@@ -46,10 +46,31 @@ function emitter_trans.process_entity(e)
             end
         end
     end
-    e._emitter = {
-        handle = effect.create_emitter{
-            emitter     = e.emitter,
+
+    local function create_lifetime(interp_lifetime)
+        local time
+        if interp_lifetime.interp_type == "const" then
+            time = interp_lifetime.minv
+        elseif interp_lifetime.interp_type == "linear" then
+            math.randomseed(os.time())
+            time = interp_lifetime.minv + (interp_lifetime.maxv - interp_lifetime.minv) * math.random()
+        end
+
+        return {
+            current = 0,
+            time = time,
         }
+    end
+
+    local emitter = e.emitter
+    e._emitter = {
+        spawn = {
+            count = emitter.spawn.count,
+            rate = emitter.spawn.rate,
+            spawn_loop = 0,
+        },
+        lifetime    = create_lifetime(e.emitter.lifetime),
+        handle      = effect.create_emitter(e.emitter.spawn)
     }
 end
 
@@ -70,13 +91,23 @@ end
 
 local itimer = world:interface "ant.timer|timer"
 
+local function calc_spawn_num(spawn, dt)
+    local function delta_spawn(spawn)
+        local t = spawn.spawn_loop % spawn.rate
+        local step = t / spawn.rate
+        return step * spawn.count
+    end
+    local already_spawned = delta_spawn(spawn)
+    spawn.spawn_loop = spawn.spawn_loop + dt
+    local totalnum = delta_spawn(spawn)
+
+    return totalnum - already_spawned
+end
+
 local function spawn_particles(e, dt)
     local emitter = e._emitter
     local spawn = emitter.spawn
-    spawn.spawn_loop = spawn.spawn_loop + dt
-    local t = spawn.spawn_loop / spawn.rate
-    local spawn_count = t * spawn.count
-    for _=1, spawn_count do
+    for _=1, calc_spawn_num(spawn, dt) do
         emitter.handle:spawn(emitter.transform)
     end
 end

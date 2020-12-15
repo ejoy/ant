@@ -10,132 +10,136 @@ check_add_id(comp_ids &ids, component_id id){
 	ids.push_back(id);
 }
 
-std::unordered_map<component_id, std::function<void (const particle_emitter::spawndata&, randomobj &, comp_ids &)>> g_spwan_operations = {
-	std::make_pair(ID_life, [](const particle_emitter::spawndata& spawn, randomobj &ro, comp_ids &ids){
-		check_add_id(ids, particle_mgr::get().add_component(
-			particles::life(spawn.init.life.get(ro()))
-		));
-	}),
-	std::make_pair(ID_velocity, [](const particle_emitter::spawndata& spawn, randomobj &ro, comp_ids &ids){
-		check_add_id(ids, particle_mgr::get().add_component(
-			particles::velocity(spawn.init.velocity.get(ro()))
-		));
-	}),
-	std::make_pair(ID_acceleration, [](const particle_emitter::spawndata& spawn, randomobj &ro, comp_ids &ids){
-		check_add_id(ids, particle_mgr::get().add_component(
-			particles::acceleration(spawn.init.acceleration.get(ro()))
-		));
-	}),
-	std::make_pair(ID_scale, [](const particle_emitter::spawndata& spawn, randomobj &ro, comp_ids &ids){
-		check_add_id(ids, particle_mgr::get().add_component(
-			particles::scale(spawn.init.scale.get(ro()))
-		));
-	}),
-	std::make_pair(ID_rotation, [](const particle_emitter::spawndata& spawn, randomobj &ro, comp_ids &ids){
-		// check_add_id(ids, particle_mgr::get().add_component(
-		// 	particles::scale(spawn.init.scale.get(ro()))
-		// ));
-	}),
-	std::make_pair(ID_translation, [](const particle_emitter::spawndata& spawn, randomobj &ro, comp_ids &ids){
-		check_add_id(ids, particle_mgr::get().add_component(
-			particles::translation(spawn.init.translation.get(ro())
-		)));
-	}),
-	std::make_pair(ID_uv, [](const particle_emitter::spawndata& spawn, randomobj &ro, comp_ids &ids){
-		
-	}),
-	std::make_pair(ID_uv_motion, [](const particle_emitter::spawndata& spawn, randomobj &ro, comp_ids &ids){
-		check_add_id(ids, particle_mgr::get().add_component(
-			particles::uv_motion(spawn.init.uv_motion.get(ro()))
-		));
-	}),
-	std::make_pair(ID_color, [](const particle_emitter::spawndata& spawn, randomobj &ro, comp_ids &ids){
-		particles::color c;
-		for(int ii=0; ii<4;++ii){
-			c[ii] = to_color_channel(spawn.init.color.rgba[ii].get(ro()));
-		}
-		check_add_id(ids, particle_mgr::get().add_component(c));
-	}),
-	std::make_pair(ID_material, [](const particle_emitter::spawndata& spawn, randomobj &ro, comp_ids &ids){
-		check_add_id(ids, particle_mgr::get().add_component(particles::material(spawn.init.material)));
-	}),
-	std::make_pair(ID_velocity_interpolator, [](const particle_emitter::spawndata& spawn, randomobj &ro, comp_ids &ids){
-		if (std::find(ids.begin(), ids.end(), ID_velocity) == ids.end()){
-			check_add_id(ids, particle_mgr::get().add_component(particles::velocity(0.f)));
-		}
-		check_add_id(ids, particle_mgr::get().add_component(
-			particles::velocity_interpolator(spawn.interp.velocity)
-		));
-	}),
-	std::make_pair(ID_acceleration_interpolator, [](const particle_emitter::spawndata& spawn, randomobj &ro, comp_ids &ids){
-		if (std::find(ids.begin(), ids.end(), ID_acceleration) == ids.end()){
-			check_add_id(ids, particle_mgr::get().add_component(particles::acceleration(0.f)));
-		}
-		check_add_id(ids, particle_mgr::get().add_component(
-			particles::acceleration_interpolator(spawn.interp.acceleration)
-		));
-	}),
-	std::make_pair(ID_scale_interpolator, [](const particle_emitter::spawndata& spawn, randomobj &ro, comp_ids &ids){
-		if (std::find(ids.begin(), ids.end(), ID_scale) == ids.end()){
-			check_add_id(ids, particle_mgr::get().add_component(particles::scale(1.f)));
-		}
-		check_add_id(ids, particle_mgr::get().add_component(
-			particles::scale_interpolator(spawn.interp.scale)
-		));
-	}),
-	std::make_pair(ID_rotation_interpolator, [](const particle_emitter::spawndata& spawn, randomobj &ro, comp_ids &ids){
-		// if (std::find(ids.begin(), ids.end(), ID_rotation) != ids.end()){
-		// 	check_add_id(ids, particle_mgr::get().add_component(particles::rotation(0.f)));
-		// }
-		// check_add_id(ids, particle_mgr::get().add_component(
-		// 	particles::rotation_interpolator(spawn.interp.rotation)
-		// ));
-	}),
-	std::make_pair(ID_translation_interpolator, [](const particle_emitter::spawndata& spawn, randomobj &ro, comp_ids &ids){
-		if (std::find(ids.begin(), ids.end(), ID_translation) == ids.end()){
-			check_add_id(ids, particle_mgr::get().add_component(particles::translation(0.f)));
-		}
-		check_add_id(ids, particle_mgr::get().add_component(
-			particles::translation_interpolator(spawn.interp.translation)
-		));
-	}),
-	std::make_pair(ID_uv_motion_interpolator, [](const particle_emitter::spawndata& spawn, randomobj &ro, comp_ids &ids){
-		if (std::find(ids.begin(), ids.end(), ID_uv_motion) == ids.end()){
-			check_add_id(ids, particle_mgr::get().add_component(particles::uv_motion(0.f)));
-		}
-		check_add_id(ids, particle_mgr::get().add_component(
-			particles::uv_motion_interpolator(spawn.interp.uv_motion)
-		));
-	}),
-	std::make_pair(ID_subuv, [](const particle_emitter::spawndata& spawn, randomobj &ro, comp_ids &ids){
-		check_add_id(ids, particle_mgr::get().add_component(
-			particles::subuv(spawn.init.subuv)
-		));
-	}),
-	std::make_pair(ID_subuv_index_interpolator, [](const particle_emitter::spawndata& spawn, randomobj &ro, comp_ids &ids){
-		assert(std::find(ids.begin(), ids.end(), ID_subuv) != ids.end());
-		check_add_id(ids, particle_mgr::get().add_component(
-			particles::subuv_index_interpolator(spawn.interp.subuv_index)
-		));
-	}),
-	std::make_pair(ID_color_interpolator, [](const particle_emitter::spawndata& spawn, randomobj &ro, comp_ids &ids){
-		assert(std::find(ids.begin(), ids.end(), ID_color) != ids.end());
-		check_add_id(ids, particle_mgr::get().add_component(
-			particles::color_interpolator(spawn.interp.color)
-		));
-	}),
-};
+using create_attrib = std::function<void (const particle_emitter::spawndata&, const glm::mat4&, randomobj &, comp_ids &)>;
 
 void
 particle_emitter::spawn(const glm::mat4 &transform){
 	randomobj ro;
 
+	auto transform_init_value = [&transform](auto &iv, float e4){
+		auto tmp = iv;
+		tmp.minv = transform * glm::vec4(tmp.minv, e4);
+		tmp.maxv = transform * glm::vec4(tmp.maxv, e4);
+
+		return tmp;
+	};
+
+	auto transform_interp_value = [&transform](auto& iv, float e4) {
+		auto tmp = iv;
+		tmp.scale = transform * glm::vec4(tmp.scale, e4);
+		return tmp;
+	};
+
     comp_ids ids;
     ids.push_back(ID_TAG_render_quad);
-    for (auto id : mspawn.init.components)
-        g_spwan_operations[id](mspawn, ro, ids);
-    for (auto id : mspawn.interp.components)
-        g_spwan_operations[id](mspawn, ro, ids);
+    for (auto id : mspawn.init.components){
+		switch (id) {
+		case ID_life:{
+			check_add_id(ids, particle_mgr::get().add_component(
+				particles::life(mspawn.init.life.get(ro()))
+			));
+		} break;
+		case ID_velocity:{
+			check_add_id(ids, particle_mgr::get().add_component(
+				particles::velocity(transform_init_value(mspawn.init.velocity, 0.f).get(ro()))
+			));
+		} break;
+		case ID_acceleration:{
+			check_add_id(ids, particle_mgr::get().add_component(
+				particles::acceleration(transform_init_value(mspawn.init.acceleration, 0.f).get(ro()))
+			));
+		} break;
+		case ID_scale:{
+			check_add_id(ids, particle_mgr::get().add_component(
+				particles::scale(transform_init_value(mspawn.init.scale, 0.f).get(ro()))
+			));
+		} break;
+		case ID_rotation:{
+			// check_add_id(ids, particle_mgr::get().add_component(
+			// 	particles::scale(spawn.init.scale.get(ro()))
+			// ));
+		} break;
+		case ID_translation:{
+			check_add_id(ids, particle_mgr::get().add_component(
+				particles::translation(transform_init_value(mspawn.init.translation, 1.f).get(ro()))
+			));
+		} break;
+		case ID_uv:{
+			
+		} break;
+		case ID_uv_motion:{
+			check_add_id(ids, particle_mgr::get().add_component(
+				particles::uv_motion(mspawn.init.uv_motion.get(ro()))
+			));
+		} break;
+		case ID_color:{
+			particles::color c;
+			for(int ii=0; ii<4;++ii){
+				c[ii] = to_color_channel(mspawn.init.color.rgba[ii].get(ro()));
+			}
+			check_add_id(ids, particle_mgr::get().add_component(c));
+		} break;
+		case ID_material:{
+			check_add_id(ids, particle_mgr::get().add_component(particles::material(mspawn.init.material)));
+		} break;
+		default: assert(false); break;
+		}
+	}
+
+    for (auto id : mspawn.interp.components){
+		switch (id){
+		case ID_velocity_interpolator: {
+			check_add_id(ids, particle_mgr::get().add_component(
+				particles::velocity_interpolator(transform_interp_value(mspawn.interp.velocity, 0.f))
+			));
+		} break;
+		case ID_acceleration_interpolator: {
+			check_add_id(ids, particle_mgr::get().add_component(
+				particles::acceleration_interpolator(transform_interp_value(mspawn.interp.acceleration, 0.f))
+			));
+		} break;
+		case ID_scale_interpolator: {
+			check_add_id(ids, particle_mgr::get().add_component(
+				particles::scale_interpolator(transform_interp_value(mspawn.interp.scale, 0.f))
+			));
+		} break;
+		case ID_rotation_interpolator: {
+			// if (std::find(ids.begin(), ids.end(), ID_rotation) != ids.end()){
+			// 	check_add_id(ids, particle_mgr::get().add_component(particles::rotation(0.f)));
+			// }
+			// check_add_id(ids, particle_mgr::get().add_component(
+			// 	particles::rotation_interpolator(spawn.interp.rotation)
+			// ));
+		} break;
+		case ID_translation_interpolator: {
+			check_add_id(ids, particle_mgr::get().add_component(
+				particles::translation_interpolator(transform_interp_value(mspawn.interp.translation, 1.f))
+			));
+		} break;
+		case ID_uv_motion_interpolator: {
+			check_add_id(ids, particle_mgr::get().add_component(
+				particles::uv_motion_interpolator(mspawn.interp.uv_motion)
+			));
+		} break;
+		case ID_subuv: {
+			check_add_id(ids, particle_mgr::get().add_component(
+				particles::subuv(mspawn.init.subuv)
+			));
+		} break;
+		case ID_subuv_index_interpolator: {
+			assert(std::find(ids.begin(), ids.end(), ID_subuv) != ids.end());
+			check_add_id(ids, particle_mgr::get().add_component(
+				particles::subuv_index_interpolator(mspawn.interp.subuv_index)
+			));
+		} break;
+		case ID_color_interpolator: {
+			assert(std::find(ids.begin(), ids.end(), ID_color) != ids.end());
+			check_add_id(ids, particle_mgr::get().add_component(
+				particles::color_interpolator(mspawn.interp.color)
+			));
+		} break;
+		}
+	}
 
     particle_mgr::get().add(ids);
 }
