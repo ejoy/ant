@@ -18,7 +18,7 @@ extern "C" {
 #include "imgui_renderer.h"
 #include "imgui_platform.h"
 #include "imgui_window.h"
-#include "widgets/MySequencer.h"
+#include "widgets/ImSequencer.h"
 
 namespace imgui::table { void init(lua_State* L); }
 
