@@ -147,7 +147,7 @@ function m.show()
             local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((current_folder == v) and imgui.flags.TreeNode{"Selected"} or 0)
             local skip = false
             if not v.parent then
-                imgui.widget.Image(icons.ROOM_INSTANCE.handle, icons.ROOM_INSTANCE.texinfo.width, icons.ROOM_INSTANCE.texinfo.height)
+                imgui.widget.Image(icons.ICON_ROOM_INSTANCE.handle, icons.ICON_ROOM_INSTANCE.texinfo.width, icons.ICON_ROOM_INSTANCE.texinfo.height)
                 imgui.cursor.SameLine()
             end
             if (#v[2].dirs == 0) then

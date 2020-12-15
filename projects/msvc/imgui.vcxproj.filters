@@ -7,6 +7,9 @@
     <Filter Include="binding">
       <UniqueIdentifier>{8c7e47fd-fe08-4aca-85f9-17a4bd24705d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="widgets">
+      <UniqueIdentifier>{eb16a398-c9a0-4831-b060-3562c2df7c24}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\3rd\imgui\imgui_widgets.cpp">
@@ -42,6 +45,15 @@
     <ClCompile Include="..\..\clibs\imgui\luaimgui_tables.cpp">
       <Filter>binding</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\imgui\widgets\ImCurveEdit.cpp">
+      <Filter>widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\imgui\widgets\ImSequencer.cpp">
+      <Filter>widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\imgui\widgets\SelectableInput.cpp">
+      <Filter>widgets</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\imgui\imgui_config.h">
@@ -76,6 +88,15 @@
     </ClInclude>
     <ClInclude Include="..\..\3rd\imgui\backends\imgui_impl_win32.h">
       <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\imgui\widgets\ImCurveEdit.h">
+      <Filter>widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\imgui\widgets\ImSequencer.h">
+      <Filter>widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\imgui\widgets\SelectableInput.h">
+      <Filter>widgets</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -18,6 +18,7 @@ extern "C" {
 #include "imgui_renderer.h"
 #include "imgui_platform.h"
 #include "imgui_window.h"
+#include "widgets/MySequencer.h"
 
 namespace imgui::table { void init(lua_State* L); }
 
@@ -1688,6 +1689,184 @@ wPopTextWrapPos(lua_State* L) {
 	return 0;
 }
 
+namespace ImSequencer
+{
+	extern bool new_anim;
+	extern int current_id;
+	extern anim_detail* current_anim;
+	extern std::unordered_map<int, std::unordered_map<std::string, anim_detail>> anim_info;
+}
+
+static int
+wSequencer(lua_State* L) {
+	static int selected_frame = -1;
+	static int current_frame = 0;
+	static std::string current_anim_name;
+	auto init_event = [L](std::vector<bool>& flags) {
+		if (lua_getfield(L, -1, "key_event") == LUA_TTABLE) {
+			lua_pushnil(L);
+			while (lua_next(L, -2) != 0) {
+				const char* frame_index = lua_tostring(L, -2);
+				if (lua_type(L, -1) == LUA_TTABLE) {
+					flags[std::atoi(frame_index)] = true;
+				}
+				lua_pop(L, 1);
+			}
+		}
+		lua_pop(L, 1);
+	};
+
+	if (lua_type(L, 1) == LUA_TTABLE) {
+		auto id = read_field_int(L, "id", -1, 1);
+		auto birth = read_field_string(L, "birth", "", 1);
+		if (ImSequencer::current_id != id) {
+			ImSequencer::current_id = id;
+			if (ImSequencer::anim_info.find(id) == ImSequencer::anim_info.end()) {
+				auto& current_anim_info = ImSequencer::anim_info[id];
+				lua_pushnil(L);
+				while (lua_next(L, 1) != 0) {
+					const char* anim_name = lua_tostring(L, -2);
+					if (lua_type(L, -1) == LUA_TTABLE) {
+						current_anim_info.insert({ std::string(anim_name), ImSequencer::anim_detail{} });
+						auto& item = current_anim_info[anim_name];
+						item.duration = (float)read_field_float(L, "duration", 0.0f, -1);
+						item.event_flags = std::vector((int)(item.duration * 30), false);
+						init_event(item.event_flags);
+					}
+					lua_pop(L, 1);
+				}
+				current_anim_name = birth;
+				ImSequencer::current_anim = &ImSequencer::anim_info[id][birth];
+			}
+		}
+		auto iter = ImSequencer::anim_info.find(id);
+		if (iter != ImSequencer::anim_info.end()) {
+			std::string anim_name = read_field_string(L, "anim_name", nullptr, 2);
+			if (current_anim_name != anim_name) {
+				current_anim_name = anim_name;
+				ImSequencer::current_anim = &iter->second[current_anim_name];
+			}
+			ImSequencer::current_anim->is_playing = read_field_boolean(L, "is_playing", false, 2);
+			ImSequencer::current_anim->current_time = (float)read_field_float(L, "current_time", 0.0f, 2);
+			current_frame = (int)(ImSequencer::current_anim->current_time * 30.0f);
+			auto dirty_num = read_field_int(L, "event_dirty", 0, 2);
+			// add or remove key event
+			if (dirty_num == 1) {
+				if (lua_getfield(L, 2, "current_event_list") == LUA_TTABLE) {
+					ImSequencer::current_anim->event_flags[selected_frame] = ((int)lua_rawlen(L, -1) > 0);
+				}
+				lua_pop(L, 1);
+			}
+			else if (dirty_num == -1) {
+				lua_pushnil(L);
+				while (lua_next(L, 1) != 0) {
+					const char* anim_name = lua_tostring(L, -2);
+					auto& item = ImSequencer::anim_info[id][anim_name];
+					item.event_flags = std::vector<bool>(item.event_flags.size(), false);
+					if (lua_type(L, -1) == LUA_TTABLE) {
+						init_event(item.event_flags);
+					}
+					lua_pop(L, 1);
+				}
+			}
+		}
+	}
+	
+	bool pause = false;
+	bool moving = false;
+	int current_select = selected_frame;
+	ImSequencer::Sequencer(pause, current_frame, current_select, moving);
+
+	if (pause) {
+		lua_pushnumber(L, current_frame / 30.0f);
+		lua_setfield(L, -2, "pause");
+	}
+	if (moving) {
+		lua_pushboolean(L, moving);
+		lua_setfield(L, -2, "moving");
+	}
+	if (selected_frame != current_select) {
+		selected_frame = current_select;
+		lua_pushinteger(L, selected_frame);
+		lua_setfield(L, -2, "selected_frame");
+	}
+	
+	return 0;
+}
+
+static int
+wSelectableInput(lua_State* L) {
+	const char* label = luaL_checkstring(L, INDEX_ID);
+	bool selected;
+	ImGuiSelectableFlags flags = 0;
+	ImVec2 size(0, 0);
+	int t = lua_type(L, INDEX_ARGS);
+	switch (t) {
+	case LUA_TNIL:
+	case LUA_TBOOLEAN:
+		selected = lua_toboolean(L, INDEX_ARGS);
+		size.x = (float)luaL_optnumber(L, 3, 0.0f);
+		size.y = (float)luaL_optnumber(L, 4, 0.0f);
+		flags = (ImGuiSelectableFlags)luaL_optinteger(L, 5, 0);
+		if (lua_toboolean(L, 6)) {
+			flags |= ImGuiSelectableFlags_Disabled;
+		}
+		break;
+	case LUA_TTABLE:
+		if (lua_geti(L, INDEX_ARGS, 1) == LUA_TSTRING &&
+			lua_compare(L, INDEX_ID, -1, LUA_OPEQ)) {
+			selected = true;
+		}
+		else {
+			selected = false;
+		}
+		lua_pop(L, 1);
+		flags = read_field_int(L, "item_flags", 0);
+		size.x = (float)read_field_float(L, "width", 0);
+		size.y = (float)read_field_float(L, "height", 0);
+		if (lua_toboolean(L, 3)) {
+			flags |= ImGuiSelectableFlags_Disabled;
+		}
+		break;
+	default:
+		return luaL_error(L, "Invalid selected type %s", lua_typename(L, t));
+	}
+
+	bool change = ImGui::Selectable(label, selected, flags, size);
+	if (change && t == LUA_TTABLE) {
+		lua_pushvalue(L, INDEX_ID);
+		lua_seti(L, INDEX_ARGS, 1);
+	}
+	lua_pushboolean(L, change);
+	return 1;
+
+	//const char* label = luaL_checkstring(L, INDEX_ID);
+// 	luaL_checktype(L, INDEX_ARGS, LUA_TTABLE);
+// 	ImGuiInputTextFlags flags = read_field_int(L, "flags", 0);
+// 	const char* hint = read_field_string(L, "hint", NULL);
+// 	int t = lua_getfield(L, INDEX_ARGS, "text");
+// 	if (t == LUA_TSTRING || t == LUA_TNIL) {
+// 		create_new_editbuf(L);
+// 		lua_pushvalue(L, -1);
+// 		lua_setfield(L, INDEX_ARGS, "text");
+// 	}
+// 	struct editbuf* ebuf = (struct editbuf*)luaL_checkudata(L, -1, "IMGUI_EDITBUF");
+// 	ebuf->L = L;
+// 	bool change;
+// 	flags |= ImGuiInputTextFlags_CallbackResize;
+// 	int top = lua_gettop(L);
+// 	if (hint) {
+// 		change = ImGui::InputTextWithHint(label, hint, ebuf->buf, ebuf->size, flags, edit_callback, ebuf);
+// 	}
+// 	else {
+// 		change = ImGui::InputText(label, ebuf->buf, ebuf->size, flags, edit_callback, ebuf);
+// 	}
+// 	if (lua_gettop(L) != top) {
+// 		lua_error(L);
+// 	}
+// 	lua_pushboolean(L, change);
+// 	return 1;
+}
 
 
 #ifdef _MSC_VER
@@ -3545,6 +3724,8 @@ luaopen_imgui(lua_State *L) {
 		{ "GetDragDropPayload", wGetDragDropPayload},
 		{ "PushTextWrapPos", wPushTextWrapPos },
 		{ "PopTextWrapPos", wPopTextWrapPos },
+		{ "Sequencer", wSequencer},
+		{ "SelectableInput", wSelectableInput },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, widgets);

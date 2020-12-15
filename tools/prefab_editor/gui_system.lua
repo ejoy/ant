@@ -12,6 +12,7 @@ local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 local hierarchy = require "hierarchy"
 local resource_browser = require "widget.resource_browser"(world, asset_mgr)
+local anim_view = require "widget.animation_view"(world, asset_mgr)
 local log_widget = require "widget.log"(asset_mgr)
 local console_widget = require "widget.console"(asset_mgr)
 local toolbar = require "widget.toolbar"(world, asset_mgr)
@@ -198,6 +199,7 @@ function m:ui_update()
     particle_emitter.show()
     inspector.show()
     resource_browser.show()
+    anim_view.show()
     log_widget.show()
     console_widget.show()
     imgui.windows.PopStyleColor(2)
@@ -267,6 +269,7 @@ local function on_target(old, new)
         end
     end
     prefab_mgr:update_current_aabb(new)
+    anim_view.bind(new)
 end
 
 local function on_update(eid)
@@ -327,6 +330,12 @@ function m:data_changed()
             end
         elseif what == "lock" then
             hierarchy:set_lock(eid, value)
+            
+            local animation = world:interface "ant.animation|animation"
+            animation.set_time(eid, 0)
+            animation.play(eid, "running", 0)
+            animation.set_speed(eid, 0.5)
+            animation.set_loop(eid, false)
         elseif what == "delete" then
             prefab_mgr:remove_entity(eid)
         end

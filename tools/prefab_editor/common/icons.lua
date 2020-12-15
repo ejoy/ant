@@ -33,9 +33,11 @@ local icon_path = {
     ["ICON_INFO"]           = "res/icon/Info.png",
     ["ICON_WARN"]           = "res/icon/Warn.png",
     ["ICON_ERROR"]          = "res/icon/Error.png",
-    ["FILE_LIST"]           = "res/icon/FileList.png",
-    ["FILE_SYSTEM"]         = "res/icon/Filesystem.png",
-    ["ROOM_INSTANCE"]       = "res/icon/RoomInstance.png"
+    ["ICON_FILE_LIST"]      = "res/icon/FileList.png",
+    ["ICON_FILE_SYSTEM"]    = "res/icon/Filesystem.png",
+    ["ICON_ROOM_INSTANCE"]  = "res/icon/RoomInstance.png",
+    ["ICON_PLAY"]           = "res/icon/Play.png",
+    ["ICON_PAUSE"]          = "res/icon/Pause.png",
 }
 
 local icons = {}

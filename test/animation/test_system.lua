@@ -73,6 +73,10 @@ local function playAnimation(e, name)
     end
     e._animation._current = {
         animation = ani,
+        event_state = {
+            next_index = 1,
+            keyframe_events = e.keyframe_events[name]
+        },
         ratio = 0,
     }
 end
