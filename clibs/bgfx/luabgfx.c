@@ -17,7 +17,7 @@
 #include "bgfx_alloc.h"
 #include "transient_buffer.h"
 
-#if BGFX_API_VERSION != 109
+#if BGFX_API_VERSION != 111
 #   error BGFX_API_VERSION mismatch
 #endif
 
