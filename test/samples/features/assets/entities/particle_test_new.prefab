@@ -1,12 +1,5 @@
 ---
 policy:
-    ant.effect|particle_system
-    ant.general|name
-data:
-    name: particle_system_test
-    particle_system: {}
----
-policy:
     ant.effect|particle_emitter
     ant.general|name
 data:
@@ -16,57 +9,51 @@ data:
     scene_entity: true
     state: 1
     emitter:
-        emitter_lifetime:
+        lifetime:
             interp_type: linear
             minv: 30
             maxv: 40
-        emitter_transform:
-            s: 1
-            r: {0, 0, 0, 1}
-            t: {5, 0, 0}
         spawn:
             count:  10
             rate:   1.0
-        init_lifetime:
-            interp_type: linear
-            minv: 1
-            maxv: 2
-        init_scale:
-            interp_type: linear
-            minv:{0.15, 0.15, 0.15}
-            maxv:{1.28, 1.28, 1.28}
-        init_translation:
-            interp_type: const
-            value:{0.0, 0.0, 0.0}
-        scale_over_life:
-            interp_type: linear
-            minv: {0.5, 0.5, 0.5}
-            maxv: {3.0, 3.0, 3.0}
-        init_color:
-            RGBA:
+            init_lifetime:
                 interp_type: linear
-                minv: {0.0, 0.0, 0.0, 1.0}
-                maxv: {1.0, 1.0, 1.0, 1.0}
-        color_over_life:
-            A:
+                minv: 1
+                maxv: 2
+            init_scale:
                 interp_type: linear
-                minv: 1.0
-                maxv: 0.0
-            RGB:
+                minv:{0.15, 0.15, 0.15}
+                maxv:{1.28, 1.28, 1.28}
+            init_translation:
                 interp_type: const
-                value: {1.0, 1.0, 1.0}
-        init_velocity:
-            interp_type: linear
-            minv: {1.0, 0.0, 0.0}
-            maxv: {0.0, 1.0, 1.0}
-        subuv:
-            dimension: {8, 8}
-        subuv_index_over_life:
-            interp_type: linear
-            minv: 0
-            maxv: 63
-        uv_motion:
-            interp_type: const
-            value: {0.2, 0.3}
-action:
-    attach_particle_system: 1
+                value:{0.0, 0.0, 0.0}
+            scale_over_life:
+                interp_type: linear
+                minv: {0.5, 0.5, 0.5}
+                maxv: {3.0, 3.0, 3.0}
+            init_color:
+                RGBA:
+                    interp_type: linear
+                    minv: {0.0, 0.0, 0.0, 1.0}
+                    maxv: {1.0, 1.0, 1.0, 1.0}
+            color_over_life:
+                A:
+                    interp_type: linear
+                    minv: 1.0
+                    maxv: 0.0
+                RGB:
+                    interp_type: const
+                    value: {1.0, 1.0, 1.0}
+            init_velocity:
+                interp_type: linear
+                minv: {1.0, 0.0, 0.0}
+                maxv: {0.0, 1.0, 1.0}
+            subuv:
+                dimension: {8, 8}
+            subuv_index_over_life:
+                interp_type: linear
+                minv: 0
+                maxv: 63
+            uv_motion:
+                interp_type: const
+                value: {0.2, 0.3}

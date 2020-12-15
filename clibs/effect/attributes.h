@@ -3,5 +3,7 @@
 #include "particle.h"
 
 struct lua_State;
-extern std::function<void (lua_State *, int, comp_ids&)> find_attrib_reader(const std::string &name);
+class particle_emitter;
+using readerop = std::function<void (lua_State *, int, particle_emitter*, comp_ids&)>;
+readerop find_attrib_reader(const std::string &name);
 

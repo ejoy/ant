@@ -1,17 +1,13 @@
 #include "pch.h"
+#include "attributes.h"
 
 #include "lua.hpp"
 #include "lua2struct.h"
 #include "particle.h"
+#include "particle_mgr.h"
+#include "emitter.h"
 #include "random.h"
 
-LUA2STRUCT(struct render_data, viewid, progid, qb, textures);
-LUA2STRUCT(struct render_data::texture, stage, uniformid, texid);
-
-LUA2STRUCT(struct particles::spawn, count, rate);
-LUA2STRUCT(struct particles::subuvdata, dimension);
-
-using p_color_attrib = particles::spawn::color_attributeT<particles::spawn::init_valueT<float>>;
 namespace lua_struct {
     template<typename VALUETYPE>
     bool get_field(lua_State *L, int index, const char* name, VALUETYPE&attrib){
@@ -26,7 +22,7 @@ namespace lua_struct {
     }
 
     template<typename T>
-    void unpack_interp_value(lua_State* L, int index, particles::spawn::init_valueT<T> &iv) {
+    void unpack_interp_value(lua_State* L, int index, interpolation::init_valueT<T> &iv) {
         luaL_checktype(L, index, LUA_TTABLE);
         const char *t = nullptr;
         if (LUA_TSTRING == lua_getfield(L, index, "interp_type")){
@@ -52,12 +48,12 @@ namespace lua_struct {
     }
 
     template<>
-    void unpack(lua_State* L, int index, p_color_attrib &civ, void*) {
-        auto check_rgba = [](lua_State* L, int index, p_color_attrib &civ){
+    void unpack(lua_State* L, int index, interpolation::color_init_value &civ, void*) {
+        auto check_rgba = [](lua_State* L, int index, interpolation::color_init_value &civ){
             bool isvalid = false;
             if (LUA_TTABLE == lua_getfield(L, index, "RGBA")){
                 isvalid = true;
-                particles::spawn::init_valueT<glm::vec4> f4v;
+                interpolation::init_valueT<glm::vec4> f4v;
                 unpack_interp_value(L, index, f4v);
                 for (int ii=0; ii<4; ++ii){
                     civ.rgba[ii].minv = f4v.minv[ii];
@@ -69,11 +65,11 @@ namespace lua_struct {
             return isvalid;
         };
 
-        auto check_rgb = [](lua_State* L, int index, p_color_attrib &civ){
+        auto check_rgb = [](lua_State* L, int index, interpolation::color_init_value&civ){
             bool isvalid = false;
             if (LUA_TTABLE == lua_getfield(L, index, "RGB")){
                 isvalid = true;
-                particles::particles::spawn::init_valueT<glm::vec3> f3v;
+                interpolation::f3_init_value f3v;
                 unpack_interp_value(L, -1, f3v);
                 for (int ii=0; ii<3; ++ii){
                     civ.rgba[ii].minv = f3v.minv[ii];
@@ -115,10 +111,10 @@ namespace lua_struct {
         unpack_interp_value(L, index, iv);\
     }
 
-    DEF_INTERP_VALUE_UNPACK(particles::spawn::init_valueT<float>);
-    DEF_INTERP_VALUE_UNPACK(particles::spawn::init_valueT<uint16_t>);
-    DEF_INTERP_VALUE_UNPACK(particles::spawn::init_valueT<glm::vec2>);
-    DEF_INTERP_VALUE_UNPACK(particles::spawn::init_valueT<glm::vec3>);
+    DEF_INTERP_VALUE_UNPACK(interpolation::init_valueT<float>);
+    DEF_INTERP_VALUE_UNPACK(interpolation::init_valueT<uint16_t>);
+    DEF_INTERP_VALUE_UNPACK(interpolation::f2_init_value);
+    DEF_INTERP_VALUE_UNPACK(interpolation::f3_init_value);
 
     template <int NUM, typename ELEMTYPE>
     void unpack_vec(lua_State* L, int idx, glm::vec<NUM, ELEMTYPE, glm::defaultp>& v) {
@@ -145,25 +141,6 @@ namespace lua_struct {
     DEF_VEC_UNPACK(glm::vec2);
     DEF_VEC_UNPACK(glm::vec3);
     DEF_VEC_UNPACK(glm::vec4);
-
-
-    template<>
-    void unpack(lua_State* L, int index, quad_buffer& qb, void*) {
-        if (LUA_TNUMBER == lua_getfield(L, index, "ib")){
-            qb.ib.idx = (uint16_t)lua_tonumber(L, -1);
-        } else {
-            luaL_error(L, "invalid 'ib'");
-        }
-        lua_pop(L, 1);
-        if (LUA_TUSERDATA == lua_getfield(L, index, "layout")){
-            qb.layout = (bgfx_vertex_layout_t*)lua_touserdata(L, -1);
-        } else {
-            luaL_error(L, "invalid pointer");
-        }
-        lua_pop(L, 1);
-    }
-    template<>
-    void pack(lua_State* L, const quad_buffer& qb, void*){}
 }
 
 
@@ -185,132 +162,67 @@ static inline VALUETYPE& check_add_component(comp_ids &ids){
     return particle_mgr::get().component_value<VALUETYPE>();
 }
 
-std::unordered_map<std::string, std::function<void (lua_State *, int, comp_ids&)>> g_attrib_map = {
-    std::make_pair("emitter_lifetime", [](lua_State *L, int index, comp_ids& ids){
-        particles::spawn::init_valueT<float> iv;
-        lua_struct::unpack(L, index, iv);
-        randomobj ro;
-        check_add_id(particle_mgr::get().add_component(particles::life(iv.get(ro()))), ids);
-    }),
-    std::make_pair("emitter_transform", [](lua_State *L, int index, comp_ids& ids){
-        auto& sp = particle_mgr::get().component_value<particles::spawn>();
-        auto &srt = sp.init.srt;
-        glm::mat4 &m = sp.init.srt;
-        const int stype = lua_getfield(L, index, "s");
-        if (stype == LUA_TTABLE){
-            glm::vec3 s;
-            lua_struct::unpack(L, -1, s);
-            m = glm::scale(s);
-        } else if (stype == LUA_TNUMBER){
-            glm::vec3 s(float(lua_tonumber(L, -1)));
-            m = glm::scale(s);
-        } else {
-            m = glm::mat4(1.f);
-        }
-        lua_pop(L, 1);
-
-        const int rtype = lua_getfield(L, index, "r");
-        if (rtype == LUA_TTABLE){
-            const int n = (int)lua_rawlen(L, -1);
-            if (n != 4){
-                luaL_error(L, "invalid 'r', need quaternion:%d", n);
-            }
-            glm::quat r;
-            for (int ii=0; ii<4; ++ii){
-                lua_geti(L, -1, ii+1);
-                r[ii] = float(lua_tonumber(L, -1));
-                lua_pop(L, 1);
-            }
-
-            m = m * glm::mat4(r);
-        }
-        lua_pop(L, 1);
-
-        const int ttype = lua_getfield(L, index, "t");
-        if (ttype == LUA_TTABLE){
-            glm::vec3 t;
-            lua_struct::unpack(L, index, t);
-            m = m * glm::translate(t);
-        }
-        lua_pop(L, 1);
-    }),
-    std::make_pair("spawn", [](lua_State *L, int index, comp_ids& ids){
-        particles::spawn sd;
-        lua_struct::unpack(L, index, sd);
-
-        check_add_id(particle_mgr::get().add_component(sd), ids);
-    }),
-    std::make_pair("init_lifetime", [](lua_State *L, int index, comp_ids& ids){
-        auto& sp = particle_mgr::get().component_value<particles::spawn>();
-        sp.init.components.push_back(particles::life::ID());
-        lua_struct::unpack(L, index, sp.init.life);
+std::unordered_map<std::string, readerop> g_attrib_map = {
+    std::make_pair("init_lifetime", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
+        emitter->mspawn.init.components.push_back(particles::life::ID());
+        lua_struct::unpack(L, index, emitter->mspawn.init.life);
 
     }),
-    std::make_pair("init_scale", [](lua_State *L, int index, comp_ids& ids){
-        auto& sp = particle_mgr::get().component_value<particles::spawn>();
-        sp.init.components.push_back(particles::scale::ID());
-        lua_struct::unpack(L, index, sp.init.scale);
+    std::make_pair("init_scale", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
+        emitter->mspawn.init.components.push_back(particles::scale::ID());
+        lua_struct::unpack(L, index, emitter->mspawn.init.scale);
     }),
-    std::make_pair("scale_over_life", [](lua_State *L, int index, comp_ids& ids){
-        auto& sp = particle_mgr::get().component_value<particles::spawn>();
-        sp.interp.components.push_back(particles::scale_interpolator::ID());
-        particles::spawn::init_valueT<glm::vec3> scale_iv;
+    std::make_pair("scale_over_life", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
+        emitter->mspawn.interp.components.push_back(particles::scale_interpolator::ID());
+        interpolation::f3_init_value scale_iv;
         lua_struct::unpack(L, index, scale_iv);
-        sp.interp.scale.from_init_value(scale_iv);
+        emitter->mspawn.interp.scale.from_init_value(scale_iv);
         
     }),
-    std::make_pair("init_translation", [](lua_State *L, int index, comp_ids& ids){
-        auto& sp = particle_mgr::get().component_value<particles::spawn>();
-        sp.interp.components.push_back(particles::translation::ID());
-        lua_struct::unpack(L, index, sp.init.translation);
+    std::make_pair("init_translation", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
+        emitter->mspawn.init.components.push_back(particles::translation::ID());
+        lua_struct::unpack(L, index, emitter->mspawn.init.translation);
     }),
-    std::make_pair("init_color", [](lua_State *L, int index, comp_ids& ids){
-        auto& sp = particle_mgr::get().component_value<particles::spawn>();
-        sp.init.components.push_back(particles::color::ID());
-        lua_struct::unpack(L, index, sp.init.color);
+    std::make_pair("init_color", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
+        emitter->mspawn.init.components.push_back(particles::color::ID());
+        lua_struct::unpack(L, index, emitter->mspawn.init.color);
     }),
-    std::make_pair("color_over_life", [](lua_State *L, int index, comp_ids& ids){
-        auto& sp = particle_mgr::get().component_value<particles::spawn>();
-        sp.interp.components.push_back(particles::color_interpolator::ID());
-        p_color_attrib iv;
+    std::make_pair("color_over_life", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
+        emitter->mspawn.interp.components.push_back(particles::color_interpolator::ID());
+        interpolation::color_init_value iv;
         lua_struct::unpack(L, index, iv);
         
         for (int ii = 0; ii < 4; ++ii) {
-            sp.interp.color.rgba[ii].from_init_value(iv.rgba[ii]);
+            emitter->mspawn.interp.color.rgba[ii].from_init_value(iv.rgba[ii]);
         }
     }),
-    std::make_pair("init_velocity", [](lua_State *L, int index, comp_ids& ids){
-        auto& sp = particle_mgr::get().component_value<particles::spawn>();
-        sp.init.components.push_back(particles::velocity::ID());
-        lua_struct::unpack(L, index, sp.init.velocity);
+    std::make_pair("init_velocity", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
+        emitter->mspawn.init.components.push_back(particles::velocity::ID());
+        lua_struct::unpack(L, index, emitter->mspawn.init.velocity);
     }),
-    std::make_pair("init_acceleration", [](lua_State *L, int index, comp_ids& ids){
-        auto& sp = particle_mgr::get().component_value<particles::spawn>();
-        sp.init.components.push_back(particles::acceleration::ID());
-        lua_struct::unpack(L, index, sp.init.acceleration);
+    std::make_pair("init_acceleration", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
+        emitter->mspawn.init.components.push_back(particles::acceleration::ID());
+        lua_struct::unpack(L, index, emitter->mspawn.init.acceleration);
     }),
-    std::make_pair("uv_motion", [](lua_State *L, int index, comp_ids& ids){
-        auto& sp = particle_mgr::get().component_value<particles::spawn>();
-        sp.init.components.push_back(particles::uv_motion::ID());
-        lua_struct::unpack(L, index, sp.init.uv_motion);
+    std::make_pair("uv_motion", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
+        emitter->mspawn.init.components.push_back(particles::uv_motion::ID());
+        lua_struct::unpack(L, index, emitter->mspawn.init.uv_motion);
     }),
-    std::make_pair("subuv", [](lua_State *L, int index, comp_ids& ids){
-        auto& sp = particle_mgr::get().component_value<particles::spawn>();
-        sp.init.components.push_back(particles::subuv::ID());
-        lua_struct::unpack(L, index, sp.init.subuv);
+    std::make_pair("subuv", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
+        emitter->mspawn.init.components.push_back(particles::subuv::ID());
+        lua_struct::unpack(L, index, emitter->mspawn.init.subuv);
     }),
-    std::make_pair("subuv_index_over_life", [](lua_State *L, int index, comp_ids& ids){
-        auto& sp = particle_mgr::get().component_value<particles::spawn>();
-        sp.interp.components.push_back(particles::subuv_index_interpolator::ID());
-        particles::spawn::init_valueT<uint16_t>  iv;
+    std::make_pair("subuv_index_over_life", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
+        emitter->mspawn.interp.components.push_back(particles::subuv_index_interpolator::ID());
+        interpolation::init_valueT<uint16_t>  iv;
         lua_struct::unpack(L, index, iv);
-        sp.interp.subuv_index.from_init_value(iv);
+        emitter->mspawn.interp.subuv_index.from_init_value(iv);
     }),
 };
 
-static void default_reader(lua_State *, int, comp_ids&){}
+static void default_reader(lua_State *, int, particle_emitter*, comp_ids&){}
 
-std::function<void (lua_State *, int, comp_ids&)> find_attrib_reader(const std::string &name){
+readerop find_attrib_reader(const std::string &name){
     auto it = g_attrib_map.find(name);
     if (it == g_attrib_map.end()){
         return default_reader;

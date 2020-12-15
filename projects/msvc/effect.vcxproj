@@ -102,7 +102,9 @@
   <ItemGroup>
     <ClCompile Include="..\..\clibs\effect\attributes.cpp" />
     <ClCompile Include="..\..\clibs\effect\effect.cpp" />
+    <ClCompile Include="..\..\clibs\effect\emitter.cpp" />
     <ClCompile Include="..\..\clibs\effect\particle.cpp" />
+    <ClCompile Include="..\..\clibs\effect\particle_mgr.cpp" />
     <ClCompile Include="..\..\clibs\effect\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -111,8 +113,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\effect\attributes.h" />
+    <ClInclude Include="..\..\clibs\effect\emitter.h" />
     <ClInclude Include="..\..\clibs\effect\lua2struct.h" />
     <ClInclude Include="..\..\clibs\effect\particle.h" />
+    <ClInclude Include="..\..\clibs\effect\particle_mgr.h" />
     <ClInclude Include="..\..\clibs\effect\pch.h" />
     <ClInclude Include="..\..\clibs\effect\quadcache.h" />
     <ClInclude Include="..\..\clibs\effect\singleton.h" />

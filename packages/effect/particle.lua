@@ -22,7 +22,7 @@ local particle_material_path = "/pkg/ant.resources/materials/particle/particle.m
 local particle_material
 local textures
 function emitter_trans.process_entity(e)
-    local viewid = world:singleton_entity "main_queue".render_target.viewid
+    
     if particle_material == nil then
         particle_material = imaterial.load(particle_material_path)
         textures = {}
@@ -46,38 +46,47 @@ function emitter_trans.process_entity(e)
             end
         end
     end
-    e._emitter = {}
-    local prog = particle_material.fx.prog
-    effect.create_emitter{
+    e._emitter = {
+        handle = effect.create_emitter{
+            emitter     = e.emitter,
+        }
+    }
+end
+
+local particle_sys = ecs.system "particle_system"
+
+function particle_sys:posinit()
+    local viewid = world:singleton_entity "main_queue".render_target.viewid
+    effect.init {
         viewid      = viewid,
-        progid      = (prog & 0xffff),
+        progid      = (particle_material.fx.prog & 0xffff),
         qb          = {
             ib = (irender.quad_ib() &0xffff),
             layout = quadlayout.handle,
         },
         textures    = textures,
-        emitter     = e.emitter,
     }
-end
-
-local aps = ecs.action "attach_particle_system"
-function aps.init(prefab, idx, value)
-    local ps = world[prefab[value]]
-
-    local eid = prefab[idx]
-    local particle_emitters = ps.particle_emitters
-    particle_emitters[#particle_emitters+1] = eid
-end
-
-local particle_sys = ecs.system "particle_system"
-
-function particle_sys:init()
-    effect.init()
 end
 
 local itimer = world:interface "ant.timer|timer"
 
+local function spawn_particles(e, dt)
+    local emitter = e._emitter
+    local spawn = emitter.spawn
+    spawn.spawn_loop = spawn.spawn_loop + dt
+    local t = spawn.spawn_loop / spawn.rate
+    local spawn_count = t * spawn.count
+    for _=1, spawn_count do
+        emitter.handle:spawn(emitter.transform)
+    end
+end
+
 function particle_sys:ui_update()
-    local dt = itimer.delta()
-    effect.update(dt * 0.001)
+    local dt = itimer.delta() * 0.001
+    for _, eid in world:each "emitter" do
+        local e = world[eid]
+        spawn_particles(e)
+    end
+
+    effect.update_particles(dt)
 end
