@@ -20,6 +20,7 @@ struct render_data{
     std::vector<texture>   textures;
 };
 
+//TODO: need remove this singletonT, push it in lua_State
 class particle_mgr : public singletonT<particle_mgr> {
     friend class singletonT<particle_mgr>;
 private:

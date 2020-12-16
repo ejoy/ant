@@ -91,25 +91,24 @@ end
 
 local itimer = world:interface "ant.timer|timer"
 
-local function calc_spawn_num(spawn, dt)
-    local function delta_spawn(spawn)
-        local t = spawn.spawn_loop % spawn.rate
-        local step = t / spawn.rate
-        return step * spawn.count
-    end
-    local already_spawned = delta_spawn(spawn)
-    spawn.spawn_loop = spawn.spawn_loop + dt
-    local totalnum = delta_spawn(spawn)
+-- local function calc_spawn_num(spawn, dt)
+--     local function delta_spawn(spawn)
+--         local t = spawn.spawn_loop % spawn.rate
+--         local step = t / spawn.rate
+--         return step * spawn.count
+--     end
+--     local already_spawned = delta_spawn(spawn)
+--     spawn.spawn_loop = spawn.spawn_loop + dt
+--     local totalnum = delta_spawn(spawn)
 
-    return totalnum - already_spawned
-end
+--     return totalnum - already_spawned
+-- end
 
 local function spawn_particles(e, dt)
-    local emitter = e._emitter
-    local spawn = emitter.spawn
-    for _=1, calc_spawn_num(spawn, dt) do
-        emitter.handle:spawn(emitter.transform)
-    end
+    local trans = e._rendercache.transform
+    local eh = e._emitter.handle
+    eh:step(dt)
+    while (0 ~= eh:spawn(trans)) do end
 end
 
 function particle_sys:ui_update()

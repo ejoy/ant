@@ -4,9 +4,17 @@
 class particle_emitter {
 public:
     particle_emitter() = default;
-    void spawn(const glm::mat4 &transform);
+    bool update(float dt);
+    bool isdead() const { return mlife.isdead(); }
+    uint32_t spawn(const glm::mat4 &transform);
 
+private:
+    void step(float dt);
+    bool update_lifetime(float dt) { return mlife.update(dt); }
+public:
     struct spawndata {
+        spawndata() : count(0), rate(1.f){}
+        //TODO: we need interp spawn count by lifetime
         uint32_t    count;
         float       rate;
 
@@ -40,6 +48,19 @@ public:
 
         init_attributes     init;
         interp_attributes   interp;
+
+        // step data
+        struct step_data{
+            step_data() : count(0), loop(0.f){}
+            uint32_t    count;
+            float       loop;
+        };
+        step_data step;
     };
-    spawndata mspawn;
+    spawndata   mspawn;
+    lifedata    mlife;
+    struct subuv {
+        glm::vec2 subuv_dim;
+    };
+    subuv   msubuv_setting;
 };

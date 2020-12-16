@@ -236,16 +236,28 @@ void particle_mgr::submit_buffer(){
 			m = glm::translate(*translation) * m;
 
 		quaddata& q = quads[iq];
-		const auto quv = sibling_component<particles::uv>(ID_TAG_render_quad, iq);
-
-		//TODO: calculate subuv by subuv->index
-		const auto qsubuv = sibling_component<particles::subuv>(ID_TAG_render_quad, iq);
-		const auto qclr = sibling_component<particles::color>(ID_TAG_render_quad, iq);
-
+		const auto &dq = quaddata::default_quad();
 		for (int ii=0; ii<4; ++ii){
-			q[ii].uv = quv->uv[ii];
-			q[ii].color = *((uint32_t*)&qclr);
+			q[ii].p = dq[ii].p;
+			q.transform(m);
 		}
+		
+		const auto quv = sibling_component<particles::uv>(ID_TAG_render_quad, iq);
+		if (quv){
+			for (int ii=0; ii<4; ++ii){
+				q[ii].uv = quv->uv[ii];
+			}
+		}
+		//TODO: calculate subuv by subuv->index
+		//const auto qsubuv = sibling_component<particles::subuv>(ID_TAG_render_quad, iq);
+		
+		const auto qclr = sibling_component<particles::color>(ID_TAG_render_quad, iq);
+		if (qclr){
+			for (int ii=0; ii<4; ++ii){
+				q[ii].color = *((uint32_t*)&qclr);
+			}
+		}
+
 	}
 
 	mrenderdata.qb.submit(tvb);

@@ -65,6 +65,7 @@ struct lifedata {
     }
 
     inline bool isdead() const { return process >= tick; }
+    inline bool update(float dt) { current += dt; return update_process(); }
     inline bool update_process() {
         process = which_process(current);
         return isdead();

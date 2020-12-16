@@ -35,13 +35,23 @@ get_emitter(lua_State *L, int index){
 
 static int
 lemitter_spawn(lua_State *L){
-    return 0;
+    auto e = get_emitter(L, 1);
+    const glm::mat4 &m = *(glm::mat4*)lua_touserdata(L, 2);
+    return e->spawn(m);
 }
 
 static int
 lemitter_del(lua_State *L){
     auto e = get_emitter(L, 1);
     e->~particle_emitter();
+    return 0;
+}
+
+static int
+lemitter_update(lua_State *L){
+    auto e = get_emitter(L, 1);
+    const float dt = (float)luaL_checknumber(L, 2);
+    e->update(dt);
     return 0;
 }
 
@@ -56,6 +66,7 @@ leffect_create_emitter(lua_State *L){
         lua_setfield(L, -2, "__index");
 
         luaL_Reg l[] = {
+            {"step", lemitter_update},
             {"spawn", lemitter_spawn},
             {"__gc", lemitter_del},
             {nullptr, nullptr,},
@@ -66,15 +77,33 @@ leffect_create_emitter(lua_State *L){
 
     lua_setmetatable(L, -2);
 
-    comp_ids ids;
-    for(lua_pushnil(L); lua_next(L, -2); lua_pop(L, 1)){
-        if (LUA_TSTRING == lua_type(L, -2)){
-            const std::string key = lua_tostring(L, -2);
-            auto reader = find_attrib_reader(key);
-            reader(L, -1, e, ids);
-        }
+    if (LUA_TTABLE == lua_getfield(L, 1, "lifetime")){
+        interpolation::init_valueT<float> iv;
+        lua_struct::unpack(L, -1, iv);
+        e->mlife.set(iv.get(randomobj()()));
+    } else {
+        luaL_error(L, "invalid 'lifetime' data");
     }
+    lua_pop(L, 1);
 
+    if (LUA_TTABLE == lua_getfield(L, 1, "subuv_setting")){
+        lua_struct::unpack(L, -1, e->msubuv_setting.subuv_dim);
+    }
+    lua_pop(L, 1);
+
+    if (LUA_TTABLE == lua_getfield(L, 1, "spawn")){
+        comp_ids ids;
+        for(lua_pushnil(L); lua_next(L, -2); lua_pop(L, 1)){
+            if (LUA_TSTRING == lua_type(L, -2)){
+                const std::string key = lua_tostring(L, -2);
+                auto reader = find_attrib_reader(key);
+                reader(L, -1, e, ids);
+            }
+        }
+    } else {
+        luaL_error(L, "invalid 'spawn' data");
+    }
+    lua_pop(L, 1);
     return 1;
 }
 

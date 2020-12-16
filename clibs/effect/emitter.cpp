@@ -3,20 +3,44 @@
 #include "random.h"
 #include "particle_mgr.h"
 #include "particle.inl"
+#include "lua2struct.h"
 
-static void
+LUA2STRUCT(struct particle_emitter::spawndata, count, rate);
+
+static inline void
 check_add_id(comp_ids &ids, component_id id){
 	assert(std::find(ids.begin(), ids.end(), id) == ids.end());
 	ids.push_back(id);
 }
 
-using create_attrib = std::function<void (const particle_emitter::spawndata&, const glm::mat4&, randomobj &, comp_ids &)>;
+bool
+particle_emitter::update(float dt){
+	step(dt);
+	return update_lifetime(dt);
+}
 
 void
+particle_emitter::step(float dt){
+	auto delta_spawn = [](auto &spawn){
+		auto t = std::fmodf(spawn.step.loop, spawn.rate);
+		auto step = t / spawn.rate;
+		return (uint32_t)(step * spawn.count);
+	};
+
+	auto already_spawned = delta_spawn(mspawn);
+	mspawn.step.loop += dt;
+	auto totalnum = delta_spawn(mspawn);
+	mspawn.step.count = totalnum - already_spawned;
+}
+
+uint32_t
 particle_emitter::spawn(const glm::mat4 &transform){
+	if (0 == mspawn.step.count)
+		return 0;
+
 	randomobj ro;
 
-	auto transform_init_value = [&transform](auto &iv, float e4){
+	auto transform_init_value = [&transform](const interpolation::f3_init_value &iv, float e4){
 		auto tmp = iv;
 		tmp.minv = transform * glm::vec4(tmp.minv, e4);
 		tmp.maxv = transform * glm::vec4(tmp.maxv, e4);
@@ -24,7 +48,7 @@ particle_emitter::spawn(const glm::mat4 &transform){
 		return tmp;
 	};
 
-	auto transform_interp_value = [&transform](auto& iv, float e4) {
+	auto transform_interp_value = [&transform](const interpolation::f3_interpolator& iv, float e4) {
 		auto tmp = iv;
 		tmp.scale = transform * glm::vec4(tmp.scale, e4);
 		return tmp;
@@ -142,4 +166,5 @@ particle_emitter::spawn(const glm::mat4 &transform){
 	}
 
     particle_mgr::get().add(ids);
+	return --mspawn.step.count;
 }
