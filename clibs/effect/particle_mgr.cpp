@@ -247,6 +247,10 @@ uint32_t particle_mgr::submit_buffer(){
 			for (int ii=0; ii<4; ++ii){
 				q[ii].uv = quv->uv[ii];
 			}
+		} else {
+			for (int ii=0; ii<4; ++ii){
+				q[ii].uv = dq[ii].uv;
+			}
 		}
 		//TODO: calculate subuv by subuv->index
 		//const auto qsubuv = sibling_component<particles::subuv>(ID_TAG_render_quad, iq);
