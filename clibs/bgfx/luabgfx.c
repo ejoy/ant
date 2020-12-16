@@ -670,6 +670,7 @@ push_supported(lua_State *L, uint64_t supported) {
 		CAPSNAME(GRAPHICS_DEBUGGER)     // Graphics debugger is present.
 		CAPSNAME(HDR10)                 // HDR10 rendering is supported.
 		CAPSNAME(HIDPI)                 // HiDPI rendering is supported.
+		CAPSNAME(IMAGE_RW)              // Image Read/Write is supported.
 		CAPSNAME(INDEX32)               // 32-bit indices are supported.
 		CAPSNAME(INSTANCING)            // Instancing is supported.
 		CAPSNAME(OCCLUSION_QUERY)       // Occlusion query is supported.
