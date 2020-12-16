@@ -61,8 +61,8 @@ void quaddata::translate(const glm::vec3 &t){
 }
 
 void quad_buffer::alloc(uint32_t numquad, bgfx_transient_vertex_buffer_t &tvb){
-    const uint32_t bufsize = numquad * sizeof(quad_vertex) * 4;
-    BGFX(alloc_transient_vertex_buffer)(&tvb, bufsize, layout);
+    const uint32_t numv = numquad * 4;
+    BGFX(alloc_transient_vertex_buffer)(&tvb, numv, layout);
 }
 
 void quad_buffer::submit(const bgfx_transient_vertex_buffer_t &tvb){

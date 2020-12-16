@@ -42,7 +42,7 @@ system "particle_system"
     .implement "particle.lua"
     .require_policy "particle_system"
     .require_policy "particle_emitter"
-    .method "posinit"
+    .method "post_init"
     .method "ui_update"
 
 transform "create_particle_emitters"

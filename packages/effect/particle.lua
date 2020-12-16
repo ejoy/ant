@@ -47,36 +47,14 @@ function emitter_trans.process_entity(e)
         end
     end
 
-    local function create_lifetime(interp_lifetime)
-        local time
-        if interp_lifetime.interp_type == "const" then
-            time = interp_lifetime.minv
-        elseif interp_lifetime.interp_type == "linear" then
-            math.randomseed(os.time())
-            time = interp_lifetime.minv + (interp_lifetime.maxv - interp_lifetime.minv) * math.random()
-        end
-
-        return {
-            current = 0,
-            time = time,
-        }
-    end
-
-    local emitter = e.emitter
     e._emitter = {
-        spawn = {
-            count = emitter.spawn.count,
-            rate = emitter.spawn.rate,
-            spawn_loop = 0,
-        },
-        lifetime    = create_lifetime(e.emitter.lifetime),
-        handle      = effect.create_emitter(e.emitter.spawn)
+        handle      = effect.create_emitter(e.emitter)
     }
 end
 
 local particle_sys = ecs.system "particle_system"
 
-function particle_sys:posinit()
+function particle_sys:post_init()
     local viewid = world:singleton_entity "main_queue".render_target.viewid
     effect.init {
         viewid      = viewid,
@@ -104,18 +82,18 @@ local itimer = world:interface "ant.timer|timer"
 --     return totalnum - already_spawned
 -- end
 
-local function spawn_particles(e, dt)
-    local trans = e._rendercache.transform
+local function update_emitter(e, dt)
+    local srt = e._rendercache.srt
     local eh = e._emitter.handle
-    eh:step(dt)
-    while (0 ~= eh:spawn(trans)) do end
+    eh:update(dt)
+    while (0 ~= eh:spawn(srt.p)) do end
 end
 
 function particle_sys:ui_update()
     local dt = itimer.delta() * 0.001
     for _, eid in world:each "emitter" do
         local e = world[eid]
-        spawn_particles(e)
+        update_emitter(e, dt)
     end
 
     effect.update_particles(dt)

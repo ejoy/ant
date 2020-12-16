@@ -5,7 +5,9 @@ policy:
 data:
     name: emitter1
     material: /pkg/ant.resources/materials/particle/particle.material
-    transform:{}
+    transform:{
+        t: {2.0, 0.0, 0.0}
+    }
     scene_entity: true
     state: 1
     emitter:
@@ -48,12 +50,12 @@ data:
                 interp_type: linear
                 minv: {1.0, 0.0, 0.0}
                 maxv: {0.0, 1.0, 1.0}
-            subuv:
-                dimension: {8, 8}
-            subuv_index_over_life:
-                interp_type: linear
-                minv: 0
-                maxv: 63
-            uv_motion:
-                interp_type: const
-                value: {0.2, 0.3}
+#            subuv:
+#                dimension: {8, 8}
+#            subuv_index_over_life:
+#                interp_type: linear
+#                minv: 0
+#                maxv: 63
+#            uv_motion:
+#                interp_type: const
+#                value: {0.2, 0.3}

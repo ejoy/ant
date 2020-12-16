@@ -40,7 +40,7 @@ public:
     render_data& get_rd() { return mrenderdata; }
 private:
     void submit_render();
-    void submit_buffer();
+    uint32_t submit_buffer();
 public:
     void update(float dt);
 private:

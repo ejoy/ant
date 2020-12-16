@@ -30,7 +30,7 @@ particle_emitter::step(float dt){
 	auto already_spawned = delta_spawn(mspawn);
 	mspawn.step.loop += dt;
 	auto totalnum = delta_spawn(mspawn);
-	mspawn.step.count = totalnum - already_spawned;
+	mspawn.step.count = (totalnum < already_spawned ? mspawn.count : totalnum) - already_spawned;
 }
 
 uint32_t
@@ -95,6 +95,9 @@ particle_emitter::spawn(const glm::mat4 &transform){
 			check_add_id(ids, particle_mgr::get().add_component(
 				particles::uv_motion(mspawn.init.uv_motion.get(ro()))
 			));
+		} break;
+		case ID_subuv:{
+
 		} break;
 		case ID_color:{
 			particles::color c;

@@ -37,7 +37,9 @@ static int
 lemitter_spawn(lua_State *L){
     auto e = get_emitter(L, 1);
     const glm::mat4 &m = *(glm::mat4*)lua_touserdata(L, 2);
-    return e->spawn(m);
+    lua_pushinteger(L, e->spawn(m));
+    return 1;
+
 }
 
 static int
@@ -61,12 +63,12 @@ leffect_create_emitter(lua_State *L){
 
     auto e = (particle_emitter*)lua_newuserdatauv(L, sizeof(particle_emitter), 0);
     new (e) particle_emitter();
-    if (0 == luaL_newmetatable(L, "PARTICLE_EMITTER")){
-        lua_pushvalue(L, 1);
+    if (luaL_newmetatable(L, "PARTICLE_EMITTER")){
+        lua_pushvalue(L, -1);
         lua_setfield(L, -2, "__index");
 
         luaL_Reg l[] = {
-            {"step", lemitter_update},
+            {"update", lemitter_update},
             {"spawn", lemitter_spawn},
             {"__gc", lemitter_del},
             {nullptr, nullptr,},
@@ -92,6 +94,8 @@ leffect_create_emitter(lua_State *L){
     lua_pop(L, 1);
 
     if (LUA_TTABLE == lua_getfield(L, 1, "spawn")){
+        lua_struct::unpack(L, -1, e->mspawn);
+
         comp_ids ids;
         for(lua_pushnil(L); lua_next(L, -2); lua_pop(L, 1)){
             if (LUA_TSTRING == lua_type(L, -2)){

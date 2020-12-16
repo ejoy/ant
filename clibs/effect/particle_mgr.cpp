@@ -215,9 +215,10 @@ particle_mgr::update_uv_motion(float dt){
 	}
 }
 
-void particle_mgr::submit_buffer(){
+uint32_t particle_mgr::submit_buffer(){
 	const int n = particlesystem_count(mmgr, ID_TAG_render_quad);
-
+	if (n == 0)
+		return 0;
 	bgfx_transient_vertex_buffer_t tvb;
 	mrenderdata.qb.alloc(n, tvb);
 
@@ -238,8 +239,7 @@ void particle_mgr::submit_buffer(){
 		quaddata& q = quads[iq];
 		const auto &dq = quaddata::default_quad();
 		for (int ii=0; ii<4; ++ii){
-			q[ii].p = dq[ii].p;
-			q.transform(m);
+			q[ii].p = m * glm::vec4(dq[ii].p, 1.f);
 		}
 		
 		const auto quv = sibling_component<particles::uv>(ID_TAG_render_quad, iq);
@@ -250,7 +250,7 @@ void particle_mgr::submit_buffer(){
 		}
 		//TODO: calculate subuv by subuv->index
 		//const auto qsubuv = sibling_component<particles::subuv>(ID_TAG_render_quad, iq);
-		
+
 		const auto qclr = sibling_component<particles::color>(ID_TAG_render_quad, iq);
 		if (qclr){
 			for (int ii=0; ii<4; ++ii){
@@ -261,12 +261,16 @@ void particle_mgr::submit_buffer(){
 	}
 
 	mrenderdata.qb.submit(tvb);
+	return n;
 }
 
 void
 particle_mgr::submit_render(){
+	if (0 == submit_buffer())
+		return;
+
 	BGFX(set_state(uint64_t(BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA), 0));
-	submit_buffer();
+	
 
 	for (size_t ii=0; ii<mrenderdata.textures.size(); ++ii){
 		const auto &t = mrenderdata.textures[ii];
