@@ -2,6 +2,7 @@
 #include "lua2struct.h"
 #include "particle.inl"
 #include "particle_mgr.h"
+#include "debug_print.h"
 
 extern bgfx_interface_vtbl_t* ibgfx();
 #define BGFX(_API) ibgfx()->_API
@@ -224,11 +225,12 @@ uint32_t particle_mgr::submit_buffer(){
 		const auto quv		= sibling_component<particles::uv>(ID_TAG_render_quad, iq);
 		const auto qsubuv	= sibling_component<particles::subuv>(ID_TAG_render_quad, iq);
 		const auto qclr		= sibling_component<particles::color>(ID_TAG_render_quad, iq);
+
 		for (int ii=0; ii<4; ++ii){
 			q[ii].p		= m * glm::vec4(dq[ii].p, 1.f);
 			q[ii].uv	= quv->uv[ii];
 			q[ii].subuv = qsubuv->uv[ii];
-			q[ii].color = *((uint32_t*)&qclr);
+			q[ii].color = *(uint32_t*)(&qclr->r);
 		}
 	}
 

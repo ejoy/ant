@@ -16,8 +16,8 @@ data:
             minv: 30
             maxv: 40
         spawn:
-            count:  1
-            rate:   1.0
+            count:  2
+            rate:   1
             init_lifetime:
                 interp_type: const
                 value: 10
@@ -30,9 +30,9 @@ data:
                     value: {1.0, 1.0, 1.0, 1.0}
             init_velocity:
                 interp_type: const
-                value: {0.0, 1.0, 0.0}
-            subuv_index:
-                dimension: {8, 8}
-                rate: 
-                    interp_type:const
-                    value: 1
+                value: {0.0, 2.0, 0.0}
+#           subuv_index:
+#               dimension: {4, 4}
+#               rate: 
+#                   interp_type:const
+#                   value: 1
