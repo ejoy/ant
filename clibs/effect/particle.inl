@@ -33,7 +33,7 @@ class component_arrayT : public component_array_baseT<T> {
 public:
 	virtual ~component_arrayT() = default;
 	void move(int from, int to){
-		this->mdata[from] = this->mdata[to];
+		this->mdata[to] = this->mdata[from];
 	}
 
 	void shrink(int n) {

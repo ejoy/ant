@@ -40,7 +40,7 @@ using comp_ids = std::vector<component_id>;
 template<class T>
 inline constexpr T pow(const T base, const uint32_t exponent){
     uint32_t v = 1;
-    for(uint32_t ii=1; ii<exponent; ++ii){
+    for(uint32_t ii=0; ii<exponent; ++ii){
         v *= base;
     }
     return v;
@@ -51,20 +51,31 @@ struct lifedata {
     static const uint32_t       MAX_PROCESS_BITS = 10;
     static const uint32_t       MAX_TICK_BITS = 22;
     static const uint32_t       MAX_PROCESS = pow(2, MAX_PROCESS_BITS);
+    static const uint32_t       LAST_PROCESS = MAX_PROCESS-1;
 
     static inline uint32_t time2tick(float t_in_second) {
-        return uint32_t(t_in_second / FREQUENCY + 0.5 / FREQUENCY);
+        return uint32_t(t_in_second / FREQUENCY + 0.5f);
+    }
+
+    static inline float tick2time(uint32_t tick){
+        return float(FREQUENCY * tick);
+    }
+
+    inline float lifetime() const {
+        return tick2time(tick);
     }
 
     inline uint32_t which_process(float t_in_second) const {
-        return uint32_t((time2tick(t_in_second) / float(tick)) * MAX_PROCESS);
+        const uint32_t t = time2tick(t_in_second);
+        const float p = t/float(tick);
+        return std::min(uint32_t(p * MAX_PROCESS+0.5f), LAST_PROCESS);
     }
 
     inline uint32_t delta_process(float dt) const {
         return which_process(current + dt) - process;
     }
 
-    inline bool isdead() const { return process >= tick; }
+    inline bool isdead() const { return process == LAST_PROCESS; }
     inline bool update(float dt) { current += dt; return update_process(); }
     inline bool update_process() {
         process = which_process(current);

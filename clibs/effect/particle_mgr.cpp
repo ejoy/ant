@@ -30,57 +30,44 @@ namespace lua_struct{
 }
 
 #ifdef _DEBUG
-#include <sstream>
-#include <Windows.h>
 const char* g_component_names[ID_count] = {
-	"ID_life",
-	"ID_spawn",
-	"ID_velocity",
-	"ID_acceleration",
-	"ID_scale",
-	"ID_rotation",
-	"ID_translation",
-	"ID_uv_motion",
-	"ID_quad",
-	"ID_material",
+    "ID_life = 0",
+    "ID_spawn",
+    "ID_velocity",
+    "ID_acceleration",
+    "ID_scale",
+    "ID_rotation",
+    "ID_translation",
+    "ID_color",
+    "ID_uv",
+    "ID_uv_motion",
+    "ID_subuv",
+    "ID_material",
 
-	"ID_velocity_interpolator",
-	"ID_acceleration_interpolator",
-	"ID_scale_interpolator",
-	"ID_rotation_interpolator",
-	"ID_translation_interpolator",
-	"ID_uv_motion_interpolator",
-	"ID_color_interpolator",
+    "ID_velocity_interpolator",
+    "ID_acceleration_interpolator",
+    "ID_scale_interpolator",
+    "ID_rotation_interpolator",
+    "ID_translation_interpolator",
+    "ID_uv_motion_interpolator",
+    "ID_color_interpolator",
+    "ID_subuv_index_interpolator",
 
-	"ID_TAG_emitter",
-	"ID_TAG_render_quad",
-	"ID_TAG_material",
+    "ID_TAG_emitter",
+    "ID_TAG_render_quad",
+    "ID_TAG_material",
 };
+
+const char* get_component_name(component_id id){
+	return g_component_names[id];
+}
 
 static_assert(ID_count == sizeof(g_component_names)/sizeof(g_component_names[0]));
 
 static inline const char*
 component_id_name(component_id id) { return g_component_names[id]; }
 
-static void
-debug_print2(std::ostringstream &oss){
-	oss << std::endl;
-	OutputDebugStringA(oss.str().c_str());
-}
 
-template<typename T, typename ...Args>
-static void
-debug_print2(std::ostringstream &oss, const T &t, Args... args){
-	oss << t << "\t";
-	debug_print2(oss, args...);
-}
-
-template<typename ...Args>
-static void
-debug_print(Args... args){
-	std::ostringstream oss;
-	debug_print2(oss, args...);
-}
 #endif //_DEBUG
 
 particle_mgr::particle_mgr()
@@ -133,9 +120,8 @@ particle_mgr::update_lifetime(float dt){
 	for (size_t ii=0; ii<lifes.size(); ++ii){
 		auto &c = lifes[ii];
 		c.current += dt;
-		if (c.update_process()){
+		if (c.update_process())
 			remove_particle((uint32_t)ii);
-		}
     }
 }
 
