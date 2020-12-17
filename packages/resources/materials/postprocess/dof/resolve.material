@@ -6,5 +6,5 @@ properties:
     u_dof_param:{0.0, 0.0, 0.0, 0.0}
     s_scatterBuffer:
         stage: 0
-        texture: /pkg/ant.resources/materials/textures/default.texture
+        texture: /pkg/ant.resources/textures/default.texture
 state: /pkg/ant.resources/materials/postprocess/postprocess.state

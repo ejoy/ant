@@ -5,7 +5,7 @@ fx:
 properties:
   s_tex:
     stage: 0
-    texture: /pkg/ant.resources/materials/textures/default.texture
+    texture: /pkg/ant.resources/textures/default.texture
 state:
   ALPHA_REF: 0
   CULL: NONE

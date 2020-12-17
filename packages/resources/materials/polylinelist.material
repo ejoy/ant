@@ -7,7 +7,7 @@ fx:
 properties:
     s_tex:
         stage: 0
-        texture: /pkg/ant.resources/materials/textures/default.texture
+        texture: /pkg/ant.resources/textures/default.texture
     u_color:     {0.8, 0.8, 0.8, 1.0}
     u_line_info: {5.0, 1.0, 0.08, 0.0}  #xyz: linewidth, visible, 0, 0
     u_tex_param: {1.0, 1.0, 0.0, 0.0}   #xy: repeat, z: enable texture

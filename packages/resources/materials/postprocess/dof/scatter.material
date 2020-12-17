@@ -6,13 +6,13 @@ properties:
     u_bokeh_sides: {0.0, 0.0, 0.0, 0.0}
     s_nearBuffer:
         stage:0
-        texture: /pkg/ant.resources/materials/textures/default.texture
+        texture: /pkg/ant.resources/textures/default.texture
     s_farBuffer:
         stage:1
-        texture: /pkg/ant.resources/materials/textures/default.texture
+        texture: /pkg/ant.resources/textures/default.texture
     s_cocBuffer:
         stage:2
-        texture: /pkg/ant.resources/materials/textures/default.texture
+        texture: /pkg/ant.resources/textures/default.texture
 state:
     CULL: CCW
     DEPTH_TEST: ALWAYS

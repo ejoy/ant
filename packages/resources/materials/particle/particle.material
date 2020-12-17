@@ -3,10 +3,15 @@ fx:
   vs: /pkg/ant.resources/shaders/particles/vs_particle.sc
   setting:
     surfacetype: translucent
+    macros:
+      SUB_TEX
 properties:
   s_tex:
     stage: 0
-    texture: /pkg/ant.resources/materials/textures/default.texture
+    texture: /pkg/ant.resources/materials/textures/default/1x1_white.texture
+  s_subtex:
+    stage: 1
+    texture: /pkg/ant.resources/textures/particles/num4x4.texture
 state:
     CULL: NONE
     DEPTH_TEST: ALWAYS

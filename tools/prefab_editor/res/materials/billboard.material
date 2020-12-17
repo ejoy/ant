@@ -6,7 +6,7 @@ fx:
 properties:
   s_basecolor:
     stage: 0
-    texture: ../texture/default.texture
+    texture: /pkg/ant.resources/textures/default.texture
   u_color: {1, 1, 1, 1}
 state:
   ALPHA_REF: 0

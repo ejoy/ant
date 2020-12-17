@@ -7,7 +7,7 @@ $input v_texcoord0, v_color0
 
 SAMPLER2D(s_tex, 0);
 #ifdef SUB_TEX
-SAMPLER2D(s_subtex, 0);
+SAMPLER2D(s_subtex, 1);
 #endif //SUB_TEX
 
 void main()
