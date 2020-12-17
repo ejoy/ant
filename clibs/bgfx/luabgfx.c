@@ -17,7 +17,7 @@
 #include "bgfx_alloc.h"
 #include "transient_buffer.h"
 
-#if BGFX_API_VERSION != 111
+#if BGFX_API_VERSION != 112
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -3035,17 +3035,23 @@ lallocTB(lua_State *L) {
 	int max_v = luaL_checkinteger(L, 2);
 	int max_i = 0;
 	int vd_index = 3;
+	int index32 = 0;
 	if (lua_isinteger(L, 3)) {
 		// alloc index
 		max_i = lua_tointeger(L, 3);
-		vd_index = 4;
+		if (lua_isboolean(L, 4)) {
+			index32 = lua_toboolean(L, 4);
+			vd_index = 5;
+		} else {
+			vd_index = 4;
+		}
 	}
 	const bgfx_vertex_layout_t *vd = NULL;
 	if (max_v) {
 		vd = get_layout(L, vd_index);
 	}
 
-	if (max_v && max_i) {
+	if (max_v && max_i && index32 == 0) {
 		if (!BGFX(alloc_transient_buffers)(&v->tvb, vd, max_v, &v->tib, max_i)) {
 			v->cap_v = 0;
 			v->cap_i = 0;
@@ -3056,11 +3062,12 @@ lallocTB(lua_State *L) {
 			BGFX(alloc_transient_vertex_buffer)(&v->tvb, max_v, vd);
 		}
 		if (max_i) {
-			BGFX(alloc_transient_index_buffer)(&v->tib, max_i);
+			BGFX(alloc_transient_index_buffer)(&v->tib, max_i, index32);
 		}
 	}
 	v->cap_v = max_v;
 	v->cap_i = max_i;
+	v->index32 = (char)index32;
 
 	lua_pushlightuserdata(L, v->tvb.data);
 	lua_pushlightuserdata(L, v->tib.data);
@@ -3160,15 +3167,28 @@ static int
 lpackTIB(lua_State *L) {
 	struct transient_buffer *v = luaL_checkudata(L, 1, "BGFX_TB");
 	luaL_checktype(L, 2, LUA_TTABLE);
-	uint16_t* indices = (uint16_t*)v->tib.data;
-	int i;
-	for (i=0;i<v->cap_i;i++) {
-		if (lua_geti(L, 2, i+1) != LUA_TNUMBER) {
-			luaL_error(L, "Invalid index buffer data %d", i+1);
+	if (v->index32) {
+		uint32_t* indices = (uint32_t*)v->tib.data;
+		int i;
+		for (i=0;i<v->cap_i;i++) {
+			if (lua_geti(L, 2, i+1) != LUA_TNUMBER) {
+				luaL_error(L, "Invalid index32 buffer data %d", i+1);
+			}
+			uint32_t v = (uint32_t)lua_tointeger(L, -1);
+			lua_pop(L, 1);
+			indices[i] = (uint32_t)v;
 		}
-		int v = lua_tointeger(L, -1);
-		lua_pop(L, 1);
-		indices[i] = (uint16_t)v;
+	} else {
+		uint16_t* indices = (uint16_t*)v->tib.data;
+		int i;
+		for (i=0;i<v->cap_i;i++) {
+			if (lua_geti(L, 2, i+1) != LUA_TNUMBER) {
+				luaL_error(L, "Invalid index buffer data %d", i+1);
+			}
+			int v = lua_tointeger(L, -1);
+			lua_pop(L, 1);
+			indices[i] = (uint16_t)v;
+		}
 	}
 
 	return 0;
