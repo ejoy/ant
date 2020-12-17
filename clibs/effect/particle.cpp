@@ -7,8 +7,6 @@
 
 #include "lua2struct.h"
 
-LUA2STRUCT(struct subuvdata, dimension);
-
 particles::particles(){
 	create_array<particles::life>();
 	create_array<particles::velocity>();
@@ -19,15 +17,14 @@ particles::particles(){
 	create_array<particles::uv>();
 	create_array<particles::uv_motion>();
 	create_array<particles::subuv>();
+	create_array<particles::subuv_motion>();
 	create_array<particles::color>();
 	create_array<particles::material>();
 	
 	create_array<particles::velocity_interpolator>();
 	create_array<particles::acceleration_interpolator>();
 	create_array<particles::scale_interpolator>();
-	//create_array<particles::rotation_interpolator>();
 	create_array<particles::translation_interpolator>();
-	create_array<particles::subuv_index_interpolator>();
 	create_array<particles::color_interpolator>();
 }
 

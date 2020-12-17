@@ -21,6 +21,33 @@ namespace lua_struct {
         return isvaild;
     }
 
+    template <int NUM, typename ELEMTYPE>
+    void unpack_vec(lua_State* L, int idx, glm::vec<NUM, ELEMTYPE, glm::defaultp>& v) {
+        luaL_checktype(L, idx, LUA_TTABLE);
+        const int len = (int)luaL_len(L, idx);
+        if (len < NUM) {
+            luaL_error(L, "invalid vec: %d", len);
+        }
+        for (int ii = 0; ii < NUM; ++ii) {
+            lua_geti(L, idx, ii + 1);
+            v[ii] = (ELEMTYPE)lua_tonumber(L, -1);
+            lua_pop(L, 1);
+        }
+    }
+
+#define DEF_VEC_UNPACK(_VECTYPE) template<>\
+    void unpack(lua_State* L, int index, _VECTYPE &v, void*) {\
+        unpack_vec(L, index, v);\
+    }\
+    template<>\
+    void pack(lua_State* L, const _VECTYPE &v, void*) {}
+
+    DEF_VEC_UNPACK(glm::ivec2);
+    DEF_VEC_UNPACK(glm::u8vec2);
+    DEF_VEC_UNPACK(glm::vec2);
+    DEF_VEC_UNPACK(glm::vec3);
+    DEF_VEC_UNPACK(glm::vec4);
+
     template<typename T>
     void unpack_interp_value(lua_State* L, int index, interpolation::init_valueT<T> &iv) {
         luaL_checktype(L, index, LUA_TTABLE);
@@ -46,6 +73,17 @@ namespace lua_struct {
             luaL_error(L, "invalid 'interp_type'");
         }
     }
+
+#define DEF_INTERP_VALUE_UNPACK(_INTERPTYPE) \
+    template<>\
+    void unpack(lua_State* L, int index, _INTERPTYPE &iv, void*) {\
+        unpack_interp_value(L, index, iv);\
+    }
+
+    DEF_INTERP_VALUE_UNPACK(interpolation::init_valueT<float>);
+    DEF_INTERP_VALUE_UNPACK(interpolation::init_valueT<uint16_t>);
+    DEF_INTERP_VALUE_UNPACK(interpolation::f2_init_value);
+    DEF_INTERP_VALUE_UNPACK(interpolation::f3_init_value);
 
     template<>
     void unpack(lua_State* L, int index, interpolation::color_init_value &civ, void*) {
@@ -105,42 +143,31 @@ namespace lua_struct {
         }
     }
 
-#define DEF_INTERP_VALUE_UNPACK(_INTERPTYPE) \
-    template<>\
-    void unpack(lua_State* L, int index, _INTERPTYPE &iv, void*) {\
-        unpack_interp_value(L, index, iv);\
-    }
-
-    DEF_INTERP_VALUE_UNPACK(interpolation::init_valueT<float>);
-    DEF_INTERP_VALUE_UNPACK(interpolation::init_valueT<uint16_t>);
-    DEF_INTERP_VALUE_UNPACK(interpolation::f2_init_value);
-    DEF_INTERP_VALUE_UNPACK(interpolation::f3_init_value);
-
-    template <int NUM, typename ELEMTYPE>
-    void unpack_vec(lua_State* L, int idx, glm::vec<NUM, ELEMTYPE, glm::defaultp>& v) {
-        luaL_checktype(L, idx, LUA_TTABLE);
-        const int len = (int)luaL_len(L, idx);
-        if (len < NUM) {
-            luaL_error(L, "invalid vec: %d", len);
-        }
-        for (int ii = 0; ii < NUM; ++ii) {
-            lua_geti(L, idx, ii + 1);
-            v[ii] = (ELEMTYPE)lua_tonumber(L, -1);
+    template<>
+    void unpack(lua_State *L, int index, interpolation::uv_motion_init_value &uvm_iv, void*){
+        if (LUA_TTABLE == lua_getfield(L, index, "dimension")){
+            uvm_iv.type = uv_motion::mt_index;
+            unpack(L, -1, uvm_iv.index.dim);
             lua_pop(L, 1);
+
+            if (LUA_TTABLE == lua_getfield(L, index, "rate")){
+                unpack(L, index, uvm_iv.index.rate);
+            } else {
+                luaL_error(L, "invalid 'rate'");
+            }
+            lua_pop(L, 1);
+        } else {
+            lua_pop(L, 1);  // pop for 'dimension'
+            if (LUA_TSTRING == lua_getfield(L, index, "interp_type")){
+                uvm_iv.type = uv_motion::mt_speed;
+            } else {
+                luaL_error(L, "invalid data, need define 'dimension'&'rate' for uv_index or 'interp_type' for uv_speed");
+            }
+            lua_pop(L, 1);
+            unpack(L, index, uvm_iv.speed);
         }
     }
 
-#define DEF_VEC_UNPACK(_VECTYPE) template<>\
-    void unpack(lua_State* L, int index, _VECTYPE &v, void*) {\
-        unpack_vec(L, index, v);\
-    }\
-    template<>\
-    void pack(lua_State* L, const _VECTYPE &v, void*) {}
-
-    DEF_VEC_UNPACK(glm::ivec2);
-    DEF_VEC_UNPACK(glm::vec2);
-    DEF_VEC_UNPACK(glm::vec3);
-    DEF_VEC_UNPACK(glm::vec4);
 }
 
 
@@ -208,15 +235,9 @@ std::unordered_map<std::string, readerop> g_attrib_map = {
         emitter->mspawn.init.components.push_back(particles::uv_motion::ID());
         lua_struct::unpack(L, index, emitter->mspawn.init.uv_motion);
     }),
-    std::make_pair("subuv", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
-        emitter->mspawn.init.components.push_back(particles::subuv::ID());
-        lua_struct::unpack(L, index, emitter->mspawn.init.subuv);
-    }),
-    std::make_pair("subuv_index_over_life", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
-        emitter->mspawn.interp.components.push_back(particles::subuv_index_interpolator::ID());
-        interpolation::init_valueT<uint16_t>  iv;
-        lua_struct::unpack(L, index, iv);
-        emitter->mspawn.interp.subuv_index.from_init_value(iv);
+    std::make_pair("subuv_index", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
+        emitter->mspawn.init.components.push_back(particles::subuv_motion::ID());
+        lua_struct::unpack(L, index, emitter->mspawn.init.subuv_motion);
     }),
 };
 

@@ -25,9 +25,9 @@ public:
             interpolation::f3_init_value        scale;
             interpolation::f3_init_value        translation;
             interpolation::f3_init_value        rotation;
-            interpolation::f2_init_value        uv_motion;
+            interpolation::uv_motion_init_value uv_motion;
+            interpolation::uv_motion_init_value subuv_motion;
             interpolation::color_init_value     color;
-            subuvdata                           subuv;
             materialdata                        material;
 
             comp_ids components;

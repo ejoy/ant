@@ -46,13 +46,11 @@ public:
 private:
     void update_lifetime(float dt);
     void update_velocity(float dt);
+    void update_uv_motion(float dt);
     void update_translation(float dt);
     void update_lifetime_scale(float dt);
     void update_lifetime_rotation(float dt);
     void update_lifetime_color(float dt);
-    void update_lifetime_subuv_index(float dt);
-    void update_uv_motion(float dt);
-    void update_quad_transform(float dt);
 
     template<typename T>
     T* sibling_component(component_id id, int ii);

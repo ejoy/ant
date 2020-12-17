@@ -6,7 +6,7 @@
 struct quad_vertex{
     glm::vec3   p;
     glm::vec2   uv;
-    glm::vec2   uv1;
+    glm::vec2   subuv;
     uint32_t    color;
 };
 

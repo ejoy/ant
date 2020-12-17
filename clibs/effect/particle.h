@@ -13,6 +13,7 @@ enum component_id : uint32_t {
     ID_uv,
     ID_uv_motion,
     ID_subuv,
+    ID_subuv_motion,
     ID_material,
 
     ID_key_count,
@@ -24,8 +25,8 @@ enum component_id : uint32_t {
     ID_rotation_interpolator,
     ID_translation_interpolator,
     ID_uv_motion_interpolator,
+    ID_subuv_motion_interpolator,
     ID_color_interpolator,
-    ID_subuv_index_interpolator,
     ID_interpolator_end,
 
     ID_component_count = ID_interpolator_end,
@@ -95,6 +96,52 @@ struct lifedata {
     float    current;
 };
 
+struct materialdata {
+    uint8_t idx;
+};
+
+struct quad_uv {
+    glm::vec2 uv[4];
+};
+
+struct uv_motion {
+    struct uv_index {
+        glm::u8vec2 dim;
+        uint16_t    idx;
+        float       rate;         // rate of move 'idx' by second
+    };
+    union {
+        uv_index index;
+        glm::vec2 speed;    //uv speed pre second
+    };
+    enum motion_type : uint8_t {
+        mt_speed = 0,
+        mt_index,
+    };
+
+    motion_type type;
+
+    void step(float dt, quad_uv& quv) {
+        if (type == mt_speed) {
+            for (auto& uv : quv.uv) {
+                uv += speed * dt;
+            }
+        }
+        else {
+            assert(type == mt_index);
+            index.idx += uint16_t(index.rate * dt + 0.5f);
+            const glm::vec2 step(1.f / index.dim.x, 1.f / index.dim.y);
+            const glm::u16vec2 uvpos(index.idx / index.dim.x, index.idx % index.dim.x);
+            auto uv = glm::vec2(uvpos) * step;
+            quv.uv[0] = uv;
+            quv.uv[1] = uv + glm::vec2(0.f, step.y);
+            quv.uv[2] = uv + glm::vec2(step.x, 0.f);
+            quv.uv[3] = uv + step;
+        }
+    }
+};
+
+
 namespace interpolation{
     template<typename T>
     struct init_valueT{
@@ -137,6 +184,18 @@ namespace interpolation{
         T rgba[4];
     };
 
+    struct uv_motion_init_value {
+        union {
+            struct uv_index{
+                init_valueT<float> rate;
+                glm::u8vec2 dim;
+            };
+            uv_index index;
+            init_valueT<glm::vec2> speed;
+        };
+        uv_motion::motion_type type;
+    };
+
     using f3_init_value         = init_valueT<glm::vec3>;
     using f2_init_value         = init_valueT<glm::vec2>;
     using color_init_value      = color_attributeT<init_valueT<float>>;
@@ -154,23 +213,6 @@ struct componentT : public T {
     static constexpr component_id ID() { return COMP_ID; }
 };
 
-struct materialdata {
-    uint8_t idx;
-};
-
-struct subuvdata{
-    glm::ivec2 dimension;
-    uint16_t index;
-};
-
-struct quad_location {
-    glm::vec3 v[4];
-};
-
-struct quad_uv {
-    glm::vec2 uv[4];
-};
-
 struct particle_manager;
 class component_array;
 struct particles{
@@ -182,16 +224,17 @@ struct particles{
     using translation               = componentT<glm::vec3,      ID_translation>;
     using color                     = componentT<glm::u8vec4,    ID_color>;
     using uv                        = componentT<quad_uv,        ID_uv>;
-    using uv_motion                 = componentT<glm::vec2,      ID_uv_motion>;
-    using subuv                     = componentT<subuvdata,      ID_subuv>;
+    using uv_motion                 = componentT<uv_motion,      ID_uv_motion>;
+    using subuv                     = componentT<quad_uv,        ID_subuv>;
+    using subuv_motion              = componentT<uv_motion,      ID_subuv_motion>;
     using material                  = componentT<materialdata,   ID_material>;
 
     using velocity_interpolator     = componentT<interpolation::f3_interpolator, ID_velocity_interpolator>;
     using acceleration_interpolator = componentT<interpolation::f3_interpolator, ID_acceleration_interpolator>;
     using scale_interpolator        = componentT<interpolation::f3_interpolator, ID_scale_interpolator>;
     using translation_interpolator  = componentT<interpolation::f3_interpolator, ID_translation_interpolator>;
-    using uv_motion_interpolator    = componentT<interpolation::f2_interpolator, ID_uv_motion>;
-    using subuv_index_interpolator  = componentT<interpolation::u16_interpolator, ID_subuv_index_interpolator>;
+    using uv_motion_interpolator    = componentT<interpolation::f2_interpolator, ID_uv_motion_interpolator>;
+    using subuv_motion_interpolator  = componentT<interpolation::u16_interpolator, ID_subuv_motion_interpolator>;
     using color_interpolator        = componentT<interpolation::color_interpolator, ID_color_interpolator>;
 
     particles();

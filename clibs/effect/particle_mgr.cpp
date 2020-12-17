@@ -179,26 +179,23 @@ particle_mgr::update_lifetime_color(float dt){
 }
 
 void
-particle_mgr::update_lifetime_subuv_index(float dt){
-	// const auto &subuv_index_interpolators = data<particles::subuv_index_interpolator>();
-	// for (int ii=0; ii<(int)subuv_index_interpolators.size(); ++ii){
-	// 	const auto &subuv_index = subuv_index_interpolators[ii];
-	// 	const auto subuv = sibling_component<particles::subuv>(ID_subuv_index_interpolator, ii);
-	// 	const auto life = sibling_component<particles::life>(ID_subuv_index_interpolator, ii);
-	// 	subuv->index = subuv_index.get(subuv->index, life->delta_process(dt));
-	// }
-}
-
-void
 particle_mgr::update_uv_motion(float dt){
-	const auto &uvmotions = data<particles::uv_motion>();
-	for (int ii=0; ii<(int)uvmotions.size(); ++ii){
-		auto& quv = *sibling_component<particles::uv>(ID_uv_motion, ii);
-		const auto &uvm = uvmotions[ii];
-		for (int ii=0; ii<4; ++ii){
-			quv.uv[ii] = dt * uvm;
+	auto update_uvmotions = [dt](auto& uvmotions, auto op) {
+		for (int ii = 0; ii < (int)uvmotions.size(); ++ii) {
+			auto& quv = op(ii);
+			auto& uvm = uvmotions[ii];
+			for (int ii = 0; ii < 4; ++ii) {
+				uvm.step(dt, quv);
+			}
 		}
-	}
+	};
+
+	update_uvmotions(data<particles::uv_motion>(), [this](int ii)->particles::uv&{
+		return (*(this->sibling_component<particles::uv>(ID_uv_motion, ii)));
+	});
+	update_uvmotions(data<particles::subuv_motion>(), [this](int ii)->particles::subuv&{
+		return (*(this->sibling_component<particles::subuv>(ID_subuv_motion, ii)));
+	});
 }
 
 uint32_t particle_mgr::submit_buffer(){
@@ -211,9 +208,9 @@ uint32_t particle_mgr::submit_buffer(){
 	quaddata* quads = (quaddata*)tvb.data;
 
 	for (int iq=0; iq<n; ++iq){
-		const auto scale = sibling_component<particles::scale>(ID_TAG_render_quad, iq);
-		const auto rotation = sibling_component<particles::rotation>(ID_TAG_render_quad, iq);
-		const auto translation = sibling_component<particles::translation>(ID_TAG_render_quad, iq);
+		const auto scale		= sibling_component<particles::scale>(ID_TAG_render_quad, iq);
+		const auto rotation		= sibling_component<particles::rotation>(ID_TAG_render_quad, iq);
+		const auto translation	= sibling_component<particles::translation>(ID_TAG_render_quad, iq);
 
 		glm::mat4 m = scale ? glm::scale(*scale) : glm::mat4(1.f);
 		if (rotation)
@@ -223,31 +220,16 @@ uint32_t particle_mgr::submit_buffer(){
 			m = glm::translate(*translation) * m;
 
 		quaddata& q = quads[iq];
-		const auto &dq = quaddata::default_quad();
+		const auto &dq		= quaddata::default_quad();
+		const auto quv		= sibling_component<particles::uv>(ID_TAG_render_quad, iq);
+		const auto qsubuv	= sibling_component<particles::subuv>(ID_TAG_render_quad, iq);
+		const auto qclr		= sibling_component<particles::color>(ID_TAG_render_quad, iq);
 		for (int ii=0; ii<4; ++ii){
-			q[ii].p = m * glm::vec4(dq[ii].p, 1.f);
+			q[ii].p		= m * glm::vec4(dq[ii].p, 1.f);
+			q[ii].uv	= quv->uv[ii];
+			q[ii].subuv = qsubuv->uv[ii];
+			q[ii].color = *((uint32_t*)&qclr);
 		}
-		
-		const auto quv = sibling_component<particles::uv>(ID_TAG_render_quad, iq);
-		if (quv){
-			for (int ii=0; ii<4; ++ii){
-				q[ii].uv = quv->uv[ii];
-			}
-		} else {
-			for (int ii=0; ii<4; ++ii){
-				q[ii].uv = dq[ii].uv;
-			}
-		}
-		//TODO: calculate subuv by subuv->index
-		//const auto qsubuv = sibling_component<particles::subuv>(ID_TAG_render_quad, iq);
-
-		const auto qclr = sibling_component<particles::color>(ID_TAG_render_quad, iq);
-		if (qclr){
-			for (int ii=0; ii<4; ++ii){
-				q[ii].color = *((uint32_t*)&qclr);
-			}
-		}
-
 	}
 
 	mrenderdata.qb.submit(tvb);
