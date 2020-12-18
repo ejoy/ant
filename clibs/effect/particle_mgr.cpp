@@ -170,11 +170,9 @@ particle_mgr::update_lifetime_color(float dt){
 		const auto life = sibling_component<particles::life>(ID_color_interpolator, ii);
 
 		const auto& ci = color_interpolators[ii];
-		for (int iv = 0; iv < 4; ++iv) {
-			for (int ii = 0; ii < 4; ++ii) {
-				const auto& c = ci.rgba[ii];
-				clr[ii] = to_color_channel(c.get(to_color_channel(clr[ii]), life->delta_process(dt)));
-			}
+		for (int ii = 0; ii < 4; ++ii) {
+			const auto& c = ci.rgba[ii];
+			clr[ii] = to_color_channel(c.get(to_color_channel(clr[ii]), life->delta_process(dt)));
 		}
 	}
 }
@@ -232,6 +230,8 @@ uint32_t particle_mgr::submit_buffer(){
 			q[ii].subuv = qsubuv->uv[ii];
 			q[ii].color = *(uint32_t*)(&qclr->r);
 		}
+
+		debug_print("color:", iq, *(uint32_t*)(&qclr->r));
 	}
 
 	mrenderdata.qb.submit(tvb);

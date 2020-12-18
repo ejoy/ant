@@ -33,12 +33,12 @@ data:
             init_color:
                 RGBA:
                     interp_type: const
-                    value: {1.0, 1.0, 1.0, 1.0}
+                    value: {0.65, 0.65, 0, 1.0}
             color_over_life:
                 RGB:
                     interp_type: linear
-                    minv: {1.0, 1.0, 0.0}
-                    maxv: {0.8, 0.0, 0.0}
+                    minv: {0.65, 0.65, 0}
+                    maxv: {0.8, 0.05, 0}
                 A:
                     interp_type: linear
                     minv: 1
@@ -50,5 +50,6 @@ data:
             subuv_index:
                 dimension: {8, 8}
                 rate:
-                    interp_type:const
-                    value: 0.2
+                    interp_type:linear
+                    minv: 0.2
+                    maxv: 0.5
