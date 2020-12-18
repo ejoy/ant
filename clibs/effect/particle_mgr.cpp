@@ -230,8 +230,6 @@ uint32_t particle_mgr::submit_buffer(){
 			q[ii].subuv = qsubuv->uv[ii];
 			q[ii].color = *(uint32_t*)(&qclr->r);
 		}
-
-		debug_print("color:", iq, *(uint32_t*)(&qclr->r));
 	}
 
 	mrenderdata.qb.submit(tvb);
