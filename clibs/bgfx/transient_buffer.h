@@ -8,6 +8,7 @@ struct transient_buffer {
 	bgfx_transient_index_buffer_t tib;
 	int cap_v;
 	int cap_i;
+	char index32;
 	char format[1];
 };
 
