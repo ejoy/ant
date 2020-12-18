@@ -74,7 +74,7 @@ void rendererDrawData(ImGuiViewport* viewport) {
 		bgfx_transient_vertex_buffer_t tvb;
 		bgfx_transient_index_buffer_t tib;
 		BGFX(alloc_transient_vertex_buffer)(&tvb, numVertices, &g_layout);
-		BGFX(alloc_transient_index_buffer)(&tib, numIndices);
+		BGFX(alloc_transient_index_buffer)(&tib, numIndices, false);
 		ImDrawVert* verts = (ImDrawVert*)tvb.data;
 		memcpy(verts, drawList->VtxBuffer.begin(), numVertices * sizeof(ImDrawVert));
 		ImDrawIdx* indices = (ImDrawIdx*)tib.data;
