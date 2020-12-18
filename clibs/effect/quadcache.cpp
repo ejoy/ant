@@ -27,10 +27,6 @@ static const quad_vertex s_default_quad[] = {
 
 static_assert(sizeof(quaddata) == sizeof(s_default_quad));
 
-void quaddata::reset(){
-    memcpy(v, s_default_quad, sizeof(s_default_quad));
-}
-
 //static
 const quaddata& quaddata::default_quad(){
     return *(quaddata*)s_default_quad;

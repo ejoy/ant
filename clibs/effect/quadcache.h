@@ -34,8 +34,7 @@ struct quaddata {
     quad_vertex& operator[](uint32_t ii){ return v[ii]; }
     const quad_vertex& operator[](uint32_t ii) const { return v[ii]; }
     quad_vertex v[4];
-    void reset();
-    
+
     void transform(const glm::mat4 &trans);
     void scale(const glm::vec3 &s);
     void rotate(const glm::quat &r);
