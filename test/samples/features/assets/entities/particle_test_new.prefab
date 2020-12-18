@@ -31,8 +31,8 @@ data:
             init_velocity:
                 interp_type: const
                 value: {0.0, 2.0, 0.0}
-#           subuv_index:
-#               dimension: {4, 4}
-#               rate: 
-#                   interp_type:const
-#                   value: 1
+            subuv_index:
+                dimension: {4, 4}
+                rate: 
+                    interp_type:const
+                    value: 0.2
