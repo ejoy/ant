@@ -83,10 +83,10 @@ local itimer = world:interface "ant.timer|timer"
 -- end
 
 local function update_emitter(e, dt)
-    local srt = e._rendercache.srt
+    local wm = e._rendercache.worldmat
     local eh = e._emitter.handle
     eh:update(dt)
-    while (0 ~= eh:spawn(srt.p)) do end
+    while (0 ~= eh:spawn(math3d.value_ptr(wm))) do end
 end
 
 function particle_sys:ui_update()

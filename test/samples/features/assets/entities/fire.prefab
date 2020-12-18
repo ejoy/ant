@@ -5,9 +5,8 @@ policy:
 data:
     name: emitter1
     material: /pkg/ant.resources/materials/particle/particle.material
-    transform:{
+    transform:
         t: {2.0, 0.0, 0.0}
-    }
     scene_entity: true
     state: 1
     emitter:

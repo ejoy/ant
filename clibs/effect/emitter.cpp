@@ -44,69 +44,82 @@ particle_emitter::step(float dt){
 	mspawn.step.count = (totalnum < already_spawned ? mspawn.count : totalnum) - already_spawned;
 }
 
-static void check_add_default_component(comp_ids &ids){
+static void check_add_default_component(comp_ids &ids, const glm::mat4 &transform){
+	auto& pm = particle_mgr::get();
 	if (has_comp(ids, ID_TAG_render_quad)){
 		const auto &dq = quaddata::default_quad();
 		if (!has_comp(ids, ID_color))
-			ids.push_back(particle_mgr::get().add_component(particles::color(0xff)));
+			ids.push_back(pm.add_component(particles::color(0xff)));
 		if (!has_comp(ids, ID_translation))
-			ids.push_back(particle_mgr::get().add_component(particles::translation(0.f)));
+			ids.push_back(pm.add_component(particles::translation(transform[3])));
 
 		if (!has_comp(ids, ID_uv)){
 			particles::uv uv; for(int ii=0; ii<4; ++ii) uv.uv[ii] = dq[ii].uv;
-			ids.push_back(particle_mgr::get().add_component(uv));
+			ids.push_back(pm.add_component(uv));
 		}
 
 		if (!has_comp(ids, ID_subuv)){
 			particles::subuv subuv; for(int ii=0; ii<4; ++ii) subuv.uv[ii] = dq[ii].subuv;
-			ids.push_back(particle_mgr::get().add_component(subuv));
+			ids.push_back(pm.add_component(subuv));
 		}
 	}
 
 	if (need_base_comp(ids, ID_color_interpolator, ID_color)){
-		ids.push_back(particle_mgr::get().add_component(particles::color(0xff)));
+		ids.push_back(pm.add_component(particles::color(0xff)));
 	}
 
 	if (need_base_comp(ids, ID_acceleration_interpolator, ID_acceleration)){
-		ids.push_back(particle_mgr::get().add_component(particles::acceleration(0.f)));
+		ids.push_back(pm.add_component(particles::acceleration(0.f)));
+	}
+
+	if (need_base_comp(ids, ID_velocity_interpolator, ID_velocity)){
+		ids.push_back(pm.add_component(particles::velocity(0.f)));
 	}
 
 	if (need_base_comp(ids, ID_translation_interpolator, ID_translation)){
-		ids.push_back(particle_mgr::get().add_component(particles::translation(0.f)));
+		ids.push_back(pm.add_component(particles::translation(transform[3])));
+	}
+
+	if (need_base_comp(ids, ID_scale_interpolator, ID_scale)){
+		ids.push_back(pm.add_component(particles::scale(transform * glm::vec4(1.f, 1.f, 1.f, 0.f))));
+	}
+
+	if (need_base_comp(ids, ID_rotation_interpolator, ID_rotation)){
+
 	}
 
 	if (need_base_comp(ids, ID_uv_motion_interpolator, ID_uv_motion)){
 		particles::uv_motion uvm;
 		uvm.speed = glm::vec2(0.f);
 		uvm.type = uv_motion::mt_speed;
-		ids.push_back(particle_mgr::get().add_component(uvm));
+		ids.push_back(pm.add_component(uvm));
 	}
 
 	if (need_base_comp(ids, ID_subuv_motion_interpolator, ID_uv_motion)){
 		particles::subuv_motion sub_uvm;
 		sub_uvm.speed = glm::vec2(0.f);
 		sub_uvm.type = uv_motion::mt_speed;
-		ids.push_back(particle_mgr::get().add_component(sub_uvm));
+		ids.push_back(pm.add_component(sub_uvm));
 	}
 
 	if (need_base_comp(ids, ID_acceleration, ID_velocity)){
-		ids.push_back(particle_mgr::get().add_component(particles::velocity(0.f)));
+		ids.push_back(pm.add_component(particles::velocity(0.f)));
 	}
 
 	if (need_base_comp(ids, ID_velocity, ID_translation)){
-		ids.push_back(particle_mgr::get().add_component(particles::translation(0.f)));
+		ids.push_back(pm.add_component(particles::translation(transform[3])));
 	}
 
 	if (need_base_comp(ids, ID_uv_motion, ID_uv)){
 		const auto &dq = quaddata::default_quad();
 		particles::uv uv; for(int ii=0; ii<4; ++ii) uv.uv[ii] = dq[ii].uv;
-		ids.push_back(particle_mgr::get().add_component(uv));
+		ids.push_back(pm.add_component(uv));
 	}
 
 	if (need_base_comp(ids, ID_subuv_motion, ID_subuv)){
 		const auto &dq = quaddata::default_quad();
 		particles::subuv subuv; for(int ii=0; ii<4; ++ii) subuv.uv[ii] = dq[ii].subuv;
-		ids.push_back(particle_mgr::get().add_component(subuv));
+		ids.push_back(pm.add_component(subuv));
 	}
 }
 
@@ -247,7 +260,7 @@ particle_emitter::spawn(const glm::mat4 &transform){
 		}
 	}
 
-	check_add_default_component(ids);
+	check_add_default_component(ids, transform);
 
     particle_mgr::get().add(ids);
 	return --mspawn.step.count;

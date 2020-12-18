@@ -6,7 +6,6 @@ policy "camera"
     .component "lock_target"
     .component "camera"
     .component "scene_entity"
-    .component "_rendercache"
 
 system "camera_view_system"
     .implement "camera.lua"

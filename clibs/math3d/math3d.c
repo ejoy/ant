@@ -1919,6 +1919,14 @@ lpoint2plane(lua_State *L){
 	return 1;
 }
 
+static int
+lvalue_ptr(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	int type;
+	lua_pushlightuserdata(L, (void*)math3d_from_lua_id(L, LS, 1, &type));
+	return 1;
+}
+
 static void
 init_math3d_api(lua_State *L, struct boxstack *bs) {
 		luaL_Reg l[] = {
@@ -1970,6 +1978,7 @@ init_math3d_api(lua_State *L, struct boxstack *bs) {
 		{ "pack", lpack },
 		{ "isvalid", lisvalid},
 		{ "isequal", lisequal},
+		{ "value_ptr", lvalue_ptr},
 
 		//points
 		{ "points_center",	lpoints_center},

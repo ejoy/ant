@@ -34,9 +34,13 @@ policy "particle_system"
 
 policy "particle_emitter"
     .require_transform "ant.render|world_matrix_transform"
+    .require_transform "ant.general|init_transform"
     .require_transform "ant.effect|create_particle_emitters"
     .require_transform "ant.effect|emitter_transform"
+    .require_transform "ant.scene|entity_state_transform"
     .component "emitter"
+    .component "transform"
+    .component "scene_entity"
 
 system "particle_system"
     .implement "particle.lua"
