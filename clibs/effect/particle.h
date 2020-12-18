@@ -107,17 +107,25 @@ struct quad_uv {
 struct uv_motion {
     struct uv_index {
         glm::u8vec2 dim;
-        uint16_t    idx;
-        float       rate;         // rate of move 'idx' by second
+        uint16_t    rate;  // rate of move 'idx' by second
+        float       idx;
     };
     union {
-        uv_index index;
+        uv_index  index;
         glm::vec2 speed;    //uv speed pre second
     };
     enum motion_type : uint8_t {
         mt_speed = 0,
         mt_index,
     };
+
+    static inline float FROM_FIXPOINT(uint16_t rate){
+        return float(rate) / float(pow(2, 10));
+    }
+
+    static inline uint16_t TO_FIXPOINT(float rate){
+        return uint16_t(rate * float(pow(2, 10)));
+    }
 
     motion_type type;
 
@@ -126,18 +134,23 @@ struct uv_motion {
             for (auto& uv : quv.uv) {
                 uv += speed * dt;
             }
-        }
-        else {
+        } else {
             assert(type == mt_index);
-            index.idx += uint16_t(index.rate * dt + 0.5f);
+            index.idx += FROM_FIXPOINT(index.rate) * dt;
+            const uint16_t idx = uint16_t(index.idx);
+
             const glm::vec2 step(1.f / index.dim.x, 1.f / index.dim.y);
-            const glm::u16vec2 uvpos(index.idx / index.dim.x, index.idx % index.dim.x);
-            auto uv = glm::vec2(uvpos) * step;
+            const glm::vec2 uvpos(idx / index.dim.x, idx % index.dim.y);
+            const glm::vec2 uv = uvpos * step;
             quv.uv[0] = uv;
             quv.uv[1] = uv + glm::vec2(0.f, step.y);
             quv.uv[2] = uv + glm::vec2(step.x, 0.f);
             quv.uv[3] = uv + step;
         }
+    }
+
+    void step_with_lifetime(uint16_t delta_process, quad_uv &quv){
+        
     }
 };
 

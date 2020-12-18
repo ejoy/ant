@@ -119,7 +119,7 @@ static void create_uvm(UVM_TYPE &uvm, const INIT_UVMTYPE &init_uvm, randomobj &r
 	} else {
 		assert(uvm.type == uv_motion::mt_index);
 		uvm.index.idx = 0;
-		uvm.index.rate = init_uvm.index.rate.get(ro());
+		uvm.index.rate = uv_motion::TO_FIXPOINT(init_uvm.index.rate.get(ro()));
 		uvm.index.dim = init_uvm.index.dim;
 	}
 }
