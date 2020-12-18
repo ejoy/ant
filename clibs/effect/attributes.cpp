@@ -212,6 +212,16 @@ std::unordered_map<std::string, readerop> g_attrib_map = {
         emitter->mspawn.interp.scale.from_init_value(scale_iv);
         
     }),
+    std::make_pair("init_rotation", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
+        emitter->mspawn.init.components.push_back(particles::rotation::ID());
+        lua_struct::unpack(L, index, emitter->mspawn.init.rotation);
+    }),
+    std::make_pair("rotation_over_life", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
+        emitter->mspawn.interp.components.push_back(particles::rotation::ID());
+        interpolation::init_valueT<float> iv;
+        lua_struct::unpack(L, index, iv);
+        emitter->mspawn.interp.rotation.from_init_value(iv);
+    }),
     std::make_pair("init_translation", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
         emitter->mspawn.init.components.push_back(particles::translation::ID());
         lua_struct::unpack(L, index, emitter->mspawn.init.translation);

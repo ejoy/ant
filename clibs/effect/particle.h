@@ -264,6 +264,7 @@ struct particles{
     using acceleration_interpolator = componentT<interpolation::f3_interpolator, ID_acceleration_interpolator>;
     using scale_interpolator        = componentT<interpolation::f3_interpolator, ID_scale_interpolator>;
     using translation_interpolator  = componentT<interpolation::f3_interpolator, ID_translation_interpolator>;
+    using rotation_interpolator     = componentT<interpolation::interp_valueT<float>, ID_translation_interpolator>;
     using uv_motion_interpolator    = componentT<interpolation::f2_interpolator, ID_uv_motion_interpolator>;
     using subuv_motion_interpolator  = componentT<interpolation::u16_interpolator, ID_subuv_motion_interpolator>;
     using color_interpolator        = componentT<interpolation::color_interpolator, ID_color_interpolator>;

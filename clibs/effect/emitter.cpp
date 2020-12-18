@@ -182,9 +182,9 @@ particle_emitter::spawn(const glm::mat4 &transform){
 			));
 		} break;
 		case ID_rotation:{
-			// check_add_id(ids, particle_mgr::get().add_component(
-			// 	particles::scale(spawn.init.scale.get(ro()))
-			// ));
+			particles::rotation r(mspawn.init.rotation.get(ro()), glm::vec3(0.f, 0.f, 1.f));
+			r = glm::quat(transform) * r;
+			check_add_id(ids, particle_mgr::get().add_component(r));
 		} break;
 		case ID_translation:{
 			check_add_id(ids, particle_mgr::get().add_component(
@@ -233,12 +233,9 @@ particle_emitter::spawn(const glm::mat4 &transform){
 			));
 		} break;
 		case ID_rotation_interpolator: {
-			// if (std::find(ids.begin(), ids.end(), ID_rotation) != ids.end()){
-			// 	check_add_id(ids, particle_mgr::get().add_component(particles::rotation(0.f)));
-			// }
-			// check_add_id(ids, particle_mgr::get().add_component(
-			// 	particles::rotation_interpolator(spawn.interp.rotation)
-			// ));
+			check_add_id(ids, particle_mgr::get().add_component(
+				particles::rotation_interpolator(mspawn.interp.rotation)
+			));
 		} break;
 		case ID_translation_interpolator: {
 			check_add_id(ids, particle_mgr::get().add_component(

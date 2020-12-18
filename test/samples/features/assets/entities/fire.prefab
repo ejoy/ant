@@ -29,6 +29,10 @@ data:
                 interp_type: linear
                 minv: {1.0, 1.0, 1.0}
                 maxv: {2.4, 2.4, 2.4}
+            init_rotation:  #rotate orientation axis radian
+                interp_type: linear
+                minv: 1
+                maxv: 2
             init_color:
                 RGBA:
                     interp_type: const

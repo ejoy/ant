@@ -24,7 +24,7 @@ public:
             interpolation::f3_init_value        acceleration;
             interpolation::f3_init_value        scale;
             interpolation::f3_init_value        translation;
-            interpolation::f3_init_value        rotation;
+            interpolation::init_valueT<float>   rotation;
             interpolation::uv_motion_init_value uv_motion;
             interpolation::uv_motion_init_value subuv_motion;
             interpolation::color_init_value     color;
@@ -38,7 +38,7 @@ public:
             interpolation::f3_interpolator      acceleration;
             interpolation::f3_interpolator      scale;
             interpolation::f3_interpolator      translation;
-            interpolation::f3_interpolator      rotation;
+            interpolation::interp_valueT<float> rotation;
             interpolation::f2_interpolator      uv_motion;
             interpolation::u16_interpolator     subuv_index;
             interpolation::color_interpolator   color;
