@@ -172,6 +172,24 @@ namespace interpolation{
         }
     };
 
+    template<>
+    struct init_valueT<uint8_t> {
+        uint8_t minv, maxv;
+        uint8_t interp_type;
+        uint8_t get(float t) const {
+            if (interp_type == 0) {
+                return minv;
+            }
+
+            if (interp_type == 1) {
+                return (uint8_t)glm::clamp(glm::lerp(float(minv), float(maxv), t), 0.f, 255.f);
+            }
+
+            assert(false && "not implement");
+            return minv;
+        }
+    };
+
     template<typename T>
     struct interp_valueT{
         T scale;
@@ -211,12 +229,12 @@ namespace interpolation{
 
     using f3_init_value         = init_valueT<glm::vec3>;
     using f2_init_value         = init_valueT<glm::vec2>;
-    using color_init_value      = color_attributeT<init_valueT<float>>;
+    using color_init_value      = color_attributeT<init_valueT<uint8_t>>;
 
     using f3_interpolator       = interp_valueT<glm::vec3>;
     using f2_interpolator       = interp_valueT<glm::vec2>;
     using u16_interpolator      = interp_valueT<uint16_t>;
-    using color_interpolator    = color_attributeT<interp_valueT<float>>;
+    using color_interpolator    = color_attributeT<interp_valueT<uint8_t>>;
 }
 
 template<typename T, component_id COMP_ID>

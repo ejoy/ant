@@ -191,7 +191,7 @@ particle_emitter::spawn(const glm::mat4 &transform){
 		case ID_color:{
 			particles::color c;
 			for(int ii=0; ii<4;++ii){
-				c[ii] = to_color_channel(mspawn.init.color.rgba[ii].get(ro()));
+				c[ii] = glm::clamp(mspawn.init.color.rgba[ii].get(ro()), uint8_t(0), uint8_t(255));
 			}
 			check_add_id(ids, particle_mgr::get().add_component(c));
 		} break;
