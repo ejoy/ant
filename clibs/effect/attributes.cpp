@@ -45,7 +45,9 @@ namespace lua_struct {
     DEF_VEC_UNPACK(glm::ivec2);
     DEF_VEC_UNPACK(glm::u8vec2);
     DEF_VEC_UNPACK(glm::vec2);
+    DEF_VEC_UNPACK(glm::u8vec3);
     DEF_VEC_UNPACK(glm::vec3);
+    DEF_VEC_UNPACK(glm::u8vec4);
     DEF_VEC_UNPACK(glm::vec4);
 
     template<typename T>
@@ -91,7 +93,7 @@ namespace lua_struct {
             bool isvalid = false;
             if (LUA_TTABLE == lua_getfield(L, index, "RGBA")){
                 isvalid = true;
-                interpolation::init_valueT<glm::vec4> f4v;
+                interpolation::init_valueT<glm::u8vec4> f4v;
                 unpack_interp_value(L, index, f4v);
                 for (int ii=0; ii<4; ++ii){
                     civ.rgba[ii].minv = f4v.minv[ii];
@@ -107,7 +109,7 @@ namespace lua_struct {
             bool isvalid = false;
             if (LUA_TTABLE == lua_getfield(L, index, "RGB")){
                 isvalid = true;
-                interpolation::f3_init_value f3v;
+                interpolation::init_valueT<glm::u8vec3> f3v;
                 unpack_interp_value(L, -1, f3v);
                 for (int ii=0; ii<3; ++ii){
                     civ.rgba[ii].minv = f3v.minv[ii];
