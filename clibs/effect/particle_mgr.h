@@ -12,10 +12,10 @@ struct render_data{
     uint16_t progid             = UINT16_MAX;
     quad_buffer qb;
     struct texture{
-        uint16_t stage;
+        uint8_t stage;
         uint16_t uniformid;
         uint16_t texid;
-        texture(uint16_t uid = UINT16_MAX, uint16_t tid=UINT16_MAX) : uniformid(uid), texid(tid){}
+        texture(uint8_t s = UINT8_MAX, uint16_t uid = UINT16_MAX, uint16_t tid=UINT16_MAX) : stage(s), uniformid(uid), texid(tid){}
     };
     std::vector<texture>   textures;
 };

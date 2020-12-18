@@ -248,7 +248,7 @@ particle_mgr::submit_render(){
 
 	for (size_t ii=0; ii<mrenderdata.textures.size(); ++ii){
 		const auto &t = mrenderdata.textures[ii];
-		BGFX(set_texture)((uint8_t)ii, {t.uniformid}, {t.texid}, UINT16_MAX);
+		BGFX(set_texture)(t.stage, {t.uniformid}, {t.texid}, UINT16_MAX);
 	}
 	
 	BGFX(submit)(mrenderdata.viewid, {mrenderdata.progid}, 0, BGFX_DISCARD_ALL);
