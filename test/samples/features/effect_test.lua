@@ -12,5 +12,5 @@ function eff_test_sys:init()
 
     --world:instance "/pkg/ant.test.features/assets/entities/star.prefab"
 
-    world:instance "/pkg/ant.test.features/assets/entities/particle_test_new.prefab"
+    world:instance "/pkg/ant.test.features/assets/entities/fire.prefab"
 end
