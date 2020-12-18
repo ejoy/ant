@@ -56,8 +56,8 @@ function m:init()
     entity.create_grid_entity_simple("", nil, nil, nil, {srt={r={0,0.92388,0,0.382683},}})
     imgui.SetWindowTitle("PrefabEditor")
     gd.package_path = "/pkg/tools.prefab_editor/"
-end
 
+end
 
 function m:post_init()
 

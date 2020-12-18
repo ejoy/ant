@@ -163,23 +163,23 @@ local function show_camera_property(eid)
             end
         end
         if #frames > 0 then
-            imgui.deprecated.Columns(2, "FrameColumns", false)
-            imgui.widget.Text("FrameIndex")
-            imgui.deprecated.NextColumn()
-            imgui.widget.Text("Duration")
-            imgui.deprecated.NextColumn()
             imgui.cursor.Separator()
-            for i, v in ipairs(frames) do
-                if imgui.widget.Selectable(i, camera_ui_data.current_frame == i) then
-                    set_current_frame(eid, i)
+            if imgui.table.Begin("InspectorTable", 2, imgui.flags.Table {'Resizable', 'ScrollY'}) then
+                imgui.table.SetupColumn("FrameIndex")
+                imgui.table.SetupColumn("Duration")
+                imgui.table.HeadersRow()
+                for i, v in ipairs(frames) do
+                    imgui.table.NextColumn()
+                    if imgui.widget.Selectable(i, camera_ui_data.current_frame == i) then
+                        set_current_frame(eid, i)
+                    end
+                    imgui.table.NextColumn()
+                    if imgui.widget.DragFloat("##"..i, camera_ui_data.duration[i]) then
+                        frames[i].duration = camera_ui_data.duration[i][1]
+                    end
                 end
-                imgui.deprecated.NextColumn()
-                if imgui.widget.DragFloat("##"..i, camera_ui_data.duration[i]) then
-                    frames[i].duration = camera_ui_data.duration[i][1]
-                end
-                imgui.deprecated.NextColumn()
+                imgui.table.End()    
             end
-            imgui.deprecated.Columns(1)
         end
 
         if what then

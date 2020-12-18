@@ -4,8 +4,12 @@ local math3d    = require "math3d"
 local imgui     = require "imgui"
 local rhwi      = import_package 'ant.render'.hwi
 local asset_mgr = import_package "ant.asset"
+local geometry_drawer = import_package "ant.geometry".drawer
 local irq       = world:interface "ant.render|irenderqueue"
 local ies       = world:interface "ant.scene|ientity_state"
+local icoll     = world:interface "ant.collision|collider"
+local drawer    = world:interface "ant.render|iwidget_drawer"
+local imaterial   = world:interface "ant.asset|imaterial"
 local vfs       = require "vfs"
 local access    = require "vfs.repoaccess"
 local fs        = require "filesystem"
@@ -284,7 +288,11 @@ local function on_update(eid)
 end
 
 local cmd_queue = require "gizmo.command_queue"(world)
+
 function m:data_changed()
+    -- if prefab_mgr.collider and icoll.test(world[prefab_mgr.collider["sphere"]]) then
+    --     print("sphere collision")
+    -- end
     for _, action, value1, value2 in event_gizmo:unpack() do
         if action == "update" or action == "ontarget" then
             inspector.update_ui(action == "update")
@@ -371,7 +379,35 @@ function m:data_changed()
         end
     end
 
-    for _, what in event_create:unpack() do
-        prefab_mgr:create(what)
+    for _, what, type in event_create:unpack() do
+        prefab_mgr:create(what, type)
+    end
+end
+
+local DEFAULT_COLOR <const> = 0xffffff00
+local normal_color          = {1, 0.5, 0.5, 1}
+local geo_utils = require "editor.geometry_utils"(world)
+local bgfx = require "bgfx"
+local anim_entity
+local skeleton_eid
+function m:widget()
+    if gizmo.target_eid then
+        local e = world[gizmo.target_eid]
+        if e and e.skeleton and anim_entity ~= e then
+            local desc={vb={}, ib={}}
+            geometry_drawer.draw_skeleton(e.skeleton._handle, e.pose_result, DEFAULT_COLOR, e.transform, desc)
+            local eid = geo_utils.create_dynamic_lines(e.transform, desc.vb, desc.ib, "skeleton", DEFAULT_COLOR)
+            ies.set_state(eid, "auxgeom", true)
+            skeleton_eid = eid
+            anim_entity = e
+        end
+    end
+    if anim_entity then
+        local desc={vb={}, ib={}}
+        geometry_drawer.draw_skeleton(anim_entity.skeleton._handle, anim_entity.pose_result, DEFAULT_COLOR, anim_entity.transform, desc, anim_view.get_current_joint())
+        local rc = world[skeleton_eid]._rendercache
+        local vbdesc, ibdesc = rc.vb, rc.ib
+        bgfx.update(vbdesc.handles[1], 0, bgfx.memory_buffer("fffd", desc.vb))
+        bgfx.update(ibdesc.handle, 0, bgfx.memory_buffer("w", desc.ib))
     end
 end

@@ -6,5 +6,5 @@ void main()
 {
     vec3 pos = a_position;
 	gl_Position = mul(u_modelViewProj, vec4(pos, 1.0));
-    v_color0 = u_color;
+    v_color0 = u_color * a_color0;
 }

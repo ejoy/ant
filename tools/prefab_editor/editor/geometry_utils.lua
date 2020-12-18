@@ -76,6 +76,10 @@ function m.create_dynamic_line(srt, p0, p1, name, color)
     return do_create_entity(vb, ib, srt, name)
 end
 
+function m.create_dynamic_lines(srt, vb, ib, name, color)
+    return do_create_entity(vb, ib, srt, name)
+end
+
 function m.get_circle_vb_ib(radius, slices, color)
 	local circle_vb, circle_ib = geolib.circle(radius, slices)
 	local gvb = {}

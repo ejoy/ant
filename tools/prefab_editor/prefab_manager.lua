@@ -128,13 +128,18 @@ local function create_light_billboard(light_eid)
 end
 
 local geom_mesh_file = {
-    ["cube(raw)"] = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
-    ["cone(raw)"] = "/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin",
-    ["cylinder(raw)"] = "/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin",
-    ["sphere(raw)"] = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin",
-    ["torus(raw)"] = "/pkg/ant.resources.binary/meshes/base/torus.glb|meshes/pTorus1_P1.meshbin"
+    ["cube"] = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
+    ["cone"] = "/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin",
+    ["cylinder"] = "/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin",
+    ["sphere"] = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin",
+    ["torus"] = "/pkg/ant.resources.binary/meshes/base/torus.glb|meshes/pTorus1_P1.meshbin"
 }
-function m:create(what)
+local default_collider_config = {
+    ["sphere"] = {origin = {0, 0, 0, 1}, radius = 0.1},
+    ["box"] = {origin = {0, 0, 0, 1}, size = {0.05, 0.05, 0.05} },
+    ["capsule"] = {origin = {0, 0, 0, 1}, height = 1.0, radius = 0.25}
+}
+function m:create(what, type)
     if not self.root then
         self:reset_prefab()
     end
@@ -150,58 +155,95 @@ function m:create(what)
         local node = hierarchy:add(new_camera, {template = camera_templ, keyframe = recorder_templ.__class[1]}, self.root)
         node.camera = true
         self.entities[#self.entities+1] = new_camera
-    elseif what == "camerarecorder" then
-
-    elseif what == "empty" then
-    elseif what == "cube(raw)"
-        or what == "cone(raw)"
-        or what == "cylinder(raw)"
-        or what == "sphere(raw)"
-        or what == "torus(raw)" then
-        local new_entity, temp = world:create_entity {
-			policy = {
-				"ant.render|render",
-				"ant.general|name",
-				"ant.scene|hierarchy_policy",
-			},
-			data = {
+    elseif what == "geometry" then
+        if type == "cube"
+            or type == "cone"
+            or type == "cylinder"
+            or type == "sphere"
+            or type == "torus" then
+            local new_entity, temp = world:create_entity {
+                policy = {
+                    "ant.render|render",
+                    "ant.general|name",
+                    "ant.scene|hierarchy_policy",
+                },
+                data = {
+                    color = {1, 1, 1, 1},
+                    scene_entity = true,
+                    state = ies.create_state "visible|selectable",
+                    transform = {s = 50},
+                    material = "/pkg/ant.resources/materials/singlecolor.material",
+                    mesh = geom_mesh_file[type],
+                    name = type .. geometricidx
+                }
+            }
+            imaterial.set_property(new_entity, "u_color", {1, 1, 1, 1})
+            self.entities[#self.entities+1] = new_entity
+            hierarchy:add(new_entity, {template = temp.__class[1]}, self.root)
+        elseif type == "cube(prefab)" then
+            m:add_prefab(gd.package_path .. "res/cube.prefab")
+        elseif type == "cone(prefab)" then
+            m:add_prefab(gd.package_path .. "res/cone.prefab")
+        elseif type == "cylinder(prefab)" then
+            m:add_prefab(gd.package_path .. "res/cylinder.prefab")
+        elseif type == "sphere(prefab)" then
+            m:add_prefab(gd.package_path .. "res/sphere.prefab")
+        elseif type == "torus(prefab)" then
+            m:add_prefab(gd.package_path .. "res/torus.prefab")
+        end
+    elseif what == "light" then
+        if type == "directional" or type == "point" or type == "spot" then      
+            local ilight = world:interface "ant.render|light" 
+            local _, newlight = ilight.create({
+                transform = {},
+                name = type .. gen_light_id(),
+                light_type = type,
                 color = {1, 1, 1, 1},
-				scene_entity = true,
-				state = ies.create_state "visible|selectable",
-				transform = {s = 50},
-				material = "/pkg/ant.resources/materials/singlecolor.material",
-				mesh = geom_mesh_file[what],
-				name = what .. geometricidx
-			}
-        }
-        imaterial.set_property(new_entity, "u_color", {1, 1, 1, 1})
-        self.entities[#self.entities+1] = new_entity
-        hierarchy:add(new_entity, {template = temp.__class[1]}, self.root)
-    elseif what == "cube(prefab)" then
-        m:add_prefab(gd.package_path .. "res/cube.prefab")
-    elseif what == "cone(prefab)" then
-        m:add_prefab(gd.package_path .. "res/cone.prefab")
-    elseif what == "cylinder(prefab)" then
-        m:add_prefab(gd.package_path .. "res/cylinder.prefab")
-    elseif what == "sphere(prefab)" then
-        m:add_prefab(gd.package_path .. "res/sphere.prefab")
-    elseif what == "torus(prefab)" then
-        m:add_prefab(gd.package_path .. "res/torus.prefab")
-    elseif what == "directional" or what == "point" or what == "spot" then      
-        local ilight = world:interface "ant.render|light" 
-        local _, newlight = ilight.create({
-            transform = {},
-            name = what .. gen_light_id(),
-            light_type = what,
-            color = {1, 1, 1, 1},
-            intensity = 2,
-            range = 1,
-            radian = math.rad(45)
-        })
-        local new_light = newlight[1]
-        self.entities[#self.entities+1] = new_light
-        hierarchy:add(new_light, {template = newlight.__class[1]}, self.root)
-        create_light_billboard(new_light)
+                intensity = 2,
+                range = 1,
+                radian = math.rad(45)
+            })
+            local new_light = newlight[1]
+            self.entities[#self.entities+1] = new_light
+            hierarchy:add(new_light, {template = newlight.__class[1]}, self.root)
+            create_light_billboard(new_light)
+        end
+    elseif what == "collider" then
+        if type == "sphere" or type == "box" or type == "capsule" then
+
+            local new_entity, temp = world:create_entity {
+                policy = {
+                    "ant.general|name",
+                    "ant.render|render",
+                    "ant.scene|hierarchy_policy",
+                    "ant.scene|transform_policy",
+                    "ant.collision|collider_policy"
+                },
+                data = {
+                    color = {1, 0.5, 0.5, 0.5},
+                    scene_entity = true,
+                    state = ies.create_state "visible|selectable",
+                    transform = {s = 10},
+                    material = "/pkg/ant.resources/materials/singlecolor.material",
+                    mesh = (type == "box") and geom_mesh_file["cube"] or geom_mesh_file[type],
+                    name = "collider" .. geometricidx,
+
+                    collider = {
+                        [type] = {
+                            default_collider_config[type]
+                        }
+                    }
+                }
+            }
+            imaterial.set_property(new_entity, "u_color", {1, 0.5, 0.5, 0.5})
+            self.entities[#self.entities+1] = new_entity
+            hierarchy:add(new_entity, {template = temp.__class[1]}, self.root)
+            if not self.collider then
+                self.collider = {}
+            end
+            self.collider[type] = new_entity
+            return new_entity
+        end
     end
 end
 
@@ -335,6 +377,7 @@ function m:open_prefab(prefab)
             if world[entity].light_type then
                 create_light_billboard(entity)
                 light_gizmo.bind(entity)
+                light_gizmo.show(false)
             end
         end
     end

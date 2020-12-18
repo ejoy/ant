@@ -1,9 +1,10 @@
 local ecs = ...
 local world = ecs.world
-
-local assetmgr = import_package "ant.asset"
-local ani_module = require "hierarchy.animation"
-
+local icoll     = world:interface "ant.collision|collider"
+local assetmgr 		= import_package "ant.asset"
+local iom 			= world:interface "ant.objcontroller|obj_motion"
+local ani_module 	= require "hierarchy.animation"
+local math3d 		= require "math3d"
 local ani_cache = ecs.transform "animation_transform"
 function ani_cache.process_entity(e)
 	e._animation = {}
@@ -42,6 +43,9 @@ local function do_animation(poseresult, task, delta_time)
 				while math.abs(current_time - current_events.time) < 0.01 do
 					for _, event in ipairs(current_events.events) do
 						print("event trigger : ", current_time, event.name, event.event_type)
+						if event.event_type == "Collision" then
+							
+						end
 					end
 					event_state.next_index = event_state.next_index + 1
 					if event_state.next_index > #event_state.keyframe_events then
@@ -49,6 +53,20 @@ local function do_animation(poseresult, task, delta_time)
 						break
 					end
 					current_events = event_state.keyframe_events[event_state.next_index]
+				end
+			end
+			local colliders = event_state.keyframe_events.collider
+			if colliders then
+				for _, collider in ipairs(colliders) do
+					if collider.joint_index > 0 then
+						local tranform = poseresult:joint(collider.joint_index)
+						local _, origin_r, origin_t = math3d.srt(tranform)
+						local origin_s, _, _ = math3d.srt(iom.worldmat(collider.eid))
+						iom.set_srt(collider.eid, math3d.matrix{ s = origin_s, r = origin_r, t = origin_t })
+						if icoll.test(world[collider.eid]) then
+							print("Overlaped!")
+						end
+					end
 				end
 			end
 		end

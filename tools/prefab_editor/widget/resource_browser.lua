@@ -193,145 +193,145 @@ function m.show()
         imgui.windows.PopStyleVar(1)
         imgui.cursor.Separator()
 
-        imgui.deprecated.Columns(3)
-        local child_width, child_height = imgui.windows.GetContentRegionAvail()
-        imgui.windows.BeginChild("##ResourceBrowserDir", child_width, child_height, false)
-        do_show_browser(resource_tree)
-        imgui.windows.EndChild()
+        --imgui.deprecated.Columns(3)
+        if imgui.table.Begin("InspectorTable", 3, imgui.flags.Table {'Resizable', 'ScrollY'}) then
+            imgui.table.NextColumn()
+            local child_width, child_height = imgui.windows.GetContentRegionAvail()
+            imgui.windows.BeginChild("##ResourceBrowserDir", child_width, child_height, false)
+            do_show_browser(resource_tree)
+            imgui.windows.EndChild()
 
-        imgui.cursor.SameLine()
-        imgui.deprecated.NextColumn()
-        child_width, child_height = imgui.windows.GetContentRegionAvail()
-        imgui.windows.BeginChild("##ResourceBrowserContent", child_width, child_height, false);
-        local folder = current_folder[2]
-        if folder then
-            rename_file(current_file)
-            for _, path in pairs(folder.dirs) do
-                imgui.widget.Image(icons.ICON_FOLD.handle, icons.ICON_FOLD.texinfo.width, icons.ICON_FOLD.texinfo.height)
-                imgui.cursor.SameLine()
-                if imgui.widget.Selectable(tostring(path[1]:filename()), current_file == path[1], 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
-                    current_file = path[1]
-                    if imgui.util.IsMouseDoubleClicked(0) then
-                        current_folder = path
+            imgui.cursor.SameLine()
+            imgui.table.NextColumn()
+            child_width, child_height = imgui.windows.GetContentRegionAvail()
+            imgui.windows.BeginChild("##ResourceBrowserContent", child_width, child_height, false);
+            local folder = current_folder[2]
+            if folder then
+                rename_file(current_file)
+                for _, path in pairs(folder.dirs) do
+                    imgui.widget.Image(icons.ICON_FOLD.handle, icons.ICON_FOLD.texinfo.width, icons.ICON_FOLD.texinfo.height)
+                    imgui.cursor.SameLine()
+                    if imgui.widget.Selectable(tostring(path[1]:filename()), current_file == path[1], 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
+                        current_file = path[1]
+                        if imgui.util.IsMouseDoubleClicked(0) then
+                            current_folder = path
+                        end
+                    end
+                    if current_file == path[1] then
+                        if imgui.windows.BeginPopupContextItem(tostring(path[1]:filename())) then
+                            if imgui.widget.Selectable("Delete", false) then
+                                lfs.remove(current_file:localpath())
+                                current_file = nil
+                            end
+                            if imgui.widget.Selectable("Rename", false) then
+                                renaming = true
+                                new_filename.text = tostring(current_file:filename())
+                            end
+                            imgui.windows.EndPopup()
+                        end
                     end
                 end
-                if current_file == path[1] then
-                    if imgui.windows.BeginPopupContextItem(tostring(path[1]:filename())) then
-                        if imgui.widget.Selectable("Delete", false) then
-                            lfs.remove(current_file:localpath())
-                            current_file = nil
+                for _, path in pairs(folder.files) do
+                    local icon = icons.get_file_icon(path)
+                    imgui.widget.Image(icon.handle, icon.texinfo.width, icon.texinfo.height)
+                    imgui.cursor.SameLine()
+                    if imgui.widget.Selectable(tostring(path:filename()), current_file == path, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
+                        current_file = path
+                        if imgui.util.IsMouseDoubleClicked(0) then
+                            local prefab_file
+                            if path:equal_extension(".prefab") then
+                                prefab_file = tostring(path)
+                            elseif path:equal_extension(".glb") then
+                                prefab_file = tostring(path) .. "|mesh.prefab"
+                            end
+                            if prefab_file then
+                                world:pub {"OpenPrefab", prefab_file}
+                            end
                         end
-                        if imgui.widget.Selectable("Rename", false) then
-                            renaming = true
-                            new_filename.text = tostring(current_file:filename())
+                        if path:equal_extension(".png") then
+                            if not preview_images[current_file] then
+                                local pkg_path = path:string()
+                                preview_images[current_file] = assetmgr.resource(pkg_path, { compile = true })
+                            end
                         end
-                        imgui.windows.EndPopup()
+
+                        if path:equal_extension(".texture") then
+                            if not texture_detail[current_file] then
+                                local pkg_path = path:string()
+                                texture_detail[current_file] = utils.readtable(pkg_path)
+                                local t = assetmgr.resource(pkg_path)
+                                local s = t.sampler
+                                preview_images[current_file] = t._data
+                            end
+                        end
+                    end
+                    if current_file == path then
+                        if imgui.windows.BeginPopupContextItem(tostring(path:filename())) then
+                            if imgui.widget.Selectable("Delete", false) then
+                                lfs.remove(current_file:localpath())
+                                current_file = nil
+                            end
+                            if imgui.widget.Selectable("Rename", false) then
+                                renaming = true
+                                new_filename.text = tostring(current_file:filename())
+                            end
+                            imgui.windows.EndPopup()
+                        end
+                    end
+                    if path:equal_extension(".material")
+                        or path:equal_extension(".texture")
+                        or path:equal_extension(".png")
+                        or path:equal_extension(".dds")
+                        or path:equal_extension(".prefab")
+                        or path:equal_extension(".glb") then
+                        if imgui.widget.BeginDragDropSource() then
+                            imgui.widget.SetDragDropPayload("DragFile", tostring(path))
+                            imgui.widget.EndDragDropSource()
+                        end
                     end
                 end
             end
-            for _, path in pairs(folder.files) do
-                local icon = icons.get_file_icon(path)
-                imgui.widget.Image(icon.handle, icon.texinfo.width, icon.texinfo.height)
-                imgui.cursor.SameLine()
-                if imgui.widget.Selectable(tostring(path:filename()), current_file == path, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
-                    current_file = path
-                    if imgui.util.IsMouseDoubleClicked(0) then
-                        local prefab_file
-                        if path:equal_extension(".prefab") then
-                            prefab_file = tostring(path)
-                        elseif path:equal_extension(".glb") then
-                            prefab_file = tostring(path) .. "|mesh.prefab"
-                        end
-                        if prefab_file then
-                            world:pub {"OpenPrefab", prefab_file}
-                        end
-                    end
-                    if path:equal_extension(".png") then
-                        if not preview_images[current_file] then
-                            local pkg_path = path:string()
-                            preview_images[current_file] = assetmgr.resource(pkg_path, { compile = true })
-                        end
-                    end
+            imgui.windows.EndChild()
 
-                    if path:equal_extension(".texture") then
-                        if not texture_detail[current_file] then
-                            local pkg_path = path:string()
-                            texture_detail[current_file] = utils.readtable(pkg_path)
-                            local t = assetmgr.resource(pkg_path)
-                            local s = t.sampler
-                            preview_images[current_file] = t._data
-                        end
+            imgui.cursor.SameLine()
+            imgui.table.NextColumn()
+            child_width, child_height = imgui.windows.GetContentRegionAvail()
+            imgui.windows.BeginChild("##ResourceBrowserPreview", child_width, child_height, false);
+            if fs.path(current_file):equal_extension(".png") or fs.path(current_file):equal_extension(".texture") then
+                local preview = preview_images[current_file]
+                if preview then
+                    if texture_detail[current_file] then
+                        imgui.widget.Text("image:" .. texture_detail[current_file].path)
                     end
-                end
-                if current_file == path then
-                    if imgui.windows.BeginPopupContextItem(tostring(path:filename())) then
-                        if imgui.widget.Selectable("Delete", false) then
-                            lfs.remove(current_file:localpath())
-                            current_file = nil
-                        end
-                        if imgui.widget.Selectable("Rename", false) then
-                            renaming = true
-                            new_filename.text = tostring(current_file:filename())
-                        end
-                        imgui.windows.EndPopup()
+                    -- imgui.deprecated.Columns(2, "PreviewColumns", true)
+                    imgui.widget.Text(preview.texinfo.width .. "x" .. preview.texinfo.height .. " ".. preview.texinfo.format)
+                    local width, height = preview.texinfo.width, preview.texinfo.height
+                    if width > 180 then
+                        width = 180
                     end
-                end
-                if path:equal_extension(".material")
-                    or path:equal_extension(".texture")
-                    or path:equal_extension(".png")
-                    or path:equal_extension(".dds")
-                    or path:equal_extension(".prefab")
-                    or path:equal_extension(".glb") then
-                    if imgui.widget.BeginDragDropSource() then
-                        imgui.widget.SetDragDropPayload("DragFile", tostring(path))
-                        imgui.widget.EndDragDropSource()
+                    if height > 180 then
+                        height = 180
+                    end
+                    imgui.widget.Image(preview.handle, width, height)
+                    imgui.cursor.SameLine()
+                    local texture_info = texture_detail[current_file] 
+                    if texture_info then
+                        imgui.widget.Text(("Compress:\n  android: %s\n  ios: %s\n  windows: %s \nSampler:\n  MAG: %s\n  MIN: %s\n  MIP: %s\n  U: %s\n  V: %s"):format( 
+                            texture_info.compress and texture_info.compress.android or "raw",
+                            texture_info.compress and texture_info.compress.ios or "raw",
+                            texture_info.compress and texture_info.compress.windows or "raw",
+                            texture_info.sampler.MAG,
+                            texture_info.sampler.MIN,
+                            texture_info.sampler.MIP,
+                            texture_info.sampler.U,
+                            texture_info.sampler.V
+                            ))
                     end
                 end
             end
+            imgui.windows.EndChild()
+        imgui.table.End()
         end
-        imgui.windows.EndChild()
-
-        imgui.cursor.SameLine()
-        imgui.deprecated.NextColumn()
-        child_width, child_height = imgui.windows.GetContentRegionAvail()
-        imgui.windows.BeginChild("##ResourceBrowserPreview", child_width, child_height, false);
-        if fs.path(current_file):equal_extension(".png") or fs.path(current_file):equal_extension(".texture") then
-            local preview = preview_images[current_file]
-            if preview then
-                if texture_detail[current_file] then
-                    imgui.widget.Text("image:" .. texture_detail[current_file].path)
-                end
-                -- imgui.deprecated.Columns(2, "PreviewColumns", true)
-                imgui.widget.Text(preview.texinfo.width .. "x" .. preview.texinfo.height .. " ".. preview.texinfo.format)
-                local width, height = preview.texinfo.width, preview.texinfo.height
-                if width > 180 then
-                    width = 180
-                end
-                if height > 180 then
-                    height = 180
-                end
-                imgui.widget.Image(preview.handle, width, height)
-                imgui.cursor.SameLine()
-                -- imgui.deprecated.NextColumn()
-                local texture_info = texture_detail[current_file] 
-                if texture_info then
-                    imgui.widget.Text(("Compress:\n  android: %s\n  ios: %s\n  windows: %s \nSampler:\n  MAG: %s\n  MIN: %s\n  MIP: %s\n  U: %s\n  V: %s"):format( 
-                        texture_info.compress and texture_info.compress.android or "raw",
-                        texture_info.compress and texture_info.compress.ios or "raw",
-                        texture_info.compress and texture_info.compress.windows or "raw",
-                        texture_info.sampler.MAG,
-                        texture_info.sampler.MIN,
-                        texture_info.sampler.MIP,
-                        texture_info.sampler.U,
-                        texture_info.sampler.V
-                        ))
-                end
-                -- imgui.deprecated.Columns(1)
-            end
-        end
-        imgui.windows.EndChild()
-
-        imgui.deprecated.Columns(1)
     end
 end
 
