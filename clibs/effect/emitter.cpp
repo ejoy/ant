@@ -42,7 +42,6 @@ particle_emitter::step(float dt){
 	mspawn.step.loop += dt;
 	auto totalnum = delta_spawn(mspawn);
 	mspawn.step.count = (totalnum < already_spawned ? mspawn.count : totalnum) - already_spawned;
-	debug_print("spawn:", mspawn.step.count, "loop:", mspawn.step.loop);
 }
 
 static void check_add_default_component(comp_ids &ids){

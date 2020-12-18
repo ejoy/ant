@@ -11,7 +11,7 @@ properties:
     texture: /pkg/ant.resources/textures/default/1x1_white.texture
   s_subtex:
     stage: 1
-    texture: /pkg/ant.resources/textures/particles/num4x4.texture
+    texture: /pkg/ant.resources/textures/particles/subsmoke8x8.texture
 state:
     CULL: NONE
     DEPTH_TEST: ALWAYS
