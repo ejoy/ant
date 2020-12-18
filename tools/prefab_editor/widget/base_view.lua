@@ -38,6 +38,7 @@ function BaseView:set_model(eid)
         self.is_prefab = true
     end
     local transform = {}
+    transform[#transform + 1] = self.base.name
     transform[#transform + 1] = self.base.position
     if self:has_rotate() then
         transform[#transform + 1] = self.base.rotate

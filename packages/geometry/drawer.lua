@@ -146,14 +146,14 @@ local function generate_joints_worldpos(ske)
 	return worldpos
 end
 
-function draw.draw_skeleton(ske, ani, color, transform, desc)
+function draw.draw_skeleton(ske, ani, color, transform, desc, hightlight_bone)
 	local bones = generate_bones(ske)
 
 	local joints = ani and get_ani_joints(ani) or generate_joints_worldpos(ske)
-	return draw.draw_bones(bones, joints, color, transform, desc)
+	return draw.draw_bones(bones, joints, color, transform, desc, hightlight_bone)
 end
 
-function draw.draw_bones(bones, joints, color, transform, desc)
+function draw.draw_bones(bones, joints, color, transform, desc, hightlight_bone)
 	local dvb = desc.vb
 	local dib = desc.ib
 
@@ -173,20 +173,20 @@ function draw.draw_bones(bones, joints, color, transform, desc)
 		
 		local finaltrans = math3d.matrix{r=rotation, s=len, t=beg_pos}
 		if transform then
-			finaltrans = math3d.mul(transform, finaltrans)
+			finaltrans = math3d.mul(math3d.matrix(transform), finaltrans)
 		end
 
-		local vstart = (#dvb - 1) // 4
+		local vstart = math.floor(#dvb / 4)
 
 		for _, bb in ipairs(bonevb) do
 			local t = math3d.totable(math3d.transform(finaltrans, bb, 1))
-			t[4] = color
+			t[4] = (i == hightlight_bone) and 0xff0000ff or color
 			append_array(t, dvb)
 		end
 
 		local istart = #dib+1
 		append_array(boneib, dib)
-		if vstart ~= 0 then
+		if vstart > 0 then
 			offset_index_buffer(dib, istart, #dib, vstart)
 		end
 	end

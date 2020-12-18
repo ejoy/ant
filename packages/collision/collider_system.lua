@@ -117,10 +117,14 @@ function icoll.test(e, srt)
 	if not collider then
 		return false
 	end
-	set_obj_transform(e.collider._handle, srt.t, srt.r)
+	if srt then
+		set_obj_transform(e.collider._handle, srt.t, srt.r)
+	end
 	local hit = w:test_overlap(e.collider._handle)
-	local _, r, t = math3d.srt(e.transform)
-	set_obj_transform(e.collider._handle, t, r)
+	if srt then
+		local _, r, t = math3d.srt(e.transform)
+		set_obj_transform(e.collider._handle, t, r)
+	end
 	return hit
 end
 
@@ -150,7 +154,7 @@ local iom = world:interface "ant.objcontroller|obj_motion"
 function collider_sys:update_collider_transform()
     for _, _, eid in trans_changed_mb:unpack() do
 		local e = world[eid]
-		if e.collider then
+		if e and e.collider then
 			local _, r, t = math3d.srt(iom.worldmat(eid))
 			set_obj_transform(e.collider._handle, t, r)
 		end

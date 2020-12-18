@@ -38,6 +38,9 @@ local icon_path = {
     ["ICON_ROOM_INSTANCE"]  = "res/icon/RoomInstance.png",
     ["ICON_PLAY"]           = "res/icon/Play.png",
     ["ICON_PAUSE"]          = "res/icon/Pause.png",
+    ["ICON_RIGIDBODY3D"]    = "res/icon/RigidBody3D.png",
+    ["ICON_COLLISIONSHAPE3D"]   = "res/icon/CollisionShape3D.png",
+    ["ICON_COLLISIONPOLYGON3D"] = "res/icon/CollisionPolygon3D.png",
 }
 
 local icons = {}

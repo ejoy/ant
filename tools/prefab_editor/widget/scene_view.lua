@@ -59,7 +59,11 @@ local function get_icon_by_object_type(node)
                 return icons.ICON_SPOTLIGHT
             end
         elseif entity.mesh then
-            return icons.ICON_MESH
+            if entity.collider then
+                return icons.ICON_COLLISIONSHAPE3D
+            else
+                return icons.ICON_MESH
+            end
         else
             return icons.ICON_OBJECT
         end
@@ -67,6 +71,8 @@ local function get_icon_by_object_type(node)
 end
 
 local function show_scene_node(node)
+    imgui.table.NextRow();
+    imgui.table.NextColumn();
     local function select_or_move(nd)
         local eid = nd.eid
         if imgui.util.IsItemClicked() then
@@ -93,7 +99,7 @@ local function show_scene_node(node)
         end
     end
     local function lock_visible(eid)
-        imgui.deprecated.NextColumn()
+        imgui.table.NextColumn();
         imgui.util.PushID(eid)
         local current_lock = hierarchy:is_locked(eid)
         local icon = current_lock and icons.ICON_LOCK or icons.ICON_UNLOCK
@@ -101,7 +107,7 @@ local function show_scene_node(node)
             world:pub { "EntityState", "lock", eid, not current_lock }
         end
         imgui.util.PopID()
-        imgui.cursor.SameLine()
+        imgui.table.NextColumn();
         imgui.util.PushID(eid)
         local current_visible = hierarchy:is_visible(eid)
         icon = current_visible and icons.ICON_VISIBLE or icons.ICON_UNVISIBLE
@@ -109,7 +115,6 @@ local function show_scene_node(node)
             world:pub { "EntityState", "visible", eid, not current_visible }
         end
         imgui.util.PopID()
-        imgui.deprecated.NextColumn()
     end
     local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((gizmo.target_eid == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
     if not node.display_name then
@@ -135,6 +140,7 @@ local function show_scene_node(node)
     end
     node_context_menu(node.eid)
     select_or_move(node)
+
     lock_visible(node.eid)
     if open and has_child then
         for _, child in ipairs(node.children) do
@@ -144,23 +150,28 @@ local function show_scene_node(node)
     end
 end
 
-local create_light = {
+local light_type = {
     "directional",
     "point",
     "spot"
 }
 
-local create_geom = {
-    "cube(raw)",
-    "cone(raw)",
-    "cylinder(raw)",
-    "sphere(raw)",
-    "torus(raw)",
+local geom_type = {
+    "cube",
+    "cone",
+    "cylinder",
+    "sphere",
+    "torus",
     "cube(prefab)",
     "cone(prefab)",
     "cylinder(prefab)",
     "sphere(prefab)",
     "torus(prefab)"
+}
+local collider_type = {
+    "sphere",
+    "box",
+    "capsule"
 }
 
 function m.show()
@@ -173,18 +184,26 @@ function m.show()
             imgui.windows.OpenPopup("CreateEntity")
         end
         if imgui.windows.BeginPopup("CreateEntity") then
-            if imgui.widget.BeginMenu("Geometry") then
-                for i, type in ipairs(create_geom) do
+            if imgui.widget.BeginMenu("Collider") then
+                for i, type in ipairs(collider_type) do
                     if imgui.widget.MenuItem(type) then
-                        world:pub { "Create", type}
+                        world:pub { "Create", "collider", type}
+                    end
+                end
+                imgui.widget.EndMenu()
+            end
+            if imgui.widget.BeginMenu("Geometry") then
+                for i, type in ipairs(geom_type) do
+                    if imgui.widget.MenuItem(type) then
+                        world:pub { "Create", "geometry", type}
                     end
                 end
                 imgui.widget.EndMenu()
             end
             if imgui.widget.BeginMenu("Light") then
-                for i, type in ipairs(create_light) do
+                for i, type in ipairs(light_type) do
                     if imgui.widget.MenuItem(type) then
-                        world:pub { "Create", type}
+                        world:pub { "Create", "light", type}
                     end
                 end
                 imgui.widget.EndMenu()
@@ -195,22 +214,26 @@ function m.show()
             imgui.windows.EndPopup()
         end
         imgui.cursor.Separator()
-        for i, child in ipairs(hierarchy.root.children) do
-            imgui.deprecated.Columns(2, "SceneColumns", false)
-            imgui.deprecated.SetColumnOffset(2, imgui.windows.GetWindowContentRegionWidth() - uiconfig.LockVisibleWidth)
-            source_eid = nil
-            target_eid = nil
-            show_scene_node(child)
-            imgui.deprecated.NextColumn()
-            if source_eid and target_eid then
-                hierarchy:set_parent(source_eid, target_eid)
-                local sourceWorldMat = iom.calc_worldmat(source_eid)
-                local targetWorldMat = iom.calc_worldmat(target_eid)
-                iom.set_srt(source_eid, math3d.mul(math3d.inverse(targetWorldMat), sourceWorldMat))
-                iss.set_parent(source_eid, target_eid)
-                world:pub {"EntityEvent", "parent", source_eid}
+        if imgui.table.Begin("InspectorTable", 3, imgui.flags.Table {'ScrollY'}) then
+            local child_width, child_height = imgui.windows.GetContentRegionAvail()
+            imgui.table.SetupColumn("Entity", imgui.flags.TableColumn {'NoHide', 'WidthStretch'}, 1.0);
+            imgui.table.SetupColumn("Lock", imgui.flags.TableColumn {'WidthFixed'}, 24.0);
+            imgui.table.SetupColumn("Visible", imgui.flags.TableColumn {'WidthFixed'}, 24.0);
+            imgui.table.HeadersRow();
+            for i, child in ipairs(hierarchy.root.children) do
+                source_eid = nil
+                target_eid = nil
+                show_scene_node(child)
+                if source_eid and target_eid then
+                    hierarchy:set_parent(source_eid, target_eid)
+                    local sourceWorldMat = iom.calc_worldmat(source_eid)
+                    local targetWorldMat = iom.calc_worldmat(target_eid)
+                    iom.set_srt(source_eid, math3d.mul(math3d.inverse(targetWorldMat), sourceWorldMat))
+                    iss.set_parent(source_eid, target_eid)
+                    world:pub {"EntityEvent", "parent", source_eid}
+                end
             end
-            imgui.deprecated.Columns(1)
+            imgui.table.End() 
         end
     end
 end

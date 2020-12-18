@@ -171,25 +171,28 @@ function CameraView:show()
         end
         
         if #frames > 0 then
-            imgui.deprecated.Columns(2, "FrameColumns", false)
-            imgui.widget.Text("FrameIndex")
-            imgui.deprecated.NextColumn()
-            imgui.widget.Text("Duration")
-            imgui.deprecated.NextColumn()
             imgui.cursor.Separator()
-            for i, v in ipairs(frames) do
-                if imgui.widget.Selectable(i, self.current_frame == i) then
-                    self.current_frame = i
-                    camera_mgr.set_frame(self.eid, i)
-                    self:update()
+            if imgui.table.Begin("CameraViewtable", 2, imgui.flags.Table {'Resizable', 'ScrollY'}) then
+                imgui.table.SetupColumn("FrameIndex", imgui.flags.TableColumn {'NoSort', 'WidthAutoResize'}, -1, 0)
+                imgui.table.SetupColumn("Duration", imgui.flags.TableColumn {'NoSort', 'WidthStretch'}, -1, 1)
+                imgui.table.HeadersRow()
+                for i, v in ipairs(frames) do
+                    --imgui.table.NextRow()
+                    imgui.table.NextColumn()
+                    --imgui.table.SetColumnIndex(0)
+                    if imgui.widget.Selectable(i, self.current_frame == i) then
+                        self.current_frame = i
+                        camera_mgr.set_frame(self.eid, i)
+                        self:update()
+                    end
+                    imgui.table.NextColumn()
+                    --imgui.table.SetColumnIndex(1)
+                    if imgui.widget.DragFloat("##"..i, self.duration[i]) then
+                        frames[i].duration = self.duration[i][1]
+                    end
                 end
-                imgui.deprecated.NextColumn()
-                if imgui.widget.DragFloat("##"..i, self.duration[i]) then
-                    frames[i].duration = self.duration[i][1]
-                end
-                imgui.deprecated.NextColumn()
+                imgui.table.End()
             end
-            imgui.deprecated.Columns(1)
         end
 
         imgui.widget.TreePop()
