@@ -9,16 +9,39 @@ struct particle_remap;
 
 struct render_data{
     uint16_t viewid             = UINT16_MAX;
-    uint16_t progid             = UINT16_MAX;
     quad_buffer qb;
+};
+
+struct material {
+    struct fx{
+        uint32_t prog;
+    };
+
+    struct fx fx;
+
+    struct state{
+        uint64_t state;
+        uint32_t rgba;
+    };
+    struct state state;
+
+    struct uniform{
+        uint32_t uniformid;
+        glm::vec4 value;
+    };
     struct texture{
         uint8_t stage;
-        uint16_t uniformid;
-        uint16_t texid;
-        texture(uint8_t s = UINT8_MAX, uint16_t uid = UINT16_MAX, uint16_t tid=UINT16_MAX) : stage(s), uniformid(uid), texid(tid){}
+        uint32_t uniformid;
+        uint32_t texid;
     };
-    std::vector<texture>   textures;
+    struct properties {
+        std::unordered_map<std::string, uniform>  uniforms;
+        std::unordered_map<std::string, texture>    textures;
+    };
+
+    struct properties properties;
 };
+
 
 //TODO: need remove this singletonT, push it in lua_State
 class particle_mgr : public singletonT<particle_mgr> {
@@ -38,9 +61,20 @@ private:
     void remap_particles() { mparticles.remap_particles(mmgr); }
 public:
     render_data& get_rd() { return mrenderdata; }
+    void register_material(uint8_t idx, material &&m){mmaterials[idx] = std::move(m);}
 private:
-    void submit_render();
-    uint32_t submit_buffer();
+    struct submit_batch{
+        //TODO: use intstance render
+        uint8_t materialidx;
+
+    };
+    using submit_batchs = std::vector<submit_batch>;
+    using quad_list = std::list<uint16_t>;
+    using quads_lists = std::vector<quad_list>;
+    quads_lists sort_quads();
+    void submit_buffer(const quad_list &l);
+    void submit_render(uint8_t materialidx);
+    void submit();
 public:
     void update(float dt);
 private:
@@ -61,4 +95,5 @@ private:
     struct particle_manager *mmgr;
 
     render_data mrenderdata;
+    std::unordered_map<uint8_t, material> mmaterials;
 };

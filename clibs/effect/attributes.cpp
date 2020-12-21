@@ -23,15 +23,20 @@ namespace lua_struct {
 
     template <int NUM, typename ELEMTYPE>
     void unpack_vec(lua_State* L, int idx, glm::vec<NUM, ELEMTYPE, glm::defaultp>& v) {
-        luaL_checktype(L, idx, LUA_TTABLE);
-        const int len = (int)luaL_len(L, idx);
-        if (len < NUM) {
-            luaL_error(L, "invalid vec: %d", len);
-        }
-        for (int ii = 0; ii < NUM; ++ii) {
-            lua_geti(L, idx, ii + 1);
-            v[ii] = (ELEMTYPE)lua_tonumber(L, -1);
-            lua_pop(L, 1);
+        const int ltype = lua_type(L, idx);
+        if (LUA_TTABLE == ltype){
+            const int len = (int)luaL_len(L, idx);
+            if (len < NUM) {
+                luaL_error(L, "invalid vec: %d", len);
+            }
+            for (int ii = 0; ii < NUM; ++ii) {
+                lua_geti(L, idx, ii + 1);
+                v[ii] = (ELEMTYPE)lua_tonumber(L, -1);
+                lua_pop(L, 1);
+            }
+        } else if (LUA_TLIGHTUSERDATA == ltype){
+            auto t = (const ELEMTYPE*)lua_touserdata(L, idx);
+            memcpy(&v, t, sizeof(ELEMTYPE) * NUM);
         }
     }
 

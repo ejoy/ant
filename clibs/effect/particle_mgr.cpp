@@ -7,8 +7,59 @@
 extern bgfx_interface_vtbl_t* ibgfx();
 #define BGFX(_API) ibgfx()->_API
 
-LUA2STRUCT(struct render_data, viewid, progid, qb, textures);
-LUA2STRUCT(struct render_data::texture, stage, uniformid, texid);
+LUA2STRUCT(struct render_data, viewid, qb);
+LUA2STRUCT(struct material, fx, state, properties);
+LUA2STRUCT(struct material::properties, uniforms, textures);
+LUA2STRUCT(struct material::fx, prog);
+LUA2STRUCT(struct material::uniform, uniformid, value);
+LUA2STRUCT(struct material::texture, stage, texid, uniformid);
+
+namespace lua_struct {
+	static int inline
+		hex2n(lua_State* L, char c) {
+		if (c >= '0' && c <= '9')
+			return c - '0';
+		else if (c >= 'A' && c <= 'F')
+			return c - 'A' + 10;
+		else if (c >= 'a' && c <= 'f')
+			return c - 'a' + 10;
+		return luaL_error(L, "Invalid state %c", c);
+	}
+
+	static inline void
+		get_state(lua_State* L, int idx, uint64_t* pstate, uint32_t* prgba) {
+		size_t sz;
+		const uint8_t* data = (const uint8_t*)luaL_checklstring(L, idx, &sz);
+		if (sz != 16 && sz != 24) {
+			luaL_error(L, "Invalid state length %d", sz);
+		}
+		uint64_t state = 0;
+		uint32_t rgba = 0;
+		int i;
+		for (i = 0; i < 15; i++) {
+			state |= hex2n(L, data[i]);
+			state <<= 4;
+		}
+		state |= hex2n(L, data[15]);
+		if (sz == 24) {
+			for (i = 0; i < 7; i++) {
+				rgba |= hex2n(L, data[16 + i]);
+				rgba <<= 4;
+			}
+			rgba |= hex2n(L, data[23]);
+		}
+		*pstate = state;
+		*prgba = rgba;
+	}
+
+	template <>
+	void unpack<struct material::state>(lua_State* L, int idx, struct material::state& v, void*) {
+		luaL_checktype(L, idx, LUA_TSTRING);
+		get_state(L, -1, &v.state, &v.rgba);
+	}
+	template <>
+	void pack<struct material::state>(lua_State* L, struct material::state const& v, void*) {}
+}
 
 namespace lua_struct{
     template<>
@@ -198,16 +249,28 @@ particle_mgr::update_uv_motion(float dt){
 	});
 }
 
-uint32_t particle_mgr::submit_buffer(){
+particle_mgr::quads_lists particle_mgr::sort_quads(){
 	const int n = particlesystem_count(mmgr, ID_TAG_render_quad);
-	if (n == 0)
-		return 0;
+	if (n == 0){
+		return std::move(quads_lists());
+	}
+
+	quads_lists	batchs(mmaterials.size());
+	for (int ii=0; ii<n; ++ii){
+		const auto material = sibling_component<particles::material>(ID_TAG_render_quad, ii);
+		batchs[material->idx].push_front((uint16_t)ii);
+	}
+
+	return batchs;
+}
+
+void particle_mgr::submit_buffer(const quad_list &l){
 	bgfx_transient_vertex_buffer_t tvb;
-	mrenderdata.qb.alloc(n, tvb);
+	mrenderdata.qb.alloc((uint32_t)l.size(), tvb);
 
 	quaddata* quads = (quaddata*)tvb.data;
 
-	for (int iq=0; iq<n; ++iq){
+	for (auto iq : l){
 		const auto scale		= sibling_component<particles::scale>(ID_TAG_render_quad, iq);
 		const auto rotation		= sibling_component<particles::rotation>(ID_TAG_render_quad, iq);
 		const auto translation	= sibling_component<particles::translation>(ID_TAG_render_quad, iq);
@@ -235,23 +298,36 @@ uint32_t particle_mgr::submit_buffer(){
 	}
 
 	mrenderdata.qb.submit(tvb);
-	return n;
 }
 
 void
-particle_mgr::submit_render(){
-	if (0 == submit_buffer())
-		return;
+particle_mgr::submit_render(uint8_t materialidx){
+	auto itmaterial = mmaterials.find(materialidx);
+	if (itmaterial != mmaterials.end()){
+		const auto &m = itmaterial->second;
+		BGFX(set_state(m.state.state, m.state.rgba));
 
-	BGFX(set_state(uint64_t(BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA), 0));
+		for (const auto &[key, t] : m.properties.textures){
+			BGFX(set_texture)(t.stage, {uint16_t(t.uniformid)}, {uint16_t(t.texid)}, UINT16_MAX);
+		}
+
+		for (const auto &[key, u] : m.properties.uniforms){
+			BGFX(set_uniform)({uint16_t(u.uniformid)}, &u.value.x, 1);
+		}
 	
-
-	for (size_t ii=0; ii<mrenderdata.textures.size(); ++ii){
-		const auto &t = mrenderdata.textures[ii];
-		BGFX(set_texture)(t.stage, {t.uniformid}, {t.texid}, UINT16_MAX);
+		BGFX(submit)(mrenderdata.viewid, {uint16_t(m.fx.prog)}, 0, BGFX_DISCARD_ALL);
 	}
-	
-	BGFX(submit)(mrenderdata.viewid, {mrenderdata.progid}, 0, BGFX_DISCARD_ALL);
+}
+
+void
+particle_mgr::submit(){
+	auto batches = sort_quads();
+	for (uint8_t materialidx=0; materialidx < batches.size(); ++materialidx){
+		const auto &l = batches[materialidx];
+		//TODO: need instance draw
+		submit_buffer(l);
+		submit_render(materialidx);
+	}
 }
 
 void
@@ -266,5 +342,5 @@ particle_mgr::update(float dt){
 	remap_particles();
 	assert(0 == particlesystem_verify(mmgr));
 
-	submit_render();
+	submit();
 }

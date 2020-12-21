@@ -6,7 +6,7 @@ public:
     particle_emitter() = default;
     bool update(float dt);
     bool isdead() const { return mlife.isdead(); }
-    uint32_t spawn(const glm::mat4 &transform);
+    uint32_t spawn(const glm::mat4 &transform, uint8_t materialidx);
 
 private:
     void step(float dt);

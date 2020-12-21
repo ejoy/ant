@@ -37,7 +37,8 @@ static int
 lemitter_spawn(lua_State *L){
     auto e = get_emitter(L, 1);
     const glm::mat4 &m = *(glm::mat4*)lua_touserdata(L, 2);
-    lua_pushinteger(L, e->spawn(m));
+    const auto materialidx = (uint8_t)(lua_tointeger(L, 3)-1);
+    lua_pushinteger(L, e->spawn(m, materialidx));
     return 1;
 
 }
@@ -118,6 +119,21 @@ leffect_update_particles(lua_State *L){
     return 0;
 }
 
+static int
+leffect_register_material(lua_State *L){
+    const uint8_t idx = (uint8_t)(luaL_checkinteger(L, 1)-1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    material m;
+    lua_struct::unpack(L, 2, m);
+    particle_mgr::get().register_material(idx, std::move(m));
+    return 0;
+}
+
+static int
+leffect_valid_material_indices(lua_State*L){
+    return 0;
+}
+
 extern "C" {
     LUAMOD_API int
     luaopen_effect(lua_State *L){
@@ -128,6 +144,8 @@ extern "C" {
             { "shutdown",           leffect_shutdown },
             { "create_emitter",     leffect_create_emitter},
             { "update_particles",   leffect_update_particles},
+            { "register_material",  leffect_register_material},
+            { "valid_material_indices", leffect_valid_material_indices},
             { nullptr, nullptr },
         };
         luaL_newlib(L, l);

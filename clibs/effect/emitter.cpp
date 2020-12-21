@@ -137,7 +137,7 @@ static void create_uvm(UVM_TYPE &uvm, const INIT_UVMTYPE &init_uvm, randomobj &r
 }
 
 uint32_t
-particle_emitter::spawn(const glm::mat4 &transform){
+particle_emitter::spawn(const glm::mat4 &transform, uint8_t materialidx){
 	if (0 == mspawn.step.count)
 		return 0;
 
@@ -159,57 +159,61 @@ particle_emitter::spawn(const glm::mat4 &transform){
 
     comp_ids ids;
     ids.push_back(ID_TAG_render_quad);
+	ids.push_back(ID_material);
+	particles::material m; m.idx = materialidx;
+	auto& pm = particle_mgr::get();
+	pm.add_component(m);
     for (auto id : mspawn.init.components){
 		switch (id) {
 		case ID_life:{
-			check_add_id(ids, particle_mgr::get().add_component(
+			check_add_id(ids, pm.add_component(
 				particles::life(mspawn.init.life.get(ro()))
 			));
 		} break;
 		case ID_velocity:{
-			check_add_id(ids, particle_mgr::get().add_component(
+			check_add_id(ids, pm.add_component(
 				particles::velocity(transform_init_value(mspawn.init.velocity, 0.f).get(ro()))
 			));
 		} break;
 		case ID_acceleration:{
-			check_add_id(ids, particle_mgr::get().add_component(
+			check_add_id(ids, pm.add_component(
 				particles::acceleration(transform_init_value(mspawn.init.acceleration, 0.f).get(ro()))
 			));
 		} break;
 		case ID_scale:{
-			check_add_id(ids, particle_mgr::get().add_component(
+			check_add_id(ids, pm.add_component(
 				particles::scale(transform_init_value(mspawn.init.scale, 0.f).get(ro()))
 			));
 		} break;
 		case ID_rotation:{
 			particles::rotation r(mspawn.init.rotation.get(ro()), glm::vec3(0.f, 0.f, 1.f));
 			r = glm::quat(transform) * r;
-			check_add_id(ids, particle_mgr::get().add_component(r));
+			check_add_id(ids, pm.add_component(r));
 		} break;
 		case ID_translation:{
-			check_add_id(ids, particle_mgr::get().add_component(
+			check_add_id(ids, pm.add_component(
 				particles::translation(transform_init_value(mspawn.init.translation, 1.f).get(ro()))
 			));
 		} break;
 		case ID_uv_motion:{
 			particles::uv_motion uvm;
 			create_uvm(uvm, mspawn.init.uv_motion, ro);
-			check_add_id(ids, particle_mgr::get().add_component(uvm));
+			check_add_id(ids, pm.add_component(uvm));
 		} break;
 		case ID_subuv_motion:{
 			particles::subuv_motion sub_uvm;
 			create_uvm(sub_uvm, mspawn.init.subuv_motion, ro);
-			check_add_id(ids, particle_mgr::get().add_component(sub_uvm));
+			check_add_id(ids, pm.add_component(sub_uvm));
 		} break;
 		case ID_color:{
 			particles::color c;
 			for(int ii=0; ii<4;++ii){
 				c[ii] = glm::clamp(mspawn.init.color.rgba[ii].get(ro()), uint8_t(0), uint8_t(255));
 			}
-			check_add_id(ids, particle_mgr::get().add_component(c));
+			check_add_id(ids, pm.add_component(c));
 		} break;
 		case ID_material:{
-			check_add_id(ids, particle_mgr::get().add_component(particles::material(mspawn.init.material)));
+			check_add_id(ids, pm.add_component(particles::material(mspawn.init.material)));
 		} break;
 		default: assert(false); break;
 		}
@@ -218,38 +222,38 @@ particle_emitter::spawn(const glm::mat4 &transform){
     for (auto id : mspawn.interp.components){
 		switch (id){
 		case ID_velocity_interpolator: {
-			check_add_id(ids, particle_mgr::get().add_component(
+			check_add_id(ids, pm.add_component(
 				particles::velocity_interpolator(transform_interp_value(mspawn.interp.velocity, 0.f))
 			));
 		} break;
 		case ID_acceleration_interpolator: {
-			check_add_id(ids, particle_mgr::get().add_component(
+			check_add_id(ids, pm.add_component(
 				particles::acceleration_interpolator(transform_interp_value(mspawn.interp.acceleration, 0.f))
 			));
 		} break;
 		case ID_scale_interpolator: {
-			check_add_id(ids, particle_mgr::get().add_component(
+			check_add_id(ids, pm.add_component(
 				particles::scale_interpolator(transform_interp_value(mspawn.interp.scale, 0.f))
 			));
 		} break;
 		case ID_rotation_interpolator: {
-			check_add_id(ids, particle_mgr::get().add_component(
+			check_add_id(ids, pm.add_component(
 				particles::rotation_interpolator(mspawn.interp.rotation)
 			));
 		} break;
 		case ID_translation_interpolator: {
-			check_add_id(ids, particle_mgr::get().add_component(
+			check_add_id(ids, pm.add_component(
 				particles::translation_interpolator(transform_interp_value(mspawn.interp.translation, 1.f))
 			));
 		} break;
 		case ID_uv_motion_interpolator: {
-			check_add_id(ids, particle_mgr::get().add_component(
+			check_add_id(ids, pm.add_component(
 				particles::uv_motion_interpolator(mspawn.interp.uv_motion)
 			));
 		} break;
 		case ID_color_interpolator: {
 			assert(std::find(ids.begin(), ids.end(), ID_color) != ids.end());
-			check_add_id(ids, particle_mgr::get().add_component(
+			check_add_id(ids, pm.add_component(
 				particles::color_interpolator(mspawn.interp.color)
 			));
 		} break;
@@ -259,6 +263,6 @@ particle_emitter::spawn(const glm::mat4 &transform){
 
 	check_add_default_component(ids, transform);
 
-    particle_mgr::get().add(ids);
+    pm.add(ids);
 	return --mspawn.step.count;
 }
