@@ -9,7 +9,6 @@
                 margin-bottom: 50%;
             }
             button {
-                display: block;
                 margin: 10px;
                 padding: 0 20px;
                 text-align: center;

@@ -308,7 +308,7 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 	RegisterProperty(PropertyId::BorderBottomLeftRadius, "border-bottom-left-radius", "0px", false, false).AddParser("length");
 	RegisterShorthand(ShorthandId::BorderRadius, "border-radius", "border-top-left-radius, border-top-right-radius, border-bottom-right-radius, border-bottom-left-radius", ShorthandType::Box);
 
-	RegisterProperty(PropertyId::Display, "display", "flex", false, true).AddParser("keyword", "none, flex");
+	RegisterProperty(PropertyId::Display, "display", "flex", false, true).AddParser("keyword", "flex, none");
 	RegisterProperty(PropertyId::Position, "position", "static", false, true).AddParser("keyword", "static, relative, absolute");
 	RegisterProperty(PropertyId::Top, "top", "0px", false, true)
 		.AddParser("length_percent");

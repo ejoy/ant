@@ -275,7 +275,7 @@ void Layout::SetProperty(PropertyId id, const Property* property, float font_siz
 		SetPercentProperty(node, id, property->Get<float>());
 		break;
 	case Property::KEYWORD:
-		SetIntProperty(node, id, property->Get<float>());
+		SetIntProperty(node, id, property->Get<int>());
 		break;
 	default:
 		SetFloatProperty(node, id, GetPropertyValue(property, font_size, document_font_size, dp_ratio));

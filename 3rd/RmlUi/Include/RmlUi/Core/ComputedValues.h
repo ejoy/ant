@@ -56,7 +56,7 @@ struct NumberAuto {
 	NumberAuto(Type type, float value = 0) : type(type), value(value) {}
 };
 
-enum class Display : uint8_t { None, Flex };
+enum class Display : uint8_t { Flex, None };
 enum class Position : uint8_t { Static, Relative, Absolute };
 
 using ZIndex = NumberAuto;
