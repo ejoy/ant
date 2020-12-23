@@ -1,0 +1,104 @@
+/*
+ * This source file is part of RmlUi, the HTML/CSS Interface Middleware
+ *
+ * For the latest information, see http://github.com/mikke89/RmlUi
+ *
+ * Copyright (c) 2008-2010 CodePoint Ltd, Shift Technology Ltd
+ * Copyright (c) 2019 The RmlUi Team, and contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ */
+
+#include "../../Include/RmlUi/Core/Decorator.h"
+#include "TextureDatabase.h"
+#include "../../Include/RmlUi/Core/PropertyDefinition.h"
+#include "../../Include/RmlUi/Core/Texture.h"
+#include <algorithm>
+
+namespace Rml {
+
+Decorator::Decorator()
+{
+}
+
+Decorator::~Decorator()
+{
+}
+
+// Attempts to load a texture into the list of textures in use by the decorator.
+int Decorator::LoadTexture(const String& texture_name, const String& rcss_path)
+{
+	if (texture_name == first_texture.GetSource())
+		return 0;
+
+	for (size_t i = 0; i < additional_textures.size(); i++)
+	{
+		if (texture_name == additional_textures[i].GetSource())
+			return (int)i + 1;
+	}
+
+	Texture texture;
+	texture.Set(texture_name, rcss_path);
+
+	additional_textures.push_back(std::move(texture));
+	return (int)additional_textures.size();
+}
+
+int Decorator::AddTexture(const Texture& texture)
+{
+	if (!texture)
+		return -1;
+
+	if (!first_texture)
+		first_texture = texture;
+
+	if (first_texture == texture)
+		return 0;
+
+	auto it = std::find(additional_textures.begin(), additional_textures.end(), texture);
+	if (it != additional_textures.end())
+		return (int)(it - additional_textures.begin()) + 1;
+
+	additional_textures.push_back(texture);
+	return (int)additional_textures.size();
+}
+
+int Decorator::GetNumTextures() const
+{
+	int result = (first_texture ? 1 : 0);
+	result += (int)additional_textures.size();
+	return result;
+}
+
+// Returns one of the decorator's previously loaded textures.
+const Texture* Decorator::GetTexture(int index) const
+{
+	if (index == 0)
+		return &first_texture;
+	
+	index -= 1;
+	if (index < 0 || index >= (int)additional_textures.size())
+		return nullptr;
+
+	return &(additional_textures[index]);
+}
+
+
+} // namespace Rml

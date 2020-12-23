@@ -42,7 +42,6 @@ CMAKE_COPY_RmlUi= echo ok
 ifeq "$(PLAT)" "ios"
   CMAKE_COPY_ozz-animation= echo ok
 else ifeq "$(PLAT)" "msvc"
-  CMAKE_OPT_RmlUi+=-DBUILD_SAMPLES=ON
 else
   CMAKE_COPY_ozz-animation= mkdir -p ../../../../../bin/$(PLAT)/$(MODE)/ && cp src/animation/offline/gltf/gltf2ozz$(TOOL_EXT_NAME) ../../../../../bin/$(PLAT)/$(MODE)/gltf2ozz$(TOOL_EXT_NAME)
 endif

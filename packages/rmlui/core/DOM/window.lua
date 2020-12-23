@@ -21,15 +21,15 @@ function datamodel_mt:__newindex(k, v)
     rmlui.DataModelSet(self,k,v)
 end
 
-function event.OnContextCreate(context)
-    datamodels[context] = {}
+function event.OnNewDocument(document)
+    datamodels[document] = {}
 end
 
-function event.OnContextDestroy(context)
-    for _, model in pairs(datamodels[context]) do
+function event.OnDeleteDocument(document)
+    for _, model in pairs(datamodels[document]) do
         rmlui.DataModelRelease(model)
     end
-    datamodels[context] = nil
+    datamodels[document] = nil
 end
 
 local function createWindow(document, source)
@@ -38,9 +38,8 @@ local function createWindow(document, source)
     local timer_object = setmetatable({}, {__mode="k"})
     function window.createModel(name)
         return function (init)
-            local context = rmlui.DocumentGetContext(document)
-            local model = rmlui.DataModelCreate(context, name, init)
-            datamodels[context][name] = model
+            local model = rmlui.DataModelCreate(document, name, init)
+            datamodels[document][name] = model
             debug.setmetatable(model, datamodel_mt)
             return model
         end
@@ -55,7 +54,7 @@ local function createWindow(document, source)
     end
     function window.close()
         task.new(function ()
-            contextManager.close(rmlui.DocumentGetContext(document))
+            contextManager.close(document)
             for t in pairs(timer_object) do
                 t:remove()
             end

@@ -108,7 +108,7 @@ struct LuaDataModel {
 	LuaTableDef* tableDef;
 	lua_State* dataL;
 	int top;
-	LuaDataModel(Rml::Context* context, const Rml::String& name);
+	LuaDataModel(Rml::ElementDocument* document, const Rml::String& name);
 	~LuaDataModel() { release(); }
 	void release();
 	bool valid() { return !!constructor; }
@@ -338,8 +338,8 @@ lDataModelDelete(lua_State* L) {
 	return 0;
 }
 
-LuaDataModel::LuaDataModel(Rml::Context* context, const Rml::String& name)
-	: constructor(context->CreateDataModel(name))
+LuaDataModel::LuaDataModel(Rml::ElementDocument* document, const Rml::String& name)
+	: constructor(document->CreateDataModel(name))
 	, handle(constructor.GetModelHandle())
 	, scalarDef(new LuaScalarDef(this))
 	, tableDef(new LuaTableDef(this))
@@ -358,12 +358,12 @@ void LuaDataModel::release() {
 
 int
 lDataModelCreate(lua_State *L) {
-	Rml::Context *context = (Rml::Context *)lua_touserdata(L, 1);
+	Rml::ElementDocument* document = (Rml::ElementDocument*)lua_touserdata(L, 1);
 	Rml::String name = luaL_checkstring(L, 2);
 	luaL_checktype(L, 3, LUA_TTABLE);
 
 	struct LuaDataModel* D = (struct LuaDataModel*)lua_newuserdata(L, sizeof(*D));
-	new (D) LuaDataModel(context, name);
+	new (D) LuaDataModel(document, name);
 	if (!D->valid()) {
 		return luaL_error(L, "Can't create DataModel with name %s", name.c_str());
 	}

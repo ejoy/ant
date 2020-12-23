@@ -19,7 +19,7 @@ std::wstring u2w(const std::string_view& str) {
 }
 #endif
 
-Rml::FileHandle File::Open(const Rml::String& path){
+Rml::FileHandle File::Open(const Rml::String& path) {
     lua_plugin* plugin = mcontext->plugin;
     lua_State* L = plugin->L;
     std::string result;
@@ -31,10 +31,23 @@ Rml::FileHandle File::Open(const Rml::String& path){
             const char* str = lua_tolstring(L, -1, &sz);
             result.assign(str, sz);
         }
-    });
+        });
 #if defined(_WIN32)
     return (Rml::FileHandle)_wfopen(u2w(result).c_str(), L"rb");
 #else
     return (Rml::FileHandle)fopen(result.c_str(), "rb");
 #endif
+}
+
+void File::Close(Rml::FileHandle file) {
+    fclose((FILE*)file);
+}
+size_t File::Read(void* buffer, size_t size, Rml::FileHandle file) {
+    return fread(buffer, 1, size, (FILE*)file);
+}
+bool File::Seek(Rml::FileHandle file, long offset, int origin) {
+    return fseek((FILE*)file, offset, origin) == 0;
+}
+size_t File::Tell(Rml::FileHandle file) {
+    return ftell((FILE*)file);
 }
