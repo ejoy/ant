@@ -69,18 +69,6 @@ struct font_manager {
 	struct truetype_font* ttf;
 	void *L;
 	int dpi_perinch;
-
-	struct _sdf {
-		// sdf value is compute as:
-		// distance: pixel(center) to glyph contour line, unit is number of pixels on sdf texture
-		// 			 if pixel inside glyph contour(which mean inisde glyph), distance is positive, or is nagitive
-		// sdf value = clamp(0, 255, onedge_value + pixel_dist_scale * distance) 
-		//			 = clamp(0, 255, onedge_value * (1.0 + (distance/max_detect_distance)))
-		// we can image that, distance is larger than max_detect_distance, if distance is nagitive, then sdfvalue must 0, otherwise it will increase the value to 255
-		int		onedge_value;			// 0 .. 255
-		//float	max_detect_distance;	// we make max_detect_distance equal to DISTANCE_OFFSET, because max_detect_distance should not exceed padding pixel
-		float	pixel_dist_scale;		// onedge_value / max_detect_distance
-	} sdf;
 };
 
 struct font_glyph {
@@ -119,8 +107,7 @@ FONT_API const char * font_manager_update(struct font_manager *, int font, int c
 FONT_API void font_manager_flush(struct font_manager *);
 FONT_API void font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size);
 
-FONT_API float font_manager_sdf_mask(struct font_manager *F, int offset);
+FONT_API float font_manager_sdf_mask(struct font_manager *F);
 FONT_API float font_manager_sdf_distance(struct font_manager *F, float numpixel);
-FONT_API void font_manager_sdf_onedge_value(struct font_manager *F, int onedge_value);
 
 #endif //font_manager_h

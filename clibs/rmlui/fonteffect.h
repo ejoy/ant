@@ -44,26 +44,36 @@ public:
     virtual bool GetGlyphMetrics(Rml::Vector2i& origin, Rml::Vector2i& dimensions, const Rml::FontGlyph& glyph) const override final{ return false;}
     virtual Rml::String GenerateKey() const = 0;
     virtual bool GetProperties(struct font_manager* F, const shader &s, PropertyMap &properties, uint16_t &prog) const{
-        const float mask = font_manager_sdf_mask(F, -5);
-        const float range = font_manager_sdf_distance(F, 2.f);
         Property m;
-        m.value[0] = mask;
-        m.value[1] = range;
+        const float offset = font_manager_sdf_distance(F, 2);
+        m.value[0] = font_manager_sdf_mask(F);// - offset;
+        m.value[1] = 1.5f;
         m.value[2] = m.value[3] = 0.0f;
         const char* mn = "u_mask";
         m.uniform_idx = s.font.find_uniform(mn);
-        properties[mn] = m;
+        if (m.uniform_idx != UINT16_MAX)
+            properties[mn] = m;
 
         Property t;
         t.texid = GetTexID();
         t.stage = 0;
         const char* tex = "s_tex";
         t.uniform_idx = s.font.find_uniform(tex);
-        properties[tex] = t;
+        if (t.uniform_idx != UINT16_MAX){
+            properties[tex] = t;
 
-        assert(t.uniform_idx == s.font_outline.find_uniform("s_tex"));
-        assert(t.uniform_idx == s.font_shadow.find_uniform("s_tex"));
-        assert(t.uniform_idx == s.font_glow.find_uniform("s_tex"));
+#ifdef _DEBUG
+            auto check_s_tex = [tex](auto idx, const auto &s){
+                auto newidx = s.find_uniform(tex);
+                if (UINT16_MAX != newidx){
+                    assert(idx == newidx);
+                }
+            };
+            check_s_tex(t.uniform_idx, s.font_outline);
+            check_s_tex(t.uniform_idx, s.font_shadow);
+            check_s_tex(t.uniform_idx, s.font_glow);
+#endif //_DEBUG
+        }
 
         prog = s.font.prog;
         return true;
@@ -131,20 +141,19 @@ public:
 
     virtual bool GetProperties(struct font_manager* F, const shader &s, PropertyMap &properties, uint16_t &prog) const override {
         SDFFontEffect::GetProperties(F, s, properties, prog);
-        assert(properties.find("u_mask") != properties.end());
-        auto &m = properties["u_mask"];
-
-        m.value[0] = font_manager_sdf_mask(F, 0);
-        m.value[1] = font_manager_sdf_distance(F, 0.5f);
-        m.value[2] = font_manager_sdf_mask(F, mMaskOffset);
-        m.value[3] = std::min(m.value[2], font_manager_sdf_distance(F, mWidth));
+        auto itmask = properties.find("u_mask");
+        if (itmask != properties.end()){
+            auto &m = itmask->second;
+            m.value[2] = mWidth;
+        }
 
         Property color;
         tocolor(GetColour(), color.value);
         const char* colorname = "u_effect_color";
         const auto& si = GetShaderInfo(s);
         color.uniform_idx   = si.find_uniform("u_effect_color");
-        properties[colorname] = color;
+        if (color.uniform_idx != UINT16_MAX)
+            properties[colorname] = color;
 
         prog = si.prog;
 
@@ -157,8 +166,8 @@ private:
 };
 
 static Rml::String
-get_default_mask_offset_str(const struct font_manager* F){
-    const int v = int(F->sdf.onedge_value * 0.85f);
+get_default_mask_offset_str(struct font_manager* F){
+    const int v = int(font_manager_sdf_mask(F) * 0.85f);
     return std::to_string(v);
 }
 
@@ -222,7 +231,7 @@ SDFFontEffectShadow(uint16_t texid, int mo, const Rml::Vector2f &offset, Rml::Co
         SDFFontEffect::GetProperties(F, s, properties, prog);
         assert(properties.find("u_mask") != properties.end());
         auto &m = properties["u_mask"];
-        m.value[2] = font_manager_sdf_mask(F, mMaskOffset);
+        m.value[2] = font_manager_sdf_mask(F);
         m.value[3] = std::min(m.value[2], m.value[1]);
 
 
@@ -230,15 +239,18 @@ SDFFontEffectShadow(uint16_t texid, int mo, const Rml::Vector2f &offset, Rml::Co
         tocolor(GetColour(), color.value);
         const char* colorname = "u_effect_color";
         color.uniform_idx = s.font_shadow.find_uniform(colorname);
-        properties[colorname] = color;
+        if (color.uniform_idx != UINT16_MAX)
+            properties[colorname] = color;
 
         Property offset;
         const char* offsetname = "u_shadow_offset";
         offset.uniform_idx = s.font_shadow.find_uniform(offsetname);
-        offset.value[0] = moffset.x;
-        offset.value[1] = moffset.y;
-        offset.value[2] = offset.value[3] = 0.0f;
-        properties[offsetname] = offset;
+        if (offset.uniform_idx != UINT16_MAX){
+            offset.value[0] = moffset.x;
+            offset.value[1] = moffset.y;
+            offset.value[2] = offset.value[3] = 0.0f;
+            properties[offsetname] = offset;
+        }
 
         prog = s.font_shadow.prog;
 
