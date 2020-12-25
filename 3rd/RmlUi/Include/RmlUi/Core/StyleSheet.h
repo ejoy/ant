@@ -31,19 +31,14 @@
 
 #include "Traits.h"
 #include "PropertyDictionary.h"
-#include "Spritesheet.h"
 
 namespace Rml {
 
 class Element;
 class ElementDefinition;
 class StyleSheetNode;
-class Decorator;
 class FontEffect;
-class SpritesheetList;
 class Stream;
-struct Sprite;
-struct Spritesheet;
 
 struct KeyframeBlock {
 	KeyframeBlock(float normalized_time) : normalized_time(normalized_time) {}
@@ -55,13 +50,6 @@ struct Keyframes {
 	Vector<KeyframeBlock> blocks;
 };
 using KeyframesMap = UnorderedMap<String, Keyframes>;
-
-struct DecoratorSpecification {
-	String decorator_type;
-	PropertyDictionary properties;
-	SharedPtr<Decorator> decorator;
-};
-using DecoratorSpecificationMap = UnorderedMap<String, DecoratorSpecification>;
 
 /**
 	StyleSheet maintains a single stylesheet definition. A stylesheet can be combined with another stylesheet to create
@@ -87,23 +75,13 @@ public:
 	/// Builds the node index for a combined style sheet.
 	void BuildNodeIndex();
 	/// Optimizes some properties for faster retrieval.
-	/// Specifically, converts all decorator and font-effect properties from strings to instanced decorator and font effect lists.
 	void OptimizeNodeProperties();
 
 	/// Returns the Keyframes of the given name, or null if it does not exist.
 	Keyframes* GetKeyframes(const String& name);
 
-	/// Returns the Decorator of the given name, or null if it does not exist.
-	SharedPtr<Decorator> GetDecorator(const String& name) const;
-
-	/// Parses the decorator property from a string and returns a list of instanced decorators.
-	DecoratorsPtr InstanceDecoratorsFromString(const String& decorator_string_value, const SharedPtr<const PropertySource>& source) const;
-
 	/// Parses the font-effect property from a string and returns a list of instanced font-effects.
 	FontEffectsPtr InstanceFontEffectsFromString(const String& font_effect_string_value, const SharedPtr<const PropertySource>& source) const;
-
-	/// Get sprite located in any spritesheet within this stylesheet.
-	const Sprite* GetSprite(const String& name) const;
 
 	/// Returns the compiled element definition for a given element hierarchy. A reference count will be added for the
 	/// caller, so another should not be added. The definition should be released by removing the reference count.
@@ -125,12 +103,6 @@ private:
 
 	// Name of every @keyframes mapped to their keys
 	KeyframesMap keyframes;
-
-	// Name of every @decorator mapped to their specification
-	DecoratorSpecificationMap decorator_map;
-
-	// Name of every @spritesheet and underlying sprites mapped to their values
-	SpritesheetList spritesheet_list;
 
 	// Map of all styled nodes, that is, they have one or more properties.
 	NodeIndex styled_node_index;

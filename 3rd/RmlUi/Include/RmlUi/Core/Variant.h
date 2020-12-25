@@ -69,7 +69,6 @@ public:
 		TRANSFORMPTR = 't',
 		TRANSITIONLIST = 'T',
 		ANIMATIONLIST = 'A',
-		DECORATORSPTR = 'D',
 		FONTEFFECTSPTR = 'F',
 		VOIDPTR = '*',
 	};
@@ -146,8 +145,6 @@ private:
 	void Set(TransitionList&& value);
 	void Set(const AnimationList& value);
 	void Set(AnimationList&& value);
-	void Set(const DecoratorsPtr& value);
-	void Set(DecoratorsPtr&& value);
 	void Set(const FontEffectsPtr& value);
 	void Set(FontEffectsPtr&& value);
 	

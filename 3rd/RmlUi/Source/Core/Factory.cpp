@@ -40,11 +40,6 @@
 
 #include "DataControllerDefault.h"
 #include "DataViewDefault.h"
-#include "DecoratorTiledBoxInstancer.h"
-#include "DecoratorTiledHorizontalInstancer.h"
-#include "DecoratorTiledImageInstancer.h"
-#include "DecoratorTiledVerticalInstancer.h"
-#include "DecoratorGradient.h"
 #include "EventInstancerDefault.h"
 #include "FontEffectBlur.h"
 #include "FontEffectGlow.h"
@@ -68,10 +63,6 @@ namespace Rml {
 // Element instancers.
 using ElementInstancerMap = UnorderedMap< String, ElementInstancer* >;
 static ElementInstancerMap element_instancers;
-
-// Decorator instancers.
-using DecoratorInstancerMap = UnorderedMap< String, DecoratorInstancer* >;
-static DecoratorInstancerMap decorator_instancers;
 
 // Font effect instancers.
 using FontEffectInstancerMap = UnorderedMap< String, FontEffectInstancer* >;
@@ -107,13 +98,6 @@ struct DefaultInstancers {
 	ElementInstancerElement element_default;
 	ElementInstancerText element_text;
 	ElementInstancerGeneric<ElementDocument> element_body;
-
-	// Decorators
-	DecoratorTiledHorizontalInstancer decorator_tiled_horizontal;
-	DecoratorTiledVerticalInstancer decorator_tiled_vertical;
-	DecoratorTiledBoxInstancer decorator_tiled_box;
-	DecoratorTiledImageInstancer decorator_image;
-	DecoratorGradientInstancer decorator_gradient;
 
 	// Font effects
 	FontEffectBlurInstancer font_effect_blur;
@@ -171,13 +155,6 @@ bool Factory::Initialise()
 	RegisterElementInstancer("#text", &default_instancers->element_text);
 	RegisterElementInstancer("body", &default_instancers->element_body);
 
-	// Decorator instancers
-	RegisterDecoratorInstancer("tiled-horizontal", &default_instancers->decorator_tiled_horizontal);
-	RegisterDecoratorInstancer("tiled-vertical", &default_instancers->decorator_tiled_vertical);
-	RegisterDecoratorInstancer("tiled-box", &default_instancers->decorator_tiled_box);
-	RegisterDecoratorInstancer("image", &default_instancers->decorator_image);
-	RegisterDecoratorInstancer("gradient", &default_instancers->decorator_gradient);
-
 	// Font effect instancers
 	RegisterFontEffectInstancer("blur", &default_instancers->font_effect_blur);
 	RegisterFontEffectInstancer("glow", &default_instancers->font_effect_glow);
@@ -212,8 +189,6 @@ bool Factory::Initialise()
 void Factory::Shutdown()
 {
 	element_instancers.clear();
-
-	decorator_instancers.clear();
 
 	font_effect_instancers.clear();
 
@@ -390,24 +365,6 @@ ElementPtr Factory::InstanceDocumentStream(Context* context, Stream* stream)
 	parser.Parse(stream);
 
 	return element;
-}
-
-
-// Registers an instancer that will be used to instance decorators.
-void Factory::RegisterDecoratorInstancer(const String& name, DecoratorInstancer* instancer)
-{
-	RMLUI_ASSERT(instancer);
-	decorator_instancers[StringUtilities::ToLower(name)] = instancer;
-}
-
-// Retrieves a decorator instancer registered with the factory.
-DecoratorInstancer* Factory::GetDecoratorInstancer(const String& name)
-{
-	auto iterator = decorator_instancers.find(name);
-	if (iterator == decorator_instancers.end())
-		return nullptr;
-	
-	return iterator->second;
 }
 
 // Registers an instancer that will be used to instance font effects.

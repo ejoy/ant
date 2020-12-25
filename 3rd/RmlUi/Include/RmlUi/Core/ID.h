@@ -41,7 +41,7 @@ enum class ShorthandId : uint8_t
 	/*
 	  The following values define the shorthand ids for the main stylesheet specification.
 	  These values must not be used in places that have their own property specification,
-	  such as decorators and font-effects.
+	  such as font-effects.
 	*/
 	Margin,
 	Padding,
@@ -53,10 +53,11 @@ enum class ShorthandId : uint8_t
 	BorderLeft,
 	Border,
 	BorderRadius,
-	Background,
 	Font,
 	PerspectiveOrigin,
 	TransformOrigin,
+
+	Background,
 
 	NumDefinedIds,
 	FirstCustomId = NumDefinedIds,
@@ -73,7 +74,7 @@ enum class PropertyId : uint8_t
 	/*
 	  The following values define the property ids for the main stylesheet specification.
 	  These values must not be used in places that have their own property specification,
-	  such as decorators and font-effects.
+	  such as font-effects.
 	*/
 	MarginTop,
 	MarginRight,
@@ -126,7 +127,6 @@ enum class PropertyId : uint8_t
 	VerticalAlign,
 	Clip,
 	Visibility,
-	BackgroundColor,
 	Color,
 	ImageColor,
 	FontFamily,
@@ -157,10 +157,12 @@ enum class PropertyId : uint8_t
 	PointerEvents,
 	Focus,
 
-	Decorator,
 	FontEffect,
 
 	FillImage,
+
+	BackgroundColor,
+	BackgroundImage,
 
 	NumDefinedIds,
 	FirstCustomId = NumDefinedIds,

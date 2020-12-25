@@ -125,10 +125,6 @@ bool Variant::GetInto(T& value) const
 		return TypeConverter< AnimationList, T >::Convert(*(AnimationList*)data, value);
 		break;
 
-	case DECORATORSPTR:
-		return TypeConverter< DecoratorsPtr, T >::Convert(*(DecoratorsPtr*)data, value);
-		break;
-
 	case FONTEFFECTSPTR:
 		return TypeConverter< FontEffectsPtr, T >::Convert(*(FontEffectsPtr*)data, value);
 		break;

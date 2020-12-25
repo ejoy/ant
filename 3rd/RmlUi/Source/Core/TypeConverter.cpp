@@ -114,23 +114,6 @@ bool TypeConverter<AnimationList, String>::Convert(const AnimationList& src, Str
 	return true;
 }
 
-bool TypeConverter<DecoratorsPtr, DecoratorsPtr>::Convert(const DecoratorsPtr& src, DecoratorsPtr& dest)
-{
-	dest = src;
-	return true;
-}
-
-
-bool TypeConverter<DecoratorsPtr, String>::Convert(const DecoratorsPtr& src, String& dest)
-{
-	if (!src || src->list.empty())
-		dest = "none";
-	else
-		dest += src->value;
-	return true;
-}
-
-
 bool TypeConverter<FontEffectsPtr, FontEffectsPtr>::Convert(const FontEffectsPtr& src, FontEffectsPtr& dest)
 {
 	dest = src;

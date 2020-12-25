@@ -37,8 +37,6 @@ namespace Rml {
 class Context;
 class DataControllerInstancer;
 class DataViewInstancer;
-class Decorator;
-class DecoratorInstancer;
 class Element;
 class ElementDocument;
 class ElementInstancer;
@@ -51,7 +49,6 @@ class FontEffectInstancer;
 class StyleSheet;
 class PropertyDictionary;
 class PropertySpecification;
-class DecoratorInstancerInterface;
 enum class EventId : uint16_t;
 
 /**
@@ -104,17 +101,6 @@ public:
 	/// @param[in] stream The stream to instance from.
 	/// @return The instanced document, or nullptr if an error occurred.
 	static ElementPtr InstanceDocumentStream(Context* context, Stream* stream);
-
-	/// Registers a non-owning pointer to an instancer that will be used to instance decorators.
-	/// @param[in] name The name of the decorator the instancer will be called for.
-	/// @param[in] instancer The instancer to call when the decorator name is encountered.
-	/// @lifetime The instancer must be kept alive until after the call to Rml::Shutdown.
-	/// @return The added instancer if the registration was successful, nullptr otherwise.
-	static void RegisterDecoratorInstancer(const String& name, DecoratorInstancer* instancer);
-	/// Retrieves a decorator instancer registered with the factory.
-	/// @param[in] name The name of the desired decorator type.
-	/// @return The decorator instancer it it exists, nullptr otherwise.
-	static DecoratorInstancer* GetDecoratorInstancer(const String& name);
 
 	/// Registers a non-owning pointer to an instancer that will be used to instance font effects.
 	/// @param[in] name The name of the font effect the instancer will be called for.

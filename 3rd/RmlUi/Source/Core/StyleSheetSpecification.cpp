@@ -344,10 +344,6 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 	RegisterProperty(PropertyId::Clip, "clip", "auto", true, false).AddParser("keyword", "auto, none").AddParser("number");
 	RegisterProperty(PropertyId::Visibility, "visibility", "visible", false, false).AddParser("keyword", "visible, hidden");
 
-	// Need some work on this if we are to include images.
-	RegisterProperty(PropertyId::BackgroundColor, "background-color", "transparent", false, false).AddParser("color");
-	RegisterShorthand(ShorthandId::Background, "background", "background-color", ShorthandType::FallThrough);
-
 	RegisterProperty(PropertyId::Color, "color", "white", true, false).AddParser("color");
 
 	RegisterProperty(PropertyId::ImageColor, "image-color", "white", false, false).AddParser("color");
@@ -387,7 +383,6 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 	RegisterProperty(PropertyId::Transition, "transition", "none", false, false).AddParser("transition");
 	RegisterProperty(PropertyId::Animation, "animation", "none", false, false).AddParser("animation");
 
-	RegisterProperty(PropertyId::Decorator, "decorator", "", false, false).AddParser("string");
 	RegisterProperty(PropertyId::FontEffect, "font-effect", "", true, false).AddParser("string");
 
 	// Rare properties (not added to computed values)
@@ -415,6 +410,12 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 		.AddParser("length_percent");
 	RegisterProperty(PropertyId::FlexGrow, "flex-grow", "0", false, true);
 	RegisterProperty(PropertyId::FlexShrink, "flex-shrink", "1", false, true);
+
+	RegisterProperty(PropertyId::BackgroundColor, "background-color", "transparent", false, false)
+		.AddParser("color");
+	RegisterProperty(PropertyId::BackgroundImage, "background-image", "", false, false)
+		.AddParser("string");
+	RegisterShorthand(ShorthandId::Background, "background", "background-color", ShorthandType::FallThrough);
 
 	//RMLUI_ASSERTMSG(instance->properties.property_map->AssertAllInserted(PropertyId::NumDefinedIds), "Missing specification for one or more Property IDs.");
 	//RMLUI_ASSERTMSG(instance->properties.shorthand_map->AssertAllInserted(ShorthandId::NumDefinedIds), "Missing specification for one or more Shorthand IDs.");

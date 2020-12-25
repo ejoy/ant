@@ -41,7 +41,6 @@ Variant::Variant() : type(NONE)
 	static_assert(sizeof(TransformPtr) <= LOCAL_DATA_SIZE, "Local data too small for TransformPtr");
 	static_assert(sizeof(TransitionList) <= LOCAL_DATA_SIZE, "Local data too small for TransitionList");
 	static_assert(sizeof(AnimationList) <= LOCAL_DATA_SIZE, "Local data too small for AnimationList");
-	static_assert(sizeof(DecoratorsPtr) <= LOCAL_DATA_SIZE, "Local data too small for DecoratorsPtr");
 	static_assert(sizeof(FontEffectsPtr) <= LOCAL_DATA_SIZE, "Local data too small for FontEffectsPtr");
 }
 
@@ -93,12 +92,6 @@ void Variant::Clear()
 			animation_list->~AnimationList();
 		}
 		break;
-		case DECORATORSPTR:
-		{
-			DecoratorsPtr* decorators = (DecoratorsPtr*)data;
-			decorators->~DecoratorsPtr();
-		}
-		break;
 		case FONTEFFECTSPTR:
 		{
 			FontEffectsPtr* font_effects = (FontEffectsPtr*)data;
@@ -139,10 +132,6 @@ void Variant::Set(const Variant& copy)
 		Set(*(AnimationList*)copy.data);
 		break;
 
-	case DECORATORSPTR:
-		Set(*(DecoratorsPtr*)copy.data);
-		break;
-
 	case FONTEFFECTSPTR:
 		Set(*(FontEffectsPtr*)copy.data);
 		break;
@@ -173,10 +162,6 @@ void Variant::Set(Variant&& other)
 
 	case ANIMATIONLIST:
 		Set(std::move(*(AnimationList*)other.data));
-		break;
-
-	case DECORATORSPTR:
-		Set(std::move(*(DecoratorsPtr*)other.data));
 		break;
 
 	case FONTEFFECTSPTR:
@@ -382,30 +367,6 @@ void Variant::Set(AnimationList&& value)
 	}
 }
 
-void Variant::Set(const DecoratorsPtr& value)
-{
-	if (type == DECORATORSPTR)
-	{
-		*(DecoratorsPtr*)data = value;
-	}
-	else
-	{
-		type = DECORATORSPTR;
-		new(data) DecoratorsPtr(value);
-	}
-}
-void Variant::Set(DecoratorsPtr&& value)
-{
-	if (type == DECORATORSPTR)
-	{
-		(*(DecoratorsPtr*)data) = std::move(value);
-	}
-	else
-	{
-		type = DECORATORSPTR;
-		new(data) DecoratorsPtr(std::move(value));
-	}
-}
 void Variant::Set(const FontEffectsPtr& value)
 {
 	if (type == FONTEFFECTSPTR)
@@ -492,8 +453,6 @@ bool Variant::operator==(const Variant & other) const
 		return DEFAULT_VARIANT_COMPARE(TransitionList);
 	case ANIMATIONLIST:
 		return DEFAULT_VARIANT_COMPARE(AnimationList);
-	case DECORATORSPTR:
-		return DEFAULT_VARIANT_COMPARE(DecoratorsPtr);
 	case FONTEFFECTSPTR:
 		return DEFAULT_VARIANT_COMPARE(FontEffectsPtr);
 	case NONE:

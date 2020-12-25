@@ -26,51 +26,32 @@
  *
  */
 
-#ifndef RMLUI_CORE_DECORATORGRADIENT_H
-#define RMLUI_CORE_DECORATORGRADIENT_H
+#ifndef RMLUI_CORE_ELEMENTDECORATION_H
+#define RMLUI_CORE_ELEMENTDECORATION_H
 
-#include "../../Include/RmlUi/Core/Decorator.h"
-#include "../../Include/RmlUi/Core/DecoratorInstancer.h"
-#include "../../Include/RmlUi/Core/Property.h"
+#include "../../Include/RmlUi/Core/Types.h"
 
 namespace Rml {
 
-class DecoratorGradient : public Decorator
-{
+struct Tile;
+struct Texture;
+class Geometry;
+class Element;
+
+class ElementBackgroundImage {
 public:
-	enum class Direction { Horizontal = 0, Vertical = 1 };
-
-	DecoratorGradient();
-	virtual ~DecoratorGradient();
-
-	bool Initialise(const Direction &dir_, const Colourb &start_, const Colourb & stop_);
-
-	DecoratorDataHandle GenerateElementData(Element* element) const override;
-	void ReleaseElementData(DecoratorDataHandle element_data) const override;
-
-	void RenderElement(Element* element, DecoratorDataHandle element_data) const override;
+	ElementBackgroundImage(Element* element);
+	~ElementBackgroundImage();
+	void Render();
+	void MarkDirty();
 
 private:
-	Direction dir;
-	Colourb start, stop;
-};
+	void Reload();
 
-
-
-class DecoratorGradientInstancer : public DecoratorInstancer
-{
-public:
-	DecoratorGradientInstancer();
-	~DecoratorGradientInstancer();
-
-	SharedPtr<Decorator> InstanceDecorator(const String& name, const PropertyDictionary& properties, const DecoratorInstancerInterface& instancer_interface) override;
-
-private:
-	struct GradientPropertyIds {
-		PropertyId direction, start, stop;
-	};
-	GradientPropertyIds ids;
-
+	Element* element;
+	UniquePtr<Texture> texture;
+	UniquePtr<Geometry> geometry;
+	bool dirty = false;
 };
 
 } // namespace Rml

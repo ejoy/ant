@@ -50,7 +50,7 @@
 #include "ElementStyle.h"
 #include "EventDispatcher.h"
 #include "EventSpecification.h"
-#include "ElementDecoration.h"
+#include "ElementBackgroundImage.h"
 #include "PluginRegistry.h"
 #include "PropertiesIterator.h"
 #include "Pool.h"
@@ -67,11 +67,11 @@ namespace Rml {
 // Meta objects for element collected in a single struct to reduce memory allocations
 struct ElementMeta
 {
-	ElementMeta(Element* el) : event_dispatcher(el), style(el), background_border(el), decoration(el), scroll(el) {}
+	ElementMeta(Element* el) : event_dispatcher(el), style(el), background_border(el), background_image(el), scroll(el) {}
 	EventDispatcher event_dispatcher;
 	ElementStyle style;
 	ElementBackgroundBorder background_border;
-	ElementDecoration decoration;
+	ElementBackgroundImage background_image;
 	ElementScroll scroll;
 	Style::ComputedValues computed_values;
 };
@@ -153,20 +153,17 @@ void Element::Update(float dp_ratio)
 }
 
 
-void Element::UpdateProperties()
-{
+void Element::UpdateProperties() {
 	meta->style.UpdateDefinition();
 
-	if (meta->style.AnyPropertiesDirty())
-	{
+	if (meta->style.AnyPropertiesDirty()) {
 		const ComputedValues* parent_values = nullptr;
 		if (parent)
 			parent_values = &parent->GetComputedValues();
 
 		const ComputedValues* document_values = nullptr;
 		float dp_ratio = 1.0f;
-		if (auto doc = GetOwnerDocument())
-		{
+		if (auto doc = GetOwnerDocument()) {
 			document_values = &doc->GetComputedValues();
 			if (Context * context = doc->GetContext())
 				dp_ratio = context->GetDensityIndependentPixelRatio();
@@ -206,7 +203,7 @@ void Element::Render()
 	if (ElementUtilities::SetClippingRegion(this))
 	{
 		meta->background_border.Render(this);
-		meta->decoration.RenderDecorators();
+		meta->background_image.Render();
 		OnRender();
 	}
 
@@ -480,11 +477,6 @@ const PropertyMap& Element::GetLocalStyleProperties()
 float Element::ResolveNumericProperty(const Property *property, float base_value)
 {
 	return meta->style.ResolveNumericProperty(property, base_value);
-}
-
-Style::Position Element::GetPosition()
-{
-	return meta->computed_values.position;
 }
 
 Style::Display Element::GetDisplay()
@@ -1275,12 +1267,6 @@ String Element::GetEventDispatcherSummary() const
 	return meta->event_dispatcher.ToString();
 }
 
-// Access the element decorators
-ElementDecoration* Element::GetElementDecoration() const
-{
-	return &meta->decoration;
-}
-
 // Returns the element's scrollbar functionality.
 ElementScroll* Element::GetElementScroll() const
 {
@@ -1324,7 +1310,7 @@ void Element::OnUpdate()
 {
 }
 
-// Called during render after backgrounds, borders, decorators, but before children, are rendered.
+// Called during render after backgrounds, borders, but before children, are rendered.
 void Element::OnRender()
 {
 }
@@ -1373,8 +1359,7 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes)
 // Called when properties on the element are changed.
 void Element::OnPropertyChange(const PropertyIdSet& changed_properties)
 {
-	if (!dirty_layout)
-	{
+	if (!dirty_layout) {
 		// Force a relayout if any of the changed properties require it.
 		const PropertyIdSet changed_properties_forcing_layout = (changed_properties & StyleSheetSpecification::GetRegisteredPropertiesForcingLayout());
 		
@@ -1438,6 +1423,7 @@ void Element::OnPropertyChange(const PropertyIdSet& changed_properties)
 	// Dirty the background if it's changed.
     if (border_radius_changed ||
 		changed_properties.Contains(PropertyId::BackgroundColor) ||
+		changed_properties.Contains(PropertyId::BackgroundImage) ||
 		changed_properties.Contains(PropertyId::Opacity) ||
 		changed_properties.Contains(PropertyId::ImageColor))
 	{
@@ -1461,11 +1447,11 @@ void Element::OnPropertyChange(const PropertyIdSet& changed_properties)
 	
 	// Dirty the decoration if it's changed.
 	if (border_radius_changed ||
-		changed_properties.Contains(PropertyId::Decorator) ||
+		changed_properties.Contains(PropertyId::BackgroundImage) ||
 		changed_properties.Contains(PropertyId::Opacity) ||
 		changed_properties.Contains(PropertyId::ImageColor))
 	{
-		meta->decoration.DirtyDecorators();
+		meta->background_image.MarkDirty();
 	}
 
 	// Check for `perspective' and `perspective-origin' changes

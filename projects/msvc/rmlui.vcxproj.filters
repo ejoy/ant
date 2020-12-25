@@ -106,45 +106,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DataViewDefault.cpp">
       <Filter>source\Core</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Decorator.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DecoratorGradient.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DecoratorInstancer.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DecoratorTiled.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DecoratorTiledBox.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DecoratorTiledBoxInstancer.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DecoratorTiledHorizontal.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DecoratorTiledHorizontalInstancer.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DecoratorTiledImage.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DecoratorTiledImageInstancer.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DecoratorTiledInstancer.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DecoratorTiledVertical.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DecoratorTiledVerticalInstancer.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DocumentHeader.cpp">
       <Filter>source\Core</Filter>
     </ClCompile>
@@ -155,9 +116,6 @@
       <Filter>source\Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ElementBackgroundBorder.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ElementDecoration.cpp">
       <Filter>source\Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ElementDefinition.cpp">
@@ -292,9 +250,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\RenderInterface.cpp">
       <Filter>source\Core</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Spritesheet.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Stream.cpp">
       <Filter>source\Core</Filter>
     </ClCompile>
@@ -373,18 +328,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\TextureDatabase.cpp">
       <Filter>source\Core</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\TextureLayout.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\TextureLayoutRectangle.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\TextureLayoutRow.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\TextureLayoutTexture.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\TextureResource.cpp">
       <Filter>source\Core</Filter>
     </ClCompile>
@@ -449,6 +392,9 @@
       <Filter>binding\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Layout.cpp">
+      <Filter>source\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ElementBackgroundImage.cpp">
       <Filter>source\Core</Filter>
     </ClCompile>
   </ItemGroup>
@@ -517,12 +463,6 @@
       <Filter>include\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Debug.h">
-      <Filter>include\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Decorator.h">
-      <Filter>include\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\DecoratorInstancer.h">
       <Filter>include\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Dictionary.h">
@@ -639,9 +579,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\ScriptInterface.h">
       <Filter>include\Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Spritesheet.h">
-      <Filter>include\Core</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Stream.h">
       <Filter>include\Core</Filter>
     </ClInclude>
@@ -744,39 +681,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\DataViewDefault.h">
       <Filter>source\Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\DecoratorGradient.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\DecoratorTiled.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\DecoratorTiledBox.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\DecoratorTiledBoxInstancer.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\DecoratorTiledHorizontal.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\DecoratorTiledHorizontalInstancer.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\DecoratorTiledImage.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\DecoratorTiledImageInstancer.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\DecoratorTiledInstancer.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\DecoratorTiledVertical.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\DecoratorTiledVerticalInstancer.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\DocumentHeader.h">
       <Filter>source\Core</Filter>
     </ClInclude>
@@ -784,9 +688,6 @@
       <Filter>source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\ElementBackgroundBorder.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\ElementDecoration.h">
       <Filter>source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\ElementDefinition.h">
@@ -918,18 +819,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\TextureDatabase.h">
       <Filter>source\Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\TextureLayout.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\TextureLayoutRectangle.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\TextureLayoutRow.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\TextureLayoutTexture.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\TextureResource.h">
       <Filter>source\Core</Filter>
     </ClInclude>
@@ -962,6 +851,9 @@
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Layout.h">
       <Filter>include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\ElementBackgroundImage.h">
+      <Filter>source\Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

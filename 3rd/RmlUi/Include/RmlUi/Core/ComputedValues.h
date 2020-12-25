@@ -115,7 +115,6 @@ enum class OriginY : uint8_t { Top, Center, Bottom };
 struct ComputedValues
 {
 	Display display = Display::Flex;
-	Position position = Position::Static;
 	Overflow overflow = Overflow::Visible;
 
 	Colourb border_top_color{ 255, 255, 255 }, border_right_color{ 255, 255, 255 }, border_bottom_color{ 255, 255, 255 }, border_left_color{ 255, 255, 255 };
@@ -130,7 +129,6 @@ struct ComputedValues
 
 	Visibility visibility = Visibility::Visible;
 
-	Colourb background_color = Colourb(255, 255, 255, 0);
 	Colourb color = Colourb(255, 255, 255);
 	Colourb image_color = Colourb(255, 255, 255);
 	float opacity = 1;
@@ -168,8 +166,10 @@ struct ComputedValues
 	TransitionList transition;
 	AnimationList animation;
 
-	DecoratorsPtr decorator;
 	FontEffectsPtr font_effect; // Sorted by layer first (back then front), then by declaration order.
+
+	Colourb background_color = Colourb(255, 255, 255, 0);
+	String background_image;
 };
 }
 

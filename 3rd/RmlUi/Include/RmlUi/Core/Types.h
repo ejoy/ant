@@ -80,7 +80,6 @@ class Property;
 class Variant;
 class Transform;
 class PropertyIdSet;
-class Decorator;
 class FontEffect;
 struct Animation;
 struct Transition;
@@ -94,7 +93,6 @@ enum class FamilyId : int;
 using FileHandle = uintptr_t;
 using TextureHandle = uintptr_t;
 using CompiledGeometryHandle = uintptr_t;
-using DecoratorDataHandle = uintptr_t;
 using FontFaceHandle = uintptr_t;
 using FontEffectsHandle = uintptr_t;
 
@@ -117,13 +115,8 @@ using ElementAttributes = Dictionary;
 using XMLAttributes = Dictionary;
 
 using AnimationList = Vector<Animation>;
-using DecoratorList = Vector<SharedPtr<const Decorator>>;
 using FontEffectList = Vector<SharedPtr<const FontEffect>>;
 
-struct Decorators {
-	DecoratorList list;
-	String value;
-};
 struct FontEffects {
 	FontEffectList list;
 	String value;
@@ -131,7 +124,6 @@ struct FontEffects {
 
 // Additional smart pointers
 using TransformPtr = SharedPtr< Transform >;
-using DecoratorsPtr = SharedPtr<const Decorators>;
 using FontEffectsPtr = SharedPtr<const FontEffects>;
 
 // Data binding types

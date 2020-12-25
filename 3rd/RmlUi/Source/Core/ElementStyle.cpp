@@ -41,7 +41,7 @@
 #include "../../Include/RmlUi/Core/StyleSheetSpecification.h"
 #include "../../Include/RmlUi/Core/TransformPrimitive.h"
 #include "../../Include/RmlUi/Core/ElementText.h"
-#include "ElementDecoration.h"
+#include "ElementBackgroundImage.h"
 #include "ElementDefinition.h"
 #include "ComputeProperty.h"
 #include "PropertiesIterator.h"
@@ -581,9 +581,6 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 		}
 
 		switch (id) {
-		case PropertyId::Position:
-			values.position = (Position)p->Get<int>();
-			break;
 		case PropertyId::Display:
 			values.display = (Display)p->Get<int>();
 			break;
@@ -631,12 +628,16 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 			values.clip = ComputeClip(p);
 			break;
 		case PropertyId::Visibility:
-			values.visibility = (Visibility)p->Get< int >();
+			values.visibility = (Visibility)p->Get<int>();
 			break;
 
 		case PropertyId::BackgroundColor:
 			values.background_color = p->Get<Colourb>();
 			break;
+		case PropertyId::BackgroundImage:
+			values.background_image = p->Get<String>();
+			break;
+
 		case PropertyId::Color:
 			values.color = p->Get<Colourb>();
 			break;
@@ -665,27 +666,27 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 			break;
 
 		case PropertyId::TextAlign:
-			values.text_align = (TextAlign)p->Get< int >();
+			values.text_align = (TextAlign)p->Get<int>();
 			break;
 		case PropertyId::TextDecoration:
-			values.text_decoration = (TextDecoration)p->Get< int >();
+			values.text_decoration = (TextDecoration)p->Get<int>();
 			break;
 		case PropertyId::TextTransform:
-			values.text_transform = (TextTransform)p->Get< int >();
+			values.text_transform = (TextTransform)p->Get<int>();
 			break;
 		case PropertyId::WhiteSpace:
-			values.white_space = (WhiteSpace)p->Get< int >();
+			values.white_space = (WhiteSpace)p->Get<int>();
 			break;
 		case PropertyId::WordBreak:
-			values.word_break = (WordBreak)p->Get< int >();
+			values.word_break = (WordBreak)p->Get<int>();
 			break;
 
 		case PropertyId::Cursor:
-			values.cursor = p->Get< String >();
+			values.cursor = p->Get<String>();
 			break;
 
 		case PropertyId::Drag:
-			values.drag = (Drag)p->Get< int >();
+			values.drag = (Drag)p->Get<int>();
 			break;
 		case PropertyId::Focus:
 			values.focus = (Focus)p->Get<int>();
@@ -727,45 +728,12 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 			values.animation = p->Get<AnimationList>();
 			break;
 
-		case PropertyId::Decorator:
-			if (p->unit == Property::DECORATOR)
-			{
-				values.decorator = p->Get<DecoratorsPtr>();
-			}
-			else if (p->unit == Property::STRING)
-			{
-				// Usually the decorator is converted from string after the style sheet is set on the ElementDocument. However, if the
-				// user sets a decorator on the element's style, we may still get a string here which must be parsed and instanced.
-				if (auto & style_sheet = element->GetStyleSheet())
-				{
-					// The property source will not be set if the property is defined in inline style. However, we may need it in order to locate
-					// resource files (typically images). In this case, generate one from the document's source URL.
-					SharedPtr<const PropertySource> document_source;
-
-					if (!p->source)
-					{
-						if (ElementDocument* document = element->GetOwnerDocument())
-							document_source = MakeShared<PropertySource>(document->GetSourceURL(), 0, String());
-					}
-
-					const String& value = p->value.GetReference<String>();
-					values.decorator = style_sheet->InstanceDecoratorsFromString(value, p->source ? p->source : document_source);
-				}
-				else
-					values.decorator.reset();
-			}
-			else
-				values.decorator.reset();
-			break;
 		case PropertyId::FontEffect:
-			if (p->unit == Property::FONTEFFECT)
-			{
+			if (p->unit == Property::FONTEFFECT) {
 				values.font_effect = p->Get<FontEffectsPtr>();
 			}
-			else if (p->unit == Property::STRING)
-			{
-				if (auto & style_sheet = element->GetStyleSheet())
-				{
+			else if (p->unit == Property::STRING) {
+				if (auto & style_sheet = element->GetStyleSheet()) {
 					const String& value = p->value.GetReference<String>();
 					values.font_effect = style_sheet->InstanceFontEffectsFromString(value, p->source);
 				}

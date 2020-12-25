@@ -100,15 +100,6 @@ public:
 	RMLUICORE_API static bool Convert(const AnimationList& src, String& dest);
 };
 
-template<> class TypeConverter< DecoratorsPtr, DecoratorsPtr > {
-public:
-	RMLUICORE_API static bool Convert(const DecoratorsPtr& src, DecoratorsPtr& dest);
-};
-template<> class TypeConverter< DecoratorsPtr, String > {
-public:
-	RMLUICORE_API static bool Convert(const DecoratorsPtr& src, String& dest);
-};
-
 template<> class TypeConverter< FontEffectsPtr, FontEffectsPtr> {
 public:
 	RMLUICORE_API static bool Convert(const FontEffectsPtr& src, FontEffectsPtr& dest);

@@ -44,11 +44,10 @@ namespace Rml {
 
 class Context;
 class DataModel;
-class Decorator;
 class ElementInstancer;
 class EventDispatcher;
 class EventListener;
-class ElementDecoration;
+class ElementBackgroundImage;
 class ElementDefinition;
 class ElementDocument;
 class ElementScroll;
@@ -197,8 +196,6 @@ public:
 	/// @return The resolved value in their canonical unit, or zero if it could not be resolved.
 	float ResolveNumericProperty(const Property *property, float base_value);
 
-	/// Returns 'position' property value from element's computed values.
-	Style::Position GetPosition();
 	/// Returns 'display' property value from element's computed values.
 	Style::Display GetDisplay();
 	/// Returns 'line-height' property value from element's computed values.
@@ -509,8 +506,6 @@ public:
 	EventDispatcher* GetEventDispatcher() const;
 	/// Returns event types with number of listeners for debugging.
 	String GetEventDispatcherSummary() const;
-	/// Access the element decorators.
-	ElementDecoration* GetElementDecoration() const;
 	/// Returns the element's scrollbar functionality.
 	ElementScroll* GetElementScroll() const;
 	/// Returns the element's transform state.
@@ -557,7 +552,7 @@ protected:
 
 	/// Called during the update loop after children are updated.
 	virtual void OnUpdate();
-	/// Called during render after backgrounds, borders, decorators, but before children, are rendered.
+	/// Called during render after backgrounds, borders, but before children, are rendered.
 	virtual void OnRender();
 	/// Called during update if the element size has been changed.
 	virtual void OnResize();

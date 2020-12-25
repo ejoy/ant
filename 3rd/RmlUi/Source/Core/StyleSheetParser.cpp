@@ -30,7 +30,6 @@
 #include "ComputeProperty.h"
 #include "StyleSheetFactory.h"
 #include "StyleSheetNode.h"
-#include "../../Include/RmlUi/Core/DecoratorInstancer.h"
 #include "../../Include/RmlUi/Core/Factory.h"
 #include "../../Include/RmlUi/Core/Log.h"
 #include "../../Include/RmlUi/Core/PropertyDefinition.h"
@@ -50,14 +49,14 @@ public:
 
 /*
  *  PropertySpecificationParser just passes the parsing to a property specification. Usually
- *    the main stylesheet specification, except for e.g. @decorator blocks.
+ *    the main stylesheet specification.
 */
 class PropertySpecificationParser final : public AbstractPropertyParser {
 private:
 	// The dictionary to store the properties in.
 	PropertyDictionary& properties;
 
-	// The specification used to parse the values. Normally the default stylesheet specification, but not for e.g. all at-rules such as decorators.
+	// The specification used to parse the values. Normally the default stylesheet specification.
 	const PropertySpecification& specification;
 
 public:
@@ -68,77 +67,6 @@ public:
 		return specification.ParsePropertyDeclaration(properties, name, value);
 	}
 };
-
-/*
- *  Spritesheets need a special parser because its property names are arbitrary keys,
- *    while its values are always rectangles. Thus, it must be parsed with a special "rectangle" parser
- *    for every name-value pair. We can probably optimize this for @performance.
-*/
-class SpritesheetPropertyParser final : public AbstractPropertyParser {
-private:
-	String image_source;
-	SpriteDefinitionList sprite_definitions;
-
-	PropertyDictionary properties;
-	PropertySpecification specification;
-	PropertyId id_rx, id_ry, id_rw, id_rh;
-	ShorthandId id_rectangle;
-
-public:
-	SpritesheetPropertyParser() : specification(4, 1) 
-	{
-		id_rx = specification.RegisterProperty("rectangle-x", "", false, false).AddParser("length").GetId();
-		id_ry = specification.RegisterProperty("rectangle-y", "", false, false).AddParser("length").GetId();
-		id_rw = specification.RegisterProperty("rectangle-w", "", false, false).AddParser("length").GetId();
-		id_rh = specification.RegisterProperty("rectangle-h", "", false, false).AddParser("length").GetId();
-		id_rectangle = specification.RegisterShorthand("rectangle", "rectangle-x, rectangle-y, rectangle-w, rectangle-h", ShorthandType::FallThrough);
-	}
-
-	const String& GetImageSource() const
-	{
-		return image_source;
-	}
-	const SpriteDefinitionList& GetSpriteDefinitions() const
-	{
-		return sprite_definitions;
-	}
-
-	void Clear() {
-		image_source.clear();
-		sprite_definitions.clear();
-	}
-
-	bool Parse(const String& name, const String& value) override
-	{
-		if (name == "src")
-		{
-			image_source = value;
-		}
-		else
-		{
-			if (!specification.ParseShorthandDeclaration(properties, id_rectangle, value))
-				return false;
-
-			Rectangle rectangle;
-			if (auto property = properties.GetProperty(id_rx))
-				rectangle.x = ComputeAbsoluteLength(*property, 1.f);
-			if (auto property = properties.GetProperty(id_ry))
-				rectangle.y = ComputeAbsoluteLength(*property, 1.f);
-			if (auto property = properties.GetProperty(id_rw))
-				rectangle.width = ComputeAbsoluteLength(*property, 1.f);
-			if (auto property = properties.GetProperty(id_rh))
-				rectangle.height = ComputeAbsoluteLength(*property, 1.f);
-
-			sprite_definitions.emplace_back(name, rectangle);
-		}
-
-		return true;
-	}
-};
-
-
-static UniquePtr<SpritesheetPropertyParser> spritesheet_property_parser;
-
 
 StyleSheetParser::StyleSheetParser()
 {
@@ -153,12 +81,10 @@ StyleSheetParser::~StyleSheetParser()
 
 void StyleSheetParser::Initialise()
 {
-	spritesheet_property_parser = MakeUnique<SpritesheetPropertyParser>();
 }
 
 void StyleSheetParser::Shutdown()
 {
-	spritesheet_property_parser.reset();
 }
 
 static bool IsValidIdentifier(const String& str)
@@ -269,74 +195,7 @@ bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const Str
 	return true;
 }
 
-bool StyleSheetParser::ParseDecoratorBlock(const String& at_name, DecoratorSpecificationMap& decorator_map, const StyleSheet& style_sheet, const SharedPtr<const PropertySource>& source)
-{
-	StringList name_type;
-	StringUtilities::ExpandString(name_type, at_name, ':');
-
-	if (name_type.size() != 2 || name_type[0].empty() || name_type[1].empty())
-	{
-		Log::Message(Log::LT_WARNING, "Decorator syntax error at %s:%d. Use syntax: '@decorator name : type { ... }'.", stream_file_name.c_str(), line_number);
-		return false;
-	}
-
-	const String& name = name_type[0];
-	String decorator_type = name_type[1];
-
-	auto it_find = decorator_map.find(name);
-	if (it_find != decorator_map.end())
-	{
-		Log::Message(Log::LT_WARNING, "Decorator with name '%s' already declared, ignoring decorator at %s:%d.", name.c_str(), stream_file_name.c_str(), line_number);
-		return false;
-	}
-
-	// Get the instancer associated with the decorator type
-	DecoratorInstancer* decorator_instancer = Factory::GetDecoratorInstancer(decorator_type);
-	PropertyDictionary properties;
-
-	if(!decorator_instancer)
-	{
-		// Type is not a declared decorator type, instead, see if it is another decorator name, then we inherit its properties.
-		auto it = decorator_map.find(decorator_type);
-		if (it != decorator_map.end())
-		{
-			// Yes, try to retrieve the instancer from the parent type, and add its property values.
-			decorator_instancer = Factory::GetDecoratorInstancer(it->second.decorator_type);
-			properties = it->second.properties;
-			decorator_type = it->second.decorator_type;
-		}
-
-		// If we still don't have an instancer, we cannot continue.
-		if (!decorator_instancer)
-		{
-			Log::Message(Log::LT_WARNING, "Invalid decorator type '%s' declared at %s:%d.", decorator_type.c_str(), stream_file_name.c_str(), line_number);
-			return false;
-		}
-	}
-
-	const PropertySpecification& property_specification = decorator_instancer->GetPropertySpecification();
-
-	PropertySpecificationParser parser(properties, property_specification);
-	if (!ReadProperties(parser))
-		return false;
-
-	// Set non-defined properties to their defaults
-	property_specification.SetPropertyDefaults(properties);
-	properties.SetSourceOfAllProperties(source);
-
-	SharedPtr<Decorator> decorator = decorator_instancer->InstanceDecorator(decorator_type, properties, DecoratorInstancerInterface(style_sheet));
-	if (!decorator)
-	{
-		Log::Message(Log::LT_WARNING, "Could not instance decorator of type '%s' declared at %s:%d.", decorator_type.c_str(), stream_file_name.c_str(), line_number);
-		return false;
-	}
-
-	decorator_map.emplace(name, DecoratorSpecification{ std::move(decorator_type), std::move(properties), std::move(decorator) });
-
-	return true;
-}
-
-int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSheet& style_sheet, KeyframesMap& keyframes, DecoratorSpecificationMap& decorator_map, SpritesheetList& spritesheet_list, int begin_line_number)
+int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSheet& style_sheet, KeyframesMap& keyframes, int begin_line_number)
 {
 	int rule_count = 0;
 	line_number = begin_line_number;
@@ -403,43 +262,6 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 					if (at_rule_identifier == "keyframes")
 					{
 						state = State::KeyframeBlock;
-					}
-					else if (at_rule_identifier == "decorator")
-					{
-						auto source = MakeShared<PropertySource>(stream_file_name, (int)line_number, pre_token_str);
-						ParseDecoratorBlock(at_rule_name, decorator_map, style_sheet, source);
-						
-						at_rule_name.clear();
-						state = State::Global;
-					}
-					else if (at_rule_identifier == "spritesheet")
-					{
-						// The spritesheet parser is reasonably heavy to initialize, so we make it a static global.
-						ReadProperties(*spritesheet_property_parser);
-
-						const String& image_source = spritesheet_property_parser->GetImageSource();
-						const SpriteDefinitionList& sprite_definitions = spritesheet_property_parser->GetSpriteDefinitions();
-						
-						if (at_rule_name.empty())
-						{
-							Log::Message(Log::LT_WARNING, "No name given for @spritesheet at %s:%d", stream_file_name.c_str(), line_number);
-						}
-						else if (sprite_definitions.empty())
-						{
-							Log::Message(Log::LT_WARNING, "Spritesheet with name '%s' has no sprites defined, ignored. At %s:%d", at_rule_name.c_str(), stream_file_name.c_str(), line_number);
-						}
-						else if (image_source.empty())
-						{
-							Log::Message(Log::LT_WARNING, "No image source (property 'src') specified for spritesheet '%s'. At %s:%d", at_rule_name.c_str(), stream_file_name.c_str(), line_number);
-						}
-						else
-						{
-							spritesheet_list.AddSpriteSheet(at_rule_name, image_source, stream_file_name, (int)line_number, sprite_definitions);
-						}
-
-						spritesheet_property_parser->Clear();
-						at_rule_name.clear();
-						state = State::Global;
 					}
 					else
 					{
