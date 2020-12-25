@@ -1,15 +1,25 @@
 local event = require "core.event"
 
 local attribute_mt = {}
+local constructor
 
-function attribute_mt:__index(k)
-    return rmlui.ElementGetAttribute(self._handle, k)
+function attribute_mt:__index(name)
+    if name == "parentNode" then
+        local parent = rmlui.ElementGetParent(self._handle)
+        if parent then
+            local parentNode = constructor(self.ownerDocument._handle, parent)
+            rawset(self, "parentNode", parentNode)
+            return parentNode
+        end
+        return
+    end
+    return rmlui.ElementGetAttribute(self._handle, name)
 end
-function attribute_mt:__newindex(k, v)
+function attribute_mt:__newindex(name, v)
     if v == nil then
-        rmlui.ElementRemoveAttribute(self._handle, k)
+        rmlui.ElementRemoveAttribute(self._handle, name)
     else
-        rmlui.ElementSetAttribute(self._handle, k, v)
+        rmlui.ElementSetAttribute(self._handle, name, v)
     end
 end
 
@@ -32,7 +42,7 @@ function api:addEventListener(type, listener, useCapture)
     rmlui.ElementAddEventListener(self._handle, type, listener, useCapture)
 end
 
-local function constructor(document, handle)
+function constructor(document, handle)
     local createDocument = require "core.DOM.document"
     local o = {
         _handle = handle,

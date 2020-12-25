@@ -46,6 +46,8 @@ Event::Event(Element* _target_element, EventId id, const String& type, const Dic
 		has_mouse_position = true;
 		mouse_x->GetInto(mouse_screen_position.x);
 		mouse_y->GetInto(mouse_screen_position.y);
+		parameters["offsetX"] = mouse_screen_position.x - target_element->GetAbsoluteLeft();
+		parameters["offsetY"] = mouse_screen_position.y - target_element->GetAbsoluteTop();
 	}
 }
 
