@@ -242,11 +242,6 @@ SDFFontEffectShadow(uint16_t texid, int8_t eo, const Rml::Vector2f &offset, Rml:
 
     virtual bool GetProperties(struct font_manager* F, const shader &s, PropertyMap &properties, uint16_t &prog) const override {
         SDFFontEffect::GetProperties(F, s, properties, prog);
-        assert(properties.find("u_mask") != properties.end());
-        auto &m = properties["u_mask"];
-        m.value[2] = font_manager_sdf_mask(F);
-        m.value[3] = std::min(m.value[2], m.value[1]);
-
 
         Property color;
         tocolor(GetColour(), color.value);
@@ -259,8 +254,8 @@ SDFFontEffectShadow(uint16_t texid, int8_t eo, const Rml::Vector2f &offset, Rml:
         const char* offsetname = "u_shadow_offset";
         offset.uniform_idx = s.font_shadow.find_uniform(offsetname);
         if (offset.uniform_idx != UINT16_MAX){
-            offset.value[0] = moffset.x;
-            offset.value[1] = moffset.y;
+            offset.value[0] = moffset.x / FONT_MANAGER_TEXSIZE;
+            offset.value[1] = moffset.y / FONT_MANAGER_TEXSIZE;
             offset.value[2] = offset.value[3] = 0.0f;
             properties[offsetname] = offset;
         }

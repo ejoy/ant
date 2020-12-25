@@ -27,24 +27,24 @@ void main()
 	vec4 color = v_color0;
 	float magicnum = 128.0;
 	float smoothing = length(fwidth(v_texcoord0)) * magicnum * u_dist_multiplier;
-	color.a *= smoothing_result(dis, u_edge_mask, smoothing);
+	float coloralpha = smoothing_result(dis, u_edge_mask, smoothing);
 
 #if defined(OUTLINE_EFFECT)
 	float outline_width	= smoothing * u_outline_width;
 	float outline_mask	= u_edge_mask - outline_width;
 	float alpha = smoothing_result(dis, outline_mask, smoothing);
-	color		= vec4(lerp(u_effect_color.xyz, v_color0.xyz, color.a), alpha * v_color0.w);
+	color		= vec4(lerp(u_effect_color.rgb, v_color0.rgb, coloralpha), alpha * v_color0.a);
 #elif defined(SHADOW_EFFECT)
-	// vec2 fonttexel = u_shadow_offset.xy / textureSize(s_tex, 0);
-	// float offsetdis = texture2D(s_tex, v_texcoord0+fonttexel).a;
-
-	// vec4 effectcolor = u_effect_color;
-	// effectcolor.a = sdf(offsetdis, u_effect_mask, u_effect_range);
-	// color = lerp(effectcolor, color, color.a);
+	float offsetdis = texture2D(s_tex, v_texcoord0+u_shadow_offset.xy).a;
+	float shadow_mask = u_edge_mask - (offsetdis - dis);
+	float alpha = smoothing_result(offsetdis, shadow_mask, smoothing);
+	color		= vec4(lerp(u_effect_color.rgb, v_color0.rgb, coloralpha), alpha * v_color0.a);
 #elif defined(GLOW_EFFECT)
 	// vec4 effectcolor = u_effect_color;
 	// effectcolor.a = sdf(dis, u_effect_mask, u_effect_range);
 	// color = lerp(effectcolor, color, color.a);
+#else
+	color.a = coloralpha;
 #endif
 
 	gl_FragColor = color;
