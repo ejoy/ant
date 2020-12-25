@@ -187,7 +187,7 @@ function m.show()
             if imgui.widget.BeginMenu("Collider") then
                 for i, type in ipairs(collider_type) do
                     if imgui.widget.MenuItem(type) then
-                        world:pub { "Create", "collider", type}
+                        world:pub { "Create", "collider", {type = type, add_to_hierarchy = true}}
                     end
                 end
                 imgui.widget.EndMenu()
@@ -195,7 +195,7 @@ function m.show()
             if imgui.widget.BeginMenu("Geometry") then
                 for i, type in ipairs(geom_type) do
                     if imgui.widget.MenuItem(type) then
-                        world:pub { "Create", "geometry", type}
+                        world:pub { "Create", "geometry", {type = type}}
                     end
                 end
                 imgui.widget.EndMenu()
@@ -203,7 +203,7 @@ function m.show()
             if imgui.widget.BeginMenu("Light") then
                 for i, type in ipairs(light_type) do
                     if imgui.widget.MenuItem(type) then
-                        world:pub { "Create", "light", type}
+                        world:pub { "Create", "light", {type = type}}
                     end
                 end
                 imgui.widget.EndMenu()
@@ -216,10 +216,10 @@ function m.show()
         imgui.cursor.Separator()
         if imgui.table.Begin("InspectorTable", 3, imgui.flags.Table {'ScrollY'}) then
             local child_width, child_height = imgui.windows.GetContentRegionAvail()
-            imgui.table.SetupColumn("Entity", imgui.flags.TableColumn {'NoHide', 'WidthStretch'}, 1.0);
-            imgui.table.SetupColumn("Lock", imgui.flags.TableColumn {'WidthFixed'}, 24.0);
-            imgui.table.SetupColumn("Visible", imgui.flags.TableColumn {'WidthFixed'}, 24.0);
-            imgui.table.HeadersRow();
+            imgui.table.SetupColumn("Entity", imgui.flags.TableColumn {'NoHide', 'WidthStretch'}, 1.0)
+            imgui.table.SetupColumn("Lock", imgui.flags.TableColumn {'WidthFixed'}, 24.0)
+            imgui.table.SetupColumn("Visible", imgui.flags.TableColumn {'WidthFixed'}, 24.0)
+            imgui.table.HeadersRow()
             for i, child in ipairs(hierarchy.root.children) do
                 source_eid = nil
                 target_eid = nil

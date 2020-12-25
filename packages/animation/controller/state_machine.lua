@@ -201,6 +201,33 @@ local function do_set_event(eid, anim, events)
 	if not e.keyframe_events then
 		e.keyframe_events = {}
 	end
+	
+	for i, col in ipairs(events.collider) do
+		col.eid, _ = world:create_entity {
+			policy = {
+				"ant.general|name",
+				"ant.scene|hierarchy_policy",
+				"ant.scene|transform_policy",
+				"ant.collision|collider_policy"
+			},
+			data = {
+				color = {1, 0.5, 0.5, 0.5},
+				scene_entity = true,
+				transform = {s = 1},
+				name = "collider" .. i,
+				collider = {
+					[col.shape.type] = col.shape.define and col.shape.define or default_collider_define[col.shape.type]
+				}
+			}
+		}
+	end
+	for _, ev in ipairs(events.event) do
+		for _, e in ipairs(ev.event_list) do
+			if e.event_type == "Collision" then
+				e.collision.collider = events.collider[e.collision.collider_index]
+			end
+		end
+	end
 	e.keyframe_events[anim] = events
 	if e._animation._current.animation == e.animation[anim] then
 		e._animation._current.event_state.keyframe_events = e.keyframe_events[anim]

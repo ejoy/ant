@@ -45,4 +45,4 @@ function cb.dropfiles(filelst)
     event("dropfiles", filelst)
 end
 
-editor.start(1280, 720, cb)
+editor.start(1440, 900, cb)
