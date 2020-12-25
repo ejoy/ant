@@ -236,22 +236,6 @@ Style::LineHeight ComputeLineHeight(const Property* property, float font_size, f
 	return Style::LineHeight(value, Style::LineHeight::Number, scale_factor);
 }
 
-Style::VerticalAlign ComputeVerticalAlign(const Property* property, float line_height, float font_size, float document_font_size, float dp_ratio)
-{
-	if (property->unit & Property::LENGTH)
-	{
-		float value = ComputeLength(property, font_size, document_font_size, dp_ratio);
-		return Style::VerticalAlign(value);
-	}
-	else if (property->unit & Property::PERCENT)
-	{
-		return Style::VerticalAlign(property->Get<float>() * line_height);
-	}
-
-	RMLUI_ASSERT(property->unit & Property::KEYWORD);
-	return Style::VerticalAlign((Style::VerticalAlign::Type)property->Get<int>());
-}
-
 Style::LengthPercentage ComputeLengthPercentage(const Property* property, float font_size, float document_font_size, float dp_ratio)
 {
 	using namespace Style;

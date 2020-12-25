@@ -124,7 +124,6 @@ enum class PropertyId : uint8_t
 	MinHeight,
 	MaxHeight,
 	LineHeight,
-	VerticalAlign,
 	Clip,
 	Visibility,
 	Color,
@@ -138,9 +137,7 @@ enum class PropertyId : uint8_t
 	TextTransform,
 	WhiteSpace,
 	WordBreak,
-	Cursor,
 	Drag,
-	ScrollbarMargin,
 
 	Perspective,
 	PerspectiveOriginX,
@@ -158,8 +155,6 @@ enum class PropertyId : uint8_t
 	Focus,
 
 	FontEffect,
-
-	FillImage,
 
 	BackgroundColor,
 	BackgroundImage,

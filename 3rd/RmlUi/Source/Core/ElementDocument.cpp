@@ -233,10 +233,6 @@ void ElementDocument::Show() {
 	}
 
 	// Focus the window or element
-	bool focused = focus_element->Focus();
-	if (focused && focus_element != this)
-		focus_element->ScrollIntoView(false);
-
 	DispatchEvent(EventId::Show, Dictionary());
 	GetContext()->SetFocus(this);
 }
@@ -362,7 +358,6 @@ void ElementDocument::ProcessDefaultAction(Event& event)
 			{
 				if(element->Focus())
 				{
-					element->ScrollIntoView(false);
 					event.StopPropagation();
 				}
 			}

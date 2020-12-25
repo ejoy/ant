@@ -32,7 +32,6 @@
 #include "../../Include/RmlUi/Core/Core.h"
 #include "../../Include/RmlUi/Core/ElementDocument.h"
 #include "../../Include/RmlUi/Core/ElementInstancer.h"
-#include "../../Include/RmlUi/Core/ElementScroll.h"
 #include "../../Include/RmlUi/Core/ElementUtilities.h"
 #include "../../Include/RmlUi/Core/Factory.h"
 #include "../../Include/RmlUi/Core/Dictionary.h"
@@ -67,12 +66,11 @@ namespace Rml {
 // Meta objects for element collected in a single struct to reduce memory allocations
 struct ElementMeta
 {
-	ElementMeta(Element* el) : event_dispatcher(el), style(el), background_border(el), background_image(el), scroll(el) {}
+	ElementMeta(Element* el) : event_dispatcher(el), style(el), background_border(el), background_image(el) {}
 	EventDispatcher event_dispatcher;
 	ElementStyle style;
 	ElementBackgroundBorder background_border;
 	ElementBackgroundImage background_image;
-	ElementScroll scroll;
 	Style::ComputedValues computed_values;
 };
 
@@ -135,9 +133,6 @@ void Element::Update(float dp_ratio)
 	HandleTransitionProperty();
 	HandleAnimationProperty();
 	AdvanceAnimations();
-
-	meta->scroll.Update();
-
 	UpdateProperties();
 
 	// Do en extra pass over the animations and properties if the 'animation' property was just changed.
@@ -740,7 +735,6 @@ void Element::SetScrollLeft(float scroll_left)
 	if (new_offset != scroll_offset.x)
 	{
 		scroll_offset.x = new_offset;
-		meta->scroll.UpdateScrollbar(ElementScroll::HORIZONTAL);
 		DirtyOffset();
 
 		DispatchEvent(EventId::Scroll, Dictionary());
@@ -760,7 +754,6 @@ void Element::SetScrollTop(float scroll_top)
 	if(new_offset != scroll_offset.y)
 	{
 		scroll_offset.y = new_offset;
-		meta->scroll.UpdateScrollbar(ElementScroll::VERTICAL);
 		DirtyOffset();
 
 		DispatchEvent(EventId::Scroll, Dictionary());
@@ -988,40 +981,6 @@ bool Element::DispatchEvent(EventId id, const Dictionary& parameters)
 	return EventDispatcher::DispatchEvent(this, specification.id, specification.type, parameters, specification.interruptible, specification.bubbles, specification.default_action_phase);
 }
 
-// Scrolls the parent element's contents so that this element is visible.
-void Element::ScrollIntoView(bool align_with_top)
-{
-	Vector2f size(0, 0);
-	if (!align_with_top)
-		size.y = layout.GetSize(Layout::BORDER).y;
-
-	Element* scroll_parent = parent;
-	while (scroll_parent != nullptr)
-	{
-		Style::Overflow overflow_property = scroll_parent->GetComputedValues().overflow;
-
-		if (overflow_property != Style::Overflow::Visible &&
-			(scroll_parent->GetScrollWidth() > scroll_parent->GetClientWidth() ||
-			scroll_parent->GetScrollHeight() > scroll_parent->GetClientHeight()))
-		{
-			Vector2f offset = scroll_parent->GetAbsoluteOffset(Layout::BORDER) - GetAbsoluteOffset(Layout::BORDER);
-			Vector2f scroll_offset(scroll_parent->GetScrollLeft(), scroll_parent->GetScrollTop());
-			scroll_offset -= offset;
-			scroll_offset.x += scroll_parent->GetClientLeft();
-			scroll_offset.y += scroll_parent->GetClientTop();
-
-			if (!align_with_top)
-				scroll_offset.y -= (scroll_parent->GetClientHeight() - size.y);
-
-			if (overflow_property != Style::Overflow::Visible) {
-				scroll_parent->SetScrollLeft(scroll_offset.x);
-				scroll_parent->SetScrollTop(scroll_offset.y);
-			}
-		}
-
-		scroll_parent = scroll_parent->GetParentNode();
-	}
-}
 
 // Appends a child to this element
 Element* Element::AppendChild(ElementPtr child)
@@ -1267,12 +1226,6 @@ String Element::GetEventDispatcherSummary() const
 	return meta->event_dispatcher.ToString();
 }
 
-// Returns the element's scrollbar functionality.
-ElementScroll* Element::GetElementScroll() const
-{
-	return &meta->scroll;
-}
-
 DataModel* Element::GetDataModel() const
 {
 	return data_model;
@@ -1357,8 +1310,7 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes)
 }
 
 // Called when properties on the element are changed.
-void Element::OnPropertyChange(const PropertyIdSet& changed_properties)
-{
+void Element::OnPropertyChange(const PropertyIdSet& changed_properties) {
 	if (!dirty_layout) {
 		// Force a relayout if any of the changed properties require it.
 		const PropertyIdSet changed_properties_forcing_layout = (changed_properties & StyleSheetSpecification::GetRegisteredPropertiesForcingLayout());
@@ -1394,16 +1346,6 @@ void Element::OnPropertyChange(const PropertyIdSet& changed_properties)
 			if (parent != nullptr)
 				parent->DirtyStructure();
 		}
-	}
-
-	// Update the position.
-	if (changed_properties.Contains(PropertyId::Left) ||
-		changed_properties.Contains(PropertyId::Right) ||
-		changed_properties.Contains(PropertyId::Top) ||
-		changed_properties.Contains(PropertyId::Bottom))
-	{
-		// TODO: This should happen during/after layout, as the containing box is not properly defined yet. Off-by-one @frame issue.
-		DirtyOffset();
 	}
 
 	// Update the z-index.

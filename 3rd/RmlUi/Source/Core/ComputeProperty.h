@@ -48,8 +48,6 @@ Style::Clip ComputeClip(const Property* property);
 
 Style::LineHeight ComputeLineHeight(const Property* property, float font_size, float document_font_size, float dp_ratio);
 
-Style::VerticalAlign ComputeVerticalAlign(const Property* property, float line_height, float font_size, float document_font_size, float dp_ratio);
-
 Style::LengthPercentage ComputeLengthPercentage(const Property* property, float font_size, float document_font_size, float dp_ratio);
 
 Style::LengthPercentageAuto ComputeLengthPercentageAuto(const Property* property, float font_size, float document_font_size, float dp_ratio);
