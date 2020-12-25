@@ -43,7 +43,7 @@ TransientIndexBuffer32::Reset(){
     moffset = 0;
 }
 
-#define RENDER_STATE (BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA)
+#define RENDER_STATE (BGFX_STATE_WRITE_RGB|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA)
 Renderer::Renderer(const RmlContext* context)
     : mTransform(Rml::Matrix4f::Identity())
     , mcontext(context)

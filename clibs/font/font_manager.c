@@ -15,8 +15,10 @@
 */
 
 #define COLLISION_STEP 7
-#define DISTANCE_OFFSET 5
+#define DISTANCE_OFFSET 8
 #define ORIGINAL_SIZE (FONT_MANAGER_GLYPHSIZE - DISTANCE_OFFSET * 2)
+#define ONEDGE_VALUE	180
+#define PIXEL_DIST_SCALE (ONEDGE_VALUE/(float)(DISTANCE_OFFSET))
 
 static const int SAPCE_CODEPOINT[] = {
     ' ', '\t', '\n', '\r',
@@ -58,7 +60,6 @@ font_manager_init(struct font_manager *F, struct truetype_font *ttf, void *L) {
 	F->ttf = ttf;
 	F->L = L;
 	F->dpi_perinch = 0;
-	font_manager_sdf_onedge_value(F, 180);
 // init priority list
 	int i;
 	for (i=0;i<FONT_MANAGER_SLOTS;i++) {
@@ -302,7 +303,7 @@ font_manager_update(struct font_manager *F, int fontid, int codepoint, struct fo
 
 	int width, height, xoff, yoff;
 
-	unsigned char *tmp = stbtt_GetCodepointSDF(fi, scale, codepoint, DISTANCE_OFFSET, F->sdf.onedge_value, F->sdf.pixel_dist_scale, &width, &height, &xoff, &yoff);
+	unsigned char *tmp = stbtt_GetCodepointSDF(fi, scale, codepoint, DISTANCE_OFFSET, ONEDGE_VALUE, PIXEL_DIST_SCALE, &width, &height, &xoff, &yoff);
 	if (tmp == NULL){
 		return NULL;
 	}
@@ -362,19 +363,13 @@ font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size) {
 }
 
 float
-font_manager_sdf_mask(struct font_manager *F, int offset){
-	return (F->sdf.onedge_value + offset) / 255.0f;
+font_manager_sdf_mask(struct font_manager *F){
+	return (ONEDGE_VALUE) / 255.f;
 }
 
 float
-font_manager_sdf_distance(struct font_manager *F, float numpixel){
-	return (numpixel * F->sdf.pixel_dist_scale) / 255.f;
-}
-
-void
-font_manager_sdf_onedge_value(struct font_manager *F, int onedge_value){
-	F->sdf.onedge_value = onedge_value;
-	F->sdf.pixel_dist_scale = F->sdf.onedge_value / ((float)DISTANCE_OFFSET);
+font_manager_sdf_distance(struct font_manager *F, uint8_t numpixel){
+	return (numpixel * PIXEL_DIST_SCALE) / 255.f;
 }
 
 #ifdef TEST_CASE

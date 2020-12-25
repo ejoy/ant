@@ -37,33 +37,57 @@ static const Rml::String DEFAULT_FONT_TEX_NAME("?FONT_TEX");
 
 class SDFFontEffect : public Rml::FontEffect {
 public:
-    SDFFontEffect(uint16_t texid, FontEffectType t) : mTexID(texid), mFEType(t){}
+    SDFFontEffect(uint16_t texid, int8_t eo, FontEffectType t)
+        : mTexID(texid)
+        , mFEType(t)
+        , mEdgeValueOffset(eo)
+        , mDistMultiplier(1.f)
+    {}
+    
+    uint16_t GetTexID() const           { return mTexID; }
+    FontEffectType GetType()  const     { return mFEType;}
+
+    float GetDistMultiplier() const     { return mDistMultiplier; }
+    void SetDistMultiplier(float d)     { mDistMultiplier = d;}
+
+    int8_t GetEdgeValueOffset() const  { return mEdgeValueOffset; }
+    void SetEdgeValueOffset(int8_t e)  { mEdgeValueOffset = e; }
+
+public:
     virtual bool HasUniqueTexture() const override{ return false;}
-    uint16_t GetTexID() const { return mTexID; }
-    FontEffectType GetType()  const { return mFEType;}
+
     virtual bool GetGlyphMetrics(Rml::Vector2i& origin, Rml::Vector2i& dimensions, const Rml::FontGlyph& glyph) const override final{ return false;}
     virtual Rml::String GenerateKey() const = 0;
     virtual bool GetProperties(struct font_manager* F, const shader &s, PropertyMap &properties, uint16_t &prog) const{
-        const float mask = font_manager_sdf_mask(F, -5);
-        const float range = font_manager_sdf_distance(F, 2.f);
         Property m;
-        m.value[0] = mask;
-        m.value[1] = range;
+        m.value[0] = font_manager_sdf_mask(F) - font_manager_sdf_distance(F, mEdgeValueOffset);
+        m.value[1] = mDistMultiplier;
         m.value[2] = m.value[3] = 0.0f;
         const char* mn = "u_mask";
         m.uniform_idx = s.font.find_uniform(mn);
-        properties[mn] = m;
+        if (m.uniform_idx != UINT16_MAX)
+            properties[mn] = m;
 
         Property t;
         t.texid = GetTexID();
         t.stage = 0;
         const char* tex = "s_tex";
         t.uniform_idx = s.font.find_uniform(tex);
-        properties[tex] = t;
+        if (t.uniform_idx != UINT16_MAX){
+            properties[tex] = t;
 
-        assert(t.uniform_idx == s.font_outline.find_uniform("s_tex"));
-        assert(t.uniform_idx == s.font_shadow.find_uniform("s_tex"));
-        assert(t.uniform_idx == s.font_glow.find_uniform("s_tex"));
+#ifdef _DEBUG
+            auto check_s_tex = [tex](auto idx, const auto &s){
+                auto newidx = s.find_uniform(tex);
+                if (UINT16_MAX != newidx){
+                    assert(idx == newidx);
+                }
+            };
+            check_s_tex(t.uniform_idx, s.font_outline);
+            check_s_tex(t.uniform_idx, s.font_shadow);
+            check_s_tex(t.uniform_idx, s.font_glow);
+#endif //_DEBUG
+        }
 
         prog = s.font.prog;
         return true;
@@ -98,12 +122,14 @@ protected:
 private:
     const uint16_t          mTexID;
     const FontEffectType    mFEType;
+    int8_t mEdgeValueOffset;
+    float mDistMultiplier;
 };
 
 ///default//////////////////////////////////////////////////////////////////
 class SDFFontEffectDefault : public SDFFontEffect{
 public:
-    SDFFontEffectDefault(uint16_t texid, bool simpletex = false) : SDFFontEffect(texid, simpletex ? FE_None : FE_FontTex){}
+    SDFFontEffectDefault(uint16_t texid, bool simpletex = false) : SDFFontEffect(texid, 0, simpletex ? FE_None : FE_FontTex){}
     virtual Rml::String GenerateKey() const override {
         return DEFAULT_FONT_TEX_NAME;
     }
@@ -113,9 +139,8 @@ public:
 template<FontEffectType FE_TYPE>
 class TSDFFontEffectOutline : public SDFFontEffect{
 public:
-    TSDFFontEffectOutline(uint16_t texid, float w, int mo, Rml::Colourb c) 
-    : SDFFontEffect(texid, FE_TYPE)
-    , mMaskOffset(mo)
+    TSDFFontEffectOutline(uint16_t texid, float w, int8_t eo, Rml::Colourb c) 
+    : SDFFontEffect(texid, eo, FE_TYPE)
     , mWidth(w){
         SetLayer(Layer::Back);
         SetColour(c);
@@ -131,20 +156,19 @@ public:
 
     virtual bool GetProperties(struct font_manager* F, const shader &s, PropertyMap &properties, uint16_t &prog) const override {
         SDFFontEffect::GetProperties(F, s, properties, prog);
-        assert(properties.find("u_mask") != properties.end());
-        auto &m = properties["u_mask"];
-
-        m.value[0] = font_manager_sdf_mask(F, 0);
-        m.value[1] = font_manager_sdf_distance(F, 0.5f);
-        m.value[2] = font_manager_sdf_mask(F, mMaskOffset);
-        m.value[3] = std::min(m.value[2], font_manager_sdf_distance(F, mWidth));
+        auto itmask = properties.find("u_mask");
+        if (itmask != properties.end()){
+            auto &m = itmask->second;
+            m.value[2] = mWidth;
+        }
 
         Property color;
         tocolor(GetColour(), color.value);
         const char* colorname = "u_effect_color";
         const auto& si = GetShaderInfo(s);
         color.uniform_idx   = si.find_uniform("u_effect_color");
-        properties[colorname] = color;
+        if (color.uniform_idx != UINT16_MAX)
+            properties[colorname] = color;
 
         prog = si.prog;
 
@@ -152,13 +176,12 @@ public:
     }
 
 private:
-    const int   mMaskOffset;
     const float mWidth;
 };
 
 static Rml::String
-get_default_mask_offset_str(const struct font_manager* F){
-    const int v = int(F->sdf.onedge_value * 0.85f);
+get_default_mask_offset_str(struct font_manager* F){
+    const int v = int(font_manager_sdf_mask(F) * 0.85f);
     return std::to_string(v);
 }
 
@@ -171,12 +194,12 @@ public:
         , id_color(Rml::PropertyId::Invalid)
         , id_maskoffset(Rml::PropertyId::Invalid)
     {
-        id_width = RegisterProperty("width", "1px", true).AddParser("length").GetId();
+        id_width = RegisterProperty("width", "1", true).AddParser("number").GetId();
         id_color = RegisterProperty("color", "white", false).AddParser("color").GetId();
         
-        id_maskoffset = RegisterProperty("maskoffset", get_default_mask_offset_str(mcontext->font_mgr), false).AddParser("number").GetId();
+        id_maskoffset = RegisterProperty("edgevalue_offset", get_default_mask_offset_str(mcontext->font_mgr), false).AddParser("number").GetId();
+        RegisterShorthand("font-effect", "width, color, edgevalue_offset", Rml::ShorthandType::FallThrough);
         RegisterShorthand("font-effect", "width, color", Rml::ShorthandType::FallThrough);
-        RegisterShorthand("font-effect", "width, color, maskoffset", Rml::ShorthandType::FallThrough);
     }
 
     Rml::SharedPtr<Rml::FontEffect> InstanceFontEffect(const Rml::String& RMLUI_UNUSED_PARAMETER(name), const Rml::PropertyDictionary& properties) override
@@ -184,10 +207,10 @@ public:
         RMLUI_UNUSED(name);
 
         const float width = properties.GetProperty(id_width)->Get<float>();
-        const int offset = -std::abs(properties.GetProperty(id_maskoffset)->Get<int>());
+        const int offset = properties.GetProperty(id_maskoffset)->Get<int>();
         const Rml::Colourb color = properties.GetProperty(id_color)->Get<Rml::Colourb>();
 
-        return Rml::MakeShared<FontEffectClass>(mcontext->font_tex.texid, width, offset, color);
+        return Rml::MakeShared<FontEffectClass>(mcontext->font_tex.texid, width, (int8_t)offset, color);
     }
 private:
     const RmlContext* mcontext;
@@ -200,9 +223,8 @@ using SDFFontEffectGlowInstancer    = TSDFFontEffectOulineInstancer<TSDFFontEffe
 ///shadow//////////////////////////////////////////////////////////////////
 class SDFFontEffectShadow : public SDFFontEffect{
 public:
-SDFFontEffectShadow(uint16_t texid, int mo, const Rml::Vector2f &offset, Rml::Colourb c) 
-    : SDFFontEffect(texid, FontEffectType(FE_Shadow|FE_FontTex))
-    , mMaskOffset(mo)
+SDFFontEffectShadow(uint16_t texid, int8_t eo, const Rml::Vector2f &offset, Rml::Colourb c) 
+    : SDFFontEffect(texid, eo, FontEffectType(FE_Shadow|FE_FontTex))
     , moffset(offset)
     {
         SetLayer(Layer::Back);
@@ -222,7 +244,7 @@ SDFFontEffectShadow(uint16_t texid, int mo, const Rml::Vector2f &offset, Rml::Co
         SDFFontEffect::GetProperties(F, s, properties, prog);
         assert(properties.find("u_mask") != properties.end());
         auto &m = properties["u_mask"];
-        m.value[2] = font_manager_sdf_mask(F, mMaskOffset);
+        m.value[2] = font_manager_sdf_mask(F);
         m.value[3] = std::min(m.value[2], m.value[1]);
 
 
@@ -230,15 +252,18 @@ SDFFontEffectShadow(uint16_t texid, int mo, const Rml::Vector2f &offset, Rml::Co
         tocolor(GetColour(), color.value);
         const char* colorname = "u_effect_color";
         color.uniform_idx = s.font_shadow.find_uniform(colorname);
-        properties[colorname] = color;
+        if (color.uniform_idx != UINT16_MAX)
+            properties[colorname] = color;
 
         Property offset;
         const char* offsetname = "u_shadow_offset";
         offset.uniform_idx = s.font_shadow.find_uniform(offsetname);
-        offset.value[0] = moffset.x;
-        offset.value[1] = moffset.y;
-        offset.value[2] = offset.value[3] = 0.0f;
-        properties[offsetname] = offset;
+        if (offset.uniform_idx != UINT16_MAX){
+            offset.value[0] = moffset.x;
+            offset.value[1] = moffset.y;
+            offset.value[2] = offset.value[3] = 0.0f;
+            properties[offsetname] = offset;
+        }
 
         prog = s.font_shadow.prog;
 
@@ -246,7 +271,6 @@ SDFFontEffectShadow(uint16_t texid, int mo, const Rml::Vector2f &offset, Rml::Co
     }
 
 private:
-    const int mMaskOffset;
     const Rml::Vector2f moffset;
 };
 
@@ -262,11 +286,11 @@ public:
         id_offset_x = RegisterProperty("offset-x", "0px", true).AddParser("length").GetId();
         id_offset_y = RegisterProperty("offset-y", "0px", true).AddParser("length").GetId();
         id_color = RegisterProperty("color", "white", false).AddParser("color").GetId();
-        id_maskoffset = RegisterProperty("maskoffset", get_default_mask_offset_str(mcontext->font_mgr), false).AddParser("number").GetId();
+        id_maskoffset = RegisterProperty("edgevalue_offset", get_default_mask_offset_str(mcontext->font_mgr), false).AddParser("number").GetId();
         
-        RegisterShorthand("offset", "offset-x, offset-y", Rml::ShorthandType::FallThrough);
+        RegisterShorthand("font-effect", "offset-x, offset-y, color, edgevalue_offset", Rml::ShorthandType::FallThrough);
         RegisterShorthand("font-effect", "offset-x, offset-y, color", Rml::ShorthandType::FallThrough);
-        RegisterShorthand("font-effect", "offset-x, offset-y, color, maskoffset", Rml::ShorthandType::FallThrough);
+        RegisterShorthand("offset", "offset-x, offset-y", Rml::ShorthandType::FallThrough);
     }
 
     Rml::SharedPtr<Rml::FontEffect> InstanceFontEffect(const Rml::String& RMLUI_UNUSED_PARAMETER(name), const Rml::PropertyDictionary& properties) override
@@ -274,7 +298,7 @@ public:
         RMLUI_UNUSED(name);
 
         return Rml::MakeShared<SDFFontEffectShadow>(mcontext->font_tex.texid, 
-                -abs(properties.GetProperty(id_maskoffset)->Get<int>()),
+                int8_t(properties.GetProperty(id_maskoffset)->Get<int>()),
                 Rml::Vector2f(  properties.GetProperty(id_offset_x)->Get<float>(),
                                 properties.GetProperty(id_offset_y)->Get<float>()),
             properties.GetProperty(id_color)->Get<Rml::Colourb>());
