@@ -27,7 +27,7 @@ void main()
 	vec4 color = v_color0;
 	float magicnum = 128.0;
 	float smoothing = length(fwidth(v_texcoord0)) * magicnum * u_dist_multiplier;
-	color.a = smoothing_result(dis, u_edge_mask, smoothing);
+	color.a *= smoothing_result(dis, u_edge_mask, smoothing);
 
 #if defined(OUTLINE_EFFECT)
 	float outline_width	= smoothing * u_outline_width;

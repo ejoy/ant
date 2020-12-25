@@ -47,7 +47,7 @@ public:
         Property m;
         const float offset = font_manager_sdf_distance(F, 2);
         m.value[0] = font_manager_sdf_mask(F);// - offset;
-        m.value[1] = 1.5f;
+        m.value[1] = 1.1f;
         m.value[2] = m.value[3] = 0.0f;
         const char* mn = "u_mask";
         m.uniform_idx = s.font.find_uniform(mn);
