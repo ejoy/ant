@@ -53,13 +53,13 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;RMLUI_STATIC_LIB;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;RMLUI_STATIC_LIB;RMLUI_NO_FONT_INTERFACE_DEFAULT;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;_DEBUG;RMLUI_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs;../../clibs/lua;../../3rd/bgfx/3rdparty;../../3rd/RmlUi/Include;../../3rd/bgfx/include;../../3rd/bx/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs;../../clibs/lua;../../3rd/bgfx/3rdparty;../../3rd/RmlUi/Include;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/yoga;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244</DisableSpecificWarnings>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -67,20 +67,20 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../3rd/build/RmlUi/msvc/$(Configuration)/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
-      <AdditionalDependencies>RmlCore.lib;RmlDebugger.lib;font.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>font.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;RMLUI_STATIC_LIB;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;RMLUI_STATIC_LIB;RMLUI_NO_FONT_INTERFACE_DEFAULT;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../../clibs;../../clibs/lua;../../3rd/bgfx/3rdparty;../../3rd/RmlUi/Include;../../3rd/bgfx/include;../../3rd/bx/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244</DisableSpecificWarnings>
@@ -92,8 +92,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../3rd/build/RmlUi/msvc/$(Configuration)/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>RmlCore.lib;RmlDebugger.lib;font.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>font.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -103,12 +103,125 @@
     <ProjectReference Include="luadll.vcxproj">
       <Project>{af8c0252-364f-4d3b-b35e-f3392eea620b}</Project>
     </ProjectReference>
+    <ProjectReference Include="yoga.vcxproj">
+      <Project>{11f6dcea-3c35-4209-82c6-dba0a8f83bd4}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\clibs\rmlui\context.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\BaseXMLParser.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Clock.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ComputeProperty.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Context.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ConvolutionFilter.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Core.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DataController.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DataControllerDefault.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DataExpression.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DataModel.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DataModelHandle.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DataTypeRegister.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DataVariable.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DataView.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DataViewDefault.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\DocumentHeader.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Element.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ElementAnimation.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ElementBackgroundBorder.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ElementBackgroundImage.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ElementDefinition.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ElementDocument.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ElementInstancer.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ElementScroll.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ElementStyle.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ElementText.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ElementUtilities.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Event.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\EventDispatcher.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\EventInstancer.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\EventInstancerDefault.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\EventListenerInstancer.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\EventSpecification.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Factory.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\FileInterface.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\FontEffect.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\FontEffectBlur.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\FontEffectGlow.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\FontEffectInstancer.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\FontEffectOutline.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\FontEffectShadow.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\FontEngineInterface.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Geometry.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\GeometryBackgroundBorder.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\GeometryDatabase.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\GeometryUtilities.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Layout.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Log.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Math.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Memory.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ObserverPtr.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Plugin.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\PluginRegistry.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\PropertiesIteratorView.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Property.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\PropertyDefinition.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\PropertyDictionary.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\PropertyParserAnimation.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\PropertyParserColour.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\PropertyParserKeyword.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\PropertyParserNumber.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\PropertyParserString.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\PropertyParserTransform.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\PropertySpecification.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\RenderInterface.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Stream.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\StreamFile.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\StreamMemory.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\StringUtilities.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\StyleSheet.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\StyleSheetFactory.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNode.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelector.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorEmpty.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorFirstChild.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorFirstOfType.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorLastChild.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorLastOfType.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorNthChild.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorNthLastChild.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorNthLastOfType.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorNthOfType.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorOnlyChild.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorOnlyOfType.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\StyleSheetParser.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\StyleSheetSpecification.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\SystemInterface.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Template.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\TemplateCache.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Texture.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\TextureDatabase.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\TextureResource.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Transform.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\TransformPrimitive.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\TransformState.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\TransformUtilities.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Tween.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\TypeConverter.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\URL.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Variant.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Vector3.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Vector4.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\WidgetScroll.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandler.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandlerBody.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandlerDefault.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandlerHead.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandlerTemplate.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\XMLParser.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\XMLParseTools.cpp" />
+    <ClCompile Include="..\..\clibs\rmlui\binding_context.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\file.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\font.cpp" />
-    <ClCompile Include="..\..\clibs\rmlui\fonteffect.cpp" />
+    <ClCompile Include="..\..\clibs\rmlui\binding_fonteffect.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\luadatabinding.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\luaplugin.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\luarmlui.cpp" />
@@ -121,6 +234,148 @@
     <ClCompile Include="..\..\clibs\rmlui\system.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Config\Config.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Animation.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\BaseXMLParser.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Colour.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\ComputedValues.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Containers\chobo\flat_map.hpp" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Containers\chobo\flat_set.hpp" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Containers\robin_hood.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Context.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\ConvolutionFilter.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Core.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\DataModelHandle.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\DataTypeRegister.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\DataTypes.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\DataVariable.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Debug.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Dictionary.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Element.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\ElementDocument.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\ElementInstancer.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\ElementScroll.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\ElementText.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\ElementUtilities.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Event.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\EventInstancer.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\EventListener.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\EventListenerInstancer.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Factory.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\FileInterface.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\FontEffect.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\FontEffectInstancer.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\FontEngineInterface.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\FontGlyph.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Geometry.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\GeometryUtilities.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Header.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\ID.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Input.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Layout.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Log.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Math.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\MathTypes.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Matrix4.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\ObserverPtr.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Platform.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Plugin.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\PropertiesIteratorView.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Property.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\PropertyDefinition.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\PropertyDictionary.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\PropertyIdSet.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\PropertyParser.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\PropertySpecification.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\RenderInterface.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\ScriptInterface.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Stream.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\StreamMemory.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\StringUtilities.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\StyleSheet.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\StyleSheetSpecification.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\SystemInterface.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Texture.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Traits.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Transform.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\TransformPrimitive.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Tween.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\TypeConverter.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Types.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\URL.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Variant.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Vector2.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Vector3.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Vector4.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Vertex.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\XMLNodeHandler.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\XMLParser.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\Clock.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\ComputeProperty.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\DataController.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\DataControllerDefault.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\DataExpression.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\DataModel.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\DataView.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\DataViewDefault.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\DocumentHeader.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\ElementAnimation.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\ElementBackgroundBorder.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\ElementBackgroundImage.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\ElementDefinition.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\ElementStyle.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\EventDispatcher.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\EventInstancerDefault.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\EventSpecification.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\FontEffectBlur.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\FontEffectGlow.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\FontEffectOutline.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\FontEffectShadow.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\GeometryBackgroundBorder.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\GeometryDatabase.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\IdNameMap.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\Memory.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\PluginRegistry.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\Pool.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\precompiled.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\PropertiesIterator.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\PropertyParserAnimation.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\PropertyParserColour.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\PropertyParserKeyword.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\PropertyParserNumber.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\PropertyParserString.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\PropertyParserTransform.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\PropertyShorthandDefinition.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\StreamFile.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\StyleSheetFactory.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNode.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelector.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorEmpty.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorFirstChild.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorFirstOfType.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorLastChild.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorLastOfType.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorNthChild.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorNthLastChild.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorNthLastOfType.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorNthOfType.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorOnlyChild.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorOnlyOfType.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\StyleSheetParser.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\Template.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\TemplateCache.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\TextureDatabase.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\TextureResource.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\TransformState.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\TransformUtilities.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\Utilities.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\WidgetScroll.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandlerBody.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandlerDefault.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandlerHead.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandlerTemplate.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\XMLParseTools.h" />
     <ClInclude Include="..\..\clibs\rmlui\context.h" />
     <ClInclude Include="..\..\clibs\rmlui\file.h" />
     <ClInclude Include="..\..\clibs\rmlui\font.h" />
@@ -131,6 +386,17 @@
     <ClInclude Include="..\..\clibs\rmlui\pch.h" />
     <ClInclude Include="..\..\clibs\rmlui\render.h" />
     <ClInclude Include="..\..\clibs\rmlui\system.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Colour.inl" />
+    <None Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Element.inl" />
+    <None Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Matrix4.inl" />
+    <None Include="..\..\3rd\RmlUi\Include\RmlUi\Core\TypeConverter.inl" />
+    <None Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Variant.inl" />
+    <None Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Vector2.inl" />
+    <None Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Vector3.inl" />
+    <None Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Vector4.inl" />
+    <None Include="..\..\3rd\RmlUi\Source\Core\Pool.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

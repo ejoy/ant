@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="..\..\3rd\yoga\yoga\BitUtils.h" />
+    <ClInclude Include="..\..\3rd\yoga\yoga\CompactValue.h" />
+    <ClInclude Include="..\..\3rd\yoga\yoga\log.h" />
+    <ClInclude Include="..\..\3rd\yoga\yoga\Utils.h" />
+    <ClInclude Include="..\..\3rd\yoga\yoga\YGConfig.h" />
+    <ClInclude Include="..\..\3rd\yoga\yoga\YGEnums.h" />
+    <ClInclude Include="..\..\3rd\yoga\yoga\YGFloatOptional.h" />
+    <ClInclude Include="..\..\3rd\yoga\yoga\YGLayout.h" />
+    <ClInclude Include="..\..\3rd\yoga\yoga\YGMacros.h" />
+    <ClInclude Include="..\..\3rd\yoga\yoga\YGNode.h" />
+    <ClInclude Include="..\..\3rd\yoga\yoga\YGNodePrint.h" />
+    <ClInclude Include="..\..\3rd\yoga\yoga\YGStyle.h" />
+    <ClInclude Include="..\..\3rd\yoga\yoga\YGValue.h" />
+    <ClInclude Include="..\..\3rd\yoga\yoga\Yoga.h" />
+    <ClInclude Include="..\..\3rd\yoga\yoga\Yoga-internal.h" />
+    <ClInclude Include="..\..\3rd\yoga\yoga\event\event.h">
+      <Filter>event</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\yoga\yoga\internal\experiments.h">
+      <Filter>internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\yoga\yoga\internal\experiments-inl.h">
+      <Filter>internal</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\3rd\yoga\yoga\log.cpp" />
+    <ClCompile Include="..\..\3rd\yoga\yoga\Utils.cpp" />
+    <ClCompile Include="..\..\3rd\yoga\yoga\YGConfig.cpp" />
+    <ClCompile Include="..\..\3rd\yoga\yoga\YGEnums.cpp" />
+    <ClCompile Include="..\..\3rd\yoga\yoga\YGLayout.cpp" />
+    <ClCompile Include="..\..\3rd\yoga\yoga\YGNode.cpp" />
+    <ClCompile Include="..\..\3rd\yoga\yoga\YGNodePrint.cpp" />
+    <ClCompile Include="..\..\3rd\yoga\yoga\YGStyle.cpp" />
+    <ClCompile Include="..\..\3rd\yoga\yoga\YGValue.cpp" />
+    <ClCompile Include="..\..\3rd\yoga\yoga\Yoga.cpp" />
+    <ClCompile Include="..\..\3rd\yoga\yoga\event\event.cpp">
+      <Filter>event</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\yoga\yoga\internal\experiments.cpp">
+      <Filter>internal</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="internal">
+      <UniqueIdentifier>{b7ec0ebc-4324-4e3c-b31d-7ddec9b8b640}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="event">
+      <UniqueIdentifier>{1c4e9c09-9695-4471-9f22-db8d83408351}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

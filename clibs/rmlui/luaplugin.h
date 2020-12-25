@@ -10,9 +10,7 @@ class lua_element_instancer;
 class lua_event_listener_instancer;
 
 enum class LuaEvent : int {
-	OnContextCreate = 1,
-	OnContextDestroy,
-	OnNewDocument,
+	OnNewDocument = 1,
 	OnDeleteDocument,
 	OnInlineScript,
 	OnExternalScript,
@@ -20,6 +18,7 @@ enum class LuaEvent : int {
 	OnEventAttach,
 	OnEventDetach,
 	OnUpdate,
+	OnShutdown,
 	OnOpenFile,
 };
 
@@ -29,8 +28,6 @@ public:
 	int GetEventClasses() override;
 	void OnInitialise() override;
 	void OnShutdown() override;
-	void OnContextCreate(Rml::Context* context) override;
-	void OnContextDestroy(Rml::Context* context) override;
 
 	bool initialize(const std::string& bootstrap, std::string& errmsg);
 	int  ref(lua_State* L);

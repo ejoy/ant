@@ -14,7 +14,6 @@
 #include <bgfx/c99/bgfx.h>
 
 #include <RmlUi/Core.h>
-#include <RmlUi/Debugger.h>
 
 #include <cassert>
 #include <cstring>
@@ -78,6 +77,13 @@ lrmlui_init(lua_State *L){
 
 static int
 lrmlui_shutdown(lua_State* L) {
+    if (g_wrapper) {
+        lua_plugin* plugin = g_wrapper->context.plugin;
+        lua_State* rL = plugin->L;
+        luabind::invoke(rL, [&]() {
+            plugin->call(LuaEvent::OnShutdown);
+        });
+    }
     Rml::Shutdown();
     if (g_wrapper) {
         delete g_wrapper;

@@ -1,70 +1,49 @@
 local m = {}
 
-local contexts = {}
+local context
 local debuggerInitialized = false
-local width, height
-local find = {}
-local maxId = 0
 
-function m.initialize(w, h)
-    width, height = w, h
+function m.initialize(width, height)
+    context = rmlui.RmlCreateContext(width, height)
+end
+
+function m.destroy()
+    rmlui.RmlRemoveContext(context)
 end
 
 function m.open(url)
-    maxId = maxId+1
-    local name = ''..maxId
-    local ctx = rmlui.RmlCreateContext(name, width, height)
-    if ctx then
-        local doc = rmlui.ContextLoadDocument(ctx, url)
-        if doc then
-            rmlui.DocumentShow(doc)
-            contexts[#contexts+1] = ctx
-            find[ctx] = name
-            return doc
-        else
-            rmlui.RmlRemoveContext(name)
+    if context then
+        local document = rmlui.ContextLoadDocument(context, url)
+        if document then
+            rmlui.DocumentShow(document)
+            return document
         end
     end
 end
 
-function m.close(ctx)
-    local name = find[ctx]
-    find[ctx] = nil
-    rmlui.RmlRemoveContext(name)
-    for i, c in ipairs(contexts) do
-        if c == ctx then
-            table.remove(contexts, i)
-            return
-        end
-    end
+function m.close(document)
+    rmlui.ContextUnloadDocument(context, document)
 end
 
 function m.mouseMove(x, y)
-    for _, ctx in ipairs(contexts) do
-        rmlui.ContextProcessMouseMove(ctx, x, y)
-    end
+    rmlui.ContextProcessMouseMove(context, x, y)
 end
 
 function m.mouseDown(button)
-    for _, ctx in ipairs(contexts) do
-        rmlui.ContextProcessMouseButtonDown(ctx, button)
-    end
+    rmlui.ContextProcessMouseButtonDown(context, button)
 end
 
 function m.mouseUp(button)
-    for _, ctx in ipairs(contexts) do
-        rmlui.ContextProcessMouseButtonUp(ctx, button)
-    end
+    rmlui.ContextProcessMouseButtonUp(context, button)
 end
 
 function m.debugger(open)
-    local ctx = contexts[1]
-    if ctx then
+    if context then
         if not debuggerInitialized then
-            rmlui.DebuggerInitialise(ctx)
+            rmlui.DebuggerInitialise(context)
             debuggerInitialized = true
         else
-            rmlui.DebuggerSetContext(ctx)
+            rmlui.DebuggerSetContext(context)
         end
         rmlui.DebuggerSetVisible(open)
     end
@@ -72,10 +51,7 @@ end
 
 function m.update()
     rmlui.RenderBegin()
-    for _, ctx in ipairs(contexts) do
-        rmlui.ContextUpdate(ctx)
-        rmlui.ContextRender(ctx)
-    end
+    rmlui.ContextUpdate(context)
     rmlui.RenderFrame()
 end
 

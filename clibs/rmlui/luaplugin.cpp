@@ -121,20 +121,6 @@ void lua_plugin::OnShutdown() {
 	delete this;
 }
 
-void lua_plugin::OnContextCreate(Rml::Context* context) {
-	luabind::invoke(L, [&]() {
-		lua_pushlightuserdata(L, (void*)context);
-		call(LuaEvent::OnContextCreate, 1);
-	});	
-}
-
-void lua_plugin::OnContextDestroy(Rml::Context* context) {
-	luabind::invoke(L, [&]() {
-		lua_pushlightuserdata(L, (void*)context);
-		call(LuaEvent::OnContextDestroy, 1);
-	});
-}
-
 bool lua_plugin::initialize(const std::string& bootstrap, std::string& errmsg) {
 	L = luaL_newstate();
 	if (L == NULL) {
@@ -155,8 +141,6 @@ bool lua_plugin::initialize(const std::string& bootstrap, std::string& errmsg) {
 		if (!lua_istable(L, -1)) {
 			luaL_error(L, "Init need a module table");
 		}
-		ref_function(*reference, L, "OnContextCreate");
-		ref_function(*reference, L, "OnContextDestroy");
 		ref_function(*reference, L, "OnNewDocument");
 		ref_function(*reference, L, "OnDeleteDocument");
 		ref_function(*reference, L, "OnInlineScript");
@@ -165,6 +149,7 @@ bool lua_plugin::initialize(const std::string& bootstrap, std::string& errmsg) {
 		ref_function(*reference, L, "OnEventAttach");
 		ref_function(*reference, L, "OnEventDetach");
 		ref_function(*reference, L, "OnUpdate");
+		ref_function(*reference, L, "OnShutdown");
 		ref_function(*reference, L, "OnOpenFile");
 	};
 	auto errfunc = [&](const char* msg) {

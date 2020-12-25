@@ -5,6 +5,7 @@ local event = require "core.event"
 local createElement = require "core.DOM.element"
 local createEvent = require "core.DOM.event"
 local environment = require "core.environment"
+local contextManager = require "core.contextManager"
 require "core.DOM.document"
 require "core.DOM.window"
 
@@ -109,6 +110,10 @@ end
 
 function m.OnOpenFile(path)
 	return fileManager.realpath(path)
+end
+
+function m.OnShutdown()
+	contextManager.destroy()
 end
 
 m.OnUpdate = require "core.update"

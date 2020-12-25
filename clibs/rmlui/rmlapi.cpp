@@ -10,7 +10,6 @@ extern "C" {
 
 #include <RmlUi/Core/Element.h>
 #include <RmlUi/Core/ElementDocument.h>
-#include <RmlUi/Debugger.h>
 
 static void
 lua_pushobject(lua_State* L, void* handle) {
@@ -44,7 +43,7 @@ namespace {
 
 static int
 lContextLoadDocument(lua_State* L) {
-	Rml::Context* ctx = (Rml::Context*)lua_touserdata(L, 1);
+	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
 	const char* path = luaL_checkstring(L, 2);
 	Rml::ElementDocument* doc = ctx->LoadDocument(path);
 	if (!doc) {
@@ -55,8 +54,16 @@ lContextLoadDocument(lua_State* L) {
 }
 
 static int
+lContextUnloadDocument(lua_State* L) {
+	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
+	Rml::ElementDocument* doc = lua_checkobject<Rml::ElementDocument>(L, 2);
+	ctx->UnloadDocument(doc);
+	return 0;
+}
+
+static int
 lContextProcessMouseMove(lua_State* L) {
-	Rml::Context* ctx = (Rml::Context*)lua_touserdata(L, 1);
+	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
 	int x = luaL_checkinteger(L, 2);
 	int y = luaL_checkinteger(L, 3);
 	ctx->ProcessMouseMove(x, y, 0);
@@ -65,7 +72,7 @@ lContextProcessMouseMove(lua_State* L) {
 
 static int
 lContextProcessMouseButtonDown(lua_State* L) {
-	Rml::Context* ctx = (Rml::Context*)lua_touserdata(L, 1);
+	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
 	int button = luaL_checkinteger(L, 2);
 	ctx->ProcessMouseButtonDown(button, 0);
 	return 0;
@@ -73,43 +80,16 @@ lContextProcessMouseButtonDown(lua_State* L) {
 
 static int
 lContextProcessMouseButtonUp(lua_State* L) {
-	Rml::Context* ctx = (Rml::Context*)lua_touserdata(L, 1);
+	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
 	int button = luaL_checkinteger(L, 2);
 	ctx->ProcessMouseButtonUp(button, 0);
 	return 0;
 }
 
 static int
-lContextRender(lua_State* L) {
-	Rml::Context* ctx = (Rml::Context*)lua_touserdata(L, 1);
-	ctx->Render();
-	return 0;
-}
-
-static int
 lContextUpdate(lua_State* L) {
-	Rml::Context* ctx = (Rml::Context*)lua_touserdata(L, 1);
+	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
 	ctx->Update();
-	return 0;
-}
-
-static int
-lDebuggerInitialise(lua_State* L) {
-	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
-	Rml::Debugger::Initialise(ctx);
-	return 0;
-}
-
-static int
-lDebuggerSetContext(lua_State* L) {
-	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
-	Rml::Debugger::SetContext(ctx);
-	return 0;
-}
-
-static int
-lDebuggerSetVisible(lua_State* L) {
-	Rml::Debugger::SetVisible(lua_toboolean(L, 1));
 	return 0;
 }
 
@@ -136,7 +116,7 @@ lDocumentGetElementById(lua_State* L) {
 
 static int
 lDocumentGetTitle(lua_State *L) {
-	Rml::ElementDocument *doc = (Rml::ElementDocument *)lua_touserdata(L, 1);
+	Rml::ElementDocument* doc = lua_checkobject<Rml::ElementDocument>(L, 1);
 	const Rml::String &title = doc->GetTitle();
 	lua_pushlstring(L, title.c_str(), title.length());
 	return 1;
@@ -144,7 +124,7 @@ lDocumentGetTitle(lua_State *L) {
 
 static int
 lDocumentGetSourceURL(lua_State *L) {
-	Rml::ElementDocument *doc = (Rml::ElementDocument *)lua_touserdata(L, 1);
+	Rml::ElementDocument* doc = lua_checkobject<Rml::ElementDocument>(L, 1);
 	const Rml::String &url = doc->GetSourceURL();
 	lua_pushlstring(L, url.c_str(), url.length());
 	return 1;
@@ -152,7 +132,7 @@ lDocumentGetSourceURL(lua_State *L) {
 
 static int
 lDocumentShow(lua_State* L) {
-	Rml::ElementDocument* doc = (Rml::ElementDocument*)lua_touserdata(L, 1);
+	Rml::ElementDocument* doc = lua_checkobject<Rml::ElementDocument>(L, 1);
 	doc->Show();
 	return 1;
 }
@@ -210,7 +190,7 @@ lElementDispatchEvent(lua_State* L) {
 
 static int
 lElementGetInnerRML(lua_State *L) {
-	Rml::Element *e = (Rml::Element *)lua_touserdata(L, 1);
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	const Rml::String &rml = e->GetInnerRML();
 	lua_pushlstring(L, rml.c_str(), rml.length());
 	return 1;
@@ -299,9 +279,9 @@ lElementSetProperty(lua_State* L) {
 
 static int
 lRmlCreateContext(lua_State* L) {
-	int w = luaL_checkinteger(L, 2);
-	int h = luaL_checkinteger(L, 3);
-	Rml::Context* ctx = Rml::CreateContext(lua_checkstdstring(L, 1), Rml::Vector2i(w, h));
+	int w = luaL_checkinteger(L, 1);
+	int h = luaL_checkinteger(L, 2);
+	Rml::Context* ctx = new Rml::Context(Rml::Vector2i(w, h));
 	if (!ctx) {
 		return 0;
 	}
@@ -311,7 +291,8 @@ lRmlCreateContext(lua_State* L) {
 
 static int
 lRmlRemoveContext(lua_State* L) {
-	Rml::RemoveContext(lua_checkstdstring(L, 1));
+	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
+	delete ctx;
 	return 0;
 }
 
@@ -340,10 +321,10 @@ lua_plugin_apis(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "ContextLoadDocument", lContextLoadDocument },
+		{ "ContextUnloadDocument", lContextUnloadDocument },
 		{ "ContextProcessMouseMove", lContextProcessMouseMove },
 		{ "ContextProcessMouseButtonDown", lContextProcessMouseButtonDown },
 		{ "ContextProcessMouseButtonUp", lContextProcessMouseButtonUp },
-		{ "ContextRender", lContextRender },
 		{ "ContextUpdate", lContextUpdate },
 		{ "DataModelCreate", lDataModelCreate },
 		{ "DataModelRelease", lDataModelRelease },
@@ -351,9 +332,6 @@ lua_plugin_apis(lua_State *L) {
 		{ "DataModelGet", lDataModelGet },
 		{ "DataModelSet", lDataModelSet },
 		{ "DataModelDirty", lDataModelDirty },
-		{ "DebuggerInitialise", lDebuggerInitialise },
-		{ "DebuggerSetContext", lDebuggerSetContext },
-		{ "DebuggerSetVisible", lDebuggerSetVisible },
 		{ "DocumentClose", lDocumentClose },
 		{ "DocumentGetContext", lDocumentGetContext },
 		{ "DocumentGetElementById", lDocumentGetElementById },

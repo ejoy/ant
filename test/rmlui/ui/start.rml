@@ -1,7 +1,7 @@
 <rml>
     <head>
         <style>
-            body {
+            div {
                 font: 300% "宋体";
                 margin-left: 60%;
                 margin-right: 10%;
@@ -9,8 +9,6 @@
                 margin-bottom: 50%;
             }
             button {
-                display: block;
-                position: relative;
                 margin: 10px;
                 padding: 0 20px;
                 text-align: center;
@@ -21,6 +19,7 @@
                 opacity: 0.5;
                 
                 transition: color background-color transform 2s elastic-out;
+                background-color: #f22222;
                 color: #ffffff;
                 transform: scale(1.0);
             }

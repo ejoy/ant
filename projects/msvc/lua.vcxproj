@@ -127,6 +127,9 @@
     <ProjectReference Include="luadll.vcxproj">
       <Project>{af8c0252-364f-4d3b-b35e-f3392eea620b}</Project>
     </ProjectReference>
+    <ProjectReference Include="rmlui.vcxproj">
+      <Project>{c7f2089d-ece0-46d6-a601-c317267b6bad}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
