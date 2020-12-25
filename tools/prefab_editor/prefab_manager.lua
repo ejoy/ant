@@ -134,12 +134,12 @@ local geom_mesh_file = {
     ["sphere"] = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin",
     ["torus"] = "/pkg/ant.resources.binary/meshes/base/torus.glb|meshes/pTorus1_P1.meshbin"
 }
-local default_collider_config = {
+local default_collider_define = {
     ["sphere"] = {origin = {0, 0, 0, 1}, radius = 0.1},
     ["box"] = {origin = {0, 0, 0, 1}, size = {0.05, 0.05, 0.05} },
     ["capsule"] = {origin = {0, 0, 0, 1}, height = 1.0, radius = 0.25}
 }
-function m:create(what, type)
+function m:create(what, config)
     if not self.root then
         self:reset_prefab()
     end
@@ -156,11 +156,11 @@ function m:create(what, type)
         node.camera = true
         self.entities[#self.entities+1] = new_camera
     elseif what == "geometry" then
-        if type == "cube"
-            or type == "cone"
-            or type == "cylinder"
-            or type == "sphere"
-            or type == "torus" then
+        if config.type == "cube"
+            or config.type == "cone"
+            or config.type == "cylinder"
+            or config.type == "sphere"
+            or config.type == "torus" then
             local new_entity, temp = world:create_entity {
                 policy = {
                     "ant.render|render",
@@ -173,31 +173,31 @@ function m:create(what, type)
                     state = ies.create_state "visible|selectable",
                     transform = {s = 50},
                     material = "/pkg/ant.resources/materials/singlecolor.material",
-                    mesh = geom_mesh_file[type],
-                    name = type .. geometricidx
+                    mesh = geom_mesh_file[config.type],
+                    name = config.type .. geometricidx
                 }
             }
             imaterial.set_property(new_entity, "u_color", {1, 1, 1, 1})
             self.entities[#self.entities+1] = new_entity
             hierarchy:add(new_entity, {template = temp.__class[1]}, self.root)
-        elseif type == "cube(prefab)" then
+        elseif config.type == "cube(prefab)" then
             m:add_prefab(gd.package_path .. "res/cube.prefab")
-        elseif type == "cone(prefab)" then
+        elseif config.type == "cone(prefab)" then
             m:add_prefab(gd.package_path .. "res/cone.prefab")
-        elseif type == "cylinder(prefab)" then
+        elseif config.type == "cylinder(prefab)" then
             m:add_prefab(gd.package_path .. "res/cylinder.prefab")
-        elseif type == "sphere(prefab)" then
+        elseif config.type == "sphere(prefab)" then
             m:add_prefab(gd.package_path .. "res/sphere.prefab")
-        elseif type == "torus(prefab)" then
+        elseif config.type == "torus(prefab)" then
             m:add_prefab(gd.package_path .. "res/torus.prefab")
         end
     elseif what == "light" then
-        if type == "directional" or type == "point" or type == "spot" then      
+        if config.type == "directional" or config.type == "point" or config.type == "spot" then      
             local ilight = world:interface "ant.render|light" 
             local _, newlight = ilight.create({
                 transform = {},
-                name = type .. gen_light_id(),
-                light_type = type,
+                name = config.type .. gen_light_id(),
+                light_type = config.type,
                 color = {1, 1, 1, 1},
                 intensity = 2,
                 range = 1,
@@ -209,8 +209,16 @@ function m:create(what, type)
             create_light_billboard(new_light)
         end
     elseif what == "collider" then
-        if type == "sphere" or type == "box" or type == "capsule" then
-
+        if config.type == "sphere" or config.type == "box" or config.type == "capsule" then
+            local scale = {}
+            if config.type == "sphere" then
+                scale = config.define and config.define.radius * 100 or default_collider_define[config.type].radius * 100
+            elseif config.type == "box" then
+                local size = config.define and config.define.size or default_collider_define[config.type].size
+                scale = {size[1] * 200, size[2] * 200, size[3] * 200}
+            elseif config.type == "capsule" then
+            end
+            
             local new_entity, temp = world:create_entity {
                 policy = {
                     "ant.general|name",
@@ -223,25 +231,21 @@ function m:create(what, type)
                     color = {1, 0.5, 0.5, 0.5},
                     scene_entity = true,
                     state = ies.create_state "visible|selectable",
-                    transform = {s = 10},
+                    transform = {s = scale},
                     material = "/pkg/ant.resources/materials/singlecolor.material",
-                    mesh = (type == "box") and geom_mesh_file["cube"] or geom_mesh_file[type],
+                    mesh = (config.type == "box") and geom_mesh_file["cube"] or geom_mesh_file[config.type],
                     name = "collider" .. geometricidx,
 
                     collider = {
-                        [type] = {
-                            default_collider_config[type]
-                        }
+                        [config.type] = config.define and config.define or default_collider_define[config.type]
                     }
                 }
             }
             imaterial.set_property(new_entity, "u_color", {1, 0.5, 0.5, 0.5})
             self.entities[#self.entities+1] = new_entity
-            hierarchy:add(new_entity, {template = temp.__class[1]}, self.root)
-            if not self.collider then
-                self.collider = {}
+            if config.add_to_hierarchy then
+                hierarchy:add(new_entity, {template = temp.__class[1]}, self.root)
             end
-            self.collider[type] = new_entity
             return new_entity
         end
     end
@@ -572,7 +576,7 @@ function m:remove_entity(eid)
         light_gizmo.on_remove_light(eid)
     end
     local teml = hierarchy:get_template(eid)
-    if teml.children then
+    if teml and teml.children then
         for _, e in ipairs(teml.children) do
             world:remove_entity(e)
         end

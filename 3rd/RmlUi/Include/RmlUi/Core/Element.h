@@ -50,11 +50,7 @@ class EventListener;
 class ElementBackgroundImage;
 class ElementDefinition;
 class ElementDocument;
-class ElementScroll;
 class ElementStyle;
-class LayoutEngine;
-class LayoutInlineBox;
-class LayoutBlockBox;
 class PropertiesIteratorView;
 class PropertyDictionary;
 class RenderInterface;
@@ -446,10 +442,6 @@ public:
 	/// Sends an event to this element by event id.
 	bool DispatchEvent(EventId id, const Dictionary& parameters);
 
-	/// Scrolls the parent element's contents so that this element is visible.
-	/// @param[in] align_with_top If true, the element will align itself to the top of the parent element's window. If false, the element will be aligned to the bottom of the parent element's window.
-	void ScrollIntoView(bool align_with_top = true);
-
 	/// Append a child to this element.
 	/// @param[in] element The element to append as a child.
 	/// @param[in] dom_element True if the element is to be part of the DOM, false otherwise. Only set this to false if you know what you're doing!
@@ -506,8 +498,6 @@ public:
 	EventDispatcher* GetEventDispatcher() const;
 	/// Returns event types with number of listeners for debugging.
 	String GetEventDispatcherSummary() const;
-	/// Returns the element's scrollbar functionality.
-	ElementScroll* GetElementScroll() const;
 	/// Returns the element's transform state.
 	const TransformState* GetTransformState() const noexcept;
 	/// Returns the data model of this element.
@@ -679,10 +669,6 @@ protected:
 
 	friend class Rml::Context;
 	friend class Rml::ElementStyle;
-	friend class Rml::LayoutEngine;
-	friend class Rml::LayoutBlockBox;
-	friend class Rml::LayoutInlineBox;
-	friend class Rml::ElementScroll;
 	friend class Rml::ElementDocument;
 };
 

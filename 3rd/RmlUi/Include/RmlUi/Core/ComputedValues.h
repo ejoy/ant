@@ -68,12 +68,6 @@ struct LineHeight {
 	LineHeight() {}
 	LineHeight(float value, InheritType inherit_type, float inherit_value) : value(value), inherit_type(inherit_type), inherit_value(inherit_value) {}
 };
-struct VerticalAlign {
-	enum Type { Baseline, Middle, Sub, Super, TextTop, TextBottom, Top, Bottom, Length } type;
-	float value; // For length type
-	VerticalAlign(Type type = Baseline) : type(type), value(0) {}
-	VerticalAlign(float value) : type(Length), value(value) {}
-};
 
 enum class Overflow : uint8_t { Visible, Hidden, Scroll };
 struct Clip {
@@ -123,7 +117,6 @@ struct ComputedValues
 	ZIndex z_index = { ZIndex::Auto };
 
 	LineHeight line_height;
-	VerticalAlign vertical_align;
 
 	Clip clip;
 
@@ -147,11 +140,8 @@ struct ComputedValues
 	WhiteSpace white_space = WhiteSpace::Normal;
 	WordBreak word_break = WordBreak::Normal;
 
-	String cursor;
-
 	Drag drag = Drag::None;
 	Focus focus = Focus::Auto;
-	float scrollbar_margin = 0;
 	PointerEvents pointer_events = PointerEvents::Auto;
 
 	float perspective = 0;

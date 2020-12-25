@@ -109,11 +109,11 @@ static YGEdge ConvertEdge(Layout::Edge edge) {
 float Layout::GetEdge(Area area, Edge edge) const {
 	switch (area) {
 	case Layout::MARGIN:
-		return YGNodeStyleGetMargin(node, ConvertEdge(edge)).value;
+		return YGValueToFloat(YGNodeStyleGetMargin(node, ConvertEdge(edge)));
 	case Layout::BORDER:
-		return YGNodeStyleGetBorder(node, ConvertEdge(edge));
+		return YGValueToFloat(YGNodeStyleGetBorder(node, ConvertEdge(edge)));
 	case Layout::PADDING:
-		return YGNodeStyleGetPadding(node, ConvertEdge(edge)).value;
+		return YGValueToFloat(YGNodeStyleGetPadding(node, ConvertEdge(edge)));
 	default:
 		return 0.0f;
 	}

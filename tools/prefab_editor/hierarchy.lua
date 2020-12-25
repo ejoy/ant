@@ -60,6 +60,7 @@ function hierarchy:replace(old_eid, new_eid)
 end
 
 function hierarchy:del(eid)
+    if not eid then return end
     local eid_node = self.all[eid]
     if not eid_node then return end
 
@@ -136,6 +137,7 @@ function hierarchy:get_visible_uidata(eid)
 end
 
 function hierarchy:is_locked(eid)
+    if not self.all[eid] then return false end
     return self.all[eid].locked[1]
 end
 

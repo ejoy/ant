@@ -219,6 +219,17 @@ lElementGetOwnerDocument(lua_State* L) {
 }
 
 static int
+lElementGetParent(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	Rml::Element* parent = e->GetParentNode();
+	if (!parent) {
+		return 0;
+	}
+	lua_pushlightuserdata(L, parent);
+	return 1;
+}
+
+static int
 lElementGetProperty(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	const Rml::Property* prop = e->GetProperty(lua_checkstdstring(L, 2));
@@ -343,6 +354,7 @@ lua_plugin_apis(lua_State *L) {
 		{ "ElementGetInnerRML", lElementGetInnerRML },
 		{ "ElementGetAttribute", lElementGetAttribute },
 		{ "ElementGetOwnerDocument", lElementGetOwnerDocument },
+		{ "ElementGetParent", lElementGetParent },
 		{ "ElementGetProperty", lElementGetProperty },
 		{ "ElementRemoveAttribute", lElementRemoveAttribute },
 		{ "ElementRemoveProperty", lElementRemoveProperty },

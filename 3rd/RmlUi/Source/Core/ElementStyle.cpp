@@ -491,9 +491,6 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 			else
 				values.line_height = parent_values->line_height;
 		}
-
-		if(line_height_before.value != values.line_height.value || line_height_before.inherit_value != values.line_height.inherit_value)
-			dirty_properties.Insert(PropertyId::VerticalAlign);
 	}
 	else {
 		values.line_height = line_height_before;
@@ -504,26 +501,19 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 		// Inherited properties are copied here, but may be overwritten below by locally defined properties
 		// Line-height and font-size are computed above
 		values.clip = parent_values->clip;
-		
 		values.color = parent_values->color;
 		values.opacity = parent_values->opacity;
-
 		values.font_family = parent_values->font_family;
 		values.font_style = parent_values->font_style;
 		values.font_weight = parent_values->font_weight;
 		values.font_face_handle = parent_values->font_face_handle;
-
 		values.text_align = parent_values->text_align;
 		values.text_decoration = parent_values->text_decoration;
 		values.text_transform = parent_values->text_transform;
 		values.white_space = parent_values->white_space;
 		values.word_break = parent_values->word_break;
-
-		values.cursor = parent_values->cursor;
 		values.focus = parent_values->focus;
-
 		values.pointer_events = parent_values->pointer_events;
-		
 		values.font_effect = parent_values->font_effect;
 	}
 
@@ -620,9 +610,6 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 		case PropertyId::LineHeight:
 			// (Line-height computed above)
 			break;
-		case PropertyId::VerticalAlign:
-			values.vertical_align = ComputeVerticalAlign(p, values.line_height.value, font_size, document_font_size, dp_ratio);
-			break;
 
 		case PropertyId::Clip:
 			values.clip = ComputeClip(p);
@@ -681,18 +668,11 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 			values.word_break = (WordBreak)p->Get<int>();
 			break;
 
-		case PropertyId::Cursor:
-			values.cursor = p->Get<String>();
-			break;
-
 		case PropertyId::Drag:
 			values.drag = (Drag)p->Get<int>();
 			break;
 		case PropertyId::Focus:
 			values.focus = (Focus)p->Get<int>();
-			break;
-		case PropertyId::ScrollbarMargin:
-			values.scrollbar_margin = ComputeLength(p, font_size, document_font_size, dp_ratio);
 			break;
 		case PropertyId::PointerEvents:
 			values.pointer_events = (PointerEvents)p->Get<int>();
@@ -742,9 +722,6 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 			}
 			else
 				values.font_effect.reset();
-			break;
-		// Unhandled properties. Must be manually retrieved with 'GetProperty()'.
-		case PropertyId::FillImage:
 			break;
 		// Invalid properties
 		case PropertyId::Invalid:

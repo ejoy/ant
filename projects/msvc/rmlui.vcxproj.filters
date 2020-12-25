@@ -127,9 +127,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ElementInstancer.cpp">
       <Filter>source\Core</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ElementScroll.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ElementStyle.cpp">
       <Filter>source\Core</Filter>
     </ClCompile>
@@ -361,9 +358,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Vector4.cpp">
       <Filter>source\Core</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\WidgetScroll.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandler.cpp">
       <Filter>source\Core</Filter>
     </ClCompile>
@@ -475,9 +469,6 @@
       <Filter>include\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\ElementInstancer.h">
-      <Filter>include\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\ElementScroll.h">
       <Filter>include\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\ElementText.h">
@@ -829,9 +820,6 @@
       <Filter>source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\Utilities.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\WidgetScroll.h">
       <Filter>source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandlerBody.h">

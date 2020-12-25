@@ -23,6 +23,67 @@ local timer = world:interface "ant.timer|timer"
 
 local fix_root <const> = false
 
+local function process_keyframe_event(task, poseresult)
+	local event_state = task.event_state
+	if not event_state.keyframe_events then return end
+	-- local delta = delta_time / ani._duration
+	-- local current_ratio = task.ratio + delta
+	-- task.ratio = current_ratio <= ani._max_ratio and current_ratio or ani._max_ratio
+	-- poseresult:do_sample(ani._sampling_cache, ani._handle, task.ratio % 1, task.weight)
+	local colliders = event_state.keyframe_events.collider
+	if colliders then
+		for _, coll in ipairs(colliders) do
+			if coll.joint_index > 0 then
+				local tranform = poseresult:joint(coll.joint_index)
+				local _, origin_r, origin_t = math3d.srt(tranform)
+				local origin_s, _, _ = math3d.srt(iom.worldmat(coll.eid))
+				iom.set_srt(coll.eid, math3d.matrix{ s = origin_s, r = origin_r, t = origin_t })
+			else
+			end
+		end
+	end
+
+	local all_events = event_state.keyframe_events.event
+	local current_events = all_events and all_events[event_state.next_index] or nil
+	if not current_events then return end
+
+	local current_time = task.animation._handle:get_time()
+	if current_time < current_events.time and event_state.finish then
+		-- restart
+		event_state.next_index = 1
+		event_state.finish = false
+	end
+	while not event_state.finish and current_events.time <= current_time do
+		for _, event in ipairs(current_events.event_list) do
+			--print("event trigger : ", current_time, event.name, event.event_type)
+			if event.event_type == "Collision" then
+				local col = event.collision.collider--colliders[event.collision.collider_index]
+				if col then
+					if col.joint_index == 0 then
+						local origin_s, _, _ = math3d.srt(iom.worldmat(col.eid))
+						iom.set_srt(col.eid, math3d.matrix{ s = origin_s, r = event.collision.offset.rotate, t = event.collision.offset.position })
+						--print("transform 1")
+					else
+						local final_mat = math3d.mul(math3d.matrix{t = event.collision.offset.position, r = event.collision.offset.rotate, s = {1,1,1}}, iom.worldmat(col.eid))
+						iom.set_srt(col.eid, final_mat)
+						--print("transform 2")
+					end
+					if event.collision.enable and icoll.test(world[coll.eid]) then
+						print("Overlaped!")
+					end
+				end
+			end
+		end
+		event_state.next_index = event_state.next_index + 1
+		if event_state.next_index > #all_events then
+			event_state.next_index = #all_events
+			event_state.finish = true
+			break
+		end
+		current_events = all_events[event_state.next_index]
+	end
+end
+
 local function do_animation(poseresult, task, delta_time)
 	if task.type == 'blend' then
 		for _, t in ipairs(task) do
@@ -31,46 +92,8 @@ local function do_animation(poseresult, task, delta_time)
 		poseresult:do_blend("blend", #task, task.weight)
 	else
 		local ani = task.animation
-		-- local delta = delta_time / ani._duration
-		-- local current_ratio = task.ratio + delta
-		-- task.ratio = current_ratio <= ani._max_ratio and current_ratio or ani._max_ratio
-		-- poseresult:do_sample(ani._sampling_cache, ani._handle, task.ratio % 1, task.weight)
-		local current_time = ani._handle:get_time()
-		local event_state = task.event_state
-		if event_state.keyframe_events then
-			local current_events = event_state.keyframe_events[event_state.next_index]
-			if current_events then
-				while math.abs(current_time - current_events.time) < 0.01 do
-					for _, event in ipairs(current_events.events) do
-						print("event trigger : ", current_time, event.name, event.event_type)
-						if event.event_type == "Collision" then
-							
-						end
-					end
-					event_state.next_index = event_state.next_index + 1
-					if event_state.next_index > #event_state.keyframe_events then
-						event_state.next_index = 1
-						break
-					end
-					current_events = event_state.keyframe_events[event_state.next_index]
-				end
-			end
-			local colliders = event_state.keyframe_events.collider
-			if colliders then
-				for _, collider in ipairs(colliders) do
-					if collider.joint_index > 0 then
-						local tranform = poseresult:joint(collider.joint_index)
-						local _, origin_r, origin_t = math3d.srt(tranform)
-						local origin_s, _, _ = math3d.srt(iom.worldmat(collider.eid))
-						iom.set_srt(collider.eid, math3d.matrix{ s = origin_s, r = origin_r, t = origin_t })
-						if icoll.test(world[collider.eid]) then
-							print("Overlaped!")
-						end
-					end
-				end
-			end
-		end
 		poseresult:do_sample(ani._sampling_cache, ani._handle, delta_time, task.weight)
+		process_keyframe_event(task, poseresult)
 	end
 end
 

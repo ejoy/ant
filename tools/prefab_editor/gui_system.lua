@@ -278,7 +278,10 @@ end
 
 local function on_update(eid)
     if not eid then return end
-
+    if world[eid].collider then
+        anim_view.on_collider_update(eid)
+        return
+    end
     if world[eid].camera then
         camera_mgr.update_frustrum(eid)
     elseif world[eid].light_type then

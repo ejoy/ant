@@ -336,9 +336,6 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 	RegisterProperty(PropertyId::MaxHeight, "max-height", "-1px", false, true).AddParser("length_percent");
 
 	RegisterProperty(PropertyId::LineHeight, "line-height", "1.2", true, true).AddParser("number_length_percent");
-	RegisterProperty(PropertyId::VerticalAlign, "vertical-align", "baseline", false, true)
-		.AddParser("keyword", "baseline, middle, sub, super, text-top, text-bottom, top, bottom")
-		.AddParser("length_percent");
 
 	RegisterProperty(PropertyId::Overflow, "overflow", "visible", false, true).AddParser("keyword", "visible, hidden, scroll");
 	RegisterProperty(PropertyId::Clip, "clip", "auto", true, false).AddParser("keyword", "auto, none").AddParser("number");
@@ -361,12 +358,9 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 	RegisterProperty(PropertyId::WhiteSpace, "white-space", "normal", true, true).AddParser("keyword", "normal, pre, nowrap, pre-wrap, pre-line");
 	RegisterProperty(PropertyId::WordBreak, "word-break", "normal", true, true).AddParser("keyword", "normal, break-all, break-word");
 
-	RegisterProperty(PropertyId::Cursor, "cursor", "", true, false).AddParser("string");
-
 	// Functional property specifications.
 	RegisterProperty(PropertyId::Drag, "drag", "none", false, false).AddParser("keyword", "none, drag, drag-drop, block, clone");
 	RegisterProperty(PropertyId::Focus, "focus", "auto", true, false).AddParser("keyword", "none, auto");
-	RegisterProperty(PropertyId::ScrollbarMargin, "scrollbar-margin", "0", false, false).AddParser("length");
 	RegisterProperty(PropertyId::PointerEvents, "pointer-events", "auto", true, false).AddParser("keyword", "none, auto");
 
 	// Perspective and Transform specifications
@@ -384,9 +378,6 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 	RegisterProperty(PropertyId::Animation, "animation", "none", false, false).AddParser("animation");
 
 	RegisterProperty(PropertyId::FontEffect, "font-effect", "", true, false).AddParser("string");
-
-	// Rare properties (not added to computed values)
-	RegisterProperty(PropertyId::FillImage, "fill-image", "", false, false).AddParser("string");
 
 	RegisterProperty(PropertyId::AlignContent, "align-content", "flex-start", false, true)
 		.AddParser("keyword", "auto, flex-start, center, flex-end, stretch, baseline, space-between, space-around");

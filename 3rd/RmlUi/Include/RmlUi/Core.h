@@ -46,7 +46,6 @@
 #include "Core/Element.h"
 #include "Core/ElementDocument.h"
 #include "Core/ElementInstancer.h"
-#include "Core/ElementScroll.h"
 #include "Core/ElementText.h"
 #include "Core/ElementUtilities.h"
 #include "Core/Event.h"
