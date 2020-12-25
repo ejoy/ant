@@ -368,7 +368,7 @@ font_manager_sdf_mask(struct font_manager *F){
 }
 
 float
-font_manager_sdf_distance(struct font_manager *F, float numpixel){
+font_manager_sdf_distance(struct font_manager *F, uint8_t numpixel){
 	return (numpixel * PIXEL_DIST_SCALE) / 255.f;
 }
 

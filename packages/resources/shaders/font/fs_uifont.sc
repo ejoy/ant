@@ -33,7 +33,7 @@ void main()
 	float outline_width	= smoothing * u_outline_width;
 	float outline_mask	= u_edge_mask - outline_width;
 	float alpha = smoothing_result(dis, outline_mask, smoothing);
-	color		= vec4(lerp(u_effect_color.xyz, v_color0.xyz, color.a), alpha * color.w);
+	color		= vec4(lerp(u_effect_color.xyz, v_color0.xyz, color.a), alpha * v_color0.w);
 #elif defined(SHADOW_EFFECT)
 	// vec2 fonttexel = u_shadow_offset.xy / textureSize(s_tex, 0);
 	// float offsetdis = texture2D(s_tex, v_texcoord0+fonttexel).a;

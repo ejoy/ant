@@ -108,6 +108,6 @@ FONT_API void font_manager_flush(struct font_manager *);
 FONT_API void font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size);
 
 FONT_API float font_manager_sdf_mask(struct font_manager *F);
-FONT_API float font_manager_sdf_distance(struct font_manager *F, float numpixel);
+FONT_API float font_manager_sdf_distance(struct font_manager *F, uint8_t numpixel);
 
 #endif //font_manager_h
