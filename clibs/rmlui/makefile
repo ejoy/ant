@@ -10,7 +10,7 @@ endif
 rmlui.dll : $(ODIR)/rmlui.dll
 	cp $< $@
 
-RMLUIINC=-I$(ANT3RD)/RmlUi/Include
+RMLUIINC=-I$(ANT3RD)/RmlUi/Include -I$(ANT3RD)/yoga
 
 $(ODIR)/file.o : file.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(RMLUIINC) $(BGFXINC)
@@ -24,29 +24,51 @@ $(ODIR)/render.o : render.cpp | $(ODIR)
 $(ODIR)/system.o : system.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
 
-$(ODIR)/context.o : context.cpp | $(ODIR)
+$(ODIR)/binding_context.o : binding_context.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
 
-$(ODIR)/fonteffect.o : fonteffect.cpp | $(ODIR)
+$(ODIR)/binding_fonteffect.o : binding_fonteffect.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
 
 $(ODIR)/luarmlui.o : luarmlui.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
 
 $(ODIR)/luaplugin.o : luaplugin.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(RMLUIINC)
+	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
+	
+$(ODIR)/luadatabinding.o : luadatabinding.cpp | $(ODIR)
+	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
 
 $(ODIR)/rmlapi.o : rmlapi.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(RMLUIINC)
+	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
 
-RMLUILIB=-L$(ANT3RD)/build/RmlUi/$(PLAT)/$(MODE) -lRmlDebugger -lRmlCore 
+RMLUI_DIR = $(ANT3RD)/RmlUi/Source/Core
+RMLUI = $(patsubst $(RMLUI_DIR)/%.cpp,%,$(wildcard $(RMLUI_DIR)/*.cpp))
+define RMLUI_COMPLILE
+$(ODIR)/$(1).o : $(RMLUI_DIR)/$(1).cpp
+	$(CXX) -c $(CFLAGS) -o $$@ $$^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(RMLUIINC)
+endef
+$(foreach v, $(RMLUI), $(eval $(call RMLUI_COMPLILE,$(v))))
+
+YOGA_DIR = $(ANT3RD)/yoga/yoga
+YOGA = $(patsubst $(YOGA_DIR)/%.cpp,%,$(wildcard $(YOGA_DIR)/*.cpp)) event/event
+define YOGA_COMPLILE
+$(ODIR)/yoga/$(1).o : $(YOGA_DIR)/$(1).cpp | $(ODIR)/yoga/event
+	$(CXX) -c $(CFLAGS) -o $$@ $$^ $(LUAINC) $(CLIBSINC) -I$(ANT3RD)/yoga -DDEBUG
+endef
+$(foreach v, $(YOGA), $(eval $(call YOGA_COMPLILE,$(v))))
+
 FONTLIB=-L../../bin/$(PLAT)/$(MODE) -lfont
 
-$(ODIR)/rmlui.dll : $(ODIR)/luarmlui.o $(ODIR)/luaplugin.o $(ODIR)/rmlapi.o $(ODIR)/file.o $(ODIR)/font.o $(ODIR)/render.o $(ODIR)/system.o $(ODIR)/context.o $(ODIR)/fonteffect.o
-	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(RMLUILIB) $(FONTLIB) $(LUALIB) -lstdc++ 
+OBJS = $(ODIR)/luarmlui.o $(ODIR)/luaplugin.o $(ODIR)/luadatabinding.o $(ODIR)/rmlapi.o $(ODIR)/file.o $(ODIR)/font.o $(ODIR)/render.o $(ODIR)/system.o $(ODIR)/binding_context.o $(ODIR)/binding_fonteffect.o $(patsubst %,$(ODIR)/%.o, $(RMLUI)) $(patsubst %,$(ODIR)/yoga/%.o, $(YOGA))
+$(ODIR)/rmlui.dll : $(OBJS)
+	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(FONTLIB) $(LUALIB) -lstdc++ 
 
-$(ODIR)/librmlui.a : $(ODIR)/file.o $(ODIR)/font.o $(ODIR)/render.o $(ODIR)/system.o $(ODIR)/luarmlui.o $(ODIR)/luaplugin.o $(ODIR)/rmlapi.o
+$(ODIR)/librmlui.a : $(OBJS)
 	ar rsv $@ $^
+
+$(ODIR)/yoga/event :
+	mkdir -p $@
 
 $(ODIR) :
 	mkdir -p $@

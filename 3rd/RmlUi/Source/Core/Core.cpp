@@ -47,11 +47,6 @@
 #include "TextureDatabase.h"
 #include "EventSpecification.h"
 
-#ifndef RMLUI_NO_FONT_INTERFACE_DEFAULT
-#include "FontEngineDefault/FontEngineInterfaceDefault.h"
-#endif
-
-
 namespace Rml {
 
 // RmlUi's renderer interface.

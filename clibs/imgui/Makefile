@@ -22,7 +22,7 @@ IMNODES_INC=-I$(IMNODES_DIR)
 
 WINDOW_INC=-I$(ANTCLIBS)/window
 
-OBJS = $(ODIR)/luaimgui.o $(ODIR)/imgui_window.o $(ODIR)/imgui_renderer.o $(ODIR)/imgui_platform.o $(ODIR)/imgui_config.o $(ODIR)/imgui.o $(ODIR)/imgui_widgets.o $(ODIR)/imgui_draw.o
+OBJS = $(ODIR)/luaimgui.o $(ODIR)/imgui_window.o $(ODIR)/imgui_renderer.o $(ODIR)/imgui_platform.o $(ODIR)/luaimgui_tables.o $(ODIR)/imgui_config.o $(ODIR)/imgui.o $(ODIR)/imgui_widgets.o $(ODIR)/imgui_draw.o $(ODIR)/imgui_tables.o $(ODIR)/ImCurveEdit.o $(ODIR)/ImSequencer.o $(ODIR)/SelectableInput.o
 
 ifeq "$(PLAT)" "mingw"
 OBJS += $(ODIR)/imgui_impl_win32.o
@@ -38,6 +38,15 @@ endif
 $(ODIR)/imgui_window.o : imgui_window.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -c -o $@ $< $(LUAINC) $(IMGUI_INC) $(WINDOW_INC) $(IMGUI_MACRO)
 
+$(ODIR)/ImCurveEdit.o : widgets/ImCurveEdit.cpp | $(ODIR)
+	$(CXX) $(CFLAGS) -c -o $@ $< $(LUAINC) $(IMGUI_INC) $(WINDOW_INC) $(IMGUI_MACRO)
+
+$(ODIR)/ImSequencer.o : widgets/ImSequencer.cpp | $(ODIR)
+	$(CXX) $(CFLAGS) -c -o $@ $< $(LUAINC) $(IMGUI_INC) $(WINDOW_INC) $(IMGUI_MACRO)
+
+$(ODIR)/SelectableInput.o : widgets/SelectableInput.cpp | $(ODIR)
+	$(CXX) $(CFLAGS) -c -o $@ $< $(LUAINC) $(IMGUI_INC) $(WINDOW_INC) $(IMGUI_MACRO)
+
 $(ODIR)/luaimgui.o : luaimgui.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -c -o $@ $< $(LUAINC) $(IMGUI_INC) $(IMGUI_MACRO) $(BGFXINC) -I../bgfx -I$(ANT3RD)/glm
 
@@ -45,6 +54,9 @@ $(ODIR)/imgui_renderer.o : imgui_renderer.cpp imgui_renderer.h | $(ODIR)
 	$(CXX) $(CFLAGS) -c -o $@ $< $(LUAINC) $(IMGUI_INC) $(IMGUI_MACRO) $(BGFXINC) -I../bgfx -I$(ANT3RD)/glm
 
 $(ODIR)/imgui_platform.o : $(IMGUI_PLAT)/imgui_platform.cpp imgui_platform.h | $(ODIR)
+	$(CXX) $(CFLAGS) -c -o $@ $< $(LUAINC) $(IMGUI_INC) $(IMGUI_MACRO) $(BGFXINC)
+
+$(ODIR)/luaimgui_tables.o : luaimgui_tables.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -c -o $@ $< $(LUAINC) $(IMGUI_INC) $(IMGUI_MACRO) $(BGFXINC)
 
 $(ODIR)/imgui_config.o : imgui_config.cpp $(IMGUI_SRC)/imgui.h | $(ODIR)
@@ -57,6 +69,9 @@ $(ODIR)/imgui_draw.o : $(IMGUI_SRC)/imgui_draw.cpp $(IMGUI_SRC)/imstb_truetype.h
 	$(CXX) $(CFLAGS) -c -o $@ $< $(IMGUI_INC) $(IMGUI_MACRO)
 
 $(ODIR)/imgui_widgets.o : $(IMGUI_SRC)/imgui_widgets.cpp $(IMGUI_SRC)/imgui_internal.h | $(ODIR)
+	$(CXX) $(CFLAGS) -c -o $@ $< $(IMGUI_INC) $(IMGUI_MACRO)
+
+$(ODIR)/imgui_tables.o : $(IMGUI_SRC)/imgui_tables.cpp $(IMGUI_SRC)/imgui_internal.h | $(ODIR)
 	$(CXX) $(CFLAGS) -c -o $@ $< $(IMGUI_INC) $(IMGUI_MACRO)
 
 $(ODIR)/imgui_impl_win32.o : $(IMGUI_SRC)/backends/imgui_impl_win32.cpp | $(ODIR)
