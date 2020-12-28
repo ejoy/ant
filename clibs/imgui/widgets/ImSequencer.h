@@ -3,6 +3,8 @@
 #include <cstddef>
 #include <map>
 #include <unordered_map>
+#include <string>
+#include <vector>
 
 struct ImDrawList;
 struct ImRect;
