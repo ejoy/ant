@@ -3,9 +3,9 @@
 #ifdef particle_system_manager_h
 #error file : "psystem_manager.h" should only define in file 'particle.inl'
 #endif 
-#define PARTICLE_COMPONENT		ID_count
-#define PARTICLE_KEY_COMPONENT	ID_key_count
-#define PARTICLE_TAGS			(ID_count - ID_component_count)
+#define PARTICLE_COMPONENT		(int)ID_count
+#define PARTICLE_KEY_COMPONENT	(int)ID_key_count
+#define PARTICLE_TAGS			(int)(ID_count - ID_component_count)
 #include "psystem_manager.h"
 
 class component_array {

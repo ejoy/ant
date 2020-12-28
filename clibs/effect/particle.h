@@ -216,11 +216,12 @@ namespace interpolation{
     };
 
     struct uv_motion_init_value {
+        struct uv_index{
+            init_valueT<float> rate;
+            glm::u8vec2 dim;
+        };
+
         union {
-            struct uv_index{
-                init_valueT<float> rate;
-                glm::u8vec2 dim;
-            };
             uv_index index;
             init_valueT<glm::vec2> speed;
         };

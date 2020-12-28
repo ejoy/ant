@@ -5,6 +5,7 @@
 #include <glm/gtx/compatibility.hpp>
 
 #include <vector>
+#include <list>
 #include <array>
 #include <cstdint>
 #include <algorithm>
@@ -14,3 +15,5 @@
 #include <memory>
 #include <cassert>
 #include <cstdint>
+#include <cstring>
+#include <cmath>

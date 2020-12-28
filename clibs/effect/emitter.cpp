@@ -33,7 +33,7 @@ particle_emitter::update(float dt){
 void
 particle_emitter::step(float dt){
 	auto delta_spawn = [](auto &spawn){
-		auto t = std::fmodf(spawn.step.loop, spawn.rate);
+		auto t = std::fmod(spawn.step.loop, spawn.rate);
 		auto step = t / spawn.rate;
 		return (uint32_t)(step * spawn.count);
 	};

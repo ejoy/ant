@@ -141,7 +141,6 @@ laddquad(lua_State *L){
             //color
             qv.color = (uint32_t)lua_tonumber(L, 2);
             //uv
-            const int uvelemnum = (int)luaL_len(L, 3);
             lua_geti(L, -1, 3);{
                 for (int jj=0; jj<2; ++jj){
                     lua_geti(L, -1, jj+1);

@@ -53,6 +53,9 @@ void
 particles::remap_particles(struct particle_manager *pm){
     struct particle_remap remap[128];
 	struct particle_arrange_context ctx;
+	ctx.component = PARTICLE_COMPONENT;
+	ctx.n = ctx.begin = ctx.end = 0;
+
 	int cap = sizeof(remap)/sizeof(remap[0]);
 	int n;
 	do {
