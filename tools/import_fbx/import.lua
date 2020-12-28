@@ -18,7 +18,6 @@ end
 
 local fs = require "filesystem.local"
 package.loaded["filesystem"] = fs
-local fs_local = require "utility.fs_local"
 
 local function refine_path(p)
     local pp = p:match "(.+)[/\\]$"
@@ -111,3 +110,13 @@ end
 if not fs.exists(fs.path(arguments.output)) then
     error(string.format("glb file is not exist, but fbx2gltf progrom return true:%s", arguments.input:string()))
 end
+
+-- _G.import_package = function (pkgname)
+--     if pkgname == "ant.json" then
+--         return require "json.json"
+--     end
+-- end
+
+-- local glbloader = require "compile_resource.model.glTF.glb"
+-- local info = glbloader.decode(arguments.output)
+-- print(info.info)
