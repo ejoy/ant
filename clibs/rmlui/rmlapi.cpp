@@ -208,6 +208,17 @@ lElementGetAttribute(lua_State* L) {
 }
 
 static int
+lElementGetBounds(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	const Rml::Vector4f& bounds = e->GetBounds();
+	lua_pushnumber(L, bounds[0]);
+	lua_pushnumber(L, bounds[1]);
+	lua_pushnumber(L, bounds[2]);
+	lua_pushnumber(L, bounds[3]);
+	return 4;
+}
+
+static int
 lElementGetOwnerDocument(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	Rml::ElementDocument* doc = e->GetOwnerDocument();
@@ -353,6 +364,7 @@ lua_plugin_apis(lua_State *L) {
 		{ "ElementDispatchEvent", lElementDispatchEvent },
 		{ "ElementGetInnerRML", lElementGetInnerRML },
 		{ "ElementGetAttribute", lElementGetAttribute },
+		{ "ElementGetBounds", lElementGetBounds },
 		{ "ElementGetOwnerDocument", lElementGetOwnerDocument },
 		{ "ElementGetParent", lElementGetParent },
 		{ "ElementGetProperty", lElementGetProperty },

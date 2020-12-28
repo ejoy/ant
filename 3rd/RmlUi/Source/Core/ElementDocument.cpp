@@ -216,23 +216,6 @@ void ElementDocument::Show() {
 	// If this turns out to be slow, the more performant approach is just to compute the new visibility property
 	UpdateDocument();
 
-	Element* focus_element = this;
-	Element* first_element = nullptr;
-	Element* element = FindNextTabElement(this, true);
-
-	while (element && element != first_element) {
-		if (!first_element)
-			first_element = element;
-
-		if (element->HasAttribute("autofocus")) {
-			focus_element = element;
-			break;
-		}
-
-		element = FindNextTabElement(element, true);
-	}
-
-	// Focus the window or element
 	DispatchEvent(EventId::Show, Dictionary());
 	GetContext()->SetFocus(this);
 }

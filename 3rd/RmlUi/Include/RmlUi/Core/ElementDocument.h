@@ -45,22 +45,6 @@ class DataModelConstructor;
 class DataTypeRegister;
 
 /**
-	 ModalFlag used for controlling the modal state of the document.
-		None:  Remove modal state.
-		Modal: Set modal state, other documents cannot receive focus.
-		Keep:  Modal state unchanged.
-
-	FocusFlag used for displaying the document.
-		None:     No focus.
-		Document: Focus the document.
-		Keep:     Focus the element in the document which last had focus.
-		Auto:     Focus the first tab element with the 'autofocus' attribute or else the document.
-*/
-enum class ModalFlag { None, Modal, Keep };
-enum class FocusFlag { None, Document, Keep, Auto };
-
-
-/**
 	Represents a document in the dom tree.
 
 	@author Lloyd Weehuizen
@@ -94,8 +78,6 @@ public:
 	const SharedPtr<StyleSheet>& GetStyleSheet() const override;
 
 	/// Show the document.
-	/// @param[in] modal_flag Flags controlling the modal state of the document, see the 'ModalFlag' description for details.
-	/// @param[in] focus_flag Flags controlling the focus, see the 'FocusFlag' description for details.
 	void Show();
 	/// Hide the document.
 	void Hide();
