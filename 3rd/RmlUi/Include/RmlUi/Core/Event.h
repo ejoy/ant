@@ -58,10 +58,9 @@ public:
 	Event();
 	/// Constructor
 	/// @param[in] target The target element of this event
-	/// @param[in] type The event type
 	/// @param[in] parameters The event parameters
 	/// @param[in] interruptible Can this event have is propagation stopped?
-	Event(Element* target, EventId id, const String& type, const Dictionary& parameters, bool interruptible);
+	Event(Element* target, EventId id, const Dictionary& parameters, bool interruptible);
 	/// Destructor
 	virtual ~Event();
 
@@ -78,7 +77,7 @@ public:
 	Element* GetTargetElement() const;
 
 	/// Get the event type.
-	const String& GetType() const;
+	String GetType() const;
 	/// Get the event id.
 	EventId GetId() const;
 
@@ -94,13 +93,6 @@ public:
 	/// Returns true if the event is still immediate propagating.
 	bool IsImmediatePropagating() const;
 
-	/// Checks if the event is of a certain type.
-	/// @param type The name of the type to check for.
-	/// @return True if the event is of the requested type, false otherwise.
-	bool operator==(const String& type) const;
-	/// Checks if the event is of a certain id.
-	bool operator==(EventId id) const;
-
 	/// Returns the value of one of the event's parameters.
 	/// @param key[in] The name of the desired parameter.
 	/// @return The value of the requested parameter.
@@ -113,38 +105,21 @@ public:
 	/// @return The dictionary of parameters
 	const Dictionary& GetParameters() const;
 
-	/// Return the unprojected mouse screen position.
-	/// Note: Only specified for events with 'mouse_x' and 'mouse_y' parameters.
-	const Vector2f& GetUnprojectedMouseScreenPos() const;
-
 protected:
 	Dictionary parameters;
-
 	Element* target_element = nullptr;
 	Element* current_element = nullptr;
 
 private:
-	/// Project the mouse coordinates to the current element to enable
-	/// interacting with transformed elements.
-	void ProjectMouse(Element* element);
-
+	void InitMouseEvent();
 	/// Release this event through its instancer.
 	void Release() override;
-
-	String type;
 	EventId id = EventId::Invalid;
 	bool interruptible = false;
-	
 	bool interrupted = false;
 	bool interrupted_immediate = false;
-
-	bool has_mouse_position = false;
-	Vector2f mouse_screen_position = Vector2f(0, 0);
-
 	EventPhase phase = EventPhase::None;
-
 	EventInstancer* instancer = nullptr;
-
 	friend class Rml::Factory;
 };
 

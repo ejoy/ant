@@ -925,15 +925,6 @@ void Element::Blur() {
 	}
 }
 
-// Fakes a mouse click on this element.
-void Element::Click()
-{
-	ElementDocument* document = GetOwnerDocument();
-	if (document) {
-		document->GenerateClickEvent(this);
-	}
-}
-
 // Adds an event listener
 void Element::AddEventListener(const String& event, EventListener* listener, bool in_capture_phase)
 {
@@ -964,21 +955,21 @@ void Element::RemoveEventListener(EventId id, EventListener* listener, bool in_c
 bool Element::DispatchEvent(const String& type, const Dictionary& parameters)
 {
 	const EventSpecification& specification = EventSpecificationInterface::GetOrInsert(type);
-	return EventDispatcher::DispatchEvent(this, specification.id, type, parameters, specification.interruptible, specification.bubbles, specification.default_action_phase);
+	return EventDispatcher::DispatchEvent(this, specification.id, parameters, specification.interruptible, specification.bubbles, specification.default_action_phase);
 }
 
 // Dispatches the specified event
 bool Element::DispatchEvent(const String& type, const Dictionary& parameters, bool interruptible, bool bubbles)
 {
 	const EventSpecification& specification = EventSpecificationInterface::GetOrInsert(type);
-	return EventDispatcher::DispatchEvent(this, specification.id, type, parameters, interruptible, bubbles, specification.default_action_phase);
+	return EventDispatcher::DispatchEvent(this, specification.id, parameters, interruptible, bubbles, specification.default_action_phase);
 }
 
 // Dispatches the specified event
 bool Element::DispatchEvent(EventId id, const Dictionary& parameters)
 {
 	const EventSpecification& specification = EventSpecificationInterface::Get(id);
-	return EventDispatcher::DispatchEvent(this, specification.id, specification.type, parameters, specification.interruptible, specification.bubbles, specification.default_action_phase);
+	return EventDispatcher::DispatchEvent(this, specification.id, parameters, specification.interruptible, specification.bubbles, specification.default_action_phase);
 }
 
 
@@ -1438,11 +1429,11 @@ void Element::DirtyLayout()
 
 void Element::ProcessDefaultAction(Event& event)
 {
-	if (event == EventId::Mousedown && IsPointWithinElement(Vector2f(event.GetParameter< float >("mouse_x", 0), event.GetParameter< float >("mouse_y", 0))) &&
-		event.GetParameter< int >("button", 0) == 0)
+	if (event.GetId() == EventId::Mousedown && event.GetParameter<int>("button", 0) == 0) {
 		SetPseudoClass("active", true);
+	}
 
-	if (event == EventId::Mousescroll)
+	if (event.GetId() == EventId::Mousescroll)
 	{
 		if (GetScrollHeight() > GetClientHeight())
 		{

@@ -129,14 +129,13 @@ public:
 	bool ChangeFocus(Element* new_focus);
 	Element* GetFocus() const;
 
-	bool ProcessKeyDown(Input::KeyIdentifier key_identifier, int key_modifier_state);
-	bool ProcessKeyUp(Input::KeyIdentifier key_identifier, int key_modifier_state);
+	bool ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state);
+	bool ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state);
 	bool ProcessTextInput(const String& string);
 	void ProcessMouseMove(int x, int y, int key_modifier_state);
 	void ProcessMouseButtonDown(int button_index, int key_modifier_state);
 	void ProcessMouseButtonUp(int button_index, int key_modifier_state);
 	void ProcessMouseWheel(float wheel_delta, int key_modifier_state);
-	void GenerateClickEvent(Element* element);
 	void OnElementDetach(Element* element);
 
 public:
@@ -154,9 +153,6 @@ private:
 protected:
 	/// Repositions the document if necessary.
 	void OnPropertyChange(const PropertyIdSet& changed_properties) override;
-
-	/// Processes the 'onpropertychange' event, checking for a change in position or size.
-	void ProcessDefaultAction(Event& event) override;
 
 	/// Called during update if the element size has been changed.
 	void OnResize() override;
