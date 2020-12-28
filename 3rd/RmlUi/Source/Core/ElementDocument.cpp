@@ -216,23 +216,6 @@ void ElementDocument::Show() {
 	// If this turns out to be slow, the more performant approach is just to compute the new visibility property
 	UpdateDocument();
 
-	Element* focus_element = this;
-	Element* first_element = nullptr;
-	Element* element = FindNextTabElement(this, true);
-
-	while (element && element != first_element) {
-		if (!first_element)
-			first_element = element;
-
-		if (element->HasAttribute("autofocus")) {
-			focus_element = element;
-			break;
-		}
-
-		element = FindNextTabElement(element, true);
-	}
-
-	// Focus the window or element
 	DispatchEvent(EventId::Show, Dictionary());
 	GetContext()->SetFocus(this);
 }
@@ -339,42 +322,6 @@ void ElementDocument::OnPropertyChange(const PropertyIdSet& changed_properties)
 	// If the document's font-size has been changed, we need to dirty all rem properties.
 	if (changed_properties.Contains(PropertyId::FontSize))
 		GetStyle()->DirtyPropertiesWithUnitRecursive(Property::REM);
-}
-
-// Processes the 'onpropertychange' event, checking for a change in position or size.
-void ElementDocument::ProcessDefaultAction(Event& event)
-{
-	Element::ProcessDefaultAction(event);
-
-	// Process generic keyboard events for this window in bubble phase
-	if (event == EventId::Keydown)
-	{
-		int key_identifier = event.GetParameter<int>("key_identifier", Input::KI_UNKNOWN);
-
-		// Process TAB
-		if (key_identifier == Input::KI_TAB)
-		{
-			if (Element* element = FindNextTabElement(event.GetTargetElement(), !event.GetParameter<bool>("shift_key", false)))
-			{
-				if(element->Focus())
-				{
-					event.StopPropagation();
-				}
-			}
-		}
-		// Process ENTER being pressed on a focusable object (emulate click)
-		else if (key_identifier == Input::KI_RETURN ||
-				 key_identifier == Input::KI_NUMPADENTER)
-		{
-			Element* focus_node = GetFocusLeafNode();
-
-			if (focus_node)
-			{
-				focus_node->Click();
-				event.StopPropagation();
-			}
-		}
-	}
 }
 
 void ElementDocument::OnResize()
@@ -522,29 +469,26 @@ static void SendEvents(const ElementSet& old_items, const ElementSet& new_items,
 	}
 }
 
-static void GenerateKeyEventParameters(Dictionary& parameters, Input::KeyIdentifier key_identifier) {
-	parameters["key_identifier"] = (int)key_identifier;
+static void GenerateKeyEventParameters(Dictionary& parameters, Input::KeyIdentifier key) {
+	parameters["key"] = (int)key;
 }
 
 static void GenerateKeyModifierEventParameters(Dictionary& parameters, int key_modifier_state) {
 	static const String property_names[] = {
-		"ctrl_key",
-		"shift_key",
-		"alt_key",
-		"meta_key",
-		"caps_lock_key",
-		"num_lock_key",
-		"scroll_lock_key"
+		"ctrlKey",
+		"shiftKey",
+		"altKey",
+		"metaKey",
 	};
-	for (int i = 0; i < 7; i++) {
+	for (int i = 0; i < sizeof(property_names) /sizeof(property_names[0]); ++i) {
 		parameters[property_names[i]] = (int)((key_modifier_state & (1 << i)) > 0);
 	}
 }
 
 static void GenerateMouseEventParameters(Dictionary& parameters, const Vector2i& mouse_position, int button_index = -1) {
 	parameters.reserve(3);
-	parameters["mouse_x"] = mouse_position.x;
-	parameters["mouse_y"] = mouse_position.y;
+	parameters["x"] = mouse_position.x;
+	parameters["y"] = mouse_position.y;
 	if (button_index >= 0)
 		parameters["button"] = button_index;
 }
@@ -581,9 +525,9 @@ Element* ElementDocument::GetFocus() const {
 	return focus;
 }
 
-bool ElementDocument::ProcessKeyDown(Input::KeyIdentifier key_identifier, int key_modifier_state) {
+bool ElementDocument::ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state) {
 	Dictionary parameters;
-	GenerateKeyEventParameters(parameters, key_identifier);
+	GenerateKeyEventParameters(parameters, key);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 
 	if (focus) {
@@ -592,9 +536,9 @@ bool ElementDocument::ProcessKeyDown(Input::KeyIdentifier key_identifier, int ke
 	return DispatchEvent(EventId::Keydown, parameters);
 }
 
-bool ElementDocument::ProcessKeyUp(Input::KeyIdentifier key_identifier, int key_modifier_state) {
+bool ElementDocument::ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state) {
 	Dictionary parameters;
-	GenerateKeyEventParameters(parameters, key_identifier);
+	GenerateKeyEventParameters(parameters, key);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 	if (focus) {
 		return focus->DispatchEvent(EventId::Keyup, parameters);
@@ -766,7 +710,7 @@ void ElementDocument::ProcessMouseButtonUp(int button_index, int key_modifier_st
 		// have had 'onmouseup' called on them, we can't guarantee this has happened already.
 		std::for_each(active_chain.begin(), active_chain.end(), [](Element* element) {
 			element->SetPseudoClass("active", false);
-			});
+		});
 		active_chain.clear();
 		active = nullptr;
 
@@ -833,11 +777,9 @@ void ElementDocument::UpdateHoverChain(const Dictionary& parameters, const Dicti
 			if (!drag_started)
 			{
 				Dictionary drag_start_parameters = drag_parameters;
-				drag_start_parameters["mouse_x"] = old_mouse_position.x;
-				drag_start_parameters["mouse_y"] = old_mouse_position.y;
+				GenerateMouseEventParameters(drag_start_parameters, old_mouse_position);
 				drag->DispatchEvent(EventId::Dragstart, drag_start_parameters);
 				drag_started = true;
-
 				if (drag->GetComputedValues().drag == Style::Drag::Clone)
 				{
 					// Clone the element and attach it to the mouse cursor.
@@ -978,13 +920,6 @@ void ElementDocument::OnElementDetach(Element* element) {
 		}
 	}
 }
-
-void ElementDocument::GenerateClickEvent(Element* element) {
-	Dictionary parameters;
-	GenerateMouseEventParameters(parameters, mouse_position, 0);
-	element->DispatchEvent(EventId::Click, parameters);
-}
-
 
 DataModelConstructor ElementDocument::CreateDataModel(const String& name) {
 	if (!data_type_register)

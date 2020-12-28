@@ -136,7 +136,7 @@ struct CollectedListener {
 };
 
 
-bool EventDispatcher::DispatchEvent(Element* target_element, const EventId id, const String& type, const Dictionary& parameters, const bool interruptible, const bool bubbles, const DefaultActionPhase default_action_phase)
+bool EventDispatcher::DispatchEvent(Element* target_element, const EventId id, const Dictionary& parameters, const bool interruptible, const bool bubbles, const DefaultActionPhase default_action_phase)
 {
 	RMLUI_ASSERTMSG(!((int)default_action_phase & (int)EventPhase::Capture), "We assume here that the default action phases cannot include capture phase.");
 
@@ -174,7 +174,7 @@ bool EventDispatcher::DispatchEvent(Element* target_element, const EventId id, c
 	std::stable_sort(listeners.begin(), listeners.end());
 
 	// Instance event
-	EventPtr event = Factory::InstanceEvent(target_element, id, type, parameters, interruptible);
+	EventPtr event = Factory::InstanceEvent(target_element, id, parameters, interruptible);
 	if (!event)
 		return false;
 

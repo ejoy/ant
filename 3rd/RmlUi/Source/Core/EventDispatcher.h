@@ -81,13 +81,12 @@ public:
 	/// Dispatches the specified event.
 	/// @param[in] target_element The element to target
 	/// @param[in] id The id of the event
-	/// @param[in] type The type of the event
 	/// @param[in] parameters The event parameters
 	/// @param[in] interruptible Can the event propagation be stopped
 	/// @param[in] bubbles True if the event should execute the bubble phase
 	/// @param[in] default_action_phase The phases to execute default actions in
 	/// @return True if the event was not consumed (ie, was prevented from propagating by an element), false if it was.
-	static bool DispatchEvent(Element* target_element, EventId id, const String& type, const Dictionary& parameters, bool interruptible, bool bubbles, DefaultActionPhase default_action_phase);
+	static bool DispatchEvent(Element* target_element, EventId id, const Dictionary& parameters, bool interruptible, bool bubbles, DefaultActionPhase default_action_phase);
 
 	/// Returns event types with number of listeners for debugging.
 	/// @return Summary of attached listeners.

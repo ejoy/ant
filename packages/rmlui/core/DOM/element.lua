@@ -1,18 +1,9 @@
 local event = require "core.event"
 
-local attribute_mt = {}
 local constructor
 
+local attribute_mt = {}
 function attribute_mt:__index(name)
-    if name == "parentNode" then
-        local parent = rmlui.ElementGetParent(self._handle)
-        if parent then
-            local parentNode = constructor(self.ownerDocument._handle, parent)
-            rawset(self, "parentNode", parentNode)
-            return parentNode
-        end
-        return
-    end
     return rmlui.ElementGetAttribute(self._handle, name)
 end
 function attribute_mt:__newindex(name, v)
@@ -37,22 +28,81 @@ function style_mt:__newindex(name, value)
     end
 end
 
-local api = {}
-function api:addEventListener(type, listener, useCapture)
-    rmlui.ElementAddEventListener(self._handle, type, listener, useCapture)
+local property_init = {}
+function property_init:addEventListener()
+    local handle = self._handle
+    return function(type, listener, useCapture)
+        rmlui.ElementAddEventListener(handle, type, listener, useCapture)
+    end
+end
+
+function property_init:ownerDocument()
+    local createDocument = require "core.DOM.document"
+    return createDocument(self._document)
+end
+
+function property_init:parentNode()
+    local parent = rmlui.ElementGetParent(self._handle)
+    if parent then
+        return constructor(self._document, parent)
+    end
+end
+
+function property_init:style()
+    return setmetatable({_handle = self._handle}, style_mt)
+end
+
+function property_init:attributes()
+    return setmetatable({_handle = self._handle}, attribute_mt)
+end
+
+local property_getter = {}
+
+for name, init in pairs(property_init) do
+    property_getter[name] = function (self)
+        local v = init(self)
+        rawset(self, name, v)
+        return v
+    end
+end
+
+function property_getter:clientLeft()
+    local x,_,_,_ = rmlui.ElementGetBounds(self._handle)
+    return x
+end
+
+function property_getter:clientTop()
+    local _,y,_,_ = rmlui.ElementGetBounds(self._handle)
+    return y
+end
+
+function property_getter:clientWidth()
+    local _,_,w,_ = rmlui.ElementGetBounds(self._handle)
+    return w
+end
+
+function property_getter:clientHeight()
+    local _,_,_,h = rmlui.ElementGetBounds(self._handle)
+    return h
+end
+
+local property_mt = {}
+function property_mt:__index(name)
+    local getter = property_getter[name]
+    if getter then
+        return getter(self)
+    end
+end
+
+function property_mt:__newindex(name, value)
+    if property_getter[name] then
+        error("element property `" .. name .. "` readonly.")
+    end
+    rawset(self, name, value)
 end
 
 function constructor(document, handle)
-    local createDocument = require "core.DOM.document"
-    local o = {
-        _handle = handle,
-        ownerDocument = createDocument(document),
-        style = setmetatable({_handle = handle}, style_mt)
-    }
-    for k,v in pairs(api) do
-        o[k] = v
-    end
-    return setmetatable(o, attribute_mt)
+    return setmetatable({_handle = handle, _document = document}, property_mt)
 end
 
 local pool = {}

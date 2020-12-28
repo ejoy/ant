@@ -178,18 +178,18 @@ ElementDocument* Context::GetFocus() const {
 	return focus;
 }
 
-bool Context::ProcessKeyDown(Input::KeyIdentifier key_identifier, int key_modifier_state) {
+bool Context::ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state) {
 	if (!focus) {
 		return false;
 	}
-	return focus->ProcessKeyDown(key_identifier, key_modifier_state);
+	return focus->ProcessKeyDown(key, key_modifier_state);
 }
 
-bool Context::ProcessKeyUp(Input::KeyIdentifier key_identifier, int key_modifier_state) {
+bool Context::ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state) {
 	if (!focus) {
 		return false;
 	}
-	return focus->ProcessKeyUp(key_identifier, key_modifier_state);
+	return focus->ProcessKeyUp(key, key_modifier_state);
 }
 
 bool Context::ProcessTextInput(char character) {

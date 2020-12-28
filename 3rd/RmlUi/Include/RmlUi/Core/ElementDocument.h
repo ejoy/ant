@@ -45,22 +45,6 @@ class DataModelConstructor;
 class DataTypeRegister;
 
 /**
-	 ModalFlag used for controlling the modal state of the document.
-		None:  Remove modal state.
-		Modal: Set modal state, other documents cannot receive focus.
-		Keep:  Modal state unchanged.
-
-	FocusFlag used for displaying the document.
-		None:     No focus.
-		Document: Focus the document.
-		Keep:     Focus the element in the document which last had focus.
-		Auto:     Focus the first tab element with the 'autofocus' attribute or else the document.
-*/
-enum class ModalFlag { None, Modal, Keep };
-enum class FocusFlag { None, Document, Keep, Auto };
-
-
-/**
 	Represents a document in the dom tree.
 
 	@author Lloyd Weehuizen
@@ -94,8 +78,6 @@ public:
 	const SharedPtr<StyleSheet>& GetStyleSheet() const override;
 
 	/// Show the document.
-	/// @param[in] modal_flag Flags controlling the modal state of the document, see the 'ModalFlag' description for details.
-	/// @param[in] focus_flag Flags controlling the focus, see the 'FocusFlag' description for details.
 	void Show();
 	/// Hide the document.
 	void Hide();
@@ -129,14 +111,13 @@ public:
 	bool ChangeFocus(Element* new_focus);
 	Element* GetFocus() const;
 
-	bool ProcessKeyDown(Input::KeyIdentifier key_identifier, int key_modifier_state);
-	bool ProcessKeyUp(Input::KeyIdentifier key_identifier, int key_modifier_state);
+	bool ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state);
+	bool ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state);
 	bool ProcessTextInput(const String& string);
 	void ProcessMouseMove(int x, int y, int key_modifier_state);
 	void ProcessMouseButtonDown(int button_index, int key_modifier_state);
 	void ProcessMouseButtonUp(int button_index, int key_modifier_state);
 	void ProcessMouseWheel(float wheel_delta, int key_modifier_state);
-	void GenerateClickEvent(Element* element);
 	void OnElementDetach(Element* element);
 
 public:
@@ -154,9 +135,6 @@ private:
 protected:
 	/// Repositions the document if necessary.
 	void OnPropertyChange(const PropertyIdSet& changed_properties) override;
-
-	/// Processes the 'onpropertychange' event, checking for a change in position or size.
-	void ProcessDefaultAction(Event& event) override;
 
 	/// Called during update if the element size has been changed.
 	void OnResize() override;

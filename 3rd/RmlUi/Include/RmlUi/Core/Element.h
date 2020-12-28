@@ -411,8 +411,6 @@ public:
 	bool Focus();
 	/// Removes focus from from this element.
 	void Blur();
-	/// Fakes a mouse click on this element.
-	void Click();
 
 	/// Adds an event listener to this element.
 	/// @param[in] event Event to attach to.
