@@ -31,7 +31,6 @@
 #include "../../Include/RmlUi/Core/Context.h"
 #include "../../Include/RmlUi/Core/Core.h"
 #include "../../Include/RmlUi/Core/ElementDocument.h"
-#include "../../Include/RmlUi/Core/ElementInstancer.h"
 #include "../../Include/RmlUi/Core/ElementUtilities.h"
 #include "../../Include/RmlUi/Core/Factory.h"
 #include "../../Include/RmlUi/Core/Dictionary.h"
@@ -85,7 +84,6 @@ transform_state(), dirty_transform(false), dirty_perspective(false), dirty_anima
 	RMLUI_ASSERT(tag == StringUtilities::ToLower(tag));
 	parent = nullptr;
 	focus = nullptr;
-	instancer = nullptr;
 	owner_document = nullptr;
 
 	offset_parent = nullptr;
@@ -105,6 +103,8 @@ transform_state(), dirty_transform(false), dirty_perspective(false), dirty_anima
 
 	meta = element_meta_chunk_pool.AllocateAndConstruct(this);
 	data_model = nullptr;
+
+	PluginRegistry::NotifyElementCreate(this);
 }
 
 Element::~Element()
@@ -210,16 +210,7 @@ void Element::Render()
 // Clones this element, returning a new, unparented element.
 ElementPtr Element::Clone() const
 {
-	ElementPtr clone;
-
-	if (instancer)
-	{
-		clone = instancer->InstanceElement(nullptr, GetTagName(), attributes);
-		if (clone)
-			clone->SetInstancer(instancer);
-	}
-	else
-		clone = Factory::InstanceElement(nullptr, GetTagName(), GetTagName(), attributes);
+	ElementPtr clone = Factory::InstanceElement(GetOwnerDocument(), GetTagName(), GetTagName(), attributes);
 
 	if (clone != nullptr)
 	{
@@ -1239,16 +1230,6 @@ RenderInterface* Element::GetRenderInterface()
 	return ::Rml::GetRenderInterface();
 }
 
-void Element::SetInstancer(ElementInstancer* _instancer)
-{
-	// Only record the first instancer being set as some instancers call other instancers to do their dirty work, in
-	// which case we don't want to update the lowest level instancer.
-	if (!instancer)
-	{
-		instancer = _instancer;
-	}
-}
-
 // Called during the update loop after children are rendered.
 void Element::OnUpdate()
 {
@@ -1296,6 +1277,16 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes)
 		else if (it->second.GetType() != Variant::NONE)
 		{
 			Log::Message(Log::LT_WARNING, "Invalid 'style' attribute, string type required. In element: %s", GetAddress().c_str());
+		}
+	}
+	
+	for (const auto& pair: changed_attributes)
+	{
+		if (pair.first.size() > 2 && pair.first[0] == 'o' && pair.first[1] == 'n')
+		{
+			EventListener* listener = Factory::InstanceEventListener(pair.second.Get<String>(), this);
+			if (listener)
+				AddEventListener(pair.first.substr(2), listener, false);
 		}
 	}
 }
@@ -1559,14 +1550,11 @@ void Element::SetDataModel(DataModel* new_data_model)
 
 void Element::Release()
 {
-	if (instancer)
-		instancer->ReleaseElement(this);
-	else
-		Log::Message(Log::LT_WARNING, "Leak detected: element %s not instanced via RmlUi Factory. Unable to release.", GetAddress().c_str());
+	delete this;
 }
 
 void Element::SetParent(Element* _parent)
-{	
+{
 	// Assumes we are already detached from the hierarchy or we are detaching now.
 	RMLUI_ASSERT(!parent || !_parent);
 

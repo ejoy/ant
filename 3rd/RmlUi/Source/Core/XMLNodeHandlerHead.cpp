@@ -152,9 +152,7 @@ bool XMLNodeHandlerHead::ElementData(XMLParser* parser, const String& data, XMLD
 	// Store the title
 	if (tag == "title")
 	{
-		SystemInterface* system_interface = GetSystemInterface();
-		if (system_interface != nullptr)
-			system_interface->TranslateString(parser->GetDocumentHeader()->title, data);
+		parser->GetDocumentHeader()->title = data;
 	}
 
 	// Store an inline script

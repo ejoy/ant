@@ -37,13 +37,10 @@ static PluginList document_plugins;
 static PluginList element_plugins;
 
 PluginRegistry::PluginRegistry()
-{
-}
+{ }
 
-void PluginRegistry::RegisterPlugin(Plugin* plugin)
-{
+void PluginRegistry::RegisterPlugin(Plugin* plugin) {
 	int event_classes = plugin->GetEventClasses();
-	
 	if (event_classes & Plugin::EVT_BASIC)
 		basic_plugins.push_back(plugin);
 	if (event_classes & Plugin::EVT_DOCUMENT)
@@ -52,18 +49,13 @@ void PluginRegistry::RegisterPlugin(Plugin* plugin)
 		element_plugins.push_back(plugin);
 }
 
-// Calls OnInitialise() on all plugins.
-void PluginRegistry::NotifyInitialise()
-{
+void PluginRegistry::NotifyInitialise() {
 	for (size_t i = 0; i < basic_plugins.size(); ++i)
 		basic_plugins[i]->OnInitialise();
 }
 
-// Calls OnShutdown() on all plugins.
-void PluginRegistry::NotifyShutdown()
-{
-	while (!basic_plugins.empty())
-	{
+void PluginRegistry::NotifyShutdown() {
+	while (!basic_plugins.empty()) {
 		basic_plugins.back()->OnShutdown();
 		basic_plugins.pop_back();
 	}
@@ -71,30 +63,32 @@ void PluginRegistry::NotifyShutdown()
 	element_plugins.clear();
 }
 
-// Calls OnDocumentLoad() on all plugins.
-void PluginRegistry::NotifyDocumentLoad(ElementDocument* document)
-{
+void PluginRegistry::NotifyDocumentCreate(ElementDocument* document) {
 	for (size_t i = 0; i < document_plugins.size(); ++i)
-		document_plugins[i]->OnDocumentLoad(document);
+		document_plugins[i]->OnDocumentCreate(document);
 }
 
-// Calls OnDocumentUnload() on all plugins.
-void PluginRegistry::NotifyDocumentUnload(ElementDocument* document)
-{
+void PluginRegistry::NotifyDocumentDestroy(ElementDocument* document) {
 	for (size_t i = 0; i < document_plugins.size(); ++i)
-		document_plugins[i]->OnDocumentUnload(document);
+		document_plugins[i]->OnDocumentDestroy(document);
 }
 
-// Calls OnElementCreate() on all plugins.
-void PluginRegistry::NotifyElementCreate(Element* element)
-{
+void PluginRegistry::NotifyLoadInlineScript(ElementDocument* document, const std::string& content, const std::string& source_path, int source_line) {
+	for (size_t i = 0; i < document_plugins.size(); ++i)
+		document_plugins[i]->OnLoadInlineScript(document, content, source_path, source_line);
+}
+
+void PluginRegistry::NotifyLoadExternalScript(ElementDocument* document, const std::string& source_path) {
+	for (size_t i = 0; i < document_plugins.size(); ++i)
+		document_plugins[i]->OnLoadExternalScript(document, source_path);
+}
+
+void PluginRegistry::NotifyElementCreate(Element* element) {
 	for (size_t i = 0; i < element_plugins.size(); ++i)
 		element_plugins[i]->OnElementCreate(element);
 }
 
-// Calls OnElementDestroy() on all plugins.
-void PluginRegistry::NotifyElementDestroy(Element* element)
-{
+void PluginRegistry::NotifyElementDestroy(Element* element) {
 	for (size_t i = 0; i < element_plugins.size(); ++i)
 		element_plugins[i]->OnElementDestroy(element);
 }

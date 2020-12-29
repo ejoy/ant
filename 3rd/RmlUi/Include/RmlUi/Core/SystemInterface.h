@@ -61,12 +61,6 @@ public:
 	/// @return Elapsed time, in seconds.
 	virtual double GetElapsedTime() = 0;
 
-	/// Translate the input string into the translated string.
-	/// @param[out] translated Translated string ready for display.
-	/// @param[in] input String as received from XML.
-	/// @return Number of translations that occured.
-	virtual int TranslateString(String& translated, const String& input);
-
 	/// Joins the path of an RML or RCSS file with the path of a resource specified within the file.
 	/// @param[out] translated_path The joined path.
 	/// @param[in] document_path The path of the source document (including the file name).

@@ -15,13 +15,13 @@ end
 
 local pool = {}
 
-function event.OnNewDocument(document, globals)
+function event.OnDocumentCreate(document, globals)
     local o = constructor(document)
     globals.document = o
     pool[document] = o
 end
 
-function event.OnDeleteDocument(handle)
+function event.OnDocumentDestroy(handle)
     pool[handle] = nil
 end
 

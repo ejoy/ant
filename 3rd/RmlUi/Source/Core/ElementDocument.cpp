@@ -44,6 +44,7 @@
 #include "TemplateCache.h"
 #include "XMLParseTools.h"
 #include "DataModel.h"
+#include "PluginRegistry.h"
 #include <set>
 
 static constexpr float DOUBLE_CLICK_TIME = 0.5f;     // [s]
@@ -239,21 +240,16 @@ void ElementDocument::Close()
 
 ElementPtr ElementDocument::CreateElement(const String& name)
 {
-	return Factory::InstanceElement(nullptr, name, name, XMLAttributes());
+	ElementPtr element(new Element(name));
+	element->SetOwnerDocument(this);
+	return element;
 }
 
 // Create a text element.
 ElementPtr ElementDocument::CreateTextNode(const String& text)
 {
-	// Create the element.
-	ElementPtr element = CreateElement("#text");
-	if (!element)
-	{
-		Log::Message(Log::LT_ERROR, "Failed to create text element, instancer returned nullptr.");
-		return nullptr;
-	}
-
-	// Cast up
+	ElementPtr element(new ElementText("#text"));
+	element->SetOwnerDocument(this);
 	ElementText* element_text = rmlui_dynamic_cast< ElementText* >(element.get());
 	if (!element_text)
 	{
@@ -268,17 +264,15 @@ ElementPtr ElementDocument::CreateTextNode(const String& text)
 }
 
 // Default load inline script implementation
-void ElementDocument::LoadInlineScript(const String& RMLUI_UNUSED_PARAMETER(content), const String& RMLUI_UNUSED_PARAMETER(source_path), int RMLUI_UNUSED_PARAMETER(line))
+void ElementDocument::LoadInlineScript(const String& content, const String& source_path, int source_linbe)
 {
-	RMLUI_UNUSED(content);
-	RMLUI_UNUSED(source_path);
-	RMLUI_UNUSED(line);
+	PluginRegistry::NotifyLoadInlineScript(this, content, source_path, source_linbe);
 }
 
 // Default load external script implementation
-void ElementDocument::LoadExternalScript(const String& RMLUI_UNUSED_PARAMETER(source_path))
+void ElementDocument::LoadExternalScript(const String& source_path)
 {
-	RMLUI_UNUSED(source_path);
+	PluginRegistry::NotifyLoadExternalScript(this, source_path);
 }
 
 // Updates the document, including its layout

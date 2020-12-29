@@ -51,7 +51,7 @@ Element* XMLNodeHandlerDefault::ElementStart(XMLParser* parser, const String& na
 	Element* parent = parser->GetParseFrame()->element;
 
 	// Attempt to instance the element with the instancer
-	ElementPtr element = Factory::InstanceElement(parent, name, name, attributes);
+	ElementPtr element = Factory::InstanceElement(parent->GetOwnerDocument(), name, name, attributes);
 	if (!element)
 	{
 		Log::Message(Log::LT_ERROR, "Failed to create element for tag %s, instancer returned nullptr.", name.c_str());

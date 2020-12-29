@@ -88,12 +88,6 @@ void SystemInterface::GetClipboardText(String& text)
 	text = clipboard_text;
 }
 
-int SystemInterface::TranslateString(String& translated, const String& input)
-{
-	translated = input;
-	return 0;
-}
-
 // Joins the path of an RML or RCSS file with the path of a resource specified within the file.
 void SystemInterface::JoinPath(String& translated_path, const String& document_path, const String& path)
 {

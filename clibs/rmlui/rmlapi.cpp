@@ -219,6 +219,21 @@ lElementGetBounds(lua_State* L) {
 }
 
 static int
+lElementGetChildren(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	if (lua_type(L, 2) != LUA_TNUMBER) {
+		lua_pushinteger(L, e->GetNumChildren());
+		return 1;
+	}
+	Rml::Element* child = e->GetChild((int)lua_tointeger(L, 2));
+	if (child) {
+		lua_pushlightuserdata(L, child);
+		return 1;
+	}
+	return 0;
+}
+
+static int
 lElementGetOwnerDocument(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	Rml::ElementDocument* doc = e->GetOwnerDocument();
@@ -365,6 +380,7 @@ lua_plugin_apis(lua_State *L) {
 		{ "ElementGetInnerRML", lElementGetInnerRML },
 		{ "ElementGetAttribute", lElementGetAttribute },
 		{ "ElementGetBounds", lElementGetBounds },
+		{ "ElementGetChildren", lElementGetChildren },
 		{ "ElementGetOwnerDocument", lElementGetOwnerDocument },
 		{ "ElementGetParent", lElementGetParent },
 		{ "ElementGetProperty", lElementGetProperty },

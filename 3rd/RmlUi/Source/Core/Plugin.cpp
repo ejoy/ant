@@ -31,44 +31,37 @@
 namespace Rml {
 
 Plugin::~Plugin()
-{
-}
+{ }
 
-int Plugin::GetEventClasses()
-{
+int Plugin::GetEventClasses() {
 	return EVT_ALL;
 }
 
 void Plugin::OnInitialise()
-{
-}
+{ }
 
 void Plugin::OnShutdown()
-{
-}
+{ }
 
-// Called when a document is successfully loaded from file or instanced, initialised and added to
-// its context.
-void Plugin::OnDocumentLoad(ElementDocument* RMLUI_UNUSED_PARAMETER(document))
-{
+void Plugin::OnDocumentCreate(ElementDocument* RMLUI_UNUSED_PARAMETER(document)) {
 	RMLUI_UNUSED(document);
 }
 
-// Called when a document is unloaded from its context.
-void Plugin::OnDocumentUnload(ElementDocument* RMLUI_UNUSED_PARAMETER(document))
-{
+void Plugin::OnDocumentDestroy(ElementDocument* RMLUI_UNUSED_PARAMETER(document)) {
 	RMLUI_UNUSED(document);
 }
 
-// Called when a new element is created.
-void Plugin::OnElementCreate(Element* RMLUI_UNUSED_PARAMETER(element))
-{
+void Plugin::OnLoadInlineScript(ElementDocument* document, const std::string& content, const std::string& source_path, int source_line) {
+}
+
+void Plugin::OnLoadExternalScript(ElementDocument* document, const std::string& source_path) {
+}
+
+void Plugin::OnElementCreate(Element* RMLUI_UNUSED_PARAMETER(element)) {
 	RMLUI_UNUSED(element);
 }
 
-// Called when an element is destroyed.
-void Plugin::OnElementDestroy(Element* RMLUI_UNUSED_PARAMETER(element))
-{
+void Plugin::OnElementDestroy(Element* RMLUI_UNUSED_PARAMETER(element)) {
 	RMLUI_UNUSED(element);
 }
 

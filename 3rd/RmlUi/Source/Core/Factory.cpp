@@ -30,7 +30,6 @@
 #include "../../Include/RmlUi/Core/Context.h"
 #include "../../Include/RmlUi/Core/Core.h"
 #include "../../Include/RmlUi/Core/ElementDocument.h"
-#include "../../Include/RmlUi/Core/ElementInstancer.h"
 #include "../../Include/RmlUi/Core/ElementText.h"
 #include "../../Include/RmlUi/Core/ElementUtilities.h"
 #include "../../Include/RmlUi/Core/EventListenerInstancer.h"
@@ -59,10 +58,6 @@
 #include <algorithm>
 
 namespace Rml {
-
-// Element instancers.
-using ElementInstancerMap = UnorderedMap< String, ElementInstancer* >;
-static ElementInstancerMap element_instancers;
 
 // Font effect instancers.
 using FontEffectInstancerMap = UnorderedMap< String, FontEffectInstancer* >;
@@ -93,11 +88,6 @@ static EventListenerInstancer* event_listener_instancer = nullptr;
 struct DefaultInstancers {
 
 	UniquePtr<EventInstancer> event_default;
-
-	// Basic elements
-	ElementInstancerElement element_default;
-	ElementInstancerText element_text;
-	ElementInstancerGeneric<ElementDocument> element_body;
 
 	// Font effects
 	FontEffectBlurInstancer font_effect_blur;
@@ -150,11 +140,6 @@ bool Factory::Initialise()
 	if (!event_listener_instancer)
 		event_listener_instancer = nullptr;
 
-	// Basic element instancers
-	RegisterElementInstancer("*", &default_instancers->element_default);
-	RegisterElementInstancer("#text", &default_instancers->element_text);
-	RegisterElementInstancer("body", &default_instancers->element_body);
-
 	// Font effect instancers
 	RegisterFontEffectInstancer("blur", &default_instancers->font_effect_blur);
 	RegisterFontEffectInstancer("glow", &default_instancers->font_effect_glow);
@@ -188,8 +173,6 @@ bool Factory::Initialise()
 
 void Factory::Shutdown()
 {
-	element_instancers.clear();
-
 	font_effect_instancers.clear();
 
 	data_controller_instancers.clear();
@@ -206,58 +189,19 @@ void Factory::Shutdown()
 	default_instancers.reset();
 }
 
-void Factory::RegisterElementInstancer(const String& name, ElementInstancer* instancer)
-{
-	element_instancers[StringUtilities::ToLower(name)] = instancer;
-}
-
-// Looks up the instancer for the given element
-ElementInstancer* Factory::GetElementInstancer(const String& tag)
-{
-	ElementInstancerMap::iterator instancer_iterator = element_instancers.find(tag);
-	if (instancer_iterator == element_instancers.end())
-	{
-		instancer_iterator = element_instancers.find("*");
-		if (instancer_iterator == element_instancers.end())
-			return nullptr;
+ElementPtr Factory::InstanceElement(ElementDocument* document, const String& instancer_name, const String& tag, const XMLAttributes& attributes) {
+	ElementPtr element(instancer_name == "body" ? new ElementDocument(tag) : new Element(tag));
+	if (document) {
+		element->SetOwnerDocument(document);
 	}
-
-	return instancer_iterator->second;
-}
-
-// Instances a single element.
-ElementPtr Factory::InstanceElement(Element* parent, const String& instancer_name, const String& tag, const XMLAttributes& attributes)
-{
-	ElementInstancer* instancer = GetElementInstancer(instancer_name);
-
-	if (instancer)
-	{
-		ElementPtr element = instancer->InstanceElement(parent, tag, attributes);		
-
-		// Process the generic attributes and bind any events
-		if (element)
-		{
-			element->SetInstancer(instancer);
-			element->SetAttributes(attributes);
-			ElementUtilities::BindEventAttributes(element.get());
-
-			PluginRegistry::NotifyElementCreate(element.get());
-		}
-
-		return element;
-	}
-
-	return nullptr;
+	element->SetAttributes(attributes);
+	return element;
 }
 
 // Instances a single text element containing a string.
-bool Factory::InstanceElementText(Element* parent, const String& in_text)
+bool Factory::InstanceElementText(Element* parent, const String& text)
 {
 	RMLUI_ASSERT(parent);
-
-	String text;
-	if (SystemInterface* system_interface = GetSystemInterface())
-		system_interface->TranslateString(text, in_text);
 
 	// If this text node only contains white-space we don't want to construct it.
 	const bool only_white_space = std::all_of(text.begin(), text.end(), &StringUtilities::IsWhitespace);
@@ -300,7 +244,8 @@ bool Factory::InstanceElementText(Element* parent, const String& in_text)
 		stream->Write(close_tag.c_str(), close_tag.size());
 		stream->Seek(0, SEEK_SET);
 
-		InstanceElementStream(parent, stream.get());
+		XMLParser parser(parent);
+		parser.Parse(stream.get());
 	}
 	else
 	{		
@@ -311,12 +256,14 @@ bool Factory::InstanceElementText(Element* parent, const String& in_text)
 		if (has_data_expression)
 			attributes.emplace("data-text", Variant());
 
-		ElementPtr element = Factory::InstanceElement(parent, "#text", "#text", attributes);
+		ElementPtr element(new ElementText("#text"));
 		if (!element)
 		{
 			Log::Message(Log::LT_ERROR, "Failed to instance text element '%s', instancer returned nullptr.", text.c_str());
 			return false;
 		}
+		element->SetOwnerDocument(parent->GetOwnerDocument());
+		element->SetAttributes(attributes);
 
 		// Assign the element its text value.
 		ElementText* text_element = rmlui_dynamic_cast< ElementText* >(element.get());
@@ -330,41 +277,6 @@ bool Factory::InstanceElementText(Element* parent, const String& in_text)
 	}
 
 	return true;
-}
-
-// Instances a element tree based on the stream
-bool Factory::InstanceElementStream(Element* parent, Stream* stream)
-{
-	XMLParser parser(parent);
-	parser.Parse(stream);
-	return true;
-}
-
-// Instances a element tree based on the stream
-ElementPtr Factory::InstanceDocumentStream(Context* context, Stream* stream)
-{
-	RMLUI_ASSERT(context);
-
-	ElementPtr element = Factory::InstanceElement(nullptr, "body", "body", XMLAttributes());
-	if (!element)
-	{
-		Log::Message(Log::LT_ERROR, "Failed to instance document, instancer returned nullptr.");
-		return nullptr;
-	}
-
-	ElementDocument* document = rmlui_dynamic_cast< ElementDocument* >(element.get());
-	if (!document)
-	{
-		Log::Message(Log::LT_ERROR, "Failed to instance document element. Found type '%s', was expecting derivative of ElementDocument.", rmlui_type_name(*element));
-		return nullptr;
-	}
-
-	document->context = context;
-
-	XMLParser parser(element.get());
-	parser.Parse(stream);
-
-	return element;
 }
 
 // Registers an instancer that will be used to instance font effects.

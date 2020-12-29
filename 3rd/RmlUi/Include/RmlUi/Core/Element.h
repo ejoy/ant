@@ -44,7 +44,6 @@ namespace Rml {
 
 class Context;
 class DataModel;
-class ElementInstancer;
 class EventDispatcher;
 class EventListener;
 class ElementBackgroundImage;
@@ -511,10 +510,6 @@ public:
 	/// @return The element's context's render interface.
 	RenderInterface* GetRenderInterface();
 
-	/// Sets the instancer to use for releasing this element.
-	/// @param[in] instancer Instancer to set on this element.
-	void SetInstancer(ElementInstancer* instancer);
-
 	/// Called when an emitted event propagates to this element, for event types with default actions.
 	/// Note: See 'EventSpecification' for the events that call this function and during which phase.
 	/// @param[in] event The event to process.
@@ -603,9 +598,6 @@ protected:
 
 	// The optional, unique ID of this object.
 	String id;
-
-	// Instancer that created us, used for destruction.
-	ElementInstancer* instancer;
 
 	// Parent element.
 	Element* parent;

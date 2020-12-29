@@ -124,9 +124,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ElementDocument.cpp">
       <Filter>source\Core</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ElementInstancer.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ElementStyle.cpp">
       <Filter>source\Core</Filter>
     </ClCompile>
@@ -466,9 +463,6 @@
       <Filter>include\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\ElementDocument.h">
-      <Filter>include\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\ElementInstancer.h">
       <Filter>include\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\ElementText.h">

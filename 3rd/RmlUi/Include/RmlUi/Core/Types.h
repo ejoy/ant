@@ -71,8 +71,8 @@ using RowMajorMatrix4f = Matrix4< float, RowMajorStorage< float > >;
 using Matrix4f = RMLUI_MATRIX4_TYPE;
 
 // Common classes
+class ElementDocument;
 class Element;
-class ElementInstancer;
 class ElementAnimation;
 class Context;
 class Event;
@@ -96,6 +96,7 @@ using CompiledGeometryHandle = uintptr_t;
 using FontFaceHandle = uintptr_t;
 using FontEffectsHandle = uintptr_t;
 
+using ElementDocumentPtr = UniqueReleaserPtr<ElementDocument>;
 using ElementPtr = UniqueReleaserPtr<Element>;
 using ContextPtr = UniqueReleaserPtr<Context>;
 using EventPtr = UniqueReleaserPtr<Event>;

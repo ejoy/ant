@@ -12,7 +12,7 @@ function event.OnDocumentExternName(document, nameordoc)
     end
 end
 
-function event.OnDeleteDocument(document)
+function event.OnDocumentDestroy(document)
     names[document] = nil
 end
 

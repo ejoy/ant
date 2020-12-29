@@ -62,7 +62,7 @@ Context::Context(const Vector2i& dimensions_)
 Context::~Context() {
 	for (auto& document : documents) {
 		document->DispatchEvent(EventId::Unload, Dictionary());
-		PluginRegistry::NotifyDocumentUnload(document);
+		PluginRegistry::NotifyDocumentDestroy(document);
 		unloaded_documents.push_back(document);
 	}
 	for (auto& document : unloaded_documents) {
@@ -142,20 +142,17 @@ ElementDocument* Context::LoadDocument(const String& document_path) {
 	if (!stream->Open(document_path))
 		return nullptr;
 
-	ElementPtr element = Factory::InstanceDocumentStream(this, stream.get());
-	if (!element)
-		return nullptr;
-
-	ElementDocument* document = rmlui_dynamic_cast<ElementDocument*>(element.release());
+	ElementDocumentPtr document(new ElementDocument("body"));
+	document->context = this;
+	PluginRegistry::NotifyDocumentCreate(document.get());
+	XMLParser parser(document.get());
+	parser.Parse(stream.get());
 	document->SetBounds(Vector4f(0, 0, dimensions[0], dimensions[1]));
-	documents.push_back(document);
-	ElementUtilities::BindEventAttributes(document);
-	PluginRegistry::NotifyDocumentLoad(document);
+	documents.push_back(document.get());
 	document->DispatchEvent(EventId::Load, Dictionary());
 	document->UpdateDataModel(false);
 	document->UpdateDocument();
-	element.release();
-	return document;
+	return document.release();
 }
 
 void Context::UnloadDocument(ElementDocument* document) {
@@ -165,7 +162,7 @@ void Context::UnloadDocument(ElementDocument* document) {
 			return;
 	}
 	document->DispatchEvent(EventId::Unload, Dictionary());
-	PluginRegistry::NotifyDocumentUnload(document);
+	PluginRegistry::NotifyDocumentDestroy(document);
 	unloaded_documents.push_back(document);
 }
 
