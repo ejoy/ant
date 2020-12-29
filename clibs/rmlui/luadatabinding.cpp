@@ -43,7 +43,6 @@ lua_pushvariant(lua_State *L, const Rml::Variant &v) {
 	case Rml::Variant::Type::VECTOR4:
 	case Rml::Variant::Type::COLOURF:
 	case Rml::Variant::Type::COLOURB:
-	case Rml::Variant::Type::SCRIPTINTERFACE:
 	case Rml::Variant::Type::TRANSFORMPTR:
 	case Rml::Variant::Type::TRANSITIONLIST:
 	case Rml::Variant::Type::ANIMATIONLIST:

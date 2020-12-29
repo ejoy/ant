@@ -50,9 +50,8 @@ Context::Context(const Vector2i& dimensions_)
 , density_independent_pixel_ratio(1.0f)
 , clip_origin(-1, -1)
 , clip_dimensions(-1, -1) {
-
-	//cursor_proxy = Factory::InstanceElement(nullptr, "body", "body", XMLAttributes());
-	//ElementDocument* cursor_proxy_document = rmlui_dynamic_cast< ElementDocument* >(cursor_proxy.get());
+	//cursor_proxy.reset(new ElementDocument("body"));
+	//ElementDocument* cursor_proxy_document = dynamic_cast< ElementDocument* >(cursor_proxy.get());
 	//if (cursor_proxy_document)
 	//	cursor_proxy_document->context = this;
 	//else
@@ -71,9 +70,6 @@ Context::~Context() {
 	}
 	documents.clear();
 	unloaded_documents.clear();
-}
-
-void Context::Release() {
 }
 
 void Context::SetDimensions(const Vector2i& _dimensions) {

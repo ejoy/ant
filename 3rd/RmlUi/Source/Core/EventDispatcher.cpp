@@ -174,10 +174,8 @@ bool EventDispatcher::DispatchEvent(Element* target_element, const EventId id, c
 	std::stable_sort(listeners.begin(), listeners.end());
 
 	// Instance event
-	EventPtr event = Factory::InstanceEvent(target_element, id, parameters, interruptible);
-	if (!event)
-		return false;
-
+	
+	std::unique_ptr<Event> event(new Event(target_element, id, parameters, interruptible));
 	int previous_sort_value = INT_MAX;
 
 	// Process the event in each listener.
@@ -219,10 +217,7 @@ bool EventDispatcher::DispatchEvent(Element* target_element, const EventId id, c
 			element->ProcessDefaultAction(*event);
 		}
 	}
-
-	bool propagating = event->IsPropagating();
-
-	return propagating;
+	return event->IsPropagating();
 }
 
 

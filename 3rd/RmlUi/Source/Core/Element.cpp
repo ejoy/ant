@@ -210,16 +210,12 @@ void Element::Render()
 // Clones this element, returning a new, unparented element.
 ElementPtr Element::Clone() const
 {
-	ElementPtr clone = Factory::InstanceElement(GetOwnerDocument(), GetTagName(), GetTagName(), attributes);
-
-	if (clone != nullptr)
-	{
-		String inner_rml;
-		GetInnerRML(inner_rml);
-
-		clone->SetInnerRML(inner_rml);
-	}
-
+	ElementPtr clone(new Element(GetTagName()));
+	clone->SetOwnerDocument(GetOwnerDocument());
+	clone->SetAttributes(attributes);
+	String inner_rml;
+	GetInnerRML(inner_rml);
+	clone->SetInnerRML(inner_rml);
 	return clone;
 }
 
@@ -323,12 +319,6 @@ void Element::SetOffset(Vector2f offset, Element* _offset_parent)
 		if (old_base != relative_offset)
 			DirtyOffset();
 	}
-}
-
-// Returns the position of the top-left corner of one of the areas of this element's primary box.
-Vector2f Element::GetRelativeOffset(Layout::Area area)
-{
-	return relative_offset + GetLayout().GetPosition(area);
 }
 
 // Returns the position of the top-left corner of one of the areas of this element's primary box.
@@ -1546,11 +1536,6 @@ void Element::SetDataModel(DataModel* new_data_model)
 
 	for (ElementPtr& child : children)
 		child->SetDataModel(new_data_model);
-}
-
-void Element::Release()
-{
-	delete this;
 }
 
 void Element::SetParent(Element* _parent)

@@ -39,7 +39,6 @@
 
 #include "DataControllerDefault.h"
 #include "DataViewDefault.h"
-#include "EventInstancerDefault.h"
 #include "FontEffectBlur.h"
 #include "FontEffectGlow.h"
 #include "FontEffectOutline.h"
@@ -48,11 +47,9 @@
 #include "PropertyParserColour.h"
 #include "StreamFile.h"
 #include "StyleSheetFactory.h"
-#include "TemplateCache.h"
 #include "XMLNodeHandlerBody.h"
 #include "XMLNodeHandlerDefault.h"
 #include "XMLNodeHandlerHead.h"
-#include "XMLNodeHandlerTemplate.h"
 #include "XMLParseTools.h"
 
 #include <algorithm>
@@ -78,17 +75,11 @@ static StructuralDataViewInstancerMap structural_data_view_instancers;
 // Structural data view names.
 static StringList structural_data_view_attribute_names;
 
-// The event instancer
-static EventInstancer* event_instancer = nullptr;
-
 // Event listener instancer.
 static EventListenerInstancer* event_listener_instancer = nullptr;
 
 // Default instancers are constructed and destroyed on Initialise and Shutdown, respectively.
 struct DefaultInstancers {
-
-	UniquePtr<EventInstancer> event_default;
-
 	// Font effects
 	FontEffectBlurInstancer font_effect_blur;
 	FontEffectGlowInstancer font_effect_glow;
@@ -129,13 +120,6 @@ bool Factory::Initialise()
 {
 	default_instancers = MakeUnique<DefaultInstancers>();
 
-	// Default event instancer
-	if (!event_instancer)
-	{
-		default_instancers->event_default = MakeUnique<EventInstancerDefault>();
-		event_instancer = default_instancers->event_default.get();
-	}
-
 	// No default event listener instancer
 	if (!event_listener_instancer)
 		event_listener_instancer = nullptr;
@@ -166,7 +150,6 @@ bool Factory::Initialise()
 	XMLParser::RegisterNodeHandler("", MakeShared<XMLNodeHandlerDefault>());
 	XMLParser::RegisterNodeHandler("body", MakeShared<XMLNodeHandlerBody>());
 	XMLParser::RegisterNodeHandler("head", MakeShared<XMLNodeHandlerHead>());
-	XMLParser::RegisterNodeHandler("template", MakeShared<XMLNodeHandlerTemplate>());
 
 	return true;
 }
@@ -182,20 +165,9 @@ void Factory::Shutdown()
 
 	event_listener_instancer = nullptr;
 
-	event_instancer = nullptr;
-
 	XMLParser::ReleaseHandlers();
 
 	default_instancers.reset();
-}
-
-ElementPtr Factory::InstanceElement(ElementDocument* document, const String& instancer_name, const String& tag, const XMLAttributes& attributes) {
-	ElementPtr element(instancer_name == "body" ? new ElementDocument(tag) : new Element(tag));
-	if (document) {
-		element->SetOwnerDocument(document);
-	}
-	element->SetAttributes(attributes);
-	return element;
 }
 
 // Instances a single text element containing a string.
@@ -266,10 +238,10 @@ bool Factory::InstanceElementText(Element* parent, const String& text)
 		element->SetAttributes(attributes);
 
 		// Assign the element its text value.
-		ElementText* text_element = rmlui_dynamic_cast< ElementText* >(element.get());
+		ElementText* text_element = dynamic_cast< ElementText* >(element.get());
 		if (!text_element)
 		{
-			Log::Message(Log::LT_ERROR, "Failed to instance text element '%s'. Found type '%s', was expecting a derivative of ElementText.", text.c_str(), rmlui_type_name(*element));
+			Log::Message(Log::LT_ERROR, "Failed to instance text element '%s'.", text.c_str());
 			return false;
 		}
 		parent->AppendChild(std::move(element));
@@ -326,27 +298,6 @@ SharedPtr<StyleSheet> Factory::InstanceStyleSheetStream(Stream* stream)
 void Factory::ClearStyleSheetCache()
 {
 	StyleSheetFactory::ClearStyleSheetCache();
-}
-
-/// Clears the template cache. This will force templates to be reloaded.
-void Factory::ClearTemplateCache()
-{
-	TemplateCache::Clear();
-}
-
-// Registers an instancer for all RmlEvents
-void Factory::RegisterEventInstancer(EventInstancer* instancer)
-{
-	event_instancer = instancer;
-}
-
-// Instance an event object.
-EventPtr Factory::InstanceEvent(Element* target, EventId id, const Dictionary& parameters, bool interruptible)
-{
-	EventPtr event = event_instancer->InstanceEvent(target, id, parameters, interruptible);
-	if (event)
-		event->instancer = event_instancer;
-	return event;
 }
 
 // Register an instancer for all event listeners

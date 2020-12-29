@@ -27,21 +27,17 @@
  */
 
 #include "../../Include/RmlUi/Core/Event.h"
-#include "../../Include/RmlUi/Core/EventInstancer.h"
 #include "../../Include/RmlUi/Core/Element.h"
 #include "../../Include/RmlUi/Core/ElementDocument.h"
 #include "EventSpecification.h"
 
 namespace Rml {
-	bool ProjectPosition(Element* element, Vector2f& position) {
+bool ProjectPosition(Element* element, Vector2f& position) {
 	if (!element->GetTransformState()) {
 		return true;
 	}
 	return element->Project(position);
 }
-
-Event::Event()
-{ }
 
 Event::Event(Element* _target_element, EventId id, const Dictionary& _parameters, bool interruptible)
 	: parameters(_parameters)
@@ -150,13 +146,6 @@ void Event::StopImmediatePropagation() {
 
 const Dictionary& Event::GetParameters() const {
 	return parameters;
-}
-
-void Event::Release() {
-	if (instancer)
-		instancer->ReleaseEvent(this);
-	else
-		Log::Message(Log::LT_WARNING, "Leak detected: Event %s not instanced via RmlUi Factory. Unable to release.", GetType().c_str());
 }
 
 EventId Event::GetId() const {

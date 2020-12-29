@@ -139,12 +139,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\EventDispatcher.cpp">
       <Filter>source\Core</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\EventInstancer.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\EventInstancerDefault.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\EventListenerInstancer.cpp">
       <Filter>source\Core</Filter>
     </ClCompile>
@@ -310,12 +304,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\SystemInterface.cpp">
       <Filter>source\Core</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Template.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\TemplateCache.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Texture.cpp">
       <Filter>source\Core</Filter>
     </ClCompile>
@@ -365,9 +353,6 @@
       <Filter>source\Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandlerHead.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandlerTemplate.cpp">
       <Filter>source\Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\XMLParser.cpp">
@@ -474,9 +459,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Event.h">
       <Filter>include\Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\EventInstancer.h">
-      <Filter>include\Core</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\EventListener.h">
       <Filter>include\Core</Filter>
     </ClInclude>
@@ -559,9 +541,6 @@
       <Filter>include\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\RenderInterface.h">
-      <Filter>include\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\ScriptInterface.h">
       <Filter>include\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Stream.h">
@@ -684,9 +663,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\EventDispatcher.h">
       <Filter>source\Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\EventInstancerDefault.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\EventSpecification.h">
       <Filter>source\Core</Filter>
     </ClInclude>
@@ -795,12 +771,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\StyleSheetParser.h">
       <Filter>source\Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\Template.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\TemplateCache.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\TextureDatabase.h">
       <Filter>source\Core</Filter>
     </ClInclude>
@@ -823,9 +793,6 @@
       <Filter>source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandlerHead.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandlerTemplate.h">
       <Filter>source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\XMLParseTools.h">

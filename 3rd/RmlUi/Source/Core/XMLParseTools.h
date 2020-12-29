@@ -55,12 +55,6 @@ public:
 	/// @param[out] value Value of the attribute read
 	static bool ReadAttribute(const char* &string, String& name, String& value);
 
-	/// Applies the named template to the specified element
-	/// @param element Element to apply the template to
-	/// @param template_name Name of the template to apply, in TEMPLATE:ELEMENT_ID form
-	/// @returns Element to continue the parse from
-	static Element* ParseTemplate(Element* element, const String& template_name);
-
     /// Determine the presence of data expression brackets inside XML data.
     /// Call this for each iteration through the data string.
     /// 'inside_brackets' should be initialized to false.

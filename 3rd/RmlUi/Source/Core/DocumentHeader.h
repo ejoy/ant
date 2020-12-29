@@ -49,8 +49,6 @@ public:
 	String source;
 	/// The title of the document
 	String title;	
-	/// A list of template resources that can used while parsing the document
-	StringList template_resources;
 
 	struct Resource {
 		String path; // Content path for inline resources, source path for external resources.

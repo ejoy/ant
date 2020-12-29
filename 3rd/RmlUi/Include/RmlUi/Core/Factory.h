@@ -40,7 +40,6 @@ class DataViewInstancer;
 class Element;
 class ElementDocument;
 class Event;
-class EventInstancer;
 class EventListener;
 class EventListenerInstancer;
 class FontEffect;
@@ -66,14 +65,6 @@ public:
 	static bool Initialise();
 	/// Cleanup and shutdown the factory
 	static void Shutdown();
-
-	/// Instances a single element.
-	/// @param[in] document
-	/// @param[in] instancer The name of the instancer to create the element with.
-	/// @param[in] tag The tag of the element to be instanced.
-	/// @param[in] attributes The attributes to instance the element with.
-	/// @return The instanced element, or nullptr if the instancing failed.
-	static ElementPtr InstanceElement(ElementDocument* document, const String& instancer, const String& tag, const XMLAttributes& attributes);
 
 	/// Instances a text element containing a string.
 	/// More than one element may be instanced if the string contains RML or RML is introduced during translation.
@@ -107,19 +98,6 @@ public:
 	static SharedPtr<StyleSheet> InstanceStyleSheetStream(Stream* stream);
 	/// Clears the style sheet cache. This will force style sheets to be reloaded.
 	static void ClearStyleSheetCache();
-	/// Clears the template cache. This will force template to be reloaded.
-	static void ClearTemplateCache();
-
-	/// Registers an instancer for all events.
-	/// @param[in] instancer The instancer to be called.
-	/// @lifetime The instancer must be kept alive until after the call to Rml::Shutdown.
-	static void RegisterEventInstancer(EventInstancer* instancer);
-	/// Instance an event object
-	/// @param[in] target Target element of this event.
-	/// @param[in] parameters Additional parameters for this event.
-	/// @param[in] interruptible If the event propagation can be stopped.
-	/// @return The instanced event.
-	static EventPtr InstanceEvent(Element* target, EventId id, const Dictionary& parameters, bool interruptible);
 
 	/// Register the instancer to be used for all event listeners.
 	/// @lifetime The instancer must be kept alive until after the call to Rml::Shutdown, or until a new instancer is set.

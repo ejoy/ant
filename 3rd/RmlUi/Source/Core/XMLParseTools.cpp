@@ -31,8 +31,6 @@
 #include "../../Include/RmlUi/Core/ElementDocument.h"
 #include "../../Include/RmlUi/Core/StringUtilities.h"
 #include "../../Include/RmlUi/Core/Types.h"
-#include "TemplateCache.h"
-#include "Template.h"
 #include <ctype.h>
 #include <string.h>
 
@@ -138,19 +136,6 @@ bool XMLParseTools::ReadAttribute(const char* &string, String& name, String& val
 	string = ptr;
 
 	return true;
-}
-
-Element* XMLParseTools::ParseTemplate(Element* element, const String& template_name)
-{	
-	// Load the template, and parse it
-	Template* parse_template = TemplateCache::GetTemplate(template_name);
-	if (!parse_template)
-	{
-		Log::ParseError(element->GetOwnerDocument()->GetSourceURL(), -1, "Failed to find template '%s'.", template_name.c_str());
-		return element;
-	}
-
-	return parse_template->ParseTemplate(element);
 }
 
 const char* XMLParseTools::ParseDataBrackets(bool& inside_brackets, char c, char previous)

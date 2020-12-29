@@ -269,7 +269,7 @@ bool DataViewText::Initialize(DataModel& model, Element* element, const String& 
 	RMLUI_UNUSED(expression);
 	RMLUI_UNUSED(modifier);
 
-	ElementText* element_text = rmlui_dynamic_cast<ElementText*>(element);
+	ElementText* element_text = dynamic_cast<ElementText*>(element);
 	if (!element_text)
 		return false;
 
@@ -336,7 +336,7 @@ bool DataViewText::Update(DataModel& model)
 	{
 		if (Element* element = GetElement())
 		{
-			RMLUI_ASSERTMSG(rmlui_dynamic_cast<ElementText*>(element), "Somehow the element type was changed from ElementText since construction of the view. Should not be possible?");
+			RMLUI_ASSERTMSG(dynamic_cast<ElementText*>(element), "Somehow the element type was changed from ElementText since construction of the view. Should not be possible?");
 
 			if (ElementText* text_element = static_cast<ElementText*>(element))
 			{
@@ -484,7 +484,9 @@ bool DataViewFor::Update(DataModel& model)
 	{
 		if (i >= num_elements)
 		{
-			ElementPtr new_element_ptr = Factory::InstanceElement(nullptr, element->GetTagName(), element->GetTagName(), attributes);
+			ElementPtr new_element_ptr(new Element(element->GetTagName()));
+			element->SetOwnerDocument(element->GetOwnerDocument());
+			element->SetAttributes(attributes);
 
 			DataAddress iterator_address;
 			iterator_address.reserve(container_address.size() + 1);

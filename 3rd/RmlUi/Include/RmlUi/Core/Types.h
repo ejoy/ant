@@ -96,10 +96,8 @@ using CompiledGeometryHandle = uintptr_t;
 using FontFaceHandle = uintptr_t;
 using FontEffectsHandle = uintptr_t;
 
-using ElementDocumentPtr = UniqueReleaserPtr<ElementDocument>;
-using ElementPtr = UniqueReleaserPtr<Element>;
-using ContextPtr = UniqueReleaserPtr<Context>;
-using EventPtr = UniqueReleaserPtr<Event>;
+using ElementDocumentPtr = UniquePtr<ElementDocument>;
+using ElementPtr = UniquePtr<Element>;
 
 // Container types for common classes
 using ElementList = Vector< Element* >;

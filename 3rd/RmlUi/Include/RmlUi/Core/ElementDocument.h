@@ -53,8 +53,6 @@ class DataTypeRegister;
 class RMLUICORE_API ElementDocument : public Element
 {
 public:
-	RMLUI_RTTI_DefineWithParent(ElementDocument, Element)
-
 	ElementDocument(const String& tag);
 	virtual ~ElementDocument();
 

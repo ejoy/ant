@@ -33,7 +33,6 @@
 #include "Types.h"
 #include "Traits.h"
 #include "Input.h"
-#include "ScriptInterface.h"
 
 namespace Rml {
 
@@ -49,7 +48,7 @@ enum class EventId : uint16_t;
 	@author Peter Curry
  */
 
-class RMLUICORE_API Context : public ScriptInterface
+class RMLUICORE_API Context
 {
 public:
 	Context(const Vector2i& dimensions);
@@ -134,9 +133,6 @@ public:
 	/// @param[out] origin The clipping origin
 	/// @param[out] dimensions The clipping dimensions
 	void SetActiveClipRegion(const Vector2i& origin, const Vector2i& dimensions);
-
-protected:
-	void Release() override;
 
 private:
 	Vector2i dimensions;

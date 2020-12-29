@@ -135,8 +135,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ElementUtilities.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Event.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\EventDispatcher.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\EventInstancer.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\EventInstancerDefault.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\EventListenerInstancer.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\EventSpecification.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Factory.cpp" />
@@ -193,8 +191,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\StyleSheetParser.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\StyleSheetSpecification.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\SystemInterface.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Template.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\TemplateCache.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Texture.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\TextureDatabase.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\TextureResource.cpp" />
@@ -212,7 +208,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandlerBody.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandlerDefault.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandlerHead.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandlerTemplate.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\XMLParser.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\XMLParseTools.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\binding_context.cpp" />
@@ -254,7 +249,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\ElementText.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\ElementUtilities.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Event.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\EventInstancer.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\EventListener.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\EventListenerInstancer.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Factory.h" />
@@ -284,7 +278,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\PropertyParser.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\PropertySpecification.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\RenderInterface.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\ScriptInterface.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Stream.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\StreamMemory.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\StringUtilities.h" />
@@ -321,7 +314,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\ElementDefinition.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\ElementStyle.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\EventDispatcher.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\EventInstancerDefault.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\EventSpecification.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\FontEffectBlur.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\FontEffectGlow.h" />
@@ -358,8 +350,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorOnlyChild.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\StyleSheetNodeSelectorOnlyOfType.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\StyleSheetParser.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\Template.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\TemplateCache.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\TextureDatabase.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\TextureResource.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\TransformState.h" />
@@ -368,7 +358,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandlerBody.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandlerDefault.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandlerHead.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\XMLNodeHandlerTemplate.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\XMLParseTools.h" />
     <ClInclude Include="..\..\clibs\rmlui\context.h" />
     <ClInclude Include="..\..\clibs\rmlui\file.h" />

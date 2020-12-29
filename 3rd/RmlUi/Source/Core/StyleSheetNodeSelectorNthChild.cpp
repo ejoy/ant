@@ -54,7 +54,7 @@ bool StyleSheetNodeSelectorNthChild::IsApplicable(const Element* element, int a,
 		Element* child = parent->GetChild(i);
 
 		// Skip text nodes.
-		if (rmlui_dynamic_cast< ElementText* >(child) != nullptr)
+		if (dynamic_cast< ElementText* >(child) != nullptr)
 			continue;
 
 		// If we've found our element, then break; the current index is our element's index.

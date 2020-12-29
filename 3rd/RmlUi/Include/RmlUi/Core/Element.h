@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_ELEMENT_H
 #define RMLUI_CORE_ELEMENT_H
 
-#include "ScriptInterface.h"
 #include "Header.h"
 #include "Layout.h"
 #include "ComputedValues.h"
@@ -64,11 +63,9 @@ struct StackingOrderedChild;
 	@author Peter Curry
  */
 
-class RMLUICORE_API Element : public ScriptInterface, public EnableObserverPtr<Element>
+class RMLUICORE_API Element : public EnableObserverPtr<Element>
 {
 public:
-	RMLUI_RTTI_DefineWithParent(Element, ScriptInterface)
-
 	/// Constructs a new RmlUi element. This should not be called directly; use the Factory instead.
 	/// @param[in] tag The tag the element was declared as in RML.
 	Element(const String& tag);
@@ -113,11 +110,6 @@ public:
 	/// @param[in] offset The offset (in pixels) of our primary box's top-left border corner from our offset parent's top-left border corner.
 	/// @param[in] offset_parent The element this element is being positioned relative to.
 	void SetOffset(Vector2f offset, Element* offset_parent);
-	/// Returns the position of the top-left corner of one of the areas of this element's primary box, relative to its
-	/// offset parent's top-left border corner.
-	/// @param[in] area The desired area position.
-	/// @return The relative offset.
-	Vector2f GetRelativeOffset(Layout::Area area = Layout::CONTENT);
 	/// Returns the position of the top-left corner of one of the areas of this element's primary box, relative to
 	/// the element root.
 	/// @param[in] area The desired area position.
@@ -553,9 +545,6 @@ protected:
 	/// Returns the RML of this element and all children.
 	/// @param[out] content The content of this element and those under it, in XML form.
 	virtual void GetRML(String& content);
-
-
-	void Release() override;
 
 protected:
 	

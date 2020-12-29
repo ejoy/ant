@@ -22,17 +22,6 @@ local function invoke(f, ...)
 	end
 	return ok, err
 end
-
-function m.OnContextCreate(context)
-	event("OnContextCreate", context)
-end
-function m.OnContextDestroy(context)
-	event("OnContextDestroy", context)
-end
-function m.OnNewDocument()
-end
-function m.OnDeleteDocument()
-end
 function m.OnDocumentCreate(document)
 	local globals = sandbox()
 	event("OnDocumentCreate", document, globals)

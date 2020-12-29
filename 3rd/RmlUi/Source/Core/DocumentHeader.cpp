@@ -44,7 +44,6 @@ void DocumentHeader::MergeHeader(const DocumentHeader& header)
 		source = header.source;
 
 	// Combine external data, keeping relative paths
-	MergePaths(template_resources, header.template_resources, header.source);
 	MergeResources(rcss, header.rcss);
 	MergeResources(scripts, header.scripts);
 }

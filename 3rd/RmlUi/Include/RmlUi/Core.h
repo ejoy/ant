@@ -48,7 +48,6 @@
 #include "Core/ElementText.h"
 #include "Core/ElementUtilities.h"
 #include "Core/Event.h"
-#include "Core/EventInstancer.h"
 #include "Core/EventListener.h"
 #include "Core/EventListenerInstancer.h"
 #include "Core/Factory.h"

@@ -58,7 +58,7 @@ bool StyleSheetNodeSelectorFirstChild::IsApplicable(const Element* element, int 
 			return true;
 
 		// If this child is not a text element, then the selector fails; this element is non-trivial.
-		if (rmlui_dynamic_cast< ElementText* >(child) == nullptr &&
+		if (dynamic_cast< ElementText* >(child) == nullptr &&
 			child->GetDisplay() != Style::Display::None)
 			return false;
 

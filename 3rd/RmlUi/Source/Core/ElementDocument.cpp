@@ -40,8 +40,6 @@
 #include "EventDispatcher.h"
 #include "StreamFile.h"
 #include "StyleSheetFactory.h"
-#include "Template.h"
-#include "TemplateCache.h"
 #include "XMLParseTools.h"
 #include "DataModel.h"
 #include "PluginRegistry.h"
@@ -75,18 +73,6 @@ void ElementDocument::ProcessHeader(const DocumentHeader* document_header)
 
 	// Construct a new header and copy the template details across
 	DocumentHeader header;
-	header.MergePaths(header.template_resources, document_header->template_resources, document_header->source);
-
-	// Merge in any templates, note a merge may cause more templates to merge
-	for (size_t i = 0; i < header.template_resources.size(); i++)
-	{
-		Template* merge_template = TemplateCache::LoadTemplate(URL(header.template_resources[i]).GetURL());	
-
-		if (merge_template)
-			header.MergeHeader(*merge_template->GetHeader());
-		else
-			Log::Message(Log::LT_WARNING, "Template %s not found", header.template_resources[i].c_str());
-	}
 
 	// Merge the document's header last, as it is the most overriding.
 	header.MergeHeader(*document_header);
@@ -250,7 +236,7 @@ ElementPtr ElementDocument::CreateTextNode(const String& text)
 {
 	ElementPtr element(new ElementText("#text"));
 	element->SetOwnerDocument(this);
-	ElementText* element_text = rmlui_dynamic_cast< ElementText* >(element.get());
+	ElementText* element_text = dynamic_cast< ElementText* >(element.get());
 	if (!element_text)
 	{
 		Log::Message(Log::LT_ERROR, "Failed to create text element, instancer didn't return a derivative of ElementText.");

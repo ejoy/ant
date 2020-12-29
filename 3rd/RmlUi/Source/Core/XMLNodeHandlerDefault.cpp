@@ -47,21 +47,11 @@ XMLNodeHandlerDefault::~XMLNodeHandlerDefault()
 
 Element* XMLNodeHandlerDefault::ElementStart(XMLParser* parser, const String& name, const XMLAttributes& attributes)
 {
-	// Determine the parent
 	Element* parent = parser->GetParseFrame()->element;
-
-	// Attempt to instance the element with the instancer
-	ElementPtr element = Factory::InstanceElement(parent->GetOwnerDocument(), name, name, attributes);
-	if (!element)
-	{
-		Log::Message(Log::LT_ERROR, "Failed to create element for tag %s, instancer returned nullptr.", name.c_str());
-		return nullptr;
-	}
-
-	// Move and append the element to the parent
-	Element* result = parent->AppendChild(std::move(element));
-
-	return result;
+	ElementPtr element(new Element(name));
+	element->SetOwnerDocument(parent->GetOwnerDocument());
+	element->SetAttributes(attributes);
+	return parent->AppendChild(std::move(element));
 }
 
 bool XMLNodeHandlerDefault::ElementEnd(XMLParser* RMLUI_UNUSED_PARAMETER(parser), const String& RMLUI_UNUSED_PARAMETER(name))

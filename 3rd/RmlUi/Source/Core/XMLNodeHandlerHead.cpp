@@ -28,7 +28,6 @@
 
 #include "XMLNodeHandlerHead.h"
 #include "DocumentHeader.h"
-#include "TemplateCache.h"
 #include "../../Include/RmlUi/Core/Core.h"
 #include "../../Include/RmlUi/Core/Element.h"
 #include "../../Include/RmlUi/Core/ElementDocument.h"
@@ -95,13 +94,6 @@ Element* XMLNodeHandlerHead::ElementStart(XMLParser* parser, const String& name,
 			{
 				parser->GetDocumentHeader()->rcss.push_back(MakeExternalResource(parser, href));
 			}
-
-			// If its an template, add to the template fields
-			else if (type == "text/template")
-			{
-				parser->GetDocumentHeader()->template_resources.push_back(href);
-			}
-
 			else
 			{
 				Log::ParseError(parser->GetSourceURL().GetURL(), parser->GetLineNumber(), "Invalid link type '%s'", type.c_str());

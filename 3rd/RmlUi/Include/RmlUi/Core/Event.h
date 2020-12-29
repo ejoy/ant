@@ -31,14 +31,12 @@
 
 #include "Header.h"
 #include "Dictionary.h"
-#include "ScriptInterface.h"
 #include "ID.h"
 
 namespace Rml {
 
 class Factory;
 class Element;
-class EventInstancer;
 struct EventSpecification;
 
 enum class EventPhase { None, Capture = 1, Target = 2, Bubble = 4 };
@@ -51,11 +49,9 @@ enum class DefaultActionPhase { None, Target = (int)EventPhase::Target, TargetAn
 	@author Lloyd Weehuizen
  */
 
-class RMLUICORE_API Event : public ScriptInterface
+class RMLUICORE_API Event
 {
 public:
-	/// Constructor
-	Event();
 	/// Constructor
 	/// @param[in] target The target element of this event
 	/// @param[in] parameters The event parameters
@@ -112,14 +108,11 @@ protected:
 
 private:
 	void InitMouseEvent();
-	/// Release this event through its instancer.
-	void Release() override;
 	EventId id = EventId::Invalid;
 	bool interruptible = false;
 	bool interrupted = false;
 	bool interrupted_immediate = false;
 	EventPhase phase = EventPhase::None;
-	EventInstancer* instancer = nullptr;
 	friend class Rml::Factory;
 };
 
