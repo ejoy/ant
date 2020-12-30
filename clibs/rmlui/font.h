@@ -2,8 +2,8 @@
 #include "context.h"
 #include "fonteffect.h"
 
-#include "RmlUi/Core/FontEngineInterface.h"
-#include "RmlUi/Core/Texture.h"
+#include "RmlUi/FontEngineInterface.h"
+#include "RmlUi/Texture.h"
 #include <unordered_map>
 #include <vector>
 #include <cstdint>

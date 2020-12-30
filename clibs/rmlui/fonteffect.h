@@ -2,9 +2,8 @@
 
 #include "context.h"
 extern "C"{
-    #include "font/font_manager.h"
+    #include "../font/font_manager.h"
 }
-#include <RmlUi/Core.h>
 #include <iomanip>
 #include <sstream>
 #include <cassert>

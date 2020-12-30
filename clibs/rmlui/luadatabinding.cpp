@@ -8,10 +8,10 @@ extern "C" {
 #include "luaplugin.h"
 #include "luabind.h"
 
-#include <RmlUi/Core/DataModelHandle.h>
-#include <RmlUi/Core/DataVariable.h>
-#include <RmlUi/Core/Element.h>
-#include <RmlUi/Core/ElementDocument.h>
+#include <RmlUi/DataModelHandle.h>
+#include <RmlUi/DataVariable.h>
+#include <RmlUi/Element.h>
+#include <RmlUi/ElementDocument.h>
 
 void
 lua_pushvariant(lua_State *L, const Rml::Variant &v) {

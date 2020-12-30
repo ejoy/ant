@@ -1,15 +1,16 @@
-#include "pch.h"
+#include <lua.hpp>
 
-extern "C" {
-#include "lua.h"
-#include "lauxlib.h"
-}
+#include "RmlUi/Context.h"
+#include "RmlUi/Core.h"
+#include "RmlUi/Element.h"
+#include "RmlUi/ElementDocument.h"
+#include "RmlUi/EventListener.h"
+#include "RmlUi/PropertyDictionary.h"
+#include "RmlUi/StyleSheetSpecification.h"
+#include "RmlUi/SystemInterface.h"
 
 #include "luaplugin.h"
 #include "luabind.h"
-
-#include <RmlUi/Core/Element.h>
-#include <RmlUi/Core/ElementDocument.h>
 
 static void
 lua_pushobject(lua_State* L, void* handle) {

@@ -1,7 +1,9 @@
 #pragma once
 
 #include <bgfx/c99/bgfx.h>
-#include <RmlUi/Core.h>
+#include <RmlUi/Element.h>
+#include <RmlUi/Plugin.h>
+#include <RmlUi/Context.h>
 #include <string>
 #include "luaplugin.h"
 

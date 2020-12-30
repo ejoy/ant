@@ -1,9 +1,11 @@
 #include "pch.h"
 
-#include <RmlUi/Core.h>
-#include <RmlUi/Core/Plugin.h>
-#include <RmlUi/Core/ElementDocument.h>
-#include <RmlUi/Core/Stream.h>
+#include <RmlUi/Plugin.h>
+#include <RmlUi/ElementDocument.h>
+#include <RmlUi/Stream.h>
+#include <RmlUi/EventListener.h>
+#include <RmlUi/EventListenerInstancer.h>
+#include <RmlUi/Factory.h>
 
 extern "C" {
 #include "lua.h"

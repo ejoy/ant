@@ -1,7 +1,7 @@
 #pragma once
 
 #include "context.h"
-#include <RmlUi/Core/FileInterface.h>
+#include <RmlUi/FileInterface.h>
 
 class File : public Rml::FileInterface {
 public:

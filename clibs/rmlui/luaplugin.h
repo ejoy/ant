@@ -2,6 +2,7 @@
 #define ant_rml_lua_plugin_h
 
 #include "luabind.h"
+#include "RmlUi/Plugin.h"
 
 class lua_event_listener;
 class lua_event_listener_instancer;

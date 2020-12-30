@@ -9,8 +9,8 @@
 #include "luabind.h"
 
 #define EXPORT_BGFX_INTERFACE
-#include <bgfx/bgfx_interface.h>
-#include <bgfx/luabgfx.h>
+#include "../bgfx/bgfx_interface.h"
+#include "../bgfx/luabgfx.h"
 #include <bgfx/c99/bgfx.h>
 
 #include <RmlUi/Core.h>

@@ -4,11 +4,12 @@
 #include "fonteffect.h"
 
 extern "C"{
-#include "font/font_manager.h"
-#include "font/truetype.h"
+#include "../font/font_manager.h"
+#include "../font/truetype.h"
 }
 
 #include <RmlUi/Core.h>
+#include <RmlUi/GeometryUtilities.h>
 #include <cassert>
 #include <cstring>
 #include <variant>

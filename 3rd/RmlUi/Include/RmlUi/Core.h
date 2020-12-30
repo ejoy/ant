@@ -26,58 +26,44 @@
  *
  */
 
-#ifndef RMLUI_CORE_H
-#define RMLUI_CORE_H
+#ifndef RMLUI_CORE_CORE_H
+#define RMLUI_CORE_CORE_H
 
-#include "Core/Core.h"
+#include "Header.h"
+#include "Types.h"
+#include "Event.h"
+#include "ComputedValues.h"
 
-#include "Core/Types.h"
-#include "Core/Math.h"
-#include "Core/Header.h"
-#include "Core/Animation.h"
-#include "Core/Layout.h"
-#include "Core/ComputedValues.h"
-#include "Core/Context.h"
-#include "Core/DataModelHandle.h"
-#include "Core/DataTypeRegister.h"
-#include "Core/DataTypes.h"
-#include "Core/DataVariable.h"
-#include "Core/Element.h"
-#include "Core/ElementDocument.h"
-#include "Core/ElementText.h"
-#include "Core/ElementUtilities.h"
-#include "Core/Event.h"
-#include "Core/EventListener.h"
-#include "Core/EventListenerInstancer.h"
-#include "Core/Factory.h"
-#include "Core/FileInterface.h"
-#include "Core/FontEngineInterface.h"
-#include "Core/FontGlyph.h"
-#include "Core/Geometry.h"
-#include "Core/GeometryUtilities.h"
-#include "Core/ID.h"
-#include "Core/Input.h"
-#include "Core/Log.h"
-#include "Core/Plugin.h"
-#include "Core/PropertiesIteratorView.h"
-#include "Core/Property.h"
-#include "Core/PropertyDefinition.h"
-#include "Core/PropertyDictionary.h"
-#include "Core/PropertyIdSet.h"
-#include "Core/PropertyParser.h"
-#include "Core/PropertySpecification.h"
-#include "Core/RenderInterface.h"
-#include "Core/StringUtilities.h"
-#include "Core/StyleSheet.h"
-#include "Core/StyleSheetSpecification.h"
-#include "Core/SystemInterface.h"
-#include "Core/Texture.h"
-#include "Core/Transform.h"
-#include "Core/TransformPrimitive.h"
-#include "Core/Tween.h"
-#include "Core/TypeConverter.h"
-#include "Core/Vertex.h"
-#include "Core/XMLNodeHandler.h"
-#include "Core/XMLParser.h"
+namespace Rml {
+
+class Plugin;
+class Context;
+class FileInterface;
+class FontEngineInterface;
+class RenderInterface;
+class SystemInterface;
+enum class DefaultActionPhase;
+
+
+RMLUICORE_API bool Initialise();
+RMLUICORE_API void Shutdown();
+RMLUICORE_API String GetVersion();
+RMLUICORE_API void SetSystemInterface(SystemInterface* system_interface);
+RMLUICORE_API SystemInterface* GetSystemInterface();
+RMLUICORE_API void SetRenderInterface(RenderInterface* render_interface);
+RMLUICORE_API RenderInterface* GetRenderInterface();
+RMLUICORE_API void SetFileInterface(FileInterface* file_interface);
+RMLUICORE_API FileInterface* GetFileInterface();
+RMLUICORE_API void SetFontEngineInterface(FontEngineInterface* font_interface);
+RMLUICORE_API FontEngineInterface* GetFontEngineInterface();
+RMLUICORE_API bool LoadFontFace(const String& file_name, bool fallback_face = false);
+RMLUICORE_API bool LoadFontFace(const byte* data, int data_size, const String& font_family, Style::FontStyle style, Style::FontWeight weight, bool fallback_face = false);
+RMLUICORE_API void RegisterPlugin(Plugin* plugin);
+RMLUICORE_API EventId RegisterEventType(const String& type, bool interruptible, bool bubbles, DefaultActionPhase default_action_phase = DefaultActionPhase::None);
+RMLUICORE_API StringList GetTextureSourceList();
+RMLUICORE_API void ReleaseTextures();
+RMLUICORE_API void ReleaseCompiledGeometry();
+
+}
 
 #endif
