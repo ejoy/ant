@@ -57,7 +57,9 @@ enum class ShorthandId : uint8_t
 	PerspectiveOrigin,
 	TransformOrigin,
 
-	Background,
+	Background, 
+	TextShadow,
+	TextStroke,
 
 	NumDefinedIds,
 	FirstCustomId = NumDefinedIds,
@@ -154,7 +156,11 @@ enum class PropertyId : uint8_t
 	PointerEvents,
 	Focus,
 
-	FontEffect,
+	TextShadowH,
+	TextShadowV,
+	TextShadowColor,
+	TextStrokeWidth,
+	TextStrokeColor,
 
 	BackgroundColor,
 	BackgroundImage,

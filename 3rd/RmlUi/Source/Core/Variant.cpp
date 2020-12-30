@@ -41,7 +41,6 @@ Variant::Variant() : type(NONE)
 	static_assert(sizeof(TransformPtr) <= LOCAL_DATA_SIZE, "Local data too small for TransformPtr");
 	static_assert(sizeof(TransitionList) <= LOCAL_DATA_SIZE, "Local data too small for TransitionList");
 	static_assert(sizeof(AnimationList) <= LOCAL_DATA_SIZE, "Local data too small for AnimationList");
-	static_assert(sizeof(FontEffectsPtr) <= LOCAL_DATA_SIZE, "Local data too small for FontEffectsPtr");
 }
 
 Variant::Variant(const Variant& copy) : type(NONE)
@@ -92,12 +91,6 @@ void Variant::Clear()
 			animation_list->~AnimationList();
 		}
 		break;
-		case FONTEFFECTSPTR:
-		{
-			FontEffectsPtr* font_effects = (FontEffectsPtr*)data;
-			font_effects->~shared_ptr();
-		}
-		break;
 		default:
 		break;
 	}
@@ -132,10 +125,6 @@ void Variant::Set(const Variant& copy)
 		Set(*(AnimationList*)copy.data);
 		break;
 
-	case FONTEFFECTSPTR:
-		Set(*(FontEffectsPtr*)copy.data);
-		break;
-
 	default:
 		memcpy(data, copy.data, LOCAL_DATA_SIZE);
 		type = copy.type;
@@ -162,10 +151,6 @@ void Variant::Set(Variant&& other)
 
 	case ANIMATIONLIST:
 		Set(std::move(*(AnimationList*)other.data));
-		break;
-
-	case FONTEFFECTSPTR:
-		Set(std::move(*(FontEffectsPtr*)other.data));
 		break;
 
 	default:
@@ -360,31 +345,6 @@ void Variant::Set(AnimationList&& value)
 	}
 }
 
-void Variant::Set(const FontEffectsPtr& value)
-{
-	if (type == FONTEFFECTSPTR)
-	{
-		*(FontEffectsPtr*)data = value;
-	}
-	else
-	{
-		type = FONTEFFECTSPTR;
-		new(data) FontEffectsPtr(value);
-	}
-}
-void Variant::Set(FontEffectsPtr&& value)
-{
-	if (type == FONTEFFECTSPTR)
-	{
-		(*(FontEffectsPtr*)data) = std::move(value);
-	}
-	else
-	{
-		type = FONTEFFECTSPTR;
-		new(data) FontEffectsPtr(std::move(value));
-	}
-}
-
 Variant& Variant::operator=(const Variant& copy)
 {
 	if (copy.type != type)
@@ -444,8 +404,6 @@ bool Variant::operator==(const Variant & other) const
 		return DEFAULT_VARIANT_COMPARE(TransitionList);
 	case ANIMATIONLIST:
 		return DEFAULT_VARIANT_COMPARE(AnimationList);
-	case FONTEFFECTSPTR:
-		return DEFAULT_VARIANT_COMPARE(FontEffectsPtr);
 	case NONE:
 		return true;
 		break;

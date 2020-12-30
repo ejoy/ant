@@ -37,7 +37,6 @@ namespace Rml {
 class Element;
 class ElementDefinition;
 class StyleSheetNode;
-class FontEffect;
 class Stream;
 
 struct KeyframeBlock {
@@ -74,14 +73,9 @@ public:
 	SharedPtr<StyleSheet> CombineStyleSheet(const StyleSheet& sheet) const;
 	/// Builds the node index for a combined style sheet.
 	void BuildNodeIndex();
-	/// Optimizes some properties for faster retrieval.
-	void OptimizeNodeProperties();
 
 	/// Returns the Keyframes of the given name, or null if it does not exist.
 	Keyframes* GetKeyframes(const String& name);
-
-	/// Parses the font-effect property from a string and returns a list of instanced font-effects.
-	FontEffectsPtr InstanceFontEffectsFromString(const String& font_effect_string_value, const SharedPtr<const PropertySource>& source) const;
 
 	/// Returns the compiled element definition for a given element hierarchy. A reference count will be added for the
 	/// caller, so another should not be added. The definition should be released by removing the reference count.

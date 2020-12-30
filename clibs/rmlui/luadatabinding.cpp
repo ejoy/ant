@@ -46,7 +46,6 @@ lua_pushvariant(lua_State *L, const Rml::Variant &v) {
 	case Rml::Variant::Type::TRANSFORMPTR:
 	case Rml::Variant::Type::TRANSITIONLIST:
 	case Rml::Variant::Type::ANIMATIONLIST:
-	case Rml::Variant::Type::FONTEFFECTSPTR:
 	case Rml::Variant::Type::VOIDPTR:
 	default:
 		// todo

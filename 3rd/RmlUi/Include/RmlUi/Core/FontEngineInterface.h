@@ -32,6 +32,7 @@
 #include "Types.h"
 #include "ComputedValues.h"
 #include "Geometry.h"
+#include "TextEffect.h"
 
 namespace Rml {
 
@@ -41,7 +42,6 @@ namespace Rml {
 	By default, RmlUi will use its own font engine with characters rendered through FreeType. To use your own engine,
 	provide a concrete implementation of this class and install it through Rml::SetFontEngineInterface().
  */
-
 
 class RMLUICORE_API FontEngineInterface
 {
@@ -77,9 +77,9 @@ public:
 
 	/// Called by RmlUi when a list of font effects is resolved for an element with a given font face.
 	/// @param[in] handle The font handle.
-	/// @param[in] font_effects The list of font effects to generate the configuration for.
+	/// @param[in] effects The list of text effects to generate the configuration for.
 	/// @return A handle to the prepared font effects which will be used when generating geometry for a string.
-	virtual FontEffectsHandle PrepareFontEffects(FontFaceHandle handle, const FontEffectList &font_effects);
+	virtual TextEffectsHandle PrepareTextEffects(FontFaceHandle handle, const TextEffects &effects);
 
 	/// Should return the point size of this font face.
 	/// @param[in] handle The font handle.
@@ -114,13 +114,13 @@ public:
 
 	/// Called by RmlUi when it wants to retrieve the geometry required to render a single line of text.
 	/// @param[in] face_handle The font handle.
-	/// @param[in] font_effects_handle The handle to the prepared font effects for which the geometry should be generated.
+	/// @param[in] text_effects_handle The handle to the prepared font effects for which the geometry should be generated.
 	/// @param[in] string The string to render.
 	/// @param[in] position The position of the baseline of the first character to render.
 	/// @param[in] colour The colour to render the text.
 	/// @param[out] geometry An array of geometries to generate the geometry into.
 	/// @return The width, in pixels, of the string geometry.
-	virtual int GenerateString(FontFaceHandle face_handle, FontEffectsHandle font_effects_handle, const String& string, const Vector2f& position, const Colourb& colour, GeometryList& geometry);
+	virtual int GenerateString(FontFaceHandle face_handle, TextEffectsHandle text_effects_handle, const String& string, const Vector2f& position, const Colourb& colour, GeometryList& geometry);
 
 	/// Called by RmlUi to determine if the text geometry is required to be re-generated. Whenever the returned version
 	/// is changed, all geometry belonging to the given face handle will be re-generated.

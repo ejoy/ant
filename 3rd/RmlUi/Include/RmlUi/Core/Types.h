@@ -80,7 +80,6 @@ class Property;
 class Variant;
 class Transform;
 class PropertyIdSet;
-class FontEffect;
 struct Animation;
 struct Transition;
 struct TransitionList;
@@ -94,7 +93,7 @@ using FileHandle = uintptr_t;
 using TextureHandle = uintptr_t;
 using CompiledGeometryHandle = uintptr_t;
 using FontFaceHandle = uintptr_t;
-using FontEffectsHandle = uintptr_t;
+using TextEffectsHandle = uintptr_t;
 
 using ElementDocumentPtr = UniquePtr<ElementDocument>;
 using ElementPtr = UniquePtr<Element>;
@@ -114,16 +113,9 @@ using ElementAttributes = Dictionary;
 using XMLAttributes = Dictionary;
 
 using AnimationList = Vector<Animation>;
-using FontEffectList = Vector<SharedPtr<const FontEffect>>;
-
-struct FontEffects {
-	FontEffectList list;
-	String value;
-};
 
 // Additional smart pointers
 using TransformPtr = SharedPtr< Transform >;
-using FontEffectsPtr = SharedPtr<const FontEffects>;
 
 // Data binding types
 class DataView;

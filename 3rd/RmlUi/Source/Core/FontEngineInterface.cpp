@@ -55,7 +55,7 @@ FontFaceHandle FontEngineInterface::GetFontFaceHandle(const String& /*family*/, 
 	return 0;
 }
 	
-FontEffectsHandle FontEngineInterface::PrepareFontEffects(FontFaceHandle /*handle*/, const FontEffectList& /*font_effects*/)
+TextEffectsHandle FontEngineInterface::PrepareTextEffects(FontFaceHandle /*handle*/, const TextEffects& /*font_effects*/)
 {
 	return 0;
 }
@@ -90,7 +90,7 @@ int FontEngineInterface::GetStringWidth(FontFaceHandle /*handle*/, const String&
 	return 0;
 }
 
-int FontEngineInterface::GenerateString(FontFaceHandle /*face_handle*/, FontEffectsHandle /*font_effects_handle*/, const String& /*string*/,
+int FontEngineInterface::GenerateString(FontFaceHandle /*face_handle*/, TextEffectsHandle /*text_effects_handle*/, const String& /*string*/,
 	const Vector2f& /*position*/, const Colourb& /*colour*/, GeometryList& /*geometry*/)
 {
 	return 0;

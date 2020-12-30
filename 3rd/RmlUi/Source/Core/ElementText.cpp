@@ -43,23 +43,14 @@ namespace Rml {
 static bool BuildToken(String& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline, Style::TextTransform text_transformation, bool decode_escape_characters);
 static bool LastToken(const char* token_begin, const char* string_end, bool collapse_white_space, bool break_at_endline);
 
-ElementText::ElementText(const String& tag) : Element(tag), colour(255, 255, 255), decoration(this)
-{
-	generated_decoration = Style::TextDecoration::None;
-	decoration_property = Style::TextDecoration::None;
-
-	geometry_dirty = true;
-
-	font_effects_handle = 0;
-	font_effects_dirty = true;
-	font_handle_version = 0;
-
+ElementText::ElementText(const String& tag)
+	: Element(tag)
+	, decoration(this) {
 	GetLayout().SetElementText(this);
 }
 
 ElementText::~ElementText()
-{
-}
+{ }
 
 void ElementText::SetText(const String& _text) {
 	if (text != _text) {
@@ -81,7 +72,7 @@ void ElementText::OnRender()
 		return;
 	
 	// If our font effects have potentially changed, update it and force a geometry generation if necessary.
-	if (font_effects_dirty && UpdateFontEffects())
+	if (text_effects_dirty && UpdateTextEffects())
 		geometry_dirty = true;
 
 	// Dirty geometry if font version has changed.
@@ -318,8 +309,8 @@ void ElementText::AddLine(const Vector2f& line_position, const String& line)
 	if (font_face_handle == 0)
 		return;
 
-	if (font_effects_dirty)
-		UpdateFontEffects();
+	if (text_effects_dirty)
+		UpdateTextEffects();
 
 	Vector2f baseline_position = line_position + Vector2f(0.0f, (float)GetFontEngineInterface()->GetLineHeight(font_face_handle) - GetFontEngineInterface()->GetBaseline(font_face_handle));
 	lines.push_back(Line(line, baseline_position));
@@ -355,12 +346,16 @@ void ElementText::OnPropertyChange(const PropertyIdSet& changed_properties)
 		font_face_changed = true;
 
 		geometry.clear();
-		font_effects_dirty = true;
+		text_effects_dirty = true;
 	}
 
-	if (changed_properties.Contains(PropertyId::FontEffect))
+	if (changed_properties.Contains(PropertyId::TextShadowH) ||
+		changed_properties.Contains(PropertyId::TextShadowV) ||
+		changed_properties.Contains(PropertyId::TextShadowColor) ||
+		changed_properties.Contains(PropertyId::TextStrokeWidth) ||
+		changed_properties.Contains(PropertyId::TextStrokeColor))
 	{
-		font_effects_dirty = true;
+		text_effects_dirty = true;
 	}
 
 	if (changed_properties.Contains(PropertyId::TextDecoration))
@@ -394,30 +389,25 @@ void ElementText::GetRML(String& content)
 	content += text;
 }
 
-// Updates the configuration this element uses for its font.
-bool ElementText::UpdateFontEffects()
-{
+bool ElementText::UpdateTextEffects() {
 	if (GetFontFaceHandle() == 0)
 		return false;
+	text_effects_dirty = false;
 
-	font_effects_dirty = false;
-
-	static const FontEffectList empty_font_effects;
-
-	// Fetch the font-effect for this text element
-	const FontEffectList* font_effects = &empty_font_effects;
-	if (const FontEffects* effects = GetComputedValues().font_effect.get())
-		font_effects = &effects->list;
-
-	// Request a font layer configuration to match this set of effects. If this is different from
-	// our old configuration, then return true to indicate we'll need to regenerate geometry.
-	FontEffectsHandle new_font_effects_handle = GetFontEngineInterface()->PrepareFontEffects(GetFontFaceHandle(), *font_effects);
-	if (new_font_effects_handle != font_effects_handle)
-	{
-		font_effects_handle = new_font_effects_handle;
-		return true;
+	auto const& computedValues = GetComputedValues();
+	TextEffects text_effects;
+	if (computedValues.text_shadow) {
+		text_effects.emplace_back(computedValues.text_shadow.value());
+	}
+	if (computedValues.text_stroke) {
+		text_effects.emplace_back(computedValues.text_stroke.value());
 	}
 
+	TextEffectsHandle new_text_effects_handle = GetFontEngineInterface()->PrepareTextEffects(GetFontFaceHandle(), text_effects);
+	if (new_text_effects_handle != text_effects_handle) {
+		text_effects_handle = new_text_effects_handle;
+		return true;
+	}
 	return false;
 }
 
@@ -440,7 +430,7 @@ void ElementText::GenerateGeometry(const FontFaceHandle font_face_handle)
 
 void ElementText::GenerateGeometry(const FontFaceHandle font_face_handle, Line& line)
 {
-	line.width = GetFontEngineInterface()->GenerateString(font_face_handle, font_effects_handle, line.text, line.position, colour, geometry);
+	line.width = GetFontEngineInterface()->GenerateString(font_face_handle, text_effects_handle, line.text, line.position, colour, geometry);
 	for (size_t i = 0; i < geometry.size(); ++i)
 		geometry[i].SetHostElement(this);
 }

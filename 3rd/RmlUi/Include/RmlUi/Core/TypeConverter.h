@@ -100,15 +100,6 @@ public:
 	RMLUICORE_API static bool Convert(const AnimationList& src, String& dest);
 };
 
-template<> class TypeConverter< FontEffectsPtr, FontEffectsPtr> {
-public:
-	RMLUICORE_API static bool Convert(const FontEffectsPtr& src, FontEffectsPtr& dest);
-};
-template<> class TypeConverter< FontEffectsPtr, String > {
-public:
-	RMLUICORE_API static bool Convert(const FontEffectsPtr& src, String& dest);
-};
-
 } // namespace Rml
 
 #include "TypeConverter.inl"

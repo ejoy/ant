@@ -92,17 +92,6 @@ public:
 	/// @return True if the event was not consumed (ie, was prevented from propagating by an element), false if it was.
 	bool ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state);
 
-	/// Sends a single unicode character as text input into this context.
-	/// @param[in] character The unicode code point to send into this context.
-	/// @return True if the event was not consumed (ie, was prevented from propagating by an element), false if it was.
-	bool ProcessTextInput(Character character);
-	/// Sends a single ascii character as text input into this context.
-	bool ProcessTextInput(char character);
-	/// Sends a string of text as text input into this context.
-	/// @param[in] string The UTF-8 string to send into this context.
-	/// @return True if the event was not consumed (ie, was prevented from propagating by an element), false if it was.
-	bool ProcessTextInput(const String& string);
-
 	/// Sends a mouse movement event into this context.
 	/// @param[in] x The x-coordinate of the mouse cursor, in window-coordinates (ie, 0 should be the left of the client area).
 	/// @param[in] y The y-coordinate of the mouse cursor, in window-coordinates (ie, 0 should be the top of the client area).

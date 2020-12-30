@@ -37,8 +37,6 @@
 
 namespace Rml {
 
-static String clipboard_text;
-
 SystemInterface::SystemInterface()
 {
 }
@@ -72,21 +70,6 @@ bool SystemInterface::LogMessage(Log::Type /*logtype*/, const String& message)
 	return true;
 }
 #endif	
-
-void SystemInterface::SetMouseCursor(const String& /*cursor_name*/)
-{
-}
-
-void SystemInterface::SetClipboardText(const String& text)
-{
-	// The default implementation will only copy and paste within the application
-	clipboard_text = text;
-}
-
-void SystemInterface::GetClipboardText(String& text)
-{
-	text = clipboard_text;
-}
 
 // Joins the path of an RML or RCSS file with the path of a resource specified within the file.
 void SystemInterface::JoinPath(String& translated_path, const String& document_path, const String& path)
@@ -122,16 +105,6 @@ void SystemInterface::JoinPath(String& translated_path, const String& document_p
 	// Append the paths and send through URL to removing any '..'.
 	URL url(Replace(translated_path, ':', '|') + Replace(path, '\\', '/'));
 	translated_path = Replace(url.GetPathedFileName(), '|', ':');
-}
-	
-// Activate keyboard (for touchscreen devices)
-void SystemInterface::ActivateKeyboard() 
-{
-}
-	
-// Deactivate keyboard (for touchscreen devices)
-void SystemInterface::DeactivateKeyboard() 
-{
 }
 
 } // namespace Rml

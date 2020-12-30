@@ -514,7 +514,9 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 		values.word_break = parent_values->word_break;
 		values.focus = parent_values->focus;
 		values.pointer_events = parent_values->pointer_events;
-		values.font_effect = parent_values->font_effect;
+
+		values.text_shadow = parent_values->text_shadow;
+		values.text_stroke = parent_values->text_stroke;
 	}
 
 
@@ -708,21 +710,37 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 			values.animation = p->Get<AnimationList>();
 			break;
 
-		case PropertyId::FontEffect:
-			if (p->unit == Property::FONTEFFECT) {
-				values.font_effect = p->Get<FontEffectsPtr>();
+		case PropertyId::TextShadowH:
+			if (!values.text_shadow) {
+				values.text_shadow = TextShadow{};
 			}
-			else if (p->unit == Property::STRING) {
-				if (auto & style_sheet = element->GetStyleSheet()) {
-					const String& value = p->value.GetReference<String>();
-					values.font_effect = style_sheet->InstanceFontEffectsFromString(value, p->source);
-				}
-				else
-					values.font_effect.reset();
-			}
-			else
-				values.font_effect.reset();
+			values.text_shadow->offset_h = ComputeLength(p, font_size, document_font_size, dp_ratio);
 			break;
+		case PropertyId::TextShadowV:
+			if (!values.text_shadow) {
+				values.text_shadow = TextShadow{};
+			}
+			values.text_shadow->offset_v = ComputeLength(p, font_size, document_font_size, dp_ratio);
+			break;
+		case PropertyId::TextShadowColor:
+			if (!values.text_shadow) {
+				values.text_shadow = TextShadow{};
+			}
+			values.text_shadow->color = p->Get<Colourb>();
+			break;
+		case PropertyId::TextStrokeWidth:
+			if (!values.text_stroke) {
+				values.text_stroke = TextStroke{};
+			}
+			values.text_stroke->width = ComputeLength(p, font_size, document_font_size, dp_ratio);
+			break;
+		case PropertyId::TextStrokeColor:
+			if (!values.text_stroke) {
+				values.text_stroke = TextStroke{};
+			}
+			values.text_stroke->color = p->Get<Colourb>();
+			break;
+
 		// Invalid properties
 		case PropertyId::Invalid:
 		case PropertyId::NumDefinedIds:

@@ -42,8 +42,6 @@ class ElementDocument;
 class Event;
 class EventListener;
 class EventListenerInstancer;
-class FontEffect;
-class FontEffectInstancer;
 class StyleSheet;
 class PropertyDictionary;
 class PropertySpecification;
@@ -72,17 +70,6 @@ public:
 	/// @param[in] text The text to instance the element (or elements) from.
 	/// @return True if the string was parsed without error, false otherwise.
 	static bool InstanceElementText(Element* parent, const String& text);
-
-	/// Registers a non-owning pointer to an instancer that will be used to instance font effects.
-	/// @param[in] name The name of the font effect the instancer will be called for.
-	/// @param[in] instancer The instancer to call when the font effect name is encountered.
-	/// @lifetime The instancer must be kept alive until after the call to Rml::Shutdown.
-	/// @return The added instancer if the registration was successful, nullptr otherwise.
-	static void RegisterFontEffectInstancer(const String& name, FontEffectInstancer* instancer);
-	/// Retrieves a font-effect instancer registered with the factory.
-	/// @param[in] name The name of the desired font-effect type.
-	/// @return The font-effect instancer it it exists, nullptr otherwise.
-	static FontEffectInstancer* GetFontEffectInstancer(const String& name);
 
 	/// Creates a style sheet from a user-generated string.
 	/// @param[in] string The contents of the style sheet.

@@ -62,7 +62,6 @@ lrmlui_init(lua_State *L){
     if (!Rml::Initialise()){
         return luaL_error(L, "Failed to Initialise RmlUi.");
     }
-    g_wrapper->interface.font.RegisterFontEffectInstancer();
 
     auto plugin = std::make_unique<lua_plugin>();
     std::string errmsg;

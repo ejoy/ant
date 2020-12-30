@@ -111,7 +111,6 @@ public:
 
 	bool ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state);
 	bool ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state);
-	bool ProcessTextInput(const String& string);
 	void ProcessMouseMove(int x, int y, int key_modifier_state);
 	void ProcessMouseButtonDown(int button_index, int key_modifier_state);
 	void ProcessMouseButtonUp(int button_index, int key_modifier_state);

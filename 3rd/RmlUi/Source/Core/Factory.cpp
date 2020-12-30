@@ -39,10 +39,6 @@
 
 #include "DataControllerDefault.h"
 #include "DataViewDefault.h"
-#include "FontEffectBlur.h"
-#include "FontEffectGlow.h"
-#include "FontEffectOutline.h"
-#include "FontEffectShadow.h"
 #include "PluginRegistry.h"
 #include "PropertyParserColour.h"
 #include "StreamFile.h"
@@ -55,10 +51,6 @@
 #include <algorithm>
 
 namespace Rml {
-
-// Font effect instancers.
-using FontEffectInstancerMap = UnorderedMap< String, FontEffectInstancer* >;
-static FontEffectInstancerMap font_effect_instancers;
 
 // Data view instancers.
 using DataViewInstancerMap = UnorderedMap< String, DataViewInstancer* >;
@@ -80,12 +72,6 @@ static EventListenerInstancer* event_listener_instancer = nullptr;
 
 // Default instancers are constructed and destroyed on Initialise and Shutdown, respectively.
 struct DefaultInstancers {
-	// Font effects
-	FontEffectBlurInstancer font_effect_blur;
-	FontEffectGlowInstancer font_effect_glow;
-	FontEffectOutlineInstancer font_effect_outline;
-	FontEffectShadowInstancer font_effect_shadow;
-
 	// Data binding views
 	DataViewInstancerDefault<DataViewAttribute> data_view_attribute;
 	DataViewInstancerDefault<DataViewAttributeIf> data_view_attribute_if;
@@ -124,12 +110,6 @@ bool Factory::Initialise()
 	if (!event_listener_instancer)
 		event_listener_instancer = nullptr;
 
-	// Font effect instancers
-	RegisterFontEffectInstancer("blur", &default_instancers->font_effect_blur);
-	RegisterFontEffectInstancer("glow", &default_instancers->font_effect_glow);
-	RegisterFontEffectInstancer("outline", &default_instancers->font_effect_outline);
-	RegisterFontEffectInstancer("shadow", &default_instancers->font_effect_shadow);
-
 	// Data binding views
 	RegisterDataViewInstancer(&default_instancers->data_view_attribute,      "attr",    false);
 	RegisterDataViewInstancer(&default_instancers->data_view_attribute_if,   "attrif",  false);
@@ -156,8 +136,6 @@ bool Factory::Initialise()
 
 void Factory::Shutdown()
 {
-	font_effect_instancers.clear();
-
 	data_controller_instancers.clear();
 	data_view_instancers.clear();
 	structural_data_view_instancers.clear();
@@ -250,23 +228,6 @@ bool Factory::InstanceElementText(Element* parent, const String& text)
 
 	return true;
 }
-
-// Registers an instancer that will be used to instance font effects.
-void Factory::RegisterFontEffectInstancer(const String& name, FontEffectInstancer* instancer)
-{
-	RMLUI_ASSERT(instancer);
-	font_effect_instancers[StringUtilities::ToLower(name)] = instancer;
-}
-
-FontEffectInstancer* Factory::GetFontEffectInstancer(const String& name)
-{
-	auto iterator = font_effect_instancers.find(name);
-	if (iterator == font_effect_instancers.end())
-		return nullptr;
-
-	return iterator->second;
-}
-
 
 // Creates a style sheet containing the passed in styles.
 SharedPtr<StyleSheet> Factory::InstanceStyleSheetString(const String& string)

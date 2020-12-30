@@ -114,23 +114,4 @@ bool TypeConverter<AnimationList, String>::Convert(const AnimationList& src, Str
 	return true;
 }
 
-bool TypeConverter<FontEffectsPtr, FontEffectsPtr>::Convert(const FontEffectsPtr& src, FontEffectsPtr& dest)
-{
-	dest = src;
-	return true;
-}
-
-
-bool TypeConverter<FontEffectsPtr, String>::Convert(const FontEffectsPtr& src, String& dest)
-{
-	if (!src || src->list.empty())
-		dest = "none";
-	else
-		dest += src->value;
-	return true;
-}
-
-
-
-
 } // namespace Rml

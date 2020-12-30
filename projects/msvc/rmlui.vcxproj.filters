@@ -73,9 +73,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Context.cpp">
       <Filter>source\Core</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\ConvolutionFilter.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\Core.cpp">
       <Filter>source\Core</Filter>
     </ClCompile>
@@ -149,24 +146,6 @@
       <Filter>source\Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\FileInterface.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\FontEffect.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\FontEffectBlur.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\FontEffectGlow.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\FontEffectInstancer.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\FontEffectOutline.cpp">
-      <Filter>source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Core\FontEffectShadow.cpp">
       <Filter>source\Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core\FontEngineInterface.cpp">
@@ -420,9 +399,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Context.h">
       <Filter>include\Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\ConvolutionFilter.h">
-      <Filter>include\Core</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\Core.h">
       <Filter>include\Core</Filter>
     </ClInclude>
@@ -469,12 +445,6 @@
       <Filter>include\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\FileInterface.h">
-      <Filter>include\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\FontEffect.h">
-      <Filter>include\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\FontEffectInstancer.h">
       <Filter>include\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\FontEngineInterface.h">
@@ -666,18 +636,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\EventSpecification.h">
       <Filter>source\Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\FontEffectBlur.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\FontEffectGlow.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\FontEffectOutline.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Core\FontEffectShadow.h">
-      <Filter>source\Core</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\GeometryBackgroundBorder.h">
       <Filter>source\Core</Filter>
     </ClInclude>
@@ -803,6 +761,9 @@
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\Core\ElementBackgroundImage.h">
       <Filter>source\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Core\TextEffect.h">
+      <Filter>include\Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

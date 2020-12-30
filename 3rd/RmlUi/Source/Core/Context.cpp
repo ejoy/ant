@@ -185,24 +185,6 @@ bool Context::ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state) {
 	return focus->ProcessKeyUp(key, key_modifier_state);
 }
 
-bool Context::ProcessTextInput(char character) {
-	if (static_cast<unsigned char>(character) > 127)
-		return false;
-	return ProcessTextInput(static_cast<Character>(character));
-}
-
-bool Context::ProcessTextInput(Character character) {
-	String text = StringUtilities::ToUTF8(character);
-	return ProcessTextInput(text);
-}
-
-bool Context::ProcessTextInput(const String& string) {
-	if (!focus) {
-		return false;
-	}
-	return focus->ProcessTextInput(string);
-}
-
 bool Context::ProcessMouseMove(int x, int y, int key_modifier_state) {
 	if (!focus) {
 		return false;

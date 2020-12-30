@@ -377,8 +377,6 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 	RegisterProperty(PropertyId::Transition, "transition", "none", false, false).AddParser("transition");
 	RegisterProperty(PropertyId::Animation, "animation", "none", false, false).AddParser("animation");
 
-	RegisterProperty(PropertyId::FontEffect, "font-effect", "", true, false).AddParser("string");
-
 	RegisterProperty(PropertyId::AlignContent, "align-content", "flex-start", false, true)
 		.AddParser("keyword", "auto, flex-start, center, flex-end, stretch, baseline, space-between, space-around");
 	RegisterProperty(PropertyId::AlignItems, "align-items", "stretch", false, true)
@@ -407,6 +405,20 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 	RegisterProperty(PropertyId::BackgroundImage, "background-image", "", false, false)
 		.AddParser("string");
 	RegisterShorthand(ShorthandId::Background, "background", "background-color", ShorthandType::FallThrough);
+
+	RegisterProperty(PropertyId::TextShadowH, "text-shadow-h", "0px", false, false)
+		.AddParser("length");
+	RegisterProperty(PropertyId::TextShadowV, "text-shadow-v", "0px", false, false)
+		.AddParser("length");
+	RegisterProperty(PropertyId::TextShadowColor, "text-shadow-color", "white", false, false)
+		.AddParser("color");
+	RegisterShorthand(ShorthandId::TextShadow, "text-shadow", "text-shadow-h, text-shadow-v, text-shadow-color", ShorthandType::FallThrough);
+
+	RegisterProperty(PropertyId::TextStrokeWidth, "-webkit-text-stroke-width", "0px", false, false)
+		.AddParser("length");
+	RegisterProperty(PropertyId::TextStrokeColor, "-webkit-text-stroke-color", "white", false, false)
+		.AddParser("color");
+	RegisterShorthand(ShorthandId::TextStroke, "-webkit-text-stroke", "-webkit-text-stroke-width, -webkit-text-stroke-color", ShorthandType::FallThrough);
 
 	//RMLUI_ASSERTMSG(instance->properties.property_map->AssertAllInserted(PropertyId::NumDefinedIds), "Missing specification for one or more Property IDs.");
 	//RMLUI_ASSERTMSG(instance->properties.shorthand_map->AssertAllInserted(ShorthandId::NumDefinedIds), "Missing specification for one or more Shorthand IDs.");

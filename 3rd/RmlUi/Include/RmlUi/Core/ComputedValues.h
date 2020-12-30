@@ -30,6 +30,8 @@
 
 #include "Types.h"
 #include "Animation.h"
+#include "TextEffect.h"
+#include <optional>
 
 namespace Rml {
 
@@ -99,7 +101,6 @@ using TransformOrigin = LengthPercentage;
 enum class OriginX : uint8_t { Left, Center, Right };
 enum class OriginY : uint8_t { Top, Center, Bottom };
 
-
 /* 
 	A computed value is a value resolved as far as possible :before: introducing layouting. See CSS specs for details of each property.
 
@@ -156,10 +157,11 @@ struct ComputedValues
 	TransitionList transition;
 	AnimationList animation;
 
-	FontEffectsPtr font_effect; // Sorted by layer first (back then front), then by declaration order.
-
 	Colourb background_color = Colourb(255, 255, 255, 0);
 	String background_image;
+	
+	std::optional<TextShadow> text_shadow;
+	std::optional<TextStroke> text_stroke;
 };
 }
 

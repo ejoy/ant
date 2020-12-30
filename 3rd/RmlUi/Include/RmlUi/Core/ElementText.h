@@ -84,8 +84,7 @@ protected:
 	void GetRML(String& content) override;
 
 private:
-	// Prepares the font effects this element uses for its font.
-	bool UpdateFontEffects();
+	bool UpdateTextEffects();
 
 	// Used to store the position and length of each line we have geometry for.
 	struct Line
@@ -109,23 +108,23 @@ private:
 	LineList lines;
 
 	GeometryList geometry;
-	bool geometry_dirty;
+	bool geometry_dirty = true;
 
-	Colourb colour;
+	Colourb colour = Colourb(255, 255, 255);
 
 	// The decoration geometry we've generated for this string.
 	Geometry decoration;
 	// What the decoration type is that we have generated.
-	Style::TextDecoration generated_decoration;
+	Style::TextDecoration generated_decoration = Style::TextDecoration::None;
 	// What the element's actual text-decoration property is; this may be different from the generated decoration
 	// if it is set to none; this means we can keep generated decoration and simply toggle it on or off as long as
 	// it isn't being changed.
-	Style::TextDecoration decoration_property;
+	Style::TextDecoration decoration_property = Style::TextDecoration::None;
 
-	FontEffectsHandle font_effects_handle;
-	bool font_effects_dirty;
+	TextEffectsHandle text_effects_handle = 0;
+	bool text_effects_dirty = false;
 
-	int font_handle_version;
+	int font_handle_version = 0;
 };
 
 } // namespace Rml

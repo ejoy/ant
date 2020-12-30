@@ -11,12 +11,7 @@ extern "C"{
 #include <RmlUi/Core.h>
 #include <cassert>
 #include <cstring>
-
-void FontEngine::RegisterFontEffectInstancer(){
-    Rml::Factory::RegisterFontEffectInstancer("outline", mFEIMgr.Create("outline", mcontext));
-    Rml::Factory::RegisterFontEffectInstancer("shadow", mFEIMgr.Create("shadow", mcontext));
-    Rml::Factory::RegisterFontEffectInstancer("glow", mFEIMgr.Create("glow", mcontext));
-}
+#include <variant>
 
 bool FontEngine::IsFontTexResource(const Rml::String &sourcename) const{
     return SDFFontEffect::IsFontTexResource(sourcename);
@@ -65,15 +60,44 @@ Rml::FontFaceHandle FontEngine::GetFontFaceHandle(const Rml::String& family, Rml
     return static_cast<Rml::FontFaceHandle>(0);
 }
 
-Rml::FontEffectsHandle FontEngine::PrepareFontEffects(Rml::FontFaceHandle handle, const Rml::FontEffectList &font_effects){
-    if (font_effects.empty())
-        return Rml::FontEffectsHandle(&mDefaultFontEffect);
+struct TextEffectVisitor {
+    const RmlContext* context = 0;
+    const SDFFontEffect* result = 0;
 
-    if (font_effects.size() == 1){
-        return Rml::FontEffectsHandle(font_effects[0].get());
+    TextEffectVisitor(const RmlContext* ctx)
+    : context(ctx)
+    { }
+    void operator() (Rml::TextShadow const& t) {
+        int8_t edgevalue_offset = int8_t(font_manager_sdf_mask(context->font_mgr) * 0.85f);
+        result = new SDFFontEffectShadow(
+            context->font_tex.texid,
+            edgevalue_offset,
+            Rml::Vector2f(t.offset_h, t.offset_v),
+            t.color
+        );
     }
-    assert(false && "not support more than one font effect in single text");
-    return 0;
+    void operator() (Rml::TextStroke const& t) {
+        int8_t edgevalue_offset = int8_t(font_manager_sdf_mask(context->font_mgr) * 0.85f);
+        result = new TSDFFontEffectOutline<FontEffectType(FE_Outline|FE_FontTex)>(
+            context->font_tex.texid,
+            t.width,
+            edgevalue_offset,
+            t.color
+        );
+    }
+};
+
+Rml::TextEffectsHandle FontEngine::PrepareTextEffects(Rml::FontFaceHandle handle, const Rml::TextEffects& text_effects){
+    if (text_effects.empty()) {
+        return Rml::TextEffectsHandle(&mDefaultFontEffect);
+    }
+    if (text_effects.size() != 1){
+        assert(false && "not support more than one font effect in single text");
+        return 0;
+    }
+    TextEffectVisitor visitor(mcontext);
+    std::visit(visitor, text_effects[0]);
+    return Rml::TextEffectsHandle(visitor.result);
 }
 
 int FontEngine::GetSize(Rml::FontFaceHandle handle){
@@ -152,7 +176,7 @@ int FontEngine::GetStringWidth(Rml::FontFaceHandle handle, const Rml::String& st
 }
 
 const FontEngine::FontResource& 
-FontEngine::FindOrAddFontResource(Rml::FontEffectsHandle font_effects_handle){
+FontEngine::FindOrAddFontResource(Rml::TextEffectsHandle font_effects_handle){
     auto sdffe = reinterpret_cast<SDFFontEffect*>(font_effects_handle);
     Rml::String key = sdffe->GenerateKey();
 
@@ -167,7 +191,7 @@ FontEngine::FindOrAddFontResource(Rml::FontEffectsHandle font_effects_handle){
     return itfound->second;
 }
 
-int FontEngine::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHandle font_effects_handle, 
+int FontEngine::GenerateString(Rml::FontFaceHandle handle, Rml::TextEffectsHandle font_effects_handle,
     const Rml::String& string, 
     const Rml::Vector2f& position, 
     const Rml::Colourb& colour,

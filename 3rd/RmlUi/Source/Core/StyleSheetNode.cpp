@@ -135,33 +135,6 @@ void StyleSheetNode::BuildIndex(StyleSheet::NodeIndex& styled_node_index)
 	}
 }
 
-// Builds up a style sheet's index recursively.
-void StyleSheetNode::OptimizeProperties(const StyleSheet& style_sheet)
-{
-	if (properties.GetNumProperties() > 0)
-	{
-		// Font-effects
-		if (const Property* property = properties.GetProperty(PropertyId::FontEffect))
-		{
-			if (property->unit == Property::STRING)
-			{
-				const String string_value = property->Get<String>();
-				FontEffectsPtr font_effects = style_sheet.InstanceFontEffectsFromString(string_value, property->source);
-
-				Property new_property = *property;
-				new_property.value = std::move(font_effects);
-				new_property.unit = Property::FONTEFFECT;
-				properties.SetProperty(PropertyId::FontEffect, new_property);
-			}
-		}
-	}
-
-	for (const auto& child : children)
-	{
-		child->OptimizeProperties(style_sheet);
-	}
-}
-
 bool StyleSheetNode::SetStructurallyVolatileRecursive(bool ancestor_is_structural_pseudo_class)
 {
 	// If any ancestor or descendant is a structural pseudo class, then we are structurally volatile.

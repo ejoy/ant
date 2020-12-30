@@ -183,7 +183,6 @@ void ElementDocument::SetStyleSheet(SharedPtr<StyleSheet> _style_sheet)
 	if (style_sheet)
 	{
 		style_sheet->BuildNodeIndex();
-		style_sheet->OptimizeNodeProperties();
 	}
 
 	GetStyle()->DirtyDefinition();
@@ -525,13 +524,6 @@ bool ElementDocument::ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_st
 	}
 	return DispatchEvent(EventId::Keyup, parameters);
 }
-
-bool ElementDocument::ProcessTextInput(const String& string) {
-	Dictionary parameters;
-	parameters["text"] = string;
-	return DispatchEvent(EventId::Textinput, parameters);
-}
-
 
 void ElementDocument::ProcessMouseMove(int x, int y, int key_modifier_state) {
 	// Check whether the mouse moved since the last event came through.
