@@ -186,7 +186,7 @@ void ElementStyle::UpdateDefinition() {
 			if (definition && new_definition) {
 				for (PropertyId id : changed_properties) {
 					const Property* p0 = GetProperty(id);
-					const Property* p1 = GetProperty(id);
+					const Property* p1 = GetProperty(id, new_definition.get());
 					if (p0 && p1 && *p0 == *p1)
 						changed_properties.Erase(id);
 				}
@@ -445,7 +445,6 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 	//   4. Dirty properties in children that are inherited
 
 	const float font_size_before = values.font_size;
-	const Style::LineHeight line_height_before = values.line_height;
 
 	// The next flag is just a small optimization, if the element was just created we don't need to copy all the default values.
 	if (!values_are_default_initialized) {
@@ -477,26 +476,6 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 
 	const float font_size = values.font_size;
 	const float document_font_size = (document_values ? document_values->font_size : DefaultComputedValues.font_size);
-
-
-	// Since vertical-align depends on line-height we compute this before iteration
-	if(dirty_properties.Contains(PropertyId::LineHeight)) {
-		if (auto p = GetLocalProperty(PropertyId::LineHeight)) {
-			values.line_height = ComputeLineHeight(p, font_size, document_font_size, dp_ratio);
-		}
-		else if (parent_values) {
-			// Line height has a special inheritance case for numbers/percent: they inherit them directly instead of computed length, but for lengths, they inherit the length.
-			// See CSS specs for details. Percent is already converted to number.
-			if (parent_values->line_height.inherit_type == Style::LineHeight::Number)
-				values.line_height = Style::LineHeight(font_size * parent_values->line_height.inherit_value, Style::LineHeight::Number, parent_values->line_height.inherit_value);
-			else
-				values.line_height = parent_values->line_height;
-		}
-	}
-	else {
-		values.line_height = line_height_before;
-	}
-
 
 	if (parent_values) {
 		// Inherited properties are copied here, but may be overwritten below by locally defined properties

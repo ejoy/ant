@@ -187,8 +187,6 @@ public:
 
 	/// Returns 'display' property value from element's computed values.
 	Style::Display GetDisplay();
-	/// Returns 'line-height' property value from element's computed values.
-	float GetLineHeight();
 
 	/// Project a 2D point in pixel coordinates onto the element's plane.
 	/// @param[in-out] point The point to project in, and the resulting projected point out.

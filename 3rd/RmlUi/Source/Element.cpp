@@ -470,11 +470,6 @@ Style::Display Element::GetDisplay()
 	return meta->computed_values.display;
 }
 
-float Element::GetLineHeight()
-{
-	return meta->computed_values.line_height.value;
-}
-
 // Returns this element's TransformState
 const TransformState *Element::GetTransformState() const noexcept
 {
@@ -1422,36 +1417,6 @@ void Element::ProcessDefaultAction(Event& event)
 {
 	if (event.GetId() == EventId::Mousedown && event.GetParameter<int>("button", 0) == 0) {
 		SetPseudoClass("active", true);
-	}
-
-	if (event.GetId() == EventId::Mousescroll)
-	{
-		if (GetScrollHeight() > GetClientHeight())
-		{
-			Style::Overflow overflow_property = meta->computed_values.overflow;
-			if (overflow_property == Style::Overflow::Scroll)
-			{
-				// Stop the propagation if the current element has scrollbars.
-				// This prevents scrolling in parent elements, which is often unintended. If instead desired behavior is
-				// to scroll in parent elements when reaching top/bottom, move StopPropagation inside the next if statement.
-				event.StopPropagation();
-
-				const float wheel_delta = event.GetParameter< float >("wheel_delta", 0.f);
-
-				if ((wheel_delta < 0 && GetScrollTop() > 0) ||
-					(wheel_delta > 0 && GetScrollHeight() > GetScrollTop() + GetClientHeight()))
-				{
-					// Defined as three times the default line-height, multiplied by the dp ratio.
-					float default_scroll_length = 3.f * DefaultComputedValues.line_height.value;
-					if (const Context* context = GetContext())
-						default_scroll_length *= context->GetDensityIndependentPixelRatio();
-
-					SetScrollTop(GetScrollTop() + wheel_delta * default_scroll_length);
-				}
-			}
-		}
-
-		return;
 	}
 
 	if (event.GetPhase() == EventPhase::Target)

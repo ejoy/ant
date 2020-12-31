@@ -335,7 +335,7 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 	RegisterProperty(PropertyId::MinHeight, "min-height", "0px", false, true).AddParser("length_percent");
 	RegisterProperty(PropertyId::MaxHeight, "max-height", "-1px", false, true).AddParser("length_percent");
 
-	RegisterProperty(PropertyId::LineHeight, "line-height", "1.2", true, true).AddParser("number_length_percent");
+	RegisterProperty(PropertyId::LineHeight, "line-height", "1.2", true, true).AddParser("number");
 
 	RegisterProperty(PropertyId::Overflow, "overflow", "visible", false, true).AddParser("keyword", "visible, hidden, scroll");
 	RegisterProperty(PropertyId::Clip, "clip", "auto", true, false).AddParser("keyword", "auto, none").AddParser("number");

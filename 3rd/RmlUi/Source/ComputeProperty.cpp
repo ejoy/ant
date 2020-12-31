@@ -210,32 +210,6 @@ Style::Clip ComputeClip(const Property* property)
 	return Style::Clip();
 }
 
-Style::LineHeight ComputeLineHeight(const Property* property, float font_size, float document_font_size, float dp_ratio)
-{
-	if (property->unit & Property::LENGTH)
-	{
-		float value = ComputeLength(property, font_size, document_font_size, dp_ratio);
-		return Style::LineHeight(value, Style::LineHeight::Length, value);
-	}
-
-	float scale_factor = 1.0f;
-
-	switch (property->unit)
-	{
-	case Property::NUMBER:
-		scale_factor = property->value.Get< float >();
-		break;
-	case Property::PERCENT:
-		scale_factor = property->value.Get< float >() * 0.01f;
-		break;
-	default:
-		RMLUI_ERRORMSG("Invalid unit for line-height");
-	}
-
-	float value = font_size * scale_factor;
-	return Style::LineHeight(value, Style::LineHeight::Number, scale_factor);
-}
-
 Style::LengthPercentage ComputeLengthPercentage(const Property* property, float font_size, float document_font_size, float dp_ratio)
 {
 	using namespace Style;

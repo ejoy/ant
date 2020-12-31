@@ -102,6 +102,8 @@ private:
 	// Generates any geometry necessary for rendering decoration (underline, strike-through, etc).
 	void GenerateDecoration(const FontFaceHandle font_face_handle);
 
+	float GetLineHeight();
+
 	String text;
 
 	typedef Vector< Line > LineList;

@@ -63,14 +63,6 @@ enum class Position : uint8_t { Static, Relative, Absolute };
 
 using ZIndex = NumberAuto;
 
-struct LineHeight {
-	float value = 12.f * 1.2f; // The computed value (length)
-	enum InheritType { Number, Length } inherit_type = Number;
-	float inherit_value = 1.2f;
-	LineHeight() {}
-	LineHeight(float value, InheritType inherit_type, float inherit_value) : value(value), inherit_type(inherit_type), inherit_value(inherit_value) {}
-};
-
 enum class Overflow : uint8_t { Visible, Hidden, Scroll };
 struct Clip {
 	enum class Type : uint8_t { Auto, None, Number };
@@ -116,8 +108,6 @@ struct ComputedValues
 	float border_top_left_radius = 0, border_top_right_radius = 0, border_bottom_right_radius = 0, border_bottom_left_radius = 0;
 
 	ZIndex z_index = { ZIndex::Auto };
-
-	LineHeight line_height;
 
 	Clip clip;
 

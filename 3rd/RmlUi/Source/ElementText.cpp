@@ -110,7 +110,7 @@ void ElementText::OnRender()
 		float clip_left = (float)clip_origin.x;
 		float clip_right = (float)(clip_origin.x + clip_dimensions.x);
 		float clip_bottom = (float)(clip_origin.y + clip_dimensions.y);
-		float line_height = (float)GetFontEngineInterface()->GetLineHeight(GetFontFaceHandle());
+		float line_height = GetLineHeight();
 		
 		render = false;
 		for (size_t i = 0; i < lines.size(); ++i)
@@ -312,7 +312,7 @@ void ElementText::AddLine(const Vector2f& line_position, const String& line)
 	if (text_effects_dirty)
 		UpdateTextEffects();
 
-	Vector2f baseline_position = line_position + Vector2f(0.0f, (float)GetFontEngineInterface()->GetLineHeight(font_face_handle) - GetFontEngineInterface()->GetBaseline(font_face_handle));
+	Vector2f baseline_position = line_position + Vector2f(0.0f, GetLineHeight() - GetFontEngineInterface()->GetBaseline(font_face_handle));
 	lines.push_back(Line(line, baseline_position));
 
 	geometry_dirty = true;
@@ -361,6 +361,11 @@ void ElementText::OnPropertyChange(const PropertyIdSet& changed_properties)
 	if (changed_properties.Contains(PropertyId::TextDecoration))
 	{
 		decoration_property = computed.text_decoration;
+	}
+
+	if (changed_properties.Contains(PropertyId::LineHeight))
+	{
+		DirtyLayout();
 	}
 
 	if (font_face_changed)
@@ -605,7 +610,7 @@ Vector2f ElementText::GetBoundsFor(float available_width, float available_height
 	float line_width;
 	int line_begin = 0;
 	bool finish = false;
-	float line_height = (float)GetFontEngineInterface()->GetLineHeight(GetFontFaceHandle());
+	float line_height = GetLineHeight();
 	float width = 0.0f;
 	float height = 0.0f;
 	float first_line = true;
@@ -634,6 +639,15 @@ Vector2f ElementText::GetBoundsFor(float available_width, float available_height
 	}
 
 	return Vector2f(width, height);
+}
+
+float ElementText::GetLineHeight() {
+	float line_height = (float)GetFontEngineInterface()->GetLineHeight(GetFontFaceHandle());
+	const Property* property = GetProperty(PropertyId::LineHeight);
+	if (!property) {
+		return line_height;
+	}
+	return line_height * property->Get<float>();
 }
 
 } // namespace Rml
