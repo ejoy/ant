@@ -146,11 +146,13 @@ public:
 	/// @param[in] value The new property to set.
 	/// @return True if the property parsed successfully, false otherwise.
 	bool SetProperty(const String& name, const String& value);
+	bool SetPropertyImmediate(const String& name, const String& value);
 	/// Sets a local property override on the element to a pre-parsed value.
 	/// @param[in] name The name of the new property.
 	/// @param[in] property The parsed property to set.
 	/// @return True if the property was set successfully, false otherwise.
 	bool SetProperty(PropertyId id, const Property& property);
+	bool SetPropertyImmediate(PropertyId id, const Property& property);
 	/// Removes a local property override on the element; its value will revert to that defined in the style sheet.
 	/// @param[in] name The name of the local property definition to remove.
 	void RemoveProperty(const String& name);
@@ -192,12 +194,6 @@ public:
 	/// @param[in-out] point The point to project in, and the resulting projected point out.
 	/// @return True on success, false if transformation matrix is singular.
 	bool Project(Vector2f& point) const noexcept;
-
-	/// Start an animation of the given property on this element.
-	/// If an animation of the same property name exists, it will be replaced.
-	/// If start_value is null, the current property value on this element is used.
-	/// @return True if a new animation was added.
-	bool Animate(const String& property_name, const Property& target_value, float duration, Tween tween = Tween{}, int num_iterations = 1, bool alternate_direction = true, float delay = 0.0f, const Property* start_value = nullptr);
 
 	/// Add a key to an animation, extending its duration.
 	/// If no animation exists for the given property name, the call will be ignored.
@@ -563,7 +559,7 @@ protected:
 	void UpdateTransformState();
 
 	/// Start an animation, replacing any existing animations of the same property name. If start_value is null, the element's current value is used.
-	ElementAnimationList::iterator StartAnimation(PropertyId property_id, const Property * start_value, int num_iterations, bool alternate_direction, float delay, bool initiated_by_animation_property);
+	void StartAnimation(PropertyId property_id, const Property * start_value, int num_iterations, bool alternate_direction, float delay, bool initiated_by_animation_property);
 
 	/// Add a key to an animation, extending its duration. If target_value is null, the element's current value is used.
 	bool AddAnimationKeyTime(PropertyId property_id, const Property * target_value, float time, Tween tween);
@@ -571,7 +567,7 @@ protected:
 	/// Start a transition of the given property on this element.
 	/// If an animation exists for the property, the call will be ignored. If a transition exists for this property, it will be replaced.
 	/// @return True if the transition was added or replaced.
-	bool StartTransition(const Transition& transition, const Property& start_value, const Property& target_value);
+	bool StartTransition(const Transition& transition, const Property& start_value, const Property& target_value, bool remove_when_complete);
 
 	/// Removes all transitions that are no longer part of the element's 'transition' property.
 	void HandleTransitionProperty();

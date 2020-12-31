@@ -381,11 +381,18 @@ static bool PrepareTransforms(Vector<AnimationKey>& keys, Element& element, int 
 
 
 ElementAnimation::ElementAnimation(PropertyId property_id, ElementAnimationOrigin origin, const Property& current_value, Element& element, double start_world_time, float duration, int num_iterations, bool alternate_direction)
-	: property_id(property_id), duration(duration), num_iterations(num_iterations), alternate_direction(alternate_direction), last_update_world_time(start_world_time),
-	time_since_iteration_start(0.0f), current_iteration(0), reverse_direction(false), animation_complete(false), origin(origin)
+	: property_id(property_id)
+	, duration(duration)
+	, num_iterations(num_iterations)
+	, alternate_direction(alternate_direction)
+	, last_update_world_time(start_world_time)
+	, time_since_iteration_start(0.0f)
+	, current_iteration(0)
+	, reverse_direction(false)
+	, animation_complete(false)
+	, origin(origin)
 {
-	if (!current_value.definition)
-	{
+	if (!current_value.definition) {
 		Log::Message(Log::LT_WARNING, "Property in animation key did not have a definition (while adding key '%s').", current_value.ToString().c_str());
 	}
 	InternalAddKey(0.0f, current_value, element, Tween{});
@@ -523,10 +530,20 @@ Property ElementAnimation::UpdateAndGetProperty(double world_time, Element& elem
 
 	float alpha = GetInterpolationFactorAndKeys(&key0, &key1);
 
-	Property result = InterpolateProperties(keys[key0].property, keys[key1].property, alpha, element, keys[0].property.definition);
-	
-	return result;
+	return InterpolateProperties(keys[key0].property, keys[key1].property, alpha, element, keys[0].property.definition);
 }
 
+void ElementAnimation::Release(Element& element) {
+	switch (GetOrigin()) {
+	case ElementAnimationOrigin::User:
+		break;
+	case ElementAnimationOrigin::Animation:
+	case ElementAnimationOrigin::Transition:
+		if (remove_when_complete) {
+			element.RemoveProperty(GetPropertyId());
+		}
+		break;
+	}
+}
 
 } // namespace Rml

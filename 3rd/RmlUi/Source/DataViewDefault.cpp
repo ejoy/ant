@@ -150,7 +150,7 @@ bool DataViewStyle::Update(DataModel& model)
 		const Property* p = element->GetLocalProperty(property_name);
 		if (!p || p->Get<String>() != value)
 		{
-			element->SetProperty(property_name, value);
+			element->SetPropertyImmediate(property_name, value);
 			result = true;
 		}
 	}
@@ -226,7 +226,7 @@ bool DataViewIf::Update(DataModel& model)
 			if (value)
 				element->RemoveProperty(PropertyId::Display);
 			else
-				element->SetProperty(PropertyId::Display, Property(Style::Display::None));
+				element->SetPropertyImmediate(PropertyId::Display, Property(Style::Display::None));
 			result = true;
 		}
 	}
@@ -253,7 +253,7 @@ bool DataViewVisible::Update(DataModel& model)
 			if (value)
 				element->RemoveProperty(PropertyId::Visibility);
 			else
-				element->SetProperty(PropertyId::Visibility, Property(Style::Visibility::Hidden));
+				element->SetPropertyImmediate(PropertyId::Visibility, Property(Style::Visibility::Hidden));
 			result = true;
 		}
 	}
@@ -452,7 +452,7 @@ bool DataViewFor::Initialize(DataModel& model, Element* element, const String& i
 	if (container_address.empty())
 		return false;
 
-	element->SetProperty(PropertyId::Display, Property(Style::Display::None));
+	element->SetPropertyImmediate(PropertyId::Display, Property(Style::Display::None));
 
 	// Copy over the attributes, but remove the 'data-for' which would otherwise recreate the data-for loop on all constructed children recursively.
 	attributes = element->GetAttributes();

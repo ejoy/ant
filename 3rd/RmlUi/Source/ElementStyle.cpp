@@ -64,104 +64,105 @@ const ElementDefinition* ElementStyle::GetDefinition() const
 }
 
 // Returns one of this element's properties.
-const Property* ElementStyle::GetLocalProperty(PropertyId id, const PropertyDictionary& inline_properties, const ElementDefinition* definition)
-{
-	// Check for overriding local properties.
+const Property* ElementStyle::GetLocalProperty(PropertyId id, const ElementDefinition* definition) const {
 	const Property* property = inline_properties.GetProperty(id);
 	if (property)
 		return property;
-
-	// Check for a property defined in an RCSS rule.
 	if (definition)
 		return definition->GetProperty(id);
-
 	return nullptr;
 }
 
 // Returns one of this element's properties.
-const Property* ElementStyle::GetProperty(PropertyId id, const Element* element, const PropertyDictionary& inline_properties, const ElementDefinition* definition)
+const Property* ElementStyle::GetProperty(PropertyId id, const ElementDefinition* definition) const
 {
-	const Property* local_property = GetLocalProperty(id, inline_properties, definition);
+	const Property* local_property = GetLocalProperty(id, definition);
 	if (local_property)
 		return local_property;
-
-	// Fetch the property specification.
 	const PropertyDefinition* property = StyleSheetSpecification::GetProperty(id);
 	if (!property)
 		return nullptr;
-
-	// If we can inherit this property, return our parent's property.
-	if (property->IsInherited())
-	{
+	if (property->IsInherited()) {
 		Element* parent = element->GetParentNode();
-		while (parent)
-		{
+		while (parent) {
 			const Property* parent_property = parent->GetStyle()->GetLocalProperty(id);
 			if (parent_property)
 				return parent_property;
-
 			parent = parent->GetParentNode();
 		}
 	}
-
-	// No property available! Return the default value.
 	return property->GetDefaultValue();
 }
 
-// Apply transition to relevant properties if a transition is defined on element.
-// Properties that are part of a transition are removed from the properties list.
-void ElementStyle::TransitionPropertyChanges(Element* element, PropertyIdSet& properties, const PropertyDictionary& inline_properties, const ElementDefinition* old_definition, const ElementDefinition* new_definition)
-{
-	RMLUI_ASSERT(element);
-	if (!old_definition || !new_definition || properties.Empty())
+void ElementStyle::TransitionPropertyChanges(PropertyIdSet& properties, const ElementDefinition* new_definition) {
+	const Property* transition_property = GetProperty(PropertyId::Transition, new_definition);
+	if (!transition_property) {
 		return;
-
-	// We get the local property instead of the computed value here, because we want to intercept property changes even before the computed values are ready.
-	// Now that we have the concept of computed values, we may want do this operation directly on them instead.
-	if (const Property* transition_property = GetLocalProperty(PropertyId::Transition, inline_properties, new_definition))
-	{
-		auto transition_list = transition_property->Get<TransitionList>();
-
-		if (!transition_list.none)
-		{
-			static const PropertyDictionary empty_properties;
-
-			auto add_transition = [&](const Transition& transition) {
-				const Property* from = GetProperty(transition.id, element, inline_properties, old_definition);
-				const Property* to = GetProperty(transition.id, element, empty_properties, new_definition);
-				if (from && to && (from->unit == to->unit) && (*from != *to)) {
-					return element->StartTransition(transition, *from, *to);
-				}
-				return false;
-			};
-
-			if (transition_list.all)
-			{
-				Transition transition = transition_list.transitions[0];
-				for (auto it = properties.begin(); it != properties.end(); )
-				{
-					transition.id = *it;
-					if (add_transition(transition))
-						it = properties.Erase(it);
-					else
-						++it;
-				}
-			}
+	}
+	auto transition_list = transition_property->Get<TransitionList>();
+	if (transition_list.none) {
+		return;
+	}
+	auto add_transition = [&](const Transition& transition) {
+		const Property* from = GetProperty(transition.id);
+		const Property* to = GetProperty(transition.id, new_definition);
+		if (from && to && (from->unit == to->unit) && (*from != *to)) {
+			return element->StartTransition(transition, *from, *to, true);
+		}
+		return false;
+	};
+	if (transition_list.all) {
+		Transition transition = transition_list.transitions[0];
+		for (auto it = properties.begin(); it != properties.end(); ) {
+			transition.id = *it;
+			if (add_transition(transition))
+				it = properties.Erase(it);
 			else
-			{
-				for (auto& transition : transition_list.transitions)
-				{
-					if (properties.Contains(transition.id))
-					{
-						if (add_transition(transition))
-							properties.Erase(transition.id);
-					}
-				}
+				++it;
+		}
+	}
+	else {
+		for (auto& transition : transition_list.transitions) {
+			if (properties.Contains(transition.id)) {
+				if (add_transition(transition))
+					properties.Erase(transition.id);
 			}
 		}
 	}
 }
-	
+
+bool ElementStyle::TransitionPropertyChanges(PropertyId id, const Property& property) {
+	const Property* transition_property = GetProperty(PropertyId::Transition);
+	if (!transition_property) {
+		return false;
+	}
+	auto transition_list = transition_property->Get<TransitionList>();
+	if (transition_list.none) {
+		return false;
+	}
+	auto add_transition = [&](const Transition& transition) {
+		const Property* from = GetProperty(id);
+		if (from && (from->unit == property.unit) && (*from != property)) {
+			return element->StartTransition(transition, *from, property, false);
+		}
+		return false;
+	};
+	if (transition_list.all) {
+		Transition transition = transition_list.transitions[0];
+		transition.id = id;
+		return add_transition(transition);
+	}
+	else {
+		bool ok = false;
+		for (auto& transition : transition_list.transitions) {
+			if (transition.id == id) {
+				ok = ok || add_transition(transition);
+			}
+		}
+		return ok;
+	}
+}
+
 void ElementStyle::UpdateDefinition() {
 	if (definition_dirty) {
 		definition_dirty = false;
@@ -183,23 +184,17 @@ void ElementStyle::UpdateDefinition() {
 				changed_properties |= new_definition->GetPropertyIds();
 
 			if (definition && new_definition) {
-				// Remove properties that compare equal from the changed list.
-				const PropertyIdSet properties_in_both_definitions = (definition->GetPropertyIds() & new_definition->GetPropertyIds());
-
-				for (PropertyId id : properties_in_both_definitions)
-				{
-					const Property* p0 = definition->GetProperty(id);
-					const Property* p1 = new_definition->GetProperty(id);
+				for (PropertyId id : changed_properties) {
+					const Property* p0 = GetProperty(id);
+					const Property* p1 = GetProperty(id);
 					if (p0 && p1 && *p0 == *p1)
 						changed_properties.Erase(id);
 				}
-
-				// Transition changed properties if transition property is set
-				TransitionPropertyChanges(element, changed_properties, inline_properties, definition.get(), new_definition.get());
+				if (!changed_properties.Empty()) {
+					TransitionPropertyChanges(changed_properties, new_definition.get());
+				}
 			}
-
 			definition = new_definition;
-			
 			DirtyProperties(changed_properties);
 		}
 
@@ -291,18 +286,26 @@ String ElementStyle::GetClassNames() const
 	return class_names;
 }
 
-// Sets a local property override on the element to a pre-parsed value.
-bool ElementStyle::SetProperty(PropertyId id, const Property& property)
-{
+bool ElementStyle::SetProperty(PropertyId id, const Property& property) {
 	Property new_property = property;
-
 	new_property.definition = StyleSheetSpecification::GetProperty(id);
 	if (!new_property.definition)
 		return false;
+	if (!TransitionPropertyChanges(id, new_property)) {
+		inline_properties.SetProperty(id, new_property);
+		DirtyProperty(id);
+	}
+	return true;
+}
 
+bool ElementStyle::SetPropertyImmediate(PropertyId id, const Property& property)
+{
+	Property new_property = property;
+	new_property.definition = StyleSheetSpecification::GetProperty(id);
+	if (!new_property.definition)
+		return false;
 	inline_properties.SetProperty(id, new_property);
 	DirtyProperty(id);
-
 	return true;
 }
 
@@ -316,18 +319,16 @@ void ElementStyle::RemoveProperty(PropertyId id)
 		DirtyProperty(id);
 }
 
-
-
 // Returns one of this element's properties.
 const Property* ElementStyle::GetProperty(PropertyId id) const
 {
-	return GetProperty(id, element, inline_properties, definition.get());
+	return GetProperty(id, definition.get());
 }
 
 // Returns one of this element's properties.
 const Property* ElementStyle::GetLocalProperty(PropertyId id) const
 {
-	return GetLocalProperty(id, inline_properties, definition.get());
+	return GetLocalProperty(id, definition.get());
 }
 
 const PropertyMap& ElementStyle::GetLocalStyleProperties() const

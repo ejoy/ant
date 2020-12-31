@@ -87,6 +87,7 @@ public:
 	/// @param[in] name The name of the new property.
 	/// @param[in] property The parsed property to set.
 	bool SetProperty(PropertyId id, const Property& property);
+	bool SetPropertyImmediate(PropertyId id, const Property& property);
 	/// Removes a local property override on the element; its value will revert to that defined in
 	/// the style sheet.
 	/// @param[in] name The name of the local property definition to remove.
@@ -140,9 +141,10 @@ private:
 	// Sets a list of properties as dirty.
 	void DirtyProperties(const PropertyIdSet& properties);
 
-	static const Property* GetLocalProperty(PropertyId id, const PropertyDictionary & inline_properties, const ElementDefinition * definition);
-	static const Property* GetProperty(PropertyId id, const Element * element, const PropertyDictionary & inline_properties, const ElementDefinition * definition);
-	static void TransitionPropertyChanges(Element * element, PropertyIdSet & properties, const PropertyDictionary & inline_properties, const ElementDefinition * old_definition, const ElementDefinition * new_definition);
+	const Property* GetLocalProperty(PropertyId id, const ElementDefinition * definition) const;
+	const Property* GetProperty(PropertyId id, const ElementDefinition * definition) const;
+	void TransitionPropertyChanges(PropertyIdSet & properties, const ElementDefinition * new_definition);
+	bool TransitionPropertyChanges(PropertyId id, const Property& property);
 
 	// Element these properties belong to
 	Element* element;

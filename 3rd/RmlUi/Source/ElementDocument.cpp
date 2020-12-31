@@ -55,7 +55,7 @@ ElementDocument::ElementDocument(const String& tag) : Element(tag)
 	style_sheet = nullptr;
 	context = nullptr;
 	SetOwnerDocument(this);
-	SetProperty(PropertyId::Position, Property(Style::Position::Absolute));
+	SetPropertyImmediate(PropertyId::Position, Property(Style::Position::Absolute));
 }
 
 ElementDocument::~ElementDocument() {
@@ -138,7 +138,7 @@ void ElementDocument::ProcessHeader(const DocumentHeader* header)
 	}
 
 	// Hide this document.
-	SetProperty(PropertyId::Visibility, Property(Style::Visibility::Hidden));
+	SetPropertyImmediate(PropertyId::Visibility, Property(Style::Visibility::Hidden));
 
 	// Update properties so that e.g. visibility status can be queried properly immediately.
 	UpdateProperties();
@@ -190,7 +190,7 @@ const SharedPtr<StyleSheet>& ElementDocument::GetStyleSheet() const
 
 void ElementDocument::Show() {
 	// Set to visible and switch focus if necessary
-	SetProperty(PropertyId::Visibility, Property(Style::Visibility::Visible));
+	SetPropertyImmediate(PropertyId::Visibility, Property(Style::Visibility::Visible));
 	
 	// We should update the document now, otherwise the focusing methods below do not think we are visible
 	// If this turns out to be slow, the more performant approach is just to compute the new visibility property
@@ -202,7 +202,7 @@ void ElementDocument::Show() {
 
 void ElementDocument::Hide()
 {
-	SetProperty(PropertyId::Visibility, Property(Style::Visibility::Hidden));
+	SetPropertyImmediate(PropertyId::Visibility, Property(Style::Visibility::Hidden));
 
 	// We should update the document now, so that the (un)focusing will get the correct visibility
 	UpdateDocument();
@@ -827,9 +827,9 @@ void ElementDocument::CreateDragClone(Element* element) {
 
 	// Set all the required properties and pseudo-classes on the clone.
 	drag_clone->SetPseudoClass("drag", true);
-	drag_clone->SetProperty(PropertyId::Position, Property(Style::Position::Absolute));
-	drag_clone->SetProperty(PropertyId::Left, Property(element->GetAbsoluteLeft() - element->GetLayout().GetEdge(Layout::MARGIN, Layout::LEFT) - mouse_position.x, Property::PX));
-	drag_clone->SetProperty(PropertyId::Top, Property(element->GetAbsoluteTop() - element->GetLayout().GetEdge(Layout::MARGIN, Layout::TOP) - mouse_position.y, Property::PX));
+	drag_clone->SetPropertyImmediate(PropertyId::Position, Property(Style::Position::Absolute));
+	drag_clone->SetPropertyImmediate(PropertyId::Left, Property(element->GetAbsoluteLeft() - element->GetLayout().GetEdge(Layout::MARGIN, Layout::LEFT) - mouse_position.x, Property::PX));
+	drag_clone->SetPropertyImmediate(PropertyId::Top, Property(element->GetAbsoluteTop() - element->GetLayout().GetEdge(Layout::MARGIN, Layout::TOP) - mouse_position.y, Property::PX));
 }
 
 void ElementDocument::ReleaseDragClone() {

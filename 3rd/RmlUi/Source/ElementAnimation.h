@@ -63,6 +63,7 @@ private:
 	float time_since_iteration_start = 0;
 	int current_iteration = 0;
 	bool reverse_direction = false;
+	bool remove_when_complete = true;
 
 	bool animation_complete = true;
 	ElementAnimationOrigin origin = ElementAnimationOrigin::User;
@@ -72,7 +73,6 @@ private:
 	float GetInterpolationFactorAndKeys(int* out_key0, int* out_key1) const;
 
 public:
-	ElementAnimation() {}
 	ElementAnimation(PropertyId property_id, ElementAnimationOrigin origin, const Property& current_value, Element& element,
 		double start_world_time, float duration, int num_iterations, bool alternate_direction);
 
@@ -87,6 +87,8 @@ public:
 	bool IsInitalized() const { return !keys.empty(); }
 	float GetInterpolationFactor() const { return GetInterpolationFactorAndKeys(nullptr, nullptr); }
 	ElementAnimationOrigin GetOrigin() const { return origin; }
+	void SetRemoveWhenComplete(bool remove) { remove_when_complete = remove; }
+	void Release(Element& element);
 };
 
 

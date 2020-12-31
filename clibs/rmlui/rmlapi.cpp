@@ -296,22 +296,8 @@ lElementSetProperty(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	Rml::String name = lua_checkstdstring(L, 2);
 	Rml::String value = lua_checkstdstring(L, 3);
-	Rml::PropertyDictionary properties;
-	if (Rml::StyleSheetSpecification::ParsePropertyDeclaration(properties, name, value)) {
-		auto source = std::make_shared<Rml::PropertySource>(
-			"TODO",
-			0,
-			"Lua"
-		);
-		properties.SetSourceOfAllProperties(source);
-		for (auto& property : properties.GetProperties()) {
-			if (!e->SetProperty(property.first, property.second)) {
-				lua_pushboolean(L, 0);
-				return 1;
-			}
-		}
-	}
-	lua_pushboolean(L, 1);
+	bool ok = e->SetProperty(name, value);
+	lua_pushboolean(L, ok);
 	return 1;
 }
 
