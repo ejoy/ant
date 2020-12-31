@@ -1715,7 +1715,40 @@ wSequencer(lua_State* L) {
 		}
 		lua_pop(L, 1);
 	};
-
+	auto init_clip_ranges = [L](ImSequencer::anim_detail& item) {
+		item.clip_rangs.clear();
+		if (lua_getfield(L, -1, "clips") == LUA_TTABLE) {
+			int len = lua_rawlen(L, -1);
+			for (int index = 0; index < len; index++) {
+				lua_pushinteger(L, index + 1);
+				lua_gettable(L, -2);
+				if (lua_type(L, -1) == LUA_TTABLE) {
+					std::string_view nv;
+					int start = -1;
+					int end = -1;
+					if (lua_getfield(L, -1, "name") == LUA_TSTRING) {
+						nv = lua_tostring(L, -1);
+					}
+					lua_pop(L, 1);
+					if (lua_getfield(L, -1, "range") == LUA_TTABLE) {
+						lua_geti(L, -1, 1);
+						start = lua_tointeger(L, -1);
+						lua_pop(L, 1);
+						lua_geti(L, -1, 2);
+						end = lua_tointeger(L, -1);
+						lua_pop(L, 1);
+						
+					}
+					lua_pop(L, 1);
+					if (start != -1 && end != -1 && end > start) {
+						item.clip_rangs.emplace_back(nv, (int)start, (int)end);
+					}
+				}
+				lua_pop(L, 1);
+			}
+		}
+		lua_pop(L, 1);
+	};
 	if (lua_type(L, 1) == LUA_TTABLE) {
 		auto id = read_field_int(L, "id", -1, 1);
 		auto birth = read_field_string(L, "birth", "", 1);
@@ -1732,6 +1765,7 @@ wSequencer(lua_State* L) {
 						item.duration = (float)read_field_float(L, "duration", 0.0f, -1);
 						item.event_flags = std::vector((int)(item.duration * 30), false);
 						init_event(item.event_flags);
+						init_clip_ranges(item);
 					}
 					lua_pop(L, 1);
 				}
@@ -1750,14 +1784,14 @@ wSequencer(lua_State* L) {
 			ImSequencer::current_anim->current_time = (float)read_field_float(L, "current_time", 0.0f, 2);
 			current_frame = (int)(ImSequencer::current_anim->current_time * 30.0f);
 			auto dirty_num = read_field_int(L, "event_dirty", 0, 2);
+			auto clip_dirty_num = read_field_int(L, "clip_range_dirty", 0, 2);
 			// add or remove key event
 			if (dirty_num == 1) {
 				if (lua_getfield(L, 2, "current_event_list") == LUA_TTABLE) {
 					ImSequencer::current_anim->event_flags[selected_frame] = ((int)lua_rawlen(L, -1) > 0);
 				}
 				lua_pop(L, 1);
-			}
-			else if (dirty_num == -1) {
+			} else if (dirty_num == -1) {
 				lua_pushnil(L);
 				while (lua_next(L, 1) != 0) {
 					const char* anim_name = lua_tostring(L, -2);
@@ -1769,21 +1803,39 @@ wSequencer(lua_State* L) {
 					lua_pop(L, 1);
 				}
 			}
+			if (clip_dirty_num > 0) {
+				lua_pushnil(L);
+				while (lua_next(L, 1) != 0) {
+					const char* anim_name = lua_tostring(L, -2);
+					auto& item = ImSequencer::anim_info[id][anim_name];
+					if (lua_type(L, -1) == LUA_TTABLE) {
+						init_clip_ranges(item);
+					}
+					lua_pop(L, 1);
+				}
+			}
 		}
 	}
 	
 	bool pause = false;
-	bool moving = false;
+	int move_type = -1;
 	int current_select = selected_frame;
-	ImSequencer::Sequencer(pause, current_frame, current_select, moving);
-
+	static int range_index = -1;
+	int move_delta = 0;
+	ImSequencer::Sequencer(pause, current_frame, current_select, move_type, range_index, move_delta);
 	if (pause) {
 		lua_pushnumber(L, current_frame / 30.0f);
 		lua_setfield(L, -2, "pause");
 	}
-	if (moving) {
-		lua_pushboolean(L, moving);
-		lua_setfield(L, -2, "moving");
+	if (move_type != -1) {
+		lua_pushinteger(L, move_type);
+		lua_setfield(L, -2, "move_type");
+		if (range_index >= 0 && range_index < ImSequencer::current_anim->clip_rangs.size()) {
+			lua_pushinteger(L, range_index + 1);
+			lua_setfield(L, -2, "current_clip_index");
+		}
+		lua_pushinteger(L, move_delta);
+		lua_setfield(L, -2, "move_delta");
 	}
 	if (selected_frame != current_select) {
 		selected_frame = current_select;

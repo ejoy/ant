@@ -1,0 +1,12 @@
+---
+name: Clip0
+range: {0.3333333333333333, 1.3333333333333333}
+---
+name: Clip1
+range: {1.6666666666666667, 2.3333333333333335}
+---
+name: Group0
+subclips: {1}
+---
+name: Group1
+subclips: {1, 2}

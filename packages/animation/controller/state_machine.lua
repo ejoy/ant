@@ -56,6 +56,7 @@ local function play_animation(e, name, duration)
 					next_index = 1,
 					keyframe_events = current_pose.event_state
 				},
+				clip_state = { current = {current_index = 1, clip}, clips = e.anim_clips and e.anim_clips[name] or {}},
 				weight = 1,
 				init_weight = 1,
 				ratio = current_pose.ratio,
@@ -66,6 +67,7 @@ local function play_animation(e, name, duration)
 					next_index = 1,
 					keyframe_events = e.keyframe_events and e.keyframe_events[name] or {}
 				},
+				clip_state = { current = {current_index = 1, clip}, clips = e.anim_clips and e.anim_clips[name] or {}},
 				weight = 0,
 				init_weight = 0,
 				ratio = 0,
@@ -78,6 +80,7 @@ local function play_animation(e, name, duration)
 				next_index = 1,
 				keyframe_events = e.keyframe_events and e.keyframe_events[name] or {}
 			},
+			clip_state = { current = {current_index = 1, clip}, clips = e.anim_clips and e.anim_clips[name] or {}},
             ratio = 0,
 		}
 		return
@@ -146,19 +149,37 @@ function iani.set_state(e, name)
 	end
 end
 
-function iani.play(eid, name, time)
+function iani.play(eid, name, time, clipname)
 	local e = world[eid]
 	if e.animation and e.animation[name]  then
 		if e.state_machine then
 			e.state_machine._current = nil
 			play_animation(e, name, time)
 		else
+			local function find_clip_by_name(clips, name)
+				for _, clip in ipairs(clips) do
+					if clip.name == name then return clip end
+				end
+			end
+			local real_clips
+			if clipname then
+				local clip = find_clip_by_name(e.anim_clips[name], clipname)
+				if clip and clip.subclips then
+					real_clips = #clip.subclips > 0 and {} or nil
+					for _, clip_index in ipairs(clip.subclips) do
+						real_clips[#real_clips + 1] = e.anim_clips[name][clip_index]
+					end
+				else
+					real_clips = clip and { clip } or nil
+				end
+			end
 			e._animation._current = {
 				animation = e.animation[name],
 				event_state = {
 					next_index = 1,
 					keyframe_events = e.keyframe_events and e.keyframe_events[name] or {}
 				},
+				clip_state = { current = {current_index = 1, clip = real_clips}, clips = e.anim_clips and e.anim_clips[name] or {}},
 				ratio = 0,
 			}
 		end
@@ -201,30 +222,33 @@ local function do_set_event(eid, anim, events)
 	if not e.keyframe_events then
 		e.keyframe_events = {}
 	end
-	
-	for i, col in ipairs(events.collider) do
-		col.eid, _ = world:create_entity {
-			policy = {
-				"ant.general|name",
-				"ant.scene|hierarchy_policy",
-				"ant.scene|transform_policy",
-				"ant.collision|collider_policy"
-			},
-			data = {
-				color = {1, 0.5, 0.5, 0.5},
-				scene_entity = true,
-				transform = {s = 1},
-				name = "collider" .. i,
-				collider = {
-					[col.shape.type] = col.shape.define and col.shape.define or default_collider_define[col.shape.type]
+	if events.collider then
+		for i, col in ipairs(events.collider) do
+			col.eid, _ = world:create_entity {
+				policy = {
+					"ant.general|name",
+					"ant.scene|hierarchy_policy",
+					"ant.scene|transform_policy",
+					"ant.collision|collider_policy"
+				},
+				data = {
+					color = {1, 0.5, 0.5, 0.5},
+					scene_entity = true,
+					transform = {s = 1},
+					name = "collider" .. i,
+					collider = {
+						[col.shape.type] = col.shape.define and col.shape.define or default_collider_define[col.shape.type]
+					}
 				}
 			}
-		}
+		end
 	end
-	for _, ev in ipairs(events.event) do
-		for _, e in ipairs(ev.event_list) do
-			if e.event_type == "Collision" then
-				e.collision.collider = events.collider[e.collision.collider_index]
+	if events.event then
+		for _, ev in ipairs(events.event) do
+			for _, e in ipairs(ev.event_list) do
+				if e.event_type == "Collision" then
+					e.collision.collider = events.collider[e.collision.collider_index]
+				end
 			end
 		end
 	end
@@ -234,7 +258,7 @@ local function do_set_event(eid, anim, events)
 	end
 end
 
-function iani.set_event(eid, anim, events)
+function iani.set_events(eid, anim, events)
 	if type(events) == "table" then
 		do_set_event(eid, anim, events)
 	elseif type(events) == "string" then
@@ -243,6 +267,30 @@ function iani.set_event(eid, anim, events)
 		local data = f:read "a"
 		f:close()
 		do_set_event(eid, anim, datalist.parse(data))
+	end
+end
+
+local function do_set_clips(eid, anim, clips)
+	local e = world[eid]
+	if not e.anim_clips then
+		e.anim_clips = {}
+	end
+	e.anim_clips[anim] = clips
+	if e._animation._current.animation == e.animation[anim] then
+		e._animation._current.clip_state.current = {current_index = 1, {}}
+		e._animation._current.clip_state.clips = e.anim_clips[anim]
+	end
+end
+
+function iani.set_clips(eid, anim, clips)
+	if type(clips) == "table" then
+		do_set_clips(eid, anim, clips)
+	elseif type(clips) == "string" then
+		local path = fs.path(clips):localpath()
+		local f = assert(lfs.open(path))
+		local data = f:read "a"
+		f:close()
+		do_set_clips(eid, anim, datalist.parse(data))
 	end
 end
 

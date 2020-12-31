@@ -242,12 +242,12 @@ function m:data_changed()
 	end
 
 	if PAN_LEFT then
-		camera_pan(0.05, 0)
+		camera_pan(0.2, 0)
 	elseif PAN_RIGHT then
-		camera_pan(-0.05, 0)
+		camera_pan(-0.2, 0)
 	elseif ZOOM_FORWARD then
-		camera_zoom(-0.05)
+		camera_zoom(-0.2)
 	elseif ZOOM_BACK then
-		camera_zoom(0.05)
+		camera_zoom(0.2)
 	end
 end
