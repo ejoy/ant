@@ -146,7 +146,7 @@ local default_layouts = {
 	TEXCOORD_4 	= 3,
 	TEXCOORD_5 	= 3,
 	TEXCOORD_6 	= 3,
-	TEXCOORD_7 	= 3,
+	TEXCOORD_7 	= 3,	
 }
 
 local function fetch_vb_buffers(gltfscene, gltfbin, prim)
@@ -172,7 +172,6 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim)
 	local numv = accessors[attributes.POSITION+1].count
 	local bufferidx = 1
 	for _, attribclass in sort_pairs(attribclasses) do
-		
 		local declname = {}
 		local cacheclass = {}
 		for _, info in ipairs(attribclass) do
@@ -297,6 +296,79 @@ local function export_skinbin(gltfscene, bindata, exports)
 	end
 end
 
+local function create_merge_normal_buffer(vb)
+	local buf = vb[1]
+	local function get_offset(declname, name)
+		local offset = 0
+		for w in declname:gmatch "%w+" do
+			if w:sub(1, 1) == name then
+				return offset, w
+			end
+			offset = offset + declmgr.elem_size(w)
+		end
+	end
+
+	local pos_offset, pos_declname = get_offset(buf.declname, 'p')
+	local normal_offset, normal_declname = get_offset(buf.declname, 'n')
+
+	local stride = declmgr.layout_stride(buf.declname)
+
+	local function create_buffer_reader(declname)
+		local c = tonumber(declname:sub(2, 2))
+		local t = declname:sub(6, 6)
+
+		local fmt = {
+			f = "f",
+			i = "h",
+			u = "B",
+			x = "i",
+			X = "I",
+		}
+
+		local elemsize = declmgr.elem_size(declname)
+
+		local f = fmt[t]:rep(c)
+		return function (buf, offset)
+			return string.unpack(f, buf, offset)
+		end, function (v)
+			if type(v) == "table" then
+				return string.pack(f, table.unpack(v))
+			end
+			return string.pack(f, v)
+		end
+	end
+
+	local reader, writer = create_buffer_reader(normal_declname)
+	local poselemsize = declmgr.elem_size(pos_declname)
+	local nbuf = buf.memory[1]
+	local cache = {}
+	local idx_cache = {}
+	for iv=vb.start, vb.num-1 do
+		local poff = pos_offset + iv * stride + 1
+		local v = nbuf:sub(poff, poff+poselemsize)
+
+		local noff = normal_offset + iv * stride + 1
+		local nx, ny, nz = reader(nbuf, noff)
+		local nn = math3d.vector(nx, ny, nz)
+		local n = cache[v]
+		n = n and math3d.normalize(math3d.add(nn, n)) or nn
+		cache[v] = n
+		idx_cache[iv+1] = n
+	end
+
+	local merge_normals = {}
+	for iv=vb.start+1, vb.num do
+		local n = idx_cache[iv]
+		merge_normals[iv] = writer(math3d.tovalue(n))
+	end
+
+	local bindata = table.concat(merge_normals, "")
+	vb.merge_normal = {
+		delcname = normal_declname,
+		memory = {bindata, 1, #bindata},
+	}
+end
+
 local function export_meshbin(gltfscene, bindata, exports)
 	exports.mesh = {}
 	local meshes = gltfscene.meshes
@@ -310,6 +382,7 @@ local function export_meshbin(gltfscene, bindata, exports)
 		for primidx, prim in ipairs(mesh.primitives) do
 			local group = {}
 			group.vb = fetch_vb_buffers(gltfscene, bindata, prim)
+			create_merge_normal_buffer(group.vb)
 			local indices_accidx = prim.indices
 			if indices_accidx then
 				local idxacc = gltfscene.accessors[indices_accidx+1]

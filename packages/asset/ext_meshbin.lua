@@ -28,13 +28,35 @@ end
 
 local function init(mesh)
     local vb = mesh.vb
-    for idx, v in ipairs(vb) do
-        if type(v) == "userdata" then
-            vb[idx] = {handle=v}
-        else
-            setmetatable(v, proxy_vb)
+    if false then --vb.merge_normal then
+        for idx, v in ipairs(vb) do
+            if idx == 1 then
+                local declname = ""
+                for l in v.declname:gmatch "%w+" do
+                    if l:sub(1, 1) ~= "n" then
+                        declname = declname .. l
+                    end
+                end
+                v.declname = declname
+            end
+
+            if type(v) == "userdata" then
+                vb[idx] = {handle=v}
+            else
+                setmetatable(v, proxy_vb)
+            end
+        end
+        vb[#vb+1] = setmetatable(vb.merge_normal, proxy_vb)
+    else
+        for idx, v in ipairs(vb) do
+            if type(v) == "userdata" then
+                vb[idx] = {handle=v}
+            else
+                setmetatable(v, proxy_vb)
+            end
         end
     end
+
     local ib = mesh.ib
     if ib then
         if type(ib.handle) ~= "userdata" then

@@ -36,7 +36,7 @@ void main()
 	color		= vec4(lerp(u_effect_color.rgb, v_color0.rgb, coloralpha), alpha * v_color0.a);
 #elif defined(SHADOW_EFFECT)
 	float offsetdis = texture2D(s_tex, v_texcoord0+u_shadow_offset.xy).a;
-	float shadow_mask = u_edge_mask - (offsetdis - dis);
+	float shadow_mask = u_edge_mask - (offsetdis - dis)*smoothing;
 	float alpha = smoothing_result(offsetdis, shadow_mask, smoothing);
 	color		= vec4(lerp(u_effect_color.rgb, v_color0.rgb, coloralpha), alpha * v_color0.a);
 #elif defined(GLOW_EFFECT)

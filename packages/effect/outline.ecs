@@ -1,0 +1,17 @@
+policy "outline"
+    .require_policy "ant.render|render"
+    .require_system "ant.effect|scalemesh_outline_system"
+    .require_transform "ant.effect|outline_transform"
+    .component "outline"
+
+transform "outline_transform"
+    .implement "outline.lua"
+    .method "process_entity"
+
+system "scalemesh_outline_system"
+    .implement "outline.lua"
+    .method "data_changed"
+
+interface "ioutline"
+    .implement "outline.lua"
+    .method "set_outline"

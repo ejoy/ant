@@ -13,12 +13,13 @@ function ipf.select_filters(eid)
 	local needadd = rc.vb and rc.fx and rc.state
 	for _, feid in world:each "primitive_filter" do
 		local filter = world[feid].primitive_filter
-		local item
-		if needadd and ((state & filter.filter_mask) ~= 0) and ((state & filter.exclude_mask) == 0) then
-			item = rc
-		end
 		local fx = rc.fx
 		if fx then
+			local item
+			if needadd and ((state & filter.filter_mask) ~= 0) and ((state & filter.exclude_mask) == 0) then
+				item = rc
+			end
+
 			filter:insert_item(fx.setting.surfacetype, eid, item)
 		end
 	end

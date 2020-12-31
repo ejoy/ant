@@ -6,7 +6,7 @@ properties:
   u_outlinescale: {0.01, 0, 0, 0}
 state:
   ALPHA_REF: 0
-  CULL: CCW
+  CULL: CW
   DEPTH_TEST: LESS
   MSAA: true
-  WRITE_MASK: RGBAZ
+  WRITE_MASK: RGBA
