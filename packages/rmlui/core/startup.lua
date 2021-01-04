@@ -22,24 +22,17 @@ local function invoke(f, ...)
 	end
 	return ok, err
 end
-
-function m.OnContextCreate(context)
-	event("OnContextCreate", context)
-end
-function m.OnContextDestroy(context)
-	event("OnContextDestroy", context)
-end
-function m.OnNewDocument(document)
+function m.OnDocumentCreate(document)
 	local globals = sandbox()
-	event("OnNewDocument", document, globals)
+	event("OnDocumentCreate", document, globals)
 	globals.window.document = globals.document
 	environment[document] = globals
 end
-function m.OnDeleteDocument(document)
-	event("OnDeleteDocument", document)
+function m.OnDocumentDestroy(document)
+	event("OnDocumentDestroy", document)
 	environment[document] = nil
 end
-function m.OnInlineScript(document, content, source_path, source_line)
+function m.OnLoadInlineScript(document, content, source_path, source_line)
 	local path = fileManager.realpath(source_path)
 	if not path then
 		console.warn(("file '%s' does not exist."):format(source_path))
@@ -53,7 +46,7 @@ function m.OnInlineScript(document, content, source_path, source_line)
 	end
 	invoke(f)
 end
-function m.OnExternalScript(document, source_path)
+function m.OnLoadExternalScript(document, source_path)
 	local path = fileManager.realpath(source_path)
 	if not path then
 		console.warn(("file '%s' does not exist."):format(source_path))

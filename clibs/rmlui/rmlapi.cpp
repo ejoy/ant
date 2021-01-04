@@ -1,15 +1,16 @@
-#include "pch.h"
+#include <lua.hpp>
 
-extern "C" {
-#include "lua.h"
-#include "lauxlib.h"
-}
+#include "RmlUi/Context.h"
+#include "RmlUi/Core.h"
+#include "RmlUi/Element.h"
+#include "RmlUi/ElementDocument.h"
+#include "RmlUi/EventListener.h"
+#include "RmlUi/PropertyDictionary.h"
+#include "RmlUi/StyleSheetSpecification.h"
+#include "RmlUi/SystemInterface.h"
 
 #include "luaplugin.h"
 #include "luabind.h"
-
-#include <RmlUi/Core/Element.h>
-#include <RmlUi/Core/ElementDocument.h>
 
 static void
 lua_pushobject(lua_State* L, void* handle) {
@@ -219,6 +220,21 @@ lElementGetBounds(lua_State* L) {
 }
 
 static int
+lElementGetChildren(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	if (lua_type(L, 2) != LUA_TNUMBER) {
+		lua_pushinteger(L, e->GetNumChildren());
+		return 1;
+	}
+	Rml::Element* child = e->GetChild((int)lua_tointeger(L, 2));
+	if (child) {
+		lua_pushlightuserdata(L, child);
+		return 1;
+	}
+	return 0;
+}
+
+static int
 lElementGetOwnerDocument(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	Rml::ElementDocument* doc = e->GetOwnerDocument();
@@ -280,22 +296,8 @@ lElementSetProperty(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	Rml::String name = lua_checkstdstring(L, 2);
 	Rml::String value = lua_checkstdstring(L, 3);
-	Rml::PropertyDictionary properties;
-	if (Rml::StyleSheetSpecification::ParsePropertyDeclaration(properties, name, value)) {
-		auto source = std::make_shared<Rml::PropertySource>(
-			"TODO",
-			0,
-			"Lua"
-		);
-		properties.SetSourceOfAllProperties(source);
-		for (auto& property : properties.GetProperties()) {
-			if (!e->SetProperty(property.first, property.second)) {
-				lua_pushboolean(L, 0);
-				return 1;
-			}
-		}
-	}
-	lua_pushboolean(L, 1);
+	bool ok = e->SetProperty(name, value);
+	lua_pushboolean(L, ok);
 	return 1;
 }
 
@@ -365,6 +367,7 @@ lua_plugin_apis(lua_State *L) {
 		{ "ElementGetInnerRML", lElementGetInnerRML },
 		{ "ElementGetAttribute", lElementGetAttribute },
 		{ "ElementGetBounds", lElementGetBounds },
+		{ "ElementGetChildren", lElementGetChildren },
 		{ "ElementGetOwnerDocument", lElementGetOwnerDocument },
 		{ "ElementGetParent", lElementGetParent },
 		{ "ElementGetProperty", lElementGetProperty },

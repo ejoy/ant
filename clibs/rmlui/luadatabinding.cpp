@@ -8,10 +8,10 @@ extern "C" {
 #include "luaplugin.h"
 #include "luabind.h"
 
-#include <RmlUi/Core/DataModelHandle.h>
-#include <RmlUi/Core/DataVariable.h>
-#include <RmlUi/Core/Element.h>
-#include <RmlUi/Core/ElementDocument.h>
+#include <RmlUi/DataModelHandle.h>
+#include <RmlUi/DataVariable.h>
+#include <RmlUi/Element.h>
+#include <RmlUi/ElementDocument.h>
 
 void
 lua_pushvariant(lua_State *L, const Rml::Variant &v) {
@@ -43,11 +43,9 @@ lua_pushvariant(lua_State *L, const Rml::Variant &v) {
 	case Rml::Variant::Type::VECTOR4:
 	case Rml::Variant::Type::COLOURF:
 	case Rml::Variant::Type::COLOURB:
-	case Rml::Variant::Type::SCRIPTINTERFACE:
 	case Rml::Variant::Type::TRANSFORMPTR:
 	case Rml::Variant::Type::TRANSITIONLIST:
 	case Rml::Variant::Type::ANIMATIONLIST:
-	case Rml::Variant::Type::FONTEFFECTSPTR:
 	case Rml::Variant::Type::VOIDPTR:
 	default:
 		// todo

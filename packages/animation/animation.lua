@@ -23,6 +23,28 @@ local timer = world:interface "ant.timer|timer"
 
 local fix_root <const> = false
 
+local function get_adjust_delta_time(task, delta)
+	local clip_state = task.clip_state
+	if not clip_state or not clip_state.current or not clip_state.current.clip then return delta end
+	local current_time = task.animation._handle:get_time()
+	local index = clip_state.current.current_index
+	local next_time = current_time + delta * 0.001
+	local skip = 0.0
+	if next_time > clip_state.current.clip[index].range[2] then
+		local index = index + 1
+		if index > #clip_state.current.clip then
+			index = 1
+			skip = task.animation._handle:duration() - clip_state.current.clip[#clip_state.current.clip].range[2] + clip_state.current.clip[index].range[1]
+		else
+			skip = clip_state.current.clip[index].range[1] - clip_state.current.clip[index - 1].range[2]
+		end
+		clip_state.current.current_index = index
+	elseif index == 1 and next_time < clip_state.current.clip[index].range[1] then
+		skip = clip_state.current.clip[index].range[1]
+	end
+	return skip * 1000 + delta
+end
+
 local function process_keyframe_event(task, poseresult)
 	local event_state = task.event_state
 	if not event_state.keyframe_events then return end
@@ -92,7 +114,8 @@ local function do_animation(poseresult, task, delta_time)
 		poseresult:do_blend("blend", #task, task.weight)
 	else
 		local ani = task.animation
-		poseresult:do_sample(ani._sampling_cache, ani._handle, delta_time, task.weight)
+		local adjust_time = get_adjust_delta_time(task, delta_time)
+		poseresult:do_sample(ani._sampling_cache, ani._handle, adjust_time, task.weight)
 		process_keyframe_event(task, poseresult)
 	end
 end

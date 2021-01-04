@@ -2,8 +2,8 @@
 #include "context.h"
 #include "fonteffect.h"
 
-#include "RmlUi/Core/FontEngineInterface.h"
-#include "RmlUi/Core/Texture.h"
+#include "RmlUi/FontEngineInterface.h"
+#include "RmlUi/Texture.h"
 #include <unordered_map>
 #include <vector>
 #include <cstdint>
@@ -27,7 +27,7 @@ public:
 public:
 	virtual bool LoadFontFace(const Rml::byte* data, int data_size, const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, bool fallback_face) override;
 	virtual Rml::FontFaceHandle GetFontFaceHandle(const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, int size)override;
-	virtual Rml::FontEffectsHandle PrepareFontEffects(Rml::FontFaceHandle handle, const Rml::FontEffectList &font_effects)override;
+	virtual Rml::TextEffectsHandle PrepareTextEffects(Rml::FontFaceHandle handle, const Rml::TextEffects& text_effects)override;
 
 	virtual int GetSize(Rml::FontFaceHandle handle)override;
 	virtual int GetXHeight(Rml::FontFaceHandle handle)override;
@@ -37,7 +37,7 @@ public:
 
 	virtual float GetUnderline(Rml::FontFaceHandle handle, float &thickness)override;
 	virtual int GetStringWidth(Rml::FontFaceHandle handle, const Rml::String& string, Rml::Character prior_character = Rml::Character::Null)override;
-	virtual int GenerateString(Rml::FontFaceHandle face_handle, Rml::FontEffectsHandle font_effects_handle, const Rml::String& string, const Rml::Vector2f& position, const Rml::Colourb& colour, Rml::GeometryList& geometry)override;
+	virtual int GenerateString(Rml::FontFaceHandle face_handle, Rml::TextEffectsHandle font_effects_handle, const Rml::String& string, const Rml::Vector2f& position, const Rml::Colourb& colour, Rml::GeometryList& geometry)override;
 
 	virtual int GetVersion(Rml::FontFaceHandle handle)override;
 
@@ -49,7 +49,7 @@ private:
 		Rml::Texture tex;
 		SDFFontEffect *fe;
 	};
-	const FontResource& FindOrAddFontResource(Rml::FontEffectsHandle font_effects_handle);
+	const FontResource& FindOrAddFontResource(Rml::TextEffectsHandle font_effects_handle);
 private:
     const RmlContext* mcontext;
 	struct fontinfo {
@@ -62,7 +62,6 @@ private:
 	std::vector<FontFace> mFontFaces;
 
 	std::unordered_map<Rml::String, FontResource>	mFontResources;
-	FontEffectInstancerManager	mFEIMgr;
 
 	SDFFontEffectDefault mDefaultFontEffect;
 };

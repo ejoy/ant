@@ -48,6 +48,16 @@ function property_init:parentNode()
     end
 end
 
+function property_init:childNodes()
+    local n = rmlui.ElementGetChildren(self._handle)
+    local children = {}
+    for i = 1, n do
+        local child = assert(rmlui.ElementGetChildren(self._handle, i-1))
+        children[i] = constructor(self._document, child)
+    end
+    return children
+end
+
 function property_init:style()
     return setmetatable({_handle = self._handle}, style_mt)
 end
@@ -107,7 +117,7 @@ end
 
 local pool = {}
 
-function event.OnDeleteDocument(handle)
+function event.OnDocumentDestroy(handle)
     pool[handle] = nil
 end
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <RmlUi/Core/SystemInterface.h>
+#include <RmlUi/SystemInterface.h>
 
 class SystemInterface : public Rml::SystemInterface {
 public:

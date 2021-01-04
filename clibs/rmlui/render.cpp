@@ -2,6 +2,7 @@
 #include "render.h"
 
 #include <RmlUi/Core.h>
+#include <RmlUi/FileInterface.h>
 #include <cassert>
 
 #ifdef RMLUI_MATRIX_ROW_MAJOR

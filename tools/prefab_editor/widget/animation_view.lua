@@ -17,6 +17,7 @@ local ozz_anims = {}
 local current_eid
 local imgui_message
 local current_anim_name
+local current_clip_name = "None"
 local current_anim
 local selected_frame = -1
 local sample_ratio = 30.0
@@ -30,6 +31,7 @@ local anim_state = {
     anim_name = "",
     key_event = {},
     event_dirty = 0,
+    clip_range_dirty = 0,
     current_event_list = {}
 }
 
@@ -45,6 +47,15 @@ local joints = {}
 local current_joint
 local current_event
 local current_collider
+local current_clip
+
+local function find_index(t, item)
+    for i, c in ipairs(t) do
+        if c == item then
+            return i
+        end
+    end
+end
 
 local function set_current_anim(anim_name)
     if current_anim and current_anim.collider then
@@ -111,18 +122,78 @@ local function from_runtime_event(runtime_event)
     return key_event
 end
 
+local function from_runtime_clip(runtime_clip)
+    local clips = {}
+    local groups = {}
+    for _, clip in ipairs(runtime_clip) do
+        if clip.range then
+            local start_frame = math.floor(clip.range[1] * sample_ratio)
+            local end_frame = math.floor(clip.range[2] * sample_ratio)
+            clips[#clips + 1] = {
+                name = clip.name,
+                range = {start_frame, end_frame},
+                name_ui = {text = clip.name},
+                range_ui = {start_frame, end_frame, speed = 1}
+            }
+        end
+        table.sort(clips, function(a, b) return a.range[2] < b.range[1] end)
+    end
+    for _, clip in ipairs(runtime_clip) do
+        if not clip.range then
+            local subclips = {}
+            for _, v in ipairs(clip.subclips) do
+                subclips[#subclips + 1] = clips[v]
+            end
+            groups[#groups + 1] = {
+                name = clip.name,
+                clips = subclips,
+                name_ui = {text = clip.name}
+            }
+        end
+    end
+    return clips, groups
+end
+
+local function get_runtime_clips()
+    if not world[current_eid].anim_clips or not world[current_eid].anim_clips[current_anim_name] then
+        iani.set_clips(current_eid, current_anim_name, {})
+    end
+    return world[current_eid].anim_clips[current_anim_name]
+end
+
 local function get_runtime_events()
     if not world[current_eid].keyframe_events or not world[current_eid].keyframe_events[current_anim_name] then
-        iani.set_event(current_eid, current_anim_name, {})
+        iani.set_events(current_eid, current_anim_name, {})
     end
     return world[current_eid].keyframe_events[current_anim_name]
 end
 
+local function to_runtime_group(runtime_clips, group)
+    local groupclips = {}
+    for _, clip in ipairs(group.clips) do
+        groupclips[#groupclips + 1] = find_index(runtime_clips, clip)
+    end
+    return {name = group.name, subclips = groupclips}
+end
+
+local function to_runtime_clip()
+    local runtime_clips = {}
+    for _, clip in ipairs(current_anim.clips) do
+        if clip.range[1] > 0 and clip.range[2] > 0 and clip.range[2] > clip.range[1] then
+            runtime_clips[#runtime_clips + 1] = {name = clip.name, range = {clip.range[1] / sample_ratio, clip.range[2] / sample_ratio}}
+        end
+    end
+    if current_anim.groups then
+        for _, group in ipairs(current_anim.groups) do
+            runtime_clips[#runtime_clips + 1] = to_runtime_group(current_anim.clips, group)
+        end
+    end
+    if #runtime_clips < 1  then return end
+    iani.set_clips(current_eid, current_anim_name, runtime_clips)
+end
+
 local function to_runtime_event()
     local runtime_event = get_runtime_events()
-    -- for i in pairs(runtime_event) do
-    --     runtime_event[i] = nil
-    -- end
     local temp = {}
     for key, value in pairs(current_anim.key_event) do
         if #value > 0 then
@@ -165,11 +236,11 @@ local function add_event(et)
         name = event_name,
         rid = (et == "Effect" or et == "Sound") and -1 or nil,
         name_ui = {text = event_name},
-        res_id_ui = {-1}
+        rid_ui = {-1}
     }
     if et == "Collision" then
         event_list[#event_list].collision = {
-            collider = current_collider,--find_collider_index(current_collider),
+            collider = current_collider,
             offset = {position = {0,0,0}, rotate = {0,0,0}},
             enable = false,
             enable_ui = {false},
@@ -229,13 +300,15 @@ local collider_type = {
 }
 local collider_idx = 1
 local function add_collider(ct)
-    if #current_anim.collider >= collider_idx then
-        collider_idx = #current_anim.collider + 1
-    end 
-    if ct == "capsule" then return end
     if not current_anim.collider then
         current_anim.collider = {}
     end
+    if ct == "capsule" then return end
+
+    if #current_anim.collider >= collider_idx then
+        collider_idx = #current_anim.collider + 1
+    end 
+    
     local shape = {type = ct, define = utils.deep_copy(default_collider_define[ct])}
     local colname = "collider" .. collider_idx
     current_anim.collider[#current_anim.collider + 1] = {
@@ -264,6 +337,50 @@ local function recreate_collider(col, config)
     delete_collider(col.collider)
     col.shape = config
     col.eid = prefab_mgr:create("collider", config)
+end
+
+local function show_events()
+    if selected_frame >= 0 then
+        imgui.cursor.SameLine()
+        if imgui.widget.Button("AddEvent") then
+            imgui.windows.OpenPopup("AddKeyEvent")
+        end
+    end
+
+    if imgui.windows.BeginPopup("AddKeyEvent") then
+        for _, et in ipairs(event_type) do
+            if imgui.widget.MenuItem(et) then
+                add_event(et)
+            end
+        end
+        imgui.windows.EndPopup()
+    end
+    if #anim_state.current_event_list > 0 then
+        imgui.cursor.SameLine()
+        if imgui.widget.Button("ClearEvent") then
+            clear_event()
+        end
+    end
+    if anim_state.current_event_list then
+        local delete_idx
+        for idx, ke in ipairs(anim_state.current_event_list) do
+            if imgui.widget.Selectable(ke.name, current_event and (current_event.name == ke.name)) then
+                current_event = ke
+                if current_event.collision and current_event.collision.collider then
+                    gizmo:set_target(current_event.collision.collider.eid)
+                end
+            end
+            if current_event and (current_event.name == ke.name) then
+                if imgui.windows.BeginPopupContextItem(ke.name) then
+                    if imgui.widget.Selectable("Delete", false) then
+                        delete_idx = idx
+                    end
+                    imgui.windows.EndPopup()
+                end
+            end
+        end
+        delete_event(delete_idx)
+    end
 end
 
 local function show_current_event()
@@ -317,7 +434,38 @@ local function show_current_event()
     end
 end
 
-local function show_collider()
+local function show_colliders()
+    if imgui.widget.Button("AddCollider") then
+        imgui.windows.OpenPopup("AddColliderPop")
+    end
+    if imgui.windows.BeginPopup("AddColliderPop") then
+        for _, ct in ipairs(shape_type) do
+            if imgui.widget.MenuItem(ct) then
+                add_collider(ct)
+            end
+        end
+        imgui.windows.EndPopup()
+    end
+    local delete_col
+    if current_anim.collider then
+        for idx, col in ipairs(current_anim.collider) do
+            if imgui.widget.Selectable(col.name, current_collider and (current_collider.name == col.name)) then
+                current_collider = col
+            end
+            if current_collider and (current_collider.name == col.name) then
+                if imgui.windows.BeginPopupContextItem(col.name) then
+                    if imgui.widget.Selectable("Delete", false) then
+                        delete_col = col
+                    end
+                    imgui.windows.EndPopup()
+                end
+            end
+        end
+        delete_collider(delete_col)
+    end
+end
+
+local function show_current_collider()
     if not current_collider then return end
 
     imgui.widget.PropertyLabel("HID")
@@ -393,12 +541,19 @@ local function show_collider()
     end
 end
 
-local function on_select_frame(frame_idx, moving)
+local function set_clips_dirty(update)
+    anim_state.clip_range_dirty = 1
+    if update then
+        to_runtime_clip()
+    end
+end
+
+local function on_move_keyframe(frame_idx, move_type)
     if not frame_idx or selected_frame == frame_idx then return end
     local old_selected_frame = selected_frame
     selected_frame = frame_idx
     local newkey = tostring(selected_frame)
-    if moving then
+    if move_type == 0 then
         local oldkey = tostring(old_selected_frame)
         current_anim.key_event[newkey] = current_anim.key_event[oldkey]
         current_anim.key_event[oldkey] = {}
@@ -411,8 +566,46 @@ local function on_select_frame(frame_idx, moving)
         current_event = nil
     end
 end
+local function min_max_range_value(clip_index)
+    local before = current_anim.clips[clip_index - 1]
+    local after = current_anim.clips[clip_index + 1]
+    return before and before.range[2] + 1 or 0, after and after.range[1] - 1 or math.floor(current_anim.duration * sample_ratio) - 1
+end
+
+local function on_move_clip(move_type, current_clip_index, move_delta)
+    local clip
+    if current_clip_index then
+        clip = current_anim.clips[current_clip_index]
+    end
+    if not clip then return end
+    local min_value, max_value = min_max_range_value(current_clip_index)
+    if move_type == 1 then
+        local new_value = clip.range[1] + move_delta
+        if new_value >= min_value and new_value < clip.range[2] then
+            clip.range[1] = new_value
+            clip.range_ui[1] = clip.range[1]
+        end
+    elseif move_type == 2 then
+        local new_value = clip.range[2] + move_delta
+        if new_value > clip.range[1] and new_value <= max_value then
+            clip.range[2] = new_value
+            clip.range_ui[2] = clip.range[2]
+        end
+    elseif move_type == 3 then
+        local new_value1 = clip.range[1] + move_delta
+        local new_value2 = clip.range[2] + move_delta
+        if new_value1 >= min_value and new_value2 <= max_value then
+            clip.range[1] = new_value1
+            clip.range[2] = new_value2
+            clip.range_ui[1] = clip.range[1]
+            clip.range_ui[2] = clip.range[2]
+        end
+    end
+    set_clips_dirty(true)
+end
 
 local current_event_file
+local current_clip_file
 local stringify     = import_package "ant.serialize".stringify
 local widget_utils  = require "widget.utils"
 local function save_event(filename)
@@ -435,13 +628,6 @@ local function save_event(filename)
         }
     end
     
-    local function find_collider_index(col)
-        for i, c in ipairs(current_anim.collider) do
-            if col == c then return i end
-        end
-        return 0
-    end
-
     for _, ev in ipairs(runtime_event.event) do
         local list = {}
         for _, ev in ipairs(ev.event_list) do
@@ -450,7 +636,7 @@ local function save_event(filename)
                 name = ev.name,
                 rid = ev.rid,
                 collision = ev.collision and {
-                    collider_index = find_collider_index(ev.collision.collider),
+                    collider_index = find_index(current_anim.collider, ev.collision.collider) or 0,
                     offset = ev.collision.offset,
                     enable = ev.collision.enable,
                 } or nil
@@ -462,6 +648,15 @@ local function save_event(filename)
         }
     end
     utils.write_file(filename, stringify(serialize_data))
+end
+
+local function save_clip(filename)
+    if not filename then
+        filename = widget_utils.get_saveas_path("Clip", ".clip")
+    end
+    if not filename then return end
+    local runtime_clip = get_runtime_clips()
+    utils.write_file(filename, stringify(runtime_clip))
 end
 
 function m.on_collider_update(eid)
@@ -477,6 +672,182 @@ function m.on_collider_update(eid)
         current_event.collision.offset_ui.rotate[1] = rot[1]
         current_event.collision.offset_ui.rotate[2] = rot[2]
         current_event.collision.offset_ui.rotate[3] = rot[3]
+    end
+end
+
+local clip_index = 0
+local function show_clips()
+    if imgui.widget.Button("NewClip") then
+        if not current_anim.clips then
+            current_anim.clips = {}
+        end
+        local key = "Clip" .. clip_index
+        current_anim.clips[#current_anim.clips + 1] = {
+            name = key,
+            range = {-1, -1},
+            name_ui = {text = key},
+            range_ui = {-1, -1, speed = 1}
+        }
+        clip_index = clip_index + 1
+        table.sort(current_anim.clips, function(a, b)
+            return a.range[2] < b.range[1]
+        end)
+        set_clips_dirty(true)
+    end
+    
+    if not current_anim.clips then return end
+
+    local delete_clip
+    for i, cs in ipairs(current_anim.clips) do
+        if imgui.widget.Selectable(cs.name, current_clip and (current_clip.name == cs.name)) then
+            current_clip = cs
+        end
+        if current_clip and (current_clip.name == cs.name) then
+            if imgui.windows.BeginPopupContextItem(cs.name) then
+                if imgui.widget.Selectable("Delete", false) then
+                    delete_clip = i
+                end
+                imgui.windows.EndPopup()
+            end
+        end
+    end
+    if delete_clip then
+        if current_anim.groups then
+            for _, group in ipairs(current_anim.groups) do
+                local found = find_index(group.clips, current_anim.clips[delete_clip])
+                if found then
+                    table.remove(group.clips, found)
+                end
+            end
+        end
+        table.remove(current_anim.clips, delete_clip)
+        current_clip = nil
+        set_clips_dirty(true)
+    end
+end
+
+local current_group
+local group_index = 0
+local function show_groups()
+    if imgui.widget.Button("NewGroup") then
+        if not current_anim.groups then
+            current_anim.groups = {}
+        end
+        local key = "Group" .. group_index
+        current_anim.groups[#current_anim.groups + 1] = {
+            name = key,
+            name_ui = {text = key},
+            clips ={}
+        }
+        group_index = group_index + 1
+        set_clips_dirty(true)
+    end
+    if not current_anim.groups then return end
+    local delete_group
+    for i, gp in ipairs(current_anim.groups) do
+        if imgui.widget.Selectable(gp.name, current_group and (current_group.name == gp.name)) then
+            current_group = gp
+            --iani.play(current_eid, current_anim_name, 0, to_runtime_group(get_runtime_clips(), gp))
+        end
+        if current_group and (current_group.name == gp.name) then
+            if imgui.windows.BeginPopupContextItem(gp.name) then
+                if imgui.widget.Selectable("Delete", false) then
+                    delete_group = i
+                end
+                imgui.windows.EndPopup()
+            end
+        end
+    end
+    if delete_group then
+        table.remove(current_anim.groups, delete_group)
+        current_group = nil
+        set_clips_dirty(true)
+    end
+end
+
+local function show_current_clip()
+    if not current_clip or not current_anim.clips then return end
+    imgui.widget.PropertyLabel("Name")
+    if imgui.widget.InputText("##Name", current_clip.name_ui) then
+        current_clip.name = tostring(current_clip.name_ui.text)
+    end
+    imgui.widget.PropertyLabel("Range")
+    local clip_index = find_index(current_anim.clips, current_clip)
+    local min_value, max_value = min_max_range_value(clip_index)
+    if imgui.widget.DragInt("##Range", current_clip.range_ui) then
+        if current_clip.range_ui[1] < min_value then
+            current_clip.range_ui[1] = min_value
+        end
+        if current_clip.range_ui[2] > max_value then
+            current_clip.range_ui[2] = max_value
+        end
+        current_clip.range = {current_clip.range_ui[1], current_clip.range_ui[2]}
+        set_clips_dirty(true)
+    end
+end
+
+local current_group_clip
+local function show_current_group()
+    if not current_group or not current_anim.groups then return end
+    imgui.widget.PropertyLabel("Name")
+    if imgui.widget.InputText("##Name", current_group.name_ui) then
+        current_group.name = tostring(current_group.name_ui.text)
+    end
+    if imgui.widget.Button("AddClip") then
+        imgui.windows.OpenPopup("AddClipPop")
+    end
+    
+    local function is_valid_range(ct)
+        return ct.range[1] >= 0 and ct.range[2] > 0 and ct.range[2] > ct.range[1]
+    end
+
+    if imgui.windows.BeginPopup("AddClipPop") then
+        for _, ct in ipairs(current_anim.clips) do
+            if is_valid_range(ct) and ct.range[1] >= 0 and not find_index(current_group.clips, ct) and imgui.widget.MenuItem(ct.name) then
+                current_group.clips[#current_group.clips + 1] = ct
+                table.sort(current_group.clips, function(a, b) return a.range[2] < b.range[1] end)
+                set_clips_dirty(true)
+            end
+        end
+        imgui.windows.EndPopup()
+    end
+    local delete_clip
+    for i, cs in ipairs(current_group.clips) do
+        if imgui.widget.Selectable(cs.name, current_group_clip and (current_group_clip.name == cs.name)) then
+            current_group_clip = cs
+        end
+        if current_group_clip and (current_group_clip.name == cs.name) then
+            if imgui.windows.BeginPopupContextItem(cs.name) then
+                if imgui.widget.Selectable("Delete", false) then
+                    delete_clip = i
+                end
+                imgui.windows.EndPopup()
+            end
+        end
+    end
+    if delete_clip then
+        table.remove(current_group.clips, delete_clip)
+        set_clips_dirty(true)
+    end
+end
+
+local function show_joints(root)
+    local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((current_joint and (current_joint.name == root.name)) and imgui.flags.TreeNode{"Selected"} or 0)
+    local flags = base_flags
+    local has_child = true
+    if #root.children == 0 then
+        flags = base_flags | imgui.flags.TreeNode { "Leaf", "NoTreePushOnOpen" }
+        has_child = false
+    end
+    local open = imgui.widget.TreeNode(root.name, flags)
+    if imgui.util.IsItemClicked() then
+        current_joint = root
+    end
+    if open and has_child then
+        for _, joint in ipairs(root.children) do
+            show_joints(joint)
+        end
+        imgui.widget.TreePop()
     end
 end
 
@@ -503,6 +874,31 @@ function m.show()
                             ozz_anim:pause(false)
                         end
                         iani.play(current_eid, name, 0)
+                        current_clip_name = "None"
+                        current_clip = nil
+                    end
+                end
+                imgui.widget.EndCombo()
+            end
+            imgui.cursor.SameLine()
+            if imgui.widget.BeginCombo("##ClipList", {current_clip_name, flags = imgui.flags.Combo {}}) then
+                local default = "None"
+                if imgui.widget.Selectable(default, current_clip_name == default) then
+                    current_clip_name = default
+                    iani.play(current_eid, current_anim_name, 0)
+                end
+                if current_anim.clips then
+                    for _, clip in ipairs(current_anim.clips) do
+                        if imgui.widget.Selectable(clip.name, current_clip_name == clip.name) then
+                            current_clip_name = clip.name
+                            iani.play(current_eid, current_anim_name, 0, current_clip_name)
+                        end
+                    end
+                    for _, group in ipairs(current_anim.groups) do
+                        if imgui.widget.Selectable(group.name, current_clip_name == group.name) then
+                            current_clip_name = group.name
+                            iani.play(current_eid, current_anim_name, 0, current_clip_name)
+                        end
                     end
                 end
                 imgui.widget.EndCombo()
@@ -515,6 +911,24 @@ function m.show()
                 iani.pause(current_eid, not anim_state.is_playing)
             end
             imgui.cursor.SameLine()
+            if imgui.widget.Button("LoadClip") then
+                local path = widget_utils.get_open_file_path("Clip", ".clip")
+                if path then
+                    iani.set_clips(current_eid, current_anim_name, path)
+                    current_clip_file = path
+                    current_anim.clips, current_anim.groups = from_runtime_clip(get_runtime_clips())
+                    --iani.play(current_eid, current_anim_name, 0, get_runtime_clips())
+                    --iani.play(current_eid, current_anim_name, 0)
+                    set_clips_dirty(false)
+                end
+            end
+            if current_anim.clips then
+                imgui.cursor.SameLine()
+                if imgui.widget.Button("SaveClip") then
+                    save_clip(current_clip_file)
+                end
+            end
+            imgui.cursor.SameLine()
             if imgui.widget.Button("LoadEvent") then
                 local path = widget_utils.get_open_file_path("Event", ".event")
                 if path then
@@ -524,7 +938,7 @@ function m.show()
                     -- f:close()
                     -- local events = datalist.parse(data)
 
-                    iani.set_event(current_eid, current_anim_name, path)
+                    iani.set_events(current_eid, current_anim_name, path)
                     current_event_file = path
                     current_anim.key_event = from_runtime_event(get_runtime_events())
                     for i, col in ipairs(current_anim.collider) do
@@ -545,154 +959,102 @@ function m.show()
                 end
             end
             imgui.cursor.SameLine()
-            if imgui.widget.Button("AddCollider") then
-                imgui.windows.OpenPopup("AddColliderPop")
-            end
-            if imgui.windows.BeginPopup("AddColliderPop") then
-                for _, ct in ipairs(shape_type) do
-                    if imgui.widget.MenuItem(ct) then
-                        add_collider(ct)
-                    end
-                end
-                imgui.windows.EndPopup()
-            end
-            if selected_frame >= 0 then
-                imgui.cursor.SameLine()
-                if imgui.widget.Button("AddEvent") then
-                    imgui.windows.OpenPopup("AddKeyEvent")
-                end
-            end
-
-            if imgui.windows.BeginPopup("AddKeyEvent") then
-                for _, et in ipairs(event_type) do
-                    if imgui.widget.MenuItem(et) then
-                        add_event(et)
-                    end
-                end
-                imgui.windows.EndPopup()
-            end
-            if #anim_state.current_event_list > 0 then
-                imgui.cursor.SameLine()
-                if imgui.widget.Button("ClearEvent") then
-                    clear_event()
-                end
-            end
-            imgui.cursor.SameLine()
             imgui.widget.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d Time: %.2f/%.2f(s)", selected_frame, selected_frame / 30, math.floor(anim_state.current_time * 30), anim_state.current_time, anim_state.duration))
             imgui_message = {}
             imgui.widget.Sequencer(ozz_anims[current_eid], anim_state, imgui_message)
+            -- clear dirty flag
+            anim_state.clip_range_dirty = 0
             set_event_dirty(0)
-            local moving
+            --
+            local move_type
             local new_frame_idx
+            local current_clip_index
+            local move_delta
             for k, v in pairs(imgui_message) do
                 if k == "pause" then
                     current_anim.ozz_anim:pause(true)
                     current_anim.ozz_anim:set_time(v)
                 elseif k == "selected_frame" then
                     new_frame_idx = v
-                elseif k == "moving" then
-                    moving = true
+                elseif k == "move_type" then
+                    move_type = v
+                elseif k == "current_clip_index" then
+                    current_clip_index = v
+                elseif k == "move_delta" then
+                    move_delta = v
                 end
             end
-            on_select_frame(new_frame_idx, moving)
+            on_move_keyframe(new_frame_idx, move_type)
+            if move_type and move_type ~= 0 then
+                on_move_clip(move_type, current_clip_index, move_delta)
+            end
             imgui.cursor.Separator()
-            if imgui.table.Begin("EventColumns", 5, imgui.flags.Table {'Resizable', 'ScrollY'}) then
+            if imgui.table.Begin("EventColumns", 9, imgui.flags.Table {'Resizable', 'ScrollY'}) then
                 imgui.table.SetupColumn("Bones", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
-                imgui.table.SetupColumn("Collider", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
-                imgui.table.SetupColumn("Collider(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
                 imgui.table.SetupColumn("Event", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
                 imgui.table.SetupColumn("Event(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
+                imgui.table.SetupColumn("Collider", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
+                imgui.table.SetupColumn("Collider(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
+                imgui.table.SetupColumn("Clip", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
+                imgui.table.SetupColumn("Clip(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
+                imgui.table.SetupColumn("Group", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
+                imgui.table.SetupColumn("Group(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
                 imgui.table.HeadersRow()
 
                 imgui.table.NextColumn()
                 local child_width, child_height = imgui.windows.GetContentRegionAvail()
-                imgui.windows.BeginChild("##EventEditorColumn0", child_width, child_height, false)
-                -- show joints
-                local function show_joints(root)
-                    local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((current_joint and (current_joint.name == root.name)) and imgui.flags.TreeNode{"Selected"} or 0)
-                    local flags = base_flags
-                    local has_child = true
-                    if #root.children == 0 then
-                        flags = base_flags | imgui.flags.TreeNode { "Leaf", "NoTreePushOnOpen" }
-                        has_child = false
-                    end
-                    local open = imgui.widget.TreeNode(root.name, flags)
-                    if imgui.util.IsItemClicked() then
-                        current_joint = root
-                    end
-                    if open and has_child then
-                        for _, joint in ipairs(root.children) do
-                            show_joints(joint)
-                        end
-                        imgui.widget.TreePop()
-                    end
-                end
+                imgui.windows.BeginChild("##show_joints", child_width, child_height, false)
                 show_joints(joints[current_eid].root)
-                
                 imgui.windows.EndChild()
 
                 imgui.table.NextColumn()
                 child_width, child_height = imgui.windows.GetContentRegionAvail()
-                imgui.windows.BeginChild("##EventEditorColumn1", child_width, child_height, false)
-                local delete_col
-                if current_anim.collider then
-                    for idx, col in ipairs(current_anim.collider) do
-                        if imgui.widget.Selectable(col.name, current_collider and (current_collider.name == col.name)) then
-                            current_collider = col
-                        end
-                        if current_collider and (current_collider.name == col.name) then
-                            if imgui.windows.BeginPopupContextItem(col.name) then
-                                if imgui.widget.Selectable("Delete", false) then
-                                    delete_col = col
-                                end
-                                imgui.windows.EndPopup()
-                            end
-                        end
-                    end
-                    delete_collider(delete_col)
-                end
+                imgui.windows.BeginChild("##show_events", child_width, child_height, false)
+                show_events()
                 imgui.windows.EndChild()
 
                 imgui.table.NextColumn()
                 child_width, child_height = imgui.windows.GetContentRegionAvail()
-                imgui.windows.BeginChild("##EventEditorColumn2", child_width, child_height, false)
-                show_collider()
-                imgui.windows.EndChild()
-                
-                imgui.table.NextColumn()
-                child_width, child_height = imgui.windows.GetContentRegionAvail()
-                imgui.windows.BeginChild("##EventEditorColumn3", child_width, child_height, false)
-                if anim_state.current_event_list then
-                    local delete_idx
-                    for idx, ke in ipairs(anim_state.current_event_list) do
-                        if imgui.widget.Selectable(ke.name, current_event and (current_event.name == ke.name)) then
-                            current_event = ke
-                            if current_event.collision then
-                                gizmo:set_target(current_event.collision.collider.eid)
-                            end
-                        end
-                        if current_event and (current_event.name == ke.name) then
-                            if imgui.windows.BeginPopupContextItem(ke.name) then
-                                if imgui.widget.Selectable("Delete", false) then
-                                    delete_idx = idx
-                                end
-                                if imgui.widget.Selectable("Rename", false) then
-                                    -- renaming = true
-                                    -- new_filename.text = tostring(current_file:filename())
-                                end
-                                imgui.windows.EndPopup()
-                            end
-                        end
-                    end
-                    delete_event(delete_idx)
-                end
-                imgui.windows.EndChild()
-
-                imgui.table.NextColumn()
-                child_width, child_height = imgui.windows.GetContentRegionAvail()
-                imgui.windows.BeginChild("##EventEditorColumn4", child_width, child_height, false)
+                imgui.windows.BeginChild("##show_current_event", child_width, child_height, false)
                 show_current_event()
                 imgui.windows.EndChild()
+
+                imgui.table.NextColumn()
+                child_width, child_height = imgui.windows.GetContentRegionAvail()
+                imgui.windows.BeginChild("##show_colliders", child_width, child_height, false)
+                show_colliders()
+                imgui.windows.EndChild()
+
+                imgui.table.NextColumn()
+                child_width, child_height = imgui.windows.GetContentRegionAvail()
+                imgui.windows.BeginChild("##show_current_collider", child_width, child_height, false)
+                show_current_collider()
+                imgui.windows.EndChild()
+                
+                imgui.table.NextColumn()
+                child_width, child_height = imgui.windows.GetContentRegionAvail()
+                imgui.windows.BeginChild("##show_clips", child_width, child_height, false)
+                show_clips()
+                imgui.windows.EndChild()
+
+                imgui.table.NextColumn()
+                child_width, child_height = imgui.windows.GetContentRegionAvail()
+                imgui.windows.BeginChild("##show_current_clip", child_width, child_height, false)
+                show_current_clip()
+                imgui.windows.EndChild()
+
+                imgui.table.NextColumn()
+                child_width, child_height = imgui.windows.GetContentRegionAvail()
+                imgui.windows.BeginChild("##show_groups", child_width, child_height, false)
+                show_groups()
+                imgui.windows.EndChild()
+                
+                imgui.table.NextColumn()
+                child_width, child_height = imgui.windows.GetContentRegionAvail()
+                imgui.windows.BeginChild("##show_current_group", child_width, child_height, false)
+                show_current_group()
+                imgui.windows.EndChild()
+
                 imgui.table.End()
             end
         end
@@ -738,7 +1100,6 @@ function m.bind(eid)
                 name = ske:joint_name(joint_idx),
                 children = {}
             }
-            --joint_list[#joint_list + 1] = new_joint
             current_joints.joint_map[joint_idx] = new_joint
             local parent_idx = ske:parent(joint_idx)
             if parent_idx > 0 then

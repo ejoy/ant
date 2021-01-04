@@ -1,7 +1,7 @@
 #pragma once
 #include "font.h"
 
-#include <RmlUi/Core/RenderInterface.h>
+#include <RmlUi/RenderInterface.h>
 #include <algorithm>
 #include <unordered_map>
 #include <bgfx/c99/bgfx.h>

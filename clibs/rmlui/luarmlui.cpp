@@ -9,8 +9,8 @@
 #include "luabind.h"
 
 #define EXPORT_BGFX_INTERFACE
-#include <bgfx/bgfx_interface.h>
-#include <bgfx/luabgfx.h>
+#include "../bgfx/bgfx_interface.h"
+#include "../bgfx/luabgfx.h"
 #include <bgfx/c99/bgfx.h>
 
 #include <RmlUi/Core.h>
@@ -62,7 +62,6 @@ lrmlui_init(lua_State *L){
     if (!Rml::Initialise()){
         return luaL_error(L, "Failed to Initialise RmlUi.");
     }
-    g_wrapper->interface.font.RegisterFontEffectInstancer();
 
     auto plugin = std::make_unique<lua_plugin>();
     std::string errmsg;

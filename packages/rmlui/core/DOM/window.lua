@@ -21,11 +21,11 @@ function datamodel_mt:__newindex(k, v)
     rmlui.DataModelSet(self,k,v)
 end
 
-function event.OnNewDocument(document)
+function event.OnDocumentCreate(document)
     datamodels[document] = {}
 end
 
-function event.OnDeleteDocument(document)
+function event.OnDocumentDestroy(document)
     for _, model in pairs(datamodels[document]) do
         rmlui.DataModelRelease(model)
     end
@@ -88,7 +88,7 @@ local function createWindow(document, source)
     return window
 end
 
-function event.OnNewDocument(document, globals)
+function event.OnDocumentCreate(document, globals)
     globals.window = createWindow(document)
     globals.window.extern = createExternWindow(document)
 end
