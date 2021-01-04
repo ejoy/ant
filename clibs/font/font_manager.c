@@ -226,6 +226,11 @@ scale_font(int v, float scale, int size) {
 	return ((int)(v * scale * size) + ORIGINAL_SIZE/2) / ORIGINAL_SIZE;
 }
 
+static inline float
+fscale_font(float v, float scale, int size){
+	return (v * scale * size) / (float)ORIGINAL_SIZE;
+}
+
 void
 font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascent, int *descent, int *lineGap) {
 	if (fontid <= 0) {
@@ -252,8 +257,8 @@ font_manager_underline(struct font_manager *F, int fontid, int size, float *unde
 	*underline_position = baseline - 1.f;
 	*thickness = 1.f;
 
-	scale_font(*underline_position, scale, size);
-	scale_font(*thickness, scale, size);
+	*underline_position = fscale_font(*underline_position, scale, size);
+	*thickness = fscale_font(*thickness, scale, size);
 }
 
 void
