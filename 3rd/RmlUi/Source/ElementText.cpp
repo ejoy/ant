@@ -435,7 +435,7 @@ void ElementText::GenerateGeometry(const FontFaceHandle font_face_handle)
 void ElementText::GenerateGeometry(const FontFaceHandle font_face_handle, Line& line)
 {
 	Vector2f position = line.position;
-	position.y += GetFontEngineInterface()->GetLineHeight(font_face_handle)/2 - GetFontEngineInterface()->GetBaseline(font_face_handle);
+	position.y += GetFontEngineInterface()->GetLineHeight(font_face_handle)/2.0f - GetFontEngineInterface()->GetBaseline(font_face_handle);
 	line.width = GetFontEngineInterface()->GenerateString(font_face_handle, text_effects_handle, line.text, position, colour, geometry);
 	for (size_t i = 0; i < geometry.size(); ++i)
 		geometry[i].SetHostElement(this);
@@ -444,7 +444,6 @@ void ElementText::GenerateGeometry(const FontFaceHandle font_face_handle, Line& 
 void ElementText::GenerateDecoration(const FontFaceHandle font_face_handle) {
 	for (const Line& line : lines) {
 		Vector2f position = line.position;
-		position.y += GetFontEngineInterface()->GetLineHeight(font_face_handle)/2 - GetFontEngineInterface()->GetBaseline(font_face_handle);
 		float width = line.width;
 		Vector<Vertex>& line_vertices = decoration.GetVertices();
 		Vector<int>& line_indices = decoration.GetIndices();
@@ -452,15 +451,15 @@ void ElementText::GenerateDecoration(const FontFaceHandle font_face_handle) {
 		float underline_position = GetFontEngineInterface()->GetUnderline(font_face_handle, underline_thickness);
 		int size = GetFontEngineInterface()->GetSize(font_face_handle);
 		int x_height = GetFontEngineInterface()->GetXHeight(font_face_handle);
+		int line_height = GetFontEngineInterface()->GetLineHeight(font_face_handle);
 
+		position.y += line_height / 2.0f;
 		underline_thickness = 1;
-		underline_position = 0;
 
-		float offset;
 		switch (decoration_property) {
-		case Style::TextDecoration::Underline:       offset = -underline_position; break;
-		case Style::TextDecoration::Overline:        offset = -underline_position - (float)size; break;
-		case Style::TextDecoration::LineThrough:     offset = -0.65f * (float)x_height; break;
+		case Style::TextDecoration::Underline:       position.y += -underline_position; break;
+		case Style::TextDecoration::Overline:        position.y += -(float)size; break;
+		case Style::TextDecoration::LineThrough:     position.y += -0.65f * (float)x_height; break;
 		default: return;
 		}
 
@@ -470,7 +469,7 @@ void ElementText::GenerateDecoration(const FontFaceHandle font_face_handle) {
 		line_indices.resize(isz + 6);
 		GeometryUtilities::GenerateQuad(
 			&line_vertices[vsz], &line_indices[isz],
-			Vector2f(position.x, position.y + offset).Round(),
+			position,
 			Vector2f((float)width, underline_thickness),
 			colour, (int)vsz
 		);
