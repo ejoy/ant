@@ -353,10 +353,16 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 	RegisterShorthand(ShorthandId::Font, "font", "font-style, font-weight, font-size, font-family", ShorthandType::FallThrough);
 
 	RegisterProperty(PropertyId::TextAlign, "text-align", "left", true, true).AddParser("keyword", "left, right, center, justify");
-	RegisterProperty(PropertyId::TextDecoration, "text-decoration", "none", true, false).AddParser("keyword", "none, underline, overline, line-through");
 	RegisterProperty(PropertyId::TextTransform, "text-transform", "none", true, true).AddParser("keyword", "none, capitalize, uppercase, lowercase");
 	RegisterProperty(PropertyId::WhiteSpace, "white-space", "normal", true, true).AddParser("keyword", "normal, pre, nowrap, pre-wrap, pre-line");
 	RegisterProperty(PropertyId::WordBreak, "word-break", "normal", true, true).AddParser("keyword", "normal, break-all, break-word");
+
+	RegisterProperty(PropertyId::TextDecorationLine, "text-decoration-line", "none", true, false)
+		.AddParser("keyword", "none, underline, overline, line-through");
+	RegisterProperty(PropertyId::TextDecorationColor, "text-decoration-color", "currentColor", true, false)
+		.AddParser("keyword", "currentColor")
+		.AddParser("color");
+	RegisterShorthand(ShorthandId::TextDecoration, "text-decoration", "text-decoration-line, text-decoration-color", ShorthandType::FallThrough);
 
 	// Functional property specifications.
 	RegisterProperty(PropertyId::Drag, "drag", "none", false, false).AddParser("keyword", "none, drag, drag-drop, block, clone");

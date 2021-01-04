@@ -154,13 +154,10 @@ int FontEngine::GetBaseline(Rml::FontFaceHandle handle){
     return -descent + lineGap;
 }
 
-float FontEngine::GetUnderline(Rml::FontFaceHandle handle, float &thickness){
+void FontEngine::GetUnderline(Rml::FontFaceHandle handle, float& position, float &thickness){
     size_t idx = static_cast<size_t>(handle)-1;
     const auto &face = mFontFaces[idx];
-
-    float underline_position;
-    font_manager_underline(mcontext->font_mgr, face.fontid, face.pixelsize, &underline_position, &thickness);
-    return underline_position;
+    font_manager_underline(mcontext->font_mgr, face.fontid, face.pixelsize, &position, &thickness);
 }
 
 int FontEngine::GetStringWidth(Rml::FontFaceHandle handle, const Rml::String& string, Rml::Character prior_character /*= Character::Null*/){

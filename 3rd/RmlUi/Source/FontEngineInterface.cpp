@@ -80,9 +80,8 @@ int FontEngineInterface::GetBaseline(FontFaceHandle /*handle*/)
 	return 0;
 }
 
-float FontEngineInterface::GetUnderline(FontFaceHandle /*handle*/, float& /*thickness*/)
+void FontEngineInterface::GetUnderline(FontFaceHandle /*handle*/, float& /*position*/, float& /*thickness*/)
 {
-	return 0;
 }
 
 int FontEngineInterface::GetStringWidth(FontFaceHandle /*handle*/, const String& /*string*/, Character /*prior_character*/)

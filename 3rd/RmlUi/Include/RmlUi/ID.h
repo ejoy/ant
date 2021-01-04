@@ -60,6 +60,7 @@ enum class ShorthandId : uint8_t
 	Background, 
 	TextShadow,
 	TextStroke,
+	TextDecoration,
 
 	NumDefinedIds,
 	FirstCustomId = NumDefinedIds,
@@ -135,7 +136,8 @@ enum class PropertyId : uint8_t
 	FontWeight,
 	FontSize,
 	TextAlign,
-	TextDecoration,
+	TextDecorationLine,
+	TextDecorationColor,
 	TextTransform,
 	WhiteSpace,
 	WordBreak,

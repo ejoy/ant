@@ -101,9 +101,9 @@ public:
 
 	/// Should return the font's underline, as a pixel offset from the bottom of the font.
 	/// @param[in] handle The font handle.
+	/// @param[out] The underline pixel offset.
 	/// @param[out] thickness The font's underline thickness in pixels.
-	/// @return The underline pixel offset.
-	virtual float GetUnderline(FontFaceHandle handle, float &thickness);
+	virtual void GetUnderline(FontFaceHandle handle, float& position, float &thickness);
 
 	/// Called by RmlUi when it wants to retrieve the width of a string when rendered with this handle.
 	/// @param[in] handle The font handle.
