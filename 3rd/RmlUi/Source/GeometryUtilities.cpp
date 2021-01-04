@@ -77,37 +77,6 @@ void GeometryUtilities::GenerateQuad(Vertex* vertices, int* indices, Vector2f or
 	indices[5] = index_offset + 2;
 }
 
-// Generates the geometry required to render a line above, below or through a line of text.
-void GeometryUtilities::GenerateLine(FontFaceHandle font_face_handle, Geometry* geometry, Vector2f position, int width, Style::TextDecoration height, Colourb colour)
-{
-	Vector< Vertex >& line_vertices = geometry->GetVertices();
-	Vector< int >& line_indices = geometry->GetIndices();
-	float underline_thickness = 0;
-	float underline_position = GetFontEngineInterface()->GetUnderline(font_face_handle, underline_thickness);
-	int size = GetFontEngineInterface()->GetSize(font_face_handle);
-	int x_height = GetFontEngineInterface()->GetXHeight(font_face_handle);
-
-	float offset;
-	switch (height)
-	{
-		case Style::TextDecoration::Underline:       offset = -underline_position; break;
-		case Style::TextDecoration::Overline:        offset = -underline_position - (float)size; break;
-		case Style::TextDecoration::LineThrough:     offset = -0.65f * (float)x_height; break;
-		default: return;
-	}
-
-	line_vertices.resize(line_vertices.size() + 4);
-	line_indices.resize(line_indices.size() + 6);
-	GeometryUtilities::GenerateQuad(
-									&line_vertices[0] + ((int)line_vertices.size() - 4),
-									&line_indices[0] + ((int)line_indices.size() - 6),
-									Vector2f(position.x, position.y + offset).Round(),
-									Vector2f((float) width, underline_thickness),
-									colour,
-									(int)line_vertices.size() - 4
-									);
-}
-
 void GeometryUtilities::GenerateBackgroundBorder(Geometry* geometry, const Layout& box, Vector2f offset, Vector4f border_radius, Colourb background_colour, const Colourb* border_colours)
 {
 	Vector<Vertex>& vertices = geometry->GetVertices();

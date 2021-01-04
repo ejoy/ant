@@ -302,7 +302,7 @@ void ElementText::ClearLines()
 }
 
 // Adds a new line into the text element.
-void ElementText::AddLine(const Vector2f& line_position, const String& line)
+void ElementText::AddLine(const Vector2f& position, const String& line)
 {
 	FontFaceHandle font_face_handle = GetFontFaceHandle();
 
@@ -312,8 +312,7 @@ void ElementText::AddLine(const Vector2f& line_position, const String& line)
 	if (text_effects_dirty)
 		UpdateTextEffects();
 
-	Vector2f baseline_position = line_position + Vector2f(0.0f, GetLineHeight() - GetFontEngineInterface()->GetBaseline(font_face_handle));
-	lines.push_back(Line(line, baseline_position));
+	lines.push_back(Line(line, position));
 
 	geometry_dirty = true;
 }
@@ -435,16 +434,47 @@ void ElementText::GenerateGeometry(const FontFaceHandle font_face_handle)
 
 void ElementText::GenerateGeometry(const FontFaceHandle font_face_handle, Line& line)
 {
-	line.width = GetFontEngineInterface()->GenerateString(font_face_handle, text_effects_handle, line.text, line.position, colour, geometry);
+	Vector2f position = line.position;
+	position.y += GetFontEngineInterface()->GetLineHeight(font_face_handle)/2 - GetFontEngineInterface()->GetBaseline(font_face_handle);
+	line.width = GetFontEngineInterface()->GenerateString(font_face_handle, text_effects_handle, line.text, position, colour, geometry);
 	for (size_t i = 0; i < geometry.size(); ++i)
 		geometry[i].SetHostElement(this);
 }
 
-// Generates any geometry necessary for rendering a line decoration (underline, strike-through, etc).
-void ElementText::GenerateDecoration(const FontFaceHandle font_face_handle)
-{	
-	for(const Line& line : lines)
-		GeometryUtilities::GenerateLine(font_face_handle, &decoration, line.position, line.width, decoration_property, colour);
+void ElementText::GenerateDecoration(const FontFaceHandle font_face_handle) {
+	for (const Line& line : lines) {
+		Vector2f position = line.position;
+		position.y += GetFontEngineInterface()->GetLineHeight(font_face_handle)/2 - GetFontEngineInterface()->GetBaseline(font_face_handle);
+		float width = line.width;
+		Vector<Vertex>& line_vertices = decoration.GetVertices();
+		Vector<int>& line_indices = decoration.GetIndices();
+		float underline_thickness = 0;
+		float underline_position = GetFontEngineInterface()->GetUnderline(font_face_handle, underline_thickness);
+		int size = GetFontEngineInterface()->GetSize(font_face_handle);
+		int x_height = GetFontEngineInterface()->GetXHeight(font_face_handle);
+
+		underline_thickness = 1;
+		underline_position = 0;
+
+		float offset;
+		switch (decoration_property) {
+		case Style::TextDecoration::Underline:       offset = -underline_position; break;
+		case Style::TextDecoration::Overline:        offset = -underline_position - (float)size; break;
+		case Style::TextDecoration::LineThrough:     offset = -0.65f * (float)x_height; break;
+		default: return;
+		}
+
+		size_t vsz = line_vertices.size();
+		size_t isz = line_indices.size();
+		line_vertices.resize(vsz + 4);
+		line_indices.resize(isz + 6);
+		GeometryUtilities::GenerateQuad(
+			&line_vertices[vsz], &line_indices[isz],
+			Vector2f(position.x, position.y + offset).Round(),
+			Vector2f((float)width, underline_thickness),
+			colour, (int)vsz
+		);
+	}
 }
 
 static bool BuildToken(String& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline, Style::TextTransform text_transformation, bool decode_escape_characters)
@@ -631,7 +661,7 @@ Vector2f ElementText::GetBoundsFor(float available_width, float available_height
 				break;
 			}
 		}
-		AddLine(Vector2f(start_width, height), line);
+		AddLine(Vector2f(start_width, height + line_height / 2), line);
 		width = std::max(width, line_width);
 		height += line_height;
 		first_line = false;
