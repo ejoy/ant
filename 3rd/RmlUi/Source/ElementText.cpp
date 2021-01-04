@@ -132,15 +132,14 @@ void ElementText::OnRender()
 			}
 		}
 	}
-	
-	if (render)
-	{
-		for (size_t i = 0; i < geometry.size(); ++i)
-			geometry[i].Render(translation);
-	}
 
 	if (decoration_property != Style::TextDecoration::None)
 		decoration.Render(translation);
+
+	if (render) {
+		for (size_t i = 0; i < geometry.size(); ++i)
+			geometry[i].Render(translation);
+	}
 }
 
 // Generates a token of text from this element, returning only the width.
@@ -434,9 +433,7 @@ void ElementText::GenerateGeometry(const FontFaceHandle font_face_handle)
 
 void ElementText::GenerateGeometry(const FontFaceHandle font_face_handle, Line& line)
 {
-	Vector2f position = line.position;
-	position.y += GetFontEngineInterface()->GetLineHeight(font_face_handle)/2.0f - GetFontEngineInterface()->GetBaseline(font_face_handle);
-	line.width = GetFontEngineInterface()->GenerateString(font_face_handle, text_effects_handle, line.text, position, colour, geometry);
+	line.width = GetFontEngineInterface()->GenerateString(font_face_handle, text_effects_handle, line.text, line.position, colour, geometry);
 	for (size_t i = 0; i < geometry.size(); ++i)
 		geometry[i].SetHostElement(this);
 }
@@ -449,17 +446,23 @@ void ElementText::GenerateDecoration(const FontFaceHandle font_face_handle) {
 		Vector<int>& line_indices = decoration.GetIndices();
 		float underline_thickness = 0;
 		float underline_position = GetFontEngineInterface()->GetUnderline(font_face_handle, underline_thickness);
-		int size = GetFontEngineInterface()->GetSize(font_face_handle);
-		int x_height = GetFontEngineInterface()->GetXHeight(font_face_handle);
-		int line_height = GetFontEngineInterface()->GetLineHeight(font_face_handle);
-
-		position.y += line_height / 2.0f;
-		underline_thickness = 1;
 
 		switch (decoration_property) {
-		case Style::TextDecoration::Underline:       position.y += -underline_position; break;
-		case Style::TextDecoration::Overline:        position.y += -(float)size; break;
-		case Style::TextDecoration::LineThrough:     position.y += -0.65f * (float)x_height; break;
+		case Style::TextDecoration::Underline: {
+			position.y += -underline_position;
+			break;
+		}
+		case Style::TextDecoration::Overline: {
+			int baseline = GetFontEngineInterface()->GetBaseline(font_face_handle);
+			int line_height = GetFontEngineInterface()->GetLineHeight(font_face_handle);
+			position.y += baseline - line_height;
+			break;
+		}
+		case Style::TextDecoration::LineThrough: {
+			int x_height = GetFontEngineInterface()->GetXHeight(font_face_handle);
+			position.y += -0.65f * x_height;
+			break;
+		}
 		default: return;
 		}
 
@@ -643,6 +646,8 @@ Vector2f ElementText::GetBoundsFor(float available_width, float available_height
 	float width = 0.0f;
 	float height = 0.0f;
 	float first_line = true;
+	float baseline_offset = line_height / 2.0f + GetFontEngineInterface()->GetLineHeight(GetFontFaceHandle()) / 2.0f - GetFontEngineInterface()->GetBaseline(GetFontFaceHandle());
+
 	Style::TextAlign text_align = GetComputedValues().text_align;
 	std::string line;
 	while (!finish) {
@@ -660,7 +665,7 @@ Vector2f ElementText::GetBoundsFor(float available_width, float available_height
 				break;
 			}
 		}
-		AddLine(Vector2f(start_width, height + line_height / 2), line);
+		AddLine(Vector2f(start_width, height + baseline_offset), line);
 		width = std::max(width, line_width);
 		height += line_height;
 		first_line = false;
