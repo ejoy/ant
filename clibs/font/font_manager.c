@@ -242,6 +242,20 @@ font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascen
 	*lineGap = scale_font(*lineGap, scale, size);
 }
 
+void 
+font_manager_underline(struct font_manager *F, int fontid, int size, float *underline_position, float *thickness){
+	const struct stbtt_fontinfo *fi = get_ttf(F, fontid);
+	float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
+	int ascent, descent, lineGap;
+	stbtt_GetFontVMetrics(fi, &ascent, &descent, &lineGap);
+	float baseline = -descent + lineGap;
+	*underline_position = baseline - 1.f;
+	*thickness = 1.f;
+
+	scale_font(*underline_position, scale, size);
+	scale_font(*thickness, scale, size);
+}
+
 void
 font_manager_boundingbox(struct font_manager *F, int fontid, int size, int *x0, int *y0, int *x1,int *y1){
 	const struct stbtt_fontinfo *fi = get_ttf(F, fontid);

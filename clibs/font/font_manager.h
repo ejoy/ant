@@ -106,6 +106,7 @@ FONT_API int font_manager_touch(struct font_manager *, int font, int codepoint, 
 FONT_API const char * font_manager_update(struct font_manager *, int font, int codepoint, struct font_glyph *glyph, uint8_t *buffer);
 FONT_API void font_manager_flush(struct font_manager *);
 FONT_API void font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size);
+FONT_API void font_manager_underline(struct font_manager *F, int fontid, int size, float *underline_position, float *thickness);
 
 FONT_API float font_manager_sdf_mask(struct font_manager *F);
 FONT_API float font_manager_sdf_distance(struct font_manager *F, uint8_t numpixel);
