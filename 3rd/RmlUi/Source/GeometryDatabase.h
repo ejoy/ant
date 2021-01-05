@@ -47,16 +47,9 @@ using GeometryDatabaseHandle = uint32_t;
 */
 
 namespace GeometryDatabase {
-
     GeometryDatabaseHandle Insert(Geometry* geometry);
     void Erase(GeometryDatabaseHandle handle);
-
     void ReleaseAll();
-
-#ifdef RMLUI_TESTS_ENABLED
-    bool PrepareForTests();
-    bool ListMatchesDatabase(const Vector<Geometry>& geometry_list);
-#endif
 }
 
 } // namespace Rml

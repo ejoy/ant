@@ -35,7 +35,7 @@
 namespace Rml {
 
 
-ElementBackgroundBorder::ElementBackgroundBorder(Element* element) : geometry(element)
+ElementBackgroundBorder::ElementBackgroundBorder(Element* element) : geometry()
 {}
 
 void ElementBackgroundBorder::Render(Element * element)
@@ -97,8 +97,7 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element)
 	Vector2f offset(0,0);
 	const Layout& box = element->GetLayout();
 	GeometryUtilities::GenerateBackgroundBorder(&geometry, box, offset, radii, background_color, border_colors);
-
-	geometry.Release();
+	geometry.ReleaseCompiledGeometry();
 }
 
 } // namespace Rml

@@ -189,41 +189,41 @@ FontEngine::FindOrAddFontResource(Rml::TextEffectsHandle font_effects_handle){
     return itfound->second;
 }
 
-int FontEngine::GenerateString(Rml::FontFaceHandle handle, Rml::TextEffectsHandle font_effects_handle,
-    const Rml::String& string, 
-    const Rml::Vector2f& position, 
+int FontEngine::GenerateString(
+    Rml::FontFaceHandle handle,
+    Rml::TextEffectsHandle text_effects_handle,
+    const Rml::String& string, const
+    Rml::Vector2f& position,
     const Rml::Colourb& colour,
-    Rml::GeometryList& geometrys){
+    Rml::GeometryList& geometrys) {
+    Rml::Geometry& geometry = geometrys[0];
 
-	geometrys.resize(1);
-	Rml::Geometry& geometry = geometrys[0];
-
-    const auto &res = FindOrAddFontResource(font_effects_handle);
+    const auto& res = FindOrAddFontResource(text_effects_handle);
     geometry.SetTexture(&res.tex);
 
-	auto& vertices = geometry.GetVertices();
-	auto& indices = geometry.GetIndices();
+    auto& vertices = geometry.GetVertices();
+    auto& indices = geometry.GetIndices();
 
-	vertices.reserve(string.size() * 4);
-	indices.reserve(string.size() * 6);
+    vertices.reserve(string.size() * 4);
+    indices.reserve(string.size() * 6);
 
-    const size_t fontidx = static_cast<size_t>(handle)-1;
-    const auto&face = mFontFaces[fontidx];
+    const size_t fontidx = static_cast<size_t>(handle) - 1;
+    const auto& face = mFontFaces[fontidx];
 
     const Rml::Vector2f fonttexel(1.f / mcontext->font_tex.width, 1.f / mcontext->font_tex.height);
 
 #define FIX_POINT 8
-    int x = int(position.x + 0.5f), y = int(position.y+0.5f);
-	for (auto it_char = Rml::StringIteratorU8(string); it_char; ++it_char)
-	{
-		int codepoint = (int)*it_char;
+    int x = int(position.x + 0.5f), y = int(position.y + 0.5f);
+    for (auto it_char = Rml::StringIteratorU8(string); it_char; ++it_char)
+    {
+        int codepoint = (int)*it_char;
 
         struct font_glyph og;
         auto g = GetGlyph(face, codepoint, &og);
 
-		// Generate the geometry for the character.
-		vertices.resize(vertices.size() + 4);
-		indices.resize(indices.size() + 6);
+        // Generate the geometry for the character.
+        vertices.resize(vertices.size() + 4);
+        indices.resize(indices.size() + 6);
 
         const int x0 = x + g.offset_x;
         const int y0 = y + g.offset_y;
@@ -235,32 +235,48 @@ int FontEngine::GenerateString(Rml::FontFaceHandle handle, Rml::TextEffectsHandl
         const int16_t v1 = g.v + og.h;
 
 
-		auto origin     = Rml::Vector2i(x0, y0);
-		auto dim        = Rml::Vector2i(g.w, g.h);
+        auto origin = Rml::Vector2i(x0, y0);
+        auto dim = Rml::Vector2i(g.w, g.h);
         // auto fe = reinterpret_cast<SDFFontEffect*>(font_effects_handle);
         // Rml::FontGlyph UNUSED_rml_fg;
         // auto olddim = dim;
         // fe->GetGlyphMetrics(origin, dim, UNUSED_rml_fg);
 
-        auto to_fixpt = [](const Rml::Vector2i &pt){
+        auto to_fixpt = [](const Rml::Vector2i& pt) {
             const float scale = FIX_POINT / 65536.f;
             return Rml::Vector2f(pt.x * scale, pt.y * scale);
         };
-		Rml::GeometryUtilities::GenerateQuad(
-			&vertices[0] + (vertices.size() - 4),
-			&indices[0] + (indices.size() - 6),
+        Rml::GeometryUtilities::GenerateQuad(
+            &vertices[0] + (vertices.size() - 4),
+            &indices[0] + (indices.size() - 6),
             to_fixpt(origin), to_fixpt(dim),
-			colour,
-			Rml::Vector2f(u0, v0) * fonttexel,
+            colour,
+            Rml::Vector2f(u0, v0) * fonttexel,
             Rml::Vector2f(u1, v1) * fonttexel,
-			(int)vertices.size() - 4
-		); 
+            (int)vertices.size() - 4
+        );
 
-		//x += g.advance_x + (dim.x - olddim.x);
+        //x += g.advance_x + (dim.x - olddim.x);
         x += g.advance_x;
-	}
+    }
 
-	return x - int(position.x + 0.5f);
+    return x - int(position.x + 0.5f);
+}
+
+void FontEngine::GenerateString(
+    Rml::FontFaceHandle handle,
+    Rml::TextEffectsHandle text_effects_handle,
+    Rml::LineList& lines, 
+    const Rml::Colourb& colour,
+    Rml::GeometryList& geometrys){
+    for (size_t i = 0; i < geometrys.size(); ++i) {
+        geometrys[i].Release();
+    }
+    geometrys.resize(1);
+    for (size_t i = 0; i < lines.size(); ++i) {
+        Rml::Line& line = lines[i];
+        line.width = GenerateString(handle, text_effects_handle, line.text, line.position, colour, geometrys);
+    }
 }
 
 int FontEngine::GetVersion(Rml::FontFaceHandle handle){

@@ -47,65 +47,30 @@ using GeometryDatabaseHandle = uint32_t;
 	@author Peter Curry
  */
 
-class RMLUICORE_API Geometry
-{
+class RMLUICORE_API Geometry {
 public:
-	Geometry(Element* host_element = nullptr);
-	Geometry(Context* host_context);
-
+	Geometry();
 	Geometry(const Geometry&) = delete;
 	Geometry& operator=(const Geometry&) = delete;
-
 	Geometry(Geometry&& other);
 	Geometry& operator=(Geometry&& other);
-
 	~Geometry();
-
-	/// Set the host element for this geometry; this should be passed in the constructor if possible.
-	/// @param[in] host_element The new host element for the geometry.
-	void SetHostElement(Element* host_element);
-
-	/// Attempts to compile the geometry if appropriate, then renders the geometry, compiled if it can.
-	/// @param[in] translation The translation of the geometry.
 	void Render(Vector2f translation);
-
-	/// Returns the geometry's vertices. If these are written to, Release() should be called to force a recompile.
-	/// @return The geometry's vertex array.
 	Vector< Vertex >& GetVertices();
-	/// Returns the geometry's indices. If these are written to, Release() should be called to force a recompile.
-	/// @return The geometry's index array.
 	Vector< int >& GetIndices();
-
-	/// Gets the geometry's texture.
-	/// @return The geometry's texture.
 	const Texture* GetTexture() const;
-	/// Sets the geometry's texture.
 	void SetTexture(const Texture* texture);
-
-	/// Releases any previously-compiled geometry, and forces any new geometry to have a compile attempted.
-	/// @param[in] clear_buffers True to also clear the vertex and index buffers, false to leave intact.
-	void Release(bool clear_buffers = false);
-
-	/// Returns true if there is geometry to be rendered.
+	void Release();
+	void ReleaseCompiledGeometry();
 	explicit operator bool() const;
 
 private:
-	// Move members from another geometry.
 	void MoveFrom(Geometry& other);
-
-	// Returns the host context's render interface.
-	RenderInterface* GetRenderInterface();
-
-	Context* host_context = nullptr;
-	Element* host_element = nullptr;
-
 	Vector< Vertex > vertices;
 	Vector< int > indices;
 	const Texture* texture = nullptr;
-
 	CompiledGeometryHandle compiled_geometry = 0;
 	bool compile_attempted = false;
-
 	GeometryDatabaseHandle database_handle;
 };
 

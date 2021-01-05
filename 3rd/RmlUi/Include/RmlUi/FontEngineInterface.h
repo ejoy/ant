@@ -43,6 +43,14 @@ namespace Rml {
 	provide a concrete implementation of this class and install it through Rml::SetFontEngineInterface().
  */
 
+struct Line {
+	Line(const String& text, const Vector2f& position) : text(text), position(position), width(0) {}
+	String text;
+	Vector2f position;
+	int width;
+};
+typedef Vector<Line> LineList;
+
 class RMLUICORE_API FontEngineInterface
 {
 public:
@@ -115,12 +123,11 @@ public:
 	/// Called by RmlUi when it wants to retrieve the geometry required to render a single line of text.
 	/// @param[in] face_handle The font handle.
 	/// @param[in] text_effects_handle The handle to the prepared font effects for which the geometry should be generated.
-	/// @param[in] string The string to render.
-	/// @param[in] position The position of the baseline of the first character to render.
+	/// @param[in] lines The string to render.
 	/// @param[in] colour The colour to render the text.
 	/// @param[out] geometry An array of geometries to generate the geometry into.
 	/// @return The width, in pixels, of the string geometry.
-	virtual int GenerateString(FontFaceHandle face_handle, TextEffectsHandle text_effects_handle, const String& string, const Vector2f& position, const Colourb& colour, GeometryList& geometry);
+	virtual void GenerateString(FontFaceHandle face_handle, TextEffectsHandle text_effects_handle, LineList& lines, const Colourb& colour, GeometryList& geometry);
 
 	/// Called by RmlUi to determine if the text geometry is required to be re-generated. Whenever the returned version
 	/// is changed, all geometry belonging to the given face handle will be re-generated.

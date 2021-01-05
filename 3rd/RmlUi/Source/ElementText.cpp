@@ -45,7 +45,7 @@ static bool LastToken(const char* token_begin, const char* string_end, bool coll
 
 ElementText::ElementText(const String& tag)
 	: Element(tag)
-	, decoration(this) {
+	, decoration() {
 	GetLayout().SetElementText(this);
 }
 
@@ -90,7 +90,6 @@ void ElementText::OnRender()
 
 	// Regenerate text decoration if necessary.
 	if (decoration_dirty) {
-		decoration.Release(true);
 		GenerateDecoration(font_face_handle);
 	}
 
@@ -132,8 +131,8 @@ void ElementText::OnRender()
 		if (decoration_under) {
 			decoration.Render(translation);
 		}
-		for (size_t i = 0; i < geometry.size(); ++i) {
-			geometry[i].Render(translation);
+		for (size_t i = 0; i < geometrys.size(); ++i) {
+			geometrys[i].Render(translation);
 		}
 		if (!decoration_under) {
 			decoration.Render(translation);
@@ -290,13 +289,8 @@ bool ElementText::GenerateLine(String& line, int& line_length, float& line_width
 // Clears all lines of generated text and prepares the element for generating new lines.
 void ElementText::ClearLines()
 {
-	// Clear the rendering information.
-	for (size_t i = 0; i < geometry.size(); ++i)
-		geometry[i].Release(true);
-
 	lines.clear();
-	decoration.Release(true);
-
+	geometry_dirty = true;
 	decoration_dirty = true;
 }
 
@@ -343,7 +337,7 @@ void ElementText::OnPropertyChange(const PropertyIdSet& changed_properties)
 	{
 		font_face_changed = true;
 
-		geometry.clear();
+		geometrys.clear();
 		text_effects_dirty = true;
 	}
 
@@ -382,7 +376,7 @@ void ElementText::OnPropertyChange(const PropertyIdSet& changed_properties)
 		for (size_t i = 0; i < vertices.size(); ++i)
 			vertices[i].colour = colour;
 
-		decoration.Release();
+		decoration.ReleaseCompiledGeometry();
 	}
 }
 
@@ -415,31 +409,15 @@ bool ElementText::UpdateTextEffects() {
 }
 
 // Clears and regenerates all of the text's geometry.
-void ElementText::GenerateGeometry(const FontFaceHandle font_face_handle)
-{
-	// Release the old geometry ...
-	for (size_t i = 0; i < geometry.size(); ++i)
-		geometry[i].Release(true);
-
-	// ... and generate it all again!
-	for (size_t i = 0; i < lines.size(); ++i)
-		GenerateGeometry(font_face_handle, lines[i]);
-
-	decoration.Release(true);
-
+void ElementText::GenerateGeometry(const FontFaceHandle font_face_handle) {
+	GetFontEngineInterface()->GenerateString(font_face_handle, text_effects_handle, lines, colour, geometrys);
 	geometry_dirty = false;
 	decoration_dirty = true;
 }
 
-void ElementText::GenerateGeometry(const FontFaceHandle font_face_handle, Line& line)
-{
-	line.width = GetFontEngineInterface()->GenerateString(font_face_handle, text_effects_handle, line.text, line.position, colour, geometry);
-	for (size_t i = 0; i < geometry.size(); ++i)
-		geometry[i].SetHostElement(this);
-}
-
 void ElementText::GenerateDecoration(const FontFaceHandle font_face_handle) {
 	decoration_dirty = false;
+	decoration.Release();
 	Style::ComputedValues const& computedValues = GetComputedValues();
 	Style::TextDecorationLine text_decoration_line = computedValues.text_decoration_line;
 	if (text_decoration_line == Style::TextDecorationLine::None) {

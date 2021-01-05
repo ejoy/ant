@@ -32,6 +32,7 @@
 #include "Header.h"
 #include "Element.h"
 #include "Geometry.h"
+#include "FontEngineInterface.h"
 
 namespace Rml {
 
@@ -87,19 +88,8 @@ protected:
 private:
 	bool UpdateTextEffects();
 
-	// Used to store the position and length of each line we have geometry for.
-	struct Line
-	{
-		Line(const String& text, const Vector2f& position) : text(text), position(position), width(0) {}
-		String text;
-		Vector2f position;
-		int width;
-	};
-
 	// Clears and regenerates all of the text's geometry.
 	void GenerateGeometry(const FontFaceHandle font_face_handle);
-	// Generates the geometry for a single line of text.
-	void GenerateGeometry(const FontFaceHandle font_face_handle, Line& line);
 	// Generates any geometry necessary for rendering decoration (underline, strike-through, etc).
 	void GenerateDecoration(const FontFaceHandle font_face_handle);
 
@@ -107,10 +97,9 @@ private:
 
 	String text;
 
-	typedef Vector< Line > LineList;
 	LineList lines;
 
-	GeometryList geometry;
+	GeometryList geometrys;
 	bool geometry_dirty = true;
 
 	Colourb colour = Colourb(255, 255, 255);
