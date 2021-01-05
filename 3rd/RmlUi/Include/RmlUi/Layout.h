@@ -44,8 +44,6 @@ public:
 		MARGIN = 0,
 		BORDER = 1,
 		PADDING = 2,
-		CONTENT = 3,
-		NUM_AREAS = 3,		// ignores CONTENT
 	};
 
 	enum Edge
@@ -67,21 +65,10 @@ public:
 	Layout& operator=(const Layout&) = delete;
 	Layout& operator=(Layout&&) = delete;
 
-	/// Returns the top-left position of one of the box's areas, relative to the top-left of the border area. This
-	/// means the position of the margin area is likely to be negative.
-	/// @param area[in] The desired area.
-	/// @return The position of the area.
-	Vector2f GetPosition(Area area = Layout::CONTENT) const;
-	/// Returns the size of one of the box's areas. This will include all inner areas.
-	/// @param area[in] The desired area.
-	/// @return The size of the requested area.
-	Vector2f GetSize(Area area = Layout::CONTENT) const;
-
-	/// Returns the size of one of the area edges.
-	/// @param area[in] The desired area.
-	/// @param edge[in] The desired edge.
-	/// @return The size of the requested area edge.
+	Vector2f GetPosition(Area area) const;
 	float GetEdge(Area area, Edge edge) const;
+	Vector2f GetPaddingSize() const;
+	Vector2f GetSize() const;
 
 	void CalculateLayout(float width, float height);
 	Vector4f GetBounds() const;

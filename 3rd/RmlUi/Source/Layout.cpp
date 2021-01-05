@@ -60,28 +60,25 @@ static float YGValueToFloat(float v) {
 }
 
 Vector2f Layout::GetPosition(Area area) const {
-	float left = YGNodeLayoutGetLeft(node);
-	float top = YGNodeLayoutGetTop(node);
 	switch (area) {
-	case Layout::PADDING:
-		left += YGValueToFloat(YGNodeStyleGetPadding(node, YGEdgeLeft));
-		top += YGValueToFloat(YGNodeStyleGetPadding(node, YGEdgeTop));
-		[[fallthrough]];
-	case Layout::BORDER:
-		left += YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeLeft));
-		top += YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeTop));
-		[[fallthrough]];
 	case Layout::MARGIN:
-		left += YGValueToFloat(YGNodeStyleGetMargin(node, YGEdgeLeft));
-		top += YGValueToFloat(YGNodeStyleGetMargin(node, YGEdgeTop));
-		break;
+		return Vector2f(-YGValueToFloat(YGNodeStyleGetMargin(node, YGEdgeLeft)), -YGValueToFloat(YGNodeStyleGetMargin(node, YGEdgeTop)));
+	case Layout::PADDING:
+		return Vector2f(YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeLeft)), YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeTop)));
+	case Layout::BORDER:
 	default:
-		break;
+		return Vector2f(0.0f, 0.0f);
 	}
-	return Vector2f(left, top);
 }
 
-Vector2f Layout::GetSize(Area area) const {
+Vector2f Layout::GetPaddingSize() const {
+	return Vector2f(
+		YGNodeLayoutGetWidth(node) - YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeLeft)) - YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeRight)),
+		YGNodeLayoutGetHeight(node) - YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeTop)) - YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeBottom))
+	);
+}
+
+Vector2f Layout::GetSize() const {
 	return Vector2f(
 		YGNodeLayoutGetWidth(node),
 		YGNodeLayoutGetHeight(node)

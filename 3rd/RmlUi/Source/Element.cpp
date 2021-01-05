@@ -319,19 +319,24 @@ void Element::SetOffset(Vector2f offset, Element* _offset_parent)
 	}
 }
 
-// Returns the position of the top-left corner of one of the areas of this element's primary box.
-Vector2f Element::GetAbsoluteOffset(Layout::Area area)
+Vector2f Element::GetAbsoluteOffset()
 {
 	if (offset_dirty) {
 		offset_dirty = false;
 		if (offset_parent != nullptr) {
-			absolute_offset = offset_parent->GetAbsoluteOffset(Layout::BORDER) + relative_offset;
+			absolute_offset = offset_parent->GetAbsoluteOffset() + relative_offset;
 		}
 		else {
 			absolute_offset = relative_offset;
 		}
 	}
 	return absolute_offset;
+}
+
+// Returns the position of the top-left corner of one of the areas of this element's primary box.
+Vector2f Element::GetAbsoluteOffset(Layout::Area area)
+{
+	return GetAbsoluteOffset() + GetLayout().GetPosition(area);
 }
 
 // Returns one of the boxes describing the size of the element.
@@ -344,11 +349,8 @@ Layout& Element::GetLayout()
 bool Element::IsPointWithinElement(const Vector2f& point)
 {
 	Vector2f position = GetAbsoluteOffset(Layout::BORDER);
-
-	const Layout& box = GetLayout();
-
 	const Vector2f box_position = position;
-	const Vector2f box_dimensions = box.GetSize(Layout::BORDER);
+	const Vector2f box_dimensions = GetLayout().GetSize();
 	if (point.x >= box_position.x &&
 		point.x <= (box_position.x + box_dimensions.x) &&
 		point.y >= box_position.y &&
@@ -691,13 +693,13 @@ float Element::GetOffsetTop()
 // Gets the width of the element, including the client area, padding, borders and scrollbars, but not margins.
 float Element::GetOffsetWidth()
 {
-	return GetLayout().GetSize(Layout::BORDER).x;
+	return GetLayout().GetSize().x;
 }
 
 // Gets the height of the element, including the client area, padding, borders and scrollbars, but not margins.
 float Element::GetOffsetHeight()
 {
-	return GetLayout().GetSize(Layout::BORDER).y;
+	return GetLayout().GetSize().y;
 }
 
 // Gets the left scroll offset of the element.
@@ -1871,7 +1873,7 @@ void Element::UpdateTransformState()
 	const ComputedValues& computed = meta->computed_values;
 
 	const Vector2f pos = GetAbsoluteOffset(Layout::BORDER);
-	const Vector2f size = GetLayout().GetSize(Layout::BORDER);
+	const Vector2f size = GetLayout().GetSize();
 	
 	bool perspective_or_transform_changed = false;
 

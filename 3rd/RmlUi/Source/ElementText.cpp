@@ -93,7 +93,7 @@ void ElementText::OnRender()
 		GenerateDecoration(font_face_handle);
 	}
 
-	const Vector2f translation = GetAbsoluteOffset();
+	const Vector2f translation = GetAbsoluteOffset(Layout::PADDING);
 	
 	bool render = true;
 	Vector2i clip_origin;

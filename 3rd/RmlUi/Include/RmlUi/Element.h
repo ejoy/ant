@@ -114,7 +114,8 @@ public:
 	/// the element root.
 	/// @param[in] area The desired area position.
 	/// @return The absolute offset.
-	Vector2f GetAbsoluteOffset(Layout::Area area = Layout::CONTENT);
+	Vector2f GetAbsoluteOffset();
+	Vector2f GetAbsoluteOffset(Layout::Area area);
 
 	Layout& GetLayout();
 

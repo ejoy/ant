@@ -206,7 +206,7 @@ void ElementBackgroundImage::Reload() {
 		element,
 		*texture,
 		Vector2f(0, 0), 
-		element->GetLayout().GetSize(Layout::PADDING)
+		element->GetLayout().GetPaddingSize()
 	);
 }
 
