@@ -118,10 +118,6 @@ public:
 
 	Layout& GetLayout();
 
-	/// Returns the baseline of the element, in pixels offset from the bottom of the element's content area.
-	/// @return The element's baseline. A negative baseline will be further 'up' the element, a positive on further 'down'. The default element will return 0.
-	virtual float GetBaseline() const;
-
 	/// Checks if a given point in screen coordinates lies within the bordered area of this element.
 	/// @param[in] point The point to test.
 	/// @return True if the element is within this element, false otherwise.
@@ -545,7 +541,6 @@ protected:
 	void SetDataModel(DataModel* new_data_model);
 
 	void DirtyOffset();
-	void SetBaseline(float baseline);
 
 	void UpdateStackingContext();
 	void DirtyStackingContext();
@@ -609,8 +604,6 @@ protected:
 	// And of the element's internal content.
 	Vector2f content_offset;
 	Vector2f content_box;
-
-	float baseline;
 
 	// True if the element is visible and active.
 	bool visible;

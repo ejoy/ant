@@ -248,17 +248,17 @@ font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascen
 }
 
 void 
-font_manager_underline(struct font_manager *F, int fontid, int size, float *underline_position, float *thickness){
+font_manager_underline(struct font_manager *F, int fontid, int size, float *position, float *thickness){
 	const struct stbtt_fontinfo *fi = get_ttf(F, fontid);
 	float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
-	int ascent, descent, lineGap;
-	stbtt_GetFontVMetrics(fi, &ascent, &descent, &lineGap);
-	float baseline = -descent + lineGap;
-	*underline_position = baseline - 1.f;
-	*thickness = 1.f;
-
-	*underline_position = fscale_font(*underline_position, scale, size);
-	*thickness = fscale_font(*thickness, scale, size);
+	stbtt_uint32 post = stbtt__find_table(fi->data, fi->fontstart, "post");
+	if (!post) {
+		return;
+	}
+	int16_t underline_position = ttSHORT(fi->data + post + 8);
+	int16_t underline_thickness = ttSHORT(fi->data + post + 10);
+	*position = fscale_font(underline_position, scale, size);
+	*thickness = fscale_font(underline_thickness, scale, size);
 }
 
 void

@@ -89,8 +89,6 @@ transform_state(), dirty_transform(false), dirty_perspective(false), dirty_anima
 	offset_parent = nullptr;
 	offset_dirty = true;
 
-	baseline = 0.0f;
-
 	visible = true;
 
 	z_index = 0;
@@ -340,12 +338,6 @@ Vector2f Element::GetAbsoluteOffset(Layout::Area area)
 Layout& Element::GetLayout()
 {
 	return layout;
-}
-
-// Returns the baseline of the element, in pixels offset from the bottom of the element's content area.
-float Element::GetBaseline() const
-{
-	return baseline;
 }
 
 // Checks if a given point in screen coordinates lies within the bordered area of this element.
@@ -1575,11 +1567,6 @@ void Element::DirtyOffset() {
 		for (size_t i = 0; i < children.size(); i++)
 			children[i]->DirtyOffset();
 	}
-}
-
-void Element::SetBaseline(float in_baseline)
-{
-	baseline = in_baseline;
 }
 
 void Element::UpdateStackingContext() {

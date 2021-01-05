@@ -37,12 +37,7 @@
 
 namespace Rml {
 
-Geometry::Geometry(Element* host_element) : host_element(host_element)
-{
-	database_handle = GeometryDatabase::Insert(this);
-}
-
-Geometry::Geometry(Context* host_context) : host_context(host_context)
+Geometry::Geometry()
 {
 	database_handle = GeometryDatabase::Insert(this);
 }
@@ -62,14 +57,9 @@ Geometry& Geometry::operator=(Geometry&& other)
 
 void Geometry::MoveFrom(Geometry& other)
 {
-	host_context = std::exchange(other.host_context, nullptr);
-	host_element = std::exchange(other.host_element, nullptr);
-
 	vertices = std::move(other.vertices);
 	indices = std::move(other.indices);
-
 	texture = std::exchange(other.texture, nullptr);
-
 	compiled_geometry = std::exchange(other.compiled_geometry, 0);
 	compile_attempted = std::exchange(other.compile_attempted, false);
 }
@@ -77,27 +67,10 @@ void Geometry::MoveFrom(Geometry& other)
 Geometry::~Geometry()
 {
 	GeometryDatabase::Erase(database_handle);
-
-	Release();
+	ReleaseCompiledGeometry();
 }
 
-// Set the host element for this geometry; this should be passed in the constructor if possible.
-void Geometry::SetHostElement(Element* _host_element)
-{
-	if (host_element == _host_element)
-		return;
-
-	if (host_element != nullptr)
-	{
-		Release();
-		host_context = nullptr;
-	}
-
-	host_element = _host_element;
-}
-
-void Geometry::Render(Vector2f translation)
-{
+void Geometry::Render(Vector2f translation) {
 	RenderInterface* const render_interface = GetRenderInterface();
 	if (!render_interface)
 		return;
@@ -133,67 +106,43 @@ void Geometry::Render(Vector2f translation)
 
 		// Either we've attempted to compile before (and failed), or the compile we just attempted failed; either way,
 		// render the uncompiled version.
-		render_interface->RenderGeometry(&vertices[0], (int)vertices.size(), &indices[0], (int)indices.size(), texture ? texture->GetHandle(GetRenderInterface()) : 0, translation);
+		render_interface->RenderGeometry(&vertices[0], (int)vertices.size(), &indices[0], (int)indices.size(), texture ? texture->GetHandle(render_interface) : 0, translation);
 	}
 }
 
-// Returns the geometry's vertices. If these are written to, Release() should be called to force a recompile.
-Vector< Vertex >& Geometry::GetVertices()
-{
+Vector< Vertex >& Geometry::GetVertices() {
 	return vertices;
 }
 
-// Returns the geometry's indices. If these are written to, Release() should be called to force a recompile.
-Vector< int >& Geometry::GetIndices()
-{
+Vector< int >& Geometry::GetIndices() {
 	return indices;
 }
 
-// Gets the geometry's texture.
-const Texture* Geometry::GetTexture() const
-{
+const Texture* Geometry::GetTexture() const {
 	return texture;
 }
 
-// Sets the geometry's texture.
-void Geometry::SetTexture(const Texture* _texture)
-{
+void Geometry::SetTexture(const Texture* _texture) {
 	texture = _texture;
-	Release();
+	ReleaseCompiledGeometry();
 }
 
-void Geometry::Release(bool clear_buffers)
-{
-	if (compiled_geometry)
-	{
+void Geometry::Release() {
+	ReleaseCompiledGeometry();
+	vertices.clear();
+	indices.clear();
+}
+
+void Geometry::ReleaseCompiledGeometry() {
+	if (compiled_geometry) {
 		GetRenderInterface()->ReleaseCompiledGeometry(compiled_geometry);
 		compiled_geometry = 0;
 	}
-
 	compile_attempted = false;
-
-	if (clear_buffers)
-	{
-		vertices.clear();
-		indices.clear();
-	}
 }
 
-Geometry::operator bool() const
-{
+Geometry::operator bool() const {
 	return !indices.empty();
-}
-
-// Returns the host context's render interface.
-RenderInterface* Geometry::GetRenderInterface()
-{
-	if (!host_context)
-	{
-		if (host_element)
-			host_context = host_element->GetContext();
-	}
-
-	return ::Rml::GetRenderInterface();
 }
 
 } // namespace Rml

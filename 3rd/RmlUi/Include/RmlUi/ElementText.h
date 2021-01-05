@@ -32,6 +32,7 @@
 #include "Header.h"
 #include "Element.h"
 #include "Geometry.h"
+#include "FontEngineInterface.h"
 
 namespace Rml {
 
@@ -75,6 +76,7 @@ public:
 	void AddLine(const Vector2f& line_position, const String& line);
 
 	Vector2f GetBoundsFor(float width, float height);
+	float GetBaseline();
 
 protected:
 	void OnRender() override;
@@ -86,19 +88,8 @@ protected:
 private:
 	bool UpdateTextEffects();
 
-	// Used to store the position and length of each line we have geometry for.
-	struct Line
-	{
-		Line(const String& text, const Vector2f& position) : text(text), position(position), width(0) {}
-		String text;
-		Vector2f position;
-		int width;
-	};
-
 	// Clears and regenerates all of the text's geometry.
 	void GenerateGeometry(const FontFaceHandle font_face_handle);
-	// Generates the geometry for a single line of text.
-	void GenerateGeometry(const FontFaceHandle font_face_handle, Line& line);
 	// Generates any geometry necessary for rendering decoration (underline, strike-through, etc).
 	void GenerateDecoration(const FontFaceHandle font_face_handle);
 
@@ -106,22 +97,17 @@ private:
 
 	String text;
 
-	typedef Vector< Line > LineList;
 	LineList lines;
 
-	GeometryList geometry;
+	GeometryList geometrys;
 	bool geometry_dirty = true;
 
 	Colourb colour = Colourb(255, 255, 255);
 
 	// The decoration geometry we've generated for this string.
 	Geometry decoration;
-	// What the decoration type is that we have generated.
-	Style::TextDecoration generated_decoration = Style::TextDecoration::None;
-	// What the element's actual text-decoration property is; this may be different from the generated decoration
-	// if it is set to none; this means we can keep generated decoration and simply toggle it on or off as long as
-	// it isn't being changed.
-	Style::TextDecoration decoration_property = Style::TextDecoration::None;
+	bool decoration_dirty = true;
+	bool decoration_under = true;
 
 	TextEffectsHandle text_effects_handle = 0;
 	bool text_effects_dirty = false;

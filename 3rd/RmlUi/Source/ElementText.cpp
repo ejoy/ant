@@ -45,7 +45,7 @@ static bool LastToken(const char* token_begin, const char* string_end, bool coll
 
 ElementText::ElementText(const String& tag)
 	: Element(tag)
-	, decoration(this) {
+	, decoration() {
 	GetLayout().SetElementText(this);
 }
 
@@ -89,14 +89,8 @@ void ElementText::OnRender()
 	}
 
 	// Regenerate text decoration if necessary.
-	if (decoration_property != generated_decoration)
-	{
-		decoration.Release(true);
-
-		if (decoration_property != Style::TextDecoration::None)
-			GenerateDecoration(font_face_handle);
-
-		generated_decoration = decoration_property;
+	if (decoration_dirty) {
+		GenerateDecoration(font_face_handle);
 	}
 
 	const Vector2f translation = GetAbsoluteOffset();
@@ -132,15 +126,18 @@ void ElementText::OnRender()
 			}
 		}
 	}
-	
-	if (render)
-	{
-		for (size_t i = 0; i < geometry.size(); ++i)
-			geometry[i].Render(translation);
-	}
 
-	if (decoration_property != Style::TextDecoration::None)
-		decoration.Render(translation);
+	if (render) {
+		if (decoration_under) {
+			decoration.Render(translation);
+		}
+		for (size_t i = 0; i < geometrys.size(); ++i) {
+			geometrys[i].Render(translation);
+		}
+		if (!decoration_under) {
+			decoration.Render(translation);
+		}
+	}
 }
 
 // Generates a token of text from this element, returning only the width.
@@ -292,13 +289,9 @@ bool ElementText::GenerateLine(String& line, int& line_length, float& line_width
 // Clears all lines of generated text and prepares the element for generating new lines.
 void ElementText::ClearLines()
 {
-	// Clear the rendering information.
-	for (size_t i = 0; i < geometry.size(); ++i)
-		geometry[i].Release(true);
-
 	lines.clear();
-	generated_decoration = Style::TextDecoration::None;
-	decoration.Release(true);
+	geometry_dirty = true;
+	decoration_dirty = true;
 }
 
 // Adds a new line into the text element.
@@ -344,7 +337,7 @@ void ElementText::OnPropertyChange(const PropertyIdSet& changed_properties)
 	{
 		font_face_changed = true;
 
-		geometry.clear();
+		geometrys.clear();
 		text_effects_dirty = true;
 	}
 
@@ -357,9 +350,9 @@ void ElementText::OnPropertyChange(const PropertyIdSet& changed_properties)
 		text_effects_dirty = true;
 	}
 
-	if (changed_properties.Contains(PropertyId::TextDecoration))
+	if (changed_properties.Contains(PropertyId::TextDecorationLine))
 	{
-		decoration_property = computed.text_decoration;
+		decoration_dirty = true;
 	}
 
 	if (changed_properties.Contains(PropertyId::LineHeight))
@@ -383,7 +376,7 @@ void ElementText::OnPropertyChange(const PropertyIdSet& changed_properties)
 		for (size_t i = 0; i < vertices.size(); ++i)
 			vertices[i].colour = colour;
 
-		decoration.Release();
+		decoration.ReleaseCompiledGeometry();
 	}
 }
 
@@ -416,50 +409,62 @@ bool ElementText::UpdateTextEffects() {
 }
 
 // Clears and regenerates all of the text's geometry.
-void ElementText::GenerateGeometry(const FontFaceHandle font_face_handle)
-{
-	// Release the old geometry ...
-	for (size_t i = 0; i < geometry.size(); ++i)
-		geometry[i].Release(true);
-
-	// ... and generate it all again!
-	for (size_t i = 0; i < lines.size(); ++i)
-		GenerateGeometry(font_face_handle, lines[i]);
-
-	decoration.Release(true);
-	generated_decoration = Style::TextDecoration::None;
-
+void ElementText::GenerateGeometry(const FontFaceHandle font_face_handle) {
+	GetFontEngineInterface()->GenerateString(font_face_handle, text_effects_handle, lines, colour, geometrys);
 	geometry_dirty = false;
-}
-
-void ElementText::GenerateGeometry(const FontFaceHandle font_face_handle, Line& line)
-{
-	Vector2f position = line.position;
-	position.y += GetFontEngineInterface()->GetLineHeight(font_face_handle)/2.0f - GetFontEngineInterface()->GetBaseline(font_face_handle);
-	line.width = GetFontEngineInterface()->GenerateString(font_face_handle, text_effects_handle, line.text, position, colour, geometry);
-	for (size_t i = 0; i < geometry.size(); ++i)
-		geometry[i].SetHostElement(this);
+	decoration_dirty = true;
 }
 
 void ElementText::GenerateDecoration(const FontFaceHandle font_face_handle) {
+	decoration_dirty = false;
+	decoration.Release();
+	Style::ComputedValues const& computedValues = GetComputedValues();
+	Style::TextDecorationLine text_decoration_line = computedValues.text_decoration_line;
+	if (text_decoration_line == Style::TextDecorationLine::None) {
+		return;
+	}
+	Colourb color;
+	Style::Color text_decoration_color = computedValues.text_decoration_color;
+	if (text_decoration_color.type == Style::Color::Type::CurrentColor) {
+		if (computedValues.text_stroke) {
+			color = computedValues.text_stroke->color;
+		}
+		else {
+			color = colour;
+		}
+	}
+	else {
+		color = text_decoration_color.value;
+	}
+
 	for (const Line& line : lines) {
 		Vector2f position = line.position;
 		float width = line.width;
 		Vector<Vertex>& line_vertices = decoration.GetVertices();
 		Vector<int>& line_indices = decoration.GetIndices();
 		float underline_thickness = 0;
-		float underline_position = GetFontEngineInterface()->GetUnderline(font_face_handle, underline_thickness);
-		int size = GetFontEngineInterface()->GetSize(font_face_handle);
-		int x_height = GetFontEngineInterface()->GetXHeight(font_face_handle);
-		int line_height = GetFontEngineInterface()->GetLineHeight(font_face_handle);
+		float underline_position = 0;
+		GetFontEngineInterface()->GetUnderline(font_face_handle, underline_position, underline_thickness);
 
-		position.y += line_height / 2.0f;
-		underline_thickness = 1;
-
-		switch (decoration_property) {
-		case Style::TextDecoration::Underline:       position.y += -underline_position; break;
-		case Style::TextDecoration::Overline:        position.y += -(float)size; break;
-		case Style::TextDecoration::LineThrough:     position.y += -0.65f * (float)x_height; break;
+		switch (text_decoration_line) {
+		case Style::TextDecorationLine::Underline: {
+			position.y += -underline_position;
+			decoration_under = true;
+			break;
+		}
+		case Style::TextDecorationLine::Overline: {
+			int baseline = GetFontEngineInterface()->GetBaseline(font_face_handle);
+			int line_height = GetFontEngineInterface()->GetLineHeight(font_face_handle);
+			position.y += baseline - line_height;
+			decoration_under = true;
+			break;
+		}
+		case Style::TextDecorationLine::LineThrough: {
+			int x_height = GetFontEngineInterface()->GetXHeight(font_face_handle);
+			position.y += -0.65f * x_height;
+			decoration_under = false;
+			break;
+		}
 		default: return;
 		}
 
@@ -471,7 +476,7 @@ void ElementText::GenerateDecoration(const FontFaceHandle font_face_handle) {
 			&line_vertices[vsz], &line_indices[isz],
 			position,
 			Vector2f((float)width, underline_thickness),
-			colour, (int)vsz
+			color, (int)vsz
 		);
 	}
 }
@@ -643,6 +648,8 @@ Vector2f ElementText::GetBoundsFor(float available_width, float available_height
 	float width = 0.0f;
 	float height = 0.0f;
 	float first_line = true;
+	float baseline = GetBaseline();
+
 	Style::TextAlign text_align = GetComputedValues().text_align;
 	std::string line;
 	while (!finish) {
@@ -660,7 +667,7 @@ Vector2f ElementText::GetBoundsFor(float available_width, float available_height
 				break;
 			}
 		}
-		AddLine(Vector2f(start_width, height + line_height / 2), line);
+		AddLine(Vector2f(start_width, height + baseline), line);
 		width = std::max(width, line_width);
 		height += line_height;
 		first_line = false;
@@ -677,6 +684,13 @@ float ElementText::GetLineHeight() {
 		return line_height;
 	}
 	return line_height * property->Get<float>();
+}
+
+float ElementText::GetBaseline() {
+	float line_height = GetLineHeight();
+	return line_height / 2.0f
+		+ GetFontEngineInterface()->GetLineHeight(GetFontFaceHandle()) / 2.0f
+		- GetFontEngineInterface()->GetBaseline(GetFontFaceHandle());
 }
 
 } // namespace Rml

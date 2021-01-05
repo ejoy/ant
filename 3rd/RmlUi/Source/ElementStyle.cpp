@@ -433,6 +433,13 @@ void ElementStyle::DirtyProperties(const PropertyIdSet& properties)
 	dirty_properties |= properties;
 }
 
+static Style::Color GetColor(const Property* property) {
+	if (property->unit == Property::KEYWORD) {
+		return Style::Color(Style::Color::Type::CurrentColor);
+	}
+	return Style::Color(property->Get<Colourb>());
+}
+
 PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const Style::ComputedValues* parent_values, const Style::ComputedValues* document_values, bool values_are_default_initialized, float dp_ratio)
 {
 	if (dirty_properties.Empty())
@@ -488,7 +495,8 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 		values.font_weight = parent_values->font_weight;
 		values.font_face_handle = parent_values->font_face_handle;
 		values.text_align = parent_values->text_align;
-		values.text_decoration = parent_values->text_decoration;
+		values.text_decoration_line = parent_values->text_decoration_line;
+		values.text_decoration_color = parent_values->text_decoration_color;
 		values.text_transform = parent_values->text_transform;
 		values.white_space = parent_values->white_space;
 		values.word_break = parent_values->word_break;
@@ -637,9 +645,6 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 		case PropertyId::TextAlign:
 			values.text_align = (TextAlign)p->Get<int>();
 			break;
-		case PropertyId::TextDecoration:
-			values.text_decoration = (TextDecoration)p->Get<int>();
-			break;
 		case PropertyId::TextTransform:
 			values.text_transform = (TextTransform)p->Get<int>();
 			break;
@@ -648,6 +653,13 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 			break;
 		case PropertyId::WordBreak:
 			values.word_break = (WordBreak)p->Get<int>();
+			break;
+
+		case PropertyId::TextDecorationLine:
+			values.text_decoration_line = (TextDecorationLine)p->Get<int>();
+			break;
+		case PropertyId::TextDecorationColor:
+			values.text_decoration_color = GetColor(p);
 			break;
 
 		case PropertyId::Drag:

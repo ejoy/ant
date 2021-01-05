@@ -283,16 +283,22 @@ void Layout::SetProperty(PropertyId id, const Property* property, float font_siz
 	}
 }
 
-
-static YGSize MeasureLabel(YGNodeRef node, float width, YGMeasureMode mode, float height, YGMeasureMode height_mode) {
+static YGSize MeasureFunc(YGNodeRef node, float width, YGMeasureMode mode, float height, YGMeasureMode height_mode) {
 	auto* element = static_cast<ElementText*>(YGNodeGetContext(node));
 	Vector2f size = element->GetBoundsFor(width, height);
 	return { 1 + std::ceil(size[0]), 1 + std::ceil(size[1]) };
 }
 
+static float BaselineFunc(YGNodeRef node, float width, float height) {
+	auto* element = static_cast<ElementText*>(YGNodeGetContext(node));
+	return element->GetBaseline();
+}
+
 void Layout::SetElementText(ElementText* element) {
 	YGNodeSetContext(node, element);
-	YGNodeSetMeasureFunc(node, MeasureLabel);
+	YGNodeSetMeasureFunc(node, MeasureFunc);
+	YGNodeSetIsReferenceBaseline(node, true);
+	YGNodeSetBaselineFunc(node, BaselineFunc);
 }
 
 void Layout::MarkDirty() {

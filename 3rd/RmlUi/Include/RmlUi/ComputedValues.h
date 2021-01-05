@@ -58,6 +58,20 @@ struct NumberAuto {
 	NumberAuto(Type type, float value = 0) : type(type), value(value) {}
 };
 
+struct Color {
+	enum class Type { CurrentColor, Value };
+	Type type = Type::Value;
+	Colourb value = 0;
+	Color(Colourb const& v)
+		: type(Type::Value)
+		, value(v)
+	{ }
+	Color(Type const& t)
+		: type(t)
+		, value()
+	{ }
+};
+
 enum class Display : uint8_t { Flex, None };
 enum class Position : uint8_t { Static, Relative, Absolute };
 
@@ -78,7 +92,7 @@ enum class FontStyle : uint8_t { Normal, Italic };
 enum class FontWeight : uint8_t { Normal, Bold };
 
 enum class TextAlign : uint8_t { Left, Right, Center, Justify };
-enum class TextDecoration : uint8_t { None, Underline, Overline, LineThrough };
+enum class TextDecorationLine : uint8_t { None, Underline, Overline, LineThrough };
 enum class TextTransform : uint8_t { None, Capitalize, Uppercase, Lowercase };
 enum class WhiteSpace : uint8_t { Normal, Pre, Nowrap, Prewrap, Preline };
 enum class WordBreak : uint8_t { Normal, BreakAll, BreakWord };
@@ -126,10 +140,12 @@ struct ComputedValues
 	FontFaceHandle font_face_handle = 0;
 
 	TextAlign text_align = TextAlign::Left;
-	TextDecoration text_decoration = TextDecoration::None;
 	TextTransform text_transform = TextTransform::None;
 	WhiteSpace white_space = WhiteSpace::Normal;
 	WordBreak word_break = WordBreak::Normal;
+
+	TextDecorationLine text_decoration_line = TextDecorationLine::None;
+	Color text_decoration_color = Color(Color::Type::CurrentColor);
 
 	Drag drag = Drag::None;
 	Focus focus = Focus::Auto;

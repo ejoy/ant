@@ -194,7 +194,7 @@ void ElementBackgroundImage::Reload() {
 	texture.reset(new Texture);
 	texture->Set(background_image, element->GetOwnerDocument()->GetSourceURL());
 
-	geometry.reset(new Geometry(element));
+	geometry.reset(new Geometry());
 	geometry->SetTexture(texture.get());
 
 	Tile tile;

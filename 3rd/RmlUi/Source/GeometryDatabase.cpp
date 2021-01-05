@@ -43,14 +43,6 @@ public:
 	}
 
 	~Database() {
-#ifdef RMLUI_TESTS_ENABLED
-		RMLUI_ASSERT(geometry_list.size() == free_list.size());
-		std::sort(free_list.begin(), free_list.end());
-		for (size_t i = 0; i < free_list.size(); i++)
-		{
-			RMLUI_ASSERT(i == free_list[i]);
-		}
-#endif
 	}
 
 	GeometryDatabaseHandle insert(Geometry* value)
@@ -129,35 +121,9 @@ void Erase(GeometryDatabaseHandle handle)
 void ReleaseAll()
 {
 	geometry_database.for_each([](Geometry* geometry) {
-		geometry->Release();
+		geometry->ReleaseCompiledGeometry();
 	});
 }
-
-
-#ifdef RMLUI_TESTS_ENABLED
-
-bool PrepareForTests()
-{
-	if (geometry_database.size() > 0)
-		return false;
-
-	// Even with size()==0 we can have items in the geometry list which should all be duplicated by the free list. We want to clear them for the tests.
-	geometry_database.clear();
-
-	return true;
-}
-
-bool ListMatchesDatabase(const Vector<Geometry>& geometry_list)
-{
-	int i = 0;
-	bool result = true;
-	geometry_database.for_each([&geometry_list, &i, &result](Geometry* geometry) {
-		result &= (geometry == &geometry_list[i++]);
-		});
-	return result;
-}
-
-#endif // RMLUI_TESTS_ENABLED
 
 } // namespace GeometryDatabase
 } // namespace Rml
