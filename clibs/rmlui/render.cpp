@@ -48,9 +48,10 @@ TransientIndexBuffer32::Reset(){
 Renderer::Renderer(const RmlContext* context)
     : mTransform(Rml::Matrix4f::Identity())
     , mcontext(context)
-    , mEncoder(nullptr){
+    , mEncoder(nullptr)
+    , mScissorRect{0, 0, 0, 0}{
     const auto &vr = mcontext->viewrect;
-    BGFX(set_view_scissor)(mcontext->viewid, 0, 0, 0, 0);
+    BGFX(set_view_scissor)(mcontext->viewid, vr.x, vr.y, vr.w, vr.h);
     BGFX(set_view_rect)(mcontext->viewid, uint16_t(vr.x), uint16_t(vr.y), uint16_t(vr.w), uint16_t(vr.h));
     BGFX(set_view_mode)(mcontext->viewid, BGFX_VIEW_MODE_SEQUENTIAL);
 }
@@ -71,6 +72,11 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
                             Rml::TextureHandle texture, const Rml::Vector2f& translation) {
     const Rml::Matrix4f m = mTransform * Rml::Matrix4f::Translate(translation.x, translation.y, 0.0);
     BGFX(encoder_set_transform)(mEncoder, m.data(), 1);
+    if (mScissorRect.x == 0 && mScissorRect.y == 0 && mScissorRect.w == 0 && mScissorRect.h == 0){
+        BGFX(encoder_set_scissor_cached)(mEncoder, UINT16_MAX);
+    } else {
+        BGFX(encoder_set_scissor)(mEncoder, mScissorRect.x, mScissorRect.y, mScissorRect.w, mScissorRect.h);
+    }
 
     bgfx_transient_vertex_buffer_t tvb;
     BGFX(alloc_transient_vertex_buffer)(&tvb, num_vertices, (bgfx_vertex_layout_t*)mcontext->layout);
@@ -123,12 +129,14 @@ void Renderer::Frame(){
 
 void Renderer::EnableScissorRegion(bool enable) {
     if (!enable){
-        BGFX(set_view_scissor)(mcontext->viewid, 0, 0, 0, 0);
+        mScissorRect.x = mScissorRect.y = mScissorRect.w = mScissorRect.h = 0;
     }
 }
 
 void Renderer::SetScissorRegion(int x, int y, int w, int h) {
-    BGFX(set_view_scissor)(mcontext->viewid, std::max(x, 0), std::max(y, 0), w, h);
+    mScissorRect.x = x, mScissorRect.y = y;
+    mScissorRect.w = w, mScissorRect.h = h;
+    //BGFX(encoder_set_scissor)(mcontext->viewid, std::max(x, 0), std::max(y, 0), w, h);
 }
 
 static inline bool

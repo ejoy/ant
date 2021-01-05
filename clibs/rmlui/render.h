@@ -75,4 +75,5 @@ private:
     TransientIndexBuffer32  mIndexBuffer;
 
     bgfx_encoder_t*         mEncoder;
+    Rect                    mScissorRect;
 };
