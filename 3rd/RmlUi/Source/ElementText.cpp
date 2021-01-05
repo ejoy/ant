@@ -670,7 +670,7 @@ Vector2f ElementText::GetBoundsFor(float available_width, float available_height
 	float width = 0.0f;
 	float height = 0.0f;
 	float first_line = true;
-	float baseline_offset = line_height / 2.0f + GetFontEngineInterface()->GetLineHeight(GetFontFaceHandle()) / 2.0f - GetFontEngineInterface()->GetBaseline(GetFontFaceHandle());
+	float baseline = GetBaseline();
 
 	Style::TextAlign text_align = GetComputedValues().text_align;
 	std::string line;
@@ -689,7 +689,7 @@ Vector2f ElementText::GetBoundsFor(float available_width, float available_height
 				break;
 			}
 		}
-		AddLine(Vector2f(start_width, height + baseline_offset), line);
+		AddLine(Vector2f(start_width, height + baseline), line);
 		width = std::max(width, line_width);
 		height += line_height;
 		first_line = false;
@@ -706,6 +706,13 @@ float ElementText::GetLineHeight() {
 		return line_height;
 	}
 	return line_height * property->Get<float>();
+}
+
+float ElementText::GetBaseline() {
+	float line_height = GetLineHeight();
+	return line_height / 2.0f
+		+ GetFontEngineInterface()->GetLineHeight(GetFontFaceHandle()) / 2.0f
+		- GetFontEngineInterface()->GetBaseline(GetFontFaceHandle());
 }
 
 } // namespace Rml

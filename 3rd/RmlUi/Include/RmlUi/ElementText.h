@@ -75,6 +75,7 @@ public:
 	void AddLine(const Vector2f& line_position, const String& line);
 
 	Vector2f GetBoundsFor(float width, float height);
+	float GetBaseline();
 
 protected:
 	void OnRender() override;
