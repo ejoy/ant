@@ -150,33 +150,28 @@ bool ElementUtilities::GetClippingRegion(Vector2i& clip_origin, Vector2i& clip_d
 		// Merge the existing clip region with the current clip region if we aren't ignoring clip regions.
 		if (num_ignored_clips == 0 && clipping_element->IsClippingEnabled())
 		{
-			// Ignore nodes that don't clip.
-			if (clipping_element->GetClientWidth() < clipping_element->GetScrollWidth() - 0.5f
-				|| clipping_element->GetClientHeight() < clipping_element->GetScrollHeight() - 0.5f)
+			const Vector2f element_origin_f = clipping_element->GetAbsoluteOffset(Layout::PADDING);
+			const Vector2f element_dimensions_f = clipping_element->GetLayout().GetSize(Layout::PADDING);
+
+			const Vector2i element_origin(Math::RealToInteger(element_origin_f.x), Math::RealToInteger(element_origin_f.y));
+			const Vector2i element_dimensions(Math::RealToInteger(element_dimensions_f.x), Math::RealToInteger(element_dimensions_f.y));
+
+			if (clip_origin == Vector2i(-1, -1) && clip_dimensions == Vector2i(-1, -1))
 			{
-				const Vector2f element_origin_f = clipping_element->GetAbsoluteOffset(Layout::PADDING);
-				const Vector2f element_dimensions_f = clipping_element->GetLayout().GetSize(Layout::PADDING);
-				
-				const Vector2i element_origin(Math::RealToInteger(element_origin_f.x), Math::RealToInteger(element_origin_f.y));
-				const Vector2i element_dimensions(Math::RealToInteger(element_dimensions_f.x), Math::RealToInteger(element_dimensions_f.y));
-				
-				if (clip_origin == Vector2i(-1, -1) && clip_dimensions == Vector2i(-1, -1))
-				{
-					clip_origin = element_origin;
-					clip_dimensions = element_dimensions;
-				}
-				else
-				{
-					const Vector2i top_left(Math::Max(clip_origin.x, element_origin.x),
-					                        Math::Max(clip_origin.y, element_origin.y));
-					
-					const Vector2i bottom_right(Math::Min(clip_origin.x + clip_dimensions.x, element_origin.x + element_dimensions.x),
-					                            Math::Min(clip_origin.y + clip_dimensions.y, element_origin.y + element_dimensions.y));
-					
-					clip_origin = top_left;
-					clip_dimensions.x = Math::Max(0, bottom_right.x - top_left.x);
-					clip_dimensions.y = Math::Max(0, bottom_right.y - top_left.y);
-				}
+				clip_origin = element_origin;
+				clip_dimensions = element_dimensions;
+			}
+			else
+			{
+				const Vector2i top_left(Math::Max(clip_origin.x, element_origin.x),
+					Math::Max(clip_origin.y, element_origin.y));
+
+				const Vector2i bottom_right(Math::Min(clip_origin.x + clip_dimensions.x, element_origin.x + element_dimensions.x),
+					Math::Min(clip_origin.y + clip_dimensions.y, element_origin.y + element_dimensions.y));
+
+				clip_origin = top_left;
+				clip_dimensions.x = Math::Max(0, bottom_right.x - top_left.x);
+				clip_dimensions.y = Math::Max(0, bottom_right.y - top_left.y);
 			}
 		}
 
@@ -204,19 +199,11 @@ bool ElementUtilities::GetClippingRegion(Vector2i& clip_origin, Vector2i& clip_d
 
 // Sets the clipping region from an element and its ancestors.
 bool ElementUtilities::SetClippingRegion(Element* element, Context* context)
-{	
-	RenderInterface* render_interface = nullptr;
-	if (element)
-	{
-		render_interface = element->GetRenderInterface();
-		if (!context)
-			context = element->GetContext();
+{
+	if (!context) {
+		context = element->GetContext();
 	}
-	else if (context)
-	{
-		render_interface = GetRenderInterface();
-	}
-
+	RenderInterface* render_interface = GetRenderInterface();
 	if (!render_interface || !context)
 		return false;
 	
