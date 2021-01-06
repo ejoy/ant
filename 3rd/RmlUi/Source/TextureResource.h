@@ -31,6 +31,7 @@
 
 #include "../Include/RmlUi/Traits.h"
 #include "../Include/RmlUi/Texture.h"
+#include <optional>
 
 namespace Rml {
 
@@ -51,34 +52,27 @@ public:
 	/// Texture loading is delayed until the texture is accessed by a specific render interface.
 	void Set(const String& source);
 
-	/// Clear any existing data and set a callback function for loading the data.
-	/// Texture loading is delayed until the texture is accessed by a specific render interface.
-	void Set(const String& name, const TextureCallback& callback);
-
 	/// Returns the resource's underlying texture handle.
-	TextureHandle GetHandle(RenderInterface* render_interface);
+	TextureHandle GetHandle();
 	/// Returns the dimensions of the resource's texture.
-	const Vector2i& GetDimensions(RenderInterface* render_interface);
+	const Vector2i& GetDimensions();
 
 	/// Returns the resource's source.
 	const String& GetSource() const;
 
 	/// Releases the texture's handle.
-	void Release(RenderInterface* render_interface = nullptr);
+	void Release();
 
 private:
 	void Reset();
 
 	/// Attempts to load the texture from the source, or the callback function if set.
-	bool Load(RenderInterface* render_interface);
+	bool Load();
 
 	String source;
 
 	using TextureData = Pair< TextureHandle, Vector2i >;
-	using TextureDataMap = SmallUnorderedMap< RenderInterface*, TextureData >;
-	TextureDataMap texture_data;
-
-	UniquePtr<TextureCallback> texture_callback;
+	std::optional<TextureData> texture_data;
 };
 
 } // namespace Rml

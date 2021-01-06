@@ -73,8 +73,7 @@ void Tile::GenerateGeometry(Vector<Vertex>& vertices, Vector<int>& indices, Elem
 	Vector2f tile_dimensions; // 'px' units
 	Vector2f texcoords[2]; // relative units
 
-	RenderInterface* render_interface = GetRenderInterface();
-	const Vector2i texture_dimensions_i = texture.GetDimensions(render_interface);
+	const Vector2i texture_dimensions_i = texture.GetDimensions();
 	const Vector2f texture_dimensions((float)texture_dimensions_i.x, (float)texture_dimensions_i.y);
 	if (texture_dimensions.x == 0 || texture_dimensions.y == 0) {
 		tile_dimensions = Vector2f(0, 0);
