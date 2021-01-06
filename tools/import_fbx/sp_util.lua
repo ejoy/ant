@@ -93,7 +93,17 @@ function util.spawn_process(commands)
 	return true, table.concat(msg, "\n")
 end
 
-local BINDIR = fs.current_path() / package.cpath:gsub(";.*$",""):sub(1,-6)
+local function find_bindir()
+    local binpath = (fs.current_path() / "bin/"):string():gsub("\\", "/")
+    for w in package.cpath:gmatch "[^;]+" do
+        local l = w:gsub("\\", "/")
+        if l:match(binpath) then
+            return l:sub(1, -6)
+        end
+    end
+end
+
+local BINDIR = fs.path(assert(find_bindir()))
 local TOOLSUFFIX = platform.OS == "OSX" and "" or ".exe"
 
 function util.tool_exe_path(toolname)

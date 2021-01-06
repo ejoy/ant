@@ -43,16 +43,17 @@ local function read_arguments()
         end
 
         local inputfile = fs.path(na)
-        if fs.is_regular_file(inputfile) then
+        if not fs.exists(inputfile) then
+            throw_error("'input' is not exists", idx, inputfile)
+        elseif fs.is_regular_file(inputfile) then
             local ext = inputfile:extension():string():upper()
-            if ext ~= ".FBX" then
+            if ext ~= ".FBX" and ext ~= ".GLB" then
                 throw_error("input file only support FBX file:%d %s", idx+1, inputfile:string())
             end
-        end
-
-        if not fs.is_directory(inputfile) then
+        elseif not fs.is_directory(inputfile) then
             throw_error("'input' must be file or directory", idx, inputfile)
         end
+
         arguments.input = inputfile
         return idx+1
     end
@@ -78,18 +79,24 @@ local function read_arguments()
         return idx+1
     end
 
+    local function read_toozz(idx)
+        arguments.toozz = true
+        return idx+1
+    end
+
     local commands = {
         ["--input"]  = read_input,
         ["-i"]       = read_input,
         ["--output"] = read_output,
         ["-o"]       = read_output,
         ["--cache"]  = read_cache,
+        ["--toozz"]  = read_toozz,
         ["--help"]   = print_help,
         ["-h"]       = print_help,
     }
 
     local idx = 1
-    while idx < #arg do
+    while idx <= #arg do
         local a = arg[idx]
         if a:match "-" or a:match "--" then
             local cmd = commands[a]
@@ -114,6 +121,33 @@ end
 
 fs.create_directories(fs.path(arguments.output):parent_path())
 
+local function toozz(glbfile, outfolder)
+    local export_ani = require "compile_resource.model.export_animation"
+    local exports = {}
+    
+    local out = outfolder/"animations"
+    fs.create_directories(out)
+    local srcfile
+    if glbfile:string():match(arguments.cache_folder:string()) then
+        srcfile = glbfile
+    else
+        srcfile = arguments.cache_folder / glbfile:filename()
+        fs.copy_file(glbfile, srcfile, true)
+    end
+
+    export_ani(srcfile, arguments.cache_folder, exports)
+
+    local outske = outfolder / exports.skeleton
+    fs.create_directories(outske:parent_path())
+    fs.copy_file(arguments.cache_folder / exports.skeleton, outske, true)
+
+    for _, anifile in ipairs(exports.animations) do
+        local outani = outfolder / anifile
+        fs.create_directories(outani:parent_path())
+        fs.copy_file(arguments.cache_folder / anifile, outani, true)
+    end
+end
+
 local function cvt_fbx(fbxfile, outfile)
     local fbx2gltf = require "fbx2gltf"
 
@@ -136,16 +170,22 @@ local function cvt_fbx(fbxfile, outfile)
         error(string.format("glb file is not exist, but fbx2gltf progrom return true:%s", out_tmpfile))
     end
 
-    local parentpath = outfile:parent_path()
-    if not fs.is_directory(parentpath) then
-        fs.create_directories(parentpath)
-    end
-
+    fs.create_directories(outfile:parent_path())
     fs.copy_file(out_tmpfile, outfile, true)
+
+    if arguments.toozz then
+        toozz(out_tmpfile, outfile:parent_path())
+    end
 end
 
 if fs.is_regular_file(arguments.input) then
-    cvt_fbx(arguments.input, arguments.output)
+    local ext = arguments.input:extension():string():upper()
+    if ext == ".FBX" then
+        cvt_fbx(arguments.input, arguments.output)
+    elseif ext == ".GLB" and arguments.toozz then
+        fs.create_directories(arguments.output)
+        toozz(arguments.input, arguments.output)
+    end
 elseif fs.is_directory(arguments.input) then
     if fs.is_regular_file(arguments.output) then
         error(("invalid 'output' as file, should be folder:%s"):format(arguments.output))
