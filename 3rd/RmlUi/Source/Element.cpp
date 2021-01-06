@@ -1153,12 +1153,6 @@ bool Element::IsClippingEnabled()
 	return computed.overflow != Style::Overflow::Visible;
 }
 
-// Gets the render interface owned by this element's context.
-RenderInterface* Element::GetRenderInterface()
-{
-	return ::Rml::GetRenderInterface();
-}
-
 // Called during the update loop after children are rendered.
 void Element::OnUpdate()
 {

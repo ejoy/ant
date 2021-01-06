@@ -241,7 +241,7 @@ void ElementUtilities::ApplyActiveClipRegion(Context* context, RenderInterface* 
 
 bool ElementUtilities::ApplyTransform(Element &element)
 {
-	RenderInterface *render_interface = element.GetRenderInterface();
+	RenderInterface *render_interface = GetRenderInterface();
 	if (!render_interface)
 		return false;
 

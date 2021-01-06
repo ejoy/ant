@@ -430,8 +430,9 @@ void ElementText::GenerateDecoration(const FontFaceHandle font_face_handle) {
 			break;
 		}
 		case Style::TextDecorationLine::LineThrough: {
-			int x_height = GetFontEngineInterface()->GetXHeight(font_face_handle);
-			position.y += -0.65f * x_height;
+			int baseline = GetFontEngineInterface()->GetBaseline(font_face_handle);
+			int line_height = GetFontEngineInterface()->GetLineHeight(font_face_handle);
+			position.y += baseline - 0.5f * line_height;
 			decoration_under = false;
 			break;
 		}

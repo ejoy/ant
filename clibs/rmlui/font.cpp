@@ -128,10 +128,8 @@ FontEngine::GetGlyph(const FontFace &face, int codepoint, struct font_glyph *og_
 }
 
 int FontEngine::GetXHeight(Rml::FontFaceHandle handle){
-    
     size_t idx = static_cast<size_t>(handle)-1;
     const auto &face = mFontFaces[idx];
-
     struct font_glyph g = GetGlyph(face, 'x');
     return g.h;
 }

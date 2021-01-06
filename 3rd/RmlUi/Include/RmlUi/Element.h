@@ -453,10 +453,6 @@ public:
 	/// Returns true if this element has clipping enabled
 	bool IsClippingEnabled();
 
-	/// Gets the render interface owned by this element's context.
-	/// @return The element's context's render interface.
-	RenderInterface* GetRenderInterface();
-
 	/// Called when an emitted event propagates to this element, for event types with default actions.
 	/// Note: See 'EventSpecification' for the events that call this function and during which phase.
 	/// @param[in] event The event to process.
@@ -502,7 +498,6 @@ protected:
 	virtual void GetRML(String& content);
 
 protected:
-	
 	void SetDataModel(DataModel* new_data_model);
 
 	void DirtyOffset();
