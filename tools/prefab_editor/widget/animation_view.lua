@@ -429,8 +429,14 @@ local function show_current_event()
                 imgui.widget.TreePop()
             end
         end
-    elseif current_event.event_type == "Sound" or current_event.event_type == "Effect" then
-        imgui.widget.Text("AssetPath : path")
+    elseif current_event.event_type == "Sound" then
+        if imgui.widget.Button("SelectSound") then
+        end
+        imgui.widget.Text("SoundPath : ")
+    elseif current_event.event_type == "Effect" then
+        if imgui.widget.Button("SelectEffect") then
+        end
+        imgui.widget.Text("EffectPath : ")
     end
 end
 
