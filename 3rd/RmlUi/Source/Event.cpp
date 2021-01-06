@@ -82,7 +82,7 @@ void Event::InitMouseEvent() {
 	parameters["clientX"] = client.x;
 	parameters["clientY"] = client.y;
 
-	Vector2f offset = client - target_element->GetAbsoluteOffset(Layout::BORDER);
+	Vector2f offset = client - target_element->GetAbsoluteOffset(Layout::Area::Border);
 	if (ProjectPosition(target_element, offset)) {
 		parameters["offsetX"] = offset.x;
 		parameters["offsetY"] = offset.y;
@@ -90,7 +90,7 @@ void Event::InitMouseEvent() {
 
 	ElementDocument* document = target_element->GetOwnerDocument();
 	if (document) {
-		Vector2f page = client - document->GetAbsoluteOffset(Layout::BORDER);
+		Vector2f page = client - document->GetAbsoluteOffset(Layout::Area::Border);
 		if (ProjectPosition(document, page)) {
 			parameters["pageX"] = page.x;
 			parameters["pageY"] = page.y;

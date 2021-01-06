@@ -179,7 +179,7 @@ void Element::Render()
 	// TODO: This is a work-around for the dirty offset not being properly updated when used by (stacking context?) children. This results
 	// in scrolling not working properly. We don't care about the return value, the call is only used to force the absolute offset to update.
 	if (offset_dirty)
-		GetAbsoluteOffset(Layout::BORDER);
+		GetAbsoluteOffset();
 
 	UpdateStackingContext();
 	UpdateTransformState();
@@ -348,7 +348,7 @@ Layout& Element::GetLayout()
 // Checks if a given point in screen coordinates lies within the bordered area of this element.
 bool Element::IsPointWithinElement(const Vector2f& point)
 {
-	Vector2f position = GetAbsoluteOffset(Layout::BORDER);
+	Vector2f position = GetAbsoluteOffset(Layout::Area::Border);
 	const Vector2f box_position = position;
 	const Vector2f box_dimensions = GetLayout().GetSize();
 	if (point.x >= box_position.x &&
@@ -636,70 +636,10 @@ void Element::SetId(const String& _id)
 	SetAttribute("id", _id);
 }
 
-// Gets the horizontal offset from the context's left edge to element's left border edge.
-float Element::GetAbsoluteLeft()
-{
-	return GetAbsoluteOffset(Layout::BORDER).x;
-}
-
-// Gets the vertical offset from the context's top edge to element's top border edge.
-float Element::GetAbsoluteTop()
-{
-	return GetAbsoluteOffset(Layout::BORDER).y;
-}
-
-// Gets the width of the left border of an element.
-float Element::GetClientLeft()
-{
-	return bounds[0];
-}
-
-// Gets the height of the top border of an element.
-float Element::GetClientTop()
-{
-	return bounds[1];
-}
-
-// Gets the inner width of the element.
-float Element::GetClientWidth()
-{
-	return bounds[2];
-}
-
-// Gets the inner height of the element.
-float Element::GetClientHeight()
-{
-	return bounds[3];
-}
-
 // Returns the element from which all offset calculations are currently computed.
 Element* Element::GetOffsetParent()
 {
 	return offset_parent;
-}
-
-// Gets the distance from this element's left border to its offset parent's left border.
-float Element::GetOffsetLeft()
-{
-	return relative_offset.x;
-}
-
-// Gets the distance from this element's top border to its offset parent's top border.
-float Element::GetOffsetTop()
-{
-	return relative_offset.y;
-}
-
-// Gets the width of the element, including the client area, padding, borders and scrollbars, but not margins.
-float Element::GetOffsetWidth()
-{
-	return GetLayout().GetSize().x;
-}
-
-// Gets the height of the element, including the client area, padding, borders and scrollbars, but not margins.
-float Element::GetOffsetHeight()
-{
-	return GetLayout().GetSize().y;
 }
 
 // Gets the left scroll offset of the element.
@@ -711,7 +651,7 @@ float Element::GetScrollLeft()
 // Sets the left scroll offset of the element.
 void Element::SetScrollLeft(float scroll_left)
 {
-	const float new_offset = Math::Clamp(Math::RoundFloat(scroll_left), 0.0f, GetScrollWidth() - GetClientWidth());
+	const float new_offset = Math::Clamp(Math::RoundFloat(scroll_left), 0.0f, GetScrollWidth() - bounds[2]);
 	if (new_offset != scroll_offset.x)
 	{
 		scroll_offset.x = new_offset;
@@ -730,7 +670,7 @@ float Element::GetScrollTop()
 // Sets the top scroll offset of the element.
 void Element::SetScrollTop(float scroll_top)
 {
-	const float new_offset = Math::Clamp(Math::RoundFloat(scroll_top), 0.0f, GetScrollHeight() - GetClientHeight());
+	const float new_offset = Math::Clamp(Math::RoundFloat(scroll_top), 0.0f, GetScrollHeight() - bounds[3]);
 	if(new_offset != scroll_offset.y)
 	{
 		scroll_offset.y = new_offset;
@@ -743,13 +683,13 @@ void Element::SetScrollTop(float scroll_top)
 // Gets the width of the scrollable content of the element; it includes the element padding but not its margin.
 float Element::GetScrollWidth()
 {
-	return Math::Max(content_box.x, GetClientWidth());
+	return Math::Max(content_box.x, bounds[2]);
 }
 
 // Gets the height of the scrollable content of the element; it includes the element padding but not its margin.
 float Element::GetScrollHeight()
 {
-	return Math::Max(content_box.y, GetClientHeight());
+	return Math::Max(content_box.y, bounds[3]);
 }
 
 // Gets the object representing the declarations of an element's style attributes.
@@ -1872,7 +1812,7 @@ void Element::UpdateTransformState()
 
 	const ComputedValues& computed = meta->computed_values;
 
-	const Vector2f pos = GetAbsoluteOffset(Layout::BORDER);
+	const Vector2f pos = GetAbsoluteOffset(Layout::Area::Border);
 	const Vector2f size = GetLayout().GetSize();
 	
 	bool perspective_or_transform_changed = false;

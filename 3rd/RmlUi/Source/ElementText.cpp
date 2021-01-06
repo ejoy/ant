@@ -40,7 +40,7 @@
 
 namespace Rml {
 
-static bool BuildToken(String& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline, Style::TextTransform text_transformation, bool decode_escape_characters);
+static bool BuildToken(String& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline, Style::TextTransform text_transformation);
 static bool LastToken(const char* token_begin, const char* string_end, bool collapse_white_space, bool break_at_endline);
 
 ElementText::ElementText(const String& tag)
@@ -93,7 +93,7 @@ void ElementText::OnRender()
 		GenerateDecoration(font_face_handle);
 	}
 
-	const Vector2f translation = GetAbsoluteOffset(Layout::PADDING);
+	const Vector2f translation = GetAbsoluteOffset(Layout::Area::Padding);
 	
 	bool render = true;
 	Vector2i clip_origin;
@@ -140,37 +140,8 @@ void ElementText::OnRender()
 	}
 }
 
-// Generates a token of text from this element, returning only the width.
-bool ElementText::GenerateToken(float& token_width, int line_begin)
-{
-	// Bail if we don't have a valid font face.
-	FontFaceHandle font_face_handle = GetFontFaceHandle();
-	if (font_face_handle == 0 ||
-		line_begin >= (int) text.size())
-		return 0;
-
-	// Determine how we are processing white-space while formatting the text.
-	using namespace Style;
-	auto& computed = GetComputedValues();
-	WhiteSpace white_space_property = computed.white_space;
-	bool collapse_white_space = white_space_property == WhiteSpace::Normal ||
-								white_space_property == WhiteSpace::Nowrap ||
-								white_space_property == WhiteSpace::Preline;
-	bool break_at_endline = white_space_property == WhiteSpace::Pre ||
-							white_space_property == WhiteSpace::Prewrap ||
-							white_space_property == WhiteSpace::Preline;
-
-	const char* token_begin = text.c_str() + line_begin;
-	String token;
-
-	BuildToken(token, token_begin, text.c_str() + text.size(), true, collapse_white_space, break_at_endline, computed.text_transform, true);
-	token_width = (float) GetFontEngineInterface()->GetStringWidth(font_face_handle, token);
-
-	return LastToken(token_begin, text.c_str() + text.size(), collapse_white_space, break_at_endline);
-}
-
 // Generates a line of text rendered from this element
-bool ElementText::GenerateLine(String& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, float right_spacing_width, bool trim_whitespace_prefix, bool decode_escape_characters)
+bool ElementText::GenerateLine(String& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix)
 {
 	FontFaceHandle font_face_handle = GetFontFaceHandle();
 
@@ -217,14 +188,13 @@ bool ElementText::GenerateLine(String& line, int& line_length, float& line_width
 			previous_codepoint = StringUtilities::ToCharacter(StringUtilities::SeekBackwardUTF8(&line.back(), line.data()));
 
 		// Generate the next token and determine its pixel-length.
-		bool break_line = BuildToken(token, next_token_begin, string_end, line.empty() && trim_whitespace_prefix, collapse_white_space, break_at_endline, text_transform_property, decode_escape_characters);
+		bool break_line = BuildToken(token, next_token_begin, string_end, line.empty() && trim_whitespace_prefix, collapse_white_space, break_at_endline, text_transform_property);
 		int token_width = font_engine_interface->GetStringWidth(font_face_handle, token, previous_codepoint);
 
 		// If we're breaking to fit a line box, check if the token can fit on the line before we add it.
 		if (break_at_line)
 		{
-			const bool is_last_token = LastToken(next_token_begin, string_end, collapse_white_space, break_at_endline);
-			int max_token_width = int(maximum_line_width - (is_last_token ? line_width + right_spacing_width : line_width));
+			int max_token_width = int(maximum_line_width - line_width);
 
 			if (token_width > max_token_width)
 			{
@@ -241,7 +211,7 @@ bool ElementText::GenerateLine(String& line, int& line_length, float& line_width
 						token.clear();
 						next_token_begin = token_begin;
 						const char* partial_string_end = StringUtilities::SeekBackwardUTF8(token_begin + i, token_begin);
-						break_line = BuildToken(token, next_token_begin, partial_string_end, line.empty() && trim_whitespace_prefix, collapse_white_space, break_at_endline, text_transform_property, decode_escape_characters);
+						break_line = BuildToken(token, next_token_begin, partial_string_end, line.empty() && trim_whitespace_prefix, collapse_white_space, break_at_endline, text_transform_property);
 						token_width = font_engine_interface->GetStringWidth(font_face_handle, token, previous_codepoint);
 
 						if (force_loop_break_after_next || token_width <= max_token_width)
@@ -481,7 +451,7 @@ void ElementText::GenerateDecoration(const FontFaceHandle font_face_handle) {
 	}
 }
 
-static bool BuildToken(String& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline, Style::TextTransform text_transformation, bool decode_escape_characters)
+static bool BuildToken(String& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline, Style::TextTransform text_transformation)
 {
 	RMLUI_ASSERT(token_begin != string_end);
 
@@ -495,56 +465,27 @@ static bool BuildToken(String& token, const char*& token_begin, const char* stri
 	//  - at the end of a section of non-white-space characters,
 	//  - at the end of a section of white-space characters, if we're not collapsing white-space,
 	//  - at an endline token, if we're breaking on endlines.
-	while (token_begin != string_end)
-	{
+	while (token_begin != string_end) {
 		bool force_non_whitespace = false;
 		char character = *token_begin;
-
 		const char* escape_begin = token_begin;
 
-		// Check for an ampersand; if we find one, we've got an HTML escaped character.
-		if (decode_escape_characters && character == '&')
-		{
-			// Find the terminating ';'.
-			while (token_begin != string_end &&
-				   *token_begin != ';')
-				++token_begin;
-
-			// If we couldn't find the ';', print the token like normal text.
-			if (token_begin == string_end)
-			{
-				token_begin = escape_begin;
-			}
-			// We could find a ';', parse the escape code. If the escape code is recognised, set the parsed character
-			// to the appropriate one. If it is a non-breaking space, prevent it being picked up as whitespace. If it
-			// is not recognised, print the token like normal text.
-			else
-			{
-				String escape_code(escape_begin + 1, token_begin);
-
-				if (escape_code == "lt")
-					character = '<';
-				else if (escape_code == "gt")
-					character = '>';
-				else if (escape_code == "amp")
-					character = '&';
-				else if (escape_code == "quot")
-					character = '"';
-				else if (escape_code == "nbsp")
-				{
-					character = ' ';
-					force_non_whitespace = true;
-				}
-				else
-					token_begin = escape_begin;
-			}
+		if (token_begin + 5 <= string_end
+			&& token_begin[0] == '&'
+			&& token_begin[1] == 'n'
+			&& token_begin[2] == 'b'
+			&& token_begin[3] == 's'
+			&& token_begin[4] == 'p'
+			&& token_begin[5] == ';'
+		) {
+			character = ' ';
+			force_non_whitespace = true;
+			token_begin += 5;
 		}
 
 		// Check for an endline token; if we're breaking on endlines and we find one, then return true to indicate a
 		// forced break.
-		if (break_at_endline &&
-			character == '\n')
-		{
+		if (break_at_endline && character == '\n') {
 			token += '\n';
 			token_begin++;
 			return true;
@@ -554,10 +495,8 @@ static bool BuildToken(String& token, const char*& token_begin, const char* stri
 		// if should terminate the token; if we're not collapsing white-space, then yes (as sections of white-space are
 		// non-breaking), otherwise only if we've transitioned from characters to white-space.
 		bool white_space = !force_non_whitespace && StringUtilities::IsWhitespace(character);
-		if (white_space != parsing_white_space)
-		{
-			if (!collapse_white_space)
-			{
+		if (white_space != parsing_white_space) {
+			if (!collapse_white_space) {
 				// Restore pointer to the beginning of the escaped token, if we processed an escape code.
 				token_begin = escape_begin;
 				return false;
@@ -565,106 +504,82 @@ static bool BuildToken(String& token, const char*& token_begin, const char* stri
 
 			// We're collapsing white-space; we only tokenise words, not white-space, so we're only done tokenising
 			// once we've begun parsing non-white-space and then found white-space.
-			if (!parsing_white_space)
-			{
+			if (!parsing_white_space) {
 				// However, if we are the last non-whitespace character in the string, and there are trailing
 				// whitespace characters after this token, then we need to append a single space to the end of this
 				// token.
-				if (token_begin != string_end &&
-					LastToken(token_begin, string_end, collapse_white_space, break_at_endline))
+				if (token_begin != string_end && LastToken(token_begin, string_end, collapse_white_space, break_at_endline))
 					token += ' ';
-
 				return false;
 			}
 
 			// We've transitioned from white-space to non-white-space, so we append a single white-space character.
 			if (!first_token)
 				token += ' ';
-
 			parsing_white_space = false;
 		}
 
 		// If the current character is white-space, we'll append a space character to the token if we're not collapsing
 		// sections of white-space.
-		if (white_space)
-		{
+		if (white_space) {
 			if (!collapse_white_space)
 				token += ' ';
 		}
-		else
-		{
-			if (text_transformation == Style::TextTransform::Uppercase)
-			{
+		else {
+			if (text_transformation == Style::TextTransform::Uppercase) {
 				if (character >= 'a' && character <= 'z')
 					character += ('A' - 'a');
 			}
-			else if (text_transformation == Style::TextTransform::Lowercase)
-			{
+			else if (text_transformation == Style::TextTransform::Lowercase) {
 				if (character >= 'A' && character <= 'Z')
 					character -= ('A' - 'a');
 			}
-
 			token += character;
 		}
-
 		++token_begin;
 	}
-
 	return false;
 }
 
 static bool LastToken(const char* token_begin, const char* string_end, bool collapse_white_space, bool break_at_endline)
 {
 	bool last_token = (token_begin == string_end);
-	if (collapse_white_space &&
-		!last_token)
-	{
+	if (collapse_white_space && !last_token) {
 		last_token = true;
 		const char* character = token_begin;
-
-		while (character != string_end)
-		{
-			if (!StringUtilities::IsWhitespace(*character) ||
-				(break_at_endline && *character == '\n'))
-			{
+		while (character != string_end) {
+			if (!StringUtilities::IsWhitespace(*character) || (break_at_endline && *character == '\n')) {
 				last_token = false;
 				break;
 			}
-
 			character++;
 		}
 	}
-
 	return last_token;
 }
 
-Vector2f ElementText::GetBoundsFor(float available_width, float available_height) {
+Vector2f ElementText::Measure(float minWidth, float maxWidth, float minHeight, float maxHeight) {
 	ClearLines();
-	int line_length;
-	float line_width;
 	int line_begin = 0;
 	bool finish = false;
 	float line_height = GetLineHeight();
-	float width = 0.0f;
+	float width = minWidth;
 	float height = 0.0f;
 	float first_line = true;
 	float baseline = GetBaseline();
 
 	Style::TextAlign text_align = GetComputedValues().text_align;
 	std::string line;
-	while (!finish) {
-		finish = GenerateLine(line, line_length, line_width, line_begin, available_width, 0.0f, first_line, true);
+	while (!finish && height < maxHeight) {
+		float line_width;
+		int line_length;
+		finish = GenerateLine(line, line_length, line_width, line_begin, maxWidth, first_line);
 		float start_width = 0.0f;
-		if (line_width < available_width) {
+		if (line_width < maxWidth) {
 			switch (text_align) {
-			case Style::TextAlign::Right:
-				start_width = available_width - line_width;
-				break;
-			case Style::TextAlign::Center:
-				start_width = (available_width - line_width) / 2.0f;
-				break;
-			default:
-				break;
+			case Style::TextAlign::Right: start_width = maxWidth - line_width; break;
+			case Style::TextAlign::Center: start_width = (maxWidth - line_width) / 2.0f; break;
+			default: break;
 			}
 		}
 		AddLine(Vector2f(start_width, height + baseline), line);
@@ -673,7 +588,7 @@ Vector2f ElementText::GetBoundsFor(float available_width, float available_height
 		first_line = false;
 		line_begin += line_length;
 	}
-
+	height = std::max(minHeight, height);
 	return Vector2f(width, height);
 }
 

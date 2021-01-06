@@ -51,22 +51,15 @@ public:
 	/// Returns the raw string this text element contains.
 	const String& GetText() const;
 
-	/// Generates a token of text from this element, returning only the width.
-	/// @param[out] token_width The window (in pixels) of the token.
-	/// @param[in] token_begin The first character to be included in the token.
-	/// @return True if the token is the end of the element's text, false if not.
-	bool GenerateToken(float& token_width, int token_begin);
 	/// Generates a line of text rendered from this element.
 	/// @param[out] line The characters making up the line, with white-space characters collapsed and endlines processed appropriately.
 	/// @param[out] line_length The number of characters from the source string consumed making up this string; this may very well be different from line.size()!
 	/// @param[out] line_width The width (in pixels) of the generated line.
 	/// @param[in] line_begin The index of the first character to be rendered in the line.
 	/// @param[in] maximum_line_width The width (in pixels) of space allowed for the line, or -1 for unlimited space.
-	/// @param[in] right_spacing_width The width (in pixels) of the spacing (consisting of margins, padding, etc) that must be remaining on the right of the line if the last of the text is rendered onto this line.
 	/// @param[in] trim_whitespace_prefix If we're collapsing whitespace, whether or not to remove all prefixing whitespace or collapse it down to a single space.
-	/// @param[in] decode_escape_characters Decode escaped characters such as &amp; into &.
 	/// @return True if the line reached the end of the element's text, false if not.
-	bool GenerateLine(String& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, float right_spacing_width, bool trim_whitespace_prefix, bool decode_escape_characters);
+	bool GenerateLine(String& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix);
 
 	/// Clears all lines of generated text and prepares the element for generating new lines.
 	void ClearLines();
@@ -75,7 +68,7 @@ public:
 	/// @param[in] line The contents of the line.
 	void AddLine(const Vector2f& line_position, const String& line);
 
-	Vector2f GetBoundsFor(float width, float height);
+	Vector2f Measure(float minWidth, float maxWidth, float minHeight, float maxHeight);
 	float GetBaseline();
 
 protected:

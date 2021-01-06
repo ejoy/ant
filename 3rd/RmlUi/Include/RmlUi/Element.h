@@ -279,45 +279,9 @@ public:
 	/// @param[in] id The new id of the element.
 	void SetId(const String& id);
 
-	/// Gets the horizontal offset from the context's left edge to element's left border edge.
-	/// @return The horizontal offset of the element within its context, in pixels.
-	float GetAbsoluteLeft();
-	/// Gets the vertical offset from the context's top edge to element's top border edge.
-	/// @return The vertical offset of the element within its context, in pixels.
-	float GetAbsoluteTop();
-
-	/// Gets the horizontal offset from the element's left border edge to the left edge of its client area. This is
-	/// usually the edge of the padding, but may be the content area for some replaced elements.
-	/// @return The horizontal offset of the element's client area, in pixels.
-	float GetClientLeft();
-	/// Gets the vertical offset from the element's top border edge to the top edge of its client area. This is
-	/// usually the edge of the padding, but may be the content area for some replaced elements.
-	/// @return The vertical offset of the element's client area, in pixels.
-	float GetClientTop();
-	/// Gets the width of the element's client area. This is usually the padded area less the vertical scrollbar
-	/// width, but may be the content area for some replaced elements.
-	/// @return The width of the element's client area, usually including padding but not the vertical scrollbar width, border or margin.
-	float GetClientWidth();
-	/// Gets the height of the element's client area. This is usually the padded area less the horizontal scrollbar
-	/// height, but may be the content area for some replaced elements.
-	/// @return The inner height of the element, usually including padding but not the horizontal scrollbar height, border or margin.
-	float GetClientHeight();
-
 	/// Returns the element from which all offset calculations are currently computed.
 	/// @return This element's offset parent.
 	Element* GetOffsetParent();
-	/// Gets the distance from this element's left border to its offset parent's left border.
-	/// @return The horizontal distance (in pixels) from this element's offset parent to itself.
-	float GetOffsetLeft();
-	/// Gets the distance from this element's top border to its offset parent's top border.
-	/// @return The vertical distance (in pixels) from this element's offset parent to itself.
-	float GetOffsetTop();
-	/// Gets the width of the element, including the client area, padding, borders and scrollbars, but not margins.
-	/// @return The width of the rendered element, in pixels.
-	float GetOffsetWidth();
-	/// Gets the height of the element, including the client area, padding, borders and scrollbars, but not margins.
-	/// @return The height of the rendered element, in pixels.
-	float GetOffsetHeight();
 
 	/// Gets the left scroll offset of the element.
 	/// @return The element's left scroll offset.

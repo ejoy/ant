@@ -39,23 +39,19 @@ class ElementText;
 class RMLUICORE_API Layout
 {
 public:
-	enum Area
-	{
-		MARGIN = 0,
-		BORDER = 1,
-		PADDING = 2,
+	enum class Area {
+		Margin,
+		Border,
+		Padding,
 	};
 
-	enum Edge
-	{
+	enum Edge {
 		TOP = 0,
 		RIGHT = 1,
 		BOTTOM = 2,
-		LEFT = 3,
-		NUM_EDGES = 4
+		LEFT = 3
 	};
 
-	/// Initialises a zero-sized box.
 	Layout();
 	~Layout();
 
@@ -81,18 +77,9 @@ public:
 	void RemoveChild(Layout const& child);
 	void RemoveAllChildren();
 	void SetProperty(PropertyId id, const Property* property, float font_size, float document_font_size, float dp_ratio);
-
 	void SetElementText(ElementText* element);
 	void MarkDirty();
-
 	std::string ToString() const;
-
-	/// Compares the size of the content area and the other area edges.
-	/// @return True if the boxes represent the same area.
-	bool operator==(const Layout& rhs) const = delete;
-	/// Compares the size of the content area and the other area edges.
-	/// @return True if the boxes do not represent the same area.
-	bool operator!=(const Layout& rhs) const = delete;
 
 private:
 	YGNodeRef node;

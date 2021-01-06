@@ -150,7 +150,7 @@ bool ElementUtilities::GetClippingRegion(Vector2i& clip_origin, Vector2i& clip_d
 		// Merge the existing clip region with the current clip region if we aren't ignoring clip regions.
 		if (num_ignored_clips == 0 && clipping_element->IsClippingEnabled())
 		{
-			const Vector2f element_origin_f = clipping_element->GetAbsoluteOffset(Layout::PADDING);
+			const Vector2f element_origin_f = clipping_element->GetAbsoluteOffset(Layout::Area::Padding);
 			const Vector2f element_dimensions_f = clipping_element->GetLayout().GetPaddingSize();
 
 			const Vector2i element_origin(Math::RealToInteger(element_origin_f.x), Math::RealToInteger(element_origin_f.y));

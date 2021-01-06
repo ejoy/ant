@@ -42,10 +42,10 @@ void GeometryBackgroundBorder::Draw(Vector<Vertex>& vertices, Vector<int>& indic
 	using Edge = Layout::Edge;
 
 	EdgeSizes border_widths = {
-		Math::RoundFloat(box.GetEdge(Layout::BORDER, Edge::TOP)),
-		Math::RoundFloat(box.GetEdge(Layout::BORDER, Edge::RIGHT)),
-		Math::RoundFloat(box.GetEdge(Layout::BORDER, Edge::BOTTOM)),
-		Math::RoundFloat(box.GetEdge(Layout::BORDER, Edge::LEFT)),
+		Math::RoundFloat(box.GetEdge(Layout::Area::Border, Edge::TOP)),
+		Math::RoundFloat(box.GetEdge(Layout::Area::Border, Edge::RIGHT)),
+		Math::RoundFloat(box.GetEdge(Layout::Area::Border, Edge::BOTTOM)),
+		Math::RoundFloat(box.GetEdge(Layout::Area::Border, Edge::LEFT)),
 	};
 
 	int num_borders = 0;

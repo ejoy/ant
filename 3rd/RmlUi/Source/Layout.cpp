@@ -61,11 +61,11 @@ static float YGValueToFloat(float v) {
 
 Vector2f Layout::GetPosition(Area area) const {
 	switch (area) {
-	case Layout::MARGIN:
+	case Layout::Area::Margin:
 		return Vector2f(-YGValueToFloat(YGNodeStyleGetMargin(node, YGEdgeLeft)), -YGValueToFloat(YGNodeStyleGetMargin(node, YGEdgeTop)));
-	case Layout::PADDING:
+	case Layout::Area::Padding:
 		return Vector2f(YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeLeft)), YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeTop)));
-	case Layout::BORDER:
+	case Layout::Area::Border:
 	default:
 		return Vector2f(0.0f, 0.0f);
 	}
@@ -105,11 +105,11 @@ static YGEdge ConvertEdge(Layout::Edge edge) {
 
 float Layout::GetEdge(Area area, Edge edge) const {
 	switch (area) {
-	case Layout::MARGIN:
+	case Layout::Area::Margin:
 		return YGValueToFloat(YGNodeStyleGetMargin(node, ConvertEdge(edge)));
-	case Layout::BORDER:
+	case Layout::Area::Border:
 		return YGValueToFloat(YGNodeStyleGetBorder(node, ConvertEdge(edge)));
-	case Layout::PADDING:
+	case Layout::Area::Padding:
 		return YGValueToFloat(YGNodeStyleGetPadding(node, ConvertEdge(edge)));
 	default:
 		return 0.0f;
@@ -280,10 +280,36 @@ void Layout::SetProperty(PropertyId id, const Property* property, float font_siz
 	}
 }
 
-static YGSize MeasureFunc(YGNodeRef node, float width, YGMeasureMode mode, float height, YGMeasureMode height_mode) {
+static YGSize MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
 	auto* element = static_cast<ElementText*>(YGNodeGetContext(node));
-	Vector2f size = element->GetBoundsFor(width, height);
-	return { 1 + std::ceil(size[0]), 1 + std::ceil(size[1]) };
+	float minWidth = 0;
+	float maxWidth = std::numeric_limits<float>::max();
+	float minHeight = 0;
+	float maxHeight = std::numeric_limits<float>::max();
+	switch (widthMode) {
+	case YGMeasureModeUndefined:
+		break;
+	case YGMeasureModeExactly:
+		minWidth = width;
+		maxWidth = width;
+		break;
+	case YGMeasureModeAtMost:
+		maxWidth = width;
+		break;
+	}
+	switch (heightMode) {
+	case YGMeasureModeUndefined:
+		break;
+	case YGMeasureModeExactly:
+		minHeight = height;
+		maxHeight = height;
+		break;
+	case YGMeasureModeAtMost:
+		maxHeight = height;
+		break;
+	}
+	Vector2f size = element->Measure(minWidth, maxWidth, minHeight, maxHeight);
+	return { size[0], size[1] };
 }
 
 static float BaselineFunc(YGNodeRef node, float width, float height) {

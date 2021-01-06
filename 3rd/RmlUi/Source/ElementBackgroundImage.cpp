@@ -216,7 +216,7 @@ void ElementBackgroundImage::Render() {
 		Reload();
 	}
 	if (geometry) {
-		geometry->Render(element->GetAbsoluteOffset(Layout::PADDING).Round());
+		geometry->Render(element->GetAbsoluteOffset(Layout::Area::Padding).Round());
 	}
 }
 
