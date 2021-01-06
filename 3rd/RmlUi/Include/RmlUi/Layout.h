@@ -39,25 +39,19 @@ class ElementText;
 class RMLUICORE_API Layout
 {
 public:
-	enum Area
-	{
-		MARGIN = 0,
-		BORDER = 1,
-		PADDING = 2,
-		CONTENT = 3,
-		NUM_AREAS = 3,		// ignores CONTENT
+	enum class Area {
+		Margin,
+		Border,
+		Padding,
 	};
 
-	enum Edge
-	{
+	enum Edge {
 		TOP = 0,
 		RIGHT = 1,
 		BOTTOM = 2,
-		LEFT = 3,
-		NUM_EDGES = 4
+		LEFT = 3
 	};
 
-	/// Initialises a zero-sized box.
 	Layout();
 	~Layout();
 
@@ -67,21 +61,10 @@ public:
 	Layout& operator=(const Layout&) = delete;
 	Layout& operator=(Layout&&) = delete;
 
-	/// Returns the top-left position of one of the box's areas, relative to the top-left of the border area. This
-	/// means the position of the margin area is likely to be negative.
-	/// @param area[in] The desired area.
-	/// @return The position of the area.
-	Vector2f GetPosition(Area area = Layout::CONTENT) const;
-	/// Returns the size of one of the box's areas. This will include all inner areas.
-	/// @param area[in] The desired area.
-	/// @return The size of the requested area.
-	Vector2f GetSize(Area area = Layout::CONTENT) const;
-
-	/// Returns the size of one of the area edges.
-	/// @param area[in] The desired area.
-	/// @param edge[in] The desired edge.
-	/// @return The size of the requested area edge.
+	Vector2f GetPosition(Area area) const;
 	float GetEdge(Area area, Edge edge) const;
+	Vector2f GetPaddingSize() const;
+	Vector2f GetSize() const;
 
 	void CalculateLayout(float width, float height);
 	Vector4f GetBounds() const;
@@ -94,18 +77,9 @@ public:
 	void RemoveChild(Layout const& child);
 	void RemoveAllChildren();
 	void SetProperty(PropertyId id, const Property* property, float font_size, float document_font_size, float dp_ratio);
-
 	void SetElementText(ElementText* element);
 	void MarkDirty();
-
 	std::string ToString() const;
-
-	/// Compares the size of the content area and the other area edges.
-	/// @return True if the boxes represent the same area.
-	bool operator==(const Layout& rhs) const = delete;
-	/// Compares the size of the content area and the other area edges.
-	/// @return True if the boxes do not represent the same area.
-	bool operator!=(const Layout& rhs) const = delete;
 
 private:
 	YGNodeRef node;

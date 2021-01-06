@@ -13,13 +13,13 @@ function PropertyBase:_init(config, modifier)
     self.modifier = modifier or {}
     self.dim = config.dim or 1
     if self.dim == 1 then
-        self.uidata = {0, speed = config.speed, min = config.min, max = config.max}
+        self.uidata = {0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
     elseif self.dim == 2 then
-        self.uidata = {0, 0, speed = config.speed, min = config.min, max = config.max}
+        self.uidata = {0, 0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
     elseif self.dim == 3 then
-        self.uidata = {0, 0, 0, speed = config.speed, min = config.min, max = config.max}
+        self.uidata = {0, 0, 0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
     elseif self.dim == 4 then
-        self.uidata = {0, 0, 0, 0, speed = config.speed, min = config.min, max = config.max}
+        self.uidata = {0, 0, 0, 0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
     end
 end
 
@@ -56,11 +56,11 @@ function PropertyBase:show()
         if self.dim == 1 then
             self.modifier.setter(self.uidata[1])
         elseif self.dim == 2 then
-            self.modifier.setter(self.uidata[1], self.uidata[2])
+            self.modifier.setter({self.uidata[1], self.uidata[2]})
         elseif self.dim == 3 then
-            self.modifier.setter(self.uidata[1], self.uidata[2], self.uidata[3])
+            self.modifier.setter({self.uidata[1], self.uidata[2], self.uidata[3]})
         elseif self.dim == 4 then
-            self.modifier.setter(self.uidata[1], self.uidata[2], self.uidata[3], self.uidata[4])
+            self.modifier.setter({self.uidata[1], self.uidata[2], self.uidata[3], self.uidata[4]})
         end
     end
 end
@@ -100,8 +100,9 @@ function Combo:update()
 end
 
 function Combo:show()
-    imgui.widget.Text(self.label)
-    imgui.cursor.SameLine(uiconfig.PropertyIndent)
+    -- imgui.widget.Text(self.label)
+    -- imgui.cursor.SameLine(uiconfig.PropertyIndent)
+    imgui.widget.PropertyLabel(self.label)
     imgui.util.PushID(tostring(self))
     if imgui.widget.BeginCombo("##"..self.label, {self.current_option, flags = imgui.flags.Combo {}}) then
         for _, option in ipairs(self.options) do
@@ -260,98 +261,93 @@ end
 function TextureResource:show()
     ResourcePath.show(self)
     if not self.runtimedata then return end
-    local texture_handle = self.runtimedata._data.handle
-    if not texture_handle then return end
-    --imgui.cursor.Indent()
-    imgui.deprecated.Columns(2, self.label, false)
-    imgui.deprecated.SetColumnOffset(2, uiconfig.PropertyIndent)
-    imgui.widget.Image(texture_handle, uiconfig.PropertyImageSize, uiconfig.PropertyImageSize)
-    --imgui.cursor.SameLine(uiconfig.PropertyImageSize * 2)
-    imgui.deprecated.NextColumn()
-    imgui.widget.Text("image")
-    imgui.cursor.SameLine()
-    --imgui.widget.PropertyLabel("image")
-    imgui.cursor.PushItemWidth(-1)
-    if imgui.widget.InputText("##" .. self.metadata.path .. self.label, self.uidata2) then
-    end
-    imgui.cursor.PopItemWidth()
-    if imgui.widget.BeginDragDropTarget() then
-        local payload = imgui.widget.AcceptDragDropPayload("DragFile")
-        if payload then
-            local relative_path = lfs.relative(lfs.path(payload), fs.path "":localpath())
-            local extension = tostring(relative_path:extension())
-            local path_str = tostring(relative_path)
-            if extension == ".png" or extension == ".dds" then
-                local t = assetmgr.resource(path_str, { compile = true })
-                self.runtimedata._data.handle = t.handle
-                self.metadata.path = path_str
-                self.uidata2.text = self.metadata.path
-            end
+    if not self.runtimedata._data.handle then return end
+    if imgui.table.Begin("##TextureTable" .. self.label, 2, imgui.flags.Table {}) then
+        imgui.table.SetupColumn("ImagePreview", imgui.flags.TableColumn {'WidthFixed'}, 64.0)
+        imgui.table.SetupColumn("ImagePath", imgui.flags.TableColumn {'NoHide', 'WidthStretch'}, 1.0)
+        imgui.table.NextColumn()
+        imgui.widget.Image(self.runtimedata._data.handle, uiconfig.PropertyImageSize, uiconfig.PropertyImageSize)
+        imgui.table.NextColumn()
+        imgui.cursor.PushItemWidth(-1)
+        if imgui.widget.InputText("##" .. self.metadata.path .. self.label, self.uidata2) then
         end
-        imgui.widget.EndDragDropTarget()
-    end
-
-    local sampler = self.metadata.sampler
-    local function show_filter(ft)
-        imgui.widget.Text(ft)
-        imgui.cursor.SameLine()
-        imgui.cursor.SetNextItemWidth(uiconfig.ComboWidth)
-        imgui.util.PushID(ft .. self.label)
-        if imgui.widget.BeginCombo("##"..ft, {sampler[ft], flags = imgui.flags.Combo { "NoArrowButton" }}) then
-            for i, type in ipairs(filter_type) do
-                if imgui.widget.Selectable(type, sampler[ft] == type) then
-                    sampler[ft] = type
+        imgui.cursor.PopItemWidth()
+        if imgui.widget.BeginDragDropTarget() then
+            local payload = imgui.widget.AcceptDragDropPayload("DragFile")
+            if payload then
+                local relative_path = lfs.relative(lfs.path(payload), fs.path "":localpath())
+                local extension = tostring(relative_path:extension())
+                local path_str = tostring(relative_path)
+                if extension == ".png" or extension == ".dds" then
+                    local t = assetmgr.resource(path_str, { compile = true })
+                    self.runtimedata._data.handle = t.handle
+                    self.metadata.path = path_str
+                    self.uidata2.text = self.metadata.path
                 end
             end
-            imgui.widget.EndCombo()
+            imgui.widget.EndDragDropTarget()
+        end
+
+        -- local sampler = self.metadata.sampler
+        -- local function show_filter(ft)
+        --     imgui.widget.Text(ft)
+        --     imgui.cursor.SameLine()
+        --     imgui.cursor.SetNextItemWidth(uiconfig.ComboWidth)
+        --     imgui.util.PushID(ft .. self.label)
+        --     if imgui.widget.BeginCombo("##"..ft, {sampler[ft], flags = imgui.flags.Combo { "NoArrowButton" }}) then
+        --         for i, type in ipairs(filter_type) do
+        --             if imgui.widget.Selectable(type, sampler[ft] == type) then
+        --                 sampler[ft] = type
+        --             end
+        --         end
+        --         imgui.widget.EndCombo()
+        --     end
+        --     imgui.util.PopID()
+        -- end
+        -- show_filter("MAG")
+        -- imgui.cursor.SameLine()
+        -- show_filter("MIN")
+        -- imgui.cursor.SameLine()
+        -- show_filter("MIP")
+
+        -- local function show_uv(uv)
+        --     imgui.widget.Text(uv)
+        --     imgui.cursor.SameLine()
+        --     imgui.cursor.SetNextItemWidth(uiconfig.ComboWidth)
+        --     imgui.util.PushID(uv .. self.label)
+        --     if imgui.widget.BeginCombo("##"..uv, {sampler[uv], flags = imgui.flags.Combo { "NoArrowButton" }}) then
+        --         for i, type in ipairs(address_type) do
+        --             if imgui.widget.Selectable(type, sampler[uv] == type) then
+        --                 sampler[uv] = type
+        --             end
+        --         end
+        --         imgui.widget.EndCombo()
+        --     end
+        --     imgui.util.PopID()
+        -- end
+        -- show_uv("U")
+        -- imgui.cursor.SameLine()
+        -- show_uv("V")
+        -- imgui.cursor.SameLine()
+        imgui.util.PushID("Save" .. self.label)
+        if imgui.widget.Button("Save") then
+            self.metadata.path = tostring(lfs.relative(lfs.path(self.metadata.path), lfs.path(self.path):remove_filename()))
+            utils.write_file(self.path, stringify(self.metadata))
         end
         imgui.util.PopID()
-    end
-    show_filter("MAG")
-    imgui.cursor.SameLine()
-    show_filter("MIN")
-    imgui.cursor.SameLine()
-    show_filter("MIP")
-
-    local function show_uv(uv)
-        imgui.widget.Text(uv)
         imgui.cursor.SameLine()
-        imgui.cursor.SetNextItemWidth(uiconfig.ComboWidth)
-        imgui.util.PushID(uv .. self.label)
-        if imgui.widget.BeginCombo("##"..uv, {sampler[uv], flags = imgui.flags.Combo { "NoArrowButton" }}) then
-            for i, type in ipairs(address_type) do
-                if imgui.widget.Selectable(type, sampler[uv] == type) then
-                    sampler[uv] = type
-                end
+        imgui.util.PushID("Save As" .. self.label)
+        if imgui.widget.Button("Save As") then
+            local path = uiutils.get_saveas_path("Texture", ".texture")
+            if path then
+                path = tostring(lfs.relative(lfs.path(path), fs.path "":localpath()))
+                self.metadata.path = tostring(lfs.relative(lfs.path(self.metadata.path), lfs.path(path):remove_filename()))
+                utils.write_file(path, stringify(self.metadata))
             end
-            imgui.widget.EndCombo()
         end
         imgui.util.PopID()
+        imgui.table.End()
     end
-    show_uv("U")
-    imgui.cursor.SameLine()
-    show_uv("V")
-
-    imgui.cursor.SameLine()
-    imgui.util.PushID("Save" .. self.label)
-    if imgui.widget.Button("Save") then
-        self.metadata.path = tostring(lfs.relative(lfs.path(self.metadata.path), lfs.path(self.path):remove_filename()))
-        utils.write_file(self.path, stringify(self.metadata))
-    end
-    imgui.util.PopID()
-    imgui.cursor.SameLine()
-    imgui.util.PushID("Save As" .. self.label)
-    if imgui.widget.Button("Save As") then
-        local path = uiutils.get_saveas_path("Texture", ".texture")
-        if path then
-            path = tostring(lfs.relative(lfs.path(path), fs.path "":localpath()))
-            self.metadata.path = tostring(lfs.relative(lfs.path(self.metadata.path), lfs.path(path):remove_filename()))
-            utils.write_file(path, stringify(self.metadata))
-        end
-    end
-    imgui.util.PopID()
-    imgui.deprecated.Columns(1)
-    --imgui.cursor.Unindent()
 end
 
 

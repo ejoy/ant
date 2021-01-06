@@ -67,9 +67,9 @@ end
 
 local function on_position_dirty(eid, pos)
     local oldPos = math3d.totable(iom.get_position(eid))
-    local tp = {pos[1], pos[2], pos[3]}
+    local newPos = {pos[1], pos[2], pos[3]}
     gizmo:set_position(pos)
-    world:pub {"EntityEvent", "move", eid, oldPos, tp}
+    world:pub {"EntityEvent", "move", eid, oldPos, newPos}
     if world[eid].camera then
         local frames = camera_mgr.get_recorder_frames(eid)
         frames[camera_ui_data.current_frame].position = math3d.ref(iom.get_position(eid))

@@ -6,7 +6,7 @@ local uiutils   = require "widget.utils"
 local uiproperty    = require "widget.uiproperty"
 
 local world
-
+local prefab_mgr
 local m = {}
 
 local born_pro = {
@@ -22,78 +22,16 @@ local born_pro = {
 
 
 local method_type = {"around_sphere", "sphere_random", "face_axis", "around_box", "change_property"}
-
+local interp_type = {"linear", "const"}
 local current_emitter_eid
 
 local property = {}
 
+local emitter_data
+
 local function update_emitter()
-
-end
-
-local function data_from_ui(target, ...)
-    if type(target) == "table" then
-        target = {...}
-    end
-    update_emitter()
-end
-
-local function create_pro_by_method(data)
-    local sp = {}
-    sp[#sp + 1] = uiproperty.Combo({label = "method", options = method_type},
-        {
-            setter = function(v)
-                data.method = v
-                update_emitter()
-            end,
-            getter = function() return data.method end
-        })
-
-    if data.method == "around_sphere" then
-        sp[#sp + 1] = uiproperty.Float({label = "radius_scale", dim = 2},
-            {
-                setter = function(...) data_from_ui(data.radius_scale, ...) end,
-                getter = function() return data.radius_scale end
-            })
-    elseif data.method == "sphere_random" then
-        sp[#sp + 1] = uiproperty.Float({label = "longitude", dim = 2},
-            {
-                setter = function(...) data_from_ui(data.longitude, ...) end,
-                getter = function() return data.longitude end
-            })
-        sp[#sp + 1] = uiproperty.Float({label = "latitude", dim = 2},
-            {
-                setter = function(...) data_from_ui(data.latitude, ...) end,
-                getter = function() return data.latitude end
-            })
-    elseif data.method == "face_axis" then
-        sp[#sp + 1] = uiproperty.Float({label = "axis", dim = 4},
-            {
-                setter = function(...) data_from_ui(data.axis, ...) end,
-                getter = function() return data.axis end
-            })
-    elseif data.method == "around_box" then
-        sp[#sp + 1] = uiproperty.Float({label = "box_range_x", dim = 2},
-            {
-                setter = function(...) data_from_ui(data.box_range.x, ...) end,
-                getter = function() return data.box_range.x end
-            })
-        sp[#sp + 1] = uiproperty.Float({label = "box_range_y", dim = 2},
-            {
-                setter = function(...) data_from_ui(data.box_range.y, ...) end,
-                getter = function() return data.box_range.y end
-            })
-    elseif data.method == "change_property" then
-        sp[#sp + 1] = uiproperty.ResourcePath({label = "texture"},
-            {
-                setter = function(value)
-                    data.properties.s_tex.texture = value
-                    update_emitter()
-                end,
-                getter = function() return data.properties.s_tex.texture end
-            })
-    end
-    return sp
+    local new_eid = prefab_mgr:recreate_entity(current_emitter_eid)
+    m.set_emitter(new_eid)
 end
 
 local function update_panel(props)
@@ -108,45 +46,115 @@ local function show_panel(props)
     end
 end
 
-local function create_emitter_panel(emitter)
-    property = {}
-    for _, item in ipairs(emitter.attributes) do
-        if item.name == "spawn" then
-            property[#property + 1] = uiproperty.Int({label = item.name},
-                {
-                    setter = function(v)
-                        item.data.count = v
-                        update_emitter()
-                    end,
-                    getter = function() return item.data.count end
-                })
-        elseif item.name == "scale" then
-            property[#property + 1] = uiproperty.Float({label = item.name, dim = 2},
-                {
-                    setter = function(...) data_from_ui(item.data.range, ...) end,
-                    getter = function() return item.data.range end
-                })
-        elseif item.name == "translation"
-            or item.name == "orientation"
-            or item.name == "material_property" then
-                property[#property + 1] = uiproperty.Group({label = item.name}, create_pro_by_method(item.data))       
+local function fcolor_property(data_source, key)
+    local dim = #data[key]
+    return uiproperty.Color({label = key, dim = dim, flags = (dim == 4) and imgui.flags.ColorEdit{"Float"} or imgui.flags.ColorEdit{"NoAlpha", "Float"}}, {
+        setter = function(v)
+            data_source[key] = v
+            update_emitter()
+        end,
+        getter = function() return data_source[key] end
+    })
+end
+
+local function icolor_property(data_source, key)
+    local dim = #data_source[key]
+    local data = data_source[key]
+    return uiproperty.Color({label = key, dim = dim, flags = (dim == 4) and imgui.flags.ColorEdit{"Uint8"} or imgui.flags.ColorEdit{"NoAlpha", "Uint8"}}, {
+        setter = function(value)
+            for i, vf in ipairs(value) do
+                data[i] = math.floor(vf * 255)
+            end
+            update_emitter()
+        end,
+        getter = function()
+            local fc = {}
+            for i, vi in ipairs(data) do
+                fc[i] = vi / 255.0
+            end
+            return fc
+        end
+    })
+end
+
+local function number_property(data_source, key, is_int, minv, maxv, speedv)
+    local pro_creator = is_int and uiproperty.Int or uiproperty.Float
+    return pro_creator({label = key, dim = type(data_source[key]) == "table" and #data_source[key] or 1, min = minv, max = maxv, speed = speedv}, {
+        setter = function(v)
+            data_source[key] = v
+            update_emitter()
+        end,
+        getter = function() return data_source[key] end
+    })
+end
+
+local function interp_type_property(data_source, key)
+    return uiproperty.Combo({label = key, options = interp_type}, {
+        setter = function(v)
+            data_source[key] = v
+            update_emitter()
+        end,
+        getter = function() return data_source[key] end
+    })
+end
+
+local function create_interp_panel(data_source, group_name, is_int, min, max)
+    return uiproperty.Group({label = group_name}, {
+        interp_type_property(data_source, "interp_type"),
+        number_property(data_source, "minv", is_int, min, max),
+        number_property(data_source, "maxv", is_int, min, max)
+    })
+end
+
+local function create_color_interp_panel(data_source, group_name)
+    return uiproperty.Group({label = group_name}, {
+        interp_type_property(data_source, "interp_type"),
+        icolor_property(data_source, "minv"),
+        icolor_property(data_source, "maxv")
+    })
+end
+
+local function create_emitter_panel()
+    property = {} 
+    property[#property + 1] = create_interp_panel(emitter_data.lifetime, "lifetime")
+    local spawn_property = {}
+    spawn_property[#spawn_property + 1] = number_property(emitter_data.spawn, "count", true, 1, 100)
+    spawn_property[#spawn_property + 1] = number_property(emitter_data.spawn, "rate", false, 0.1, 10.0, 0.1)
+    for key, item in pairs(emitter_data.spawn) do
+        if key == "init_color" then
+            local source_data = emitter_data.spawn[key]["RGBA"]
+            spawn_property[#spawn_property + 1] = uiproperty.Group({label = key}, {
+                interp_type_property(source_data, "interp_type"),
+                icolor_property(source_data, "value")
+            })
+        elseif key == "color_over_life" then
+            spawn_property[#spawn_property + 1] = uiproperty.Group({label = key}, {
+                create_color_interp_panel(emitter_data.spawn[key]["RGB"], "RGB"),
+                create_interp_panel(emitter_data.spawn[key]["A"], "A", true, 0, 255)
+            })
+        elseif key == "subuv_index" then
+            spawn_property[#spawn_property + 1] = uiproperty.Group({label = key}, {
+                number_property(emitter_data.spawn[key], "dimension", true, 1),
+                create_interp_panel(emitter_data.spawn[key]["rate"], "rate")
+            })
+        elseif key == "count" or key =="rate" then
+            --
+        elseif key == "init_lifetime" then
+            spawn_property[#spawn_property + 1] = create_interp_panel(emitter_data.spawn[key], key, false, 0)
+        else
+            spawn_property[#spawn_property + 1] = create_interp_panel(emitter_data.spawn[key], key)
         end
     end
+    property[#property + 1] = uiproperty.Group({label = "spawn"}, spawn_property)
     update_panel(property)
 end
 
 function m.set_emitter(emitter_eid)
     current_emitter_eid = emitter_eid
-    create_emitter_panel(world[emitter_eid].emitter)
+    local tp = hierarchy:get_template(emitter_eid)
+    emitter_data = tp.template.data.emitter
+    create_emitter_panel()
 end
-
-local testcolor = {1, 0.5, 1, 1}
-local uitestcolor = uiproperty.Color({label = "TestColor", dim = 4},
-                    {
-                        setter = function(...) testcolor = {...} end,
-                        getter = function() return testcolor end
-                    })
-uitestcolor:update()
 
 function m.show()
     local viewport = imgui.GetMainViewport()
@@ -154,11 +162,11 @@ function m.show()
     imgui.windows.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
     for _ in uiutils.imgui_windows("ParticleEmitter", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
         show_panel(property)
-        --uitestcolor:show()
     end
 end
 
 return function(w)
     world = w
+    prefab_mgr = require "prefab_manager"(world)
     return m
 end

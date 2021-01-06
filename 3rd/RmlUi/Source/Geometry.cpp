@@ -93,7 +93,7 @@ void Geometry::Render(Vector2f translation) {
 		if (!compile_attempted)
 		{
 			compile_attempted = true;
-			compiled_geometry = render_interface->CompileGeometry(&vertices[0], (int)vertices.size(), &indices[0], (int)indices.size(), texture ? texture->GetHandle(render_interface) : 0);
+			compiled_geometry = render_interface->CompileGeometry(&vertices[0], (int)vertices.size(), &indices[0], (int)indices.size(), texture ? texture->GetHandle() : 0);
 
 			// If we managed to compile the geometry, we can clear the local copy of vertices and indices and
 			// immediately render the compiled version.
@@ -106,7 +106,7 @@ void Geometry::Render(Vector2f translation) {
 
 		// Either we've attempted to compile before (and failed), or the compile we just attempted failed; either way,
 		// render the uncompiled version.
-		render_interface->RenderGeometry(&vertices[0], (int)vertices.size(), &indices[0], (int)indices.size(), texture ? texture->GetHandle(render_interface) : 0, translation);
+		render_interface->RenderGeometry(&vertices[0], (int)vertices.size(), &indices[0], (int)indices.size(), texture ? texture->GetHandle() : 0, translation);
 	}
 }
 

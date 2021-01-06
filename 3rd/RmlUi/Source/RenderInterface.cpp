@@ -38,7 +38,7 @@ RenderInterface::RenderInterface()
 
 RenderInterface::~RenderInterface()
 {
-	TextureDatabase::ReleaseTextures(this);
+	TextureDatabase::ReleaseTextures();
 }
 
 // Called by RmlUi when it wants to compile geometry it believes will be static for the forseeable future.

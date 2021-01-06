@@ -21,11 +21,11 @@ function BaseView:_init()
     self.base.prefab:set_getter(function() return self:on_get_prefab() end)
     self.base.name:set_setter(function(value) self:on_set_name(value) end)      
     self.base.name:set_getter(function() return self:on_get_name() end)
-    self.base.position:set_setter(function(...) self:on_set_position(...) end)
+    self.base.position:set_setter(function(value) self:on_set_position(value) end)
     self.base.position:set_getter(function() return self:on_get_position() end)
-    self.base.rotate:set_setter(function(...) self:on_set_rotate(...) end)
+    self.base.rotate:set_setter(function(value) self:on_set_rotate(value) end)
     self.base.rotate:set_getter(function() return self:on_get_rotate() end)
-    self.base.scale:set_setter(function(...) self:on_set_scale(...) end)
+    self.base.scale:set_setter(function(value) self:on_set_scale(value) end)
     self.base.scale:set_getter(function() return self:on_get_scale() end)
 end
 
@@ -67,16 +67,16 @@ function BaseView:on_get_name()
     return world[self.eid].name
 end
 
-function BaseView:on_set_position(...)
-    world:pub {"EntityEvent", "move", self.eid, math3d.totable(iom.get_position(self.eid)), {...}}
+function BaseView:on_set_position(value)
+    world:pub {"EntityEvent", "move", self.eid, math3d.totable(iom.get_position(self.eid)), value}
 end
 
 function BaseView:on_get_position()
     return math3d.totable(iom.get_position(self.eid))
 end
 
-function BaseView:on_set_rotate(...)
-    world:pub {"EntityEvent", "rotate", self.eid, math3d.totable(iom.get_rotation(self.eid)), {...}}
+function BaseView:on_set_rotate(value)
+    world:pub {"EntityEvent", "rotate", self.eid, math3d.totable(iom.get_rotation(self.eid)), value}
 end
 
 function BaseView:on_get_rotate()
@@ -85,8 +85,8 @@ function BaseView:on_get_rotate()
     return { math.deg(rad[1]), math.deg(rad[2]), math.deg(rad[3]) }
 end
 
-function BaseView:on_set_scale(...)
-    world:pub {"EntityEvent", "scale", self.eid, math3d.totable(iom.get_scale(self.eid)), {...}}
+function BaseView:on_set_scale(value)
+    world:pub {"EntityEvent", "scale", self.eid, math3d.totable(iom.get_scale(self.eid)), value}
 end
 
 function BaseView:on_get_scale()

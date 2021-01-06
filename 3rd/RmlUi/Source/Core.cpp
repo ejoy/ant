@@ -202,11 +202,6 @@ EventId RegisterEventType(const String& type, bool interruptible, bool bubbles, 
 	return EventSpecificationInterface::InsertOrReplaceCustom(type, interruptible, bubbles, default_action_phase);
 }
 
-StringList GetTextureSourceList()
-{
-	return TextureDatabase::GetSourceList();
-}
-
 void ReleaseTextures()
 {
 	TextureDatabase::ReleaseTextures();

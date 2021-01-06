@@ -38,12 +38,6 @@ void Texture::Set(const String& source, const String& source_path)
 	resource = TextureDatabase::Fetch(source, source_path);
 }
 
-void Texture::Set(const String& name, const TextureCallback& callback)
-{
-	resource = MakeShared<TextureResource>();
-	resource->Set(name, callback);
-}
-
 // Returns the texture's source name. This is usually the name of the file the texture was loaded from.
 const String& Texture::GetSource() const
 {
@@ -55,21 +49,21 @@ const String& Texture::GetSource() const
 }
 
 // Returns the texture's handle. 
-TextureHandle Texture::GetHandle(RenderInterface* render_interface) const
+TextureHandle Texture::GetHandle() const
 {
 	if (!resource)
 		return 0;
 
-	return resource->GetHandle(render_interface);
+	return resource->GetHandle();
 }
 
 // Returns the texture's dimensions.
-Vector2i Texture::GetDimensions(RenderInterface* render_interface) const
+Vector2i Texture::GetDimensions() const
 {
 	if (!resource)
 		return Vector2i(0, 0);
 
-	return resource->GetDimensions(render_interface);
+	return resource->GetDimensions();
 }
 
 bool Texture::operator==(const Texture& other) const

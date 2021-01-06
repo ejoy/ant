@@ -49,17 +49,11 @@ TextureDatabase::~TextureDatabase()
 #ifdef RMLUI_DEBUG
 	// All textures not owned by the database should have been released at this point.
 	int num_leaks_file = 0;
-	
-	for (auto& texture : textures)
+	for (auto& texture : textures) {
 		num_leaks_file += (texture.second.use_count() > 1);
-
-	const int num_leaks_callback = (int)callback_textures.size();
-	const int total_num_leaks = num_leaks_file + num_leaks_callback;
-
-	if (total_num_leaks > 0)
-	{
-		Log::Message(Log::LT_ERROR, "Textures leaked during shutdown. Total: %d  From file: %d  Generated: %d.",
-			total_num_leaks, num_leaks_file, num_leaks_callback);
+	}
+	if (num_leaks_file > 0) {
+		Log::Message(Log::LT_ERROR, "Textures leaked during shutdown. Total: %d.", num_leaks_file);
 	}
 #endif
 
@@ -87,54 +81,20 @@ SharedPtr<TextureResource> TextureDatabase::Fetch(const String& source, const St
 		GetSystemInterface()->JoinPath(path, StringUtilities::Replace(source_directory, '|', ':'), source);
 
 	TextureMap::iterator iterator = texture_database->textures.find(path);
-	if (iterator != texture_database->textures.end())
-	{
+	if (iterator != texture_database->textures.end()) {
 		return iterator->second;
 	}
-
 	auto resource = MakeShared<TextureResource>();
 	resource->Set(path);
-
 	texture_database->textures[resource->GetSource()] = resource;
 	return resource;
 }
 
-void TextureDatabase::AddCallbackTexture(TextureResource* texture)
+void TextureDatabase::ReleaseTextures()
 {
-	if (texture_database)
-		texture_database->callback_textures.insert(texture);
-}
-
-void TextureDatabase::RemoveCallbackTexture(TextureResource* texture)
-{
-	if (texture_database)
-		texture_database->callback_textures.erase(texture);
-}
-
-StringList TextureDatabase::GetSourceList()
-{
-	StringList result;
-	
-	if (texture_database)
-	{
-		result.reserve(texture_database->textures.size());
-
-		for (const auto& pair : texture_database->textures)
-			result.push_back(pair.first);
-	}
-
-	return result;
-}
-
-void TextureDatabase::ReleaseTextures(RenderInterface* render_interface)
-{
-	if (texture_database)
-	{
+	if (texture_database) {
 		for (const auto& texture : texture_database->textures)
-			texture.second->Release(render_interface);
-
-		for (const auto& texture : texture_database->callback_textures)
-			texture->Release(render_interface);
+			texture.second->Release();
 	}
 }
 

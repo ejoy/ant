@@ -37,16 +37,6 @@ namespace Rml {
 class TextureResource;
 class RenderInterface;
 
-/*
-	Callback function for generating textures.
-	/// @param[in] name The name used to set the texture.
-	/// @param[out] data The raw data of the texture, each pixel has four 8-bit channels: red-green-blue-alpha.
-	/// @param[out] dimensions The width and height of the generated texture.
-	/// @return True on success.
-*/
-using TextureCallback = Function<bool(const String& name, UniquePtr<const byte[]>& data, Vector2i& dimensions)>;
-
-
 /**
 	Abstraction of a two-dimensional texture image, with an application-specific texture handle.
 
@@ -61,22 +51,15 @@ public:
 	/// @param[in] source_path The path of the resource that is requesting the texture (ie, the RCSS file in which it was specified, etc).
 	void Set(const String& source, const String& source_path = "");
 
-	/// Set a callback function for generating the texture on first use. The texture is never added to the global cache.
-	/// @param[in] name The name of the texture.
-	/// @param[in] callback The callback function which generates the data of the texture, see TextureCallback.
-	void Set(const String& name, const TextureCallback& callback);
-
 	/// Returns the texture's source name. This is usually the name of the file the texture was loaded from.
 	/// @return The name of the this texture's source. This will be the empty string if this texture is not loaded.
 	const String& GetSource() const;
 	/// Returns the texture's handle.
-	/// @param[in] The render interface that is requesting the handle.
 	/// @return The texture's handle. This will be nullptr if the texture isn't loaded.
-	TextureHandle GetHandle(RenderInterface* render_interface) const;
+	TextureHandle GetHandle() const;
 	/// Returns the texture's dimensions.
-	/// @param[in] The render interface that is requesting the dimensions.
 	/// @return The texture's dimensions. This will be (0, 0) if the texture isn't loaded.
-	Vector2i GetDimensions(RenderInterface* render_interface) const;
+	Vector2i GetDimensions() const;
 
 	/// Returns true if the texture points to the same underlying resource.
 	bool operator==(const Texture&) const;

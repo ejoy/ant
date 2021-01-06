@@ -53,16 +53,7 @@ public:
 
 	/// Release all textures bound through a render interface.
     /// Pass nullptr to release all textures in the database.
-	static void ReleaseTextures(RenderInterface* render_interface = nullptr);
-
-    /// Adds a texture resource with a callback function and stores it as a weak (raw) pointer in the database.
-    static void AddCallbackTexture(TextureResource* texture);
-
-    /// Removes a callback texture from the database.
-    static void RemoveCallbackTexture(TextureResource* texture);
-
-	/// Return a list of all texture sources currently in the database.
-	static StringList GetSourceList();
+	static void ReleaseTextures();
 
 private:
 	TextureDatabase();
@@ -70,9 +61,6 @@ private:
 
 	using TextureMap = UnorderedMap< String, SharedPtr<TextureResource> >;
 	TextureMap textures;
-
-    using CallbackTextureMap = UnorderedSet< TextureResource* >;
-    CallbackTextureMap callback_textures;
 };
 
 } // namespace Rml

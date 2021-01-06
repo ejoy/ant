@@ -272,7 +272,7 @@ void ElementDocument::UpdateDataModel(bool clear_dirty_variables) {
 void ElementDocument::UpdateLayout()
 {
 	if (dirty_layout) {
-		GetLayout().CalculateLayout(GetClientWidth(), GetClientHeight());
+		GetLayout().CalculateLayout(bounds[2], bounds[3]);
 		UpdateChildrenBounds();
 	}
 }
@@ -828,8 +828,8 @@ void ElementDocument::CreateDragClone(Element* element) {
 	// Set all the required properties and pseudo-classes on the clone.
 	drag_clone->SetPseudoClass("drag", true);
 	drag_clone->SetPropertyImmediate(PropertyId::Position, Property(Style::Position::Absolute));
-	drag_clone->SetPropertyImmediate(PropertyId::Left, Property(element->GetAbsoluteLeft() - element->GetLayout().GetEdge(Layout::MARGIN, Layout::LEFT) - mouse_position.x, Property::PX));
-	drag_clone->SetPropertyImmediate(PropertyId::Top, Property(element->GetAbsoluteTop() - element->GetLayout().GetEdge(Layout::MARGIN, Layout::TOP) - mouse_position.y, Property::PX));
+	drag_clone->SetPropertyImmediate(PropertyId::Left, Property(element->GetAbsoluteOffset(Layout::Area::Border).x - element->GetLayout().GetEdge(Layout::Area::Margin, Layout::LEFT) - mouse_position.x, Property::PX));
+	drag_clone->SetPropertyImmediate(PropertyId::Top, Property(element->GetAbsoluteOffset(Layout::Area::Border).y - element->GetLayout().GetEdge(Layout::Area::Margin, Layout::TOP) - mouse_position.y, Property::PX));
 }
 
 void ElementDocument::ReleaseDragClone() {

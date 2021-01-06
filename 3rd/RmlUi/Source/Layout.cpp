@@ -60,28 +60,25 @@ static float YGValueToFloat(float v) {
 }
 
 Vector2f Layout::GetPosition(Area area) const {
-	float left = YGNodeLayoutGetLeft(node);
-	float top = YGNodeLayoutGetTop(node);
 	switch (area) {
-	case Layout::PADDING:
-		left += YGValueToFloat(YGNodeStyleGetPadding(node, YGEdgeLeft));
-		top += YGValueToFloat(YGNodeStyleGetPadding(node, YGEdgeTop));
-		[[fallthrough]];
-	case Layout::BORDER:
-		left += YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeLeft));
-		top += YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeTop));
-		[[fallthrough]];
-	case Layout::MARGIN:
-		left += YGValueToFloat(YGNodeStyleGetMargin(node, YGEdgeLeft));
-		top += YGValueToFloat(YGNodeStyleGetMargin(node, YGEdgeTop));
-		break;
+	case Layout::Area::Margin:
+		return Vector2f(-YGValueToFloat(YGNodeStyleGetMargin(node, YGEdgeLeft)), -YGValueToFloat(YGNodeStyleGetMargin(node, YGEdgeTop)));
+	case Layout::Area::Padding:
+		return Vector2f(YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeLeft)), YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeTop)));
+	case Layout::Area::Border:
 	default:
-		break;
+		return Vector2f(0.0f, 0.0f);
 	}
-	return Vector2f(left, top);
 }
 
-Vector2f Layout::GetSize(Area area) const {
+Vector2f Layout::GetPaddingSize() const {
+	return Vector2f(
+		YGNodeLayoutGetWidth(node) - YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeLeft)) - YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeRight)),
+		YGNodeLayoutGetHeight(node) - YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeTop)) - YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeBottom))
+	);
+}
+
+Vector2f Layout::GetSize() const {
 	return Vector2f(
 		YGNodeLayoutGetWidth(node),
 		YGNodeLayoutGetHeight(node)
@@ -108,11 +105,11 @@ static YGEdge ConvertEdge(Layout::Edge edge) {
 
 float Layout::GetEdge(Area area, Edge edge) const {
 	switch (area) {
-	case Layout::MARGIN:
+	case Layout::Area::Margin:
 		return YGValueToFloat(YGNodeStyleGetMargin(node, ConvertEdge(edge)));
-	case Layout::BORDER:
+	case Layout::Area::Border:
 		return YGValueToFloat(YGNodeStyleGetBorder(node, ConvertEdge(edge)));
-	case Layout::PADDING:
+	case Layout::Area::Padding:
 		return YGValueToFloat(YGNodeStyleGetPadding(node, ConvertEdge(edge)));
 	default:
 		return 0.0f;
@@ -283,10 +280,36 @@ void Layout::SetProperty(PropertyId id, const Property* property, float font_siz
 	}
 }
 
-static YGSize MeasureFunc(YGNodeRef node, float width, YGMeasureMode mode, float height, YGMeasureMode height_mode) {
+static YGSize MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
 	auto* element = static_cast<ElementText*>(YGNodeGetContext(node));
-	Vector2f size = element->GetBoundsFor(width, height);
-	return { 1 + std::ceil(size[0]), 1 + std::ceil(size[1]) };
+	float minWidth = 0;
+	float maxWidth = std::numeric_limits<float>::max();
+	float minHeight = 0;
+	float maxHeight = std::numeric_limits<float>::max();
+	switch (widthMode) {
+	case YGMeasureModeUndefined:
+		break;
+	case YGMeasureModeExactly:
+		minWidth = width;
+		maxWidth = width;
+		break;
+	case YGMeasureModeAtMost:
+		maxWidth = width;
+		break;
+	}
+	switch (heightMode) {
+	case YGMeasureModeUndefined:
+		break;
+	case YGMeasureModeExactly:
+		minHeight = height;
+		maxHeight = height;
+		break;
+	case YGMeasureModeAtMost:
+		maxHeight = height;
+		break;
+	}
+	Vector2f size = element->Measure(minWidth, maxWidth, minHeight, maxHeight);
+	return { size[0], size[1] };
 }
 
 static float BaselineFunc(YGNodeRef node, float width, float height) {

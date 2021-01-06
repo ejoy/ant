@@ -33,6 +33,7 @@
 #include "../Include/RmlUi/Geometry.h"
 #include "../Include/RmlUi/ElementDocument.h"
 #include "../Include/RmlUi/GeometryUtilities.h"
+#include "../Include/RmlUi/Core.h"
 
 namespace Rml {
 
@@ -72,8 +73,7 @@ void Tile::GenerateGeometry(Vector<Vertex>& vertices, Vector<int>& indices, Elem
 	Vector2f tile_dimensions; // 'px' units
 	Vector2f texcoords[2]; // relative units
 
-	RenderInterface* render_interface = element->GetRenderInterface();
-	const Vector2i texture_dimensions_i = texture.GetDimensions(render_interface);
+	const Vector2i texture_dimensions_i = texture.GetDimensions();
 	const Vector2f texture_dimensions((float)texture_dimensions_i.x, (float)texture_dimensions_i.y);
 	if (texture_dimensions.x == 0 || texture_dimensions.y == 0) {
 		tile_dimensions = Vector2f(0, 0);
@@ -206,7 +206,7 @@ void ElementBackgroundImage::Reload() {
 		element,
 		*texture,
 		Vector2f(0, 0), 
-		element->GetLayout().GetSize(Layout::PADDING)
+		element->GetLayout().GetPaddingSize()
 	);
 }
 
@@ -216,7 +216,7 @@ void ElementBackgroundImage::Render() {
 		Reload();
 	}
 	if (geometry) {
-		geometry->Render(element->GetAbsoluteOffset(Layout::PADDING).Round());
+		geometry->Render(element->GetAbsoluteOffset(Layout::Area::Padding).Round());
 	}
 }
 
