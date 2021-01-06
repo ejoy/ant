@@ -37,26 +37,33 @@ namespace lua_struct {
         } else if (LUA_TLIGHTUSERDATA == ltype){
             auto t = (const ELEMTYPE*)lua_touserdata(L, idx);
             memcpy(&v, t, sizeof(ELEMTYPE) * NUM);
+        } else if (LUA_TNUMBER == ltype){
+            assert(NUM == 1 && "number value should init vec1 data");
+            v[0] = (ELEMTYPE)lua_tonumber(L, idx);
+        } else {
+            luaL_error(L, "unknown lua type:%s", lua_typename(L, ltype));
         }
     }
 
-#define DEF_VEC_UNPACK(_VECTYPE) template<>\
+#define DEF_VEC(_VECTYPE) template<>\
     void unpack(lua_State* L, int index, _VECTYPE &v, void*) {\
         unpack_vec(L, index, v);\
     }\
     template<>\
     void pack(lua_State* L, const _VECTYPE &v, void*) {}
 
-    DEF_VEC_UNPACK(glm::ivec2);
-    DEF_VEC_UNPACK(glm::u8vec2);
-    DEF_VEC_UNPACK(glm::vec2);
-    DEF_VEC_UNPACK(glm::u8vec3);
-    DEF_VEC_UNPACK(glm::vec3);
-    DEF_VEC_UNPACK(glm::u8vec4);
-    DEF_VEC_UNPACK(glm::vec4);
+    DEF_VEC(glm::vec1);
+    DEF_VEC(glm::u8vec1);
+    DEF_VEC(glm::ivec2);
+    DEF_VEC(glm::u8vec2);
+    DEF_VEC(glm::vec2);
+    DEF_VEC(glm::u8vec3);
+    DEF_VEC(glm::vec3);
+    DEF_VEC(glm::u8vec4);
+    DEF_VEC(glm::vec4);
 
     template<typename T>
-    void unpack_interp_value(lua_State* L, int index, interpolation::init_valueT<T> &iv) {
+    void unpack_init_value(lua_State* L, int index, interpolation::init_valueT<T> &iv) {
         luaL_checktype(L, index, LUA_TTABLE);
         const char *t = nullptr;
         if (LUA_TSTRING == lua_getfield(L, index, "interp_type")){
@@ -81,16 +88,15 @@ namespace lua_struct {
         }
     }
 
-#define DEF_INTERP_VALUE_UNPACK(_INTERPTYPE) \
+#define DEF_INIT_VALUE_UNPACK(_INITTYPE) \
     template<>\
-    void unpack(lua_State* L, int index, _INTERPTYPE &iv, void*) {\
-        unpack_interp_value(L, index, iv);\
+    void unpack(lua_State* L, int index, _INITTYPE &iv, void*) {\
+        unpack_init_value(L, index, iv);\
     }
 
-    DEF_INTERP_VALUE_UNPACK(interpolation::init_valueT<float>);
-    DEF_INTERP_VALUE_UNPACK(interpolation::init_valueT<uint16_t>);
-    DEF_INTERP_VALUE_UNPACK(interpolation::f2_init_value);
-    DEF_INTERP_VALUE_UNPACK(interpolation::f3_init_value);
+    DEF_INIT_VALUE_UNPACK(interpolation::f1_init_value);
+    DEF_INIT_VALUE_UNPACK(interpolation::f2_init_value);
+    DEF_INIT_VALUE_UNPACK(interpolation::f3_init_value);
 
     template<>
     void unpack(lua_State* L, int index, interpolation::color_init_value &civ, void*) {
@@ -99,10 +105,10 @@ namespace lua_struct {
             if (LUA_TTABLE == lua_getfield(L, index, "RGBA")){
                 isvalid = true;
                 interpolation::init_valueT<glm::u8vec4> f4v;
-                unpack_interp_value(L, index, f4v);
+                unpack_init_value(L, index, f4v);
                 for (int ii=0; ii<4; ++ii){
-                    civ.rgba[ii].minv = f4v.minv[ii];
-                    civ.rgba[ii].maxv = f4v.maxv[ii];
+                    civ.rgba[ii].minv[0] = f4v.minv[ii];
+                    civ.rgba[ii].maxv[0] = f4v.maxv[ii];
                     civ.rgba[ii].interp_type = f4v.interp_type;
                 }
             }
@@ -115,17 +121,17 @@ namespace lua_struct {
             if (LUA_TTABLE == lua_getfield(L, index, "RGB")){
                 isvalid = true;
                 interpolation::init_valueT<glm::u8vec3> f3v;
-                unpack_interp_value(L, -1, f3v);
+                unpack_init_value(L, -1, f3v);
                 for (int ii=0; ii<3; ++ii){
-                    civ.rgba[ii].minv = f3v.minv[ii];
-                    civ.rgba[ii].maxv = f3v.maxv[ii];
+                    civ.rgba[ii].minv[0] = f3v.minv[ii];
+                    civ.rgba[ii].maxv[0] = f3v.maxv[ii];
                     civ.rgba[ii].interp_type = f3v.interp_type;
                 }
             }
             lua_pop(L, 1);
 
             if (LUA_TTABLE == lua_getfield(L, index, "A")){
-                unpack_interp_value(L, -1, civ.rgba[3]);
+                unpack_init_value(L, -1, civ.rgba[3]);
             } else {
                 luaL_error(L, "need define 'A' for alpha interp");
             }
@@ -142,7 +148,7 @@ namespace lua_struct {
         const char* rgba_names[] = {"R", "G", "B", "A"};
         for (int ii=0; ii<4; ++ii){
             if (LUA_TTABLE == lua_getfield(L, index, rgba_names[ii])){
-                unpack_interp_value(L, -1, civ.rgba[ii]);
+                unpack_init_value(L, -1, civ.rgba[ii]);
             } else {
                 luaL_error(L, "need define '%s'", rgba_names[ii]);
             }
@@ -227,7 +233,7 @@ std::unordered_map<std::string, readerop> g_attrib_map = {
         lua_struct::unpack(L, index, emitter->mspawn.init.rotation);
     }),
     std::make_pair("rotation_over_life", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
-        interpolation::init_valueT<float> iv;
+        interpolation::f1_init_value iv;
         lua_struct::unpack(L, index, iv);
 
         check_add_id(particles::rotation::ID(), emitter->mspawn.init.components);
@@ -256,7 +262,7 @@ std::unordered_map<std::string, readerop> g_attrib_map = {
         for (int ii = 0; ii < 4; ++ii) {
             auto &ic = emitter->mspawn.init.color.rgba[ii];
             const auto& c = iv.rgba[ii];
-            ic.minv = c.minv;
+            ic.minv[0] = c.minv[0];
             ic.interp_type = 0;
             emitter->mspawn.interp.color.rgba[ii].from_init_value(c);
         }

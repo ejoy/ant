@@ -157,6 +157,21 @@ struct uv_motion {
 
 namespace interpolation{
     template<typename T>
+    T lerpT(const T& minv, const T& maxv, float t) {
+        return glm::lerp(minv, maxv, t);
+    }
+
+    template<>
+    inline glm::u8vec1 lerpT(const glm::u8vec1& minv, const glm::u8vec1& maxv, float t) {
+        return glm::u8vec1(uint8_t(glm::clamp(glm::lerp(float(minv[0]), float(maxv[0]), t), 0.f, 255.f)));
+    }
+
+    template<>
+    inline glm::vec1 lerpT(const glm::vec1& minv, const glm::vec1& maxv, float t) {
+        return glm::vec1(glm::lerp(minv[0], maxv[1], t));
+    }
+
+    template<typename T>
     struct init_valueT{
         T minv, maxv;
         uint8_t interp_type;
@@ -165,48 +180,42 @@ namespace interpolation{
                 return minv;
             }
             if (interp_type == 1)
-                return glm::lerp(minv, maxv, t);
+                return lerpT(minv, maxv, t);
 
             assert(false && "not implement");
             return minv;
         }
     };
 
-    template<>
-    struct init_valueT<uint8_t> {
-        uint8_t minv, maxv;
-        uint8_t interp_type;
-        uint8_t get(float t) const {
-            if (interp_type == 0) {
-                return minv;
-            }
-
-            if (interp_type == 1) {
-                return (uint8_t)glm::clamp(glm::lerp(float(minv), float(maxv), t), 0.f, 255.f);
-            }
-
-            assert(false && "not implement");
-            return minv;
-        }
-    };
-
-    template<typename T>
+    template<int NUM>
     struct interp_valueT{
-        T scale;
+        glm::vec<NUM, float, glm::defaultp> scale;
         uint8_t interp_type;
 
+        template<typename T>
         void from_init_value(const init_valueT<T>& iv) {
-            scale = T((iv.maxv - iv.minv) / float(lifedata::MAX_PROCESS));
+            for (int ii=0; ii<NUM; ++ii){
+                scale[ii] = (float(iv.maxv[ii] - iv.minv[ii]) / float(lifedata::MAX_PROCESS));
+            }
+
             interp_type = iv.interp_type;
         }
 
-        T get(const T&value, uint32_t delta) const {
+        template<typename T>
+        glm::vec<NUM, T, glm::defaultp> get(const glm::vec<NUM, T, glm::defaultp>& value, uint32_t delta) const {
             if (interp_type == 0)
-                return scale;
-            if (interp_type == 1)
-                return (T(float(delta) * scale) + value);
+                return value;
+
+            if (interp_type == 1) {
+                glm::vec<NUM, T, glm::defaultp> r;
+                for (int ii = 0; ii < NUM; ++ii) {
+                    r[ii] = T(float(delta) * scale[ii] + (float)value[ii]);
+                }
+                return r;
+            }
+
             assert(false && "not implement");
-            return scale;
+            return value;
         }
     };
 
@@ -217,7 +226,7 @@ namespace interpolation{
 
     struct uv_motion_init_value {
         struct uv_index{
-            init_valueT<float> rate;
+            init_valueT<glm::vec1> rate;
             glm::u8vec2 dim;
         };
 
@@ -230,12 +239,13 @@ namespace interpolation{
 
     using f3_init_value         = init_valueT<glm::vec3>;
     using f2_init_value         = init_valueT<glm::vec2>;
-    using color_init_value      = color_attributeT<init_valueT<uint8_t>>;
+    using f1_init_value         = init_valueT<glm::vec1>;
+    using color_init_value      = color_attributeT<init_valueT<glm::u8vec1>>;
 
-    using f3_interpolator       = interp_valueT<glm::vec3>;
-    using f2_interpolator       = interp_valueT<glm::vec2>;
-    using u16_interpolator      = interp_valueT<uint16_t>;
-    using color_interpolator    = color_attributeT<interp_valueT<uint8_t>>;
+    using f3_interpolator       = interp_valueT<3>;
+    using f2_interpolator       = interp_valueT<2>;
+    using f1_interpolator       = interp_valueT<1>;
+    using color_interpolator    = color_attributeT<f1_interpolator>;
 }
 
 template<typename T, component_id COMP_ID>
@@ -265,9 +275,9 @@ struct particles{
     using acceleration_interpolator = componentT<interpolation::f3_interpolator, ID_acceleration_interpolator>;
     using scale_interpolator        = componentT<interpolation::f3_interpolator, ID_scale_interpolator>;
     using translation_interpolator  = componentT<interpolation::f3_interpolator, ID_translation_interpolator>;
-    using rotation_interpolator     = componentT<interpolation::interp_valueT<float>, ID_translation_interpolator>;
+    using rotation_interpolator     = componentT<interpolation::f1_interpolator, ID_rotation_interpolator>;
     using uv_motion_interpolator    = componentT<interpolation::f2_interpolator, ID_uv_motion_interpolator>;
-    using subuv_motion_interpolator  = componentT<interpolation::u16_interpolator, ID_subuv_motion_interpolator>;
+    using subuv_motion_interpolator = componentT<interpolation::f1_interpolator, ID_subuv_motion_interpolator>;
     using color_interpolator        = componentT<interpolation::color_interpolator, ID_color_interpolator>;
 
     particles();

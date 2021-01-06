@@ -19,12 +19,12 @@ public:
         float       rate;
 
         struct init_attributes{
-            interpolation::init_valueT<float>   life;
+            interpolation::f1_init_value        life;
             interpolation::f3_init_value        velocity;
             interpolation::f3_init_value        acceleration;
             interpolation::f3_init_value        scale;
             interpolation::f3_init_value        translation;
-            interpolation::init_valueT<float>   rotation;
+            interpolation::f1_init_value        rotation;
             interpolation::uv_motion_init_value uv_motion;
             interpolation::uv_motion_init_value subuv_motion;
             interpolation::color_init_value     color;
@@ -38,7 +38,7 @@ public:
             interpolation::f3_interpolator      acceleration;
             interpolation::f3_interpolator      scale;
             interpolation::f3_interpolator      translation;
-            interpolation::interp_valueT<float> rotation;
+            interpolation::f1_interpolator      rotation;
             // interpolation::f2_interpolator      uv_motion;
             // interpolation::f2_interpolator     subuv_motion;
             interpolation::color_interpolator   color;

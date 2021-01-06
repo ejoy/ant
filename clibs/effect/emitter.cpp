@@ -131,7 +131,7 @@ static void create_uvm(UVM_TYPE &uvm, const INIT_UVMTYPE &init_uvm, randomobj &r
 	} else {
 		assert(uvm.type == uv_motion::mt_index);
 		uvm.index.idx = 0;
-		uvm.index.rate = uv_motion::TO_FIXPOINT(init_uvm.index.rate.get(ro()));
+		uvm.index.rate = uv_motion::TO_FIXPOINT(init_uvm.index.rate.get(ro())[0]);
 		uvm.index.dim = init_uvm.index.dim;
 	}
 }
@@ -167,7 +167,7 @@ particle_emitter::spawn(const glm::mat4 &transform, uint8_t materialidx){
 		switch (id) {
 		case ID_life:{
 			check_add_id(ids, pm.add_component(
-				particles::life(mspawn.init.life.get(ro()))
+				particles::life(mspawn.init.life.get(ro())[0])
 			));
 		} break;
 		case ID_velocity:{
@@ -186,7 +186,7 @@ particle_emitter::spawn(const glm::mat4 &transform, uint8_t materialidx){
 			));
 		} break;
 		case ID_rotation:{
-			particles::rotation r(mspawn.init.rotation.get(ro()), glm::vec3(0.f, 0.f, 1.f));
+			particles::rotation r(mspawn.init.rotation.get(ro())[0], glm::vec3(0.f, 0.f, 1.f));
 			r = glm::quat(transform) * r;
 			check_add_id(ids, pm.add_component(r));
 		} break;
@@ -208,7 +208,7 @@ particle_emitter::spawn(const glm::mat4 &transform, uint8_t materialidx){
 		case ID_color:{
 			particles::color c;
 			for(int ii=0; ii<4;++ii){
-				c[ii] = glm::clamp(mspawn.init.color.rgba[ii].get(ro()), uint8_t(0), uint8_t(255));
+				c[ii] = mspawn.init.color.rgba[ii].get(ro())[0];
 			}
 			check_add_id(ids, pm.add_component(c));
 		} break;

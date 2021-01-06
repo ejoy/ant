@@ -224,7 +224,7 @@ particle_mgr::update_lifetime_color(float dt){
 		const uint16_t dp = life->delta_process(dt);
 		for (int ii = 0; ii < 4; ++ii) {
 			const auto& c = ci.rgba[ii];
-			clr[ii] = c.get(clr[ii], dp);
+			clr[ii] = c.get(glm::u8vec1(clr[ii]), dp)[0];
 		}
 	}
 }
