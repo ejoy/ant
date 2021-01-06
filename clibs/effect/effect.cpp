@@ -89,11 +89,6 @@ leffect_create_emitter(lua_State *L){
     }
     lua_pop(L, 1);
 
-    if (LUA_TTABLE == lua_getfield(L, 1, "subuv_setting")){
-        lua_struct::unpack(L, -1, e->msubuv_setting.subuv_dim);
-    }
-    lua_pop(L, 1);
-
     if (LUA_TTABLE == lua_getfield(L, 1, "spawn")){
         lua_struct::unpack(L, -1, e->mspawn);
 

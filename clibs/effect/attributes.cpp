@@ -211,20 +211,30 @@ std::unordered_map<std::string, readerop> g_attrib_map = {
         lua_struct::unpack(L, index, emitter->mspawn.init.scale);
     }),
     std::make_pair("scale_over_life", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
-        emitter->mspawn.interp.components.push_back(particles::scale_interpolator::ID());
+        
         interpolation::f3_init_value scale_iv;
         lua_struct::unpack(L, index, scale_iv);
+
+        check_add_id(particles::scale::ID(), emitter->mspawn.init.components);
+        emitter->mspawn.init.scale.interp_type = 0;
+        emitter->mspawn.init.scale.minv = scale_iv.minv;
+
+        emitter->mspawn.interp.components.push_back(particles::scale_interpolator::ID());
         emitter->mspawn.interp.scale.from_init_value(scale_iv);
-        
     }),
     std::make_pair("init_rotation", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
         emitter->mspawn.init.components.push_back(particles::rotation::ID());
         lua_struct::unpack(L, index, emitter->mspawn.init.rotation);
     }),
     std::make_pair("rotation_over_life", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
-        emitter->mspawn.interp.components.push_back(particles::rotation::ID());
         interpolation::init_valueT<float> iv;
         lua_struct::unpack(L, index, iv);
+
+        check_add_id(particles::rotation::ID(), emitter->mspawn.init.components);
+        emitter->mspawn.init.rotation.interp_type = 0;
+        emitter->mspawn.init.rotation.minv = iv.minv;
+
+        emitter->mspawn.interp.components.push_back(particles::rotation::ID());
         emitter->mspawn.interp.rotation.from_init_value(iv);
     }),
     std::make_pair("init_translation", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
@@ -239,9 +249,16 @@ std::unordered_map<std::string, readerop> g_attrib_map = {
         emitter->mspawn.interp.components.push_back(particles::color_interpolator::ID());
         interpolation::color_init_value iv;
         lua_struct::unpack(L, index, iv);
+
+        // we should override init.color value
+        check_add_id(particles::color::ID(), emitter->mspawn.init.components);
         
         for (int ii = 0; ii < 4; ++ii) {
-            emitter->mspawn.interp.color.rgba[ii].from_init_value(iv.rgba[ii]);
+            auto &ic = emitter->mspawn.init.color.rgba[ii];
+            const auto& c = iv.rgba[ii];
+            ic.minv = c.minv;
+            ic.interp_type = 0;
+            emitter->mspawn.interp.color.rgba[ii].from_init_value(c);
         }
     }),
     std::make_pair("init_velocity", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){

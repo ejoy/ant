@@ -39,8 +39,8 @@ public:
             interpolation::f3_interpolator      scale;
             interpolation::f3_interpolator      translation;
             interpolation::interp_valueT<float> rotation;
-            interpolation::f2_interpolator      uv_motion;
-            interpolation::u16_interpolator     subuv_index;
+            // interpolation::f2_interpolator      uv_motion;
+            // interpolation::f2_interpolator     subuv_motion;
             interpolation::color_interpolator   color;
 
             comp_ids components;
@@ -59,8 +59,4 @@ public:
     };
     spawndata   mspawn;
     lifedata    mlife;
-    struct subuv {
-        glm::vec2 subuv_dim;
-    };
-    subuv   msubuv_setting;
 };

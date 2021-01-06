@@ -246,13 +246,12 @@ particle_emitter::spawn(const glm::mat4 &transform, uint8_t materialidx){
 				particles::translation_interpolator(transform_interp_value(mspawn.interp.translation, 1.f))
 			));
 		} break;
-		case ID_uv_motion_interpolator: {
-			check_add_id(ids, pm.add_component(
-				particles::uv_motion_interpolator(mspawn.interp.uv_motion)
-			));
-		} break;
+		// case ID_uv_motion_interpolator: {
+		// 	check_add_id(ids, pm.add_component(
+		// 		particles::uv_motion_interpolator(mspawn.interp.uv_motion)
+		// 	));
+		// } break;
 		case ID_color_interpolator: {
-			assert(std::find(ids.begin(), ids.end(), ID_color) != ids.end());
 			check_add_id(ids, pm.add_component(
 				particles::color_interpolator(mspawn.interp.color)
 			));

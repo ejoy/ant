@@ -33,15 +33,11 @@ data:
                 interp_type: linear
                 minv: 1
                 maxv: 2
-            init_color:
-                RGBA:
-                    interp_type: const
-                    value: {140, 140, 0, 255}
             color_over_life:
                 RGB:
                     interp_type: linear
-                    minv: {140, 140, 0}
-                    maxv: {220, 15, 0}
+                    minv: {255, 0, 0}
+                    maxv: {0, 255, 0}
                 A:
                     interp_type: linear
                     minv: 255
