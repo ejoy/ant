@@ -187,6 +187,16 @@ namespace interpolation{
         }
     };
 
+    template<typename T>
+    T round(float v){
+        static_assert(false, "need define");
+    }
+
+    template<>
+    inline float round<float>(float v) { return v;}
+    template<>
+    inline uint8_t round<uint8_t>(float v) { return uint8_t(v+0.5f);}
+
     template<int NUM>
     struct interp_valueT{
         glm::vec<NUM, float, glm::defaultp> scale;
@@ -209,7 +219,7 @@ namespace interpolation{
             if (interp_type == 1) {
                 glm::vec<NUM, T, glm::defaultp> r;
                 for (int ii = 0; ii < NUM; ++ii) {
-                    r[ii] = T(float(delta) * scale[ii] + (float)value[ii]);
+                    r[ii] = round<T>(float(delta) * scale[ii] + (float)value[ii]);
                 }
                 return r;
             }
