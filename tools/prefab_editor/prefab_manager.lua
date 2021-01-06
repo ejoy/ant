@@ -432,14 +432,9 @@ function m:add_prefab(filename)
     hierarchy:add(mount_root, {template = entity_template, filename = filename, children = entities}, self.root)
 end
 
-function m:update_material(eid, mtl)
+function m:recreate_entity(eid)
     local prefab = hierarchy:get_template(eid)
-    prefab.template.data.material = mtl
     local new_eid = world:create_entity(prefab.template)
-    local current_dir = lfs.path(tostring(self.prefab)):parent_path()
-    local relative_path = tostring(lfs.relative(lfs.path(mtl), current_dir))
-    prefab.template.data.material = relative_path
-    world[eid].material = relative_path
     iom.set_srt(new_eid, iom.srt(eid))
     world[new_eid].name = world[eid].name
     local new_node = hierarchy:replace(eid, new_eid)
@@ -459,6 +454,36 @@ function m:update_material(eid, mtl)
     local gizmo = require "gizmo.gizmo"(world)
     gizmo:set_target(new_eid)
     return new_eid
+end
+
+function m:update_material(eid, mtl)
+    local prefab = hierarchy:get_template(eid)
+    prefab.template.data.material = mtl
+    -- local new_eid = world:create_entity(prefab.template)
+    -- local current_dir = lfs.path(tostring(self.prefab)):parent_path()
+    -- local relative_path = tostring(lfs.relative(lfs.path(mtl), current_dir))
+    -- prefab.template.data.material = relative_path
+    -- world[eid].material = relative_path
+    -- iom.set_srt(new_eid, iom.srt(eid))
+    -- world[new_eid].name = world[eid].name
+    -- local new_node = hierarchy:replace(eid, new_eid)
+    -- world[new_eid].parent = new_node.parent
+    -- for _, v in ipairs(new_node.children) do
+    --     world[v.eid].parent = new_eid
+    -- end
+    -- local idx
+    -- for i, e in ipairs(self.entities) do
+    --     if e == eid then
+    --         idx = i
+    --         break
+    --     end
+    -- end
+    -- self.entities[idx] = new_eid
+    -- world:remove_entity(eid)
+    -- local gizmo = require "gizmo.gizmo"(world)
+    -- gizmo:set_target(new_eid)
+    -- return new_eid
+    return self:recreate_entity(eid)
 end
 
 local utils = require "common.utils"

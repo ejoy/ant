@@ -74,7 +74,7 @@ function gizmo:set_position(worldpos)
 		if not parent_worldmat then
 			localPos = worldpos
 		else
-			localPos = math3d.totable(math3d.transform(math3d.inverse(parent_worldmat), worldpos, 1))
+			localPos = math3d.totable(math3d.transform(math3d.inverse(parent_worldmat), math3d.vector(worldpos), 1))
 		end
 		
 		iom.set_position(self.target_eid, localPos)

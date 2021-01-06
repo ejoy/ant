@@ -13,13 +13,13 @@ function PropertyBase:_init(config, modifier)
     self.modifier = modifier or {}
     self.dim = config.dim or 1
     if self.dim == 1 then
-        self.uidata = {0, speed = config.speed, min = config.min, max = config.max}
+        self.uidata = {0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
     elseif self.dim == 2 then
-        self.uidata = {0, 0, speed = config.speed, min = config.min, max = config.max}
+        self.uidata = {0, 0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
     elseif self.dim == 3 then
-        self.uidata = {0, 0, 0, speed = config.speed, min = config.min, max = config.max}
+        self.uidata = {0, 0, 0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
     elseif self.dim == 4 then
-        self.uidata = {0, 0, 0, 0, speed = config.speed, min = config.min, max = config.max}
+        self.uidata = {0, 0, 0, 0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
     end
 end
 
@@ -56,11 +56,11 @@ function PropertyBase:show()
         if self.dim == 1 then
             self.modifier.setter(self.uidata[1])
         elseif self.dim == 2 then
-            self.modifier.setter(self.uidata[1], self.uidata[2])
+            self.modifier.setter({self.uidata[1], self.uidata[2]})
         elseif self.dim == 3 then
-            self.modifier.setter(self.uidata[1], self.uidata[2], self.uidata[3])
+            self.modifier.setter({self.uidata[1], self.uidata[2], self.uidata[3]})
         elseif self.dim == 4 then
-            self.modifier.setter(self.uidata[1], self.uidata[2], self.uidata[3], self.uidata[4])
+            self.modifier.setter({self.uidata[1], self.uidata[2], self.uidata[3], self.uidata[4]})
         end
     end
 end
@@ -100,8 +100,9 @@ function Combo:update()
 end
 
 function Combo:show()
-    imgui.widget.Text(self.label)
-    imgui.cursor.SameLine(uiconfig.PropertyIndent)
+    -- imgui.widget.Text(self.label)
+    -- imgui.cursor.SameLine(uiconfig.PropertyIndent)
+    imgui.widget.PropertyLabel(self.label)
     imgui.util.PushID(tostring(self))
     if imgui.widget.BeginCombo("##"..self.label, {self.current_option, flags = imgui.flags.Combo {}}) then
         for _, option in ipairs(self.options) do
