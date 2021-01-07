@@ -31,8 +31,6 @@
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/Factory.h"
-#include "../Include/RmlUi/FontEngineInterface.h"
-#include "../Include/RmlUi/RenderInterface.h"
 #include "DataController.h"
 #include "DataModel.h"
 #include "DataView.h"
@@ -119,75 +117,6 @@ float ElementUtilities::GetDensityIndependentPixelRatio(Element * element)
 
 	return context->GetDensityIndependentPixelRatio();
 }
-
-// Returns the width of a string rendered within the context of the given element.
-int ElementUtilities::GetStringWidth(Element* element, const String& string)
-{
-	FontFaceHandle font_face_handle = element->GetFontFaceHandle();
-	if (font_face_handle == 0)
-		return 0;
-
-	return GetFontEngineInterface()->GetStringWidth(font_face_handle, string);
-}
-	
-// Generates the clipping region for an element.
-bool ElementUtilities::GetClippingRegion(Vector2i& clip_origin, Vector2i& clip_dimensions, Element* element)
-{
-	Rect clip = element->GetClippingRegion();
-	if (clip.IsEmpty()) {
-		clip_origin = Vector2i(-1, -1);
-		clip_dimensions = Vector2i(-1, -1);
-		return false;
-	}
-	clip_origin = Vector2i(clip.origin.x, clip.origin.y);
-	clip_dimensions = Vector2i(clip.size.w, clip.size.h);
-	return true;
-}
-
-bool ElementUtilities::ApplyTransform(Element &element)
-{
-	RenderInterface *render_interface = GetRenderInterface();
-	if (!render_interface)
-		return false;
-
-	struct PreviousMatrix {
-		const Matrix4f* pointer; // This may be expired, dereferencing not allowed!
-		Matrix4f value;
-	};
-	static SmallUnorderedMap<RenderInterface*, PreviousMatrix> previous_matrix;
-
-	auto it = previous_matrix.find(render_interface);
-	if (it == previous_matrix.end())
-		it = previous_matrix.emplace(render_interface, PreviousMatrix{ nullptr, Matrix4f::Identity() }).first;
-
-	RMLUI_ASSERT(it != previous_matrix.end());
-
-	const Matrix4f*& old_transform = it->second.pointer;
-	const Matrix4f* new_transform = nullptr;
-
-	if (const TransformState* state = element.GetTransformState())
-		new_transform = state->GetTransform();
-
-	// Only changed transforms are submitted.
-	if (old_transform != new_transform)
-	{
-		Matrix4f& old_transform_value = it->second.value;
-
-		// Do a deep comparison as well to avoid submitting a new transform which is equal.
-		if(!old_transform || !new_transform || (old_transform_value != *new_transform))
-		{
-			render_interface->SetTransform(new_transform);
-
-			if(new_transform)
-				old_transform_value = *new_transform;
-		}
-
-		old_transform = new_transform;
-	}
-
-	return true;
-}
-
 
 static bool ApplyDataViewsControllersInternal(Element* element, const bool construct_structural_view, const String& structural_view_inner_rml)
 {

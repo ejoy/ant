@@ -67,24 +67,7 @@ public:
 	/// @param[in] element The element to determine the density-independent pixel ratio for.
 	/// @return The density-independent pixel ratio of the context, or 1.0 if no context assigned.
 	static float GetDensityIndependentPixelRatio(Element* element);
-	/// Returns the width of a string rendered within the context of the given element.
-	/// @param[in] element The element to measure the string from.
-	/// @param[in] string The string to measure.
-	/// @return The string width, in pixels.
-	static int GetStringWidth(Element* element, const String& string);
-	/// Generates the clipping region for an element.
-	/// @param[out] clip_origin The origin, in context coordinates, of the origin of the element's clipping window.
-	/// @param[out] clip_dimensions The size, in context coordinates, of the element's clipping window.
-	/// @param[in] element The element to generate the clipping region for.
-	/// @return True if a clipping region exists for the element and clip_origin and clip_window were set, false if not.
-	static bool GetClippingRegion(Vector2i& clip_origin, Vector2i& clip_dimensions, Element* element);
-
-	/// Applies an element's accumulated transform matrix, determined from its and ancestor's `perspective' and `transform' properties.
-	/// Note: All calls to RenderInterface::SetTransform must go through here.
-	/// @param[in] element		The element whose transform to apply.
-	/// @return true if a render interface is available to set the transform.
-	static bool ApplyTransform(Element& element);
-
+	
 	/// Creates data views and data controllers if a data model applies to the element.
 	/// Attributes such as 'data-' are used to create the views and controllers.
 	/// @return True if a data view or controller was constructed.

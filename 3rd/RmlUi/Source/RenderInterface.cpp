@@ -33,7 +33,6 @@ namespace Rml {
 
 RenderInterface::RenderInterface()
 {
-	context = nullptr;
 }
 
 RenderInterface::~RenderInterface()
@@ -77,12 +76,6 @@ void RenderInterface::ReleaseTexture(TextureHandle /*texture*/)
 // Called by RmlUi when it wants to change the current transform matrix to a new matrix.
 void RenderInterface::SetTransform(const Matrix4f* /*transform*/)
 {
-}
-
-// Get the context currently being rendered.
-Context* RenderInterface::GetContext() const
-{
-	return context;
 }
 
 } // namespace Rml

@@ -71,14 +71,10 @@ Geometry::~Geometry()
 }
 
 void Geometry::Render(Point translation) {
-	RenderInterface* const render_interface = GetRenderInterface();
-	if (!render_interface)
-		return;
-
 	// Render our compiled geometry if possible.
 	if (compiled_geometry)
 	{
-		render_interface->RenderCompiledGeometry(compiled_geometry, Vector2f(translation.x, translation.y));
+		GetRenderInterface()->RenderCompiledGeometry(compiled_geometry, Vector2f(translation.x, translation.y));
 	}
 	// Otherwise, if we actually have geometry, try to compile it if we haven't already done so, otherwise render it in
 	// immediate mode.
@@ -91,20 +87,20 @@ void Geometry::Render(Point translation) {
 		if (!compile_attempted)
 		{
 			compile_attempted = true;
-			compiled_geometry = render_interface->CompileGeometry(&vertices[0], (int)vertices.size(), &indices[0], (int)indices.size(), texture ? texture->GetHandle() : 0);
+			compiled_geometry = GetRenderInterface()->CompileGeometry(&vertices[0], (int)vertices.size(), &indices[0], (int)indices.size(), texture ? texture->GetHandle() : 0);
 
 			// If we managed to compile the geometry, we can clear the local copy of vertices and indices and
 			// immediately render the compiled version.
 			if (compiled_geometry)
 			{	
-				render_interface->RenderCompiledGeometry(compiled_geometry, Vector2f(translation.x, translation.y));
+				GetRenderInterface()->RenderCompiledGeometry(compiled_geometry, Vector2f(translation.x, translation.y));
 				return;
 			}
 		}
 
 		// Either we've attempted to compile before (and failed), or the compile we just attempted failed; either way,
 		// render the uncompiled version.
-		render_interface->RenderGeometry(&vertices[0], (int)vertices.size(), &indices[0], (int)indices.size(), texture ? texture->GetHandle() : 0, Vector2f(translation.x, translation.y));
+		GetRenderInterface()->RenderGeometry(&vertices[0], (int)vertices.size(), &indices[0], (int)indices.size(), texture ? texture->GetHandle() : 0, Vector2f(translation.x, translation.y));
 	}
 }
 

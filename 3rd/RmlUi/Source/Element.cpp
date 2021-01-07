@@ -35,10 +35,10 @@
 #include "../Include/RmlUi/Factory.h"
 #include "../Include/RmlUi/Dictionary.h"
 #include "../Include/RmlUi/PropertyIdSet.h"
-#include "../Include/RmlUi/PropertiesIteratorView.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/TransformPrimitive.h"
+#include "../Include/RmlUi/RenderInterface.h"
 #include "Clock.h"
 #include "ComputeProperty.h"
 #include "DataModel.h"
@@ -185,7 +185,12 @@ void Element::Render()
 		stacking_context[i]->Render();
 
 	// Apply our transform
-	ElementUtilities::ApplyTransform(*this);
+	if (transform_state && transform_state->GetTransform()) {
+		GetRenderInterface()->SetTransform(transform_state->GetTransform());
+	}
+	else {
+		GetRenderInterface()->SetTransform(&Matrix4f::Identity());
+	}
 
 	// Set up the clipping region for this element.
 	GetContext()->SetActiveClipRegion(GetClippingRegion());
@@ -420,12 +425,6 @@ Style::Display Element::GetDisplay()
 	return meta->computed_values.display;
 }
 
-// Returns this element's TransformState
-const TransformState *Element::GetTransformState() const noexcept
-{
-	return transform_state.get();
-}
-
 // Project a 2D point in pixel coordinates onto the element's plane.
 bool Element::Project(Point& point) const noexcept
 {
@@ -468,12 +467,6 @@ bool Element::Project(Point& point) const noexcept
 	// The transformation matrix is either singular, or the ray is parallel to the element's plane.
 	return false;
 }
-
-PropertiesIteratorView Element::IterateLocalProperties() const
-{
-	return PropertiesIteratorView(MakeUnique<PropertiesIterator>(meta->style.Iterate()));
-}
-
 
 // Sets or removes a pseudo-class on the element.
 void Element::SetPseudoClass(const String& pseudo_class, bool activate)

@@ -49,7 +49,6 @@ class ElementBackgroundImage;
 class ElementDefinition;
 class ElementDocument;
 class ElementStyle;
-class PropertiesIteratorView;
 class PropertyDictionary;
 class RenderInterface;
 class StyleSheet;
@@ -188,10 +187,6 @@ public:
 	/// @return True if a new animation key was added.
 	bool AddAnimationKey(const String& property_name, const Property& target_value, float duration, Tween tween = Tween{});
 	
-	/// Iterator for the local (non-inherited) properties defined on this element.
-	/// @warning Modifying the element's properties or classes invalidates the iterator.
-	/// @return Iterator to the first property defined on this element.
-	PropertiesIteratorView IterateLocalProperties() const;
 	///@}
 
 	/** @name Pseudo-classes
@@ -435,8 +430,6 @@ public:
 	EventDispatcher* GetEventDispatcher() const;
 	/// Returns event types with number of listeners for debugging.
 	String GetEventDispatcherSummary() const;
-	/// Returns the element's transform state.
-	const TransformState* GetTransformState() const noexcept;
 	/// Returns the data model of this element.
 	DataModel* GetDataModel() const;
 	//@}

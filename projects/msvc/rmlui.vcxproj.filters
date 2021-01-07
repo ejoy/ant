@@ -178,9 +178,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\PluginRegistry.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\PropertiesIteratorView.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Property.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -643,9 +640,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Plugin.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\PropertiesIteratorView.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Property.h">

@@ -150,7 +150,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\ObserverPtr.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Plugin.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\PluginRegistry.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\PropertiesIteratorView.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Property.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\PropertyDefinition.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\PropertyDictionary.cpp" />
@@ -255,7 +254,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\ObserverPtr.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Platform.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Plugin.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\PropertiesIteratorView.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Property.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\PropertyDefinition.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\PropertyDictionary.h" />

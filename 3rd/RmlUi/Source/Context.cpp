@@ -99,13 +99,7 @@ float Context::GetDensityIndependentPixelRatio() const {
 }
 
 bool Context::Update() {
-	RenderInterface* render_interface = GetRenderInterface();
-	if (render_interface == nullptr) {
-		return false;
-	}
-
 	if (focus) {
-		render_interface->context = this;
 		ApplyActiveClipRegion();
 		focus->Render();
 		SetActiveClipRegion(Rect());
@@ -126,7 +120,6 @@ bool Context::Update() {
 	//	cursor_proxy->Render();
 	//}
 
-	render_interface->context = nullptr;
 	return true;
 }
 

@@ -32,12 +32,6 @@
 #include "EventSpecification.h"
 
 namespace Rml {
-bool ProjectPosition(Element* element, Point& position) {
-	if (!element->GetTransformState()) {
-		return true;
-	}
-	return element->Project(position);
-}
 
 Event::Event(Element* _target_element, EventId id, const Dictionary& _parameters, bool interruptible)
 	: parameters(_parameters)
@@ -83,7 +77,7 @@ void Event::InitMouseEvent() {
 	parameters["clientY"] = client.y;
 
 	Point offset = client - target_element->GetBorderOffset();
-	if (ProjectPosition(target_element, offset)) {
+	if (target_element->Project(offset)) {
 		parameters["offsetX"] = offset.x;
 		parameters["offsetY"] = offset.y;
 	}
@@ -91,7 +85,7 @@ void Event::InitMouseEvent() {
 	ElementDocument* document = target_element->GetOwnerDocument();
 	if (document) {
 		Point page = client - document->GetBorderOffset();
-		if (ProjectPosition(document, page)) {
+		if (document->Project(page)) {
 			parameters["pageX"] = page.x;
 			parameters["pageY"] = page.y;
 		}
