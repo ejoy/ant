@@ -32,9 +32,6 @@ namespace ImSequencer
 	}
 #endif
 
-	static int min(int a, int b) { return (a < b) ? a : b; }
-	static int max(int a, int b) { return (a > b) ? a : b; }
-
 	bool Sequencer(bool& pause, int& current_frame, int& selected_frame, int& move_type, int& range_index, int& move_delta)
 	{
 		static int firstFrame = 0;

@@ -93,50 +93,16 @@ void ElementText::OnRender()
 		GenerateDecoration(font_face_handle);
 	}
 
-	const Vector2f translation = GetAbsoluteOffset(Layout::Area::Padding);
+	const Point translation = GetPaddingOffset();
 	
-	bool render = true;
-	Vector2i clip_origin;
-	Vector2i clip_dimensions;
-	if (GetContext()->GetActiveClipRegion(clip_origin, clip_dimensions))
-	{
-		float clip_top = (float)clip_origin.y;
-		float clip_left = (float)clip_origin.x;
-		float clip_right = (float)(clip_origin.x + clip_dimensions.x);
-		float clip_bottom = (float)(clip_origin.y + clip_dimensions.y);
-		float line_height = GetLineHeight();
-		
-		render = false;
-		for (size_t i = 0; i < lines.size(); ++i)
-		{			
-			const Line& line = lines[i];
-			float x = translation.x + line.position.x;
-			float y = translation.y + line.position.y;
-			
-			bool render_line = !(x > clip_right);
-			render_line = render_line && !(x + line.width < clip_left);
-			
-			render_line = render_line && !(y - line_height > clip_bottom);
-			render_line = render_line && !(y < clip_top);
-			
-			if (render_line)
-			{
-				render = true;
-				break;
-			}
-		}
+	if (decoration_under) {
+		decoration.Render(translation);
 	}
-
-	if (render) {
-		if (decoration_under) {
-			decoration.Render(translation);
-		}
-		for (size_t i = 0; i < geometrys.size(); ++i) {
-			geometrys[i].Render(translation);
-		}
-		if (!decoration_under) {
-			decoration.Render(translation);
-		}
+	for (size_t i = 0; i < geometrys.size(); ++i) {
+		geometrys[i].Render(translation);
+	}
+	if (!decoration_under) {
+		decoration.Render(translation);
 	}
 }
 
@@ -265,7 +231,7 @@ void ElementText::ClearLines()
 }
 
 // Adds a new line into the text element.
-void ElementText::AddLine(const Vector2f& position, const String& line)
+void ElementText::AddLine(const Point& position, const String& line)
 {
 	FontFaceHandle font_face_handle = GetFontFaceHandle();
 
@@ -408,7 +374,7 @@ void ElementText::GenerateDecoration(const FontFaceHandle font_face_handle) {
 	}
 
 	for (const Line& line : lines) {
-		Vector2f position = line.position;
+		Point position = line.position;
 		float width = line.width;
 		Vector<Vertex>& line_vertices = decoration.GetVertices();
 		Vector<int>& line_indices = decoration.GetIndices();
@@ -445,7 +411,7 @@ void ElementText::GenerateDecoration(const FontFaceHandle font_face_handle) {
 		line_indices.resize(isz + 6);
 		GeometryUtilities::GenerateQuad(
 			&line_vertices[vsz], &line_indices[isz],
-			position,
+			Vector2f(position.x, position.y),
 			Vector2f((float)width, underline_thickness),
 			color, (int)vsz
 		);
@@ -559,7 +525,7 @@ static bool LastToken(const char* token_begin, const char* string_end, bool coll
 	return last_token;
 }
 
-Vector2f ElementText::Measure(float minWidth, float maxWidth, float minHeight, float maxHeight) {
+Size ElementText::Measure(float minWidth, float maxWidth, float minHeight, float maxHeight) {
 	ClearLines();
 	int line_begin = 0;
 	bool finish = false;
@@ -583,14 +549,14 @@ Vector2f ElementText::Measure(float minWidth, float maxWidth, float minHeight, f
 			default: break;
 			}
 		}
-		AddLine(Vector2f(start_width, height + baseline), line);
+		AddLine(Point(start_width, height + baseline), line);
 		width = std::max(width, line_width);
 		height += line_height;
 		first_line = false;
 		line_begin += line_length;
 	}
 	height = std::max(minHeight, height);
-	return Vector2f(width, height);
+	return Size(width, height);
 }
 
 float ElementText::GetLineHeight() {

@@ -44,9 +44,9 @@ namespace Rml {
  */
 
 struct Line {
-	Line(const String& text, const Vector2f& position) : text(text), position(position), width(0) {}
+	Line(const String& text, const Point& position) : text(text), position(position), width(0) {}
 	String text;
-	Vector2f position;
+	Point position;
 	int width;
 };
 typedef Vector<Line> LineList;

@@ -48,8 +48,7 @@ namespace Rml {
 Context::Context(const Vector2i& dimensions_)
 : dimensions(dimensions_)
 , density_independent_pixel_ratio(1.0f)
-, clip_origin(-1, -1)
-, clip_dimensions(-1, -1) {
+, clip() {
 	//cursor_proxy.reset(new ElementDocument("body"));
 	//ElementDocument* cursor_proxy_document = dynamic_cast< ElementDocument* >(cursor_proxy.get());
 	//if (cursor_proxy_document)
@@ -76,11 +75,9 @@ void Context::SetDimensions(const Vector2i& _dimensions) {
 	if (dimensions != _dimensions) {
 		dimensions = _dimensions;
 		if (focus) {
-			focus->SetBounds(Vector4f(0, 0, dimensions[0], dimensions[1]));
-			focus->DirtyLayout();
-			focus->DispatchEvent(EventId::Resize, Dictionary());
+			focus->SetDimensions(Size(dimensions[0], dimensions[1]));
 		}
-		clip_dimensions = dimensions;
+		clip.Union(Rect(clip.origin, Size(dimensions[0], dimensions[1])));
 	}
 }
 
@@ -109,9 +106,10 @@ bool Context::Update() {
 
 	if (focus) {
 		render_interface->context = this;
-		ElementUtilities::ApplyActiveClipRegion(this, render_interface);
+		ApplyActiveClipRegion();
 		focus->Render();
-		ElementUtilities::SetClippingRegion(nullptr, this);
+		SetActiveClipRegion(Rect());
+
 		focus->UpdateDataModel(true);
 		focus->Update(density_independent_pixel_ratio);
 		focus->UpdateLayout();
@@ -138,12 +136,11 @@ ElementDocument* Context::LoadDocument(const String& document_path) {
 	if (!stream->Open(document_path))
 		return nullptr;
 
-	ElementDocumentPtr document(new ElementDocument("body"));
+	ElementDocumentPtr document(new ElementDocument("body", Size(dimensions[0], dimensions[1])));
 	document->context = this;
 	PluginRegistry::NotifyDocumentCreate(document.get());
 	XMLParser parser(document.get());
 	parser.Parse(stream.get());
-	document->SetBounds(Vector4f(0, 0, dimensions[0], dimensions[1]));
 	documents.push_back(document.get());
 	document->DispatchEvent(EventId::Load, Dictionary());
 	document->UpdateDataModel(false);
@@ -216,18 +213,22 @@ bool Context::ProcessMouseWheel(float wheel_delta, int key_modifier_state) {
 	focus->ProcessMouseWheel(wheel_delta, key_modifier_state);
 	return true;
 }
-	
-bool Context::GetActiveClipRegion(Vector2i& origin, Vector2i& dimensions) const {
-	if (clip_dimensions.x < 0 || clip_dimensions.y < 0)
-		return false;
-	origin = clip_origin;
-	dimensions = clip_dimensions;
-	return true;
+
+void Context::ApplyActiveClipRegion() {	
+	if (clip.IsEmpty()) {
+		GetRenderInterface()->EnableScissorRegion(false);
+	}
+	else {
+		GetRenderInterface()->EnableScissorRegion(true);
+		GetRenderInterface()->SetScissorRegion(clip.origin.x, clip.origin.y, clip.size.w, clip.size.h);
+	}
 }
 
-void Context::SetActiveClipRegion(const Vector2i& origin, const Vector2i& dimensions) {
-	clip_origin = origin;
-	clip_dimensions = dimensions;
+void Context::SetActiveClipRegion(const Rect& clip_) {
+	if (clip_ != clip) {
+		clip = clip_;
+		ApplyActiveClipRegion();
+	}
 }
 
 void Context::ReleaseUnloadedDocuments() {

@@ -50,7 +50,9 @@ static constexpr float DOUBLE_CLICK_MAX_DIST = 3.f;  // [dp]
 
 namespace Rml {
 
-ElementDocument::ElementDocument(const String& tag) : Element(tag)
+ElementDocument::ElementDocument(const String& tag, const Size& _dimensions)
+	: Element(tag)
+	, dimensions(_dimensions)
 {
 	style_sheet = nullptr;
 	context = nullptr;
@@ -272,7 +274,7 @@ void ElementDocument::UpdateDataModel(bool clear_dirty_variables) {
 void ElementDocument::UpdateLayout()
 {
 	if (dirty_layout) {
-		GetLayout().CalculateLayout(bounds[2], bounds[3]);
+		GetLayout().CalculateLayout(dimensions);
 		UpdateChildrenBounds();
 	}
 }
@@ -295,10 +297,6 @@ void ElementDocument::OnPropertyChange(const PropertyIdSet& changed_properties)
 	// If the document's font-size has been changed, we need to dirty all rem properties.
 	if (changed_properties.Contains(PropertyId::FontSize))
 		GetStyle()->DirtyPropertiesWithUnitRecursive(Property::REM);
-}
-
-void ElementDocument::OnResize()
-{
 }
 
 enum class CanFocus { Yes, No, NoAndNoChildren };
@@ -733,7 +731,7 @@ void ElementDocument::ProcessMouseWheel(float wheel_delta, int key_modifier_stat
 }
 
 void ElementDocument::UpdateHoverChain(const Dictionary& parameters, const Dictionary& drag_parameters, const Vector2i& old_mouse_position) {
-	Vector2f position((float)mouse_position.x, (float)mouse_position.y);
+	Point position((float)mouse_position.x, (float)mouse_position.y);
 
 	// Send out drag events.
 	if (drag)
@@ -828,8 +826,8 @@ void ElementDocument::CreateDragClone(Element* element) {
 	// Set all the required properties and pseudo-classes on the clone.
 	drag_clone->SetPseudoClass("drag", true);
 	drag_clone->SetPropertyImmediate(PropertyId::Position, Property(Style::Position::Absolute));
-	drag_clone->SetPropertyImmediate(PropertyId::Left, Property(element->GetAbsoluteOffset(Layout::Area::Border).x - element->GetLayout().GetEdge(Layout::Area::Margin, Layout::LEFT) - mouse_position.x, Property::PX));
-	drag_clone->SetPropertyImmediate(PropertyId::Top, Property(element->GetAbsoluteOffset(Layout::Area::Border).y - element->GetLayout().GetEdge(Layout::Area::Margin, Layout::TOP) - mouse_position.y, Property::PX));
+	drag_clone->SetPropertyImmediate(PropertyId::Left, Property(element->GetBorderOffset().x - element->GetLayout().GetEdge(Layout::Area::Margin, Layout::LEFT) - mouse_position.x, Property::PX));
+	drag_clone->SetPropertyImmediate(PropertyId::Top, Property(element->GetBorderOffset().y - element->GetLayout().GetEdge(Layout::Area::Margin, Layout::TOP) - mouse_position.y, Property::PX));
 }
 
 void ElementDocument::ReleaseDragClone() {
@@ -932,6 +930,14 @@ DataModel* ElementDocument::GetDataModelPtr(const String& name) const {
 	if (it != data_models.end())
 		return it->second.get();
 	return nullptr;
+}
+
+void ElementDocument::SetDimensions(const Size& _dimensions) {
+	if (dimensions != _dimensions) {
+		dimensions = _dimensions;
+		DirtyLayout();
+		DispatchEvent(EventId::Resize, Dictionary());
+	}
 }
 
 } // namespace Rml

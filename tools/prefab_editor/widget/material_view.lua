@@ -208,10 +208,10 @@ function MaterialView:set_model(eid)
                 end
             )
             pro:set_setter(
-                function(...)
+                function(v)
                     local tdata = mtldata_list[eid].tdata
-                    tdata.properties[k] = {...}
-                    imaterial.set_property(eid, k, {...})
+                    tdata.properties[k] = v
+                    imaterial.set_property(eid, k, v)
                 end
             )
             self.uniforms[#self.uniforms + 1] = pro
@@ -239,13 +239,9 @@ function MaterialView:show()
     BaseView.show(self)
     if imgui.widget.TreeNode("Material", imgui.flags.TreeNode { "DefaultOpen" }) then
         self.mat_file:show()
-        -- imgui.cursor.Indent()
-        -- self.vs_file:show()
-        -- self.fs_file:show()
         self.save_mat:show()
         imgui.cursor.SameLine()
         self.save_as_mat:show()
-        -- imgui.cursor.Unindent()
         for i = 1, self.sampler_num do
             self.samplers[i]:show()
         end

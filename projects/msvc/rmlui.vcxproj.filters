@@ -606,9 +606,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\FontEngineInterface.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\FontGlyph.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Geometry.h">
       <Filter>include</Filter>
     </ClInclude>

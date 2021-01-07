@@ -164,27 +164,6 @@ RMLUICORE_API int RealToInteger(float value)
 	return int(value);
 }
 
-RMLUICORE_API void SnapToPixelGrid(float& offset, float& width)
-{
-	const float right_edge = offset + width;
-	offset = Math::RoundFloat(offset);
-	width = Math::RoundFloat(right_edge) - offset;
-}
-
-RMLUICORE_API void SnapToPixelGrid(Vector2f& position, Vector2f& size)
-{
-	const Vector2f bottom_right = position + size;
-	position = position.Round();
-	size = bottom_right.Round() - position;
-}
-
-RMLUICORE_API void ExpandToPixelGrid(Vector2f& position, Vector2f& size)
-{
-	const Vector2f bottom_right = position + size;
-	position = Vector2f(std::floor(position.x), std::floor(position.y));
-	size = Vector2f(std::ceil(bottom_right.x), std::ceil(bottom_right.y)) - position;
-}
-
 // Converts the given number to a power of two, rounding up if necessary.
 RMLUICORE_API int ToPowerOfTwo(int number)
 {

@@ -167,19 +167,6 @@ RMLUICORE_API int RoundDownToInteger(float value);
 /// @return The truncated value as a signed integer.
 RMLUICORE_API int RealToInteger(float value);
 
-/// Round the position and width of a line segment to the pixel grid while minimizing movement of the edges.
-/// @param[inout] x The position, which will use normal rounding.
-/// @param[inout] width The width, which is rounded such that movement of the right edge is minimized.
-RMLUICORE_API void SnapToPixelGrid(float& x, float& width);
-/// Round the position and size of a rectangle to the pixel grid while minimizing movement of the edges.
-/// @param[inout] position The position, which will use normal rounding.
-/// @param[inout] size The size, which is rounded such that movement of the right and bottom edges is minimized.
-RMLUICORE_API void SnapToPixelGrid(Vector2f& position, Vector2f& size);
-/// Round the position and size of a rectangle to the pixel grid such that it fully covers the original rectangle.
-/// @param[inout] position The position, which will be rounded down.
-/// @param[inout] size The size, which is rounded such that the right and bottom edges are rounded up.
-RMLUICORE_API void ExpandToPixelGrid(Vector2f& position, Vector2f& size);
-
 /// Converts a number to the nearest power of two, rounding up if necessary.
 /// @param[in] value The value to convert to a power-of-two.
 /// @return The smallest power of two that is as least as big as the input value.

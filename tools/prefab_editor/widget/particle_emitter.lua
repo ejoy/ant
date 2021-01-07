@@ -9,19 +9,6 @@ local world
 local prefab_mgr
 local m = {}
 
-local born_pro = {
-    Scale = {0.15, 0.28},
-    Velocity = {1.0, 1.0, 1.0},
-    LifeTime = {5.0},
-    Direction = {1.0, 1.0, 1.0},
-    EmitterType = {1},
-    Name = "No Name",
-    MaterialFile = "test material",
-    TextureFile = "test texture",
-}
-
-
-local method_type = {"around_sphere", "sphere_random", "face_axis", "around_box", "change_property"}
 local interp_type = {"linear", "const"}
 local current_emitter_eid
 

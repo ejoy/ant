@@ -242,7 +242,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Factory.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\FileInterface.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\FontEngineInterface.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\FontGlyph.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Geometry.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\GeometryUtilities.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Header.h" />

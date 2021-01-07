@@ -30,11 +30,6 @@
 
 namespace Rml {
 
-Vector4i operator*(int lhs, const Vector4i& rhs)
-{
-	return Vector4i(lhs * rhs.x, lhs * rhs.y, lhs * rhs.z, lhs * rhs.w);
-}
-
 Vector4f operator*(float lhs, const Vector4f& rhs)
 {
 	return Vector4f(lhs * rhs.x, lhs * rhs.y, lhs * rhs.z, lhs * rhs.w);

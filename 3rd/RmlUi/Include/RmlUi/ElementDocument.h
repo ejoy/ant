@@ -53,7 +53,7 @@ class DataTypeRegister;
 class RMLUICORE_API ElementDocument : public Element
 {
 public:
-	ElementDocument(const String& tag);
+	ElementDocument(const String& tag, const Size& dimensions);
 	virtual ~ElementDocument();
 
 	/// Process given document header
@@ -116,6 +116,7 @@ public:
 	void ProcessMouseButtonUp(int button_index, int key_modifier_state);
 	void ProcessMouseWheel(float wheel_delta, int key_modifier_state);
 	void OnElementDetach(Element* element);
+	void SetDimensions(const Size& dimensions);
 
 public:
 	DataModelConstructor CreateDataModel(const String& name);
@@ -132,9 +133,6 @@ private:
 protected:
 	/// Repositions the document if necessary.
 	void OnPropertyChange(const PropertyIdSet& changed_properties) override;
-
-	/// Called during update if the element size has been changed.
-	void OnResize() override;
 
 private:
 	/// Find the next element to focus, starting at the current element
@@ -185,6 +183,7 @@ private:
 	std::set<Element*> hover_chain;
 	std::vector<Element*> active_chain;
 	ElementPtr cursor_proxy;
+	Size dimensions;
 
 	friend class Rml::Context;
 	friend class Rml::Factory;

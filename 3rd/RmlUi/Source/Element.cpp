@@ -78,30 +78,33 @@ static Pool< ElementMeta > element_meta_chunk_pool(200, true);
 
 
 /// Constructs a new RmlUi element.
-Element::Element(const String& tag) : tag(tag), relative_offset(0, 0), absolute_offset(0, 0), scroll_offset(0, 0), content_offset(0, 0), content_box(0, 0), 
-transform_state(), dirty_transform(false), dirty_perspective(false), dirty_animation(false), dirty_transition(false), dirty_layout(false)
+Element::Element(const String& tag) 
+	: tag(tag)
+	, offset_relative(0, 0)
+	, offset_absolute(0, 0)
+	, scroll_offset(0, 0)
+	, content_offset(0, 0)
+	, content_box(0, 0)
+	, transform_state()
+	, dirty_transform(false)
+	, dirty_perspective(false)
+	, dirty_animation(false)
+	, dirty_transition(false)
+	, dirty_layout(false)
 {
 	RMLUI_ASSERT(tag == StringUtilities::ToLower(tag));
 	parent = nullptr;
 	focus = nullptr;
 	owner_document = nullptr;
-
 	offset_parent = nullptr;
 	offset_dirty = true;
-
 	visible = true;
-
 	z_index = 0;
-
 	stacking_context_dirty = true;
-
 	structure_dirty = false;
-
 	computed_values_are_default_initialized = true;
-
 	meta = element_meta_chunk_pool.AllocateAndConstruct(this);
 	data_model = nullptr;
-
 	PluginRegistry::NotifyElementCreate(this);
 }
 
@@ -124,10 +127,7 @@ Element::~Element()
 
 void Element::Update(float dp_ratio)
 {
-	OnUpdate();
-
 	UpdateStructure();
-
 	HandleTransitionProperty();
 	HandleAnimationProperty();
 	AdvanceAnimations();
@@ -176,11 +176,6 @@ void Element::UpdateProperties() {
 
 void Element::Render()
 {
-	// TODO: This is a work-around for the dirty offset not being properly updated when used by (stacking context?) children. This results
-	// in scrolling not working properly. We don't care about the return value, the call is only used to force the absolute offset to update.
-	if (offset_dirty)
-		GetAbsoluteOffset();
-
 	UpdateStackingContext();
 	UpdateTransformState();
 
@@ -193,12 +188,10 @@ void Element::Render()
 	ElementUtilities::ApplyTransform(*this);
 
 	// Set up the clipping region for this element.
-	if (ElementUtilities::SetClippingRegion(this))
-	{
-		meta->background_border.Render(this);
-		meta->background_image.Render();
-		OnRender();
-	}
+	GetContext()->SetActiveClipRegion(GetClippingRegion());
+	meta->background_border.Render(this);
+	meta->background_image.Render();
+	OnRender();
 
 	// Render the rest of the elements in the stacking context.
 	for (; i < stacking_context.size(); ++i)
@@ -296,70 +289,33 @@ String Element::GetAddress(bool include_pseudo_classes, bool include_parents) co
 		return address;
 }
 
-// Sets the position of this element, as a two-dimensional offset from another element.
-void Element::SetOffset(Vector2f offset, Element* _offset_parent)
-{
-	// If our offset has definitely changed, or any of our parenting has, then these are set and
-	// updated based on our left / right / top / bottom properties.
-	if (relative_offset != offset ||
-		offset_parent != _offset_parent)
-	{
-		relative_offset = offset;
-		offset_parent = _offset_parent;
-		DirtyOffset();
-	}
-
-	// Otherwise, our offset is updated in case left / right / top / bottom will have an impact on
-	// our final position, and our children are dirtied if they do.
-	else
-	{
-		Vector2f& old_base = relative_offset;
-		if (old_base != relative_offset)
-			DirtyOffset();
-	}
-}
-
-Vector2f Element::GetAbsoluteOffset()
-{
+Point Element::GetBorderOffset() {
 	if (offset_dirty) {
 		offset_dirty = false;
 		if (offset_parent != nullptr) {
-			absolute_offset = offset_parent->GetAbsoluteOffset() + relative_offset;
+			offset_absolute = offset_parent->GetBorderOffset() + offset_relative;
 		}
 		else {
-			absolute_offset = relative_offset;
+			offset_absolute = offset_relative;
 		}
 	}
-	return absolute_offset;
+	return offset_absolute;
 }
 
-// Returns the position of the top-left corner of one of the areas of this element's primary box.
-Vector2f Element::GetAbsoluteOffset(Layout::Area area)
-{
-	return GetAbsoluteOffset() + GetLayout().GetPosition(area);
+Point Element::GetPaddingOffset() {
+	return GetBorderOffset() + Point(layout.GetEdge(Layout::Area::Border, Layout::Edge::LEFT), layout.GetEdge(Layout::Area::Border, Layout::Edge::TOP));
 }
 
-// Returns one of the boxes describing the size of the element.
-Layout& Element::GetLayout()
-{
+Point Element::GetContentOffset() {
+	return GetPaddingOffset() + Point(layout.GetEdge(Layout::Area::Padding, Layout::Edge::LEFT), layout.GetEdge(Layout::Area::Padding, Layout::Edge::TOP));
+}
+
+Layout& Element::GetLayout() {
 	return layout;
 }
 
-// Checks if a given point in screen coordinates lies within the bordered area of this element.
-bool Element::IsPointWithinElement(const Vector2f& point)
-{
-	Vector2f position = GetAbsoluteOffset(Layout::Area::Border);
-	const Vector2f box_position = position;
-	const Vector2f box_dimensions = GetLayout().GetSize();
-	if (point.x >= box_position.x &&
-		point.x <= (box_position.x + box_dimensions.x) &&
-		point.y >= box_position.y &&
-		point.y <= (box_position.y + box_dimensions.y))
-	{
-		return true;
-	}
-
-	return false;
+bool Element::IsPointWithinElement(const Point& point) {
+	return Rect(GetBorderOffset(), layout.GetSize()).Contains(point);
 }
 
 // Returns the visibility of the element.
@@ -471,7 +427,7 @@ const TransformState *Element::GetTransformState() const noexcept
 }
 
 // Project a 2D point in pixel coordinates onto the element's plane.
-bool Element::Project(Vector2f& point) const noexcept
+bool Element::Project(Point& point) const noexcept
 {
 	if(!transform_state || !transform_state->GetTransform())
 		return true;
@@ -504,7 +460,7 @@ bool Element::Project(Vector2f& point) const noexcept
 			float t = -local_points[0].z / ray.z;
 			Vector3f p = local_points[0] + ray * t;
 
-			point = Vector2f(p.x, p.y);
+			point = Point(p.x, p.y);
 			return true;
 		}
 	}
@@ -651,7 +607,7 @@ float Element::GetScrollLeft()
 // Sets the left scroll offset of the element.
 void Element::SetScrollLeft(float scroll_left)
 {
-	const float new_offset = Math::Clamp(Math::RoundFloat(scroll_left), 0.0f, GetScrollWidth() - bounds[2]);
+	const float new_offset = Math::Clamp(Math::RoundFloat(scroll_left), 0.0f, GetScrollWidth() - layout.GetSize().w);
 	if (new_offset != scroll_offset.x)
 	{
 		scroll_offset.x = new_offset;
@@ -670,7 +626,7 @@ float Element::GetScrollTop()
 // Sets the top scroll offset of the element.
 void Element::SetScrollTop(float scroll_top)
 {
-	const float new_offset = Math::Clamp(Math::RoundFloat(scroll_top), 0.0f, GetScrollHeight() - bounds[3]);
+	const float new_offset = Math::Clamp(Math::RoundFloat(scroll_top), 0.0f, GetScrollHeight() - layout.GetSize().h);
 	if(new_offset != scroll_offset.y)
 	{
 		scroll_offset.y = new_offset;
@@ -683,13 +639,13 @@ void Element::SetScrollTop(float scroll_top)
 // Gets the width of the scrollable content of the element; it includes the element padding but not its margin.
 float Element::GetScrollWidth()
 {
-	return Math::Max(content_box.x, bounds[2]);
+	return Math::Max(content_box.x, layout.GetSize().w);
 }
 
 // Gets the height of the scrollable content of the element; it includes the element padding but not its margin.
 float Element::GetScrollHeight()
 {
-	return Math::Max(content_box.y, bounds[3]);
+	return Math::Max(content_box.y, layout.GetSize().h);
 }
 
 // Gets the object representing the declarations of an element's style attributes.
@@ -898,7 +854,7 @@ Element* Element::AppendChild(ElementPtr child)
 {
 	RMLUI_ASSERT(child);
 	Element* child_ptr = child.get();
-	GetLayout().InsertChild(child->GetLayout(), (uint32_t)children.size());
+	layout.InsertChild(child->GetLayout(), (uint32_t)children.size());
 	children.insert(children.end(), std::move(child));
 	// Set parent just after inserting into children. This allows us to eg. get our previous sibling in SetParent.
 	child_ptr->SetParent(this);
@@ -936,7 +892,7 @@ Element* Element::InsertBefore(ElementPtr child, Element* adjacent_element)
 	{
 		child_ptr = child.get();
 
-		GetLayout().InsertChild(child->GetLayout(), (uint32_t)child_index);
+		layout.InsertChild(child->GetLayout(), (uint32_t)child_index);
 		DirtyLayout();
 
 		children.insert(children.begin() + child_index, std::move(child));
@@ -1009,7 +965,7 @@ ElementPtr Element::RemoveChild(Element* child)
 
 			detached_child->SetParent(nullptr);
 
-			GetLayout().RemoveChild(child->GetLayout());
+			layout.RemoveChild(child->GetLayout());
 			DirtyLayout();
 			DirtyStackingContext();
 			DirtyStructure();
@@ -1141,29 +1097,15 @@ DataModel* Element::GetDataModel() const
 {
 	return data_model;
 }
-	
-int Element::GetClippingIgnoreDepth()
-{
-	return GetComputedValues().clip.number;
-}
-	
+
 bool Element::IsClippingEnabled()
 {
 	const auto& computed = GetComputedValues();
 	return computed.overflow != Style::Overflow::Visible;
 }
 
-// Called during the update loop after children are rendered.
-void Element::OnUpdate()
-{
-}
-
 // Called during render after backgrounds, borders, but before children, are rendered.
 void Element::OnRender()
-{
-}
-
-void Element::OnResize()
 {
 }
 
@@ -1588,7 +1530,6 @@ void Element::StartAnimation(PropertyId property_id, const Property* start_value
 	}
 }
 
-
 bool Element::AddAnimationKeyTime(PropertyId property_id, const Property* target_value, float time, Tween tween)
 {
 	if (!target_value)
@@ -1806,8 +1747,8 @@ void Element::UpdateTransformState()
 
 	const ComputedValues& computed = meta->computed_values;
 
-	const Vector2f pos = GetAbsoluteOffset(Layout::Area::Border);
-	const Vector2f size = GetLayout().GetSize();
+	const Point pos = GetBorderOffset();
+	const Size size = layout.GetSize();
 	
 	bool perspective_or_transform_changed = false;
 
@@ -1818,7 +1759,7 @@ void Element::UpdateTransformState()
 		bool had_perspective = (transform_state && transform_state->GetLocalPerspective());
 
 		float distance = computed.perspective;
-		Vector2f vanish = Vector2f(pos.x + size.x * 0.5f, pos.y + size.y * 0.5f);
+		Point vanish(pos.x + size.w * 0.5f, pos.y + size.h * 0.5f);
 		bool have_perspective = false;
 
 		if (distance > 0.0f)
@@ -1827,12 +1768,12 @@ void Element::UpdateTransformState()
 
 			// Compute the vanishing point from the perspective origin
 			if (computed.perspective_origin_x.type == Style::PerspectiveOrigin::Percentage)
-				vanish.x = pos.x + computed.perspective_origin_x.value * 0.01f * size.x;
+				vanish.x = pos.x + computed.perspective_origin_x.value * 0.01f * size.w;
 			else
 				vanish.x = pos.x + computed.perspective_origin_x.value;
 
 			if (computed.perspective_origin_y.type == Style::PerspectiveOrigin::Percentage)
-				vanish.y = pos.y + computed.perspective_origin_y.value * 0.01f * size.y;
+				vanish.y = pos.y + computed.perspective_origin_y.value * 0.01f * size.h;
 			else
 				vanish.y = pos.y + computed.perspective_origin_y.value;
 		}
@@ -1885,15 +1826,15 @@ void Element::UpdateTransformState()
 			if(have_transform)
 			{
 				// Compute the transform origin
-				Vector3f transform_origin(pos.x + size.x * 0.5f, pos.y + size.y * 0.5f, 0);
+				Vector3f transform_origin(pos.x + size.w * 0.5f, pos.y + size.h * 0.5f, 0);
 
 				if (computed.transform_origin_x.type == Style::TransformOrigin::Percentage)
-					transform_origin.x = pos.x + computed.transform_origin_x.value * size.x * 0.01f;
+					transform_origin.x = pos.x + computed.transform_origin_x.value * size.w * 0.01f;
 				else
 					transform_origin.x = pos.x + computed.transform_origin_x.value;
 
 				if (computed.transform_origin_y.type == Style::TransformOrigin::Percentage)
-					transform_origin.y = pos.y + computed.transform_origin_y.value * size.y * 0.01f;
+					transform_origin.y = pos.y + computed.transform_origin_y.value * size.h * 0.01f;
 				else
 					transform_origin.y = pos.y + computed.transform_origin_y.value;
 
@@ -1953,17 +1894,13 @@ void Element::UpdateTransformState()
 	}
 }
 
-Vector4f const& Element::GetBounds() const {
-	return bounds;
-}
-
-void Element::SetBounds(Vector4f bounds_) {
-	bounds = bounds_;
-	SetOffset(Vector2f(bounds[0], bounds[1]), GetParentNode());
-}
-
 void Element::UpdateBounds() {
-	SetBounds(GetLayout().GetBounds());
+	Point offset = layout.GetOffset();
+	if (offset_relative != offset || offset_parent != parent) {
+		offset_relative = offset;
+		offset_parent = parent;
+		DirtyOffset();
+	}
 }
 
 void Element::UpdateChildrenBounds() {
@@ -1981,7 +1918,7 @@ void Element::UpdateChildrenBounds() {
 	}
 }
 
-Element* Element::GetElementAtPoint(Vector2f point, const Element* ignore_element) {
+Element* Element::GetElementAtPoint(Point point, const Element* ignore_element) {
 	UpdateStackingContext();
 	for (int i = (int)stacking_context.size() - 1; i >= 0; --i) {
 		if (ignore_element != nullptr) {
@@ -2010,18 +1947,27 @@ Element* Element::GetElementAtPoint(Vector2f point, const Element* ignore_elemen
 	// Check if the point is actually within this element.
 	bool within_element = (projection_result && IsPointWithinElement(point));
 	if (within_element) {
-		Vector2i clip_origin, clip_dimensions;
-		if (ElementUtilities::GetClippingRegion(clip_origin, clip_dimensions, this)) {
-			within_element = point.x >= clip_origin.x &&
-				point.y >= clip_origin.y &&
-				point.x <= (clip_origin.x + clip_dimensions.x) &&
-				point.y <= (clip_origin.y + clip_dimensions.y);
+		Rect clip = GetClippingRegion();
+		if (!clip.IsEmpty()) {
+			within_element = clip.Contains(point);
 		}
 	}
 	if (within_element) {
 		return this;
 	}
 	return nullptr;
+}
+
+Rect Element::GetClippingRegion() {
+	Rect clip;
+	if (parent) {
+		clip = parent->GetClippingRegion();
+	}
+	if (!IsClippingEnabled()) {
+		return clip;
+	}
+	clip.Union(Rect(GetBorderOffset(), layout.GetSize()));
+	return clip;
 }
 
 } // namespace Rml

@@ -83,22 +83,22 @@ static inline float ResolveLengthPercentage(NumericValue value, Element& e, floa
 static inline float ResolveWidth(NumericValue value, Element& e) noexcept
 {
 	if (value.unit & (Property::PX | Property::NUMBER)) return value.number;
-	return ResolveLengthPercentage(value, e, e.GetLayout().GetSize().x);
+	return ResolveLengthPercentage(value, e, e.GetLayout().GetSize().w);
 }
 
 /// Resolve a numeric property value with the element's height as relative base value.
 static inline float ResolveHeight(NumericValue value, Element& e) noexcept
 {
 	if (value.unit & (Property::PX | Property::NUMBER)) return value.number;
-	return ResolveLengthPercentage(value, e, e.GetLayout().GetSize().y);
+	return ResolveLengthPercentage(value, e, e.GetLayout().GetSize().h);
 }
 
 /// Resolve a numeric property value with the element's depth as relative base value.
 static inline float ResolveDepth(NumericValue value, Element& e) noexcept
 {
 	if (value.unit & (Property::PX | Property::NUMBER)) return value.number;
-	Vector2f size = e.GetLayout().GetSize();
-	return ResolveLengthPercentage(value, e, Math::Max(size.x, size.y));
+	Size size = e.GetLayout().GetSize();
+	return ResolveLengthPercentage(value, e, Math::Max(size.w, size.h));
 }
 
 static inline String ToString(NumericValue value) noexcept
