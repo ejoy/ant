@@ -202,7 +202,7 @@ static inline VALUETYPE& check_add_component(comp_ids &ids){
     return particle_mgr::get().component_value<VALUETYPE>();
 }
 
-static void
+static inline void
 cvt_color(interpolation::init_valueT<uint16_t> &clr){
     clr.minv <<= 8;
     clr.maxv <<= 8;

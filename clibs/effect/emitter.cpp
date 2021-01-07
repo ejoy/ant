@@ -32,16 +32,15 @@ particle_emitter::update(float dt){
 
 void
 particle_emitter::step(float dt){
-	auto delta_spawn = [](auto &spawn){
-		auto t = std::fmod(spawn.step.loop, spawn.rate);
-		auto step = t / spawn.rate;
+	auto delta_spawn = [](const auto &spawn){
+		auto step = spawn.step.loop / spawn.rate;
 		return (uint32_t)(step * spawn.count);
 	};
 
 	auto already_spawned = delta_spawn(mspawn);
 	mspawn.step.loop += dt;
 	auto totalnum = delta_spawn(mspawn);
-	mspawn.step.count = (totalnum < already_spawned ? mspawn.count : totalnum) - already_spawned;
+	mspawn.step.count = totalnum - already_spawned;
 }
 
 static void check_add_default_component(comp_ids &ids, const glm::mat4 &transform){
