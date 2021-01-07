@@ -67,6 +67,7 @@ void TextureDatabase::Initialise()
 
 void TextureDatabase::Shutdown()
 {
+	ReleaseTextures();
 	delete texture_database;
 }
 
@@ -93,8 +94,10 @@ SharedPtr<TextureResource> TextureDatabase::Fetch(const String& source, const St
 void TextureDatabase::ReleaseTextures()
 {
 	if (texture_database) {
-		for (const auto& texture : texture_database->textures)
+		for (const auto& texture : texture_database->textures) {
 			texture.second->Release();
+		}
+		texture_database->textures.clear();
 	}
 }
 

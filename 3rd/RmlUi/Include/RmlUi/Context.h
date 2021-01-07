@@ -114,14 +114,8 @@ public:
 	/// @return True if the event was not consumed (ie, was prevented from propagating by an element), false if it was.
 	bool ProcessMouseWheel(float wheel_delta, int key_modifier_state);
 
-	/// Gets the current clipping region for the render traversal
-	/// @param[out] origin The clipping origin
-	/// @param[out] dimensions The clipping dimensions
-	bool GetActiveClipRegion(Vector2i& origin, Vector2i& dimensions) const;
-	/// Sets the current clipping region for the render traversal
-	/// @param[out] origin The clipping origin
-	/// @param[out] dimensions The clipping dimensions
-	void SetActiveClipRegion(const Vector2i& origin, const Vector2i& dimensions);
+	void SetActiveClipRegion(const Rect& clip);
+	void ApplyActiveClipRegion();
 
 private:
 	Vector2i dimensions;
@@ -134,8 +128,7 @@ private:
 	std::vector<ElementDocument*> documents;
 	ElementDocument* focus = nullptr;
 
-	Vector2i clip_origin;
-	Vector2i clip_dimensions;
+	Rect clip;
 
 	// Releases all unloaded documents pending destruction.
 	void ReleaseUnloadedDocuments();

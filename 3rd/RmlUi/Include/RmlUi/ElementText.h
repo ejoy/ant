@@ -66,9 +66,9 @@ public:
 	/// Adds a new line into the text element.
 	/// @param[in] line_position The position of this line, as an offset from the first line.
 	/// @param[in] line The contents of the line.
-	void AddLine(const Vector2f& line_position, const String& line);
+	void AddLine(const Point& line_position, const String& line);
 
-	Vector2f Measure(float minWidth, float maxWidth, float minHeight, float maxHeight);
+	Size Measure(float minWidth, float maxWidth, float minHeight, float maxHeight);
 	float GetBaseline();
 
 protected:

@@ -43,15 +43,11 @@ RMLUICORE_API Vector2i operator*(int lhs, const Vector2i& rhs);
 RMLUICORE_API Vector2f operator*(float lhs, const Vector2f& rhs);
 
 // Define common Vector3 types.
-typedef Vector3< int > Vector3i;
 typedef Vector3< float > Vector3f;
-RMLUICORE_API Vector3i operator*(int lhs, const Vector3i& rhs);
 RMLUICORE_API Vector3f operator*(float lhs, const Vector3f& rhs);
 
 // Define common Vector4 types.
-typedef Vector4< int > Vector4i;
 typedef Vector4< float > Vector4f;
-RMLUICORE_API Vector4i operator*(int lhs, const Vector4i& rhs);
 RMLUICORE_API Vector4f operator*(float lhs, const Vector4f& rhs);
 
 } // namespace Rml

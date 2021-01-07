@@ -191,7 +191,7 @@ int FontEngine::GenerateString(
     Rml::FontFaceHandle handle,
     Rml::TextEffectsHandle text_effects_handle,
     const Rml::String& string, const
-    Rml::Vector2f& position,
+    Rml::Point& position,
     const Rml::Colourb& colour,
     Rml::GeometryList& geometrys) {
     Rml::Geometry& geometry = geometrys[0];

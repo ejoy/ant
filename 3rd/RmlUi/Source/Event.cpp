@@ -32,7 +32,7 @@
 #include "EventSpecification.h"
 
 namespace Rml {
-bool ProjectPosition(Element* element, Vector2f& position) {
+bool ProjectPosition(Element* element, Point& position) {
 	if (!element->GetTransformState()) {
 		return true;
 	}
@@ -75,14 +75,14 @@ void Event::InitMouseEvent() {
 	if (!x || !y) {
 		return;
 	}
-	Vector2f client;
+	Point client(0,0);
 	x->GetInto(client.x);
 	y->GetInto(client.y);
 
 	parameters["clientX"] = client.x;
 	parameters["clientY"] = client.y;
 
-	Vector2f offset = client - target_element->GetAbsoluteOffset(Layout::Area::Border);
+	Point offset = client - target_element->GetBorderOffset();
 	if (ProjectPosition(target_element, offset)) {
 		parameters["offsetX"] = offset.x;
 		parameters["offsetY"] = offset.y;
@@ -90,7 +90,7 @@ void Event::InitMouseEvent() {
 
 	ElementDocument* document = target_element->GetOwnerDocument();
 	if (document) {
-		Vector2f page = client - document->GetAbsoluteOffset(Layout::Area::Border);
+		Point page = client - document->GetBorderOffset();
 		if (ProjectPosition(document, page)) {
 			parameters["pageX"] = page.x;
 			parameters["pageY"] = page.y;

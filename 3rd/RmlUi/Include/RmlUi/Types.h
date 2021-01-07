@@ -62,9 +62,7 @@ using Colourf = Colour< float, 1 >;
 using Colourb = Colour< byte, 255 >;
 using Vector2i = Vector2< int >;
 using Vector2f = Vector2< float >;
-using Vector3i = Vector3< int >;
 using Vector3f = Vector3< float >;
-using Vector4i = Vector4< int >;
 using Vector4f = Vector4< float >;
 using ColumnMajorMatrix4f = Matrix4< float, ColumnMajorStorage< float > >;
 using RowMajorMatrix4f = Matrix4< float, RowMajorStorage< float > >;
@@ -122,6 +120,116 @@ class DataView;
 using DataViewPtr = UniqueReleaserPtr<DataView>;
 class DataController;
 using DataControllerPtr = UniqueReleaserPtr<DataController>;
+
+struct Point {
+	Point() : x(0.0f), y(0.0f) {}
+	Point(float x_, float y_) : x(x_), y(y_) {}
+	float x;
+	float y;
+	void SetPoint(float x_, float y_) {
+		x = x_;
+		y = y_;
+	}
+};
+
+struct Size {
+	float w;
+	float h;
+	Size() : w(0.0f), h(0.0f) {}
+	Size(float width, float height) : w(width), h(height) {}
+	bool IsEmpty() const { return !w || !h; }
+	void SetSize(float width, float height) {
+		w = width;
+		h = height;
+	}
+};
+
+struct Rect {
+	Point origin;
+	Size size;
+	Rect() : origin(), size() {}
+	Rect(float x, float y, float width, float height) : origin(x, y), size(width, height) {}
+	Rect(const Point& origin_, const Size& size_) : origin(origin_), size(size_) {}
+	float x() const { return origin.x; }
+	float y() const { return origin.y; }
+	float width() const { return size.w; }
+	float height() const { return size.h; }
+	float right() const { return x() + width(); }
+	float bottom() const { return y() + height(); }
+	bool IsEmpty() const { return size.IsEmpty(); }
+	void SetRect(float x, float y, float width, float height) {
+		origin.SetPoint(x, y);
+		size.SetSize(width, height);
+	}
+	void Union(const Rect& rect) {
+		if (IsEmpty()) {
+			*this = rect;
+			return;
+		}
+		if (rect.IsEmpty()) {
+			return;
+		}
+		float rx = std::min(x(), rect.x());
+		float ry = std::min(y(), rect.y());
+		float rr = std::max(right(), rect.right());
+		float rb = std::max(bottom(), rect.bottom());
+		SetRect(rx, ry, rr - rx, rb - ry);
+	}  
+	bool Contains(const Point& point) const {
+		return (point.x >= x()) && (point.x < right()) && (point.y >= y()) && (point.y < bottom());
+	}
+};
+
+inline bool operator==(const Point& lhs, const Point& rhs) {
+	return lhs.x == rhs.x && lhs.y == rhs.y;
+}
+inline bool operator!=(const Point& lhs, const Point& rhs) {
+	return !(lhs == rhs);
+}
+inline bool operator==(const Size& lhs, const Size& rhs) {
+	return lhs.w == rhs.w && lhs.h == rhs.h;
+}
+inline bool operator!=(const Size& lhs, const Size& rhs) {
+	return !(lhs == rhs);
+}
+inline bool operator==(const Rect& lhs, const Rect& rhs) {
+	return lhs.origin == rhs.origin && lhs.size == rhs.size;
+}
+inline bool operator!=(const Rect& lhs, const Rect& rhs) {
+	return !(lhs == rhs);
+}
+
+inline Point operator+(const Point& lhs, const Point& rhs) {
+	return Point(lhs.x + rhs.x, lhs.y + rhs.y);
+}
+inline Point operator-(const Point& lhs, const Point& rhs) {
+	return Point(lhs.x - rhs.x, lhs.y - rhs.y);
+}
+inline Point operator+(const Point& lhs, const Size& rhs) {
+	return Point(lhs.x + rhs.w, lhs.y + rhs.h);
+}
+inline Point operator-(const Point& lhs, const Size& rhs) {
+	return Point(lhs.x - rhs.w, lhs.y - rhs.h);
+}
+inline Size operator+(const Size& lhs, const Size& rhs) {
+	return Size(lhs.w + rhs.w, lhs.h + rhs.h);
+}
+inline Size operator-(const Size& lhs, const Size& rhs) {
+	return Size(lhs.w - rhs.w, lhs.h - rhs.h);
+}
+inline Size operator+(const Size& lhs, const Vector2f& rhs) {
+	return Size(lhs.w + rhs[0], lhs.h + rhs[1]);
+}
+inline Size operator-(const Size& lhs, const Vector2f& rhs) {
+	return Size(lhs.w - rhs[0], lhs.h - rhs[1]);
+}
+inline Vector2f operator+(const Vector2f& lhs, const Size& rhs) {
+	return Vector2f(lhs[0] + rhs.w, lhs[1] + rhs.h);
+}
+inline Vector2f operator-(const Vector2f& lhs, const Size& rhs) {
+	return Vector2f(lhs[0] - rhs.w, lhs[1] - rhs.h);
+}
+
 
 } // namespace Rml
 

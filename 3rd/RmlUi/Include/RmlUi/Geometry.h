@@ -55,7 +55,7 @@ public:
 	Geometry(Geometry&& other);
 	Geometry& operator=(Geometry&& other);
 	~Geometry();
-	void Render(Vector2f translation);
+	void Render(Point translation);
 	Vector< Vertex >& GetVertices();
 	Vector< int >& GetIndices();
 	const Texture* GetTexture() const;

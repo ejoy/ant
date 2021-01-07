@@ -48,19 +48,6 @@ namespace Style { struct ComputedValues; }
 class RMLUICORE_API ElementUtilities
 {
 public:
-	enum PositionAnchor
-	{
-		TOP = 1 << 0,
-		BOTTOM = 1 << 1,
-		LEFT = 1 << 2,
-		RIGHT = 1 << 3,
-
-		TOP_LEFT = TOP | LEFT,
-		TOP_RIGHT = TOP | RIGHT,
-		BOTTOM_LEFT = BOTTOM | LEFT,
-		BOTTOM_RIGHT = BOTTOM | RIGHT
-	};
-
 	/// Get the element with the given id.
 	/// @param[in] root_element First element to check.
 	/// @param[in] id ID of the element to look for.
@@ -91,15 +78,6 @@ public:
 	/// @param[in] element The element to generate the clipping region for.
 	/// @return True if a clipping region exists for the element and clip_origin and clip_window were set, false if not.
 	static bool GetClippingRegion(Vector2i& clip_origin, Vector2i& clip_dimensions, Element* element);
-	/// Sets the clipping region from an element and its ancestors.
-	/// @param[in] element The element to generate the clipping region from.
-	/// @param[in] context The context of the element; if this is not supplied, it will be derived from the element.
-	/// @return The visibility of the given element within its clipping region.
-	static bool SetClippingRegion(Element* element, Context* context = nullptr);
-	/// Applies the clip region from the render interface to the renderer
-	/// @param[in] context The context to read the clip region from
-	/// @param[in] render_interface The render interface to update.
-	static void ApplyActiveClipRegion(Context* context, RenderInterface* render_interface);
 
 	/// Applies an element's accumulated transform matrix, determined from its and ancestor's `perspective' and `transform' properties.
 	/// Note: All calls to RenderInterface::SetTransform must go through here.

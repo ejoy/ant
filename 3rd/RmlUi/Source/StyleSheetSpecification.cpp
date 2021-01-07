@@ -338,7 +338,6 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 	RegisterProperty(PropertyId::LineHeight, "line-height", "1.2", true, true).AddParser("number");
 
 	RegisterProperty(PropertyId::Overflow, "overflow", "visible", false, true).AddParser("keyword", "visible, hidden, scroll");
-	RegisterProperty(PropertyId::Clip, "clip", "auto", true, false).AddParser("keyword", "auto, none").AddParser("number");
 	RegisterProperty(PropertyId::Visibility, "visibility", "visible", false, false).AddParser("keyword", "visible, hidden");
 
 	RegisterProperty(PropertyId::Color, "color", "white", true, false).AddParser("color");

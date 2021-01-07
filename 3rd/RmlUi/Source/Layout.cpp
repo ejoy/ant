@@ -59,29 +59,33 @@ static float YGValueToFloat(float v) {
 	return v;
 }
 
-Vector2f Layout::GetPosition(Area area) const {
-	switch (area) {
-	case Layout::Area::Margin:
-		return Vector2f(-YGValueToFloat(YGNodeStyleGetMargin(node, YGEdgeLeft)), -YGValueToFloat(YGNodeStyleGetMargin(node, YGEdgeTop)));
-	case Layout::Area::Padding:
-		return Vector2f(YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeLeft)), YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeTop)));
-	case Layout::Area::Border:
-	default:
-		return Vector2f(0.0f, 0.0f);
-	}
-}
-
-Vector2f Layout::GetPaddingSize() const {
-	return Vector2f(
-		YGNodeLayoutGetWidth(node) - YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeLeft)) - YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeRight)),
-		YGNodeLayoutGetHeight(node) - YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeTop)) - YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeBottom))
+Size Layout::GetPaddingSize() const {
+	Size size = GetSize();
+	return size - Size(
+		YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeLeft)) + YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeRight)),
+		YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeTop)) + YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeBottom))
 	);
 }
 
-Vector2f Layout::GetSize() const {
-	return Vector2f(
+Size Layout::GetContentSize() const {
+	Size size = GetPaddingSize();
+	return size - Size(
+		YGValueToFloat(YGNodeStyleGetPadding(node, YGEdgeLeft)) + YGValueToFloat(YGNodeStyleGetPadding(node, YGEdgeRight)),
+		YGValueToFloat(YGNodeStyleGetPadding(node, YGEdgeTop)) + YGValueToFloat(YGNodeStyleGetPadding(node, YGEdgeBottom))
+	);
+}
+
+Size Layout::GetSize() const {
+	return Size(
 		YGNodeLayoutGetWidth(node),
 		YGNodeLayoutGetHeight(node)
+	);
+}
+
+Point Layout::GetOffset() const {
+	return Point(
+		YGNodeLayoutGetLeft(node),
+		YGNodeLayoutGetTop(node)
 	);
 }
 
@@ -116,17 +120,8 @@ float Layout::GetEdge(Area area, Edge edge) const {
 	}
 }
 
-void Layout::CalculateLayout(float width, float height) {
-	YGNodeCalculateLayout(node, width, height, YGDirectionLTR);
-}
-
-Vector4f Layout::GetBounds() const {
-	return Vector4f(
-		YGNodeLayoutGetLeft(node),
-		YGNodeLayoutGetTop(node),
-		YGNodeLayoutGetWidth(node),
-		YGNodeLayoutGetHeight(node)
-	);
+void Layout::CalculateLayout(Size const& size) {
+	YGNodeCalculateLayout(node, size.w, size.h, YGDirectionLTR);
 }
 
 void Layout::InsertChild(Layout const& child, uint32_t index) {
@@ -308,8 +303,8 @@ static YGSize MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMode, 
 		maxHeight = height;
 		break;
 	}
-	Vector2f size = element->Measure(minWidth, maxWidth, minHeight, maxHeight);
-	return { size[0], size[1] };
+	Size size = element->Measure(minWidth, maxWidth, minHeight, maxHeight);
+	return { size.w, size.h };
 }
 
 static float BaselineFunc(YGNodeRef node, float width, float height) {

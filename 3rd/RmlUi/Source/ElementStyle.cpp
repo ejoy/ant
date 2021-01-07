@@ -487,7 +487,6 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 	if (parent_values) {
 		// Inherited properties are copied here, but may be overwritten below by locally defined properties
 		// Line-height and font-size are computed above
-		values.clip = parent_values->clip;
 		values.color = parent_values->color;
 		values.opacity = parent_values->opacity;
 		values.font_family = parent_values->font_family;
@@ -601,9 +600,6 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 			// (Line-height computed above)
 			break;
 
-		case PropertyId::Clip:
-			values.clip = ComputeClip(p);
-			break;
 		case PropertyId::Visibility:
 			values.visibility = (Visibility)p->Get<int>();
 			break;

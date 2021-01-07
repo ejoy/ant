@@ -52,7 +52,7 @@ struct Tile {
 		SCALE_DOWN, // Tile acts like 'scale-none' if smaller than boundaries, or like 'contain' otherwise.
 	};
 
-	void GenerateGeometry(Vector<Vertex>& vertices, Vector<int>& indices, Element* element, const Texture& texture, const Vector2f& surface_origin, const Vector2f& surface_dimensions);
+	void GenerateGeometry(Vector<Vertex>& vertices, Vector<int>& indices, Element* element, const Texture& texture, const Vector2f& surface_origin, const Size& surface_dimensions);
 
 	Orientation orientation = ORIENTATION_NONE;
 	FitMode fit_mode = CONTAIN;
@@ -67,7 +67,7 @@ static const Vector2f oriented_texcoords[4][2] = {
 	{Vector2f(1, 1), Vector2f(0, 0)}    // ROTATE_180
 };
 
-void Tile::GenerateGeometry(Vector<Vertex>& vertices, Vector<int>& indices, Element* element, const Texture& texture, const Vector2f& surface_origin, const Vector2f& surface_dimensions) {
+void Tile::GenerateGeometry(Vector<Vertex>& vertices, Vector<int>& indices, Element* element, const Texture& texture, const Vector2f& surface_origin, const Size& surface_dimensions_) {
 	Vector2f position(0, 0);
 	Vector2f size(0, 0);
 	Vector2f tile_dimensions; // 'px' units
@@ -91,6 +91,7 @@ void Tile::GenerateGeometry(Vector<Vertex>& vertices, Vector<int>& indices, Elem
 		texcoords[1] = size_relative + texcoords[0];
 	}
 
+	Vector2f surface_dimensions(surface_dimensions_.w, surface_dimensions_.h);
 	if (surface_dimensions.x <= 0 || surface_dimensions.y <= 0)
 		return;
 
@@ -216,7 +217,7 @@ void ElementBackgroundImage::Render() {
 		Reload();
 	}
 	if (geometry) {
-		geometry->Render(element->GetAbsoluteOffset(Layout::Area::Padding).Round());
+		geometry->Render(element->GetPaddingOffset());
 	}
 }
 

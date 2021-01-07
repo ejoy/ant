@@ -78,25 +78,14 @@ enum class Position : uint8_t { Static, Relative, Absolute };
 using ZIndex = NumberAuto;
 
 enum class Overflow : uint8_t { Visible, Hidden, Scroll };
-struct Clip {
-	enum class Type : uint8_t { Auto, None, Number };
-	// Note, internally 'number' is encoded with Auto as 0 and None as -1. However, the enum must correspond to the keywords in StyleSheetSpec.
-	int number = 0;
-	Clip() {}
-	Clip(Type type, int number = 0) : number(type == Type::Auto ? 0 : (type == Type::None ? -1 : number)) {}
-};
-
 enum class Visibility : uint8_t { Visible, Hidden };
-
 enum class FontStyle : uint8_t { Normal, Italic };
 enum class FontWeight : uint8_t { Normal, Bold };
-
 enum class TextAlign : uint8_t { Left, Right, Center, Justify };
 enum class TextDecorationLine : uint8_t { None, Underline, Overline, LineThrough };
 enum class TextTransform : uint8_t { None, Capitalize, Uppercase, Lowercase };
 enum class WhiteSpace : uint8_t { Normal, Pre, Nowrap, Prewrap, Preline };
 enum class WordBreak : uint8_t { Normal, BreakAll, BreakWord };
-
 enum class Drag : uint8_t { None, Drag, DragDrop, Block, Clone };
 enum class Focus : uint8_t { None, Auto };
 enum class PointerEvents : uint8_t { None, Auto };
@@ -122,8 +111,6 @@ struct ComputedValues
 	float border_top_left_radius = 0, border_top_right_radius = 0, border_bottom_right_radius = 0, border_bottom_left_radius = 0;
 
 	ZIndex z_index = { ZIndex::Auto };
-
-	Clip clip;
 
 	Visibility visibility = Visibility::Visible;
 

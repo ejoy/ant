@@ -61,13 +61,14 @@ public:
 	Layout& operator=(const Layout&) = delete;
 	Layout& operator=(Layout&&) = delete;
 
-	Vector2f GetPosition(Area area) const;
 	float GetEdge(Area area, Edge edge) const;
-	Vector2f GetPaddingSize() const;
-	Vector2f GetSize() const;
+	Size GetPaddingSize() const;
+	Size GetContentSize() const;
 
-	void CalculateLayout(float width, float height);
-	Vector4f GetBounds() const;
+	Size GetSize() const;
+	Point GetOffset() const;
+
+	void CalculateLayout(Size const& size);
 
 	void SetWidth(float v);
 	void SetHeight(float v);

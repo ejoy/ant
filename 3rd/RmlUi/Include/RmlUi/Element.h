@@ -106,23 +106,16 @@ public:
 	/// @return The address of the element, including its full parentage.
 	String GetAddress(bool include_pseudo_classes = false, bool include_parents = true) const;
 
-	/// Sets the position of this element, as a two-dimensional offset from another element.
-	/// @param[in] offset The offset (in pixels) of our primary box's top-left border corner from our offset parent's top-left border corner.
-	/// @param[in] offset_parent The element this element is being positioned relative to.
-	void SetOffset(Vector2f offset, Element* offset_parent);
-	/// Returns the position of the top-left corner of one of the areas of this element's primary box, relative to
-	/// the element root.
-	/// @param[in] area The desired area position.
-	/// @return The absolute offset.
-	Vector2f GetAbsoluteOffset();
-	Vector2f GetAbsoluteOffset(Layout::Area area);
+	Point GetBorderOffset();
+	Point GetPaddingOffset();
+	Point GetContentOffset();
 
 	Layout& GetLayout();
 
 	/// Checks if a given point in screen coordinates lies within the bordered area of this element.
 	/// @param[in] point The point to test.
 	/// @return True if the element is within this element, false otherwise.
-	virtual bool IsPointWithinElement(const Vector2f& point);
+	bool IsPointWithinElement(const Point& point);
 
 	/// Returns the visibility of the element.
 	/// @return True if the element is visible, false otherwise.
@@ -188,7 +181,7 @@ public:
 	/// Project a 2D point in pixel coordinates onto the element's plane.
 	/// @param[in-out] point The point to project in, and the resulting projected point out.
 	/// @return True on success, false if transformation matrix is singular.
-	bool Project(Vector2f& point) const noexcept;
+	bool Project(Point& point) const noexcept;
 
 	/// Add a key to an animation, extending its duration.
 	/// If no animation exists for the given property name, the call will be ignored.
@@ -448,8 +441,6 @@ public:
 	DataModel* GetDataModel() const;
 	//@}
 	
-	/// Returns true if this element requires clipping
-	int GetClippingIgnoreDepth();
 	/// Returns true if this element has clipping enabled
 	bool IsClippingEnabled();
 
@@ -461,14 +452,13 @@ public:
 	/// Return the computed values of the element's properties. These values are updated as appropriate on every Context::Update.
 	const ComputedValues& GetComputedValues() const;
 
-	Vector4f const& GetBounds() const;
-	void SetBounds(Vector4f bounds);
 	void UpdateBounds();
 	void UpdateChildrenBounds();
 	void SetOwnerDocument(ElementDocument* document);
 	void SetParent(Element* parent);
-	Element* GetElementAtPoint(Vector2f point, const Element* ignore_element = nullptr);
-	
+	Element* GetElementAtPoint(Point point, const Element* ignore_element = nullptr);
+	Rect GetClippingRegion();
+
 protected:
 	void Update(float dp_ratio);
 	void Render();
@@ -476,12 +466,8 @@ protected:
 	/// Updates definition, computed values, and runs OnPropertyChange on this element.
 	void UpdateProperties();
 
-	/// Called during the update loop after children are updated.
-	virtual void OnUpdate();
 	/// Called during render after backgrounds, borders, but before children, are rendered.
 	virtual void OnRender();
-	/// Called during update if the element size has been changed.
-	virtual void OnResize();
 
 	/// Called when attributes on the element are changed.
 	/// @param[in] changed_attributes Dictionary of attributes changed on the element. Attribute value will be empty if it was unset.
@@ -549,12 +535,10 @@ protected:
 	// Attributes on this element.
 	ElementAttributes attributes;
 
-	// The offset of the element, and the element it is offset from.
 	Element* offset_parent;
-	Vector2f relative_offset;		// the offset from the parent
-
-	mutable Vector2f absolute_offset;
-	mutable bool offset_dirty;
+	Point offset_relative;		// the offset from the parent
+	Point offset_absolute;
+	bool offset_dirty;
 
 	// The offset this element adds to its logical children due to scrolling content.
 	Vector2f scroll_offset;
@@ -590,8 +574,6 @@ protected:
 	bool dirty_layout;
 
 	ElementMeta* meta;
-
-	Vector4f bounds;
 
 	friend class Rml::Context;
 	friend class Rml::ElementStyle;

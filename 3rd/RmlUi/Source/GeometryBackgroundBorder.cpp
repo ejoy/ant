@@ -57,9 +57,11 @@ void GeometryBackgroundBorder::Draw(Vector<Vertex>& vertices, Vector<int>& indic
 				num_borders += 1;
 	}
 
-	const Vector2f border_size = box.GetSize().Round();
+	Size border_size = box.GetSize();
+	border_size.w = Math::RoundFloat(border_size.w);
+	border_size.h = Math::RoundFloat(border_size.h);
 
-	const bool has_background = (background_color.alpha > 0 && border_size.x > 0 && border_size.y > 0);
+	const bool has_background = (background_color.alpha > 0 && border_size.w > 0 && border_size.h > 0);
 	const bool has_border = (num_borders > 0);
 
 	if (!has_background && !has_border)
@@ -69,22 +71,22 @@ void GeometryBackgroundBorder::Draw(Vector<Vertex>& vertices, Vector<int>& indic
 
 	const Vector2f border_position = offset.Round();
 	const Vector2f padding_position = border_position + Vector2f(border_widths[Edge::LEFT], border_widths[Edge::TOP]);
-	const Vector2f padding_size = border_size - Vector2f(border_widths[Edge::LEFT] + border_widths[Edge::RIGHT], border_widths[Edge::TOP] + border_widths[Edge::BOTTOM]);
+	const Size padding_size = border_size - Size(border_widths[Edge::LEFT] + border_widths[Edge::RIGHT], border_widths[Edge::TOP] + border_widths[Edge::BOTTOM]);
 
 	// Border edge positions
 	CornerPositions positions_outer = {
 		border_position,
-		border_position + Vector2f(border_size.x, 0),
+		border_position + Vector2f(border_size.w, 0),
 		border_position + border_size,
-		border_position + Vector2f(0, border_size.y)
+		border_position + Vector2f(0, border_size.h)
 	};
 
 	// Padding edge positions
 	CornerPositions positions_inner = {
 		padding_position,
-		padding_position + Vector2f(padding_size.x, 0),
+		padding_position + Vector2f(padding_size.w, 0),
 		padding_position + padding_size,
-		padding_position + Vector2f(0, padding_size.y)
+		padding_position + Vector2f(0, padding_size.h)
 	};
 
 
@@ -105,10 +107,10 @@ void GeometryBackgroundBorder::Draw(Vector<Vertex>& vertices, Vector<int>& indic
 	{
 		// Scale the radii such that we have no overlapping curves.
 		float scale_factor = FLT_MAX;
-		scale_factor = Math::Min(scale_factor, padding_size.x / (radii[TOP_LEFT] + radii[TOP_RIGHT]));       // Top
-		scale_factor = Math::Min(scale_factor, padding_size.y / (radii[TOP_RIGHT] + radii[BOTTOM_RIGHT]));   // Right
-		scale_factor = Math::Min(scale_factor, padding_size.x / (radii[BOTTOM_RIGHT] + radii[BOTTOM_LEFT])); // Bottom
-		scale_factor = Math::Min(scale_factor, padding_size.y / (radii[BOTTOM_LEFT] + radii[TOP_LEFT]));     // Left
+		scale_factor = Math::Min(scale_factor, padding_size.w / (radii[TOP_LEFT] + radii[TOP_RIGHT]));       // Top
+		scale_factor = Math::Min(scale_factor, padding_size.h / (radii[TOP_RIGHT] + radii[BOTTOM_RIGHT]));   // Right
+		scale_factor = Math::Min(scale_factor, padding_size.w / (radii[BOTTOM_RIGHT] + radii[BOTTOM_LEFT])); // Bottom
+		scale_factor = Math::Min(scale_factor, padding_size.h / (radii[BOTTOM_LEFT] + radii[TOP_LEFT]));     // Left
 
 		scale_factor = Math::Min(1.0f, scale_factor);
 

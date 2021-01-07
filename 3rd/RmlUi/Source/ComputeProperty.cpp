@@ -199,17 +199,6 @@ float ComputeFontsize(const Property& property, const Style::ComputedValues& val
 	return ComputeAbsoluteLength(property, dp_ratio);
 }
 
-Style::Clip ComputeClip(const Property* property)
-{
-	int value = property->Get<int>();
-	if (property->unit == Property::KEYWORD)
-		return Style::Clip(static_cast<Style::Clip::Type>(value));
-	else if (property->unit == Property::NUMBER)
-		return Style::Clip(Style::Clip::Type::Number, value);
-	RMLUI_ERRORMSG("Invalid clip type");
-	return Style::Clip();
-}
-
 Style::LengthPercentage ComputeLengthPercentage(const Property* property, float font_size, float document_font_size, float dp_ratio)
 {
 	using namespace Style;
