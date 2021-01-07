@@ -83,7 +83,7 @@ leffect_create_emitter(lua_State *L){
     if (LUA_TTABLE == lua_getfield(L, 1, "lifetime")){
         interpolation::f1_init_value iv;
         lua_struct::unpack(L, -1, iv);
-        e->mlife.set(iv.get(randomobj()())[0]);
+        e->mlife.set(iv.get(randomobj()()));
     } else {
         luaL_error(L, "invalid 'lifetime' data");
     }

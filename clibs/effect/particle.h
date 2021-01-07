@@ -161,14 +161,8 @@ namespace interpolation{
         return glm::lerp(minv, maxv, t);
     }
 
-    template<>
-    inline glm::u8vec1 lerpT(const glm::u8vec1& minv, const glm::u8vec1& maxv, float t) {
-        return glm::u8vec1(uint8_t(glm::clamp(glm::lerp(float(minv[0]), float(maxv[0]), t), 0.f, 255.f)));
-    }
-
-    template<>
-    inline glm::vec1 lerpT(const glm::vec1& minv, const glm::vec1& maxv, float t) {
-        return glm::vec1(glm::lerp(minv[0], maxv[1], t));
+    inline uint16_t lerpT(uint16_t minv, uint16_t maxv, float t) {
+        return uint16_t(glm::clamp(glm::lerp(float(minv), float(maxv), t), 0.f, 255.f));
     }
 
     template<typename T>
@@ -188,40 +182,23 @@ namespace interpolation{
     };
 
     template<typename T>
-    T round(float v){
-        static_assert(false, "need define");
-    }
-
-    template<>
-    inline float round<float>(float v) { return v;}
-    template<>
-    inline uint8_t round<uint8_t>(float v) { return uint8_t(v+0.5f);}
-
-    template<int NUM>
     struct interp_valueT{
-        glm::vec<NUM, float, glm::defaultp> scale;
+        T scale;
         uint8_t interp_type;
-
-        template<typename T>
-        void from_init_value(const init_valueT<T>& iv) {
-            for (int ii=0; ii<NUM; ++ii){
-                scale[ii] = (float(iv.maxv[ii] - iv.minv[ii]) / float(lifedata::MAX_PROCESS));
-            }
-
+        template<typename INIT_TYPE>
+        void from_init_value(const init_valueT<INIT_TYPE>& iv) {
+            const float inv_max_process = 1.f / lifedata::MAX_PROCESS;
+            scale = (iv.maxv - iv.minv) * inv_max_process;
             interp_type = iv.interp_type;
         }
 
-        template<typename T>
-        glm::vec<NUM, T, glm::defaultp> get(const glm::vec<NUM, T, glm::defaultp>& value, uint32_t delta) const {
+        template<typename VALUE_TYPE>
+        VALUE_TYPE get(const VALUE_TYPE& value, uint32_t delta_process) const {
             if (interp_type == 0)
                 return value;
 
             if (interp_type == 1) {
-                glm::vec<NUM, T, glm::defaultp> r;
-                for (int ii = 0; ii < NUM; ++ii) {
-                    r[ii] = round<T>(float(delta) * scale[ii] + (float)value[ii]);
-                }
-                return r;
+                return VALUE_TYPE(float(delta_process) * scale) + value;
             }
 
             assert(false && "not implement");
@@ -236,7 +213,7 @@ namespace interpolation{
 
     struct uv_motion_init_value {
         struct uv_index{
-            init_valueT<glm::vec1> rate;
+            init_valueT<float> rate;
             glm::u8vec2 dim;
         };
 
@@ -249,12 +226,12 @@ namespace interpolation{
 
     using f3_init_value         = init_valueT<glm::vec3>;
     using f2_init_value         = init_valueT<glm::vec2>;
-    using f1_init_value         = init_valueT<glm::vec1>;
-    using color_init_value      = color_attributeT<init_valueT<glm::u8vec1>>;
+    using f1_init_value         = init_valueT<float>;
+    using color_init_value      = color_attributeT<init_valueT<uint16_t>>;
 
-    using f3_interpolator       = interp_valueT<3>;
-    using f2_interpolator       = interp_valueT<2>;
-    using f1_interpolator       = interp_valueT<1>;
+    using f3_interpolator       = interp_valueT<glm::vec3>;
+    using f2_interpolator       = interp_valueT<glm::vec2>;
+    using f1_interpolator       = interp_valueT<float>;
     using color_interpolator    = color_attributeT<f1_interpolator>;
 }
 
@@ -274,7 +251,7 @@ struct particles{
     using scale                     = componentT<glm::vec3,      ID_scale>;
     using rotation                  = componentT<glm::quat,      ID_rotation>;
     using translation               = componentT<glm::vec3,      ID_translation>;
-    using color                     = componentT<glm::u8vec4,    ID_color>;
+    using color                     = componentT<glm::u16vec4,   ID_color>;
     using uv                        = componentT<quad_uv,        ID_uv>;
     using uv_motion                 = componentT<uv_motion,      ID_uv_motion>;
     using subuv                     = componentT<quad_uv,        ID_subuv>;

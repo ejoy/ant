@@ -224,7 +224,7 @@ particle_mgr::update_lifetime_color(float dt){
 		const uint16_t dp = life->delta_process(dt);
 		for (int ii = 0; ii < 4; ++ii) {
 			const auto& c = ci.rgba[ii];
-			clr[ii] = c.get(glm::u8vec1(clr[ii]), dp)[0];
+			clr[ii] = c.get(clr[ii], dp);
 		}
 	}
 }
@@ -289,11 +289,16 @@ void particle_mgr::submit_buffer(const quad_list &l){
 		const auto qsubuv	= sibling_component<particles::subuv>(ID_TAG_render_quad, iq);
 		const auto qclr		= sibling_component<particles::color>(ID_TAG_render_quad, iq);
 
+		const uint32_t c =	uint32_t(qclr->x >> 8)|
+							uint32_t((qclr->y >>8)<<8)|
+							uint32_t((qclr->z >>8)<<16)|
+							uint32_t((qclr->w >>8)<<24);
+
 		for (int ii=0; ii<4; ++ii){
 			q[ii].p		= m * glm::vec4(dq[ii].p, 1.f);
 			q[ii].uv	= quv->uv[ii];
 			q[ii].subuv = qsubuv->uv[ii];
-			q[ii].color = *(uint32_t*)(&qclr->r);
+			q[ii].color = c;
 		}
 	}
 

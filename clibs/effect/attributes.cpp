@@ -107,8 +107,8 @@ namespace lua_struct {
                 interpolation::init_valueT<glm::u8vec4> f4v;
                 unpack_init_value(L, index, f4v);
                 for (int ii=0; ii<4; ++ii){
-                    civ.rgba[ii].minv[0] = f4v.minv[ii];
-                    civ.rgba[ii].maxv[0] = f4v.maxv[ii];
+                    civ.rgba[ii].minv = f4v.minv[ii];
+                    civ.rgba[ii].maxv = f4v.maxv[ii];
                     civ.rgba[ii].interp_type = f4v.interp_type;
                 }
             }
@@ -123,8 +123,8 @@ namespace lua_struct {
                 interpolation::init_valueT<glm::u8vec3> f3v;
                 unpack_init_value(L, -1, f3v);
                 for (int ii=0; ii<3; ++ii){
-                    civ.rgba[ii].minv[0] = f3v.minv[ii];
-                    civ.rgba[ii].maxv[0] = f3v.maxv[ii];
+                    civ.rgba[ii].minv = f3v.minv[ii];
+                    civ.rgba[ii].maxv = f3v.maxv[ii];
                     civ.rgba[ii].interp_type = f3v.interp_type;
                 }
             }
@@ -202,6 +202,12 @@ static inline VALUETYPE& check_add_component(comp_ids &ids){
     return particle_mgr::get().component_value<VALUETYPE>();
 }
 
+static void
+cvt_color(interpolation::init_valueT<uint16_t> &clr){
+    clr.minv <<= 8;
+    clr.maxv <<= 8;
+}
+
 static void default_reader(lua_State *, int, particle_emitter*, comp_ids&){}
 
 std::unordered_map<std::string, readerop> g_attrib_map = {
@@ -250,11 +256,14 @@ std::unordered_map<std::string, readerop> g_attrib_map = {
     std::make_pair("init_color", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
         emitter->mspawn.init.components.push_back(particles::color::ID());
         lua_struct::unpack(L, index, emitter->mspawn.init.color);
+        for (auto &ic : emitter->mspawn.init.color.rgba) cvt_color(ic);
     }),
     std::make_pair("color_over_life", [](lua_State *L, int index, particle_emitter* emitter, comp_ids& ids){
         emitter->mspawn.interp.components.push_back(particles::color_interpolator::ID());
         interpolation::color_init_value iv;
         lua_struct::unpack(L, index, iv);
+
+        for (auto &ic : iv.rgba) cvt_color(ic);
 
         // we should override init.color value
         check_add_id(particles::color::ID(), emitter->mspawn.init.components);
@@ -262,7 +271,7 @@ std::unordered_map<std::string, readerop> g_attrib_map = {
         for (int ii = 0; ii < 4; ++ii) {
             auto &ic = emitter->mspawn.init.color.rgba[ii];
             const auto& c = iv.rgba[ii];
-            ic.minv[0] = c.minv[0];
+            ic.minv = c.minv;
             ic.interp_type = 0;
             emitter->mspawn.interp.color.rgba[ii].from_init_value(c);
         }
