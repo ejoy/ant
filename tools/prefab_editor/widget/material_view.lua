@@ -208,10 +208,10 @@ function MaterialView:set_model(eid)
                 end
             )
             pro:set_setter(
-                function(...)
+                function(v)
                     local tdata = mtldata_list[eid].tdata
-                    tdata.properties[k] = {...}
-                    imaterial.set_property(eid, k, {...})
+                    tdata.properties[k] = v
+                    imaterial.set_property(eid, k, v)
                 end
             )
             self.uniforms[#self.uniforms + 1] = pro
