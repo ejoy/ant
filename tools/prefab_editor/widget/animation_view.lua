@@ -238,6 +238,15 @@ local function add_event(et)
         name_ui = {text = event_name},
         rid_ui = {-1}
     }
+    
+    if et == "Effect" then
+        event_list[#event_list].effect_path_ui = {text = ""}
+        event_list[#event_list].link_info = {
+            joint_name = "None",
+            joint_index = -1
+        }
+    end
+
     if et == "Collision" then
         event_list[#event_list].collision = {
             collider = current_collider,
@@ -400,9 +409,9 @@ local function show_current_event()
         current_event.name = tostring(current_event.name_ui.text)
     end
 
-    if current_event.event_type == "Collision" then
-        imgui.widget.PropertyLabel("Collider")
+    if current_event.event_type == "Collision" and current_anim.collider then
         local collision = current_event.collision
+        imgui.widget.PropertyLabel("Collider")
         if imgui.widget.BeginCombo("##Collider", {collision.collider and collision.collider.name or "", flags = imgui.flags.Combo {}}) then
             for idx, col in ipairs(current_anim.collider) do
                 if imgui.widget.Selectable(col.name, collision.collider and (collision.collider.name == col.name)) then
@@ -435,8 +444,23 @@ local function show_current_event()
         imgui.widget.Text("SoundPath : ")
     elseif current_event.event_type == "Effect" then
         if imgui.widget.Button("SelectEffect") then
+            local path = uiutils.get_open_file_path("Prefab", ".prefab")
+            if path then
+                current_event.effect_path_ui.text = path
+            end
         end
-        imgui.widget.Text("EffectPath : ")
+        imgui.widget.PropertyLabel("EffectPath")
+        imgui.widget.InputText("##EffectPath", current_event.effect_path_ui)
+        imgui.widget.PropertyLabel("LinkJoint")
+        if imgui.widget.BeginCombo("##LinkJoint", {current_event.link_info.joint_name, flags = imgui.flags.Combo {}}) then
+            for _, option in ipairs(joint_list) do
+                if imgui.widget.Selectable(option.name, current_event.link_info.joint_name == option.name) then
+                    current_event.link_info.joint_index = option.index
+                    current_event.link_info.joint_name = option.name
+                end
+            end
+            imgui.widget.EndCombo()
+        end
     end
 end
 
