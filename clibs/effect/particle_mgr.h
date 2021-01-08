@@ -42,6 +42,11 @@ struct material {
     struct properties properties;
 };
 
+struct particle_stat{
+    uint16_t count;
+    uint16_t comp_count[ID_key_count];
+};
+
 
 //TODO: need remove this singletonT, push it in lua_State
 class particle_mgr : public singletonT<particle_mgr> {
@@ -56,6 +61,8 @@ public:
 
     template<typename T>
     T& component_value(int idx = -1) {return mparticles.component_value<T>(idx);}
+    void particle_stat(struct particle_stat &stat) const;
+
 private:
     void remove_particle(uint32_t pidx);
     void remap_particles() { mparticles.remap_particles(mmgr); }

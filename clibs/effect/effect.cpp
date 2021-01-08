@@ -129,6 +129,24 @@ leffect_valid_material_indices(lua_State*L){
     return 0;
 }
 
+static int
+leffect_particle_stat(lua_State *L){
+    struct particle_stat s;
+    particle_mgr::get().particle_stat(s);
+    lua_newtable(L);
+    lua_pushnumber(L, s.count);
+    lua_setfield(L, -2, "count");
+
+    const int num = sizeof(s.comp_count)/sizeof(s.comp_count[0]);
+    lua_createtable(L, num, 0);
+    for (int ii=0; ii<num; ++ii){
+        lua_pushnumber(L, s.comp_count[ii]);
+        lua_seti(L, -2, ii+1);
+    }
+    lua_setfield(L, -2, "comp_count");
+    return 1;
+}
+
 extern "C" {
     LUAMOD_API int
     luaopen_effect(lua_State *L){
@@ -141,6 +159,7 @@ extern "C" {
             { "update_particles",   leffect_update_particles},
             { "register_material",  leffect_register_material},
             { "valid_material_indices", leffect_valid_material_indices},
+            { "particle_stat",      leffect_particle_stat},
             { nullptr, nullptr },
         };
         luaL_newlib(L, l);

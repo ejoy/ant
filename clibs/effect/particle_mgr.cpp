@@ -162,6 +162,14 @@ bool particle_mgr::add(const comp_ids &ids){
 }
 
 void
+particle_mgr::particle_stat(struct particle_stat &stat) const {
+	stat.count = particlesystem_count(mmgr, ID_life);
+	for (int ii=0; ii<ID_key_count; ++ii){
+		stat.comp_count[ii] = particlesystem_count(mmgr, ii);
+	}
+}
+
+void
 particle_mgr::remove_particle(uint32_t pidx){
 	particlesystem_remove(mmgr, ID_life, (particle_index)pidx);
 }
