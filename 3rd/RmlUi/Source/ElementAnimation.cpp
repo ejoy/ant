@@ -94,22 +94,6 @@ static Property InterpolateProperties(const Property & p0, const Property& p1, f
 		return Property{ f, p0.unit };
 	}
 
-	if (p0.unit == Property::KEYWORD && p1.unit == Property::KEYWORD)
-	{
-		// Discrete interpolation, swap at alpha = 0.5.
-		// Special case for the 'visibility' property as in the CSS specs: 
-		//   Apply the visible property if present during the entire transition period, ie. alpha (0,1).
-		if (definition && definition->GetId() == PropertyId::Visibility)
-		{
-			if (p0.Get<int>() == (int)Style::Visibility::Visible)
-				return alpha < 1.f ? p0 : p1;
-			else if (p1.Get<int>() == (int)Style::Visibility::Visible)
-				return alpha <= 0.f ? p0 : p1;
-		}
-
-		return alpha < 0.5f ? p0 : p1;
-	}
-
 	if (p0.unit == Property::COLOUR && p1.unit == Property::COLOUR)
 	{
 		Colourf c0 = ColourToLinearSpace(p0.value.Get<Colourb>());

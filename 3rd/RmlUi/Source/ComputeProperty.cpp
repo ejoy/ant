@@ -35,27 +35,6 @@ const Style::ComputedValues DefaultComputedValues = Style::ComputedValues{};
 
 static constexpr float PixelsPerInch = 96.0f;
 
-
-
-float ResolveValue(Style::LengthPercentageAuto length, float base_value)
-{
-	if (length.type == Style::LengthPercentageAuto::Length)
-		return length.value;
-	else if (length.type == Style::LengthPercentageAuto::Percentage)
-		return length.value * 0.01f * base_value;
-	return 0.0f;
-}
-
-float ResolveValue(Style::LengthPercentage length, float base_value)
-{
-	if (length.type == Style::LengthPercentage::Length)
-		return length.value;
-	else if (length.type == Style::LengthPercentage::Percentage)
-		return length.value * 0.01f * base_value;
-	return 0.0f;
-}
-
-
 float ComputeLength(const Property* property, float font_size, float document_font_size, float dp_ratio)
 {
 	RMLUI_ASSERT(property);
@@ -197,28 +176,6 @@ float ComputeFontsize(const Property& property, const Style::ComputedValues& val
 	}
 
 	return ComputeAbsoluteLength(property, dp_ratio);
-}
-
-Style::LengthPercentage ComputeLengthPercentage(const Property* property, float font_size, float document_font_size, float dp_ratio)
-{
-	using namespace Style;
-	if (property->unit & Property::PERCENT)
-		return LengthPercentage(LengthPercentage::Percentage, property->Get<float>());
-
-	return LengthPercentage(LengthPercentage::Length, ComputeLength(property, font_size, document_font_size, dp_ratio));
-}
-
-
-Style::LengthPercentageAuto ComputeLengthPercentageAuto(const Property* property, float font_size, float document_font_size, float dp_ratio)
-{
-	using namespace Style;
-	// Assuming here that 'auto' is the only possible keyword
-	if (property->unit & Property::PERCENT)
-		return LengthPercentageAuto(LengthPercentageAuto::Percentage, property->Get<float>());
-	else if (property->unit & Property::KEYWORD)
-		return LengthPercentageAuto(LengthPercentageAuto::Auto);
-
-	return LengthPercentageAuto(LengthPercentageAuto::Length, ComputeLength(property, font_size, document_font_size, dp_ratio));
 }
 
 Style::LengthPercentage ComputeOrigin(const Property* property, float font_size, float document_font_size, float dp_ratio)

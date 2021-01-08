@@ -37,15 +37,15 @@ namespace Rml {
 GeometryBackgroundBorder::GeometryBackgroundBorder(Vector<Vertex>& vertices, Vector<int>& indices) : vertices(vertices), indices(indices)
 {}
 
-void GeometryBackgroundBorder::Draw(Vector<Vertex>& vertices, Vector<int>& indices, CornerSizes radii, const Layout& box, const Vector2f offset, const Colourb background_color, const Colourb* border_colors)
+void GeometryBackgroundBorder::Draw(Vector<Vertex>& vertices, Vector<int>& indices, CornerSizes radii, const Layout::Metrics& metrics, const Vector2f offset, const Colourb background_color, const Colourb* border_colors)
 {
 	using Edge = Layout::Edge;
 
 	EdgeSizes border_widths = {
-		Math::RoundFloat(box.GetEdge(Layout::Area::Border, Edge::TOP)),
-		Math::RoundFloat(box.GetEdge(Layout::Area::Border, Edge::RIGHT)),
-		Math::RoundFloat(box.GetEdge(Layout::Area::Border, Edge::BOTTOM)),
-		Math::RoundFloat(box.GetEdge(Layout::Area::Border, Edge::LEFT)),
+		Math::RoundFloat(metrics.borderWidth.top),
+		Math::RoundFloat(metrics.borderWidth.right),
+		Math::RoundFloat(metrics.borderWidth.bottom),
+		Math::RoundFloat(metrics.borderWidth.left),
 	};
 
 	int num_borders = 0;
@@ -57,7 +57,7 @@ void GeometryBackgroundBorder::Draw(Vector<Vertex>& vertices, Vector<int>& indic
 				num_borders += 1;
 	}
 
-	Size border_size = box.GetSize();
+	Size border_size = metrics.frame.size;
 	border_size.w = Math::RoundFloat(border_size.w);
 	border_size.h = Math::RoundFloat(border_size.h);
 

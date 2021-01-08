@@ -140,7 +140,7 @@ void ElementDocument::ProcessHeader(const DocumentHeader* header)
 	}
 
 	// Hide this document.
-	SetPropertyImmediate(PropertyId::Visibility, Property(Style::Visibility::Hidden));
+	SetVisible(false);
 
 	// Update properties so that e.g. visibility status can be queried properly immediately.
 	UpdateProperties();
@@ -192,7 +192,7 @@ const SharedPtr<StyleSheet>& ElementDocument::GetStyleSheet() const
 
 void ElementDocument::Show() {
 	// Set to visible and switch focus if necessary
-	SetPropertyImmediate(PropertyId::Visibility, Property(Style::Visibility::Visible));
+	SetVisible(true);
 	
 	// We should update the document now, otherwise the focusing methods below do not think we are visible
 	// If this turns out to be slow, the more performant approach is just to compute the new visibility property
@@ -204,7 +204,7 @@ void ElementDocument::Show() {
 
 void ElementDocument::Hide()
 {
-	SetPropertyImmediate(PropertyId::Visibility, Property(Style::Visibility::Hidden));
+	SetVisible(false);
 
 	// We should update the document now, so that the (un)focusing will get the correct visibility
 	UpdateDocument();
@@ -229,7 +229,7 @@ ElementPtr ElementDocument::CreateElement(const String& name)
 // Create a text element.
 ElementPtr ElementDocument::CreateTextNode(const String& text)
 {
-	ElementPtr element(new ElementText("#text"));
+	ElementPtr element(new ElementText("#text", text));
 	element->SetOwnerDocument(this);
 	ElementText* element_text = dynamic_cast< ElementText* >(element.get());
 	if (!element_text)
@@ -273,15 +273,8 @@ void ElementDocument::UpdateDataModel(bool clear_dirty_variables) {
 // Updates the layout if necessary.
 void ElementDocument::UpdateLayout()
 {
-	if (dirty_layout) {
-		GetLayout().CalculateLayout(dimensions);
-		UpdateChildrenBounds();
-	}
-}
-
-void ElementDocument::DirtyLayout()
-{
-	dirty_layout = true;
+	layout.CalculateLayout(dimensions);
+	UpdateBounds();
 }
 
 void ElementDocument::DirtyDpProperties()
@@ -826,8 +819,8 @@ void ElementDocument::CreateDragClone(Element* element) {
 	// Set all the required properties and pseudo-classes on the clone.
 	drag_clone->SetPseudoClass("drag", true);
 	drag_clone->SetPropertyImmediate(PropertyId::Position, Property(Style::Position::Absolute));
-	drag_clone->SetPropertyImmediate(PropertyId::Left, Property(element->GetBorderOffset().x - element->GetLayout().GetEdge(Layout::Area::Margin, Layout::LEFT) - mouse_position.x, Property::PX));
-	drag_clone->SetPropertyImmediate(PropertyId::Top, Property(element->GetBorderOffset().y - element->GetLayout().GetEdge(Layout::Area::Margin, Layout::TOP) - mouse_position.y, Property::PX));
+	drag_clone->SetPropertyImmediate(PropertyId::Left, Property(element->GetOffset().x - mouse_position.x, Property::PX));
+	drag_clone->SetPropertyImmediate(PropertyId::Top, Property(element->GetOffset().y - mouse_position.y, Property::PX));
 }
 
 void ElementDocument::ReleaseDragClone() {

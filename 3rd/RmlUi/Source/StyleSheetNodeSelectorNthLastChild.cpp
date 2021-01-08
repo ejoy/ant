@@ -60,7 +60,7 @@ bool StyleSheetNodeSelectorNthLastChild::IsApplicable(const Element* element, in
 		if (child == element)
 			break;
 
-		if (child->GetDisplay() == Style::Display::None)
+		if (!child->IsVisible())
 			continue;
 
 		element_index++;

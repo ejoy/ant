@@ -220,13 +220,8 @@ bool DataViewIf::Update(DataModel& model)
 	if (element && GetExpression().Run(expr_interface, variant))
 	{
 		const bool value = variant.Get<bool>();
-		const bool is_visible = (element->GetLocalStyleProperties().count(PropertyId::Display) == 0);
-		if(is_visible != value)
-		{
-			if (value)
-				element->RemoveProperty(PropertyId::Display);
-			else
-				element->SetPropertyImmediate(PropertyId::Display, Property(Style::Display::None));
+		if (element->IsVisible() != value) {
+			element->SetVisible(value);
 			result = true;
 		}
 	}
@@ -247,13 +242,9 @@ bool DataViewVisible::Update(DataModel& model)
 	if (element && GetExpression().Run(expr_interface, variant))
 	{
 		const bool value = variant.Get<bool>();
-		const bool is_visible = (element->GetLocalStyleProperties().count(PropertyId::Visibility) == 0);
-		if (is_visible != value)
+		if (element->IsVisible() != value)
 		{
-			if (value)
-				element->RemoveProperty(PropertyId::Visibility);
-			else
-				element->SetPropertyImmediate(PropertyId::Visibility, Property(Style::Visibility::Hidden));
+			element->SetVisible(value);
 			result = true;
 		}
 	}
@@ -452,7 +443,7 @@ bool DataViewFor::Initialize(DataModel& model, Element* element, const String& i
 	if (container_address.empty())
 		return false;
 
-	element->SetPropertyImmediate(PropertyId::Display, Property(Style::Display::None));
+	element->SetVisible(false);
 
 	// Copy over the attributes, but remove the 'data-for' which would otherwise recreate the data-for loop on all constructed children recursively.
 	attributes = element->GetAttributes();

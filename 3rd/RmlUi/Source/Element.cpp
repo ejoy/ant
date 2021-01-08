@@ -80,8 +80,6 @@ static Pool< ElementMeta > element_meta_chunk_pool(200, true);
 /// Constructs a new RmlUi element.
 Element::Element(const String& tag) 
 	: tag(tag)
-	, offset_relative(0, 0)
-	, offset_absolute(0, 0)
 	, scroll_offset(0, 0)
 	, content_offset(0, 0)
 	, content_box(0, 0)
@@ -90,15 +88,11 @@ Element::Element(const String& tag)
 	, dirty_perspective(false)
 	, dirty_animation(false)
 	, dirty_transition(false)
-	, dirty_layout(false)
 {
 	RMLUI_ASSERT(tag == StringUtilities::ToLower(tag));
 	parent = nullptr;
 	focus = nullptr;
 	owner_document = nullptr;
-	offset_parent = nullptr;
-	offset_dirty = true;
-	visible = true;
 	z_index = 0;
 	stacking_context_dirty = true;
 	structure_dirty = false;
@@ -294,39 +288,54 @@ String Element::GetAddress(bool include_pseudo_classes, bool include_parents) co
 		return address;
 }
 
-Point Element::GetBorderOffset() {
-	if (offset_dirty) {
-		offset_dirty = false;
-		if (offset_parent != nullptr) {
-			offset_absolute = offset_parent->GetBorderOffset() + offset_relative;
-		}
-		else {
-			offset_absolute = offset_relative;
-		}
-	}
-	return offset_absolute;
-}
-
-Point Element::GetPaddingOffset() {
-	return GetBorderOffset() + Point(layout.GetEdge(Layout::Area::Border, Layout::Edge::LEFT), layout.GetEdge(Layout::Area::Border, Layout::Edge::TOP));
-}
-
-Point Element::GetContentOffset() {
-	return GetPaddingOffset() + Point(layout.GetEdge(Layout::Area::Padding, Layout::Edge::LEFT), layout.GetEdge(Layout::Area::Padding, Layout::Edge::TOP));
-}
-
 Layout& Element::GetLayout() {
 	return layout;
 }
 
-bool Element::IsPointWithinElement(const Point& point) {
-	return Rect(GetBorderOffset(), layout.GetSize()).Contains(point);
+const Layout::Metrics& Element::GetMetrics() const {
+	return metrics;
 }
 
-// Returns the visibility of the element.
-bool Element::IsVisible() const
-{
-	return visible;
+Point& Element::GetOffset() {
+	if (dirty_offset) {
+		dirty_offset = false;
+		if (parent) {
+			offset = metrics.frame.origin + parent->GetOffset();
+		}
+		else {
+			offset = metrics.frame.origin;
+		}
+	}
+	return offset;
+}
+
+void Element::DirtyOffset() {
+	if (dirty_offset) {
+		return;
+	}
+	dirty_offset = true;
+	if (transform_state) {
+		DirtyTransformState(true, true);
+	}
+	for (auto& child : children) {
+		child->DirtyOffset();
+	}
+}
+
+bool Element::IsPointWithinElement(const Point& point) {
+	return Rect(GetOffset(), metrics.frame.size).Contains(point);
+}
+
+bool Element::IsVisible() const {
+	return metrics.visible;
+}
+
+void Element::SetVisible(bool visible) {
+	if (IsVisible() == visible) {
+		return;
+	}
+	layout.SetVisible(visible);
+	layout.MarkDirty();
 }
 
 // Returns the z-index of the element.
@@ -418,11 +427,6 @@ const PropertyMap& Element::GetLocalStyleProperties()
 float Element::ResolveNumericProperty(const Property *property, float base_value)
 {
 	return meta->style.ResolveNumericProperty(property, base_value);
-}
-
-Style::Display Element::GetDisplay()
-{
-	return meta->computed_values.display;
 }
 
 // Project a 2D point in pixel coordinates onto the element's plane.
@@ -585,12 +589,6 @@ void Element::SetId(const String& _id)
 	SetAttribute("id", _id);
 }
 
-// Returns the element from which all offset calculations are currently computed.
-Element* Element::GetOffsetParent()
-{
-	return offset_parent;
-}
-
 // Gets the left scroll offset of the element.
 float Element::GetScrollLeft()
 {
@@ -600,11 +598,10 @@ float Element::GetScrollLeft()
 // Sets the left scroll offset of the element.
 void Element::SetScrollLeft(float scroll_left)
 {
-	const float new_offset = Math::Clamp(Math::RoundFloat(scroll_left), 0.0f, GetScrollWidth() - layout.GetSize().w);
+	const float new_offset = Math::Clamp(Math::RoundFloat(scroll_left), 0.0f, GetScrollWidth() - metrics.frame.size.w);
 	if (new_offset != scroll_offset.x)
 	{
 		scroll_offset.x = new_offset;
-		DirtyOffset();
 
 		DispatchEvent(EventId::Scroll, Dictionary());
 	}
@@ -619,11 +616,10 @@ float Element::GetScrollTop()
 // Sets the top scroll offset of the element.
 void Element::SetScrollTop(float scroll_top)
 {
-	const float new_offset = Math::Clamp(Math::RoundFloat(scroll_top), 0.0f, GetScrollHeight() - layout.GetSize().h);
+	const float new_offset = Math::Clamp(Math::RoundFloat(scroll_top), 0.0f, GetScrollHeight() - metrics.frame.size.h);
 	if(new_offset != scroll_offset.y)
 	{
 		scroll_offset.y = new_offset;
-		DirtyOffset();
 
 		DispatchEvent(EventId::Scroll, Dictionary());
 	}
@@ -632,13 +628,13 @@ void Element::SetScrollTop(float scroll_top)
 // Gets the width of the scrollable content of the element; it includes the element padding but not its margin.
 float Element::GetScrollWidth()
 {
-	return Math::Max(content_box.x, layout.GetSize().w);
+	return Math::Max(content_box.x, metrics.frame.size.w);
 }
 
 // Gets the height of the scrollable content of the element; it includes the element padding but not its margin.
 float Element::GetScrollHeight()
 {
-	return Math::Max(content_box.y, layout.GetSize().h);
+	return Math::Max(content_box.y, metrics.frame.size.h);
 }
 
 // Gets the object representing the declarations of an element's style attributes.
@@ -731,11 +727,9 @@ int Element::GetNumChildren() const
 }
 
 // Gets the markup and content of the element.
-void Element::GetInnerRML(String& content) const
-{
-	for (int i = 0; i < GetNumChildren(); i++)
-	{
-		children[i]->GetRML(content);
+void Element::GetInnerRML(String& content) const {
+	for (auto& child : children) {
+		child->GetRML(content);
 	}
 }
 
@@ -1091,10 +1085,8 @@ DataModel* Element::GetDataModel() const
 	return data_model;
 }
 
-bool Element::IsClippingEnabled()
-{
-	const auto& computed = GetComputedValues();
-	return computed.overflow != Style::Overflow::Visible;
+bool Element::IsClippingEnabled() {
+	return layout.GetOverflow() != Layout::Overflow::Visible;
 }
 
 // Called during render after backgrounds, borders, but before children, are rendered.
@@ -1151,12 +1143,9 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes)
 
 // Called when properties on the element are changed.
 void Element::OnPropertyChange(const PropertyIdSet& changed_properties) {
-	if (!dirty_layout) {
-		// Force a relayout if any of the changed properties require it.
-		const PropertyIdSet changed_properties_forcing_layout = (changed_properties & StyleSheetSpecification::GetRegisteredPropertiesForcingLayout());
-		
-		if(!changed_properties_forcing_layout.Empty())
-			DirtyLayout();
+	const PropertyIdSet changed_properties_forcing_layout = (changed_properties & StyleSheetSpecification::GetRegisteredPropertiesForcingLayout());
+	if (!changed_properties_forcing_layout.Empty()) {
+		DirtyLayout();
 	}
 
 	const bool border_radius_changed = (
@@ -1168,24 +1157,12 @@ void Element::OnPropertyChange(const PropertyIdSet& changed_properties) {
 
 
 	// Update the visibility.
-	if (changed_properties.Contains(PropertyId::Visibility) || changed_properties.Contains(PropertyId::Display)) {
-		bool new_visibility = (meta->computed_values.display != Style::Display::None && meta->computed_values.visibility == Style::Visibility::Visible);
-			
-		if (visible != new_visibility) {
-			visible = new_visibility;
-			DirtyLayout();
-			if (!visible) {
-				Blur();
-			}
-		}
-
-		if (changed_properties.Contains(PropertyId::Display)) {
-			// Due to structural pseudo-classes, this may change the element definition in siblings and parent.
-			// However, the definitions will only be changed on the next update loop which may result in jarring behavior for one @frame.
-			// A possible workaround is to add the parent to a list of elements that need to be updated again.
-			if (parent != nullptr)
-				parent->DirtyStructure();
-		}
+	if (changed_properties.Contains(PropertyId::Display)) {
+		// Due to structural pseudo-classes, this may change the element definition in siblings and parent.
+		// However, the definitions will only be changed on the next update loop which may result in jarring behavior for one @frame.
+		// A possible workaround is to add the parent to a list of elements that need to be updated again.
+		if (parent != nullptr)
+			parent->DirtyStructure();
 	}
 
 	// Update the z-index.
@@ -1265,15 +1242,8 @@ void Element::OnPropertyChange(const PropertyIdSet& changed_properties) {
 	}
 }
 
-// Forces a re-layout of this element, and any other children required.
-void Element::DirtyLayout()
-{
-	if (!dirty_layout) {
-		dirty_layout = true;
-		Element* parent = GetParentNode();
-		RMLUI_ASSERT(parent != nullptr);
-		parent->DirtyLayout();
-	}
+void Element::DirtyLayout() {
+	layout.MarkDirty();
 }
 
 void Element::ProcessDefaultAction(Event& event)
@@ -1424,19 +1394,6 @@ void Element::SetParent(Element* _parent)
 			else
 				Log::Message(Log::LT_ERROR, "Could not locate data model '%s' in element %s.", name.c_str(), GetAddress().c_str());
 		}
-	}
-}
-
-void Element::DirtyOffset() {
-	if (!offset_dirty) {
-		offset_dirty = true;
-
-		if(transform_state)
-			DirtyTransformState(true, true);
-
-		// Not strictly true ... ?
-		for (size_t i = 0; i < children.size(); i++)
-			children[i]->DirtyOffset();
 	}
 }
 
@@ -1740,8 +1697,8 @@ void Element::UpdateTransformState()
 
 	const ComputedValues& computed = meta->computed_values;
 
-	const Point pos = GetBorderOffset();
-	const Size size = layout.GetSize();
+	const Point pos = GetOffset();
+	const Size size = metrics.frame.size;
 	
 	bool perspective_or_transform_changed = false;
 
@@ -1888,26 +1845,17 @@ void Element::UpdateTransformState()
 }
 
 void Element::UpdateBounds() {
-	Point offset = layout.GetOffset();
-	if (offset_relative != offset || offset_parent != parent) {
-		offset_relative = offset;
-		offset_parent = parent;
-		DirtyOffset();
+	if (!layout.UpdateMetrics(metrics)) {
+		return;
 	}
-}
-
-void Element::UpdateChildrenBounds() {
-	if (dirty_layout) {
-		dirty_layout = false;
-		if (IsVisible()) {
-			for (int i = 0; i < GetNumChildren(); ++i) {
-				Element* child = GetChild(i);
-				if (child->IsVisible()) {
-					child->UpdateBounds();
-					child->UpdateChildrenBounds();
-				}
-			}
+	if (IsVisible()) {
+		DirtyOffset();
+		for (auto& child : children) {
+			child->UpdateBounds();
 		}
+	}
+	else {
+		Blur();
 	}
 }
 
@@ -1959,7 +1907,7 @@ Rect Element::GetClippingRegion() {
 	if (!IsClippingEnabled()) {
 		return clip;
 	}
-	clip.Union(Rect(GetBorderOffset(), layout.GetSize()));
+	clip.Union(Rect(GetOffset(), metrics.frame.size));
 	return clip;
 }
 

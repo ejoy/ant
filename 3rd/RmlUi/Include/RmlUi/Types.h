@@ -122,10 +122,10 @@ class DataController;
 using DataControllerPtr = UniqueReleaserPtr<DataController>;
 
 struct Point {
-	Point() : x(0.0f), y(0.0f) {}
+	float x{};
+	float y{};
+	Point() {}
 	Point(float x_, float y_) : x(x_), y(y_) {}
-	float x;
-	float y;
 	void SetPoint(float x_, float y_) {
 		x = x_;
 		y = y_;
@@ -133,9 +133,9 @@ struct Point {
 };
 
 struct Size {
-	float w;
-	float h;
-	Size() : w(0.0f), h(0.0f) {}
+	float w{};
+	float h{};
+	Size() {}
 	Size(float width, float height) : w(width), h(height) {}
 	bool IsEmpty() const { return !w || !h; }
 	void SetSize(float width, float height) {
@@ -177,6 +177,27 @@ struct Rect {
 	}  
 	bool Contains(const Point& point) const {
 		return (point.x >= x()) && (point.x < right()) && (point.y >= y()) && (point.y < bottom());
+	}
+};
+
+struct EdgeInsets {
+	float left{};
+	float top{};
+	float right{};
+	float bottom{};
+	bool operator==(const EdgeInsets& rhs) const {
+		return std::tie(left, top, right, bottom) == std::tie(rhs.left, rhs.top, rhs.right, bottom);
+	}
+	bool operator!=(const EdgeInsets& rhs) const {
+		return !(*this == rhs);
+	}
+	EdgeInsets operator+(const EdgeInsets& rhs) {
+		return EdgeInsets {
+			left + rhs.left,
+			top + rhs.top,
+			right + rhs.right,
+			bottom + rhs.bottom,
+		};
 	}
 };
 
@@ -230,6 +251,24 @@ inline Vector2f operator-(const Vector2f& lhs, const Size& rhs) {
 	return Vector2f(lhs[0] - rhs.w, lhs[1] - rhs.h);
 }
 
+inline Point operator+(const Point& lhs, const EdgeInsets& rhs) {
+	return Point(lhs.x + rhs.left, lhs.y + rhs.top);
+}
+inline Point operator-(const Point& lhs, const EdgeInsets& rhs) {
+	return Point(lhs.x - rhs.left, lhs.y - rhs.top);
+}
+inline Size operator+(const Size& lhs, const EdgeInsets& rhs) {
+	return Size(lhs.w + rhs.left + rhs.right, lhs.h + rhs.top + rhs.bottom);
+}
+inline Size operator-(const Size& lhs, const EdgeInsets& rhs) {
+	return Size(lhs.w - rhs.left - rhs.right, lhs.h - rhs.top - rhs.bottom);
+}
+inline Rect operator+(const Rect& lhs, const EdgeInsets& rhs) {
+	return Rect(lhs.origin + rhs, lhs.size + rhs);
+}
+inline Rect operator-(const Rect& lhs, const EdgeInsets& rhs) {
+	return Rect(lhs.origin - rhs, lhs.size - rhs);
+}
 
 } // namespace Rml
 

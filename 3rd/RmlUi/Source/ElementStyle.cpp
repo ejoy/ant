@@ -560,13 +560,6 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 		}
 
 		switch (id) {
-		case PropertyId::Display:
-			values.display = (Display)p->Get<int>();
-			break;
-		case PropertyId::Overflow:
-			values.overflow = (Overflow)p->Get< int >();
-			break;
-
 		case PropertyId::BorderTopColor:
 			values.border_top_color = p->Get<Colourb>();
 			break;
@@ -598,10 +591,6 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 
 		case PropertyId::LineHeight:
 			// (Line-height computed above)
-			break;
-
-		case PropertyId::Visibility:
-			values.visibility = (Visibility)p->Get<int>();
 			break;
 
 		case PropertyId::BackgroundColor:

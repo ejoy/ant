@@ -58,8 +58,7 @@ bool StyleSheetNodeSelectorFirstChild::IsApplicable(const Element* element, int 
 			return true;
 
 		// If this child is not a text element, then the selector fails; this element is non-trivial.
-		if (dynamic_cast< ElementText* >(child) == nullptr &&
-			child->GetDisplay() != Style::Display::None)
+		if (dynamic_cast< ElementText* >(child) == nullptr && child->IsVisible())
 			return false;
 
 		// Otherwise, skip over the text element to find the last non-trivial element.

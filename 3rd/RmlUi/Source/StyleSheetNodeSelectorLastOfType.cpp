@@ -59,8 +59,7 @@ bool StyleSheetNodeSelectorLastOfType::IsApplicable(const Element* element, int 
 
 		// Otherwise, if this child shares our element's tag, then our element is not the first tagged child; the
 		// selector fails.
-		if (child->GetTagName() == element->GetTagName() &&
-			child->GetDisplay() != Style::Display::None)
+		if (child->GetTagName() == element->GetTagName() && child->IsVisible())
 			return false;
 
 		child_index--;

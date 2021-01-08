@@ -105,11 +105,10 @@ public:
 	/// @return The address of the element, including its full parentage.
 	String GetAddress(bool include_pseudo_classes = false, bool include_parents = true) const;
 
-	Point GetBorderOffset();
-	Point GetPaddingOffset();
-	Point GetContentOffset();
-
 	Layout& GetLayout();
+	const Layout::Metrics& GetMetrics() const;
+	Point& GetOffset();
+	void DirtyOffset();
 
 	/// Checks if a given point in screen coordinates lies within the bordered area of this element.
 	/// @param[in] point The point to test.
@@ -119,6 +118,7 @@ public:
 	/// Returns the visibility of the element.
 	/// @return True if the element is visible, false otherwise.
 	bool IsVisible() const;
+	void SetVisible(bool visible);
 	/// Returns the z-index of the element.
 	/// @return The element's z-index.
 	float GetZIndex() const;
@@ -173,9 +173,6 @@ public:
 	/// @param[in] base_value The value that is scaled by the number or percentage value, if applicable.
 	/// @return The resolved value in their canonical unit, or zero if it could not be resolved.
 	float ResolveNumericProperty(const Property *property, float base_value);
-
-	/// Returns 'display' property value from element's computed values.
-	Style::Display GetDisplay();
 
 	/// Project a 2D point in pixel coordinates onto the element's plane.
 	/// @param[in-out] point The point to project in, and the resulting projected point out.
@@ -266,10 +263,6 @@ public:
 	/// Sets the id of the element.
 	/// @param[in] id The new id of the element.
 	void SetId(const String& id);
-
-	/// Returns the element from which all offset calculations are currently computed.
-	/// @return This element's offset parent.
-	Element* GetOffsetParent();
 
 	/// Gets the left scroll offset of the element.
 	/// @return The element's left scroll offset.
@@ -479,8 +472,6 @@ protected:
 protected:
 	void SetDataModel(DataModel* new_data_model);
 
-	void DirtyOffset();
-
 	void UpdateStackingContext();
 	void DirtyStackingContext();
 
@@ -528,22 +519,16 @@ protected:
 	// Attributes on this element.
 	ElementAttributes attributes;
 
-	Element* offset_parent;
-	Point offset_relative;		// the offset from the parent
-	Point offset_absolute;
-	bool offset_dirty;
-
 	// The offset this element adds to its logical children due to scrolling content.
 	Vector2f scroll_offset;
 
 	Layout layout;
+	Layout::Metrics metrics;
+	Point offset;
 
 	// And of the element's internal content.
 	Vector2f content_offset;
 	Vector2f content_box;
-
-	// True if the element is visible and active.
-	bool visible;
 
 	OwnedElementList children;
 
@@ -560,11 +545,11 @@ protected:
 	UniquePtr< TransformState > transform_state;
 	bool dirty_transform;
 	bool dirty_perspective;
+	bool dirty_offset = false;
 
 	ElementAnimationList animations;
 	bool dirty_animation;
 	bool dirty_transition;
-	bool dirty_layout;
 
 	ElementMeta* meta;
 

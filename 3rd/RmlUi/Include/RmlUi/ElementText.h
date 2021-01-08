@@ -43,7 +43,7 @@ namespace Rml {
 class RMLUICORE_API ElementText final : public Element
 {
 public:
-	ElementText(const String& tag);
+	ElementText(const String& tag, const String& text);
 	virtual ~ElementText();
 
 	/// Sets the raw string this text element contains. The actual rendered text may be different due to whitespace formatting.

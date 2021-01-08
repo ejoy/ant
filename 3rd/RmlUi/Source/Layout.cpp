@@ -59,65 +59,12 @@ static float YGValueToFloat(float v) {
 	return v;
 }
 
-Size Layout::GetPaddingSize() const {
-	Size size = GetSize();
-	return size - Size(
-		YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeLeft)) + YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeRight)),
-		YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeTop)) + YGValueToFloat(YGNodeStyleGetBorder(node, YGEdgeBottom))
-	);
-}
-
-Size Layout::GetContentSize() const {
-	Size size = GetPaddingSize();
-	return size - Size(
-		YGValueToFloat(YGNodeStyleGetPadding(node, YGEdgeLeft)) + YGValueToFloat(YGNodeStyleGetPadding(node, YGEdgeRight)),
-		YGValueToFloat(YGNodeStyleGetPadding(node, YGEdgeTop)) + YGValueToFloat(YGNodeStyleGetPadding(node, YGEdgeBottom))
-	);
-}
-
-Size Layout::GetSize() const {
-	return Size(
-		YGNodeLayoutGetWidth(node),
-		YGNodeLayoutGetHeight(node)
-	);
-}
-
-Point Layout::GetOffset() const {
-	return Point(
-		YGNodeLayoutGetLeft(node),
-		YGNodeLayoutGetTop(node)
-	);
-}
-
 void Layout::SetWidth(float v) {
 	YGNodeStyleSetWidth(node, v);
 }
 
 void Layout::SetHeight(float v) {
 	YGNodeStyleSetHeight(node, v);
-}
-
-static YGEdge ConvertEdge(Layout::Edge edge) {
-	switch (edge) {
-	case Layout::Edge::LEFT: return YGEdgeLeft;
-	case Layout::Edge::RIGHT: return YGEdgeRight;
-	case Layout::Edge::TOP: return YGEdgeTop;
-	case Layout::Edge::BOTTOM: return YGEdgeBottom;
-	default: assert(false); return YGEdgeAll;
-	}
-}
-
-float Layout::GetEdge(Area area, Edge edge) const {
-	switch (area) {
-	case Layout::Area::Margin:
-		return YGValueToFloat(YGNodeStyleGetMargin(node, ConvertEdge(edge)));
-	case Layout::Area::Border:
-		return YGValueToFloat(YGNodeStyleGetBorder(node, ConvertEdge(edge)));
-	case Layout::Area::Padding:
-		return YGValueToFloat(YGNodeStyleGetPadding(node, ConvertEdge(edge)));
-	default:
-		return 0.0f;
-	}
 }
 
 void Layout::CalculateLayout(Size const& size) {
@@ -322,6 +269,51 @@ void Layout::SetElementText(ElementText* element) {
 void Layout::MarkDirty() {
 	if (YGNodeGetContext(node)) {
 		YGNodeMarkDirty(node);
+	}
+}
+
+bool Layout::UpdateMetrics(Layout::Metrics& metrics) {
+	if (!YGNodeGetHasNewLayout(node)) {
+		return false;
+	}
+	metrics.frame = Rect{
+		Point {
+			YGValueToFloat(YGNodeLayoutGetLeft(node)),
+			YGValueToFloat(YGNodeLayoutGetTop(node))
+		},
+		Size {
+			YGValueToFloat(YGNodeLayoutGetWidth(node)),
+			YGValueToFloat(YGNodeLayoutGetHeight(node))
+		}
+	};
+	metrics.borderWidth = EdgeInsets{
+		YGValueToFloat(YGNodeLayoutGetBorder(node, YGEdgeLeft)),
+		YGValueToFloat(YGNodeLayoutGetBorder(node, YGEdgeTop)),
+		YGValueToFloat(YGNodeLayoutGetBorder(node, YGEdgeRight)),
+		YGValueToFloat(YGNodeLayoutGetBorder(node, YGEdgeBottom))
+	};
+	metrics.contentInsets = metrics.borderWidth + EdgeInsets{
+		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeLeft)),
+		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeTop)),
+		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeRight)),
+		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeBottom))
+	};
+	metrics.overflowInset = {};
+	metrics.visible = YGNodeStyleGetDisplay(node) != YGDisplayNone;
+	YGNodeSetHasNewLayout(node, false);
+	return true;
+}
+
+Layout::Overflow Layout::GetOverflow() {
+	return (Layout::Overflow)YGNodeStyleGetOverflow(node);
+}
+
+void Layout::SetVisible(bool visible) {
+	if (visible) {
+		YGNodeStyleSetDisplay(node, YGDisplayFlex);
+	}
+	else {
+		YGNodeStyleSetDisplay(node, YGDisplayNone);
 	}
 }
 

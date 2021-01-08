@@ -43,8 +43,9 @@ namespace Rml {
 static bool BuildToken(String& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline, Style::TextTransform text_transformation);
 static bool LastToken(const char* token_begin, const char* string_end, bool collapse_white_space, bool break_at_endline);
 
-ElementText::ElementText(const String& tag)
+ElementText::ElementText(const String& tag, const String& text_)
 	: Element(tag)
+	, text(text_)
 	, decoration() {
 	GetLayout().SetElementText(this);
 }
@@ -55,7 +56,6 @@ ElementText::~ElementText()
 void ElementText::SetText(const String& _text) {
 	if (text != _text) {
 		text = _text;
-		GetLayout().MarkDirty();
 		DirtyLayout();
 	}
 }
@@ -93,8 +93,7 @@ void ElementText::OnRender()
 		GenerateDecoration(font_face_handle);
 	}
 
-	const Point translation = GetPaddingOffset();
-	
+	const Point translation = GetOffset() + metrics.borderWidth;
 	if (decoration_under) {
 		decoration.Render(translation);
 	}
@@ -299,7 +298,6 @@ void ElementText::OnPropertyChange(const PropertyIdSet& changed_properties)
 	if (font_face_changed)
 	{
 		// We have to let our document know we need to be regenerated.
-		GetLayout().MarkDirty();
 		DirtyLayout();
 	}
 	else if (colour_changed)

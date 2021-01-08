@@ -49,7 +49,7 @@ void ElementBackgroundBorder::Render(Element * element)
 	}
 
 	if (geometry)
-		geometry.Render(element->GetBorderOffset());
+		geometry.Render(element->GetOffset());
 }
 
 void ElementBackgroundBorder::DirtyBackground()
@@ -95,8 +95,7 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element)
 	);
 
 	Vector2f offset(0,0);
-	const Layout& box = element->GetLayout();
-	GeometryUtilities::GenerateBackgroundBorder(&geometry, box, offset, radii, background_color, border_colors);
+	GeometryUtilities::GenerateBackgroundBorder(&geometry, element->GetMetrics(), offset, radii, background_color, border_colors);
 	geometry.ReleaseCompiledGeometry();
 }
 

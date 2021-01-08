@@ -77,13 +77,13 @@ void GeometryUtilities::GenerateQuad(Vertex* vertices, int* indices, Vector2f or
 	indices[5] = index_offset + 2;
 }
 
-void GeometryUtilities::GenerateBackgroundBorder(Geometry* geometry, const Layout& box, Vector2f offset, Vector4f border_radius, Colourb background_colour, const Colourb* border_colours)
+void GeometryUtilities::GenerateBackgroundBorder(Geometry* geometry, const Layout::Metrics& metrics, Vector2f offset, Vector4f border_radius, Colourb background_colour, const Colourb* border_colours)
 {
 	Vector<Vertex>& vertices = geometry->GetVertices();
 	Vector<int>& indices = geometry->GetIndices();
 
 	CornerSizes corner_sizes{ border_radius.x, border_radius.y, border_radius.z, border_radius.w };
-	GeometryBackgroundBorder::Draw(vertices, indices, corner_sizes, box, offset, background_colour, border_colours);
+	GeometryBackgroundBorder::Draw(vertices, indices, corner_sizes, metrics, offset, background_colour, border_colours);
 }
 
 } // namespace Rml

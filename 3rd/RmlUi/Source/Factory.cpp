@@ -206,7 +206,7 @@ bool Factory::InstanceElementText(Element* parent, const String& text)
 		if (has_data_expression)
 			attributes.emplace("data-text", Variant());
 
-		ElementPtr element(new ElementText("#text"));
+		ElementPtr element(new ElementText("#text", text));
 		if (!element)
 		{
 			Log::Message(Log::LT_ERROR, "Failed to instance text element '%s', instancer returned nullptr.", text.c_str());

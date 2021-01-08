@@ -127,7 +127,6 @@ enum class PropertyId : uint8_t
 	MinHeight,
 	MaxHeight,
 	LineHeight,
-	Visibility,
 	Color,
 	ImageColor,
 	FontFamily,

@@ -47,7 +47,7 @@ bool StyleSheetNodeSelectorEmpty::IsApplicable(const Element* element, int RMLUI
 
 	for (int i = 0; i < element->GetNumChildren(); ++i)
 	{
-		if (element->GetChild(i)->GetDisplay() != Style::Display::None)
+		if (element->GetChild(i)->IsVisible())
 			return false;
 	}
 

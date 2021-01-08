@@ -201,13 +201,14 @@ void ElementBackgroundImage::Reload() {
 	Tile tile;
 	tile.align[0] = Style::LengthPercentage(Style::LengthPercentage::Percentage, 0.0f);
 	tile.align[1] = Style::LengthPercentage(Style::LengthPercentage::Percentage, 0.0f);
+	Layout::Metrics const& metrics = element->GetMetrics();
 	tile.GenerateGeometry(
 		geometry->GetVertices(),
 		geometry->GetIndices(),
 		element,
 		*texture,
 		Vector2f(0, 0), 
-		element->GetLayout().GetPaddingSize()
+		metrics.frame.size + metrics.borderWidth
 	);
 }
 
@@ -217,7 +218,7 @@ void ElementBackgroundImage::Render() {
 		Reload();
 	}
 	if (geometry) {
-		geometry->Render(element->GetPaddingOffset());
+		geometry->Render(element->GetOffset() + element->GetMetrics().borderWidth);
 	}
 }
 

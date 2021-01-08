@@ -58,8 +58,7 @@ bool StyleSheetNodeSelectorOnlyChild::IsApplicable(const Element* element, int R
 			continue;
 
 		// Skip the child if it is trivial.
-		if (dynamic_cast< const ElementText* >(element) != nullptr ||
-			child->GetDisplay() == Style::Display::None)
+		if (dynamic_cast< const ElementText* >(element) != nullptr || !child->IsVisible())
 			continue;
 
 		return false;

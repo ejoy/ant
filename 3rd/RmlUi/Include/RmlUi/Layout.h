@@ -36,9 +36,29 @@ namespace Rml {
 
 class ElementText;
 
-class RMLUICORE_API Layout
-{
+class RMLUICORE_API Layout {
 public:
+	struct Metrics {
+		Rect frame;
+		EdgeInsets contentInsets{};
+		EdgeInsets borderWidth{};
+		EdgeInsets overflowInset{};
+		bool visible{};
+
+		Rect getContentFrame() const {
+			return Rect {
+				Point {contentInsets.left, contentInsets.top},
+				frame.size - contentInsets
+			};
+		}
+		bool operator==(const Metrics& rhs) const {
+			return std::tie(frame, contentInsets, borderWidth, visible) == std::tie(rhs.frame, rhs.contentInsets, rhs.borderWidth, visible);
+		}
+		bool operator!=(const Metrics& rhs) const {
+			return !(*this == rhs);
+		}
+	};
+
 	enum class Area {
 		Margin,
 		Border,
@@ -52,6 +72,12 @@ public:
 		LEFT = 3
 	};
 
+	enum class Overflow {
+		Visible,
+		Hidden,
+		Scroll,
+	};
+
 	Layout();
 	~Layout();
 
@@ -60,13 +86,6 @@ public:
 
 	Layout& operator=(const Layout&) = delete;
 	Layout& operator=(Layout&&) = delete;
-
-	float GetEdge(Area area, Edge edge) const;
-	Size GetPaddingSize() const;
-	Size GetContentSize() const;
-
-	Size GetSize() const;
-	Point GetOffset() const;
 
 	void CalculateLayout(Size const& size);
 
@@ -81,6 +100,9 @@ public:
 	void SetElementText(ElementText* element);
 	void MarkDirty();
 	std::string ToString() const;
+	bool UpdateMetrics(Layout::Metrics& metrics);
+	Overflow GetOverflow();
+	void SetVisible(bool visible);
 
 private:
 	YGNodeRef node;

@@ -31,10 +31,9 @@
 
 #include "../Include/RmlUi/Types.h"
 #include "../Include/RmlUi/Vertex.h"
+#include "../Include/RmlUi/Layout.h"
 
 namespace Rml {
-
-class Layout;
 
 // Ordered by top, right, bottom, left.
 using EdgeSizes = Array<float, 4>;
@@ -56,7 +55,7 @@ public:
 	/// @param[in] offset Offset the position of the generated vertices.
 	/// @param[in] background_color Color of the background, set alpha to zero to not generate a background.
 	/// @param[in] border_colors Pointer to a four-element array of border colors in top-right-bottom-left order, or nullptr to not generate borders.
-	static void Draw(Vector<Vertex>& vertices, Vector<int>& indices, CornerSizes radii, const Layout& box, Vector2f offset, Colourb background_color, const Colourb* border_colors);
+	static void Draw(Vector<Vertex>& vertices, Vector<int>& indices, CornerSizes radii, const Layout::Metrics& metrics, Vector2f offset, Colourb background_color, const Colourb* border_colors);
 
 private:
 	enum Corner { TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT };

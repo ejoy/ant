@@ -72,13 +72,10 @@ struct Color {
 	{ }
 };
 
-enum class Display : uint8_t { Flex, None };
 enum class Position : uint8_t { Static, Relative, Absolute };
 
 using ZIndex = NumberAuto;
 
-enum class Overflow : uint8_t { Visible, Hidden, Scroll };
-enum class Visibility : uint8_t { Visible, Hidden };
 enum class FontStyle : uint8_t { Normal, Italic };
 enum class FontWeight : uint8_t { Normal, Bold };
 enum class TextAlign : uint8_t { Left, Right, Center, Justify };
@@ -104,15 +101,10 @@ enum class OriginY : uint8_t { Top, Center, Bottom };
 
 struct ComputedValues
 {
-	Display display = Display::Flex;
-	Overflow overflow = Overflow::Visible;
-
 	Colourb border_top_color{ 255, 255, 255 }, border_right_color{ 255, 255, 255 }, border_bottom_color{ 255, 255, 255 }, border_left_color{ 255, 255, 255 };
 	float border_top_left_radius = 0, border_top_right_radius = 0, border_bottom_right_radius = 0, border_bottom_left_radius = 0;
 
 	ZIndex z_index = { ZIndex::Auto };
-
-	Visibility visibility = Visibility::Visible;
 
 	Colourb color = Colourb(255, 255, 255);
 	Colourb image_color = Colourb(255, 255, 255);
@@ -157,14 +149,6 @@ struct ComputedValues
 	std::optional<TextStroke> text_stroke;
 };
 }
-
-
-// Resolves a computed LengthPercentage value to the base unit 'px'. 
-// Percentages are scaled by the base_value.
-// Note: Auto must be manually handled during layout, here it returns zero.
-RMLUICORE_API float ResolveValue(Style::LengthPercentageAuto length, float base_value);
-RMLUICORE_API float ResolveValue(Style::LengthPercentage length, float base_value);
-
 
 using ComputedValues = Style::ComputedValues;
 

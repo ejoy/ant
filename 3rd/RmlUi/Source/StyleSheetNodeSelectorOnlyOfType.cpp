@@ -58,8 +58,7 @@ bool StyleSheetNodeSelectorOnlyOfType::IsApplicable(const Element* element, int 
 			continue;
 
 		// Skip the child if it does not share our tag.
-		if (child->GetTagName() != element->GetTagName() ||
-			child->GetDisplay() == Style::Display::None)
+		if (child->GetTagName() != element->GetTagName() || !child->IsVisible())
 			continue;
 
 		// We've found a similarly-tagged child to our element; selector fails.

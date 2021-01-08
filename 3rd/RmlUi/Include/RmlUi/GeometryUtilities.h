@@ -32,11 +32,11 @@
 #include "Header.h"
 #include "Types.h"
 #include "Vertex.h"
+#include "Layout.h"
 #include "ComputedValues.h"
 
 namespace Rml {
 
-class Layout;
 class Geometry;
 
 /**
@@ -75,7 +75,7 @@ public:
 	/// @param[in] border_radius The border radius in pixel units in the following order: top-left, top-right, bottom-right, bottom-left.
 	/// @param[in] background_colour The colour applied to the background, set alpha to zero to not generate the background.
 	/// @param[in] border_colours Pointer to a four-element array of border colors in top-right-bottom-left order, or nullptr to not generate borders.
-	static void GenerateBackgroundBorder(Geometry* geometry, const Layout& box, Vector2f offset, Vector4f border_radius, Colourb background_colour, const Colourb* border_colours = nullptr);
+	static void GenerateBackgroundBorder(Geometry* geometry, const Layout::Metrics& metrics, Vector2f offset, Vector4f border_radius, Colourb background_colour, const Colourb* border_colours = nullptr);
 
 private:
 	GeometryUtilities();

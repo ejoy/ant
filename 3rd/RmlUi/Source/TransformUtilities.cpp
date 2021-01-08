@@ -83,21 +83,21 @@ static inline float ResolveLengthPercentage(NumericValue value, Element& e, floa
 static inline float ResolveWidth(NumericValue value, Element& e) noexcept
 {
 	if (value.unit & (Property::PX | Property::NUMBER)) return value.number;
-	return ResolveLengthPercentage(value, e, e.GetLayout().GetSize().w);
+	return ResolveLengthPercentage(value, e, e.GetMetrics().frame.size.w);
 }
 
 /// Resolve a numeric property value with the element's height as relative base value.
 static inline float ResolveHeight(NumericValue value, Element& e) noexcept
 {
 	if (value.unit & (Property::PX | Property::NUMBER)) return value.number;
-	return ResolveLengthPercentage(value, e, e.GetLayout().GetSize().h);
+	return ResolveLengthPercentage(value, e, e.GetMetrics().frame.size.h);
 }
 
 /// Resolve a numeric property value with the element's depth as relative base value.
 static inline float ResolveDepth(NumericValue value, Element& e) noexcept
 {
 	if (value.unit & (Property::PX | Property::NUMBER)) return value.number;
-	Size size = e.GetLayout().GetSize();
+	Size size = e.GetMetrics().frame.size;
 	return ResolveLengthPercentage(value, e, Math::Max(size.w, size.h));
 }
 

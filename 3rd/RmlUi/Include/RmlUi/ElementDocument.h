@@ -140,9 +140,6 @@ private:
 	/// Searches forwards or backwards for a focusable element in the given substree
 	Element* SearchFocusSubtree(Element* element, bool forward);
 
-	/// Sets the dirty flag on the layout so the document will format its children before the next render.
-	void DirtyLayout() override;
-
 	/// Updates all sizes defined by the 'lp' unit.
 	void DirtyDpProperties();
 

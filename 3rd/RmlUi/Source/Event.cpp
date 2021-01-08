@@ -76,7 +76,7 @@ void Event::InitMouseEvent() {
 	parameters["clientX"] = client.x;
 	parameters["clientY"] = client.y;
 
-	Point offset = client - target_element->GetBorderOffset();
+	Point offset = client - target_element->GetOffset();
 	if (target_element->Project(offset)) {
 		parameters["offsetX"] = offset.x;
 		parameters["offsetY"] = offset.y;
@@ -84,7 +84,7 @@ void Event::InitMouseEvent() {
 
 	ElementDocument* document = target_element->GetOwnerDocument();
 	if (document) {
-		Point page = client - document->GetBorderOffset();
+		Point page = client - document->GetOffset();
 		if (document->Project(page)) {
 			parameters["pageX"] = page.x;
 			parameters["pageY"] = page.y;
