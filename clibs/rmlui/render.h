@@ -69,6 +69,9 @@ public:
     void Begin();
     void Frame();
 
+public:
+    void UpdateViewRect();
+
 private:
     Rml::Matrix4f           mTransform;
     const RmlContext*       mcontext;

@@ -124,6 +124,19 @@ lRenderFrame(lua_State* L){
     return 0;
 }
 
+int
+lrmlui_update_viewrect(lua_State *L){
+    if (g_wrapper){
+        Rect &r = g_wrapper->context.viewrect;
+        r.x = luaL_checknumber(L, 1);
+        r.y = luaL_checknumber(L, 2);
+        r.w = luaL_checknumber(L, 3);
+        r.h = luaL_checknumber(L, 4);
+        g_wrapper->interface.renderer.UpdateViewRect();
+    }
+    return 0;
+}
+
 extern "C"
 #if defined(_WIN32)
 __declspec(dllexport)
@@ -135,6 +148,7 @@ luaopen_rmlui(lua_State* L) {
         { "init",     lrmlui_init },
         { "shutdown", lrmlui_shutdown },
         { "update",   lrmlui_update },
+        { "update_viewrect", lrmlui_update_viewrect},
         { nullptr, nullptr },
     };
     luaL_newlib(L, l);
