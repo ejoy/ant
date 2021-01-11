@@ -1,4 +1,5 @@
 import "@ant.general"
+import "@ant.rmlui"
 import "@ant.render"
 import "@ant.animation"
 import "@ant.collision"
@@ -11,6 +12,7 @@ import "@ant.effect"
 
 system "init_system"
     .implement "init_system.lua"
+    .require_system "ant.rmlui|rmlui_system"
     .require_policy "ant.general|name"
     .require_policy "ant.render|render"
     .require_policy "ant.render|light"

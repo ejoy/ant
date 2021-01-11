@@ -17,6 +17,14 @@ function cb.update(delta)
     task.update(delta)
     event "update"
 end
+
+function cb.exit()
+    for _, w in ipairs(worlds) do
+        w.exit()
+    end
+    event "exit"
+end
+
 function cb.mouse_wheel(x, y, delta)
     local mvp = imgui.GetMainViewport()
     x, y = x - mvp.WorkPos[1], y - mvp.WorkPos[2]

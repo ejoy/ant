@@ -56,7 +56,9 @@ function event.update()
     --     entities = e
     -- end
 end
-
+function event.exit()
+    --w.exit()
+end
 -- function event.prefab_viewer()
 --     for _ in imgui_windows("prefab_viewer", wndflags) do
 --         w.show()

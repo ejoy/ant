@@ -139,7 +139,7 @@ local function choose_project()
         imgui.cursor.SameLine()
         if imgui.widget.Button("Quit") then
             local res_root_str = tostring(fs.path "":localpath())
-            global_data.project_root = fs.path(string.sub(res_root_str, 1, #res_root_str - 1))
+            global_data.project_root = lfs.path(string.sub(res_root_str, 1, #res_root_str - 1))
             global_data.packages = get_package(lfs.absolute(lfs.path(arg[0])):remove_filename(), false)
             imgui.windows.CloseCurrentPopup();
             show_mount_dialog = true
@@ -189,7 +189,8 @@ local function show_dock_space(offset_x, offset_y)
     imgui.windows.End()
     return x,y,w,h
 end
-
+local iRmlUi     = world:interface "ant.rmlui|rmlui"
+local irq        = world:interface "ant.render|irenderqueue"
 function m:ui_update()
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.2, 0.2, 0.2, 1)
@@ -217,6 +218,9 @@ function m:ui_update()
         local mvp = imgui.GetMainViewport()
         local viewport = {x = x - mvp.WorkPos[1], y = y - mvp.WorkPos[2] + uiconfig.MenuHeight, w = width, h = height}
         irq.set_view_rect(world:singleton_entity_id "main_queue", viewport)
+
+        iRmlUi.update_viewrect(viewport.x, viewport.y, viewport.w, viewport.h)
+
         local secondViewport = {x = viewport.x + (width - second_view_width), y = viewport.y + (height - second_vew_height), w = second_view_width, h = second_vew_height}
         irq.set_view_rect(camera_mgr.second_view, secondViewport)
         world:pub {"ViewportDirty", viewport}
@@ -406,6 +410,7 @@ function m:widget()
         end
     end
     if anim_entity then
+        bgfx.dbg_text_print(0, 0, 0x0f, "Animtaion")
         local desc={vb={}, ib={}}
         geometry_drawer.draw_skeleton(anim_entity.skeleton._handle, anim_entity.pose_result, DEFAULT_COLOR, anim_entity.transform, desc, anim_view.get_current_joint())
         local rc = world[skeleton_eid]._rendercache

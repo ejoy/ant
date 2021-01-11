@@ -105,10 +105,10 @@ local function from_runtime_event(runtime_event)
         for _, ev in ipairs(runtime_event.event) do
             for _, e in ipairs(ev.event_list) do
                 e.name_ui = {text = e.name}
-                if e.event_type == "Effect" or e.event_type == "Sound"  then
+                if e.event_type == "Sound" or e.event_type == "Effect" then
                     e.rid_ui = {e.rid}
-                end
-                if e.event_type == "Collision" then
+                    e.asset_path_ui = {text = e.asset_path}
+                elseif e.event_type == "Collision" then
                     e.collision.enable_ui = {e.collision.enable}
                     e.collision.offset_ui = {
                         position = {e.collision.offset.position[1],e.collision.offset.position[2],e.collision.offset.position[3],speed = 0.01},
@@ -235,27 +235,41 @@ local function add_event(et)
         event_type = et,
         name = event_name,
         rid = (et == "Effect" or et == "Sound") and -1 or nil,
-        name_ui = {text = event_name},
-        rid_ui = {-1}
-    }
-    
-    if et == "Effect" then
-        event_list[#event_list].effect_path_ui = {text = ""}
-        event_list[#event_list].link_info = {
+        asset_path = (et == "Effect" or et == "Sound") and "" or nil,
+        link_info = (et == "Effect") and {
             joint_name = "None",
             joint_index = -1
-        }
-    end
-
-    if et == "Collision" then
-        event_list[#event_list].collision = {
+        } or nil,
+        name_ui = {text = event_name},
+        rid_ui = {-1},
+        asset_path_ui = (et == "Effect" or et == "Sound") and {text = ""} or nil,
+        collision = (et == "Collision") and {
             collider = current_collider,
             offset = {position = {0,0,0}, rotate = {0,0,0}},
             enable = false,
             enable_ui = {false},
             offset_ui = {position = {0,0,0,speed = 0.01}, rotate = {0,0,0,speed = 0.01}},
-        }
-    end
+        } or nil
+    }
+    
+    -- if et == "Effect" then
+    --     event_list[#event_list].asset_path = ""
+    --     event_list[#event_list].asset_path_ui = {text = ""}
+    --     event_list[#event_list].link_info = {
+    --         joint_name = "None",
+    --         joint_index = -1
+    --     }
+    -- end
+
+    -- if et == "Collision" then
+    --     event_list[#event_list].collision = {
+    --         collider = current_collider,
+    --         offset = {position = {0,0,0}, rotate = {0,0,0}},
+    --         enable = false,
+    --         enable_ui = {false},
+    --         offset_ui = {position = {0,0,0,speed = 0.01}, rotate = {0,0,0,speed = 0.01}},
+    --     }
+    -- end
     set_event_dirty(1)
 end
 
@@ -446,7 +460,10 @@ local function show_current_event()
         if imgui.widget.Button("SelectEffect") then
             local path = uiutils.get_open_file_path("Prefab", ".prefab")
             if path then
-                current_event.effect_path_ui.text = path
+                local global_data = require "common.global_data"
+                local lfs         = require "filesystem.local"
+                local rp = lfs.relative(lfs.path(path), global_data.project_root)
+                current_event.effect_path_ui.text = global_data.package_path .. tostring(rp)
             end
         end
         imgui.widget.PropertyLabel("EffectPath")
@@ -947,8 +964,6 @@ function m.show()
                     iani.set_clips(current_eid, current_anim_name, path)
                     current_clip_file = path
                     current_anim.clips, current_anim.groups = from_runtime_clip(get_runtime_clips())
-                    --iani.play(current_eid, current_anim_name, 0, get_runtime_clips())
-                    --iani.play(current_eid, current_anim_name, 0)
                     set_clips_dirty(false)
                 end
             end
@@ -962,12 +977,6 @@ function m.show()
             if imgui.widget.Button("LoadEvent") then
                 local path = widget_utils.get_open_file_path("Event", ".event")
                 if path then
-                    --local filename = tostring(path[1])--fs.path(path[1]):localpath()
-                    -- local f = assert(lfs.open(path))
-                    -- local data = f:read "a"
-                    -- f:close()
-                    -- local events = datalist.parse(data)
-
                     iani.set_events(current_eid, current_anim_name, path)
                     current_event_file = path
                     current_anim.key_event = from_runtime_event(get_runtime_events())

@@ -156,6 +156,10 @@ function iRmlUi.initialize(w, h)
     req("initialize", w, h)
 end
 
+function iRmlUi.update_viewrect(x, y, w, h)
+    rmlui.update_viewrect(x, y, w, h)
+end
+
 function iRmlUi.debugger(open)
     req("debugger", open)
 end

@@ -60,7 +60,10 @@ function m:init()
 end
 
 function m:post_init()
-
+    local vr = irq.view_rect(world:singleton_entity_id "main_queue")
+    local iRmlUi = world:interface "ant.rmlui|rmlui"
+	iRmlUi.initialize(vr.w, vr.w)
+	iRmlUi.preload_dir "/pkg/tools.prefab_editor/res/ui"
 end
 
 function m:data_changed()

@@ -142,8 +142,22 @@ function m.set_emitter(emitter_eid)
     emitter_data = tp.template.data.emitter
     create_emitter_panel()
 end
-
+local effect        = require "effect"
+local stat_window
 function m.show()
+    -- if not stat_window then
+    --     local iRmlUi = world:interface "ant.rmlui|rmlui"
+    --     stat_window = iRmlUi.open "particle_stat.rml"
+    --     -- stat_window.postMessage("hello")
+    --     -- stat_window.addEventListener("message", function(event)
+    --     --     print(event.data)
+    --     -- end)
+    -- end
+    -- local stat = effect.particle_stat()
+    -- if stat then
+    --     stat_window.postMessage("particle num : " .. math.floor(stat.count))
+    -- end
+    --effect
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1] + viewport.WorkSize[1] - uiconfig.PropertyWidgetWidth, viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
     imgui.windows.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
