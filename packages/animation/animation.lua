@@ -84,15 +84,17 @@ local function process_keyframe_event(task, poseresult)
 					if col.joint_index == 0 then
 						local origin_s, _, _ = math3d.srt(iom.worldmat(col.eid))
 						iom.set_srt(col.eid, math3d.matrix{ s = origin_s, r = event.collision.offset.rotate, t = event.collision.offset.position })
-						--print("transform 1")
 					else
 						local final_mat = math3d.mul(math3d.matrix{t = event.collision.offset.position, r = event.collision.offset.rotate, s = {1,1,1}}, iom.worldmat(col.eid))
 						iom.set_srt(col.eid, final_mat)
-						--print("transform 2")
 					end
 					if event.collision.enable and icoll.test(world[coll.eid]) then
 						print("Overlaped!")
 					end
+				end
+			elseif event.event_type == "Effect" then
+				if not event.effect_eid and event.asset_path then
+					
 				end
 			end
 		end

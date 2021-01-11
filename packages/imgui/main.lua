@@ -115,6 +115,7 @@ local function start(w, h, callback)
 
 	cb.init = cb.init or empty_function
 	cb.update = cb.update or empty_function
+	cb.exit = cb.exit or empty_function
 	cb.mouse_wheel = cb.mouse_wheel or empty_function
 	cb.mouse = cb.mouse or empty_function
 	cb.keyboard = cb.keyboard or empty_function
@@ -163,7 +164,8 @@ local function start(w, h, callback)
         rhwi.frame()
 		thread.sleep(0.01)
 	end
-    imgui.Destroy()
+	cb.exit()
+	imgui.Destroy()
 	rhwi.shutdown()
     print "exit"
 end
