@@ -49,7 +49,6 @@ enum class Character : char32_t { Null, Replacement = 0xfffd };
 }
 
 #include "Colour.h"
-#include "Vector2.h"
 #include "Vector3.h"
 #include "Vector4.h"
 #include "Matrix4.h"
@@ -60,8 +59,6 @@ namespace Rml {
 // Color and linear algebra
 using Colourf = Colour< float, 1 >;
 using Colourb = Colour< byte, 255 >;
-using Vector2i = Vector2< int >;
-using Vector2f = Vector2< float >;
 using Vector3f = Vector3< float >;
 using Vector4f = Vector4< float >;
 using ColumnMajorMatrix4f = Matrix4< float, ColumnMajorStorage< float > >;
@@ -89,7 +86,6 @@ enum class FamilyId : int;
 // Types for external interfaces.
 using FileHandle = uintptr_t;
 using TextureHandle = uintptr_t;
-using CompiledGeometryHandle = uintptr_t;
 using FontFaceHandle = uintptr_t;
 using TextEffectsHandle = uintptr_t;
 
@@ -154,8 +150,10 @@ struct Rect {
 	float y() const { return origin.y; }
 	float width() const { return size.w; }
 	float height() const { return size.h; }
-	float right() const { return x() + width(); }
-	float bottom() const { return y() + height(); }
+	float left() const { return origin.x; }
+	float top() const { return origin.y; }
+	float right() const { return left() + width(); }
+	float bottom() const { return top() + height(); }
 	bool IsEmpty() const { return size.IsEmpty(); }
 	void SetRect(float x, float y, float width, float height) {
 		origin.SetPoint(x, y);
@@ -180,24 +178,37 @@ struct Rect {
 	}
 };
 
+template <typename T>
 struct EdgeInsets {
-	float left{};
-	float top{};
-	float right{};
-	float bottom{};
+	T left{};
+	T top{};
+	T right{};
+	T bottom{};
+	T& operator[](size_t i) const {
+		return ((T*)this)[i];
+	}
 	bool operator==(const EdgeInsets& rhs) const {
 		return std::tie(left, top, right, bottom) == std::tie(rhs.left, rhs.top, rhs.right, bottom);
 	}
 	bool operator!=(const EdgeInsets& rhs) const {
 		return !(*this == rhs);
 	}
-	EdgeInsets operator+(const EdgeInsets& rhs) {
-		return EdgeInsets {
-			left + rhs.left,
-			top + rhs.top,
-			right + rhs.right,
-			bottom + rhs.bottom,
-		};
+};
+
+template <typename T>
+struct CornerInsets {
+	T topLeft{};
+	T topRight{};
+	T bottomRight{};
+	T bottomLeft{};
+	T& operator[](size_t i) const {
+		return ((T*)this)[i];
+	}
+	bool operator==(const CornerInsets& rhs) const {
+		return std::tie(topLeft, topRight, bottomLeft, bottomRight) == std::tie(rhs.topLeft, rhs.topRight, rhs.bottomLeft, bottomRight);
+	}
+	bool operator!=(const CornerInsets& rhs) const {
+		return !(*this == rhs);
 	}
 };
 
@@ -238,38 +249,38 @@ inline Size operator+(const Size& lhs, const Size& rhs) {
 inline Size operator-(const Size& lhs, const Size& rhs) {
 	return Size(lhs.w - rhs.w, lhs.h - rhs.h);
 }
-inline Size operator+(const Size& lhs, const Vector2f& rhs) {
-	return Size(lhs.w + rhs[0], lhs.h + rhs[1]);
-}
-inline Size operator-(const Size& lhs, const Vector2f& rhs) {
-	return Size(lhs.w - rhs[0], lhs.h - rhs[1]);
-}
-inline Vector2f operator+(const Vector2f& lhs, const Size& rhs) {
-	return Vector2f(lhs[0] + rhs.w, lhs[1] + rhs.h);
-}
-inline Vector2f operator-(const Vector2f& lhs, const Size& rhs) {
-	return Vector2f(lhs[0] - rhs.w, lhs[1] - rhs.h);
+
+inline EdgeInsets<float> operator+(const EdgeInsets<float>& lhs, const EdgeInsets<float>& rhs) {
+	return EdgeInsets<float> {
+		lhs.left + rhs.left,
+		lhs.top + rhs.top,
+		lhs.right + rhs.right,
+		lhs.bottom + rhs.bottom,
+	};
 }
 
-inline Point operator+(const Point& lhs, const EdgeInsets& rhs) {
+inline Point operator+(const Point& lhs, const EdgeInsets<float>& rhs) {
 	return Point(lhs.x + rhs.left, lhs.y + rhs.top);
 }
-inline Point operator-(const Point& lhs, const EdgeInsets& rhs) {
+inline Point operator-(const Point& lhs, const EdgeInsets<float>& rhs) {
 	return Point(lhs.x - rhs.left, lhs.y - rhs.top);
 }
-inline Size operator+(const Size& lhs, const EdgeInsets& rhs) {
+inline Size operator+(const Size& lhs, const EdgeInsets<float>& rhs) {
 	return Size(lhs.w + rhs.left + rhs.right, lhs.h + rhs.top + rhs.bottom);
 }
-inline Size operator-(const Size& lhs, const EdgeInsets& rhs) {
+inline Size operator-(const Size& lhs, const EdgeInsets<float>& rhs) {
 	return Size(lhs.w - rhs.left - rhs.right, lhs.h - rhs.top - rhs.bottom);
 }
-inline Rect operator+(const Rect& lhs, const EdgeInsets& rhs) {
+inline Rect operator+(const Rect& lhs, const EdgeInsets<float>& rhs) {
 	return Rect(lhs.origin + rhs, lhs.size + rhs);
 }
-inline Rect operator-(const Rect& lhs, const EdgeInsets& rhs) {
+inline Rect operator-(const Rect& lhs, const EdgeInsets<float>& rhs) {
 	return Rect(lhs.origin - rhs, lhs.size - rhs);
 }
 
+inline Point operator*(const Point& lhs, const Point& rhs) {
+	return Point(lhs.x * rhs.x, lhs.y * rhs.y);
+}
 } // namespace Rml
 
 

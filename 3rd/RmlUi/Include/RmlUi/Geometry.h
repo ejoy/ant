@@ -37,9 +37,7 @@ namespace Rml {
 
 class Context;
 class Element;
-class RenderInterface;
 struct Texture;
-using GeometryDatabaseHandle = uint32_t;
 
 /**
 	A helper object for holding an array of vertices and indices, and compiling it as necessary when rendered.
@@ -58,20 +56,15 @@ public:
 	void Render(Point translation);
 	Vector< Vertex >& GetVertices();
 	Vector< int >& GetIndices();
-	const Texture* GetTexture() const;
-	void SetTexture(const Texture* texture);
+	void SetTexture(SharedPtr<Texture> texture);
 	void Release();
-	void ReleaseCompiledGeometry();
 	explicit operator bool() const;
 
 private:
 	void MoveFrom(Geometry& other);
-	Vector< Vertex > vertices;
-	Vector< int > indices;
-	const Texture* texture = nullptr;
-	CompiledGeometryHandle compiled_geometry = 0;
-	bool compile_attempted = false;
-	GeometryDatabaseHandle database_handle;
+	Vector<Vertex> vertices;
+	Vector<int> indices;
+	SharedPtr<Texture> texture;
 };
 
 using GeometryList = Vector< Geometry >;

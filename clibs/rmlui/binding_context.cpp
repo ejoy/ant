@@ -10,7 +10,6 @@ LUA2STRUCT(struct shader, font, font_outline, font_shadow, font_glow, image);
 LUA2STRUCT(struct shader_info, prog, uniforms);
 LUA2STRUCT(struct shader_info::uniforms, handle, name);
 LUA2STRUCT(struct Rect, x, y, w, h);
-LUA2STRUCT(Rml::Vector2i, x, y);
 
 RmlContext::RmlContext(lua_State *L, int idx){
     lua_struct::unpack(L, idx, *this);

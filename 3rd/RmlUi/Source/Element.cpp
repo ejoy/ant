@@ -187,7 +187,7 @@ void Element::Render()
 	}
 
 	// Set up the clipping region for this element.
-	GetContext()->SetActiveClipRegion(GetClippingRegion());
+	GetRenderInterface()->SetScissorRegion(GetClippingRegion());
 	meta->background_border.Render(this);
 	meta->background_image.Render();
 	OnRender();
@@ -981,25 +981,76 @@ Element* Element::GetElementById(const String& id)
 		return GetOwnerDocument();
 	else if (id == "#parent")
 		return this->parent;
-	else
+	Element* search_root = GetOwnerDocument();
+	if (search_root == nullptr)
+		search_root = this;
+		
+	// Breadth first search on elements for the corresponding id
+	typedef Queue<Element*> SearchQueue;
+	SearchQueue search_queue;
+	search_queue.push(search_root);
+
+	while (!search_queue.empty())
 	{
-		Element* search_root = GetOwnerDocument();
-		if (search_root == nullptr)
-			search_root = this;
-		return ElementUtilities::GetElementById(search_root, id);
+		Element* element = search_queue.front();
+		search_queue.pop();
+		
+		if (element->GetId() == id)
+		{
+			return element;
+		}
+		
+		// Add all children to search
+		for (int i = 0; i < element->GetNumChildren(); i++)
+			search_queue.push(element->GetChild(i));
 	}
+	return nullptr;
 }
 
 // Get all elements with the given tag.
 void Element::GetElementsByTagName(ElementList& elements, const String& tag)
 {
-	return ElementUtilities::GetElementsByTagName(elements, this, tag);
+	// Breadth first search on elements for the corresponding id
+	typedef Queue< Element* > SearchQueue;
+	SearchQueue search_queue;
+	for (int i = 0; i < GetNumChildren(); ++i)
+		search_queue.push(GetChild(i));
+
+	while (!search_queue.empty())
+	{
+		Element* element = search_queue.front();
+		search_queue.pop();
+
+		if (element->GetTagName() == tag)
+			elements.push_back(element);
+
+		// Add all children to search.
+		for (int i = 0; i < element->GetNumChildren(); i++)
+			search_queue.push(element->GetChild(i));
+	}
 }
 
 // Get all elements with the given class set on them.
 void Element::GetElementsByClassName(ElementList& elements, const String& class_name)
 {
-	return ElementUtilities::GetElementsByClassName(elements, this, class_name);
+	// Breadth first search on elements for the corresponding id
+	typedef Queue< Element* > SearchQueue;
+	SearchQueue search_queue;
+	for (int i = 0; i < GetNumChildren(); ++i)
+		search_queue.push(GetChild(i));
+
+	while (!search_queue.empty())
+	{
+		Element* element = search_queue.front();
+		search_queue.pop();
+
+		if (element->IsClassSet(class_name))
+			elements.push_back(element);
+
+		// Add all children to search.
+		for (int i = 0; i < element->GetNumChildren(); i++)
+			search_queue.push(element->GetChild(i));
+	}
 }
 
 static Element* QuerySelectorMatchRecursive(const StyleSheetNodeListRaw& nodes, Element* element)
@@ -1183,8 +1234,7 @@ void Element::OnPropertyChange(const PropertyIdSet& changed_properties) {
     if (border_radius_changed ||
 		changed_properties.Contains(PropertyId::BackgroundColor) ||
 		changed_properties.Contains(PropertyId::BackgroundImage) ||
-		changed_properties.Contains(PropertyId::Opacity) ||
-		changed_properties.Contains(PropertyId::ImageColor))
+		changed_properties.Contains(PropertyId::Opacity))
 	{
 		meta->background_border.DirtyBackground();
     }
@@ -1207,8 +1257,7 @@ void Element::OnPropertyChange(const PropertyIdSet& changed_properties) {
 	// Dirty the decoration if it's changed.
 	if (border_radius_changed ||
 		changed_properties.Contains(PropertyId::BackgroundImage) ||
-		changed_properties.Contains(PropertyId::Opacity) ||
-		changed_properties.Contains(PropertyId::ImageColor))
+		changed_properties.Contains(PropertyId::Opacity))
 	{
 		meta->background_image.MarkDirty();
 	}

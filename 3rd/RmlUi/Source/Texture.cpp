@@ -27,53 +27,60 @@
  */
 
 #include "../Include/RmlUi/Texture.h"
-#include "TextureDatabase.h"
-#include "TextureResource.h"
+#include "../Include/RmlUi/RenderInterface.h"
+#include "../Include/RmlUi/Core.h"
 
 namespace Rml {
 
-// Attempts to load a texture.
-void Texture::Set(const String& source, const String& source_path)
-{
-	resource = TextureDatabase::Fetch(source, source_path);
+Texture::Texture(const String& _source)
+	: source(_source) {
+	if (!GetRenderInterface()->LoadTexture(handle, dimensions, source)) {
+		Log::Message(Log::LT_WARNING, "Failed to load texture from %s.", source.c_str());
+		handle = 0;
+		dimensions = Size(0, 0);
+	}
 }
 
-// Returns the texture's source name. This is usually the name of the file the texture was loaded from.
-const String& Texture::GetSource() const
-{
-	static String empty_string;
-	if (!resource)
-		return empty_string;
-
-	return resource->GetSource();
+Texture::~Texture() {
+	if (handle && GetRenderInterface()) {
+		GetRenderInterface()->ReleaseTexture(handle);
+		handle = 0;
+	}
 }
 
-// Returns the texture's handle. 
-TextureHandle Texture::GetHandle() const
-{
-	if (!resource)
-		return 0;
-
-	return resource->GetHandle();
+TextureHandle Texture::GetHandle() const {
+	return handle;
 }
 
-// Returns the texture's dimensions.
-Vector2i Texture::GetDimensions() const
-{
-	if (!resource)
-		return Vector2i(0, 0);
-
-	return resource->GetDimensions();
+const Size& Texture::GetDimensions() const {
+	return dimensions;
 }
 
-bool Texture::operator==(const Texture& other) const
-{
-	return resource == other.resource;
+using TextureMap = UnorderedMap<String, SharedPtr<Texture>>;
+static TextureMap textures;
+
+void Texture::Shutdown() {
+#ifdef RMLUI_DEBUG
+	// All textures not owned by the database should have been released at this point.
+	int num_leaks_file = 0;
+	for (auto& texture : textures) {
+		num_leaks_file += (texture.second.use_count() > 1);
+	}
+	if (num_leaks_file > 0) {
+		Log::Message(Log::LT_ERROR, "Textures leaked during shutdown. Total: %d.", num_leaks_file);
+	}
+#endif
+	textures.clear();
 }
 
-Texture::operator bool() const
-{
-	return static_cast<bool>(resource);
+SharedPtr<Texture> Texture::Fetch(const String& path) {
+	auto iterator = textures.find(path);
+	if (iterator != textures.end()) {
+		return iterator->second;
+	}
+	auto resource = MakeShared<Texture>(path);
+	textures[path] = resource;
+	return resource;
 }
 
 } // namespace Rml

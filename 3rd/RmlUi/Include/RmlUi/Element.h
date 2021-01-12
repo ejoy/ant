@@ -50,7 +50,6 @@ class ElementDefinition;
 class ElementDocument;
 class ElementStyle;
 class PropertyDictionary;
-class RenderInterface;
 class StyleSheet;
 class TransformState;
 struct ElementMeta;
@@ -520,15 +519,15 @@ protected:
 	ElementAttributes attributes;
 
 	// The offset this element adds to its logical children due to scrolling content.
-	Vector2f scroll_offset;
+	Point scroll_offset;
 
 	Layout layout;
 	Layout::Metrics metrics;
 	Point offset;
 
 	// And of the element's internal content.
-	Vector2f content_offset;
-	Vector2f content_box;
+	Point content_offset;
+	Point content_box;
 
 	OwnedElementList children;
 

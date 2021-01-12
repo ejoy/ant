@@ -449,7 +449,7 @@ static void GenerateKeyModifierEventParameters(Dictionary& parameters, int key_m
 	}
 }
 
-static void GenerateMouseEventParameters(Dictionary& parameters, const Vector2i& mouse_position, int button_index = -1) {
+static void GenerateMouseEventParameters(Dictionary& parameters, const Point& mouse_position, int button_index = -1) {
 	parameters.reserve(3);
 	parameters["x"] = mouse_position.x;
 	parameters["y"] = mouse_position.y;
@@ -512,7 +512,7 @@ bool ElementDocument::ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_st
 
 void ElementDocument::ProcessMouseMove(int x, int y, int key_modifier_state) {
 	// Check whether the mouse moved since the last event came through.
-	Vector2i old_mouse_position = mouse_position;
+	Point old_mouse_position = mouse_position;
 	bool mouse_moved = (x != mouse_position.x) || (y != mouse_position.y);
 	if (mouse_moved) {
 		mouse_position.x = x;
@@ -591,7 +591,8 @@ void ElementDocument::ProcessMouseButtonDown(int button_index, int key_modifier_
 		{
 			// Check for a double-click on an element; if one has occured, we send the 'dblclick' event to the hover
 			// element. If not, we'll start a timer to catch the next one.
-			float mouse_distance_squared = float((mouse_position - last_click_mouse_position).SquaredMagnitude());
+			Point distance = mouse_position - last_click_mouse_position;
+			float mouse_distance_squared = distance.x * distance.x + distance.y * distance.y;
 			float max_mouse_distance = DOUBLE_CLICK_MAX_DIST * GetContext()->GetDensityIndependentPixelRatio();
 
 			double click_time = GetSystemInterface()->GetElapsedTime();
@@ -723,8 +724,8 @@ void ElementDocument::ProcessMouseWheel(float wheel_delta, int key_modifier_stat
 	}
 }
 
-void ElementDocument::UpdateHoverChain(const Dictionary& parameters, const Dictionary& drag_parameters, const Vector2i& old_mouse_position) {
-	Point position((float)mouse_position.x, (float)mouse_position.y);
+void ElementDocument::UpdateHoverChain(const Dictionary& parameters, const Dictionary& drag_parameters, const Point& old_mouse_position) {
+	Point position = mouse_position;
 
 	// Send out drag events.
 	if (drag)

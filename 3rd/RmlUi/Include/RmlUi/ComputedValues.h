@@ -101,13 +101,12 @@ enum class OriginY : uint8_t { Top, Center, Bottom };
 
 struct ComputedValues
 {
-	Colourb border_top_color{ 255, 255, 255 }, border_right_color{ 255, 255, 255 }, border_bottom_color{ 255, 255, 255 }, border_left_color{ 255, 255, 255 };
-	float border_top_left_radius = 0, border_top_right_radius = 0, border_bottom_right_radius = 0, border_bottom_left_radius = 0;
+	EdgeInsets<Colourb> border_color;
+	CornerInsets<float> border_radius {};
 
 	ZIndex z_index = { ZIndex::Auto };
 
 	Colourb color = Colourb(255, 255, 255);
-	Colourb image_color = Colourb(255, 255, 255);
 	float opacity = 1;
 
 	String font_family;

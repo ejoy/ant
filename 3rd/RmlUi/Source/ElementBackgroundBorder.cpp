@@ -67,36 +67,21 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element)
 	const ComputedValues& computed = element->GetComputedValues();
 
 	Colourb background_color = computed.background_color;
-	Colourb border_colors[4] = {
-		computed.border_top_color,
-		computed.border_right_color,
-		computed.border_bottom_color,
-		computed.border_left_color,
-	};
+	EdgeInsets<Colourb> border_color = computed.border_color;
 	
-	// Apply opacity
+	// Apply opacity 
 	const float opacity = computed.opacity;
 	background_color.alpha = (byte)(opacity * (float)background_color.alpha);
-
-	if (opacity < 1)
-	{
+	
+	if (opacity < 1) {
 		for (int i = 0; i < 4; ++i)
-			border_colors[i].alpha = (byte)(opacity * (float)border_colors[i].alpha);
+			border_color[i].alpha = (byte)(opacity * (float)border_color[i].alpha);
 	}
 
 	geometry.GetVertices().clear();
 	geometry.GetIndices().clear();
 
-	const Vector4f radii(
-		computed.border_top_left_radius,
-		computed.border_top_right_radius,
-		computed.border_bottom_right_radius,
-		computed.border_bottom_left_radius
-	);
-
-	Vector2f offset(0,0);
-	GeometryUtilities::GenerateBackgroundBorder(&geometry, element->GetMetrics(), offset, radii, background_color, border_colors);
-	geometry.ReleaseCompiledGeometry();
+	GeometryUtilities::GenerateBackgroundBorder(geometry, element->GetMetrics(), Point(0,0), computed.border_radius, background_color, computed.border_color);
 }
 
 } // namespace Rml

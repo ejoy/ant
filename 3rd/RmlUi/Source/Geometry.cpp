@@ -31,7 +31,6 @@
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/RenderInterface.h"
-#include "GeometryDatabase.h"
 #include <utility>
 
 
@@ -39,13 +38,11 @@ namespace Rml {
 
 Geometry::Geometry()
 {
-	database_handle = GeometryDatabase::Insert(this);
 }
 
 Geometry::Geometry(Geometry&& other)
 {
 	MoveFrom(other);
-	database_handle = GeometryDatabase::Insert(this);
 }
 
 Geometry& Geometry::operator=(Geometry&& other)
@@ -60,48 +57,23 @@ void Geometry::MoveFrom(Geometry& other)
 	vertices = std::move(other.vertices);
 	indices = std::move(other.indices);
 	texture = std::exchange(other.texture, nullptr);
-	compiled_geometry = std::exchange(other.compiled_geometry, 0);
-	compile_attempted = std::exchange(other.compile_attempted, false);
 }
 
 Geometry::~Geometry()
 {
-	GeometryDatabase::Erase(database_handle);
-	ReleaseCompiledGeometry();
 }
 
 void Geometry::Render(Point translation) {
-	// Render our compiled geometry if possible.
-	if (compiled_geometry)
-	{
-		GetRenderInterface()->RenderCompiledGeometry(compiled_geometry, Vector2f(translation.x, translation.y));
-	}
-	// Otherwise, if we actually have geometry, try to compile it if we haven't already done so, otherwise render it in
-	// immediate mode.
-	else
-	{
-		if (vertices.empty() ||
-			indices.empty())
-			return;
-
-		if (!compile_attempted)
-		{
-			compile_attempted = true;
-			compiled_geometry = GetRenderInterface()->CompileGeometry(&vertices[0], (int)vertices.size(), &indices[0], (int)indices.size(), texture ? texture->GetHandle() : 0);
-
-			// If we managed to compile the geometry, we can clear the local copy of vertices and indices and
-			// immediately render the compiled version.
-			if (compiled_geometry)
-			{	
-				GetRenderInterface()->RenderCompiledGeometry(compiled_geometry, Vector2f(translation.x, translation.y));
-				return;
-			}
-		}
-
-		// Either we've attempted to compile before (and failed), or the compile we just attempted failed; either way,
-		// render the uncompiled version.
-		GetRenderInterface()->RenderGeometry(&vertices[0], (int)vertices.size(), &indices[0], (int)indices.size(), texture ? texture->GetHandle() : 0, Vector2f(translation.x, translation.y));
-	}
+	if (vertices.empty() || indices.empty())
+		return;
+	GetRenderInterface()->RenderGeometry(
+		&vertices[0],
+		(int)vertices.size(),
+		&indices[0],
+		(int)indices.size(),
+		texture ? texture->GetHandle() : 0,
+		translation
+	);
 }
 
 Vector< Vertex >& Geometry::GetVertices() {
@@ -112,27 +84,13 @@ Vector< int >& Geometry::GetIndices() {
 	return indices;
 }
 
-const Texture* Geometry::GetTexture() const {
-	return texture;
-}
-
-void Geometry::SetTexture(const Texture* _texture) {
+void Geometry::SetTexture(SharedPtr<Texture> _texture) {
 	texture = _texture;
-	ReleaseCompiledGeometry();
 }
 
 void Geometry::Release() {
-	ReleaseCompiledGeometry();
 	vertices.clear();
 	indices.clear();
-}
-
-void Geometry::ReleaseCompiledGeometry() {
-	if (compiled_geometry) {
-		GetRenderInterface()->ReleaseCompiledGeometry(compiled_geometry);
-		compiled_geometry = 0;
-	}
-	compile_attempted = false;
 }
 
 Geometry::operator bool() const {

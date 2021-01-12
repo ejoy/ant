@@ -18,14 +18,14 @@ bool FontEngine::IsFontTexResource(const Rml::String &sourcename) const{
     return SDFFontEffect::IsFontTexResource(sourcename);
 }
 
-Rml::TextureHandle FontEngine::GetFontTexHandle(const Rml::String &sourcename, Rml::Vector2i& texture_dimensions) const{
+Rml::TextureHandle FontEngine::GetFontTexHandle(const Rml::String &sourcename, Rml::Size& texture_dimensions) const{
     auto itfound = mFontResources.find(sourcename);
     if (itfound == mFontResources.end()){
         return Rml::TextureHandle(0);
     }
 
-    texture_dimensions.x = mcontext->font_tex.width;
-    texture_dimensions.y = mcontext->font_tex.height;
+    texture_dimensions.w = mcontext->font_tex.width;
+    texture_dimensions.h = mcontext->font_tex.height;
     return Rml::TextureHandle(itfound->second.fe);
 }
 
@@ -73,7 +73,7 @@ struct TextEffectVisitor {
         result = new SDFFontEffectShadow(
             context->font_tex.texid,
             edgevalue_offset,
-            Rml::Vector2f(t.offset_h, t.offset_v),
+            Rml::Point(t.offset_h, t.offset_v),
             t.color
         );
     }
@@ -178,10 +178,10 @@ FontEngine::FindOrAddFontResource(Rml::TextEffectsHandle font_effects_handle){
 
     auto itfound = mFontResources.find(key);
 	if (itfound == mFontResources.end()){
-        auto &fr = mFontResources[key];
-        fr.tex.Set(key);
-        fr.fe = sdffe;
-        return fr;
+        auto result = mFontResources.emplace(key, FontResource{ nullptr, sdffe });
+        FontEngine::FontResource& resource = result.first->second;
+        resource.tex.reset(new Rml::Texture(key));
+        return resource;
     }
 
     return itfound->second;
@@ -197,7 +197,7 @@ int FontEngine::GenerateString(
     Rml::Geometry& geometry = geometrys[0];
 
     const auto& res = FindOrAddFontResource(text_effects_handle);
-    geometry.SetTexture(&res.tex);
+    geometry.SetTexture(res.tex);
 
     auto& vertices = geometry.GetVertices();
     auto& indices = geometry.GetIndices();
@@ -208,7 +208,7 @@ int FontEngine::GenerateString(
     const size_t fontidx = static_cast<size_t>(handle) - 1;
     const auto& face = mFontFaces[fontidx];
 
-    const Rml::Vector2f fonttexel(1.f / mcontext->font_tex.width, 1.f / mcontext->font_tex.height);
+    const Rml::Point fonttexel(1.f / mcontext->font_tex.width, 1.f / mcontext->font_tex.height);
 
 #define FIX_POINT 8
     int x = int(position.x + 0.5f), y = int(position.y + 0.5f);
@@ -220,38 +220,22 @@ int FontEngine::GenerateString(
         auto g = GetGlyph(face, codepoint, &og);
 
         // Generate the geometry for the character.
-        vertices.resize(vertices.size() + 4);
-        indices.resize(indices.size() + 6);
-
         const int x0 = x + g.offset_x;
         const int y0 = y + g.offset_y;
-
         const int16_t u0 = g.u;
         const int16_t v0 = g.v;
-
-        const int16_t u1 = g.u + og.w;
-        const int16_t v1 = g.v + og.h;
-
-
-        auto origin = Rml::Vector2i(x0, y0);
-        auto dim = Rml::Vector2i(g.w, g.h);
-        // auto fe = reinterpret_cast<SDFFontEffect*>(font_effects_handle);
-        // Rml::FontGlyph UNUSED_rml_fg;
-        // auto olddim = dim;
-        // fe->GetGlyphMetrics(origin, dim, UNUSED_rml_fg);
-
-        auto to_fixpt = [](const Rml::Vector2i& pt) {
-            const float scale = FIX_POINT / 65536.f;
-            return Rml::Vector2f(pt.x * scale, pt.y * scale);
-        };
-        Rml::GeometryUtilities::GenerateQuad(
-            &vertices[0] + (vertices.size() - 4),
-            &indices[0] + (indices.size() - 6),
-            to_fixpt(origin), to_fixpt(dim),
+        const float scale = FIX_POINT / 65536.f;
+        Rml::GeometryUtilities::GenerateRect(
+            geometry,
+            Rml::Rect {
+                { x0 * scale, y0 * scale },
+                { g.w * scale, g.h * scale },
+            } ,
             colour,
-            Rml::Vector2f(u0, v0) * fonttexel,
-            Rml::Vector2f(u1, v1) * fonttexel,
-            (int)vertices.size() - 4
+            Rml::Rect {
+                { u0 * fonttexel.x, v0 * fonttexel.y },
+                { og.w * fonttexel.x , og.h * fonttexel.y }
+            }
         );
 
         //x += g.advance_x + (dim.x - olddim.x);

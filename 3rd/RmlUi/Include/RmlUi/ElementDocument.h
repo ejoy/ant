@@ -157,11 +157,11 @@ private:
 
 	Context* context;
 
-	void UpdateHoverChain(const Dictionary& parameters, const Dictionary& drag_parameters, const Vector2i& old_mouse_position);
+	void UpdateHoverChain(const Dictionary& parameters, const Dictionary& drag_parameters, const Point& old_mouse_position);
 	void CreateDragClone(Element* element);
 	void ReleaseDragClone();
 
-	Vector2i mouse_position = Vector2i(0,0);
+	Point mouse_position = Point(0,0);
 
 	Element* hover = nullptr;
 	Element* active = nullptr;
@@ -175,7 +175,7 @@ private:
 
 	Element* last_click_element = nullptr;
 	double last_click_time = 0;
-	Vector2i last_click_mouse_position = Vector2i(0, 0);
+	Point last_click_mouse_position = Point(0, 0);
 
 	std::set<Element*> hover_chain;
 	std::vector<Element*> active_chain;

@@ -27,7 +27,7 @@
  */
 
 #include "../Include/RmlUi/RenderInterface.h"
-#include "TextureDatabase.h"
+#include "../Include/RmlUi/Texture.h"
 
 namespace Rml {
 
@@ -37,33 +37,17 @@ RenderInterface::RenderInterface()
 
 RenderInterface::~RenderInterface()
 {
-	TextureDatabase::ReleaseTextures();
-}
-
-// Called by RmlUi when it wants to compile geometry it believes will be static for the forseeable future.
-CompiledGeometryHandle RenderInterface::CompileGeometry(Vertex* /*vertices*/, int /*num_vertices*/, int* /*indices*/, int /*num_indices*/, TextureHandle /*texture*/)
-{
-	return 0;
-}
-
-// Called by RmlUi when it wants to render application-compiled geometry.
-void RenderInterface::RenderCompiledGeometry(CompiledGeometryHandle /*geometry*/, const Vector2f& /*translation*/)
-{
-}
-
-// Called by RmlUi when it wants to release application-compiled geometry.
-void RenderInterface::ReleaseCompiledGeometry(CompiledGeometryHandle /*geometry*/)
-{
+	Texture::Shutdown();
 }
 
 // Called by RmlUi when a texture is required by the library.
-bool RenderInterface::LoadTexture(TextureHandle& /*texture_handle*/, Vector2i& /*texture_dimensions*/, const String& /*source*/)
+bool RenderInterface::LoadTexture(TextureHandle& /*texture_handle*/, Size& /*texture_dimensions*/, const String& /*source*/)
 {
 	return false;
 }
 
 // Called by RmlUi when a texture is required to be built from an internally-generated sequence of pixels.
-bool RenderInterface::GenerateTexture(TextureHandle& /*texture_handle*/, const byte* /*source*/, const Vector2i& /*source_dimensions*/)
+bool RenderInterface::GenerateTexture(TextureHandle& /*texture_handle*/, const byte* /*source*/, const Size& /*source_dimensions*/)
 {
 	return false;
 }

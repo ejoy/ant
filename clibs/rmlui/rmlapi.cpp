@@ -315,7 +315,7 @@ static int
 lRmlCreateContext(lua_State* L) {
 	int w = luaL_checkinteger(L, 1);
 	int h = luaL_checkinteger(L, 2);
-	Rml::Context* ctx = new Rml::Context(Rml::Vector2i(w, h));
+	Rml::Context* ctx = new Rml::Context(Rml::Size(w, h));
 	if (!ctx) {
 		return 0;
 	}

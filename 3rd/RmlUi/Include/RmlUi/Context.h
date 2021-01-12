@@ -39,7 +39,6 @@ namespace Rml {
 class Stream;
 class ElementDocument;
 class EventListener;
-class RenderInterface;
 enum class EventId : uint16_t;
 
 /**
@@ -51,15 +50,15 @@ enum class EventId : uint16_t;
 class RMLUICORE_API Context
 {
 public:
-	Context(const Vector2i& dimensions);
+	Context(const Size& dimensions);
 	virtual ~Context();
 
 	/// Changes the dimensions of the context.
 	/// @param[in] dimensions The new dimensions of the context.
-	void SetDimensions(const Vector2i& dimensions);
+	void SetDimensions(const Size& dimensions);
 	/// Returns the dimensions of the context.
 	/// @return The current dimensions of the context.
-	const Vector2i& GetDimensions() const;
+	const Size& GetDimensions() const;
 
 	/// Changes the size ratio of 'dp' unit to 'px' unit
 	/// @param[in] dp_ratio The new density-independent pixel ratio of the context.
@@ -114,11 +113,8 @@ public:
 	/// @return True if the event was not consumed (ie, was prevented from propagating by an element), false if it was.
 	bool ProcessMouseWheel(float wheel_delta, int key_modifier_state);
 
-	void SetActiveClipRegion(const Rect& clip);
-	void ApplyActiveClipRegion();
-
 private:
-	Vector2i dimensions;
+	Size dimensions;
 	float density_independent_pixel_ratio;
 
 	// Documents that have been unloaded from the context but not yet released.
@@ -127,8 +123,6 @@ private:
 	// Root of the element tree.
 	std::vector<ElementDocument*> documents;
 	ElementDocument* focus = nullptr;
-
-	Rect clip;
 
 	// Releases all unloaded documents pending destruction.
 	void ReleaseUnloadedDocuments();

@@ -40,9 +40,9 @@ class RMLUICORE_API Layout {
 public:
 	struct Metrics {
 		Rect frame;
-		EdgeInsets contentInsets{};
-		EdgeInsets borderWidth{};
-		EdgeInsets overflowInset{};
+		EdgeInsets<float> contentInsets{};
+		EdgeInsets<float> borderWidth{};
+		EdgeInsets<float> overflowInset{};
 		bool visible{};
 
 		Rect getContentFrame() const {

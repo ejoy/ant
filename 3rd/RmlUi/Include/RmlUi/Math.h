@@ -33,8 +33,6 @@
 
 namespace Rml {
 
-template <typename Type> class Vector2;
-using Vector2f = Vector2< float >;
 
 namespace Math {
 

@@ -49,7 +49,6 @@ private:
 	void Reload();
 
 	Element* element;
-	UniquePtr<Texture> texture;
 	UniquePtr<Geometry> geometry;
 	bool dirty = false;
 };

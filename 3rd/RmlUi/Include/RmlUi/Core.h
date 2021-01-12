@@ -60,8 +60,6 @@ RMLUICORE_API bool LoadFontFace(const String& file_name, bool fallback_face = fa
 RMLUICORE_API bool LoadFontFace(const byte* data, int data_size, const String& font_family, Style::FontStyle style, Style::FontWeight weight, bool fallback_face = false);
 RMLUICORE_API void RegisterPlugin(Plugin* plugin);
 RMLUICORE_API EventId RegisterEventType(const String& type, bool interruptible, bool bubbles, DefaultActionPhase default_action_phase = DefaultActionPhase::None);
-RMLUICORE_API void ReleaseTextures();
-RMLUICORE_API void ReleaseCompiledGeometry();
 
 }
 

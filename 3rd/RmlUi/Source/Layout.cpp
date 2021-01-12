@@ -286,13 +286,13 @@ bool Layout::UpdateMetrics(Layout::Metrics& metrics) {
 			YGValueToFloat(YGNodeLayoutGetHeight(node))
 		}
 	};
-	metrics.borderWidth = EdgeInsets{
+	metrics.borderWidth = {
 		YGValueToFloat(YGNodeLayoutGetBorder(node, YGEdgeLeft)),
 		YGValueToFloat(YGNodeLayoutGetBorder(node, YGEdgeTop)),
 		YGValueToFloat(YGNodeLayoutGetBorder(node, YGEdgeRight)),
 		YGValueToFloat(YGNodeLayoutGetBorder(node, YGEdgeBottom))
 	};
-	metrics.contentInsets = metrics.borderWidth + EdgeInsets{
+	metrics.contentInsets = {
 		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeLeft)),
 		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeTop)),
 		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeRight)),

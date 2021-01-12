@@ -35,38 +35,23 @@
 
 namespace Rml {
 
-GeometryUtilities::GeometryUtilities()
+static void DrawQuad(Vertex* vertices, int* indices, Rect rect, Colourb colour, Rect texcoord, int index_offset)
 {
-}
+	vertices[0].pos = rect.origin;
+	vertices[0].col = colour;
+	vertices[0].uv = Point(texcoord.left(), texcoord.top());
 
-GeometryUtilities::~GeometryUtilities()
-{
-}
+	vertices[1].pos = rect.origin + Size(rect.size.w, 0);
+	vertices[1].col = colour;
+	vertices[1].uv = Point(texcoord.right(), texcoord.top());
 
-// Generates a quad from a position, size and colour.
-void GeometryUtilities::GenerateQuad(Vertex* vertices, int* indices, Vector2f origin, Vector2f dimensions, Colourb colour, int index_offset)
-{
-	GenerateQuad(vertices, indices, origin, dimensions, colour, Vector2f(0, 0), Vector2f(1, 1), index_offset);
-}
+	vertices[2].pos = rect.origin + rect.size;
+	vertices[2].col = colour;
+	vertices[2].uv = Point(texcoord.right(), texcoord.bottom());
 
-// Generates a quad from a position, size, colour and texture coordinates.
-void GeometryUtilities::GenerateQuad(Vertex* vertices, int* indices, Vector2f origin, Vector2f dimensions, Colourb colour, Vector2f top_left_texcoord, Vector2f bottom_right_texcoord, int index_offset)
-{
-	vertices[0].position = origin;
-	vertices[0].colour = colour;
-	vertices[0].tex_coord = top_left_texcoord;
-
-	vertices[1].position = Vector2f(origin.x + dimensions.x, origin.y);
-	vertices[1].colour = colour;
-	vertices[1].tex_coord = Vector2f(bottom_right_texcoord.x, top_left_texcoord.y);
-
-	vertices[2].position = origin + dimensions;
-	vertices[2].colour = colour;
-	vertices[2].tex_coord = bottom_right_texcoord;
-
-	vertices[3].position = Vector2f(origin.x, origin.y + dimensions.y);
-	vertices[3].colour = colour;
-	vertices[3].tex_coord = Vector2f(top_left_texcoord.x, bottom_right_texcoord.y);
+	vertices[3].pos = rect.origin + Size(0, rect.size.h);
+	vertices[3].col = colour;
+	vertices[3].uv = Point(texcoord.left(), texcoord.bottom());
 
 	indices[0] = index_offset + 0;
 	indices[1] = index_offset + 3;
@@ -77,13 +62,27 @@ void GeometryUtilities::GenerateQuad(Vertex* vertices, int* indices, Vector2f or
 	indices[5] = index_offset + 2;
 }
 
-void GeometryUtilities::GenerateBackgroundBorder(Geometry* geometry, const Layout::Metrics& metrics, Vector2f offset, Vector4f border_radius, Colourb background_colour, const Colourb* border_colours)
-{
-	Vector<Vertex>& vertices = geometry->GetVertices();
-	Vector<int>& indices = geometry->GetIndices();
+void GeometryUtilities::GenerateRect(Geometry& geometry, Rect rect, Colourb colour, Rect texcoord){
+	Vector<Vertex>& vertices = geometry.GetVertices();
+	Vector<int>& indices = geometry.GetIndices();
+	size_t vsz = vertices.size();
+	size_t isz = indices.size();
+	vertices.resize(vsz + 4);
+	indices.resize(isz + 6);
+	DrawQuad(
+		&vertices[vsz], &indices[isz],
+		rect,
+		colour,
+		texcoord,
+		(int)vsz
+	);
+}
 
-	CornerSizes corner_sizes{ border_radius.x, border_radius.y, border_radius.z, border_radius.w };
-	GeometryBackgroundBorder::Draw(vertices, indices, corner_sizes, metrics, offset, background_colour, border_colours);
+void GeometryUtilities::GenerateBackgroundBorder(Geometry& geometry, const Layout::Metrics& metrics, Point border_position, CornerInsets<float> const& border_radius, Colourb background_colour, EdgeInsets<Colourb> const& border_colours)
+{
+	Vector<Vertex>& vertices = geometry.GetVertices();
+	Vector<int>& indices = geometry.GetIndices();
+	GeometryBackgroundBorder::Draw(vertices, indices, border_radius, metrics, border_position, background_colour, border_colours);
 }
 
 } // namespace Rml

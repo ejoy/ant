@@ -151,9 +151,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\GeometryBackgroundBorder.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\GeometryDatabase.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\GeometryUtilities.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -278,12 +275,6 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Texture.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\TextureDatabase.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\TextureResource.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Transform.cpp">
@@ -420,9 +411,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\GeometryBackgroundBorder.h">
       <Filter>source</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\GeometryDatabase.h">
-      <Filter>source</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\IdNameMap.h">
       <Filter>source</Filter>
     </ClInclude>
@@ -505,12 +493,6 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\StyleSheetParser.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\TextureDatabase.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\TextureResource.h">
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\TransformState.h">
@@ -711,9 +693,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Variant.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Vector2.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Vector3.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -747,9 +726,6 @@
       <Filter>include</Filter>
     </None>
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\Variant.inl">
-      <Filter>include</Filter>
-    </None>
-    <None Include="..\..\3rd\RmlUi\Include\RmlUi\Vector2.inl">
       <Filter>include</Filter>
     </None>
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\Vector3.inl">

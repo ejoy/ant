@@ -130,8 +130,6 @@ class Vector4
 
 		/// Cast to Vector3
 		explicit inline operator Vector3< Type >() const;
-		/// Cast to Vector2
-		explicit inline operator Vector2< Type >() const;
 
 		// The components of the vector.
 		Type x;
