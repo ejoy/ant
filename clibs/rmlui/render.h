@@ -52,12 +52,11 @@ public:
     Renderer(const RmlContext* context);
     virtual void RenderGeometry(Rml::Vertex* vertices, int num_vertices, 
                                 int* indices, int num_indices, 
-                                Rml::TextureHandle texture, const Rml::Vector2f& translation) override;
+                                Rml::TextureHandle texture, const Rml::Point& translation) override;
 
-    virtual void EnableScissorRegion(bool enable) override;
-	virtual void SetScissorRegion(int x, int y, int width, int height) override;
-    virtual bool LoadTexture(Rml::TextureHandle& texture_handle, Rml::Vector2i& texture_dimensions, const Rml::String& source) override;
-    virtual bool GenerateTexture(Rml::TextureHandle& texture_handle, const Rml::byte* source, const Rml::Vector2i& source_dimensions) override;
+	virtual void SetScissorRegion(Rml::Rect const& clip) override;
+    virtual bool LoadTexture(Rml::TextureHandle& texture_handle, Rml::Size& texture_dimensions, const Rml::String& source) override;
+    virtual bool GenerateTexture(Rml::TextureHandle& texture_handle, const Rml::byte* source, const Rml::Size& source_dimensions) override;
     virtual void ReleaseTexture(Rml::TextureHandle texture) override;
     virtual void SetTransform(const Rml::Matrix4f* transform) override{
         mTransform = transform ? *transform : Rml::Matrix4f::Identity();

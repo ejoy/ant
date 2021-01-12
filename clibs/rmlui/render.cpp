@@ -73,7 +73,7 @@ void Renderer::UpdateViewRect(){
 
 void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
                             int* indices, int num_indices, 
-                            Rml::TextureHandle texture, const Rml::Vector2f& translation) {
+                            Rml::TextureHandle texture, const Rml::Point& translation) {
     const Rml::Matrix4f m = mTransform * Rml::Matrix4f::Translate(translation.x, translation.y, 0.0);
     BGFX(encoder_set_transform)(mEncoder, m.data(), 1);
     if (mScissorRect.x == 0 && mScissorRect.y == 0 && mScissorRect.w == 0 && mScissorRect.h == 0){
@@ -131,15 +131,14 @@ void Renderer::Frame(){
     mIndexBuffer.Reset();
 }
 
-void Renderer::EnableScissorRegion(bool enable) {
-    if (!enable){
+void Renderer::SetScissorRegion(Rml::Rect const& clip) {
+    if (clip.IsEmpty()) {
         mScissorRect.x = mScissorRect.y = mScissorRect.w = mScissorRect.h = 0;
     }
-}
-
-void Renderer::SetScissorRegion(int x, int y, int w, int h) {
-    mScissorRect.x = x, mScissorRect.y = y;
-    mScissorRect.w = w, mScissorRect.h = h;
+    else {
+        mScissorRect.x = clip.origin.x, mScissorRect.y = clip.origin.y;
+        mScissorRect.w = clip.size.w, mScissorRect.h = clip.size.h;
+    }
     //BGFX(encoder_set_scissor)(mcontext->viewid, std::max(x, 0), std::max(y, 0), w, h);
 }
 
@@ -155,7 +154,7 @@ DefaultSamplerFlag(){
         );  // u,v: clamp, min,max: linear
 }
 
-bool Renderer::LoadTexture(Rml::TextureHandle& texture_handle, Rml::Vector2i& texture_dimensions, const Rml::String& source){
+bool Renderer::LoadTexture(Rml::TextureHandle& texture_handle, Rml::Size& texture_dimensions, const Rml::String& source){
     auto ifont = static_cast<FontEngine*>(Rml::GetFontEngineInterface());
     if (ifont->IsFontTexResource(source)){
         texture_handle = ifont->GetFontTexHandle(source, texture_dimensions);
@@ -177,20 +176,20 @@ bool Renderer::LoadTexture(Rml::TextureHandle& texture_handle, Rml::Vector2i& te
 	bgfx_texture_info_t info;
 	const bgfx_texture_handle_t th = BGFX(create_texture)(mem, DefaultSamplerFlag(), 1, &info);
 	if (th.idx != UINT16_MAX){
-		texture_dimensions.x = (int)info.width;
-		texture_dimensions.y = (int)info.height;
+		texture_dimensions.w = info.width;
+		texture_dimensions.h = info.height;
         texture_handle = Rml::TextureHandle(new SDFFontEffectDefault(th.idx, true));
         return true;
 	}
 	return false;
 }
 
-bool Renderer::GenerateTexture(Rml::TextureHandle& texture_handle, const Rml::byte* source, const Rml::Vector2i& source_dimensions) {
+bool Renderer::GenerateTexture(Rml::TextureHandle& texture_handle, const Rml::byte* source, const Rml::Size& source_dimensions) {
     //RGBA data
-    const uint32_t bufsize = source_dimensions.x * source_dimensions.y * 4;
+    const uint32_t bufsize = source_dimensions.w * source_dimensions.h * 4;
      const bgfx_memory_t *mem = BGFX(alloc)(bufsize);
 	memcpy(mem->data, source, bufsize);
-	auto thidx = BGFX(create_texture_2d)(source_dimensions.x, source_dimensions.y, false, 1, BGFX_TEXTURE_FORMAT_RGBA8, DefaultSamplerFlag(), mem).idx;
+	auto thidx = BGFX(create_texture_2d)(source_dimensions.w, source_dimensions.h, false, 1, BGFX_TEXTURE_FORMAT_RGBA8, DefaultSamplerFlag(), mem).idx;
     if (thidx != UINT16_MAX){
         texture_handle = Rml::TextureHandle(new SDFFontEffectDefault(thidx, true));
         return true;

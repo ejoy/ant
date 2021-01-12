@@ -31,11 +31,9 @@
 
 #include "Header.h"
 #include "Types.h"
+#include <optional>
 
 namespace Rml {
-
-class TextureResource;
-class RenderInterface;
 
 /**
 	Abstraction of a two-dimensional texture image, with an application-specific texture handle.
@@ -43,32 +41,19 @@ class RenderInterface;
 	@author Peter Curry
  */
 
-struct RMLUICORE_API Texture
-{
+struct RMLUICORE_API Texture {
 public:
-	/// Set the texture source and path. The texture is added to the global cache and only loaded on first use.
-	/// @param[in] source The source of the texture.
-	/// @param[in] source_path The path of the resource that is requesting the texture (ie, the RCSS file in which it was specified, etc).
-	void Set(const String& source, const String& source_path = "");
-
-	/// Returns the texture's source name. This is usually the name of the file the texture was loaded from.
-	/// @return The name of the this texture's source. This will be the empty string if this texture is not loaded.
-	const String& GetSource() const;
-	/// Returns the texture's handle.
-	/// @return The texture's handle. This will be nullptr if the texture isn't loaded.
+	Texture(const String& path);
+	~Texture();
 	TextureHandle GetHandle() const;
-	/// Returns the texture's dimensions.
-	/// @return The texture's dimensions. This will be (0, 0) if the texture isn't loaded.
-	Vector2i GetDimensions() const;
-
-	/// Returns true if the texture points to the same underlying resource.
-	bool operator==(const Texture&) const;
-
-	/// Returns true if the underlying resource is set.
-	explicit operator bool() const;
-
+	const Size& GetDimensions() const;
+public:
+	static void Shutdown();
+	static SharedPtr<Texture> Fetch(const String& path);
 private:
-	SharedPtr<TextureResource> resource;
+	String source;
+	TextureHandle handle;
+	Size dimensions;
 };
 
 } // namespace Rml

@@ -341,7 +341,6 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 
 	RegisterProperty(PropertyId::Color, "color", "white", true, false).AddParser("color");
 
-	RegisterProperty(PropertyId::ImageColor, "image-color", "white", false, false).AddParser("color");
 	RegisterProperty(PropertyId::Opacity, "opacity", "1", true, false).AddParser("number");
 
 	RegisterProperty(PropertyId::FontFamily, "font-family", "", true, true).AddParser("string");

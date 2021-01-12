@@ -28,6 +28,7 @@
 
 #include "ElementStyle.h"
 #include "../Include/RmlUi/Core.h"
+#include "../Include/RmlUi/Context.h"
 #include "../Include/RmlUi/ElementDocument.h"
 #include "../Include/RmlUi/ElementUtilities.h"
 #include "../Include/RmlUi/FontEngineInterface.h"
@@ -348,7 +349,11 @@ float ElementStyle::ResolveNumericProperty(const Property* property, float base_
 	else if (property->unit & Property::ANGLE)
 		return ComputeAngle(*property);
 
-	const float dp_ratio = ElementUtilities::GetDensityIndependentPixelRatio(element);
+
+	Context* context = element->GetContext();
+	if (context == nullptr)
+		return 1.0f;
+	const float dp_ratio = context->GetDensityIndependentPixelRatio();
 	const float font_size = element->GetComputedValues().font_size;
 
 	auto doc = element->GetOwnerDocument();
@@ -561,28 +566,28 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 
 		switch (id) {
 		case PropertyId::BorderTopColor:
-			values.border_top_color = p->Get<Colourb>();
+			values.border_color.top = p->Get<Colourb>();
 			break;
 		case PropertyId::BorderRightColor:
-			values.border_right_color = p->Get<Colourb>();
+			values.border_color.right = p->Get<Colourb>();
 			break;
 		case PropertyId::BorderBottomColor:
-			values.border_bottom_color = p->Get<Colourb>();
+			values.border_color.bottom = p->Get<Colourb>();
 			break;
 		case PropertyId::BorderLeftColor:
-			values.border_left_color = p->Get<Colourb>();
+			values.border_color.left = p->Get<Colourb>();
 			break;
 		case PropertyId::BorderTopLeftRadius:
-			values.border_top_left_radius = ComputeLength(p, font_size, document_font_size, dp_ratio);
+			values.border_radius.topLeft = ComputeLength(p, font_size, document_font_size, dp_ratio);
 			break;
 		case PropertyId::BorderTopRightRadius:
-			values.border_top_right_radius = ComputeLength(p, font_size, document_font_size, dp_ratio);
+			values.border_radius.topRight = ComputeLength(p, font_size, document_font_size, dp_ratio);
 			break;
 		case PropertyId::BorderBottomRightRadius:
-			values.border_bottom_right_radius = ComputeLength(p, font_size, document_font_size, dp_ratio);
+			values.border_radius.bottomRight = ComputeLength(p, font_size, document_font_size, dp_ratio);
 			break;
 		case PropertyId::BorderBottomLeftRadius:
-			values.border_bottom_left_radius = ComputeLength(p, font_size, document_font_size, dp_ratio);
+			values.border_radius.bottomLeft = ComputeLength(p, font_size, document_font_size, dp_ratio);
 			break;
 
 		case PropertyId::ZIndex:
@@ -602,9 +607,6 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 
 		case PropertyId::Color:
 			values.color = p->Get<Colourb>();
-			break;
-		case PropertyId::ImageColor:
-			values.image_color = p->Get<Colourb>();
 			break;
 		case PropertyId::Opacity:
 			values.opacity = p->Get<float>();

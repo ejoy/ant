@@ -36,14 +36,13 @@
 #include "../Include/RmlUi/SystemInterface.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/Types.h"
+#include "../Include/RmlUi/Texture.h"
 
 #include "EventSpecification.h"
 #include "FileInterfaceDefault.h"
-#include "GeometryDatabase.h"
 #include "PluginRegistry.h"
 #include "StyleSheetFactory.h"
 #include "StyleSheetParser.h"
-#include "TextureDatabase.h"
 #include "EventSpecification.h"
 
 namespace Rml {
@@ -83,7 +82,6 @@ bool Initialise() {
 		return false;
 	}
 	EventSpecificationInterface::Initialize();
-	TextureDatabase::Initialise();
 	if (!font_interface) {
 		Log::Message(Log::LT_ERROR, "No font interface set!");
 		return false;
@@ -111,7 +109,7 @@ void Shutdown() {
 	font_interface = nullptr;
 	default_font_interface.reset();
 
-	TextureDatabase::Shutdown();
+	Texture::Shutdown();
 
 	initialised = false;
 
@@ -202,14 +200,5 @@ EventId RegisterEventType(const String& type, bool interruptible, bool bubbles, 
 	return EventSpecificationInterface::InsertOrReplaceCustom(type, interruptible, bubbles, default_action_phase);
 }
 
-void ReleaseTextures()
-{
-	TextureDatabase::ReleaseTextures();
-}
-
-void ReleaseCompiledGeometry()
-{
-	return GeometryDatabase::ReleaseAll();
-}
 
 } // namespace Rml

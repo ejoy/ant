@@ -141,7 +141,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\FontEngineInterface.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Geometry.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\GeometryBackgroundBorder.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\GeometryDatabase.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\GeometryUtilities.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Layout.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Log.cpp" />
@@ -184,8 +183,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\StyleSheetSpecification.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\SystemInterface.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Texture.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\TextureDatabase.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\TextureResource.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Transform.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\TransformPrimitive.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\TransformState.cpp" />
@@ -277,7 +274,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Types.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\URL.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Variant.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Vector2.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Vector3.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Vector4.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Vertex.h" />
@@ -301,7 +297,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\EventSpecification.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\FileInterfaceDefault.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\GeometryBackgroundBorder.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Source\GeometryDatabase.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\IdNameMap.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\Memory.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\PluginRegistry.h" />
@@ -330,8 +325,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\StyleSheetNodeSelectorOnlyChild.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\StyleSheetNodeSelectorOnlyOfType.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\StyleSheetParser.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Source\TextureDatabase.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Source\TextureResource.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\TransformState.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\TransformUtilities.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\Utilities.h" />
@@ -356,7 +349,6 @@
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\Matrix4.inl" />
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\TypeConverter.inl" />
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\Variant.inl" />
-    <None Include="..\..\3rd\RmlUi\Include\RmlUi\Vector2.inl" />
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\Vector3.inl" />
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\Vector4.inl" />
     <None Include="..\..\3rd\RmlUi\Source\Pool.inl" />

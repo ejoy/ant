@@ -183,13 +183,13 @@ get_default_mask_offset_str(struct font_manager* F){
 ///shadow//////////////////////////////////////////////////////////////////
 class SDFFontEffectShadow : public SDFFontEffect{
 public:
-SDFFontEffectShadow(uint16_t texid, int8_t eo, const Rml::Vector2f &offset, Rml::Colourb c) 
+SDFFontEffectShadow(uint16_t texid, int8_t eo, const Rml::Point &offset, Rml::Colourb c) 
     : SDFFontEffect(texid, eo, FontEffectType(FE_Shadow|FE_FontTex))
     , moffset(offset)
     , mcolor(c)
     { }
 
-    Rml::Vector2f GetOffset() const { return moffset; }
+    Rml::Point GetOffset() const { return moffset; }
     virtual Rml::String GenerateKey() const override{
         std::ostringstream oss;
         
@@ -224,6 +224,6 @@ SDFFontEffectShadow(uint16_t texid, int8_t eo, const Rml::Vector2f &offset, Rml:
     }
 
 private:
-    const Rml::Vector2f moffset;
+    const Rml::Point moffset;
     Rml::Colourb mcolor;
 };

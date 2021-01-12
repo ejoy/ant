@@ -45,10 +45,9 @@
 
 namespace Rml {
 
-Context::Context(const Vector2i& dimensions_)
+Context::Context(const Size& dimensions_)
 : dimensions(dimensions_)
-, density_independent_pixel_ratio(1.0f)
-, clip() {
+, density_independent_pixel_ratio(1.0f) {
 	//cursor_proxy.reset(new ElementDocument("body"));
 	//ElementDocument* cursor_proxy_document = dynamic_cast< ElementDocument* >(cursor_proxy.get());
 	//if (cursor_proxy_document)
@@ -71,17 +70,16 @@ Context::~Context() {
 	unloaded_documents.clear();
 }
 
-void Context::SetDimensions(const Vector2i& _dimensions) {
+void Context::SetDimensions(const Size& _dimensions) {
 	if (dimensions != _dimensions) {
 		dimensions = _dimensions;
 		if (focus) {
-			focus->SetDimensions(Size(dimensions[0], dimensions[1]));
+			focus->SetDimensions(dimensions);
 		}
-		clip.Union(Rect(clip.origin, Size(dimensions[0], dimensions[1])));
 	}
 }
 
-const Vector2i& Context::GetDimensions() const {
+const Size& Context::GetDimensions() const {
 	return dimensions;
 }
 
@@ -100,10 +98,7 @@ float Context::GetDensityIndependentPixelRatio() const {
 
 bool Context::Update() {
 	if (focus) {
-		ApplyActiveClipRegion();
 		focus->Render();
-		SetActiveClipRegion(Rect());
-
 		focus->UpdateDataModel(true);
 		focus->Update(density_independent_pixel_ratio);
 		focus->UpdateLayout();
@@ -129,7 +124,7 @@ ElementDocument* Context::LoadDocument(const String& document_path) {
 	if (!stream->Open(document_path))
 		return nullptr;
 
-	ElementDocumentPtr document(new ElementDocument("body", Size(dimensions[0], dimensions[1])));
+	ElementDocumentPtr document(new ElementDocument("body", dimensions));
 	document->context = this;
 	PluginRegistry::NotifyDocumentCreate(document.get());
 	XMLParser parser(document.get());
@@ -205,23 +200,6 @@ bool Context::ProcessMouseWheel(float wheel_delta, int key_modifier_state) {
 	}
 	focus->ProcessMouseWheel(wheel_delta, key_modifier_state);
 	return true;
-}
-
-void Context::ApplyActiveClipRegion() {	
-	if (clip.IsEmpty()) {
-		GetRenderInterface()->EnableScissorRegion(false);
-	}
-	else {
-		GetRenderInterface()->EnableScissorRegion(true);
-		GetRenderInterface()->SetScissorRegion(clip.origin.x, clip.origin.y, clip.size.w, clip.size.h);
-	}
-}
-
-void Context::SetActiveClipRegion(const Rect& clip_) {
-	if (clip_ != clip) {
-		clip = clip_;
-		ApplyActiveClipRegion();
-	}
 }
 
 void Context::ReleaseUnloadedDocuments() {

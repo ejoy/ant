@@ -214,12 +214,6 @@ void Variant::Set(void* voidptr)
 	memcpy(data, &voidptr, sizeof(void*));
 }
 
-void Variant::Set(const Vector2f& value)
-{
-	type = VECTOR2;
-	SET_VARIANT(Vector2f);
-}
-
 void Variant::Set(const Vector3f& value)
 {
 	type = VECTOR3;
@@ -386,8 +380,6 @@ bool Variant::operator==(const Variant & other) const
 		return DEFAULT_VARIANT_COMPARE(int64_t);
 	case STRING:
 		return DEFAULT_VARIANT_COMPARE(String);
-	case VECTOR2:
-		return DEFAULT_VARIANT_COMPARE(Vector2f);
 	case VECTOR3:
 		return DEFAULT_VARIANT_COMPARE(Vector3f);
 	case VECTOR4:

@@ -308,9 +308,7 @@ void ElementText::OnPropertyChange(const PropertyIdSet& changed_properties)
 		// Re-colour the decoration geometry.
 		Vector< Vertex >& vertices = decoration.GetVertices();
 		for (size_t i = 0; i < vertices.size(); ++i)
-			vertices[i].colour = colour;
-
-		decoration.ReleaseCompiledGeometry();
+			vertices[i].col = colour;
 	}
 }
 
@@ -374,8 +372,6 @@ void ElementText::GenerateDecoration(const FontFaceHandle font_face_handle) {
 	for (const Line& line : lines) {
 		Point position = line.position;
 		float width = line.width;
-		Vector<Vertex>& line_vertices = decoration.GetVertices();
-		Vector<int>& line_indices = decoration.GetIndices();
 		float underline_thickness = 0;
 		float underline_position = 0;
 		GetFontEngineInterface()->GetUnderline(font_face_handle, underline_position, underline_thickness);
@@ -403,15 +399,14 @@ void ElementText::GenerateDecoration(const FontFaceHandle font_face_handle) {
 		default: return;
 		}
 
-		size_t vsz = line_vertices.size();
-		size_t isz = line_indices.size();
-		line_vertices.resize(vsz + 4);
-		line_indices.resize(isz + 6);
-		GeometryUtilities::GenerateQuad(
-			&line_vertices[vsz], &line_indices[isz],
-			Vector2f(position.x, position.y),
-			Vector2f((float)width, underline_thickness),
-			color, (int)vsz
+		GeometryUtilities::GenerateRect(
+			decoration,
+			Rect{
+				position,
+				Size((float)width, underline_thickness),
+			},
+			color,
+			Rect{ {0, 0}, {1, 1} }
 		);
 	}
 }

@@ -210,10 +210,5 @@ Vector4< Type >::operator Vector3< Type >() const
 	return Vector3< Type >(x, y, z);
 }
 
-template < typename Type >
-Vector4< Type >::operator Vector2< Type >() const
-{
-	return Vector2< Type >(x, y);
-}
 
 } // namespace Rml

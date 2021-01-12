@@ -60,7 +60,6 @@ public:
 		INT = 'i',
 		INT64 = 'I',
 		STRING = 's',
-		VECTOR2 = '2',
 		VECTOR3 = '3',
 		VECTOR4 = '4',
 		COLOURF = 'g',
@@ -128,7 +127,6 @@ private:
 	void Set(const int64_t value);
 	void Set(const char* value);
 	void Set(void* value);
-	void Set(const Vector2f& value);
 	void Set(const Vector3f& value);
 	void Set(const Vector4f& value);
 	void Set(const Colourf& value);

@@ -94,8 +94,7 @@ function rmlui_sys:init()
             return import_package "ant.rmlui"
         ]])
     }
-
-    preload_dir "/pkg/ant.resources.binary/ui/test"
+    preload_dir "/pkg/ant.resources.binary/ui/test/assets/font/"
 end
 
 local windows = {}

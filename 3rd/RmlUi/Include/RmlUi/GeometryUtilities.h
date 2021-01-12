@@ -45,41 +45,10 @@ class Geometry;
 	@author Robert Curry
  */
 
-class RMLUICORE_API GeometryUtilities
-{
+class RMLUICORE_API GeometryUtilities {
 public:
-	/// Generates a quad from a position, size and colour.
-	/// @param[out] vertices An array of at least four vertices that the generated vertex data will be written into.
-	/// @param[out] indices An array of at least six indices that the generated index data will be written into.
-	/// @param[in] origin The origin of the quad to generate.
-	/// @param[in] dimensions The dimensions of the quad to generate.
-	/// @param[in] colour The colour to be assigned to each of the quad's vertices.
-	/// @param[in] index_offset The offset to be added to the generated indices; this should be the number of vertices already in the array.
-	static void GenerateQuad(Vertex* vertices, int* indices, Vector2f origin, Vector2f dimensions, Colourb colour, int index_offset = 0);
-	/// Generates a quad from a position, size, colour and texture coordinates.
-	/// @param[out] vertices An array of at least four vertices that the generated vertex data will be written into.
-	/// @param[out] indices An array of at least six indices that the generated index data will be written into.
-	/// @param[in] origin The origin of the quad to generate.
-	/// @param[in] dimensions The dimensions of the quad to generate.
-	/// @param[in] colour The colour to be assigned to each of the quad's vertices.
-	/// @param[in] top_left_texcoord The texture coordinates at the top-left of the quad.
-	/// @param[in] bottom_right_texcoord The texture coordinates at the bottom-right of the quad.
-	/// @param[in] index_offset The offset to be added to the generated indices; this should be the number of vertices already in the array.
-	static void GenerateQuad(Vertex* vertices, int* indices, Vector2f origin, Vector2f dimensions, Colourb colour, Vector2f top_left_texcoord, Vector2f bottom_right_texcoord, int index_offset = 0);
-
-	/// Generates a geometry in the same way as element backgrounds and borders are generated, with support for the border-radius property.
-	/// Vertex positions are relative to the border-box, vertex texture coordinates are default initialized.
-	/// @param[out] geometry The geometry to append the newly created vertices and indices into.
-	/// @param[in] box The box which determines the background and border geometry.
-	/// @param[in] offset Offset the position of the generated vertices.
-	/// @param[in] border_radius The border radius in pixel units in the following order: top-left, top-right, bottom-right, bottom-left.
-	/// @param[in] background_colour The colour applied to the background, set alpha to zero to not generate the background.
-	/// @param[in] border_colours Pointer to a four-element array of border colors in top-right-bottom-left order, or nullptr to not generate borders.
-	static void GenerateBackgroundBorder(Geometry* geometry, const Layout::Metrics& metrics, Vector2f offset, Vector4f border_radius, Colourb background_colour, const Colourb* border_colours = nullptr);
-
-private:
-	GeometryUtilities();
-	~GeometryUtilities();
+	static void GenerateRect(Geometry& geometry, Rect rect, Colourb colour, Rect texcoord);
+	static void GenerateBackgroundBorder(Geometry& geometry, const Layout::Metrics& metrics, Point border_position, CornerInsets<float> const& border_radius, Colourb background_colour, EdgeInsets<Colourb> const& border_colours);
 };
 
 } // namespace Rml
