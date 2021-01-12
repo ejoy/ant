@@ -97,9 +97,9 @@ lContextUpdate(lua_State* L) {
 static int
 lContextUpdateSize(lua_State *L){
 	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
-	ctx->SetDimensions(Rml::Vector2i(
-		(int)luaL_checkinteger(L, 2),
-		(int)luaL_checkinteger(L, 3)));
+	ctx->SetDimensions(Rml::Size(
+		(float)luaL_checkinteger(L, 2),
+		(float)luaL_checkinteger(L, 3)));
 
 	return 0;
 }
