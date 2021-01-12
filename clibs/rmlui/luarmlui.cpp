@@ -125,7 +125,7 @@ lRenderFrame(lua_State* L){
 }
 
 int
-lrmlui_update_viewrect(lua_State *L){
+lUpdateViewrect(lua_State *L){
     if (g_wrapper){
         Rect &r = g_wrapper->context.viewrect;
         r.x = luaL_checknumber(L, 1);
@@ -148,7 +148,6 @@ luaopen_rmlui(lua_State* L) {
         { "init",     lrmlui_init },
         { "shutdown", lrmlui_shutdown },
         { "update",   lrmlui_update },
-        { "update_viewrect", lrmlui_update_viewrect},
         { nullptr, nullptr },
     };
     luaL_newlib(L, l);

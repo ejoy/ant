@@ -13,6 +13,7 @@ CMD.mouseMove = contextManager.mouseMove
 CMD.mouseDown = contextManager.mouseDown
 CMD.mouseUp = contextManager.mouseUp
 CMD.debugger = contextManager.debugger
+CMD.update_viewrect = contextManager.update_viewrect
 
 CMD.open = windowManager.open
 CMD.close = windowManager.close

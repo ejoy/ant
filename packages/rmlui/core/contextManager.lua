@@ -49,6 +49,11 @@ function m.debugger(open)
     end
 end
 
+function m.update_viewrect(x, y, w, h)
+    rmlui.UpdateViewrect(x, y, w, h)
+    rmlui.ContextUpdateSize(context, w, h)
+end
+
 function m.update()
     rmlui.RenderBegin()
     rmlui.ContextUpdate(context)

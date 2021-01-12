@@ -95,6 +95,16 @@ lContextUpdate(lua_State* L) {
 }
 
 static int
+lContextUpdateSize(lua_State *L){
+	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
+	ctx->SetDimensions(Rml::Vector2i(
+		(int)luaL_checkinteger(L, 2),
+		(int)luaL_checkinteger(L, 3)));
+
+	return 0;
+}
+
+static int
 lDocumentClose(lua_State* L) {
 	Rml::ElementDocument* doc = lua_checkobject<Rml::ElementDocument>(L, 1);
 	doc->Close();
@@ -339,6 +349,7 @@ int lDataModelSet(lua_State* L);
 int lDataModelDirty(lua_State* L);
 int lRenderBegin(lua_State* L);
 int lRenderFrame(lua_State* L);
+int lUpdateViewrect(lua_State *L);
 
 int
 lua_plugin_apis(lua_State *L) {
@@ -350,6 +361,7 @@ lua_plugin_apis(lua_State *L) {
 		{ "ContextProcessMouseButtonDown", lContextProcessMouseButtonDown },
 		{ "ContextProcessMouseButtonUp", lContextProcessMouseButtonUp },
 		{ "ContextUpdate", lContextUpdate },
+		{ "ContextUpdateSize", lContextUpdateSize},
 		{ "DataModelCreate", lDataModelCreate },
 		{ "DataModelRelease", lDataModelRelease },
 		{ "DataModelRelease", lDataModelDelete },
@@ -378,6 +390,7 @@ lua_plugin_apis(lua_State *L) {
 		{ "Log", lLog },
 		{ "RenderBegin", lRenderBegin },
 		{ "RenderFrame", lRenderFrame },
+		{ "UpdateViewrect", lUpdateViewrect},
 		{ "RmlCreateContext", lRmlCreateContext },
 		{ "RmlRemoveContext", lRmlRemoveContext },
 		{ NULL, NULL },
