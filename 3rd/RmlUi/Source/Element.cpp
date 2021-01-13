@@ -65,11 +65,9 @@ namespace Rml {
 // Meta objects for element collected in a single struct to reduce memory allocations
 struct ElementMeta
 {
-	ElementMeta(Element* el) : event_dispatcher(el), style(el), background_border(el), background_image(el) {}
+	ElementMeta(Element* el) : event_dispatcher(el), style(el) {}
 	EventDispatcher event_dispatcher;
 	ElementStyle style;
-	ElementBackgroundBorder background_border;
-	ElementBackgroundImage background_image;
 	Style::ComputedValues computed_values;
 };
 
@@ -168,17 +166,32 @@ void Element::UpdateProperties() {
 	}
 }
 
-void Element::Render()
-{
+void Element::Render() {
 	UpdateStackingContext();
 	UpdateTransformState();
 
-	// Render all elements in our local stacking context that have a z-index beneath our local index of 0.
 	size_t i = 0;
-	for (; i < stacking_context.size() && stacking_context[i]->z_index < 0; ++i)
+	for (; i < stacking_context.size() && stacking_context[i]->z_index < 0; ++i) {
 		stacking_context[i]->Render();
+	}
 
-	// Apply our transform
+	if (dirty_background || dirty_border) {
+		if (!geometry_border) {
+			geometry_border.reset(new Geometry);
+		}
+		ElementBackgroundBorder::GenerateGeometry(this, *geometry_border, padding_edge);
+		dirty_background = false;
+		dirty_border = false;
+		dirty_image = true;
+	}
+	if (dirty_image) {
+		if (!geometry_image) {
+			geometry_image.reset(new Geometry);
+		}
+		ElementBackgroundImage::GenerateGeometry(this, *geometry_image, padding_edge);
+		dirty_image = false;
+	}
+
 	if (transform_state && transform_state->GetTransform()) {
 		GetRenderInterface()->SetTransform(transform_state->GetTransform());
 	}
@@ -186,15 +199,18 @@ void Element::Render()
 		GetRenderInterface()->SetTransform(&Matrix4f::Identity());
 	}
 
-	// Set up the clipping region for this element.
 	GetRenderInterface()->SetScissorRegion(GetClippingRegion());
-	meta->background_border.Render(this);
-	meta->background_image.Render();
+	if (geometry_border) {
+		geometry_border->Render(GetOffset());
+	}
+	if (geometry_image) {
+		geometry_image->Render(GetOffset());
+	}
 	OnRender();
 
-	// Render the rest of the elements in the stacking context.
-	for (; i < stacking_context.size(); ++i)
+	for (; i < stacking_context.size(); ++i) {
 		stacking_context[i]->Render();
+	}
 }
 
 // Clones this element, returning a new, unparented element.
@@ -1236,7 +1252,7 @@ void Element::OnPropertyChange(const PropertyIdSet& changed_properties) {
 		changed_properties.Contains(PropertyId::BackgroundImage) ||
 		changed_properties.Contains(PropertyId::Opacity))
 	{
-		meta->background_border.DirtyBackground();
+		dirty_background = true;
     }
 
 	// Dirty the border if it's changed.
@@ -1251,7 +1267,7 @@ void Element::OnPropertyChange(const PropertyIdSet& changed_properties) {
 		changed_properties.Contains(PropertyId::BorderLeftColor) ||
 		changed_properties.Contains(PropertyId::Opacity))
 	{
-		meta->background_border.DirtyBorder();
+		dirty_border = true;
 	}
 	
 	// Dirty the decoration if it's changed.
@@ -1259,7 +1275,7 @@ void Element::OnPropertyChange(const PropertyIdSet& changed_properties) {
 		changed_properties.Contains(PropertyId::BackgroundImage) ||
 		changed_properties.Contains(PropertyId::Opacity))
 	{
-		meta->background_image.MarkDirty();
+		dirty_image = true;
 	}
 
 	// Check for `perspective' and `perspective-origin' changes

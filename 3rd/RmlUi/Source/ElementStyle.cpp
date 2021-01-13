@@ -42,7 +42,6 @@
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/TransformPrimitive.h"
 #include "../Include/RmlUi/ElementText.h"
-#include "ElementBackgroundImage.h"
 #include "ElementDefinition.h"
 #include "ComputeProperty.h"
 #include "PropertiesIterator.h"

@@ -148,12 +148,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\Geometry.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\GeometryBackgroundBorder.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\GeometryUtilities.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Layout.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -408,9 +402,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\FileInterfaceDefault.h">
       <Filter>source</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\GeometryBackgroundBorder.h">
-      <Filter>source</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\IdNameMap.h">
       <Filter>source</Filter>
     </ClInclude>
@@ -586,9 +577,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Geometry.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\GeometryUtilities.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Header.h">

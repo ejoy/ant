@@ -38,6 +38,7 @@
 #include "Types.h"
 #include "Transform.h"
 #include "Tween.h"
+#include "Geometry.h"
 
 namespace Rml {
 
@@ -45,13 +46,13 @@ class Context;
 class DataModel;
 class EventDispatcher;
 class EventListener;
-class ElementBackgroundImage;
 class ElementDefinition;
 class ElementDocument;
 class ElementStyle;
 class PropertyDictionary;
 class StyleSheet;
 class TransformState;
+class Geometry;
 struct ElementMeta;
 struct StackingOrderedChild;
 
@@ -550,7 +551,15 @@ protected:
 	bool dirty_animation;
 	bool dirty_transition;
 
+
 	ElementMeta* meta;
+
+	bool dirty_background = false;
+	bool dirty_border = false;
+	bool dirty_image = false;
+	UniquePtr<Geometry> geometry_border;
+	UniquePtr<Geometry> geometry_image;
+	Geometry::Path padding_edge;
 
 	friend class Rml::Context;
 	friend class Rml::ElementStyle;

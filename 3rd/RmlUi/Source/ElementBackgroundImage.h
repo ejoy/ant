@@ -30,27 +30,14 @@
 #define RMLUI_CORE_ELEMENTDECORATION_H
 
 #include "../Include/RmlUi/Types.h"
+#include "../Include/RmlUi/Geometry.h"
 
 namespace Rml {
 
-struct Tile;
-struct Texture;
-class Geometry;
 class Element;
 
-class ElementBackgroundImage {
-public:
-	ElementBackgroundImage(Element* element);
-	~ElementBackgroundImage();
-	void Render();
-	void MarkDirty();
-
-private:
-	void Reload();
-
-	Element* element;
-	UniquePtr<Geometry> geometry;
-	bool dirty = false;
+struct ElementBackgroundImage {
+	static void GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path const& paddingEdge);
 };
 
 } // namespace Rml
