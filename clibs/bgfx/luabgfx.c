@@ -981,12 +981,14 @@ lgetStats(lua_State *L) {
 		PUSHSTAT(transientIbUsed);
 		break;
 	case 't':	// timers
-		PUSHSTAT(waitSubmit); break;
-		PUSHSTAT(waitRender); break;
+// 		PUSHSTAT(waitSubmit); break;
+// 		PUSHSTAT(waitRender); break;
 		lua_pushnumber(L, (stat->cpuTimeEnd - stat->cpuTimeBegin)*1000.0/stat->cpuTimerFreq);
 		lua_setfield(L, 2, "cpu");
 		lua_pushnumber(L, (stat->gpuTimeEnd - stat->gpuTimeBegin)*1000.0/stat->gpuTimerFreq);
 		lua_setfield(L, 2, "gpu");
+		lua_pushinteger(L, stat->cpuTimerFreq / stat->cpuTimeFrame);
+		lua_setfield(L, 2, "fps");
 		break;
 	case 'v': {	// views
 		if (lua_getfield(L, 2, "view") != LUA_TTABLE) {

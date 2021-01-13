@@ -189,8 +189,11 @@ local function show_dock_space(offset_x, offset_y)
     imgui.windows.End()
     return x,y,w,h
 end
-local iRmlUi     = world:interface "ant.rmlui|rmlui"
-local irq        = world:interface "ant.render|irenderqueue"
+local iRmlUi    = world:interface "ant.rmlui|rmlui"
+local irq       = world:interface "ant.render|irenderqueue"
+local bgfx      = require "bgfx"
+local effect    = require "effect"
+local stat_window
 function m:ui_update()
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.2, 0.2, 0.2, 1)
@@ -243,6 +246,19 @@ function m:ui_update()
             world:pub {"AddPrefab", drag_file}
             drag_file = nil
         end
+    end
+
+    if not stat_window then
+        local iRmlUi = world:interface "ant.rmlui|rmlui"
+        stat_window = iRmlUi.open "bgfx_stat.rml"
+    end
+    local bgfxstat = bgfx.get_stats("sdcpnmtv")
+    if bgfxstat then
+        stat_window.postMessage(string.format("DrawCall: %d\nTriangle: %d\nTexture: %d\ncpu(ms): %f\ngpu(ms): %f\nfps: %d", bgfxstat.numDraw, bgfxstat.numTriList, bgfxstat.numTextures, bgfxstat.cpu, bgfxstat.gpu, bgfxstat.fps))
+    end
+    local particlestat = effect.particle_stat()
+    if particlestat then
+        stat_window.postMessage(string.format("Particle: " .. math.floor(particlestat.count)))
     end
 end
 
@@ -392,28 +408,33 @@ function m:data_changed()
 end
 
 local DEFAULT_COLOR <const> = 0xffffff00
-local normal_color          = {1, 0.5, 0.5, 1}
 local geo_utils = require "editor.geometry_utils"(world)
-local bgfx = require "bgfx"
 local anim_entity
-local skeleton_eid
 function m:widget()
+    if anim_entity then
+        ies.set_state(anim_entity.skeleton_eid, "visible", false)
+    end
+    anim_entity = nil
     if gizmo.target_eid then
         local e = world[gizmo.target_eid]
-        if e and e.skeleton and anim_entity ~= e then
-            local desc={vb={}, ib={}}
-            geometry_drawer.draw_skeleton(e.skeleton._handle, e.pose_result, DEFAULT_COLOR, e.transform, desc)
-            local eid = geo_utils.create_dynamic_lines(e.transform, desc.vb, desc.ib, "skeleton", DEFAULT_COLOR)
-            ies.set_state(eid, "auxgeom", true)
-            skeleton_eid = eid
-            anim_entity = e
+        if e and e.skeleton then
+            if not e.skeleton_eid then
+                local desc={vb={}, ib={}}
+                geometry_drawer.draw_skeleton(e.skeleton._handle, e.pose_result, DEFAULT_COLOR, e.transform, desc)
+                local eid = geo_utils.create_dynamic_lines(e.transform, desc.vb, desc.ib, "skeleton", DEFAULT_COLOR)
+                ies.set_state(eid, "auxgeom", true)
+                e.skeleton_eid = eid
+            end
+            if anim_entity ~= e then
+                anim_entity = e
+            end
         end
     end
     if anim_entity then
-        bgfx.dbg_text_print(0, 0, 0x0f, "Animtaion")
+        ies.set_state(anim_entity.skeleton_eid, "visible", true)
         local desc={vb={}, ib={}}
         geometry_drawer.draw_skeleton(anim_entity.skeleton._handle, anim_entity.pose_result, DEFAULT_COLOR, anim_entity.transform, desc, anim_view.get_current_joint())
-        local rc = world[skeleton_eid]._rendercache
+        local rc = world[anim_entity.skeleton_eid]._rendercache
         local vbdesc, ibdesc = rc.vb, rc.ib
         bgfx.update(vbdesc.handles[1], 0, bgfx.memory_buffer("fffd", desc.vb))
         bgfx.update(ibdesc.handle, 0, bgfx.memory_buffer("w", desc.ib))
