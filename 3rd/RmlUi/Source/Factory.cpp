@@ -29,7 +29,7 @@
 #include "../Include/RmlUi/Factory.h"
 #include "../Include/RmlUi/Context.h"
 #include "../Include/RmlUi/Core.h"
-#include "../Include/RmlUi/ElementDocument.h"
+#include "../Include/RmlUi/Document.h"
 #include "../Include/RmlUi/ElementText.h"
 #include "../Include/RmlUi/ElementUtilities.h"
 #include "../Include/RmlUi/EventListenerInstancer.h"
@@ -206,13 +206,12 @@ bool Factory::InstanceElementText(Element* parent, const String& text)
 		if (has_data_expression)
 			attributes.emplace("data-text", Variant());
 
-		ElementPtr element(new ElementText("#text", text));
+		ElementPtr element(new ElementText(parent->GetOwnerDocument(), "#text", text));
 		if (!element)
 		{
 			Log::Message(Log::LT_ERROR, "Failed to instance text element '%s', instancer returned nullptr.", text.c_str());
 			return false;
 		}
-		element->SetOwnerDocument(parent->GetOwnerDocument());
 		element->SetAttributes(attributes);
 
 		// Assign the element its text value.

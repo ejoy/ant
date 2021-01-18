@@ -27,7 +27,6 @@
  */
 
 #include "StyleSheetParser.h"
-#include "ComputeProperty.h"
 #include "StyleSheetFactory.h"
 #include "StyleSheetNode.h"
 #include "../Include/RmlUi/Factory.h"

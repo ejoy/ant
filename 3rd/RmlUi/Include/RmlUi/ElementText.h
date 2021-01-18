@@ -43,7 +43,7 @@ namespace Rml {
 class RMLUICORE_API ElementText final : public Element
 {
 public:
-	ElementText(const String& tag, const String& text);
+	ElementText(Document* owner, const String& tag, const String& text);
 	virtual ~ElementText();
 
 	/// Sets the raw string this text element contains. The actual rendered text may be different due to whitespace formatting.
@@ -72,7 +72,7 @@ public:
 	float GetBaseline();
 
 protected:
-	void OnRender() override;
+	void Render() override;
 
 	void OnPropertyChange(const PropertyIdSet& properties) override;
 
@@ -87,24 +87,29 @@ private:
 	void GenerateDecoration(const FontFaceHandle font_face_handle);
 
 	float GetLineHeight();
+	Style::TextAlign GetAlign();
+	std::optional<TextShadow> GetTextShadow();
+	std::optional<TextStroke> GetTextStroke();
+	Style::TextDecorationLine GetTextDecorationLine();
+	Colourb GetTextDecorationColor();
+	Style::TextTransform GetTextTransform();
+	Style::WhiteSpace GetWhiteSpace();
+	Style::WordBreak GetWordBreak();
+	Colourb GetTextColor();
+	FontFaceHandle GetFontFaceHandle();
 
 	String text;
-
 	LineList lines;
-
 	GeometryList geometrys;
 	bool geometry_dirty = true;
-
-	Colourb colour = Colourb(255, 255, 255);
-
-	// The decoration geometry we've generated for this string.
 	Geometry decoration;
 	bool decoration_dirty = true;
 	bool decoration_under = true;
-
 	TextEffectsHandle text_effects_handle = 0;
 	bool text_effects_dirty = false;
 
+	FontFaceHandle font_handle = 0;
+	bool font_handle_dirty = false;
 	int font_handle_version = 0;
 };
 

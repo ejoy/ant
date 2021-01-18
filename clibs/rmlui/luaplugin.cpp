@@ -1,7 +1,7 @@
 #include "pch.h"
 
 #include <RmlUi/Plugin.h>
-#include <RmlUi/ElementDocument.h>
+#include <RmlUi/Document.h>
 #include <RmlUi/Stream.h>
 #include <RmlUi/EventListener.h>
 #include <RmlUi/EventListenerInstancer.h>
@@ -65,21 +65,21 @@ void lua_plugin::OnShutdown() {
 	delete this;
 }
 
-void lua_plugin::OnDocumentCreate(Rml::ElementDocument* document) {
+void lua_plugin::OnDocumentCreate(Rml::Document* document) {
 	luabind::invoke(L, [&]() {
 		lua_pushlightuserdata(L, (void*)document);
 		call(LuaEvent::OnDocumentCreate, 1);
 	});
 }
 
-void lua_plugin::OnDocumentDestroy(Rml::ElementDocument* document) {
+void lua_plugin::OnDocumentDestroy(Rml::Document* document) {
 	luabind::invoke(L, [&]() {
 		lua_pushlightuserdata(L, (void*)document);
 		call(LuaEvent::OnDocumentDestroy, 1);
 	});
 }
 
-void lua_plugin::OnLoadInlineScript(Rml::ElementDocument* document, const std::string& content, const std::string& source_path, int source_line) {
+void lua_plugin::OnLoadInlineScript(Rml::Document* document, const std::string& content, const std::string& source_path, int source_line) {
 	luabind::invoke(L, [&]() {
 		lua_pushlightuserdata(L, (void*)document);
 		lua_pushlstring(L, content.data(), content.size());
@@ -89,7 +89,7 @@ void lua_plugin::OnLoadInlineScript(Rml::ElementDocument* document, const std::s
 	});
 }
 
-void lua_plugin::OnLoadExternalScript(Rml::ElementDocument* document, const std::string& source_path) {
+void lua_plugin::OnLoadExternalScript(Rml::Document* document, const std::string& source_path) {
 	luabind::invoke(L, [&]() {
 		lua_pushlightuserdata(L, (void*)document);
 		lua_pushlstring(L, source_path.data(), source_path.size());
@@ -167,7 +167,7 @@ lua_event_listener::lua_event_listener(lua_plugin* p, const Rml::String& code, R
 	: plugin(p) {
 	lua_State *L = plugin->L;
 	luabind::invoke(L, [&]() {
-		Rml::ElementDocument* doc = element->GetOwnerDocument();
+		Rml::Document* doc = element->GetOwnerDocument();
 		lua_pushlightuserdata(L, (void*)this);
 		lua_pushlightuserdata(L, (void*)doc);
 		lua_pushlightuserdata(L, (void*)element);

@@ -39,6 +39,7 @@
 #include "Transform.h"
 #include "Tween.h"
 #include "Geometry.h"
+#include "Node.h"
 
 namespace Rml {
 
@@ -47,7 +48,7 @@ class DataModel;
 class EventDispatcher;
 class EventListener;
 class ElementDefinition;
-class ElementDocument;
+class Document;
 class ElementStyle;
 class PropertyDictionary;
 class StyleSheet;
@@ -62,12 +63,10 @@ struct StackingOrderedChild;
 	@author Peter Curry
  */
 
-class RMLUICORE_API Element : public EnableObserverPtr<Element>
+class RMLUICORE_API Element : public Node, public EnableObserverPtr<Element>
 {
 public:
-	/// Constructs a new RmlUi element. This should not be called directly; use the Factory instead.
-	/// @param[in] tag The tag the element was declared as in RML.
-	Element(const String& tag);
+	Element(Document* owner, const String& tag);
 	virtual ~Element();
 
 	/// Clones this element, returning a new, unparented element.
@@ -105,27 +104,18 @@ public:
 	/// @return The address of the element, including its full parentage.
 	String GetAddress(bool include_pseudo_classes = false, bool include_parents = true) const;
 
-	Layout& GetLayout();
-	const Layout::Metrics& GetMetrics() const;
-	Point& GetOffset();
-	void DirtyOffset();
+	void UpdateOffset();
 
 	/// Checks if a given point in screen coordinates lies within the bordered area of this element.
 	/// @param[in] point The point to test.
 	/// @return True if the element is within this element, false otherwise.
 	bool IsPointWithinElement(const Point& point);
 
-	/// Returns the visibility of the element.
-	/// @return True if the element is visible, false otherwise.
-	bool IsVisible() const;
-	void SetVisible(bool visible);
-	/// Returns the z-index of the element.
-	/// @return The element's z-index.
 	float GetZIndex() const;
+	float GetFontSize() const;
+	float GetOpacity();
 
-	/// Returns the element's font face handle.
-	/// @return The element's font face handle.
-	FontFaceHandle GetFontFaceHandle() const;
+	bool UpdataFontSize();
 
 	/** @name Properties
 	 */
@@ -241,9 +231,6 @@ public:
 	int GetNumAttributes() const;
 	//@}
 
-	/// Gets the outer-most focus element down the tree from this node.
-	/// @return Outer-most focus element.
-	Element* GetFocusLeafNode();
 
 	/// Returns the element's context.
 	/// @return The context this element's document exists within.
@@ -264,50 +251,18 @@ public:
 	/// @param[in] id The new id of the element.
 	void SetId(const String& id);
 
-	/// Gets the left scroll offset of the element.
-	/// @return The element's left scroll offset.
-	float GetScrollLeft();
-	/// Sets the left scroll offset of the element.
-	/// @param[in] scroll_left The element's new left scroll offset.
-	void SetScrollLeft(float scroll_left);
-	/// Gets the top scroll offset of the element.
-	/// @return The element's top scroll offset.
-	float GetScrollTop();
-	/// Sets the top scroll offset of the element.
-	/// @param[in] scroll_top The element's new top scroll offset.
-	void SetScrollTop(float scroll_top);
-	/// Gets the width of the scrollable content of the element; it includes the element padding but not its margin.
-	/// @return The width (in pixels) of the of the scrollable content of the element.
-	float GetScrollWidth();
-	/// Gets the height of the scrollable content of the element; it includes the element padding but not its margin.
-	/// @return The height (in pixels) of the of the scrollable content of the element.
-	float GetScrollHeight();
-
 	/// Gets the object representing the declarations of an element's style attributes.
 	/// @return The element's style.
 	ElementStyle* GetStyle() const;
 
 	/// Gets the document this element belongs to.
 	/// @return This element's document.
-	ElementDocument* GetOwnerDocument() const;
+	Document* GetOwnerDocument() const;
 
 	/// Gets this element's parent node.
 	/// @return This element's parent.
 	Element* GetParentNode() const;
 
-	/// Gets the element immediately following this one in the tree.
-	/// @return This element's next sibling element, or nullptr if there is no sibling element.
-	Element* GetNextSibling() const;
-	/// Gets the element immediately preceding this one in the tree.
-	/// @return This element's previous sibling element, or nullptr if there is no sibling element.
-	Element* GetPreviousSibling() const;
-
-	/// Returns the first child of this element.
-	/// @return This element's first child, or nullptr if it contains no children.
-	Element* GetFirstChild() const;
-	/// Gets the last child of this element.
-	/// @return This element's last child, or nullptr if it contains no children.
-	Element* GetLastChild() const;
 	/// Get the child element at the given index.
 	/// @param[in] index Index of child to get.
 	/// @return The child element at the given index.
@@ -332,12 +287,6 @@ public:
 	/** @name DOM Methods
 	 */
 	//@{
-
-	/// Gives focus to the current element.
-	/// @return True if the change focus request was successful
-	bool Focus();
-	/// Removes focus from from this element.
-	void Blur();
 
 	/// Adds an event listener to this element.
 	/// @param[in] event Event to attach to.
@@ -376,18 +325,10 @@ public:
 	/// @param[in] element Element to insert into the this element.
 	/// @param[in] adjacent_element The element to insert directly before.
 	Element* InsertBefore(ElementPtr element, Element* adjacent_element);
-	/// Replaces the second node with the first node.
-	/// @param[in] inserted_element The element that will be inserted and replace the other element.
-	/// @param[in] replaced_element The existing element that will be replaced. If this doesn't exist, inserted_element will be appended.
-	/// @return A unique pointer to the replaced element if found, discard the result to immediately destroy.
-	ElementPtr ReplaceChild(ElementPtr inserted_element, Element* replaced_element);
 	/// Remove a child element from this element.
 	/// @param[in] The element to remove.
 	/// @returns A unique pointer to the element if found, discard the result to immediately destroy.
 	ElementPtr RemoveChild(Element* element);
-	/// Returns whether or not this element has any DOM children.
-	/// @return True if the element has at least one DOM child, false otherwise.
-	bool HasChildNodes() const;
 
 	/// Get a child element by its ID.
 	/// @param[in] id Id of the the child element
@@ -440,20 +381,18 @@ public:
 
 	void UpdateBounds();
 	void UpdateChildrenBounds();
-	void SetOwnerDocument(ElementDocument* document);
 	void SetParent(Element* parent);
 	Element* GetElementAtPoint(Point point, const Element* ignore_element = nullptr);
 	Rect GetClippingRegion();
+	const Matrix4f* GetTransform();
 
 protected:
-	void Update(float dp_ratio);
-	void Render();
+	void Update();
+	virtual void Render();
+	void SetClipRegion(const Matrix4f* matrix);
 
 	/// Updates definition, computed values, and runs OnPropertyChange on this element.
 	void UpdateProperties();
-
-	/// Called during render after backgrounds, borders, but before children, are rendered.
-	virtual void OnRender();
 
 	/// Called when attributes on the element are changed.
 	/// @param[in] changed_attributes Dictionary of attributes changed on the element. Attribute value will be empty if it was unset.
@@ -509,26 +448,13 @@ protected:
 
 	// Parent element.
 	Element* parent;
-	// Currently focused child object
-	Element* focus;
 	// The owning document
-	ElementDocument* owner_document;
+	Document* owner_document;
 
 	// Active data model for this element.
 	DataModel* data_model;
 	// Attributes on this element.
 	ElementAttributes attributes;
-
-	// The offset this element adds to its logical children due to scrolling content.
-	Point scroll_offset;
-
-	Layout layout;
-	Layout::Metrics metrics;
-	Point offset;
-
-	// And of the element's internal content.
-	Point content_offset;
-	Point content_box;
 
 	OwnedElementList children;
 
@@ -539,18 +465,14 @@ protected:
 
 	bool structure_dirty;
 
-	bool computed_values_are_default_initialized;
-
 	// Transform state
 	UniquePtr< TransformState > transform_state;
 	bool dirty_transform;
 	bool dirty_perspective;
-	bool dirty_offset = false;
 
 	ElementAnimationList animations;
 	bool dirty_animation;
 	bool dirty_transition;
-
 
 	ElementMeta* meta;
 
@@ -561,9 +483,11 @@ protected:
 	UniquePtr<Geometry> geometry_image;
 	Geometry::Path padding_edge;
 
+	float font_size = 16.f;
+
 	friend class Rml::Context;
 	friend class Rml::ElementStyle;
-	friend class Rml::ElementDocument;
+	friend class Rml::Document;
 };
 
 } // namespace Rml

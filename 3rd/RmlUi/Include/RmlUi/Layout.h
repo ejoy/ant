@@ -34,6 +34,7 @@
 
 namespace Rml {
 
+class Element;
 class ElementText;
 
 class RMLUICORE_API Layout {
@@ -59,19 +60,6 @@ public:
 		}
 	};
 
-	enum class Area {
-		Margin,
-		Border,
-		Padding,
-	};
-
-	enum Edge {
-		TOP = 0,
-		RIGHT = 1,
-		BOTTOM = 2,
-		LEFT = 3
-	};
-
 	enum class Overflow {
 		Visible,
 		Hidden,
@@ -83,26 +71,25 @@ public:
 
 	Layout(const Layout&) = delete;
 	Layout(Layout&&) = delete;
-
 	Layout& operator=(const Layout&) = delete;
 	Layout& operator=(Layout&&) = delete;
 
-	void CalculateLayout(Size const& size);
-
-	void SetWidth(float v);
-	void SetHeight(float v);
-
-	void InsertChild(Layout const& child, uint32_t index);
-	void SwapChild(Layout const& child, uint32_t index);
-	void RemoveChild(Layout const& child);
-	void RemoveAllChildren();
-	void SetProperty(PropertyId id, const Property* property, float font_size, float document_font_size, float dp_ratio);
 	void SetElementText(ElementText* element);
+	void CalculateLayout(Size const& size);
+	void SetProperty(PropertyId id, const Property* property, Element* element);
 	void MarkDirty();
 	std::string ToString() const;
 	bool UpdateMetrics(Layout::Metrics& metrics);
 	Overflow GetOverflow();
 	void SetVisible(bool visible);
+
+	void InsertChild(Layout const& child, uint32_t index);
+	void SwapChild(Layout const& child, uint32_t index);
+	void RemoveChild(Layout const& child);
+	void RemoveAllChildren();
+	YGNodeRef GetSelf() const;
+	YGNodeRef GetParent() const;
+	void SetContext(void* context);
 
 private:
 	YGNodeRef node;

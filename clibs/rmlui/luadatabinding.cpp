@@ -11,7 +11,7 @@ extern "C" {
 #include <RmlUi/DataModelHandle.h>
 #include <RmlUi/DataVariable.h>
 #include <RmlUi/Element.h>
-#include <RmlUi/ElementDocument.h>
+#include <RmlUi/Document.h>
 
 void
 lua_pushvariant(lua_State *L, const Rml::Variant &v) {
@@ -104,7 +104,7 @@ struct LuaDataModel {
 	LuaTableDef* tableDef;
 	lua_State* dataL;
 	int top;
-	LuaDataModel(Rml::ElementDocument* document, const Rml::String& name);
+	LuaDataModel(Rml::Document* document, const Rml::String& name);
 	~LuaDataModel() { release(); }
 	void release();
 	bool valid() { return !!constructor; }
@@ -334,7 +334,7 @@ lDataModelDelete(lua_State* L) {
 	return 0;
 }
 
-LuaDataModel::LuaDataModel(Rml::ElementDocument* document, const Rml::String& name)
+LuaDataModel::LuaDataModel(Rml::Document* document, const Rml::String& name)
 	: constructor(document->CreateDataModel(name))
 	, handle(constructor.GetModelHandle())
 	, scalarDef(new LuaScalarDef(this))
@@ -354,7 +354,7 @@ void LuaDataModel::release() {
 
 int
 lDataModelCreate(lua_State *L) {
-	Rml::ElementDocument* document = (Rml::ElementDocument*)lua_touserdata(L, 1);
+	Rml::Document* document = (Rml::Document*)lua_touserdata(L, 1);
 	Rml::String name = luaL_checkstring(L, 2);
 	luaL_checktype(L, 3, LUA_TTABLE);
 

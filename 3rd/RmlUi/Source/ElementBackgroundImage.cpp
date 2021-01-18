@@ -31,7 +31,7 @@
 #include "../Include/RmlUi/Texture.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/Geometry.h"
-#include "../Include/RmlUi/ElementDocument.h"
+#include "../Include/RmlUi/Document.h"
 #include "../Include/RmlUi/SystemInterface.h"
 #include "../Include/RmlUi/Core.h"
 
@@ -48,19 +48,18 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	GetSystemInterface()->JoinPath(path, StringUtilities::Replace(element->GetOwnerDocument()->GetSourceURL(), '|', ':'), background_image);
 	geometry.SetTexture(Texture::Fetch(path));
 	Layout::Metrics const& metrics = element->GetMetrics();
-	const auto& computed = element->GetComputedValues();
-	Colourb quad_colour(255, 255, 255, byte(255 * computed.opacity));
+	Colourb colour = Colourb(255, 255, 255).ApplyOpacity(element->GetOpacity());
 
 	Rect surface {
 		{0, 0},
 		metrics.frame.size
 	};
 	if (paddingEdge.size() == 0) {
-		geometry.AddRect(surface - metrics.borderWidth, quad_colour);
+		geometry.AddRect(surface - metrics.borderWidth, colour);
 		geometry.UpdateUV(4, surface, Rect{ 0,0,1,1 });
 	}
 	else {
-		geometry.AddPolygon(paddingEdge, quad_colour);
+		geometry.AddPolygon(paddingEdge, colour);
 		geometry.UpdateUV(paddingEdge.size(), surface, Rect{ 0,0,1,1 });
 	}
 }

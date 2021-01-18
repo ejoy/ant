@@ -58,9 +58,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\Clock.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\ComputeProperty.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Context.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -107,9 +104,6 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\ElementDefinition.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\ElementDocument.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\ElementStyle.cpp">
@@ -319,6 +313,15 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\XMLParseTools.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Node.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Document.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\ElementDocument.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\rmlui\file.h">
@@ -352,9 +355,6 @@
       <Filter>binding</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\Clock.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\ComputeProperty.h">
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\DataController.h">
@@ -516,9 +516,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Colour.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\ComputedValues.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Config.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -547,9 +544,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Element.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\ElementDocument.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\ElementText.h">
@@ -694,6 +688,18 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\XMLParser.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Node.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Document.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\ElementDocument.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\ComputedValues.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

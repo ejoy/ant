@@ -35,7 +35,7 @@
 namespace Rml {
 
 class Element;
-class ElementDocument;
+class Document;
 class Context;
 
 class RMLUICORE_API Plugin {
@@ -50,10 +50,10 @@ public:
 	virtual int GetEventClasses();
 	virtual void OnInitialise();
 	virtual void OnShutdown();
-	virtual void OnDocumentCreate(ElementDocument* document);
-	virtual void OnDocumentDestroy(ElementDocument* document);
-	virtual void OnLoadInlineScript(ElementDocument* document, const std::string& content, const std::string& source_path, int source_line);
-	virtual void OnLoadExternalScript(ElementDocument* document, const std::string& source_path);
+	virtual void OnDocumentCreate(Document* document);
+	virtual void OnDocumentDestroy(Document* document);
+	virtual void OnLoadInlineScript(Document* document, const std::string& content, const std::string& source_path, int source_line);
+	virtual void OnLoadExternalScript(Document* document, const std::string& source_path);
 	virtual void OnElementCreate(Element* element);
 	virtual void OnElementDestroy(Element* element);
 };

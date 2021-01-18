@@ -30,7 +30,7 @@
 #include "DocumentHeader.h"
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/Element.h"
-#include "../Include/RmlUi/ElementDocument.h"
+#include "../Include/RmlUi/Document.h"
 #include "../Include/RmlUi/StringUtilities.h"
 #include "../Include/RmlUi/SystemInterface.h"
 #include "../Include/RmlUi/XMLParser.h"
@@ -129,7 +129,7 @@ bool XMLNodeHandlerHead::ElementEnd(XMLParser* parser, const String& name)
 		if (!element)
 			return true;
 
-		ElementDocument* document = element->GetOwnerDocument();
+		Document* document = element->GetOwnerDocument();
 		if (document)
 			document->ProcessHeader(parser->GetDocumentHeader());
 	}

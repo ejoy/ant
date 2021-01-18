@@ -108,6 +108,11 @@ public:
 	/// @return A constant pointer to the first value.
 	inline operator ColourType*() { return &red; }
 
+	inline Colour& ApplyOpacity(float opacity) {
+		alpha = ColourType((float)alpha * opacity);
+		return *this;
+	}
+
 	ColourType red, green, blue, alpha;
 
 #ifdef RMLUI_COLOUR_USER_EXTRA

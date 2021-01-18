@@ -37,7 +37,7 @@
 namespace Rml {
 
 class Stream;
-class ElementDocument;
+class Document;
 class EventListener;
 enum class EventId : uint16_t;
 
@@ -72,13 +72,13 @@ public:
 	/// Load a document into the context.
 	/// @param[in] document_path The path to the document to load.
 	/// @return The loaded document, or nullptr if no document was loaded.
-	ElementDocument* LoadDocument(const String& document_path);
+	Document* LoadDocument(const String& document_path);
 	/// Unload the given document.
 	/// @param[in] document The document to unload.
-	void UnloadDocument(ElementDocument* document);
+	void UnloadDocument(Document* document);
 
-	void SetFocus(ElementDocument* document);
-	ElementDocument* GetFocus() const;
+	void SetFocus(Document* document);
+	Document* GetFocus() const;
 
 	/// Sends a key down event into this context.
 	/// @param[in] key The key pressed.
@@ -118,11 +118,11 @@ private:
 	float density_independent_pixel_ratio;
 
 	// Documents that have been unloaded from the context but not yet released.
-	std::vector<ElementDocument*> unloaded_documents;
+	std::vector<Document*> unloaded_documents;
 
 	// Root of the element tree.
-	std::vector<ElementDocument*> documents;
-	ElementDocument* focus = nullptr;
+	std::vector<Document*> documents;
+	Document* focus = nullptr;
 
 	// Releases all unloaded documents pending destruction.
 	void ReleaseUnloadedDocuments();

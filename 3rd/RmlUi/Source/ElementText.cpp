@@ -31,10 +31,11 @@
 #include "ElementStyle.h"
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/Context.h"
-#include "../Include/RmlUi/ElementDocument.h"
+#include "../Include/RmlUi/Document.h"
 #include "../Include/RmlUi/ElementUtilities.h"
 #include "../Include/RmlUi/Event.h"
 #include "../Include/RmlUi/FontEngineInterface.h"
+#include "../Include/RmlUi/RenderInterface.h"
 #include "../Include/RmlUi/Property.h"
 
 namespace Rml {
@@ -42,10 +43,12 @@ namespace Rml {
 static bool BuildToken(String& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline, Style::TextTransform text_transformation);
 static bool LastToken(const char* token_begin, const char* string_end, bool collapse_white_space, bool break_at_endline);
 
-ElementText::ElementText(const String& tag, const String& text_)
-	: Element(tag)
+ElementText::ElementText(Document* owner, const String& tag, const String& text_)
+	: Element(owner, tag)
 	, text(text_)
-	, decoration() {
+	, decoration() 
+{
+	Node::SetType(Node::Type::Text);
 	GetLayout().SetElementText(this);
 }
 
@@ -64,35 +67,30 @@ const String& ElementText::GetText() const
 	return text;
 }
 
-void ElementText::OnRender()
-{
+void ElementText::Render() {
 	FontFaceHandle font_face_handle = GetFontFaceHandle();
 	if (font_face_handle == 0)
 		return;
-	
-	// If our font effects have potentially changed, update it and force a geometry generation if necessary.
-	if (text_effects_dirty && UpdateTextEffects())
-		geometry_dirty = true;
 
-	// Dirty geometry if font version has changed.
+	const Matrix4f* matrix = Element::GetTransform();
+	SetClipRegion(matrix);
+	GetRenderInterface()->SetTransform(matrix ? matrix : &Matrix4f::Identity());
+
+	if (text_effects_dirty && UpdateTextEffects()) {
+		geometry_dirty = true;
+	}
 	int new_version = GetFontEngineInterface()->GetVersion(font_face_handle);
-	if (new_version != font_handle_version)
-	{
+	if (new_version != font_handle_version) {
 		font_handle_version = new_version;
 		geometry_dirty = true;
 	}
-
-	// Regenerate the geometry if the colour or font configuration has altered.
 	if (geometry_dirty) {
 		GenerateGeometry(font_face_handle);
 	}
-
-	// Regenerate text decoration if necessary.
 	if (decoration_dirty) {
 		GenerateDecoration(font_face_handle);
 	}
-
-	const Point translation = GetOffset() + metrics.borderWidth;
+	const Point translation = GetOffset() + GetMetrics().borderWidth;
 	if (decoration_under) {
 		decoration.Render(translation);
 	}
@@ -119,22 +117,20 @@ bool ElementText::GenerateLine(String& line, int& line_length, float& line_width
 		return true;
 
 	// Determine how we are processing white-space while formatting the text.
-	using namespace Style;
-	auto& computed = GetComputedValues();
-	WhiteSpace white_space_property = computed.white_space;
-	bool collapse_white_space = white_space_property == WhiteSpace::Normal ||
-								white_space_property == WhiteSpace::Nowrap ||
-								white_space_property == WhiteSpace::Preline;
-	bool break_at_line = (maximum_line_width >= 0) && 
-		                   (white_space_property == WhiteSpace::Normal ||
-							white_space_property == WhiteSpace::Prewrap ||
-							white_space_property == WhiteSpace::Preline);
-	bool break_at_endline = white_space_property == WhiteSpace::Pre ||
-							white_space_property == WhiteSpace::Prewrap ||
-							white_space_property == WhiteSpace::Preline;
+	Style::WhiteSpace white_space_property = GetWhiteSpace();
+	Style::TextTransform text_transform_property = GetTextTransform();
+	Style::WordBreak word_break = GetWordBreak();
 
-	TextTransform text_transform_property = computed.text_transform;
-	WordBreak word_break = computed.word_break;
+	bool collapse_white_space = white_space_property == Style::WhiteSpace::Normal ||
+								white_space_property == Style::WhiteSpace::Nowrap ||
+								white_space_property == Style::WhiteSpace::Preline;
+	bool break_at_line = (maximum_line_width >= 0) && 
+		                   (white_space_property == Style::WhiteSpace::Normal ||
+							white_space_property == Style::WhiteSpace::Prewrap ||
+							white_space_property == Style::WhiteSpace::Preline);
+	bool break_at_endline = white_space_property == Style::WhiteSpace::Pre ||
+							white_space_property == Style::WhiteSpace::Prewrap ||
+							white_space_property == Style::WhiteSpace::Preline;
 
 	FontEngineInterface* font_engine_interface = GetFontEngineInterface();
 
@@ -162,7 +158,7 @@ bool ElementText::GenerateLine(String& line, int& line_length, float& line_width
 
 			if (token_width > max_token_width)
 			{
-				if (word_break == WordBreak::BreakAll || (word_break == WordBreak::BreakWord && line.empty()))
+				if (word_break == Style::WordBreak::BreakAll || (word_break == Style::WordBreak::BreakWord && line.empty()))
 				{
 					// Try to break up the word
 					max_token_width = int(maximum_line_width - line_width);
@@ -246,33 +242,18 @@ void ElementText::AddLine(const Point& position, const String& line)
 
 void ElementText::OnPropertyChange(const PropertyIdSet& changed_properties)
 {
-	Element::OnPropertyChange(changed_properties);
-
-	bool colour_changed = false;
-	bool font_face_changed = false;
-	auto& computed = GetComputedValues();
-
-	if (changed_properties.Contains(PropertyId::Color) ||
-		changed_properties.Contains(PropertyId::Opacity))
-	{
-		// Fetch our (potentially) new colour.
-		Colourb new_colour = computed.color;
-		float opacity = computed.opacity;
-		new_colour.alpha = byte(opacity * float(new_colour.alpha));
-		colour_changed = colour != new_colour;
-		if (colour_changed)
-			colour = new_colour;
-	}
+	bool layout_changed = false;
 
 	if (changed_properties.Contains(PropertyId::FontFamily) ||
 		changed_properties.Contains(PropertyId::FontWeight) ||
 		changed_properties.Contains(PropertyId::FontStyle) ||
 		changed_properties.Contains(PropertyId::FontSize))
 	{
-		font_face_changed = true;
-
-		geometrys.clear();
+		DirtyLayout();
+		decoration_dirty = true;
 		text_effects_dirty = true;
+		font_handle_dirty = true;
+		layout_changed = true;
 	}
 
 	if (changed_properties.Contains(PropertyId::TextShadowH) ||
@@ -284,30 +265,38 @@ void ElementText::OnPropertyChange(const PropertyIdSet& changed_properties)
 		text_effects_dirty = true;
 	}
 
-	if (changed_properties.Contains(PropertyId::TextDecorationLine))
-	{
+
+	if (changed_properties.Contains(PropertyId::LineHeight)) {
+		DirtyLayout();
+		decoration_dirty = true;
+		layout_changed = true;
+	}
+
+	if (layout_changed) {
+		return;
+	}
+
+	bool colour_changed = false;
+
+	if (changed_properties.Contains(PropertyId::TextDecorationLine)) {
 		decoration_dirty = true;
 	}
 
-	if (changed_properties.Contains(PropertyId::LineHeight))
-	{
-		DirtyLayout();
+	if (changed_properties.Contains(PropertyId::Opacity)) {
+		text_effects_dirty = true;
+		colour_changed = true;
 	}
-
-	if (font_face_changed)
-	{
-		// We have to let our document know we need to be regenerated.
-		DirtyLayout();
+	if (changed_properties.Contains(PropertyId::Color)) {
+		colour_changed = true;
 	}
-	else if (colour_changed)
-	{
+	if (colour_changed) {
 		// Force the geometry to be regenerated.
 		geometry_dirty = true;
-
 		// Re-colour the decoration geometry.
-		Vector< Vertex >& vertices = decoration.GetVertices();
-		for (size_t i = 0; i < vertices.size(); ++i)
-			vertices[i].col = colour;
+		Colourb col = GetTextDecorationColor().ApplyOpacity(GetOpacity());
+		for (auto& vtx : decoration.GetVertices()) {
+			vtx.col = col;
+		}
 	}
 }
 
@@ -322,15 +311,17 @@ bool ElementText::UpdateTextEffects() {
 		return false;
 	text_effects_dirty = false;
 
-	auto const& computedValues = GetComputedValues();
+	auto shadow = GetTextShadow();
+	auto stroke = GetTextStroke();
 	TextEffects text_effects;
-	if (computedValues.text_shadow) {
-		text_effects.emplace_back(computedValues.text_shadow.value());
+	if (shadow) {
+		shadow->color.ApplyOpacity(GetOpacity());
+		text_effects.emplace_back(shadow.value());
 	}
-	if (computedValues.text_stroke) {
-		text_effects.emplace_back(computedValues.text_stroke.value());
+	if (stroke) {
+		stroke->color.ApplyOpacity(GetOpacity());
+		text_effects.emplace_back(stroke.value());
 	}
-
 	TextEffectsHandle new_text_effects_handle = GetFontEngineInterface()->PrepareTextEffects(GetFontFaceHandle(), text_effects);
 	if (new_text_effects_handle != text_effects_handle) {
 		text_effects_handle = new_text_effects_handle;
@@ -341,7 +332,8 @@ bool ElementText::UpdateTextEffects() {
 
 // Clears and regenerates all of the text's geometry.
 void ElementText::GenerateGeometry(const FontFaceHandle font_face_handle) {
-	GetFontEngineInterface()->GenerateString(font_face_handle, text_effects_handle, lines, colour, geometrys);
+	Colourb color = GetTextColor().ApplyOpacity(GetOpacity());
+	GetFontEngineInterface()->GenerateString(font_face_handle, text_effects_handle, lines, color, geometrys);
 	geometry_dirty = false;
 	decoration_dirty = true;
 }
@@ -349,25 +341,11 @@ void ElementText::GenerateGeometry(const FontFaceHandle font_face_handle) {
 void ElementText::GenerateDecoration(const FontFaceHandle font_face_handle) {
 	decoration_dirty = false;
 	decoration.Release();
-	Style::ComputedValues const& computedValues = GetComputedValues();
-	Style::TextDecorationLine text_decoration_line = computedValues.text_decoration_line;
+	Style::TextDecorationLine text_decoration_line = GetTextDecorationLine();
 	if (text_decoration_line == Style::TextDecorationLine::None) {
 		return;
 	}
-	Colourb color;
-	Style::Color text_decoration_color = computedValues.text_decoration_color;
-	if (text_decoration_color.type == Style::Color::Type::CurrentColor) {
-		if (computedValues.text_stroke) {
-			color = computedValues.text_stroke->color;
-		}
-		else {
-			color = colour;
-		}
-	}
-	else {
-		color = text_decoration_color.value;
-	}
-
+	Colourb color = GetTextDecorationColor().ApplyOpacity(GetOpacity());
 	for (const Line& line : lines) {
 		Point position = line.position;
 		float width = line.width;
@@ -522,7 +500,7 @@ Size ElementText::Measure(float minWidth, float maxWidth, float minHeight, float
 	float first_line = true;
 	float baseline = GetBaseline();
 
-	Style::TextAlign text_align = GetComputedValues().text_align;
+	Style::TextAlign text_align = GetAlign();
 	std::string line;
 	while (!finish && height < maxHeight) {
 		float line_width;
@@ -549,17 +527,96 @@ Size ElementText::Measure(float minWidth, float maxWidth, float minHeight, float
 float ElementText::GetLineHeight() {
 	float line_height = (float)GetFontEngineInterface()->GetLineHeight(GetFontFaceHandle());
 	const Property* property = GetProperty(PropertyId::LineHeight);
-	if (!property) {
-		return line_height;
-	}
 	return line_height * property->Get<float>();
 }
+
 
 float ElementText::GetBaseline() {
 	float line_height = GetLineHeight();
 	return line_height / 2.0f
 		+ GetFontEngineInterface()->GetLineHeight(GetFontFaceHandle()) / 2.0f
 		- GetFontEngineInterface()->GetBaseline(GetFontFaceHandle());
+}
+
+Style::TextAlign ElementText::GetAlign() {
+	const Property* property = GetProperty(PropertyId::TextAlign);
+	return (Style::TextAlign)property->Get<int>();
+}
+
+std::optional<TextShadow> ElementText::GetTextShadow() {
+	TextShadow shadow {
+		ComputeProperty<float>(GetProperty(PropertyId::TextShadowH), this),
+		ComputeProperty<float>(GetProperty(PropertyId::TextShadowV), this),
+		GetProperty(PropertyId::TextShadowColor)->Get<Colourb>(),
+	};
+	if (shadow.offset_h || shadow.offset_v) {
+		return shadow;
+	}
+	return {};
+}
+
+std::optional<TextStroke> ElementText::GetTextStroke() {
+	TextStroke stroke{
+		ComputeProperty<float>(GetProperty(PropertyId::TextStrokeWidth), this),
+		GetProperty(PropertyId::TextStrokeColor)->Get<Colourb>(),
+	};
+	if (stroke.width) {
+		return stroke;
+	}
+	return {};
+}
+
+Style::TextDecorationLine ElementText::GetTextDecorationLine() {
+	const Property* property = GetProperty(PropertyId::TextDecorationLine);
+	return (Style::TextDecorationLine)property->Get<int>();
+}
+
+Colourb ElementText::GetTextDecorationColor() {
+	const Property* property = GetProperty(PropertyId::TextDecorationColor);
+	if (property->unit == Property::KEYWORD) {
+		// CurrentColor
+		auto stroke = GetTextStroke();
+		if (stroke) {
+			return stroke->color;
+		}
+		else {
+			return GetTextColor();
+		}
+	}
+	return property->Get<Colourb>();
+}
+
+Style::TextTransform ElementText::GetTextTransform() {
+	const Property* property = GetProperty(PropertyId::TextTransform);
+	return (Style::TextTransform)property->Get<int>();
+}
+
+Style::WhiteSpace ElementText::GetWhiteSpace() {
+	const Property* property = GetProperty(PropertyId::WhiteSpace);
+	return (Style::WhiteSpace)property->Get<int>();
+}
+
+Style::WordBreak ElementText::GetWordBreak() {
+	const Property* property = GetProperty(PropertyId::WordBreak);
+	return (Style::WordBreak)property->Get<int>();
+}
+
+Colourb ElementText::GetTextColor() {
+	const Property* property = GetProperty(PropertyId::Color);
+	return property->Get<Colourb>();
+}
+
+FontFaceHandle ElementText::GetFontFaceHandle() {
+	if (!font_handle_dirty) {
+		return font_handle;
+	}
+	String family = StringUtilities::ToLower(GetProperty(PropertyId::FontFamily)->Get<String>());
+	Style::FontStyle style   = (Style::FontStyle)GetProperty(PropertyId::FontStyle)->Get<int>();
+	Style::FontWeight weight = (Style::FontWeight)GetProperty(PropertyId::FontWeight)->Get<int>();
+	int size = GetFontSize();
+	font_handle = GetFontEngineInterface()->GetFontFaceHandle(family, style, weight, size);
+	font_handle_dirty = false;
+	return font_handle;
 }
 
 } // namespace Rml

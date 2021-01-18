@@ -66,7 +66,7 @@ using RowMajorMatrix4f = Matrix4< float, RowMajorStorage< float > >;
 using Matrix4f = RMLUI_MATRIX4_TYPE;
 
 // Common classes
-class ElementDocument;
+class Document;
 class Element;
 class ElementAnimation;
 class Context;
@@ -89,7 +89,7 @@ using TextureHandle = uintptr_t;
 using FontFaceHandle = uintptr_t;
 using TextEffectsHandle = uintptr_t;
 
-using ElementDocumentPtr = UniquePtr<ElementDocument>;
+using DocumentPtr = UniquePtr<Document>;
 using ElementPtr = UniquePtr<Element>;
 
 // Container types for common classes
@@ -284,6 +284,9 @@ inline Rect operator-(const Rect& lhs, const EdgeInsets<float>& rhs) {
 
 inline Point operator*(const Point& lhs, const Point& rhs) {
 	return Point(lhs.x * rhs.x, lhs.y * rhs.y);
+}
+inline Size operator*(const Size& lhs, float rhs) {
+	return Size(lhs.w * rhs, lhs.h * rhs);
 }
 } // namespace Rml
 

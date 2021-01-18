@@ -28,7 +28,7 @@
 
 #include "../Include/RmlUi/Event.h"
 #include "../Include/RmlUi/Element.h"
-#include "../Include/RmlUi/ElementDocument.h"
+#include "../Include/RmlUi/Document.h"
 #include "EventSpecification.h"
 
 namespace Rml {
@@ -82,10 +82,10 @@ void Event::InitMouseEvent() {
 		parameters["offsetY"] = offset.y;
 	}
 
-	ElementDocument* document = target_element->GetOwnerDocument();
+	Document* document = target_element->GetOwnerDocument();
 	if (document) {
-		Point page = client - document->GetOffset();
-		if (document->Project(page)) {
+		Point page = client - document->body.GetOffset();
+		if (document->body.Project(page)) {
 			parameters["pageX"] = page.x;
 			parameters["pageY"] = page.y;
 		}

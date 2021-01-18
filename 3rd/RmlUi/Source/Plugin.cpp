@@ -43,18 +43,18 @@ void Plugin::OnInitialise()
 void Plugin::OnShutdown()
 { }
 
-void Plugin::OnDocumentCreate(ElementDocument* RMLUI_UNUSED_PARAMETER(document)) {
+void Plugin::OnDocumentCreate(Document* RMLUI_UNUSED_PARAMETER(document)) {
 	RMLUI_UNUSED(document);
 }
 
-void Plugin::OnDocumentDestroy(ElementDocument* RMLUI_UNUSED_PARAMETER(document)) {
+void Plugin::OnDocumentDestroy(Document* RMLUI_UNUSED_PARAMETER(document)) {
 	RMLUI_UNUSED(document);
 }
 
-void Plugin::OnLoadInlineScript(ElementDocument* document, const std::string& content, const std::string& source_path, int source_line) {
+void Plugin::OnLoadInlineScript(Document* document, const std::string& content, const std::string& source_path, int source_line) {
 }
 
-void Plugin::OnLoadExternalScript(ElementDocument* document, const std::string& source_path) {
+void Plugin::OnLoadExternalScript(Document* document, const std::string& source_path) {
 }
 
 void Plugin::OnElementCreate(Element* RMLUI_UNUSED_PARAMETER(element)) {

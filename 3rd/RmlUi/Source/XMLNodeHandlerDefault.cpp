@@ -48,8 +48,7 @@ XMLNodeHandlerDefault::~XMLNodeHandlerDefault()
 Element* XMLNodeHandlerDefault::ElementStart(XMLParser* parser, const String& name, const XMLAttributes& attributes)
 {
 	Element* parent = parser->GetParseFrame()->element;
-	ElementPtr element(new Element(name));
-	element->SetOwnerDocument(parent->GetOwnerDocument());
+	ElementPtr element(new Element(parent->GetOwnerDocument(), name));
 	element->SetAttributes(attributes);
 	return parent->AppendChild(std::move(element));
 }

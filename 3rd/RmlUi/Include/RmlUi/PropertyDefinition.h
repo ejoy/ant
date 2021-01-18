@@ -53,6 +53,7 @@ public:
 	/// @return This property definition.
 	PropertyDefinition& AddParser(const String& parser_name, const String& parser_parameters = "");
 
+
 	/// Called when parsing a RCSS declaration.
 	/// @param property[out] The property to set the parsed value onto.
 	/// @param value[in] The raw value defined for this property.

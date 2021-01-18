@@ -35,7 +35,7 @@ namespace Rml {
 
 class Context;
 class Element;
-class ElementDocument;
+class Document;
 class Plugin;
 
 class PluginRegistry {
@@ -43,10 +43,10 @@ public:
 	static void RegisterPlugin(Plugin* plugin);
 	static void NotifyInitialise();
 	static void NotifyShutdown();
-	static void NotifyDocumentCreate(ElementDocument* document);
-	static void NotifyDocumentDestroy(ElementDocument* document);
-	static void NotifyLoadInlineScript(ElementDocument* document, const std::string& content, const std::string& source_path, int source_line);
-	static void NotifyLoadExternalScript(ElementDocument* document, const std::string& source_path);
+	static void NotifyDocumentCreate(Document* document);
+	static void NotifyDocumentDestroy(Document* document);
+	static void NotifyLoadInlineScript(Document* document, const std::string& content, const std::string& source_path, int source_line);
+	static void NotifyLoadExternalScript(Document* document, const std::string& source_path);
 	static void NotifyElementCreate(Element* element);
 	static void NotifyElementDestroy(Element* element);
 

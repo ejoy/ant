@@ -8,7 +8,7 @@ class lua_event_listener;
 class lua_event_listener_instancer;
 
 class Rml::Element;
-class Rml::ElementDocument;
+class Rml::Document;
 
 enum class LuaEvent : int {
 	OnDocumentCreate = 1,
@@ -29,10 +29,10 @@ public:
 	int GetEventClasses() override;
 	void OnInitialise() override;
 	void OnShutdown() override;
-	void OnDocumentCreate(Rml::ElementDocument* document) override;
-	void OnDocumentDestroy(Rml::ElementDocument* document) override;
-	void OnLoadInlineScript(Rml::ElementDocument* document, const std::string& content, const std::string& source_path, int source_line) override;
-	void OnLoadExternalScript(Rml::ElementDocument* document, const std::string& source_path) override;
+	void OnDocumentCreate(Rml::Document* document) override;
+	void OnDocumentDestroy(Rml::Document* document) override;
+	void OnLoadInlineScript(Rml::Document* document, const std::string& content, const std::string& source_path, int source_line) override;
+	void OnLoadExternalScript(Rml::Document* document, const std::string& source_path) override;
 	void OnElementCreate(Rml::Element* element) override;
 	void OnElementDestroy(Rml::Element* element) override;
 

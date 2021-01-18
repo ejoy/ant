@@ -29,7 +29,7 @@
 #include "XMLNodeHandlerBody.h"
 #include "XMLParseTools.h"
 #include "../Include/RmlUi/XMLParser.h"
-#include "../Include/RmlUi/ElementDocument.h"
+#include "../Include/RmlUi/Document.h"
 #include "../Include/RmlUi/Factory.h"
 
 namespace Rml {
@@ -48,9 +48,9 @@ Element* XMLNodeHandlerBody::ElementStart(XMLParser* parser, const String& RMLUI
 
 	Element* element = parser->GetParseFrame()->element;
 	// Apply any attributes to the document
-	ElementDocument* document = parser->GetParseFrame()->element->GetOwnerDocument();
+	Document* document = parser->GetParseFrame()->element->GetOwnerDocument();
 	if (document)
-		document->SetAttributes(attributes);
+		document->body.SetAttributes(attributes);
 
 	// Tell the parser to use the element handler for all children
 	parser->PushDefaultHandler();

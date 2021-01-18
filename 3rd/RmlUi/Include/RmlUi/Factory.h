@@ -38,7 +38,7 @@ class Context;
 class DataControllerInstancer;
 class DataViewInstancer;
 class Element;
-class ElementDocument;
+class Document;
 class Event;
 class EventListener;
 class EventListenerInstancer;

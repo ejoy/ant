@@ -63,22 +63,22 @@ void PluginRegistry::NotifyShutdown() {
 	element_plugins.clear();
 }
 
-void PluginRegistry::NotifyDocumentCreate(ElementDocument* document) {
+void PluginRegistry::NotifyDocumentCreate(Document* document) {
 	for (size_t i = 0; i < document_plugins.size(); ++i)
 		document_plugins[i]->OnDocumentCreate(document);
 }
 
-void PluginRegistry::NotifyDocumentDestroy(ElementDocument* document) {
+void PluginRegistry::NotifyDocumentDestroy(Document* document) {
 	for (size_t i = 0; i < document_plugins.size(); ++i)
 		document_plugins[i]->OnDocumentDestroy(document);
 }
 
-void PluginRegistry::NotifyLoadInlineScript(ElementDocument* document, const std::string& content, const std::string& source_path, int source_line) {
+void PluginRegistry::NotifyLoadInlineScript(Document* document, const std::string& content, const std::string& source_path, int source_line) {
 	for (size_t i = 0; i < document_plugins.size(); ++i)
 		document_plugins[i]->OnLoadInlineScript(document, content, source_path, source_line);
 }
 
-void PluginRegistry::NotifyLoadExternalScript(ElementDocument* document, const std::string& source_path) {
+void PluginRegistry::NotifyLoadExternalScript(Document* document, const std::string& source_path) {
 	for (size_t i = 0; i < document_plugins.size(); ++i)
 		document_plugins[i]->OnLoadExternalScript(document, source_path);
 }

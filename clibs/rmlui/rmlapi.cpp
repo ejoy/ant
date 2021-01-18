@@ -3,7 +3,7 @@
 #include "RmlUi/Context.h"
 #include "RmlUi/Core.h"
 #include "RmlUi/Element.h"
-#include "RmlUi/ElementDocument.h"
+#include "RmlUi/Document.h"
 #include "RmlUi/EventListener.h"
 #include "RmlUi/PropertyDictionary.h"
 #include "RmlUi/StyleSheetSpecification.h"
@@ -46,7 +46,7 @@ static int
 lContextLoadDocument(lua_State* L) {
 	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
 	const char* path = luaL_checkstring(L, 2);
-	Rml::ElementDocument* doc = ctx->LoadDocument(path);
+	Rml::Document* doc = ctx->LoadDocument(path);
 	if (!doc) {
 		return 0;
 	}
@@ -57,7 +57,7 @@ lContextLoadDocument(lua_State* L) {
 static int
 lContextUnloadDocument(lua_State* L) {
 	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
-	Rml::ElementDocument* doc = lua_checkobject<Rml::ElementDocument>(L, 2);
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 2);
 	ctx->UnloadDocument(doc);
 	return 0;
 }
@@ -106,28 +106,28 @@ lContextUpdateSize(lua_State *L){
 
 static int
 lDocumentClose(lua_State* L) {
-	Rml::ElementDocument* doc = lua_checkobject<Rml::ElementDocument>(L, 1);
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
 	doc->Close();
 	return 0;
 }
 
 static int
 lDocumentGetContext(lua_State *L) {
-	Rml::ElementDocument* doc = lua_checkobject<Rml::ElementDocument>(L, 1);
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
 	lua_pushlightuserdata(L, (void *)doc->GetContext());
 	return 1;
 }
 
 static int
 lDocumentGetElementById(lua_State* L) {
-	Rml::ElementDocument* doc = lua_checkobject<Rml::ElementDocument>(L, 1);
-	lua_pushobject(L, doc->GetElementById(lua_checkstdstring(L, 2)));
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
+	lua_pushobject(L, doc->body.GetElementById(lua_checkstdstring(L, 2)));
 	return 1;
 }
 
 static int
 lDocumentGetTitle(lua_State *L) {
-	Rml::ElementDocument* doc = lua_checkobject<Rml::ElementDocument>(L, 1);
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
 	const Rml::String &title = doc->GetTitle();
 	lua_pushlstring(L, title.c_str(), title.length());
 	return 1;
@@ -135,7 +135,7 @@ lDocumentGetTitle(lua_State *L) {
 
 static int
 lDocumentGetSourceURL(lua_State *L) {
-	Rml::ElementDocument* doc = lua_checkobject<Rml::ElementDocument>(L, 1);
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
 	const Rml::String &url = doc->GetSourceURL();
 	lua_pushlstring(L, url.c_str(), url.length());
 	return 1;
@@ -143,9 +143,9 @@ lDocumentGetSourceURL(lua_State *L) {
 
 static int
 lDocumentShow(lua_State* L) {
-	Rml::ElementDocument* doc = lua_checkobject<Rml::ElementDocument>(L, 1);
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
 	doc->Show();
-	return 1;
+	return 0;
 }
 
 struct EventListener final : public Rml::EventListener {
@@ -178,8 +178,8 @@ lElementAddEventListener(lua_State* L) {
 	return 0;
 }
 static int
-lElementDispatchEvent(lua_State* L) {
-	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+lDocumentDispatchEvent(lua_State* L) {
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
 	Rml::Dictionary params;
 	if (lua_type(L, 3) == LUA_TTABLE) {
 		lua_pushnil(L);
@@ -195,7 +195,7 @@ lElementDispatchEvent(lua_State* L) {
 			lua_pop(L, 1);
 		}
 	}
-	e->DispatchEvent(lua_checkstdstring(L, 2), params);
+	doc->body.DispatchEvent(lua_checkstdstring(L, 2), params);
 	return 0;
 }
 
@@ -247,7 +247,7 @@ lElementGetChildren(lua_State* L) {
 static int
 lElementGetOwnerDocument(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	Rml::ElementDocument* doc = e->GetOwnerDocument();
+	Rml::Document* doc = e->GetOwnerDocument();
 	if (!doc) {
 		return 0;
 	}
@@ -369,13 +369,13 @@ lua_plugin_apis(lua_State *L) {
 		{ "DataModelSet", lDataModelSet },
 		{ "DataModelDirty", lDataModelDirty },
 		{ "DocumentClose", lDocumentClose },
+		{ "DocumentDispatchEvent", lDocumentDispatchEvent },
 		{ "DocumentGetContext", lDocumentGetContext },
 		{ "DocumentGetElementById", lDocumentGetElementById },
 		{ "DocumentGetTitle", lDocumentGetTitle },
 		{ "DocumentGetSourceURL", lDocumentGetSourceURL },
 		{ "DocumentShow", lDocumentShow },
 		{ "ElementAddEventListener", lElementAddEventListener },
-		{ "ElementDispatchEvent", lElementDispatchEvent },
 		{ "ElementGetInnerRML", lElementGetInnerRML },
 		{ "ElementGetAttribute", lElementGetAttribute },
 		{ "ElementGetBounds", lElementGetBounds },

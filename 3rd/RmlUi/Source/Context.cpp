@@ -29,7 +29,7 @@
 #include "../Include/RmlUi/Context.h"
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/DataModelHandle.h"
-#include "../Include/RmlUi/ElementDocument.h"
+#include "../Include/RmlUi/Document.h"
 #include "../Include/RmlUi/ElementUtilities.h"
 #include "../Include/RmlUi/Factory.h"
 #include "../Include/RmlUi/RenderInterface.h"
@@ -48,8 +48,8 @@ namespace Rml {
 Context::Context(const Size& dimensions_)
 : dimensions(dimensions_)
 , density_independent_pixel_ratio(1.0f) {
-	//cursor_proxy.reset(new ElementDocument("body"));
-	//ElementDocument* cursor_proxy_document = dynamic_cast< ElementDocument* >(cursor_proxy.get());
+	//cursor_proxy.reset(new Document("body"));
+	//Document* cursor_proxy_document = dynamic_cast< Document* >(cursor_proxy.get());
 	//if (cursor_proxy_document)
 	//	cursor_proxy_document->context = this;
 	//else
@@ -58,12 +58,12 @@ Context::Context(const Size& dimensions_)
 
 Context::~Context() {
 	for (auto& document : documents) {
-		document->DispatchEvent(EventId::Unload, Dictionary());
+		document->body.DispatchEvent(EventId::Unload, Dictionary());
 		PluginRegistry::NotifyDocumentDestroy(document);
 		unloaded_documents.push_back(document);
 	}
 	for (auto& document : unloaded_documents) {
-		document->GetEventDispatcher()->DetachAllEvents();
+		document->body.GetEventDispatcher()->DetachAllEvents();
 		delete document;
 	}
 	documents.clear();
@@ -98,17 +98,16 @@ float Context::GetDensityIndependentPixelRatio() const {
 
 bool Context::Update() {
 	if (focus) {
-		focus->Render();
 		focus->UpdateDataModel(true);
-		focus->Update(density_independent_pixel_ratio);
-		focus->UpdateLayout();
+		focus->Update();
+		focus->Render();
 		ReleaseUnloadedDocuments();
 	}
 
 	// Render the cursor proxy so any elements attached the cursor will be rendered below the cursor.
 	//if (cursor_proxy)
 	//{
-	//	static_cast<ElementDocument&>(*cursor_proxy).UpdateDocument();
+	//	static_cast<Document&>(*cursor_proxy).UpdateDocument();
 	//	cursor_proxy->SetOffset(Vector2f((float)Math::Clamp(mouse_position.x, 0, dimensions.x),
 	//		(float)Math::Clamp(mouse_position.y, 0, dimensions.y)),
 	//		nullptr);
@@ -119,40 +118,43 @@ bool Context::Update() {
 }
 
 // Load a document into the context.
-ElementDocument* Context::LoadDocument(const String& document_path) {	
+Document* Context::LoadDocument(const String& document_path) {	
 	auto stream = MakeUnique<StreamFile>();
 	if (!stream->Open(document_path))
 		return nullptr;
 
-	ElementDocumentPtr document(new ElementDocument("body", dimensions));
+	DocumentPtr document(new Document(dimensions));
 	document->context = this;
 	PluginRegistry::NotifyDocumentCreate(document.get());
-	XMLParser parser(document.get());
+	XMLParser parser(&document->body);
 	parser.Parse(stream.get());
 	documents.push_back(document.get());
-	document->DispatchEvent(EventId::Load, Dictionary());
+	document->body.DispatchEvent(EventId::Load, Dictionary());
 	document->UpdateDataModel(false);
-	document->UpdateDocument();
+	document->Update();
 	return document.release();
 }
 
-void Context::UnloadDocument(ElementDocument* document) {
+void Context::UnloadDocument(Document* document) {
 	RMLUI_ASSERT(document->GetContext() == this);
 	for (size_t i = 0; i < unloaded_documents.size(); ++i) {
 		if (unloaded_documents[i] == document)
 			return;
 	}
-	document->DispatchEvent(EventId::Unload, Dictionary());
+	document->body.DispatchEvent(EventId::Unload, Dictionary());
 	PluginRegistry::NotifyDocumentDestroy(document);
 	unloaded_documents.push_back(document);
 }
 
-void Context::SetFocus(ElementDocument* document) {
+void Context::SetFocus(Document* document) {
 	RMLUI_ASSERT(document->GetContext() == this);
+	if (focus) {
+		focus->Hide();
+	}
 	focus = document;
 }
 
-ElementDocument* Context::GetFocus() const {
+Document* Context::GetFocus() const {
 	return focus;
 }
 
@@ -207,10 +209,10 @@ void Context::ReleaseUnloadedDocuments() {
 		return;
 	}
 
-	std::vector<ElementDocument*> documents = std::move(unloaded_documents);
+	std::vector<Document*> documents = std::move(unloaded_documents);
 	unloaded_documents.clear();
 	for (auto document : documents) {
-		document->GetEventDispatcher()->DetachAllEvents();
+		document->body.GetEventDispatcher()->DetachAllEvents();
 		auto pos = std::find(std::begin(documents), std::end(documents), document);
 		std::rotate(pos, pos + 1, std::end(documents));
 		documents.pop_back();

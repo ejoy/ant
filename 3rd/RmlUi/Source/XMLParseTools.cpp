@@ -28,7 +28,7 @@
 
 #include "XMLParseTools.h"
 #include "../Include/RmlUi/StreamMemory.h"
-#include "../Include/RmlUi/ElementDocument.h"
+#include "../Include/RmlUi/Document.h"
 #include "../Include/RmlUi/StringUtilities.h"
 #include "../Include/RmlUi/Types.h"
 #include <ctype.h>

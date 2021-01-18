@@ -30,6 +30,7 @@
 #include "../Include/RmlUi/ID.h"
 #include "../Include/RmlUi/Property.h"
 #include "../Include/RmlUi/ElementText.h"
+#include "ElementStyle.h"
 
 #define DEBUG
 #include <yoga/YGNodePrint.h>
@@ -39,7 +40,7 @@ namespace Rml {
 
 Layout::Layout()
 : node(YGNodeNew())
-{}
+{ }
 
 Layout::~Layout() {
 	YGNodeFree(node);
@@ -57,14 +58,6 @@ static float YGValueToFloat(float v) {
 		return 0.0f;
 	}
 	return v;
-}
-
-void Layout::SetWidth(float v) {
-	YGNodeStyleSetWidth(node, v);
-}
-
-void Layout::SetHeight(float v) {
-	YGNodeStyleSetHeight(node, v);
 }
 
 void Layout::CalculateLayout(Size const& size) {
@@ -87,44 +80,23 @@ void Layout::RemoveAllChildren() {
 	YGNodeRemoveAllChildren(node);
 }
 
+YGNodeRef Layout::GetSelf() const {
+	return node;
+}
+
+YGNodeRef Layout::GetParent() const {
+	return YGNodeGetParent(node);
+}
+
+void Layout::SetContext(void* context) {
+	YGNodeSetContext(node, context);
+}
+
 std::string Layout::ToString() const {
 	std::string result;
 	auto options = static_cast<YGPrintOptions>(YGPrintOptionsLayout | YGPrintOptionsStyle | YGPrintOptionsChildren);
 	facebook::yoga::YGNodeToString(result, node, options, 0);
 	return result;
-}
-
-static float GetPropertyValue(const Property* property, float font_size, float document_font_size, float dp_ratio) {
-	static constexpr float PixelsPerInch = 96.0f;
-	float v = property->Get<float>();
-	switch (property->unit) {
-	case Property::PERCENT:
-	case Property::NUMBER:
-	case Property::PX:
-	case Property::RAD:
-		return v;
-	case Property::DP:
-		return v * dp_ratio;
-	case Property::EM:
-		return v * font_size;
-	case Property::REM:
-		return v * document_font_size;
-	case Property::DEG:
-		return Math::DegreesToRadians(v);
-	case Property::INCH:
-		return v * PixelsPerInch;
-	case Property::CM:
-		return v * PixelsPerInch * (1.0f / 2.54f);
-	case Property::MM:
-		return v * PixelsPerInch * (1.0f / 25.4f);
-	case Property::PT:
-		return v * PixelsPerInch * (1.0f / 72.0f);
-	case Property::PC:
-		return v * PixelsPerInch * (1.0f / 6.0f);
-	default:
-		break;
-	}
-	return 0.0f;
 }
 
 static void SetFloatProperty(YGNodeRef node, PropertyId id, float v) {
@@ -208,7 +180,7 @@ static void SetIntProperty(YGNodeRef node, PropertyId id, int v) {
 	}
 }
 
-void Layout::SetProperty(PropertyId id, const Property* property, float font_size, float document_font_size, float dp_ratio) {
+void Layout::SetProperty(PropertyId id, const Property* property, Element* element) {
 	switch (property->unit) {
 	case Property::PERCENT:
 		SetPercentProperty(node, id, property->Get<float>());
@@ -217,7 +189,7 @@ void Layout::SetProperty(PropertyId id, const Property* property, float font_siz
 		SetIntProperty(node, id, property->Get<int>());
 		break;
 	default:
-		SetFloatProperty(node, id, GetPropertyValue(property, font_size, document_font_size, dp_ratio));
+		SetFloatProperty(node, id, ComputeProperty<float>(property, element));
 		break;
 	}
 }
@@ -267,9 +239,7 @@ void Layout::SetElementText(ElementText* element) {
 }
 
 void Layout::MarkDirty() {
-	if (YGNodeGetContext(node)) {
-		YGNodeMarkDirty(node);
-	}
+	YGNodeMarkDirty(node);
 }
 
 bool Layout::UpdateMetrics(Layout::Metrics& metrics) {

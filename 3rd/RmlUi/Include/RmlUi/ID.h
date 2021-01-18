@@ -152,8 +152,6 @@ enum class PropertyId : uint8_t
 	Animation,
 
 	Opacity,
-	PointerEvents,
-	Focus,
 
 	TextShadowH,
 	TextShadowV,

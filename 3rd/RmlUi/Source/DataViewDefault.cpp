@@ -475,9 +475,8 @@ bool DataViewFor::Update(DataModel& model)
 	{
 		if (i >= num_elements)
 		{
-			ElementPtr new_element_ptr(new Element(element->GetTagName()));
-			element->SetOwnerDocument(element->GetOwnerDocument());
-			element->SetAttributes(attributes);
+			ElementPtr new_element_ptr(new Element(element->GetOwnerDocument(), element->GetTagName()));
+			new_element_ptr->SetAttributes(attributes);
 
 			DataAddress iterator_address;
 			iterator_address.reserve(container_address.size() + 1);

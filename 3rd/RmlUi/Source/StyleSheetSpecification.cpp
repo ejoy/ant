@@ -42,7 +42,6 @@ namespace Rml {
 
 static StyleSheetSpecification* instance = nullptr;
 
-
 struct DefaultStyleSheetParsers {
 	PropertyParserNumber number = PropertyParserNumber(Property::NUMBER);
 	PropertyParserNumber length = PropertyParserNumber(Property::LENGTH, Property::PX);
@@ -360,12 +359,7 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 		.AddParser("keyword", "currentColor")
 		.AddParser("color");
 	RegisterShorthand(ShorthandId::TextDecoration, "text-decoration", "text-decoration-line, text-decoration-color", ShorthandType::FallThrough);
-
-	// Functional property specifications.
-	RegisterProperty(PropertyId::Drag, "drag", "none", false, false).AddParser("keyword", "none, drag, drag-drop, block, clone");
-	RegisterProperty(PropertyId::Focus, "focus", "auto", true, false).AddParser("keyword", "none, auto");
-	RegisterProperty(PropertyId::PointerEvents, "pointer-events", "auto", true, false).AddParser("keyword", "none, auto");
-
+	
 	// Perspective and Transform specifications
 	RegisterProperty(PropertyId::Perspective, "perspective", "none", false, false).AddParser("keyword", "none").AddParser("length");
 	RegisterProperty(PropertyId::PerspectiveOriginX, "perspective-origin-x", "50%", false, false).AddParser("keyword", "left, center, right").AddParser("length_percent");
@@ -409,11 +403,11 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 		.AddParser("string");
 	RegisterShorthand(ShorthandId::Background, "background", "background-color", ShorthandType::FallThrough);
 
-	RegisterProperty(PropertyId::TextShadowH, "text-shadow-h", "0px", false, false)
+	RegisterProperty(PropertyId::TextShadowH, "text-shadow-h", "0px", true, false)
 		.AddParser("length");
-	RegisterProperty(PropertyId::TextShadowV, "text-shadow-v", "0px", false, false)
+	RegisterProperty(PropertyId::TextShadowV, "text-shadow-v", "0px", true, false)
 		.AddParser("length");
-	RegisterProperty(PropertyId::TextShadowColor, "text-shadow-color", "white", false, false)
+	RegisterProperty(PropertyId::TextShadowColor, "text-shadow-color", "white", true, false)
 		.AddParser("color");
 	RegisterShorthand(ShorthandId::TextShadow, "text-shadow", "text-shadow-h, text-shadow-v, text-shadow-color", ShorthandType::FallThrough);
 

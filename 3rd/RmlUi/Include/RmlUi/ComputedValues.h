@@ -38,43 +38,12 @@ namespace Rml {
 namespace Style
 {
 
-struct LengthPercentageAuto {
-	enum Type { Auto, Length, Percentage } type = Length;
-	float value = 0;
-	LengthPercentageAuto() {}
-	LengthPercentageAuto(Type type, float value = 0) : type(type), value(value) {}
-};
 struct LengthPercentage {
 	enum Type { Length, Percentage } type = Length;
 	float value = 0;
 	LengthPercentage() {}
 	LengthPercentage(Type type, float value = 0) : type(type), value(value) {}
 };
-
-struct NumberAuto {
-	enum Type { Auto, Number } type = Number;
-	float value = 0;
-	NumberAuto() {}
-	NumberAuto(Type type, float value = 0) : type(type), value(value) {}
-};
-
-struct Color {
-	enum class Type { CurrentColor, Value };
-	Type type = Type::Value;
-	Colourb value = 0;
-	Color(Colourb const& v)
-		: type(Type::Value)
-		, value(v)
-	{ }
-	Color(Type const& t)
-		: type(t)
-		, value()
-	{ }
-};
-
-enum class Position : uint8_t { Static, Relative, Absolute };
-
-using ZIndex = NumberAuto;
 
 enum class FontStyle : uint8_t { Normal, Italic };
 enum class FontWeight : uint8_t { Normal, Bold };
@@ -84,8 +53,6 @@ enum class TextTransform : uint8_t { None, Capitalize, Uppercase, Lowercase };
 enum class WhiteSpace : uint8_t { Normal, Pre, Nowrap, Prewrap, Preline };
 enum class WordBreak : uint8_t { Normal, BreakAll, BreakWord };
 enum class Drag : uint8_t { None, Drag, DragDrop, Block, Clone };
-enum class Focus : uint8_t { None, Auto };
-enum class PointerEvents : uint8_t { None, Auto };
 
 using PerspectiveOrigin = LengthPercentage;
 using TransformOrigin = LengthPercentage;
@@ -99,36 +66,7 @@ enum class OriginY : uint8_t { Top, Center, Bottom };
 	Note: Enums and default values must correspond to the keywords and defaults in `StyleSheetSpecification.cpp`.
 */
 
-struct ComputedValues
-{
-	EdgeInsets<Colourb> border_color;
-	CornerInsets<float> border_radius {};
-
-	ZIndex z_index = { ZIndex::Auto };
-
-	Colourb color = Colourb(255, 255, 255);
-	float opacity = 1;
-
-	String font_family;
-	FontStyle font_style = FontStyle::Normal;
-	FontWeight font_weight = FontWeight::Normal;
-	float font_size = 12.f;
-	// Font face used to render text and resolve ex properties. Does not represent a true property
-	// like most computed values, but placed here as it is used and inherited in a similar manner.
-	FontFaceHandle font_face_handle = 0;
-
-	TextAlign text_align = TextAlign::Left;
-	TextTransform text_transform = TextTransform::None;
-	WhiteSpace white_space = WhiteSpace::Normal;
-	WordBreak word_break = WordBreak::Normal;
-
-	TextDecorationLine text_decoration_line = TextDecorationLine::None;
-	Color text_decoration_color = Color(Color::Type::CurrentColor);
-
-	Drag drag = Drag::None;
-	Focus focus = Focus::Auto;
-	PointerEvents pointer_events = PointerEvents::Auto;
-
+struct ComputedValues {
 	float perspective = 0;
 	PerspectiveOrigin perspective_origin_x = { PerspectiveOrigin::Percentage, 50.f };
 	PerspectiveOrigin perspective_origin_y = { PerspectiveOrigin::Percentage, 50.f };
@@ -141,11 +79,11 @@ struct ComputedValues
 	TransitionList transition;
 	AnimationList animation;
 
+	EdgeInsets<Colourb> border_color;
+	CornerInsets<float> border_radius{};
+
 	Colourb background_color = Colourb(255, 255, 255, 0);
 	String background_image;
-	
-	std::optional<TextShadow> text_shadow;
-	std::optional<TextStroke> text_stroke;
 };
 }
 
