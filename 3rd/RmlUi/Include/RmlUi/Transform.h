@@ -69,14 +69,11 @@ public:
 	/// Add a Primitive to this Transform
 	void AddPrimitive(const TransformPrimitive& p);
 
-	/// Return the number of Primitives in this Transform
-	int GetNumPrimitives() const noexcept;
-
-	/// Return the i-th Primitive in this Transform
-	const TransformPrimitive& GetPrimitive(int i) const noexcept;
-
 	PrimitiveList& GetPrimitives() noexcept { return primitives; }
 	const PrimitiveList& GetPrimitives() const noexcept { return primitives; }
+
+	bool Empty() const;
+	Matrix4f GetMatrix(Element& e);
 
 private:
 	PrimitiveList primitives;

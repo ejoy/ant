@@ -76,20 +76,10 @@ void ElementText::Render() {
 	SetClipRegion(matrix);
 	GetRenderInterface()->SetTransform(matrix ? matrix : &Matrix4f::Identity());
 
-	if (text_effects_dirty && UpdateTextEffects()) {
-		geometry_dirty = true;
-	}
-	int new_version = GetFontEngineInterface()->GetVersion(font_face_handle);
-	if (new_version != font_handle_version) {
-		font_handle_version = new_version;
-		geometry_dirty = true;
-	}
-	if (geometry_dirty) {
-		GenerateGeometry(font_face_handle);
-	}
-	if (decoration_dirty) {
-		GenerateDecoration(font_face_handle);
-	}
+	UpdateTextEffects();
+	UpdateGeometry(font_face_handle);
+	UpdateDecoration(font_face_handle);
+
 	const Point translation = GetOffset() + GetMetrics().borderWidth;
 	if (decoration_under) {
 		decoration.Render(translation);
@@ -220,24 +210,15 @@ bool ElementText::GenerateLine(String& line, int& line_length, float& line_width
 void ElementText::ClearLines()
 {
 	lines.clear();
-	geometry_dirty = true;
-	decoration_dirty = true;
+	dirty_geometry = true;
+	dirty_decoration = true;
 }
 
 // Adds a new line into the text element.
 void ElementText::AddLine(const Point& position, const String& line)
 {
-	FontFaceHandle font_face_handle = GetFontFaceHandle();
-
-	if (font_face_handle == 0)
-		return;
-
-	if (text_effects_dirty)
-		UpdateTextEffects();
-
 	lines.push_back(Line(line, position));
-
-	geometry_dirty = true;
+	dirty_geometry = true;
 }
 
 void ElementText::OnPropertyChange(const PropertyIdSet& changed_properties)
@@ -250,9 +231,9 @@ void ElementText::OnPropertyChange(const PropertyIdSet& changed_properties)
 		changed_properties.Contains(PropertyId::FontSize))
 	{
 		DirtyLayout();
-		decoration_dirty = true;
-		text_effects_dirty = true;
-		font_handle_dirty = true;
+		dirty_decoration = true;
+		dirty_effects = true;
+		dirty_font = true;
 		layout_changed = true;
 	}
 
@@ -262,13 +243,12 @@ void ElementText::OnPropertyChange(const PropertyIdSet& changed_properties)
 		changed_properties.Contains(PropertyId::TextStrokeWidth) ||
 		changed_properties.Contains(PropertyId::TextStrokeColor))
 	{
-		text_effects_dirty = true;
+		dirty_effects = true;
 	}
-
 
 	if (changed_properties.Contains(PropertyId::LineHeight)) {
 		DirtyLayout();
-		decoration_dirty = true;
+		dirty_decoration = true;
 		layout_changed = true;
 	}
 
@@ -276,26 +256,19 @@ void ElementText::OnPropertyChange(const PropertyIdSet& changed_properties)
 		return;
 	}
 
-	bool colour_changed = false;
-
 	if (changed_properties.Contains(PropertyId::TextDecorationLine)) {
-		decoration_dirty = true;
+		dirty_decoration = true;
 	}
-
 	if (changed_properties.Contains(PropertyId::Opacity)) {
-		text_effects_dirty = true;
-		colour_changed = true;
+		dirty_effects = true;
 	}
-	if (changed_properties.Contains(PropertyId::Color)) {
-		colour_changed = true;
-	}
-	if (colour_changed) {
-		// Force the geometry to be regenerated.
-		geometry_dirty = true;
-		// Re-colour the decoration geometry.
-		Colourb col = GetTextDecorationColor().ApplyOpacity(GetOpacity());
-		for (auto& vtx : decoration.GetVertices()) {
-			vtx.col = col;
+	if (changed_properties.Contains(PropertyId::Color) || changed_properties.Contains(PropertyId::Opacity)) {
+		dirty_geometry = true;
+		if (!dirty_decoration) {
+			Colourb col = GetTextDecorationColor().ApplyOpacity(GetOpacity());
+			for (auto& vtx : decoration.GetVertices()) {
+				vtx.col = col;
+			}
 		}
 	}
 }
@@ -306,10 +279,10 @@ void ElementText::GetRML(String& content)
 	content += text;
 }
 
-bool ElementText::UpdateTextEffects() {
-	if (GetFontFaceHandle() == 0)
-		return false;
-	text_effects_dirty = false;
+void ElementText::UpdateTextEffects() {
+	if (!dirty_effects || GetFontFaceHandle() == 0)
+		return;
+	dirty_effects = false;
 
 	auto shadow = GetTextShadow();
 	auto stroke = GetTextStroke();
@@ -325,21 +298,25 @@ bool ElementText::UpdateTextEffects() {
 	TextEffectsHandle new_text_effects_handle = GetFontEngineInterface()->PrepareTextEffects(GetFontFaceHandle(), text_effects);
 	if (new_text_effects_handle != text_effects_handle) {
 		text_effects_handle = new_text_effects_handle;
-		return true;
+		dirty_geometry = true;
 	}
-	return false;
 }
 
-// Clears and regenerates all of the text's geometry.
-void ElementText::GenerateGeometry(const FontFaceHandle font_face_handle) {
+void ElementText::UpdateGeometry(const FontFaceHandle font_face_handle) {
+	if (!dirty_geometry) {
+		return;
+	}
+	dirty_geometry = false;
+	dirty_decoration = true;
 	Colourb color = GetTextColor().ApplyOpacity(GetOpacity());
 	GetFontEngineInterface()->GenerateString(font_face_handle, text_effects_handle, lines, color, geometrys);
-	geometry_dirty = false;
-	decoration_dirty = true;
 }
 
-void ElementText::GenerateDecoration(const FontFaceHandle font_face_handle) {
-	decoration_dirty = false;
+void ElementText::UpdateDecoration(const FontFaceHandle font_face_handle) {
+	if (!dirty_decoration) {
+		return;
+	}
+	dirty_decoration = false;
 	decoration.Release();
 	Style::TextDecorationLine text_decoration_line = GetTextDecorationLine();
 	if (text_decoration_line == Style::TextDecorationLine::None) {
@@ -607,15 +584,15 @@ Colourb ElementText::GetTextColor() {
 }
 
 FontFaceHandle ElementText::GetFontFaceHandle() {
-	if (!font_handle_dirty) {
+	if (!dirty_font) {
 		return font_handle;
 	}
+	dirty_font = false;
 	String family = StringUtilities::ToLower(GetProperty(PropertyId::FontFamily)->Get<String>());
 	Style::FontStyle style   = (Style::FontStyle)GetProperty(PropertyId::FontStyle)->Get<int>();
 	Style::FontWeight weight = (Style::FontWeight)GetProperty(PropertyId::FontWeight)->Get<int>();
 	int size = GetFontSize();
 	font_handle = GetFontEngineInterface()->GetFontFaceHandle(family, style, weight, size);
-	font_handle_dirty = false;
 	return font_handle;
 }
 

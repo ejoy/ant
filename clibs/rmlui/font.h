@@ -40,8 +40,6 @@ public:
 	int GenerateString(Rml::FontFaceHandle handle, Rml::TextEffectsHandle text_effects_handle, const Rml::String& string, const Rml::Point& position, const Rml::Colourb& colour, Rml::GeometryList& geometrys);
 	virtual void GenerateString(Rml::FontFaceHandle face_handle, Rml::TextEffectsHandle text_effects_handle, Rml::LineList& lines, const Rml::Colourb& colour, Rml::GeometryList& geometry)override;
 
-	virtual int GetVersion(Rml::FontFaceHandle handle)override;
-
 private:
 	struct font_glyph
 	GetGlyph(const FontFace &face, int codepoint, struct font_glyph *og = nullptr);

@@ -1414,8 +1414,11 @@ void Element::UpdateTransformState()
 
 	const ComputedValues& computed = meta->computed_values;
 
-	const Point pos = GetOffset();
-	const Size size = GetMetrics().frame.size;
+	const Rect rect = {
+		GetOffset(),
+		GetMetrics().frame.size
+	};
+	Point origin = rect.origin + rect.size * 0.5f;
 	
 	bool perspective_or_transform_changed = false;
 
@@ -1424,7 +1427,7 @@ void Element::UpdateTransformState()
 		bool had_perspective = (transform_state && transform_state->GetLocalPerspective());
 
 		float distance = computed.perspective;
-		Point vanish = pos + size * 0.5f;
+		Point vanish = origin;
 		bool have_perspective = false;
 
 		if (distance > 0.0f)
@@ -1433,14 +1436,14 @@ void Element::UpdateTransformState()
 
 			// Compute the vanishing point from the perspective origin
 			if (computed.perspective_origin_x.type == Style::PerspectiveOrigin::Percentage)
-				vanish.x = pos.x + computed.perspective_origin_x.value * 0.01f * size.w;
+				vanish.x = rect.origin.x + computed.perspective_origin_x.value * 0.01f * rect.size.w;
 			else
-				vanish.x = pos.x + computed.perspective_origin_x.value;
+				vanish.x = rect.origin.x + computed.perspective_origin_x.value;
 
 			if (computed.perspective_origin_y.type == Style::PerspectiveOrigin::Percentage)
-				vanish.y = pos.y + computed.perspective_origin_y.value * 0.01f * size.h;
+				vanish.y = rect.origin.y + computed.perspective_origin_y.value * 0.01f * rect.size.h;
 			else
-				vanish.y = pos.y + computed.perspective_origin_y.value;
+				vanish.y = rect.origin.y + computed.perspective_origin_y.value;
 		}
 
 		if (have_perspective)
@@ -1472,45 +1475,25 @@ void Element::UpdateTransformState()
 		// We want to find the accumulated transform given all our ancestors. It is assumed here that the parent transform is already updated,
 		// so that we only need to consider our local transform and combine it with our parent's transform and perspective matrices.
 		bool had_transform = (transform_state && transform_state->GetTransform());
-
 		bool have_transform = false;
 		Matrix4f transform = Matrix4f::Identity();
 
-		if (computed.transform)
+		if (computed.transform && !computed.transform->Empty())
 		{
-			// First find the current element's transform
-			const int n = computed.transform->GetNumPrimitives();
-			for (int i = 0; i < n; ++i)
-			{
-				const TransformPrimitive& primitive = computed.transform->GetPrimitive(i);
-				Matrix4f matrix = TransformUtilities::ResolveTransform(primitive, *this);
-				transform *= matrix;
-				have_transform = true;
-			}
-
-			if(have_transform)
-			{
-				// Compute the transform origin
-				Vector3f transform_origin(pos.x + size.w * 0.5f, pos.y + size.h * 0.5f, 0);
-
-				if (computed.transform_origin_x.type == Style::TransformOrigin::Percentage)
-					transform_origin.x = pos.x + computed.transform_origin_x.value * size.w * 0.01f;
-				else
-					transform_origin.x = pos.x + computed.transform_origin_x.value;
-
-				if (computed.transform_origin_y.type == Style::TransformOrigin::Percentage)
-					transform_origin.y = pos.y + computed.transform_origin_y.value * size.h * 0.01f;
-				else
-					transform_origin.y = pos.y + computed.transform_origin_y.value;
-
-				transform_origin.z = computed.transform_origin_z;
-
-				// Make the transformation apply relative to the transform origin
-				transform = Matrix4f::Translate(transform_origin) * transform * Matrix4f::Translate(-transform_origin);
-			}
-
-			// We may want to include the local offsets here, as suggested by the CSS specs, so that the local transform is applied after the offset I believe
-			// the motivation is. Then we would need to subtract the absolute zero-offsets during geometry submit whenever we have transforms.
+			have_transform = true;
+			// Compute the transform origin
+			Vector3f transform_origin(origin.x, origin.y, 0);
+			if (computed.transform_origin_x.type == Style::TransformOrigin::Percentage)
+				transform_origin.x = rect.origin.x + computed.transform_origin_x.value * rect.size.w * 0.01f;
+			else
+				transform_origin.x = rect.origin.x + computed.transform_origin_x.value;
+			if (computed.transform_origin_y.type == Style::TransformOrigin::Percentage)
+				transform_origin.y = rect.origin.y + computed.transform_origin_y.value * rect.size.h * 0.01f;
+			else
+				transform_origin.y = rect.origin.y + computed.transform_origin_y.value;
+			transform_origin.z = computed.transform_origin_z;
+			// Make the transformation apply relative to the transform origin
+			transform = Matrix4f::Translate(transform_origin) * computed.transform->GetMatrix(*this) * Matrix4f::Translate(-transform_origin);
 		}
 
 		if (parent && parent->transform_state)

@@ -30,6 +30,7 @@
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/TransformPrimitive.h"
 #include "../Include/RmlUi/Property.h"
+#include "TransformUtilities.h"
 
 namespace Rml {
 
@@ -60,14 +61,16 @@ void Transform::AddPrimitive(const TransformPrimitive & p)
 	primitives.push_back(p);
 }
 
-int Transform::GetNumPrimitives() const noexcept 
-{
-	return (int)primitives.size();
+bool Transform::Empty() const {
+	return primitives.empty();
 }
 
-const TransformPrimitive & Transform::GetPrimitive(int i) const noexcept 
-{
-	return primitives[i];
+Matrix4f Transform::GetMatrix(Element& e) {
+	Matrix4f matrix = Matrix4f::Identity();
+	for (const TransformPrimitive& primitive : primitives) {
+		matrix *= TransformUtilities::ResolveTransform(primitive, e);;
+	}
+	return std::move(matrix);
 }
 
 } // namespace Rml

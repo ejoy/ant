@@ -128,12 +128,6 @@ public:
 	/// @param[out] geometry An array of geometries to generate the geometry into.
 	/// @return The width, in pixels, of the string geometry.
 	virtual void GenerateString(FontFaceHandle face_handle, TextEffectsHandle text_effects_handle, LineList& lines, const Colourb& colour, GeometryList& geometry);
-
-	/// Called by RmlUi to determine if the text geometry is required to be re-generated. Whenever the returned version
-	/// is changed, all geometry belonging to the given face handle will be re-generated.
-	/// @param[in] face_handle The font handle.
-	/// @return The version required for using any geometry generated with the face handle.
-	virtual int GetVersion(FontFaceHandle handle);
 };
 
 } // namespace Rml

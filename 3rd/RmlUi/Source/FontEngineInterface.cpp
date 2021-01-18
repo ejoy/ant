@@ -93,9 +93,5 @@ void FontEngineInterface::GenerateString(FontFaceHandle /*face_handle*/, TextEff
 {
 }
 
-int FontEngineInterface::GetVersion(FontFaceHandle /*handle*/)
-{
-	return 0;
-}
 
 } // namespace Rml

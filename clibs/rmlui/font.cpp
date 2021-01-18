@@ -252,7 +252,3 @@ void FontEngine::GenerateString(
         line.width = GenerateString(handle, text_effects_handle, line.text, line.position, colour, geometrys);
     }
 }
-
-int FontEngine::GetVersion(Rml::FontFaceHandle handle){
-    return 1;
-}

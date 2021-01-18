@@ -61,22 +61,12 @@ static Colourb ColourFromLinearSpace(Colourf c)
 // Merges all the primitives to a single DecomposedMatrix4 primitive
 static bool CombineAndDecompose(Transform& t, Element& e)
 {
-	Matrix4f m = Matrix4f::Identity();
-
-	for (TransformPrimitive& primitive : t.GetPrimitives())
-	{
-		Matrix4f m_primitive = TransformUtilities::ResolveTransform(primitive, e);
-		m *= m_primitive;
-	}
-
+	Matrix4f m = t.GetMatrix(e);
 	Transforms::DecomposedMatrix4 decomposed;
-
 	if (!TransformUtilities::Decompose(decomposed, m))
 		return false;
-
 	t.ClearPrimitives();
 	t.AddPrimitive(decomposed);
-
 	return true;
 }
 
