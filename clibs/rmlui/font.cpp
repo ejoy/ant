@@ -9,7 +9,6 @@ extern "C"{
 }
 
 #include <RmlUi/Core.h>
-#include <RmlUi/GeometryUtilities.h>
 #include <cassert>
 #include <cstring>
 #include <variant>
@@ -225,17 +224,10 @@ int FontEngine::GenerateString(
         const int16_t u0 = g.u;
         const int16_t v0 = g.v;
         const float scale = FIX_POINT / 65536.f;
-        Rml::GeometryUtilities::GenerateRect(
-            geometry,
-            Rml::Rect {
-                { x0 * scale, y0 * scale },
-                { g.w * scale, g.h * scale },
-            } ,
-            colour,
-            Rml::Rect {
-                { u0 * fonttexel.x, v0 * fonttexel.y },
-                { og.w * fonttexel.x , og.h * fonttexel.y }
-            }
+        geometry.AddRect(
+            { x0 * scale, y0 * scale, g.w * scale, g.h * scale },
+            { u0 * fonttexel.x, v0 * fonttexel.y ,og.w * fonttexel.x , og.h * fonttexel.y },
+            colour
         );
 
         //x += g.advance_x + (dim.x - olddim.x);

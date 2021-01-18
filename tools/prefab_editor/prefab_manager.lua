@@ -600,6 +600,9 @@ function m:remove_entity(eid)
     elseif world[eid].light_type then
         light_gizmo.on_remove_light(eid)
     end
+    if world[eid].skeleton_eid then
+        world:remove_entity(world[eid].skeleton_eid)
+    end
     local teml = hierarchy:get_template(eid)
     if teml and teml.children then
         for _, e in ipairs(teml.children) do

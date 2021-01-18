@@ -178,6 +178,10 @@ struct Rect {
 	}
 };
 
+struct Quad {
+	Point a, b, c, d;
+};
+
 template <typename T>
 struct EdgeInsets {
 	T left{};
@@ -272,10 +276,10 @@ inline Size operator-(const Size& lhs, const EdgeInsets<float>& rhs) {
 	return Size(lhs.w - rhs.left - rhs.right, lhs.h - rhs.top - rhs.bottom);
 }
 inline Rect operator+(const Rect& lhs, const EdgeInsets<float>& rhs) {
-	return Rect(lhs.origin + rhs, lhs.size + rhs);
+	return Rect(lhs.origin - rhs, lhs.size + rhs);
 }
 inline Rect operator-(const Rect& lhs, const EdgeInsets<float>& rhs) {
-	return Rect(lhs.origin - rhs, lhs.size - rhs);
+	return Rect(lhs.origin + rhs, lhs.size - rhs);
 }
 
 inline Point operator*(const Point& lhs, const Point& rhs) {

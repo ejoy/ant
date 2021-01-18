@@ -30,58 +30,128 @@
 #include "../Include/RmlUi/Layout.h"
 #include "../Include/RmlUi/ComputedValues.h"
 #include "../Include/RmlUi/Element.h"
-#include "../Include/RmlUi/GeometryUtilities.h"
 
 namespace Rml {
 
+static const auto PI = std::acosf(-1);
 
-ElementBackgroundBorder::ElementBackgroundBorder(Element* element) : geometry()
-{}
-
-void ElementBackgroundBorder::Render(Element * element)
-{
-	if (background_dirty || border_dirty)
-	{
-		GenerateGeometry(element);
-
-		background_dirty = false;
-		border_dirty = false;
-	}
-
-	if (geometry)
-		geometry.Render(element->GetOffset());
-}
-
-void ElementBackgroundBorder::DirtyBackground()
-{
-	background_dirty = true;
-}
-
-void ElementBackgroundBorder::DirtyBorder()
-{
-	border_dirty = true;
-}
-
-void ElementBackgroundBorder::GenerateGeometry(Element* element)
-{
+void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path& paddingEdge) {
+	geometry.Release();
 	const ComputedValues& computed = element->GetComputedValues();
-
-	Colourb background_color = computed.background_color;
-	EdgeInsets<Colourb> border_color = computed.border_color;
-	
-	// Apply opacity 
 	const float opacity = computed.opacity;
-	background_color.alpha = (byte)(opacity * (float)background_color.alpha);
-	
+	EdgeInsets<Colourb> border_color = computed.border_color;
+	Colourb background_color = computed.background_color;
 	if (opacity < 1) {
-		for (int i = 0; i < 4; ++i)
+		background_color.alpha = (byte)(opacity * (float)background_color.alpha);
+		for (int i = 0; i < 4; ++i) {
 			border_color[i].alpha = (byte)(opacity * (float)border_color[i].alpha);
+		}
 	}
 
 	geometry.GetVertices().clear();
 	geometry.GetIndices().clear();
+	const Layout::Metrics& metrics = element->GetMetrics();
 
-	GeometryUtilities::GenerateBackgroundBorder(geometry, element->GetMetrics(), Point(0,0), computed.border_radius, background_color, computed.border_color);
+	Rect padding = metrics.frame - metrics.borderWidth;
+	Quad quadLeft = {
+		{ 0, computed.border_radius.topLeft },
+		{ metrics.borderWidth.left, std::max(metrics.borderWidth.top, computed.border_radius.topLeft) },
+		{ metrics.borderWidth.left, metrics.frame.size.h - std::max(metrics.borderWidth.bottom, computed.border_radius.bottomLeft) },
+		{ 0, metrics.frame.size.h - computed.border_radius.bottomLeft }
+	};
+	Quad quadTop = {
+		{ computed.border_radius.topLeft, 0 },
+		{ metrics.frame.size.w - computed.border_radius.topRight, 0 },
+		{ metrics.frame.size.w - std::max(metrics.borderWidth.right, computed.border_radius.topRight), metrics.borderWidth.top },
+		{ std::max(metrics.borderWidth.left, computed.border_radius.topLeft), metrics.borderWidth.top },
+	};
+	Quad quadRight = {
+		{ metrics.frame.size.w - metrics.borderWidth.right, std::max(metrics.borderWidth.top, computed.border_radius.topRight) },
+		{ metrics.frame.size.w, computed.border_radius.topRight },
+		{ metrics.frame.size.w, metrics.frame.size.h - computed.border_radius.bottomRight },
+		{ metrics.frame.size.w - metrics.borderWidth.right, metrics.frame.size.h - std::max(metrics.borderWidth.bottom, computed.border_radius.bottomRight) },
+	};
+	Quad quadBottom = {
+		{ std::max(metrics.borderWidth.left, computed.border_radius.bottomLeft), metrics.frame.size.h - metrics.borderWidth.bottom },
+		{ metrics.frame.size.w - std::max(metrics.borderWidth.right, computed.border_radius.bottomRight), metrics.frame.size.h - metrics.borderWidth.bottom },
+		{ metrics.frame.size.w - computed.border_radius.bottomRight, metrics.frame.size.h },
+		{ computed.border_radius.bottomLeft, metrics.frame.size.h },
+	};
+
+	geometry.AddQuad(quadLeft, computed.border_color.left);
+	Geometry::Path topLeftOuter;
+	topLeftOuter.DrawArc(
+		{ computed.border_radius.topLeft, computed.border_radius.topLeft },
+		computed.border_radius.topLeft,
+		computed.border_radius.topLeft,
+		PI, PI * 1.5f
+	);
+	Geometry::Path topLeftInner;
+	topLeftInner.DrawArc(
+		{ computed.border_radius.topLeft, computed.border_radius.topLeft },
+		std::max(0.0f, computed.border_radius.topLeft - metrics.borderWidth.left),
+		std::max(0.0f, computed.border_radius.topLeft - metrics.borderWidth.top),
+		PI, PI * 1.5f
+	);
+	geometry.AddArc(topLeftOuter, topLeftInner, computed.border_color.left);
+
+	geometry.AddQuad(quadTop, computed.border_color.top);
+	Geometry::Path topRightOuter;
+	topRightOuter.DrawArc(
+		{ metrics.frame.size.w - computed.border_radius.topRight, computed.border_radius.topRight },
+		computed.border_radius.topRight,
+		computed.border_radius.topRight,
+		PI * 1.5f, PI * 2.f
+	);
+	Geometry::Path topRightInner;
+	topRightInner.DrawArc(
+		{ metrics.frame.size.w - computed.border_radius.topRight, computed.border_radius.topRight },
+		std::max(0.0f, computed.border_radius.topRight - metrics.borderWidth.right),
+		std::max(0.0f, computed.border_radius.topRight - metrics.borderWidth.top),
+		PI * 1.5f, PI * 2.f
+	);
+	geometry.AddArc(topRightOuter, topRightInner, computed.border_color.top);
+
+	geometry.AddQuad(quadRight, computed.border_color.right);
+	Geometry::Path bottomRightOuter;
+	bottomRightOuter.DrawArc(
+		{ metrics.frame.size.w - computed.border_radius.bottomRight, metrics.frame.size.h - computed.border_radius.bottomRight },
+		computed.border_radius.bottomRight,
+		computed.border_radius.bottomRight,
+		0, PI * 0.5f
+	);
+	Geometry::Path bottomRightInner;
+	bottomRightInner.DrawArc(
+		{ metrics.frame.size.w - computed.border_radius.bottomRight, metrics.frame.size.h - computed.border_radius.bottomRight },
+		std::max(0.0f, computed.border_radius.bottomRight - metrics.borderWidth.right),
+		std::max(0.0f, computed.border_radius.bottomRight - metrics.borderWidth.bottom),
+		0, PI * 0.5f
+	);
+	geometry.AddArc(bottomRightOuter, bottomRightInner, computed.border_color.right);
+
+	geometry.AddQuad(quadBottom, computed.border_color.bottom);
+	Geometry::Path bottomLeftOuter;
+	bottomLeftOuter.DrawArc(
+		{ computed.border_radius.bottomLeft, metrics.frame.size.h - computed.border_radius.bottomLeft },
+		computed.border_radius.bottomLeft,
+		computed.border_radius.bottomLeft,
+		PI * 0.5f, PI
+	);
+	Geometry::Path bottomLeftInner;
+	bottomLeftInner.DrawArc(
+		{ computed.border_radius.bottomLeft, metrics.frame.size.h - computed.border_radius.bottomLeft },
+		std::max(0.0f, computed.border_radius.bottomLeft - metrics.borderWidth.left),
+		std::max(0.0f, computed.border_radius.bottomLeft - metrics.borderWidth.bottom),
+		PI * 0.5f, PI
+	);
+	geometry.AddArc(bottomLeftOuter, bottomLeftInner, computed.border_color.bottom);
+
+	paddingEdge.clear();
+	paddingEdge.append(topLeftInner);
+	paddingEdge.append(topRightInner);
+	paddingEdge.append(bottomRightInner);
+	paddingEdge.append(bottomLeftInner);
+	geometry.AddPolygon(paddingEdge, background_color);
 }
 
 } // namespace Rml

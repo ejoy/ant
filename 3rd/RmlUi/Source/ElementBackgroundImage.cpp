@@ -32,61 +32,37 @@
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/Geometry.h"
 #include "../Include/RmlUi/ElementDocument.h"
-#include "../Include/RmlUi/GeometryUtilities.h"
 #include "../Include/RmlUi/SystemInterface.h"
 #include "../Include/RmlUi/Core.h"
 
 namespace Rml {
 
-ElementBackgroundImage::ElementBackgroundImage(Element* _element)
-: element(_element)
-{ }
-
-ElementBackgroundImage::~ElementBackgroundImage() {
-}
-
-void ElementBackgroundImage::Reload() {
-	geometry.reset();
+void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path const& paddingEdge) {
+	geometry.Release();
 
 	auto& background_image = element->GetComputedValues().background_image;
 	if (background_image.empty() || background_image == "auto") {
 		return;
-	}	
+	}
 	String path;
-	if (background_image.size() > 0 && background_image[0] == '?')
-		path = background_image;
-	else
-		GetSystemInterface()->JoinPath(path, StringUtilities::Replace(element->GetOwnerDocument()->GetSourceURL(), '|', ':'), background_image);
-
-	geometry.reset(new Geometry());
-	geometry->SetTexture(Texture::Fetch(path));
-
+	GetSystemInterface()->JoinPath(path, StringUtilities::Replace(element->GetOwnerDocument()->GetSourceURL(), '|', ':'), background_image);
+	geometry.SetTexture(Texture::Fetch(path));
 	Layout::Metrics const& metrics = element->GetMetrics();
 	const auto& computed = element->GetComputedValues();
 	Colourb quad_colour(255, 255, 255, byte(255 * computed.opacity));
-	GeometryUtilities::GenerateRect(
-		*geometry,
-		Rect{
-			Point(0, 0),
-			metrics.frame.size - metrics.borderWidth
-		},
-		quad_colour,
-		Rect{ 0,0,1,1 }
-	);
-}
 
-void ElementBackgroundImage::Render() {
-	if (dirty) {
-		dirty = false;
-		Reload();
+	Rect surface {
+		{0, 0},
+		metrics.frame.size
+	};
+	if (paddingEdge.size() == 0) {
+		geometry.AddRect(surface - metrics.borderWidth, quad_colour);
+		geometry.UpdateUV(4, surface, Rect{ 0,0,1,1 });
 	}
-	if (geometry) {
-		geometry->Render(element->GetOffset() + element->GetMetrics().borderWidth);
+	else {
+		geometry.AddPolygon(paddingEdge, quad_colour);
+		geometry.UpdateUV(paddingEdge.size(), surface, Rect{ 0,0,1,1 });
 	}
-}
-
-void ElementBackgroundImage::MarkDirty() {
-	dirty = true;
 }
 
 } // namespace Rml

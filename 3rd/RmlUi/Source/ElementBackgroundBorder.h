@@ -34,22 +34,8 @@
 
 namespace Rml {
 
-class ElementBackgroundBorder {
-public:
-	ElementBackgroundBorder(Element* element);
-
-	void Render(Element* element);
-
-	void DirtyBackground();
-	void DirtyBorder();
-
-private:
-	void GenerateGeometry(Element* element);
-
-	bool background_dirty = false;
-	bool border_dirty = false;
-
-	Geometry geometry;
+struct ElementBackgroundBorder {
+	static void GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path& paddingEdge);
 };
 
 } // namespace Rml

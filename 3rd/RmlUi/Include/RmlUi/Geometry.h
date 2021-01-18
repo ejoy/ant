@@ -39,12 +39,6 @@ class Context;
 class Element;
 struct Texture;
 
-/**
-	A helper object for holding an array of vertices and indices, and compiling it as necessary when rendered.
-
-	@author Peter Curry
- */
-
 class RMLUICORE_API Geometry {
 public:
 	Geometry();
@@ -59,6 +53,23 @@ public:
 	void SetTexture(SharedPtr<Texture> texture);
 	void Release();
 	explicit operator bool() const;
+
+	struct Path {
+		void DrawArc(const Point& center, float radius_a, float radius_b, float a_min, float a_max);
+		const size_t size() const { return points.size(); }
+		const Point& operator[](size_t i) const { return points[i]; }
+		void append(const Path& path) { points.insert(points.end(), path.points.begin(), path.points.end()); }
+		void clear() { points.clear(); }
+		std::vector<Point> points;
+	};
+
+	void AddRect(const Rect& rect, Colourb col);
+	void AddRect(const Rect& rect, const Rect& uv, Colourb col);
+	void AddQuad(const Quad& quad, Colourb col);
+	void AddArc(const Path& outer, const Path& inner, Colourb col);
+	void AddPolygon(const Path& points, Colourb col);
+	void UpdateUV(size_t count, const Rect& surface, const Rect& uv);
+	void Reserve(size_t idx_count, size_t vtx_count);
 
 private:
 	void MoveFrom(Geometry& other);

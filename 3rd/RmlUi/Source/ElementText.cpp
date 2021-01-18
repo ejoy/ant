@@ -35,7 +35,6 @@
 #include "../Include/RmlUi/ElementUtilities.h"
 #include "../Include/RmlUi/Event.h"
 #include "../Include/RmlUi/FontEngineInterface.h"
-#include "../Include/RmlUi/GeometryUtilities.h"
 #include "../Include/RmlUi/Property.h"
 
 namespace Rml {
@@ -399,14 +398,9 @@ void ElementText::GenerateDecoration(const FontFaceHandle font_face_handle) {
 		default: return;
 		}
 
-		GeometryUtilities::GenerateRect(
-			decoration,
-			Rect{
-				position,
-				Size((float)width, underline_thickness),
-			},
-			color,
-			Rect{ {0, 0}, {1, 1} }
+		decoration.AddRect(
+			{ position, { (float)width, underline_thickness } },
+			color
 		);
 	}
 }
