@@ -19,10 +19,12 @@ policy:
     ant.general|name
     ant.effect|outline
 data:
+    mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
     material: /pkg/ant.resources/materials/outline/scale.material
     state: 0x00000001
     scene_entity: true
-    outline: true
+    outline:
+        width: 0.01
     name: pbr_cube_outline
 action:
     mount: 1

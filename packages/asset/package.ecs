@@ -66,3 +66,8 @@ interface "imaterial"
     .method "get_property"
     .method "has_property"
     .method "which_set_func"
+
+interface "imesh"
+    .implement "mesh.lua"
+    .method "create_vb"
+    .method "create_ib"

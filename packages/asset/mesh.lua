@@ -62,3 +62,13 @@ function smt.process_entity(e)
 	rc.vb = s.vb
 	rc.ib = s.ib
 end
+
+
+local imesh = ecs.interface "imesh"
+function imesh.create_vb(vb)
+	return ext_meshbin.proxy_vb(vb)
+end
+
+function imesh.create_ib(ib)
+	return ext_meshbin.proxy_ib(ib)
+end

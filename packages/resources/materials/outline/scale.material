@@ -3,7 +3,7 @@ fx:
   vs: /pkg/ant.resources/shaders/outline/vs_scaleoutline.sc
 properties:
   u_outlinecolor: {0.8, 0.8, 0, 1}
-  u_outlinescale: {0.01, 0, 0, 0}
+  u_outlinescale: {0.005, 0, 0, 0}
 state:
   ALPHA_REF: 0
   CULL: CW
