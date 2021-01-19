@@ -36,14 +36,9 @@
 
 namespace Rml {
 
-/**
-	@author Peter Curry
- */
-
-class RMLUICORE_API ElementText final : public Element
-{
+class RMLUICORE_API ElementText final : public Element {
 public:
-	ElementText(Document* owner, const String& tag, const String& text);
+	ElementText(Document* owner, const String& text);
 	virtual ~ElementText();
 
 	void SetText(const String& text);
@@ -53,9 +48,11 @@ public:
 	float GetBaseline();
 
 protected:
-	void Render() override;
-	void OnPropertyChange(const PropertyIdSet& properties) override;
-	void GetRML(String& content) override;
+	void OnRender() override;
+	void OnChange(const PropertyIdSet& properties) override;
+
+	const Property* GetProperty(PropertyId id);
+	float GetOpacity();
 
 private:
 	void UpdateTextEffects();

@@ -59,6 +59,7 @@ public:
 		const size_t size() const { return points.size(); }
 		const Point& operator[](size_t i) const { return points[i]; }
 		void append(const Path& path) { points.insert(points.end(), path.points.begin(), path.points.end()); }
+		void append(Point&& point) { points.emplace_back(std::forward<Point>(point)); }
 		void clear() { points.clear(); }
 		std::vector<Point> points;
 	};

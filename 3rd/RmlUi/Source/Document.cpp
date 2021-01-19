@@ -51,7 +51,7 @@ static constexpr float DOUBLE_CLICK_MAX_DIST = 3.f;  // [dp]
 namespace Rml {
 
 Document::Document(const Size& _dimensions)
-	: body(this)
+	: body(new ElementDocument(this))
 	, dimensions(_dimensions)
 {
 	style_sheet = nullptr;
@@ -59,6 +59,7 @@ Document::Document(const Size& _dimensions)
 }
 
 Document::~Document() {
+	body.reset();
 }
 
 void Document::ProcessHeader(const DocumentHeader* header)
@@ -133,7 +134,7 @@ void Document::ProcessHeader(const DocumentHeader* header)
 	}
 
 	// Update properties so that e.g. visibility status can be queried properly immediately.
-	body.UpdateProperties();
+	body->UpdateProperties();
 }
 
 // Returns the document's context.
@@ -171,7 +172,7 @@ void Document::SetStyleSheet(SharedPtr<StyleSheet> _style_sheet)
 		style_sheet->BuildNodeIndex();
 	}
 
-	body.GetStyle()->DirtyDefinition();
+	body->GetStyle()->DirtyDefinition();
 }
 
 // Returns the document's style sheet.
@@ -182,11 +183,11 @@ const SharedPtr<StyleSheet>& Document::GetStyleSheet() const
 
 void Document::Show() {
 	GetContext()->SetFocus(this);
-	body.DispatchEvent(EventId::Show, Dictionary());
+	body->DispatchEvent(EventId::Show, Dictionary());
 }
 
 void Document::Hide() {
-	body.DispatchEvent(EventId::Hide, Dictionary());
+	body->DispatchEvent(EventId::Hide, Dictionary());
 	GetContext()->SetFocus(nullptr);
 }
 
@@ -204,20 +205,15 @@ ElementPtr Document::CreateElement(const String& name)
 }
 
 // Create a text element.
-ElementPtr Document::CreateTextNode(const String& text)
+TextPtr Document::CreateTextNode(const String& str)
 {
-	ElementPtr element(new ElementText(this, "#text", text));
-	ElementText* element_text = dynamic_cast< ElementText* >(element.get());
-	if (!element_text)
+	TextPtr text(new ElementText(this, str));
+	if (!text)
 	{
 		Log::Message(Log::LT_ERROR, "Failed to create text element, instancer didn't return a derivative of ElementText.");
 		return nullptr;
 	}
-	
-	// Set the text
-	element_text->SetText(text);
-
-	return element;
+	return text;
 }
 
 // Default load inline script implementation
@@ -240,7 +236,7 @@ void Document::UpdateDataModel(bool clear_dirty_variables) {
 
 void Document::DirtyDpProperties()
 {
-	body.GetStyle()->DirtyPropertiesWithUnitRecursive(Property::DP);
+	body->GetStyle()->DirtyPropertiesWithUnitRecursive(Property::DP);
 }
 
 using ElementSet = std::set<Element*>;
@@ -312,14 +308,14 @@ bool Document::ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state) 
 	Dictionary parameters;
 	GenerateKeyEventParameters(parameters, key);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
-	return body.DispatchEvent(EventId::Keydown, parameters);
+	return body->DispatchEvent(EventId::Keydown, parameters);
 }
 
 bool Document::ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state) {
 	Dictionary parameters;
 	GenerateKeyEventParameters(parameters, key);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
-	return body.DispatchEvent(EventId::Keyup, parameters);
+	return body->DispatchEvent(EventId::Keyup, parameters);
 }
 
 void Document::ProcessMouseMove(int x, int y, int key_modifier_state) {
@@ -533,7 +529,7 @@ void Document::UpdateHoverChain(const Dictionary& parameters, const Dictionary& 
 		}
 	}
 
-	hover = body.GetElementAtPoint(position);
+	hover = body->GetElementAtPoint(position);
 
 	// Build the new hover chain.
 	ElementSet new_hover_chain;
@@ -551,7 +547,7 @@ void Document::UpdateHoverChain(const Dictionary& parameters, const Dictionary& 
 	// Send out drag events.
 	if (drag)
 	{
-		drag_hover = body.GetElementAtPoint(position, drag);
+		drag_hover = body->GetElementAtPoint(position, drag);
 
 		ElementSet new_drag_hover_chain;
 		element = drag_hover;
@@ -586,17 +582,19 @@ void Document::CreateDragClone(Element* element) {
 	ReleaseDragClone();
 
 	// Instance the drag clone.
-	ElementPtr element_drag_clone = element->Clone();
-	if (!element_drag_clone)
+	ElementPtr clone(new Element(element->GetOwnerDocument(), element->GetTagName()));
+	clone->SetAttributes(element->GetAttributes());
+	clone->SetInnerRML(element->GetInnerRML());
+	if (!clone)
 	{
 		Log::Message(Log::LT_ERROR, "Unable to duplicate drag clone.");
 		return;
 	}
 
-	drag_clone = element_drag_clone.get();
+	drag_clone = clone.get();
 
 	// Append the clone to the cursor proxy element.
-	cursor_proxy->AppendChild(std::move(element_drag_clone));
+	cursor_proxy->AppendChild(std::move(clone));
 
 	// Set the style sheet on the cursor proxy.
 	//TODO static_cast<Document&>(*cursor_proxy).SetStyleSheet(element->GetStyleSheet());
@@ -604,8 +602,8 @@ void Document::CreateDragClone(Element* element) {
 	// Set all the required properties and pseudo-classes on the clone.
 	drag_clone->SetPseudoClass("drag", true);
 	//drag_clone->SetPropertyImmediate(PropertyId::Position, Property(Style::Position::Absolute));
-	drag_clone->SetPropertyImmediate(PropertyId::Left, Property(element->GetOffset().x - mouse_position.x, Property::PX));
-	drag_clone->SetPropertyImmediate(PropertyId::Top, Property(element->GetOffset().y - mouse_position.y, Property::PX));
+	//drag_clone->SetPropertyImmediate(PropertyId::Left, Property(element->GetOffset().x - mouse_position.x, Property::PX));
+	//drag_clone->SetPropertyImmediate(PropertyId::Top, Property(element->GetOffset().y - mouse_position.y, Property::PX));
 }
 
 void Document::ReleaseDragClone() {
@@ -713,18 +711,19 @@ DataModel* Document::GetDataModelPtr(const String& name) const {
 void Document::SetDimensions(const Size& _dimensions) {
 	if (dimensions != _dimensions) {
 		dimensions = _dimensions;
-		body.DispatchEvent(EventId::Resize, Dictionary());
+		body->DispatchEvent(EventId::Resize, Dictionary());
 	}
 }
 
 void Document::Update() {
-	body.Update();
-	body.GetLayout().CalculateLayout(dimensions);
-	body.UpdateBounds();
+	body->Update();
+	body->GetLayout().CalculateLayout(dimensions);
+	body->UpdateBounds();
+	body->UpdateMatrix();
 }
 
 void Document::Render() {
-	body.Render();
+	body->OnRender();
 }
 
 } // namespace Rml

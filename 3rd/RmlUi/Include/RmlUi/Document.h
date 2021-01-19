@@ -80,7 +80,7 @@ public:
 	ElementPtr CreateElement(const String& name);
 	/// Create a text element with the given text content.
 	/// @param[in] text The text content of the text element.
-	ElementPtr CreateTextNode(const String& text);
+	TextPtr CreateTextNode(const String& text);
 
 	/// Load a inline script into the document. Note that the base implementation does nothing, scripting language addons hook
 	/// this method.
@@ -105,7 +105,7 @@ public:
 
 	void Update();
 	void Render();
-	ElementDocument body;
+	std::unique_ptr<ElementDocument> body;
 
 public:
 	DataModelConstructor CreateDataModel(const String& name);

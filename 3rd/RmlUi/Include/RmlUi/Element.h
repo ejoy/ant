@@ -52,7 +52,6 @@ class Document;
 class ElementStyle;
 class PropertyDictionary;
 class StyleSheet;
-class TransformState;
 class Geometry;
 struct ElementMeta;
 struct StackingOrderedChild;
@@ -68,9 +67,6 @@ class RMLUICORE_API Element : public Node, public EnableObserverPtr<Element>
 public:
 	Element(Document* owner, const String& tag);
 	virtual ~Element();
-
-	/// Clones this element, returning a new, unparented element.
-	ElementPtr Clone() const;
 
 	/** @name Classes
 	 */
@@ -103,8 +99,6 @@ public:
 	/// @param[in] include_pseudo_classes True if the address is to include the pseudo-classes of the leaf element.
 	/// @return The address of the element, including its full parentage.
 	String GetAddress(bool include_pseudo_classes = false, bool include_parents = true) const;
-
-	void UpdateOffset();
 
 	/// Checks if a given point in screen coordinates lies within the bordered area of this element.
 	/// @param[in] point The point to test.
@@ -147,15 +141,6 @@ public:
 	/// @return The value of this property.
 	template < typename T >
 	T GetProperty(const String& name);
-	/// Returns one of this element's properties. If this element is not defined this property, nullptr will be
-	/// returned.
-	/// @param[in] name The name of the property to fetch the value for.
-	/// @return The value of this property for this element, or nullptr if this property has not been explicitly defined for this element.
-	const Property* GetLocalProperty(const String& name);
-	const Property* GetLocalProperty(PropertyId id);
-	/// Returns the local style properties, excluding any properties from local class.
-	/// @return The local properties for this element, or nullptr if no properties defined
-	const PropertyMap& GetLocalStyleProperties();
 
 	/// Resolves a property with units of number, percentage, length, or angle to their canonical unit (unit-less, 'px', or 'rad').
 	/// Numbers and percentages are scaled by the base value and returned.
@@ -259,10 +244,6 @@ public:
 	/// @return This element's document.
 	Document* GetOwnerDocument() const;
 
-	/// Gets this element's parent node.
-	/// @return This element's parent.
-	Element* GetParentNode() const;
-
 	/// Get the child element at the given index.
 	/// @param[in] index Index of child to get.
 	/// @return The child element at the given index.
@@ -272,14 +253,8 @@ public:
 	/// @return The number of children.
 	int GetNumChildren() const;
 
-	/// Gets the markup and content of the element.
-	/// @param[out] content The content of the element.
-	virtual void GetInnerRML(String& content) const;
-	/// Gets the markup and content of the element.
-	/// @return The content of the element.
 	String GetInnerRML() const;
-	/// Sets the markup and content of the element. All existing children will be replaced.
-	/// @param[in] rml The new content of the element.
+	String GetOuterRML() const;
 	void SetInnerRML(const String& rml);
 
 	//@}
@@ -385,28 +360,16 @@ public:
 	Element* GetElementAtPoint(Point point, const Element* ignore_element = nullptr);
 	Rect GetClippingRegion();
 	const Matrix4f* GetTransform();
+	void SetClipRegion(const Matrix4f* matrix);
 
 protected:
 	void Update();
-	virtual void Render();
-	void SetClipRegion(const Matrix4f* matrix);
 
-	/// Updates definition, computed values, and runs OnPropertyChange on this element.
 	void UpdateProperties();
+	void OnAttributeChange(const ElementAttributes& changed_attributes);
 
-	/// Called when attributes on the element are changed.
-	/// @param[in] changed_attributes Dictionary of attributes changed on the element. Attribute value will be empty if it was unset.
-	virtual void OnAttributeChange(const ElementAttributes& changed_attributes);
-	/// Called when properties on the element are changed.
-	/// @param[in] changed_properties The properties changed on the element.
-	virtual void OnPropertyChange(const PropertyIdSet& changed_properties);
-
-	/// Forces a re-layout of this element, and any other elements required.
-	virtual void DirtyLayout();
-
-	/// Returns the RML of this element and all children.
-	/// @param[out] content The content of this element and those under it, in XML form.
-	virtual void GetRML(String& content);
+	virtual void OnRender() override;
+	virtual void OnChange(const PropertyIdSet& changed_properties) override;
 
 protected:
 	void SetDataModel(DataModel* new_data_model);
@@ -417,9 +380,12 @@ protected:
 	void DirtyStructure();
 	void UpdateStructure();
 
-	void DirtyTransformState(bool perspective_dirty, bool transform_dirty);
-	void UpdateTransformState();
-
+	void DirtyTransform();
+	void DirtyPerspective();
+	void UpdateTransform();
+	void UpdatePerspective();
+	void UpdateMatrix();
+	
 	/// Start an animation, replacing any existing animations of the same property name. If start_value is null, the element's current value is used.
 	void StartAnimation(PropertyId property_id, const Property * start_value, int num_iterations, bool alternate_direction, float delay, bool initiated_by_animation_property);
 
@@ -446,8 +412,6 @@ protected:
 	// The optional, unique ID of this object.
 	String id;
 
-	// Parent element.
-	Element* parent;
 	// The owning document
 	Document* owner_document;
 
@@ -465,10 +429,12 @@ protected:
 
 	bool structure_dirty;
 
-	// Transform state
-	UniquePtr< TransformState > transform_state;
 	bool dirty_transform;
 	bool dirty_perspective;
+	Matrix4f transform;
+	UniquePtr<Matrix4f> perspective;
+	mutable bool have_inv_transform = true;
+	mutable UniquePtr<Matrix4f> inv_transform;
 
 	ElementAnimationList animations;
 	bool dirty_animation;
@@ -485,7 +451,6 @@ protected:
 
 	float font_size = 16.f;
 
-	friend class Rml::Context;
 	friend class Rml::ElementStyle;
 	friend class Rml::Document;
 };

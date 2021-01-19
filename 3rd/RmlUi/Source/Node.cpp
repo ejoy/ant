@@ -5,6 +5,9 @@
 
 namespace Rml {
 
+Node::~Node()
+{}
+
 void Node::SetType(Type type_) {
 	type = type_;
 }
@@ -40,25 +43,12 @@ void Node::SetParentNode(Element* parent_) {
 	parent = parent_;
 }
 
-bool Node::DirtyOffset() {
-	if (dirty_offset) {
-		return false;
-	}
-	dirty_offset = true;
-	return true;
+Element* Node::GetParentNode() const {
+	return parent;
 }
 
-const Point& Node::GetOffset() {
-	if (dirty_offset) {
-		dirty_offset = false;
-		if (parent) {
-			offset = metrics.frame.origin + parent->GetOffset();
-		}
-		else {
-			offset = metrics.frame.origin;
-		}
-	}
-	return offset;
+void Node::DirtyLayout() {
+	layout.MarkDirty();
 }
 
 }

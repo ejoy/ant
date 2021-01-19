@@ -61,7 +61,7 @@ float ComputeProperty<float>(const Property* property, Element* e) {
 	case Property::EM:
 		return value * e->GetFontSize();
 	case Property::REM:
-		return value * e->GetOwnerDocument()->body.GetFontSize();
+		return value * e->GetOwnerDocument()->body->GetFontSize();
 	case Property::DP:
 		return value * e->GetContext()->GetDensityIndependentPixelRatio();
 	case Property::DEG:
@@ -389,11 +389,6 @@ const Property* ElementStyle::GetProperty(PropertyId id) const
 const Property* ElementStyle::GetLocalProperty(PropertyId id) const
 {
 	return GetLocalProperty(id, definition.get());
-}
-
-const PropertyMap& ElementStyle::GetLocalStyleProperties() const
-{
-	return inline_properties.GetProperties();
 }
 
 float ElementStyle::ResolveNumericProperty(const Property* property, float base_value) const

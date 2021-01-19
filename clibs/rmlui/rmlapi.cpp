@@ -121,7 +121,7 @@ lDocumentGetContext(lua_State *L) {
 static int
 lDocumentGetElementById(lua_State* L) {
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	lua_pushobject(L, doc->body.GetElementById(lua_checkstdstring(L, 2)));
+	lua_pushobject(L, doc->body->GetElementById(lua_checkstdstring(L, 2)));
 	return 1;
 }
 
@@ -195,7 +195,7 @@ lDocumentDispatchEvent(lua_State* L) {
 			lua_pop(L, 1);
 		}
 	}
-	doc->body.DispatchEvent(lua_checkstdstring(L, 2), params);
+	doc->body->DispatchEvent(lua_checkstdstring(L, 2), params);
 	return 0;
 }
 

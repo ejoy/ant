@@ -14,6 +14,7 @@ namespace Rml {
 			Element,
 			Text,
 		};
+		virtual ~Node();
 		void SetType(Type type);
 		Type GetType();
 		bool UpdateMetrics();
@@ -23,15 +24,16 @@ namespace Rml {
 		bool IsVisible() const;
 		void SetVisible(bool visible);
 		void SetParentNode(Element* parent);
-		bool DirtyOffset();
-		const Point& GetOffset();
+		Element* GetParentNode() const;
+		void DirtyLayout();
 
-	private:
+		virtual void OnRender() = 0;
+		virtual void OnChange(const PropertyIdSet& properties) = 0;
+
+	protected:
 		Type type = Type::Unset;
 		Layout layout;
 		Layout::Metrics metrics;
 		Element* parent = nullptr;
-		Point offset;
-		bool dirty_offset = false;
     };
 }

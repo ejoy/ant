@@ -149,82 +149,40 @@ void Factory::Shutdown()
 }
 
 // Instances a single text element containing a string.
-bool Factory::InstanceElementText(Element* parent, const String& text)
+bool Factory::InstanceElementText(Element* parent, const String& str)
 {
 	RMLUI_ASSERT(parent);
 
-	// If this text node only contains white-space we don't want to construct it.
-	const bool only_white_space = std::all_of(text.begin(), text.end(), &StringUtilities::IsWhitespace);
-	if (only_white_space)
+	if (std::all_of(str.begin(), str.end(), &StringUtilities::IsWhitespace))
 		return true;
 
-	// See if we need to parse it as RML, and whether the text contains data expressions (curly brackets).
-	bool parse_as_rml = false;
 	bool has_data_expression = false;
-
 	bool inside_brackets = false;
 	char previous = 0;
-	for (const char c : text)
-	{
-		const char* error_str = XMLParseTools::ParseDataBrackets(inside_brackets, c, previous);
-		if (error_str)
-		{
-			Log::Message(Log::LT_WARNING, "Failed to instance text element '%s'. %s", text.c_str(), error_str);
-			return false;
+	for (const char c : str) {
+		if (inside_brackets) {
+			if (c == '}' && previous == '}') {
+				has_data_expression = true;
+				break;
+			}
 		}
-
-		if (inside_brackets)
-			has_data_expression = true;
-		else if (c == '<')
-			parse_as_rml = true;
-
+		else if (c == '{' && previous == '{') {
+				inside_brackets = true;
+		}
 		previous = c;
 	}
 
-	// If the text contains RML elements then run it through the XML parser again.
-	if (parse_as_rml)
-	{
-		auto stream = MakeUnique<StreamMemory>(text.size() + 32);
-		Context* context = parent->GetContext();
-		String tag = "body";
-		String open_tag = "<" + tag + ">";
-		String close_tag = "</" + tag + ">";
-		stream->Write(open_tag.c_str(), open_tag.size());
-		stream->Write(text);
-		stream->Write(close_tag.c_str(), close_tag.size());
-		stream->Seek(0, SEEK_SET);
-
-		XMLParser parser(parent);
-		parser.Parse(stream.get());
+	TextPtr text(new ElementText(parent->GetOwnerDocument(), str));
+	if (!text) {
+		Log::Message(Log::LT_ERROR, "Failed to instance text element '%s', instancer returned nullptr.", str.c_str());
+		return false;
 	}
-	else
-	{		
-		// Attempt to instance the element.
+	if (has_data_expression) {
 		XMLAttributes attributes;
-
-		// If we have curly brackets in the text, we tag the element so that the appropriate data view (DataViewText) is constructed.
-		if (has_data_expression)
-			attributes.emplace("data-text", Variant());
-
-		ElementPtr element(new ElementText(parent->GetOwnerDocument(), "#text", text));
-		if (!element)
-		{
-			Log::Message(Log::LT_ERROR, "Failed to instance text element '%s', instancer returned nullptr.", text.c_str());
-			return false;
-		}
-		element->SetAttributes(attributes);
-
-		// Assign the element its text value.
-		ElementText* text_element = dynamic_cast< ElementText* >(element.get());
-		if (!text_element)
-		{
-			Log::Message(Log::LT_ERROR, "Failed to instance text element '%s'.", text.c_str());
-			return false;
-		}
-		parent->AppendChild(std::move(element));
-		text_element->SetText(text);
+		attributes.emplace("data-text", Variant());
+		text->SetAttributes(attributes);
 	}
-
+	parent->AppendChild(std::move(text));
 	return true;
 }
 

@@ -102,8 +102,6 @@ public:
 	/// @param[in] name The name of the property to fetch the value for.
 	/// @return The value of this property for this element, or nullptr if this property has not been explicitly defined for this element.
 	const Property* GetLocalProperty(PropertyId id) const;
-	/// Returns the local style properties, excluding any properties from local class.
-	const PropertyMap& GetLocalStyleProperties() const;
 
 	/// Resolves a property with units of number, percentage, length, or angle to their canonical unit (unit-less, 'px', or 'rad').
 	/// @param[in] property The property to resolve the value for.

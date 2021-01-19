@@ -29,10 +29,12 @@
 #include "DataViewDefault.h"
 #include "DataExpression.h"
 #include "DataModel.h"
+#include "ElementStyle.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/ElementText.h"
 #include "../Include/RmlUi/Factory.h"
 #include "../Include/RmlUi/Variant.h"
+#include "../Include/RmlUi/StyleSheetSpecification.h"
 
 namespace Rml {
 
@@ -147,7 +149,7 @@ bool DataViewStyle::Update(DataModel& model)
 	if (element && GetExpression().Run(expr_interface, variant))
 	{
 		const String value = variant.Get<String>();
-		const Property* p = element->GetLocalProperty(property_name);
+		const Property* p = element->GetStyle()->GetLocalProperty(StyleSheetSpecification::GetPropertyId(property_name));
 		if (!p || p->Get<String>() != value)
 		{
 			element->SetPropertyImmediate(property_name, value);

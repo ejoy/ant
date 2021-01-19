@@ -43,13 +43,14 @@ namespace Rml {
 static bool BuildToken(String& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline, Style::TextTransform text_transformation);
 static bool LastToken(const char* token_begin, const char* string_end, bool collapse_white_space, bool break_at_endline);
 
-ElementText::ElementText(Document* owner, const String& tag, const String& text_)
-	: Element(owner, tag)
+ElementText::ElementText(Document* owner, const String& text_)
+	: Element(owner, "#text")
 	, text(text_)
 	, decoration() 
 {
 	Node::SetType(Node::Type::Text);
 	GetLayout().SetElementText(this);
+	DirtyLayout();
 }
 
 ElementText::~ElementText()
@@ -67,34 +68,47 @@ const String& ElementText::GetText() const
 	return text;
 }
 
-void ElementText::Render() {
+const Property* ElementText::GetProperty(PropertyId id) {
+	if (!parent) {
+		return nullptr;
+	}
+	return parent->GetProperty(id);
+}
+
+float ElementText::GetOpacity() {
+	if (!parent) {
+		return 1.f;
+	}
+	return parent->GetOpacity();
+}
+
+void ElementText::OnRender() {
 	FontFaceHandle font_face_handle = GetFontFaceHandle();
 	if (font_face_handle == 0)
 		return;
 
-	const Matrix4f* matrix = Element::GetTransform();
-	SetClipRegion(matrix);
+	const Matrix4f* matrix = parent->GetTransform();
+	parent->SetClipRegion(matrix);
 	GetRenderInterface()->SetTransform(matrix ? matrix : &Matrix4f::Identity());
 
 	UpdateTextEffects();
 	UpdateGeometry(font_face_handle);
 	UpdateDecoration(font_face_handle);
 
-	const Point translation = GetOffset() + GetMetrics().borderWidth;
+	const Layout::Metrics& metrics = GetMetrics();
+	const Point& translation = metrics.frame.origin;
 	if (decoration_under) {
 		decoration.Render(translation);
 	}
-	for (size_t i = 0; i < geometrys.size(); ++i) {
-		geometrys[i].Render(translation);
+	for (auto& geometry : geometrys) {
+		geometry.Render(translation);
 	}
 	if (!decoration_under) {
 		decoration.Render(translation);
 	}
 }
 
-// Generates a line of text rendered from this element
-bool ElementText::GenerateLine(String& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix)
-{
+bool ElementText::GenerateLine(String& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix) {
 	FontFaceHandle font_face_handle = GetFontFaceHandle();
 
 	// Initialise the output variables.
@@ -206,23 +220,18 @@ bool ElementText::GenerateLine(String& line, int& line_length, float& line_width
 	return true;
 }
 
-// Clears all lines of generated text and prepares the element for generating new lines.
-void ElementText::ClearLines()
-{
+void ElementText::ClearLines() {
 	lines.clear();
 	dirty_geometry = true;
 	dirty_decoration = true;
 }
 
-// Adds a new line into the text element.
-void ElementText::AddLine(const Point& position, const String& line)
-{
+void ElementText::AddLine(const Point& position, const String& line) {
 	lines.push_back(Line(line, position));
 	dirty_geometry = true;
 }
 
-void ElementText::OnPropertyChange(const PropertyIdSet& changed_properties)
-{
+void ElementText::OnChange(const PropertyIdSet& changed_properties) {
 	bool layout_changed = false;
 
 	if (changed_properties.Contains(PropertyId::FontFamily) ||
@@ -271,12 +280,6 @@ void ElementText::OnPropertyChange(const PropertyIdSet& changed_properties)
 			}
 		}
 	}
-}
-
-// Returns the RML of this element
-void ElementText::GetRML(String& content)
-{
-	content += text;
 }
 
 void ElementText::UpdateTextEffects() {
@@ -522,8 +525,8 @@ Style::TextAlign ElementText::GetAlign() {
 
 std::optional<TextShadow> ElementText::GetTextShadow() {
 	TextShadow shadow {
-		ComputeProperty<float>(GetProperty(PropertyId::TextShadowH), this),
-		ComputeProperty<float>(GetProperty(PropertyId::TextShadowV), this),
+		ComputeProperty<float>(GetProperty(PropertyId::TextShadowH), parent),
+		ComputeProperty<float>(GetProperty(PropertyId::TextShadowV), parent),
 		GetProperty(PropertyId::TextShadowColor)->Get<Colourb>(),
 	};
 	if (shadow.offset_h || shadow.offset_v) {
@@ -534,7 +537,7 @@ std::optional<TextShadow> ElementText::GetTextShadow() {
 
 std::optional<TextStroke> ElementText::GetTextStroke() {
 	TextStroke stroke{
-		ComputeProperty<float>(GetProperty(PropertyId::TextStrokeWidth), this),
+		ComputeProperty<float>(GetProperty(PropertyId::TextStrokeWidth), parent),
 		GetProperty(PropertyId::TextStrokeColor)->Get<Colourb>(),
 	};
 	if (stroke.width) {
@@ -591,7 +594,7 @@ FontFaceHandle ElementText::GetFontFaceHandle() {
 	String family = StringUtilities::ToLower(GetProperty(PropertyId::FontFamily)->Get<String>());
 	Style::FontStyle style   = (Style::FontStyle)GetProperty(PropertyId::FontStyle)->Get<int>();
 	Style::FontWeight weight = (Style::FontWeight)GetProperty(PropertyId::FontWeight)->Get<int>();
-	int size = GetFontSize();
+	int size = parent->GetFontSize();
 	font_handle = GetFontEngineInterface()->GetFontFaceHandle(family, style, weight, size);
 	return font_handle;
 }

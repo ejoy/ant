@@ -28,6 +28,7 @@
 
   
 #include "../Include/RmlUi/Element.h"
+#include "../Include/RmlUi/ElementText.h"
 #include "../Include/RmlUi/Context.h"
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/Document.h"
@@ -39,6 +40,7 @@
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/TransformPrimitive.h"
 #include "../Include/RmlUi/RenderInterface.h"
+#include "../Include/RmlUi/StreamMemory.h"
 #include "Clock.h"
 #include "DataModel.h"
 #include "ElementAnimation.h"
@@ -53,7 +55,6 @@
 #include "Pool.h"
 #include "StyleSheetParser.h"
 #include "StyleSheetNode.h"
-#include "TransformState.h"
 #include "TransformUtilities.h"
 #include "XMLParseTools.h"
 #include <algorithm>
@@ -72,7 +73,6 @@ struct ElementMeta {
 Element::Element(Document* owner, const String& tag)
 	: owner_document(owner)
 	, tag(tag)
-	, transform_state()
 	, dirty_transform(false)
 	, dirty_perspective(false)
 	, dirty_animation(false)
@@ -90,8 +90,9 @@ Element::Element(Document* owner, const String& tag)
 }
 
 Element::~Element() {
-	RMLUI_ASSERT(parent == nullptr);	
+	RMLUI_ASSERT(parent == nullptr);
 	//GetOwnerDocument()->OnElementDetach(this);
+	SetDataModel(nullptr);
 	PluginRegistry::NotifyElementDestroy(this);
 	for (ElementPtr& child : children) {
 		child->SetParent(nullptr);
@@ -116,25 +117,31 @@ void Element::Update() {
 	}
 }
 
+void Element::UpdateMatrix() {
+	UpdateTransform();
+	UpdatePerspective();
+	for (auto& child : children) {
+		child->UpdateMatrix();
+	}
+}
 
 void Element::UpdateProperties() {
 	meta->style.UpdateDefinition();
 	if (meta->style.AnyPropertiesDirty()) {
 		PropertyIdSet dirty_properties = meta->style.ComputeValues(meta->computed_values);
-		// Computed values are just calculated and can safely be used in OnPropertyChange.
-		// However, new properties set during this call will not be available until the next update loop.
-		if (!dirty_properties.Empty())
-			OnPropertyChange(dirty_properties);
+		if (!dirty_properties.Empty()) {
+			OnChange(dirty_properties);
+		}
 	}
 }
 
-void Element::Render() {
+void Element::OnRender() {
 	const Matrix4f* matrix = Element::GetTransform();
 	SetClipRegion(matrix);
 
 	size_t i = 0;
 	for (; i < stacking_context.size() && stacking_context[i]->GetZIndex() < 0; ++i) {
-		stacking_context[i]->Render();
+		stacking_context[i]->OnRender();
 	}
 
 	if (dirty_background || dirty_border) {
@@ -157,53 +164,37 @@ void Element::Render() {
 	GetRenderInterface()->SetTransform(matrix ? matrix : &Matrix4f::Identity());
 
 	if (geometry_border) {
-		geometry_border->Render(GetOffset());
+		geometry_border->Render(Point{});
 	}
 	if (geometry_image) {
-		geometry_image->Render(GetOffset());
+		geometry_image->Render(Point{});
 	}
 
 	for (; i < stacking_context.size(); ++i) {
-		stacking_context[i]->Render();
+		stacking_context[i]->OnRender();
 	}
 }
 
-// Clones this element, returning a new, unparented element.
-ElementPtr Element::Clone() const
-{
-	ElementPtr clone(new Element(GetOwnerDocument(), GetTagName()));
-	clone->SetAttributes(attributes);
-	String inner_rml;
-	GetInnerRML(inner_rml);
-	clone->SetInnerRML(inner_rml);
-	return clone;
-}
-
-// Sets or removes a class on the element.
 void Element::SetClass(const String& class_name, bool activate)
 {
 	meta->style.SetClass(class_name, activate);
 }
 
-// Checks if a class is set on the element.
 bool Element::IsClassSet(const String& class_name) const
 {
 	return meta->style.IsClassSet(class_name);
 }
 
-// Specifies the entire list of classes for this element. This will replace any others specified.
 void Element::SetClassNames(const String& class_names)
 {
 	SetAttribute("class", class_names);
 }
 
-/// Return the active class list
 String Element::GetClassNames() const
 {
 	return meta->style.GetClassNames();
 }
 
-// Returns the active style sheet for this element. This may be nullptr.
 const SharedPtr<StyleSheet>& Element::GetStyleSheet() const
 {
 	if (Document * document = GetOwnerDocument())
@@ -212,19 +203,15 @@ const SharedPtr<StyleSheet>& Element::GetStyleSheet() const
 	return null_style_sheet;
 }
 
-// Returns the element's definition.
 const ElementDefinition* Element::GetDefinition()
 {
 	return meta->style.GetDefinition();
 }
 
-// Fills an String with the full address of this element.
 String Element::GetAddress(bool include_pseudo_classes, bool include_parents) const
 {
-	// Add the tag name onto the address.
 	String address(tag);
 
-	// Add the ID if we have one.
 	if (!id.empty())
 	{
 		address += "#";
@@ -258,21 +245,8 @@ String Element::GetAddress(bool include_pseudo_classes, bool include_parents) co
 		return address;
 }
 
-
-void Element::UpdateOffset() {
-	if (!Node::DirtyOffset()) {
-		return;
-	}
-	if (transform_state) {
-		DirtyTransformState(true, true);
-	}
-	for (auto& child : children) {
-		child->UpdateOffset();
-	}
-}
-
 bool Element::IsPointWithinElement(const Point& point) {
-	return Rect(GetOffset(), GetMetrics().frame.size).Contains(point);
+	return GetMetrics().frame.Contains(point);
 }
 
 float Element::GetZIndex() const {
@@ -296,7 +270,7 @@ static float ComputeFontsize(const Property* property, Element* element) {
 		return fontSize * property->Get<float>();
 	}
 	if (property->unit == Property::REM) {
-		if (element == &(element->GetOwnerDocument()->body)) {
+		if (element == element->GetOwnerDocument()->body.get()) {
 			return property->Get<float>() * 16;
 		}
 	}
@@ -305,7 +279,7 @@ static float ComputeFontsize(const Property* property, Element* element) {
 
 bool Element::UpdataFontSize() {
 	float new_size = font_size;
-	if (auto p = GetLocalProperty(PropertyId::FontSize))
+	if (auto p = meta->style.GetLocalProperty(PropertyId::FontSize))
 		new_size = ComputeFontsize(p, this);
 	else if (parent) {
 		new_size = parent->GetFontSize();
@@ -356,44 +330,24 @@ bool Element::SetPropertyImmediate(PropertyId id, const Property& property) {
 	return meta->style.SetPropertyImmediate(id, property);
 }
 
-// Removes a local property override on the element.
 void Element::RemoveProperty(const String& name)
 {
 	meta->style.RemoveProperty(StyleSheetSpecification::GetPropertyId(name));
 }
 
-// Removes a local property override on the element.
 void Element::RemoveProperty(PropertyId id)
 {
 	meta->style.RemoveProperty(id);
 }
 
-// Returns one of this element's properties.
 const Property* Element::GetProperty(const String& name)
 {
 	return meta->style.GetProperty(StyleSheetSpecification::GetPropertyId(name));
 }
 
-// Returns one of this element's properties.
 const Property* Element::GetProperty(PropertyId id)
 {
 	return meta->style.GetProperty(id);
-}
-
-// Returns one of this element's properties.
-const Property* Element::GetLocalProperty(const String& name)
-{
-	return meta->style.GetLocalProperty(StyleSheetSpecification::GetPropertyId(name));
-}
-
-const Property* Element::GetLocalProperty(PropertyId id)
-{
-	return meta->style.GetLocalProperty(id);
-}
-
-const PropertyMap& Element::GetLocalStyleProperties()
-{
-	return meta->style.GetLocalStyleProperties();
 }
 
 float Element::ResolveNumericProperty(const Property *property, float base_value)
@@ -404,59 +358,57 @@ float Element::ResolveNumericProperty(const Property *property, float base_value
 // Project a 2D point in pixel coordinates onto the element's plane.
 bool Element::Project(Point& point) const noexcept
 {
-	if(!transform_state || !transform_state->GetTransform())
-		return true;
-
 	// The input point is in window coordinates. Need to find the projection of the point onto the current element plane,
 	// taking into account the full transform applied to the element.
+	if (!inv_transform) {
+		inv_transform = MakeUnique<Matrix4f>(transform);
+		have_inv_transform = inv_transform->Invert();
+	}
+	if (!have_inv_transform) {
+		return false;
+	}
 
-	if (const Matrix4f* inv_transform = transform_state->GetInverseTransform())
+	// Pick two points forming a line segment perpendicular to the window.
+	Vector4f window_points[2] = { { point.x, point.y, -10, 1}, { point.x, point.y, 10, 1 } };
+
+	// Project them into the local element space.
+	window_points[0] = *inv_transform * window_points[0];
+	window_points[1] = *inv_transform * window_points[1];
+
+	Vector3f local_points[2] = {
+		window_points[0].PerspectiveDivide(),
+		window_points[1].PerspectiveDivide()
+	};
+
+	// Construct a ray from the two projected points in the local space of the current element.
+	// Find the intersection with the z=0 plane to produce our destination point.
+	Vector3f ray = local_points[1] - local_points[0];
+
+	// Only continue if we are not close to parallel with the plane.
+	if (std::fabs(ray.z) > 1.0f)
 	{
-		// Pick two points forming a line segment perpendicular to the window.
-		Vector4f window_points[2] = {{ point.x, point.y, -10, 1}, { point.x, point.y, 10, 1 }};
+		// Solving the line equation p = p0 + t*ray for t, knowing that p.z = 0, produces the following.
+		float t = -local_points[0].z / ray.z;
+		Vector3f p = local_points[0] + ray * t;
 
-		// Project them into the local element space.
-		window_points[0] = *inv_transform * window_points[0];
-		window_points[1] = *inv_transform * window_points[1];
-
-		Vector3f local_points[2] = {
-			window_points[0].PerspectiveDivide(),
-			window_points[1].PerspectiveDivide()
-		};
-
-		// Construct a ray from the two projected points in the local space of the current element.
-		// Find the intersection with the z=0 plane to produce our destination point.
-		Vector3f ray = local_points[1] - local_points[0];
-
-		// Only continue if we are not close to parallel with the plane.
-		if(std::fabs(ray.z) > 1.0f)
-		{
-			// Solving the line equation p = p0 + t*ray for t, knowing that p.z = 0, produces the following.
-			float t = -local_points[0].z / ray.z;
-			Vector3f p = local_points[0] + ray * t;
-
-			point = Point(p.x, p.y);
-			return true;
-		}
+		point = Point(p.x, p.y);
+		return true;
 	}
 
 	// The transformation matrix is either singular, or the ray is parallel to the element's plane.
 	return false;
 }
 
-// Sets or removes a pseudo-class on the element.
 void Element::SetPseudoClass(const String& pseudo_class, bool activate)
 {
 	meta->style.SetPseudoClass(pseudo_class, activate);
 }
 
-// Checks if a specific pseudo-class has been set on the element.
 bool Element::IsPseudoClassSet(const String& pseudo_class) const
 {
 	return meta->style.IsPseudoClassSet(pseudo_class);
 }
 
-// Checks if a complete set of pseudo-classes are set on the element.
 bool Element::ArePseudoClassesSet(const PseudoClassList& pseudo_classes) const
 {
 	for (PseudoClassList::const_iterator i = pseudo_classes.begin(); i != pseudo_classes.end(); ++i)
@@ -468,25 +420,21 @@ bool Element::ArePseudoClassesSet(const PseudoClassList& pseudo_classes) const
 	return true;
 }
 
-// Gets a list of the current active pseudo classes
 const PseudoClassList& Element::GetActivePseudoClasses() const
 {
 	return meta->style.GetActivePseudoClasses();
 }
 
-/// Get the named attribute
 Variant* Element::GetAttribute(const String& name)
 {
 	return GetIf(attributes, name);
 }
 
-// Checks if the element has a certain attribute.
 bool Element::HasAttribute(const String& name) const
 {
 	return attributes.find(name) != attributes.end();
 }
 
-// Removes an attribute from the element
 void Element::RemoveAttribute(const String& name)
 {
 	auto it = attributes.find(name);
@@ -500,17 +448,13 @@ void Element::RemoveAttribute(const String& name)
 	}
 }
 
-// Returns the element's context.
 Context* Element::GetContext() const
 {
-	Document* document = GetOwnerDocument();
-	if (document != nullptr)
+	if (Document* document = GetOwnerDocument())
 		return document->GetContext();
-
 	return nullptr;
 }
 
-// Set a group of attributes
 void Element::SetAttributes(const ElementAttributes& _attributes)
 {
 	attributes.reserve(attributes.size() + _attributes.size());
@@ -520,31 +464,26 @@ void Element::SetAttributes(const ElementAttributes& _attributes)
 	OnAttributeChange(_attributes);
 }
 
-// Returns the number of attributes on the element.
 int Element::GetNumAttributes() const
 {
 	return (int)attributes.size();
 }
 
-// Gets the name of the element.
 const String& Element::GetTagName() const
 {
 	return tag;
 }
 
-// Gets the ID of the element.
 const String& Element::GetId() const
 {
 	return id;
 }
 
-// Sets the ID of the element.
 void Element::SetId(const String& _id)
 {
 	SetAttribute("id", _id);
 }
 
-// Gets the object representing the declarations of an element's style attributes.
 ElementStyle* Element::GetStyle() const
 {
 	return &meta->style;
@@ -552,10 +491,6 @@ ElementStyle* Element::GetStyle() const
 
 Document* Element::GetOwnerDocument() const {
 	return owner_document;
-}
-
-Element* Element::GetParentNode() const {
-	return parent;
 }
 
 Element* Element::GetChild(int index) const {
@@ -569,23 +504,25 @@ int Element::GetNumChildren() const {
 	return (int)children.size();
 }
 
-void Element::GetInnerRML(String& content) const {
-	for (auto& child : children) {
-		child->GetRML(content);
-	}
-}
-
-String Element::GetInnerRML() const {
-	String result;
-	GetInnerRML(result);
-	return result;
-}
-
 void Element::SetInnerRML(const String& rml) {
 	while ((int) children.size() > 0)
 		RemoveChild(children.front().get());
-	if (!rml.empty())
-		Factory::InstanceElementText(this, rml);
+	if (rml.empty()) {
+		return;
+	}
+
+	if (std::all_of(rml.begin(), rml.end(), &StringUtilities::IsWhitespace))
+		return;
+	auto stream = MakeUnique<StreamMemory>(rml.size() + 32);
+	Context* context = parent->GetContext();
+	String open_tag = "<" + tag + ">";
+	String close_tag = "</" + tag + ">";
+	stream->Write(open_tag.c_str(), open_tag.size());
+	stream->Write(rml);
+	stream->Write(close_tag.c_str(), close_tag.size());
+	stream->Seek(0, SEEK_SET);
+	XMLParser parser(parent);
+	parser.Parse(stream.get());
 }
 
 void Element::AddEventListener(const String& event, EventListener* listener, bool in_capture_phase) {
@@ -701,10 +638,10 @@ Element* Element::GetElementById(const String& id) {
 	if (id == "#self")
 		return this;
 	else if (id == "#document")
-		return &(GetOwnerDocument()->body);
+		return GetOwnerDocument()->body.get();
 	else if (id == "#parent")
 		return this->parent;
-	Element* search_root = &(GetOwnerDocument()->body);
+	Element* search_root = GetOwnerDocument()->body.get();
 	if (search_root == nullptr)
 		search_root = this;
 		
@@ -729,7 +666,6 @@ Element* Element::GetElementById(const String& id) {
 	return nullptr;
 }
 
-// Get all elements with the given tag.
 void Element::GetElementsByTagName(ElementList& elements, const String& tag) {
 	// Breadth first search on elements for the corresponding id
 	typedef Queue< Element* > SearchQueue;
@@ -901,7 +837,7 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes)
 }
 
 // Called when properties on the element are changed.
-void Element::OnPropertyChange(const PropertyIdSet& changed_properties) {
+void Element::OnChange(const PropertyIdSet& changed_properties) {
 	const bool border_radius_changed = (
 		changed_properties.Contains(PropertyId::BorderTopLeftRadius) ||
 		changed_properties.Contains(PropertyId::BorderTopRightRadius) ||
@@ -970,7 +906,7 @@ void Element::OnPropertyChange(const PropertyIdSet& changed_properties) {
 		changed_properties.Contains(PropertyId::PerspectiveOriginX) ||
 		changed_properties.Contains(PropertyId::PerspectiveOriginY))
 	{
-		DirtyTransformState(true, false);
+		DirtyPerspective();
 	}
 
 	// Check for `transform' and `transform-origin' changes
@@ -979,7 +915,7 @@ void Element::OnPropertyChange(const PropertyIdSet& changed_properties) {
 		changed_properties.Contains(PropertyId::TransformOriginY) ||
 		changed_properties.Contains(PropertyId::TransformOriginZ))
 	{
-		DirtyTransformState(false, true);
+		DirtyTransform();
 	}
 
 	// Check for `animation' changes
@@ -992,10 +928,12 @@ void Element::OnPropertyChange(const PropertyIdSet& changed_properties) {
 	{
 		dirty_transition = true;
 	}
-}
 
-void Element::DirtyLayout() {
-	GetLayout().MarkDirty();
+	for (auto& child : children) {
+		if (child->GetType() == Node::Type::Text) {
+			child->OnChange(changed_properties);
+		}
+	}
 }
 
 void Element::ProcessDefaultAction(Event& event)
@@ -1025,27 +963,41 @@ const Style::ComputedValues& Element::GetComputedValues() const
 	return meta->computed_values;
 }
 
-void Element::GetRML(String& content)
-{
-	content += "<";
-	content += tag;
+String Element::GetInnerRML() const {
+	String rml;
+	for (auto& child : children) {
+		if (child->GetType() == Node::Type::Text) {
+			rml += ((ElementText&)*child).GetText();
+		}
+		else {
+			rml += child->GetOuterRML();
+		}
+	}
+	return rml;
+}
+
+String Element::GetOuterRML() const {
+	String rml;
+	rml += "<";
+	rml += tag;
 	for (auto& pair : attributes) {
 		auto& name = pair.first;
 		auto& variant = pair.second;
 		String value;
 		if (variant.GetInto(value))
-			content += " " + name + "=\"" + value + "\"";
+			rml += " " + name + "=\"" + value + "\"";
 	}
 	if (!children.empty()) {
-		content += ">";
-		GetInnerRML(content);
-		content += "</";
-		content += tag;
-		content += ">";
+		rml += ">";
+		rml += GetInnerRML();
+		rml += "</";
+		rml += tag;
+		rml += ">";
 	}
 	else {
-		content += " />";
+		rml += " />";
 	}
+	return rml;
 }
 
 void Element::SetDataModel(DataModel* new_data_model)  {
@@ -1082,8 +1034,8 @@ void Element::SetParent(Element* _parent) {
 	}
 
 	// The transform state may require recalculation.
-	if (transform_state || (parent && parent->transform_state))
-		DirtyTransformState(true, true);
+	DirtyTransform();
+	DirtyPerspective();
 
 	if (!parent)
 	{
@@ -1401,152 +1353,105 @@ void Element::AdvanceAnimations()
 		DispatchEvent(is_transition[i] ? EventId::Transitionend : EventId::Animationend, dictionary_list[i]);
 }
 
-void Element::DirtyTransformState(bool perspective_dirty, bool transform_dirty)
+void Element::DirtyTransform()
 {
-	dirty_perspective |= perspective_dirty;
-	dirty_transform |= transform_dirty;
+	dirty_transform = true;
 }
 
-void Element::UpdateTransformState()
+void Element::DirtyPerspective()
 {
-	if (!dirty_perspective && !dirty_transform)
+	dirty_perspective = true;
+}
+
+void Element::UpdateTransform() {
+	if (!dirty_transform)
 		return;
-
+	dirty_transform = false;
 	const ComputedValues& computed = meta->computed_values;
-
-	const Rect rect = {
-		GetOffset(),
-		GetMetrics().frame.size
-	};
-	Point origin = rect.origin + rect.size * 0.5f;
-	
-	bool perspective_or_transform_changed = false;
-
-	if (dirty_perspective)
-	{
-		bool had_perspective = (transform_state && transform_state->GetLocalPerspective());
-
-		float distance = computed.perspective;
-		Point vanish = origin;
-		bool have_perspective = false;
-
-		if (distance > 0.0f)
-		{
-			have_perspective = true;
-
-			// Compute the vanishing point from the perspective origin
-			if (computed.perspective_origin_x.type == Style::PerspectiveOrigin::Percentage)
-				vanish.x = rect.origin.x + computed.perspective_origin_x.value * 0.01f * rect.size.w;
-			else
-				vanish.x = rect.origin.x + computed.perspective_origin_x.value;
-
-			if (computed.perspective_origin_y.type == Style::PerspectiveOrigin::Percentage)
-				vanish.y = rect.origin.y + computed.perspective_origin_y.value * 0.01f * rect.size.h;
-			else
-				vanish.y = rect.origin.y + computed.perspective_origin_y.value;
+	Matrix4f new_transform = Matrix4f::Identity();
+	if (computed.transform && !computed.transform->Empty()) {
+		const Layout::Metrics& metrics = GetMetrics();
+		Vector3f origin {
+			computed.transform_origin_x.value,
+			computed.transform_origin_y.value,
+			computed.transform_origin_z,
+		};
+		if (computed.transform_origin_x.type == Style::TransformOrigin::Percentage) {
+			origin.x *= metrics.frame.size.w * 0.01f;
 		}
-
-		if (have_perspective)
-		{
-			// Equivalent to: Translate(x,y,0) * Perspective(distance) * Translate(-x,-y,0)
-			Matrix4f perspective = Matrix4f::FromRows(
-				{ 1, 0, -vanish.x / distance, 0 },
-				{ 0, 1, -vanish.y / distance, 0 },
-				{ 0, 0, 1, 0 },
-				{ 0, 0, -1 / distance, 1 }
-			);
-
-			if (!transform_state)
-				transform_state = MakeUnique<TransformState>();
-
-			perspective_or_transform_changed |= transform_state->SetLocalPerspective(&perspective);
+		if (computed.transform_origin_y.type == Style::TransformOrigin::Percentage) {
+			origin.y *= metrics.frame.size.h * 0.01f;
 		}
-		else if (transform_state)
-			transform_state->SetLocalPerspective(nullptr);
-
-		perspective_or_transform_changed |= (have_perspective != had_perspective);
-
-		dirty_perspective = false;
+		new_transform = Matrix4f::Translate(origin)
+			* computed.transform->GetMatrix(*this)
+			* Matrix4f::Translate(-origin);
+	}
+	new_transform = Matrix4f::Translate(metrics.frame.origin.x, metrics.frame.origin.y, 0) * new_transform;
+	if (parent) {
+		if (parent->perspective) {
+			new_transform = *parent->perspective * new_transform;
+		}
+		new_transform = parent->transform * new_transform;
 	}
 
-
-	if (dirty_transform)
-	{
-		// We want to find the accumulated transform given all our ancestors. It is assumed here that the parent transform is already updated,
-		// so that we only need to consider our local transform and combine it with our parent's transform and perspective matrices.
-		bool had_transform = (transform_state && transform_state->GetTransform());
-		bool have_transform = false;
-		Matrix4f transform = Matrix4f::Identity();
-
-		if (computed.transform && !computed.transform->Empty())
-		{
-			have_transform = true;
-			// Compute the transform origin
-			Vector3f transform_origin(origin.x, origin.y, 0);
-			if (computed.transform_origin_x.type == Style::TransformOrigin::Percentage)
-				transform_origin.x = rect.origin.x + computed.transform_origin_x.value * rect.size.w * 0.01f;
-			else
-				transform_origin.x = rect.origin.x + computed.transform_origin_x.value;
-			if (computed.transform_origin_y.type == Style::TransformOrigin::Percentage)
-				transform_origin.y = rect.origin.y + computed.transform_origin_y.value * rect.size.h * 0.01f;
-			else
-				transform_origin.y = rect.origin.y + computed.transform_origin_y.value;
-			transform_origin.z = computed.transform_origin_z;
-			// Make the transformation apply relative to the transform origin
-			transform = Matrix4f::Translate(transform_origin) * computed.transform->GetMatrix(*this) * Matrix4f::Translate(-transform_origin);
+	if (new_transform != transform) {
+		transform = new_transform;
+		for (auto& child : children) {
+			child->DirtyTransform();
 		}
+		have_inv_transform = true;
+		inv_transform.reset();
+	}
+}
 
-		if (parent && parent->transform_state)
-		{
-			// Apply the parent's local perspective and transform.
-			// @performance: If we have no local transform and no parent perspective, we can effectively just point to the parent transform instead of copying it.
-			const TransformState& parent_state = *parent->transform_state;
-
-			if (auto parent_perspective = parent_state.GetLocalPerspective())
-			{
-				transform = *parent_perspective * transform;
-				have_transform = true;
-			}
-
-			if (auto parent_transform = parent_state.GetTransform())
-			{
-				transform = *parent_transform * transform;
-				have_transform = true;
-			}
+void Element::UpdatePerspective() {
+	if (!dirty_perspective)
+		return;
+	dirty_perspective = false;
+	const ComputedValues& computed = meta->computed_values;
+	float distance = computed.perspective;
+	bool changed = false;
+	if (distance > 0.0f) {
+		const Layout::Metrics& metrics = GetMetrics();
+		Point origin {
+			computed.perspective_origin_x.value,
+			computed.perspective_origin_y.value,
+		};
+		if (computed.perspective_origin_x.type == Style::PerspectiveOrigin::Percentage) {
+			origin.x *= metrics.frame.size.w * 0.01f;
 		}
-
-		if (have_transform)
-		{
-			if (!transform_state)
-				transform_state = MakeUnique<TransformState>();
-
-			perspective_or_transform_changed |= transform_state->SetTransform(&transform);
+		if (computed.perspective_origin_y.type == Style::PerspectiveOrigin::Percentage) {
+			origin.y *= metrics.frame.size.h * 0.01f;
 		}
-		else if (transform_state)
-			transform_state->SetTransform(nullptr);
-
-		perspective_or_transform_changed |= (had_transform != have_transform);
+		// Equivalent to: Translate(x,y,0) * Perspective(distance) * Translate(-x,-y,0)
+		Matrix4f new_perspective = Matrix4f::FromRows(
+			{ 1, 0, -origin.x / distance, 0 },
+			{ 0, 1, -origin.y / distance, 0 },
+			{ 0, 0, 1, 0 },
+			{ 0, 0, -1 / distance, 1 }
+		);
+		if (!perspective || new_perspective != *perspective) {
+			perspective = MakeUnique<Matrix4f>(new_perspective);
+			changed = true;
+		}
+	}
+	else {
+		if (!perspective) {
+			perspective.reset();
+			changed = true;
+		}
 	}
 
-	if (perspective_or_transform_changed)
-	{
-		for (size_t i = 0; i < children.size(); i++)
-			children[i]->DirtyTransformState(false, true);
-	}
-
-	// No reason to keep the transform state around if transform and perspective have been removed.
-	if (transform_state && !transform_state->GetTransform() && !transform_state->GetLocalPerspective())
-	{
-		transform_state.reset();
+	if (changed) {
+		for (auto& child : children) {
+			child->DirtyTransform();
+		}
 	}
 }
 
 void Element::UpdateBounds() {
-	if (!UpdateMetrics()) {
-		return;
-	}
-	if (IsVisible()) {
-		UpdateOffset();
+	if (Node::UpdateMetrics() && Node::IsVisible()) {
+		DirtyTransform();
 		for (auto& child : children) {
 			child->UpdateBounds();
 		}
@@ -1572,18 +1477,7 @@ Element* Element::GetElementAtPoint(Point point, const Element* ignore_element) 
 		}
 	}
 
-	// Projection may fail if we have a singular transformation matrix.
-	bool projection_result = Project(point);
-
-	// Check if the point is actually within this element.
-	bool within_element = (projection_result && IsPointWithinElement(point));
-	if (within_element) {
-		Rect clip = GetClippingRegion();
-		if (!clip.IsEmpty()) {
-			within_element = clip.Contains(point);
-		}
-	}
-	if (within_element) {
+	if (Project(point) && IsPointWithinElement(point)) {
 		return this;
 	}
 	return nullptr;
@@ -1591,32 +1485,27 @@ Element* Element::GetElementAtPoint(Point point, const Element* ignore_element) 
 
 Rect Element::GetClippingRegion() {
 	Rect clip;
-	if (parent) {
-		clip = parent->GetClippingRegion();
-	}
-	if (!IsClippingEnabled()) {
-		return clip;
-	}
-	clip.Union(Rect(GetOffset(), GetMetrics().frame.size));
+	//if (parent) {
+	//	clip = parent->GetClippingRegion();
+	//}
+	//if (!IsClippingEnabled()) {
+	//	return clip;
+	//}
+	//clip.Union(Rect(GetOffset(), GetMetrics().frame.size));
 	return clip;
 }
 
 const Matrix4f* Element::GetTransform() {
-	UpdateTransformState();
-	if (transform_state && transform_state->GetTransform()) {
-		return transform_state->GetTransform();
-	}
-	return nullptr;
+	return &transform;
 }
 
 void Element::SetClipRegion(const Matrix4f* matrix) {
-	if (!matrix) {
-		GetRenderInterface()->SetScissorRegion(GetClippingRegion());
-		return;
-	}
-
-	// TODO: support overflow + transform
-	GetRenderInterface()->SetScissorRegion({});
+	//if (!matrix) {
+	//	GetRenderInterface()->SetScissorRegion(GetClippingRegion());
+	//	return;
+	//}
+	//// TODO: support overflow + transform
+	//GetRenderInterface()->SetScissorRegion({});
 }
 
 } // namespace Rml

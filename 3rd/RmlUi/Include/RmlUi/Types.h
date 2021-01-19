@@ -68,6 +68,7 @@ using Matrix4f = RMLUI_MATRIX4_TYPE;
 // Common classes
 class Document;
 class Element;
+class ElementText;
 class ElementAnimation;
 class Context;
 class Event;
@@ -91,6 +92,7 @@ using TextEffectsHandle = uintptr_t;
 
 using DocumentPtr = UniquePtr<Document>;
 using ElementPtr = UniquePtr<Element>;
+using TextPtr = ElementPtr;// UniquePtr<ElementText>;
 
 // Container types for common classes
 using ElementList = Vector< Element* >;

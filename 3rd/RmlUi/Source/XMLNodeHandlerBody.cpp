@@ -50,7 +50,7 @@ Element* XMLNodeHandlerBody::ElementStart(XMLParser* parser, const String& RMLUI
 	// Apply any attributes to the document
 	Document* document = parser->GetParseFrame()->element->GetOwnerDocument();
 	if (document)
-		document->body.SetAttributes(attributes);
+		document->body->SetAttributes(attributes);
 
 	// Tell the parser to use the element handler for all children
 	parser->PushDefaultHandler();

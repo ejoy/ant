@@ -35,7 +35,6 @@
 #include "DataModel.h"
 #include "DataView.h"
 #include "ElementStyle.h"
-#include "TransformState.h"
 #include <limits>
 
 namespace Rml {

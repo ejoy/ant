@@ -58,12 +58,12 @@ Context::Context(const Size& dimensions_)
 
 Context::~Context() {
 	for (auto& document : documents) {
-		document->body.DispatchEvent(EventId::Unload, Dictionary());
+		document->body->DispatchEvent(EventId::Unload, Dictionary());
 		PluginRegistry::NotifyDocumentDestroy(document);
 		unloaded_documents.push_back(document);
 	}
 	for (auto& document : unloaded_documents) {
-		document->body.GetEventDispatcher()->DetachAllEvents();
+		document->body->GetEventDispatcher()->DetachAllEvents();
 		delete document;
 	}
 	documents.clear();
@@ -126,10 +126,10 @@ Document* Context::LoadDocument(const String& document_path) {
 	DocumentPtr document(new Document(dimensions));
 	document->context = this;
 	PluginRegistry::NotifyDocumentCreate(document.get());
-	XMLParser parser(&document->body);
+	XMLParser parser(document->body.get());
 	parser.Parse(stream.get());
 	documents.push_back(document.get());
-	document->body.DispatchEvent(EventId::Load, Dictionary());
+	document->body->DispatchEvent(EventId::Load, Dictionary());
 	document->UpdateDataModel(false);
 	document->Update();
 	return document.release();
@@ -141,7 +141,7 @@ void Context::UnloadDocument(Document* document) {
 		if (unloaded_documents[i] == document)
 			return;
 	}
-	document->body.DispatchEvent(EventId::Unload, Dictionary());
+	document->body->DispatchEvent(EventId::Unload, Dictionary());
 	PluginRegistry::NotifyDocumentDestroy(document);
 	unloaded_documents.push_back(document);
 }
@@ -212,7 +212,7 @@ void Context::ReleaseUnloadedDocuments() {
 	std::vector<Document*> documents = std::move(unloaded_documents);
 	unloaded_documents.clear();
 	for (auto document : documents) {
-		document->body.GetEventDispatcher()->DetachAllEvents();
+		document->body->GetEventDispatcher()->DetachAllEvents();
 		auto pos = std::find(std::begin(documents), std::end(documents), document);
 		std::rotate(pos, pos + 1, std::end(documents));
 		documents.pop_back();
