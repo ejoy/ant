@@ -16,37 +16,37 @@ $(ODIR)/file.o : file.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(RMLUIINC) $(BGFXINC)
 
 $(ODIR)/font.o : font.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
+	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
 
 $(ODIR)/render.o : render.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
+	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
 
 $(ODIR)/system.o : system.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
+	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
 
 $(ODIR)/binding_context.o : binding_context.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
+	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
 
 $(ODIR)/binding_fonteffect.o : binding_fonteffect.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
+	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
 
 $(ODIR)/luarmlui.o : luarmlui.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
+	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
 
 $(ODIR)/luaplugin.o : luaplugin.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
+	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
 	
 $(ODIR)/luadatabinding.o : luadatabinding.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
+	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
 
 $(ODIR)/rmlapi.o : rmlapi.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
+	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
 
-RMLUI_DIR = $(ANT3RD)/RmlUi/Source/Core
+RMLUI_DIR = $(ANT3RD)/RmlUi/Source
 RMLUI = $(patsubst $(RMLUI_DIR)/%.cpp,%,$(wildcard $(RMLUI_DIR)/*.cpp))
 define RMLUI_COMPLILE
 $(ODIR)/$(1).o : $(RMLUI_DIR)/$(1).cpp
-	$(CXX) -c $(CFLAGS) -o $$@ $$^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(RMLUIINC)
+	$(CXX) -c $(CFLAGS) -o $$@ $$^ -DRMLUI_STATIC_LIB $(LUAINC) $(RMLUIINC)
 endef
 $(foreach v, $(RMLUI), $(eval $(call RMLUI_COMPLILE,$(v))))
 
@@ -54,7 +54,7 @@ YOGA_DIR = $(ANT3RD)/yoga/yoga
 YOGA = $(patsubst $(YOGA_DIR)/%.cpp,%,$(wildcard $(YOGA_DIR)/*.cpp)) event/event
 define YOGA_COMPLILE
 $(ODIR)/yoga/$(1).o : $(YOGA_DIR)/$(1).cpp | $(ODIR)/yoga/event
-	$(CXX) -c $(CFLAGS) -o $$@ $$^ $(LUAINC) $(CLIBSINC) -I$(ANT3RD)/yoga -DDEBUG
+	$(CXX) -c $(CFLAGS) -o $$@ $$^ $(LUAINC) -I$(ANT3RD)/yoga -DDEBUG
 endef
 $(foreach v, $(YOGA), $(eval $(call YOGA_COMPLILE,$(v))))
 

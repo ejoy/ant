@@ -33,7 +33,7 @@
 
 namespace Rml {
 
-static const auto PI = std::acosf(-1);
+static const auto PI = acosf(-1);
 
 void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path& paddingEdge) {
 	geometry.Release();

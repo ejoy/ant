@@ -57,6 +57,8 @@ Event::Event(Element* _target_element, EventId id, const Dictionary& _parameters
 	case EventId::Dragend:
 		InitMouseEvent();
 		break;
+	default:
+		break;
 	}
 }
 
