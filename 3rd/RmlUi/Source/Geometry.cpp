@@ -58,7 +58,7 @@ void Geometry::MoveFrom(Geometry& other) {
 Geometry::~Geometry()
 { }
 
-void Geometry::Render(Point translation) {
+void Geometry::Render() {
 	if (vertices.empty() || indices.empty())
 		return;
 	GetRenderInterface()->RenderGeometry(
@@ -66,8 +66,7 @@ void Geometry::Render(Point translation) {
 		(int)vertices.size(),
 		&indices[0],
 		(int)indices.size(),
-		texture ? texture->GetHandle() : 0,
-		translation
+		texture ? texture->GetHandle() : 0
 	);
 }
 

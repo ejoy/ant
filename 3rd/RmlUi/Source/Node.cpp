@@ -51,4 +51,12 @@ void Node::DirtyLayout() {
 	layout.MarkDirty();
 }
 
+void Node::DirtyTransform() {
+	dirty_transform = true;
+}
+
+const Matrix4f& Node::GetTransform() const {
+	return transform;
+}
+
 }

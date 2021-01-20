@@ -718,8 +718,7 @@ void Document::SetDimensions(const Size& _dimensions) {
 void Document::Update() {
 	body->Update();
 	body->GetLayout().CalculateLayout(dimensions);
-	body->UpdateBounds();
-	body->UpdateMatrix();
+	body->UpdateLayout();
 }
 
 void Document::Render() {

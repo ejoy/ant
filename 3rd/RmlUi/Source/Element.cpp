@@ -73,7 +73,6 @@ struct ElementMeta {
 Element::Element(Document* owner, const String& tag)
 	: owner_document(owner)
 	, tag(tag)
-	, dirty_transform(false)
 	, dirty_perspective(false)
 	, dirty_animation(false)
 	, dirty_transition(false)
@@ -117,14 +116,6 @@ void Element::Update() {
 	}
 }
 
-void Element::UpdateMatrix() {
-	UpdateTransform();
-	UpdatePerspective();
-	for (auto& child : children) {
-		child->UpdateMatrix();
-	}
-}
-
 void Element::UpdateProperties() {
 	meta->style.UpdateDefinition();
 	if (meta->style.AnyPropertiesDirty()) {
@@ -136,40 +127,22 @@ void Element::UpdateProperties() {
 }
 
 void Element::OnRender() {
-	const Matrix4f* matrix = Element::GetTransform();
-	SetClipRegion(matrix);
+	UpdateTransform();
+	UpdatePerspective();
+	UpdateGeometry();
 
 	size_t i = 0;
 	for (; i < stacking_context.size() && stacking_context[i]->GetZIndex() < 0; ++i) {
 		stacking_context[i]->OnRender();
 	}
-
-	if (dirty_background || dirty_border) {
-		if (!geometry_border) {
-			geometry_border.reset(new Geometry);
-		}
-		ElementBackgroundBorder::GenerateGeometry(this, *geometry_border, padding_edge);
-		dirty_background = false;
-		dirty_border = false;
-		dirty_image = true;
-	}
-	if (dirty_image) {
-		if (!geometry_image) {
-			geometry_image.reset(new Geometry);
-		}
-		ElementBackgroundImage::GenerateGeometry(this, *geometry_image, padding_edge);
-		dirty_image = false;
-	}
-
-	GetRenderInterface()->SetTransform(matrix ? matrix : &Matrix4f::Identity());
-
+	SetClipRegion();
+	GetRenderInterface()->SetTransform(&transform);
 	if (geometry_border) {
-		geometry_border->Render(Point{});
+		geometry_border->Render();
 	}
 	if (geometry_image) {
-		geometry_image->Render(Point{});
+		geometry_image->Render();
 	}
-
 	for (; i < stacking_context.size(); ++i) {
 		stacking_context[i]->OnRender();
 	}
@@ -1353,11 +1326,6 @@ void Element::AdvanceAnimations()
 		DispatchEvent(is_transition[i] ? EventId::Transitionend : EventId::Animationend, dictionary_list[i]);
 }
 
-void Element::DirtyTransform()
-{
-	dirty_transform = true;
-}
-
 void Element::DirtyPerspective()
 {
 	dirty_perspective = true;
@@ -1449,11 +1417,30 @@ void Element::UpdatePerspective() {
 	}
 }
 
-void Element::UpdateBounds() {
+void Element::UpdateGeometry() {
+	if (dirty_background || dirty_border) {
+		if (!geometry_border) {
+			geometry_border.reset(new Geometry);
+		}
+		ElementBackgroundBorder::GenerateGeometry(this, *geometry_border, padding_edge);
+		dirty_background = false;
+		dirty_border = false;
+		dirty_image = true;
+	}
+	if (dirty_image) {
+		if (!geometry_image) {
+			geometry_image.reset(new Geometry);
+		}
+		ElementBackgroundImage::GenerateGeometry(this, *geometry_image, padding_edge);
+		dirty_image = false;
+	}
+}
+
+void Element::UpdateLayout() {
 	if (Node::UpdateMetrics() && Node::IsVisible()) {
 		DirtyTransform();
 		for (auto& child : children) {
-			child->UpdateBounds();
+			child->UpdateLayout();
 		}
 	}
 }
@@ -1483,29 +1470,7 @@ Element* Element::GetElementAtPoint(Point point, const Element* ignore_element) 
 	return nullptr;
 }
 
-Rect Element::GetClippingRegion() {
-	Rect clip;
-	//if (parent) {
-	//	clip = parent->GetClippingRegion();
-	//}
-	//if (!IsClippingEnabled()) {
-	//	return clip;
-	//}
-	//clip.Union(Rect(GetOffset(), GetMetrics().frame.size));
-	return clip;
-}
-
-const Matrix4f* Element::GetTransform() {
-	return &transform;
-}
-
-void Element::SetClipRegion(const Matrix4f* matrix) {
-	//if (!matrix) {
-	//	GetRenderInterface()->SetScissorRegion(GetClippingRegion());
-	//	return;
-	//}
-	//// TODO: support overflow + transform
-	//GetRenderInterface()->SetScissorRegion({});
+void Element::SetClipRegion() {
 }
 
 } // namespace Rml

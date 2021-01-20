@@ -59,8 +59,7 @@ public:
 	/// @param[in] indices The geometry's index data.
 	/// @param[in] num_indices The number of indices passed to the function. This will always be a multiple of three.
 	/// @param[in] texture The texture to be applied to the geometry. This may be nullptr, in which case the geometry is untextured.
-	/// @param[in] translation The translation to apply to the geometry.
-	virtual void RenderGeometry(Vertex* vertices, int num_vertices, int* indices, int num_indices, TextureHandle texture, const Point& translation) = 0;
+	virtual void RenderGeometry(Vertex* vertices, int num_vertices, int* indices, int num_indices, TextureHandle texture) = 0;
 
 	/// Called by RmlUi when it wants to enable or disable scissoring to clip content.
 	/// @param[in] enable True if scissoring is to enabled, false if it is to be disabled.

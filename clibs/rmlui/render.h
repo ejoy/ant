@@ -52,7 +52,7 @@ public:
     Renderer(const RmlContext* context);
     virtual void RenderGeometry(Rml::Vertex* vertices, int num_vertices, 
                                 int* indices, int num_indices, 
-                                Rml::TextureHandle texture, const Rml::Point& translation) override;
+                                Rml::TextureHandle texture) override;
 
 	virtual void SetScissorRegion(Rml::Rect const& clip) override;
     virtual bool LoadTexture(Rml::TextureHandle& texture_handle, Rml::Size& texture_dimensions, const Rml::String& source) override;
