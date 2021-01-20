@@ -104,7 +104,7 @@ public:
 	/// Checks if a given point in screen coordinates lies within the bordered area of this element.
 	/// @param[in] point The point to test.
 	/// @return True if the element is within this element, false otherwise.
-	bool IsPointWithinElement(const Point& point);
+	bool IsPointWithinElement(Point point);
 
 	float GetZIndex() const;
 	float GetFontSize() const;
