@@ -145,7 +145,7 @@ vec3 unpack_dxt_normal(vec4 packednormal)
 
 vec4 transform_screen_coord_to_ndc(mat4 m, vec2 apos)
 {
-	vec4 p      = mul(u_model[0], vec4(apos, 0.0, 1.0));
+	vec4 p      = mul(m, vec4(apos, 0.0, 1.0));
     vec2 pos    = p.xy * u_viewTexel.xy;
     pos.y       = 1 - pos.y;
 	pos         = pos * 2.0 - 1.0;
