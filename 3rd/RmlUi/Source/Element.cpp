@@ -219,8 +219,8 @@ String Element::GetAddress(bool include_pseudo_classes, bool include_parents) co
 		return address;
 }
 
-bool Element::IsPointWithinElement(const Point& point) {
-	return GetMetrics().frame.Contains(point);
+bool Element::IsPointWithinElement(Point point) {
+	return Project(point) && Rect { {}, GetMetrics().frame.size }.Contains(point);
 }
 
 float Element::GetZIndex() const {
@@ -337,8 +337,7 @@ bool Element::Project(Point& point) const noexcept
 	if (!inv_transform) {
 		have_inv_transform = 0.f != glm::determinant(transform);
 		if (have_inv_transform) {
-			inv_transform = MakeUnique<glm::mat4x4>(transform);
-			glm::inverse(*inv_transform);
+			inv_transform = MakeUnique<glm::mat4x4>(glm::inverse(transform));
 		}
 	}
 	if (!have_inv_transform) {
@@ -1493,7 +1492,7 @@ Element* Element::GetElementAtPoint(Point point, const Element* ignore_element) 
 		}
 	}
 
-	if (Project(point) && IsPointWithinElement(point)) {
+	if (IsPointWithinElement(point)) {
 		return this;
 	}
 	return nullptr;
