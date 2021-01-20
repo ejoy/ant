@@ -32,6 +32,8 @@
 #include "Header.h"
 #include "Types.h"
 #include "Property.h"
+#include <glm/glm.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace Rml {
 namespace Transforms {
@@ -78,7 +80,7 @@ struct RMLUICORE_API Matrix2D : public ResolvedPrimitive< 6 >
 struct RMLUICORE_API Matrix3D : public ResolvedPrimitive< 16 >
 {
 	Matrix3D(const NumericValue* values) noexcept;
-	Matrix3D(const Matrix4f& matrix) noexcept;
+	Matrix3D(const glm::mat4x4& matrix) noexcept;
 };
 
 struct RMLUICORE_API TranslateX : public UnresolvedPrimitive< 1 >
@@ -198,11 +200,11 @@ struct RMLUICORE_API Perspective : public UnresolvedPrimitive< 1 >
 };
 
 struct RMLUICORE_API DecomposedMatrix4 {
-	Vector4f perspective;
-	Vector4f quaternion;
-	Vector3f translation;
-	Vector3f scale;
-	Vector3f skew;
+	glm::vec4 perspective;
+	glm::quat quaternion;
+	glm::vec3 translation;
+	glm::vec3 scale;
+	glm::vec3 skew;
 };
 
 } // namespace Transforms

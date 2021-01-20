@@ -49,9 +49,6 @@ enum class Character : char32_t { Null, Replacement = 0xfffd };
 }
 
 #include "Colour.h"
-#include "Vector3.h"
-#include "Vector4.h"
-#include "Matrix4.h"
 #include "ObserverPtr.h"
 
 namespace Rml {
@@ -59,11 +56,6 @@ namespace Rml {
 // Color and linear algebra
 using Colourf = Colour< float, 1 >;
 using Colourb = Colour< byte, 255 >;
-using Vector3f = Vector3< float >;
-using Vector4f = Vector4< float >;
-using ColumnMajorMatrix4f = Matrix4< float, ColumnMajorStorage< float > >;
-using RowMajorMatrix4f = Matrix4< float, RowMajorStorage< float > >;
-using Matrix4f = RMLUI_MATRIX4_TYPE;
 
 // Common classes
 class Document;

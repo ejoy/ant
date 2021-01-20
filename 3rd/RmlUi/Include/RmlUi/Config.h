@@ -62,14 +62,6 @@
 
 namespace Rml {
 
-// Default matrix type to be used. This alias may be set to ColumnMajorMatrix4f or RowMajorMatrix4f. This alias can not
-// be set here because matrix types are defined after this include in Core/Types.h.
-#ifdef RMLUI_MATRIX_ROW_MAJOR
-#define RMLUI_MATRIX4_TYPE RowMajorMatrix4f
-#else
-#define RMLUI_MATRIX4_TYPE ColumnMajorMatrix4f
-#endif
-
 // A way to disable 'final' specified for Rml::Releaser class. It breaks EASTL.
 #define RMLUI_RELEASER_FINAL final
 

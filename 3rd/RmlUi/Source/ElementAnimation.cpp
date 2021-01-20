@@ -29,6 +29,7 @@
 #include "ElementAnimation.h"
 #include "ElementStyle.h"
 #include "TransformUtilities.h"
+#include "../Include/RmlUi/Math.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
@@ -61,7 +62,7 @@ static Colourb ColourFromLinearSpace(Colourf c)
 // Merges all the primitives to a single DecomposedMatrix4 primitive
 static bool CombineAndDecompose(Transform& t, Element& e)
 {
-	Matrix4f m = t.GetMatrix(e);
+	glm::mat4x4 m = t.GetMatrix(e);
 	Transforms::DecomposedMatrix4 decomposed;
 	if (!TransformUtilities::Decompose(decomposed, m))
 		return false;

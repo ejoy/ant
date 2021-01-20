@@ -27,6 +27,8 @@
  */
 
 #include "../Include/RmlUi/StreamMemory.h"
+#include "../Include/RmlUi/Math.h"
+#include "../Include/RmlUi/Debug.h"
 #include <string.h>
 #include <stdio.h>
 

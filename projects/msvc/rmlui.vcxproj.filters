@@ -286,12 +286,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\Variant.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Vector3.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Vector4.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\XMLNodeHandler.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -585,12 +579,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Math.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\MathTypes.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Matrix4.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\ObserverPtr.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -669,12 +657,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Variant.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Vector3.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Vector4.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Vertex.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -707,19 +689,10 @@
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\Element.inl">
       <Filter>include</Filter>
     </None>
-    <None Include="..\..\3rd\RmlUi\Include\RmlUi\Matrix4.inl">
-      <Filter>include</Filter>
-    </None>
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\TypeConverter.inl">
       <Filter>include</Filter>
     </None>
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\Variant.inl">
-      <Filter>include</Filter>
-    </None>
-    <None Include="..\..\3rd\RmlUi\Include\RmlUi\Vector3.inl">
-      <Filter>include</Filter>
-    </None>
-    <None Include="..\..\3rd\RmlUi\Include\RmlUi\Vector4.inl">
       <Filter>include</Filter>
     </None>
   </ItemGroup>

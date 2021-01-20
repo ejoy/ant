@@ -37,6 +37,7 @@
 #include "../Include/RmlUi/FontEngineInterface.h"
 #include "../Include/RmlUi/RenderInterface.h"
 #include "../Include/RmlUi/Property.h"
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace Rml {
 
@@ -86,7 +87,8 @@ void ElementText::UpdateTransform() {
 	if (!dirty_transform)
 		return;
 	dirty_transform = false;
-	transform = parent->GetTransform() * Matrix4f::Translate(metrics.frame.origin.x, metrics.frame.origin.y, 0);
+
+	transform = glm::translate(parent->GetTransform(), glm::vec3(metrics.frame.origin.x, metrics.frame.origin.y, 0));
 }
 
 void ElementText::OnRender() {
@@ -100,7 +102,7 @@ void ElementText::OnRender() {
 	UpdateDecoration(font_face_handle);
 
 	SetClipRegion();
-	GetRenderInterface()->SetTransform(&transform);
+	GetRenderInterface()->SetTransform(transform);
 	if (decoration_under) {
 		decoration.Render();
 	}

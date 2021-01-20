@@ -31,6 +31,7 @@
 
 #include "../Include/RmlUi/Header.h"
 #include "../Include/RmlUi/Types.h"
+#include <glm/glm.hpp>
 
 namespace Rml {
 
@@ -44,7 +45,7 @@ namespace TransformUtilities
 	void SetIdentity(TransformPrimitive& primitive) noexcept;
 
 	// Resolve the primitive into a transformation matrix, given the current element properties and layout.
-	Matrix4f ResolveTransform(const TransformPrimitive& primitive, Element& e) noexcept;
+	glm::mat4x4 ResolveTransform(const TransformPrimitive& primitive, Element& e) noexcept;
 	
 	// Prepares the primitive for interpolation. This must be done before calling InterpolateWith().
 	// Promote units to basic types which can be interpolated, that is, convert 'length -> pixel' for unresolved primitives.
@@ -61,7 +62,7 @@ namespace TransformUtilities
 
 	// Decompose a Matrix4 into its decomposed components.
 	// Returns true on success, or false if the matrix is singular.
-	bool Decompose(Transforms::DecomposedMatrix4& decomposed_matrix, const Matrix4f& matrix) noexcept;
+	bool Decompose(Transforms::DecomposedMatrix4& decomposed_matrix, const glm::mat4x4& matrix) noexcept;
 
 	String ToString(const TransformPrimitive& primitive) noexcept;
 }

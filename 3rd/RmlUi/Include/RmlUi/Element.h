@@ -40,6 +40,7 @@
 #include "Tween.h"
 #include "Geometry.h"
 #include "Node.h"
+#include <glm/glm.hpp>
 
 namespace Rml {
 
@@ -426,9 +427,9 @@ protected:
 	bool structure_dirty;
 
 	bool dirty_perspective;
-	UniquePtr<Matrix4f> perspective;
+	UniquePtr<glm::mat4x4> perspective;
 	mutable bool have_inv_transform = true;
-	mutable UniquePtr<Matrix4f> inv_transform;
+	mutable UniquePtr<glm::mat4x4> inv_transform;
 
 	ElementAnimationList animations;
 	bool dirty_animation;

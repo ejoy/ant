@@ -29,6 +29,7 @@
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/StringUtilities.h"
 #include "../Include/RmlUi/URL.h"
+#include "../Include/RmlUi/Debug.h"
 #include <string.h>
 
 namespace Rml {

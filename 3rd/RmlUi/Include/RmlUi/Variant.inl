@@ -85,14 +85,6 @@ bool Variant::GetInto(T& value) const
 		return TypeConverter< String, T >::Convert(*(String*)data, value);
 		break;
 
-	case VECTOR3:
-		return TypeConverter< Vector3f, T >::Convert(*(Vector3f*)data, value);
-		break;
-
-	case VECTOR4:
-		return TypeConverter< Vector4f, T >::Convert(*(Vector4f*)data, value);
-		break;
-
 	case COLOURF:
 		return TypeConverter< Colourf, T >::Convert(*(Colourf*)data, value);
 		break;

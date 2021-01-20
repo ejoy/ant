@@ -32,6 +32,7 @@
 #include "Header.h"
 #include "Types.h"
 #include "TransformPrimitive.h"
+#include <glm/glm.hpp>
 
 namespace Rml {
 
@@ -73,7 +74,7 @@ public:
 	const PrimitiveList& GetPrimitives() const noexcept { return primitives; }
 
 	bool Empty() const;
-	Matrix4f GetMatrix(Element& e);
+	glm::mat4x4 GetMatrix(Element& e);
 
 private:
 	PrimitiveList primitives;

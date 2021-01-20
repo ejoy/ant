@@ -55,7 +55,7 @@ void Node::DirtyTransform() {
 	dirty_transform = true;
 }
 
-const Matrix4f& Node::GetTransform() const {
+const glm::mat4x4& Node::GetTransform() const {
 	return transform;
 }
 

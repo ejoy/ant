@@ -46,7 +46,7 @@ TransientIndexBuffer32::Reset(){
 
 #define RENDER_STATE (BGFX_STATE_WRITE_RGB|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA)
 Renderer::Renderer(const RmlContext* context)
-    : mTransform(Rml::Matrix4f::Identity())
+    : mTransform(1)
     , mcontext(context)
     , mEncoder(nullptr)
     , mScissorRect{0, 0, 0, 0}{
@@ -74,7 +74,7 @@ void Renderer::UpdateViewRect(){
 void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
                             int* indices, int num_indices, 
                             Rml::TextureHandle texture) {
-    BGFX(encoder_set_transform)(mEncoder, mTransform.data(), 1);
+    BGFX(encoder_set_transform)(mEncoder, &mTransform, 1);
     if (mScissorRect.x == 0 && mScissorRect.y == 0 && mScissorRect.w == 0 && mScissorRect.h == 0){
         BGFX(encoder_set_scissor_cached)(mEncoder, UINT16_MAX);
     } else {

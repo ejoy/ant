@@ -30,6 +30,7 @@
 #include "DataExpression.h"
 #include "DataModel.h"
 #include "ElementStyle.h"
+#include "../Include/RmlUi/Math.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/ElementText.h"
 #include "../Include/RmlUi/Factory.h"

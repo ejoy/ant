@@ -30,6 +30,7 @@
 
 #include "Types.h"
 #include "ID.h"
+#include "Debug.h"
 #include <bitset>
 
 namespace Rml {

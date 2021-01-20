@@ -27,6 +27,7 @@
  */
 
 #include "Memory.h"
+#include "../Include/RmlUi/Debug.h"
 #include <memory>
 #include <stdlib.h>
 #include <stdint.h>

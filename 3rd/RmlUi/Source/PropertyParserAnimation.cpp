@@ -29,6 +29,7 @@
 
 #include "PropertyParserAnimation.h"
 #include "PropertyShorthandDefinition.h"
+#include "../Include/RmlUi/Math.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/PropertyIdSet.h"
 #include "../Include/RmlUi/StringUtilities.h"

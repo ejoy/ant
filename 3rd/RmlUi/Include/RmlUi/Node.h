@@ -3,6 +3,7 @@
 #include "Layout.h"
 #include <memory>
 #include <vector>
+#include <glm/glm.hpp>
 
 namespace Rml {
 	class Element;
@@ -28,7 +29,7 @@ namespace Rml {
 		void DirtyLayout();
 
 		void DirtyTransform();
-		const Matrix4f& GetTransform() const;
+		const glm::mat4x4& GetTransform() const;
 
 		virtual void OnRender() = 0;
 		virtual void OnChange(const PropertyIdSet& properties) = 0;
@@ -38,7 +39,7 @@ namespace Rml {
 		Layout layout;
 		Layout::Metrics metrics;
 		Element* parent = nullptr;
-		Matrix4f transform;
+		glm::mat4x4 transform;
 		bool dirty_transform = false;
     };
 }
