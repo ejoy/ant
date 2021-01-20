@@ -1382,15 +1382,18 @@ void Element::UpdateTransform() {
 		if (computed.transform_origin_y.type == Style::TransformOrigin::Percentage) {
 			origin.y *= metrics.frame.size.h * 0.01f;
 		}
-		new_transform = Matrix4f::Translate(origin)
-			* computed.transform->GetMatrix(*this)
-			* Matrix4f::Translate(-origin);
+		new_transform = computed.transform->GetMatrix(*this)
+						* Matrix4f::Translate(-origin);
+		if (parent && parent->perspective){
+			new_transform = *(parent->perspective) * new_transform;
+		} 
+		new_transform = Matrix4f::Translate(origin) * new_transform;
 	}
 	new_transform = Matrix4f::Translate(metrics.frame.origin.x, metrics.frame.origin.y, 0) * new_transform;
 	if (parent) {
-		if (parent->perspective) {
-			new_transform = *parent->perspective * new_transform;
-		}
+		// if (parent->perspective) {
+		// 	new_transform = *parent->perspective * new_transform;
+		// }
 		new_transform = parent->transform * new_transform;
 	}
 
@@ -1424,6 +1427,39 @@ void Element::UpdatePerspective() {
 			origin.y *= metrics.frame.size.h * 0.01f;
 		}
 		// Equivalent to: Translate(x,y,0) * Perspective(distance) * Translate(-x,-y,0)
+		// Matrix4f new_perspective = Matrix4f::Translate(-origin.x,-origin.y,0.f);
+		// auto lookat = [](const auto &c, const auto &e, const auto &up){
+		// 	Vector3f const f((c - e).Normalise());
+		// 	Vector3f const s(up.CrossProduct(f).Normalise());
+		// 	Vector3f const u(f.CrossProduct(s));
+
+		// 	Matrix4f Result = Matrix4f::Identity();
+		// 	Result[0][0] = s.x;
+		// 	Result[1][0] = s.y;
+		// 	Result[2][0] = s.z;
+		// 	Result[0][1] = u.x;
+		// 	Result[1][1] = u.y;
+		// 	Result[2][1] = u.z;
+		// 	Result[0][2] = f.x;
+		// 	Result[1][2] = f.y;
+		// 	Result[2][2] = f.z;
+		// 	Result[3][0] = -s.DotProduct(e);
+		// 	Result[3][1] = -s.DotProduct(e);
+		// 	Result[3][2] = -s.DotProduct(e);
+		// 	return Result;
+		// };
+
+		// auto viewmat = lookat(Vector3f(0.f, 0.f, 0.f), Vector3f(0.f, 0.f, distance), Vector3f(0.f, 1.f, 0.f));
+		// auto projmat = Matrix4f::ProjectPerspective(
+		// 	-metrics.frame.size.w*0.5f, metrics.frame.size.w*0.5f,
+		// 	-metrics.frame.size.h*0.5f, metrics.frame.size.h*0.5f,
+		// 	0.1f, 100.f);
+
+		// new_perspective = 
+		// 	Matrix4f::Translate(origin.x, origin.y,0.f) * 
+		// 	projmat * viewmat * 
+		// 	new_perspective;
+
 		Matrix4f new_perspective = Matrix4f::FromRows(
 			{ 1, 0, -origin.x / distance, 0 },
 			{ 0, 1, -origin.y / distance, 0 },
