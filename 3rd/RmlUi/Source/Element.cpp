@@ -61,6 +61,7 @@
 #include <cmath>
 #include <yoga/YGNode.h>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/transform.hpp>
 
 namespace Rml {
 
@@ -1353,13 +1354,7 @@ void Element::UpdateTransform() {
 		if (computed.transform_origin_y.type == Style::TransformOrigin::Percentage) {
 			origin.y *= metrics.frame.size.h * 0.01f;
 		}
-		new_transform = glm::translate(new_transform, origin) * computed.transform->GetMatrix(*this) * glm::translate(new_transform, -origin);
-		// if (parent && parent->perspective){
-		// 	new_transform = *(parent->perspective) * new_transform;
-		// }
-		//new_transform =  * new_transform;
-		// new_transform = glm::translate(new_transform, origin);
-		// new_transform 
+		new_transform = glm::translate(origin) * computed.transform->GetMatrix(*this) * glm::translate(-origin);
 	}
 	new_transform = glm::translate(new_transform, glm::vec3(metrics.frame.origin.x, metrics.frame.origin.y, 0));
 	if (parent) {
@@ -1367,22 +1362,6 @@ void Element::UpdateTransform() {
 			new_transform = *parent->perspective * new_transform;
 		}
 		new_transform = parent->transform * new_transform;
-
-		// glm::vec4 vertices[] = {
-		// 	{1.f, 1.f, 0.f, 1.f},
-		// 	{99.f, 1.f, 0.f, 1.f},
-		// 	{1.f, 99.f, 0.f, 1.f},
-		// 	{99.f, 99.f, 0.f, 1.f},
-		// };
-
-		// glm::vec4 cv [4];
-		// glm::vec4 ndcv [4];
-		// for (int ii = 0; ii < 4; ++ii){
-		// 	cv[ii] = new_transform * vertices[ii];
-		// 	ndcv[ii] = cv[ii] / cv[ii].w;
-		// }
-
-		// int debug = 0;
 	}
 
 	if (new_transform != transform) {
@@ -1415,16 +1394,13 @@ void Element::UpdatePerspective() {
 		if (computed.perspective_origin_y.type == Style::PerspectiveOrigin::Percentage) {
 			origin.y *= metrics.frame.size.h * 0.01f;
 		}
-		// Equivalent to: Translate(x,y,0) * Perspective(distance) * Translate(-x,-y,0)
-		glm::mat4x4 new_perspective = glm::translate(glm::mat4(1.f), origin) * 
-		glm::mat4
-		{
+		// Equivalent to: translate(origin) * perspective(distance) * translate(-origin)
+		glm::mat4x4 new_perspective = {
 			{ 1, 0, 0, 0 },
 			{ 0, 1, 0, 0 },
-			{ 0, 0, 1, -1 / distance},
-			{ 0, 0, 0, 1}
-		} *
-		glm::translate(glm::mat4(1.f), -origin);
+			{ -origin.x / distance, -origin.y / distance, 1, -1 / distance },
+			{ 0, 0, 0, 1 }
+		};
 		
 		if (!perspective || new_perspective != *perspective) {
 			perspective = MakeUnique<glm::mat4x4>(new_perspective);
