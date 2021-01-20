@@ -37,6 +37,7 @@
 #include "../Include/RmlUi/FontEngineInterface.h"
 #include "../Include/RmlUi/RenderInterface.h"
 #include "../Include/RmlUi/Property.h"
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace Rml {
 
@@ -82,29 +83,34 @@ float ElementText::GetOpacity() {
 	return parent->GetOpacity();
 }
 
+void ElementText::UpdateTransform() {
+	if (!dirty_transform)
+		return;
+	dirty_transform = false;
+
+	transform = glm::translate(parent->GetTransform(), glm::vec3(metrics.frame.origin.x, metrics.frame.origin.y, 0));
+}
+
 void ElementText::OnRender() {
 	FontFaceHandle font_face_handle = GetFontFaceHandle();
 	if (font_face_handle == 0)
 		return;
 
-	const Matrix4f* matrix = parent->GetTransform();
-	parent->SetClipRegion(matrix);
-	GetRenderInterface()->SetTransform(matrix ? matrix : &Matrix4f::Identity());
-
+	UpdateTransform();
 	UpdateTextEffects();
 	UpdateGeometry(font_face_handle);
 	UpdateDecoration(font_face_handle);
 
-	const Layout::Metrics& metrics = GetMetrics();
-	const Point& translation = metrics.frame.origin;
+	SetClipRegion();
+	GetRenderInterface()->SetTransform(transform);
 	if (decoration_under) {
-		decoration.Render(translation);
+		decoration.Render();
 	}
 	for (auto& geometry : geometrys) {
-		geometry.Render(translation);
+		geometry.Render();
 	}
 	if (!decoration_under) {
-		decoration.Render(translation);
+		decoration.Render();
 	}
 }
 

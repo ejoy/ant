@@ -27,6 +27,7 @@
  */
 
 #include "PropertyParserColour.h"
+#include "../Include/RmlUi/Math.h"
 #include <string.h>
 
 namespace Rml {

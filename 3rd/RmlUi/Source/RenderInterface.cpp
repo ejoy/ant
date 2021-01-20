@@ -58,7 +58,7 @@ void RenderInterface::ReleaseTexture(TextureHandle /*texture*/)
 }
 
 // Called by RmlUi when it wants to change the current transform matrix to a new matrix.
-void RenderInterface::SetTransform(const Matrix4f* /*transform*/)
+void RenderInterface::SetTransform(const glm::mat4x4& /*transform*/)
 {
 }
 

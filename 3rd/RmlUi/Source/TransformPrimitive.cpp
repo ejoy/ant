@@ -29,6 +29,7 @@
 #include "../Include/RmlUi/TransformPrimitive.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/TypeConverter.h"
+#include "../Include/RmlUi/Math.h"
 
 namespace Rml {
 namespace Transforms {
@@ -109,7 +110,7 @@ inline UnresolvedPrimitive<N>::UnresolvedPrimitive(Array<NumericValue, N> values
 Matrix2D::Matrix2D(const NumericValue* values) noexcept : ResolvedPrimitive(values) { }
 
 Matrix3D::Matrix3D(const NumericValue* values) noexcept : ResolvedPrimitive(values) { }
-Matrix3D::Matrix3D(const Matrix4f& matrix) noexcept : ResolvedPrimitive(matrix.data()) { }
+Matrix3D::Matrix3D(const glm::mat4x4& matrix) noexcept : ResolvedPrimitive((float*)&matrix) { }
 
 TranslateX::TranslateX(const NumericValue* values) noexcept : UnresolvedPrimitive(values) { }
 TranslateX::TranslateX(float x, Property::Unit unit) noexcept : UnresolvedPrimitive({ NumericValue(x, unit) }) { }

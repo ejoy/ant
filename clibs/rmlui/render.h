@@ -52,14 +52,14 @@ public:
     Renderer(const RmlContext* context);
     virtual void RenderGeometry(Rml::Vertex* vertices, int num_vertices, 
                                 int* indices, int num_indices, 
-                                Rml::TextureHandle texture, const Rml::Point& translation) override;
+                                Rml::TextureHandle texture) override;
 
 	virtual void SetScissorRegion(Rml::Rect const& clip) override;
     virtual bool LoadTexture(Rml::TextureHandle& texture_handle, Rml::Size& texture_dimensions, const Rml::String& source) override;
     virtual bool GenerateTexture(Rml::TextureHandle& texture_handle, const Rml::byte* source, const Rml::Size& source_dimensions) override;
     virtual void ReleaseTexture(Rml::TextureHandle texture) override;
-    virtual void SetTransform(const Rml::Matrix4f* transform) override{
-        mTransform = transform ? *transform : Rml::Matrix4f::Identity();
+    virtual void SetTransform(const glm::mat4x4& transform) override{
+        mTransform = transform;
     }
 
 public:
@@ -72,7 +72,7 @@ public:
     void UpdateViewRect();
 
 private:
-    Rml::Matrix4f           mTransform;
+    glm::mat4x4             mTransform;
     const RmlContext*       mcontext;
     TransientIndexBuffer32  mIndexBuffer;
 

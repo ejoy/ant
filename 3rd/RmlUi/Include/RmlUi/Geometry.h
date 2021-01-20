@@ -47,7 +47,7 @@ public:
 	Geometry(Geometry&& other);
 	Geometry& operator=(Geometry&& other);
 	~Geometry();
-	void Render(Point translation);
+	void Render();
 	Vector< Vertex >& GetVertices();
 	Vector< int >& GetIndices();
 	void SetTexture(SharedPtr<Texture> texture);

@@ -40,6 +40,7 @@
 #include "Tween.h"
 #include "Geometry.h"
 #include "Node.h"
+#include <glm/glm.hpp>
 
 namespace Rml {
 
@@ -354,13 +355,10 @@ public:
 	/// Return the computed values of the element's properties. These values are updated as appropriate on every Context::Update.
 	const ComputedValues& GetComputedValues() const;
 
-	void UpdateBounds();
-	void UpdateChildrenBounds();
+	void UpdateLayout();
 	void SetParent(Element* parent);
 	Element* GetElementAtPoint(Point point, const Element* ignore_element = nullptr);
-	Rect GetClippingRegion();
-	const Matrix4f* GetTransform();
-	void SetClipRegion(const Matrix4f* matrix);
+	void SetClipRegion();
 
 protected:
 	void Update();
@@ -368,8 +366,8 @@ protected:
 	void UpdateProperties();
 	void OnAttributeChange(const ElementAttributes& changed_attributes);
 
-	virtual void OnRender() override;
-	virtual void OnChange(const PropertyIdSet& changed_properties) override;
+	void OnRender() override;
+	void OnChange(const PropertyIdSet& changed_properties) override;
 
 protected:
 	void SetDataModel(DataModel* new_data_model);
@@ -380,11 +378,10 @@ protected:
 	void DirtyStructure();
 	void UpdateStructure();
 
-	void DirtyTransform();
 	void DirtyPerspective();
 	void UpdateTransform();
 	void UpdatePerspective();
-	void UpdateMatrix();
+	void UpdateGeometry();
 	
 	/// Start an animation, replacing any existing animations of the same property name. If start_value is null, the element's current value is used.
 	void StartAnimation(PropertyId property_id, const Property * start_value, int num_iterations, bool alternate_direction, float delay, bool initiated_by_animation_property);
@@ -429,12 +426,10 @@ protected:
 
 	bool structure_dirty;
 
-	bool dirty_transform;
 	bool dirty_perspective;
-	Matrix4f transform;
-	UniquePtr<Matrix4f> perspective;
+	UniquePtr<glm::mat4x4> perspective;
 	mutable bool have_inv_transform = true;
-	mutable UniquePtr<Matrix4f> inv_transform;
+	mutable UniquePtr<glm::mat4x4> inv_transform;
 
 	ElementAnimationList animations;
 	bool dirty_animation;

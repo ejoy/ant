@@ -59,7 +59,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;RMLUI_STATIC_LIB;RMLUI_NO_FONT_INTERFACE_DEFAULT;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;_DEBUG;RMLUI_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/bgfx/3rdparty;../../3rd/RmlUi/Include;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/yoga;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/bgfx/3rdparty;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/RmlUi/Include;../../3rd/yoga;../../3rd/glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244</DisableSpecificWarnings>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -189,8 +189,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\TypeConverter.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\URL.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Variant.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Vector3.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Vector4.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\XMLNodeHandler.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerBody.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerDefault.cpp" />
@@ -244,8 +242,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Layout.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Log.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Math.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\MathTypes.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Matrix4.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Node.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\ObserverPtr.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Platform.h" />
@@ -273,8 +269,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Types.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\URL.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Variant.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Vector3.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Vector4.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Vertex.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\XMLNodeHandler.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\XMLParser.h" />
@@ -342,11 +336,8 @@
   <ItemGroup>
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\Colour.inl" />
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\Element.inl" />
-    <None Include="..\..\3rd\RmlUi\Include\RmlUi\Matrix4.inl" />
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\TypeConverter.inl" />
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\Variant.inl" />
-    <None Include="..\..\3rd\RmlUi\Include\RmlUi\Vector3.inl" />
-    <None Include="..\..\3rd\RmlUi\Include\RmlUi\Vector4.inl" />
     <None Include="..\..\3rd\RmlUi\Source\Pool.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -28,6 +28,7 @@
 
 #include "../Include/RmlUi/StringUtilities.h"
 #include "../Include/RmlUi/Log.h"
+#include "../Include/RmlUi/Debug.h"
 #include <algorithm>
 #include <stdio.h>
 #include <stdarg.h>

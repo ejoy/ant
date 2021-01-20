@@ -29,46 +29,14 @@
 #include "TransformUtilities.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/TransformPrimitive.h"
+#include "../Include/RmlUi/Math.h"
+#include <glm/gtx/transform.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 namespace Rml {
 
 using namespace Transforms;
-
-static Vector3f Combine(const Vector3f& a, const Vector3f& b, float a_scale, float b_scale)
-{
-	Vector3f result;
-	result.x = a_scale * a.x + b_scale * b.x;
-	result.y = a_scale * a.y + b_scale * b.y;
-	result.z = a_scale * a.z + b_scale * b.z;
-	return result;
-}
-
-
-// Interpolate two quaternions a, b with weight alpha [0, 1]
-static Vector4f QuaternionSlerp(const Vector4f& a, const Vector4f& b, float alpha)
-{
-	using namespace Math;
-
-	const float eps = 0.9995f;
-
-	float dot = a.DotProduct(b);
-	dot = Clamp(dot, -1.f, 1.f);
-
-	if (dot > eps)
-		return a;
-
-	float theta = ACos(dot);
-	float w = Sin(alpha * theta) / SquareRoot(1.f - dot * dot);
-	float a_scale = Cos(alpha * theta) - dot * w;
-
-	Vector4f result;
-	for (int i = 0; i < 4; i++)
-	{
-		result[i] = a[i] * a_scale + b[i] * w;
-	}
-
-	return result;
-}
 
 /// Resolve a numeric property value for an element.
 static inline float ResolveLengthPercentage(NumericValue value, Element& e, float base) noexcept
@@ -155,11 +123,11 @@ struct SetIdentityVisitor
 	}
 	void operator()(Transforms::DecomposedMatrix4& p)
 	{
-		p.perspective = Vector4f(0, 0, 0, 1);
-		p.quaternion = Vector4f(0, 0, 0, 1);
-		p.translation = Vector3f(0, 0, 0);
-		p.scale = Vector3f(1, 1, 1);
-		p.skew = Vector3f(0, 0, 0);
+		p.perspective = glm::vec4(0, 0, 0, 1);
+		p.quaternion = glm::quat(0, 0, 0, 1);
+		p.translation = glm::vec3(0, 0, 0);
+		p.scale = glm::vec3(1, 1, 1);
+		p.skew = glm::vec3(0, 0, 0);
 	}
 
 
@@ -196,6 +164,57 @@ struct SetIdentityVisitor
 	}
 };
 
+static glm::mat4x4 skew(float angle_x, float angle_y) {
+	float skewX = tanf(angle_x);
+	float skewY = tanf(angle_y);
+	return glm::mat4x4 {
+		{ 1, skewX, 0, 0 },
+		{ skewY, 1, 0, 0 },
+		{ 0, 0, 1, 0 },
+		{ 0, 0, 0, 1 }
+	};
+}
+
+static glm::mat4x4 compose(const glm::vec3& translation, const glm::vec3& scale, const glm::vec3& skew, const glm::vec4& perspective, const glm::quat& quaternion) {
+	glm::mat4x4 matrix(1);
+	for (int i = 0; i < 4; i++)
+		matrix[i][3] = perspective[i];
+	for (int i = 0; i < 4; i++)
+		for (int j = 0; j < 3; j++)
+			matrix[3][i] += translation[j] * matrix[j][i];
+
+	float x = quaternion.x;
+	float y = quaternion.y;
+	float z = quaternion.z;
+	float w = quaternion.w;
+	matrix *=  glm::mat4x4 {
+		{ 1.f - 2.f * (y * y + z * z), 2.f * (x * y - z * w), 2.f * (x * z + y * w), 0.f },
+		{ 2.f * (x * y + z * w), 1.f - 2.f * (x * x + z * z), 2.f * (y * z - x * w), 0.f },
+		{ 2.f * (x * z - y * w), 2.f * (y * z + x * w), 1.f - 2.f * (x * x + y * y), 0.f },
+		{ 0, 0, 0, 1 }
+	};
+
+	glm::mat4x4 temp(1);
+	if (skew[2]) {
+		temp[2][1] = skew[2];
+		matrix *= temp;
+	}
+	if (skew[1]) {
+		temp[2][1] = 0;
+		temp[2][0] = skew[1];
+		matrix *= temp;
+	}
+	if (skew[0]) {
+		temp[2][0] = 0;
+		temp[1][0] = skew[0];
+		matrix *= temp;
+	}
+	for (int i = 0; i < 3; i++)
+		for (int j = 0; j < 4; j++)
+			matrix[i][j] *= scale[i];
+	return matrix;
+}
+
 void TransformUtilities::SetIdentity(TransformPrimitive& p) noexcept
 {
 	SetIdentityVisitor{}.run(p);
@@ -204,136 +223,158 @@ void TransformUtilities::SetIdentity(TransformPrimitive& p) noexcept
 
 struct ResolveTransformVisitor
 {
-	Matrix4f& m;
+	glm::mat4x4& m;
 	Element& e;
 
 	void operator()(const Transforms::Matrix2D& p)
 	{
-		m = Matrix4f::FromRows(
-			Vector4f(p.values[0], p.values[2], 0, p.values[4]),
-			Vector4f(p.values[1], p.values[3], 0, p.values[5]),
-			Vector4f(0, 0, 1, 0),
-			Vector4f(0, 0, 0, 1)
-		);
+		m = glm::mat4x4 {
+			{ p.values[0], p.values[2], 0, p.values[4] },
+			{ p.values[1], p.values[3], 0, p.values[5] },
+			{ 0, 0, 1, 0},
+			{ 0, 0, 0, 1}
+		};
 	}
 
 	void operator()(const Transforms::Matrix3D& p)
 	{
-		m = Matrix4f::FromColumns(
-			Vector4f(p.values[0], p.values[1], p.values[2], p.values[3]),
-			Vector4f(p.values[4], p.values[5], p.values[6], p.values[7]),
-			Vector4f(p.values[8], p.values[9], p.values[10], p.values[11]),
-			Vector4f(p.values[12], p.values[13], p.values[14], p.values[15])
-		);
+		m = glm::mat4x4 {
+			{ p.values[0], p.values[1], p.values[2], p.values[3] },
+			{ p.values[4], p.values[5], p.values[6], p.values[7] },
+			{ p.values[8], p.values[9], p.values[10], p.values[11] },
+			{ p.values[12], p.values[13], p.values[14], p.values[15] }
+		};
 	}
 
 	void operator()(const Transforms::TranslateX& p)
 	{
-		m = Matrix4f::TranslateX(ResolveWidth(p.values[0], e));
+		float x = ResolveWidth(p.values[0], e);
+		m = glm::translate(glm::vec3(x, 0, 0));
 	}
 
 	void operator()(const Transforms::TranslateY& p)
 	{
-		m = Matrix4f::TranslateY(ResolveHeight(p.values[0], e));
+		float y = ResolveHeight(p.values[0], e);
+		m = glm::translate(glm::vec3(0, y, 0));
 	}
 
 	void operator()(const Transforms::TranslateZ& p)
 	{
-		m = Matrix4f::TranslateZ(ResolveDepth(p.values[0], e));
+		float z = ResolveDepth(p.values[0], e);
+		m = glm::translate(glm::vec3(0, 0, z));
 	}
 
 	void operator()(const Transforms::Translate2D& p)
 	{
-		m = Matrix4f::Translate(
-			ResolveWidth(p.values[0], e),
-			ResolveHeight(p.values[1], e),
-			0
-		);
+		float x = ResolveWidth(p.values[0], e);
+		float y = ResolveHeight(p.values[1], e);
+		m = glm::translate(glm::vec3(x, y, 0));
 	}
 
 	void operator()(const Transforms::Translate3D& p)
 	{
-		m = Matrix4f::Translate(
-			ResolveWidth(p.values[0], e),
-			ResolveHeight(p.values[1], e),
-			ResolveDepth(p.values[2], e)
-		);
+		float x = ResolveWidth(p.values[0], e);
+		float y = ResolveHeight(p.values[1], e);
+		float z = ResolveDepth(p.values[2], e);
+		m = glm::translate(glm::vec3(x, y, z));
 	}
 
 	void operator()(const Transforms::ScaleX& p)
 	{
-		m = Matrix4f::ScaleX(p.values[0]);
+		float x = p.values[0];
+		m = glm::scale(glm::vec3(x, 1, 1));
 	}
 
 	void operator()(const Transforms::ScaleY& p)
 	{
-		m = Matrix4f::ScaleY(p.values[0]);
+		float y = p.values[0];
+		m = glm::scale(glm::vec3(1, y, 1));
 	}
 
 	void operator()(const Transforms::ScaleZ& p)
 	{
-		m = Matrix4f::ScaleZ(p.values[0]);
+		float z = p.values[0];
+		m = glm::scale(glm::vec3(1, 1, z));
 	}
 
 	void operator()(const Transforms::Scale2D& p)
 	{
-		m = Matrix4f::Scale(p.values[0], p.values[1], 1);
+		float x = p.values[0];
+		float y = p.values[1];
+		m = glm::scale(glm::vec3(x, y, 1));
 	}
 
 	void operator()(const Transforms::Scale3D& p)
 	{
-		m = Matrix4f::Scale(p.values[0], p.values[1], p.values[2]);
+		float x = p.values[0];
+		float y = p.values[1];
+		float z = p.values[2];
+		m = glm::scale(glm::vec3(x, y, z));
 	}
 
 	void operator()(const Transforms::RotateX& p)
 	{
-		m = Matrix4f::RotateX(p.values[0]);
+		float angle = p.values[0];
+		m = glm::rotate(angle, glm::vec3(1, 0, 0));
 	}
 
 	void operator()(const Transforms::RotateY& p)
 	{
-		m = Matrix4f::RotateY(p.values[0]);
+		float angle = p.values[0];
+		m = glm::rotate(angle, glm::vec3(0, 1, 0));
 	}
 
 	void operator()(const Transforms::RotateZ& p)
 	{
-		m = Matrix4f::RotateZ(p.values[0]);
+		float angle = p.values[0];
+		m = glm::rotate(angle, glm::vec3(0, 0, 1));
 	}
 
 	void operator()(const Transforms::Rotate2D& p)
 	{
-		m = Matrix4f::RotateZ(p.values[0]);
+		float angle = p.values[0];
+		m = glm::rotate(angle, glm::vec3(0, 0, 1));
 	}
 
 	void operator()(const Transforms::Rotate3D& p)
 	{
-		m = Matrix4f::Rotate(Vector3f(p.values[0], p.values[1], p.values[2]), p.values[3]);
+		float x = p.values[0];
+		float y = p.values[1];
+		float z = p.values[2];
+		float angle = p.values[3];
+		m = glm::rotate(angle, glm::vec3(x, y, z));
 	}
 
 	void operator()(const Transforms::SkewX& p)
 	{
-		m = Matrix4f::SkewX(p.values[0]);
+		m = skew(p.values[0], 0);
 	}
 
 	void operator()(const Transforms::SkewY& p)
 	{
-		m = Matrix4f::SkewY(p.values[0]);
+		m = skew(0, p.values[0]);
 	}
 
 	void operator()(const Transforms::Skew2D& p)
 	{
-		m = Matrix4f::Skew(p.values[0], p.values[1]);
+		m = skew(p.values[0], p.values[1]);
 	}
 
 	void operator()(const Transforms::DecomposedMatrix4& p)
 	{
-		m = Matrix4f::Compose(p.translation, p.scale, p.skew, p.perspective, p.quaternion);
-	}
-	void operator()(const Transforms::Perspective& p)
-	{
-		m = Matrix4f::Perspective(ResolveDepth(p.values[0], e));
+		m = compose(p.translation, p.scale, p.skew, p.perspective, p.quaternion);
 	}
 
+	void operator()(const Transforms::Perspective& p)
+	{
+		float distance = ResolveDepth(p.values[0], e);
+		m = glm::mat4x4 {
+			{ 1, 0, 0, 0 },
+			{ 0, 1, 0, 0 },
+			{ 0, 0, 1, 0 },
+			{ 0, 0, - 1.f / distance, 1 }
+		};
+	}
 
 	void run(const TransformPrimitive& primitive)
 	{
@@ -365,16 +406,13 @@ struct ResolveTransformVisitor
 	}
 };
 
-Matrix4f TransformUtilities::ResolveTransform(const TransformPrimitive& p, Element& e) noexcept
+glm::mat4x4 TransformUtilities::ResolveTransform(const TransformPrimitive& p, Element& e) noexcept
 {
-	Matrix4f m;
+	glm::mat4x4 m;
 	ResolveTransformVisitor visitor{ m, e };
 	visitor.run(p);
 	return m;
 }
-
-
-
 
 struct PrepareVisitor
 {
@@ -423,7 +461,7 @@ struct PrepareVisitor
 		// Rotate3D can be interpolated if and only if their rotation axes point in the same direction.
 		// We normalize the rotation vector here for easy comparison, and return true here. Later on we make the
 		// pair-wise check in 'TryConvertToMatchingGenericType' to see if we need to decompose.
-		Vector3f vec = Vector3f(p.values[0], p.values[1], p.values[2]).Normalise();
+		glm::vec3 vec = glm::normalize(glm::vec3(p.values[0], p.values[1], p.values[2]));
 		p.values[0] = vec.x;
 		p.values[1] = vec.y;
 		p.values[2] = vec.z;
@@ -483,9 +521,6 @@ bool TransformUtilities::PrepareForInterpolation(TransformPrimitive& p, Element&
 {
 	return PrepareVisitor{ e }.run(p);
 }
-
-
-
 
 enum class GenericType { None, Scale3D, Translate3D, Rotate3D };
 
@@ -646,7 +681,7 @@ struct InterpolateVisitor
 	bool Interpolate(DecomposedMatrix4& p0, const DecomposedMatrix4& p1)
 	{
 		p0.perspective = p0.perspective * (1.0f - alpha) + p1.perspective * alpha;
-		p0.quaternion = QuaternionSlerp(p0.quaternion, p1.quaternion, alpha);
+		p0.quaternion = glm::slerp(p0.quaternion, p1.quaternion, alpha);
 		p0.translation = p0.translation * (1.0f - alpha) + p1.translation * alpha;
 		p0.scale = p0.scale * (1.0f - alpha) + p1.scale * alpha;
 		p0.skew = p0.skew * (1.0f - alpha) + p1.skew * alpha;
@@ -736,25 +771,25 @@ static inline String ToString(const Transforms::UnresolvedPrimitive<N>& p) noexc
 
 static inline String ToString(const Transforms::DecomposedMatrix4& p) noexcept {
 	static const Transforms::DecomposedMatrix4 d{
-		Vector4f(0, 0, 0, 1),
-		Vector4f(0, 0, 0, 1),
-		Vector3f(0, 0, 0),
-		Vector3f(1, 1, 1),
-		Vector3f(0, 0, 0)
+		glm::vec4(0, 0, 0, 1),
+		glm::quat(0, 0, 0, 1),
+		glm::vec3(0, 0, 0),
+		glm::vec3(1, 1, 1),
+		glm::vec3(0, 0, 0)
 	};
 	String tmp;
 	String result;
 
-	if (p.perspective != d.perspective && TypeConverter< Vector4f, String >::Convert(p.perspective, tmp))
-		result += "perspective(" + tmp + "), ";
-	if (p.quaternion != d.quaternion && TypeConverter< Vector4f, String >::Convert(p.quaternion, tmp))
-		result += "quaternion(" + tmp + "), ";
-	if (p.translation != d.translation && TypeConverter< Vector3f, String >::Convert(p.translation, tmp))
-		result += "translation(" + tmp + "), ";
-	if (p.scale != d.scale && TypeConverter< Vector3f, String >::Convert(p.scale, tmp))
-		result += "scale(" + tmp + "), ";
-	if (p.skew != d.skew && TypeConverter< Vector3f, String >::Convert(p.skew, tmp))
-		result += "skew(" + tmp + "), ";
+	if (p.perspective != d.perspective)
+		result += "perspective(" + glm::to_string(p.perspective) + "), ";
+	if (p.quaternion != d.quaternion)
+		result += "quaternion(" + glm::to_string(p.quaternion) + "), ";
+	if (p.translation != d.translation)
+		result += "translation(" + glm::to_string(p.translation) + "), ";
+	if (p.scale != d.scale)
+		result += "scale(" + glm::to_string(p.scale) + "), ";
+	if (p.skew != d.skew)
+		result += "skew(" + glm::to_string(p.skew) + "), ";
 
 	if (result.size() > 2)
 		result.resize(result.size() - 2);
@@ -829,96 +864,9 @@ String TransformUtilities::ToString(const TransformPrimitive& p) noexcept
 }
 
 
-bool TransformUtilities::Decompose(Transforms::DecomposedMatrix4& d, const Matrix4f& m) noexcept
+bool TransformUtilities::Decompose(Transforms::DecomposedMatrix4& d, const glm::mat4x4& m) noexcept
 {
-	// Follows the procedure given in https://drafts.csswg.org/css-transforms-2/#interpolation-of-3d-matrices
-
-	const float eps = 0.0005f;
-
-	if (Math::AbsoluteValue(m[3][3]) < eps)
-		return false;
-
-
-	// Perspective matrix
-	Matrix4f p = m;
-
-	for (int i = 0; i < 3; i++)
-		p[i][3] = 0;
-	p[3][3] = 1;
-
-	if (Math::AbsoluteValue(p.Determinant()) < eps)
-		return false;
-
-	if (m[0][3] != 0 || m[1][3] != 0 || m[2][3] != 0)
-	{
-		auto rhs = m.GetColumn(3);
-		Matrix4f p_inv = p;
-		if (!p_inv.Invert())
-			return false;
-		auto& p_inv_trans = p.Transpose();
-		d.perspective = p_inv_trans * rhs;
-	}
-	else
-	{
-		d.perspective[0] = d.perspective[1] = d.perspective[2] = 0;
-		d.perspective[3] = 1;
-	}
-
-	for (int i = 0; i < 3; i++)
-		d.translation[i] = m[3][i];
-
-	Vector3f row[3];
-	for (int i = 0; i < 3; i++)
-	{
-		row[i][0] = m[i][0];
-		row[i][1] = m[i][1];
-		row[i][2] = m[i][2];
-	}
-
-	d.scale[0] = row[0].Magnitude();
-	row[0] = row[0].Normalise();
-
-	d.skew[0] = row[0].DotProduct(row[1]);
-	row[1] = Combine(row[1], row[0], 1, -d.skew[0]);
-
-	d.scale[1] = row[1].Magnitude();
-	row[1] = row[1].Normalise();
-	d.skew[0] /= d.scale[1];
-
-	d.skew[1] = row[0].DotProduct(row[2]);
-	row[2] = Combine(row[2], row[0], 1, -d.skew[1]);
-	d.skew[2] = row[1].DotProduct(row[2]);
-	row[2] = Combine(row[2], row[1], 1, -d.skew[2]);
-
-	d.scale[2] = row[2].Magnitude();
-	row[2] = row[2].Normalise();
-	d.skew[2] /= d.scale[2];
-	d.skew[1] /= d.scale[2];
-
-	// Check if we need to flip coordinate system
-	auto pdum3 = row[1].CrossProduct(row[2]);
-	if (row[0].DotProduct(pdum3) < 0.0f)
-	{
-		for (int i = 0; i < 3; i++)
-		{
-			d.scale[i] *= -1.f;
-			row[i] *= -1.f;
-		}
-	}
-
-	d.quaternion[0] = 0.5f * Math::SquareRoot(Math::Max(1.f + row[0][0] - row[1][1] - row[2][2], 0.0f));
-	d.quaternion[1] = 0.5f * Math::SquareRoot(Math::Max(1.f - row[0][0] + row[1][1] - row[2][2], 0.0f));
-	d.quaternion[2] = 0.5f * Math::SquareRoot(Math::Max(1.f - row[0][0] - row[1][1] + row[2][2], 0.0f));
-	d.quaternion[3] = 0.5f * Math::SquareRoot(Math::Max(1.f + row[0][0] + row[1][1] + row[2][2], 0.0f));
-
-	if (row[2][1] > row[1][2])
-		d.quaternion[0] *= -1.f;
-	if (row[0][2] > row[2][0])
-		d.quaternion[1] *= -1.f;
-	if (row[1][0] > row[0][1])
-		d.quaternion[2] *= -1.f;
-
-	return true;
+	return glm::decompose(m, d.scale, d.quaternion, d.translation, d.skew, d.perspective);
 }
 
 } // namespace Rml

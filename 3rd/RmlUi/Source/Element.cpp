@@ -60,6 +60,7 @@
 #include <algorithm>
 #include <cmath>
 #include <yoga/YGNode.h>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace Rml {
 
@@ -73,7 +74,6 @@ struct ElementMeta {
 Element::Element(Document* owner, const String& tag)
 	: owner_document(owner)
 	, tag(tag)
-	, dirty_transform(false)
 	, dirty_perspective(false)
 	, dirty_animation(false)
 	, dirty_transition(false)
@@ -117,14 +117,6 @@ void Element::Update() {
 	}
 }
 
-void Element::UpdateMatrix() {
-	UpdateTransform();
-	UpdatePerspective();
-	for (auto& child : children) {
-		child->UpdateMatrix();
-	}
-}
-
 void Element::UpdateProperties() {
 	meta->style.UpdateDefinition();
 	if (meta->style.AnyPropertiesDirty()) {
@@ -136,40 +128,22 @@ void Element::UpdateProperties() {
 }
 
 void Element::OnRender() {
-	const Matrix4f* matrix = Element::GetTransform();
-	SetClipRegion(matrix);
+	UpdateTransform();
+	UpdatePerspective();
+	UpdateGeometry();
 
 	size_t i = 0;
 	for (; i < stacking_context.size() && stacking_context[i]->GetZIndex() < 0; ++i) {
 		stacking_context[i]->OnRender();
 	}
-
-	if (dirty_background || dirty_border) {
-		if (!geometry_border) {
-			geometry_border.reset(new Geometry);
-		}
-		ElementBackgroundBorder::GenerateGeometry(this, *geometry_border, padding_edge);
-		dirty_background = false;
-		dirty_border = false;
-		dirty_image = true;
-	}
-	if (dirty_image) {
-		if (!geometry_image) {
-			geometry_image.reset(new Geometry);
-		}
-		ElementBackgroundImage::GenerateGeometry(this, *geometry_image, padding_edge);
-		dirty_image = false;
-	}
-
-	GetRenderInterface()->SetTransform(matrix ? matrix : &Matrix4f::Identity());
-
+	SetClipRegion();
+	GetRenderInterface()->SetTransform(transform);
 	if (geometry_border) {
-		geometry_border->Render(Point{});
+		geometry_border->Render();
 	}
 	if (geometry_image) {
-		geometry_image->Render(Point{});
+		geometry_image->Render();
 	}
-
 	for (; i < stacking_context.size(); ++i) {
 		stacking_context[i]->OnRender();
 	}
@@ -361,35 +335,38 @@ bool Element::Project(Point& point) const noexcept
 	// The input point is in window coordinates. Need to find the projection of the point onto the current element plane,
 	// taking into account the full transform applied to the element.
 	if (!inv_transform) {
-		inv_transform = MakeUnique<Matrix4f>(transform);
-		have_inv_transform = inv_transform->Invert();
+		have_inv_transform = 0.f != glm::determinant(transform);
+		if (have_inv_transform) {
+			inv_transform = MakeUnique<glm::mat4x4>(transform);
+			glm::inverse(*inv_transform);
+		}
 	}
 	if (!have_inv_transform) {
 		return false;
 	}
 
 	// Pick two points forming a line segment perpendicular to the window.
-	Vector4f window_points[2] = { { point.x, point.y, -10, 1}, { point.x, point.y, 10, 1 } };
+	glm::vec4 window_points[2] = { { point.x, point.y, -10, 1}, { point.x, point.y, 10, 1 } };
 
 	// Project them into the local element space.
 	window_points[0] = *inv_transform * window_points[0];
 	window_points[1] = *inv_transform * window_points[1];
 
-	Vector3f local_points[2] = {
-		window_points[0].PerspectiveDivide(),
-		window_points[1].PerspectiveDivide()
+	glm::vec3 local_points[2] = {
+		window_points[0] / window_points[0].w,
+		window_points[1] / window_points[1].w
 	};
 
 	// Construct a ray from the two projected points in the local space of the current element.
 	// Find the intersection with the z=0 plane to produce our destination point.
-	Vector3f ray = local_points[1] - local_points[0];
+	glm::vec3 ray = local_points[1] - local_points[0];
 
 	// Only continue if we are not close to parallel with the plane.
 	if (std::fabs(ray.z) > 1.0f)
 	{
 		// Solving the line equation p = p0 + t*ray for t, knowing that p.z = 0, produces the following.
 		float t = -local_points[0].z / ray.z;
-		Vector3f p = local_points[0] + ray * t;
+		glm::vec3 p = local_points[0] + ray * t;
 
 		point = Point(p.x, p.y);
 		return true;
@@ -1353,11 +1330,6 @@ void Element::AdvanceAnimations()
 		DispatchEvent(is_transition[i] ? EventId::Transitionend : EventId::Animationend, dictionary_list[i]);
 }
 
-void Element::DirtyTransform()
-{
-	dirty_transform = true;
-}
-
 void Element::DirtyPerspective()
 {
 	dirty_perspective = true;
@@ -1368,10 +1340,10 @@ void Element::UpdateTransform() {
 		return;
 	dirty_transform = false;
 	const ComputedValues& computed = meta->computed_values;
-	Matrix4f new_transform = Matrix4f::Identity();
+	glm::mat4x4 new_transform(1);
 	if (computed.transform && !computed.transform->Empty()) {
 		const Layout::Metrics& metrics = GetMetrics();
-		Vector3f origin {
+		glm::vec3 origin {
 			computed.transform_origin_x.value,
 			computed.transform_origin_y.value,
 			computed.transform_origin_z,
@@ -1382,14 +1354,13 @@ void Element::UpdateTransform() {
 		if (computed.transform_origin_y.type == Style::TransformOrigin::Percentage) {
 			origin.y *= metrics.frame.size.h * 0.01f;
 		}
-		new_transform = computed.transform->GetMatrix(*this)
-						* Matrix4f::Translate(-origin);
+		new_transform = computed.transform->GetMatrix(*this) * glm::translate(new_transform, -origin);
 		if (parent && parent->perspective){
 			new_transform = *(parent->perspective) * new_transform;
-		} 
-		new_transform = Matrix4f::Translate(origin) * new_transform;
+		}
+		new_transform = glm::translate(new_transform, origin) * new_transform;
 	}
-	new_transform = Matrix4f::Translate(metrics.frame.origin.x, metrics.frame.origin.y, 0) * new_transform;
+	new_transform = glm::translate(new_transform, glm::vec3(metrics.frame.origin.x, metrics.frame.origin.y, 0));
 	if (parent) {
 		// if (parent->perspective) {
 		// 	new_transform = *parent->perspective * new_transform;
@@ -1460,14 +1431,14 @@ void Element::UpdatePerspective() {
 		// 	projmat * viewmat * 
 		// 	new_perspective;
 
-		Matrix4f new_perspective = Matrix4f::FromRows(
+		glm::mat4x4 new_perspective = {
 			{ 1, 0, -origin.x / distance, 0 },
 			{ 0, 1, -origin.y / distance, 0 },
 			{ 0, 0, 1, 0 },
 			{ 0, 0, -1 / distance, 1 }
-		);
+		};
 		if (!perspective || new_perspective != *perspective) {
-			perspective = MakeUnique<Matrix4f>(new_perspective);
+			perspective = MakeUnique<glm::mat4x4>(new_perspective);
 			changed = true;
 		}
 	}
@@ -1485,11 +1456,30 @@ void Element::UpdatePerspective() {
 	}
 }
 
-void Element::UpdateBounds() {
+void Element::UpdateGeometry() {
+	if (dirty_background || dirty_border) {
+		if (!geometry_border) {
+			geometry_border.reset(new Geometry);
+		}
+		ElementBackgroundBorder::GenerateGeometry(this, *geometry_border, padding_edge);
+		dirty_background = false;
+		dirty_border = false;
+		dirty_image = true;
+	}
+	if (dirty_image) {
+		if (!geometry_image) {
+			geometry_image.reset(new Geometry);
+		}
+		ElementBackgroundImage::GenerateGeometry(this, *geometry_image, padding_edge);
+		dirty_image = false;
+	}
+}
+
+void Element::UpdateLayout() {
 	if (Node::UpdateMetrics() && Node::IsVisible()) {
 		DirtyTransform();
 		for (auto& child : children) {
-			child->UpdateBounds();
+			child->UpdateLayout();
 		}
 	}
 }
@@ -1519,29 +1509,7 @@ Element* Element::GetElementAtPoint(Point point, const Element* ignore_element) 
 	return nullptr;
 }
 
-Rect Element::GetClippingRegion() {
-	Rect clip;
-	//if (parent) {
-	//	clip = parent->GetClippingRegion();
-	//}
-	//if (!IsClippingEnabled()) {
-	//	return clip;
-	//}
-	//clip.Union(Rect(GetOffset(), GetMetrics().frame.size));
-	return clip;
-}
-
-const Matrix4f* Element::GetTransform() {
-	return &transform;
-}
-
-void Element::SetClipRegion(const Matrix4f* matrix) {
-	//if (!matrix) {
-	//	GetRenderInterface()->SetScissorRegion(GetClippingRegion());
-	//	return;
-	//}
-	//// TODO: support overflow + transform
-	//GetRenderInterface()->SetScissorRegion({});
+void Element::SetClipRegion() {
 }
 
 } // namespace Rml

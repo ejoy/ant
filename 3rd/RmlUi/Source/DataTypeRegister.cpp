@@ -27,6 +27,7 @@
  */
 
 #include "../Include/RmlUi/DataTypeRegister.h"
+#include "../Include/RmlUi/Math.h"
 
 namespace Rml {
 

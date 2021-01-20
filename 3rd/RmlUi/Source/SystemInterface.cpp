@@ -30,6 +30,7 @@
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/StringUtilities.h"
 #include "../Include/RmlUi/URL.h"
+#include "../Include/RmlUi/Math.h"
 
 #ifdef RMLUI_PLATFORM_WIN32
 #include <windows.h>

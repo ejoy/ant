@@ -26,6 +26,8 @@
  *
  */
 
+#include "Debug.h"
+
 namespace Rml {
 
 template <typename SourceType, typename DestType>
@@ -84,8 +86,6 @@ PASS_THROUGH(double);
 PASS_THROUGH(bool);
 PASS_THROUGH(char);
 PASS_THROUGH(Character);
-PASS_THROUGH(Vector3f);
-PASS_THROUGH(Vector4f);
 PASS_THROUGH(Colourf);
 PASS_THROUGH(Colourb);
 PASS_THROUGH(String);
@@ -238,8 +238,6 @@ public: \
 	} \
 }
 
-STRING_VECTOR_CONVERTER(Vector3f, float, 3);
-STRING_VECTOR_CONVERTER(Vector4f, float, 4);
 STRING_VECTOR_CONVERTER(Colourf, float, 4);
 STRING_VECTOR_CONVERTER(Colourb, byte, 4);
 
@@ -357,8 +355,6 @@ public: \
 	} \
 }
 
-VECTOR_STRING_CONVERTER(Vector3f, float, 3);
-VECTOR_STRING_CONVERTER(Vector4f, float, 4);
 VECTOR_STRING_CONVERTER(Colourf, float, 4);
 VECTOR_STRING_CONVERTER(Colourb, byte, 4);
 #undef PASS_THROUGH

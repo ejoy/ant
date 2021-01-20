@@ -65,10 +65,10 @@ bool Transform::Empty() const {
 	return primitives.empty();
 }
 
-Matrix4f Transform::GetMatrix(Element& e) {
-	Matrix4f matrix = Matrix4f::Identity();
+glm::mat4x4 Transform::GetMatrix(Element& e) {
+	glm::mat4x4 matrix(1);
 	for (const TransformPrimitive& primitive : primitives) {
-		matrix *= TransformUtilities::ResolveTransform(primitive, e);;
+		matrix *= TransformUtilities::ResolveTransform(primitive, e);
 	}
 	return std::move(matrix);
 }

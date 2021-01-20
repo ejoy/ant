@@ -36,7 +36,6 @@ Variant::Variant() : type(NONE)
 	// Make sure our object size assumptions fit inside the static buffer
 	static_assert(sizeof(Colourb) <= LOCAL_DATA_SIZE, "Local data too small for Colourb");
 	static_assert(sizeof(Colourf) <= LOCAL_DATA_SIZE, "Local data too small for Colourf");
-	static_assert(sizeof(Vector4f) <= LOCAL_DATA_SIZE, "Local data too small for Vector4f");
 	static_assert(sizeof(String) <= LOCAL_DATA_SIZE, "Local data too small for String");
 	static_assert(sizeof(TransformPtr) <= LOCAL_DATA_SIZE, "Local data too small for TransformPtr");
 	static_assert(sizeof(TransitionList) <= LOCAL_DATA_SIZE, "Local data too small for TransitionList");
@@ -214,18 +213,6 @@ void Variant::Set(void* voidptr)
 	memcpy(data, &voidptr, sizeof(void*));
 }
 
-void Variant::Set(const Vector3f& value)
-{
-	type = VECTOR3;
-	SET_VARIANT(Vector3f);
-}
-
-void Variant::Set(const Vector4f& value)
-{
-	type = VECTOR4;
-	SET_VARIANT(Vector4f);
-}
-
 void Variant::Set(const Colourf& value)
 {
 	type = COLOURF;
@@ -380,10 +367,6 @@ bool Variant::operator==(const Variant & other) const
 		return DEFAULT_VARIANT_COMPARE(int64_t);
 	case STRING:
 		return DEFAULT_VARIANT_COMPARE(String);
-	case VECTOR3:
-		return DEFAULT_VARIANT_COMPARE(Vector3f);
-	case VECTOR4:
-		return DEFAULT_VARIANT_COMPARE(Vector4f);
 	case COLOURF:
 		return DEFAULT_VARIANT_COMPARE(Colourf);
 	case COLOURB:
