@@ -1354,18 +1354,36 @@ void Element::UpdateTransform() {
 		if (computed.transform_origin_y.type == Style::TransformOrigin::Percentage) {
 			origin.y *= metrics.frame.size.h * 0.01f;
 		}
-		new_transform = computed.transform->GetMatrix(*this) * glm::translate(new_transform, -origin);
-		if (parent && parent->perspective){
-			new_transform = *(parent->perspective) * new_transform;
-		}
-		new_transform = glm::translate(new_transform, origin) * new_transform;
+		new_transform = glm::translate(new_transform, origin) * computed.transform->GetMatrix(*this) * glm::translate(new_transform, -origin);
+		// if (parent && parent->perspective){
+		// 	new_transform = *(parent->perspective) * new_transform;
+		// }
+		//new_transform =  * new_transform;
+		// new_transform = glm::translate(new_transform, origin);
+		// new_transform 
 	}
 	new_transform = glm::translate(new_transform, glm::vec3(metrics.frame.origin.x, metrics.frame.origin.y, 0));
 	if (parent) {
-		// if (parent->perspective) {
-		// 	new_transform = *parent->perspective * new_transform;
-		// }
+		if (parent->perspective) {
+			new_transform = *parent->perspective * new_transform;
+		}
 		new_transform = parent->transform * new_transform;
+
+		// glm::vec4 vertices[] = {
+		// 	{1.f, 1.f, 0.f, 1.f},
+		// 	{99.f, 1.f, 0.f, 1.f},
+		// 	{1.f, 99.f, 0.f, 1.f},
+		// 	{99.f, 99.f, 0.f, 1.f},
+		// };
+
+		// glm::vec4 cv [4];
+		// glm::vec4 ndcv [4];
+		// for (int ii = 0; ii < 4; ++ii){
+		// 	cv[ii] = new_transform * vertices[ii];
+		// 	ndcv[ii] = cv[ii] / cv[ii].w;
+		// }
+
+		// int debug = 0;
 	}
 
 	if (new_transform != transform) {
@@ -1387,9 +1405,10 @@ void Element::UpdatePerspective() {
 	bool changed = false;
 	if (distance > 0.0f) {
 		const Layout::Metrics& metrics = GetMetrics();
-		Point origin {
+		glm::vec3 origin {
 			computed.perspective_origin_x.value,
 			computed.perspective_origin_y.value,
+			0.f,
 		};
 		if (computed.perspective_origin_x.type == Style::PerspectiveOrigin::Percentage) {
 			origin.x *= metrics.frame.size.w * 0.01f;
@@ -1398,45 +1417,16 @@ void Element::UpdatePerspective() {
 			origin.y *= metrics.frame.size.h * 0.01f;
 		}
 		// Equivalent to: Translate(x,y,0) * Perspective(distance) * Translate(-x,-y,0)
-		// Matrix4f new_perspective = Matrix4f::Translate(-origin.x,-origin.y,0.f);
-		// auto lookat = [](const auto &c, const auto &e, const auto &up){
-		// 	Vector3f const f((c - e).Normalise());
-		// 	Vector3f const s(up.CrossProduct(f).Normalise());
-		// 	Vector3f const u(f.CrossProduct(s));
-
-		// 	Matrix4f Result = Matrix4f::Identity();
-		// 	Result[0][0] = s.x;
-		// 	Result[1][0] = s.y;
-		// 	Result[2][0] = s.z;
-		// 	Result[0][1] = u.x;
-		// 	Result[1][1] = u.y;
-		// 	Result[2][1] = u.z;
-		// 	Result[0][2] = f.x;
-		// 	Result[1][2] = f.y;
-		// 	Result[2][2] = f.z;
-		// 	Result[3][0] = -s.DotProduct(e);
-		// 	Result[3][1] = -s.DotProduct(e);
-		// 	Result[3][2] = -s.DotProduct(e);
-		// 	return Result;
-		// };
-
-		// auto viewmat = lookat(Vector3f(0.f, 0.f, 0.f), Vector3f(0.f, 0.f, distance), Vector3f(0.f, 1.f, 0.f));
-		// auto projmat = Matrix4f::ProjectPerspective(
-		// 	-metrics.frame.size.w*0.5f, metrics.frame.size.w*0.5f,
-		// 	-metrics.frame.size.h*0.5f, metrics.frame.size.h*0.5f,
-		// 	0.1f, 100.f);
-
-		// new_perspective = 
-		// 	Matrix4f::Translate(origin.x, origin.y,0.f) * 
-		// 	projmat * viewmat * 
-		// 	new_perspective;
-
-		glm::mat4x4 new_perspective = {
-			{ 1, 0, -origin.x / distance, 0 },
-			{ 0, 1, -origin.y / distance, 0 },
-			{ 0, 0, 1, 0 },
-			{ 0, 0, -1 / distance, 1 }
-		};
+		glm::mat4x4 new_perspective = glm::translate(glm::mat4(1.f), origin) * 
+		glm::mat4
+		{
+			{ 1, 0, 0, 0 },
+			{ 0, 1, 0, 0 },
+			{ 0, 0, 1, -1 / distance},
+			{ 0, 0, 0, 1}
+		} *
+		glm::translate(glm::mat4(1.f), -origin);
+		
 		if (!perspective || new_perspective != *perspective) {
 			perspective = MakeUnique<glm::mat4x4>(new_perspective);
 			changed = true;
