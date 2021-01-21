@@ -137,8 +137,8 @@ void Element::OnRender() {
 	for (; i < stacking_context.size() && stacking_context[i]->GetZIndex() < 0; ++i) {
 		stacking_context[i]->OnRender();
 	}
-	SetClipRegion();
 	GetRenderInterface()->SetTransform(transform);
+	SetClipRegion();
 	if (geometry_border) {
 		geometry_border->Render();
 	}
@@ -1475,6 +1475,12 @@ Element* Element::GetElementAtPoint(Point point, const Element* ignore_element) 
 }
 
 void Element::SetClipRegion() {
+	if (IsClippingEnabled()) {
+		GetRenderInterface()->SetScissorRegion({ {}, GetMetrics().frame.size });
+	}
+	else {
+		GetRenderInterface()->SetScissorRegion({});
+	}
 }
 
 } // namespace Rml

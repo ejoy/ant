@@ -130,13 +130,39 @@ void Renderer::Frame(){
     mIndexBuffer.Reset();
 }
 
+std::optional<glm::vec2> project(const glm::mat4x4& m, glm::vec2 pt) {
+    glm::vec4 points_v4[2] = { { pt.x, pt.y, -10, 1}, { pt.x, pt.y, 10, 1 } };
+    points_v4[0] = m * points_v4[0];
+    points_v4[1] = m * points_v4[1];
+    glm::vec3 points_v3[2] = {
+        points_v4[0] / points_v4[0].w,
+        points_v4[1] / points_v4[1].w
+    };
+    glm::vec3 ray = points_v3[1] - points_v3[0];
+    if (std::fabs(ray.z) > 1.0f) {
+        float t = -points_v3[0].z / ray.z;
+        glm::vec3 p = points_v3[0] + ray * t;
+        return glm::vec2(p.x, p.y);
+    }
+    return {};
+}
+
 void Renderer::SetScissorRegion(Rml::Rect const& clip) {
     if (clip.IsEmpty()) {
         mScissorRect.x = mScissorRect.y = mScissorRect.w = mScissorRect.h = 0;
     }
     else {
-        mScissorRect.x = clip.origin.x, mScissorRect.y = clip.origin.y;
-        mScissorRect.w = clip.size.w, mScissorRect.h = clip.size.h;
+        auto leftTop = project(mTransform, { clip.left(), clip.top() });
+        auto bottomRight = project(mTransform, { clip.right(), clip.bottom() });
+        if (!leftTop || !bottomRight) {
+            SetScissorRegion({});
+        }
+        else {
+            mScissorRect.x = leftTop->x;
+            mScissorRect.y = leftTop->y;
+            mScissorRect.w = bottomRight->x - leftTop->x;
+            mScissorRect.h = bottomRight->y - leftTop->y;
+        }
     }
     //BGFX(encoder_set_scissor)(mcontext->viewid, std::max(x, 0), std::max(y, 0), w, h);
 }

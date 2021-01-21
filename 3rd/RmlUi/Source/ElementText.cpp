@@ -101,8 +101,10 @@ void ElementText::OnRender() {
 	UpdateGeometry(font_face_handle);
 	UpdateDecoration(font_face_handle);
 
-	SetClipRegion();
+	GetRenderInterface()->SetTransform(parent->GetTransform());
+	parent->SetClipRegion();
 	GetRenderInterface()->SetTransform(transform);
+
 	if (decoration_under) {
 		decoration.Render();
 	}
