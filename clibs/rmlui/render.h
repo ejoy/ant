@@ -70,6 +70,8 @@ public:
 
 public:
     void UpdateViewRect();
+    bool CalcScissorRectPlane(const glm::mat4 &transform, const Rect &rect, glm::vec4 planes[4]);
+    void SubmitScissorRect();
 
 private:
     glm::mat4x4             mTransform;

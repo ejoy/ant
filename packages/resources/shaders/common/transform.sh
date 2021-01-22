@@ -3,6 +3,8 @@
 
 #include <shaderlib.sh>
 
+uniform vec4 u_clip_planes[4];
+
 mat3 mat3_from_columns(vec3 v0, vec3 v1, vec3 v2)
 {
 	mat3 m = mat3(v0, v1, v2);
@@ -143,14 +145,25 @@ vec3 unpack_dxt_normal(vec4 packednormal)
     return remap_dxt_normal(packednormal.wy, 1.0);
 }
 
-vec4 transform_screen_coord_to_ndc(mat4 m, vec2 apos)
+vec4 map_screen_coord_to_ndc(vec2 p)
 {
-	vec4 p      = mul(m, vec4(apos, 0.0, 1.0));
-	p /= p.w;
     vec2 pos    = p.xy * u_viewTexel.xy;
     pos.y       = 1 - pos.y;
 	pos         = pos * 2.0 - 1.0;
 	return vec4(pos, 0.0, 1.0);
+}
+
+vec4 transform_ui_point(mat4 m, vec2 apos)
+{
+	vec4 p = mul(m, vec4(apos, 0.0, 1.0));
+	p /= p.w;
+	return p;
+}
+
+vec4 transform_screen_coord_to_ndc(mat4 m, vec2 apos)
+{
+	vec4 p = transform_ui_point(m, apos);
+	return map_screen_coord_to_ndc(p.xy);
 }
 
 #endif //__SHADER_TRANSFORMS_SH__

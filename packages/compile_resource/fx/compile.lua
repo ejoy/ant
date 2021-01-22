@@ -54,34 +54,62 @@ local function create_depfile(filename, deps)
     writefile(filename, table.concat(w, "\n"))
 end
 
+local function DEF_FUNC() end
+
+local SETTING_MAPPING = {
+    lighting = function (v)
+        if v == "on" then
+            return "ENABLE_LIGHTING"
+        end
+    end,
+    shadow_receive = function (v)
+        if v == "on" then
+            return "ENABLE_SHADOW"
+        end
+    end,
+    skinning = function (v)
+        if v == "GPU" then
+            return "GPU_SKINNING"
+        end
+    end,
+    depth_type = function (v)
+        if v == "linear" then
+            return "DEPTH_LINEAR"
+        elseif v == "pack_depth" then
+            return "PACK_RGBA8"
+        end
+    end,
+    bloom = function (v)
+        if v == "on" then
+            return "BLOOM_ENABLE"
+        end
+    end,
+    fix_line_width = "FIX_WIDTH",
+    subsurface = DEF_FUNC,
+    surfacetype = DEF_FUNC,
+    shadow_cast = DEF_FUNC,
+}
+
 local function get_macros(setting)
-	local macros = {}
-	if setting.lighting == "on" then
-		macros[#macros+1] = "ENABLE_LIGHTING"
-	end
-	if setting.shadow_receive == "on" then
-		macros[#macros+1] = "ENABLE_SHADOW"
-	end
-	if setting.skinning == "GPU" then
-		macros[#macros+1] = "GPU_SKINNING"
+    local macros = {
+        "ENABLE_SRGB_TEXTURE",
+        "ENABLE_SRGB_FB",
+    }
+    for k, v in pairs(setting) do
+        local f = SETTING_MAPPING[k]
+        if f == nil then
+            macros[#macros+1] = k
+        else
+            local t = type(f)
+            if t == "function" then
+                macros[#macros+1] = f(v)
+            elseif t == "string" then
+                macros[#macros+1] = v
+            else
+                error("invalid type")
+            end
+        end
     end
-	if setting.depth_type == "linear" then
-		macros[#macros+1] = "DEPTH_LINEAR"
-    end
-    if setting.depth_value == "pack_depth" then
-        macros[#macros+1] = "PACK_RGBA8"
-    end
-	if setting.bloom_enable then
-		macros[#macros+1] = "BLOOM_ENABLE"
-    end
-    if setting.fix_line_width then
-        macros[#macros+1] = "FIX_WIDTH"
-    end
-    if setting.macros then
-        table.move(setting.macros, 1, #setting.macros, #macros+1, macros)
-    end
-	macros[#macros+1] = "ENABLE_SRGB_TEXTURE"
-	macros[#macros+1] = "ENABLE_SRGB_FB"
 	return macros
 end
 

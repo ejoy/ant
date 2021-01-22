@@ -51,33 +51,44 @@ function rmlui_sys:init()
     fbmgr.bind(vid, irq.frame_buffer(mq_eid))
 
     local default_texid = assetmgr.resource "/pkg/ant.resources/textures/default/1x1_white.texture".handle
+
+    local function create_font_shader(effectname)
+        local setting = {}
+        if effectname then
+            setting[effectname] = 1
+        end
+        return {
+            fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
+            vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
+            setting = setting,
+        }
+    end
+
+    local shader_defines = {
+        image = {
+            fs = "/pkg/ant.resources/shaders/ui/fs_image.sc",
+            vs = "/pkg/ant.resources/shaders/ui/vs_image.sc",
+            setting = {}
+        },
+        font = create_font_shader(),
+        font_outline = create_font_shader "OUTLINE_EFFECT",
+        font_shadow = create_font_shader "SHADOW_EFFECT",
+    }
+
+    local function create_shaders(def)
+        local shaders = {}
+        for k, v in pairs(def) do
+            shaders[k] = assetmgr.load_fx(v)
+            v.setting["ENABLE_CLIP_PLANES"] = 1
+            shaders[k .. "_cp"] = assetmgr.load_fx(v)
+        end
+        return shaders
+    end
+    local shaders = create_shaders(shader_defines)
+
     rmlui.init {
 		viewid = vid,
-        shader = {
-            font = assetmgr.load_fx {
-                fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
-                vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
-            },
-            font_outline = assetmgr.load_fx {
-                fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
-                vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
-                setting = {macros = {"OUTLINE_EFFECT"}},
-            },
-            font_shadow = assetmgr.load_fx {
-                fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
-                vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
-                setting = {macros = {"SHADOW_EFFECT"}},
-            },
-            font_glow = assetmgr.load_fx {
-                fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
-                vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
-                setting = {macros = {"GLOW_EFFECT"}},
-            },
-            image = assetmgr.load_fx {
-                fs = "/pkg/ant.resources/shaders/ui/fs_image.sc",
-                vs = "/pkg/ant.resources/shaders/ui/vs_image.sc",
-            },
-        },
+        shader = shaders,
         font_mgr = ifont.handle(),
         default_tex = {
             width = 1, height = 1,

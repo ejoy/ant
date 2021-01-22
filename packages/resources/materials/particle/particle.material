@@ -3,8 +3,7 @@ fx:
   vs: /pkg/ant.resources/shaders/particles/vs_particle.sc
   setting:
     surfacetype: translucent
-    macros:
-      SUB_TEX
+    SUB_TEX: 1
 properties:
   s_tex:
     stage: 0

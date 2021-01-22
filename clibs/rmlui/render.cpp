@@ -65,6 +65,39 @@ is_font_tex(SDFFontEffect *fe) {
     return fe ? (fe->GetType() & FE_FontTex) != 0 : false;
 }
 
+bool Renderer::CalcScissorRectPlane(const glm::mat4 &transform, const Rect &rect, glm::vec4 planes[4]){
+    /*
+rect point:
+      p0
+    0 --- 1
+ p3 |     | p1
+    3 --- 2
+      p2
+    */
+    glm::vec4 rectPoints[4] = {
+        {rect.x, rect.y, 0.f, 1.f},
+        {rect.x+rect.w, rect.y, 0.f, 1.f},
+        {rect.x+rect.w, rect.y+rect.h, 0.f, 1.f},
+        {rect.x, rect.y+rect.w, 0.f, 1.f},
+    };
+
+    // default normal
+    planes[0] = glm::vec4(0.f, 1.f, 0.f, 0.f);
+    planes[1] = glm::vec4(-1.f,0.f, 0.f, 0.f);
+    planes[2] = glm::vec4(0.f,-1.f, 0.f, 0.f);
+    planes[3] = glm::vec4(1.f, 1.f, 0.f, 0.f);
+
+    for (int ii=0; ii<4; ++ii){
+        rectPoints[ii]  = transform * rectPoints[ii];
+        planes[ii]      = transform * planes[ii];
+        const float dist= -glm::dot(rectPoints[ii], planes[ii]);
+        planes[ii].w    = dist;
+    }
+
+    const bool isNormalRect = rectPoints[0].x == rectPoints[1].x;
+    return isNormalRect;
+}
+
 void Renderer::UpdateViewRect(){
     const auto &vr = mcontext->viewrect;
     BGFX(set_view_scissor)(mcontext->viewid, vr.x, vr.y, vr.w, vr.h);
@@ -74,12 +107,26 @@ void Renderer::UpdateViewRect(){
 void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
                             int* indices, int num_indices, 
                             Rml::TextureHandle texture) {
+
     BGFX(encoder_set_transform)(mEncoder, &mTransform, 1);
-    if (mScissorRect.x == 0 && mScissorRect.y == 0 && mScissorRect.w == 0 && mScissorRect.h == 0){
-        BGFX(encoder_set_scissor_cached)(mEncoder, UINT16_MAX);
+    bool needDistancePlaneShader = false;
+    glm::vec4 planes[4];
+    if (mScissorRect.isVaild()){
+        if (CalcScissorRectPlane(mTransform, mScissorRect, planes)){
+            BGFX(encoder_set_scissor)(mEncoder, mScissorRect.x, mScissorRect.y, mScissorRect.w, mScissorRect.h);
+        } else {
+            needDistancePlaneShader = true;
+        }
     } else {
-        BGFX(encoder_set_scissor)(mEncoder, mScissorRect.x, mScissorRect.y, mScissorRect.w, mScissorRect.h);
+        BGFX(encoder_set_scissor_cached)(mEncoder, UINT16_MAX);
     }
+
+    auto submit_clip_planes_uniforms = [=](const shader_info &si){
+        if (needDistancePlaneShader){
+            auto uniformIdx = si.find_uniform("u_clip_planes");
+            BGFX(encoder_set_uniform)(mEncoder, {uniformIdx}, planes, 4);
+        }
+    };
 
     bgfx_transient_vertex_buffer_t tvb;
     BGFX(alloc_transient_vertex_buffer)(&tvb, num_vertices, (bgfx_vertex_layout_t*)mcontext->layout);
@@ -89,41 +136,57 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
 
     mIndexBuffer.SetIndex(mEncoder, indices, num_indices);
     BGFX(encoder_set_state)(mEncoder, RENDER_STATE, 0);
-  
+
     auto fe = FE(texture);
-    if (is_font_tex(fe)) {
-        PropertyMap properties;
-        uint16_t prog = UINT16_MAX;
-        fe->GetProperties(mcontext->font_mgr, mcontext->shader, properties, prog);
-
-        for (auto it : properties){
-            const auto& v = it.second;
-            if(v.uniform_idx == UINT16_MAX){
-                continue;
+    auto get_shader = [&](){
+        shader::ShaderType st;
+        if (fe){
+            switch (fe->GetType()){
+            case FontEffectType(FE_Outline|FE_FontTex): st = needDistancePlaneShader ? shader::ST_font_outline_cp : shader::ST_font_outline; break;
+            case FontEffectType(FE_Shadow|FE_FontTex): st = needDistancePlaneShader ? shader::ST_font_shadow_cp : shader::ST_font_shadow; break;
+            case FontEffectType(FE_None|FE_FontTex): st = needDistancePlaneShader ? shader::ST_font_cp : shader::ST_font; break;
+            case FontEffectType::FE_None: st = needDistancePlaneShader ? shader::ST_image_cp : shader::ST_image; break;
+            default: st = shader::ST_count;
             }
-
-            static const Rml::String tex_property_name = "s_tex";
-            if (tex_property_name == it.first){
-                BGFX(encoder_set_texture)(mEncoder, v.stage, {v.uniform_idx}, {v.texid}, UINT16_MAX);
-            } else {
-                BGFX(encoder_set_uniform)(mEncoder, {v.uniform_idx}, v.value, 1);
-            }
+        } else {
+            st = needDistancePlaneShader ? shader::ST_image_cp : shader::ST_image;
         }
-        BGFX(encoder_submit)(mEncoder, mcontext->viewid, {prog}, 0, BGFX_DISCARD_ALL);
+
+        return mcontext->shader.get_shader(st);
+    };
+
+    auto si = get_shader();
+
+    PropertyMap properties;
+    if (is_font_tex(fe)) {
+        fe->GetProperties(mcontext->font_mgr, si, properties);
     } else {
-        const auto &si = mcontext->shader.image;
-        const uint16_t id = fe == nullptr ? uint16_t(mcontext->default_tex.texid) : fe->GetTexID();
-        auto texuniformidx = si.find_uniform("s_tex");
-        assert(texuniformidx != UINT16_MAX);
-        BGFX(encoder_set_texture)(mEncoder, 0, {texuniformidx}, {id}, UINT32_MAX);
-        BGFX(encoder_submit)(mEncoder,mcontext->viewid, { (uint16_t)si.prog }, 0, BGFX_DISCARD_ALL);
+        Property p;
+        p.uniform_idx = si.find_uniform("s_tex");
+        p.texid = fe ? fe->GetTexID() : uint16_t(mcontext->default_tex.texid);
+        p.stage = 0;
+        properties.emplace("s_tex", p);
     }
+
+    for (auto it : properties){
+        const auto& v = it.second;
+        if(v.uniform_idx == UINT16_MAX)
+            continue;
+
+        static const Rml::String tex_property_name = "s_tex";
+        if (tex_property_name == it.first){
+            BGFX(encoder_set_texture)(mEncoder, v.stage, {v.uniform_idx}, {v.texid}, UINT16_MAX);
+        } else {
+            BGFX(encoder_set_uniform)(mEncoder, {v.uniform_idx}, v.value, 1);
+        }
+    }
+    submit_clip_planes_uniforms(si);
+    BGFX(encoder_submit)(mEncoder,mcontext->viewid, { (uint16_t)si.prog }, 0, BGFX_DISCARD_ALL);
 }
 
 void Renderer::Begin(){
     mEncoder = BGFX(encoder_begin)(false);
 }
-
 
 void Renderer::Frame(){
     BGFX(encoder_end)(mEncoder);

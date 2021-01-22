@@ -28,7 +28,7 @@ local default_setting = {
 	subsurface = "off",			-- "on"/"off"? maybe has other setting
 	skinning = "UNKNOWN",
     depth_type = setting:get 'graphic/shadow/type',
-    bloom_enable = setting:get 'graphic/postprocess/bloom/enable',
+    bloom = setting:get 'graphic/postprocess/bloom/enable' and "on" or "off",
 }
 
 local function merge(a, b)
