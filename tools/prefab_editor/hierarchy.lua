@@ -98,7 +98,24 @@ end
 function hierarchy:update_prefab_template()
     local prefab_template = {}
     local function construct_entity(eid, pt)
-        table.insert(pt, self.all[eid].template.template)
+        local templ = self.all[eid].template.template
+        if templ and templ.data and templ.data.collider then
+            local templ_copy = utils.deep_copy(templ)
+            templ_copy.data.color = nil
+            templ_copy.data.mesh = nil
+            templ_copy.data.material = nil
+            templ_copy.data.state = nil
+            templ_copy.policy = {
+                "ant.general|name",
+                "ant.scene|hierarchy_policy",
+                "ant.scene|transform_policy",
+                "ant.collision|collider_policy"
+            }
+            table.insert(pt, templ_copy)
+        else
+            table.insert(pt, self.all[eid].template.template)
+        end
+        
         local pidx = #pt
         local keyframe_templ = self.all[eid].template.keyframe
         if keyframe_templ then
@@ -125,7 +142,6 @@ function hierarchy:update_prefab_template()
     end
     construct_entity(self.root.eid, prefab_template)
     return prefab_template
-    --prefab.__class = prefab_template
 end
 
 function hierarchy:get_locked_uidata(eid)
@@ -182,6 +198,17 @@ end
 
 function hierarchy:get_node(eid)
     return self.all[eid]
+end
+
+function hierarchy:update_slot_list(eid)
+    local node = self:get_node(eid)
+    local slot_list = {["None"] = eid}
+    for _, child in ipairs(node.children) do
+        if world[child.eid].slot then
+            slot_list[child.template.template.data.name] = child.eid
+        end
+    end
+    world[eid].slot_list = slot_list
 end
 
 return hierarchy

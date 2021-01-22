@@ -153,7 +153,6 @@ function CameraView:on_delete_frame()
     end
 end
 
-
 function CameraView:show()
     BaseView.show(self)
     if imgui.widget.TreeNode("Camera", imgui.flags.TreeNode { "DefaultOpen" }) then

@@ -90,7 +90,7 @@ function LightView:show()
     self.light_property:show()
 end
 
-function BaseView:has_rotate()
+function LightView:has_rotate()
     return world[self.eid].light_type ~= "point"
 end
 

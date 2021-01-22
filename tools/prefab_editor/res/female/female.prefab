@@ -48,6 +48,54 @@ policy:
   ant.render|render
   ant.scene|hierarchy_policy
 ---
+action:
+  mount: 3
+data:
+  follow_flag: 1
+  follow_joint: "mixamorig:LeftHand"
+  name: slot1
+  slot: true
+  transform: {}
+policy:
+  ant.general|name
+  ant.scene|slot_policy
+  ant.scene|transform_policy
+---
+action:
+  mount: 3
+data:
+  color: {1, 1, 1, 1}
+  material: /pkg/ant.resources/materials/singlecolor.material
+  mesh: /pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin
+  name: cube0
+  scene_entity: true
+  state: 5
+  transform:
+    r: {0, 0, 0, 1}
+    s: {50, 50, 50}
+    t: {1.8574118614196777, 0, 0}
+policy:
+  ant.render|render
+  ant.general|name
+  ant.scene|hierarchy_policy
+---
+action:
+  mount: 3
+data:
+  collider:
+    sphere:
+      origin: {0, 0, 0, 1}
+      radius: 0.1
+  name: collider0
+  scene_entity: true
+  transform:
+    s: 10
+policy:
+  ant.general|name
+  ant.scene|hierarchy_policy
+  ant.scene|transform_policy
+  ant.collision|collider_policy
+---
 data:
   color: {1, 1, 1, 1}
   intensity: 2
