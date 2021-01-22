@@ -79,92 +79,101 @@ bool PropertyParserTransform::ParseValue(Property& property, const String& value
 
 		if (Scan(bytes_read, next, "perspective", length1, args, 1))
 		{
-			transform->AddPrimitive({ Perspective(args) });
+			transform->emplace_back(Perspective {args[0]});
 		}
 		else if (Scan(bytes_read, next, "matrix", number6, args, 6))
 		{
-			transform->AddPrimitive({ Matrix2D(args) });
+			transform->emplace_back(Matrix2D(glm::mat3x2 {
+				{args[0].number, args[1].number},
+				{args[2].number, args[3].number},
+				{args[4].number, args[5].number},
+			}));
 		}
 		else if (Scan(bytes_read, next, "matrix3d", number16, args, 16))
 		{
-			transform->AddPrimitive({ Matrix3D(args) });
+			transform->emplace_back(Matrix3D(glm::mat4x4 {
+				{args[0].number, args[1].number, args[2].number, args[3].number},
+				{args[4].number, args[5].number, args[6].number, args[7].number},
+				{args[8].number, args[9].number, args[10].number, args[11].number},
+				{args[12].number, args[13].number, args[14].number, args[15].number},
+			}));
 		}
 		else if (Scan(bytes_read, next, "translateX", length1, args, 1))
 		{
-			transform->AddPrimitive({ TranslateX(args) });
+			transform->emplace_back(TranslateX {args[0]});
 		}
 		else if (Scan(bytes_read, next, "translateY", length1, args, 1))
 		{
-			transform->AddPrimitive({ TranslateY(args) });
+			transform->emplace_back(TranslateY{ args[0] });
 		}
 		else if (Scan(bytes_read, next, "translateZ", length1, args, 1))
 		{
-			transform->AddPrimitive({ TranslateZ(args) });
+			transform->emplace_back(TranslateZ{ args[0] });
 		}
 		else if (Scan(bytes_read, next, "translate", length2, args, 2))
 		{
-			transform->AddPrimitive({ Translate2D(args) });
+			transform->emplace_back(Translate2D{ args[0], args[1] });
 		}
 		else if (Scan(bytes_read, next, "translate3d", length3, args, 3))
 		{
-			transform->AddPrimitive({ Translate3D(args) });
+			transform->emplace_back(Translate3D{ args[0], args[1], args[2] });
 		}
 		else if (Scan(bytes_read, next, "scaleX", number1, args, 1))
 		{
-			transform->AddPrimitive({ ScaleX(args) });
+			transform->emplace_back(ScaleX { args[0].number });
 		}
 		else if (Scan(bytes_read, next, "scaleY", number1, args, 1))
 		{
-			transform->AddPrimitive({ ScaleY(args) });
+			transform->emplace_back(ScaleY{ args[0].number });
 		}
 		else if (Scan(bytes_read, next, "scaleZ", number1, args, 1))
 		{
-			transform->AddPrimitive({ ScaleZ(args) });
+			transform->emplace_back(ScaleZ{ args[0].number });
 		}
 		else if (Scan(bytes_read, next, "scale", number2, args, 2))
 		{
-			transform->AddPrimitive({ Scale2D(args) });
+			transform->emplace_back(Scale2D{ args[0].number, args[0].number });
 		}
 		else if (Scan(bytes_read, next, "scale", number1, args, 1))
 		{
 			args[1] = args[0];
-			transform->AddPrimitive({ Scale2D(args) });
+			transform->emplace_back(Scale2D{ args[0].number, args[1].number });
 		}
 		else if (Scan(bytes_read, next, "scale3d", number3, args, 3))
 		{
-			transform->AddPrimitive({ Scale3D(args) });
+			transform->emplace_back(Scale3D{ args[0].number, args[1].number, args[2].number });
 		}
 		else if (Scan(bytes_read, next, "rotateX", angle1, args, 1))
 		{
-			transform->AddPrimitive({ RotateX(args) });
+			transform->emplace_back(RotateX { args[0] });
 		}
 		else if (Scan(bytes_read, next, "rotateY", angle1, args, 1))
 		{
-			transform->AddPrimitive({ RotateY(args) });
+			transform->emplace_back(RotateY{ args[0] });
 		}
 		else if (Scan(bytes_read, next, "rotateZ", angle1, args, 1))
 		{
-			transform->AddPrimitive({ RotateZ(args) });
+			transform->emplace_back(RotateZ{ args[0] });
 		}
 		else if (Scan(bytes_read, next, "rotate", angle1, args, 1))
 		{
-			transform->AddPrimitive({ Rotate2D(args) });
+			transform->emplace_back(Rotate2D{ args[0] });
 		}
 		else if (Scan(bytes_read, next, "rotate3d", number3angle1, args, 4))
 		{
-			transform->AddPrimitive({ Rotate3D(args) });
+			transform->emplace_back(Rotate3D{ {args[0].number, args[1].number, args[2].number}, args[3] });
 		}
 		else if (Scan(bytes_read, next, "skewX", angle1, args, 1))
 		{
-			transform->AddPrimitive({ SkewX(args) });
+			transform->emplace_back(SkewX {args[0]});
 		}
 		else if (Scan(bytes_read, next, "skewY", angle1, args, 1))
 		{
-			transform->AddPrimitive({ SkewY(args) });
+			transform->emplace_back(SkewX{ args[1] });
 		}
 		else if (Scan(bytes_read, next, "skew", angle2, args, 2))
 		{
-			transform->AddPrimitive({ Skew2D(args) });
+			transform->emplace_back(Skew2D{ args[0], args[1] });
 		}
 
 		if (bytes_read > 0)

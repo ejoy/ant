@@ -31,7 +31,6 @@
 #include "../Include/RmlUi/Animation.h"
 #include "../Include/RmlUi/Transform.h"
 #include "../Include/RmlUi/TransformPrimitive.h"
-#include "TransformUtilities.h"
 
 namespace Rml {
 
@@ -46,10 +45,10 @@ bool TypeConverter<TransformPtr, String>::Convert(const TransformPtr& src, Strin
 	if (src)
 	{
 		dest.clear();
-		const Transform::PrimitiveList& primitives = src->GetPrimitives();
+		auto const& primitives = *src;
 		for (size_t i = 0; i < primitives.size(); i++)
 		{
-			dest += TransformUtilities::ToString(primitives[i]);
+			dest += primitives[i].ToString();
 			if (i != primitives.size() - 1) 
 				dest += ' ';
 		}

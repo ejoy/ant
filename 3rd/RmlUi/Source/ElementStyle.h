@@ -103,12 +103,6 @@ public:
 	/// @return The value of this property for this element, or nullptr if this property has not been explicitly defined for this element.
 	const Property* GetLocalProperty(PropertyId id) const;
 
-	/// Resolves a property with units of number, percentage, length, or angle to their canonical unit (unit-less, 'px', or 'rad').
-	/// @param[in] property The property to resolve the value for.
-	/// @param[in] base_value The value that is scaled by the number or percentage value, if applicable.
-	/// @return The resolved value in their canonical unit, or zero if it could not be resolved.
-	float ResolveNumericProperty(const Property* property, float base_value) const;
-
 	/// Mark definition and all children dirty.
 	void DirtyDefinition();
 

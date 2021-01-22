@@ -28,13 +28,13 @@
 
 #include "ElementAnimation.h"
 #include "ElementStyle.h"
-#include "TransformUtilities.h"
 #include "../Include/RmlUi/Math.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/Transform.h"
 #include "../Include/RmlUi/TransformPrimitive.h"
+#include <glm/gtx/matrix_decompose.hpp>
 
 namespace Rml {
 
@@ -59,20 +59,21 @@ static Colourb ColourFromLinearSpace(Colourf c)
 	return result;
 }
 
-// Merges all the primitives to a single DecomposedMatrix4 primitive
-static bool CombineAndDecompose(Transform& t, Element& e)
-{
-	glm::mat4x4 m = t.GetMatrix(e);
-	Transforms::DecomposedMatrix4 decomposed;
-	if (!TransformUtilities::Decompose(decomposed, m))
+static bool CombineAndDecompose(Transform& t, size_t i, Element& e) {
+	glm::mat4x4 m = TransformGetMatrix(t, e, i);
+	Transforms::DecomposedMatrix4 d;
+	if (!glm::decompose(m, d.scale, d.quaternion, d.translation, d.skew, d.perspective))
 		return false;
-	t.ClearPrimitives();
-	t.AddPrimitive(decomposed);
+	t.erase(t.begin() + i, t.end());
+	t.emplace_back(std::move(d));
 	return true;
 }
 
+static bool CombineAndDecompose(Transform& t0, Transform& t1, size_t i, Element& e) {
+	return CombineAndDecompose(t0, i, e) && CombineAndDecompose(t1, i, e);
+}
 
-static Property InterpolateProperties(const Property & p0, const Property& p1, float alpha, Element& element, const PropertyDefinition* definition)
+static Property InterpolateProperties(const Property& p0, const Property& p1, float alpha, Element& element)
 {
 	if ((p0.unit & Property::NUMBER_LENGTH_PERCENT) && (p1.unit & Property::NUMBER_LENGTH_PERCENT))
 	{
@@ -99,31 +100,11 @@ static Property InterpolateProperties(const Property & p0, const Property& p1, f
 	{
 		auto& t0 = p0.value.GetReference<TransformPtr>();
 		auto& t1 = p1.value.GetReference<TransformPtr>();
-
-		const auto& prim0 = t0->GetPrimitives();
-		const auto& prim1 = t1->GetPrimitives();
-
-		if (prim0.size() != prim1.size())
-		{
-			RMLUI_ERRORMSG("Transform primitives not of same size during interpolation. Were the transforms properly prepared for interpolation?");
+		auto t = t0->Interpolate(*t1, alpha);
+		if (!t) {
+			RMLUI_ERRORMSG("Transform primitives can not be interpolated.");
 			return Property{ t0, Property::TRANSFORM };
 		}
-
-		// Build the new, interpolating transform
-		UniquePtr<Transform> t(new Transform);
-		t->GetPrimitives().reserve(t0->GetPrimitives().size());
-
-		for (size_t i = 0; i < prim0.size(); i++)
-		{
-			TransformPrimitive p = prim0[i];
-			if (!TransformUtilities::InterpolateWith(p, prim1[i], alpha))
-			{
-				RMLUI_ERRORMSG("Transform primitives can not be interpolated. Were the transforms properly prepared for interpolation?");
-				return Property{ t0, Property::TRANSFORM };
-			}
-			t->AddPrimitive(p);
-		}
-
 		return Property{ TransformPtr(std::move(t)), Property::TRANSFORM };
 	}
 
@@ -131,229 +112,84 @@ static Property InterpolateProperties(const Property & p0, const Property& p1, f
 	return alpha < 0.5f ? p0 : p1;
 }
 
-
-
-
-enum class PrepareTransformResult { Unchanged = 0, ChangedT0 = 1, ChangedT1 = 2, ChangedT0andT1 = 3, Invalid = 4 };
-
-static PrepareTransformResult PrepareTransformPair(Transform& t0, Transform& t1, Element& element)
-{
-	using namespace Transforms;
-
-	// Insert or modify primitives such that the two transforms match exactly in both number of and types of primitives.
-	// Based largely on https://drafts.csswg.org/css-transforms-1/#interpolation-of-transforms
-
-	auto& prims0 = t0.GetPrimitives();
-	auto& prims1 = t1.GetPrimitives();
-
-	// Check for trivial case where they contain the same primitives
-	if (prims0.size() == prims1.size())
-	{
-		PrepareTransformResult result = PrepareTransformResult::Unchanged;
-		bool same_primitives = true;
-
-		for (size_t i = 0; i < prims0.size(); i++)
-		{
-			auto p0_type = prims0[i].type;
-			auto p1_type = prims1[i].type;
-
-			// See if they are the same or can be converted to a matching generic type.
-			if (TransformUtilities::TryConvertToMatchingGenericType(prims0[i], prims1[i]))
-			{
-				if (prims0[i].type != p0_type)
-					result = PrepareTransformResult((int)result | (int)PrepareTransformResult::ChangedT0);
-				if (prims1[i].type != p1_type)
-					result = PrepareTransformResult((int)result | (int)PrepareTransformResult::ChangedT1);
+//
+// see
+//   https://www.w3.org/TR/css-transforms-1/#interpolation-of-transforms
+//   https://www.w3.org/TR/css-transforms-2/#interpolation-of-transform-functions
+//
+static bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element) {
+	if (t0.size() != t1.size()) {
+		bool t0_shorter = t0.size() < t1.size();
+		auto& shorter = t0_shorter ? t0 : t1;
+		auto& longer = t0_shorter ? t1 : t0;
+		size_t i = 0;
+		for (; i < shorter.size(); ++i) {
+			auto& p0 = shorter[i];
+			auto& p1 = longer[i];
+			if (p0.index() == p1.index()) {
+				p0.PrepareForInterpolation(element, false);
+				p1.PrepareForInterpolation(element, false);
+				continue;
 			}
-			else
-			{
-				same_primitives = false;
-				break;
+			if (p0.GetType() == p1.GetType()) {
+				p0.PrepareForInterpolation(element, true);
+				p1.PrepareForInterpolation(element, true);
+				RMLUI_ASSERT(p0.index() == p1.index());
+				continue;
 			}
+			if (shorter.size() < longer.size()) {
+				p1.PrepareForInterpolation(element, false);
+				TransformPrimitive p = p1;
+				p.SetIdentity();
+				shorter.insert(shorter.begin() + i, p);
+				continue;
+			}
+			return CombineAndDecompose(t0, t1, i, element);
 		}
-		if (same_primitives)
-			return result;
-	}
-
-	if (prims0.size() != prims1.size())
-	{
-		// Try to match the smallest set of primitives to the larger set, set missing keys in the small set to identity.
-		// Requirement: The small set must match types in the same order they appear in the big set.
-		// Example: (letter indicates type, number represents values)
-		// big:       a0 b0 c0 b1
-		//               ^     ^ 
-		// small:     b2 b3   
-		//            ^  ^
-		// new small: a1 b2 c1 b3   
-		bool prims0_smallest = (prims0.size() < prims1.size());
-
-		auto& small = (prims0_smallest ? prims0 : prims1);
-		auto& big = (prims0_smallest ? prims1 : prims0);
-
-		Vector<size_t> matching_indices; // Indices into 'big' for matching types
-		matching_indices.reserve(small.size() + 1);
-
-		size_t i_big = 0;
-		bool match_success = true;
-		bool changed_big = false;
-
-		// Iterate through the small set to see if its types fit into the big set
-		for (size_t i_small = 0; i_small < small.size(); i_small++)
-		{
-			match_success = false;
-
-			for (; i_big < big.size(); i_big++)
-			{
-				auto big_type = big[i_big].type;
-
-				if (TransformUtilities::TryConvertToMatchingGenericType(small[i_small], big[i_big]))
-				{
-					// They matched exactly or in their more generic form. One or both primitives may have been converted.
-					match_success = true;
-					if (big[i_big].type != big_type)
-						changed_big = true;
-				}
-
-				if (match_success)
-				{
-					matching_indices.push_back(i_big);
-					match_success = true;
-					i_big += 1;
-					break;
-				}
-			}
-
-			if (!match_success)
-				break;
+		for (; i < longer.size(); ++i) {
+			auto& p1 = longer[i];
+			p1.PrepareForInterpolation(element, false);
+			TransformPrimitive p = p1;
+			p.SetIdentity();
+			shorter.insert(shorter.begin() + i, p);
 		}
-
-
-		if (match_success)
-		{
-			// Success, insert the missing primitives into the small set
-			matching_indices.push_back(big.size()); // Needed to copy elements behind the last matching primitive
-			small.reserve(big.size());
-			size_t i0 = 0;
-			for (size_t match_index : matching_indices)
-			{
-				for (size_t i = i0; i < match_index; i++)
-				{
-					TransformPrimitive p = big[i];
-					TransformUtilities::SetIdentity(p);
-					small.insert(small.begin() + i, p);
-				}
-
-				// Next value to copy is one-past the matching primitive
-				i0 = match_index + 1;
-			}
-
-			// The small set has always been changed if we get here, but the big set is only changed
-			// if one or more of its primitives were converted to a general form.
-			if (changed_big)
-				return PrepareTransformResult::ChangedT0andT1;
-
-			return (prims0_smallest ? PrepareTransformResult::ChangedT0 : PrepareTransformResult::ChangedT1);
-		}
-	}
-
-
-	// If we get here, things get tricky. Need to do full matrix interpolation.
-	// In short, we decompose the Transforms into translation, rotation, scale, skew and perspective components. 
-	// Then, during update, interpolate these components and combine into a new transform matrix.
-	if (!CombineAndDecompose(t0, element))
-		return PrepareTransformResult::Invalid;
-	if (!CombineAndDecompose(t1, element))
-		return PrepareTransformResult::Invalid;
-
-	return PrepareTransformResult::ChangedT0andT1;
-}
-
-
-static bool PrepareTransforms(Vector<AnimationKey>& keys, Element& element, int start_index)
-{
-	bool result = true;
-
-	// Prepare each transform individually.
-	for (int i = start_index; i < (int)keys.size(); i++)
-	{
-		Property& property = keys[i].property;
-		RMLUI_ASSERT(property.value.GetType() == Variant::TRANSFORMPTR);
-
-		if (!property.value.GetReference<TransformPtr>())
-			property.value = MakeShared<Transform>();
-
-		bool must_decompose = false;
-		Transform& transform = *property.value.GetReference<TransformPtr>();
-
-		for (TransformPrimitive& primitive : transform.GetPrimitives())
-		{
-			if (!TransformUtilities::PrepareForInterpolation(primitive, element))
-			{
-				must_decompose = true;
-				break;
-			}
-		}
-
-		if (must_decompose)
-			result &= CombineAndDecompose(transform, element);
-	}
-
-	if (!result)
-		return false;
-
-	// We don't need to prepare the transforms pairwise if we only have a single key added so far.
-	if (keys.size() < 2 || start_index < 1)
 		return true;
-
-	// Now, prepare the transforms pair-wise so they can be interpolated.
-	const int N = (int)keys.size();
-
-	int count_iterations = -1;
-	const int max_iterations = 3 * N;
-
-	Vector<bool> dirty_list(N + 1, false);
-	dirty_list[start_index] = true;
-
-	// For each pair of keys, match the transform primitives such that they can be interpolated during animation update
-	for (int i = start_index; i < N && count_iterations < max_iterations; count_iterations++)
-	{
-		if (!dirty_list[i])
-		{
-			++i;
-			continue;
-		}
-
-		auto& prop0 = keys[i - 1].property;
-		auto& prop1 = keys[i].property;
-
-		if(prop0.unit != Property::TRANSFORM || prop1.unit != Property::TRANSFORM)
-			return false;
-
-		auto& t0 = prop0.value.GetReference<TransformPtr>();
-		auto& t1 = prop1.value.GetReference<TransformPtr>();
-
-		auto prepare_result = PrepareTransformPair(*t0, *t1, element);
-
-		if (prepare_result == PrepareTransformResult::Invalid)
-			return false;
-
-		bool changed_t0 = ((int)prepare_result & (int)PrepareTransformResult::ChangedT0);
-		bool changed_t1 = ((int)prepare_result & (int)PrepareTransformResult::ChangedT1);
-
-		dirty_list[i] = false;
-		dirty_list[i - 1] = dirty_list[i - 1] || changed_t0;
-		dirty_list[i + 1] = dirty_list[i + 1] || changed_t1;
-
-		if (changed_t0 && i > 1)
-			--i;
-		else
-			++i;
 	}
 
-	// Something has probably gone wrong if we exceeded max_iterations, possibly a bug in PrepareTransformPair()
-	return (count_iterations < max_iterations);
+	RMLUI_ASSERT(t0.size() == t1.size());
+	for (size_t i = 0; i < t0.size(); ++i) {
+		if (t0[i].index() != t1[i].index()) {
+			return CombineAndDecompose(t0, t1, i, element);
+		}
+	}
+	return true;
 }
 
+
+static bool PrepareTransforms(Property& property, Element& element) {
+	RMLUI_ASSERT(property.value.GetType() == Variant::TRANSFORMPTR);
+	if (!property.value.GetReference<TransformPtr>()) {
+		property.value = MakeShared<Transform>();
+	}
+	return true;
+}
+
+static bool PrepareTransforms(AnimationKey& key, Element& element) {
+	auto& prop0 = key.in;
+	auto& prop1 = key.out;
+	if (prop0.unit != Property::TRANSFORM || prop1.unit != Property::TRANSFORM) {
+		return false;
+	}
+	if (!prop0.value.GetReference<TransformPtr>()) {
+		prop0.value = MakeShared<Transform>();
+	}
+	if (!prop1.value.GetReference<TransformPtr>()) {
+		prop1.value = MakeShared<Transform>();
+	}
+	auto& t0 = prop0.value.GetReference<TransformPtr>();
+	auto& t1 = prop1.value.GetReference<TransformPtr>();
+	return PrepareTransformPair(*t0, *t1, element);
+}
 
 ElementAnimation::ElementAnimation(PropertyId property_id, ElementAnimationOrigin origin, const Property& current_value, Element& element, double start_world_time, float duration, int num_iterations, bool alternate_direction)
 	: property_id(property_id)
@@ -374,53 +210,42 @@ ElementAnimation::ElementAnimation(PropertyId property_id, ElementAnimationOrigi
 }
 
 
-bool ElementAnimation::InternalAddKey(float time, const Property& in_property, Element& element, Tween tween)
+bool ElementAnimation::InternalAddKey(float time, const Property& out_prop, Element& element, Tween tween)
 {
-	int valid_properties = (Property::NUMBER_LENGTH_PERCENT | Property::ANGLE | Property::COLOUR | Property::TRANSFORM | Property::KEYWORD);
-
-	if (!(in_property.unit & valid_properties))
-	{
-		Log::Message(Log::LT_WARNING, "Property '%s' is not a valid target for interpolation.", in_property.ToString().c_str());
+	if (!(out_prop.unit & (Property::NUMBER_LENGTH_PERCENT | Property::ANGLE | Property::COLOUR | Property::TRANSFORM | Property::KEYWORD))) {
+		Log::Message(Log::LT_WARNING, "Property '%s' is not a valid target for interpolation.", out_prop.ToString().c_str());
 		return false;
 	}
 
-	keys.emplace_back(time, in_property, tween);
+	bool first = keys.size() == 0;
+	Property const& in_prop = first ? out_prop: keys.back().prop;
+	keys.emplace_back(time, in_prop, out_prop, tween);
 	bool result = true;
-
-	if (keys.back().property.unit == Property::TRANSFORM)
-	{
-		result = PrepareTransforms(keys, element, (int)keys.size() - 1);
+	if (!first && out_prop.unit == Property::TRANSFORM) {
+		result = PrepareTransforms(keys.back(), element);
 	}
-
-	if (!result)
-	{
-		Log::Message(Log::LT_WARNING, "Could not add animation key with property '%s'.", in_property.ToString().c_str());
+	if (!result) {
+		Log::Message(Log::LT_WARNING, "Could not add animation key with property '%s'.", out_prop.ToString().c_str());
 		keys.pop_back();
 	}
-
 	return result;
 }
 
 
-bool ElementAnimation::AddKey(float target_time, const Property & in_property, Element& element, Tween tween, bool extend_duration)
-{
-	if (!IsInitalized())
-	{
+bool ElementAnimation::AddKey(float target_time, const Property & in_property, Element& element, Tween tween, bool remove) {
+	if (!IsInitalized()) {
 		Log::Message(Log::LT_WARNING, "Element animation was not initialized properly, can't add key.");
 		return false;
 	}
-	if (!InternalAddKey(target_time, in_property, element, tween))
-	{
+	if (!InternalAddKey(target_time, in_property, element, tween)) {
 		return false;
 	}
-
-	if (extend_duration)
-		duration = target_time;
-
+	duration = target_time;
+	remove_when_complete = remove;
 	return true;
 }
 
-float ElementAnimation::GetInterpolationFactorAndKeys(int* out_key0, int* out_key1) const
+float ElementAnimation::GetInterpolationFactorAndKeys(int* out_key) const
 {
 	float t = time_since_iteration_start;
 
@@ -462,13 +287,9 @@ float ElementAnimation::GetInterpolationFactorAndKeys(int* out_key0, int* out_ke
 
 	alpha = keys[key1].tween(alpha);
 
-	if (out_key0) *out_key0 = key0;
-	if (out_key1) *out_key1 = key1;
-
+	if (out_key) *out_key = key1;
 	return alpha;
 }
-
-
 
 Property ElementAnimation::UpdateAndGetProperty(double world_time, Element& element)
 {
@@ -500,15 +321,15 @@ Property ElementAnimation::UpdateAndGetProperty(double world_time, Element& elem
 		}
 	}
 
-	int key0 = -1;
-	int key1 = -1;
-
-	float alpha = GetInterpolationFactorAndKeys(&key0, &key1);
-
-	return InterpolateProperties(keys[key0].property, keys[key1].property, alpha, element, keys[0].property.definition);
+	int key = -1;
+	float alpha = GetInterpolationFactorAndKeys(&key);
+	return InterpolateProperties(keys[key].in, keys[key].out, alpha, element);
 }
 
 void ElementAnimation::Release(Element& element) {
+	if (!IsInitalized()) {
+		return;
+	}
 	switch (GetOrigin()) {
 	case ElementAnimationOrigin::User:
 		break;
@@ -516,6 +337,9 @@ void ElementAnimation::Release(Element& element) {
 	case ElementAnimationOrigin::Transition:
 		if (remove_when_complete) {
 			element.RemoveProperty(GetPropertyId());
+		}
+		else {
+			element.SetProperty(GetPropertyId(), keys.back().prop);
 		}
 		break;
 	}
