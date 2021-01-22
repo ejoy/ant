@@ -36,9 +36,17 @@
 namespace Rml {
 
 struct AnimationKey {
-	AnimationKey(float time, const Property& property, Tween tween) : time(time), property(property), tween(tween) {}
+	AnimationKey(float time, const Property& in_prop, const Property& out_prop, Tween tween)
+		: time(time)
+		, in(in_prop)
+		, out(out_prop)
+		, prop(out_prop)
+		, tween(tween)
+	{}
 	float time;   // Local animation time (Zero means the time when the animation iteration starts)
-	Property property;
+	Property in;
+	Property out;
+	Property prop;
 	Tween tween;  // Tweening between the previous and this key. Ignored for the first animation key.
 };
 
@@ -52,31 +60,26 @@ class ElementAnimation
 {
 private:
 	PropertyId property_id = PropertyId::Invalid;
-
 	float duration = 0;           // for a single iteration
 	int num_iterations = 0;       // -1 for infinity
 	bool alternate_direction = 0; // between iterations
-
 	Vector<AnimationKey> keys;
-
 	double last_update_world_time = 0;
 	float time_since_iteration_start = 0;
 	int current_iteration = 0;
 	bool reverse_direction = false;
 	bool remove_when_complete = true;
-
 	bool animation_complete = true;
 	ElementAnimationOrigin origin = ElementAnimationOrigin::User;
 
-	bool InternalAddKey(float time, const Property& property, Element& element, Tween tween);
-
-	float GetInterpolationFactorAndKeys(int* out_key0, int* out_key1) const;
+	bool InternalAddKey(float time, const Property& out_prop, Element& element, Tween tween);
+	float GetInterpolationFactorAndKeys(int* out_key) const;
 
 public:
 	ElementAnimation(PropertyId property_id, ElementAnimationOrigin origin, const Property& current_value, Element& element,
 		double start_world_time, float duration, int num_iterations, bool alternate_direction);
 
-	bool AddKey(float target_time, const Property & property, Element & element, Tween tween, bool extend_duration);
+	bool AddKey(float target_time, const Property & property, Element & element, Tween tween, bool remove_when_complete);
 
 	Property UpdateAndGetProperty(double time, Element& element);
 
@@ -85,9 +88,8 @@ public:
 	bool IsComplete() const { return animation_complete; }
 	bool IsTransition() const { return origin == ElementAnimationOrigin::Transition; }
 	bool IsInitalized() const { return !keys.empty(); }
-	float GetInterpolationFactor() const { return GetInterpolationFactorAndKeys(nullptr, nullptr); }
+	float GetInterpolationFactor() const { return GetInterpolationFactorAndKeys(nullptr); }
 	ElementAnimationOrigin GetOrigin() const { return origin; }
-	void SetRemoveWhenComplete(bool remove) { remove_when_complete = remove; }
 	void Release(Element& element);
 };
 

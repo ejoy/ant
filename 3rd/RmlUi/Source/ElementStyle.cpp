@@ -391,17 +391,6 @@ const Property* ElementStyle::GetLocalProperty(PropertyId id) const
 	return GetLocalProperty(id, definition.get());
 }
 
-float ElementStyle::ResolveNumericProperty(const Property* property, float base_value) const
-{
-	if (!property || !(property->unit & (Property::NUMBER_LENGTH_PERCENT | Property::ANGLE)))
-		return 0.0f;
-	if (property->unit & Property::NUMBER)
-		return property->Get<float>() * base_value;
-	else if (property->unit & Property::PERCENT)
-		return property->Get<float>() * base_value * 0.01f;
-	return ComputeProperty<float>(property, element);
-}
-
 void ElementStyle::DirtyDefinition()
 {
 	definition_dirty = true;
@@ -497,6 +486,9 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values) {
 
 		if (dirty_em_properties && p->unit == Property::EM)
 			dirty_properties.Insert(id);
+		if (!dirty_properties.Contains(id)) {
+			continue;
+		}
 
 		switch (id) {
 		case PropertyId::Left:

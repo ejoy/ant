@@ -6,7 +6,7 @@ data:
     name: emitter1
     material: /pkg/ant.resources/materials/particle/particle.material
     transform:
-        t: {2.0, 0.0, 0.0}
+        t: {0.0, 0.0, 0.0}
     scene_entity: true
     state: 1
     emitter:
@@ -15,12 +15,12 @@ data:
             minv: 30
             maxv: 40
         spawn:
-            count:  6
+            count:  3
             rate:   0.9
             init_lifetime:
                 interp_type: linear
-                minv: 5
-                maxv: 6.5
+                minv: 1
+                maxv: 3
             init_scale:
                 interp_type: linear
                 minv: {0.8, 0.8, 0.8}

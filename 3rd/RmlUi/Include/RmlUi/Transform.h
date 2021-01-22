@@ -32,55 +32,13 @@
 #include "Header.h"
 #include "Types.h"
 #include "TransformPrimitive.h"
-#include <glm/glm.hpp>
 
 namespace Rml {
 
-class Property;
-
-/**
-	The Transform class holds the information parsed from an element's `transform' property.
-	
-	The class holds a list of transform primitives making up a complete transformation specification
-	of an element. Each transform instance is relative to the element's parent coordinate system.
-	During the Context::Render call the transforms of the current element and its ancestors will be
-	used to find the final transformation matrix for the global coordinate system.
-
-	@author Markus Schöngart
-	@see Rml::Variant
- */
-
-class RMLUICORE_API Transform
-{
+class Transform : public Vector<TransformPrimitive> {
 public:
-	using PrimitiveList = Vector< TransformPrimitive >;
-
-	/// Default constructor, initializes an identity transform
-	Transform();
-
-	/// Construct transform with a list of primitives
-	Transform(PrimitiveList primitives);
-
-	/// Helper function to create a 'transform' Property from the given list of primitives
-	static Property MakeProperty(PrimitiveList primitives);
-
-	/// Remove all Primitives from this Transform
-	void ClearPrimitives();
-
-	/// Add a Primitive to this Transform
-	void AddPrimitive(const TransformPrimitive& p);
-
-	PrimitiveList& GetPrimitives() noexcept { return primitives; }
-	const PrimitiveList& GetPrimitives() const noexcept { return primitives; }
-
-	bool Empty() const;
-	glm::mat4x4 GetMatrix(Element& e);
-
-private:
-	PrimitiveList primitives;
+	UniquePtr<Transform> Interpolate(const Transform& other, float alpha);
 };
-
-
 
 } // namespace Rml
 #endif

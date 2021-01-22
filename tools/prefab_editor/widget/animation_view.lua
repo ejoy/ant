@@ -88,7 +88,6 @@ local function from_runtime_event(runtime_event)
         local ske = world[current_eid].skeleton._handle
         for _, col in ipairs(runtime_event.collider) do
             col.hid_ui = {col.hid}
-            col.joint_name = col.joint_index > 0 and ske:joint_name(col.joint_index) or "None"
             col.name_ui = {text = col.name}
             if col.shape.type == "box" then
                 col.halfsize_ui = {col.shape.define.size[1], col.shape.define.size[2], col.shape.define.size[3], speed = 0.01}
@@ -237,8 +236,8 @@ local function add_event(et)
         rid = (et == "Effect" or et == "Sound") and -1 or nil,
         asset_path = (et == "Effect" or et == "Sound") and "" or nil,
         link_info = (et == "Effect") and {
-            joint_name = "None",
-            joint_index = -1
+            slot_name = "",
+            slot_eid = current_eid
         } or nil,
         name_ui = {text = event_name},
         rid_ui = {-1},
@@ -251,25 +250,6 @@ local function add_event(et)
             offset_ui = {position = {0,0,0,speed = 0.01}, rotate = {0,0,0,speed = 0.01}},
         } or nil
     }
-    
-    -- if et == "Effect" then
-    --     event_list[#event_list].asset_path = ""
-    --     event_list[#event_list].asset_path_ui = {text = ""}
-    --     event_list[#event_list].link_info = {
-    --         joint_name = "None",
-    --         joint_index = -1
-    --     }
-    -- end
-
-    -- if et == "Collision" then
-    --     event_list[#event_list].collision = {
-    --         collider = current_collider,
-    --         offset = {position = {0,0,0}, rotate = {0,0,0}},
-    --         enable = false,
-    --         enable_ui = {false},
-    --         offset_ui = {position = {0,0,0,speed = 0.01}, rotate = {0,0,0,speed = 0.01}},
-    --     }
-    -- end
     set_event_dirty(1)
 end
 
@@ -321,26 +301,25 @@ local shape_type = {
 local collider_type = {
     "T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8"
 }
-local collider_idx = 1
+local collider_id = 1
 local function add_collider(ct)
     if not current_anim.collider then
         current_anim.collider = {}
     end
     if ct == "capsule" then return end
 
-    if #current_anim.collider >= collider_idx then
-        collider_idx = #current_anim.collider + 1
+    if #current_anim.collider >= collider_id then
+        collider_id = #current_anim.collider + 1
     end 
     
     local shape = {type = ct, define = utils.deep_copy(default_collider_define[ct])}
-    local colname = "collider" .. collider_idx
+    local colname = "collider" .. collider_id
     current_anim.collider[#current_anim.collider + 1] = {
         hid = 0,
         name = colname,
         shape = shape,
         type = collider_type[1],
-        joint_index = current_joint and current_joint.index or 0,
-        joint_name = current_joint and current_joint.name or "",
+        slot_name = "",
         --
         eid = prefab_mgr:create("collider", shape),
         hid_ui = {0},
@@ -349,7 +328,7 @@ local function add_collider(ct)
         height_ui = {0.025, speed = 0.01},
         halfsize_ui = {0.025, 0.025, 0.025, speed = 0.01}
     }
-    collider_idx = collider_idx + 1
+    collider_id = collider_id + 1
     local runtime_event = get_runtime_events()
     runtime_event.collider = current_anim.collider
 end
@@ -405,7 +384,7 @@ local function show_events()
         delete_event(delete_idx)
     end
 end
-
+local slot_list = {}
 local function show_current_event()
     if not current_event then return end
     imgui.widget.PropertyLabel("EventType")
@@ -463,128 +442,26 @@ local function show_current_event()
                 local global_data = require "common.global_data"
                 local lfs         = require "filesystem.local"
                 local rp = lfs.relative(lfs.path(path), global_data.project_root)
-                current_event.effect_path_ui.text = global_data.package_path .. tostring(rp)
+                local path = global_data.package_path .. tostring(rp)
+                current_event.asset_path_ui.text = path
+                current_event.asset_path = path
             end
         end
         imgui.widget.PropertyLabel("EffectPath")
-        imgui.widget.InputText("##EffectPath", current_event.effect_path_ui)
-        imgui.widget.PropertyLabel("LinkJoint")
-        if imgui.widget.BeginCombo("##LinkJoint", {current_event.link_info.joint_name, flags = imgui.flags.Combo {}}) then
-            for _, option in ipairs(joint_list) do
-                if imgui.widget.Selectable(option.name, current_event.link_info.joint_name == option.name) then
-                    current_event.link_info.joint_index = option.index
-                    current_event.link_info.joint_name = option.name
-                end
-            end
-            imgui.widget.EndCombo()
-        end
-    end
-end
-
-local function show_colliders()
-    if imgui.widget.Button("AddCollider") then
-        imgui.windows.OpenPopup("AddColliderPop")
-    end
-    if imgui.windows.BeginPopup("AddColliderPop") then
-        for _, ct in ipairs(shape_type) do
-            if imgui.widget.MenuItem(ct) then
-                add_collider(ct)
-            end
-        end
-        imgui.windows.EndPopup()
-    end
-    local delete_col
-    if current_anim.collider then
-        for idx, col in ipairs(current_anim.collider) do
-            if imgui.widget.Selectable(col.name, current_collider and (current_collider.name == col.name)) then
-                current_collider = col
-            end
-            if current_collider and (current_collider.name == col.name) then
-                if imgui.windows.BeginPopupContextItem(col.name) then
-                    if imgui.widget.Selectable("Delete", false) then
-                        delete_col = col
+        imgui.widget.InputText("##EffectPath", current_event.asset_path_ui)
+        local slot_list = world[current_eid].slot_list
+        if slot_list then
+            imgui.widget.PropertyLabel("LinkSlot")
+            if imgui.widget.BeginCombo("##LinkSlot", {current_event.link_info.slot_name, flags = imgui.flags.Combo {}}) then
+                for name, eid in pairs(slot_list) do
+                    if imgui.widget.Selectable(name, current_event.link_info.slot_name == name) then
+                        current_event.link_info.slot_name = name
+                        current_event.link_info.slot_eid = eid
                     end
-                    imgui.windows.EndPopup()
                 end
+                imgui.widget.EndCombo()
             end
         end
-        delete_collider(delete_col)
-    end
-end
-
-local function show_current_collider()
-    if not current_collider then return end
-
-    imgui.widget.PropertyLabel("HID")
-    if imgui.widget.DragInt("##HID", current_collider.hid_ui) then
-        current_collider.hid = current_collider.hid_ui[1]
-    end
-    
-    imgui.widget.PropertyLabel("Name")
-    if imgui.widget.InputText("##Name", current_collider.name_ui) then
-        current_collider.name = tostring(current_collider.name_ui.text)
-    end
-
-    imgui.widget.PropertyLabel("Shape")
-    if imgui.widget.BeginCombo("##ColliderShapeCombo", {current_collider.shape.type, flags = imgui.flags.Combo {}}) then
-        for _, option in ipairs(shape_type) do
-            if imgui.widget.Selectable(option, current_collider.shape.type == option) then
-                recreate_collider(current_collider, {type = option})
-            end
-        end
-        imgui.widget.EndCombo()
-    end
-    imgui.widget.PropertyLabel("Type")
-    if imgui.widget.BeginCombo("##ColliderTypeCombo", {current_collider.type, flags = imgui.flags.Combo {}}) then
-        for _, option in ipairs(collider_type) do
-            if imgui.widget.Selectable(option, current_collider.type == option) then
-                current_collider.type = option
-            end
-        end
-        imgui.widget.EndCombo()
-    end
-
-    imgui.widget.PropertyLabel("LinkJoint")
-    if imgui.widget.BeginCombo("##LinkJoint", {current_collider.joint_name, flags = imgui.flags.Combo {}}) then
-        for _, option in ipairs(joint_list) do
-            if imgui.widget.Selectable(option.name, current_collider.joint_name == option.name) then
-                current_collider.joint_index = option.index
-                current_collider.joint_name = option.name
-            end
-        end
-        imgui.widget.EndCombo()
-    end
-
-    local redefine
-    if current_collider.shape.type == "sphere" or current_collider.shape.type == "capsule" then
-        imgui.widget.PropertyLabel("Radius")
-        local is_capsule = current_collider.shape.type == "capsule"
-        if imgui.widget.DragFloat("##Radius", current_collider.radius_ui) then
-            redefine = {
-                origin = {0, 0, 0, 1}, radius = current_collider.radius_ui[1]
-            }
-        end
-        if is_capsule then
-            imgui.widget.PropertyLabel("Height")
-            if imgui.widget.DragFloat("##Height", current_collider.height_ui) then
-                redefine.height = current_collider.height_ui[1]
-            end
-        end
-    elseif current_collider.shape.type == "box" then
-        imgui.widget.PropertyLabel("HalfSize")
-        if imgui.widget.DragFloat("##HalfSize", current_collider.halfsize_ui) then
-            redefine = {
-                origin = {0, 0, 0, 1},
-                size = {
-                    current_collider.halfsize_ui[1],
-                    current_collider.halfsize_ui[2],
-                    current_collider.halfsize_ui[3]
-                }
-            }
-        end
-    end
-    if redefine then
-        recreate_collider(current_collider, {type = current_collider.shape.type, define = redefine})
     end
 end
 
@@ -671,7 +548,7 @@ local function save_event(filename)
             name = col.name,
             shape = col.shape,
             type = col.type,
-            joint_index = col.joint_index
+            slot_name = col.slot_name
         }
     end
     
@@ -1028,12 +905,10 @@ function m.show()
                 on_move_clip(move_type, current_clip_index, move_delta)
             end
             imgui.cursor.Separator()
-            if imgui.table.Begin("EventColumns", 9, imgui.flags.Table {'Resizable', 'ScrollY'}) then
+            if imgui.table.Begin("EventColumns", 7, imgui.flags.Table {'Resizable', 'ScrollY'}) then
                 imgui.table.SetupColumn("Bones", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
                 imgui.table.SetupColumn("Event", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
                 imgui.table.SetupColumn("Event(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
-                imgui.table.SetupColumn("Collider", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
-                imgui.table.SetupColumn("Collider(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
                 imgui.table.SetupColumn("Clip", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
                 imgui.table.SetupColumn("Clip(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
                 imgui.table.SetupColumn("Group", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
@@ -1056,18 +931,6 @@ function m.show()
                 child_width, child_height = imgui.windows.GetContentRegionAvail()
                 imgui.windows.BeginChild("##show_current_event", child_width, child_height, false)
                 show_current_event()
-                imgui.windows.EndChild()
-
-                imgui.table.NextColumn()
-                child_width, child_height = imgui.windows.GetContentRegionAvail()
-                imgui.windows.BeginChild("##show_colliders", child_width, child_height, false)
-                show_colliders()
-                imgui.windows.EndChild()
-
-                imgui.table.NextColumn()
-                child_width, child_height = imgui.windows.GetContentRegionAvail()
-                imgui.windows.BeginChild("##show_current_collider", child_width, child_height, false)
-                show_current_collider()
                 imgui.windows.EndChild()
                 
                 imgui.table.NextColumn()
@@ -1158,6 +1021,8 @@ function m.bind(eid)
             end
         end
         setup_joint_list(joints[eid].root)
+        world[eid].joint_list = joint_list
+        hierarchy:update_slot_list(eid)
     end
 end
 

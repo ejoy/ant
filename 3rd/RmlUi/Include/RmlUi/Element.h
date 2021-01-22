@@ -36,7 +36,6 @@
 #include "ObserverPtr.h"
 #include "Property.h"
 #include "Types.h"
-#include "Transform.h"
 #include "Tween.h"
 #include "Geometry.h"
 #include "Node.h"
@@ -143,22 +142,10 @@ public:
 	template < typename T >
 	T GetProperty(const String& name);
 
-	/// Resolves a property with units of number, percentage, length, or angle to their canonical unit (unit-less, 'px', or 'rad').
-	/// Numbers and percentages are scaled by the base value and returned.
-	/// @param[in] property The property to resolve the value for.
-	/// @param[in] base_value The value that is scaled by the number or percentage value, if applicable.
-	/// @return The resolved value in their canonical unit, or zero if it could not be resolved.
-	float ResolveNumericProperty(const Property *property, float base_value);
-
 	/// Project a 2D point in pixel coordinates onto the element's plane.
 	/// @param[in-out] point The point to project in, and the resulting projected point out.
 	/// @return True on success, false if transformation matrix is singular.
 	bool Project(Point& point) const noexcept;
-
-	/// Add a key to an animation, extending its duration.
-	/// If no animation exists for the given property name, the call will be ignored.
-	/// @return True if a new animation key was added.
-	bool AddAnimationKey(const String& property_name, const Property& target_value, float duration, Tween tween = Tween{});
 	
 	///@}
 

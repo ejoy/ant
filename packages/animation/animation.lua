@@ -47,23 +47,23 @@ end
 
 local function process_keyframe_event(task, poseresult)
 	local event_state = task.event_state
-	if not event_state.keyframe_events then return end
-	-- local delta = delta_time / ani._duration
-	-- local current_ratio = task.ratio + delta
-	-- task.ratio = current_ratio <= ani._max_ratio and current_ratio or ani._max_ratio
-	-- poseresult:do_sample(ani._sampling_cache, ani._handle, task.ratio % 1, task.weight)
-	local colliders = event_state.keyframe_events.collider
-	if colliders then
-		for _, coll in ipairs(colliders) do
-			if coll.joint_index > 0 then
-				local tranform = poseresult:joint(coll.joint_index)
-				local _, origin_r, origin_t = math3d.srt(tranform)
-				local origin_s, _, _ = math3d.srt(iom.worldmat(coll.eid))
-				iom.set_srt(coll.eid, math3d.matrix{ s = origin_s, r = origin_r, t = origin_t })
-			else
-			end
-		end
-	end
+	-- if not event_state.keyframe_events then return end
+	-- -- local delta = delta_time / ani._duration
+	-- -- local current_ratio = task.ratio + delta
+	-- -- task.ratio = current_ratio <= ani._max_ratio and current_ratio or ani._max_ratio
+	-- -- poseresult:do_sample(ani._sampling_cache, ani._handle, task.ratio % 1, task.weight)
+	-- local colliders = event_state.keyframe_events.collider
+	-- if colliders then
+	-- 	for _, coll in ipairs(colliders) do
+	-- 		if coll.joint_index > 0 then
+	-- 			local tranform = poseresult:joint(coll.joint_index)
+	-- 			local _, origin_r, origin_t = math3d.srt(tranform)
+	-- 			local origin_s, _, _ = math3d.srt(iom.worldmat(coll.eid))
+	-- 			iom.set_srt(coll.eid, math3d.matrix{ s = origin_s, r = origin_r, t = origin_t })
+	-- 		else
+	-- 		end
+	-- 	end
+	-- end
 
 	local all_events = event_state.keyframe_events.event
 	local current_events = all_events and all_events[event_state.next_index] or nil
@@ -93,8 +93,13 @@ local function process_keyframe_event(task, poseresult)
 					end
 				end
 			elseif event.event_type == "Effect" then
-				if not event.effect_eid and event.asset_path then
-					
+				if not event.effect_eid and event.asset_path ~= "" then
+					local prefab = world:instance(event.asset_path)
+					event.effect_eid = prefab[1]
+					world[event.effect_eid].parent = event.link_info.slot_eid
+				end
+				if event.effect_eid and world[event.effect_eid].parent ~= event.link_info.slot_eid then
+					world[event.effect_eid].parent = event.link_info.slot_eid
 				end
 			end
 		end
@@ -118,7 +123,7 @@ local function do_animation(poseresult, task, delta_time)
 		local ani = task.animation
 		local adjust_time = get_adjust_delta_time(task, delta_time)
 		poseresult:do_sample(ani._sampling_cache, ani._handle, adjust_time, task.weight)
-		process_keyframe_event(task, poseresult)
+		--process_keyframe_event(task, poseresult)
 	end
 end
 
@@ -157,6 +162,13 @@ function ani_sys:end_animation()
 	clear_animation_cache()
 end
 
+function ani_sys:data_changed()
+	local delta_time = timer.delta()
+	for _, eid in world:each "animation" do
+		local e = world[eid]
+		process_keyframe_event(e._animation._current)
+	end
+end
 
 --TODO
 --local m = ecs.interface "animation"

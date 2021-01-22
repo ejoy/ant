@@ -64,6 +64,8 @@ local function get_icon_by_object_type(node)
             else
                 return icons.ICON_MESH
             end
+        elseif entity.slot then
+            return icons.ICON_SLOT
         else
             return icons.ICON_OBJECT
         end
@@ -211,6 +213,12 @@ function m.show()
             if imgui.widget.MenuItem("Camera") then
                 world:pub { "Create", "camera"}
             end
+            if imgui.widget.MenuItem("Slot") then
+                world:pub { "Create", "slot"}
+            end
+            if imgui.widget.MenuItem("Slot") then
+                world:pub { "Create", "slot"}
+            end
             imgui.windows.EndPopup()
         end
         imgui.cursor.Separator()
@@ -225,12 +233,7 @@ function m.show()
                 target_eid = nil
                 show_scene_node(child)
                 if source_eid and target_eid then
-                    hierarchy:set_parent(source_eid, target_eid)
-                    local sourceWorldMat = iom.calc_worldmat(source_eid)
-                    local targetWorldMat = iom.calc_worldmat(target_eid)
-                    iom.set_srt(source_eid, math3d.mul(math3d.inverse(targetWorldMat), sourceWorldMat))
-                    iss.set_parent(source_eid, target_eid)
-                    world:pub {"EntityEvent", "parent", source_eid}
+                    world:pub {"EntityEvent", "parent", source_eid, target_eid}
                 end
             end
             imgui.table.End() 
@@ -243,7 +246,6 @@ return function(w, am)
     asset_mgr = am
     icons = require "common.icons"(asset_mgr)
     iom = world:interface "ant.objcontroller|obj_motion"
-    iss = world:interface "ant.scene|iscenespace"
     gizmo = require "gizmo.gizmo"(world)
     return m
 end

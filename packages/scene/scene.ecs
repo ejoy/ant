@@ -7,6 +7,11 @@ system "scenespace_system"
     .method "update_hierarchy"
     .method "update_transform"
 
+policy "slot_policy"
+    .component "slot"
+    .component "follow_joint"
+    .component "follow_flag"
+
 policy "hierarchy_policy"
     .require_system "scenespace_system"
     .require_transform "ant.general|rendercache_transform"

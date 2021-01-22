@@ -95,8 +95,21 @@ function Combo:_init(config, modifier)
     self.modifier       = modifier
 end
 
+function Combo:set_getter(getter)
+    self.modifier.getter = getter
+end
+
+function Combo:set_setter(setter)
+    self.modifier.setter = setter
+end
+
 function Combo:update()
     self.current_option = self.modifier.getter()
+end
+
+function Combo:set_options(options)
+    self.options = options
+    self.current_option = options[1]
 end
 
 function Combo:show()

@@ -41,6 +41,7 @@
 #include "../Include/RmlUi/TransformPrimitive.h"
 #include "../Include/RmlUi/RenderInterface.h"
 #include "../Include/RmlUi/StreamMemory.h"
+#include "../Include/RmlUi/Transform.h"
 #include "Clock.h"
 #include "DataModel.h"
 #include "ElementAnimation.h"
@@ -55,7 +56,6 @@
 #include "Pool.h"
 #include "StyleSheetParser.h"
 #include "StyleSheetNode.h"
-#include "TransformUtilities.h"
 #include "XMLParseTools.h"
 #include <algorithm>
 #include <cmath>
@@ -323,11 +323,6 @@ const Property* Element::GetProperty(const String& name)
 const Property* Element::GetProperty(PropertyId id)
 {
 	return meta->style.GetProperty(id);
-}
-
-float Element::ResolveNumericProperty(const Property *property, float base_value)
-{
-	return meta->style.ResolveNumericProperty(property, base_value);
 }
 
 // Project a 2D point in pixel coordinates onto the element's plane.
@@ -1077,21 +1072,6 @@ void Element::UpdateStructure() {
 	}
 }
 
-bool Element::AddAnimationKey(const String & property_name, const Property & target_value, float duration, Tween tween)
-{
-	ElementAnimation* animation = nullptr;
-	PropertyId property_id = StyleSheetSpecification::GetPropertyId(property_name);
-	for (auto& existing_animation : animations) {
-		if (existing_animation.GetPropertyId() == property_id) {
-			animation = &existing_animation;
-			break;
-		}
-	}
-	if (!animation)
-		return false;
-	return animation->AddKey(animation->GetDuration() + duration, target_value, *this, tween, true);
-}
-
 void Element::StartAnimation(PropertyId property_id, const Property* start_value, int num_iterations, bool alternate_direction, float delay, bool initiated_by_animation_property) {
 	Property value;
 	if (start_value) {
@@ -1141,7 +1121,7 @@ bool Element::AddAnimationKeyTime(PropertyId property_id, const Property* target
 	}
 	if (!animation)
 		return false;
-	return animation->AddKey(time, *target_value, *this, tween, true);
+	return animation->AddKey(time, *target_value, *this, tween, false);
 }
 
 bool Element::StartTransition(const Transition& transition, const Property& start_value, const Property & target_value, bool remove_when_complete)
@@ -1170,11 +1150,10 @@ bool Element::StartTransition(const Transition& transition, const Property& star
 		*it = ElementAnimation{ transition.id, ElementAnimationOrigin::Transition, start_value, *this, start_time, 0.0f, 1, false };
 	}
 
-	if (!it->AddKey(duration, target_value, *this, transition.tween, true)) {
+	if (!it->AddKey(duration, target_value, *this, transition.tween, remove_when_complete)) {
 		animations.erase(it);
 		return false;
 	}
-	it->SetRemoveWhenComplete(remove_when_complete);
 	SetPropertyImmediate(transition.id, start_value);
 	return true;
 }
@@ -1341,7 +1320,7 @@ void Element::UpdateTransform() {
 	dirty_transform = false;
 	const ComputedValues& computed = meta->computed_values;
 	glm::mat4x4 new_transform(1);
-	if (computed.transform && !computed.transform->Empty()) {
+	if (computed.transform && !computed.transform->empty()) {
 		const Layout::Metrics& metrics = GetMetrics();
 		glm::vec3 origin {
 			computed.transform_origin_x.value,
@@ -1354,7 +1333,7 @@ void Element::UpdateTransform() {
 		if (computed.transform_origin_y.type == Style::TransformOrigin::Percentage) {
 			origin.y *= metrics.frame.size.h * 0.01f;
 		}
-		new_transform = glm::translate(origin) * computed.transform->GetMatrix(*this) * glm::translate(-origin);
+		new_transform = glm::translate(origin) * TransformGetMatrix(*computed.transform, *this) * glm::translate(-origin);
 	}
 	new_transform = glm::translate(new_transform, glm::vec3(metrics.frame.origin.x, metrics.frame.origin.y, 0));
 	if (parent) {

@@ -16,6 +16,8 @@ local light_panel
 local camera_panel
 local material_panel
 local base_panel
+local slot_panel
+local collider_panel
 local current_panel
 local current_eid
 
@@ -217,14 +219,32 @@ local function get_base_panel()
     return base_panel
 end
 
+local function get_slot_panel()
+    if not slot_panel then
+        slot_panel = require "widget.slot_view"(world)()
+    end
+    return slot_panel
+end
+
+local function get_collider_panel()
+    if not collider_panel then
+        collider_panel = require "widget.collider_view"(world)()
+    end
+    return collider_panel
+end
+
 local function update_current()
     if current_eid == gizmo.target_eid then return end
     current_eid = gizmo.target_eid
     if current_eid then
-        if world[current_eid].camera then
+        if world[current_eid].collider then
+            current_panel = get_collider_panel()
+        elseif world[current_eid].camera then
             current_panel = get_camera_panel()
         elseif world[current_eid].light_type then
             current_panel = get_light_panel()
+        elseif world[current_eid].slot then
+            current_panel = get_slot_panel()
         elseif world[current_eid].material then
             current_panel = get_material_panel()
         else

@@ -7,6 +7,8 @@ local asset_mgr = import_package "ant.asset"
 local geometry_drawer = import_package "ant.geometry".drawer
 local irq       = world:interface "ant.render|irenderqueue"
 local ies       = world:interface "ant.scene|ientity_state"
+local iom       = world:interface "ant.objcontroller|obj_motion"
+local iss       = world:interface "ant.scene|iscenespace"
 local icoll     = world:interface "ant.collision|collider"
 local drawer    = world:interface "ant.render|iwidget_drawer"
 local imaterial   = world:interface "ant.asset|imaterial"
@@ -328,21 +330,32 @@ function m:data_changed()
     end
     for _, what, target, v1, v2 in entity_event:unpack() do
         local transform_dirty = true
+        local template = hierarchy:get_template(target)
         if what == "move" then
             gizmo:set_position(v2)
+            --template.template.data.transform.position = v2
             cmd_queue:record {action = gizmo_const.MOVE, eid = target, oldvalue = v1, newvalue = v2}
         elseif what == "rotate" then
             gizmo:set_rotation(math3d.quaternion{math.rad(v2[1]), math.rad(v2[2]), math.rad(v2[3])})
+            --template.template.data.transform.rotate = v2
             cmd_queue:record {action = gizmo_const.ROTATE, eid = target, oldvalue = v1, newvalue = v2}
         elseif what == "scale" then
             gizmo:set_scale(v2)
+            --template.template.data.transform.scale = v2
             cmd_queue:record {action = gizmo_const.SCALE, eid = target, oldvalue = v1, newvalue = v2}
         elseif what == "name" then
             transform_dirty = false
-            local template = hierarchy:get_template(target)
             template.template.data.name = v1
             hierarchy:update_display_name(target, v1)
         elseif what == "parent" then
+            hierarchy:set_parent(target, v1)
+            local sourceWorldMat = iom.calc_worldmat(target)
+            local targetWorldMat = iom.calc_worldmat(v1)
+            iom.set_srt(target, math3d.mul(math3d.inverse(targetWorldMat), sourceWorldMat))
+            iss.set_parent(target, v1)
+            if not world[v1].slot and world[target].collider then
+                world[target].slot_name = "None"
+            end
             inspector.update_template_tranform(target)
         end
         if transform_dirty then

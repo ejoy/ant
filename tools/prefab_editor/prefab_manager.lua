@@ -12,6 +12,7 @@ local geo_utils
 local logger
 local ilight
 local light_gizmo
+local gizmo
 local camera_mgr
 local world
 local iom
@@ -139,11 +140,74 @@ local default_collider_define = {
     ["box"] = {origin = {0, 0, 0, 1}, size = {0.05, 0.05, 0.05} },
     ["capsule"] = {origin = {0, 0, 0, 1}, height = 1.0, radius = 0.25}
 }
+
+local slot_entity_id = 1
+function m:create_slot()
+    if not gizmo.target_eid then return end
+    local new_entity, temp = world:create_entity {
+        action = { mount = 0 },
+        policy = {
+            "ant.general|name",
+            "ant.scene|slot_policy",
+            "ant.scene|transform_policy",
+        },
+        data = {
+            transform = {},
+            slot = true,
+            follow_flag = 1,
+            name = "empty" .. slot_entity_id,
+        }
+    }
+    slot_entity_id = slot_entity_id + 1
+    world[new_entity].parent = gizmo.target_eid
+    self.entities[#self.entities+1] = new_entity
+    hierarchy:add(new_entity, {template = temp.__class[1]}, gizmo.target_eid)
+    hierarchy:update_slot_list(gizmo.target_eid)
+end
+
+function m:create_collider(config)
+    if config.type ~= "sphere" and config.type ~= "box" then return end
+    local scale = {}
+    local define = config.define or default_collider_define[config.type]
+    if config.type == "sphere" then
+        scale = define.radius * 100
+    elseif config.type == "box" then
+        local size = define.size
+        scale = {size[1] * 200, size[2] * 200, size[3] * 200}
+    elseif config.type == "capsule" then
+    end
+    
+    local new_entity, temp = world:create_entity {
+        action = { mount = 0 },
+        policy = {
+            "ant.general|name",
+            "ant.render|render",
+            "ant.scene|hierarchy_policy",
+            "ant.scene|transform_policy",
+            "ant.collision|collider_policy"
+        },
+        data = {
+            name = "collider" .. geometricidx,
+            scene_entity = true,
+            transform = {s = scale},
+            collider = { [config.type] = define },
+            color = {1, 0.5, 0.5, 0.5},
+            state = ies.create_state "visible|selectable",
+            material = "/pkg/ant.resources/materials/singlecolor.material",
+            mesh = (config.type == "box") and geom_mesh_file["cube"] or geom_mesh_file[config.type]
+        }
+    }
+    imaterial.set_property(new_entity, "u_color", {1, 0.5, 0.5, 0.5})
+    return new_entity, temp
+end
+
 function m:create(what, config)
     if not self.root then
         self:reset_prefab()
     end
-    if what == "camera" then
+    if what == "slot" then
+        self:create_slot()
+    elseif what == "camera" then
         local new_camera, camera_templ = camera_mgr.ceate_camera()
         local s, r, t = math3d.srt(camera_templ.data.transform)
         local ts, tr, tt = math3d.totable(s), math3d.totable(r), math3d.totable(t)
@@ -162,6 +226,7 @@ function m:create(what, config)
             or config.type == "sphere"
             or config.type == "torus" then
             local new_entity, temp = world:create_entity {
+                action = { mount = 0 },
                 policy = {
                     "ant.render|render",
                     "ant.general|name",
@@ -178,8 +243,9 @@ function m:create(what, config)
                 }
             }
             imaterial.set_property(new_entity, "u_color", {1, 1, 1, 1})
+            world[new_entity].parent = gizmo.target_eid or self.root
             self.entities[#self.entities+1] = new_entity
-            hierarchy:add(new_entity, {template = temp.__class[1]}, self.root)
+            hierarchy:add(new_entity, {template = temp.__class[1]}, world[new_entity].parent)
         elseif config.type == "cube(prefab)" then
             m:add_prefab(gd.package_path .. "res/cube.prefab")
         elseif config.type == "cone(prefab)" then
@@ -209,44 +275,11 @@ function m:create(what, config)
             create_light_billboard(new_light)
         end
     elseif what == "collider" then
-        if config.type == "sphere" or config.type == "box" or config.type == "capsule" then
-            local scale = {}
-            if config.type == "sphere" then
-                scale = config.define and config.define.radius * 100 or default_collider_define[config.type].radius * 100
-            elseif config.type == "box" then
-                local size = config.define and config.define.size or default_collider_define[config.type].size
-                scale = {size[1] * 200, size[2] * 200, size[3] * 200}
-            elseif config.type == "capsule" then
-            end
-            
-            local new_entity, temp = world:create_entity {
-                policy = {
-                    "ant.general|name",
-                    "ant.render|render",
-                    "ant.scene|hierarchy_policy",
-                    "ant.scene|transform_policy",
-                    "ant.collision|collider_policy"
-                },
-                data = {
-                    color = {1, 0.5, 0.5, 0.5},
-                    scene_entity = true,
-                    state = ies.create_state "visible|selectable",
-                    transform = {s = scale},
-                    material = "/pkg/ant.resources/materials/singlecolor.material",
-                    mesh = (config.type == "box") and geom_mesh_file["cube"] or geom_mesh_file[config.type],
-                    name = "collider" .. geometricidx,
-
-                    collider = {
-                        [config.type] = config.define and config.define or default_collider_define[config.type]
-                    }
-                }
-            }
-            imaterial.set_property(new_entity, "u_color", {1, 0.5, 0.5, 0.5})
-            self.entities[#self.entities+1] = new_entity
-            if config.add_to_hierarchy then
-                hierarchy:add(new_entity, {template = temp.__class[1]}, self.root)
-            end
-            return new_entity
+        local new_entity, temp = self:create_collider(config)
+        world[new_entity].parent = gizmo.target_eid or self.root
+        self.entities[#self.entities+1] = new_entity
+        if config.add_to_hierarchy then
+            hierarchy:add(new_entity, {template = temp.__class[1]}, world[new_entity].parent)
         end
     end
 end
@@ -287,7 +320,7 @@ local function get_prefab(filename)
 end
 
 function m:open(filename)
-    local prefab = get_prefab(filename)
+    local prefab = get_prefab(filename)--get_prefab("/pkg/tools.prefab_editor/res/fire.prefab")--
     self:open_prefab(prefab)
     world:pub {"WindowTitle", filename}
 end
@@ -371,17 +404,35 @@ function m:open_prefab(prefab)
                 camera_mgr.bind_recorder(last_camera, entity)
                 remove_entity[#remove_entity+1] = entity
             else
-                hierarchy:add(entity, {template = prefab.__class[i]}, world[entity].parent or self.root)
+                if world[entity].collider then
+                    local collider = world[entity].collider
+                    local config = {}
+                    if collider.sphere then
+                        config.type = "sphere"
+                        config.define = collider.sphere
+                    elseif collider.box then
+                        config.type = "box"
+                        config.define = collider.box
+                    end
+                    local new_entity, temp = self:create_collider(config)
+                    world[new_entity].parent = world[entity].parent or self.root
+                    hierarchy:add(new_entity, {template = temp.__class[1]}, world[new_entity].parent)
+                    add_entity[#add_entity + 1] = new_entity
+                    remove_entity[#remove_entity+1] = entity
+                else
+                    hierarchy:add(entity, {template = prefab.__class[i]}, world[entity].parent or self.root)
+                end
             end
             if world[entity].camera then
                 camera_mgr.update_frustrum(entity)
                 camera_mgr.show_frustum(entity, false)
                 last_camera = entity
-            end
-            if world[entity].light_type then
+            elseif world[entity].light_type then
                 create_light_billboard(entity)
                 light_gizmo.bind(entity)
                 light_gizmo.show(false)
+            elseif world[entity].collider then
+
             end
         end
     end
@@ -459,30 +510,6 @@ end
 function m:update_material(eid, mtl)
     local prefab = hierarchy:get_template(eid)
     prefab.template.data.material = mtl
-    -- local new_eid = world:create_entity(prefab.template)
-    -- local current_dir = lfs.path(tostring(self.prefab)):parent_path()
-    -- local relative_path = tostring(lfs.relative(lfs.path(mtl), current_dir))
-    -- prefab.template.data.material = relative_path
-    -- world[eid].material = relative_path
-    -- iom.set_srt(new_eid, iom.srt(eid))
-    -- world[new_eid].name = world[eid].name
-    -- local new_node = hierarchy:replace(eid, new_eid)
-    -- world[new_eid].parent = new_node.parent
-    -- for _, v in ipairs(new_node.children) do
-    --     world[v.eid].parent = new_eid
-    -- end
-    -- local idx
-    -- for i, e in ipairs(self.entities) do
-    --     if e == eid then
-    --         idx = i
-    --         break
-    --     end
-    -- end
-    -- self.entities[idx] = new_eid
-    -- world:remove_entity(eid)
-    -- local gizmo = require "gizmo.gizmo"(world)
-    -- gizmo:set_target(new_eid)
-    -- return new_eid
     return self:recreate_entity(eid)
 end
 
@@ -625,6 +652,7 @@ return function(w)
     worldedit   = import_package "ant.editor".worldedit(world)
     ilight      = world:interface "ant.render|light"
     light_gizmo = require "gizmo.light"(world)
+    gizmo = require "gizmo.gizmo"(world)
     geo_utils   = require "editor.geometry_utils"(world)
     local asset_mgr = import_package "ant.asset"
     logger      = require "widget.log"(asset_mgr)

@@ -184,7 +184,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\Texture.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Transform.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\TransformPrimitive.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\TransformUtilities.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Tween.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\TypeConverter.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\URL.cpp" />
@@ -316,7 +315,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\StyleSheetNodeSelectorOnlyChild.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\StyleSheetNodeSelectorOnlyOfType.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\StyleSheetParser.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Source\TransformUtilities.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\Utilities.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerBody.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerDefault.h" />

@@ -28,14 +28,14 @@ local eremove_mb = world:sub {"entity_removed"}
 local hie_scene = require "hierarchy.scene"
 local scenequeue = hie_scene.queue()
 
-local function bind_slot_entity(e)
-	local slot = e.bind_slot
-	if slot then
+local function bind_joint_entity(e)
+	local joint = e.follow_joint
+	if joint then
 		local pe = world[e.parent]
 		local pr = pe.pose_result
 		if pr and pe.skeleton then
 			local ske = assert(pe.skeleton)._handle
-			e._bind_slot_idx = ske:joint_index(slot)
+			e._follow_joint_idx = ske:joint_index(joint)
 		end
 	end
 end
@@ -74,7 +74,7 @@ function sp_sys:update_hierarchy()
 		if e then
 			scenequeue:mount(eid, e.parent or 0)
 			if e.parent then
-				bind_slot_entity(e)
+				bind_joint_entity(e)
 				inherit_entity_state(e)
 				inherit_material(e)
 			end
@@ -124,10 +124,16 @@ local function update_transform(eid)
 		if e.lock_target == nil then
 			local pe = world[e.parent]
 			-- need apply before tr.worldmat
-			local bs_idx = e._bind_slot_idx
-			if bs_idx then
-				local t = pe.pose_result:joint(bs_idx)
-				rc.worldmat = math3d.mul(t, rc.worldmat)
+			local joint_idx = e._follow_joint_idx
+			if joint_idx then
+				local adjust_mat = pe.pose_result:joint(joint_idx)
+				local scale, rotate, pos = math3d.srt(adjust_mat)
+				if e.follow_flag == 1 then
+					adjust_mat = math3d.matrix {s=1, r={0,0,0,1}, t=pos}
+				elseif e.follow_flag == 2 then
+					adjust_mat = math3d.matrix {s=1, r=rotate, t=pos}
+				end
+				rc.worldmat = math3d.mul(adjust_mat, rc.worldmat)
 			end
 			local p_rc = pe._rendercache
 			if p_rc.worldmat then
