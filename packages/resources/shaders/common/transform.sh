@@ -168,6 +168,10 @@ vec4 transform_screen_coord_to_ndc(mat4 m, vec2 apos)
 
 #ifdef ENABLE_CLIP_RECT
 uniform vec4 u_clip_rect[2];
+float check_dist(vec2 A, vec2 B, vec2 P)
+{
+	return (B.x - A.x) * (P.y - A.y) - (B.y - A.y) * (P.x - A.x);
+}
 void check_clip_rotated_rect(vec2 pixel)
 {
 	vec2 lt = u_clip_rect[0].xy;
@@ -175,21 +179,11 @@ void check_clip_rotated_rect(vec2 pixel)
 	vec2 lb = u_clip_rect[1].xy;
 	vec2 rb = u_clip_rect[1].zw;
 
-	vec2 tn = rb - rt;
-	vec2 rn = lt - rt;
-	vec2 bn = -tn;
-	vec2 ln = -rn;
-
-	vec2 tv = pixel - lt;
-	vec2 rv = pixel - rt;
-	vec2 bv = pixel - rb;
-	vec2 lv = pixel - lb;
-
 	if (any(bvec4(
-		dot(tv, tn) <= 0,
-		dot(rv, rn) <= 0,
-		dot(bv, bn) <= 0,
-		dot(lv, ln) <= 0)
+		check_dist(lt, rt, pixel) <= 0,
+		check_dist(rt, rb, pixel) <= 0,
+		check_dist(rb, lb, pixel) <= 0,
+		check_dist(lb, lt, pixel) <= 0)
 	)){
 		discard;
 	}

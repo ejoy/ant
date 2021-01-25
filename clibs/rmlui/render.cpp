@@ -132,6 +132,10 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
 
     mScissorRect.submitScissorRect(mEncoder, si);
     BGFX(encoder_submit)(mEncoder,mcontext->viewid, { (uint16_t)si.prog }, 0, BGFX_DISCARD_ALL);
+
+    // #ifdef _DEBUG
+    // mScissorRect.drawDebugScissorRect(mEncoder, mcontext->viewid, mcontext->shader.debug_draw.prog);
+    // #endif //_DEBUG
 }
 
 void Renderer::Begin(){
@@ -164,23 +168,39 @@ void Renderer::ScissorRect::updateTransform(const glm::mat4 &m){
 
     needShaderClipRect = glm::mat3(1.f) != glm::mat3(m);
 
-    glm::vec4 corners[] = {
-        {scissorRect.x, scissorRect.y, 0, 1},
-        {scissorRect.x + scissorRect.w, scissorRect.y, 0, 1},
-        {scissorRect.x, scissorRect.y + scissorRect.h, 0, 1},
-        {scissorRect.x + scissorRect.w, scissorRect.y + scissorRect.h, 0, 1},
-    };
+    if (needShaderClipRect){
+        glm::vec4 corners[] = {
+            {scissorRect.x, scissorRect.y, 0, 1},
+            {scissorRect.x + scissorRect.w, scissorRect.y, 0, 1},
+            {scissorRect.x, scissorRect.y + scissorRect.h, 0, 1},
+            {scissorRect.x + scissorRect.w, scissorRect.y + scissorRect.h, 0, 1},
+        };
 
-    for (auto &c : corners){
-        c = m * c;
-        c /= c.w;
+        for (auto &c : corners){
+            c = m * c;
+            c /= c.w;
+        }
+
+        rectVerteices[0].x = corners[0].x;rectVerteices[0].y = corners[0].y;
+        rectVerteices[0].z = corners[1].x;rectVerteices[0].w = corners[1].y;
+
+        rectVerteices[1].x = corners[2].x;rectVerteices[1].y = corners[2].y;
+        rectVerteices[1].z = corners[3].x;rectVerteices[1].w = corners[3].y;
+    } else {
+        const auto& v = m[3];
+        Rect r{
+            scissorRect.x + int(v.x),
+            scissorRect.x + int(v.y),
+            scissorRect.w, scissorRect.h
+        };
+
+        rectVerteices[0].x = r.x;rectVerteices[0].y = r.y;
+        rectVerteices[0].z = r.x+r.w;rectVerteices[0].w = r.y;
+
+        rectVerteices[1].x = r.x;rectVerteices[1].y = r.y+r.h;
+        rectVerteices[1].z = r.x+r.w;rectVerteices[1].w = r.y+r.h;
     }
 
-    rectVerteices[0].x = corners[0].x;rectVerteices[0].y = corners[0].y;
-    rectVerteices[0].z = corners[1].x;rectVerteices[0].w = corners[1].y;
-
-    rectVerteices[1].x = corners[2].x;rectVerteices[1].y = corners[2].y;
-    rectVerteices[1].z = corners[3].x;rectVerteices[1].w = corners[3].y;
 }
 
 Rect Renderer::ScissorRect::get(){
@@ -190,6 +210,41 @@ Rect Renderer::ScissorRect::get(){
         int(rectVerteices[1].z - rectVerteices[0].x),
         int(rectVerteices[1].w - rectVerteices[0].y)};
 }
+
+#ifdef _DEBUG
+void Renderer::ScissorRect::drawDebugScissorRect(bgfx_encoder_t *encoder, uint16_t viewid, uint16_t progid){
+    if (!needShaderClipRect)
+        return;
+
+    glm::mat4 m(1.f);
+    BGFX(encoder_set_transform)(encoder, &m, 1);
+
+    static bgfx_vertex_layout_t debugLayout;
+    static bool isinit = false;
+    if (!isinit){
+        isinit = true;
+        BGFX(vertex_layout_begin)(&debugLayout, BGFX_RENDERER_TYPE_COUNT);
+        BGFX(vertex_layout_add)(&debugLayout, BGFX_ATTRIB_POSITION, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
+        BGFX(vertex_layout_end)(&debugLayout);
+    }
+    
+    bgfx_transient_vertex_buffer_t tvb;
+    BGFX(alloc_transient_vertex_buffer)(&tvb, 4, &debugLayout);
+
+    memcpy(tvb.data, &rectVerteices, sizeof(glm::vec2)*4);
+    BGFX(encoder_set_transient_vertex_buffer)(encoder, 0, &tvb, 0, 4);
+
+    bgfx_transient_index_buffer_t tib;
+    BGFX(alloc_transient_index_buffer)(&tib, 6, false);
+
+    const uint16_t indices[] = {0, 1, 2, 1, 3, 2};
+    BGFX(encoder_set_transient_index_buffer)(encoder, &tib, 0, 6);
+
+    BGFX(encoder_set_state)(encoder, RENDER_STATE, 0);
+
+    BGFX(encoder_submit)(encoder, viewid, {progid}, 0, BGFX_DISCARD_ALL);
+}
+#endif //_DEBUG
 
 void Renderer::ScissorRect::submitScissorRect(bgfx_encoder_t* encoder, const shader_info &si){
     if (scissorRect.isVaild()){

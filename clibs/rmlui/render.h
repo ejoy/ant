@@ -89,6 +89,10 @@ private:
         void updateTransform(const glm::mat4 &m);
         void submitScissorRect(bgfx_encoder_t* encoder, const shader_info &si);
         Rect get();
+
+        #ifdef _DEBUG
+        void drawDebugScissorRect(bgfx_encoder_t *encoder, uint16_t viewid, uint16_t progid);
+        #endif //_DEBUG
     };
 
     ScissorRect mScissorRect;

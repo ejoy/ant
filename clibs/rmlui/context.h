@@ -71,6 +71,10 @@ struct shader {
     shader_info font_shadow_cr;
     shader_info image_cr;
 
+    #ifdef _DEBUG
+    shader_info debug_draw;
+    #endif //_DEBUG
+
     const shader_info& get_shader(ShaderType type) const {
         switch (type){
         case ST_font: return font;
