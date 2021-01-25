@@ -79,8 +79,8 @@ function rmlui_sys:init()
         local shaders = {}
         for k, v in pairs(def) do
             shaders[k] = assetmgr.load_fx(v)
-            v.setting["ENABLE_CLIP_PLANES"] = 1
-            shaders[k .. "_cp"] = assetmgr.load_fx(v)
+            v.setting["ENABLE_CLIP_RECT"] = 1
+            shaders[k .. "_cr"] = assetmgr.load_fx(v)
         end
         return shaders
     end

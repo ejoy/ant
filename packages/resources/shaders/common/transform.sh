@@ -166,4 +166,34 @@ vec4 transform_screen_coord_to_ndc(mat4 m, vec2 apos)
 	return map_screen_coord_to_ndc(p.xy);
 }
 
+#ifdef ENABLE_CLIP_RECT
+uniform vec4 u_clip_rect[2];
+void check_clip_rotated_rect(vec2 pixel)
+{
+	vec2 lt = u_clip_rect[0].xy;
+	vec2 rt = u_clip_rect[0].zw;
+	vec2 lb = u_clip_rect[1].xy;
+	vec2 rb = u_clip_rect[1].zw;
+
+	vec2 tn = rb - rt;
+	vec2 rn = lt - rt;
+	vec2 bn = -tn;
+	vec2 ln = -rn;
+
+	vec2 tv = pixel - lt;
+	vec2 rv = pixel - rt;
+	vec2 bv = pixel - rb;
+	vec2 lv = pixel - lb;
+
+	if (any(bvec4(
+		dot(tv, tn) <= 0,
+		dot(rv, rn) <= 0,
+		dot(bv, bn) <= 0,
+		dot(lv, ln) <= 0)
+	)){
+		discard;
+	}
+}
+#endif //ENABLE_CLIP_RECT
+
 #endif //__SHADER_TRANSFORMS_SH__

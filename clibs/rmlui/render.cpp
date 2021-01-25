@@ -65,39 +65,6 @@ is_font_tex(SDFFontEffect *fe) {
     return fe ? (fe->GetType() & FE_FontTex) != 0 : false;
 }
 
-bool Renderer::CalcScissorRectPlane(const glm::mat4 &transform, const Rect &rect, glm::vec4 planes[4]){
-    /*
-rect point:
-      p0
-    0 --- 1
- p3 |     | p1
-    3 --- 2
-      p2
-    */
-    glm::vec4 rectPoints[4] = {
-        {rect.x, rect.y, 0.f, 1.f},
-        {rect.x+rect.w, rect.y, 0.f, 1.f},
-        {rect.x+rect.w, rect.y+rect.h, 0.f, 1.f},
-        {rect.x, rect.y+rect.w, 0.f, 1.f},
-    };
-
-    // default normal
-    planes[0] = glm::vec4(0.f, 1.f, 0.f, 0.f);
-    planes[1] = glm::vec4(-1.f,0.f, 0.f, 0.f);
-    planes[2] = glm::vec4(0.f,-1.f, 0.f, 0.f);
-    planes[3] = glm::vec4(1.f, 1.f, 0.f, 0.f);
-
-    for (int ii=0; ii<4; ++ii){
-        rectPoints[ii]  = transform * rectPoints[ii];
-        planes[ii]      = transform * planes[ii];
-        const float dist= -glm::dot(rectPoints[ii], planes[ii]);
-        planes[ii].w    = dist;
-    }
-
-    const bool isNormalRect = rectPoints[0].x == rectPoints[1].x;
-    return isNormalRect;
-}
-
 void Renderer::UpdateViewRect(){
     const auto &vr = mcontext->viewrect;
     BGFX(set_view_scissor)(mcontext->viewid, vr.x, vr.y, vr.w, vr.h);
@@ -109,24 +76,6 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
                             Rml::TextureHandle texture) {
 
     BGFX(encoder_set_transform)(mEncoder, &mTransform, 1);
-    bool needDistancePlaneShader = false;
-    glm::vec4 planes[4];
-    if (mScissorRect.isVaild()){
-        if (CalcScissorRectPlane(mTransform, mScissorRect, planes)){
-            BGFX(encoder_set_scissor)(mEncoder, mScissorRect.x, mScissorRect.y, mScissorRect.w, mScissorRect.h);
-        } else {
-            needDistancePlaneShader = true;
-        }
-    } else {
-        BGFX(encoder_set_scissor_cached)(mEncoder, UINT16_MAX);
-    }
-
-    auto submit_clip_planes_uniforms = [=](const shader_info &si){
-        if (needDistancePlaneShader){
-            auto uniformIdx = si.find_uniform("u_clip_planes");
-            BGFX(encoder_set_uniform)(mEncoder, {uniformIdx}, planes, 4);
-        }
-    };
 
     bgfx_transient_vertex_buffer_t tvb;
     BGFX(alloc_transient_vertex_buffer)(&tvb, num_vertices, (bgfx_vertex_layout_t*)mcontext->layout);
@@ -142,14 +91,14 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
         shader::ShaderType st;
         if (fe){
             switch (fe->GetType()){
-            case FontEffectType(FE_Outline|FE_FontTex): st = needDistancePlaneShader ? shader::ST_font_outline_cp : shader::ST_font_outline; break;
-            case FontEffectType(FE_Shadow|FE_FontTex): st = needDistancePlaneShader ? shader::ST_font_shadow_cp : shader::ST_font_shadow; break;
-            case FontEffectType(FE_None|FE_FontTex): st = needDistancePlaneShader ? shader::ST_font_cp : shader::ST_font; break;
-            case FontEffectType::FE_None: st = needDistancePlaneShader ? shader::ST_image_cp : shader::ST_image; break;
+            case FontEffectType(FE_Outline|FE_FontTex): st = mScissorRect.needShaderClipRect ? shader::ST_font_outline_cr : shader::ST_font_outline; break;
+            case FontEffectType(FE_Shadow|FE_FontTex): st = mScissorRect.needShaderClipRect ? shader::ST_font_shadow_cr : shader::ST_font_shadow; break;
+            case FontEffectType(FE_None|FE_FontTex): st = mScissorRect.needShaderClipRect ? shader::ST_font_cr : shader::ST_font; break;
+            case FontEffectType::FE_None: st = mScissorRect.needShaderClipRect ? shader::ST_image_cr : shader::ST_image; break;
             default: st = shader::ST_count;
             }
         } else {
-            st = needDistancePlaneShader ? shader::ST_image_cp : shader::ST_image;
+            st = mScissorRect.needShaderClipRect ? shader::ST_image_cr : shader::ST_image;
         }
 
         return mcontext->shader.get_shader(st);
@@ -180,7 +129,8 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
             BGFX(encoder_set_uniform)(mEncoder, {v.uniform_idx}, v.value, 1);
         }
     }
-    submit_clip_planes_uniforms(si);
+
+    mScissorRect.submitScissorRect(mEncoder, si);
     BGFX(encoder_submit)(mEncoder,mcontext->viewid, { (uint16_t)si.prog }, 0, BGFX_DISCARD_ALL);
 }
 
@@ -193,41 +143,66 @@ void Renderer::Frame(){
     mIndexBuffer.Reset();
 }
 
-std::optional<glm::vec2> project(const glm::mat4x4& m, glm::vec2 pt) {
-    glm::vec4 points_v4[2] = { { pt.x, pt.y, -10, 1}, { pt.x, pt.y, 10, 1 } };
-    points_v4[0] = m * points_v4[0];
-    points_v4[1] = m * points_v4[1];
-    glm::vec3 points_v3[2] = {
-        points_v4[0] / points_v4[0].w,
-        points_v4[1] / points_v4[1].w
-    };
-    glm::vec3 ray = points_v3[1] - points_v3[0];
-    if (std::fabs(ray.z) > 1.0f) {
-        float t = -points_v3[0].z / ray.z;
-        glm::vec3 p = points_v3[0] + ray * t;
-        return glm::vec2(p.x, p.y);
+void Renderer::ScissorRect::updateScissorRect(const glm::mat4 &m, const Rml::Rect &clip){
+    if (clip.IsEmpty()) {
+        scissorRect.x = scissorRect.y = scissorRect.w = scissorRect.h = 0;
+    } else {
+        scissorRect.x = clip.left();
+        scissorRect.y = clip.top();
+        scissorRect.w = clip.width();
+        scissorRect.h = clip.height();
+
+        updateTransform(m);
     }
-    return {};
+}
+
+void Renderer::ScissorRect::updateTransform(const glm::mat4 &m){
+    if (!scissorRect.isVaild()){
+        needShaderClipRect = false;
+        return ;
+    }
+
+    needShaderClipRect = glm::mat3(1.f) != glm::mat3(m);
+
+    if (needShaderClipRect){
+        glm::vec4 corners[] = {
+            {scissorRect.x, scissorRect.y, 0, 1},
+            {scissorRect.x + scissorRect.w, scissorRect.y, 0, 1},
+            {scissorRect.x, scissorRect.y + scissorRect.h, 0, 1},
+            {scissorRect.x + scissorRect.w, scissorRect.y + scissorRect.h, 0, 1},
+        };
+
+        for (auto &c : corners){
+            c = m * c;
+            c /= c.w;
+        }
+
+        rectVerteices[0].x = corners[0].x;rectVerteices[0].y = corners[0].y;
+        rectVerteices[0].z = corners[1].x;rectVerteices[0].w = corners[1].y;
+
+        rectVerteices[1].x = corners[2].x;rectVerteices[1].y = corners[2].y;
+        rectVerteices[1].z = corners[3].x;rectVerteices[1].w = corners[3].y;
+    }
+}
+
+void Renderer::ScissorRect::submitScissorRect(bgfx_encoder_t* encoder, const shader_info &si){
+    if (scissorRect.isVaild()){
+        if (needShaderClipRect){
+            BGFX(encoder_set_scissor_cached)(encoder, UINT16_MAX);
+            auto uniformIdx = si.find_uniform("u_clip_rect");
+            if (uniformIdx != UINT16_MAX){
+                BGFX(encoder_set_uniform)(encoder, {uniformIdx}, rectVerteices, sizeof(rectVerteices)/sizeof(rectVerteices[0]));
+            }
+        } else {
+            BGFX(encoder_set_scissor)(encoder, scissorRect.x, scissorRect.y, scissorRect.w, scissorRect.h);
+        }
+    } else {
+        BGFX(encoder_set_scissor_cached)(encoder, UINT16_MAX);
+    }
 }
 
 void Renderer::SetScissorRegion(Rml::Rect const& clip) {
-    if (clip.IsEmpty()) {
-        mScissorRect.x = mScissorRect.y = mScissorRect.w = mScissorRect.h = 0;
-    }
-    else {
-        auto leftTop = project(mTransform, { clip.left(), clip.top() });
-        auto bottomRight = project(mTransform, { clip.right(), clip.bottom() });
-        if (!leftTop || !bottomRight) {
-            SetScissorRegion({});
-        }
-        else {
-            mScissorRect.x = leftTop->x;
-            mScissorRect.y = leftTop->y;
-            mScissorRect.w = bottomRight->x - leftTop->x;
-            mScissorRect.h = bottomRight->y - leftTop->y;
-        }
-    }
-    //BGFX(encoder_set_scissor)(mcontext->viewid, std::max(x, 0), std::max(y, 0), w, h);
+    mScissorRect.updateScissorRect(mTransform, clip);
 }
 
 static inline bool

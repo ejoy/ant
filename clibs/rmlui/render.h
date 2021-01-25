@@ -60,6 +60,7 @@ public:
     virtual void ReleaseTexture(Rml::TextureHandle texture) override;
     virtual void SetTransform(const glm::mat4x4& transform) override{
         mTransform = transform;
+        mScissorRect.updateTransform(mTransform);
     }
 
 public:
@@ -70,8 +71,8 @@ public:
 
 public:
     void UpdateViewRect();
-    bool CalcScissorRectPlane(const glm::mat4 &transform, const Rect &rect, glm::vec4 planes[4]);
-    void SubmitScissorRect();
+    // bool CalcScissorRectPlane(const glm::mat4 &transform, const Rect &rect, glm::vec4 planes[4]);
+    // void SubmitScissorRect();
 
 private:
     glm::mat4x4             mTransform;
@@ -79,5 +80,15 @@ private:
     TransientIndexBuffer32  mIndexBuffer;
 
     bgfx_encoder_t*         mEncoder;
-    Rect                    mScissorRect;
+
+    struct ScissorRect{
+        Rect scissorRect {0, 0, 0, 0};
+        glm::vec4 rectVerteices[2]{glm::vec4(0), glm::vec4(0)};
+        bool needShaderClipRect = false;
+        void updateScissorRect(const glm::mat4 &m, const Rml::Rect& clip);
+        void updateTransform(const glm::mat4 &m);
+        void submitScissorRect(bgfx_encoder_t* encoder, const shader_info &si);
+    };
+
+    ScissorRect mScissorRect;
 };

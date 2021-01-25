@@ -1,6 +1,8 @@
 $input v_color0, v_texcoord0
 #include <bgfx_shader.sh>
-#include "../../common/common.sh"
+#include "shaderlib.sh"
+
+#include "common/transform.sh"
 
 SAMPLER2D(s_tex, 0);
 
@@ -23,6 +25,10 @@ float smoothing_result(float dis, float mask, float range){
 
 void main()
 {
+	#ifdef ENABLE_CLIP_RECT
+	check_clip_rotated_rect(gl_FragCoord.xy);
+	#endif //ENABLE_CLIP_RECT
+
 	float dis = texture2D(s_tex, v_texcoord0).a;
 	vec4 color = v_color0;
 	float magicnum = 128.0;

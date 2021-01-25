@@ -54,10 +54,10 @@ struct shader {
         ST_font_shadow,
         ST_image,
 
-        ST_font_cp,
-        ST_font_outline_cp,
-        ST_font_shadow_cp,
-        ST_image_cp,
+        ST_font_cr,
+        ST_font_outline_cr,
+        ST_font_shadow_cr,
+        ST_image_cr,
         ST_count,
     };
     shader_info font;
@@ -65,11 +65,11 @@ struct shader {
     shader_info font_shadow;
     shader_info image;
 
-    //with distance planes
-    shader_info font_cp;
-    shader_info font_outline_cp;
-    shader_info font_shadow_cp;
-    shader_info image_cp;
+    //with clip rect
+    shader_info font_cr;
+    shader_info font_outline_cr;
+    shader_info font_shadow_cr;
+    shader_info image_cr;
 
     const shader_info& get_shader(ShaderType type) const {
         switch (type){
@@ -77,10 +77,10 @@ struct shader {
         case ST_font_outline: return font_outline;
         case ST_font_shadow: return font_shadow;
         case ST_image: return image;
-        case ST_font_cp: return font_cp;
-        case ST_font_outline_cp: return font_outline_cp;
-        case ST_font_shadow_cp: return font_shadow_cp;
-        case ST_image_cp: return image_cp;
+        case ST_font_cr: return font_cr;
+        case ST_font_outline_cr: return font_outline_cr;
+        case ST_font_shadow_cr: return font_shadow_cr;
+        case ST_image_cr: return image_cr;
         default: assert(false && "invalid type"); return font;
         }
     }
