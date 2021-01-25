@@ -40,7 +40,7 @@
 #include "../Include/RmlUi/PropertyIdSet.h"
 #include "../Include/RmlUi/StyleSheet.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
-#include "../Include/RmlUi/TransformPrimitive.h"
+#include "../Include/RmlUi/Transform.h"
 #include "../Include/RmlUi/ElementText.h"
 #include "ElementDefinition.h"
 #include "PropertiesIterator.h"

@@ -27,7 +27,6 @@
  */
 
 #include "PropertyParserTransform.h"
-#include "../Include/RmlUi/TransformPrimitive.h"
 #include "../Include/RmlUi/Transform.h"
 #include <string.h>
 

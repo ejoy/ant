@@ -265,9 +265,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\Texture.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\TransformPrimitive.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Tween.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -631,9 +628,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Transform.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\TransformPrimitive.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Tween.h">

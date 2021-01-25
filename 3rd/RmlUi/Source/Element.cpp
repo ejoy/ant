@@ -38,10 +38,9 @@
 #include "../Include/RmlUi/PropertyIdSet.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
-#include "../Include/RmlUi/TransformPrimitive.h"
+#include "../Include/RmlUi/Transform.h"
 #include "../Include/RmlUi/RenderInterface.h"
 #include "../Include/RmlUi/StreamMemory.h"
-#include "../Include/RmlUi/Transform.h"
 #include "Clock.h"
 #include "DataModel.h"
 #include "ElementAnimation.h"
@@ -1332,7 +1331,7 @@ void Element::UpdateTransform() {
 		if (computed.transform_origin_y.type == Style::TransformOrigin::Percentage) {
 			origin.y *= metrics.frame.size.h * 0.01f;
 		}
-		new_transform = glm::translate(origin) * TransformGetMatrix(*computed.transform, *this) * glm::translate(-origin);
+		new_transform = glm::translate(origin) * computed.transform->GetMatrix(*this) * glm::translate(-origin);
 	}
 	new_transform = glm::translate(new_transform, glm::vec3(metrics.frame.origin.x, metrics.frame.origin.y, 0));
 	if (parent) {

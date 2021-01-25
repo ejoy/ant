@@ -183,7 +183,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\SystemInterface.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Texture.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Transform.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\TransformPrimitive.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Tween.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\TypeConverter.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\URL.cpp" />
@@ -262,7 +261,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Texture.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Traits.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Transform.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\TransformPrimitive.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Tween.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\TypeConverter.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Types.h" />
