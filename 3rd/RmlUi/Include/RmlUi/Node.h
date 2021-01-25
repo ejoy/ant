@@ -28,9 +28,6 @@ namespace Rml {
 		Element* GetParentNode() const;
 		void DirtyLayout();
 
-		void DirtyTransform();
-		const glm::mat4x4& GetTransform() const;
-
 		virtual void OnRender() = 0;
 		virtual void OnChange(const PropertyIdSet& properties) = 0;
 

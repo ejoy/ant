@@ -55,7 +55,6 @@ protected:
 	float GetOpacity();
 
 private:
-	void UpdateTransform();
 	void UpdateTextEffects();
 	void UpdateGeometry(const FontFaceHandle font_face_handle);
 	void UpdateDecoration(const FontFaceHandle font_face_handle);
