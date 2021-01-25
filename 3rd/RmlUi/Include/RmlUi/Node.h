@@ -36,7 +36,5 @@ namespace Rml {
 		Layout layout;
 		Layout::Metrics metrics;
 		Element* parent = nullptr;
-		glm::mat4x4 transform;
-		bool dirty_transform = false;
     };
 }

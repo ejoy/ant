@@ -434,6 +434,9 @@ protected:
 
 	float font_size = 16.f;
 
+	glm::mat4x4 transform;
+	bool dirty_transform = false;
+
 	friend class Rml::ElementStyle;
 	friend class Rml::Document;
 };
