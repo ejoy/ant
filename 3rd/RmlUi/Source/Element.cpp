@@ -137,8 +137,7 @@ void Element::OnRender() {
 	for (; i < stacking_context.size() && stacking_context[i]->GetZIndex() < 0; ++i) {
 		stacking_context[i]->OnRender();
 	}
-	GetRenderInterface()->SetTransform(transform);
-	SetClipRegion();
+	SetRednerStatus();
 	if (geometry_border) {
 		geometry_border->Render();
 	}
@@ -1453,13 +1452,19 @@ Element* Element::GetElementAtPoint(Point point, const Element* ignore_element) 
 	return nullptr;
 }
 
-void Element::SetClipRegion() {
+void Element::SetRednerStatus() {
+	auto render = GetRenderInterface();
+	render->SetTransform(transform);
 	if (IsClippingEnabled()) {
-		GetRenderInterface()->SetScissorRegion({ {}, GetMetrics().frame.size });
+		render->SetScissorRegion({ {}, GetMetrics().frame.size });
 	}
 	else {
-		GetRenderInterface()->SetScissorRegion({});
+		render->SetScissorRegion({});
 	}
+}
+
+void Element::DirtyTransform() {
+	dirty_transform = true;
 }
 
 } // namespace Rml

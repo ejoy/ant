@@ -345,7 +345,7 @@ public:
 	void UpdateLayout();
 	void SetParent(Element* parent);
 	Element* GetElementAtPoint(Point point, const Element* ignore_element = nullptr);
-	void SetClipRegion();
+	void SetRednerStatus();
 
 protected:
 	void Update();
@@ -369,7 +369,8 @@ protected:
 	void UpdateTransform();
 	void UpdatePerspective();
 	void UpdateGeometry();
-	
+	void DirtyTransform();
+
 	/// Start an animation, replacing any existing animations of the same property name. If start_value is null, the element's current value is used.
 	void StartAnimation(PropertyId property_id, const Property * start_value, int num_iterations, bool alternate_direction, float delay, bool initiated_by_animation_property);
 
@@ -432,6 +433,9 @@ protected:
 	Geometry::Path padding_edge;
 
 	float font_size = 16.f;
+
+	glm::mat4x4 transform;
+	bool dirty_transform = false;
 
 	friend class Rml::ElementStyle;
 	friend class Rml::Document;

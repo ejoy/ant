@@ -83,27 +83,16 @@ float ElementText::GetOpacity() {
 	return parent->GetOpacity();
 }
 
-void ElementText::UpdateTransform() {
-	if (!dirty_transform)
-		return;
-	dirty_transform = false;
-
-	transform = glm::translate(parent->GetTransform(), glm::vec3(metrics.frame.origin.x, metrics.frame.origin.y, 0));
-}
-
 void ElementText::OnRender() {
 	FontFaceHandle font_face_handle = GetFontFaceHandle();
 	if (font_face_handle == 0)
 		return;
 
-	UpdateTransform();
 	UpdateTextEffects();
 	UpdateGeometry(font_face_handle);
 	UpdateDecoration(font_face_handle);
 
-	GetRenderInterface()->SetTransform(parent->GetTransform());
-	parent->SetClipRegion();
-	GetRenderInterface()->SetTransform(transform);
+	parent->SetRednerStatus();
 
 	if (decoration_under) {
 		decoration.Render();
@@ -235,7 +224,7 @@ void ElementText::ClearLines() {
 }
 
 void ElementText::AddLine(const Point& position, const String& line) {
-	lines.push_back(Line(line, position));
+	lines.push_back(Line(line, metrics.frame.origin + position));
 	dirty_geometry = true;
 }
 
