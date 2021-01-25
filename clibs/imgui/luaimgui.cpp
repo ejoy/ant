@@ -1718,7 +1718,7 @@ wSequencer(lua_State* L) {
 	auto init_clip_ranges = [L](ImSequencer::anim_detail& item) {
 		item.clip_rangs.clear();
 		if (lua_getfield(L, -1, "clips") == LUA_TTABLE) {
-			int len = lua_rawlen(L, -1);
+			int len = (int)lua_rawlen(L, -1);
 			for (int index = 0; index < len; index++) {
 				lua_pushinteger(L, index + 1);
 				lua_gettable(L, -2);
@@ -1732,10 +1732,10 @@ wSequencer(lua_State* L) {
 					lua_pop(L, 1);
 					if (lua_getfield(L, -1, "range") == LUA_TTABLE) {
 						lua_geti(L, -1, 1);
-						start = lua_tointeger(L, -1);
+						start = (int)lua_tointeger(L, -1);
 						lua_pop(L, 1);
 						lua_geti(L, -1, 2);
-						end = lua_tointeger(L, -1);
+						end = (int)lua_tointeger(L, -1);
 						lua_pop(L, 1);
 						
 					}
@@ -3217,7 +3217,6 @@ static struct enum_pair eTableFlags[] = {
 	ENUM(ImGuiTableFlags, Reorderable),
 	ENUM(ImGuiTableFlags, Hideable),
 	ENUM(ImGuiTableFlags, Sortable),
-	ENUM(ImGuiTableFlags, MultiSortable),
 	ENUM(ImGuiTableFlags, NoSavedSettings),
 	ENUM(ImGuiTableFlags, ContextMenuInBody),
 	ENUM(ImGuiTableFlags, RowBg),
@@ -3232,10 +3231,11 @@ static struct enum_pair eTableFlags[] = {
 	ENUM(ImGuiTableFlags, Borders),
 	ENUM(ImGuiTableFlags, NoBordersInBody),
 	ENUM(ImGuiTableFlags, NoBordersInBodyUntilResize),
-	ENUM(ImGuiTableFlags, ColumnsWidthStretch),
-	ENUM(ImGuiTableFlags, ColumnsWidthFixed),
-	ENUM(ImGuiTableFlags, SameWidths),
-	ENUM(ImGuiTableFlags, NoHeadersWidth),
+	ENUM(ImGuiTableFlags, SizingFixedFit),
+	ENUM(ImGuiTableFlags, SizingFixedSame),
+	ENUM(ImGuiTableFlags, SizingStretchProp),
+	ENUM(ImGuiTableFlags, SizingStretchSame),
+	ENUM(ImGuiTableFlags, NoHostExtendX),
 	ENUM(ImGuiTableFlags, NoHostExtendY),
 	ENUM(ImGuiTableFlags, NoKeepColumnsVisible),
 	ENUM(ImGuiTableFlags, PreciseWidths),
@@ -3245,6 +3245,8 @@ static struct enum_pair eTableFlags[] = {
 	ENUM(ImGuiTableFlags, NoPadInnerX),
 	ENUM(ImGuiTableFlags, ScrollX),
 	ENUM(ImGuiTableFlags, ScrollY),
+	ENUM(ImGuiTableFlags, SortMulti),
+	ENUM(ImGuiTableFlags, SortTristate),
 	{ NULL, 0 },
 };
 
@@ -3260,7 +3262,6 @@ static struct enum_pair eTableColumnFlags[] = {
 	ENUM(ImGuiTableColumnFlags, DefaultSort),
 	ENUM(ImGuiTableColumnFlags, WidthStretch),
 	ENUM(ImGuiTableColumnFlags, WidthFixed),
-	ENUM(ImGuiTableColumnFlags, WidthAutoResize),
 	ENUM(ImGuiTableColumnFlags, NoResize),
 	ENUM(ImGuiTableColumnFlags, NoReorder),
 	ENUM(ImGuiTableColumnFlags, NoHide),

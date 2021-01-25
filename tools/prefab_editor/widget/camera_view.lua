@@ -172,7 +172,7 @@ function CameraView:show()
         if #frames > 0 then
             imgui.cursor.Separator()
             if imgui.table.Begin("CameraViewtable", 2, imgui.flags.Table {'Resizable', 'ScrollY'}) then
-                imgui.table.SetupColumn("FrameIndex", imgui.flags.TableColumn {'NoSort', 'WidthAutoResize'}, -1, 0)
+                imgui.table.SetupColumn("FrameIndex", imgui.flags.TableColumn {'NoSort', 'WidthFixed', 'NoResize'}, -1, 0)
                 imgui.table.SetupColumn("Duration", imgui.flags.TableColumn {'NoSort', 'WidthStretch'}, -1, 1)
                 imgui.table.HeadersRow()
                 for i, v in ipairs(frames) do
