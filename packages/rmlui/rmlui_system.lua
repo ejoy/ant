@@ -85,6 +85,10 @@ function rmlui_sys:init()
         return shaders
     end
     local shaders = create_shaders(shader_defines)
+    shaders.debug_draw = assetmgr.load_fx{
+        vs = "/pkg/ant.resources/shaders/ui/vs_debug.sc",
+        fs = "/pkg/ant.resources/shaders/ui/fs_debug.sc",
+    }
 
     rmlui.init {
 		viewid = vid,
