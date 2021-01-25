@@ -184,7 +184,11 @@ void Renderer::ScissorRect::updateTransform(const glm::mat4 &m){
 }
 
 Rect Renderer::ScissorRect::get(){
-    return Rect{rectVerteices[0].x, rectVerteices[0].y, rectVerteices[3].x - rectVerteices[0].x, rectVerteices[3].y - rectVerteices[0].y};
+    return Rect{
+        int(rectVerteices[0].x),
+        int(rectVerteices[0].y),
+        int(rectVerteices[1].z - rectVerteices[0].x),
+        int(rectVerteices[1].w - rectVerteices[0].y)};
 }
 
 void Renderer::ScissorRect::submitScissorRect(bgfx_encoder_t* encoder, const shader_info &si){
