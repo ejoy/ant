@@ -164,25 +164,27 @@ void Renderer::ScissorRect::updateTransform(const glm::mat4 &m){
 
     needShaderClipRect = glm::mat3(1.f) != glm::mat3(m);
 
-    if (needShaderClipRect){
-        glm::vec4 corners[] = {
-            {scissorRect.x, scissorRect.y, 0, 1},
-            {scissorRect.x + scissorRect.w, scissorRect.y, 0, 1},
-            {scissorRect.x, scissorRect.y + scissorRect.h, 0, 1},
-            {scissorRect.x + scissorRect.w, scissorRect.y + scissorRect.h, 0, 1},
-        };
+    glm::vec4 corners[] = {
+        {scissorRect.x, scissorRect.y, 0, 1},
+        {scissorRect.x + scissorRect.w, scissorRect.y, 0, 1},
+        {scissorRect.x, scissorRect.y + scissorRect.h, 0, 1},
+        {scissorRect.x + scissorRect.w, scissorRect.y + scissorRect.h, 0, 1},
+    };
 
-        for (auto &c : corners){
-            c = m * c;
-            c /= c.w;
-        }
-
-        rectVerteices[0].x = corners[0].x;rectVerteices[0].y = corners[0].y;
-        rectVerteices[0].z = corners[1].x;rectVerteices[0].w = corners[1].y;
-
-        rectVerteices[1].x = corners[2].x;rectVerteices[1].y = corners[2].y;
-        rectVerteices[1].z = corners[3].x;rectVerteices[1].w = corners[3].y;
+    for (auto &c : corners){
+        c = m * c;
+        c /= c.w;
     }
+
+    rectVerteices[0].x = corners[0].x;rectVerteices[0].y = corners[0].y;
+    rectVerteices[0].z = corners[1].x;rectVerteices[0].w = corners[1].y;
+
+    rectVerteices[1].x = corners[2].x;rectVerteices[1].y = corners[2].y;
+    rectVerteices[1].z = corners[3].x;rectVerteices[1].w = corners[3].y;
+}
+
+Rect Renderer::ScissorRect::get(){
+    return Rect{rectVerteices[0].x, rectVerteices[0].y, rectVerteices[3].x - rectVerteices[0].x, rectVerteices[3].y - rectVerteices[0].y};
 }
 
 void Renderer::ScissorRect::submitScissorRect(bgfx_encoder_t* encoder, const shader_info &si){
@@ -194,7 +196,8 @@ void Renderer::ScissorRect::submitScissorRect(bgfx_encoder_t* encoder, const sha
                 BGFX(encoder_set_uniform)(encoder, {uniformIdx}, rectVerteices, sizeof(rectVerteices)/sizeof(rectVerteices[0]));
             }
         } else {
-            BGFX(encoder_set_scissor)(encoder, scissorRect.x, scissorRect.y, scissorRect.w, scissorRect.h);
+            auto r = get();
+            BGFX(encoder_set_scissor)(encoder, r.x, r.y, r.w, r.h);
         }
     } else {
         BGFX(encoder_set_scissor_cached)(encoder, UINT16_MAX);

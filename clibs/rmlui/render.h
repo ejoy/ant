@@ -88,6 +88,7 @@ private:
         void updateScissorRect(const glm::mat4 &m, const Rml::Rect& clip);
         void updateTransform(const glm::mat4 &m);
         void submitScissorRect(bgfx_encoder_t* encoder, const shader_info &si);
+        Rect get();
     };
 
     ScissorRect mScissorRect;
