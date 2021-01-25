@@ -41,6 +41,29 @@ lua_pushstdstring(lua_State* L, const std::string& str) {
 }
 
 namespace {
+	
+struct EventListener final : public Rml::EventListener {
+	EventListener(lua_State* L_, int idx)
+		: L(L_)
+		, ref(LUA_NOREF)
+	{
+		luaL_checktype(L, idx, LUA_TFUNCTION);
+		lua_pushvalue(L, idx);
+		ref = get_lua_plugin()->ref(L);
+	}
+	~EventListener() {
+		get_lua_plugin()->unref(ref);
+	}
+	void OnDetach(Rml::Element* element) override { delete this; }
+	void ProcessEvent(Rml::Event& event) override {
+		luabind::invoke(L, [&]() {
+			lua_pushevent(L, event);
+			get_lua_plugin()->callref(ref, 1, 0);
+		});
+	}
+	lua_State* L;
+	int ref;
+};
 
 static int
 lContextLoadDocument(lua_State* L) {
@@ -105,6 +128,13 @@ lContextUpdateSize(lua_State *L){
 }
 
 static int
+lDocumentAddEventListener(lua_State* L) {
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
+	doc->body->AddEventListener(lua_checkstdstring(L, 2), new EventListener(L, 3), lua_toboolean(L, 4));
+	return 0;
+}
+
+static int
 lDocumentClose(lua_State* L) {
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
 	doc->Close();
@@ -147,29 +177,6 @@ lDocumentShow(lua_State* L) {
 	doc->Show();
 	return 0;
 }
-
-struct EventListener final : public Rml::EventListener {
-	EventListener(lua_State* L_, int idx)
-		: L(L_)
-		, ref(LUA_NOREF)
-	{
-		luaL_checktype(L, idx, LUA_TFUNCTION);
-		lua_pushvalue(L, idx);
-		ref = get_lua_plugin()->ref(L);
-	}
-	~EventListener() {
-		get_lua_plugin()->unref(ref);
-	}
-	void OnDetach(Rml::Element* element) override { delete this; }
-	void ProcessEvent(Rml::Event& event) override {
-		luabind::invoke(L, [&]() {
-			lua_pushevent(L, event);
-			get_lua_plugin()->callref(ref, 1, 0);
-		});
-	}
-	lua_State* L;
-	int ref;
-};
 
 static int
 lElementAddEventListener(lua_State* L) {
@@ -369,6 +376,7 @@ lua_plugin_apis(lua_State *L) {
 		{ "DataModelSet", lDataModelSet },
 		{ "DataModelDirty", lDataModelDirty },
 		{ "DocumentClose", lDocumentClose },
+		{ "DocumentAddEventListener", lDocumentAddEventListener },
 		{ "DocumentDispatchEvent", lDocumentDispatchEvent },
 		{ "DocumentGetContext", lDocumentGetContext },
 		{ "DocumentGetElementById", lDocumentGetElementById },
