@@ -86,7 +86,6 @@ PASS_THROUGH(double);
 PASS_THROUGH(bool);
 PASS_THROUGH(char);
 PASS_THROUGH(Character);
-PASS_THROUGH(Colourf);
 PASS_THROUGH(Colourb);
 PASS_THROUGH(String);
 
@@ -238,7 +237,6 @@ public: \
 	} \
 }
 
-STRING_VECTOR_CONVERTER(Colourf, float, 4);
 STRING_VECTOR_CONVERTER(Colourb, byte, 4);
 
 /////////////////////////////////////////////////
@@ -355,7 +353,6 @@ public: \
 	} \
 }
 
-VECTOR_STRING_CONVERTER(Colourf, float, 4);
 VECTOR_STRING_CONVERTER(Colourb, byte, 4);
 #undef PASS_THROUGH
 #undef BASIC_CONVERTER

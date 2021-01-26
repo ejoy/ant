@@ -151,9 +151,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\Math.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Memory.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\ObserverPtr.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -387,9 +384,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\IdNameMap.h">
       <Filter>source</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Memory.h">
-      <Filter>source</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\PluginRegistry.h">
       <Filter>source</Filter>
     </ClInclude>
@@ -466,9 +460,6 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\StyleSheetParser.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Utilities.h">
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerBody.h">

@@ -60,7 +60,6 @@ public:
 		INT = 'i',
 		INT64 = 'I',
 		STRING = 's',
-		COLOURF = 'g',
 		COLOURB = 'h',
 		TRANSFORMPTR = 't',
 		TRANSITIONLIST = 'T',
@@ -125,7 +124,6 @@ private:
 	void Set(const int64_t value);
 	void Set(const char* value);
 	void Set(void* value);
-	void Set(const Colourf& value);
 	void Set(const Colourb& value);
 	void Set(const String& value);
 	void Set(String&& value);

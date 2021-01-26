@@ -143,7 +143,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\Layout.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Log.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Math.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Memory.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Node.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\ObserverPtr.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Plugin.cpp" />
@@ -285,7 +284,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\EventSpecification.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\FileInterfaceDefault.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\IdNameMap.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Memory.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\PluginRegistry.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\Pool.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\PropertiesIterator.h" />
@@ -312,7 +310,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\StyleSheetNodeSelectorOnlyChild.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\StyleSheetNodeSelectorOnlyOfType.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\StyleSheetParser.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Utilities.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerBody.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerDefault.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerHead.h" />

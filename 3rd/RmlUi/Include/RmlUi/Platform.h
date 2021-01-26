@@ -46,13 +46,6 @@
 	#define RMLUI_DEBUG
 #endif
 
-#if defined __LP64__ || defined _M_X64 || defined _WIN64 || defined __MINGW64__ || defined _LP64
-    #define RMLUI_ARCH_64
-#else
-    #define RMLUI_ARCH_32
-#endif
-
-
 #if defined(RMLUI_PLATFORM_WIN32) && !defined(__MINGW32__)
 	// declaration of 'identifier' hides class member
 	#pragma warning(disable : 4458)
@@ -89,42 +82,6 @@
 #  define RMLUI_UNUSED_PARAMETER(x) UNUSED_ ## x
 #endif
 
-// RMLUI_UNUSED_ASSERT_PARAMETERS wraps method parameters which are not used in the method other than
-// by a RMLUI_ASSERT check.  This safely deals with debug versus release mode configurations
-// and will warn if the parameter starts being used when compiled with GCC
-#ifdef RMLUI_DEBUG
-   // In this case, the parameter is used by a RMLUI_ASSERT test, so we just pass through as is
-#  define RMLUI_UNUSED_ASSERT_PARAMETER(x) x
-#  define RMLUI_UNUSED_ASSERT(x)
-#else
-   // If not in DEBUG builds, this parameter is unused, mark it as such
-#  if defined __llvm__
-#    define RMLUI_UNUSED_ASSERT_PARAMETER(x) UNUSED_ ## x __attribute__((unused))
-#    define RMLUI_UNUSED_ASSERT(x)
-#  elif defined __GNUC__
-#    define RMLUI_UNUSED_ASSERT_PARAMETER(x) UNUSED_ ## x __attribute__((__unused__))
-#    define RMLUI_UNUSED_ASSERT(x)
-#  else
-#    define RMLUI_UNUSED_ASSERT_PARAMETER(x) UNUSED_ ## x
-#    define RMLUI_UNUSED_ASSERT(x) (void)(UNUSED_ ## x)
-#  endif
-#endif
-
-// Wraps functions which are not referenced or exported to avoid compiler warnings
-#if defined __llvm__
-#  define RMLUI_UNUSED_FUNCTION(x) __attribute__((unused)) UNUSED_ ## x
-#elif defined __GNUC__
-#  define RMLUI_UNUSED_FUNCTION(x) __attribute__((__unused__)) UNUSED_ ## x
-#else
-#  define RMLUI_UNUSED_FUNCTION(x) UNUSED_ ## x
-#endif
-
-// Squelchs warnings for unused enums in switch statements, this should only be used for special values
-// that are known to NEVER be used.
-#define RMLUI_UNUSED_SWITCH_ENUM(x) \
-  case x: \
-    RMLUI_ERRORMSG("Switch case for unhandled ENUM has been hit!  This shouldn't happen!  ENUM Name: " # x); \
-    break;
 
 // Tell the compiler of printf-like functions, warns on incorrect usage.
 #if defined __MINGW32__

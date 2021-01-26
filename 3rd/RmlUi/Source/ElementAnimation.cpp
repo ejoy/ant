@@ -36,25 +36,18 @@
 
 namespace Rml {
 
-static Colourf ColourToLinearSpace(Colourb c)
-{
-	Colourf result;
-	// Approximate inverse sRGB function
-	result.red = Math::SquareRoot((float)c.red / 255.f);
-	result.green = Math::SquareRoot((float)c.green / 255.f);
-	result.blue = Math::SquareRoot((float)c.blue / 255.f);
-	result.alpha = (float)c.alpha / 255.f;
-	return result;
+static byte InterpolateColor(byte t0, byte t1, float alpha) {
+	float f0 = Math::SquareRoot((float)t0 / 255.f);
+	float f1 = Math::SquareRoot((float)t1 / 255.f);
+	float f  = f0 * (1.0f - alpha) + f1 * alpha;
+	return (byte)Math::Clamp(f * f * 255.f, 0.0f, 255.f);
 }
 
-static Colourb ColourFromLinearSpace(Colourf c)
-{
-	Colourb result;
-	result.red = (byte)Math::Clamp(c.red*c.red*255.f, 0.0f, 255.f);
-	result.green = (byte)Math::Clamp(c.green*c.green*255.f, 0.0f, 255.f);
-	result.blue = (byte)Math::Clamp(c.blue*c.blue*255.f, 0.0f, 255.f);
-	result.alpha = (byte)Math::Clamp(c.alpha*255.f, 0.0f, 255.f);
-	return result;
+static byte InterpolateAlphaColor(byte t0, byte t1, float alpha) {
+	float f0 = (float)t0 / 255.f;
+	float f1 = (float)t1 / 255.f;
+	float f = f0 * (1.0f - alpha) + f1 * alpha;
+	return (byte)Math::Clamp(f * 255.f, 0.0f, 255.f);
 }
 
 static Property InterpolateProperties(const Property& p0, const Property& p1, float alpha, Element& element)
@@ -72,12 +65,14 @@ static Property InterpolateProperties(const Property& p0, const Property& p1, fl
 
 	if (p0.unit == Property::COLOUR && p1.unit == Property::COLOUR)
 	{
-		Colourf c0 = ColourToLinearSpace(p0.value.Get<Colourb>());
-		Colourf c1 = ColourToLinearSpace(p1.value.Get<Colourb>());
-
-		Colourf c = c0 * (1.0f - alpha) + c1 * alpha;
-
-		return Property{ ColourFromLinearSpace(c), Property::COLOUR };
+		Colourb c0 = p0.value.Get<Colourb>();
+		Colourb c1 = p1.value.Get<Colourb>();
+		Colourb c;
+		c.red = InterpolateColor(c0.red, c1.red, alpha);
+		c.green = InterpolateColor(c0.green, c1.green, alpha);
+		c.blue = InterpolateColor(c0.blue, c1.blue, alpha);
+		c.alpha = InterpolateAlphaColor(c0.alpha, c1.alpha, alpha);
+		return Property{ c, Property::COLOUR };
 	}
 
 	if (p0.unit == Property::TRANSFORM && p1.unit == Property::TRANSFORM)

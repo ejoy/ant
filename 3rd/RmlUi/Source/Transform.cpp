@@ -1,6 +1,5 @@
 #include "../Include/RmlUi/Transform.h"
 #include "../Include/RmlUi/Element.h"
-#include "../Include/RmlUi/TypeConverter.h"
 #include "../Include/RmlUi/Math.h"
 #include "ElementStyle.h"
 #include <glm/gtx/transform.hpp>

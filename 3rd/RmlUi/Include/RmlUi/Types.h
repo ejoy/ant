@@ -53,8 +53,6 @@ enum class Character : char32_t { Null, Replacement = 0xfffd };
 
 namespace Rml {
 
-// Color and linear algebra
-using Colourf = Colour< float, 1 >;
 using Colourb = Colour< byte, 255 >;
 
 // Common classes
