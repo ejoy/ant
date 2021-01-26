@@ -158,7 +158,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\PropertyParserString.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\PropertyParserTransform.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\PropertySpecification.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\RenderInterface.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Stream.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\StreamFile.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\StreamMemory.cpp" />

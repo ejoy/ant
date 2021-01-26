@@ -130,6 +130,7 @@ void Element::UpdateProperties() {
 void Element::OnRender() {
 	UpdateTransform();
 	UpdatePerspective();
+	UpdateClip();
 	UpdateGeometry();
 
 	size_t i = 0;
@@ -754,10 +755,6 @@ String Element::GetEventDispatcherSummary() const {
 
 DataModel* Element::GetDataModel() const {
 	return data_model;
-}
-
-bool Element::IsClippingEnabled() {
-	return GetLayout().GetOverflow() != Layout::Overflow::Visible;
 }
 
 void Element::OnAttributeChange(const ElementAttributes& changed_attributes)
@@ -1451,19 +1448,63 @@ Element* Element::GetElementAtPoint(Point point, const Element* ignore_element) 
 	return nullptr;
 }
 
+void Element::UpdateClip() {
+	if (!dirty_clip)
+		return;
+	dirty_clip = false;
+
+	if (GetLayout().GetOverflow() == Layout::Overflow::Visible) {
+		clip_type = Clip::None;
+		return;
+	}
+	Size size = GetMetrics().frame.size;
+	if (size.IsEmpty()) {
+		clip_type = Clip::None;
+		return;
+	}
+	Rect scissorRect{ {}, size };
+	glm::vec4 corners[] = {
+		{scissorRect.left(),  scissorRect.top(),    0, 1},
+		{scissorRect.right(), scissorRect.top(),    0, 1},
+		{scissorRect.right(), scissorRect.bottom(), 0, 1},
+		{scissorRect.left(),  scissorRect.bottom(), 0, 1},
+	};
+	for (auto& c : corners) {
+		c = transform * c;
+		c /= c.w;
+	}
+	if (corners[0].x == corners[3].x
+		&& corners[0].y == corners[1].y
+		&& corners[2].x == corners[1].x
+		&& corners[2].y == corners[3].y
+	) {
+		clip_type = Clip::Scissor;
+		clip.scissor.x = std::floor(corners[0].x);
+		clip.scissor.y = std::floor(corners[0].y);
+		clip.scissor.z = std::ceil(corners[2].x - clip.scissor.x);
+		clip.scissor.w = std::ceil(corners[2].y - clip.scissor.y);
+		return;
+	}
+	clip_type = Clip::Shader;
+	clip.shader[0].x = corners[0].x; clip.shader[0].y = corners[0].y;
+	clip.shader[0].z = corners[1].x; clip.shader[0].w = corners[1].y;
+	clip.shader[1].z = corners[2].x; clip.shader[1].w = corners[2].y;
+	clip.shader[1].x = corners[3].x; clip.shader[1].y = corners[3].y;
+}
+
 void Element::SetRednerStatus() {
 	auto render = GetRenderInterface();
 	render->SetTransform(transform);
-	if (IsClippingEnabled()) {
-		render->SetScissorRegion({ {}, GetMetrics().frame.size });
-	}
-	else {
-		render->SetScissorRegion({});
+	switch (clip_type) {
+	case Clip::None:    render->SetClipRect();             break;
+	case Clip::Scissor: render->SetClipRect(clip.scissor); break;
+	case Clip::Shader:  render->SetClipRect(clip.shader);  break;
 	}
 }
 
 void Element::DirtyTransform() {
 	dirty_transform = true;
+	dirty_clip = true;
 }
 
 } // namespace Rml

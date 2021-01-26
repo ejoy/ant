@@ -330,9 +330,6 @@ public:
 	/// Returns the data model of this element.
 	DataModel* GetDataModel() const;
 	//@}
-	
-	/// Returns true if this element has clipping enabled
-	bool IsClippingEnabled();
 
 	/// Called when an emitted event propagates to this element, for event types with default actions.
 	/// Note: See 'EventSpecification' for the events that call this function and during which phase.
@@ -370,6 +367,7 @@ protected:
 	void UpdatePerspective();
 	void UpdateGeometry();
 	void DirtyTransform();
+	void UpdateClip();
 
 	/// Start an animation, replacing any existing animations of the same property name. If start_value is null, the element's current value is used.
 	void StartAnimation(PropertyId property_id, const Property * start_value, int num_iterations, bool alternate_direction, float delay, bool initiated_by_animation_property);
@@ -436,6 +434,17 @@ protected:
 
 	glm::mat4x4 transform;
 	bool dirty_transform = false;
+
+	bool dirty_clip = false;
+	enum class Clip {
+		None,
+		Scissor,
+		Shader,
+	} clip_type = Clip::None;
+	union {
+		glm::u16vec4 scissor;
+		glm::vec4 shader[2];
+	} clip;
 
 	friend class Rml::ElementStyle;
 	friend class Rml::Document;

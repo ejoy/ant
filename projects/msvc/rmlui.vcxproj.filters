@@ -193,9 +193,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\PropertySpecification.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\RenderInterface.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Stream.cpp">
       <Filter>source</Filter>
     </ClCompile>
