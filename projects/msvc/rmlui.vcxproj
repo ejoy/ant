@@ -326,7 +326,6 @@
     <ClInclude Include="..\..\clibs\rmlui\system.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\3rd\RmlUi\Include\RmlUi\Colour.inl" />
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\Element.inl" />
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\TypeConverter.inl" />
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\Variant.inl" />

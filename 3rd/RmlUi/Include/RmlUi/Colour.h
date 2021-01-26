@@ -30,104 +30,39 @@
 #define RMLUI_CORE_COLOUR_H
 
 #include "Header.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/color_space.hpp>
 
 namespace Rml {
-
-/**	
-	Templated class for a four-component RGBA colour.
-
-	@author Peter Curry
- */
-
-template < typename ColourType, int AlphaDefault >
-class Colour
-{
+	
+class Color : public glm::u8vec4 {
 public:
-	/// Initialising constructor.
-	/// @param[in] rgb Initial red, green and blue value of the colour.
-	/// @param[in] alpha Initial alpha value of the colour.
-	inline Colour(ColourType rgb = ColourType{ 0 }, ColourType alpha = ColourType{ AlphaDefault });
-	/// Initialising constructor.
-	/// @param[in] red Initial red value of the colour.
-	/// @param[in] green Initial green value of the colour.
-	/// @param[in] blue Initial blue value of the colour.
-	/// @param[in] alpha Initial alpha value of the colour.
-	inline Colour(ColourType red, ColourType green, ColourType blue, ColourType alpha = ColourType{ AlphaDefault });
-
-	/// Returns the sum of this colour and another. This does not saturate the channels.
-	/// @param[in] rhs The colour to add this to.
-	/// @return The sum of the two colours.
-	inline Colour operator+(const Colour& rhs) const;
-	/// Returns the result of subtracting another colour from this colour.
-	/// @param[in] rhs The colour to subtract from this colour.
-	/// @return The result of the subtraction.
-	inline Colour operator-(const Colour& rhs) const;
-	/// Returns the result of multiplying this colour by another.
-	/// @param[in] rhs The colour to multiply by.
-	/// @return The result of the multiplication.
-	Colour operator*(const Colour& rhs) const;
-	/// Returns the result of multiplying this colour component-wise by a scalar.
-	/// @param[in] rhs The scalar value to multiply by.
-	/// @return The result of the scale.
-	inline Colour operator*(float rhs) const;
-	/// Returns the result of dividing this colour component-wise by a scalar.
-	/// @param[in] rhs The scalar value to divide by.
-	/// @return The result of the scale.
-	inline Colour operator/(float rhs) const;
-
-	/// Adds another colour to this in-place. This does not saturate the channels.
-	/// @param[in] rhs The colour to add.
-	inline void operator+=(const Colour& rhs);
-	/// Subtracts another colour from this in-place.
-	/// @param[in] rhs The colour to subtract.
-	inline void operator-=(const Colour& rhs);
-	/// Multiplies this colour component-wise with another in-place.
-	/// @param[in] rhs The colour to multiply by.
-	/// @return This colour, post-operation.
-	void operator*=(const Colour& rhs);
-	/// Scales this colour component-wise in-place.
-	/// @param[in] rhs The value to scale this colours's components by.
-	inline void operator*=(float rhs);
-	/// Scales this colour component-wise in-place by the inverse of a value.
-	/// @param[in] rhs The value to divide this colour's components by.
-	inline void operator/=(float rhs);
-
-	/// Equality operator.
-	/// @param[in] rhs The colour to compare this against.
-	/// @return True if the two colours are equal, false otherwise.
-	inline bool operator==(const Colour& rhs)	{ return red == rhs.red && green == rhs.green && blue == rhs.blue && alpha == rhs.alpha; }
-	/// Inequality operator.
-	/// @param[in] rhs The colour to compare this against.
-	/// @return True if the two colours are not equal, false otherwise.
-	inline bool operator!=(const Colour& rhs)	{ return red != rhs.red || green != rhs.green || blue != rhs.blue || alpha != rhs.alpha; }
-
-	/// Auto-cast operator.
-	/// @return A pointer to the first value.
-	inline operator const ColourType*() const { return &red; }
-	/// Constant auto-cast operator.
-	/// @return A constant pointer to the first value.
-	inline operator ColourType*() { return &red; }
-
-	inline Colour& ApplyOpacity(float opacity) {
-		alpha = ColourType((float)alpha * opacity);
-		return *this;
-	}
-
-	ColourType red, green, blue, alpha;
-
-#ifdef RMLUI_COLOUR_USER_EXTRA
-	#if defined(__has_include) && __has_include(RMLUI_COLOUR_USER_EXTRA)
-		#include RMLUI_COLOUR_USER_EXTRA
-	#else
-		RMLUI_COLOUR_USER_EXTRA
-	#endif
-#endif
+	Color()
+		: glm::u8vec4(0,0,0,255)
+	{ }
+	Color(glm::u8 r, glm::u8 g, glm::u8 b, glm::u8 a)
+		: glm::u8vec4(r, g, b, a)
+	{ }
+	Color(glm::u8vec4&& v)
+		: glm::u8vec4(std::forward<glm::u8vec4>(v))
+	{ }
 };
+
+inline Color ColorInterpolate(const Color& c0, const Color& c1, float alpha) {
+	auto s0 = glm::convertLinearToSRGB(glm::vec4(c0) / 255.f);
+	auto s1 = glm::convertLinearToSRGB(glm::vec4(c1) / 255.f);
+	auto s  = glm::mix(s0, s1, alpha);
+	auto c  = glm::convertSRGBToLinear(s);
+	return glm::u8vec4(c * 255.f);
+}
+
+inline void ColorApplyOpacity(Color& c, float opacity) {
+	c.a = glm::u8((float)c.a * opacity);
+}
 
 } // namespace Rml
 
 
-#include "Colour.inl"
 
 
 #endif

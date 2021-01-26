@@ -191,7 +191,7 @@ int FontEngine::GenerateString(
     Rml::TextEffectsHandle text_effects_handle,
     const Rml::String& string, const
     Rml::Point& position,
-    const Rml::Colourb& colour,
+    const Rml::Color& colour,
     Rml::GeometryList& geometrys) {
     Rml::Geometry& geometry = geometrys[0];
 
@@ -241,7 +241,7 @@ void FontEngine::GenerateString(
     Rml::FontFaceHandle handle,
     Rml::TextEffectsHandle text_effects_handle,
     Rml::LineList& lines, 
-    const Rml::Colourb& colour,
+    const Rml::Color& colour,
     Rml::GeometryList& geometrys){
     for (size_t i = 0; i < geometrys.size(); ++i) {
         geometrys[i].Release();

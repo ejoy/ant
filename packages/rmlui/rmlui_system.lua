@@ -45,7 +45,7 @@ function rmlui_sys:init()
     local ft_w, ft_h = ifont.font_tex_dim()
 
     local mq_eid = world:singleton_entity_id "main_queue"
-    local  layouhandle = declmgr.get "p2|c40niu|t20".handle
+    local layouhandle = declmgr.get "p2|c40niu|t20".handle
     local vid = viewidmgr.get "uiruntime"
     local vr = irq.view_rect(mq_eid)
     fbmgr.bind(vid, irq.frame_buffer(mq_eid))

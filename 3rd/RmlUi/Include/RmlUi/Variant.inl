@@ -86,7 +86,7 @@ bool Variant::GetInto(T& value) const
 		break;
 
 	case COLOURB:
-		return TypeConverter< Colourb, T >::Convert(*(Colourb*)data, value);
+		return TypeConverter< Color, T >::Convert(*(Color*)data, value);
 		break;
 
 	case VOIDPTR:

@@ -271,7 +271,8 @@ void ElementText::OnChange(const PropertyIdSet& changed_properties) {
 	if (changed_properties.Contains(PropertyId::Color) || changed_properties.Contains(PropertyId::Opacity)) {
 		dirty_geometry = true;
 		if (!dirty_decoration) {
-			Colourb col = GetTextDecorationColor().ApplyOpacity(GetOpacity());
+			Color col = GetTextDecorationColor();
+			ColorApplyOpacity(col, GetOpacity());
 			for (auto& vtx : decoration.GetVertices()) {
 				vtx.col = col;
 			}
@@ -288,11 +289,11 @@ void ElementText::UpdateTextEffects() {
 	auto stroke = GetTextStroke();
 	TextEffects text_effects;
 	if (shadow) {
-		shadow->color.ApplyOpacity(GetOpacity());
+		ColorApplyOpacity(shadow->color, GetOpacity());
 		text_effects.emplace_back(shadow.value());
 	}
 	if (stroke) {
-		stroke->color.ApplyOpacity(GetOpacity());
+		ColorApplyOpacity(stroke->color, GetOpacity());
 		text_effects.emplace_back(stroke.value());
 	}
 	TextEffectsHandle new_text_effects_handle = GetFontEngineInterface()->PrepareTextEffects(GetFontFaceHandle(), text_effects);
@@ -308,7 +309,8 @@ void ElementText::UpdateGeometry(const FontFaceHandle font_face_handle) {
 	}
 	dirty_geometry = false;
 	dirty_decoration = true;
-	Colourb color = GetTextColor().ApplyOpacity(GetOpacity());
+	Color color = GetTextColor();
+	ColorApplyOpacity(color, GetOpacity());
 	GetFontEngineInterface()->GenerateString(font_face_handle, text_effects_handle, lines, color, geometrys);
 }
 
@@ -322,7 +324,8 @@ void ElementText::UpdateDecoration(const FontFaceHandle font_face_handle) {
 	if (text_decoration_line == Style::TextDecorationLine::None) {
 		return;
 	}
-	Colourb color = GetTextDecorationColor().ApplyOpacity(GetOpacity());
+	Color color = GetTextDecorationColor();
+	ColorApplyOpacity(color, GetOpacity());
 	for (const Line& line : lines) {
 		Point position = line.position;
 		float width = line.width;
@@ -524,7 +527,7 @@ std::optional<TextShadow> ElementText::GetTextShadow() {
 	TextShadow shadow {
 		ComputeProperty<float>(GetProperty(PropertyId::TextShadowH), parent),
 		ComputeProperty<float>(GetProperty(PropertyId::TextShadowV), parent),
-		GetProperty(PropertyId::TextShadowColor)->Get<Colourb>(),
+		GetProperty(PropertyId::TextShadowColor)->Get<Color>(),
 	};
 	if (shadow.offset_h || shadow.offset_v) {
 		return shadow;
@@ -535,7 +538,7 @@ std::optional<TextShadow> ElementText::GetTextShadow() {
 std::optional<TextStroke> ElementText::GetTextStroke() {
 	TextStroke stroke{
 		ComputeProperty<float>(GetProperty(PropertyId::TextStrokeWidth), parent),
-		GetProperty(PropertyId::TextStrokeColor)->Get<Colourb>(),
+		GetProperty(PropertyId::TextStrokeColor)->Get<Color>(),
 	};
 	if (stroke.width) {
 		return stroke;
@@ -548,7 +551,7 @@ Style::TextDecorationLine ElementText::GetTextDecorationLine() {
 	return (Style::TextDecorationLine)property->Get<int>();
 }
 
-Colourb ElementText::GetTextDecorationColor() {
+Color ElementText::GetTextDecorationColor() {
 	const Property* property = GetProperty(PropertyId::TextDecorationColor);
 	if (property->unit == Property::KEYWORD) {
 		// CurrentColor
@@ -560,7 +563,7 @@ Colourb ElementText::GetTextDecorationColor() {
 			return GetTextColor();
 		}
 	}
-	return property->Get<Colourb>();
+	return property->Get<Color>();
 }
 
 Style::TextTransform ElementText::GetTextTransform() {
@@ -578,9 +581,9 @@ Style::WordBreak ElementText::GetWordBreak() {
 	return (Style::WordBreak)property->Get<int>();
 }
 
-Colourb ElementText::GetTextColor() {
+Color ElementText::GetTextColor() {
 	const Property* property = GetProperty(PropertyId::Color);
-	return property->Get<Colourb>();
+	return property->Get<Color>();
 }
 
 FontFaceHandle ElementText::GetFontFaceHandle() {

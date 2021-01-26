@@ -103,7 +103,7 @@ static void DrawQuadPos(Vertex* vtx, const Point& a, const Point& b, const Point
 	vtx[3].pos = d;
 }
 
-static void DrawQuadColor(Vertex* vtx, const Colourb& col) {
+static void DrawQuadColor(Vertex* vtx, const Color& col) {
 	vtx[0].col = col;
 	vtx[1].col = col;
 	vtx[2].col = col;
@@ -117,13 +117,13 @@ static void DrawQuadUV(Vertex* vtx, const Point& a, const Point& b, const Point&
 	vtx[3].uv = d;
 }
 
-static void DrawQuad(Vertex* vtx, int* idx, int idx_offset, const Point& a, const Point& b, const Point& c, const Point& d, const Colourb& col) {
+static void DrawQuad(Vertex* vtx, int* idx, int idx_offset, const Point& a, const Point& b, const Point& c, const Point& d, const Color& col) {
 	DrawQuadIdx(idx, idx_offset);
 	DrawQuadPos(vtx, a, b, c, d);
 	DrawQuadColor(vtx, col);
 }
 
-static void DrawRect(Vertex* vtx, int* idx, int idx_offset, const Rect& pos, const Colourb& col) {
+static void DrawRect(Vertex* vtx, int* idx, int idx_offset, const Rect& pos, const Color& col) {
 	Point topLeft = pos.origin;
 	Point bottomRight = pos.origin + pos.size;
 	DrawQuad(vtx, idx, idx_offset, topLeft, Point(bottomRight.x, topLeft.y), bottomRight, Point(topLeft.x, bottomRight.y), col);
@@ -162,7 +162,7 @@ static void PointNormalize(float& vx, float& vy) {
 	}
 }
 
-void Geometry::AddRect(const Rect& rect, Colourb col) {
+void Geometry::AddRect(const Rect& rect, Color col) {
 	size_t vsz = vertices.size();
 	size_t isz = indices.size();
 	Reserve(6, 4);
@@ -171,7 +171,7 @@ void Geometry::AddRect(const Rect& rect, Colourb col) {
 	DrawRect(vtx, idx, (int)vsz, rect, col);
 }
 
-void Geometry::AddQuad(const Quad& quad, Colourb col) {
+void Geometry::AddQuad(const Quad& quad, Color col) {
 	size_t vsz = vertices.size();
 	size_t isz = indices.size();
 	Reserve(6, 4);
@@ -180,7 +180,7 @@ void Geometry::AddQuad(const Quad& quad, Colourb col) {
 	DrawQuad(vtx, idx, (int)vsz, quad.a, quad.b, quad.c, quad.d, col);
 }
 
-void Geometry::AddRect(const Rect& rect, const Rect& uv, Colourb col) {
+void Geometry::AddRect(const Rect& rect, const Rect& uv, Color col) {
 	size_t vsz = vertices.size();
 	size_t isz = indices.size();
 	Reserve(6, 4);
@@ -190,7 +190,7 @@ void Geometry::AddRect(const Rect& rect, const Rect& uv, Colourb col) {
 	DrawRectUV(vtx, uv);
 }
 
-void Geometry::AddArc(const Path& outer, const Path& inner, Colourb col) {
+void Geometry::AddArc(const Path& outer, const Path& inner, Color col) {
 	size_t outer_count = outer.size();
 	size_t inner_count = inner.size();
 	size_t count = outer_count + inner_count;
@@ -242,7 +242,7 @@ void Geometry::AddArc(const Path& outer, const Path& inner, Colourb col) {
 	}
 }
 
-void Geometry::AddPolygon(const Path& points, Colourb col) {
+void Geometry::AddPolygon(const Path& points, Color col) {
 	size_t vsz = vertices.size();
 	size_t isz = indices.size();
 	size_t points_count = points.size();

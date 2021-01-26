@@ -124,7 +124,7 @@ private:
 	void Set(const int64_t value);
 	void Set(const char* value);
 	void Set(void* value);
-	void Set(const Colourb& value);
+	void Set(const Color& value);
 	void Set(const String& value);
 	void Set(String&& value);
 	void Set(const TransformPtr& value);

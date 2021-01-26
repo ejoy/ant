@@ -36,20 +36,6 @@
 
 namespace Rml {
 
-static byte InterpolateColor(byte t0, byte t1, float alpha) {
-	float f0 = Math::SquareRoot((float)t0 / 255.f);
-	float f1 = Math::SquareRoot((float)t1 / 255.f);
-	float f  = f0 * (1.0f - alpha) + f1 * alpha;
-	return (byte)Math::Clamp(f * f * 255.f, 0.0f, 255.f);
-}
-
-static byte InterpolateAlphaColor(byte t0, byte t1, float alpha) {
-	float f0 = (float)t0 / 255.f;
-	float f1 = (float)t1 / 255.f;
-	float f = f0 * (1.0f - alpha) + f1 * alpha;
-	return (byte)Math::Clamp(f * 255.f, 0.0f, 255.f);
-}
-
 static Property InterpolateProperties(const Property& p0, const Property& p1, float alpha, Element& element)
 {
 	if ((p0.unit & Property::NUMBER_LENGTH_PERCENT) && (p1.unit & Property::NUMBER_LENGTH_PERCENT))
@@ -65,14 +51,9 @@ static Property InterpolateProperties(const Property& p0, const Property& p1, fl
 
 	if (p0.unit == Property::COLOUR && p1.unit == Property::COLOUR)
 	{
-		Colourb c0 = p0.value.Get<Colourb>();
-		Colourb c1 = p1.value.Get<Colourb>();
-		Colourb c;
-		c.red = InterpolateColor(c0.red, c1.red, alpha);
-		c.green = InterpolateColor(c0.green, c1.green, alpha);
-		c.blue = InterpolateColor(c0.blue, c1.blue, alpha);
-		c.alpha = InterpolateAlphaColor(c0.alpha, c1.alpha, alpha);
-		return Property{ c, Property::COLOUR };
+		Color c0 = p0.value.Get<Color>();
+		Color c1 = p1.value.Get<Color>();
+		return Property{ ColorInterpolate(c0, c1, alpha), Property::COLOUR };
 	}
 
 	if (p0.unit == Property::TRANSFORM && p1.unit == Property::TRANSFORM)

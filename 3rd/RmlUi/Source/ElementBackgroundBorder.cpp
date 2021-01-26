@@ -38,13 +38,13 @@ static const auto PI = acosf(-1);
 void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path& paddingEdge) {
 	geometry.Release();
 	const ComputedValues& computed = element->GetComputedValues();
-	EdgeInsets<Colourb> border_color = computed.border_color;
-	Colourb background_color = computed.background_color;
+	EdgeInsets<Color> border_color = computed.border_color;
+	Color background_color = computed.background_color;
 	float opacity = element->GetOpacity();
 	if (opacity < 1) {
-		background_color.ApplyOpacity(opacity);
+		ColorApplyOpacity(background_color, opacity);
 		for (int i = 0; i < 4; ++i) {
-			border_color[i].ApplyOpacity(opacity);
+			ColorApplyOpacity(border_color[i], opacity);
 		}
 	}
 

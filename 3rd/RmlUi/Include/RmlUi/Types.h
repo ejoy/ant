@@ -53,8 +53,6 @@ enum class Character : char32_t { Null, Replacement = 0xfffd };
 
 namespace Rml {
 
-using Colourb = Colour< byte, 255 >;
-
 // Common classes
 class Document;
 class Element;

@@ -34,7 +34,7 @@ namespace Rml {
 Variant::Variant() : type(NONE)
 {
 	// Make sure our object size assumptions fit inside the static buffer
-	static_assert(sizeof(Colourb) <= LOCAL_DATA_SIZE, "Local data too small for Colourb");
+	static_assert(sizeof(Color) <= LOCAL_DATA_SIZE, "Local data too small for Color");
 	static_assert(sizeof(String) <= LOCAL_DATA_SIZE, "Local data too small for String");
 	static_assert(sizeof(TransformPtr) <= LOCAL_DATA_SIZE, "Local data too small for TransformPtr");
 	static_assert(sizeof(TransitionList) <= LOCAL_DATA_SIZE, "Local data too small for TransitionList");
@@ -212,10 +212,10 @@ void Variant::Set(void* voidptr)
 	memcpy(data, &voidptr, sizeof(void*));
 }
 
-void Variant::Set(const Colourb& value)
+void Variant::Set(const Color& value)
 {
 	type = COLOURB;
-	SET_VARIANT(Colourb);
+	SET_VARIANT(Color);
 }
 
 void Variant::Set(const String& value)
@@ -361,7 +361,7 @@ bool Variant::operator==(const Variant & other) const
 	case STRING:
 		return DEFAULT_VARIANT_COMPARE(String);
 	case COLOURB:
-		return DEFAULT_VARIANT_COMPARE(Colourb);
+		return DEFAULT_VARIANT_COMPARE(Color);
 	case VOIDPTR:
 		return DEFAULT_VARIANT_COMPARE(void*);
 	case TRANSFORMPTR:

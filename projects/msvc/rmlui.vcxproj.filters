@@ -659,9 +659,6 @@
     <None Include="..\..\3rd\RmlUi\Source\Pool.inl">
       <Filter>source</Filter>
     </None>
-    <None Include="..\..\3rd\RmlUi\Include\RmlUi\Colour.inl">
-      <Filter>include</Filter>
-    </None>
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\Element.inl">
       <Filter>include</Filter>
     </None>

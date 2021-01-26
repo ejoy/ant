@@ -79,11 +79,11 @@ public:
 
 protected:
     static inline void
-    tocolor(const Rml::Colourb &c, float *cc){
-        cc[0] = c.red   / 256.f;
-        cc[1] = c.green / 256.f;
-        cc[2] = c.blue  / 256.f;
-        cc[3] = c.alpha / 256.f;
+    tocolor(const Rml::Color &c, float *cc){
+        cc[0] = c.r / 255.f;
+        cc[1] = c.g / 255.f;
+        cc[2] = c.b / 255.f;
+        cc[3] = c.a / 255.f;
     }
 
     const shader_info&
@@ -117,7 +117,7 @@ public:
 template<FontEffectType FE_TYPE>
 class TSDFFontEffectOutline : public SDFFontEffect{
 public:
-    TSDFFontEffectOutline(uint16_t texid, float w, int8_t eo, Rml::Colourb c) 
+    TSDFFontEffectOutline(uint16_t texid, float w, int8_t eo, Rml::Color c)
     : SDFFontEffect(texid, eo, FE_TYPE)
     , mWidth(w)
     , mcolor(c)
@@ -127,7 +127,8 @@ public:
         std::ostringstream oss;
         
         oss << std::setprecision(std::numeric_limits<long double>::digits10 + 1) 
-            << DEFAULT_FONT_TEX_NAME.c_str() << GetType()<< mWidth << mcolor;
+            << DEFAULT_FONT_TEX_NAME.c_str() << GetType()<< mWidth
+            << *(uint32_t*)&mcolor;
         return oss.str();
     }
 
@@ -150,7 +151,7 @@ public:
 
 private:
     const float mWidth;
-    Rml::Colourb mcolor;
+    Rml::Color mcolor;
 };
 
 static Rml::String
@@ -162,7 +163,7 @@ get_default_mask_offset_str(struct font_manager* F){
 ///shadow//////////////////////////////////////////////////////////////////
 class SDFFontEffectShadow : public SDFFontEffect{
 public:
-SDFFontEffectShadow(uint16_t texid, int8_t eo, const Rml::Point &offset, Rml::Colourb c) 
+SDFFontEffectShadow(uint16_t texid, int8_t eo, const Rml::Point &offset, Rml::Color c)
     : SDFFontEffect(texid, eo, FontEffectType(FE_Shadow|FE_FontTex))
     , moffset(offset)
     , mcolor(c)
@@ -173,7 +174,8 @@ SDFFontEffectShadow(uint16_t texid, int8_t eo, const Rml::Point &offset, Rml::Co
         std::ostringstream oss;
         
         oss << std::setprecision(std::numeric_limits<long double>::digits10 + 1) 
-            << DEFAULT_FONT_TEX_NAME.c_str() << GetType()<< moffset.x << moffset.y << mcolor;
+            << DEFAULT_FONT_TEX_NAME.c_str() << GetType()<< moffset.x << moffset.y
+            << *(uint32_t*)&mcolor;
         return oss.str();
     }
 
@@ -201,5 +203,5 @@ SDFFontEffectShadow(uint16_t texid, int8_t eo, const Rml::Point &offset, Rml::Co
 
 private:
     const Rml::Point moffset;
-    Rml::Colourb mcolor;
+    Rml::Color mcolor;
 };

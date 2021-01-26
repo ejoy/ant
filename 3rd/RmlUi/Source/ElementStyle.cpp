@@ -534,16 +534,16 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values) {
 
 		switch (id) {
 		case PropertyId::BorderTopColor:
-			values.border_color.top = p->Get<Colourb>();
+			values.border_color.top = p->Get<Color>();
 			break;
 		case PropertyId::BorderRightColor:
-			values.border_color.right = p->Get<Colourb>();
+			values.border_color.right = p->Get<Color>();
 			break;
 		case PropertyId::BorderBottomColor:
-			values.border_color.bottom = p->Get<Colourb>();
+			values.border_color.bottom = p->Get<Color>();
 			break;
 		case PropertyId::BorderLeftColor:
-			values.border_color.left = p->Get<Colourb>();
+			values.border_color.left = p->Get<Color>();
 			break;
 		case PropertyId::BorderTopLeftRadius:
 			values.border_radius.topLeft = ComputeProperty<float>(p, element);
@@ -559,7 +559,7 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values) {
 			break;
 
 		case PropertyId::BackgroundColor:
-			values.background_color = p->Get<Colourb>();
+			values.background_color = p->Get<Color>();
 			break;
 		case PropertyId::BackgroundImage:
 			values.background_image = p->Get<String>();

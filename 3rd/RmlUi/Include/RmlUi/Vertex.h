@@ -36,7 +36,7 @@ namespace Rml {
 
 struct RMLUICORE_API Vertex {
 	Point pos;
-	Colourb col;
+	Color col;
 	Point uv;
 };
 

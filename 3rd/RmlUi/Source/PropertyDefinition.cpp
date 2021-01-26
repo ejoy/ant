@@ -147,8 +147,8 @@ bool PropertyDefinition::GetValue(String& value, const Property& property) const
 
 		case Property::COLOUR:
 		{
-			Colourb colour = property.value.Get< Colourb >();
-			value = CreateString(32, "rgba(%d,%d,%d,%d)", colour.red, colour.green, colour.blue, colour.alpha);
+			Color colour = property.value.Get< Color >();
+			value = CreateString(32, "rgba(%d,%d,%d,%d)", colour.r, colour.g, colour.b, colour.a);
 		}
 		break;
 
