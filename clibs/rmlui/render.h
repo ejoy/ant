@@ -35,23 +35,11 @@ enum SamplerFlag : uint32_t {
     MIP_MASK        = 0x00000400,
 };
 
-class TransientIndexBuffer32{
-public:
-    TransientIndexBuffer32(uint32_t sizeBytes = 1024*1024*sizeof(uint32_t));
-    ~TransientIndexBuffer32();
-    void SetIndex(bgfx_encoder_t *encoder, int *indices, int num);
-    void Reset();
-private:
-    uint32_t moffset;
-    uint32_t msize;
-    const bgfx_dynamic_index_buffer_handle_t  mdyn_indexbuffer;
-};
-
 class Renderer : public Rml::RenderInterface {
 public:
     Renderer(const RmlContext* context);
     void RenderGeometry(Rml::Vertex* vertices, int num_vertices, 
-                                int* indices, int num_indices, 
+                                Rml::Index* indices, int num_indices,
                                 Rml::TextureHandle texture) override;
     bool LoadTexture(Rml::TextureHandle& texture_handle, Rml::Size& texture_dimensions, const Rml::String& source) override;
     bool GenerateTexture(Rml::TextureHandle& texture_handle, const Rml::byte* source, const Rml::Size& source_dimensions) override;
@@ -74,7 +62,6 @@ public:
 
 private:
     const RmlContext*       mcontext;
-    TransientIndexBuffer32  mIndexBuffer;
     bgfx_encoder_t*         mEncoder;
 
     struct ScissorRect{

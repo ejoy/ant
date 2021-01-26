@@ -12,38 +12,6 @@ error "need matrix type as column major"
 extern bgfx_interface_vtbl_t* ibgfx();
 #define BGFX(api) ibgfx()->api
 
-TransientIndexBuffer32::TransientIndexBuffer32(uint32_t sizeBytes)
-: moffset(0), msize(sizeBytes)
-, mdyn_indexbuffer(BGFX(create_dynamic_index_buffer)(sizeBytes, BGFX_BUFFER_INDEX32|BGFX_BUFFER_ALLOW_RESIZE))
-{}
-
-TransientIndexBuffer32::~TransientIndexBuffer32(){
-    if (BGFX_HANDLE_IS_VALID(mdyn_indexbuffer)){
-        BGFX(destroy_dynamic_index_buffer)(mdyn_indexbuffer);
-    }
-}
-
-void 
-TransientIndexBuffer32::SetIndex(bgfx_encoder_t* encoder, int *indices, int num){
-    const uint32_t numbytes = num * sizeof(uint32_t);
-
-    if (moffset * sizeof(uint32_t) + numbytes > msize){
-        assert(false);
-    }
-
-    auto mem = BGFX(alloc)(numbytes);
-    memcpy(mem->data, indices, numbytes);
-    BGFX(update_dynamic_index_buffer)(mdyn_indexbuffer, moffset, mem);
-    BGFX(encoder_set_dynamic_index_buffer)(encoder, mdyn_indexbuffer, moffset, num);
-
-    moffset += num;
-}
-
-void
-TransientIndexBuffer32::Reset(){
-    moffset = 0;
-}
-
 #define RENDER_STATE (BGFX_STATE_WRITE_RGB|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA)
 Renderer::Renderer(const RmlContext* context)
     : mcontext(context)
@@ -70,7 +38,7 @@ void Renderer::UpdateViewRect(){
 }
 
 void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
-                            int* indices, int num_indices, 
+                            Rml::Index* indices, int num_indices,
                             Rml::TextureHandle texture) {
     bgfx_transient_vertex_buffer_t tvb;
     BGFX(alloc_transient_vertex_buffer)(&tvb, num_vertices, (bgfx_vertex_layout_t*)mcontext->layout);
@@ -78,7 +46,13 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
     memcpy(tvb.data, vertices, num_vertices * sizeof(Rml::Vertex));
     BGFX(encoder_set_transient_vertex_buffer)(mEncoder, 0, &tvb, 0, num_vertices);
 
-    mIndexBuffer.SetIndex(mEncoder, indices, num_indices);
+    bgfx_transient_index_buffer_t tib;
+    BGFX(alloc_transient_index_buffer)(&tib, num_indices, true);
+
+    static_assert(sizeof(Rml::Index) == sizeof(uint32_t));
+    memcpy(tib.data, indices, num_indices * sizeof(Rml::Index));
+    BGFX(encoder_set_transient_index_buffer)(mEncoder, &tib, 0, num_indices);
+
     BGFX(encoder_set_state)(mEncoder, RENDER_STATE, 0);
 
     auto fe = FE(texture);
@@ -139,7 +113,6 @@ void Renderer::Begin(){
 
 void Renderer::Frame(){
     BGFX(encoder_end)(mEncoder);
-    mIndexBuffer.Reset();
 }
 
 #ifdef _DEBUG

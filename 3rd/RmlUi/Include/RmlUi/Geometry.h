@@ -49,7 +49,7 @@ public:
 	~Geometry();
 	void Render();
 	Vector< Vertex >& GetVertices();
-	Vector< int >& GetIndices();
+	Vector< Index >& GetIndices();
 	void SetTexture(SharedPtr<Texture> texture);
 	void Release();
 	explicit operator bool() const;
@@ -75,7 +75,7 @@ public:
 private:
 	void MoveFrom(Geometry& other);
 	Vector<Vertex> vertices;
-	Vector<int> indices;
+	Vector<Index> indices;
 	SharedPtr<Texture> texture;
 };
 

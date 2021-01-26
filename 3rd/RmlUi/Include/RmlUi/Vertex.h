@@ -34,11 +34,13 @@
 
 namespace Rml {
 
-struct RMLUICORE_API Vertex {
+struct Vertex {
 	Point pos;
 	Color col;
 	Point uv;
 };
+
+using Index = uint32_t;
 
 } // namespace Rml
 #endif

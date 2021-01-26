@@ -40,7 +40,7 @@ namespace Rml {
 
 class RenderInterface : public NonCopyMoveable {
 public:
-	virtual void RenderGeometry(Vertex* vertices, int num_vertices, int* indices, int num_indices, TextureHandle texture) = 0;
+	virtual void RenderGeometry(Vertex* vertices, int num_vertices, Index* indices, int num_indices, TextureHandle texture) = 0;
 	virtual bool LoadTexture(TextureHandle& texture_handle, Size& texture_dimensions, const String& source) = 0;
 	virtual bool GenerateTexture(TextureHandle& texture_handle, const byte* source, const Size& source_dimensions) = 0;
 	virtual void ReleaseTexture(TextureHandle texture) = 0;
