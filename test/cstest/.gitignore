@@ -1,0 +1,4 @@
+build/
+shaders/*.bin
+shaders/*.bin.d
+shaders/*.hlsl
