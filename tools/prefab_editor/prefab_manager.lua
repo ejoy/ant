@@ -468,7 +468,7 @@ function m:add_prefab(filename)
     --         scene_entity = true
     --     }
     -- }
-    local mount_root = world:create_simple_entity(gen_prefab_name())--world:create_entity(entity_template)
+    local mount_root = create_simple_entity(gen_prefab_name())--world:create_entity(entity_template)
     self.entities[#self.entities+1] = mount_root
     -- entity_template.data.name = entity_name
     -- world[mount_root].name = entity_name

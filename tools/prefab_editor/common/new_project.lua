@@ -13,7 +13,7 @@ function m.set_path(path)
     local standard_path = string.gsub(path, "\\", "/")
     local engine_pos = string.find(standard_path, '/ant/')
     init_param.MountRoot = string.sub(standard_path, engine_pos + 5, -1)
-    init_param.PackageName = "ant." .. string.gsub(init_param.MountRoot, '/', '.')
+    init_param.PackageName = string.gsub(init_param.MountRoot, '/', '.')--"ant." .. string.gsub(init_param.MountRoot, '/', '.')
     lfs.create_directory(lfs.path(init_param.ProjectPath .. "\\res"))
 end
 
