@@ -1,25 +1,25 @@
 import "@ant.asset"
 
 system "font_system"
-    .implement "fontrender.lua"
+    .implement "font/font/fontrender.lua"
     .method "camera_usage"
 
 component "font"
-    .implement "fontrender.lua"
+    .implement "font/fontrender.lua"
     .method "init"
 
 component "show_config"
-    .implement "fontrender.lua"
+    .implement "font/fontrender.lua"
     .method "init"
 
 transform "font_mesh"
-    .implement "fontrender.lua"
+    .implement "font/fontrender.lua"
     .input "font"
     .output "mesh"
     .method "process_prefab"
 
 interface "ifont"
-    .implement "fontrender.lua"
+    .implement "font/fontrender.lua"
     .method "font_tex_handle"
     .method "font_tex_dim"
     .method "handle"
@@ -37,7 +37,7 @@ policy "fontrender"
     .component "state"
 
 action "show_name"
-    .implement "fontrender.lua"
+    .implement "font/fontrender.lua"
     .method "init"
 
 policy "show_name"

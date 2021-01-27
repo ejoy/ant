@@ -10,8 +10,6 @@ local viewidmgr 	= require "viewid_mgr"
 local fbmgr			= require "framebuffer_mgr"
 local samplerutil	= require "sampler"
 
-local irender		= ecs.interface "irender"
-
 local imaterial		= world:interface "ant.asset|imaterial"
 local ipf			= world:interface "ant.scene|iprimitive_filter"
 
@@ -40,6 +38,17 @@ function vpt.process_entity(e)
 	end
 end
 
+local wmt = ecs.transform "world_matrix_transform"
+local function set_world_matrix(rc)
+	bgfx.set_transform(rc.worldmat)
+end
+
+function wmt.process_entity(e)
+	local rc = e._rendercache
+	rc.set_transform = set_world_matrix
+end
+
+local irender		= ecs.interface "irender"
 function irender.check_primitive_mode_state(state, template_state)
 	local s = bgfx.parse_state(state)
 	if s.PT then
@@ -649,4 +658,14 @@ function irq.update_rendertarget(rt)
 	else
 		rt.fb_idx = fbmgr.get_fb_idx(viewid)
 	end
+end
+
+local rt = ecs.component "render_target"
+function rt:init()
+	irq.update_rendertarget(self)
+	return self
+end
+
+function rt:delete()
+	fbmgr.unbind(self.viewid)
 end

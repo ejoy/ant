@@ -1,3 +1,4 @@
+require "render_system.bind_bgfx_math_adapter"	--for bind bgfx api to math adapter
 return {
     hwi         = require "hardware_interface",
 	viewidmgr   = require "viewid_mgr",
