@@ -3,7 +3,7 @@ local world = ecs.world
 
 local bgfx = require "bgfx"
 local fbmgr = require "framebuffer_mgr"
-
+local icamera = world:interface "ant.camera|camera"
 local irq = ecs.interface "irenderqueue"
 
 function irq.clear_state(eid)

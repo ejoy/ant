@@ -9,7 +9,7 @@ local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
 local fbmgr			= require "framebuffer_mgr"
 local samplerutil	= require "sampler"
-
+local icamera		= world:interface "ant.camera|camera"
 local imaterial		= world:interface "ant.asset|imaterial"
 local ipf			= world:interface "ant.scene|iprimitive_filter"
 
@@ -97,7 +97,6 @@ function pd_pt.process_entity(e)
 	end
 end
 
-local icamera = world:interface "ant.camera|camera"
 function irender.draw(vid, ri)
 	ri:set_transform()
 
