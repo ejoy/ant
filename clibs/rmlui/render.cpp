@@ -40,6 +40,7 @@ void Renderer::UpdateViewRect(){
 void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
                             Rml::Index* indices, int num_indices,
                             Rml::TextureHandle texture) {
+    BGFX(encoder_set_state)(mEncoder, RENDER_STATE, 0);
     bgfx_transient_vertex_buffer_t tvb;
     BGFX(alloc_transient_vertex_buffer)(&tvb, num_vertices, (bgfx_vertex_layout_t*)mcontext->layout);
 
@@ -98,9 +99,8 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
     }
 
     mScissorRect.submitScissorRect(mEncoder, si);
-    const uint8_t discard_flags = ~(BGFX_DISCARD_TRANSFORM|BGFX_DISCARD_STATE);
+    const uint8_t discard_flags = ~BGFX_DISCARD_TRANSFORM;
     BGFX(encoder_submit)(mEncoder,mcontext->viewid, { (uint16_t)si.prog }, 0, discard_flags);
-    BGFX(encoder_discard)(mEncoder, discard_flags);
     // #ifdef _DEBUG
     // mScissorRect.drawDebugScissorRect(mEncoder, mcontext->viewid, mcontext->shader.debug_draw.prog);
     // #endif //_DEBUG
@@ -108,7 +108,6 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
 
 void Renderer::Begin(){
     mEncoder = BGFX(encoder_begin)(false);
-    BGFX(encoder_set_state)(mEncoder, RENDER_STATE, 0);
 }
 
 void Renderer::Frame(){
