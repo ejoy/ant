@@ -34,7 +34,7 @@ function rt:delete()
 	fbmgr.unbind(self.viewid)
 end
 
-local render_sys = ecs.system "render_system"
+local render_sys = ecs.system "forward_render_system"
 
 local function update_view_proj(viewid, cameraeid)
 	local rc = world[cameraeid]._rendercache
@@ -53,8 +53,7 @@ function render_sys:init()
 	irender.create_main_queue(vr, camera_eid)
 end
 
-function render_sys:render_commit()
-	iqc.update()
+function render_sys:render_submit()
 	isp.update()
 	for _, eid in world:each "render_target" do
 		local rq = world[eid]
@@ -111,7 +110,7 @@ function pd_sys:post_init()
 		}
 	end
 end
-function pd_sys:before_render()
+function pd_sys:render_preprocess()
 	for _, d in pairs(pd_mbs) do
 		local cb = d.cb
 		for msg in d.mb:each() do
