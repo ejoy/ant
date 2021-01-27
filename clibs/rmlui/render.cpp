@@ -92,7 +92,7 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
 
         static const Rml::String tex_property_name = "s_tex";
         if (tex_property_name == it.first){
-            BGFX(encoder_set_texture)(mEncoder, v.stage, {v.uniform_idx}, {v.texid}, UINT16_MAX);
+            BGFX(encoder_set_texture)(mEncoder, v.stage, {v.uniform_idx}, {v.texid}, UINT32_MAX);
         } else {
             BGFX(encoder_set_uniform)(mEncoder, {v.uniform_idx}, v.value, 1);
         }

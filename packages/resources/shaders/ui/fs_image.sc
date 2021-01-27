@@ -10,5 +10,5 @@ void main()
     #ifdef ENABLE_CLIP_RECT
     check_clip_rotated_rect(gl_FragCoord.xy);
     #endif //ENABLE_CLIP_RECT
-    gl_FragColor = toLinear(texture2D(s_tex, v_texcoord0) * v_color0);
+    gl_FragColor = texture2D(s_tex, v_texcoord0) * v_color0;
 }
