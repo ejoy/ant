@@ -98,9 +98,9 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
     }
 
     mScissorRect.submitScissorRect(mEncoder, si);
-    const uint8_t discard_flags = ~BGFX_DISCARD_TRANSFORM;
+    const uint8_t discard_flags = ~(BGFX_DISCARD_TRANSFORM|BGFX_DISCARD_STATE);
     BGFX(encoder_submit)(mEncoder,mcontext->viewid, { (uint16_t)si.prog }, 0, discard_flags);
-
+    BGFX(encoder_discard)(mEncoder, discard_flags);
     // #ifdef _DEBUG
     // mScissorRect.drawDebugScissorRect(mEncoder, mcontext->viewid, mcontext->shader.debug_draw.prog);
     // #endif //_DEBUG
