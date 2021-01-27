@@ -90,7 +90,7 @@ DataTypeRegister::DataTypeRegister()
 		double value = 0;
 		if (!variant.GetInto(value))
 			return false;
-        variant = Math::RoundFloat(value);
+        variant = round(value);
 		return true;
 	});
 }

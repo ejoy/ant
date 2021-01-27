@@ -55,9 +55,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\BaseXMLParser.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Clock.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Context.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -332,9 +329,6 @@
     </ClInclude>
     <ClInclude Include="..\..\clibs\rmlui\pch.h">
       <Filter>binding</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Clock.h">
-      <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\DataController.h">
       <Filter>source</Filter>

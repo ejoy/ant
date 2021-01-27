@@ -269,10 +269,7 @@ void Geometry::UpdateUV(size_t count, const Rect& surface, const Rect& uv) {
 	Vertex* vtx = &vertices[vertices.size() - count];
 	const Size size = surface.size;
 	const Size uv_size = uv.size;
-	const Point scale = Point(
-		size.w != 0.0f ? (uv_size.w / size.w) : 0.0f,
-		size.h != 0.0f ? (uv_size.h / size.h) : 0.0f
-	);
+	const Point scale { uv_size.w / size.w, uv_size.h / size.h };
 	const Point a = surface.origin;
 	const Point uv_a = uv.origin;
 	const Point min = uv.origin;

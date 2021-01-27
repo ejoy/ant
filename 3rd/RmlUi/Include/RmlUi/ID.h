@@ -161,6 +161,8 @@ enum class PropertyId : uint8_t
 
 	BackgroundColor,
 	BackgroundImage,
+	BackgroundOrigin,
+	BackgroundSize,
 
 	NumDefinedIds,
 	FirstCustomId = NumDefinedIds,

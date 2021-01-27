@@ -40,19 +40,6 @@ const float RMLUI_PI = 3.141592653f;
 
 static constexpr float FZERO = 0.0001f;
 
-// Evaluates if a number is, or close to, zero.
-RMLUICORE_API bool IsZero(float value)
-{
-	return AbsoluteValue(value) < FZERO;
-}
-
-// Evaluates if two floating-point numbers are equal, or so similar that they could be considered
-// so.
-RMLUICORE_API bool AreEqual(float value_0, float value_1)
-{
-	return IsZero(value_1 - value_0);
-}
-
 // Calculates the absolute value of a number.
 RMLUICORE_API float AbsoluteValue(float value)
 {
@@ -113,28 +100,10 @@ RMLUICORE_API float DegreesToRadians(float angle)
 	return angle * (RMLUI_PI / 180.0f);
 }
 
-// Normalises an angle in radians
-RMLUICORE_API float NormaliseAngle(float angle)
-{
-	return fmodf(angle, RMLUI_PI * 2.0f);
-}
-
 // Calculates the square root of a value.
 RMLUICORE_API float SquareRoot(float value)
 {
 	return sqrtf(value);
-}
-
-// Rounds a floating-point value to the nearest integer.
-RMLUICORE_API float RoundFloat(float value)
-{
-	return roundf(value);
-}
-
-// Rounds a floating-point value to the nearest integer.
-RMLUICORE_API double RoundFloat(double value)
-{
-	return round(value);
 }
 
 // Rounds a floating-point value to the nearest integer.
@@ -146,44 +115,10 @@ RMLUICORE_API int RoundToInteger(float value)
 	return RealToInteger(value - 0.5f);
 }
 
-// Rounds a floating-point value up to the nearest integer.
-RMLUICORE_API int RoundUpToInteger(float value)
-{
-	return RealToInteger(ceilf(value));
-}
-
-// Rounds a floating-point value down to the nearest integer.
-RMLUICORE_API int RoundDownToInteger(float value)
-{
-	return RealToInteger(floorf(value));
-}
-
 // Efficiently truncates a floating-point value into an integer.
 RMLUICORE_API int RealToInteger(float value)
 {
 	return int(value);
-}
-
-// Converts the given number to a power of two, rounding up if necessary.
-RMLUICORE_API int ToPowerOfTwo(int number)
-{
-	// Check if the number is already a power of two.
-	if ((number & (number - 1)) == 0)
-		return number;
-
-	// Assuming 31 useful bits in an int here ... !
-	for (int i = 31; i >= 0; i--)
-	{
-		if (number & (1 << i))
-		{
-			if (i == 31)
-				return 1 << 31;
-			else
-				return 1 << (i + 1);
-		}
-	}
-
-	return 0;
 }
 
 // Converts from a hexadecimal digit to decimal.
@@ -197,24 +132,6 @@ RMLUICORE_API int HexToDecimal(char hex_digit)
 		return 10 + (hex_digit - 'A');
 
 	return -1;
-}
-
-// Generates a random floating-point value between 0 and a user-specified value.
-RMLUICORE_API float RandomReal(float max_value)
-{
-	return (rand() / (float) RAND_MAX) * max_value;
-}
-
-// Generates a random integer value between 0 and a user-specified value.
-RMLUICORE_API int RandomInteger(int max_value)
-{
-	return (rand() % max_value);
-}
-
-// Generates a random boolean value, with equal chance of true or false.
-RMLUICORE_API bool RandomBool()
-{
-	return RandomInteger(2) == 1;
 }
 
 }

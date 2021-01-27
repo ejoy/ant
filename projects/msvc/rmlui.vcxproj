@@ -109,7 +109,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\3rd\RmlUi\Source\BaseXMLParser.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Clock.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Context.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\DataController.cpp" />
@@ -267,7 +266,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Vertex.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\XMLNodeHandler.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\XMLParser.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Clock.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\DataController.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\DataControllerDefault.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\DataExpression.h" />

@@ -399,8 +399,13 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 
 	RegisterProperty(PropertyId::BackgroundColor, "background-color", "transparent", false, false)
 		.AddParser("color");
-	RegisterProperty(PropertyId::BackgroundImage, "background-image", "", false, false)
+	RegisterProperty(PropertyId::BackgroundImage, "background-image", "none", false, false)
+		.AddParser("keyword", "none")
 		.AddParser("string");
+	RegisterProperty(PropertyId::BackgroundOrigin, "background-origin", "padding-box", false, false)
+		.AddParser("keyword", "padding-box,border-box,content-box");
+	RegisterProperty(PropertyId::BackgroundSize, "background-size", "auto", false, false)
+		.AddParser("keyword", "auto,cover,contain");
 	RegisterShorthand(ShorthandId::Background, "background", "background-color", ShorthandType::FallThrough);
 
 	RegisterProperty(PropertyId::TextShadowH, "text-shadow-h", "0px", true, false)

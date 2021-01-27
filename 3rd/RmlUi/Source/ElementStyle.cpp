@@ -561,9 +561,6 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values) {
 		case PropertyId::BackgroundColor:
 			values.background_color = p->Get<Color>();
 			break;
-		case PropertyId::BackgroundImage:
-			values.background_image = p->Get<String>();
-			break;
 
 		case PropertyId::Perspective:
 			values.perspective = ComputeProperty<float>(p, element);

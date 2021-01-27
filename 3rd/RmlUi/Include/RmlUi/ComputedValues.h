@@ -53,6 +53,8 @@ enum class TextTransform : uint8_t { None, Capitalize, Uppercase, Lowercase };
 enum class WhiteSpace : uint8_t { Normal, Pre, Nowrap, Prewrap, Preline };
 enum class WordBreak : uint8_t { Normal, BreakAll, BreakWord };
 enum class Drag : uint8_t { None, Drag, DragDrop, Block, Clone };
+enum class BoxType : uint8_t { PaddingBox, BorderBox, ContentBox };
+enum class BackgroundSize : uint8_t { Auto, Cover, Contain };
 
 using PerspectiveOrigin = LengthPercentage;
 using TransformOrigin = LengthPercentage;
@@ -83,7 +85,6 @@ struct ComputedValues {
 	CornerInsets<float> border_radius{};
 
 	Color background_color = Color(255, 255, 255, 0);
-	String background_image;
 };
 }
 
