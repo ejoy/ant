@@ -22,10 +22,10 @@ function m.gen_main()
 package.path = "engine/?.lua"
 require "bootstrap"
 import_package "ant.window".start "$PackageName"
-    ]]
+]]
     local test_code = [[
 import_package "ant.window".start "$PackageName"
-    ]]
+]]
 
     utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\main.lua")), string.gsub(main_code, "%$(%w+)", init_param))
 end
@@ -48,7 +48,7 @@ return {
         }
     }
 }
-    ]]
+]]
     
     utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\package.lua")), string.gsub(package_code, "%$(%w+)", init_param))
 end
@@ -58,7 +58,7 @@ function m.gen_mount()
 @pkg packages
 @pkg-one $MountRoot
 engine engine
-    ]]
+]]
     utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\.mount")), string.gsub(mount_content, "%$(%w+)", init_param))
 end
 
@@ -72,7 +72,7 @@ function m:init()
     irq.set_view_clear_color(world:singleton_entity_id "main_queue", 0)
     --world:instance "res/scenes.prefab"
 end
-    ]]
+]]
     utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\init_system.lua")), system_code)
 end
 
@@ -124,7 +124,7 @@ pipeline "ui"
     .stage "ui_start"
     .stage "ui_update"
     .stage "ui_end"
-    ]]
+]]
     utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\package.ecs")), ecs)
 end
 
@@ -171,7 +171,7 @@ graphic:
     stabilize: true
     split_lamada: 1
     split_num: 4
-    ]]
+]]
     utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\settings")), settings)
 end
 return m

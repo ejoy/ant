@@ -110,8 +110,8 @@ local function choose_project()
             local path = choose_project_dir()
             if path then
                 global_data.project_root = lfs.path(path)
-                global_data.packages = get_package(lfs.absolute(global_data.project_root), true)
                 on_new_project(path)
+                global_data.packages = get_package(lfs.absolute(global_data.project_root), true)
             end
         end
         imgui.cursor.SameLine()
