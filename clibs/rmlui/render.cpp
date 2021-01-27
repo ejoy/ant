@@ -187,7 +187,8 @@ CustomTexture(const Rml::String &key){
 static inline SamplerFlag
 DefaultSamplerFlag(){
     return SamplerFlag(
-        SamplerFlag::U_CLAMP|SamplerFlag::V_CLAMP
+        //SamplerFlag::U_CLAMP|SamplerFlag::V_CLAMP
+        SamplerFlag::U_BORDER|SamplerFlag::V_BORDER
         );  // u,v: clamp, min,max: linear
 }
 
