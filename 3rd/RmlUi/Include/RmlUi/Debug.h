@@ -92,21 +92,6 @@ if (!(::Rml::Assert(m, __FILE__, __LINE__))) \
 }
 #define RMLUI_VERIFY(x) RMLUI_ASSERT(x)
 
-struct RmlUiAssertNonrecursive {
-	bool& entered;
-	RmlUiAssertNonrecursive(bool& entered) : entered(entered) {
-		RMLUI_ASSERTMSG(!entered, "A method defined as non-recursive was entered twice!");
-		entered = true;
-	}
-	~RmlUiAssertNonrecursive() {
-		entered = false;
-	}
-};
-
-#define RMLUI_ASSERT_NONRECURSIVE \
-static bool rmlui_nonrecursive_entered = false; \
-RmlUiAssertNonrecursive rmlui_nonrecursive(rmlui_nonrecursive_entered)
-
 } // namespace Rml
 #endif
 

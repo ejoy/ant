@@ -68,11 +68,11 @@ private:
 	std::optional<TextShadow> GetTextShadow();
 	std::optional<TextStroke> GetTextStroke();
 	Style::TextDecorationLine GetTextDecorationLine();
-	Colourb GetTextDecorationColor();
+	Color GetTextDecorationColor();
 	Style::TextTransform GetTextTransform();
 	Style::WhiteSpace GetWhiteSpace();
 	Style::WordBreak GetWordBreak();
-	Colourb GetTextColor();
+	Color GetTextColor();
 	FontFaceHandle GetFontFaceHandle();
 
 	bool dirty_geometry = true;

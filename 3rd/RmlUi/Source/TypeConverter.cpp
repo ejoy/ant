@@ -30,7 +30,6 @@
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/Animation.h"
 #include "../Include/RmlUi/Transform.h"
-#include "../Include/RmlUi/TransformPrimitive.h"
 
 namespace Rml {
 

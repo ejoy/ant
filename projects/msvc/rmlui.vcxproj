@@ -143,7 +143,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\Layout.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Log.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Math.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Memory.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Node.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\ObserverPtr.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Plugin.cpp" />
@@ -158,7 +157,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\PropertyParserString.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\PropertyParserTransform.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\PropertySpecification.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\RenderInterface.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Stream.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\StreamFile.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\StreamMemory.cpp" />
@@ -183,7 +181,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\SystemInterface.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Texture.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Transform.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\TransformPrimitive.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Tween.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\TypeConverter.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\URL.cpp" />
@@ -262,7 +259,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Texture.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Traits.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Transform.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\TransformPrimitive.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Tween.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\TypeConverter.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Types.h" />
@@ -288,7 +284,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\EventSpecification.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\FileInterfaceDefault.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\IdNameMap.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Memory.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\PluginRegistry.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\Pool.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\PropertiesIterator.h" />
@@ -315,7 +310,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\StyleSheetNodeSelectorOnlyChild.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\StyleSheetNodeSelectorOnlyOfType.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\StyleSheetParser.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Utilities.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerBody.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerDefault.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerHead.h" />
@@ -332,7 +326,6 @@
     <ClInclude Include="..\..\clibs\rmlui\system.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\3rd\RmlUi\Include\RmlUi\Colour.inl" />
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\Element.inl" />
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\TypeConverter.inl" />
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\Variant.inl" />

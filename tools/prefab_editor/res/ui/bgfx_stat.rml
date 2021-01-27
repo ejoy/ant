@@ -18,14 +18,14 @@
 	bgfx {
 		width: auto;
 		height: auto;
-		font: 150% "宋体";
+		font: 100% "宋体";
 		color: #FF0000;
 		text-align:"left"
 	}
 	particle {
 		width: auto;
 		height: 24px;
-		font: 150% "宋体";
+		font: 100% "宋体";
 		color: #FF0000;
 		text-align:"right"
 	}

@@ -200,15 +200,14 @@ function hierarchy:get_node(eid)
     return self.all[eid]
 end
 
-function hierarchy:update_slot_list(eid)
-    local node = self:get_node(eid)
-    local slot_list = {["None"] = eid}
-    for _, child in ipairs(node.children) do
-        if world[child.eid].slot then
-            slot_list[child.template.template.data.name] = child.eid
+function hierarchy:update_slot_list()
+    local slot_list = {["None"] = -1}
+    for _, value in pairs(self.all) do
+        if world[value.eid].slot then
+            slot_list[value.template.template.data.name] = value.eid
         end
     end
-    world[eid].slot_list = slot_list
+    self.slot_list = slot_list
 end
 
 return hierarchy

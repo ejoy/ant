@@ -86,8 +86,7 @@ PASS_THROUGH(double);
 PASS_THROUGH(bool);
 PASS_THROUGH(char);
 PASS_THROUGH(Character);
-PASS_THROUGH(Colourf);
-PASS_THROUGH(Colourb);
+PASS_THROUGH(Color);
 PASS_THROUGH(String);
 
 // Pointer types need to be typedef'd
@@ -238,8 +237,7 @@ public: \
 	} \
 }
 
-STRING_VECTOR_CONVERTER(Colourf, float, 4);
-STRING_VECTOR_CONVERTER(Colourb, byte, 4);
+STRING_VECTOR_CONVERTER(Color, byte, 4);
 
 /////////////////////////////////////////////////
 // To String Converters
@@ -355,8 +353,7 @@ public: \
 	} \
 }
 
-VECTOR_STRING_CONVERTER(Colourf, float, 4);
-VECTOR_STRING_CONVERTER(Colourb, byte, 4);
+VECTOR_STRING_CONVERTER(Color, byte, 4);
 #undef PASS_THROUGH
 #undef BASIC_CONVERTER
 #undef BASIC_CONVERTER_BOOL

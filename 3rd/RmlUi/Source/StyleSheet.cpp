@@ -31,7 +31,6 @@
 #include "StyleSheetFactory.h"
 #include "StyleSheetNode.h"
 #include "StyleSheetParser.h"
-#include "Utilities.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/Factory.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
@@ -39,6 +38,13 @@
 #include <algorithm>
 
 namespace Rml {
+
+template <class T>
+inline void HashCombine(std::size_t& seed, const T& v)
+{
+	Hash<T> hasher;
+	seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
 
 // Sorts style nodes based on specificity.
 inline static bool StyleSheetNodeSort(const StyleSheetNode* lhs, const StyleSheetNode* rhs)
@@ -106,15 +112,13 @@ size_t StyleSheet::NodeHash(const String& tag, const String& id)
 	if (!tag.empty())
 		seed = Hash<String>()(tag);
 	if(!id.empty())
-		Utilities::HashCombine(seed, id);
+		HashCombine(seed, id);
 	return seed;
 }
 
 // Returns the compiled element definition for a given element hierarchy.
 SharedPtr<ElementDefinition> StyleSheet::GetElementDefinition(const Element* element) const
 {
-	RMLUI_ASSERT_NONRECURSIVE;
-
 	// See if there are any styles defined for this element.
 	// Using static to avoid allocations. Make sure we don't call this function recursively.
 	static Vector< const StyleSheetNode* > applicable_nodes;
@@ -169,7 +173,7 @@ SharedPtr<ElementDefinition> StyleSheet::GetElementDefinition(const Element* ele
 	// Check if this puppy has already been cached in the node index.
 	size_t seed = 0;
 	for (const StyleSheetNode* node : applicable_nodes)
-		Utilities::HashCombine(seed, node);
+		HashCombine(seed, node);
 
 	auto cache_iterator = node_cache.find(seed);
 	if (cache_iterator != node_cache.end())

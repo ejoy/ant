@@ -38,7 +38,6 @@ lua_pushvariant(lua_State *L, const Rml::Variant &v) {
 		lua_pushlstring(L, s.c_str(), s.length());
 		break; }
 	case Rml::Variant::Type::NONE:
-	case Rml::Variant::Type::COLOURF:
 	case Rml::Variant::Type::COLOURB:
 	case Rml::Variant::Type::TRANSFORMPTR:
 	case Rml::Variant::Type::TRANSITIONLIST:

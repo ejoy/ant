@@ -144,8 +144,10 @@ local new_coll_mb = world:sub{"component_register", "collider"}
 function collider_sys:data_changed()
 	for _, _, eid in new_coll_mb:unpack() do
 		local e = world[eid]
-		local obj = e.collider._handle
-		collider_entity_mapper[obj] = eid
+		if e then
+			local obj = e.collider._handle
+			collider_entity_mapper[obj] = eid
+		end
 	end
 end
 

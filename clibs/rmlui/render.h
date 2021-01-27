@@ -35,33 +35,19 @@ enum SamplerFlag : uint32_t {
     MIP_MASK        = 0x00000400,
 };
 
-class TransientIndexBuffer32{
-public:
-    TransientIndexBuffer32(uint32_t sizeBytes = 1024*1024*sizeof(uint32_t));
-    ~TransientIndexBuffer32();
-    void SetIndex(bgfx_encoder_t *encoder, int *indices, int num);
-    void Reset();
-private:
-    uint32_t moffset;
-    uint32_t msize;
-    const bgfx_dynamic_index_buffer_handle_t  mdyn_indexbuffer;
-};
-
 class Renderer : public Rml::RenderInterface {
 public:
     Renderer(const RmlContext* context);
-    virtual void RenderGeometry(Rml::Vertex* vertices, int num_vertices, 
-                                int* indices, int num_indices, 
+    void RenderGeometry(Rml::Vertex* vertices, int num_vertices, 
+                                Rml::Index* indices, int num_indices,
                                 Rml::TextureHandle texture) override;
-
-	virtual void SetScissorRegion(Rml::Rect const& clip) override;
-    virtual bool LoadTexture(Rml::TextureHandle& texture_handle, Rml::Size& texture_dimensions, const Rml::String& source) override;
-    virtual bool GenerateTexture(Rml::TextureHandle& texture_handle, const Rml::byte* source, const Rml::Size& source_dimensions) override;
-    virtual void ReleaseTexture(Rml::TextureHandle texture) override;
-    virtual void SetTransform(const glm::mat4x4& transform) override{
-        mTransform = transform;
-        mScissorRect.updateTransform(mTransform);
-    }
+    bool LoadTexture(Rml::TextureHandle& texture_handle, Rml::Size& texture_dimensions, const Rml::String& source) override;
+    bool GenerateTexture(Rml::TextureHandle& texture_handle, const Rml::byte* source, const Rml::Size& source_dimensions) override;
+    void ReleaseTexture(Rml::TextureHandle texture) override;
+    void SetTransform(const glm::mat4x4& transform) override;
+    void SetClipRect() override;
+    void SetClipRect(const glm::u16vec4& r) override;
+    void SetClipRect(glm::vec4 r[2]) override;
 
 public:
     // will delete buffer
@@ -75,20 +61,13 @@ public:
     // void SubmitScissorRect();
 
 private:
-    glm::mat4x4             mTransform;
     const RmlContext*       mcontext;
-    TransientIndexBuffer32  mIndexBuffer;
-
     bgfx_encoder_t*         mEncoder;
 
     struct ScissorRect{
-        Rect scissorRect {0, 0, 0, 0};
         glm::vec4 rectVerteices[2]{glm::vec4(0), glm::vec4(0)};
         bool needShaderClipRect = false;
-        void updateScissorRect(const glm::mat4 &m, const Rml::Rect& clip);
-        void updateTransform(const glm::mat4 &m);
         void submitScissorRect(bgfx_encoder_t* encoder, const shader_info &si);
-        Rect get();
 
         #ifdef _DEBUG
         void drawDebugScissorRect(bgfx_encoder_t *encoder, uint16_t viewid, uint16_t progid);

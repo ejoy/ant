@@ -131,7 +131,7 @@ interface "irender"
     .method "check_primitive_mode_state"
 
 interface "irenderqueue"
-    .implement "render_system/render.lua"
+    .implement "render_system/renderqueue.lua"
     .method "clear_state"
     .method "view_rect"
     .method "frame_buffer"

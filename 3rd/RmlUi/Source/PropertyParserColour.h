@@ -54,7 +54,7 @@ public:
 	bool ParseValue(Property& property, const String& value, const ParameterMap& parameters) const override;
 
 private:
-	using ColourMap = UnorderedMap< String, Colourb>;
+	using ColourMap = UnorderedMap< String, Color>;
 	ColourMap html_colours;
 };
 

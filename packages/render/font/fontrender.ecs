@@ -1,7 +1,7 @@
 import "@ant.asset"
 
 system "font_system"
-    .implement "font/font/fontrender.lua"
+    .implement "font/fontrender.lua"
     .method "camera_usage"
 
 component "font"

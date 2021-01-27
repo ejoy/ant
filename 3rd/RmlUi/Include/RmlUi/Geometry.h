@@ -49,7 +49,7 @@ public:
 	~Geometry();
 	void Render();
 	Vector< Vertex >& GetVertices();
-	Vector< int >& GetIndices();
+	Vector< Index >& GetIndices();
 	void SetTexture(SharedPtr<Texture> texture);
 	void Release();
 	explicit operator bool() const;
@@ -64,18 +64,18 @@ public:
 		std::vector<Point> points;
 	};
 
-	void AddRect(const Rect& rect, Colourb col);
-	void AddRect(const Rect& rect, const Rect& uv, Colourb col);
-	void AddQuad(const Quad& quad, Colourb col);
-	void AddArc(const Path& outer, const Path& inner, Colourb col);
-	void AddPolygon(const Path& points, Colourb col);
+	void AddRect(const Rect& rect, Color col);
+	void AddRect(const Rect& rect, const Rect& uv, Color col);
+	void AddQuad(const Quad& quad, Color col);
+	void AddArc(const Path& outer, const Path& inner, Color col);
+	void AddPolygon(const Path& points, Color col);
 	void UpdateUV(size_t count, const Rect& surface, const Rect& uv);
 	void Reserve(size_t idx_count, size_t vtx_count);
 
 private:
 	void MoveFrom(Geometry& other);
 	Vector<Vertex> vertices;
-	Vector<int> indices;
+	Vector<Index> indices;
 	SharedPtr<Texture> texture;
 };
 

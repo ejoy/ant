@@ -79,10 +79,10 @@ struct ComputedValues {
 	TransitionList transition;
 	AnimationList animation;
 
-	EdgeInsets<Colourb> border_color;
+	EdgeInsets<Color> border_color;
 	CornerInsets<float> border_radius{};
 
-	Colourb background_color = Colourb(255, 255, 255, 0);
+	Color background_color = Color(255, 255, 255, 0);
 	String background_image;
 };
 }

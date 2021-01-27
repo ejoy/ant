@@ -216,9 +216,6 @@ function m.show()
             if imgui.widget.MenuItem("Slot") then
                 world:pub { "Create", "slot"}
             end
-            if imgui.widget.MenuItem("Slot") then
-                world:pub { "Create", "slot"}
-            end
             imgui.windows.EndPopup()
         end
         imgui.cursor.Separator()

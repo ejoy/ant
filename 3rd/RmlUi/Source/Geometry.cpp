@@ -74,7 +74,7 @@ Vector<Vertex>& Geometry::GetVertices() {
 	return vertices;
 }
 
-Vector<int>& Geometry::GetIndices() {
+Vector<Index>& Geometry::GetIndices() {
 	return indices;
 }
 
@@ -91,7 +91,7 @@ Geometry::operator bool() const {
 	return !indices.empty();
 }
 
-static void DrawQuadIdx(int* idx, int idx_offset) {
+static void DrawQuadIdx(Index* idx, Index idx_offset) {
 	idx[0] = idx_offset + 0; idx[1] = idx_offset + 1; idx[2] = idx_offset + 2;
 	idx[3] = idx_offset + 0; idx[4] = idx_offset + 2; idx[5] = idx_offset + 3;
 }
@@ -103,7 +103,7 @@ static void DrawQuadPos(Vertex* vtx, const Point& a, const Point& b, const Point
 	vtx[3].pos = d;
 }
 
-static void DrawQuadColor(Vertex* vtx, const Colourb& col) {
+static void DrawQuadColor(Vertex* vtx, const Color& col) {
 	vtx[0].col = col;
 	vtx[1].col = col;
 	vtx[2].col = col;
@@ -117,13 +117,13 @@ static void DrawQuadUV(Vertex* vtx, const Point& a, const Point& b, const Point&
 	vtx[3].uv = d;
 }
 
-static void DrawQuad(Vertex* vtx, int* idx, int idx_offset, const Point& a, const Point& b, const Point& c, const Point& d, const Colourb& col) {
+static void DrawQuad(Vertex* vtx, Index* idx, Index idx_offset, const Point& a, const Point& b, const Point& c, const Point& d, const Color& col) {
 	DrawQuadIdx(idx, idx_offset);
 	DrawQuadPos(vtx, a, b, c, d);
 	DrawQuadColor(vtx, col);
 }
 
-static void DrawRect(Vertex* vtx, int* idx, int idx_offset, const Rect& pos, const Colourb& col) {
+static void DrawRect(Vertex* vtx, Index* idx, Index idx_offset, const Rect& pos, const Color& col) {
 	Point topLeft = pos.origin;
 	Point bottomRight = pos.origin + pos.size;
 	DrawQuad(vtx, idx, idx_offset, topLeft, Point(bottomRight.x, topLeft.y), bottomRight, Point(topLeft.x, bottomRight.y), col);
@@ -162,35 +162,35 @@ static void PointNormalize(float& vx, float& vy) {
 	}
 }
 
-void Geometry::AddRect(const Rect& rect, Colourb col) {
+void Geometry::AddRect(const Rect& rect, Color col) {
 	size_t vsz = vertices.size();
 	size_t isz = indices.size();
 	Reserve(6, 4);
 	Vertex* vtx = &vertices[vsz];
-	int* idx = &indices[isz];
-	DrawRect(vtx, idx, (int)vsz, rect, col);
+	Index* idx = &indices[isz];
+	DrawRect(vtx, idx, (Index)vsz, rect, col);
 }
 
-void Geometry::AddQuad(const Quad& quad, Colourb col) {
+void Geometry::AddQuad(const Quad& quad, Color col) {
 	size_t vsz = vertices.size();
 	size_t isz = indices.size();
 	Reserve(6, 4);
 	Vertex* vtx = &vertices[vsz];
-	int* idx = &indices[isz];
-	DrawQuad(vtx, idx, (int)vsz, quad.a, quad.b, quad.c, quad.d, col);
+	Index* idx = &indices[isz];
+	DrawQuad(vtx, idx, (Index)vsz, quad.a, quad.b, quad.c, quad.d, col);
 }
 
-void Geometry::AddRect(const Rect& rect, const Rect& uv, Colourb col) {
+void Geometry::AddRect(const Rect& rect, const Rect& uv, Color col) {
 	size_t vsz = vertices.size();
 	size_t isz = indices.size();
 	Reserve(6, 4);
 	Vertex* vtx = &vertices[vsz];
-	int* idx = &indices[isz];
-	DrawRect(vtx, idx, (int)vsz, rect, col);
+	Index* idx = &indices[isz];
+	DrawRect(vtx, idx, (Index)vsz, rect, col);
 	DrawRectUV(vtx, uv);
 }
 
-void Geometry::AddArc(const Path& outer, const Path& inner, Colourb col) {
+void Geometry::AddArc(const Path& outer, const Path& inner, Color col) {
 	size_t outer_count = outer.size();
 	size_t inner_count = inner.size();
 	size_t count = outer_count + inner_count;
@@ -202,7 +202,7 @@ void Geometry::AddArc(const Path& outer, const Path& inner, Colourb col) {
 	size_t isz = indices.size();
 	Reserve((count - 2) * 3, count);
 	Vertex* vtx = &vertices[vsz];
-	int* idx = &indices[isz];
+	Index* idx = &indices[isz];
 
 	for (size_t i = 0; i < outer_count; ++i) {
 		vtx[i].pos = outer[i];
@@ -214,24 +214,24 @@ void Geometry::AddArc(const Path& outer, const Path& inner, Colourb col) {
 		vtx[i].col = col;
 	}
 
-	int outer_offset = (int)vsz;
-	int inner_offset = (int)(vsz + outer_count);
-	int diff = (int)outer_count - (int)inner_count;
-	int prefix = diff / 2;
-	int suffix = diff - diff / 2;
-	for (int i = 0; i < prefix; ++i) {
+	Index outer_offset = (Index)vsz;
+	Index inner_offset = (Index)(vsz + outer_count);
+	Index diff = (Index)outer_count - (Index)inner_count;
+	Index prefix = diff / 2;
+	Index suffix = diff - diff / 2;
+	for (Index i = 0; i < prefix; ++i) {
 		idx[0] = outer_offset + i + 0;
 		idx[1] = outer_offset + i + 1;
 		idx[2] = inner_offset + 0;
 		idx += 3;
 	}
-	for (int i = 0; i < suffix; ++i) {
-		idx[0] = outer_offset + ((int)outer_count - i - 2) + 0;
-		idx[1] = outer_offset + ((int)outer_count - i - 2) + 1;
-		idx[2] = inner_offset + ((int)inner_count - 1);
+	for (Index i = 0; i < suffix; ++i) {
+		idx[0] = outer_offset + ((Index)outer_count - i - 2) + 0;
+		idx[1] = outer_offset + ((Index)outer_count - i - 2) + 1;
+		idx[2] = inner_offset + ((Index)inner_count - 1);
 		idx += 3;
 	}
-	for (int i = 0; i < (int)inner_count - 1; ++i) {
+	for (Index i = 0; i < (Index)inner_count - 1; ++i) {
 		idx[0] = outer_offset + prefix + i + 0;
 		idx[1] = outer_offset + prefix + i + 1;
 		idx[2] = inner_offset + i + 1;
@@ -242,21 +242,21 @@ void Geometry::AddArc(const Path& outer, const Path& inner, Colourb col) {
 	}
 }
 
-void Geometry::AddPolygon(const Path& points, Colourb col) {
+void Geometry::AddPolygon(const Path& points, Color col) {
 	size_t vsz = vertices.size();
 	size_t isz = indices.size();
 	size_t points_count = points.size();
 	assert(points_count > 2);
 	Reserve((points_count - 2) * 3, points_count);
 	Vertex* vtx = &vertices[vsz];
-	int* idx = &indices[isz];
+	Index* idx = &indices[isz];
 
 	for (int i = 0; i < points_count; ++i) {
 		vtx[i].pos = points[i];
 		vtx[i].col = col;
 	}
 
-	int offset = (int)vsz;
+	Index offset = (Index)vsz;
 	for (int i = 0; i < points_count - 2; ++i) {
 		idx[0] = offset + 0;
 		idx[1] = offset + i + 1;

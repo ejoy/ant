@@ -151,9 +151,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\Math.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\Memory.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\ObserverPtr.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -191,9 +188,6 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\PropertySpecification.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\RenderInterface.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Stream.cpp">
@@ -263,9 +257,6 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Texture.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\TransformPrimitive.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Tween.cpp">
@@ -393,9 +384,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\IdNameMap.h">
       <Filter>source</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Memory.h">
-      <Filter>source</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\PluginRegistry.h">
       <Filter>source</Filter>
     </ClInclude>
@@ -472,9 +460,6 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\StyleSheetParser.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\Utilities.h">
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerBody.h">
@@ -633,9 +618,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Transform.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\TransformPrimitive.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Tween.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -676,9 +658,6 @@
   <ItemGroup>
     <None Include="..\..\3rd\RmlUi\Source\Pool.inl">
       <Filter>source</Filter>
-    </None>
-    <None Include="..\..\3rd\RmlUi\Include\RmlUi\Colour.inl">
-      <Filter>include</Filter>
     </None>
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\Element.inl">
       <Filter>include</Filter>

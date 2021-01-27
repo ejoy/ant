@@ -33,45 +33,8 @@
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/Transform.h"
-#include "../Include/RmlUi/TransformPrimitive.h"
-#include <glm/gtx/matrix_decompose.hpp>
 
 namespace Rml {
-
-static Colourf ColourToLinearSpace(Colourb c)
-{
-	Colourf result;
-	// Approximate inverse sRGB function
-	result.red = Math::SquareRoot((float)c.red / 255.f);
-	result.green = Math::SquareRoot((float)c.green / 255.f);
-	result.blue = Math::SquareRoot((float)c.blue / 255.f);
-	result.alpha = (float)c.alpha / 255.f;
-	return result;
-}
-
-static Colourb ColourFromLinearSpace(Colourf c)
-{
-	Colourb result;
-	result.red = (byte)Math::Clamp(c.red*c.red*255.f, 0.0f, 255.f);
-	result.green = (byte)Math::Clamp(c.green*c.green*255.f, 0.0f, 255.f);
-	result.blue = (byte)Math::Clamp(c.blue*c.blue*255.f, 0.0f, 255.f);
-	result.alpha = (byte)Math::Clamp(c.alpha*255.f, 0.0f, 255.f);
-	return result;
-}
-
-static bool CombineAndDecompose(Transform& t, size_t i, Element& e) {
-	glm::mat4x4 m = TransformGetMatrix(t, e, i);
-	Transforms::DecomposedMatrix4 d;
-	if (!glm::decompose(m, d.scale, d.quaternion, d.translation, d.skew, d.perspective))
-		return false;
-	t.erase(t.begin() + i, t.end());
-	t.emplace_back(std::move(d));
-	return true;
-}
-
-static bool CombineAndDecompose(Transform& t0, Transform& t1, size_t i, Element& e) {
-	return CombineAndDecompose(t0, i, e) && CombineAndDecompose(t1, i, e);
-}
 
 static Property InterpolateProperties(const Property& p0, const Property& p1, float alpha, Element& element)
 {
@@ -88,12 +51,9 @@ static Property InterpolateProperties(const Property& p0, const Property& p1, fl
 
 	if (p0.unit == Property::COLOUR && p1.unit == Property::COLOUR)
 	{
-		Colourf c0 = ColourToLinearSpace(p0.value.Get<Colourb>());
-		Colourf c1 = ColourToLinearSpace(p1.value.Get<Colourb>());
-
-		Colourf c = c0 * (1.0f - alpha) + c1 * alpha;
-
-		return Property{ ColourFromLinearSpace(c), Property::COLOUR };
+		Color c0 = p0.value.Get<Color>();
+		Color c1 = p1.value.Get<Color>();
+		return Property{ ColorInterpolate(c0, c1, alpha), Property::COLOUR };
 	}
 
 	if (p0.unit == Property::TRANSFORM && p1.unit == Property::TRANSFORM)
@@ -118,6 +78,17 @@ static Property InterpolateProperties(const Property& p0, const Property& p1, fl
 //   https://www.w3.org/TR/css-transforms-2/#interpolation-of-transform-functions
 //
 static bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element) {
+	for (auto& p0 : t0) {
+		if (!p0.PrepareForInterpolation(element)) {
+			return false;
+		}
+	}
+	for (auto& p1 : t1) {
+		if (!p1.PrepareForInterpolation(element)) {
+			return false;
+		}
+	}
+
 	if (t0.size() != t1.size()) {
 		bool t0_shorter = t0.size() < t1.size();
 		auto& shorter = t0_shorter ? t0 : t1;
@@ -127,28 +98,24 @@ static bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element)
 			auto& p0 = shorter[i];
 			auto& p1 = longer[i];
 			if (p0.index() == p1.index()) {
-				p0.PrepareForInterpolation(element, false);
-				p1.PrepareForInterpolation(element, false);
 				continue;
 			}
 			if (p0.GetType() == p1.GetType()) {
-				p0.PrepareForInterpolation(element, true);
-				p1.PrepareForInterpolation(element, true);
+				p0.ConvertToGenericType();
+				p1.ConvertToGenericType();
 				RMLUI_ASSERT(p0.index() == p1.index());
 				continue;
 			}
 			if (shorter.size() < longer.size()) {
-				p1.PrepareForInterpolation(element, false);
 				TransformPrimitive p = p1;
 				p.SetIdentity();
 				shorter.insert(shorter.begin() + i, p);
 				continue;
 			}
-			return CombineAndDecompose(t0, t1, i, element);
+			return t0.Combine(element, i) && t1.Combine(element, i);
 		}
 		for (; i < longer.size(); ++i) {
 			auto& p1 = longer[i];
-			p1.PrepareForInterpolation(element, false);
 			TransformPrimitive p = p1;
 			p.SetIdentity();
 			shorter.insert(shorter.begin() + i, p);
@@ -159,7 +126,7 @@ static bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element)
 	RMLUI_ASSERT(t0.size() == t1.size());
 	for (size_t i = 0; i < t0.size(); ++i) {
 		if (t0[i].index() != t1[i].index()) {
-			return CombineAndDecompose(t0, t1, i, element);
+			return t0.Combine(element, i) && t1.Combine(element, i);
 		}
 	}
 	return true;

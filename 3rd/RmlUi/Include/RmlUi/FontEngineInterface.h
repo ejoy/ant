@@ -127,7 +127,7 @@ public:
 	/// @param[in] colour The colour to render the text.
 	/// @param[out] geometry An array of geometries to generate the geometry into.
 	/// @return The width, in pixels, of the string geometry.
-	virtual void GenerateString(FontFaceHandle face_handle, TextEffectsHandle text_effects_handle, LineList& lines, const Colourb& colour, GeometryList& geometry);
+	virtual void GenerateString(FontFaceHandle face_handle, TextEffectsHandle text_effects_handle, LineList& lines, const Color& colour, GeometryList& geometry);
 };
 
 } // namespace Rml

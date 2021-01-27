@@ -48,7 +48,8 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	GetSystemInterface()->JoinPath(path, StringUtilities::Replace(element->GetOwnerDocument()->GetSourceURL(), '|', ':'), background_image);
 	geometry.SetTexture(Texture::Fetch(path));
 	Layout::Metrics const& metrics = element->GetMetrics();
-	Colourb colour = Colourb(255, 255, 255).ApplyOpacity(element->GetOpacity());
+	Color colour(255, 255, 255, 255);
+	ColorApplyOpacity(colour, element->GetOpacity());
 
 	Rect surface {
 		{0, 0},

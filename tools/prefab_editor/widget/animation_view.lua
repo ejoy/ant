@@ -333,14 +333,6 @@ local function add_collider(ct)
     runtime_event.collider = current_anim.collider
 end
 
-local function recreate_collider(col, config)
-    if config.type == "capsule" then return end
-    prefab_mgr:remove_entity(col.eid)
-    delete_collider(col.collider)
-    col.shape = config
-    col.eid = prefab_mgr:create("collider", config)
-end
-
 local function show_events()
     if selected_frame >= 0 then
         imgui.cursor.SameLine()
@@ -1022,7 +1014,7 @@ function m.bind(eid)
         end
         setup_joint_list(joints[eid].root)
         world[eid].joint_list = joint_list
-        hierarchy:update_slot_list(eid)
+        hierarchy:update_slot_list()
     end
 end
 

@@ -38,10 +38,9 @@
 #include "../Include/RmlUi/PropertyIdSet.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
-#include "../Include/RmlUi/TransformPrimitive.h"
+#include "../Include/RmlUi/Transform.h"
 #include "../Include/RmlUi/RenderInterface.h"
 #include "../Include/RmlUi/StreamMemory.h"
-#include "../Include/RmlUi/Transform.h"
 #include "Clock.h"
 #include "DataModel.h"
 #include "ElementAnimation.h"
@@ -131,6 +130,7 @@ void Element::UpdateProperties() {
 void Element::OnRender() {
 	UpdateTransform();
 	UpdatePerspective();
+	UpdateClip();
 	UpdateGeometry();
 
 	size_t i = 0;
@@ -757,10 +757,6 @@ DataModel* Element::GetDataModel() const {
 	return data_model;
 }
 
-bool Element::IsClippingEnabled() {
-	return GetLayout().GetOverflow() != Layout::Overflow::Visible;
-}
-
 void Element::OnAttributeChange(const ElementAttributes& changed_attributes)
 {
 	auto it = changed_attributes.find("id");
@@ -1332,7 +1328,7 @@ void Element::UpdateTransform() {
 		if (computed.transform_origin_y.type == Style::TransformOrigin::Percentage) {
 			origin.y *= metrics.frame.size.h * 0.01f;
 		}
-		new_transform = glm::translate(origin) * TransformGetMatrix(*computed.transform, *this) * glm::translate(-origin);
+		new_transform = glm::translate(origin) * computed.transform->GetMatrix(*this) * glm::translate(-origin);
 	}
 	new_transform = glm::translate(new_transform, glm::vec3(metrics.frame.origin.x, metrics.frame.origin.y, 0));
 	if (parent) {
@@ -1452,19 +1448,63 @@ Element* Element::GetElementAtPoint(Point point, const Element* ignore_element) 
 	return nullptr;
 }
 
+void Element::UpdateClip() {
+	if (!dirty_clip)
+		return;
+	dirty_clip = false;
+
+	if (GetLayout().GetOverflow() == Layout::Overflow::Visible) {
+		clip_type = Clip::None;
+		return;
+	}
+	Size size = GetMetrics().frame.size;
+	if (size.IsEmpty()) {
+		clip_type = Clip::None;
+		return;
+	}
+	Rect scissorRect{ {}, size };
+	glm::vec4 corners[] = {
+		{scissorRect.left(),  scissorRect.top(),    0, 1},
+		{scissorRect.right(), scissorRect.top(),    0, 1},
+		{scissorRect.right(), scissorRect.bottom(), 0, 1},
+		{scissorRect.left(),  scissorRect.bottom(), 0, 1},
+	};
+	for (auto& c : corners) {
+		c = transform * c;
+		c /= c.w;
+	}
+	if (corners[0].x == corners[3].x
+		&& corners[0].y == corners[1].y
+		&& corners[2].x == corners[1].x
+		&& corners[2].y == corners[3].y
+	) {
+		clip_type = Clip::Scissor;
+		clip.scissor.x = std::floor(corners[0].x);
+		clip.scissor.y = std::floor(corners[0].y);
+		clip.scissor.z = std::ceil(corners[2].x - clip.scissor.x);
+		clip.scissor.w = std::ceil(corners[2].y - clip.scissor.y);
+		return;
+	}
+	clip_type = Clip::Shader;
+	clip.shader[0].x = corners[0].x; clip.shader[0].y = corners[0].y;
+	clip.shader[0].z = corners[1].x; clip.shader[0].w = corners[1].y;
+	clip.shader[1].z = corners[2].x; clip.shader[1].w = corners[2].y;
+	clip.shader[1].x = corners[3].x; clip.shader[1].y = corners[3].y;
+}
+
 void Element::SetRednerStatus() {
 	auto render = GetRenderInterface();
 	render->SetTransform(transform);
-	if (IsClippingEnabled()) {
-		render->SetScissorRegion({ {}, GetMetrics().frame.size });
-	}
-	else {
-		render->SetScissorRegion({});
+	switch (clip_type) {
+	case Clip::None:    render->SetClipRect();             break;
+	case Clip::Scissor: render->SetClipRect(clip.scissor); break;
+	case Clip::Shader:  render->SetClipRect(clip.shader);  break;
 	}
 }
 
 void Element::DirtyTransform() {
 	dirty_transform = true;
+	dirty_clip = true;
 }
 
 } // namespace Rml
