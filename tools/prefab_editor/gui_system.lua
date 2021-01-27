@@ -347,6 +347,9 @@ function m:data_changed()
             transform_dirty = false
             template.template.data.name = v1
             hierarchy:update_display_name(target, v1)
+            if world[target].slot then
+                hierarchy:update_slot_list()
+            end
         elseif what == "parent" then
             hierarchy:set_parent(target, v1)
             local sourceWorldMat = iom.calc_worldmat(target)

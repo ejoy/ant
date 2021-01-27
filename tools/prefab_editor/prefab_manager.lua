@@ -8,6 +8,7 @@ local stringify     = import_package "ant.serialize".stringify
 local widget_utils  = require "widget.utils"
 local bgfx          = require "bgfx"
 local gd            = require "common.global_data"
+local utils         = require "common.utils"
 local geo_utils
 local logger
 local ilight
@@ -136,9 +137,9 @@ local geom_mesh_file = {
     ["torus"] = "/pkg/ant.resources.binary/meshes/base/torus.glb|meshes/pTorus1_P1.meshbin"
 }
 local default_collider_define = {
-    ["sphere"] = {origin = {0, 0, 0, 1}, radius = 0.1},
-    ["box"] = {origin = {0, 0, 0, 1}, size = {0.05, 0.05, 0.05} },
-    ["capsule"] = {origin = {0, 0, 0, 1}, height = 1.0, radius = 0.25}
+    ["sphere"] = {{origin = {0, 0, 0, 1}, radius = 0.1}},
+    ["box"] = {{origin = {0, 0, 0, 1}, size = {0.05, 0.05, 0.05} }},
+    ["capsule"] = {{origin = {0, 0, 0, 1}, height = 1.0, radius = 0.25}}
 }
 
 local slot_entity_id = 1
@@ -162,7 +163,7 @@ function m:create_slot()
     world[new_entity].parent = gizmo.target_eid
     self.entities[#self.entities+1] = new_entity
     hierarchy:add(new_entity, {template = temp.__class[1]}, gizmo.target_eid)
-    hierarchy:update_slot_list(gizmo.target_eid)
+    hierarchy:update_slot_list()
 end
 
 function m:create_collider(config)
@@ -170,9 +171,9 @@ function m:create_collider(config)
     local scale = {}
     local define = config.define or default_collider_define[config.type]
     if config.type == "sphere" then
-        scale = define.radius * 100
+        scale = define[1].radius * 100
     elseif config.type == "box" then
-        local size = define.size
+        local size = define[1].size
         scale = {size[1] * 200, size[2] * 200, size[3] * 200}
     elseif config.type == "capsule" then
     end
@@ -325,6 +326,21 @@ function m:open(filename)
     world:pub {"WindowTitle", filename}
 end
 
+local function create_simple_entity(name)
+    return world:create_entity{
+		policy = {
+            "ant.general|name",
+            "ant.scene|hierarchy_policy",
+            "ant.scene|transform_policy"
+		},
+		data = {
+            name = name,
+            scene_entity = true,
+            transform = {}
+		},
+    }
+end
+
 function m:reset_prefab()
     camera_mgr.clear()
     for _, eid in ipairs(self.entities) do
@@ -339,16 +355,7 @@ function m:reset_prefab()
     end
     light_gizmo.clear()
     hierarchy:clear()
-    self.root = world:create_entity{
-		policy = {
-			"ant.general|name",
-			"ant.scene|transform_policy",
-		},
-		data = {
-			transform = {},
-			name = "scene root",
-		},
-    }
+    self.root = create_simple_entity("scene root")
     hierarchy:set_root(self.root)
 end
 
@@ -370,16 +377,7 @@ function m:open_prefab(prefab)
                 teml.children = entity
                 set_select_adapter(entity, parent)
             else
-                local prefab_root = world:create_entity{
-                    policy = {
-                        "ant.general|name",
-                        "ant.scene|transform_policy",
-                    },
-                    data = {
-                        transform = {},
-                        name = "prefab" .. i,
-                    },
-                }
+                local prefab_root = create_simple_entity("prefab" .. i)
                 hierarchy:add(prefab_root, {filename = prefab.__class[i].prefab, children = entity}, self.root)
                 for _, e in ipairs(entity) do
                     if not world[e].parent then
@@ -432,7 +430,7 @@ function m:open_prefab(prefab)
                 light_gizmo.bind(entity)
                 light_gizmo.show(false)
             elseif world[entity].collider then
-
+                world:remove_entity(entity)
             end
         end
     end
@@ -452,42 +450,52 @@ function m:add_prefab(filename)
     if not self.root then
         self:reset_prefab()
     end
-    local entity_template = {
-        action = {
-            mount = 1
-        },
-        policy = {
-            "ant.general|name",
-            "ant.scene|transform_policy"
-        },
-        data = {
-            name = "",
-            transform = {},
-            scene_entity = true
-        }
-    }
-    local mount_root = world:create_entity(entity_template)
+    -- local entity_template = {
+    --     action = {
+    --         mount = 1
+    --     },
+    --     policy = {
+    --         "ant.general|name",
+    --         "ant.scene|transform_policy"
+    --     },
+    --     data = {
+    --         name = gen_prefab_name(),
+    --         transform = {},
+    --         scene_entity = true
+    --     }
+    -- }
+    local mount_root = world:create_simple_entity(gen_prefab_name())--world:create_entity(entity_template)
     self.entities[#self.entities+1] = mount_root
-    local entity_name = gen_prefab_name()
-    entity_template.data.name = entity_name
-    world[mount_root].name = entity_name
-    -- local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
+    -- entity_template.data.name = entity_name
+    -- world[mount_root].name = entity_name
     local prefab = worldedit:prefab_template(filename)
     local entities = worldedit:prefab_instance(prefab)
     world[entities[1]].parent = mount_root
     
     set_select_adapter(entities, mount_root)
-    -- local current_dir = lfs.path(tostring(self.prefab)):parent_path()
-    -- local relative_path = lfs.relative(lfs.path(vfspath), current_dir)
-
-    hierarchy:add(mount_root, {template = entity_template, filename = filename, children = entities}, self.root)
+    --hierarchy:add(mount_root, {template = entity_template, filename = filename, children = entities}, self.root)
+    hierarchy:add(mount_root, {filename = filename, children = entities}, self.root)
 end
 
 function m:recreate_entity(eid)
     local prefab = hierarchy:get_template(eid)
-    local new_eid = world:create_entity(prefab.template)
+    local copy_prefab = utils.deep_copy(prefab)
+    local new_eid = world:create_entity(copy_prefab.template)
     iom.set_srt(new_eid, iom.srt(eid))
-    world[new_eid].name = world[eid].name
+    local scale = 1
+    if world[new_eid].collider.sphere then
+        scale = world[new_eid].collider.sphere[1].radius * 100
+    elseif world[new_eid].collider.box then
+        local size = world[new_eid].collider.box[1].size
+        scale = {size[1] * 200, size[2] * 200, size[3] * 200}
+    else
+    end
+    iom.set_scale(new_eid, scale)
+    if world[new_eid].collider then
+        imaterial.set_property(new_eid, "u_color", {1, 0.5, 0.5, 0.5})
+    end
+
+    --world[new_eid].name = world[eid].name
     local new_node = hierarchy:replace(eid, new_eid)
     world[new_eid].parent = new_node.parent
     for _, v in ipairs(new_node.children) do
@@ -637,8 +645,8 @@ function m:remove_entity(eid)
         end
     end
     world:remove_entity(eid)
-    self:internal_remove(eid)
     hierarchy:del(eid)
+    self:internal_remove(eid)
 end
 
 function m:get_current_filename()
