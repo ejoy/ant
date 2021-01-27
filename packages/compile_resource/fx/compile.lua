@@ -104,7 +104,7 @@ local function get_macros(setting)
             if t == "function" then
                 macros[#macros+1] = f(v)
             elseif t == "string" then
-                macros[#macros+1] = v
+                macros[#macros+1] = f
             else
                 error("invalid type")
             end
