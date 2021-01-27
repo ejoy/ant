@@ -810,10 +810,12 @@ function m.show()
                             iani.play(current_eid, current_anim_name, 0, current_clip_name)
                         end
                     end
-                    for _, group in ipairs(current_anim.groups) do
-                        if imgui.widget.Selectable(group.name, current_clip_name == group.name) then
-                            current_clip_name = group.name
-                            iani.play(current_eid, current_anim_name, 0, current_clip_name)
+                    if current_anim.groups then
+                        for _, group in ipairs(current_anim.groups) do
+                            if imgui.widget.Selectable(group.name, current_clip_name == group.name) then
+                                current_clip_name = group.name
+                                iani.play(current_eid, current_anim_name, 0, current_clip_name)
+                            end
                         end
                     end
                 end
