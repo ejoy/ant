@@ -11,9 +11,9 @@ local prefab_mgr
 local collider_type = {"sphere", "box", "capsule"}
 function ColliderView:_init()
     BaseView._init(self)
-    self.radius = uiproperty.Float({label = "Radius", min = 0.001, speed = 0.01}, {})
-    self.height = uiproperty.Float({label = "Height", min = 0.001, speed = 0.01}, {})
-    self.half_size = uiproperty.Float({label = "HalfSize", dim = 3, min = 0.001, speed = 0.01}, {})
+    self.radius = uiproperty.Float({label = "Radius", min = 0.01, max = 10.0, speed = 0.01}, {})
+    self.height = uiproperty.Float({label = "Height", min = 0.01, max = 10.0, speed = 0.01}, {})
+    self.half_size = uiproperty.Float({label = "HalfSize", min = 0.01, max = 10.0, speed = 0.01, dim = 3}, {})
 end
 local redefine = false
 function ColliderView:set_model(eid)

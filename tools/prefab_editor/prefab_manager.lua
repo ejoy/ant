@@ -413,6 +413,10 @@ function m:open_prefab(prefab)
                         config.define = collider.box
                     end
                     local new_entity, temp = self:create_collider(config)
+                    
+                    if world[entity].parent and world[world[entity].parent].slot then
+                        world[new_entity].slot_name = world[world[entity].parent].name
+                    end
                     world[new_entity].parent = world[entity].parent or self.root
                     hierarchy:add(new_entity, {template = temp.__class[1]}, world[new_entity].parent)
                     add_entity[#add_entity + 1] = new_entity
