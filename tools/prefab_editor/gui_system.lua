@@ -32,6 +32,7 @@ local camera_mgr = require "camera_manager"(world)
 local gizmo = require "gizmo.gizmo"(world)
 local global_data = require "common.global_data"
 local icons = require "common.icons"(asset_mgr)
+local logger = require "widget.log"(asset_mgr)
 local gizmo_const = require "gizmo.const"
 local new_project = require "common.new_project"
 local widget_utils = require "widget.utils"
@@ -109,33 +110,48 @@ local function choose_project()
         if imgui.widget.Button("Create project") then
             local path = choose_project_dir()
             if path then
-                global_data.project_root = lfs.path(path)
-                on_new_project(path)
-                global_data.packages = get_package(lfs.absolute(global_data.project_root), true)
+                local lpath = lfs.path(path)
+                local not_empty
+                for path in lpath:list_directory() do
+                    not_empty = true
+                    break
+                end
+                if not_empty then
+                    logger.error({tag = "Editor", message = "folder not empty!"})
+                else
+                    global_data.project_root = lpath
+                    on_new_project(path)
+                    global_data.packages = get_package(lfs.absolute(global_data.project_root), true)
+                end
             end
         end
         imgui.cursor.SameLine()
         if imgui.widget.Button("Open project") then
             local path = choose_project_dir()
             if path then
-                global_data.project_root = lfs.path(path)
-                global_data.packages = get_package(lfs.absolute(global_data.project_root), true)
-                --file server
-                local cthread = require "thread"
-                cthread.newchannel "log_channel"
-                cthread.newchannel "fileserver_channel"
-                cthread.newchannel "console_channel"
-                local produce = cthread.channel_produce "fileserver_channel"
-                produce:push(arg, path)
-                local lthread = require "editor.thread"
-                fileserver_thread = lthread.create [[
-                    package.path = "engine/?.lua;tools/prefab_editor/?.lua"
-                    require "bootstrap"
-                    local fileserver = require "fileserver_adapter"()
-                    fileserver.run()
-                ]]
-                log_widget.init_log_receiver()
-                console_widget.init_console_sender()
+                local lpath = lfs.path(path)
+                if lfs.exists(lpath / ".mount") then
+                    global_data.project_root = lpath
+                    global_data.packages = get_package(lfs.absolute(global_data.project_root), true)
+                    --file server
+                    local cthread = require "thread"
+                    cthread.newchannel "log_channel"
+                    cthread.newchannel "fileserver_channel"
+                    cthread.newchannel "console_channel"
+                    local produce = cthread.channel_produce "fileserver_channel"
+                    produce:push(arg, path)
+                    local lthread = require "editor.thread"
+                    fileserver_thread = lthread.create [[
+                        package.path = "engine/?.lua;tools/prefab_editor/?.lua"
+                        require "bootstrap"
+                        local fileserver = require "fileserver_adapter"()
+                        fileserver.run()
+                    ]]
+                    log_widget.init_log_receiver()
+                    console_widget.init_console_sender()
+                else
+                    logger.error({tag = "Editor", message = "not project exist!"})
+                end
             end
         end
         imgui.cursor.SameLine()
@@ -210,8 +226,8 @@ function m:ui_update()
     inspector.show()
     resource_browser.show()
     anim_view.show()
-    log_widget.show()
     console_widget.show()
+    log_widget.show()
     imgui.windows.PopStyleColor(2)
     imgui.windows.PopStyleVar()
     local dirty = false
