@@ -10,7 +10,7 @@ local ipf		= world:interface "ant.scene|iprimitive_filter"
 local isp		= world:interface "ant.render|system_properties"
 local icamera	= world:interface "ant.camera|camera"
 
-local render_sys = ecs.system "forward_render_system"
+local render_sys = ecs.system "render_system"
 
 function render_sys:init()
 	local vr = {w=world.args.width,h=world.args.height}

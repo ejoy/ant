@@ -5,7 +5,7 @@ import "shadow/shadow_debug.ecs"
 
 system "shadow_system"
     .implement "shadow/shadow_maker.lua"
-    .require_system "ant.render|forward_render_system"
+    .require_system "ant.render|render_system"
     --.require_policy "ant.render|shadow_debug_policy"
     .method "init"
     .method "post_init"

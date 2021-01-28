@@ -37,6 +37,7 @@ local function update_render_queue(q, viewsize)
 
 	icamera.set_frustum_aspect(q.camera_eid, vr.w/vr.h)
 	resize_framebuffer(vr.w, vr.h, rt.fb_idx)
+	irq.update_rendertarget(rt)
 end
 
 local function rebind_uiruntime()
@@ -47,30 +48,12 @@ local function rebind_uiruntime()
 	fbmgr.bind(uiviewid, fbidx)
 end
 
-local irq = world:interface "ant.render|irenderqueue"
-local function rebind_viewid()
-	for _, eid in world:each "render_target" do
-		irq.update_rendertarget(world[eid].render_target)
+local function update_camera_viewrect(viewsize)
+	for _, eid in world:each "watch_screen_buffer" do
+		update_render_queue(world[eid], viewsize)
 	end
 
 	rebind_uiruntime()
-end
-
-local function update_camera_viewrect(viewsize)
-	local pdq = world:singleton_entity "pre_depth_queue"
-	if pdq then
-		update_render_queue(pdq, viewsize)
-	end
-
-	local mq = world:singleton_entity "main_queue"
-	update_render_queue(mq, viewsize)
-
-	local bq = world:singleton_entity "blit_queue"
-	if bq then
-		update_render_queue(bq, viewsize)
-	end
-
-	rebind_viewid()
 end
 
 function vp_detect_sys:post_init()

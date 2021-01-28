@@ -15,10 +15,10 @@ local ipf			= world:interface "ant.scene|iprimitive_filter"
 
 local vpt = ecs.transform "visible_primitive_transform"
 local function parse_rc(rc)
-	local pdq = world:singleton_entity "pre_depth_queue"
-	if pdq then
-		local state = bgfx.parse_state(rc.state)
-		state.WRITE_MASK = state.WRITE_MASK:gsub("Z", "")
+	local state = bgfx.parse_state(rc.state)
+	local wm = state.WRITE_MASK:gsub("Z", "")
+	if wm ~= state.WRITE_MASK then
+		state.WRITE_MASK = wm
 		return setmetatable({
 			state = bgfx.make_state(state)
 		}, {__index=rc})
@@ -260,6 +260,7 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|pre_depth_queue",
+			"ant.render|watch_screen_buffer",
 			"ant.general|name",
 		},
 		data = {
@@ -284,6 +285,7 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 			},
 			visible = true,
 			pre_depth_queue = true,
+			watch_screen_buffer = true,
 		}
 	}
 end
@@ -350,6 +352,7 @@ function irender.create_main_queue(view_rect, camera_eid)
 	return world:create_entity {
 		policy = {
 			"ant.render|render_queue",
+			"ant.render|watch_screen_buffer",
 			"ant.render|main_queue",
 			"ant.general|name",
 		},
@@ -372,6 +375,7 @@ function irender.create_main_queue(view_rect, camera_eid)
 			visible = true,
 			name = "main render queue",
 			main_queue = true,
+			watch_screen_buffer = true,
 		}
 	}
 end
@@ -390,6 +394,7 @@ function irender.create_blit_queue(viewrect)
 		policy = {
 			"ant.render|blit_queue",
 			"ant.render|render_queue",
+			"ant.render|watch_screen_buffer",
 			"ant.general|name",
 		},
 		data = {
@@ -410,6 +415,7 @@ function irender.create_blit_queue(viewrect)
 			},
 			visible = true,
 			blit_queue = true,
+			watch_screen_buffer = true,
 			name = "blit main queue to window frame buffer",
 		}
 	}
