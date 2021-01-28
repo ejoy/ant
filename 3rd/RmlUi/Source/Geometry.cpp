@@ -66,7 +66,8 @@ void Geometry::Render() {
 		(int)vertices.size(),
 		&indices[0],
 		(int)indices.size(),
-		texture ? texture->GetHandle() : 0
+		texture ? texture->GetHandle() : 0,
+		flags
 	);
 }
 
@@ -80,6 +81,10 @@ Vector<Index>& Geometry::GetIndices() {
 
 void Geometry::SetTexture(SharedPtr<Texture> _texture) {
 	texture = _texture;
+}
+
+void Geometry::SetSamplerFlag(SamplerFlag flags_) {
+	flags = flags_;
 }
 
 void Geometry::Release() {

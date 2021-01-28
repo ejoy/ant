@@ -31,6 +31,7 @@
 
 #include "Header.h"
 #include "Vertex.h"
+#include "RenderInterface.h"
 #include <stdint.h>
 
 namespace Rml {
@@ -51,6 +52,7 @@ public:
 	Vector< Vertex >& GetVertices();
 	Vector< Index >& GetIndices();
 	void SetTexture(SharedPtr<Texture> texture);
+	void SetSamplerFlag(SamplerFlag flags);
 	void Release();
 	explicit operator bool() const;
 
@@ -78,7 +80,8 @@ private:
 	void MoveFrom(Geometry& other);
 	Vector<Vertex> vertices;
 	Vector<Index> indices;
-	SharedPtr<Texture> texture;
+	SharedPtr<Texture> texture; 
+	SamplerFlag flags = SamplerFlag::Unset;
 };
 
 using GeometryList = Vector< Geometry >;

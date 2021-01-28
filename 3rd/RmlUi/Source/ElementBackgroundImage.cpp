@@ -52,6 +52,7 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		return;
 	}
 
+	SamplerFlag repeat = (SamplerFlag)element->GetProperty(PropertyId::BackgroundRepeat)->Get<int>();
 	Style::BoxType origin = (Style::BoxType)element->GetProperty(PropertyId::BackgroundOrigin)->Get<int>();
 	Style::BackgroundSize size = (Style::BackgroundSize)element->GetProperty(PropertyId::BackgroundSize)->Get<int>();
 	Point position {
@@ -63,6 +64,7 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	GetSystemInterface()->JoinPath(path, StringUtilities::Replace(element->GetOwnerDocument()->GetSourceURL(), '|', ':'), image->Get<String>());
 	auto texture = Texture::Fetch(path);
 	geometry.SetTexture(texture);
+	geometry.SetSamplerFlag(repeat);
 	Color colour(255, 255, 255, 255);
 	ColorApplyOpacity(colour, element->GetOpacity());
 

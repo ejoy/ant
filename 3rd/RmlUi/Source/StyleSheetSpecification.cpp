@@ -410,6 +410,9 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 		.AddParser("keyword", "top, center, bottom")
 		.AddParser("length_percent");
 	RegisterShorthand(ShorthandId::BackgroundPosition, "background-position", "background-position-x, background-position-y", ShorthandType::FallThrough);
+	
+	RegisterProperty(PropertyId::BackgroundRepeat, "background-repeat", "repeat", false, false)
+		.AddParser("keyword", "repeat, repeat-x, repeat-y, no-repeat");
 	RegisterShorthand(ShorthandId::Background, "background", "background-color", ShorthandType::FallThrough);
 
 	RegisterProperty(PropertyId::TextShadowH, "text-shadow-h", "0px", true, false)

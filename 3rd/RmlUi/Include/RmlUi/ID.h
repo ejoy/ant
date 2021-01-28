@@ -162,6 +162,7 @@ enum class PropertyId : uint8_t
 	BackgroundSize,
 	BackgroundPositionX,
 	BackgroundPositionY,
+	BackgroundRepeat,
 
 	NumDefinedIds,
 };

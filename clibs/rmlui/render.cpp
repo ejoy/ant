@@ -37,9 +37,23 @@ void Renderer::UpdateViewRect(){
     BGFX(set_view_rect)(mcontext->viewid, uint16_t(vr.x), uint16_t(vr.y), uint16_t(vr.w), uint16_t(vr.h));
 }
 
-void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
-                            Rml::Index* indices, int num_indices,
-                            Rml::TextureHandle texture) {
+static uint64_t getTextureFlags(Rml::SamplerFlag flags) {
+    switch (flags) {
+    default:
+    case Rml::SamplerFlag::Unset:
+        return UINT32_MAX;
+    case Rml::SamplerFlag::Repeat:
+        return 0;
+    case Rml::SamplerFlag::RepeatX:
+        return BGFX_SAMPLER_V_BORDER;
+    case Rml::SamplerFlag::RepeatY:
+        return BGFX_SAMPLER_U_BORDER;
+    case Rml::SamplerFlag::NoRepeat:
+        return BGFX_SAMPLER_U_BORDER | BGFX_SAMPLER_V_BORDER;
+    }
+}
+
+void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices, Rml::Index* indices, int num_indices, Rml::TextureHandle texture, Rml::SamplerFlag flags) {
     BGFX(encoder_set_state)(mEncoder, RENDER_STATE, 0);
     bgfx_transient_vertex_buffer_t tvb;
     BGFX(alloc_transient_vertex_buffer)(&tvb, num_vertices, (bgfx_vertex_layout_t*)mcontext->layout);
@@ -92,7 +106,7 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
 
         static const Rml::String tex_property_name = "s_tex";
         if (tex_property_name == it.first){
-            BGFX(encoder_set_texture)(mEncoder, v.stage, {v.uniform_idx}, {v.texid}, UINT32_MAX);
+            BGFX(encoder_set_texture)(mEncoder, v.stage, { v.uniform_idx }, { v.texid }, getTextureFlags(flags));
         } else {
             BGFX(encoder_set_uniform)(mEncoder, {v.uniform_idx}, v.value, 1);
         }
@@ -184,22 +198,14 @@ CustomTexture(const Rml::String &key){
     return (!key.empty() && key[0] == '?');
 }
 
-static inline SamplerFlag
-DefaultSamplerFlag(){
-    return SamplerFlag(
-        //SamplerFlag::U_CLAMP|SamplerFlag::V_CLAMP
-        SamplerFlag::U_BORDER|SamplerFlag::V_BORDER
-        );  // u,v: clamp, min,max: linear
-}
-
-bool Renderer::LoadTexture(Rml::TextureHandle& texture_handle, Rml::Size& texture_dimensions, const Rml::String& source){
+bool Renderer::LoadTexture(Rml::TextureHandle& handle, Rml::Size& dimensions, const Rml::String& path){
     auto ifont = static_cast<FontEngine*>(Rml::GetFontEngineInterface());
-    if (ifont->IsFontTexResource(source)){
-        texture_handle = ifont->GetFontTexHandle(source, texture_dimensions);
+    if (ifont->IsFontTexResource(path)){
+        handle = ifont->GetFontTexHandle(path, dimensions);
         return true;
     }
     Rml::FileInterface* ifile = Rml::GetFileInterface();
-	Rml::FileHandle fh = ifile->Open(source);
+	Rml::FileHandle fh = ifile->Open(path);
 	if (!fh)
 		return false;
 	
@@ -212,28 +218,14 @@ bool Renderer::LoadTexture(Rml::TextureHandle& texture_handle, Rml::Size& textur
 	ifile->Close(fh);
 
 	bgfx_texture_info_t info;
-	const bgfx_texture_handle_t th = BGFX(create_texture)(mem, DefaultSamplerFlag(), 1, &info);
+	const bgfx_texture_handle_t th = BGFX(create_texture)(mem, 0, 1, &info);
 	if (th.idx != UINT16_MAX){
-		texture_dimensions.w = info.width;
-		texture_dimensions.h = info.height;
-        texture_handle = Rml::TextureHandle(new SDFFontEffectDefault(th.idx, true));
+		dimensions.w = info.width;
+		dimensions.h = info.height;
+        handle = Rml::TextureHandle(new SDFFontEffectDefault(th.idx, true));
         return true;
 	}
 	return false;
-}
-
-bool Renderer::GenerateTexture(Rml::TextureHandle& texture_handle, const Rml::byte* source, const Rml::Size& source_dimensions) {
-    //RGBA data
-    const uint32_t bufsize = source_dimensions.w * source_dimensions.h * 4;
-     const bgfx_memory_t *mem = BGFX(alloc)(bufsize);
-	memcpy(mem->data, source, bufsize);
-	auto thidx = BGFX(create_texture_2d)(source_dimensions.w, source_dimensions.h, false, 1, BGFX_TEXTURE_FORMAT_RGBA8, DefaultSamplerFlag(), mem).idx;
-    if (thidx != UINT16_MAX){
-        texture_handle = Rml::TextureHandle(new SDFFontEffectDefault(thidx, true));
-        return true;
-    }
-
-    return false;
 }
 
 bool Renderer::UpdateTexture(Rml::TextureHandle texhandle, const Rect &rt, uint8_t *buffer){
