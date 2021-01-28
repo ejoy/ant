@@ -248,7 +248,7 @@ static float ComputeFontsize(const Property* property, Element* element) {
 			return property->Get<float>() * 16;
 		}
 	}
-	return ComputeProperty<float>(property, element);
+	return ComputeProperty(property, element);
 }
 
 bool Element::UpdataFontSize() {
@@ -1295,22 +1295,15 @@ void Element::UpdateTransform() {
 	if (!dirty_transform)
 		return;
 	dirty_transform = false;
-	const ComputedValues& computed = meta->computed_values;
 	glm::mat4x4 new_transform(1);
-	if (computed.transform && !computed.transform->empty()) {
-		const Layout::Metrics& metrics = GetMetrics();
+	auto computedTransform = GetProperty(PropertyId::Transform)->Get<TransformPtr>();
+	if (computedTransform && !computedTransform->empty()) {
 		glm::vec3 origin {
-			computed.transform_origin_x.value,
-			computed.transform_origin_y.value,
-			computed.transform_origin_z,
+			ComputePropertyW(GetProperty(PropertyId::TransformOriginX), this),
+			ComputePropertyH(GetProperty(PropertyId::TransformOriginY), this),
+			ComputeProperty (GetProperty(PropertyId::TransformOriginZ), this),
 		};
-		if (computed.transform_origin_x.type == Style::TransformOrigin::Percentage) {
-			origin.x *= metrics.frame.size.w * 0.01f;
-		}
-		if (computed.transform_origin_y.type == Style::TransformOrigin::Percentage) {
-			origin.y *= metrics.frame.size.h * 0.01f;
-		}
-		new_transform = glm::translate(origin) * computed.transform->GetMatrix(*this) * glm::translate(-origin);
+		new_transform = glm::translate(origin) * computedTransform->GetMatrix(*this) * glm::translate(-origin);
 	}
 	new_transform = glm::translate(new_transform, glm::vec3(metrics.frame.origin.x, metrics.frame.origin.y, 0));
 	if (parent) {
@@ -1334,22 +1327,14 @@ void Element::UpdatePerspective() {
 	if (!dirty_perspective)
 		return;
 	dirty_perspective = false;
-	const ComputedValues& computed = meta->computed_values;
-	float distance = computed.perspective;
+	float distance = ComputeProperty(GetProperty(PropertyId::Perspective), this);
 	bool changed = false;
 	if (distance > 0.0f) {
-		const Layout::Metrics& metrics = GetMetrics();
 		glm::vec3 origin {
-			computed.perspective_origin_x.value,
-			computed.perspective_origin_y.value,
+			ComputePropertyW(GetProperty(PropertyId::PerspectiveOriginX), this),
+			ComputePropertyH(GetProperty(PropertyId::PerspectiveOriginY), this),
 			0.f,
 		};
-		if (computed.perspective_origin_x.type == Style::PerspectiveOrigin::Percentage) {
-			origin.x *= metrics.frame.size.w * 0.01f;
-		}
-		if (computed.perspective_origin_y.type == Style::PerspectiveOrigin::Percentage) {
-			origin.y *= metrics.frame.size.h * 0.01f;
-		}
 		// Equivalent to: translate(origin) * perspective(distance) * translate(-origin)
 		glm::mat4x4 new_perspective = {
 			{ 1, 0, 0, 0 },

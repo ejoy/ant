@@ -28,6 +28,7 @@
 
 #include "ElementBackgroundImage.h"
 #include "ElementDefinition.h"
+#include "ElementStyle.h"
 #include "../Include/RmlUi/Texture.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/Geometry.h"
@@ -53,6 +54,10 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 
 	Style::BoxType origin = (Style::BoxType)element->GetProperty(PropertyId::BackgroundOrigin)->Get<int>();
 	Style::BackgroundSize size = (Style::BackgroundSize)element->GetProperty(PropertyId::BackgroundSize)->Get<int>();
+	Point position {
+		ComputePropertyW(element->GetProperty(PropertyId::BackgroundPositionX), element),
+		ComputePropertyH(element->GetProperty(PropertyId::BackgroundPositionY), element)
+	};
 
 	String path;
 	GetSystemInterface()->JoinPath(path, StringUtilities::Replace(element->GetOwnerDocument()->GetSourceURL(), '|', ':'), image->Get<String>());
@@ -66,8 +71,11 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		surface.size.w / tex.size.w,
 		surface.size.h / tex.size.h
 	};
+	Rect uv { {
+		position.x / tex.size.w,
+		position.y / tex.size.h
+	}, {} };
 	float aspectRatio = scale.w / scale.h;
-	Rect uv;
 	switch (size) {
 	case Style::BackgroundSize::Auto:
 		uv.size.w = scale.w;

@@ -57,7 +57,7 @@ bool PropertyParserTransform::ParseValue(Property& property, const String& value
 
 	char const* next = value.c_str();
 
-	Transforms::NumericValue args[16];
+	FloatValue args[16];
 
 	const PropertyParser* angle1[] = { &angle };
 	const PropertyParser* angle2[] = { &angle, &angle };
@@ -83,18 +83,18 @@ bool PropertyParserTransform::ParseValue(Property& property, const String& value
 		else if (Scan(bytes_read, next, "matrix", number6, args, 6))
 		{
 			transform->emplace_back(Matrix2D(glm::mat3x2 {
-				{args[0].number, args[1].number},
-				{args[2].number, args[3].number},
-				{args[4].number, args[5].number},
+				{args[0].value, args[1].value},
+				{args[2].value, args[3].value},
+				{args[4].value, args[5].value},
 			}));
 		}
 		else if (Scan(bytes_read, next, "matrix3d", number16, args, 16))
 		{
 			transform->emplace_back(Matrix3D(glm::mat4x4 {
-				{args[0].number, args[1].number, args[2].number, args[3].number},
-				{args[4].number, args[5].number, args[6].number, args[7].number},
-				{args[8].number, args[9].number, args[10].number, args[11].number},
-				{args[12].number, args[13].number, args[14].number, args[15].number},
+				{args[0].value, args[1].value, args[2].value, args[3].value},
+				{args[4].value, args[5].value, args[6].value, args[7].value},
+				{args[8].value, args[9].value, args[10].value, args[11].value},
+				{args[12].value, args[13].value, args[14].value, args[15].value},
 			}));
 		}
 		else if (Scan(bytes_read, next, "translateX", length1, args, 1))
@@ -119,28 +119,28 @@ bool PropertyParserTransform::ParseValue(Property& property, const String& value
 		}
 		else if (Scan(bytes_read, next, "scaleX", number1, args, 1))
 		{
-			transform->emplace_back(ScaleX { args[0].number });
+			transform->emplace_back(ScaleX { args[0].value });
 		}
 		else if (Scan(bytes_read, next, "scaleY", number1, args, 1))
 		{
-			transform->emplace_back(ScaleY{ args[0].number });
+			transform->emplace_back(ScaleY{ args[0].value });
 		}
 		else if (Scan(bytes_read, next, "scaleZ", number1, args, 1))
 		{
-			transform->emplace_back(ScaleZ{ args[0].number });
+			transform->emplace_back(ScaleZ{ args[0].value });
 		}
 		else if (Scan(bytes_read, next, "scale", number2, args, 2))
 		{
-			transform->emplace_back(Scale2D{ args[0].number, args[0].number });
+			transform->emplace_back(Scale2D{ args[0].value, args[0].value });
 		}
 		else if (Scan(bytes_read, next, "scale", number1, args, 1))
 		{
 			args[1] = args[0];
-			transform->emplace_back(Scale2D{ args[0].number, args[1].number });
+			transform->emplace_back(Scale2D{ args[0].value, args[1].value });
 		}
 		else if (Scan(bytes_read, next, "scale3d", number3, args, 3))
 		{
-			transform->emplace_back(Scale3D{ args[0].number, args[1].number, args[2].number });
+			transform->emplace_back(Scale3D{ args[0].value, args[1].value, args[2].value });
 		}
 		else if (Scan(bytes_read, next, "rotateX", angle1, args, 1))
 		{
@@ -160,7 +160,7 @@ bool PropertyParserTransform::ParseValue(Property& property, const String& value
 		}
 		else if (Scan(bytes_read, next, "rotate3d", number3angle1, args, 4))
 		{
-			transform->emplace_back(Rotate3D{ {args[0].number, args[1].number, args[2].number}, args[3] });
+			transform->emplace_back(Rotate3D{ {args[0].value, args[1].value, args[2].value}, args[3] });
 		}
 		else if (Scan(bytes_read, next, "skewX", angle1, args, 1))
 		{
@@ -192,7 +192,7 @@ bool PropertyParserTransform::ParseValue(Property& property, const String& value
 }
 
 // Scan a string for a parameterized keyword with a certain number of numeric arguments.
-bool PropertyParserTransform::Scan(int& out_bytes_read, const char* str, const char* keyword, const PropertyParser** parsers, Transforms::NumericValue* args, int nargs) const
+bool PropertyParserTransform::Scan(int& out_bytes_read, const char* str, const char* keyword, const PropertyParser** parsers, FloatValue* args, int nargs) const
 {
 	out_bytes_read = 0;
 	int total_bytes_read = 0, bytes_read = 0;
@@ -256,7 +256,7 @@ bool PropertyParserTransform::Scan(int& out_bytes_read, const char* str, const c
 		if (sscanf(str, " %[^,)] %n", arg, &bytes_read), bytes_read
 			&& parsers[i]->ParseValue(prop, String(arg), ParameterMap()))
 		{
-			args[i].number = prop.value.Get<float>();
+			args[i].value = prop.value.Get<float>();
 			args[i].unit = prop.unit;
 			str += bytes_read;
 			total_bytes_read += bytes_read;

@@ -11,47 +11,6 @@ namespace Rml {
 
 using namespace Transforms;
 
-static float ResolveLength(NumericValue value, Element& e) noexcept {
-	if (!(value.unit & (Property::NUMBER | Property::LENGTH)))
-		return 0.0f;
-	Property prop;
-	prop.value = Variant(value.number);
-	prop.unit = value.unit;
-	return ComputeProperty<float>(&prop, &e);
-}
-
-static float ResolveWidth(NumericValue value, Element& e) noexcept {
-	if (value.unit & Property::PERCENT) {
-		return value.number * e.GetMetrics().frame.size.w * 0.01f;
-	}
-	return ResolveLength(value, e);
-}
-
-static float ResolveHeight(NumericValue value, Element& e) noexcept {
-	if (value.unit & Property::PERCENT) {
-		return value.number * e.GetMetrics().frame.size.h * 0.01f;
-	}
-	return ResolveLength(value, e);
-}
-
-static float ResolveDepth(NumericValue value, Element& e) noexcept {
-	if (value.unit & Property::PERCENT) {
-		return 0.f;
-	}
-	return ResolveLength(value, e);
-}
-
-static float ResolveAngle(NumericValue value) noexcept {
-	switch (value.unit) {
-	case Property::RAD:
-		return value.number;
-	case Property::DEG:
-		return Math::DegreesToRadians(value.number);
-	default:
-		return 0.f;
-	}
-}
-
 static glm::mat4x4 skew(float angle_x, float angle_y) {
 	float skewX = tanf(angle_x);
 	float skewY = tanf(angle_y);
@@ -137,30 +96,30 @@ struct MultiplyVisitor {
 	}
 	void operator()(const Transforms::TranslateX& p) {
 		glm::vec3 v{ 0 };
-		v.x = ResolveWidth(p.x, e);
+		v.x = ComputePropertyW(p.x, &e);
 		matrix = glm::translate(matrix, v);
 	}
 	void operator()(const Transforms::TranslateY& p) {
 		glm::vec3 v{ 0 };
-		v.y = ResolveHeight(p.y, e);
+		v.y = ComputePropertyH(p.y, &e);
 		matrix = glm::translate(matrix, v);
 	}
 	void operator()(const Transforms::TranslateZ& p) {
 		glm::vec3 v{ 0 };
-		v.z = ResolveDepth(p.z, e);
+		v.z = ComputeProperty(p.z, &e);
 		matrix = glm::translate(matrix, v);
 	}
 	void operator()(const Transforms::Translate2D& p) {
 		glm::vec3 v{ 0 };
-		v.x = ResolveWidth(p.x, e);
-		v.y = ResolveHeight(p.y, e);
+		v.x = ComputePropertyW(p.x, &e);
+		v.y = ComputePropertyH(p.y, &e);
 		matrix = glm::translate(matrix, v);
 	}
 	void operator()(const Transforms::Translate3D& p) {
 		glm::vec3 v{ 0 };
-		v.x = ResolveWidth(p.x, e);
-		v.y = ResolveHeight(p.y, e);
-		v.z = ResolveDepth(p.z, e);
+		v.x = ComputePropertyW(p.x, &e);
+		v.y = ComputePropertyH(p.y, &e);
+		v.z = ComputeProperty(p.z, &e);
 		matrix = glm::translate(matrix, v);
 	}
 	void operator()(const Transforms::ScaleX& p) {
@@ -179,39 +138,39 @@ struct MultiplyVisitor {
 		matrix = glm::scale(matrix, { p.x, p.y, p.z });
 	}
 	void operator()(const Transforms::RotateX& p) {
-		float angle = ResolveAngle(p.angle);
+		float angle = ComputeProperty(p.angle, &e);
 		matrix = glm::rotate(matrix, angle, { 1, 0, 0 });
 	}
 	void operator()(const Transforms::RotateY& p) {
-		float angle = ResolveAngle(p.angle);
+		float angle = ComputeProperty(p.angle, &e);
 		matrix = glm::rotate(matrix, angle, { 0, 1, 0 });
 	}
 	void operator()(const Transforms::RotateZ& p) {
-		float angle = ResolveAngle(p.angle);
+		float angle = ComputeProperty(p.angle, &e);
 		matrix = glm::rotate(matrix, angle, { 0, 0, 1 });
 	}
 	void operator()(const Transforms::Rotate2D& p) {
-		float angle = ResolveAngle(p.angle);
+		float angle = ComputeProperty(p.angle, &e);
 		matrix = glm::rotate(matrix, angle, { 0, 0, 1 });
 	}
 	void operator()(const Transforms::Rotate3D& p) {
-		float angle = ResolveAngle(p.angle);
+		float angle = ComputeProperty(p.angle, &e);
 		matrix = glm::rotate(matrix, angle, p.axis);
 	}
 	void operator()(const Transforms::SkewX& p) {
-		matrix *= skew(ResolveAngle(p.x), 0);
+		matrix *= skew(ComputeProperty(p.x, &e), 0);
 	}
 	void operator()(const Transforms::SkewY& p) {
-		matrix *= skew(0, ResolveAngle(p.y));
+		matrix *= skew(0, ComputeProperty(p.y, &e));
 	}
 	void operator()(const Transforms::Skew2D& p) {
-		matrix *= skew(ResolveAngle(p.x), ResolveAngle(p.y));
+		matrix *= skew(ComputeProperty(p.x, &e), ComputeProperty(p.y, &e));
 	}
 	void operator()(const Transforms::DecomposedMatrix4& p) {
 		matrix *= compose(p.translation, p.scale, p.skew, p.perspective, p.quaternion);
 	}
 	void operator()(const Transforms::Perspective& p) {
-		float distance = ResolveDepth(p.distance, e);
+		float distance = ComputeProperty(p.distance, &e);
 		matrix *= perspective(distance);
 	}
 };
@@ -227,47 +186,47 @@ struct PrepareVisitor {
 	void operator()(Scale3D&) { }
 	void operator()(DecomposedMatrix4&) { }
 	void operator()(TranslateX& p) {
-		p.x = NumericValue{ ResolveWidth(p.x, e), Property::PX };
+		p.x = { ComputePropertyW(p.x, &e), Property::PX };
 	}
 	void operator()(TranslateY& p) {
-		p.y = NumericValue{ ResolveHeight(p.y, e), Property::PX };
+		p.y = { ComputePropertyH(p.y, &e), Property::PX };
 	}
 	void operator()(TranslateZ& p) {
-		p.z = NumericValue{ ResolveDepth(p.z, e), Property::PX };
+		p.z = { ComputeProperty(p.z, &e), Property::PX };
 	}
 	void operator()(Translate2D& p) {
-		p.x = NumericValue{ ResolveWidth(p.x, e), Property::PX };
-		p.y = NumericValue{ ResolveHeight(p.y, e), Property::PX };
+		p.x = { ComputePropertyW(p.x, &e), Property::PX };
+		p.y = { ComputePropertyH(p.y, &e), Property::PX };
 	}
 	void operator()(Translate3D& p) {
-		p.x = NumericValue{ ResolveWidth(p.x, e), Property::PX };
-		p.y = NumericValue{ ResolveHeight(p.y, e), Property::PX };
-		p.z = NumericValue{ ResolveDepth(p.z, e), Property::PX };
+		p.x = { ComputePropertyW(p.x, &e), Property::PX };
+		p.y = { ComputePropertyH(p.y, &e), Property::PX };
+		p.z = { ComputeProperty(p.z, &e), Property::PX };
 	}
 	void operator()(RotateX& p) {
-		p.angle = NumericValue{ ResolveAngle(p.angle), Property::RAD };
+		p.angle = { ComputeProperty(p.angle, &e), Property::RAD };
 	}
 	void operator()(RotateY& p) {
-		p.angle = NumericValue{ ResolveAngle(p.angle), Property::RAD };
+		p.angle = { ComputeProperty(p.angle, &e), Property::RAD };
 	}
 	void operator()(RotateZ& p) {
-		p.angle = NumericValue{ ResolveAngle(p.angle), Property::RAD };
+		p.angle = { ComputeProperty(p.angle, &e), Property::RAD };
 	}
 	void operator()(Rotate2D& p) {
-		p.angle = NumericValue{ ResolveAngle(p.angle), Property::RAD };
+		p.angle = { ComputeProperty(p.angle, &e), Property::RAD };
 	}
 	void operator()(Rotate3D& p) {
-		p.angle = NumericValue{ ResolveAngle(p.angle), Property::RAD };
+		p.angle = { ComputeProperty(p.angle, &e), Property::RAD };
 	}
 	void operator()(SkewX& p) {
-		p.x = NumericValue{ ResolveAngle(p.x), Property::RAD };
+		p.x = { ComputeProperty(p.x, &e), Property::RAD };
 	}
 	void operator()(SkewY& p) {
-		p.y = NumericValue{ ResolveAngle(p.y), Property::RAD };
+		p.y = { ComputeProperty(p.y, &e), Property::RAD };
 	}
 	void operator()(Skew2D& p) {
-		p.x = NumericValue{ ResolveAngle(p.x), Property::RAD };
-		p.y = NumericValue{ ResolveAngle(p.y), Property::RAD };
+		p.x = { ComputeProperty(p.x, &e), Property::RAD };
+		p.y = { ComputeProperty(p.y, &e), Property::RAD };
 	}
 	void operator()(Matrix3D& p) {
 		auto d = decompose((const glm::mat4x4&)p);
@@ -280,7 +239,7 @@ struct PrepareVisitor {
 		else { ok = false; };
 	}
 	void operator()(Perspective& p) {
-		float distance = ResolveDepth(p.distance, e);
+		float distance = ComputeProperty(p.distance, &e);
 		auto d = decompose(perspective(distance));
 		if (d) { t = d.value(); }
 		else { ok = false; };
@@ -302,9 +261,9 @@ struct InterpolateVisitor {
 	void interpolate(float& p0, const float& p1) {
 		p0 = glm::lerp(p0, p1, alpha);
 	}
-	void interpolate(NumericValue& p0, const NumericValue& p1) {
+	void interpolate(FloatValue& p0, const FloatValue& p1) {
 		assert(p0.unit == p1.unit);
-		interpolate(p0.number, p1.number);
+		interpolate(p0.value, p1.value);
 	}
 	void interpolate(DecomposedMatrix4& p0, const DecomposedMatrix4& p1) {
 		p0.perspective = glm::lerp(p0.perspective, p1.perspective, alpha);
@@ -342,11 +301,11 @@ struct InterpolateVisitor {
 	void interpolate(RotateZ& p0, const RotateZ& p1) { interpolate(p0.angle, p1.angle); }
 	void interpolate(Rotate2D& p0, const Rotate2D& p1) { interpolate(p0.angle, p1.angle); }
 	void interpolate(Rotate3D& p0, const Rotate3D& p1) {
-		glm::quat q0(p0.angle.number, p0.axis);
-		glm::quat q1(p1.angle.number, p1.axis);
+		glm::quat q0(p0.angle.value, p0.axis);
+		glm::quat q1(p1.angle.value, p1.axis);
 		q0 = glm::slerp(q0, q1, alpha);
 		p0.axis = glm::axis(q0);
-		p0.angle.number = glm::angle(q0);
+		p0.angle.value = glm::angle(q0);
 	}
 	void interpolate(SkewX& p0, const SkewX& p1) { interpolate(p0.x, p1.x); }
 	void interpolate(SkewY& p0, const SkewY& p1) { interpolate(p0.y, p1.y); }

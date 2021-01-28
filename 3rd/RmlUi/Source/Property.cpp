@@ -47,4 +47,19 @@ String Property::ToString() const
 	return string;
 }
 
+FloatValue Property::ToFloatValue() const {
+	if (unit & Property::KEYWORD) {
+		switch (Get<int>()) {
+		default:
+		case 0 /* left/top     */: return { 0.0f, Property::Unit::PERCENT }; break;
+		case 1 /* center       */: return { 50.0f, Property::Unit::PERCENT }; break;
+		case 2 /* right/bottom */: return { 100.0f, Property::Unit::PERCENT }; break;
+		}
+	}
+	return {
+		value.Get<float>(),
+		unit,
+	};
+}
+
 } // namespace Rml

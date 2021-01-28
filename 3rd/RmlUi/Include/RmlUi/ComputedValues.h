@@ -31,19 +31,13 @@
 #include "Types.h"
 #include "Animation.h"
 #include "TextEffect.h"
+#include "Property.h"
 #include <optional>
 
 namespace Rml {
 
 namespace Style
 {
-
-struct LengthPercentage {
-	enum Type { Length, Percentage } type = Length;
-	float value = 0;
-	LengthPercentage() {}
-	LengthPercentage(Type type, float value = 0) : type(type), value(value) {}
-};
 
 enum class FontStyle : uint8_t { Normal, Italic };
 enum class FontWeight : uint8_t { Normal, Bold };
@@ -56,12 +50,6 @@ enum class Drag : uint8_t { None, Drag, DragDrop, Block, Clone };
 enum class BoxType : uint8_t { PaddingBox, BorderBox, ContentBox };
 enum class BackgroundSize : uint8_t { Auto, Cover, Contain };
 
-using PerspectiveOrigin = LengthPercentage;
-using TransformOrigin = LengthPercentage;
-
-enum class OriginX : uint8_t { Left, Center, Right };
-enum class OriginY : uint8_t { Top, Center, Bottom };
-
 /* 
 	A computed value is a value resolved as far as possible :before: introducing layouting. See CSS specs for details of each property.
 
@@ -69,15 +57,6 @@ enum class OriginY : uint8_t { Top, Center, Bottom };
 */
 
 struct ComputedValues {
-	float perspective = 0;
-	PerspectiveOrigin perspective_origin_x = { PerspectiveOrigin::Percentage, 50.f };
-	PerspectiveOrigin perspective_origin_y = { PerspectiveOrigin::Percentage, 50.f };
-
-	TransformPtr transform;
-	TransformOrigin transform_origin_x = { TransformOrigin::Percentage, 50.f };
-	TransformOrigin transform_origin_y = { TransformOrigin::Percentage, 50.f };
-	float transform_origin_z = 0.0f;
-
 	TransitionList transition;
 	AnimationList animation;
 

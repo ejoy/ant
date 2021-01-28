@@ -41,10 +41,8 @@ class IdNameMap {
 	UnorderedMap<String, ID> reverse_map;
 
 protected:
-	IdNameMap(size_t num_ids_to_reserve) {
+	IdNameMap() {
 		static_assert((int)ID::Invalid == 0, "Invalid id must be zero");
-		name_map.reserve(num_ids_to_reserve);
-		reverse_map.reserve(num_ids_to_reserve);
 		AddPair(ID::Invalid, "invalid");
 	}
 
@@ -102,12 +100,12 @@ public:
 
 class PropertyIdNameMap : public IdNameMap<PropertyId> {
 public:
-	PropertyIdNameMap(size_t reserve_num_properties) : IdNameMap(reserve_num_properties) {}
+	PropertyIdNameMap() : IdNameMap() {}
 };
 
 class ShorthandIdNameMap : public IdNameMap<ShorthandId> {
 public:
-	ShorthandIdNameMap(size_t reserve_num_shorthands) : IdNameMap(reserve_num_shorthands) {}
+	ShorthandIdNameMap() : IdNameMap() {}
 };
 
 } // namespace Rml

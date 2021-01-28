@@ -39,13 +39,6 @@
 namespace Rml {
 namespace Transforms {
 
-struct NumericValue {
-	NumericValue() noexcept : number(0.f), unit(Property::UNKNOWN) {}
-	NumericValue(float number, Property::Unit unit) noexcept : number(number), unit(unit) {}
-	float number;
-	Property::Unit unit;
-};
-
 struct Matrix2D : glm::mat3x2 {
 	Matrix2D() : glm::mat3x2(1) {}
 	Matrix2D(glm::mat3x2&& o) : glm::mat3x2(std::forward<glm::mat3x2>(o)) {}
@@ -57,26 +50,26 @@ struct Matrix3D : glm::mat4x4 {
 };
 
 struct TranslateX {
-	NumericValue x = { 0.f, Property::PX };
+	FloatValue x = { 0.f, Property::PX };
 };
 
 struct TranslateY {
-	NumericValue y = { 0.f, Property::PX };
+	FloatValue y = { 0.f, Property::PX };
 };
 
 struct TranslateZ {
-	NumericValue z = { 0.f, Property::PX };
+	FloatValue z = { 0.f, Property::PX };
 };
 
 struct Translate2D {
-	NumericValue x = { 0.f, Property::PX };
-	NumericValue y = { 0.f, Property::PX };
+	FloatValue x = { 0.f, Property::PX };
+	FloatValue y = { 0.f, Property::PX };
 };
 
 struct Translate3D {
-	NumericValue x = { 0.f, Property::PX };
-	NumericValue y = { 0.f, Property::PX };
-	NumericValue z = { 0.f, Property::PX };
+	FloatValue x = { 0.f, Property::PX };
+	FloatValue y = { 0.f, Property::PX };
+	FloatValue z = { 0.f, Property::PX };
 };
 
 struct ScaleX {
@@ -103,38 +96,38 @@ struct Scale3D {
 };
 
 struct RotateX {
-	NumericValue angle = { 0.f, Property::RAD };
+	FloatValue angle = { 0.f, Property::RAD };
 };
 
 struct RotateY {
-	NumericValue angle = { 0.f, Property::RAD };
+	FloatValue angle = { 0.f, Property::RAD };
 };
 
 struct RotateZ {
-	NumericValue angle = { 0.f, Property::RAD };
+	FloatValue angle = { 0.f, Property::RAD };
 };
 
 struct Rotate2D {
-	NumericValue angle = { 0.f, Property::RAD };
+	FloatValue angle = { 0.f, Property::RAD };
 };
 
 struct Rotate3D {
 	glm::vec3 axis = glm::vec3(0, 0, 1);
-	NumericValue angle = { 0.f, Property::RAD };
+	FloatValue angle = { 0.f, Property::RAD };
 };
 
 struct SkewX {
-	NumericValue x = { 0.f, Property::RAD };
+	FloatValue x = { 0.f, Property::RAD };
 };
 struct SkewY {
-	NumericValue y = { 0.f, Property::RAD };
+	FloatValue y = { 0.f, Property::RAD };
 };
 struct Skew2D {
-	NumericValue x = { 0.f, Property::RAD };
-	NumericValue y = { 0.f, Property::RAD };
+	FloatValue x = { 0.f, Property::RAD };
+	FloatValue y = { 0.f, Property::RAD };
 };
 struct Perspective {
-	NumericValue distance = { 0.f, Property::PX };
+	FloatValue distance = { 0.f, Property::PX };
 };
 
 struct DecomposedMatrix4 {

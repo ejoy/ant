@@ -62,14 +62,7 @@ public:
 	/// @return The parser registered under the given name, or nullptr if no such parser exists.
 	static PropertyParser* GetParser(const String& parser_name);
 
-	/// Registers a custom property with a new definition.
-	/// @param[in] property_name The name to register the new property under.
-	/// @param[in] default_value The default value to be used for an element if it has no other definition provided.
-	/// @param[in] inherited True if this property is inherited from parent to child, false otherwise.
-	/// @param[in] forces_layout True if a change in this property on an element will cause the element's layout to possibly change.
-	/// @return The new property definition, ready to have parsers attached.
-	static PropertyDefinition& RegisterProperty(const String& property_name, const String& default_value, bool inherited, bool forces_layout = false);
-	/// Returns a property definition.
+	// Returns a property definition.
 	/// @param[in] property_name The name of the desired property.
 	/// @return The appropriate property definition if it could be found, nullptr otherwise.
 	static const PropertyDefinition* GetProperty(const String& property_name);
@@ -82,12 +75,6 @@ public:
 	/// Returns the id set of all registered property definitions that may dirty the layout.
 	static const PropertyIdSet& GetRegisteredPropertiesForcingLayout();
 
-	/// Registers a custom shorthand property definition.
-	/// @param[in] shorthand_name The name to register the new shorthand property under.
-	/// @param[in] properties A comma-separated list of the properties this definition is shorthand for. The order in which they are specified here is the order in which the values will be processed.
-	/// @param[in] type The type of shorthand to declare.
-	/// @param True if all the property names exist, false otherwise.
-	static ShorthandId RegisterShorthand(const String& shorthand_name, const String& property_names, ShorthandType type);
 	/// Returns a shorthand definition.
 	/// @param[in] shorthand_name The name of the desired shorthand.
 	/// @return The appropriate shorthand definition if it could be found, nullptr otherwise.

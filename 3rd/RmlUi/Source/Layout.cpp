@@ -189,7 +189,7 @@ void Layout::SetProperty(PropertyId id, const Property* property, Element* eleme
 		SetIntProperty(node, id, property->Get<int>());
 		break;
 	default:
-		SetFloatProperty(node, id, ComputeProperty<float>(property, element));
+		SetFloatProperty(node, id, ComputeProperty(property, element));
 		break;
 	}
 }

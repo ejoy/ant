@@ -56,9 +56,8 @@ struct DefaultStyleSheetParsers {
 	PropertyParserTransform transform = PropertyParserTransform();
 };
 
-StyleSheetSpecification::StyleSheetSpecification() : 
-	// Reserve space for all defined ids and some more for custom properties
-	properties((size_t)PropertyId::MaxNumIds, 2 * (size_t)ShorthandId::NumDefinedIds)
+StyleSheetSpecification::StyleSheetSpecification()
+	: properties()
 {
 	RMLUI_ASSERT(instance == nullptr);
 	instance = this;
@@ -127,13 +126,6 @@ PropertyParser* StyleSheetSpecification::GetParser(const String& parser_name)
 	return (*iterator).second;
 }
 
-// Registers a property with a new definition.
-PropertyDefinition& StyleSheetSpecification::RegisterProperty(const String& property_name, const String& default_value, bool inherited, bool forces_layout)
-{
-	RMLUI_ASSERTMSG((size_t)instance->properties.property_map->GetId(property_name) < (size_t)PropertyId::FirstCustomId, "Custom property name matches an internal property, please make a unique name for the given property.");
-	return instance->RegisterProperty(PropertyId::Invalid, property_name, default_value, inherited, forces_layout); 
-}
-
 // Returns a property definition.
 const PropertyDefinition* StyleSheetSpecification::GetProperty(const String& property_name)
 {
@@ -158,14 +150,6 @@ const PropertyIdSet & StyleSheetSpecification::GetRegisteredInheritedProperties(
 const PropertyIdSet& StyleSheetSpecification::GetRegisteredPropertiesForcingLayout()
 {
 	return instance->properties.GetRegisteredPropertiesForcingLayout();
-}
-
-// Registers a shorthand property definition.
-ShorthandId StyleSheetSpecification::RegisterShorthand(const String& shorthand_name, const String& property_names, ShorthandType type)
-{
-	RMLUI_ASSERTMSG(instance->properties.property_map->GetId(shorthand_name) == PropertyId::Invalid, "Custom shorthand name matches a property name, please make a unique name.");
-	RMLUI_ASSERTMSG((size_t)instance->properties.shorthand_map->GetId(shorthand_name) < (size_t)ShorthandId::FirstCustomId, "Custom shorthand name matches an internal shorthand, please make a unique name for the given shorthand property.");
-	return instance->properties.RegisterShorthand(shorthand_name, property_names, type);
 }
 
 // Returns a shorthand definition.
@@ -361,18 +345,31 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 	RegisterShorthand(ShorthandId::TextDecoration, "text-decoration", "text-decoration-line, text-decoration-color", ShorthandType::FallThrough);
 	
 	// Perspective and Transform specifications
-	RegisterProperty(PropertyId::Perspective, "perspective", "none", false, false).AddParser("keyword", "none").AddParser("length");
-	RegisterProperty(PropertyId::PerspectiveOriginX, "perspective-origin-x", "50%", false, false).AddParser("keyword", "left, center, right").AddParser("length_percent");
-	RegisterProperty(PropertyId::PerspectiveOriginY, "perspective-origin-y", "50%", false, false).AddParser("keyword", "top, center, bottom").AddParser("length_percent");
+	RegisterProperty(PropertyId::Perspective, "perspective", "none", false, false)
+		.AddParser("keyword", "none").AddParser("length");
+	RegisterProperty(PropertyId::PerspectiveOriginX, "perspective-origin-x", "50%", false, false)
+		.AddParser("keyword", "left, center, right")
+		.AddParser("length_percent");
+	RegisterProperty(PropertyId::PerspectiveOriginY, "perspective-origin-y", "50%", false, false)
+		.AddParser("keyword", "top, center, bottom")
+		.AddParser("length_percent");
 	RegisterShorthand(ShorthandId::PerspectiveOrigin, "perspective-origin", "perspective-origin-x, perspective-origin-y", ShorthandType::FallThrough);
-	RegisterProperty(PropertyId::Transform, "transform", "none", false, false).AddParser("transform");
-	RegisterProperty(PropertyId::TransformOriginX, "transform-origin-x", "50%", false, false).AddParser("keyword", "left, center, right").AddParser("length_percent");
-	RegisterProperty(PropertyId::TransformOriginY, "transform-origin-y", "50%", false, false).AddParser("keyword", "top, center, bottom").AddParser("length_percent");
-	RegisterProperty(PropertyId::TransformOriginZ, "transform-origin-z", "0", false, false).AddParser("length");
+	RegisterProperty(PropertyId::Transform, "transform", "none", false, false)
+		.AddParser("transform");
+	RegisterProperty(PropertyId::TransformOriginX, "transform-origin-x", "50%", false, false)
+		.AddParser("keyword", "left, center, right")
+		.AddParser("length_percent");
+	RegisterProperty(PropertyId::TransformOriginY, "transform-origin-y", "50%", false, false)
+		.AddParser("keyword", "top, center, bottom")
+		.AddParser("length_percent");
+	RegisterProperty(PropertyId::TransformOriginZ, "transform-origin-z", "0", false, false)
+		.AddParser("length");
 	RegisterShorthand(ShorthandId::TransformOrigin, "transform-origin", "transform-origin-x, transform-origin-y, transform-origin-z", ShorthandType::FallThrough);
 
-	RegisterProperty(PropertyId::Transition, "transition", "none", false, false).AddParser("transition");
-	RegisterProperty(PropertyId::Animation, "animation", "none", false, false).AddParser("animation");
+	RegisterProperty(PropertyId::Transition, "transition", "none", false, false)
+		.AddParser("transition");
+	RegisterProperty(PropertyId::Animation, "animation", "none", false, false)
+		.AddParser("animation");
 
 	RegisterProperty(PropertyId::AlignContent, "align-content", "flex-start", false, true)
 		.AddParser("keyword", "auto, flex-start, center, flex-end, stretch, baseline, space-between, space-around");
@@ -403,9 +400,16 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 		.AddParser("keyword", "none")
 		.AddParser("string");
 	RegisterProperty(PropertyId::BackgroundOrigin, "background-origin", "padding-box", false, false)
-		.AddParser("keyword", "padding-box,border-box,content-box");
+		.AddParser("keyword", "padding-box, border-box, content-box");
 	RegisterProperty(PropertyId::BackgroundSize, "background-size", "auto", false, false)
-		.AddParser("keyword", "auto,cover,contain");
+		.AddParser("keyword", "auto, cover, contain");
+	RegisterProperty(PropertyId::BackgroundPositionX, "background-position-x", "0%", false, false)
+		.AddParser("keyword", "left, center, right")
+		.AddParser("length_percent");
+	RegisterProperty(PropertyId::BackgroundPositionY, "background-position-y", "0%", false, false)
+		.AddParser("keyword", "top, center, bottom")
+		.AddParser("length_percent");
+	RegisterShorthand(ShorthandId::BackgroundPosition, "background-position", "background-position-x, background-position-y", ShorthandType::FallThrough);
 	RegisterShorthand(ShorthandId::Background, "background", "background-color", ShorthandType::FallThrough);
 
 	RegisterProperty(PropertyId::TextShadowH, "text-shadow-h", "0px", true, false)
@@ -421,9 +425,6 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 	RegisterProperty(PropertyId::TextStrokeColor, "-webkit-text-stroke-color", "white", false, false)
 		.AddParser("color");
 	RegisterShorthand(ShorthandId::TextStroke, "-webkit-text-stroke", "-webkit-text-stroke-width, -webkit-text-stroke-color", ShorthandType::FallThrough);
-
-	//RMLUI_ASSERTMSG(instance->properties.property_map->AssertAllInserted(PropertyId::NumDefinedIds), "Missing specification for one or more Property IDs.");
-	//RMLUI_ASSERTMSG(instance->properties.shorthand_map->AssertAllInserted(ShorthandId::NumDefinedIds), "Missing specification for one or more Shorthand IDs.");
 }
 
 } // namespace Rml

@@ -48,7 +48,7 @@ class PropertyIdSetIterator;
 
 class RMLUICORE_API PropertyIdSet {
 private:
-	static constexpr size_t N = size_t(PropertyId::MaxNumIds);
+	static constexpr size_t N = size_t(PropertyId::NumDefinedIds);
 	std::bitset<N> defined_ids;
 
 public:
@@ -143,7 +143,7 @@ private:
 
 	inline void ProceedToNextValid()
 	{
-		for (; id_index < size_t(PropertyId::MaxNumIds); ++id_index)
+		for (; id_index < size_t(PropertyId::NumDefinedIds); ++id_index)
 		{
 			if (container->Contains( static_cast<PropertyId>(id_index) ))
 				return;

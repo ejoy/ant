@@ -56,10 +56,12 @@ public:
 
 	struct Path {
 		void DrawArc(const Point& center, float radius_a, float radius_b, float a_min, float a_max);
+		bool empty() const { return points.empty(); }
 		const size_t size() const { return points.size(); }
 		const Point& operator[](size_t i) const { return points[i]; }
 		void append(const Path& path) { points.insert(points.end(), path.points.begin(), path.points.end()); }
-		void append(Point&& point) { points.emplace_back(std::forward<Point>(point)); }
+		void push(Point point) { points.push_back(point); }
+		void emplace(Point&& point) { points.emplace_back(std::forward<Point>(point)); }
 		void clear() { points.clear(); }
 		std::vector<Point> points;
 	};

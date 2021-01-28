@@ -525,8 +525,8 @@ Style::TextAlign ElementText::GetAlign() {
 
 std::optional<TextShadow> ElementText::GetTextShadow() {
 	TextShadow shadow {
-		ComputeProperty<float>(GetProperty(PropertyId::TextShadowH), parent),
-		ComputeProperty<float>(GetProperty(PropertyId::TextShadowV), parent),
+		ComputeProperty(GetProperty(PropertyId::TextShadowH), parent),
+		ComputeProperty(GetProperty(PropertyId::TextShadowV), parent),
 		GetProperty(PropertyId::TextShadowColor)->Get<Color>(),
 	};
 	if (shadow.offset_h || shadow.offset_v) {
@@ -537,7 +537,7 @@ std::optional<TextShadow> ElementText::GetTextShadow() {
 
 std::optional<TextStroke> ElementText::GetTextStroke() {
 	TextStroke stroke{
-		ComputeProperty<float>(GetProperty(PropertyId::TextStrokeWidth), parent),
+		ComputeProperty(GetProperty(PropertyId::TextStrokeWidth), parent),
 		GetProperty(PropertyId::TextStrokeColor)->Get<Color>(),
 	};
 	if (stroke.width) {

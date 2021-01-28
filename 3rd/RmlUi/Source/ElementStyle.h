@@ -156,8 +156,12 @@ private:
 	PropertyIdSet dirty_properties;
 };
 
-template <typename T>
-T ComputeProperty(const Property* property, Element* e);
+float ComputeProperty(FloatValue value, Element* e);
+float ComputePropertyW(FloatValue value, Element* e);
+float ComputePropertyH(FloatValue value, Element* e);
+float ComputeProperty(const Property* property, Element* e);
+float ComputePropertyW(const Property* property, Element* e);
+float ComputePropertyH(const Property* property, Element* e);
 
 } // namespace Rml
 #endif
