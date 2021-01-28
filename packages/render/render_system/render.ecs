@@ -174,12 +174,11 @@ interface "system_properties"
     .implement "render_system/system_properties.lua"
     .method "get"
     .method "update"
-    
-    
+
+import "render_system/forward_render_pipeline.ecs"
 pipeline "render"
     .stage "refine_filter"
     .stage "cull"
     .stage "refine_camera"
-    .stage "render_preprocess"
-    .stage "render_submit"
+    .pipeline "render_process"
     .pipeline "postprocess"
