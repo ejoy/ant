@@ -136,11 +136,9 @@ local function compile_path(pathstring)
     return path
 end
 
-local function compile(pathstring)
-    return compile_file(compile_path(pathstring))
-end
 
 return {
     set_identity = set_identity,
-    compile = compile,
+    compile_file = compile_file,
+    compile_path = compile_path,
 }
