@@ -785,16 +785,14 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes)
 	}
 }
 
-// Called when properties on the element are changed.
 void Element::OnChange(const PropertyIdSet& changed_properties) {
 	const bool border_radius_changed = (
 		changed_properties.Contains(PropertyId::BorderTopLeftRadius) ||
 		changed_properties.Contains(PropertyId::BorderTopRightRadius) ||
 		changed_properties.Contains(PropertyId::BorderBottomRightRadius) ||
 		changed_properties.Contains(PropertyId::BorderBottomLeftRadius)
-	);
+		);
 
-	// Update the visibility.
 	if (changed_properties.Contains(PropertyId::Display)) {
 		// Due to structural pseudo-classes, this may change the element definition in siblings and parent.
 		// However, the definitions will only be changed on the next update loop which may result in jarring behavior for one @frame.
@@ -803,7 +801,6 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 			parent->DirtyStructure();
 	}
 
-	// Update the z-index.
 	if (changed_properties.Contains(PropertyId::ZIndex)) {
 		float new_z_index = 0;
 		const Property* property = GetProperty(PropertyId::ZIndex);
@@ -818,16 +815,14 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 		}
 	}
 
-	// Dirty the background if it's changed.
-    if (border_radius_changed ||
+	if (border_radius_changed ||
 		changed_properties.Contains(PropertyId::BackgroundColor) ||
 		changed_properties.Contains(PropertyId::BackgroundImage) ||
 		changed_properties.Contains(PropertyId::Opacity))
 	{
 		dirty_background = true;
-    }
+	}
 
-	// Dirty the border if it's changed.
 	if (border_radius_changed ||
 		changed_properties.Contains(PropertyId::BorderTopWidth) ||
 		changed_properties.Contains(PropertyId::BorderRightWidth) ||
@@ -841,16 +836,21 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 	{
 		dirty_border = true;
 	}
-	
-	// Dirty the decoration if it's changed.
+
 	if (border_radius_changed ||
 		changed_properties.Contains(PropertyId::BackgroundImage) ||
+		changed_properties.Contains(PropertyId::BackgroundOrigin) ||
+		changed_properties.Contains(PropertyId::BackgroundSize) ||
+		changed_properties.Contains(PropertyId::BackgroundSizeX) ||
+		changed_properties.Contains(PropertyId::BackgroundSizeY) ||
+		changed_properties.Contains(PropertyId::BackgroundPositionX) ||
+		changed_properties.Contains(PropertyId::BackgroundPositionY) ||
+		changed_properties.Contains(PropertyId::BackgroundRepeat) ||
 		changed_properties.Contains(PropertyId::Opacity))
 	{
 		dirty_image = true;
 	}
 
-	// Check for `perspective' and `perspective-origin' changes
 	if (changed_properties.Contains(PropertyId::Perspective) ||
 		changed_properties.Contains(PropertyId::PerspectiveOriginX) ||
 		changed_properties.Contains(PropertyId::PerspectiveOriginY))
@@ -858,7 +858,6 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 		DirtyPerspective();
 	}
 
-	// Check for `transform' and `transform-origin' changes
 	if (changed_properties.Contains(PropertyId::Transform) ||
 		changed_properties.Contains(PropertyId::TransformOriginX) ||
 		changed_properties.Contains(PropertyId::TransformOriginY) ||
@@ -867,12 +866,11 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 		DirtyTransform();
 	}
 
-	// Check for `animation' changes
 	if (changed_properties.Contains(PropertyId::Animation))
 	{
 		dirty_animation = true;
 	}
-	// Check for `transition' changes
+
 	if (changed_properties.Contains(PropertyId::Transition))
 	{
 		dirty_transition = true;

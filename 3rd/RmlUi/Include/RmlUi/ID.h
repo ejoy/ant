@@ -160,6 +160,8 @@ enum class PropertyId : uint8_t
 	BackgroundImage,
 	BackgroundOrigin,
 	BackgroundSize,
+	BackgroundSizeX,
+	BackgroundSizeY,
 	BackgroundPositionX,
 	BackgroundPositionY,
 	BackgroundRepeat,

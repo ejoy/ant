@@ -403,6 +403,10 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 		.AddParser("keyword", "padding-box, border-box, content-box");
 	RegisterProperty(PropertyId::BackgroundSize, "background-size", "auto", false, false)
 		.AddParser("keyword", "auto, cover, contain");
+	RegisterProperty(PropertyId::BackgroundSizeX, "background-size-x", "0px", false, false)
+		.AddParser("length_percent");
+	RegisterProperty(PropertyId::BackgroundSizeY, "background-size-y", "0px", false, false)
+		.AddParser("length_percent");
 	RegisterProperty(PropertyId::BackgroundPositionX, "background-position-x", "0%", false, false)
 		.AddParser("keyword", "left, center, right")
 		.AddParser("length_percent");
@@ -413,7 +417,7 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 	
 	RegisterProperty(PropertyId::BackgroundRepeat, "background-repeat", "repeat", false, false)
 		.AddParser("keyword", "repeat, repeat-x, repeat-y, no-repeat");
-	RegisterShorthand(ShorthandId::Background, "background", "background-color", ShorthandType::FallThrough);
+	RegisterShorthand(ShorthandId::Background, "background", "background-image, background-position, background-size-x, background-size-y", ShorthandType::FallThrough);
 
 	RegisterProperty(PropertyId::TextShadowH, "text-shadow-h", "0px", true, false)
 		.AddParser("length");
