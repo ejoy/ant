@@ -111,6 +111,7 @@ policy "render_queue"
 
 policy "watch_screen_buffer"
     .component "watch_screen_buffer"
+    .component "render_target"
 
 component "render_target"
     .implement "render_system/render_system.lua"

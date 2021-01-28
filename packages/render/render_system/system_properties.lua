@@ -160,25 +160,16 @@ local function update_shadow_properties()
 end
 
 local function update_postprocess_properties()
-	local function rb_handle(q, idx)
-		local fbidx = q.render_target.fb_idx
-		local fb = fbmgr.get(fbidx)
-		return fbmgr.get_rb(fb[idx]).handle
-	end
-
 	local mq = world:singleton_entity "main_queue"
+
+	local fbidx = mq.render_target.fb_idx
+	local fb = fbmgr.get(fbidx)
+
 	local mv = system_properties["s_mainview"]
-	mv.texture.handle = rb_handle(mq, 1)
-	
+	mv.texture.handle = fbmgr.get_rb(fb[1]).handle
+
 	local mvd = system_properties["s_mainview_depth"]
-	local pdq = world:singleton_entity "pre_depth_queue"
-	if pdq then
-		mvd.texture.handle = rb_handle(pdq, 1)
-	else
-		local fbidx = mq.render_target.fb_idx
-		local fb = fbmgr.get(fbidx)
-		mvd.texture.handle = fbmgr.get_rb(fb[#fb]).handle
-	end
+	mvd.texture.handle = fbmgr.get_rb(fb[#fb]).handle
 end
 
 function m.update()

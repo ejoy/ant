@@ -8,16 +8,17 @@ local vp_detect_sys = ecs.system "viewport_detect_system"
 local icamera	= world:interface "ant.camera|camera"
 local irq		= world:interface "ant.render|irenderqueue"
 local eventResize = world:sub {"resize"}
+local rb_cache = {}
 
 local function resize_framebuffer(w, h, fbidx)
 	if fbidx then
 		local fb = fbmgr.get(fbidx)
 		local changed = false
 		local rbs = {}
-		local ownerships = fb.ownerships
 		for _, rbidx in ipairs(fb)do
 			rbs[#rbs+1] = rbidx
-			if ownerships == nil or (not ownerships[rbidx]) then
+			if rb_cache[rbidx] == nil then
+				rb_cache[rbidx] = true
 				changed = fbmgr.resize_rb(w, h, rbidx) or changed
 			end
 		end
@@ -49,6 +50,7 @@ local function rebind_uiruntime()
 end
 
 local function update_camera_viewrect(viewsize)
+	rb_cache = {}
 	for _, eid in world:each "watch_screen_buffer" do
 		update_render_queue(world[eid], viewsize)
 	end
