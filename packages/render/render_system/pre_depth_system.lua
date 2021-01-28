@@ -32,7 +32,7 @@ function pd_sys:post_init()
 		}
 	end
 end
-function pd_sys:render_preprocess()
+function pd_sys:data_changed()
 	for _, d in pairs(pd_mbs) do
 		local cb = d.cb
 		for msg in d.mb:each() do

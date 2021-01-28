@@ -50,7 +50,7 @@ policy "blit_queue"
 system "pre_depth_system"
     .implement "render_system/forward_render_system.lua"
     .method "post_init"
-    .method "render_preprocess"
+    .method "data_changed"
 
 policy "pre_depth_queue"
     .require_transform "pre_depth_primitive_transform"

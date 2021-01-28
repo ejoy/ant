@@ -20,7 +20,6 @@ function render_sys:init()
 		frustum = default_comp.frustum(vr.w/vr.h),
         name = "default_camera",
 	}
-	--irender.create_pre_depth_queue(vr, camera_eid)
 	irender.create_main_queue(vr, camera_eid)
 end
 
@@ -34,19 +33,11 @@ function render_sys:render_submit()
 	for _, eid in world:each "render_target" do
 		local rq = world[eid]
 		if rq.visible then
-			local rt = rq.render_target
-			local viewid = rt.viewid
+			local viewid = rq.render_target.viewid
 			bgfx.touch(viewid)
 			update_view_proj(viewid, rq.camera_eid)
 
-			local filter = rq.primitive_filter
-			local results = filter.result
-
-			for _, fn in ipairs(filter.filter_order) do
-				local result = results[fn]
-				if result.sort then
-					result:sort()
-				end
+			for _, result in ipf.iter_filter(rq.primitive_filter) do
 				for _, item in ipf.iter_target(result) do
 					irender.draw(viewid, item)
 				end

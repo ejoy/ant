@@ -74,6 +74,23 @@ function ipf.iter_target(result)
 	end, vs, 0
 end
 
+function ipf.iter_filter(filter)
+	local results = filter.result
+	local orders = filter.filter_order
+	local n = #orders
+	return function (t, idx)
+		if idx < n then
+			idx = idx + 1
+			local fn = t[idx]
+			local r = results[fn]
+			if r.sort then
+				r:sort()
+			end
+			return idx, r
+		end
+	end, orders, 0
+end
+
 local ies = world:interface "ant.scene|ientity_state"
 
 local pf = ecs.component "primitive_filter"
