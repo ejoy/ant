@@ -1,0 +1,25 @@
+pipeline "render_process"
+    .stage "render_preprocess"
+    .stage "render_submit"
+
+system "forward_render_system"
+    .implement "render_system/forward_render.lua"
+    .require_policy "ant.render|forward_render"
+    .method "init"
+
+transform "visible_primitive_transform"
+    .implement  "render_system/forward_render.lua"
+    .input      "primitive_filter"
+    .output     "primitive_filter.visible"
+    .method     "process_entity"
+
+policy "forward_render"
+    .require_policy     "render_queue"
+    .require_transform  "visible_primitive_transform"
+    .require_system     "pre_depth_system"
+    .require_system     "forward_render_system"
+    .component          "primitive_filter"
+
+--must define 'render_pipeline' policy
+policy "render_pipeline"
+    .require_policy "ant.render|forward_render"

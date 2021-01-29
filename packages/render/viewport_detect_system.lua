@@ -18,8 +18,8 @@ local function resize_framebuffer(w, h, fbidx)
 		for _, rbidx in ipairs(fb)do
 			rbs[#rbs+1] = rbidx
 			if rb_cache[rbidx] == nil then
-				rb_cache[rbidx] = true
 				changed = fbmgr.resize_rb(w, h, rbidx) or changed
+				rb_cache[rbidx] = changed
 			end
 		end
 		

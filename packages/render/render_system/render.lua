@@ -10,33 +10,6 @@ local viewidmgr 	= require "viewid_mgr"
 local fbmgr			= require "framebuffer_mgr"
 local samplerutil	= require "sampler"
 local icamera		= world:interface "ant.camera|camera"
-local imaterial		= world:interface "ant.asset|imaterial"
-local ipf			= world:interface "ant.scene|iprimitive_filter"
-
-local vpt = ecs.transform "visible_primitive_transform"
-local function parse_rc(rc)
-	local state = bgfx.parse_state(rc.state)
-	local wm = state.WRITE_MASK:gsub("Z", "")
-	if wm ~= state.WRITE_MASK then
-		state.WRITE_MASK = wm
-		return setmetatable({
-			state = bgfx.make_state(state)
-		}, {__index=rc})
-	end
-	return rc
-end
-function vpt.process_entity(e)
-	local f = e.primitive_filter
-	f.insert_item = function (filter, fxtype, eid, rc)
-		local items = filter.result[fxtype].items
-		if rc then
-			rc.eid = eid
-			ipf.add_item(items, eid, parse_rc(rc))
-		else
-			ipf.remove_item(items, eid)
-		end
-	end
-end
 
 local wmt = ecs.transform "world_matrix_transform"
 local function set_world_matrix(rc)
@@ -59,42 +32,6 @@ function irender.check_primitive_mode_state(state, template_state)
 		end
 	end
 	return template_state
-end
-
-local pre_depth_material_file<const> 	= "/pkg/ant.resources/materials/depth.material"
-local pre_depth_material, pre_depth_skinning_material
-
-local function can_write_depth(state)
-	local s = bgfx.parse_state(state)
-	local wm = s.WRITE_MASK
-	return wm == nil or wm:match "Z"
-end
-
-local pd_pt = ecs.transform "pre_depth_primitive_transform"
-function pd_pt.process_entity(e)
-	if pre_depth_material == nil then
-		pre_depth_material 			= imaterial.load(pre_depth_material_file, {depth_type="linear"})
-		pre_depth_skinning_material = imaterial.load(pre_depth_material_file, {depth_type="linear", skinning="GPU"})
-	end
-
-	e.primitive_filter.insert_item = function (filter, fxtype, eid, rc)
-		if fxtype == "opaticy" then
-			local items = filter.result[fxtype].items
-			local material = world[eid].skinning_type == "GPU" and pre_depth_skinning_material or pre_depth_material
-			if rc then
-				if can_write_depth(rc.state) then
-					ipf.add_item(items, eid, setmetatable({
-						eid			= eid,
-						properties	= material.properties,
-						fx			= material.fx,
-						state		= irender.check_primitive_mode_state(rc.state, material.state),
-					}, {__index=rc}))
-				end
-			else
-				ipf.remove_item(items, eid)
-			end
-		end
-	end
 end
 
 function irender.draw(vid, ri)
@@ -314,8 +251,7 @@ function irender.create_main_queue(view_rect, camera_eid)
 		local pd = world:singleton_entity "pre_depth_queue"
 
 		local pd_fb = fbmgr.get(pd.render_target.fb_idx)
-		assert(#pd_fb == 1)
-		return pd_fb[1]
+		return pd_fb[#pd_fb]
 	end
 
 	render_buffers[#render_buffers+1] = get_depth_buffer()

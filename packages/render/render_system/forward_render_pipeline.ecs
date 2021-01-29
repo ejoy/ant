@@ -1,3 +1,0 @@
-pipeline "render_process"
-    .stage "render_preprocess"
-    .stage "render_submit"
