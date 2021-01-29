@@ -4,6 +4,7 @@ local world     = ecs.world
 local mc = import_package "ant.math".constant
 local math3d    = require "math3d"
 local default_comp 	= import_package "ant.general".default
+local irq = world:interface "ant.render|irenderqueue"
 
 local cm = ecs.transform "camera_transform"
 
@@ -66,24 +67,22 @@ function ic.create(info)
     }
 end
 
-local function bind_queue(cameraeid, q)
-    q.camera_eid = cameraeid
-    local vr = q.render_target.view_rect
+local function bind_queue(cameraeid, qeid)
+    irq.set_camera(qeid, cameraeid)
+    local vr = irq.view_rect(qeid)
     ic.set_frustum_aspect(cameraeid, vr.w / vr.h)
 end
 
 function ic.bind(eid, which_queue)
-    local q = world:singleton_entity(which_queue)
-    if q == nil then
+    local qeid = world:singleton_entity_id(which_queue)
+    if qeid == nil then
         error(string.format("not find queue:%s", which_queue))
     end
 
-    bind_queue(eid, q)
+    bind_queue(eid, qeid)
 end
 
-function ic.bind_queue(eid, queueeid)
-    bind_queue(eid, world[queueeid])
-end
+ic.bind_queue = bind_queue
 
 function ic.calc_viewmat(eid)
     local rc = world[eid]._rendercache
