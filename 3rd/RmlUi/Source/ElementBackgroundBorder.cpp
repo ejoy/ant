@@ -112,7 +112,7 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 		);
 	}
 	else {
-		topLeftInner.append({
+		topLeftInner.emplace({
 			metrics.borderWidth.left,
 			metrics.borderWidth.top
 		});
@@ -137,7 +137,7 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 		);
 	}
 	else {
-		topRightInner.append({
+		topRightInner.emplace({
 			metrics.frame.size.w - metrics.borderWidth.right,
 			metrics.borderWidth.top
 		});
@@ -162,7 +162,7 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 		);
 	}
 	else {
-		bottomRightInner.append({
+		bottomRightInner.emplace({
 			metrics.frame.size.w - metrics.borderWidth.right,
 			metrics.frame.size.h - metrics.borderWidth.bottom
 		});
@@ -187,7 +187,7 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 		);
 	}
 	else {
-		bottomLeftInner.append({
+		bottomLeftInner.emplace({
 			metrics.borderWidth.left,
 			metrics.frame.size.h - metrics.borderWidth.bottom
 		});

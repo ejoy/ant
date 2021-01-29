@@ -38,10 +38,9 @@
 
 namespace Rml {
 
-PropertySpecification::PropertySpecification(size_t reserve_num_properties, size_t reserve_num_shorthands) :
-	// Increment reserve numbers by one because the 'invalid' property occupies the first element
-	properties(reserve_num_properties + 1), shorthands(reserve_num_shorthands + 1),
-	property_map(MakeUnique<PropertyIdNameMap>(reserve_num_properties + 1)), shorthand_map(MakeUnique<ShorthandIdNameMap>(reserve_num_shorthands + 1))
+PropertySpecification::PropertySpecification() :
+	properties(), shorthands(),
+	property_map(MakeUnique<PropertyIdNameMap>()), shorthand_map(MakeUnique<ShorthandIdNameMap>())
 {
 }
 
@@ -58,13 +57,6 @@ PropertyDefinition& PropertySpecification::RegisterProperty(const String& proper
 		property_map->AddPair(id, property_name);
 
 	size_t index = (size_t)id;
-
-	if (index >= size_t(PropertyId::MaxNumIds))
-	{
-		Log::Message(Log::LT_ERROR, "Fatal error while registering property '%s': Maximum number of allowed properties exceeded. Continuing execution may lead to crash.", property_name.c_str());
-		RMLUI_ERROR;
-		return *properties[0];
-	}
 
 	if (index < properties.size())
 	{
@@ -181,12 +173,6 @@ ShorthandId PropertySpecification::RegisterShorthand(const String& shorthand_nam
 	property_shorthand->type = type;
 
 	const size_t index = (size_t)id;
-
-	if (index >= size_t(ShorthandId::MaxNumIds))
-	{
-		Log::Message(Log::LT_ERROR, "Error while registering shorthand '%s': Maximum number of allowed shorthands exceeded.", shorthand_name.c_str());
-		return ShorthandId::Invalid;
-	}
 
 	if (index < shorthands.size())
 	{

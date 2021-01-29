@@ -68,7 +68,7 @@ enum class ShorthandType
 class RMLUICORE_API PropertySpecification
 {
 public:
-	PropertySpecification(size_t reserve_num_properties, size_t reserve_num_shorthands);
+	PropertySpecification();
 	~PropertySpecification();
 
 	/// Registers a property with a new definition.

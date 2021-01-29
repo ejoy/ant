@@ -49,29 +49,27 @@
 
 namespace Rml {
 	
-template <>
-float ComputeProperty<float>(const Property* property, Element* e) {
+float ComputeProperty(FloatValue fv, Element* e) {
 	static constexpr float PixelsPerInch = 96.0f;
-	float value = property->value.Get<float>();
-	switch (property->unit) {
+	switch (fv.unit) {
 	case Property::NUMBER:
 	case Property::PX:
 	case Property::RAD:
-		return value;
+		return fv.value;
 	case Property::EM:
-		return value * e->GetFontSize();
+		return fv.value * e->GetFontSize();
 	case Property::REM:
-		return value * e->GetOwnerDocument()->body->GetFontSize();
+		return fv.value * e->GetOwnerDocument()->body->GetFontSize();
 	case Property::DP:
-		return value * e->GetContext()->GetDensityIndependentPixelRatio();
+		return fv.value * e->GetContext()->GetDensityIndependentPixelRatio();
 	case Property::DEG:
-		return Math::DegreesToRadians(value);
+		return Math::DegreesToRadians(fv.value);
 	default:
 		break;
 	}
-	if (property->unit & Property::PPI_UNIT) {
-		float inch = value * PixelsPerInch;
-		switch (property->unit) {
+	if (fv.unit & Property::PPI_UNIT) {
+		float inch = fv.value * PixelsPerInch;
+		switch (fv.unit) {
 		case Property::INCH: // inch
 			return inch;
 		case Property::CM: // centimeter
@@ -89,25 +87,34 @@ float ComputeProperty<float>(const Property* property, Element* e) {
 	return 0.0f;
 }
 
-static Style::LengthPercentage ComputeOrigin(const Property* property, Element* element) {
-	using namespace Style;
-	static_assert((int)OriginX::Left == (int)OriginY::Top && (int)OriginX::Center == (int)OriginY::Center && (int)OriginX::Right == (int)OriginY::Bottom, "");
-
-	if (property->unit & Property::KEYWORD) {
-		float percent = 0.0f;
-		OriginX origin = (OriginX)property->Get<int>();
-		switch (origin)
-		{
-		case OriginX::Left: percent = 0.0f; break;
-		case OriginX::Center: percent = 50.0f; break;
-		case OriginX::Right: percent = 100.f; break;
-		}
-		return LengthPercentage(LengthPercentage::Percentage, percent);
+float ComputePropertyW(FloatValue fv, Element* e) {
+	if (fv.unit == Property::PERCENT) {
+		return fv.value * e->GetMetrics().frame.size.w * 0.01f;
 	}
-	else if (property->unit & Property::PERCENT)
-		return LengthPercentage(LengthPercentage::Percentage, property->Get<float>());
+	return ComputeProperty(fv, e);
+}
 
-	return LengthPercentage(LengthPercentage::Length, ComputeProperty<float>(property, element));
+float ComputePropertyH(FloatValue fv, Element* e) {
+	if (fv.unit == Property::PERCENT) {
+		return fv.value * e->GetMetrics().frame.size.h * 0.01f;
+	}
+	return ComputeProperty(fv, e);
+}
+
+float ComputeProperty(const Property* property, Element* e) {
+	return ComputeProperty(property->ToFloatValue(), e);
+}
+
+float ComputePropertyW(const Property* property, Element* e) {
+	return ComputePropertyW(property->ToFloatValue(), e);
+}
+
+float ComputePropertyH(const Property* property, Element* e) {
+	return ComputePropertyH(property->ToFloatValue(), e);
+}
+
+static FloatValue ComputeOrigin(const Property* property) {
+	return property->ToFloatValue();
 }
 
 ElementStyle::ElementStyle(Element* _element)
@@ -546,43 +553,20 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values) {
 			values.border_color.left = p->Get<Color>();
 			break;
 		case PropertyId::BorderTopLeftRadius:
-			values.border_radius.topLeft = ComputeProperty<float>(p, element);
+			values.border_radius.topLeft = ComputeProperty(p, element);
 			break;
 		case PropertyId::BorderTopRightRadius:
-			values.border_radius.topRight = ComputeProperty<float>(p, element);
+			values.border_radius.topRight = ComputeProperty(p, element);
 			break;
 		case PropertyId::BorderBottomRightRadius:
-			values.border_radius.bottomRight = ComputeProperty<float>(p, element);
+			values.border_radius.bottomRight = ComputeProperty(p, element);
 			break;
 		case PropertyId::BorderBottomLeftRadius:
-			values.border_radius.bottomLeft = ComputeProperty<float>(p, element);
+			values.border_radius.bottomLeft = ComputeProperty(p, element);
 			break;
 
 		case PropertyId::BackgroundColor:
 			values.background_color = p->Get<Color>();
-			break;
-
-		case PropertyId::Perspective:
-			values.perspective = ComputeProperty<float>(p, element);
-			break;
-		case PropertyId::PerspectiveOriginX:
-			values.perspective_origin_x = ComputeOrigin(p, element);
-			break;
-		case PropertyId::PerspectiveOriginY:
-			values.perspective_origin_y = ComputeOrigin(p, element);
-			break;
-
-		case PropertyId::Transform:
-			values.transform = p->Get<TransformPtr>();
-			break;
-		case PropertyId::TransformOriginX:
-			values.transform_origin_x = ComputeOrigin(p, element);
-			break;
-		case PropertyId::TransformOriginY:
-			values.transform_origin_y = ComputeOrigin(p, element);
-			break;
-		case PropertyId::TransformOriginZ:
-			values.transform_origin_z = ComputeProperty<float>(p, element);
 			break;
 
 		case PropertyId::Transition:

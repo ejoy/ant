@@ -1,5 +1,7 @@
 local imgui     = require "imgui"
 local assetmgr  = import_package "ant.asset"
+local cr        = import_package "ant.compile_resource"
+local datalist  = require "datalist"
 local uiconfig  = require "widget.config"
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
@@ -113,8 +115,6 @@ function Combo:set_options(options)
 end
 
 function Combo:show()
-    -- imgui.widget.Text(self.label)
-    -- imgui.cursor.SameLine(uiconfig.PropertyIndent)
     imgui.widget.PropertyLabel(self.label)
     imgui.util.PushID(tostring(self))
     if imgui.widget.BeginCombo("##"..self.label, {self.current_option, flags = imgui.flags.Combo {}}) then
@@ -139,8 +139,6 @@ function EditText:_init(config, modifier)
 end
 
 function EditText:show()
-    -- imgui.widget.Text(self.label)
-    -- imgui.cursor.SameLine(uiconfig.PropertyIndent)
     imgui.widget.PropertyLabel(self.label)
     if self.readonly then
         imgui.widget.Text(tostring(self.uidata.text))
@@ -215,45 +213,21 @@ function ResourcePath:get_metadata()
     return self.metadata
 end
 
--- local MaterialResource = class("MaterialResource", ResourcePath)
--- function MaterialResource:get_extension()
---     return ".material"
--- end
--- function MaterialResource:upate()
---     ResourcePath.update(self)
---     self.vs_property = ResourcePath({label = "FS"}, {
---         getter = function()
-
---         end,
---         setter = function()
-            
---         end
---     })
---     self.fs_property = ResourcePath({label = "FS"}, {
---         getter = function()
-
---         end,
---         setter = function()
-
---         end
---     })
---     self.metadata = utils.readtable(self.path)
--- end
--- function MaterialResource:on_dragdrop()
---     self.metadata = utils.readtable(self.path)
---     self.vs_property:update()
---     self.fs_property:update()
--- end
-
-
 local TextureResource  = class("TextureResource", ResourcePath)
 function TextureResource:_init(config, modifier)
     ResourcePath._init(self, config, modifier)
     self.extension = ".texture"
 end
+
 function TextureResource:do_update()
     if #self.path <= 0 then return end
-    self.metadata = utils.readtable(self.path)
+    local r = {}
+    self.path:gsub('[^|]*', function (w) r[#r+1] = w end)
+    if #r > 1 then
+        self.metadata = datalist.parse(cr.read_file(self.path))
+    else
+        self.metadata = utils.readtable(self.path)
+    end
     self.runtimedata = assetmgr.resource(self.path)
     if not self.uidata2 then
         self.uidata2 = {text = ""}
@@ -301,47 +275,6 @@ function TextureResource:show()
             imgui.widget.EndDragDropTarget()
         end
 
-        -- local sampler = self.metadata.sampler
-        -- local function show_filter(ft)
-        --     imgui.widget.Text(ft)
-        --     imgui.cursor.SameLine()
-        --     imgui.cursor.SetNextItemWidth(uiconfig.ComboWidth)
-        --     imgui.util.PushID(ft .. self.label)
-        --     if imgui.widget.BeginCombo("##"..ft, {sampler[ft], flags = imgui.flags.Combo { "NoArrowButton" }}) then
-        --         for i, type in ipairs(filter_type) do
-        --             if imgui.widget.Selectable(type, sampler[ft] == type) then
-        --                 sampler[ft] = type
-        --             end
-        --         end
-        --         imgui.widget.EndCombo()
-        --     end
-        --     imgui.util.PopID()
-        -- end
-        -- show_filter("MAG")
-        -- imgui.cursor.SameLine()
-        -- show_filter("MIN")
-        -- imgui.cursor.SameLine()
-        -- show_filter("MIP")
-
-        -- local function show_uv(uv)
-        --     imgui.widget.Text(uv)
-        --     imgui.cursor.SameLine()
-        --     imgui.cursor.SetNextItemWidth(uiconfig.ComboWidth)
-        --     imgui.util.PushID(uv .. self.label)
-        --     if imgui.widget.BeginCombo("##"..uv, {sampler[uv], flags = imgui.flags.Combo { "NoArrowButton" }}) then
-        --         for i, type in ipairs(address_type) do
-        --             if imgui.widget.Selectable(type, sampler[uv] == type) then
-        --                 sampler[uv] = type
-        --             end
-        --         end
-        --         imgui.widget.EndCombo()
-        --     end
-        --     imgui.util.PopID()
-        -- end
-        -- show_uv("U")
-        -- imgui.cursor.SameLine()
-        -- show_uv("V")
-        -- imgui.cursor.SameLine()
         imgui.util.PushID("Save" .. self.label)
         if imgui.widget.Button("Save") then
             self.metadata.path = tostring(lfs.relative(lfs.path(self.metadata.path), lfs.path(self.path):remove_filename()))

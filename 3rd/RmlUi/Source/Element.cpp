@@ -248,7 +248,7 @@ static float ComputeFontsize(const Property* property, Element* element) {
 			return property->Get<float>() * 16;
 		}
 	}
-	return ComputeProperty<float>(property, element);
+	return ComputeProperty(property, element);
 }
 
 bool Element::UpdataFontSize() {
@@ -785,16 +785,14 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes)
 	}
 }
 
-// Called when properties on the element are changed.
 void Element::OnChange(const PropertyIdSet& changed_properties) {
 	const bool border_radius_changed = (
 		changed_properties.Contains(PropertyId::BorderTopLeftRadius) ||
 		changed_properties.Contains(PropertyId::BorderTopRightRadius) ||
 		changed_properties.Contains(PropertyId::BorderBottomRightRadius) ||
 		changed_properties.Contains(PropertyId::BorderBottomLeftRadius)
-	);
+		);
 
-	// Update the visibility.
 	if (changed_properties.Contains(PropertyId::Display)) {
 		// Due to structural pseudo-classes, this may change the element definition in siblings and parent.
 		// However, the definitions will only be changed on the next update loop which may result in jarring behavior for one @frame.
@@ -803,7 +801,6 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 			parent->DirtyStructure();
 	}
 
-	// Update the z-index.
 	if (changed_properties.Contains(PropertyId::ZIndex)) {
 		float new_z_index = 0;
 		const Property* property = GetProperty(PropertyId::ZIndex);
@@ -818,16 +815,14 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 		}
 	}
 
-	// Dirty the background if it's changed.
-    if (border_radius_changed ||
+	if (border_radius_changed ||
 		changed_properties.Contains(PropertyId::BackgroundColor) ||
 		changed_properties.Contains(PropertyId::BackgroundImage) ||
 		changed_properties.Contains(PropertyId::Opacity))
 	{
 		dirty_background = true;
-    }
+	}
 
-	// Dirty the border if it's changed.
 	if (border_radius_changed ||
 		changed_properties.Contains(PropertyId::BorderTopWidth) ||
 		changed_properties.Contains(PropertyId::BorderRightWidth) ||
@@ -841,16 +836,21 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 	{
 		dirty_border = true;
 	}
-	
-	// Dirty the decoration if it's changed.
+
 	if (border_radius_changed ||
 		changed_properties.Contains(PropertyId::BackgroundImage) ||
+		changed_properties.Contains(PropertyId::BackgroundOrigin) ||
+		changed_properties.Contains(PropertyId::BackgroundSize) ||
+		changed_properties.Contains(PropertyId::BackgroundSizeX) ||
+		changed_properties.Contains(PropertyId::BackgroundSizeY) ||
+		changed_properties.Contains(PropertyId::BackgroundPositionX) ||
+		changed_properties.Contains(PropertyId::BackgroundPositionY) ||
+		changed_properties.Contains(PropertyId::BackgroundRepeat) ||
 		changed_properties.Contains(PropertyId::Opacity))
 	{
 		dirty_image = true;
 	}
 
-	// Check for `perspective' and `perspective-origin' changes
 	if (changed_properties.Contains(PropertyId::Perspective) ||
 		changed_properties.Contains(PropertyId::PerspectiveOriginX) ||
 		changed_properties.Contains(PropertyId::PerspectiveOriginY))
@@ -858,7 +858,6 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 		DirtyPerspective();
 	}
 
-	// Check for `transform' and `transform-origin' changes
 	if (changed_properties.Contains(PropertyId::Transform) ||
 		changed_properties.Contains(PropertyId::TransformOriginX) ||
 		changed_properties.Contains(PropertyId::TransformOriginY) ||
@@ -867,12 +866,11 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 		DirtyTransform();
 	}
 
-	// Check for `animation' changes
 	if (changed_properties.Contains(PropertyId::Animation))
 	{
 		dirty_animation = true;
 	}
-	// Check for `transition' changes
+
 	if (changed_properties.Contains(PropertyId::Transition))
 	{
 		dirty_transition = true;
@@ -1295,22 +1293,15 @@ void Element::UpdateTransform() {
 	if (!dirty_transform)
 		return;
 	dirty_transform = false;
-	const ComputedValues& computed = meta->computed_values;
 	glm::mat4x4 new_transform(1);
-	if (computed.transform && !computed.transform->empty()) {
-		const Layout::Metrics& metrics = GetMetrics();
+	auto computedTransform = GetProperty(PropertyId::Transform)->Get<TransformPtr>();
+	if (computedTransform && !computedTransform->empty()) {
 		glm::vec3 origin {
-			computed.transform_origin_x.value,
-			computed.transform_origin_y.value,
-			computed.transform_origin_z,
+			ComputePropertyW(GetProperty(PropertyId::TransformOriginX), this),
+			ComputePropertyH(GetProperty(PropertyId::TransformOriginY), this),
+			ComputeProperty (GetProperty(PropertyId::TransformOriginZ), this),
 		};
-		if (computed.transform_origin_x.type == Style::TransformOrigin::Percentage) {
-			origin.x *= metrics.frame.size.w * 0.01f;
-		}
-		if (computed.transform_origin_y.type == Style::TransformOrigin::Percentage) {
-			origin.y *= metrics.frame.size.h * 0.01f;
-		}
-		new_transform = glm::translate(origin) * computed.transform->GetMatrix(*this) * glm::translate(-origin);
+		new_transform = glm::translate(origin) * computedTransform->GetMatrix(*this) * glm::translate(-origin);
 	}
 	new_transform = glm::translate(new_transform, glm::vec3(metrics.frame.origin.x, metrics.frame.origin.y, 0));
 	if (parent) {
@@ -1334,22 +1325,14 @@ void Element::UpdatePerspective() {
 	if (!dirty_perspective)
 		return;
 	dirty_perspective = false;
-	const ComputedValues& computed = meta->computed_values;
-	float distance = computed.perspective;
+	float distance = ComputeProperty(GetProperty(PropertyId::Perspective), this);
 	bool changed = false;
 	if (distance > 0.0f) {
-		const Layout::Metrics& metrics = GetMetrics();
 		glm::vec3 origin {
-			computed.perspective_origin_x.value,
-			computed.perspective_origin_y.value,
+			ComputePropertyW(GetProperty(PropertyId::PerspectiveOriginX), this),
+			ComputePropertyH(GetProperty(PropertyId::PerspectiveOriginY), this),
 			0.f,
 		};
-		if (computed.perspective_origin_x.type == Style::PerspectiveOrigin::Percentage) {
-			origin.x *= metrics.frame.size.w * 0.01f;
-		}
-		if (computed.perspective_origin_y.type == Style::PerspectiveOrigin::Percentage) {
-			origin.y *= metrics.frame.size.h * 0.01f;
-		}
 		// Equivalent to: translate(origin) * perspective(distance) * translate(-origin)
 		glm::mat4x4 new_perspective = {
 			{ 1, 0, 0, 0 },

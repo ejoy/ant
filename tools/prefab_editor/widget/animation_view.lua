@@ -531,19 +531,8 @@ local function save_event(filename)
     if not filename then return end
     local runtime_event = get_runtime_events()
     local serialize_data = {
-        collider = {},
         event = {}
     }
-    for _, col in ipairs(runtime_event.collider) do
-        serialize_data.collider[#serialize_data.collider + 1] = {
-            hid = col.hid,
-            name = col.name,
-            shape = col.shape,
-            type = col.type,
-            slot_name = col.slot_name
-        }
-    end
-    
     for _, ev in ipairs(runtime_event.event) do
         local list = {}
         for _, ev in ipairs(ev.event_list) do
@@ -963,6 +952,7 @@ function m.bind(eid)
         current_eid = eid
     end
     if not ozz_anims[eid] then
+        animation_list = {}
         ozz_anims[eid] = {
             id = eid,
             birth = world[eid].animation_birth

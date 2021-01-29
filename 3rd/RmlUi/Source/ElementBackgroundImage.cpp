@@ -28,6 +28,7 @@
 
 #include "ElementBackgroundImage.h"
 #include "ElementDefinition.h"
+#include "ElementStyle.h"
 #include "../Include/RmlUi/Texture.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/Geometry.h"
@@ -40,35 +41,66 @@ namespace Rml {
 void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path const& paddingEdge) {
 	geometry.Release();
 
-	Layout::Metrics const& metrics = element->GetMetrics();
-	Rect surface = Rect{ {0, 0}, metrics.frame.size } - metrics.borderWidth;
-	if (surface.size.IsEmpty()) {
-		return;
-	}
 	const Property* image = element->GetProperty(PropertyId::BackgroundImage);
 	if (image->unit != Property::STRING) {
 		// "none"
 		return;
 	}
 
+	Layout::Metrics const& metrics = element->GetMetrics();
 	Style::BoxType origin = (Style::BoxType)element->GetProperty(PropertyId::BackgroundOrigin)->Get<int>();
-	Style::BackgroundSize size = (Style::BackgroundSize)element->GetProperty(PropertyId::BackgroundSize)->Get<int>();
+
+	Rect surface = Rect{ {0, 0}, metrics.frame.size };
+	if (surface.size.IsEmpty()) {
+		return;
+	}
+
+	switch (origin) {
+	case Style::BoxType::PaddingBox:
+		surface = surface - metrics.borderWidth;
+		break;
+	case Style::BoxType::BorderBox:
+		break;
+	case Style::BoxType::ContentBox:
+		surface = surface - metrics.borderWidth - metrics.contentInsets;
+		break;
+	}
+	if (surface.size.IsEmpty()) {
+		return;
+	}
+
+	SamplerFlag repeat = (SamplerFlag)element->GetProperty(PropertyId::BackgroundRepeat)->Get<int>();
+	Style::BackgroundSize backgroundSize = (Style::BackgroundSize)element->GetProperty(PropertyId::BackgroundSize)->Get<int>();
+	Size texSize {
+		ComputePropertyW(element->GetProperty(PropertyId::BackgroundSizeX), element),
+		ComputePropertyH(element->GetProperty(PropertyId::BackgroundSizeY), element)
+	};
+	Point texPosition {
+		ComputePropertyW(element->GetProperty(PropertyId::BackgroundPositionX), element),
+		ComputePropertyH(element->GetProperty(PropertyId::BackgroundPositionY), element)
+	};
 
 	String path;
 	GetSystemInterface()->JoinPath(path, StringUtilities::Replace(element->GetOwnerDocument()->GetSourceURL(), '|', ':'), image->Get<String>());
 	auto texture = Texture::Fetch(path);
 	geometry.SetTexture(texture);
+	geometry.SetSamplerFlag(repeat);
 	Color colour(255, 255, 255, 255);
 	ColorApplyOpacity(colour, element->GetOpacity());
 
-	Rect tex{ {}, texture->GetDimensions() };
+	if (texSize.IsEmpty()) {
+		texSize = texture->GetDimensions();
+	}
 	Size scale{
-		surface.size.w / tex.size.w,
-		surface.size.h / tex.size.h
+		surface.size.w / texSize.w,
+		surface.size.h / texSize.h
 	};
+	Rect uv { {
+		texPosition.x / texSize.w,
+		texPosition.y / texSize.h
+	}, {} };
 	float aspectRatio = scale.w / scale.h;
-	Rect uv;
-	switch (size) {
+	switch (backgroundSize) {
 	case Style::BackgroundSize::Auto:
 		uv.size.w = scale.w;
 		uv.size.h = scale.h;
@@ -95,14 +127,9 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		break;
 	}
 
-	switch (origin) {
-	case Style::BoxType::PaddingBox:
-	case Style::BoxType::BorderBox:
-	case Style::BoxType::ContentBox:
-		break;
-	}
-
-	if (paddingEdge.size() == 0) {
+	if (paddingEdge.size() == 0 
+		|| (origin == Style::BoxType::ContentBox && metrics.contentInsets != EdgeInsets<float>{})
+	) {
 		geometry.AddRect(surface, colour);
 		geometry.UpdateUV(4, surface, uv);
 	}

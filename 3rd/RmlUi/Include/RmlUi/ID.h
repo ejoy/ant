@@ -57,16 +57,13 @@ enum class ShorthandId : uint8_t
 	PerspectiveOrigin,
 	TransformOrigin,
 
+	BackgroundPosition,
 	Background, 
 	TextShadow,
 	TextStroke,
 	TextDecoration,
 
 	NumDefinedIds,
-	FirstCustomId = NumDefinedIds,
-
-	// The maximum number of IDs. This limits the number of possible custom IDs to MaxNumIds - FirstCustomId.
-	MaxNumIds = 0xff
 };
 
 
@@ -163,12 +160,13 @@ enum class PropertyId : uint8_t
 	BackgroundImage,
 	BackgroundOrigin,
 	BackgroundSize,
+	BackgroundSizeX,
+	BackgroundSizeY,
+	BackgroundPositionX,
+	BackgroundPositionY,
+	BackgroundRepeat,
 
 	NumDefinedIds,
-	FirstCustomId = NumDefinedIds,
-
-	// The maximum number of IDs. This limits the number of possible custom IDs to MaxNumIds - FirstCustomId.
-	MaxNumIds = 128
 };
 
 
@@ -221,9 +219,6 @@ enum class EventId : uint16_t
 
 	// Custom IDs start here
 	FirstCustomId = NumDefinedIds,
-
-	// The maximum number of IDs. This limits the number of possible custom IDs to MaxNumIds - FirstCustomId.
-	MaxNumIds = 0xffff
 };
 
 } // namespace Rml

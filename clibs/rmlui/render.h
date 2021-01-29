@@ -6,43 +6,11 @@
 #include <unordered_map>
 #include <bgfx/c99/bgfx.h>
 
-// Same as BGFX
-enum SamplerFlag : uint32_t {
-    U_MIRROR        = 0x00000001,
-    U_CLAMP         = 0x00000002,
-    U_BORDER        = 0x00000003,
-    U_SHIFT         = 0,
-    U_MASK          = 0x00000003,
-
-    V_MIRROR        = 0x00000004,
-    V_CLAMP         = 0x00000008,
-    V_BORDER        = 0x0000000c,
-    V_SHIFT         = 2,
-    V_MASK          = 0x0000000c,
-
-    MIN_POINT       = 0x00000040,
-    MIN_ANISOTROPIC = 0x00000080,
-    MIN_SHIFT       = 6,
-    MIN_MASK        = 0x000000c0,
-
-    MAG_POINT       = 0x00000100,
-    MAG_ANISOTROPIC = 0x00000200,
-    MAG_SHIFT       = 8,
-    MAG_MASK        = 0x00000300,
-
-    MIP_POINT       = 0x00000400,
-    MIP_SHIFT       = 10,
-    MIP_MASK        = 0x00000400,
-};
-
 class Renderer : public Rml::RenderInterface {
 public:
     Renderer(const RmlContext* context);
-    void RenderGeometry(Rml::Vertex* vertices, int num_vertices, 
-                                Rml::Index* indices, int num_indices,
-                                Rml::TextureHandle texture) override;
-    bool LoadTexture(Rml::TextureHandle& texture_handle, Rml::Size& texture_dimensions, const Rml::String& source) override;
-    bool GenerateTexture(Rml::TextureHandle& texture_handle, const Rml::byte* source, const Rml::Size& source_dimensions) override;
+    void RenderGeometry(Rml::Vertex* vertices, int num_vertices, Rml::Index* indices, int num_indices,  Rml::TextureHandle texture, Rml::SamplerFlag flags) override;
+    bool LoadTexture(Rml::TextureHandle& handle, Rml::Size& dimensions, const Rml::String& path) override;
     void ReleaseTexture(Rml::TextureHandle texture) override;
     void SetTransform(const glm::mat4x4& transform) override;
     void SetClipRect() override;

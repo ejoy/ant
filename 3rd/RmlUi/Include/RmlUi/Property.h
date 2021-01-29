@@ -43,6 +43,8 @@ struct RMLUICORE_API PropertySource {
 	String rule_name;
 };
 
+struct FloatValue;
+
 
 /**
 	@author Peter Curry
@@ -106,6 +108,8 @@ public:
 	/// Get the value of the property as a string.
 	String ToString() const;
 
+	FloatValue ToFloatValue() const;
+
 	/// Templatised accessor.
 	template <typename T>
 	T Get() const
@@ -124,6 +128,13 @@ public:
 	int parser_index = -1;
 
 	SharedPtr<const PropertySource> source;
+};
+
+struct FloatValue {
+	FloatValue() noexcept : value(0.f), unit(Property::UNKNOWN) {}
+	FloatValue(float v, Property::Unit unit) : value(v), unit(unit) {}
+	float value;
+	Property::Unit unit;
 };
 
 } // namespace Rml
