@@ -1740,7 +1740,7 @@ wSequencer(lua_State* L) {
 						
 					}
 					lua_pop(L, 1);
-					if (start != -1 && end != -1 && end > start) {
+					if (start != -1 && end != -1 && end >= start) {
 						item.clip_rangs.emplace_back(nv, (int)start, (int)end);
 					}
 				}

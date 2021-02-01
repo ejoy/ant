@@ -23,7 +23,7 @@ namespace ImSequencer
 	}
 	int GetFrameMax()
 	{
-		return (int)(current_anim->duration * 30.0f);
+		return (int)std::ceil(current_anim->duration * 30.0f);
 	}
 
 #ifndef IMGUI_DEFINE_MATH_OPERATORS
@@ -243,6 +243,7 @@ namespace ImSequencer
 			auto start = current_anim->clip_rangs[i].start;
 			auto end = current_anim->clip_rangs[i].end;
 			ImVec2 pos = ImVec2(contentMin.x + legendWidth - firstFrameUsed * framePixelWidth, contentMin.y + 1);
+			pos.x -= 0.5 * framePixelWidth;
 			ImVec2 slotP1(pos.x + start * framePixelWidth, pos.y + 2);
 			ImVec2 slotP2(pos.x + end * framePixelWidth + framePixelWidth, pos.y + ItemHeight - 2);
 			ImVec2 slotP3(pos.x + end * framePixelWidth + framePixelWidth, pos.y + ItemHeight - 2);

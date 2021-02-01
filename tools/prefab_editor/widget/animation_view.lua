@@ -483,9 +483,7 @@ local function on_move_keyframe(frame_idx, move_type)
     end
 end
 local function min_max_range_value(clip_index)
-    local before = current_anim.clips[clip_index - 1]
-    local after = current_anim.clips[clip_index + 1]
-    return before and before.range[2] + 1 or 0, after and after.range[1] - 1 or math.floor(current_anim.duration * sample_ratio) - 1
+    return 0, math.floor(current_anim.duration * sample_ratio) - 1
 end
 
 local function on_move_clip(move_type, current_clip_index, move_delta)
@@ -497,16 +495,25 @@ local function on_move_clip(move_type, current_clip_index, move_delta)
     local min_value, max_value = min_max_range_value(current_clip_index)
     if move_type == 1 then
         local new_value = clip.range[1] + move_delta
-        if new_value >= min_value and new_value < clip.range[2] then
-            clip.range[1] = new_value
-            clip.range_ui[1] = clip.range[1]
+        --if new_value >= min_value and new_value < clip.range[2] then
+        if new_value < 0 then
+            new_value = 0
         end
+        if new_value > clip.range[2] then
+            new_value = clip.range[2]
+        end
+        clip.range[1] = new_value
+        clip.range_ui[1] = clip.range[1]
     elseif move_type == 2 then
         local new_value = clip.range[2] + move_delta
-        if new_value > clip.range[1] and new_value <= max_value then
-            clip.range[2] = new_value
-            clip.range_ui[2] = clip.range[2]
+        if new_value < clip.range[1] then
+            new_value = clip.range[1]
         end
+        if new_value > max_value then
+            new_value = max_value
+        end
+        clip.range[2] = new_value
+        clip.range_ui[2] = clip.range[2]
     elseif move_type == 3 then
         local new_value1 = clip.range[1] + move_delta
         local new_value2 = clip.range[2] + move_delta
@@ -678,13 +685,17 @@ local function show_current_clip()
     end
     imgui.widget.PropertyLabel("Range")
     local clip_index = find_index(current_anim.clips, current_clip)
-    local min_value, max_value = min_max_range_value(clip_index)
+    local min_value, max_value = min_max_range_value()
     if imgui.widget.DragInt("##Range", current_clip.range_ui) then
         if current_clip.range_ui[1] < min_value then
             current_clip.range_ui[1] = min_value
+        elseif current_clip.range_ui[1] >= current_clip.range_ui[2] then
+            current_clip.range_ui[1] = current_clip.range_ui[2]
         end
         if current_clip.range_ui[2] > max_value then
             current_clip.range_ui[2] = max_value
+        elseif current_clip.range_ui[2] <= current_clip.range_ui[1] then
+            current_clip.range_ui[2] = current_clip.range_ui[1]
         end
         current_clip.range = {current_clip.range_ui[1], current_clip.range_ui[2]}
         set_clips_dirty(true)
