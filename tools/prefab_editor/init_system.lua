@@ -50,8 +50,7 @@ function m:init()
     rc.projmat = icamera.calc_projmat(second_camera)
     rc.viewprojmat = icamera.calc_viewproj(second_camera)
     camera_mgr.second_view_camera = second_camera
-    --camera_mgr.set_second_camera(second_camera, false)
-    camera_mgr.set_second_camera(second_camera, true)
+    camera_mgr.set_second_camera(second_camera, false)
     
     entity.create_procedural_sky()
     entity.create_grid_entity_simple("", nil, nil, nil, {srt={r={0,0.92388,0,0.382683},}})

@@ -390,13 +390,6 @@ function m:open_prefab(prefab)
         else
             local keyframes = prefab.__class[i].data.frames
             if keyframes and last_camera then
-                -- for i, v in ipairs(keyframes) do
-                --     local tp = v.position
-                --     local tr = v.rotation
-                --     v.position = math3d.ref(math3d.vector(tp[1], tp[2], tp[3]))
-                --     v.rotation = math3d.ref(math3d.quaternion(tr[1], tr[2], tr[3], tr[4]))
-                -- end
-
                 local templ = hierarchy:get_template(last_camera)
                 templ.keyframe = prefab.__class[i]
                 camera_mgr.bind_recorder(last_camera, entity)
@@ -454,30 +447,13 @@ function m:add_prefab(filename)
     if not self.root then
         self:reset_prefab()
     end
-    -- local entity_template = {
-    --     action = {
-    --         mount = 1
-    --     },
-    --     policy = {
-    --         "ant.general|name",
-    --         "ant.scene|transform_policy"
-    --     },
-    --     data = {
-    --         name = gen_prefab_name(),
-    --         transform = {},
-    --         scene_entity = true
-    --     }
-    -- }
-    local mount_root = create_simple_entity(gen_prefab_name())--world:create_entity(entity_template)
+    local mount_root = create_simple_entity(gen_prefab_name())
     self.entities[#self.entities+1] = mount_root
-    -- entity_template.data.name = entity_name
-    -- world[mount_root].name = entity_name
     local prefab = worldedit:prefab_template(filename)
     local entities = worldedit:prefab_instance(prefab)
     world[entities[1]].parent = mount_root
     
     set_select_adapter(entities, mount_root)
-    --hierarchy:add(mount_root, {template = entity_template, filename = filename, children = entities}, self.root)
     hierarchy:add(mount_root, {filename = filename, children = entities}, self.root)
 end
 
