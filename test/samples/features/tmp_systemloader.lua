@@ -96,26 +96,30 @@ local function find_entity(name, whichtype)
 end
 
 local function point_light_test()
-    local  lighteid = world:instance "/pkg/ant.test.features/assets/entities/light_point.prefab"[1]
-    iom.set_position(lighteid, {1, 1, 1, 1})
+    local pl_pos = {
+        {  1, 0, 1},
+        { -1, 0, 1},
+        { -1, 0,-1},
+        {  1, 0,-1},
+    }
 
-    local  lightcube = world:instance "/pkg/ant.test.features/assets/entities/cube.prefab"[1]
-    iom.set_position(lightcube, iom.get_position(lighteid))
+    for _, p in ipairs(pl_pos) do
+        local  lighteid = world:instance "/pkg/ant.test.features/assets/entities/light_point.prefab"[1]
+        iom.set_position(lighteid, p)
+    end
 
-    local cubeeid = world:instance "/pkg/ant.test.features/assets/entities/pbr_cube.prefab"[1]
-    iom.set_position(cubeeid, {0, 0, 0, 1})
-
-    world:instance("/pkg/ant.test.features/assets/entities/billboard_test.prefab", 
-        {root=world:singleton_entity "main_queue".camera_eid})
+    -- local cubeeid = world:instance "/pkg/ant.test.features/assets/entities/pbr_cube.prefab"[1]
+    -- iom.set_position(cubeeid, {0, 0, 0, 1})
 end
 
 function init_loader_sys:init()
-    --point_light_test()
+    point_light_test()
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
 
     --world:instance "/pkg/ant.test.features/assets/entities/font_tt.prefab"
+    world:instance "/pkg/ant.resources.binary/meshes/female/female.glb|mesh.prefab"
 
-    --ientity.create_procedural_sky()
+    ientity.create_procedural_sky()
     --target_lock_test()
 end
 

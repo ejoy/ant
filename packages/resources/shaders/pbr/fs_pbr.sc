@@ -1,5 +1,6 @@
 $input v_normal, v_posWS, v_texcoord0
 #include <bgfx_shader.sh>
+#include <bgfx_compute.sh>
 #include <shaderlib.sh>
 #include "common/lighting.sh"
 #include "common/transform.sh"
@@ -13,7 +14,6 @@ $input v_normal, v_posWS, v_texcoord0
 uniform vec4 u_IBLparam;
 #define u_prefiltered_cube_mip_levels u_IBLparam.x
 #define u_scaleIBLAmbient u_IBLparam.y
-
 
 // material properites
 SAMPLER2D(s_basecolor, 0);
@@ -152,25 +152,13 @@ vec3 fresnelSchlickRoughness(float NdotH, vec3 F0, float roughness)
     return fresnelSchlick(NdotH, F0, F90);
 }
 
-vec3 directional_light_radiance()
-{
-	return u_directional_color.rgb * u_directional_intensity.r;
-}
-
-vec3 point_light_radiance(vec3 lightcolor, vec3 lightdir)
-{
-	float distance_square = dot(lightdir, lightdir);
-
-	return (lightcolor / distance_square);
-}
-
 vec3 diffuse_percent(vec3 kS, float metallic)
 {
 	vec3 kD = vec3_splat(1.0) - kS;
 	return kD * (1.0 - metallic);
 }
 
-vec3 calc_direct_lighting(PBRInfo pbr_info, vec3 light_radiance, vec3 basecolor, vec3 F0)
+vec3 calc_direct_lighting(PBRInfo pbr_info, vec3 radiance, vec3 basecolor, vec3 F0)
 {
 	float N = DistributionGGX(pbr_info.NdotH, pbr_info.alpha_roughness);
 	float G = GeometrySmith(pbr_info.NdotV, pbr_info.NdotL, pbr_info.roughness);
@@ -181,7 +169,7 @@ vec3 calc_direct_lighting(PBRInfo pbr_info, vec3 light_radiance, vec3 basecolor,
 	vec3 kD = diffuse_percent(F, pbr_info.metallic);
 	vec3 diffuse = kD * lambertian_diffuse(basecolor);
 
-	return (diffuse + specular) * light_radiance * pbr_info.NdotL; 
+	return (diffuse + specular) * radiance * pbr_info.NdotL; 
 }
 
 vec3 calc_indirect_lighting_IBL(PBRInfo pbr_info, vec3 N, vec3 R, vec3 basecolor, vec3 F0)
@@ -224,6 +212,27 @@ float to_alpha_roughness(float roughness)
 	return roughness * roughness;
 }
 
+vec3 light_radiance(Light l, vec3 pos2light, float dist)
+{
+#define IS_DIRECTIONAL_LIGHT(_type) (_type == 0)
+#define IS_POINT_LIGHT(_type)	(_type==1)
+#define IS_SPOT_LIGHT(_type)	(_type==2)
+	vec3 radiance = l.color * l.intensity;
+	if (IS_DIRECTIONAL_LIGHT(l.type)){
+		radiance *= dot(l.dir, pos2light);
+	} else {
+		// make radiance attenuation by dist square
+		radiance /= (dist*dist);
+		if (IS_SPOT_LIGHT(l.type)){
+			float theta = dot(l.dir, pos2light);
+			float t = max(theta - l.inner_cutoff, 0.0) / (l.outter_cutoff - l.inner_cutoff);
+			radiance *= clamp(t, 0.0, 1.0);
+		}
+	}
+
+	return radiance;
+}
+
 void main()
 {
 	vec4 basecolor = get_basecolor(v_texcoord0);
@@ -233,44 +242,27 @@ void main()
 
 	vec3 N = getNormal(v_normal, v_posWS.xyz, v_texcoord0);
 	vec3 V = normalize(u_eyepos.xyz - v_posWS.xyz);
-	vec3 L = normalize(u_directional_lightdir.xyz);
-	vec3 H = normalize(L+V);
 	vec3 R = normalize(reflect(-V, N));
 
 	PBRInfo pbr_inputs;
-
-	pbr_inputs.NdotL 			= max(dot(N, L), 0.0);
 	pbr_inputs.NdotV 			= max(dot(N, V), 0.0);
-	pbr_inputs.NdotH 			= max(dot(N, H), 0.0);
-	pbr_inputs.LdotH 			= max(dot(L, H), 0.0);
-	pbr_inputs.VdotH 			= max(dot(V, H), 0.0);
 	pbr_inputs.roughness 		= roughness;
 	pbr_inputs.metallic 		= metallic;
 	pbr_inputs.alpha_roughness 	= to_alpha_roughness(roughness);
 
 	vec3 F0 = mix(vec3_splat(0.04), basecolor, metallic);
-	vec3 color = calc_direct_lighting(pbr_inputs, directional_light_radiance(), basecolor.rgb, F0);
 
-	for (int ii=0; ii < MAX_LIGHT; ++ii)
+	vec3 color = vec3_splat(0);
+	// one directional light, 4 point/spot light
+	for (int ii=0; ii < 5; ++ii)
 	{
-		vec3 lightcolor = u_light_color[ii];
-		vec4 lightpos 	= u_light_pos[ii];
+		Light l = b_lights[ii];
+		vec3 L = l.pos.xyz - v_posWS.xyz;
+		float dist = length(L);
+		L /= dist;
 
-		L = lightpos.xyz - v_posWS.xyz;
-		H = normalize(L+V);
-		vec3 radiance = point_light_radiance(lightcolor, L);
-
-#define IS_SPOT_LIGHT(_type) _type > 1.0
-		if (IS_SPOT_LIGHT(lightpos.w))
-		{
-			vec4 spotdir = u_light_dir[ii];
-			float cutoff = spotdir.w;
-			float outcutoff = u_light_param[ii].w;
-			float theta = dot(L, spotdir);
-
-			float t = max(theta - cutoff, 0.0) / (outcutoff - cutoff);
-			radiance *= clamp(t, 0.0, 1.0);
-		}
+		vec3 H = normalize(L+V);
+		vec3 radiance = light_radiance(l, L, dist);
 
 		pbr_inputs.NdotL = max(dot(N, L), 0.0);
 		pbr_inputs.LdotH = max(dot(L, H), 0.0);

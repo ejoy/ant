@@ -1,3 +1,11 @@
 pipeline "render_process"
     .stage "render_preprocess"
     .stage "render_submit"
+
+policy "cluster_render"
+    .require_policy "render_queue"
+    .require_system "cluster_forward_system"
+    .component "primitier_filter"
+
+policy "render_pipeline"
+    .require_policy "cluster_render"

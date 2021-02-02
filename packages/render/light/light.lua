@@ -1,25 +1,27 @@
 local ecs = ...
 local world = ecs.world
 
-local math3d = require "math3d"
-local mathpkg = import_package "ant.math"
-local mc = mathpkg.constant
+local declmgr	= require "vertexdecl_mgr"
+local math3d	= require "math3d"
+local bgfx		= require "bgfx"
+local mathpkg	= import_package "ant.math"
+local mc		= mathpkg.constant
 
-local ies = world:interface "ant.scene|ientity_state"
-local imaterial = world:interface "ant.asset|imaterial"
-local iom = world:interface "ant.objcontroller|obj_motion"
+local ies		= world:interface "ant.scene|ientity_state"
+local imaterial	= world:interface "ant.asset|imaterial"
+local iom		= world:interface "ant.objcontroller|obj_motion"
 
 local lt = ecs.transform "light_transform"
 function lt.process_entity(e)
-	local lt = e.light_type
-	if (lt == "point" or lt == "spot") and e.range == nil then
+	local t = e.light_type
+	if (t == "point" or t == "spot") and e.range == nil then
 		error(("light:%s need define 'range' attribute"):format(lt))
-	elseif lt == "spot" and e.radian == nil then
+	elseif t == "spot" and e.radian == nil then
 		error("spot light need define 'radian' attribute")
 	end
 	e._light = {
-		color		= math3d.ref(math3d.vector(e.color or {1, 1, 1, 1})),
-		intensity	= math3d.ref(math3d.vector{e.intensity or 2, 0, 0, 0}),
+		color		= e.color or {1, 1, 1, 1},
+		intensity	= e.intensity or 2,
 		range		= e.range,
 		radian		= e.radian,
 	}
@@ -27,6 +29,13 @@ end
 
 -- light interface
 local ilight 	= ecs.interface "light"
+
+local max_light_num<const>			= 1024
+--we need 64 byte stride, as vec4*4 for light struct
+local light_buffer_layout			= declmgr.get "t40|t41|t42|t43"
+local light_struct_stride			= light_buffer_layout.stride
+assert(light_struct_stride == 64)
+local light_buffer_handle			= bgfx.create_dynamic_vertex_buffer(max_light_num, light_buffer_layout.handle, "ra")
 
 function ilight.create(light)
 	return world:create_entity {
@@ -66,10 +75,7 @@ function ilight.intensity(eid)
 end
 
 function ilight.set_intensity(eid, i)
-	local ii = world[eid]._light.intensity
-	local v = math3d.tovalue(ii)
-	v[1] = i
-	ii.v = v
+	world[eid]._light.intensity = i
 	world:pub{"component_changed", "light", eid}
 end
 
@@ -99,6 +105,25 @@ function ilight.set_radian(eid, r)
 
 	e._light.radian = r
 	world:pub{"component_changed", "light", eid}
+end
+
+function ilight.inner_cutoff(eid)
+	local l = world[eid]._light
+	local r = l.radian
+	return r and math.cos(r * 0.5) or 0
+end
+
+function ilight.outter_cutoff(eid)
+	local l = world[eid]._light
+	local r = l.outter_radian
+	if r == nil and l.radian then
+		r = l.radian * 1.1
+	end
+	return r and math.cos(r * 0.5) or 0
+end
+
+function ilight.light_buffer()
+	return light_buffer_handle
 end
 
 local active_dl
