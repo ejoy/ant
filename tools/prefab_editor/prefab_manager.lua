@@ -390,12 +390,12 @@ function m:open_prefab(prefab)
         else
             local keyframes = prefab.__class[i].data.frames
             if keyframes and last_camera then
-                for i, v in ipairs(keyframes) do
-                    local tp = v.position
-                    local tr = v.rotation
-                    v.position = math3d.ref(math3d.vector(tp[1], tp[2], tp[3]))
-                    v.rotation = math3d.ref(math3d.quaternion(tr[1], tr[2], tr[3], tr[4]))
-                end
+                -- for i, v in ipairs(keyframes) do
+                --     local tp = v.position
+                --     local tr = v.rotation
+                --     v.position = math3d.ref(math3d.vector(tp[1], tp[2], tp[3]))
+                --     v.rotation = math3d.ref(math3d.quaternion(tr[1], tr[2], tr[3], tr[4]))
+                -- end
 
                 local templ = hierarchy:get_template(last_camera)
                 templ.keyframe = prefab.__class[i]
