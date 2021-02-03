@@ -35,7 +35,12 @@ local max_light_num<const>			= 1024
 local light_buffer_layout			= declmgr.get "t40|t41|t42|t43"
 local light_struct_stride			= light_buffer_layout.stride
 assert(light_struct_stride == 64)
-local light_buffer_handle			= bgfx.create_dynamic_vertex_buffer(max_light_num, light_buffer_layout.handle, "ra")
+local access_status<const>			= "r"
+local light_buffer					= {
+	handle = bgfx.create_dynamic_vertex_buffer(max_light_num, light_buffer_layout.handle, access_status .. "a"),
+	stage = 9,
+	access = access_status,
+}
 
 function ilight.create(light)
 	return world:create_entity {
@@ -123,7 +128,7 @@ function ilight.outter_cutoff(eid)
 end
 
 function ilight.light_buffer()
-	return light_buffer_handle
+	return light_buffer
 end
 
 local active_dl

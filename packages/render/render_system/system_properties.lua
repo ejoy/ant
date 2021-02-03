@@ -153,8 +153,8 @@ local function add_light_properties()
 			lighttypes[t], ilight.intensity(leid),
 			ilight.inner_cutoff(leid),	ilight.outter_cutoff(leid))
 	end
-	local lb = table.concat(lights, "")
-	bgfx.update(ilight.light_buffer(), 0, bgfx.memory_buffer(lb))
+	local c = table.concat(lights, "")
+	bgfx.update(ilight.light_buffer().handle, 0, bgfx.memory_buffer(c))
 end
 
 local function update_lighting_properties()
