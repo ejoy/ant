@@ -3521,7 +3521,7 @@ static void ioKeyMods(lua_State* L) {
 static void ioKeysPressed(lua_State* L) {
 	lua_getfield(L, LUA_REGISTRYINDEX, "_ImGui_KeysPressed");
 	for (int i = 1; i < 255; ++i) {
-		if (ImGui::IsKeyPressed(i)) {
+		if (ImGui::IsKeyPressed(i, false)) {
 			lua_pushboolean(L, 1);
 		}
 		else {

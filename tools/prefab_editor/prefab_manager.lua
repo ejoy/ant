@@ -136,6 +136,7 @@ local geom_mesh_file = {
     ["sphere"] = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin",
     ["torus"] = "/pkg/ant.resources.binary/meshes/base/torus.glb|meshes/pTorus1_P1.meshbin"
 }
+
 local default_collider_define = {
     ["sphere"] = {{origin = {0, 0, 0, 1}, radius = 0.1}},
     ["box"] = {{origin = {0, 0, 0, 1}, size = {0.05, 0.05, 0.05} }},
@@ -202,15 +203,19 @@ function m:create_collider(config)
     return new_entity, temp
 end
 
-function m:create_particle()
-    self.entities[#self.entities+1] = mount_root
-    local prefab = worldedit:prefab_template(gd.package_path .. "res/particle.prefab")
-    local entities = worldedit:prefab_instance(prefab)
-    local new_entity = entities[1]
-    self.entities[#self.entities+1] = new_entity
-    local parent = gizmo.target_eid or self.root
-    world[new_entity].parent = parent
-    hierarchy:add(new_entity, {template = entities.__class[1]}, parent)
+local function create_simple_entity(name)
+    return world:create_entity{
+		policy = {
+            "ant.general|name",
+            "ant.scene|hierarchy_policy",
+            "ant.scene|transform_policy"
+		},
+		data = {
+            name = name,
+            scene_entity = true,
+            transform = {}
+		},
+    }
 end
 
 function m:create(what, config)
@@ -294,7 +299,13 @@ function m:create(what, config)
             hierarchy:add(new_entity, {template = temp.__class[1]}, world[new_entity].parent)
         end
     elseif what == "particle" then
-        self:create_particle()
+        local prefab = worldedit:prefab_template(gd.package_path .. "res/particle.prefab")
+        local entities = worldedit:prefab_instance(prefab)
+        local new_entity = entities[1]
+        m.entities[#m.entities+1] = new_entity
+        local parent = gizmo.target_eid or m.root
+        world[new_entity].parent = parent
+        hierarchy:add(new_entity, {template = entities.__class[1]}, parent)
     end
 end
 
@@ -337,21 +348,6 @@ function m:open(filename)
     local prefab = get_prefab(filename)--get_prefab("/pkg/tools.prefab_editor/res/fire.prefab")--
     self:open_prefab(prefab)
     world:pub {"WindowTitle", filename}
-end
-
-local function create_simple_entity(name)
-    return world:create_entity{
-		policy = {
-            "ant.general|name",
-            "ant.scene|hierarchy_policy",
-            "ant.scene|transform_policy"
-		},
-		data = {
-            name = name,
-            scene_entity = true,
-            transform = {}
-		},
-    }
 end
 
 function m:reset_prefab()
