@@ -202,6 +202,17 @@ function m:create_collider(config)
     return new_entity, temp
 end
 
+function m:create_particle()
+    self.entities[#self.entities+1] = mount_root
+    local prefab = worldedit:prefab_template(gd.package_path .. "res/particle.prefab")
+    local entities = worldedit:prefab_instance(prefab)
+    local new_entity = entities[1]
+    self.entities[#self.entities+1] = new_entity
+    local parent = gizmo.target_eid or self.root
+    world[new_entity].parent = parent
+    hierarchy:add(new_entity, {template = entities.__class[1]}, parent)
+end
+
 function m:create(what, config)
     if not self.root then
         self:reset_prefab()
@@ -282,6 +293,8 @@ function m:create(what, config)
         if config.add_to_hierarchy then
             hierarchy:add(new_entity, {template = temp.__class[1]}, world[new_entity].parent)
         end
+    elseif what == "particle" then
+        self:create_particle()
     end
 end
 
