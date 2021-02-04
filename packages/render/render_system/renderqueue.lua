@@ -77,7 +77,7 @@ local function set_view_clear(viewid, cs)
 	-- end
 end
 
-function irq.set_view_clear(eid, what, color, depth, stencil)
+function irq.set_view_clear(eid, what, color, depth, stencil, needtouch)
 	local rt = world[eid].render_target
 	local cs = rt.clear_state
 	cs.color = color
@@ -85,7 +85,11 @@ function irq.set_view_clear(eid, what, color, depth, stencil)
 	cs.stencil = stencil
 
 	cs.clear = what
-	set_view_clear(rt.viewid, cs)
+	local viewid = rt.viewid
+	set_view_clear(viewid, cs)
+	if needtouch then
+		bgfx.touch(viewid)
+	end
 	world:pub{"component_changed", "clear_state", eid}
 end
 

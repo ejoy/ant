@@ -14,6 +14,7 @@ local irender	= world:interface "ant.render|irender"
 
 local iom		= world:interface "ant.objcontroller|obj_motion"
 local ipf		= world:interface "ant.scene|iprimitive_filter"
+local irq		= world:interface "ant.render|irenderqueue"
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
 
@@ -192,7 +193,8 @@ function sm:init()
 	gpu_skinning_material = imaterial.load(originmatrial, {depth_type=dt, skinning="GPU"})
 	for ii=1, ishadow.split_num() do
 		local vr = {x=(ii-1)*s, y=0, w=s, h=s}
-		create_csm_entity(ii, vr, fbidx, dt)
+		local eid = create_csm_entity(ii, vr, fbidx, dt)
+		irq.set_view_clear(eid, "D", nil, 1, nil, true)
 	end
 end
 
