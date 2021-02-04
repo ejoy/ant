@@ -17,6 +17,7 @@ local system_properties = {
 	-- u_directional_color		= math3d.ref(mc.ZERO),
 	-- u_directional_intensity	= math3d.ref(mc.ZERO),
 	u_eyepos				= math3d.ref(mc.ZERO_PT),
+	u_numlight				= math3d.ref(mc.ZERO_PT),
 
 	-- u_light_pos				= {
 	-- 	math3d.ref(mc.ZERO_PT),
@@ -155,11 +156,10 @@ local function add_light_properties()
 	end
 	local c = table.concat(lights, "")
 	bgfx.update(ilight.light_buffer().handle, 0, bgfx.memory_buffer(c))
+	system_properties["u_numlight"].v = math3d.vector(#lights, 0, 0, 0)
 end
 
 local function update_lighting_properties()
-	-- add_directional_light_properties()
-	-- add_point_light_properties()
 	add_light_properties()
 
 	local mq = world:singleton_entity "main_queue"

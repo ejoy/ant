@@ -253,8 +253,9 @@ void main()
 	vec3 F0 = mix(vec3_splat(0.04), basecolor, metallic);
 
 	vec3 color = vec3_splat(0);
+	int numlight = u_numlight.x;
 	// one directional light, 4 point/spot light
-	for (int ii=0; ii < 5; ++ii)
+	for (int ii=0; ii < numlight; ++ii)
 	{
 		Light l = b_lights[ii];
 		vec3 L = l.pos.xyz - v_posWS.xyz;

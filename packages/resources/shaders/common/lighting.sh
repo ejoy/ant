@@ -27,6 +27,8 @@ StructuredBuffer<Light>	b_lights : register(t[9]);
 BUFFER_RO(b_lights, LIGHT, 9);
 #endif //BGFX_SHADER_LANGUAGE_HLSL
 
+uniform vec4 u_numlight;
+
 uniform vec4 u_eyepos;
 
 float fresnel(float _ndotl, float _bias, float _pow)
