@@ -32,6 +32,7 @@ local anim_state = {
     key_event = {},
     event_dirty = 0,
     clip_range_dirty = 0,
+    selected_clip_index = 0,
     current_event_list = {}
 }
 
@@ -487,10 +488,8 @@ local function min_max_range_value(clip_index)
 end
 
 local function on_move_clip(move_type, current_clip_index, move_delta)
-    local clip
-    if current_clip_index then
-        clip = current_anim.clips[current_clip_index]
-    end
+    if current_clip_index <= 0 or current_clip_index > #current_anim.clips then return end
+    local clip = current_anim.clips[current_clip_index]
     if not clip then return end
     local min_value, max_value = min_max_range_value(current_clip_index)
     if move_type == 1 then
@@ -612,6 +611,7 @@ local function show_clips()
     for i, cs in ipairs(current_anim.clips) do
         if imgui.widget.Selectable(cs.name, current_clip and (current_clip.name == cs.name)) then
             current_clip = cs
+            anim_state.selected_clip_index = i
         end
         if current_clip and (current_clip.name == cs.name) then
             if imgui.windows.BeginPopupContextItem(cs.name) then
@@ -886,7 +886,7 @@ function m.show()
             --
             local move_type
             local new_frame_idx
-            local current_clip_index
+            -- local current_clip_index
             local move_delta
             for k, v in pairs(imgui_message) do
                 if k == "pause" then
@@ -896,15 +896,15 @@ function m.show()
                     new_frame_idx = v
                 elseif k == "move_type" then
                     move_type = v
-                elseif k == "current_clip_index" then
-                    current_clip_index = v
+                -- elseif k == "current_clip_index" then
+                --     current_clip_index = v
                 elseif k == "move_delta" then
                     move_delta = v
                 end
             end
             on_move_keyframe(new_frame_idx, move_type)
             if move_type and move_type ~= 0 then
-                on_move_clip(move_type, current_clip_index, move_delta)
+                on_move_clip(move_type, anim_state.selected_clip_index, move_delta)
             end
             imgui.cursor.Separator()
             if imgui.table.Begin("EventColumns", 7, imgui.flags.Table {'Resizable', 'ScrollY'}) then

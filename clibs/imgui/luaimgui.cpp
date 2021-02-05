@@ -1702,6 +1702,7 @@ wSequencer(lua_State* L) {
 	static int selected_frame = -1;
 	static int current_frame = 0;
 	static std::string current_anim_name;
+	int selected_clip_index = -1;
 	auto init_event = [L](std::vector<bool>& flags) {
 		if (lua_getfield(L, -1, "key_event") == LUA_TTABLE) {
 			lua_pushnil(L);
@@ -1749,6 +1750,7 @@ wSequencer(lua_State* L) {
 		}
 		lua_pop(L, 1);
 	};
+	
 	if (lua_type(L, 1) == LUA_TTABLE) {
 		auto id = read_field_int(L, "id", -1, 1);
 		auto birth = read_field_string(L, "birth", "", 1);
@@ -1785,6 +1787,7 @@ wSequencer(lua_State* L) {
 			current_frame = (int)(ImSequencer::current_anim->current_time * 30.0f);
 			auto dirty_num = read_field_int(L, "event_dirty", 0, 2);
 			auto clip_dirty_num = read_field_int(L, "clip_range_dirty", 0, 2);
+			selected_clip_index = read_field_int(L, "selected_clip_index", 0, 2) - 1;
 			// add or remove key event
 			if (dirty_num == 1) {
 				if (lua_getfield(L, 2, "current_event_list") == LUA_TTABLE) {
@@ -1820,9 +1823,8 @@ wSequencer(lua_State* L) {
 	bool pause = false;
 	int move_type = -1;
 	int current_select = selected_frame;
-	static int range_index = -1;
 	int move_delta = 0;
-	ImSequencer::Sequencer(pause, current_frame, current_select, move_type, range_index, move_delta);
+	ImSequencer::Sequencer(pause, current_frame, current_select, move_type, selected_clip_index, move_delta);
 	if (pause) {
 		lua_pushnumber(L, current_frame / 30.0f);
 		lua_setfield(L, -2, "pause");
@@ -1830,10 +1832,6 @@ wSequencer(lua_State* L) {
 	if (move_type != -1) {
 		lua_pushinteger(L, move_type);
 		lua_setfield(L, -2, "move_type");
-		if (range_index >= 0 && range_index < ImSequencer::current_anim->clip_rangs.size()) {
-			lua_pushinteger(L, range_index + 1);
-			lua_setfield(L, -2, "current_clip_index");
-		}
 		lua_pushinteger(L, move_delta);
 		lua_setfield(L, -2, "move_delta");
 	}

@@ -253,8 +253,13 @@ namespace ImSequencer
 
 			if (slotP1.x <= (canvas_size.x + contentMin.x) && slotP2.x >= (contentMin.x + legendWidth))
 			{
-				draw_list->AddRectFilled(slotP1, slotP3, slotColorHalf, 2);
-				draw_list->AddRectFilled(slotP1, slotP2, slotColor, 2);
+				if (range_index == i) {
+					draw_list->AddRectFilled(slotP1, slotP3, slotColorHalf, 2);
+					draw_list->AddRectFilled(slotP1, slotP2, slotColor, 2);
+				} else {
+					draw_list->AddRect(slotP1, slotP3, slotColorHalf, 2);
+					draw_list->AddRect(slotP1, slotP2, slotColor, 2);
+				}
 			}
 			if (ImRect(slotP1, slotP2).Contains(io.MousePos) && io.MouseDoubleClicked[0])
 			{
@@ -267,12 +272,13 @@ namespace ImSequencer
 			const unsigned int quadColor[] = { 0xFFFFFFFF, 0xFFFFFFFF, slotColor + (/*selected*/false ? 0 : 0x202020) };
 			if (movingEntry == -1/* && (sequenceOptions & SEQUENCER_EDIT_STARTEND)*/)// TODOFOCUS && backgroundRect.Contains(io.MousePos))
 			{
-				for (int j = 2; j >= 0; j--)
-				{
+				for (int j = 2; j >= 0; j--) {
 					ImRect& rc = rects[j];
 					if (!rc.Contains(io.MousePos))
 						continue;
-					draw_list->AddRectFilled(rc.Min, rc.Max, quadColor[j], 2);
+					if (range_index == i) {
+						draw_list->AddRectFilled(rc.Min, rc.Max, quadColor[j], 2);
+					}
 				}
 
 				for (int j = 0; j < 3; j++)
@@ -282,13 +288,13 @@ namespace ImSequencer
 						continue;
 					if (!ImRect(childFramePos, childFramePos + childFrameSize).Contains(io.MousePos))
 						continue;
-					if (ImGui::IsMouseClicked(0) && !MovingScrollBar && !MovingCurrentFrame)
+					if (range_index == i/*ImGui::IsMouseClicked(0) && !MovingScrollBar && !MovingCurrentFrame*/)
 					{
 						movingEntry = 0;
 						movingPos = cx;
 						movingPart = j + 1;
 						//sequence->BeginEdit(movingEntry);
-						range_index = i;
+						//range_index = i;
 						break;
 					}
 				}
