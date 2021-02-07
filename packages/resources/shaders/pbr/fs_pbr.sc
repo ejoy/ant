@@ -5,6 +5,7 @@ $input v_normal, v_posWS, v_texcoord0
 #include "common/lighting.sh"
 #include "common/transform.sh"
 #include "common/utils.sh"
+#include "common/cluster_shading.sh"
 
 #ifdef ENABLE_SHADOW
 #include "common/shadow.sh"
@@ -212,7 +213,7 @@ float to_alpha_roughness(float roughness)
 	return roughness * roughness;
 }
 
-vec3 light_radiance(Light l, vec3 pos2light, float dist)
+vec3 light_radiance(light_info l, vec3 pos2light, float dist)
 {
 #define IS_DIRECTIONAL_LIGHT(_type) (_type == 0)
 #define IS_POINT_LIGHT(_type)	(_type==1)
@@ -233,6 +234,29 @@ vec3 light_radiance(Light l, vec3 pos2light, float dist)
 	return radiance;
 }
 
+PBRInfo init_pbr_inputs(vec3 N, vec3 V, float roughness, float metallic){
+	PBRInfo pbr_inputs;
+	pbr_inputs.NdotV 			= max(dot(N, V), 0.0);
+	pbr_inputs.roughness 		= roughness;
+	pbr_inputs.metallic 		= metallic;
+	pbr_inputs.alpha_roughness 	= to_alpha_roughness(roughness);
+	return pbr_inputs;
+}
+
+void update_pbr_inputs_from_light(light_info l, out pbr_info pbr_inputs, out vec3 radiance){
+	vec3 L = l.pos.xyz - v_posWS.xyz;
+	float dist = length(L);
+	L /= dist;
+
+	vec3 H = normalize(L+V);
+	radiance = light_radiance(l, L, dist);
+
+	pbr_inputs.NdotL = max(dot(N, L), 0.0);
+	pbr_inputs.LdotH = max(dot(L, H), 0.0);
+	pbr_inputs.NdotH = max(dot(N, H), 0.0);
+	pbr_inputs.VdotH = max(dot(V, H), 0.0);
+}
+
 void main()
 {
 	vec4 basecolor = get_basecolor(v_texcoord0);
@@ -244,12 +268,8 @@ void main()
 	vec3 V = normalize(u_eyepos.xyz - v_posWS.xyz);
 	vec3 R = normalize(reflect(-V, N));
 
-	PBRInfo pbr_inputs;
-	pbr_inputs.NdotV 			= max(dot(N, V), 0.0);
-	pbr_inputs.roughness 		= roughness;
-	pbr_inputs.metallic 		= metallic;
-	pbr_inputs.alpha_roughness 	= to_alpha_roughness(roughness);
-
+	PBRInfo pbr_inputs = init_pbr_inputs(N, V, roughness, metallic);
+	
 	vec3 F0 = mix(vec3_splat(0.04), basecolor, metallic);
 
 	vec3 color = vec3_splat(0);
@@ -257,18 +277,7 @@ void main()
 	// one directional light, 4 point/spot light
 	for (int ii=0; ii < numlight; ++ii)
 	{
-		Light l = b_lights[ii];
-		vec3 L = l.pos.xyz - v_posWS.xyz;
-		float dist = length(L);
-		L /= dist;
-
-		vec3 H = normalize(L+V);
-		vec3 radiance = light_radiance(l, L, dist);
-
-		pbr_inputs.NdotL = max(dot(N, L), 0.0);
-		pbr_inputs.LdotH = max(dot(L, H), 0.0);
-		pbr_inputs.NdotH = max(dot(N, H), 0.0);
-		pbr_inputs.VdotH = max(dot(V, H), 0.0);
+		update_pbr_inputs_from_light(b_lights[ii], pbr_inputs, radiance);
 
 		color += calc_direct_lighting(pbr_inputs, radiance, basecolor.rgb, F0);
 	}
