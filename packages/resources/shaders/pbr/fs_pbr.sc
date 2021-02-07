@@ -218,7 +218,7 @@ vec3 light_radiance(light_info l, vec3 pos2light, float dist)
 #define IS_DIRECTIONAL_LIGHT(_type) (_type == 0)
 #define IS_POINT_LIGHT(_type)	(_type==1)
 #define IS_SPOT_LIGHT(_type)	(_type==2)
-	vec3 radiance = l.color * l.intensity;
+	vec3 radiance = l.color.rgb * l.intensity;
 	if (IS_DIRECTIONAL_LIGHT(l.type)){
 		radiance *= dot(l.dir, pos2light);
 	} else {
@@ -243,20 +243,6 @@ PBRInfo init_pbr_inputs(vec3 N, vec3 V, float roughness, float metallic){
 	return pbr_inputs;
 }
 
-void update_pbr_inputs_from_light(light_info l, out pbr_info pbr_inputs, out vec3 radiance){
-	vec3 L = l.pos.xyz - v_posWS.xyz;
-	float dist = length(L);
-	L /= dist;
-
-	vec3 H = normalize(L+V);
-	radiance = light_radiance(l, L, dist);
-
-	pbr_inputs.NdotL = max(dot(N, L), 0.0);
-	pbr_inputs.LdotH = max(dot(L, H), 0.0);
-	pbr_inputs.NdotH = max(dot(N, H), 0.0);
-	pbr_inputs.VdotH = max(dot(V, H), 0.0);
-}
-
 void main()
 {
 	vec4 basecolor = get_basecolor(v_texcoord0);
@@ -268,17 +254,31 @@ void main()
 	vec3 V = normalize(u_eyepos.xyz - v_posWS.xyz);
 	vec3 R = normalize(reflect(-V, N));
 
+	vec3 F0 = mix(vec3_splat(0.04), basecolor.rgb, metallic);
+
 	PBRInfo pbr_inputs = init_pbr_inputs(N, V, roughness, metallic);
-	
-	vec3 F0 = mix(vec3_splat(0.04), basecolor, metallic);
-
 	vec3 color = vec3_splat(0);
-	int numlight = u_numlight.x;
-	// one directional light, 4 point/spot light
-	for (int ii=0; ii < numlight; ++ii)
-	{
-		update_pbr_inputs_from_light(b_lights[ii], pbr_inputs, radiance);
 
+	uint cluster_idx = which_cluster(gl_FragCoord.xyz);
+
+	light_grid g = b_light_grids[cluster_idx];
+	uint iend = g.offset + g.count;
+	for (uint ii=g.offset; ii<iend; ++ii)
+	{
+		uint ilight = b_light_index_lists[ii];
+		light_info l = b_lights[ilight];
+
+		vec3 L = l.pos.xyz - v_posWS.xyz;
+		float dist = length(L);
+		L /= dist;
+
+		vec3 H = normalize(L+V);
+		vec3 radiance = light_radiance(l, L, dist);
+
+		pbr_inputs.NdotL = max(dot(N, L), 0.0);
+		pbr_inputs.LdotH = max(dot(L, H), 0.0);
+		pbr_inputs.NdotH = max(dot(N, H), 0.0);
+		pbr_inputs.VdotH = max(dot(V, H), 0.0);
 		color += calc_direct_lighting(pbr_inputs, radiance, basecolor.rgb, F0);
 	}
 	// vec3 indirect_color = calc_indirect_lighting_IBL(pbr_inputs, N, R, basecolor.rgb, F0);

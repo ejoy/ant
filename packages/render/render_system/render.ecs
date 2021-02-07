@@ -127,6 +127,7 @@ interface "irender"
 
 interface "irenderqueue"
     .implement "render_system/renderqueue.lua"
+    .method "viewid"
     .method "clear_state"
     .method "view_rect"
     .method "frame_buffer"
@@ -171,6 +172,10 @@ interface "system_properties"
     .method "update"
 
 import "render_system/forward_render.ecs"
+import "render_system/cluster_render.ecs"
+policy "render_pipeline"
+    .require_policy "ant.render|forward_render"
+
 pipeline "render"
     .stage "refine_filter"
     .stage "cull"

@@ -4,7 +4,7 @@ local world = ecs.world
 local assetmgr		= require "asset"
 local ext_material	= require "ext_material"
 
-local ilight		= world:interface "ant.render|light"
+local icluster_render = world:interface "ant.render|icluster_render"
 local mpt = ecs.transform "material_prefab_transform"
 local function load_material(m, setting)
 	local fx = assetmgr.load_fx(m.fx, setting)
@@ -219,17 +219,16 @@ local function generate_properties(fx, properties)
 	local setting = fx.setting
 	if setting.lighting == "on" then
 		if lightbuffer_property == nil then
-			local lb = ilight.light_buffer()
 			lightbuffer_property = {
 				type = "b",
 				set = function ()
-					bgfx.set_buffer(lb.stage, lb.handle, lb.access)
+					icluster_render.set_buffers()
 				end,
 				ref = true,
 			}
 		end
 		new_properties = new_properties or {}
-		new_properties.b_lights = lightbuffer_property
+		new_properties.light_properties = lightbuffer_property
 	end
 	return new_properties
 end

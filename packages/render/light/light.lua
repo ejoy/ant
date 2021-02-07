@@ -30,18 +30,6 @@ end
 -- light interface
 local ilight 	= ecs.interface "light"
 
-local max_light_num<const>			= 1024
---we need 64 byte stride, as vec4*4 for light struct
-local light_buffer_layout			= declmgr.get "t40|t41|t42|t43"
-local light_struct_stride			= light_buffer_layout.stride
-assert(light_struct_stride == 64)
-local access_status<const>			= "r"
-local light_buffer					= {
-	handle = bgfx.create_dynamic_vertex_buffer(max_light_num, light_buffer_layout.handle, access_status .. "a"),
-	stage = 9,
-	access = access_status,
-}
-
 function ilight.create(light)
 	return world:create_entity {
 		policy = {
@@ -125,10 +113,6 @@ function ilight.outter_cutoff(eid)
 		r = l.radian * 1.1
 	end
 	return r and math.cos(r * 0.5) or 0
-end
-
-function ilight.light_buffer()
-	return light_buffer
 end
 
 local active_dl

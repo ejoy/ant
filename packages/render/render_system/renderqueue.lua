@@ -6,6 +6,10 @@ local fbmgr = require "framebuffer_mgr"
 local icamera = world:interface "ant.camera|camera"
 local irq = ecs.interface "irenderqueue"
 
+function irq.viewid(eid)
+	return world[eid].render_target.viewid
+end
+
 function irq.clear_state(eid)
 	return world[eid].render_target.clear_state
 end

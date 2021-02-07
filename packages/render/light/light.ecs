@@ -21,7 +21,6 @@ interface "light"
     .method "create_light_direction_arrow"
 
     .method "max_point_light"
-    .method "light_buffer"
 
 transform "light_transform"
     .implement "light/light.lua"

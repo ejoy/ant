@@ -10,25 +10,6 @@
 // uniform vec4 u_light_dir[MAX_LIGHT];	//point light: (0, 0, 0, 0), spot light, xyz: light dir, w: cutoff
 // uniform vec4 u_light_param[MAX_LIGHT];	//xyz for attenuation: const, linear, quadratic, w: outcutoff
 
-//TODO: if we need more accurate attenuation, we can utilize pos.w/dir.w/color.w to transfer data, right now, the light attenuation: light_color/(distance*distance), 
-struct Light{
-	vec4	pos;
-	vec4	dir;
-	vec4	color;
-	float	type;
-	float	intensity;
-	float	inner_cutoff;
-	float	outter_cutoff;
-};
-
-#if BGFX_SHADER_LANGUAGE_HLSL
-StructuredBuffer<Light>	b_lights : register(t[9]);
-#else	//!BGFX_SHADER_LANGUAGE_HLSL
-BUFFER_RO(b_lights, LIGHT, 9);
-#endif //BGFX_SHADER_LANGUAGE_HLSL
-
-uniform vec4 u_numlight;
-
 uniform vec4 u_eyepos;
 
 float fresnel(float _ndotl, float _bias, float _pow)

@@ -3,11 +3,12 @@ local world = ecs.world
 
 local fbmgr		= require "framebuffer_mgr"
 local math3d	= require "math3d"
-local bgfx		= require "bgfx"
 
 local mc		= import_package "ant.math".constant
 local iom		= world:interface "ant.objcontroller|obj_motion"
-local ilight	= world:interface "ant.render|light"
+local icamera	= world:interface "ant.camera|camera"
+local icluster	= world:interface "ant.render|icluster_render"
+local irq		= world:interface "ant.render|irenderqueue"
 local ishadow	= world:interface "ant.render|ishadow"
 
 local m = ecs.interface "system_properties"
@@ -17,32 +18,9 @@ local system_properties = {
 	-- u_directional_color		= math3d.ref(mc.ZERO),
 	-- u_directional_intensity	= math3d.ref(mc.ZERO),
 	u_eyepos				= math3d.ref(mc.ZERO_PT),
-	u_numlight				= math3d.ref(mc.ZERO_PT),
-
-	-- u_light_pos				= {
-	-- 	math3d.ref(mc.ZERO_PT),
-	-- 	math3d.ref(mc.ZERO_PT),
-	-- 	math3d.ref(mc.ZERO_PT),
-	-- 	math3d.ref(mc.ZERO_PT),
-	-- },
-	-- u_light_color			= {
-	-- 	math3d.ref(mc.ZERO),
-	-- 	math3d.ref(mc.ZERO),
-	-- 	math3d.ref(mc.ZERO),
-	-- 	math3d.ref(mc.ZERO),
-	-- },
-	-- u_light_dir				= {
-	-- 	math3d.ref(mc.ZERO),
-	-- 	math3d.ref(mc.ZERO),
-	-- 	math3d.ref(mc.ZERO),
-	-- 	math3d.ref(mc.ZERO),
-	-- },
-	-- u_light_param			= {
-	-- 	math3d.ref(mc.ZERO),
-	-- 	math3d.ref(mc.ZERO),
-	-- 	math3d.ref(mc.ZERO),
-	-- 	math3d.ref(mc.ZERO),
-	-- },
+	u_cluster_size			= math3d.ref(mc.ZERO_PT),
+	u_cluster_shading_param	= math3d.ref(mc.ZERO_PT),
+	u_cluster_shading_param2= math3d.ref(mc.ZERO_PT),
 
 	-- shadow
 	u_csm_matrix 		= {
@@ -120,50 +98,26 @@ end
 -- 	end
 -- end
 
-local lighttypes = {
-	directional = 0,
-	point = 1,
-	spot = 2,
-}
-
-local function add_light_properties()
-	--[[
-		struct Light{
-			vec4	pos;
-			vec4	dir;
-			vec4	color;
-			float	type;
-			float	intensity;
-			float	inner_cutoff;
-			float	outter_cutoff;
-		};
-	]]
-
-	local lights = {}
-	for _, leid in world:each "light_type" do
-		local le = world[leid]
-		
-		local p	= math3d.tovalue(iom.get_position(leid))
-		local d	= math3d.tovalue(iom.get_direction(leid))
-		local c = ilight.color(leid)
-		local t	= le.light_type
-		lights[#lights+1] = ('f'):rep(16):pack(
-			p[1], p[2], p[3], 1,
-			d[1], d[2], d[3], 0,
-			c[1], c[2], c[3], c[4],
-			lighttypes[t], ilight.intensity(leid),
-			ilight.inner_cutoff(leid),	ilight.outter_cutoff(leid))
-	end
-	local c = table.concat(lights, "")
-	bgfx.update(ilight.light_buffer().handle, 0, bgfx.memory_buffer(c))
-	system_properties["u_numlight"].v = math3d.vector(#lights, 0, 0, 0)
-end
-
 local function update_lighting_properties()
-	add_light_properties()
+	local mq_eid = world:singleton_entity_id "main_queue"
+	local mq = world[mq_eid]
+	local mc_eid = mq.camera_eid
 
-	local mq = world:singleton_entity "main_queue"
-	system_properties["u_eyepos"].id = iom.get_position(mq.camera_eid)
+	local vr = irq.view_rect(mq_eid)icluster.cluster_sizes()
+
+	local sizes = icluster.cluster_sizes()
+	sizes[4] = sizes[1] / vr.w
+	system_properties["u_cluster_size"].v				= sizes
+	local f = icamera.get_frustum(mc_eid)
+	local near, far = f.n, f.f
+	system_properties["u_cluster_shading_param"].v	= {vr.w, vr.h, near, far}
+	local num_depth_slices = sizes[3]
+	local log_farnear = math.log(far/near, 2)
+	local log_near = math.log(near)
+
+	system_properties["u_cluster_shading_param2"].v	= {num_depth_slices / log_farnear, -num_depth_slices * log_near / log_farnear, 0, 0}
+
+	system_properties["u_eyepos"].id = iom.get_position(mc_eid)
 end
 
 local function update_shadow_properties()
