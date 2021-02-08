@@ -119,17 +119,11 @@ end
 
 local function create_cluster_buffers()
     cluster_buffers.AABB.handle                = bgfx.create_dynamic_vertex_buffer(cluster_count, cluster_buffers.AABB.layout.handle, "rwa")
-    cluster_buffers.AABB.access                = "rw"
     cluster_buffers.light_grids.handle         = bgfx.create_dynamic_vertex_buffer(cluster_count, cluster_buffers.light_grids.layout.handle, "rwa")
-    cluster_buffers.light_grids.access         = "rw"
     cluster_buffers.global_index_count.handle  = bgfx.create_dynamic_index_buffer(1, "rwa")
-    cluster_buffers.global_index_count.access  = "rw"
-
     local lights = create_light_buffers()
     cluster_buffers.light_index_list.handle    = bgfx.create_dynamic_index_buffer(#lights, "rwa")
-    cluster_buffers.light_index_list.access    = "rw"
     cluster_buffers.light_info.handle          = bgfx.create_dynamic_vertex_buffer(#lights, cluster_buffers.light_info.layout.handle, "ra")
-    cluster_buffers.light_info.access          = "r"
     local c = table.concat(lights, "")
 	bgfx.update(cluster_buffers.light_info.handle, 0, bgfx.memory_buffer(c))
 end

@@ -39,13 +39,16 @@ struct AABB {
 #define CLUSTER_BUFFER_LIGHT_INFO_STAGE         4
 SBUFFER_RW(b_cluster_AABBs,		AABB,		CLUSTER_BUFFER_AABB_STAGE);
 SBUFFER_RW(b_global_index_count,uint,  		CLUSTER_BUFFER_GLOBAL_INDEX_COUNT_STAGE);
+SBUFFER_RW(b_light_grids,		light_grid,	CLUSTER_BUFFER_LIGHT_GRID_STAGE);
+SBUFFER_RW(b_light_index_lists, uint,		CLUSTER_BUFFER_LIGHT_INDEX_LIST_STAGE);
 #else
 #define CLUSTER_BUFFER_LIGHT_GRID_STAGE         10
 #define CLUSTER_BUFFER_LIGHT_INDEX_LIST_STAGE   11
 #define CLUSTER_BUFFER_LIGHT_INFO_STAGE         12
+SBUFFER_RO(b_light_grids,		light_grid,	CLUSTER_BUFFER_LIGHT_GRID_STAGE);
+SBUFFER_RO(b_light_index_lists, uint,		CLUSTER_BUFFER_LIGHT_INDEX_LIST_STAGE);
 #endif
-SBUFFER_RW(b_light_grids,		light_grid,	CLUSTER_BUFFER_LIGHT_GRID_STAGE);
-SBUFFER_RW(b_light_index_lists, uint,		CLUSTER_BUFFER_LIGHT_INDEX_LIST_STAGE);
+
 SBUFFER_RO(b_lights,			light_info, CLUSTER_BUFFER_LIGHT_INFO_STAGE);
 
 uniform vec4 u_cluster_size;
