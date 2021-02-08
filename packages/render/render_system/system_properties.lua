@@ -99,25 +99,9 @@ end
 -- end
 
 local function update_lighting_properties()
-	local mq_eid = world:singleton_entity_id "main_queue"
-	local mq = world[mq_eid]
-	local mc_eid = mq.camera_eid
-
-	local vr = irq.view_rect(mq_eid)icluster.cluster_sizes()
-
-	local sizes = icluster.cluster_sizes()
-	sizes[4] = sizes[1] / vr.w
-	system_properties["u_cluster_size"].v				= sizes
-	local f = icamera.get_frustum(mc_eid)
-	local near, far = f.n, f.f
-	system_properties["u_cluster_shading_param"].v	= {vr.w, vr.h, near, far}
-	local num_depth_slices = sizes[3]
-	local log_farnear = math.log(far/near, 2)
-	local log_near = math.log(near)
-
-	system_properties["u_cluster_shading_param2"].v	= {num_depth_slices / log_farnear, -num_depth_slices * log_near / log_farnear, 0, 0}
-
-	system_properties["u_eyepos"].id = iom.get_position(mc_eid)
+	icluster.extract_cluster_properties(system_properties)
+	local mq = world:singleton_entity "main_queue"
+	system_properties["u_eyepos"].id = iom.get_position(mq.camera_eid)
 end
 
 local function update_shadow_properties()
@@ -163,6 +147,10 @@ local function update_postprocess_properties()
 
 	local mvd = system_properties["s_mainview_depth"]
 	mvd.texture.handle = fbmgr.get_rb(fb[#fb]).handle
+end
+
+function m.properties()
+	return system_properties
 end
 
 function m.update()

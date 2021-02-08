@@ -13,6 +13,7 @@ interface "icluster_render"
     .implement "render_system/cluster_render.lua"
     .method "set_buffers"
     .method "cluster_sizes"
+    .method "extract_cluster_properties"
 
 
 policy "cluster_render"

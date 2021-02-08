@@ -8,6 +8,8 @@ local assetmgr  = import_package "ant.asset"
 local irq       = world:interface "ant.render|irenderqueue"
 local iom       = world:interface "ant.objcontroller|obj_motion"
 local ilight    = world:interface "ant.render|light"
+local icamera   = world:interface "ant.camera|camera"
+local isp       = world:interface "ant.render|system_properties"
 
 local cfs = ecs.system "cluster_forward_system"
 
@@ -120,21 +122,33 @@ end
 local function create_cluster_buffers()
     cluster_buffers.AABB.handle                = bgfx.create_dynamic_vertex_buffer(cluster_count, cluster_buffers.AABB.layout.handle, "rwa")
     cluster_buffers.light_grids.handle         = bgfx.create_dynamic_vertex_buffer(cluster_count, cluster_buffers.light_grids.layout.handle, "rwa")
-    cluster_buffers.global_index_count.handle  = bgfx.create_dynamic_index_buffer(1, "rwa")
+    cluster_buffers.global_index_count.handle  = bgfx.create_dynamic_index_buffer(1, "drwa")
     local lights = create_light_buffers()
-    cluster_buffers.light_index_list.handle    = bgfx.create_dynamic_index_buffer(#lights, "rwa")
+    cluster_buffers.light_index_list.handle    = bgfx.create_dynamic_index_buffer(#lights, "drwa")
     cluster_buffers.light_info.handle          = bgfx.create_dynamic_vertex_buffer(#lights, cluster_buffers.light_info.layout.handle, "ra")
     local c = table.concat(lights, "")
 	bgfx.update(cluster_buffers.light_info.handle, 0, bgfx.memory_buffer(c))
 end
 
+local function set_buffers(which_stage, which_access)
+    for _, b in pairs(cluster_buffers) do
+        local access = b[which_access]
+        if access then
+            bgfx.set_buffer(b[which_stage], b.handle, access)
+        end
+    end
+end
+
 local function build_cluster_aabb_struct()
     local mq_eid = world:singleton_entity_id "main_queue"
-    for _, b in pairs(cluster_buffers) do
-        local build_access = b.build_access
-        if build_access then
-            bgfx.set_buffer(b.stage, b.handle, build_access)
-        end
+    set_buffers("stage", "build_access")
+    local icr = world:interface "ant.render|icluster_render"
+    
+    local properties = isp.properties()
+    icr.extract_cluster_properties(properties)
+
+    for _, u in ipairs(cluster_aabb_fx.uniforms) do
+        bgfx.set_uniform(u.handle, assert(properties[u.name]).value)
     end
 
     bgfx.dispatch(irq.viewid(mq_eid), cluster_aabb_fx.prog, cluster_grid_x, cluster_grid_y, cluster_grid_z)
@@ -177,16 +191,15 @@ function cfs:data_changed()
     end
 end
 
-
 local function cull_lights()
     local mq_eid = world:singleton_entity_id "main_queue"
-    for _, b in pairs(cluster_buffers) do
-        local cull_access = b.cull_access
-        if cull_access then
-            print(b.name, cull_access, b.stage)
-            bgfx.set_buffer(b.stage, b.handle, cull_access)
-        end
+
+    --TODO: need abstract compute dispatch pipeline, which like render pipeline
+    local properties = isp.properties()
+    for _, u in ipairs(cluster_light_cull_fx.uniforms) do
+        bgfx.set_uniform(u.handle, assert(properties[u.name]).value)
     end
+    set_buffers("stage", "cull_access")
 
     --workgroup size: 16, 9, 4
     bgfx.dispatch(irq.viewid(mq_eid), cluster_light_cull_fx.prog, 1, 1, cluster_cull_light_size)
@@ -199,14 +212,29 @@ end
 local icr = ecs.interface "icluster_render"
 
 function icr.set_buffers()
-    for _, b in pairs(cluster_buffers) do
-        local render_access = b.render_access
-        if render_access then
-            bgfx.set_buffer(b.render_stage, b.handle, render_access)
-        end
-    end
+    set_buffers("render_stage", "render_access")
 end
 
 function icr.cluster_sizes()
     return {cluster_grid_x, cluster_grid_y, cluster_grid_z}
+end
+
+function icr.extract_cluster_properties(properties)
+    local mq_eid = world:singleton_entity_id "main_queue"
+	local mq = world[mq_eid]
+	local mc_eid = mq.camera_eid
+
+	local vr = irq.view_rect(mq_eid)
+
+	local sizes = icr.cluster_sizes()
+	sizes[4] = sizes[1] / vr.w
+	assert(properties["u_cluster_size"]).v				= sizes
+	local f = icamera.get_frustum(mc_eid)
+	local near, far = f.n, f.f
+	assert(properties["u_cluster_shading_param"]).v	= {vr.w, vr.h, near, far}
+	local num_depth_slices = sizes[3]
+	local log_farnear = math.log(far/near, 2)
+	local log_near = math.log(near)
+
+	assert(properties["u_cluster_shading_param2"]).v	= {num_depth_slices / log_farnear, -num_depth_slices * log_near / log_farnear, 0, 0}
 end
