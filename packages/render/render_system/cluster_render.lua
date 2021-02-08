@@ -60,7 +60,7 @@ local cluster_buffers = {
         cull_access = "w",
         render_access = "r",
         render_stage = 11,
-        name = "CLUSTER_BUFFER_LIGHT_GRID_STAGE",
+        name = "CLUSTER_BUFFER_LIGHT_INDEX_LIST_STAGE",
     },
     --[[
         struct light_info{
@@ -156,7 +156,7 @@ function cfs:post_init()
 
     cluster_aabb_fx = assetmgr.load_fx{
         cs = "/pkg/ant.resources/shaders/compute/cs_cluster_aabb.sc",
-        setting = {CLUSTER_PREPROCESS = 1},
+        setting = {CLUSTER_BUILD=1},
     }
     cluster_light_cull_fx = assetmgr.load_fx{
         cs = "/pkg/ant.resources/shaders/compute/cs_lightcull.sc",
@@ -183,11 +183,13 @@ local function cull_lights()
     for _, b in pairs(cluster_buffers) do
         local cull_access = b.cull_access
         if cull_access then
+            print(b.name, cull_access, b.stage)
             bgfx.set_buffer(b.stage, b.handle, cull_access)
         end
     end
 
-    bgfx.dispatch(irq.viewid(mq_eid), cluster_light_cull_fx.prog, cluster_grid_x, cluster_grid_y, cluster_cull_light_size)
+    --workgroup size: 16, 9, 4
+    bgfx.dispatch(irq.viewid(mq_eid), cluster_light_cull_fx.prog, 1, 1, cluster_cull_light_size)
 end
 
 function cfs:render_preprocess()

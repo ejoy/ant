@@ -31,23 +31,32 @@ struct AABB {
     vec4 maxv;
 };
 
-#ifdef CLUSTER_PREPROCESS
+#if defined(CLUSTER_BUILD) || defined(CLUSTER_PREPROCESS)
 #define CLUSTER_BUFFER_AABB_STAGE               0
 #define CLUSTER_BUFFER_GLOBAL_INDEX_COUNT_STAGE 1
 #define CLUSTER_BUFFER_LIGHT_GRID_STAGE         2
 #define CLUSTER_BUFFER_LIGHT_INDEX_LIST_STAGE   3
 #define CLUSTER_BUFFER_LIGHT_INFO_STAGE         4
+
+#	if defined(CLUSTER_BUILD)
+// only 2 buffer needed: lihgt info for read and aabb for write
 SBUFFER_RW(b_cluster_AABBs,		AABB,		CLUSTER_BUFFER_AABB_STAGE);
-SBUFFER_RW(b_global_index_count,uint,  		CLUSTER_BUFFER_GLOBAL_INDEX_COUNT_STAGE);
+#	else //defined(CLUSTER_BUILD)
+// 5 buffer needed, aabb and light infor for read, light grid and light index list for write, global index count for read/write
+SBUFFER_RO(b_cluster_AABBs,		AABB,		CLUSTER_BUFFER_AABB_STAGE);
 SBUFFER_RW(b_light_grids,		light_grid,	CLUSTER_BUFFER_LIGHT_GRID_STAGE);
+SBUFFER_RW(b_global_index_count,uint,  		CLUSTER_BUFFER_GLOBAL_INDEX_COUNT_STAGE);
 SBUFFER_RW(b_light_index_lists, uint,		CLUSTER_BUFFER_LIGHT_INDEX_LIST_STAGE);
-#else
+#	endif //defined(CLUSTER_BUILD)
+
+#else //!(defined(CLUSTER_BUILD) || defined(CLUSTER_PREPROCESS))
+// render stage need 3 buffer, light grid, light index lists and light info only for read
 #define CLUSTER_BUFFER_LIGHT_GRID_STAGE         10
 #define CLUSTER_BUFFER_LIGHT_INDEX_LIST_STAGE   11
 #define CLUSTER_BUFFER_LIGHT_INFO_STAGE         12
 SBUFFER_RO(b_light_grids,		light_grid,	CLUSTER_BUFFER_LIGHT_GRID_STAGE);
 SBUFFER_RO(b_light_index_lists, uint,		CLUSTER_BUFFER_LIGHT_INDEX_LIST_STAGE);
-#endif
+#endif //defined(CLUSTER_BUILD) || defined(CLUSTER_PREPROCESS)
 
 SBUFFER_RO(b_lights,			light_info, CLUSTER_BUFFER_LIGHT_INFO_STAGE);
 
