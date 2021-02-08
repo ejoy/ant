@@ -1,7 +1,12 @@
+@echo off
 if "%1" == "" (
     set BUILD_MODE=Debug
     call make init PLAT=msvc MODE=%BUILD_MODE%
+) else (
+    set BUILD_MODE=%1
 )
+
+@echo on
 
 call scripts\msvc.bat
 
