@@ -161,9 +161,7 @@ function m:create_slot()
         }
     }
     slot_entity_id = slot_entity_id + 1
-    world[new_entity].parent = gizmo.target_eid
-    self.entities[#self.entities+1] = new_entity
-    hierarchy:add(new_entity, {template = temp.__class[1]}, gizmo.target_eid)
+    self:add_entity(new_entity, gizmo.target_eid, temp)
     hierarchy:update_slot_list()
 end
 
@@ -218,6 +216,14 @@ local function create_simple_entity(name)
     }
 end
 
+function m:add_entity(new_entity, parent, temp, no_hierarchy)
+    self.entities[#self.entities+1] = new_entity
+    world[new_entity].parent = parent or self.root
+    if not no_hierarchy then
+        hierarchy:add(new_entity, {template = temp.__class[1]}, world[new_entity].parent)
+    end
+end
+
 function m:create(what, config)
     if not self.root then
         self:reset_prefab()
@@ -260,9 +266,7 @@ function m:create(what, config)
                 }
             }
             imaterial.set_property(new_entity, "u_color", {1, 1, 1, 1})
-            world[new_entity].parent = gizmo.target_eid or self.root
-            self.entities[#self.entities+1] = new_entity
-            hierarchy:add(new_entity, {template = temp.__class[1]}, world[new_entity].parent)
+            self:add_entity(new_entity, gizmo.target_eid, temp)
         elseif config.type == "cube(prefab)" then
             m:add_prefab(gd.package_path .. "res/cube.prefab")
         elseif config.type == "cone(prefab)" then
@@ -286,26 +290,15 @@ function m:create(what, config)
                 range = 1,
                 radian = math.rad(45)
             })
-            local new_light = newlight[1]
-            self.entities[#self.entities+1] = new_light
-            hierarchy:add(new_light, {template = newlight.__class[1]}, self.root)
+            self:add_entity(newlight[1], self.root, newlight)
             create_light_billboard(new_light)
         end
     elseif what == "collider" then
         local new_entity, temp = self:create_collider(config)
-        world[new_entity].parent = gizmo.target_eid or self.root
-        self.entities[#self.entities+1] = new_entity
-        if config.add_to_hierarchy then
-            hierarchy:add(new_entity, {template = temp.__class[1]}, world[new_entity].parent)
-        end
+        self:add_entity(new_entity, gizmo.target_eid, temp, not config.add_to_hierarchy)
     elseif what == "particle" then
-        --local prefab = worldedit:prefab_template(gd.package_path .. "res/particle.prefab")
         local entities = world:instance(gd.package_path .. "res/particle.prefab")
-        local new_entity = entities[1]
-        m.entities[#m.entities+1] = new_entity
-        local parent = gizmo.target_eid or m.root
-        world[new_entity].parent = parent
-        hierarchy:add(new_entity, {template = entities.__class[1]}, parent)
+        self:add_entity(entities[1], gizmo.target_eid, entities)
     end
 end
 
@@ -339,13 +332,12 @@ local function remove_entitys(entities)
 end
 
 local function get_prefab(filename)
-    --local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
     assetmgr.unload(filename)
     return worldedit:prefab_template(filename)
 end
 
 function m:open(filename)
-    local prefab = get_prefab(filename)--get_prefab("/pkg/tools.prefab_editor/res/fire.prefab")--
+    local prefab = get_prefab(filename)
     self:open_prefab(prefab)
     world:pub {"WindowTitle", filename}
 end
@@ -470,7 +462,6 @@ function m:recreate_entity(eid)
         imaterial.set_property(new_eid, "u_color", {1, 0.5, 0.5, 0.5})
     end
 
-    --world[new_eid].name = world[eid].name
     local new_node = hierarchy:replace(eid, new_eid)
     world[new_eid].parent = new_node.parent
     for _, v in ipairs(new_node.children) do
@@ -550,9 +541,6 @@ function m:save_prefab(path)
     filename = filename or prefab_filename
     local saveas = (lfs.path(filename) ~= lfs.path(prefab_filename))
     local current_templ = hierarchy:update_prefab_template()
-    -- if self.prefab then
-    --     self.prefab.__class = current_templ
-    -- end
     self.entities.__class = current_templ
     
     local path_list = split(prefab_filename)

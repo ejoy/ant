@@ -886,7 +886,6 @@ function m.show()
             --
             local move_type
             local new_frame_idx
-            -- local current_clip_index
             local move_delta
             for k, v in pairs(imgui_message) do
                 if k == "pause" then
@@ -896,8 +895,6 @@ function m.show()
                     new_frame_idx = v
                 elseif k == "move_type" then
                     move_type = v
-                -- elseif k == "current_clip_index" then
-                --     current_clip_index = v
                 elseif k == "move_delta" then
                     move_delta = v
                 end
