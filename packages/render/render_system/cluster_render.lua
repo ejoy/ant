@@ -90,8 +90,10 @@ local lighttypes = {
 local function create_light_buffers()
 	--[[
 		struct light_info{
-			vec4	pos;
-			vec4	dir;
+			vec3	pos;
+            float   range;
+			vec3	dir;
+            uint    enable;
 			vec4	color;
 			float	type;
 			float	intensity;

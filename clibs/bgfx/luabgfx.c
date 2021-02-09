@@ -2650,6 +2650,59 @@ getMemory(lua_State *L, int idx) {
 	return bgfxMemory(L, idx);
 }
 
+static uint16_t
+buffer_flags(lua_State *L, int index) {
+	uint16_t flags = BGFX_BUFFER_NONE;
+	if (lua_isstring(L, index)) {
+		const char *f = lua_tostring(L, index);
+		int i;
+		for (i=0;f[i];i++) {
+			switch(f[i]) {
+			case 'r' :
+				flags |= BGFX_BUFFER_COMPUTE_READ;
+				break;
+			case 'w':
+				flags |= BGFX_BUFFER_COMPUTE_WRITE;
+				break;
+			case 'a':
+				flags |= BGFX_BUFFER_ALLOW_RESIZE;
+				break;
+			case 'd':
+				flags |= BGFX_BUFFER_INDEX32;
+				break;
+			case 'c':{
+				size_t sz;
+				const char* fmt = luaL_checklstring(L, index+1, &sz);
+				if (sz < 4)
+					return luaL_error(L, "invalid compute format:%s", fmt);
+
+				if ('f' == *fmt) flags |= BGFX_BUFFER_COMPUTE_TYPE_FLOAT;
+				else if ('f' == *fmt) flags |= BGFX_BUFFER_COMPUTE_TYPE_FLOAT;
+				else if ('f' == *fmt) flags |= BGFX_BUFFER_COMPUTE_TYPE_FLOAT;
+				else return luaL_error(L, "invalid compute format type:%c, type should be: f|i|u(float|int|uint)", *fmt);
+
+				if		(0 == strcmp(fmt+1, "8x1")) flags |= BGFX_BUFFER_COMPUTE_FORMAT_8X1;
+				else if (0 == strcmp(fmt+1, "8x2")) flags |= BGFX_BUFFER_COMPUTE_FORMAT_8X2;
+				else if (0 == strcmp(fmt+1, "8x4")) flags |= BGFX_BUFFER_COMPUTE_FORMAT_8X4;
+
+				else if (0 == strcmp(fmt+1,"16x1")) flags |= BGFX_BUFFER_COMPUTE_FORMAT_16X1;
+				else if (0 == strcmp(fmt+1,"16x2")) flags |= BGFX_BUFFER_COMPUTE_FORMAT_16X2;
+				else if (0 == strcmp(fmt+1,"16x4")) flags |= BGFX_BUFFER_COMPUTE_FORMAT_16X4;
+
+				else if (0 == strcmp(fmt+1,"32x1")) flags |= BGFX_BUFFER_COMPUTE_FORMAT_32X1;
+				else if (0 == strcmp(fmt+1,"32x2")) flags |= BGFX_BUFFER_COMPUTE_FORMAT_32X2;
+				else if (0 == strcmp(fmt+1,"32x4")) flags |= BGFX_BUFFER_COMPUTE_FORMAT_32X4;
+
+				else return luaL_error(L, "invalid compute format:%s, format should be: 8x1|8x2|8x4|16x1|16x2|16x4|32x1|32x2|32x4", fmt+1);
+			} break;
+			default:
+				return luaL_error(L, "Invalid buffer flag %c", f[i]);
+			}
+		}
+	}
+	return flags;
+}
+
 /*
 	string / BGFX_MEMORY
 	desc
@@ -2753,34 +2806,6 @@ lcreateDynamicVertexBuffer(lua_State *L) {
 	return 1;
 }
 
-static uint16_t
-index_buffer_flags(lua_State *L, int index) {
-	uint16_t flags = BGFX_BUFFER_NONE;
-	if (lua_isstring(L, index)) {
-		const char *f = lua_tostring(L, index);
-		int i;
-		for (i=0;f[i];i++) {
-			switch(f[i]) {
-			case 'r' :
-				flags |= BGFX_BUFFER_COMPUTE_READ;
-				break;
-			case 'w':
-				flags |= BGFX_BUFFER_COMPUTE_WRITE;
-				break;
-			case 'a':
-				flags |= BGFX_BUFFER_ALLOW_RESIZE;
-				break;
-			case 'd':
-				flags |= BGFX_BUFFER_INDEX32;
-				break;
-			default:
-				return luaL_error(L, "Invalid buffer flag %c", f[i]);
-			}
-		}
-	}
-	return flags;
-}
-
 static const bgfx_memory_t *
 getIndexBuffer(lua_State *L, int idx, int index32) {
 	if (lua_type(L, idx) == LUA_TTABLE) {
@@ -2805,7 +2830,7 @@ getIndexBuffer(lua_State *L, int idx, int index32) {
  */
 static int
 lcreateIndexBuffer(lua_State *L) {
-	uint16_t flags = index_buffer_flags(L, 2);
+	uint16_t flags = buffer_flags(L, 2);
 	const int index32 = flags & BGFX_BUFFER_INDEX32;
 	const bgfx_memory_t *mem = getIndexBuffer(L, 1, index32);
 	bgfx_index_buffer_handle_t handle = BGFX(create_index_buffer)(mem, flags);
@@ -2845,7 +2870,7 @@ lupdate(lua_State *L) {
 
 static int
 lcreateDynamicIndexBuffer(lua_State *L) {
-	uint16_t flags = index_buffer_flags(L, 2);
+	uint16_t flags = buffer_flags(L, 2);
 
 	bgfx_dynamic_index_buffer_handle_t handle;
 	if (lua_type(L, 1) == LUA_TNUMBER) {
