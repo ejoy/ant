@@ -80,19 +80,17 @@ static int lGetMainViewport(lua_State* L) {
 	lua_pushlightuserdata(L, viewport->PlatformHandle);
 	lua_setfield(L, -2, "PlatformHandle");
 
-	ImVec2 pos = viewport->GetWorkPos();
 	lua_newtable(L);
-	lua_pushnumber(L, pos.x);
+	lua_pushnumber(L, viewport->WorkPos.x);
 	lua_seti(L, -2, 1);
-	lua_pushnumber(L, pos.y);
+	lua_pushnumber(L, viewport->WorkPos.y);
 	lua_seti(L, -2, 2);
 	lua_setfield(L, -2, "WorkPos");
 
-	ImVec2 size = viewport->GetWorkSize();
 	lua_newtable(L);
-	lua_pushnumber(L, size.x);
+	lua_pushnumber(L, viewport->WorkSize.x);
 	lua_seti(L, -2, 1);
-	lua_pushnumber(L, size.y);
+	lua_pushnumber(L, viewport->WorkSize.y);
 	lua_seti(L, -2, 2);
 	lua_setfield(L, -2, "WorkSize");
 
@@ -1454,24 +1452,14 @@ wBeginListBox(lua_State *L) {
 	const char *label = luaL_checkstring(L, INDEX_ID);
 	float width = (float)luaL_optnumber(L, 2, 0);
 	float height = (float)luaL_optnumber(L, 3, 0);
-	bool change = ImGui::ListBoxHeader(label, ImVec2(width, height));
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-wBeginListBoxN(lua_State *L) {
-	const char *label = luaL_checkstring(L, INDEX_ID);
-	int count = (int)luaL_checkinteger(L, 2);
-	int height_in_items = (int)luaL_optinteger(L, 3, -1);
-	bool change = ImGui::ListBoxHeader(label, count, height_in_items);
+	bool change = ImGui::BeginListBox(label, ImVec2(width, height));
 	lua_pushboolean(L, change);
 	return 1;
 }
 
 static int
 wEndListBox(lua_State *L) {
-	ImGui::ListBoxFooter();
+	ImGui::EndListBox();
 	return 0;
 }
 
@@ -3762,7 +3750,6 @@ luaopen_imgui(lua_State *L) {
 		{ "EndMenu", wEndMenu },
 		{ "MenuItem", wMenuItem },
 		{ "BeginListBox", wBeginListBox },
-		{ "BeginListBoxN", wBeginListBoxN },
 		{ "EndListBox", wEndListBox },
 		{ "ListBox", wListBox },
 		{ "Image", wImage },
