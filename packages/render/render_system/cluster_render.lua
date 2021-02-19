@@ -16,7 +16,38 @@ local cfs = ecs.system "cluster_forward_system"
 local cluster_grid_x<const>, cluster_grid_y<const>, cluster_grid_z<const> = 16, 9, 24
 local cluster_cull_light_size<const> = 6
 assert(cluster_cull_light_size * 4 == cluster_grid_z)
-local cluster_count<const> = cluster_grid_x * cluster_grid_y * cluster_grid_z;
+local cluster_count<const> = cluster_grid_x * cluster_grid_y * cluster_grid_z
+
+--[[
+    struct light_grids {
+        uint offset;
+        uint count;
+    };
+]]
+local light_grid_buffer_size<const> = cluster_count * 2
+--[[
+    struct light_info{
+        vec3	pos;
+        float   range;
+        vec3	dir;
+        float   enable;
+        vec4	color;
+        float	type;
+        float	intensity;
+        float	inner_cutoff;
+        float	outter_cutoff;
+    };
+]]
+local light_struct_size_in_vec4<const>     = 4  --sizeof(light_info), vec4 * 4
+
+--[[
+    struct light_aabb{
+        vec4 minv;
+        vec4 maxv;
+    };
+]]
+local cluster_aabb_size_in_vec4<const> = 2  --sizeof(light_aabb)
+local cluster_aabb_buffer_size<const> = cluster_count * cluster_aabb_size_in_vec4
 
 local cluster_aabb_fx, cluster_light_cull_fx
 
@@ -32,7 +63,7 @@ local cluster_buffers = {
         build_access = "w",
         cull_access = "r",
         name = "CLUSTER_BUFFER_AABB_STAGE",
-        layout = declmgr.get "t30|t31",
+        layout = declmgr.get "t40",
     },
     -- index buffer of 32bit, and only 1 element
     global_index_count = {
@@ -40,21 +71,13 @@ local cluster_buffers = {
         cull_access = "rw",
         name = "CLUSTER_BUFFER_GLOBAL_INDEX_COUNT_STAGE",
     },
-
-    --[[
-        struct light_grids {
-            uint offset;
-            uint count;
-        };
-        need 2 32bit data
-    ]]
+    -- index buffer of 32bit
     light_grids = {
         stage = 2,
         render_stage = 10,
         cull_access = "w",
         render_access = "r",
         name = "CLUSTER_BUFFER_LIGHT_GRID_STAGE",
-        layout = declmgr.get "t40Nii"   --4 int16_t as 2 uint
     },
     -- index buffer of 32bit
     light_index_list = {
@@ -77,7 +100,7 @@ local cluster_buffers = {
         cull_access = "r",
         render_access = "r",
         name = "CLUSTER_BUFFER_LIGHT_INFO_STAGE",
-        layout = declmgr.get "t30|t31|t32|t33",
+        layout = declmgr.get "t40",
     }
 }
 
@@ -88,20 +111,6 @@ local lighttypes = {
 }
 
 local function create_light_buffers()
-	--[[
-		struct light_info{
-			vec3	pos;
-            float   range;
-			vec3	dir;
-            uint    enable;
-			vec4	color;
-			float	type;
-			float	intensity;
-			float	inner_cutoff;
-			float	outter_cutoff;
-		};
-	]]
-
 	local lights = {}
 	for _, leid in world:each "light_type" do
 		local le = world[leid]
@@ -122,14 +131,14 @@ local function create_light_buffers()
 end
 
 local function create_cluster_buffers()
-    cluster_buffers.AABB.handle                = bgfx.create_dynamic_vertex_buffer(cluster_count, cluster_buffers.AABB.layout.handle, "rwa")
-    cluster_buffers.light_grids.handle         = bgfx.create_dynamic_vertex_buffer(cluster_count, cluster_buffers.light_grids.layout.handle, "rwa")
+    cluster_buffers.AABB.handle                = bgfx.create_dynamic_vertex_buffer(cluster_aabb_buffer_size, cluster_buffers.AABB.layout.handle, "rwa")
+    cluster_buffers.light_grids.handle         = bgfx.create_dynamic_index_buffer(light_grid_buffer_size, "drwa")
     cluster_buffers.global_index_count.handle  = bgfx.create_dynamic_index_buffer(1, "drwa")
+
     local lights = create_light_buffers()
-    cluster_buffers.light_index_list.handle    = bgfx.create_dynamic_index_buffer(#lights, "drwa")
-    cluster_buffers.light_info.handle          = bgfx.create_dynamic_vertex_buffer(#lights, cluster_buffers.light_info.layout.handle, "ra")
-    local c = table.concat(lights, "")
-	bgfx.update(cluster_buffers.light_info.handle, 0, bgfx.memory_buffer(c))
+    local numlights = #lights
+    cluster_buffers.light_index_list.handle    = bgfx.create_dynamic_index_buffer(numlights, "drwa")
+    cluster_buffers.light_info.handle          = bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(lights, "")), cluster_buffers.light_info.layout.handle, "r")
 end
 
 local function set_buffers(which_stage, which_access)

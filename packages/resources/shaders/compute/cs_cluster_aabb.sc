@@ -22,33 +22,28 @@ vec4 screen2view(vec4 screen){
 // dispatch as: [16, 9, 24]
 NUM_THREADS(1, 1, 1)
 void main(){
-    //Per Tile variables
-    //it same as gl_GlobalInvocationID 
     uint cluster_idx =  gl_GlobalInvocationID;
 
     vec2 bottomleft = gl_WorkGroupID.xy * u_tile_unit_pre_pixel;
     vec2 topright   = bottomleft + u_tile_unit_pre_pixel;
 
-    vec4 maxPoint_sS = vec4(topright,  -1.0, 1.0);
-    vec4 minPoint_sS = vec4(bottomleft,-1.0, 1.0);
+    vec4 max_sS = vec4(topright,  -1.0, 1.0);
+    vec4 min_sS = vec4(bottomleft,-1.0, 1.0);
     
-    //Pass min and max to view space
-    vec3 maxPoint_vS = screen2view(maxPoint_sS).xyz;
-    vec3 minPoint_vS = screen2view(minPoint_sS).xyz;
+    vec3 max_vS = screen2view(max_sS).xyz;
+    vec3 min_vS = screen2view(min_sS).xyz;
 
     float nearZ = which_z(gl_WorkGroupID.z,     u_cluster_size.z);
     float farZ  = which_z(gl_WorkGroupID.z+1,   u_cluster_size.z);
 
-    //Finding the 4 intersection points made from the maxPoint to the cluster near/far plane
-    vec3 eyePos_vS    = vec3_splat(0.0);
-    vec3 minPointNear = line_zplane_intersection(eyePos_vS, minPoint_vS, nearZ );
-    vec3 minPointFar  = line_zplane_intersection(eyePos_vS, minPoint_vS, farZ );
-    vec3 maxPointNear = line_zplane_intersection(eyePos_vS, maxPoint_vS, nearZ );
-    vec3 maxPointFar  = line_zplane_intersection(eyePos_vS, maxPoint_vS, farZ );
+    vec3 eyepos_vS   = vec3_splat(0.0);
+    vec3 min_near_vS = line_zplane_intersection(eyepos_vS, min_vS, nearZ);
+    vec3 min_far_vS  = line_zplane_intersection(eyepos_vS, min_vS, farZ);
+    vec3 max_near_vS = line_zplane_intersection(eyepos_vS, max_vS, nearZ);
+    vec3 max_far_vS  = line_zplane_intersection(eyepos_vS, max_vS, farZ);
 
-    vec3 minPointAABB = min(min(minPointNear, minPointFar),min(maxPointNear, maxPointFar));
-    vec3 maxPointAABB = max(max(minPointNear, minPointFar),max(maxPointNear, maxPointFar));
+    vec3 minv = min(min(min_near_vS, min_far_vS),min(max_near_vS, max_far_vS));
+    vec3 maxv = max(max(min_near_vS, min_far_vS),max(max_near_vS, max_far_vS));
 
-    b_cluster_AABBs[cluster_idx].minv  = vec4(minPointAABB , 0.0);
-    b_cluster_AABBs[cluster_idx].maxv  = vec4(maxPointAABB , 0.0);
+    store_cluster_aabb2(b_cluster_AABBs, cluster_idx, vec4(minv, 0.0), vec4(maxv, 0.0));
 }

@@ -261,12 +261,12 @@ void main()
 
 	uint cluster_idx = which_cluster(gl_FragCoord.xyz);
 
-	light_grid g = b_light_grids[cluster_idx];
+	light_grid g; load_light_grid(b_light_grids, cluster_idx, g);
 	uint iend = g.offset + g.count;
 	for (uint ii=g.offset; ii<iend; ++ii)
 	{
 		uint ilight = b_light_index_lists[ii];
-		light_info l = b_lights[ilight];
+		light_info l; load_light_info(b_lights, ilight, l);
 
 		vec3 L = l.pos.xyz - v_posWS.xyz;
 		float dist = length(L);

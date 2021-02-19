@@ -6,7 +6,7 @@
 //shared light_info shared_lights[16*9*4];
 
 float sphere_closest_pt_to_aabb(vec3 center, uint cluster_idx){
-    AABB aabb = b_cluster_AABBs[cluster_idx];
+    AABB aabb; load_cluster_aabb(b_cluster_AABBs, cluster_idx, aabb);
 
     // float sqDist = 0.0;
     // for(int i = 0; i < 3; ++i){
@@ -40,19 +40,6 @@ bool interset_aabb(light_info l, uint cluster_idx){
     float sq_dist = sphere_closest_pt_to_aabb(center, cluster_idx);
     return sq_dist <= (boundsphere_radius * boundsphere_radius);
 }
-
-#if BGFX_SHADER_LANGUAGE_HLSL
-uint buffer_length(StructuredBuffer<light_info> bo)
-{
-    uint num, stride;
-    bo.GetDimensions(num, stride);
-    return num;
-}
-#else
-uint buffer_length(StructuredBuffer<light_info> bo){
-    return bo.length();
-}
-#endif
 
 // cluster num: 16 * 9 * 24, dispatch(1, 1, 6)
 // NUM_THREADS(16, 9, 4)
@@ -104,7 +91,7 @@ uint buffer_length(StructuredBuffer<light_info> bo){
 
 NUM_THREADS(16, 9, 4)
 void main(){
-    uint light_count  = buffer_length(b_lights);
+    uint light_count; buffer_length(b_lights, light_count);
     uint workgroup_size = 16 * 9 * 4;
     uint cluster_idx = gl_LocalInvocationIndex + workgroup_size * gl_WorkGroupID.z;
     
@@ -112,13 +99,12 @@ void main(){
     uint visible_light_indices[100];
 
     for(uint light_idx=0; light_idx<light_count; ++light_idx){
-        light_info l = b_lights[light_idx];
-        //if(l.enable == 1) {
-            if(interset_aabb(l, cluster_idx)){
-                visible_light_indices[visible_light_count] = light_idx;
-                ++visible_light_count;
-            }
-        //}
+        light_info l; load_light_info(b_lights, light_idx, l);
+
+        if(interset_aabb(l, cluster_idx)){
+            visible_light_indices[visible_light_count] = light_idx;
+            ++visible_light_count;
+        }
     }
 
     //TODO: if we can init this value before call compute dispatch, we can remove barrier() call
@@ -132,6 +118,5 @@ void main(){
         b_light_index_lists[offset + i] = visible_light_indices[i];
     }
 
-    b_light_grids[cluster_idx].offset = offset;
-    b_light_grids[cluster_idx].count = visible_light_count;
+    store_light_grid2(b_light_grids, cluster_idx, offset, visible_light_count);
 }
