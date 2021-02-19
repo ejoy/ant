@@ -20,9 +20,13 @@ vec4 screen2view(vec4 screen){
 }
 
 // dispatch as: [16, 9, 24]
+uint calc_cluster_idx(uvec3 id)
+{
+    return dot(id, uvec3(1, u_cluster_size.x, u_cluster_size.x * u_cluster_size.y));
+}
 NUM_THREADS(1, 1, 1)
 void main(){
-    uint cluster_idx =  gl_GlobalInvocationID;
+    uint cluster_idx = calc_cluster_idx(gl_GlobalInvocationID);
 
     vec2 bottomleft = gl_WorkGroupID.xy * u_tile_unit_pre_pixel;
     vec2 topright   = bottomleft + u_tile_unit_pre_pixel;
