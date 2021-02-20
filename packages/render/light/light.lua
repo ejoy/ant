@@ -271,7 +271,12 @@ function ilight.update_properties(system_properties)
 		icluster.extract_cluster_properties(system_properties)
 	else
 		local lights = ilight.create_light_buffers()
+		local numlight = #lights
+		if numlight == 0 then
+			return
+		end
 		local n = #lights * 4
+		
 		if light_buffer == nil then
 			light_buffer = bgfx.create_dynamic_vertex_buffer(n, declmgr.get "t40".handle, "a")
 		end
@@ -285,8 +290,10 @@ function ilight.set_light_buffers()
 		local icluster_render = world:interface "ant.render|icluster_render"
 		icluster_render.set_buffers()
 	else
-		local stage<const> = 12
-		bgfx.set_buffer(stage, light_buffer, "r")
+		if light_buffer then
+			local stage<const> = 12
+			bgfx.set_buffer(stage, light_buffer, "r")
+		end
 	end
 end
 
