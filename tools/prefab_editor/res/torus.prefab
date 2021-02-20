@@ -15,7 +15,7 @@ action:
   mount: 1
 data:
   color: {1, 1, 1, 1}
-  material: /pkg/ant.resources/materials/pbr_default.material
+  material: /pkg/ant.resources/materials/singlecolor.material
   mesh: /pkg/ant.resources.binary/meshes/base/torus.glb|meshes/pTorus1_P1.meshbin
   name: torus
   scene_entity: true
@@ -26,15 +26,3 @@ policy:
   ant.render|render
   ant.general|name
   ant.scene|hierarchy_policy
----
-data:
-  color: {1, 1, 1, 1}
-  intensity: 2
-  light_type: directional
-  name: directional1
-  radian: 0.7853981633974483
-  range: 1
-  transform: {}
-policy:
-  ant.render|light
-  ant.general|name

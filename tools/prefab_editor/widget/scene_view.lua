@@ -66,6 +66,8 @@ local function get_icon_by_object_type(node)
             end
         elseif entity.slot then
             return icons.ICON_SLOT
+        elseif entity.emitter then
+            return icons.ICON_PARTICLES3D
         else
             return icons.ICON_OBJECT
         end
@@ -215,6 +217,9 @@ function m.show()
             end
             if imgui.widget.MenuItem("Slot") then
                 world:pub { "Create", "slot"}
+            end
+            if imgui.widget.MenuItem("Particle") then
+                world:pub { "Create", "particle"}
             end
             imgui.windows.EndPopup()
         end

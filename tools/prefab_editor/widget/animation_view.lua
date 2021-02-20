@@ -32,6 +32,7 @@ local anim_state = {
     key_event = {},
     event_dirty = 0,
     clip_range_dirty = 0,
+    selected_clip_index = 0,
     current_event_list = {}
 }
 
@@ -483,30 +484,34 @@ local function on_move_keyframe(frame_idx, move_type)
     end
 end
 local function min_max_range_value(clip_index)
-    local before = current_anim.clips[clip_index - 1]
-    local after = current_anim.clips[clip_index + 1]
-    return before and before.range[2] + 1 or 0, after and after.range[1] - 1 or math.floor(current_anim.duration * sample_ratio) - 1
+    return 0, math.floor(current_anim.duration * sample_ratio) - 1
 end
 
 local function on_move_clip(move_type, current_clip_index, move_delta)
-    local clip
-    if current_clip_index then
-        clip = current_anim.clips[current_clip_index]
-    end
+    if current_clip_index <= 0 or current_clip_index > #current_anim.clips then return end
+    local clip = current_anim.clips[current_clip_index]
     if not clip then return end
     local min_value, max_value = min_max_range_value(current_clip_index)
     if move_type == 1 then
         local new_value = clip.range[1] + move_delta
-        if new_value >= min_value and new_value < clip.range[2] then
-            clip.range[1] = new_value
-            clip.range_ui[1] = clip.range[1]
+        if new_value < 0 then
+            new_value = 0
         end
+        if new_value > clip.range[2] then
+            new_value = clip.range[2]
+        end
+        clip.range[1] = new_value
+        clip.range_ui[1] = clip.range[1]
     elseif move_type == 2 then
         local new_value = clip.range[2] + move_delta
-        if new_value > clip.range[1] and new_value <= max_value then
-            clip.range[2] = new_value
-            clip.range_ui[2] = clip.range[2]
+        if new_value < clip.range[1] then
+            new_value = clip.range[1]
         end
+        if new_value > max_value then
+            new_value = max_value
+        end
+        clip.range[2] = new_value
+        clip.range_ui[2] = clip.range[2]
     elseif move_type == 3 then
         local new_value1 = clip.range[1] + move_delta
         local new_value2 = clip.range[2] + move_delta
@@ -606,6 +611,7 @@ local function show_clips()
     for i, cs in ipairs(current_anim.clips) do
         if imgui.widget.Selectable(cs.name, current_clip and (current_clip.name == cs.name)) then
             current_clip = cs
+            anim_state.selected_clip_index = i
         end
         if current_clip and (current_clip.name == cs.name) then
             if imgui.windows.BeginPopupContextItem(cs.name) then
@@ -678,20 +684,30 @@ local function show_current_clip()
     end
     imgui.widget.PropertyLabel("Range")
     local clip_index = find_index(current_anim.clips, current_clip)
-    local min_value, max_value = min_max_range_value(clip_index)
+    local min_value, max_value = min_max_range_value()
+    local old_range = {current_clip.range_ui[1], current_clip.range_ui[2]}
     if imgui.widget.DragInt("##Range", current_clip.range_ui) then
-        if current_clip.range_ui[1] < min_value then
-            current_clip.range_ui[1] = min_value
+        local range_ui = current_clip.range_ui
+        if old_range[1] ~= range_ui[1] then
+            if range_ui[1] < min_value then
+                range_ui[1] = min_value
+            elseif range_ui[1] > range_ui[2] then
+                range_ui[1] = range_ui[2]
+            end
+        elseif old_range[2] ~= range_ui[2] then
+            if range_ui[2] > max_value  then
+                range_ui[2] = max_value
+            elseif range_ui[2] < range_ui[1]  then
+                range_ui[2] = range_ui[1]
+            end
         end
-        if current_clip.range_ui[2] > max_value then
-            current_clip.range_ui[2] = max_value
-        end
-        current_clip.range = {current_clip.range_ui[1], current_clip.range_ui[2]}
+        current_clip.range = {range_ui[1], range_ui[2]}
         set_clips_dirty(true)
     end
 end
 
 local current_group_clip
+local current_clip_label
 local function show_current_group()
     if not current_group or not current_anim.groups then return end
     imgui.widget.PropertyLabel("Name")
@@ -703,14 +719,13 @@ local function show_current_group()
     end
     
     local function is_valid_range(ct)
-        return ct.range[1] >= 0 and ct.range[2] > 0 and ct.range[2] > ct.range[1]
+        return ct.range[1] >= 0 and ct.range[2] > 0 and ct.range[2] >= ct.range[1]
     end
 
     if imgui.windows.BeginPopup("AddClipPop") then
         for _, ct in ipairs(current_anim.clips) do
-            if is_valid_range(ct) and ct.range[1] >= 0 and not find_index(current_group.clips, ct) and imgui.widget.MenuItem(ct.name) then
+            if is_valid_range(ct) and imgui.widget.MenuItem(ct.name) then
                 current_group.clips[#current_group.clips + 1] = ct
-                table.sort(current_group.clips, function(a, b) return a.range[2] < b.range[1] end)
                 set_clips_dirty(true)
             end
         end
@@ -718,11 +733,14 @@ local function show_current_group()
     end
     local delete_clip
     for i, cs in ipairs(current_group.clips) do
-        if imgui.widget.Selectable(cs.name, current_group_clip and (current_group_clip.name == cs.name)) then
+        local unique_prefix = tostring(i) .. "."
+        local label = unique_prefix .. cs.name
+        if imgui.widget.Selectable(label, current_group_clip and (current_clip_label == label)) then
             current_group_clip = cs
+            current_clip_label = unique_prefix .. current_group_clip.name
         end
-        if current_group_clip and (current_group_clip.name == cs.name) then
-            if imgui.windows.BeginPopupContextItem(cs.name) then
+        if current_group_clip and (current_clip_label == label) then
+            if imgui.windows.BeginPopupContextItem(label) then
                 if imgui.widget.Selectable("Delete", false) then
                     delete_clip = i
                 end
@@ -733,6 +751,7 @@ local function show_current_group()
     if delete_clip then
         table.remove(current_group.clips, delete_clip)
         set_clips_dirty(true)
+        current_clip_label = nil
     end
 end
 
@@ -867,7 +886,6 @@ function m.show()
             --
             local move_type
             local new_frame_idx
-            local current_clip_index
             local move_delta
             for k, v in pairs(imgui_message) do
                 if k == "pause" then
@@ -877,15 +895,13 @@ function m.show()
                     new_frame_idx = v
                 elseif k == "move_type" then
                     move_type = v
-                elseif k == "current_clip_index" then
-                    current_clip_index = v
                 elseif k == "move_delta" then
                     move_delta = v
                 end
             end
             on_move_keyframe(new_frame_idx, move_type)
             if move_type and move_type ~= 0 then
-                on_move_clip(move_type, current_clip_index, move_delta)
+                on_move_clip(move_type, anim_state.selected_clip_index, move_delta)
             end
             imgui.cursor.Separator()
             if imgui.table.Begin("EventColumns", 7, imgui.flags.Table {'Resizable', 'ScrollY'}) then

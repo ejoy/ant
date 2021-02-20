@@ -41,7 +41,8 @@ local icon_path = {
     ["ICON_RIGIDBODY3D"]    = "res/icon/RigidBody3D.png",
     ["ICON_COLLISIONSHAPE3D"]   = "res/icon/CollisionShape3D.png",
     ["ICON_COLLISIONPOLYGON3D"] = "res/icon/CollisionPolygon3D.png",
-    ["ICON_SLOT"] = "res/icon/Slot.png",
+    ["ICON_SLOT"]           = "res/icon/Slot.png",
+    ["ICON_PARTICLES3D"]    = "res/icon/Particles3D.png"
 }
 
 local icons = {}

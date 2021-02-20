@@ -80,19 +80,17 @@ static int lGetMainViewport(lua_State* L) {
 	lua_pushlightuserdata(L, viewport->PlatformHandle);
 	lua_setfield(L, -2, "PlatformHandle");
 
-	ImVec2 pos = viewport->GetWorkPos();
 	lua_newtable(L);
-	lua_pushnumber(L, pos.x);
+	lua_pushnumber(L, viewport->WorkPos.x);
 	lua_seti(L, -2, 1);
-	lua_pushnumber(L, pos.y);
+	lua_pushnumber(L, viewport->WorkPos.y);
 	lua_seti(L, -2, 2);
 	lua_setfield(L, -2, "WorkPos");
 
-	ImVec2 size = viewport->GetWorkSize();
 	lua_newtable(L);
-	lua_pushnumber(L, size.x);
+	lua_pushnumber(L, viewport->WorkSize.x);
 	lua_seti(L, -2, 1);
-	lua_pushnumber(L, size.y);
+	lua_pushnumber(L, viewport->WorkSize.y);
 	lua_seti(L, -2, 2);
 	lua_setfield(L, -2, "WorkSize");
 
@@ -1454,24 +1452,14 @@ wBeginListBox(lua_State *L) {
 	const char *label = luaL_checkstring(L, INDEX_ID);
 	float width = (float)luaL_optnumber(L, 2, 0);
 	float height = (float)luaL_optnumber(L, 3, 0);
-	bool change = ImGui::ListBoxHeader(label, ImVec2(width, height));
-	lua_pushboolean(L, change);
-	return 1;
-}
-
-static int
-wBeginListBoxN(lua_State *L) {
-	const char *label = luaL_checkstring(L, INDEX_ID);
-	int count = (int)luaL_checkinteger(L, 2);
-	int height_in_items = (int)luaL_optinteger(L, 3, -1);
-	bool change = ImGui::ListBoxHeader(label, count, height_in_items);
+	bool change = ImGui::BeginListBox(label, ImVec2(width, height));
 	lua_pushboolean(L, change);
 	return 1;
 }
 
 static int
 wEndListBox(lua_State *L) {
-	ImGui::ListBoxFooter();
+	ImGui::EndListBox();
 	return 0;
 }
 
@@ -1699,9 +1687,6 @@ namespace ImSequencer
 
 static int
 wSequencer(lua_State* L) {
-	static int selected_frame = -1;
-	static int current_frame = 0;
-	static std::string current_anim_name;
 	auto init_event = [L](std::vector<bool>& flags) {
 		if (lua_getfield(L, -1, "key_event") == LUA_TTABLE) {
 			lua_pushnil(L);
@@ -1740,7 +1725,7 @@ wSequencer(lua_State* L) {
 						
 					}
 					lua_pop(L, 1);
-					if (start != -1 && end != -1 && end > start) {
+					if (start != -1 && end != -1 && end >= start) {
 						item.clip_rangs.emplace_back(nv, (int)start, (int)end);
 					}
 				}
@@ -1749,11 +1734,17 @@ wSequencer(lua_State* L) {
 		}
 		lua_pop(L, 1);
 	};
+
+	static int selected_frame = -1;
+	static int current_frame = 0;
+	static std::string current_anim_name;
+	static int selected_clip_index = -1;
+	static int current_id = -1;
 	if (lua_type(L, 1) == LUA_TTABLE) {
 		auto id = read_field_int(L, "id", -1, 1);
 		auto birth = read_field_string(L, "birth", "", 1);
-		if (ImSequencer::current_id != id) {
-			ImSequencer::current_id = id;
+		if (current_id != id) {
+			current_id = id;
 			if (ImSequencer::anim_info.find(id) == ImSequencer::anim_info.end()) {
 				auto& current_anim_info = ImSequencer::anim_info[id];
 				lua_pushnil(L);
@@ -1785,6 +1776,7 @@ wSequencer(lua_State* L) {
 			current_frame = (int)(ImSequencer::current_anim->current_time * 30.0f);
 			auto dirty_num = read_field_int(L, "event_dirty", 0, 2);
 			auto clip_dirty_num = read_field_int(L, "clip_range_dirty", 0, 2);
+			selected_clip_index = read_field_int(L, "selected_clip_index", 0, 2) - 1;
 			// add or remove key event
 			if (dirty_num == 1) {
 				if (lua_getfield(L, 2, "current_event_list") == LUA_TTABLE) {
@@ -1816,13 +1808,12 @@ wSequencer(lua_State* L) {
 			}
 		}
 	}
-	
+
 	bool pause = false;
 	int move_type = -1;
-	int current_select = selected_frame;
-	static int range_index = -1;
 	int move_delta = 0;
-	ImSequencer::Sequencer(pause, current_frame, current_select, move_type, range_index, move_delta);
+	int current_select = selected_frame;
+	ImSequencer::Sequencer(pause, current_frame, current_select, move_type, selected_clip_index, move_delta);
 	if (pause) {
 		lua_pushnumber(L, current_frame / 30.0f);
 		lua_setfield(L, -2, "pause");
@@ -1830,10 +1821,6 @@ wSequencer(lua_State* L) {
 	if (move_type != -1) {
 		lua_pushinteger(L, move_type);
 		lua_setfield(L, -2, "move_type");
-		if (range_index >= 0 && range_index < ImSequencer::current_anim->clip_rangs.size()) {
-			lua_pushinteger(L, range_index + 1);
-			lua_setfield(L, -2, "current_clip_index");
-		}
 		lua_pushinteger(L, move_delta);
 		lua_setfield(L, -2, "move_delta");
 	}
@@ -3521,7 +3508,7 @@ static void ioKeyMods(lua_State* L) {
 static void ioKeysPressed(lua_State* L) {
 	lua_getfield(L, LUA_REGISTRYINDEX, "_ImGui_KeysPressed");
 	for (int i = 1; i < 255; ++i) {
-		if (ImGui::IsKeyPressed(i)) {
+		if (ImGui::IsKeyPressed(i, false)) {
 			lua_pushboolean(L, 1);
 		}
 		else {
@@ -3763,7 +3750,6 @@ luaopen_imgui(lua_State *L) {
 		{ "EndMenu", wEndMenu },
 		{ "MenuItem", wMenuItem },
 		{ "BeginListBox", wBeginListBox },
-		{ "BeginListBoxN", wBeginListBoxN },
 		{ "EndListBox", wEndListBox },
 		{ "ListBox", wListBox },
 		{ "Image", wImage },

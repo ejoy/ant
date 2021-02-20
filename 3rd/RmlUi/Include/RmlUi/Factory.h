@@ -29,8 +29,8 @@
 #ifndef RMLUI_CORE_FACTORY_H
 #define RMLUI_CORE_FACTORY_H
 
-#include "XMLParser.h"
 #include "Header.h"
+#include "Stream.h"
 
 namespace Rml {
 

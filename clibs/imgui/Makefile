@@ -16,10 +16,6 @@ IMGUI_MACRO += -DIMGUI_DISABLE_DEMO_WINDOWS
 IMGUI_MACRO += -DIMGUI_DISABLE_DEFAULT_ALLOCATORS
 IMGUI_MACRO += -I. -DIMGUI_USER_CONFIG=\"imgui_config.h\"
 
-IMNODES_DIR=$(ANT3RD)/imnodes
-IMNODES_SRC=$(IMNODES_DIR)
-IMNODES_INC=-I$(IMNODES_DIR)
-
 WINDOW_INC=-I$(ANTCLIBS)/window
 
 OBJS = $(ODIR)/luaimgui.o $(ODIR)/imgui_window.o $(ODIR)/imgui_renderer.o $(ODIR)/imgui_platform.o $(ODIR)/luaimgui_tables.o $(ODIR)/imgui_config.o $(ODIR)/imgui.o $(ODIR)/imgui_widgets.o $(ODIR)/imgui_draw.o $(ODIR)/imgui_tables.o $(ODIR)/ImCurveEdit.o $(ODIR)/ImSequencer.o $(ODIR)/SelectableInput.o

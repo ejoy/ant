@@ -84,6 +84,7 @@ function irender.create_view_queue(view_rect, view_name, exclude)
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|view_queue",
+			"ant.render|watch_screen_buffer",
 			"ant.general|name",
 		},
 		data = {
@@ -116,7 +117,8 @@ function irender.create_view_queue(view_rect, view_name, exclude)
 			},
 			visible = true,
 			name = view_name,
-			view_queue = true
+			view_queue = true,
+			watch_screen_buffer = true,
 		}
 	}
 end
@@ -129,6 +131,7 @@ function irender.create_orthoview_queue(view_rect, orthoface, queuename)
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|orthoview_queue",
+			"ant.render|watch_screen_buffer",
 			"ant.general|name",
 		},
 		data = {
@@ -164,6 +167,7 @@ function irender.create_orthoview_queue(view_rect, orthoface, queuename)
 			},
 			visible = false,
 			orthoview = orthoface,
+			watch_screen_buffer = true,
 			name = orthoface or queuename,
 		}
 	}

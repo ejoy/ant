@@ -17,7 +17,6 @@ policy:
   ant.render|render
   ant.general|name
   ant.scene|hierarchy_policy
-  ant.objcontroller|select
 data:
   scene_entity: true
   state: 5

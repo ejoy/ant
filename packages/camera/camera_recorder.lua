@@ -16,6 +16,12 @@ function cq_trans.process_entity(e)
         cursor = 0,
         camera_eid = nil,
     }
+    for i, v in ipairs(e.frames) do
+        local tp = v.position
+        local tr = v.rotation
+        v.position = math3d.ref(math3d.vector(tp[1], tp[2], tp[3]))
+        v.rotation = math3d.ref(math3d.quaternion(tr[1], tr[2], tr[3], tr[4]))
+    end
 end
 
 local cr = ecs.interface "icamera_recorder"

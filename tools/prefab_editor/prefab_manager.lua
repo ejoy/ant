@@ -136,6 +136,7 @@ local geom_mesh_file = {
     ["sphere"] = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin",
     ["torus"] = "/pkg/ant.resources.binary/meshes/base/torus.glb|meshes/pTorus1_P1.meshbin"
 }
+
 local default_collider_define = {
     ["sphere"] = {{origin = {0, 0, 0, 1}, radius = 0.1}},
     ["box"] = {{origin = {0, 0, 0, 1}, size = {0.05, 0.05, 0.05} }},
@@ -160,9 +161,7 @@ function m:create_slot()
         }
     }
     slot_entity_id = slot_entity_id + 1
-    world[new_entity].parent = gizmo.target_eid
-    self.entities[#self.entities+1] = new_entity
-    hierarchy:add(new_entity, {template = temp.__class[1]}, gizmo.target_eid)
+    self:add_entity(new_entity, gizmo.target_eid, temp)
     hierarchy:update_slot_list()
 end
 
@@ -200,6 +199,29 @@ function m:create_collider(config)
     }
     imaterial.set_property(new_entity, "u_color", {1, 0.5, 0.5, 0.5})
     return new_entity, temp
+end
+
+local function create_simple_entity(name)
+    return world:create_entity{
+		policy = {
+            "ant.general|name",
+            "ant.scene|hierarchy_policy",
+            "ant.scene|transform_policy"
+		},
+		data = {
+            name = name,
+            scene_entity = true,
+            transform = {}
+		},
+    }
+end
+
+function m:add_entity(new_entity, parent, temp, no_hierarchy)
+    self.entities[#self.entities+1] = new_entity
+    world[new_entity].parent = parent or self.root
+    if not no_hierarchy then
+        hierarchy:add(new_entity, {template = temp.__class[1]}, world[new_entity].parent)
+    end
 end
 
 function m:create(what, config)
@@ -244,9 +266,7 @@ function m:create(what, config)
                 }
             }
             imaterial.set_property(new_entity, "u_color", {1, 1, 1, 1})
-            world[new_entity].parent = gizmo.target_eid or self.root
-            self.entities[#self.entities+1] = new_entity
-            hierarchy:add(new_entity, {template = temp.__class[1]}, world[new_entity].parent)
+            self:add_entity(new_entity, gizmo.target_eid, temp)
         elseif config.type == "cube(prefab)" then
             m:add_prefab(gd.package_path .. "res/cube.prefab")
         elseif config.type == "cone(prefab)" then
@@ -270,18 +290,15 @@ function m:create(what, config)
                 range = 1,
                 radian = math.rad(45)
             })
-            local new_light = newlight[1]
-            self.entities[#self.entities+1] = new_light
-            hierarchy:add(new_light, {template = newlight.__class[1]}, self.root)
+            self:add_entity(newlight[1], self.root, newlight)
             create_light_billboard(new_light)
         end
     elseif what == "collider" then
         local new_entity, temp = self:create_collider(config)
-        world[new_entity].parent = gizmo.target_eid or self.root
-        self.entities[#self.entities+1] = new_entity
-        if config.add_to_hierarchy then
-            hierarchy:add(new_entity, {template = temp.__class[1]}, world[new_entity].parent)
-        end
+        self:add_entity(new_entity, gizmo.target_eid, temp, not config.add_to_hierarchy)
+    elseif what == "particle" then
+        local entities = world:instance(gd.package_path .. "res/particle.prefab")
+        self:add_entity(entities[1], gizmo.target_eid, entities)
     end
 end
 
@@ -315,30 +332,14 @@ local function remove_entitys(entities)
 end
 
 local function get_prefab(filename)
-    --local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
     assetmgr.unload(filename)
     return worldedit:prefab_template(filename)
 end
 
 function m:open(filename)
-    local prefab = get_prefab(filename)--get_prefab("/pkg/tools.prefab_editor/res/fire.prefab")--
+    local prefab = get_prefab(filename)
     self:open_prefab(prefab)
     world:pub {"WindowTitle", filename}
-end
-
-local function create_simple_entity(name)
-    return world:create_entity{
-		policy = {
-            "ant.general|name",
-            "ant.scene|hierarchy_policy",
-            "ant.scene|transform_policy"
-		},
-		data = {
-            name = name,
-            scene_entity = true,
-            transform = {}
-		},
-    }
 end
 
 function m:reset_prefab()
@@ -368,35 +369,15 @@ function m:open_prefab(prefab)
     local add_entity = {}
     local last_camera
     for i, entity in ipairs(entities) do
-        if type(entity) == "table" then          
-            -- entity[1] : root node  
-            local parent = world[entity[1]].parent
-            if parent then
-                local teml = hierarchy:get_template(parent)
-                teml.filename = prefab.__class[i].prefab
-                teml.children = entity
-                set_select_adapter(entity, parent)
-            else
-                local prefab_root = create_simple_entity("prefab" .. i)
-                hierarchy:add(prefab_root, {filename = prefab.__class[i].prefab, children = entity}, self.root)
-                for _, e in ipairs(entity) do
-                    if not world[e].parent then
-                        world[e].parent = prefab_root
-                    end
-                end
-                add_entity[#add_entity+1] = prefab_root
-            end
+        if type(entity) == "table" then
+            local templ = hierarchy:get_template(entity.root)
+            templ.filename = prefab.__class[i].prefab
+            set_select_adapter(entity, entity.root)
+            add_entity[#add_entity+1] = prefab_root
             remove_entity[#remove_entity+1] = entity
         else
             local keyframes = prefab.__class[i].data.frames
             if keyframes and last_camera then
-                for i, v in ipairs(keyframes) do
-                    local tp = v.position
-                    local tr = v.rotation
-                    v.position = math3d.ref(math3d.vector(tp[1], tp[2], tp[3]))
-                    v.rotation = math3d.ref(math3d.quaternion(tr[1], tr[2], tr[3], tr[4]))
-                end
-
                 local templ = hierarchy:get_template(last_camera)
                 templ.keyframe = prefab.__class[i]
                 camera_mgr.bind_recorder(last_camera, entity)
@@ -454,31 +435,13 @@ function m:add_prefab(filename)
     if not self.root then
         self:reset_prefab()
     end
-    -- local entity_template = {
-    --     action = {
-    --         mount = 1
-    --     },
-    --     policy = {
-    --         "ant.general|name",
-    --         "ant.scene|transform_policy"
-    --     },
-    --     data = {
-    --         name = gen_prefab_name(),
-    --         transform = {},
-    --         scene_entity = true
-    --     }
-    -- }
-    local mount_root = create_simple_entity(gen_prefab_name())--world:create_entity(entity_template)
+    local mount_root, temp = create_simple_entity(gen_prefab_name())
     self.entities[#self.entities+1] = mount_root
-    -- entity_template.data.name = entity_name
-    -- world[mount_root].name = entity_name
-    local prefab = worldedit:prefab_template(filename)
-    local entities = worldedit:prefab_instance(prefab)
+    local entities = world:instance(filename)
     world[entities[1]].parent = mount_root
-    
+    world[mount_root].parent = gizmo.target_eid or self.root
     set_select_adapter(entities, mount_root)
-    --hierarchy:add(mount_root, {template = entity_template, filename = filename, children = entities}, self.root)
-    hierarchy:add(mount_root, {filename = filename, children = entities}, self.root)
+    hierarchy:add(mount_root, {filename = filename, template = temp.__class[1]}, world[mount_root].parent)
 end
 
 function m:recreate_entity(eid)
@@ -499,7 +462,6 @@ function m:recreate_entity(eid)
         imaterial.set_property(new_eid, "u_color", {1, 0.5, 0.5, 0.5})
     end
 
-    --world[new_eid].name = world[eid].name
     local new_node = hierarchy:replace(eid, new_eid)
     world[new_eid].parent = new_node.parent
     for _, v in ipairs(new_node.children) do
@@ -579,9 +541,6 @@ function m:save_prefab(path)
     filename = filename or prefab_filename
     local saveas = (lfs.path(filename) ~= lfs.path(prefab_filename))
     local current_templ = hierarchy:update_prefab_template()
-    -- if self.prefab then
-    --     self.prefab.__class = current_templ
-    -- end
     self.entities.__class = current_templ
     
     local path_list = split(prefab_filename)
