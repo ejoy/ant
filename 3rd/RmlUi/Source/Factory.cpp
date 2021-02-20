@@ -36,7 +36,7 @@
 #include "../Include/RmlUi/StreamMemory.h"
 #include "../Include/RmlUi/StyleSheet.h"
 #include "../Include/RmlUi/SystemInterface.h"
-
+#include "../Include/RmlUi/XMLParser.h"
 #include "DataControllerDefault.h"
 #include "DataViewDefault.h"
 #include "PluginRegistry.h"
@@ -178,7 +178,7 @@ bool Factory::InstanceElementText(Element* parent, const String& str)
 		return false;
 	}
 	if (has_data_expression) {
-		XMLAttributes attributes;
+		ElementAttributes attributes;
 		attributes.emplace("data-text", Variant());
 		text->SetAttributes(attributes);
 	}

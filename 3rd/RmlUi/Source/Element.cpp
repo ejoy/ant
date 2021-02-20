@@ -42,6 +42,7 @@
 #include "../Include/RmlUi/RenderInterface.h"
 #include "../Include/RmlUi/StreamMemory.h"
 #include "../Include/RmlUi/SystemInterface.h"
+#include "../Include/RmlUi/XMLParser.h"
 #include "DataModel.h"
 #include "ElementAnimation.h"
 #include "ElementBackgroundBorder.h"

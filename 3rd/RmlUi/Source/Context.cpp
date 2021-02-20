@@ -119,16 +119,13 @@ bool Context::Update() {
 
 // Load a document into the context.
 Document* Context::LoadDocument(const String& document_path) {	
-	auto stream = MakeUnique<StreamFile>();
-	if (!stream->Open(document_path))
-		return nullptr;
-
 	DocumentPtr document(new Document(dimensions));
 	document->context = this;
-	PluginRegistry::NotifyDocumentCreate(document.get());
-	XMLParser parser(document->body.get());
-	parser.Parse(stream.get());
+	if (!document->Load(document_path)) {
+		return nullptr;
+	}
 	documents.push_back(document.get());
+	PluginRegistry::NotifyDocumentCreate(document.get());
 	document->body->DispatchEvent(EventId::Load, Dictionary());
 	document->UpdateDataModel(false);
 	document->Update();

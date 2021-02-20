@@ -87,6 +87,8 @@ public:
 	/// @param out_data The string contents of the file.
 	/// @return True on success.
 	virtual bool LoadFile(const String& path, String& out_data);
+
+	virtual String GetPath(const String& path) = 0;
 };
 
 } // namespace Rml

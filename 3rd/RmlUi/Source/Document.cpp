@@ -35,6 +35,7 @@
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/SystemInterface.h"
 #include "../Include/RmlUi/DataModelHandle.h"
+#include "../Include/RmlUi/XMLParser.h"
 #include "DocumentHeader.h"
 #include "ElementStyle.h"
 #include "EventDispatcher.h"
@@ -60,6 +61,15 @@ Document::Document(const Size& _dimensions)
 
 Document::~Document() {
 	body.reset();
+}
+
+bool Document::Load(const String& path) {
+	auto stream = MakeUnique<StreamFile>();
+	if (!stream->Open(path))
+		return false;
+	XMLParser parser(body.get());
+	parser.Parse(stream.get());
+	return true;
 }
 
 void Document::ProcessHeader(const DocumentHeader* header)

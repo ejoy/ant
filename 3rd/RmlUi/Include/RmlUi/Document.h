@@ -49,6 +49,8 @@ public:
 	Document(const Size& dimensions);
 	virtual ~Document();
 
+	bool Load(const String& path);
+
 	/// Process given document header
 	void ProcessHeader(const DocumentHeader* header);
 
