@@ -337,10 +337,7 @@ void luaV_finishset (lua_State *L, const TValue *t, TValue *key,
       lua_assert(isempty(slot));  /* slot must be empty */
       tm = fasttm(L, h->metatable, TM_NEWINDEX);  /* get metamethod */
       if (tm == NULL) {  /* no metamethod? */
-        if (isabstkey(slot))  /* no previous entry? */
-          slot = luaH_newkey(L, h, key);  /* create one */
-        /* no metamethod and (now) there is an entry with given key */
-        setobj2t(L, cast(TValue *, slot), val);  /* set its new value */
+        luaH_finishset(L, h, key, slot, val);  /* set new value */
         invalidateTMcache(h);
         luaC_barrierback(L, obj2gco(h), val);
         return;
@@ -845,6 +842,10 @@ void luaV_finishOp (lua_State *L) {
       luaV_concat(L, total);  /* concat them (may yield again) */
       break;
     }
+    case OP_CLOSE:  case OP_RETURN: {  /* yielded closing variables */
+      ci->u.l.savedpc--;  /* repeat instruction to close other vars. */
+      break;
+    }
     default: {
       /* only these other opcodes can yield */
       lua_assert(op == OP_TFORCALL || op == OP_CALL ||
@@ -1149,6 +1150,8 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
     Instruction i;  /* instruction being executed */
     StkId ra;  /* instruction's A register */
     vmfetch();
+// low-level line tracing for debugging Lua
+// printf("line: %d\n", luaG_getfuncline(cl->p, pcRel(pc, cl->p)));
     lua_assert(base == ci->func + 1);
     lua_assert(base <= L->top && L->top < L->stack_last);
     /* invalidate top for instructions not expecting it */
@@ -1527,7 +1530,7 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
         vmbreak;
       }
       vmcase(OP_CLOSE) {
-        Protect(luaF_close(L, ra, LUA_OK));
+        Protect(luaF_close(L, ra, LUA_OK, 1));
         vmbreak;
       }
       vmcase(OP_TBC) {
@@ -1632,10 +1635,8 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
           b = cast_int(L->top - ra);
         savepc(ci);  /* several calls here can raise errors */
         if (TESTARG_k(i)) {
-          /* close upvalues from current call; the compiler ensures
-             that there are no to-be-closed variables here, so this
-             call cannot change the stack */
-          luaF_close(L, base, NOCLOSINGMETH);
+          luaF_closeupval(L, base);  /* close upvalues from current call */
+          lua_assert(L->tbclist < base);  /* no pending tbc variables */
           lua_assert(base == ci->func + 1);
         }
         while (!ttisfunction(s2v(ra))) {  /* not a function? */
@@ -1665,7 +1666,7 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
         if (TESTARG_k(i)) {  /* may there be open upvalues? */
           if (L->top < ci->top)
             L->top = ci->top;
-          luaF_close(L, base, LUA_OK);
+          luaF_close(L, base, CLOSEKTOP, 1);
           updatetrap(ci);
           updatestack(ci);
         }

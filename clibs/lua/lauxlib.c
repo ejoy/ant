@@ -545,10 +545,8 @@ static char *prepbuffsize (luaL_Buffer *B, size_t sz, int boxidx) {
     if (buffonstack(B))  /* buffer already has a box? */
       newbuff = (char *)resizebox(L, boxidx, newsize);  /* resize it */
     else {  /* no box yet */
-      lua_pushnil(L);  /* reserve slot for final result */
       newbox(L);  /* create a new box */
-      /* move box (and slot) to its intended position */
-      lua_rotate(L, boxidx - 1, 2);
+      lua_insert(L, boxidx);  /* move box to its intended position */
       lua_toclose(L, boxidx);
       newbuff = (char *)resizebox(L, boxidx, newsize);
       memcpy(newbuff, B->b, B->n * sizeof(char));  /* copy original content */
@@ -585,8 +583,8 @@ LUALIB_API void luaL_pushresult (luaL_Buffer *B) {
   lua_State *L = B->L;
   lua_pushlstring(L, B->b, B->n);
   if (buffonstack(B)) {
-    lua_copy(L, -1, -3);  /* move string to reserved slot */
-    lua_pop(L, 2);  /* pop string and box (closing the box) */
+    lua_closeslot(L, -2);  /* close the box */
+    lua_remove(L, -2);  /* remove box from the stack */
   }
 }
 
@@ -639,10 +637,14 @@ LUALIB_API char *luaL_buffinitsize (lua_State *L, luaL_Buffer *B, size_t sz) {
 ** =======================================================
 */
 
-/* index of free-list header */
-#define freelist	0
+/* index of free-list header (after the predefined values) */
+#define freelist	(LUA_RIDX_LAST + 1)
 
-
+/*
+** The previously freed references form a linked list:
+** t[freelist] is the index of a first free index, or zero if list is
+** empty; t[t[freelist]] is the index of the second element; etc.
+*/
 LUALIB_API int luaL_ref (lua_State *L, int t) {
   int ref;
   if (lua_isnil(L, -1)) {
@@ -650,9 +652,16 @@ LUALIB_API int luaL_ref (lua_State *L, int t) {
     return LUA_REFNIL;  /* 'nil' has a unique fixed reference */
   }
   t = lua_absindex(L, t);
-  lua_rawgeti(L, t, freelist);  /* get first free element */
-  ref = (int)lua_tointeger(L, -1);  /* ref = t[freelist] */
-  lua_pop(L, 1);  /* remove it from stack */
+  if (lua_rawgeti(L, t, freelist) == LUA_TNIL) {  /* first access? */
+    ref = 0;  /* list is empty */
+    lua_pushinteger(L, 0);  /* initialize as an empty list */
+    lua_rawseti(L, t, freelist);  /* ref = t[freelist] = 0 */
+  }
+  else {  /* already initialized */
+    lua_assert(lua_isinteger(L, -1));
+    ref = (int)lua_tointeger(L, -1);  /* ref = t[freelist] */
+  }
+  lua_pop(L, 1);  /* remove element from stack */
   if (ref != 0) {  /* any free element? */
     lua_rawgeti(L, t, ref);  /* remove it from list */
     lua_rawseti(L, t, freelist);  /* (t[freelist] = t[ref]) */
@@ -668,6 +677,7 @@ LUALIB_API void luaL_unref (lua_State *L, int t, int ref) {
   if (ref >= 0) {
     t = lua_absindex(L, t);
     lua_rawgeti(L, t, freelist);
+    lua_assert(lua_isinteger(L, -1));
     lua_rawseti(L, t, ref);  /* t[ref] = t[freelist] */
     lua_pushinteger(L, ref);
     lua_rawseti(L, t, freelist);  /* t[freelist] = ref */

@@ -50,6 +50,10 @@
 #include <stdlib.h>
 #include "lauxlib.h"
 
+#if defined(lua_assert)
+#undef lua_assert
+#endif
+
 #define lua_assert(e) (void)(               \
         (!!(e)) ||                          \
         (                                   \
@@ -62,6 +66,10 @@
             0                               \
         )                                   \
     )
+
+#if defined(luai_apicheck)
+#undef luai_apicheck
+#endif
 
 #define luai_apicheck(l, e)                  \
     do {                                     \
