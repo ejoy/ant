@@ -10,3 +10,18 @@ data:
   range: 180
   light_type: point
   name: point_light
+---
+policy:
+    ant.render|render
+    ant.scene|hierarchy_policy
+    ant.general|name
+data:
+    transform:
+      s: {10, 10, 10, 0}
+    material: /pkg/ant.resources/materials/bunny.material
+    mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
+    state: 0x00000005
+    scene_entity: true
+    name: slot_cube
+action:
+    mount: 1

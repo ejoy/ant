@@ -1,4 +1,5 @@
 pipeline "render_process"
+    .stage "update_system_properties"
     .stage "render_preprocess"
     .stage "render_submit"
 
@@ -19,7 +20,3 @@ policy "forward_render"
     .require_transform  "visible_primitive_transform"
     .require_system     "forward_render_system"
     .component          "primitive_filter"
-
---must define 'render_pipeline' policy
-policy "render_pipeline"
-    .require_policy "ant.render|forward_render"

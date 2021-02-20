@@ -1,9 +1,11 @@
 local bgfx = require "bgfx"
-local setting = import_package "ant.settings".setting
 local sha1 = require "hash".sha1
+local datalist = require "datalist"
 local stringify = require "fx.stringify"
-local fs = require "filesystem"
-local lfs = require "filesystem.local"
+local fs        = require "filesystem"
+local lfs       = require "filesystem.local"
+
+local setting   = import_package "ant.settings".setting
 local FX_CACHE = {}
 local fxcompile
 
@@ -20,16 +22,16 @@ else
     fxcompile = require "fx.compile"
 end
 
-local default_setting = {
-	lighting = "on",			-- "on"/"off"
-	surfacetype = "opaticy",	-- "opaticy"/"translucent"/"decal"
-	shadow_cast	= "on",			-- "on"/"off"
-	shadow_receive = "off",		-- "on"/"off"
-	subsurface = "off",			-- "on"/"off"? maybe has other setting
-	skinning = "UNKNOWN",
-    depth_type = setting:get 'graphic/shadow/type',
-    bloom = setting:get 'graphic/postprocess/bloom/enable' and "on" or "off",
-}
+local function read_default_setting_from_file()
+    local f = fs.open (fs.path "/pkg/ant.resources/settings/default.setting")
+    local c = f:read "a"
+    f:close()
+    return c
+end
+
+local default_setting       = datalist.parse(read_default_setting_from_file())
+default_setting.depth_type  = setting:get 'graphic/shadow/type'
+default_setting.bloom       = setting:get 'graphic/postprocess/bloom/enable' and "on" or "off"
 
 local function merge(a, b)
     for k, v in pairs(b) do

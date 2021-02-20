@@ -1,10 +1,11 @@
 local ecs = ...
 local world = ecs.world
 
-local assetmgr = require "asset"
-local mpt = ecs.transform "material_prefab_transform"
-local ext_material = require "ext_material"
+local assetmgr		= require "asset"
+local ext_material	= require "ext_material"
 
+local icluster_render = world:interface "ant.render|icluster_render"
+local mpt = ecs.transform "material_prefab_transform"
 local function load_material(m, setting)
 	local fx = assetmgr.load_fx(m.fx, setting)
 	local properties = m.properties
@@ -188,7 +189,14 @@ local function to_v(t)
 	return res
 end
 
-local function generate_properties(uniforms, properties)
+local lightbuffer_property
+
+local function generate_properties(fx, properties)
+	if fx == nil then
+		return nil
+	end
+
+	local uniforms = fx.uniforms
 	local isp 		= world:interface "ant.render|system_properties"
 	local new_properties
 	properties = properties or {}
@@ -207,6 +215,21 @@ local function generate_properties(uniforms, properties)
 		end
 	end
 
+	--TODO: right now, bgfx shaderc tool would not save buffer binding to uniforom info after shader compiled(currentlly only sampler/const buffer will save in uniform infos), just work around it right now
+	local setting = fx.setting
+	if setting.lighting == "on" then
+		if lightbuffer_property == nil then
+			lightbuffer_property = {
+				type = "b",
+				set = function ()
+					icluster_render.set_buffers()
+				end,
+				ref = true,
+			}
+		end
+		new_properties = new_properties or {}
+		new_properties.light_properties = lightbuffer_property
+	end
 	return new_properties
 end
 
@@ -215,6 +238,6 @@ function mt.process_entity(e)
 	local c = e._cache_prefab
 
 	rc.fx 			= c.fx
-	rc.properties 	= c.fx and generate_properties(c.fx.uniforms, c.properties) or nil
+	rc.properties 	= generate_properties(c.fx, c.properties)
 	rc.state 		= c.state
 end

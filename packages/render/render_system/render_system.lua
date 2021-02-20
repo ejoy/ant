@@ -14,8 +14,11 @@ local function update_view_proj(viewid, cameraeid)
 	bgfx.set_view_transform(viewid, rc.viewmat, rc.projmat)
 end
 
-function render_sys:render_submit()
+function render_sys:update_system_properties()
 	isp.update()
+end
+
+function render_sys:render_submit()
 	for _, eid in world:each "render_target" do
 		local rq = world[eid]
 		if rq.visible then

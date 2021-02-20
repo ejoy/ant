@@ -1,47 +1,25 @@
 local ecs = ...
 local world = ecs.world
 
-local fbmgr = require "framebuffer_mgr"
+local fbmgr		= require "framebuffer_mgr"
+local math3d	= require "math3d"
 
-local mc = import_package "ant.math".constant
-
-local math3d = require "math3d"
-local iom = world:interface "ant.objcontroller|obj_motion"
-local ilight = world:interface "ant.render|light"
-local ishadow = world:interface "ant.render|ishadow"
+local mc		= import_package "ant.math".constant
+local iom		= world:interface "ant.objcontroller|obj_motion"
+local ishadow	= world:interface "ant.render|ishadow"
+local ilight	= world:interface "ant.render|light"
 
 local m = ecs.interface "system_properties"
 local system_properties = {
 	--lighting
-	u_directional_lightdir	= math3d.ref(mc.ZERO),
-	u_directional_color		= math3d.ref(mc.ZERO),
-	u_directional_intensity	= math3d.ref(mc.ZERO),
+	-- u_directional_lightdir	= math3d.ref(mc.ZERO),
+	-- u_directional_color		= math3d.ref(mc.ZERO),
+	-- u_directional_intensity	= math3d.ref(mc.ZERO),
 	u_eyepos				= math3d.ref(mc.ZERO_PT),
-
-	u_light_pos				= {
-		math3d.ref(mc.ZERO_PT),
-		math3d.ref(mc.ZERO_PT),
-		math3d.ref(mc.ZERO_PT),
-		math3d.ref(mc.ZERO_PT),
-	},
-	u_light_color			= {
-		math3d.ref(mc.ZERO),
-		math3d.ref(mc.ZERO),
-		math3d.ref(mc.ZERO),
-		math3d.ref(mc.ZERO),
-	},
-	u_light_dir				= {
-		math3d.ref(mc.ZERO),
-		math3d.ref(mc.ZERO),
-		math3d.ref(mc.ZERO),
-		math3d.ref(mc.ZERO),
-	},
-	u_light_param			= {
-		math3d.ref(mc.ZERO),
-		math3d.ref(mc.ZERO),
-		math3d.ref(mc.ZERO),
-		math3d.ref(mc.ZERO),
-	},
+	u_cluster_size			= math3d.ref(mc.ZERO_PT),
+	u_cluster_shading_param	= math3d.ref(mc.ZERO_PT),
+	u_cluster_shading_param2= math3d.ref(mc.ZERO_PT),
+	u_light_count			= math3d.ref(mc.ZERO_PT),
 
 	-- shadow
 	u_csm_matrix 		= {
@@ -65,64 +43,62 @@ function m.get(n)
 	return system_properties[n]
 end
 
-local function add_directional_light_properties()
-	local deid = ilight.directional_light()
-	if deid then
-		local data = ilight.data(deid)
-		system_properties["u_directional_lightdir"].v	= math3d.inverse(iom.get_direction(deid))
-		system_properties["u_directional_color"].v		= data.color
-		system_properties["u_directional_intensity"].v	= data.intensity
-	else
-		system_properties["u_directional_lightdir"].v	= mc.ZERO
-		system_properties["u_directional_color"].v		= mc.ZERO
-		system_properties["u_directional_intensity"].v	= mc.ZERO
-	end
-end
+-- local function add_directional_light_properties()
+-- 	local deid = ilight.directional_light()
+-- 	if deid then
+-- 		local data = ilight.data(deid)
+-- 		system_properties["u_directional_lightdir"].v	= math3d.inverse(iom.get_direction(deid))
+-- 		system_properties["u_directional_color"].v		= data.color
+-- 		system_properties["u_directional_intensity"].v	= data.intensity
+-- 	else
+-- 		system_properties["u_directional_lightdir"].v	= mc.ZERO
+-- 		system_properties["u_directional_color"].v		= mc.ZERO
+-- 		system_properties["u_directional_intensity"].v	= mc.ZERO
+-- 	end
+-- end
 
-local function add_point_light_properties()
-	local numlight = 1
-	local maxlight<const> = ilight.max_point_light()
-	for _, leid in world:each "light_type" do
-		if numlight <= maxlight then
-			local e = world[leid]
-			local lt = e.light_type
-			if lt == "point" or lt == "spot" then
-				system_properties.u_light_color[numlight].v = ilight.color(leid)
-				local param = {0.0, 0.0, 0.0, 0.0}
-				local lightdir = system_properties.u_light_dir[numlight]
-				if lt == "spot" then
-					lightdir.v = iom.get_direction(leid)
-					param[1] = 2.0
-					local radian = ilight.radian(leid) * 0.5
-					local outer_radian = radian * 1.1
-					param[2], param[3] = math.cos(radian), math.cos(outer_radian)
-				else
-					lightdir.v = mc.ZERO
-				end
+-- local function add_point_light_properties()
+-- 	local numlight = 1
+-- 	local maxlight<const> = ilight.max_point_light()
+-- 	for _, leid in world:each "light_type" do
+-- 		if numlight <= maxlight then
+-- 			local e = world[leid]
+-- 			local lt = e.light_type
+-- 			if lt == "point" or lt == "spot" then
+-- 				system_properties.u_light_color[numlight].v = ilight.color(leid)
+-- 				local param = {0.0, 0.0, 0.0, 0.0}
+-- 				local lightdir = system_properties.u_light_dir[numlight]
+-- 				if lt == "spot" then
+-- 					lightdir.v = iom.get_direction(leid)
+-- 					param[1] = 2.0
+-- 					local radian = ilight.radian(leid) * 0.5
+-- 					local outer_radian = radian * 1.1
+-- 					param[2], param[3] = math.cos(radian), math.cos(outer_radian)
+-- 				else
+-- 					lightdir.v = mc.ZERO
+-- 				end
 
-				system_properties.u_light_pos[numlight].v	= iom.get_position(leid)
-				system_properties.u_light_param[numlight].v = param
-			end
+-- 				system_properties.u_light_pos[numlight].v	= iom.get_position(leid)
+-- 				system_properties.u_light_param[numlight].v = param
+-- 			end
 
-			numlight = numlight + 1
-		end
-	end
+-- 			numlight = numlight + 1
+-- 		end
+-- 	end
 
-	for i=numlight, maxlight-numlight do
-		system_properties.u_light_color[i].v	= mc.ZERO
-		system_properties.u_light_pos[i].v		= mc.ZERO
-		system_properties.u_light_dir[i].v		= mc.ZERO
-		system_properties.u_light_param[i].v	= mc.ZERO
-	end
-	if numlight > maxlight then
-		log.warn("point light number exceed, max point/spot light: %d", maxlight)
-	end
-end
+-- 	for i=numlight, maxlight-numlight do
+-- 		system_properties.u_light_color[i].v	= mc.ZERO
+-- 		system_properties.u_light_pos[i].v		= mc.ZERO
+-- 		system_properties.u_light_dir[i].v		= mc.ZERO
+-- 		system_properties.u_light_param[i].v	= mc.ZERO
+-- 	end
+-- 	if numlight > maxlight then
+-- 		log.warn("point light number exceed, max point/spot light: %d", maxlight)
+-- 	end
+-- end
 
 local function update_lighting_properties()
-	add_directional_light_properties()
-	add_point_light_properties()
-
+	ilight.update_properties(system_properties)
 	local mq = world:singleton_entity "main_queue"
 	system_properties["u_eyepos"].id = iom.get_position(mq.camera_eid)
 end
@@ -170,6 +146,10 @@ local function update_postprocess_properties()
 
 	local mvd = system_properties["s_mainview_depth"]
 	mvd.texture.handle = fbmgr.get_rb(fb[#fb]).handle
+end
+
+function m.properties()
+	return system_properties
 end
 
 function m.update()

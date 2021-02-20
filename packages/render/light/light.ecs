@@ -7,6 +7,9 @@ interface "light"
     .method "radian"
     .method "set_radian"
 
+    .method "inner_cutoff"
+    .method "outter_cutoff"
+
     .method "intensity"
     .method "set_intensity"
     .method "color"
@@ -18,6 +21,9 @@ interface "light"
     .method "create_light_direction_arrow"
 
     .method "max_point_light"
+    .method "use_cluster_shading"
+    .method "create_light_buffers"
+    .method "update_properties"
 
 transform "light_transform"
     .implement "light/light.lua"

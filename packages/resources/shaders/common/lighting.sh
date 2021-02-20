@@ -2,19 +2,15 @@
 #define __SHADER_LIGHTING_SH__
 
 // lighting
-uniform vec4 u_directional_lightdir;
-uniform vec4 u_directional_color;
-uniform vec4 u_directional_intensity;
+// uniform vec4 u_directional_lightdir;
+// uniform vec4 u_directional_color;
 
-#ifndef MAX_LIGHT
-#define MAX_LIGHT 4
-#endif // MAX_LIGHT
+// uniform vec4 u_light_color[MAX_LIGHT];	
+// uniform vec4 u_light_pos[MAX_LIGHT];	//xyz: pos, w: light type
+// uniform vec4 u_light_dir[MAX_LIGHT];	//point light: (0, 0, 0, 0), spot light, xyz: light dir, w: cutoff
+// uniform vec4 u_light_param[MAX_LIGHT];	//xyz for attenuation: const, linear, quadratic, w: outcutoff
 
-uniform vec4 u_light_color[MAX_LIGHT];	
-uniform vec4 u_light_pos[MAX_LIGHT];		//xyz: pos, w: light type
-uniform vec4 u_light_dir[MAX_LIGHT];		// point light: (0, 0, 0, 0), spot light, xyz: light dir, w: cutoff
-uniform vec4 u_light_param[MAX_LIGHT];    //xyz for attenuation: const, linear, quadratic, w: outcutoff
-
+uniform vec4 u_light_count;
 uniform vec4 u_eyepos;
 
 float fresnel(float _ndotl, float _bias, float _pow)
