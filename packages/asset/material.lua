@@ -4,7 +4,6 @@ local world = ecs.world
 local assetmgr		= require "asset"
 local ext_material	= require "ext_material"
 
-local icluster_render = world:interface "ant.render|icluster_render"
 local mpt = ecs.transform "material_prefab_transform"
 local function load_material(m, setting)
 	local fx = assetmgr.load_fx(m.fx, setting)
@@ -216,13 +215,15 @@ local function generate_properties(fx, properties)
 	end
 
 	--TODO: right now, bgfx shaderc tool would not save buffer binding to uniforom info after shader compiled(currentlly only sampler/const buffer will save in uniform infos), just work around it right now
+
 	local setting = fx.setting
 	if setting.lighting == "on" then
 		if lightbuffer_property == nil then
 			lightbuffer_property = {
 				type = "b",
 				set = function ()
-					icluster_render.set_buffers()
+					local ilight = world:interface "ant.render|light"
+					ilight.set_light_buffers()
 				end,
 				ref = true,
 			}
