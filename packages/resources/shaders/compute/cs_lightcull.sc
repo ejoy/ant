@@ -91,7 +91,7 @@ bool interset_aabb(light_info l, uint cluster_idx){
 
 NUM_THREADS(16, 9, 4)
 void main(){
-    uint light_count; buffer_length(b_lights, light_count);
+    uint light_count; buffer_length(b_lights, light_count); light_count = light_count / 4;
     uint workgroup_size = 16 * 9 * 4;
     uint cluster_idx = gl_LocalInvocationIndex + workgroup_size * gl_WorkGroupID.z;
     

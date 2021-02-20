@@ -26,7 +26,7 @@ vec4 screen2view(vec4 screen){
 // dispatch as: [16, 9, 24]
 NUM_THREADS(1, 1, 1)
 void main(){
-    uint cluster_idx = dot(gl_LocalInvocationID, uvec3(1, u_cluster_size.x, u_cluster_size.x * u_cluster_size.y));
+    uint cluster_idx = dot(gl_WorkGroupID, uvec3(1, u_cluster_size.x, u_cluster_size.x * u_cluster_size.y));
 
 #if HOMOGENEOUS_DEPTH
     float near_sS = -1.0;

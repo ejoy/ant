@@ -98,7 +98,7 @@ float linear_depth(float nolinear_depth){
 
 uint which_cluster(vec3 fragcoord){
 	uint cluster_z     = uint(max(log2(linear_depth(fragcoord.z)) * u_slice_scale + u_slice_bias, 0.0));
-    uvec3 cluster_coord= uvec3(fragcoord.xy / u_tile_unit_pre_pixel, cluster_z);
+    uvec3 cluster_coord= uvec3(fragcoord.xy * u_tile_unit_pre_pixel, cluster_z);
     return 	cluster_coord.x +
             u_cluster_size.x * cluster_coord.y +
             (u_cluster_size.x * u_cluster_size.y) * cluster_coord.z;
@@ -130,13 +130,13 @@ float which_z(uint depth_slice, uint num_slice){
 #define store_light_grid(_BUF, _INDEX, _GRID){\
 		int idx = _INDEX * 2;\
 		_BUF[idx+0] = _GRID.offset;\
-		_BUF[idx+0] = _GRID.count;\
+		_BUF[idx+1] = _GRID.count;\
 	}
 
 #define store_light_grid2(_BUF, _INDEX, _OFFSET, _COUNT){\
 		int idx = _INDEX * 2;\
 		_BUF[idx+0] = _OFFSET;\
-		_BUF[idx+0] = _COUNT;\
+		_BUF[idx+1] = _COUNT;\
 	}
 
 #define load_cluster_aabb(_BUF, _INDEX, _AABB){\
