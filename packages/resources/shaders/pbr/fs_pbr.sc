@@ -259,6 +259,7 @@ void main()
 	PBRInfo pbr_inputs = init_pbr_inputs(N, V, roughness, metallic);
 	vec3 color = vec3_splat(0);
 
+#ifdef CLUSTER_SHADING
 	uint cluster_idx = which_cluster(gl_FragCoord.xyz);
 
 	light_grid g; load_light_grid(b_light_grids, cluster_idx, g);
@@ -266,8 +267,11 @@ void main()
 	for (uint ii=g.offset; ii<iend; ++ii)
 	{
 		uint ilight = b_light_index_lists[ii];
+#else //!CLUSTER_SHADING
+	for (uint ilight=0; ilight<u_light_count[0]; ++ilight)
+	{
+#endif //CLUSTER_SHADING
 		light_info l; load_light_info(b_lights, ilight, l);
-
 		vec3 L = l.pos.xyz - v_posWS.xyz;
 		float dist = length(L);
 		L /= dist;

@@ -104,39 +104,13 @@ local cluster_buffers = {
     }
 }
 
-local lighttypes = {
-	directional = 0,
-	point = 1,
-	spot = 2,
-}
-
-local function create_light_buffers()
-	local lights = {}
-	for _, leid in world:each "light_type" do
-		local le = world[leid]
-		
-		local p	= math3d.tovalue(iom.get_position(leid))
-		local d	= math3d.tovalue(iom.get_direction(leid))
-		local c = ilight.color(leid)
-		local t	= le.light_type
-        local enable<const> = 1
-        --TODO: use bgfx.memory{('f'):rep(16), }
-		lights[#lights+1] = ('f'):rep(16):pack(
-			p[1], p[2], p[3], ilight.range(leid),
-			d[1], d[2], d[3], enable,
-			c[1], c[2], c[3], c[4],
-			lighttypes[t], ilight.intensity(leid),
-			ilight.inner_cutoff(leid),	ilight.outter_cutoff(leid))
-	end
-    return lights
-end
 
 local function create_cluster_buffers()
     cluster_buffers.AABB.handle                = bgfx.create_dynamic_vertex_buffer(cluster_aabb_buffer_size, cluster_buffers.AABB.layout.handle, "rwa")
     cluster_buffers.light_grids.handle         = bgfx.create_dynamic_index_buffer(light_grid_buffer_size, "drwa")
     cluster_buffers.global_index_count.handle  = bgfx.create_dynamic_index_buffer(1, "drwa")
 
-    local lights = create_light_buffers()
+    local lights = ilight.create_light_buffers()
     local numlights = #lights
     cluster_buffers.light_index_list.handle    = bgfx.create_dynamic_index_buffer(numlights, "drwa")
     cluster_buffers.light_info.handle          = bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(lights, "")), cluster_buffers.light_info.layout.handle, "r")
@@ -170,7 +144,7 @@ local cr_camera_mb
 local camera_frustum_mb
 
 function cfs:init()
-    
+    ilight.use_cluster_shading(true)
 end
 
 function cfs:post_init()

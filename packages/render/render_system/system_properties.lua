@@ -6,10 +6,8 @@ local math3d	= require "math3d"
 
 local mc		= import_package "ant.math".constant
 local iom		= world:interface "ant.objcontroller|obj_motion"
-local icamera	= world:interface "ant.camera|camera"
-local icluster	= world:interface "ant.render|icluster_render"
-local irq		= world:interface "ant.render|irenderqueue"
 local ishadow	= world:interface "ant.render|ishadow"
+local ilight	= world:interface "ant.render|light"
 
 local m = ecs.interface "system_properties"
 local system_properties = {
@@ -21,6 +19,7 @@ local system_properties = {
 	u_cluster_size			= math3d.ref(mc.ZERO_PT),
 	u_cluster_shading_param	= math3d.ref(mc.ZERO_PT),
 	u_cluster_shading_param2= math3d.ref(mc.ZERO_PT),
+	u_light_count			= math3d.ref(mc.ZERO_PT),
 
 	-- shadow
 	u_csm_matrix 		= {
@@ -99,7 +98,7 @@ end
 -- end
 
 local function update_lighting_properties()
-	icluster.extract_cluster_properties(system_properties)
+	ilight.update_properties(system_properties)
 	local mq = world:singleton_entity "main_queue"
 	system_properties["u_eyepos"].id = iom.get_position(mq.camera_eid)
 end

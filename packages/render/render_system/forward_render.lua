@@ -7,7 +7,6 @@ local irq = world:interface "ant.render|irenderqueue"
 local irender = world:interface "ant.render|irender"
 local default_comp 	= import_package "ant.general".default
 local icamera	= world:interface "ant.camera|camera"
-
 local vpt = ecs.transform "visible_primitive_transform"
 local function parse_rc(rc)
 	local state = bgfx.parse_state(rc.state)

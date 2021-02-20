@@ -10,6 +10,7 @@
 // uniform vec4 u_light_dir[MAX_LIGHT];	//point light: (0, 0, 0, 0), spot light, xyz: light dir, w: cutoff
 // uniform vec4 u_light_param[MAX_LIGHT];	//xyz for attenuation: const, linear, quadratic, w: outcutoff
 
+uniform vec4 u_light_count;
 uniform vec4 u_eyepos;
 
 float fresnel(float _ndotl, float _bias, float _pow)

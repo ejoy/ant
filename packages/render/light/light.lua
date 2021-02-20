@@ -228,6 +228,58 @@ function ilight.create_light_direction_arrow(eid, data)
 	imaterial.set_property(coneeid, "u_color", {1, 0, 0, 1})
 end
 
+local lighttypes = {
+	directional = 0,
+	point = 1,
+	spot = 2,
+}
+
+function ilight.create_light_buffers()
+	local lights = {}
+	for _, leid in world:each "light_type" do
+		local le = world[leid]
+		
+		local p	= math3d.tovalue(iom.get_position(leid))
+		local d	= math3d.tovalue(iom.get_direction(leid))
+		local c = ilight.color(leid)
+		local t	= le.light_type
+        local enable<const> = 1
+        --TODO: use bgfx.memory{('f'):rep(16), }
+		lights[#lights+1] = ('f'):rep(16):pack(
+			p[1], p[2], p[3], ilight.range(leid),
+			d[1], d[2], d[3], enable,
+			c[1], c[2], c[3], c[4],
+			lighttypes[t], ilight.intensity(leid),
+			ilight.inner_cutoff(leid),	ilight.outter_cutoff(leid))
+	end
+    return lights
+end
+
+local isclustering = false
+function ilight.use_cluster_shading(enable)
+	if enable then
+		return isclustering
+	end
+
+	isclustering = enable
+end
+
+local light_buffer
+function ilight.update_properties(system_properties)
+	if ilight.use_cluster_shading() then
+		local icluster = world:interface "ant.render|icluster_render"
+		icluster.extract_cluster_properties(system_properties)
+	else
+		local lights = ilight.create_light_buffers()
+		local n = #lights * 4
+		if light_buffer == nil then
+			light_buffer = bgfx.create_dynamic_vertex_buffer(n, declmgr.get "t40".handle, "a")
+		end
+		bgfx.update(light_buffer, 0, bgfx.memory_buffer(table.concat(lights, "")))
+		system_properties["u_light_count"].v = {#lights, 0, 0, 0}
+	end
+end
+
 local mdl = ecs.action "main_directional_light"
 function mdl.init(prefab, idx, value)
 	local eid = prefab[idx]
