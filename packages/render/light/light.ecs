@@ -24,6 +24,7 @@ interface "light"
     .method "use_cluster_shading"
     .method "create_light_buffers"
     .method "update_properties"
+    .method "set_light_buffers"
 
 transform "light_transform"
     .implement "light/light.lua"

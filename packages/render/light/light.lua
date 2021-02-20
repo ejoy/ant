@@ -280,6 +280,16 @@ function ilight.update_properties(system_properties)
 	end
 end
 
+function ilight.set_light_buffers()
+	if ilight.use_cluster_shading() then
+		local icluster_render = world:interface "ant.render|icluster_render"
+		icluster_render.set_buffers()
+	else
+		local stage<const> = 12
+		bgfx.set_buffer(stage, light_buffer, "r")
+	end
+end
+
 local mdl = ecs.action "main_directional_light"
 function mdl.init(prefab, idx, value)
 	local eid = prefab[idx]

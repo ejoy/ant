@@ -131,7 +131,7 @@ function irender.create_orthoview_queue(view_rect, orthoface, queuename)
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|orthoview_queue",
-			"ant.render|watch_screen_buffer",
+			--"ant.render|watch_screen_buffer",
 			"ant.general|name",
 		},
 		data = {
@@ -167,7 +167,7 @@ function irender.create_orthoview_queue(view_rect, orthoface, queuename)
 			},
 			visible = false,
 			orthoview = orthoface,
-			watch_screen_buffer = true,
+			--watch_screen_buffer = true,
 			name = orthoface or queuename,
 		}
 	}
