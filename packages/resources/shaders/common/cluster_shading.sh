@@ -89,11 +89,22 @@ where inverse function is:
 //see: 	http://www.songho.ca/opengl/gl_projectionmatrix.html or
 //		https://gist.github.com/kovrov/a26227aeadde77b78092b8a962bd1a91
 // where z_e and z_n relationship, this function is the revserse of projection matrix
+// right hand coordinate, where:
+// z_n = A*z_e+B/-z_e ==> z_e = -B / (z_n + A)
+// left hand coordinate, where:
+// z_n = A*z_e+B/z_e ==> z_e = B / (z_n - A)
 float linear_depth(float nolinear_depth){
-    float ndc_depth = 2.0 * nolinear_depth - 1.0;
-    
-    float ldepth = 2.0 * u_nearZ * u_farZ / (u_farZ + u_nearZ - ndc_depth * (u_farZ - u_nearZ));
-    return ldepth;
+#if HOMOGENEOUS_DEPTH
+	float z_n = 2.0 * nolinear_depth - 1.0;
+	float A = (u_farZ + u_nearZ) / (u_farZ - u_nearZ);
+	float B = -2.0 * u_farZ * u_nearZ/(u_farZ - u_nearZ);
+#else //!HOMOGENEOUS_DEPTH
+	float z_n = nolinear_depth;
+	float A = u_farZ / (u_farZ - u_nearZ);
+	float B = -(u_farZ * u_nearZ) / (u_farZ - u_nearZ);
+#endif //HOMOGENEOUS_DEPTH
+	float z_e = B / (z_n - A);
+    return z_e;
 }
 
 uint which_cluster(vec3 fragcoord){
