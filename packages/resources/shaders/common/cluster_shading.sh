@@ -1,5 +1,13 @@
 #include "bgfx_compute.sh"
 
+#ifndef ORIGIN_TOP_LEFT
+#define ORIGIN_TOP_LEFT 1
+#endif //ORIGIN_TOP_LEFT
+
+#ifndef HOMOGENEOUS_DEPTH
+#define HOMOGENEOUS_DEPTH 0
+#endif //HOMOGENEOUS_DEPTH
+
 //TODO: if we need more accurate attenuation, we can utilize pos.w/dir.w/color.w to transfer data, right now, the light attenuation: light_color/(distance*distance), 
 struct light_info{
 	vec3	pos;
@@ -98,7 +106,7 @@ uint which_cluster(vec3 fragcoord){
 }
 
 float which_z(uint depth_slice, uint num_slice){
-	return u_nearZ * pow(u_nearZ / u_farZ, (depth_slice + 1) / float(num_slice));
+	return u_nearZ*pow(u_farZ/u_nearZ, depth_slice/float(num_slice));
 }
 
 #define load_light_info(_BUF, _INDEX, _LIGHT){\

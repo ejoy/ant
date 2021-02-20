@@ -14,26 +14,40 @@ vec3 line_zplane_intersection(vec3 A, vec3 B, float zDistance){
 
 vec4 screen2view(vec4 screen){
     vec2 screen_ndc = (screen.xy / vec2(u_screen_width, u_screen_height)) * 2.0 + 1.0;
+#if ORIGIN_TOP_LEFT
+    screen_ndc.y = 1.0 - screen_ndc.y;
+#endif //ORIGIN_TOP_LEFT
+
     vec4 ndc = vec4(screen_ndc, screen.zw);
     vec4 clip = mul(u_invProj, ndc);
     return clip / clip.w;
 }
 
 // dispatch as: [16, 9, 24]
-uint calc_cluster_idx(uvec3 id)
-{
-    return dot(id, uvec3(1, u_cluster_size.x, u_cluster_size.x * u_cluster_size.y));
-}
 NUM_THREADS(1, 1, 1)
 void main(){
-    uint cluster_idx = calc_cluster_idx(gl_GlobalInvocationID);
+    uint cluster_idx = dot(gl_LocalInvocationID, uvec3(1, u_cluster_size.x, u_cluster_size.x * u_cluster_size.y));
 
+#if HOMOGENEOUS_DEPTH
+    float near_sS = -1.0;
+#else //!HOMOGENEOUS_DEPTH
+    float near_sS = 0.0;
+#endif //HOMOGENEOUS_DEPTH
+
+#if ORIGIN_TOP_LEFT
+    vec2 topleft = gl_WorkGroupID.xy * u_tile_unit_pre_pixel;
+    vec2 bottomright = topleft + u_tile_unit_pre_pixel;
+
+    vec4 min_sS = vec4(topleft,     near_sS, 1.0);
+    vec4 max_sS = vec4(bottomright, near_sS, 1.0);
+#else //!ORIGIN_TOP_LEFT
     vec2 bottomleft = gl_WorkGroupID.xy * u_tile_unit_pre_pixel;
-    vec2 topright   = bottomleft + u_tile_unit_pre_pixel;
+    vec2 topright = bottomleft + u_tile_unit_pre_pixel;
 
-    vec4 max_sS = vec4(topright,  -1.0, 1.0);
-    vec4 min_sS = vec4(bottomleft,-1.0, 1.0);
-    
+    vec4 min_sS = vec4(bottomleft,near_sS, 1.0);
+    vec4 max_sS = vec4(topright,  near_sS, 1.0);
+#endif //ORIGIN_TOP_LEFT
+
     vec3 max_vS = screen2view(max_sS).xyz;
     vec3 min_vS = screen2view(min_sS).xyz;
 

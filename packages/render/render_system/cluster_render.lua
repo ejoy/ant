@@ -120,6 +120,7 @@ local function create_light_buffers()
 		local c = ilight.color(leid)
 		local t	= le.light_type
         local enable<const> = 1
+        --TODO: use bgfx.memory{('f'):rep(16), }
 		lights[#lights+1] = ('f'):rep(16):pack(
 			p[1], p[2], p[3], ilight.range(leid),
 			d[1], d[2], d[3], enable,
