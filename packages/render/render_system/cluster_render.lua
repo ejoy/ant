@@ -112,7 +112,7 @@ local function create_cluster_buffers()
 
     local lights = ilight.create_light_buffers()
     local numlights = #lights
-    cluster_buffers.light_index_list.handle    = bgfx.create_dynamic_index_buffer(numlights, "drwa")
+    cluster_buffers.light_index_list.handle    = bgfx.create_dynamic_index_buffer(numlights * cluster_count, "drwa")
     cluster_buffers.light_info.handle          = bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(lights, "")), cluster_buffers.light_info.layout.handle, "r")
 end
 

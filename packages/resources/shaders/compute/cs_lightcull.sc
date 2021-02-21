@@ -5,9 +5,7 @@
 //Shared variables 
 //shared light_info shared_lights[16*9*4];
 
-float sphere_closest_pt_to_aabb(vec3 center, uint cluster_idx){
-    AABB aabb; load_cluster_aabb(b_cluster_AABBs, cluster_idx, aabb);
-
+float sphere_closest_pt_to_aabb(vec3 center, AABB aabb){
     // float sqDist = 0.0;
     // for(int i = 0; i < 3; ++i){
     //     float v = pt[i];
@@ -34,10 +32,10 @@ float sphere_closest_pt_to_aabb(vec3 center, uint cluster_idx){
     //return distance < sphere.radius;
 }
 
-bool interset_aabb(light_info l, uint cluster_idx){
+bool interset_aabb(light_info l, AABB aabb){
     float boundsphere_radius = l.range;
     vec3 center = mul(u_view, vec4(l.pos, 1.0)).xyz;
-    float sq_dist = sphere_closest_pt_to_aabb(center, cluster_idx);
+    float sq_dist = sphere_closest_pt_to_aabb(center, aabb);
     return sq_dist <= (boundsphere_radius * boundsphere_radius);
 }
 
@@ -94,14 +92,14 @@ void main(){
     uint light_count; buffer_length(b_lights, light_count); light_count = light_count / 4;
     uint workgroup_size = 16 * 9 * 4;
     uint cluster_idx = gl_LocalInvocationIndex + workgroup_size * gl_WorkGroupID.z;
-    
+    AABB aabb; load_cluster_aabb(b_cluster_AABBs, cluster_idx, aabb);
     uint visible_light_count = 0;
     uint visible_light_indices[100];
 
     for(uint light_idx=0; light_idx<light_count; ++light_idx){
         light_info l; load_light_info(b_lights, light_idx, l);
 
-        if(interset_aabb(l, cluster_idx)){
+        if(interset_aabb(l, aabb)){
             visible_light_indices[visible_light_count] = light_idx;
             ++visible_light_count;
         }
