@@ -94,6 +94,7 @@ local function get_macros(setting)
     local macros = {
         "ENABLE_SRGB_TEXTURE",
         "ENABLE_SRGB_FB",
+        "CLUSTER_SHADING",
     }
     for k, v in pairs(setting) do
         local f = SETTING_MAPPING[k]

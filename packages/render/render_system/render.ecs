@@ -174,9 +174,10 @@ interface "system_properties"
     .method "update"
 
 import "render_system/forward_render.ecs"
---import "render_system/cluster_render.ecs"
+import "render_system/cluster_render.ecs"
 policy "render_pipeline"
     .require_policy "ant.render|forward_render"
+    .require_policy "ant.render|cluster_render"
 
 pipeline "render"
     .stage "refine_filter"

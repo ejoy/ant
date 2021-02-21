@@ -255,13 +255,13 @@ function ilight.create_light_buffers()
     return lights
 end
 
-local isclustering = false
+local is_cluster_shading = false
 function ilight.use_cluster_shading(enable)
-	if enable then
-		return isclustering
+	if enable ~= nil then
+		is_cluster_shading = enable
 	end
 
-	isclustering = enable
+	return is_cluster_shading
 end
 
 local light_buffer
@@ -278,7 +278,7 @@ function ilight.update_properties(system_properties)
 		local n = #lights * 4
 		
 		if light_buffer == nil then
-			light_buffer = bgfx.create_dynamic_vertex_buffer(n, declmgr.get "t40".handle, "a")
+			light_buffer = bgfx.create_dynamic_vertex_buffer(n, declmgr.get "t40".handle, "ra")
 		end
 		bgfx.update(light_buffer, 0, bgfx.memory_buffer(table.concat(lights, "")))
 		system_properties["u_light_count"].v = {#lights, 0, 0, 0}

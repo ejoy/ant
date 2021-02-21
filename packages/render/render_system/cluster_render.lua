@@ -213,7 +213,7 @@ function icr.extract_cluster_properties(properties)
 	local vr = irq.view_rect(mq_eid)
 
 	local sizes = icr.cluster_sizes()
-	sizes[4] = sizes[1] / vr.w
+	sizes[4] = vr.w / sizes[1]
 	assert(properties["u_cluster_size"]).v				= sizes
 	local f = icamera.get_frustum(mc_eid)
 	local near, far = f.n, f.f
