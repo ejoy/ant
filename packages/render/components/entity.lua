@@ -46,7 +46,7 @@ ientity.create_mesh = create_mesh
 local nameidx = 0
 local function gen_test_name() nameidx = nameidx + 1 return "entity" .. nameidx end
 
-local function create_simple_render_entity(srt, material, name, mesh, state)
+local function create_simple_render_entity(name, material, mesh, srt, state)
 	return world:create_entity {
 		policy = {
 			"ant.render|render",
@@ -63,13 +63,15 @@ local function create_simple_render_entity(srt, material, name, mesh, state)
 	}
 end
 
+ientity.create_simple_render_entity = create_simple_render_entity
+
 function ientity.create_grid_entity_simple(name, w, h, unit, srt)
 	w = w or 64
 	h = h or 64
 	unit = unit or 1
 	local vb, ib = geolib.grid(w, h, nil, unit)
 	local mesh = create_mesh({"p3|c40niu", vb}, ib)
-	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line.material", name, mesh, ies.create_state "visible")
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line.material", mesh, srt)
 end
 
 function ientity.create_grid_entity(name, width, height, unit, linewidth)
@@ -256,7 +258,7 @@ end
 
 function ientity.create_quad_entity(rect, material, name)
 	local mesh = quad_mesh(rect)
-	return create_simple_render_entity(nil, material, name, mesh)
+	return create_simple_render_entity(name, material, mesh)
 end
 
 local frustum_ib = {

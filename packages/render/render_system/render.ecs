@@ -165,6 +165,7 @@ interface "entity"
     .method "create_prim_plane_entity"
     .method "create_circle_mesh_entity"
     .method "create_gamma_test_entity"
+    .method "create_simple_render_entity"
 
 
 interface "system_properties"

@@ -1,4 +1,8 @@
 fx:
   fs: /pkg/ant.resources/shaders/simple/triangle/fs_simpletri.sc
   vs: /pkg/ant.resources/shaders/simple/triangle/vs_simpletri.sc
+  setting:
+    SINGLE_COLOR: 1
+properties:
+  u_color: {0.8, 0.8, 0.8, 1}
 state: /pkg/ant.resources/materials/states/default.state
