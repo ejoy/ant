@@ -255,13 +255,13 @@ function ilight.create_light_buffers()
     return lights
 end
 
-local isclustering = false
+local is_cluster_shading = false
 function ilight.use_cluster_shading(enable)
-	if enable then
-		return isclustering
+	if enable ~= nil then
+		is_cluster_shading = enable
 	end
 
-	isclustering = enable
+	return is_cluster_shading
 end
 
 local light_buffer

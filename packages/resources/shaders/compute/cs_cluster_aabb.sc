@@ -13,7 +13,7 @@ vec3 line_zplane_intersection(vec3 A, vec3 B, float zDistance){
 }
 
 vec4 screen2view(vec4 screen){
-    vec2 screen_ndc = (screen.xy / vec2(u_screen_width, u_screen_height)) * 2.0 + 1.0;
+    vec2 screen_ndc = (screen.xy / vec2(u_screen_width, u_screen_height)) * 2.0 - 1.0;
 #if ORIGIN_TOP_LEFT
     screen_ndc.y = 1.0 - screen_ndc.y;
 #endif //ORIGIN_TOP_LEFT

@@ -112,7 +112,7 @@ local function create_cluster_buffers()
 
     local lights = ilight.create_light_buffers()
     local numlights = #lights
-    cluster_buffers.light_index_list.handle    = bgfx.create_dynamic_index_buffer(numlights, "drwa")
+    cluster_buffers.light_index_list.handle    = bgfx.create_dynamic_index_buffer(numlights * cluster_count, "drwa")
     cluster_buffers.light_info.handle          = bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(lights, "")), cluster_buffers.light_info.layout.handle, "r")
 end
 
@@ -213,7 +213,7 @@ function icr.extract_cluster_properties(properties)
 	local vr = irq.view_rect(mq_eid)
 
 	local sizes = icr.cluster_sizes()
-	sizes[4] = sizes[1] / vr.w
+	sizes[4] = vr.w / sizes[1]
 	assert(properties["u_cluster_size"]).v				= sizes
 	local f = icamera.get_frustum(mc_eid)
 	local near, far = f.n, f.f

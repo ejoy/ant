@@ -5,9 +5,7 @@
 //Shared variables 
 //shared light_info shared_lights[16*9*4];
 
-float sphere_closest_pt_to_aabb(vec3 center, uint cluster_idx){
-    AABB aabb; load_cluster_aabb(b_cluster_AABBs, cluster_idx, aabb);
-
+float sphere_closest_pt_to_aabb(vec3 center, AABB aabb){
     // float sqDist = 0.0;
     // for(int i = 0; i < 3; ++i){
     //     float v = pt[i];
@@ -34,10 +32,10 @@ float sphere_closest_pt_to_aabb(vec3 center, uint cluster_idx){
     //return distance < sphere.radius;
 }
 
-bool interset_aabb(light_info l, uint cluster_idx){
+bool interset_aabb(light_info l, AABB aabb){
     float boundsphere_radius = l.range;
     vec3 center = mul(u_view, vec4(l.pos, 1.0)).xyz;
-    float sq_dist = sphere_closest_pt_to_aabb(center, cluster_idx);
+    float sq_dist = sphere_closest_pt_to_aabb(center, aabb);
     return sq_dist <= (boundsphere_radius * boundsphere_radius);
 }
 
@@ -94,29 +92,34 @@ void main(){
     uint light_count; buffer_length(b_lights, light_count); light_count = light_count / 4;
     uint workgroup_size = 16 * 9 * 4;
     uint cluster_idx = gl_LocalInvocationIndex + workgroup_size * gl_WorkGroupID.z;
-    
-    uint visible_light_count = 0;
-    uint visible_light_indices[100];
+    AABB aabb; load_cluster_aabb(b_cluster_AABBs, cluster_idx, aabb);
 
+    //TODO: temp fix. I alloc a light_index_list buffer with cluster_count * light_count * (uint) bytes.
+    //  It make I can access b_light_index_lists without memory barrier. That cause memory waste and casue memory cache missed
+    //  There are bug in the commont code below which use memory barrier to make memory more compact. we should fix this code. 
+    uint visible_light_count = 0;
+    // uint visible_light_indices[100];
+
+    uint offset = cluster_idx * light_count;
     for(uint light_idx=0; light_idx<light_count; ++light_idx){
         light_info l; load_light_info(b_lights, light_idx, l);
 
-        if(interset_aabb(l, cluster_idx)){
-            visible_light_indices[visible_light_count] = light_idx;
+        if(interset_aabb(l, aabb)){
+            // visible_light_indices[visible_light_count] = light_idx;
+            // ++visible_light_count;
+            b_light_index_lists[offset+visible_light_count] = light_idx;
             ++visible_light_count;
         }
     }
 
     //TODO: if we can init this value before call compute dispatch, we can remove barrier() call
-    b_global_index_count[0] = 0;
-    // need init b_global_index_count before modify
-    barrier();
-    uint offset;
-    atomicFetchAndAdd(b_global_index_count[0], visible_light_count, offset);
-
-    for(uint i = 0; i < visible_light_count; ++i){
-        b_light_index_lists[offset + i] = visible_light_indices[i];
-    }
-
+    // b_global_index_count[0] = 0;
+    // // need init b_global_index_count before modify
+    // barrier();
+    // uint offset;
+    // atomicFetchAndAdd(b_global_index_count[0], visible_light_count, offset);
+    // for(uint i = 0; i < visible_light_count; ++i){
+    //     b_light_index_lists[offset + i] = visible_light_indices[i];
+    // }
     store_light_grid2(b_light_grids, cluster_idx, offset, visible_light_count);
 }
