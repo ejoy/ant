@@ -96,33 +96,6 @@ local function find_entity(name, whichtype)
     end
 end
 
-local function test_cube_star(radius)
-    local vertices, indices = geo.cube_star(30, radius)
-
-    local function quad_line_indices(tri_indices)
-        local indices = {}
-    
-        for it=1, #tri_indices, 3 do
-            local v1, v2, v3 = tri_indices[it], tri_indices[it+1], tri_indices[it+2]
-            indices[#indices+1] = v1
-            indices[#indices+1] = v2
-    
-            indices[#indices+1] = v2
-            indices[#indices+1] = v3
-        end
-    
-        return indices
-    end
-
-    local line_indices = quad_line_indices(indices)
-    local mesh = ientity.create_mesh({"p3", vertices}, line_indices)
-    return ientity.create_simple_render_entity("test_star",
-        --"/pkg/ant.resources/materials/simpletri.material",
-        "/pkg/ant.resources/materials/line.material",
-        mesh
-    )
-end
-
 local function point_light_test()
     local pl_pos = {
         {  1, 0, 1},
@@ -165,8 +138,6 @@ function init_loader_sys:init()
 end
 
 function init_loader_sys:post_init()
-    local radius = 50
-    test_cube_star(radius)
     local mq = world:singleton_entity "main_queue"
     local pos = math3d.vector(-10.5, 10, -5.5, 1)
     
