@@ -10,6 +10,7 @@ import "@ant.scene"
 import "@ant.splitviews"
 import "@ant.effect"
 import "@ant.asset"
+import "@ant.quad_sphere"
 
 system "init_loader_system"
     .implement "tmp_systemloader.lua"
