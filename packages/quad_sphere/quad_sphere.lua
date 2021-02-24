@@ -46,12 +46,13 @@ local function create_face_quad_indices(quadnum)
     return indices
 end
 
+local visible_trunk_range<const> = 4
+
 local qsmt = ecs.transform "quad_sphere_mesh_transform"
 function qsmt.process_entity(e)
     local qs  = e.quad_sphere
-    local vtr = qs.visible_trunk_range
 
-    local numtrunk = vtr * vtr
+    local numtrunk = visible_trunk_range * visible_trunk_range
     local rc = e._rendercache
     
     local numvertices = numtrunk * vertices_per_trunk   --duplicate vertices on trunk edge
@@ -105,7 +106,6 @@ function iquad_sphere.create(numtrunk, radius, name)
             quad_sphere = {
                 num_trunk   = numtrunk,
                 radius      = radius,
-                visible_trunk_range = 4,
             },
             scene_entity = true,
             name = name or "",
