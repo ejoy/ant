@@ -18,6 +18,11 @@ function gt.process_entity(e)
 	e._rendercache.srt			= math3d.ref(math3d.matrix(e.transform or {}))
 end
 
+local ibt = ecs.transform "init_bounding_transform"
+function ibt.process_entity(e)
+    e._bounding = {}
+end
+
 local m = ecs.action "name"
 function m.init(prefab, i, value)
     prefab[value] = prefab[i]

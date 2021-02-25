@@ -50,4 +50,5 @@ transform "debug_mesh_bounding_transform"
 
 policy "debug_mesh_bounding"
     .require_system "render_mesh_bounding_system"
+    .require_transform "debug_mesh_bounding_transform"
     .component "debug_mesh_bounding"

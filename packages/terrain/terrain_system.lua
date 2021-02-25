@@ -122,7 +122,7 @@ function bt.process_prefab(e)
 	local terrain = e.terrain
 
 	if not is_power_of_2(terrain.elem_size+1) then
-		error(string.foramt("element size must be power of two - 1:%d", terrain.elem_size))
+		error(("element size must be power of two - 1:%d"):format(terrain.elem_size))
 	end
 
 	local num_title	= terrain.tile_width * terrain.tile_height
@@ -172,9 +172,7 @@ function sma.init(prefab, idx, terraineid)
 	local minv, maxv = terrain_module.create_section_aabb(
 		terrain.renderdata:vertex_buffer "position", vbstart, terrain.elem_size, pitchw)
 
-	e.mesh = {bounding = {
-		aabb = math3d.ref(math3d.aabb(minv, maxv))
-	}}
+	e._bounding.aabb = math3d.ref(math3d.aabb(minv, maxv))
 end
 
 local function create_render_terrain_entity(eid)
@@ -200,7 +198,8 @@ local function create_render_terrain_entity(eid)
 					"ant.render|render",
 					"ant.scene|hierarchy_policy",
 					"ant.general|name",
-					"ant.render|debug_mesh_bounding"
+					"ant.general|init_bounding_transform",
+					"ant.render|debug_mesh_bounding",
 				},
 				data = {
 					name = "section" .. isx .. isy,
@@ -227,12 +226,14 @@ local terrain_create_mb = world:sub{"component_register", "terrain"}
 local terrain_delete_mb = world:sub{"remove_entity", "terrain"}
 function ts.data_changed()
 	for _, _, eid in terrain_create_mb:unpack() do
-		local e = world[eid]
 		create_render_terrain_entity(eid)
 	end
 
 	for _, _, eid in terrain_delete_mb:unpack() do
-		local e= world[eid]
-
+		for _, seid in world:each "section_draw" do
+			if world[seid].parent == eid then
+				world:remove_entity(seid)
+			end
+		end
 	end
 end

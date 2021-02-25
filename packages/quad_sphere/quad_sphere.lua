@@ -69,6 +69,11 @@ local function create_quad_sphere_trunk_ib()
 end
 local visible_trunk_ib<const> = create_quad_sphere_trunk_ib()
 
+local qsbt = ecs.transform "quad_sphere_bounding_transform"
+function qsbt.process_entity(e)
+    e._bounding.aabb = math3d.ref(math3d.aabb())
+end
+
 local qsmt = ecs.transform "quad_sphere_mesh_transform"
 function qsmt.process_entity(e)
     local rc = e._rendercache
@@ -110,6 +115,7 @@ function iquad_sphere.create(name, numtrunk, radius)
     return world:create_entity {
         policy = {
             "ant.quad_sphere|quad_sphere",
+            "ant.render|debug_mesh_bounding",
             "ant.general|name",
         },
         data = {
@@ -121,6 +127,7 @@ function iquad_sphere.create(name, numtrunk, radius)
                 radius      = radius,
             },
             scene_entity = true,
+            debug_mesh_bounding = true,
             name = name or "",
         }
     }
@@ -344,7 +351,7 @@ end
 
 local function which_face(pos)
     local x, y, z = pos[1], pos[2], pos[3]
-    local ax, ay, az = math.abs(x), math.abs[y], math.abs(z)
+    local ax, ay, az = math.abs(x), math.abs(y), math.abs(z)
     if ax > ay then
         if ax > az then
             return x > 0 and face_index.right or face_index.left, y, z
@@ -386,8 +393,10 @@ function iquad_sphere.set_trunkid(eid, trunkid)
 
     local corners = trunkid_class.create(trunkid, qs):corners()
     local vertices, aabb = tile_vertices(corners, qs.radius)
+    e._bounding.aabb.m = aabb
     local rc = e._rendercache
-    rc.aabb = aabb
+    rc.aabb = e._bounding.aabb
+
     local vb = rc.vb
     local poshandle = vb.handles[1]
     bgfx.update(poshandle, 0, bgfx.memory_buffer("fff", vertices), quad_sphere_vertex_layout.handle)

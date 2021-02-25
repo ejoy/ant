@@ -19,6 +19,11 @@ transform "init_transform"
     .output "_rendercache.transform"
     .method "process_entity"
 
+transform "init_bounding_transform"
+    .implement "general.lua"
+    .output "_bounding"
+    .method "process_entity"
+
 action "name"
     .implement "general.lua"
     .method "init"

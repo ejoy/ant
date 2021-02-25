@@ -205,10 +205,10 @@ function rmb_sys:widget()
 		for _, eid in world:each "debug_mesh_bounding" do
 			local e = world[eid]
 			local rc = e._rendercache
-			if rc.debug_mesh_bounding and e.mesh and e.mesh.bounding then
+			if rc.debug_mesh_bounding and e._bounding and e._bounding.aabb then
 				if rc and rc.vb and ies.can_visible(eid) then
 					local w = iom.calc_worldmat(eid)
-					local aabb = math3d.aabb_transform(w, e.mesh.bounding.aabb)
+					local aabb = math3d.aabb_transform(w, e._bounding.aabb)
 					local v = math3d.tovalue(aabb)
 					local aabb_shape = {min=v, max={v[5], v[6], v[7]}}
 					geometry_drawer.draw_aabb_box(aabb_shape, DEFAULT_COLOR, nil, desc)

@@ -19,6 +19,14 @@ function m:delete()
 	end
 end
 
+local mbt = ecs.transform "mesh_bounding_transform"
+function mbt.process_entity(e)
+	local m = e.mesh
+	if m.bounding and m.bounding.aabb then
+		e._bounding.aabb = m.bounding.aabb
+	end
+end
+
 local mpt = ecs.transform "mesh_prefab_transform"
 function mpt.process_prefab(e)
 	local mesh = e.mesh

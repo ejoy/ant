@@ -102,11 +102,11 @@ end
 
 local function update_bounding(rc, e)
 	local worldmat = rc.worldmat
-	local mesh = e.mesh
-	if worldmat == nil or mesh == nil or mesh.bounding == nil then
+	local bounding = e._bounding
+	if worldmat == nil or bounding == nil then
 		rc.aabb = nil
 	else
-		rc.aabb = math3d.aabb_transform(rc.worldmat, mesh.bounding.aabb)
+		rc.aabb = math3d.aabb_transform(rc.worldmat, bounding.aabb)
 	end
 end
 
