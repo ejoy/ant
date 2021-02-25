@@ -108,7 +108,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\BaseXMLParser.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Context.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Core.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\DataController.cpp" />
@@ -156,6 +155,7 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\PropertyParserString.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\PropertyParserTransform.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\PropertySpecification.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\HtmlParser.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Stream.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\StreamFile.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\StreamMemory.cpp" />
@@ -184,12 +184,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\TypeConverter.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\URL.cpp" />
     <ClCompile Include="..\..\3rd\RmlUi\Source\Variant.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\XMLNodeHandler.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerBody.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerDefault.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerHead.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\XMLParser.cpp" />
-    <ClCompile Include="..\..\3rd\RmlUi\Source\XMLParseTools.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\binding_context.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\file.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\font.cpp" />
@@ -207,7 +201,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Animation.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\BaseXMLParser.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Colour.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\ComputedValues.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Config.h" />
@@ -264,8 +257,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\URL.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Variant.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Vertex.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\XMLNodeHandler.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\XMLParser.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\DataController.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\DataControllerDefault.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\DataExpression.h" />
@@ -292,6 +283,7 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\PropertyParserString.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\PropertyParserTransform.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\PropertyShorthandDefinition.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\HtmlParser.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\StreamFile.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\StyleSheetFactory.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\StyleSheetNode.h" />
@@ -308,10 +300,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\StyleSheetNodeSelectorOnlyChild.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\StyleSheetNodeSelectorOnlyOfType.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\StyleSheetParser.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerBody.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerDefault.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerHead.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Source\XMLParseTools.h" />
     <ClInclude Include="..\..\clibs\rmlui\context.h" />
     <ClInclude Include="..\..\clibs\rmlui\file.h" />
     <ClInclude Include="..\..\clibs\rmlui\font.h" />

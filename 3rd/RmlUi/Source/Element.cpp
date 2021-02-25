@@ -42,7 +42,6 @@
 #include "../Include/RmlUi/RenderInterface.h"
 #include "../Include/RmlUi/StreamMemory.h"
 #include "../Include/RmlUi/SystemInterface.h"
-#include "../Include/RmlUi/XMLParser.h"
 #include "DataModel.h"
 #include "ElementAnimation.h"
 #include "ElementBackgroundBorder.h"
@@ -56,7 +55,6 @@
 #include "Pool.h"
 #include "StyleSheetParser.h"
 #include "StyleSheetNode.h"
-#include "XMLParseTools.h"
 #include <algorithm>
 #include <cmath>
 #include <yoga/YGNode.h>
@@ -459,24 +457,24 @@ int Element::GetNumChildren() const {
 }
 
 void Element::SetInnerRML(const String& rml) {
-	while ((int) children.size() > 0)
-		RemoveChild(children.front().get());
-	if (rml.empty()) {
-		return;
-	}
-
-	if (std::all_of(rml.begin(), rml.end(), &StringUtilities::IsWhitespace))
-		return;
-	auto stream = MakeUnique<StreamMemory>(rml.size() + 32);
-	Context* context = parent->GetContext();
-	String open_tag = "<" + tag + ">";
-	String close_tag = "</" + tag + ">";
-	stream->Write(open_tag.c_str(), open_tag.size());
-	stream->Write(rml);
-	stream->Write(close_tag.c_str(), close_tag.size());
-	stream->Seek(0, SEEK_SET);
-	XMLParser parser(parent);
-	parser.Parse(stream.get());
+	//while ((int) children.size() > 0)
+	//	RemoveChild(children.front().get());
+	//if (rml.empty()) {
+	//	return;
+	//}
+	//
+	//if (std::all_of(rml.begin(), rml.end(), &StringUtilities::IsWhitespace))
+	//	return;
+	//auto stream = MakeUnique<StreamMemory>(rml.size() + 32);
+	//Context* context = parent->GetContext();
+	//String open_tag = "<" + tag + ">";
+	//String close_tag = "</" + tag + ">";
+	//stream->Write(open_tag.c_str(), open_tag.size());
+	//stream->Write(rml);
+	//stream->Write(close_tag.c_str(), close_tag.size());
+	//stream->Seek(0, SEEK_SET);
+	//XMLParser parser(parent);
+	//parser.Parse(stream.get());
 }
 
 void Element::AddEventListener(const String& event, EventListener* listener, bool in_capture_phase) {

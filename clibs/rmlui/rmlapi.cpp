@@ -156,14 +156,6 @@ lDocumentGetElementById(lua_State* L) {
 }
 
 static int
-lDocumentGetTitle(lua_State *L) {
-	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	const Rml::String &title = doc->GetTitle();
-	lua_pushlstring(L, title.c_str(), title.length());
-	return 1;
-}
-
-static int
 lDocumentGetSourceURL(lua_State *L) {
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
 	const Rml::String &url = doc->GetSourceURL();
@@ -380,7 +372,6 @@ lua_plugin_apis(lua_State *L) {
 		{ "DocumentDispatchEvent", lDocumentDispatchEvent },
 		{ "DocumentGetContext", lDocumentGetContext },
 		{ "DocumentGetElementById", lDocumentGetElementById },
-		{ "DocumentGetTitle", lDocumentGetTitle },
 		{ "DocumentGetSourceURL", lDocumentGetSourceURL },
 		{ "DocumentShow", lDocumentShow },
 		{ "ElementAddEventListener", lElementAddEventListener },
