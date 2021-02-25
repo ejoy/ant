@@ -14,7 +14,7 @@ local iquad_sphere = ecs.interface "iquad_sphere"
 local ientity = world:interface "ant.render|entity"
 local ientity_state = world:interface "ant.scene|ientity_state"
 
-local tile_pre_trunk_line<const>    = 4
+local tile_pre_trunk_line<const>    = 32
 local vertices_pre_tile_line<const> = tile_pre_trunk_line+1
 local vertices_per_trunk<const>     = vertices_pre_tile_line * vertices_pre_tile_line
 local tiles_pre_trunk<const>        = tile_pre_trunk_line * tile_pre_trunk_line
@@ -274,7 +274,7 @@ function trunkid_class:corners()
 
     local corners = {nil, nil, nil, nil}
     for i=1, 4 do
-        corners[i] = math3d.tovalue(math3d.normalize(math3d.vector(face_pt_op(p2ds[i], self.qs.cube_len * 0.5))))
+        corners[i] = math3d.tovalue(math3d.mul(self.qs.radius, math3d.normalize(math3d.vector(face_pt_op(p2ds[i], self.qs.cube_len * 0.5)))))
     end
     return corners
 end
@@ -307,7 +307,7 @@ local function quad_line_indices(tri_indices)
     return indices
 end
 
-local function tile_vertices(trunk_corners)
+local function tile_vertices(trunk_corners, radius)
     local h = math3d.sub(trunk_corners[2], trunk_corners[1])
     local v = math3d.sub(trunk_corners[3], trunk_corners[1])
 
@@ -320,7 +320,7 @@ local function tile_vertices(trunk_corners)
     for i=0, tile_pre_trunk_line do
         local sp = math3d.muladd(hd, i, trunk_corners[1])
         for j=0, tile_pre_trunk_line do
-            local p = math3d.normalize(math3d.muladd(vd, j, sp))
+            local p = math3d.mul(radius, math3d.normalize(math3d.muladd(vd, j, sp)))
             aabb = math3d.aabb_append(aabb, p)
             local vp = math3d.tovalue(p)
             for ii=1, 3 do
@@ -380,8 +380,7 @@ function iquad_sphere.set_trunkid(eid, trunkid)
     end
 
     local corners = trunkid_class.create(trunkid, qs):corners()
-    local vertices, aabb = tile_vertices(corners)
-    local t = math3d.tovalue(aabb)
+    local vertices, aabb = tile_vertices(corners, qs.radius)
     local rc = e._rendercache
     rc.aabb = aabb
     local vb = rc.vb
