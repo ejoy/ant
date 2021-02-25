@@ -12,6 +12,7 @@ local function parse_rc(rc)
 	local state = bgfx.parse_state(rc.state)
 	local wm = state.WRITE_MASK:gsub("Z", "")
 	if wm ~= state.WRITE_MASK then
+		state.DEPTH_TEST = "EQUAL"
 		state.WRITE_MASK = wm
 		return setmetatable({
 			state = bgfx.make_state(state)

@@ -1,0 +1,9 @@
+fx:
+  fs: /pkg/ant.resources/shaders/depth/fs_depth.sc
+  vs: /pkg/ant.resources/shaders/depth/vs_depth.sc
+setting: /pkg/ant.resources/settings/nolighting.setting
+state:
+  ALPHA_REF: 0
+  CULL: CCW
+  DEPTH_TEST: LESS
+  WRITE_MASK: RGBAZ

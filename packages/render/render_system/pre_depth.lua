@@ -9,7 +9,7 @@ local irender = world:interface "ant.render|irender"
 local imaterial		= world:interface "ant.asset|imaterial"
 local ipf			= world:interface "ant.scene|iprimitive_filter"
 
-local pre_depth_material_file<const> 	= "/pkg/ant.resources/materials/depth.material"
+local pre_depth_material_file<const> 	= "/pkg/ant.resources/materials/predepth.material"
 local pre_depth_material, pre_depth_skinning_material
 
 local function can_write_depth(state)
