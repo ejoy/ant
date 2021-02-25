@@ -19,6 +19,11 @@ local vertices_pre_tile_line<const> = tile_pre_trunk_line+1
 local vertices_per_trunk<const>     = vertices_pre_tile_line * vertices_pre_tile_line
 local tiles_pre_trunk<const>        = tile_pre_trunk_line * tile_pre_trunk_line
 
+local visible_trunk_range<const>        = 4
+local visible_trunk_num<const>          = visible_trunk_range * visible_trunk_range
+local visible_trunk_indices_num<const>  = visible_trunk_num * tiles_pre_trunk * 6
+local quad_sphere_vertex_layout<const>  = declmgr.get "p3"
+
 --[[
     quad indices
     1 ----- 2
@@ -46,39 +51,39 @@ local function create_face_quad_indices(quad_pre_line)
     return indices
 end
 
-local visible_trunk_range<const> = 4
-
-local qsmt = ecs.transform "quad_sphere_mesh_transform"
-function qsmt.process_entity(e)
-    local numtrunk = visible_trunk_range * visible_trunk_range
-    local rc = e._rendercache
-    
-    local numvertices = numtrunk * vertices_per_trunk   --duplicate vertices on trunk edge
-    rc.vb = {
-        start = 0,
-        num = numvertices,
-        handles = {
-            bgfx.create_dynamic_vertex_buffer(numvertices, declmgr.get "p3".handle, "a"),
-        }
-    }
-
-    assert(numvertices < 65535, "too many vertices")
-
+local function create_quad_sphere_trunk_ib()
     local indices = create_face_quad_indices(tile_pre_trunk_line)
     local numindices_pre_trunk = #indices
-    for i=1, numtrunk-1 do
+    for i=1, visible_trunk_num-1 do
 		local offset = i * vertices_per_trunk
 		for j=1, numindices_pre_trunk do
 			indices[#indices+1] = offset + indices[j]
 		end
 	end
 
-    assert(numtrunk * tiles_pre_trunk * 6 == #indices)
-    rc.ib = {
+    return {
         start = 0,
         num = #indices,
         handle = bgfx.create_index_buffer(bgfx.memory_buffer("w", indices))
     }
+end
+local visible_trunk_ib<const> = create_quad_sphere_trunk_ib()
+
+local qsmt = ecs.transform "quad_sphere_mesh_transform"
+function qsmt.process_entity(e)
+    local rc = e._rendercache
+
+    local numvertices = visible_trunk_num * vertices_per_trunk   --duplicate vertices on trunk edge
+    rc.vb = {
+        start = 0,
+        num = numvertices,
+        handles = {
+            bgfx.create_dynamic_vertex_buffer(numvertices, quad_sphere_vertex_layout.handle, "a"),
+        }
+    }
+
+    assert(numvertices < 65536, "too many vertices")
+    rc.ib = visible_trunk_ib
 end
 
 local qst = ecs.transform "quad_sphere_transform"
@@ -385,5 +390,5 @@ function iquad_sphere.set_trunkid(eid, trunkid)
     rc.aabb = aabb
     local vb = rc.vb
     local poshandle = vb.handles[1]
-    bgfx.update(poshandle, 0, bgfx.memory_buffer("fff", vertices), declmgr.get "p3".handle)
+    bgfx.update(poshandle, 0, bgfx.memory_buffer("fff", vertices), quad_sphere_vertex_layout.handle)
 end
