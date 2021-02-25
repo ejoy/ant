@@ -131,7 +131,7 @@ function init_loader_sys:init()
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
 
     --world:instance "/pkg/ant.test.features/assets/entities/font_tt.prefab"
-    world:instance "/pkg/ant.resources.binary/meshes/female/female.glb|mesh.prefab"
+    --world:instance "/pkg/ant.resources.binary/meshes/female/female.glb|mesh.prefab"
 
     ientity.create_procedural_sky()
     --target_lock_test()

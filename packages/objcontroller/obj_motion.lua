@@ -57,9 +57,16 @@ function iobj_motion.set_view(eid, pos, dir, updir)
     world:pub{"component_changed", "transform", eid}
 end
 
-function iobj_motion.set_scale(eid, scale)
+function iobj_motion.set_scale_no_check(eid, scale)
     world[eid]._rendercache.srt.s = scale
     world:pub{"component_changed", "transform", eid}
+end
+
+function iobj_motion.set_scale(eid, scale)
+    if type(scale) == "number" then
+        iobj_motion.set_scale_no_check(eid, {scale, scale, scale})
+    end
+    iobj_motion.set_scale_no_check(eid, scale)
 end
 
 function iobj_motion.get_scale(eid)

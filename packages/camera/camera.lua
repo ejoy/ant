@@ -150,6 +150,15 @@ function ic.lookto(eid, ...)
     iom.lookto(eid, ...)
 end
 
+function ic.focus_obj(cameraeid, eid)
+    local fe = world[eid]
+    local aabb = fe._rendercache.aabb
+    if aabb then
+        local center, extent = math3d.aabb_center_extents(aabb)
+        iom.lookto(cameraeid, math3d.muladd(extent, 5, center), center)
+    end
+end
+
 function ic.set_dof_focus_obj(eid, focus_eid)
     local dof = world[eid]._dof
     dof.focus_eid = focus_eid

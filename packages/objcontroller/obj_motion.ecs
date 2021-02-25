@@ -12,6 +12,7 @@ interface "obj_motion"
 
     .method "get_scale"
     .method "set_scale"
+    .method "set_scale_no_check"
 
     .method "srt"
     .method "set_srt"

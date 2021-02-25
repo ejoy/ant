@@ -36,6 +36,7 @@ interface "camera"
     .method "set_updir"
     .method "set_dof_focus_obj"
     .method "set_dof"
+    .method "focus_obj"
 
 pipeline "camera"
     .stage "update_mainview_camera"

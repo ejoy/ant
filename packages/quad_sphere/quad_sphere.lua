@@ -14,7 +14,7 @@ local iquad_sphere = ecs.interface "iquad_sphere"
 local ientity = world:interface "ant.render|entity"
 local ientity_state = world:interface "ant.scene|ientity_state"
 
-local tile_pre_trunk_line<const>    = 32
+local tile_pre_trunk_line<const>    = 4
 local vertices_pre_tile_line<const> = tile_pre_trunk_line+1
 local vertices_per_trunk<const>     = vertices_pre_tile_line * vertices_pre_tile_line
 local tiles_pre_trunk<const>        = tile_pre_trunk_line * tile_pre_trunk_line
@@ -269,7 +269,7 @@ end
 
 function trunkid_class:corners()
     local face = self:face()
-    local face_pt_op = create_face_pt_op[face]
+    local face_pt_op = create_face_pt_op[face+1]
     local p2ds = self:cube_proj_points()
 
     local corners = {nil, nil, nil, nil}
@@ -289,7 +289,7 @@ function trunkid_class:position(x, y)
 
     local t = {offset[1] + x * tu, offset[2] + y * tu}
     local face = self:face()
-    return create_face_pt_op[face](t, qs.radius)
+    return create_face_pt_op[face+1](t, qs.radius)
 end
 
 local function quad_line_indices(tri_indices)
@@ -316,16 +316,19 @@ local function tile_vertices(trunk_corners)
 
     local hd = math3d.mul(h, inv_tile_size)
     local vd = math3d.mul(v, inv_tile_size)
+    local aabb = math3d.aabb()
     for i=0, tile_pre_trunk_line do
         local sp = math3d.muladd(hd, i, trunk_corners[1])
         for j=0, tile_pre_trunk_line do
-            local vp = math3d.tovalue(math3d.normalize(math3d.muladd(vd, j, sp)))
+            local p = math3d.normalize(math3d.muladd(vd, j, sp))
+            aabb = math3d.aabb_append(aabb, p)
+            local vp = math3d.tovalue(p)
             for ii=1, 3 do
                 vertices[#vertices+1] = vp[ii]
             end
         end
     end
-    return vertices
+    return vertices, aabb
 end
 
 function iquad_sphere.trunk_position(eid, trunkid, x, y)
@@ -377,9 +380,11 @@ function iquad_sphere.set_trunkid(eid, trunkid)
     end
 
     local corners = trunkid_class.create(trunkid, qs):corners()
-    local vertices = tile_vertices(corners)
-    
-    local vb = e._rendercache.vb
+    local vertices, aabb = tile_vertices(corners)
+    local t = math3d.tovalue(aabb)
+    local rc = e._rendercache
+    rc.aabb = aabb
+    local vb = rc.vb
     local poshandle = vb.handles[1]
     bgfx.update(poshandle, 0, bgfx.memory_buffer("fff", vertices), declmgr.get "p3".handle)
 end
