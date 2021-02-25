@@ -16,7 +16,6 @@ function qst_sys:init()
     iqs.set_trunkid(qs_eid, trunkid)
 end
 
-local qs_mb = world:sub{"component_register", "quad_sphere"}
 local kb_mb = world:sub{"keyboard", 'SPACE'}
 function qst_sys:data_changed()
     

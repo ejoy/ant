@@ -154,8 +154,13 @@ function ic.focus_obj(cameraeid, eid)
     local fe = world[eid]
     local aabb = fe._rendercache.aabb
     if aabb then
-        local center, extent = math3d.aabb_center_extents(aabb)
-        iom.lookto(cameraeid, math3d.muladd(extent, 5, center), center)
+        local aabb_min, aabb_max= math3d.index(aabb, 1), math3d.index(aabb, 2)
+        local center = math3d.mul(0.5, math3d.add(aabb_min, aabb_max))
+        local nviewdir = math3d.sub(aabb_max, center)
+        local viewdir = math3d.normalize(math3d.inverse(nviewdir))
+
+        local pos = math3d.muladd(3, nviewdir, center)
+        iom.lookto(cameraeid, pos, viewdir)
     end
 end
 
