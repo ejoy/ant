@@ -51,20 +51,38 @@ local function create_face_quad_indices(quad_pre_line)
     return indices
 end
 
+local trunk_indices = create_face_quad_indices(tile_pre_trunk_line)
+
+local function quad_line_indices(tri_indices)
+    local indices = {}
+
+    for it=1, #tri_indices, 3 do
+        local v1, v2, v3 = tri_indices[it], tri_indices[it+1], tri_indices[it+2]
+        indices[#indices+1] = v1
+        indices[#indices+1] = v2
+
+        indices[#indices+1] = v2
+        indices[#indices+1] = v3
+    end
+
+    return indices
+end
+
+local trunk_line_indices = quad_line_indices(trunk_indices)
+
 local function create_quad_sphere_trunk_ib()
-    local indices = create_face_quad_indices(tile_pre_trunk_line)
-    local numindices_pre_trunk = #indices
+    local numindices_pre_trunk = #trunk_indices
     for i=1, visible_trunk_num-1 do
 		local offset = i * vertices_per_trunk
 		for j=1, numindices_pre_trunk do
-			indices[#indices+1] = offset + indices[j]
+			trunk_indices[#trunk_indices+1] = offset + trunk_indices[j]
 		end
 	end
 
     return {
         start = 0,
-        num = #indices,
-        handle = bgfx.create_index_buffer(bgfx.memory_buffer("w", indices))
+        num = #trunk_indices,
+        handle = bgfx.create_index_buffer(bgfx.memory_buffer("w", trunk_indices))
     }
 end
 local visible_trunk_ib<const> = create_quad_sphere_trunk_ib()
@@ -304,21 +322,6 @@ function trunkid_class:position(x, y)
     return create_face_pt_op[face+1](t, qs.radius)
 end
 
-local function quad_line_indices(tri_indices)
-    local indices = {}
-
-    for it=1, #tri_indices, 3 do
-        local v1, v2, v3 = tri_indices[it], tri_indices[it+1], tri_indices[it+2]
-        indices[#indices+1] = v1
-        indices[#indices+1] = v2
-
-        indices[#indices+1] = v2
-        indices[#indices+1] = v3
-    end
-
-    return indices
-end
-
 local function tile_vertices(trunk_corners, radius)
     local h = math3d.sub(trunk_corners[2], trunk_corners[1])
     local v = math3d.sub(trunk_corners[3], trunk_corners[1])
@@ -400,4 +403,75 @@ function iquad_sphere.set_trunkid(eid, trunkid)
     local vb = rc.vb
     local poshandle = vb.handles[1]
     bgfx.update(poshandle, 0, bgfx.memory_buffer("fff", vertices), quad_sphere_vertex_layout.handle)
+end
+
+function iquad_sphere.add_line_grid(eid)
+    local e = world[eid]
+    local qs = e._quad_sphere
+    local trunkid = qs.trunkid
+    if trunkid then
+        local corners = trunkid_class.create(trunkid, qs):corners()
+        local vertices = tile_vertices(corners, qs.radius)
+    
+        local mesh = ientity.create_mesh({"p3", vertices}, trunk_line_indices)
+        return ientity.create_simple_render_entity(
+            "quad_sphere_line",
+            "/pkg/ant.resources/materials/line.material",
+            mesh)
+    end
+end
+
+function iquad_sphere.tile_aabbs(eid)
+    local e = world[eid]
+    local qs = e._quad_sphere
+    local trunkid = qs.trunkid
+    if trunkid then
+        local corners = trunkid_class.create(trunkid, qs):corners()
+        local vertices = tile_vertices(corners, qs.radius)
+
+        local aabbs = {}
+        for i=1, tile_pre_trunk_line do
+            local offset = (i-1) * (tile_pre_trunk_line+1)
+            local offset_n = i * (tile_pre_trunk_line+1)
+            for j=1, tile_pre_trunk_line do
+                local v0 = {vertices[offset+j],     vertices[offset+j+1],       vertices[offset+j+2]}
+                local v1 = {vertices[offset+j+3],   vertices[offset+j+3+1],     vertices[offset+j+3+2]}
+                local v2 = {vertices[offset_n+j],   vertices[offset_n+j+1],     vertices[offset_n+j+2]}
+                local v3 = {vertices[offset_n+j+3], vertices[offset_n+j+3+1],   vertices[offset_n+j+3+2]}
+
+                local aabb = math3d.aabb()
+                aabbs[#aabbs+1] = math3d.aabb_append(aabb, v0, v1, v2, v3)
+            end
+        end
+
+        return aabbs
+    end
+end
+
+function iquad_sphere.tile_center(eid, tilecoord)
+    local e = world[eid]
+    local qs = e._quad_sphere
+    local trunkid = qs.trunkid
+    if trunkid == nil then
+        return
+    end
+
+    assert(tilecoord[1] >= 0 and tilecoord[2] >= 0)
+    local corners = trunkid_class.create(trunkid, qs):corners()
+
+    local h = math3d.sub(corners[2], corners[1])
+    local v = math3d.sub(corners[3], corners[1])
+
+    local inv_tile_size = 1.0/tile_pre_trunk_line
+
+    local hd = math3d.mul(h, inv_tile_size)
+    local vd = math3d.mul(v, inv_tile_size)
+
+    local sp = math3d.add(math3d.muladd(hd, tilecoord[1]-1, corners[1]), math3d.mul(0.5, hd))
+    return math3d.mul(qs.radius, math3d.normalize(
+        math3d.add(
+            math3d.muladd(vd, tilecoord[2]-1, sp), 
+            math3d.mul(0.5, vd)
+        )
+    ))
 end
