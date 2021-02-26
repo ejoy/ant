@@ -286,7 +286,7 @@ function trunkid_class:coord()
     return trunk_idx % nt, trunk_idx // nt
 end
 
-function trunkid_class:cube_proj_points()
+function trunkid_class:proj_corners()
     local x, y = self:coord()
     local half_ptl  = self.qs.proj_trunk_len * 0.5
     return {
@@ -297,17 +297,17 @@ function trunkid_class:cube_proj_points()
     }
 end
 
-function trunkid_class:corners()
-    local face = self:face()
-    local face_pt_op = create_face_pt_op[face+1]
-    local p2ds = self:cube_proj_points()
+-- function trunkid_class:corners()
+--     local face = self:face()
+--     local p2ds = self:proj_corners()
+--     local face_pt_op = create_face_pt_op[face+1]
 
-    local corners = {nil, nil, nil, nil}
-    for i=1, 4 do
-        corners[i] = math3d.tovalue(math3d.mul(self.qs.radius, math3d.normalize(math3d.vector(face_pt_op(p2ds[i], self.qs.cube_len * 0.5)))))
-    end
-    return corners
-end
+--     local corners = {nil, nil, nil, nil}
+--     for i=1, 4 do
+--         corners[i] = math3d.tovalue(math3d.mul(self.qs.radius, math3d.normalize(math3d.vector(face_pt_op(p2ds[i], self.qs.cube_len * 0.5)))))
+--     end
+--     return corners
+-- end
 
 function trunkid_class:position(x, y)
     local cx, cy = self:coord()
@@ -322,9 +322,21 @@ function trunkid_class:position(x, y)
     return create_face_pt_op[face+1](t, qs.radius)
 end
 
-local function tile_vertices(trunk_corners, radius)
-    local h = math3d.sub(trunk_corners[2], trunk_corners[1])
-    local v = math3d.sub(trunk_corners[3], trunk_corners[1])
+local function tile_vertices(qs)
+    local radius    = qs.radius
+    local trunkid   = qs.trunkid
+    local tid       = trunkid_class.create(trunkid, qs)
+    local face      = tid:face()
+    local corners   = tid:proj_corners()
+
+    local face_pt_op= create_face_pt_op[face+1]
+    local coord3    = qs.cube_len * 0.5
+    for i=1, #corners do
+        corners[i] = face_pt_op(corners[i], coord3)
+    end
+
+    local h = math3d.sub(corners[2], corners[1])
+    local v = math3d.sub(corners[3], corners[1])
 
     local vertices = {}
     local inv_tile_size = 1.0/tile_pre_trunk_line
@@ -333,7 +345,7 @@ local function tile_vertices(trunk_corners, radius)
     local vd = math3d.mul(v, inv_tile_size)
     local aabb = math3d.aabb()
     for i=0, tile_pre_trunk_line do
-        local sp = math3d.muladd(hd, i, trunk_corners[1])
+        local sp = math3d.muladd(hd, i, corners[1])
         for j=0, tile_pre_trunk_line do
             local p = math3d.mul(radius, math3d.normalize(math3d.muladd(vd, j, sp)))
             aabb = math3d.aabb_append(aabb, p)
@@ -387,15 +399,12 @@ end
 function iquad_sphere.set_trunkid(eid, trunkid)
     local e = world[eid]
     local qs = e._quad_sphere
-
-    local rt_qs = e._quad_sphere
-    if rt_qs.trunkid == nil then
-        rt_qs.trunkid = trunkid
+    if qs.trunkid == nil then
+        qs.trunkid = trunkid
         ientity_state.set_state(eid, "visible", true)
     end
 
-    local corners = trunkid_class.create(trunkid, qs):corners()
-    local vertices, aabb = tile_vertices(corners, qs.radius)
+    local vertices, aabb = tile_vertices(qs)
     e._bounding.aabb.m = aabb
     local rc = e._rendercache
     rc.aabb = e._bounding.aabb
@@ -407,18 +416,13 @@ end
 
 function iquad_sphere.add_line_grid(eid)
     local e = world[eid]
-    local qs = e._quad_sphere
-    local trunkid = qs.trunkid
-    if trunkid then
-        local corners = trunkid_class.create(trunkid, qs):corners()
-        local vertices = tile_vertices(corners, qs.radius)
-    
-        local mesh = ientity.create_mesh({"p3", vertices}, trunk_line_indices)
-        return ientity.create_simple_render_entity(
-            "quad_sphere_line",
-            "/pkg/ant.resources/materials/line.material",
-            mesh)
-    end
+    local vertices = tile_vertices(e._quad_sphere)
+
+    local mesh = ientity.create_mesh({"p3", vertices}, trunk_line_indices)
+    return ientity.create_simple_render_entity(
+        "quad_sphere_line",
+        "/pkg/ant.resources/materials/line.material",
+        mesh)
 end
 
 function iquad_sphere.tile_aabbs(eid)
