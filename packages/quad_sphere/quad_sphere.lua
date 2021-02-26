@@ -13,6 +13,7 @@ local bgfx      = require "bgfx"
 local iquad_sphere = ecs.interface "iquad_sphere"
 local ientity = world:interface "ant.render|entity"
 local ientity_state = world:interface "ant.scene|ientity_state"
+local iom   = world:interface "ant.objcontroller|obj_motion"
 
 local tile_pre_trunk_line<const>    = 32
 local vertices_pre_tile_line<const> = tile_pre_trunk_line+1
@@ -429,31 +430,43 @@ end
 function iquad_sphere.tile_aabbs(eid)
     local e = world[eid]
     local qs = e._quad_sphere
-    local trunkid = qs.trunkid
-    if trunkid then
-        local corners = trunkid_class.create(trunkid, qs):corners()
-        local vertices = tile_vertices(corners, qs.radius)
 
-        local aabbs = {}
-        for i=1, tile_pre_trunk_line do
-            local offset = (i-1) * (tile_pre_trunk_line+1)
-            local offset_n = i * (tile_pre_trunk_line+1)
-            for j=1, tile_pre_trunk_line do
-                local v0 = {vertices[offset+j],     vertices[offset+j+1],       vertices[offset+j+2]}
-                local v1 = {vertices[offset+j+3],   vertices[offset+j+3+1],     vertices[offset+j+3+2]}
-                local v2 = {vertices[offset_n+j],   vertices[offset_n+j+1],     vertices[offset_n+j+2]}
-                local v3 = {vertices[offset_n+j+3], vertices[offset_n+j+3+1],   vertices[offset_n+j+3+2]}
+    local vertices = tile_vertices(qs)
 
-                local aabb = math3d.aabb()
-                aabbs[#aabbs+1] = math3d.aabb_append(aabb, v0, v1, v2, v3)
-            end
+    local aabbs = {}
+    for ih=1, tile_pre_trunk_line do
+        local offset = (ih-1) * vertices_pre_tile_line
+        for iv=1, tile_pre_trunk_line do
+            local voff = (iv-1) * 3
+            local idx = offset + voff + iv
+
+            local aabb = math3d.aabb()
+            aabbs[#aabbs+1] = math3d.aabb_append(aabb,
+                math3d.vector(vertices[idx],            vertices[idx+1],        vertices[idx+2]),
+                math3d.vector(vertices[idx+3],          vertices[idx+4],        vertices[idx+5]),
+                math3d.vector(vertices[idx+offset],     vertices[idx+offset+1], vertices[idx+offset+2]),
+                math3d.vector(vertices[idx+offset+3],   vertices[idx+offset+4], vertices[idx+offset+5])
+            )
         end
-
-        return aabbs
     end
+
+    return aabbs
 end
 
-function iquad_sphere.tile_center(eid, tilecoord)
+local function tile_delta(qs)
+    local corners = trunkid_class.create(qs.trunkid, qs):corners_3d()
+
+    local h = math3d.sub(corners[2], corners[1])
+    local v = math3d.sub(corners[3], corners[1])
+
+    local inv_tile_size = 1.0/tile_pre_trunk_line
+
+    return  math3d.mul(h, inv_tile_size),
+            math3d.mul(v, inv_tile_size),
+            corners[1]
+end
+
+function iquad_sphere.tile_aabb(eid, tilex, tiley)
     local e = world[eid]
     local qs = e._quad_sphere
     local trunkid = qs.trunkid
@@ -461,22 +474,51 @@ function iquad_sphere.tile_center(eid, tilecoord)
         return
     end
 
-    assert(tilecoord[1] >= 0 and tilecoord[2] >= 0)
-    local corners = trunkid_class.create(trunkid, qs):corners_3d()
+    local hd, vd, basept = tile_delta(qs)
 
-    local h = math3d.sub(corners[2], corners[1])
-    local v = math3d.sub(corners[3], corners[1])
+    local aabb = math3d.aabb()
+    for _, coord in ipairs{
+        {tilex-1,   tiley-1},
+        {tilex,     tiley-1},
+        {tilex-1, tiley},
+        {tilex, tiley},
+    } do
+        local tileorigin_proj = math3d.muladd(vd, coord[2], math3d.muladd(hd, coord[1], basept))
+        aabb = math3d.aabb_append(aabb, math3d.mul(qs.radius, math3d.normalize(tileorigin_proj)))
+    end
 
-    local inv_tile_size = 1.0/tile_pre_trunk_line
+    return aabb
+end
 
-    local hd = math3d.mul(h, inv_tile_size)
-    local vd = math3d.mul(v, inv_tile_size)
+function iquad_sphere.tile_center(eid, tilex, tiley)
+    local e = world[eid]
+    local qs = e._quad_sphere
+    local trunkid = qs.trunkid
+    if trunkid == nil then
+        return
+    end
 
-    local sp = math3d.add(math3d.muladd(hd, tilecoord[1]-1, corners[1]), math3d.mul(0.5, hd))
+    assert(tilex > 0 and tiley > 0)
+
+    local hd, vd, basept = tile_delta(qs)
+
+    local sp = math3d.add(math3d.muladd(hd, tilex-1, basept), math3d.mul(0.5, hd))
     return math3d.mul(qs.radius, math3d.normalize(
         math3d.add(
-            math3d.muladd(vd, tilecoord[2]-1, sp), 
+            math3d.muladd(vd, tiley-1, sp), 
             math3d.mul(0.5, vd)
         )
     ))
+end
+
+function iquad_sphere.focus_camera(eid, camreaeid, view_height, focus_pt)
+    local e = world[eid]
+
+    local qs = e._quad_sphere
+    
+    local camera_radius = view_height + qs.radius
+    local viewdir = math3d.normalize(focus_pt)
+    local camerapos = math3d.mul(viewdir, camera_radius)
+    viewdir = math3d.inverse(viewdir)
+    iom.lookto(camreaeid, camerapos, viewdir)
 end

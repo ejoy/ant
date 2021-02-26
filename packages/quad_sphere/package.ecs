@@ -7,6 +7,8 @@ interface "iquad_sphere"
     .method "add_line_grid"
     .method "tile_aabbs"
     .method "tile_center"
+    .method "tile_aabb"
+    .method "focus_camera"
 
 transform "quad_sphere_transform"
     .implement "quad_sphere.lua"
