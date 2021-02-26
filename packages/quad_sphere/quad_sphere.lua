@@ -286,23 +286,27 @@ function trunkid_class:face()
     return math.floor(self.trunkid / self.qs.trunks_pre_face)
 end
 
-function trunkid_class:coord()
+function trunkid_class:trunk_index_coord()
     local qs = self.qs
     local trunk_idx = self.trunkid % qs.trunks_pre_face
     local nt = qs.num_trunk
     return trunk_idx % nt, trunk_idx // nt
 end
 
+function trunkid_class:coord()
+    local tix, tiy = self:trunk_index_coord()
+    local offset = self.qs.proj_trunk_len * self.qs.num_trunk * 0.5
+    return tix - offset, tiy - offset
+end
+
 function trunkid_class:proj_corners()
     local x, y = self:coord()
     local ptl = self.qs.proj_trunk_len
-    x, y = x * ptl, y * ptl
-    local half_ptl  = ptl * 0.5
     return {
-        {x - half_ptl, y - half_ptl},
-        {x + half_ptl, y - half_ptl},
-        {x - half_ptl, y + half_ptl},
-        {x + half_ptl, y + half_ptl},
+        {x, y},
+        {x+ptl, y},
+        {x, y+ptl},
+        {x+ptl, y+ptl},
     }
 end
 
@@ -319,7 +323,7 @@ function trunkid_class:corners_3d()
 end
 
 function trunkid_class:position(x, y)
-    local cx, cy = self:coord()
+    local cx, cy = self:trunk_index_coord()
     local qs = self.qs
     local tu = qs.proj_trunk_unit
     local plen = qs.proj_trunk_len
@@ -480,8 +484,8 @@ function iquad_sphere.tile_aabb(eid, tilex, tiley)
     for _, coord in ipairs{
         {tilex-1,   tiley-1},
         {tilex,     tiley-1},
-        {tilex-1, tiley},
-        {tilex, tiley},
+        {tilex-1,   tiley},
+        {tilex,     tiley},
     } do
         local tileorigin_proj = math3d.muladd(vd, coord[2], math3d.muladd(hd, coord[1], basept))
         aabb = math3d.aabb_append(aabb, math3d.mul(qs.radius, math3d.normalize(tileorigin_proj)))

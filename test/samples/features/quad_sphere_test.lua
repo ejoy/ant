@@ -13,7 +13,7 @@ function qst_sys:init()
     local trunk_num = 128
     qs_eid = iqs.create("test_quad_sphere", trunk_num, 6000)
     local face = 2  --top
-    local tx, ty = 127, 127
+    local tx, ty = 1, 1
     local trunkid = face * trunk_num * trunk_num + ty * trunk_num + tx
     iqs.set_trunkid(qs_eid, trunkid)
 end
