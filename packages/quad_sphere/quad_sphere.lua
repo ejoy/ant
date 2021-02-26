@@ -166,23 +166,29 @@ local face_index<const> = {
 
 local create_face_pt_op = {
     function (p2d, othercoord)
-        return {p2d[1], p2d[2], othercoord}
+        p2d[3] = othercoord
+        return p2d
     end,
     function (p2d, othercoord)
-        return {p2d[1], p2d[2], -othercoord}
+        p2d[3] = -othercoord
+        return p2d
     end,
     function (p2d, othercoord)
-        return {p2d[1], othercoord, p2d[2]}
+        p2d[2], p2d[3] = othercoord, p2d[2]
+        return p2d
     end,
     function (p2d, othercoord)
-        return {p2d[1], -othercoord, p2d[2]}
+        p2d[2], p2d[3] = -othercoord, p2d[2]
+        return p2d
     end,
 
     function (p2d, othercoord)
-        return {-othercoord, p2d[1], p2d[2]}
+        p2d[1], p2d[2], p2d[3] = -othercoord, p2d[1], p2d[2]
+        return p2d
     end,
     function (p2d, othercoord)
-        return {othercoord, p2d[1], p2d[2]}
+        p2d[1], p2d[2], p2d[3] = othercoord, p2d[1], p2d[2]
+        return p2d
     end,
 }
 
@@ -288,7 +294,9 @@ end
 
 function trunkid_class:proj_corners()
     local x, y = self:coord()
-    local half_ptl  = self.qs.proj_trunk_len * 0.5
+    local ptl = self.qs.proj_trunk_len
+    x, y = x * ptl, y * ptl
+    local half_ptl  = ptl * 0.5
     return {
         {x - half_ptl, y - half_ptl},
         {x + half_ptl, y - half_ptl},
@@ -297,17 +305,17 @@ function trunkid_class:proj_corners()
     }
 end
 
--- function trunkid_class:corners()
---     local face = self:face()
---     local p2ds = self:proj_corners()
---     local face_pt_op = create_face_pt_op[face+1]
+function trunkid_class:corners_3d()
+    local face      = self:face()
+    local corners   = self:proj_corners()
 
---     local corners = {nil, nil, nil, nil}
---     for i=1, 4 do
---         corners[i] = math3d.tovalue(math3d.mul(self.qs.radius, math3d.normalize(math3d.vector(face_pt_op(p2ds[i], self.qs.cube_len * 0.5)))))
---     end
---     return corners
--- end
+    local face_pt_op= create_face_pt_op[face+1]
+    local coord3    = self.qs.cube_len * 0.5
+    for i=1, #corners do
+        face_pt_op(corners[i], coord3)
+    end
+    return corners
+end
 
 function trunkid_class:position(x, y)
     local cx, cy = self:coord()
@@ -326,14 +334,7 @@ local function tile_vertices(qs)
     local radius    = qs.radius
     local trunkid   = qs.trunkid
     local tid       = trunkid_class.create(trunkid, qs)
-    local face      = tid:face()
-    local corners   = tid:proj_corners()
-
-    local face_pt_op= create_face_pt_op[face+1]
-    local coord3    = qs.cube_len * 0.5
-    for i=1, #corners do
-        corners[i] = face_pt_op(corners[i], coord3)
-    end
+    local corners   = tid:corners_3d()
 
     local h = math3d.sub(corners[2], corners[1])
     local v = math3d.sub(corners[3], corners[1])
@@ -461,7 +462,7 @@ function iquad_sphere.tile_center(eid, tilecoord)
     end
 
     assert(tilecoord[1] >= 0 and tilecoord[2] >= 0)
-    local corners = trunkid_class.create(trunkid, qs):corners()
+    local corners = trunkid_class.create(trunkid, qs):corners_3d()
 
     local h = math3d.sub(corners[2], corners[1])
     local v = math3d.sub(corners[3], corners[1])
