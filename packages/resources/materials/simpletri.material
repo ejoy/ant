@@ -5,4 +5,9 @@ fx:
     SINGLE_COLOR: 1
 properties:
   u_color: {0.8, 0.8, 0.8, 1}
-state: /pkg/ant.resources/materials/states/default.state
+state:
+  ALPHA_REF: 0
+  CULL: NONE
+  DEPTH_TEST: LESS
+  MSAA: true
+  WRITE_MASK: RGBAZ

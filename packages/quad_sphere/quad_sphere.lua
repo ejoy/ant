@@ -282,21 +282,72 @@ function trunkid_class.create(trunkid, qs)
     }, {__index=trunkid_class})
 end
 
+--trunid:
+--  tx: [0, 13], ty:[14, 27], f: [28, 31]
+local function trunkid_face(trunkid)
+    return trunkid >> 28
+end
+
+local function trunkid_index(trunkid)
+    return (0x0fffffff & trunkid) >> 14, (0x00003fff & trunkid)
+end
+
+local function pack_trunkid(face, tx, ty)
+    return (face << 28|ty << 14 |tx)
+end
+
 function trunkid_class:face()
-    return math.floor(self.trunkid / self.qs.trunks_pre_face)
+    return trunkid_face(self.trunkid)
 end
 
 function trunkid_class:trunk_index_coord()
-    local qs = self.qs
-    local trunk_idx = self.trunkid % qs.trunks_pre_face
-    local nt = qs.num_trunk
-    return trunk_idx % nt, trunk_idx // nt
+    return trunkid_index(self.trunkid)
+end
+
+function trunkid_class:unpack()
+    local t = self.trunkid
+    return trunkid_face(t), trunkid_index(t)
 end
 
 function trunkid_class:coord()
     local tix, tiy = self:trunk_index_coord()
     local offset = self.qs.proj_trunk_len * self.qs.num_trunk * 0.5
     return tix - offset, tiy - offset
+end
+
+function trunkid_class:coord_3d()
+    local radius = self.qs.radius
+    local face = self:face()
+    local op = create_face_pt_op[face+1]
+    local tx, ty = self:coord()
+    return math3d.mul(radius, math3d.normalize(math3d.vector(op({tx, ty}, self.qs.cube_len * 0.5))))
+end
+
+
+--[[
+    r:      raidus
+    theta:  [0, pi/2]
+    phi:    [0, 2*pi]
+    x:      r*sin(theta)*cos(phi)
+    y:      r*sin(theta)*sin(phi)
+    z:      r*cos(theta)
+
+    r:      sqrt(dot(p))
+    theta:  arccos(z/r)
+    phi:    arccos(x/(r*sin(theta)))
+]]
+function trunkid_class:to_sphereical_coord(xyzcoord)
+    local nc = math3d.tovalue(math3d.mul(1/self.qs.radius, math3d.vector(xyzcoord)))
+    local theta = math.acos(nc[3])
+    local sintheta = math.sin(theta)
+    local phi = math.acos(nc[1]/sintheta)
+    return theta, phi
+end
+
+function trunkid_class:to_xyz(theta, phi)
+    local sintheta, costheta = math.sin(theta), math.cos(theta)
+    local sinphi, cosphi    = math.sin(phi), math.cos(phi)
+    return math3d.mul(self.ps.raidus, math3d.vector(sintheta*cosphi, sintheta*sinphi, costheta))
 end
 
 function trunkid_class:proj_corners()
@@ -335,9 +386,8 @@ function trunkid_class:position(x, y)
     return create_face_pt_op[face+1](t, qs.radius)
 end
 
-local function tile_vertices(qs)
+local function tile_vertices(trunkid, qs)
     local radius    = qs.radius
-    local trunkid   = qs.trunkid
     local tid       = trunkid_class.create(trunkid, qs)
     local corners   = tid:corners_3d()
 
@@ -368,6 +418,25 @@ function iquad_sphere.trunk_position(eid, trunkid, x, y)
     local e = world[eid]
     local qs = e._quad_sphere
     return trunkid_class.create(trunkid, qs):position(x, y)
+end
+
+
+iquad_sphere.pack_trunkid = pack_trunkid
+
+function iquad_sphere.unpack_trunkid(trunkid)
+    return trunkid_face(trunkid), trunkid_index(trunkid)
+end
+
+function iquad_sphere.center_coord(eid, spherecial)
+    local e = world[eid]
+    local qs = e._quad_sphere
+    local trunkid = qs.trunkid
+    local tid = trunkid_class.create(trunkid, qs)
+    local xyz = tid:coord_3d()
+    if spherecial then
+        return tid:to_sphereical_coord(xyz)
+    end
+    return xyz
 end
 
 local function which_face(pos)
@@ -405,12 +474,12 @@ end
 function iquad_sphere.set_trunkid(eid, trunkid)
     local e = world[eid]
     local qs = e._quad_sphere
-    if qs.trunkid == nil then
+    if qs.trunkid ~= trunkid then
         qs.trunkid = trunkid
         ientity_state.set_state(eid, "visible", true)
     end
 
-    local vertices, aabb = tile_vertices(qs)
+    local vertices, aabb = tile_vertices(trunkid, qs)
     e._bounding.aabb.m = aabb
     local rc = e._rendercache
     rc.aabb = e._bounding.aabb
@@ -422,7 +491,9 @@ end
 
 function iquad_sphere.add_line_grid(eid)
     local e = world[eid]
-    local vertices = tile_vertices(e._quad_sphere)
+    local qs = e._quad_sphere
+    local trunkid = qs.trunkid
+    local vertices = tile_vertices(trunkid, qs)
 
     local mesh = ientity.create_mesh({"p3", vertices}, trunk_line_indices)
     return ientity.create_simple_render_entity(
@@ -434,8 +505,8 @@ end
 function iquad_sphere.tile_aabbs(eid)
     local e = world[eid]
     local qs = e._quad_sphere
-
-    local vertices = tile_vertices(qs)
+    local trunkid = qs.trunkid
+    local vertices = tile_vertices(trunkid, qs)
 
     local aabbs = {}
     for ih=1, tile_pre_trunk_line do
