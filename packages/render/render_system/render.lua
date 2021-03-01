@@ -24,14 +24,10 @@ end
 local irender		= ecs.interface "irender"
 function irender.check_primitive_mode_state(state, template_state)
 	local s = bgfx.parse_state(state)
-	if s.PT then
-		local ts = bgfx.parse_state(template_state)
-		if s.PT ~= ts.PT then
-			ts.PT = s.PT
-			return bgfx.make_state(ts)
-		end
-	end
-	return template_state
+	local ts = bgfx.parse_state(template_state)
+	ts.PT = s.PT
+	ts.CULL = s.CULL
+	return bgfx.make_state(ts)
 end
 
 function irender.draw(vid, ri)
