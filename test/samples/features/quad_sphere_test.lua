@@ -16,16 +16,19 @@ local qs_eids = {}
 function qst_sys:init()
     --front
     qs_eids[1] = iqs.create("test_quad_sphere1", num_trunk, radius)
-    iqs.set_trunkid(qs_eids[1], iqs.pack_trunkid(0, 5, 5))
+    iqs.set_trunkid(qs_eids[1], iqs.pack_trunkid(0, 1, 5))
     imaterial.set_property(qs_eids[1], "u_color", {1, 0, 0, 1})
     --top
     qs_eids[2] = iqs.create("test_quad_sphere2", num_trunk, radius)
-    iqs.set_trunkid(qs_eids[2], iqs.pack_trunkid(2, 1, 1))
+    iqs.set_trunkid(qs_eids[2], iqs.pack_trunkid(2, 5, 5))
     imaterial.set_property(qs_eids[2], "u_color", {0, 1, 0, 1})
-    --left
+    --right
     qs_eids[3] = iqs.create("test_quad_sphere3", num_trunk, radius)
-    iqs.set_trunkid(qs_eids[3], iqs.pack_trunkid(4, 1, 1))
+    iqs.set_trunkid(qs_eids[3], iqs.pack_trunkid(5, 1, 1))
     imaterial.set_property(qs_eids[3], "u_color", {0, 0, 1, 1})
+
+    iqs.add_inscribed_cube(qs_eids[1], {1, 1, 0, 1})
+    iqs.add_solid_angle_entity(qs_eids[1], {0.9, 0.8, 0.5, 1})
 end
 
 local kb_mb = world:sub{"keyboard"}

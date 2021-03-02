@@ -1,0 +1,13 @@
+fx:
+  fs: /pkg/ant.resources/shaders/line/fs_line.sc
+  vs: /pkg/ant.resources/shaders/line/vs_line.sc
+  setting:
+    u_color: {0, 0, 0, 1}
+state:
+  ALPHA_REF: 1
+  CULL: CCW
+  DEPTH_TEST: LESS
+  LINEAA: true
+  MSAA: true
+  PT: LINES
+  WRITE_MASK: RGBA

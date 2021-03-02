@@ -15,7 +15,8 @@ local ientity = world:interface "ant.render|entity"
 local ientity_state = world:interface "ant.scene|ientity_state"
 local iom   = world:interface "ant.objcontroller|obj_motion"
 
-local tile_pre_trunk_line<const>    = 32
+local tile_pre_trunk_line<const>    = 2
+local inv_tile_pre_trunk_line<const> = 1.0 / tile_pre_trunk_line
 local vertices_pre_tile_line<const> = tile_pre_trunk_line+1
 local vertices_per_trunk<const>     = vertices_pre_tile_line * vertices_pre_tile_line
 local tiles_pre_trunk<const>        = tile_pre_trunk_line * tile_pre_trunk_line
@@ -110,89 +111,6 @@ function qsmt.process_entity(e)
     rc.ib = visible_trunk_ib
 end
 
-local qst = ecs.transform "quad_sphere_transform"
-function qst.process_entity(e)
-    local qs = e.quad_sphere
-    local nt = qs.num_trunk
-    local radius = qs.radius
-    assert(nt > 0 and radius > 0)
-
-    local cube_len = radius * math.sqrt(2)
-    local proj_trunk_len = cube_len / qs.num_trunk
-    e._quad_sphere = {
-        num_trunk       = nt,
-        radius          = radius,
-        cube_len        = cube_len,
-        proj_trunk_len  = proj_trunk_len,
-        proj_trunk_unit = proj_trunk_len / tile_pre_trunk_line,
-        trunks_pre_face = nt * nt,
-    }
-end
-
-function iquad_sphere.create(name, numtrunk, radius)
-    --local verties, indices = geo.quad_sphere(numtrunk, radius)
-    return world:create_entity {
-        policy = {
-            "ant.quad_sphere|quad_sphere",
-            "ant.render|debug_mesh_bounding",
-            "ant.general|name",
-        },
-        data = {
-            transform = {},
-            material = "/pkg/ant.resources/materials/simpletri.material",
-            state = 0,
-            quad_sphere = {
-                num_trunk   = numtrunk,
-                radius      = radius,
-            },
-            scene_entity = true,
-            debug_mesh_bounding = true,
-            name = name or "",
-        }
-    }
-end
-
---{F, B, U, D, L, R}
-
-local face_index<const> = {
-    front = 0,
-    back = 1,
-
-    top = 2,
-    bottom = 3,
-
-    left = 4,
-    right = 5,
-}
-
-local create_face_pt_op = {
-    function (p2d, othercoord)
-        p2d[3] = othercoord
-        return p2d
-    end,
-    function (p2d, othercoord)
-        p2d[3] = -othercoord
-        return p2d
-    end,
-    function (p2d, othercoord)
-        p2d[2], p2d[3] = othercoord, p2d[2]
-        return p2d
-    end,
-    function (p2d, othercoord)
-        p2d[2], p2d[3] = -othercoord, p2d[2]
-        return p2d
-    end,
-
-    function (p2d, othercoord)
-        p2d[1], p2d[2], p2d[3] = -othercoord, p2d[1], p2d[2]
-        return p2d
-    end,
-    function (p2d, othercoord)
-        p2d[1], p2d[2], p2d[3] = othercoord, p2d[1], p2d[2]
-        return p2d
-    end,
-}
-
 --[[
 
 		tlf ------- trf
@@ -205,17 +123,36 @@ local create_face_pt_op = {
 	  bln ------- brn
 ]]
 
-local quad_sphere_cube_len<const> = math.sqrt(2);
-local hcl<const>   = quad_sphere_cube_len * 0.5;
-local cube_tlf<const> = math3d.ref(math3d.vector(-hcl, hcl, hcl))
-local cube_trf<const> = math3d.ref(math3d.vector( hcl, hcl, hcl))
-local cube_tln<const> = math3d.ref(math3d.vector(-hcl, hcl,-hcl))
-local cube_trn<const> = math3d.ref(math3d.vector( hcl, hcl,-hcl))
-local cube_blf<const> = math3d.ref(math3d.vector(-hcl,-hcl, hcl))
-local cube_brf<const> = math3d.ref(math3d.vector( hcl,-hcl, hcl))
-local cube_bln<const> = math3d.ref(math3d.vector(-hcl,-hcl,-hcl))
-local cube_brn<const> = math3d.ref(math3d.vector( hcl,-hcl,-hcl))
+--{F, B, U, D, L, R}
+local face_index<const> = {
+    front   = 0,
+    back    = 1,
 
+    top     = 2,
+    bottom  = 3,
+
+    left    = 4,
+    right   = 5,
+}
+
+local inscribed_cube_len<const>         = math.sqrt(3) * 2.0/3.0
+local half_inscribed_cube_len<const>    = inscribed_cube_len * 0.5
+
+local function cube_vertices(radius)
+    local l = half_inscribed_cube_len * radius
+    return {
+        tlf = math3d.ref(math3d.vector(-l, l, l)),
+        trf = math3d.ref(math3d.vector( l, l, l)),
+        tln = math3d.ref(math3d.vector(-l, l,-l)),
+        trn = math3d.ref(math3d.vector( l, l,-l)),
+        blf = math3d.ref(math3d.vector(-l,-l, l)),
+        brf = math3d.ref(math3d.vector( l,-l, l)),
+        bln = math3d.ref(math3d.vector(-l,-l,-l)),
+        brn = math3d.ref(math3d.vector( l,-l,-l)),
+    }
+end
+
+local normalize_cube_vertices<const> = cube_vertices(1)
 
 local function quad_sphere(num_trunk, radius)
 	radius = radius or 1
@@ -242,9 +179,9 @@ local function quad_sphere(num_trunk, radius)
 	end
 
 	local vertices = {}
-	create_face_vertices({cube_tlf, cube_tln, cube_trf}, vertices, {1, -1, 1})	--top/bottom
-	create_face_vertices({cube_blf, cube_bln, cube_tlf}, vertices, {-1, 1, 1})	--left/right
-	create_face_vertices({cube_tln, cube_bln, cube_trn}, vertices, {1, 1, -1})	--front/back
+	create_face_vertices({normalize_cube_vertices.tlf, normalize_cube_vertices.tln, normalize_cube_vertices.trf}, vertices, {1, -1, 1})	--top/bottom
+	create_face_vertices({normalize_cube_vertices.blf, normalize_cube_vertices.bln, normalize_cube_vertices.tlf}, vertices, {-1, 1, 1})	--left/right
+	create_face_vertices({normalize_cube_vertices.tln, normalize_cube_vertices.bln, normalize_cube_vertices.trn}, vertices, {1, 1, -1})	--front/back
 
 	local fn = trunk_vn * trunk_vn
 	local indices = create_face_quad_indices(num_trunk)
@@ -273,6 +210,100 @@ local function quad_sphere(num_trunk, radius)
 	-- end
 
 end
+
+local qst = ecs.transform "quad_sphere_transform"
+function qst.process_entity(e)
+    local qs = e.quad_sphere
+    local nt = qs.num_trunk
+    local radius = qs.radius
+    assert(nt > 0 and radius > 0)
+
+    local cube_len = radius * inscribed_cube_len
+    local proj_trunk_len = cube_len / qs.num_trunk
+
+    local vertices = cube_vertices(radius)
+    for k, v in ipairs(vertices) do
+        vertices[k] = math3d.ref(v)
+    end
+
+    e._quad_sphere = {
+        num_trunk       = nt,
+        inv_num_trunk   = 1 / nt,
+        num_trunk_point = nt + 1,
+        trunks_pre_face = nt * nt,
+        radius          = radius,
+        cube_len        = cube_len,
+        proj_trunk_len  = proj_trunk_len,
+        proj_tile_len   = proj_trunk_len / tile_pre_trunk_line,
+        inscribed_cube  = {
+            vertices = vertices,
+            {vertices.tln, vertices.trn, vertices.brn, vertices.bln}, --front
+            {vertices.trf, vertices.tlf, vertices.blf, vertices.brf}, --back
+
+            {vertices.tlf, vertices.trf, vertices.trn, vertices.tln}, --up
+            {vertices.bln, vertices.brn, vertices.brf, vertices.blf}, --down
+
+            {vertices.tlf, vertices.tln, vertices.bln, vertices.blf}, --left
+            {vertices.trn, vertices.trf, vertices.brf, vertices.brn}, --right
+        }
+    }
+end
+
+function iquad_sphere.create(name, numtrunk, radius)
+    --local verties, indices = geo.quad_sphere(numtrunk, radius)
+    return world:create_entity {
+        policy = {
+            "ant.quad_sphere|quad_sphere",
+            --"ant.render|debug_mesh_bounding",
+            "ant.general|name",
+        },
+        data = {
+            transform = {},
+            material = "/pkg/ant.resources/materials/simpletri.material",
+            state = 0,
+            quad_sphere = {
+                num_trunk   = numtrunk,
+                radius      = radius,
+            },
+            scene_entity = true,
+            --debug_mesh_bounding = true,
+            name = name or "",
+        }
+    }
+end
+
+local create_face_pt_op = {
+    --front
+    function (p2d, othercoord)
+        p2d[3] = -othercoord
+        return p2d
+    end,
+    --back
+    function (p2d, othercoord)
+        p2d[3] = othercoord
+        return p2d
+    end,
+    --top
+    function (p2d, othercoord)
+        p2d[2], p2d[3] = othercoord, p2d[2]
+        return p2d
+    end,
+    --bottom
+    function (p2d, othercoord)
+        p2d[2], p2d[3] = -othercoord, p2d[2]
+        return p2d
+    end,
+    --left
+    function (p2d, othercoord)
+        p2d[1], p2d[3] = -othercoord, p2d[1]
+        return p2d
+    end,
+    --right
+    function (p2d, othercoord)
+        p2d[1], p2d[3] = othercoord, p2d[1]
+        return p2d
+    end,
+}
 
 local trunkid_class = {}
 function trunkid_class.create(trunkid, qs)
@@ -309,19 +340,26 @@ function trunkid_class:unpack()
     return trunkid_face(t), trunkid_index(t)
 end
 
-function trunkid_class:coord()
-    local tix, tiy = self:trunk_index_coord()
-    local offset = self.qs.proj_trunk_len * self.qs.num_trunk * 0.5
-    return tix - offset, tiy - offset
-end
+-- function trunkid_class:coord()
+--     local tix, tiy = self:trunk_index_coord()
+--     local qs = self.qs
+--     local ptl = qs.proj_trunk_len
+--     local x, y = ptl * 0.5, ptl * 0.5
 
-function trunkid_class:coord_3d()
-    local radius = self.qs.radius
-    local face = self:face()
-    local op = create_face_pt_op[face+1]
-    local tx, ty = self:coord()
-    return math3d.mul(radius, math3d.normalize(math3d.vector(op({tx, ty}, self.qs.cube_len * 0.5))))
-end
+--     local xoffset = qs.cube_len * 0.5
+--     local yoffset = qs.cube_len * 0.5
+
+--     local nt = qs.num_trunk
+--     return (tix) * ptl - x - xoffset, (nt - (tiy)) * ptl - y - yoffset
+-- end
+
+-- function trunkid_class:coord_3d()
+--     local radius = self.qs.radius
+--     local face = self:face()
+--     local op = create_face_pt_op[face+1]
+--     local tx, ty = self:coord()
+--     return math3d.mul(radius, math3d.normalize(math3d.vector(op({tx, ty}, self.qs.cube_len * 0.5))))
+-- end
 
 
 --[[
@@ -350,33 +388,46 @@ function trunkid_class:to_xyz(theta, phi)
     return math3d.mul(self.ps.raidus, math3d.vector(sintheta*cosphi, sintheta*sinphi, costheta))
 end
 
-function trunkid_class:proj_corners()
-    local x, y = self:coord()
-    local ptl = self.qs.proj_trunk_len
+function trunkid_class:proj_corners_3d()
+    -- tx, ty start from 1
+    local tx, ty = self:trunk_index_coord()
+    local qs = self.qs
+    local itn = qs.inv_num_trunk
+    local cv = qs.inscribed_cube
+    local face = self:face()
+    local fv = cv[face+1]
+
+    local h = math3d.sub(fv[2], fv[1])
+    local v = math3d.sub(fv[4], fv[1])
+    local dh, dv = math3d.mul(h, itn), math3d.mul(v, itn)
+    local p = math3d.muladd(dh, (tx-0.5), fv[1])
+    p = math3d.muladd(dv, ty-0.5, p)
+
     return {
-        {x, y},
-        {x+ptl, y},
-        {x, y+ptl},
-        {x+ptl, y+ptl},
+        p,                                 math3d.add(p, dh),
+        math3d.add(dv, math3d.add(p, dh)), math3d.add(p, dv),
     }
 end
 
 function trunkid_class:corners_3d()
-    local face      = self:face()
-    local corners   = self:proj_corners()
-
-    local face_pt_op= create_face_pt_op[face+1]
-    local coord3    = self.qs.cube_len * 0.5
-    for i=1, #corners do
-        face_pt_op(corners[i], coord3)
+    local projcorners = self:proj_corners_3d()
+    local qs = self.qs
+    local radius = qs.radius
+    local function to_surface(v)
+        return math3d.mul(radius, math3d.normalize(v))
     end
-    return corners
+    
+    local s = {}
+    for i, c in ipairs(projcorners) do
+        s[i] = to_surface(c)
+    end
+    return s
 end
 
 function trunkid_class:position(x, y)
     local cx, cy = self:trunk_index_coord()
     local qs = self.qs
-    local tu = qs.proj_trunk_unit
+    local tu = qs.proj_tile_len
     local plen = qs.proj_trunk_len
 
     local offset = {cx * plen, cy * plen}
@@ -389,16 +440,14 @@ end
 local function tile_vertices(trunkid, qs)
     local radius    = qs.radius
     local tid       = trunkid_class.create(trunkid, qs)
-    local corners   = tid:corners_3d()
+    local corners   = tid:proj_corners_3d()
 
     local h = math3d.sub(corners[2], corners[1])
-    local v = math3d.sub(corners[3], corners[1])
+    local v = math3d.sub(corners[4], corners[1])
 
     local vertices = {}
-    local inv_tile_size = 1.0/tile_pre_trunk_line
-
-    local hd = math3d.mul(h, inv_tile_size)
-    local vd = math3d.mul(v, inv_tile_size)
+    local hd = math3d.mul(h, inv_tile_pre_trunk_line)
+    local vd = math3d.mul(v, inv_tile_pre_trunk_line)
     local aabb = math3d.aabb()
     for i=0, tile_pre_trunk_line do
         local sp = math3d.muladd(hd, i, corners[1])
@@ -500,6 +549,104 @@ function iquad_sphere.add_line_grid(eid)
         "quad_sphere_line",
         "/pkg/ant.resources/materials/line.material",
         mesh)
+end
+
+function iquad_sphere.add_inscribed_cube(eid, color)
+    local e = world[eid]
+    local qs = e._quad_sphere
+    local vertices = {}
+    local function to_v(...)
+        for idx=1, select('#', ...) do
+            local v = select(idx, ...)
+            local vv = math3d.tovalue(v)
+            vertices[#vertices+1] = vv[1]
+            vertices[#vertices+1] = vv[2]
+            vertices[#vertices+1] = vv[3]
+        end
+    end
+    local v = qs.inscribed_cube.vertices
+    to_v(   v.tlf, v.trf, v.trn, v.tln,
+            v.blf, v.brf, v.brn, v.bln)
+    local indices = {
+        0, 1, 1, 2, 2, 3, 3, 0,
+        4, 5, 5, 6, 6, 7, 7, 4,
+
+        0, 4, 1, 5, 2, 6, 3, 7,
+    }
+
+    local mesh = ientity.create_mesh({"p3", vertices}, indices)
+    local eid = ientity.create_simple_render_entity(
+        "quad_sphere_line",
+        "/pkg/ant.resources/materials/line_color.material",
+        mesh)
+
+    if color then
+        local imaterial = world:interface "ant.asset|imaterial"
+        imaterial.set_property(eid, "u_color", color)
+    end
+end
+
+function iquad_sphere.add_solid_angle_entity(eid, color)
+    local e         = world[eid]
+    local qs        = e._quad_sphere
+
+    local tid       = trunkid_class.create(qs.trunkid, qs)
+    local corners   = tid:proj_corners_3d()
+    local vertices = {}
+    for _, c in ipairs(corners) do
+        local v = math3d.tovalue(c)
+        vertices[#vertices+1] = v[1]
+        vertices[#vertices+1] = v[2]
+        vertices[#vertices+1] = v[3]
+    end
+    local indices = {0, 1, 2, 2, 3, 0}
+    local mesh = ientity.create_mesh({"p3", vertices}, indices)
+    local plane_eid = ientity.create_simple_render_entity(
+        "proj_corners",
+        "/pkg/ant.resources/materials/simpletri.material",
+        mesh)
+
+    vertices[#vertices+1] = 0
+    vertices[#vertices+1] = 0
+    vertices[#vertices+1] = 0
+    local proj_cube_indices = {5, 0, 5, 1, 5, 2, 5, 3, 5, 4}
+    local linemesh = ientity.create_mesh({"p3", vertices}, proj_cube_indices)
+
+    local plane_line_eid = ientity.create_simple_render_entity(
+        "proj_corners_line",
+        "/pkg/ant.resources/materials/line_color.material",
+        linemesh)
+
+    local curve_vertices = {}
+    for i=1, 4*3 do
+        curve_vertices[i] = vertices[i]
+    end
+    local corners3d = tid:corners_3d()
+    for _, c in ipairs(corners3d) do
+        local v = math3d.tovalue(c)
+        curve_vertices[#curve_vertices+1] = v[1]
+        curve_vertices[#curve_vertices+1] = v[2]
+        curve_vertices[#curve_vertices+1] = v[3]
+    end
+
+    local curve_line_indices = {
+        0, 4, 1, 5, 2, 6, 3, 7
+    }
+
+    local curvemesh = ientity.create_mesh({"p3", curve_vertices}, curve_line_indices)
+
+    local curved_eid = ientity.create_simple_render_entity(
+        "curved_line",
+        "/pkg/ant.resources/materials/line_color.material",
+        curvemesh)
+    
+    if color then
+        local imaterial = world:interface "ant.asset|imaterial"
+        imaterial.set_property(plane_eid, "u_color", color)
+        imaterial.set_property(plane_line_eid, "u_color", color)
+        imaterial.set_property(curved_eid, "u_color", color)
+    end
+
 end
 
 function iquad_sphere.tile_aabbs(eid)
