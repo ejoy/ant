@@ -15,6 +15,8 @@ local ientity = world:interface "ant.render|entity"
 local ientity_state = world:interface "ant.scene|ientity_state"
 local iom   = world:interface "ant.objcontroller|obj_motion"
 
+local ctrunkid = require "trunkid_class"
+
 local tile_pre_trunk_line<const>    = 32
 local inv_tile_pre_trunk_line<const> = 1.0 / tile_pre_trunk_line
 local vertices_pre_tile_line<const> = tile_pre_trunk_line+1
@@ -272,199 +274,20 @@ function iquad_sphere.create(name, numtrunk, radius)
     }
 end
 
-local create_face_pt_op = {
-    --front
-    function (p2d, othercoord)
-        p2d[3] = -othercoord
-        return p2d
-    end,
-    --back
-    function (p2d, othercoord)
-        p2d[3] = othercoord
-        return p2d
-    end,
-    --top
-    function (p2d, othercoord)
-        p2d[2], p2d[3] = othercoord, p2d[2]
-        return p2d
-    end,
-    --bottom
-    function (p2d, othercoord)
-        p2d[2], p2d[3] = -othercoord, p2d[2]
-        return p2d
-    end,
-    --left
-    function (p2d, othercoord)
-        p2d[1], p2d[3] = -othercoord, p2d[1]
-        return p2d
-    end,
-    --right
-    function (p2d, othercoord)
-        p2d[1], p2d[3] = othercoord, p2d[1]
-        return p2d
-    end,
-}
-
-local trunkid_class = {}
-function trunkid_class.create(trunkid, qs)
-    return setmetatable({
-        trunkid = trunkid,
-        qs = qs,
-    }, {__index=trunkid_class})
-end
-
---trunid:
---  tx: [0, 13], ty:[14, 27], f: [28, 31]
-local function trunkid_face(trunkid)
-    return trunkid >> 28
-end
-
-local function trunkid_index(trunkid)
-    return (0x0fffffff & trunkid) >> 14, (0x00003fff & trunkid)
-end
-
-local function pack_trunkid(face, tx, ty)
-    return (face << 28|ty << 14 |tx)
-end
-
-function trunkid_class:face()
-    return trunkid_face(self.trunkid)
-end
-
-function trunkid_class:trunk_index_coord()
-    return trunkid_index(self.trunkid)
-end
-
-function trunkid_class:unpack()
-    local t = self.trunkid
-    return trunkid_face(t), trunkid_index(t)
-end
-
--- function trunkid_class:coord()
---     local tix, tiy = self:trunk_index_coord()
---     local qs = self.qs
---     local ptl = qs.proj_trunk_len
---     local x, y = ptl * 0.5, ptl * 0.5
-
---     local xoffset = qs.cube_len * 0.5
---     local yoffset = qs.cube_len * 0.5
-
---     local nt = qs.num_trunk
---     return (tix) * ptl - x - xoffset, (nt - (tiy)) * ptl - y - yoffset
--- end
-
--- function trunkid_class:coord_3d()
---     local radius = self.qs.radius
---     local face = self:face()
---     local op = create_face_pt_op[face+1]
---     local tx, ty = self:coord()
---     return math3d.mul(radius, math3d.normalize(math3d.vector(op({tx, ty}, self.qs.cube_len * 0.5))))
--- end
-
-
---[[
-    r:      raidus
-    theta:  [0, pi/2]
-    phi:    [0, 2*pi]
-    x:      r*sin(theta)*cos(phi)
-    y:      r*sin(theta)*sin(phi)
-    z:      r*cos(theta)
-
-    r:      sqrt(dot(p))
-    theta:  arccos(z/r)
-    phi:    arccos(x/(r*sin(theta)))
-]]
-function trunkid_class:to_sphereical_coord(xyzcoord)
-    local nc = math3d.tovalue(math3d.mul(1/self.qs.radius, math3d.vector(xyzcoord)))
-    local theta = math.acos(nc[3])
-    local sintheta = math.sin(theta)
-    local phi = math.acos(nc[1]/sintheta)
-    return theta, phi
-end
-
-function trunkid_class:to_xyz(theta, phi)
-    local sintheta, costheta = math.sin(theta), math.cos(theta)
-    local sinphi, cosphi    = math.sin(phi), math.cos(phi)
-    return math3d.mul(self.ps.raidus, math3d.vector(sintheta*cosphi, sintheta*sinphi, costheta))
-end
-
-local function quad_corners(facepoints, inv_num, ix, iy)
-    local h = math3d.sub(facepoints[2], facepoints[1])
-    local v = math3d.sub(facepoints[4], facepoints[1])
-    local dh, dv = math3d.mul(h, inv_num), math3d.mul(v, inv_num)
-    local p = math3d.muladd(dh, ix, facepoints[1])
-    p = math3d.muladd(dv, iy, p)
-
-    local p1 = math3d.add(p, dh)
-    return {
-        p,                                 p1,
-        math3d.add(dv, p1), math3d.add(p, dv),
-    }
-end
-
-local function quad_delta(corners, inv_num)
-    local h = math3d.sub(corners[2], corners[1])
-    local v = math3d.sub(corners[4], corners[1])
-
-    return  math3d.mul(h, inv_num),
-            math3d.mul(v, inv_num),
-            corners[1]
-end
-
-function trunkid_class:proj_corners_3d()
-    -- tx, ty start from 1
-    local tx, ty = self:trunk_index_coord()
-    local qs = self.qs
-    local face = self:face()
-    local fv = qs.inscribed_cube[face+1]
-    return quad_corners(fv, qs.inv_num_trunk, tx-1, ty-1)
-end
-
-function trunkid_class:corners_3d()
-    local projcorners = self:proj_corners_3d()
-    local qs = self.qs
-    local radius = qs.radius
-    local function to_surface(v)
-        return math3d.mul(radius, math3d.normalize(v))
-    end
-    
-    local s = {}
-    for i, c in ipairs(projcorners) do
-        s[i] = to_surface(c)
-    end
-    return s
-end
-
-function trunkid_class:position(x, y)
-    local cx, cy = self:trunk_index_coord()
-    local qs = self.qs
-    local tu = qs.proj_tile_len
-    local plen = qs.proj_trunk_len
-
-    local offset = {cx * plen, cy * plen}
-
-    local t = {offset[1] + x * tu, offset[2] + y * tu}
-    local face = self:face()
-    return create_face_pt_op[face+1](t, qs.radius)
-end
-
 local function tile_vertices(trunkid, qs)
     local radius    = qs.radius
-    local tid       = trunkid_class.create(trunkid, qs)
-    local corners   = tid:proj_corners_3d()
-    local hd, vd, basept = quad_delta(corners, inv_tile_pre_trunk_line)
+    local hd, vd, basept = ctrunkid(trunkid, qs):tile_delta(inv_tile_pre_trunk_line)
 
     local vertices = {}
     local aabb = math3d.aabb()
-    for i=0, tile_pre_trunk_line do
-        local sp = math3d.muladd(hd, i, basept)
-        for j=0, tile_pre_trunk_line do
-            local p = math3d.mul(radius, math3d.normalize(math3d.muladd(vd, j, sp)))
-            aabb = math3d.aabb_append(aabb, p)
-            local vp = math3d.tovalue(p)
-            for ii=1, 3 do
-                vertices[#vertices+1] = vp[ii]
-            end
+    for hp in ctrunkid.iter_point(tile_pre_trunk_line, hd, basept) do
+        for p in ctrunkid.iter_point(tile_pre_trunk_line, vd, hp) do
+            local sp = ctrunkid.surface_point(radius, p)
+            aabb = math3d.aabb_append(aabb, sp)
+            local v = math3d.tovalue(sp)
+            vertices[#vertices+1] = v[1]
+            vertices[#vertices+1] = v[2]
+            vertices[#vertices+1] = v[3]
         end
     end
     return vertices, aabb
@@ -473,9 +296,8 @@ end
 -- normal num == tile num, not vertices normal
 local function tile_normals(trunkid, qs)
     local radius    = qs.radius
-    local tid       = trunkid_class.create(trunkid, qs)
+    local tid       = ctrunkid(trunkid, qs)
     local corners   = tid:proj_corners_3d()
-
 
 
 end
@@ -483,21 +305,21 @@ end
 function iquad_sphere.trunk_position(eid, trunkid, x, y)
     local e = world[eid]
     local qs = e._quad_sphere
-    return trunkid_class.create(trunkid, qs):position(x, y)
+    return ctrunkid(trunkid, qs):position(x, y)
 end
 
 
-iquad_sphere.pack_trunkid = pack_trunkid
+iquad_sphere.pack_trunkid = ctrunkid.pack_trunkid
 
 function iquad_sphere.unpack_trunkid(trunkid)
-    return trunkid_face(trunkid), trunkid_index(trunkid)
+    return ctrunkid.trunkid_face(trunkid), ctrunkid.trunkid_index(trunkid)
 end
 
 function iquad_sphere.center_coord(eid, spherecial)
     local e = world[eid]
     local qs = e._quad_sphere
     local trunkid = qs.trunkid
-    local tid = trunkid_class.create(trunkid, qs)
+    local tid = ctrunkid(trunkid, qs)
     local xyz = tid:coord_3d()
     if spherecial then
         return tid:to_sphereical_coord(xyz)
@@ -607,7 +429,7 @@ function iquad_sphere.add_solid_angle_entity(eid, color)
     local e         = world[eid]
     local qs        = e._quad_sphere
 
-    local tid       = trunkid_class.create(qs.trunkid, qs)
+    local tid       = ctrunkid(qs.trunkid, qs)
     local corners   = tid:proj_corners_3d()
     local vertices = {}
     for _, c in ipairs(corners) do
@@ -700,7 +522,7 @@ function iquad_sphere.tile_aabb(eid, tilex, tiley)
         return
     end
 
-    local hd, vd, basept = tile_delta(qs)
+    local hd, vd, basept = ctrunkid(trunkid, qs):tile_delta(inv_tile_pre_trunk_line)
 
     local aabb = math3d.aabb()
     for _, coord in ipairs{
@@ -709,8 +531,8 @@ function iquad_sphere.tile_aabb(eid, tilex, tiley)
         {tilex-1,   tiley},
         {tilex,     tiley},
     } do
-        local tileorigin_proj = math3d.muladd(vd, coord[2], math3d.muladd(hd, coord[1], basept))
-        aabb = math3d.aabb_append(aabb, math3d.mul(qs.radius, math3d.normalize(tileorigin_proj)))
+        local tileorigin_proj = ctrunkid.quad_position(hd, vd, coord[1], coord[2], basept)
+        aabb = math3d.aabb_append(aabb, ctrunkid.surface_point(qs.radius, tileorigin_proj))
     end
 
     return aabb
@@ -724,17 +546,10 @@ function iquad_sphere.tile_center(eid, tilex, tiley)
         return
     end
 
-    assert(tilex > 0 and tiley > 0)
+    local hd, vd, basept = ctrunkid(trunkid, qs):tile_delta(inv_tile_pre_trunk_line)
 
-    local hd, vd, basept = tile_delta(qs)
-
-    local sp = math3d.add(math3d.muladd(hd, tilex-1, basept), math3d.mul(0.5, hd))
-    return math3d.mul(qs.radius, math3d.normalize(
-        math3d.add(
-            math3d.muladd(vd, tiley-1, sp), 
-            math3d.mul(0.5, vd)
-        )
-    ))
+    local p = ctrunkid.quad_position(hd, vd, tilex-1, tiley-1, basept)
+    return ctrunkid.quad_position(hd, vd, 0.5, 0.5, p)
 end
 
 function iquad_sphere.focus_camera(eid, camreaeid, view_height, focus_pt)
