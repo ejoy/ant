@@ -52,9 +52,6 @@
     <ClCompile Include="..\..\clibs\rmlui\binding_fonteffect.cpp">
       <Filter>binding\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\BaseXMLParser.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Context.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -268,24 +265,6 @@
     <ClCompile Include="..\..\3rd\RmlUi\Source\Variant.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\XMLNodeHandler.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerBody.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerDefault.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerHead.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\XMLParser.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\RmlUi\Source\XMLParseTools.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Node.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -296,6 +275,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\3rd\RmlUi\Source\Transform.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\HtmlParser.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -456,22 +438,7 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\StyleSheetParser.h">
       <Filter>source</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerBody.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerDefault.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\XMLNodeHandlerHead.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\XMLParseTools.h">
-      <Filter>source</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Animation.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\BaseXMLParser.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Colour.h">
@@ -630,12 +597,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Vertex.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\XMLNodeHandler.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\XMLParser.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Node.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -647,6 +608,9 @@
     </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\ComputedValues.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\HtmlParser.h">
+      <Filter>source</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

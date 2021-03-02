@@ -36,17 +36,12 @@
 #include "../Include/RmlUi/StreamMemory.h"
 #include "../Include/RmlUi/StyleSheet.h"
 #include "../Include/RmlUi/SystemInterface.h"
-#include "../Include/RmlUi/XMLParser.h"
 #include "DataControllerDefault.h"
 #include "DataViewDefault.h"
 #include "PluginRegistry.h"
 #include "PropertyParserColour.h"
 #include "StreamFile.h"
 #include "StyleSheetFactory.h"
-#include "XMLNodeHandlerBody.h"
-#include "XMLNodeHandlerDefault.h"
-#include "XMLNodeHandlerHead.h"
-#include "XMLParseTools.h"
 
 #include <algorithm>
 
@@ -126,11 +121,6 @@ bool Factory::Initialise()
 	RegisterDataControllerInstancer(&default_instancers->data_controller_value, "value");
 	RegisterDataControllerInstancer(&default_instancers->data_controller_event, "event");
 
-	// XML node handlers
-	XMLParser::RegisterNodeHandler("", MakeShared<XMLNodeHandlerDefault>());
-	XMLParser::RegisterNodeHandler("body", MakeShared<XMLNodeHandlerBody>());
-	XMLParser::RegisterNodeHandler("head", MakeShared<XMLNodeHandlerHead>());
-
 	return true;
 }
 
@@ -142,8 +132,6 @@ void Factory::Shutdown()
 	structural_data_view_attribute_names.clear();
 
 	event_listener_instancer = nullptr;
-
-	XMLParser::ReleaseHandlers();
 
 	default_instancers.reset();
 }

@@ -35,16 +35,18 @@
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/SystemInterface.h"
 #include "../Include/RmlUi/DataModelHandle.h"
-#include "../Include/RmlUi/XMLParser.h"
+#include "../Include/RmlUi/FileInterface.h"
+#include "../Include/RmlUi/ElementUtilities.h"
 #include "DocumentHeader.h"
 #include "ElementStyle.h"
 #include "EventDispatcher.h"
 #include "StreamFile.h"
 #include "StyleSheetFactory.h"
-#include "XMLParseTools.h"
 #include "DataModel.h"
 #include "PluginRegistry.h"
+#include "HtmlParser.h"
 #include <set>
+#include <fstream>
 
 static constexpr float DOUBLE_CLICK_TIME = 0.5f;     // [s]
 static constexpr float DOUBLE_CLICK_MAX_DIST = 3.f;  // [dp]
@@ -63,12 +65,170 @@ Document::~Document() {
 	body.reset();
 }
 
+
+using namespace std::literals;
+
+static bool isDataViewElement(Element* e) {
+	for (const String& name : Factory::GetStructuralDataViewAttributeNames()) {
+		if (e->GetTagName() == name) {
+			return true;
+		}
+	}
+	return false;
+}
+
+class DocumentHtmlHandler: public HtmlHandler {
+	Document&             m_doc;
+	ElementAttributes     m_attributes;
+	SharedPtr<StyleSheet> m_style_sheet;
+	std::stack<Element*>  m_stack;
+	Element*              m_current;
+	size_t                m_line = 0;
+
+public:
+	DocumentHtmlHandler(Document& doc)
+		: m_doc(doc)
+	{}
+	void OnDocumentBegin() override {}
+	void OnDocumentEnd() override {
+		if (m_style_sheet) {
+			m_doc.SetStyleSheet(std::move(m_style_sheet));
+		}
+	}
+	void OnElementBegin(const char* szName) override {
+		m_attributes.clear();
+
+		if (!m_current && szName == "body"sv) {
+			m_current = m_doc.body.get();
+			return;
+		}
+		if (!m_current) {
+			return;
+		}
+		Element* parent = m_current;
+		m_stack.push(parent);
+		m_current = new Element(&m_doc, szName);
+		parent->AppendChild(ElementPtr(m_current));
+	}
+	void OnElementEnd(const  char* szName) override {
+		if (!m_current) {
+			return;
+		}
+		if (m_stack.empty()) {
+			m_current = nullptr;
+		}
+		else {
+			m_current = m_stack.top();
+			m_stack.pop();
+		}
+	}
+	void OnCloseSingleElement(const  char* szName) override {
+		if (szName == "script"sv) {
+			auto it = m_attributes.find("path");
+			if (it != m_attributes.end()) {
+				m_doc.LoadExternalScript(it->second.Get<std::string>());
+			}
+		}
+		else if (szName == "style"sv) {
+			auto it = m_attributes.find("path");
+			if (it != m_attributes.end()) {
+				LoadExternalStyle(it->second.Get<std::string>());
+			}
+		}
+		else {
+			OnElementEnd(szName);
+		}
+	}
+	void OnAttribute(const char* szName, const char* szValue) override {
+		if (m_current) {
+			m_current->SetAttribute(szName, szValue);
+		}
+		else {
+			m_attributes.emplace(szName, szValue);
+		}
+	}
+	void OnTextBegin() override {}
+	void OnTextEnd(const char* szValue) override {
+		if (m_current) {
+			if (isDataViewElement(m_current) && ElementUtilities::ApplyStructuralDataViews(m_current, szValue)) {
+				return;
+			}
+			Factory::InstanceElementText(m_current, szValue);
+		}
+	}
+	void OnComment(const char* szText) override {}
+	void OnScriptBegin(unsigned int line) override {
+		m_line = line;
+	}
+	void OnScriptEnd(const char* szValue) override {
+		auto it = m_attributes.find("path");
+		if (it == m_attributes.end()) {
+			m_doc.LoadInlineScript(szValue, m_doc.GetSourceURL(), m_line);
+		}
+		else {
+			m_doc.LoadExternalScript(it->second.Get<std::string>());
+		}
+	}
+	void OnStyleBegin(unsigned int line) override {
+		m_line = line;
+	}
+	void LoadInlineStyle(const std::string& content, const std::string& source_path, int line) {
+		UniquePtr<StyleSheet> inline_sheet = MakeUnique<StyleSheet>();
+		auto stream = MakeUnique<StreamMemory>((const byte*)content.data(), content.size());
+		stream->SetSourceURL(source_path);
+		if (inline_sheet->LoadStyleSheet(stream.get(), line)) {
+			if (m_style_sheet) {
+				SharedPtr<StyleSheet> combined_sheet = m_style_sheet->CombineStyleSheet(*inline_sheet);
+				m_style_sheet = combined_sheet;
+			}
+			else
+				m_style_sheet = std::move(inline_sheet);
+		}
+		stream.reset();
+	}
+	void LoadExternalStyle(const std::string& source_path) {
+		SharedPtr<StyleSheet> sub_sheet = StyleSheetFactory::GetStyleSheet(source_path);
+		if (sub_sheet) {
+			if (m_style_sheet) {
+				SharedPtr<StyleSheet> combined_sheet = m_style_sheet->CombineStyleSheet(*sub_sheet);
+				m_style_sheet = std::move(combined_sheet);
+			}
+			else
+				m_style_sheet = sub_sheet;
+		}
+		else
+			Log::Message(Log::LT_ERROR, "Failed to load style sheet %s.", source_path.c_str());
+	}
+	void OnStyleEnd(const char* szValue) override {
+		auto it = m_attributes.find("path");
+		if (it == m_attributes.end()) {
+			LoadInlineStyle(szValue, m_doc.GetSourceURL(), m_line);
+		}
+		else {
+			LoadExternalStyle(it->second.Get<std::string>());
+		}
+	}
+};
+
 bool Document::Load(const String& path) {
-	auto stream = MakeUnique<StreamFile>();
-	if (!stream->Open(path))
+	try {
+		std::ifstream input(GetFileInterface()->GetPath(path));
+		if (!input) {
+			return false;
+		}
+		std::string data((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+		input.close();
+
+		source_url = path;
+		HtmlParser parser;
+		DocumentHtmlHandler handler(*this);
+		parser.Parse(data, &handler);
+		body->UpdateProperties();
+	}
+	catch (HtmlParserException& e) {
+		Log::Message(Log::LT_ERROR, "%s Line: %d Column: %d", e.what(), e.GetLine(), e.GetColumn());
 		return false;
-	XMLParser parser(body.get());
-	parser.Parse(stream.get());
+	}
 	return true;
 }
 
@@ -76,9 +236,6 @@ void Document::ProcessHeader(const DocumentHeader* header)
 {
 	// Store the source address that we came from
 	source_url = header->source;
-
-	// Set the title to the document title.
-	title = header->title;
 
 	// If a style-sheet (or sheets) has been specified for this element, then we load them and set the combined sheet
 	// on the element; all of its children will inherit it by default.
@@ -153,17 +310,6 @@ Context* Document::GetContext()
 	return context;
 }
 
-// Sets the document's title.
-void Document::SetTitle(const String& _title)
-{
-	title = _title;
-}
-
-const String& Document::GetTitle() const
-{
-	return title;
-}
-
 const String& Document::GetSourceURL() const
 {
 	return source_url;
@@ -227,9 +373,9 @@ TextPtr Document::CreateTextNode(const String& str)
 }
 
 // Default load inline script implementation
-void Document::LoadInlineScript(const String& content, const String& source_path, int source_linbe)
+void Document::LoadInlineScript(const String& content, const String& source_path, int source_line)
 {
-	PluginRegistry::NotifyLoadInlineScript(this, content, source_path, source_linbe);
+	PluginRegistry::NotifyLoadInlineScript(this, content, source_path, source_line);
 }
 
 // Default load external script implementation

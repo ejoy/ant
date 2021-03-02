@@ -57,11 +57,6 @@ public:
 	/// Returns the document's context.
 	Context* GetContext();
 
-	/// Sets the document's title.
-	void SetTitle(const String& title);
-	/// Returns the title of this document.
-	const String& GetTitle() const;
-
 	/// Returns the source address of this document.
 	const String& GetSourceURL() const;
 
@@ -84,16 +79,7 @@ public:
 	/// @param[in] text The text content of the text element.
 	TextPtr CreateTextNode(const String& text);
 
-	/// Load a inline script into the document. Note that the base implementation does nothing, scripting language addons hook
-	/// this method.
-	/// @param[in] content The script content.
-	/// @param[in] source_path Path of the script the source comes from, useful for debug information.
-	/// @param[in] source_line Line of the script the source comes from, useful for debug information.
 	virtual void LoadInlineScript(const String& content, const String& source_path, int source_line);
-
-	/// Load a external script into the document. Note that the base implementation does nothing, scripting language addons hook
-	/// this method.
-	/// @param[in] source_path The script file path.
 	virtual void LoadExternalScript(const String& source_path);
 
 	bool ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state);
@@ -125,9 +111,6 @@ private:
 
 	/// Updates all sizes defined by the 'lp' unit.
 	void DirtyDpProperties();
-
-	// Title of the document
-	String title;
 
 	// The original path this document came from
 	String source_url;

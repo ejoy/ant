@@ -121,11 +121,12 @@ bool Context::Update() {
 Document* Context::LoadDocument(const String& document_path) {	
 	DocumentPtr document(new Document(dimensions));
 	document->context = this;
+	PluginRegistry::NotifyDocumentCreate(document.get());
 	if (!document->Load(document_path)) {
+		PluginRegistry::NotifyDocumentDestroy(document.get());
 		return nullptr;
 	}
 	documents.push_back(document.get());
-	PluginRegistry::NotifyDocumentCreate(document.get());
 	document->body->DispatchEvent(EventId::Load, Dictionary());
 	document->UpdateDataModel(false);
 	document->Update();
