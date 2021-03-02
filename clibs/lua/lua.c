@@ -639,8 +639,33 @@ static int pmain (lua_State *L) {
   return 1;
 }
 
+#if defined(_WIN32)
+static void enable_vtmode_(HANDLE h) {
+    if (h == INVALID_HANDLE_VALUE) {
+        return;
+    }
+    DWORD mode = 0;
+    if (!GetConsoleMode(h, &mode)) {
+        return;
+    }
+    mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    SetConsoleMode(h, mode);
+}
+static void enable_vtmode() {
+    enable_vtmode_(GetStdHandle(STD_OUTPUT_HANDLE));
+    enable_vtmode_(GetStdHandle(STD_ERROR_HANDLE));
+}
+#endif
 
 int main (int argc, char **argv) {
+#if defined(_WIN32)
+  if (GetACP() != CP_UTF8) {
+    fprintf(stderr, "The process codepage isn't UTF-8 (old Windows?).");
+    return -1;
+  }
+  enable_vtmode();
+#endif
+
   int status, result;
   lua_State *L = luaL_newstate();  /* create state */
   if (L == NULL) {

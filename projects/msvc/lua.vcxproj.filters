@@ -13,17 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="utf8">
-      <UniqueIdentifier>{b52597ae-2dca-4280-8621-b4f2f2ecaad0}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\clibs\lua\utf8_lua.c">
-      <Filter>utf8</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\clibs\lua\utf8_unicode.c">
-      <Filter>utf8</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\lua\lzio.h">
@@ -107,5 +96,15 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="lua54.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\clibs\lua\resource.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\clibs\lua\lua.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
