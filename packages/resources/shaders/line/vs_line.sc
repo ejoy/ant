@@ -11,7 +11,7 @@ void main()
 {
     vec3 pos = a_position;
 	gl_Position = mul(u_modelViewProj, vec4(pos, 1.0));
-#ifdef SINGLE_COLOR
+#ifndef SINGLE_COLOR
     v_color0 = a_color0;
 #endif 
 }
