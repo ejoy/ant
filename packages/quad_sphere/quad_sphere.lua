@@ -400,8 +400,8 @@ function trunkid_class:proj_corners_3d()
     local h = math3d.sub(fv[2], fv[1])
     local v = math3d.sub(fv[4], fv[1])
     local dh, dv = math3d.mul(h, itn), math3d.mul(v, itn)
-    local p = math3d.muladd(dh, (tx-0.5), fv[1])
-    p = math3d.muladd(dv, ty-0.5, p)
+    local p = math3d.muladd(dh, tx-1, fv[1])
+    p = math3d.muladd(dv, ty-1, p)
 
     return {
         p,                                 math3d.add(p, dh),
