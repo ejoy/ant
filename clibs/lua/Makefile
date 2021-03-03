@@ -6,6 +6,10 @@ else
 default : $(ODIR)/liblua.a
 endif
 
+ifeq "$(PLAT)" "mingw"
+MYOBJS=utf8_crt.o utf8_unicode.o
+endif
+
 CORE_O=	lapi.o lcode.o lctype.o ldebug.o ldo.o ldump.o lfunc.o lgc.o llex.o \
 	lmem.o lobject.o lopcodes.o lparser.o lstate.o lstring.o ltable.o \
 	ltm.o lundump.o lvm.o lzio.o
@@ -37,10 +41,7 @@ ifeq "$(PLAT)" "mingw"
 $(ODIR)/lua54.dll : $(foreach v, $(BASE_O), $(ODIR)/$(v))
 	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^
 
-$(ODIR)/resource.o : resource.rc
-	windres -i $^ -o $@
-
-$(ODIR)/lua.exe : $(ODIR)/lua.o $(ODIR)/resource.o | $(ODIR)/lua54.dll
+$(ODIR)/lua.exe : $(ODIR)/lua.o | $(ODIR)/lua54.dll
 	$(CC) -o $@ $^ $(LUALIB) && $(STRIP) $@
 
 else
@@ -120,3 +121,7 @@ lvm.o: lvm.c lprefix.h lua.h luaconf.h ldebug.h lstate.h lobject.h \
  ltable.h lvm.h ljumptab.h
 lzio.o: lzio.c lprefix.h lua.h luaconf.h llimits.h lmem.h lstate.h \
  lobject.h ltm.h lzio.h
+
+utf8_crt.o: utf8_crt.c utf8_crt.h utf8_unicode.h
+utf8_lua.o: utf8_lua.c utf8_unicode.h lua.c lprefix.h lua.h luaconf.h lauxlib.h lualib.h
+utf8_unicode.o: utf8_unicode.c utf8_unicode.h
