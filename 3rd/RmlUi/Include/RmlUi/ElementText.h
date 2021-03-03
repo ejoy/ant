@@ -33,6 +33,7 @@
 #include "Element.h"
 #include "Geometry.h"
 #include "FontEngineInterface.h"
+#include <optional>
 
 namespace Rml {
 

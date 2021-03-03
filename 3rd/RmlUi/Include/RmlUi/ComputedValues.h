@@ -32,7 +32,6 @@
 #include "Animation.h"
 #include "TextEffect.h"
 #include "Property.h"
-#include <optional>
 
 namespace Rml {
 

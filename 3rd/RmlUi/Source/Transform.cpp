@@ -6,6 +6,7 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/compatibility.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
+#include <optional>
 
 namespace Rml {
 
