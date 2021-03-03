@@ -224,9 +224,6 @@ function qst.process_entity(e)
     local proj_trunk_len = cube_len / qs.num_trunk
 
     local vertices = cube_vertices(radius)
-    for k, v in ipairs(vertices) do
-        vertices[k] = math3d.ref(v)
-    end
 
     e._quad_sphere = {
         num_trunk       = nt,
@@ -280,8 +277,8 @@ local function tile_vertices(trunkid, qs)
 
     local vertices = {}
     local aabb = math3d.aabb()
-    for hp in ctrunkid.iter_point(tile_pre_trunk_line, hd, basept) do
-        for p in ctrunkid.iter_point(tile_pre_trunk_line, vd, hp) do
+    for vp in ctrunkid.iter_point(tile_pre_trunk_line, vd, basept) do
+        for p in ctrunkid.iter_point(tile_pre_trunk_line, hd, vp) do
             local sp = ctrunkid.surface_point(radius, p)
             aabb = math3d.aabb_append(aabb, sp)
             local v = math3d.tovalue(sp)
@@ -542,14 +539,28 @@ function iquad_sphere.tile_center(eid, tilex, tiley)
     local e = world[eid]
     local qs = e._quad_sphere
     local trunkid = qs.trunkid
-    if trunkid == nil then
-        return
-    end
 
     local hd, vd, basept = ctrunkid(trunkid, qs):tile_delta(inv_tile_pre_trunk_line)
 
     local p = ctrunkid.quad_position(hd, vd, tilex-1, tiley-1, basept)
     return ctrunkid.quad_position(hd, vd, 0.5, 0.5, p)
+end
+
+function iquad_sphere.tile_normals(eid)
+    local e = world[eid]
+    local qs = e._quad_sphere
+    local trunkid = qs.trunkid
+    local hd, vd, basept = ctrunkid(trunkid, qs):tile_delta(inv_tile_pre_trunk_line)
+    local radius = qs.radius
+
+    local normals = {}
+    local ip = ctrunkid.iter_point
+    for vp in ip(tile_pre_trunk_line-1, vd, basept) do
+        for p in ip(tile_pre_trunk_line-1, hd, vp) do
+            normals[#normals+1] = ctrunkid.surface_point(radius, ctrunkid.quad_position(hd, vd, 0.5, 0.5, p))
+        end
+    end
+    return normals
 end
 
 function iquad_sphere.focus_camera(eid, camreaeid, view_height, focus_pt)
