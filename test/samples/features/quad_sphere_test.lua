@@ -81,8 +81,8 @@ function qst_sys:follow_transform_updated()
 
                 local s
 
-                for i=1, 16 do
-                    for j=1, 16 do
+                for i=1, 32 do
+                    for j=1, 32 do
                         local ceid = world:create_entity {
                             policy = {
                                 "ant.render|render",
@@ -102,9 +102,12 @@ function qst_sys:follow_transform_updated()
                             s = calc_scale(center_tile_aabb, world[ceid]._bounding.aabb)
                         end
                         
-                        local center = iqs.tile_center(qs_eid, i*2, j*2)
-                        iom.set_position(ceid, center)
-                        iom.set_scale(ceid, s)
+                        local tx, ty = i, j
+                        local m = iqs.tile_matrix(qs_eids[1], tx, ty)
+                        local srt = iom.srt(ceid)
+                        iom.set_srt(ceid, math3d.mul(m, srt))
+
+                        iom.set_scale(ceid, 3)
 
                         cubeeids[#cubeeids+1] = ceid
                     end

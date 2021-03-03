@@ -15,7 +15,9 @@ local ientity = world:interface "ant.render|entity"
 local ientity_state = world:interface "ant.scene|ientity_state"
 local iom   = world:interface "ant.objcontroller|obj_motion"
 
-local ctrunkid = require "trunkid_class"
+local ctrunkid      = require "trunkid_class"
+local iter_point    = ctrunkid.iter_point
+local surface_point = ctrunkid.surface_point
 
 local tile_pre_trunk_line<const>    = 32
 local inv_tile_pre_trunk_line<const> = 1.0 / tile_pre_trunk_line
@@ -542,8 +544,28 @@ function iquad_sphere.tile_center(eid, tilex, tiley)
 
     local hd, vd, basept = ctrunkid(trunkid, qs):tile_delta(inv_tile_pre_trunk_line)
 
-    local p = ctrunkid.quad_position(hd, vd, tilex-1, tiley-1, basept)
-    return ctrunkid.quad_position(hd, vd, 0.5, 0.5, p)
+    return ctrunkid.quad_position(hd, vd, tilex-1+0.5, tiley-1+0.5, basept)
+end
+
+function iquad_sphere.tile_matrix(eid, tilex, tiley)
+    local e = world[eid]
+    local qs = e._quad_sphere
+    local trunkid = qs.trunkid
+
+    local tid = ctrunkid(trunkid, qs)
+    local hd, vd, basept = tid:tile_delta(inv_tile_pre_trunk_line)
+
+    local facen = math3d.cross(math3d.normalize(hd), math3d.normalize(vd))
+    local radius = qs.radius
+
+    local q = ctrunkid.quad_position(hd, vd, tilex-1+0.5, tiley-1+0.5, basept)
+
+    local n = math3d.normalize(q)
+    local p = math3d.mul(radius, n)
+    local r = math3d.cross(facen, n)
+    local u = math3d.cross(n, r)
+
+    return math3d.set_columns(math3d.matrix(), r, u, n, p)
 end
 
 function iquad_sphere.tile_normals(eid)
@@ -554,9 +576,9 @@ function iquad_sphere.tile_normals(eid)
     local radius = qs.radius
 
     local normals = {}
-    local ip = ctrunkid.iter_point
-    for vp in ip(tile_pre_trunk_line-1, vd, basept) do
-        for p in ip(tile_pre_trunk_line-1, hd, vp) do
+    
+    for vp in iter_point(tile_pre_trunk_line-1, vd, basept) do
+        for p in iter_point(tile_pre_trunk_line-1, hd, vp) do
             normals[#normals+1] = ctrunkid.surface_point(radius, ctrunkid.quad_position(hd, vd, 0.5, 0.5, p))
         end
     end
