@@ -106,14 +106,19 @@ local cluster_buffers = {
 
 
 local function create_cluster_buffers()
-    cluster_buffers.AABB.handle                = bgfx.create_dynamic_vertex_buffer(cluster_aabb_buffer_size, cluster_buffers.AABB.layout.handle, "rwa")
-    cluster_buffers.light_grids.handle         = bgfx.create_dynamic_index_buffer(light_grid_buffer_size, "drwa")
-    cluster_buffers.global_index_count.handle  = bgfx.create_dynamic_index_buffer(1, "drwa")
-
     local lights = ilight.create_light_buffers()
     local numlights = #lights
-    cluster_buffers.light_index_list.handle    = bgfx.create_dynamic_index_buffer(numlights * cluster_count, "drwa")
-    cluster_buffers.light_info.handle          = bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(lights, "")), cluster_buffers.light_info.layout.handle, "r")
+
+    if numlights > 0 then
+        cluster_buffers.AABB.handle                = bgfx.create_dynamic_vertex_buffer(cluster_aabb_buffer_size, cluster_buffers.AABB.layout.handle, "rwa") 
+        cluster_buffers.light_grids.handle         = bgfx.create_dynamic_index_buffer(light_grid_buffer_size, "drwa")
+        cluster_buffers.global_index_count.handle  = bgfx.create_dynamic_index_buffer(1, "drwa")
+
+
+        cluster_buffers.light_index_list.handle    = bgfx.create_dynamic_index_buffer(numlights * cluster_count, "drwa")
+        cluster_buffers.light_info.handle          = bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(lights, "")), cluster_buffers.light_info.layout.handle, "r")
+        return true
+    end
 end
 
 local function set_buffers(which_stage, which_access)
@@ -126,6 +131,9 @@ local function set_buffers(which_stage, which_access)
 end
 
 local function build_cluster_aabb_struct()
+    if cluster_aabb_fx == nil then
+        return
+    end
     local mq_eid = world:singleton_entity_id "main_queue"
     set_buffers("stage", "build_access")
     local icr = world:interface "ant.render|icluster_render"
@@ -152,17 +160,17 @@ function cfs:post_init()
     cr_camera_mb = world:sub{"component_changed", "camera_eid", mq_eid}
     camera_frustum_mb = world:sub{"component_changed", "frustum", world[mq_eid].camera_eid}
 
-    create_cluster_buffers()
-
-    cluster_aabb_fx = assetmgr.load_fx{
-        cs = "/pkg/ant.resources/shaders/compute/cs_cluster_aabb.sc",
-        setting = {CLUSTER_BUILD=1},
-    }
-    cluster_light_cull_fx = assetmgr.load_fx{
-        cs = "/pkg/ant.resources/shaders/compute/cs_lightcull.sc",
-        setting = {CLUSTER_PREPROCESS=1}
-    }
-    build_cluster_aabb_struct()
+    if create_cluster_buffers() then
+        cluster_aabb_fx = assetmgr.load_fx{
+            cs = "/pkg/ant.resources/shaders/compute/cs_cluster_aabb.sc",
+            setting = {CLUSTER_BUILD=1},
+        }
+        cluster_light_cull_fx = assetmgr.load_fx{
+            cs = "/pkg/ant.resources/shaders/compute/cs_lightcull.sc",
+            setting = {CLUSTER_PREPROCESS=1}
+        }
+        build_cluster_aabb_struct()
+    end
 end
 
 function cfs:data_changed()
@@ -178,6 +186,9 @@ function cfs:data_changed()
 end
 
 local function cull_lights()
+    if cluster_light_cull_fx == nil then
+        return
+    end
     local mq_eid = world:singleton_entity_id "main_queue"
 
     --TODO: need abstract compute dispatch pipeline, which like render pipeline
@@ -198,7 +209,9 @@ end
 local icr = ecs.interface "icluster_render"
 
 function icr.set_buffers()
-    set_buffers("render_stage", "render_access")
+    if cluster_light_cull_fx then
+        set_buffers("render_stage", "render_access")
+    end
 end
 
 function icr.cluster_sizes()
