@@ -98,7 +98,10 @@ function iobj_motion.lookto(eid, eyepos, viewdir, updir)
     local e = world[eid]
     local rc = e._rendercache
     if updir then
-        rc.updir = updir
+        if rc.updir == nil then
+            rc.updir = math3d.ref(math3d.vector(0, 1, 0, 0))
+        end
+        rc.updir.v = updir
     end
     rc.srt.id = math3d.inverse(math3d.lookto(eyepos, viewdir, updir))
     world:pub{"component_changed", "transform", eid}

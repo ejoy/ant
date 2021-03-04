@@ -96,12 +96,11 @@ function ctrunkid:tile_delta(inv_num)
 end
 
 function ctrunkid:proj_corners_3d()
-    -- tx, ty start from 1
     local tx, ty = self:trunk_index_coord()
     local qs = self.qs
     local face = self:face()
     local fv = qs.inscribed_cube[face+1]
-    return ctrunkid.quad_corners(fv, qs.inv_num_trunk, tx-1, ty-1)
+    return ctrunkid.quad_corners(fv, qs.inv_num_trunk, tx, ty)
 end
 
 local function surface_point(radius, v)
@@ -167,16 +166,16 @@ local create_face_pt_op = {
 }
 
 function ctrunkid:position(x, y)
-    local cx, cy = self:trunk_index_coord()
-    local qs = self.qs
-    local tu = qs.proj_tile_len
-    local plen = qs.proj_trunk_len
+    -- local cx, cy = self:trunk_index_coord()
+    -- local qs = self.qs
+    -- local tu = qs.proj_tile_len
+    -- local plen = qs.proj_trunk_len
 
-    local offset = {cx * plen, cy * plen}
+    -- local offset = {cx * plen, cy * plen}
 
-    local t = {offset[1] + x * tu, offset[2] + y * tu}
-    local face = self:face()
-    return create_face_pt_op[face+1](t, qs.radius)
+    -- local t = {offset[1] + x * tu, offset[2] + y * tu}
+    -- local face = self:face()
+    -- return create_face_pt_op[face+1](t, qs.radius)
 end
 
 return ctrunkid

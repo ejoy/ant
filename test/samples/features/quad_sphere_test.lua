@@ -4,8 +4,8 @@ local world = ecs.world
 local qst_sys = ecs.system "quad_sphere_test_system"
 local iqs = world:interface "ant.quad_sphere|iquad_sphere"
 local iom = world:interface "ant.objcontroller|obj_motion"
-local icamera = world:interface "ant.camera|camera"
 local imaterial = world:interface "ant.asset|imaterial"
+local icc = world:interface "ant.quad_sphere|icamera_controller"
 
 local math3d = require "math3d"
 
@@ -16,19 +16,26 @@ local qs_eids = {}
 function qst_sys:init()
     --front
     qs_eids[1] = iqs.create("test_quad_sphere1", num_trunk, radius)
-    iqs.set_trunkid(qs_eids[1], iqs.pack_trunkid(0, 1, 5))
+    --iqs.set_trunkid(qs_eids[1], iqs.pack_trunkid(0, 1, 5))
     imaterial.set_property(qs_eids[1], "u_color", {1, 0, 0, 1})
-    --top
-    qs_eids[2] = iqs.create("test_quad_sphere2", num_trunk, radius)
-    iqs.set_trunkid(qs_eids[2], iqs.pack_trunkid(2, 5, 5))
-    imaterial.set_property(qs_eids[2], "u_color", {0, 1, 0, 1})
-    --right
-    qs_eids[3] = iqs.create("test_quad_sphere3", num_trunk, radius)
-    iqs.set_trunkid(qs_eids[3], iqs.pack_trunkid(5, 1, 1))
-    imaterial.set_property(qs_eids[3], "u_color", {0, 0, 1, 1})
+    -- --top
+    -- qs_eids[2] = iqs.create("test_quad_sphere2", num_trunk, radius)
+    -- iqs.set_trunkid(qs_eids[2], iqs.pack_trunkid(2, 5, 5))
+    -- imaterial.set_property(qs_eids[2], "u_color", {0, 1, 0, 1})
+    -- --right
+    -- qs_eids[3] = iqs.create("test_quad_sphere3", num_trunk, radius)
+    -- iqs.set_trunkid(qs_eids[3], iqs.pack_trunkid(5, 1, 1))
+    -- imaterial.set_property(qs_eids[3], "u_color", {0, 0, 1, 1})
 
     iqs.add_inscribed_cube(qs_eids[1], {1, 1, 0, 1})
-    iqs.add_solid_angle_entity(qs_eids[1], {0.9, 0.8, 0.5, 1})
+    --iqs.add_solid_angle_entity(qs_eids[1], {0.9, 0.8, 0.5, 1})
+end
+
+function qst_sys:post_init()
+    local mq = world:singleton_entity "main_queue"
+    local cceid = icc.create(mq.camera_eid, qs_eids[1])
+    icc.set_view(cceid, {0, 0, radius}, {0, 5, -10}, 0.1)
+    --icc.set_forward(cceid, 0.1)
 end
 
 local kb_mb = world:sub{"keyboard"}
@@ -44,13 +51,8 @@ function qst_sys:follow_transform_updated()
         if key == 'SPACE' and p == 0 then
             local mq = world:singleton_entity "main_queue"
             local cameraeid = mq.camera_eid
-            local swap = {2, 3, 1}
-
-            which_qseid = swap[which_qseid]
-            local qs_eid = qs_eids[which_qseid]
-
-            local center = iqs.tile_center(qs_eid, 16, 16)
-            iqs.focus_camera(qs_eid, cameraeid, 20, center)
+            local center = iqs.tile_center(qs_eids[1], 16, 16)
+            iqs.focus_camera(qs_eids[1], cameraeid, 20, center)
         end
 
         if key == 'L' and p == 0 then

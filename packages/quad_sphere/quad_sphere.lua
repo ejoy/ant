@@ -292,22 +292,6 @@ local function tile_vertices(trunkid, qs)
     return vertices, aabb
 end
 
--- normal num == tile num, not vertices normal
-local function tile_normals(trunkid, qs)
-    local radius    = qs.radius
-    local tid       = ctrunkid(trunkid, qs)
-    local corners   = tid:proj_corners_3d()
-
-
-end
-
-function iquad_sphere.trunk_position(eid, trunkid, x, y)
-    local e = world[eid]
-    local qs = e._quad_sphere
-    return ctrunkid(trunkid, qs):position(x, y)
-end
-
-
 iquad_sphere.pack_trunkid = ctrunkid.pack_trunkid
 
 function iquad_sphere.unpack_trunkid(trunkid)
@@ -329,33 +313,50 @@ end
 local function which_face(pos)
     local x, y, z = pos[1], pos[2], pos[3]
     local ax, ay, az = math.abs(x), math.abs(y), math.abs(z)
+    local maxv
+    local fx, fy
+    local face
     if ax > ay then
         if ax > az then
-            return x > 0 and face_index.right or face_index.left, y, z
+            maxv = ax
+            face, fx, fy = x > 0 and face_index.right or face_index.left, y, z
         end
     else
         if ay > az then
-            return y > 0 and face_index.top or face_index.bottom, x, z
+            maxv = ay
+            face, fx, fy = y > 0 and face_index.top or face_index.bottom, x, z
         end
     end
 
-    return z > 0 and face_index.front or face_index.back, x, y
+    maxv = az
+    --front face in -z direction
+    face, fx, fy = z > 0 and face_index.back or face_index.front, x, y
+
+    -- normalize[0, 1]
+    fx, fy = fx / maxv, fy / maxv
+    fx = (fx + 1) * 0.5
+    fy = (fy + 1) * 0.5
+    return face, fx, fy
 end
 
-function iquad_sphere.trunk_index(eid, pos)
+local function tile_coord(pos, qs)
+    local face, x, y = which_face(pos)
+    local nt = qs.num_trunk
+    local tx, ty = x * nt, y * nt
+    local ix, iy = math.floor(tx), math.floor(ty)
+
+    local cx, cy = qs.cube_len * x, qs.cube_len * y
+    cx = cx - ix * qs.proj_trunk_len
+    cy = cy - iy * qs.proj_trunk_len
+
+    return ctrunkid.pack_trunkid(face, ix, iy), cx, cy
+end
+
+function iquad_sphere.trunk_coord(eid, pos)
     local e = world[eid]
     local qs = e._quad_sphere
 
-    local face, x, y = which_face(pos)
-
-    local nt = qs.num_trunk
-    local tl = qs.proj_trunk_len
-    local trunk_coord = {x / tl, y / tl}
-
-    local trunkid = face * qs.trunks_pre_face + trunk_coord[2] * nt + trunk_coord[1]
-    local tile_coord_x, tile_coord_y = x - trunk_coord[1] * nt, y - trunk_coord[2]
-
-    return trunkid, tile_coord_x, tile_coord_y
+    return tile_coord(pos, qs)
 end
 
 function iquad_sphere.set_trunkid(eid, trunkid)
@@ -566,6 +567,35 @@ function iquad_sphere.tile_matrix(eid, tilex, tiley)
     local u = math3d.cross(n, r)
 
     return math3d.set_columns(math3d.matrix(), r, u, n, p)
+end
+
+function iquad_sphere.move(eid, pos, forward, df, dr)
+    local e = world[eid]
+    local qs = e._quad_sphere
+    
+    local trunkid = tile_coord(math3d.tovalue(pos), qs)
+
+    local n = math3d.normalize(pos)
+    -- calc new position
+    local r = math3d.cross(n, forward)
+    if math3d.dot(r, r) == 0 then
+        error(("forward vector parallel with up vector:%s, %s"):format(math3d.tostring(forward), math3d.tostring(n)))
+    end
+    local newpos = math3d.muladd(df, forward, pos)
+    newpos = math3d.muladd(dr, r, newpos)
+
+    -- calc new forward
+    local nn = math3d.normalize(n)
+    local nr = math3d.cross(n, nn)
+    local nf = math3d.cross(nr, nn)
+
+    local newtrunkid = tile_coord(math3d.tovalue(newpos), qs)
+
+    if trunkid ~= newtrunkid then
+        iquad_sphere.set_trunkid(eid, newtrunkid)
+    end
+
+    return newpos, nf
 end
 
 function iquad_sphere.tile_normals(eid)
