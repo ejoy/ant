@@ -285,7 +285,7 @@ function ientity.create_frustum_entity(frustum_points, name, color)
 		vb[#vb+1] = color
 	end
 	local mesh = create_mesh({"p3|c40niu", vb}, frustum_ib)
-	return create_simple_render_entity(nil, "/pkg/ant.resources/materials/line.material", name, mesh)
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line.material", mesh)
 end
 
 local axis_ib = {
@@ -303,7 +303,7 @@ function ientity.create_axis_entity(srt, name, color)
 		0, 0, 1, color or 0xffff0000,
 	}
 	local mesh = create_mesh({"p3|c40niu", axis_vb}, axis_ib)
-	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line_singlecolor.material", name, mesh)
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_singlecolor.material", mesh, srt)
 end
 
 function ientity.create_line_entity(srt, p0, p1, name, color)
@@ -312,7 +312,7 @@ function ientity.create_line_entity(srt, p0, p1, name, color)
 		p1[1], p1[2], p1[3], color or 0xffffffff,
 	}
 	local mesh = create_mesh({"p3|c40niu", vb}, {0, 1})
-	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line_singlecolor.material", name, mesh)
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_singlecolor.material", mesh, srt)
 	
 end
 
@@ -327,7 +327,7 @@ function ientity.create_circle_entity(radius, slices, srt, name)
 		gvb[#gvb+1] = 0xffffffff
 	end
 	local mesh = create_mesh({"p3|c40niu", gvb}, circle_ib)
-	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line_singlecolor.material", name, mesh)
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_singlecolor.material", mesh, srt)
 end
 
 function ientity.create_circle_mesh_entity(radius, slices, srt, mtl, name)
@@ -353,7 +353,7 @@ function ientity.create_circle_mesh_entity(radius, slices, srt, mtl, name)
 		idx = idx + 1
 	end
 	local mesh = create_mesh({"p3|n3", gvb}, ib)
-	return create_simple_render_entity(srt, mtl, name, mesh)
+	return create_simple_render_entity(name, mtl, mesh, srt)
 end
 
 local skybox_mesh
