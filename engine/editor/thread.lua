@@ -11,9 +11,8 @@ if thread.id == 0 then
 			local f = assert(io.open(path.."/script/debugger.lua"))
 			local str = f:read "a"
 			f:close()
-			assert(load(str, "=(BOOTSTRAP)"))()
-			:init {root=path,latest=true}
-			:start "<Not Needed>"
+			assert(load(str, "=(BOOTSTRAP)"))(path)
+			:start {latest=true,address="<Not Needed>"} 
 			:event "wait"
 		]]):format(debugger.root)
 	end
