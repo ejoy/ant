@@ -162,11 +162,11 @@ local function calc_sun_direction(skycomp)
 	local altitude = math.asin(math.sin(latitude) * math.sin(delta) + 
 								math.cos(latitude) * math.cos(delta) * math.cos(hh))
 
-	local rot0 = math3d.quaternion(skycomp._updir, -azimuth)
+	local rot0 = math3d.quaternion{axis=skycomp._updir, r=-azimuth}
 	local dir  = math3d.transform(rot0, skycomp._northdir, 0)
 	local uxd  = math3d.cross(skycomp._updir, dir)
 	
-	local rot1 = math3d.quaternion(uxd, -altitude)
+	local rot1 = math3d.quaternion{axis=uxd, r=-altitude}
 	return math3d.transform(rot1, dir, 0)
 end
 

@@ -145,6 +145,10 @@ function icc.set_forward(radian_ratio)
     cc.forward.v = rotate_forward(cc.targetpos, radian_ratio)
 end
 
+function icc.forward()
+    return check_cc().forward
+end
+
 function icc.move(df, dr)
     local cc = check_cc()
 

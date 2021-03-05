@@ -966,11 +966,26 @@ lvector(lua_State *L) {
 
 static int
 lquaternion(lua_State *L) {
-	if (lua_isuserdata(L, 1)) {
+	const int n = lua_gettop(L);
+	if (n == 1 && lua_isuserdata(L, 1)){
 		int64_t id = object_to_quat(L, GETLS(L), 1);
 		lua_pushlightuserdata(L, STACKID(id));
 		return 1;
 	}
+
+	if (n == 2 && lua_isuserdata(L, 1) && lua_isuserdata(L, 2)){
+		int64_t id1 = get_id(L, 1, lua_type(L, 1));
+		int64_t id2 = get_id(L, 2, lua_type(L, 2));
+
+		int type1, type2;
+		struct lastack *LS = GETLS(L);
+		const float *v1 = lastack_value(LS, id1, &type1);
+		const float *v2 = lastack_value(LS, id2, &type2);
+		math3d_quat_between_2vectors(LS, v1, v2);
+		lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+		return 1;
+	}
+
 	return new_object(L, LINEAR_TYPE_QUAT, quat_from_table, 4);
 }
 

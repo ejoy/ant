@@ -14,6 +14,7 @@ local mathpkg   = import_package "ant.math"
 local mc		= mathpkg.constant
 
 local ies = world:interface "ant.scene|ientity_state"
+local imaterial = world:interface "ant.asset|imaterial"
 local irender = world:interface "ant.render|irender"
 local bgfx = require "bgfx"
 
@@ -488,7 +489,7 @@ function ientity.create_gamma_test_entity()
     }
 end
 
-function ientity.create_arrow_entity(srt, data)
+function ientity.create_arrow_entity(origin, forward, scale, data)
 	--[[
 		cylinde & cone
 		1. center in (0, 0, 0, 1)
@@ -500,17 +501,6 @@ function ientity.create_arrow_entity(srt, data)
 		2. scale cylinder as it match cylinder_cone_ratio
 		3. scale cylinder radius
 	]]
-	local arroweid = world:create_entity{
-		policy = {
-			"ant.general|name",
-			"ant.scene|transform_policy",
-		},
-		data = {
-			transform = srt,
-			scene_entity = true,
-			name = "directional light arrow",
-		},
-	}
 
 	local cone_rawlen<const> = 2
 	local cone_raw_halflen = cone_rawlen * 0.5
@@ -534,6 +524,22 @@ function ientity.create_arrow_entity(srt, data)
 
 	local cone_offset = math3d.sub(cone_centerpos, arrow_center)
 
+	local arroweid = world:create_entity{
+		policy = {
+			"ant.general|name",
+			"ant.scene|transform_policy",
+		},
+		data = {
+			transform = {
+				s = scale,
+				r = math3d.quaternion(mc.YAXIS, forward),
+				t = math3d.sub(origin, cylinder_bottom_pos),	-- move cylinder bottom to zero origin, and move to origin: -cylinder_bottom_pos+origin
+			},
+			scene_entity = true,
+			name = "directional light arrow",
+		},
+	}
+
 	local cylindereid = world:create_entity{
 		policy = {
 			"ant.render|render",
@@ -547,7 +553,7 @@ function ientity.create_arrow_entity(srt, data)
 				s = math3d.ref(math3d.mul(100, math3d.vector(cylinder_radius, cylinder_scaleY, cylinder_radius))),
 				t = math3d.ref(cylinder_offset),
 			},
-			material = "/pkg/ant.resources/materials/singlecolor.material",
+			material = "/pkg/ant.resources/materials/simpletri.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			name = "arrow.cylinder",
 		},
@@ -568,7 +574,7 @@ function ientity.create_arrow_entity(srt, data)
 			scene_entity = true,
 			state = ies.create_state "visible",
 			transform =  {s=100, t=cone_offset},
-			material = "/pkg/ant.resources/materials/singlecolor.material",
+			material = "/pkg/ant.resources/materials/simpletri.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone"
 		},

@@ -564,7 +564,6 @@ function iquad_sphere.tile_matrix(eid, tilex, tiley)
     local tid = ctrunkid(trunkid, qs)
     local hd, vd, basept = tid:tile_delta(inv_tile_pre_trunk_line)
 
-    local facen = math3d.cross(math3d.normalize(hd), math3d.normalize(vd))
     local radius = qs.radius
 
     local q = ctrunkid.quad_position(hd, vd, tilex-1+0.5, tiley-1+0.5, basept)

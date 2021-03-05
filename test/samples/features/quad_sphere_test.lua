@@ -35,10 +35,52 @@ end
 function qst_sys:post_init()
     local mq = world:singleton_entity "main_queue"
     icc.attach(mq.camera_eid, qs_eids[1])
-    local targetpos = {0, 0, radius, 1}
-    icc.set_view(targetpos, {0, 2, 2, 1}, 0.1)
+    local tp = {0, 0, radius}
+    local targetpos = math3d.vector(tp[1], tp[2], tp[3], 1)
+    icc.set_view(targetpos, {0, 2, 2, 1}, 0)
 
-    
+    local srt = iqs.tangent_matrix(targetpos)
+    local xaxis = math3d.tovalue(math3d.add(targetpos, math3d.normalize(math3d.index(srt, 1))))
+    local yaxis = math3d.tovalue(math3d.add(targetpos, math3d.normalize(math3d.index(srt, 2))))
+    local zaxis = math3d.tovalue(math3d.add(targetpos, math3d.normalize(math3d.index(srt, 3))))
+
+    local vertices = {
+        tp[1], tp[2], tp[3],
+        xaxis[1], xaxis[2], xaxis[3],
+        yaxis[1], yaxis[2], yaxis[3],
+        zaxis[1], zaxis[2], zaxis[3],
+    }
+
+    local indices = {
+        0, 1, 0, 2, 0, 3,
+    }
+
+    local axismesh = ientity.create_mesh({"p3", vertices}, indices)
+    ientity.create_simple_render_entity(
+        "axis",
+        "/pkg/ant.resources/materials/line_color.material",
+        axismesh
+    )
+
+    -- ientity.create_arrow_entity(targetpos, math3d.index(srt, 1), 0.1, {
+    --     cylinder_cone_ratio = 8/3.0,
+    --     cylinder_color = {1, 0, 0, 1},
+    --     cone_color = {1, 0, 0, 1}
+    -- })
+
+    -- ientity.create_arrow_entity(targetpos, math3d.index(srt, 2), 0.1, {
+    --     cylinder_cone_ratio = 8/3.0,
+    --     cylinder_color = {0, 1, 0, 1},
+    --     cone_color = {0, 1, 0, 1}
+    -- })
+
+    -- ientity.create_arrow_entity(targetpos, math3d.index(srt, 3), 0.1, {
+    --     cylinder_cone_ratio = 8/3.0,
+    --     cylinder_color = {0, 0, 1, 1},
+    --     cone_color = {0, 0, 1, 1}
+    -- })
+
+
 
     --icc.set_forward(cceid, 0.1)
 end
