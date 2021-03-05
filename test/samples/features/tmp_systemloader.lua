@@ -126,6 +126,9 @@ local function point_light_test()
     -- iom.set_position(cubeeid, {0, 0, 0, 1})
 end
 
+local icc = world:interface "ant.test.features|icamera_controller"
+local iccqs = world:interface "ant.quad_sphere|icamera_controller"
+
 function init_loader_sys:init()
     point_light_test()
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
@@ -135,12 +138,19 @@ function init_loader_sys:init()
 
     ientity.create_procedural_sky()
     --target_lock_test()
+
+    icc.create()
+    iccqs.create()
 end
 
 function init_loader_sys:post_init()
     local mq = world:singleton_entity "main_queue"
+
+    icc.attach(mq.camera_eid)
+    iccqs.attach(mq.camera_eid)
+    icamera.controller(mq.camera_eid, iccqs.get())
+
     local pos = math3d.vector(-10.5, 10, -5.5, 1)
-    
     icamera.lookto(mq.camera_eid, pos, math3d.sub(mc.ZERO_PT, pos))
     -- icamera.set_dof(mq.camera_eid, {
     --     -- aperture_fstop      = 2.8,
@@ -172,4 +182,14 @@ function init_loader_sys:post_init()
     -- ipl.add_strip_lines({
     --     {0, 0, 0}, {0.5, 0, 1}, {1, 0, 0},
     -- }, 15, {1.0, 1.0, 0.0, 1.0})
+end
+
+local kb_mb = world:sub{"keyboard"}
+function init_loader_sys:data_changed()
+    for _, key, press, status in kb_mb:unpack() do
+        if key == "X" and press == 0 then
+            local mq = world:singleton_entity "main_queue"
+            icamera.controller(mq.camera_eid, icc.get() == icamera.controller(mq.camera_eid) and iccqs.get() or icc.get())
+        end
+    end
 end

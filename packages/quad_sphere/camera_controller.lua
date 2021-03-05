@@ -9,6 +9,8 @@ local rhwi = import_package "ant.render".hwi
 
 local iqs = world:interface "ant.quad_sphere|iquad_sphere"
 local iom = world:interface "ant.objcontroller|obj_motion"
+local icamera = world:interface "ant.camera|camera"
+local _DEBUG<const> = false
 
 local cct = ecs.transform "camera_controller_transform"
 function cct.process_entity(e)
@@ -20,11 +22,35 @@ function cct.process_entity(e)
     }
 end
 
-local cceid
-
 local icc = ecs.interface "icamera_controller"
 
-local function check_cc(cc)
+local cceid
+function icc.create(cameraeid, qseid)
+    if cceid then
+        error("can not could more than one time")
+    end
+
+    cceid = world:create_entity{
+        policy={
+            "ant.quad_sphere|camera_controller",
+            "ant.general|name",
+        },
+        data = {
+            camera_controller = {},
+            name = "quad_sphere_camera_controller",
+        }
+    }
+    icc.attach(cceid, cameraeid, qseid)
+    return cceid
+end
+
+
+local function check_cc()
+    if cceid == nil then
+        error("invalid camera contronller eid")
+    end
+
+    local cc = world[cceid]._camera_controller
     if cc.qseid == nil then
         error("need attach a quad_sphere")
     end
@@ -32,33 +58,33 @@ local function check_cc(cc)
     if cc.camera_eid == nil then
         error("need attach camera")
     end
+
+    return cc
 end
 
-function icc.active_camera_controller(eid)
-    if eid == nil then
-        return cceid
+function icc.camera()
+    return check_cc().camera_eid
+end
+
+function icc.quad_sphere()
+    return check_cc().qseid
+end
+
+function icc.attach(ceid, qseid)
+    local cc = world[cceid]._camera_controller
+    cc.camera_eid, cc.qseid = ceid, qseid
+end
+
+function icc.is_active()
+    local e = world[cceid]
+    local ceid = e._camera_controller.camera_eid
+    if ceid and world[ceid] then
+        return icamera.controller(ceid) == cceid
     end
-    cceid = eid
 end
 
-function icc.camera(eid)
-    eid = eid or cceid
-    local e = world[eid]
-    local cc = e._camera_controller
-    return cc.camera_eid
-end
-
-function icc.quad_sphere(eid)
-    local e = world[eid]
-    local cc = e._camera_controller
-    return cc.qseid
-end
-
-function icc.attach(eid, ceid, qseid)
-    local e = world[eid]
-    local cc = e._camera_controller
-    cc.camera_eid = ceid
-    cc.qseid = qseid
+function icc.get()
+    return cceid
 end
 
 local function updateview(cc)
@@ -74,8 +100,9 @@ local function updateview(cc)
     iom.lookto(cc.camera_eid, eyepos, viewdir, updir)
 end
 
+local twopi<const> = math.pi * 2
 local function calc_rotation(targetpos, radian_ratio)
-    local r = radian_ratio * math.pi * 2
+    local r = radian_ratio * twopi
     local n = math3d.normalize(targetpos)
     return math3d.quaternion{axis=n, r=r}
 end
@@ -85,65 +112,50 @@ local function calc_forward(targetpos, forward, radian_ratio)
     return math3d.transform(q, forward, 0)
 end
 
-function icc.set_view(eid, targetpos, localpos, radian_ratio)
-    local e = world[eid]
-    local cc = e._camera_controller
-    check_cc(cc)
+local function rotate_local_forward(radian_ratio)
+    --TODO: there is a more fast version for rotate vector around YAXIS
+    local r = radian_ratio * twopi
+    local q = math3d.quaternion{axis=mc.YAXIS, r=r}
+    return math3d.transform(q, mc.ZAXIS, 0)
+end
+
+local function rotate_forward(targetpos, radian_ratio)
+    local tm = iqs.tangent_matrix(targetpos)
+    local f = rotate_local_forward(radian_ratio)
+    return math3d.transform(tm, f, 0)
+end
+
+function icc.set_view(targetpos, localpos, radian_ratio)
+    local cc = check_cc()
 
     cc.targetpos.v = targetpos
     cc.localpos.v = localpos
 
-    cc.forward = calc_forward(cc.targetpos, mc.ZAXIS, radian_ratio)
+    cc.forward.v = rotate_forward(cc.targetpos, radian_ratio)
+    assert(0 == math3d.dot(cc.forward, targetpos))
     updateview(cc)
 
-    local trunkid = iqs.trunk_coord(cc.qseid, targetpos)
+    local trunkid = iqs.trunk_coord(cc.qseid, cc.targetpos)
     iqs.set_trunkid(cc.qseid, trunkid)
 end
 
-function icc.set_forward(eid, radian_ratio)
-    local e = world[eid]
-    local cc = e._camera_controller
-    check_cc(cc)
+function icc.set_forward(radian_ratio)
+    local cc = check_cc()
 
-    cc.forward.v = calc_forward(cc.targetpos, mc.ZAXIS, radian_ratio)
+    cc.forward.v = rotate_forward(cc.targetpos, radian_ratio)
 end
 
-function icc.move(eid, df, dr)
-    local e = world[eid]
-    local cc = e._camera_controller
-    check_cc(cc)
-    
+function icc.move(df, dr)
+    local cc = check_cc()
+
     local t, f = cc.targetpos, cc.forward
     t.v, f.v = iqs.move(cc.qseid, t, f, df, dr)
     updateview(cc)
 end
 
-function icc.rotate(eid, radian_ratio)
-    local e = world[eid]
-    local cc = e._camera_controller
-    check_cc(cc)
-
+function icc.rotate(radian_ratio)
+    local cc = check_cc()
     cc.forward.v = calc_forward(cc.targetpos, cc.forward, radian_ratio)
-end
-
-function icc.create(cameraeid, qseid)
-    local eid = world:create_entity{
-        policy={
-            "ant.quad_sphere|camera_controller",
-            "ant.general|name",
-        },
-        data = {
-            camera_controller = {},
-            name = "quad_sphere_camera_controller",
-        }
-    }
-    icc.attach(eid, cameraeid, qseid)
-
-    if cceid == nil then
-        icc.active_camera_controller(eid)
-    end
-
-    return eid
 end
 
 local cc = ecs.system "camera_controller"
@@ -176,6 +188,9 @@ end
 -- end
 
 function cc:data_changed()
+    if not icc.is_active() then
+        return 
+    end
 	-- if can_rotate() then
     --     local cameraeid = icc.camera()
 	-- 	for _, e in ipairs(mouse_events) do
@@ -215,7 +230,7 @@ function cc:data_changed()
 		end
 		--if keyboard_delta[1] ~= 0 or keyboard_delta[2] ~= 0 or keyboard_delta[3] ~= 0 then
         if df ~= 0 or dr ~= 0 then
-            icc.move(icc.active_camera_controller(), df, dr)
+            icc.move(df, dr)
 		end
 	--end
 end

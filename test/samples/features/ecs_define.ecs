@@ -12,6 +12,33 @@ import "@ant.effect"
 import "@ant.asset"
 import "@ant.quad_sphere"
 
+policy "camera_controller"
+    .require_transform "ant.test.features|camera_controller"
+    .require_system "ant.test.features|camera_controller_system"
+    .component "camera_controller"
+    .unique_component "test_feature_camera_controller"
+
+system "camera_controller_system"
+    .implement "camera_controller.lua"
+    .require_interface "ant.objcontroller|obj_motion"
+    .require_interface "ant.camera|camera"
+    .method "data_changed"
+    .method "post_init"
+
+transform "camera_controller"
+    .implement "camera_controller.lua"
+    .input "camera_controller"
+    .output "_camera_controller"
+    .method "process_entity"
+
+interface "icamera_controller"
+    .implement "camera_controller.lua"
+    .method "create"
+    .method "attach"
+    .method "camera"
+    .method "is_active"
+    .method "get"
+
 system "init_loader_system"
     .implement "tmp_systemloader.lua"
     -- .require_system "ant.test.features|camera_controller_system"
@@ -59,18 +86,12 @@ system "init_loader_system"
 
     .method "init"
     .method "post_init"
+    .method "data_changed"
 
 
 system "animation_test_system"
     .implement "animation_test.lua"
     .method "init"
-
-system "camera_controller_system"
-    .implement "camera_controller.lua"
-    .require_interface "ant.objcontroller|obj_motion"
-    .require_interface "ant.camera|camera"
-    .method "data_changed"
-    .method "post_init"
 
 system "character_ik_test_system"
     .implement "character_ik_test.lua"

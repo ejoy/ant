@@ -548,6 +548,14 @@ function iquad_sphere.tile_center(eid, tilex, tiley)
     return ctrunkid.quad_position(hd, vd, tilex-1+0.5, tiley-1+0.5, basept)
 end
 
+function iquad_sphere.tangent_matrix(pos)
+    local n = math3d.normalize(pos)
+    local r = math3d.cross(mc.YAXIS, n)
+    local f = math3d.cross(r, n)
+
+    return math3d.set_columns(mc.IDENTITY_MAT, r, n, f, pos)
+end
+
 function iquad_sphere.tile_matrix(eid, tilex, tiley)
     local e = world[eid]
     local qs = e._quad_sphere
@@ -563,10 +571,7 @@ function iquad_sphere.tile_matrix(eid, tilex, tiley)
 
     local n = math3d.normalize(q)
     local p = math3d.mul(radius, n)
-    local r = math3d.cross(facen, n)
-    local u = math3d.cross(n, r)
-
-    return math3d.set_columns(math3d.matrix(), r, u, n, p)
+    return iquad_sphere.tangent_matrix(p)
 end
 
 function iquad_sphere.move(eid, pos, forward, df, dr)
@@ -585,7 +590,7 @@ function iquad_sphere.move(eid, pos, forward, df, dr)
     newpos = math3d.muladd(dr, r, newpos)
 
     -- calc new forward
-    local nn = math3d.normalize(n)
+    local nn = math3d.normalize(newpos)
     local nr = math3d.cross(n, nn)
     local nf = math3d.cross(nr, nn)
 

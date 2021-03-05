@@ -4,11 +4,63 @@ local world = ecs.world
 local math3d = require "math3d"
 local rhwi = import_package "ant.render".hwi
 
-local camera_controller_sys = ecs.system "camera_controller_system"
-
-local iom = world:interface "ant.objcontroller|obj_motion"
 local icamera = world:interface "ant.camera|camera"
 
+local cct = ecs.transform "camera_controller"
+function cct.process_entity(e)
+	e._camera_controller = {}
+end
+
+local icc = ecs.interface "icamera_controller"
+
+local cceid
+function icc.create(ceid)
+	if cceid then
+		error("could not create more than two time")
+	end
+
+	cceid = world:create_entity{
+		policy = {
+			"ant.test.features|camera_controller",
+			"ant.general|name",
+		},
+		data = {
+			camera_controller = {},
+			name = "test",
+			test_feature_camera_controller = true,
+		}
+	}
+
+	icc.camera(ceid)
+	return cceid
+end
+
+function icc.attach(ceid)
+	local cc = world[cceid]._camera_controller
+	local old_cameraeid = cc.camera_eid
+	cc.camera_eid = ceid
+	world:pub{"camera_controller_changed", "camera", ceid, old_cameraeid}
+	icamera.controller(ceid, cceid)
+end
+
+function icc.get()
+	return cceid
+end
+
+function icc.camera()
+	return world[cceid]._camera_controller.camera_eid
+end
+
+function icc.is_active()
+	local ceid = world[cceid]._camera_controller.camera_eid
+	if ceid and world[ceid] then
+		return icamera.controller(ceid) == cceid
+	end
+end
+
+local cc_sys = ecs.system "camera_controller_system"
+
+local iom = world:interface "ant.objcontroller|obj_motion"
 local mouse_events = {
 	world:sub {"mouse", "LEFT"},
 	world:sub {"mouse", "RIGHT"}
@@ -21,12 +73,7 @@ local dpi_x, dpi_y
 local eventKeyboard = world:sub {"keyboard"}
 local kKeyboardSpeed <const> = 0.5
 
-
-local cameraeid
-
-function camera_controller_sys:post_init()
-	cameraeid = world:singleton_entity "main_queue".camera_eid
-
+function cc_sys:post_init()
 	dpi_x, dpi_y = rhwi.dpi()
 end
 
@@ -60,10 +107,18 @@ local function scale_orthoview(cameraeid, delta)
 	icamera.set_frustum(cameraeid, f)
 end
 
-function camera_controller_sys:data_changed()
+function cc_sys:data_changed()
+	--TODO: need another ortho view camera_controller
+	if not icc.is_active() then
+		return
+	end
+
+	local cameraeid
 	for _, t, eid in svs_mb:unpack() do
 		cameraeid = world[eid].camera_eid
 	end
+
+	cameraeid = cameraeid or icc.camera()
 
 	if can_rotate(cameraeid) then
 		for _, e in ipairs(mouse_events) do

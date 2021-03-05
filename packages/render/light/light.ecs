@@ -18,8 +18,6 @@ interface "light"
     .method "active_directional_light"
     .method "directional_light"
 
-    .method "create_light_direction_arrow"
-
     .method "max_point_light"
     .method "use_cluster_shading"
     .method "create_light_buffers"

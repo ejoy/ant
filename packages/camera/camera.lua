@@ -7,14 +7,22 @@ local default_comp 	= import_package "ant.general".default
 local irq = world:interface "ant.render|irenderqueue"
 
 local cm = ecs.transform "camera_transform"
-
 function cm.process_entity(e)
+    local f = e.frustum
+    e._camera = {
+        clip_range = e.clip_range and e.clip_range or {f.n, f.f}
+    }
+end
+
+local cmm = ecs.transform "camera_motion_transform"
+
+function cmm.process_entity(e)
     local rc = e._rendercache
     local f = {}
     for k, v in pairs(e.frustum) do f[k] = v end
     rc.frustum = f
     rc.updir = math3d.ref(e.updir or mc.YAXIS)
-    rc.clip_range = e.clip_range and e.clip_range or {f.n, f.f}
+
     local lt = e.lock_target
     if lt then
         local nlt = {}
@@ -71,6 +79,18 @@ local function bind_queue(cameraeid, qeid)
     irq.set_camera(qeid, cameraeid)
     local vr = irq.view_rect(qeid)
     ic.set_frustum_aspect(cameraeid, vr.w / vr.h)
+end
+
+function ic.controller(eid, ceid)
+    local e = world[eid]
+    local c = e._camera
+    local old_ceid = c.controller_eid
+
+    if ceid == nil then
+        return old_ceid
+    end
+    c.controller_eid = ceid
+    world:pub{"camera_controller_changed", ceid, old_ceid}
 end
 
 function ic.bind(eid, which_queue)

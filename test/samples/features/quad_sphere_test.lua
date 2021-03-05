@@ -5,8 +5,9 @@ local qst_sys = ecs.system "quad_sphere_test_system"
 local iqs = world:interface "ant.quad_sphere|iquad_sphere"
 local iom = world:interface "ant.objcontroller|obj_motion"
 local imaterial = world:interface "ant.asset|imaterial"
+local icamera = world:interface "ant.camera|camera"
+local ientity = world:interface "ant.render|entity"
 local icc = world:interface "ant.quad_sphere|icamera_controller"
-
 local math3d = require "math3d"
 
 local num_trunk<const> = 5
@@ -33,8 +34,12 @@ end
 
 function qst_sys:post_init()
     local mq = world:singleton_entity "main_queue"
-    local cceid = icc.create(mq.camera_eid, qs_eids[1])
-    icc.set_view(cceid, {0, 0, radius}, {0, 5, -10}, 0.1)
+    icc.attach(mq.camera_eid, qs_eids[1])
+    local targetpos = {0, 0, radius, 1}
+    icc.set_view(targetpos, {0, 2, 2, 1}, 0.1)
+
+    
+
     --icc.set_forward(cceid, 0.1)
 end
 
