@@ -12,7 +12,7 @@ if thread.id == 0 then
 			local str = f:read "a"
 			f:close()
 			assert(load(str, "=(BOOTSTRAP)"))(path)
-			:start "<Not Needed>"
+			:start {latest=true,address="<Not Needed>"} 
 			:event "wait"
 		]]):format(debugger.root)
 	end

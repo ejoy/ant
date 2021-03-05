@@ -97,6 +97,10 @@ namespace luabind {
 				return;
 			}
 			--top;
+			if (freelist.empty()) {
+				lua_settop(dataL, top);
+				return;
+			}
 			for (auto it = freelist.begin(); it != freelist.end(); --top, ++it) {
 				if (top != *it) {
 					lua_settop(dataL, top);
