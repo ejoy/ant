@@ -7,6 +7,7 @@ local iom = world:interface "ant.objcontroller|obj_motion"
 local imaterial = world:interface "ant.asset|imaterial"
 local icamera = world:interface "ant.camera|camera"
 local ientity = world:interface "ant.render|entity"
+local ies = world:interface "ant.scene|ientity_state"
 local icc = world:interface "ant.quad_sphere|icamera_controller"
 local math3d = require "math3d"
 
@@ -18,7 +19,7 @@ function qst_sys:init()
     --front
     qs_eids[1] = iqs.create("test_quad_sphere1", num_trunk, radius)
     --iqs.set_trunkid(qs_eids[1], iqs.pack_trunkid(0, 1, 5))
-    imaterial.set_property(qs_eids[1], "u_color", {1, 0, 0, 1})
+    imaterial.set_property(qs_eids[1], "u_color", {0.8, 0.8, 0.8, 1})
     -- --top
     -- qs_eids[2] = iqs.create("test_quad_sphere2", num_trunk, radius)
     -- iqs.set_trunkid(qs_eids[2], iqs.pack_trunkid(2, 5, 5))
@@ -35,7 +36,8 @@ end
 function qst_sys:post_init()
     local mq = world:singleton_entity "main_queue"
     icc.attach(mq.camera_eid, qs_eids[1])
-    local tp = {0, 0, radius}
+    local tp = {0, radius * 0.5, radius}
+    tp = math3d.tovalue(math3d.mul(radius, math3d.normalize(math3d.vector(tp))))
     local targetpos = math3d.vector(tp[1], tp[2], tp[3], 1)
     icc.set_view(targetpos, {0, 2, 2, 1}, 0)
 
@@ -44,21 +46,23 @@ function qst_sys:post_init()
     local yaxis = math3d.tovalue(math3d.add(targetpos, math3d.normalize(math3d.index(srt, 2))))
     local zaxis = math3d.tovalue(math3d.add(targetpos, math3d.normalize(math3d.index(srt, 3))))
 
+    local axisorigin = targetpos --math3d.muladd(math3d.normalize(targetpos), 0.1, targetpos)
+    local ao = math3d.tovalue(axisorigin)
     local vertices = {
-        tp[1], tp[2], tp[3],
-        xaxis[1], xaxis[2], xaxis[3],
-        yaxis[1], yaxis[2], yaxis[3],
-        zaxis[1], zaxis[2], zaxis[3],
+        ao[1], ao[2], ao[3],            0xff0000ff,
+        xaxis[1], xaxis[2], xaxis[3],   0xff0000ff,
+        ao[1], ao[2], ao[3],            0xff00ff00,
+        yaxis[1], yaxis[2], yaxis[3],   0xff00ff00,
+        ao[1], ao[2], ao[3],            0xffff0000,
+        zaxis[1], zaxis[2], zaxis[3],   0xffff0000,
     }
 
-    local indices = {
-        0, 1, 0, 2, 0, 3,
-    }
+    --ies.set_state(qs_eids[1], "visible",)
 
-    local axismesh = ientity.create_mesh({"p3", vertices}, indices)
+    local axismesh = ientity.create_mesh{"p3|c40niu", vertices}
     ientity.create_simple_render_entity(
         "axis",
-        "/pkg/ant.resources/materials/line_color.material",
+        "/pkg/ant.resources/materials/line.material",
         axismesh
     )
 
