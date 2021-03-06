@@ -143,6 +143,19 @@ function init_loader_sys:init()
     iccqs.create()
 end
 
+local camera_cache = {
+    icc = {
+        pos = math3d.ref(math3d.vector()),
+        dir = math3d.ref(math3d.vector()),
+        updir = math3d.ref(math3d.vector()),
+    },
+    iccqs = {
+        pos = math3d.ref(math3d.vector()),
+        dir = math3d.ref(math3d.vector()),
+        updir = math3d.ref(math3d.vector()),
+    }
+}
+
 function init_loader_sys:post_init()
     local mq = world:singleton_entity "main_queue"
 
@@ -150,8 +163,9 @@ function init_loader_sys:post_init()
     iccqs.attach(mq.camera_eid)
     icamera.controller(mq.camera_eid, iccqs.get())
 
-    local pos = math3d.vector(-10.5, 10, -5.5, 1)
-    icamera.lookto(mq.camera_eid, pos, math3d.sub(mc.ZERO_PT, pos))
+    camera_cache.icc.pos.v = {-10.5, 10, -5.5, 1}
+    camera_cache.icc.dir.v = math3d.sub(mc.ZERO_PT, camera_cache.icc.pos)
+    camera_cache.icc.updir.v = mc.YAXIS
     -- icamera.set_dof(mq.camera_eid, {
     --     -- aperture_fstop      = 2.8,
     --     -- aperture_blades     = 0,
@@ -189,7 +203,17 @@ function init_loader_sys:data_changed()
     for _, key, press, status in kb_mb:unpack() do
         if key == "X" and press == 0 then
             local mq = world:singleton_entity "main_queue"
-            icamera.controller(mq.camera_eid, icc.get() == icamera.controller(mq.camera_eid) and iccqs.get() or icc.get())
+
+            local isicc = icc.get() == icamera.controller(mq.camera_eid)
+            local c = isicc and camera_cache.icc or camera_cache.iccqs
+            c.pos.v = iom.get_position(mq.camera_eid)
+            c.dir.v = iom.get_direction(mq.camera_eid)
+            c.updir.v = iom.get_updir(mq.camera_eid)
+
+            local uc = isicc and camera_cache.iccqs or camera_cache.icc
+
+            iom.lookto(mq.camera_eid, uc.pos, uc.dir, uc.updir)
+            icamera.controller(mq.camera_eid, isicc and iccqs.get() or icc.get())
         end
     end
 end

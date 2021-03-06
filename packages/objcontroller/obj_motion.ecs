@@ -8,6 +8,7 @@ interface "obj_motion"
     .method "get_direction"
     .method "get_rotation"
     .method "set_rotation"
+    .method "get_updir"
     --
 
     .method "get_scale"

@@ -34,6 +34,13 @@ function iobj_motion.set_direction(eid, dir)
     world:pub{"component_changed", "transform", eid}
 end
 
+function iobj_motion.get_updir(eid, dir)
+    local e = world[eid]
+    local rc = e._rendercache
+    local srt = rc.srt
+    return math3d.index(srt, 2)
+end
+
 function iobj_motion.srt(eid)
     if world[eid]._rendercache then return world[eid]._rendercache.srt end
 end
