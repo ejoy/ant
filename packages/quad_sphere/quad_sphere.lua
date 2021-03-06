@@ -319,23 +319,24 @@ local function which_face(pos)
     if ax > ay then
         if ax > az then
             maxv = ax
-            face, fx, fy = x > 0 and face_index.right or face_index.left, y, z
+            face, fx, fy = x > 0 and face_index.right or face_index.left, y, x > 0 and z or -z
         end
     else
         if ay > az then
             maxv = ay
-            face, fx, fy = y > 0 and face_index.top or face_index.bottom, x, z
+            face, fx, fy = y > 0 and face_index.top or face_index.bottom, y > 0 and x or -x, z
         end
     end
 
     maxv = az
-    --front face in -z direction
-    face, fx, fy = z > 0 and face_index.back or face_index.front, x, y
+    --front face in -z direction, back face's positive is from +z to -z, so x need inverse
+    face, fx, fy = z > 0 and face_index.back or face_index.front, z > 0 and -x or x, y
 
-    -- normalize[0, 1]
+    -- normalize[0, 1], flip y coord
     fx, fy = fx / maxv, fy / maxv
     fx = (fx + 1) * 0.5
     fy = (fy + 1) * 0.5
+    fy = 1 - fy
     return face, fx, fy
 end
 
