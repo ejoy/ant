@@ -17,7 +17,7 @@ function ctrunkid.trunkid_face(trunkid)
 end
 
 function ctrunkid.trunkid_index(trunkid)
-    return (0x0fffffff & trunkid) >> 14, (0x00003fff & trunkid)
+    return (0x00003fff & trunkid), (0x0fffffff & trunkid) >> 14
 end
 
 function ctrunkid.pack_trunkid(face, tx, ty)
