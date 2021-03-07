@@ -159,13 +159,17 @@ local camera_cache = {
 function init_loader_sys:post_init()
     local mq = world:singleton_entity "main_queue"
 
+    local eid = world:instance "/pkg/ant.test.features/assets/entities/cube.prefab"[1]
+    iom.set_scale(eid, 0.1)
+
     icc.attach(mq.camera_eid)
     iccqs.attach(mq.camera_eid)
-    icamera.controller(mq.camera_eid, iccqs.get())
+    icamera.controller(mq.camera_eid, icc.get())
 
     camera_cache.icc.pos.v = {-10.5, 10, -5.5, 1}
     camera_cache.icc.dir.v = math3d.sub(mc.ZERO_PT, camera_cache.icc.pos)
     camera_cache.icc.updir.v = mc.YAXIS
+    icamera.lookto(mq.camera_eid, camera_cache.icc.pos, camera_cache.icc.dir)
     -- icamera.set_dof(mq.camera_eid, {
     --     -- aperture_fstop      = 2.8,
     --     -- aperture_blades     = 0,

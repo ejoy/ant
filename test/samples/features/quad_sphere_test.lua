@@ -16,9 +16,8 @@ local radius<const> = 10
 
 local qs_eids = {}
 function qst_sys:init()
-    --front
     qs_eids[1] = iqs.create("test_quad_sphere1", num_trunk, radius)
-    --iqs.set_trunkid(qs_eids[1], iqs.pack_trunkid(0, 1, 5))
+    --iqs.set_trunkid(qs_eids[1], iqs.pack_trunkid(1, 0, 4)) --front
     imaterial.set_property(qs_eids[1], "u_color", {0.8, 0.8, 0.8, 1})
     -- --top
     -- qs_eids[2] = iqs.create("test_quad_sphere2", num_trunk, radius)
