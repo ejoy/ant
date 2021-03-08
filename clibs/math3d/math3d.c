@@ -1514,7 +1514,7 @@ lisequal(lua_State *L){
 	default: luaL_error(L, "invalide type: %s", lastack_typename(type0));break;}
 
 	for (int ii=0; ii<numelem; ++ii){
-		if (abs(v0[ii]-v1[ii]) > threshold){
+		if (abs(v0[ii]-v1[ii]) < threshold){
 			lua_pushboolean(L, 0);
 			return 1;
 		}
