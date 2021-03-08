@@ -38,17 +38,6 @@ FontEngineInterface::~FontEngineInterface()
 {
 }
 
-bool FontEngineInterface::LoadFontFace(const String& /*file_name*/, bool /*fallback_face*/)
-{
-	return false;
-}
-
-bool FontEngineInterface::LoadFontFace(const byte* /*data*/, int /*data_size*/, const String& /*font_family*/,
-	Style::FontStyle /*style*/, Style::FontWeight /*weight*/, bool /*fallback_face*/)
-{
-	return false;
-}
-
 FontFaceHandle FontEngineInterface::GetFontFaceHandle(const String& /*family*/, Style::FontStyle /*style*/,
 	Style::FontWeight /*weight*/, int /*size*/)
 {

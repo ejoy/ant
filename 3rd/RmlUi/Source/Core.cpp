@@ -176,16 +176,6 @@ FontEngineInterface* GetFontEngineInterface()
 	return font_interface;
 }
 
-bool LoadFontFace(const String& file_name, bool fallback_face)
-{
-	return font_interface->LoadFontFace(file_name, fallback_face);
-}
-
-bool LoadFontFace(const byte* data, int data_size, const String& font_family, Style::FontStyle style, Style::FontWeight weight, bool fallback_face)
-{
-	return font_interface->LoadFontFace(data, data_size, font_family, style, weight, fallback_face);
-}
-
 // Registers a generic rmlui plugin
 void RegisterPlugin(Plugin* plugin)
 {
@@ -194,11 +184,5 @@ void RegisterPlugin(Plugin* plugin)
 
 	PluginRegistry::RegisterPlugin(plugin);
 }
-
-EventId RegisterEventType(const String& type, bool interruptible, bool bubbles, DefaultActionPhase default_action_phase)
-{
-	return EventSpecificationInterface::InsertOrReplaceCustom(type, interruptible, bubbles, default_action_phase);
-}
-
 
 } // namespace Rml

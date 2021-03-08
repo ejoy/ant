@@ -44,7 +44,6 @@ class RenderInterface;
 class SystemInterface;
 enum class DefaultActionPhase;
 
-
 RMLUICORE_API bool Initialise();
 RMLUICORE_API void Shutdown();
 RMLUICORE_API String GetVersion();
@@ -56,10 +55,7 @@ RMLUICORE_API void SetFileInterface(FileInterface* file_interface);
 RMLUICORE_API FileInterface* GetFileInterface();
 RMLUICORE_API void SetFontEngineInterface(FontEngineInterface* font_interface);
 RMLUICORE_API FontEngineInterface* GetFontEngineInterface();
-RMLUICORE_API bool LoadFontFace(const String& file_name, bool fallback_face = false);
-RMLUICORE_API bool LoadFontFace(const byte* data, int data_size, const String& font_family, Style::FontStyle style, Style::FontWeight weight, bool fallback_face = false);
 RMLUICORE_API void RegisterPlugin(Plugin* plugin);
-RMLUICORE_API EventId RegisterEventType(const String& type, bool interruptible, bool bubbles, DefaultActionPhase default_action_phase = DefaultActionPhase::None);
 
 }
 

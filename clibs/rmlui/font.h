@@ -25,7 +25,6 @@ public:
 	bool IsFontTexResource(const Rml::String &sourcename) const;
 	Rml::TextureHandle GetFontTexHandle(const Rml::String &sourcename, Rml::Size& texture_dimensions) const;
 public:
-	virtual bool LoadFontFace(const Rml::byte* data, int data_size, const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, bool fallback_face) override;
 	virtual Rml::FontFaceHandle GetFontFaceHandle(const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, int size)override;
 	virtual Rml::TextEffectsHandle PrepareTextEffects(Rml::FontFaceHandle handle, const Rml::TextEffects& text_effects)override;
 

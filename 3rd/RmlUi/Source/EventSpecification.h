@@ -58,10 +58,6 @@ namespace EventSpecificationInterface {
 	// Get event id for the given name.
 	// If not found: Inserts a new entry with default values.
 	EventId GetIdOrInsert(const String& event_type);
-
-	// Insert a new specification for the given event_type.
-	// If the type already exists, it will be replaced if and only if the event type is not an internal type.
-	EventId InsertOrReplaceCustom(const String& event_type, bool interruptible, bool bubbles, DefaultActionPhase default_action_phase);
 }
 
 } // namespace Rml
