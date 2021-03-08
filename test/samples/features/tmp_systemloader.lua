@@ -164,7 +164,7 @@ function init_loader_sys:post_init()
 
     icc.attach(mq.camera_eid)
     iccqs.attach(mq.camera_eid)
-    icamera.controller(mq.camera_eid, icc.get())
+    icamera.controller(mq.camera_eid, iccqs.get())
 
     camera_cache.icc.pos.v = {-10.5, 10, -5.5, 1}
     camera_cache.icc.dir.v = math3d.sub(mc.ZERO_PT, camera_cache.icc.pos)

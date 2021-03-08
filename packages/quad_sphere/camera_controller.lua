@@ -122,7 +122,7 @@ end
 local function rotate_forward(targetpos, radian_ratio)
     local tm = iqs.tangent_matrix(targetpos)
     local f = rotate_local_forward(radian_ratio)
-    return math3d.transform(tm, f, 0)
+    return math3d.normalize(math3d.transform(tm, f, 0))
 end
 
 function icc.set_view(targetpos, localpos, radian_ratio)
@@ -175,7 +175,7 @@ local mouse_lastx, mouse_lasty
 local dpi_x, dpi_y
 
 local keyboard_event = world:sub {"keyboard"}
-local keyboard_speed <const> = 0.5
+local keyboard_speed <const> = 0.1
 
 function cc:post_init()
 	dpi_x, dpi_y = rhwi.dpi()

@@ -30,6 +30,8 @@ local visible_trunk_num<const>          = visible_trunk_range * visible_trunk_ra
 local visible_trunk_indices_num<const>  = visible_trunk_num * tiles_pre_trunk * 6
 local quad_sphere_vertex_layout<const>  = declmgr.get "p3"
 
+local _DEBUG<const> = true
+
 --[[
     quad indices
     1 ----- 2
@@ -574,29 +576,52 @@ function iquad_sphere.tile_matrix(eid, tilex, tiley)
     return iquad_sphere.tangent_matrix(p)
 end
 
+local function check_is_normalize(n)
+    local l = math3d.length(n)
+    local T<const> = 1e-6
+
+    local c = l - 1
+    return assert(-T<= c and c <= T)
+end
+
 function iquad_sphere.move(eid, pos, forward, df, dr)
     local e = world[eid]
     local qs = e._quad_sphere
+
+    if _DEBUG then
+        check_is_normalize(forward)
+    end
     
     local trunkid = tile_coord(math3d.tovalue(pos), qs)
 
     local n = math3d.normalize(pos)
     -- calc new position
-    local r = math3d.cross(n, forward)
-    if math3d.dot(r, r) == 0 then
-        error(("forward vector parallel with up vector:%s, %s"):format(math3d.tostring(forward), math3d.tostring(n)))
+    local r = math3d.normalize(math3d.cross(n, forward))
+
+    if _DEBUG then
+        if math3d.dot(r, r) == 0 then
+            error(("forward vector parallel with up vector:%s, %s"):format(math3d.tostring(forward), math3d.tostring(n)))
+        end
     end
     local newpos = math3d.muladd(df, forward, pos)
     newpos = math3d.muladd(dr, r, newpos)
 
+    -- print("=================")
+    -- print("pos:", math3d.tostring(pos), "forward:", math3d.tostring(forward), "df:", df, "dr:", dr)
+    -- print("n:", math3d.tostring(n), "r:", math3d.tostring(r),  "newpos:", math3d.tostring(newpos))
+
     -- calc new forward
     local nn = math3d.normalize(newpos)
-    local nr = math3d.cross(n, nn)
-    local nf = math3d.cross(nr, nn)
+    local nr = math3d.cross(n, nn)  --not need to be normalized
+    local nf = math3d.normalize(math3d.cross(nr, nn))
+
+    newpos = math3d.mul(qs.radius, nn)
+    --print("nn:", math3d.tostring(nn), "nr:", math3d.tostring(nr), "nf:", math3d.tostring(nf), "np:", math3d.tostring(newpos))
 
     local newtrunkid = tile_coord(math3d.tovalue(newpos), qs)
 
     if trunkid ~= newtrunkid then
+        --print("changed trunkid from:", iquad_sphere.unpack_trunkid(trunkid), "to:", iquad_sphere.unpack_trunkid(newtrunkid))
         iquad_sphere.set_trunkid(eid, newtrunkid)
     end
 
