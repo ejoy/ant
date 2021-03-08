@@ -633,16 +633,13 @@ function iquad_sphere.move(eid, pos, forward, df, dr)
     newpos = move_toward(dr, r, newpos)
     newpos = math3d.mul(qs.radius, math3d.normalize(newpos))
 
-    local tm = iquad_sphere.tangent_matrix(newpos)
-    local nf = math3d.normalize(math3d.transform(tm, mc.ZAXIS, 0))
-
     local newtrunkid = which_trunkid(math3d.tovalue(newpos), qs)
 
     if trunkid ~= newtrunkid then
         iquad_sphere.set_trunkid(eid, newtrunkid)
     end
 
-    return newpos, nf
+    return newpos
 end
 
 function iquad_sphere.tile_normals(eid)

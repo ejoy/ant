@@ -103,27 +103,15 @@ local function updateview(cc)
     iom.lookto(cc.camera_eid, eyepos, viewdir, updir)
 end
 
-local function calc_rotation(targetpos, radian_ratio)
-    local r = radian_ratio * twopi
-    local n = math3d.normalize(targetpos)
-    return math3d.quaternion{axis=n, r=r}
-end
-
-local function calc_forward(targetpos, forward, radian_ratio)
-    local q = calc_rotation(targetpos, radian_ratio)
-    return math3d.transform(q, forward, 0)
-end
-
-local function rotate_local_forward(radian_ratio)
+local function rotate_local_forward(radian)
     --TODO: there is a more fast version for rotate vector around YAXIS
-    local r = radian_ratio * twopi
-    local q = math3d.quaternion{axis=mc.YAXIS, r=r}
+    local q = math3d.quaternion{axis=mc.YAXIS, r=radian}
     return math3d.transform(q, mc.ZAXIS, 0)
 end
 
-local function rotate_forward(targetpos, radian_ratio)
+local function rotate_forward(targetpos, radian)
     local tm = iqs.tangent_matrix(targetpos)
-    local f = rotate_local_forward(radian_ratio)
+    local f = rotate_local_forward(radian)
     return math3d.normalize(math3d.transform(tm, f, 0))
 end
 
@@ -133,7 +121,9 @@ function icc.set_view(targetpos, localpos, radian_ratio)
     cc.targetpos.v = targetpos
     cc.localpos.v = localpos
 
-    cc.forward.v = rotate_forward(cc.targetpos, radian_ratio)
+    cc.forward_rotate_radian = radian_ratio * twopi
+    cc.forward.v = rotate_forward(cc.targetpos, cc.forward_rotate_radian)
+    
     assert(0 == math3d.dot(cc.forward, targetpos))
     updateview(cc)
 
@@ -143,8 +133,8 @@ end
 
 function icc.set_forward(radian_ratio)
     local cc = check_cc()
-
-    cc.forward.v = rotate_forward(cc.targetpos, radian_ratio)
+    cc.forward_rotate_radian = radian_ratio * twopi
+    cc.forward.v = rotate_forward(cc.targetpos, cc.forward_rotate_radian)
 end
 
 function icc.forward()
@@ -154,14 +144,16 @@ end
 function icc.move(df, dr)
     local cc = check_cc()
 
-    local t, f = cc.targetpos, cc.forward
-    t.v, f.v = iqs.move(cc.qseid, t, f, df, dr)
+    cc.targetpos.v = iqs.move(cc.qseid, cc.targetpos, cc.forward, df, dr)
+    cc.forward.v = rotate_forward(cc.targetpos, cc.forward_rotate_radian)
     updateview(cc)
 end
 
-function icc.rotate(radian_ratio)
+function icc.rotate(delta_radian_ratio)
     local cc = check_cc()
-    cc.forward.v = calc_forward(cc.targetpos, cc.forward, radian_ratio)
+    local delta_radian = delta_radian_ratio * twopi
+    cc.forward_rotate_radian = cc.forward_rotate_radian + delta_radian
+    cc.forward.v = rotate_forward(cc.targetpos, cc.forward_rotate_radian)
 end
 
 function icc.coord_info()
@@ -208,19 +200,18 @@ function cc:data_changed()
     if not icc.is_active() then
         return 
     end
-	-- if can_rotate() then
-    --     local cameraeid = icc.camera()
-	-- 	for _, e in ipairs(mouse_events) do
-	-- 		for _,_,state,x,y in e:unpack() do
-	-- 			if state == "MOVE" and mouse_lastx then
-	-- 				local ux = (x - mouse_lastx) / dpi_x * move_speed
-	-- 				local uy = (y - mouse_lasty) / dpi_y * move_speed
-	-- 				iom.rotate_forward_vector(cameraeid, uy, ux)
-	-- 			end
-	-- 			mouse_lastx, mouse_lasty = x, y
-	-- 		end
-	-- 	end
-	-- end
+
+    local cameraeid = icc.camera()
+    for _, e in ipairs(mouse_events) do
+        for _,_,state,x,y in e:unpack() do
+            if state == "MOVE" and mouse_lastx then
+                local ux = (x - mouse_lastx) / dpi_x * move_speed
+                local uy = (y - mouse_lasty) / dpi_y * move_speed
+                iom.rotate_forward_vector(cameraeid, uy, ux)
+            end
+            mouse_lastx, mouse_lasty = x, y
+        end
+    end
 
 	--if can_move() then
 		--local keyboard_delta = {0 , 0, 0}
