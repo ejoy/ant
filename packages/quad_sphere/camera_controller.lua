@@ -40,7 +40,7 @@ function icc.create(cameraeid, qseid)
             name = "quad_sphere_camera_controller",
         }
     }
-    icc.attach(cceid, cameraeid, qseid)
+    icc.attach(cameraeid, qseid)
     return cceid
 end
 

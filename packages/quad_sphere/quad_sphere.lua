@@ -312,34 +312,46 @@ function iquad_sphere.center_coord(eid, spherecial)
     return xyz
 end
 
-local function which_face(pos)
-    local x, y, z = pos[1], pos[2], pos[3]
+local function find_face(x, y, z)
     local ax, ay, az = math.abs(x), math.abs(y), math.abs(z)
-    local maxv
-    local fx, fy
-    local face
+
     if ax > ay then
         if ax > az then
-            maxv = ax
-            face, fx, fy = x > 0 and face_index.right or face_index.left, y, x > 0 and z or -z
+            return x > 0 and face_index.right or face_index.left, z, y, ax
         end
     else
         if ay > az then
-            maxv = ay
-            face, fx, fy = y > 0 and face_index.top or face_index.bottom, y > 0 and x or -x, z
+            return y > 0 and face_index.top or face_index.bottom, x, z, ay
         end
     end
 
-    maxv = az
-    --front face in -z direction, back face's positive is from +z to -z, so x need inverse
-    face, fx, fy = z > 0 and face_index.back or face_index.front, z > 0 and -x or x, y
+    return z > 0 and face_index.back or face_index.front, x, y, az
+end
 
-    -- normalize[0, 1], flip y coord
-    fx, fy = fx / maxv, fy / maxv
-    fx = (fx + 1) * 0.5
-    fy = (fy + 1) * 0.5
-    fy = 1 - fy
-    return face, fx, fy
+local function normlize_face_xy(face, x, y, maxv)
+    local nx, ny = x/maxv, y/maxv
+    nx, ny = (nx+1)*0.5, (ny+1)*0.5
+    ny = 1-ny
+    if face == face_index.back or face == face_index.left or face == face_index.bottom then
+        nx = 1-nx
+    end
+    return nx, ny
+end
+
+local function which_face(pos)
+    local face, x, y, maxv = find_face(pos[1], pos[2], pos[3])
+    return face, normlize_face_xy(face, x, y, maxv)
+end
+
+iquad_sphere.which_face = which_face
+
+local function which_trunkid(pos, qs)
+    local face, x, y = which_face(pos)
+    local nt = qs.num_trunk
+    local tx, ty = x * nt, y * nt
+    local ix, iy = math.floor(tx), math.floor(ty)
+
+    return ctrunkid.pack_trunkid(face, ix, iy)
 end
 
 local function tile_coord(pos, qs)
@@ -356,10 +368,7 @@ local function tile_coord(pos, qs)
 end
 
 function iquad_sphere.trunk_coord(eid, pos)
-    local e = world[eid]
-    local qs = e._quad_sphere
-
-    return tile_coord(pos, qs)
+    return tile_coord(pos, world[eid]._quad_sphere)
 end
 
 function iquad_sphere.set_trunkid(eid, trunkid)
@@ -553,9 +562,17 @@ end
 
 function iquad_sphere.tangent_matrix(pos)
     local n = math3d.normalize(pos)
-    local r = math3d.cross(mc.YAXIS, n)
-    local f = math3d.cross(r, n)
-
+    local r, f
+    if math3d.isequal(mc.YAXIS, n) then
+        r = mc.XAXIS
+        f = mc.ZAXIS
+    elseif math3d.isequal(mc.NYAXIS, n) then
+        r = mc.XAXIS
+        f = mc.NZAXIS
+    else
+        r = math3d.cross(mc.YAXIS, n)
+        f = math3d.cross(r, n)
+    end
     return math3d.set_columns(mc.IDENTITY_MAT, r, n, f, pos)
 end
 
@@ -587,15 +604,15 @@ end
 function iquad_sphere.move(eid, pos, forward, df, dr)
     local e = world[eid]
     local qs = e._quad_sphere
+    local radius = qs.radius
 
     if _DEBUG then
         check_is_normalize(forward)
     end
-    
-    local trunkid = tile_coord(math3d.tovalue(pos), qs)
+
+    local trunkid = which_trunkid(math3d.tovalue(pos), qs)
 
     local n = math3d.normalize(pos)
-    -- calc new position
     local r = math3d.normalize(math3d.cross(n, forward))
 
     if _DEBUG then
@@ -603,25 +620,25 @@ function iquad_sphere.move(eid, pos, forward, df, dr)
             error(("forward vector parallel with up vector:%s, %s"):format(math3d.tostring(forward), math3d.tostring(n)))
         end
     end
-    local newpos = math3d.muladd(df, forward, pos)
-    newpos = math3d.muladd(dr, r, newpos)
 
-    -- print("=================")
-    -- print("pos:", math3d.tostring(pos), "forward:", math3d.tostring(forward), "df:", df, "dr:", dr)
-    -- print("n:", math3d.tostring(n), "r:", math3d.tostring(r),  "newpos:", math3d.tostring(newpos))
+    local function move_toward(d, toward, origin)
+        if d ~= 0 then
+            local np = math3d.muladd(d, toward, origin)
+            return math3d.mul(radius, math3d.normalize(np))
+        end
+        return origin
+    end
 
-    -- calc new forward
-    local nn = math3d.normalize(newpos)
-    local nr = math3d.cross(n, nn)  --not need to be normalized
-    local nf = math3d.normalize(math3d.cross(nr, nn))
+    local newpos = move_toward(df, forward, pos)
+    newpos = move_toward(dr, r, newpos)
+    newpos = math3d.mul(qs.radius, math3d.normalize(newpos))
 
-    newpos = math3d.mul(qs.radius, nn)
-    --print("nn:", math3d.tostring(nn), "nr:", math3d.tostring(nr), "nf:", math3d.tostring(nf), "np:", math3d.tostring(newpos))
+    local tm = iquad_sphere.tangent_matrix(newpos)
+    local nf = math3d.normalize(math3d.transform(tm, mc.ZAXIS, 0))
 
-    local newtrunkid = tile_coord(math3d.tovalue(newpos), qs)
+    local newtrunkid = which_trunkid(math3d.tovalue(newpos), qs)
 
     if trunkid ~= newtrunkid then
-        --print("changed trunkid from:", iquad_sphere.unpack_trunkid(trunkid), "to:", iquad_sphere.unpack_trunkid(newtrunkid))
         iquad_sphere.set_trunkid(eid, newtrunkid)
     end
 
