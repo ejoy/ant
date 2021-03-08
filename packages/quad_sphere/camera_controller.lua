@@ -170,7 +170,7 @@ function icc.coord_info()
 
     local _, nx, ny = iqs.which_face(math3d.tovalue(cc.froward))
     local radian = math.asin(ny)
-    radian = nx > 0 and radian or (radian + halfpi)
+    radian = nx > 0 and radian or (radian + math.pi)
     assert(radian < twopi)
     return trunkid, tx, ty, radian / twopi
 end
