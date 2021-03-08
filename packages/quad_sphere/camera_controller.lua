@@ -162,6 +162,16 @@ function icc.rotate(radian_ratio)
     cc.forward.v = calc_forward(cc.targetpos, cc.forward, radian_ratio)
 end
 
+function icc.coord_info()
+    local cc = check_cc()
+    local trunkid, tx, ty = iqs.trunk_coord(cc.qseid, cc.targetpos)
+
+    local _, nx, ny = iqs.which_face(math3d.tovalue(cc.froward))
+    local radian = math.asin(ny)
+    radian = nx > 0 and radian or (radian + math3d.pi * 0.5)
+    return trunkid, tx, ty, radian
+end
+
 local cc = ecs.system "camera_controller"
 
 local mouse_events = {
