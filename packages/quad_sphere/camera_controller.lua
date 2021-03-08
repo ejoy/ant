@@ -12,6 +12,9 @@ local iom = world:interface "ant.objcontroller|obj_motion"
 local icamera = world:interface "ant.camera|camera"
 local _DEBUG<const> = false
 
+local twopi<const> = math.pi * 2
+local halfpi<const> = math.pi * 0.5
+
 local cct = ecs.transform "camera_controller_transform"
 function cct.process_entity(e)
     -- targetpos and localpos should be element of camera_controller component, and put it in _camera_controller component
@@ -100,7 +103,6 @@ local function updateview(cc)
     iom.lookto(cc.camera_eid, eyepos, viewdir, updir)
 end
 
-local twopi<const> = math.pi * 2
 local function calc_rotation(targetpos, radian_ratio)
     local r = radian_ratio * twopi
     local n = math3d.normalize(targetpos)
@@ -168,8 +170,9 @@ function icc.coord_info()
 
     local _, nx, ny = iqs.which_face(math3d.tovalue(cc.froward))
     local radian = math.asin(ny)
-    radian = nx > 0 and radian or (radian + math3d.pi * 0.5)
-    return trunkid, tx, ty, radian
+    radian = nx > 0 and radian or (radian + halfpi)
+    assert(radian < twopi)
+    return trunkid, tx, ty, radian / twopi
 end
 
 local cc = ecs.system "camera_controller"

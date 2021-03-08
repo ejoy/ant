@@ -63,6 +63,7 @@ interface "icamera_controller"
     .method "rotate"
     .method "is_active"
     .method "get"
+    .method "coord_info"
 
 policy "camera_controller"
     .require_interface "ant.quad_sphere|icamera_controller"
