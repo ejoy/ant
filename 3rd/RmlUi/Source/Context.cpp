@@ -47,14 +47,8 @@ namespace Rml {
 
 Context::Context(const Size& dimensions_)
 : dimensions(dimensions_)
-, density_independent_pixel_ratio(1.0f) {
-	//cursor_proxy.reset(new Document("body"));
-	//Document* cursor_proxy_document = dynamic_cast< Document* >(cursor_proxy.get());
-	//if (cursor_proxy_document)
-	//	cursor_proxy_document->context = this;
-	//else
-	//	cursor_proxy.reset();
-}
+, density_independent_pixel_ratio(1.0f)
+{ }
 
 Context::~Context() {
 	for (auto& document : documents) {
@@ -103,17 +97,6 @@ bool Context::Update() {
 		focus->Render();
 		ReleaseUnloadedDocuments();
 	}
-
-	// Render the cursor proxy so any elements attached the cursor will be rendered below the cursor.
-	//if (cursor_proxy)
-	//{
-	//	static_cast<Document&>(*cursor_proxy).UpdateDocument();
-	//	cursor_proxy->SetOffset(Vector2f((float)Math::Clamp(mouse_position.x, 0, dimensions.x),
-	//		(float)Math::Clamp(mouse_position.y, 0, dimensions.y)),
-	//		nullptr);
-	//	cursor_proxy->Render();
-	//}
-
 	return true;
 }
 
