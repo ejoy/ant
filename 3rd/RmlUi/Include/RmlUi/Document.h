@@ -37,7 +37,6 @@ namespace Rml {
 
 class Context;
 class Stream;
-class DocumentHeader;
 class ElementText;
 class StyleSheet;
 class DataModel;
@@ -50,9 +49,6 @@ public:
 	virtual ~Document();
 
 	bool Load(const String& path);
-
-	/// Process given document header
-	void ProcessHeader(const DocumentHeader* header);
 
 	/// Returns the document's context.
 	Context* GetContext();

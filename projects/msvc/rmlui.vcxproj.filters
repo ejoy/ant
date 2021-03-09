@@ -330,9 +330,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\DataViewDefault.h">
       <Filter>source</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\RmlUi\Source\DocumentHeader.h">
-      <Filter>source</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\RmlUi\Source\ElementAnimation.h">
       <Filter>source</Filter>
     </ClInclude>

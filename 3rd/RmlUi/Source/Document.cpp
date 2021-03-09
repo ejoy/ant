@@ -37,7 +37,6 @@
 #include "../Include/RmlUi/DataModelHandle.h"
 #include "../Include/RmlUi/FileInterface.h"
 #include "../Include/RmlUi/ElementUtilities.h"
-#include "DocumentHeader.h"
 #include "ElementStyle.h"
 #include "EventDispatcher.h"
 #include "StreamFile.h"
@@ -230,78 +229,6 @@ bool Document::Load(const String& path) {
 		return false;
 	}
 	return true;
-}
-
-void Document::ProcessHeader(const DocumentHeader* header)
-{
-	// Store the source address that we came from
-	source_url = header->source;
-
-	// If a style-sheet (or sheets) has been specified for this element, then we load them and set the combined sheet
-	// on the element; all of its children will inherit it by default.
-	SharedPtr<StyleSheet> new_style_sheet;
-
-	// Combine any inline sheets.
-	for (const DocumentHeader::Resource& rcss : header->rcss)
-	{
-		if (rcss.is_inline)
-		{
-			UniquePtr<StyleSheet> inline_sheet = MakeUnique<StyleSheet>();
-			auto stream = MakeUnique<StreamMemory>((const byte*)rcss.content.c_str(), rcss.content.size());
-			stream->SetSourceURL(rcss.path);
-
-			if (inline_sheet->LoadStyleSheet(stream.get(), rcss.line))
-			{
-				if (new_style_sheet)
-				{
-					SharedPtr<StyleSheet> combined_sheet = new_style_sheet->CombineStyleSheet(*inline_sheet);
-					new_style_sheet = combined_sheet;
-				}
-				else
-					new_style_sheet = std::move(inline_sheet);
-			}
-
-			stream.reset();
-		}
-		else
-		{
-			SharedPtr<StyleSheet> sub_sheet = StyleSheetFactory::GetStyleSheet(rcss.path);
-			if (sub_sheet)
-			{
-				if (new_style_sheet)
-				{
-					SharedPtr<StyleSheet> combined_sheet = new_style_sheet->CombineStyleSheet(*sub_sheet);
-					new_style_sheet = std::move(combined_sheet);
-				}
-				else
-					new_style_sheet = sub_sheet;
-			}
-			else
-				Log::Message(Log::LT_ERROR, "Failed to load style sheet %s.", rcss.path.c_str());
-		}
-	}
-
-	// If a style sheet is available, set it on the document and release it.
-	if (new_style_sheet)
-	{
-		SetStyleSheet(std::move(new_style_sheet));
-	}
-
-	// Load scripts.
-	for (const DocumentHeader::Resource& script : header->scripts)
-	{
-		if (script.is_inline)
-		{
-			LoadInlineScript(script.content, script.path, script.line);
-		}
-		else
-		{
-			LoadExternalScript(script.path);
-		}
-	}
-
-	// Update properties so that e.g. visibility status can be queried properly immediately.
-	body->UpdateProperties();
 }
 
 // Returns the document's context.
