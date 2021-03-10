@@ -4,118 +4,14 @@ local world = ecs.world
 local mathpkg   = import_package "ant.math"
 local mc        = mathpkg.constant
 
-local renderpkg = import_package "ant.render"
-local declmgr   = renderpkg.declmgr
-
 local math3d    = require "math3d"
-local bgfx      = require "bgfx"
-
 local iquad_sphere = ecs.interface "iquad_sphere"
-local ientity = world:interface "ant.render|entity"
-local ientity_state = world:interface "ant.scene|ientity_state"
 local iom   = world:interface "ant.objcontroller|obj_motion"
+local itr   = world:interface "ant.quad_sphere|itrunk_render"
 
 local ctrunkid      = require "trunkid_class"
-local iter_point    = ctrunkid.iter_point
+local constant      = require "constant"
 local surface_point = ctrunkid.surface_point
-
-local tile_pre_trunk_line<const>    = 32
-local inv_tile_pre_trunk_line<const> = 1.0 / tile_pre_trunk_line
-local vertices_pre_tile_line<const> = tile_pre_trunk_line+1
-local vertices_per_trunk<const>     = vertices_pre_tile_line * vertices_pre_tile_line
-local tiles_pre_trunk<const>        = tile_pre_trunk_line * tile_pre_trunk_line
-
-local visible_trunk_range<const>        = 4
-local visible_trunk_num<const>          = visible_trunk_range * visible_trunk_range
-local visible_trunk_indices_num<const>  = visible_trunk_num * tiles_pre_trunk * 6
-local quad_sphere_vertex_layout<const>  = declmgr.get "p3"
-
-local _DEBUG<const> = true
-
---[[
-    quad indices
-    1 ----- 2
-    |       |
-    |       |
-    0 ----- 3
-]]
-
-local function create_face_quad_indices(quad_pre_line)
-    local indices = {}
-    local vertex_num = quad_pre_line+1
-    for i=0, quad_pre_line-1 do
-        local is = i * vertex_num
-        local is_n = (i+1) * vertex_num
-        for j=0, quad_pre_line-1 do
-            indices[#indices+1] = is_n+ j
-            indices[#indices+1] = is+j
-            indices[#indices+1] = is+j+1
-
-            indices[#indices+1] = is+j+1
-            indices[#indices+1] = is_n+j+1
-            indices[#indices+1] = is_n+j
-        end
-    end
-    return indices
-end
-
-local trunk_indices = create_face_quad_indices(tile_pre_trunk_line)
-
-local function quad_line_indices(tri_indices)
-    local indices = {}
-
-    for it=1, #tri_indices, 3 do
-        local v1, v2, v3 = tri_indices[it], tri_indices[it+1], tri_indices[it+2]
-        indices[#indices+1] = v1
-        indices[#indices+1] = v2
-
-        indices[#indices+1] = v2
-        indices[#indices+1] = v3
-    end
-
-    return indices
-end
-
-local trunk_line_indices = quad_line_indices(trunk_indices)
-
-local function create_quad_sphere_trunk_ib()
-    local numindices_pre_trunk = #trunk_indices
-    for i=1, visible_trunk_num-1 do
-		local offset = i * vertices_per_trunk
-		for j=1, numindices_pre_trunk do
-			trunk_indices[#trunk_indices+1] = offset + trunk_indices[j]
-		end
-	end
-
-    return {
-        start = 0,
-        num = #trunk_indices,
-        handle = bgfx.create_index_buffer(bgfx.memory_buffer("w", trunk_indices))
-    }
-end
-local visible_trunk_ib<const> = create_quad_sphere_trunk_ib()
-
-local qsbt = ecs.transform "quad_sphere_bounding_transform"
-function qsbt.process_entity(e)
-    e._bounding.aabb = math3d.ref(math3d.aabb())
-end
-
-local qsmt = ecs.transform "quad_sphere_mesh_transform"
-function qsmt.process_entity(e)
-    local rc = e._rendercache
-
-    local numvertices = visible_trunk_num * vertices_per_trunk   --duplicate vertices on trunk edge
-    rc.vb = {
-        start = 0,
-        num = numvertices,
-        handles = {
-            bgfx.create_dynamic_vertex_buffer(numvertices, quad_sphere_vertex_layout.handle, "a"),
-        }
-    }
-
-    assert(numvertices < 65536, "too many vertices")
-    rc.ib = visible_trunk_ib
-end
 
 --[[
 
@@ -158,69 +54,28 @@ local function cube_vertices(radius)
     }
 end
 
-local normalize_cube_vertices<const> = cube_vertices(1)
-
-local function quad_sphere(num_trunk, radius)
-	radius = radius or 1
-    local trunk_vn = (num_trunk+1)
-	local function create_face_vertices(pts, vertices, mirror_mask)
-		local dl = math3d.mul(math3d.sub(pts[2], pts[1]), 1/num_trunk)
-		local dt = math3d.mul(math3d.sub(pts[3], pts[1]), 1/num_trunk)
-		
-		local fn = trunk_vn * trunk_vn * 3
-
-		local offset = #vertices
-		for il=0, num_trunk do
-			local lstart = math3d.muladd(dl, il, pts[1])
-			local il_offset = offset + il * trunk_vn * 3
-			for it=0, num_trunk do
-				local v = math3d.tovalue(math3d.mul(radius, math3d.normalize(math3d.muladd(dt, it, lstart))))
-				local off = il_offset+it*3
-				for i=1, 3 do
-					vertices[off+i]		= v[i]
-					vertices[fn+off+i]	= mirror_mask[i] * v[i]
-				end
-			end
-		end
-	end
-
-	local vertices = {}
-	create_face_vertices({normalize_cube_vertices.tlf, normalize_cube_vertices.tln, normalize_cube_vertices.trf}, vertices, {1, -1, 1})	--top/bottom
-	create_face_vertices({normalize_cube_vertices.blf, normalize_cube_vertices.bln, normalize_cube_vertices.tlf}, vertices, {-1, 1, 1})	--left/right
-	create_face_vertices({normalize_cube_vertices.tln, normalize_cube_vertices.bln, normalize_cube_vertices.trn}, vertices, {1, 1, -1})	--front/back
-
-	local fn = trunk_vn * trunk_vn
-	local indices = create_face_quad_indices(num_trunk)
-	local num = #indices
-	for i=1, 5 do
-		local offset = i * fn
-		for j=1, num do
-			indices[#indices+1] = offset + indices[j]
-		end
-	end
-
-	return vertices, indices
-	-- local face = {}
-	-- local delta_t = math.pi / num_trunk
-	-- local delta_f = math.pi * 2 / num_trunk
-	-- for i=0, math.pi, delta_t do
-	-- 	local s_i = math.sin(i)
-	-- 	local c_i = math.cos(i)
-	-- 	for j=0, 2 * math.pi, delta_f do
-	-- 		face[#face+1] = {
-	-- 			s_i * math.cos(j),
-	-- 			s_i * math.sin(j),
-	-- 			c_i
-	-- 		}
-	-- 	end
-	-- end
-
+local function create_trunk_entity(qseid)
+    return world:create_entity{
+        policy = {
+            "ant.quad_sphere|trunk",
+            "ant.general|name",
+        },
+        data = {
+            state = 0,
+            scene_entity = true,
+            material = "/pkg/ant.resources/materials/simpletri.material",
+            trunk = {
+                qseid = qseid,
+            },
+        },
+    }
 end
 
 local qst = ecs.transform "quad_sphere_transform"
 function qst.process_entity(e)
     local qs = e.quad_sphere
     local nt = qs.num_trunk
+    local inv_num_trunk   = 1 / nt
     local radius = qs.radius
     assert(nt > 0 and radius > 0)
 
@@ -229,87 +84,64 @@ function qst.process_entity(e)
 
     local vertices = cube_vertices(radius)
 
+    local inscribed_cube  = {
+        vertices = vertices,
+        {vertices.tln, vertices.trn, vertices.brn, vertices.bln}, --front
+        {vertices.trf, vertices.tlf, vertices.blf, vertices.brf}, --back
+
+        {vertices.tlf, vertices.trf, vertices.trn, vertices.tln}, --up
+        {vertices.bln, vertices.brn, vertices.brf, vertices.blf}, --down
+
+        {vertices.tlf, vertices.tln, vertices.bln, vertices.blf}, --left
+        {vertices.trn, vertices.trf, vertices.brf, vertices.brn}, --right
+    }
+
+    local function trunk_distance(face, x1, x2)
+        local fv = inscribed_cube[face+1]
+        local hd, vd, basetpt = ctrunkid.quad_delta(fv, inv_num_trunk)
+        local p1, p2 = math3d.muladd(x1, hd, basetpt), math3d.muladd(x2, hd, basetpt)
+        local sp1, sp2 = surface_point(radius, p1), surface_point(radius, p2)
+        return math3d.length(math3d.sub(sp2, sp1))
+    end
+
+    local trunk_entity_pool = {}
+
     e._quad_sphere = {
         num_trunk       = nt,
-        inv_num_trunk   = 1 / nt,
+        inv_num_trunk   = inv_num_trunk,
         num_trunk_point = nt + 1,
         trunks_pre_face = nt * nt,
         radius          = radius,
         cube_len        = cube_len,
         proj_trunk_len  = proj_trunk_len,
-        proj_tile_len   = proj_trunk_len / tile_pre_trunk_line,
-        inscribed_cube  = {
-            vertices = vertices,
-            {vertices.tln, vertices.trn, vertices.brn, vertices.bln}, --front
-            {vertices.trf, vertices.tlf, vertices.blf, vertices.brf}, --back
-
-            {vertices.tlf, vertices.trf, vertices.trn, vertices.tln}, --up
-            {vertices.bln, vertices.brn, vertices.brf, vertices.blf}, --down
-
-            {vertices.tlf, vertices.tln, vertices.bln, vertices.blf}, --left
-            {vertices.trn, vertices.trf, vertices.brf, vertices.brn}, --right
-        }
+        proj_tile_len   = proj_trunk_len * constant.inv_tile_pre_trunk_line,
+        trunk_distance  = trunk_distance(0, 0, 1),
+        inscribed_cube  = inscribed_cube,
+        trunk_entity_pool=trunk_entity_pool,
+        visible_trunks  = {},
     }
 end
 
 function iquad_sphere.create(name, numtrunk, radius)
-    --local verties, indices = geo.quad_sphere(numtrunk, radius)
     return world:create_entity {
         policy = {
             "ant.quad_sphere|quad_sphere",
-            --"ant.render|debug_mesh_bounding",
             "ant.general|name",
         },
         data = {
-            transform = {},
-            material = "/pkg/ant.resources/materials/simpletri.material",
-            state = 0,
             quad_sphere = {
                 num_trunk   = numtrunk,
                 radius      = radius,
             },
-            scene_entity = true,
-            --debug_mesh_bounding = true,
             name = name or "",
         }
     }
-end
-
-local function tile_vertices(trunkid, qs)
-    local radius    = qs.radius
-    local hd, vd, basept = ctrunkid(trunkid, qs):tile_delta(inv_tile_pre_trunk_line)
-
-    local vertices = {}
-    local aabb = math3d.aabb()
-    for vp in ctrunkid.iter_point(tile_pre_trunk_line, vd, basept) do
-        for p in ctrunkid.iter_point(tile_pre_trunk_line, hd, vp) do
-            local sp = ctrunkid.surface_point(radius, p)
-            aabb = math3d.aabb_append(aabb, sp)
-            local v = math3d.tovalue(sp)
-            vertices[#vertices+1] = v[1]
-            vertices[#vertices+1] = v[2]
-            vertices[#vertices+1] = v[3]
-        end
-    end
-    return vertices, aabb
 end
 
 iquad_sphere.pack_trunkid = ctrunkid.pack_trunkid
 
 function iquad_sphere.unpack_trunkid(trunkid)
     return ctrunkid.trunkid_face(trunkid), ctrunkid.trunkid_index(trunkid)
-end
-
-function iquad_sphere.center_coord(eid, spherecial)
-    local e = world[eid]
-    local qs = e._quad_sphere
-    local trunkid = qs.trunkid
-    local tid = ctrunkid(trunkid, qs)
-    local xyz = tid:coord_3d()
-    if spherecial then
-        return tid:to_sphereical_coord(xyz)
-    end
-    return xyz
 end
 
 local function find_face(x, y, z)
@@ -343,8 +175,6 @@ local function which_face(pos)
     return face, normlize_face_xy(face, x, y, maxv)
 end
 
-iquad_sphere.which_face = which_face
-
 local function which_trunkid(pos, qs)
     local face, x, y = which_face(pos)
     local nt = qs.num_trunk
@@ -353,6 +183,9 @@ local function which_trunkid(pos, qs)
 
     return ctrunkid.pack_trunkid(face, ix, iy)
 end
+
+iquad_sphere.which_face = which_face
+iquad_sphere.which_trunkid = which_trunkid
 
 local function tile_coord(pos, qs)
     local face, x, y = which_face(pos)
@@ -371,193 +204,90 @@ function iquad_sphere.trunk_coord(eid, pos)
     return tile_coord(pos, world[eid]._quad_sphere)
 end
 
-function iquad_sphere.set_trunkid(eid, trunkid)
+-- function iquad_sphere.set_trunkid(eid, trunkid)
+--     local e = world[eid]
+--     local qs = e._quad_sphere
+--     if qs.trunkid ~= trunkid then
+--         qs.trunkid = trunkid
+--         ientity_state.set_state(eid, "visible", true)
+--     end
+
+--     local vertices, aabb = ctrunkid.tile_vertices(trunkid, qs, constant.tile_pre_trunk_line)
+--     e._bounding.aabb.m = aabb
+--     local rc = e._rendercache
+--     rc.aabb = e._bounding.aabb
+
+--     local vb = rc.vb
+--     local poshandle = vb.handles[1]
+--     bgfx.update(poshandle, 0, bgfx.memory_buffer("fff", vertices), quad_sphere_vertex_layout.handle)
+-- end
+
+function iquad_sphere.update_visible_trunks(eid, cameraeid)
     local e = world[eid]
     local qs = e._quad_sphere
-    if qs.trunkid ~= trunkid then
-        qs.trunkid = trunkid
-        ientity_state.set_state(eid, "visible", true)
-    end
 
-    local vertices, aabb = tile_vertices(trunkid, qs)
-    e._bounding.aabb.m = aabb
-    local rc = e._rendercache
-    rc.aabb = e._bounding.aabb
+    local pos = iom.get_position(cameraeid)
 
-    local vb = rc.vb
-    local poshandle = vb.handles[1]
-    bgfx.update(poshandle, 0, bgfx.memory_buffer("fff", vertices), quad_sphere_vertex_layout.handle)
-end
+    local visible_trunks = {}
 
-function iquad_sphere.add_line_grid(eid)
-    local e = world[eid]
-    local qs = e._quad_sphere
-    local trunkid = qs.trunkid
-    local vertices = tile_vertices(trunkid, qs)
+    local trunkid = which_trunkid(math3d.tovalue(pos), qs)
+    local tm = iquad_sphere.tangent_matrix(pos)
+    local r, f = math3d.index(tm, 1), math3d.index(tm, 3)
+    local vtr = constant.visible_trunk_range
+    local trunkdis = qs.trunk_distance
 
-    local mesh = ientity.create_mesh({"p3", vertices}, trunk_line_indices)
-    return ientity.create_simple_render_entity(
-        "quad_sphere_line",
-        "/pkg/ant.resources/materials/line.material",
-        mesh)
-end
-
-function iquad_sphere.add_inscribed_cube(eid, color)
-    local e = world[eid]
-    local qs = e._quad_sphere
-    local vertices = {}
-    local function to_v(...)
-        for idx=1, select('#', ...) do
-            local v = select(idx, ...)
-            local vv = math3d.tovalue(v)
-            vertices[#vertices+1] = vv[1]
-            vertices[#vertices+1] = vv[2]
-            vertices[#vertices+1] = vv[3]
-        end
-    end
-    local v = qs.inscribed_cube.vertices
-    to_v(   v.tlf, v.trf, v.trn, v.tln,
-            v.blf, v.brf, v.brn, v.bln)
-    local indices = {
-        0, 1, 1, 2, 2, 3, 3, 0,
-        4, 5, 5, 6, 6, 7, 7, 4,
-
-        0, 4, 1, 5, 2, 6, 3, 7,
-    }
-
-    local mesh = ientity.create_mesh({"p3", vertices}, indices)
-    local eid = ientity.create_simple_render_entity(
-        "quad_sphere_line",
-        "/pkg/ant.resources/materials/line_color.material",
-        mesh)
-
-    if color then
-        local imaterial = world:interface "ant.asset|imaterial"
-        imaterial.set_property(eid, "u_color", color)
-    end
-end
-
-function iquad_sphere.add_solid_angle_entity(eid, color)
-    local e         = world[eid]
-    local qs        = e._quad_sphere
-
-    local tid       = ctrunkid(qs.trunkid, qs)
-    local corners   = tid:proj_corners_3d()
-    local vertices = {}
-    for _, c in ipairs(corners) do
-        local v = math3d.tovalue(c)
-        vertices[#vertices+1] = v[1]
-        vertices[#vertices+1] = v[2]
-        vertices[#vertices+1] = v[3]
-    end
-    local indices = {0, 1, 2, 2, 3, 0}
-    local mesh = ientity.create_mesh({"p3", vertices}, indices)
-    local plane_eid = ientity.create_simple_render_entity(
-        "proj_corners",
-        "/pkg/ant.resources/materials/simpletri.material",
-        mesh)
-
-    vertices[#vertices+1] = 0
-    vertices[#vertices+1] = 0
-    vertices[#vertices+1] = 0
-    local proj_cube_indices = {5, 0, 5, 1, 5, 2, 5, 3, 5, 4}
-    local linemesh = ientity.create_mesh({"p3", vertices}, proj_cube_indices)
-
-    local plane_line_eid = ientity.create_simple_render_entity(
-        "proj_corners_line",
-        "/pkg/ant.resources/materials/line_color.material",
-        linemesh)
-
-    local curve_vertices = {}
-    for i=1, 4*3 do
-        curve_vertices[i] = vertices[i]
-    end
-    local corners3d = tid:corners_3d()
-    for _, c in ipairs(corners3d) do
-        local v = math3d.tovalue(c)
-        curve_vertices[#curve_vertices+1] = v[1]
-        curve_vertices[#curve_vertices+1] = v[2]
-        curve_vertices[#curve_vertices+1] = v[3]
-    end
-
-    local curve_line_indices = {
-        0, 4, 1, 5, 2, 6, 3, 7
-    }
-
-    local curvemesh = ientity.create_mesh({"p3", curve_vertices}, curve_line_indices)
-
-    local curved_eid = ientity.create_simple_render_entity(
-        "curved_line",
-        "/pkg/ant.resources/materials/line_color.material",
-        curvemesh)
-    
-    if color then
-        local imaterial = world:interface "ant.asset|imaterial"
-        imaterial.set_property(plane_eid, "u_color", color)
-        imaterial.set_property(plane_line_eid, "u_color", color)
-        imaterial.set_property(curved_eid, "u_color", color)
-    end
-
-end
-
-function iquad_sphere.tile_aabbs(eid)
-    local e = world[eid]
-    local qs = e._quad_sphere
-    local trunkid = qs.trunkid
-    local vertices = tile_vertices(trunkid, qs)
-
-    local aabbs = {}
-    for ih=1, tile_pre_trunk_line do
-        local offset = (ih-1) * vertices_pre_tile_line
-        for iv=1, tile_pre_trunk_line do
-            local voff = (iv-1) * 3
-            local idx = offset + voff + iv
-
-            local aabb = math3d.aabb()
-            aabbs[#aabbs+1] = math3d.aabb_append(aabb,
-                math3d.vector(vertices[idx],            vertices[idx+1],        vertices[idx+2]),
-                math3d.vector(vertices[idx+3],          vertices[idx+4],        vertices[idx+5]),
-                math3d.vector(vertices[idx+offset],     vertices[idx+offset+1], vertices[idx+offset+2]),
-                math3d.vector(vertices[idx+offset+3],   vertices[idx+offset+4], vertices[idx+offset+5])
-            )
+    for i=-vtr, vtr do
+        local dv = math3d.mul(i * trunkdis, f)
+        for j=-vtr, vtr do
+            if i~=0 and j~=0 then
+                local dh = math3d.mul(j * trunkdis, r)
+                local np = math3d.add(math3d.add(pos, dh), dv)
+                local ntid = which_trunkid(math3d.tovalue(np), qs)
+                visible_trunks[#visible_trunks+1] = ntid
+            else
+                visible_trunks[#visible_trunks+1] = trunkid
+            end
         end
     end
 
-    return aabbs
-end
+    local tep = qs.trunk_entity_pool
+    if #qs.visible_trunks == 0 then
+        local l = vtr*2+1
+        for i=1, l*l do
+            tep[i] = create_trunk_entity(eid)
+        end
+    else
+        local remove_trunkids = {}
+        local function find_trunkid(vt, tid)
+            for _, tt in ipairs(vt) do
+                if tt == tid then
+                    return tt
+                end
+            end
+        end
 
-function iquad_sphere.tile_aabb(eid, tilex, tiley)
-    local e = world[eid]
-    local qs = e._quad_sphere
-    local trunkid = qs.trunkid
-    if trunkid == nil then
-        return
+        local old_trunkids = {}
+        for idx, tid in ipairs(qs.visible_trunks) do
+            if nil == find_trunkid(visible_trunks, tid) then
+                remove_trunkids[#remove_trunkids+1] = idx
+            else
+                old_trunkids[tid] = idx
+            end
+        end
+
+        if #remove_trunkids > 0 then
+            for _, tid in ipairs(visible_trunks) do
+                if nil == old_trunkids[tid] then
+                    local poolidx = remove_trunkids[#remove_trunkids]
+                    remove_trunkids[#remove_trunkids] = nil
+                    local teid = tep[poolidx]
+                    itr.reset_trunk(teid, tid)
+                end
+            end
+        end
+        assert(#remove_trunkids == 0)
     end
-
-    local hd, vd, basept = ctrunkid(trunkid, qs):tile_delta(inv_tile_pre_trunk_line)
-
-    local aabb = math3d.aabb()
-    for _, coord in ipairs{
-        {tilex-1,   tiley-1},
-        {tilex,     tiley-1},
-        {tilex-1,   tiley},
-        {tilex,     tiley},
-    } do
-        local tileorigin_proj = ctrunkid.quad_position(hd, vd, coord[1], coord[2], basept)
-        aabb = math3d.aabb_append(aabb, ctrunkid.surface_point(qs.radius, tileorigin_proj))
-    end
-
-    return aabb
-end
-
-function iquad_sphere.tile_center(eid, tilex, tiley)
-    local e = world[eid]
-    local qs = e._quad_sphere
-    local trunkid = qs.trunkid
-
-    local hd, vd, basept = ctrunkid(trunkid, qs):tile_delta(inv_tile_pre_trunk_line)
-
-    return ctrunkid.quad_position(hd, vd, tilex-1+0.5, tiley-1+0.5, basept)
+    qs.visible_trunks = visible_trunks
 end
 
 function iquad_sphere.tangent_matrix(pos)
@@ -576,23 +306,6 @@ function iquad_sphere.tangent_matrix(pos)
     return math3d.set_columns(mc.IDENTITY_MAT, r, n, f, pos)
 end
 
-function iquad_sphere.tile_matrix(eid, tilex, tiley)
-    local e = world[eid]
-    local qs = e._quad_sphere
-    local trunkid = qs.trunkid
-
-    local tid = ctrunkid(trunkid, qs)
-    local hd, vd, basept = tid:tile_delta(inv_tile_pre_trunk_line)
-
-    local radius = qs.radius
-
-    local q = ctrunkid.quad_position(hd, vd, tilex-1+0.5, tiley-1+0.5, basept)
-
-    local n = math3d.normalize(q)
-    local p = math3d.mul(radius, n)
-    return iquad_sphere.tangent_matrix(p)
-end
-
 local function check_is_normalize(n)
     local l = math3d.length(n)
     local T<const> = 1e-6
@@ -606,7 +319,7 @@ function iquad_sphere.move(eid, pos, forward, df, dr)
     local qs = e._quad_sphere
     local radius = qs.radius
 
-    if _DEBUG then
+    if constant._DEBUG then
         check_is_normalize(forward)
     end
 
@@ -615,7 +328,7 @@ function iquad_sphere.move(eid, pos, forward, df, dr)
     local n = math3d.normalize(pos)
     local r = math3d.normalize(math3d.cross(n, forward))
 
-    if _DEBUG then
+    if constant._DEBUG then
         if math3d.dot(r, r) == 0 then
             error(("forward vector parallel with up vector:%s, %s"):format(math3d.tostring(forward), math3d.tostring(n)))
         end
@@ -640,33 +353,4 @@ function iquad_sphere.move(eid, pos, forward, df, dr)
     end
 
     return newpos
-end
-
-function iquad_sphere.tile_normals(eid)
-    local e = world[eid]
-    local qs = e._quad_sphere
-    local trunkid = qs.trunkid
-    local hd, vd, basept = ctrunkid(trunkid, qs):tile_delta(inv_tile_pre_trunk_line)
-    local radius = qs.radius
-
-    local normals = {}
-    
-    for vp in iter_point(tile_pre_trunk_line-1, vd, basept) do
-        for p in iter_point(tile_pre_trunk_line-1, hd, vp) do
-            normals[#normals+1] = ctrunkid.surface_point(radius, ctrunkid.quad_position(hd, vd, 0.5, 0.5, p))
-        end
-    end
-    return normals
-end
-
-function iquad_sphere.focus_camera(eid, camreaeid, view_height, focus_pt)
-    local e = world[eid]
-
-    local qs = e._quad_sphere
-    
-    local camera_radius = view_height + qs.radius
-    local viewdir = math3d.normalize(focus_pt)
-    local camerapos = math3d.mul(viewdir, camera_radius)
-    viewdir = math3d.inverse(viewdir)
-    iom.lookto(camreaeid, camerapos, viewdir)
 end

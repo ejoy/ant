@@ -86,11 +86,6 @@ function ctrunkid.quad_delta(corners, inv_num)
             corners[1]
 end
 
-function ctrunkid.quad_position(hd, vd, sx, sy, basept)
-    local hp = math3d.muladd(hd, sx, basept)
-    return math3d.muladd(vd, sy, hp)
-end
-
 function ctrunkid:tile_delta(inv_num)
     return ctrunkid.quad_delta(self:proj_corners_3d(), inv_num)
 end
@@ -108,6 +103,11 @@ local function surface_point(radius, v)
 end
 
 ctrunkid.surface_point = surface_point
+
+function ctrunkid.quad_position(hd, vd, sx, sy, basept)
+    local hp = math3d.muladd(hd, sx, basept)
+    return math3d.muladd(vd, sy, hp)
+end
 
 function ctrunkid.iter_point(n, d, basept)
     local idx=0
@@ -132,50 +132,24 @@ function ctrunkid:corners_3d()
     return s
 end
 
-local create_face_pt_op = {
-    --front
-    function (p2d, othercoord)
-        p2d[3] = -othercoord
-        return p2d
-    end,
-    --back
-    function (p2d, othercoord)
-        p2d[3] = othercoord
-        return p2d
-    end,
-    --top
-    function (p2d, othercoord)
-        p2d[2], p2d[3] = othercoord, p2d[2]
-        return p2d
-    end,
-    --bottom
-    function (p2d, othercoord)
-        p2d[2], p2d[3] = -othercoord, p2d[2]
-        return p2d
-    end,
-    --left
-    function (p2d, othercoord)
-        p2d[1], p2d[3] = -othercoord, p2d[1]
-        return p2d
-    end,
-    --right
-    function (p2d, othercoord)
-        p2d[1], p2d[3] = othercoord, p2d[1]
-        return p2d
-    end,
-}
+function ctrunkid.tile_vertices(trunkid, qs, tile_pre_trunk_line)
+    local radius    = qs.radius
+    local hd, vd, basept = ctrunkid(trunkid, qs):tile_delta(1.0/tile_pre_trunk_line)
 
-function ctrunkid:position(x, y)
-    -- local cx, cy = self:trunk_index_coord()
-    -- local qs = self.qs
-    -- local tu = qs.proj_tile_len
-    -- local plen = qs.proj_trunk_len
-
-    -- local offset = {cx * plen, cy * plen}
-
-    -- local t = {offset[1] + x * tu, offset[2] + y * tu}
-    -- local face = self:face()
-    -- return create_face_pt_op[face+1](t, qs.radius)
+    local vertices = {}
+    local aabb = math3d.aabb()
+    for vp in ctrunkid.iter_point(tile_pre_trunk_line, vd, basept) do
+        for p in ctrunkid.iter_point(tile_pre_trunk_line, hd, vp) do
+            local sp = ctrunkid.surface_point(radius, p)
+            aabb = math3d.aabb_append(aabb, sp)
+            local v = math3d.tovalue(sp)
+            vertices[#vertices+1] = v[1]
+            vertices[#vertices+1] = v[2]
+            vertices[#vertices+1] = v[3]
+        end
+    end
+    return vertices, aabb
 end
+
 
 return ctrunkid
