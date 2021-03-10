@@ -88,10 +88,6 @@ public:
 	/// @return True if the event was not consumed (ie, was prevented from propagating by an element), false if it was.
 	static bool DispatchEvent(Element* target_element, EventId id, const Dictionary& parameters, bool interruptible, bool bubbles, DefaultActionPhase default_action_phase);
 
-	/// Returns event types with number of listeners for debugging.
-	/// @return Summary of attached listeners.
-	String ToString() const;
-
 private:
 	Element* element;
 

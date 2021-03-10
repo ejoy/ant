@@ -21,17 +21,6 @@ function datamodel_mt:__newindex(k, v)
     rmlui.DataModelSet(self,k,v)
 end
 
-function event.OnDocumentCreate(document)
-    datamodels[document] = {}
-end
-
-function event.OnDocumentDestroy(document)
-    for _, model in pairs(datamodels[document]) do
-        rmlui.DataModelRelease(model)
-    end
-    datamodels[document] = nil
-end
-
 local function createWindow(document, source)
     --TODO: pool
     local window = {}
@@ -85,12 +74,27 @@ local function createWindow(document, source)
             data = data,
         })
     end
-    return window
+    local mt = {}
+    function mt:__newindex(name, f)
+        if name == "onload" then
+            rawset(self, "onload", f)
+            self.addEventListener("load", f)
+        end
+    end
+    return setmetatable(window, mt)
 end
 
 function event.OnDocumentCreate(document, globals)
+    datamodels[document] = {}
     globals.window = createWindow(document)
     globals.window.extern = createExternWindow(document)
+end
+
+function event.OnDocumentDestroy(document)
+    for _, model in pairs(datamodels[document]) do
+        rmlui.DataModelRelease(model)
+    end
+    datamodels[document] = nil
 end
 
 return createWindow
