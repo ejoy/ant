@@ -35,6 +35,7 @@ local function create_trunk_entity(qseid)
             "ant.general|name",
         },
         data = {
+            transform = {},
             state = 0,
             scene_entity = true,
             material = "/pkg/ant.resources/materials/simpletri.material",
@@ -326,12 +327,11 @@ local function find_visible_trunks(pos, qs)
 end
 
 local function update_visible_trunks(visible_trunks, qs, qseid)
-    local vtr = constant.visible_trunk_range
     local tep = qs.trunk_entity_pool
     if #qs.visible_trunks == 0 then
-        local l = vtr*2+1
-        for i=1, l*l do
-            tep[i] = create_trunk_entity(qseid)
+        for idx, tid in ipairs(visible_trunks) do
+            tep[idx] = create_trunk_entity(qseid)
+            itr.reset_trunk(tep[idx], tid)
         end
     else
         local remove_trunkids = {}
@@ -411,8 +411,6 @@ function iquad_sphere.move(eid, pos, forward, df, dr)
         check_is_normalize(forward)
     end
 
-    local trunkid = which_trunkid(math3d.tovalue(pos), qs)
-
     local n = math3d.normalize(pos)
     local r = math3d.normalize(math3d.cross(n, forward))
 
@@ -433,12 +431,5 @@ function iquad_sphere.move(eid, pos, forward, df, dr)
     local newpos = move_toward(df, forward, pos)
     newpos = move_toward(dr, r, newpos)
     newpos = math3d.mul(qs.radius, math3d.normalize(newpos))
-
-    local newtrunkid = which_trunkid(math3d.tovalue(newpos), qs)
-
-    if trunkid ~= newtrunkid then
-        iquad_sphere.set_trunkid(eid, newtrunkid)
-    end
-
     return newpos
 end

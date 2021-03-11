@@ -28,7 +28,7 @@ function tmt.process_entity(e)
     rc.vb = {
         start = 0,
         num = vn,
-        handle = {
+        handles = {
             bgfx.create_dynamic_vertex_buffer(vn, vblayout[1].handle),
             bgfx.create_dynamic_vertex_buffer(vn, vblayout[2].handle),
             bgfx.create_dynamic_vertex_buffer(vn, vblayout[3].handle),
