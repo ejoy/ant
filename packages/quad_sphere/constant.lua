@@ -3,6 +3,34 @@ local vertices_pre_tile_line<const> = tile_pre_trunk_line+1
 local visible_trunk_range<const> = 2
 local vertices_per_trunk<const>     = vertices_pre_tile_line * vertices_pre_tile_line
 
+--[[
+
+		tlf ------- trf
+		/|			 /|
+	   / |			/ |
+	  tln ------- trn |
+	   | blf ------- brf
+	   |  /	       |  /
+	   | /		   | /
+	  bln ------- brn
+]]
+
+--{F, B, U, D, L, R}
+local face_index<const> = {
+    front   = 0,
+    back    = 1,
+
+    top     = 2,
+    bottom  = 3,
+
+    left    = 4,
+    right   = 5,
+}
+
+local inscribed_cube_len<const>         = math.sqrt(3) * 2.0/3.0
+local half_inscribed_cube_len<const>    = inscribed_cube_len * 0.5
+
+
 local renderpkg = import_package "ant.render"
 local declmgr = renderpkg.declmgr
 
@@ -63,6 +91,8 @@ local function create_quad_sphere_trunk_ib()
 end
 
 local c <const> = {
+    inscribed_cube_len      = inscribed_cube_len,
+    half_inscribed_cube_len = half_inscribed_cube_len,
     tile_pre_trunk_line     = tile_pre_trunk_line,
     inv_tile_pre_trunk_line = 1.0 / tile_pre_trunk_line,
     vertices_pre_tile_line  = vertices_pre_tile_line,
@@ -79,6 +109,7 @@ local c <const> = {
         declmgr.get "t20",
         declmgr.get "t21",
     },
+    face_index              = face_index,
     _DEBUG                  = true,
 }
 return c
