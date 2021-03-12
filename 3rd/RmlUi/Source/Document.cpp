@@ -37,7 +37,6 @@
 #include "../Include/RmlUi/DataModelHandle.h"
 #include "../Include/RmlUi/FileInterface.h"
 #include "../Include/RmlUi/ElementUtilities.h"
-#include "DocumentHeader.h"
 #include "ElementStyle.h"
 #include "EventDispatcher.h"
 #include "StreamFile.h"
@@ -232,78 +231,6 @@ bool Document::Load(const String& path) {
 	return true;
 }
 
-void Document::ProcessHeader(const DocumentHeader* header)
-{
-	// Store the source address that we came from
-	source_url = header->source;
-
-	// If a style-sheet (or sheets) has been specified for this element, then we load them and set the combined sheet
-	// on the element; all of its children will inherit it by default.
-	SharedPtr<StyleSheet> new_style_sheet;
-
-	// Combine any inline sheets.
-	for (const DocumentHeader::Resource& rcss : header->rcss)
-	{
-		if (rcss.is_inline)
-		{
-			UniquePtr<StyleSheet> inline_sheet = MakeUnique<StyleSheet>();
-			auto stream = MakeUnique<StreamMemory>((const byte*)rcss.content.c_str(), rcss.content.size());
-			stream->SetSourceURL(rcss.path);
-
-			if (inline_sheet->LoadStyleSheet(stream.get(), rcss.line))
-			{
-				if (new_style_sheet)
-				{
-					SharedPtr<StyleSheet> combined_sheet = new_style_sheet->CombineStyleSheet(*inline_sheet);
-					new_style_sheet = combined_sheet;
-				}
-				else
-					new_style_sheet = std::move(inline_sheet);
-			}
-
-			stream.reset();
-		}
-		else
-		{
-			SharedPtr<StyleSheet> sub_sheet = StyleSheetFactory::GetStyleSheet(rcss.path);
-			if (sub_sheet)
-			{
-				if (new_style_sheet)
-				{
-					SharedPtr<StyleSheet> combined_sheet = new_style_sheet->CombineStyleSheet(*sub_sheet);
-					new_style_sheet = std::move(combined_sheet);
-				}
-				else
-					new_style_sheet = sub_sheet;
-			}
-			else
-				Log::Message(Log::LT_ERROR, "Failed to load style sheet %s.", rcss.path.c_str());
-		}
-	}
-
-	// If a style sheet is available, set it on the document and release it.
-	if (new_style_sheet)
-	{
-		SetStyleSheet(std::move(new_style_sheet));
-	}
-
-	// Load scripts.
-	for (const DocumentHeader::Resource& script : header->scripts)
-	{
-		if (script.is_inline)
-		{
-			LoadInlineScript(script.content, script.path, script.line);
-		}
-		else
-		{
-			LoadExternalScript(script.path);
-		}
-	}
-
-	// Update properties so that e.g. visibility status can be queried properly immediately.
-	body->UpdateProperties();
-}
-
 // Returns the document's context.
 Context* Document::GetContext()
 {
@@ -456,10 +383,6 @@ static void GenerateMouseEventParameters(Dictionary& parameters, const Point& mo
 		parameters["button"] = button_index;
 }
 
-static void GenerateDragEventParameters(Dictionary& parameters, Element* drag) {
-	parameters["drag_element"] = (void*)drag;
-}
-
 bool Document::ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state) {
 	Dictionary parameters;
 	GenerateKeyEventParameters(parameters, key);
@@ -490,7 +413,6 @@ void Document::ProcessMouseMove(int x, int y, int key_modifier_state) {
 
 	Dictionary drag_parameters;
 	GenerateMouseEventParameters(drag_parameters, mouse_position);
-	GenerateDragEventParameters(drag_parameters, drag);
 	GenerateKeyModifierEventParameters(drag_parameters, key_modifier_state);
 
 	// Update the current hover chain. This will send all necessary 'onmouseout', 'onmouseover', 'ondragout' and
@@ -501,9 +423,6 @@ void Document::ProcessMouseMove(int x, int y, int key_modifier_state) {
 	if (mouse_moved) {
 		if (hover) {
 			hover->DispatchEvent(EventId::Mousemove, parameters);
-
-			if (drag_hover && drag_verbose)
-				drag_hover->DispatchEvent(EventId::Dragmove, drag_parameters);
 		}
 	}
 }
@@ -553,25 +472,6 @@ void Document::ProcessMouseButtonDown(int button_index, int key_modifier_state) 
 		last_click_mouse_position = mouse_position;
 
 		active_chain.insert(active_chain.end(), hover_chain.begin(), hover_chain.end());
-
-		if (propagate)
-		{
-			// Traverse down the hierarchy of the newly focused element (if any), and see if we can begin dragging it.
-			drag_started = false;
-			drag = hover;
-			while (drag)
-			{
-				Style::Drag drag_style = Style::Drag::None;
-				switch (drag_style)
-				{
-				case Style::Drag::None:		drag = drag->GetParentNode(); continue;
-				case Style::Drag::Block:	drag = nullptr; continue;
-				default: drag_verbose = (drag_style == Style::Drag::DragDrop || drag_style == Style::Drag::Clone);
-				}
-
-				break;
-			}
-		}
 	}
 	else
 	{
@@ -607,40 +507,6 @@ void Document::ProcessMouseButtonUp(int button_index, int key_modifier_state) {
 		});
 		active_chain.clear();
 		active = nullptr;
-
-		if (drag)
-		{
-			if (drag_started)
-			{
-				Dictionary drag_parameters;
-				GenerateMouseEventParameters(drag_parameters, mouse_position);
-				GenerateDragEventParameters(drag_parameters, drag);
-				GenerateKeyModifierEventParameters(drag_parameters, key_modifier_state);
-
-				if (drag_hover)
-				{
-					if (drag_verbose)
-					{
-						drag_hover->DispatchEvent(EventId::Dragdrop, drag_parameters);
-						// User may have removed the element, do an extra check.
-						if (drag_hover)
-							drag_hover->DispatchEvent(EventId::Dragout, drag_parameters);
-					}
-				}
-
-				if (drag)
-					drag->DispatchEvent(EventId::Dragend, drag_parameters);
-
-				ReleaseDragClone();
-			}
-
-			drag = nullptr;
-			drag_hover = nullptr;
-			drag_hover_chain.clear();
-
-			// We may have changes under our mouse, this ensures that the hover chain is properly updated
-			ProcessMouseMove(mouse_position.x, mouse_position.y, key_modifier_state);
-		}
 	}
 	else
 	{
@@ -663,28 +529,6 @@ void Document::ProcessMouseWheel(float wheel_delta, int key_modifier_state) {
 void Document::UpdateHoverChain(const Dictionary& parameters, const Dictionary& drag_parameters, const Point& old_mouse_position) {
 	Point position = mouse_position;
 
-	// Send out drag events.
-	if (drag)
-	{
-		if (mouse_position != old_mouse_position)
-		{
-			if (!drag_started)
-			{
-				Dictionary drag_start_parameters = drag_parameters;
-				GenerateMouseEventParameters(drag_start_parameters, old_mouse_position);
-				drag->DispatchEvent(EventId::Dragstart, drag_start_parameters);
-				drag_started = true;
-				if (Style::Drag::None == Style::Drag::Clone)
-				{
-					// Clone the element and attach it to the mouse cursor.
-					CreateDragClone(drag);
-				}
-			}
-
-			drag->DispatchEvent(EventId::Drag, drag_parameters);
-		}
-	}
-
 	hover = body->GetElementAtPoint(position);
 
 	// Build the new hover chain.
@@ -700,74 +544,8 @@ void Document::UpdateHoverChain(const Dictionary& parameters, const Dictionary& 
 	SendEvents(hover_chain, new_hover_chain, EventId::Mouseout, parameters);
 	SendEvents(new_hover_chain, hover_chain, EventId::Mouseover, parameters);
 
-	// Send out drag events.
-	if (drag)
-	{
-		drag_hover = body->GetElementAtPoint(position, drag);
-
-		ElementSet new_drag_hover_chain;
-		element = drag_hover;
-		while (element != nullptr)
-		{
-			new_drag_hover_chain.insert(element);
-			element = element->GetParentNode();
-		}
-
-		if (drag_started &&
-			drag_verbose)
-		{
-			// Send out ondragover and ondragout events as appropriate.
-			SendEvents(drag_hover_chain, new_drag_hover_chain, EventId::Dragout, drag_parameters);
-			SendEvents(new_drag_hover_chain, drag_hover_chain, EventId::Dragover, drag_parameters);
-		}
-
-		drag_hover_chain.swap(new_drag_hover_chain);
-	}
-
 	// Swap the new chain in.
 	hover_chain.swap(new_hover_chain);
-}
-
-void Document::CreateDragClone(Element* element) {
-	if (!cursor_proxy)
-	{
-		Log::Message(Log::LT_ERROR, "Unable to create drag clone, no cursor proxy document.");
-		return;
-	}
-
-	ReleaseDragClone();
-
-	// Instance the drag clone.
-	ElementPtr clone(new Element(element->GetOwnerDocument(), element->GetTagName()));
-	clone->SetAttributes(element->GetAttributes());
-	clone->SetInnerRML(element->GetInnerRML());
-	if (!clone)
-	{
-		Log::Message(Log::LT_ERROR, "Unable to duplicate drag clone.");
-		return;
-	}
-
-	drag_clone = clone.get();
-
-	// Append the clone to the cursor proxy element.
-	cursor_proxy->AppendChild(std::move(clone));
-
-	// Set the style sheet on the cursor proxy.
-	//TODO static_cast<Document&>(*cursor_proxy).SetStyleSheet(element->GetStyleSheet());
-
-	// Set all the required properties and pseudo-classes on the clone.
-	drag_clone->SetPseudoClass("drag", true);
-	//drag_clone->SetPropertyImmediate(PropertyId::Position, Property(Style::Position::Absolute));
-	//drag_clone->SetPropertyImmediate(PropertyId::Left, Property(element->GetOffset().x - mouse_position.x, Property::PX));
-	//drag_clone->SetPropertyImmediate(PropertyId::Top, Property(element->GetOffset().y - mouse_position.y, Property::PX));
-}
-
-void Document::ReleaseDragClone() {
-	if (drag_clone)
-	{
-		cursor_proxy->RemoveChild(drag_clone);
-		drag_clone = nullptr;
-	}
 }
 
 void Document::OnElementDetach(Element* element) {
@@ -791,29 +569,6 @@ void Document::OnElementDetach(Element* element) {
 
 		if (active == element)
 			active = nullptr;
-	}
-
-	if (drag)
-	{
-		auto it = drag_hover_chain.find(element);
-		if (it != drag_hover_chain.end())
-		{
-			drag_hover_chain.erase(it);
-
-			if (drag_hover == element)
-				drag_hover = nullptr;
-		}
-
-		if (drag == element)
-		{
-			// The dragged element is being removed, silently cancel the drag operation
-			if (drag_started)
-				ReleaseDragClone();
-
-			drag = nullptr;
-			drag_hover = nullptr;
-			drag_hover_chain.clear();
-		}
 	}
 }
 

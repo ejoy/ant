@@ -325,8 +325,6 @@ public:
 	//@{
 	/// Access the event dispatcher for this element.
 	EventDispatcher* GetEventDispatcher() const;
-	/// Returns event types with number of listeners for debugging.
-	String GetEventDispatcherSummary() const;
 	/// Returns the data model of this element.
 	DataModel* GetDataModel() const;
 	//@}

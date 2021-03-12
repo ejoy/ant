@@ -730,10 +730,6 @@ EventDispatcher* Element::GetEventDispatcher() const {
 	return &meta->event_dispatcher;
 }
 
-String Element::GetEventDispatcherSummary() const {
-	return meta->event_dispatcher.ToString();
-}
-
 DataModel* Element::GetDataModel() const {
 	return data_model;
 }

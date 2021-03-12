@@ -263,7 +263,6 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\DataModel.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\DataView.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\DataViewDefault.h" />
-    <ClInclude Include="..\..\3rd\RmlUi\Source\DocumentHeader.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\ElementAnimation.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\ElementBackgroundBorder.h" />
     <ClInclude Include="..\..\3rd\RmlUi\Source\ElementBackgroundImage.h" />

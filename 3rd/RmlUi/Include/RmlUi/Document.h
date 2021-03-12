@@ -37,7 +37,6 @@ namespace Rml {
 
 class Context;
 class Stream;
-class DocumentHeader;
 class ElementText;
 class StyleSheet;
 class DataModel;
@@ -50,9 +49,6 @@ public:
 	virtual ~Document();
 
 	bool Load(const String& path);
-
-	/// Process given document header
-	void ProcessHeader(const DocumentHeader* header);
 
 	/// Returns the document's context.
 	Context* GetContext();
@@ -121,20 +117,11 @@ private:
 	Context* context;
 
 	void UpdateHoverChain(const Dictionary& parameters, const Dictionary& drag_parameters, const Point& old_mouse_position);
-	void CreateDragClone(Element* element);
-	void ReleaseDragClone();
 
 	Point mouse_position = Point(0,0);
 
 	Element* hover = nullptr;
 	Element* active = nullptr;
-
-	Element* drag = nullptr;
-	bool drag_started = false;
-	bool drag_verbose = false;
-	Element* drag_clone = nullptr;
-	Element* drag_hover = nullptr;
-	std::set<Element*> drag_hover_chain;
 
 	Element* last_click_element = nullptr;
 	double last_click_time = 0;
@@ -142,7 +129,6 @@ private:
 
 	std::set<Element*> hover_chain;
 	std::vector<Element*> active_chain;
-	ElementPtr cursor_proxy;
 	Size dimensions;
 
 	friend class Rml::Context;

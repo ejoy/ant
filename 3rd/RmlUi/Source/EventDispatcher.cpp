@@ -252,39 +252,4 @@ void EventDispatcher::CollectListeners(int dom_distance_from_target, const Event
 }
 
 
-String EventDispatcher::ToString() const
-{
-	String result;
-
-	if (listeners.empty())
-		return result;
-
-	auto add_to_result = [&result](EventId id, int count) {
-		const EventSpecification& specification = EventSpecificationInterface::Get(id);
-		result += CreateString(specification.type.size() + 32, "%s (%d), ", specification.type.c_str(), count);
-	};
-
-	EventId previous_id = listeners[0].id;
-	int count = 0;
-	for (const auto& listener : listeners)
-	{
-		if (listener.id != previous_id)
-		{
-			add_to_result(previous_id, count);
-			previous_id = listener.id;
-			count = 0;
-		}
-		count++;
-	}
-
-	if (count > 0)
-		add_to_result(previous_id, count);
-
-	if (result.size() > 2)
-		result.resize(result.size() - 2);
-
-	return result;
-}
-
-
 } // namespace Rml

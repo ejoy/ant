@@ -153,23 +153,5 @@ EventId GetIdOrInsert(const String& event_type)
 	return GetOrInsert(event_type).id;
 }
 
-EventId InsertOrReplaceCustom(const String& event_type, bool interruptible, bool bubbles, DefaultActionPhase default_action_phase)
-{
-	const size_t size_before = specifications.size();
-	EventSpecification& specification = GetOrInsert(event_type, interruptible, bubbles, default_action_phase);
-	bool got_existing_entry = (size_before == specifications.size());
-
-	// If we found an existing entry of same type, replace it, but only if it is a custom event id.
-	if (got_existing_entry && (int)specification.id >= (int)EventId::FirstCustomId)
-	{
-		specification.interruptible = interruptible;
-		specification.bubbles = bubbles;
-		specification.default_action_phase = default_action_phase;
-	}
-
-	return specification.id;
-}
-
-
 }
 } // namespace Rml
