@@ -59,13 +59,44 @@ function qst.process_entity(e)
 
     local vertices = cube_vertices(radius)
 
+    --[[
+		tlf ------- trf
+		/|			 /|
+	   / |			/ |
+	  tln ------- trn |
+	   | blf ------- brf
+	   |  /	       |  /
+	   | /		   | /
+	  bln ------- brn
+
+            ------
+           |      |
+           |  2 U |
+           |  (1) |
+     ------+------+------+------
+    |      |      |      |      |
+    |  1 B |  4 L |  0 F |  5 R |
+    |  (4) |  (5) |  (6) |  (7) |
+     ------+------+------+------
+           |      |
+           |  3 D |
+           |  (9) |
+            ------
+
+    all face local direction is :
+    ---->
+    |
+    v
+]]
+
     local inscribed_cube  = {
         vertices = vertices,
         {vertices.tln, vertices.trn, vertices.brn, vertices.bln}, --front
         {vertices.trf, vertices.tlf, vertices.blf, vertices.brf}, --back
 
-        {vertices.tlf, vertices.trf, vertices.trn, vertices.tln}, --up
-        {vertices.bln, vertices.brn, vertices.brf, vertices.blf}, --down
+        --be careful here
+        {vertices.trf, vertices.trn, vertices.tln, vertices.tlf}, --up
+        {vertices.blf, vertices.bln, vertices.brn, vertices.brf}, --down
 
         {vertices.tlf, vertices.tln, vertices.bln, vertices.blf}, --left
         {vertices.trn, vertices.trf, vertices.brf, vertices.brn}, --right
@@ -309,13 +340,15 @@ local function find_visible_trunks(pos, qs)
     local visible_trunks = {}
     local maxdepth = constant.visible_trunk_range
     local function fvt(tid, depth)
+        if mask[tid] == nil then
+            mask[tid] = true
+            visible_trunks[#visible_trunks+1] = tid
+
+            print("face:", ctrunkid.trunkid_face(tid), "tx, ty:", ctrunkid.trunkid_index(tid))
+        end
+
+        local n = quadsphere.neighbor(tid, qs.num_trunk)
         if depth <= maxdepth then
-            if mask[tid] == nil then
-                mask[tid] = true
-                visible_trunks[#visible_trunks+1] = tid
-            end
-    
-            local n = quadsphere.neighbor(tid, qs.num_trunk)
             for _, t in ipairs(n) do
                 fvt(t, depth+1)
             end
