@@ -194,7 +194,7 @@ local function find_face(x, y, z)
         end
     else
         if ay > az then
-            return y > 0 and constant.face_index.top or constant.face_index.bottom, x, z, ay
+            return y > 0 and constant.face_index.up or constant.face_index.down, x, z, ay
         end
     end
 
@@ -205,7 +205,7 @@ local function normlize_face_xy(face, x, y, maxv)
     local nx, ny = x/maxv, y/maxv
     nx, ny = (nx+1)*0.5, (ny+1)*0.5
     ny = 1-ny
-    if face == constant.face_index.back or face == constant.face_index.left or face == constant.face_index.bottom then
+    if face == constant.face_index.back or face == constant.face_index.left or face == constant.face_index.down then
         nx = 1-nx
     end
     return nx, ny
