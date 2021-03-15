@@ -37,12 +37,58 @@ local function create_trunk_entity(qseid)
             transform = {},
             state = 0,
             scene_entity = true,
-            material = "/pkg/ant.resources/materials/simpletri.material",
+            material = "/pkg/ant.resources/materials/quad_sphere/quad_sphere.material",
             trunk = {
                 qseid = qseid,
             },
         },
     }
+end
+
+local function calc_trunk_mark_uv_coords(mark_uv)
+    local w, h = mark_uv.w, mark_uv.h
+    local n = mark_uv.num
+    local s = mark_uv.size
+
+    local du, dv = s/w, s/h
+    local c = {}
+
+    local numelem = n*8
+
+    for i=1, n do
+        local u = (i-1) * du
+        local v = (((i-1) * s) // w) * dv
+        local nu, nv = u+du, v+dv
+        local off = (i-1)*8+1
+        c[off+0] = u;   c[off+1] = v;
+        c[off+2] = nu;  c[off+3] = v;
+        c[off+4] = nu;  c[off+5] = nv;
+        c[off+6] = u;   c[off+7] = nv;
+
+        -- rotate math.pi * 0.5
+        local ir90 = numelem
+        c[ir90+off+0] = nu; c[ir90+off+1] = v;
+        c[ir90+off+2] = nu; c[ir90+off+3] = nv;
+        c[ir90+off+4] = u;  c[ir90+off+5] = nv;
+        c[ir90+off+6] = u;  c[ir90+off+7] = v;
+
+        -- rotate math.pi
+        local ir180 = ir90+numelem
+        
+        c[ir180+off+0] = nu; c[ir180+off+1] = nv;
+        c[ir180+off+2] = u;  c[ir180+off+3] = nv;
+        c[ir180+off+4] = u;  c[ir180+off+5] = v;
+        c[ir180+off+6] = nu; c[ir180+off+7] = v;
+
+        -- rotate math.pi * 1.5
+        local ir270 = ir180+numelem
+
+        c[ir270+off+0] = u;  c[ir270+off+1] = nv;
+        c[ir270+off+2] = u;  c[ir270+off+3] = v;
+        c[ir270+off+4] = nu; c[ir270+off+5] = v;
+        c[ir270+off+6] = nu; c[ir270+off+7] = nv;
+    end
+    return c
 end
 
 local qst = ecs.transform "quad_sphere_transform"
@@ -114,6 +160,7 @@ function qst.process_entity(e)
         proj_tile_len   = proj_trunk_len * constant.inv_tile_pre_trunk_line,
         inscribed_cube  = inscribed_cube,
         trunk_entity_pool=trunk_entity_pool,
+        mark_uv_coords  = calc_trunk_mark_uv_coords(qs.mark_uv),
         visible_trunks  = {},
     }
 end
@@ -130,7 +177,7 @@ function iquad_sphere.create(name, numtrunk, radius)
                 radius      = radius,
                 mark_uv = {
                     w=256, h=256,
-                    s=64, n=6,
+                    size=64, num=6,
                 },
             },
             name = name or "",

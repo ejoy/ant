@@ -54,10 +54,12 @@ function itr.reset_trunk(eid, trunkid)
 
         return p
     end
+
+    local uv_coords = qs.mark_uv_coords
     for iv=1, tptl do
         for ih=1, tptl do
             local tileidx = (iv-1) * tptl + ih
-            local uv = uv_indices[tileidx]
+            local idx = uv_indices[tileidx] -- base 0
             for vidx, p in ipairs{
                 get_pt(ih, iv),
                 get_pt(ih, iv),
@@ -68,9 +70,9 @@ function itr.reset_trunk(eid, trunkid)
                 vertices[#vertices+1] = p[2]
                 vertices[#vertices+1] = p[3]
 
-                local uvidx = (vidx-1)*2
-                vertices[#vertices+1] = uv[uvidx+1]
-                vertices[#vertices+1] = uv[uvidx+2]
+                local uvidx = idx*8+(vidx-1)*2
+                vertices[#vertices+1] = uv_coords[uvidx+1]
+                vertices[#vertices+1] = uv_coords[uvidx+2]
             end
         end
     end

@@ -1,0 +1,14 @@
+colorspace: sRGB
+compress:
+  android: ASTC6x6
+  ios: ASTC6x6
+  windows: BC3
+normalmap: false
+path: /pkg/ant.resources.binary/textures/brickwall.dds
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: CLAMP
+  V: CLAMP
+type: texture
