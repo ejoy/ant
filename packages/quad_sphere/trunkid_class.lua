@@ -1,4 +1,5 @@
 local math3d = require "math3d"
+local constant = require "constant"
 
 local ctrunkid = {}
 setmetatable(ctrunkid, {
@@ -132,14 +133,14 @@ function ctrunkid:corners_3d()
     return s
 end
 
-function ctrunkid.tile_vertices(trunkid, qs, tile_pre_trunk_line)
+function ctrunkid.tile_vertices(trunkid, qs)
     local radius    = qs.radius
-    local hd, vd, basept = ctrunkid(trunkid, qs):tile_delta(1.0/tile_pre_trunk_line)
+    local hd, vd, basept = ctrunkid(trunkid, qs):tile_delta(constant.inv_tile_pre_trunk_line)
 
     local vertices = {}
     local aabb = math3d.aabb()
-    for vp in ctrunkid.iter_point(tile_pre_trunk_line, vd, basept) do
-        for p in ctrunkid.iter_point(tile_pre_trunk_line, hd, vp) do
+    for vp in ctrunkid.iter_point(constant.tile_pre_trunk_line, vd, basept) do
+        for p in ctrunkid.iter_point(constant.tile_pre_trunk_line, hd, vp) do
             local sp = ctrunkid.surface_point(radius, p)
             aabb = math3d.aabb_append(aabb, sp)
             local v = math3d.tovalue(sp)

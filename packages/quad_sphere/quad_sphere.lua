@@ -12,7 +12,6 @@ local itr   = world:interface "ant.quad_sphere|itrunk_render"
 
 local ctrunkid      = require "trunkid_class"
 local constant      = require "constant"
-local surface_point = ctrunkid.surface_point
 
 local function cube_vertices(radius)
     local l = constant.half_inscribed_cube_len * radius
@@ -59,7 +58,7 @@ function qst.process_entity(e)
 
     local vertices = cube_vertices(radius)
 
-    --[[
+--[[
 		tlf ------- trf
 		/|			 /|
 	   / |			/ |
@@ -102,49 +101,6 @@ function qst.process_entity(e)
         {vertices.trn, vertices.trf, vertices.brf, vertices.brn}, --right
     }
 
-    local function trunk_radian(face, x)
-        local fv = inscribed_cube[face+1]
-        local hd, vd, basetpt = ctrunkid.quad_delta(fv, inv_num_trunk)
-        local p1, p2, p3, p4 =  math3d.muladd(x,    hd, basetpt),
-                                math3d.muladd(x+1,  hd, basetpt),
-                                math3d.muladd(x+2,  hd, basetpt),
-                                math3d.muladd(x+3,  hd, basetpt)
-
-        local sp1, sp2, sp3, sp4 =  math3d.mul(radius, math3d.normalize(p1)),
-                                    math3d.mul(radius, math3d.normalize(p2)),
-                                    math3d.mul(radius, math3d.normalize(p3)),
-                                    math3d.mul(radius, math3d.normalize(p4))
-        local d1, d2, d3 = math3d.sub(sp2, sp1), math3d.sub(sp3, sp2), math3d.sub(sp4, sp3)
-
-        local pp = 1
-        
-        -- local fv = inscribed_cube[face+1]
-        -- local hd, vd, basetpt = ctrunkid.quad_delta(fv, inv_num_trunk)
-        -- local p1, p2, p3, p4 =  math3d.muladd(x, hd, basetpt),
-        --                         math3d.muladd(x+1, hd, basetpt),
-        --                         math3d.muladd(x+2, hd, basetpt),
-        --                         math3d.muladd(x+3, hd, basetpt)
-
-        -- local n1, n2, n3, n4 =  math3d.normalize(p1),
-        --                         math3d.normalize(p2),
-        --                         math3d.normalize(p3),
-        --                         math3d.normalize(p4)
-
-        -- local c1, c2, c3 = math3d.dot(n1, n2), math3d.dot(n2, n3), math3d.dot(n3, n4)
-
-        -- local r = math.acos(math3d.dot(n1, n2))
-
-        -- local sp1, sp2 = math3d.mul(radius, n1), math3d.mul(radius, n2)
-
-        -- local tm = iquad_sphere.tangent_matrix(basetpt)
-        -- local f = math3d.index(tm, 3)
-        -- local q1 = math3d.quaternion{axis=f, r=r}
-
-        -- local pp = math3d.transform(q1, sp1, 1)
-
-        -- local ppp = 1
-    end
-
     local trunk_entity_pool = {}
 
     e._quad_sphere = {
@@ -156,7 +112,6 @@ function qst.process_entity(e)
         cube_len        = cube_len,
         proj_trunk_len  = proj_trunk_len,
         proj_tile_len   = proj_trunk_len * constant.inv_tile_pre_trunk_line,
-        --trunk_radian    = trunk_radian(0, 0, 1),
         inscribed_cube  = inscribed_cube,
         trunk_entity_pool=trunk_entity_pool,
         visible_trunks  = {},
@@ -173,6 +128,10 @@ function iquad_sphere.create(name, numtrunk, radius)
             quad_sphere = {
                 num_trunk   = numtrunk,
                 radius      = radius,
+                mark_uv = {
+                    w=256, h=256,
+                    s=64, n=6,
+                },
             },
             name = name or "",
         }
@@ -244,95 +203,6 @@ end
 function iquad_sphere.trunk_coord(eid, pos)
     return tile_coord(pos, world[eid]._quad_sphere)
 end
-
--- function iquad_sphere.set_trunkid(eid, trunkid)
---     local e = world[eid]
---     local qs = e._quad_sphere
---     if qs.trunkid ~= trunkid then
---         qs.trunkid = trunkid
---         ientity_state.set_state(eid, "visible", true)
---     end
-
---     local vertices, aabb = ctrunkid.tile_vertices(trunkid, qs, constant.tile_pre_trunk_line)
---     e._bounding.aabb.m = aabb
---     local rc = e._rendercache
---     rc.aabb = e._bounding.aabb
-
---     local vb = rc.vb
---     local poshandle = vb.handles[1]
---     bgfx.update(poshandle, 0, bgfx.memory_buffer("fff", vertices), quad_sphere_vertex_layout.handle)
--- end
-
--- local function find_visible_trunks(pos)
---     local visible_trunks = {}
-
---     local trunkid = which_trunkid(math3d.tovalue(pos), qs)
---     local corners = ctrunkid(trunkid, qs):corners_3d()
---     local ptl = qs.proj_trunk_len
-
---     local vtr = constant.visible_trunk_range
-
---     local function direction(pt, ih, iv)
---         local tm = iquad_sphere.tangent_matrix(pt)
---         local r, f = math3d.index(tm, 1), math3d.index(tm, 3)
---         if ih < 0 then
---             r = math3d.inverse(r)
---         end
-
---         if iv < 0 then
---             f = math3d.inverse(f)
---         end
-
---         return r, f
---     end
-
-
---     local mark = {}
-
---     local function find_trunkid(pt, hnext, vnext)
---         local r, f = direction(pt, 0, 0)
---         local np = pt
---         for iv in vnext() do
---             if iv ~= 0 then
---                 np = math3d.mul(ptl, f, np)
---             end
---             for ih in hnext() do
---                 if iv ~= 0 or ih ~= 0 then
---                     np = math3d.muladd(ptl, r, np)
---                     local ntid = which_trunkid(math3d.tovalue(np), qs)
---                     assert(mark[ntid] == nil)
---                     mark[ntid] = true
---                     visible_trunks[#visible_trunks+1] = ntid
-    
---                     r, f = direction(np, iv, ih)
---                 end
---             end
---         end
---     end
-
---     find_trunkid(corners[2], )
-
-
---     local mark = {}
---     for i=-vtr, vtr do
---         local hq = math3d.quaternion{axis=f, r=i*trunkradian}
---         for j=-vtr, vtr do
---             local ntid
---             if i==0 and j==0 then
---                 ntid = trunkid
---             else
---                 local vq = math3d.quaternion{axis=r, r=j*trunkradian}
---                 local q = math3d.mul(hq, vq)
---                 local np = math3d.transform(q, pos, 1)
---                 print(math3d.tostring(np), math3d.length(np), i, j)
---                 ntid = which_trunkid(math3d.tovalue(np), qs)
---             end
-            
-
---         end
---     end
--- end
-
 
 local function find_visible_trunks(pos, qs)
     local trunkid = which_trunkid(math3d.tovalue(pos), qs)

@@ -105,8 +105,7 @@ local c <const> = {
         buffer              = create_quad_sphere_trunk_ib(),
     },
     vb_layout = {
-        declmgr.get "p3",
-        declmgr.get "t20",
+        declmgr.get "p3|t20",
         declmgr.get "t21",
     },
     face_index              = face_index,
