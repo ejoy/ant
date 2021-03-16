@@ -8,7 +8,6 @@ local tt = ecs.transform "trunk_transform"
 function tt.process_entity(e)
     e._trunk = {
         qseid = e.trunk.qseid,
-        mark_uv = e.mark_uv,
     }
 end
 

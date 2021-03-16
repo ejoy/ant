@@ -14,5 +14,4 @@ state:
   CULL:         NONE
   DEPTH_TEST:   LESS
   MSAA:         true
-  PT:           TRISTRIP
   WRITE_MASK:   RGBAZ

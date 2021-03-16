@@ -1,8 +1,8 @@
 local tile_pre_trunk_line<const> = 32
 local vertices_pre_tile_line<const> = tile_pre_trunk_line+1
 local visible_trunk_range<const> = 2
-local vertices_per_trunk<const>     = vertices_pre_tile_line * vertices_pre_tile_line
-
+local vertices_per_trunk<const>  = vertices_pre_tile_line * vertices_pre_tile_line
+local tiles_pre_trunk<const>     = tile_pre_trunk_line * tile_pre_trunk_line
 --[[
 
 		tlf ------- trf
@@ -38,32 +38,28 @@ local bgfx = require "bgfx"
 
 --[[
     quad indices
-    1 ----- 2
+    0 ----- 1
     |       |
     |       |
-    0 ----- 3
+    3 ----- 2
 ]]
 
-local function create_face_quad_indices(quad_pre_line)
+local function create_face_quad_indices(tilenum)
     local indices = {}
-    local vertex_num = quad_pre_line+1
-    for i=0, quad_pre_line-1 do
-        local is = i * vertex_num
-        local is_n = (i+1) * vertex_num
-        for j=0, quad_pre_line-1 do
-            indices[#indices+1] = is_n+ j
-            indices[#indices+1] = is+j
-            indices[#indices+1] = is+j+1
+    for i=1, tilenum do
+        local offset = (i-1)*4
+        indices[#indices+1] = offset+0
+        indices[#indices+1] = offset+1
+        indices[#indices+1] = offset+2
 
-            indices[#indices+1] = is+j+1
-            indices[#indices+1] = is_n+j+1
-            indices[#indices+1] = is_n+j
-        end
+        indices[#indices+1] = offset+2
+        indices[#indices+1] = offset+3
+        indices[#indices+1] = offset+0
     end
     return indices
 end
 
-local trunk_indices = create_face_quad_indices(tile_pre_trunk_line)
+local trunk_indices = create_face_quad_indices(tiles_pre_trunk)
 
 local function quad_line_indices(tri_indices)
     local indices = {}
@@ -82,7 +78,7 @@ end
 
 local trunk_line_indices = quad_line_indices(trunk_indices)
 
-local function create_quad_sphere_trunk_ib()
+local function create_trunk_ib()
     return {
         start = 0,
         num = #trunk_indices,
@@ -97,12 +93,12 @@ local c <const> = {
     inv_tile_pre_trunk_line = 1.0 / tile_pre_trunk_line,
     vertices_pre_tile_line  = vertices_pre_tile_line,
     vertices_per_trunk      = vertices_per_trunk,
-    tiles_pre_trunk         = tile_pre_trunk_line * tile_pre_trunk_line,
+    tiles_pre_trunk         = tiles_pre_trunk,
     visible_trunk_range     = visible_trunk_range,
     trunk_ib = {
         indices             = trunk_indices,
         line_indices        = trunk_line_indices,
-        buffer              = create_quad_sphere_trunk_ib(),
+        buffer              = create_trunk_ib(),
     },
     vb_layout = {
         declmgr.get "p3|t20",

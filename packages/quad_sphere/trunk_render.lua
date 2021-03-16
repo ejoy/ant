@@ -44,7 +44,7 @@ function itr.reset_trunk(eid, trunkid)
 
     local cache = {}
     local function get_pt(ih, iv)
-        local idx = iv * tptl + ih
+        local idx = iv * (tptl+1) + ih
         local p = cache[idx]
         if  p == nil then
             p = math3d.muladd(ih,  hd,  math3d.muladd(iv,vd, basept))
@@ -61,10 +61,10 @@ function itr.reset_trunk(eid, trunkid)
             local tileidx = (iv-1) * tptl + ih
             local idx = uv_indices[tileidx] -- base 0
             for vidx, p in ipairs{
-                get_pt(ih, iv),
-                get_pt(ih, iv),
-                get_pt(ih, iv),
-                get_pt(ih, iv),
+                get_pt(ih-1, iv-1),
+                get_pt(ih,   iv-1),
+                get_pt(ih,   iv),
+                get_pt(ih-1, iv),
             } do
                 vertices[#vertices+1] = p[1]
                 vertices[#vertices+1] = p[2]
@@ -96,12 +96,13 @@ function itr.reset_trunk(eid, trunkid)
         end
 
         math3d.aabb_append(aabb, table.unpack(pp))
+        return aabb
     end
 
     e._bounding.aabb.m = calc_aabb()
     local rc = e._rendercache
     rc.aabb = e._bounding.aabb
-
+    rc.ib = constant.trunk_ib.buffer
     local vb = rc.vb
     local poshandle = vb.handles[1]
     bgfx.update(poshandle, 0, bgfx.memory_buffer("fffff", vertices), constant.vb_layout[1].handle)
