@@ -1,5 +1,4 @@
 local ecs = ...
-local world = ecs.world
 local math3d = require "math3d"
 local constant  = require "constant"
 local bgfx      = require "bgfx"
@@ -11,8 +10,7 @@ function tt.process_entity(e)
     }
 end
 
-local tlt = ecs.transform "trunk_layer_uv_transform"
-function tlt.process_prefab(e)
+local function create_color_uv_handle()
     local uvs = {}
     for i=0, constant.tile_pre_trunk_line do
         local u = i * constant.inv_tile_pre_trunk_line
@@ -24,8 +22,10 @@ function tlt.process_prefab(e)
             uvs[#uvs+1] = u;    uvs[#uvs+1] = v+1
         end
     end
-    e._cache_prefab.layer_uv_handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("ff", uvs), constant.vb_layout[2].handle)
+    return bgfx.create_vertex_buffer(bgfx.memory_buffer("ff", uvs), constant.vb_layout[2].handle)
 end
+
+local color_layer_uv_handle = create_color_uv_handle()
 
 local tbt = ecs.transform "trunk_bounding_transform"
 function tbt.process_entity(e)
@@ -38,7 +38,6 @@ local vblayout = constant.vb_layout
 
 function tmt.process_entity(e)
     local rc = e._rendercache
-    local c = e._cache_prefab
     --rc.ib = constant.trunk_ib.buffer
     local vn = constant.tiles_pre_trunk * 4
     rc.vb = {
@@ -46,7 +45,7 @@ function tmt.process_entity(e)
         num = vn,
         handles = {
             bgfx.create_dynamic_vertex_buffer(vn, vblayout[1].handle),
-            c.layer_uv_handle,
+            color_layer_uv_handle,
         }
     }
 end
