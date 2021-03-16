@@ -75,7 +75,7 @@ function effekseer_sys:init()
 
     local filemgr = require "filemanager"
     effekseer.set_filename_callback(filemgr.realpath)
-    filemgr.add("/pkg/ant.resources/effekseer/Base")
+    filemgr.add("/pkg/tools.prefab_editor/res/effekseer/Base")
 end
 
 local itimer = world:interface "ant.timer|timer"
