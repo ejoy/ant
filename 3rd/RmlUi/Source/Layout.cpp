@@ -94,8 +94,10 @@ void Layout::SetContext(void* context) {
 
 std::string Layout::ToString() const {
 	std::string result;
+#ifdef DEBUG
 	auto options = static_cast<YGPrintOptions>(YGPrintOptionsLayout | YGPrintOptionsStyle | YGPrintOptionsChildren);
 	facebook::yoga::YGNodeToString(result, node, options, 0);
+#endif
 	return result;
 }
 

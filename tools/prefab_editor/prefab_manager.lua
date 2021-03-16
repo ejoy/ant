@@ -292,7 +292,7 @@ function m:create(what, config)
                 radian = math.rad(45)
             })
             self:add_entity(newlight[1], self.root, newlight)
-            create_light_billboard(new_light)
+            create_light_billboard(newlight[1])
         end
     elseif what == "collider" then
         local new_entity, temp = self:create_collider(config)
