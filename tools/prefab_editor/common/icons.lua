@@ -73,6 +73,7 @@ return function(assetmgr)
             return icons.ICON_ANIMATION
         elseif ext == ".png" or ext == ".ktx" or ext == ".jpg" then
             return icons.ICON_IMAGE
+        elseif ext == ".efk" then
         end
         return icons.ICON_FILE
     end

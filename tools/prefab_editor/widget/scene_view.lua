@@ -66,7 +66,7 @@ local function get_icon_by_object_type(node)
             end
         elseif entity.slot then
             return icons.ICON_SLOT
-        elseif entity.emitter then
+        elseif entity.effekseer then
             return icons.ICON_PARTICLES3D
         else
             return icons.ICON_OBJECT
