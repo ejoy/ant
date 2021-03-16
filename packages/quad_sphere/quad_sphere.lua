@@ -47,46 +47,47 @@ end
 
 local function calc_trunk_mark_uv_coords(mark_uv)
     local w, h = mark_uv.w, mark_uv.h
-    local n = mark_uv.num
-    local s = mark_uv.size
 
-    local du, dv = s/w, s/h
+    local du, dv = 1/w, 1/h
     local c = {}
 
-    local numelem = n*8
+    local numelem = w*h
 
-    for i=1, n do
-        local u = (i-1) * du
-        local v = (((i-1) * s) // w) * dv
-        local nu, nv = u+du, v+dv
-        local off = (i-1)*8+1
-        c[off+0] = u;   c[off+1] = v;
-        c[off+2] = nu;  c[off+3] = v;
-        c[off+4] = nu;  c[off+5] = nv;
-        c[off+6] = u;   c[off+7] = nv;
+    for ih=1, h do
+        local v = (ih-1)*dv
+        for iw=1, w do
+            local u = (iw-1)*du
+            local nu, nv = u+du, v+dv
+            local idx = (ih-1)*w+iw
+            local off = (idx-1)*8+1
+            c[off+0] = u;   c[off+1] = v;
+            c[off+2] = nu;  c[off+3] = v;
+            c[off+4] = nu;  c[off+5] = nv;
+            c[off+6] = u;   c[off+7] = nv;
 
-        -- rotate math.pi * 0.5
-        local ir90 = numelem
-        c[ir90+off+0] = nu; c[ir90+off+1] = v;
-        c[ir90+off+2] = nu; c[ir90+off+3] = nv;
-        c[ir90+off+4] = u;  c[ir90+off+5] = nv;
-        c[ir90+off+6] = u;  c[ir90+off+7] = v;
+            -- rotate math.pi * 0.5
+            local ir90 = numelem
+            c[ir90+off+0] = nu; c[ir90+off+1] = v;
+            c[ir90+off+2] = nu; c[ir90+off+3] = nv;
+            c[ir90+off+4] = u;  c[ir90+off+5] = nv;
+            c[ir90+off+6] = u;  c[ir90+off+7] = v;
 
-        -- rotate math.pi
-        local ir180 = ir90+numelem
-        
-        c[ir180+off+0] = nu; c[ir180+off+1] = nv;
-        c[ir180+off+2] = u;  c[ir180+off+3] = nv;
-        c[ir180+off+4] = u;  c[ir180+off+5] = v;
-        c[ir180+off+6] = nu; c[ir180+off+7] = v;
+            -- rotate math.pi
+            local ir180 = ir90+numelem
+            
+            c[ir180+off+0] = nu; c[ir180+off+1] = nv;
+            c[ir180+off+2] = u;  c[ir180+off+3] = nv;
+            c[ir180+off+4] = u;  c[ir180+off+5] = v;
+            c[ir180+off+6] = nu; c[ir180+off+7] = v;
 
-        -- rotate math.pi * 1.5
-        local ir270 = ir180+numelem
+            -- rotate math.pi * 1.5
+            local ir270 = ir180+numelem
 
-        c[ir270+off+0] = u;  c[ir270+off+1] = nv;
-        c[ir270+off+2] = u;  c[ir270+off+3] = v;
-        c[ir270+off+4] = nu; c[ir270+off+5] = v;
-        c[ir270+off+6] = nu; c[ir270+off+7] = nv;
+            c[ir270+off+0] = u;  c[ir270+off+1] = nv;
+            c[ir270+off+2] = u;  c[ir270+off+3] = v;
+            c[ir270+off+4] = nu; c[ir270+off+5] = v;
+            c[ir270+off+6] = nu; c[ir270+off+7] = nv;
+        end
     end
     return c
 end
@@ -175,9 +176,11 @@ function iquad_sphere.create(name, numtrunk, radius)
             quad_sphere = {
                 num_trunk   = numtrunk,
                 radius      = radius,
+                color_uv = {
+                    w=8, h=8,
+                },
                 mark_uv = {
-                    w=256, h=256,
-                    size=64, num=6,
+                    w=6, h=1
                 },
             },
             name = name or "",
@@ -260,8 +263,6 @@ local function find_visible_trunks(pos, qs)
         if mask[tid] == nil then
             mask[tid] = true
             visible_trunks[#visible_trunks+1] = tid
-
-            print("face:", ctrunkid.trunkid_face(tid), "tx, ty:", ctrunkid.trunkid_index(tid))
         end
 
         local n = quadsphere.neighbor(tid, qs.num_trunk)
