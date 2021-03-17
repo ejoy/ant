@@ -153,10 +153,6 @@ local camera_frustum_mb
 local light_mb = world:sub{"component_register", "light_type"}
 local light_change_mb
 
-function cfs:init()
-    ilight.use_cluster_shading(true)
-end
-
 local function check_init()
     if cluster_light_cull_fx == nil and cluster_aabb_fx == nil then
         if create_cluster_buffers() then

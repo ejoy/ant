@@ -7,7 +7,7 @@ local IDENTITY
 local BINPATH = fs.path "":localpath() / ".build" / "sc"
 local SHARER_INC = lfs.current_path() / "packages/resources/shaders"
 
-local setting = import_package "ant.settings"
+local setting = import_package "ant.settings".setting
 
 local function get_filename(pathname)
     pathname = lfs.absolute(fs.path(pathname):localpath()):string():lower():lower()
@@ -90,12 +90,23 @@ local SETTING_MAPPING = {
     shadow_cast = DEF_FUNC,
 }
 
-local function get_macros(setting)
-    local macros = {
+local enable_cs = setting:data().graphic.lighting.cluster_shading ~= 0
+
+local function default_macros()
+    local m = {
         "ENABLE_SRGB_TEXTURE",
         "ENABLE_SRGB_FB",
-        "CLUSTER_SHADING",
     }
+
+    if enable_cs then
+        m[#m+1] = "CLUSTER_SHADING"
+    end
+    return m
+end
+
+local function get_macros(setting)
+    local macros = default_macros()
+
     for k, v in pairs(setting) do
         local f = SETTING_MAPPING[k]
         if f == nil then

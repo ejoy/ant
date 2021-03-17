@@ -4,7 +4,6 @@
 
 system "cluster_forward_system"
     .implement "render_system/cluster_render.lua"
-    .method "init"
     .method "post_init"
     .method "data_changed"
     .method "render_preprocess"

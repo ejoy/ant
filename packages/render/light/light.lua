@@ -6,6 +6,9 @@ local math3d	= require "math3d"
 local bgfx		= require "bgfx"
 local iom		= world:interface "ant.objcontroller|obj_motion"
 
+local setting	= import_package "ant.settings".setting
+local enable_cluster_shading = setting:data().graphic.lighting.cluster_shading ~= 0
+
 local lt = ecs.transform "light_transform"
 function lt.process_entity(e)
 	local t = e.light_type
@@ -17,7 +20,7 @@ function lt.process_entity(e)
 	e._light = {
 		color		= e.color or {1, 1, 1, 1},
 		intensity	= e.intensity or 2,
-		range		= e.range,
+		range		= e.range or math.maxinteger,
 		radian		= e.radian,
 	}
 end
@@ -37,7 +40,7 @@ function ilight.create(light)
 			light_type	= assert(light.light_type),
 			color		= light.color or {1, 1, 1, 1},
 			intensity	= light.intensity or 2,
-			range		= light.range or 0,	-- 0 for range mean infinite, for directional light
+			range		= light.range,
 			radian		= light.radian,
 		}
 	}
@@ -154,13 +157,8 @@ function ilight.create_light_buffers()
     return lights
 end
 
-local is_cluster_shading = false
-function ilight.use_cluster_shading(enable)
-	if enable ~= nil then
-		is_cluster_shading = enable
-	end
-
-	return is_cluster_shading
+function ilight.use_cluster_shading()
+	return enable_cluster_shading
 end
 
 local light_buffer
