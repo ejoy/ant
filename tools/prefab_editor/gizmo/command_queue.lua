@@ -1,5 +1,6 @@
 local queue = require "queue"
 local gizmo_const = require "gizmo.const"
+local gizmo
 local world
 local iom
 
@@ -63,5 +64,6 @@ end
 return function(w)
     world = w
     iom = world:interface "ant.objcontroller|obj_motion"
+	gizmo = require "gizmo.gizmo"(world)
     return cmd_queue
 end
