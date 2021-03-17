@@ -37,7 +37,7 @@ function ilight.create(light)
 			light_type	= assert(light.light_type),
 			color		= light.color or {1, 1, 1, 1},
 			intensity	= light.intensity or 2,
-			range		= light.range,
+			range		= light.range or 0,	-- 0 for range mean infinite, for directional light
 			radian		= light.radian,
 		}
 	}
@@ -139,13 +139,13 @@ function ilight.create_light_buffers()
 		local le = world[leid]
 		
 		local p	= math3d.tovalue(iom.get_position(leid))
-		local d	= math3d.tovalue(iom.get_direction(leid))
+		local d	= math3d.tovalue(math3d.inverse(iom.get_direction(leid)))
 		local c = ilight.color(leid)
 		local t	= le.light_type
         local enable<const> = 1
         --TODO: use bgfx.memory{('f'):rep(16), }
 		lights[#lights+1] = ('f'):rep(16):pack(
-			p[1], p[2], p[3], ilight.range(leid),
+			p[1], p[2], p[3], ilight.range(leid) or 10000,
 			d[1], d[2], d[3], enable,
 			c[1], c[2], c[3], c[4],
 			lighttypes[t], ilight.intensity(leid),
