@@ -255,8 +255,6 @@ function icr.extract_cluster_properties(properties)
 	local log_near = math.log(near)
 
 	assert(properties["u_cluster_shading_param2"]).v	= {num_depth_slices / log_farnear, -num_depth_slices * log_near / log_farnear, 0, 0}
-
-    ilight.update_light_buffers()
 end
 
 function icr.light_info_buffer_handle()
