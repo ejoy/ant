@@ -104,10 +104,16 @@ local cluster_buffers = {
     }
 }
 
+local function num_light()
+    local n = 0
+    for _, l in world:each "light_type" do
+        n = n + 1
+    end
+    return n
+end
 
 local function create_cluster_buffers()
-    local lights = ilight.create_light_buffers()
-    local numlights = #lights
+    local numlights = num_light()
 
     if numlights > 0 then
         cluster_buffers.AABB.handle                = bgfx.create_dynamic_vertex_buffer(cluster_aabb_buffer_size, cluster_buffers.AABB.layout.handle, "rwa") 
@@ -116,7 +122,8 @@ local function create_cluster_buffers()
 
 
         cluster_buffers.light_index_list.handle    = bgfx.create_dynamic_index_buffer(numlights * cluster_count, "drwa")
-        cluster_buffers.light_info.handle          = bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(lights, "")), cluster_buffers.light_info.layout.handle, "r")
+        --cluster_buffers.light_info.handle          = bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(lights, "")), cluster_buffers.light_info.layout.handle, "r")
+        cluster_buffers.light_info.handle          = bgfx.create_dynamic_vertex_buffer(numlights * cluster_buffers.light_info.layout.stride, "ra")
         return true
     end
 end
@@ -248,4 +255,9 @@ function icr.extract_cluster_properties(properties)
 	local log_near = math.log(near)
 
 	assert(properties["u_cluster_shading_param2"]).v	= {num_depth_slices / log_farnear, -num_depth_slices * log_near / log_farnear, 0, 0}
+
+    local lights = ilight.create_light_buffers()
+    if #lights > 0 and cluster_buffers.light_info.handle then
+        bgfx.update(cluster_buffers.light_info.handle, 0, bgfx.memory_buffer(table.concat(lights, "")))
+    end
 end
