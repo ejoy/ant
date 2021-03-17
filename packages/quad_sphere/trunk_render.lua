@@ -18,7 +18,7 @@ function itr.generate_quad_uv_index()
 
     local indices = {}
     for i=1, tn do
-        indices[i] = math.random(0, 5)
+        indices[i] = math.random(0, 2)
     end
     return indices
 end
@@ -29,13 +29,12 @@ end
 
 function itr.reset_trunk(eid, trunkid)
     local e = world[eid]
-    local t = e._trunk
-    local qs = assert(world[t.qseid])._quad_sphere
-    t.id = trunkid
+    local qseid = e.parent
+    local qs = assert(world[qseid])._quad_sphere
 
     ies.set_state(eid, "visible", true)
 
-    local uv_indices = get_uv_indices(t.qseid, trunkid)
+    local uv_indices = get_uv_indices(qseid, trunkid)
 
     local radius    = qs.radius
     local hd, vd, basept = ctrunkid(trunkid, qs):tile_delta(constant.inv_tile_pre_trunk_line)

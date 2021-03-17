@@ -17,7 +17,23 @@ local radius<const> = 10
 
 local qseid
 function qst_sys:init()
-    qseid = iqs.create("test_quad_sphere1", num_trunk, radius)
+    qseid = iqs.create("test_quad_sphere1", num_trunk, radius,{
+        {
+            index=1,
+            name="background",
+            region={0.0, 0.0, 0.5, 0.5},
+        },
+        {
+            index=2,
+            name="background",
+            region={0.5, 0.0, 0.5, 0.5},
+        },
+        {
+            index=3,
+            name="background",
+            region={0.0, 0.5, 0.5, 0.5},
+        },
+    })
     iqsd.add_inscribed_cube(qseid, {1, 1, 0, 1})
 end
 
