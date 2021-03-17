@@ -64,6 +64,7 @@ function m.update()
     iom.set_position(m.current_gizmo.root, iom.get_position(m.current_light))
     iom.set_rotation(m.current_gizmo.root, iom.get_rotation(m.current_light))
     iom.set_position(m.billboard[m.current_light], iom.get_position(m.current_light))
+    ilight.update_light_buffers()
 end
 
 function m.show(b)
@@ -159,7 +160,7 @@ end
 
 local function update_spot_gizmo()
     local range = ilight.range(m.current_light)
-    local radian = ilight.radian(m.current_light)
+    local radian = ilight.radian(m.current_light) or 10
     local radius = range * math.tan(radian * 0.5)
     if #m.spot.eid == 0 then
         local root = m.spot.root
