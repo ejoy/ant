@@ -120,6 +120,7 @@ data:
   intensity: 2
   light_type: directional
   name: directional1
+  range: 0
   radian: 0.7853981633974483
   transform:
     r: {0.03485451266169548, 0.8202439546585083, -0.34508469700813293, -0.45486438274383545}
