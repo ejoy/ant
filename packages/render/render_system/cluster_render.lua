@@ -172,6 +172,7 @@ local function check_init()
                 setting = {CLUSTER_PREPROCESS=1}
             }
             build_cluster_aabb_struct()
+            ilight.update_light_buffers()
         end
     end
 end
