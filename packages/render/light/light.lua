@@ -17,10 +17,19 @@ function lt.process_entity(e)
 	elseif t == "spot" and e.radian == nil then
 		error("spot light need define 'radian' attribute")
 	end
+
+	local range = e.range
+	if e.light_type == "directional" then
+		if range == 0 then
+			range = math.maxinteger
+		else
+			assert(range > 10000 * 10000, "need very large range for directional light")
+		end
+	end
 	e._light = {
 		color		= e.color or {1, 1, 1, 1},
 		intensity	= e.intensity or 2,
-		range		= e.range or math.maxinteger,
+		range		= range,
 		radian		= e.radian,
 	}
 end

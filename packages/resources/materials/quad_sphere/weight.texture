@@ -1,10 +1,10 @@
-colorspace: sRGB
+colorspace: linear
 compress:
   android: ASTC6x6
   ios: ASTC6x6
   windows: BC3
 normalmap: false
-path: /pkg/ant.resources.binary/textures/weight_test.dds
+path: /pkg/ant.resources.binary/textures/quad_sphere/mark.png
 sampler:
   MAG: LINEAR
   MIN: LINEAR

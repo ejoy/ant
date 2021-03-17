@@ -3,13 +3,6 @@ local math3d = require "math3d"
 local constant  = require "constant"
 local bgfx      = require "bgfx"
 
-local tt = ecs.transform "trunk_transform"
-function tt.process_entity(e)
-    e._trunk = {
-        qseid = e.trunk.qseid,
-    }
-end
-
 local function create_color_uv_handle()
     local uvs = {}
     for i=0, constant.tile_pre_trunk_line do

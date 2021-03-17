@@ -3,7 +3,7 @@ local subprocess = require "sp_util"
 local platform = require "platform"
 
 local bin_files = {
-	Windows = "bin/msvc/FBX2glTF-windows-x64.exe",
+	Windows = "bin/msvc/FBX2glTF.exe",
 	OSX = "bin/osx/FBX2glTF-darwin-x64",
 	Linux = "bin/linux/FBX2glTF-linux-x64",
 }

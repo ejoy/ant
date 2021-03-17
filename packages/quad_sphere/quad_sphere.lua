@@ -27,10 +27,11 @@ local function cube_vertices(radius)
     }
 end
 
-local function create_trunk_entity(qseid)
+local function create_trunk_entity(qseid, whichlayer, layereid)
     return world:create_entity{
         policy = {
             "ant.quad_sphere|trunk",
+            "ant.quad_sphere|trunk_layer",
             "ant.general|name",
         },
         data = {
@@ -38,10 +39,26 @@ local function create_trunk_entity(qseid)
             state = 0,
             scene_entity = true,
             material = "/pkg/ant.resources/materials/quad_sphere/quad_sphere.material",
-            trunk = {
-                qseid = qseid,
-            },
+            [whichlayer] = true,
         },
+        action = {
+            mount       = qseid,
+            mount_layer = layereid,
+        }
+    }
+end
+
+local function create_layer_entity(qseid, idx, name)
+    return world:create_entity{
+        policy = {
+            "ant.general|name",
+        },
+        data = {
+            quad_sphere_layer = {
+                layer_idx = idx,
+            },
+            name = name,
+        }
     }
 end
 
@@ -166,7 +183,7 @@ function qst.process_entity(e)
     }
 end
 
-function iquad_sphere.create(name, numtrunk, radius)
+function iquad_sphere.create(name, numtrunk, radius, layers)
     return world:create_entity {
         policy = {
             "ant.quad_sphere|quad_sphere",
@@ -177,11 +194,14 @@ function iquad_sphere.create(name, numtrunk, radius)
                 num_trunk   = numtrunk,
                 radius      = radius,
                 color_uv = {
-                    w=8, h=8,
+                    w=2, h=2,
+                    size={1024, 1024},
+                    background_idx = 1,
                 },
                 mark_uv = {
                     w=6, h=1
                 },
+                layers = layers,
             },
             name = name or "",
         }
@@ -280,9 +300,13 @@ end
 local function update_visible_trunks(visible_trunks, qs, qseid)
     local tep = qs.trunk_entity_pool
     if #qs.visible_trunks == 0 then
-        for idx, tid in ipairs(visible_trunks) do
-            tep[idx] = create_trunk_entity(qseid)
-            itr.reset_trunk(tep[idx], tid)
+        for layeridx=1, qs.layernum do
+            local layereid = create_layer_entity(qseid, layeridx, "layer:" .. layeridx)
+            for idx, tid in ipairs(visible_trunks) do
+                tep[idx] = create_trunk_entity(qseid, layeridx, layereid)
+                itr.reset_trunk(tep[idx], tid)
+                
+            end
         end
     else
         local remove_trunkids = {}
