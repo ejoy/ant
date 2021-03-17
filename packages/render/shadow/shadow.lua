@@ -100,7 +100,7 @@ local function get_render_buffers(width, height, depth_type)
 end
 
 local function shadow_color()
-	local c = {1, 1, 1, 1}
+	local c = {0, 0, 0, 1}
 	for idx, v in ipairs(shadowcfg.color) do
 		c[idx] = v
 	end

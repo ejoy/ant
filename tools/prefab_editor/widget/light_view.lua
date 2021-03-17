@@ -50,7 +50,7 @@ function LightView:on_set_color(...)
 end
 
 function LightView:on_get_color()
-    return math3d.totable(ilight.color(self.eid))
+    return ilight.color(self.eid)
 end
 
 function LightView:on_set_intensity(...)
@@ -59,7 +59,7 @@ function LightView:on_set_intensity(...)
 end
 
 function LightView:on_get_intensity()
-    return math3d.totable(ilight.intensity(self.eid))
+    return ilight.intensity(self.eid)
 end
 
 function LightView:on_set_range(value)

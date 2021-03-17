@@ -120,7 +120,7 @@ float shadow_visibility(float distanceVS, vec4 posWS)
 	}
 
 	if (cascadeidx >= 0)
-		return max(0.1, hardShadow(s_shadowmap, shadowcoord, u_shadowmap_bias));
+		return hardShadow(s_shadowmap, shadowcoord, u_shadowmap_bias);
 
 	return 1.0;
 }
