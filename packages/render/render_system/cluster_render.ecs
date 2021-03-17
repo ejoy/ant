@@ -13,6 +13,7 @@ interface "icluster_render"
     .method "set_buffers"
     .method "cluster_sizes"
     .method "extract_cluster_properties"
+    .method "light_info_buffer_handle"
 
 
 policy "cluster_render"

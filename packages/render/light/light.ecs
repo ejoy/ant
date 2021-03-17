@@ -22,6 +22,7 @@ interface "light"
     .method "use_cluster_shading"
     .method "create_light_buffers"
     .method "update_properties"
+    .method "update_light_buffers"
     .method "set_light_buffers"
 
 transform "light_transform"

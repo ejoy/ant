@@ -162,23 +162,33 @@ function ilight.use_cluster_shading()
 end
 
 local light_buffer
+local num_light
 function ilight.update_properties(system_properties)
 	if ilight.use_cluster_shading() then
 		local icluster = world:interface "ant.render|icluster_render"
 		icluster.extract_cluster_properties(system_properties)
 	else
-		local lights = ilight.create_light_buffers()
-		local numlight = #lights
-		if numlight == 0 then
-			return
-		end
-		local n = numlight*4
-		
+		system_properties["u_light_count"].v = {num_light, 0, 0, 0}
+	end
+end
+
+function ilight.update_light_buffers()
+	local lb
+	local lights = ilight.create_light_buffers()
+
+	if ilight.use_cluster_shading() then
+		local icluster = world:interface "ant.render|icluster_render"
+		lb = icluster.light_info_buffer_handle()
+	else
 		if light_buffer == nil then
-			light_buffer = bgfx.create_dynamic_vertex_buffer(n, declmgr.get "t40".handle, "ra")
+			light_buffer = bgfx.create_dynamic_vertex_buffer(#lights * 4, declmgr.get "t40".handle, "ra")
 		end
-		bgfx.update(light_buffer, 0, bgfx.memory_buffer(table.concat(lights, "")))
-		system_properties["u_light_count"].v = {numlight, 0, 0, 0}
+		lb = light_buffer
+		num_light = #lights
+	end
+
+	if lb then
+		bgfx.update(lb, 0, bgfx.memory_buffer(table.concat(lights, "")))
 	end
 end
 

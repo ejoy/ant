@@ -256,8 +256,9 @@ function icr.extract_cluster_properties(properties)
 
 	assert(properties["u_cluster_shading_param2"]).v	= {num_depth_slices / log_farnear, -num_depth_slices * log_near / log_farnear, 0, 0}
 
-    local lights = ilight.create_light_buffers()
-    if #lights > 0 and cluster_buffers.light_info.handle then
-        bgfx.update(cluster_buffers.light_info.handle, 0, bgfx.memory_buffer(table.concat(lights, "")))
-    end
+    ilight.update_light_buffers()
+end
+
+function icr.light_info_buffer_handle()
+    return cluster_buffers.light_info.handle
 end
