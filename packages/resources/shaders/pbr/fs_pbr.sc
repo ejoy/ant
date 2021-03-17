@@ -213,19 +213,23 @@ float to_alpha_roughness(float roughness)
 	return roughness * roughness;
 }
 
-vec3 light_radiance(light_info l, vec3 pos2light, float dist)
+vec3 light_radiance(light_info l, vec3 wpos, out vec3 p2l)
 {
 #define IS_DIRECTIONAL_LIGHT(_type) (_type == 0)
 #define IS_POINT_LIGHT(_type)	(_type==1)
 #define IS_SPOT_LIGHT(_type)	(_type==2)
 	vec3 radiance = l.color.rgb * l.intensity;
 	if (IS_DIRECTIONAL_LIGHT(l.type)){
-		radiance *= dot(l.dir, pos2light);
+		p2l = l.dir;
 	} else {
+		p2l = l.pos.xyz - wpos;
+		float dist = length(p2l);
+		p2l /= dist;
+
 		// make radiance attenuation by dist square
 		radiance /= (dist*dist);
 		if (IS_SPOT_LIGHT(l.type)){
-			float theta = dot(l.dir, pos2light);
+			float theta = dot(l.dir, p2l);
 			float t = max(theta - l.inner_cutoff, 0.0) / (l.outter_cutoff - l.inner_cutoff);
 			radiance *= clamp(t, 0.0, 1.0);
 		}
@@ -272,13 +276,10 @@ void main()
 	{
 #endif //CLUSTER_SHADING
 		light_info l; load_light_info(b_lights, ilight, l);
-		vec3 L = l.pos.xyz - v_posWS.xyz;
-		float dist = length(L);
-		L /= dist;
+		vec3 L;
+		vec3 radiance = light_radiance(l, v_posWS.xyz, L);
 
 		vec3 H = normalize(L+V);
-		vec3 radiance = light_radiance(l, L, dist);
-
 		pbr_inputs.NdotL = max(dot(N, L), 0.0);
 		pbr_inputs.LdotH = max(dot(L, H), 0.0);
 		pbr_inputs.NdotH = max(dot(N, H), 0.0);

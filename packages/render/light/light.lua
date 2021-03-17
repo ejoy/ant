@@ -174,13 +174,13 @@ function ilight.update_properties(system_properties)
 		if numlight == 0 then
 			return
 		end
-		local n = #lights * 4
+		local n = numlight*4
 		
 		if light_buffer == nil then
 			light_buffer = bgfx.create_dynamic_vertex_buffer(n, declmgr.get "t40".handle, "ra")
 		end
 		bgfx.update(light_buffer, 0, bgfx.memory_buffer(table.concat(lights, "")))
-		system_properties["u_light_count"].v = {#lights, 0, 0, 0}
+		system_properties["u_light_count"].v = {numlight, 0, 0, 0}
 	end
 end
 

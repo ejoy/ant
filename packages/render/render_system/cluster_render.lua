@@ -150,30 +150,43 @@ end
 
 local cr_camera_mb
 local camera_frustum_mb
+local light_mb = world:sub{"component_register", "light_type"}
+local light_change_mb
 
 function cfs:init()
     ilight.use_cluster_shading(true)
+end
+
+local function check_init()
+    if cluster_light_cull_fx == nil and cluster_aabb_fx == nil then
+        if create_cluster_buffers() then
+            cluster_aabb_fx = assetmgr.load_fx{
+                cs = "/pkg/ant.resources/shaders/compute/cs_cluster_aabb.sc",
+                setting = {CLUSTER_BUILD=1},
+            }
+            cluster_light_cull_fx = assetmgr.load_fx{
+                cs = "/pkg/ant.resources/shaders/compute/cs_lightcull.sc",
+                setting = {CLUSTER_PREPROCESS=1}
+            }
+            build_cluster_aabb_struct()
+        end
+    end
 end
 
 function cfs:post_init()
     local mq_eid = world:singleton_entity_id "main_queue"
     cr_camera_mb = world:sub{"component_changed", "camera_eid", mq_eid}
     camera_frustum_mb = world:sub{"component_changed", "frustum", world[mq_eid].camera_eid}
-
-    if create_cluster_buffers() then
-        cluster_aabb_fx = assetmgr.load_fx{
-            cs = "/pkg/ant.resources/shaders/compute/cs_cluster_aabb.sc",
-            setting = {CLUSTER_BUILD=1},
-        }
-        cluster_light_cull_fx = assetmgr.load_fx{
-            cs = "/pkg/ant.resources/shaders/compute/cs_lightcull.sc",
-            setting = {CLUSTER_PREPROCESS=1}
-        }
-        build_cluster_aabb_struct()
-    end
 end
 
 function cfs:data_changed()
+    if not ilight.use_cluster_shading() then
+        return
+    end
+    for _ in light_mb:unpack() do
+        check_init()
+    end
+
     local mq = world:singleton_entity "main_queue"
     for _ in cr_camera_mb:unpack() do
         build_cluster_aabb_struct()
@@ -203,6 +216,9 @@ local function cull_lights()
 end
 
 function cfs:render_preprocess()
+    if not ilight.use_cluster_shading() then
+        return
+    end
     cull_lights()
 end
 
