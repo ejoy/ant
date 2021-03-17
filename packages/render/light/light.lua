@@ -13,10 +13,10 @@ local lt = ecs.transform "light_transform"
 function lt.process_entity(e)
 	local t = e.light_type
 	local range = e.range
-	if (t == "point" or t == "spot") and e.range == nil then
+	if (t == "point" or t == "spot") and range == nil then
 		error(("light:%s need define 'range' attribute"):format(lt))
-	elseif t == "spot" and e.radian == nil then
-		error("spot light need define 'radian' attribute")
+	elseif t == "spot" and (e.radian == nil or range == nil) then
+		error("spot light need define 'radian' or 'range' attributes")
 	else
 		assert(t == "directional")
 		if range == 0 then
@@ -65,7 +65,8 @@ end
 
 function ilight.set_color(eid, color)
 	local l = world[eid]._light
-	l.color.v = color
+	local c = l.color
+	for i=1, 4 do c[i] = color[i] end
 
 	world:pub{"component_changed", "light", eid}
 end
