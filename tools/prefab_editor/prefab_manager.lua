@@ -9,6 +9,7 @@ local widget_utils  = require "widget.utils"
 local bgfx          = require "bgfx"
 local gd            = require "common.global_data"
 local utils         = require "common.utils"
+local effekseer     = require "effekseer"   
 local geo_utils
 local logger
 local ilight
@@ -291,7 +292,7 @@ function m:create(what, config)
                 radian = math.rad(45)
             })
             self:add_entity(newlight[1], self.root, newlight)
-            create_light_billboard(new_light)
+            create_light_billboard(newlight[1])
         end
     elseif what == "collider" then
         local new_entity, temp = self:create_collider(config)
@@ -430,6 +431,40 @@ end
 
 local nameidx = 0
 local function gen_prefab_name() nameidx = nameidx + 1 return "prefab" .. nameidx end
+
+function m:add_effect(filename)
+    if not self.root then
+        self:reset_prefab()
+    end
+    
+    local effect, temp = world:create_entity{
+		policy = {
+            "ant.general|name",
+            "ant.scene|hierarchy_policy",
+            "ant.scene|transform_policy",
+            "ant.effekseer|effekseer_policy"
+		},
+		data = {
+            name = name,
+            scene_entity = true,
+            transform = {},
+            effekseer = filename,
+            speed = 1.0,
+            auto_play = true,
+            loop = true
+		},
+    }
+    if world[effect].effekseer.handle == -1 then
+        print("create effect faild : ", filename)
+    else
+        local eh = world[effect].effekseer.handle
+        effekseer.set_loop(eh, true)
+        effekseer.play(eh)
+    end
+    self.entities[#self.entities+1] = effect
+    world[effect].parent = gizmo.target_eid or self.root
+    hierarchy:add(effect, {template = temp.__class[1]}, world[effect].parent)
+end
 
 function m:add_prefab(filename)
     if not self.root then
@@ -601,6 +636,9 @@ function m:remove_entity(eid)
     if world[eid].skeleton_eid then
         world:remove_entity(world[eid].skeleton_eid)
     end
+    if world[eid].effekseer then
+        effekseer.destroy(world[eid].effekseer.handle)
+    end
     local teml = hierarchy:get_template(eid)
     if teml and teml.children then
         for _, e in ipairs(teml.children) do
@@ -610,6 +648,7 @@ function m:remove_entity(eid)
     world:remove_entity(eid)
     hierarchy:del(eid)
     self:internal_remove(eid)
+    gizmo.target_eid = nil
 end
 
 function m:get_current_filename()

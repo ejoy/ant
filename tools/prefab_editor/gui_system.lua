@@ -252,7 +252,8 @@ function m:ui_update()
         if (x > last_x and x < (last_x + last_width) and y > last_y and y < (last_y + last_height)) then
             if not drag_file then
                 local dropdata = imgui.widget.GetDragDropPayload()
-                if dropdata and string.sub(dropdata, -7) == ".prefab" then
+                if dropdata and (string.sub(dropdata, -7) == ".prefab"
+                    or string.sub(dropdata, -4) == ".efk") then
                     drag_file = dropdata
                 end
             end
@@ -261,7 +262,7 @@ function m:ui_update()
         end
     else
         if drag_file then
-            world:pub {"AddPrefab", drag_file}
+            world:pub {"AddPrefabOrEffect", drag_file}
             drag_file = nil
         end
     end
@@ -285,7 +286,7 @@ local drop_files_event = world:sub {"OnDropFiles"}
 local entity_event = world:sub {"EntityEvent"}
 local event_keyboard = world:sub{"keyboard"}
 local event_open_prefab = world:sub {"OpenPrefab"}
-local event_add_prefab = world:sub {"AddPrefab"}
+local event_add_prefab = world:sub {"AddPrefabOrEffect"}
 local event_resource_browser = world:sub {"ResourceBrowser"}
 local event_window_title = world:sub {"WindowTitle"}
 local event_create = world:sub {"Create"}
@@ -407,7 +408,11 @@ function m:data_changed()
         prefab_mgr:open(filename)
     end
     for _, filename in event_add_prefab:unpack() do
-        prefab_mgr:add_prefab(filename)
+        if string.sub(filename, -4) == ".efk" then
+            prefab_mgr:add_effect(filename)
+        else
+            prefab_mgr:add_prefab(filename)
+        end
     end
     for _, files in drop_files_event:unpack() do
         on_drop_files(files)

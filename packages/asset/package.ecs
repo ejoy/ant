@@ -15,6 +15,11 @@ component "meshskin"
     .implement "meshskin.lua"
     .method "init"
 
+component "effekseer"
+    .implement "effekseer_impl.lua"
+    .method "init"
+    .method "delete"
+
 transform "material_prefab_transform"
     .implement "material.lua"
     .require_transform "ant.general|cache_transform"

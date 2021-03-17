@@ -1,0 +1,18 @@
+import "@ant.asset"
+import "@ant.render"
+
+system "effekseer_system"
+    .implement "effekseer_system.lua"
+    .require_policy "ant.render|render"
+    .require_interface "ant.render|irenderqueue"
+    .method "init"
+    .method "camera_usage"
+    .method "ui_update"
+    .method "exit"
+
+policy "effekseer_policy"
+    .require_system "effekseer_system"
+    .component "effekseer"
+    .component "loop"
+    .component "speed"
+    .component "auto_play"

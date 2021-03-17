@@ -18,6 +18,7 @@ local material_panel
 local base_panel
 local slot_panel
 local collider_panel
+local effect_panel
 local current_panel
 local current_eid
 
@@ -232,7 +233,12 @@ local function get_collider_panel()
     end
     return collider_panel
 end
-
+local function get_effect_panel()
+    if not effect_panel then
+        effect_panel = require "widget.effect_view"(world)()
+    end
+    return effect_panel
+end
 local function update_current()
     if current_eid == gizmo.target_eid then return end
     current_eid = gizmo.target_eid
@@ -247,6 +253,8 @@ local function update_current()
             current_panel = get_slot_panel()
         elseif world[current_eid].material then
             current_panel = get_material_panel()
+        elseif world[current_eid].effekseer then
+            current_panel = get_effect_panel()
         else
             current_panel = get_base_panel()
         end
