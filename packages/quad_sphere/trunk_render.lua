@@ -12,29 +12,12 @@ local itr = ecs.interface "itrunk_render"
 
 local surface_point = ctrunkid.surface_point
 
---TODO: need remove, just for test
-function itr.generate_quad_uv_index()
-    local tn = constant.tiles_pre_trunk
-
-    local indices = {}
-    for i=1, tn do
-        indices[i] = math.random(0, 2)
-    end
-    return indices
-end
-
-local function get_uv_indices(qseid, trunkid)
-    return itr.generate_quad_uv_index()
-end
-
-function itr.reset_trunk(eid, trunkid)
+function itr.reset_trunk(eid, trunkid, cover_tiles)
     local e = world[eid]
     local qseid = e.parent
     local qs = assert(world[qseid])._quad_sphere
 
     ies.set_state(eid, "visible", true)
-
-    local uv_indices = get_uv_indices(qseid, trunkid)
 
     local radius    = qs.radius
     local hd, vd, basept = ctrunkid(trunkid, qs):tile_delta(constant.inv_tile_pre_trunk_line)
@@ -58,20 +41,22 @@ function itr.reset_trunk(eid, trunkid)
     for iv=1, tptl do
         for ih=1, tptl do
             local tileidx = (iv-1) * tptl + ih
-            local idx = uv_indices[tileidx] -- base 0
-            for vidx, p in ipairs{
-                get_pt(ih-1, iv-1),
-                get_pt(ih,   iv-1),
-                get_pt(ih,   iv),
-                get_pt(ih-1, iv),
-            } do
-                vertices[#vertices+1] = p[1]
-                vertices[#vertices+1] = p[2]
-                vertices[#vertices+1] = p[3]
-
-                local uvidx = idx*8+(vidx-1)*2
-                vertices[#vertices+1] = uv_coords[uvidx+1]
-                vertices[#vertices+1] = uv_coords[uvidx+2]
+            local idx = cover_tiles[tileidx] -- base 0
+            if idx then
+                for vidx, p in ipairs{
+                    get_pt(ih-1, iv-1),
+                    get_pt(ih,   iv-1),
+                    get_pt(ih,   iv),
+                    get_pt(ih-1, iv),
+                } do
+                    vertices[#vertices+1] = p[1]
+                    vertices[#vertices+1] = p[2]
+                    vertices[#vertices+1] = p[3]
+    
+                    local uvidx = idx*8+(vidx-1)*2
+                    vertices[#vertices+1] = uv_coords[uvidx+1]
+                    vertices[#vertices+1] = uv_coords[uvidx+2]
+                end
             end
         end
     end

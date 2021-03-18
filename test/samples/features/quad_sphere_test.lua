@@ -12,28 +12,57 @@ local icc = world:interface "ant.quad_sphere|icamera_controller"
 local iqsd = world:interface "ant.quad_sphere|iquad_sphere_debug"
 local math3d = require "math3d"
 
+local qspkg = import_package "ant.quad_sphere"
+local qs_const = qspkg.constant
+
 local num_trunk<const> = 5
 local radius<const> = 10
 
+--TODO: need remove, just for test
+local function generate_quad_uv_index()
+    local tn = qs_const.tiles_pre_trunk
+
+    local indices = {}
+    for i=1, tn do
+        indices[i] = math.random(0, 2)
+    end
+    return indices
+end
+
+local tile_indices = setmetatable({}, {__index=function(self, tid)
+    local indices = generate_quad_uv_index()
+    self[tid] = indices
+    return indices
+end})
+
 local qseid
 function qst_sys:init()
-    qseid = iqs.create("test_quad_sphere1", num_trunk, radius,{
-        {
-            index=1,
-            name="background",
-            region={0.0, 0.0, 0.5, 0.5},
+    qseid = iqs.create("test_quad_sphere1", num_trunk, radius, {
+        mark_uv = {
+            w=6, h=1
         },
         {
-            index=2,
             name="background",
-            region={0.5, 0.0, 0.5, 0.5},
+            region={
+                rect = {0.0, 0.0, 0.5, 0.5},
+                w=1, h=1,
+            },
         },
         {
-            index=3,
-            name="background",
-            region={0.0, 0.5, 0.5, 0.5},
+            name="color1",
+            region={
+                rect={0.5, 0.0, 0.5, 0.5},
+                w=1, h=1,
+            },
         },
-    })
+        {
+            name="color2",
+            region={
+                rect={0.0, 0.5, 0.5, 0.5},
+                w=1, h=1,
+            },
+        },
+    }, tile_indices)
     iqsd.add_inscribed_cube(qseid, {1, 1, 0, 1})
 end
 

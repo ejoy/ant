@@ -27,7 +27,7 @@ local function cube_vertices(radius)
     }
 end
 
-local function create_trunk_entity(qseid, whichlayer, layereid)
+local function create_trunk_entity(qseid)
     return world:create_entity{
         policy = {
             "ant.quad_sphere|trunk",
@@ -39,30 +39,14 @@ local function create_trunk_entity(qseid, whichlayer, layereid)
             state = 0,
             scene_entity = true,
             material = "/pkg/ant.resources/materials/quad_sphere/quad_sphere.material",
-            [whichlayer] = true,
         },
         action = {
             mount       = qseid,
-            mount_layer = layereid,
         }
     }
 end
 
-local function create_layer_entity(qseid, idx, name)
-    return world:create_entity{
-        policy = {
-            "ant.general|name",
-        },
-        data = {
-            quad_sphere_layer = {
-                layer_idx = idx,
-            },
-            name = name,
-        }
-    }
-end
-
-local function calc_trunk_mark_uv_coords(mark_uv)
+local function build_mark_uv(mark_uv)
     local w, h = mark_uv.w, mark_uv.h
 
     local du, dv = 1/w, 1/h
@@ -109,6 +93,33 @@ local function calc_trunk_mark_uv_coords(mark_uv)
     return c
 end
 
+local function build_uv_ref(qs, layers)
+    local uv_ref = {}
+    local uv_coords, idx = build_mark_uv(layers.mark_uv)
+
+    uv_ref.uv_coords = uv_coords
+
+    return uv_ref
+end
+
+local function update_layers(layers, tile_indices, visible_trunks)
+    local mlayers = {}
+    for _, l in ipairs(layers) do
+        mlayers[l.index] = l
+        l.cover_tiles = {}
+    end
+
+    for _, trunkid in ipairs(visible_trunks) do
+        local indices = tile_indices[trunkid]
+        assert(#indices == constant.tiles_pre_trunk)
+        for i, tex_idx in ipairs(indices) do
+            local l = mlayers[tex_idx]
+            local ct = l.cover_tiles
+            ct[trunkid][i] = tex_idx
+        end
+    end
+end
+
 local qst = ecs.transform "quad_sphere_transform"
 function qst.process_entity(e)
     local qs = e.quad_sphere
@@ -116,6 +127,11 @@ function qst.process_entity(e)
     local inv_num_trunk   = 1 / nt
     local radius = qs.radius
     assert(nt > 0 and radius > 0)
+
+    local layers = {}
+    for _, ld in ipairs(qs.layers) do
+        layers[#layers+1] = setmetatable({}, ld)
+    end
 
     local cube_len = radius * constant.inscribed_cube_len
     local proj_trunk_len = cube_len / qs.num_trunk
@@ -178,12 +194,14 @@ function qst.process_entity(e)
         proj_tile_len   = proj_trunk_len * constant.inv_tile_pre_trunk_line,
         inscribed_cube  = inscribed_cube,
         trunk_entity_pool=trunk_entity_pool,
-        mark_uv_coords  = calc_trunk_mark_uv_coords(qs.mark_uv),
+        uv_ref          = build_uv_ref(qs, layers),
+        layers          = layers,
+        tile_indices    = qs.tile_indices,
         visible_trunks  = {},
     }
 end
 
-function iquad_sphere.create(name, numtrunk, radius, layers)
+function iquad_sphere.create(name, numtrunk, radius, layers, tile_indices)
     return world:create_entity {
         policy = {
             "ant.quad_sphere|quad_sphere",
@@ -193,15 +211,8 @@ function iquad_sphere.create(name, numtrunk, radius, layers)
             quad_sphere = {
                 num_trunk   = numtrunk,
                 radius      = radius,
-                color_uv = {
-                    w=2, h=2,
-                    size={1024, 1024},
-                    background_idx = 1,
-                },
-                mark_uv = {
-                    w=6, h=1
-                },
-                layers = layers,
+                layers      = layers,
+                tile_indices= tile_indices,
             },
             name = name or "",
         }
@@ -299,13 +310,15 @@ end
 
 local function update_visible_trunks(visible_trunks, qs, qseid)
     local tep = qs.trunk_entity_pool
+    local layers = qs.layers
+    update_layers(qs.layers, qs.tile_indices, visible_trunks)
+
     if #qs.visible_trunks == 0 then
-        for layeridx=1, qs.layernum do
-            local layereid = create_layer_entity(qseid, layeridx, "layer:" .. layeridx)
+        for _, l in ipairs(layers) do
             for idx, tid in ipairs(visible_trunks) do
-                tep[idx] = create_trunk_entity(qseid, layeridx, layereid)
-                itr.reset_trunk(tep[idx], tid)
-                
+                tep[idx] = create_trunk_entity(qseid)
+                local cover_tiles = l.cover_tiles[tid]
+                itr.reset_trunk(tep[idx], tid, cover_tiles)
             end
         end
     else

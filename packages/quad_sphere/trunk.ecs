@@ -1,6 +1,5 @@
 interface "itrunk_render"
     .implement "trunk_render.lua"
-    .method "generate_quad_uv_index"
     .method "reset_trunk"
 
 transform "trunk_bounding_transform"

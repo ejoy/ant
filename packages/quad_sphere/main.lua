@@ -1,0 +1,4 @@
+
+return {
+    constant = require "constant"
+}
