@@ -3054,13 +3054,13 @@ static struct enum_pair eInputTextFlags[] = {
 	ENUM(ImGuiInputTextFlags, AllowTabInput),
 	ENUM(ImGuiInputTextFlags, CtrlEnterForNewLine),
 	ENUM(ImGuiInputTextFlags, NoHorizontalScroll),
-	ENUM(ImGuiInputTextFlags, AlwaysInsertMode),
+	ENUM(ImGuiInputTextFlags, AlwaysOverwrite),
 	ENUM(ImGuiInputTextFlags, ReadOnly),
 	ENUM(ImGuiInputTextFlags, Password),
 	ENUM(ImGuiInputTextFlags, NoUndoRedo),
 	ENUM(ImGuiInputTextFlags, CharsScientific),
 	ENUM(ImGuiInputTextFlags, CallbackResize),
-	ENUM(ImGuiInputTextFlags, Multiline),
+	ENUM(ImGuiInputTextFlags, CallbackEdit),
 	{ NULL, 0 },
 };
 

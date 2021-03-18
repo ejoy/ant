@@ -46,7 +46,7 @@ function LightView:set_model(eid)
 end
 
 function LightView:on_set_color(...)
-    ilight.set_color(self.eid, {...})
+    ilight.set_color(self.eid, ...)
     ilight.update_light_buffers()
 end
 

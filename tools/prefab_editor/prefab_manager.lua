@@ -343,16 +343,38 @@ function m:open(filename)
     world:pub {"WindowTitle", filename}
 end
 
+local function do_remove_entity(eid)
+    if world[eid].camera then
+        camera_mgr.remove_camera(eid)
+    elseif world[eid].light_type then
+        light_gizmo.on_remove_light(eid)
+    end
+    if world[eid].skeleton_eid then
+        world:remove_entity(world[eid].skeleton_eid)
+    end
+    if world[eid].effekseer then
+        effekseer.destroy(world[eid].effekseer.handle)
+    end
+    local teml = hierarchy:get_template(eid)
+    if teml and teml.children then
+        remove_entitys(teml.children)
+        -- for _, e in ipairs(teml.children) do
+        --     world:remove_entity(e)
+        -- end
+    end
+end
+
 function m:reset_prefab()
     camera_mgr.clear()
     for _, eid in ipairs(self.entities) do
         if type(eid) == "table" then
             assert(false)
         end
-        local teml = hierarchy:get_template(eid)
-        if teml and teml.children then
-            remove_entitys(teml.children)
-        end
+        -- local teml = hierarchy:get_template(eid)
+        -- if teml and teml.children then
+        --     remove_entitys(teml.children)
+        -- end
+        do_remove_entity(eid)
         world:remove_entity(eid)
     end
     light_gizmo.clear()
@@ -374,7 +396,7 @@ function m:open_prefab(prefab)
             local templ = hierarchy:get_template(entity.root)
             templ.filename = prefab.__class[i].prefab
             set_select_adapter(entity, entity.root)
-            add_entity[#add_entity+1] = prefab_root
+            templ.children = entity
             remove_entity[#remove_entity+1] = entity
         else
             local keyframes = prefab.__class[i].data.frames
@@ -628,23 +650,7 @@ end
 
 function m:remove_entity(eid)
     if not eid then return end
-    if world[eid].camera then
-        camera_mgr.remove_camera(eid)
-    elseif world[eid].light_type then
-        light_gizmo.on_remove_light(eid)
-    end
-    if world[eid].skeleton_eid then
-        world:remove_entity(world[eid].skeleton_eid)
-    end
-    if world[eid].effekseer then
-        effekseer.destroy(world[eid].effekseer.handle)
-    end
-    local teml = hierarchy:get_template(eid)
-    if teml and teml.children then
-        for _, e in ipairs(teml.children) do
-            world:remove_entity(e)
-        end
-    end
+    do_remove_entity(eid)
     world:remove_entity(eid)
     hierarchy:del(eid)
     self:internal_remove(eid)
