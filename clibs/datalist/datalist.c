@@ -1092,7 +1092,7 @@ lquote(lua_State *L) {
 	size_t sz,i;
 	const char * str = luaL_checklstring(L, 1, &sz);
 	for (i=0;i<sz;i++) {
-		if (str[i] < 32) {
+		if ((unsigned char)str[i] < 32) {
 			switch (str[i]) {
 			case 0:
 				luaL_addchar(&b, '\\');
