@@ -268,21 +268,21 @@ struct ozzAllocator : public luaClass<ozzAllocator> {
 };
 REGISTER_LUA_CLASS(ozzAllocator)
 
-struct ozzSamplingCache : public luaClass<ozzSamplingCache> {
-	ozz::animation::SamplingCache* v;
-	ozzSamplingCache(int max_tracks)
-	: v(ozz::New<ozz::animation::SamplingCache>(max_tracks))
-	{ }
-	~ozzSamplingCache() {
-		ozz::Delete(v);
-	}
-	static int create(lua_State* L) {
-		int max_tracks = (int)luaL_optinteger(L, 1, 0);
-		base_type::constructor(L, max_tracks);
-		return 1;
-	}
-};
-REGISTER_LUA_CLASS(ozzSamplingCache)
+// struct ozzSamplingCache : public luaClass<ozzSamplingCache> {
+// 	ozz::animation::SamplingCache* v;
+// 	ozzSamplingCache(int max_tracks)
+// 	: v(ozz::New<ozz::animation::SamplingCache>(max_tracks))
+// 	{ }
+// 	~ozzSamplingCache() {
+// 		ozz::Delete(v);
+// 	}
+// 	static int create(lua_State* L) {
+// 		int max_tracks = (int)luaL_optinteger(L, 1, 0);
+// 		base_type::constructor(L, max_tracks);
+// 		return 1;
+// 	}
+// };
+// REGISTER_LUA_CLASS(ozzSamplingCache)
 
 struct ozzAnimation : public luaClass<ozzAnimation> {
 	ozz::animation::Animation* v;
@@ -453,18 +453,13 @@ private:
 	}
 
 	int do_sample(lua_State* L) {
-		ozzSamplingCache* sampling = ozzSamplingCache::get(L, 2);
-		ozzAnimation* animation = ozzAnimation::get(L, 3);
-		float ratio = animation->update((float)luaL_checknumber(L, 4) * 0.001f); // millisecond to second
-		float weight = (float)luaL_optnumber(L, 5, 1.0f);
+		ozzAnimation* animation = ozzAnimation::get(L, 2);
+		float ratio = animation->update((float)luaL_checknumber(L, 3) * 0.001f); // millisecond to second
+		float weight = (float)luaL_optnumber(L, 4, 1.0f);
 
 		bindpose_soa bp_soa(m_ske->num_soa_joints());
 		ozz::animation::SamplingJob job;
-		if (m_ske->num_joints() > sampling->v->max_tracks()){
-			sampling->v->Resize(m_ske->num_joints());
-		}
 		job.animation = animation->v;
-		job.cache = sampling->v;
 		job.ratio = ratio;
 		job.output = ozz::make_span(bp_soa);
 		if (!job.Run()) {
@@ -495,7 +490,7 @@ private:
 		} else {
 			return luaL_error(L, "invalid blend type: %s", blendtype);
 		}
-		job.bind_pose = m_ske->joint_bind_poses();
+		job.rest_pose = m_ske->joint_rest_poses();
 		job.threshold = threshold;
 		job.output = ozz::make_span(bp_soa);
 		if (!job.Run()) {
@@ -755,7 +750,6 @@ luaopen_hierarchy_animation(lua_State *L) {
 		{ "mesh_skinning",				lmesh_skinning},
 		{ "build_skinning_matrices",	lbuild_skinning_matrices},
 		{ "new_animation",				ozzAnimation::create},
-		{ "new_sampling_cache",			ozzSamplingCache::create},
 		{ "new_bind_pose",				ozzBindpose::create},
 		{ "bind_pose_mt",				ozzBindpose::getMT},
 		{ "new_pose_result",			ozzPoseResult::create},

@@ -9,7 +9,6 @@ loaders["ozz-animation"] = function (fn)
 	local looptimes = 0 -- TODO
 	return {
 		_handle = handle,
-		_sampling_cache = animodule.new_sampling_cache(),
 		_duration = handle:duration() * 1000. / scale,
 		_max_ratio = looptimes > 0 and looptimes or math.maxinteger,
 	}

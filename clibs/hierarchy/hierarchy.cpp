@@ -178,7 +178,7 @@ lbuilddata_jointindex(lua_State *L) {
 
 static ozz::math::Float4x4
 joint_matrix(const ozz::animation::Skeleton *ske, int jointidx) {
-	auto poses = ske->joint_bind_poses();
+	auto poses = ske->joint_rest_poses();
 	assert(0 <= jointidx && jointidx < (int)poses.size());
 	
 	auto pose = poses[jointidx / 4];
@@ -227,7 +227,7 @@ lbuilddata_bindpose(lua_State *L) {
 
 	ozz::animation::LocalToModelJob job;
 	job.skeleton = ske;
-	job.input = ske->joint_bind_poses();
+	job.input = ske->joint_rest_poses();
 	job.output = ozz::make_span(*bpresult);
 
 	if (!job.Run()) {
@@ -242,7 +242,7 @@ lbuilddata_size(lua_State *L){
 
 	size_t buffersize = 0;
 
-	auto bind_poses = ske->joint_bind_poses();
+	auto bind_poses = ske->joint_rest_poses();
 	buffersize += bind_poses.size_bytes();
 	buffersize += ske->joint_parents().size() * sizeof(uint16_t);
 

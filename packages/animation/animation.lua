@@ -104,7 +104,7 @@ local function do_animation(poseresult, task, delta_time)
 	else
 		local ani = task.animation
 		local adjust_time = get_adjust_delta_time(task, delta_time)
-		poseresult:do_sample(ani._sampling_cache, ani._handle, adjust_time, task.weight)
+		poseresult:do_sample(ani._handle, adjust_time, task.weight)
 	end
 end
 
