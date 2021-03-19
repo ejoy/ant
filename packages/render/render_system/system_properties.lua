@@ -8,6 +8,7 @@ local mc		= import_package "ant.math".constant
 local iom		= world:interface "ant.objcontroller|obj_motion"
 local ishadow	= world:interface "ant.render|ishadow"
 local ilight	= world:interface "ant.render|light"
+local itimer	= world:interface "ant.timer|timer"
 
 local m = ecs.interface "system_properties"
 local system_properties = {
@@ -20,6 +21,7 @@ local system_properties = {
 	u_cluster_shading_param	= math3d.ref(mc.ZERO_PT),
 	u_cluster_shading_param2= math3d.ref(mc.ZERO_PT),
 	u_light_count			= math3d.ref(mc.ZERO_PT),
+	u_time					= math3d.ref(mc.ZERO_PT),
 
 	-- shadow
 	u_csm_matrix 		= {
@@ -148,11 +150,19 @@ local function update_postprocess_properties()
 	mvd.texture.handle = fbmgr.get_rb(fb[#fb]).handle
 end
 
+local starttime = itimer.current()
+
+local function update_timer_properties()
+	local t = system_properties["u_time"]
+	t.v = {itimer.current()-starttime, itimer.delta(), 0, 0}
+end
+
 function m.properties()
 	return system_properties
 end
 
 function m.update()
+	update_timer_properties()
 	update_lighting_properties()
 	update_shadow_properties()
 	update_postprocess_properties()

@@ -1,0 +1,11 @@
+---
+policy:
+  ant.general|name
+  ant.render|render
+data:
+  material: /pkg/ant.resources/materials/uvmotion.material
+  mesh: /pkg/ant.resources.binary/guidao.glb|meshes/Cube_P1.meshbin
+  name: guidao
+  scene_entity: true
+  state: 7
+  transform: {}

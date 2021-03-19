@@ -1,0 +1,34 @@
+fx:
+  vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
+  fs: /pkg/ant.resources/shaders/pbr/fs_pbr.sc
+  setting:
+    UV_MOTION: 1
+properties:
+  s_basecolor:
+    stage: 0
+    texture: /pkg/ant.resources.binary/guidao.glb|images/basecolor.texture
+  s_emissive:
+    stage: 4
+    texture: /pkg/ant.resources/textures/pbr/default/emissive.texture
+  s_metallic_roughness:
+    stage: 1
+    texture: /pkg/ant.resources/textures/pbr/default/metallic_roughness.texture
+  s_normal:
+    stage: 2
+    texture: /pkg/ant.resources/textures/pbr/default/normal.texture
+  s_occlusion:
+    stage: 3
+    texture: /pkg/ant.resources/textures/pbr/default/occlusion.texture
+  u_IBLparam: {1, 1, 0, 0}
+  u_alpha_info: {1, 0, 0, 0}
+  u_basecolor_factor: {1, 1, 1, 1}
+  u_emissive_factor: {0, 0, 0, 0}
+  u_material_texture_flags: {1, 0, 0, 0}
+  u_metallic_roughness_factor: {0, 0.4000000059604645, 0, 0}
+  u_uvmotion_speed: {0, -0.1, 0, 0}
+state:
+  ALPHA_REF: 0
+  CULL: CCW
+  DEPTH_TEST: LESS
+  MSAA: true
+  WRITE_MASK: RGBAZ

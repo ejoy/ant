@@ -7,6 +7,10 @@ $input v_normal, v_posWS, v_texcoord0
 #include "common/utils.sh"
 #include "common/cluster_shading.sh"
 
+#ifdef UV_MOTION
+#include "common/uvmotion.sh"
+#endif //UV_MOTION
+
 #ifdef ENABLE_SHADOW
 #include "common/shadow.sh"
 #define v_distanceVS v_posWS.w
@@ -249,12 +253,17 @@ PBRInfo init_pbr_inputs(vec3 N, vec3 V, float roughness, float metallic){
 
 void main()
 {
-	vec4 basecolor = get_basecolor(v_texcoord0);
+#ifdef UV_MOTION
+	vec2 uv = uv_motion(v_texcoord0);
+#else //!UV_MOTION
+	vec2 uv = v_texcoord0;
+#endif //UV_MOTION
+	vec4 basecolor = get_basecolor(uv);
 
 	float metallic, roughness;
-	get_metallic_roughness(v_texcoord0, metallic, roughness);
+	get_metallic_roughness(uv, metallic, roughness);
 
-	vec3 N = getNormal(v_normal, v_posWS.xyz, v_texcoord0);
+	vec3 N = getNormal(v_normal, v_posWS.xyz, uv);
 	vec3 V = normalize(u_eyepos.xyz - v_posWS.xyz);
 	vec3 R = normalize(reflect(-V, N));
 
@@ -286,9 +295,6 @@ void main()
 		pbr_inputs.VdotH = max(dot(V, H), 0.0);
 		color += calc_direct_lighting(pbr_inputs, radiance, basecolor.rgb, F0);
 	}
-	// vec3 indirect_color = calc_indirect_lighting_IBL(pbr_inputs, N, R, basecolor.rgb, F0);
-	// modulate_occlusion(v_texcoord0, indirect_color);
-	//color += indirect_color;
 
 // #ifdef ENABLE_SHADOW
 // 	float visibility = shadow_visibility(v_distanceVS, vec4(v_posWS.xyz, 1.0));
@@ -299,9 +305,9 @@ void main()
 	vec4 finalcolor = vec4(color, basecolor.a);
 
 #ifdef ENABLE_BLOOM
-	add_emissive(v_texcoord0, gl_FragData[1]);
+	add_emissive(uv, gl_FragData[1]);
 #else //!ENABLE_BLOOM
-	add_emissive(v_texcoord0, color);
+	add_emissive(uv, color);
 #endif
 
 	gl_FragColor = output_color_sRGB(finalcolor);
