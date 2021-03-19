@@ -1,4 +1,16 @@
-local fs = require "filesystem.local"
+local path_sep = package.config:sub(3,3)
+if package.cpath:match(path_sep) then
+	package.cpath = (function ()
+		local i = 0
+		while arg[i] ~= nil do
+			i = i - 1
+		end
+		local dir = arg[i + 1]:match("(.+)[/\\][%w_.-]+$")
+		return ("%s/?.dll"):format(dir)
+	end)()
+end
+
+local fs = require "filesystem.cpp"
 --local fs = require "bee.filesystem"
 
 local function copy_directory(from, to, filter)
@@ -15,15 +27,15 @@ local function copy_directory(from, to, filter)
 end
 
 local input = fs.path "./"
-local output = fs.path "../install"
+local output = fs.path "../ant_release"
 
 fs.remove_all(output)
 
-copy_directory(input / "bin" / "msvc" / "Debug", output, function (path)
-    return path:equal_extension '.dll' or path:equal_extension'.exe'
+copy_directory(input / "bin" / "msvc" / "Release", output / "bin", function (path)
+   return path:equal_extension '.dll' or path:equal_extension'.exe'
 end)
 copy_directory(input / "engine", output / "engine")
 copy_directory(input / "packages", output / "packages")
 copy_directory(input / "tools" / "prefab_editor", output / "tools" / "prefab_editor", function (path)
-    return path == input / "tools" / "prefab_editor" / ".build"
+    return path ~= input / "tools" / "prefab_editor" / ".build"
 end)

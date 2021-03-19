@@ -9,7 +9,7 @@ local widget_utils  = require "widget.utils"
 local bgfx          = require "bgfx"
 local gd            = require "common.global_data"
 local utils         = require "common.utils"
-local effekseer     = require "effekseer"   
+local effekseer     = require "effekseer"
 local geo_utils
 local logger
 local ilight
@@ -498,7 +498,7 @@ function m:add_prefab(filename)
     world[entities[1]].parent = mount_root
     world[mount_root].parent = gizmo.target_eid or self.root
     set_select_adapter(entities, mount_root)
-    hierarchy:add(mount_root, {filename = filename, template = temp.__class[1]}, world[mount_root].parent)
+    hierarchy:add(mount_root, {filename = filename, template = temp.__class[1], children = entities}, world[mount_root].parent)
 end
 
 function m:recreate_entity(eid)

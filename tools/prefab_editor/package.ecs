@@ -10,6 +10,7 @@ import "@ant.camera"
 import "@ant.asset"
 import "@ant.effect"
 import "@ant.effekseer"
+import "@ant.prefab"
 
 system "init_system"
     .implement "init_system.lua"
