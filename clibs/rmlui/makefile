@@ -10,7 +10,7 @@ endif
 rmlui.dll : $(ODIR)/rmlui.dll
 	cp $< $@
 
-RMLUIINC=-I$(ANT3RD)/RmlUi/Include -I$(ANT3RD)/yoga
+RMLUIINC=-I$(ANT3RD)/RmlUi/Include -I$(ANT3RD)/yoga -I$(ANT3RD)/glm
 
 $(ODIR)/file.o : file.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(RMLUIINC) $(BGFXINC)
