@@ -268,21 +268,21 @@ struct ozzAllocator : public luaClass<ozzAllocator> {
 };
 REGISTER_LUA_CLASS(ozzAllocator)
 
-// struct ozzSamplingCache : public luaClass<ozzSamplingCache> {
-// 	ozz::animation::SamplingCache* v;
-// 	ozzSamplingCache(int max_tracks)
-// 	: v(ozz::New<ozz::animation::SamplingCache>(max_tracks))
-// 	{ }
-// 	~ozzSamplingCache() {
-// 		ozz::Delete(v);
-// 	}
-// 	static int create(lua_State* L) {
-// 		int max_tracks = (int)luaL_optinteger(L, 1, 0);
-// 		base_type::constructor(L, max_tracks);
-// 		return 1;
-// 	}
-// };
-// REGISTER_LUA_CLASS(ozzSamplingCache)
+struct ozzSamplingContext : public luaClass<ozzSamplingContext> {
+	ozz::animation::SamplingJob::Context*  v;
+	ozzSamplingContext(int max_tracks)
+	: v(ozz::New<ozz::animation::SamplingJob::Context>(max_tracks))
+	{ }
+	~ozzSamplingContext() {
+		ozz::Delete(v);
+	}
+	static int create(lua_State* L) {
+		int max_tracks = (int)luaL_optinteger(L, 1, 0);
+		base_type::constructor(L, max_tracks);
+		return 1;
+	}
+};
+REGISTER_LUA_CLASS(ozzSamplingContext)
 
 struct ozzAnimation : public luaClass<ozzAnimation> {
 	ozz::animation::Animation* v;
@@ -453,13 +453,18 @@ private:
 	}
 
 	int do_sample(lua_State* L) {
-		ozzAnimation* animation = ozzAnimation::get(L, 2);
-		float ratio = animation->update((float)luaL_checknumber(L, 3) * 0.001f); // millisecond to second
-		float weight = (float)luaL_optnumber(L, 4, 1.0f);
+		ozzSamplingContext* sc = ozzSamplingContext::get(L, 2);
+		ozzAnimation* animation = ozzAnimation::get(L, 3);
+		float ratio = animation->update((float)luaL_checknumber(L, 4) * 0.001f); // millisecond to second
+		float weight = (float)luaL_optnumber(L, 5, 1.0f);
 
+		if (m_ske->num_joints() > sc->v->max_tracks()){
+			sc->v->Resize(m_ske->num_joints());
+		}
 		bindpose_soa bp_soa(m_ske->num_soa_joints());
 		ozz::animation::SamplingJob job;
 		job.animation = animation->v;
+		job.context = sc->v;
 		job.ratio = ratio;
 		job.output = ozz::make_span(bp_soa);
 		if (!job.Run()) {
@@ -751,6 +756,7 @@ luaopen_hierarchy_animation(lua_State *L) {
 		{ "build_skinning_matrices",	lbuild_skinning_matrices},
 		{ "new_animation",				ozzAnimation::create},
 		{ "new_bind_pose",				ozzBindpose::create},
+		{ "new_sampling_context",		ozzSamplingContext::create},
 		{ "bind_pose_mt",				ozzBindpose::getMT},
 		{ "new_pose_result",			ozzPoseResult::create},
 		{ "pose_result_mt",				ozzPoseResult::getMT},

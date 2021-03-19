@@ -1,6 +1,19 @@
 local math3d = require "math3d"
 local utility = require "model.utility"
 
+local function fix_invalid_name(name)
+    local invalid_chars<const> = {
+        '<', '>', ':', '/', '\\', '|', '?', '*', ' ', '\t', '\r', '%[', '%]', '%(', '%)'
+    }
+
+    local replace_char<const> = '_'
+    for _, ic in ipairs(invalid_chars) do
+        name = name:gsub(ic, replace_char)
+    end
+
+    return name
+end
+
 local prefab = {}
 
 local function create_entity(t)
@@ -50,7 +63,7 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
     local mesh = gltfscene.meshes[meshidx+1]
 
     for primidx, prim in ipairs(mesh.primitives) do
-        local meshname = mesh.name or ("mesh" .. meshidx)
+        local meshname = mesh.name and fix_invalid_name(mesh.name) or ("mesh" .. meshidx)
         local materialfile
         if prim.material then 
             if exports.material and next(exports.material) then
@@ -103,8 +116,9 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
                 local lst = {}
                 data.animation = {}
                 for name, file in pairs(exports.animations) do
-                    data.animation[name] = file
-                    lst[#lst+1] = name
+                    local n = fix_invalid_name(name)
+                    data.animation[n] = file
+                    lst[#lst+1] = n
                 end
                 table.sort(lst)
                 data.animation_birth = lst[1]
@@ -124,13 +138,14 @@ end
 local function create_node_entity(gltfscene, nodeidx, parent)
     local node = gltfscene.nodes[nodeidx+1]
     local transform = get_transform(node)
+    local nname = node.name and fix_invalid_name(node.name) or ("node" .. nodeidx)
     return create_entity {
         policy = {
             "ant.general|name",
             "ant.scene|transform_policy"
         },
         data = {
-            name = node.name or ("node" .. nodeidx),
+            name = nname,
             scene_entity = true,
             transform = transform,
         },
