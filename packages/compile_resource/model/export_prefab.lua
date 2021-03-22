@@ -178,6 +178,12 @@ local function find_mesh_nodes(gltfscene, scenenodes)
     return meshnodes
 end
 
+local function righthand2lefthand_transform()
+    return {
+        s = {-1.0, 1.0, 1.0}
+    }
+end
+
 return function(output, glbdata, exports)
     prefab = {}
 
@@ -187,9 +193,11 @@ return function(output, glbdata, exports)
     local rootid = create_entity {
         policy = {
             "ant.general|name",
+            "ant.scene|transform_policy",
         },
         data = {
             name = scene.name or "Rootscene",
+            transform = righthand2lefthand_transform(),
         },
         parent = "root",
     }

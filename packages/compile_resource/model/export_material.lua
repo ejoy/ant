@@ -262,7 +262,7 @@ return function (output, glbdata, exports, tolocalpath)
             return s
         end
 
-        s = read_datalist(tolocalpath "/pkg/ant.resources/materials/states/default.state")
+        s = read_datalist(tolocalpath "/pkg/ant.resources/materials/states/default_cw.state")
         local PT = primitive_state_names[primitivemode+1]
         s.PT = PT ~= "" and PT or nil
         return s
