@@ -39,3 +39,5 @@ copy_directory(input / "packages", output / "packages")
 copy_directory(input / "tools" / "prefab_editor", output / "tools" / "prefab_editor", function (path)
     return path ~= input / "tools" / "prefab_editor" / ".build"
 end)
+
+fs.copy_file(input / "run_eidtor.bat", output / "run_eidtor.bat")
