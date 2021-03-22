@@ -1,0 +1,4 @@
+interface "iprefab"
+	.implement "prefab.lua"
+	.method "get_entity"
+	.method "get_property"
