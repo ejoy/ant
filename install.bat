@@ -1,0 +1,1 @@
+.\bin\msvc\Release\lua.exe install.lua

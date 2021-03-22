@@ -1,6 +1,6 @@
 
 #ifdef GPU_SKINNING
-#define BGFX_CONFIG_MAX_BONES 64
+#define BGFX_CONFIG_MAX_BONES 128
 $input  a_position, a_normal, a_texcoord0, a_indices, a_weight
 #else //!GPU_SKINNING
 $input  a_position, a_normal, a_texcoord0

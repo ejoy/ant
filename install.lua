@@ -40,4 +40,4 @@ copy_directory(input / "tools" / "prefab_editor", output / "tools" / "prefab_edi
     return path ~= input / "tools" / "prefab_editor" / ".build"
 end)
 
-fs.copy_file(input / "run_eidtor.bat", output / "run_eidtor.bat")
+fs.copy_file(input / "run_editor.bat", output / "run_editor.bat")
