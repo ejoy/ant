@@ -135,7 +135,9 @@ end
 function ani_sys:do_refine()
 	for _, eid in world:each "pose_result" do
 		local e = world[eid]
-		e.pose_result:fix_root_XZ()
+		if e.animation.fix_root_XZ then
+			e.pose_result:fix_root_XZ()
+		end
 	end
 end
 
