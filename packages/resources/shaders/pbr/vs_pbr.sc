@@ -1,10 +1,6 @@
+#include "common/inputs.sh"
+DEF_SKINNING_INPUTS2(a_normal, a_texcoord0)
 
-#ifdef GPU_SKINNING
-#define BGFX_CONFIG_MAX_BONES 128
-$input  a_position, a_normal, a_texcoord0, a_indices, a_weight
-#else //!GPU_SKINNING
-$input  a_position, a_normal, a_texcoord0
-#endif //GPU_SKINNING
 $output v_texcoord0, v_normal, v_posWS
 
 #include <bgfx_shader.sh>
@@ -12,15 +8,7 @@ $output v_texcoord0, v_normal, v_posWS
 
 void main()
 {
-    vec4 pos      = vec4(a_position, 1.0);
-	
-#ifdef GPU_SKINNING
-	mat4 w = calc_bone_transform(a_indices, a_weight);
-	vec4 worldpos = mul(w, pos);
-#else //!GPU_SKINNING
-	vec4 worldpos = mul(u_model[0], pos);
-#endif //GPU_SKINNING
-	
+	vec4 worldpos = mul(get_world_matrix(), vec4(a_position, 1.0));
 	gl_Position   = mul(u_viewProj, worldpos);
 #ifdef ENABLE_SHADOW
 	v_posWS       = vec4(worldpos.xyz, mul(u_view, worldpos).z);

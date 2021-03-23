@@ -55,6 +55,12 @@ mat4 calc_bone_transform(ivec4 indices, vec4 weights)
 	return wolrdMat;
 }
 
+#ifdef GPU_SKINNING
+#define get_world_matrix()	calc_bone_transform(a_indices, a_weight)
+#else //!GPU_SKINNING
+#define get_world_matrix()	u_model[0]
+#endif //GPU_SKINNING
+
 mat3 calc_tbn_lh_ex(vec3 n, vec3 t, float b_sign, mat4 worldMat)
 {
 	vec3 normal = normalize(mul(worldMat, vec4(n, 0.0)).xyz);
