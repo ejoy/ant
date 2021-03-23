@@ -1,12 +1,13 @@
 local math3d = require "math3d"
 local utility = require "model.utility"
 
-local function fix_invalid_name(name)
-    local invalid_chars<const> = {
-        '<', '>', ':', '/', '\\', '|', '?', '*', ' ', '\t', '\r', '%[', '%]', '%(', '%)'
-    }
+local invalid_chars<const> = {
+    '<', '>', ':', '/', '\\', '|', '?', '*', ' ', '\t', '\r', '%[', '%]', '%(', '%)'
+}
 
-    local replace_char<const> = '_'
+local replace_char<const> = '_'
+
+local function fix_invalid_name(name)
     for _, ic in ipairs(invalid_chars) do
         name = name:gsub(ic, replace_char)
     end
@@ -74,7 +75,7 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
                 error(("primitive need material, but no material files output:%s %d"):format(meshname, prim.material))
             end
         else
-            materialfile = "/pkg/ant.resources/materials/pbr_default.material"
+            materialfile = "/pkg/ant.resources/materials/pbr_default_cw.material"
         end
 
         local meshfile = exports.mesh[meshidx+1][primidx]
