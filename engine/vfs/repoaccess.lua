@@ -30,7 +30,7 @@ function access.addmount(repo, name, path)
 	repo._mountname[#repo._mountname+1] = name
 end
 
-function access.readmount(repo)
+function access.readmount(repo, asAbsolute)
 	local mountpoint = {}
 	local mountname = {}
 	local dir = {}
@@ -50,7 +50,11 @@ function access.readmount(repo)
 				error ("Invalid .mount file : " .. line)
 			end
 		end
-		path = lfs.path(path:gsub("%s*#.*$",""))	-- strip comment
+		if asAbsolute then
+			path = lfs.absolute(repo._root / lfs.path(path:gsub("%s*#.*$","")))
+		else
+			path = lfs.path(path:gsub("%s*#.*$",""))	-- strip comment
+		end
 		if name == '@pkg-one' then
 			local pkgname = load_package(path)
 			addmount('pkg/'..pkgname, path)
