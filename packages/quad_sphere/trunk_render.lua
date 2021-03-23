@@ -37,7 +37,7 @@ function itr.reset_trunk(eid, trunkid, cover_tiles)
         return p
     end
 
-    local uv_coords = qs.mark_uv_coords
+    local uv_coords = qs.uv_ref.uv_coords
     for iv=1, tptl do
         for ih=1, tptl do
             local tileidx = (iv-1) * tptl + ih

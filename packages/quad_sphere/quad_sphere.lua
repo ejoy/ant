@@ -93,12 +93,39 @@ local function build_mark_uv(mark_uv)
     return c
 end
 
-local function build_uv_ref(qs, layers)
+local function build_uv_ref(layers)
     local uv_ref = {}
-    local uv_coords, idx = build_mark_uv(layers.mark_uv)
+    local uv_coords = build_mark_uv(layers.mark_uv)
+
+    for _, l in ipairs(layers) do
+        local r = l.region
+        local rect = r.rect
+        local u, v = rect[1], rect[2]
+        local eu, ev = rect[3], rect[4]
+        local du, dv = (eu-u)/r.w, (ev-v)/r.h
+        
+        local ibeg = #uv_coords
+        for ih=1, r.h do
+            for iw=1, r.w do
+                uv_coords[#uv_coords+1] = u
+                uv_coords[#uv_coords+1] = v
+
+                uv_coords[#uv_coords+1] = u+du
+                uv_coords[#uv_coords+1] = v
+
+                uv_coords[#uv_coords+1] = u+du
+                uv_coords[#uv_coords+1] = v+dv
+
+                uv_coords[#uv_coords+1] = u
+                uv_coords[#uv_coords+1] = v+dv
+            end
+        end
+        local iend = #uv_coords
+
+        l.index_range = {ibeg, iend}
+    end
 
     uv_ref.uv_coords = uv_coords
-
     return uv_ref
 end
 
@@ -129,8 +156,8 @@ function qst.process_entity(e)
     assert(nt > 0 and radius > 0)
 
     local layers = {}
-    for _, ld in ipairs(qs.layers) do
-        layers[#layers+1] = setmetatable({}, ld)
+    for k, v in pairs(qs.layers) do
+        layers[k] = setmetatable({}, v)
     end
 
     local cube_len = radius * constant.inscribed_cube_len
@@ -194,7 +221,7 @@ function qst.process_entity(e)
         proj_tile_len   = proj_trunk_len * constant.inv_tile_pre_trunk_line,
         inscribed_cube  = inscribed_cube,
         trunk_entity_pool=trunk_entity_pool,
-        uv_ref          = build_uv_ref(qs, layers),
+        uv_ref          = build_uv_ref(layers),
         layers          = layers,
         tile_indices    = qs.tile_indices,
         visible_trunks  = {},
@@ -309,16 +336,16 @@ local function find_visible_trunks(pos, qs)
 end
 
 local function update_visible_trunks(visible_trunks, qs, qseid)
-    local tep = qs.trunk_entity_pool
+    local pool = qs.trunk_entity_pool
     local layers = qs.layers
     update_layers(qs.layers, qs.tile_indices, visible_trunks)
 
     if #qs.visible_trunks == 0 then
         for _, l in ipairs(layers) do
             for idx, tid in ipairs(visible_trunks) do
-                tep[idx] = create_trunk_entity(qseid)
+                pool[idx] = create_trunk_entity(qseid)
                 local cover_tiles = l.cover_tiles[tid]
-                itr.reset_trunk(tep[idx], tid, cover_tiles)
+                itr.reset_trunk(pool[idx], tid, cover_tiles)
             end
         end
     else
