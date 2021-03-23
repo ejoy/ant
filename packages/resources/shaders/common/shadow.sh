@@ -103,9 +103,9 @@ vec4 get_color_coverage(int cascadeidx)
 	return color_coverages[cascadeidx];
 }
 
-float shadow_visibility(float distanceVS, vec4 posWS)
+int calc_shadow_coord(float distanceVS, vec4 posWS, out vec4 shadowcoord)
 {
-	vec4 shadowcoord;
+	//TODO: NEED optimize! pass 'offset' and 'scale' to replace calculating pos projection in light space
 	int cascadeidx = -1;
 	for (int ii = 3; ii >= 0; --ii){
 		mat4 m = u_csm_matrix[ii];
@@ -119,7 +119,13 @@ float shadow_visibility(float distanceVS, vec4 posWS)
 		}
 	}
 
-	if (cascadeidx >= 0)
+	return cascadeidx;
+}
+
+float shadow_visibility(float distanceVS, vec4 posWS)
+{
+	vec4 shadowcoord;
+	if (calc_shadow_coord(distanceVS, posWS, shadowcoord) >= 0)
 		return hardShadow(s_shadowmap, shadowcoord, u_shadowmap_bias);
 
 	return 1.0;
