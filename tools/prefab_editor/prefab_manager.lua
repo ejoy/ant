@@ -561,12 +561,12 @@ local function convert_path(path, current_dir, new_dir, glb_filename)
     if fs.path(path):is_absolute() then return path end
     local new_path
     if glb_filename then
-        local dir = tostring(lfs.relative(current_dir, new_dir)) .. "/" .. glb_filename
+        --local dir = tostring(lfs.relative(current_dir, new_dir)) .. "/" .. glb_filename
         local pretty = tostring(lfs.path(path))
         if string.sub(path, 1, 2) == "./" then
             pretty = string.sub(path, 3)
         end
-        new_path = dir .. "|" .. pretty
+        new_path = glb_filename .. "|" .. pretty
     else
         local op_path = path
         local spec = string.find(path, '|')
@@ -603,7 +603,7 @@ function m:save_prefab(path)
     local path_list = split(prefab_filename)
     local glb_filename
     if #path_list > 1 then
-        glb_filename = get_filename(path_list[1])
+        glb_filename = path_list[1]--get_filename(path_list[1])
     end
 
     if not saveas then
@@ -617,6 +617,7 @@ function m:save_prefab(path)
         return
     end
     local data = self.entities.__class
+    --fs.path():localpath()
     local current_dir = lfs.path(prefab_filename):parent_path()
     local new_dir = lfs.path(filename):localpath():parent_path()
     for _, t in ipairs(data) do
