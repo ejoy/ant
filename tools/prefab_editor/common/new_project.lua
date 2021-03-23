@@ -71,7 +71,12 @@ local ecs = ...
 local world = ecs.world
 local m = ecs.system 'init_system'
 local irq = world:interface "ant.render|irenderqueue"
+
 function m:init()
+    print("my system init.")
+end
+
+function m:post_init()
     irq.set_view_clear_color(world:singleton_entity_id "main_queue", 0)
     --world:instance "res/scenes.prefab"
 end
@@ -101,6 +106,7 @@ system "init_system"
     .require_policy "ant.render|simplerender"
     .require_policy "ant.render|postprocess"
     .method "init"
+    .method "post_init"
 
 pipeline "init"
     .stage "init"
