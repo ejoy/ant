@@ -39,7 +39,12 @@ ifeq "$(PLAT)" "ios"
   CMAKE_COPY_ozz-animation= echo ok
 else ifeq "$(PLAT)" "msvc"
 else
-  CMAKE_COPY_ozz-animation= mkdir -p ../../../../../bin/$(PLAT)/$(MODE)/ && cp src/animation/offline/gltf/gltf2ozz$(TOOL_EXT_NAME) ../../../../../bin/$(PLAT)/$(MODE)/gltf2ozz$(TOOL_EXT_NAME)
+  ifeq "$(MAKE_OZZ_GLTF_TOOL)" "on"
+    OZZ_GLTF_TOOL:=src/animation/offline/gltf/gltf2ozz$(TOOL_EXT_NAME)
+  else
+    OZZ_GLTF_TOOL:=../../../../tools/$(PLAT)/gltf2ozz$(TOOL_EXT_NAME)
+  endif
+  CMAKE_COPY_ozz-animation= mkdir -p ../../../../../bin/$(PLAT)/$(MODE)/ && cp $(OZZ_GLTF_TOOL) ../../../../../bin/$(PLAT)/$(MODE)/gltf2ozz$(TOOL_EXT_NAME)
 endif
 
 CMAKE_OPT_reactphysics3d=-DRP3D_LOGS_ENABLED=ON
