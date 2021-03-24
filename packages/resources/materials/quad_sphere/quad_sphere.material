@@ -3,12 +3,12 @@ fx:
     fs: /pkg/ant.resources/shaders/quad_sphere/fs_quad_sphere.sc
 
 properties:
-    s_weight:
-        stage: 0
-        texture: /pkg/ant.resources/materials/quad_sphere/weight.texture
     s_color:
-        stage: 1
+        stage: 0
         texture: /pkg/ant.resources/materials/quad_sphere/color.texture
+    s_weight:
+        stage: 1
+        texture: /pkg/ant.resources/materials/quad_sphere/weight.texture
 state:
   ALPHA_REF:    0
   CULL:         NONE

@@ -114,24 +114,6 @@ local function build_uv_ref(layers)
     }
 end
 
-local function update_layers(layers, tile_indices, visible_trunks)
-    local mlayers = {}
-    for _, l in ipairs(layers) do
-        mlayers[l.index] = l
-        l.cover_tiles = {}
-    end
-
-    for _, trunkid in ipairs(visible_trunks) do
-        local indices = tile_indices[trunkid]
-        assert(#indices == constant.tiles_pre_trunk)
-        for i, tex_idx in ipairs(indices) do
-            local l = mlayers[tex_idx]
-            local ct = l.cover_tiles
-            ct[trunkid][i] = tex_idx
-        end
-    end
-end
-
 local qst = ecs.transform "quad_sphere_transform"
 function qst.process_entity(e)
     local qs = e.quad_sphere
@@ -320,51 +302,68 @@ local function find_visible_trunks(pos, qs)
     return visible_trunks
 end
 
-local function update_visible_trunks(visible_trunks, qs, qseid)
-    local pool = qs.trunk_entity_pool
-    local layers = qs.layers
-    update_layers(qs.layers, qs.tile_indices, visible_trunks)
-
-    if #qs.visible_trunks == 0 then
-        for _, l in ipairs(layers) do
-            for idx, tid in ipairs(visible_trunks) do
-                pool[idx] = create_trunk_entity(qseid)
-                local cover_tiles = l.cover_tiles[tid]
-                itr.reset_trunk(pool[idx], tid, cover_tiles)
-            end
+local function find_list(l, v)
+    for idx, vv in ipairs(l) do 
+        if vv == v then
+            return idx
         end
-    else
-        local remove_trunkids = {}
-        local function find_trunkid(vt, tid)
-            for _, tt in ipairs(vt) do
-                if tt == tid then
-                    return tt
-                end
-            end
-        end
-
-        local old_trunkids = {}
-        for idx, tid in ipairs(qs.visible_trunks) do
-            if nil == find_trunkid(visible_trunks, tid) then
-                remove_trunkids[#remove_trunkids+1] = idx
-            else
-                old_trunkids[tid] = idx
-            end
-        end
-
-        if #remove_trunkids > 0 then
-            for _, tid in ipairs(visible_trunks) do
-                if nil == old_trunkids[tid] then
-                    local poolidx = remove_trunkids[#remove_trunkids]
-                    remove_trunkids[#remove_trunkids] = nil
-                    local teid = tep[poolidx]
-                    itr.reset_trunk(teid, tid)
-                end
-            end
-        end
-        assert(#remove_trunkids == 0)
     end
+end
+
+local function update_visible_trunks(visible_trunks, qs, qseid)
+    local update_trunks = {}
+    local layers = qs.layers
+    local numlayer = #layers
+    local pool = qs.trunk_entity_pool
+    local old_visible_trunks = qs.visible_trunks
+    for _, trunkid in ipairs(visible_trunks) do
+        if find_list(old_visible_trunks, trunkid) == nil then
+            update_trunks[#update_trunks+1] = trunkid
+            if pool[trunkid] == nil then
+                local eids = {}
+                for i=1, numlayer do
+                    eids[#eids+1] = create_trunk_entity(qseid)
+                end
+                pool[trunkid] = eids
+            end
+        end
+    end
+
     qs.visible_trunks = visible_trunks
+    local tile_indices = qs.tile_indices
+    for _, trunkid in ipairs(update_trunks) do
+        local eids = pool[trunkid]
+        local indices = tile_indices[trunkid]
+        local covers = indices.covers
+        assert(#covers == constant.tiles_pre_trunk)
+        local marks = indices.mask
+
+        for tileidx=1, constant.tiles_pre_trunk do
+            --generate cover tile
+            do
+                local layeridx = covers[tileidx]
+                local eid = eids[layeridx]
+                local le = world[eid]
+                local cover_tiles = le._trunk.cover_tiles
+                cover_tiles[#cover_tiles+1] = {layeridx}
+            end
+
+            --generate mark tile
+            local mi = marks[tileidx]
+            if mi then
+                for _, m in ipairs(mi) do
+                    local layeridx = m.layeridx
+                    local le = world[eids[layeridx]]
+                    local cover_tiles = le._trunk.cover_tiles
+                    cover_tiles[#cover_tiles+1] = {layeridx, m.markidx}
+                end
+            end
+        end
+
+        for _, eid in ipairs(eids) do
+            itr.reset_trunk(eid, trunkid)
+        end
+    end
 end
 
 function iquad_sphere.update_visible_trunks(eid, cameraeid)

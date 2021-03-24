@@ -1,3 +1,4 @@
+local constant = require "packages.quad_sphere.constant"
 local ecs = ...
 local world = ecs.world
 
@@ -29,10 +30,26 @@ local function generate_quad_uv_index()
     return indices
 end
 
-local tile_indices = setmetatable({}, {__index=function(self, tid)
-    local indices = generate_quad_uv_index()
-    self[tid] = indices
+local function build_mark_indices(covers)
+    local indices = {}
+    for i=1, math.random(0, constant.tile_pre_trunk_line) do
+        for j = 1, math.random(0, constant.tile_pre_trunk_line) do
+            local tileidx = (i-1) * constant.tile_pre_trunk_line + j
+            indices[tileidx] = math.random(0, 6)
+        end
+    end
+    
     return indices
+end
+
+local tile_indices = setmetatable({}, {__index=function(self, trunkid)
+    local c = generate_quad_uv_index()
+    local t = {
+        covers = c,
+        marks = build_mark_indices(c),
+    }
+    self[trunkid] = c
+    return c
 end})
 
 local qseid

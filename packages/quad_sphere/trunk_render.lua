@@ -12,7 +12,7 @@ local itr = ecs.interface "itrunk_render"
 
 local surface_point = ctrunkid.surface_point
 
-function itr.reset_trunk(eid, trunkid, cover_tiles)
+function itr.reset_trunk(eid, trunkid)
     local e = world[eid]
     local qseid = e.parent
     local qs = assert(world[qseid])._quad_sphere
@@ -37,33 +37,32 @@ function itr.reset_trunk(eid, trunkid, cover_tiles)
         return p
     end
 
+    local cover_tiles = e._trunk.cover_tiles
+
     local uvref = qs.uv_ref
     local mc, cc = uvref.mark_uv_coords, uvref.color_uv_coords
-    for iv=1, tptl do
-        for ih=1, tptl do
-            local tileidx = (iv-1) * tptl + ih
-            local uv_idx = cover_tiles[tileidx]
-            if uv_idx then
-                for vidx, p in ipairs{
-                    get_pt(ih-1, iv-1),
-                    get_pt(ih,   iv-1),
-                    get_pt(ih,   iv),
-                    get_pt(ih-1, iv),
-                } do
-                    vertices[#vertices+1] = p[1]
-                    vertices[#vertices+1] = p[2]
-                    vertices[#vertices+1] = p[3]
+    for _, tileidx in ipairs(cover_tiles) do
+        local uv_idx = cover_tiles[tileidx]
+        local ih, iv = tileidx % tptl, tileidx // tptl
+        for vidx, p in ipairs{
+            get_pt(ih-1, iv-1),
+            get_pt(ih,   iv-1),
+            get_pt(ih,   iv),
+            get_pt(ih-1, iv),
+        } do
+            vertices[#vertices+1] = p[1]
+            vertices[#vertices+1] = p[2]
+            vertices[#vertices+1] = p[3]
 
-                    local function set_uvidx(idx, coords)
-                        local uvidx = idx*8+(vidx-1)*2  --base 0
-                        vertices[#vertices+1] = coords[uvidx+1]
-                        vertices[#vertices+1] = coords[uvidx+2]
-                    end
-
-                    set_uvidx(uv_idx[1], mc)
-                    set_uvidx(uv_idx[2], cc)
-                end
+            local function set_uvidx(idx, coords)
+                local default_uvidx<const> = 0
+                local uvidx = idx and idx*8+(vidx-1)*2 or default_uvidx --base 0
+                vertices[#vertices+1] = coords[uvidx+1]
+                vertices[#vertices+1] = coords[uvidx+2]
             end
+
+            set_uvidx(uv_idx[1], cc)
+            set_uvidx(uv_idx[2], mc)
         end
     end
 
