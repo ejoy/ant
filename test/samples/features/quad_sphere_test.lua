@@ -56,6 +56,7 @@ local qseid
 function qst_sys:init()
     qseid = iqs.create("test_quad_sphere1", num_trunk, radius, {
         mark = {
+            default_uvidx = 6,
             w=6, h=1
         },
         color = {

@@ -83,6 +83,7 @@ local function build_mark_uv(mark_uv)
             insert_uv(c, ir270+off, u, nv, u, v, nu, v, nu, nv)
         end
     end
+    c.default_uvidx = mark_uv.default_uvidx
     return c
 end
 

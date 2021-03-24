@@ -55,8 +55,12 @@ function itr.reset_trunk(eid, trunkid)
             vertices[#vertices+1] = p[3]
 
             local function set_uvidx(idx, coords)
-                local default_uvidx<const> = 0
-                local uvidx = idx and idx*8+(vidx-1)*2 or default_uvidx --base 0
+                local uvidx
+                if idx then
+                    uvidx = (idx-1)*8+(vidx-1)*2
+                else
+                    uvidx = coords.default_uvidx or 0
+                end
                 vertices[#vertices+1] = coords[uvidx+1]
                 vertices[#vertices+1] = coords[uvidx+2]
             end
