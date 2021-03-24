@@ -70,7 +70,7 @@ local function play_animation(e, name, duration)
 				clip_state = { current = {current_index = 1, clip}, clips = e.anim_clips and e.anim_clips[name] or {}},
 				weight = 0,
 				init_weight = 0,
-				ratio = 0,
+				play_state = { ratio = 0.0, previous_ratio = 0.0, speed = 1.0, play = true, loop = true}
 			}
 		}
 	else
@@ -81,7 +81,7 @@ local function play_animation(e, name, duration)
 				keyframe_events = e.keyframe_events and e.keyframe_events[name] or {}
 			},
 			clip_state = { current = {current_index = 1, clip}, clips = e.anim_clips and e.anim_clips[name] or {}},
-            ratio = 0,
+			play_state = { ratio = 0.0, previous_ratio = 0.0, speed = 1.0, play = true, loop = true}
 		}
 		return
 	end
@@ -180,7 +180,7 @@ function iani.play(eid, name, time, clipname)
 					keyframe_events = e.keyframe_events and e.keyframe_events[name] or {}
 				},
 				clip_state = { current = {current_index = 1, clip = real_clips}, clips = e.anim_clips and e.anim_clips[name] or {}},
-				ratio = 0,
+				play_state = { ratio = 0.0, previous_ratio = 0.0, speed = 1.0, play = true, loop = true}
 			}
 		end
 		return true
@@ -192,29 +192,43 @@ function iani.get_duration(eid)
 	return e._animation._current.animation._handle:duration()
 end
 
-function iani.set_time(eid, mstime)
+function iani.set_time(eid, second)
 	local e = world[eid]
-	e._animation._current.animation._handle:set_time(mstime)
+	local ratio = second / e._animation._current.animation._handle:duration()
+	if ratio > 1.0 then
+		ratio = 1.0
+	elseif ratio < 0.0 then
+		ratio = 0.0
+	end
+	e._animation._current.play_state.ratio = ratio
+end
+
+function iani.get_time(eid)
+	local e = world[eid]
+	if not e then
+		return 0
+	end
+	return e._animation._current.play_state.ratio * e._animation._current.animation._handle:duration()
 end
 
 function iani.set_speed(eid, speed)
 	local e = world[eid]
-	e._animation._current.animation._handle:set_speed(speed)
+	e._animation._current.play_state.speed = speed
 end
 
 function iani.set_loop(eid, loop)
 	local e = world[eid]
-	e._animation._current.animation._handle:set_loop(loop)
+	e._animation._current.play_state.loop = loop
 end
 
 function iani.pause(eid, pause)
 	local e = world[eid]
-	e._animation._current.animation._handle:pause(pause)
+	e._animation._current.play_state.play = not pause
 end
 
 function iani.is_playing(eid)
 	local e = world[eid]
-	return e._animation._current.animation._handle:is_playing()
+	return e._animation._current.play_state.play
 end
 
 local function do_set_event(eid, anim, events)

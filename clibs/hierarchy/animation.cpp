@@ -360,10 +360,6 @@ struct ozzAnimation : public luaClass<ozzAnimation> {
 		lua_pushboolean(L, base_type::get(L, 1)->c->is_playing());
 		return 1;
 	}
-	float update(float dt) {
-		c->update(*v, dt);
-		return c->time_ratio();
-	}
 
 	static int create(lua_State* L) {
 		const char* path = luaL_checkstring(L, 1);
@@ -455,7 +451,7 @@ private:
 	int do_sample(lua_State* L) {
 		ozzSamplingContext* sc = ozzSamplingContext::get(L, 2);
 		ozzAnimation* animation = ozzAnimation::get(L, 3);
-		float ratio = animation->update((float)luaL_checknumber(L, 4) * 0.001f); // millisecond to second
+		float ratio = (float)luaL_checknumber(L, 4);
 		float weight = (float)luaL_optnumber(L, 5, 1.0f);
 
 		if (m_ske->num_joints() > sc->v->max_tracks()){
