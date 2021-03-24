@@ -46,6 +46,13 @@ local function create_trunk_entity(qseid)
     }
 end
 
+local function insert_uv(c, idx, u1, v1, u2, v2, u3, v3, u4, v4)
+    c[idx+0] = u1; c[idx+1] = v1;
+    c[idx+2] = u2; c[idx+3] = v2;
+    c[idx+4] = u3; c[idx+5] = v3;
+    c[idx+6] = u4; c[idx+7] = v4;
+end
+
 local function build_mark_uv(mark_uv)
     local w, h = mark_uv.w, mark_uv.h
 
@@ -61,72 +68,50 @@ local function build_mark_uv(mark_uv)
             local nu, nv = u+du, v+dv
             local idx = (ih-1)*w+iw
             local off = (idx-1)*8+1
-            c[off+0] = u;   c[off+1] = v;
-            c[off+2] = nu;  c[off+3] = v;
-            c[off+4] = nu;  c[off+5] = nv;
-            c[off+6] = u;   c[off+7] = nv;
+            insert_uv(c, off, u, v, nu, v, nu, nv, u, nv)
 
             -- rotate math.pi * 0.5
             local ir90 = numelem
-            c[ir90+off+0] = nu; c[ir90+off+1] = v;
-            c[ir90+off+2] = nu; c[ir90+off+3] = nv;
-            c[ir90+off+4] = u;  c[ir90+off+5] = nv;
-            c[ir90+off+6] = u;  c[ir90+off+7] = v;
+            insert_uv(c, ir90+off, nu, v, nu, nv, u, nv, u, v)
 
             -- rotate math.pi
             local ir180 = ir90+numelem
-            
-            c[ir180+off+0] = nu; c[ir180+off+1] = nv;
-            c[ir180+off+2] = u;  c[ir180+off+3] = nv;
-            c[ir180+off+4] = u;  c[ir180+off+5] = v;
-            c[ir180+off+6] = nu; c[ir180+off+7] = v;
+            insert_uv(c, ir180+off, nu, nv, u, nv, u, v, nu, v)
 
             -- rotate math.pi * 1.5
             local ir270 = ir180+numelem
-
-            c[ir270+off+0] = u;  c[ir270+off+1] = nv;
-            c[ir270+off+2] = u;  c[ir270+off+3] = v;
-            c[ir270+off+4] = nu; c[ir270+off+5] = v;
-            c[ir270+off+6] = nu; c[ir270+off+7] = nv;
+            insert_uv(c, ir270+off, u, nv, u, v, nu, v, nu, nv)
         end
     end
     return c
 end
 
-local function build_uv_ref(layers)
-    local uv_ref = {}
-    local uv_coords = build_mark_uv(layers.mark_uv)
-
-    for _, l in ipairs(layers) do
+local function build_color_uv(color_uv)
+    local c = {}
+    for _, l in ipairs(color_uv) do
         local r = l.region
-        local rect = r.rect
-        local u, v = rect[1], rect[2]
-        local eu, ev = rect[3], rect[4]
-        local du, dv = (eu-u)/r.w, (ev-v)/r.h
-        
-        local ibeg = #uv_coords
-        for ih=1, r.h do
-            for iw=1, r.w do
-                uv_coords[#uv_coords+1] = u
-                uv_coords[#uv_coords+1] = v
+        local rt = r.rect
+        local u, v = rt[1], rt[2]
+        local w, h = r.w, r.h
+        local du, dv = (rt[3]-u)/r.w, (rt[4]-v)/r.h
 
-                uv_coords[#uv_coords+1] = u+du
-                uv_coords[#uv_coords+1] = v
-
-                uv_coords[#uv_coords+1] = u+du
-                uv_coords[#uv_coords+1] = v+dv
-
-                uv_coords[#uv_coords+1] = u
-                uv_coords[#uv_coords+1] = v+dv
+        for ih=1, h do
+            local nv = v+dv
+            for iw=1, w do
+                local nu = u+du
+                insert_uv(c, #c, u, v, nu, v, nu, nv, u, nv)
+                u = nu
             end
+            v = nv
         end
-        local iend = #uv_coords
-
-        l.index_range = {ibeg, iend}
     end
+end
 
-    uv_ref.uv_coords = uv_coords
-    return uv_ref
+local function build_uv_ref(layers)
+    return {
+        mark_uv_coords = build_mark_uv(layers.mark_uv),
+        color_uv_coords = build_color_uv(layers.color_uv)
+    }
 end
 
 local function update_layers(layers, tile_indices, visible_trunks)

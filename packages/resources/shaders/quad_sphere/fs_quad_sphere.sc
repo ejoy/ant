@@ -7,8 +7,8 @@ SAMPLER2D(s_color, 1);
 
 void main()
 {
-    float weight = texture2D(s_weight, v_texcoord0).r;
-    vec4 color = texture2D(s_color, v_texcoord1);
+    float weight    = texture2D(s_weight, v_texcoord0).r;
+    vec4 color      = texture2D(s_color, v_texcoord1);
 
     gl_FragColor = color * weight;
 }

@@ -38,30 +38,32 @@ end})
 local qseid
 function qst_sys:init()
     qseid = iqs.create("test_quad_sphere1", num_trunk, radius, {
-        mark_uv = {
+        mark = {
             w=6, h=1
         },
-        {
-            name="background",
-            region={
-                rect = {0.0, 0.0, 0.5, 0.5},
-                w=1, h=1,
+        color = {
+            {
+                name="background",
+                region={
+                    rect = {0.0, 0.0, 0.5, 0.5},
+                    w=1, h=1,
+                },
             },
-        },
-        {
-            name="color1",
-            region={
-                rect={0.5, 0.0, 0.5, 0.5},
-                w=1, h=1,
+            {
+                name="color1",
+                region={
+                    rect={0.5, 0.0, 0.5, 0.5},
+                    w=1, h=1,
+                },
             },
-        },
-        {
-            name="color2",
-            region={
-                rect={0.0, 0.5, 0.5, 0.5},
-                w=1, h=1,
+            {
+                name="color2",
+                region={
+                    rect={0.0, 0.5, 0.5, 0.5},
+                    w=1, h=1,
+                },
             },
-        },
+        }
     }, tile_indices)
     iqsd.add_inscribed_cube(qseid, {1, 1, 0, 1})
 end

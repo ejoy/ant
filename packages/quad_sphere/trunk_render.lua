@@ -37,12 +37,13 @@ function itr.reset_trunk(eid, trunkid, cover_tiles)
         return p
     end
 
-    local uv_coords = qs.uv_ref.uv_coords
+    local uvref = qs.uv_ref
+    local mc, cc = uvref.mark_uv_coords, uvref.color_uv_coords
     for iv=1, tptl do
         for ih=1, tptl do
             local tileidx = (iv-1) * tptl + ih
-            local idx = cover_tiles[tileidx] -- base 0
-            if idx then
+            local uv_idx = cover_tiles[tileidx]
+            if uv_idx then
                 for vidx, p in ipairs{
                     get_pt(ih-1, iv-1),
                     get_pt(ih,   iv-1),
@@ -52,10 +53,15 @@ function itr.reset_trunk(eid, trunkid, cover_tiles)
                     vertices[#vertices+1] = p[1]
                     vertices[#vertices+1] = p[2]
                     vertices[#vertices+1] = p[3]
-    
-                    local uvidx = idx*8+(vidx-1)*2
-                    vertices[#vertices+1] = uv_coords[uvidx+1]
-                    vertices[#vertices+1] = uv_coords[uvidx+2]
+
+                    local function set_uvidx(idx, coords)
+                        local uvidx = idx*8+(vidx-1)*2  --base 0
+                        vertices[#vertices+1] = coords[uvidx+1]
+                        vertices[#vertices+1] = coords[uvidx+2]
+                    end
+
+                    set_uvidx(uv_idx[1], mc)
+                    set_uvidx(uv_idx[2], cc)
                 end
             end
         end
@@ -89,6 +95,5 @@ function itr.reset_trunk(eid, trunkid, cover_tiles)
     rc.ib = constant.trunk_ib.buffer
     local vb = rc.vb
     local poshandle = vb.handles[1]
-    bgfx.update(poshandle, 0, bgfx.memory_buffer("fffff", vertices), constant.vb_layout[1].handle)
-
+    bgfx.update(poshandle, 0, bgfx.memory_buffer("fffffff", vertices), constant.vb_layout.handle)
 end
