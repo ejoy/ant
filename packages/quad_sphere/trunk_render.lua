@@ -97,6 +97,5 @@ function itr.reset_trunk(eid, trunkid)
     rc.aabb = e._bounding.aabb
     rc.ib = constant.trunk_ib.buffer
     local vb = rc.vb
-    local poshandle = vb.handles[1]
-    bgfx.update(poshandle, 0, bgfx.memory_buffer("fffffff", vertices), constant.vb_layout.handle)
+    bgfx.update(vb.handles[1], 0, bgfx.memory_buffer("fffffff", vertices), constant.vb_layout.handle)
 end
