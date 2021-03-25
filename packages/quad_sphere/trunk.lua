@@ -3,22 +3,12 @@ local math3d = require "math3d"
 local constant  = require "constant"
 local bgfx      = require "bgfx"
 
--- local function create_color_uv_handle()
---     local uvs = {}
---     for i=0, constant.tile_pre_trunk_line do
---         local u = i * constant.inv_tile_pre_trunk_line
---         for j=0, constant.tile_pre_trunk_line do
---             local v = j * constant.inv_tile_pre_trunk_line
---             uvs[#uvs+1] = u;    uvs[#uvs+1] = v
---             uvs[#uvs+1] = u+1;  uvs[#uvs+1] = v
---             uvs[#uvs+1] = u+1;  uvs[#uvs+1] = v+1
---             uvs[#uvs+1] = u;    uvs[#uvs+1] = v+1
---         end
---     end
---     return bgfx.create_vertex_buffer(bgfx.memory_buffer("ff", uvs), constant.vb_layout[2].handle)
--- end
-
--- local color_layer_uv_handle = create_color_uv_handle()
+local tt = ecs.transform "trunk_transform"
+function tt.process_entity(e)
+    e._trunk = {
+        cover_tiles = {}
+    }
+end
 
 local tbt = ecs.transform "trunk_bounding_transform"
 function tbt.process_entity(e)
@@ -37,7 +27,7 @@ function tmt.process_entity(e)
         start = 0,
         num = vn,
         handles = {
-            bgfx.create_dynamic_vertex_buffer(vn, vblayout[1].handle),
+            bgfx.create_dynamic_vertex_buffer(vn, vblayout.handle),
         }
     }
 end

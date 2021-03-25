@@ -39,10 +39,10 @@ function itr.reset_trunk(eid, trunkid)
 
     local cover_tiles = e._trunk.cover_tiles
 
-    local uvref = qs.uv_ref
-    local mc, cc = uvref.mark_uv_coords, uvref.color_uv_coords
-    for _, tileidx in ipairs(cover_tiles) do
-        local uv_idx = cover_tiles[tileidx]
+    local uvref = qs.layers.uv_ref
+    local mc, cc = uvref.mask_uv_coords, uvref.color_uv_coords
+    for _, ct in ipairs(cover_tiles) do
+        local tileidx, layeridx, maskidx = ct[1], ct[2], ct[3]
         local ih, iv = tileidx % tptl, tileidx // tptl
         for vidx, p in ipairs{
             get_pt(ih-1, iv-1),
@@ -65,8 +65,8 @@ function itr.reset_trunk(eid, trunkid)
                 vertices[#vertices+1] = coords[uvidx+2]
             end
 
-            set_uvidx(uv_idx[1], cc)
-            set_uvidx(uv_idx[2], mc)
+            set_uvidx(layeridx, cc)
+            set_uvidx(maskidx, mc)
         end
     end
 

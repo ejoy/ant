@@ -1,4 +1,4 @@
-local constant = require "packages.quad_sphere.constant"
+
 local ecs = ...
 local world = ecs.world
 
@@ -25,17 +25,23 @@ local function generate_quad_uv_index()
 
     local indices = {}
     for i=1, tn do
-        indices[i] = math.random(0, 2)
+        indices[i] = math.random(1, 3)
     end
     return indices
 end
 
 local function build_mark_indices(covers)
     local indices = {}
-    for i=1, math.random(0, constant.tile_pre_trunk_line) do
-        for j = 1, math.random(0, constant.tile_pre_trunk_line) do
-            local tileidx = (i-1) * constant.tile_pre_trunk_line + j
-            indices[tileidx] = math.random(0, 6)
+    for i=1, math.random(1, qs_const.tile_pre_trunk_line) do
+        for j = 1, math.random(1, qs_const.tile_pre_trunk_line) do
+            local tileidx = (i-1) * qs_const.tile_pre_trunk_line + j
+            local numlayer = math.random(1, 2)
+            local offsetlayer = 1
+            local layers = {}
+            for l=1, numlayer do
+                layers[#layers+1] = {layeridx = offsetlayer+l, maskidx=math.random(1, 6)}
+            end
+            indices[tileidx] = layers
         end
     end
     
@@ -46,16 +52,16 @@ local tile_indices = setmetatable({}, {__index=function(self, trunkid)
     local c = generate_quad_uv_index()
     local t = {
         covers = c,
-        marks = build_mark_indices(c),
+        masks = build_mark_indices(c),
     }
-    self[trunkid] = c
-    return c
+    self[trunkid] = t
+    return t
 end})
 
 local qseid
 function qst_sys:init()
     qseid = iqs.create("test_quad_sphere1", num_trunk, radius, {
-        mark = {
+        mask = {
             default_uvidx = 6,
             w=6, h=1
         },

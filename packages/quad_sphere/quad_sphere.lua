@@ -31,7 +31,7 @@ local function create_trunk_entity(qseid)
     return world:create_entity{
         policy = {
             "ant.quad_sphere|trunk",
-            "ant.quad_sphere|trunk_layer",
+            "ant.scene|hierarchy_policy",
             "ant.general|name",
         },
         data = {
@@ -53,8 +53,8 @@ local function insert_uv(c, idx, u1, v1, u2, v2, u3, v3, u4, v4)
     c[idx+6] = u4; c[idx+7] = v4;
 end
 
-local function build_mark_uv(mark_uv)
-    local w, h = mark_uv.w, mark_uv.h
+local function build_mask_uv(mask_uv)
+    local w, h = mask_uv.w, mask_uv.h
 
     local du, dv = 1/w, 1/h
     local c = {}
@@ -83,7 +83,7 @@ local function build_mark_uv(mark_uv)
             insert_uv(c, ir270+off, u, nv, u, v, nu, v, nu, nv)
         end
     end
-    c.default_uvidx = mark_uv.default_uvidx
+    c.default_uvidx = mask_uv.default_uvidx
     return c
 end
 
@@ -106,12 +106,13 @@ local function build_color_uv(color_uv)
             v = nv
         end
     end
+    return c
 end
 
 local function build_uv_ref(layers)
     return {
-        mark_uv_coords = build_mark_uv(layers.mark_uv),
-        color_uv_coords = build_color_uv(layers.color_uv)
+        mask_uv_coords = build_mask_uv(layers.mask),
+        color_uv_coords = build_color_uv(layers.color)
     }
 end
 
@@ -122,11 +123,6 @@ function qst.process_entity(e)
     local inv_num_trunk   = 1 / nt
     local radius = qs.radius
     assert(nt > 0 and radius > 0)
-
-    local layers = {}
-    for k, v in pairs(qs.layers) do
-        layers[k] = setmetatable({}, v)
-    end
 
     local cube_len = radius * constant.inscribed_cube_len
     local proj_trunk_len = cube_len / qs.num_trunk
@@ -189,8 +185,11 @@ function qst.process_entity(e)
         proj_tile_len   = proj_trunk_len * constant.inv_tile_pre_trunk_line,
         inscribed_cube  = inscribed_cube,
         trunk_entity_pool=trunk_entity_pool,
-        uv_ref          = build_uv_ref(layers),
-        layers          = layers,
+        layers          = {
+            uv_ref          = build_uv_ref(qs.layers),
+            color           = qs.layers.color,
+            mask            = qs.layers.mask,
+        },
         tile_indices    = qs.tile_indices,
         visible_trunks  = {},
     }
@@ -200,9 +199,12 @@ function iquad_sphere.create(name, numtrunk, radius, layers, tile_indices)
     return world:create_entity {
         policy = {
             "ant.quad_sphere|quad_sphere",
+            "ant.scene|transform_policy",
             "ant.general|name",
         },
         data = {
+            transform = {},
+            scene_entity = true,
             quad_sphere = {
                 num_trunk   = numtrunk,
                 radius      = radius,
@@ -314,7 +316,7 @@ end
 local function update_visible_trunks(visible_trunks, qs, qseid)
     local update_trunks = {}
     local layers = qs.layers
-    local numlayer = #layers
+    local numlayer = #layers.color
     local pool = qs.trunk_entity_pool
     local old_visible_trunks = qs.visible_trunks
     for _, trunkid in ipairs(visible_trunks) do
@@ -337,7 +339,7 @@ local function update_visible_trunks(visible_trunks, qs, qseid)
         local indices = tile_indices[trunkid]
         local covers = indices.covers
         assert(#covers == constant.tiles_pre_trunk)
-        local marks = indices.mask
+        local masks = indices.masks
 
         for tileidx=1, constant.tiles_pre_trunk do
             --generate cover tile
@@ -346,17 +348,17 @@ local function update_visible_trunks(visible_trunks, qs, qseid)
                 local eid = eids[layeridx]
                 local le = world[eid]
                 local cover_tiles = le._trunk.cover_tiles
-                cover_tiles[#cover_tiles+1] = {layeridx}
+                cover_tiles[#cover_tiles+1] = {tileidx, layeridx}
             end
 
-            --generate mark tile
-            local mi = marks[tileidx]
+            --generate mask tile
+            local mi = masks[tileidx]
             if mi then
                 for _, m in ipairs(mi) do
                     local layeridx = m.layeridx
                     local le = world[eids[layeridx]]
                     local cover_tiles = le._trunk.cover_tiles
-                    cover_tiles[#cover_tiles+1] = {layeridx, m.markidx}
+                    cover_tiles[#cover_tiles+1] = {tileidx, layeridx, m.maskidx}
                 end
             end
         end
