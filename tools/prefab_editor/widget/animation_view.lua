@@ -49,7 +49,7 @@ local current_joint
 local current_event
 local current_collider
 local current_clip
-
+local anim_group_eid = {}
 local function find_index(t, item)
     for i, c in ipairs(t) do
         if c == item then
@@ -775,6 +775,27 @@ local function show_joints(root)
     end
 end
 
+local function anim_group_set_time(eid, t)
+    local group_eid = anim_group_eid[ozz_anims[eid][current_anim_name].anim_obj]
+    for _, anim_eid in ipairs(group_eid) do
+        iani.set_time(anim_eid, t)
+    end
+end
+
+local function anim_group_play(eid, ...)
+    local group_eid = anim_group_eid[ozz_anims[eid][current_anim_name].anim_obj]
+    for _, anim_eid in ipairs(group_eid) do
+        iani.play(anim_eid, ...)
+    end
+end
+
+local function anim_group_pause(eid, p)
+    local group_eid = anim_group_eid[ozz_anims[eid][current_anim_name].anim_obj]
+    for _, anim_eid in ipairs(group_eid) do
+        iani.pause(anim_eid, p)
+    end
+end
+
 function m.show()
     if not current_eid or not world[current_eid] then return end
     local viewport = imgui.GetMainViewport()
@@ -793,11 +814,18 @@ function m.show()
                     if imgui.widget.Selectable(name, current_anim_name == name) then
                         set_current_anim(name)
                         --
-                        iani.set_time(current_eid, 0)
+                        -- iani.set_time(current_eid, 0)
+                        -- if not iani.is_playing(current_eid) then
+                        --     iani.pause(current_eid, false)
+                        -- end
+                        -- iani.play(current_eid, name, 0)
+
+                        anim_group_set_time(current_eid, 0)
                         if not iani.is_playing(current_eid) then
-                            iani.pause(current_eid, false)
+                            anim_group_pause(current_eid, false)
                         end
-                        iani.play(current_eid, name, 0)
+                        anim_group_play(current_eid, name, 0)
+
                         current_clip_name = "None"
                         current_clip = nil
                     end
@@ -809,20 +837,20 @@ function m.show()
                 local default = "None"
                 if imgui.widget.Selectable(default, current_clip_name == default) then
                     current_clip_name = default
-                    iani.play(current_eid, current_anim_name, 0)
+                    anim_group_play(current_eid, current_anim_name, 0)
                 end
                 if current_anim.clips then
                     for _, clip in ipairs(current_anim.clips) do
                         if imgui.widget.Selectable(clip.name, current_clip_name == clip.name) then
                             current_clip_name = clip.name
-                            iani.play(current_eid, current_anim_name, 0, current_clip_name)
+                            anim_group_play(current_eid, current_anim_name, 0, current_clip_name)
                         end
                     end
                     if current_anim.groups then
                         for _, group in ipairs(current_anim.groups) do
                             if imgui.widget.Selectable(group.name, current_clip_name == group.name) then
                                 current_clip_name = group.name
-                                iani.play(current_eid, current_anim_name, 0, current_clip_name)
+                                anim_group_play(current_eid, current_anim_name, 0, current_clip_name)
                             end
                         end
                     end
@@ -834,7 +862,7 @@ function m.show()
             local icon = anim_state.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
             if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
                 anim_state.is_playing = not anim_state.is_playing
-                iani.pause(current_eid, not anim_state.is_playing)
+                anim_group_pause(current_eid, not anim_state.is_playing)
             end
             imgui.cursor.SameLine()
             if imgui.widget.Button("LoadClip") then
@@ -891,8 +919,8 @@ function m.show()
                 if k == "pause" then
                     -- current_anim.ozz_anim:pause(true)
                     -- current_anim.ozz_anim:set_time(v)
-                    iani.pause(current_eid, true)
-                    iani.set_time(current_eid, v)
+                    anim_group_pause(current_eid, true)
+                    anim_group_set_time(current_eid, v)
                 elseif k == "selected_frame" then
                     new_frame_idx = v
                 elseif k == "move_type" then
@@ -973,19 +1001,32 @@ function m.bind(eid)
         animation_list = {}
         ozz_anims[eid] = {
             id = eid,
-            birth = world[eid].animation_birth
+            birth = world[eid].animation_birth,
         }
-        local animation = world[eid].animation
-        for key, anim in pairs(animation) do
+        local animations = world[eid].animation
+        local parentNode = hierarchy:get_node(world[eid].parent)
+        for key, anim in pairs(animations) do
             ozz_anims[eid][key] = {
                 name = key,
                 duration = anim._handle:duration(),
-                --ozz_anim = anim._handle,
-                --play_state = world[eid]._animation._current.play_state,
-                key_event = from_runtime_event(world[eid].keyframe_events and world[eid].keyframe_events[key] or {})
+                key_event = from_runtime_event(world[eid].keyframe_events and world[eid].keyframe_events[key] or {}),
+                anim_obj = anim
             }
             animation_list[#animation_list + 1] = key
+            --
+            if not anim_group_eid[anim] then
+                anim_group_eid[anim] = {}
+            end
+            
+            for _, child in ipairs(parentNode.children) do
+                if world[child.eid].animation._handle == animations._handle then
+                    if not find_index(anim_group_eid[anim], child.eid)  then
+                        anim_group_eid[anim][#anim_group_eid[anim] + 1] = child.eid
+                    end
+                end
+            end
         end
+
         set_current_anim(ozz_anims[eid].birth)
         joint_list = {
             {
