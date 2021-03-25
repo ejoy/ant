@@ -54,6 +54,7 @@ local function on_new_project(path)
     new_project.gen_package_ecs()
     new_project.gen_package()
     new_project.gen_settings()
+    new_project.gen_bat()
 end
 
 local function choose_project_dir()
@@ -71,7 +72,7 @@ end
 local function get_package(entry_path, readmount)
     local repo = {_root = entry_path}
     if readmount then
-        access.readmount(repo)
+        access.readmount(repo, readmount)
     end
     local merged_repo = vfs.merge_mount(repo)
     local packages = {}
@@ -447,31 +448,34 @@ end
 local DEFAULT_COLOR <const> = 0xffffff00
 local geo_utils = require "editor.geometry_utils"(world)
 local anim_entity
+local anim_transform = math3d.ref()
+local current_skeleton
+local skeleton_eid
 function m:widget()
-    if anim_entity then
-        ies.set_state(anim_entity.skeleton_eid, "visible", false)
+    if skeleton_eid then
+        ies.set_state(skeleton_eid, "visible", false)
     end
-    anim_entity = nil
-    if gizmo.target_eid then
-        local e = world[gizmo.target_eid]
-        if e and e.skeleton then
-            if not e.skeleton_eid then
-                local desc={vb={}, ib={}}
-                geometry_drawer.draw_skeleton(e.skeleton._handle, e.pose_result, DEFAULT_COLOR, e.transform, desc)
-                local eid = geo_utils.create_dynamic_lines(e.transform, desc.vb, desc.ib, "skeleton", DEFAULT_COLOR)
-                ies.set_state(eid, "auxgeom", true)
-                e.skeleton_eid = eid
-            end
-            if anim_entity ~= e then
-                anim_entity = e
-            end
+    local eid = gizmo.target_eid
+    if not eid then return end
+    local e = world[eid]
+    if not e.skeleton then return end
+    if current_skeleton ~= e.skeleton then
+        current_skeleton = e.skeleton
+        if skeleton_eid then
+            world:remove_entity(skeleton_eid)
         end
-    end
-    if anim_entity then
-        ies.set_state(anim_entity.skeleton_eid, "visible", true)
         local desc={vb={}, ib={}}
-        geometry_drawer.draw_skeleton(anim_entity.skeleton._handle, anim_entity.pose_result, DEFAULT_COLOR, anim_entity.transform, desc, anim_view.get_current_joint())
-        local rc = world[anim_entity.skeleton_eid]._rendercache
+        geometry_drawer.draw_skeleton(e.skeleton._handle, e.pose_result, DEFAULT_COLOR, iom.calc_worldmat(eid), desc)
+        skeleton_eid = geo_utils.create_dynamic_lines(e.transform, desc.vb, desc.ib, "skeleton", DEFAULT_COLOR)
+        ies.set_state(skeleton_eid, "auxgeom", true)
+        anim_transform.m = iom.calc_worldmat(eid)
+        anim_entity = e
+    end
+    if skeleton_eid then
+        ies.set_state(skeleton_eid, "visible", true)
+        local desc={vb={}, ib={}}
+        geometry_drawer.draw_skeleton(anim_entity.skeleton._handle, anim_entity.pose_result, DEFAULT_COLOR, anim_transform, desc, anim_view.get_current_joint())
+        local rc = world[skeleton_eid]._rendercache
         local vbdesc, ibdesc = rc.vb, rc.ib
         bgfx.update(vbdesc.handles[1], 0, bgfx.memory_buffer("fffd", desc.vb))
         bgfx.update(ibdesc.handle, 0, bgfx.memory_buffer("w", desc.ib))

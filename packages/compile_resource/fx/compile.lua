@@ -5,7 +5,7 @@ local datalist = require "datalist"
 local toolset = require "fx.toolset"
 local IDENTITY
 local BINPATH = fs.path "":localpath() / ".build" / "sc"
-local SHARER_INC = lfs.current_path() / "packages/resources/shaders"
+local SHARER_INC = lfs.absolute(fs.path "/pkg/ant.resources/shaders":localpath())
 
 local setting = import_package "ant.settings".setting
 

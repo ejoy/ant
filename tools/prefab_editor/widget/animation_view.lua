@@ -776,15 +776,16 @@ local function show_joints(root)
 end
 
 function m.show()
+    if not current_eid or not world[current_eid] then return end
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
     for _ in uiutils.imgui_windows("Animation", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
     --if imgui.windows.Begin ("Animation", imgui.flags.Window {'AlwaysAutoResize'}) then
-        if current_eid and ozz_anims[current_eid] then
+        if ozz_anims[current_eid] then
             if current_anim then
-                anim_state.current_time = current_anim.ozz_anim:get_time()
-                anim_state.is_playing = current_anim.ozz_anim:is_playing()
+                anim_state.current_time = iani.get_time(current_eid)-- current_anim.ozz_anim:get_time()
+                anim_state.is_playing = iani.is_playing(current_eid)--current_anim.play_state.play --current_anim.ozz_anim:is_playing()
             end
             imgui.cursor.PushItemWidth(150)
             if imgui.widget.BeginCombo("##AnimationList", {current_anim_name, flags = imgui.flags.Combo {}}) then
@@ -793,9 +794,8 @@ function m.show()
                         set_current_anim(name)
                         --
                         iani.set_time(current_eid, 0)
-                        local ozz_anim = current_anim.ozz_anim
-                        if not ozz_anim:is_playing() then
-                            ozz_anim:pause(false)
+                        if not iani.is_playing(current_eid) then
+                            iani.pause(current_eid, false)
                         end
                         iani.play(current_eid, name, 0)
                         current_clip_name = "None"
@@ -889,8 +889,10 @@ function m.show()
             local move_delta
             for k, v in pairs(imgui_message) do
                 if k == "pause" then
-                    current_anim.ozz_anim:pause(true)
-                    current_anim.ozz_anim:set_time(v)
+                    -- current_anim.ozz_anim:pause(true)
+                    -- current_anim.ozz_anim:set_time(v)
+                    iani.pause(current_eid, true)
+                    iani.set_time(current_eid, v)
                 elseif k == "selected_frame" then
                     new_frame_idx = v
                 elseif k == "move_type" then
@@ -978,7 +980,8 @@ function m.bind(eid)
             ozz_anims[eid][key] = {
                 name = key,
                 duration = anim._handle:duration(),
-                ozz_anim = anim._handle,
+                --ozz_anim = anim._handle,
+                --play_state = world[eid]._animation._current.play_state,
                 key_event = from_runtime_event(world[eid].keyframe_events and world[eid].keyframe_events[key] or {})
             }
             animation_list[#animation_list + 1] = key

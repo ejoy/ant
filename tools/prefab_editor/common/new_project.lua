@@ -1,6 +1,6 @@
 local utils = require "common.utils"
 local lfs   = require "filesystem.local"
-
+local fs  = require "filesystem.cpp"
 local m = {
 }
 
@@ -11,15 +11,18 @@ local init_param = {
 function m.set_path(path)
     init_param.ProjectPath = path
     local standard_path = string.gsub(path, "\\", "/")
-    local engine_pos = string.find(standard_path, '/ant/')
-    init_param.MountRoot = string.sub(standard_path, engine_pos + 5, -1)
-    init_param.PackageName = string.gsub(init_param.MountRoot, '/', '.')--"ant." .. string.gsub(init_param.MountRoot, '/', '.')
+    local project_pos = string.find(standard_path, "/[^/]*$")
+    --local current = fs.current_path()
+    init_param.EnginePath = tostring(fs.relative(fs.current_path(), fs.path(standard_path)))
+    init_param.EngineWinStylePath = string.gsub(init_param.EnginePath, "/", "\\")
+    --init_param.MountRoot = string.sub(standard_path, project_pos + 1, -1)
+    init_param.PackageName = string.sub(standard_path, project_pos + 1, -1)--string.gsub(init_param.MountRoot, '/', '.')--"ant." .. string.gsub(init_param.MountRoot, '/', '.')
     lfs.create_directory(lfs.path(init_param.ProjectPath .. "\\res"))
 end
 
 function m.gen_main()
     local main_code = [[
-package.path = "engine/?.lua"
+package.path = "$EnginePath/engine/?.lua"
 require "bootstrap"
 import_package "ant.window".start "$PackageName"
 ]]
@@ -55,9 +58,9 @@ end
 
 function m.gen_mount()
     local mount_content = [[
-@pkg packages
-@pkg-one $MountRoot
-engine engine
+@pkg $EnginePath/packages
+@pkg-one .
+engine $EnginePath/engine
 ]]
     utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\.mount")), string.gsub(mount_content, "%$(%w+)", init_param))
 end
@@ -68,7 +71,12 @@ local ecs = ...
 local world = ecs.world
 local m = ecs.system 'init_system'
 local irq = world:interface "ant.render|irenderqueue"
+
 function m:init()
+    print("my system init.")
+end
+
+function m:post_init()
     irq.set_view_clear_color(world:singleton_entity_id "main_queue", 0)
     --world:instance "res/scenes.prefab"
 end
@@ -80,6 +88,7 @@ function m.gen_package_ecs()
     local ecs = [[
 import "@ant.general"
 import "@ant.render"
+import "@ant.collision"
 import "@ant.animation"
 import "@ant.sky"
 import "@ant.camera"
@@ -97,6 +106,7 @@ system "init_system"
     .require_policy "ant.render|simplerender"
     .require_policy "ant.render|postprocess"
     .method "init"
+    .method "post_init"
 
 pipeline "init"
     .stage "init"
@@ -148,17 +158,19 @@ animation:
     GPU:
       enable: true
 graphic:
+  lighting:
+    cluster_shading: 1
   render:
     clear_color: 0x000000ff
     clear_depth: 1
     clear_stencil: 0
     clear: CDS
   hdr:
-    enable: true
+    enable: false
     format: RGBA16F
   postprocess:
     bloom:
-      enable: true
+      enable: false
       format: RGBA16F
       sample_times: 4
   shadow:
@@ -167,11 +179,17 @@ graphic:
     type: inv_z
     bias: 0.003
     normal_offset: 0
-    color: {1, 1, 1, 1}
+    color: {0.05, 0.05, 0.05, 1}
     stabilize: true
     split_lamada: 1
     split_num: 4
 ]]
     utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\settings")), settings)
+end
+function m.gen_bat()
+    local bat = [[
+$EngineWinStylePath\bin\lua.exe main.lua
+]]
+    utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\run.bat")), string.gsub(bat, "%$(%w+)", init_param))
 end
 return m

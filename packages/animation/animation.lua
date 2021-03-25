@@ -95,6 +95,32 @@ local function process_keyframe_event(task, poseresult)
 	end
 end
 
+local function set_time_ratio(task, r)
+	local state = task.play_state
+	state.previous_ratio = state.ratio
+	if state.loop then
+		state.ratio = r - math.floor(r)
+	else
+		if r < 0.0 then
+			state.ratio = 0
+		elseif r > 1.0 then
+			state.ratio = 1.0
+		else
+			state.ratio = r
+		end
+	end
+end
+
+local function update_play_state(task, dt)
+	local state = task.play_state
+	local new_ratio = state.ratio
+	if state.play then
+		new_ratio = state.ratio + dt * state.speed / (task.animation._handle:duration() * 1000.0)
+	end
+	set_time_ratio(task, new_ratio)
+	return state.ratio
+end
+
 local function do_animation(poseresult, task, delta_time)
 	if task.type == 'blend' then
 		for _, t in ipairs(task) do
@@ -104,7 +130,8 @@ local function do_animation(poseresult, task, delta_time)
 	else
 		local ani = task.animation
 		local adjust_time = get_adjust_delta_time(task, delta_time)
-		poseresult:do_sample(ani._sampling_context, ani._handle, adjust_time, task.weight)
+		local ratio = update_play_state(task, adjust_time)
+		poseresult:do_sample(ani._sampling_context, ani._handle, ratio, task.weight)
 	end
 end
 
