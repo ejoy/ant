@@ -57,7 +57,7 @@ return function(assetmgr)
             return icons.ICON_SCRIPT
         elseif ext == ".shader" then
             return icons.ICON_SHADER
-        elseif ext == ".glb" then
+        elseif ext == ".glb" or ext == ".fbx" then
             return icons.ICON_MESHLIBRARY
         elseif ext == ".meshbin" then
             return icons.ICON_MESH

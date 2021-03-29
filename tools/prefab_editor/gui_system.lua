@@ -287,6 +287,7 @@ local drop_files_event = world:sub {"OnDropFiles"}
 local entity_event = world:sub {"EntityEvent"}
 local event_keyboard = world:sub{"keyboard"}
 local event_open_prefab = world:sub {"OpenPrefab"}
+local event_open_fbx = world:sub {"OpenFBX"}
 local event_add_prefab = world:sub {"AddPrefabOrEffect"}
 local event_resource_browser = world:sub {"ResourceBrowser"}
 local event_window_title = world:sub {"WindowTitle"}
@@ -407,6 +408,9 @@ function m:data_changed()
     end
     for _, filename in event_open_prefab:unpack() do
         prefab_mgr:open(filename)
+    end
+    for _, filename in event_open_fbx:unpack() do
+        prefab_mgr:open_fbx(filename)
     end
     for _, filename in event_add_prefab:unpack() do
         if string.sub(filename, -4) == ".efk" then

@@ -10,6 +10,8 @@ local bgfx          = require "bgfx"
 local gd            = require "common.global_data"
 local utils         = require "common.utils"
 local effekseer     = require "effekseer"
+local subprocess    = require "sp_util"
+
 local geo_utils
 local logger
 local ilight
@@ -335,6 +337,52 @@ end
 local function get_prefab(filename)
     assetmgr.unload(filename)
     return worldedit:prefab_template(filename)
+end
+
+local FBXTOGLB
+function m:open_fbx(filename)
+    if not FBXTOGLB then
+        local f = assert(lfs.open(fs.path("editor.settings"):localpath()))
+        local data = f:read "a"
+        f:close()
+        local datalist = require "datalist"
+        local settings = datalist.parse(data)
+        if lfs.exists(lfs.path(settings.BlenderPath .. "/blender.exe")) then
+            FBXTOGLB = subprocess.tool_exe_path(settings.BlenderPath .. "/blender")
+        else
+            print("Can not find blender.")
+            return
+        end
+    end
+
+    local fullpath = tostring(lfs.current_path() / fs.path(filename):localpath())
+    local scriptpath = tostring(lfs.current_path()) .. "/tools/prefab_editor/Export.GLB.py"
+    local commands = {
+		FBXTOGLB,
+        "--background",
+        "--python",
+        scriptpath,
+        "--",
+        fullpath
+	}
+    local ok, msg = subprocess.spawn_process(commands)
+	if ok then
+		local INFO = msg:upper()
+		for _, term in ipairs {
+			"ERROR",
+			"FAILED TO CONVERT FBX FILE"
+		} do
+			if INFO:find(term, 1, true) then
+				ok = false
+				break
+			end
+		end
+	end
+	if not ok then
+		return false, msg
+	end
+    local prefabFilename = string.sub(filename, 1, string.find(filename, ".fbx")) .. "glb|mesh.prefab"
+    self:open(prefabFilename)
 end
 
 function m:open(filename)
