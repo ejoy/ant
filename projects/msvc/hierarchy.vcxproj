@@ -16,13 +16,11 @@
     <ClCompile Include="..\..\clibs\hierarchy\hierarchy.cpp" />
     <ClCompile Include="..\..\clibs\hierarchy\ik.cpp" />
     <ClCompile Include="..\..\clibs\hierarchy\ozzmesh.cpp" />
-    <ClCompile Include="..\..\clibs\hierarchy\playbackcontroller.cpp" />
     <ClCompile Include="..\..\clibs\hierarchy\scene.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\3rd\ozz-animation\samples\framework\mesh.h" />
     <ClInclude Include="..\..\clibs\hierarchy\hierarchy.h" />
-    <ClInclude Include="..\..\clibs\hierarchy\playbackcontroller.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="luadll.vcxproj">
