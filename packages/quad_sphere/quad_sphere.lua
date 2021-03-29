@@ -214,7 +214,7 @@ function qst.process_entity(e)
         proj_trunk_len  = proj_trunk_len,
         proj_tile_len   = proj_trunk_len * constant.inv_tile_pre_trunk_line,
         inscribed_cube  = inscribed_cube,
-        trunk_entity_pool={n=0},
+        trunk_entity_pool={n=0, ref={}},
         layers          = {
             uv_ref          = build_uv_ref(qs.layers),
             color           = qs.layers.color,
@@ -373,7 +373,7 @@ local function update_visible_trunks(visible_trunks, qs, qseid)
         local trunk_refidx = pool.ref[trunkid]
         local layers_eids = pool[trunk_refidx]
 
-        local indices = itr.build_tile_indices(tile_indices, trunkid, qs.layers.backgroundidx or 0)
+        local indices = itr.build_tile_indices(tile_indices, trunkid, qs.layers.backgroundidx or 1)
 
         for layeridx, l in ipairs(indices) do
             local covereid = layers_eids.covers[layeridx]

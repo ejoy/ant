@@ -8,6 +8,7 @@ system "camera_controller"
     .implement "camera_controller.lua"
     .method "post_init"
     .method "data_changed"
+    .method "camera_usage"
 
 interface "icamera_controller"
     .implement "camera_controller.lua"

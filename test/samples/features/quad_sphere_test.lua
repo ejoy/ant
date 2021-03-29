@@ -49,13 +49,13 @@ local function build_mark_indices(covers)
 end
 
 local tile_indices = setmetatable({}, {__index=function(self, trunkid)
-    local c = generate_quad_uv_index()
-    local t = {
-        covers = c,
-        masks = build_mark_indices(c),
-    }
-    self[trunkid] = t
-    return t
+    return generate_quad_uv_index()
+    -- local t = {
+    --     covers = c,
+    --     masks = build_mark_indices(c),
+    -- }
+    -- self[trunkid] = t
+    -- return t
 end})
 
 local qseid
@@ -66,6 +66,7 @@ function qst_sys:init()
             w=6, h=1
         },
         color = {
+            backgroundidx = 1,
             {
                 name="background",
                 region={

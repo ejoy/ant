@@ -1,4 +1,3 @@
-local const = require "tools.prefab_editor.gizmo.const"
 local ecs = ...
 local world = ecs.world
 
@@ -29,42 +28,40 @@ local function get_rotate_name(n, rotateidx)
     end
     error("invalid rotateidx:", rotateidx)
 end
-local mn<const> = mask_names
 
-function itr.build_tile_indices(trunk_covers, backgroundidx)
-    local covers
+function itr.build_tile_indices(tile_indices, trunkid, backgroundidx)
+    -- need cache
+    local indices = {}
+    local trunk_tile_indices = tile_indices[trunkid]
     for tileidx=1, constant.tiles_pre_trunk do
-        local layeridx = trunk_covers[tileidx]
-        local l = covers[layeridx]
+        local layeridx = trunk_tile_indices[tileidx]
+        local l = indices[layeridx]
         if l == nil then
-            l = {}
-            covers[layeridx] = l
+            l = {
+                covers = {}
+            }
+            indices[layeridx] = l
         end
 
-        l[#l+1] = tileidx
+        l.covers[#l.covers+1] = tileidx
     end
 
-    local masks = {}
-    for layeridx, l in ipairs(covers) do
+    for layeridx, l in pairs(indices) do
         if layeridx ~= backgroundidx then
-            masks[layeridx] = itr.build_mask_uv(l)
+            l.marks = itr.build_mask_uv(layeridx, l.covers)
         end
     end
 
-    return {
-        covers = covers,
-        masks = masks,
-    }
+    return indices
 end
 
-function itr.build_mask_uv(covers)
+function itr.build_mask_uv(layeridx, covers)
     if #covers == 0 then
         return
     end
     
     local c = constant.tile_pre_trunk_line
     local indices = {}
-    local layeridx = covers[1]
     -- range from [2, c-1] for skip edge case
     for j=2, c-1 do
         for i=2, c-1 do

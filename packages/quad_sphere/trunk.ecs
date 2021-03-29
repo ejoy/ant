@@ -1,6 +1,8 @@
 interface "itrunk_render"
     .implement "trunk_render.lua"
     .method "reset_trunk"
+    .method "build_tile_indices"
+    .method "build_mask_uv"
 
 transform "trunk_transform"
     .implement "trunk.lua"
