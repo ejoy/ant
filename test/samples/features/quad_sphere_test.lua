@@ -1,4 +1,3 @@
-
 local ecs = ...
 local world = ecs.world
 
@@ -28,28 +27,64 @@ local function generate_quad_uv_index()
         indices[i] = math.random(1, 3)
     end
     return indices
+
 end
 
-local function build_mark_indices(covers)
+local function generate_quad_uv_index2()
+    local rect<const> = {
+        512, 512,
+        532, 532,
+    }
+
+    local test<const> = {
+    --                            10
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1,
+        1, 1, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, --10
+        1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    }
+
+    local function is_in_rect(x, y)
+        return  rect[1] <= x and x < rect[3] and 
+                rect[2] <= y and y < rect[4]
+    end
+
     local indices = {}
-    for i=1, math.random(1, qs_const.tile_pre_trunk_line) do
-        for j = 1, math.random(1, qs_const.tile_pre_trunk_line) do
-            local tileidx = (i-1) * qs_const.tile_pre_trunk_line + j
-            local numlayer = math.random(1, 2)
-            local offsetlayer = 1
-            local layers = {}
-            for l=1, numlayer do
-                layers[#layers+1] = {layeridx = offsetlayer+l, maskidx=math.random(1, 6)}
+    local c = qs_const.tile_pre_trunk_line
+    for i=1, c do
+        for j=1, c do
+            local tileidx = (i-1) * c + j
+            if is_in_rect(i, j) then
+                local w, h = rect[3] - rect[1], rect[4] - rect[2]
+                local testidx = (i-rect[1]) * w + j-rect[2]
+                indices[tileidx] = test[testidx]
+            else
+                indices[tileidx] = 1
             end
-            indices[tileidx] = layers
         end
     end
-    
+
     return indices
 end
 
 local tile_indices = setmetatable({}, {__index=function(self, trunkid)
-    return generate_quad_uv_index()
+    return generate_quad_uv_index2()
     -- local t = {
     --     covers = c,
     --     masks = build_mark_indices(c),
