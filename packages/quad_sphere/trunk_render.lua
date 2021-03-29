@@ -1,3 +1,4 @@
+local const = require "tools.prefab_editor.gizmo.const"
 local ecs = ...
 local world = ecs.world
 
@@ -11,6 +12,141 @@ local ies = world:interface "ant.scene|ientity_state"
 local itr = ecs.interface "itrunk_render"
 
 local surface_point = ctrunkid.surface_point
+
+local mask_names = {
+    U = 1, -- like U
+    C = 2, -- circle/center
+    S = 3, -- /, slope, triangle
+    L = 4, -- line
+    B = 5, -- bight, corner
+    F = 6, -- Full
+}
+
+local halfpi<const>, onehalfpi<const>, twopi<const> = math.pi * 0.5, math.pi * 1.5, math.pi*2
+local function get_rotate_name(n, rotateidx)
+    if 0<= rotateidx and rotateidx <= 3 then
+        return mask_names[n] + 6 * rotateidx
+    end
+    error("invalid rotateidx:", rotateidx)
+end
+local mn<const> = mask_names
+
+function itr.build_tile_indices(trunk_covers, backgroundidx)
+    local covers
+    for tileidx=1, constant.tiles_pre_trunk do
+        local layeridx = trunk_covers[tileidx]
+        local l = covers[layeridx]
+        if l == nil then
+            l = {}
+            covers[layeridx] = l
+        end
+
+        l[#l+1] = tileidx
+    end
+
+    local masks = {}
+    for layeridx, l in ipairs(covers) do
+        if layeridx ~= backgroundidx then
+            masks[layeridx] = itr.build_mask_uv(l)
+        end
+    end
+
+    return {
+        covers = covers,
+        masks = masks,
+    }
+end
+
+function itr.build_mask_uv(covers)
+    if #covers == 0 then
+        return
+    end
+    
+    local c = constant.tile_pre_trunk_line
+    local indices = {}
+    local layeridx = covers[1]
+    -- range from [2, c-1] for skip edge case
+    for j=2, c-1 do
+        for i=2, c-1 do
+            local nl = (j-1) * c
+            local tileidx = nl + i
+            if covers[tileidx] == nil then
+                local last_l = (j-2) * c
+                local next_l = j * c
+    
+                local neighbors = {left=tileidx-1, right=tileidx+1, up=last_l+i, down=next_l+i}    --left, right, up, down
+                local neighbor_covers = {}
+
+                local covercount = 0
+                for k, n in pairs(neighbors) do
+                    if covers[n] then
+                        neighbor_covers[k] = true
+                        covercount = covercount+1
+                    end
+                end
+
+                local item = indices[tileidx]
+                if item == nil and covercount > 0 then
+                    item = {}
+                    indices[tileidx] = item
+                end
+
+                if covercount == 4 then
+                    item[#item+1] = {layeridx = layeridx, maskidx=mask_names.C}
+                elseif covercount == 3 then
+                    local function find_rotate_idx()
+                        local idxdirname<const> = {up=0, right=1, down=2, left=3,}
+                        local dirnameidx<const> = {"up", "right", "down", "left"}
+                        for _, n in ipairs(dirnameidx) do
+                            if neighbor_covers[n] == nil then
+                                return idxdirname[n]
+                            end
+                        end
+                        error("can not be here")
+                    end
+
+                    item[#item+1] = {layeridx=layeridx, maskidx=get_rotate_name('U', find_rotate_idx())}
+                elseif covercount == 2 then
+                    if neighbor_covers.left and neighbor_covers.right then
+                        item[#item+1] = {layeridx=layeridx, maskidx=get_rotate_name("L", 2)}
+                        item[#item+1] = {layeridx=layeridx, maskidx=mask_names.L}
+                    elseif neighbor_covers.up and neighbor_covers.down then
+                        item[#item+1] = {layeridx=layeridx, maskidx=get_rotate_name("L", 1)}
+                        item[#item+1] = {layeridx=layeridx, maskidx=get_rotate_name("L", 3)}
+                    elseif neighbor_covers.up and neighbor_covers.right then
+                        item[#item+1] = {layeridx=layeridx, maskidx=get_rotate_name("T", 3)}
+                    elseif neighbor_covers.right and neighbor_covers.down then
+                        item[#item+1] = {layeridx=layeridx, maskidx=mask_names.T}
+                    elseif neighbor_covers.down and neighbor_covers.left then
+                        item[#item+1] = {layeridx=layeridx, maskidx=get_rotate_name("T", 1)}
+                    elseif neighbor_covers.left and neighbor_covers.up then
+                        item[#item+1] = {layeridx=layeridx, maskidx=get_rotate_name("T", 2)}
+                    else
+                        error("invalid")
+                    end
+                elseif covercount == 1 then
+                    local nameidx<const> = {left=2, right=0, up=3, down=1}
+                    local k = next(neighbor_covers)
+                    item[#item+1] = {layeridx=layeridx, maskidx=get_rotate_name("L", nameidx[k])}
+                else
+                    assert(covercount == 0)
+                    local corner_tiles<const> = {
+                        tileidx-c-1, tileidx-c+1,   -- upleft, upright
+                        tileidx+c-1, tileidx+c+1,   -- downleft, downright
+                    }
+                    
+                    for idx, ctileidx in ipairs(corner_tiles) do
+                        if covers[ctileidx] then
+                            item[#item+1] = {layeridx=layeridx, maskidx=get_rotate_name("B", idx)}
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return indices
+end
 
 function itr.reset_trunk(eid, trunkid)
     local e = world[eid]

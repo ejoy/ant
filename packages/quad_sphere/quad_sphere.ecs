@@ -22,3 +22,7 @@ policy "quad_sphere"
     .require_transform "ant.general|init_transform"
     .component "quad_sphere"
     .component "transform"
+
+action "quad_sphere"
+    .implement "quad_sphere.lua"
+    .method "init"

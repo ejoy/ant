@@ -27,7 +27,7 @@ local function cube_vertices(radius)
     }
 end
 
-local function create_trunk_entity(qseid)
+local function create_trunk_entity(qseid, material)
     return world:create_entity{
         policy = {
             "ant.quad_sphere|trunk",
@@ -38,7 +38,7 @@ local function create_trunk_entity(qseid)
             transform = {},
             state = 0,
             scene_entity = true,
-            material = "/pkg/ant.resources/materials/quad_sphere/quad_sphere.material",
+            material = material,
         },
         action = {
             mount       = qseid,
@@ -116,6 +116,38 @@ local function build_uv_ref(layers)
     }
 end
 
+-- max visible trunk is 3 when in trunk corner, and cache 3 trunk
+local max_trunk_entity_num<const>   = 6
+local function reset_trunk_entity_pool(qseid, layernum, pool)
+    pool.n = 0
+    pool.ref = {}
+    if #pool == 0 then
+        for i=1, max_trunk_entity_num do
+            if pool[i] == nil then
+                local covers = {}
+                local masks = {}
+    
+                for l=1, layernum do
+                    covers[l] = create_trunk_entity(qseid, "/pkg/ant.resources/materials/quad_sphere/quad_sphere.material")
+                    masks[l] = create_trunk_entity(qseid, "/pkg/ant.resources/materials/quad_sphere/quad_sphere_mask.material")
+                end
+                pool[i] = {
+                    covers = covers,
+                    masks = masks,
+                }
+            end
+        end
+    end
+end
+
+local qs_a = ecs.action "quad_sphere"
+function qs_a.init(prefab, idx, eid)
+    local e = world[eid]
+    local qs = e._quad_sphere
+    local layers = qs.layers.color
+    reset_trunk_entity_pool(eid, #layers, qs.trunk_entity_pool)
+end
+
 local qst = ecs.transform "quad_sphere_transform"
 function qst.process_entity(e)
     local qs = e.quad_sphere
@@ -172,8 +204,6 @@ function qst.process_entity(e)
         {vertices.trn, vertices.trf, vertices.brf, vertices.brn}, --right
     }
 
-    local trunk_entity_pool = {}
-
     e._quad_sphere = {
         num_trunk       = nt,
         inv_num_trunk   = inv_num_trunk,
@@ -184,7 +214,7 @@ function qst.process_entity(e)
         proj_trunk_len  = proj_trunk_len,
         proj_tile_len   = proj_trunk_len * constant.inv_tile_pre_trunk_line,
         inscribed_cube  = inscribed_cube,
-        trunk_entity_pool=trunk_entity_pool,
+        trunk_entity_pool={n=0},
         layers          = {
             uv_ref          = build_uv_ref(qs.layers),
             color           = qs.layers.color,
@@ -305,6 +335,17 @@ local function find_visible_trunks(pos, qs)
     return visible_trunks
 end
 
+local function cull_trunks(visible_trunks, cameraeid)
+    return visible_trunks
+    --TODO: need cache trunk aabb, and find the trunk aabb for cull
+    -- local vp = world[cameraeid]._rendercache.viewprojmat
+    -- local frustum_planes = math3d.frustum_planes(vp)
+
+    -- local vt = {}
+    -- math3d.frustum_intersect_aabb_list(frustum_planes, visible_trunks, vt)
+    -- return vt
+end
+
 local function find_list(l, v)
     for idx, vv in ipairs(l) do 
         if vv == v then
@@ -315,56 +356,37 @@ end
 
 local function update_visible_trunks(visible_trunks, qs, qseid)
     local update_trunks = {}
-    local layers = qs.layers
-    local numlayer = #layers.color
     local pool = qs.trunk_entity_pool
     local old_visible_trunks = qs.visible_trunks
     for _, trunkid in ipairs(visible_trunks) do
         if find_list(old_visible_trunks, trunkid) == nil then
             update_trunks[#update_trunks+1] = trunkid
-            if pool[trunkid] == nil then
-                local eids = {}
-                for i=1, numlayer do
-                    eids[#eids+1] = create_trunk_entity(qseid)
-                end
-                pool[trunkid] = eids
-            end
+            local idx = pool.n+1
+            pool.ref[trunkid] = idx
+            pool.n = idx
         end
     end
 
     qs.visible_trunks = visible_trunks
     local tile_indices = qs.tile_indices
     for _, trunkid in ipairs(update_trunks) do
-        local eids = pool[trunkid]
-        local indices = tile_indices[trunkid]
-        local covers = indices.covers
-        assert(#covers == constant.tiles_pre_trunk)
-        local masks = indices.masks
+        local trunk_refidx = pool.ref[trunkid]
+        local layers_eids = pool[trunk_refidx]
 
-        for tileidx=1, constant.tiles_pre_trunk do
-            --generate cover tile
-            do
-                local layeridx = covers[tileidx]
-                local eid = eids[layeridx]
-                local le = world[eid]
-                local cover_tiles = le._trunk.cover_tiles
-                cover_tiles[#cover_tiles+1] = {tileidx, layeridx}
-            end
+        local indices = itr.build_tile_indices(tile_indices, trunkid, qs.layers.backgroundidx or 0)
 
-            --generate mask tile
-            local mi = masks[tileidx]
-            if mi then
-                for _, m in ipairs(mi) do
-                    local layeridx = m.layeridx
-                    local le = world[eids[layeridx]]
-                    local cover_tiles = le._trunk.cover_tiles
-                    cover_tiles[#cover_tiles+1] = {tileidx, layeridx, m.maskidx}
-                end
-            end
-        end
+        for layeridx, l in ipairs(indices) do
+            local covereid = layers_eids.covers[layeridx]
+            local ce = world[covereid]
+            ce._trunk.cover_tiles = l.cover
 
-        for _, eid in ipairs(eids) do
-            itr.reset_trunk(eid, trunkid)
+            itr.reset_trunk(covereid, trunkid)
+
+            local maskeid = layers_eids.masks[layeridx]
+            local me = world[maskeid]
+            me._trunk.cover_tiles = l.mask
+
+            itr.reset_trunk(maskeid, trunkid)
         end
     end
 end
@@ -375,8 +397,7 @@ function iquad_sphere.update_visible_trunks(eid, cameraeid)
 
     local pos = math3d.mul(qs.radius, math3d.normalize(iom.get_position(cameraeid)))
 
-    local visible_trunks = find_visible_trunks(pos, qs)
-
+    local visible_trunks = cull_trunks(find_visible_trunks(pos, qs))
     update_visible_trunks(visible_trunks, qs, eid)
 end
 

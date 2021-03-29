@@ -126,7 +126,6 @@ function icc.set_view(targetpos, localpos, radian_ratio)
     
     assert(0 == math3d.dot(cc.forward, targetpos))
     updateview(cc)
-    iqs.update_visible_trunks(cc.qseid, cc.camera_eid)
 end
 
 function icc.set_forward(radian_ratio)
@@ -145,8 +144,6 @@ function icc.move(df, dr)
     cc.targetpos.v = iqs.move(cc.qseid, cc.targetpos, cc.forward, df, dr)
     cc.forward.v = rotate_forward(cc.targetpos, cc.forward_rotate_radian)
     updateview(cc)
-
-    iqs.update_visible_trunks(cc.qseid, cc.camera_eid)
 end
 
 function icc.rotate(delta_radian_ratio)
@@ -245,4 +242,8 @@ function cc:data_changed()
             icc.move(df, dr)
 		end
 	--end
+end
+
+function cc:camera_usage()
+    iqs.update_visible_trunks(icc.quad_sphere(), icc.camera())
 end
