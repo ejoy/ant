@@ -1,0 +1,18 @@
+fx:
+    vs: /pkg/ant.resources/shaders/quad_sphere/vs_quad_sphere.sc
+    fs: /pkg/ant.resources/shaders/quad_sphere/fs_quad_sphere.sc
+
+properties:
+    s_color:
+        stage: 0
+        texture: /pkg/ant.resources/materials/quad_sphere/color.texture
+    s_weight:
+        stage: 1
+        texture: /pkg/ant.resources/materials/quad_sphere/weight.texture
+state:
+  ALPHA_REF:    0
+  CULL:         NONE
+  DEPTH_TEST:   LESS
+  MSAA:         true
+  WRITE_MASK:   RGBAZ
+  BLEND:        ALPHA

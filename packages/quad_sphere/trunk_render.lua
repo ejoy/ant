@@ -55,6 +55,10 @@ function itr.build_tile_indices(tile_indices, trunkid, backgroundidx)
     return indices
 end
 
+local function pack_item(tileidx, maskidx)
+    return tileidx|(maskidx << 16)
+end
+
 function itr.build_mask_uv(layeridx, covers)
     if #covers == 0 then
         return
@@ -89,7 +93,7 @@ function itr.build_mask_uv(layeridx, covers)
                 end
 
                 if covercount == 4 then
-                    item[#item+1] = {layeridx = layeridx, maskidx=mask_names.C}
+                    item[#item+1] = pack_item(tileidx, mask_names.C)
                 elseif covercount == 3 then
                     local function find_rotate_idx()
                         local idxdirname<const> = {up=0, right=1, down=2, left=3,}
@@ -102,29 +106,29 @@ function itr.build_mask_uv(layeridx, covers)
                         error("can not be here")
                     end
 
-                    item[#item+1] = {layeridx=layeridx, maskidx=get_rotate_name('U', find_rotate_idx())}
+                    item[#item+1] = pack_item(tileidx, get_rotate_name('U', find_rotate_idx()))
                 elseif covercount == 2 then
                     if neighbor_covers.left and neighbor_covers.right then
-                        item[#item+1] = {layeridx=layeridx, maskidx=get_rotate_name("L", 2)}
-                        item[#item+1] = {layeridx=layeridx, maskidx=mask_names.L}
+                        item[#item+1] = pack_item(tileidx,  get_rotate_name("L", 2))
+                        item[#item+1] = pack_item(tileidx,  mask_names.L)
                     elseif neighbor_covers.up and neighbor_covers.down then
-                        item[#item+1] = {layeridx=layeridx, maskidx=get_rotate_name("L", 1)}
-                        item[#item+1] = {layeridx=layeridx, maskidx=get_rotate_name("L", 3)}
+                        item[#item+1] = pack_item(tileidx,  get_rotate_name("L", 1))
+                        item[#item+1] = pack_item(tileidx,  get_rotate_name("L", 3))
                     elseif neighbor_covers.up and neighbor_covers.right then
-                        item[#item+1] = {layeridx=layeridx, maskidx=get_rotate_name("T", 3)}
+                        item[#item+1] = pack_item(tileidx,  get_rotate_name("T", 3))
                     elseif neighbor_covers.right and neighbor_covers.down then
-                        item[#item+1] = {layeridx=layeridx, maskidx=mask_names.T}
+                        item[#item+1] = pack_item(tileidx,  mask_names.T)
                     elseif neighbor_covers.down and neighbor_covers.left then
-                        item[#item+1] = {layeridx=layeridx, maskidx=get_rotate_name("T", 1)}
+                        item[#item+1] = pack_item(tileidx,  get_rotate_name("T", 1))
                     elseif neighbor_covers.left and neighbor_covers.up then
-                        item[#item+1] = {layeridx=layeridx, maskidx=get_rotate_name("T", 2)}
+                        item[#item+1] = pack_item(tileidx,  get_rotate_name("T", 2))
                     else
                         error("invalid")
                     end
                 elseif covercount == 1 then
                     local nameidx<const> = {left=2, right=0, up=3, down=1}
                     local k = next(neighbor_covers)
-                    item[#item+1] = {layeridx=layeridx, maskidx=get_rotate_name("L", nameidx[k])}
+                    item[#item+1] = pack_item(tileidx,  get_rotate_name("L", nameidx[k]))
                 else
                     assert(covercount == 0)
                     local corner_tiles<const> = {
@@ -134,7 +138,7 @@ function itr.build_mask_uv(layeridx, covers)
                     
                     for idx, ctileidx in ipairs(corner_tiles) do
                         if covers[ctileidx] then
-                            item[#item+1] = {layeridx=layeridx, maskidx=get_rotate_name("B", idx)}
+                            item[#item+1] = pack_item(tileidx,  get_rotate_name("B", idx))
                         end
                     end
                 end
@@ -170,12 +174,14 @@ function itr.reset_trunk(eid, trunkid)
         return p
     end
 
-    local cover_tiles = e._trunk.cover_tiles
-
+    local trunk = e._trunk
+    local cover_tiles = trunk.cover_tiles
+    local layeridx = trunk.layeridx
     local uvref = qs.layers.uv_ref
     local mc, cc = uvref.mask_uv_coords, uvref.color_uv_coords
-    for _, ct in ipairs(cover_tiles) do
-        local tileidx, layeridx, maskidx = ct[1], ct[2], ct[3]
+    for _, idx in ipairs(cover_tiles) do
+        local tileidx = idx & 0x0000ffff
+        local maskidx = (idx & 0xffff0000) >> 16
         local ih, iv = tileidx % tptl, tileidx // tptl
         for vidx, p in ipairs{
             get_pt(ih-1, iv-1),

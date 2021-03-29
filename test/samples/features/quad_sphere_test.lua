@@ -32,8 +32,8 @@ end
 
 local function generate_quad_uv_index2()
     local rect<const> = {
-        512, 512,
-        532, 532,
+        2, 5,
+        22, 25,
     }
 
     local test<const> = {
@@ -72,8 +72,8 @@ local function generate_quad_uv_index2()
             local tileidx = (i-1) * c + j
             if is_in_rect(i, j) then
                 local w, h = rect[3] - rect[1], rect[4] - rect[2]
-                local testidx = (i-rect[1]) * w + j-rect[2]
-                indices[tileidx] = test[testidx]
+                local testidx = (i-rect[1]) * w + j-rect[2]+1
+                indices[tileidx] = assert(test[testidx])
             else
                 indices[tileidx] = 1
             end

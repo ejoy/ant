@@ -117,7 +117,7 @@ local function build_uv_ref(layers)
 end
 
 -- max visible trunk is 3 when in trunk corner, and cache 3 trunk
-local max_trunk_entity_num<const>   = 6
+local max_trunk_entity_num<const>   = 25
 local function reset_trunk_entity_pool(qseid, layernum, pool)
     pool.n = 0
     pool.ref = {}
@@ -141,7 +141,8 @@ local function reset_trunk_entity_pool(qseid, layernum, pool)
 end
 
 local qs_a = ecs.action "quad_sphere"
-function qs_a.init(prefab, idx, eid)
+function qs_a.init(prefab, idx, param)
+    local eid = prefab[idx]
     local e = world[eid]
     local qs = e._quad_sphere
     local layers = qs.layers.color
@@ -242,6 +243,9 @@ function iquad_sphere.create(name, numtrunk, radius, layers, tile_indices)
                 tile_indices= tile_indices,
             },
             name = name or "",
+        },
+        action = {
+            quad_sphere = {}
         }
     }
 end
@@ -378,15 +382,19 @@ local function update_visible_trunks(visible_trunks, qs, qseid)
         for layeridx, l in ipairs(indices) do
             local covereid = layers_eids.covers[layeridx]
             local ce = world[covereid]
-            ce._trunk.cover_tiles = l.cover
-
+            ce._trunk.cover_tiles = l.covers
+            ce._trunk.layeridx = layeridx
             itr.reset_trunk(covereid, trunkid)
 
-            local maskeid = layers_eids.masks[layeridx]
-            local me = world[maskeid]
-            me._trunk.cover_tiles = l.mask
-
-            itr.reset_trunk(maskeid, trunkid)
+            local m = l.mask
+            if m then
+                local maskeid = layers_eids.masks[layeridx]
+                local me = world[maskeid]
+                me._trunk.cover_tiles = l.mask
+                me._trunk.layeridx = layeridx
+                me._trunk.mask = true
+                itr.reset_trunk(maskeid, trunkid)
+            end
         end
     end
 end
