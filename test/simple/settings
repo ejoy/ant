@@ -37,7 +37,7 @@ graphic:
     type: inv_z
     bias: 0.003
     normal_offset: 0
-    color: {0.05, 0.05, 0.05, 1}
+    color: {0.0, 0.0, 0.0, 1}
     stabilize: true
     split_lamada: 1
     split_num: 4
