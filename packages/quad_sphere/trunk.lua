@@ -23,11 +23,12 @@ function tmt.process_entity(e)
     local rc = e._rendercache
     --rc.ib = constant.trunk_ib.buffer
     local vn = constant.tiles_pre_trunk * 4
+    local l = e.ismask and vblayout.cover or vblayout.mask
     rc.vb = {
         start = 0,
         num = vn,
         handles = {
-            bgfx.create_dynamic_vertex_buffer(vn, vblayout.handle, "a"),
+            bgfx.create_dynamic_vertex_buffer(vn, l.handle, "a"),
         }
     }
 end

@@ -9,6 +9,7 @@ local math3d    = require "math3d"
 local iquad_sphere = ecs.interface "iquad_sphere"
 local iom   = world:interface "ant.objcontroller|obj_motion"
 local itr   = world:interface "ant.quad_sphere|itrunk_render"
+local ies   = world:interface "ant.scene|ientity_state"
 
 local ctrunkid      = require "trunkid_class"
 local constant      = require "constant"
@@ -27,7 +28,7 @@ local function cube_vertices(radius)
     }
 end
 
-local function create_trunk_entity(qseid, material)
+local function create_trunk_entity(qseid, material, ismask)
     return world:create_entity{
         policy = {
             "ant.quad_sphere|trunk",
@@ -39,6 +40,7 @@ local function create_trunk_entity(qseid, material)
             state = 0,
             scene_entity = true,
             material = material,
+            ismask = ismask,
         },
         action = {
             mount       = qseid,
@@ -124,17 +126,14 @@ local function reset_trunk_entity_pool(qseid, layernum, pool)
     if #pool == 0 then
         for i=1, max_trunk_entity_num do
             if pool[i] == nil then
-                local covers = {}
-                local masks = {}
-    
+                local layers = {}
                 for l=1, layernum do
-                    covers[l] = create_trunk_entity(qseid, "/pkg/ant.resources/materials/quad_sphere/quad_sphere.material")
-                    masks[l] = create_trunk_entity(qseid, "/pkg/ant.resources/materials/quad_sphere/quad_sphere_mask.material")
+                    layers[l] = {
+                        cover = create_trunk_entity(qseid, "/pkg/ant.resources/materials/quad_sphere/quad_sphere.material"),
+                        mask = create_trunk_entity(qseid, "/pkg/ant.resources/materials/quad_sphere/quad_sphere_mask.material")
+                    }
                 end
-                pool[i] = {
-                    covers = covers,
-                    masks = masks,
-                }
+                pool[i] = layers
             end
         end
     end
@@ -358,18 +357,51 @@ local function find_list(l, v)
     end
 end
 
+local function find_list_different(l1, l2)
+    local ml2 = {}
+    for _, v in ipairs(l2) do
+        ml2[v] = true
+    end
+
+    local ll1 = {}
+    for _, v in ipairs(l1) do
+        if ml2[v] then
+            ml2[v] = nil
+        else
+            ll1[#ll1+1] = v
+        end
+    end
+
+    local ll2 = {}
+    for k in pairs(ml2) do
+        ll2[#ll2+1] = k
+    end
+
+    return ll1, ll2
+end
+
 local function update_visible_trunks(visible_trunks, qs)
     local update_trunks = {}
     local pool = qs.trunk_entity_pool
     local old_visible_trunks = qs.visible_trunks
-    for _, trunkid in ipairs(visible_trunks) do
-        if find_list(old_visible_trunks, trunkid) == nil then
-            update_trunks[#update_trunks+1] = trunkid
+    if pool.n == 0 then
+        update_trunks = visible_trunks
+        for _, tid in ipairs(visible_trunks) do
             local idx = pool.n+1
-            pool.ref[trunkid] = idx
+            pool.ref[tid] = idx
             pool.n = idx
         end
+    else
+        local remove_trunks
+        remove_trunks, update_trunks = find_list_different(old_visible_trunks, visible_trunks)
+        assert(remove_trunks == #update_trunks)
+        for idx, tid in ipairs(update_trunks) do
+            local old_tid = remove_trunks[idx]
+            pool.ref[tid] = pool.ref[old_tid]
+            pool.ref[old_tid] = nil
+        end
     end
+
 
     qs.visible_trunks = visible_trunks
     local tile_indices = qs.tile_indices
@@ -380,19 +412,14 @@ local function update_visible_trunks(visible_trunks, qs)
         local indices = itr.build_tile_indices(tile_indices, trunkid, qs.layers.backgroundidx)
 
         for layeridx, l in ipairs(indices) do
-            local covereid = layers_eids.covers[layeridx]
-            local ce = world[covereid]
-            ce._trunk.cover_tiles = l.covers
-            ce._trunk.layeridx = layeridx
-            itr.reset_trunk(covereid, trunkid)
+            local layer = layers_eids[layeridx]
+            itr.reset_trunk(layer.cover, trunkid, layeridx, l.covers)
 
             local m = l.mask
             if m then
-                local maskeid = layers_eids.masks[layeridx]
-                local me = world[maskeid]
-                me._trunk.cover_tiles = l.mask
-                me._trunk.layeridx = layeridx
-                itr.reset_trunk(maskeid, trunkid)
+                itr.reset_trunk(layer.mask, trunkid, layeridx, l.masks)
+            else
+                ies.set_state(layer.mask, "visible", false)
             end
         end
     end

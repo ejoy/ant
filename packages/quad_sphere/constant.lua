@@ -100,7 +100,10 @@ local c <const> = {
         line_indices        = trunk_line_indices,
         buffer              = create_trunk_ib(),
     },
-    vb_layout               = declmgr.get "p3|t20|t21",
+    vb_layout               = {
+        cover = declmgr.get "p3|t20",
+        mask = declmgr.get "p3|t20|t21",
+    },
     face_index              = face_index,
     _DEBUG                  = true,
 }

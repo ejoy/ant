@@ -149,12 +149,19 @@ function itr.build_mask_indices(covers)
     return indices
 end
 
-function itr.reset_trunk(eid, trunkid)
+function itr.reset_trunk(eid, trunkid, layeridx, cover_tiles)
     local e = world[eid]
     local qseid = e.parent
     local qs = assert(world[qseid])._quad_sphere
 
     ies.set_state(eid, "visible", true)
+
+    local trunk = e._trunk
+    trunk.cover_tiles = cover_tiles
+    trunk.layeridx = layeridx
+    trunk.trunkid = trunkid
+
+    local ismask = e.ismask
 
     local radius    = qs.radius
     local hd, vd, basept = ctrunkid(trunkid, qs):tile_delta(constant.inv_tile_pre_trunk_line)
@@ -174,9 +181,6 @@ function itr.reset_trunk(eid, trunkid)
         return p
     end
 
-    local trunk = e._trunk
-    local cover_tiles = trunk.cover_tiles
-    local layeridx = trunk.layeridx
     local uvref = qs.layers.uv_ref
     local mc, cc = uvref.mask_uv_coords, uvref.color_uv_coords
     for _, idx in ipairs(cover_tiles) do
@@ -194,18 +198,15 @@ function itr.reset_trunk(eid, trunkid)
             vertices[#vertices+1] = p[3]
 
             local function set_uvidx(idx, coords)
-                local uvidx
-                if idx then
-                    uvidx = (idx-1)*8+(vidx-1)*2
-                else
-                    uvidx = coords.default_uvidx or 0
-                end
+                local uvidx = (idx-1)*8+(vidx-1)*2
                 vertices[#vertices+1] = coords[uvidx+1]
                 vertices[#vertices+1] = coords[uvidx+2]
             end
 
             set_uvidx(layeridx, cc)
-            set_uvidx(maskidx, mc)
+            if ismask then
+                set_uvidx(maskidx, mc)
+            end
         end
     end
 
@@ -236,5 +237,7 @@ function itr.reset_trunk(eid, trunkid)
     rc.aabb = e._bounding.aabb
     rc.ib = constant.trunk_ib.buffer
     local vb = rc.vb
-    bgfx.update(vb.handles[1], 0, bgfx.memory_buffer("fffffff", vertices), constant.vb_layout.handle)
+    local bufdesc = ismask and "fffff" or "fffffff" --p3|t20 or p3|t20|t21
+    local layout = ismask and constant.vb_layout.mask or constant.vb_layout.cover
+    bgfx.update(vb.handles[1], 0, bgfx.memory_buffer(bufdesc, vertices), layout.handle)
 end
