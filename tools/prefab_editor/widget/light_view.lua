@@ -47,7 +47,6 @@ end
 
 function LightView:on_set_color(...)
     ilight.set_color(self.eid, ...)
-    ilight.update_light_buffers()
 end
 
 function LightView:on_get_color()
@@ -57,7 +56,6 @@ end
 function LightView:on_set_intensity(...)
     ilight.set_intensity(self.eid, ...)
     light_gizmo.update_gizmo()
-    ilight.update_light_buffers()
 end
 
 function LightView:on_get_intensity()
@@ -67,7 +65,6 @@ end
 function LightView:on_set_range(value)
     ilight.set_range(self.eid, value)
     light_gizmo.update_gizmo()
-    ilight.update_light_buffers()
 end
 
 function LightView:on_get_range()
@@ -77,7 +74,6 @@ end
 function LightView:on_set_radian(value)
     ilight.set_radian(self.eid, math.rad(value))
     light_gizmo.update_gizmo()
-    ilight.update_light_buffers()
 end
 
 function LightView:on_get_radian()

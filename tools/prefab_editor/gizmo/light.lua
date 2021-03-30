@@ -64,7 +64,6 @@ function m.update()
     iom.set_position(m.current_gizmo.root, iom.get_position(m.current_light))
     iom.set_rotation(m.current_gizmo.root, iom.get_rotation(m.current_light))
     iom.set_position(m.billboard[m.current_light], iom.get_position(m.current_light))
-    ilight.update_light_buffers()
 end
 
 function m.show(b)
@@ -219,7 +218,6 @@ end
 function m.on_remove_light(eid)
     if world[eid].light_type == "directional" then
         ilight.active_directional_light(nil)
-        ilight.update_light_buffers()
     end
     world:remove_entity(m.billboard[eid])
     m.billboard[eid] = nil

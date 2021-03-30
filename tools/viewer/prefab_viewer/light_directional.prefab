@@ -11,4 +11,5 @@ data:
   color: {1, 1, 1, 1}
   intensity: 2
   light_type: directional
+  state: 0x01
   name: directional_light

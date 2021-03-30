@@ -10,6 +10,7 @@ data:
   range: 180
   light_type: point
   name: point_light
+  state: 0x01
 ---
 policy:
     ant.render|render

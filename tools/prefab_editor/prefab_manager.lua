@@ -295,7 +295,6 @@ function m:create(what, config)
             })
             self:add_entity(newlight[1], self.root, newlight)
             create_light_billboard(newlight[1])
-            ilight.update_light_buffers()
         end
     elseif what == "collider" then
         local new_entity, temp = self:create_collider(config)

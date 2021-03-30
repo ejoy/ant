@@ -106,6 +106,7 @@ local cluster_buffers = {
 
 local function num_light()
     local n = 0
+    --TODO: world should provide a method to get the number of entities with component type
     for _, l in world:each "light_type" do
         n = n + 1
     end
@@ -158,22 +159,18 @@ end
 local cr_camera_mb
 local camera_frustum_mb
 local light_mb = world:sub{"component_register", "light_type"}
-local light_change_mb
 
 local function check_init()
-    if cluster_light_cull_fx == nil and cluster_aabb_fx == nil then
-        if create_cluster_buffers() then
-            cluster_aabb_fx = assetmgr.load_fx{
-                cs = "/pkg/ant.resources/shaders/compute/cs_cluster_aabb.sc",
-                setting = {CLUSTER_BUILD=1},
-            }
-            cluster_light_cull_fx = assetmgr.load_fx{
-                cs = "/pkg/ant.resources/shaders/compute/cs_lightcull.sc",
-                setting = {CLUSTER_PREPROCESS=1}
-            }
-            build_cluster_aabb_struct()
-            ilight.update_light_buffers()
-        end
+    if create_cluster_buffers() then
+        cluster_aabb_fx = assetmgr.load_fx{
+            cs = "/pkg/ant.resources/shaders/compute/cs_cluster_aabb.sc",
+            setting = {CLUSTER_BUILD=1},
+        }
+        cluster_light_cull_fx = assetmgr.load_fx{
+            cs = "/pkg/ant.resources/shaders/compute/cs_lightcull.sc",
+            setting = {CLUSTER_PREPROCESS=1}
+        }
+        build_cluster_aabb_struct()
     end
 end
 
@@ -187,8 +184,11 @@ function cfs:data_changed()
     if not ilight.use_cluster_shading() then
         return
     end
-    for _ in light_mb:unpack() do
-        check_init()
+
+    if cluster_light_cull_fx == nil and cluster_aabb_fx == nil then
+        for _ in light_mb:unpack() do
+            check_init()
+        end
     end
 
     local mq = world:singleton_entity "main_queue"

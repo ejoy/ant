@@ -12,3 +12,4 @@ data:
   intensity: 2
   light_type: directional
   name: directional_light
+  state: 0x01

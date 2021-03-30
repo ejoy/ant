@@ -20,19 +20,20 @@ function lt.process_entity(e)
 		error("spot light need define 'radian' or 'range' attributes")
 	elseif t == "directional" then
 		range = math.maxinteger
-		-- assert(t == "directional")
-		-- if range == 0 then
-		-- 	range = math.maxinteger
-		-- else
-		-- 	assert(range > 10000 * 10000, "need very large range for directional light")
-		-- end
 	end
 
+	local r = e.radian
+	local inner, outter
+	if r then
+		inner, outter = math.cos(r*0.5), math.cos((e.outter_radian or r * 1.1)*0.5)
+	end
 	e._light = {
 		color		= e.color or {1, 1, 1, 1},
 		intensity	= e.intensity or 2,
 		range		= range,
 		radian		= e.radian,
+		inner_cutoff= inner,
+		outter_cutoff=outter,
 	}
 end
 
@@ -53,6 +54,8 @@ function ilight.create(light)
 			intensity	= light.intensity or 2,
 			range		= light.range,
 			radian		= light.radian,
+			state		= ies.create_state "visible",
+			motion_type = light.motion_type or "dynamic",
 		}
 	}
 end
@@ -70,7 +73,7 @@ function ilight.set_color(eid, color)
 	local c = l.color
 	for i=1, 4 do c[i] = color[i] end
 
-	world:pub{"component_changed", "light", eid}
+	world:pub{"component_changed", "light", eid, "color"}
 end
 
 function ilight.intensity(eid)
@@ -79,7 +82,7 @@ end
 
 function ilight.set_intensity(eid, i)
 	world[eid]._light.intensity = i
-	world:pub{"component_changed", "light", eid}
+	world:pub{"component_changed", "light", eid, "intensity"}
 end
 
 function ilight.range(eid)
@@ -93,7 +96,7 @@ function ilight.set_range(eid, r)
 	end
 
 	e._light.range = r
-	world:pub{"component_changed", "light", eid}
+	world:pub{"component_changed", "light", eid, "range"}
 end
 
 function ilight.radian(eid)
@@ -107,22 +110,25 @@ function ilight.set_radian(eid, r)
 	end
 
 	e._light.radian = r
-	world:pub{"component_changed", "light", eid}
+	e._light.inner_cutoff = math.cos(r*0.5)
+	world:pub{"component_changed", "light", eid, "radian"}
 end
 
 function ilight.inner_cutoff(eid)
-	local l = world[eid]._light
-	local r = l.radian
-	return r and math.cos(r * 0.5) or 0
+	return world[eid]._light.inner_cutoff
 end
 
 function ilight.outter_cutoff(eid)
+	return world[eid]._light.outter_cutoff
+end
+
+function ilight.set_outter_cutoff(eid, outter_radian)
 	local l = world[eid]._light
-	local r = l.outter_radian
-	if r == nil and l.radian then
-		r = l.radian * 1.1
+	if l.radian > outter_radian then
+		error("invalid outter radian")
 	end
-	return r and math.cos(r * 0.5) or 0
+	l.outter_cutoff = math.cos(outter_radian*0.5)
+	world:pub{"component_changed", "light", eid, "outter_cutoff"}
 end
 
 local active_dl
@@ -164,7 +170,7 @@ function ilight.create_light_buffers()
 				d[1], d[2], d[3], enable,
 				c[1], c[2], c[3], c[4],
 				lighttypes[t], ilight.intensity(leid),
-				ilight.inner_cutoff(leid),	ilight.outter_cutoff(leid))
+				ilight.inner_cutoff(leid) or 0,	ilight.outter_cutoff(leid) or 0)
 		end
 	end
     return lights
@@ -185,7 +191,13 @@ function ilight.update_properties(system_properties)
 	end
 end
 
-function ilight.update_light_buffers()
+local defaultbuffer<const> = ('f'):rep(16):pack(
+	0, 0, 0, 0,
+	0, 0, 0, 0,
+	0, 0, 0, 0,
+	0, 0, 0, 0)
+
+local function update_light_buffers()
 	local lb
 	local lights = ilight.create_light_buffers()
 
@@ -200,7 +212,11 @@ function ilight.update_light_buffers()
 		num_light = #lights
 	end
 
-	bgfx.update(lb, 0, bgfx.memory_buffer(table.concat(lights, "")))
+	if #lights == 0 then
+		bgfx.update(lb, 0, defaultbuffer)
+	else
+		bgfx.update(lb, 0, bgfx.memory_buffer(table.concat(lights, "")))
+	end
 end
 
 function ilight.set_light_buffers()
@@ -222,6 +238,46 @@ function mdl.init(prefab, idx, value)
 end
 
 local lightsys = ecs.system "light_system"
-function lightsys:data_changed()
+local light_trans_mb = world:sub{"component_changed", "transform"}
+local light_comp_mb = world:sub{"component_changed", "light"}
+local light_register_mb = world:sub{"component_register", "light_type"}
+local light_remove_mb = world:sub{"entity_removed"}
 
+function lightsys:data_changed()
+	local changed = false
+	for msg in light_trans_mb:each() do
+		local le = world[msg[3]]
+		if le and le.light_type then
+			changed = true
+			break
+		end
+	end
+
+	if not changed then
+		for _ in light_comp_mb:each() do
+			changed = true
+			break
+		end
+	end
+
+	if not changed then
+		for _ in light_register_mb:each() do
+			changed = true
+			break
+		end
+	end
+
+	if not changed then
+		for msg in light_remove_mb:each() do
+			local e = msg[3]
+			if e.light_type then
+				changed = true
+				break
+			end
+		end
+	end
+
+	if changed then
+		update_light_buffers()
+	end
 end
