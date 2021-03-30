@@ -349,14 +349,6 @@ local function cull_trunks(visible_trunks, cameraeid)
     -- return vt
 end
 
-local function find_list(l, v)
-    for idx, vv in ipairs(l) do 
-        if vv == v then
-            return idx
-        end
-    end
-end
-
 local function find_list_different(l1, l2)
     local ml2 = {}
     for _, v in ipairs(l2) do
@@ -394,7 +386,7 @@ local function update_visible_trunks(visible_trunks, qs)
     else
         local remove_trunks
         remove_trunks, update_trunks = find_list_different(old_visible_trunks, visible_trunks)
-        assert(remove_trunks == #update_trunks)
+        assert(#remove_trunks == #update_trunks)
         for idx, tid in ipairs(update_trunks) do
             local old_tid = remove_trunks[idx]
             pool.ref[tid] = pool.ref[old_tid]
@@ -415,9 +407,9 @@ local function update_visible_trunks(visible_trunks, qs)
             local layer = layers_eids[layeridx]
             itr.reset_trunk(layer.cover, trunkid, layeridx, l.covers)
 
-            local m = l.mask
+            local m = l.masks
             if m then
-                itr.reset_trunk(layer.mask, trunkid, layeridx, l.masks)
+                itr.reset_trunk(layer.mask, trunkid, layeridx, m)
             else
                 ies.set_state(layer.mask, "visible", false)
             end

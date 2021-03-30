@@ -48,7 +48,7 @@ function itr.build_tile_indices(tile_indices, trunkid, backgroundidx)
 
     for layeridx, l in pairs(indices) do
         if layeridx ~= backgroundidx then
-            l.marks = itr.build_mask_indices(l.covers)
+            l.masks = itr.build_mask_indices(l.covers)
         end
     end
 
@@ -86,14 +86,8 @@ function itr.build_mask_indices(covers)
                     end
                 end
 
-                local item = indices[tileidx]
-                if item == nil and covercount > 0 then
-                    item = {}
-                    indices[tileidx] = item
-                end
-
                 if covercount == 4 then
-                    item[#item+1] = pack_item(tileidx, mask_names.C)
+                    indices[#indices+1] = pack_item(tileidx, mask_names.C)
                 elseif covercount == 3 then
                     local function find_rotate_idx()
                         local idxdirname<const> = {up=0, right=1, down=2, left=3,}
@@ -106,29 +100,29 @@ function itr.build_mask_indices(covers)
                         error("can not be here")
                     end
 
-                    item[#item+1] = pack_item(tileidx, get_rotate_name('U', find_rotate_idx()))
+                    indices[#indices+1] = pack_item(tileidx, get_rotate_name('U', find_rotate_idx()))
                 elseif covercount == 2 then
                     if neighbor_covers.left and neighbor_covers.right then
-                        item[#item+1] = pack_item(tileidx,  get_rotate_name("L", 2))
-                        item[#item+1] = pack_item(tileidx,  mask_names.L)
+                        indices[#indices+1] = pack_item(tileidx,  get_rotate_name("L", 2))
+                        indices[#indices+1] = pack_item(tileidx,  mask_names.L)
                     elseif neighbor_covers.up and neighbor_covers.down then
-                        item[#item+1] = pack_item(tileidx,  get_rotate_name("L", 1))
-                        item[#item+1] = pack_item(tileidx,  get_rotate_name("L", 3))
+                        indices[#indices+1] = pack_item(tileidx,  get_rotate_name("L", 1))
+                        indices[#indices+1] = pack_item(tileidx,  get_rotate_name("L", 3))
                     elseif neighbor_covers.up and neighbor_covers.right then
-                        item[#item+1] = pack_item(tileidx,  get_rotate_name("T", 3))
+                        indices[#indices+1] = pack_item(tileidx,  get_rotate_name("T", 3))
                     elseif neighbor_covers.right and neighbor_covers.down then
-                        item[#item+1] = pack_item(tileidx,  mask_names.T)
+                        indices[#indices+1] = pack_item(tileidx,  mask_names.T)
                     elseif neighbor_covers.down and neighbor_covers.left then
-                        item[#item+1] = pack_item(tileidx,  get_rotate_name("T", 1))
+                        indices[#indices+1] = pack_item(tileidx,  get_rotate_name("T", 1))
                     elseif neighbor_covers.left and neighbor_covers.up then
-                        item[#item+1] = pack_item(tileidx,  get_rotate_name("T", 2))
+                        indices[#indices+1] = pack_item(tileidx,  get_rotate_name("T", 2))
                     else
                         error("invalid")
                     end
                 elseif covercount == 1 then
                     local nameidx<const> = {left=2, right=0, up=3, down=1}
                     local k = next(neighbor_covers)
-                    item[#item+1] = pack_item(tileidx,  get_rotate_name("L", nameidx[k]))
+                    indices[#indices+1] = pack_item(tileidx,  get_rotate_name("L", nameidx[k]))
                 else
                     assert(covercount == 0)
                     local corner_tiles<const> = {
@@ -138,7 +132,7 @@ function itr.build_mask_indices(covers)
                     
                     for idx, ctileidx in ipairs(corner_tiles) do
                         if covers[ctileidx] then
-                            item[#item+1] = pack_item(tileidx,  get_rotate_name("B", idx))
+                            indices[#indices+1] = pack_item(tileidx,  get_rotate_name("B", idx))
                         end
                     end
                 end

@@ -1,6 +1,6 @@
 local tile_pre_trunk_line<const> = 32
 local vertices_pre_tile_line<const> = tile_pre_trunk_line+1
-local visible_trunk_range<const> = 2
+local visible_trunk_range<const> = 0
 local vertices_per_trunk<const>  = vertices_pre_tile_line * vertices_pre_tile_line
 local tiles_pre_trunk<const>     = tile_pre_trunk_line * tile_pre_trunk_line
 --[[
