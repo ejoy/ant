@@ -358,7 +358,7 @@ local function find_list(l, v)
     end
 end
 
-local function update_visible_trunks(visible_trunks, qs, qseid)
+local function update_visible_trunks(visible_trunks, qs)
     local update_trunks = {}
     local pool = qs.trunk_entity_pool
     local old_visible_trunks = qs.visible_trunks
@@ -377,7 +377,7 @@ local function update_visible_trunks(visible_trunks, qs, qseid)
         local trunk_refidx = pool.ref[trunkid]
         local layers_eids = pool[trunk_refidx]
 
-        local indices = itr.build_tile_indices(tile_indices, trunkid, qs.layers.backgroundidx or 1)
+        local indices = itr.build_tile_indices(tile_indices, trunkid, qs.layers.backgroundidx)
 
         for layeridx, l in ipairs(indices) do
             local covereid = layers_eids.covers[layeridx]
@@ -392,7 +392,6 @@ local function update_visible_trunks(visible_trunks, qs, qseid)
                 local me = world[maskeid]
                 me._trunk.cover_tiles = l.mask
                 me._trunk.layeridx = layeridx
-                me._trunk.mask = true
                 itr.reset_trunk(maskeid, trunkid)
             end
         end
@@ -406,7 +405,7 @@ function iquad_sphere.update_visible_trunks(eid, cameraeid)
     local pos = math3d.mul(qs.radius, math3d.normalize(iom.get_position(cameraeid)))
 
     local visible_trunks = cull_trunks(find_visible_trunks(pos, qs))
-    update_visible_trunks(visible_trunks, qs, eid)
+    update_visible_trunks(visible_trunks, qs)
 end
 
 function iquad_sphere.tangent_matrix(pos)

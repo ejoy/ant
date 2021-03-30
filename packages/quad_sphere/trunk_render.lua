@@ -48,7 +48,7 @@ function itr.build_tile_indices(tile_indices, trunkid, backgroundidx)
 
     for layeridx, l in pairs(indices) do
         if layeridx ~= backgroundidx then
-            l.marks = itr.build_mask_uv(layeridx, l.covers)
+            l.marks = itr.build_mask_indices(l.covers)
         end
     end
 
@@ -59,7 +59,7 @@ local function pack_item(tileidx, maskidx)
     return tileidx|(maskidx << 16)
 end
 
-function itr.build_mask_uv(layeridx, covers)
+function itr.build_mask_indices(covers)
     if #covers == 0 then
         return
     end

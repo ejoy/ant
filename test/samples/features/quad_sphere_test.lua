@@ -15,8 +15,8 @@ local math3d = require "math3d"
 local qspkg = import_package "ant.quad_sphere"
 local qs_const = qspkg.constant
 
-local num_trunk<const> = 5
-local radius<const> = 10
+local num_trunk<const> = 128
+local radius<const> = 6000
 
 --TODO: need remove, just for test
 local function generate_quad_uv_index()
