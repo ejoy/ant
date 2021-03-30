@@ -5,6 +5,7 @@ local declmgr	= require "vertexdecl_mgr"
 local math3d	= require "math3d"
 local bgfx		= require "bgfx"
 local iom		= world:interface "ant.objcontroller|obj_motion"
+local ies		= world:interface "ant.scene|ientity_state"
 
 local setting	= import_package "ant.settings".setting
 local enable_cluster_shading = setting:data().graphic.lighting.cluster_shading ~= 0
@@ -151,19 +152,20 @@ function ilight.create_light_buffers()
 	local lights = {}
 	for _, leid in world:each "light_type" do
 		local le = world[leid]
-		
-		local p	= math3d.tovalue(iom.get_position(leid))
-		local d	= math3d.tovalue(math3d.inverse(iom.get_direction(leid)))
-		local c = ilight.color(leid)
-		local t	= le.light_type
-        local enable<const> = 1
-        --TODO: use bgfx.memory{('f'):rep(16), }
-		lights[#lights+1] = ('f'):rep(16):pack(
-			p[1], p[2], p[3], ilight.range(leid) or 10000,
-			d[1], d[2], d[3], enable,
-			c[1], c[2], c[3], c[4],
-			lighttypes[t], ilight.intensity(leid),
-			ilight.inner_cutoff(leid),	ilight.outter_cutoff(leid))
+		if ies.can_visible(leid) then
+			local p	= math3d.tovalue(iom.get_position(leid))
+			local d	= math3d.tovalue(math3d.inverse(iom.get_direction(leid)))
+			local c = ilight.color(leid)
+			local t	= le.light_type
+			local enable<const> = 1
+			--TODO: use bgfx.memory{('f'):rep(16), }
+			lights[#lights+1] = ('f'):rep(16):pack(
+				p[1], p[2], p[3], ilight.range(leid) or math.maxinteger,
+				d[1], d[2], d[3], enable,
+				c[1], c[2], c[3], c[4],
+				lighttypes[t], ilight.intensity(leid),
+				ilight.inner_cutoff(leid),	ilight.outter_cutoff(leid))
+		end
 	end
     return lights
 end
@@ -198,9 +200,7 @@ function ilight.update_light_buffers()
 		num_light = #lights
 	end
 
-	if lb then
-		bgfx.update(lb, 0, bgfx.memory_buffer(table.concat(lights, "")))
-	end
+	bgfx.update(lb, 0, bgfx.memory_buffer(table.concat(lights, "")))
 end
 
 function ilight.set_light_buffers()
