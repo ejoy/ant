@@ -89,6 +89,19 @@ function sp_sys:update_hierarchy()
 
     local needclear
     for _, eid in eremove_mb:unpack() do
+		--TODO: fix remove branch
+		local function mount_children()
+			local children = {}
+			for _, ceid in world:each "scene_entity" do
+				local ce = world[ceid]
+				if ce.parent == eid then
+					scenequeue:mount(ceid, 0)
+					ce.parent = nil
+				end
+			end
+			return children
+		end
+		mount_children()
 		scenequeue:mount(eid)
 		ipf.reset_filters(eid)
         needclear = true
