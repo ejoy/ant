@@ -26,3 +26,21 @@
 
 #define luai_threadcall(L, from) luai_threadevent(L, from, 0)
 #define luai_threadret(L, to) luai_threadevent(L, to, 1)
+
+#define LUA_ERREVENT_PANIC 0x10
+
+#define luai_errevent(L, errcode)                     \
+    if (L->hookmask & LUA_MASKEXCEPTION) {            \
+        switch (errcode) {                            \
+        case LUA_ERRRUN:                              \
+        case LUA_ERRSYNTAX:                           \
+        case LUA_ERRMEM:                              \
+        case LUA_ERRERR: {                            \
+            int code = errcode;                       \
+            if (!L->errorJmp) {                       \
+                code |= LUA_ERREVENT_PANIC;           \
+            }                                         \
+            LUA_CALLHOOK(L, LUA_HOOKEXCEPTION, code); \
+            break;                                    \
+        }}                                            \
+    }
