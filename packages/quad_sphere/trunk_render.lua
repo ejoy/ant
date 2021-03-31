@@ -48,7 +48,7 @@ function itr.build_tile_indices(tile_indices, trunkid, backgroundidx)
 
     for layeridx, l in pairs(indices) do
         if layeridx ~= backgroundidx then
-            --l.masks = itr.build_mask_indices(l.covers)
+            l.masks = itr.build_mask_indices(l.covers)
         end
     end
 
@@ -228,12 +228,22 @@ function itr.reset_trunk(eid, trunkid, layeridx, cover_tiles)
     end
 
     e._bounding.aabb.m = calc_aabb()
-    if #vertices > 0 then
+    local numv = #vertices
+    if numv > 0 then
         local rc = e._rendercache
         rc.aabb = e._bounding.aabb
-        rc.ib = constant.trunk_ib.buffer
+
         local vb = rc.vb
         local bufdesc = ismask and "fffffff" or "fffff" --p3|t20|t21 or p3|t20
+        vb.start = 0
+        vb.num = #vertices / #bufdesc
+
+        local tilenum = vb.num / 4
+        local ib = rc.ib
+
+        ib.num = tilenum * 6
+        ib.handle = constant.trunk_ib.buffer.handle
+
         local layout = ismask and constant.vb_layout.mask or constant.vb_layout.cover
         bgfx.update(vb.handles[1], 0, bgfx.memory_buffer(bufdesc, vertices), layout.handle)
     end

@@ -61,7 +61,7 @@ local function build_mask_uv(mask_uv)
     local du, dv = 1/w, 1/h
     local c = {}
 
-    local numelem = w*h
+    local numelem = w*h*8
 
     for ih=1, h do
         local v = (ih-1)*dv

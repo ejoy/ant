@@ -85,11 +85,11 @@ local function generate_quad_uv_index2()
         end
     end
 
-    --return indices
+    return indices
 end
 
 local tile_indices = setmetatable({}, {__index=function(self, trunkid)
-    return generate_quad_uv_index() --generate_quad_uv_index2()
+    return generate_quad_uv_index2()
     -- local t = {
     --     covers = c,
     --     masks = build_mark_indices(c),

@@ -31,4 +31,9 @@ function tmt.process_entity(e)
             bgfx.create_dynamic_vertex_buffer(vn, l.handle, "a"),
         }
     }
+    rc.ib = {
+        start = 0,
+        num = 0,
+        handle = nil,
+    }
 end
