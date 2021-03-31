@@ -460,31 +460,31 @@ struct ConvertToGenericTypeVisitor {
 };
 
 void TransformPrimitive::SetIdentity() {
-	std::visit(SetIdentityVisitor(), *this);
+	std::visit(SetIdentityVisitor(), static_cast<Transforms::Primitive&>(*this));
 }
 
 bool TransformPrimitive::PrepareForInterpolation(Element& e) {
 	PrepareVisitor visitor{ e, *this };
-	std::visit(visitor, *this);
+	std::visit(visitor, static_cast<Transforms::Primitive&>(*this));
 	return visitor.ok;
 }
 
 void TransformPrimitive::ConvertToGenericType() {
-	std::visit(ConvertToGenericTypeVisitor{ *this }, *this);
+	std::visit(ConvertToGenericTypeVisitor{ *this }, static_cast<Transforms::Primitive&>(*this));
 }
 
 bool TransformPrimitive::Interpolate(const TransformPrimitive& other, float alpha) {
 	if (index() != other.index())
 		return false;
-	return std::visit(InterpolateVisitor{ other, alpha }, *this);
+	return std::visit(InterpolateVisitor{ other, alpha }, static_cast<Transforms::Primitive&>(*this));
 }
 
 String TransformPrimitive::ToString() const {
-	return std::visit(ToStringVisitor{}, *this);
+	return std::visit(ToStringVisitor{}, static_cast<Transforms::Primitive const&>(*this));
 }
 
 TransformType TransformPrimitive::GetType() const {
-	return std::visit(GetTypeVisitor{}, *this);
+	return std::visit(GetTypeVisitor{}, static_cast<Transforms::Primitive const&>(*this));
 }
 
 UniquePtr<Transform> Transform::Interpolate(const Transform& other, float alpha) {
@@ -506,7 +506,7 @@ UniquePtr<Transform> Transform::Interpolate(const Transform& other, float alpha)
 glm::mat4x4 Transform::GetMatrix(Element& e) const {
 	MultiplyVisitor visitor{ e };
 	for (auto const& t : *this) {
-		std::visit(visitor, t);
+		std::visit(visitor, static_cast<Transforms::Primitive const&>(t));
 	}
 	return visitor.matrix;
 }
@@ -514,7 +514,7 @@ glm::mat4x4 Transform::GetMatrix(Element& e) const {
 bool Transform::Combine(Element& e, size_t start) {
 	MultiplyVisitor visitor{ e };
 	for (size_t i = start; i < size(); ++i) {
-		std::visit(visitor, (*this)[i]);
+		std::visit(visitor, static_cast<Transforms::Primitive&>((*this)[i]));
 	}
 	auto d = decompose(visitor.matrix);
 	if (!d) {

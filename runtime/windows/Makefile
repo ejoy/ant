@@ -21,7 +21,7 @@ $(ODIR)/libruntime.a :
 	cd ../common/ && $(MAKE) $@
 
 ant.exe : main.o modules.o $(ODIR)/libruntime.a $(ODIR)/libant.a
-	$(CC) -o $@ main.o modules.o ../common/$(ODIR)/libruntime.a $(ANT)/clibs/ant/$(ODIR)/libant.a $(LINKLIBANT) -lshlwapi && $(STRIP) $@
+	$(CC) -o $@ main.o modules.o ../common/$(ODIR)/libruntime.a $(ANT)/clibs/ant/$(ODIR)/libant.a $(LINKLIBANT) -lshlwapi -lxinput && $(STRIP) $@
 
 clean :
 	rm -f *.o

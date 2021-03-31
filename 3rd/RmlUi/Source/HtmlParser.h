@@ -50,7 +50,7 @@ enum class HtmlError {
 
 class HtmlParserException : public std::exception {
 public:
-    const char* what() const override;
+    const char* what() const noexcept override;
     HtmlError GetCode() const { return m_code; }
     unsigned int GetLine() const { return m_line; }
     unsigned int GetColumn() const { return m_column; }
