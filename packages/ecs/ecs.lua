@@ -2,6 +2,7 @@ local typeclass = require "typeclass"
 local system = require "system"
 local policy = require "policy"
 local event = require "event"
+local prefab = require "prefab"
 local stringify = import_package "ant.serialize".stringify
 local assetmgr = import_package "ant.asset"
 
@@ -329,11 +330,8 @@ function m.new_world(config)
 		_uniques = {},
 	}, world)
 
-	--init event
 	event.init(world)
-	world.sub = event.sub
-	world.pub = event.pub
-	world.unsub = event.unsub
+	prefab.init(world)
 
 	w.component = function(name)
 		return function (args)

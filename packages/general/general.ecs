@@ -1,6 +1,9 @@
 policy "name"
     .component "name"
 
+policy "tag"
+    .component "tag"
+
 transform "cache_transform"
     .implement "general.lua"
     .output "_cache_prefab"

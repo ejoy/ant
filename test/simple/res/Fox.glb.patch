@@ -1,5 +1,20 @@
 ---
 file: mesh.prefab
+op: add
+path: /1/script
+value: /res/Fox.lua
+---
+file: mesh.prefab
+op: add
+path: /3/data/tag
+value: fox
+---
+file: mesh.prefab
+op: add
+path: /3/policy/-
+value: ant.general|tag
+---
+file: mesh.prefab
 op: replace
 path: /2/data/transform
 value:
