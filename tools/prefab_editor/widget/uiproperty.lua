@@ -191,10 +191,10 @@ function ResourcePath:show()
     if imgui.widget.BeginDragDropTarget() then
         local payload = imgui.widget.AcceptDragDropPayload("DragFile")
         if payload then
-            local relative_path = lfs.relative(lfs.path(payload), fs.path "":localpath())
+            local relative_path = lfs.path(payload)--lfs.relative(lfs.path(payload), fs.path "":localpath())
             local extension = tostring(relative_path:extension())
             if extension == self.extension then
-                local path_str = tostring(relative_path)
+                local path_str = tostring(payload)
                 self.path = path_str
                 self.uidata.text = path_str
                 self.modifier.setter(path_str)

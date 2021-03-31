@@ -189,11 +189,13 @@ end
 
 function iani.get_duration(eid)
 	local e = world[eid]
+	if not e then return 0 end
 	return e._animation._current.animation._handle:duration()
 end
 
 function iani.set_time(eid, second)
 	local e = world[eid]
+	if not e then return end
 	local ratio = second / e._animation._current.animation._handle:duration()
 	if ratio > 1.0 then
 		ratio = 1.0
@@ -205,29 +207,31 @@ end
 
 function iani.get_time(eid)
 	local e = world[eid]
-	if not e then
-		return 0
-	end
+	if not e then return 0 end
 	return e._animation._current.play_state.ratio * e._animation._current.animation._handle:duration()
 end
 
 function iani.set_speed(eid, speed)
 	local e = world[eid]
+	if not e then return end
 	e._animation._current.play_state.speed = speed
 end
 
 function iani.set_loop(eid, loop)
 	local e = world[eid]
+	if not e then return end
 	e._animation._current.play_state.loop = loop
 end
 
 function iani.pause(eid, pause)
 	local e = world[eid]
+	if not e then return end
 	e._animation._current.play_state.play = not pause
 end
 
 function iani.is_playing(eid)
 	local e = world[eid]
+	if not e then return end
 	return e._animation._current.play_state.play
 end
 

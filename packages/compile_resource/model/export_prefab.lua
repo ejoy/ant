@@ -88,7 +88,7 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
             transform   = transform,
             mesh        = meshfile,
             material    = materialfile,
-            name        = meshname .. "." .. primidx,
+            name        = node.name or "",
             state       = DEFAULT_STATE,
         }
 
@@ -146,7 +146,7 @@ local function create_node_entity(gltfscene, nodeidx, parent)
             "ant.scene|transform_policy"
         },
         data = {
-            name = nname,
+            name = node.name or "",
             scene_entity = true,
             transform = transform,
         },

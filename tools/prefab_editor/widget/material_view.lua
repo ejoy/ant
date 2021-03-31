@@ -45,12 +45,12 @@ function MaterialView:_init()
 end
 local gd = require "common.global_data"
 function MaterialView:on_set_mat(value)
-    local origin_path = fs.path(value)
-    local relative_path = tostring(origin_path)
-    if origin_path:is_absolute() then
-        relative_path = tostring(fs.relative(fs.path(value), gd.project_root))
-    end
-    local new_eid = prefab_mgr:update_material(self.eid, relative_path)
+    -- local origin_path = fs.path(value)
+    -- local relative_path = tostring(origin_path)
+    -- if origin_path:is_absolute() then
+    --     relative_path = tostring(fs.relative(fs.path(value), gd.project_root))
+    -- end
+    local new_eid = prefab_mgr:update_material(self.eid, value)
     self:set_model(new_eid)
 end
 function MaterialView:on_get_mat()

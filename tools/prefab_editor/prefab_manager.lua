@@ -285,7 +285,7 @@ function m:create(what, config)
         if config.type == "directional" or config.type == "point" or config.type == "spot" then      
             local ilight = world:interface "ant.render|light" 
             local _, newlight = ilight.create({
-                transform = {},
+                transform = {t = {0, 5, 0},r = {math.rad(130), 0, 0}},
                 name = config.type .. gen_light_id(),
                 light_type = config.type,
                 color = {1, 1, 1, 1},
@@ -385,8 +385,71 @@ function m:open_fbx(filename)
     self:open(prefabFilename)
 end
 
+local function split(str)
+    local r = {}
+    str:gsub('[^|]*', function (w) r[#r+1] = w end)
+    return r
+end
+
+local function get_filename(pathname)
+    pathname = pathname:lower()
+    return pathname:match "[/]?([^/]*)$"
+end
+
+local function convert_path(path, glb_filename)
+    if fs.path(path):is_absolute() then return path end
+    local new_path
+    if glb_filename then
+        local pretty = tostring(lfs.path(path))
+        if string.sub(path, 1, 2) == "./" then
+            pretty = string.sub(path, 3)
+        end
+        new_path = glb_filename .. "|" .. pretty
+    else
+        -- local op_path = path
+        -- local spec = string.find(path, '|')
+        -- if spec then
+        --     op_path = string.sub(path, 1, spec - 1)
+        -- end
+        -- new_path = tostring(lfs.relative(current_dir / lfs.path(op_path), new_dir))
+        -- if spec then
+        --     new_path = new_path .. string.sub(path, spec)
+        -- end
+    end
+    return new_path
+end
+
 function m:open(filename)
     local prefab = get_prefab(filename)
+    local path_list = split(filename)
+    local glb_filename
+    if #path_list > 1 then
+        glb_filename = path_list[1]
+        for _, t in ipairs(prefab.__class) do
+            if t.prefab then
+                t.prefab = convert_path(t.prefab, glb_filename)
+            else
+                if t.data.material then
+                    t.data.material = convert_path(t.data.material, glb_filename)
+                end
+                if t.data.mesh then
+                    t.data.mesh = convert_path(t.data.mesh, glb_filename)
+                end
+                if t.data.meshskin then
+                    t.data.meshskin = convert_path(t.data.meshskin, glb_filename)
+                end
+                if t.data.skeleton then
+                    t.data.skeleton = convert_path(t.data.skeleton, glb_filename)
+                end
+                if t.data.animation then
+                    local animation = t.data.animation
+                    for k, v in pairs(t.data.animation) do
+                        animation[k] = convert_path(v, glb_filename)
+                    end
+                end
+            end
+        end
+    end
     self:open_prefab(prefab)
     world:pub {"WindowTitle", filename}
 end
@@ -555,18 +618,18 @@ function m:recreate_entity(eid)
     local new_eid = world:create_entity(copy_prefab.template)
     iom.set_srt(new_eid, iom.srt(eid))
     local scale = 1
-    if world[new_eid].collider.sphere then
-        scale = world[new_eid].collider.sphere[1].radius * 100
-    elseif world[new_eid].collider.box then
-        local size = world[new_eid].collider.box[1].size
-        scale = {size[1] * 200, size[2] * 200, size[3] * 200}
-    else
-    end
-    iom.set_scale(new_eid, scale)
-    if world[new_eid].collider then
+    local col = world[new_eid].collider
+    if col then
+        if col.sphere then
+            scale = col.sphere[1].radius * 100
+        elseif col.box then
+            local size = col.box[1].size
+            scale = {size[1] * 200, size[2] * 200, size[3] * 200}
+        else
+        end
         imaterial.set_property(new_eid, "u_color", {1, 0.5, 0.5, 0.5})
     end
-
+    iom.set_scale(new_eid, scale)
     local new_node = hierarchy:replace(eid, new_eid)
     world[new_eid].parent = new_node.parent
     for _, v in ipairs(new_node.children) do
@@ -594,41 +657,6 @@ end
 
 local utils = require "common.utils"
 
-local function split(str)
-    local r = {}
-    str:gsub('[^|]*', function (w) r[#r+1] = w end)
-    return r
-end
-
-local function get_filename(pathname)
-    pathname = pathname:lower()
-    return pathname:match "[/]?([^/]*)$"
-end
-
-local function convert_path(path, current_dir, new_dir, glb_filename)
-    if fs.path(path):is_absolute() then return path end
-    local new_path
-    if glb_filename then
-        --local dir = tostring(lfs.relative(current_dir, new_dir)) .. "/" .. glb_filename
-        local pretty = tostring(lfs.path(path))
-        if string.sub(path, 1, 2) == "./" then
-            pretty = string.sub(path, 3)
-        end
-        new_path = glb_filename .. "|" .. pretty
-    else
-        local op_path = path
-        local spec = string.find(path, '|')
-        if spec then
-            op_path = string.sub(path, 1, spec - 1)
-        end
-        new_path = tostring(lfs.relative(current_dir / lfs.path(op_path), new_dir))
-        if spec then
-            new_path = new_path .. string.sub(path, spec)
-        end
-    end
-    return new_path
-end
-
 function m:save_prefab(path)
     local filename
     if not self.prefab and not path then
@@ -651,7 +679,7 @@ function m:save_prefab(path)
     local path_list = split(prefab_filename)
     local glb_filename
     if #path_list > 1 then
-        glb_filename = path_list[1]--get_filename(path_list[1])
+        glb_filename = path_list[1]
     end
 
     if not saveas then
@@ -665,33 +693,9 @@ function m:save_prefab(path)
         return
     end
     local data = self.entities.__class
-    --fs.path():localpath()
-    local current_dir = lfs.path(prefab_filename):parent_path()
-    local new_dir = lfs.path(filename):localpath():parent_path()
-    for _, t in ipairs(data) do
-        if t.prefab then
-            t.prefab = convert_path(t.prefab, current_dir, new_dir, glb_filename)
-        else
-            if t.data.material then
-                t.data.material = convert_path(t.data.material, current_dir, new_dir, glb_filename)
-            end
-            if t.data.mesh then
-                t.data.mesh = convert_path(t.data.mesh, current_dir, new_dir, glb_filename)
-            end
-            if t.data.meshskin then
-                t.data.meshskin = convert_path(t.data.meshskin, current_dir, new_dir, glb_filename)
-            end
-            if t.data.skeleton then
-                t.data.skeleton = convert_path(t.data.skeleton, current_dir, new_dir, glb_filename)
-            end
-            if t.data.animation then
-                local animation = t.data.animation
-                for k, v in pairs(t.data.animation) do
-                    animation[k] = convert_path(v, current_dir, new_dir, glb_filename)
-                end
-            end
-        end
-    end
+    -- local current_dir = lfs.path(prefab_filename):parent_path()
+    -- local new_dir = lfs.path(filename):localpath():parent_path()
+    
     utils.write_file(filename, stringify(data))
     self:open(filename)
     world:pub {"ResourceBrowser", "dirty"}

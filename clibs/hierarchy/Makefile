@@ -13,7 +13,7 @@ else
 default : $(ODIR)/libhierarchy.a
 endif
 
-OBJ_FILES := $(ODIR)/hierarchy.o $(ODIR)/animation.o $(ODIR)/mesh.o $(ODIR)/ik.o $(ODIR)/ozzmesh.o $(ODIR)/scene.o $(ODIR)/playbackcontroller.o
+OBJ_FILES := $(ODIR)/hierarchy.o $(ODIR)/animation.o $(ODIR)/mesh.o $(ODIR)/ik.o $(ODIR)/ozzmesh.o $(ODIR)/scene.o
 
 $(ODIR)/scene.o : scene.c | $(ODIR)
 	$(CC) -c $(CFLAGS) -o $@ $< $(LUAINC)
@@ -32,9 +32,6 @@ $(ODIR)/ozzmesh.o: ozzmesh.cpp | $(ODIR)
 
 $(ODIR)/mesh.o: $(OZZ_SAMPLE_DIR)/framework/mesh.cc | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $< $(LUAINC) $(GLM_DIR) $(CLIBS) $(OZZINC) $(OZZ_SAMPLE_DIR)/framework
-
-$(ODIR)/playbackcontroller.o : playbackcontroller.cpp
-	$(CXX) -c $(CFLAGS) -o $@ $< $(LUAINC) $(GLM_DIR) $(CLIBS) $(OZZINC)
 
 $(ODIR)/hierarchy.dll : $(OBJ_FILES)
 	$(CXX) $(LD_SHARED) -lstdc++ -o $@ $^ $(LUALIB) $(GLM_DIR) $(OZZINC) $(OZZRUNTIME) $(OZZOFFLINE) $(OZZGEOMERTY) $(OZZBASE)
