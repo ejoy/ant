@@ -1019,7 +1019,8 @@ function m.bind(eid)
             end
             
             for _, child in ipairs(parentNode.children) do
-                if world[child.eid].animation._handle == animations._handle then
+                local handle = world[child.eid].animation
+                if handle and handle._handle == animations._handle then
                     if not find_index(anim_group_eid[anim], child.eid)  then
                         anim_group_eid[anim][#anim_group_eid[anim] + 1] = child.eid
                     end

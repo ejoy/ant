@@ -23,10 +23,14 @@ local timer = world:interface "ant.timer|timer"
 
 local fix_root <const> = false
 
+local function get_current_anim_time(task)
+	return task.play_state.ratio * task.animation._handle:duration()
+end
+
 local function get_adjust_delta_time(task, delta)
 	local clip_state = task.clip_state
 	if not clip_state or not clip_state.current or not clip_state.current.clip then return delta end
-	local current_time = task.animation._handle:get_time()
+	local current_time = get_current_anim_time(task)--task.animation._handle:get_time()
 	local index = clip_state.current.current_index
 	local next_time = current_time + delta * 0.001
 	local skip = 0.0
@@ -45,13 +49,13 @@ local function get_adjust_delta_time(task, delta)
 	return skip * 1000 + delta
 end
 
-local function process_keyframe_event(task, poseresult)
+local function process_keyframe_event(task)
 	local event_state = task.event_state
 	local all_events = event_state.keyframe_events.event
 	local current_events = all_events and all_events[event_state.next_index] or nil
 	if not current_events then return end
 
-	local current_time = task.animation._handle:get_time()
+	local current_time = get_current_anim_time(task)
 	if current_time < current_events.time and event_state.finish then
 		-- restart
 		event_state.next_index = 1
@@ -175,8 +179,7 @@ end
 function ani_sys:data_changed()
 	local delta_time = timer.delta()
 	for _, eid in world:each "animation" do
-		local e = world[eid]
-		process_keyframe_event(e._animation._current)
+		process_keyframe_event(world[eid]._animation._current)
 	end
 end
 

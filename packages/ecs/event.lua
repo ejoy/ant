@@ -95,6 +95,9 @@ local world = {}
 function world:init()
     self._event_lookup = {}
     self._event_pattern = {}
+	self.sub = world.sub
+	self.pub = world.pub
+	self.unsub = world.unsub
 end
 
 function world:sub(pattern)
