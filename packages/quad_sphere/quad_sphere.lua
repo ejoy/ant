@@ -102,7 +102,7 @@ local function build_color_uv(color_uv)
             local nv = v+dv
             for iw=1, w do
                 local nu = u+du
-                insert_uv(c, #c, u, v, nu, v, nu, nv, u, nv)
+                insert_uv(c, #c+1, u, v, nu, v, nu, nv, u, nv)
                 u = nu
             end
             v = nv
@@ -119,7 +119,7 @@ local function build_uv_ref(layers)
 end
 
 -- max visible trunk is 3 when in trunk corner, and cache 3 trunk
-local max_trunk_entity_num<const>   = 25
+local max_trunk_entity_num<const>   = 1
 local function reset_trunk_entity_pool(qseid, layernum, pool)
     pool.n = 0
     pool.ref = {}
@@ -128,9 +128,13 @@ local function reset_trunk_entity_pool(qseid, layernum, pool)
             if pool[i] == nil then
                 local layers = {}
                 for l=1, layernum do
+                    local ceid = create_trunk_entity(qseid, "/pkg/ant.resources/materials/quad_sphere/quad_sphere.material")
+                    local meid = create_trunk_entity(qseid, "/pkg/ant.resources/materials/quad_sphere/quad_sphere_mask.material", true)
+                    ies.set_state(ceid, "visible", false)
+                    ies.set_state(meid, "visible", false)
                     layers[l] = {
-                        cover = create_trunk_entity(qseid, "/pkg/ant.resources/materials/quad_sphere/quad_sphere.material"),
-                        mask = create_trunk_entity(qseid, "/pkg/ant.resources/materials/quad_sphere/quad_sphere_mask.material")
+                        cover = ceid,
+                        mask = meid,
                     }
                 end
                 pool[i] = layers
@@ -334,7 +338,7 @@ local function find_visible_trunks(pos, qs)
         end
     end
 
-    fvt(trunkid, 0)
+    fvt(trunkid, 1)
     return visible_trunks
 end
 

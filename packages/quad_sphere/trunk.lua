@@ -23,7 +23,7 @@ function tmt.process_entity(e)
     local rc = e._rendercache
     --rc.ib = constant.trunk_ib.buffer
     local vn = constant.tiles_pre_trunk * 4
-    local l = e.ismask and vblayout.cover or vblayout.mask
+    local l = e.ismask and vblayout.mask or vblayout.cover
     rc.vb = {
         start = 0,
         num = vn,

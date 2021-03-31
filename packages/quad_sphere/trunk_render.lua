@@ -48,7 +48,7 @@ function itr.build_tile_indices(tile_indices, trunkid, backgroundidx)
 
     for layeridx, l in pairs(indices) do
         if layeridx ~= backgroundidx then
-            l.masks = itr.build_mask_indices(l.covers)
+            --l.masks = itr.build_mask_indices(l.covers)
         end
     end
 
@@ -161,15 +161,15 @@ function itr.reset_trunk(eid, trunkid, layeridx, cover_tiles)
     local hd, vd, basept = ctrunkid(trunkid, qs):tile_delta(constant.inv_tile_pre_trunk_line)
     local vertices = {}
     local tptl = constant.tile_pre_trunk_line
-
+    local vptl = constant.vertices_pre_tile_line
     local cache = {}
     local function get_pt(ih, iv)
-        local idx = iv * (tptl+1) + ih
-        local p = cache[idx]
+        local vidx = iv*vptl+ih+1    --base 1
+        local p = cache[vidx]
         if  p == nil then
-            p = math3d.muladd(ih,  hd,  math3d.muladd(iv,vd, basept))
+            p = math3d.muladd(ih, hd, math3d.muladd(iv, vd, basept))
             p = math3d.tovalue(surface_point(radius, p))
-            cache[idx] = p
+            cache[vidx] = p
         end
 
         return p
@@ -180,12 +180,13 @@ function itr.reset_trunk(eid, trunkid, layeridx, cover_tiles)
     for _, idx in ipairs(cover_tiles) do
         local tileidx = idx & 0x0000ffff
         local maskidx = (idx & 0xffff0000) >> 16
-        local ih, iv = tileidx % tptl, tileidx // tptl
+        local tileidx0 = tileidx-1  --base 0
+        local ih, iv = tileidx0 % tptl, tileidx0 // tptl    --ih, iv base 0
         for vidx, p in ipairs{
-            get_pt(ih-1, iv-1),
-            get_pt(ih,   iv-1),
-            get_pt(ih,   iv),
-            get_pt(ih-1, iv),
+            get_pt(ih,  iv),
+            get_pt(ih+1,iv),
+            get_pt(ih+1,iv+1),
+            get_pt(ih,  iv+1),
         } do
             vertices[#vertices+1] = p[1]
             vertices[#vertices+1] = p[2]
@@ -227,11 +228,13 @@ function itr.reset_trunk(eid, trunkid, layeridx, cover_tiles)
     end
 
     e._bounding.aabb.m = calc_aabb()
-    local rc = e._rendercache
-    rc.aabb = e._bounding.aabb
-    rc.ib = constant.trunk_ib.buffer
-    local vb = rc.vb
-    local bufdesc = ismask and "fffff" or "fffffff" --p3|t20 or p3|t20|t21
-    local layout = ismask and constant.vb_layout.mask or constant.vb_layout.cover
-    bgfx.update(vb.handles[1], 0, bgfx.memory_buffer(bufdesc, vertices), layout.handle)
+    if #vertices > 0 then
+        local rc = e._rendercache
+        rc.aabb = e._bounding.aabb
+        rc.ib = constant.trunk_ib.buffer
+        local vb = rc.vb
+        local bufdesc = ismask and "fffffff" or "fffff" --p3|t20|t21 or p3|t20
+        local layout = ismask and constant.vb_layout.mask or constant.vb_layout.cover
+        bgfx.update(vb.handles[1], 0, bgfx.memory_buffer(bufdesc, vertices), layout.handle)
+    end
 end
