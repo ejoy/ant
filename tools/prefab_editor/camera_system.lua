@@ -8,7 +8,7 @@ local inspector = require "widget.inspector"(world)
 local m = ecs.system "camera_system"
 
 local event_camera_control = world:sub {"camera"}
-local camera_init_eye_pos <const> = {0, 10, -20, 1}
+local camera_init_eye_pos <const> = {5, 5, 10, 1}
 local camera_init_target <const> = {0, 0,  0, 1}
 local camera_target
 local camera_distance

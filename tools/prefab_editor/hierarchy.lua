@@ -116,7 +116,7 @@ function hierarchy:update_prefab_template()
             table.insert(pt, self.all[eid].template.template)
         end
         
-        local pidx = #pt
+        local pidx = (#pt < 1) and "root" or #pt
         local keyframe_templ = self.all[eid].template.keyframe
         if keyframe_templ then
             local templ_copy = utils.deep_copy(keyframe_templ)

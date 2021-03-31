@@ -1,6 +1,6 @@
 ---
 action:
-  mount: 0
+  mount: root
 data:
   name: Root
   scene_entity: true
