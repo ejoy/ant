@@ -88,18 +88,19 @@ function effekseer_sys:camera_usage()
 end
 
 
-local trans_changed_mb = world:sub {"component_changed", "transform"}
 local iom = world:interface "ant.objcontroller|obj_motion"
 
 function effekseer_sys:ui_update()
     -- local dt = itimer.delta() * 0.001
-    for _, _, eid in trans_changed_mb:unpack() do
+    for _, eid in world:each "effekseer" do
 		local e = world[eid]
-		if e and e.effekseer then
-			effekseer.update_transform(e.effekseer.handle, iom.worldmat(eid))
-		end
+		effekseer.update_transform(e.effekseer.handle, iom.worldmat(eid))
     end
     effekseer.update()
+end
+
+function effekseer_sys:follow_transform_updated()
+
 end
 
 function effekseer_sys:exit()

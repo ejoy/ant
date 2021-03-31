@@ -8,6 +8,7 @@ system "effekseer_system"
     .method "init"
     .method "camera_usage"
     .method "ui_update"
+    .method "follow_transform_updated"
     .method "exit"
 
 policy "effekseer_policy"
