@@ -1,12 +1,13 @@
 fx:
     vs: /pkg/ant.resources/shaders/quad_sphere/vs_quad_sphere.sc
     fs: /pkg/ant.resources/shaders/quad_sphere/fs_quad_sphere.sc
-
+    setting:
+        WITH_MASK: 1
 properties:
     s_color:
         stage: 0
         texture: /pkg/ant.resources/materials/quad_sphere/color.texture
-    s_weight:
+    s_mask:
         stage: 1
         texture: /pkg/ant.resources/materials/quad_sphere/weight.texture
 state:
