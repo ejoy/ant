@@ -1,4 +1,4 @@
-$input v_normal, v_posWS, v_texcoord0
+$input v_texcoord0, v_posWS, v_normal, v_tangent, v_bitangent
 #include <bgfx_shader.sh>
 #include <bgfx_compute.sh>
 #include <shaderlib.sh>
@@ -86,16 +86,17 @@ void get_metallic_roughness(vec2 texcoord, out float metallic, out float roughne
     }
 }
 
-// Find the normal for this fragment, pulling either from a predefined normal map
-// or from the interpolated mesh normal and tangent attributes.
-vec3 getNormal(vec3 normalWS, vec3 posWS, vec2 texcoord)
+vec3 get_normal(vec3 tanget, vec3 bitanget, vec3 normal, vec2 texcoord)
 {
     if (u_normal_texture_flag > 0.0){
+		// vec3 normalTS = fetch_compress_normal(s_normal, texcoord, 0.0);
+	    // return normalize(mul(tbn_from_world_pos(normalWS, posWS, texcoord), normalTS));	// TS to WS
+		mat3 tbn = mtxFromCols(tanget, bitanget, normal);
 		vec3 normalTS = fetch_compress_normal(s_normal, texcoord, 0.0);
-	    return normalize(mul(tbn_from_world_pos(normalWS, posWS, texcoord), normalTS));	// TS to WS
-    }
+		return instMul(normalTS, tbn);
+	}
 
-    return normalize(normalWS);
+	return normal;
 }
 
 vec3 lambertian_diffuse(vec3 basecolor)
@@ -263,7 +264,7 @@ void main()
 	float metallic, roughness;
 	get_metallic_roughness(uv, metallic, roughness);
 
-	vec3 N = getNormal(v_normal, v_posWS.xyz, uv);
+	vec3 N = get_normal(v_tangent, v_bitangent, v_normal, uv);
 	vec3 V = normalize(u_eyepos.xyz - v_posWS.xyz);
 	vec3 R = normalize(reflect(-V, N));
 

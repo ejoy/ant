@@ -1,7 +1,7 @@
 #include "common/inputs.sh"
-DEF_SKINNING_INPUTS2(a_normal, a_texcoord0)
+DEF_SKINNING_INPUTS3(a_normal, a_tangent, a_texcoord0)
 
-$output v_texcoord0, v_normal, v_posWS
+$output v_texcoord0, v_posWS, v_normal, v_tangent, v_bitangent
 
 #include <bgfx_shader.sh>
 #include "common/transform.sh"
@@ -9,15 +9,16 @@ $output v_texcoord0, v_normal, v_posWS
 void main()
 {
 	mat4 wm = get_world_matrix();
-	vec4 worldpos = mul(wm, vec4(a_position, 1.0));
-	gl_Position   = mul(u_viewProj, worldpos);
+	v_posWS = mul(wm, vec4(a_position, 1.0));
+	gl_Position   = mul(u_viewProj, v_posWS);
 #ifdef ENABLE_SHADOW
-	v_posWS       = vec4(worldpos.xyz, mul(u_view, worldpos).z);
-#else //!ENABLE_SHADOW
-	v_posWS       = worldpos;
+	v_posWS.w = mul(u_view, v_posWS).z;
 #endif //ENABLE_SHADOW
-	v_texcoord0   = a_texcoord0;
 
-	// normal need recalculate after tranform to world space
-	v_normal	  = normalize(mul(wm, vec4(a_normal.xyz, 0.0))).xyz;
+	//TODO: normal and tangent should use inverse transpose matrix
+	v_normal	= normalize(mul(wm, vec4(a_normal, 0.0)).xyz);
+	v_tangent	= normalize(mul(wm, vec4(a_tangent, 0.0)).xyz);
+	v_bitangent	= cross(v_normal, v_tangent);	//left hand
+
+	v_texcoord0	= a_texcoord0;
 }

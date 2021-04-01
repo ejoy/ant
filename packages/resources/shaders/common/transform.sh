@@ -5,16 +5,6 @@
 
 uniform vec4 u_clip_planes[4];
 
-mat3 mat3_from_columns(vec3 v0, vec3 v1, vec3 v2)
-{
-	mat3 m = mat3(v0, v1, v2);
-#ifdef BGFX_SHADER_LANGUAGE_HLSL
-	return transpose(m);
-#else
-	return m;
-#endif
-}
-
 mat3 to_tbn(vec3 t, vec3 b, vec3 n)
 {
 	mat3 TBN = mat3(t, b, n);
