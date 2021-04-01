@@ -198,7 +198,7 @@ return function (output, glbdata, exports, tolocalpath)
             texture_desc.compress = {
                     android = "ASTC4x4",
                     ios = "ASTC4x4",
-                    windows = "BC3",
+                    windows = texture_desc.normalmap and "BC5" or "BC3",
                 }
         else
             texture_desc.format = "RGBA8"
