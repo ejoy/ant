@@ -1,6 +1,7 @@
 #include "HtmlParser.h"
 
 #include <assert.h>
+#include <string.h>
 #include <list>
 
 struct HtmlAttribute {
@@ -40,7 +41,7 @@ static const char* g_ErrorList[] = {
 	"Input data error"
 };
 
-const char* HtmlParserException::what() const {
+const char* HtmlParserException::what() const noexcept {
 	return g_ErrorList[(size_t)m_code];
 }
 

@@ -1,5 +1,7 @@
 include ../common.mk
 
+LUA_CFLAGS =
+
 ifeq "$(PLAT)" "mingw"
 default : font.dll
 else
@@ -12,13 +14,13 @@ font.dll : $(ODIR)/font.dll
 BGFX3RD_INC=-I$(ANT3RD)/bgfx/3rdparty
 
 $(ODIR)/luafont.o : luafont.c | $(ODIR)
-	$(CC) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFX3RD_INC)
+	$(CC) $(CFLAGS) -c $(LUA_CFLAGS) -o $@ $^ $(LUAINC) $(BGFX3RD_INC)
 
 $(ODIR)/font_manager.o : font_manager.c | $(ODIR)
-	$(CC) $(CFLAGS) -c $(LUA_FLAGS) -DFONT_EXPORT -DFONT_IMP -o $@ $^ $(LUAINC) $(BGFX3RD_INC)
+	$(CC) $(CFLAGS) -c $(LUA_CFLAGS) -DFONT_EXPORT -DFONT_IMP -o $@ $^ $(LUAINC) $(BGFX3RD_INC)
 
 $(ODIR)/truetype.o : truetype.c | $(ODIR)
-	$(CC) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFX3RD_INC)
+	$(CC) $(CFLAGS) -c $(LUA_CFLAGS) -o $@ $^ $(LUAINC) $(BGFX3RD_INC)
 
 $(ODIR)/font.dll : $(ODIR)/luafont.o $(ODIR)/font_manager.o $(ODIR)/truetype.o
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) -lstdc++
