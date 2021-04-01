@@ -137,7 +137,7 @@ float recalc_dxt_normal_Z(vec2 normalXY)
 vec3 remap_dxt_normal(vec2 normalTSXY, float offset)
 {
     vec2 normalTSXY_Remap = normalTSXY * 2.0 - 1.0;
-    normalTSXY_Remap = normalTSXY_Remap * offset;
+    normalTSXY_Remap += normalTSXY_Remap * offset;
     return vec3(normalTSXY_Remap, recalc_dxt_normal_Z(normalTSXY_Remap));
 }
 
