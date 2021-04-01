@@ -205,7 +205,7 @@ return function (output, glbdata, exports, tolocalpath)
         end
     end
 
-    local function fetch_texture_info(texidx, name, normalmap, colorspace)
+    local function fetch_texture_info(texidx, normalmap, colorspace)
         local tex = textures[texidx+1]
         local imgname = export_image(tex.source)
         local texture_desc = {
@@ -219,13 +219,18 @@ return function (output, glbdata, exports, tolocalpath)
         --TODO: check texture if need compress
         local need_compress<const> = true
         add_texture_format(texture_desc, need_compress)
-        utility.save_txt_file("./images/" .. name .. ".texture", texture_desc)
-        return "./../images/" .. name .. ".texture"
+        local imgname_noext = fs.path(imgname):stem():string()
+        local texfilename = "./images/" .. imgname_noext .. ".texture"
+        if fs.exists(fs.path(texfilename)) then
+            error("filename:" .. texfilename .. " already exist")
+        end
+        utility.save_txt_file(texfilename, texture_desc)
+        return "./../images/" .. imgname_noext .. ".texture"
     end
 
     local function handle_texture(tex_desc, name, normalmap, colorspace)
         local filename = tex_desc
-            and fetch_texture_info(tex_desc.index, name, normalmap, colorspace)
+            and fetch_texture_info(tex_desc.index, normalmap, colorspace)
             or default_pbr_param[name].texture
         return {
             texture = filename,
