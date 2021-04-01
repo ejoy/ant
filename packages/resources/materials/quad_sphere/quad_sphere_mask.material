@@ -3,6 +3,7 @@ fx:
     fs: /pkg/ant.resources/shaders/quad_sphere/fs_quad_sphere.sc
     setting:
         WITH_MASK: 1
+        surface_type: translucent
 properties:
     s_color:
         stage: 0
