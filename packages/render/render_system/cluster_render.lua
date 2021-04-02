@@ -49,7 +49,15 @@ local light_struct_size_in_vec4<const>     = 4  --sizeof(light_info), vec4 * 4
 local cluster_aabb_size_in_vec4<const> = 2  --sizeof(light_aabb)
 local cluster_aabb_buffer_size<const> = cluster_count * cluster_aabb_size_in_vec4
 
-local cluster_aabb_fx, cluster_light_cull_fx
+local cluster_aabb_fx = assetmgr.load_fx{
+    cs = "/pkg/ant.resources/shaders/compute/cs_cluster_aabb.sc",
+    setting = {CLUSTER_BUILD=1},
+}
+
+local cluster_light_cull_fx = assetmgr.load_fx{
+    cs = "/pkg/ant.resources/shaders/compute/cs_lightcull.sc",
+    setting = {CLUSTER_PREPROCESS=1}
+}
 
 -- cluster [forward] render system
 --1. build cluster aabb
@@ -65,6 +73,7 @@ local cluster_buffers = {
         name = "CLUSTER_BUFFER_AABB_STAGE",
         layout = declmgr.get "t40",
     },
+    -- TODO: not use
     -- index buffer of 32bit, and only 1 element
     global_index_count = {
         stage = 1,
@@ -82,6 +91,7 @@ local cluster_buffers = {
     -- index buffer of 32bit
     light_index_list = {
         stage = 3,
+        size = 0,
         cull_access = "w",
         render_access = "r",
         render_stage = 11,
@@ -113,18 +123,26 @@ local function num_light()
     return n
 end
 
-local function create_cluster_buffers()
-    local numlights = num_light()
+cluster_buffers.light_grids.handle         = bgfx.create_dynamic_index_buffer(light_grid_buffer_size, "drw")
+cluster_buffers.global_index_count.handle  = bgfx.create_dynamic_index_buffer(1, "drw")
+cluster_buffers.AABB.handle                = bgfx.create_dynamic_vertex_buffer(cluster_aabb_buffer_size, cluster_buffers.AABB.layout.handle, "rw")
 
+--TODO: need move to light.lua, will update by cpu
+cluster_buffers.light_info.handle          = bgfx.create_dynamic_vertex_buffer(1, "ra")
+
+local numlights = 0
+local function check_light_index_list()
     if numlights > 0 then
-        cluster_buffers.AABB.handle                = bgfx.create_dynamic_vertex_buffer(cluster_aabb_buffer_size, cluster_buffers.AABB.layout.handle, "rwa") 
-        cluster_buffers.light_grids.handle         = bgfx.create_dynamic_index_buffer(light_grid_buffer_size, "drwa")
-        cluster_buffers.global_index_count.handle  = bgfx.create_dynamic_index_buffer(1, "drwa")
-
-
-        cluster_buffers.light_index_list.handle    = bgfx.create_dynamic_index_buffer(numlights * cluster_count, "drwa")
-        --cluster_buffers.light_info.handle          = bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(lights, "")), cluster_buffers.light_info.layout.handle, "r")
-        cluster_buffers.light_info.handle          = bgfx.create_dynamic_vertex_buffer(numlights * cluster_buffers.light_info.layout.stride, "ra")
+        local lil_size = numlights * cluster_count
+        local lil = cluster_buffers.light_index_list
+        if lil_size > lil.size then
+            if lil.handle then
+                bgfx.destroy(lil.handle)
+            end
+            lil.handle = bgfx.create_dynamic_index_buffer(lil_size, "drw")
+        end
+        lil.size = lil_size
+        assert(lil.handle)
         return true
     end
 end
@@ -139,9 +157,6 @@ local function set_buffers(which_stage, which_access)
 end
 
 local function build_cluster_aabb_struct()
-    if cluster_aabb_fx == nil then
-        return
-    end
     local mq_eid = world:singleton_entity_id "main_queue"
     set_buffers("stage", "build_access")
     local icr = world:interface "ant.render|icluster_render"
@@ -160,20 +175,6 @@ local cr_camera_mb
 local camera_frustum_mb
 local light_mb = world:sub{"component_register", "light_type"}
 
-local function check_init()
-    if create_cluster_buffers() then
-        cluster_aabb_fx = assetmgr.load_fx{
-            cs = "/pkg/ant.resources/shaders/compute/cs_cluster_aabb.sc",
-            setting = {CLUSTER_BUILD=1},
-        }
-        cluster_light_cull_fx = assetmgr.load_fx{
-            cs = "/pkg/ant.resources/shaders/compute/cs_lightcull.sc",
-            setting = {CLUSTER_PREPROCESS=1}
-        }
-        build_cluster_aabb_struct()
-    end
-end
-
 function cfs:post_init()
     local mq_eid = world:singleton_entity_id "main_queue"
     cr_camera_mb = world:sub{"component_changed", "camera_eid", mq_eid}
@@ -185,10 +186,10 @@ function cfs:data_changed()
         return
     end
 
-    if cluster_light_cull_fx == nil and cluster_aabb_fx == nil then
-        for _ in light_mb:unpack() do
-            check_init()
-        end
+    numlights = num_light()
+
+    for _ in light_mb:unpack() do
+        check_light_index_list()
     end
 
     local mq = world:singleton_entity "main_queue"
@@ -203,9 +204,6 @@ function cfs:data_changed()
 end
 
 local function cull_lights()
-    if cluster_light_cull_fx == nil then
-        return
-    end
     local mq_eid = world:singleton_entity_id "main_queue"
 
     --TODO: need abstract compute dispatch pipeline, which like render pipeline
@@ -220,7 +218,7 @@ local function cull_lights()
 end
 
 function cfs:render_preprocess()
-    if not ilight.use_cluster_shading() then
+    if not ilight.use_cluster_shading() or numlights == 0 then
         return
     end
     cull_lights()
@@ -229,7 +227,7 @@ end
 local icr = ecs.interface "icluster_render"
 
 function icr.set_buffers()
-    if cluster_light_cull_fx then
+    if numlights > 0 then
         set_buffers("render_stage", "render_access")
     end
 end
@@ -246,7 +244,7 @@ function icr.extract_cluster_properties(properties)
 	local vr = irq.view_rect(mq_eid)
 
 	local sizes = icr.cluster_sizes()
-	sizes[4] = vr.w / sizes[1]
+    sizes[4] = 0.0
 	assert(properties["u_cluster_size"]).v				= sizes
 	local f = icamera.get_frustum(mc_eid)
 	local near, far = f.n, f.f
@@ -255,7 +253,10 @@ function icr.extract_cluster_properties(properties)
 	local log_farnear = math.log(far/near, 2)
 	local log_near = math.log(near)
 
-	assert(properties["u_cluster_shading_param2"]).v	= {num_depth_slices / log_farnear, -num_depth_slices * log_near / log_farnear, 0, 0}
+	assert(properties["u_cluster_shading_param2"]).v	= {
+        num_depth_slices / log_farnear, -num_depth_slices * log_near / log_farnear,
+        vr.w / sizes[1], vr.h/sizes[2],
+    }
 end
 
 function icr.light_info_buffer_handle()

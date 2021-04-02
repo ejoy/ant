@@ -245,5 +245,9 @@ function cc:data_changed()
 end
 
 function cc:camera_usage()
+    if not icc.is_active() then
+        return 
+    end
+
     iqs.update_visible_trunks(icc.quad_sphere(), icc.camera())
 end

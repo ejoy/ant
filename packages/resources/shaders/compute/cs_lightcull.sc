@@ -95,7 +95,7 @@ void main(){
     AABB aabb; load_cluster_aabb(b_cluster_AABBs, cluster_idx, aabb);
 
     //TODO: temp fix. I alloc a light_index_list buffer with cluster_count * light_count * (uint) bytes.
-    //  It make I can access b_light_index_lists without memory barrier. That cause memory waste and casue memory cache missed
+    //  It let us access b_light_index_lists without memory barrier. That cause memory waste and casue memory cache missed
     //  There are bug in the commont code below which use memory barrier to make memory more compact. we should fix this code. 
     uint visible_light_count = 0;
     // uint visible_light_indices[100];

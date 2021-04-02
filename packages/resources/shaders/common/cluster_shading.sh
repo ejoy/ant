@@ -61,16 +61,16 @@ BUFFER_RO(b_light_index_lists,	uint,		CLUSTER_BUFFER_LIGHT_INDEX_LIST_STAGE);
 BUFFER_RO(b_lights,				vec4,		CLUSTER_BUFFER_LIGHT_INFO_STAGE);
 
 uniform vec4 u_cluster_size;
-// unit_pre_pixel = u_screen_width / u_cluster_size.x, mean num pixel pre tile in x direction
-#define u_tile_unit_pre_pixel   u_cluster_size.w
 uniform vec4 u_cluster_shading_param;
 #define u_screen_width  u_cluster_shading_param.x
 #define u_screen_height u_cluster_shading_param.y
 #define u_nearZ         u_cluster_shading_param.z
 #define u_farZ          u_cluster_shading_param.w
+#define u_screen_size	u_cluster_shading_param.xy
 uniform vec4 u_cluster_shading_param2;
 #define u_slice_scale	u_cluster_shading_param2.x
 #define u_slice_bias	u_cluster_shading_param2.y
+#define u_tile_unit		u_cluster_shading_param2.zw
 
 /**
 about the depth slice:
@@ -109,7 +109,7 @@ float linear_depth(float nolinear_depth){
 
 uint which_cluster(vec3 fragcoord){
 	uint cluster_z     = uint(max(log2(linear_depth(fragcoord.z)) * u_slice_scale + u_slice_bias, 0.0));
-    uvec3 cluster_coord= uvec3(fragcoord.xy / u_tile_unit_pre_pixel, cluster_z);
+    uvec3 cluster_coord= uvec3(fragcoord.xy / u_tile_unit, cluster_z);
     return 	cluster_coord.x +
             u_cluster_size.x * cluster_coord.y +
             (u_cluster_size.x * u_cluster_size.y) * cluster_coord.z;
