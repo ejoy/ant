@@ -164,16 +164,8 @@ function cfs:post_init()
     local mq_eid = world:singleton_entity_id "main_queue"
     cr_camera_mb = world:sub{"component_changed", "camera_eid", mq_eid}
     camera_frustum_mb = world:sub{"component_changed", "frustum", world[mq_eid].camera_eid}
-end
 
-function cfs:data_changed()
-    if not ilight.use_cluster_shading() then
-        return
-    end
-
-    for _ in light_mb:unpack() do
-        check_light_index_list()
-    end
+    cluster_buffers.light_info.handle = ilight.light_buffer()
 end
 
 local function cull_lights()
@@ -194,6 +186,11 @@ function cfs:render_preprocess()
     if not ilight.use_cluster_shading() or world:count "light_type" == 0 then
         return
     end
+
+    for _ in light_mb:each() do
+        check_light_index_list()
+    end
+
     local mq = world:singleton_entity "main_queue"
     for _ in cr_camera_mb:unpack() do
         build_cluster_aabb_struct()

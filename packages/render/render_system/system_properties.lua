@@ -124,8 +124,6 @@ local function update_lighting_properties()
 			num_depth_slices / log_farnear, -num_depth_slices * log_near / log_farnear,
 			vr.w / sizes[1], vr.h/sizes[2],
 		}
-
-		icluster.set_light_buffer(ilight.light_buffer())
 	end
 end
 

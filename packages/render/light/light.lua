@@ -164,7 +164,6 @@ local function create_light_buffers()
 			local c = ilight.color(leid)
 			local t	= le.light_type
 			local enable<const> = 1
-			--TODO: use bgfx.memory{('f'):rep(16), }
 			lights[#lights+1] = ('f'):rep(16):pack(
 				p[1], p[2], p[3], ilight.range(leid) or math.maxinteger,
 				d[1], d[2], d[3], enable,
@@ -184,7 +183,9 @@ local light_buffer = bgfx.create_dynamic_vertex_buffer(1, declmgr.get "t40".hand
 
 local function update_light_buffers()
 	local lights = create_light_buffers()
-	bgfx.update(light_buffer, 0, bgfx.memory_buffer(table.concat(lights, "")))
+	if #lights > 0 then
+		bgfx.update(light_buffer, 0, bgfx.memory_buffer(table.concat(lights, "")))
+	end
 end
 
 function ilight.light_buffer()
