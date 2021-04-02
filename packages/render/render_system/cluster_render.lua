@@ -192,12 +192,12 @@ function cfs:render_preprocess()
     end
 
     local mq = world:singleton_entity "main_queue"
-    for _ in cr_camera_mb:unpack() do
+    for _ in cr_camera_mb:each() do
         build_cluster_aabb_struct()
         camera_frustum_mb = world:sub{"component_changed", "frustum", mq.camera_eid}
     end
 
-    for _ in camera_frustum_mb:unpack() do
+    for _ in camera_frustum_mb:each() do
         build_cluster_aabb_struct()
     end
 
