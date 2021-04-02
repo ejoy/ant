@@ -405,7 +405,7 @@ local function update_visible_trunks(visible_trunks, qs)
         local trunk_refidx = pool.ref[trunkid]
         local layers_eids = pool[trunk_refidx]
 
-        local indices = itr.build_tile_indices(tile_indices, trunkid, qs.layers.backgroundidx)
+        local indices = itr.build_tile_indices(tile_indices, trunkid, qs.layers.color.backgroundidx)
 
         for layeridx, l in ipairs(indices) do
             local layer = layers_eids[layeridx]
