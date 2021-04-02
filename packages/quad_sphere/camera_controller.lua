@@ -146,6 +146,13 @@ function icc.move(df, dr)
     updateview(cc)
 end
 
+function icc.move_distance(dd)
+    local cc = check_cc()
+    local lp = cc.localpos
+    lp.v = math3d.muladd(dd, lp, lp)
+    updateview(cc)
+end
+
 function icc.rotate(delta_radian_ratio)
     local cc = check_cc()
     local delta_radian = delta_radian_ratio * twopi
@@ -187,16 +194,6 @@ function cc:post_init()
 	dpi_x, dpi_y = rhwi.dpi()
 end
 
--- local function can_rotate(cameraeid)
--- 	local lock_target = world[cameraeid].lock_target
--- 	return lock_target and lock_target.type ~= "rotate" or true
--- end
-
--- local function can_move(cameraeid)
--- 	local lock_target = world[cameraeid].lock_target
--- 	return lock_target and lock_target.type ~= "move" or true
--- end
-
 function cc:data_changed()
     if not icc.is_active() then
         return 
@@ -208,40 +205,38 @@ function cc:data_changed()
             if state == "MOVE" and mouse_lastx then
                 local ux = (x - mouse_lastx) / dpi_x * move_speed
                 local uy = (y - mouse_lasty) / dpi_y * move_speed
-                iom.rotate_forward_vector(cameraeid, uy, ux)
+                --iom.rotate_forward_vector(cameraeid, uy, ux)
             end
             mouse_lastx, mouse_lasty = x, y
         end
     end
 
-	--if can_move() then
-		--local keyboard_delta = {0 , 0, 0}
-        local df, dr = 0, 0
-		for _,code,press in keyboard_event:unpack() do
-			local delta = (press>0) and keyboard_speed or 0
-			if code == "A" then
-				--keyboard_delta[1] = keyboard_delta[1] - delta
-                dr = dr - delta
-			elseif code == "D" then
-				--keyboard_delta[1] = keyboard_delta[1] + delta
-                dr = dr + delta
-			-- elseif code == "Q" then
-			-- 	keyboard_delta[2] = keyboard_delta[2] - delta
-			-- elseif code == "E" then
-			-- 	keyboard_delta[2] = keyboard_delta[2] + delta
-			elseif code == "W" then
-			-- keyboard_delta[3] = keyboard_delta[3] + delta
-                df = df - delta
-			elseif code == "S" then
-				--keyboard_delta[3] = keyboard_delta[3] - delta
-                df = df + delta
-			end
-		end
-		--if keyboard_delta[1] ~= 0 or keyboard_delta[2] ~= 0 or keyboard_delta[3] ~= 0 then
-        if df ~= 0 or dr ~= 0 then
-            icc.move(df, dr)
-		end
-	--end
+	
+    local df, dr = 0, 0
+    local dd = 0
+    for _,code,press in keyboard_event:unpack() do
+        local delta = (press>0) and keyboard_speed or 0
+        if code == "A" then
+            dr = dr - delta
+        elseif code == "D" then
+            dr = dr + delta
+        elseif code == "W" then
+            df = df - delta
+        elseif code == "S" then
+            df = df + delta
+        elseif code == "Q" then
+            dd = dd - delta
+        elseif code == "E" then
+            dd = dd + delta
+        end
+    end
+    if df ~= 0 or dr ~= 0 then
+        icc.move(df, dr)
+    end
+
+    if dd ~= 0 then
+        icc.move_distance(dd)
+    end
 end
 
 function cc:camera_usage()
