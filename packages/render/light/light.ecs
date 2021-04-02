@@ -21,9 +21,8 @@ interface "light"
 
     .method "max_point_light"
     .method "use_cluster_shading"
-    .method "create_light_buffers"
-    .method "update_properties"
     .method "set_light_buffers"
+    .method "light_buffer"
 
 transform "light_transform"
     .implement "light/light.lua"

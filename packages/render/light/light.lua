@@ -154,7 +154,7 @@ local lighttypes = {
 	spot = 2,
 }
 
-function ilight.create_light_buffers()
+local function create_light_buffers()
 	local lights = {}
 	for _, leid in world:each "light_type" do
 		local le = world[leid]
@@ -180,43 +180,15 @@ function ilight.use_cluster_shading()
 	return enable_cluster_shading
 end
 
-local light_buffer
-local num_light
-function ilight.update_properties(system_properties)
-	if ilight.use_cluster_shading() then
-		local icluster = world:interface "ant.render|icluster_render"
-		icluster.extract_cluster_properties(system_properties)
-	else
-		system_properties["u_light_count"].v = {num_light, 0, 0, 0}
-	end
-end
-
-local defaultbuffer<const> = ('f'):rep(16):pack(
-	0, 0, 0, 0,
-	0, 0, 0, 0,
-	0, 0, 0, 0,
-	0, 0, 0, 0)
+local light_buffer = bgfx.create_dynamic_vertex_buffer(1, declmgr.get "t40".handle, "ra")
 
 local function update_light_buffers()
-	local lb
-	local lights = ilight.create_light_buffers()
+	local lights = create_light_buffers()
+	bgfx.update(light_buffer, 0, bgfx.memory_buffer(table.concat(lights, "")))
+end
 
-	if ilight.use_cluster_shading() then
-		local icluster = world:interface "ant.render|icluster_render"
-		lb = icluster.light_info_buffer_handle()
-	else
-		if light_buffer == nil then
-			light_buffer = bgfx.create_dynamic_vertex_buffer(#lights * 4, declmgr.get "t40".handle, "ra")
-		end
-		lb = light_buffer
-		num_light = #lights
-	end
-
-	if #lights == 0 then
-		bgfx.update(lb, 0, defaultbuffer)
-	else
-		bgfx.update(lb, 0, bgfx.memory_buffer(table.concat(lights, "")))
-	end
+function ilight.light_buffer()
+	return light_buffer
 end
 
 function ilight.set_light_buffers()
@@ -224,10 +196,8 @@ function ilight.set_light_buffers()
 		local icluster_render = world:interface "ant.render|icluster_render"
 		icluster_render.set_buffers()
 	else
-		if light_buffer then
-			local stage<const> = 12
-			bgfx.set_buffer(stage, light_buffer, "r")
-		end
+		local stage<const> = 12
+		bgfx.set_buffer(stage, light_buffer, "r")
 	end
 end
 

@@ -9,6 +9,7 @@ local iom		= world:interface "ant.objcontroller|obj_motion"
 local ishadow	= world:interface "ant.render|ishadow"
 local ilight	= world:interface "ant.render|light"
 local itimer	= world:interface "ant.timer|timer"
+local icamera	= world:interface "ant.camera|camera"
 
 local m = ecs.interface "system_properties"
 local system_properties = {
@@ -100,9 +101,32 @@ end
 -- end
 
 local function update_lighting_properties()
-	ilight.update_properties(system_properties)
 	local mq = world:singleton_entity "main_queue"
 	system_properties["u_eyepos"].id = iom.get_position(mq.camera_eid)
+
+	system_properties["u_light_count"].v = {world:count "light_type", 0, 0, 0}
+	if ilight.use_cluster_shading() then
+		local icluster = world:interface "ant.render|icluster_render"
+		local mc_eid = mq.camera_eid
+		local vr = mq.render_target.view_rect
+	
+		local sizes = icluster.cluster_sizes()
+		sizes[4] = 0.0
+		system_properties["u_cluster_size"].v	= sizes
+		local f = icamera.get_frustum(mc_eid)
+		local near, far = f.n, f.f
+		system_properties["u_cluster_shading_param"].v	= {vr.w, vr.h, near, far}
+		local num_depth_slices = sizes[3]
+		local log_farnear = math.log(far/near, 2)
+		local log_near = math.log(near)
+	
+		system_properties["u_cluster_shading_param2"].v	= {
+			num_depth_slices / log_farnear, -num_depth_slices * log_near / log_farnear,
+			vr.w / sizes[1], vr.h/sizes[2],
+		}
+
+		icluster.set_light_buffer(ilight.light_buffer())
+	end
 end
 
 local function update_shadow_properties()

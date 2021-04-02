@@ -114,24 +114,12 @@ local cluster_buffers = {
     }
 }
 
-local function num_light()
-    local n = 0
-    --TODO: world should provide a method to get the number of entities with component type
-    for _, l in world:each "light_type" do
-        n = n + 1
-    end
-    return n
-end
-
 cluster_buffers.light_grids.handle         = bgfx.create_dynamic_index_buffer(light_grid_buffer_size, "drw")
 cluster_buffers.global_index_count.handle  = bgfx.create_dynamic_index_buffer(1, "drw")
 cluster_buffers.AABB.handle                = bgfx.create_dynamic_vertex_buffer(cluster_aabb_buffer_size, cluster_buffers.AABB.layout.handle, "rw")
 
---TODO: need move to light.lua, will update by cpu
-cluster_buffers.light_info.handle          = bgfx.create_dynamic_vertex_buffer(1, "ra")
-
-local numlights = 0
 local function check_light_index_list()
+    local numlights = world:count "light_type"
     if numlights > 0 then
         local lil_size = numlights * cluster_count
         local lil = cluster_buffers.light_index_list
@@ -159,11 +147,8 @@ end
 local function build_cluster_aabb_struct()
     local mq_eid = world:singleton_entity_id "main_queue"
     set_buffers("stage", "build_access")
-    local icr = world:interface "ant.render|icluster_render"
-    
-    local properties = isp.properties()
-    icr.extract_cluster_properties(properties)
 
+    local properties = isp.properties()
     for _, u in ipairs(cluster_aabb_fx.uniforms) do
         bgfx.set_uniform(u.handle, assert(properties[u.name]).value)
     end
@@ -186,20 +171,8 @@ function cfs:data_changed()
         return
     end
 
-    numlights = num_light()
-
     for _ in light_mb:unpack() do
         check_light_index_list()
-    end
-
-    local mq = world:singleton_entity "main_queue"
-    for _ in cr_camera_mb:unpack() do
-        build_cluster_aabb_struct()
-        camera_frustum_mb = world:sub{"component_changed", "frustum", mq.camera_eid}
-    end
-
-    for _ in camera_frustum_mb:unpack() do
-        build_cluster_aabb_struct()
     end
 end
 
@@ -218,16 +191,26 @@ local function cull_lights()
 end
 
 function cfs:render_preprocess()
-    if not ilight.use_cluster_shading() or numlights == 0 then
+    if not ilight.use_cluster_shading() or world:count "light_type" == 0 then
         return
     end
+    local mq = world:singleton_entity "main_queue"
+    for _ in cr_camera_mb:unpack() do
+        build_cluster_aabb_struct()
+        camera_frustum_mb = world:sub{"component_changed", "frustum", mq.camera_eid}
+    end
+
+    for _ in camera_frustum_mb:unpack() do
+        build_cluster_aabb_struct()
+    end
+
     cull_lights()
 end
 
 local icr = ecs.interface "icluster_render"
 
 function icr.set_buffers()
-    if numlights > 0 then
+    if world:count "light_type" > 0 then
         set_buffers("render_stage", "render_access")
     end
 end
@@ -236,29 +219,6 @@ function icr.cluster_sizes()
     return {cluster_grid_x, cluster_grid_y, cluster_grid_z}
 end
 
-function icr.extract_cluster_properties(properties)
-    local mq_eid = world:singleton_entity_id "main_queue"
-	local mq = world[mq_eid]
-	local mc_eid = mq.camera_eid
-
-	local vr = irq.view_rect(mq_eid)
-
-	local sizes = icr.cluster_sizes()
-    sizes[4] = 0.0
-	assert(properties["u_cluster_size"]).v				= sizes
-	local f = icamera.get_frustum(mc_eid)
-	local near, far = f.n, f.f
-	assert(properties["u_cluster_shading_param"]).v	= {vr.w, vr.h, near, far}
-	local num_depth_slices = sizes[3]
-	local log_farnear = math.log(far/near, 2)
-	local log_near = math.log(near)
-
-	assert(properties["u_cluster_shading_param2"]).v	= {
-        num_depth_slices / log_farnear, -num_depth_slices * log_near / log_farnear,
-        vr.w / sizes[1], vr.h/sizes[2],
-    }
-end
-
-function icr.light_info_buffer_handle()
-    return cluster_buffers.light_info.handle
+function icr.set_light_buffer(light_buffer)
+    cluster_buffers.light_info.handle = light_buffer
 end

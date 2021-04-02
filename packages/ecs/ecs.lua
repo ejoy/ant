@@ -213,19 +213,29 @@ local function component_next(set, index)
 	end
 end
 
-function world:each(component_type)
-	local s = self._set[component_type]
+local function component_set(w, component_type)
+	local s = w._set[component_type]
 	if s == nil then
-		s = { entity = self._entity }
-		for eid in pairs(self._entity) do
-			local e = self[eid]
+		s = { entity = w._entity }
+		for eid in pairs(w._entity) do
+			local e = w[eid]
 			if e[component_type] ~= nil then
 				s[#s+1] = eid
 			end
 		end
-		self._set[component_type] = s
+		w._set[component_type] = s
 	end
+	return s
+end
+
+function world:each(component_type)
+	local s = component_set(self, component_type)
 	return component_next, s, 0
+end
+
+function world:count(component_type)
+	local s = component_set(self, component_type)
+	return #s
 end
 
 function world:singleton_entity_id(c_type)
