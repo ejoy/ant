@@ -3636,6 +3636,7 @@ lSetWindowTitle(lua_State* L) {
 #elif BX_PLATFORM_LINUX
 #define bx_malloc_size malloc_usable_size
 #elif BX_PLATFORM_OSX
+#include <malloc/malloc.h>
 #define bx_malloc_size malloc_size
 #elif BX_PLATFORM_IOS
 #define bx_malloc_size malloc_size

@@ -58,7 +58,7 @@ $(ODIR)/yoga/$(1).o : $(YOGA_DIR)/$(1).cpp | $(ODIR)/yoga/event
 endef
 $(foreach v, $(YOGA), $(eval $(call YOGA_COMPLILE,$(v))))
 
-FONTLIB=-L../../bin/$(PLAT)/$(MODE) -lfont
+FONTLIB=-L../font/o/$(PLAT)/$(MODE) -lfont
 
 OBJS = $(ODIR)/luarmlui.o $(ODIR)/luaplugin.o $(ODIR)/luadatabinding.o $(ODIR)/rmlapi.o $(ODIR)/file.o $(ODIR)/font.o $(ODIR)/render.o $(ODIR)/system.o $(ODIR)/binding_context.o $(ODIR)/binding_fonteffect.o $(patsubst %,$(ODIR)/%.o, $(RMLUI)) $(patsubst %,$(ODIR)/yoga/%.o, $(YOGA))
 $(ODIR)/rmlui.dll : $(OBJS)

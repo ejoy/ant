@@ -1,19 +1,34 @@
 export BX_CONFIG=DEBUG
 export BGFX_CONFIG=DEBUG
 
-ifeq ($(shell uname), Darwin)
+ifeq "$(PLAT)" "osx"
+
 GENIE=cd bgfx && ../bx/tools/bin/darwin/genie
+ifeq ($(shell uname -m), arm64)
+OSX_GCC=osx-arm64
+else
+OSX_GCC=osx
+endif
+
 else
 GENIE=cd bgfx && ../bx/tools/bin/windows/genie
 endif
+
+
 
 GENIE_WITH_EDITOR = --with-tools --with-shared-lib --with-dynamic-runtime --with-examples
 
 ifeq "$(PLAT)" "ios"
   BGFX_MAKEFILE = .build/projects/gmake-ios-arm64
 else ifeq "$(PLAT)" "osx"
-  BGFX_MAKEFILE = .build/projects/gmake-osx
+
+ifeq ($(shell uname -m), arm64)
+  BGFX_MAKEFILE = .build/projects/gmake-$(OSX_GCC)
+  BGFX_BIN = bgfx/.build/osx-arm64/bin/
+else
+  BGFX_MAKEFILE = .build/projects/gmake-$(OSX_GCC)
   BGFX_BIN = bgfx/.build/osx64_clang/bin/
+endif
   BGFX_SHARED_LIB = libbgfx-shared-lib$(MODE).dylib
 else ifeq "$(PLAT)" "mingw"
   BGFX_MAKEFILE = .build/projects/gmake-mingw-gcc
@@ -62,7 +77,7 @@ GENIE_PLATFORM= --with-windows=10.0 vs2019
 else ifeq "$(PLAT)" "ios"
 GENIE_PLATFORM= --gcc=ios-arm64 gmake
 else ifeq "$(PLAT)" "osx"
-GENIE_PLATFORM= --gcc=osx gmake
+GENIE_PLATFORM= --gcc=$(OSX_GCC) gmake
 else
 GENIE_PLATFORM= --os=windows --gcc=mingw-gcc gmake
 endif
