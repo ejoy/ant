@@ -269,7 +269,8 @@ function m:create(what, config)
                 }
             }
             imaterial.set_property(new_entity, "u_color", {1, 1, 1, 1})
-            self:add_entity(new_entity, gizmo.target_eid, temp)
+            self:add_entity(new_entity, config.parent or gizmo.target_eid, temp)
+            return new_entity
         elseif config.type == "cube(prefab)" then
             m:add_prefab(gd.package_path .. "res/cube.prefab")
         elseif config.type == "cone(prefab)" then
@@ -298,7 +299,8 @@ function m:create(what, config)
         end
     elseif what == "collider" then
         local new_entity, temp = self:create_collider(config)
-        self:add_entity(new_entity, gizmo.target_eid, temp, not config.add_to_hierarchy)
+        self:add_entity(new_entity, config.parent or gizmo.target_eid, temp, not config.add_to_hierarchy)
+        return new_entity
     elseif what == "particle" then
         local entities = world:instance(gd.package_path .. "res/particle.prefab")
         self:add_entity(entities[1], gizmo.target_eid, entities)
@@ -646,6 +648,7 @@ function m:recreate_entity(eid)
     world:remove_entity(eid)
     local gizmo = require "gizmo.gizmo"(world)
     gizmo:set_target(new_eid)
+    world:pub {"EntityRecreate", eid, new_eid}
     return new_eid
 end
 
