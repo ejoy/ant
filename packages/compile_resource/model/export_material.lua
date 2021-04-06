@@ -287,7 +287,7 @@ return function (output, glbdata, exports, tolocalpath)
                     s_emissive           = handle_texture(mat.emissiveTexture, "emissive", false, "sRGB"),
                     u_basecolor_factor = tov4(pbr_mr.baseColorFactor, default_pbr_param.basecolor.factor),
                     u_metallic_roughness_factor = {
-                        pbr_mr.metallicFactor or 0.0,
+                        pbr_mr.metallicFactor or 1.0,
                         pbr_mr.roughnessFactor or 1.0,
                         0.0,
                         0.0,

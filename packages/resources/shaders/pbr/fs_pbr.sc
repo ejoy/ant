@@ -71,8 +71,8 @@ void get_metallic_roughness(vec2 texcoord, out float metallic, out float roughne
     metallic = u_metallic_factor;
     if (u_metallic_roughness_texture_flag > 0.0) {
         vec4 mr		= texture2D(s_metallic_roughness, texcoord);
-        roughness	= mr.r * roughness;
-        metallic	= mr.g * metallic;
+        roughness	= mr.g * roughness;
+        metallic	= mr.b * metallic;
     }
 
 	roughness	= clamp(roughness, MIN_ROUGHNESS, 1.0);
