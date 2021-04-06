@@ -177,6 +177,30 @@ function itr.reset_trunk(eid, trunkid, layeridx, cover_tiles)
 
     local uvref = qs.layers.uv_ref
     local mc, cc = uvref.mask_uv_coords, uvref.color_uv_coords
+
+    local layeruvidx = (layeridx-1)*8
+    local layeruv = {
+        cc[layeruvidx+1], cc[layeruvidx+2],
+        cc[layeruvidx+3], cc[layeruvidx+4],
+        cc[layeruvidx+5], cc[layeruvidx+6],
+        cc[layeruvidx+7], cc[layeruvidx+8],
+    }
+
+    local function add_layer_uv(vertices, vidx)
+        local idx = (vidx-1)*2
+        vertices[#vertices+1] = layeruv[idx+1]
+        vertices[#vertices+1] = layeruv[idx+2]
+    end
+
+    local function add_layer_mask_uv(vertices, vidx, maskidx)
+        add_layer_uv(vertices, vidx)
+        local uvidx = (maskidx-1)*8+(vidx-1)*2
+        vertices[#vertices+1] = mc[uvidx+1]
+        vertices[#vertices+1] = mc[uvidx+2]
+    end
+
+    local add_uv = ismask and add_layer_mask_uv and add_layer_uv
+
     for _, idx in ipairs(cover_tiles) do
         local tileidx = idx & 0x0000ffff
         local maskidx = (idx & 0xffff0000) >> 16
@@ -192,16 +216,7 @@ function itr.reset_trunk(eid, trunkid, layeridx, cover_tiles)
             vertices[#vertices+1] = p[2]
             vertices[#vertices+1] = p[3]
 
-            local function set_uvidx(idx, coords)
-                local uvidx = (idx-1)*8+(vidx-1)*2
-                vertices[#vertices+1] = coords[uvidx+1]
-                vertices[#vertices+1] = coords[uvidx+2]
-            end
-
-            set_uvidx(layeridx, cc)
-            if ismask then
-                set_uvidx(maskidx, mc)
-            end
+            add_uv(vertices, vidx, maskidx)
         end
     end
 
