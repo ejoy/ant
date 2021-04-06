@@ -13,9 +13,9 @@ function LightView:_init()
     BaseView._init(self)
     local subproperty = {}
     subproperty["color"]        = uiproperty.Color({label = "Color", dim = 4})
-    subproperty["intensity"]    = uiproperty.Float({label = "Intensity"})
-    subproperty["range"]        = uiproperty.Float({label = "Range"})
-    subproperty["radian"]       = uiproperty.Float({label = "Radian"})
+    subproperty["intensity"]    = uiproperty.Float({label = "Intensity", min = 0, max = 100})
+    subproperty["range"]        = uiproperty.Float({label = "Range", min = 0, max = 500})
+    subproperty["radian"]       = uiproperty.Float({label = "Radian", min = 0, max = 180})
     self.subproperty            = subproperty
     self.light_property         = uiproperty.Group({label = "Light"}, {})
     --
