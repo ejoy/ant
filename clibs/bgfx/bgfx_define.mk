@@ -23,7 +23,13 @@ BXLIB += -lpsapi
 BGFXLIBDIR = $(BGFXSRC)/.build/win64_mingw-gcc/bin
 BGFXLIB = -lbgfx$(MODE) $(BIMGLIB) $(BXLIB) -lstdc++ -lgdi32 -luuid
 else ifeq "$(PLAT)" "osx"
+
+ifeq ($(shell uname -m), arm64)
+BGFXLIBDIR = $(BGFXSRC)/.build/osx-arm64/bin
+else
 BGFXLIBDIR = $(BGFXSRC)/.build/osx64_clang/bin
+endif
+
 BGFXLIB = -lbgfx$(MODE) $(BIMGLIB) $(BXLIB) -lstdc++
 BGFXLIB += -framework Foundation -framework Metal -framework QuartzCore -framework Cocoa
 else ifeq "$(PLAT)" "ios"
