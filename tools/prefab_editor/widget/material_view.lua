@@ -134,8 +134,8 @@ end
 local texture_used_idx = {
     ["s_basecolor"] = 1,
     ["s_normal"]    = 2,
-    ["s_occlusion"] = 3,
-    ["s_emissive"]  = 4
+    ["s_emissive"]  = 3,
+    ["s_metallic_roughness"] = 4,
 }
 
 function MaterialView:set_model(eid)
@@ -176,16 +176,10 @@ function MaterialView:set_model(eid)
             pro:set_setter(
                 function(value)
                     local runtime_tex = assetmgr.resource(value)
-                    local s = runtime_tex.sampler
                     local tdata = mtldata_list[eid].tdata
-                    if k == "s_metallic_roughness" then
-                        tdata.roperties.u_metallic_roughness_factor[4] = 1
-                        imaterial.set_property(eid, "u_metallic_roughness_factor", tdata.properties.u_metallic_roughness_factor)
-                    else
-                        local used_flags = tdata.properties.u_material_texture_flags
-                        used_flags[texture_used_idx[k]] = 1
-                        imaterial.set_property(eid, "u_material_texture_flags", used_flags)
-                    end
+                    local used_flags = tdata.properties.u_texture_flags
+                    used_flags[texture_used_idx[k]] = 1
+                    imaterial.set_property(eid, "u_texture_flags", used_flags)
                     local prop = imaterial.get_property(eid, k)
                     local mtl_filename = tostring(world[eid].material)
                     local relative_path = lfs.relative(lfs.path(value), lfs.path(mtl_filename):remove_filename())

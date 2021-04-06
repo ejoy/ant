@@ -34,21 +34,17 @@ local default_pbr_param = {
     },
     metallic_roughness = {
         texture = "/pkg/ant.resources/textures/pbr/default/metallic_roughness.texture",
-        factor = {1, 1, 0, 0},
+        factor = {1, 0, 0, 0},
         stage = 1,
     },
     normal = {
         texture = "/pkg/ant.resources/textures/pbr/default/normal.texture",
         stage = 2,
     },
-    occlusion = {
-        texture = "/pkg/ant.resources/textures/pbr/default/occlusion.texture",
-        stage = 3,
-    },
     emissive = {
         texture = "/pkg/ant.resources/textures/pbr/default/emissive.texture",
         factor = {0, 0, 0, 0},
-        stage = 4,
+        stage = 3,
     },
 }
 
@@ -288,22 +284,20 @@ return function (output, glbdata, exports, tolocalpath)
                     s_basecolor          = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),
                     s_metallic_roughness = handle_texture(pbr_mr.metallicRoughnessTexture, "metallic_roughness", false, "linear"),
                     s_normal             = handle_texture(mat.normalTexture, "normal", true, "linear"),
-                    s_occlusion          = handle_texture(mat.occlusionTexture, "occlusion", false, "linear"),
                     s_emissive           = handle_texture(mat.emissiveTexture, "emissive", false, "sRGB"),
-    
                     u_basecolor_factor = tov4(pbr_mr.baseColorFactor, default_pbr_param.basecolor.factor),
                     u_metallic_roughness_factor = {
-                        0.0, -- keep for occlusion factor
-                        pbr_mr.roughnessFactor or 1.0,
                         pbr_mr.metallicFactor or 0.0,
-                        pbr_mr.metallicRoughnessTexture and 1.0 or 0.0,
+                        pbr_mr.roughnessFactor or 1.0,
+                        0.0,
+                        0.0,
                     },
                     u_emissive_factor = tov4(mat.emissiveFactor, default_pbr_param.emissive.factor),
-                    u_material_texture_flags = {
+                    u_texture_flags = {
                         pbr_mr.baseColorTexture and 1.0 or 0.0,
+                        pbr_mr.metallicRoughnessTexture and 1.0 or 0.0,
                         mat.normalTexture and 1.0 or 0.0,
                         mat.emissiveTexture and 1.0 or 0.0,
-                        mat.occlusionTexture and 1.0 or 0.0,
                     },
                     u_IBLparam = {
                             1.0, -- perfilter cubemap mip levels
@@ -317,6 +311,10 @@ return function (output, glbdata, exports, tolocalpath)
                     }
                 },
             }
+
+            if mat.occlusionTexture then
+                print("WARNING: NOT SUPPORT occlusion texture right now!")
+            end
     
             local function refine_name(name)
                 local newname = name:gsub("['\\/:*?\"<>|]", "_")

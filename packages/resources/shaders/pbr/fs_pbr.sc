@@ -16,40 +16,35 @@ $input v_texcoord0, v_posWS, v_normal, v_tangent, v_bitangent
 #define v_distanceVS v_posWS.w
 #endif //ENABLE_SHADOW
 
-uniform vec4 u_IBLparam;
-#define u_prefiltered_cube_mip_levels u_IBLparam.x
-#define u_scaleIBLAmbient u_IBLparam.y
-
 // material properites
 SAMPLER2D(s_basecolor, 0);
-uniform vec4 u_basecolor_factor;
-
-SAMPLER2D(s_metallic_roughness, 1);
-uniform vec4 u_metallic_roughness_factor;
-#define u_roughness_factor  u_metallic_roughness_factor.y
-#define u_metallic_factor   u_metallic_roughness_factor.z
-
+SAMPLER2D(s_metallic_roughness, 1);	// r channel for metallic, g channel for roughness, occlusion map should put in b channel
 SAMPLER2D(s_normal, 2);
+SAMPLER2D(s_emissive, 3);
 
-SAMPLER2D(s_occlusion, 3);
-
-SAMPLER2D(s_emissive, 4);
+uniform vec4 u_basecolor_factor;
+uniform vec4 u_metallic_roughness_factor;
+#define u_metallic_factor   u_metallic_roughness_factor.x
+#define u_roughness_factor  u_metallic_roughness_factor.y
 uniform vec4 u_emissive_factor;
 
-uniform vec4 u_material_texture_flags;
-#define u_basecolor_texture_flag    u_material_texture_flags.x
-#define u_metallic_roughness_texture_flag u_metallic_roughness_factor.w
-#define u_normal_texture_flag       u_material_texture_flags.y
-#define u_occlusion_texture_flag    u_material_texture_flags.z
-#define u_emissive_texture_flag     u_material_texture_flags.w
+uniform vec4 u_texture_flags;
+#define u_basecolor_texture_flag			u_texture_flags.x
+#define u_metallic_roughness_texture_flag	u_texture_flags.y
+#define u_normal_texture_flag				u_texture_flags.z
+#define u_emissive_texture_flag				u_texture_flags.w
 
 uniform vec4 u_diffuse_factor;
 uniform vec4 u_specular_factor;
 
 // IBL
-SAMPLERCUBE(s_irradiance, 6);
-SAMPLERCUBE(s_prefilteredmap, 7);
-SAMPLER2D(s_BRDFLUT, 8);
+SAMPLERCUBE(s_irradiance, 4);
+SAMPLERCUBE(s_prefilteredmap, 5);
+SAMPLER2D(s_BRDFLUT, 6);
+
+uniform vec4 u_IBLparam;
+#define u_prefiltered_cube_mip_levels	u_IBLparam.x
+#define u_scaleIBLAmbient				u_IBLparam.y
 
 // alpha
 uniform vec4 u_alpha_info;
@@ -58,32 +53,30 @@ uniform vec4 u_alpha_info;
 
 struct PBRInfo
 {
-	float NdotL;                  // cos angle between normal and light direction
-	float NdotV;                  // cos angle between normal and view direction
-	float NdotH;                  // cos angle between normal and half vector
-	float LdotH;                  // cos angle between light direction and half vector
-	float VdotH;                  // cos angle between view direction and half vector
-	float metallic;              // metallic value at the surface
-	float roughness;   // roughness value, as authored by the model creator (input to shader)
-	float alpha_roughness;        // roughness mapped to a more linear change in the roughness (proposed by [2])
+	float NdotL;                  	// cos angle between normal and light direction
+	float NdotV;                  	// cos angle between normal and view direction
+	float NdotH;                  	// cos angle between normal and half vector
+	float LdotH;                  	// cos angle between light direction and half vector
+	float VdotH;                  	// cos angle between view direction and half vector
+	float metallic;              	// metallic value at the surface
+	float roughness;   				// roughness value, as authored by the model creator (input to shader)
+	float alpha_roughness;        	// roughness mapped to a more linear change in the roughness (proposed by [2])
 };
 
-const float c_min_roughness = 0.04;
+#define MIN_ROUGHNESS 0.04
 
 void get_metallic_roughness(vec2 texcoord, out float metallic, out float roughness)
 {
     roughness = u_roughness_factor;
     metallic = u_metallic_factor;
     if (u_metallic_roughness_texture_flag > 0.0) {
-        // Roughness is stored in the 'g' channel, metallic is stored in the 'b' channel.
-        // This layout intentionally reserves the 'r' channel for (optional) occlusion map data
-        vec4 mrSample 		= texture2D(s_metallic_roughness, texcoord);
-        roughness= mrSample.g * roughness;
-        metallic 			= mrSample.b * metallic;
-    } else {
-        roughness= clamp(roughness, c_min_roughness, 1.0);
-        metallic 			= clamp(metallic, 0.0, 1.0);
+        vec4 mr		= texture2D(s_metallic_roughness, texcoord);
+        roughness	= mr.r * roughness;
+        metallic	= mr.g * metallic;
     }
+
+	roughness	= clamp(roughness, MIN_ROUGHNESS, 1.0);
+	metallic 	= clamp(metallic, 0.0, 1.0);
 }
 
 vec3 get_normal(vec3 tanget, vec3 bitanget, vec3 normal, vec2 texcoord)
@@ -190,17 +183,6 @@ vec3 calc_indirect_lighting_IBL(PBRInfo pbr_info, vec3 N, vec3 R, vec3 basecolor
 	vec3 irradiance = textureCube(s_irradiance, N).rgb;
     vec3 diffuse    = kD * irradiance * basecolor;
 	return diffuse + specular;
-}
-
-void modulate_occlusion(vec2 texcoord, inout vec3 indirect_color)
-{
-	//const float u_OcclusionStrength = 1.0f;
-	// Apply optional PBR terms for additional (optional) shading
-	if (u_occlusion_texture_flag > 0.0) {
-		float ao = texture2D(s_occlusion, texcoord).r;
-		//color = lerp(color, color * ao, u_OcclusionStrength);
-        indirect_color *= ao;
-	}
 }
 
 void add_emissive(vec2 texcoord, inout vec3 color)
