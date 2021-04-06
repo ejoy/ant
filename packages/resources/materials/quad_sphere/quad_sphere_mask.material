@@ -3,7 +3,6 @@ fx:
     fs: /pkg/ant.resources/shaders/quad_sphere/fs_quad_sphere.sc
     setting:
         WITH_MASK: 1
-        surface_type: translucent
 properties:
     s_color:
         stage: 0
@@ -14,7 +13,7 @@ properties:
 state:
   ALPHA_REF:    0
   CULL:         NONE
-  DEPTH_TEST:   LESS
+  DEPTH_TEST:   ALWAYS
   MSAA:         true
-  WRITE_MASK:   RGBAZ
-  BLEND:        ALPHA
+  WRITE_MASK:   RGBA
+  BLEND:        ADD
