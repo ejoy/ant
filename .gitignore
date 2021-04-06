@@ -3,6 +3,7 @@
 **/*.xcworkspace
 *.xcscheme
 *.xcbkptlist
+*.DS_Store
 *.dll
 *.exe
 *.o
