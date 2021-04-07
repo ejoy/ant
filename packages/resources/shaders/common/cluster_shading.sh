@@ -31,22 +31,22 @@ struct AABB {
     vec4 maxv;
 };
 
-#if defined(CLUSTER_BUILD) || defined(CLUSTER_PREPROCESS)
-BUFFER_RW(b_cluster_AABBs,		vec4,		0);
+#if defined(CLUSTER_BUILD_AABB) || defined(CLUSTER_LIGHT_CULL)
+BUFFER_RW(b_cluster_AABBs,		vec4,	0);
 
-#	if defined(CLUSTER_PREPROCESS)
-BUFFER_RW(b_light_grids,			uint,	1);
-BUFFER_RW(b_global_index_count,	uint,		2);
-BUFFER_RW(b_light_index_lists,		uint,	3);
-#	endif //defined(CLUSTER_BUILD)
-BUFFER_RO(b_lights,				vec4,		4);
+#	if defined(CLUSTER_LIGHT_CULL)
+BUFFER_RW(b_global_index_count,	uint,	1);
+BUFFER_RW(b_light_grids,		uint,	2);
+BUFFER_RW(b_light_index_lists,	uint,	3);
+#	endif //defined(CLUSTER_BUILD_AABB)
+BUFFER_RO(b_lights,				vec4,	4);
 
-#else //!(defined(CLUSTER_BUILD) || defined(CLUSTER_PREPROCESS))
+#else //!(defined(CLUSTER_BUILD_AABB) || defined(CLUSTER_LIGHT_CULL))
 
 BUFFER_RO(b_light_grids,		uint,	10);
 BUFFER_RO(b_light_index_lists,	uint,	11);
-BUFFER_RO(b_lights,				vec4,		12);
-#endif //defined(CLUSTER_BUILD) || defined(CLUSTER_PREPROCESS)
+BUFFER_RO(b_lights,				vec4,	12);
+#endif //defined(CLUSTER_BUILD_AABB) || defined(CLUSTER_LIGHT_CULL)
 
 
 

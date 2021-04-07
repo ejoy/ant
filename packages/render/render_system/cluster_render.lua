@@ -51,12 +51,12 @@ local cluster_aabb_buffer_size<const> = cluster_count * cluster_aabb_size_in_vec
 
 local cluster_aabb_fx = assetmgr.load_fx{
     cs = "/pkg/ant.resources/shaders/compute/cs_cluster_aabb.sc",
-    setting = {CLUSTER_BUILD=1},
+    setting = {CLUSTER_BUILD_AABB=1},
 }
 
 local cluster_light_cull_fx = assetmgr.load_fx{
     cs = "/pkg/ant.resources/shaders/compute/cs_lightcull.sc",
-    setting = {CLUSTER_PREPROCESS=1}
+    setting = {CLUSTER_LIGHT_CULL=1}
 }
 
 -- cluster [forward] render system
