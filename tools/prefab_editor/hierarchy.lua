@@ -23,7 +23,7 @@ local function find(t, eid)
     return nil
 end
 function hierarchy:add(ineid, tp, inpeid)
-    local node = { eid = ineid, parent = inpeid, template = tp, children = {}, locked = {false}, visible = {true} }
+    local node = { eid = ineid, parent = inpeid, template = utils.deep_copy(tp), children = {}, locked = {false}, visible = {true} }
     if inpeid then
         local parent = self.all[inpeid]
         if parent then
@@ -95,27 +95,48 @@ function hierarchy:set_parent(eid, peid)
     self.all[eid] = removed_node
 end
 
+local function find_policy(t, policy)
+    for i, v in ipairs(t) do
+        if v == policy then
+            return i
+        end
+    end
+    return nil
+end
+
 function hierarchy:update_prefab_template()
     local prefab_template = {}
     local function construct_entity(eid, pt)
         local templ = self.all[eid].template.template
-        if templ and templ.data and templ.data.collider then
-            local templ_copy = utils.deep_copy(templ)
-            templ_copy.data.color = nil
-            templ_copy.data.mesh = nil
-            templ_copy.data.material = nil
-            templ_copy.data.state = nil
-            templ_copy.policy = {
-                "ant.general|name",
-                "ant.scene|hierarchy_policy",
-                "ant.scene|transform_policy",
-                "ant.collision|collider_policy"
-            }
-            table.insert(pt, templ_copy)
-        else
-            table.insert(pt, self.all[eid].template.template)
+        if templ and templ.data then
+            if templ.data.collider then
+                local templ_copy = utils.deep_copy(templ)
+                templ_copy.data.color = nil
+                templ_copy.data.mesh = nil
+                templ_copy.data.material = nil
+                templ_copy.data.state = nil
+                templ_copy.policy = {
+                    "ant.general|name",
+                    "ant.scene|hierarchy_policy",
+                    "ant.scene|transform_policy",
+                    "ant.collision|collider_policy"
+                }
+                templ = templ_copy
+            elseif templ.data.tag then
+                local policy_name = "ant.general|tag"
+                local find = find_policy(templ.policy, policy_name)
+                if #templ.data.tag > 0 then
+                    if not find then
+                        templ.policy[#templ.policy + 1] = policy_name
+                    end
+                elseif find then
+                    templ.data.tag = nil
+                    table.remove(templ.policy, find)
+                end
+            end
         end
-        
+        table.insert(pt, templ)
+
         local pidx = (#pt < 1) and "root" or #pt
         local keyframe_templ = self.all[eid].template.keyframe
         if keyframe_templ then

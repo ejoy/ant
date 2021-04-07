@@ -11,6 +11,7 @@ function BaseView:_init()
     local base = {}
     base["prefab"]   = uiproperty.EditText({label = "Prefabe", readonly = true})
     base["name"]     = uiproperty.EditText({label = "Name"})
+    base["tag"]      = uiproperty.EditText({label = "Tag"})
     base["position"] = uiproperty.Float({label = "Position", dim = 3, speed = 0.1})
     base["rotate"]   = uiproperty.Float({label = "Rotate", dim = 3})
     base["scale"]    = uiproperty.Float({label = "Scale", dim = 3, speed = 0.05})
@@ -21,6 +22,8 @@ function BaseView:_init()
     self.base.prefab:set_getter(function() return self:on_get_prefab() end)
     self.base.name:set_setter(function(value) self:on_set_name(value) end)      
     self.base.name:set_getter(function() return self:on_get_name() end)
+    self.base.tag:set_setter(function(value) self:on_set_tag(value) end)      
+    self.base.tag:set_getter(function() return self:on_get_tag() end)
     self.base.position:set_setter(function(value) self:on_set_position(value) end)
     self.base.position:set_getter(function() return self:on_get_position() end)
     self.base.rotate:set_setter(function(value) self:on_set_rotate(value) end)
@@ -39,6 +42,7 @@ function BaseView:set_model(eid)
     end
     local transform = {}
     transform[#transform + 1] = self.base.name
+    transform[#transform + 1] = self.base.tag
     transform[#transform + 1] = self.base.position
     if self:has_rotate() then
         transform[#transform + 1] = self.base.rotate
@@ -65,6 +69,17 @@ end
 
 function BaseView:on_get_name()
     return world[self.eid].name
+end
+
+function BaseView:on_set_tag(value)
+    local template = hierarchy:get_template(self.eid)
+    template.template.data.tag = value
+    world[self.eid].tag = value
+    world:pub {"EntityEvent", "tag", self.eid, value}
+end
+
+function BaseView:on_get_tag()
+    return world[self.eid].tag or ""
 end
 
 function BaseView:on_set_position(value)

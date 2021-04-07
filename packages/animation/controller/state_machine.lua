@@ -240,15 +240,15 @@ local function do_set_event(eid, anim, events)
 	if not e.keyframe_events then
 		e.keyframe_events = {}
 	end
-	if events.event then
-		for _, ev in ipairs(events.event) do
-			for _, e in ipairs(ev.event_list) do
-				if e.event_type == "Collision" then
-					e.collision.collider = events.collider[e.collision.collider_index]
-				end
-			end
-		end
-	end
+	-- if events.event then
+	-- 	for _, ev in ipairs(events.event) do
+	-- 		for _, e in ipairs(ev.event_list) do
+	-- 			if e.event_type == "Collision" then
+	-- 				e.collision.collider = events.collider[e.collision.collider_index]
+	-- 			end
+	-- 		end
+	-- 	end
+	-- end
 	e.keyframe_events[anim] = events
 	if e._animation._current.animation == e.animation[anim] then
 		e._animation._current.event_state.keyframe_events = e.keyframe_events[anim]

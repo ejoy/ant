@@ -35,7 +35,7 @@ if fs.exists(output) then
     fs.remove_all(output / "packages")
     fs.remove_all(output / "tools")
 else
-    fs.mkdir(output)
+    fs.create_directories(output)
 end
 
 copy_directory(input / "bin" / "msvc" / "Release", output / "bin", function (path)
