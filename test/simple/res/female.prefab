@@ -1,0 +1,124 @@
+---
+action:
+  mount: root
+data:
+  name: "Root Scene"
+  scene_entity: true
+  transform:
+    s: {-1, 1, 1}
+policy:
+  ant.general|name
+  ant.scene|hierarchy_policy
+  ant.scene|transform_policy
+script:/pkg/ant.ecs/default_script.lua
+---
+action:
+  mount: 1
+data:
+  name: RootNode
+  scene_entity: true
+  transform:
+    r: {0, 0, 0, 1}
+    s: {1, 1, 1}
+    t: {0, 0, 0}
+policy:
+  ant.general|name
+  ant.scene|hierarchy_policy
+  ant.scene|transform_policy
+---
+action:
+  mount: 2
+data:
+  animation:
+    idle: /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
+    jumping: /pkg/ant.resources.binary/meshes/female/animations/junmping.ozz
+    punching: /pkg/ant.resources.binary/meshes/female/animations/punching.ozz
+    running: /pkg/ant.resources.binary/meshes/female/animations/running.ozz
+    running-fast: /pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz
+    walking: /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
+  animation_birth: idle
+  material: /pkg/ant.resources.binary/meshes/female/female.glb|materials/asdf1_Beta_HighLimbsGeoSG2.material
+  mesh: /pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Surface_P1.meshbin
+  meshskin: /pkg/ant.resources.binary/meshes/female/female.glb|meshes/skin2.skinbin
+  name: Beta_Surface.1
+  scene_entity: true
+  skeleton: /pkg/ant.resources.binary/meshes/female/female.glb|animations/skeleton.ozz
+  state: 7
+  tag: body
+  transform:
+    r: {0, 0, 0, 1}
+    s: {1, 1, 1}
+    t: {0, 0, 0}
+policy:
+  ant.animation|animation
+  ant.animation|animation_controller.birth
+  ant.animation|skinning
+  ant.general|name
+  ant.render|render
+  ant.scene|hierarchy_policy
+  ant.general|tag
+---
+action:
+  mount: 3
+data:
+  follow_flag: 1
+  follow_joint: "mixamorig:LeftHand"
+  name: slot1
+  slot: true
+  transform: {}
+policy:
+  ant.general|name
+  ant.scene|slot_policy
+  ant.scene|transform_policy
+---
+action:
+  mount: 4
+data:
+  collider:
+    sphere:
+      ---
+      origin: {0, 0, 0, 1}
+      radius: 0.1
+  name: collider0
+  scene_entity: true
+  transform:
+    s: 10
+policy:
+  ant.general|name
+  ant.scene|hierarchy_policy
+  ant.scene|transform_policy
+  ant.collision|collider_policy
+---
+action:
+  mount: 3
+data:
+  follow_flag: 1
+  follow_joint: "mixamorig:RightHand"
+  name: slot2
+  slot: true
+  transform:
+    r: {0, 0, 0, 1}
+    s: {1, 1, 1}
+    t: {2.384185791015625e-07, 0, 0}
+policy:
+  ant.general|name
+  ant.scene|slot_policy
+  ant.scene|transform_policy
+---
+action:
+  mount: root
+data:
+  color: {1, 1, 1, 1}
+  intensity: 2
+  light_type: directional
+  name: directional1
+  radian: 0.7853981633974483
+  range: 0
+  state: 1
+  transform:
+    r: {0.03485451266169548, 0.8202439546585083, -0.34508469700813293, -0.45486438274383545}
+    s: {1, 1, 1}
+    t: {0, 0, 0}
+policy:
+  ant.render|light
+  ant.general|name

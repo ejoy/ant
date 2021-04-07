@@ -286,7 +286,8 @@ function m.show()
                         or path:equal_extension(".dds")
                         or path:equal_extension(".prefab")
                         or path:equal_extension(".glb")
-                        or path:equal_extension(".efk") then
+                        or path:equal_extension(".efk")
+                        or path:equal_extension(".lua") then
                         if imgui.widget.BeginDragDropSource() then
                             imgui.widget.SetDragDropPayload("DragFile", tostring(path))
                             imgui.widget.EndDragDropSource()

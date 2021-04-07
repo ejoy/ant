@@ -6,6 +6,30 @@ function m:init()
     irq.set_view_clear_color(world:singleton_entity_id "main_queue", 0)
 
     world:prefab_instance "res/scenes.prefab"
-    local prefab = world:prefab_instance "res/Fox.glb|mesh.prefab"
-    world:prefab_event(prefab, "birth")
+    -- local prefab = world:prefab_instance "res/Fox.glb|mesh.prefab"
+    -- -- prefab_event(prefab, event, tag, param)
+    -- world:prefab_event(prefab, "autoplay", "fox", "Survey")
+
+    local prefab = world:prefab_instance "res/female.prefab"
+    --[[
+        autoplay : auto play animation
+        play     : play animation
+        duration : get current animation duration
+        time     : set animtion current time
+        set_position
+        set_rotation
+        set_scale
+        get_position
+        get_rotation
+        get_scale
+    --]]
+    local tag = "body"
+    world:prefab_event(prefab, "autoplay", tag, "walking")
+    -- world:prefab_event(prefab, "play", tag, "running")
+    -- world:prefab_event(prefab, "time", tag, 0.08)
+    -- local duration = world:prefab_event(prefab, "duration", tag)
+    -- world:prefab_event(prefab, "set_position", tag, {1, 0, 0})
+    -- world:prefab_event(prefab, "get_position", tag)
+    -- world:prefab_event(prefab, "set_rotation", tag, {45, 0, 0})
+    -- world:prefab_event(prefab, "set_scale", tag, {0.5, 0.5, 0.5})
 end

@@ -6,9 +6,10 @@ local BaseView  = require "widget.view_class".BaseView
 local world
 local iom
 local gizmo
-
+local prefab_mgr
 function BaseView:_init()
     local base = {}
+    base["script"]   = uiproperty.ResourcePath({label = "Script", extension = ".lua"})
     base["prefab"]   = uiproperty.EditText({label = "Prefabe", readonly = true})
     base["name"]     = uiproperty.EditText({label = "Name"})
     base["tag"]      = uiproperty.EditText({label = "Tag"})
@@ -19,6 +20,7 @@ function BaseView:_init()
     self.base        = base
     self.general_property = uiproperty.Group({label = "General"}, base)
     --
+    self.base.script:set_getter(function() return prefab_mgr.prefab_script end)
     self.base.prefab:set_getter(function() return self:on_get_prefab() end)
     self.base.name:set_setter(function(value) self:on_set_name(value) end)      
     self.base.name:set_getter(function() return self:on_get_name() end)
@@ -117,6 +119,7 @@ function BaseView:has_scale()
 end
 
 function BaseView:update()
+    self.base.script:update()
     if self.is_prefab then
         self.base.prefab:update()
     end
@@ -124,6 +127,7 @@ function BaseView:update()
 end
 
 function BaseView:show()
+    self.base.script:show()
     if self.is_prefab then
         self.base.prefab:show()
     end
@@ -132,6 +136,7 @@ end
 
 return function(w)
     world   = w
+    prefab_mgr = require "prefab_manager"(world)
     iom     = world:interface "ant.objcontroller|obj_motion"
     gizmo   = require "gizmo.gizmo"(world)
     return BaseView
