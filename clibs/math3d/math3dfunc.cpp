@@ -141,11 +141,12 @@ equal_one(float f) {
 
 int
 math3d_decompose_scale(const float mat[16], float scale[4]) {
+	const glm::mat4& m = MAT(mat);
 	int ii;
 	scale[3] = 0;
 	for (ii = 0; ii < 3; ++ii) {
-		const float * v = (const float *)&MAT(mat)[ii];
-		float dot = glm::dot(VEC3(v),VEC3(v));
+		const float* v = &m[ii].x;
+		float dot = glm::dot(VEC3(v), VEC3(v));
 		if (equal_one(dot)) {
 			scale[ii] = 1.0f;
 		} else {
@@ -156,6 +157,7 @@ math3d_decompose_scale(const float mat[16], float scale[4]) {
 				return 1;
 			}
 		}
+		scale[ii] *= glm::sign(m[ii][ii]);
 	}
 	if (scale[0] == 1.0f && scale[1] == 1.0f && scale[2] == 1.0f) {
 		return 1;
@@ -166,7 +168,7 @@ math3d_decompose_scale(const float mat[16], float scale[4]) {
 void
 math3d_decompose_rot(const float mat[16], float quat[4]) {
 	glm::quat &q = *(glm::quat *)quat;
-	glm::mat3x3 rotMat(MAT(mat));
+	glm::mat rotMat(MAT(mat));
 	float scale[4];
 	if (math3d_decompose_scale(mat, scale) == 0) {
 		int ii;
