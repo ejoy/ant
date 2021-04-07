@@ -157,7 +157,9 @@ math3d_decompose_scale(const float mat[16], float scale[4]) {
 				return 1;
 			}
 		}
-		scale[ii] *= glm::sign(m[ii][ii]);
+		if (glm::determinant(m) < 0){
+			scale[ii] *= -1;
+		}
 	}
 	if (scale[0] == 1.0f && scale[1] == 1.0f && scale[2] == 1.0f) {
 		return 1;
