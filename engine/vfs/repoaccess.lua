@@ -60,8 +60,10 @@ function access.readmount(repo, asAbsolute)
 			addmount('pkg/'..pkgname, path)
 		elseif name == '@pkg' then
 			for pkgpath in path:list_directory() do
-				local pkgname = load_package(pkgpath)
-				addmount('pkg/'..pkgname, pkgpath)
+				if not pkgpath:string():match ".DS_Store" then
+					local pkgname = load_package(pkgpath)
+					addmount('pkg/'..pkgname, pkgpath)
+				end
 			end
 		else
 			addmount(name, path)
