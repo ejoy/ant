@@ -493,6 +493,7 @@ function m:reset_prefab()
     light_gizmo.clear()
     hierarchy:clear()
     self.root = create_simple_entity("scene root")
+    self.prefab_script = ""
     hierarchy:set_root(self.root)
 end
 
@@ -501,6 +502,12 @@ function m:open_prefab(prefab)
     self.prefab = prefab
     local entities = worldedit:prefab_instance(prefab)
     self.entities = entities
+    for _, c in ipairs(entities.__class) do
+        if c.script then
+            self.prefab_script = c.script
+            break
+        end
+    end
     local remove_entity = {}
     local add_entity = {}
     local last_camera
@@ -677,6 +684,7 @@ function m:save_prefab(path)
     filename = filename or prefab_filename
     local saveas = (lfs.path(filename) ~= lfs.path(prefab_filename))
     local current_templ = hierarchy:update_prefab_template()
+    current_templ[1].script = (#self.prefab_script > 0) and self.prefab_script or "/pkg/ant.ecs/default_script.lua"
     self.entities.__class = current_templ
     
     local path_list = split(prefab_filename)
