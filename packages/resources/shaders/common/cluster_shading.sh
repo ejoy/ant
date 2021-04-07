@@ -32,33 +32,23 @@ struct AABB {
 };
 
 #if defined(CLUSTER_BUILD) || defined(CLUSTER_PREPROCESS)
-#define CLUSTER_BUFFER_AABB_STAGE               0
-#define CLUSTER_BUFFER_GLOBAL_INDEX_COUNT_STAGE 1
-#define CLUSTER_BUFFER_LIGHT_GRID_STAGE         2
-#define CLUSTER_BUFFER_LIGHT_INDEX_LIST_STAGE   3
-#define CLUSTER_BUFFER_LIGHT_INFO_STAGE         4
+BUFFER_RW(b_cluster_AABBs,		vec4,		0);
 
-#	if defined(CLUSTER_BUILD)
-// only 2 buffer needed: lihgt info for read and aabb for write
-BUFFER_RW(b_cluster_AABBs,		vec4,		CLUSTER_BUFFER_AABB_STAGE);
-#	else //defined(CLUSTER_BUILD)
-// 5 buffer needed, aabb and light infor for read, light grid and light index list for write, global index count for read/write
-BUFFER_RO(b_cluster_AABBs,		vec4,		CLUSTER_BUFFER_AABB_STAGE);
-BUFFER_RW(b_light_grids,		uint,		CLUSTER_BUFFER_LIGHT_GRID_STAGE);
-BUFFER_RW(b_global_index_count,	uint,  		CLUSTER_BUFFER_GLOBAL_INDEX_COUNT_STAGE);
-BUFFER_RW(b_light_index_lists,	uint,		CLUSTER_BUFFER_LIGHT_INDEX_LIST_STAGE);
+#	if defined(CLUSTER_PREPROCESS)
+BUFFER_RW(b_light_grids,			uint,	1);
+BUFFER_RW(b_global_index_count,	uint,		2);
+BUFFER_RW(b_light_index_lists,		uint,	3);
 #	endif //defined(CLUSTER_BUILD)
+BUFFER_RO(b_lights,				vec4,		4);
 
 #else //!(defined(CLUSTER_BUILD) || defined(CLUSTER_PREPROCESS))
-// render stage need 3 buffer, light grid, light index lists and light info only for read
-#define CLUSTER_BUFFER_LIGHT_GRID_STAGE         10
-#define CLUSTER_BUFFER_LIGHT_INDEX_LIST_STAGE   11
-#define CLUSTER_BUFFER_LIGHT_INFO_STAGE         12
-BUFFER_RO(b_light_grids,		uint,		CLUSTER_BUFFER_LIGHT_GRID_STAGE);
-BUFFER_RO(b_light_index_lists,	uint,		CLUSTER_BUFFER_LIGHT_INDEX_LIST_STAGE);
+
+BUFFER_RO(b_light_grids,		uint,	10);
+BUFFER_RO(b_light_index_lists,	uint,	11);
+BUFFER_RO(b_lights,				vec4,		12);
 #endif //defined(CLUSTER_BUILD) || defined(CLUSTER_PREPROCESS)
 
-BUFFER_RO(b_lights,				vec4,		CLUSTER_BUFFER_LIGHT_INFO_STAGE);
+
 
 uniform vec4 u_cluster_size;
 uniform vec4 u_cluster_shading_param;
@@ -173,7 +163,7 @@ float which_z(uint depth_slice, uint num_slice){
     _BUF.GetDimensions(_LEN);\
 }
 #else //!BGFX_SHADER_LANGUAGE_HLSL
-#define buffer_length(_BUF, _LEN){
+#define buffer_length(_BUF, _LEN){\
 	_LEN = _BUF.length();\
 }
 #endif //BGFX_SHADER_LANGUAGE_HLSL

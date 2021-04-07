@@ -203,14 +203,16 @@ local function generate_properties(fx, properties)
 		new_properties = {}
 		for _, u in ipairs(uniforms) do
 			local n = u.name
-			local v = to_v(properties[n]) or isp.get(n)
-			new_properties[n] = {
-				value = v,
-				handle = u.handle,
-				type = u.type,
-				set = imaterial.which_set_func(v),
-				ref = true,
-			}
+			if not n:match "@data" then
+				local v = to_v(properties[n]) or isp.get(n)
+				new_properties[n] = {
+					value = v,
+					handle = u.handle,
+					type = u.type,
+					set = imaterial.which_set_func(v),
+					ref = true,
+				}
+			end
 		end
 	end
 

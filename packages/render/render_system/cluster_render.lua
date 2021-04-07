@@ -144,16 +144,23 @@ local function set_buffers(which_stage, which_access)
     end
 end
 
-local function build_cluster_aabb_struct()
+local function dispatch_program(dimx, dimy, dimz, fx, stagename, accessname)
     local mq_eid = world:singleton_entity_id "main_queue"
-    set_buffers("stage", "build_access")
+    set_buffers(stagename, accessname)
 
     local properties = isp.properties()
-    for _, u in ipairs(cluster_aabb_fx.uniforms) do
-        bgfx.set_uniform(u.handle, assert(properties[u.name]).value)
+    for _, u in ipairs(fx.uniforms) do
+        local n = u.name
+        if not n:match ".@data" then
+            bgfx.set_uniform(u.handle, assert(properties[n]).value)
+        end
     end
 
-    bgfx.dispatch(irq.viewid(mq_eid), cluster_aabb_fx.prog, cluster_grid_x, cluster_grid_y, cluster_grid_z)
+    bgfx.dispatch(irq.viewid(mq_eid), fx.prog, dimx, dimy, dimz)
+end
+
+local function build_cluster_aabb_struct()
+    dispatch_program(cluster_grid_x, cluster_grid_y, cluster_grid_z, cluster_aabb_fx, "stage", "build_access")
 end
 
 local cr_camera_mb
@@ -169,17 +176,7 @@ function cfs:post_init()
 end
 
 local function cull_lights()
-    local mq_eid = world:singleton_entity_id "main_queue"
-
-    --TODO: need abstract compute dispatch pipeline, which like render pipeline
-    local properties = isp.properties()
-    for _, u in ipairs(cluster_light_cull_fx.uniforms) do
-        bgfx.set_uniform(u.handle, assert(properties[u.name]).value)
-    end
-    set_buffers("stage", "cull_access")
-
-    --workgroup size: 16, 9, 4
-    bgfx.dispatch(irq.viewid(mq_eid), cluster_light_cull_fx.prog, 1, 1, cluster_cull_light_size)
+    dispatch_program(1, 1, cluster_cull_light_size, cluster_light_cull_fx, "stage", "cull_access")
 end
 
 function cfs:render_preprocess()
