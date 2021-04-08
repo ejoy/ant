@@ -433,7 +433,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = DQSAS4352B;
 				ENABLE_HARDENED_RUNTIME = YES;
-				INSTALL_PATH = /Users/ejoy/Github/ant/bin/osx/debug;
+				GCC_INCREASE_PRECOMPILED_HEADER_SHARING = YES;
+				INSTALL_PATH = ../../bin/osx/debug;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SYMROOT = ../../bin/osx/debug;
 			};
@@ -446,7 +447,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = DQSAS4352B;
 				ENABLE_HARDENED_RUNTIME = YES;
-				INSTALL_PATH = /Users/ejoy/Github/ant/bin/osx/release;
+				GCC_INCREASE_PRECOMPILED_HEADER_SHARING = YES;
+				INSTALL_PATH = ../../bin/osx/release;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SYMROOT = ../../bin/osx/release;
 			};
