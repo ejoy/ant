@@ -13,7 +13,10 @@ prebuilt.load("prefab", "res/scenes.prefab")
 if identity then
     prebuilt.build(identity)
 else
-    prebuilt.build "windows_direct3d11"
+    if require "platform".OS == "Windows" then
+        prebuilt.build "windows_direct3d11"
+    end
+
     prebuilt.build "ios_metal"
     prebuilt.build "osx_metal"
 end

@@ -30,7 +30,7 @@ ifeq "$(PLAT)" "ios"
   CMAKE_OZZ_OPT = -Dozz_build_tools=OFF -Dozz_build_gltf=OFF
 endif
 
-CMAKE_OPT_ozz-animation=$(CMAKE_OZZ_OPT) -Dozz_build_samples=OFF -Dozz_build_fbx=OFF -Dozz_build_howtos=OFF -Dozz_build_cpp11=ON -DEMSCRIPTEN=FALSE
+CMAKE_OPT_ozz-animation=$(CMAKE_OZZ_OPT) -Dozz_build_samples=OFF -Dozz_build_fbx=OFF -Dozz_build_howtos=OFF -Dozz_build_cpp11=ON -Dozz_build_tests=OFF -DEMSCRIPTEN=FALSE
 ifeq "$(PLAT)" "mingw"
 TOOL_EXT_NAME=.exe
 endif

@@ -10,6 +10,8 @@ else
 OSX_GCC=osx
 endif
 
+else ifeq "$(PLAT)" "ios"
+GENIE=cd bgfx && ../bx/tools/bin/darwin/genie
 else
 GENIE=cd bgfx && ../bx/tools/bin/windows/genie
 endif
