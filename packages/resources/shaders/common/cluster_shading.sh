@@ -32,9 +32,11 @@ struct AABB {
 };
 
 #if defined(CLUSTER_BUILD_AABB) || defined(CLUSTER_LIGHT_CULL)
-BUFFER_RW(b_cluster_AABBs,		vec4,	0);
 
-#	if defined(CLUSTER_LIGHT_CULL)
+#	if defined(CLUSTER_BUILD_AABB)
+BUFFER_RW(b_cluster_AABBs,		vec4,	0);
+#	else// defined CLUSTER_LIGHT_CULL
+BUFFER_RO(b_cluster_AABBs,		vec4,	0);
 BUFFER_RW(b_global_index_count,	uint,	1);
 BUFFER_RW(b_light_grids,		uint,	2);
 BUFFER_RW(b_light_index_lists,	uint,	3);

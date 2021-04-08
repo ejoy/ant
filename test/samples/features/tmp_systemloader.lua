@@ -125,14 +125,14 @@ local function point_light_test()
     -- local cubeeid = world:instance "/pkg/ant.test.features/assets/entities/pbr_cube.prefab"[1]
     -- iom.set_position(cubeeid, {0, 0, 0, 1})
 
-    for _, r in ipairs{
-        math3d.quaternion{2.4, 0, 0},
-        math3d.quaternion{-2.4, 0, 0},
-        math3d.quaternion{0, 1, 0},
-    } do
-        local eid = world:instance "/pkg/ant.test.features/assets/entities/light_directional.prefab"[1]
-        iom.set_rotation(eid, r)
-    end
+    -- for _, r in ipairs{
+    --     math3d.quaternion{2.4, 0, 0},
+    --     math3d.quaternion{-2.4, 0, 0},
+    --     math3d.quaternion{0, 1, 0},
+    -- } do
+    --     local eid = world:instance "/pkg/ant.test.features/assets/entities/light_directional.prefab"[1]
+    --     iom.set_rotation(eid, r)
+    -- end
 end
 
 local icc = world:interface "ant.test.features|icamera_controller"
@@ -175,7 +175,7 @@ function init_loader_sys:post_init()
 
     icc.attach(mq.camera_eid)
     iccqs.attach(mq.camera_eid)
-    icamera.controller(mq.camera_eid, iccqs.get())
+    icamera.controller(mq.camera_eid, icc.get())
 
     camera_cache.icc.pos.v = {-10.5, 10, -5.5, 1}
     camera_cache.icc.dir.v = math3d.sub(mc.ZERO_PT, camera_cache.icc.pos)
