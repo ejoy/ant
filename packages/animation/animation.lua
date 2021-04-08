@@ -164,12 +164,12 @@ local function clear_animation_cache()
 end
 
 function ani_sys:do_refine()
-	for _, eid in world:each "pose_result" do
-		local e = world[eid]
-		if e.animation.fix_root_XZ then
-			e.pose_result:fix_root_XZ()
-		end
-	end
+	-- for _, eid in world:each "pose_result" do
+	-- 	local e = world[eid]
+	-- 	if e.animation.fix_root_XZ then
+	-- 		e.pose_result:fix_root_XZ()
+	-- 	end
+	-- end
 end
 
 function ani_sys:end_animation()
