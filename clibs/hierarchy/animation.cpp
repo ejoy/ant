@@ -455,7 +455,8 @@ private:
 
 	int fetch_result(lua_State* L) {
 		if (m_results.empty()) {
-			return luaL_error(L, "no result");
+			//return luaL_error(L, "no result");
+			return 0;
 		}
 		ozz::animation::LocalToModelJob job;
 		job.input = ozz::make_span(m_results.back());
