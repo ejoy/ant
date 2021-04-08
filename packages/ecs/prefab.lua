@@ -18,16 +18,56 @@ local function absolutePath(path, base)
 end
 
 local function command(w, set, name, ...)
-	assert(name == "play_animation")
-	local animation = w:interface "ant.animation|animation"
-	for _, eid in ipairs(set) do
-		animation.play(eid, ...)
+	local iom = w:interface "ant.objcontroller|obj_motion"
+	local iani = w:interface "ant.animation|animation"
+	--assert(name == "play_animation")
+	if name == "autoplay" then
+		for _, eid in ipairs(set) do
+			iani.play(eid, ...)
+		end
+	elseif name == "play" then
+		for _, eid in ipairs(set) do
+			iani.play(eid, ...)
+			iani.pause(eid, true)
+		end
+	elseif name == "time" then
+		for _, eid in ipairs(set) do
+			iani.set_time(eid, ...)
+		end
+	elseif name == "duration" then
+		for _, eid in ipairs(set) do
+			return iani.get_duration(eid)
+		end
+	elseif name == "set_position" then
+		for _, eid in ipairs(set) do
+			iom.set_position(eid, ...)
+		end
+	elseif name == "set_rotation" then
+		for _, eid in ipairs(set) do
+			iom.set_rotation(eid, ...)
+		end
+	elseif name == "set_scale" then
+		for _, eid in ipairs(set) do
+			iom.set_scale(eid, ...)
+		end
+	elseif name == "get_position" then
+		for _, eid in ipairs(set) do
+			return iom.get_position(eid)
+		end
+	elseif name == "get_rotation" then
+		for _, eid in ipairs(set) do
+			return iom.get_rotation(eid)
+		end
+	elseif name == "get_scale" then
+		for _, eid in ipairs(set) do
+			return iom.get_scale(eid)
+		end
 	end
 end
 
 local function createProxy(w, set)
 	return setmetatable({}, {__index=function (self, name)
-		local f = function (_,...) command(w, set, name, ...) end
+		local f = function (_,...) return command(w, set, name, ...) end
 		self[name] = f
 		return f
 	end})
@@ -99,7 +139,7 @@ function world:prefab_instance(filename)
 end
 
 function world:prefab_event(prefab, name, ...)
-	prefab.event[name](...)
+	return prefab.event[name](...)
 end
 
 return world

@@ -31,46 +31,36 @@ struct AABB {
     vec4 maxv;
 };
 
-#if defined(CLUSTER_BUILD) || defined(CLUSTER_PREPROCESS)
-#define CLUSTER_BUFFER_AABB_STAGE               0
-#define CLUSTER_BUFFER_GLOBAL_INDEX_COUNT_STAGE 1
-#define CLUSTER_BUFFER_LIGHT_GRID_STAGE         2
-#define CLUSTER_BUFFER_LIGHT_INDEX_LIST_STAGE   3
-#define CLUSTER_BUFFER_LIGHT_INFO_STAGE         4
+#if defined(CLUSTER_BUILD_AABB) || defined(CLUSTER_LIGHT_CULL)
+BUFFER_RW(b_cluster_AABBs,		vec4,	0);
 
-#	if defined(CLUSTER_BUILD)
-// only 2 buffer needed: lihgt info for read and aabb for write
-BUFFER_RW(b_cluster_AABBs,		vec4,		CLUSTER_BUFFER_AABB_STAGE);
-#	else //defined(CLUSTER_BUILD)
-// 5 buffer needed, aabb and light infor for read, light grid and light index list for write, global index count for read/write
-BUFFER_RO(b_cluster_AABBs,		vec4,		CLUSTER_BUFFER_AABB_STAGE);
-BUFFER_RW(b_light_grids,		uint,		CLUSTER_BUFFER_LIGHT_GRID_STAGE);
-BUFFER_RW(b_global_index_count,	uint,  		CLUSTER_BUFFER_GLOBAL_INDEX_COUNT_STAGE);
-BUFFER_RW(b_light_index_lists,	uint,		CLUSTER_BUFFER_LIGHT_INDEX_LIST_STAGE);
-#	endif //defined(CLUSTER_BUILD)
+#	if defined(CLUSTER_LIGHT_CULL)
+BUFFER_RW(b_global_index_count,	uint,	1);
+BUFFER_RW(b_light_grids,		uint,	2);
+BUFFER_RW(b_light_index_lists,	uint,	3);
+#	endif //defined(CLUSTER_BUILD_AABB)
+BUFFER_RO(b_lights,				vec4,	4);
 
-#else //!(defined(CLUSTER_BUILD) || defined(CLUSTER_PREPROCESS))
-// render stage need 3 buffer, light grid, light index lists and light info only for read
-#define CLUSTER_BUFFER_LIGHT_GRID_STAGE         10
-#define CLUSTER_BUFFER_LIGHT_INDEX_LIST_STAGE   11
-#define CLUSTER_BUFFER_LIGHT_INFO_STAGE         12
-BUFFER_RO(b_light_grids,		uint,		CLUSTER_BUFFER_LIGHT_GRID_STAGE);
-BUFFER_RO(b_light_index_lists,	uint,		CLUSTER_BUFFER_LIGHT_INDEX_LIST_STAGE);
-#endif //defined(CLUSTER_BUILD) || defined(CLUSTER_PREPROCESS)
+#else //!(defined(CLUSTER_BUILD_AABB) || defined(CLUSTER_LIGHT_CULL))
 
-BUFFER_RO(b_lights,				vec4,		CLUSTER_BUFFER_LIGHT_INFO_STAGE);
+BUFFER_RO(b_light_grids,		uint,	10);
+BUFFER_RO(b_light_index_lists,	uint,	11);
+BUFFER_RO(b_lights,				vec4,	12);
+#endif //defined(CLUSTER_BUILD_AABB) || defined(CLUSTER_LIGHT_CULL)
+
+
 
 uniform vec4 u_cluster_size;
-// unit_pre_pixel = u_screen_width / u_cluster_size.x, mean num pixel pre tile in x direction
-#define u_tile_unit_pre_pixel   u_cluster_size.w
 uniform vec4 u_cluster_shading_param;
 #define u_screen_width  u_cluster_shading_param.x
 #define u_screen_height u_cluster_shading_param.y
 #define u_nearZ         u_cluster_shading_param.z
 #define u_farZ          u_cluster_shading_param.w
+#define u_screen_size	u_cluster_shading_param.xy
 uniform vec4 u_cluster_shading_param2;
 #define u_slice_scale	u_cluster_shading_param2.x
 #define u_slice_bias	u_cluster_shading_param2.y
+#define u_tile_unit		u_cluster_shading_param2.zw
 
 /**
 about the depth slice:
@@ -109,7 +99,7 @@ float linear_depth(float nolinear_depth){
 
 uint which_cluster(vec3 fragcoord){
 	uint cluster_z     = uint(max(log2(linear_depth(fragcoord.z)) * u_slice_scale + u_slice_bias, 0.0));
-    uvec3 cluster_coord= uvec3(fragcoord.xy / u_tile_unit_pre_pixel, cluster_z);
+    uvec3 cluster_coord= uvec3(fragcoord.xy / u_tile_unit, cluster_z);
     return 	cluster_coord.x +
             u_cluster_size.x * cluster_coord.y +
             (u_cluster_size.x * u_cluster_size.y) * cluster_coord.z;
@@ -173,7 +163,7 @@ float which_z(uint depth_slice, uint num_slice){
     _BUF.GetDimensions(_LEN);\
 }
 #else //!BGFX_SHADER_LANGUAGE_HLSL
-#define buffer_length(_BUF, _LEN){
+#define buffer_length(_BUF, _LEN){\
 	_LEN = _BUF.length();\
 }
 #endif //BGFX_SHADER_LANGUAGE_HLSL

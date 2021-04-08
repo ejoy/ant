@@ -319,6 +319,7 @@ end
 
 local function on_update(eid)
     if not eid then return end
+    prefab_mgr:update_current_aabb(eid)
     if world[eid].collider then
         anim_view.on_collider_update(eid)
         return
@@ -328,7 +329,7 @@ local function on_update(eid)
     elseif world[eid].light_type then
         light_gizmo.update()
     end
-    prefab_mgr:update_current_aabb(eid)
+    
 end
 
 local cmd_queue = require "gizmo.command_queue"(world)
@@ -352,15 +353,12 @@ function m:data_changed()
         local template = hierarchy:get_template(target)
         if what == "move" then
             gizmo:set_position(v2)
-            --template.template.data.transform.position = v2
             cmd_queue:record {action = gizmo_const.MOVE, eid = target, oldvalue = v1, newvalue = v2}
         elseif what == "rotate" then
             gizmo:set_rotation(math3d.quaternion{math.rad(v2[1]), math.rad(v2[2]), math.rad(v2[3])})
-            --template.template.data.transform.rotate = v2
             cmd_queue:record {action = gizmo_const.ROTATE, eid = target, oldvalue = v1, newvalue = v2}
         elseif what == "scale" then
             gizmo:set_scale(v2)
-            --template.template.data.transform.scale = v2
             cmd_queue:record {action = gizmo_const.SCALE, eid = target, oldvalue = v1, newvalue = v2}
         elseif what == "name" then
             transform_dirty = false

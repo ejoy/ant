@@ -29,7 +29,14 @@ end
 local input = fs.path "./"
 local output = fs.path "../ant_release"
 
-fs.remove_all(output)
+if fs.exists(output) then
+    fs.remove_all(output / "bin")
+    fs.remove_all(output / "engine")
+    fs.remove_all(output / "packages")
+    fs.remove_all(output / "tools")
+else
+    fs.create_directories(output)
+end
 
 copy_directory(input / "bin" / "msvc" / "Release", output / "bin", function (path)
    return path:equal_extension '.dll' or path:equal_extension'.exe'
@@ -40,4 +47,4 @@ copy_directory(input / "tools" / "prefab_editor", output / "tools" / "prefab_edi
     return path ~= input / "tools" / "prefab_editor" / ".build"
 end)
 
-fs.copy_file(input / "run_editor.bat", output / "run_editor.bat")
+fs.copy_file(input / "run_editor.bat", output / "run_editor.bat", true)

@@ -117,13 +117,22 @@ local function point_light_test()
         {  3, 2,-3},
     }
 
-    for _, p in ipairs(pl_pos) do
-        local  lighteid = world:instance "/pkg/ant.test.features/assets/entities/light_point.prefab"[1]
-        iom.set_position(lighteid, p)
-    end
+    -- for _, p in ipairs(pl_pos) do
+    --     local  lighteid = world:instance "/pkg/ant.test.features/assets/entities/light_point.prefab"[1]
+    --     iom.set_position(lighteid, p)
+    -- end
 
     -- local cubeeid = world:instance "/pkg/ant.test.features/assets/entities/pbr_cube.prefab"[1]
     -- iom.set_position(cubeeid, {0, 0, 0, 1})
+
+    for _, r in ipairs{
+        math3d.quaternion{2.4, 0, 0},
+        math3d.quaternion{-2.4, 0, 0},
+        math3d.quaternion{0, 1, 0},
+    } do
+        local eid = world:instance "/pkg/ant.test.features/assets/entities/light_directional.prefab"[1]
+        iom.set_rotation(eid, r)
+    end
 end
 
 local icc = world:interface "ant.test.features|icamera_controller"
@@ -138,6 +147,8 @@ function init_loader_sys:init()
 
     ientity.create_procedural_sky()
     --target_lock_test()
+
+    world:instance "/pkg/ant.resources.binary/meshes/testBDcloud.glb|mesh.prefab"
 
     icc.create()
     iccqs.create()

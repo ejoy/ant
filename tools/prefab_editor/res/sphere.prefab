@@ -2,10 +2,10 @@
 action:
   mount: root
 data:
-  name: Root
+  name: "Root Scene"
   scene_entity: true
   transform:
-    s: 1
+    s: {-1, 1, 1}
 policy:
   ant.general|name
   ant.scene|hierarchy_policy
@@ -14,15 +14,48 @@ policy:
 action:
   mount: 1
 data:
-  color: {1, 1, 1, 1}
-  material: /pkg/ant.resources/materials/singlecolor.material
-  mesh: /pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin
-  name: sphere
+  name: RootNode
   scene_entity: true
-  state: 5
   transform:
-    s: 50
+    r: {0, 0, 0, 1}
+    s: {1, 1, 1}
+    t: {0, 0, 0}
 policy:
-  ant.render|render
   ant.general|name
   ant.scene|hierarchy_policy
+  ant.scene|transform_policy
+---
+action:
+  mount: 2
+data:
+  material: /pkg/ant.resources.binary/meshes/base/sphere.glb|materials/lambert1.material
+  mesh: /pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin
+  name: pSphere1
+  scene_entity: true
+  state: 7
+  transform:
+    r: {0, 0, 0, 1}
+    s: {100, 100, 100}
+    t: {0, 0, 0}
+policy:
+  ant.general|name
+  ant.render|render
+  ant.scene|hierarchy_policy
+---
+action:
+  mount: root
+data:
+  color: {1, 1, 1, 1}
+  intensity: 2
+  light_type: directional
+  motion_type: dynamic
+  name: directional4
+  radian: 0.7853981633974483
+  range: 1
+  state: 1
+  transform:
+    r: {2.2689280275926285, 0, 0}
+    t: {0, 5, 0}
+policy:
+  ant.render|light
+  ant.general|name

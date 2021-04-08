@@ -7,8 +7,10 @@
 class lua_event_listener;
 class lua_event_listener_instancer;
 
-class Rml::Element;
-class Rml::Document;
+namespace Rml {
+class Element;
+class Document;
+}
 
 enum class LuaEvent : int {
 	OnDocumentCreate = 1,

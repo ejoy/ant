@@ -5,16 +5,6 @@
 
 uniform vec4 u_clip_planes[4];
 
-mat3 mat3_from_columns(vec3 v0, vec3 v1, vec3 v2)
-{
-	mat3 m = mat3(v0, v1, v2);
-#ifdef BGFX_SHADER_LANGUAGE_HLSL
-	return transpose(m);
-#else
-	return m;
-#endif
-}
-
 mat3 to_tbn(vec3 t, vec3 b, vec3 n)
 {
 	mat3 TBN = mat3(t, b, n);
@@ -113,42 +103,32 @@ mat3 calc_tbn(vec3 n, vec3 t, vec3 b, mat4 worldMat)
  	return to_tbn(tangent, bitangent, normal);
 }
 
-#if BGFX_SHADER_TYPE_FRAGMENT
-mat3 tbn_from_world_pos(vec3 normal, vec3 posWS, vec2 texcoord)
+// #if BGFX_SHADER_TYPE_FRAGMENT
+// mat3 tbn_from_world_pos(vec3 normal, vec3 posWS, vec2 texcoord)
+// {
+//     vec3 Q1  = dFdx(posWS);
+//     vec3 Q2  = dFdy(posWS);
+//     vec2 st1 = dFdx(texcoord);
+//     vec2 st2 = dFdy(texcoord);
+
+//     vec3 N  = normalize(normal);
+//     vec3 T  = normalize(Q1*st2.y - Q2*st1.y);
+//     vec3 B  = -normalize(cross(N, T));
+
+// 	return to_tbn(T, B, N);
+// }
+// #endif //BGFX_SHADER_TYPE_FRAGMENT
+
+vec3 remap_normal(vec2 normalTSXY)
 {
-    vec3 Q1  = dFdx(posWS);
-    vec3 Q2  = dFdy(posWS);
-    vec2 st1 = dFdx(texcoord);
-    vec2 st2 = dFdy(texcoord);
-
-    vec3 N  = normalize(normal);
-    vec3 T  = normalize(Q1*st2.y - Q2*st1.y);
-    vec3 B  = -normalize(cross(N, T));
-
-	return to_tbn(T, B, N);
-}
-#endif //BGFX_SHADER_TYPE_FRAGMENT
-
-float recalc_dxt_normal_Z(vec2 normalXY)
-{
-    return sqrt(1.0 - saturate(dot(normalXY, normalXY)));
-}
-
-vec3 remap_dxt_normal(vec2 normalTSXY, float offset)
-{
-    vec2 normalTSXY_Remap = normalTSXY * 2.0 - 1.0;
-    normalTSXY_Remap = normalTSXY_Remap * offset;
-    return vec3(normalTSXY_Remap, recalc_dxt_normal_Z(normalTSXY_Remap));
+    vec2 normalXY = normalTSXY * 2.0 - 1.0;
+	float z = sqrt(1.0 - dot(normalXY, normalXY));
+    return vec3(normalXY, z);
 }
 
-vec3 fetch_compress_normal(sampler2D normalMap, vec2 texcoord, float offset)
+vec3 fetch_bc5_normal(sampler2D normalMap, vec2 texcoord)
 {
-    return remap_dxt_normal(texture2DBc5(normalMap, texcoord), offset);
-}
-
-vec3 unpack_dxt_normal(vec4 packednormal)
-{
-    return remap_dxt_normal(packednormal.wy, 1.0);
+    return remap_normal(texture2DBc5(normalMap, texcoord));
 }
 
 vec4 map_screen_coord_to_ndc(vec2 p)

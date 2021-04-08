@@ -34,21 +34,17 @@ local default_pbr_param = {
     },
     metallic_roughness = {
         texture = "/pkg/ant.resources/textures/pbr/default/metallic_roughness.texture",
-        factor = {1, 1, 0, 0},
+        factor = {1, 0, 0, 0},
         stage = 1,
     },
     normal = {
         texture = "/pkg/ant.resources/textures/pbr/default/normal.texture",
         stage = 2,
     },
-    occlusion = {
-        texture = "/pkg/ant.resources/textures/pbr/default/occlusion.texture",
-        stage = 3,
-    },
     emissive = {
         texture = "/pkg/ant.resources/textures/pbr/default/emissive.texture",
         factor = {0, 0, 0, 0},
-        stage = 4,
+        stage = 3,
     },
 }
 
@@ -198,14 +194,14 @@ return function (output, glbdata, exports, tolocalpath)
             texture_desc.compress = {
                     android = "ASTC4x4",
                     ios = "ASTC4x4",
-                    windows = "BC3",
+                    windows = texture_desc.normalmap and "BC5" or "BC3",
                 }
         else
             texture_desc.format = "RGBA8"
         end
     end
 
-    local function fetch_texture_info(texidx, name, normalmap, colorspace)
+    local function fetch_texture_info(texidx, normalmap, colorspace)
         local tex = textures[texidx+1]
         local imgname = export_image(tex.source)
         local texture_desc = {
@@ -219,13 +215,18 @@ return function (output, glbdata, exports, tolocalpath)
         --TODO: check texture if need compress
         local need_compress<const> = true
         add_texture_format(texture_desc, need_compress)
-        utility.save_txt_file("./images/" .. name .. ".texture", texture_desc)
-        return "./../images/" .. name .. ".texture"
+        local imgname_noext = fs.path(imgname):stem():string()
+        local texfilename = "./images/" .. imgname_noext .. ".texture"
+        if fs.exists(fs.path(texfilename)) then
+            error("filename:" .. texfilename .. " already exist")
+        end
+        utility.save_txt_file(texfilename, texture_desc)
+        return "./../images/" .. imgname_noext .. ".texture"
     end
 
     local function handle_texture(tex_desc, name, normalmap, colorspace)
         local filename = tex_desc
-            and fetch_texture_info(tex_desc.index, name, normalmap, colorspace)
+            and fetch_texture_info(tex_desc.index, normalmap, colorspace)
             or default_pbr_param[name].texture
         return {
             texture = filename,
@@ -283,22 +284,20 @@ return function (output, glbdata, exports, tolocalpath)
                     s_basecolor          = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),
                     s_metallic_roughness = handle_texture(pbr_mr.metallicRoughnessTexture, "metallic_roughness", false, "linear"),
                     s_normal             = handle_texture(mat.normalTexture, "normal", true, "linear"),
-                    s_occlusion          = handle_texture(mat.occlusionTexture, "occlusion", false, "linear"),
                     s_emissive           = handle_texture(mat.emissiveTexture, "emissive", false, "sRGB"),
-    
                     u_basecolor_factor = tov4(pbr_mr.baseColorFactor, default_pbr_param.basecolor.factor),
                     u_metallic_roughness_factor = {
-                        0.0, -- keep for occlusion factor
+                        pbr_mr.metallicFactor or 1.0,
                         pbr_mr.roughnessFactor or 1.0,
-                        pbr_mr.metallicFactor or 0.0,
-                        pbr_mr.metallicRoughnessTexture and 1.0 or 0.0,
+                        0.0,
+                        0.0,
                     },
                     u_emissive_factor = tov4(mat.emissiveFactor, default_pbr_param.emissive.factor),
-                    u_material_texture_flags = {
+                    u_texture_flags = {
                         pbr_mr.baseColorTexture and 1.0 or 0.0,
+                        pbr_mr.metallicRoughnessTexture and 1.0 or 0.0,
                         mat.normalTexture and 1.0 or 0.0,
                         mat.emissiveTexture and 1.0 or 0.0,
-                        mat.occlusionTexture and 1.0 or 0.0,
                     },
                     u_IBLparam = {
                             1.0, -- perfilter cubemap mip levels
@@ -312,6 +311,10 @@ return function (output, glbdata, exports, tolocalpath)
                     }
                 },
             }
+
+            if mat.occlusionTexture then
+                print("WARNING: NOT SUPPORT occlusion texture right now!")
+            end
     
             local function refine_name(name)
                 local newname = name:gsub("['\\/:*?\"<>|]", "_")

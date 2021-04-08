@@ -83,14 +83,18 @@ struct font_glyph {
 };
 
 #ifdef FONT_EXPORT
-#   ifdef FONT_IMP
-#define FONT_API __declspec(dllexport)
-#	else //!FONT_IMP
-#define FONT_API __declspec(dllimport)
-#	endif//FONT_IMP
+#	ifdef _WIN32
+#		ifdef FONT_IMP
+#			define FONT_API __declspec(dllexport)
+#		else //!FONT_IMP
+#			define FONT_API __declspec(dllimport)
+#		endif//FONT_IMP
+#	else
+#		define FONT_API extern
+#	endif
 #else //!FONT_EXPORT
-#define FONT_API extern
-#	endif //FONT_EXPORT
+#	define FONT_API extern
+#endif //FONT_EXPORT
 
 void font_manager_init(struct font_manager *, struct truetype_font *ttf, void *L);
 FONT_API int font_manager_addfont_with_family(struct font_manager *F, const char* family);

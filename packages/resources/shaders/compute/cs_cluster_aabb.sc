@@ -35,14 +35,14 @@ void main(){
 #endif //HOMOGENEOUS_DEPTH
 
 #if ORIGIN_TOP_LEFT
-    vec2 topleft = gl_WorkGroupID.xy * u_tile_unit_pre_pixel;
-    vec2 bottomright = topleft + u_tile_unit_pre_pixel;
+    vec2 topleft = gl_WorkGroupID.xy * u_tile_unit;
+    vec2 bottomright = topleft + u_tile_unit;
 
     vec4 min_sS = vec4(topleft,     near_sS, 1.0);
     vec4 max_sS = vec4(bottomright, near_sS, 1.0);
 #else //!ORIGIN_TOP_LEFT
-    vec2 bottomleft = gl_WorkGroupID.xy * u_tile_unit_pre_pixel;
-    vec2 topright = bottomleft + u_tile_unit_pre_pixel;
+    vec2 bottomleft = gl_WorkGroupID.xy * u_tile_unit;
+    vec2 topright = bottomleft + u_tile_unit;
 
     vec4 min_sS = vec4(bottomleft,near_sS, 1.0);
     vec4 max_sS = vec4(topright,  near_sS, 1.0);

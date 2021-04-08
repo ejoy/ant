@@ -1,15 +1,6 @@
 #ifndef __SHADER_LIGHTING_SH__
 #define __SHADER_LIGHTING_SH__
 
-// lighting
-// uniform vec4 u_directional_lightdir;
-// uniform vec4 u_directional_color;
-
-// uniform vec4 u_light_color[MAX_LIGHT];	
-// uniform vec4 u_light_pos[MAX_LIGHT];	//xyz: pos, w: light type
-// uniform vec4 u_light_dir[MAX_LIGHT];	//point light: (0, 0, 0, 0), spot light, xyz: light dir, w: cutoff
-// uniform vec4 u_light_param[MAX_LIGHT];	//xyz for attenuation: const, linear, quadratic, w: outcutoff
-
 uniform vec4 u_light_count;
 uniform vec4 u_eyepos;
 
@@ -91,25 +82,17 @@ vec4 calc_fog_factor(vec4 color, float density, float LOG2, float distanceVS)
 	return saturate(1.0/exp2(density*density*distanceVS*distanceVS*LOG2)) * color;
 }
 
-vec3 unproject_normal(vec3 normal)
-{
-	// projection back
-	float pX = normal.x/(1.0 + normal.z);
-	float pY = normal.y/(1.0 + normal.z);
-	float denom = 2.0/(1.0 +pX*pX + pY*pY);
-	normal.x = pX * denom;
-	normal.y = pX * denom;
-	normal.z = denom -1.0; 
+// vec3 unproject_normal(vec3 normal)
+// {
+// 	// projection back
+// 	float pX = normal.x/(1.0 + normal.z);
+// 	float pY = normal.y/(1.0 + normal.z);
+// 	float denom = 2.0/(1.0 +pX*pX + pY*pY);
+// 	normal.x = pX * denom;
+// 	normal.y = pX * denom;
+// 	normal.z = denom -1.0; 
 
-	return normal;
-}
-
-vec3 remap_normal(vec2 normalTS)
-{
-	vec3 normal = vec3(normalTS, 0.0);
-	normal.xy = normal.xy * 2.0 - 1.0;
-	normal.z = sqrt((1.0 - dot(normal.xy, normal.xy)));
-	return normal;
-}
+// 	return normal;
+// }
 
 #endif //__SHADER_LIGHTING_SH__

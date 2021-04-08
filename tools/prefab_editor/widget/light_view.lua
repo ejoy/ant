@@ -1,6 +1,7 @@
 local utils     = require "common.utils"
 local math3d    = require "math3d"
 local uiproperty    = require "widget.uiproperty"
+local hierarchy = require "hierarchy"
 local world
 local ilight
 local light_gizmo
@@ -12,16 +13,16 @@ function LightView:_init()
     BaseView._init(self)
     local subproperty = {}
     subproperty["color"]        = uiproperty.Color({label = "Color", dim = 4})
-    subproperty["intensity"]    = uiproperty.Float({label = "Intensity"})
-    subproperty["range"]        = uiproperty.Float({label = "Range"})
-    subproperty["radian"]       = uiproperty.Float({label = "Radian"})
+    subproperty["intensity"]    = uiproperty.Float({label = "Intensity", min = 0, max = 100})
+    subproperty["range"]        = uiproperty.Float({label = "Range", min = 0, max = 500})
+    subproperty["radian"]       = uiproperty.Float({label = "Radian", min = 0, max = 180})
     self.subproperty            = subproperty
     self.light_property         = uiproperty.Group({label = "Light"}, {})
     --
     self.subproperty.color:set_getter(function() return self:on_get_color() end)
     self.subproperty.color:set_setter(function(...) self:on_set_color(...) end)
     self.subproperty.intensity:set_getter(function() return self:on_get_intensity() end)
-    self.subproperty.intensity:set_setter(function(...) self:on_set_intensity(...) end)
+    self.subproperty.intensity:set_setter(function(value) self:on_set_intensity(value) end)
     self.subproperty.range:set_getter(function() return self:on_get_range() end)
     self.subproperty.range:set_setter(function(value) self:on_set_range(value) end)
     self.subproperty.radian:set_getter(function() return self:on_get_radian() end)
@@ -46,6 +47,8 @@ function LightView:set_model(eid)
 end
 
 function LightView:on_set_color(...)
+    local template = hierarchy:get_template(self.eid)
+    template.template.data.color = ...
     ilight.set_color(self.eid, ...)
 end
 
@@ -53,8 +56,10 @@ function LightView:on_get_color()
     return ilight.color(self.eid)
 end
 
-function LightView:on_set_intensity(...)
-    ilight.set_intensity(self.eid, ...)
+function LightView:on_set_intensity(value)
+    local template = hierarchy:get_template(self.eid)
+    template.template.data.intensity = value
+    ilight.set_intensity(self.eid, value)
     light_gizmo.update_gizmo()
 end
 
@@ -63,6 +68,8 @@ function LightView:on_get_intensity()
 end
 
 function LightView:on_set_range(value)
+    local template = hierarchy:get_template(self.eid)
+    template.template.data.range = value
     ilight.set_range(self.eid, value)
     light_gizmo.update_gizmo()
 end
@@ -72,6 +79,8 @@ function LightView:on_get_range()
 end
 
 function LightView:on_set_radian(value)
+    local template = hierarchy:get_template(self.eid)
+    template.template.data.radian = value
     ilight.set_radian(self.eid, math.rad(value))
     light_gizmo.update_gizmo()
 end

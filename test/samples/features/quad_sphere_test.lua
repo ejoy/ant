@@ -3,11 +3,11 @@ local world = ecs.world
 
 local qst_sys = ecs.system "quad_sphere_test_system"
 local iqs = world:interface "ant.quad_sphere|iquad_sphere"
-local iom = world:interface "ant.objcontroller|obj_motion"
-local imaterial = world:interface "ant.asset|imaterial"
-local icamera = world:interface "ant.camera|camera"
-local ientity = world:interface "ant.render|entity"
-local ies = world:interface "ant.scene|ientity_state"
+-- local iom = world:interface "ant.objcontroller|obj_motion"
+-- local imaterial = world:interface "ant.asset|imaterial"
+-- local icamera = world:interface "ant.camera|camera"
+-- local ientity = world:interface "ant.render|entity"
+-- local ies = world:interface "ant.scene|ientity_state"
 local icc = world:interface "ant.quad_sphere|icamera_controller"
 local iqsd = world:interface "ant.quad_sphere|iquad_sphere_debug"
 local math3d = require "math3d"
@@ -20,14 +20,19 @@ local radius<const> = 6000
 
 --TODO: need remove, just for test
 local function generate_quad_uv_index()
-    local tn = qs_const.tiles_pre_trunk
+    -- local tn = qs_const.tiles_pre_trunk
+
+    -- local indices = {}
+    -- for i=1, tn do
+    --     indices[i] = math.random(1, 3)
+    -- end
+    -- return indices
 
     local indices = {}
-    for i=1, tn do
-        indices[i] = math.random(1, 3)
+    for i=1, qs_const.tiles_pre_trunk do
+        indices[#indices+1] = 1
     end
     return indices
-
 end
 
 local function generate_quad_uv_index2()
@@ -112,14 +117,14 @@ function qst_sys:init()
             {
                 name="color1",
                 region={
-                    rect={0.5, 0.0, 0.5, 0.5},
+                    rect={0.5, 0.0, 1.0, 0.5},
                     w=1, h=1,
                 },
             },
             {
                 name="color2",
                 region={
-                    rect={0.0, 0.5, 0.5, 0.5},
+                    rect={0.0, 0.5, 0.5, 1.0},
                     w=1, h=1,
                 },
             },
