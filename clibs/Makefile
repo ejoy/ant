@@ -19,7 +19,7 @@ LUA_TARGETS += $(ODIR)/lua54.dll
 endif
 
 copy_lua: build_lua
-	cp $(addprefix lua/,$(LUA_TARGETS)) $(BIN)
+	cp $(addprefix lua/,$(LUA_TARGETS)) $(BIN)/lua.exe
 build_lua:
 	$(MAKE) -C lua $(LUA_TARGETS)
 clean_lua:
