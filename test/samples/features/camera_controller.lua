@@ -1,8 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local math3d = require "math3d"
-local rhwi = import_package "ant.render".hwi
+local rhwi      = import_package "ant.hwi"
 
 local icamera = world:interface "ant.camera|camera"
 

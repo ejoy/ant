@@ -1,0 +1,15 @@
+system "init_system"
+    .implement "init_system.lua"
+    .method "init"
+    .method "update"
+
+pipeline "init"
+    .stage "init"
+
+pipeline "exit"
+    .stage "exit"
+
+pipeline "update"
+    .stage "update"
+
+

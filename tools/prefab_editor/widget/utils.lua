@@ -79,8 +79,8 @@ function m.show_message_box()
     do_show_message(message[level])
 end
 
-local rhwi          = import_package 'ant.render'.hwi
-local stringify     = import_package "ant.serialize".stringify
+local rhwi      = import_package "ant.hwi"
+
 local filedialog    = require 'filedialog'
 function m.get_saveas_path(filetype, extension)
     local dialog_info = {

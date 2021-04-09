@@ -3,10 +3,8 @@ hw.__index = hw
 
 local platform = require "platform"
 local bgfx     = require "bgfx"
-local bgfxutil = require "bgfx.util"
 
 local math3d   = require "math3d"
-local  lfont   = require "font"
 
 local caps = nil
 function hw.get_caps()
@@ -145,21 +143,9 @@ function hw.shutdown()
 end
 
 hw.frames = nil
-local _ui_dirty = false
-
-function hw.ui_frame()
-	_ui_dirty = true
-end
 function hw.frame()
 	hw.frames = bgfx.frame()
-	_ui_dirty = false
 	return hw.frames
-end
-
-function hw.on_update_end()
-	if _ui_dirty then
-		hw.frame()
-	end
 end
 
 return hw

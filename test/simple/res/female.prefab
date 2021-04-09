@@ -10,7 +10,7 @@ policy:
   ant.general|name
   ant.scene|hierarchy_policy
   ant.scene|transform_policy
-script:/pkg/ant.ecs/default_script.lua
+script:/pkg/ant.prefab/default_script.lua
 ---
 action:
   mount: 1

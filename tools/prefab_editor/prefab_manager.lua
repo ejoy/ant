@@ -684,7 +684,7 @@ function m:save_prefab(path)
     filename = filename or prefab_filename
     local saveas = (lfs.path(filename) ~= lfs.path(prefab_filename))
     local current_templ = hierarchy:update_prefab_template()
-    current_templ[1].script = (#self.prefab_script > 0) and self.prefab_script or "/pkg/ant.ecs/default_script.lua"
+    current_templ[1].script = (#self.prefab_script > 0) and self.prefab_script or "/pkg/ant.prefab/default_script.lua"
     self.entities.__class = current_templ
     
     local path_list = split(prefab_filename)

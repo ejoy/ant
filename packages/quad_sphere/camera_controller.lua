@@ -5,7 +5,7 @@ local math3d = require "math3d"
 local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
 
-local rhwi = import_package "ant.render".hwi
+local rhwi = import_package "ant.hwi"
 
 local iqs = world:interface "ant.quad_sphere|iquad_sphere"
 local iom = world:interface "ant.objcontroller|obj_motion"

@@ -1,5 +1,5 @@
 local imgui = require "imgui"
-local rhwi  = import_package 'ant.render'.hwi
+local rhwi      = import_package "ant.hwi"
 local stringify = import_package "ant.serialize".stringify
 local lfs   = require "filesystem.local"
 local fs    = require "filesystem"

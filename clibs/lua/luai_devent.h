@@ -29,18 +29,24 @@
 
 #define LUA_ERREVENT_PANIC 0x10
 
-#define luai_errevent(L, errcode)                     \
-    if (L->hookmask & LUA_MASKEXCEPTION) {            \
-        switch (errcode) {                            \
-        case LUA_ERRRUN:                              \
-        case LUA_ERRSYNTAX:                           \
-        case LUA_ERRMEM:                              \
-        case LUA_ERRERR: {                            \
-            int code = errcode;                       \
-            if (!L->errorJmp) {                       \
-                code |= LUA_ERREVENT_PANIC;           \
-            }                                         \
-            LUA_CALLHOOK(L, LUA_HOOKEXCEPTION, code); \
-            break;                                    \
-        }}                                            \
+#if LUA_VERSION_NUM >= 504
+#define luai_errevent_(L, errcode) luaD_hook(L, LUA_HOOKEXCEPTION, errcode, L->top - L->stack, 1)
+#else
+#define luai_errevent_(L, errcode) LUA_CALLHOOK(L, LUA_HOOKEXCEPTION, errcode)
+#endif
+
+#define luai_errevent(L, errcode)           \
+    if (L->hookmask & LUA_MASKEXCEPTION) {  \
+        switch (errcode) {                  \
+        case LUA_ERRRUN:                    \
+        case LUA_ERRSYNTAX:                 \
+        case LUA_ERRMEM:                    \
+        case LUA_ERRERR: {                  \
+            int code = errcode;             \
+            if (!L->errorJmp) {             \
+                code |= LUA_ERREVENT_PANIC; \
+            }                               \
+            luai_errevent_(L, code);        \
+            break;                          \
+        }}                                  \
     }

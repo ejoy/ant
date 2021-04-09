@@ -927,10 +927,14 @@ function m.show()
                 if path then
                     iani.set_events(current_eid, current_anim_name, path)
                     current_event_file = path
+                    for _, ev in pairs(current_anim.key_event) do
+                        for _, e in ipairs(ev) do
+                            if e.collider_index then
+                                prefab_mgr.remove_entity(collider_list[e.collider_index])
+                            end
+                        end
+                    end
                     current_anim.key_event = from_runtime_event(get_runtime_events())
-                    -- for i, col in ipairs(current_anim.collider) do
-                    --     col.eid = prefab_mgr:create("collider", col.shape)
-                    -- end
                     set_event_dirty(-1)
                 end
             end

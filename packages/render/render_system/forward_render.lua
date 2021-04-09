@@ -67,6 +67,8 @@ function fr_sys:init()
 		frustum = default_comp.frustum(vr.w/vr.h),
         name = "default_camera",
 	}
+
+	irender.create_blit_queue(vr)
 	local deid = irender.create_pre_depth_queue(vr, camera_eid)
 	local meid = irender.create_main_queue(vr, camera_eid)
 

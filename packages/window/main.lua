@@ -1,9 +1,9 @@
-local renderpkg = import_package "ant.render"
 local argument  = import_package "ant.argument"
 local inputmgr  = import_package "ant.inputmgr"
 local ecs       = import_package "ant.ecs"
+local rhwi      = import_package "ant.hwi"
 local thread    = require "thread"
-local rhwi      = renderpkg.hwi
+
 local debug_traceback = debug.traceback
 local thread_sleep = thread.sleep
 
@@ -33,9 +33,6 @@ function callback.init(nwh, context, width, height)
 	callback.keyboard = ev.keyboard
 
 	world:pub {"resize", width, height}
-	local irender = world:interface "ant.render|irender"
-	irender.create_blit_queue{w=width,h=height}
-
 	world:pipeline_init()
 end
 function callback.size(width,height,_)
