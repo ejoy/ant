@@ -454,12 +454,10 @@ private:
 	}
 
 	int fetch_result(lua_State* L) {
-		if (m_results.empty()) {
-			//return luaL_error(L, "no result");
-			return 0;
-		}
+		if (m_ske == nullptr)
+			return luaL_error(L, "invalid skeleton!");
 		ozz::animation::LocalToModelJob job;
-		job.input = ozz::make_span(m_results.back());
+		job.input = m_results.empty() ? m_ske->joint_rest_poses() : ozz::make_span(m_results.back());
 		job.skeleton = m_ske;
 		job.output = ozz::make_span(*(bindpose*)this);
 		if (!job.Run()) {
