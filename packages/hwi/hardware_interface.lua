@@ -3,10 +3,8 @@ hw.__index = hw
 
 local platform = require "platform"
 local bgfx     = require "bgfx"
-local bgfxutil = require "bgfx.util"
 
 local math3d   = require "math3d"
-local  lfont   = require "font"
 
 local caps = nil
 function hw.get_caps()

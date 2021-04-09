@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local imgui      = require "imgui"
-local rhwi       = import_package 'ant.render'.hwi
+local rhwi      = import_package "ant.hwi"
 
 local function ONCE(t, s)
     if not s then return t end

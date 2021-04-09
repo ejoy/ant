@@ -2,9 +2,9 @@ local ecs = ...
 local world = ecs.world
 
 local setting	= import_package "ant.settings".setting
+local hwi 		= import_package "ant.hwi"
 
 local math3d	= require "math3d"
-local hwi 		= require "hardware_interface"
 
 local fbmgr		= require "framebuffer_mgr"
 local samplerutil = require "sampler"

@@ -1,9 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local math3d = require "math3d"
-local rhwi = import_package 'ant.render'.hwi
-local mc = import_package "ant.math".constant
-local iwd = world:interface "ant.render|iwidget_drawer"
+
 local iss = world:interface "ant.scene|iscenespace"
 local computil = world:interface "ant.render|entity"
 local gizmo_sys = ecs.system "gizmo_system"

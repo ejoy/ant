@@ -1,9 +1,9 @@
-local renderpkg = import_package "ant.render"
 local argument  = import_package "ant.argument"
 local inputmgr  = import_package "ant.inputmgr"
 local ecs       = import_package "ant.ecs"
+local rhwi      = import_package "ant.hwi"
 local thread    = require "thread"
-local rhwi      = renderpkg.hwi
+
 local debug_traceback = debug.traceback
 local thread_sleep = thread.sleep
 

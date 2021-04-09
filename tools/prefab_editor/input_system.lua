@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-local rhwi  = import_package 'ant.render'.hwi
+local rhwi  = import_package "ant.hwi"
 local utils = require "mathutils"(world)
 local imgui = require "imgui"
 local m     = ecs.system 'input_system'

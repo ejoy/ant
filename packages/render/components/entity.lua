@@ -4,8 +4,8 @@ local world = ecs.world
 local ientity = ecs.interface "entity"
 
 local declmgr   = require "vertexdecl_mgr"
-local hwi       = require "hardware_interface"
 local math3d    = require "math3d"
+local hwi		= import_package "ant.hwi"
 local geopkg    = import_package "ant.geometry"
 local geodrawer = geopkg.drawer
 local geolib    = geopkg.geometry

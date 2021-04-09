@@ -168,11 +168,8 @@ function ResourcePath:update()
 end
 
 local uiutils       = require "widget.utils"
-local rhwi          = import_package 'ant.render'.hwi
+
 local stringify     = import_package "ant.serialize".stringify
-local filedialog    = require 'filedialog'
-local filter_type   = {"POINT", "LINEAR", "ANISOTROPIC"}
-local address_type  = {"WRAP", "MIRROR", "CLAMP", "BORDER"}
 
 function ResourcePath:on_dragdrop()
     
