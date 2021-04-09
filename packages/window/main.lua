@@ -33,9 +33,6 @@ function callback.init(nwh, context, width, height)
 	callback.keyboard = ev.keyboard
 
 	world:pub {"resize", width, height}
-	local irender = world:interface "ant.render|irender"
-	irender.create_blit_queue{w=width,h=height}
-
 	world:pipeline_init()
 end
 function callback.size(width,height,_)
