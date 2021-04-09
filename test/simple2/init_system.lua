@@ -49,7 +49,7 @@ end
 
 local function load_shader(shaderfile)
     local h = bgfx.create_shader(read_file(shaderfile))
-    bgfx.set_name(shaderfile)
+    bgfx.set_name(h, shaderfile:string())
     return h
 end
 
@@ -115,9 +115,9 @@ function is:update()
 
     local eye = {0, 0, -10}
     local viewmat = math3d.lookat(math3d.vector(eye), math3d.vector(0, 0, 0), math3d.vector(0, 1, 0))
-    local fb_size = world.args.fb_size
+    local fb_size = {w=world.args.width, h=world.args.height}
     local projmat = math3d.projmat{aspect=fb_size.w/fb_size.h, fov=90, n=0.01, f=100}
-    bgfx.set_view_transform(viewid, viewmat, projmat)
+    bgfx.set_view_transform(viewid, math3d.value_ptr(viewmat), math3d.value_ptr(projmat))
     bgfx.set_state(material.mesh.state)
     bgfx.set_vertex_buffer(0, mesh.vb.handle, mesh.vb.start, mesh.vb.num)
     bgfx.set_index_buffer(mesh.ib.handle, mesh.ib.start, mesh.ib.num)

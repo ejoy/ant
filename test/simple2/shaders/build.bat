@@ -1,0 +1,5 @@
+d:/Work/ant/bin/msvc/Debug/shaderc.exe --platform windows --type fragment -p ps_5_0 -f d:/Work/ant/test/simple2/shaders/mesh/fs_mesh.sc -o d:/Work/ant/test/simple2/shaders/mesh/fs_mesh.bin --depends -i d:/Work/ant/packages/resources/shaders
+d:/Work/ant/bin/msvc/Debug/shaderc.exe --platform windows --type vertex -p vs_5_0 -f d:/Work/ant/test/simple2/shaders/mesh/vs_mesh.sc -o d:/Work/ant/test/simple2/shaders/mesh/vs_mesh.bin --depends -i d:/Work/ant/packages/resources/shaders
+
+d:/Work/ant/bin/msvc/Debug/shaderc.exe --platform windows --type fragment -p ps_5_0 -f d:/Work/ant/test/simple2/shaders/fullquad/fs_quad.sc -o d:/Work/ant/test/simple2/shaders/fullquad/fs_quad.bin --depends -i d:/Work/ant/packages/resources/shaders
+d:/Work/ant/bin/msvc/Debug/shaderc.exe --platform windows --type vertex -p vs_5_0 -f d:/Work/ant/test/simple2/shaders/fullquad/vs_quad.sc -o d:/Work/ant/test/simple2/shaders/fullquad/vs_quad.bin --depends -i d:/Work/ant/packages/resources/shaders

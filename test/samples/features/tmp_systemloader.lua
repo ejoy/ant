@@ -148,7 +148,7 @@ function init_loader_sys:init()
     ientity.create_procedural_sky()
     --target_lock_test()
 
-    world:instance "/pkg/ant.resources.binary/meshes/testBDcloud.glb|mesh.prefab"
+    world:instance "/pkg/ant.test.features/assets/CloudTestRun.glb|mesh.prefab"
 
     icc.create()
     iccqs.create()

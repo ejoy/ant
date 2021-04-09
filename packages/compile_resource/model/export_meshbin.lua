@@ -199,7 +199,7 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim)
 	return attribuffers
 end
 
-local function find_skin_root_idx(scene, skin)
+local function find_skin_roots(scene, skin)
 	local joints = skin.joints
 	if joints == nil then
 		error(string.format("invalid mesh, skin node must have joints"))
@@ -219,47 +219,42 @@ local function find_skin_root_idx(scene, skin)
 		end
 	end
 
-	local root = skin.joints[1];
-	while (parents[root]) do
-		root = parents[root]
+	local roots = {}
+	for _, jidx in ipairs(joints) do
+		if parents[jidx] == nil then
+			roots[#roots+1] = jidx
+		end
 	end
 
-	return root;
+	return roots;
 end
-
-local cache_tree = {}
 
 local function redirect_skin_joints(gltfscene, skin)
 	local joints = skin.joints
-	local skeleton_nodeidx = find_skin_root_idx(gltfscene, skin)
+	local skeleton_roots = find_skin_roots(gltfscene, skin)
 
-	if skeleton_nodeidx > 0 then
-		local mapper = cache_tree[skeleton_nodeidx]
-		if mapper == nil then
-			mapper = {}
-			local node_index = 0
-			-- follow with ozz-animation:SkeleteBuilder, IterateJointsDF
-			local function iterate_hierarchy_DF(nodes)
-				for _, nidx in ipairs(nodes) do
-					mapper[nidx] = node_index
-					node_index = node_index + 1
-					local node = gltfscene.nodes[nidx+1]
-					local c = node.children
-					if c then
-						iterate_hierarchy_DF(c)
-					end
-				end
+	local mapper = {}
+	local node_index = 0
+	-- follow with ozz-animation:SkeleteBuilder, IterateJointsDF
+	local function iterate_hierarchy_DF(nodes)
+		for _, nidx in ipairs(nodes) do
+			mapper[nidx] = node_index
+			node_index = node_index + 1
+			local node = gltfscene.nodes[nidx+1]
+			local c = node.children
+			if c then
+				iterate_hierarchy_DF(c)
 			end
-			iterate_hierarchy_DF{skeleton_nodeidx}
-
-			cache_tree[skeleton_nodeidx] = mapper
-		end
-
-		for i=1, #joints do
-			local joint_nodeidx = joints[i]
-			joints[i] = assert(mapper[joint_nodeidx])
 		end
 	end
+	iterate_hierarchy_DF(skeleton_roots)
+
+	for i=1, #joints do
+		local joint_nodeidx = joints[i]
+		joints[i] = assert(mapper[joint_nodeidx])
+	end
+
+	print ""
 end
 
 local function export_skinbin(gltfscene, bindata, exports)
