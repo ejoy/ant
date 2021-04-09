@@ -90,13 +90,13 @@ function toolset.compile(config)
 		end
 	end
 
-	-- print("shader compile:")
-	-- local cmdstring = {}
-	-- for _, c in ipairs(commands) do
-	-- 	cmdstring[#cmdstring+1] = tostring(c)
-	-- end
+	print("shader compile:")
+	local cmdstring = {}
+	for _, c in ipairs(commands) do
+		cmdstring[#cmdstring+1] = tostring(c)
+	end
 
-	-- print(table.concat(cmdstring, " "))
+	print(table.concat(cmdstring, " "))
 
 	do
 		-- Fixes bgfx shaderc bug
