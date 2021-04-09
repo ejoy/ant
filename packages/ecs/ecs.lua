@@ -2,9 +2,6 @@ local typeclass = require "typeclass"
 local system = require "system"
 local policy = require "policy"
 local event = require "event"
-local prefab = require "prefab"
-local stringify = import_package "ant.serialize".stringify
-local assetmgr = import_package "ant.asset"
 
 local world = {}
 world.__index = world
@@ -112,8 +109,8 @@ local function instance_prefab(w, prefab, owned)
 	return res
 end
 
-local function create_entity_template(w, v)
-	local res = policy.create(w, v.policy)
+function world:create_entity_template(v)
+	local res = policy.create(self, v.policy)
 	local e = {}
 	for _, c in ipairs(res.component) do
 		local init = res.init_component[c]
@@ -137,35 +134,15 @@ local function create_entity_template(w, v)
 	}
 end
 
-function world:create_template(t)
-	local prefab = {__class=t}
-	for _, v in ipairs(t) do
-		if v.prefab then
-			prefab[#prefab+1] = {
-				prefab = assetmgr.resource(v.prefab, self),
-				args = v.args,
-			}
-		else
-			prefab[#prefab+1] = create_entity_template(self, v)
-		end
-	end
-	return prefab
-end
-
 function world:create_entity(v)
 	local args = {}
 	if v.action and v.action.mount then
 		args["_mount"] = v.action.mount
 		v.action.mount = "_mount"
 	end
-	local prefab = {__class={v}, create_entity_template(self, v)}
+	local prefab = {__class={v}, self:create_entity_template(v)}
 	local res = self:instance_prefab(prefab, args, true)
 	return res[1], res
-end
-
-function world:instance(filename, args)
-	local prefab = assetmgr.resource(filename, self)
-	return self:instance_prefab(prefab, args)
 end
 
 function world:instance_prefab(prefab, args, owned)
@@ -177,10 +154,6 @@ function world:instance_prefab(prefab, args, owned)
 	end
 	run_action(self, res, prefab)
 	return res
-end
-
-function world:serialize(entities)
-	return stringify(entities.__class)
 end
 
 function world:remove_entity(eid)
@@ -341,7 +314,6 @@ function m.new_world(config)
 	}, world)
 
 	event.init(world)
-	prefab.init(world)
 
 	w.component = function(name)
 		return function (args)
