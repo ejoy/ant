@@ -7,7 +7,25 @@ local fs = require "filesystem"
 local is = ecs.system "init_system"
 
 local mesh = {
-
+    ib = {
+        handle = bgfx.create_index_buffer(
+            bgfx.memory_buffer("w", {0, 1, 2, 2, 3, 0})
+            ),
+        start = 0,
+        num = 6,
+    },
+    vb = {
+        handle = bgfx.create_vertex_buffer(
+            bgfx.memory_buffer("fff", {
+                -1,-1, 0,
+                -1, 1, 0,
+                 1, 1, 0,
+                 1,-1, 0,
+            }), declmgr.get "p3".handle, ""
+        ),
+        start = 0,
+        num = 4,
+    }
 }
 
 local function create_uniform(h, mark)
@@ -88,26 +106,7 @@ load_program(material.fullscreen.shader, fs.path "/pkg/ant.test.simple2/shaders/
 local viewid = 0
 
 function is:init()
-    bgfx.set_view_clear(viewid, "C", 0xff00ffff, 1.0, 0.0)
-    mesh.ib = {
-        handle = bgfx.create_index_buffer(
-            bgfx.memory_buffer("w", {0, 1, 2, 2, 3, 0})
-            ),
-        start = 0,
-        num = 6,
-    }
-    mesh.vb = {
-        handle = bgfx.create_vertex_buffer(
-            bgfx.memory_buffer("fff", {
-                -1,-1, 0,
-                -1, 1, 0,
-                 1, 1, 0,
-                 1,-1, 0,
-            }), declmgr.get "p3".handle, ""
-        ),
-        start = 0,
-        num = 4,
-    }
+    bgfx.set_view_clear(viewid, "CD", 0x000000ff, 1.0, 0.0)
 end
 
 function is:update()
@@ -118,6 +117,7 @@ function is:update()
     local fb_size = {w=world.args.width, h=world.args.height}
     local projmat = math3d.projmat{aspect=fb_size.w/fb_size.h, fov=90, n=0.01, f=100}
     bgfx.set_view_transform(viewid, math3d.value_ptr(viewmat), math3d.value_ptr(projmat))
+    bgfx.set_view_rect(viewid, 0, 0, fb_size.w, fb_size.h)
     bgfx.set_state(material.mesh.state)
     bgfx.set_vertex_buffer(0, mesh.vb.handle, mesh.vb.start, mesh.vb.num)
     bgfx.set_index_buffer(mesh.ib.handle, mesh.ib.start, mesh.ib.num)
