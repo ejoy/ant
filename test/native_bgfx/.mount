@@ -8,5 +8,5 @@
 @pkg-one packages/resources
 @pkg-one packages/serialize
 @pkg-one packages/asset
-@pkg-one test/simple2
+@pkg-one test/native_bgfx
 engine engine

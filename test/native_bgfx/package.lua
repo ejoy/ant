@@ -1,8 +1,8 @@
 return {
-    name = "ant.test.simple2",
+    name = "ant.test.native_bgfx",
     ecs = {
         import = {
-            "@ant.test.simple2",
+            "@ant.test.native_bgfx",
         },
         pipeline = {
             "init",
@@ -10,7 +10,7 @@ return {
             "exit",
         },
         system = {
-            "ant.test.simple2|init_system",
+            "ant.test.native_bgfx|init_system",
         }
     }
 }

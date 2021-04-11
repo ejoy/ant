@@ -148,13 +148,13 @@ local function load_program(shader, vsfile, fsfile)
     if fsfile then
         fshandle = load_shader(fsfile)
     end
-    shader.prog, shader.uniforms = create_render_program(load_shader(vsfile), load_shader(fsfile))
+    shader.prog, shader.uniforms = create_render_program(vshandle, fshandle)
 end
 
-load_program(material.mesh.shader, fs.path "/pkg/ant.test.simple2/shaders/mesh/vs_mesh.bin", fs.path "/pkg/ant.test.simple2/shaders/mesh/fs_mesh.bin")
-load_program(material.fullscreen.shader, fs.path "/pkg/ant.test.simple2/shaders/fullquad/vs_quad.bin", fs.path "/pkg/ant.test.simple2/shaders/fullquad/fs_quad.bin")
+load_program(material.mesh.shader, fs.path "/pkg/ant.test.native_bgfx/shaders/mesh/vs_mesh.bin", fs.path "/pkg/ant.test.native_bgfx/shaders/mesh/fs_mesh.bin")
+load_program(material.fullscreen.shader, fs.path "/pkg/ant.test.native_bgfx/shaders/fullquad/vs_quad.bin", fs.path "/pkg/ant.test.native_bgfx/shaders/fullquad/fs_quad.bin")
 
-load_program(material.depth.shader, fs.path "/pkg/ant.test.simple2/shaders/mesh/vs_mesh.bin")
+load_program(material.depth.shader, fs.path "/pkg/ant.test.native_bgfx/shaders/mesh/vs_mesh.bin")
 
 local viewid = 2
 
@@ -164,15 +164,19 @@ end
 
 local fb_size = {w=world.args.width, h=world.args.height}
 
+local function create_fb1(rbs, viewid)
+    local fbhandle = bgfx.create_frame_buffer(rbs, true)
+    bgfx.set_view_frame_buffer(viewid, fbhandle)
+    return viewid, {handle = fbhandle, rb_handles=rbs}
+end
+
 local function create_fb(rbs, viewid)
     local handles = {}
     for _, rb in ipairs(rbs) do
         handles[#handles+1] = bgfx.create_texture2d(rb.w, rb.h, false, rb.layers, rb.format, rb.flags)
     end
 
-    local fbhandle = bgfx.create_frame_buffer(handles, true)
-    bgfx.set_view_frame_buffer(viewid, fbhandle)
-    return viewid, {handle = fbhandle, rb_handles=handles}
+    return create_fb1(handles, viewid)
 end
 local sampleflag = sampler.sampler_flag{
     RT="RT_MSAA4",
@@ -192,21 +196,14 @@ local depth_viewid, depth_fb = create_fb({
     },
 }, 0)
 
-local function create_render_fb(color_rb, depth_rb, viewid)
-    local rbs = {color_rb, depth_rb}
-    local render_fb = bgfx.create_frame_buffer(rbs, true)
-    return viewid, render_fb
-end
-
-local fb_viewid, fb = create_render_fb(
+local fb_viewid, fb = create_fb1({
     bgfx.create_texture2d(
         fb_size.w,
         fb_size.h,
         false,
         1,
         "RGBA16F",
-        sampleflag,
-    }, depth_fb.rb_handles[1], 1)
+        sampleflag), depth_fb.rb_handles[1]}, 1)
 
 function is:update()
     local eye = {0, 0, -10}
@@ -215,16 +212,16 @@ function is:update()
     local projmat = math3d.projmat{aspect=fb_size.w/fb_size.h, fov=90, n=0.01, f=100}
 
     bgfx.touch(depth_viewid)
-    bgfx.set_view_clear(fb_viewid, "D", 0, 1.0, 0.0)
-    bgfx.set_view_transform(fb_viewid, math3d.value_ptr(viewmat), math3d.value_ptr(projmat))
-    bgfx.set_view_rect(fb_viewid, 0, 0, fb_size.w, fb_size.h)
+    bgfx.set_view_clear(depth_viewid, "D", 0, 1.0, 0.0)
+    bgfx.set_view_transform(depth_viewid, math3d.value_ptr(viewmat), math3d.value_ptr(projmat))
+    bgfx.set_view_rect(depth_viewid, 0, 0, fb_size.w, fb_size.h)
     bgfx.set_state(material.depth.state)
     bgfx.set_vertex_buffer(0, mesh.vb.handle, mesh.vb.start, mesh.vb.num)
     bgfx.set_index_buffer(mesh.ib.handle, mesh.ib.start, mesh.ib.num)
-    bgfx.submit(depth_viewid, material.depth.prog, 0)
+    bgfx.submit(depth_viewid, material.depth.shader.prog, 0)
 
     bgfx.touch(fb_viewid)
-    bgfx.set_view_clear(fb_viewid, "CD", 0x000000ff, 1.0, 0.0)
+    bgfx.set_view_clear(fb_viewid, "C", 0x000000ff, 1.0, 0.0)
     bgfx.set_view_transform(fb_viewid, math3d.value_ptr(viewmat), math3d.value_ptr(projmat))
     bgfx.set_view_rect(fb_viewid, 0, 0, fb_size.w, fb_size.h)
     bgfx.set_state(material.mesh.state)
