@@ -85,7 +85,9 @@ local function create_render_program(vs, fs)
         local uniforms = {}
         local mark = {}
         uniform_info(vs, uniforms, mark)
-        uniform_info(fs, uniforms, mark)
+        if fs then
+            uniform_info(fs, uniforms, mark)
+        end
         return prog, uniforms
     else
         error(string.format("create program failed, vs:%d, fs:%d", vs, fs))
@@ -93,8 +95,6 @@ local function create_render_program(vs, fs)
 end
 
 local function read_file(filename)
-    print(filename)
-    print(filename:localpath())
     local f = fs.open(filename, "rb")
     local c = f:read "a"
     f:close()
@@ -109,14 +109,24 @@ end
 
 
 local material = {
-    mesh = {
+    depth = {
         shader = {},
         state = bgfx.make_state {
             ALPHA_REF = 0,
             CULL = "CCW",
             DEPTH_TEST = "LESS",
             MSAA = true,
-            WRITE_MASK = "RGBAZ",
+            WRITE_MASK = "Z",
+        }
+    },
+    mesh = {
+        shader = {},
+        state = bgfx.make_state {
+            ALPHA_REF = 0,
+            CULL = "CCW",
+            DEPTH_TEST = "EQUAL",
+            MSAA = true,
+            WRITE_MASK = "RGBA",
         }
     },
     fullscreen = {
@@ -133,13 +143,20 @@ local material = {
 }
 
 local function load_program(shader, vsfile, fsfile)
+    local vshandle = load_shader(vsfile)
+    local fshandle
+    if fsfile then
+        fshandle = load_shader(fsfile)
+    end
     shader.prog, shader.uniforms = create_render_program(load_shader(vsfile), load_shader(fsfile))
 end
 
 load_program(material.mesh.shader, fs.path "/pkg/ant.test.simple2/shaders/mesh/vs_mesh.bin", fs.path "/pkg/ant.test.simple2/shaders/mesh/fs_mesh.bin")
 load_program(material.fullscreen.shader, fs.path "/pkg/ant.test.simple2/shaders/fullquad/vs_quad.bin", fs.path "/pkg/ant.test.simple2/shaders/fullquad/fs_quad.bin")
 
-local viewid = 1
+load_program(material.depth.shader, fs.path "/pkg/ant.test.simple2/shaders/mesh/vs_mesh.bin")
+
+local viewid = 2
 
 function is:init()
     
@@ -164,14 +181,8 @@ local sampleflag = sampler.sampler_flag{
     U="CLAMP",
     V="CLAMP",
 }
-local fb_viewid, fb = create_fb({
-    {
-        w = fb_size.w,
-        h = fb_size.h,
-        format = "RGBA16F",
-        layers = 1,
-        flags = sampleflag,
-    },
+
+local depth_viewid, depth_fb = create_fb({
     {
         w = fb_size.w,
         h = fb_size.h,
@@ -179,17 +190,40 @@ local fb_viewid, fb = create_fb({
         layers = 1,
         flags = sampleflag,
     },
-
 }, 0)
 
+local function create_render_fb(color_rb, depth_rb, viewid)
+    local rbs = {color_rb, depth_rb}
+    local render_fb = bgfx.create_frame_buffer(rbs, true)
+    return viewid, render_fb
+end
+
+local fb_viewid, fb = create_render_fb(
+    bgfx.create_texture2d(
+        fb_size.w,
+        fb_size.h,
+        false,
+        1,
+        "RGBA16F",
+        sampleflag,
+    }, depth_fb.rb_handles[1], 1)
 
 function is:update()
-    bgfx.touch(fb_viewid)
-
     local eye = {0, 0, -10}
     local viewmat = math3d.lookat(math3d.vector(eye), math3d.vector(0, 0, 0), math3d.vector(0, 1, 0))
     
     local projmat = math3d.projmat{aspect=fb_size.w/fb_size.h, fov=90, n=0.01, f=100}
+
+    bgfx.touch(depth_viewid)
+    bgfx.set_view_clear(fb_viewid, "D", 0, 1.0, 0.0)
+    bgfx.set_view_transform(fb_viewid, math3d.value_ptr(viewmat), math3d.value_ptr(projmat))
+    bgfx.set_view_rect(fb_viewid, 0, 0, fb_size.w, fb_size.h)
+    bgfx.set_state(material.depth.state)
+    bgfx.set_vertex_buffer(0, mesh.vb.handle, mesh.vb.start, mesh.vb.num)
+    bgfx.set_index_buffer(mesh.ib.handle, mesh.ib.start, mesh.ib.num)
+    bgfx.submit(depth_viewid, material.depth.prog, 0)
+
+    bgfx.touch(fb_viewid)
     bgfx.set_view_clear(fb_viewid, "CD", 0x000000ff, 1.0, 0.0)
     bgfx.set_view_transform(fb_viewid, math3d.value_ptr(viewmat), math3d.value_ptr(projmat))
     bgfx.set_view_rect(fb_viewid, 0, 0, fb_size.w, fb_size.h)
