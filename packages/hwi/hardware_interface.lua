@@ -50,7 +50,7 @@ local function bgfx_init(args)
 	if args.reset == nil then
 		flags = {
 			-- v = true,
-			m = 4,
+			--m = 4,
 			s = true,
 		}
 		args.reset = get_flags()
