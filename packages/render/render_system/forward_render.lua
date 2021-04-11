@@ -27,7 +27,7 @@ function vpt.process_entity(e)
 		local items = filter.result[fxtype].items
 		if rc then
 			rc.eid = eid
-			ipf.add_item(items, eid, parse_rc(rc))
+			ipf.add_item(items, eid, rc) --parse_rc(rc))
 		else
 			ipf.remove_item(items, eid)
 		end
@@ -69,10 +69,10 @@ function fr_sys:init()
 	}
 
 	irender.create_blit_queue(vr)
-	local deid = irender.create_pre_depth_queue(vr, camera_eid)
+	--local deid = irender.create_pre_depth_queue(vr, camera_eid)
 	local meid = irender.create_main_queue(vr, camera_eid)
 
-	watch_main_queue(meid, deid)
+	--watch_main_queue(meid, deid)
 end
 
 function fr_sys:data_changed()

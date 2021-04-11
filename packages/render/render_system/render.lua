@@ -248,10 +248,14 @@ function irender.create_main_queue(view_rect, camera_eid)
 	local rs = sd.graphic.render
 
 	local function get_depth_buffer()
-		local pd = world:singleton_entity "pre_depth_queue"
+		return fbmgr.create_rb(
+			default_comp.render_buffer(
+			view_rect.w, view_rect.h, "D24S8", rb_flag)
+		)
+		-- local pd = world:singleton_entity "pre_depth_queue"
 
-		local pd_fb = fbmgr.get(pd.render_target.fb_idx)
-		return pd_fb[#pd_fb]
+		-- local pd_fb = fbmgr.get(pd.render_target.fb_idx)
+		-- return pd_fb[#pd_fb]
 	end
 
 	render_buffers[#render_buffers+1] = get_depth_buffer()
@@ -271,7 +275,7 @@ function irender.create_main_queue(view_rect, camera_eid)
 				view_mode = "s",
 				clear_state = {
 					color = rs.clear_color or 0x000000ff,
-					clear = "C",
+					clear = "CD",
 				},
 				view_rect = {
 					x = view_rect.x or 0, y = view_rect.y or 0,
