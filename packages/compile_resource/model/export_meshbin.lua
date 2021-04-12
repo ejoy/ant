@@ -253,8 +253,6 @@ local function redirect_skin_joints(gltfscene, skin)
 		local joint_nodeidx = joints[i]
 		joints[i] = assert(mapper[joint_nodeidx])
 	end
-
-	print ""
 end
 
 local function export_skinbin(gltfscene, bindata, exports)

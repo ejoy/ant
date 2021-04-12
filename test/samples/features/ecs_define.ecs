@@ -11,6 +11,7 @@ import "@ant.splitviews"
 import "@ant.effect"
 import "@ant.asset"
 import "@ant.quad_sphere"
+import "@ant.prefab"
 
 policy "camera_controller"
     .require_transform "ant.test.features|camera_controller"
@@ -57,7 +58,7 @@ system "init_loader_system"
     .require_system "ant.camera|camera_recorder_system"
     .require_system "ant.sky|procedural_sky_system"
     .require_system "ant.splitviews|splitviews_system"
-    
+    .require_system "ant.prefab|prefab_system"
     .require_system "ant.render|physic_bounding_system"
     .require_system "ant.render|render_mesh_bounding_system"
     
