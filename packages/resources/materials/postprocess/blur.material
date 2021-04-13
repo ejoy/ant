@@ -4,7 +4,7 @@ fx:
 properties:
   s_basecolor:
     stage: 0
-    texture: /pkg/ant.resources/materials/textures/Default.texture
+    texture: /pkg/ant.resources/textures/Default.texture
   u_blur: {5, 0.75, 0, 0}
   u_params: {1, 25, 0, 0}
 state:
