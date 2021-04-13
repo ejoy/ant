@@ -106,9 +106,14 @@ function SEARCH.fx(data, setting)
 end
 
 local tasks = {}
+local fx_tasks = {}
 
 local function load(...)
     tasks[#tasks+1] = {...}
+end
+
+local function load_fx(fx)
+    fx_tasks[#fx_tasks+1] = fx
 end
 
 local function build(identity)
@@ -116,9 +121,13 @@ local function build(identity)
     for _, task in ipairs(tasks) do
         prebuilt(table.unpack(task))
     end
+    for _, fx in ipairs(fx_tasks) do
+        prebuilt_fx(fx, fx.setting)
+    end
 end
 
 return {
     load = load,
+    load_fx = load_fx,
     build = build,
 }
