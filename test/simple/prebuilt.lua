@@ -17,7 +17,7 @@ prebuilt.load_fx {
     setting = {CLUSTER_LIGHT_CULL=1}
 }
 prebuilt.load("prefab", "res/scenes.prefab")
-prebuilt.load("prefab", "/pkg/ant.resources.binary/meshes/female/female.glb|mesh.prefab")
+prebuilt.load("glb", "/pkg/ant.resources.binary/meshes/female/female.glb")
 
 prebuilt.load("material", "/pkg/ant.resources/materials/postprocess/combine.material")
 prebuilt.load("material", "/pkg/ant.resources/materials/postprocess/dof/simple_blur.material")

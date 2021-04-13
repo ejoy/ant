@@ -20,6 +20,9 @@ end
 local SEARCH = {}
 
 local function prebuilt(ext, path, ...)
+    if ext == "glb" then
+        return prebuilt("prefab", path.."|mesh.prefab", ...)
+    end
     local fullpath = absolute_path(path)
     push_currentpath(fullpath)
     local f = assert(lfs.open(cr.compile(fullpath), "rb"))
