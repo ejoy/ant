@@ -4,10 +4,10 @@ fx:
 properties:
   s_basecolor:
     stage: 0
-    texture: /pkg/ant.resources/materials/textures/Default.texture
+    texture: /pkg/ant.resources/textures/Default.texture
   s_bloomcolor:
     stage: 1
-    texture: /pkg/ant.resources/materials/textures/Default.texture
+    texture: /pkg/ant.resources/textures/Default.texture
   u_params: {1, 0, 0, 0}
 state:
   CULL: CCW

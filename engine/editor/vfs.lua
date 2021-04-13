@@ -51,6 +51,10 @@ function localvfs.merge_mount(other)
 	return repo
 end
 
-localvfs.new(lfs.absolute(lfs.path(arg[0])):remove_filename())
+if _VFS_ROOT_ then
+	localvfs.new(lfs.absolute(lfs.path(_VFS_ROOT_)))
+else
+	localvfs.new(lfs.absolute(lfs.path(arg[0])):remove_filename())
+end
 
 package.loaded.vfs = localvfs

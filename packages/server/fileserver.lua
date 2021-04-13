@@ -65,7 +65,8 @@ local function do_prebuilt(repopath, identity)
 	sp.spawn {
 		config.lua,
 		"-e", ("package.cpath=[[%s]]"):format(package.cpath),
-		repopath / "prebuilt.lua",
+		"tools/prebuilt/main.lua",
+		repopath,
 		identity,
         hideWindow = true,
     } :wait()

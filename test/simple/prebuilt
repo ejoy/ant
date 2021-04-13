@@ -1,0 +1,27 @@
+---
+path: /pkg/ant.resources/materials/fullscreen.material
+---
+path: /pkg/ant.resources/materials/depth.material
+setting:
+    depth_type: inv_z
+---
+path: /pkg/ant.resources/materials/depth.material
+setting:
+    depth_type: inv_z
+    skinning: GPU
+---
+path: res/scenes.prefab
+---
+path: /pkg/ant.resources.binary/meshes/female/female.glb
+---
+type: fx
+cs = /pkg/ant.resources/shaders/compute/cs_cluster_aabb.sc
+setting:
+    CLUSTER_BUILD_AABB: 1
+---
+type: fx
+cs = /pkg/ant.resources/shaders/compute/cs_lightcull.sc
+setting:
+    CLUSTER_LIGHT_CULL: 1
+---
+path: /pkg/ant.resources/materials/postprocess
