@@ -308,7 +308,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CODE_SIGN_ENTITLEMENTS = ant/ant.entitlements;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = GP6WLPM75Q;
 				GCC_C_LANGUAGE_STANDARD = c11;
@@ -321,7 +322,6 @@
 					../../3rd/bx/include,
 				);
 				INFOPLIST_FILE = ant/Info.plist;
-				"IPHONEOS_DEPLOYMENT_TARGET[sdk=macosx*]" = 14.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -347,12 +347,13 @@
 					"-lozz_base_d",
 					"-lstdc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.ejoy.fileserver;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ejoy.ant;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SUPPORTS_MACCATALYST = YES;
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
+				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
-				TARGETED_DEVICE_FAMILY = "1,2,6";
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -362,7 +363,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CODE_SIGN_ENTITLEMENTS = ant/ant.entitlements;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = GP6WLPM75Q;
 				GCC_C_LANGUAGE_STANDARD = c11;
@@ -375,7 +377,6 @@
 					../../3rd/bx/include,
 				);
 				INFOPLIST_FILE = ant/Info.plist;
-				"IPHONEOS_DEPLOYMENT_TARGET[sdk=macosx*]" = 14.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -401,12 +402,13 @@
 					"-lozz_base_r",
 					"-lstdc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.ejoy.fileserver;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ejoy.ant;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SUPPORTS_MACCATALYST = YES;
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
+				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
-				TARGETED_DEVICE_FAMILY = "1,2,6";
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};

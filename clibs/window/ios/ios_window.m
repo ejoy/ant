@@ -116,33 +116,47 @@ static void push_message(struct ant_window_message* msg) {
 }
 @end
 
-@implementation AppDelegate
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+@implementation SceneDelegate
+-(void)scene:(UIScene *)scene willConnectToSession:(UISceneSession *)session options:(UISceneConnectionOptions *)connectionOptions API_AVAILABLE(ios(13.0)){
     CGRect rect = [[UIScreen mainScreen] bounds];
     float scale = [[UIScreen mainScreen] scale];
     self.m_window = [[UIWindow alloc] initWithFrame: rect];
+    
+    UIWindowScene *windowScene = (UIWindowScene *)scene;
+    [self.m_window setWindowScene:windowScene];
+    
+    [self.m_window setBackgroundColor:[UIColor whiteColor]];
+    
     self.m_view = [[View alloc] initWithRect: rect WithScale: scale];
     self.m_view.multipleTouchEnabled = true;
-    [self.m_window addSubview: self.m_view];
+    //[self.m_window addSubview: self.m_view];
 
     ViewController* mvc = [[ViewController alloc] init];
     mvc.view = self.m_view;
     [self.m_window setRootViewController: mvc];
     [self.m_window makeKeyAndVisible];
-
-    return YES;
 }
-- (void)applicationDidBecomeActive:(UIApplication *)application {
+- (void)sceneDidBecomeActive:(UIScene *)scene {
     [self.m_view start];
 }
-- (void)applicationWillResignActive:(UIApplication *)application {
+- (void)sceneWillResignActive:(UIScene *)scene {
     [self.m_view stop];
 }
-- (void)applicationWillTerminate:(UIApplication *)application {
+- (void)sceneDidDisconnect:(UIScene *)scene {
     struct ant_window_message msg;
     msg.type = ANT_WINDOW_EXIT;
     push_message(&msg);
     [self.m_view stop];
+}
+@end
+
+@implementation AppDelegate
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    return YES;
+}
+-(UISceneConfiguration *)application:(UIApplication *)application configurationForConnectingSceneSession:(UISceneSession *)connectingSceneSession options:(UISceneConnectionOptions *)options API_AVAILABLE(ios(13.0)){
+    UISceneConfiguration * config = [[UISceneConfiguration alloc] initWithName:@"Default Configuration" sessionRole:connectingSceneSession.role];
+    return config;
 }
 @end
 

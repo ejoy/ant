@@ -9,9 +9,12 @@
     @property (nonatomic, retain) CADisplayLink* m_displayLink;
 @end
 
-@interface AppDelegate : UIResponder <UIApplicationDelegate>
+@interface SceneDelegate : UIResponder <UIWindowSceneDelegate>
     @property (nonatomic, retain) UIWindow* m_window;
     @property (nonatomic, retain) View*     m_view;
+@end
+
+@interface AppDelegate : UIResponder <UIApplicationDelegate>
 @end
 
 #endif
