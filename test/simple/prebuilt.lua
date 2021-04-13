@@ -22,6 +22,12 @@ prebuilt.load("prefab", "/pkg/ant.resources.binary/meshes/female/female.glb|mesh
 prebuilt.load("material", "/pkg/ant.resources/materials/postprocess/combine.material")
 prebuilt.load("material", "/pkg/ant.resources/materials/postprocess/dof/simple_blur.material")
 prebuilt.load("material", "/pkg/ant.resources/materials/postprocess/dof/simple_merge.material")
+prebuilt.load("material", "/pkg/ant.resources/materials/postprocess/dof/downsample.material")
+prebuilt.load("material", "/pkg/ant.resources/materials/postprocess/downsample.material")
+prebuilt.load("material", "/pkg/ant.resources/materials/postprocess/upsample.material")
+prebuilt.load("material", "/pkg/ant.resources/materials/postprocess/copy_quad.material")
+prebuilt.load("material", "/pkg/ant.resources/materials/postprocess/tonemapping.material")
+prebuilt.load("material", "/pkg/ant.resources/materials/postprocess/dof/resolve.material")
 
 if identity then
     prebuilt.build(identity)
