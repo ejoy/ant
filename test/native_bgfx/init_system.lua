@@ -29,41 +29,6 @@ local mesh = {
     }
 }
 
-local function quad_mesh_vertices(rect)
-    local origin_bottomleft = false
-	local minv, maxv
-	if origin_bottomleft then
-		minv, maxv = 0, 1
-	else
-		minv, maxv = 1, 0
-	end
-	local x, y, w, h
-	if rect then
-		x, y = rect.x or 0, rect.y or 0
-		w, h = rect.w, rect.h
-	else
-		x, y = -1, -1
-		w, h = 2, 2
-	end
-	return {
-		x, 		y, 		0, 	0, minv,	--bottom left
-		x,		y + h, 	0, 	0, maxv,	--top left
-		x + w, 	y, 		0, 	1, minv,	--bottom right
-		x + w, 	y + h, 	0, 	1, maxv,	--top right
-	}
-end
-
-local quadmesh = {
-    vb = {
-        handle = bgfx.create_vertex_buffer(
-            bgfx.memory_buffer("fffff", quad_mesh_vertices()),
-            declmgr.get "p3|t20".handle, ""
-        ),
-        start = 0,
-        num = 4,
-    }
-}
-
 local function create_uniform(h, mark)
     local name, type, num = bgfx.get_uniform_info(h)
     if mark[name] then
@@ -133,7 +98,7 @@ local material = {
         shader = {},
         state = bgfx.make_state {
             ALPHA_REF = 0,
-            CULL = "CCW",
+            CULL = "CW",
             DEPTH_TEST = "ALWAYS",
             MSAA = true,
             PT = "TRISTRIP",
@@ -233,7 +198,7 @@ function is:update()
     bgfx.touch(viewid)
     bgfx.set_view_rect(viewid, 0, 0, fb_size.w, fb_size.h)
     bgfx.set_state(material.fullscreen.state)
-    bgfx.set_vertex_buffer(0, quadmesh.vb.handle, quadmesh.vb.start, quadmesh.vb.num)
+    bgfx.set_vertex_buffer(0, mesh.vb.handle, 0, 3)
     bgfx.set_texture(0, material.fullscreen.shader.uniforms[1].handle, fb.rb_handles[1])
     bgfx.submit(viewid, material.fullscreen.shader.prog, 0)
 end
