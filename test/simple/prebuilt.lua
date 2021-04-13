@@ -19,6 +19,9 @@ prebuilt.load_fx {
 prebuilt.load("prefab", "res/scenes.prefab")
 prebuilt.load("prefab", "/pkg/ant.resources.binary/meshes/female/female.glb|mesh.prefab")
 
+prebuilt.load("material", "/pkg/ant.resources/materials/postprocess/combine.material")
+prebuilt.load("material", "/pkg/ant.resources/materials/postprocess/dof/simple_blur.material")
+prebuilt.load("material", "/pkg/ant.resources/materials/postprocess/dof/simple_merge.material")
 
 if identity then
     prebuilt.build(identity)
