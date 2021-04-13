@@ -79,7 +79,9 @@
                 (unsigned)(__LINE__),        \
                 #e);                         \
             fflush(stderr);                  \
-            lua_checkstack((l), 6);          \
+            if (!lua_checkstack((l), 6)) {   \
+                abort();                     \
+            }                                \
             luaL_traceback((l), (l), 0, 0);  \
             fprintf(stderr, "%s\n",          \
                 lua_tostring((l), -1));      \
