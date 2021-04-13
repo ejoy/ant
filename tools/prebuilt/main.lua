@@ -32,6 +32,9 @@ local supports = {
 }
 
 local function supportsExtension(path)
+    if fs.is_directory(path) then
+        return true
+    end
     local ext = path:extension():string():sub(2):lower()
     return supports[ext] and true or false
 end
