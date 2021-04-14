@@ -168,3 +168,10 @@ int lmachine(lua_State* L) {
     }
     return 0;
 }
+
+bool isiOSAppOnMac() {
+    if (@available(iOS 14.0, *)) {
+        return [NSProcessInfo processInfo].isiOSAppOnMac;
+    }
+    return false;
+}
