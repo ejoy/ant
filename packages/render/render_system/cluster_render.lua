@@ -14,8 +14,8 @@ local isp       = world:interface "ant.render|system_properties"
 local cfs = ecs.system "cluster_forward_system"
 
 local cluster_grid_x<const>, cluster_grid_y<const>, cluster_grid_z<const> = 16, 9, 24
-local cluster_cull_light_size<const> = 6
-assert(cluster_cull_light_size * 4 == cluster_grid_z)
+local cluster_cull_light_size<const> = 8
+assert(cluster_cull_light_size * 3 == cluster_grid_z)
 local cluster_count<const> = cluster_grid_x * cluster_grid_y * cluster_grid_z
 
 --[[

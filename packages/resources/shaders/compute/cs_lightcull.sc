@@ -16,11 +16,16 @@ bool interset_aabb(light_info l, AABB aabb){
     return sq_dist <= (boundsphere_radius * boundsphere_radius);
 }
 
-NUM_THREADS(16, 9, 4)
+#define NUM_X 16
+#define NUM_Y 9
+#define NUM_Z 3
+
+#define WORKGORUP_SIZE  (16 * 9 * 3)
+
+NUM_THREADS(NUM_X, NUM_Y, NUM_Z)
 void main(){
     uint light_count = u_light_count.x;
-    uint workgroup_size = 16 * 9 * 4;
-    uint cluster_idx = gl_LocalInvocationIndex + workgroup_size * gl_WorkGroupID.z;
+    uint cluster_idx = gl_LocalInvocationIndex + WORKGORUP_SIZE * gl_WorkGroupID.z;
     AABB aabb; load_cluster_aabb(b_cluster_AABBs, cluster_idx, aabb);
 
     uint visible_light_count = 0;
