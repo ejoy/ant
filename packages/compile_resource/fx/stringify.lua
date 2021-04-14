@@ -18,7 +18,7 @@ end
 return function (t)
     local s = {}
     for k, v in sortpairs(t) do
-        s[#s+1] = k..": "..tostring(v)
+        s[#s+1] = k.."="..tostring(v)
     end
-    return table.concat(s, "\n")
+    return table.concat(s, "&")
 end
