@@ -26,8 +26,8 @@ function m:init()
     --]]
     local tag = "body"
     world:prefab_event(prefab, "autoplay", tag, "walking")
-    world:prefab_event(prefab, "set_events", tag, "walking", "res/walking.event")
-    local collider = world:prefab_event(prefab, "get_collider", tag, "walking", 0.3)
+    -- world:prefab_event(prefab, "set_events", tag, "walking", "res/walking.event")
+    -- local collider = world:prefab_event(prefab, "get_collider", tag, "walking", 0.3)
     -- world:prefab_event(prefab, "play", tag, "running")
     -- world:prefab_event(prefab, "time", tag, 0.08)
     -- local duration = world:prefab_event(prefab, "duration", tag)

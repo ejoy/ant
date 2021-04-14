@@ -22,7 +22,7 @@ end
 
 function m.gen_main()
     local main_code = [[
-package.path = "$EnginePath/engine/?.lua"
+package.path = "engine/?.lua"
 require "bootstrap"
 import_package "ant.window".start "$PackageName"
 ]]
