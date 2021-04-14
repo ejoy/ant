@@ -73,7 +73,7 @@ end
 local function get_package(entry_path, readmount)
     local repo = {_root = entry_path}
     if readmount then
-        access.readmount(repo, readmount)
+        access.readmount(repo)
     end
     local merged_repo = vfs.merge_mount(repo)
     local packages = {}

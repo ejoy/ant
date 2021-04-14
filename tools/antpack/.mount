@@ -1,3 +1,4 @@
-@pkg packages
-@pkg-one tools/antpack
 engine engine
+@pkg packages
+@pkg-one ${project}
+
