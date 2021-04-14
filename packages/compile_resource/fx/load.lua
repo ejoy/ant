@@ -1,25 +1,16 @@
 local bgfx = require "bgfx"
-local sha1 = require "hash".sha1
 local datalist = require "datalist"
-local stringify = require "fx.stringify"
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 
 local setting   = import_package "ant.settings".setting
 local FX_CACHE = {}
-local fxcompile
+local fxcompile = require "fx.compile"
 
-if __ANT_RUNTIME__ then
-    fxcompile = {}
-    function fxcompile.register()
-    end
-    function fxcompile.get_shader(fx, stage)
-        if fx[stage] then
-            return (fs.path(fx[stage]) / stage / fx.hash):localpath()
-        end
-    end
-else
-    fxcompile = require "fx.compile"
+local function create_param(fx)
+    local param = require "fx.stringify"(fx.setting)
+    fx.param = param
+    return param
 end
 
 local function read_default_setting_from_file()
@@ -133,12 +124,11 @@ local function create_program(fx)
 end
 
 local function get_fx_cache(fx)
-    local hash = sha1(stringify(fx.setting)):sub(1,7)
-    fx.hash = hash
-    if not FX_CACHE[hash] then
-        FX_CACHE[hash] = {}
+    local key = create_param(fx)
+    if not FX_CACHE[key] then
+        FX_CACHE[key] = {}
     end
-    return FX_CACHE[hash]
+    return FX_CACHE[key]
 end
 
 local function loader(input, setting)
@@ -156,7 +146,7 @@ end
 
 local function compile(input, setting)
     local fx = read_fx(input, setting)
-    fx.hash = sha1(stringify(fx.setting)):sub(1,7)
+    create_param(fx)
     if fx.vs then fxcompile.get_shader(fx, "vs") end
     if fx.fs then fxcompile.get_shader(fx, "fs") end
     if fx.cs then fxcompile.get_shader(fx, "cs") end
