@@ -261,9 +261,27 @@ local function do_set_event(eid, anim, events)
 	end
 end
 
--- function iani.get_collider(eid, anim)
--- 	local events = e.keyframe_events[anim]
--- end
+function iani.get_collider(eid, anim, time)
+	local e = world[eid]
+	if not e.keyframe_events then return end
+
+	local events = e.keyframe_events[anim]
+	if not events then return end
+
+	local colliders
+	for _, event in ipairs(events.event) do
+		if math.abs(time - event.time) < 0.0001 then
+			colliders = {}
+			for _, ev in ipairs(event.event_list) do
+				if ev.event_type == "Collision" then
+					colliders[#colliders + 1] = ev.collision
+				end
+			end
+			break
+		end
+	end
+	return colliders
+end
 
 function iani.set_events(eid, anim, events)
 	if type(events) == "table" then

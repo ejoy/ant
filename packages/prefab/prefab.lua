@@ -32,6 +32,7 @@ local function command(w, set, name, ...)
 			time 			= iani.set_time,
 			set_clips 		= iani.set_clips,
 			set_events 		= iani.set_events,
+			get_collider    = iani.get_collider,
 			duration 		= iani.get_duration,
 			set_position 	= iom.set_position,
 			set_rotation 	= iom.set_rotation,
@@ -42,55 +43,15 @@ local function command(w, set, name, ...)
 		}
 	end
 	--assert(name == "play_animation")
+	local ret
 	for _, eid in ipairs(set) do
 		if cmd_handle[name] then
-			cmd_handle[name](eid, ...)
+			ret = cmd_handle[name](eid, ...)
 		else
 			print("can't find command handle : ", name)
 		end
 	end
-	-- if name == "autoplay" then
-	-- 	for _, eid in ipairs(set) do
-	-- 		iani.play(eid, ...)
-	-- 	end
-	-- elseif name == "play" then
-	-- 	for _, eid in ipairs(set) do
-	-- 		iani.play(eid, ...)
-	-- 		iani.pause(eid, true)
-	-- 	end
-	-- elseif name == "time" then
-	-- 	for _, eid in ipairs(set) do
-	-- 		iani.set_time(eid, ...)
-	-- 	end
-	-- elseif name == "duration" then
-	-- 	for _, eid in ipairs(set) do
-	-- 		return iani.get_duration(eid)
-	-- 	end
-	-- elseif name == "set_position" then
-	-- 	for _, eid in ipairs(set) do
-	-- 		iom.set_position(eid, ...)
-	-- 	end
-	-- elseif name == "set_rotation" then
-	-- 	for _, eid in ipairs(set) do
-	-- 		iom.set_rotation(eid, ...)
-	-- 	end
-	-- elseif name == "set_scale" then
-	-- 	for _, eid in ipairs(set) do
-	-- 		iom.set_scale(eid, ...)
-	-- 	end
-	-- elseif name == "get_position" then
-	-- 	for _, eid in ipairs(set) do
-	-- 		return iom.get_position(eid)
-	-- 	end
-	-- elseif name == "get_rotation" then
-	-- 	for _, eid in ipairs(set) do
-	-- 		return iom.get_rotation(eid)
-	-- 	end
-	-- elseif name == "get_scale" then
-	-- 	for _, eid in ipairs(set) do
-	-- 		return iom.get_scale(eid)
-	-- 	end
-	-- end
+	return ret
 end
 
 local function createProxy(w, set)

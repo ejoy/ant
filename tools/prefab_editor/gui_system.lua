@@ -55,6 +55,7 @@ local function on_new_project(path)
     new_project.gen_package()
     new_project.gen_settings()
     new_project.gen_bat()
+    new_project.gen_prebuild()
 end
 
 local function choose_project_dir()

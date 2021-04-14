@@ -58,9 +58,9 @@ end
 
 function m.gen_mount()
     local mount_content = [[
-@pkg $EnginePath/packages
-@pkg-one .
-engine $EnginePath/engine
+@pkg packages
+@pkg-one ${project}
+engine engine
 ]]
     utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\.mount")), string.gsub(mount_content, "%$(%w+)", init_param))
 end
@@ -191,5 +191,34 @@ function m.gen_bat()
 $EngineWinStylePath\bin\lua.exe main.lua
 ]]
     utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\run.bat")), string.gsub(bat, "%$(%w+)", init_param))
+end
+
+function m.gen_prebuild()
+    local content = [[
+---
+path: /pkg/ant.resources/materials/fullscreen.material
+---
+path: /pkg/ant.resources/materials/depth.material
+setting:
+    depth_type: inv_z
+---
+path: /pkg/ant.resources/materials/depth.material
+setting:
+    depth_type: inv_z
+    skinning: GPU
+---
+type: fx
+cs = /pkg/ant.resources/shaders/compute/cs_cluster_aabb.sc
+setting:
+    CLUSTER_BUILD_AABB: 1
+---
+type: fx
+cs = /pkg/ant.resources/shaders/compute/cs_lightcull.sc
+setting:
+    CLUSTER_LIGHT_CULL: 1
+---
+path: /pkg/ant.resources/materials/postprocess
+]]
+    utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\prebuild")), content)
 end
 return m
