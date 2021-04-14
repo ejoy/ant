@@ -301,36 +301,3 @@ void window_mainloop(struct ant_window_callback* cb, int update) {
 	}
 	UnregisterClassW(CLASSNAME, GetModuleHandleW(0));
 }
-
-void window_exit(struct ant_window_callback* cb) {
-	HANDLE h = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
-	if (h != INVALID_HANDLE_VALUE) {
-		THREADENTRY32 te;
-		te.dwSize = sizeof(te);
-		for (BOOL ok = Thread32First(h, &te); ok; ok = Thread32Next(h, &te)) {
-			if (te.th32OwnerProcessID == GetCurrentProcessId()) {
-				PostThreadMessageW(te.th32ThreadID, WM_QUIT, 0, 0);
-			}
-		}
-		CloseHandle(h);
-	}
-}
-
-void window_ime(void* ime) {
-	// do nothing
-}
-
-int window_set_title(void* handle,const char* title,size_t sz) {
-	wchar_t* wtitle = (wchar_t*)malloc((sz + 1) * sizeof(wchar_t));
-	if (wtitle == 0) {
-		return 1;
-	}
-	int wsz = MultiByteToWideChar(CP_UTF8, 0, title, (int)sz + 1, wtitle, (int)sz + 1);
-	if (wsz == 0) {
-		free(wtitle);
-		return 2;
-	}
-	SetWindowTextW((HWND) handle, wtitle);
-	free(wtitle);
-	return 0;
-}

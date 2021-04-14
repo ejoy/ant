@@ -194,13 +194,6 @@ ltraceback(lua_State *L) {
 	return 1;
 }
 
-static int
-lset_ime(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
-	window_ime(lua_touserdata(L, 1));
-	return 0;
-}
-
 static struct ant_window_callback*
 get_callback(lua_State *L) {
 	if (lua_getfield(L, LUA_REGISTRYINDEX, ANT_WINDOW_CALLBACK) != LUA_TUSERDATA) {
@@ -256,22 +249,6 @@ lmainloop(lua_State *L) {
 	return 0;
 }
 
-static int
-lset_title(lua_State* L) {
-	void * handle = lua_touserdata(L, 1);
-	size_t sz;
-	const char* title = luaL_checklstring(L, 2, &sz);
-	int err = window_set_title(handle, title, sz);
-	if (err) {
-		lua_pushboolean(L, 0);
-		lua_pushinteger(L, err);
-		return 2;
-	} else {
-		lua_pushboolean(L, 1);
-		return 1;
-	}
-}
-
 static void
 init(lua_State *L) {
 	struct ant_window_callback* cb = lua_newuserdatauv(L, sizeof(*cb), 0);
@@ -281,12 +258,6 @@ init(lua_State *L) {
 	window_init(cb);
 }
 
-static int
-lexit(lua_State *L) {
-	window_exit(get_callback(L));
-	return 0;
-}
-
 LUAMOD_API int
 luaopen_window(lua_State *L) {
 	init(L);
@@ -294,9 +265,6 @@ luaopen_window(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "create", lcreate },
 		{ "mainloop", lmainloop },
-		{ "set_ime", lset_ime },
-		{ "set_title",lset_title},
-		{ "exit",lexit},
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
