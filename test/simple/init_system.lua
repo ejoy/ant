@@ -16,6 +16,7 @@ function m:init()
         play     : play animation
         duration : get current animation duration
         time     : set animtion current time
+        set_clips: set animtion clips
         set_position
         set_rotation
         set_scale
@@ -24,12 +25,18 @@ function m:init()
         get_scale
     --]]
     local tag = "body"
-    world:prefab_event(prefab, "autoplay", tag, "walking")
+    -- world:prefab_event(prefab, "autoplay", tag, "walking")
     -- world:prefab_event(prefab, "play", tag, "running")
     -- world:prefab_event(prefab, "time", tag, 0.08)
     -- local duration = world:prefab_event(prefab, "duration", tag)
     -- world:prefab_event(prefab, "set_position", tag, {1, 0, 0})
     -- world:prefab_event(prefab, "get_position", tag)
     -- world:prefab_event(prefab, "set_rotation", tag, {45, 0, 0})
-    -- world:prefab_event(prefab, "set_scale", tag, {0.5, 0.5, 0.5})
+    world:prefab_event(prefab, "set_scale", tag, {0.5, 0.5, 0.5})
+    -- test clip and group
+    world:prefab_event(prefab, "set_clips", tag, "res/test.clip")
+    -- world:prefab_event(prefab, "autoplay", tag, "Clip2")
+    -- world:prefab_event(prefab, "autoplay", tag, "Clip0")
+    -- world:prefab_event(prefab, "autoplay", tag, "Clip1")
+    world:prefab_event(prefab, "autoplay", tag, "Group0")
 end

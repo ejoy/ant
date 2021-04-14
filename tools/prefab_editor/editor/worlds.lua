@@ -5,8 +5,6 @@ local function create_world(config)
     local rect_w, rect_h = config.width, config.height
     local world = ecs.new_world (config)
     local ev = inputmgr.create(world)
-    local irender = world:interface "ant.render|irender"
-    irender.create_blit_queue{w=config.width, h=config.height}
     local m = {}
     function m.init()
         world:pub {"resize", rect_w, rect_h}

@@ -77,7 +77,7 @@ local function playAnimation(e, name)
             next_index = 1,
             keyframe_events = e.keyframe_events[name]
         },
-        clip_state = { current = {current_index = 1, clip}, clips = e.anim_clips[name]}
+        clip_state = { current = {clip_index = 1}, clips = e.anim_clips[name]}
         ratio = 0,
     }
 end

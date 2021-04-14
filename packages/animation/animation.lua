@@ -29,24 +29,24 @@ end
 
 local function get_adjust_delta_time(task, delta)
 	local clip_state = task.clip_state
-	if not clip_state or not clip_state.current or not clip_state.current.clip then return delta end
-	local current_time = get_current_anim_time(task)--task.animation._handle:get_time()
-	local index = clip_state.current.current_index
+	if not clip_state or not clip_state.current or not clip_state.current.clips then return delta end
+	local current_time = get_current_anim_time(task)
+	local index = clip_state.current.clip_index
 	local next_time = current_time + delta * 0.001
-	local skip = 0.0
-	if next_time > clip_state.current.clip[index].range[2] then
+	local clips = clip_state.current.clips
+	if next_time > clips[index][2].range[2] then
+		local excess = next_time - clips[index][2].range[2]
 		local index = index + 1
-		if index > #clip_state.current.clip then
+		if index > #clips then
 			index = 1
-			skip = task.animation._handle:duration() - clip_state.current.clip[#clip_state.current.clip].range[2] + clip_state.current.clip[index].range[1]
-		else
-			skip = clip_state.current.clip[index].range[1] - clip_state.current.clip[index - 1].range[2]
 		end
-		clip_state.current.current_index = index
-	elseif index == 1 and next_time < clip_state.current.clip[index].range[1] then
-		skip = clip_state.current.clip[index].range[1]
+		clip_state.current.clip_index = index
+		if task.animation ~= clips[index][1] then
+			task.animation = clips[index][1]
+		end
+		--task.play_state.ratio = (clips[index][2].range[1] + excess) / task.animation._handle:duration()
 	end
-	return skip * 1000 + delta
+	return delta
 end
 
 local function process_keyframe_event(task)
@@ -99,30 +99,46 @@ local function process_keyframe_event(task)
 	end
 end
 
-local function set_time_ratio(task, r)
-	local state = task.play_state
-	state.previous_ratio = state.ratio
-	if state.loop then
-		state.ratio = r - math.floor(r)
-	else
-		if r < 0.0 then
-			state.ratio = 0
-		elseif r > 1.0 then
-			state.ratio = 1.0
+local function update_play_state(task, ms_delta)
+	local play_state = task.play_state
+	if not play_state.play then return end
+	
+	local clip_state = task.clip_state.current
+	local next_time = get_current_anim_time(task) + ms_delta * play_state.speed * 0.001
+	local duration = task.animation._handle:duration()
+	local clips = clip_state.clips
+	if clips then
+		local index = clip_state.clip_index
+		if next_time > clips[index][2].range[2] then
+			local excess = next_time - clips[index][2].range[2]
+			if index >= #clips then
+				if not play_state.loop then
+					play_state.ratio = clips[#clips][2].range[2] / duration
+					return
+				end
+				index = 1
+			else
+				index = index + 1
+			end
+			clip_state.clip_index = index
+			if task.animation ~= clips[index][1] then
+				task.animation = clips[index][1]
+			end
+			play_state.ratio = (clips[index][2].range[1] + excess) / task.animation._handle:duration()
 		else
-			state.ratio = r
+			play_state.ratio = next_time / duration
 		end
+		return
 	end
-end
-
-local function update_play_state(task, dt)
-	local state = task.play_state
-	local new_ratio = state.ratio
-	if state.play then
-		new_ratio = state.ratio + dt * state.speed / (task.animation._handle:duration() * 1000.0)
+	if next_time > duration then
+		if not play_state.loop then
+			play_state.ratio = 1.0
+		else
+			play_state.ratio = (next_time - duration) / duration
+		end
+	else
+		play_state.ratio = next_time / duration
 	end
-	set_time_ratio(task, new_ratio)
-	return state.ratio
 end
 
 local function do_animation(poseresult, task, delta_time)
@@ -133,9 +149,8 @@ local function do_animation(poseresult, task, delta_time)
 		poseresult:do_blend("blend", #task, task.weight)
 	else
 		local ani = task.animation
-		local adjust_time = get_adjust_delta_time(task, delta_time)
-		local ratio = update_play_state(task, adjust_time)
-		poseresult:do_sample(ani._sampling_context, ani._handle, ratio, task.weight)
+		update_play_state(task, delta_time)
+		poseresult:do_sample(ani._sampling_context, ani._handle, task.play_state.ratio, task.weight)
 	end
 end
 

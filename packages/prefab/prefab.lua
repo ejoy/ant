@@ -17,52 +17,80 @@ local function absolutePath(path, base)
 	return fs.absolute(fs.path(path), fs.path(base):remove_filename())
 end
 
+local cmd_handle
+
 local function command(w, set, name, ...)
 	local iom = w:interface "ant.objcontroller|obj_motion"
 	local iani = w:interface "ant.animation|animation"
+	if not cmd_handle then
+		cmd_handle = {
+			autoplay = iani.play,
+			play = function(eid, ...)
+				iani.play(eid, ...)
+				iani.pause(eid, true)
+			end,
+			time 			= iani.set_time,
+			set_clips 		= iani.set_clips,
+			set_events 		= iani.set_events,
+			duration 		= iani.get_duration,
+			set_position 	= iom.set_position,
+			set_rotation 	= iom.set_rotation,
+			set_scale 		= iom.set_scale,
+			get_position 	= iom.get_position,
+			get_rotation 	= iom.get_rotation,
+			get_scale 		= iom.get_scale
+		}
+	end
 	--assert(name == "play_animation")
-	if name == "autoplay" then
-		for _, eid in ipairs(set) do
-			iani.play(eid, ...)
-		end
-	elseif name == "play" then
-		for _, eid in ipairs(set) do
-			iani.play(eid, ...)
-			iani.pause(eid, true)
-		end
-	elseif name == "time" then
-		for _, eid in ipairs(set) do
-			iani.set_time(eid, ...)
-		end
-	elseif name == "duration" then
-		for _, eid in ipairs(set) do
-			return iani.get_duration(eid)
-		end
-	elseif name == "set_position" then
-		for _, eid in ipairs(set) do
-			iom.set_position(eid, ...)
-		end
-	elseif name == "set_rotation" then
-		for _, eid in ipairs(set) do
-			iom.set_rotation(eid, ...)
-		end
-	elseif name == "set_scale" then
-		for _, eid in ipairs(set) do
-			iom.set_scale(eid, ...)
-		end
-	elseif name == "get_position" then
-		for _, eid in ipairs(set) do
-			return iom.get_position(eid)
-		end
-	elseif name == "get_rotation" then
-		for _, eid in ipairs(set) do
-			return iom.get_rotation(eid)
-		end
-	elseif name == "get_scale" then
-		for _, eid in ipairs(set) do
-			return iom.get_scale(eid)
+	for _, eid in ipairs(set) do
+		if cmd_handle[name] then
+			cmd_handle[name](eid, ...)
+		else
+			print("can't find command handle : ", name)
 		end
 	end
+	-- if name == "autoplay" then
+	-- 	for _, eid in ipairs(set) do
+	-- 		iani.play(eid, ...)
+	-- 	end
+	-- elseif name == "play" then
+	-- 	for _, eid in ipairs(set) do
+	-- 		iani.play(eid, ...)
+	-- 		iani.pause(eid, true)
+	-- 	end
+	-- elseif name == "time" then
+	-- 	for _, eid in ipairs(set) do
+	-- 		iani.set_time(eid, ...)
+	-- 	end
+	-- elseif name == "duration" then
+	-- 	for _, eid in ipairs(set) do
+	-- 		return iani.get_duration(eid)
+	-- 	end
+	-- elseif name == "set_position" then
+	-- 	for _, eid in ipairs(set) do
+	-- 		iom.set_position(eid, ...)
+	-- 	end
+	-- elseif name == "set_rotation" then
+	-- 	for _, eid in ipairs(set) do
+	-- 		iom.set_rotation(eid, ...)
+	-- 	end
+	-- elseif name == "set_scale" then
+	-- 	for _, eid in ipairs(set) do
+	-- 		iom.set_scale(eid, ...)
+	-- 	end
+	-- elseif name == "get_position" then
+	-- 	for _, eid in ipairs(set) do
+	-- 		return iom.get_position(eid)
+	-- 	end
+	-- elseif name == "get_rotation" then
+	-- 	for _, eid in ipairs(set) do
+	-- 		return iom.get_rotation(eid)
+	-- 	end
+	-- elseif name == "get_scale" then
+	-- 	for _, eid in ipairs(set) do
+	-- 		return iom.get_scale(eid)
+	-- 	end
+	-- end
 end
 
 local function createProxy(w, set)

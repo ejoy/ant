@@ -50,11 +50,45 @@ local current_event
 local current_collider
 local current_clip
 local anim_group_eid = {}
+local all_clips = {}
+local all_groups = {}
+
+local clip_index = 0
+local group_index = 0
+
 local function find_index(t, item)
     for i, c in ipairs(t) do
         if c == item then
             return i
         end
+    end
+end
+
+local function anim_group_set_time(eid, t)
+    local group_eid = anim_group_eid[ozz_anims[eid][current_anim_name].anim_obj]
+    for _, anim_eid in ipairs(group_eid) do
+        iani.set_time(anim_eid, t)
+    end
+end
+
+local function anim_group_play(eid, ...)
+    local group_eid = anim_group_eid[ozz_anims[eid][current_anim_name].anim_obj]
+    for _, anim_eid in ipairs(group_eid) do
+        iani.play(anim_eid, ...)
+    end
+end
+
+local function anim_group_set_loop(eid, ...)
+    local group_eid = anim_group_eid[ozz_anims[eid][current_anim_name].anim_obj]
+    for _, anim_eid in ipairs(group_eid) do
+        iani.set_loop(anim_eid, ...)
+    end
+end
+
+local function anim_group_pause(eid, p)
+    local group_eid = anim_group_eid[ozz_anims[eid][current_anim_name].anim_obj]
+    for _, anim_eid in ipairs(group_eid) do
+        iani.pause(anim_eid, p)
     end
 end
 
@@ -80,8 +114,28 @@ local function set_current_anim(anim_name)
     anim_state.duration = current_anim.duration
     current_collider = nil
     current_event = nil
+    
+    anim_group_play(current_eid, anim_name, 0)
+    anim_group_set_time(current_eid, 0)
+    anim_group_pause(current_eid, true)
+    -- if not iani.is_playing(current_eid) then
+    --     anim_group_pause(current_eid, false)
+    -- end
 end
 
+local default_collider_define = {
+    ["sphere"]  = {{origin = {0, 0, 0, 1}, radius = 0.1}},
+    ["box"]     = {{origin = {0, 0, 0, 1}, size = {0.05, 0.05, 0.05}}},
+    ["capsule"] = {{origin = {0, 0, 0, 1}, height = 1.0, radius = 0.25}}
+}
+
+local collider_list = {}
+
+local function get_collider(shape_type, def)
+    collider_list[#collider_list + 1] = prefab_mgr:create("collider",
+        {type = shape_type, define = def or utils.deep_copy(default_collider_define[shape_type]), parent = prefab_mgr.root, add_to_hierarchy = true})
+    return #collider_list
+end
 
 local function from_runtime_event(runtime_event)
     local key_event = {}
@@ -105,7 +159,7 @@ local function from_runtime_event(runtime_event)
                     e.collision.eid_index = get_collider(col_def.shape_type, def)
                     e.collision.enable_ui = {e.collision.enable}
                     e.collision.shape_type = col_def.shape_type
-                    iom.set_srt(collider_list[e.collision.eid_index], math3d.matrix{ r = col_def.offset.rotate, t = col_def.offset.position })
+                    iom.set_srt(collider_list[e.collision.eid_index], math3d.matrix{ s = world[collider_list[e.collision.eid_index]].transform.s, r = col_def.offset.rotate, t = col_def.offset.position })
                 end
             end
             key_event[tostring(math.floor(ev.time * sample_ratio))] = ev.event_list
@@ -115,42 +169,59 @@ local function from_runtime_event(runtime_event)
 end
 
 local function from_runtime_clip(runtime_clip)
-    local clips = {}
-    local groups = {}
+    all_clips = {}
+    all_groups = {}
+    for _, anim in pairs(ozz_anims[current_eid]) do
+        if type(anim) == "table" and anim.clips then
+            anim.clips = {}
+        end
+    end
     for _, clip in ipairs(runtime_clip) do
         if clip.range then
             local start_frame = math.floor(clip.range[1] * sample_ratio)
             local end_frame = math.floor(clip.range[2] * sample_ratio)
-            clips[#clips + 1] = {
+            local new_clip = {
+                anim_name = clip.anim_name,
                 name = clip.name,
                 range = {start_frame, end_frame},
                 name_ui = {text = clip.name},
                 range_ui = {start_frame, end_frame, speed = 1}
             }
+            local anim_clips = ozz_anims[current_eid][clip.anim_name].clips
+            anim_clips[#anim_clips + 1] = new_clip
+            all_clips[#all_clips+1] = new_clip
         end
-        table.sort(clips, function(a, b) return a.range[2] < b.range[1] end)
     end
+    
     for _, clip in ipairs(runtime_clip) do
         if not clip.range then
             local subclips = {}
             for _, v in ipairs(clip.subclips) do
-                subclips[#subclips + 1] = clips[v]
+                subclips[#subclips + 1] = all_clips[v]
             end
-            groups[#groups + 1] = {
+            all_groups[#all_groups + 1] = {
                 name = clip.name,
                 clips = subclips,
                 name_ui = {text = clip.name}
             }
         end
     end
-    return clips, groups
+    clip_index = #all_clips
+    group_index = #all_groups
+    -- for _, anim in pairs(ozz_anims[current_eid]) do
+    --     if type(anim) == "table" and anim.clips then
+    --         table.sort(anim.clips, function(a, b) return a.range[2] < b.range[1] end)
+    --     end
+    -- end
+
+    -- table.sort(all_clips, function(a, b) return a.range[2] < b.range[1] end)
 end
 
 local function get_runtime_clips()
-    if not world[current_eid].anim_clips or not world[current_eid].anim_clips[current_anim_name] then
-        iani.set_clips(current_eid, current_anim_name, {})
+    if not world[current_eid].anim_clips then
+        iani.set_clips(current_eid, {})
     end
-    return world[current_eid].anim_clips[current_anim_name]
+    return world[current_eid].anim_clips
 end
 
 local function get_runtime_events()
@@ -170,18 +241,16 @@ end
 
 local function to_runtime_clip()
     local runtime_clips = {}
-    for _, clip in ipairs(current_anim.clips) do
+    for _, clip in ipairs(all_clips) do
         if clip.range[1] > 0 and clip.range[2] > 0 and clip.range[2] > clip.range[1] then
-            runtime_clips[#runtime_clips + 1] = {name = clip.name, range = {clip.range[1] / sample_ratio, clip.range[2] / sample_ratio}}
+            runtime_clips[#runtime_clips + 1] = {anim_name = clip.anim_name, name = clip.name, range = {clip.range[1] / sample_ratio, clip.range[2] / sample_ratio}}
         end
     end
-    if current_anim.groups then
-        for _, group in ipairs(current_anim.groups) do
-            runtime_clips[#runtime_clips + 1] = to_runtime_group(current_anim.clips, group)
-        end
+    for _, group in ipairs(all_groups) do
+        runtime_clips[#runtime_clips + 1] = to_runtime_group(all_clips, group)
     end
     if #runtime_clips < 1  then return end
-    iani.set_clips(current_eid, current_anim_name, runtime_clips)
+    iani.set_clips(current_eid, runtime_clips)
 end
 
 local function to_runtime_event()
@@ -209,20 +278,6 @@ local function set_event_dirty(num)
     if num ~= 0 then
         to_runtime_event()
     end
-end
-
-local default_collider_define = {
-    ["sphere"]  = {{origin = {0, 0, 0, 1}, radius = 0.1}},
-    ["box"]     = {{origin = {0, 0, 0, 1}, size = {0.05, 0.05, 0.05}}},
-    ["capsule"] = {{origin = {0, 0, 0, 1}, height = 1.0, radius = 0.25}}
-}
-
-local collider_list = {}
-
-local function get_collider(shape_type, def)
-    collider_list[#collider_list + 1] = prefab_mgr:create("collider",
-        {type = shape_type, define = def or utils.deep_copy(default_collider_define[shape_type]), parent = prefab_mgr.root, add_to_hierarchy = true})
-    return #collider_list
 end
 
 local event_id = 1
@@ -506,8 +561,9 @@ local function min_max_range_value(clip_index)
 end
 
 local function on_move_clip(move_type, current_clip_index, move_delta)
-    if current_clip_index <= 0 or current_clip_index > #current_anim.clips then return end
-    local clip = current_anim.clips[current_clip_index]
+    local clips = current_anim.clips
+    if current_clip_index <= 0 or current_clip_index > #clips then return end
+    local clip = clips[current_clip_index]
     if not clip then return end
     local min_value, max_value = min_max_range_value(current_clip_index)
     if move_type == 1 then
@@ -599,101 +655,98 @@ local function save_clip(filename)
         filename = widget_utils.get_saveas_path("Clip", ".clip")
     end
     if not filename then return end
+    if current_clip_file ~= filename then
+        current_clip_file = filename
+    end
     local runtime_clip = get_runtime_clips()
     utils.write_file(filename, stringify(runtime_clip))
 end
 
-function m.on_collider_update(eid)
-    -- if not current_event or not current_event.collision then return end
-    -- local eidx = current_event.collision.eid_index
-    -- if eidx and collider_list[eidx] == eid then
-    --     local pos = math3d.totable(iom.get_position(eid))
-    --     local rot = math3d.totable(iom.get_rotation(eid))
-    --     current_event.collision.offset.position = pos
-    --     current_event.collision.offset.rotate = rot
-    -- --     current_event.collision.offset_ui.position[1] = pos[1]
-    -- --     current_event.collision.offset_ui.position[2] = pos[2]
-    -- --     current_event.collision.offset_ui.position[3] = pos[3]
-    -- --     current_event.collision.offset_ui.rotate[1] = rot[1]
-    -- --     current_event.collision.offset_ui.rotate[2] = rot[2]
-    -- --     current_event.collision.offset_ui.rotate[3] = rot[3]
-    -- end
-end
-
-local clip_index = 0
 local function show_clips()
     if imgui.widget.Button("NewClip") then
-        if not current_anim.clips then
-            current_anim.clips = {}
-        end
         local key = "Clip" .. clip_index
-        current_anim.clips[#current_anim.clips + 1] = {
+        clip_index = clip_index + 1
+        local new_clip = {
+            anim_name = current_anim_name,
             name = key,
             range = {-1, -1},
             name_ui = {text = key},
             range_ui = {-1, -1, speed = 1}
         }
-        clip_index = clip_index + 1
+        current_anim.clips[#current_anim.clips + 1] = new_clip
         table.sort(current_anim.clips, function(a, b)
+            return a.range[2] < b.range[1]
+        end)
+        all_clips[#all_clips+1] = new_clip
+        table.sort(all_clips, function(a, b)
             return a.range[2] < b.range[1]
         end)
         set_clips_dirty(true)
     end
     
-    if not current_anim.clips then return end
-
-    local delete_clip
-    for i, cs in ipairs(current_anim.clips) do
-        if imgui.widget.Selectable(cs.name, current_clip and (current_clip.name == cs.name)) then
+    local delete_index
+    local anim_name
+    for i, cs in ipairs(all_clips) do
+        if imgui.widget.Selectable(cs.name, current_clip and (current_clip.name == cs.name), 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
             current_clip = cs
-            anim_state.selected_clip_index = i
+            set_current_anim(cs.anim_name)
+            anim_state.selected_clip_index = find_index(current_anim.clips, cs)
+            if imgui.util.IsMouseDoubleClicked(0) then
+                anim_group_play(current_eid, cs.name, 0)
+                anim_group_set_loop(current_eid, false)
+            end
         end
         if current_clip and (current_clip.name == cs.name) then
             if imgui.windows.BeginPopupContextItem(cs.name) then
                 if imgui.widget.Selectable("Delete", false) then
-                    delete_clip = i
+                    delete_index = i
                 end
                 imgui.windows.EndPopup()
             end
         end
     end
-    if delete_clip then
-        if current_anim.groups then
-            for _, group in ipairs(current_anim.groups) do
-                local found = find_index(group.clips, current_anim.clips[delete_clip])
+    if delete_index then
+        local anim_name = current_clip
+        local delete_clip = all_clips[delete_index]
+        if all_groups then
+            for _, group in ipairs(all_groups) do
+                local found = find_index(group.clips, delete_clip)
                 if found then
                     table.remove(group.clips, found)
                 end
             end
         end
-        table.remove(current_anim.clips, delete_clip)
+        local found = find_index(current_anim.clips, delete_clip)
+        if found then
+            table.remove(current_anim.clips, found)
+        end
+        table.remove(all_clips, delete_index)
         current_clip = nil
         set_clips_dirty(true)
     end
 end
 
 local current_group
-local group_index = 0
+
 local function show_groups()
     if imgui.widget.Button("NewGroup") then
-        if not current_anim.groups then
-            current_anim.groups = {}
-        end
         local key = "Group" .. group_index
-        current_anim.groups[#current_anim.groups + 1] = {
+        group_index = group_index + 1
+        all_groups[#all_groups + 1] = {
             name = key,
             name_ui = {text = key},
             clips ={}
         }
-        group_index = group_index + 1
         set_clips_dirty(true)
     end
-    if not current_anim.groups then return end
     local delete_group
-    for i, gp in ipairs(current_anim.groups) do
-        if imgui.widget.Selectable(gp.name, current_group and (current_group.name == gp.name)) then
+    for i, gp in ipairs(all_groups) do
+        if imgui.widget.Selectable(gp.name, current_group and (current_group.name == gp.name), 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
             current_group = gp
-            --iani.play(current_eid, current_anim_name, 0, to_runtime_group(get_runtime_clips(), gp))
+            if imgui.util.IsMouseDoubleClicked(0) then
+                anim_group_play(current_eid, gp.name, 0)
+                anim_group_set_loop(current_eid, false)
+            end
         end
         if current_group and (current_group.name == gp.name) then
             if imgui.windows.BeginPopupContextItem(gp.name) then
@@ -705,20 +758,22 @@ local function show_groups()
         end
     end
     if delete_group then
-        table.remove(current_anim.groups, delete_group)
+        table.remove(all_groups, delete_group)
         current_group = nil
         set_clips_dirty(true)
     end
 end
 
 local function show_current_clip()
-    if not current_clip or not current_anim.clips then return end
-    imgui.widget.PropertyLabel("Name")
-    if imgui.widget.InputText("##Name", current_clip.name_ui) then
+    if not current_clip then return end
+    imgui.widget.PropertyLabel("AnimName")
+    imgui.widget.Text(current_clip.anim_name)
+    imgui.widget.PropertyLabel("ClipName")
+    if imgui.widget.InputText("##ClipName", current_clip.name_ui) then
         current_clip.name = tostring(current_clip.name_ui.text)
     end
     imgui.widget.PropertyLabel("Range")
-    local clip_index = find_index(current_anim.clips, current_clip)
+    --local clip_index = find_index(all_clips, current_clip)
     local min_value, max_value = min_max_range_value()
     local old_range = {current_clip.range_ui[1], current_clip.range_ui[2]}
     if imgui.widget.DragInt("##Range", current_clip.range_ui) then
@@ -744,7 +799,7 @@ end
 local current_group_clip
 local current_clip_label
 local function show_current_group()
-    if not current_group or not current_anim.groups then return end
+    if not current_group then return end
     imgui.widget.PropertyLabel("Name")
     if imgui.widget.InputText("##Name", current_group.name_ui) then
         current_group.name = tostring(current_group.name_ui.text)
@@ -758,9 +813,9 @@ local function show_current_group()
     end
 
     if imgui.windows.BeginPopup("AddClipPop") then
-        for _, ct in ipairs(current_anim.clips) do
-            if is_valid_range(ct) and imgui.widget.MenuItem(ct.name) then
-                current_group.clips[#current_group.clips + 1] = ct
+        for _, clip in ipairs(all_clips) do
+            if is_valid_range(clip) and imgui.widget.MenuItem(clip.name) then
+                current_group.clips[#current_group.clips + 1] = clip
                 set_clips_dirty(true)
             end
         end
@@ -810,27 +865,6 @@ local function show_joints(root)
     end
 end
 
-local function anim_group_set_time(eid, t)
-    local group_eid = anim_group_eid[ozz_anims[eid][current_anim_name].anim_obj]
-    for _, anim_eid in ipairs(group_eid) do
-        iani.set_time(anim_eid, t)
-    end
-end
-
-local function anim_group_play(eid, ...)
-    local group_eid = anim_group_eid[ozz_anims[eid][current_anim_name].anim_obj]
-    for _, anim_eid in ipairs(group_eid) do
-        iani.play(anim_eid, ...)
-    end
-end
-
-local function anim_group_pause(eid, p)
-    local group_eid = anim_group_eid[ozz_anims[eid][current_anim_name].anim_obj]
-    for _, anim_eid in ipairs(group_eid) do
-        iani.pause(anim_eid, p)
-    end
-end
-
 local recreate_event
 
 function m.show()
@@ -861,39 +895,8 @@ function m.show()
                 for _, name in ipairs(animation_list) do
                     if imgui.widget.Selectable(name, current_anim_name == name) then
                         set_current_anim(name)
-                        anim_group_set_time(current_eid, 0)
-                        if not iani.is_playing(current_eid) then
-                            anim_group_pause(current_eid, false)
-                        end
-                        anim_group_play(current_eid, name, 0)
-
                         current_clip_name = "None"
                         current_clip = nil
-                    end
-                end
-                imgui.widget.EndCombo()
-            end
-            imgui.cursor.SameLine()
-            if imgui.widget.BeginCombo("##ClipList", {current_clip_name, flags = imgui.flags.Combo {}}) then
-                local default = "None"
-                if imgui.widget.Selectable(default, current_clip_name == default) then
-                    current_clip_name = default
-                    anim_group_play(current_eid, current_anim_name, 0)
-                end
-                if current_anim.clips then
-                    for _, clip in ipairs(current_anim.clips) do
-                        if imgui.widget.Selectable(clip.name, current_clip_name == clip.name) then
-                            current_clip_name = clip.name
-                            anim_group_play(current_eid, current_anim_name, 0, current_clip_name)
-                        end
-                    end
-                    if current_anim.groups then
-                        for _, group in ipairs(current_anim.groups) do
-                            if imgui.widget.Selectable(group.name, current_clip_name == group.name) then
-                                current_clip_name = group.name
-                                anim_group_play(current_eid, current_anim_name, 0, current_clip_name)
-                            end
-                        end
                     end
                 end
                 imgui.widget.EndCombo()
@@ -909,31 +912,35 @@ function m.show()
             if imgui.widget.Button("LoadClip") then
                 local path = widget_utils.get_open_file_path("Clip", ".clip")
                 if path then
-                    iani.set_clips(current_eid, current_anim_name, path)
+                    iani.set_clips(current_eid, path)
                     current_clip_file = path
-                    current_anim.clips, current_anim.groups = from_runtime_clip(get_runtime_clips())
+                    from_runtime_clip(get_runtime_clips())
                     set_clips_dirty(false)
                 end
             end
-            if current_anim.clips then
+            if all_clips then
                 imgui.cursor.SameLine()
                 if imgui.widget.Button("SaveClip") then
                     save_clip(current_clip_file)
+                end
+                imgui.cursor.SameLine()
+                if imgui.widget.Button("SaveAsClip") then
+                    save_clip()
                 end
             end
             imgui.cursor.SameLine()
             if imgui.widget.Button("LoadEvent") then
                 local path = widget_utils.get_open_file_path("Event", ".event")
                 if path then
-                    iani.set_events(current_eid, current_anim_name, path)
-                    current_event_file = path
                     for _, ev in pairs(current_anim.key_event) do
                         for _, e in ipairs(ev) do
-                            if e.collider_index then
-                                prefab_mgr.remove_entity(collider_list[e.collider_index])
+                            if e.collision and e.collision.eid_index then
+                                prefab_mgr:remove_entity(collider_list[e.collision.eid_index])
                             end
                         end
                     end
+                    current_event_file = path
+                    iani.set_events(current_eid, current_anim_name, path)
                     current_anim.key_event = from_runtime_event(get_runtime_events())
                     set_event_dirty(-1)
                 end
@@ -1046,6 +1053,7 @@ function m.bind(eid)
             id = eid,
             birth = world[eid].animation_birth,
         }
+        world[eid].anim_clips = all_clips
         local animations = world[eid].animation
         local parentNode = hierarchy:get_node(world[eid].parent)
         for key, anim in pairs(animations) do
@@ -1053,6 +1061,7 @@ function m.bind(eid)
                 name = key,
                 duration = anim._handle:duration(),
                 key_event = from_runtime_event(world[eid].keyframe_events and world[eid].keyframe_events[key] or {}),
+                clips = {},
                 anim_obj = anim
             }
             animation_list[#animation_list + 1] = key
@@ -1070,7 +1079,7 @@ function m.bind(eid)
                 end
             end
         end
-
+        table.sort(animation_list)
         set_current_anim(ozz_anims[eid].birth)
         joint_list = {
             {

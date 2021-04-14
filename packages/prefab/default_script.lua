@@ -41,3 +41,11 @@ end
 function event.get_scale(tag_name, s)
     return tag(tag_name) : get_scale()
 end
+
+function event.set_clips(tag_name, clips)
+    return tag(tag_name) : set_clips(clips)
+end
+
+function event.set_events(tag_name, anim_name, events)
+    return tag(tag_name) : set_events(anim_name, events)
+end

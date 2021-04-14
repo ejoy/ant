@@ -1,0 +1,29 @@
+event:
+  ---
+  event_list:
+    ---
+    collision:
+      enable: true
+      shape_def:
+        offset:
+          position: {0, 0, 2.235031843185425, 1}
+          rotation: {0, 0, 0, 1}
+        radius: 0.1
+        shape_type: sphere
+    event_type: Collision
+    name: Collision1
+  time: 0.3
+  ---
+  event_list:
+    ---
+    collision:
+      enable: true
+      shape_def:
+        halfsize: {0.05, 0.05, 0.05}
+        offset:
+          position: {1.2987240552902222, 0, 0, 1}
+          rotation: {0, 0, 0, 1}
+        shape_type: box
+    event_type: Collision
+    name: Collision1
+  time: 0.8
