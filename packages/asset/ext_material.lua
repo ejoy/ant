@@ -11,7 +11,9 @@ local function init(material)
     if type(material.fx) == "string" then
         material.fx = assetmgr.resource(material.fx)
     end
-    material.state = bgfx.make_state(load_elem(material.state))
+    if material.state then
+        material.state = bgfx.make_state(load_elem(material.state))
+    end
     material.setting = material.setting and load_elem(material.setting) or nil
     if material.properties then
         for _, v in pairs(material.properties) do

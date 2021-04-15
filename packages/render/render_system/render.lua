@@ -66,7 +66,7 @@ function irender.draw(vid, ri)
 	bgfx.submit(vid, ri.fx.prog, 0)
 end
 
-function irender.dispatch(vid, ci, numx, numy, numz)
+function irender.dispatch(vid, ci)
 	local properties = ci.properties
 	if properties then
 		for n, p in pairs(properties) do
@@ -74,7 +74,8 @@ function irender.dispatch(vid, ci, numx, numy, numz)
 		end
 	end
 
-	bgfx.dispatch(vid, ci.fx.prog, numx, numy, numz)
+	local s = ci.dispatch_size
+	bgfx.dispatch(vid, ci.fx.prog, s[1], s[2], s[3])
 end
 
 function irender.get_main_view_rendertexture()

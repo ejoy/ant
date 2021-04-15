@@ -11,7 +11,6 @@ interface "icluster_render"
     .implement "render_system/cluster_render.lua"
     .method "set_buffers"
     .method "cluster_sizes"
-    .method "set_light_buffer"
 
 policy "cluster_render"
     .require_policy "ant.render|forward_render"
