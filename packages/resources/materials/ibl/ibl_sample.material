@@ -1,0 +1,6 @@
+fx:
+  fs: /pkg/ant.resources/shaders/ibl/fs_ibl_sample.sc
+  vs: /pkg/ant.resources/shaders/ibl/vs_fullscreen.sc
+properties:
+  u_samplecount: 100
+state: /pkg/ant.resources/materials/states/default.state

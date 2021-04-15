@@ -1,0 +1,5 @@
+system "init_system"
+    .implement "init_system.lua"
+    .require_policy "ant.render|render"
+    .require_policy "ant.render.ibl|ibl"
+    .method "init"
