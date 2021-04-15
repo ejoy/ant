@@ -391,12 +391,6 @@ function m:data_changed()
             end
         elseif what == "lock" then
             hierarchy:set_lock(eid, value)
-            
-            local animation = world:interface "ant.animation|animation"
-            animation.set_time(eid, 0)
-            animation.play(eid, "running", 0)
-            animation.set_speed(eid, 0.5)
-            animation.set_loop(eid, false)
         elseif what == "delete" then
             prefab_mgr:remove_entity(eid)
         end
