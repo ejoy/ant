@@ -624,6 +624,9 @@ end
 function m:recreate_entity(eid)
     local prefab = hierarchy:get_template(eid)
     local copy_prefab = utils.deep_copy(prefab)
+    
+    --rebuild_entity(eid, copy_prefab.template)
+
     local new_eid = world:create_entity(copy_prefab.template)
     iom.set_srt(new_eid, iom.srt(eid))
     local scale = 1

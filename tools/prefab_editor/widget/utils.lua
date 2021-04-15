@@ -79,6 +79,24 @@ function m.show_message_box()
     do_show_message(message[level])
 end
 
+function m.confirm_dialog(info)
+    imgui.windows.OpenPopup(info.title)
+    local change, opened = imgui.windows.BeginPopupModal(info.title, imgui.flags.Window{"AlwaysAutoResize", "NoClosed"})
+    if change then
+        imgui.widget.Text(info.message)
+        if imgui.widget.Button("OK") then
+            info.answer = 1
+            imgui.windows.CloseCurrentPopup()
+        end
+        imgui.cursor.SameLine()
+        if imgui.widget.Button("Cancel") then
+            info.answer = 0
+            imgui.windows.CloseCurrentPopup()
+        end
+        imgui.windows.EndPopup()
+    end
+end
+
 local rhwi      = import_package "ant.hwi"
 
 local filedialog    = require 'filedialog'

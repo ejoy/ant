@@ -10,6 +10,10 @@ function localvfs.realpath(pathname)
 	return rp:string()
 end
 
+function localvfs.virtualpath(pathname)
+	return access.virtualpath(repo, pathname)
+end
+
 function localvfs.list(path)
 	path = path:match "^/?(.-)/?$" .. '/'
 	local item = {}

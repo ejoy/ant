@@ -4,6 +4,7 @@ local hierarchy = require "hierarchy"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local utils     = require "common.utils"
+local fs        = require "filesystem"
 local world
 local icons
 local iani
@@ -866,7 +867,9 @@ local function show_joints(root)
 end
 
 local recreate_event
-
+local anim_name = ""
+local ui_anim_name = {text = ""}
+local anim_path = ""
 function m.show()
     if not current_eid or not world[current_eid] then return end
     if not recreate_event then
@@ -890,6 +893,70 @@ function m.show()
                 anim_state.current_time = iani.get_time(current_eid)
                 anim_state.is_playing = iani.is_playing(current_eid)
             end
+            imgui.cursor.SameLine()
+            local title = "New Animation"
+            if imgui.widget.Button("Add") then
+                anim_path = ""
+                imgui.windows.OpenPopup(title)
+            end
+            local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize"})
+            if change then
+                imgui.widget.Text("Name : ")
+                imgui.cursor.SameLine()
+                if imgui.widget.InputText("##" .. "Name", ui_anim_name) then
+                    anim_name = tostring(ui_anim_name.text)
+                end
+                imgui.widget.Text("Path : " .. anim_path)
+                imgui.cursor.SameLine()
+                local origin_name
+                if imgui.widget.Button("...") then
+                    local filename = uiutils.get_open_file_path("Animation", ".ozz")
+                    if filename then
+                        local vfs = require "vfs"
+                        local path = fs.path(filename)
+                        origin_name = path:stem():string()
+                        anim_path = "/" .. vfs.virtualpath(path)
+                    end
+                end
+                if #anim_name < 1 and #anim_path > 0 then
+                    anim_name = origin_name
+                end
+                if imgui.widget.Button("  OK  ") then
+                    if #anim_name > 0 and #anim_path > 0 then
+                        local update = true
+                        if world[current_eid].animation[anim_name] then
+                            local confirm = {title = "Confirm", message = "animation ".. anim_name .. " exist, replace it ?"}
+                            uiutils.confirm_dialog(confirm)
+                            if confirm.answer and confirm.answer == 0 then
+                                update = false
+                            end
+                        end
+                        if update then
+                            local template = hierarchy:get_template(current_eid)
+                            template.template.data.animation[anim_name] = anim_path
+                            world[current_eid].animation[anim_name] = anim_path
+                        end
+                    end
+                    anim_name = ""
+                    ui_anim_name.text = ""
+                    imgui.windows.CloseCurrentPopup()
+                end
+                imgui.cursor.SameLine()
+                if imgui.widget.Button("Cancel") then
+                    anim_name = ""
+                    ui_anim_name.text = ""
+                    imgui.windows.CloseCurrentPopup()
+                end
+                imgui.windows.EndPopup()
+            end
+
+            imgui.cursor.SameLine()
+            if imgui.widget.Button("Remove") then
+                local template = hierarchy:get_template(current_eid)
+                template.template.data.animation[current_anim_name] = nil
+                world[current_eid].animation[current_anim_name] = nil
+            end
+            imgui.cursor.SameLine()
             imgui.cursor.PushItemWidth(150)
             if imgui.widget.BeginCombo("##AnimationList", {current_anim_name, flags = imgui.flags.Combo {}}) then
                 for _, name in ipairs(animation_list) do
