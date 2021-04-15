@@ -1,3 +1,4 @@
+engine engine
 @pkg-one packages/window
 @pkg-one packages/argument
 @pkg-one packages/ecs
@@ -8,5 +9,4 @@
 @pkg-one packages/resources
 @pkg-one packages/serialize
 @pkg-one packages/asset
-@pkg-one test/native_bgfx
-engine engine
+@pkg-one ${project}

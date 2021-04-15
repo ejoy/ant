@@ -175,16 +175,3 @@ void window_mainloop(struct ant_window_callback* cb, int update) {
     char **argv = 0;
     UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
 }
-
-void window_exit(struct ant_window_callback* cb) {
-    //TODO
-}
-
-void window_ime(void* ime) {
-    // do nothing
-}
-
-int window_set_title(void* handle,const char* title,size_t sz){
-    // not implement
-    return 0;
-}

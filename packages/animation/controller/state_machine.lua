@@ -56,7 +56,7 @@ local function play_animation(e, name, duration)
 					next_index = 1,
 					keyframe_events = current_pose.event_state
 				},
-				clip_state = { current = {current_index = 1, clip}, clips = e.anim_clips and e.anim_clips[name] or {}},
+				clip_state = { current = {clip_index = 1}, clips = e.anim_clips and e.anim_clips[name] or {}},
 				weight = 1,
 				init_weight = 1,
 				ratio = current_pose.ratio,
@@ -67,7 +67,7 @@ local function play_animation(e, name, duration)
 					next_index = 1,
 					keyframe_events = e.keyframe_events and e.keyframe_events[name] or {}
 				},
-				clip_state = { current = {current_index = 1, clip}, clips = e.anim_clips and e.anim_clips[name] or {}},
+				clip_state = { current = {clip_index = 1}, clips = e.anim_clips and e.anim_clips[name] or {}},
 				weight = 0,
 				init_weight = 0,
 				play_state = { ratio = 0.0, previous_ratio = 0.0, speed = 1.0, play = true, loop = true}
@@ -80,7 +80,7 @@ local function play_animation(e, name, duration)
 				next_index = 1,
 				keyframe_events = e.keyframe_events and e.keyframe_events[name] or {}
 			},
-			clip_state = { current = {current_index = 1, clip}, clips = e.anim_clips and e.anim_clips[name] or {}},
+			clip_state = { current = {clip_index = 1}, clips = e.anim_clips and e.anim_clips[name] or {}},
 			play_state = { ratio = 0.0, previous_ratio = 0.0, speed = 1.0, play = true, loop = true}
 		}
 		return
@@ -149,42 +149,57 @@ function iani.set_state(e, name)
 	end
 end
 
-function iani.play(eid, name, time, clipname)
+function iani.play(eid, name, time)
 	local e = world[eid]
-	if e.animation and e.animation[name]  then
-		if e.state_machine then
-			e.state_machine._current = nil
-			play_animation(e, name, time)
-		else
-			local function find_clip_by_name(clips, name)
-				for _, clip in ipairs(clips) do
-					if clip.name == name then return clip end
-				end
-			end
-			local real_clips
-			if clipname then
-				local clip = find_clip_by_name(e.anim_clips[name], clipname)
-				if clip and clip.subclips then
-					real_clips = #clip.subclips > 0 and {} or nil
-					for _, clip_index in ipairs(clip.subclips) do
-						real_clips[#real_clips + 1] = e.anim_clips[name][clip_index]
-					end
-				else
-					real_clips = clip and { clip } or nil
-				end
-			end
-			e._animation._current = {
-				animation = e.animation[name],
-				event_state = {
-					next_index = 1,
-					keyframe_events = e.keyframe_events and e.keyframe_events[name] or {}
-				},
-				clip_state = { current = {current_index = 1, clip = real_clips}, clips = e.anim_clips and e.anim_clips[name] or {}},
-				play_state = { ratio = 0.0, previous_ratio = 0.0, speed = 1.0, play = true, loop = true}
-			}
-		end
-		return true
+	if not e.animation then return false end
+
+	local anim = e.animation[name]
+	if not anim and not e.anim_clips then
+		print("anim:", name, "not exist")
+		return false
 	end
+	local real_clips
+	local start_ratio = 0.0
+	if not anim then
+		local function find_clip_by_name(clips, name)
+			for _, clip in ipairs(clips) do
+				if clip.name == name then return clip end
+			end
+		end
+		local clip = find_clip_by_name(e.anim_clips, name)
+		if clip and clip.subclips then
+			real_clips = #clip.subclips > 0 and {} or nil
+			for _, clip_index in ipairs(clip.subclips) do
+				local anim_name = e.anim_clips[clip_index].anim_name
+				real_clips[#real_clips + 1] = {e.animation[anim_name], e.anim_clips[clip_index]}
+			end
+		else
+			real_clips = clip and {{e.animation[clip.anim_name], clip }} or nil
+		end
+		
+		if not real_clips or #real_clips < 1 then
+			print("clip:", name, "not exist")
+			return false
+		end
+		anim = real_clips[1][1]
+		start_ratio = real_clips[1][2].range[1] / anim._handle:duration()
+	end
+
+	if e.state_machine then
+		e.state_machine._current = nil
+		play_animation(e, name, time)
+	else
+		e._animation._current = {
+			animation = anim,
+			event_state = {
+				next_index = 1,
+				keyframe_events = e.keyframe_events and e.keyframe_events[name] or {}
+			},
+			clip_state = { current = {clip_index = 1, clips = real_clips}, clips = e.anim_clips or {}},
+			play_state = { ratio = start_ratio, previous_ratio = start_ratio, speed = 1.0, play = true, loop = true}
+		}
+	end
+	return true
 end
 
 function iani.get_duration(eid)
@@ -240,19 +255,32 @@ local function do_set_event(eid, anim, events)
 	if not e.keyframe_events then
 		e.keyframe_events = {}
 	end
-	-- if events.event then
-	-- 	for _, ev in ipairs(events.event) do
-	-- 		for _, e in ipairs(ev.event_list) do
-	-- 			if e.event_type == "Collision" then
-	-- 				e.collision.collider = events.collider[e.collision.collider_index]
-	-- 			end
-	-- 		end
-	-- 	end
-	-- end
 	e.keyframe_events[anim] = events
 	if e._animation._current.animation == e.animation[anim] then
 		e._animation._current.event_state.keyframe_events = e.keyframe_events[anim]
 	end
+end
+
+function iani.get_collider(eid, anim, time)
+	local e = world[eid]
+	if not e.keyframe_events then return end
+
+	local events = e.keyframe_events[anim]
+	if not events then return end
+
+	local colliders
+	for _, event in ipairs(events.event) do
+		if math.abs(time - event.time) < 0.0001 then
+			colliders = {}
+			for _, ev in ipairs(event.event_list) do
+				if ev.event_type == "Collision" then
+					colliders[#colliders + 1] = ev.collision
+				end
+			end
+			break
+		end
+	end
+	return colliders
 end
 
 function iani.set_events(eid, anim, events)
@@ -267,27 +295,20 @@ function iani.set_events(eid, anim, events)
 	end
 end
 
-local function do_set_clips(eid, anim, clips)
+local function do_set_clips(eid, clips)
 	local e = world[eid]
-	if not e.anim_clips then
-		e.anim_clips = {}
-	end
-	e.anim_clips[anim] = clips
-	if e._animation._current.animation == e.animation[anim] then
-		e._animation._current.clip_state.current = {current_index = 1, {}}
-		e._animation._current.clip_state.clips = e.anim_clips[anim]
-	end
+	e.anim_clips = clips
 end
 
-function iani.set_clips(eid, anim, clips)
+function iani.set_clips(eid, clips)
 	if type(clips) == "table" then
-		do_set_clips(eid, anim, clips)
+		do_set_clips(eid, clips)
 	elseif type(clips) == "string" then
 		local path = fs.path(clips):localpath()
 		local f = assert(lfs.open(path))
 		local data = f:read "a"
 		f:close()
-		do_set_clips(eid, anim, datalist.parse(data))
+		do_set_clips(eid, datalist.parse(data))
 	end
 end
 

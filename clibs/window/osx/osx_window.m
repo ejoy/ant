@@ -212,7 +212,6 @@ static int32_t clamp(int32_t v, int32_t min, int32_t max) {
 @end
 
 WindowDelegate* g_wd = nil;
-NSView* g_ime = nil;
 int32_t g_mx = 0;
 int32_t g_my = 0;
 
@@ -322,8 +321,6 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
         msg.u.mouse.y = g_my;
 		cb->message(cb->ud, &msg);
         break;
-	case NSEventTypeKeyDown:
-        if (g_ime) [g_ime interpretKeyEvents:@[event]];
 	case NSEventTypeKeyUp:
 		msg.type = ANT_WINDOW_KEYBOARD;
 		msg.u.keyboard.state = keyboard_state(event);
@@ -359,19 +356,4 @@ void window_mainloop(struct ant_window_callback* cb, int update) {
             while (dispatch_event(cb, peek_event())) { }
         }
     }
-}
-
-void window_exit(struct ant_window_callback* cb) {
-    //TODO
-}
-
-void window_ime(void* ime) {
-    g_ime = (NSView*)ime;
-}
-
-int window_set_title(void* handle,const char* title,size_t sz){
-    NSString* nsTitle = [[NSString alloc] initWithUTF8String:title];
-    [g_wd setTitle:nsTitle];
-    [nsTitle release];
-    return 0;
 }

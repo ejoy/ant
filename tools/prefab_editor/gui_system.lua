@@ -55,6 +55,7 @@ local function on_new_project(path)
     new_project.gen_package()
     new_project.gen_settings()
     new_project.gen_bat()
+    new_project.gen_prebuild()
 end
 
 local function choose_project_dir()
@@ -72,7 +73,7 @@ end
 local function get_package(entry_path, readmount)
     local repo = {_root = entry_path}
     if readmount then
-        access.readmount(repo, readmount)
+        access.readmount(repo)
     end
     local merged_repo = vfs.merge_mount(repo)
     local packages = {}
@@ -320,10 +321,6 @@ end
 local function on_update(eid)
     if not eid then return end
     prefab_mgr:update_current_aabb(eid)
-    if world[eid].collider then
-        anim_view.on_collider_update(eid)
-        return
-    end
     if world[eid].camera then
         camera_mgr.update_frustrum(eid)
     elseif world[eid].light_type then

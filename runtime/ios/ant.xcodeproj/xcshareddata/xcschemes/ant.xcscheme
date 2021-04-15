@@ -14,10 +14,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "11BA4EAD261E92CB008B5776"
-               BuildableName = "lua"
-               BlueprintName = "lua"
-               ReferencedContainer = "container:lua.xcodeproj">
+               BlueprintIdentifier = "11F4175D21B6620A00486046"
+               BuildableName = "ant.app"
+               BlueprintName = "ant"
+               ReferencedContainer = "container:ant.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -31,34 +31,25 @@
       </Testables>
    </TestAction>
    <LaunchAction
-      buildConfiguration = "Debug"
+      buildConfiguration = "Release"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      disableMainThreadChecker = "YES"
       launchStyle = "0"
-      useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "$PROJECT_DIR/../../.."
+      useCustomWorkingDirectory = "NO"
       ignoresPersistentStateOnLaunch = "NO"
-      debugDocumentVersioning = "YES"
+      debugDocumentVersioning = "NO"
       debugServiceExtension = "internal"
-      enableGPUFrameCaptureMode = "1"
       allowLocationSimulation = "YES">
       <BuildableProductRunnable
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "11BA4EAD261E92CB008B5776"
-            BuildableName = "lua"
-            BlueprintName = "lua"
-            ReferencedContainer = "container:lua.xcodeproj">
+            BlueprintIdentifier = "11F4175D21B6620A00486046"
+            BuildableName = "ant.app"
+            BlueprintName = "ant"
+            ReferencedContainer = "container:ant.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <CommandLineArguments>
-         <CommandLineArgument
-            argument = "test/simple/main.lua"
-            isEnabled = "YES">
-         </CommandLineArgument>
-      </CommandLineArguments>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -70,15 +61,15 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "11BA4EAD261E92CB008B5776"
-            BuildableName = "lua"
-            BlueprintName = "lua"
-            ReferencedContainer = "container:lua.xcodeproj">
+            BlueprintIdentifier = "11F4175D21B6620A00486046"
+            BuildableName = "ant.app"
+            BlueprintName = "ant"
+            ReferencedContainer = "container:ant.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction
-      buildConfiguration = "Debug">
+      buildConfiguration = "Release">
    </AnalyzeAction>
    <ArchiveAction
       buildConfiguration = "Release"
