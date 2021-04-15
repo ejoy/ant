@@ -54,6 +54,11 @@ local function set_texture(p)
 	return bgfx.set_texture(v.stage, p.handle, v.texture.handle, v.texture.flags)
 end
 
+local function set_buffer(p)
+	local v = p.value
+	return bgfx.set_buffer(v.stage, v.handle, v.access)
+end
+
 local function update_uniform(p, dst)
 	local src = p.value
 	if type(dst) == "table" then
@@ -138,6 +143,9 @@ end
 local function which_type(u)
 	local t = type(u)
 	if t == "table" then
+		if u.access then
+			return "b"
+		end
 		return u.stage and "s" or "array"
 	end
 
@@ -145,15 +153,17 @@ local function which_type(u)
 	return "v"
 end
 
+local set_funcs<const> = {
+	s = set_texture,
+	b = set_buffer,
+	array = set_uniform_array,
+	v = set_uniform,
+}
+
 function imaterial.which_set_func(u)
 	local t = which_type(u)
-	if t == "s" then
-		return set_texture
-	end
-
-	return t == "array" and set_uniform_array or set_uniform
+	return set_funcs[t]
 end
-
 
 local m = ecs.component "material"
 
@@ -188,7 +198,6 @@ local function to_v(t)
 	return res
 end
 
-local lightbuffer_property
 
 local function generate_properties(fx, properties)
 	if fx == nil then
@@ -220,18 +229,29 @@ local function generate_properties(fx, properties)
 
 	local setting = fx.setting
 	if setting.lighting == "on" then
-		if lightbuffer_property == nil then
-			lightbuffer_property = {
+		new_properties = new_properties or {}
+		local ilight = world:interface "ant.render|light"
+		if ilight.use_cluster_shading() then
+			for _, n in ipairs{
+				"b_light_grids", 
+				"b_light_index_lists", 
+				"b_light_info"
+			} do
+				local v = isp.get(n)
+				new_properties[n] = {
+					value	= v,
+					type 	= "b",
+					ref		= true,
+				}
+			end
+		else
+			local n = "b_light_info"
+			new_properties[n] = {
+				value = isp.get(n),
 				type = "b",
-				set = function ()
-					local ilight = world:interface "ant.render|light"
-					ilight.set_light_buffers()
-				end,
 				ref = true,
 			}
 		end
-		new_properties = new_properties or {}
-		new_properties.light_properties = lightbuffer_property
 	end
 	return new_properties
 end

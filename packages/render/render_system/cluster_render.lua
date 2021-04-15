@@ -77,7 +77,7 @@ local cluster_buffers = {
         name = "CLUSTER_BUFFER_LIGHT_GRID_STAGE",
     },
     -- index buffer of 32bit
-    light_index_list = {
+    light_index_lists = {
         cull_stage = 3,
         size = 0,
         cull_access = "w",
@@ -107,34 +107,28 @@ cluster_buffers.light_grids.handle         = bgfx.create_dynamic_index_buffer(li
 cluster_buffers.global_index_count.handle  = bgfx.create_dynamic_index_buffer(1, "drw")
 cluster_buffers.AABB.handle                = bgfx.create_dynamic_vertex_buffer(cluster_aabb_buffer_size, cluster_buffers.AABB.layout.handle, "rw")
 
-local function set_buffers(which_stage, which_access)
-    for _, b in pairs(cluster_buffers) do
-        local access = b[which_access]
-        if access then
-            bgfx.set_buffer(b[which_stage], b.handle, access)
-        end
-    end
-end
-
 local cs_entities = {}
 
 local function check_light_index_list()
     local numlights = world:count "light_type"
     if numlights > 0 then
         local lil_size = numlights * cluster_count
-        local lil = cluster_buffers.light_index_list
+        local lil = cluster_buffers.light_index_lists
         local oldhandle = lil.handle
         if lil_size > lil.size then
             if lil.handle then
                 bgfx.destroy(lil.handle)
             end
             lil.handle = bgfx.create_dynamic_index_buffer(lil_size, "drw")
+            lil.size = lil_size
         end
         if lil.handle ~= oldhandle then
             assert(lil.handle)
             local ce = world[cs_entities.culleid]
             ce._rendercache.properties.b_light_index_lists.handle = lil.handle
-            lil.size = lil_size
+
+            local re = world:singleton_entity "cluster_render"
+            re.cluster_render.b_light_index_lists.handle = lil.handle
         end
         return true
     end
@@ -156,7 +150,7 @@ function cfs:post_init()
 
     cluster_buffers.light_info.handle = ilight.light_buffer()
 
-    --
+    --build
     local buildeid = icompute.create_compute_entity("build_cluster_aabb", "/pkg/ant.resources/materials/cluster_build.material", cluster_size)
     local be = world[buildeid]
     local buildproperties = be._rendercache.properties
@@ -164,6 +158,7 @@ function cfs:post_init()
     buildproperties.b_light_info       = icompute.create_buffer_property(cluster_buffers.light_info, "build")
     cs_entities.buildeid = buildeid
 
+    --cull
     local culleid = icompute.create_compute_entity("build_cluster_aabb", "/pkg/ant.resources/materials/cluster_light_cull.material", {1, 1, cluster_cull_light_size})
     local ce = world[culleid]
     local cullproperties = ce._rendercache.properties
@@ -171,7 +166,7 @@ function cfs:post_init()
         {"b_cluster_AABBs",     cluster_buffers.AABB},
         {"b_global_index_count",cluster_buffers.global_index_count},
         {"b_light_grids",       cluster_buffers.light_grids},
-        {"b_light_index_lists", cluster_buffers.light_index_list},
+        {"b_light_index_lists", cluster_buffers.light_index_lists},
         {"b_light_info",        cluster_buffers.light_info},
     } do
         local name, desc = b[1], b[2]
@@ -179,6 +174,32 @@ function cfs:post_init()
     end
 
     cs_entities.culleid = culleid
+
+    --render
+    local rendereid = world:create_entity {
+        policy = {
+            "ant.render|cluster_render",
+            "ant.general|name",
+        },
+        data = {
+            name = "cluster_render_entity",
+            cluster_render = {
+                properties = {},
+                cluster_size = cluster_size,
+            },
+        }
+    }
+
+    local re = world[rendereid]
+    local renderproperties = re.cluster_render.properties
+    for _, b in ipairs{
+        {"b_light_grids", cluster_buffers.light_grids},
+        {"b_light_index_lists", cluster_buffers.light_index_lists},
+        {"b_light_info", cluster_buffers.light_info},
+    } do
+        local name, desc = b[1], b[2]
+        renderproperties[name] = icompute.create_buffer_property(desc, "render")
+    end
 end
 
 local function cull_lights()
@@ -206,16 +227,4 @@ function cfs:render_preprocess()
     end
 
     cull_lights()
-end
-
-local icr = ecs.interface "icluster_render"
-
-function icr.set_buffers()
-    if world:count "light_type" > 0 then
-        set_buffers("render_stage", "render_access")
-    end
-end
-
-function icr.cluster_sizes()
-    return cluster_size
 end

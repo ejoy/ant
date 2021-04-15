@@ -22,6 +22,9 @@ local system_properties = {
 	u_cluster_shading_param	= math3d.ref(mc.ZERO_PT),
 	u_cluster_shading_param2= math3d.ref(mc.ZERO_PT),
 	u_light_count			= math3d.ref(mc.ZERO_PT),
+	b_light_grids			= {stage=-1, handle=nil, access=nil},
+	b_light_index_lists		= {stage=-1, handle=nil, access=nil},
+	b_light_info			= {stage=-1, handle=nil, access=nil},
 	u_time					= math3d.ref(mc.ZERO_PT),
 
 	-- shadow
@@ -106,24 +109,38 @@ local function update_lighting_properties()
 
 	system_properties["u_light_count"].v = {world:count "light_type", 0, 0, 0}
 	if ilight.use_cluster_shading() then
-		local icluster = world:interface "ant.render|icluster_render"
 		local mc_eid = mq.camera_eid
 		local vr = mq.render_target.view_rect
 	
-		local sizes = icluster.cluster_sizes()
-		sizes[4] = 0.0
-		system_properties["u_cluster_size"].v	= sizes
+		local cs = world:singleton_entity "cluster_render"
+		local cluster_size = cs.cluster_render.cluster_size
+		system_properties["u_cluster_size"].v	= cluster_size
 		local f = icamera.get_frustum(mc_eid)
 		local near, far = f.n, f.f
 		system_properties["u_cluster_shading_param"].v	= {vr.w, vr.h, near, far}
-		local num_depth_slices = sizes[3]
+		local num_depth_slices = cluster_size[3]
 		local log_farnear = math.log(far/near, 2)
 		local log_near = math.log(near)
 	
 		system_properties["u_cluster_shading_param2"].v	= {
 			num_depth_slices / log_farnear, -num_depth_slices * log_near / log_farnear,
-			vr.w / sizes[1], vr.h/sizes[2],
+			vr.w / cluster_size[1], vr.h/cluster_size[2],
 		}
+
+		local cs_p = cs.cluster_render.properties
+		local function update_buffer(name, ...)
+			if name then
+				local sp, p = system_properties[name], cs_p[name]
+				sp.stage  = p.stage
+				sp.handle = p.handle
+				sp.access = p.access
+			end
+		end
+		update_buffer("b_light_grids", "b_light_index_lists", "b_light_info")
+	else
+		system_properties.b_light_info.stage = 12
+		system_properties.b_light_info.handle = ilight.light_buffer()
+		system_properties.b_light_info.access = "r"
 	end
 end
 

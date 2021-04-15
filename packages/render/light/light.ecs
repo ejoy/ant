@@ -21,7 +21,6 @@ interface "light"
 
     .method "max_point_light"
     .method "use_cluster_shading"
-    .method "set_light_buffers"
     .method "light_buffer"
 
 transform "light_transform"
