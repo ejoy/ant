@@ -130,6 +130,8 @@ local default_layouts = {
 	TEXCOORD_7 	= 3,
 }
 
+local jointidx_fmt<const> = "HHHH"
+
 local function fetch_vb_buffers(gltfscene, gltfbin, prim)
 	local attributes = prim.attributes
 	local attribclasses = {}
@@ -161,7 +163,7 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim)
 	local function joint_vertex_attrib(class, iv)
 		local joint_va = vertex_attrib(class, iv)
 		assert(#joint_va == 4)
-		return ("H"):rep(4):pack(joint_va:byte(1), joint_va:byte(2), joint_va:byte(3), joint_va:byte(4))
+		return jointidx_fmt:pack(joint_va:byte(1), joint_va:byte(2), joint_va:byte(3), joint_va:byte(4))
 	end
 
 	local function get_vertex_attrib_op(declname)
