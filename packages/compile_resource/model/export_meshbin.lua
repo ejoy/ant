@@ -167,7 +167,7 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim)
 	end
 
 	local function get_vertex_attrib_op(declname)
-		if declname:sub(1, 1) == "i" and declname:sub(6, 6) then
+		if declname:sub(1, 1) == "i" and declname:sub(6, 6) == "u" then
 			assert(declname:sub(2, 2) == '4')
 			return joint_vertex_attrib, declname:sub(1, 5) .. "i"
 		end
