@@ -23,9 +23,9 @@ return function (input, output, exports)
         "--file=" .. (cwd / input):string(),
         cwd = folder,
     }
-    print(msg)
+
     if not success then
-        return
+        print(msg)
     end
     local skefile = folder / "skeleton.ozz"
     if not fs.exists(skefile) then
