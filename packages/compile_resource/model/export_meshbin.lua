@@ -152,6 +152,26 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim)
 	local attribuffers = {}
 	local numv = accessors[attributes.POSITION+1].count
 	local bufferidx = 1
+	local function vertex_attrib(class, iv)
+		local acc_offset, bv_offset, elemsize, stride = class[1], class[2], class[3], class[4]
+		local elemoffset = bv_offset + iv * stride + acc_offset + 1
+		return gltfbin:sub(elemoffset, elemoffset + elemsize - 1)
+	end
+
+	local function joint_vertex_attrib(class, iv)
+		local joint_va = vertex_attrib(class, iv)
+		assert(#joint_va == 4)
+		return ("H"):rep(4):pack(joint_va:byte(1), joint_va:byte(2), joint_va:byte(3), joint_va:byte(4))
+	end
+
+	local function get_vertex_attrib_op(declname)
+		if declname:sub(1, 1) == "i" and declname:sub(6, 6) then
+			assert(declname:sub(2, 2) == '4')
+			return joint_vertex_attrib, declname:sub(1, 5) .. "i"
+		end
+		return vertex_attrib, declname
+	end
+
 	for _, attribclass in sort_pairs(attribclasses) do
 		local declname = {}
 		local cacheclass = {}
@@ -164,17 +184,18 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim)
 			local bv_offset = bv.byteOffset or 0
 
 			local elemsize = gltfutil.accessor_elemsize(acc)
-			cacheclass[#cacheclass+1] = {acc_offset, bv_offset, elemsize, bv.byteStride or elemsize}
-			declname[#declname+1] = get_desc(attribname, acc)
+			local d = get_desc(attribname, acc)
+			local va
+			va, d = get_vertex_attrib_op(d)
+			declname[#declname+1] = d
+			cacheclass[#cacheclass+1] = {acc_offset, bv_offset, elemsize, bv.byteStride or elemsize, vertex_attrib = va}
 		end
 
 		local buffer = {}
 		for ii=0, numv-1 do
 			for jj=1, #cacheclass do
 				local c = cacheclass[jj]
-				local acc_offset, bv_offset, elemsize, stride = c[1], c[2], c[3], c[4]
-				local elemoffset = bv_offset + ii * stride + acc_offset + 1
-				buffer[#buffer+1] = gltfbin:sub(elemoffset, elemoffset + elemsize - 1)
+				buffer[#buffer+1] = c:vertex_attrib(ii)
 
 				-- local buf = gltfbin:sub(elemoffset, elemoffset + elemsize - 1)
 				-- local size = elemsize / 4
