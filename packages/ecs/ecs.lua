@@ -45,14 +45,13 @@ end
 local function register_entity(w)
 	local eid = w._entity_id + 1
 	w._entity_id = eid
-	w[eid] = {}
 	w._entity[eid] = true
 	return eid
 end
 
-local function instance_entity(w, entity, owned)
-	local eid = register_entity(w)
-	local e = w[eid]
+local function instance_entity(w, eid, entity, owned)
+	local e = {}
+	w[eid] = e
 	setmetatable(e, {__index = entity.template, __owned = owned})
 	for _, c in ipairs(entity.unique) do
 		if w._uniques[c] then
@@ -103,7 +102,7 @@ local function instance_prefab(w, prefab, owned)
 		if v.prefab then
 			res[i] = instance_prefab(w, v.prefab, owned)
 		else
-			res[i] = instance_entity(w, v, owned)
+			res[i] = instance_entity(w, register_entity(w), v, owned)
 		end
 	end
 	return res
@@ -142,6 +141,31 @@ function world:create_entity(v)
 	end
 	local prefab = {__class={v}, self:create_entity_template(v)}
 	local res = self:instance_prefab(prefab, args, true)
+	return res[1], res
+end
+
+function world:rebuild_entity(eid, data)
+	local args = {}
+	if data.action and data.action.mount then
+		args["_mount"] = data.action.mount
+		data.action.mount = "_mount"
+	end
+	local w = self
+	local template = w:create_entity_template(data)
+	local prefab = {
+		__class = {data},
+		template,
+	}
+	local res = {
+		__class = {data},
+		instance_entity(w, eid, template, true),
+	}
+	if args then
+		for k, v in pairs(args) do
+			res[k] = v -- TODO?
+		end
+	end
+	run_action(self, res, prefab)
 	return res[1], res
 end
 
