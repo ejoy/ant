@@ -1,6 +1,5 @@
 *.dSYM
 *.user
-**/*.xcworkspace
 *.xcbkptlist
 *.DS_Store
 *.dll
@@ -28,4 +27,4 @@ script_runner.user.lua
 
 projects/xcode/lua/Build
 projects/xcode/lua/DerivedData
-projects/xcode/lua/lua.xcodeproj/xcuserdata/
+projects/xcode/lua/lua.xcodeproj/project.xcworkspace/xcuserdata/ejoy.xcuserdatad/UserInterfaceState.xcuserstate
