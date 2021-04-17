@@ -80,7 +80,7 @@ interface "imaterial"
     .method "set_property_directly"
     .method "get_property"
     .method "has_property"
-    .method "which_set_func"
+    .method "property_set_func"
 
 interface "imesh"
     .implement "mesh.lua"

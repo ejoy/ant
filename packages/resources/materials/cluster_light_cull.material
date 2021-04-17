@@ -1,0 +1,5 @@
+fx:
+    cs: "/pkg/ant.resources/shaders/compute/cs_lightcull.sc"
+    setting:
+        CLUSTER_LIGHT_CULL: 1
+        lighting: off

@@ -1,15 +1,11 @@
 local ecs = ...
 local world = ecs.world
 
-local math3d    = require "math3d"
 local bgfx      = require "bgfx"
 local declmgr   = require "vertexdecl_mgr"
-local assetmgr  = import_package "ant.asset"
-local irq       = world:interface "ant.render|irenderqueue"
-local iom       = world:interface "ant.objcontroller|obj_motion"
 local ilight    = world:interface "ant.render|light"
-local icamera   = world:interface "ant.camera|camera"
-local isp       = world:interface "ant.render|system_properties"
+local irender   = world:interface "ant.render|irender"
+local icompute  = world:interface "ant.render|icompute"
 
 local cfs = ecs.system "cluster_forward_system"
 
@@ -17,6 +13,7 @@ local cluster_grid_x<const>, cluster_grid_y<const>, cluster_grid_z<const> = 16, 
 local cluster_cull_light_size<const> = 8
 assert(cluster_cull_light_size * 3 == cluster_grid_z)
 local cluster_count<const> = cluster_grid_x * cluster_grid_y * cluster_grid_z
+local cluster_size<const> = {cluster_grid_x, cluster_grid_y, cluster_grid_z}
 
 --[[
     struct light_grids {
@@ -49,16 +46,6 @@ local light_struct_size_in_vec4<const>     = 4  --sizeof(light_info), vec4 * 4
 local cluster_aabb_size_in_vec4<const> = 2  --sizeof(light_aabb)
 local cluster_aabb_buffer_size<const> = cluster_count * cluster_aabb_size_in_vec4
 
-local cluster_aabb_fx = assetmgr.load_fx{
-    cs = "/pkg/ant.resources/shaders/compute/cs_cluster_aabb.sc",
-    setting = {CLUSTER_BUILD_AABB=1},
-}
-
-local cluster_light_cull_fx = assetmgr.load_fx{
-    cs = "/pkg/ant.resources/shaders/compute/cs_lightcull.sc",
-    setting = {CLUSTER_LIGHT_CULL=1}
-}
-
 -- cluster [forward] render system
 --1. build cluster aabb
 --2. find visble cluster. [opt]
@@ -67,7 +54,8 @@ local cluster_light_cull_fx = assetmgr.load_fx{
 
 local cluster_buffers = {
     AABB = {
-        stage = 0,
+        build_stage = 0,
+        cull_stage = 0,
         build_access = "w",
         cull_access = "r",
         name = "CLUSTER_BUFFER_AABB_STAGE",
@@ -76,21 +64,21 @@ local cluster_buffers = {
     -- TODO: not use
     -- index buffer of 32bit, and only 1 element
     global_index_count = {
-        stage = 1,
+        cull_stage = 1,
         cull_access = "rw",
         name = "CLUSTER_BUFFER_GLOBAL_INDEX_COUNT_STAGE",
     },
     -- index buffer of 32bit
     light_grids = {
-        stage = 2,
+        cull_stage = 2,
         render_stage = 10,
         cull_access = "w",
         render_access = "r",
         name = "CLUSTER_BUFFER_LIGHT_GRID_STAGE",
     },
     -- index buffer of 32bit
-    light_index_list = {
-        stage = 3,
+    light_index_lists = {
+        cull_stage = 3,
         size = 0,
         cull_access = "w",
         render_access = "r",
@@ -104,7 +92,8 @@ local cluster_buffers = {
         };
     ]]
     light_info = {
-        stage = 4,
+        build_stage = 4,
+        cull_stage = 4,
         render_stage = 12,
         build_access = "r",
         cull_access = "r",
@@ -117,50 +106,37 @@ local cluster_buffers = {
 cluster_buffers.light_grids.handle         = bgfx.create_dynamic_index_buffer(light_grid_buffer_size, "drw")
 cluster_buffers.global_index_count.handle  = bgfx.create_dynamic_index_buffer(1, "drw")
 cluster_buffers.AABB.handle                = bgfx.create_dynamic_vertex_buffer(cluster_aabb_buffer_size, cluster_buffers.AABB.layout.handle, "rw")
+cluster_buffers.light_index_lists.handle   = bgfx.create_dynamic_index_buffer(1, "drw")
+local cs_entities = {}
 
 local function check_light_index_list()
     local numlights = world:count "light_type"
     if numlights > 0 then
         local lil_size = numlights * cluster_count
-        local lil = cluster_buffers.light_index_list
+        local lil = cluster_buffers.light_index_lists
+        local oldhandle = lil.handle
         if lil_size > lil.size then
             if lil.handle then
                 bgfx.destroy(lil.handle)
             end
             lil.handle = bgfx.create_dynamic_index_buffer(lil_size, "drw")
+            lil.size = lil_size
         end
-        lil.size = lil_size
-        assert(lil.handle)
+        if lil.handle ~= oldhandle then
+            assert(lil.handle)
+            local ce = world[cs_entities.culleid]
+            ce._rendercache.properties.b_light_index_lists.handle = lil.handle
+
+            local re = world:singleton_entity "cluster_render"
+            re.cluster_render.properties.b_light_index_lists.handle = lil.handle
+        end
         return true
     end
 end
 
-local function set_buffers(which_stage, which_access)
-    for _, b in pairs(cluster_buffers) do
-        local access = b[which_access]
-        if access then
-            bgfx.set_buffer(b[which_stage], b.handle, access)
-        end
-    end
-end
-
-local function dispatch_program(dimx, dimy, dimz, fx, stagename, accessname)
-    local mq_eid = world:singleton_entity_id "main_queue"
-    set_buffers(stagename, accessname)
-
-    local properties = isp.properties()
-    for _, u in ipairs(fx.uniforms) do
-        local n = u.name
-        if not n:match ".@data" then
-            bgfx.set_uniform(u.handle, assert(properties[n]).value)
-        end
-    end
-
-    bgfx.dispatch(irq.viewid(mq_eid), fx.prog, dimx, dimy, dimz)
-end
-
 local function build_cluster_aabb_struct()
-    dispatch_program(cluster_grid_x, cluster_grid_y, cluster_grid_z, cluster_aabb_fx, "stage", "build_access")
+    local mq = world:singleton_entity "main_queue"
+    irender.dispatch(mq.render_target.viewid, world[cs_entities.buildeid]._rendercache)
 end
 
 local cr_camera_mb
@@ -173,10 +149,62 @@ function cfs:post_init()
     camera_frustum_mb = world:sub{"component_changed", "frustum", world[mq_eid].camera_eid}
 
     cluster_buffers.light_info.handle = ilight.light_buffer()
+
+    --build
+    local buildeid = icompute.create_compute_entity("build_cluster_aabb", "/pkg/ant.resources/materials/cluster_build.material", cluster_size)
+    local be = world[buildeid]
+    local buildproperties = be._rendercache.properties
+    buildproperties.b_cluster_AABBs    = icompute.create_buffer_property(cluster_buffers.AABB, "build")
+    buildproperties.b_light_info       = icompute.create_buffer_property(cluster_buffers.light_info, "build")
+    cs_entities.buildeid = buildeid
+
+    --cull
+    local culleid = icompute.create_compute_entity("build_cluster_aabb", "/pkg/ant.resources/materials/cluster_light_cull.material", {1, 1, cluster_cull_light_size})
+    local ce = world[culleid]
+    local cullproperties = ce._rendercache.properties
+    for _, b in ipairs{
+        {"b_cluster_AABBs",     cluster_buffers.AABB},
+        {"b_global_index_count",cluster_buffers.global_index_count},
+        {"b_light_grids",       cluster_buffers.light_grids},
+        {"b_light_index_lists", cluster_buffers.light_index_lists},
+        {"b_light_info",        cluster_buffers.light_info},
+    } do
+        local name, desc = b[1], b[2]
+        cullproperties[name] = icompute.create_buffer_property(desc, "cull")
+    end
+
+    cs_entities.culleid = culleid
+
+    --render
+    local rendereid = world:create_entity {
+        policy = {
+            "ant.render|cluster_render_entity",
+            "ant.general|name",
+        },
+        data = {
+            name = "cluster_render_entity",
+            cluster_render = {
+                properties = {},
+                cluster_size = cluster_size,
+            },
+        }
+    }
+
+    local re = world[rendereid]
+    local renderproperties = re.cluster_render.properties
+    for _, b in ipairs{
+        {"b_light_grids", cluster_buffers.light_grids},
+        {"b_light_index_lists", cluster_buffers.light_index_lists},
+        {"b_light_info", cluster_buffers.light_info},
+    } do
+        local name, desc = b[1], b[2]
+        renderproperties[name] = icompute.create_buffer_property(desc, "render")
+    end
 end
 
 local function cull_lights()
-    dispatch_program(1, 1, cluster_cull_light_size, cluster_light_cull_fx, "stage", "cull_access")
+    local mq = world:singleton_entity "main_queue"
+    irender.dispatch(mq.render_target.viewid, world[cs_entities.culleid]._rendercache)
 end
 
 function cfs:render_preprocess()
@@ -199,20 +227,4 @@ function cfs:render_preprocess()
     end
 
     cull_lights()
-end
-
-local icr = ecs.interface "icluster_render"
-
-function icr.set_buffers()
-    if world:count "light_type" > 0 then
-        set_buffers("render_stage", "render_access")
-    end
-end
-
-function icr.cluster_sizes()
-    return {cluster_grid_x, cluster_grid_y, cluster_grid_z}
-end
-
-function icr.set_light_buffer(light_buffer)
-    cluster_buffers.light_info.handle = light_buffer
 end

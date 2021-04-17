@@ -1,4 +1,5 @@
 import "render_system/render.ecs"
+import "compute/compute.ecs"
 import "viewport_detect_system.ecs"
 import "widget_system.ecs"
 import "font/fontrender.ecs"
