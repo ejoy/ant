@@ -12,4 +12,8 @@ policy "cluster_render"
     .require_policy "ant.render|compute_policy"
     .require_system "ant.render|cluster_forward_system"
     .require_interface "ant.render|icompute"
+
+policy "cluster_render_entity"
+    .require_system "ant.render|cluster_forward_system"
+    .require_interface "ant.render|icompute"
     .unique_component "cluster_render"

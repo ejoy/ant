@@ -150,18 +150,22 @@ local function which_type(u)
 	end
 
 	assert(t == "userdata")
-	return "v"
+	return "u"
 end
 
 local set_funcs<const> = {
 	s = set_texture,
 	b = set_buffer,
 	array = set_uniform_array,
-	v = set_uniform,
+	u = set_uniform,
 }
 
-function imaterial.which_set_func(u)
+local function which_set_func(u)
 	local t = which_type(u)
+	return set_funcs[t]
+end
+
+function imaterial.property_set_func(t)
 	return set_funcs[t]
 end
 
@@ -218,7 +222,7 @@ local function generate_properties(fx, properties)
 					value = v,
 					handle = u.handle,
 					type = u.type,
-					set = imaterial.which_set_func(v),
+					set = which_set_func(v),
 					ref = true,
 				}
 			end
@@ -231,25 +235,20 @@ local function generate_properties(fx, properties)
 	if setting.lighting == "on" then
 		new_properties = new_properties or {}
 		local ilight = world:interface "ant.render|light"
+
+		local buffer_names = {"b_light_info"}
 		if ilight.use_cluster_shading() then
-			for _, n in ipairs{
-				"b_light_grids", 
-				"b_light_index_lists", 
-				"b_light_info"
-			} do
-				local v = isp.get(n)
-				new_properties[n] = {
-					value	= v,
-					type 	= "b",
-					ref		= true,
-				}
-			end
-		else
-			local n = "b_light_info"
+			buffer_names[#buffer_names+1] = "b_light_grids"
+			buffer_names[#buffer_names+1] = "b_light_index_lists"
+		end
+
+		for _, n in ipairs(buffer_names) do
+			local v = isp.get(n)
 			new_properties[n] = {
-				value = isp.get(n),
-				type = "b",
-				ref = true,
+				value	= v,
+				set		= imaterial.property_set_func "b",
+				type 	= "b",
+				ref		= true,
 			}
 		end
 	end

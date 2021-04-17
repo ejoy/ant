@@ -10,6 +10,7 @@ local ishadow	= world:interface "ant.render|ishadow"
 local ilight	= world:interface "ant.render|light"
 local itimer	= world:interface "ant.timer|timer"
 local icamera	= world:interface "ant.camera|camera"
+local imaterial = world:interface "ant.asset|imaterial"
 
 local m = ecs.interface "system_properties"
 local system_properties = {
@@ -22,9 +23,9 @@ local system_properties = {
 	u_cluster_shading_param	= math3d.ref(mc.ZERO_PT),
 	u_cluster_shading_param2= math3d.ref(mc.ZERO_PT),
 	u_light_count			= math3d.ref(mc.ZERO_PT),
-	b_light_grids			= {stage=-1, handle=nil, access=nil},
-	b_light_index_lists		= {stage=-1, handle=nil, access=nil},
-	b_light_info			= {stage=-1, handle=nil, access=nil},
+	b_light_grids			= {stage=-1, value=nil},
+	b_light_index_lists		= {stage=-1, value=nil},
+	b_light_info			= {stage=-1, value=nil},
 	u_time					= math3d.ref(mc.ZERO_PT),
 
 	-- shadow
@@ -134,13 +135,15 @@ local function update_lighting_properties()
 				sp.stage  = p.stage
 				sp.handle = p.handle
 				sp.access = p.access
+				update_buffer(...)
 			end
 		end
 		update_buffer("b_light_grids", "b_light_index_lists", "b_light_info")
 	else
-		system_properties.b_light_info.stage = 12
-		system_properties.b_light_info.handle = ilight.light_buffer()
-		system_properties.b_light_info.access = "r"
+		local li = system_properties.b_light_info
+		li.stage = 12
+		li.handle = ilight.light_buffer()
+		li.access = "r"
 	end
 end
 

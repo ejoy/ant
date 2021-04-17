@@ -40,7 +40,7 @@ local function get_properties(eid, fx)
 			value = v,
 			handle = u.handle,
 			type = u.type,
-			set = imaterial.which_set_func(v)
+			set = imaterial.property_set_func "u"
 		},
 	}
 	uid_cache[eid] = p

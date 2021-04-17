@@ -106,7 +106,7 @@ local cluster_buffers = {
 cluster_buffers.light_grids.handle         = bgfx.create_dynamic_index_buffer(light_grid_buffer_size, "drw")
 cluster_buffers.global_index_count.handle  = bgfx.create_dynamic_index_buffer(1, "drw")
 cluster_buffers.AABB.handle                = bgfx.create_dynamic_vertex_buffer(cluster_aabb_buffer_size, cluster_buffers.AABB.layout.handle, "rw")
-
+cluster_buffers.light_index_lists.handle   = bgfx.create_dynamic_index_buffer(1, "drw")
 local cs_entities = {}
 
 local function check_light_index_list()
@@ -128,7 +128,7 @@ local function check_light_index_list()
             ce._rendercache.properties.b_light_index_lists.handle = lil.handle
 
             local re = world:singleton_entity "cluster_render"
-            re.cluster_render.b_light_index_lists.handle = lil.handle
+            re.cluster_render.properties.b_light_index_lists.handle = lil.handle
         end
         return true
     end
@@ -178,7 +178,7 @@ function cfs:post_init()
     --render
     local rendereid = world:create_entity {
         policy = {
-            "ant.render|cluster_render",
+            "ant.render|cluster_render_entity",
             "ant.general|name",
         },
         data = {

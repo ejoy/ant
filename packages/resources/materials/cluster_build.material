@@ -2,3 +2,4 @@ fx:
     cs: "/pkg/ant.resources/shaders/compute/cs_cluster_aabb.sc"
     setting:
         CLUSTER_BUILD_AABB: 1
+        lighting: off
