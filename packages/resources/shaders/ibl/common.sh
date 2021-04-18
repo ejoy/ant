@@ -1,3 +1,9 @@
+// from: https://github.com/KhronosGroup/glTF-Sample-Viewer/blob/master/source/shaders/ibl_filtering.frag
+
+uniform vec4 u_ibl_param;
+#define u_sample_count u_ibl_param.x;
+#define u_lodBias u_ibl_param.y;
+
 vec3 uvToXYZ(int face, vec2 uv)
 {
     if(face == 0)
@@ -24,6 +30,44 @@ vec2 dirToUV(vec3 dir)
     return vec2(
             0.5f + 0.5f * atan(dir.z, dir.x) / MATH_PI,
             1.f - acos(dir.y) / MATH_PI);
+}
+
+mat3 generateTBN(vec3 normal)
+{
+    vec3 bitangent = vec3(0.0, 1.0, 0.0);
+
+    float NdotUp = dot(normal, vec3(0.0, 1.0, 0.0));
+    float epsilon = 0.0000001;
+    if (1.0 - abs(NdotUp) <= epsilon)
+    {
+        // Sampling +Y or -Y, so we need a more robust bitangent.
+        if (NdotUp > 0.0)
+        {
+            bitangent = vec3(0.0, 0.0, 1.0);
+        }
+        else
+        {
+            bitangent = vec3(0.0, 0.0, -1.0);
+        }
+    }
+
+    vec3 tangent = normalize(cross(bitangent, normal));
+    bitangent = cross(normal, tangent);
+
+    return mat3(tangent, bitangent, normal);
+}
+
+// Mipmap Filtered Samples (GPU Gems 3, 20.4)
+// https://developer.nvidia.com/gpugems/gpugems3/part-iii-rendering/chapter-20-gpu-based-importance-sampling
+float computeLod(float pdf)
+{
+    // IBL Baker (Matt Davidson)
+    // https://github.com/derkreature/IBLBaker/blob/65d244546d2e79dd8df18a28efdabcf1f2eb7717/data/shadersD3D11/IblImportanceSamplingDiffuse.fx#L215
+    float solidAngleTexel = 4.0 * MATH_PI / (6.0 * float(u_width) * float(u_sampleCount));
+    float solidAngleSample = 1.0 / (float(u_sampleCount) * pdf);
+    float lod = 0.5 * log2(solidAngleSample / solidAngleTexel);
+
+    return lod;
 }
 
 // Hammersley Points on the Hemisphere
