@@ -66,18 +66,6 @@ function irender.draw(vid, ri)
 	bgfx.submit(vid, ri.fx.prog, 0)
 end
 
-function irender.dispatch(vid, ci)
-	local properties = ci.properties
-	if properties then
-		for n, p in pairs(properties) do
-			p:set()
-		end
-	end
-
-	local s = ci.dispatch_size
-	bgfx.dispatch(vid, ci.fx.prog, s[1], s[2], s[3])
-end
-
 function irender.get_main_view_rendertexture()
 	local mq = world:singleton_entity "main_queue"
 	local fb = fbmgr.get(mq.render_target.fb_idx)

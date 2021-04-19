@@ -1,0 +1,9 @@
+transform "init_ibl_transform"
+    .implement "ibl.lua"
+    .method "process_entity"
+    .input "ibl"
+    .output "_ibl"
+
+interface "iibl"
+    .implement "ibl.lua"
+    .method "filter_all"

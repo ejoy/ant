@@ -4,13 +4,14 @@
 
 #include <ibl/common.sh>
 
-#ifndef FACE_SIZE
-#define FACE_SIZE 8
-#endif //FACE_SIZE
+#ifndef THREADS
+#define THREADS 8
+#endif //THREADS
 
-IMAGEC3D_WR(s_irradiancemap, rgb32f, 0);
+SAMPLERCUBE(s_source, 0);
+IMAGE2D_ARRAY_WR(s_irradiance, rgba16f, 1);
 
-vec4 irradiance_importance_sample(int idx, int sample_count, float roughness)
+vec4 irradiance_importance_sample(int sampleIndex, vec3 N, float roughness)
 {
     // generate a quasi monte carlo point in the unit square [0.1)^2
     vec2 hammersleyPoint = hammersley2d(sampleIndex, u_sampleCount);
@@ -34,17 +35,24 @@ vec4 irradiance_importance_sample(int idx, int sample_count, float roughness)
     // i.e. rotate the hemisphere to the normal direction
     vec3 localSpaceDirection = normalize(vec3(sinTheta * cosPhi, sinTheta * sinPhi, cosTheta));
     mat3 TBN = generateTBN(N);
-    vec3 direction = TBN * localSpaceDirection;
+    vec3 direction = instMul(localSpaceDirection, TBN);
 
     return vec4(direction, pdf);
 }
 
-NUM_THREADS(FACE_SIZE, FACE_SIZE, 6)
+vec3 toN(uvec3 id)
+{
+    vec2 xy = id.xy * 2.0 - 1.0;
+    xy.y *= -1.0;
+    int faceidx = id.z;
+    return normalize(uvToXYZ(faceidx, xy));
+}
+
+NUM_THREADS(THREADS, THREADS, 1)
 void main()
 {
-    vec4 color = vec4(0.f);
-
-    vec3 N = normalize(uvToXYZ(gl_WorkGroupID.z, gl_WorkGroupID.xy));
+    vec4 color = vec4_splat(0.f);
+    vec3 N = toN(gl_GlobalInvocationID);
     for(int i = 0; i < u_sampleCount; ++i)
     {
         vec4 sample = irradiance_importance_sample(i, N, u_roughness);
@@ -61,7 +69,7 @@ void main()
         float NdotH = clamp(dot(N, H), 0.0, 1.0);
 
         // sample lambertian at a lower resolution to avoid fireflies
-        vec3 lambertian = textureLod(uCubeMap, H, lod).rgb;
+        vec3 lambertian = textureCubeLod(s_source, H, lod).rgb;
 
         //// the below operations cancel each other out
         // lambertian *= NdotH; // lamberts law
@@ -71,5 +79,5 @@ void main()
         color += vec4(lambertian, 1.0);
     }
 
-    imageStore(s_irradiancemap, gl_GlobalInvocationID, color);
+    imageStore(s_irradiance, gl_GlobalInvocationID, (MATH_PI * color) / u_sampleCount);
 }

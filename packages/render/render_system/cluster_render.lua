@@ -136,7 +136,7 @@ end
 
 local function build_cluster_aabb_struct()
     local mq = world:singleton_entity "main_queue"
-    irender.dispatch(mq.render_target.viewid, world[cs_entities.buildeid]._rendercache)
+    icompute.dispatch(mq.render_target.viewid, world[cs_entities.buildeid]._rendercache)
 end
 
 local cr_camera_mb
@@ -204,7 +204,7 @@ end
 
 local function cull_lights()
     local mq = world:singleton_entity "main_queue"
-    irender.dispatch(mq.render_target.viewid, world[cs_entities.culleid]._rendercache)
+    icompute.dispatch(mq.render_target.viewid, world[cs_entities.culleid]._rendercache)
 end
 
 function cfs:render_preprocess()

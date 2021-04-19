@@ -79,10 +79,10 @@ void get_metallic_roughness(vec2 texcoord, out float metallic, out float roughne
 	metallic 	= clamp(metallic, 0.0, 1.0);
 }
 
-vec3 get_normal(vec3 tanget, vec3 bitanget, vec3 normal, vec2 texcoord)
+vec3 get_normal(vec3 tangent, vec3 bitangent, vec3 normal, vec2 texcoord)
 {
     if (u_normal_texture_flag > 0.0){
-		mat3 tbn = mtxFromCols(tanget, bitanget, normal);
+		mat3 tbn = mtxFromCols(tangent, bitangent, normal);
 		vec3 normalTS = fetch_bc5_normal(s_normal, texcoord);
 		return instMul(normalTS, tbn);
 	}

@@ -4003,6 +4003,81 @@ lupdateTexture2D(lua_State *L) {
 }
 
 /*
+	integer facesize
+	boolean hasmips
+	integer layers
+	string format
+	string flags: nil for BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE
+	userdata[BGFX_MEMORY] memory: nil for immutable txture
+*/
+static int
+lcreateTextureCube(lua_State *L){
+	const int facesize = luaL_checkinteger(L, 1);
+	const bool hasMips = lua_toboolean(L, 2);
+	const int layers = luaL_checkinteger(L, 3);
+	const bgfx_texture_format_t fmt = texture_format_from_string(L, 4);
+	const uint64_t flags = lua_isnoneornil(L, 5) ? 
+							(BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE) :
+							get_texture_flags(L, luaL_checkstring(L, 5));
+
+	const bgfx_memory_t * mem = lua_isnoneornil(L, 6) ? NULL : getMemory(L, 6);
+
+	const bgfx_texture_handle_t handle = BGFX(create_texture_cube)(facesize, hasMips, layers, fmt, flags, NULL);
+	if (!BGFX_HANDLE_IS_VALID(handle))
+		return luaL_error(L, "create texture cube failed");
+	lua_pushinteger(L, BGFX_LUAHANDLE(TEXTURE, handle));
+	return 1;
+}
+
+static inline int
+get_cubemap_side(lua_State*L, const char *s){
+	if (strcmp("+X", s) == 0)
+		return 0;
+	if (strcmp("-X", s) == 0)
+		return 1;
+	if (strcmp("+Y", s) == 0)
+		return 2;
+	if (strcmp("-Y", s) == 0)
+		return 3;
+	if (strcmp("+Z", s) == 0)
+		return 4;
+	if (strcmp("-Z", s) == 0)
+		return 5;
+	
+	luaL_error(L, "invalid cube side:%s", s);
+	return -1;
+}
+
+/*
+	integer texture id
+	integer layer
+	string cubeside
+	integer mip
+	integer x
+	integer y
+	integer w
+	integer h
+	userdata BGFX_MEMORY
+	integer pitch = UINT16_MAX
+*/
+static int
+lupdateTextureCube(lua_State *L){
+	const bgfx_texture_handle_t th = {BGFX_LUAHANDLE_ID(TEXTURE, luaL_checkinteger(L, 1))};
+	const int side = get_cubemap_side(L, luaL_checkstring(L, 2));
+	const int layer = luaL_checkinteger(L, 3);
+	const int mip = luaL_checkinteger(L, 4);
+	const int x = luaL_checkinteger(L, 5);
+	const int y = luaL_checkinteger(L, 6);
+	const int w = luaL_checkinteger(L, 7);
+	const int h = luaL_checkinteger(L, 8);
+	const bgfx_memory_t *mem = getMemory(L, 9);
+	const int pitch = luaL_optinteger(L, 10, UINT16_MAX);
+
+	BGFX(update_texture_cube)(th, side, layer, mip, x, y, w, h, mem, pitch);
+	return 0;
+}
+
+/*
 	integer depth
 	boolean cubemap
 	integer layers
@@ -4818,6 +4893,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "create_dynamic_index_buffer", lcreateDynamicIndexBuffer },
 		{ "create_uniform", lcreateUniform },
 		{ "create_texture2d", lcreateTexture2D },
+		{ "create_texturecube", lcreateTextureCube},
 		{ "create_frame_buffer", lcreateFrameBuffer },
 		{ "create_indirect_buffer", lcreateIndirectBuffer },
 		{ "create_occlusion_query", lcreateOcclusionQuery },
@@ -4843,6 +4919,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "read_texture", lreadTexture },
 		{ "update", lupdate },
 		{ "update_texture2d", lupdateTexture2D },
+		{ "update_texturecube", lupdateTextureCube},
 	
 		// encoder apis
 		{ "touch", ltouch },

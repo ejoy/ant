@@ -1,4 +1,0 @@
-fx:
-    cs: /pkg/ant.resources/shaders/ibl/cs_build_irradiancemap.sc
-    setting:
-        BUILD_IRRADIANCE_MAP: 1

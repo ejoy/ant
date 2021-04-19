@@ -1,0 +1,13 @@
+fx:
+    cs: /pkg/ant.resources/shaders/ibl/cs_build_irradiancemap.sc
+    setting:
+        BUILD_IRRADIANCE_MAP: 1
+        lighting: off
+properties:
+    u_ibl_param: {0, 0, 0, 0}
+    s_source:
+        stage: 0
+        texture: /pkg/ant.resources/textures/default.texture
+    s_irradiance:
+        stage: 1
+        texture: /pkg/ant.resources/textures/default.texture

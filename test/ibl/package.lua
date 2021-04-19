@@ -1,4 +1,16 @@
 return {
     name = "ant.test.ibl",
-    entry = "main",
+    ecs = {
+        import = {
+            "@ant.test.ibl",
+        },
+        pipeline = {
+            "init",
+            "update",
+            "exit",
+        },
+        system = {
+            "ant.test.ibl|init_system",
+        }
+    }
 }

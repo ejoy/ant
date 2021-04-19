@@ -9,6 +9,7 @@ local bindings = {
 	csm2 		= shadow_csm_start_viewid + 1,
 	csm3 		= shadow_csm_start_viewid + 2,
 	csm4 		= shadow_csm_start_viewid + 3,
+	ibl			= 5,
 	depth		= 29,
 	main_view 	= 30,
 	pickup 		= 31,
@@ -22,6 +23,9 @@ local bindings = {
 
 local pool = {}
 for _, v in pairs(bindings) do
+	if pool[v] then
+		error(("duplicate viewid defined:%d"):format(v))
+	end
 	pool[v] = true
 end
 
