@@ -228,8 +228,14 @@ end
 
 local bm = ecs.action "bind_camera"
 function bm.init(prefab, idx, value)
-    local eid = prefab[idx][1]
-    ic.bind(eid, value)
+    local eid
+    if value.camera_eid == nil then
+        eid = prefab[idx]
+    else
+        eid = prefab[idx][1]
+    end
+    
+    ic.bind(eid, value.which)
 end
 
 local dof_trans = ecs.transform "dof_transform"

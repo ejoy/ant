@@ -1,9 +1,4 @@
 ---
-action:
-    import: {camera, 1}
-    bind_camera: main_queue
-prefab: ./camera.prefab
----
 prefab: ./procedural_sky.prefab
 ---
 prefab: ./plane.prefab
