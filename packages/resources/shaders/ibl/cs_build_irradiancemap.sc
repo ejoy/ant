@@ -48,21 +48,17 @@ void main()
         vec3 H = vec3(sample.xyz);
         float pdf = sample.w;
 
-        // mipmap filtered samples (GPU Gems 3, 20.4)
         float lod = compute_lod(pdf);
-
-        // apply the bias to the lod
         lod += u_lod_bias;
-
-        float NdotH = clamp(dot(N, H), 0.0, 1.0);
 
         // sample lambertian at a lower resolution to avoid fireflies
         vec3 lambertian = textureCubeLod(s_source, H, lod).rgb;
 
         //// the below operations cancel each other out
-        // lambertian *= NdotH; // lamberts law
-        // lambertian /= pdf; // invert bias from importance sampling
-        // lambertian /= MATH_PI; // convert irradiance to radiance https://seblagarde.wordpress.com/2012/01/08/pi-or-not-to-pi-in-game-lighting-equation/
+        // float NdotH = clamp(dot(N, H), 0.0, 1.0);
+        // lambertian *= NdotH;     // lamberts law
+        // lambertian /= pdf;       // invert bias from importance sampling
+        // lambertian /= MATH_PI;   // convert irradiance to radiance https://seblagarde.wordpress.com/2012/01/08/pi-or-not-to-pi-in-game-lighting-equation/
 
         color += vec4(lambertian, 1.0);
     }
