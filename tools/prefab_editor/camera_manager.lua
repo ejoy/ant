@@ -161,6 +161,7 @@ function m.ceate_camera()
         updir = {0, 1, 0},
         name = gen_camera_name()
     }
+    world[new_camera].camera = true
     iom.set_position(new_camera, iom.get_position(m.main_camera))
     iom.set_rotation(new_camera, iom.get_rotation(m.main_camera))
     m.update_frustrum(new_camera)

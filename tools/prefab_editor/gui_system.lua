@@ -152,7 +152,7 @@ local function choose_project()
                     log_widget.init_log_receiver()
                     console_widget.init_console_sender()
                 else
-                    logger.error({tag = "Editor", message = "not project exist!"})
+                    logger.error({tag = "Editor", message = "no project exist!"})
                 end
             end
         end

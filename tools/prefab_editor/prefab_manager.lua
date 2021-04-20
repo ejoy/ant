@@ -622,15 +622,14 @@ function m:add_prefab(filename)
 end
 
 function m:recreate_entity(eid)
-    local prefab = hierarchy:get_template(eid)
-    local copy_prefab = utils.deep_copy(prefab)
-    
-    --rebuild_entity(eid, copy_prefab.template)
+    rebuild_entity(eid, prefab.template)
 
-    local new_eid = world:create_entity(copy_prefab.template)
-    iom.set_srt(new_eid, iom.srt(eid))
+    -- local prefab = hierarchy:get_template(eid)
+    -- local copy_prefab = utils.deep_copy(prefab)
+    -- local new_eid = world:create_entity(copy_prefab.template)
+    -- iom.set_srt(new_eid, iom.srt(eid))
     local scale = 1
-    local col = world[new_eid].collider
+    local col = world[eid].collider
     if col then
         if col.sphere then
             scale = col.sphere[1].radius * 100
@@ -639,27 +638,27 @@ function m:recreate_entity(eid)
             scale = {size[1] * 200, size[2] * 200, size[3] * 200}
         else
         end
-        imaterial.set_property(new_eid, "u_color", {1, 0.5, 0.5, 0.5})
+        imaterial.set_property(eid, "u_color", {1, 0.5, 0.5, 0.5})
     end
-    iom.set_scale(new_eid, scale)
-    local new_node = hierarchy:replace(eid, new_eid)
-    world[new_eid].parent = new_node.parent
-    for _, v in ipairs(new_node.children) do
-        world[v.eid].parent = new_eid
-    end
-    local idx
-    for i, e in ipairs(self.entities) do
-        if e == eid then
-            idx = i
-            break
-        end
-    end
-    self.entities[idx] = new_eid
-    world:remove_entity(eid)
-    local gizmo = require "gizmo.gizmo"(world)
-    gizmo:set_target(new_eid)
-    world:pub {"EntityRecreate", eid, new_eid}
-    return new_eid
+    -- iom.set_scale(new_eid, scale)
+    -- local new_node = hierarchy:replace(eid, new_eid)
+    -- world[new_eid].parent = new_node.parent
+    -- for _, v in ipairs(new_node.children) do
+    --     world[v.eid].parent = new_eid
+    -- end
+    -- local idx
+    -- for i, e in ipairs(self.entities) do
+    --     if e == eid then
+    --         idx = i
+    --         break
+    --     end
+    -- end
+    -- self.entities[idx] = new_eid
+    -- world:remove_entity(eid)
+    -- local gizmo = require "gizmo.gizmo"(world)
+    -- gizmo:set_target(new_eid)
+    world:pub {"EntityRecreate", eid}
+    -- return new_eid
 end
 
 function m:update_material(eid, mtl)

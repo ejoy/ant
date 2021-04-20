@@ -40,23 +40,23 @@ function hierarchy:add(ineid, tp, inpeid)
 end
 
 function hierarchy:replace(old_eid, new_eid)
-    local node = { eid = new_eid, parent = self.all[old_eid].parent, template = self.all[old_eid].template, children = self.all[old_eid].children, locked = {false}, visible = {true} }
-    local parent_node
-    if node.parent then
-        parent_node = self.all[node.parent]
-    else
-        parent_node = self.root
-    end
-    local idx = find(parent_node.children, old_eid)
-    if idx then
-        parent_node.children[idx] = node
-    end
-    for _, v in ipairs(node.children) do
-        v.parent = node
-    end
-    self.all[old_eid] = nil
-    self.all[new_eid] = node
-    return node
+    -- local node = { eid = new_eid, parent = self.all[old_eid].parent, template = self.all[old_eid].template, children = self.all[old_eid].children, locked = {false}, visible = {true} }
+    -- local parent_node
+    -- if node.parent then
+    --     parent_node = self.all[node.parent]
+    -- else
+    --     parent_node = self.root
+    -- end
+    -- local idx = find(parent_node.children, old_eid)
+    -- if idx then
+    --     parent_node.children[idx] = node
+    -- end
+    -- for _, v in ipairs(node.children) do
+    --     v.parent = node
+    -- end
+    -- self.all[old_eid] = nil
+    -- self.all[new_eid] = node
+    -- return node
 end
 
 function hierarchy:del(eid)
@@ -138,17 +138,18 @@ function hierarchy:update_prefab_template()
         table.insert(pt, templ)
 
         local pidx = (#pt < 1) and "root" or #pt
-        local keyframe_templ = self.all[eid].template.keyframe
-        if keyframe_templ then
-            local templ_copy = utils.deep_copy(keyframe_templ)
-            for i, v in ipairs(templ_copy.data.frames) do
-                local tp = math3d.totable(keyframe_templ.data.frames[i].position)
-                local tr = math3d.totable(keyframe_templ.data.frames[i].rotation)
-                templ_copy.data.frames[i].position = {tp[1], tp[2], tp[3]}
-                templ_copy.data.frames[i].rotation = {tr[1], tr[2], tr[3], tr[4]}
-            end
-            table.insert(pt, templ_copy)
-        end
+        -- TODO: animation
+        -- local keyframe_templ = self.all[eid].template.keyframe
+        -- if keyframe_templ then
+        --     local templ_copy = utils.deep_copy(keyframe_templ)
+        --     for i, v in ipairs(templ_copy.data.frames) do
+        --         local tp = math3d.totable(keyframe_templ.data.frames[i].position)
+        --         local tr = math3d.totable(keyframe_templ.data.frames[i].rotation)
+        --         templ_copy.data.frames[i].position = {tp[1], tp[2], tp[3]}
+        --         templ_copy.data.frames[i].rotation = {tr[1], tr[2], tr[3], tr[4]}
+        --     end
+        --     table.insert(pt, templ_copy)
+        -- end
         local prefab_filename = self.all[eid].template.filename
         if prefab_filename then
             table.insert(pt, {args = {root = #pt}, prefab = prefab_filename})

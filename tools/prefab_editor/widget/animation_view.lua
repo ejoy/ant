@@ -14,7 +14,7 @@ local gizmo
 local iom
 
 local m = {}
-local ozz_anims = {}
+local edit_anims = {}
 local current_eid
 local imgui_message
 local current_anim_name
@@ -22,9 +22,7 @@ local current_clip_name = "None"
 local current_anim
 local selected_frame = -1
 local sample_ratio = 30.0
-local animation_list = {
 
-}
 local anim_state = {
     duration = 0,
     current_time = 0,
@@ -66,28 +64,28 @@ local function find_index(t, item)
 end
 
 local function anim_group_set_time(eid, t)
-    local group_eid = anim_group_eid[ozz_anims[eid][current_anim_name].anim_obj]
+    local group_eid = anim_group_eid[world[eid].animation[current_anim_name]]
     for _, anim_eid in ipairs(group_eid) do
         iani.set_time(anim_eid, t)
     end
 end
 
 local function anim_group_play(eid, ...)
-    local group_eid = anim_group_eid[ozz_anims[eid][current_anim_name].anim_obj]
+    local group_eid = anim_group_eid[world[eid].animation[current_anim_name]]
     for _, anim_eid in ipairs(group_eid) do
         iani.play(anim_eid, ...)
     end
 end
 
 local function anim_group_set_loop(eid, ...)
-    local group_eid = anim_group_eid[ozz_anims[eid][current_anim_name].anim_obj]
+    local group_eid = anim_group_eid[world[eid].animation[current_anim_name]]
     for _, anim_eid in ipairs(group_eid) do
         iani.set_loop(anim_eid, ...)
     end
 end
 
 local function anim_group_pause(eid, p)
-    local group_eid = anim_group_eid[ozz_anims[eid][current_anim_name].anim_obj]
+    local group_eid = anim_group_eid[world[eid].animation[current_anim_name]]
     for _, anim_eid in ipairs(group_eid) do
         iani.pause(anim_eid, p)
     end
@@ -101,7 +99,7 @@ local function set_current_anim(anim_name)
             end
         end
     end
-    current_anim = ozz_anims[current_eid][anim_name]
+    current_anim = edit_anims[current_eid][anim_name]
     if current_anim and current_anim.collider then
         for _, col in ipairs(current_anim.collider) do
             if col.collider then
@@ -172,7 +170,7 @@ end
 local function from_runtime_clip(runtime_clip)
     all_clips = {}
     all_groups = {}
-    for _, anim in pairs(ozz_anims[current_eid]) do
+    for _, anim in pairs(edit_anims[current_eid]) do
         if type(anim) == "table" and anim.clips then
             anim.clips = {}
         end
@@ -188,7 +186,7 @@ local function from_runtime_clip(runtime_clip)
                 name_ui = {text = clip.name},
                 range_ui = {start_frame, end_frame, speed = 1}
             }
-            local anim_clips = ozz_anims[current_eid][clip.anim_name].clips
+            local anim_clips = edit_anims[current_eid][clip.anim_name].clips
             anim_clips[#anim_clips + 1] = new_clip
             all_clips[#all_clips+1] = new_clip
         end
@@ -209,7 +207,7 @@ local function from_runtime_clip(runtime_clip)
     end
     clip_index = #all_clips
     group_index = #all_groups
-    -- for _, anim in pairs(ozz_anims[current_eid]) do
+    -- for _, anim in pairs(edit_anims[current_eid]) do
     --     if type(anim) == "table" and anim.clips then
     --         table.sort(anim.clips, function(a, b) return a.range[2] < b.range[1] end)
     --     end
@@ -875,7 +873,7 @@ function m.show()
     if not recreate_event then
         recreate_event = world:sub {"EntityRecreate"}
     end
-    for _, old, new in recreate_event:unpack() do
+    for _, eid in recreate_event:unpack() do
         for i, c in ipairs(collider_list) do
             if collider_list[i] == old then
                 collider_list[i] = new
@@ -888,7 +886,7 @@ function m.show()
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
     for _ in uiutils.imgui_windows("Animation", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
     --if imgui.windows.Begin ("Animation", imgui.flags.Window {'AlwaysAutoResize'}) then
-        if ozz_anims[current_eid] then
+        if edit_anims[current_eid] then
             if current_anim then
                 anim_state.current_time = iani.get_time(current_eid)
                 anim_state.is_playing = iani.is_playing(current_eid)
@@ -959,7 +957,7 @@ function m.show()
             imgui.cursor.SameLine()
             imgui.cursor.PushItemWidth(150)
             if imgui.widget.BeginCombo("##AnimationList", {current_anim_name, flags = imgui.flags.Combo {}}) then
-                for _, name in ipairs(animation_list) do
+                for _, name in ipairs(edit_anims[current_eid].name_list) do
                     if imgui.widget.Selectable(name, current_anim_name == name) then
                         set_current_anim(name)
                         current_clip_name = "None"
@@ -1026,7 +1024,7 @@ function m.show()
             imgui.cursor.SameLine()
             imgui.widget.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d Time: %.2f/%.2f(s)", selected_frame, selected_frame / 30, math.floor(anim_state.current_time * 30), anim_state.current_time, anim_state.duration))
             imgui_message = {}
-            imgui.widget.Sequencer(ozz_anims[current_eid], anim_state, imgui_message)
+            imgui.widget.Sequencer(edit_anims[current_eid], anim_state, imgui_message)
             -- clear dirty flag
             anim_state.clip_range_dirty = 0
             set_event_dirty(0)
@@ -1109,30 +1107,71 @@ function m.show()
     end
 end
 
+local function construct_joints(eid)
+    joint_list = {
+        {
+            index = 0,
+            name = "None",
+            children = {}
+        }
+    }
+    joints[eid] = {root = nil, joint_map = {}}
+    local ske = world[eid].skeleton._handle
+    local function construct(current_joints, ske, joint_idx)
+        if current_joints.joint_map[joint_idx] then
+            return current_joints.joint_map[joint_idx]
+        end
+        local new_joint = {
+            index = joint_idx,
+            name = ske:joint_name(joint_idx),
+            children = {}
+        }
+        current_joints.joint_map[joint_idx] = new_joint
+        local parent_idx = ske:parent(joint_idx)
+        if parent_idx > 0 then
+            new_joint.parent = current_joints.joint_map[parent_idx] or construct(current_joints, ske, ske:parent(parent_idx))
+            table.insert(current_joints.joint_map[parent_idx].children, new_joint)
+        else
+            current_joints.root = new_joint
+        end
+    end
+    for i=1, #ske do
+        construct(joints[eid], ske, i)
+    end
+    local function setup_joint_list(joint)
+        joint_list[#joint_list + 1] = joint
+        for _, child_joint in ipairs(joint.children) do
+            setup_joint_list(child_joint)
+        end
+    end
+    setup_joint_list(joints[eid].root)
+    world[eid].joint_list = joint_list
+    hierarchy:update_slot_list()
+end
+
 function m.bind(eid)
     if not eid or not world[eid] or not world[eid].animation then return end
     if current_eid ~= eid then
         current_eid = eid
     end
-    if not ozz_anims[eid] then
-        animation_list = {}
-        ozz_anims[eid] = {
+    if not edit_anims[eid] then
+        edit_anims[eid] = {
             id = eid,
+            name_list = {},
             birth = world[eid].animation_birth,
         }
+        local edit_anim = edit_anims[eid]
         world[eid].anim_clips = all_clips
         local animations = world[eid].animation
         local parentNode = hierarchy:get_node(world[eid].parent)
         for key, anim in pairs(animations) do
-            ozz_anims[eid][key] = {
+            edit_anim[key] = {
                 name = key,
                 duration = anim._handle:duration(),
-                key_event = from_runtime_event(world[eid].keyframe_events and world[eid].keyframe_events[key] or {}),
-                clips = {},
-                anim_obj = anim
+                key_event = {},
+                clips = {}
             }
-            animation_list[#animation_list + 1] = key
-            --
+            edit_anim.name_list[#edit_anim.name_list + 1] = key
             if not anim_group_eid[anim] then
                 anim_group_eid[anim] = {}
             end
@@ -1146,47 +1185,10 @@ function m.bind(eid)
                 end
             end
         end
-        table.sort(animation_list)
-        set_current_anim(ozz_anims[eid].birth)
-        joint_list = {
-            {
-                index = 0,
-                name = "None",
-                children = {}
-            }
-        }
-        joints[eid] = {root = nil, joint_map = {}}
-        local ske = world[eid].skeleton._handle
-        local function construct(current_joints, ske, joint_idx)
-            if current_joints.joint_map[joint_idx] then
-                return current_joints.joint_map[joint_idx]
-            end
-            local new_joint = {
-                index = joint_idx,
-                name = ske:joint_name(joint_idx),
-                children = {}
-            }
-            current_joints.joint_map[joint_idx] = new_joint
-            local parent_idx = ske:parent(joint_idx)
-            if parent_idx > 0 then
-                new_joint.parent = current_joints.joint_map[parent_idx] or construct(current_joints, ske, ske:parent(parent_idx))
-                table.insert(current_joints.joint_map[parent_idx].children, new_joint)
-            else
-                current_joints.root = new_joint
-            end
-        end
-        for i=1, #ske do
-            construct(joints[eid], ske, i)
-        end
-        local function setup_joint_list(joint)
-            joint_list[#joint_list + 1] = joint
-            for _, child_joint in ipairs(joint.children) do
-                setup_joint_list(child_joint)
-            end
-        end
-        setup_joint_list(joints[eid].root)
-        world[eid].joint_list = joint_list
-        hierarchy:update_slot_list()
+        table.sort(edit_anim.name_list)
+        set_current_anim(edit_anim.birth)
+        
+        construct_joints(eid)
     end
 end
 

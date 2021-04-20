@@ -4,6 +4,7 @@ local math3d    = require "math3d"
 local uiproperty    = require "widget.uiproperty"
 local BaseView = require "widget.view_class".BaseView
 local CameraView = require "widget.view_class".CameraView
+local hierarchy = require "hierarchy"
 local world
 local iom
 local camera_mgr
@@ -43,11 +44,12 @@ function CameraView:_init()
     })
     self.current_frame      = 1
     self.duration           = {}
+    self.main_camera_ui     = {false}
 end
 
 function CameraView:set_model(eid)
     if not BaseView.set_model(self, eid) then return false end
-    
+    self.main_camera_ui[1] = world[eid].main_camera or false
     self.frames = camera_mgr.get_recorder_frames(eid)
     self.current_frame = 1
     for i, v in ipairs(self.frames) do
@@ -58,9 +60,9 @@ function CameraView:set_model(eid)
 end
 
 function CameraView:on_set_position(...)
-    BaseView.position_setter(self, ...)
+    BaseView.on_set_position(self, ...)
     local frames = camera_mgr.get_recorder_frames(self.eid)
-    frames[self.current_frame].position = math3d.ref(math3d.vector{...})
+    frames[self.current_frame].position = math3d.ref(math3d.vector(...))
     camera_mgr.update_frustrum(self.eid)
 end
 
@@ -70,9 +72,9 @@ function CameraView:on_get_position()
 end
 
 function CameraView:on_set_rotate(...)
-    BaseView.rotate_setter(self, ...)
+    BaseView.on_set_rotate(self, ...)
     local frames = camera_mgr.get_recorder_frames(self.eid)
-    frames[self.current_frame].rotation = math3d.ref(math3d.quaternion{...})
+    frames[self.current_frame].rotation = math3d.ref(math3d.quaternion(...))
     camera_mgr.update_frustrum(self.eid)
 end
 
@@ -156,6 +158,22 @@ end
 function CameraView:show()
     BaseView.show(self)
     if imgui.widget.TreeNode("Camera", imgui.flags.TreeNode { "DefaultOpen" }) then
+        imgui.widget.PropertyLabel("MainCamera")
+        if imgui.widget.Checkbox("##MainCamera", self.main_camera_ui) then
+            --world[self.eid].main_camera = self.main_camera_ui[1]
+            local template = hierarchy:get_template(self.eid)
+            if self.main_camera_ui[1] then
+                if not template.template.action then
+                    template.template.action = {}
+                end
+                template.template.action.bind_camera = {which = "main_queue"}
+            else
+                if template.template.action and emplate.template.action.bind_camera then
+                    template.template.action.bind_camera = nil
+                end
+            end
+        end
+
         for _, pro in ipairs(self.camera_property) do
             pro:show() 
         end
