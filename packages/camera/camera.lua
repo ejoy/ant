@@ -229,7 +229,7 @@ end
 local bm = ecs.action "bind_camera"
 function bm.init(prefab, idx, value)
     local eid
-    if value.camera_eid == nil then
+    if not value.camera_eid then
         eid = prefab[idx]
     else
         eid = prefab[idx][value.camera_eid]
