@@ -11,7 +11,7 @@
 SAMPLERCUBE(s_source, 0);
 IMAGE2D_ARRAY_WR(s_irradiance, rgba16f, 1);
 
-vec4 irradiance_importance_sample(int sampleIndex, vec3 N, float roughness)
+vec4 irradiance_importance_sample(int sampleIndex, vec3 N)
 {
     // generate a quasi monte carlo point in the unit square [0.1)^2
     vec2 hammersleyPoint = hammersley2d(sampleIndex, u_sampleCount);
@@ -55,7 +55,7 @@ void main()
     vec3 N = toN(gl_GlobalInvocationID);
     for(int i = 0; i < u_sampleCount; ++i)
     {
-        vec4 sample = irradiance_importance_sample(i, N, u_roughness);
+        vec4 sample = irradiance_importance_sample(i, N);
 
         vec3 H = vec3(sample.xyz);
         float pdf = sample.w;
