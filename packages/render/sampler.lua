@@ -3,20 +3,11 @@ local s = {}; s.__index = s
 local sample_types = {
 	U="u", V="v", W="w", 
 	MIN="-", MAG="+", MIP="*",
-
 	COMPARE="c",
 	BOARD_COLOR="c",
-
-	RT = "r", 
-	RT_READWRITE = "r", 
-	RT_MSAA="r",
-
+	RT = "r",
 	COLOR_SPACE="S",
-
 	BLIT = "b",
-	BLIT_READBACK = "b", 
-	BLIT_COMPUTE = "b",
-
 	SAMPLE = "s",
 }
 

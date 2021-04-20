@@ -4,7 +4,7 @@ fx:
         BUILD_IRRADIANCE_MAP: 1
         lighting: off
 properties:
-    u_ibl_param: {0, 0, 0, 0}
+    u_ibl_param: {32, 0, 0, 0}
     s_source:
         stage: 0
         texture: /pkg/ant.resources/textures/default.texture
