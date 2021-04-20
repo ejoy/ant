@@ -39,5 +39,6 @@ local sb_mb = world:sub {"component_register", "skybox"}
 function skybox_sys.post_init()
 	for _, _, eid in sb_mb:unpack() do
 		iibl.filter_all(eid)
+		world:pub{"ibl_updated", eid}
 	end
 end
