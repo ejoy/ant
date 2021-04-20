@@ -14,9 +14,9 @@ const int cCharlie = 2;
 
 //layout(push_constant) uniform FilterParameters {
 uniform  float u_roughness;
-uniform  int u_sampleCount;
+uniform  int u_sample_count;
 uniform  int u_width;
-uniform  float u_lodBias;
+uniform  float u_lod_bias;
 uniform  int u_distribution; // enum
 uniform int u_currentFace;
 
@@ -128,8 +128,8 @@ float computeLod(float pdf)
 {
     // IBL Baker (Matt Davidson)
     // https://github.com/derkreature/IBLBaker/blob/65d244546d2e79dd8df18a28efdabcf1f2eb7717/data/shadersD3D11/IblImportanceSamplingDiffuse.fx#L215
-    float solidAngleTexel = 4.0 * MATH_PI / (6.0 * float(u_width) * float(u_sampleCount));
-    float solidAngleSample = 1.0 / (float(u_sampleCount) * pdf);
+    float solidAngleTexel = 4.0 * MATH_PI / (6.0 * float(u_width) * float(u_sample_count));
+    float solidAngleSample = 1.0 / (float(u_sample_count) * pdf);
     float lod = 0.5 * log2(solidAngleSample / solidAngleTexel);
 
     return lod;
@@ -140,7 +140,7 @@ vec3 filterColor(vec3 N)
     //return  textureLod(uCubeMap, N, 3.0).rgb;
     vec4 color = vec4(0.f);
 
-    for(int i = 0; i < u_sampleCount; ++i)
+    for(int i = 0; i < u_sample_count; ++i)
     {
         vec4 importanceSample = getImportanceSample(i, N, u_roughness);
 
@@ -151,7 +151,7 @@ vec3 filterColor(vec3 N)
         float lod = computeLod(pdf);
 
         // apply the bias to the lod
-        lod += u_lodBias;
+        lod += u_lod_bias;
 
         if(u_distribution == cLambertian)
         {
@@ -179,7 +179,7 @@ vec3 filterColor(vec3 N)
                 if(u_roughness == 0.0)
                 {
                     // without this the roughness=0 lod is too high (taken from original implementation)
-                    lod = u_lodBias;
+                    lod = u_lod_bias;
                 }
 
                 color += vec4(textureLod(uCubeMap, L, lod).rgb * NdotL, NdotL);
@@ -223,7 +223,7 @@ vec3 LUT(float NdotV, float roughness)
     float B = 0.0;
     float C = 0.0;
 
-    for(int i = 0; i < u_sampleCount; ++i)
+    for(int i = 0; i < u_sample_count; ++i)
     {
         // Importance sampling, depending on the distribution.
         vec3 H = getImportanceSample(i, N, roughness).xyz;
@@ -265,7 +265,7 @@ vec3 LUT(float NdotV, float roughness)
     // The PDF is simply pdf(v, h) -> NDF * <nh>.
     // To parametrize the PDF over l, use the Jacobian transform, yielding to: pdf(v, l) -> NDF * <nh> / 4<vh>
     // Since the BRDF divide through the PDF to be normalized, the 4 can be pulled out of the integral.
-    return vec3(4.0 * A, 4.0 * B, 4.0 * 2.0 * MATH_PI * C) / float(u_sampleCount);
+    return vec3(4.0 * A, 4.0 * B, 4.0 * 2.0 * MATH_PI * C) / float(u_sample_count);
 }
 
 

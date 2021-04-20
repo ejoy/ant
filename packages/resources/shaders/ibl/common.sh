@@ -1,42 +1,48 @@
 // from: https://github.com/KhronosGroup/glTF-Sample-Viewer/blob/master/source/shaders/ibl_filtering.frag
 
 uniform vec4 u_ibl_param;
-#define u_sampleCount       u_ibl_param.x
-#define u_lodBias           u_ibl_param.y
+#define u_sample_count      u_ibl_param.x
+#define u_lod_bias          u_ibl_param.y
 #define u_face_texture_size u_ibl_param.z
 #define u_roughness         u_ibl_param.w
 
 #define MATH_PI 3.14159265359
 
-vec3 uvToXYZ(int face, vec2 uv)
+vec3 uv2dir(int face, vec2 uv)
 {
-    if(face == 0)
-        return vec3(     1.f,   uv.y,    -uv.x);
-
-    if(face == 1)
-        return vec3(    -1.f,   uv.y,     uv.x);
-
-    if(face == 2)
-        return vec3(   +uv.x,   -1.f,    +uv.y);
-
-    if(face == 3)
-        return vec3(   +uv.x,    1.f,    -uv.y);
-
-    if(face == 4)
-        return vec3(   +uv.x,   uv.y,      1.f);
-
-    //if(face == 5)
-    return vec3(    -uv.x,  +uv.y,     -1.f);
+    switch (face){
+    case 0:
+        return vec3( 1.0, uv.y,-uv.x);
+    case 1:
+        return vec3(-1.0, uv.y, uv.x);
+    case 2:
+        return vec3( uv.x, 1.0,-uv.y);
+    case 3:
+        return vec3( uv.x,-1.0, uv.y);
+    case 4:
+        return vec3( uv.x, uv.y, 1.0);
+    default:
+        return vec3(-uv.x, uv.y,-1.0);
+    }
 }
 
-vec2 dirToUV(vec3 dir)
+vec2 dir2uv(vec3 dir)
 {
     return vec2(
             0.5f + 0.5f * atan2(dir.z, dir.x) / MATH_PI,
             1.f - acos(dir.y) / MATH_PI);
 }
 
-mat3 generateTBN(vec3 normal)
+vec3 id2dir(ivec3 id, float size)
+{
+    vec2 xy = id.xy / u_face_texture_size;
+    xy = xy * 2.0 - 1.0;
+    xy.y *= -1.0;
+    int faceidx = id.z;
+    return normalize(uv2dir(faceidx, xy));
+}
+
+mat3 generate_tbn(vec3 normal)
 {
     vec3 bitangent = vec3(0.0, 1.0, 0.0);
 
@@ -63,12 +69,12 @@ mat3 generateTBN(vec3 normal)
 
 // Mipmap Filtered Samples (GPU Gems 3, 20.4)
 // https://developer.nvidia.com/gpugems/gpugems3/part-iii-rendering/chapter-20-gpu-based-importance-sampling
-float computeLod(float pdf)
+float compute_lod(float pdf)
 {
     // IBL Baker (Matt Davidson)
     // https://github.com/derkreature/IBLBaker/blob/65d244546d2e79dd8df18a28efdabcf1f2eb7717/data/shadersD3D11/IblImportanceSamplingDiffuse.fx#L215
-    float solidAngleTexel = 4.0 * MATH_PI / (6.0 * float(u_face_texture_size) * float(u_sampleCount));
-    float solidAngleSample = 1.0 / (float(u_sampleCount) * pdf);
+    float solidAngleTexel = 4.0 * MATH_PI / (6.0 * float(u_face_texture_size) * float(u_sample_count));
+    float solidAngleSample = 1.0 / (float(u_sample_count) * pdf);
     float lod = 0.5 * log2(solidAngleSample / solidAngleTexel);
 
     return lod;
@@ -99,7 +105,7 @@ vec2 hammersley2d(int i, int N)
 // vec4 getImportanceSample(int sampleIndex, vec3 N, float roughness)
 // {
 //     // generate a quasi monte carlo point in the unit square [0.1)^2
-//     vec2 hammersleyPoint = hammersley2d(sampleIndex, u_sampleCount);
+//     vec2 hammersleyPoint = hammersley2d(sampleIndex, u_sample_count);
 //     float u = hammersleyPoint.x;
 //     float v = hammersleyPoint.y;
 

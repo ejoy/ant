@@ -10,9 +10,9 @@ data:
     transform: {}
     ibl:
         irradiance:
-            size: 128
+            size: 64
         prefilter:
-            size: 128
+            size: 256
         LUT:
             size: 256
     material: /pkg/ant.resources/materials/sky/skybox.material

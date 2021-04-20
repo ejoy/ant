@@ -1,10 +1,10 @@
-colorspace: sRGB
+colorspace: Linear
 compress:
   android: ASTC6x6
   ios: ASTC6x6
   windows: BC1
 normalmap: false
-path: /pkg/ant.resources.binary/textures/cubemap/101.dds
+path: /pkg/ant.resources.binary/textures/cubemap/pisa_with_mips.ktx
 sampler:
   MAG: LINEAR
   MIN: LINEAR

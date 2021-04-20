@@ -76,8 +76,10 @@ local function fitler_irradiance_map(ibl)
     local properties = e._rendercache.properties
     properties.s_irradiance = icompute.create_image_property(ibl.irradiance.handle, 1, 0, "w")
 
-    local ip_v = properties.u_ibl_param.value
-    ip_v.v = math3d.set_index(ip_v, 3, ibl.irradiance.size)
+    if properties.u_ibl_param then
+        local ip_v = properties.u_ibl_param.value
+        ip_v.v = math3d.set_index(ip_v, 3, ibl.irradiance.size)
+    end
     icompute.dispatch(ibl_viewid, e._rendercache)
 end
 

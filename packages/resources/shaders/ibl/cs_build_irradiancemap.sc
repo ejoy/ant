@@ -14,57 +14,45 @@ IMAGE2D_ARRAY_WR(s_irradiance, rgba16f, 1);
 vec4 irradiance_importance_sample(int sampleIndex, vec3 N)
 {
     // generate a quasi monte carlo point in the unit square [0.1)^2
-    vec2 hammersleyPoint = hammersley2d(sampleIndex, u_sampleCount);
-    float u = hammersleyPoint.x;
-    float v = hammersleyPoint.y;
+    vec2 hp = hammersley2d(sampleIndex, u_sample_count);
+    float u = hp.x;
+    float v = hp.y;
 
     // generate the points on the hemisphere with a fitting mapping for
     
     // Cosine weighted hemisphere sampling
     // http://www.pbr-book.org/3ed-2018/Monte_Carlo_Integration/2D_Sampling_with_Multidimensional_Transformations.html#Cosine-WeightedHemisphereSampling
-    float cosTheta = sqrt(1.0 - u);
-    float sinTheta = sqrt(u); // equivalent to `sqrt(1.0 - cosTheta*cosTheta)`;
+    float cos_thera = sqrt(1.0 - u);
+    float sin_thera = sqrt(u); // equivalent to `sqrt(1.0 - cos_thera*cos_thera)`;
     float phi = 2.0 * MATH_PI * v;
 
-    float cosPhi = cos(phi);
-    float sinPhi = sin(phi);
+    float cos_phi = cos(phi);
+    float sin_phi = sin(phi);
 
-    float pdf = cosTheta / MATH_PI; // evaluation for solid angle, therefore drop the sinTheta
+    // sphere coordinate to XYZ
+    vec3 dir_LS = normalize(vec3(sin_thera * cos_phi, sin_thera * sin_phi, cos_thera));
+    mat3 TBN = generate_tbn(N);
+    vec3 dir_WS = instMul(dir_LS, TBN);
 
-    // transform the hemisphere sample to the normal coordinate frame
-    // i.e. rotate the hemisphere to the normal direction
-    vec3 localSpaceDirection = normalize(vec3(sinTheta * cosPhi, sinTheta * sinPhi, cosTheta));
-    mat3 TBN = generateTBN(N);
-    vec3 direction = instMul(localSpaceDirection, TBN);
-
-    return vec4(direction, pdf);
-}
-
-vec3 toN(uvec3 id)
-{
-    vec2 xy = id.xy * 2.0 - 1.0;
-    xy.y *= -1.0;
-    int faceidx = id.z;
-    return normalize(uvToXYZ(faceidx, xy));
+    return vec4(dir_WS, cos_thera / MATH_PI);
 }
 
 NUM_THREADS(THREADS, THREADS, 1)
 void main()
 {
     vec4 color = vec4_splat(0.f);
-    vec3 N = toN(gl_GlobalInvocationID);
-    for(int i = 0; i < u_sampleCount; ++i)
-    {
-        vec4 sample = irradiance_importance_sample(i, N);
+    vec3 N = id2dir(gl_GlobalInvocationID, u_face_texture_size);
 
+    for (uint sampleidx=0; sampleidx<u_sample_count; ++sampleidx){
+        vec4 sample = irradiance_importance_sample(sampleidx, N);
         vec3 H = vec3(sample.xyz);
         float pdf = sample.w;
 
         // mipmap filtered samples (GPU Gems 3, 20.4)
-        float lod = computeLod(pdf);
+        float lod = compute_lod(pdf);
 
         // apply the bias to the lod
-        lod += u_lodBias;
+        lod += u_lod_bias;
 
         float NdotH = clamp(dot(N, H), 0.0, 1.0);
 
@@ -79,5 +67,5 @@ void main()
         color += vec4(lambertian, 1.0);
     }
 
-    imageStore(s_irradiance, gl_GlobalInvocationID, (MATH_PI * color) / u_sampleCount);
+    imageStore(s_irradiance, gl_GlobalInvocationID, (MATH_PI * color) / u_sample_count);
 }
