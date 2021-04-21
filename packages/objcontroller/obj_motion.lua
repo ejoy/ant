@@ -134,6 +134,12 @@ function iobj_motion.move(eid, v)
     iobj_motion.set_position(eid, p)
 end
 
+function iobj_motion.move_forward(eid, v)
+    local srt = world[eid]._rendercache.srt
+    local f = math3d.normalize(math3d.index(srt, 3))
+    iobj_motion.move_along_axis(eid, f, v)
+end
+
 function iobj_motion.set_lock_target(eid, lt)
     local nlt = {}; for k, v in pairs(lt) do nlt[k] = v end
     world[eid]._rendercache.lock_target = nlt

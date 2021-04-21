@@ -25,6 +25,7 @@ interface "obj_motion"
     .method "move"
     .method "move_along_axis"
     .method "move_delta"
+    .method "move_forward"
 
     .method "rotate_forward_vector"
     .method "rotate"
