@@ -193,6 +193,21 @@ function iobj_motion.rotate_forward_vector(eid, rotateX, rotateY)
     end
 end
 
+function iobj_motion.rotate_around_point2(eid, viewpt, dx, dy)
+    local srt = world[eid]._rendercache.srt
+    local right, up = math3d.index(srt, 1), math3d.index(srt, 2)
+    local pos = math3d.index(srt, 4)
+
+    local nq = math3d.mul(
+        math3d.quaternion{axis=right, r=dx},
+        math3d.quaternion{axis=up, r=dy})
+    
+    pos = math3d.transform(nq, pos, 1)
+    iobj_motion.set_position(eid, pos)
+
+    iobj_motion.set_direction(eid, math3d.normalize(math3d.sub(viewpt, pos)))
+end
+
 function iobj_motion.rotate(eid, rotateX, rotateY)
     if rotateX or rotateY then
         local rc = world[eid]._rendercache

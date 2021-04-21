@@ -30,6 +30,7 @@ interface "obj_motion"
     .method "rotate_forward_vector"
     .method "rotate"
     .method "rotate_around_point"
+    .method "rotate_around_point2"
 
     .method "ray"
 
