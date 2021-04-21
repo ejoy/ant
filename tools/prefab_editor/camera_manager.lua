@@ -6,6 +6,7 @@ local icamera
 local imaterial
 local ies
 local geo_utils
+local irq
 
 local m = {
     FRUSTUM_LEFT    = 1,
@@ -173,6 +174,10 @@ function m.bind_recorder(eid, recorder)
     m.camera_list[eid].recorder = recorder
 end
 
+function m.bind_main_camera()
+    icamera.bind(m.main_camera, "main_queue")
+end
+
 function m.set_frame(cam_eid, idx)
     local pos = world[m.camera_list[cam_eid].recorder].frames[idx].position
     local rot = world[m.camera_list[cam_eid].recorder].frames[idx].rotation
@@ -218,7 +223,10 @@ function m.get_recorder_frames(eid)
 end
 
 local function do_remove_camera(cam)
-    world:remove_entity(cam.recorder)
+    if not cam then return end
+    if cam.recorder then
+        world:remove_entity(cam.recorder)
+    end
     world:remove_entity(cam.frustum_eid)
     world:remove_entity(cam.far_boundary[1].line_eid)
     world:remove_entity(cam.far_boundary[2].line_eid)
@@ -248,6 +256,7 @@ return function(w)
     imaterial   = world:interface "ant.asset|imaterial"
     ies         = world:interface "ant.scene|ientity_state"
     icamera_recorder = world:interface "ant.camera|icamera_recorder"
+    irq         = world:interface "ant.render|irenderqueue"
     geo_utils   = require "editor.geometry_utils"(world)
     return m
 end

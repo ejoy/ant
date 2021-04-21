@@ -92,23 +92,6 @@ policy:
 action:
   mount: 3
 data:
-  material: /pkg/ant.resources.binary/meshes/base/cube.glb|materials/lambert1.material
-  mesh: /pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin
-  name: cube0
-  scene_entity: true
-  state: 7
-  transform:
-    r: {0, 0, 0, 1}
-    s: {50, 50, 50}
-    t: {1.8574118614196777, 0, 0}
-policy:
-  ant.render|render
-  ant.general|name
-  ant.scene|hierarchy_policy
----
-action:
-  mount: 3
-data:
   follow_flag: 1
   follow_joint: "mixamorig:RightHand"
   name: slot2

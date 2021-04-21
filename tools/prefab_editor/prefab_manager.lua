@@ -235,7 +235,7 @@ function m:create(what, config)
         self:create_slot()
     elseif what == "camera" then
         local new_camera, camera_templ = camera_mgr.ceate_camera()
-        local s, r, t = math3d.srt(camera_templ.data.transform)
+        local s, r, t = math3d.srt(iom.srt(new_camera))
         local ts, tr, tt = math3d.totable(s), math3d.totable(r), math3d.totable(t)
         camera_templ.data.transform = {s = {ts[1],ts[2],ts[3]}, r = {tr[1],tr[2],tr[3],tr[4]}, t = {tt[1],tt[2],tt[3]}}
 
@@ -568,6 +568,8 @@ function m:open_prefab(prefab)
     for _, e in ipairs(add_entity) do
         self.entities[#self.entities + 1] = e
     end
+
+    camera_mgr.bind_main_camera()
     world:pub {"editor", "prefab", entities}
 end
 

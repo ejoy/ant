@@ -156,7 +156,10 @@ function hierarchy:update_prefab_template()
         end
         for _, child in ipairs(self.all[eid].children) do
             if self.all[child.eid].template.template then
-                self.all[child.eid].template.template.action = {mount = pidx}
+                if not self.all[child.eid].template.template.action then
+                    self.all[child.eid].template.template.action = {}
+                end
+                self.all[child.eid].template.template.action.mount = pidx
             end
             construct_entity(child.eid, pt)
         end
