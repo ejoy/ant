@@ -193,7 +193,7 @@ function iobj_motion.rotate_forward_vector(eid, rotateX, rotateY)
     end
 end
 
-function iobj_motion.rotate_around_point2(eid, viewpt, dx, dy)
+function iobj_motion.rotate_around_point2(eid, viewpt, dx, dy, distance)
     local srt = world[eid]._rendercache.srt
     local right, up = math3d.index(srt, 1), math3d.index(srt, 2)
     local pos = math3d.index(srt, 4)
@@ -201,11 +201,17 @@ function iobj_motion.rotate_around_point2(eid, viewpt, dx, dy)
     local nq = math3d.mul(
         math3d.quaternion{axis=right, r=dx},
         math3d.quaternion{axis=up, r=dy})
-    
-    pos = math3d.transform(nq, pos, 1)
-    iobj_motion.set_position(eid, pos)
 
-    iobj_motion.set_direction(eid, math3d.normalize(math3d.sub(viewpt, pos)))
+    pos = math3d.transform(nq, pos, 1)
+
+    local newdir = math3d.normalize(math3d.sub(viewpt, pos))
+    iobj_motion.set_direction(eid, newdir)
+
+    if distance then
+        iobj_motion.set_position(eid, math3d.muladd(newdir, distance, pos))
+    else
+        iobj_motion.set_position(eid, pos)
+    end
 end
 
 function iobj_motion.rotate(eid, rotateX, rotateY)

@@ -1,13 +1,13 @@
 fx:
-    cs: /pkg/ant.resources/shaders/ibl/cs_build_irradiancemap.sc
+    cs: /pkg/ant.resources/shaders/ibl/cs_build_perfilter.sc
     setting:
-        BUILD_IRRADIANCE_MAP: 1
+        BUILD_PREFILTER_MAP: 1
         lighting: off
 properties:
-    u_ibl_param: {512, 0, 64, 0}    #sample count, lod bais, cube face texture size, roughness
+    u_ibl_param: {512, 0, 128, 0}    #sample count, lod bais, cube face texture size, roughness
     s_source:
         stage: 0
         texture: /pkg/ant.resources/textures/default.texture
-    s_irradiance:
+    s_prefilter:
         stage: 1
         texture: /pkg/ant.resources/textures/default.texture
