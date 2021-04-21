@@ -114,9 +114,9 @@ function m.update_frustrum(cam_eid)
 end
 
 function m.show_frustum(eid, visible)
-    if m.second_camera ~= eid then
-        return
-    end
+    -- if m.second_camera ~= eid then
+    --     return
+    -- end
     world[m.second_view].visible = visible
     if m.camera_list[eid] and m.camera_list[eid].frustum_eid then
         local state = "visible"

@@ -570,7 +570,10 @@ function m:open_prefab(prefab)
     end
 
     camera_mgr.bind_main_camera()
-    world:pub {"editor", "prefab", entities}
+end
+
+function m:reload()
+    self:open(tostring(self.prefab))
 end
 
 local nameidx = 0
@@ -624,9 +627,9 @@ function m:add_prefab(filename)
 end
 
 function m:recreate_entity(eid)
-    rebuild_entity(eid, prefab.template)
-
-    -- local prefab = hierarchy:get_template(eid)
+    local prefab = hierarchy:get_template(eid)
+    world:rebuild_entity(eid, prefab.template)
+    
     -- local copy_prefab = utils.deep_copy(prefab)
     -- local new_eid = world:create_entity(copy_prefab.template)
     -- iom.set_srt(new_eid, iom.srt(eid))

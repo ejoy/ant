@@ -396,6 +396,7 @@ function m:data_changed()
         end
     end
     for _, filename in event_open_prefab:unpack() do
+        anim_view:clear()
         prefab_mgr:open(filename)
     end
     for _, filename in event_open_fbx:unpack() do
@@ -430,6 +431,9 @@ function m:data_changed()
             gizmo:set_target(nil)
         elseif state.CTRL and key == "S" and press == 1 then
             prefab_mgr:save_prefab()
+        elseif state.CTRL and key == "R" and press == 1 then
+            anim_view:clear()
+            prefab_mgr:reload()
         end
     end
 

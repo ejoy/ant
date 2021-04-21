@@ -31,11 +31,9 @@ action:
 data:
   animation:
     idle: /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
-    jumping: /pkg/ant.resources.binary/meshes/female/animations/junmping.ozz
+    junmping: /pkg/ant.resources.binary/meshes/female/animations/junmping.ozz
     punching: /pkg/ant.resources.binary/meshes/female/animations/punching.ozz
     running: /pkg/ant.resources.binary/meshes/female/animations/running.ozz
-    running-fast: /pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz
-    walking: /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
   animation_birth: idle
   material: /pkg/ant.resources.binary/meshes/female/female.glb|materials/asdf1_Beta_HighLimbsGeoSG2.material
   mesh: /pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Surface_P1.meshbin
@@ -121,25 +119,4 @@ data:
     t: {0, 0, 0}
 policy:
   ant.render|light
-  ant.general|name
----
-action:
-  mount: root
-data:
-  camera: true
-  frustum:
-    aspect: 1.6898734177215189
-    f: 100
-    fov: 30
-    n: 0.1
-    type: mat
-  name: camera1
-  scene_entity: true
-  transform:
-    r: {0.15622985363006592, -0.3771722614765167, 0.0647125244140625, 0.9105743765830994}
-    s: {1, 1, 1}
-    t: {2, 2, -2}
-  updir: {0, 1, 0}
-policy:
-  ant.camera|camera
   ant.general|name

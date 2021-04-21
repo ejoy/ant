@@ -17,7 +17,6 @@ local m = {}
 local edit_anims = {}
 local current_eid
 local imgui_message
-local current_anim_name
 local current_clip_name = "None"
 local current_anim
 local selected_frame = -1
@@ -64,28 +63,28 @@ local function find_index(t, item)
 end
 
 local function anim_group_set_time(eid, t)
-    local group_eid = anim_group_eid[world[eid].animation[current_anim_name]]
+    local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
     for _, anim_eid in ipairs(group_eid) do
         iani.set_time(anim_eid, t)
     end
 end
 
 local function anim_group_play(eid, ...)
-    local group_eid = anim_group_eid[world[eid].animation[current_anim_name]]
+    local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
     for _, anim_eid in ipairs(group_eid) do
         iani.play(anim_eid, ...)
     end
 end
 
 local function anim_group_set_loop(eid, ...)
-    local group_eid = anim_group_eid[world[eid].animation[current_anim_name]]
+    local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
     for _, anim_eid in ipairs(group_eid) do
         iani.set_loop(anim_eid, ...)
     end
 end
 
 local function anim_group_pause(eid, p)
-    local group_eid = anim_group_eid[world[eid].animation[current_anim_name]]
+    local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
     for _, anim_eid in ipairs(group_eid) do
         iani.pause(anim_eid, p)
     end
@@ -107,7 +106,6 @@ local function set_current_anim(anim_name)
             end
         end
     end
-    current_anim_name = anim_name
     anim_state.anim_name = current_anim.name
     anim_state.key_event = current_anim.key_event
     anim_state.duration = current_anim.duration
@@ -224,10 +222,10 @@ local function get_runtime_clips()
 end
 
 local function get_runtime_events()
-    if not world[current_eid].keyframe_events or not world[current_eid].keyframe_events[current_anim_name] then
-        iani.set_events(current_eid, current_anim_name, {})
+    if not world[current_eid].keyframe_events or not world[current_eid].keyframe_events[current_anim.name] then
+        iani.set_events(current_eid, current_anim.name, {})
     end
-    return world[current_eid].keyframe_events[current_anim_name]
+    return world[current_eid].keyframe_events[current_anim.name]
 end
 
 local function to_runtime_group(runtime_clips, group)
@@ -666,7 +664,7 @@ local function show_clips()
         local key = "Clip" .. clip_index
         clip_index = clip_index + 1
         local new_clip = {
-            anim_name = current_anim_name,
+            anim_name = current_anim.name,
             name = key,
             range = {-1, -1},
             name_ui = {text = key},
@@ -864,23 +862,40 @@ local function show_joints(root)
     end
 end
 
-local recreate_event
+local open_prefab_event
 local anim_name = ""
 local ui_anim_name = {text = ""}
 local anim_path = ""
+
+function m.clear()
+    current_eid = nil
+    current_anim = nil
+    all_clips = {}
+    all_groups = {}
+    anim_group_eid = {}
+    current_collider = nil
+    current_event = nil
+    current_joint = nil
+    current_clip = nil
+end
+
 function m.show()
     if not current_eid or not world[current_eid] then return end
-    if not recreate_event then
-        recreate_event = world:sub {"EntityRecreate"}
-    end
-    for _, eid in recreate_event:unpack() do
-        for i, c in ipairs(collider_list) do
-            if collider_list[i] == old then
-                collider_list[i] = new
-                break;
-            end
-        end
-    end
+    -- if not open_prefab_event then
+    --     open_prefab_event = world:sub {"editor", "OpenPrefab"}
+    -- end
+    -- for _, what in open_prefab_event:unpack() do
+    --     if what == "OpenPrefab" then
+    --         clear_edit_data()
+    --     end
+    --     -- for i, c in ipairs(collider_list) do
+    --     --     if collider_list[i] == old then
+    --     --         collider_list[i] = new
+    --     --         break;
+    --     --     end
+    --     -- end
+    -- end
+    local reload = false
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
@@ -933,6 +948,8 @@ function m.show()
                             local template = hierarchy:get_template(current_eid)
                             template.template.data.animation[anim_name] = anim_path
                             world[current_eid].animation[anim_name] = anim_path
+                            --TODO:reload
+                            reload = true
                         end
                     end
                     anim_name = ""
@@ -951,14 +968,16 @@ function m.show()
             imgui.cursor.SameLine()
             if imgui.widget.Button("Remove") then
                 local template = hierarchy:get_template(current_eid)
-                template.template.data.animation[current_anim_name] = nil
-                world[current_eid].animation[current_anim_name] = nil
+                template.template.data.animation[current_anim.name] = nil
+                world[current_eid].animation[current_anim.name] = nil
+                --TODO:reload
+                reload = true
             end
             imgui.cursor.SameLine()
             imgui.cursor.PushItemWidth(150)
-            if imgui.widget.BeginCombo("##AnimationList", {current_anim_name, flags = imgui.flags.Combo {}}) then
+            if imgui.widget.BeginCombo("##AnimationList", {current_anim.name, flags = imgui.flags.Combo {}}) then
                 for _, name in ipairs(edit_anims[current_eid].name_list) do
-                    if imgui.widget.Selectable(name, current_anim_name == name) then
+                    if imgui.widget.Selectable(name, current_anim.name == name) then
                         set_current_anim(name)
                         current_clip_name = "None"
                         current_clip = nil
@@ -1005,7 +1024,7 @@ function m.show()
                         end
                     end
                     current_event_file = path
-                    iani.set_events(current_eid, current_anim_name, path)
+                    iani.set_events(current_eid, current_anim.name, path)
                     current_anim.key_event = from_runtime_event(get_runtime_events())
                     set_event_dirty(-1)
                 end
@@ -1105,16 +1124,15 @@ function m.show()
             end
         end
     end
+    if reload then
+        m.clear()
+        prefab_mgr:save_prefab()
+        prefab_mgr:reload()
+    end
 end
 
 local function construct_joints(eid)
-    joint_list = {
-        {
-            index = 0,
-            name = "None",
-            children = {}
-        }
-    }
+    joint_list = {{ index = 0, name = "None", children = {}}}
     joints[eid] = {root = nil, joint_map = {}}
     local ske = world[eid].skeleton._handle
     local function construct(current_joints, ske, joint_idx)
@@ -1149,52 +1167,57 @@ local function construct_joints(eid)
     hierarchy:update_slot_list()
 end
 
+local function construct_edit_animations(eid)
+    edit_anims[eid] = {
+        id = eid,
+        name_list = {},
+        birth = world[eid].animation_birth,
+    }
+    local edit_anim = edit_anims[eid]
+    world[eid].anim_clips = all_clips
+    local animations = world[eid].animation
+    local parentNode = hierarchy:get_node(world[eid].parent)
+    for key, anim in pairs(animations) do
+        edit_anim[key] = {
+            name = key,
+            duration = anim._handle:duration(),
+            key_event = {},
+            clips = {}
+        }
+        edit_anim.name_list[#edit_anim.name_list + 1] = key
+        if not anim_group_eid[anim] then
+            anim_group_eid[anim] = {}
+        end
+        
+        for _, child in ipairs(parentNode.children) do
+            local handle = world[child.eid].animation
+            if handle and handle._handle == animations._handle then
+                if not find_index(anim_group_eid[anim], child.eid)  then
+                    anim_group_eid[anim][#anim_group_eid[anim] + 1] = child.eid
+                end
+            end
+        end
+    end
+    table.sort(edit_anim.name_list)
+    set_current_anim(edit_anim.birth)
+    construct_joints(eid)
+end
+
 function m.bind(eid)
     if not eid or not world[eid] or not world[eid].animation then return end
     if current_eid ~= eid then
         current_eid = eid
     end
     if not edit_anims[eid] then
-        edit_anims[eid] = {
-            id = eid,
-            name_list = {},
-            birth = world[eid].animation_birth,
-        }
-        local edit_anim = edit_anims[eid]
-        world[eid].anim_clips = all_clips
-        local animations = world[eid].animation
-        local parentNode = hierarchy:get_node(world[eid].parent)
-        for key, anim in pairs(animations) do
-            edit_anim[key] = {
-                name = key,
-                duration = anim._handle:duration(),
-                key_event = {},
-                clips = {}
-            }
-            edit_anim.name_list[#edit_anim.name_list + 1] = key
-            if not anim_group_eid[anim] then
-                anim_group_eid[anim] = {}
-            end
-            
-            for _, child in ipairs(parentNode.children) do
-                local handle = world[child.eid].animation
-                if handle and handle._handle == animations._handle then
-                    if not find_index(anim_group_eid[anim], child.eid)  then
-                        anim_group_eid[anim][#anim_group_eid[anim] + 1] = child.eid
-                    end
-                end
-            end
-        end
-        table.sort(edit_anim.name_list)
-        set_current_anim(edit_anim.birth)
-        
-        construct_joints(eid)
+        construct_edit_animations(eid)
     end
 end
 
-function m.add_animation(anim_name)
-
-end
+-- function m.reload_all_animation()
+--     prefab_mgr:recreate_entity(current_eid)
+--     m.clear()
+--     construct_edit_animations(current_eid)
+-- end
 
 function m.get_current_joint()
     return current_joint and current_joint.index or 0
