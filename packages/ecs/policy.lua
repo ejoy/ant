@@ -29,6 +29,9 @@ local function create(w, policies)
         for _, v in ipairs(class.transform) do
             import_transform(v)
         end
+        if #class.output == 0 then
+            error(("transform `%s` has not output."):format(name))
+        end
         for _, v in ipairs(class.input) do
             if not reflection[v] then
                 reflection[v] = {depend={}}
