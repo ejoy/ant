@@ -46,6 +46,11 @@ local default_pbr_param = {
         factor = {0, 0, 0, 0},
         stage = 3,
     },
+    occlusion = {
+        texture = "/pkg/ant.resources/textures/pbr/defautl/occlusion.texture",
+        factor = {0, 0, 0, 0},
+        stage = 4,
+    }
 }
 
 local filter_tags = {
@@ -106,10 +111,12 @@ local UV_map = {
     REPEAT          = "WRAP",
 }
 
-local default_fx = {
-    fs = "/pkg/ant.resources/shaders/pbr/fs_pbr.sc",
-    vs = "/pkg/ant.resources/shaders/pbr/vs_pbr.sc",
-}
+local function get_default_fx()
+    return {
+        fs = "/pkg/ant.resources/shaders/pbr/fs_pbr.sc",
+        vs = "/pkg/ant.resources/shaders/pbr/vs_pbr.sc",
+    }
+end
 
 local primitive_state_names = {
     "POINTS",
@@ -278,43 +285,49 @@ return function (output, glbdata, exports, tolocalpath)
 
         for mode in pairs(modes) do
             local material = {
-                fx          = default_fx,
+                fx          = get_default_fx(),
                 state       = get_state(mode),
                 properties  = {
                     s_basecolor          = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),
                     s_metallic_roughness = handle_texture(pbr_mr.metallicRoughnessTexture, "metallic_roughness", false, "linear"),
                     s_normal             = handle_texture(mat.normalTexture, "normal", true, "linear"),
                     s_emissive           = handle_texture(mat.emissiveTexture, "emissive", false, "sRGB"),
-                    u_basecolor_factor = tov4(pbr_mr.baseColorFactor, default_pbr_param.basecolor.factor),
-                    u_metallic_roughness_factor = {
-                        pbr_mr.metallicFactor or 1.0,
+                    s_occulsion          = handle_texture(mat.occlusionTexture, "occlusion", false, "linear"),
+                    u_basecolor_factor   = tov4(pbr_mr.baseColorFactor, default_pbr_param.basecolor.factor),
+                    u_emissive_factor    = tov4(mat.emissiveFactor, default_pbr_param.emissive.factor),
+                    u_pbr_factor         = {
+                        pbr_mr.metallicFactor or 0.0,
                         pbr_mr.roughnessFactor or 1.0,
-                        0.0,
-                        0.0,
-                    },
-                    u_emissive_factor = tov4(mat.emissiveFactor, default_pbr_param.emissive.factor),
-                    u_texture_flags = {
-                        pbr_mr.baseColorTexture and 1.0 or 0.0,
-                        pbr_mr.metallicRoughnessTexture and 1.0 or 0.0,
-                        mat.normalTexture and 1.0 or 0.0,
-                        mat.emissiveTexture and 1.0 or 0.0,
-                    },
-                    u_IBLparam = {
-                            1.0, -- perfilter cubemap mip levels
-                            1.0, -- IBL indirect lighting scale
-                            0.0, 0.0,
-                        },
-                    u_alpha_info = {
-                        mat.alphaMode == "OPAQUE" and 0.0 or 1.0, --u_alpha_mask
                         mat.alphaCutoff or 0.0,
-                        0.0, 0.0,
-                    }
+                        1.0, --occlusion strength
+                    },
                 },
             }
 
-            if mat.occlusionTexture then
-                print("WARNING: NOT SUPPORT occlusion texture right now!")
+            local setting = {}
+            if pbr_mr.baseColorTexture then 
+                setting[#setting+1] = "HAS_BASECOLOR_MAP_TEXTURE"
             end
+            if pbr_mr.metallicRoughnessTexture then
+                setting[#setting+1] = "HAS_METALLIC_ROUGHNESS_TEXTURE"
+            end
+            if pbr_mr.normalTexture then
+                setting[#setting+1] = "HAS_METALLIC_ROUGHNESS_TEXTURE"
+            end
+            if mat.occlusionTexture then
+                setting[#setting+1] = "HAS_OCCLUSION_TEXTURE"
+            end
+            if mat.emissiveTexture then
+                setting[#setting+1] = "HAS_EMISSIVE_TEXTURE"
+            end
+            if mat.alphaMode == "OPAQUE" then
+                setting[#setting+1] = "ALPHAMODE_OPAQUE"
+            end
+            if mat.alphaCutoff then
+                setting[#setting+1] = "ALPHAMODE_MASK"
+            end
+
+            material.fx.setting = setting
     
             local function refine_name(name)
                 local newname = name:gsub("['\\/:*?\"<>|]", "_")

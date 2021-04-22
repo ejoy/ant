@@ -10,23 +10,31 @@ local ishadow	= world:interface "ant.render|ishadow"
 local ilight	= world:interface "ant.render|light"
 local itimer	= world:interface "ant.timer|timer"
 local icamera	= world:interface "ant.camera|camera"
-local imaterial = world:interface "ant.asset|imaterial"
 
 local m = ecs.interface "system_properties"
+local function def_tex_prop(stage)
+	return {stage=stage, texture={handle=nil}}
+end
+
+local function def_buffer_prop(stage)
+	return {stage=stage, value=nil}
+end
+
 local system_properties = {
 	--lighting
-	-- u_directional_lightdir	= math3d.ref(mc.ZERO),
-	-- u_directional_color		= math3d.ref(mc.ZERO),
-	-- u_directional_intensity	= math3d.ref(mc.ZERO),
 	u_eyepos				= math3d.ref(mc.ZERO_PT),
 	u_cluster_size			= math3d.ref(mc.ZERO_PT),
 	u_cluster_shading_param	= math3d.ref(mc.ZERO_PT),
 	u_cluster_shading_param2= math3d.ref(mc.ZERO_PT),
 	u_light_count			= math3d.ref(mc.ZERO_PT),
-	b_light_grids			= {stage=-1, value=nil},
-	b_light_index_lists		= {stage=-1, value=nil},
-	b_light_info			= {stage=-1, value=nil},
+	b_light_grids			= def_buffer_prop(-1),
+	b_light_index_lists		= def_buffer_prop(-1),
+	b_light_info			= def_buffer_prop(-1),
 	u_time					= math3d.ref(mc.ZERO_PT),
+	--IBL
+	s_irradiance			= def_tex_prop(5),
+	s_prefilter				= def_tex_prop(6),
+	s_LUT					= def_tex_prop(7),
 
 	-- shadow
 	u_csm_matrix 		= {
@@ -40,75 +48,43 @@ local system_properties = {
 	u_shadow_param1		= math3d.ref(mc.ZERO),
 	u_shadow_param2		= math3d.ref(mc.ZERO),
 
-	s_mainview_depth	= {stage=5, texture={handle=nil}},
-	s_mainview			= {stage=6, texture={handle=nil}},
-	s_shadowmap			= {stage=7, texture={handle=nil}},
-	s_postprocess_input	= {stage=7, texture={handle=nil}},
+	s_mainview_depth	= def_tex_prop(5),
+	s_mainview			= def_tex_prop(6),
+	s_shadowmap			= def_tex_prop(7),
+	s_postprocess_input	= def_tex_prop(7),
 }
 
 function m.get(n)
 	return system_properties[n]
 end
 
--- local function add_directional_light_properties()
--- 	local deid = ilight.directional_light()
--- 	if deid then
--- 		local data = ilight.data(deid)
--- 		system_properties["u_directional_lightdir"].v	= math3d.inverse(iom.get_direction(deid))
--- 		system_properties["u_directional_color"].v		= data.color
--- 		system_properties["u_directional_intensity"].v	= data.intensity
--- 	else
--- 		system_properties["u_directional_lightdir"].v	= mc.ZERO
--- 		system_properties["u_directional_color"].v		= mc.ZERO
--- 		system_properties["u_directional_intensity"].v	= mc.ZERO
--- 	end
--- end
+local function get_sky_entity()
+	local sky_eid
+	for _, eid in world:each "skybox" do
+		sky_eid = eid
+	end
 
--- local function add_point_light_properties()
--- 	local numlight = 1
--- 	local maxlight<const> = ilight.max_point_light()
--- 	for _, leid in world:each "light_type" do
--- 		if numlight <= maxlight then
--- 			local e = world[leid]
--- 			local lt = e.light_type
--- 			if lt == "point" or lt == "spot" then
--- 				system_properties.u_light_color[numlight].v = ilight.color(leid)
--- 				local param = {0.0, 0.0, 0.0, 0.0}
--- 				local lightdir = system_properties.u_light_dir[numlight]
--- 				if lt == "spot" then
--- 					lightdir.v = iom.get_direction(leid)
--- 					param[1] = 2.0
--- 					local radian = ilight.radian(leid) * 0.5
--- 					local outer_radian = radian * 1.1
--- 					param[2], param[3] = math.cos(radian), math.cos(outer_radian)
--- 				else
--- 					lightdir.v = mc.ZERO
--- 				end
-
--- 				system_properties.u_light_pos[numlight].v	= iom.get_position(leid)
--- 				system_properties.u_light_param[numlight].v = param
--- 			end
-
--- 			numlight = numlight + 1
--- 		end
--- 	end
-
--- 	for i=numlight, maxlight-numlight do
--- 		system_properties.u_light_color[i].v	= mc.ZERO
--- 		system_properties.u_light_pos[i].v		= mc.ZERO
--- 		system_properties.u_light_dir[i].v		= mc.ZERO
--- 		system_properties.u_light_param[i].v	= mc.ZERO
--- 	end
--- 	if numlight > maxlight then
--- 		log.warn("point light number exceed, max point/spot light: %d", maxlight)
--- 	end
--- end
+	for _, eid in world:each "procedural_sky" do
+		sky_eid = eid
+	end
+	return sky_eid
+end
 
 local function update_lighting_properties()
 	local mq = world:singleton_entity "main_queue"
 	system_properties["u_eyepos"].id = iom.get_position(mq.camera_eid)
 
 	system_properties["u_light_count"].v = {world:count "light_type", 0, 0, 0}
+
+	local skyeid = get_sky_entity()
+	if skyeid then
+		local sky = world[skyeid]
+		local ibl = sky._ibl
+		system_properties["s_irradiance"].texture.handle= ibl.irradiance.handle
+		system_properties["s_prefilter"].texture.handle	= ibl.prefilter.handle
+		system_properties["s_LUT"].texture.handle		= ibl.LUT.handle
+	end
+
 	if ilight.use_cluster_shading() then
 		local mc_eid = mq.camera_eid
 		local vr = mq.render_target.view_rect

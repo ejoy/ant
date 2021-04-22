@@ -28,10 +28,10 @@ void main()
         // float NdotH = clamp(dot(N, H), 0.0, 1.0);
         // lambertian *= NdotH;     // lamberts law
         // lambertian /= pdf;       // invert bias from importance sampling
-        // lambertian /= MATH_PI;   // convert irradiance to radiance https://seblagarde.wordpress.com/2012/01/08/pi-or-not-to-pi-in-game-lighting-equation/
+        // lambertian /= M_PI;   // convert irradiance to radiance https://seblagarde.wordpress.com/2012/01/08/pi-or-not-to-pi-in-game-lighting-equation/
 
         color += vec4(lambertian, 1.0);
     }
 
-    imageStore(s_irradiance, gl_GlobalInvocationID, (MATH_PI * color) / u_sample_count);
+    imageStore(s_irradiance, gl_GlobalInvocationID, (M_PI * color) / u_sample_count);
 }

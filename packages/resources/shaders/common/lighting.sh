@@ -4,95 +4,50 @@
 uniform vec4 u_light_count;
 uniform vec4 u_eyepos;
 
-float fresnel(float _ndotl, float _bias, float _pow)
+struct light_info{
+	vec3	pos;
+	float	range;
+	vec3	dir;
+	float	enable;
+	vec4	color;
+	float	type;
+	float	intensity;
+	float	inner_cutoff;
+	float	outter_cutoff;
+};
+
+#define LightType_Directional 0
+#define LightType_Point 1
+#define LightType_Spot 0
+
+#define IS_DIRECTIONAL_LIGHT(_type) (_type==LightType_Directional)
+#define IS_POINT_LIGHT(_type)       (_type==LightType_Point)
+#define IS_SPOT_LIGHT(_type)        (_type==LightType_Spot)
+
+// https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_lights_punctual/README.md#range-property
+float getRangeAttenuation(float range, float distance)
 {
-	float facing = (1.0 - _ndotl);
-	return max(mix(pow(facing, _pow), 1, _bias), 0.0);
+    if (range <= 0.0)
+    {
+        // negative range means unlimited
+        return 1.0 / pow(distance, 2.0);
+    }
+    return max(min(1.0 - pow(distance / range, 4.0), 1.0), 0.0) / pow(distance, 2.0);
 }
 
-float specular_blinn(vec3 lightdir, vec3 normal, vec3 viewdir, float shininess)
+// https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_lights_punctual/README.md#inner-and-outer-cone-angles
+float getSpotAttenuation(vec3 pointToLight, vec3 spotDirection, float outerConeCos, float innerConeCos)
 {
-	vec3 halfdir = normalize(lightdir + viewdir);
-
-	float hdotn = max(0.0, dot(halfdir, normal));	// Phong need check dot result, but Blinn-Phong not	
-	return pow(hdotn, shininess * 128.0);
+    float actualCos = dot(normalize(spotDirection), normalize(-pointToLight));
+    if (actualCos > outerConeCos)
+    {
+        if (actualCos < innerConeCos)
+        {
+            return smoothstep(outerConeCos, innerConeCos, actualCos);
+        }
+        return 1.0;
+    }
+    return 0.0;
 }
-
-vec3 calc_directional_light(vec3 normal, vec3 lightdir, vec3 viewdir, float shininess)
-{
-	float ndotl = dot(normal, lightdir);
-	float diffuse = max(0.0, ndotl);
-	//vec3 specular_color = vec3(1.0, 1.0, 1.0);
-	float fres = fresnel(ndotl, 0.2, 5.0);	
-	float specular = step(0, ndotl) * fres * specular_blinn(lightdir, normal, viewdir, shininess);
-
-	float result = diffuse + specular;
-	return vec3(result, result, result);
-}
-
-vec4 calc_lighting_BH(vec3 normal, vec3 lightdir, vec3 viewdir, 
-						vec4 lightColor, vec4 diffuseColor, vec4 specularColor, 
-						float gloss, float specularIntensity)
-{
-	float ndotl = max(0, dot(normal, lightdir));
-
-	float hdotn = saturate(dot(normal,normalize(viewdir + lightdir)));
-	float shininess = specularColor.w;   									 // spec shape
-	float specularFactor = pow(hdotn, shininess * 128.0) * specularIntensity;  // spec intensity 
-
-	vec3 diffuse = diffuseColor.xyz * lightColor.xyz * ndotl;
-	vec3 specular = specularColor.rgb * specularFactor * gloss;              // gloss from normalmap texture 
-
-	//return vec4(specularFactor * gloss, specularFactor * gloss, specularFactor * gloss, 1.0);
-	//return vec4(specular,1.0);
-	return vec4(diffuse + specular, 1.0);
-}
-
-// vec4 calc_point_lighting(vec3 normal, vec3 lightpos, vec3 viewdir, vec4 diffuse, vec4 specular, float shininess)
-// {
-//     // ambient
-//     vec3 ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;
-  	
-//     // diffuse 
-//     vec3 norm = normalize(normal);
-//     vec3 lightDir = normalize(light.position - FragPos);
-//     float diff = max(dot(norm, lightDir), 0.0);
-//     vec3 diffuse = light.diffuse * diff * texture(material.diffuse, TexCoords).rgb;  
-    
-//     // specular
-//     vec3 viewDir = normalize(viewPos - FragPos);
-//     vec3 reflectDir = reflect(-lightDir, norm);  
-//     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-//     vec3 specular = light.specular * spec * texture(material.specular, TexCoords).rgb;  
-    
-//     // attenuation
-//     float distance    = length(light.position - FragPos);
-//     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
-
-//     ambient  *= attenuation;  
-//     diffuse   *= attenuation;
-//     specular *= attenuation;   
-        
-//     vec3 result = ambient + diffuse + specular;
-//     FragColor = vec4(result, 1.0);
-// }
-
-vec4 calc_fog_factor(vec4 color, float density, float LOG2, float distanceVS)
-{
-	return saturate(1.0/exp2(density*density*distanceVS*distanceVS*LOG2)) * color;
-}
-
-// vec3 unproject_normal(vec3 normal)
-// {
-// 	// projection back
-// 	float pX = normal.x/(1.0 + normal.z);
-// 	float pY = normal.y/(1.0 + normal.z);
-// 	float denom = 2.0/(1.0 +pX*pX + pY*pY);
-// 	normal.x = pX * denom;
-// 	normal.y = pX * denom;
-// 	normal.z = denom -1.0; 
-
-// 	return normal;
-// }
 
 #endif //__SHADER_LIGHTING_SH__

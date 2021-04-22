@@ -6,6 +6,7 @@ $input v_texcoord0, v_posWS, v_normal, v_tangent, v_bitangent
 #include "common/transform.sh"
 #include "common/utils.sh"
 #include "common/cluster_shading.sh"
+#include "pbr/pbr.sh"
 
 #ifdef UV_MOTION
 #include "common/uvmotion.sh"
@@ -17,219 +18,103 @@ $input v_texcoord0, v_posWS, v_normal, v_tangent, v_bitangent
 #endif //ENABLE_SHADOW
 
 // material properites
-SAMPLER2D(s_basecolor, 0);
+SAMPLER2D(s_basecolor,          0);
 SAMPLER2D(s_metallic_roughness, 1);	// r channel for metallic, g channel for roughness, occlusion map should put in b channel
-SAMPLER2D(s_normal, 2);
-SAMPLER2D(s_emissive, 3);
+SAMPLER2D(s_normal,             2);
+SAMPLER2D(s_emissive,           3);
+SAMPLER2D(s_occlusion,          4);
+// IBL
+SAMPLERCUBE(s_irradiance,       5);
+SAMPLERCUBE(s_prefilter,        6);
+SAMPLER2D(s_LUT,                7);
 
 uniform vec4 u_basecolor_factor;
-uniform vec4 u_metallic_roughness_factor;
-#define u_metallic_factor   u_metallic_roughness_factor.x
-#define u_roughness_factor  u_metallic_roughness_factor.y
 uniform vec4 u_emissive_factor;
+uniform vec4 u_pbr_factor;
+#define u_metallic_factor   u_pbr_factor.x
+#define u_roughness_factor  u_pbr_factor.y
+#define u_alpha_mask        u_pbr_factor.x
+#define u_alpha_mask_cutoff u_pbr_factor.y
 
-uniform vec4 u_texture_flags;
-#define u_basecolor_texture_flag			u_texture_flags.x
-#define u_metallic_roughness_texture_flag	u_texture_flags.y
-#define u_normal_texture_flag				u_texture_flags.z
-#define u_emissive_texture_flag				u_texture_flags.w
+uniform vec4 u_pbr_factor2;
+#define u_occlusion_strength u_pbr_factor2.x
+#define u_ibl_prefilter_mipmap_count u_pbr_factor2.y
 
-uniform vec4 u_diffuse_factor;
-uniform vec4 u_specular_factor;
-
-// IBL
-SAMPLERCUBE(s_irradiance, 4);
-SAMPLERCUBE(s_prefilteredmap, 5);
-SAMPLER2D(s_BRDFLUT, 6);
-
-uniform vec4 u_IBLparam;
-#define u_prefiltered_cube_mip_levels	u_IBLparam.x
-#define u_scaleIBLAmbient				u_IBLparam.y
-
-// alpha
-uniform vec4 u_alpha_info;
-#define u_alpha_mask u_alpha_info.x
-#define u_alpha_mask_cutoff u_alpha_info.y
-
-struct PBRInfo
+struct MaterialInfo
 {
-	float NdotL;                  	// cos angle between normal and light direction
-	float NdotV;                  	// cos angle between normal and view direction
-	float NdotH;                  	// cos angle between normal and half vector
-	float LdotH;                  	// cos angle between light direction and half vector
-	float VdotH;                  	// cos angle between view direction and half vector
-	float metallic;              	// metallic value at the surface
-	float roughness;   				// roughness value, as authored by the model creator (input to shader)
-	float alpha_roughness;        	// roughness mapped to a more linear change in the roughness (proposed by [2])
+    float perceptualRoughness;      // roughness value, as authored by the model creator (input to shader)
+    vec3 f0;                        // full reflectance color (n incidence angle)
+
+    float alphaRoughness;           // roughness mapped to a more linear change in the roughness (proposed by [2])
+    vec3 albedoColor;
+
+    vec3 f90;                       // reflectance color at grazing angle
+    float metallic;
+
+    vec3 n;
+    vec3 basecolor;
 };
 
-#define MIN_ROUGHNESS 0.04
-
-void get_metallic_roughness(vec2 texcoord, out float metallic, out float roughness)
+vec4 get_basecolor(vec2 texcoord)
 {
-    roughness = u_roughness_factor;
-    metallic = u_metallic_factor;
-    if (u_metallic_roughness_texture_flag > 0.0) {
-        vec4 mr		= texture2D(s_metallic_roughness, texcoord);
-        roughness	= mr.g * roughness;
-        metallic	= mr.b * metallic;
-    }
-
-	roughness	= clamp(roughness, MIN_ROUGHNESS, 1.0);
-	metallic 	= clamp(metallic, 0.0, 1.0);
+    #ifdef HAS_BASECOLOR_MAP_TEXTURE
+        return u_basecolor_factor * texture(s_basecolor, texcoord);
+    #else
+        return u_basecolor_factor;
+    #endif
 }
 
 vec3 get_normal(vec3 tangent, vec3 bitangent, vec3 normal, vec2 texcoord)
 {
-    if (u_normal_texture_flag > 0.0){
+    #ifdef HAS_NORMAL_TEXTURE
 		mat3 tbn = mtxFromCols(tangent, bitangent, normal);
 		vec3 normalTS = fetch_bc5_normal(s_normal, texcoord);
 		return instMul(normalTS, tbn);
-	}
-
-	return normal;
+    #else //!HAS_NORMAL_TEXTURE
+        return normal;
+	#endif //HAS_NORMAL_TEXTURE
 }
 
-vec3 lambertian_diffuse(vec3 basecolor)
+
+MaterialInfo getMetallicRoughnessInfo(MaterialInfo info, float f0_ior)
 {
-	return basecolor / M_PI;
+    info.metallic = u_MetallicFactor;
+    info.perceptualRoughness = u_RoughnessFactor;
+
+#ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
+    // Roughness is stored in the 'g' channel, metallic is stored in the 'b' channel.
+    // This layout intentionally reserves the 'r' channel for (optional) occlusion map data
+    vec4 mrSample = texture(u_MetallicRoughnessSampler, getMetallicRoughnessUV());
+    info.perceptualRoughness *= mrSample.g;
+    info.metallic *= mrSample.b;
+#endif
+
+    // Achromatic f0 based on IOR.
+    info.albedoColor = mix(info.basecolor.rgb * (1.0 - f0_ior),  vec3_splat(0.0), info.metallic);
+    info.f0 = mix(vec3_splat(f0_ior), info.basecolor.rgb, info.metallic);
+
+    return info;
 }
 
-vec4 get_basecolor(vec2 texcoord)
+float clamp_dot(vec3 x, vec3 y)
 {
-    if (u_basecolor_texture_flag > 0.0)
-		return texture2D_sRGB(s_basecolor, texcoord) * u_basecolor_factor;
-
-	return u_basecolor_factor;
+    return clamp(dot(x, y), 0.0, 1.0);
 }
 
-float DistributionGGX(float NdotH, float alpha_roughness)
+vec3 getIBLRadianceLambertian(vec3 n, vec3 diffuseColor)
 {
-    float a2 = alpha_roughness * alpha_roughness;
-
-    float NdotH2 = NdotH*NdotH;
-
-    float nom   = a2;
-    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
-    denom = M_PI * denom * denom;
-
-    return nom / denom;
+    return textureCube(s_irradiance, n).rgb * diffuseColor;
 }
 
-float GeometrySchlickGGX(float NdotV, float roughness)
+vec3 getIBLRadianceGGX(vec3 n, vec3 v, float NdotV, float perceptualRoughness, vec3 specularColor)
 {
-    float r = (roughness + 1.0);
-    float k = (r*r) / 8.0;
+    float lod = clamp(perceptualRoughness * u_ibl_prefilter_mipmap_count, 0.0, u_ibl_prefilter_mipmap_count);
+    vec3 reflection = normalize(reflect(-v, n));
 
-    float nom   = NdotV;
-    float denom = NdotV * (1.0 - k) + k;
-
-    return nom / denom;
-}
-
-float GeometrySmith(float NdotV, float NdotL, float roughness)
-{
-    return 	GeometrySchlickGGX(NdotV, roughness) * 
-    		GeometrySchlickGGX(NdotL, roughness);
-}
-
-vec3 fresnelSchlick(float NdotH, vec3 F0, vec3 F90)
-{
-	return F0 + (F90 - F0) * pow(1.0 - NdotH, 5.0);
-}
-
-vec3 fresnelSchlickSimple(float NdotH, vec3 F0)
-{
-    return fresnelSchlick(NdotH, F0, vec3_splat(1.0));
-}
-
-vec3 fresnelSchlickRoughness(float NdotH, vec3 F0, float roughness)
-{
-	vec3 F90 = max(vec3_splat(1.0 - roughness), F0);
-    return fresnelSchlick(NdotH, F0, F90);
-}
-
-vec3 diffuse_percent(vec3 kS, float metallic)
-{
-	vec3 kD = vec3_splat(1.0) - kS;
-	return kD * (1.0 - metallic);
-}
-
-vec3 calc_direct_lighting(PBRInfo pbr_info, vec3 radiance, vec3 basecolor, vec3 F0)
-{
-	float N = DistributionGGX(pbr_info.NdotH, pbr_info.alpha_roughness);
-	float G = GeometrySmith(pbr_info.NdotV, pbr_info.NdotL, pbr_info.roughness);
-	vec3  F = fresnelSchlickSimple(pbr_info.NdotH, F0);
-
-	vec3 specular = (N * G * F) / (4 * pbr_info.NdotV * pbr_info.NdotV + 0.001);
-
-	vec3 kD = diffuse_percent(F, pbr_info.metallic);
-	vec3 diffuse = kD * lambertian_diffuse(basecolor);
-
-	return (diffuse + specular) * radiance * pbr_info.NdotL; 
-}
-
-vec3 calc_indirect_lighting_IBL(PBRInfo pbr_info, vec3 N, vec3 R, vec3 basecolor, vec3 F0)
-{
-	vec3 F = fresnelSchlickRoughness(pbr_info.NdotH, F0, pbr_info.roughness);
-
-#define MAX_REFLECTION_LOD 4.0
-    vec3 prefiltered = textureCubeLod(s_prefilteredmap, R, pbr_info.roughness * MAX_REFLECTION_LOD).rgb;
-    vec2 brdf  = texture2D(s_BRDFLUT, vec2(pbr_info.NdotV, pbr_info.roughness)).rg;
-    vec3 specular = prefiltered * (F * brdf.x + brdf.y);
-
-	vec3 kD = diffuse_percent(F, pbr_info.metallic);
-
-	vec3 irradiance = textureCube(s_irradiance, N).rgb;
-    vec3 diffuse    = kD * irradiance * basecolor;
-	return diffuse + specular;
-}
-
-void add_emissive(vec2 texcoord, inout vec3 color)
-{
-	if (u_emissive_texture_flag > 0.0) {
-		vec3 emissive = texture2D_sRGB(s_emissive, texcoord).rgb * u_emissive_factor.rgb;
-		color += emissive;
-	}
-}
-
-float to_alpha_roughness(float roughness)
-{
-	return roughness * roughness;
-}
-
-vec3 light_radiance(light_info l, vec3 wpos, out vec3 p2l)
-{
-#define IS_DIRECTIONAL_LIGHT(_type) (_type == 0)
-#define IS_POINT_LIGHT(_type)	(_type==1)
-#define IS_SPOT_LIGHT(_type)	(_type==2)
-	vec3 radiance = l.color.rgb * l.intensity;
-	if (IS_DIRECTIONAL_LIGHT(l.type)){
-		p2l = l.dir;
-	} else {
-		p2l = l.pos.xyz - wpos;
-		float dist = length(p2l);
-		p2l /= dist;
-
-		// make radiance attenuation by dist square
-		radiance /= (dist*dist);
-		if (IS_SPOT_LIGHT(l.type)){
-			float theta = dot(l.dir, p2l);
-			float t = max(theta - l.inner_cutoff, 0.0) / (l.outter_cutoff - l.inner_cutoff);
-			radiance *= clamp(t, 0.0, 1.0);
-		}
-	}
-
-	return radiance;
-}
-
-PBRInfo init_pbr_inputs(vec3 N, vec3 V, float roughness, float metallic){
-	PBRInfo pbr_inputs;
-	pbr_inputs.NdotV 			= max(dot(N, V), 0.0);
-	pbr_inputs.roughness 		= roughness;
-	pbr_inputs.metallic 		= metallic;
-	pbr_inputs.alpha_roughness 	= to_alpha_roughness(roughness);
-	return pbr_inputs;
+    vec2 brdfSamplePoint = clamp(vec2(NdotV, perceptualRoughness), vec2(0.0, 0.0), vec2(1.0, 1.0));
+    vec2 brdf = texture(s_LUT, brdfSamplePoint).rg;
+    vec3 specularLight = textureCubeLod(s_prefilter, reflection, lod).rgb;
+   return specularLight * (specularColor * brdf.x + brdf.y);
 }
 
 void main()
@@ -239,19 +124,66 @@ void main()
 #else //!UV_MOTION
 	vec2 uv = v_texcoord0;
 #endif //UV_MOTION
-	vec4 basecolor = get_basecolor(uv);
+    vec4 basecolor = get_basecolor(uv);
 
-	float metallic, roughness;
-	get_metallic_roughness(uv, metallic, roughness);
+#ifdef MATERIAL_UNLIT
+    gl_FragColor = basecolor;
+    return;
+#endif
 
-	vec3 N = get_normal(v_tangent, v_bitangent, v_normal, uv);
-	vec3 V = normalize(u_eyepos.xyz - v_posWS.xyz);
-	vec3 R = normalize(reflect(-V, N));
+#ifdef ALPHAMODE_OPAQUE
+    basecolor.a = u_alpha_mask;
+#endif
 
-	vec3 F0 = mix(vec3_splat(0.04), basecolor.rgb, metallic);
+#ifdef ALPHAMODE_MASK
+    // Late discard to avaoid samplig artifacts. See https://github.com/KhronosGroup/glTF-Sample-Viewer/issues/267
+    if(basecolor.a < u_alpha_mask_cutoff)
+    {
+        discard;
+    }
+    basecolor.a = 1.0;
+#endif
 
-	PBRInfo pbr_inputs = init_pbr_inputs(N, V, roughness, metallic);
-	vec3 color = vec3_splat(0);
+    vec3 v = normalize(u_eyepos - v_posWS.xyz);
+    vec3 n = get_normal(v_tangent, v_bitangent, v_normal, uv);
+    float NdotV = clamp_dot(n, v);
+
+    MaterialInfo materialInfo;
+    materialInfo.basecolor  = basecolor.rgb;
+    materialInfo            = getMetallicRoughnessInfo(materialInfo, MIN_ROUGHNESS);
+    materialInfo.perceptualRoughness = clamp(materialInfo.perceptualRoughness, 0.0, 1.0);
+    materialInfo.metallic   = clamp(materialInfo.metallic, 0.0, 1.0);
+
+    // Roughness is authored as perceptual roughness; as is convention,
+    // convert to material roughness by squaring the perceptual roughness.
+    materialInfo.alphaRoughness = materialInfo.perceptualRoughness * materialInfo.perceptualRoughness;
+
+    // Compute reflectance.
+    float reflectance = max(max(materialInfo.f0.r, materialInfo.f0.g), materialInfo.f0.b);
+
+    // Anything less than 2% is physically impossible and is instead considered to be shadowing. Compare to "Real-Time-Rendering" 4th editon on page 325.
+    materialInfo.f90 = vec3(clamp(reflectance * 50.0, 0.0, 1.0));
+
+    materialInfo.n = n;
+
+    // LIGHTING
+    vec3 f_specular = vec3_splat(0.0);
+    vec3 f_diffuse = vec3_splat(0.0);
+
+    float NdotV = clamp_dot(n, v);
+
+    // Calculate lighting contribution from image based lighting source (IBL)
+#ifdef USE_IBL
+    f_specular += getIBLRadianceGGX(NdotV, materialInfo.perceptualRoughness, materialInfo.f0);
+    f_diffuse += getIBLRadianceLambertian(n, materialInfo.albedoColor);
+#endif
+
+#ifdef HAS_OCCLUSION_TEXTURE
+    float ao = texture(s_occlusion,  uv).r;
+    f_diffuse = mix(f_diffuse, f_diffuse * ao, u_occlusion_strength);
+    // apply ambient occlusion too all lighting that is not punctual
+    f_specular = mix(f_specular, f_specular * ao, u_occlusion_strength);
+#endif
 
 #ifdef CLUSTER_SHADING
 	uint cluster_idx = which_cluster(gl_FragCoord.xyz);
@@ -265,31 +197,46 @@ void main()
 	for (uint ilight=0; ilight<u_light_count[0]; ++ilight)
 	{
 #endif //CLUSTER_SHADING
-		light_info l; load_light_info(b_lights, ilight, l);
-		vec3 L;
-		vec3 radiance = light_radiance(l, v_posWS.xyz, L);
+        light_info l; load_light_info(b_lights, ilight, l);
 
-		vec3 H = normalize(L+V);
-		pbr_inputs.NdotL = max(dot(N, L), 0.0);
-		pbr_inputs.LdotH = max(dot(L, H), 0.0);
-		pbr_inputs.NdotH = max(dot(N, H), 0.0);
-		pbr_inputs.VdotH = max(dot(V, H), 0.0);
-		color += calc_direct_lighting(pbr_inputs, radiance, basecolor.rgb, F0);
-	}
+        vec3 pointToLight = l.dir;
+        float rangeAttenuation = 1.0;
+        float spotAttenuation = 1.0;
 
-#ifdef ENABLE_SHADOW
-	float visibility = shadow_visibility(v_distanceVS, vec4(v_posWS.xyz, 1.0));
-	vec4 finalcolor = vec4(mix(u_shadow_color, color.rgb, visibility), basecolor.a);
-#else //!ENABLE_SHADOW
-	vec4 finalcolor = vec4(color, basecolor.a);
-#endif //ENABLE_SHADOW
- 	//vec4 finalcolor = vec4(color, basecolor.a);
+        if(!IS_DIRECTIONAL_LIGHT(l.type))
+        {
+            pointToLight = l.pos - v_posWS.xyz;
+            rangeAttenuation = getRangeAttenuation(l.range, length(pointToLight));
+            if (IS_SPOT_LIGHT(l.type))
+            {
+                spotAttenuation = getSpotAttenuation(pointToLight, l.dir, l.outter_cutoff, l.inner_cutoff);
+            }
+        }
 
-#ifdef ENABLE_BLOOM
-	add_emissive(uv, gl_FragData[1]);
-#else //!ENABLE_BLOOM
-	add_emissive(uv, color);
+        vec3 intensity = rangeAttenuation * spotAttenuation * light.intensity * light.color;
+
+        vec3 l = normalize(pointToLight);   // Direction from surface point to light
+        vec3 h = normalize(l + v);          // Direction of the vector between l and v, called halfway vector
+        float NdotL = clamp_dot(n, l);
+        float NdotH = clamp_dot(n, h);
+        float LdotH = clamp_dot(l, h);
+        float VdotH = clamp_dot(v, h);
+
+        if (NdotL > 0.0 || NdotV > 0.0)
+        {
+            // Calculation of analytical light
+            // https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#acknowledgments AppendixB
+            f_diffuse += intensity * NdotL *  BRDF_lambertian(materialInfo.f0, materialInfo.f90, materialInfo.albedoColor, VdotH);
+            f_specular += intensity * NdotL * BRDF_specularGGX(materialInfo.f0, materialInfo.f90, materialInfo.alphaRoughness, VdotH, NdotL, NdotV, NdotH);
+        }
+    }
+#endif // !USE_PUNCTUAL
+
+    vec3 f_emissive = u_emissive_factor.rgb;
+#ifdef HAS_EMISSIVE_TEXTURE
+    f_emissive *= texture(s_emissive, uv).rgb;
 #endif
 
-	gl_FragColor = output_color_sRGB(finalcolor);
+    vec3 color = f_emissive + diffuse + f_specular;
+    gl_FragColor = vec4(color.rgb, basecolor.a);
 }

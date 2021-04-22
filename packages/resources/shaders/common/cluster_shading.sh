@@ -1,4 +1,5 @@
 #include "bgfx_compute.sh"
+#include "lighting.sh"
 
 #ifndef ORIGIN_TOP_LEFT
 #define ORIGIN_TOP_LEFT 1
@@ -7,19 +8,6 @@
 #ifndef HOMOGENEOUS_DEPTH
 #define HOMOGENEOUS_DEPTH 0
 #endif //HOMOGENEOUS_DEPTH
-
-//TODO: if we need more accurate attenuation, we can utilize pos.w/dir.w/color.w to transfer data, right now, the light attenuation: light_color/(distance*distance), 
-struct light_info{
-	vec3	pos;
-	float	range;
-	vec3	dir;
-	float	enable;
-	vec4	color;
-	float	type;
-	float	intensity;
-	float	inner_cutoff;
-	float	outter_cutoff;
-};
 
 struct light_grid{
     uint offset;

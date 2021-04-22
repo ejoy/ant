@@ -1,5 +1,5 @@
 fx:
-    cs: /pkg/ant.resources/shaders/ibl/cs_build_prefiltermap.sc
+    cs: /pkg/ant.resources/shaders/pbr/ibl/cs_build_prefiltermap.sc
     setting:
         BUILD_PREFILTER_MAP: 1
         lighting: off

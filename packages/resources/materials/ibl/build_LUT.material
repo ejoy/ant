@@ -1,5 +1,5 @@
 fx:
-    cs: /pkg/ant.resources/shaders/ibl/cs_build_LUT.sc
+    cs: /pkg/ant.resources/shaders/pbr/ibl/cs_build_LUT.sc
     setting:
         BUILD_LUT: 1
         lighting: off

@@ -6,12 +6,11 @@ uniform vec4 u_ibl_param;
 #define u_face_texture_size u_ibl_param.z
 #define u_roughness         u_ibl_param.w
 
-#define MATH_PI 3.14159265359
-#define MIN_ROUGHNESS 0.04
-
 #ifndef WORKGROUP_THREADS
 #define WORKGROUP_THREADS 8
 #endif //WORKGROUP_THREADS
+
+#include "pbr/pbr.sh"
 
 vec3 uv2dir(int face, vec2 uv)
 {
@@ -34,8 +33,8 @@ vec3 uv2dir(int face, vec2 uv)
 vec2 dir2uv(vec3 dir)
 {
     return vec2(
-            0.5f + 0.5f * atan2(dir.z, dir.x) / MATH_PI,
-            1.f - acos(dir.y) / MATH_PI);
+            0.5f + 0.5f * atan2(dir.z, dir.x) / M_PI,
+            1.f - acos(dir.y) / M_PI);
 }
 
 vec3 id2dir(ivec3 id, float size)
@@ -78,7 +77,7 @@ float compute_lod(float pdf)
 {
     // IBL Baker (Matt Davidson)
     // https://github.com/derkreature/IBLBaker/blob/65d244546d2e79dd8df18a28efdabcf1f2eb7717/data/shadersD3D11/IblImportanceSamplingDiffuse.fx#L215
-    float solidAngleTexel = 4.0 * MATH_PI / (6.0 * float(u_face_texture_size) * float(u_sample_count));
+    float solidAngleTexel = 4.0 * M_PI / (6.0 * float(u_face_texture_size) * float(u_sample_count));
     float solidAngleSample = 1.0 / (float(u_sample_count) * pdf);
     float lod = 0.5 * log2(solidAngleSample / solidAngleTexel);
 
@@ -106,19 +105,9 @@ vec2 hammersley2d(int i, int N)
     return vec2(float(i)/float(N), radicalInverse_VdC(uint(i)));
 }
 
-// NDF
-float D_GGX(float NdotH, float roughness)
-{
-    float alpha = roughness * roughness;
-    float alpha2 = alpha * alpha;
-
-    float divisor = NdotH * NdotH * (alpha2 - 1.0) + 1.0;
-    return alpha2 / (MATH_PI * divisor * divisor);
-}
-
 float PDF_GGX(float NdotH, float roughness)
 {
-    float D = D_GGX(NdotH, roughness);
+    float D = DistributionGGX(NdotH, roughness * roughness);
     return max(D / 4.0, 0.0);
 }
 
@@ -129,7 +118,7 @@ vec3 importance_sample_GGX(int sampleidx, vec3 N, float roughness)
     float alpha = roughness * roughness;
     float cos_theta = sqrt((1.0 - hp2d.x) / (1.0 + (alpha*alpha - 1.0) * hp2d.x));
     float sin_theta = sqrt(1.0 - cos_theta*cos_theta);
-    float phi = 2.0 * MATH_PI * hp2d.y;
+    float phi = 2.0 * M_PI * hp2d.y;
     float cos_phi = cos(phi);
     float sin_phi = sin(phi);
 
@@ -146,7 +135,7 @@ vec3 importance_sample_irradiance(int sampleidx, vec3 N)
     // http://www.pbr-book.org/3ed-2018/Monte_Carlo_Integration/2D_Sampling_with_Multidimensional_Transformations.html#Cosine-WeightedHemisphereSampling
     float cos_theta = sqrt(1.0 - hp2d.x);
     float sin_theta = sqrt(hp2d.x); // equivalent to `sqrt(1.0 - cos_theta*cos_theta)`;
-    float phi = 2.0 * MATH_PI * hp2d.y;
+    float phi = 2.0 * M_PI * hp2d.y;
 
     float cos_phi = cos(phi);
     float sin_phi = sin(phi);
@@ -156,5 +145,5 @@ vec3 importance_sample_irradiance(int sampleidx, vec3 N)
 
 float PDF_irradiance(float NdotH)
 {
-    return NdotH / MATH_PI;
+    return NdotH / M_PI;
 }
