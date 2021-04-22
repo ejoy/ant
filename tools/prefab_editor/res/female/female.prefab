@@ -35,7 +35,7 @@ data:
     punching: /pkg/ant.resources.binary/meshes/female/animations/punching.ozz
     running: /pkg/ant.resources.binary/meshes/female/animations/running.ozz
   animation_birth: idle
-  material: /pkg/ant.resources.binary/meshes/female/female.glb|materials/asdf1_Beta_HighLimbsGeoSG2.material
+  material: /pkg/tools.prefab_editor/res/female/test.material
   mesh: /pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Surface_P1.meshbin
   meshskin: /pkg/ant.resources.binary/meshes/female/female.glb|meshes/skin2.skinbin
   name: Beta_Surface.1

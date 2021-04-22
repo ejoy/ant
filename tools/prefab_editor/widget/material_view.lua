@@ -87,6 +87,11 @@ local do_save = function(eid, path)
     end
 end
 
+function MaterialView:clear()
+    if not self.eid then return end
+    mtldata_list[self.eid] = nil
+end
+
 function MaterialView:on_save_mat()
     local path = self.mat_file:get_path()
     do_save(self.eid, path)
@@ -96,6 +101,10 @@ function MaterialView:on_saveas_mat()
     local path = uiutils.get_saveas_path("Material", ".material")
     if path then
         do_save(self.eid, path)
+        local vpath = "/" .. tostring(vfs.virtualpath(fs.path(path)))
+        if vpath == self.mat_file:get_path() then
+            assetmgr.unload(vpath)
+        end
     end
 end
 
@@ -142,6 +151,7 @@ function MaterialView:set_model(eid)
     if not BaseView.set_model(self, eid) then return false end
 
     if not mtldata_list[eid] then
+        --self.samplers = {}
         local mtl_filename = tostring(world[eid].material)
         local md = {filename = mtl_filename, tdata = datalist.parse(cr.read_file(mtl_filename))}
         local mtl_path = cr.compile(mtl_filename):remove_filename()
@@ -182,8 +192,8 @@ function MaterialView:set_model(eid)
                     imaterial.set_property(eid, "u_texture_flags", used_flags)
                     local prop = imaterial.get_property(eid, k)
                     local mtl_filename = tostring(world[eid].material)
-                    local relative_path = lfs.relative(lfs.path(value), lfs.path(mtl_filename):remove_filename())
-                    tdata.properties[k].texture = relative_path:string()
+                    --local relative_path = lfs.relative(lfs.path(value), lfs.path(mtl_filename):remove_filename())
+                    tdata.properties[k].texture = value--relative_path:string()
                     imaterial.set_property(eid, k, {stage = prop.value.stage, texture = {handle = runtime_tex._data.handle}})
                 end
             )
@@ -211,11 +221,13 @@ function MaterialView:set_model(eid)
             self.uniforms[#self.uniforms + 1] = pro
         end
     end
+    table.sort(self.samplers, function(a, b) return a.label < b.label end)
     self:update()
     return true
 end
 
 function MaterialView:update()
+    if not self.eid then return end
     BaseView.update(self)
     self.mat_file:update()
     self.vs_file:update()
@@ -230,6 +242,7 @@ function MaterialView:update()
 end
 
 function MaterialView:show()
+    if not self.eid then return end
     BaseView.show(self)
     if imgui.widget.TreeNode("Material", imgui.flags.TreeNode { "DefaultOpen" }) then
         self.mat_file:show()

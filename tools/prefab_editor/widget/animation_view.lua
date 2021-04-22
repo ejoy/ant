@@ -862,7 +862,6 @@ local function show_joints(root)
     end
 end
 
-local open_prefab_event
 local anim_name = ""
 local ui_anim_name = {text = ""}
 local anim_path = ""
@@ -881,20 +880,6 @@ end
 
 function m.show()
     if not current_eid or not world[current_eid] then return end
-    -- if not open_prefab_event then
-    --     open_prefab_event = world:sub {"editor", "OpenPrefab"}
-    -- end
-    -- for _, what in open_prefab_event:unpack() do
-    --     if what == "OpenPrefab" then
-    --         clear_edit_data()
-    --     end
-    --     -- for i, c in ipairs(collider_list) do
-    --     --     if collider_list[i] == old then
-    --     --         collider_list[i] = new
-    --     --         break;
-    --     --     end
-    --     -- end
-    -- end
     local reload = false
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
@@ -1125,7 +1110,6 @@ function m.show()
         end
     end
     if reload then
-        m.clear()
         prefab_mgr:save_prefab()
         prefab_mgr:reload()
     end

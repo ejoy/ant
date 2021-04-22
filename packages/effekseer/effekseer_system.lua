@@ -13,6 +13,15 @@ effekseer.update_transform = math3d_adapter.matrix(effekseer.update_transform, 2
 
 local effekseer_sys = ecs.system "effekseer_system"
 
+-- local m = ecs.component "effekseer"
+
+-- function m:init()
+-- 	effekseer.set_loop(self.handle, self.loop)
+--     effekseer.set_speed(self.handle, self.speed)
+--     if e.auto_play then
+--         effekseer.play(self.handle)
+--     end
+-- end
 
 function effekseer_sys:init()
     local shader_defines = {
@@ -78,6 +87,15 @@ function effekseer_sys:init()
     filemgr.add("/pkg/ant.resources.binary/effekseer/Base")
 end
 
+local iplay = ecs.interface "effekseer_playback"
+
+function iplay.play(eid, loop, speed)
+    local eh = world[eid].effekseer.handle
+    effekseer.set_speed(eh, speed or 1.0)
+    effekseer.set_loop(eh, loop or false)
+    effekseer.play(eh)
+end
+
 local itimer = world:interface "ant.timer|timer"
 
 function effekseer_sys:camera_usage()
@@ -89,8 +107,18 @@ end
 
 
 local iom = world:interface "ant.objcontroller|obj_motion"
-
+local event_entity_register = world:sub{"entity_register"}
 function effekseer_sys:ui_update()
+    for _, eid in event_entity_register:unpack() do
+        if world[eid].effekseer then
+            local eh = world[eid].effekseer.handle
+            effekseer.set_loop(eh, world[eid].loop)
+            effekseer.set_speed(eh, world[eid].speed)
+            if world[eid].auto_play then
+                effekseer.play(eh)
+            end
+        end
+    end
     -- local dt = itimer.delta() * 0.001
     for _, eid in world:each "effekseer" do
 		local e = world[eid]

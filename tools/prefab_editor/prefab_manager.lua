@@ -11,7 +11,7 @@ local gd            = require "common.global_data"
 local utils         = require "common.utils"
 local effekseer     = require "effekseer"
 local subprocess    = require "sp_util"
-
+local anim_view
 local geo_utils
 local logger
 local ilight
@@ -422,6 +422,7 @@ local function convert_path(path, glb_filename)
 end
 
 function m:open(filename)
+    world:pub {"PreOpenPrefab", filename}
     local prefab = get_prefab(filename)
     local path_list = split(filename)
     local glb_filename
@@ -669,7 +670,8 @@ end
 function m:update_material(eid, mtl)
     local prefab = hierarchy:get_template(eid)
     prefab.template.data.material = mtl
-    return self:recreate_entity(eid)
+    self:save_prefab()
+    self:reload()
 end
 
 local utils = require "common.utils"
