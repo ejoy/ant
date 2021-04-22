@@ -48,6 +48,7 @@ function init_ibl_trans.process_entity(e)
         prefilter    = {
             handle = bgfx.create_texturecube(prefilter_size, true, 1, "RGBA16F", prefitlerflags),
             size = prefilter_size,
+            mipmap_count = math.log(prefilter_size, 2)+1,
         },
         LUT             = {
             handle = bgfx.create_texture2d(LUT_size, LUT_size, false, 1, "RG16F", flags),
@@ -81,8 +82,8 @@ local function create_irradiance_entity(ibl)
     local properties = e._rendercache.properties
     properties.s_irradiance = icompute.create_image_property(ibl.irradiance.handle, 1, 0, "w")
 
-    if properties.u_ibl_param then
-        local ip_v = properties.u_ibl_param.value
+    if properties.u_build_ibl_param then
+        local ip_v = properties.u_build_ibl_param.value
         ip_v.v = math3d.set_index(ip_v, 3, ibl.irradiance.size)
     end
     return {
@@ -97,13 +98,13 @@ end
 local function create_prefilter_entity(ibl)
     local size = ibl.prefilter.size
 
-    local num_mipmap = math.log(size, 2)+1
-    local dr = 1 / (num_mipmap-1)
+    local mipmap_count = ibl.prefilter.mipmap_count
+    local dr = 1 / (mipmap_count-1)
     local r = 0
     local eids = {}
     local source_tex = {stage = 0, texture={handle=ibl.source.handle}}
     local prefilter_stage<const> = 1
-    for i=1, num_mipmap do
+    for i=1, mipmap_count do
         local s = size >> (i-1)
         local dispatchsize = {
             math.floor(s / thread_group_size), math.floor(s / thread_group_size), 6
@@ -116,7 +117,7 @@ local function create_prefilter_entity(ibl)
         imaterial.set_property(eid, "s_source", source_tex)
         local properties = world[eid]._rendercache.properties
 
-        local ip = properties.u_ibl_param
+        local ip = properties.u_build_ibl_param
         if ip then
             local ipv = ip.value
             ipv.v = math3d.set_index(ipv, 3, s)

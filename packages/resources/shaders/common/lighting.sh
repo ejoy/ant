@@ -25,29 +25,16 @@ struct light_info{
 #define IS_SPOT_LIGHT(_type)        (_type==LightType_Spot)
 
 // https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_lights_punctual/README.md#range-property
-float getRangeAttenuation(float range, float distance)
+float get_range_attenuation(float range, float distance)
 {
-    if (range <= 0.0)
-    {
-        // negative range means unlimited
-        return 1.0 / pow(distance, 2.0);
-    }
     return max(min(1.0 - pow(distance / range, 4.0), 1.0), 0.0) / pow(distance, 2.0);
 }
 
 // https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_lights_punctual/README.md#inner-and-outer-cone-angles
-float getSpotAttenuation(vec3 pointToLight, vec3 spotDirection, float outerConeCos, float innerConeCos)
+float get_spot_attenuation(vec3 pt2l, vec3 spotdir, float outer_cone, float inner_cone)
 {
-    float actualCos = dot(normalize(spotDirection), normalize(-pointToLight));
-    if (actualCos > outerConeCos)
-    {
-        if (actualCos < innerConeCos)
-        {
-            return smoothstep(outerConeCos, innerConeCos, actualCos);
-        }
-        return 1.0;
-    }
-    return 0.0;
+    float cosv = dot(normalize(spotdir), normalize(-pt2l));
+    return smoothstep(outer_cone, inner_cone, cosv);
 }
 
 #endif //__SHADER_LIGHTING_SH__

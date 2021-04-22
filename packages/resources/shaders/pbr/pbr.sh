@@ -117,4 +117,5 @@ vec3 BRDF_specularGGX(vec3 f0, vec3 f90, float alphaRoughness, float VdotH, floa
 //     float sheenVisibility = V_Sheen(NdotL, NdotV, sheenRoughness);
 //     return sheenColor * sheenDistribution * sheenVisibility;
 // }
+
 #endif //__PBR_SH__

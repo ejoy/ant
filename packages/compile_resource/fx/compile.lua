@@ -111,6 +111,7 @@ local function default_macros()
     local m = {
         "ENABLE_SRGB_TEXTURE",
         "ENABLE_SRGB_FB",
+        "ENABLE_IBL"
     }
 
     if enable_cs then

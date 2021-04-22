@@ -31,7 +31,9 @@ local system_properties = {
 	b_light_index_lists		= def_buffer_prop(-1),
 	b_light_info			= def_buffer_prop(-1),
 	u_time					= math3d.ref(mc.ZERO_PT),
+
 	--IBL
+	u_ibl_param				= math3d.ref(mc.ZERO_PT),
 	s_irradiance			= def_tex_prop(5),
 	s_prefilter				= def_tex_prop(6),
 	s_LUT					= def_tex_prop(7),
@@ -83,6 +85,9 @@ local function update_lighting_properties()
 		system_properties["s_irradiance"].texture.handle= ibl.irradiance.handle
 		system_properties["s_prefilter"].texture.handle	= ibl.prefilter.handle
 		system_properties["s_LUT"].texture.handle		= ibl.LUT.handle
+
+		local ip = system_properties["u_ibl_param"]
+		ip.v = math3d.set_index(ip, 1, ibl.prefilter.mipmap_count)
 	end
 
 	if ilight.use_cluster_shading() then

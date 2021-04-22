@@ -306,25 +306,25 @@ return function (output, glbdata, exports, tolocalpath)
 
             local setting = {}
             if pbr_mr.baseColorTexture then 
-                setting[#setting+1] = "HAS_BASECOLOR_MAP_TEXTURE"
+                setting["HAS_BASECOLOR_MAP_TEXTURE"] = 1
             end
             if pbr_mr.metallicRoughnessTexture then
-                setting[#setting+1] = "HAS_METALLIC_ROUGHNESS_TEXTURE"
+                setting["HAS_METALLIC_ROUGHNESS_TEXTURE"] = 1
             end
             if pbr_mr.normalTexture then
-                setting[#setting+1] = "HAS_METALLIC_ROUGHNESS_TEXTURE"
+                setting["HAS_NORMAL_TEXTURE"] = 1
             end
             if mat.occlusionTexture then
-                setting[#setting+1] = "HAS_OCCLUSION_TEXTURE"
+                setting["HAS_OCCLUSION_TEXTURE"] = 1
             end
             if mat.emissiveTexture then
-                setting[#setting+1] = "HAS_EMISSIVE_TEXTURE"
+                setting["HAS_EMISSIVE_TEXTURE"] = 1
             end
             if mat.alphaMode == "OPAQUE" then
-                setting[#setting+1] = "ALPHAMODE_OPAQUE"
+                setting["ALPHAMODE_OPAQUE"] = 1
             end
             if mat.alphaCutoff then
-                setting[#setting+1] = "ALPHAMODE_MASK"
+                setting["ALPHAMODE_MASK"] = 1
             end
 
             material.fx.setting = setting

@@ -1,10 +1,10 @@
 // from: https://github.com/KhronosGroup/glTF-Sample-Viewer/blob/master/source/shaders/ibl_filtering.frag
 
-uniform vec4 u_ibl_param;
-#define u_sample_count      u_ibl_param.x
-#define u_lod_bias          u_ibl_param.y
-#define u_face_texture_size u_ibl_param.z
-#define u_roughness         u_ibl_param.w
+uniform vec4 u_build_ibl_param;
+#define u_sample_count      u_build_ibl_param.x
+#define u_lod_bias          u_build_ibl_param.y
+#define u_face_texture_size u_build_ibl_param.z
+#define u_roughness         u_build_ibl_param.w
 
 #ifndef WORKGROUP_THREADS
 #define WORKGROUP_THREADS 8
