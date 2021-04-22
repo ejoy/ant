@@ -19,7 +19,6 @@ function init_ibl_trans.process_entity(e)
     local prefilter_size     = ibl.prefilter.size
     local LUT_size              = ibl.LUT.size
 
-    local fmt<const> = "RGBA16F"
     local flags = sampler.sampler_flag {
         MIN="LINEAR",
         MAG="LINEAR",
@@ -43,15 +42,15 @@ function init_ibl_trans.process_entity(e)
             handle = nil,
         },
         irradiance   = {
-            handle = bgfx.create_texturecube(irradiance_size, false, 1, fmt, flags),
+            handle = bgfx.create_texturecube(irradiance_size, false, 1, "RGBA16F", flags),
             size = irradiance_size,
         },
         prefilter    = {
-            handle = bgfx.create_texturecube(prefilter_size, true, 1, fmt, prefitlerflags),
+            handle = bgfx.create_texturecube(prefilter_size, true, 1, "RGBA16F", prefitlerflags),
             size = prefilter_size,
         },
         LUT             = {
-            handle = bgfx.create_texture2d(LUT_size, LUT_size, false, 1, fmt, flags),
+            handle = bgfx.create_texture2d(LUT_size, LUT_size, false, 1, "RG16F", flags),
             size = LUT_size,
         }
     }
@@ -99,7 +98,7 @@ local function create_prefilter_entity(ibl)
     local size = ibl.prefilter.size
 
     local num_mipmap = math.log(size, 2)+1
-    local dr = 1 / num_mipmap
+    local dr = 1 / (num_mipmap-1)
     local r = 0
     local eids = {}
     local source_tex = {stage = 0, texture={handle=ibl.source.handle}}
@@ -107,22 +106,31 @@ local function create_prefilter_entity(ibl)
     for i=1, num_mipmap do
         local s = size >> (i-1)
         local dispatchsize = {
-            s / thread_group_size, s / thread_group_size, 6
+            math.floor(s / thread_group_size), math.floor(s / thread_group_size), 6
         }
-        r = r + dr
 
+        print("dispatchsize:", dispatchsize[1], dispatchsize[2], dispatchsize[3])
         local eid = icompute.create_compute_entity(
             "irradiance_builder", "/pkg/ant.resources/materials/ibl/build_prefilter.material", dispatchsize)
 
         imaterial.set_property(eid, "s_source", source_tex)
         local properties = world[eid]._rendercache.properties
+
+        local ip = properties.u_ibl_param
+        if ip then
+            local ipv = ip.value
+            ipv.v = math3d.set_index(ipv, 3, s)
+            ipv.v = math3d.set_index(ipv, 4, r)
+        end
         local mipidx = i-1
-        
-        properties.s_prefilter = icompute.create_image_property(ibl.irradiance.handle, prefilter_stage, mipidx, "w")
+        properties.s_prefilter = icompute.create_image_property(ibl.prefilter.handle, prefilter_stage, mipidx, "w")
         eids[#eids+1] = eid
+        r = r + dr
     end
+
+    assert(math.abs(r-1.0) >= dr)
     return {
-        eids = {},
+        eids = eids,
         name = "prefilter",
         dispatch = function (self)
             for _, eid in ipairs(self.eids) do
@@ -141,11 +149,11 @@ local function create_LUT_entity(ibl)
         "irradiance_builder", "/pkg/ant.resources/materials/ibl/build_LUT.material", dispatchsize)
 
     local LUT_stage<const> = 0
-    world[eid]._rendercache.properties.s_prefilter = icompute.create_image_property(ibl.irradiance.handle, LUT_stage, 0, "w")
+    world[eid]._rendercache.properties.s_prefilter = icompute.create_image_property(ibl.LUT.handle, LUT_stage, 0, "w")
     return {
         eid = eid,
         name = "LUT",
-        function (self)
+        dispatch = function (self)
             dispatch(self.eid)
         end
     }

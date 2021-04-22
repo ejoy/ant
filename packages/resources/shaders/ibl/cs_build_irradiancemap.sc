@@ -13,7 +13,7 @@ void main()
     vec4 color = vec4_splat(0.f);
     vec3 N = id2dir(gl_GlobalInvocationID, u_face_texture_size);
 
-    for (uint sampleidx=0; sampleidx<u_sample_count; ++sampleidx){
+    for (int sampleidx=0; sampleidx < int(u_sample_count); ++sampleidx){
         vec3 H = importance_sample_irradiance(sampleidx, N);
         float NdotH = saturate(H.z);
         float pdf = PDF_irradiance(NdotH);

@@ -14,7 +14,7 @@ float V_SmithGGXCorrelated(float NoV, float NoL, float roughness)
 }
 
 
-vec3 LUT(float NdotV, float roughness)
+vec2 LUT(float NdotV, float roughness)
 {
     // Compute spherical view vector: (sin(phi), 0, cos(phi))
     vec3 V = vec3(sqrt(1.0 - NdotV * NdotV), 0.0, NdotV);
@@ -54,7 +54,7 @@ vec3 LUT(float NdotV, float roughness)
     // The PDF is simply pdf(v, h) -> NDF * <nh>.
     // To parametrize the PDF over l, use the Jacobian transform, yielding to: pdf(v, l) -> NDF * <nh> / 4<vh>
     // Since the BRDF divide through the PDF to be normalized, the 4 can be pulled out of the integral.
-    return 4.0 * vec2(A, B) / float(u_sample_count);
+    return 4.0 * AB / float(u_sample_count);
 }
 
 NUM_THREADS(WORKGROUP_THREADS, WORKGROUP_THREADS, 1)
