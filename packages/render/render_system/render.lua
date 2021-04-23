@@ -391,8 +391,7 @@ function irender.read_render_buffer_content(format, rb_idx, force_read, size)
 		layers = 1,
 		format = format,
 		flags = samplerutil.sampler_flag {
-			BLIT="BLIT_AS_DST",
-			BLIT_READBACK="BLIT_READBACK_ON",
+			BLIT="BLIT_READWRITE",
 			MIN="POINT",
 			MAG="POINT",
 			U="CLAMP",

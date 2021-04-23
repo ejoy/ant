@@ -166,8 +166,7 @@ local function blit_buffer_init(self)
 		layers = 1,
 		format = "RGBA8",
 		flags = samplerutil.sampler_flag {
-			BLIT="BLIT_AS_DST",
-			BLIT_READBACK="BLIT_READBACK_ON",
+			BLIT="BLIT_READWRITE",
 			MIN="POINT",
 			MAG="POINT",
 			U="CLAMP",

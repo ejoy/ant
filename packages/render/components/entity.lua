@@ -447,6 +447,17 @@ function ientity.create_procedural_sky(settings)
 				month 		= settings.whichmonth or "June",
 				latitude 	= settings.whichlatitude or math.rad(50),
 			},
+			ibl = {
+				irradiance = {
+					size = 64,
+				},
+				prefilter = {
+					size = 256,
+				},
+				LUT = {
+					size = 256,
+				}
+			},
 			state = ies.create_state "visible",
 			mesh = create_sky_mesh(32, 32),
 			scene_entity = true,

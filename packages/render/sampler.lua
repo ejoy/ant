@@ -39,6 +39,7 @@ local sample_value = {
 	-- BLIT
 	BLIT_AS_DST = 'w', 
 	BLIT_READBACK_ON = 'r',
+	BLIT_READWRITE = 'wbr',
 	BLIT_COMPUTEREAD = '',
 	BLIT_COMPUTEWRITE = 'c',	
 

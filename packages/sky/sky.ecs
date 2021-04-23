@@ -9,7 +9,10 @@ system "procedural_sky_system"
 
 policy "procedural_sky"
     .require_system "procedural_sky_system"
+    .require_transform "ant.render.ibl|init_ibl_transform"
+    .require_interface "ant.render.ibl|iibl"
     .component "procedural_sky"
+    .component "ibl"
 
 policy "procedural_sky_follow_sun"
     .require_system "procedural_sky_system"

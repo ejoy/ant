@@ -82,12 +82,14 @@ local function update_lighting_properties()
 	if skyeid then
 		local sky = world[skyeid]
 		local ibl = sky._ibl
-		system_properties["s_irradiance"].texture.handle= ibl.irradiance.handle
-		system_properties["s_prefilter"].texture.handle	= ibl.prefilter.handle
-		system_properties["s_LUT"].texture.handle		= ibl.LUT.handle
+		if ibl then
+			system_properties["s_irradiance"].texture.handle= ibl.irradiance.handle
+			system_properties["s_prefilter"].texture.handle	= ibl.prefilter.handle
+			system_properties["s_LUT"].texture.handle		= ibl.LUT.handle
 
-		local ip = system_properties["u_ibl_param"]
-		ip.v = math3d.set_index(ip, 1, ibl.prefilter.mipmap_count)
+			local ip = system_properties["u_ibl_param"]
+			ip.v = math3d.set_index(ip, 1, ibl.prefilter.mipmap_count)
+		end
 	end
 
 	if ilight.use_cluster_shading() then
