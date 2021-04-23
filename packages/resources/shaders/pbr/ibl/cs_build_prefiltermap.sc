@@ -1,7 +1,7 @@
 #include <bgfx_shader.sh>
 #include <bgfx_compute.sh>
 
-#include <ibl/common.sh>
+#include <pbr/ibl/common.sh>
 
 #ifndef WORKGROUP_THREADS
 #define WORKGROUP_THREADS 8

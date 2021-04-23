@@ -218,6 +218,9 @@ local function generate_properties(fx, properties)
 			local n = u.name
 			if not n:match "@data" then
 				local v = to_v(properties[n]) or isp.get(n)
+				if v == nil then
+					error(("not found property:%s"):format(n))
+				end
 				new_properties[n] = {
 					value = v,
 					handle = u.handle,

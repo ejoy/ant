@@ -58,6 +58,6 @@ function cc_sys:data_changed()
         local mq = world:singleton_entity "main_queue"
 
         local cameraeid = mq.camera_eid
-        iom.rotate_around_point2(cameraeid, viewat, -dy, -dx)
+        iom.rotate_around_point2(cameraeid, viewat, dy, dx)
     end
 end

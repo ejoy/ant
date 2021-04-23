@@ -292,7 +292,7 @@ return function (output, glbdata, exports, tolocalpath)
                     s_metallic_roughness = handle_texture(pbr_mr.metallicRoughnessTexture, "metallic_roughness", false, "linear"),
                     s_normal             = handle_texture(mat.normalTexture, "normal", true, "linear"),
                     s_emissive           = handle_texture(mat.emissiveTexture, "emissive", false, "sRGB"),
-                    s_occulsion          = handle_texture(mat.occlusionTexture, "occlusion", false, "linear"),
+                    s_occlusion          = handle_texture(mat.occlusionTexture, "occlusion", false, "linear"),
                     u_basecolor_factor   = tov4(pbr_mr.baseColorFactor, default_pbr_param.basecolor.factor),
                     u_emissive_factor    = tov4(mat.emissiveFactor, default_pbr_param.emissive.factor),
                     u_pbr_factor         = {

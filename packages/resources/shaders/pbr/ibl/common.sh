@@ -107,7 +107,7 @@ vec2 hammersley2d(int i, int N)
 
 float PDF_GGX(float NdotH, float roughness)
 {
-    float D = DistributionGGX(NdotH, roughness * roughness);
+    float D = D_GGX(NdotH, roughness * roughness);
     return max(D / 4.0, 0.0);
 }
 

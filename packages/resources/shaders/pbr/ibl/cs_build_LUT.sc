@@ -1,5 +1,5 @@
 #include <bgfx_compute.sh>
-#include <ibl/common.sh>
+#include <pbr/ibl/common.sh>
 
 IMAGE2D_WR(s_LUT, rg16f, 0);
 

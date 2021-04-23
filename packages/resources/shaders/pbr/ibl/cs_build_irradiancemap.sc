@@ -2,7 +2,7 @@
 #include <bgfx_shader.sh>
 #include <bgfx_compute.sh>
 
-#include <ibl/common.sh>
+#include <pbr/ibl/common.sh>
 
 SAMPLERCUBE(s_source, 0);
 IMAGE2D_ARRAY_WR(s_irradiance, rgba16f, 1);
