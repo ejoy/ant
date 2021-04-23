@@ -296,7 +296,7 @@ return function (output, glbdata, exports, tolocalpath)
                     u_basecolor_factor   = tov4(pbr_mr.baseColorFactor, default_pbr_param.basecolor.factor),
                     u_emissive_factor    = tov4(mat.emissiveFactor, default_pbr_param.emissive.factor),
                     u_pbr_factor         = {
-                        pbr_mr.metallicFactor or 0.0,
+                        pbr_mr.metallicFactor or 1.0,
                         pbr_mr.roughnessFactor or 1.0,
                         mat.alphaCutoff or 0.0,
                         1.0, --occlusion strength
