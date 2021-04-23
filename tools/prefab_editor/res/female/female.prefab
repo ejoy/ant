@@ -10,6 +10,7 @@ policy:
   ant.general|name
   ant.scene|hierarchy_policy
   ant.scene|transform_policy
+script: /pkg/ant.prefab/default_script.lua
 ---
 action:
   mount: 1
@@ -30,13 +31,11 @@ action:
 data:
   animation:
     idle: /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
-    jumping: /pkg/ant.resources.binary/meshes/female/animations/junmping.ozz
+    junmping: /pkg/ant.resources.binary/meshes/female/animations/junmping.ozz
     punching: /pkg/ant.resources.binary/meshes/female/animations/punching.ozz
     running: /pkg/ant.resources.binary/meshes/female/animations/running.ozz
-    running-fast: /pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz
-    walking: /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
   animation_birth: idle
-  material: /pkg/ant.resources.binary/meshes/female/female.glb|materials/asdf1_Beta_HighLimbsGeoSG2.material
+  material: /pkg/tools.prefab_editor/res/female/test.material
   mesh: /pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Surface_P1.meshbin
   meshskin: /pkg/ant.resources.binary/meshes/female/female.glb|meshes/skin2.skinbin
   name: Beta_Surface.1
@@ -87,23 +86,6 @@ policy:
   ant.scene|hierarchy_policy
   ant.scene|transform_policy
   ant.collision|collider_policy
----
-action:
-  mount: 3
-data:
-  material: /pkg/ant.resources.binary/meshes/base/cube.glb|materials/lambert1.material
-  mesh: /pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin
-  name: cube0
-  scene_entity: true
-  state: 7
-  transform:
-    r: {0, 0, 0, 1}
-    s: {50, 50, 50}
-    t: {1.8574118614196777, 0, 0}
-policy:
-  ant.render|render
-  ant.general|name
-  ant.scene|hierarchy_policy
 ---
 action:
   mount: 3

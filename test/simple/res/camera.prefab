@@ -1,4 +1,6 @@
 ---
+action:
+    bind_camera: {which = main_queue}
 data:
   transform:
     r: {2, -1, 1, 0}
@@ -10,6 +12,9 @@ data:
     n: 0.1
     type: mat
   name: DEFAULT_CAMERA
+  tag: camera
 policy:
   ant.general|name
   ant.camera|camera
+  ant.general|tag
+script:/pkg/ant.prefab/default_script.lua

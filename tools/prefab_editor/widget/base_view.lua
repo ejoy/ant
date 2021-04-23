@@ -37,6 +37,7 @@ end
 function BaseView:set_model(eid)
     if self.eid == eid then return false end
     self.eid = eid
+    if not self.eid then return false end
     self.is_prefab = false
     local template = hierarchy:get_template(eid)
     if template and template.filename then
@@ -119,6 +120,7 @@ function BaseView:has_scale()
 end
 
 function BaseView:update()
+    if not self.eid then return end
     self.base.script:update()
     if self.is_prefab then
         self.base.prefab:update()
@@ -127,6 +129,7 @@ function BaseView:update()
 end
 
 function BaseView:show()
+    if not self.eid then return end
     self.base.script:show()
     if self.is_prefab then
         self.base.prefab:show()

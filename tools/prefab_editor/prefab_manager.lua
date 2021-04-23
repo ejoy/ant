@@ -11,7 +11,7 @@ local gd            = require "common.global_data"
 local utils         = require "common.utils"
 local effekseer     = require "effekseer"
 local subprocess    = require "sp_util"
-
+local anim_view
 local geo_utils
 local logger
 local ilight
@@ -235,7 +235,7 @@ function m:create(what, config)
         self:create_slot()
     elseif what == "camera" then
         local new_camera, camera_templ = camera_mgr.ceate_camera()
-        local s, r, t = math3d.srt(camera_templ.data.transform)
+        local s, r, t = math3d.srt(iom.srt(new_camera))
         local ts, tr, tt = math3d.totable(s), math3d.totable(r), math3d.totable(t)
         camera_templ.data.transform = {s = {ts[1],ts[2],ts[3]}, r = {tr[1],tr[2],tr[3],tr[4]}, t = {tt[1],tt[2],tt[3]}}
 
@@ -422,6 +422,7 @@ local function convert_path(path, glb_filename)
 end
 
 function m:open(filename)
+    world:pub {"PreOpenPrefab", filename}
     local prefab = get_prefab(filename)
     local path_list = split(filename)
     local glb_filename
@@ -568,7 +569,12 @@ function m:open_prefab(prefab)
     for _, e in ipairs(add_entity) do
         self.entities[#self.entities + 1] = e
     end
-    world:pub {"editor", "prefab", entities}
+
+    camera_mgr.bind_main_camera()
+end
+
+function m:reload()
+    self:open(tostring(self.prefab))
 end
 
 local nameidx = 0
@@ -623,14 +629,13 @@ end
 
 function m:recreate_entity(eid)
     local prefab = hierarchy:get_template(eid)
-    local copy_prefab = utils.deep_copy(prefab)
+    world:rebuild_entity(eid, prefab.template)
     
-    --rebuild_entity(eid, copy_prefab.template)
-
-    local new_eid = world:create_entity(copy_prefab.template)
-    iom.set_srt(new_eid, iom.srt(eid))
+    -- local copy_prefab = utils.deep_copy(prefab)
+    -- local new_eid = world:create_entity(copy_prefab.template)
+    -- iom.set_srt(new_eid, iom.srt(eid))
     local scale = 1
-    local col = world[new_eid].collider
+    local col = world[eid].collider
     if col then
         if col.sphere then
             scale = col.sphere[1].radius * 100
@@ -639,33 +644,34 @@ function m:recreate_entity(eid)
             scale = {size[1] * 200, size[2] * 200, size[3] * 200}
         else
         end
-        imaterial.set_property(new_eid, "u_color", {1, 0.5, 0.5, 0.5})
+        imaterial.set_property(eid, "u_color", {1, 0.5, 0.5, 0.5})
     end
-    iom.set_scale(new_eid, scale)
-    local new_node = hierarchy:replace(eid, new_eid)
-    world[new_eid].parent = new_node.parent
-    for _, v in ipairs(new_node.children) do
-        world[v.eid].parent = new_eid
-    end
-    local idx
-    for i, e in ipairs(self.entities) do
-        if e == eid then
-            idx = i
-            break
-        end
-    end
-    self.entities[idx] = new_eid
-    world:remove_entity(eid)
-    local gizmo = require "gizmo.gizmo"(world)
-    gizmo:set_target(new_eid)
-    world:pub {"EntityRecreate", eid, new_eid}
-    return new_eid
+    -- iom.set_scale(new_eid, scale)
+    -- local new_node = hierarchy:replace(eid, new_eid)
+    -- world[new_eid].parent = new_node.parent
+    -- for _, v in ipairs(new_node.children) do
+    --     world[v.eid].parent = new_eid
+    -- end
+    -- local idx
+    -- for i, e in ipairs(self.entities) do
+    --     if e == eid then
+    --         idx = i
+    --         break
+    --     end
+    -- end
+    -- self.entities[idx] = new_eid
+    -- world:remove_entity(eid)
+    -- local gizmo = require "gizmo.gizmo"(world)
+    -- gizmo:set_target(new_eid)
+    world:pub {"EntityRecreate", eid}
+    -- return new_eid
 end
 
 function m:update_material(eid, mtl)
     local prefab = hierarchy:get_template(eid)
     prefab.template.data.material = mtl
-    return self:recreate_entity(eid)
+    self:save_prefab()
+    self:reload()
 end
 
 local utils = require "common.utils"

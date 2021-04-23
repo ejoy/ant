@@ -6,6 +6,7 @@ policy "camera"
     .component "frustum"
     .component "lock_target"
     .component "scene_entity"
+    .component "camera"
 
 system "camera_view_system"
     .implement "camera.lua"

@@ -71,6 +71,7 @@ local function instance_entity(w, eid, entity, owned)
 	for _, f in ipairs(entity.process) do
 		f(e)
 	end
+	w:pub {"entity_register", eid}
 	return eid
 end
 

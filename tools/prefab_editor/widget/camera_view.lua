@@ -4,6 +4,7 @@ local math3d    = require "math3d"
 local uiproperty    = require "widget.uiproperty"
 local BaseView = require "widget.view_class".BaseView
 local CameraView = require "widget.view_class".CameraView
+local hierarchy = require "hierarchy"
 local world
 local iom
 local camera_mgr
@@ -43,12 +44,18 @@ function CameraView:_init()
     })
     self.current_frame      = 1
     self.duration           = {}
+    self.main_camera_ui     = {false}
 end
 
 function CameraView:set_model(eid)
-    if not BaseView.set_model(self, eid) then return false end
-    
     self.frames = camera_mgr.get_recorder_frames(eid)
+    if not BaseView.set_model(self, eid) then return false end
+    local template = hierarchy:get_template(self.eid)
+    if template.template.action and template.template.action.bind_camera and template.template.action.bind_camera.which == "main_queue" then
+        self.main_camera_ui[1] = true
+    else
+        self.main_camera_ui[1] = false
+    end
     self.current_frame = 1
     for i, v in ipairs(self.frames) do
         self.duration[i] = {self.frames[i].duration}
@@ -58,27 +65,38 @@ function CameraView:set_model(eid)
 end
 
 function CameraView:on_set_position(...)
-    BaseView.position_setter(self, ...)
-    local frames = camera_mgr.get_recorder_frames(self.eid)
-    frames[self.current_frame].position = math3d.ref(math3d.vector{...})
+    BaseView.on_set_position(self, ...)
+    if #self.frames > 0 then
+        self.frames[self.current_frame].position = math3d.ref(math3d.vector(...))
+    end
     camera_mgr.update_frustrum(self.eid)
 end
 
 function CameraView:on_get_position()
-    local frames = camera_mgr.get_recorder_frames(self.eid)
-    return math3d.totable(frames[self.current_frame].position)
+    if #self.frames > 0 then
+        return math3d.totable(self.frames[self.current_frame].position)
+    else 
+        return math3d.totable(iom.get_position(self.eid))
+    end
 end
 
 function CameraView:on_set_rotate(...)
-    BaseView.rotate_setter(self, ...)
-    local frames = camera_mgr.get_recorder_frames(self.eid)
-    frames[self.current_frame].rotation = math3d.ref(math3d.quaternion{...})
+    BaseView.on_set_rotate(self, ...)
+    if #self.frames > 0 then
+        self.frames[self.current_frame].rotation = math3d.ref(math3d.quaternion(...))
+    end
     camera_mgr.update_frustrum(self.eid)
 end
 
 function CameraView:on_get_rotate()
-    local frames = camera_mgr.get_recorder_frames(self.eid)
-    local rad = math3d.totable(math3d.quat2euler(frames[self.current_frame].rotation))
+    local rad
+    if #self.frames > 0 then
+        rad = math3d.totable(math3d.quat2euler(self.frames[self.current_frame].rotation))
+        return { math.deg(rad[1]), math.deg(rad[2]), math.deg(rad[3]) }
+    else
+        local r = iom.get_rotation(self.eid)
+        rad = math3d.totable(math3d.quat2euler(r))
+    end
     return { math.deg(rad[1]), math.deg(rad[2]), math.deg(rad[3]) }
 end
 
@@ -102,26 +120,51 @@ end
 function CameraView:on_get_dist()
     return camera_mgr.camera_list[self.eid].dist_to_target
 end
+
 function CameraView:on_set_fov(value)
-    self.frames[self.current_frame].fov = value
+    if #self.frames > 0 then
+        self.frames[self.current_frame].fov = value
+    end
+    local template = hierarchy:get_template(self.eid)
+    template.template.data.frustum.fov = value
     icamera.set_frustum(self.eid, {fov = value})
 end
 function CameraView:on_get_fov()
-    return self.frames[self.current_frame].fov
+    if #self.frames > 0 then
+        return self.frames[self.current_frame].fov
+    else
+        return world[self.eid].frustum.fov
+    end
 end
 function CameraView:on_set_near(value)
-    self.frames[self.current_frame].n = value
+    if #self.frames > 0 then
+        self.frames[self.current_frame].n = value
+    end
+    local template = hierarchy:get_template(self.eid)
+    template.template.data.frustum.n = value
     icamera.set_frustum(self.eid, {n = value})
 end
 function CameraView:on_get_near()
-    return self.frames[self.current_frame].n or 1
+    if #self.frames > 0 then
+        return self.frames[self.current_frame].n or 1
+    else
+        return world[self.eid].frustum.n or 1
+    end
 end
 function CameraView:on_set_far(value)
-    self.frames[self.current_frame].f = value
+    if #self.frames > 0 then
+        self.frames[self.current_frame].f = value
+    end
+    local template = hierarchy:get_template(self.eid)
+    template.template.data.frustum.f = value
     icamera.set_frustum(self.eid, {f = value})
 end
 function CameraView:on_get_far()
-    return self.frames[self.current_frame].f or 100
+    if #self.frames > 0 then
+        return self.frames[self.current_frame].f or 100
+    else
+        return world[self.eid].frustum.f
+    end
 end
 function CameraView:update()
     BaseView.update(self)
@@ -156,44 +199,58 @@ end
 function CameraView:show()
     BaseView.show(self)
     if imgui.widget.TreeNode("Camera", imgui.flags.TreeNode { "DefaultOpen" }) then
+        imgui.widget.PropertyLabel("MainCamera")
+        if imgui.widget.Checkbox("##MainCamera", self.main_camera_ui) then
+            local template = hierarchy:get_template(self.eid)
+            if self.main_camera_ui[1] then
+                if not template.template.action then
+                    template.template.action = {}
+                end
+                template.template.action.bind_camera = {which = "main_queue"}
+            else
+                if template.template.action and template.template.action.bind_camera then
+                    template.template.action.bind_camera = nil
+                end
+            end
+        end
+
         for _, pro in ipairs(self.camera_property) do
             pro:show() 
         end
         --imgui.cursor.Separator()
-        self.addframe:show()
-        local frames = camera_mgr.get_recorder_frames(self.eid)
-        if #frames > 1 then
-            imgui.cursor.SameLine()
-            self.deleteframe:show()
-            imgui.cursor.SameLine()
-            self.play:show()
-        end
+        -- self.addframe:show()
+        -- if #self.frames > 1 then
+        --     imgui.cursor.SameLine()
+        --     self.deleteframe:show()
+        --     imgui.cursor.SameLine()
+        --     self.play:show()
+        -- end
         
-        if #frames > 0 then
-            imgui.cursor.Separator()
-            if imgui.table.Begin("CameraViewtable", 2, imgui.flags.Table {'Resizable', 'ScrollY'}) then
-                imgui.table.SetupColumn("FrameIndex", imgui.flags.TableColumn {'NoSort', 'WidthFixed', 'NoResize'}, -1, 0)
-                imgui.table.SetupColumn("Duration", imgui.flags.TableColumn {'NoSort', 'WidthStretch'}, -1, 1)
-                imgui.table.HeadersRow()
-                for i, v in ipairs(frames) do
-                    --imgui.table.NextRow()
-                    imgui.table.NextColumn()
-                    --imgui.table.SetColumnIndex(0)
-                    if imgui.widget.Selectable(i, self.current_frame == i) then
-                        self.current_frame = i
-                        camera_mgr.set_frame(self.eid, i)
-                        self:update()
-                    end
-                    imgui.table.NextColumn()
-                    --imgui.table.SetColumnIndex(1)
-                    if imgui.widget.DragFloat("##"..i, self.duration[i]) then
-                        frames[i].duration = self.duration[i][1]
-                    end
-                end
-                imgui.table.End()
-            end
-        end
-
+        -- if #self.frames > 0 then
+        --     imgui.cursor.Separator()
+        --     if imgui.table.Begin("CameraViewtable", 2, imgui.flags.Table {'Resizable', 'ScrollY'}) then
+        --         imgui.table.SetupColumn("FrameIndex", imgui.flags.TableColumn {'NoSort', 'WidthFixed', 'NoResize'}, -1, 0)
+        --         imgui.table.SetupColumn("Duration", imgui.flags.TableColumn {'NoSort', 'WidthStretch'}, -1, 1)
+        --         imgui.table.HeadersRow()
+        --         for i, v in ipairs(self.frames) do
+        --             --imgui.table.NextRow()
+        --             imgui.table.NextColumn()
+        --             --imgui.table.SetColumnIndex(0)
+        --             if imgui.widget.Selectable(i, self.current_frame == i) then
+        --                 self.current_frame = i
+        --                 camera_mgr.set_frame(self.eid, i)
+        --                 self:update()
+        --             end
+        --             imgui.table.NextColumn()
+        --             --imgui.table.SetColumnIndex(1)
+        --             if imgui.widget.DragFloat("##"..i, self.duration[i]) then
+        --                 self.frames[i].duration = self.duration[i][1]
+        --             end
+        --         end
+        --         imgui.table.End()
+        --     end
+        -- end
+        
         imgui.widget.TreePop()
     end
 end

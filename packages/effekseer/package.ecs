@@ -11,6 +11,10 @@ system "effekseer_system"
     .method "follow_transform_updated"
     .method "exit"
 
+interface "effekseer_playback"
+    .implement "effekseer_system.lua"
+    .method "play"
+
 policy "effekseer_policy"
     .require_system "effekseer_system"
     .component "effekseer"

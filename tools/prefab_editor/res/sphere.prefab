@@ -10,6 +10,7 @@ policy:
   ant.general|name
   ant.scene|hierarchy_policy
   ant.scene|transform_policy
+script: /pkg/ant.prefab/default_script.lua
 ---
 action:
   mount: 1
@@ -28,7 +29,7 @@ policy:
 action:
   mount: 2
 data:
-  material: /pkg/ant.resources.binary/meshes/base/sphere.glb|materials/lambert1.material
+  material: /pkg/tools.prefab_editor/res/test.material
   mesh: /pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin
   name: pSphere1
   scene_entity: true

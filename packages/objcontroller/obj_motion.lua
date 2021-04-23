@@ -85,7 +85,12 @@ function iobj_motion.set_rotation(eid, rot)
     local rc = e._rendercache
     local srt = rc.srt
     if rc.updir then
-        local viewdir = math3d.todirection(rot)
+        local viewdir
+        if type(rot) == "table" then
+            viewdir = math3d.todirection(math3d.quaternion{math.rad(rot[1]), math.rad(rot[2]), math.rad(rot[3])})
+        else
+            viewdir = math3d.todirection(rot)
+        end
         srt.id = math3d.inverse(math3d.lookto(math3d.index(srt, 4), viewdir, rc.updir))
     else
         srt.r = rot

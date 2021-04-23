@@ -19,6 +19,7 @@ local lfs       = require "filesystem.local"
 local hierarchy = require "hierarchy"
 local resource_browser = require "widget.resource_browser"(world, asset_mgr)
 local anim_view = require "widget.animation_view"(world, asset_mgr)
+local material_view = require "widget.material_view"(world, asset_mgr)
 local log_widget = require "widget.log"(asset_mgr)
 local console_widget = require "widget.console"(asset_mgr)
 local toolbar = require "widget.toolbar"(world, asset_mgr)
@@ -152,7 +153,7 @@ local function choose_project()
                     log_widget.init_log_receiver()
                     console_widget.init_console_sender()
                 else
-                    logger.error({tag = "Editor", message = "not project exist!"})
+                    logger.error({tag = "Editor", message = "no project exist!"})
                 end
             end
         end
@@ -288,6 +289,7 @@ local drop_files_event = world:sub {"OnDropFiles"}
 local entity_event = world:sub {"EntityEvent"}
 local event_keyboard = world:sub{"keyboard"}
 local event_open_prefab = world:sub {"OpenPrefab"}
+local event_preopen_prefab = world:sub {"PreOpenPrefab"}
 local event_open_fbx = world:sub {"OpenFBX"}
 local event_add_prefab = world:sub {"AddPrefabOrEffect"}
 local event_resource_browser = world:sub {"ResourceBrowser"}
@@ -395,6 +397,10 @@ function m:data_changed()
             prefab_mgr:remove_entity(eid)
         end
     end
+    for _, filename in event_preopen_prefab:unpack() do
+        anim_view:clear()
+        material_view:clear()
+    end
     for _, filename in event_open_prefab:unpack() do
         prefab_mgr:open(filename)
     end
@@ -430,6 +436,9 @@ function m:data_changed()
             gizmo:set_target(nil)
         elseif state.CTRL and key == "S" and press == 1 then
             prefab_mgr:save_prefab()
+        elseif state.CTRL and key == "R" and press == 1 then
+            anim_view:clear()
+            prefab_mgr:reload()
         end
     end
 

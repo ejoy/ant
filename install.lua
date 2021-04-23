@@ -1,3 +1,5 @@
+local PLAT <const> = "msvc"
+
 local path_sep = package.config:sub(3,3)
 if package.cpath:match(path_sep) then
 	package.cpath = (function ()
@@ -11,7 +13,6 @@ if package.cpath:match(path_sep) then
 end
 
 local fs = require "filesystem.cpp"
---local fs = require "bee.filesystem"
 
 local function copy_directory(from, to, filter)
     fs.create_directories(to)
@@ -38,7 +39,7 @@ else
     fs.create_directories(output)
 end
 
-copy_directory(input / "bin" / "msvc" / "Release", output / "bin", function (path)
+copy_directory(input / "bin" / PLAT / "Release", output / "bin", function (path)
    return path:equal_extension '.dll' or path:equal_extension'.exe'
 end)
 copy_directory(input / "engine", output / "engine")
@@ -49,3 +50,8 @@ copy_directory(input / "tools" / "prefab_editor", output / "tools" / "prefab_edi
 end)
 
 fs.copy_file(input / "run_editor.bat", output / "run_editor.bat", true)
+
+if PLAT == "msvc" then
+    local msvc = require "tools.install.msvc_helper"
+    msvc.copy_vcrt("x64", output / "bin")
+end
