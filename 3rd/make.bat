@@ -6,11 +6,7 @@ if "%1" == "" (
     set BUILD_MODE=%1
 )
 
-if "%2" == "MAKE_OZZ_GLTF_TOOL" (
-    set OZZ_GLTF_TOOL=build\ozz-animation\msvc\%BUILD_MODE%\src\animation\offline\gltf\gltf2ozz.exe
-) else (
-    set OZZ_GLTF_TOOL=tools\msvc\gltf2ozz.exe
-)
+set OZZ_GLTF_TOOL=build\ozz-animation\msvc\%BUILD_MODE%\src\animation\offline\gltf\gltf2ozz.exe
 
 @echo on
 

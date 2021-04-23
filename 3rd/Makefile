@@ -30,7 +30,7 @@ ifeq "$(PLAT)" "ios"
   CMAKE_OZZ_OPT = -Dozz_build_tools=OFF -Dozz_build_gltf=OFF
 endif
 
-CMAKE_OPT_ozz-animation=$(CMAKE_OZZ_OPT) -Dozz_build_samples=OFF -Dozz_build_fbx=OFF -Dozz_build_howtos=OFF -Dozz_build_cpp11=ON -Dozz_build_tests=OFF -DEMSCRIPTEN=FALSE
+CMAKE_OPT_ozz-animation=$(CMAKE_OZZ_OPT) -Dozz_build_msvc_rt_dll=ON -Dozz_build_samples=OFF -Dozz_build_fbx=OFF -Dozz_build_howtos=OFF -Dozz_build_cpp11=ON -Dozz_build_tests=OFF -DEMSCRIPTEN=FALSE
 ifeq "$(PLAT)" "mingw"
 TOOL_EXT_NAME=.exe
 endif
@@ -39,11 +39,7 @@ ifeq "$(PLAT)" "ios"
   CMAKE_COPY_ozz-animation= echo ok
 else ifeq "$(PLAT)" "msvc"
 else
-  ifeq "$(MAKE_OZZ_GLTF_TOOL)" "on"
-    OZZ_GLTF_TOOL:=src/animation/offline/gltf/gltf2ozz$(TOOL_EXT_NAME)
-  else
-    OZZ_GLTF_TOOL:=../../../../tools/$(PLAT)/gltf2ozz$(TOOL_EXT_NAME)
-  endif
+  OZZ_GLTF_TOOL:=src/animation/offline/gltf/gltf2ozz$(TOOL_EXT_NAME)
   CMAKE_COPY_ozz-animation= mkdir -p ../../../../../bin/$(PLAT)/$(MODE)/ && cp $(OZZ_GLTF_TOOL) ../../../../../bin/$(PLAT)/$(MODE)/gltf2ozz$(TOOL_EXT_NAME)
 endif
 
