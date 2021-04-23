@@ -150,7 +150,14 @@ local function create_LUT_entity(ibl)
         "irradiance_builder", "/pkg/ant.resources/materials/ibl/build_LUT.material", dispatchsize)
 
     local LUT_stage<const> = 0
-    world[eid]._rendercache.properties.s_prefilter = icompute.create_image_property(ibl.LUT.handle, LUT_stage, 0, "w")
+    local properties = world[eid]._rendercache.properties
+    properties.s_LUT = icompute.create_image_property(ibl.LUT.handle, LUT_stage, 0, "w")
+    local ip = properties.u_build_ibl_param
+    if ip then
+        local ipv = ip.value
+        ipv.v = math3d.set_index(ipv, 3, size)
+    end
+
     return {
         eid = eid,
         name = "LUT",
