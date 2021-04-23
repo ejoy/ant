@@ -36,7 +36,7 @@ end
 
 local skybox_sys = ecs.system "skybox_system"
 local sb_mb = world:sub {"component_register", "skybox"}
-function skybox_sys.post_init()
+function skybox_sys.data_changed()
 	for _, _, eid in sb_mb:unpack() do
 		iibl.filter_all(eid)
 		world:pub{"ibl_updated", eid}

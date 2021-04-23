@@ -56,11 +56,11 @@ struct material_info
 
 vec4 get_basecolor(vec2 texcoord)
 {
-    #ifdef HAS_BASECOLOR_MAP_TEXTURE
+    #ifdef HAS_BASECOLOR_TEXTURE
         return u_basecolor_factor * texture2D(s_basecolor, texcoord);
-    #else //!HAS_BASECOLOR_MAP_TEXTURE
+    #else //!HAS_BASECOLOR_TEXTURE
         return u_basecolor_factor;
-    #endif//HAS_BASECOLOR_MAP_TEXTURE
+    #endif//HAS_BASECOLOR_TEXTURE
 }
 
 vec3 get_normal(vec3 tangent, vec3 bitangent, vec3 normal, vec2 texcoord)
@@ -131,7 +131,7 @@ void main()
 #endif
 
 #ifdef ALPHAMODE_OPAQUE
-    basecolor.a = u_alpha_mask;
+    basecolor.a = u_alpha_mask_cutoff;
 #endif
 
 #ifdef ALPHAMODE_MASK

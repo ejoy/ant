@@ -2,7 +2,10 @@ local ecs = ...
 local world = ecs.world
 
 local fbmgr		= require "framebuffer_mgr"
+local sampler = require "sampler"
 local math3d	= require "math3d"
+local bgfx		= require "bgfx"
+
 
 local mc		= import_package "ant.math".constant
 local iom		= world:interface "ant.objcontroller|obj_motion"
@@ -12,8 +15,18 @@ local itimer	= world:interface "ant.timer|timer"
 local icamera	= world:interface "ant.camera|camera"
 
 local m = ecs.interface "system_properties"
-local function def_tex_prop(stage)
-	return {stage=stage, texture={handle=nil}}
+
+local flags = sampler.sampler_flag {
+	MIN="LINEAR",
+	MAG="LINEAR",
+	U="CLAMP",
+	V="CLAMP",
+}
+local def_cubetex_handle = bgfx.create_texturecube(1, false, 1, "RGBA8", flags)
+local def_2dtex_handle = bgfx.create_texture2d(1, 1, false, 1, "RGBA8", flags)
+
+local function def_tex_prop(stage, handle)
+	return {stage=stage, texture={handle=handle}}
 end
 
 local function def_buffer_prop(stage)
@@ -34,9 +47,9 @@ local system_properties = {
 
 	--IBL
 	u_ibl_param				= math3d.ref(mc.ZERO_PT),
-	s_irradiance			= def_tex_prop(5),
-	s_prefilter				= def_tex_prop(6),
-	s_LUT					= def_tex_prop(7),
+	s_irradiance			= def_tex_prop(5, def_cubetex_handle),
+	s_prefilter				= def_tex_prop(6, def_cubetex_handle),
+	s_LUT					= def_tex_prop(7, def_2dtex_handle),
 
 	-- shadow
 	u_csm_matrix 		= {

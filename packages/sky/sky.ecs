@@ -48,4 +48,4 @@ transform "skybox_ibl_transform"
 
 system "skybox_system"
     .implement "skybox.lua"
-    .method "post_init"
+    .method "data_changed"

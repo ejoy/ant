@@ -47,7 +47,7 @@ local default_pbr_param = {
         stage = 3,
     },
     occlusion = {
-        texture = "/pkg/ant.resources/textures/pbr/defautl/occlusion.texture",
+        texture = "/pkg/ant.resources/textures/pbr/default/occlusion.texture",
         factor = {0, 0, 0, 0},
         stage = 4,
     }
@@ -232,13 +232,13 @@ return function (output, glbdata, exports, tolocalpath)
     end
 
     local function handle_texture(tex_desc, name, normalmap, colorspace)
-        local filename = tex_desc
-            and fetch_texture_info(tex_desc.index, normalmap, colorspace)
-            or default_pbr_param[name].texture
-        return {
-            texture = filename,
-            stage = default_pbr_param[name].stage,
-        }
+        if tex_desc then
+            local filename = fetch_texture_info(tex_desc.index, normalmap, colorspace)
+            return {
+                texture = filename,
+                stage = default_pbr_param[name].stage,
+            }
+        end
     end
 
     local function find_material_modes()
@@ -304,21 +304,19 @@ return function (output, glbdata, exports, tolocalpath)
                 },
             }
 
+            local p = material.properties
             local setting = {}
-            if pbr_mr.baseColorTexture then 
-                setting["HAS_BASECOLOR_MAP_TEXTURE"] = 1
-            end
-            if pbr_mr.metallicRoughnessTexture then
-                setting["HAS_METALLIC_ROUGHNESS_TEXTURE"] = 1
-            end
-            if pbr_mr.normalTexture then
-                setting["HAS_NORMAL_TEXTURE"] = 1
-            end
-            if mat.occlusionTexture then
-                setting["HAS_OCCLUSION_TEXTURE"] = 1
-            end
-            if mat.emissiveTexture then
-                setting["HAS_EMISSIVE_TEXTURE"] = 1
+            local tex_names = {
+                s_basecolor = "HAS_BASECOLOR_TEXTURE",
+                s_metallic_roughness = "HAS_METALLIC_ROUGHNESS_TEXTURE",
+                s_normal = "HAS_NORMAL_TEXTURE",
+                s_emissive = "HAS_EMISSIVE_TEXTURE",
+                s_occlusion = "HAS_OCCLUSION_TEXTURE",
+            }
+            for k, n in pairs(tex_names) do
+                if p[k] then
+                    setting[n] = 1
+                end
             end
             if mat.alphaMode == "OPAQUE" then
                 setting["ALPHAMODE_OPAQUE"] = 1
