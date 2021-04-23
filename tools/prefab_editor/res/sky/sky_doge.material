@@ -1,0 +1,15 @@
+fx:
+    vs: /pkg/ant.resources/shaders/sky/skybox/vs_skybox.sc
+    fs: /pkg/ant.resources/shaders/sky/skybox/fs_skybox.sc
+    setting:
+        surfacetype: background
+properties:
+    s_skybox:
+        stage: 0
+        texture: /pkg/ant.resources/textures/sky/doge2.texture
+state:
+    ALPHA_REF: 0
+    CULL: CW
+    DEPTH_TEST: LEQUAL
+    MSAA: true
+    WRITE_MASK: RGBA
