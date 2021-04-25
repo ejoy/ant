@@ -19,7 +19,7 @@ LUA_TARGETS += $(ODIR)/lua54.dll
 endif
 
 copy_lua: build_lua
-	cp $(addprefix lua/,$(LUA_TARGETS)) $(BIN)/lua.exe
+	cp $(addprefix lua/,$(LUA_TARGETS)) $(BIN)
 build_lua:
 	$(MAKE) -C lua $(LUA_TARGETS)
 clean_lua:
@@ -33,7 +33,7 @@ define COPY_DLL_func
 $(BIN)/$(1).dll : copy_$(1)
 
 copy_$(1): build_$(1)
-	cp $(1)/$(ODIR)/$(1).dll $(BIN)/$(1).dll
+	cp $(1)/$(ODIR)/$(1).dll $(BIN)
 endef
 
 define MAKE_temp
