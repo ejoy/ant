@@ -44,6 +44,8 @@ function access.readmount(repo)
 			if not (line:match "^%s*#" or line:match "^%s*$") then
 				error ("Invalid .mount file : " .. line)
 			end
+
+			goto continue
 		end
 		path = path:gsub("%s*#.*$","")	-- strip comment
 		path = path:gsub("%${([^}]*)}", {
@@ -63,6 +65,8 @@ function access.readmount(repo)
 		else
 			addmount(name, path)
 		end
+
+		::continue::
 	end
 	table.sort(mountname)
 	repo._mountname = mountname
