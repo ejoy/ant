@@ -119,12 +119,13 @@ function effekseer_sys:ui_update()
             end
         end
     end
-    -- local dt = itimer.delta() * 0.001
+    
     for _, eid in world:each "effekseer" do
 		local e = world[eid]
 		effekseer.update_transform(e.effekseer.handle, iom.worldmat(eid))
     end
-    effekseer.update()
+    local dt = itimer.delta() * 0.001
+    effekseer.update(dt)
 end
 
 function effekseer_sys:follow_transform_updated()

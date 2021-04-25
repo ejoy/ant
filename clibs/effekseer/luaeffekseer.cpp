@@ -130,7 +130,8 @@ leffekseer_update_view_proj(lua_State* L) {
 static int
 leffekseer_update(lua_State* L) {
 	g_effekseer->update();
-	g_effekseer->draw();
+	float delta = (float)luaL_checknumber(L, 1);
+	g_effekseer->draw(delta);
 	return 0;
 }
 
@@ -263,7 +264,7 @@ void effekseer_ctx::update()
 	}
 }
 
-void effekseer_ctx::draw()
+void effekseer_ctx::draw(float delta)
 {
 	if (effects.empty())
 	{
@@ -272,7 +273,13 @@ void effekseer_ctx::draw()
 	BGFX(set_view_transform)(viewid, view_mat.Values, proj_mat.Values);
 	renderer->SetCameraMatrix(view_mat);
 	renderer->SetProjectionMatrix(proj_mat);
-	manager->Update();
+	float deltaFrames = delta * 60.0f;
+	int iterations = std::max(1, (int)roundf(deltaFrames));
+	float advance = deltaFrames / iterations;
+	for (int i = 0; i < iterations; i++) {
+		manager->Update(advance);
+	}
+	renderer->SetTime(renderer->GetTime() + delta);
 	renderer->BeginRendering();
 	manager->Draw();
 	renderer->EndRendering();
