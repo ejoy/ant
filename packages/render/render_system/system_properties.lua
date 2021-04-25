@@ -117,7 +117,7 @@ local function update_lighting_properties()
 		system_properties["u_cluster_shading_param"].v	= {vr.w, vr.h, near, far}
 		local num_depth_slices = cluster_size[3]
 		local log_farnear = math.log(far/near, 2)
-		local log_near = math.log(near)
+		local log_near = math.log(near, 2)
 	
 		system_properties["u_cluster_shading_param2"].v	= {
 			num_depth_slices / log_farnear, -num_depth_slices * log_near / log_farnear,
