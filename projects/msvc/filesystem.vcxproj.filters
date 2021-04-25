@@ -38,9 +38,6 @@
     <ClInclude Include="..\..\clibs\filesystem\path_helper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\clibs\filesystem\range.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\clibs\filesystem\unicode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -54,9 +51,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\clibs\filesystem\error.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\clibs\filesystem\expected.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\clibs\filesystem\file.h">
