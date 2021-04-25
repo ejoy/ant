@@ -26,10 +26,8 @@
     <ClInclude Include="..\..\clibs\filesystem\file.h" />
     <ClInclude Include="..\..\clibs\filesystem\filesystem.h" />
     <ClInclude Include="..\..\clibs\filesystem\file_helper.h" />
-    <ClInclude Include="..\..\clibs\filesystem\ghc_filesystem.h" />
     <ClInclude Include="..\..\clibs\filesystem\path_helper.h" />
     <ClInclude Include="..\..\clibs\filesystem\range.h" />
-    <ClInclude Include="..\..\clibs\filesystem\span.h" />
     <ClInclude Include="..\..\clibs\filesystem\unicode.h" />
     <ClInclude Include="..\..\clibs\filesystem\windows_category.h" />
   </ItemGroup>
@@ -88,7 +86,7 @@
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../../clibs/lua</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -107,7 +105,7 @@
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../../clibs/lua</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

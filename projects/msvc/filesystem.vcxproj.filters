@@ -41,9 +41,6 @@
     <ClInclude Include="..\..\clibs\filesystem\range.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\clibs\filesystem\span.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\clibs\filesystem\unicode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -69,9 +66,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\clibs\filesystem\filesystem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\clibs\filesystem\ghc_filesystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

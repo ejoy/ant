@@ -275,7 +275,11 @@ namespace ant::lua_filesystem {
             LUA_TRY;
             const fs::path& self = path::to(L, 1);
             auto res = self.generic_u8string();
+#if defined(__cpp_lib_char8_t)
+            lua_pushlstring(L, reinterpret_cast<const char*>(res.data()), res.size());
+#else
             lua_pushlstring(L, res.data(), res.size());
+#endif
             return 1;
             LUA_TRY_END;
         }
