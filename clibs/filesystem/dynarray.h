@@ -1,13 +1,13 @@
 #pragma once
 
 #include <stdexcept>
-#include "span.h"
+#include <span>
 
 namespace std {
     template <class T>
-    class dynarray : public nonstd::span<T> {
+    class dynarray : public std::span<T> {
     public:
-        typedef       nonstd::span<T>                 mybase;
+        typedef       std::span<T>                    mybase;
         typedef       T                               value_type;
         typedef       T&                              reference;
         typedef const T&                              const_reference;
