@@ -110,7 +110,7 @@ local iom = world:interface "ant.objcontroller|obj_motion"
 local event_entity_register = world:sub{"entity_register"}
 function effekseer_sys:ui_update()
     for _, eid in event_entity_register:unpack() do
-        if world[eid].effekseer then
+        if world[eid] and world[eid].effekseer then
             local eh = world[eid].effekseer.handle
             effekseer.set_loop(eh, world[eid].loop)
             effekseer.set_speed(eh, world[eid].speed)
