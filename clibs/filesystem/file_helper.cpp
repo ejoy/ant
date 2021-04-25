@@ -1,5 +1,4 @@
 #include "file_helper.h"
-#include <assert.h>
 #include <fcntl.h>
 #if defined(_WIN32)
 #include <io.h>
@@ -12,26 +11,20 @@
 namespace ant::file {
 
 #if defined(_WIN32)
-    FILE* open(handle h, mode m) {
-        switch (m) {
-        case mode::eRead: {
-            int fn = _open_osfhandle((intptr_t)(HANDLE)h, _O_RDONLY | _O_BINARY);
-            if (fn == -1) {
-                return 0;
-            }
-            return _fdopen(fn, "rb");
-        }
-        case mode::eWrite: {
-            int fn = _open_osfhandle((intptr_t)(HANDLE)h, _O_WRONLY | _O_BINARY);
-            if (fn == -1) {
-                return 0;
-            }
-            return _fdopen(fn, "wb");
-        }
-        default:
-            assert(false);
+    FILE* open_read(handle h) {
+        int fn = _open_osfhandle((intptr_t)(HANDLE)h, _O_RDONLY | _O_BINARY);
+        if (fn == -1) {
             return 0;
         }
+        return _fdopen(fn, "rb");
+    }
+
+    FILE* open_write(handle h) {
+        int fn = _open_osfhandle((intptr_t)(HANDLE)h, _O_WRONLY | _O_BINARY);
+        if (fn == -1) {
+            return 0;
+        }
+        return _fdopen(fn, "wb");
     }
 
     handle get_handle(FILE* f) {
@@ -54,7 +47,7 @@ namespace ant::file {
         return newh;
     }
 
-    handle lock(const lua::string_type& filename) {
+    handle lock(const handle::string_type& filename) {
         return handle(CreateFileW(filename.c_str(),
             GENERIC_WRITE,
             0, NULL,
@@ -64,16 +57,12 @@ namespace ant::file {
         ));
     }
 #else
-    FILE* open(handle h, mode m) {
-        switch (m) {
-        case mode::eRead:
-            return fdopen(h, "rb");
-        case mode::eWrite:
-            return fdopen(h, "wb");
-        default:
-            assert(false);
-            return 0;
-        }
+    FILE* open_read(handle h) {
+        return fdopen(h, "rb");
+    }
+
+    FILE* open_write(handle h) {
+        return fdopen(h, "wb");
     }
 
     handle get_handle(FILE* f) {
@@ -84,7 +73,7 @@ namespace ant::file {
         return handle(::dup(get_handle(f)));
     }
 
-    handle lock(const lua::string_type& filename) {
+    handle lock(const handle::string_type& filename) {
 #if defined(__APPLE__) 
         int fd = ::open(filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_EXLOCK | O_NONBLOCK, 0644);
         return handle(fd);

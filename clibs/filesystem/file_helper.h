@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdio.h>
-#include "binding.h"
+#include <string>
 #if defined(_WIN32)
 #include <Windows.h>
 #endif
@@ -10,8 +10,10 @@ namespace ant::file {
     struct handle {
 #if defined(_WIN32)
         typedef HANDLE value_type;
+        typedef std::wstring string_type;
 #else
         typedef int value_type;
+        typedef std::string string_type;
 #endif
         explicit handle() : value((value_type)-1) { }
         explicit handle(value_type v) : value(v) { }
@@ -25,12 +27,9 @@ namespace ant::file {
         value_type value;
     };
 
-    enum class mode {
-        eRead,
-        eWrite,
-    };
-    FILE*  open(handle h, mode m);
+    FILE* open_read(handle h);
+    FILE* open_write(handle h);
     handle get_handle(FILE* f);
     handle dup(FILE* f);
-    handle lock(const lua::string_type& filename);
+    handle lock(const handle::string_type& filename);
 }
