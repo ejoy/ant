@@ -12,10 +12,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\clibs\firmware\firmware.cpp" />
-    <ClCompile Include="tools\data.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\clibs\firmware\incbin.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="luadll.vcxproj">
@@ -23,11 +19,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\engine\firmware\bootloader.lua" />
-    <None Include="..\..\engine\firmware\bootstrap.lua" />
-    <None Include="..\..\engine\firmware\init_thread.lua" />
-    <None Include="..\..\engine\firmware\io.lua" />
-    <None Include="..\..\engine\firmware\vfs.lua" />
+    <ClInclude Include="..\..\clibs\firmware\FirmwareBootstrap.h" />
+    <ClInclude Include="..\..\clibs\firmware\FirmwareIo.h" />
+    <ClInclude Include="..\..\clibs\firmware\FirmwareVfs.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -86,16 +80,19 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
     </Link>
-    <PreBuildEvent>
-      <Command>tools\build_firmware.bat $(Configuration)</Command>
-    </PreBuildEvent>
-    <PreBuildEvent>
-      <Message>generate bin data</Message>
-    </PreBuildEvent>
+    <PreBuildEvent />
+    <PreBuildEvent />
     <PostBuildEvent>
       <Command>
       </Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>cd ..\..
+.\bin\msvc\$(Configuration)\lua.exe clibs\firmware\embed.lua engine\firmware\bootstrap.lua clibs\firmware\FirmwareBootstrap.h
+.\bin\msvc\$(Configuration)\lua.exe clibs\firmware\embed.lua engine\firmware\io.lua clibs\firmware\FirmwareIo.h
+.\bin\msvc\$(Configuration)\lua.exe clibs\firmware\embed.lua engine\firmware\vfs.lua clibs\firmware\FirmwareVfs.h
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -117,13 +114,16 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
     </Link>
-    <PreBuildEvent>
-      <Command>tools\build_firmware.bat $(Configuration)</Command>
-    </PreBuildEvent>
-    <PreBuildEvent>
-      <Message>generate bin data</Message>
-    </PreBuildEvent>
+    <PreBuildEvent />
+    <PreBuildEvent />
     <PostBuildEvent />
+    <PreBuildEvent>
+      <Command>cd ..\..
+.\bin\msvc\$(Configuration)\lua.exe clibs\firmware\embed.lua engine\firmware\bootstrap.lua clibs\firmware\FirmwareBootstrap.h
+.\bin\msvc\$(Configuration)\lua.exe clibs\firmware\embed.lua engine\firmware\io.lua clibs\firmware\FirmwareIo.h
+.\bin\msvc\$(Configuration)\lua.exe clibs\firmware\embed.lua engine\firmware\vfs.lua clibs\firmware\FirmwareVfs.h
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

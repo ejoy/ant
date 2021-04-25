@@ -1,11 +1,10 @@
 #pragma once
 
 #include "filesystem.h"
-#include "expected.h"
 
 namespace ant::path_helper {
-    auto dll_path(void* module_handle)->nonstd::expected<fs::path, std::exception>;
-    auto exe_path()->nonstd::expected<fs::path, std::exception>;
-    auto dll_path()->nonstd::expected<fs::path, std::exception>;
+    fs::path dll_path(void* module_handle);
+    fs::path exe_path();
+    fs::path dll_path();
     bool equal(fs::path const& lhs, fs::path const& rhs);
 }

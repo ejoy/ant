@@ -17,7 +17,7 @@ CLIBSINC = -I$(ANTCLIBS)
 LUAINC = -I$(ANT)/clibs/lua
 
 CC= gcc -std=c11
-CXX = g++ -std=c++17
+CXX = g++ -std=c++2a
 
 MODE = release
 

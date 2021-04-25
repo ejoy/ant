@@ -24,6 +24,16 @@ namespace ant::lua {
     }
 #endif
 
+    inline string_type checkstring(lua_State* L, int idx) {
+        size_t len = 0;
+        const char* buf = luaL_checklstring(L, idx, &len);
+#if defined(_WIN32)
+        return u2w(std::string_view(buf, len));
+#else
+        return std::string(buf, len);
+#endif
+    }
+
     template <class T>
     inline T tostring(lua_State* L, int idx);
 

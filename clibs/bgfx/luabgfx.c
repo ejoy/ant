@@ -17,7 +17,7 @@
 #include "bgfx_alloc.h"
 #include "transient_buffer.h"
 
-#if BGFX_API_VERSION != 112
+#if BGFX_API_VERSION != 114
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -569,6 +569,7 @@ linit(lua_State *L) {
 
 	init.callback = &cb->base;
 	init.allocator = NULL;
+	init.capabilities = UINT64_MAX;
 	init.debug = false;
 	init.profile = false;
 
@@ -4022,7 +4023,7 @@ lcreateTextureCube(lua_State *L){
 
 	const bgfx_memory_t * mem = lua_isnoneornil(L, 6) ? NULL : getMemory(L, 6);
 
-	const bgfx_texture_handle_t handle = BGFX(create_texture_cube)(facesize, hasMips, layers, fmt, flags, NULL);
+	const bgfx_texture_handle_t handle = BGFX(create_texture_cube)(facesize, hasMips, layers, fmt, flags, mem);
 	if (!BGFX_HANDLE_IS_VALID(handle))
 		return luaL_error(L, "create texture cube failed");
 	lua_pushinteger(L, BGFX_LUAHANDLE(TEXTURE, handle));

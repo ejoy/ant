@@ -54,7 +54,7 @@ struct effekseer_ctx
 	effect_adapter* get_effect(int32_t eidx);
 	int32_t create_effect(const void* data, int32_t size);
 	void destroy_effect(int32_t eidx);
-	void draw();
+	void draw(float deltaTime);
 	void update();
 	int filename_callback_ = LUA_REFNIL;
 };
