@@ -54,7 +54,7 @@ namespace ant::path_helper {
         if (path_len <= 1) {
             throw std::runtime_error("_NSGetExecutablePath failed.");
         }
-        dynarray<char> buf(path_len);
+        std::dynarray<char> buf(path_len);
         int rv = _NSGetExecutablePath(buf.data(), &path_len);
         if (rv != 0) {
             throw std::runtime_error("_NSGetExecutablePath failed.");
