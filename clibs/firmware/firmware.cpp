@@ -1,18 +1,17 @@
 #include <lua.hpp>
-#include "incbin.h"
 #include <string_view>
 #include <map>
 
-INCBIN(FirmwareBootstrap, "../../engine/firmware/bootstrap.lua");
-INCBIN(FirmwareIo, "../../engine/firmware/io.lua");
-INCBIN(FirmwareVfs, "../../engine/firmware/vfs.lua");
+#include "FirmwareBootstrap.h"
+#include "FirmwareIo.h"
+#include "FirmwareVfs.h"
 
 struct bin {
 	const char* data;
 	size_t      size;
 };
 
-#define INIT_BIN(name) { (const char*)g##name##Data, (size_t)g##name##Size }
+#define INIT_BIN(name) { (const char*)g##name##Data, sizeof(g##name##Data) }
 
 std::map<std::string_view, bin> firmware = {
 	{ "bootstrap.lua", INIT_BIN(FirmwareBootstrap) },

@@ -6,11 +6,14 @@ else
 default : $(ODIR)/libfirmware.a
 endif
 
-$(ODIR)/firmware.o : firmware.cpp incbin.h \
-	$(ANT3RD)/../engine/firmware/bootstrap.lua \
-	$(ANT3RD)/../engine/firmware/io.lua \
-	$(ANT3RD)/../engine/firmware/vfs.lua \
-	| $(ODIR)
+FirmwareBootstrap.h: $(ANT)/engine/firmware/bootstrap.lua
+	$(ANT)/bin/$(PLAT)/$(MODE)/lua $(ANT)/clibs/firmware/embed.lua $^ $@
+FirmwareIo.h: $(ANT)/engine/firmware/io.lua
+	$(ANT)/bin/$(PLAT)/$(MODE)/lua $(ANT)/clibs/firmware/embed.lua $^ $@
+FirmwareVfs.h: $(ANT)/engine/firmware/vfs.lua
+	$(ANT)/bin/$(PLAT)/$(MODE)/lua $(ANT)/clibs/firmware/embed.lua $^ $@
+
+$(ODIR)/firmware.o : firmware.cpp FirmwareBootstrap.h FirmwareIo.h FirmwareVfs.h | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $< $(LUAINC)
 
 $(ODIR)/firmware.dll : $(ODIR)/firmware.o
