@@ -1,6 +1,7 @@
 local datalist = require "datalist"
 local fs = require "filesystem"
 local cr = import_package "ant.compile_resource"
+local math3d = require "math3d"
 
 local world = {}
 
@@ -40,10 +41,16 @@ local function command(w, set, name, ...)
 			get_collider    = iani.get_collider,
 			duration 		= iani.get_duration,
 			set_position 	= iom.set_position,
-			set_rotation 	= iom.set_rotation,
+			set_rotation 	= function(eid, r)
+				iom.set_rotation(eid, math3d.quaternion{math.rad(r[1]), math.rad(r[2]), math.rad(r[3])})
+			end,
 			set_scale 		= iom.set_scale,
 			get_position 	= iom.get_position,
-			get_rotation 	= iom.get_rotation,
+			get_rotation 	= function(eid)
+				local quat = iom.get_rotation(eid)
+				local rad = math3d.totable(math3d.quat2euler(quat))
+				return { math.deg(rad[1]), math.deg(rad[2]), math.deg(rad[3]) }
+			end,
 			get_scale 		= iom.get_scale
 		}
 	end
