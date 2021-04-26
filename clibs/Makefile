@@ -37,7 +37,7 @@ copy_$(1): build_$(1)
 endef
 
 define MAKE_temp
-build_$(1) : build_lua
+build_$(1) : copy_lua
 	$(MAKE) -C $(1) $(ODIR)/$(1).dll
 
 clean_$(1) :
