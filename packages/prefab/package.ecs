@@ -1,2 +1,9 @@
+import "@ant.objcontroller"
+import "@ant.animation"
+import "@ant.effekseer"
+
 system "prefab_system"
     .implement "prefab_system.lua"
+    .require_interface "ant.objcontroller|obj_motion"
+    .require_interface "ant.animation|animation"
+    .require_interface "ant.effekseer|effekseer_playback"
