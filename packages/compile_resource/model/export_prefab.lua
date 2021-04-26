@@ -56,10 +56,19 @@ local STATE_TYPE = {
 }
 
 local DEFAULT_STATE = STATE_TYPE.visible|STATE_TYPE.cast_shadow|STATE_TYPE.selectable
-
-local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
+local function update_transform(ptrans, transform)
+    local lm = math3d.matrix(transform)
+    lm = math3d.mul(ptrans, lm)
+    local s, r, t = math3d.srt(lm)
+    return {
+        s = {math3d.index(s, 1, 2, 3)},
+        r = math3d.tovalue(r),
+        t = {math3d.index(t, 1, 2, 3)}
+    }
+end
+local function create_mesh_node_entity(gltfscene, nodeidx, ptrans, parent, exports)
     local node = gltfscene.nodes[nodeidx+1]
-    local transform = get_transform(node)
+    local transform = update_transform(ptrans, get_transform(node))
     local meshidx = node.mesh
     local mesh = gltfscene.meshes[meshidx+1]
 
@@ -139,7 +148,7 @@ local function create_node_entity(gltfscene, nodeidx, parent)
             "ant.scene|transform_policy"
         },
         data = {
-            name = node.name or "",
+            name = nname,
             scene_entity = true,
             transform = transform,
         },
@@ -173,7 +182,7 @@ local function find_mesh_nodes(gltfscene, scenenodes)
 end
 
 local function righthand2lefthand_transform()
-    return {
+    return math3d.matrix {
         s = {-1.0, 1.0, 1.0}
     }
 end
@@ -191,10 +200,12 @@ return function(output, glbdata, exports)
         },
         data = {
             name = scene.name or "Rootscene",
-            transform = righthand2lefthand_transform(),
+            transform = {},
         },
         parent = "root",
     }
+
+    local r2l_trans = righthand2lefthand_transform()
 
     local meshnodes = find_mesh_nodes(gltfscene, scene.nodes)
 
@@ -216,7 +227,7 @@ return function(output, glbdata, exports)
         assert(C[nodeidx] == nil)
         C[nodeidx] = parent
         assert(nodeidx == mesh_nodeidx)
-        create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
+        create_mesh_node_entity(gltfscene, nodeidx, r2l_trans, parent, exports)
     end
     utility.save_txt_file("./mesh.prefab", prefab)
 end
