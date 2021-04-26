@@ -65,8 +65,8 @@ local system_properties = {
 
 	s_mainview_depth	= def_tex_prop(5),
 	s_mainview			= def_tex_prop(6),
-	s_shadowmap			= def_tex_prop(7),
 	s_postprocess_input	= def_tex_prop(7),
+	s_shadowmap			= def_tex_prop(8),
 }
 
 function m.get(n)

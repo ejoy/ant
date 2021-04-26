@@ -22,11 +22,12 @@ local cmd_handle
 local function command(w, set, name, ...)
 	local iom = w:interface "ant.objcontroller|obj_motion"
 	local iani = w:interface "ant.animation|animation"
-	local ieff = w:interface "ant.effekseer|effekseer_playback"
+	
 	if not cmd_handle then
 		cmd_handle = {
 			autoplay = iani.play,
 			play = function(eid, ...)
+				local ieff = w:interface "ant.effekseer|effekseer_playback"
 				if w[eid].effekseer then
 					ieff.play(eid, ...)
 				else
