@@ -1,14 +1,11 @@
 colorspace: Linear
-compress:
-  android: ASTC6x6
-  ios: ASTC6x6
-  windows: BC1
+format: RGBA8
 normalmap: false
 path: /pkg/ant.resources.binary/textures/cubemap/pisa_with_mips.ktx
 sampler:
   MAG: LINEAR
   MIN: LINEAR
-  MIP: POINT
+  MIP: LINEAR
   U: CLAMP
   V: CLAMP
   W: CLAMP
