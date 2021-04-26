@@ -785,9 +785,14 @@ quat_from_index(lua_State *L, struct lastack *LS, int index) {
 
 static int
 lindex(lua_State *L) {
+	const int num_indices = lua_gettop(L)-1;
 	int64_t id = get_id(L, 1, lua_type(L, 1));
-	int idx = luaL_checkinteger(L, 2);
-	return index_object(L, GETLS(L), id, idx);
+
+	for (int ii=0; ii<num_indices; ++ii){
+		int idx = luaL_checkinteger(L, ii+2);
+		index_object(L, GETLS(L), id, idx);
+	}
+	return num_indices;
 }
 
 static void
