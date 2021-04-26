@@ -21,7 +21,7 @@ local function import_impl(file, ecs)
 	imported[file] = true
 	local path = fs.path(file)
 	local packname = path:package_name()
-	local module, err = fs.loadfile(path, 't', pm.loadenv(packname))
+	local module, err = fs.loadfile(path, "bt", pm.loadenv(packname))
 	if not module then
 		error(("module '%s' load failed:%s"):format(file, err))
 	end

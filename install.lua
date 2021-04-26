@@ -1,5 +1,3 @@
-local PLAT <const> = "msvc"
-
 local path_sep = package.config:sub(3,3)
 if package.cpath:match(path_sep) then
 	package.cpath = (function ()
@@ -13,6 +11,8 @@ if package.cpath:match(path_sep) then
 end
 
 local fs = require "filesystem.cpp"
+local bytecode = dofile "tools/install/bytecode.lua"
+local argument = dofile "packages/argument/main.lua"
 
 local function copy_directory(from, to, filter)
     fs.create_directories(to)
@@ -21,7 +21,11 @@ local function copy_directory(from, to, filter)
             if fs.is_directory(fromfile) then
                 copy_directory(fromfile, to / fromfile:filename(), filter)
             else
-                fs.copy_file(fromfile, to / fromfile:filename(), true)
+                if argument["bytecode"] and fromfile:equal_extension ".lua" then
+                    bytecode(fromfile, to / fromfile:filename())
+                else
+                    fs.copy_file(fromfile, to / fromfile:filename(), true)
+                end
             end
         end
     end
@@ -29,6 +33,8 @@ end
 
 local input = fs.path "./"
 local output = fs.path "../ant_release"
+local BIN = fs.exe_path():parent_path()
+local PLAT = BIN:parent_path():filename():string()
 
 if fs.exists(output) then
     fs.remove_all(output / "bin")
@@ -39,7 +45,7 @@ else
     fs.create_directories(output)
 end
 
-copy_directory(input / "bin" / PLAT / "Release", output / "bin", function (path)
+copy_directory(BIN, output / "bin", function (path)
    return path:equal_extension '.dll' or path:equal_extension'.exe'
 end)
 copy_directory(input / "engine", output / "engine")

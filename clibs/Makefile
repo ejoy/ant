@@ -11,7 +11,7 @@ include common.mk
 
 all: $(ALL_LIBS)
 
-LUA_TARGETS = $(ODIR)/lua.exe
+LUA_TARGETS = $(ODIR)/lua.exe $(ODIR)/luac.exe
 ifeq "$(PLAT)" "msvc"
 LUA_TARGETS += $(ODIR)/lua54.dll
 else ifeq "$(PLAT)" "mingw"
@@ -20,6 +20,7 @@ endif
 
 copy_lua: build_lua
 	cp $(addprefix lua/,$(LUA_TARGETS)) $(BIN)
+
 build_lua:
 	$(MAKE) -C lua $(LUA_TARGETS)
 clean_lua:
@@ -37,7 +38,7 @@ copy_$(1): build_$(1)
 endef
 
 define MAKE_temp
-build_$(1) : build_lua
+build_$(1) : copy_lua
 	$(MAKE) -C $(1) $(ODIR)/$(1).dll
 
 clean_$(1) :

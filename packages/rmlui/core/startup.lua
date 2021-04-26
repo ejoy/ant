@@ -52,7 +52,7 @@ function m.OnLoadExternalScript(document, source_path)
 		console.warn(("file '%s' does not exist."):format(source_path))
 		return
 	end
-	local f, err = loadfile(path, "t", environment[document])
+	local f, err = loadfile(path, "bt", environment[document])
 	if not f then
 		console.warn(err)
 		return

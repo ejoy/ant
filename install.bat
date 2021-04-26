@@ -1,1 +1,1 @@
-.\bin\msvc\Release\lua.exe install.lua
+.\bin\msvc\Release\lua.exe install.lua %*
