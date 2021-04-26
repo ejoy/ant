@@ -110,10 +110,10 @@ int calc_shadow_coord(float distanceVS, vec4 posWS, out vec4 shadowcoord)
 	for (int ii = 3; ii >= 0; --ii){
 		mat4 m = u_csm_matrix[ii];
 		vec4 v = mul(m, posWS);
-		vec2 t = v.xy / v.w;
+		vec4 t = v / v.w;
 		float fidx = float(ii);
 		if (0.25 * fidx <= t.x && t.x <= 0.25 * (fidx+1) &&
-			0.0 < t.y && t.y < 1.0){
+			0.0 < t.y && t.y < 1.0 && 0.0 <= t.z && t.z <= 1.0){
 			shadowcoord = v;
 			cascadeidx = ii;
 		}
