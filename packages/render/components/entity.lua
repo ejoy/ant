@@ -365,11 +365,7 @@ local function get_skybox_mesh()
 	if skybox_mesh == nil then
 		local desc = {vb={}, ib={}}
 		geodrawer.draw_box({1, 1, 1}, nil, nil, desc)
-		local gvb = {}
-		for _, v in ipairs(desc.vb)do
-			table.move(v, 1, 3, #gvb+1, gvb)
-		end
-		skybox_mesh = create_mesh({"p3", gvb}, desc.ib)
+		skybox_mesh = create_mesh({"p3", desc.vb}, desc.ib)
 	end
 
 	return skybox_mesh
@@ -384,8 +380,13 @@ function ientity.create_skybox(material)
 		},
 		data = {
 			transform = {},
-			material = material or "/pkg/ant.resources/materials/skybox.material",
+			material = material or "/pkg/ant.resources/materials/sky/skybox.material",
 			state = ies.create_state "visible",
+			ibl = {
+				irradiance = {size=64},
+				prefilter = {size=256},
+				LUT = {size=256},
+			},
 			scene_entity = true,
 			name = "sky_box",
 			mesh = get_skybox_mesh(),

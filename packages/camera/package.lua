@@ -1,3 +1,4 @@
 return {
-    name = "ant.camera"
+    name = "ant.camera",
+    entry = "main"
 }

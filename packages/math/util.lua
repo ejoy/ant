@@ -96,4 +96,20 @@ function util.random(r)
 	return util.lerp(r[1], r[2], t)
 end
 
+function util.min(a, b)
+	local t = {}
+	for i=1, 3 do
+		t[i] = math.min(a[i], b[i])
+	end
+	return t
+end
+
+function util.max(a, b)
+	local t = {}
+	for i=1, 3 do
+		t[i] = math.max(a[i], b[i])
+	end
+	return t
+end
+
 return util
