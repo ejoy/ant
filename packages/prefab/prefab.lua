@@ -126,7 +126,7 @@ function world:prefab_instance(filename)
 	for _, v in ipairs(getTemplate(filename)) do
 		if v.script then
 			local script = absolutePath(v.script, filename)
-			assert(fs.loadfile(script, "t", env))(ant)
+			assert(fs.loadfile(script, "bt", env))(ant)
 		end
 	end
 	return p

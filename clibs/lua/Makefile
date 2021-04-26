@@ -26,6 +26,7 @@ $(ODIR)/_$(1) : $(subst .o,.c,$(1))  | $(ODIR)
 endef
 $(foreach v, $(BASE_O), $(eval $(call build_lua,$(v))))
 $(eval $(call build_lua,lua.o))
+$(eval $(call build_lua,luac.o))
 
 $(ODIR)/liblua.a : $(foreach v, $(BASE_O), $(ODIR)/_$(v))
 	ar rsv $@ $^
@@ -34,6 +35,9 @@ lua54.dll : $(ODIR)/lua54.dll | $(ODIR)
 	cp $^ $@
 
 lua.exe : $(ODIR)/lua.exe | $(ODIR)
+	cp $^ $@
+
+luac.exe : $(ODIR)/luac.exe | $(ODIR)
 	cp $^ $@
 
 ifeq "$(PLAT)" "mingw"
@@ -50,6 +54,9 @@ $(ODIR)/lua.exe : $(ODIR)/lua.o $(foreach v, $(BASE_O), $(ODIR)/$(v))
 	$(CC) -o $@ $^ -lreadline && $(STRIP) $@
 
 endif
+
+$(ODIR)/luac.exe : $(ODIR)/luac.o $(foreach v, $(BASE_O), $(ODIR)/$(v))
+	$(CC) -o $@ $^ -lreadline && $(STRIP) $@
 
 $(ODIR) :
 	mkdir -p $@
