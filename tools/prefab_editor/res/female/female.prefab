@@ -35,10 +35,10 @@ data:
     punching: /pkg/ant.resources.binary/meshes/female/animations/punching.ozz
     running: /pkg/ant.resources.binary/meshes/female/animations/running.ozz
   animation_birth: idle
-  material: /pkg/tools.prefab_editor/res/female/test.material
+  material: /pkg/ant.resources.binary/meshes/female/female.glb|materials/asdf1_Beta_HighLimbsGeoSG2.material
   mesh: /pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Surface_P1.meshbin
   meshskin: /pkg/ant.resources.binary/meshes/female/female.glb|meshes/skin2.skinbin
-  name: Beta_Surface.1
+  name: Beta_Surface
   scene_entity: true
   skeleton: /pkg/ant.resources.binary/meshes/female/female.glb|animations/skeleton.ozz
   state: 7
@@ -59,19 +59,6 @@ policy:
 action:
   mount: 3
 data:
-  follow_flag: 1
-  follow_joint: "mixamorig:LeftHand"
-  name: slot1
-  slot: true
-  transform: {}
-policy:
-  ant.general|name
-  ant.scene|slot_policy
-  ant.scene|transform_policy
----
-action:
-  mount: 4
-data:
   collider:
     sphere:
       ---
@@ -86,22 +73,6 @@ policy:
   ant.scene|hierarchy_policy
   ant.scene|transform_policy
   ant.collision|collider_policy
----
-action:
-  mount: 3
-data:
-  follow_flag: 1
-  follow_joint: "mixamorig:RightHand"
-  name: slot2
-  slot: true
-  transform:
-    r: {0, 0, 0, 1}
-    s: {1, 1, 1}
-    t: {2.384185791015625e-07, 0, 0}
-policy:
-  ant.general|name
-  ant.scene|slot_policy
-  ant.scene|transform_policy
 ---
 action:
   mount: root

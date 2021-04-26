@@ -328,7 +328,7 @@ local function on_update(eid)
     elseif world[eid].light_type then
         light_gizmo.update()
     end
-    
+    inspector.update_template_tranform(eid)
 end
 
 local cmd_queue = require "gizmo.command_queue"(world)
