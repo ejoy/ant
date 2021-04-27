@@ -25,3 +25,7 @@ setting:
     CLUSTER_LIGHT_CULL: 1
 ---
 path: /pkg/ant.resources/materials/postprocess
+---
+type: fx
+fs = /pkg/ant.resources/shaders/effekseer/fs_model_unlit.sc
+vs = /pkg/ant.resources/shaders/effekseer/vs_sprite_unlit.sc
