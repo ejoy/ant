@@ -2,6 +2,7 @@ local util = {}
 local subprocess = require "subprocess"
 local fs = require "filesystem.local"
 local platform = require "platform"
+local thread = require "thread"
 
 local function quote_arg(s)
     if type(s) ~= 'string' then
@@ -67,20 +68,37 @@ function util.spawn_process(commands)
 		msg[#msg+1] = "----------------------------"
 		return false, table.concat(msg, "\n")
 	end
-	if prog.stdout then
-		local s = prog.stdout:read "a"
-		if #s > 0 then
-			msg[#msg+1] = "========== stdout =========="
-			msg[#msg+1] = s
-		end
-	end
-	if prog.stderr then
-		local s = prog.stderr:read "a"
-		if #s > 0 then
-			msg[#msg+1] = "========== stderr =========="
-			msg[#msg+1] = s
-		end
-	end
+
+    local outmsg = {}
+    local errmsg = {}
+    while true do
+        local outn = subprocess.peek(prog.stdout)
+        if outn == nil then
+            errmsg[#errmsg+1] = prog.stderr:read "a"
+            break
+        elseif outn ~= 0 then
+            outmsg[#outmsg+1] = prog.stdout:read(outn)
+        end
+        local errn = subprocess.peek(prog.stderr)
+        if errn == nil then
+            errmsg[#errmsg+1] = prog.stderr:read "a"
+            break
+        elseif errn ~= 0 then
+            errmsg[#errmsg+1] = prog.stderr:read(errn)
+        end
+        if outn == 0 and errn == 0 then
+            thread.sleep(0.1)
+        end
+    end
+
+    if #outmsg > 0 then
+        msg[#msg+1] = "========== stdout =========="
+        msg[#msg+1] = table.concat(outmsg)
+    end
+    if #errmsg > 0 then
+        msg[#msg+1] = "========== stderr =========="
+        msg[#msg+1] = table.concat(errmsg)
+    end
 	msg[#msg+1] = "----------------------------"
 	local errcode = prog:wait()
 	if errcode ~= 0 then
