@@ -9,6 +9,9 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
+    <Filter Include="Lua Files">
+      <UniqueIdentifier>{f09e077a-b529-47a3-bb45-25a488e778d6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\clibs\firmware\firmware.cpp">
@@ -25,5 +28,16 @@
     <ClInclude Include="..\..\clibs\firmware\FirmwareVfs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\..\engine\firmware\bootstrap.lua">
+      <Filter>Lua Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\engine\firmware\io.lua">
+      <Filter>Lua Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\engine\firmware\vfs.lua">
+      <Filter>Lua Files</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

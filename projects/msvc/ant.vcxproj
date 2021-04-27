@@ -24,6 +24,9 @@
     <ProjectReference Include="datalist.vcxproj">
       <Project>{c7c5b671-3ffe-4af9-9edd-55b33d96542e}</Project>
     </ProjectReference>
+    <ProjectReference Include="effekseer.vcxproj">
+      <Project>{71944675-3829-41db-961e-ca61018f5027}</Project>
+    </ProjectReference>
     <ProjectReference Include="filesystem.vcxproj">
       <Project>{e8872bdc-3e50-4224-963b-fa202217d028}</Project>
     </ProjectReference>

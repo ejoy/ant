@@ -26,6 +26,7 @@ int luaopen_thread(lua_State* L);
 int luaopen_window(lua_State* L);
 int luaopen_terrain(lua_State *L);
 int luaopen_font(lua_State *L);
+int luaopen_effekseer(lua_State* L);
 }
 
 const luaL_Reg* ant_modules() {
@@ -55,6 +56,7 @@ const luaL_Reg* ant_modules() {
         { "thread", luaopen_thread },
         { "window", luaopen_window },
         { "terrain", luaopen_terrain},
+        { "effekseer", luaopen_effekseer},
         { NULL, NULL },
     };
     return modules;

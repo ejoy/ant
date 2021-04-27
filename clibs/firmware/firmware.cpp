@@ -11,7 +11,7 @@ struct bin {
 	size_t      size;
 };
 
-#define INIT_BIN(name) { (const char*)g##name##Data, sizeof(g##name##Data) }
+#define INIT_BIN(name) { (const char*)g##name##Data, sizeof(g##name##Data) - 1 }
 
 std::map<std::string_view, bin> firmware = {
 	{ "bootstrap.lua", INIT_BIN(FirmwareBootstrap) },

@@ -23,6 +23,41 @@
     <ClInclude Include="..\..\clibs\firmware\FirmwareIo.h" />
     <ClInclude Include="..\..\clibs\firmware\FirmwareVfs.h" />
   </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\..\engine\firmware\bootstrap.lua">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cd ..\..
+.\bin\msvc\$(Configuration)\lua.exe clibs\firmware\embed.lua engine\firmware\bootstrap.lua clibs\firmware\FirmwareBootstrap.h</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">cd ..\..
+.\bin\msvc\$(Configuration)\lua.exe clibs\firmware\embed.lua engine\firmware\bootstrap.lua clibs\firmware\FirmwareBootstrap.h</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\clibs\firmware\FirmwareBootstrap.h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\clibs\firmware\FirmwareBootstrap.h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Build %(Filename)%(Extension)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Build %(Filename)%(Extension)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\..\engine\firmware\io.lua">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cd ..\..
+.\bin\msvc\$(Configuration)\lua.exe clibs\firmware\embed.lua engine\firmware\io.lua clibs\firmware\FirmwareIo.h</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">cd ..\..
+.\bin\msvc\$(Configuration)\lua.exe clibs\firmware\embed.lua engine\firmware\io.lua clibs\firmware\FirmwareIo.h</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Build %(Filename)%(Extension)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Build %(Filename)%(Extension)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\clibs\firmware\FirmwareIo.h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\clibs\firmware\FirmwareIo.h</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="..\..\engine\firmware\vfs.lua">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cd ..\..
+.\bin\msvc\$(Configuration)\lua.exe clibs\firmware\embed.lua engine\firmware\vfs.lua clibs\firmware\FirmwareVfs.h</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">cd ..\..
+.\bin\msvc\$(Configuration)\lua.exe clibs\firmware\embed.lua engine\firmware\vfs.lua clibs\firmware\FirmwareVfs.h</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Build %(Filename)%(Extension)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Build %(Filename)%(Extension)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\clibs\firmware\FirmwareVfs.h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\clibs\firmware\FirmwareVfs.h</Outputs>
+    </CustomBuild>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{4e00a5a9-ec1a-442e-8e9d-4a44a4bc5898}</ProjectGuid>
@@ -86,13 +121,7 @@
       <Command>
       </Command>
     </PostBuildEvent>
-    <PreBuildEvent>
-      <Command>cd ..\..
-.\bin\msvc\$(Configuration)\lua.exe clibs\firmware\embed.lua engine\firmware\bootstrap.lua clibs\firmware\FirmwareBootstrap.h
-.\bin\msvc\$(Configuration)\lua.exe clibs\firmware\embed.lua engine\firmware\io.lua clibs\firmware\FirmwareIo.h
-.\bin\msvc\$(Configuration)\lua.exe clibs\firmware\embed.lua engine\firmware\vfs.lua clibs\firmware\FirmwareVfs.h
-</Command>
-    </PreBuildEvent>
+    <PreBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -117,13 +146,7 @@
     <PreBuildEvent />
     <PreBuildEvent />
     <PostBuildEvent />
-    <PreBuildEvent>
-      <Command>cd ..\..
-.\bin\msvc\$(Configuration)\lua.exe clibs\firmware\embed.lua engine\firmware\bootstrap.lua clibs\firmware\FirmwareBootstrap.h
-.\bin\msvc\$(Configuration)\lua.exe clibs\firmware\embed.lua engine\firmware\io.lua clibs\firmware\FirmwareIo.h
-.\bin\msvc\$(Configuration)\lua.exe clibs\firmware\embed.lua engine\firmware\vfs.lua clibs\firmware\FirmwareVfs.h
-</Command>
-    </PreBuildEvent>
+    <PreBuildEvent />
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
