@@ -17,7 +17,7 @@
 #endif
 
 #define luai_threadevent(L, from, type)         \
-    if (L && (L->hookmask & LUA_MASKTHREAD)) {  \
+    if (L && (L->l_G->mainthread->hookmask & LUA_MASKTHREAD)) {  \
         setpvalue(LUA_S2V(L->top), from);       \
         L->top++;                               \
         LUA_CALLHOOK(L, LUA_HOOKTHREAD, type);  \
