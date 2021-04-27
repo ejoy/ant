@@ -1,13 +1,17 @@
 if __ANT_RUNTIME__ then
+    local lfs = require "filesystem.local"
+    local vfs = require "vfs"
     local fs = require "filesystem"
     local sha1 = require "hash".sha1
     local m = {}
-    function m.register()
+    function m.set_identity()
     end
-    function m.get_shader(fx, stage)
+    function m.compile_shader(fx, stage)
         if fx[stage] then
-            local hash = sha1(fx.param):sub(1,7)
-            return (fs.path(fx[stage]) / (stage..hash) / "main.bin"):localpath()
+            local hash = sha1(stage..fx.param):sub(1,7)
+            local path1 = (fs.path(fx[stage]) / hash / "main.bin"):localpath()
+            local path2 = vfs.compile(fx[stage], stage..fx.param)
+            return path1
         end
     end
     return m
@@ -166,11 +170,11 @@ local function do_compile(input, output, stage, setting)
     return deps
 end
 
-local function get_shader(fx, stage)
+local function compile_shader(fx, stage)
     local path = fx[stage]
     local hashpath = get_filename(path)
-    local hash = sha1(fx.param):sub(1,7)
-    local output = BINPATH / IDENTITY / hashpath / (stage .. hash)
+    local hash = sha1(stage .. fx.param):sub(1,7)
+    local output = BINPATH / IDENTITY / hashpath / hash
     local outfile = output / "main.bin"
     local depfile = output / ".dep"
     if not do_build(depfile) then
@@ -183,5 +187,5 @@ end
 
 return {
     set_identity = set_identity,
-    get_shader = get_shader,
+    compile_shader = compile_shader,
 }

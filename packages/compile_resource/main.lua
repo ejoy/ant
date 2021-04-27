@@ -13,10 +13,6 @@ if __ANT_RUNTIME__ then
     function cm.compile_path(pathstring)
         return fs.path(pathstring:gsub("|", "/")):localpath()
     end
-    function fx.set_identity()
-    end
-    function fx.compile()
-    end
 else
     cm = require "compile"
 end
@@ -48,6 +44,5 @@ return {
     compile = compile,
     compile_path = compile_path,
     read_file = read_file,
-    compile_fx = fx.compile,
-    load_fx = fx.loader,
+    compile_fx = fx.load,
 }

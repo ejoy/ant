@@ -239,6 +239,10 @@ function offline.GET(id, fullpath)
 	response_id(id, realpath, v.hash)
 end
 
+function offline.COMPILE(id, fullpath, setting)
+	error "TODO"
+end
+
 function offline.EXIT(id)
 	response_id(id, nil)
 	error "EXIT"
@@ -612,6 +616,10 @@ function online.GET(id, fullpath)
 		f:close()
 		response_id(id, realpath, v.hash)
 	end
+end
+
+function online.COMPILE(id, fullpath, setting)
+	online.GET(id, fullpath .. "/" .. setting)
 end
 
 function online.PREFETCH(path)
