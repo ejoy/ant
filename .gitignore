@@ -16,7 +16,8 @@
 .log
 
 clibs/**/build
-
+clibs/lua/luadll
+clibs/lua/luac
 
 /3rd/bin
 /bin
