@@ -208,10 +208,6 @@ function init_loader_sys:post_init()
     camera_cache.icc.updir.v = mc.YAXIS
     icamera.lookto(mq.camera_eid, camera_cache.icc.pos, camera_cache.icc.dir)
 
-
-    local p = iom.get_position(mq.camera_eid)
-    local l = math3d.length(p)
-    print(l)
     -- icamera.set_dof(mq.camera_eid, {
     --     -- aperture_fstop      = 2.8,
     --     -- aperture_blades     = 0,

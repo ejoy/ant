@@ -389,6 +389,7 @@ function ientity.create_skybox(material)
 			},
 			scene_entity = true,
 			name = "sky_box",
+			skybox = {},
 			mesh = get_skybox_mesh(),
 		}
 	}

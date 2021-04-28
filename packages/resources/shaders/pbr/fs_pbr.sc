@@ -19,7 +19,7 @@ $input v_texcoord0, v_posWS, v_normal, v_tangent, v_bitangent
 
 // material properites
 SAMPLER2D(s_basecolor,          0);
-SAMPLER2D(s_metallic_roughness, 1);	// r channel for metallic, g channel for roughness, occlusion map should put in b channel
+SAMPLER2D(s_metallic_roughness, 1);
 SAMPLER2D(s_normal,             2);
 SAMPLER2D(s_emissive,           3);
 SAMPLER2D(s_occlusion,          4);
@@ -170,12 +170,6 @@ void main()
 
     float NdotV = clamp_dot(N, V);
 
-    // Calculate lighting contribution from image based lighting source (IBL)
-#ifdef ENABLE_IBL
-    f_specular += get_IBL_radiance_GGX(N, V, NdotV, mi.roughness, mi.f0);
-    f_diffuse += get_IBL_radiance_Lambertian(N, mi.albedo);
-#endif
-
 #ifdef HAS_OCCLUSION_TEXTURE
     float ao = texture2D(s_occlusion,  uv).r;
     f_diffuse = mix(f_diffuse, f_diffuse * ao, u_occlusion_strength);
@@ -237,5 +231,11 @@ void main()
 #ifdef ENABLE_SHADOW
 	color = shadow_visibility(v_distanceVS, vec4(v_posWS.xyz, 1.0), color);
 #endif //ENABLE_SHADOW
+
+    // Calculate lighting contribution from image based lighting source (IBL)
+#ifdef ENABLE_IBL
+    color += get_IBL_radiance_GGX(N, V, NdotV, mi.roughness, mi.f0);
+    color += get_IBL_radiance_Lambertian(N, mi.albedo);
+#endif
     gl_FragColor = vec4(color, basecolor.a);
 }
