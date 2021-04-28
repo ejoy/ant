@@ -208,7 +208,7 @@ local function cull_lights()
 end
 
 function cfs:render_preprocess()
-    if not ilight.use_cluster_shading() or world:count "light_type" == 0 then
+    if not ilight.use_cluster_shading() then
         return
     end
 
