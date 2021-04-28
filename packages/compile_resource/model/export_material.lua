@@ -264,13 +264,16 @@ return function (output, glbdata, exports, tolocalpath)
 
     local material_modes = find_material_modes()
 
-    local function get_state(primitivemode)
+    local function get_state(primitivemode, translucent)
         local s = states[primitivemode]
         if s then
             return s
         end
 
-        s = read_datalist(tolocalpath "/pkg/ant.resources/materials/states/default_cw.state")
+        local defstate = translucent and 
+                    "/pkg/ant.resources/materials/states/translucent.state" or 
+                    "/pkg/ant.resources/materials/states/default_cw.state"
+        s = read_datalist(tolocalpath(defstate))
         local PT = primitive_state_names[primitivemode+1]
         s.PT = PT ~= "" and PT or nil
         return s
@@ -284,9 +287,10 @@ return function (output, glbdata, exports, tolocalpath)
         local modes = material_modes[matidx]
 
         for mode in pairs(modes) do
+            local isopaque = mat.alphaMode == nil or mat.alphaMode == "OPAQUE"
             local material = {
                 fx          = get_default_fx(),
-                state       = get_state(mode),
+                state       = get_state(mode, not isopaque),
                 properties  = {
                     s_basecolor          = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),
                     s_metallic_roughness = handle_texture(pbr_mr.metallicRoughnessTexture, "metallic_roughness", false, "linear"),
@@ -318,8 +322,10 @@ return function (output, glbdata, exports, tolocalpath)
                     setting[n] = 1
                 end
             end
-            if mat.alphaMode == "OPAQUE" then
+            if isopaque then
                 setting["ALPHAMODE_OPAQUE"] = 1
+            else
+                setting["MATERIAL_UNLIT"] = 1
             end
             if mat.alphaCutoff then
                 setting["ALPHAMODE_MASK"] = 1

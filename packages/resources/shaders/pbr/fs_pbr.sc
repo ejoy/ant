@@ -125,11 +125,6 @@ void main()
 #endif //UV_MOTION
     vec4 basecolor = get_basecolor(uv);
 
-#ifdef MATERIAL_UNLIT
-    gl_FragColor = basecolor;
-    return;
-#endif
-
 #ifdef ALPHAMODE_OPAQUE
     basecolor.a = u_alpha_mask_cutoff;
 #endif
@@ -141,6 +136,11 @@ void main()
         discard;
     }
     basecolor.a = 1.0;
+#endif
+
+#ifdef MATERIAL_UNLIT
+    gl_FragColor = basecolor;
+    return;
 #endif
 
     vec3 V = normalize(u_eyepos.xyz - v_posWS.xyz);
