@@ -104,7 +104,7 @@ local csm_setting = {
     --stabilize		= shadowcfg.stabilize,
 	split_num		= shadowcfg.split_num,
 	cross_delta		= shadowcfg.cross_delta or 0.005,
-	split_weight	= shadowcfg.split_weight or 0.75,
+	split_weight	= shadowcfg.split_weight or 0.7,
 	split_frustums	= {nil, nil, nil, nil},
 	fb_index		= fbmgr.create(get_render_buffers(shadowcfg.size * shadowcfg.split_num, shadowcfg.size, shadowcfg.type)),
 	

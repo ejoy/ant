@@ -235,11 +235,7 @@ void main()
     vec3 color = f_emissive + f_diffuse + f_specular;
 
 #ifdef ENABLE_SHADOW
-	float visibility = shadow_visibility(v_distanceVS, vec4(v_posWS.xyz, 1.0));
-	vec4 finalcolor = vec4(mix(u_shadow_color, color.rgb, visibility), basecolor.a);
-#else //!ENABLE_SHADOW
-	vec4 finalcolor = vec4(color, basecolor.a);
+	color = shadow_visibility(v_distanceVS, vec4(v_posWS.xyz, 1.0), color);
 #endif //ENABLE_SHADOW
-
-    gl_FragColor = finalcolor;
+    gl_FragColor = vec4(color, basecolor.a);
 }
