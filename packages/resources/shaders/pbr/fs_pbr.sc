@@ -165,16 +165,14 @@ void main()
     //mi.normal = N;
 
     // LIGHTING
-    vec3 f_specular = vec3_splat(0.0);
-    vec3 f_diffuse = vec3_splat(0.0);
+    vec3 color = vec3_splat(0.0);
 
     float NdotV = clamp_dot(N, V);
 
 #ifdef HAS_OCCLUSION_TEXTURE
     float ao = texture2D(s_occlusion,  uv).r;
-    f_diffuse = mix(f_diffuse, f_diffuse * ao, u_occlusion_strength);
-    // apply ambient occlusion too all lighting that is not punctual
-    f_specular = mix(f_specular, f_specular * ao, u_occlusion_strength);
+    color  += mix(f_diffuse, f_diffuse * ao, u_occlusion_strength) + 
+            = mix(f_specular, f_specular * ao, u_occlusion_strength);
 #endif
 
 #ifdef CLUSTER_SHADING
@@ -216,17 +214,15 @@ void main()
         {
             // Calculation of analytical light
             // https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#acknowledgments AppendixB
-            f_diffuse += intensity * NdotL *  BRDF_lambertian(mi.f0, mi.f90, mi.albedo, VdotH);
-            f_specular += intensity * NdotL * BRDF_specularGGX(mi.f0, mi.f90, mi.alpha_roughness, VdotH, NdotL, NdotV, NdotH);
+            color += intensity * (
+                    NdotL * BRDF_lambertian(mi.f0, mi.f90, mi.albedo, VdotH) +
+                    NdotL * BRDF_specularGGX(mi.f0, mi.f90, mi.alpha_roughness, VdotH, NdotL, NdotV, NdotH));
         }
     }
 
-    vec3 f_emissive = u_emissive_factor.rgb;
 #ifdef HAS_EMISSIVE_TEXTURE
-    f_emissive *= texture2D(s_emissive, uv).rgb;
+    color += texture2D(s_emissive, uv).rgb * u_emissive_factor.rgb;
 #endif
-
-    vec3 color = f_emissive + f_diffuse + f_specular;
 
 #ifdef ENABLE_SHADOW
 	color = shadow_visibility(v_distanceVS, vec4(v_posWS.xyz, 1.0), color);
@@ -234,8 +230,8 @@ void main()
 
     // Calculate lighting contribution from image based lighting source (IBL)
 #ifdef ENABLE_IBL
-    color += get_IBL_radiance_GGX(N, V, NdotV, mi.roughness, mi.f0);
-    color += get_IBL_radiance_Lambertian(N, mi.albedo);
+    color +=    get_IBL_radiance_GGX(N, V, NdotV, mi.roughness, mi.f0) +
+                get_IBL_radiance_Lambertian(N, mi.albedo);
 #endif
     gl_FragColor = vec4(color, basecolor.a);
 }
