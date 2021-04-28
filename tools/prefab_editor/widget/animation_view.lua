@@ -5,6 +5,7 @@ local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local utils     = require "common.utils"
 local fs        = require "filesystem"
+local rc        = import_package "ant.compile_resource"
 local world
 local icons
 local iani
@@ -862,10 +863,6 @@ local function show_joints(root)
     end
 end
 
-local anim_name = ""
-local ui_anim_name = {text = ""}
-local anim_path = ""
-
 function m.clear()
     current_eid = nil
     current_anim = nil
@@ -876,6 +873,21 @@ function m.clear()
     current_event = nil
     current_joint = nil
     current_clip = nil
+end
+
+local anim_name = ""
+local ui_anim_name = {text = ""}
+local anim_path = ""
+local external_anim_list = {}
+local current_external_anim
+local anim_glb_path = ""
+
+local function clear_add_animation_cache()
+    anim_name = ""
+    ui_anim_name.text = ""
+    anim_glb_path = ""
+    external_anim_list = {}
+    current_external_anim = nil
 end
 
 function m.show()
@@ -892,7 +904,7 @@ function m.show()
                 anim_state.is_playing = iani.is_playing(current_eid)
             end
             imgui.cursor.SameLine()
-            local title = "New Animation"
+            local title = "Add Animation"
             if imgui.widget.Button("Add") then
                 anim_path = ""
                 imgui.windows.OpenPopup(title)
@@ -904,21 +916,41 @@ function m.show()
                 if imgui.widget.InputText("##" .. "Name", ui_anim_name) then
                     anim_name = tostring(ui_anim_name.text)
                 end
-                imgui.widget.Text("Path : " .. anim_path)
+                imgui.widget.Text("Path : " .. anim_glb_path)
                 imgui.cursor.SameLine()
                 local origin_name
                 if imgui.widget.Button("...") then
-                    local filename = uiutils.get_open_file_path("Animation", ".ozz")
-                    if filename then
+                    local glb_filename = uiutils.get_open_file_path("Animation", ".glb")
+                    if glb_filename then
+                        external_anim_list = {}
+                        current_external_anim = nil
                         local vfs = require "vfs"
-                        local path = fs.path(filename)
-                        origin_name = path:stem():string()
-                        anim_path = "/" .. vfs.virtualpath(path)
+                        anim_glb_path = "/" .. vfs.virtualpath(fs.path(glb_filename))
+                        rc.compile(anim_glb_path)
+                        local external_path = rc.compile_path(anim_glb_path .. "|animations")
+                        for path in external_path:list_directory() do
+                            if path:equal_extension ".ozz" then
+                                local filename = path:filename():string()
+                                if filename ~= "skeleton.ozz" then
+                                    external_anim_list[#external_anim_list + 1] = filename
+                                end
+                            end
+                        end
                     end
                 end
-                if #anim_name < 1 and #anim_path > 0 then
-                    anim_name = origin_name
+                if #external_anim_list > 0 then
+                    imgui.cursor.Separator()
+                    for _, external_anim in ipairs(external_anim_list) do
+                        if imgui.widget.Selectable(external_anim, current_external_anim and (current_external_anim == external_anim), 0, 0, imgui.flags.Selectable {"DontClosePopups"}) then
+                            current_external_anim = external_anim
+                            anim_path = anim_glb_path .. "|animations/" .. external_anim
+                            if #anim_name < 1 then
+                                anim_name = fs.path(anim_path):stem():string()--string.sub(external_anim, 1, -5)
+                            end
+                        end
+                    end
                 end
+                imgui.cursor.Separator()
                 if imgui.widget.Button("  OK  ") then
                     if #anim_name > 0 and #anim_path > 0 then
                         local update = true
@@ -930,21 +962,23 @@ function m.show()
                             end
                         end
                         if update then
-                            local template = hierarchy:get_template(current_eid)
-                            template.template.data.animation[anim_name] = anim_path
-                            world[current_eid].animation[anim_name] = anim_path
+                            local group_eid = anim_group_eid[world[current_eid].animation[current_anim.name]]
+                            --TODO: set for group eid
+                            for _, eid in ipairs(group_eid) do
+                                local template = hierarchy:get_template(eid)
+                                template.template.data.animation[anim_name] = anim_path
+                                world[eid].animation[anim_name] = anim_path
+                            end
                             --TODO:reload
                             reload = true
                         end
                     end
-                    anim_name = ""
-                    ui_anim_name.text = ""
+                    clear_add_animation_cache()
                     imgui.windows.CloseCurrentPopup()
                 end
                 imgui.cursor.SameLine()
                 if imgui.widget.Button("Cancel") then
-                    anim_name = ""
-                    ui_anim_name.text = ""
+                    clear_add_animation_cache()
                     imgui.windows.CloseCurrentPopup()
                 end
                 imgui.windows.EndPopup()
@@ -1213,6 +1247,7 @@ return function(w, am)
     iani = world:interface "ant.animation|animation"
     ies = world:interface "ant.scene|ientity_state"
     iom = world:interface "ant.objcontroller|obj_motion"
+    --rc =    require "compile_resource"
     prefab_mgr = require "prefab_manager"(world)
     gizmo = require "gizmo.gizmo"(world)
     return m
