@@ -271,7 +271,7 @@ return function (output, glbdata, exports, tolocalpath)
         end
 
         local defstate = translucent and 
-                    "/pkg/ant.resources/materials/states/translucent.state" or 
+                    "/pkg/ant.resources/materials/states/translucent_cw.state" or 
                     "/pkg/ant.resources/materials/states/default_cw.state"
         s = read_datalist(tolocalpath(defstate))
         local PT = primitive_state_names[primitivemode+1]
