@@ -156,7 +156,7 @@ function init_loader_sys:init()
     --target_lock_test()
 
     ientity.create_skybox()
-    world:instance "/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab"
+    --world:instance "/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab"
     --world:instance "/pkg/ant.test.features/assets/CloudTestRun.glb|mesh.prefab"
 
     -- local eid = world:create_entity {
@@ -229,10 +229,6 @@ function init_loader_sys:post_init()
     -- })
     -- local dir = {0, 0, 1, 0}
     -- icamera.lookto(mq.camera_eid, {0, 0, -8, 1}, dir)
-    local f = icamera.get_frustum(mq.camera_eid)
-    f.n, f.f = 0.25, 300
-    icamera.set_frustum(mq.camera_eid, f)
-
     -- local ipl = world:interface "ant.render|ipolyline"
     -- ipl.add_strip_lines({
     --     {0, 0, 0}, {0.5, 0, 1}, {1, 0, 0},
