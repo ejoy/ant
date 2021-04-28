@@ -7,9 +7,9 @@ data:
     t: {-1, 1, 2, 1}
   frustum:
     aspect: 1.3333333333333333
-    f: 1000
+    f: 100
     fov: 60
-    n: 0.1
+    n: 1
     type: mat
   name: DEFAULT_CAMERA
   tag: camera

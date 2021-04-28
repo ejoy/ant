@@ -39,18 +39,6 @@ local scale_offset = hwi.get_caps().homogeneousDepth and homogeneous_depth_scale
 
 local shadowcfg = setting:data().graphic.shadow
 
-local function gen_ratios(distances)
-	local pre_dis = 0
-	local ratios = {}
-	for i=1, #distances do
-		local dis = distances[i]
-		ratios[#ratios+1] = {pre_dis, dis}
-		pre_dis = dis
-	end
-	ratios[#ratios+1] = {pre_dis, 1.0}
-	return ratios
-end
-
 local function get_render_buffers(width, height, depth_type)
 	if depth_type == "linear" then
 		local flags = samplerutil.sampler_flag {
@@ -111,21 +99,38 @@ end
 local csm_setting = {
 	depth_type		= shadowcfg.type,
 	shadowmap_size	= shadowcfg.size,
-	split_num		= shadowcfg.split_num,
 	shadow_param	= {shadowcfg.bias, shadowcfg.normal_offset, 1/shadowcfg.size, 0},
     color			= math3d.ref(math3d.vector(shadow_color())),
     --stabilize		= shadowcfg.stabilize,
+	split_num		= shadowcfg.split_num,
+	cross_delta		= shadowcfg.cross_delta or 0.005,
+	split_weight	= shadowcfg.split_weight or 0.75,
 	split_frustums	= {nil, nil, nil, nil},
-	fb_index		= fbmgr.create(get_render_buffers(shadowcfg.size * shadowcfg.split_num, shadowcfg.size, shadowcfg.type))
+	fb_index		= fbmgr.create(get_render_buffers(shadowcfg.size * shadowcfg.split_num, shadowcfg.size, shadowcfg.type)),
+	
 }
+
+local function gen_ratios(distances)
+	local pre_dis = 0
+	local ratios = {}
+	for i=1, #distances do
+		local dis = distances[i] * (1.0+csm_setting.cross_delta)
+		ratios[#ratios+1] = {pre_dis, dis}
+		pre_dis = dis
+	end
+	ratios[#ratios+1] = {pre_dis, 1.0}
+	return ratios
+end
 
 if shadowcfg.split_lamada then
 	csm_setting.split_lamada = shadowcfg.split_lamada and math.max(0, math.min(1, shadowcfg.split_lamada)) or nil
 else
 	local ratio_list
+	
 	if shadowcfg.split_ratios then
-		if #shadowcfg.split_ratios ~= (csm_setting.split_num - 1)  then
-			error(("#split_ratios == split_num - 1: %d, %d"):format(#shadowcfg.split_ratios, csm_setting.split_num))
+		local n =csm_setting.split_num
+		if #shadowcfg.split_ratios ~= (n - 1)  then
+			error(("#split_ratios == split_num - 1: %d, %d"):format(#shadowcfg.split_ratios, n))
 		end
 
 		ratio_list = shadowcfg.split_ratios
@@ -213,35 +218,37 @@ end
 
 function ishadow.calc_split_frustums(view_frustum)
 	local lambda = csm_setting.split_lamada
-	local split_frustums = csm_setting.split_frustums
+	local frustums = csm_setting.split_frustums
 	local view_nearclip, view_farclip = view_frustum.n, view_frustum.f
 	local clip_range = view_farclip - view_nearclip
 	local split_num = csm_setting.split_num
 
-	local function calc_clip(r)
-		return view_nearclip + clip_range * r
-	end
-	
 	if lambda then
-		local ratio = view_farclip / view_nearclip;
-		local last_clip = view_nearclip
-		for i=1, split_num do
-			local p = i / split_num
-			local log = view_nearclip * (ratio ^ p);
-			local uniform = calc_clip(p)
-			local new_far_clip = lambda * (log - uniform) + uniform;
+		local l = csm_setting.split_weight
+		local ratio = view_farclip/view_nearclip
+		local num_sclies = split_num*2
 
-			split_frustums[i] = split_new_frustum(view_frustum, last_clip, new_far_clip)
-			last_clip = new_far_clip
+		local nearclip = view_nearclip
+		local cross_multipler = (1.0+csm_setting.cross_delta)
+		for i=1, split_num do
+			local idx = (i-1)*2
+			local si = (idx+1) / num_sclies
+			local farclip = l*(view_nearclip*(ratio^si)) + (1-l)*(view_nearclip + (clip_range)*si)
+			frustums[i] = split_new_frustum(view_frustum, nearclip, farclip)
+			nearclip = farclip * cross_multipler
 		end
 	else
+		local function calc_clip(r)
+			return view_nearclip + clip_range * r
+		end
+
 		for i=1, split_num do
 			local ratio = csm_setting.split_ratios[i]
 			local near_clip, far_clip = calc_clip(ratio[1]), calc_clip(ratio[2])
-			split_frustums[i] = split_new_frustum(view_frustum, near_clip, far_clip)
+			frustums[i] = split_new_frustum(view_frustum, near_clip, far_clip)
 		end
 	end
-	return split_frustums
+	return frustums
 end
 
 function ishadow.split_num()
