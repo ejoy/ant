@@ -19,6 +19,11 @@ function vfs.realpath(path)
 	return io_resp()
 end
 
+function vfs.compile(path, setting)
+	io_req("COMPILE", threadid, npath(path), setting)
+	return io_resp()
+end
+
 function vfs.prefetch(path)
 	io_req("PREFETCH", npath(path))
 end

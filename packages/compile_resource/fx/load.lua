@@ -105,7 +105,7 @@ local function load_shader(fx, stage)
     if input == nil then
         error(("invalid stage:%s in fx file"):format(stage))
     end
-    local h = bgfx.create_shader(readfile(fxcompile.get_shader(fx, stage)))
+    local h = bgfx.create_shader(readfile(fxcompile.compile_shader(fx, stage)))
     bgfx.set_name(h, input)
     return h
 end
@@ -131,7 +131,7 @@ local function get_fx_cache(fx)
     return FX_CACHE[key]
 end
 
-local function loader(input, setting)
+local function load(input, setting)
     local fx = read_fx(input, setting)
     local cache = get_fx_cache(fx)
     local schash = get_hash(fx)
@@ -144,21 +144,12 @@ local function loader(input, setting)
     return fx
 end
 
-local function compile(input, setting)
-    local fx = read_fx(input, setting)
-    create_param(fx)
-    if fx.vs then fxcompile.get_shader(fx, "vs") end
-    if fx.fs then fxcompile.get_shader(fx, "fs") end
-    if fx.cs then fxcompile.get_shader(fx, "cs") end
-end
-
-local function unloader(res)
+local function unload(res)
     bgfx.destroy(assert(res.prog))
 end
 
 return {
     set_identity = fxcompile.set_identity,
-    compile = compile,
-    loader = loader,
-    unloader = unloader,
+    load = load,
+    unload = unload,
 }
