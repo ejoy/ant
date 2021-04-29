@@ -187,7 +187,7 @@ local function mouse_hit_plane(screen_pos, plane_info)
 end
 
 local function update_global_axis()
-	if not global_data.viewport then return end
+	if not global_data.viewport or not global_axis_eid then return end
 	local worldPos = mouse_hit_plane({50, global_data.viewport.h  - 50}, {dir = {0,1,0}, pos = {0,0,0}})
 	if worldPos then
 		iom.set_position(global_axis_eid, math3d.totable(worldPos))

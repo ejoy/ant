@@ -8,6 +8,7 @@ local renderbuffers = {}
 local viewid_bindings = {}
 
 function mgr.bind(viewid, fb_idx)
+	if not fb_idx then return end
 	viewid_bindings[viewid] = fb_idx
 	local fb = mgr.get(fb_idx)
 	bgfx.set_view_frame_buffer(viewid, assert(fb.handle))

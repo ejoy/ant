@@ -44,21 +44,18 @@ local function update_render_queue(q, viewsize)
 	irq.update_rendertarget(rt)
 end
 
-local function rebind_uiruntime()
-	local uiviewid = viewidmgr.get "uiruntime"
-
-	local mq_eid = world:singleton_entity_id "main_queue"
-	local fbidx = irq.frame_buffer(mq_eid)
-	fbmgr.bind(uiviewid, fbidx)
-end
-
 local function update_camera_viewrect(viewsize)
 	rb_cache = {}
 	for _, eid in world:each "watch_screen_buffer" do
 		update_render_queue(world[eid], viewsize)
 	end
 
-	rebind_uiruntime()
+	for _, eid in world:each "render_target" do
+		local rt = world[eid].render_target
+		local viewid = rt.viewid
+		local fbidx = rt.fb_idx
+		fbmgr.bind(viewid, fbidx)
+	end
 end
 
 function vp_detect_sys:post_init()
