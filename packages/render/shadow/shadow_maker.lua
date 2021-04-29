@@ -120,6 +120,32 @@ local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_s
 	}
 	camera_rc.projmat = math3d.projmat(camera_rc.frustum)
 	camera_rc.viewprojmat = math3d.mul(camera_rc.projmat, camera_rc.viewmat)
+
+
+	-- do
+	-- 	local ident_projmat = math3d.projmat{
+	-- 		ortho=true,
+	-- 		l=-1, r=1, b=-1, t=1, n=-100, f=100,
+	-- 	}
+
+	-- 	local minv, maxv = math3d.minmax(corners_WS, camera_rc.viewmat)
+	-- 	local minv_proj, maxv_proj = math3d.transformH(ident_projmat, minv, 1), math3d.transformH(ident_projmat, maxv, 1)
+	-- 	-- scale = 2 / (maxv_proj-minv_proj)
+	-- 	local scale = math3d.mul(2, math3d.reciprocal(math3d.sub(maxv_proj, minv_proj)))
+	-- 	-- offset = 0.5 * (minv_proj+maxv_proj) * scale
+	-- 	local offset = math3d.mul(scale, math3d.mul(0.5, math3d.add(minv_proj, maxv_proj)))
+	-- 	local scalex, scaley = math3d.index(scale, 1, 2)
+	-- 	local offsetx, offsety = math3d.index(offset, 1, 2)
+	-- 	local lightproj = math3d.mul(math3d.matrix(
+	-- 	scalex, 0.0, 	0.0, 0.0,
+	-- 	0.0,	scaley,	0.0, 0.0,
+	-- 	0.0,	0.0,	1.0, 0.0,
+	-- 	offsetx,offsety,0.0, 1.0
+	-- 	), ident_projmat)
+
+	-- 	camera_rc.projmat = lightproj
+	-- 	camera_rc.viewprojmat = math3d.mul(camera_rc.projmat, camera_rc.viewmat)
+	-- end
 end
 
 local function calc_shadow_camera(camera, frustum, lightdir, shadowmap_size, stabilize, sc_eid)
