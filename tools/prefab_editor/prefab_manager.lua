@@ -496,6 +496,7 @@ function m:reset_prefab()
     self.root = create_simple_entity("scene root")
     self.prefab_script = ""
     hierarchy:set_root(self.root)
+    ilight.active_directional_light(nil)
 end
 
 function m:open_prefab(prefab)
@@ -547,6 +548,9 @@ function m:open_prefab(prefab)
                     add_entity[#add_entity + 1] = new_entity
                     remove_entity[#remove_entity+1] = entity
                 else
+                    if world[entity].mesh then
+                        ies.set_state(entity, "selectable", true)
+                    end
                     hierarchy:add(entity, {template = prefab.__class[i]}, world[entity].parent or self.root)
                 end
             end
@@ -571,6 +575,10 @@ function m:open_prefab(prefab)
     end
 
     camera_mgr.bind_main_camera()
+
+    -- if not ilight.directional_light() then
+    --     world:pub { "Create", "light", {type = "directional"}}
+    -- end
 end
 
 function m:reload()
