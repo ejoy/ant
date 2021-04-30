@@ -43,11 +43,13 @@ https://github.com/KhronosGroup/glTF#gltf-tools
 
 ### 构建luamake
 
-> git clone https://github.com/actboy168/luamake
-> cd luamake
-> git submodule update --init
-> .\compile\install.bat (msvc)
-> ./compile/install.sh (mingw/linux/macos)
+``` bash
+git clone https://github.com/actboy168/luamake
+cd luamake
+git submodule update --init
+.\compile\install.bat (msvc)
+./compile/install.sh (mingw/linux/macos)
+```
 
 ### 编译
 工程分为三部分：
@@ -57,24 +59,34 @@ https://github.com/KhronosGroup/glTF#gltf-tools
 
 #### 编译3rd
 
-> luamake 3rd_init
-> luamake 3rd_make
+``` bash
+luamake 3rd_init
+luamake 3rd_make
+```
 
 也可以单独编译一个项目
-> luamake $(ProjectName)_init
-> luamake $(ProjectName)_make
+``` bash
+luamake $(ProjectName)_init
+luamake $(ProjectName)_make
+```
 
 #### 编译editor
 
-> luamake
+``` bash
+luamake
+```
 
 #### 编译runtime
 
-> luamake runtime
+``` bash
+luamake runtime
+```
 
 ### 运行
 运行一个最简单的示例
-> bin/msvc/debug/lua.exe test/simple/main.lua
+``` bash
+bin/msvc/debug/lua.exe test/simple/main.lua
+```
 
 ### 关于ant目录结构
 - **bin**：用于存放dll
