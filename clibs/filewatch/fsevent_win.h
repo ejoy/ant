@@ -6,13 +6,8 @@
 #include <thread>
 #include "lockqueue.h"
 
-#if defined(__MINGW32__)
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#else
 #include <filesystem>
 namespace fs = std::filesystem;
-#endif
 
 namespace ant::win::fsevent {
     class task;

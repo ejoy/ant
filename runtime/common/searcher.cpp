@@ -24,15 +24,7 @@ searcher_c(lua_State *L) {
 
 static void*
 get_bgfx() {
-#if defined(_MSC_VER)
-    HMODULE dll = LoadLibraryW(L"bgfx-core.dll");
-    if (dll) {
-        return (void*)GetProcAddress(dll, "bgfx_get_interface");
-    }
-    return NULL;
-#else
     return (void*)bgfx_get_interface;
-#endif
 }
 
 static void

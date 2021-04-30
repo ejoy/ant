@@ -81,13 +81,13 @@ function util.spawn_process(commands)
         end
         local errn = subprocess.peek(prog.stderr)
         if errn == nil then
-            errmsg[#errmsg+1] = prog.stderr:read "a"
+            outmsg[#outmsg+1] = prog.stdout:read "a"
             break
         elseif errn ~= 0 then
             errmsg[#errmsg+1] = prog.stderr:read(errn)
         end
         if outn == 0 and errn == 0 then
-            thread.sleep(0.1)
+            thread.sleep(0.01)
         end
     end
 
