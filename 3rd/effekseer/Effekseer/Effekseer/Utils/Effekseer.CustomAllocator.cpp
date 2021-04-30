@@ -21,9 +21,10 @@ void* EFK_STDCALL InternalAlignedMalloc(unsigned int size, unsigned int aligneme
 #elif defined(_MSC_VER)
 	return _mm_malloc(size, alignement);
 #else
-	void* ptr = nullptr;
-	posix_memalign(&ptr, alignement, size);
-	return ptr;
+// 	void* ptr = nullptr;
+// 	posix_memalign(&ptr, alignement, size);
+// 	return ptr;
+	return _aligned_malloc(alignement, size);
 #endif
 }
 
@@ -34,7 +35,7 @@ void EFK_STDCALL InternalAlignedFree(void* p, unsigned int size)
 #elif defined(_MSC_VER)
 	_mm_free(p);
 #else
-	return free(p);
+	return _aligned_free(p);
 #endif
 }
 

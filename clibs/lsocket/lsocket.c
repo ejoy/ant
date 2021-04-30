@@ -7,7 +7,7 @@
  */
 #define LUA_LIB
 #include <stdlib.h>
-#if _WINDOWS && _MSC_VER > 0
+#if defined(_WIN32) && _MSC_VER > 0
 #include <io.h>
 
 #define strncasecmp _strnicmp
@@ -15,7 +15,7 @@
 
 #else
 #include <unistd.h>
-#endif // _WINDOWS && _MSC_VER > 0
+#endif // defined(_WIN32) && _MSC_VER > 0
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -24,7 +24,7 @@
 #include "lua.h"
 #include "lauxlib.h"
 
-#if (defined _WIN32 ) || (defined _WIN64)
+#if (defined _WIN32)
 #include "win_compat.h"
 
 // winsock do not need check select fd

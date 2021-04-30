@@ -15,9 +15,7 @@
 .dep
 .log
 
-clibs/**/build
-clibs/lua/luadll
-clibs/lua/luac
+build
 
 /3rd/bin
 /bin

@@ -1,28 +1,28 @@
 local lm = require "luamake"
 
-local effekseerDir = "../../3rd/effekseer"
+dofile "../common.lua"
 
-local platform = require "bee.platform"
+local EffekseerDir = Ant3rd .. "effekseer"
 
-print(lm.plat)
-print(platform.OS)
-
-lm:lua_dll "effekseer" {
+lm:source_set "source_effekseer" {
     includes = {
-        effekseerDir.."/Effekseer",
-        effekseerDir.."/EffekseerRendererBGFX",
-        "../../3rd/bgfx/include",
-        "../../3rd/bx/include",
-        "../../3rd/glm"
+        EffekseerDir.."/Effekseer",
+        EffekseerDir.."/EffekseerRendererBGFX",
+        LuaInclude,
+        BgfxInclude,
+        Ant3rd .."glm"
     },
     sources = {
         "*.cpp",
-        effekseerDir.."/*.cpp",
+        EffekseerDir.."/*.cpp",
     },
-    flags = {
-        lm.plat=="msvc" and "-wd4244"
-    },
-    ldflags = {
-        
+    msvc = {
+        flags = {
+            "-wd4244"
+        }
     }
+}
+
+lm:lua_dll "effekseer" {
+    deps = "source_effekseer",
 }

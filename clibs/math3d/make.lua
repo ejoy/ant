@@ -1,6 +1,12 @@
 local lm = require "luamake"
 
-lm:lua_dll "math3d" {
+dofile "../common.lua"
+
+lm:source_set "source_math3d" {
+    includes = {
+        LuaInclude,
+        Ant3rd .. "glm",
+    },
     sources = {
         "linalg.c",
         "math3d.c",
@@ -8,15 +14,17 @@ lm:lua_dll "math3d" {
         "mathadapter.c",
         "testadapter.c",
     },
-    includes = {
-        "../../3rd/glm",
-    },
     defines = {
-        "LUA_BUILD_AS_DLL",
         "_USE_MATH_DEFINES",
-    },
-    ldflags = {
-        lm.plat == "msvc" and "-export:luaopen_math3d_adapter",
-        lm.plat == "msvc" and "-export:luaopen_math3d_adapter_test",
+    }
+}
+
+lm:lua_dll "math3d" {
+    deps = "source_math3d",
+    msvc = {
+        ldflags = {
+            "-export:luaopen_math3d_adapter",
+            "-export:luaopen_math3d_adapter_test",
+        }
     }
 }

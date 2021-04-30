@@ -5,7 +5,14 @@ Ant 游戏引擎
 
 > git submodule update --init
 
-### 搭建MINGW环境
+### 搭建编译环境
+
+#### MSVC
+- 安装Visual Studio 2019+
+
+- 下载并安装[cmake](https://cmake.org/download/)
+
+#### MINGW
 - 下载并安装[msys2](https://www.msys2.org/)
 
 - 修改镜像服务器
@@ -23,7 +30,7 @@ echo "export PATH=\$MINGW/bin:\$PATH" >> ~/.bash_profile
 
 - 安装gcc/make/cmake
 ``` bash
-pacman -Syu make mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake
+pacman -Syu make mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja
 ```
 
 #### 关于模型的转换工具
@@ -34,6 +41,15 @@ pacman -Syu make mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake
 - glTF转glb工具
 https://github.com/KhronosGroup/glTF#gltf-tools
 
+### 构建luamake
+
+``` bash
+git clone https://github.com/actboy168/luamake
+cd luamake
+git submodule update --init
+.\compile\install.bat (msvc)
+./compile/install.sh (mingw/linux/macos)
+```
 
 ### 编译
 工程分为三部分：
@@ -44,54 +60,33 @@ https://github.com/KhronosGroup/glTF#gltf-tools
 #### 编译3rd
 
 ``` bash
-cd 3rd  
-make init MODE=debug/release PLAT=mingw/msvc/osx/ios
-make all -j8 MODE=debug/release	PLAT=mingw/msvc/osx/ios
+luamake 3rd_init
+luamake 3rd_make
 ```
 
 也可以单独编译一个项目
 ``` bash
-cd 3rd  
-make $(ProjectName)_init MODE=debug/release PLAT=mingw/msvc/osx/ios
-make $(ProjectName)_make MODE=debug/release PLAT=mingw/msvc/osx/ios
-```
-#### 编译clibs  
-
-*OSX平台下面的文件名称与window下面的文件名称一致，即动态库的后缀仍然是dll，可执行文件的后缀仍然是ant.exe*
-
-``` bash
-cd clibs  
-make -j8 MODE=debug/release
+luamake $(ProjectName)_init
+luamake $(ProjectName)_make
 ```
 
-如果需要编译msvc，那么直接打开：
-> $(antfolder)/projects/msvc/ant.sln  
+#### 编译editor
 
-##### runtime:iOS
 ``` bash
-cd 3rd  
-make init PLAT=ios MODE=debug/release
-make all -j8 PLAT=ios MODE=debug/release
-cd ../clibs/ant
-make -j8 PLAT=ios MODE=debug/release
+luamake
 ```
 
-这里需要定位到目录：*../clibs/ant*下，该目录用于生成运行时所需要的lib文件
+#### 编译runtime
 
-编译成功后，使用xcode打开runtime/ios/ant.xcodeproj工程后，编译运行即可
-
-##### runtime:OSX
 ``` bash
-cd 3rd
-make init PLAT=osx MODE=debug
-make all PLAT=osx MODE=debug
-cd runtime/osx
-make
+luamake runtime
 ```
 
 ### 运行
 运行一个最简单的示例
-> bin/msvc/debug/lua.exe test/simple/main.lua
+``` bash
+bin/msvc/debug/lua.exe test/simple/main.lua
+```
 
 ### 关于ant目录结构
 - **bin**：用于存放dll
