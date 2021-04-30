@@ -14,7 +14,7 @@ lm:build "ozz-animation_init" {
         "-DEMSCRIPTEN=FALSE"
     },
     "-G", "Ninja",
-    "-S", "ozz-animation",
+    "-S", "@../ozz-animation",
     "-B", OzzBuildDir,
     pool = "console",
 }

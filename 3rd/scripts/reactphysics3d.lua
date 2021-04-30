@@ -8,7 +8,7 @@ lm:build "reactphysics3d_init" {
         "-DRP3D_LOGS_ENABLED=ON",
     },
     "-G", "Ninja",
-    "-S", "reactphysics3d",
+    "-S", "@../reactphysics3d",
     "-B", Rp3dBuildDir,
     pool = "console",
 }
