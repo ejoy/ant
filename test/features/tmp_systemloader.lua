@@ -421,5 +421,46 @@ function init_loader_sys:data_changed()
             local is = interset_aabb(l, aabb1, viewmat)
             print("interset_aabb:", is and "true" or "false")
         end
+
+        if key == 'F' and press == 0 then
+            local mq = world:singleton_entity "main_queue"
+            local screensize = {mq.render_target.view_rect.w, mq.render_target.view_rect.h}
+            local frustum = icamera.get_frustum(mq.camera_eid)
+            local u_nearZ, u_farZ = frustum.n, frustum.f
+            local invproj = math3d.inverse(icamera.calc_projmat(mq.camera_eid))
+            local vb = {}
+            local ib = {}
+            local function add_frustum_wireframe(ib)
+                local lib = {
+                    0, 1, 2, 3, 4, 5, 6, 7,
+                    0, 2, 2, 4, 4, 6, 6, 0,
+                    1, 3, 3, 5, 5, 7, 7, 1,
+                }
+                table.move(lib, 1, #lib, #lib+1, ib)
+            end
+            for z=1, 24 do
+                for y=1, 9 do
+                    for x=1, 16 do
+                        local id = {x-1, y-1, z-1}
+                        local points = split_frustum.build_frustum_points(id, screensize, u_nearZ, u_farZ, invproj)
+                        for _, p in ipairs(points) do
+                            local v = math3d.tovalue(p)
+                            for _, vv in ipairs(v) do
+                                vb[#vb+1] = vv
+                            end
+                        end
+                        add_frustum_wireframe(ib)
+                    end
+                end
+            end
+
+            local mesh = ientity.create_mesh({"p3", vb}, ib)
+            ientity.create_simple_render_entity(
+                "frustum",
+                "/pkg/ant.resources/materials/line.material",
+                mesh)
+        end
     end
+
+
 end
