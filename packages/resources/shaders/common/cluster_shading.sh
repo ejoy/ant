@@ -1,9 +1,9 @@
 #include "bgfx_compute.sh"
 #include "lighting.sh"
 
-#ifndef ORIGIN_TOP_LEFT
-#define ORIGIN_TOP_LEFT 1
-#endif //ORIGIN_TOP_LEFT
+#ifndef ORIGIN_BOTTOM_LEFT
+#define ORIGIN_BOTTOM_LEFT 0
+#endif //ORIGIN_BOTTOM_LEFT
 
 #ifndef HOMOGENEOUS_DEPTH
 #define HOMOGENEOUS_DEPTH 0

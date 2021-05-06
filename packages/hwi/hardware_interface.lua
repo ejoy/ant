@@ -69,7 +69,10 @@ function hw.init(args)
 	bgfx_init(args)
     local os = platform.OS
     local renderer = hw.get_caps().rendererType
-	import_package "ant.compile_resource".set_identity((os.."_"..renderer):lower())
+
+	local view_setting = "hd" .. (math3d.homogeneous_depth and "1" or "0")
+	view_setting = view_setting .. "_" .. "obl" .. (math3d.origin_bottom_left and "1" or "0")
+	import_package "ant.compile_resource".set_identity((os.."_"..renderer .. "_" .. view_setting):lower())
 end
 
 function hw.dpi()

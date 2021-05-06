@@ -3,6 +3,7 @@ local stringify = import_package "ant.serialize".stringify
 
 local lfs = require "filesystem.local"
 local subprocess = require "sp_util"
+local identity_util = require "identity"
 
 local TEXTUREC = subprocess.tool_exe_path "texturec"
 
@@ -116,8 +117,8 @@ return {
         return true
     end,
     what_bin_file = function (output, identity)
-        local os, renderer = identity:match "(%w+)_(%w+)"
-        local ext = assert(extensions[renderer])
+		local id = identity_util.parse(identity)
+        local ext = assert(extensions[id.renderer])
         return (output / "main.bin"):replace_extension(ext)
     end,
 }

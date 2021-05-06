@@ -22,10 +22,10 @@ local fs = require "filesystem"
 local sha1 = require "hash".sha1
 local datalist = require "datalist"
 local toolset = require "fx.toolset"
-local IDENTITY
+local IDENTITY, IDENTITY_items
 local BINPATH = fs.path "":localpath() / ".build" / "sc"
 local SHARER_INC = lfs.absolute(fs.path "/pkg/ant.resources/shaders":localpath())
-
+local identity_util = require "identity"
 local setting = import_package "ant.settings".setting
 
 local function get_filename(pathname)
@@ -49,6 +49,7 @@ end
 
 local function set_identity(identity)
     IDENTITY = identity
+    IDENTITY_items = identity_util.parse(identity)
 end
 
 local function do_build(depfile)
@@ -119,6 +120,8 @@ local function default_macros()
     }
 
     if enable_cs then
+        m[#m+1] = "HOMOGENEOUS_DEPTH=" .. (IDENTITY_items.homogeneous_depth and "1" or "0")
+        m[#m+1] = "ORIGIN_BOTTOM_LEFT=" .. (IDENTITY_items.origin_bottomleft and "1" or "0")
         m[#m+1] = "CLUSTER_SHADING"
     end
     return m
@@ -152,17 +155,16 @@ local function compile_debug_shader(platform, renderer)
 end
 
 local function do_compile(input, output, stage, setting)
-    local platform, renderer = IDENTITY:match "(%w+)_(%w+)"
     input = fs.path(input):localpath():string()
     local ok, err, deps = toolset.compile {
-        platform = platform,
-        renderer = renderer,
+        platform = IDENTITY_items.platform,
+        renderer = IDENTITY_items.renderer,
         input = input,
         output = output,
         includes = {SHARER_INC},
         stage = stage,
         macros = get_macros(setting),
-        debug = compile_debug_shader(platform, renderer),
+        debug = compile_debug_shader(IDENTITY_items.platform, IDENTITY_items.renderer),
     }
     if not ok then
         error("compile failed: " .. input .. "\n\n" .. err)

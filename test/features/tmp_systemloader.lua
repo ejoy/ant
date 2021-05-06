@@ -133,7 +133,7 @@ local function point_light_test()
     -- local cubeeid = world:instance "/pkg/ant.test.features/assets/entities/pbr_cube.prefab"[1]
     -- iom.set_position(cubeeid, {0, 0, 0, 1})
 
-    local eid = world:instance "/pkg/ant.test.features/assets/entities/light_directional.prefab"[1]
+    --local eid = world:instance "/pkg/ant.test.features/assets/entities/light_directional.prefab"[1]
 
     -- for _, r in ipairs{
     --     math3d.quaternion{2.4, 0, 0},
@@ -158,7 +158,7 @@ function init_loader_sys:init()
     --ientity.create_procedural_sky()
     --target_lock_test()
 
-    ientity.create_skybox()
+    --ientity.create_skybox()
     world:instance "/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab"
     --world:instance "/pkg/ant.test.features/assets/CloudTestRun.glb|mesh.prefab"
 

@@ -12,15 +12,15 @@ vec3 line_zplane_intersection(vec3 A, vec3 B, float zDistance){
     return result;
 }
 
-vec4 screen2view(vec4 screen){
+vec3 screen2view(vec4 screen){
     vec2 screen_ndc = (screen.xy / vec2(u_screen_width, u_screen_height)) * 2.0 - 1.0;
-#if ORIGIN_TOP_LEFT
+#if ORIGIN_BOTTOM_LEFT
     screen_ndc.y = 1.0 - screen_ndc.y;
-#endif //ORIGIN_TOP_LEFT
+#endif //ORIGIN_BOTTOM_LEFT
 
     vec4 ndc = vec4(screen_ndc, screen.zw);
     vec4 clip = mul(u_invProj, ndc);
-    return clip / clip.w;
+    return clip.xyz / clip.w;
 }
 
 // dispatch as: [16, 9, 24]
@@ -34,34 +34,19 @@ void main(){
     float near_sS = 0.0;
 #endif //HOMOGENEOUS_DEPTH
 
-#if ORIGIN_TOP_LEFT
-    vec2 topleft = gl_WorkGroupID.xy * u_tile_unit;
-    vec2 bottomright = topleft + u_tile_unit;
+    vec2 base = gl_WorkGroupID.xy * u_tile_unit;
+    vec2 bottomleft = base + vec2(0.0, u_tile_unit.y);
+    vec2 topright   = base + vec2(u_tile_unit.x, 0.0);
 
-    vec4 min_sS = vec4(topleft,     near_sS, 1.0);
-    vec4 max_sS = vec4(bottomright, near_sS, 1.0);
-#else //!ORIGIN_TOP_LEFT
-    vec2 bottomleft = gl_WorkGroupID.xy * u_tile_unit;
-    vec2 topright = bottomleft + u_tile_unit;
-
-    vec4 min_sS = vec4(bottomleft,near_sS, 1.0);
-    vec4 max_sS = vec4(topright,  near_sS, 1.0);
-#endif //ORIGIN_TOP_LEFT
-
-    vec3 max_vS = screen2view(max_sS).xyz;
-    vec3 min_vS = screen2view(min_sS).xyz;
+    vec3 min_vS = screen2view(vec4(bottomleft,  near_sS, 1.0));
+    vec3 max_vS = screen2view(vec4(topright,    near_sS, 1.0));
 
     float nearZ = which_z(gl_WorkGroupID.z,     u_cluster_size.z);
     float farZ  = which_z(gl_WorkGroupID.z+1,   u_cluster_size.z);
 
-    vec3 eyepos_vS   = vec3_splat(0.0);
-    vec3 min_near_vS = line_zplane_intersection(eyepos_vS, min_vS, nearZ);
-    vec3 min_far_vS  = line_zplane_intersection(eyepos_vS, min_vS, farZ);
-    vec3 max_near_vS = line_zplane_intersection(eyepos_vS, max_vS, nearZ);
-    vec3 max_far_vS  = line_zplane_intersection(eyepos_vS, max_vS, farZ);
-
-    vec3 minv = min(min(min_near_vS, min_far_vS),min(max_near_vS, max_far_vS));
-    vec3 maxv = max(max(min_near_vS, min_far_vS),max(max_near_vS, max_far_vS));
+    vec3 eyepos_vS = vec3_splat(0.0);
+    vec3 minv = line_zplane_intersection(eyepos_vS, min_vS, nearZ);
+    vec3 maxv = line_zplane_intersection(eyepos_vS, max_vS, farZ);
 
     store_cluster_aabb2(b_cluster_AABBs, cluster_idx, vec4(minv, 0.0), vec4(maxv, 0.0));
 }
