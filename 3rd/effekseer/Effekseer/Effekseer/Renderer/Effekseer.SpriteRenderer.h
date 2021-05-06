@@ -34,7 +34,6 @@ public:
 		bool IsRightHand;
 		float Maginification = 1.0f;
 
-
 		ZSortType ZSort;
 
 		NodeRendererDepthParameter* DepthParameterPtr = nullptr;

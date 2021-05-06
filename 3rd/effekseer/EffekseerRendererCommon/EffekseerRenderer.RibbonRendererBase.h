@@ -338,9 +338,6 @@ protected:
 
 					for (int32_t sploop = 0; sploop < parameter.SplineDivision; sploop++)
 					{
-						bool isFirst = param.InstanceIndex == 0 && sploop == 0;
-						bool isLast = param.InstanceIndex == (param.InstanceCount - 1);
-
 						float percent1 = (float)(sploop) / (float)(parameter.SplineDivision);
 
 						float percent2 = (float)(sploop + 1) / (float)(parameter.SplineDivision);
@@ -496,9 +493,6 @@ protected:
 						verteies[i].SetAlphaThreshold(param.AlphaThreshold);
 					}
 				}
-
-				float percent = (float)(param.InstanceIndex * parameter.SplineDivision + sploop) /
-								(float)((param.InstanceCount - 1) * parameter.SplineDivision);
 
 				if (parameter.ViewpointDependent)
 				{

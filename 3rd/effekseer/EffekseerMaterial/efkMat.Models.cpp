@@ -75,6 +75,8 @@ static const char* tag_changeNodePosCommand = "ChangeNodePosCommand";
 
 static const char* tag_changeMultiNodePosCommand = "ChangeMultiNodePosCommand";
 
+static const char* tag_changeNodeCommentSizeCommand = "ChangeNodeCommentSizeCommand";
+
 static std::vector<char> GetVectorFromStr(const std::string& s)
 {
 	std::vector<char> ret;
@@ -203,30 +205,32 @@ public:
 	virtual const char* GetTag() { return tag_changeStringCommand; }
 };
 
-class ChangeNodePosCommand : public ICommand
+class ChangeNodeRegionCommand : public ICommand
 {
 private:
 	std::shared_ptr<Node> node_;
-	Vector2DF newValue_;
-	Vector2DF oldValue_;
+	std::array<Vector2DF,2> newValue_;
+	std::array<Vector2DF,2> oldValue_;
 
 public:
-	ChangeNodePosCommand(std::shared_ptr<Node> node, Vector2DF newValue, Vector2DF oldValue)
+	ChangeNodeRegionCommand(std::shared_ptr<Node> node, std::array<Vector2DF,2> newValue, std::array<Vector2DF,2> oldValue)
 		: node_(node), newValue_(newValue), oldValue_(oldValue)
 	{
 	}
 
-	virtual ~ChangeNodePosCommand() {}
+	virtual ~ChangeNodeRegionCommand() {}
 
 	void Execute() override
 	{
-		node_->Pos = newValue_;
+		node_->Pos = newValue_[0];
+		node_->CommentSize = newValue_[1];
 		node_->MakePosDirtied();
 	}
 
 	void Unexecute() override
 	{
-		node_->Pos = oldValue_;
+		node_->Pos = oldValue_[0];
+		node_->CommentSize = oldValue_[1];
 		node_->MakePosDirtied();
 	}
 
@@ -236,7 +240,7 @@ public:
 		if (command->GetTag() != this->GetTag())
 			return false;
 
-		auto command_ = static_cast<ChangeNodePosCommand*>(command);
+		auto command_ = static_cast<ChangeNodeRegionCommand*>(command);
 		if (command_->node_ != this->node_)
 			return false;
 
@@ -339,18 +343,18 @@ std::shared_ptr<NodeProperty> Node::GetProperty(const std::string& name) const
 	return Properties[index];
 }
 
-void Node::UpdatePos(const Vector2DF& pos)
+void Node::UpdateRegion(const Vector2DF& pos, const Vector2DF& size)
 {
 
-	if (pos.X == pos.X && Pos.Y == pos.Y)
+	if (Pos.X == pos.X && Pos.Y == pos.Y && CommentSize.X == size.X && CommentSize.Y == size.Y)
 		return;
 
 	Pos = pos;
 
-	auto value_old = Pos;
-	auto value_new = pos;
+	auto value_old = std::array<Vector2DF, 2>{Pos, CommentSize};
+	auto value_new = std::array<Vector2DF, 2>{pos, size};
 
-	auto command = std::make_shared<ChangeNodePosCommand>(shared_from_this(), value_new, value_old);
+	auto command = std::make_shared<ChangeNodeRegionCommand>(shared_from_this(), value_new, value_old);
 
 	auto material = material_.lock();
 	if (material != nullptr)
@@ -947,7 +951,7 @@ void Material::Initialize()
 {
 	auto outputNodeParam = std::make_shared<NodeOutput>();
 	auto outputNode = CreateNode(outputNodeParam, true);
-	outputNode->UpdatePos(Vector2DF(200, 100));
+	outputNode->UpdateRegion(Vector2DF(200, 100), Vector2DF{});
 
 	for (size_t ci = 0; ci < CustomData.size(); ci++)
 	{
@@ -958,6 +962,8 @@ void Material::Initialize()
 			CustomData[ci].Descriptions[i] = std::make_shared<NodeDescription>();
 		}
 	}
+
+	commandManager_->Reset();
 }
 
 std::vector<std::shared_ptr<Pin>> Material::GetConnectedPins(std::shared_ptr<Pin> pin)
@@ -1087,6 +1093,12 @@ std::shared_ptr<Node> Material::CreateNode(std::shared_ptr<NodeParameter> parame
 	auto node = std::make_shared<Node>();
 	node->material_ = this->shared_from_this();
 	node->Parameter = parameter;
+
+	if (parameter->Type == NodeType::Comment)
+	{
+		node->CommentSize = Vector2DF{
+			100.0f, 100.0f};
+	}
 
 	if (guid > 0)
 	{
@@ -1639,11 +1651,13 @@ void Material::LoadFromStr(const char* json, std::shared_ptr<Library> library, c
 	textures.clear();
 
 	LoadFromStrInternal(json, Vector2DF(), library, basePath, SaveLoadAimType::IO);
+
+	commandManager_->Reset();
 }
 
 std::string Material::SaveAsStr(const char* basePath) { return SaveAsStrInternal(nodes_, links_, basePath, SaveLoadAimType::IO); }
 
-bool Material::Load(std::vector<uint8_t>& data, std::shared_ptr<Library> library, const char* basePath)
+ErrorCode Material::Load(std::vector<uint8_t>& data, std::shared_ptr<Library> library, const char* basePath)
 {
 
 	int offset = 0;
@@ -1657,11 +1671,16 @@ bool Material::Load(std::vector<uint8_t>& data, std::shared_ptr<Library> library
 	prefix[4] = 0;
 
 	if (std::string("EFKM") != std::string(prefix))
-		return false;
+		return ErrorCode::InvalidFile;
 
 	int version = 0;
 	memcpy(&version, data.data() + offset, 4);
 	offset += sizeof(int);
+
+	if (version > lastestSupportedVersion_)
+	{
+		return ErrorCode::NewVersion;
+	}
 
 	uint64_t guid = 0;
 	memcpy(&guid, data.data() + offset, 8);
@@ -1686,7 +1705,7 @@ bool Material::Load(std::vector<uint8_t>& data, std::shared_ptr<Library> library
 		offset += chunk_size;
 	}
 
-	return true;
+	return ErrorCode::OK;
 }
 
 bool Material::Save(std::vector<uint8_t>& data, const char* basePath)
@@ -1694,7 +1713,7 @@ bool Material::Save(std::vector<uint8_t>& data, const char* basePath)
 	// header
 
 	const char* prefix = "EFKM";
-	int version = 3;
+	int version = MaterialVersion16;
 
 	size_t offset = 0;
 

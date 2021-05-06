@@ -302,9 +302,9 @@ inline Color HSVToRGB(Color hsv)
 		break;
 	}
 	Color result;
-	result.R = R;
-	result.G = G;
-	result.B = B;
+	result.R = static_cast<uint8_t>(R);
+	result.G = static_cast<uint8_t>(G);
+	result.B = static_cast<uint8_t>(B);
 	result.A = hsv.A;
 	return result;
 }

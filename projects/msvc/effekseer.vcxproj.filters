@@ -212,9 +212,6 @@
     <ClCompile Include="..\..\3rd\effekseer\Effekseer\Effekseer\Model\ModelLoader.cpp">
       <Filter>effekseer\Effekseer\Effekseer\Model</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\effekseer\Effekseer\Effekseer\Model\ProcedualModelGenerator.cpp">
-      <Filter>effekseer\Effekseer\Effekseer\Model</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\3rd\effekseer\Effekseer\Effekseer\Model\SplineGenerator.cpp">
       <Filter>effekseer\Effekseer\Effekseer\Model</Filter>
     </ClCompile>
@@ -340,6 +337,12 @@
     </ClCompile>
     <ClCompile Include="..\..\clibs\effekseer\effect.cpp">
       <Filter>binding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\effekseer\Effekseer\Effekseer\Effekseer.CurveLoader.cpp">
+      <Filter>effekseer\Effekseer\Effekseer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\effekseer\Effekseer\Effekseer\Model\ProceduralModelGenerator.cpp">
+      <Filter>effekseer\Effekseer\Effekseer\Model</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -536,12 +539,6 @@
       <Filter>effekseer\Effekseer\Effekseer\Model</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\effekseer\Effekseer\Effekseer\Model\ModelLoader.h">
-      <Filter>effekseer\Effekseer\Effekseer\Model</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\effekseer\Effekseer\Effekseer\Model\ProcedualModelGenerator.h">
-      <Filter>effekseer\Effekseer\Effekseer\Model</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\3rd\effekseer\Effekseer\Effekseer\Model\ProcedualModelParameter.h">
       <Filter>effekseer\Effekseer\Effekseer\Model</Filter>
     </ClInclude>
     <ClInclude Include="..\..\3rd\effekseer\Effekseer\Effekseer\Model\SplineGenerator.h">
@@ -774,6 +771,12 @@
     </ClInclude>
     <ClInclude Include="..\..\clibs\effekseer\effect.h">
       <Filter>binding</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\effekseer\Effekseer\Effekseer\Model\ProceduralModelGenerator.h">
+      <Filter>effekseer\Effekseer\Effekseer\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\effekseer\Effekseer\Effekseer\Model\ProceduralModelParameter.h">
+      <Filter>effekseer\Effekseer\Effekseer\Model</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

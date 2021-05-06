@@ -12,10 +12,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <iterator>
 #include <array>
 #include <cfloat>
 #include <chrono>
+#include <iterator>
 #include <list>
 #include <map>
 #include <mutex>
@@ -97,10 +97,9 @@ enum eEffectNodeType
 	EFFECT_NODE_TYPE_RING = 4,
 	EFFECT_NODE_TYPE_MODEL = 5,
 	EFFECT_NODE_TYPE_TRACK = 6,
-	
+
 	EFFECT_NODE_TYPE_DWORD = 0x7fffffff,
 };
-
 
 class StringHelper
 {

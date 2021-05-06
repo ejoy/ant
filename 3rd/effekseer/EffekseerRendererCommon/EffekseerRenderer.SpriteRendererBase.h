@@ -69,7 +69,6 @@ protected:
 						   const StandardRendererState& state,
 						   const ::Effekseer::SIMD::Mat44f& camera)
 	{
-		void* userData = nullptr;
 		const ShaderParameterCollector& collector = state.Collector;
 		if (collector.ShaderType == RendererShaderType::Material)
 		{
@@ -130,7 +129,7 @@ protected:
 		state.EdgeColor[3] = param.BasicParameterPtr->EdgeColor[3];
 		state.EdgeColorScaling = param.BasicParameterPtr->EdgeColorScaling;
 		state.IsAlphaCuttoffEnabled = param.BasicParameterPtr->IsAlphaCutoffEnabled;
-		
+
 		state.Maginification = param.Maginification;
 
 		state.Distortion = param.BasicParameterPtr->MaterialType == Effekseer::RendererMaterialType::BackDistortion;
@@ -150,6 +149,8 @@ protected:
 
 		renderer->GetStandardRenderer()->UpdateStateAndRenderingIfRequired(state);
 
+		count = (std::min)(count, m_renderer->GetSquareMaxCount());
+
 		renderer->GetStandardRenderer()->BeginRenderingAndRenderingIfRequired(count * 4, stride_, (void*&)m_ringBufferData);
 		m_spriteCount = 0;
 
@@ -164,10 +165,10 @@ protected:
 	{
 		if (parameter.ZSort == Effekseer::ZSortType::None)
 		{
-			auto camera = m_renderer->GetCameraMatrix();
+			auto cameraMat = m_renderer->GetCameraMatrix();
 			const auto& state = m_renderer->GetStandardRenderer()->GetState();
 
-			RenderingInstance(instanceParameter, parameter, state, camera);
+			RenderingInstance(instanceParameter, parameter, state, cameraMat);
 		}
 		else
 		{

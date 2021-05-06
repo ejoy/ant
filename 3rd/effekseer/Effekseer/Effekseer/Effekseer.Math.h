@@ -13,7 +13,8 @@ namespace Effekseer
 //----------------------------------------------------------------------------------
 inline float NormalizeAngle(float angle)
 {
-	union {
+	union
+	{
 		float f;
 		int32_t i;
 	} ofs, anglebits = {angle};

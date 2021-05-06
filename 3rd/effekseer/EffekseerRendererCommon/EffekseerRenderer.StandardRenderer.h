@@ -1,4 +1,4 @@
-
+﻿
 #ifndef __EFFEKSEERRENDERER_STANDARD_RENDERER_BASE_H__
 #define __EFFEKSEERRENDERER_STANDARD_RENDERER_BASE_H__
 
@@ -532,6 +532,7 @@ public:
 				shader_ = (SHADER*)m_state.Collector.MaterialDataPtr->UserPtr;
 			}
 			*/
+
 			// validate
 			if (shader_ == nullptr)
 				return;
@@ -759,6 +760,9 @@ public:
 				reconstructionParam.ProjectionMatrix43,
 				reconstructionParam.ProjectionMatrix44);
 
+			pcb.UVInversedBack[0] = uvInversedBack[0];
+			pcb.UVInversedBack[1] = uvInversedBack[1];
+
 			m_renderer->SetPixelBufferToShader(&pcb, sizeof(PixelConstantBuffer), 0);
 		}
 		else
@@ -839,6 +843,9 @@ public:
 					reconstructionParam.ProjectionMatrix34,
 					reconstructionParam.ProjectionMatrix43,
 					reconstructionParam.ProjectionMatrix44);
+
+				pcb.UVInversedBack[0] = uvInversedBack[0];
+				pcb.UVInversedBack[1] = uvInversedBack[1];
 
 				m_renderer->SetPixelBufferToShader(&pcb, sizeof(PixelConstantBuffer), 0);
 			}

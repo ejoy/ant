@@ -3,15 +3,15 @@
 //
 //----------------------------------------------------------------------------------
 #include "Effekseer.Setting.h"
-#include "Effekseer.RectF.h"
 #include "Effekseer.EffectLoader.h"
+#include "Effekseer.RectF.h"
 
 #include "Effekseer.CurveLoader.h"
 #include "Effekseer.MaterialLoader.h"
 #include "Effekseer.SoundLoader.h"
 #include "Effekseer.TextureLoader.h"
 #include "Model/ModelLoader.h"
-#include "Model/ProcedualModelGenerator.h"
+#include "Model/ProceduralModelGenerator.h"
 
 #include "Renderer/Effekseer.ModelRenderer.h"
 #include "Renderer/Effekseer.RibbonRenderer.h"
@@ -20,8 +20,8 @@
 #include "Renderer/Effekseer.TrackRenderer.h"
 
 #include "Effekseer.Effect.h"
-#include "IO/Effekseer.EfkEfcFactory.h"
 #include "Effekseer.ResourceManager.h"
+#include "IO/Effekseer.EfkEfcFactory.h"
 
 //----------------------------------------------------------------------------------
 //
@@ -43,7 +43,7 @@ Setting::Setting()
 	AddEffectFactory(efkefcFactory);
 
 	resourceManager_ = MakeRefPtr<ResourceManager>();
-	resourceManager_->SetProcedualMeshGenerator(MakeRefPtr<ProcedualModelGenerator>());
+	resourceManager_->SetProceduralMeshGenerator(MakeRefPtr<ProceduralModelGenerator>());
 }
 
 //----------------------------------------------------------------------------------
@@ -177,17 +177,17 @@ void Setting::SetCurveLoader(CurveLoaderRef loader)
 //----------------------------------------------------------------------------------
 //
 //----------------------------------------------------------------------------------
-ProcedualModelGeneratorRef Setting::GetProcedualMeshGenerator() const
+ProceduralModelGeneratorRef Setting::GetProceduralMeshGenerator() const
 {
-	return resourceManager_->GetProcedualMeshGenerator();
+	return resourceManager_->GetProceduralMeshGenerator();
 }
 
 //----------------------------------------------------------------------------------
 //
 //----------------------------------------------------------------------------------
-void Setting::SetProcedualMeshGenerator(ProcedualModelGeneratorRef generator)
+void Setting::SetProceduralMeshGenerator(ProceduralModelGeneratorRef generator)
 {
-	resourceManager_->SetProcedualMeshGenerator(generator);
+	resourceManager_->SetProceduralMeshGenerator(generator);
 }
 
 //----------------------------------------------------------------------------------

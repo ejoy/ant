@@ -1,4 +1,4 @@
-
+﻿
 #ifndef __EFFEKSEERRENDERER_COMMON_UTILS_H__
 #define __EFFEKSEERRENDERER_COMMON_UTILS_H__
 
@@ -971,7 +971,7 @@ struct ShaderParameterCollector
 			IsDepthRequired = true;
 		}
 
-		if (param->MaterialType == ::Effekseer::RendererMaterialType::File)
+		if (param->MaterialType == ::Effekseer::RendererMaterialType::File && isMaterial)
 		{
 			MaterialRenderDataPtr = param->MaterialRenderDataPtr;
 			if (MaterialRenderDataPtr != nullptr)
@@ -1024,7 +1024,7 @@ struct ShaderParameterCollector
 		if (MaterialRenderDataPtr != nullptr && MaterialDataPtr != nullptr)
 		{
 			TextureCount = static_cast<int32_t>(Effekseer::Min(MaterialRenderDataPtr->MaterialTextures.size(), ::Effekseer::UserTextureSlotMax));
-			for (size_t i = 0; i < TextureCount; i++)
+			for (int32_t i = 0; i < TextureCount; i++)
 			{
 				if (MaterialRenderDataPtr->MaterialTextures[i].Type == 1)
 				{
@@ -1410,6 +1410,7 @@ struct PixelConstantBuffer
 	EmmisiveParameter EmmisiveParam;
 	EdgeParameter EdgeParam;
 	SoftParticleParameter SoftParticleParam;
+	float UVInversedBack[4];
 
 	void SetModelFlipbookParameter(float enableInterpolation, float interpolationType)
 	{

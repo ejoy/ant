@@ -56,7 +56,8 @@ public:
 	/**
 		@brief	描画に必要なパラメータ
 	*/
-	union {
+	union
+	{
 		EffectNodeTrack::InstanceGroupValues track;
 	} rendererValues;
 

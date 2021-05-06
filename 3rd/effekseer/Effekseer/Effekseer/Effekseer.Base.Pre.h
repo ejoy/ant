@@ -85,8 +85,8 @@ class Texture;
 class SoundData;
 class SoundPlayer;
 class Model;
-struct ProcedualModelParameter;
-class ProcedualModelGenerator;
+struct ProceduralModelParameter;
+class ProceduralModelGenerator;
 class Curve;
 class Material;
 
@@ -685,7 +685,7 @@ public:
 	{
 		auto ptr = Get();
 		SafeAddRef(ptr);
-		return RefPtr<U>(reinterpret_cast<U*>(ptr));
+		return RefPtr<U>(static_cast<U*>(ptr));
 	}
 
 	void* Pin()
@@ -764,7 +764,7 @@ using MaterialLoaderRef = RefPtr<MaterialLoader>;
 using SoundLoaderRef = RefPtr<SoundLoader>;
 using ModelLoaderRef = RefPtr<ModelLoader>;
 using CurveLoaderRef = RefPtr<CurveLoader>;
-using ProcedualModelGeneratorRef = RefPtr<ProcedualModelGenerator>;
+using ProceduralModelGeneratorRef = RefPtr<ProceduralModelGenerator>;
 
 /**
 	@brief	This object generates random values.
@@ -986,7 +986,7 @@ struct NodeRendererBasicParameter
 
 		for (size_t i = 2; i < TextureIndexes.size(); i++)
 		{
-			if(TextureIndexes[i] >= 0)
+			if (TextureIndexes[i] >= 0)
 			{
 				return true;
 			}
@@ -1002,9 +1002,6 @@ struct NodeRendererBasicParameter
 			return true;
 
 		if (IsAlphaCutoffEnabled)
-			return true;
-
-		if (EmissiveScaling != 1.0f)
 			return true;
 
 		return false;

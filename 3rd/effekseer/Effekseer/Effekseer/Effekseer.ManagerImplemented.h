@@ -162,6 +162,9 @@ private:
 	//! objects on rendering
 	CustomAlignedVector<DrawSet> m_renderingDrawSets;
 
+	//! objects on rendering temporaly (sorted)
+	CustomAlignedVector<DrawSet> sortedRenderingDrawSets_;
+
 	//! objects on rendering
 	CustomAlignedMap<Handle, DrawSet> m_renderingDrawSetMaps;
 
@@ -202,6 +205,9 @@ private:
 
 	int m_randMax;
 
+	std::queue<std::pair<SoundTag, SoundPlayer::InstanceParameter>> m_requestedSounds;
+	std::mutex m_soundMutex;
+
 	Handle AddDrawSet(const EffectRef& effect, InstanceContainer* pInstanceContainer, InstanceGlobal* pGlobalPointer);
 
 	void StopStoppingEffects();
@@ -216,6 +222,10 @@ private:
 	static int EFK_STDCALL Rand();
 
 	void ExecuteEvents();
+
+	void ExecuteSounds();
+
+	void StoreSortingDrawSets(const Manager::DrawParameter& drawParameter);
 
 public:
 	ManagerImplemented(int instance_max, bool autoFlip);
@@ -465,6 +475,8 @@ public:
 	void LockRendering() override;
 
 	void UnlockRendering() override;
+
+	void RequestToPlaySound(Instance* instance, const EffectNodeImplemented* node);
 
 	ManagerImplemented* GetImplemented() override
 	{

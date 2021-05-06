@@ -13,7 +13,8 @@ public:
 	{
 		Vector3DF Position;
 
-		union {
+		union
+		{
 			struct
 			{
 				float Radius;

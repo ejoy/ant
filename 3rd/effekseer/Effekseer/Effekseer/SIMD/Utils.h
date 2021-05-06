@@ -29,10 +29,9 @@ public:
 #elif defined(_MSC_VER)
 		return _mm_malloc(size, align);
 #else
-// 		void *ptr = nullptr;
-// 		posix_memalign(&ptr, align, size);
-// 		return ptr;
-		return _aligned_malloc(align, size);
+		void *ptr = nullptr;
+		posix_memalign(&ptr, align, size);
+		return ptr;
 #endif
 	}
 	static void operator delete(void* ptr) {
@@ -41,7 +40,7 @@ public:
 #elif defined(_MSC_VER)
 		_mm_free(ptr);
 #else
-		return _aligned_free(ptr);
+		return free(ptr);
 #endif
 	}
 };

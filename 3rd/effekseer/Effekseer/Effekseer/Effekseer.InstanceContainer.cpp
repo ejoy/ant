@@ -240,7 +240,7 @@ void InstanceContainer::Draw(bool recursive)
 		if (count > 0 && m_pEffectNode->IsRendered)
 		{
 			void* userData = m_pGlobal->GetUserData();
-			
+
 			m_pEffectNode->BeginRendering(count, m_pManager, userData);
 
 			for (InstanceGroup* group = m_headGroups; group != nullptr; group = group->NextUsedByContainer)

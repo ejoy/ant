@@ -9,7 +9,7 @@
 #include "Effekseer.SoundLoader.h"
 #include "Effekseer.TextureLoader.h"
 #include "Model/ModelLoader.h"
-#include "Model/ProcedualModelGenerator.h"
+#include "Model/ProceduralModelGenerator.h"
 
 //----------------------------------------------------------------------------------
 //
@@ -97,21 +97,14 @@ void ResourceManager::UnloadCurve(CurveRef resource)
 	cachedCurves_.Unload(resource);
 }
 
-ModelRef ResourceManager::GenerateProcedualModel(const ProcedualModelParameter* param)
+ModelRef ResourceManager::GenerateProceduralModel(const ProceduralModelParameter& param)
 {
-	if (procedualMeshGenerator_ != nullptr)
-	{
-		return procedualMeshGenerator_->Generate(param);
-	}
-	return nullptr;
+	return proceduralMeshGenerator_.Load(param);
 }
 
-void ResourceManager::UngenerateProcedualModel(ModelRef resource)
+void ResourceManager::UngenerateProceduralModel(ModelRef resource)
 {
-	if (procedualMeshGenerator_ != nullptr)
-	{
-		procedualMeshGenerator_->Ungenerate(resource);
-	}
+	proceduralMeshGenerator_.Unload(resource);
 }
 
 //----------------------------------------------------------------------------------

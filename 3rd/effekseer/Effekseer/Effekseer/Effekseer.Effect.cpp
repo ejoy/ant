@@ -19,8 +19,8 @@
 #include "Effekseer.TextureLoader.h"
 #include "Model/Model.h"
 #include "Model/ModelLoader.h"
-#include "Model/ProcedualModelGenerator.h"
-#include "Model/ProcedualModelParameter.h"
+#include "Model/ProceduralModelGenerator.h"
+#include "Model/ProceduralModelParameter.h"
 #include "Utils/Effekseer.BinaryReader.h"
 
 #include <array>
@@ -174,11 +174,11 @@ void EffectFactory::SetCurve(Effect* effect, int32_t index, CurveRef data)
 	effect_->curves_[index] = data;
 }
 
-void EffectFactory::SetProcedualModel(Effect* effect, int32_t index, ModelRef data)
+void EffectFactory::SetProceduralModel(Effect* effect, int32_t index, ModelRef data)
 {
 	auto effect_ = static_cast<EffectImplemented*>(effect);
-	assert(0 <= index && index < effect_->procedualModels_.size());
-	effect_->procedualModels_[index] = data;
+	assert(0 <= index && index < effect_->proceduralModels_.size());
+	effect_->proceduralModels_[index] = data;
 }
 
 void EffectFactory::SetLoadingParameter(Effect* effect, ReferenceObject* parameter)
@@ -274,10 +274,14 @@ void EffectFactory::OnLoadingResource(Effect* effect, const void* data, int32_t 
 		SetCurve(effect, i, resource);
 	}
 
-	for (int32_t ind = 0; ind < effect->GetProcedualModelCount(); ind++)
+	for (int32_t ind = 0; ind < effect->GetProceduralModelCount(); ind++)
 	{
-		auto model = resourceMgr->GenerateProcedualModel(effect->GetProcedualModelParameter(ind));
-		SetProcedualModel(effect, ind, model);
+		const auto param = effect->GetProceduralModelParameter(ind);
+		if (param != nullptr)
+		{
+			auto model = resourceMgr->GenerateProceduralModel(*param);
+			SetProceduralModel(effect, ind, model);
+		}
 	}
 }
 
@@ -327,10 +331,10 @@ void EffectFactory::OnUnloadingResource(Effect* effect)
 		SetCurve(effect, i, nullptr);
 	}
 
-	for (int32_t ind = 0; ind < effect->GetProcedualModelCount(); ind++)
+	for (int32_t ind = 0; ind < effect->GetProceduralModelCount(); ind++)
 	{
-		resourceMgr->UngenerateProcedualModel(effect->GetProcedualModel(ind));
-		SetProcedualModel(effect, ind, nullptr);
+		resourceMgr->UngenerateProceduralModel(effect->GetProceduralModel(ind));
+		SetProceduralModel(effect, ind, nullptr);
 	}
 }
 
@@ -562,19 +566,19 @@ bool EffectImplemented::LoadBody(const uint8_t* data, int32_t size, float mag)
 		}
 	};
 
-	const auto loadProcedualModels = [&]() -> void {
+	const auto loadProceduralModels = [&]() -> void {
 		// curve
 		int32_t pmCount = 0;
 
 		binaryReader.Read(pmCount, 0, elementCountMax);
 
-		procedualModelParameters_.resize(pmCount);
-		procedualModels_.resize(pmCount);
+		proceduralModelParameters_.resize(pmCount);
+		proceduralModels_.resize(pmCount);
 
 		for (int32_t i = 0; i < pmCount; i++)
 		{
-			procedualModelParameters_[i].Load(binaryReader);
-			procedualModels_[i] = nullptr;
+			proceduralModelParameters_[i].Load(binaryReader, m_version);
+			proceduralModels_[i] = nullptr;
 		}
 	};
 
@@ -582,7 +586,7 @@ bool EffectImplemented::LoadBody(const uint8_t* data, int32_t size, float mag)
 	{
 		loadCurves();
 
-		loadProcedualModels();
+		loadProceduralModels();
 	}
 
 	if (m_version >= 14)
@@ -632,7 +636,7 @@ bool EffectImplemented::LoadBody(const uint8_t* data, int32_t size, float mag)
 	{
 		loadCurves();
 
-		loadProcedualModels();
+		loadProceduralModels();
 	}
 
 	if (m_version >= 13)
@@ -1158,29 +1162,29 @@ const char16_t* EffectImplemented::GetCurvePath(int n) const
 	return curvePaths_[n].get();
 }
 
-ModelRef EffectImplemented::GetProcedualModel(int n) const
+ModelRef EffectImplemented::GetProceduralModel(int n) const
 {
-	if (n < 0 || n >= GetProcedualModelCount())
+	if (n < 0 || n >= GetProceduralModelCount())
 	{
 		return nullptr;
 	}
 
-	return procedualModels_[n];
+	return proceduralModels_[n];
 }
 
-int32_t EffectImplemented::GetProcedualModelCount() const
+int32_t EffectImplemented::GetProceduralModelCount() const
 {
-	return static_cast<int32_t>(procedualModelParameters_.size());
+	return static_cast<int32_t>(proceduralModelParameters_.size());
 }
 
-const ProcedualModelParameter* EffectImplemented::GetProcedualModelParameter(int n) const
+const ProceduralModelParameter* EffectImplemented::GetProceduralModelParameter(int n) const
 {
-	if (n < 0 || n >= GetProcedualModelCount())
+	if (n < 0 || n >= GetProceduralModelCount())
 	{
 		return nullptr;
 	}
 
-	return &procedualModelParameters_[n];
+	return &proceduralModelParameters_[n];
 }
 
 void EffectImplemented::SetTexture(int32_t index, TextureType type, TextureRef data)
@@ -1253,12 +1257,12 @@ void EffectImplemented::SetCurve(int32_t index, CurveRef data)
 	curves_[index] = data;
 }
 
-void EffectImplemented::SetProcedualModel(int32_t index, ModelRef data)
+void EffectImplemented::SetProceduralModel(int32_t index, ModelRef data)
 {
 	auto resourceMgr = GetSetting()->GetResourceManager();
-	assert(0 <= index && index < procedualModels_.size());
-	resourceMgr->UngenerateProcedualModel(procedualModels_[index]);
-	procedualModels_[index] = data;
+	assert(0 <= index && index < proceduralModels_.size());
+	resourceMgr->UngenerateProceduralModel(proceduralModels_[index]);
+	proceduralModels_[index] = data;
 }
 
 bool EffectImplemented::Reload(ManagerRef* managers,
@@ -1290,7 +1294,7 @@ bool EffectImplemented::Reload(ManagerRef* managers,
 	auto originalMag = this->GetMaginification() / this->m_maginificationExternal;
 	auto originalMagExt = this->m_maginificationExternal;
 
-	isReloadingOnRenderingThread = true;
+	isReloadingOnRenderingThread = reloadingThreadType == ReloadingThreadType::Render;
 	Reset();
 	Load(data, size, originalMag * originalMagExt, matPath, reloadingThreadType);
 
@@ -1313,7 +1317,7 @@ bool EffectImplemented::Reload(ManagerRef* managers,
 		manager->EndReloadEffect(EffectRef::FromPinned(this), true);
 	}
 
-	return false;
+	return true;
 }
 
 //----------------------------------------------------------------------------------
@@ -1353,7 +1357,7 @@ bool EffectImplemented::Reload(
 		lockCount++;
 	}
 
-	isReloadingOnRenderingThread = true;
+	isReloadingOnRenderingThread = reloadingThreadType == ReloadingThreadType::Render;
 	Reset();
 	Load(data, size, m_maginificationExternal, materialPath, reloadingThreadType);
 	isReloadingOnRenderingThread = false;
@@ -1367,7 +1371,7 @@ bool EffectImplemented::Reload(
 
 	eLoader->Unload(data, size);
 
-	return false;
+	return true;
 }
 
 //----------------------------------------------------------------------------------

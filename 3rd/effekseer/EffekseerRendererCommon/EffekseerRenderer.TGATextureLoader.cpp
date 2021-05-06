@@ -1,7 +1,6 @@
 ﻿
 #include "EffekseerRenderer.TGATextureLoader.h"
 
-
 namespace EffekseerRenderer
 {
 

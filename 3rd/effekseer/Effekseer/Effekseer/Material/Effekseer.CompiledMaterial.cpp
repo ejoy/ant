@@ -90,8 +90,14 @@ bool CompiledMaterial::Load(const uint8_t* data, int32_t size)
 	memcpy(&version, data + offset, 4);
 	offset += sizeof(int);
 
-	// bacause of camera position node, structure of uniform is changed
-	if (version == 0)
+	// bacause of camera position node, structure of uniform is changed, etc
+	if (version < OldestSupportVersion)
+	{
+		return false;
+	}
+
+	// Too new
+	if (version > LatestSupportVersion)
 	{
 		return false;
 	}

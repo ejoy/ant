@@ -98,7 +98,7 @@ public:
 	Vector2DF Pos;
 
 	//! For visualization (comment)
-	Vector2DF CommentSize = Vector2DF(100, 100);
+	Vector2DF CommentSize = Vector2DF(0, 0);
 
 	//! is node opened and show a preview
 	bool IsPreviewOpened = false;
@@ -120,7 +120,7 @@ public:
 
 	std::shared_ptr<NodeProperty> GetProperty(const std::string& name) const;
 
-	void UpdatePos(const Vector2DF& pos);
+	void UpdateRegion(const Vector2DF& pos, const Vector2DF& size);
 
 	bool GetIsPosDirtied() const { return isPosDirtied_; }
 
@@ -159,9 +159,19 @@ public:
 	std::array<float, 4> Values;
 };
 
+enum class ErrorCode
+{
+	OK,
+	InvalidFile,
+	NotFound,
+	NewVersion,
+};
+
 class Material : public std::enable_shared_from_this<Material>
 {
 private:
+	const int32_t lastestSupportedVersion_ = MaterialVersion16;
+
 	enum class SaveLoadAimType
 	{
 		IO,
@@ -259,7 +269,7 @@ public:
 
 	std::string SaveAsStr(const char* basePath);
 
-	bool Load(std::vector<uint8_t>& data, std::shared_ptr<Library> library, const char* basePath);
+	ErrorCode Load(std::vector<uint8_t>& data, std::shared_ptr<Library> library, const char* basePath);
 
 	bool Save(std::vector<uint8_t>& data, const char* basePath);
 

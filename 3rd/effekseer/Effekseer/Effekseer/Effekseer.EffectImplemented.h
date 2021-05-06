@@ -9,7 +9,7 @@
 #include "Effekseer.Effect.h"
 #include "Effekseer.InternalScript.h"
 #include "Effekseer.Vector3D.h"
-#include "Model/ProcedualModelParameter.h"
+#include "Model/ProceduralModelParameter.h"
 #include "Utils/BinaryVersion.h"
 #include "Utils/Effekseer.CustomAllocator.h"
 #include <assert.h>
@@ -104,7 +104,7 @@ class EffectImplemented : public Effect, public ReferenceObject
 	friend class EffectFactory;
 	friend class Instance;
 
-	static const int32_t SupportBinaryVersion = Version16Alpha8;
+	static const int32_t SupportBinaryVersion = Version16;
 
 protected:
 	SettingRef m_setting;
@@ -130,8 +130,8 @@ protected:
 	CustomVector<std::unique_ptr<char16_t[]>> modelPaths_;
 	CustomVector<ModelRef> models_;
 
-	CustomVector<ModelRef> procedualModels_;
-	CustomVector<ProcedualModelParameter> procedualModelParameters_;
+	CustomVector<ModelRef> proceduralModels_;
+	CustomVector<ProceduralModelParameter> proceduralModelParameters_;
 
 	CustomVector<std::unique_ptr<char16_t[]>> materialPaths_;
 	CustomVector<MaterialRef> materials_;
@@ -195,7 +195,6 @@ protected:
 	void ResetReloadingBackup();
 
 public:
-
 	static EffectRef Create(const ManagerRef& pManager, const void* pData, int size, float magnification, const char16_t* materialPath = nullptr);
 
 	static EffectRef Create(const SettingRef& setting, const void* pData, int size, float magnification, const char16_t* materialPath = nullptr);
@@ -282,11 +281,11 @@ public:
 
 	const char16_t* GetCurvePath(int n) const override;
 
-	ModelRef GetProcedualModel(int n) const override;
+	ModelRef GetProceduralModel(int n) const override;
 
-	int32_t GetProcedualModelCount() const override;
+	int32_t GetProceduralModelCount() const override;
 
-	const ProcedualModelParameter* GetProcedualModelParameter(int n) const override;
+	const ProceduralModelParameter* GetProceduralModelParameter(int n) const override;
 
 	void SetTexture(int32_t index, TextureType type, TextureRef data) override;
 
@@ -298,7 +297,7 @@ public:
 
 	void SetCurve(int32_t index, CurveRef data) override;
 
-	void SetProcedualModel(int32_t index, ModelRef data) override;
+	void SetProceduralModel(int32_t index, ModelRef data) override;
 
 	bool Reload(ManagerRef* managers,
 				int32_t managersCount,
@@ -334,8 +333,14 @@ public:
 		return ReferenceObject::Release();
 	}
 
-	EffectImplemented* GetImplemented() override { return this; }
-	const EffectImplemented* GetImplemented() const override { return this; }
+	EffectImplemented* GetImplemented() override
+	{
+		return this;
+	}
+	const EffectImplemented* GetImplemented() const override
+	{
+		return this;
+	}
 };
 //----------------------------------------------------------------------------------
 //

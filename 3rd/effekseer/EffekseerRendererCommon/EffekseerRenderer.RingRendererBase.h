@@ -130,7 +130,11 @@ protected:
 	void BeginRendering_(RENDERER* renderer, int32_t count, const efkRingNodeParam& param, void* userData)
 	{
 		m_spriteCount = 0;
-		int32_t singleVertexCount = param.VertexCount * 8;
+		const auto singleVertexCount = param.VertexCount * 8;
+		const auto singleSpriteCount = param.VertexCount * 2;
+
+		count = (std::min)(count, renderer->GetSquareMaxCount() / singleSpriteCount);
+
 		m_instanceCount = count;
 
 		instances_.clear();
@@ -225,7 +229,7 @@ protected:
 							const efkRingInstanceParam& instanceParameter,
 							const ::Effekseer::SIMD::Mat44f& camera)
 	{
-		::Effekseer::SIMD::Mat43f mat43;
+		::Effekseer::SIMD::Mat43f mat43{};
 
 		if (parameter.Billboard == ::Effekseer::BillboardType::Billboard ||
 			parameter.Billboard == ::Effekseer::BillboardType::RotatedBillboard ||
@@ -759,7 +763,7 @@ public:
 
 	void Rendering(const efkRingNodeParam& parameter, const efkRingInstanceParam& instanceParameter, void* userData)
 	{
-		if (m_spriteCount == m_renderer->GetSquareMaxCount())
+		if (m_spriteCount + 2 * parameter.VertexCount > m_renderer->GetSquareMaxCount())
 			return;
 		Rendering_(parameter, instanceParameter, m_renderer->GetCameraMatrix());
 	}
