@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-local Rp3dBuildDir = "$builddir/reactphysics3d/" .. lm.mode .. "/"
+local Rp3dBuildDir = "@../$builddir/reactphysics3d/" .. lm.mode .. "/"
 
 lm:build "reactphysics3d_init" {
     "cmake", "-DCMAKE_BUILD_TYPE="..lm.mode,

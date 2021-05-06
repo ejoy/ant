@@ -82,6 +82,11 @@ luamake
 luamake runtime
 ```
 
+#### 编译选项
+``` bash
+luamake [target] -mode [debug/release] #-mode默认是release
+```
+
 ### 运行
 运行一个最简单的示例
 ``` bash

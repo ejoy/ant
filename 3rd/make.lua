@@ -22,6 +22,4 @@ lm:phony "3rd_make" {
     }
 }
 
-lm:default {
-    "3rd_make"
-}
+lm:default "3rd_make"

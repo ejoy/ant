@@ -8,11 +8,11 @@ local BGFX_BINS
 if lm.plat == "msvc" then
     BGFX_OS = "windows"
     BGFX_ARGS = {"--with-windows=10.0", "vs2019"}
-    BGFX_BINS = "@../bgfx/.build/win64_vs2019/bin/"
+    BGFX_BINS = "../bgfx/.build/win64_vs2019/bin/"
 elseif lm.plat == "mingw" then
     BGFX_OS = "windows"
     BGFX_ARGS = {"--os=windows", "--gcc=mingw-gcc", "gmake"}
-    BGFX_BINS = "@../bgfx/.build/win64_mingw-gcc/bin/"
+    BGFX_BINS = "../bgfx/.build/win64_mingw-gcc/bin/"
 end
 
 GENIE = ("../bx/tools/bin/%s/genie"):format(BGFX_OS)
@@ -43,35 +43,42 @@ elseif lm.plat == "mingw" then
     }
 end
 
-lm:build "copy_bgfx_texturec" {
-    "{COPY}", BGFX_BINS .. "texturec"..lm.mode..".exe", "$bin/texturec.exe",
+lm:copy "copy_bgfx_texturec" {
+    input = BGFX_BINS .. "texturec"..lm.mode..".exe",
+    output = "$bin/texturec.exe",
     deps = "bgfx_build",
 }
 
-lm:build "copy_bgfx_shaderc" {
-    "{COPY}", BGFX_BINS .. "shaderc"..lm.mode..".exe", "$bin/shaderc.exe",
+lm:copy "copy_bgfx_shaderc" {
+    input = BGFX_BINS .. "shaderc"..lm.mode..".exe",
+    output = "$bin/shaderc.exe",
     deps = "bgfx_build",
 }
 
-lm:build "copy_bgfx_shared_lib" {
-    "{COPY}", BGFX_BINS .. "bgfx-shared-lib"..lm.mode..".dll", "$bin/bgfx-core.dll",
+lm:copy "copy_bgfx_shared_lib" {
+    input = BGFX_BINS .. "bgfx-shared-lib"..lm.mode..".dll",
+    output = "$bin/bgfx-core.dll",
     deps = "bgfx_build",
 }
 
-lm:build "copy_bgfx_shader" {
-    "{COPY}", "@../bgfx/src/bgfx_shader.sh", "@../../packages/resources/shaders/bgfx_shader.sh",
+lm:copy "copy_bgfx_shader" {
+    input = "../bgfx/src/bgfx_shader.sh",
+    output = "../../packages/resources/shaders/bgfx_shader.sh",
 }
 
-lm:build "copy_bgfx_compute" {
-    "{COPY}", "@../bgfx/src/bgfx_compute.sh", "@../../packages/resources/shaders/bgfx_compute.sh",
+lm:copy "copy_bgfx_compute" {
+    input = "../bgfx/src/bgfx_compute.sh",
+    output = "../../packages/resources/shaders/bgfx_compute.sh",
 }
 
-lm:build "copy_bgfx_examples_common" {
-    "{COPY}", "@../bgfx/examples/common/common.sh", "@../../packages/resources/shaders/common.sh",
+lm:copy "copy_bgfx_examples_common" {
+    input = "../bgfx/examples/common/common.sh",
+    output = "../../packages/resources/shaders/common.sh",
 }
 
-lm:build "copy_bgfx_examples_shaderlib" {
-    "{COPY}", "@../bgfx/examples/common/shaderlib.sh", "@../../packages/resources/shaders/shaderlib.sh",
+lm:copy "copy_bgfx_examples_shaderlib" {
+    input = "../bgfx/examples/common/shaderlib.sh",
+    output = "../../packages/resources/shaders/shaderlib.sh",
 }
 
 lm:phony "bgfx_make" {
