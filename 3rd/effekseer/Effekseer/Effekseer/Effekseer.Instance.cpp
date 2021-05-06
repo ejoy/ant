@@ -12,6 +12,7 @@
 #include "Effekseer.InstanceGroup.h"
 #include "Effekseer.Manager.h"
 #include "Effekseer.ManagerImplemented.h"
+#include "Effekseer.Setting.h"
 #include "Model/Model.h"
 
 //----------------------------------------------------------------------------------
@@ -20,6 +21,10 @@
 namespace Effekseer
 {
 
+static bool IsInfiniteValue(int value)
+{
+	return std::numeric_limits<int32_t>::max() / 1000 < value;
+}
 //----------------------------------------------------------------------------------
 //
 //----------------------------------------------------------------------------------
@@ -414,10 +419,16 @@ void Instance::FirstUpdate()
 	else if (m_pEffectNode->TranslationType == ParameterTranslationType_FCurve)
 	{
 		assert(m_pEffectNode->TranslationFCurve != nullptr);
+		const auto coordinateSystem = m_pEffectNode->GetEffect()->GetSetting()->GetCoordinateSystem();
 
 		translation_values.fcruve.offset = m_pEffectNode->TranslationFCurve->GetOffsets(rand);
 
 		prevPosition_ = translation_values.fcruve.offset + m_pEffectNode->TranslationFCurve->GetValues(m_LivingTime, m_LivedTime);
+
+		if (coordinateSystem == CoordinateSystem::LH)
+		{
+			prevPosition_.SetZ(-prevPosition_.GetZ());
+		}
 	}
 	else if (m_pEffectNode->TranslationType == ParameterTranslationType_NurbsCurve)
 	{
@@ -625,8 +636,7 @@ void Instance::FirstUpdate()
 	}
 	else if (m_pEffectNode->ScalingType == ParameterScalingType_SingleEasing)
 	{
-		scaling_values.single_easing.start = m_pEffectNode->ScalingSingleEasing.start.getValue(rand);
-		scaling_values.single_easing.end = m_pEffectNode->ScalingSingleEasing.end.getValue(rand);
+		m_pEffectNode->ScalingSingleEasing.Init(scaling_values.single_easing, effect, instanceGlobal, m_pParent, &rand);
 	}
 	else if (m_pEffectNode->ScalingType == ParameterScalingType_FCurve)
 	{
@@ -745,9 +755,9 @@ void Instance::FirstUpdate()
 		{
 			model = m_pEffectNode->GetEffect()->GetModel(m_pEffectNode->GenerationLocation.model.index);
 		}
-		else if (m_pEffectNode->GenerationLocation.model.Reference == ModelReferenceType::Procedual)
+		else if (m_pEffectNode->GenerationLocation.model.Reference == ModelReferenceType::Procedural)
 		{
-			model = m_pEffectNode->GetEffect()->GetProcedualModel(m_pEffectNode->GenerationLocation.model.index);
+			model = m_pEffectNode->GetEffect()->GetProceduralModel(m_pEffectNode->GenerationLocation.model.index);
 		}
 
 		{
@@ -867,7 +877,11 @@ void Instance::FirstUpdate()
 		{
 			auto& uvTimeOffset = uvTimeOffsets[i];
 			uvTimeOffset = (int32_t)UV.Animation.StartFrame.getValue(rand);
-			uvTimeOffset *= UV.Animation.FrameLength;
+
+			if (!IsInfiniteValue(UV.Animation.FrameLength))
+			{
+				uvTimeOffset *= UV.Animation.FrameLength;
+			}
 		}
 		else if (UVType == ParameterRendererCommon::UV_SCROLL)
 		{
@@ -968,7 +982,7 @@ void Instance::FirstUpdate()
 	}
 
 	prevGlobalPosition_ = SIMD::Vec3f::Transform(prevPosition_, m_ParentMatrix);
-	m_pEffectNode->InitializeRenderedInstance(*this, m_pManager);
+	m_pEffectNode->InitializeRenderedInstance(*this, *ownGroup_, m_pManager);
 }
 
 //----------------------------------------------------------------------------------
@@ -997,8 +1011,7 @@ void Instance::Update(float deltaFrame, bool shown)
 
 			if (living_time <= (float)soundValues.delay && (float)soundValues.delay < living_time_p)
 			{
-				auto instanceGlobal = m_pContainer->GetRootInstance();
-				m_pEffectNode->PlaySound_(*this, instanceGlobal, instanceGlobal->GetUserData(), m_pManager);
+				m_pManager->RequestToPlaySound(this, m_pEffectNode);
 			}
 		}
 	}
@@ -1076,8 +1089,6 @@ void Instance::Update(float deltaFrame, bool shown)
 
 			for (int i = 0; i < m_pEffectNode->GetChildrenCount(); i++, group = group->NextUsedByInstance)
 			{
-				auto child = (EffectNodeImplemented*)m_pEffectNode->GetChild(i);
-
 				if (maxGenerationChildrenCount[i] <= m_generatedChildrenCount[i] && group->GetInstanceCount() == 0)
 				{
 					maxcreate_count++;
@@ -1238,6 +1249,7 @@ void Instance::CalculateMatrix(float deltaFrame)
 
 	// if( m_sequenceNumber == ((ManagerImplemented*)m_pManager)->GetSequenceNumber() ) return;
 	m_sequenceNumber = ((ManagerImplemented*)m_pManager)->GetSequenceNumber();
+	const auto coordinateSystem = m_pEffectNode->GetEffect()->GetSetting()->GetCoordinateSystem();
 
 	assert(m_pEffectNode != nullptr);
 	assert(m_pContainer != nullptr);
@@ -1251,7 +1263,7 @@ void Instance::CalculateMatrix(float deltaFrame)
 	/* 更新処理 */
 	if (m_pEffectNode->GetType() != EFFECT_NODE_TYPE_ROOT)
 	{
-		SIMD::Vec3f localPosition;
+		SIMD::Vec3f localPosition{};
 		SIMD::Vec3f localAngle;
 		SIMD::Vec3f localScaling;
 
@@ -1283,6 +1295,11 @@ void Instance::CalculateMatrix(float deltaFrame)
 			assert(m_pEffectNode->TranslationFCurve != nullptr);
 			auto fcurve = m_pEffectNode->TranslationFCurve->GetValues(m_LivingTime, m_LivedTime);
 			localPosition = fcurve + translation_values.fcruve.offset;
+
+			if (coordinateSystem == CoordinateSystem::LH)
+			{
+				localPosition.SetZ(-localPosition.GetZ());
+			}
 		}
 		else if (m_pEffectNode->TranslationType == ParameterTranslationType_NurbsCurve)
 		{
@@ -1399,8 +1416,7 @@ void Instance::CalculateMatrix(float deltaFrame)
 		}
 		else if (m_pEffectNode->RotationType == ParameterRotationType_AxisEasing)
 		{
-			rotation_values.axis.rotation = m_pEffectNode->RotationAxisEasing.easing.getValue(
-				rotation_values.axis.easing.start, rotation_values.axis.easing.end, m_LivingTime / m_LivedTime);
+			rotation_values.axis.rotation = m_pEffectNode->RotationAxisEasing.easing.GetValue(rotation_values.axis.easing, m_LivingTime / m_LivedTime);
 		}
 		else if (m_pEffectNode->RotationType == ParameterRotationType_FCurve)
 		{
@@ -1442,8 +1458,7 @@ void Instance::CalculateMatrix(float deltaFrame)
 		}
 		else if (m_pEffectNode->ScalingType == ParameterScalingType_SingleEasing)
 		{
-			float s = m_pEffectNode->ScalingSingleEasing.getValue(
-				scaling_values.single_easing.start, scaling_values.single_easing.end, m_LivingTime / m_LivedTime);
+			float s = m_pEffectNode->ScalingSingleEasing.GetValue(scaling_values.single_easing, m_LivingTime / m_LivedTime);
 			localScaling = {s, s, s};
 		}
 		else if (m_pEffectNode->ScalingType == ParameterScalingType_FCurve)
@@ -1479,11 +1494,11 @@ void Instance::CalculateMatrix(float deltaFrame)
 		{
 			currentLocalPosition += forceField_.ModifyLocation;
 			forceField_.ExternalVelocity = localVelocity;
-			forceField_.Update(m_pEffectNode->LocalForceField, currentLocalPosition, m_pEffectNode->GetEffect()->GetMaginification(), deltaFrame);		
+			forceField_.Update(m_pEffectNode->LocalForceField, currentLocalPosition, m_pEffectNode->GetEffect()->GetMaginification(), deltaFrame, m_pEffectNode->GetEffect()->GetSetting()->GetCoordinateSystem());
 		}
 
 		/* 描画部分の更新 */
-		m_pEffectNode->UpdateRenderedInstance(*this, m_pManager);
+		m_pEffectNode->UpdateRenderedInstance(*this, *ownGroup_, m_pManager);
 
 		// 回転行列の作成
 		SIMD::Mat43f MatRot;
@@ -1532,7 +1547,7 @@ void Instance::CalculateMatrix(float deltaFrame)
 		if (m_pEffectNode->LocalForceField.IsGlobalEnabled)
 		{
 			InstanceGlobal* instanceGlobal = m_pContainer->GetRootInstance();
-			forceField_.UpdateGlobal(m_pEffectNode->LocalForceField, prevGlobalPosition_, m_pEffectNode->GetEffect()->GetMaginification(), instanceGlobal->GetTargetLocation(), deltaFrame);
+			forceField_.UpdateGlobal(m_pEffectNode->LocalForceField, prevGlobalPosition_, m_pEffectNode->GetEffect()->GetMaginification(), instanceGlobal->GetTargetLocation(), deltaFrame, m_pEffectNode->GetEffect()->GetSetting()->GetCoordinateSystem());
 			SIMD::Mat43f MatTraGlobal = SIMD::Mat43f::Translation(forceField_.GlobalModifyLocation);
 			m_GlobalMatrix43 *= MatTraGlobal;
 		}
@@ -1696,19 +1711,22 @@ RectF Instance::GetUV(const int32_t index) const
 	}
 	else if (UVType == ParameterRendererCommon::UV_ANIMATION)
 	{
-		auto uvTimeOffset = uvTimeOffsets[index];
+		auto uvTimeOffset = static_cast<float>(uvTimeOffsets[index]);
 
-		// TODO : refactor
+		float time{};
+		int frameLength = UV.Animation.FrameLength;
 
-		// Avoid overflow
-		if(uvTimeOffset > std::numeric_limits<int32_t>::max() / 1000)
+		if (IsInfiniteValue(frameLength))
 		{
-			uvTimeOffset = std::numeric_limits<int32_t>::max() / 1000;
+			time = uvTimeOffset;
+			frameLength = 1;
+		}
+		else
+		{
+			time = m_LivingTime + uvTimeOffset;
 		}
 
-		auto time = m_LivingTime + uvTimeOffset;
-
-		int32_t frameNum = (int32_t)(time / UV.Animation.FrameLength);
+		int32_t frameNum = (int32_t)(time / frameLength);
 		int32_t frameCount = UV.Animation.FrameCountX * UV.Animation.FrameCountY;
 
 		if (UV.Animation.LoopType == UV.Animation.LOOPTYPE_ONCE)
@@ -1755,8 +1773,6 @@ RectF Instance::GetUV(const int32_t index) const
 	else if (UVType == ParameterRendererCommon::UV_FCURVE)
 	{
 		auto& uvAreaOffset = uvAreaOffsets[index];
-
-		auto time = (int32_t)m_LivingTime;
 
 		auto fcurvePos = UV.FCurve.Position->GetValues(m_LivingTime, m_LivedTime);
 		auto fcurveSize = UV.FCurve.Size->GetValues(m_LivingTime, m_LivedTime);
@@ -1852,6 +1868,11 @@ std::array<float, 4> Instance::GetCustomData(int32_t index) const
 									(values[1] + instanceCustomData->fcurveColor.offset[1]) / 255.0f,
 									(values[2] + instanceCustomData->fcurveColor.offset[2]) / 255.0f,
 									(values[3] + instanceCustomData->fcurveColor.offset[3]) / 255.0f};
+	}
+	else if (parameterCustomData->Type == ParameterCustomDataType::DynamicInput)
+	{
+		auto instanceGlobal = this->m_pContainer->GetRootInstance();
+		return instanceGlobal->GetDynamicInputParameters();
 	}
 	else
 	{

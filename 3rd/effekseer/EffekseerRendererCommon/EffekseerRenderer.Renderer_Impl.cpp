@@ -212,7 +212,32 @@ void Renderer::Impl::SetBackground(::Effekseer::Backend::TextureRef texture)
 void Renderer::Impl::GetDepth(::Effekseer::Backend::TextureRef& texture, DepthReconstructionParameter& reconstructionParam)
 {
 	texture = depthTexture_;
-	reconstructionParam = reconstructionParam_;
+
+	if (texture != nullptr)
+	{
+		reconstructionParam = reconstructionParam_;
+	}
+	else
+	{
+		// return far clip depth
+		const auto projMat = GetProjectionMatrix();
+		reconstructionParam.ProjectionMatrix33 = projMat.Values[2][2];
+		reconstructionParam.ProjectionMatrix43 = projMat.Values[2][3];
+		reconstructionParam.ProjectionMatrix34 = projMat.Values[3][2];
+		reconstructionParam.ProjectionMatrix44 = projMat.Values[3][3];
+
+		if (isDepthReversed)
+		{
+			reconstructionParam.DepthBufferScale = 0.0f;
+			reconstructionParam.DepthBufferOffset = 0.0f;
+		}
+		else
+		{
+
+			reconstructionParam.DepthBufferScale = 0.0f;
+			reconstructionParam.DepthBufferOffset = 1.0f;
+		}
+	}
 }
 
 void Renderer::Impl::SetDepth(::Effekseer::Backend::TextureRef texture, const DepthReconstructionParameter& reconstructionParam)

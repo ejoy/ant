@@ -317,7 +317,7 @@ void EffectNodeSprite::EndRendering(Manager* manager, void* userData)
 //----------------------------------------------------------------------------------
 //
 //----------------------------------------------------------------------------------
-void EffectNodeSprite::InitializeRenderedInstance(Instance& instance, Manager* manager)
+void EffectNodeSprite::InitializeRenderedInstance(Instance& instance, InstanceGroup& instanceGroup, Manager* manager)
 {
 	InstanceValues& instValues = instance.rendererValues.sprite;
 	IRandObject& rand = instance.GetRandObject();
@@ -367,7 +367,7 @@ void EffectNodeSprite::InitializeRenderedInstance(Instance& instance, Manager* m
 //----------------------------------------------------------------------------------
 //
 //----------------------------------------------------------------------------------
-void EffectNodeSprite::UpdateRenderedInstance(Instance& instance, Manager* manager)
+void EffectNodeSprite::UpdateRenderedInstance(Instance& instance, InstanceGroup& instanceGroup, Manager* manager)
 {
 	InstanceValues& instValues = instance.rendererValues.sprite;
 

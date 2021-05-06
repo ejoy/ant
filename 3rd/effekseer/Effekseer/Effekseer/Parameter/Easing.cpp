@@ -3,7 +3,7 @@
 namespace Effekseer
 {
 
-float ParameterEasingFloat::GetValue(const InstanceEasingType& instance, float time)
+float ParameterEasingFloat::GetValue(const InstanceEasingType& instance, float time) const
 {
 	auto t = getEaseValue(type_, time);
 
@@ -63,7 +63,7 @@ void ParameterEasingFloat::Init(InstanceEasingType& instance, Effect* e, Instanc
 	}
 }
 
-SIMD::Vec3f ParameterEasingSIMDVec3::GetValue(const InstanceEasingType& instance, float time)
+SIMD::Vec3f ParameterEasingSIMDVec3::GetValue(const InstanceEasingType& instance, float time) const
 {
 	if (isIndividualEnabled)
 	{

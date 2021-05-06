@@ -22,13 +22,13 @@ void ApplyEq(float& dstParam, Effect* e, InstanceGlobal* instg, Instance* parren
 
 //! calculate dynamic equation and return a result
 SIMD::Vec3f ApplyEq(Effect* e,
-			  InstanceGlobal* instg,
-			  Instance* parrentInstance,
-			  IRandObject* rand,
-			  const int& dpInd,
-			  const SIMD::Vec3f& originalParam,
-			  const std::array<float, 3>& scale,
-			  const std::array<float, 3>& scaleInv);
+					InstanceGlobal* instg,
+					Instance* parrentInstance,
+					IRandObject* rand,
+					const int& dpInd,
+					const SIMD::Vec3f& originalParam,
+					const std::array<float, 3>& scale,
+					const std::array<float, 3>& scaleInv);
 
 //! calculate dynamic equation and return a result
 random_float ApplyEq(Effect* e, InstanceGlobal* instg, Instance* parrentInstance, IRandObject* rand, const RefMinMax& dpInd, random_float originalParam);

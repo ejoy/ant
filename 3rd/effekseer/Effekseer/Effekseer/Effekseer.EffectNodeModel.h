@@ -34,7 +34,8 @@ public:
 		Color _color;
 		Color _original;
 
-		union {
+		union
+		{
 			struct
 			{
 				Color _color;
@@ -94,9 +95,9 @@ public:
 
 	void EndRendering(Manager* manager, void* userData) override;
 
-	void InitializeRenderedInstance(Instance& instance, Manager* manager) override;
+	void InitializeRenderedInstance(Instance& instance, InstanceGroup& instanceGroup, Manager* manager) override;
 
-	void UpdateRenderedInstance(Instance& instance, Manager* manager) override;
+	void UpdateRenderedInstance(Instance& instance, InstanceGroup& instanceGroup, Manager* manager) override;
 
 	eEffectNodeType GetType() const override
 	{

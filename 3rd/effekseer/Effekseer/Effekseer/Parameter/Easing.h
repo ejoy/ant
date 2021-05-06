@@ -4,9 +4,10 @@
 
 #include "../Effekseer.Base.Pre.h"
 #include "../Effekseer.InternalStruct.h"
+#include "../Utils/BinaryVersion.h"
 #include "../Utils/Effekseer.BinaryReader.h"
-#include "Effekseer.Parameters.h"
 #include "DynamicParameter.h"
+#include "Effekseer.Parameters.h"
 
 namespace Effekseer
 {
@@ -41,26 +42,28 @@ enum class Easing3Type : int32_t
 	EaseInOutBounce = 62,
 };
 
-template<typename T>
+template <typename T>
 struct easing_type_information
 {
 	using type = void;
 	static constexpr uint8_t elemNum = 0;
 };
 
-template<> struct easing_type_information<float>
+template <>
+struct easing_type_information<float>
 {
 	using type = random_float;
 	static const uint8_t elemNum = 1;
 };
 
-template<> struct easing_type_information<SIMD::Vec3f>
+template <>
+struct easing_type_information<SIMD::Vec3f>
 {
 	using type = random_vector3d;
 	static constexpr uint8_t elemNum = 3;
 };
 
-template<typename T>
+template <typename T>
 struct InstanceEasing
 {
 	T start;
@@ -69,7 +72,7 @@ struct InstanceEasing
 	float Rate;
 };
 
-template<typename T>
+template <typename T>
 struct ParameterEasing
 {
 protected:
@@ -88,18 +91,18 @@ protected:
 		return t;
 	}
 
-	float getEaseInQuadratic(float t)
+	float getEaseInQuadratic(float t) const
 	{
 		return t * t;
 	}
 
-	float getEaseOutQuadratic(float t)
+	float getEaseOutQuadratic(float t) const
 	{
 		t = (1.0f - t);
 		return 1.0f - t * t;
 	}
 
-	float getEaseInOutQuadratic(float t)
+	float getEaseInOutQuadratic(float t) const
 	{
 		if (t <= 0.5f)
 		{
@@ -113,18 +116,18 @@ protected:
 		}
 	}
 
-	float getEaseInCubic(float t)
+	float getEaseInCubic(float t) const
 	{
 		return t * t * t;
 	}
 
-	float getEaseOutCubic(float t)
+	float getEaseOutCubic(float t) const
 	{
 		t = (1.0f - t);
 		return 1.0f - t * t * t;
 	}
 
-	float getEaseInOutCubic(float t)
+	float getEaseInOutCubic(float t) const
 	{
 		if (t <= 0.5f)
 		{
@@ -138,18 +141,18 @@ protected:
 		}
 	}
 
-	float getEaseInQuartic(float t)
+	float getEaseInQuartic(float t) const
 	{
 		return t * t * t * t;
 	}
 
-	float getEaseOutQuartic(float t)
+	float getEaseOutQuartic(float t) const
 	{
 		t = (1.0f - t);
 		return 1.0f - t * t * t * t;
 	}
 
-	float getEaseInOutQuartic(float t)
+	float getEaseInOutQuartic(float t) const
 	{
 		if (t <= 0.5f)
 		{
@@ -163,18 +166,18 @@ protected:
 		}
 	}
 
-	float getEaseInQuintic(float t)
+	float getEaseInQuintic(float t) const
 	{
 		return t * t * t * t * t;
 	}
 
-	float getEaseOutQuintic(float t)
+	float getEaseOutQuintic(float t) const
 	{
 		t = (1.0f - t);
 		return 1.0f - t * t * t * t * t;
 	}
 
-	float getEaseInOutQuintic(float t)
+	float getEaseInOutQuintic(float t) const
 	{
 		if (t <= 0.5f)
 		{
@@ -188,20 +191,20 @@ protected:
 		}
 	}
 
-	float getEaseInBack(float t)
+	float getEaseInBack(float t) const
 	{
 		float c = 1.8f;
 		return (c + 1.0f) * t * t * t - c * t * t;
 	}
 
-	float getEaseOutBack(float t)
+	float getEaseOutBack(float t) const
 	{
 		t = (1.0f - t);
 		float c = 1.8f;
 		return 1.0f - ((c + 1.0f) * t * t * t - c * t * t);
 	}
 
-	float getEaseInOutBack(float t)
+	float getEaseInOutBack(float t) const
 	{
 		float c = 1.8f;
 		if (t <= 0.5f)
@@ -216,7 +219,7 @@ protected:
 		}
 	}
 
-	float getEaseOutBounce(float t)
+	float getEaseOutBounce(float t) const
 	{
 		if (t < 4.0f / 11.0f)
 		{
@@ -240,12 +243,12 @@ protected:
 		}
 	}
 
-	float getEaseInBounce(float t)
+	float getEaseInBounce(float t) const
 	{
 		return 1.0f - getEaseOutBounce(1.0f - t);
 	}
 
-	float getEaseInOutBounce(float t)
+	float getEaseInOutBounce(float t) const
 	{
 		if (t <= 0.5f)
 		{
@@ -259,7 +262,7 @@ protected:
 		}
 	}
 
-	float getEaseValue(Easing3Type type, float time)
+	float getEaseValue(Easing3Type type, float time) const
 	{
 		auto t = 0.0f;
 		if (type == Easing3Type::StartEndSpeed)
@@ -371,7 +374,7 @@ protected:
 		}
 		else
 		{
-			t = t / v.Rate;		
+			t = t / v.Rate;
 		}
 
 		t = Clamp(t, 2.0f, 0.0f);
@@ -433,6 +436,10 @@ protected:
 		return a[j] + (b[j] + (c[j] + d[j] * dt) * dt) * dt;
 	}
 
+protected:
+	int32_t minDynamicParameterVersion_ = 14;
+	int32_t minAppendParameterVersion_ = Version16Alpha1;
+
 public:
 	RefMinMax RefEqS;
 	RefMinMax RefEqE;
@@ -457,7 +464,7 @@ public:
 	{
 		BinaryReader<true> reader(pos, size);
 
-		if (version >= 14)
+		if (version >= minDynamicParameterVersion_)
 		{
 			reader.Read<RefMinMax>(RefEqS);
 			reader.Read<RefMinMax>(RefEqE);
@@ -467,7 +474,7 @@ public:
 		reader.Read<RandomValue>(end);
 
 		// middle parameter
-		if (version >= 1600)
+		if (version >= minAppendParameterVersion_)
 		{
 			int32_t isMiddleEnabledNum = 0;
 			reader.Read<int32_t>(isMiddleEnabledNum);
@@ -480,7 +487,7 @@ public:
 			}
 		}
 
-		if (version >= 1600)
+		if (version >= minAppendParameterVersion_)
 		{
 			reader.Read<Easing3Type>(type_);
 
@@ -498,14 +505,15 @@ public:
 			reader.Read<float>(params[2]);
 		}
 
-		if (version >= 1600)
+		if (version >= minAppendParameterVersion_)
 		{
 			int channel = 0;
 			reader.Read<int>(channel);
 
 			for (int32_t i = 0; i < ElemNum; i++)
 			{
-				channelIDs[i] = channel & 0xff;;
+				channelIDs[i] = channel & 0xff;
+				;
 				channel = (channel >> 8);
 			}
 
@@ -524,7 +532,7 @@ public:
 			}
 		}
 
-		if (version >= 1600)
+		if (version >= minAppendParameterVersion_)
 		{
 			int isIndividual = 0;
 			reader.Read<int>(isIndividual);
@@ -540,23 +548,28 @@ public:
 		}
 	}
 
-	virtual T GetValue(const InstanceEasingType& instance, float time) = 0;
+	virtual T GetValue(const InstanceEasingType& instance, float time) const = 0;
 };
 
 class ParameterEasingFloat : public ParameterEasing<float>
 {
 public:
-	virtual float GetValue(const InstanceEasingType& instance, float time) override;
+	ParameterEasingFloat(int minDynamicParameterVersion, int32_t minAppendParameterVersion)
+	{
+		minDynamicParameterVersion_ = minDynamicParameterVersion;
+		minAppendParameterVersion_ = minAppendParameterVersion;
+	}
+
+	virtual float GetValue(const InstanceEasingType& instance, float time) const override;
 	void Init(InstanceEasingType& instance, Effect* e, InstanceGlobal* instg, Instance* parent, IRandObject* rand);
 };
 
 class ParameterEasingSIMDVec3 : public ParameterEasing<SIMD::Vec3f>
 {
 public:
-	virtual SIMD::Vec3f GetValue(const InstanceEasingType& instance, float time) override;
+	virtual SIMD::Vec3f GetValue(const InstanceEasingType& instance, float time) const override;
 	void Init(InstanceEasingType& instance, Effect* e, InstanceGlobal* instg, Instance* parent, IRandObject* rand, const std::array<float, 3>& scale, const std::array<float, 3>& scaleInv);
 };
-
 
 } // namespace Effekseer
 

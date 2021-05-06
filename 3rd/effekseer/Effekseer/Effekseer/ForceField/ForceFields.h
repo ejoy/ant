@@ -174,7 +174,7 @@ public:
 			return 0.0f;
 		}
 
-		const auto deg = powf(distance+ 1.0f, fffc.Power) * powf(tubeRadius - ffft.MinRadius + 1.0f, ffft.RadiusPower);
+		const auto deg = powf(distance + 1.0f, fffc.Power) * powf(tubeRadius - ffft.MinRadius + 1.0f, ffft.RadiusPower);
 
 		if (deg == 0.0f)
 		{
@@ -312,7 +312,7 @@ public:
 		}
 
 		auto acc = vel - ffc.PreviousVelocity;
-		return acc * ffc.DeltaFrame;
+		return acc;
 	}
 
 	/**
@@ -440,9 +440,9 @@ struct LocalForceFieldInstance
 	SIMD::Vec3f GlobalVelocitySum;
 	SIMD::Vec3f GlobalModifyLocation;
 
-	void Update(const LocalForceFieldParameter& parameter, const SIMD::Vec3f& location, float magnification, float deltaFrame);
+	void Update(const LocalForceFieldParameter& parameter, const SIMD::Vec3f& location, float magnification, float deltaFrame, CoordinateSystem coordinateSystem);
 
-	void UpdateGlobal(const LocalForceFieldParameter& parameter, const SIMD::Vec3f& location, float magnification, const SIMD::Vec3f& targetPosition, float deltaTime);
+	void UpdateGlobal(const LocalForceFieldParameter& parameter, const SIMD::Vec3f& location, float magnification, const SIMD::Vec3f& targetPosition, float deltaTime, CoordinateSystem coordinateSystem);
 
 	void Reset();
 };

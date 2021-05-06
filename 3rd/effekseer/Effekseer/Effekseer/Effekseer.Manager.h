@@ -67,7 +67,16 @@ public:
 	struct DrawParameter
 	{
 		Vector3D CameraPosition;
-		Vector3D CameraDirection;
+
+		/**
+			@brief
+			\~English A direction of camera
+			\~Japanese カメラの方向
+			@note
+			\~English It means that the direction is normalize(focus - position)
+			\~Japanese normalize(focus-position)を意味する。
+		*/
+		Vector3D CameraFrontDirection;
 
 		/**
 			@brief
@@ -78,6 +87,13 @@ public:
 			\~Japanese 例えば、エフェクトのレイヤーが0でカリングマスクの最初のビットが1のときエフェクトは表示される。
 		*/
 		int32_t CameraCullingMask;
+
+		/**
+			@brief
+			\~English Whether effects should be sorted by camera position and direction
+			\~Japanese エフェクトをカメラの位置と方向でソートするかどうか
+		*/
+		bool IsSortingEffectsEnabled = false;
 
 		DrawParameter();
 	};

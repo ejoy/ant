@@ -346,7 +346,7 @@ bool Model::GenerateWireIndexBuffer(Backend::GraphicsDevice* graphicsDevice)
 		return true;
 	}
 
-		if (graphicsDevice == nullptr)
+	if (graphicsDevice == nullptr)
 	{
 		return false;
 	}

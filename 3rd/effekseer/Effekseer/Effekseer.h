@@ -85,8 +85,8 @@ class Texture;
 class SoundData;
 class SoundPlayer;
 class Model;
-struct ProcedualModelParameter;
-class ProcedualModelGenerator;
+struct ProceduralModelParameter;
+class ProceduralModelGenerator;
 class Curve;
 class Material;
 
@@ -685,7 +685,7 @@ public:
 	{
 		auto ptr = Get();
 		SafeAddRef(ptr);
-		return RefPtr<U>(reinterpret_cast<U*>(ptr));
+		return RefPtr<U>(static_cast<U*>(ptr));
 	}
 
 	void* Pin()
@@ -764,7 +764,7 @@ using MaterialLoaderRef = RefPtr<MaterialLoader>;
 using SoundLoaderRef = RefPtr<SoundLoader>;
 using ModelLoaderRef = RefPtr<ModelLoader>;
 using CurveLoaderRef = RefPtr<CurveLoader>;
-using ProcedualModelGeneratorRef = RefPtr<ProcedualModelGenerator>;
+using ProceduralModelGeneratorRef = RefPtr<ProceduralModelGenerator>;
 
 /**
 	@brief	This object generates random values.
@@ -986,7 +986,7 @@ struct NodeRendererBasicParameter
 
 		for (size_t i = 2; i < TextureIndexes.size(); i++)
 		{
-			if(TextureIndexes[i] >= 0)
+			if (TextureIndexes[i] >= 0)
 			{
 				return true;
 			}
@@ -1002,9 +1002,6 @@ struct NodeRendererBasicParameter
 			return true;
 
 		if (IsAlphaCutoffEnabled)
-			return true;
-
-		if (EmissiveScaling != 1.0f)
 			return true;
 
 		return false;
@@ -1040,14 +1037,14 @@ public:
 #ifndef __EFFEKSEER_CUSTOM_ALLOCATOR_H__
 #define __EFFEKSEER_CUSTOM_ALLOCATOR_H__
 
-#include <memory>
 #include <list>
 #include <map>
+#include <memory>
 #include <new>
 #include <set>
+#include <string>
 #include <unordered_map>
 #include <vector>
-#include <string>
 
 namespace Effekseer
 {
@@ -1225,20 +1222,46 @@ class StringView
 	using Traits = std::char_traits<char16_t>;
 
 public:
-	StringView(): ptr_(nullptr), size_(0) {}
+	StringView()
+		: ptr_(nullptr)
+		, size_(0)
+	{
+	}
 
-	StringView(const char16_t* ptr): ptr_(ptr), size_(Traits::length(ptr)) {}
+	StringView(const char16_t* ptr)
+		: ptr_(ptr)
+		, size_(Traits::length(ptr))
+	{
+	}
 
-	StringView(const char16_t* ptr, size_t size): ptr_(ptr), size_(size) {}
+	StringView(const char16_t* ptr, size_t size)
+		: ptr_(ptr)
+		, size_(size)
+	{
+	}
 
 	template <size_t N>
-	StringView(const char16_t ptr[N]): ptr_(ptr), size_(N) {}
+	StringView(const char16_t ptr[N])
+		: ptr_(ptr)
+		, size_(N)
+	{
+	}
 
-	StringView(const CustomString& str): ptr_(str.data()), size_(str.size()) {}
+	StringView(const CustomString& str)
+		: ptr_(str.data())
+		, size_(str.size())
+	{
+	}
 
-	const char16_t* data() const { return ptr_; }
+	const char16_t* data() const
+	{
+		return ptr_;
+	}
 
-	size_t size() const { return size_; }
+	size_t size() const
+	{
+		return size_;
+	}
 
 	bool operator==(const StringView& rhs) const
 	{
@@ -1250,7 +1273,8 @@ public:
 		return size() != rhs.size() || Traits::compare(data(), rhs.data(), size()) != 0;
 	}
 
-	struct Hash {
+	struct Hash
+	{
 		size_t operator()(const StringView& key) const
 		{
 			constexpr size_t basis = (sizeof(size_t) == 8) ? 14695981039346656037ULL : 2166136261U;
@@ -1259,7 +1283,8 @@ public:
 			const uint8_t* data = reinterpret_cast<const uint8_t*>(key.data());
 			size_t count = key.size() * sizeof(char16_t);
 			size_t val = basis;
-			for (size_t i = 0; i < count; i++) {
+			for (size_t i = 0; i < count; i++)
+			{
 				val ^= static_cast<size_t>(data[i]);
 				val *= prime;
 			}
@@ -2340,7 +2365,7 @@ public:
 
 	bool GetHasMipmap() const
 	{
-		return false;// hasMipmap_;
+		return hasMipmap_;
 	}
 
 	TextureType GetTextureType() const
@@ -2765,7 +2790,7 @@ namespace Effekseer
 //----------------------------------------------------------------------------------
 //
 //----------------------------------------------------------------------------------
-	
+
 /**
 	@brief	\~english	Resource base
 			\~japanese	リソース基底
@@ -2777,12 +2802,18 @@ public:
 
 	virtual ~Resource() = default;
 
-	const CustomString& GetPath() { return path_; }
+	const CustomString& GetPath()
+	{
+		return path_;
+	}
 
 private:
 	friend class ResourceManager;
 
-	void SetPath(const char16_t* path) { path_ = path; }
+	void SetPath(const char16_t* path)
+	{
+		path_ = path;
+	}
 
 	CustomString path_;
 };
@@ -2806,9 +2837,15 @@ public:
 		return backend_->GetSize()[1];
 	}
 
-	const Backend::TextureRef& GetBackend() { return backend_; }
+	const Backend::TextureRef& GetBackend()
+	{
+		return backend_;
+	}
 
-	void SetBackend(const Backend::TextureRef& backend) { backend_ = backend; }
+	void SetBackend(const Backend::TextureRef& backend)
+	{
+		backend_ = backend;
+	}
 
 private:
 	Backend::TextureRef backend_;
@@ -3010,7 +3047,7 @@ public:
 	\~English set model data into specified index
 	\~Japanese	指定されたインデックスにモデルを設定する。
 	*/
-	void SetProcedualModel(Effect* effect, int32_t index, ModelRef data);
+	void SetProceduralModel(Effect* effect, int32_t index, ModelRef data);
 
 	/**
 	@brief
@@ -3291,22 +3328,22 @@ public:
 	virtual const char16_t* GetCurvePath(int n) const = 0;
 
 	/**
-	@brief	\~English	Get a procedual model's pointer
+	@brief	\~English	Get a procedural model's pointer
 	\~Japanese	格納されているプロシージャルモデルのポインタを取得する。
 	*/
-	virtual ModelRef GetProcedualModel(int n) const = 0;
+	virtual ModelRef GetProceduralModel(int n) const = 0;
 
 	/**
-	@brief	\~English	Get the number of stored procedual model's pointer
+	@brief	\~English	Get the number of stored procedural model's pointer
 	\~Japanese	格納されているプロシージャルモデルのポインタの個数を取得する。
 	*/
-	virtual int32_t GetProcedualModelCount() const = 0;
+	virtual int32_t GetProceduralModelCount() const = 0;
 
 	/**
-	@brief	\~English	Get a procedual model's parameter
+	@brief	\~English	Get a procedural model's parameter
 	\~Japanese	格納されているプロシージャルモデルのパラメーターを取得する。
 	*/
-	virtual const ProcedualModelParameter* GetProcedualModelParameter(int n) const = 0;
+	virtual const ProceduralModelParameter* GetProceduralModelParameter(int n) const = 0;
 
 	/**
 		@brief
@@ -3349,7 +3386,7 @@ public:
 		\~English set a model data into specified index
 		\~Japanese	指定されたインデックスにカーブを設定する。
 	*/
-	virtual void SetProcedualModel(int32_t index, ModelRef data) = 0;
+	virtual void SetProceduralModel(int32_t index, ModelRef data) = 0;
 
 	/**
 		@brief
@@ -3510,7 +3547,7 @@ struct EffectBasicRenderParameter
 	{
 		float Color[4];
 		float Threshold;
-		int32_t ColorScaling;
+		float ColorScaling;
 	} EdgeParam;
 
 	AlphaBlendType AlphaBlend;
@@ -3700,7 +3737,16 @@ public:
 	struct DrawParameter
 	{
 		Vector3D CameraPosition;
-		Vector3D CameraDirection;
+
+		/**
+			@brief
+			\~English A direction of camera
+			\~Japanese カメラの方向
+			@note
+			\~English It means that the direction is normalize(focus - position)
+			\~Japanese normalize(focus-position)を意味する。
+		*/
+		Vector3D CameraFrontDirection;
 
 		/**
 			@brief
@@ -3711,6 +3757,13 @@ public:
 			\~Japanese 例えば、エフェクトのレイヤーが0でカリングマスクの最初のビットが1のときエフェクトは表示される。
 		*/
 		int32_t CameraCullingMask;
+
+		/**
+			@brief
+			\~English Whether effects should be sorted by camera position and direction
+			\~Japanese エフェクトをカメラの位置と方向でソートするかどうか
+		*/
+		bool IsSortingEffectsEnabled = false;
 
 		DrawParameter();
 	};
@@ -4553,7 +4606,7 @@ public:
 		@param	loader	[in]		ローダー
 		*/
 	void SetEffectLoader(EffectLoaderRef loader);
-	
+
 	/**
 		@brief
 		\~English get a texture loader
@@ -4662,7 +4715,7 @@ public:
 		\~English	generator
 		\~Japanese ジェネレータ
 	*/
-	ProcedualModelGeneratorRef GetProcedualMeshGenerator() const;
+	ProceduralModelGeneratorRef GetProceduralMeshGenerator() const;
 
 	/**
 		@brief
@@ -4672,7 +4725,7 @@ public:
 		\~English	generator
 		\~Japanese ジェネレータ
 	*/
-	void SetProcedualMeshGenerator(ProcedualModelGeneratorRef generator);
+	void SetProceduralMeshGenerator(ProceduralModelGeneratorRef generator);
 
 	/**
 		@brief
@@ -4701,7 +4754,7 @@ public:
 		\~Japanese Effect Factoryの数を取得する。
 	*/
 	int32_t GetEffectFactoryCount() const;
-	
+
 	/**
 		@brief
 		\~English	Get resource manager

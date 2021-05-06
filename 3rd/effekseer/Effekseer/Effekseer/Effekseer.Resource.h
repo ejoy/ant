@@ -5,9 +5,9 @@
 //----------------------------------------------------------------------------------
 // Include
 //----------------------------------------------------------------------------------
+#include "Backend/GraphicsDevice.h"
 #include "Effekseer.Base.Pre.h"
 #include "Utils/Effekseer.CustomAllocator.h"
-#include "Backend/GraphicsDevice.h"
 
 //----------------------------------------------------------------------------------
 //
@@ -17,7 +17,7 @@ namespace Effekseer
 //----------------------------------------------------------------------------------
 //
 //----------------------------------------------------------------------------------
-	
+
 /**
 	@brief	\~english	Resource base
 			\~japanese	リソース基底
@@ -29,12 +29,18 @@ public:
 
 	virtual ~Resource() = default;
 
-	const CustomString& GetPath() { return path_; }
+	const CustomString& GetPath()
+	{
+		return path_;
+	}
 
 private:
 	friend class ResourceManager;
 
-	void SetPath(const char16_t* path) { path_ = path; }
+	void SetPath(const char16_t* path)
+	{
+		path_ = path;
+	}
 
 	CustomString path_;
 };
@@ -58,9 +64,15 @@ public:
 		return backend_->GetSize()[1];
 	}
 
-	const Backend::TextureRef& GetBackend() { return backend_; }
+	const Backend::TextureRef& GetBackend()
+	{
+		return backend_;
+	}
 
-	void SetBackend(const Backend::TextureRef& backend) { backend_ = backend; }
+	void SetBackend(const Backend::TextureRef& backend)
+	{
+		backend_ = backend;
+	}
 
 private:
 	Backend::TextureRef backend_;

@@ -202,7 +202,7 @@ function gizmo:update_scale()
 	local viewdir = iom.get_direction(camera_mgr.main_camera)
 	local eyepos = iom.get_position(camera_mgr.main_camera)
 	local project_dist = math3d.dot(math3d.normalize(viewdir), math3d.sub(iom.get_position(self.root_eid), eyepos))
-	gizmo_scale = project_dist * 0.35
+	gizmo_scale = project_dist * 0.6
 	if self.root_eid then
 		iom.set_scale(self.root_eid, gizmo_scale)
 	end

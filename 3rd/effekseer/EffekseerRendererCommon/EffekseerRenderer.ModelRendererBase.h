@@ -645,6 +645,8 @@ protected:
 				pcb->LightAmbientColor = ColorToFloat4(renderer->GetLightAmbientColor());
 			}
 
+			pcb->SetEmissiveScaling(static_cast<float>(param.BasicParameterPtr->EmissiveScaling));
+
 			if (REQUIRE_ADVANCED_DATA)
 			{
 				pcb->SetModelFlipbookParameter(param.BasicParameterPtr->EnableInterpolation, static_cast<float>(param.BasicParameterPtr->InterpolationType));
@@ -666,7 +668,6 @@ protected:
 					ColorToFloat4(param.FalloffParam.BeginColor),
 					ColorToFloat4(param.FalloffParam.EndColor));
 
-				pcb->SetEmissiveScaling(static_cast<float>(param.BasicParameterPtr->EmissiveScaling));
 				pcb->SetEdgeParameter(ColorToFloat4(Effekseer::Color(
 										  param.BasicParameterPtr->EdgeColor[0],
 										  param.BasicParameterPtr->EdgeColor[1],
@@ -687,6 +688,9 @@ protected:
 				reconstructionParam.ProjectionMatrix34,
 				reconstructionParam.ProjectionMatrix43,
 				reconstructionParam.ProjectionMatrix44);
+
+			pcb->UVInversedBack[0] = uvInversedBack[0];
+			pcb->UVInversedBack[1] = uvInversedBack[1];
 		}
 
 		vcb->CameraMatrix = renderer->GetCameraProjectionMatrix();
@@ -894,9 +898,9 @@ public:
 
 		::Effekseer::RefPtr<MODEL> model;
 
-		if (param.IsProcedualMode)
+		if (param.IsProceduralMode)
 		{
-			model = param.EffectPointer->GetProcedualModel(param.ModelIndex);
+			model = param.EffectPointer->GetProceduralModel(param.ModelIndex);
 		}
 		else
 		{

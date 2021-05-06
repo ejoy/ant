@@ -101,6 +101,7 @@ local function on_scale_dirty(eid, scale)
     if world[eid].camera then
         
     else
+        if scale[1] == 0 or scale[2] == 0 or scale[3] == 0 then return end
         local oldScale = math3d.totable(iom.get_scale(eid))
         gizmo:set_scale(scale)
         world:pub {"EntityEvent", "scale", eid, oldScale, {scale[1], scale[2], scale[3]}}

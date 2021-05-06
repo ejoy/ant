@@ -52,6 +52,7 @@
     <ClCompile Include="..\..\3rd\effekseer\Effekseer\Effekseer\Culling\Culling3D.WorldInternal.cpp" />
     <ClCompile Include="..\..\3rd\effekseer\Effekseer\Effekseer\Effekseer.Client.cpp" />
     <ClCompile Include="..\..\3rd\effekseer\Effekseer\Effekseer\Effekseer.Color.cpp" />
+    <ClCompile Include="..\..\3rd\effekseer\Effekseer\Effekseer\Effekseer.CurveLoader.cpp" />
     <ClCompile Include="..\..\3rd\effekseer\Effekseer\Effekseer\Effekseer.DefaultEffectLoader.cpp" />
     <ClCompile Include="..\..\3rd\effekseer\Effekseer\Effekseer\Effekseer.DefaultFile.cpp" />
     <ClCompile Include="..\..\3rd\effekseer\Effekseer\Effekseer\Effekseer.Effect.cpp" />
@@ -90,7 +91,7 @@
     <ClCompile Include="..\..\3rd\effekseer\Effekseer\Effekseer\Material\Effekseer.MaterialFile.cpp" />
     <ClCompile Include="..\..\3rd\effekseer\Effekseer\Effekseer\Model\Model.cpp" />
     <ClCompile Include="..\..\3rd\effekseer\Effekseer\Effekseer\Model\ModelLoader.cpp" />
-    <ClCompile Include="..\..\3rd\effekseer\Effekseer\Effekseer\Model\ProcedualModelGenerator.cpp" />
+    <ClCompile Include="..\..\3rd\effekseer\Effekseer\Effekseer\Model\ProceduralModelGenerator.cpp" />
     <ClCompile Include="..\..\3rd\effekseer\Effekseer\Effekseer\Model\SplineGenerator.cpp" />
     <ClCompile Include="..\..\3rd\effekseer\Effekseer\Effekseer\Noise\CurlNoise.cpp" />
     <ClCompile Include="..\..\3rd\effekseer\Effekseer\Effekseer\Noise\PerlinNoise.cpp" />
@@ -207,8 +208,8 @@
     <ClInclude Include="..\..\3rd\effekseer\Effekseer\Effekseer\Material\Effekseer.MaterialFile.h" />
     <ClInclude Include="..\..\3rd\effekseer\Effekseer\Effekseer\Model\Model.h" />
     <ClInclude Include="..\..\3rd\effekseer\Effekseer\Effekseer\Model\ModelLoader.h" />
-    <ClInclude Include="..\..\3rd\effekseer\Effekseer\Effekseer\Model\ProcedualModelGenerator.h" />
-    <ClInclude Include="..\..\3rd\effekseer\Effekseer\Effekseer\Model\ProcedualModelParameter.h" />
+    <ClInclude Include="..\..\3rd\effekseer\Effekseer\Effekseer\Model\ProceduralModelGenerator.h" />
+    <ClInclude Include="..\..\3rd\effekseer\Effekseer\Effekseer\Model\ProceduralModelParameter.h" />
     <ClInclude Include="..\..\3rd\effekseer\Effekseer\Effekseer\Model\SplineGenerator.h" />
     <ClInclude Include="..\..\3rd\effekseer\Effekseer\Effekseer\Noise\CurlNoise.h" />
     <ClInclude Include="..\..\3rd\effekseer\Effekseer\Effekseer\Noise\PerlinNoise.h" />

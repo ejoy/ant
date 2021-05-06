@@ -2,8 +2,8 @@
 #ifndef __EFFEKSEER_MATERIALLOADER_H__
 #define __EFFEKSEER_MATERIALLOADER_H__
 
-#include "Effekseer.Base.h"
 #include "Effekseer.Base.Pre.h"
+#include "Effekseer.Base.h"
 
 namespace Effekseer
 {

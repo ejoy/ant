@@ -42,6 +42,7 @@ public:
 	int32_t drawvertexCount = 0;
 	bool isRenderModeValid = true;
 	bool isSoftParticleEnabled = false;
+	bool isDepthReversed = false;
 
 	Effekseer::RefPtr<Effekseer::RenderingUserData> CurrentRenderingUserData;
 	void* CurrentHandleUserData = nullptr;

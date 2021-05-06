@@ -22,6 +22,17 @@ bool MaterialFile::Load(const uint8_t* data, int32_t size)
 	memcpy(&version, data + offset, 4);
 	offset += sizeof(int);
 
+	if (version < OldestSupportVersion)
+	{
+		return false;
+	}
+
+	// Too new
+	if (version > LatestSupportVersion)
+	{
+		return false;
+	}
+
 	memcpy(&guid_, data + offset, 8);
 	offset += sizeof(uint64_t);
 

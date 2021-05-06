@@ -183,7 +183,6 @@ void Renderer::SetBackground(::Effekseer::Backend::TextureRef texture)
 	param.Size = {1, 1};
 	param.GenerateMipmap = false;
 	param.InitialData.assign(buf.begin(), buf.end());
-
 	return GetGraphicsDevice()->CreateTexture(param);
 }
 

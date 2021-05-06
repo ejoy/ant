@@ -306,7 +306,7 @@ void EffectNodeRibbon::EndRendering(Manager* manager, void* userData)
 //----------------------------------------------------------------------------------
 //
 //----------------------------------------------------------------------------------
-void EffectNodeRibbon::InitializeRenderedInstance(Instance& instance, Manager* manager)
+void EffectNodeRibbon::InitializeRenderedInstance(Instance& instance, InstanceGroup& instanceGroup, Manager* manager)
 {
 	InstanceValues& instValues = instance.rendererValues.ribbon;
 	IRandObject& rand = instance.GetRandObject();
@@ -342,7 +342,7 @@ void EffectNodeRibbon::InitializeRenderedInstance(Instance& instance, Manager* m
 //----------------------------------------------------------------------------------
 //
 //----------------------------------------------------------------------------------
-void EffectNodeRibbon::UpdateRenderedInstance(Instance& instance, Manager* manager)
+void EffectNodeRibbon::UpdateRenderedInstance(Instance& instance, InstanceGroup& instanceGroup, Manager* manager)
 {
 	InstanceValues& instValues = instance.rendererValues.ribbon;
 

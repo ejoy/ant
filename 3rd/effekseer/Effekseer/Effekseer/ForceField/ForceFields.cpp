@@ -272,7 +272,7 @@ void LocalForceFieldParameter::MaintainAttractiveForceCompatibility(const float 
 	LocalForceFields[3].IsGlobal = true;
 }
 
-void LocalForceFieldInstance::Update(const LocalForceFieldParameter& parameter, const SIMD::Vec3f& location, float magnification, float deltaFrame)
+void LocalForceFieldInstance::Update(const LocalForceFieldParameter& parameter, const SIMD::Vec3f& location, float magnification, float deltaFrame, CoordinateSystem coordinateSystem)
 {
 	for (size_t i = 0; i < parameter.LocalForceFields.size(); i++)
 	{
@@ -288,15 +288,22 @@ void LocalForceFieldInstance::Update(const LocalForceFieldParameter& parameter, 
 		ForceFieldCommonParameter ffcp;
 		ffcp.FieldCenter = parameter.LocalForceFields[i].Position;
 		ffcp.Position = location / magnification;
-		ffcp.PreviousSumVelocity = (VelocitySum + ExternalVelocity) / magnification;
+		ffcp.PreviousSumVelocity = (VelocitySum + ExternalVelocity / deltaFrame) / magnification;
 		ffcp.PreviousVelocity = Velocities[i] / magnification;
 		ffcp.DeltaFrame = deltaFrame;
 		ffcp.IsFieldRotated = field.IsRotated;
 
+		if (coordinateSystem == CoordinateSystem::LH)
+		{
+			ffcp.Position.SetZ(-ffcp.Position.GetZ());
+			ffcp.PreviousVelocity.SetZ(-ffcp.PreviousVelocity.GetZ());
+			ffcp.PreviousSumVelocity.SetZ(-ffcp.PreviousSumVelocity.GetZ());
+		}
+
 		if (field.IsRotated)
 		{
-			ffcp.PreviousSumVelocity = SIMD::Vec3f::Transform(VelocitySum + ExternalVelocity, field.InvRotation);
-			ffcp.PreviousVelocity = SIMD::Vec3f::Transform(Velocities[i], field.InvRotation);
+			ffcp.PreviousSumVelocity = SIMD::Vec3f::Transform(ffcp.PreviousSumVelocity, field.InvRotation);
+			ffcp.PreviousVelocity = SIMD::Vec3f::Transform(ffcp.PreviousVelocity, field.InvRotation);
 			ffcp.Position = SIMD::Vec3f::Transform(ffcp.Position, field.InvRotation);
 		}
 
@@ -354,6 +361,11 @@ void LocalForceFieldInstance::Update(const LocalForceFieldParameter& parameter, 
 			acc = SIMD::Vec3f::Transform(acc, field.Rotation);
 		}
 
+		if (coordinateSystem == CoordinateSystem::LH)
+		{
+			acc.SetZ(-acc.GetZ());
+		}
+
 		Velocities[i] += acc;
 	}
 
@@ -370,7 +382,7 @@ void LocalForceFieldInstance::Update(const LocalForceFieldParameter& parameter, 
 	ModifyLocation += VelocitySum * deltaFrame;
 }
 
-void LocalForceFieldInstance::UpdateGlobal(const LocalForceFieldParameter& parameter, const SIMD::Vec3f& location, float magnification, const SIMD::Vec3f& targetPosition, float deltaFrame)
+void LocalForceFieldInstance::UpdateGlobal(const LocalForceFieldParameter& parameter, const SIMD::Vec3f& location, float magnification, const SIMD::Vec3f& targetPosition, float deltaFrame, CoordinateSystem coordinateSystem)
 {
 	for (size_t i = 0; i < parameter.LocalForceFields.size(); i++)
 	{
@@ -392,10 +404,17 @@ void LocalForceFieldInstance::UpdateGlobal(const LocalForceFieldParameter& param
 		ffcp.DeltaFrame = deltaFrame;
 		ffcp.IsFieldRotated = field.IsRotated;
 
+		if (coordinateSystem == CoordinateSystem::LH)
+		{
+			ffcp.Position.SetZ(-ffcp.Position.GetZ());
+			ffcp.PreviousVelocity.SetZ(-ffcp.PreviousVelocity.GetZ());
+			ffcp.PreviousSumVelocity.SetZ(-ffcp.PreviousSumVelocity.GetZ());
+		}
+
 		if (field.IsRotated)
 		{
-			ffcp.PreviousSumVelocity = SIMD::Vec3f::Transform(VelocitySum, field.InvRotation);
-			ffcp.PreviousVelocity = SIMD::Vec3f::Transform(Velocities[i], field.InvRotation);
+			ffcp.PreviousSumVelocity = SIMD::Vec3f::Transform(ffcp.PreviousSumVelocity, field.InvRotation);
+			ffcp.PreviousVelocity = SIMD::Vec3f::Transform(ffcp.PreviousVelocity, field.InvRotation);
 			ffcp.Position = SIMD::Vec3f::Transform(ffcp.Position, field.InvRotation);
 		}
 
@@ -436,6 +455,11 @@ void LocalForceFieldInstance::UpdateGlobal(const LocalForceFieldParameter& param
 		if (field.IsRotated)
 		{
 			acc = SIMD::Vec3f::Transform(acc, field.Rotation);
+		}
+
+		if (coordinateSystem == CoordinateSystem::LH)
+		{
+			acc.SetZ(-acc.GetZ());
 		}
 
 		Velocities[i] += acc;

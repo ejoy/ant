@@ -27,7 +27,8 @@ struct RibbonAllColorParameter
 		Parameter_DWORD = 0x7fffffff,
 	} type;
 
-	union {
+	union
+	{
 		struct
 		{
 			Color all;
@@ -55,7 +56,8 @@ struct RibbonColorParameter
 		Parameter_DWORD = 0x7fffffff,
 	} type;
 
-	union {
+	union
+	{
 		struct
 		{
 
@@ -79,7 +81,8 @@ struct RibbonPositionParameter
 		Parameter_DWORD = 0x7fffffff,
 	} type;
 
-	union {
+	union
+	{
 		struct
 		{
 
@@ -105,7 +108,8 @@ public:
 		Color _color;
 		Color _original;
 
-		union {
+		union
+		{
 			struct
 			{
 				Color _color;
@@ -125,11 +129,13 @@ public:
 
 		} allColorValues;
 
-		union {
+		union
+		{
 
 		} colorValues;
 
-		union {
+		union
+		{
 
 		} positionValues;
 	};
@@ -174,9 +180,9 @@ public:
 
 	void EndRendering(Manager* manager, void* userData) override;
 
-	void InitializeRenderedInstance(Instance& instance, Manager* manager) override;
+	void InitializeRenderedInstance(Instance& instance, InstanceGroup& instanceGroup, Manager* manager) override;
 
-	void UpdateRenderedInstance(Instance& instance, Manager* manager) override;
+	void UpdateRenderedInstance(Instance& instance, InstanceGroup& instanceGroup, Manager* manager) override;
 
 	eEffectNodeType GetType() const override
 	{

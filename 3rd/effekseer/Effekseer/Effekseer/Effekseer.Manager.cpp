@@ -1,9 +1,9 @@
 #include "Effekseer.Manager.h"
 #include "Effekseer.ManagerImplemented.h"
 
-#include "Effekseer.Resource.h"
 #include "Effekseer.Effect.h"
 #include "Effekseer.EffectImplemented.h"
+#include "Effekseer.Resource.h"
 #include "SIMD/Utils.h"
 
 #include "Effekseer.EffectNode.h"
@@ -14,8 +14,8 @@
 #include "Effekseer.InstanceGroup.h"
 
 #include "Effekseer.DefaultEffectLoader.h"
-#include "Effekseer.TextureLoader.h"
 #include "Effekseer.MaterialLoader.h"
+#include "Effekseer.TextureLoader.h"
 
 #include "Effekseer.Setting.h"
 
@@ -28,8 +28,8 @@
 #include "Effekseer.SoundLoader.h"
 #include "Sound/Effekseer.SoundPlayer.h"
 
-#include "Model/ModelLoader.h"
 #include "Effekseer.CurveLoader.h"
+#include "Model/ModelLoader.h"
 
 #include <algorithm>
 #include <iostream>
@@ -163,12 +163,9 @@ void ManagerImplemented::StopStoppingEffects()
 
 				if (pRootInstance && pRootInstance->GetState() == INSTANCE_STATE_ACTIVE && !pRootInstance->IsFirstTime())
 				{
-					int maxcreate_count = 0;
 					bool canRemoved = true;
 					for (int i = 0; i < pRootInstance->m_pEffectNode->GetChildrenCount(); i++)
 					{
-						auto child = (EffectNodeImplemented*)pRootInstance->m_pEffectNode->GetChild(i);
-
 						if (pRootInstance->maxGenerationChildrenCount[i] > pRootInstance->m_generatedChildrenCount[i])
 						{
 							canRemoved = false;
@@ -263,11 +260,11 @@ void ManagerImplemented::GCDrawSet(bool isRemovingManager)
 				{
 					(*it).second.RemovingCallback(this, (*it).first, isRemovingManager);
 				}
-                
-                		if (m_cullingWorld != NULL && (*it).second.CullingObjectPointer != nullptr)
-                		{
-                    			m_cullingWorld->RemoveObject((*it).second.CullingObjectPointer);
-                		}
+
+				if (m_cullingWorld != NULL && (*it).second.CullingObjectPointer != nullptr)
+				{
+					m_cullingWorld->RemoveObject((*it).second.CullingObjectPointer);
+				}
 
 				m_RemovingDrawSets[0][(*it).first] = (*it).second;
 				m_DrawSets.erase(it++);
@@ -383,6 +380,36 @@ void ManagerImplemented::ExecuteEvents()
 				pContainer->KillAllInstances(false);
 			}
 		}
+	}
+}
+
+void ManagerImplemented::StoreSortingDrawSets(const Manager::DrawParameter& drawParameter)
+{
+	sortedRenderingDrawSets_.clear();
+
+	if (m_culled)
+	{
+		for (size_t i = 0; i < m_culledObjects.size(); i++)
+		{
+			DrawSet& drawSet = *m_culledObjects[i];
+			sortedRenderingDrawSets_.emplace_back(drawSet);
+		}
+	}
+	else
+	{
+		for (const auto& ds : m_renderingDrawSets)
+		{
+			sortedRenderingDrawSets_.emplace_back(ds);
+		}
+	}
+
+	if (drawParameter.IsSortingEffectsEnabled)
+	{
+		std::sort(sortedRenderingDrawSets_.begin(), sortedRenderingDrawSets_.end(), [&](const DrawSet& a, const DrawSet& b) -> bool {
+			const auto da = SIMD::Vec3f::Dot(a.GlobalMatrix.GetTranslation() - drawParameter.CameraPosition, drawParameter.CameraFrontDirection);
+			const auto db = SIMD::Vec3f::Dot(b.GlobalMatrix.GetTranslation() - drawParameter.CameraPosition, drawParameter.CameraFrontDirection);
+			return da > db;
+		});
 	}
 }
 
@@ -1364,6 +1391,8 @@ void ManagerImplemented::Update(const UpdateParameter& parameter)
 			m_WorkerThreads[0].WaitForComplete();
 		}
 	}
+
+	ExecuteSounds();
 }
 
 void ManagerImplemented::DoUpdate(const UpdateParameter& parameter)
@@ -1551,6 +1580,8 @@ void ManagerImplemented::UpdateHandle(Handle handle, float deltaFrame)
 			UpdateHandleInternal(drawSet);
 		}
 	}
+
+	ExecuteSounds();
 }
 
 void ManagerImplemented::UpdateHandleToMoveToFrame(Handle handle, float frame)
@@ -1670,7 +1701,7 @@ bool ManagerImplemented::IsClippedWithDepth(DrawSet& drawSet, InstanceContainer*
 		return false;
 
 	SIMD::Vec3f pos = drawSet.GlobalMatrix.GetTranslation();
-	auto distance = SIMD::Vec3f::Dot(SIMD::Vec3f(drawParameter.CameraPosition) - pos, SIMD::Vec3f(drawParameter.CameraDirection));
+	auto distance = SIMD::Vec3f::Dot(pos - SIMD::Vec3f(drawParameter.CameraPosition), SIMD::Vec3f(drawParameter.CameraFrontDirection));
 	if (container->m_pEffectNode->DepthValues.DepthParameter.DepthClipping < distance)
 	{
 		return true;
@@ -1692,6 +1723,10 @@ void ManagerImplemented::StopWithoutRemoveDrawSet(DrawSet& drawSet)
 
 void ManagerImplemented::ResetAndPlayWithDataSet(DrawSet& drawSet, float frame)
 {
+	assert(drawSet.ParameterPointer != nullptr);
+	auto effect = drawSet.ParameterPointer->GetRoot();
+	assert(effect != nullptr);
+
 	auto pGlobal = drawSet.GlobalPointer;
 	auto e = static_cast<EffectImplemented*>(drawSet.ParameterPointer.Get());
 
@@ -1756,62 +1791,54 @@ void ManagerImplemented::Draw(const Manager::DrawParameter& drawParameter)
 	// start to record a time
 	int64_t beginTime = ::Effekseer::GetTime();
 
-	if (m_culled)
-	{
-		for (size_t i = 0; i < m_culledObjects.size(); i++)
+	const auto render = [this, &drawParameter](DrawSet& drawSet) -> void {
+		if (drawSet.InstanceContainerPointer == nullptr)
 		{
-			DrawSet& drawSet = *m_culledObjects[i];
-			if (drawSet.InstanceContainerPointer == nullptr)
-			{
-				continue;
-			}
+			return;
+		}
 
-			if (drawSet.IsShown && drawSet.IsAutoDrawing && ((drawParameter.CameraCullingMask & (1 << drawSet.Layer)) != 0))
+		if (drawSet.IsShown && drawSet.IsAutoDrawing && ((drawParameter.CameraCullingMask & (1 << drawSet.Layer)) != 0))
+		{
+			if (drawSet.GlobalPointer->RenderedInstanceContainers.size() > 0)
 			{
-				if (drawSet.GlobalPointer->RenderedInstanceContainers.size() > 0)
+				for (auto& c : drawSet.GlobalPointer->RenderedInstanceContainers)
 				{
-					for (auto& c : drawSet.GlobalPointer->RenderedInstanceContainers)
-					{
-						if (IsClippedWithDepth(drawSet, c, drawParameter))
-							continue;
+					if (IsClippedWithDepth(drawSet, c, drawParameter))
+						continue;
 
-						c->Draw(false);
-					}
-				}
-				else
-				{
-					drawSet.InstanceContainerPointer->Draw(true);
+					c->Draw(false);
 				}
 			}
+			else
+			{
+				drawSet.InstanceContainerPointer->Draw(true);
+			}
+		}
+	};
+
+	if (drawParameter.IsSortingEffectsEnabled)
+	{
+		StoreSortingDrawSets(drawParameter);
+
+		for (auto& drawSet : sortedRenderingDrawSets_)
+		{
+			render(drawSet);
 		}
 	}
 	else
 	{
-		for (size_t i = 0; i < m_renderingDrawSets.size(); i++)
+		if (m_culled)
 		{
-			DrawSet& drawSet = m_renderingDrawSets[i];
-
-			if (drawSet.InstanceContainerPointer == nullptr)
+			for (size_t i = 0; i < m_culledObjects.size(); i++)
 			{
-				continue;
+				render(*m_culledObjects[i]);
 			}
-
-			if (drawSet.IsShown && drawSet.IsAutoDrawing && ((drawParameter.CameraCullingMask & (1 << drawSet.Layer)) != 0))
+		}
+		else
+		{
+			for (size_t i = 0; i < m_renderingDrawSets.size(); i++)
 			{
-				if (drawSet.GlobalPointer->RenderedInstanceContainers.size() > 0)
-				{
-					for (auto& c : drawSet.GlobalPointer->RenderedInstanceContainers)
-					{
-						if (IsClippedWithDepth(drawSet, c, drawParameter))
-							continue;
-
-						c->Draw(false);
-					}
-				}
-				else
-				{
-					drawSet.InstanceContainerPointer->Draw(true);
-				}
+				render(m_renderingDrawSets[i]);
 			}
 		}
 	}
@@ -1827,51 +1854,48 @@ void ManagerImplemented::DrawBack(const Manager::DrawParameter& drawParameter)
 	// start to record a time
 	int64_t beginTime = ::Effekseer::GetTime();
 
-	if (m_culled)
-	{
-		for (size_t i = 0; i < m_culledObjects.size(); i++)
+	const auto render = [this, &drawParameter](DrawSet& drawSet) -> void {
+		if (drawSet.InstanceContainerPointer == nullptr)
 		{
-			DrawSet& drawSet = *m_culledObjects[i];
+			return;
+		}
 
-			if (drawSet.InstanceContainerPointer == nullptr)
+		if (drawSet.IsShown && drawSet.IsAutoDrawing && ((drawParameter.CameraCullingMask & (1 << drawSet.Layer)) != 0))
+		{
+			auto e = (EffectImplemented*)drawSet.ParameterPointer.Get();
+			for (int32_t j = 0; j < e->renderingNodesThreshold; j++)
 			{
-				continue;
-			}
+				if (IsClippedWithDepth(drawSet, drawSet.GlobalPointer->RenderedInstanceContainers[j], drawParameter))
+					continue;
 
-			if (drawSet.IsShown && drawSet.IsAutoDrawing && ((drawParameter.CameraCullingMask & (1 << drawSet.Layer)) != 0))
-			{
-				auto e = (EffectImplemented*)drawSet.ParameterPointer.Get();
-				for (int32_t j = 0; j < e->renderingNodesThreshold; j++)
-				{
-					if (IsClippedWithDepth(drawSet, drawSet.GlobalPointer->RenderedInstanceContainers[j], drawParameter))
-						continue;
-
-					drawSet.GlobalPointer->RenderedInstanceContainers[j]->Draw(false);
-				}
+				drawSet.GlobalPointer->RenderedInstanceContainers[j]->Draw(false);
 			}
+		}
+	};
+
+	if (drawParameter.IsSortingEffectsEnabled)
+	{
+		StoreSortingDrawSets(drawParameter);
+
+		for (auto& drawSet : sortedRenderingDrawSets_)
+		{
+			render(drawSet);
 		}
 	}
 	else
 	{
-		for (size_t i = 0; i < m_renderingDrawSets.size(); i++)
+		if (m_culled)
 		{
-			DrawSet& drawSet = m_renderingDrawSets[i];
-
-			if (drawSet.InstanceContainerPointer == nullptr)
+			for (size_t i = 0; i < m_culledObjects.size(); i++)
 			{
-				continue;
+				render(*m_culledObjects[i]);
 			}
-
-			if (drawSet.IsShown && drawSet.IsAutoDrawing && ((drawParameter.CameraCullingMask & (1 << drawSet.Layer)) != 0))
+		}
+		else
+		{
+			for (size_t i = 0; i < m_renderingDrawSets.size(); i++)
 			{
-				auto e = (EffectImplemented*)drawSet.ParameterPointer.Get();
-				for (int32_t j = 0; j < e->renderingNodesThreshold; j++)
-				{
-					if (IsClippedWithDepth(drawSet, drawSet.GlobalPointer->RenderedInstanceContainers[j], drawParameter))
-						continue;
-
-					drawSet.GlobalPointer->RenderedInstanceContainers[j]->Draw(false);
-				}
+				render(m_renderingDrawSets[i]);
 			}
 		}
 	}
@@ -1887,65 +1911,55 @@ void ManagerImplemented::DrawFront(const Manager::DrawParameter& drawParameter)
 	// start to record a time
 	int64_t beginTime = ::Effekseer::GetTime();
 
-	if (m_culled)
-	{
-		for (size_t i = 0; i < m_culledObjects.size(); i++)
+	const auto render = [this, &drawParameter](DrawSet& drawSet) -> void {
+		if (drawSet.InstanceContainerPointer == nullptr)
 		{
-			DrawSet& drawSet = *m_culledObjects[i];
+			return;
+		}
 
-			if (drawSet.InstanceContainerPointer == nullptr)
+		if (drawSet.IsShown && drawSet.IsAutoDrawing && ((drawParameter.CameraCullingMask & (1 << drawSet.Layer)) != 0))
+		{
+			if (drawSet.GlobalPointer->RenderedInstanceContainers.size() > 0)
 			{
-				continue;
-			}
-
-			if (drawSet.IsShown && drawSet.IsAutoDrawing && ((drawParameter.CameraCullingMask & (1 << drawSet.Layer)) != 0))
-			{
-				if (drawSet.GlobalPointer->RenderedInstanceContainers.size() > 0)
+				auto e = (EffectImplemented*)drawSet.ParameterPointer.Get();
+				for (size_t j = e->renderingNodesThreshold; j < drawSet.GlobalPointer->RenderedInstanceContainers.size(); j++)
 				{
-					auto e = (EffectImplemented*)drawSet.ParameterPointer.Get();
-					for (size_t j = e->renderingNodesThreshold; j < drawSet.GlobalPointer->RenderedInstanceContainers.size(); j++)
-					{
-						if (IsClippedWithDepth(drawSet, drawSet.GlobalPointer->RenderedInstanceContainers[j], drawParameter))
-							continue;
+					if (IsClippedWithDepth(drawSet, drawSet.GlobalPointer->RenderedInstanceContainers[j], drawParameter))
+						continue;
 
-						drawSet.GlobalPointer->RenderedInstanceContainers[j]->Draw(false);
-					}
-				}
-				else
-				{
-					drawSet.InstanceContainerPointer->Draw(true);
+					drawSet.GlobalPointer->RenderedInstanceContainers[j]->Draw(false);
 				}
 			}
+			else
+			{
+				drawSet.InstanceContainerPointer->Draw(true);
+			}
+		}
+	};
+
+	if (drawParameter.IsSortingEffectsEnabled)
+	{
+		StoreSortingDrawSets(drawParameter);
+
+		for (auto& drawSet : sortedRenderingDrawSets_)
+		{
+			render(drawSet);
 		}
 	}
 	else
 	{
-		for (size_t i = 0; i < m_renderingDrawSets.size(); i++)
+		if (m_culled)
 		{
-			DrawSet& drawSet = m_renderingDrawSets[i];
-
-			if (drawSet.InstanceContainerPointer == nullptr)
+			for (size_t i = 0; i < m_culledObjects.size(); i++)
 			{
-				continue;
+				render(*m_culledObjects[i]);
 			}
-
-			if (drawSet.IsShown && drawSet.IsAutoDrawing && ((drawParameter.CameraCullingMask & (1 << drawSet.Layer)) != 0))
+		}
+		else
+		{
+			for (size_t i = 0; i < m_renderingDrawSets.size(); i++)
 			{
-				if (drawSet.GlobalPointer->RenderedInstanceContainers.size() > 0)
-				{
-					auto e = (EffectImplemented*)drawSet.ParameterPointer.Get();
-					for (size_t j = e->renderingNodesThreshold; j < drawSet.GlobalPointer->RenderedInstanceContainers.size(); j++)
-					{
-						if (IsClippedWithDepth(drawSet, drawSet.GlobalPointer->RenderedInstanceContainers[j], drawParameter))
-							continue;
-
-						drawSet.GlobalPointer->RenderedInstanceContainers[j]->Draw(false);
-					}
-				}
-				else
-				{
-					drawSet.InstanceContainerPointer->Draw(true);
-				}
+				render(m_renderingDrawSets[i]);
 			}
 		}
 	}
@@ -2247,9 +2261,6 @@ void ManagerImplemented::EndReloadEffect(const EffectRef& effect, bool doLockThr
 			continue;
 		}
 
-		auto e = static_cast<EffectImplemented*>(effect.Get());
-		auto pGlobal = ds.GlobalPointer;
-
 		ResetAndPlayWithDataSet(ds, ds.GlobalPointer->GetUpdatedFrame());
 	}
 
@@ -2327,6 +2338,57 @@ void ManagerImplemented::LockRendering()
 void ManagerImplemented::UnlockRendering()
 {
 	m_renderingMutex.unlock();
+}
+
+void ManagerImplemented::RequestToPlaySound(Instance* instance, const EffectNodeImplemented* node)
+{
+	if (node->Sound.WaveId >= 0)
+	{
+		InstanceGlobal* instanceGlobal = instance->GetInstanceGlobal();
+		IRandObject& rand = instance->GetRandObject();
+
+		SoundPlayer::InstanceParameter parameter;
+		parameter.Data = node->GetEffect()->GetWave(node->Sound.WaveId);
+		parameter.Volume = node->Sound.Volume.getValue(rand);
+		parameter.Pitch = node->Sound.Pitch.getValue(rand);
+		parameter.Pan = node->Sound.Pan.getValue(rand);
+
+		parameter.Mode3D = (node->Sound.PanType == ParameterSoundPanType_3D);
+		parameter.Position = ToStruct(instance->GetGlobalMatrix43().GetTranslation());
+		parameter.Distance = node->Sound.Distance;
+		parameter.UserData = instanceGlobal->GetUserData();
+
+		std::lock_guard<std::mutex> lock(m_soundMutex);
+		m_requestedSounds.emplace(static_cast<SoundTag>(instanceGlobal), parameter);
+	}
+}
+
+void ManagerImplemented::ExecuteSounds()
+{
+	if (m_requestedSounds.empty())
+	{
+		return;
+	}
+
+	std::lock_guard<std::mutex> lock(m_soundMutex);
+
+	auto player = GetSoundPlayer();
+	if (player != nullptr)
+	{
+		while (!m_requestedSounds.empty())
+		{
+			auto sound = m_requestedSounds.back();
+			player->Play(sound.first, sound.second);
+			m_requestedSounds.pop();
+		}
+	}
+	else
+	{
+		while (!m_requestedSounds.empty())
+		{
+			m_requestedSounds.pop();
+		}
+	}
 }
 
 } // namespace Effekseer

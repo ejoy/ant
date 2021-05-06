@@ -3,6 +3,7 @@
 #define __EFFEKSEER_MATERIAL_H__
 
 #include "../Effekseer.Base.Pre.h"
+#include "../Utils/BinaryVersion.h"
 #include <array>
 #include <assert.h>
 #include <map>
@@ -47,6 +48,9 @@ private:
 	std::vector<Texture> textures_;
 
 	std::vector<Uniform> uniforms_;
+
+	static const int32_t LatestSupportVersion = MaterialVersion16;
+	static const int32_t OldestSupportVersion = 0;
 
 public:
 	MaterialFile() = default;

@@ -163,7 +163,7 @@ public:
 	\~English set model data into specified index
 	\~Japanese	指定されたインデックスにモデルを設定する。
 	*/
-	void SetProcedualModel(Effect* effect, int32_t index, ModelRef data);
+	void SetProceduralModel(Effect* effect, int32_t index, ModelRef data);
 
 	/**
 	@brief
@@ -444,22 +444,22 @@ public:
 	virtual const char16_t* GetCurvePath(int n) const = 0;
 
 	/**
-	@brief	\~English	Get a procedual model's pointer
+	@brief	\~English	Get a procedural model's pointer
 	\~Japanese	格納されているプロシージャルモデルのポインタを取得する。
 	*/
-	virtual ModelRef GetProcedualModel(int n) const = 0;
+	virtual ModelRef GetProceduralModel(int n) const = 0;
 
 	/**
-	@brief	\~English	Get the number of stored procedual model's pointer
+	@brief	\~English	Get the number of stored procedural model's pointer
 	\~Japanese	格納されているプロシージャルモデルのポインタの個数を取得する。
 	*/
-	virtual int32_t GetProcedualModelCount() const = 0;
+	virtual int32_t GetProceduralModelCount() const = 0;
 
 	/**
-	@brief	\~English	Get a procedual model's parameter
+	@brief	\~English	Get a procedural model's parameter
 	\~Japanese	格納されているプロシージャルモデルのパラメーターを取得する。
 	*/
-	virtual const ProcedualModelParameter* GetProcedualModelParameter(int n) const = 0;
+	virtual const ProceduralModelParameter* GetProceduralModelParameter(int n) const = 0;
 
 	/**
 		@brief
@@ -502,7 +502,7 @@ public:
 		\~English set a model data into specified index
 		\~Japanese	指定されたインデックスにカーブを設定する。
 	*/
-	virtual void SetProcedualModel(int32_t index, ModelRef data) = 0;
+	virtual void SetProceduralModel(int32_t index, ModelRef data) = 0;
 
 	/**
 		@brief
@@ -663,7 +663,7 @@ struct EffectBasicRenderParameter
 	{
 		float Color[4];
 		float Threshold;
-		int32_t ColorScaling;
+		float ColorScaling;
 	} EdgeParam;
 
 	AlphaBlendType AlphaBlend;

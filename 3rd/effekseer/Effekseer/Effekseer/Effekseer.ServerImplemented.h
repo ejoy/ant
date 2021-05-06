@@ -52,11 +52,10 @@ private:
 	};
 
 private:
-
 	struct EffectParameter
 	{
 		EffectRef EffectPtr;
-		bool IsRegistering;
+		bool IsRegistered;
 	};
 
 	EfkSocket m_socket;

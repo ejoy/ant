@@ -8,7 +8,7 @@
 
 namespace Effekseer
 {
-	
+
 namespace SIMD
 {
 

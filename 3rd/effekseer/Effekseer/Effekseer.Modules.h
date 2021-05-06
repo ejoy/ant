@@ -92,7 +92,6 @@ public:
 		bool IsRightHand;
 		float Maginification = 1.0f;
 
-
 		ZSortType ZSort;
 
 		NodeRendererDepthParameter* DepthParameterPtr = nullptr;
@@ -429,7 +428,7 @@ public:
 
 		bool EnableViewOffset = false;
 
-		bool IsProcedualMode = false;
+		bool IsProceduralMode = false;
 
 		RefPtr<RenderingUserData> UserData;
 	};
@@ -1150,20 +1149,19 @@ public:
 
 #endif // __EFFEKSEER_MODEL_H__
 
-#ifndef	__EFFEKSEER_CURVE_H__
-#define	__EFFEKSEER_CURVE_H__
+#ifndef __EFFEKSEER_CURVE_H__
+#define __EFFEKSEER_CURVE_H__
 
 //----------------------------------------------------------------------------------
 // Include
 //----------------------------------------------------------------------------------
 
-#include <vector>
-#include <limits>
 #include <cmath>
+#include <limits>
+#include <vector>
 
 namespace Effekseer
 {
-
 
 class dVector4
 {
@@ -1171,8 +1169,11 @@ public:
 	double X, Y, Z, W;
 
 public:
-	dVector4(double x = 0, double y = 0, double z = 0, double w = 0) :
-		X(x), Y(y), Z(z), W(w)
+	dVector4(double x = 0, double y = 0, double z = 0, double w = 0)
+		: X(x)
+		, Y(y)
+		, Z(z)
+		, W(w)
 	{
 	}
 };
@@ -1185,6 +1186,7 @@ public:
 class Curve : public Resource
 {
 	friend class CurveLoader;
+
 public:
 	static const int32_t Version = 1;
 
@@ -1217,24 +1219,27 @@ private:
 	 */
 	double CalcBSplineBasisFunc(const std::vector<double>& knot, unsigned int j, unsigned int p, double t)
 	{
-		if (knot.size() == 0) return std::numeric_limits<double>::quiet_NaN();
+		if (knot.size() == 0)
+			return std::numeric_limits<double>::quiet_NaN();
 
 		// ノット列のデータ長が充分でない場合は nan を返す
 		unsigned int m = static_cast<unsigned int>(knot.size()) - 1;
-		if (m < j + p + 1) return std::numeric_limits<double>::quiet_NaN();
+		if (m < j + p + 1)
+			return std::numeric_limits<double>::quiet_NaN();
 
 		// 正値をとる範囲外ならゼロを返す
-		if ((t < knot[j]) || (t > knot[j + p + 1])) return(0);
+		if ((t < knot[j]) || (t > knot[j + p + 1]))
+			return (0);
 		// p = 0 かつ knot[j] <= t <= knot[j + p + 1] なら 1 を返す
-		if (p == 0) return(1);
+		if (p == 0)
+			return (1);
 		// p = 1 の場合、三角の頂点の値は特別扱い
-		if (p == 1 && t == knot[j + 1]) return(1);
+		if (p == 1 && t == knot[j + 1])
+			return (1);
 
 		// 漸化式の計算
-		double d1 = (knot[j + p] == knot[j]) ? 0 :
-			(t - knot[j]) * CalcBSplineBasisFunc(knot, j, p - 1, t) / (knot[j + p] - knot[j]);
-		double d2 = (knot[j + p + 1] == knot[j + 1]) ? 0 :
-			(knot[j + p + 1] - t) * CalcBSplineBasisFunc(knot, j + 1, p - 1, t) / (knot[j + p + 1] - knot[j + 1]);
+		double d1 = (knot[j + p] == knot[j]) ? 0 : (t - knot[j]) * CalcBSplineBasisFunc(knot, j, p - 1, t) / (knot[j + p] - knot[j]);
+		double d2 = (knot[j + p + 1] == knot[j + 1]) ? 0 : (knot[j + p + 1] - t) * CalcBSplineBasisFunc(knot, j + 1, p - 1, t) / (knot[j + p + 1] - knot[j + 1]);
 
 		return (d1 + d2);
 	}
@@ -1317,18 +1322,19 @@ public:
 	{
 	}
 
-	Vector3D CalcuratePoint(float t, float magnification) {
+	Vector3D CalcuratePoint(float t, float magnification)
+	{
 		if (t == 0.0f && mControllPoint.size() > 0)
 		{
 			return {
 				static_cast<float>(mControllPoint[0].X * magnification),
-				static_cast<float>(mControllPoint[0].Y * magnification), 
+				static_cast<float>(mControllPoint[0].Y * magnification),
 				static_cast<float>(mControllPoint[0].Z * magnification)};
 		}
 
 		int p = mOrder; // 次数
 
-		std::vector< double > bs(mControllPointCount); // B-Spline 基底関数の計算結果(重み値を積算)
+		std::vector<double> bs(mControllPointCount); // B-Spline 基底関数の計算結果(重み値を積算)
 
 		// ノット列の要素を +1 する
 		auto knot = mKnotValue;
@@ -1337,7 +1343,8 @@ public:
 		float t_rate = float(knot.back() - 1);
 
 		double wSum = 0; // bs の合計
-		for (int j = 0; j < mControllPointCount; ++j) {
+		for (int j = 0; j < mControllPointCount; ++j)
+		{
 			bs[j] = mControllPoint[j].W * CalcBSplineBasisFunc(knot, j, p, t * (t_rate));
 
 			if (!std::isnan(bs[j]))
@@ -1365,25 +1372,51 @@ public:
 	//
 	//  Getter
 	//
-	int GetControllPointCount() { return mControllPointCount; }
-	dVector4 GetControllPoint(int index) { return mControllPoint[index]; }
+	int GetControllPointCount()
+	{
+		return mControllPointCount;
+	}
+	dVector4 GetControllPoint(int index)
+	{
+		return mControllPoint[index];
+	}
 
-	int GetKnotCount() { return mKnotCount; }
-	double GetKnotValue(int index) { return mKnotValue[index]; }
+	int GetKnotCount()
+	{
+		return mKnotCount;
+	}
+	double GetKnotValue(int index)
+	{
+		return mKnotValue[index];
+	}
 
-	int GetOrder() { return mOrder; }
-	int GetStep() { return mStep; }
-	int GetType() { return mType; }
-	int GetDimension() { return mDimension; }
+	int GetOrder()
+	{
+		return mOrder;
+	}
+	int GetStep()
+	{
+		return mStep;
+	}
+	int GetType()
+	{
+		return mType;
+	}
+	int GetDimension()
+	{
+		return mDimension;
+	}
 
-	float GetLength() { return mLength; }
+	float GetLength()
+	{
+		return mLength;
+	}
 
 }; // end class
 
-
 } // end namespace Effekseer
 
-#endif  // __EFFEKSEER_CURVE_H__
+#endif // __EFFEKSEER_CURVE_H__
 
 #ifndef __EFFEKSEER_CURVELOADER_H__
 #define __EFFEKSEER_CURVELOADER_H__
@@ -1411,17 +1444,7 @@ private:
 	::Effekseer::FileInterface* fileInterface_ = nullptr;
 
 public:
-	CurveLoader(::Effekseer::FileInterface* fileInterface = nullptr)
-	{
-		if (fileInterface != nullptr)
-		{
-			fileInterface_ = fileInterface;
-		}
-		else
-		{
-			fileInterface_ = &defaultFileInterface_;
-		}
-	}
+	CurveLoader(::Effekseer::FileInterface* fileInterface = nullptr);
 
 	virtual ~CurveLoader() = default;
 
@@ -1436,69 +1459,23 @@ public:
 	\~English a pointer of loaded a curve
 	\~Japanese 読み込まれたカーブのポインタ
 	*/
-	virtual Effekseer::CurveRef Load(const char16_t* path)
-	{
+	virtual CurveRef Load(const char16_t* path);
 
-		std::unique_ptr<::Effekseer::FileReader> reader(fileInterface_->OpenRead(path));
-		if (reader.get() == nullptr)
-		{
-			return nullptr;
-		}
-
-		auto curve = Effekseer::MakeRefPtr<Effekseer::Curve>();
-
-		// load converter version
-		int converter_version = 0;
-		reader->Read(&converter_version, sizeof(int));
-
-		// load controll point count
-		reader->Read(&curve->mControllPointCount, sizeof(int));
-
-		// load controll points
-		for (int i = 0; i < curve->mControllPointCount; i++)
-		{
-			dVector4 value;
-			reader->Read(&value, sizeof(dVector4));
-			curve->mControllPoint.push_back(value);
-		}
-
-		// load knot count
-		reader->Read(&curve->mKnotCount, sizeof(int));
-
-		// load knot values
-		for (int i = 0; i < curve->mKnotCount; i++)
-		{
-			double value;
-			reader->Read(&value, sizeof(double));
-			curve->mKnotValue.push_back(value);
-		}
-
-		// load order
-		reader->Read(&curve->mOrder, sizeof(int));
-
-		// load step
-		reader->Read(&curve->mStep, sizeof(int));
-
-		// load type
-		reader->Read(&curve->mType, sizeof(int));
-
-		// load dimension
-		reader->Read(&curve->mDimension, sizeof(int));
-
-		// calc curve length
-		curve->mLength = 0;
-
-		for (int i = 1; i < curve->mControllPointCount; i++)
-		{
-			dVector4 p0 = curve->mControllPoint[i - 1];
-			dVector4 p1 = curve->mControllPoint[i];
-
-			float len = Vector3D::Length(Vector3D((float)p1.X, (float)p1.Y, (float)p1.Z) - Vector3D((float)p0.X, (float)p0.Y, (float)p0.Z));
-			curve->mLength += len;
-		}
-
-		return curve;
-	}
+	/*
+	@brief
+	\~English load a curve
+	\~Japanese カーブを読み込む。
+	@param	data
+	\~English	data pointer
+	\~Japanese	データのポインタ
+	@param	size
+	\~English	the size of data
+	\~Japanese	データの大きさ
+	@ return
+	\~English a pointer of loaded a curve
+	\~Japanese 読み込まれたカーブのポインタ
+	*/
+	virtual CurveRef Load(const void* data, int32_t size);
 
 	/**
 		@brief
@@ -1508,9 +1485,7 @@ public:
 		\~English	a pointer of loaded a curve
 		\~Japanese	読み込まれたカーブのポインタ
 	*/
-	virtual void Unload(CurveRef data)
-	{
-	}
+	virtual void Unload(CurveRef data);
 };
 
 //----------------------------------------------------------------------------------

@@ -190,11 +190,7 @@ public:
 					float acceleration;
 				} random;
 
-				struct
-				{
-					float start;
-					float end;
-				} easing;
+				InstanceEasing<float> easing;
 			};
 		} axis;
 
@@ -236,11 +232,7 @@ public:
 			float acceleration;
 		} single_random;
 
-		struct
-		{
-			float start;
-			float end;
-		} single_easing;
+		InstanceEasing<float> single_easing;
 
 		struct
 		{

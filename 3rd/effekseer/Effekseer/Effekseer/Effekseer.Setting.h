@@ -72,7 +72,7 @@ public:
 		@param	loader	[in]		ローダー
 		*/
 	void SetEffectLoader(EffectLoaderRef loader);
-	
+
 	/**
 		@brief
 		\~English get a texture loader
@@ -181,7 +181,7 @@ public:
 		\~English	generator
 		\~Japanese ジェネレータ
 	*/
-	ProcedualModelGeneratorRef GetProcedualMeshGenerator() const;
+	ProceduralModelGeneratorRef GetProceduralMeshGenerator() const;
 
 	/**
 		@brief
@@ -191,7 +191,7 @@ public:
 		\~English	generator
 		\~Japanese ジェネレータ
 	*/
-	void SetProcedualMeshGenerator(ProcedualModelGeneratorRef generator);
+	void SetProceduralMeshGenerator(ProceduralModelGeneratorRef generator);
 
 	/**
 		@brief
@@ -220,7 +220,7 @@ public:
 		\~Japanese Effect Factoryの数を取得する。
 	*/
 	int32_t GetEffectFactoryCount() const;
-	
+
 	/**
 		@brief
 		\~English	Get resource manager

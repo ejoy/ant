@@ -18,8 +18,6 @@ public:
 
 	static bool AddValue(const char* key, const char* value);
 
-	static bool LoadFromJsonStr(const char* json_str);
-
 	static void Clear();
 };
 
