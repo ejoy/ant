@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-local OzzBuildDir = "$builddir/ozz-animation/"..lm.mode.."/"
+local OzzBuildDir = "@../$builddir/ozz-animation/"..lm.mode.."/"
 
 lm:build "ozz-animation_init" {
     "cmake", "-DCMAKE_BUILD_TYPE="..lm.mode,
@@ -24,8 +24,8 @@ lm:build "ozz-animation_build" {
     pool = "console",
 }
 
-
-lm:build "ozz-animation_make" {
-    "{COPY}", OzzBuildDir .. "src/animation/offline/gltf/gltf2ozz.exe", "$bin/gltf2ozz.exe",
+lm:copy "ozz-animation_make" {
+    input = OzzBuildDir .. "src/animation/offline/gltf/gltf2ozz.exe",
+    output = "$bin/gltf2ozz.exe",
     deps = "ozz-animation_build",
 }
