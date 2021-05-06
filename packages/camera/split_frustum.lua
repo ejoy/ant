@@ -35,6 +35,39 @@ local function which_z(u_nearZ, u_farZ, depth_slice, num_slice)
     return u_nearZ*((u_farZ/u_nearZ) ^ (depth_slice/num_slice))
 end
 
+local function build_frustum_points(id, screensize, u_nearZ, u_farZ, invproj)
+    local near_sS = HOMOGENEOUS_DEPTH and -1.0 or 0.0
+
+    local tileunit<const> = {screensize[1]/u_cluster_size[1], screensize[2]/u_cluster_size[2]}
+
+    local x, y  = id[1] * tileunit[1], id[2] * tileunit[2]
+    local nx, ny= x + tileunit[1], y + tileunit[1]
+
+    local corners_near_sS = {
+        {x, y, near_sS, 1.0},
+        {nx, y, near_sS, 1.0},
+        {x, ny, near_sS, 1.0},
+        {nx, ny, near_sS, 1.0},
+    }
+
+    local eyepos = math3d.vector(0, 0, 0)
+
+    local depth         = which_z(u_nearZ, u_farZ, id[3],     u_cluster_size[3]);
+    local depth_next    = which_z(u_nearZ, u_farZ, id[3]+1,   u_cluster_size[3]);
+
+    local points = {}
+    for _, v in ipairs(corners_near_sS) do
+        local v_vS = screen2view(v, screensize, invproj)
+        local p0 = line_zplane_intersection(eyepos, v_vS, depth)
+        local p1 = line_zplane_intersection(eyepos, v_vS, depth_next)
+
+        points[#points+1] = p0
+        points[#points+1] = p1
+    end
+
+    return points
+end
+
 -- dispatch as: [16, 9, 24]
 local function build_aabb(id, screensize, u_nearZ, u_farZ, invproj)
     local near_sS = HOMOGENEOUS_DEPTH and -1.0 or 0.0
@@ -120,6 +153,7 @@ return {
     which_z = which_z,
     which_cluster = which_cluster,
     build = build_aabb,
+    build_frustum_points = build_frustum_points,
     build_all = function (screensize, nearZ, farZ, invproj)
         local cluster_aabbs = {}
         for z=1, u_cluster_size[3] do
