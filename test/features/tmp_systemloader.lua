@@ -8,8 +8,11 @@ local ies = world:interface "ant.scene|ientity_state"
 local init_loader_sys = ecs.system 'init_loader_system'
 local imaterial = world:interface "ant.asset|imaterial"
 local mathpkg = import_package"ant.math"
-local mc = mathpkg.constant
-local mu = mathpkg.util
+local mc, mu = mathpkg.constant, mathpkg.util
+
+local camerapkg = import_package"ant.camera"
+local split_frustum = camerapkg.split_frustum
+
 local geo = import_package "ant.geometry".geometry
 
 local function create_plane_test()
@@ -329,8 +332,6 @@ function init_loader_sys:data_changed()
                 minv = {-0.15881, 0.11909, 0.25},
                 maxv = {-0.1042, 0.17866, 0.33338},
             }
-            local camerapkg = import_package"ant.camera"
-            local split_frustum = camerapkg.split_frustum
             local screensize = {mq.render_target.view_rect.w, mq.render_target.view_rect.h}
 
             local pt = {0, 1, 0, 1}
@@ -428,37 +429,46 @@ function init_loader_sys:data_changed()
             local frustum = icamera.get_frustum(mq.camera_eid)
             local u_nearZ, u_farZ = frustum.n, frustum.f
             local invproj = math3d.inverse(icamera.calc_projmat(mq.camera_eid))
+            local invview = math3d.inverse(icamera.calc_viewmat(mq.camera_eid))
             local vb = {}
             local ib = {}
-            local function add_frustum_wireframe(ib)
-                local lib = {
+            local function add_frustum_wireframe(ib, offset)
+                local lib<const> = {
                     0, 1, 2, 3, 4, 5, 6, 7,
-                    0, 2, 2, 4, 4, 6, 6, 0,
-                    1, 3, 3, 5, 5, 7, 7, 1,
+                    0, 2, 2, 6, 6, 4, 4, 0,
+                    1, 3, 3, 7, 7, 5, 5, 1,
                 }
-                table.move(lib, 1, #lib, #lib+1, ib)
+                for _, v in ipairs(lib) do
+                    ib[#ib+1] = v + offset
+                end
             end
-            for z=1, 24 do
-                for y=1, 9 do
-                    for x=1, 16 do
+            local xsize, ysize, zsize = 16, 9, 24
+            local allpoints = {}
+            for z=1, zsize do
+                for y=1, ysize do
+                    for x=1, xsize do
                         local id = {x-1, y-1, z-1}
-                        local points = split_frustum.build_frustum_points(id, screensize, u_nearZ, u_farZ, invproj)
+                        
+                        local points = split_frustum.build_frustum_points(id, screensize, u_nearZ, u_farZ, invproj, {xsize, ysize, zsize})
+                        add_frustum_wireframe(ib, #vb/3)
+                        allpoints[#allpoints+1] = points
                         for _, p in ipairs(points) do
-                            local v = math3d.tovalue(p)
-                            for _, vv in ipairs(v) do
-                                vb[#vb+1] = vv
+                            local v = math3d.tovalue(math3d.transform(invview, p, 1))
+                            for i=1, 3 do
+                                vb[#vb+1] = v[i]
                             end
                         end
-                        add_frustum_wireframe(ib)
                     end
                 end
             end
 
             local mesh = ientity.create_mesh({"p3", vb}, ib)
-            ientity.create_simple_render_entity(
+            local eid = ientity.create_simple_render_entity(
                 "frustum",
-                "/pkg/ant.resources/materials/line.material",
+                "/pkg/ant.resources/materials/line_color.material",
                 mesh)
+            
+            imaterial.set_property(eid, "u_color", {0.8, 0.8, 0.0, 1.0})
         end
     end
 

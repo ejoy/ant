@@ -4,7 +4,7 @@ fx:
 state:
   ALPHA_REF: 1
   CULL: CCW
-  DEPTH_TEST: LESS
+  DEPTH_TEST: ALWAYS
   LINEAA: true
   MSAA: true
   PT: LINES
