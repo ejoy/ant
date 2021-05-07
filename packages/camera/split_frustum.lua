@@ -3,7 +3,7 @@ local math3d = require "math3d"
 local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
 
-local HOMOGENEOUS_DEPTH, ORIGIN_TOP_LEFT = math3d.homogeneous_depth, not math3d.origin_bottom_left
+local HOMOGENEOUS_DEPTH, ORIGIN_BOTTOM_LEFT = math3d.homogeneous_depth, math3d.origin_bottom_left
 
 local function line_zplane_intersection(A, B, zDistance)
     local pn = math3d.vector(0.0, 0.0, 1.0)
@@ -16,7 +16,7 @@ end
 
 local function screen2view(screen, screensize, invproj)
     local screen_ndc = {screen[1]/screensize[1], screen[2]/screensize[2]}
-    if ORIGIN_TOP_LEFT then
+    if not ORIGIN_BOTTOM_LEFT then
         screen_ndc[2] = 1.0 - screen_ndc[2];
     end
 
@@ -68,34 +68,7 @@ end
 
 -- dispatch as: [16, 9, 24]
 local function build_aabb(id, screensize, u_nearZ, u_farZ, invproj)
-    local near_sS = HOMOGENEOUS_DEPTH and -1.0 or 0.0
-    local tileunit = {screensize[1]/u_cluster_size[1], screensize[2]/u_cluster_size[2]}
-
-    local x, y  = id[1] * tileunit[1], id[2] * tileunit[2]
-    local nx, ny= x + tileunit[1], y + tileunit[2]
-
-    local corners_near_sS = {
-        {x, y, near_sS, 1.0},
-        {nx, y, near_sS, 1.0},
-        {x, ny, near_sS, 1.0},
-        {nx, ny, near_sS, 1.0},
-    }
-
-    local eyepos = math3d.vector(0, 0, 0)
-
-    local depth         = which_z(u_nearZ, u_farZ, id[3],     u_cluster_size[3]);
-    local depth_next    = which_z(u_nearZ, u_farZ, id[3]+1,   u_cluster_size[3]);
-
-    local points = {}
-    for _, v in ipairs(corners_near_sS) do
-        local v_vS = screen2view(v, screensize, invproj)
-        local p0 = line_zplane_intersection(eyepos, v_vS, depth)
-        local p1 = line_zplane_intersection(eyepos, v_vS, depth_next)
-
-        points[#points+1] = p0
-        points[#points+1] = p1
-    end
-
+    local points = build_frustum_points(id, screensize, u_nearZ, u_farZ, invproj, u_cluster_size)
     local minv, maxv = math3d.minmax(points)
 
     return {
@@ -122,15 +95,15 @@ end
 local function which_cluster_Z(nolineardepth, u_nearZ, u_farZ, u_slice_scale, u_slice_bias)
     local ldepth = linear_depth(nolineardepth, u_nearZ, u_farZ)
     local logdepth = math.log(ldepth, 2)
-    return math.floor(math.max(logdepth * u_slice_scale + u_slice_bias, 0.0)+0.5);
+    return math.floor(math.max(logdepth * u_slice_scale + u_slice_bias, 0.0));
 end
     
 local function which_cluster(fragcoord, screensize, u_nearZ, u_farZ, u_slice_scale, u_slice_bias)
     local tileunit = {screensize[1]/u_cluster_size[1], screensize[2]/u_cluster_size[2]}
-    local cluster_z = math.floor(math.max(math.log(linear_depth(fragcoord[3], u_nearZ, u_farZ), 2) * u_slice_scale + u_slice_bias, 0.0)+0.5);
+    local cluster_z = math.floor(math.max(math.log(linear_depth(fragcoord[3], u_nearZ, u_farZ), 2) * u_slice_scale + u_slice_bias, 0.0));
     local cluster_coord= {
-        math.floor((fragcoord[1]/tileunit[1])+0.5),
-        math.floor((fragcoord[2]/tileunit[2])+0.5),
+        math.floor(fragcoord[1]/tileunit[1]),
+        math.floor(fragcoord[2]/tileunit[2]),
         cluster_z,
     }
     return 	cluster_coord[1] +
