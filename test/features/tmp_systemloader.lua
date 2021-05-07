@@ -211,6 +211,8 @@ function init_loader_sys:post_init()
     camera_cache.icc.updir.v = mc.YAXIS
     icamera.lookto(mq.camera_eid, camera_cache.icc.pos, camera_cache.icc.dir)
 
+    iom.set_rotation(mq.camera_eid, math3d.quaternion(0.3392,0.4239,-0.1751,0.8213))
+
     -- icamera.set_dof(mq.camera_eid, {
     --     -- aperture_fstop      = 2.8,
     --     -- aperture_blades     = 0,
@@ -421,6 +423,17 @@ function init_loader_sys:data_changed()
             local aabb1 = split_frustum.build(clusterid, screensize, near, far, math3d.inverse(projmat))
             local is = interset_aabb(l, aabb1, viewmat)
             print("interset_aabb:", is and "true" or "false")
+        end
+
+        if key == 'T' and press == 0 then
+            local clusterid = {8, 3, 11}
+            local mq = world:singleton_entity "main_queue"
+            local screensize = {mq.render_target.view_rect.w, mq.render_target.view_rect.h}
+            local frustum = icamera.get_frustum(mq.camera_eid)
+            local near, far = frustum.n, frustum.f
+            local invproj = math3d.inverse(icamera.calc_projmat(mq.camera_eid))
+            local aabb1 = split_frustum.build(clusterid, screensize, near, far, invproj)
+            print(aabb1)
         end
 
         if key == 'F' and press == 0 then
