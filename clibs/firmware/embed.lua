@@ -1,4 +1,4 @@
-local input, output = ...
+local input, output, name = ...
 
 local function readfile(filename)
     local f <close> = assert(io.open(filename, "rb"))
@@ -12,8 +12,7 @@ local function writeline(f, data)
     f:write "\r\n"
 end
 
-local name = assert(output:match "([^./\\]+)%..*$")
-local f <close> = assert(io.open(output, "wb"))
+local f <close> = assert(io.open(output .. "/" .. name .. ".h", "wb"))
 writeline(f, [[#pragma once]])
 writeline(f)
 writeline(f, ([[const char g%sData[] = R"firmware(]]):format(name))
