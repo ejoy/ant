@@ -9,12 +9,12 @@
 #if defined(__ARM_NEON__) || defined(__ARM_NEON)
 // ARMv7/ARM64 NEON
 
-#define EFK_SIMD_NEON
+// #define EFK_SIMD_NEON
 
-#if defined(_M_ARM64) || defined(__aarch64__)
-#define EFK_SIMD_NEON_ARM64
-#endif
-
+// #if defined(_M_ARM64) || defined(__aarch64__)
+// #define EFK_SIMD_NEON_ARM64
+// #endif
+#define EFK_SIMD_GEN
 #include <arm_neon.h>
 
 #elif (defined(_M_AMD64) || defined(_M_X64)) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2) || defined(__SSE2__)

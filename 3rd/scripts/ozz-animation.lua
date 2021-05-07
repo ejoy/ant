@@ -2,6 +2,11 @@ local lm = require "luamake"
 
 local OzzBuildDir = "@../$builddir/ozz-animation/"..lm.mode.."/"
 
+local EXE = ""
+if lm.plat == "msvc" or lm.plat == "mingw" then
+    EXE = ".exe"
+end
+
 lm:build "ozz-animation_init" {
     "cmake", "-DCMAKE_BUILD_TYPE="..lm.mode,
     {
@@ -25,7 +30,7 @@ lm:build "ozz-animation_build" {
 }
 
 lm:copy "ozz-animation_make" {
-    input = OzzBuildDir .. "src/animation/offline/gltf/gltf2ozz.exe",
-    output = "$bin/gltf2ozz.exe",
+    input = OzzBuildDir .. "src/animation/offline/gltf/gltf2ozz"..EXE,
+    output = "$bin/gltf2ozz"..EXE,
     deps = "ozz-animation_build",
 }

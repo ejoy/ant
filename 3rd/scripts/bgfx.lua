@@ -4,15 +4,30 @@ local SETENV = lm.plat == "msvc" and "set" or "export"
 local BGFX_OS
 local BGFX_ARGS
 local BGFX_BINS
+local BGFX_MAKEFILE
+local BGFX_EXE
+local BGFX_SHARED_LIB
 
 if lm.plat == "msvc" then
     BGFX_OS = "windows"
     BGFX_ARGS = {"--with-windows=10.0", "vs2019"}
     BGFX_BINS = "../bgfx/.build/win64_vs2019/bin/"
+    BGFX_EXE = ".exe"
+    BGFX_SHARED_LIB = "bgfx-shared-lib"..lm.mode..".dll"
 elseif lm.plat == "mingw" then
     BGFX_OS = "windows"
     BGFX_ARGS = {"--os=windows", "--gcc=mingw-gcc", "gmake"}
     BGFX_BINS = "../bgfx/.build/win64_mingw-gcc/bin/"
+    BGFX_MAKEFILE = "@../bgfx/.build/projects/gmake-mingw-gcc"
+    BGFX_EXE = ".exe"
+    BGFX_SHARED_LIB = "bgfx-shared-lib"..lm.mode..".dll"
+elseif lm.plat == "macos" then
+    BGFX_OS = "darwin"
+    BGFX_ARGS = {"--gcc=osx-arm64", "gmake"}
+    BGFX_BINS = "../bgfx/.build/osx-arm64/bin/"
+    BGFX_MAKEFILE = "@../bgfx/.build/projects/gmake-osx-arm64"
+    BGFX_EXE = ""
+    BGFX_SHARED_LIB = "libbgfx-shared-lib"..lm.mode..".dylib"
 end
 
 GENIE = ("../bx/tools/bin/%s/genie"):format(BGFX_OS)
@@ -34,9 +49,8 @@ if lm.plat == "msvc" then
         MSBuild, "/nologo", "@../bgfx/.build/projects/vs2019/bgfx.sln", "/m", "/v:m", "/t:build", ([[/p:Configuration=%s,Platform=x64]]):format(lm.mode),
         pool = "console",
     }
-elseif lm.plat == "mingw" then
-    local BgfxMakefile = "@../bgfx/.build/projects/gmake-mingw-gcc"
-    local BgfxMake = {"make", "--no-print-directory", "-R", "-C", BgfxMakefile, "config="..lm.mode.."64", "-j8" }
+else
+    local BgfxMake = {"make", "--no-print-directory", "-R", "-C", BGFX_MAKEFILE, "config="..lm.mode.."64", "-j8" }
     lm:build "bgfx_build" {
         BgfxMake, "bgfx", "bx", "bimg", "bimg_decode", "bgfx-shared-lib", "shaderc", "texturec",
         pool = "console",
@@ -44,19 +58,19 @@ elseif lm.plat == "mingw" then
 end
 
 lm:copy "copy_bgfx_texturec" {
-    input = BGFX_BINS .. "texturec"..lm.mode..".exe",
-    output = "$bin/texturec.exe",
+    input = BGFX_BINS .. "texturec"..lm.mode..BGFX_EXE,
+    output = "$bin/texturec"..BGFX_EXE,
     deps = "bgfx_build",
 }
 
 lm:copy "copy_bgfx_shaderc" {
-    input = BGFX_BINS .. "shaderc"..lm.mode..".exe",
-    output = "$bin/shaderc.exe",
+    input = BGFX_BINS .. "shaderc"..lm.mode..BGFX_EXE,
+    output = "$bin/shaderc"..BGFX_EXE,
     deps = "bgfx_build",
 }
 
 lm:copy "copy_bgfx_shared_lib" {
-    input = BGFX_BINS .. "bgfx-shared-lib"..lm.mode..".dll",
+    input = BGFX_BINS .. BGFX_SHARED_LIB,
     output = "$bin/bgfx-core.dll",
     deps = "bgfx_build",
 }
