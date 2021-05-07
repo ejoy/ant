@@ -1012,7 +1012,15 @@ lsrt(lua_State *L) {
 static int
 llength(lua_State *L) {
 	const float * v3 = vector_from_index(L, GETLS(L), 1);
-	lua_pushnumber(L, math3d_length(v3));
+	float length = 0;
+	if (!lua_isnoneornil(L, 2)){
+		const float *vv3 = vector_from_index(L, GETLS(L), 2);
+		const float vv[3] = {vv3[0]-v3[0], vv3[1]-v3[1], vv3[2]-v3[2]};
+		length = math3d_length(vv);
+	} else {
+		length = math3d_length(v3);
+	}
+	lua_pushnumber(L, length);
 	return 1;
 }
 
@@ -1703,6 +1711,16 @@ laabb_intersection(lua_State *L){
 	return 1;
 }
 
+static int
+laabb_test_point(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float *aabb = matrix_from_index(L, LS, 1);
+	const float *v = vector_from_index(L, LS, 2);
+
+	lua_pushboolean(L, math3d_aabb_test_point(LS, aabb, v));
+	return 1;
+}
+
 static const char* s_frustum_field[] = {
 	"l", "b", "n", "r", "t", "f",
 };
@@ -2006,14 +2024,15 @@ init_math3d_api(lua_State *L, struct boxstack *bs) {
 		{ "points_aabb",	lpoints_aabb},
 
 		//aabb
-		{ "aabb", 			laabb},
-		{ "aabb_isvalid", 	laabb_isvalid},
-		{ "aabb_append", 	laabb_append},
-		{ "aabb_merge", 	laabb_merge},
-		{ "aabb_transform", laabb_transform},
+		{ "aabb", 				 laabb},
+		{ "aabb_isvalid", 		 laabb_isvalid},
+		{ "aabb_append", 		 laabb_append},
+		{ "aabb_merge", 		 laabb_merge},
+		{ "aabb_transform", 	 laabb_transform},
 		{ "aabb_center_extents", laabb_center_extents},
 		{ "aabb_intersect_plane",laabb_intersect_plane},
 		{ "aabb_intersection",	 laabb_intersection},
+		{ "aabb_test_point",	 laabb_test_point},
 		{ "aabb_to_frustum",	 laabb_to_frustum},
 		{ "aabb_points",		 laabb_points},
 		{ "aabb_expand",		 laabb_expand},

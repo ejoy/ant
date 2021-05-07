@@ -211,7 +211,26 @@ function init_loader_sys:post_init()
     camera_cache.icc.updir.v = mc.YAXIS
     icamera.lookto(mq.camera_eid, camera_cache.icc.pos, camera_cache.icc.dir)
 
-    iom.set_rotation(mq.camera_eid, math3d.quaternion(0.3392,0.4239,-0.1751,0.8213))
+    iom.set_rotation(mq.camera_eid, math3d.quaternion(0.3893,0.1568,-0.0674,0.9052))
+
+    do
+        local v_posWS = {0.36984, 0.75826, -0.30619, 1.0}
+        local lpos = {0.0, 1.0, 0.0, 1.0}
+        local dis = math3d.length(lpos, v_posWS)
+
+        local vp = icamera.calc_viewproj(mq.camera_eid)
+        local ndc = math3d.transformH(vp, v_posWS, 1)
+        local depth = math3d.index(ndc, 3)
+        local screen = math3d.muladd(ndc, 0.5, {0.5, 0.5, 0.0, 0.0})
+        local screeny = math3d.index(screen, 2)
+        screeny = 1 - screeny
+        screen = math3d.set_index(screen, 2, screeny)
+        local vr = world:singleton_entity "main_queue".render_target.view_rect
+        local s = {vr.w, vr.h, 0.0, 0.0}
+        local coord = math3d.mul(screen, s)
+
+        print(math3d.tostring(coord))
+    end
 
     -- icamera.set_dof(mq.camera_eid, {
     --     -- aperture_fstop      = 2.8,
@@ -432,6 +451,26 @@ function init_loader_sys:data_changed()
             local frustum = icamera.get_frustum(mq.camera_eid)
             local near, far = frustum.n, frustum.f
             local invproj = math3d.inverse(icamera.calc_projmat(mq.camera_eid))
+            
+            local v_posWS = {0.36984, 0.75826, -0.30619, 1.0}
+            local xsize, ysize, zsize = 16, 9, 24
+            local id1
+            local viewmat = icamera.calc_viewmat(mq.camera_eid)
+            local posVS = math3d.transform(viewmat, v_posWS, 1)
+            for z=1, zsize do
+                for y=1, ysize do
+                    for x=1, xsize do
+                        local id = {x-1, y-1, z-1}
+                        local aabb = split_frustum.build(id, screensize, near, far, invproj, {xsize, ysize, zsize})
+                        if math3d.aabb_test_point(math3d.aabb(aabb.minv, aabb.maxv), posVS) then
+                            id1 = id
+                            break
+                        end
+                    end
+                end
+            end
+
+            print(id1)
             local aabb1 = split_frustum.build(clusterid, screensize, near, far, invproj)
             print(aabb1)
         end

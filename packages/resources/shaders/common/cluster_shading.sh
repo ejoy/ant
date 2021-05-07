@@ -88,8 +88,8 @@ float linear_depth(float nolinear_depth){
 }
 
 uint which_cluster(vec3 fragcoord){
-	uint cluster_z     = uint(max(log2(linear_depth(fragcoord.z)) * u_slice_scale + u_slice_bias, 0.0)+0.5);
-    uvec3 cluster_coord= uvec3(fragcoord.xy / u_tile_unit, cluster_z);
+	uint cluster_z     = uint(max(log2(linear_depth(fragcoord.z)) * u_slice_scale + u_slice_bias, 0.0));
+    uvec3 cluster_coord= uvec3(fragcoord.xy/u_tile_unit, cluster_z);
     return 	cluster_coord.x +
             u_cluster_size.x * cluster_coord.y +
             (u_cluster_size.x * u_cluster_size.y) * cluster_coord.z;

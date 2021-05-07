@@ -535,6 +535,19 @@ math3d_aabb_transform(struct lastack *LS, const float trans[16], const float aab
 	rmax = glm::max(xa, xb) + glm::max(ya, yb) + glm::max(za, zb) + pos;
 }
 
+int
+math3d_aabb_test_point(struct lastack *LS, const float *aabb, const float *p){
+	const auto & minv = AABB_MIN(aabb);
+	const auto & maxv = AABB_MAX(aabb);
+
+	for (int ii=0;ii<3;++ii){
+		if (minv[ii] > p[ii] || maxv[ii] < p[ii])
+			return 0;
+	}
+
+	return 1;
+}
+
 void
 math3d_aabb_center_extents(struct lastack *LS, const float *aabb, float center[4], float extents[4]){
 	const auto & minv = AABB_MIN(aabb);

@@ -55,6 +55,7 @@ void math3d_aabb_merge(struct lastack *LS, const float *aabblhs, const float *aa
 int math3d_aabb_isvalid(struct lastack *LS, const float *aabb);
 void math3d_aabb_transform(struct lastack *LS, const float trans[16], const float aabb[16], float raabb[16]);
 void math3d_aabb_center_extents(struct lastack *LS, const float *aabb, float center[4], float extents[4]);
+int math3d_aabb_test_point(struct lastack *LS, const float *aabb, const float *p);
 float math3d_aabb_diagonal_length(struct lastack *LS, const float *aabb);
 int math3d_aabb_intersect_plane(struct lastack *LS, const float *aabb, const float plane[4]);
 void math3d_aabb_intersetion(struct lastack *LS, const float *lhsaabb, const float *rhsaabb);
