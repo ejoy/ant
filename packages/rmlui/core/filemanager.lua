@@ -4,8 +4,15 @@ local bgfx = require "bgfx"
 local cr = import_package "ant.compile_resource"
 
 local os = platform.OS
-local renderer = bgfx.get_caps().rendererType
-cr.set_identity((os.."_"..renderer):lower())
+do
+    local hwcaps = bgfx.get_caps()
+    local renderer = hwcaps.rendererType
+
+    local ss = os.."_"..renderer
+    ss = ss .. "_" .. "hd" .. (hwcaps.homogeneousDepth and "1" or "0")
+    ss = ss .. "_" .. "obl" .. (hwcaps.originBottomLeft and "1" or "0")
+    cr.set_identity(ss:lower())
+end
 
 local m = {}
 
