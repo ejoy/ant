@@ -30,6 +30,9 @@ lm:source_set "source_bgfx" {
         includes = Ant3rd .. "bx/include/compat/mingw",
         linkdirs = Ant3rd .. "bgfx/.build/win64_mingw-gcc/bin",
     },
+    macos = {
+        linkdirs = Ant3rd .. "bgfx/.build/osx-arm64/bin",
+    },
 }
 
 lm:lua_dll "bgfx" {
