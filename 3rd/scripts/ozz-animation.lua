@@ -34,3 +34,8 @@ lm:copy "ozz-animation_make" {
     output = "$bin/gltf2ozz"..EXE,
     deps = "ozz-animation_build",
 }
+
+lm:build "ozz-animation_clean" {
+    "ninja", "-C", OzzBuildDir, "-t", "clean",
+    pool = "console",
+}

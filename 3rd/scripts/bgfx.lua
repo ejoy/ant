@@ -57,6 +57,11 @@ else
     }
 end
 
+lm:build "bgfx_clean" {
+    "make", "-C", BGFX_MAKEFILE, "clean",
+    pool = "console",
+}
+
 lm:copy "copy_bgfx_texturec" {
     input = BGFX_BINS .. "texturec"..lm.mode..BGFX_EXE,
     output = "$bin/texturec"..BGFX_EXE,

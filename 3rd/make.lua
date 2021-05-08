@@ -23,4 +23,12 @@ lm:phony "3rd_make" {
     }
 }
 
+lm:phony "3rd_clean" {
+    deps = {
+        "bgfx_clean",
+        "ozz-animation_clean",
+        "reactphysics3d_clean",
+    }
+}
+
 lm:default "3rd_make"

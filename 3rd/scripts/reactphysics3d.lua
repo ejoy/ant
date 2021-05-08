@@ -13,8 +13,12 @@ lm:build "reactphysics3d_init" {
     pool = "console",
 }
 
-
 lm:build "reactphysics3d_make" {
     "ninja", "-C", Rp3dBuildDir,
+    pool = "console",
+}
+
+lm:build "reactphysics3d_clean" {
+    "ninja", "-C", Rp3dBuildDir, "-t", "clean",
     pool = "console",
 }
