@@ -504,7 +504,8 @@ function m:open_prefab(prefab)
     self.prefab = prefab
     local entities = worldedit:prefab_instance(prefab)
     self.entities = entities
-    for _, c in ipairs(entities.__class) do
+    local template_class = prefab.__class
+    for _, c in ipairs(template_class) do
         if c.script then
             self.prefab_script = c.script
             break
@@ -516,15 +517,15 @@ function m:open_prefab(prefab)
     for i, entity in ipairs(entities) do
         if type(entity) == "table" then
             local templ = hierarchy:get_template(entity.root)
-            templ.filename = prefab.__class[i].prefab
+            templ.filename = template_class[i].prefab
             set_select_adapter(entity, entity.root)
             templ.children = entity
             remove_entity[#remove_entity+1] = entity
         else
-            local keyframes = prefab.__class[i].data.frames
+            local keyframes = template_class[i].data.frames
             if keyframes and last_camera then
                 local templ = hierarchy:get_template(last_camera)
-                templ.keyframe = prefab.__class[i]
+                templ.keyframe = template_class[i]
                 camera_mgr.bind_recorder(last_camera, entity)
                 remove_entity[#remove_entity+1] = entity
             else
@@ -551,7 +552,7 @@ function m:open_prefab(prefab)
                     if world[entity].mesh then
                         ies.set_state(entity, "selectable", true)
                     end
-                    hierarchy:add(entity, {template = prefab.__class[i]}, world[entity].parent or self.root)
+                    hierarchy:add(entity, {template = template_class[i]}, world[entity].parent or self.root)
                 end
             end
             if world[entity].camera then
@@ -582,6 +583,11 @@ function m:open_prefab(prefab)
 end
 
 function m:reload()
+    -- local new_template = hierarchy:update_prefab_template()
+    -- new_template[1].script = (#self.prefab_script > 0) and self.prefab_script or "/pkg/ant.prefab/default_script.lua"
+    -- local prefab = utils.deep_copy(self.prefab)
+    -- prefab.__class = new_template
+    -- self:open_prefab(prefab)
     self:open(tostring(self.prefab))
 end
 
@@ -700,31 +706,26 @@ function m:save_prefab(path)
     local prefab_filename = self.prefab and tostring(self.prefab) or ""
     filename = filename or prefab_filename
     local saveas = (lfs.path(filename) ~= lfs.path(prefab_filename))
-    local current_templ = hierarchy:update_prefab_template()
-    current_templ[1].script = (#self.prefab_script > 0) and self.prefab_script or "/pkg/ant.prefab/default_script.lua"
-    self.entities.__class = current_templ
-    
-    local path_list = split(prefab_filename)
-    local glb_filename
-    if #path_list > 1 then
-        glb_filename = path_list[1]
-    end
 
+    local new_template = hierarchy:update_prefab_template()
+    new_template[1].script = (#self.prefab_script > 0) and self.prefab_script or "/pkg/ant.prefab/default_script.lua"
+    
     if not saveas then
+        local path_list = split(prefab_filename)
+        local glb_filename
+        if #path_list > 1 then
+            glb_filename = path_list[1]
+        end
         if glb_filename then
             local msg = "cann't save glb file, please save as prefab"
             logger.error({tag = "Editor", message = msg})
             widget_utils.message_box({title = "SaveError", info = msg})
         else
-            utils.write_file(filename, stringify(self.entities.__class))
+            utils.write_file(filename, stringify(new_template))
         end
         return
     end
-    local data = self.entities.__class
-    -- local current_dir = lfs.path(prefab_filename):parent_path()
-    -- local new_dir = lfs.path(filename):localpath():parent_path()
-    
-    utils.write_file(filename, stringify(data))
+    utils.write_file(filename, stringify(new_template))
     self:open(filename)
     world:pub {"ResourceBrowser", "dirty"}
 end

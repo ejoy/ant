@@ -12,9 +12,10 @@ local math3d        = require "math3d"
 local uiproperty    = require "widget.uiproperty"
 local BaseView      = require "widget.view_class".BaseView
 local MaterialView  = require "widget.view_class".MaterialView
+
 local world
 local imaterial
-
+local ies
 local mtldata_list = {
 
 }
@@ -209,7 +210,7 @@ function MaterialView:set_model(eid)
         local setting = md.tdata.fx.setting
         self.ui_lighting[1] = setting.lighting and setting.lighting == "on"
         self.ui_shadow_receive[1] = setting.shadow_receive and setting.shadow_receive == "on"
-        self.ui_shadow_cast[1] = setting.shadow_cast and setting.shadow_cast == "on"
+        self.ui_shadow_cast[1] = ies.can_cast(self.eid)
         self.ui_postprocess[1] = setting.bloom and setting.bloom == "on"
         self.ui_surfacetype.text = setting.surfacetype or "opaticy"
         mtldata_list[eid] = md
@@ -291,6 +292,7 @@ end
 function MaterialView:show()
     if not self.eid then return end
     BaseView.show(self)
+    local dirty
     if imgui.widget.TreeNode("Material", imgui.flags.TreeNode { "DefaultOpen" }) then
         self.mat_file:show()
         self.save_mat:show()
@@ -305,6 +307,7 @@ function MaterialView:show()
             else
                 setting.lighting = "off"
             end
+            dirty = true
         end
         imgui.widget.PropertyLabel("shadow_receive")
         if imgui.widget.Checkbox("##shadow_receive", self.ui_shadow_receive) then
@@ -313,14 +316,11 @@ function MaterialView:show()
             else
                 setting.shadow_receive = "off"
             end
+            dirty = true
         end
         imgui.widget.PropertyLabel("shadow_cast")
         if imgui.widget.Checkbox("##shadow_cast", self.ui_shadow_cast) then
-            if self.ui_shadow_cast[1] then
-                setting.shadow_cast = "on"
-            else
-                setting.shadow_cast = "off"
-            end
+            ies.set_state(self.eid, "cast_shadow", self.ui_shadow_cast[1])
         end
         imgui.widget.PropertyLabel("postprocess")
         if imgui.widget.Checkbox("##postprocess", self.ui_postprocess) then
@@ -329,7 +329,9 @@ function MaterialView:show()
             else
                 setting.bloom = "off"
             end
+            dirty = true
         end
+
         for i = 1, self.sampler_num do
             self.samplers[i]:show()
         end
@@ -338,11 +340,17 @@ function MaterialView:show()
         end
         imgui.widget.TreePop()
     end
+    
+    if dirty then
+        self:on_save_mat()
+        prefab_mgr:reload()
+    end
 end
 
 return function(w)
     world       = w
     imaterial   = world:interface "ant.asset|imaterial"
+    ies         = world:interface "ant.scene|ientity_state"
     prefab_mgr  = require "prefab_manager"(world)
     require "widget.base_view"(world)
     return MaterialView
