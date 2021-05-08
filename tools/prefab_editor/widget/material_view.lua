@@ -19,6 +19,15 @@ local mtldata_list = {
 
 }
 
+local surfacetype = {
+    "foreground",
+    "opaticy",
+    "background",
+    "translucent",
+    "decal",
+    "ui"
+}
+
 function MaterialView:_init()
     BaseView._init(self)
     self.mat_file       = uiproperty.ResourcePath({label = "File", extension = ".material"})
@@ -26,6 +35,7 @@ function MaterialView:_init()
     self.fs_file        = uiproperty.ResourcePath({label = "FS", extension = ".sc", readonly = true})
     self.save_mat       = uiproperty.Button({label = "Save"})
     self.save_as_mat    = uiproperty.Button({label = "SaveAs"})
+    self.surfacetype    = uiproperty.Combo({label = "surfacetype", options = surfacetype},{})
     self.samplers       = {}
     self.uniforms       = {}
     self.float_uniforms = {}
@@ -42,6 +52,14 @@ function MaterialView:_init()
     self.fs_file:set_setter(function(value) self:on_set_fs(value) end)
     self.save_mat:set_click(function() self:on_save_mat() end)
     self.save_as_mat:set_click(function() self:on_saveas_mat() end)
+    self.surfacetype:set_setter(function(value) self:on_set_surfacetype(value) end)      
+    self.surfacetype:set_getter(function() return self:on_get_surfacetype() end)
+    --
+    self.ui_surfacetype = {text = "opaticy"}
+    self.ui_lighting = {true}
+    self.ui_shadow_receive = {false}
+    self.ui_shadow_cast = {false}
+    self.ui_postprocess = {false}
 end
 local gd = require "common.global_data"
 function MaterialView:on_set_mat(value)
@@ -68,14 +86,33 @@ end
 function MaterialView:on_get_fs()
     return mtldata_list[self.eid].tdata.fx.fs
 end
+function MaterialView:on_set_surfacetype(value)
+    mtldata_list[self.eid].tdata.fx.setting.surfacetype = value
+end
+function MaterialView:on_get_surfacetype()
+    return mtldata_list[self.eid].tdata.fx.setting.surfacetype or "opaticy"
+end
+
+local function convert_path(path, current_path)
+    if fs.path(path):is_absolute() then return path end
+    local pretty = tostring(lfs.path(path))
+    if string.sub(path, 1, 2) == "./" then
+        pretty = string.sub(path, 3)
+    end
+    return current_path .. pretty
+end
 
 local do_save = function(eid, path)
+    local mtl_path = tostring(fs.path(mtldata_list[eid].filename):remove_filename())
     local tempt = {}
     local tdata = mtldata_list[eid].tdata
     local properties = tdata.properties
     for k, v in pairs(properties) do
         if v.tdata then
             tempt[k] = v.tdata
+            if v.texture then
+                v.texture = convert_path(v.texture, mtl_path)
+            end
             v.tdata = nil
         end
     end
@@ -159,13 +196,22 @@ function MaterialView:set_model(eid)
             if is_sampler(k) then
                 local absolute_path
                 if fs.path(v.texture):is_absolute() then
-                    absolute_path = v.texture
+                    print(v.texture)
+                    absolute_path = tostring(cr.compile_path(v.texture))
+                    print(absolute_path)
                 else
                     absolute_path = tostring(mtl_path) .. v.texture 
                 end
                 v.tdata = utils.readtable(absolute_path)
             end
         end
+        
+        local setting = md.tdata.fx.setting
+        self.ui_lighting[1] = setting.lighting and setting.lighting == "on"
+        self.ui_shadow_receive[1] = setting.shadow_receive and setting.shadow_receive == "on"
+        self.ui_shadow_cast[1] = setting.shadow_cast and setting.shadow_cast == "on"
+        self.ui_postprocess[1] = setting.bloom and setting.bloom == "on"
+        self.ui_surfacetype.text = setting.surfacetype or "opaticy"
         mtldata_list[eid] = md
     end
 
@@ -232,7 +278,7 @@ function MaterialView:update()
     self.mat_file:update()
     self.vs_file:update()
     self.fs_file:update()
-
+    self.surfacetype:update()
     for i = 1, self.sampler_num do
         self.samplers[i]:update()
     end
@@ -240,6 +286,7 @@ function MaterialView:update()
         self.uniforms[i]:update()
     end
 end
+
 
 function MaterialView:show()
     if not self.eid then return end
@@ -249,6 +296,40 @@ function MaterialView:show()
         self.save_mat:show()
         imgui.cursor.SameLine()
         self.save_as_mat:show()
+        self.surfacetype:show()
+        imgui.widget.PropertyLabel("lighting")
+        local setting = mtldata_list[self.eid].tdata.fx.setting
+        if imgui.widget.Checkbox("##lighting", self.ui_lighting) then
+            if self.ui_lighting[1] then
+                setting.lighting = "on"
+            else
+                setting.lighting = "off"
+            end
+        end
+        imgui.widget.PropertyLabel("shadow_receive")
+        if imgui.widget.Checkbox("##shadow_receive", self.ui_shadow_receive) then
+            if self.ui_shadow_receive[1] then
+                setting.shadow_receive = "on"
+            else
+                setting.shadow_receive = "off"
+            end
+        end
+        imgui.widget.PropertyLabel("shadow_cast")
+        if imgui.widget.Checkbox("##shadow_cast", self.ui_shadow_cast) then
+            if self.ui_shadow_cast[1] then
+                setting.shadow_cast = "on"
+            else
+                setting.shadow_cast = "off"
+            end
+        end
+        imgui.widget.PropertyLabel("postprocess")
+        if imgui.widget.Checkbox("##postprocess", self.ui_postprocess) then
+            if self.ui_postprocess[1] then
+                setting.bloom = "on"
+            else
+                setting.bloom = "off"
+            end
+        end
         for i = 1, self.sampler_num do
             self.samplers[i]:show()
         end
