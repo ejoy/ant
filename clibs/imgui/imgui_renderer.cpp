@@ -5,7 +5,7 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <cstring>
 #include <cstdlib>
-#include <malloc.h>
+#include <stdlib.h>
 #include <stack>
 #include "bgfx_interface.h"
 #include "luabgfx.h"
