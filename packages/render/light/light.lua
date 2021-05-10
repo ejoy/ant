@@ -54,6 +54,7 @@ function ilight.create(light)
 			intensity	= light.intensity or 2,
 			range		= light.range,
 			radian		= light.radian,
+			make_shadow	= light.make_shadow,
 			state		= ies.create_state "visible",
 			motion_type = light.motion_type or "dynamic",
 		}
@@ -129,23 +130,6 @@ function ilight.set_outter_cutoff(eid, outter_radian)
 	end
 	l.outter_cutoff = math.cos(outter_radian*0.5)
 	world:pub{"component_changed", "light", eid, "outter_cutoff"}
-end
-
-local active_dl
-function ilight.directional_light()
-	return active_dl
-end
-
-function ilight.active_directional_light(eid)
-	if eid then
-		local e = world[eid]
-		assert(e.light_type == "directional")
-	end
-	active_dl = eid
-end
-
-function ilight.max_point_light()
-	return 4
 end
 
 local lighttypes = {

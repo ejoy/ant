@@ -16,10 +16,6 @@ interface "light"
     .method "color"
     .method "set_color"
 
-    .method "active_directional_light"
-    .method "directional_light"
-
-    .method "max_point_light"
     .method "use_cluster_shading"
     .method "light_buffer"
 
@@ -48,6 +44,8 @@ policy "light"
     .component "intensity"
     .component "range"
     .component "radian"
+    .component "make_shadow"
+    .component "motion_type"
 
 action "main_directional_light"
     .implement "light/light.lua"

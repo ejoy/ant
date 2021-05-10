@@ -81,7 +81,15 @@ local blit_shadowmap_viewid = viewidmgr.generate "blit_shadowmap"
 
 local function check_shadow_matrix()
 	local se = world[find_csm_entity(1)]
-	local lightdir = iom.get_direction(ilight.directional_light())
+	local function directional_light()
+		for _, eid in world:each "light_type" do
+			local e = world[eid]
+			if e.light_type == "directional" then
+				return eid
+			end
+		end
+	end
+	local lightdir = iom.get_direction(directional_light())
 	print("light direction:", math3d.tostring(lightdir))
 
 	local mq = world:singleton_entity "main_queue"

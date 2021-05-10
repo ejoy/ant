@@ -94,13 +94,18 @@ local function light_matrix(center_WS, lightdir)
 	return math3d.set_columns(mc.IDENTITY_MAT, xaxis, yaxis, lightdir, center_WS)
 end
 
+local function update_camera_matrices(rc)
+	rc.viewmat	= math3d.inverse(rc.srt)
+	rc.worldmat	= rc.srt
+	rc.projmat	= math3d.projmat(rc.frustum)
+	rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
+end
+
 local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, camera_rc)
 	local center_WS = math3d.points_center(corners_WS)
 	local min_extent, max_extent
 
-	camera_rc.worldmat = light_matrix(center_WS, lightdir)
-	camera_rc.viewmat = math3d.inverse(camera_rc.worldmat)
-	camera_rc.srt.id = camera_rc.worldmat
+	camera_rc.srt.id = light_matrix(center_WS, lightdir)
 
 	if stabilize then
 		local radius = math3d.points_radius(corners_WS, center_WS)
@@ -118,8 +123,8 @@ local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_s
 		b = min_extent[2], t = max_extent[2],
 		n = min_extent[3], f = max_extent[3],
 	}
-	camera_rc.projmat = math3d.projmat(camera_rc.frustum)
-	camera_rc.viewprojmat = math3d.mul(camera_rc.projmat, camera_rc.viewmat)
+
+	update_camera_matrices(camera_rc)
 
 
 	-- do
@@ -236,29 +241,95 @@ function sm:init()
 	end
 end
 
-local modify_mailboxs = {}
+local viewcamera_changed_mb
+local viewcamera_trans_mb, viewcamera_frustum_mb
 
 function sm:post_init()
 	local mq = world:singleton_entity "main_queue"
-	modify_mailboxs[#modify_mailboxs+1] = world:sub{"component_changed", "transform", mq.camera_eid}
-	modify_mailboxs[#modify_mailboxs+1] = world:sub{"component_changed", "frusutm", mq.camera_eid}
-	modify_mailboxs[#modify_mailboxs+1] = world:sub{"component_changed", "directional_light", ilight.directional_light()}
+	viewcamera_trans_mb = world:sub{"component_changed", "transform", mq.camera_eid}
+	viewcamera_frustum_mb = world:sub{"component_changed", "frusutm", mq.camera_eid}
 
-	--pub an event to make update_shadow_camera be called
-	world:pub{"component_changed", "directional_light", ilight.directional_light()}
+	viewcamera_changed_mb = world:sub{"component_changed", "viewcamera", mq.camera_eid}
+end
+
+local dl_eid
+local create_light_mb = world:sub{"component_register", "make_shadow"}
+local remove_light_mb
+local light_trans_mb
+
+local function set_csm_visible(v)
+	for _, ceid in world:each "csm" do
+		world[ceid].visible = v
+	end
+end
+
+function sm:data_changed()
+	local function find_shadow_light(eid)
+		local e = world[eid]
+		assert(e.make_shadow)
+		if e.light_type == "directional" then
+			if dl_eid then
+				log.warn("already has directional light for making shadow")
+			else
+				dl_eid = eid
+			end
+
+			return dl_eid
+		end
+	end
+
+	for msg in create_light_mb:each() do
+		local eid = msg[3]
+		if find_shadow_light(eid) then
+			remove_light_mb = world:sub{"entity_removed", eid}
+
+			light_trans_mb = world:sub{"component_changed", "transform", eid}
+			set_csm_visible(true)
+		end
+	end
+
+	if remove_light_mb then
+		for msg in remove_light_mb:each() do
+			local eid = msg[2]
+			assert(eid == dl_eid)
+			dl_eid = nil
+
+			set_csm_visible(false)
+		end
+	end
+
+	for _, mb in ipairs{
+		viewcamera_trans_mb,
+		viewcamera_frustum_mb,
+	} do
+		for msg in mb:each() do
+			world:pub{"component_changed", "viewcamera", msg[3]}
+		end
+	end
 end
 
 function sm:update_camera()
 	local mq = world:singleton_entity "main_queue"
 	local c = world[mq.camera_eid]._rendercache
 
-	local leid = ilight.directional_light()
-	for _, ceid in world:each "csm" do
-		world[ceid].visible = leid ~= nil
+	local changed
+
+	local mbs = {viewcamera_changed_mb}
+	if light_trans_mb then
+		mbs[#mbs+1] = light_trans_mb
+	end
+	for _, mb in ipairs(mbs) do
+		for _ in mb:each() do
+			changed = true
+		end
 	end
 
-	if leid then
-		update_shadow_camera(leid, c)
+	if changed then
+		update_shadow_camera(dl_eid, c)
+	else
+		for _, eid in world:each "csm" do
+			update_camera_matrices(world[eid]._rendercache)
+		end
 	end
 end
 
