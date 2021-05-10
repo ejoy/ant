@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-if lm.mode == "debug" and lm.target == "x64" and lm.plat == "msvc" then
+if lm.mode == "debug" and lm.target == "x64" and lm.compiler == "msvc" then
     lm.ldflags = {
         "/STACK:"..0x160000
     }

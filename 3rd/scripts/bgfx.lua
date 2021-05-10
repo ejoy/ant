@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-local SETENV = lm.plat == "msvc" and "set" or "export"
+local SETENV = lm.hostshell == "cmd" and "set" or "export"
 local BGFX_OS
 local BGFX_ARGS
 local BGFX_BINS
@@ -8,20 +8,20 @@ local BGFX_MAKEFILE
 local BGFX_EXE
 local BGFX_SHARED_LIB
 
-if lm.plat == "msvc" then
+if lm.compiler == "msvc" then
     BGFX_OS = "windows"
     BGFX_ARGS = {"--with-windows=10.0", "vs2019"}
     BGFX_BINS = "../bgfx/.build/win64_vs2019/bin/"
     BGFX_EXE = ".exe"
     BGFX_SHARED_LIB = "bgfx-shared-lib"..lm.mode..".dll"
-elseif lm.plat == "mingw" then
+elseif lm.os == "windows" then
     BGFX_OS = "windows"
     BGFX_ARGS = {"--os=windows", "--gcc=mingw-gcc", "gmake"}
     BGFX_BINS = "../bgfx/.build/win64_mingw-gcc/bin/"
     BGFX_MAKEFILE = "@../bgfx/.build/projects/gmake-mingw-gcc"
     BGFX_EXE = ".exe"
     BGFX_SHARED_LIB = "bgfx-shared-lib"..lm.mode..".dll"
-elseif lm.plat == "macos" then
+elseif lm.os == "macos" then
     BGFX_OS = "darwin"
     BGFX_ARGS = {"--gcc=osx-arm64", "gmake"}
     BGFX_BINS = "../bgfx/.build/osx-arm64/bin/"
@@ -31,7 +31,7 @@ elseif lm.plat == "macos" then
 end
 
 GENIE = ("../bx/tools/bin/%s/genie"):format(BGFX_OS)
-if lm.plat == "msvc" then
+if lm.hostshell == "cmd" then
     GENIE = GENIE:gsub("/", "\\")
 end
 
@@ -42,7 +42,7 @@ lm:shell "bgfx_init" {
     pool = "console",
 }
 
-if lm.plat == "msvc" then
+if lm.compiler == "msvc" then
     local msvc = require "msvc"
     local MSBuild = msvc:installpath() / "MSBuild" / "Current" / "Bin" / "MSBuild.exe"
     lm:build "bgfx_build" {

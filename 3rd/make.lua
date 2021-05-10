@@ -1,7 +1,4 @@
 local lm = require "luamake"
-local fs = require "bee.filesystem"
-fs.create_directories(fs.path(("build/%s/bin"):format(lm.plat)))
-fs.create_directories(fs.path(("bin/%s/%s"):format(lm.plat, lm.mode)))
 
 lm:import "scripts/bgfx.lua"
 lm:import "scripts/ozz-animation.lua"

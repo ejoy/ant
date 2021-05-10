@@ -33,7 +33,8 @@ lm:source_set "source_rmlui" {
     },
     includes = {
         LuaInclude,
-        BgfxInclude,
+        Ant3rd .. "bgfx/include",
+        Ant3rd .. "bx/include",
         Ant3rd .. "glm",
         Ant3rd .. "rmlui/Include",
         Ant3rd .. "bgfx/3rdparty",
@@ -54,7 +55,8 @@ lm:lua_dll "rmlui" {
     },
     includes = {
         LuaInclude,
-        BgfxInclude,
+        Ant3rd .. "bgfx/include",
+        Ant3rd .. "bx/include",
         Ant3rd .. "glm",
         Ant3rd .. "rmlui/Include",
         Ant3rd .. "bgfx/3rdparty",

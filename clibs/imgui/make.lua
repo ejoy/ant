@@ -54,14 +54,10 @@ lm:lua_dll "imgui" {
             "user32",
             "shell32",
             "ole32",
-        },
-    },
-    mingw = {
-        links = {
             "imm32",
             "dwmapi",
             "gdi32",
             "uuid"
         },
-    }
+    },
 }

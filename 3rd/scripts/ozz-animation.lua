@@ -3,7 +3,7 @@ local lm = require "luamake"
 local OzzBuildDir = "@../$builddir/ozz-animation/"..lm.mode.."/"
 
 local EXE = ""
-if lm.plat == "msvc" or lm.plat == "mingw" then
+if lm.os == "windows" then
     EXE = ".exe"
 end
 

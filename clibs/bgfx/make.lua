@@ -18,20 +18,12 @@ lm:source_set "source_bgfx" {
     links = {
         "bx"..lm.mode,
     },
+    linkdirs = BgfxLinkdir,
     msvc = {
-        includes = Ant3rd .. "bx/include/compat/msvc",
-        linkdirs = Ant3rd .. "bgfx/.build/win64_vs2019/bin",
         flags = {
             "-wd4244",
             "-wd4267",
         }
-    },
-    mingw = {
-        includes = Ant3rd .. "bx/include/compat/mingw",
-        linkdirs = Ant3rd .. "bgfx/.build/win64_mingw-gcc/bin",
-    },
-    macos = {
-        linkdirs = Ant3rd .. "bgfx/.build/osx-arm64/bin",
     },
 }
 
