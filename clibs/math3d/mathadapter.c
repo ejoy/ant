@@ -42,7 +42,7 @@ static int
 lmatrix_adapter_1(lua_State *L) {
 	struct lastack *LS = math3d_getLS(L);
 	lua_CFunction f = lua_tocfunction(L, lua_upvalueindex(2));
-	int from = lua_tointeger(L, lua_upvalueindex(3));
+	int from = (int)lua_tointeger(L, lua_upvalueindex(3));
 	void * v = get_pointer(L, LS, from, LINEAR_TYPE_MAT);
 	lua_settop(L, from-1);
 	lua_pushlightuserdata(L, v);
@@ -53,7 +53,7 @@ static int
 lmatrix_adapter_2(lua_State *L) {
 	struct lastack *LS = math3d_getLS(L);
 	lua_CFunction f = lua_tocfunction(L, lua_upvalueindex(2));
-	int from = lua_tointeger(L, lua_upvalueindex(3));
+	int from = (int)lua_tointeger(L, lua_upvalueindex(3));
 	void * v1 = getopt_pointer(L, LS, from, LINEAR_TYPE_MAT);
 	void * v2 = getopt_pointer(L, LS, from+1, LINEAR_TYPE_MAT);
 	lua_settop(L, from-1);
@@ -74,7 +74,7 @@ static int
 lmatrix_adapter_var(lua_State *L) {
 	struct lastack *LS = math3d_getLS(L);
 	lua_CFunction f = lua_tocfunction(L, lua_upvalueindex(2));
-	int from = lua_tointeger(L, lua_upvalueindex(3));
+	int from = (int)lua_tointeger(L, lua_upvalueindex(3));
 	int i;
 	int top = lua_gettop(L);
 	for (i=from;i<=top;i++) {
@@ -97,8 +97,8 @@ lbind_matrix(lua_State *L) {
 		return luaL_error(L, "need a c function");
 	if (lua_getupvalue(L, 1, 1) != NULL)
 		luaL_error(L, "Only support light cfunction");
-	int from = luaL_checkinteger(L, 2);
-	int n = luaL_optinteger(L, 3, 0);
+	int from = (int)luaL_checkinteger(L, 2);
+	int n = (int)luaL_optinteger(L, 3, 0);
 	lua_CFunction f;
 	switch (n) {
 	case 0:
@@ -125,7 +125,7 @@ static int
 lvector(lua_State *L) {
 	struct lastack *LS = math3d_getLS(L);
 	lua_CFunction f = lua_tocfunction(L, lua_upvalueindex(2));
-	const int from = lua_tointeger(L, lua_upvalueindex(3));
+	const int from = (int)lua_tointeger(L, lua_upvalueindex(3));
 
 	const int top = lua_gettop(L);
 
@@ -187,7 +187,7 @@ convert_stack_value(lua_State *L, struct lastack *LS, int from, int top, int ele
 static int
 lvariant(lua_State *L) {
 	struct lastack *LS = math3d_getLS(L);
-	const int from = lua_tointeger(L, lua_upvalueindex(4));
+	const int from = (int)lua_tointeger(L, lua_upvalueindex(4));
 	const int top = lua_gettop(L);
 	const uint8_t elemtype = check_elem_type(L, LS, from);	
 	lua_CFunction f = lua_tocfunction(L, lua_upvalueindex((elemtype == SET_Mat) ? 2 : 3));
@@ -224,7 +224,7 @@ static int
 lformat(lua_State *L, const char *format) {
 	struct lastack *LS = math3d_getLS(L);
 	lua_CFunction f = lua_tocfunction(L, lua_upvalueindex(2));
-	int from = lua_tointeger(L, lua_upvalueindex(4));
+	int from = (int)lua_tointeger(L, lua_upvalueindex(4));
 	int i;
 	int top = lua_gettop(L);
 	void *v = NULL;
@@ -385,7 +385,7 @@ static int
 loutput_object(lua_State *L, int ltype) {
 	lua_CFunction f = lua_tocfunction(L, lua_upvalueindex(2));
 	int retn = f(L);
-	int from = lua_tointeger(L, lua_upvalueindex(3));
+	int from = (int)lua_tointeger(L, lua_upvalueindex(3));
 	int top = lua_gettop(L);
 	if (retn > from) {
 		lua_settop(L, retn);
