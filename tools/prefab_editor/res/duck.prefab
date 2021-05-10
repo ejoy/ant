@@ -4,8 +4,7 @@ action:
 data:
   name: Rootscene
   scene_entity: true
-  transform:
-    s: {-1, 1, 1}
+  transform: {}
 policy:
   ant.general|name
   ant.scene|hierarchy_policy
@@ -15,7 +14,7 @@ script: /pkg/ant.prefab/default_script.lua
 action:
   mount: 1
 data:
-  name: root
+  name: node0
   scene_entity: true
   transform:
     r: {0, 0, 0, 1}
@@ -29,14 +28,14 @@ policy:
 action:
   mount: 2
 data:
-  material: /pkg/tools.prefab_editor/res/Duck.glb|materials/blinn3-fx.material
+  material: /pkg/tools.prefab_editor/res/duck.material
   mesh: /pkg/tools.prefab_editor/res/Duck.glb|meshes/LOD3spShape_P1.meshbin
-  name: body
+  name: tt
   scene_entity: true
   state: 7
   transform:
-    r: {0, 0, 0, 1}
-    s: {1, 1, 1}
+    r: {1, 0, 0, 0}
+    s: {-1, -1, -1}
     t: {0, 0, 0}
 policy:
   ant.general|name
@@ -50,7 +49,7 @@ data:
   intensity: 2
   light_type: directional
   motion_type: dynamic
-  name: directional7
+  name: directional1
   radian: 0.7853981633974483
   range: 1
   state: 1
@@ -60,3 +59,18 @@ data:
 policy:
   ant.render|light
   ant.general|name
+---
+action:
+  mount: root
+data:
+  name: prefab1
+  scene_entity: true
+  transform: {}
+policy:
+  ant.general|name
+  ant.scene|hierarchy_policy
+  ant.scene|transform_policy
+---
+args:
+  root: 5
+prefab: /pkg/tools.prefab_editor/res/plane.prefab

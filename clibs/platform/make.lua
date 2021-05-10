@@ -9,16 +9,27 @@ lm:source_set "source_platform" {
     },
     sources = {
         "lplatform.cpp",
-        "platform_mingw.cpp",
         "platform_timer.cpp",
-        "win32/wmi.cpp"
     },
-    links = {
-        "gdi32",
-        "user32",
-        "ole32",
-        "oleaut32",
-        "wbemuuid",
+    windows = {
+        sources = {
+            "platform_mingw.cpp",
+            "win32/wmi.cpp"
+        },
+        links = {
+            "gdi32",
+            "user32",
+            "ole32",
+            "oleaut32",
+            "wbemuuid",
+        },
+    },
+    macos = {
+        sources = {
+            "platform_osx.mm",
+            "osx/font_info.mm",
+            "osx/task_info.mm",
+        },
     }
 }
 

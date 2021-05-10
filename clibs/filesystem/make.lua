@@ -5,7 +5,16 @@ dofile "../common.lua"
 lm:source_set "source_filesystem" {
     includes = LuaInclude,
     sources = {
-        "*.cpp",
+        "error.cpp",
+        "file_helper.cpp",
+        "path_helper.cpp",
+        "lua_filesystem.cpp"
+    },
+    windows = {
+        sources = {
+            "unicode.cpp",
+            "windows_category.cpp",
+        },
     }
 }
 

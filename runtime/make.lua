@@ -33,6 +33,9 @@ lm:source_set "ant_common" {
     },
     windows = {
         sources = "common/set_current_win32.cpp"
+    },
+    macos = {
+        sources = "common/set_current_osx.cpp"
     }
 }
 
@@ -52,6 +55,15 @@ lm:exe "ant" {
         sources = "windows/main.cpp",
         links = {
             "shlwapi",
+        }
+    },
+    macos = {
+        sources = "osx/main.cpp",
+        ldflags = {
+            "-framework", "Foundation",
+            "-framework", "Metal",
+            "-framework", "QuartzCore",
+            "-framework", "Cocoa"
         }
     }
 }

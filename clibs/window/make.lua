@@ -6,11 +6,20 @@ lm:source_set "source_window" {
     includes = LuaInclude,
     sources = {
         "window.c",
-        "mingw/mingw_window.c",
     },
-    links = {
-        "user32",
-        "shell32",
+    windows = {
+        sources = {
+            "mingw/mingw_window.c",
+        },
+        links = {
+            "user32",
+            "shell32",
+        },
+    },
+    macos = {
+        sources = {
+            "osx/osx_window.m",
+        },
     }
 }
 

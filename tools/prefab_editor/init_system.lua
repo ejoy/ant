@@ -33,7 +33,7 @@ function m:init()
     local main_camera = icamera.create {
         eyepos = {-200, 100, 200, 1},
         viewdir = {2, -1, -2, 0},
-        frustum = {n = 1, f = 1000 }
+        frustum = {n = 1, f = 100 }
     }
     icamera.bind(main_camera, "main_queue")
     camera_mgr.main_camera = main_camera
@@ -43,7 +43,7 @@ function m:init()
     local second_camera = icamera.create {
         eyepos = {2, 2, -2, 1},
         viewdir = {-2, -1, 2, 0},
-        frustum = {f = 1000 }
+        frustum = {n = 1, f = 100 }
     }
     local rc = world[second_camera]._rendercache
     rc.viewmat = icamera.calc_viewmat(second_camera)

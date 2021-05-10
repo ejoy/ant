@@ -1,9 +1,9 @@
 local lm = require "luamake"
 
-local OzzBuildDir = "@../$builddir/ozz-animation/"..lm.mode.."/"
+local OzzBuildDir = "@../$builddir/ozz-animation/"
 
 local EXE = ""
-if lm.plat == "msvc" or lm.plat == "mingw" then
+if lm.os == "windows" then
     EXE = ".exe"
 end
 
@@ -33,4 +33,9 @@ lm:copy "ozz-animation_make" {
     input = OzzBuildDir .. "src/animation/offline/gltf/gltf2ozz"..EXE,
     output = "$bin/gltf2ozz"..EXE,
     deps = "ozz-animation_build",
+}
+
+lm:build "ozz-animation_clean" {
+    "ninja", "-C", OzzBuildDir, "-t", "clean",
+    pool = "console",
 }

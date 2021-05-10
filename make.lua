@@ -1,7 +1,18 @@
 local lm = require "luamake"
 local fs = require "bee.filesystem"
 
-lm.bindir = ("bin/%s/%s"):format(lm.plat, lm.mode)
+local isWindows = lm.os == 'windows'
+local plat = (function ()
+    if isWindows then
+        if lm.compiler == "gcc" then
+            return "mingw"
+        end
+        return "msvc"
+    end
+    return lm.os
+end)()
+lm.builddir = ("build/%s/%s"):format(plat, lm.mode)
+lm.bindir = ("bin/%s/%s"):format(plat, lm.mode)
 
 local Backlist = {}
 local EditorModules = {}

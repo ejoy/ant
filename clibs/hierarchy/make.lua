@@ -3,7 +3,7 @@ local lm = require "luamake"
 dofile "../common.lua"
 
 local LIB_SUFFIX = lm.mode == "release" and "_r" or "_d"
-local OzzDir = Ant3rd .. "build/"..lm.plat.."/ozz-animation/"..lm.mode.."/src/"
+local OzzDir = Ant3rd..lm.builddir.."/ozz-animation/src/"
 
 lm:source_set "source_hierarchy" {
     includes = {
