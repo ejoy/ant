@@ -19,20 +19,20 @@
 #include <cstring>
 
 struct RmlInterface {
-    SystemInterface system;
-    FontEngine      font;
-    File            file;
-    Renderer        renderer;
+    SystemInterface m_system;
+    FontEngine      m_font;
+    File            m_file;
+    Renderer        m_renderer;
     RmlInterface(RmlContext* context)
-        : system()
-        , font(context)
-        , file(context)
-        , renderer(context)
+        : m_system()
+        , m_font(context)
+        , m_file(context)
+        , m_renderer(context)
     {
-        Rml::SetSystemInterface(&system);
-        Rml::SetFontEngineInterface(&font);
-        Rml::SetFileInterface(&file);
-        Rml::SetRenderInterface(&renderer);
+        Rml::SetSystemInterface(&m_system);
+        Rml::SetFontEngineInterface(&m_font);
+        Rml::SetFileInterface(&m_file);
+        Rml::SetRenderInterface(&m_renderer);
     }
 };
 
@@ -97,7 +97,7 @@ lrmlui_update(lua_State* L) {
         return 0;
     }
     double delta = luaL_checknumber(L, 1);
-    g_wrapper->interface.system.update(delta);
+    g_wrapper->interface.m_system.update(delta);
 
     lua_plugin* plugin = g_wrapper->context.plugin;
     lua_State* rL = plugin->L;
@@ -111,7 +111,7 @@ lrmlui_update(lua_State* L) {
 int
 lRenderBegin(lua_State* L) {
     if (g_wrapper) {
-        g_wrapper->interface.renderer.Begin();
+        g_wrapper->interface.m_renderer.Begin();
     }
     return 0;
 }
@@ -119,7 +119,7 @@ lRenderBegin(lua_State* L) {
 int
 lRenderFrame(lua_State* L){
     if (g_wrapper){
-        g_wrapper->interface.renderer.Frame();
+        g_wrapper->interface.m_renderer.Frame();
     }
     return 0;
 }
@@ -132,7 +132,7 @@ lUpdateViewrect(lua_State *L){
         r.y = luaL_checknumber(L, 2);
         r.w = luaL_checknumber(L, 3);
         r.h = luaL_checknumber(L, 4);
-        g_wrapper->interface.renderer.UpdateViewRect();
+        g_wrapper->interface.m_renderer.UpdateViewRect();
     }
     return 0;
 }
