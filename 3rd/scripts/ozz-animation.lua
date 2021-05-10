@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-local OzzBuildDir = "@../$builddir/ozz-animation/"..lm.mode.."/"
+local OzzBuildDir = "@../$builddir/ozz-animation/"
 
 local EXE = ""
 if lm.os == "windows" then

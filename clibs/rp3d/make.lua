@@ -11,7 +11,7 @@ lm:source_set "source_rp3d" {
         "lua-rp3d.cpp",
     },
     linkdirs = {
-        Ant3rd .. lm.builddir .. "/reactphysics3d/" .. lm.mode
+        Ant3rd .. lm.builddir .. "/reactphysics3d/"
     },
     links = {
         "reactphysics3d"

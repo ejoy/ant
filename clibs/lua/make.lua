@@ -20,7 +20,7 @@ lm:source_set "source_lua" {
     }
 }
 
-if lm.plat == "msvc" and lm.plat == "mingw" then
+if lm.os == "windows" then
     lm:dll "lua54" {
         sources = {
             "*.c",
