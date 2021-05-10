@@ -158,7 +158,7 @@ unpack_numbers(lua_State *L, int index, float *v, size_t n) {
 		if (lua_geti(L, index, i+1) != LUA_TNUMBER) {
 			luaL_error(L, "Need a number from index %d", i+1);
 		}
-		v[i] = lua_tonumber(L, -1);
+		v[i] = (float)lua_tonumber(L, -1);
 		lua_pop(L, 1);
 	}
 }
@@ -223,7 +223,7 @@ quat_from_axis(lua_State *L, struct lastack *LS, int index, const char *key) {
 	if (lua_getfield(L, index, "r") != LUA_TNUMBER) {
 		return luaL_error(L, "Need .r for quat");
 	}
-	float r = lua_tonumber(L, -1);
+	float r = (float)lua_tonumber(L, -1);
 	lua_pop(L, 1);
 
 	math3d_make_quat_from_axis(LS, axis, r);
@@ -257,7 +257,7 @@ matrix_from_table(lua_State *L, struct lastack *LS, int index) {
 		const float *s;
 		float tmp[4];
 		if (lua_getfield(L, index, "s") == LUA_TNUMBER) {
-			tmp[0] = lua_tonumber(L, -1);
+			tmp[0] = (float)lua_tonumber(L, -1);
 			tmp[1] = tmp[0];
 			tmp[2] = tmp[0];
 			tmp[3] = 0;
@@ -319,7 +319,7 @@ assign_scale(lua_State *L, struct lastack *LS, int index, int64_t oid) {
 	float tmp[4];
 	const float * scale = NULL;
 	if (lua_type(L, index) == LUA_TNUMBER) {
-		float us = lua_tonumber(L, index);
+		float us = (float)lua_tonumber(L, index);
 		if (us != 1.0f) {
 			tmp[0] = tmp[1] = tmp[2] = us;
 			tmp[3] = 0;
@@ -543,7 +543,7 @@ static int
 ref_get_number(lua_State *L) {
 	struct refobject *R = lua_touserdata(L, 1);
 	struct lastack * LS = GETLS(L);
-	int idx = lua_tointeger(L, 2);
+	int idx = (int)lua_tointeger(L, 2);
 	int type;
 	const float * v = lastack_value(LS, R->id, &type);
 	if (v == NULL) {
@@ -632,7 +632,7 @@ new_object(lua_State *L, int type, from_table_func from_table, int narray) {
 		float tmp[16];
 		struct lastack *LS = GETLS(L);
 		for (i=0;i<argn;i++) {
-			tmp[i] = luaL_checknumber(L, i+1);
+			tmp[i] = (float)luaL_checknumber(L, i+1);
 		}
 		lastack_pushobject(LS, tmp, type);
 		id = lastack_pop(LS);
@@ -739,7 +739,7 @@ lsub(lua_State *L) {
 static const float *
 get_vec_or_number(lua_State *L, struct lastack *LS, int index, float tmp[4]) {
 	if (lua_type(L, index) == LUA_TNUMBER) {
-		tmp[0] = lua_tonumber(L, index);
+		tmp[0] = (float)lua_tonumber(L, index);
 		tmp[1] = tmp[0];
 		tmp[2] = tmp[0];
 		tmp[3] = tmp[0];
@@ -789,7 +789,7 @@ lindex(lua_State *L) {
 	int64_t id = get_id(L, 1, lua_type(L, 1));
 
 	for (int ii=0; ii<num_indices; ++ii){
-		int idx = luaL_checkinteger(L, ii+2);
+		int idx = (int)luaL_checkinteger(L, ii+2);
 		index_object(L, GETLS(L), id, idx);
 	}
 	return num_indices;
@@ -804,7 +804,7 @@ set_index_object(lua_State *L, struct lastack *LS, int64_t id){
 		return;
 	}
 
-	int idx = luaL_checkinteger(L, 2);
+	int idx = (int)luaL_checkinteger(L, 2);
 	if (idx < 1 || idx > 4) {
 		luaL_error(L, "Invalid index %d", idx);
 		return;
@@ -823,7 +823,7 @@ set_index_object(lua_State *L, struct lastack *LS, int64_t id){
 	case LINEAR_TYPE_VEC4:
 	case LINEAR_TYPE_QUAT:{
 		float vv[4]; memcpy(vv, v, sizeof(vv));
-		vv[idx] = luaL_checknumber(L, 3);
+		vv[idx] = (float)luaL_checknumber(L, 3);
 		lastack_pushvec4(LS, vv);
 	}
 		break;
@@ -866,7 +866,7 @@ lmul(lua_State *L) {
 	if (lua_isnumber(L, 1)) {
 		// number * vertex
 		float r[4];
-		r[0] = lua_tonumber(L, 1);
+		r[0] = (float)lua_tonumber(L, 1);
 		r[1] = r[0];
 		r[2] = r[0];
 		r[3] = r[0];
@@ -884,7 +884,7 @@ lmul(lua_State *L) {
 		case LINEAR_TYPE_VEC4:
 			if (lua_isnumber(L, 2)) {
 				float r[4];
-				r[0] = lua_tonumber(L, 2);
+				r[0] = (float)lua_tonumber(L, 2);
 				r[1] = r[0];
 				r[2] = r[0];
 				r[3] = r[0];
@@ -952,9 +952,9 @@ lvector(lua_State *L) {
 		int type;
 		const float *vec3 = lastack_value(LS, id, &type);
 		if (vec3 == NULL || type != LINEAR_TYPE_VEC4) {
-			return luaL_error(L, "Need a vector, it's %s", vec3 == NULL? "Invalid" : lastack_typename(id));
+			return luaL_error(L, "Need a vector, it's %s", vec3 == NULL? "Invalid" : lastack_typename((int)id));
 		}
-		float n4 = luaL_checknumber(L, 2);
+		float n4 = (float)luaL_checknumber(L, 2);
 		if (n4 == vec3[3]) {
 			lua_pushlightuserdata(L, STACKID(id));
 		} else {
@@ -1249,7 +1249,7 @@ ltransform(lua_State *L){
 	const float* v = vector_from_index(L, LS, 2);
 	float tmp[4];
 	if (!lua_isnil(L, 3)){
-		const float p = luaL_checknumber(L, 3);
+		const float p = (float)luaL_checknumber(L, 3);
 		if (p != v[3]) {
 			tmp[0] = v[0];
 			tmp[1] = v[1];
@@ -1296,20 +1296,20 @@ static void
 create_proj_mat(lua_State *L, struct lastack *LS, int index) {
 	float left, right, top, bottom;
 	lua_getfield(L, index, "n");
-	float near = luaL_optnumber(L, -1, 0.1f);
+	float near = (float)luaL_optnumber(L, -1, 0.1f);
 	lua_pop(L, 1);
 	lua_getfield(L, index, "f");
-	float far = luaL_optnumber(L, -1, 100.0f);
+	float far = (float)luaL_optnumber(L, -1, 100.0f);
 	lua_pop(L, 1);
 
 	int mattype = MAT_PERSPECTIVE;
 	if (lua_getfield(L, index, "fov") == LUA_TNUMBER) {
-		float fov = lua_tonumber(L, -1);
+		float fov = (float)lua_tonumber(L, -1);
 		lua_pop(L, 1);
 		lua_getfield(L, index, "aspect");
-		float aspect = luaL_checknumber(L, -1);
+		float aspect = (float)luaL_checknumber(L, -1);
 		lua_pop(L, 1);
-		float ymax = near * tanf(fov * (M_PI / 360));
+		float ymax = near * tanf(fov * ((float)M_PI / 360));
 		float xmax = ymax * aspect;
 		left = -xmax;
 		right = xmax;
@@ -1323,16 +1323,16 @@ create_proj_mat(lua_State *L, struct lastack *LS, int index) {
 		}
 		lua_pop(L, 1); //pop "ortho"
 		lua_getfield(L, index, "l");
-		left = luaL_checknumber(L, -1);
+		left = (float)luaL_checknumber(L, -1);
 		lua_pop(L, 1);
 		lua_getfield(L, index, "r");
-		right = luaL_checknumber(L, -1);
+		right = (float)luaL_checknumber(L, -1);
 		lua_pop(L, 1);
 		lua_getfield(L, index, "b");
-		bottom = luaL_checknumber(L, -1);
+		bottom = (float)luaL_checknumber(L, -1);
 		lua_pop(L, 1);
 		lua_getfield(L, index, "t");
-		top = luaL_checknumber(L, -1);
+		top = (float)luaL_checknumber(L, -1);
 		lua_pop(L, 1);
 	}
 
@@ -1398,7 +1398,7 @@ llerp(lua_State *L){
 		luaL_error(L, "not equal type for lerp:%s, %s", lastack_typename(type0), lastack_typename(type1));
 	}
 
-	const float ratio = luaL_checknumber(L, 3);
+	const float ratio = (float)luaL_checknumber(L, 3);
 
 	switch (type0)
 	{
@@ -1421,7 +1421,7 @@ lslerp(lua_State *L){
 	struct lastack *LS = GETLS(L);
 	const float *v0 = quat_from_index(L, LS, 1);
 	const float *v1 = quat_from_index(L, LS, 2);
-	const float ratio = luaL_checknumber(L, 3);
+	const float ratio = (float)luaL_checknumber(L, 3);
 
 	math3d_quat_slerp(LS, v0, v1, ratio, alloc_quat(L, LS));
 	return 1;
@@ -1476,10 +1476,10 @@ lpack(lua_State *L) {
 	for (i=0;i<n;i++) {
 		switch(format[i]) {
 		case 'f':
-			u.f[i] = luaL_checknumber(L, i+2);
+			u.f[i] = (float)luaL_checknumber(L, i+2);
 			break;
 		case 'd':
-			u.n[i] = luaL_checkinteger(L, i+2);
+			u.n[i] = (uint32_t)luaL_checkinteger(L, i+2);
 			break;
 		default:
 			return luaL_error(L, "Invalid format %s", format);
@@ -1517,7 +1517,7 @@ lisequal(lua_State *L){
 		return 1;
 	}
 
-	const float threshold = luaL_optnumber(L, 3, 10e-6);
+	const float threshold = (float)luaL_optnumber(L, 3, 10e-6);
 
 	int numelem = 0;
 	switch (type0){
@@ -1527,7 +1527,7 @@ lisequal(lua_State *L){
 	default: luaL_error(L, "invalide type: %s", lastack_typename(type0));break;}
 
 	for (int ii=0; ii<numelem; ++ii){
-		if (abs(v0[ii]-v1[ii]) < threshold){
+		if (fabs(v0[ii]-v1[ii]) < threshold){
 			lua_pushboolean(L, 0);
 			return 1;
 		}
@@ -1793,7 +1793,7 @@ lfrustum_to_aabb(lua_State *L){
 			luaL_error(L, "invalid field:%s in frustum", s_frustum_field[ii]);
 			return 0;
 		}
-		frustum[ii] = lua_tonumber(L, -1);
+		frustum[ii] = (float)lua_tonumber(L, -1);
 		lua_pop(L, 1);
 	}
 	
@@ -1859,7 +1859,7 @@ lfrustum_intersect_aabb_list(lua_State *L){
 	fetch_vectors_from_table(L, LS, 1, 6, planes);
 
 	luaL_checktype(L, 2, LUA_TTABLE);
-	const int numelem = lua_rawlen(L, 2);
+	const int numelem = (int)lua_rawlen(L, 2);
 
 	const int visibleset_idx = 3;
 	luaL_checktype(L, visibleset_idx, LUA_TTABLE);
