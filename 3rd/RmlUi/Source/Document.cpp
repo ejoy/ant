@@ -81,7 +81,7 @@ class DocumentHtmlHandler: public HtmlHandler {
 	ElementAttributes     m_attributes;
 	SharedPtr<StyleSheet> m_style_sheet;
 	std::stack<Element*>  m_stack;
-	Element*              m_current;
+	Element*              m_current = nullptr;
 	size_t                m_line = 0;
 
 public:
