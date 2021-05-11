@@ -8,6 +8,15 @@ lm.msvc = {
     }
 }
 
+lm.ios = {
+    flags = {
+        "-isysroot",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk",
+        "-fembed-bitcode",
+        "-fobjc-arc"
+    }
+}
+
 Ant3rd = "../../3rd/"
 BgfxInclude = {
     Ant3rd .. "bgfx/include",
