@@ -14,6 +14,8 @@ lm:source_set "source_lua" {
         "!utf8_lua.c",
     },
     macos = {
+        visibility = "default",
+        defines = "LUA_USE_MACOSX",
         sources = {
             "!utf8_*.c"
         }

@@ -6,6 +6,7 @@ lm:build {
     "$luamake", "lua", "@embed.lua",
     "@../../engine/firmware/bootstrap.lua",
     "@.", "FirmwareBootstrap",
+    input = "../../engine/firmware/bootstrap.lua",
     output = "FirmwareBootstrap.h",
 }
 
@@ -13,6 +14,7 @@ lm:build {
     "$luamake", "lua", "@embed.lua",
     "@../../engine/firmware/io.lua",
     "@.", "FirmwareIo",
+    input = "../../engine/firmware/io.lua",
     output = "FirmwareIo.h",
 }
 
@@ -20,6 +22,7 @@ lm:build {
     "$luamake", "lua", "@embed.lua",
     "@../../engine/firmware/vfs.lua",
     "@.", "FirmwareVfs",
+    input = "../../engine/firmware/vfs.lua",
     output = "FirmwareVfs.h",
 }
 

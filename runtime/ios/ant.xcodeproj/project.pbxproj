@@ -327,7 +327,7 @@
 					"@executable_path/Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = (
-					../../clibs/ant/o/ios/debug,
+					../../bin/ios/debug,
 					"../../3rd/bgfx/.build/ios-arm64/bin",
 					../../3rd/build/ios/debug/reactphysics3d,
 					"../../3rd/build/ios/debug/ozz-animation/src/animation/runtime",
@@ -382,7 +382,7 @@
 					"@executable_path/Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = (
-					../../clibs/ant/o/ios/release,
+					../../bin/ios/release,
 					"../../3rd/bgfx/.build/ios-arm64/bin",
 					../../3rd/build/ios/release/reactphysics3d,
 					"../../3rd/build/ios/release/ozz-animation/src/animation/runtime",

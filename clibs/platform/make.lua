@@ -30,6 +30,16 @@ lm:source_set "source_platform" {
             "osx/font_info.mm",
             "osx/task_info.mm",
         },
+        ldflags = {
+            "-framework", "AppKit"
+        }
+    },
+    ios = {
+        sources = {
+            "platform_ios.mm",
+            "osx/font_info.mm",
+            "osx/task_info.mm",
+        }
     }
 }
 

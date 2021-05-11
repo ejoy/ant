@@ -39,3 +39,6 @@ end
 LuaInclude = {
     "../lua",
 }
+
+--TODO
+lm.visibility = "default"

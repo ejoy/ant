@@ -20,6 +20,11 @@ lm:source_set "source_window" {
         sources = {
             "osx/osx_window.m",
         },
+    },
+    ios = {
+        sources = {
+            "ios/ios_window.m",
+        },
     }
 }
 
