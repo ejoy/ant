@@ -148,8 +148,25 @@ local function unload(res)
     bgfx.destroy(assert(res.prog))
 end
 
+local function compile(input, setting)
+    local fx = read_fx(input, setting)
+    local cache = get_fx_cache(fx)
+    local schash = get_hash(fx)
+    local res = cache[schash]
+    if res then
+        return
+    end
+    if fx.cs then
+        fxcompile.compile_shader(fx, "cs")
+    else
+        fxcompile.compile_shader(fx, "vs")
+        fxcompile.compile_shader(fx, "fs")
+    end
+end
+
 return {
     set_identity = fxcompile.set_identity,
     load = load,
     unload = unload,
+    compile = compile,
 }
