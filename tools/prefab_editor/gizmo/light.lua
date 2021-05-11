@@ -43,14 +43,8 @@ function m.bind(eid)
     if not m.directional.root then
         m.init()
     end
-    if world[eid].light_type == "directional" then
-        m.current_gizmo = m.directional
-        ilight.active_directional_light(eid)
-    elseif world[eid].light_type == "point" then
-        m.current_gizmo = m.point
-    elseif world[eid].light_type == "spot"then
-        m.current_gizmo = m.spot
-    end
+    local lt = world[eid].light_type
+    m.current_gizmo = m[lt]
     if m.current_gizmo then
         m.update_gizmo()
         iom.set_position(m.current_gizmo.root, iom.get_position(eid))
@@ -206,7 +200,6 @@ function m.update_gizmo()
 end
 
 function m.clear()
-    ilight.active_directional_light(nil)
     for k,v in pairs(m.billboard) do
         world:remove_entity(v)
     end
@@ -216,9 +209,6 @@ function m.clear()
 end
 
 function m.on_remove_light(eid)
-    if world[eid].light_type == "directional" then
-        ilight.active_directional_light(nil)
-    end
     world:remove_entity(m.billboard[eid])
     m.billboard[eid] = nil
     m.current_light = nil

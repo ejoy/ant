@@ -114,16 +114,13 @@ local function create_light_billboard(light_eid)
         }
     }
     local icons = require "common.icons"(assetmgr)
-    local tex
     local light_type = world[light_eid].light_type
-    if light_type == "spot" then
-        tex = icons.ICON_SPOTLIGHT.handle
-    elseif light_type == "point" then
-        tex = icons.ICON_POINTLIGHT.handle
-    elseif light_type == "directional" then
-        tex = icons.ICON_DIRECTIONALLIGHT.handle
-        ilight.active_directional_light(light_eid)
-    end
+    local light_icons = {
+        spot = "ICON_SPOTLIGHT",
+        point = "ICON_POINTLIGHT",
+        directional = "ICON_DIRECTIONALLIGHT",
+    }
+    local tex = light_icons[light_type].handle
     imaterial.set_property(bb_eid, "s_basecolor", {stage = 0, texture = {handle = tex}})
     iom.set_scale(bb_eid, 0.2)
     ies.set_state(bb_eid, "auxgeom", true)
@@ -496,7 +493,6 @@ function m:reset_prefab()
     self.root = create_simple_entity("scene root")
     self.prefab_script = ""
     hierarchy:set_root(self.root)
-    ilight.active_directional_light(nil)
 end
 
 function m:open_prefab(prefab)
