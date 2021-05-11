@@ -67,7 +67,7 @@ function assetmgr.load_fx(fx, setting)
 	check_resolve_path(fx, "vs")
 	check_resolve_path(fx, "fs")
 	check_resolve_path(fx, "cs")
-	return cr.compile_fx(fx, setting)
+	return cr.load_fx(fx, setting)
 end
 
 assetmgr.edit = resource.edit
