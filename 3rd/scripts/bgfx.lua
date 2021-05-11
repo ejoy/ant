@@ -6,6 +6,7 @@ local BGFX_ARGS
 local BGFX_BINS
 local BGFX_MAKEFILE
 local BGFX_EXE
+local BGFX_DLL
 local BGFX_SHARED_LIB
 local EnableEditor = true
 
@@ -14,6 +15,7 @@ if lm.compiler == "msvc" then
     BGFX_ARGS = {"--with-windows=10.0", "vs2019"}
     BGFX_BINS = "../bgfx/.build/win64_vs2019/bin/"
     BGFX_EXE = ".exe"
+    BGFX_DLL = ".dll"
     BGFX_SHARED_LIB = "bgfx-shared-lib"..lm.mode..".dll"
 elseif lm.os == "windows" then
     BGFX_OS = "windows"
@@ -21,6 +23,7 @@ elseif lm.os == "windows" then
     BGFX_BINS = "../bgfx/.build/win64_mingw-gcc/bin/"
     BGFX_MAKEFILE = "@../bgfx/.build/projects/gmake-mingw-gcc"
     BGFX_EXE = ".exe"
+    BGFX_DLL = ".dll"
     BGFX_SHARED_LIB = "bgfx-shared-lib"..lm.mode..".dll"
 elseif lm.os == "macos" then
     BGFX_OS = "darwin"
@@ -28,6 +31,7 @@ elseif lm.os == "macos" then
     BGFX_BINS = "../bgfx/.build/osx-arm64/bin/"
     BGFX_MAKEFILE = "@../bgfx/.build/projects/gmake-osx-arm64"
     BGFX_EXE = ""
+    BGFX_DLL = ".so"
     BGFX_SHARED_LIB = "libbgfx-shared-lib"..lm.mode..".dylib"
 elseif lm.os == "ios" then
     EnableEditor = false
@@ -85,7 +89,7 @@ if EnableEditor then
     
     lm:copy "copy_bgfx_shared_lib" {
         input = BGFX_BINS .. BGFX_SHARED_LIB,
-        output = "$bin/bgfx-core.dll",
+        output = "$bin/bgfx-core"..BGFX_DLL,
         deps = "bgfx_build",
     }
     
