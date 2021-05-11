@@ -91,6 +91,9 @@ local function create_irradiance_entity(ibl)
         name = "irradiance",
         dispatch = function (self)
             dispatch(self.eid)
+        end,
+        remove = function (self)
+            world:remove_entity(self.eid)
         end
     }
 end
@@ -137,6 +140,11 @@ local function create_prefilter_entity(ibl)
             for _, eid in ipairs(self.eids) do
                 dispatch(eid)
             end
+        end,
+        remove = function (self)
+            for _, eid in ipairs(self.eids) do
+                world:remove_entity(eid)
+            end
         end
     }
 end
@@ -163,18 +171,25 @@ local function create_LUT_entity(ibl)
         name = "LUT",
         dispatch = function (self)
             dispatch(self.eid)
+        end,
+        remove = function(self)
+            world:remove_entity(self.eid)
         end
     }
 end
 
 local function create_filter_entites(ibl)
-    if filter_entites == nil then
-        filter_entites = {
-            create_irradiance_entity(ibl),
-            create_prefilter_entity(ibl),
-            create_LUT_entity(ibl),
-        }
+    if filter_entites then
+        for _, fe in pairs(filter_entites) do
+            fe:remove()
+        end
     end
+
+    filter_entites = {
+        create_irradiance_entity(ibl),
+        create_prefilter_entity(ibl),
+        create_LUT_entity(ibl),
+    }
 end
 
 function iibl.filter_all(eid)
