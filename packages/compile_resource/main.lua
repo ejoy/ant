@@ -44,5 +44,5 @@ return {
     compile = compile,
     compile_path = compile_path,
     read_file = read_file,
-    compile_fx = fx.load,
+    compile_fx = fx.compile,
 }
