@@ -38,6 +38,9 @@ lm:lua_dll "font" {
     msvc = {
         flags = {
             "-wd4244",
+        },
+        ldflags = {
+            "-export:luaopen_font_truetype",
         }
     },
 }

@@ -7,6 +7,6 @@ if package.cpath:match(path_sep) then
 			i = i - 1
 		end
 		local dir = arg[i + 1]:match("(.+)[/\\][%w_.-]+$")
-		return ("%s/?.so"):format(dir,ext)
+		return ("%s/?.%s"):format(dir,ext)
 	end)()
 end

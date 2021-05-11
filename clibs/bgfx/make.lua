@@ -23,7 +23,10 @@ lm:source_set "source_bgfx" {
         flags = {
             "-wd4244",
             "-wd4267",
-        }
+        },
+        ldflags = {
+            "-export:luaopen_bgfx_util",
+        },
     },
 }
 
