@@ -13,7 +13,7 @@ local config = {
 	address = "127.0.0.1",
 	port = 2018,
 	rootname = arg[1],
-	identity = os.."_"..renderer[os],
+	identity = os.."_"..renderer[os].."_hd0_obl0",
 }
 
 local thread = require "thread"

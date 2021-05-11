@@ -56,7 +56,7 @@ const luaL_Reg* ant_modules() {
         { "thread", luaopen_thread },
         { "window", luaopen_window },
         { "terrain", luaopen_terrain},
-        //{ "effekseer", luaopen_effekseer},
+        { "effekseer", luaopen_effekseer},
         { NULL, NULL },
     };
     return modules;
