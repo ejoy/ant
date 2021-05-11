@@ -33,6 +33,12 @@ local function def_buffer_prop(stage)
 	return {stage=stage, value=nil}
 end
 
+local def_ibl = {
+	irradiance = {handle = def_cubetex_handle},
+	prefilter = {handle = def_cubetex_handle, mipmap_count = 0},
+	LUT = {handle = def_2dtex_handle},
+}
+
 local system_properties = {
 	--lighting
 	u_eyepos				= math3d.ref(mc.ZERO_PT),
@@ -91,19 +97,18 @@ local function update_lighting_properties()
 
 	system_properties["u_light_count"].v = {world:count "light_type", 0, 0, 0}
 
-	local skyeid = get_sky_entity()
-	if skyeid then
-		local sky = world[skyeid]
-		local ibl = sky._ibl
-		if ibl then
-			system_properties["s_irradiance"].texture.handle= ibl.irradiance.handle
-			system_properties["s_prefilter"].texture.handle	= ibl.prefilter.handle
-			system_properties["s_LUT"].texture.handle		= ibl.LUT.handle
-
-			local ip = system_properties["u_ibl_param"]
-			ip.v = math3d.set_index(ip, 1, ibl.prefilter.mipmap_count)
-		end
+	local function update_ibl_tex(ibl)
+		system_properties["s_irradiance"].texture.handle= ibl.irradiance.handle
+		system_properties["s_prefilter"].texture.handle	= ibl.prefilter.handle
+		system_properties["s_LUT"].texture.handle		= ibl.LUT.handle
+		local ip = system_properties["u_ibl_param"]
+		ip.v = math3d.set_index(ip, 1, ibl.prefilter.mipmap_count)
 	end
+
+	local skyeid = get_sky_entity()
+	local ibl = skyeid and world[skyeid]._ibl or def_ibl
+	ibl = ibl or def_ibl
+	update_ibl_tex(ibl)
 
 	if ilight.use_cluster_shading() then
 		local mc_eid = mq.camera_eid
