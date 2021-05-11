@@ -120,7 +120,7 @@ local function create_light_billboard(light_eid)
         point = "ICON_POINTLIGHT",
         directional = "ICON_DIRECTIONALLIGHT",
     }
-    local tex = light_icons[light_type].handle
+    local tex = icons[light_icons[light_type]].handle
     imaterial.set_property(bb_eid, "s_basecolor", {stage = 0, texture = {handle = tex}})
     iom.set_scale(bb_eid, 0.2)
     ies.set_state(bb_eid, "auxgeom", true)
