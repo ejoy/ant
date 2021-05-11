@@ -47,10 +47,6 @@ policy "light"
     .component "make_shadow"
     .component "motion_type"
 
-action "main_directional_light"
-    .implement "light/light.lua"
-    .method "init"
-
 system "light_system"
     .implement "light/light.lua"
     .method "data_changed"

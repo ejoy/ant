@@ -176,12 +176,6 @@ function ilight.light_buffer()
 	return light_buffer
 end
 
-local mdl = ecs.action "main_directional_light"
-function mdl.init(prefab, idx, value)
-	local eid = prefab[idx]
-	ilight.active_directional_light(eid)
-end
-
 local lightsys = ecs.system "light_system"
 local light_trans_mb = world:sub{"component_changed", "transform"}
 local light_comp_mb = world:sub{"component_changed", "light"}

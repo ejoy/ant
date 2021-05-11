@@ -218,7 +218,7 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 				},
 				fb_idx = fbidx,
 			},
-			visible = true,
+			visible = false,
 			name = "csm" .. index,
 		},
 	}
@@ -266,8 +266,7 @@ end
 function sm:data_changed()
 	local function find_shadow_light(eid)
 		local e = world[eid]
-		assert(e.make_shadow)
-		if e.light_type == "directional" then
+		if e.light_type == "directional" and e.make_shadow then
 			if dl_eid then
 				log.warn("already has directional light for making shadow")
 			else
@@ -309,6 +308,9 @@ function sm:data_changed()
 end
 
 function sm:update_camera()
+	if dl_eid == nil then
+		return
+	end
 	local mq = world:singleton_entity "main_queue"
 	local c = world[mq.camera_eid]._rendercache
 

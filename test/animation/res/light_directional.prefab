@@ -1,6 +1,4 @@
 ---
-action:
-  main_directional_light: true
 policy:
   ant.render|light
   ant.general|name

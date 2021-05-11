@@ -133,7 +133,7 @@ local function point_light_test()
     -- local cubeeid = world:instance "/pkg/ant.test.features/assets/entities/pbr_cube.prefab"[1]
     -- iom.set_position(cubeeid, {0, 0, 0, 1})
 
-    --local eid = world:instance "/pkg/ant.test.features/assets/entities/light_directional.prefab"[1]
+    local eid = world:instance "/pkg/ant.test.features/assets/entities/light_directional.prefab"[1]
 
     -- for _, r in ipairs{
     --     math3d.quaternion{2.4, 0, 0},
