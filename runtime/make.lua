@@ -39,33 +39,42 @@ lm:source_set "ant_common" {
     }
 }
 
-lm:exe "ant" {
-    deps = {
-        "ant_common",
-        RuntimeModules
-    },
-    includes = {
-        "../clibs/lua",
-        "common"
-    },
-    links = {
-        "bgfx"..lm.mode
-    },
-    windows = {
-        sources = "windows/main.cpp",
-        links = {
-            "shlwapi",
-        }
-    },
-    macos = {
-        sources = "osx/main.cpp",
-        ldflags = {
-            "-framework", "Foundation",
-            "-framework", "Metal",
-            "-framework", "QuartzCore",
-            "-framework", "Cocoa"
+if lm.os == "ios" then
+    lm:lib "ant" {
+        deps = {
+            --"ant_common",
+            RuntimeModules
         }
     }
-}
+else
+    lm:exe "ant" {
+        deps = {
+            "ant_common",
+            RuntimeModules
+        },
+        includes = {
+            "../clibs/lua",
+            "common"
+        },
+        links = {
+            "bgfx"..lm.mode
+        },
+        windows = {
+            sources = "windows/main.cpp",
+            links = {
+                "shlwapi",
+            }
+        },
+        macos = {
+            sources = "osx/main.cpp",
+            ldflags = {
+                "-framework", "Foundation",
+                "-framework", "Metal",
+                "-framework", "QuartzCore",
+                "-framework", "Cocoa"
+            }
+        }
+    }
+end
 
 lm:default "ant"

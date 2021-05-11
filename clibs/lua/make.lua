@@ -17,6 +17,11 @@ lm:source_set "source_lua" {
         sources = {
             "!utf8_*.c"
         }
+    },
+    ios = {
+        sources = {
+            "!utf8_*.c"
+        }
     }
 }
 
