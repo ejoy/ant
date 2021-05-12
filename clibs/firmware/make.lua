@@ -3,24 +3,21 @@ local lm = require "luamake"
 dofile "../common.lua"
 
 lm:build {
-    "$luamake", "lua", "@embed.lua",
-    "@../../engine/firmware/bootstrap.lua",
+    "$luamake", "lua", "@embed.lua", "$in",
     "@.", "FirmwareBootstrap",
     input = "../../engine/firmware/bootstrap.lua",
     output = "FirmwareBootstrap.h",
 }
 
 lm:build {
-    "$luamake", "lua", "@embed.lua",
-    "@../../engine/firmware/io.lua",
+    "$luamake", "lua", "@embed.lua", "$in",
     "@.", "FirmwareIo",
     input = "../../engine/firmware/io.lua",
     output = "FirmwareIo.h",
 }
 
 lm:build {
-    "$luamake", "lua", "@embed.lua",
-    "@../../engine/firmware/vfs.lua",
+    "$luamake", "lua", "@embed.lua", "$in",
     "@.", "FirmwareVfs",
     input = "../../engine/firmware/vfs.lua",
     output = "FirmwareVfs.h",
