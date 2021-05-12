@@ -4,7 +4,6 @@ require "bootstrap"
 local lfs = require "filesystem.local"
 local srv = import_package "ant.server"
 
-local logfile
 local event = {}
 
 local function luaexe()
@@ -26,16 +25,26 @@ local function os_date(fmt)
     return os.date(fmt, ti):gsub('{ms}', ('%03d'):format(math.floor(tf*1000)))
 end
 
+local function readfile(filename)
+    local f <close> = assert(io.open(filename:string(), "rb"))
+    return f:read "a"
+end
+
+local function writefile(filename, data)
+    local f <close> = assert(io.open(filename:string(), "wb"))
+    f:write(data)
+end
+
 function event.RUNTIME_CREATE(repo)
-    local logdir = repo._root / '.log'
-    lfs.create_directories(logdir)
-    for path in logdir:list_directory() do
-        if path:equal_extension ".log" then
-            lfs.create_directories(logdir / 'backup')
-            lfs.rename(path, logdir / 'backup' / path:filename())
-        end
+    local logdir = repo._root / ".log"
+    repo._log_file = logdir / "runtime.log"
+    if lfs.exists(repo._log_file) then
+        lfs.create_directories(logdir / 'backup')
+        lfs.rename(repo._log_file, logdir / 'backup' / (readfile(logdir / ".timestamp") .. ".log"))
+    else
+        lfs.create_directories(logdir)
     end
-    logfile = logdir / ('%s.log'):format(os_date('%Y_%m_%d_%H_%M_%S_{ms}'))
+    writefile(logdir / ".timestamp", os_date('%Y_%m_%d_%H_%M_%S_{ms}'))
 end
 
 function event.RUNTIME_CLOSE(repo)
@@ -45,8 +54,8 @@ function event.SERVER_LOG(_,_,...)
     print(...)
 end
 
-function event.RUNTIME_LOG(data)
-    local fp = assert(lfs.open(logfile, 'a'))
+function event.RUNTIME_LOG(repo, data)
+    local fp = assert(lfs.open(repo._log_file, 'a'))
     fp:write(data)
     fp:write('\n')
     fp:close()

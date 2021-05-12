@@ -232,11 +232,11 @@ end
 function repo:close()
 	self._lock:close()
 	self._lock = nil
-	self._mountname = nil
-	self._mountpoint = nil
-	self._root = nil
-	self._repo = nil
-	self._namecache = nil
+	--self._mountname = nil
+	--self._mountpoint = nil
+	--self._root = nil
+	--self._repo = nil
+	--self._namecache = nil
 end
 
 -- make file dirty, would build later

@@ -170,7 +170,7 @@ function message:DBG(data)
 end
 
 function message:LOG(data)
-	event[#event+1] = {"RUNTIME_LOG", data}
+	event[#event+1] = {"RUNTIME_LOG", self._repo, data}
 end
 
 function message:MSG(CMD,...)
