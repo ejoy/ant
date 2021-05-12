@@ -20,9 +20,21 @@ setting:
     CLUSTER_BUILD_AABB: 1
 ---
 type: fx
+cs = /pkg/ant.resources/shaders/compute/cs_cluster_aabb.sc
+setting:
+    CLUSTER_BUILD_AABB: 1
+    lighting: off
+---
+type: fx
 cs = /pkg/ant.resources/shaders/compute/cs_lightcull.sc
 setting:
     CLUSTER_LIGHT_CULL: 1
+---
+type: fx
+cs = /pkg/ant.resources/shaders/compute/cs_lightcull.sc
+setting:
+    CLUSTER_LIGHT_CULL: 1
+    lighting: off
 ---
 path: /pkg/ant.resources/materials/postprocess
 ---

@@ -34,7 +34,7 @@ function event.SERVER_LOG(...)
     sender:push({"SERVER", ...})
 end
 
-function event.RUNTIME_LOG(data)
+function event.RUNTIME_LOG(_, data)
     local fp = assert(lfs.open(logfile, 'a'))
     fp:write(data)
     fp:write('\n')
