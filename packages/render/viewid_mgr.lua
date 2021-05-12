@@ -2,6 +2,7 @@ local viewid_pool = {}; viewid_pool.__index = viewid_pool
 
 local max_viewid<const>				 = 256
 local shadow_csm_start_viewid<const> = 1
+local shadow_omni_start_viewid<const> = shadow_csm_start_viewid+4
 local max_uieditor<const>			 = 32
 
 local bindings = {
@@ -9,7 +10,11 @@ local bindings = {
 	csm2 		= shadow_csm_start_viewid + 1,
 	csm3 		= shadow_csm_start_viewid + 2,
 	csm4 		= shadow_csm_start_viewid + 3,
-	ibl			= 5,
+	omni_Green	= shadow_omni_start_viewid + 0,
+	omni_Yellow = shadow_omni_start_viewid + 1,
+	omni_Blue	= shadow_omni_start_viewid + 2,
+	omni_Red	= shadow_omni_start_viewid + 3,
+	ibl			= 9,
 	depth		= 29,
 	main_view 	= 30,
 	pickup 		= 31,

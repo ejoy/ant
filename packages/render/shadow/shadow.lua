@@ -3,34 +3,13 @@ local world = ecs.world
 
 local setting	= import_package "ant.settings".setting
 local hwi 		= import_package "ant.hwi"
-
 local math3d	= require "math3d"
 
 local fbmgr		= require "framebuffer_mgr"
 local samplerutil = require "sampler"
+local shadowcommon=require "shadow.common"
 
-local function calc_bias_matrix()
-	-- topleft origin and homogeneous depth matrix
-	local m = {
-		0.5, 0.0, 0.0, 0.0,
-		0.0, -0.5, 0.0, 0.0,
-		0.0, 0.0, 1.0, 0.0,
-		0.5, 0.5, 0.0, 1.0,
-	}
-
-	local caps = hwi.get_caps()
-	if caps.originBottomLeft then
-		m[6] = -m[6]
-	end
-	
-	if caps.homogeneousDepth then
-		m[11], m[15] = 0.5, 0.5
-	end
-
-	return math3d.ref(math3d.matrix(m))
-end
-
-local sm_bias_matrix = calc_bias_matrix()
+local sm_bias_matrix = shadowcommon.sm_bias_matrix
 
 local homogeneous_depth_scale_offset = math3d.ref(math3d.vector(0.5, 0.5, 0.0, 0.0))
 local normal_depth_scale_offset = math3d.ref(math3d.vector(1.0, 0.0, 0.0, 0.0))

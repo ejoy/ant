@@ -250,6 +250,7 @@ function sm:post_init()
 	viewcamera_frustum_mb = world:sub{"component_changed", "frusutm", mq.camera_eid}
 
 	viewcamera_changed_mb = world:sub{"component_changed", "viewcamera", mq.camera_eid}
+	world:pub{"component_changed", "viewcamera", mq.camera_eid}	--init shadowmap
 end
 
 local dl_eid
@@ -264,7 +265,7 @@ local function set_csm_visible(v)
 end
 
 function sm:data_changed()
-	local function find_shadow_light(eid)
+	local function find_directional_light(eid)
 		local e = world[eid]
 		if e.light_type == "directional" and e.make_shadow then
 			if dl_eid then
@@ -279,7 +280,7 @@ function sm:data_changed()
 
 	for msg in create_light_mb:each() do
 		local eid = msg[3]
-		if find_shadow_light(eid) then
+		if find_directional_light(eid) then
 			remove_light_mb = world:sub{"entity_removed", eid}
 
 			light_trans_mb = world:sub{"component_changed", "transform", eid}
@@ -308,31 +309,32 @@ function sm:data_changed()
 end
 
 function sm:update_camera()
-	if dl_eid == nil then
-		return
-	end
-	local mq = world:singleton_entity "main_queue"
-	local c = world[mq.camera_eid]._rendercache
-
-	local changed
-
-	local mbs = {viewcamera_changed_mb}
-	if light_trans_mb then
-		mbs[#mbs+1] = light_trans_mb
-	end
-	for _, mb in ipairs(mbs) do
-		for _ in mb:each() do
-			changed = true
+	if dl_eid then
+		local mq = world:singleton_entity "main_queue"
+		local c = world[mq.camera_eid]._rendercache
+	
+		local changed
+	
+		local mbs = {viewcamera_changed_mb}
+		if light_trans_mb then
+			mbs[#mbs+1] = light_trans_mb
+		end
+		for _, mb in ipairs(mbs) do
+			for _ in mb:each() do
+				changed = true
+			end
+		end
+	
+		if changed then
+			update_shadow_camera(dl_eid, c)
+		else
+			for _, eid in world:each "csm" do
+				local camera_eid = world[eid].camera_eid
+				update_camera_matrices(world[camera_eid]._rendercache)
+			end
 		end
 	end
 
-	if changed then
-		update_shadow_camera(dl_eid, c)
-	else
-		for _, eid in world:each "csm" do
-			update_camera_matrices(world[eid]._rendercache)
-		end
-	end
 end
 
 function sm:refine_camera()
