@@ -33,6 +33,10 @@ echo "export PATH=\$MINGW/bin:\$PATH" >> ~/.bash_profile
 pacman -Syu make mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja
 ```
 
+#### MACOS
+- 安装xcode, ninja, cmake
+
+
 #### 关于模型的转换工具
 引擎支持直接支持glb（glTF文件的二进制，但不支持二进制的glTF格式）文件格式，需要使用FBX的话，可以使用FBX2glTF工具。
 
