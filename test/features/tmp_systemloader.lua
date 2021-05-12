@@ -212,26 +212,6 @@ function init_loader_sys:post_init()
     icamera.lookto(mq.camera_eid, camera_cache.icc.pos, camera_cache.icc.dir)
 
     iom.set_rotation(mq.camera_eid, math3d.quaternion(0.3893,0.1568,-0.0674,0.9052))
-
-    do
-        local v_posWS = {0.36984, 0.75826, -0.30619, 1.0}
-        local lpos = {0.0, 1.0, 0.0, 1.0}
-        local dis = math3d.length(lpos, v_posWS)
-
-        local vp = icamera.calc_viewproj(mq.camera_eid)
-        local ndc = math3d.transformH(vp, v_posWS, 1)
-        local depth = math3d.index(ndc, 3)
-        local screen = math3d.muladd(ndc, 0.5, {0.5, 0.5, 0.0, 0.0})
-        local screeny = math3d.index(screen, 2)
-        screeny = 1 - screeny
-        screen = math3d.set_index(screen, 2, screeny)
-        local vr = world:singleton_entity "main_queue".render_target.view_rect
-        local s = {vr.w, vr.h, 0.0, 0.0}
-        local coord = math3d.mul(screen, s)
-
-        print(math3d.tostring(coord))
-    end
-
     -- icamera.set_dof(mq.camera_eid, {
     --     -- aperture_fstop      = 2.8,
     --     -- aperture_blades     = 0,
