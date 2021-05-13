@@ -70,10 +70,9 @@ local TetrahedronFaces = {
 
 local fovx_adjust<const>, fovy_adjust<const> = 0.0, 0.0
 local fovx<const> = 143.98570868 + 7.8 + fovx_adjust
-local fovy<const> = 125.26438968 + 3.0 + fovx_adjust
+local fovy<const> = 125.26438968 + 3.0 + fovy_adjust
 
 local aspect<const> = math.tan(math.rad(fovx*0.5) )/math.tan(math.rad(fovy*0.5))
-
 
 local omni_setting = {
     size = def_sm_size,

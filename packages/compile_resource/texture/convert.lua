@@ -39,7 +39,7 @@ return function (input, output, identity, localpath)
 	local param = readdatalist(input)
 
 	local texpath = localpath(assert(param.path))
-	param.format = assert(which_format(os, param))
+	param.format = assert(which_format(id.platform, param))
 
 	return texutil.convert_image(output, texpath, binfile, param)
 end
