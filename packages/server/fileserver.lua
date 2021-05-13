@@ -152,6 +152,7 @@ function message:GET(hash)
 end
 
 function message:DBG(data)
+	do return end
 	if data == "" then
 		local fd = assert(network.listen('127.0.0.1', 4278))
 		fd.update = dbgserver_update
