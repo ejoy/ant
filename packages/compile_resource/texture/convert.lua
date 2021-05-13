@@ -1,6 +1,7 @@
 local texutil = require "texture.util"
 local datalist = require "datalist"
 local lfs = require "filesystem.local"
+local ident_util = require "identity"
 
 local extensions = {
 	direct3d11 	= "dds",
@@ -31,8 +32,8 @@ local function readdatalist(filepath)
 end
 
 return function (input, output, identity, localpath)
-	local os, renderer = identity:match "(%w+)_(%w+)"
-	local ext = assert(extensions[renderer])
+	local id = ident_util.parse(identity)
+	local ext = assert(extensions[id.renderer])
 	local binfile = (output / "main.bin"):replace_extension(ext)
 
 	local param = readdatalist(input)

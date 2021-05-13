@@ -8,7 +8,10 @@ local math3d   = require "math3d"
 
 local caps = nil
 function hw.get_caps()
-    return assert(caps)
+	if caps == nil then
+    	caps = bgfx.get_caps()
+	end
+	return caps
 end
 
 local function check_renderer(renderer)
@@ -57,22 +60,25 @@ local function bgfx_init(args)
 	end
 	
 	bgfx.init(args)
-	assert(caps == nil)
-	caps = bgfx.get_caps()
+	hw.get_caps()
 	math3d.set_homogeneous_depth(caps.homogeneousDepth)
 	math3d.homogeneous_depth = caps.homogeneousDepth
 	math3d.set_origin_bottom_left(caps.originBottomLeft)
 	math3d.origin_bottom_left = caps.originBottomLeft
 end
 
-function hw.init(args)
-	bgfx_init(args)
+function hw.update_identity()
     local os = platform.OS
     local renderer = hw.get_caps().rendererType
 
-	local view_setting = "hd" .. (math3d.homogeneous_depth and "1" or "0")
-	view_setting = view_setting .. "_" .. "obl" .. (math3d.origin_bottom_left and "1" or "0")
-	import_package "ant.compile_resource".set_identity((os.."_"..renderer .. "_" .. view_setting):lower())
+	local view_setting = math3d.homogeneous_depth and "_hd" or ""
+	view_setting = view_setting .. (math3d.origin_bottom_left and "_obl" or "")
+	import_package "ant.compile_resource".set_identity((os.."_"..renderer .. view_setting):lower())
+end
+
+function hw.init(args)
+	bgfx_init(args)
+	hw.update_identity()
 end
 
 function hw.dpi()
