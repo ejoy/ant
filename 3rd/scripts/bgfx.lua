@@ -113,6 +113,19 @@ if EnableEditor then
         output = "../../packages/resources/shaders/shaderlib.sh",
     }
     
+    if lm.compiler == "msvc" then
+        lm:build "mt_bgfx_texturec" {
+            "mt", "-nologo", "-manifest", "$in", "-outputresource:$bin/texturec.exe;#1",
+            input = "utf8.manifest",
+            deps = "copy_bgfx_texturec",
+        }
+        lm:build "mt_bgfx_shaderc" {
+            "mt", "-nologo", "-manifest", "$in", "-outputresource:$bin/shaderc.exe;#1",
+            input = "utf8.manifest",
+            deps = "copy_bgfx_shaderc",
+        }
+    end
+
     lm:phony "bgfx_make" {
         deps = {
             "copy_bgfx_texturec",
@@ -122,6 +135,12 @@ if EnableEditor then
             "copy_bgfx_compute",
             "copy_bgfx_examples_common",
             "copy_bgfx_examples_shaderlib",
+        },
+        msvc = {
+            deps = {
+                "mt_bgfx_texturec",
+                "mt_bgfx_shaderc",
+            }
         }
     }
 else
