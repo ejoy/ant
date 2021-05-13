@@ -21,7 +21,7 @@ lm:source_set "source_filesystem" {
 lm:lua_dll "filesystem" {
     deps = "source_filesystem",
     msvc = {
-        export_luaopen = false,
+        export_luaopen = "off",
         ldflags = {
             "-export:luaopen_filesystem_cpp"
         }

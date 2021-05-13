@@ -36,45 +36,67 @@ lm:source_set "ant_common" {
     },
     macos = {
         sources = "common/set_current_osx.cpp"
+    },
+    ios = {
+        sources = "common/set_current_ios.mm"
     }
 }
 
-if lm.os == "ios" then
-    lm:lib "ant" {
-        deps = {
-            --"ant_common",
-            RuntimeModules
-        }
-    }
-else
-    lm:exe "ant" {
-        deps = {
-            "ant_common",
-            RuntimeModules
-        },
-        includes = {
-            "../clibs/lua",
-            "common"
-        },
+lm:lib "runtime_modules" {
+    deps = {
+        RuntimeModules
+    },
+}
+
+lm:exe "ant" {
+    deps = {
+        "ant_common",
+        RuntimeModules
+    },
+    includes = {
+        "../clibs/lua",
+        "common"
+    },
+    links = {
+        "bgfx"..lm.mode
+    },
+    windows = {
+        sources = "windows/main.cpp",
         links = {
-            "bgfx"..lm.mode
+            "shlwapi",
+        }
+    },
+    macos = {
+        sources = "osx/main.cpp",
+        ldflags = {
+            "-framework", "Foundation",
+            "-framework", "Metal",
+            "-framework", "QuartzCore",
+            "-framework", "Cocoa"
+        }
+    },
+    ios = {
+        includes = "../clibs/window/ios",
+        sources = {
+            "ios/ant/main.mm",
+            "ios/ant/ios_error.mm",
         },
-        windows = {
-            sources = "windows/main.cpp",
-            links = {
-                "shlwapi",
-            }
+        ldflags = {
+            "-framework", "CoreText",
+            "-framework", "UIKit",
+            "-framework", "Metal",
+            "-framework", "QuartzCore",
+            "-framework", "OpenGLES",
+            "-isysroot", "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk",
+            "-fembed-bitcode",
+            "-fobjc-arc"
         },
-        macos = {
-            sources = "osx/main.cpp",
-            ldflags = {
-                "-framework", "Foundation",
-                "-framework", "Metal",
-                "-framework", "QuartzCore",
-                "-framework", "Cocoa"
-            }
+        flags = {
+            "-isysroot", "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk",
+            "-fembed-bitcode",
+            "-fobjc-arc"
         }
     }
-end
+}
 
 lm:default "ant"

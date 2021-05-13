@@ -32,6 +32,8 @@ if lm.os == "windows" then
     end
 elseif lm.os == "macos" then
     BgfxLinkdir = Ant3rd .. "bgfx/.build/osx-arm64/bin"
+elseif lm.os == "ios" then
+    BgfxLinkdir = Ant3rd .. "bgfx/.build/ios-arm64/bin"
 else
     BgfxLinkdir = ""
 end

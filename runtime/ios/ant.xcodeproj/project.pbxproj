@@ -336,7 +336,7 @@
 					"../../3rd/build/ios/debug/ozz-animation/src/base",
 				);
 				OTHER_LDFLAGS = (
-					"-lant",
+					"-lruntime_modules",
 					"-lbgfxDebug",
 					"-lbxDebug",
 					"-lbimgDebug",
@@ -391,7 +391,7 @@
 					"../../3rd/build/ios/release/ozz-animation/src/base",
 				);
 				OTHER_LDFLAGS = (
-					"-lant",
+					"-lruntime_modules",
 					"-lbgfxRelease",
 					"-lbxRelease",
 					"-lbimgRelease",
