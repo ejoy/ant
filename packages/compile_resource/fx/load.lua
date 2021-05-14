@@ -2,7 +2,6 @@ local bgfx = require "bgfx"
 local datalist = require "datalist"
 local fs = require "filesystem"
 local lfs = require "filesystem.local"
-local sha1 = require "hash".sha1
 local stringify = require "fx.stringify"
 
 local setting   = import_package "ant.settings".setting
@@ -36,30 +35,28 @@ local function merge(a, b)
 end
 
 local function initFX(fx)
+    local res = {}
     merge(fx.setting, defaultSetting)
     fx.setting.identity = IDENTITY
     local function updateStage(stage)
-        fx.setting.stage = stage
         if fx[stage] then
-            fx[stage] = {
-                path = fx[stage],
-                stage = stage,
-                setting = fx.setting,
-                hash = sha1(stringify(fx.setting)):sub(1,7),
-            }
+            fx.setting.stage = stage
+            res[stage] = fx[stage] .. "?" .. stringify(fx.setting)
         end
     end
     updateStage "cs"
     updateStage "fs"
     updateStage "vs"
     fx.setting.stage = nil
+    res.setting = fx.setting
+    return res
 end
 
 local function getHash(fx)
     if fx.cs then
-        return fx.cs.path..fx.cs.hash
+        return fx.cs
     end
-    return fx.vs.path..fx.fs.path..fx.vs.hash
+    return fx.vs..fx.fs
 end
 
 local function create_uniform(h, mark)
@@ -115,7 +112,7 @@ local function loadShader(fx, stage)
         error(("invalid stage:%s in fx file"):format(stage))
     end
     local h = bgfx.create_shader(readfile(fxcompile.compile_shader(shader)))
-    bgfx.set_name(h, shader.path)
+    bgfx.set_name(h, shader)
     return h
 end
 
@@ -133,7 +130,7 @@ local function createProgram(fx)
 end
 
 local function load(fx)
-    initFX(fx)
+    fx = initFX(fx)
     local schash = getHash(fx)
     local res = CACHE[schash]
     if res then
@@ -149,9 +146,13 @@ local function unload(res)
     bgfx.destroy(assert(res.prog))
 end
 
-local function compile(fx)
-    fx.setting = fx.setting or {}
-    initFX(fx)
+local function compile(fx, setting)
+    setting = setting or {}
+    if fx.setting then
+        merge(setting, fx.setting)
+    end
+    fx.setting = setting
+    fx = initFX(fx)
     if fx.cs then
         fxcompile.compile_shader(fx.cs)
     else

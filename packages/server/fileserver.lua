@@ -104,10 +104,10 @@ end
 local debug = {}
 local message = {}
 
-function message:ROOT(identity, reponame)
-	LOG("ROOT", identity, reponame)
+function message:ROOT(reponame)
+	LOG("ROOT", reponame)
 	local reponame = assert(reponame or REPOPATH, "Need repo name")
-	local repo = repo_create(identity, reponame)
+	local repo = repo_create(reponame)
 	if repo == nil then
 		response(self, "ROOT", "")
 		return

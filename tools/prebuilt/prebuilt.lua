@@ -122,7 +122,7 @@ end
 local function build()
     --TODO
     for _, identity in ipairs {
-        "windows_direct3d11_hd0_obl0",
+        "windows_direct3d11",
         "ios_metal_hd0_obl0"
     } do
         cr.set_identity(identity)

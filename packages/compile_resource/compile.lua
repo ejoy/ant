@@ -17,7 +17,7 @@ local function set_identity(ext, identity)
     cfg.setting = {
         identity = identity
     }
-    cfg.hash = sha1(stringify(cfg.setting)):sub(1,7)
+    cfg.arguments = stringify(cfg.setting)
 end
 
 local function split(str)
@@ -26,23 +26,25 @@ local function split(str)
     return r
 end
 
+local function compile_path(pathstring, seq)
+    local pathlst = split(pathstring)
+    local res = {}
+    for i = 1, #pathlst - 1 do
+        local path = pathlst[i]
+        local ext = path:match "[^/]%.([%w*?_%-]*)$"
+        local cfg = assert(link[ext], "invalid path")
+        res[#res+1] = path
+        res[#res+1] = "?"
+        res[#res+1] = cfg.arguments
+        res[#res+1] = seq
+    end
+    res[#res+1] = pathlst[#pathlst]
+    return table.concat(res)
+end
+
 if __ANT_RUNTIME__ then
     local function compile(pathstring)
-        local pathlst = split(pathstring)
-        if #pathlst == 1 then
-            return fs.path(pathlst[1]):localpath()
-        end
-        local path = fs.path(pathlst[1])
-        for i = 2, #pathlst do
-            local ext = path:extension():string():sub(2):lower()
-            local cfg = link[ext]
-            if cfg then
-                path = (path / cfg.hash / pathlst[i]):localpath()
-            else
-                path = path:localpath() / pathlst[i]
-            end
-        end
-        return path
+        return fs.path(compile_path(pathstring, "/")):localpath()
     end
     return {
         set_identity = set_identity,
@@ -127,43 +129,52 @@ local function absolute_path(base, path)
 	return lfs.absolute(base:parent_path() / (path:match "^%./(.+)$" or path))
 end
 
-local function do_compile(cfg, input, output)
+local function do_compile(cfg, setting, input, output)
     lfs.create_directories(output)
-    local ok, err = require(cfg.compiler)(input, output, cfg.setting.identity, function (path)
+    local ok, err = require(cfg.compiler)(input, output, setting.identity, function (path)
         return absolute_path(input, path)
     end)
     if not ok then
         error("compile failed: " .. input:string() .. "\n" .. err)
     end
     create_depfile(output / ".dep", input)
-    writefile(output / ".setting", serialize(cfg.setting))
 end
 
-local function compile_file(input)
-    local ext = input:extension():string():sub(2):lower()
-    local cfg = link[ext]
-    if not cfg then
-        return input
-    end
+local function parseUrl(url)
+    local path, arguments = url:match "^([^?]*)%?(.*)$"
+    local setting = {}
+    arguments:gsub("([^=&]*)=([^=&]*)", function(k ,v)
+        setting[k] = v
+    end)
+    return path, setting, arguments
+end
+
+local function compile_file(url)
+    local path, setting, arguments = parseUrl(url)
+    local hash = sha1(arguments):sub(1,7)
+    local ext = path:match "[^/]%.([%w*?_%-]*)$"
+    local cfg = assert(link[ext], "invalid path")
+    local input = fs.path(path):localpath()
     local keystring = lfs.absolute(input):string():lower()
-    local output = cfg.binpath / get_filename(keystring) / cfg.hash
+    local output = cfg.binpath / get_filename(keystring) / hash
     if not lfs.exists(output) or not do_build(output) then
-        do_compile(cfg, input, output)
+        do_compile(cfg, setting, input, output)
+        writefile(output / ".setting", serialize(setting))
+        writefile(output / ".arguments", arguments)
     end
     return output
 end
 
-local function compile_path(pathstring)
-    local pathlst = split(pathstring)
-    local path = fs.path(pathlst[1]):localpath()
-    for i = 2, #pathlst do
-        path = compile_file(path) / pathlst[i]
-    end
-    return path
-end
-
 local function compile(pathstring)
-    return compile_file(compile_path(pathstring))
+    local urllst = split(compile_path(pathstring, "|"))
+    local url = urllst[1]
+    if #urllst == 1 then
+        return fs.path(url):localpath()
+    end
+    for i = 2, #urllst do
+        url = compile_file(url) .. "/" .. urllst[i]
+    end
+    return url
 end
 
 return {
