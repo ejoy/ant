@@ -75,7 +75,7 @@ function ientity.create_grid_entity_simple(name, w, h, unit, srt)
 	unit = unit or 1
 	local vb, ib = geolib.grid(w, h, nil, unit)
 	local mesh = create_mesh({"p3|c40niu", vb}, ib)
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line.material", mesh, srt)
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_foreground.material", mesh, srt)
 end
 
 function ientity.create_grid_entity(name, width, height, unit, linewidth)
@@ -307,7 +307,7 @@ function ientity.create_axis_entity(srt, name, color)
 		0, 0, 1, color or 0xffff0000,
 	}
 	local mesh = create_mesh({"p3|c40niu", axis_vb}, axis_ib)
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_singlecolor.material", mesh, srt)
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line.material", mesh, srt)
 end
 
 function ientity.create_line_entity(srt, p0, p1, name, color)
@@ -316,7 +316,7 @@ function ientity.create_line_entity(srt, p0, p1, name, color)
 		p1[1], p1[2], p1[3], color or 0xffffffff,
 	}
 	local mesh = create_mesh({"p3|c40niu", vb}, {0, 1})
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_singlecolor.material", mesh, srt)
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line.material", mesh, srt)
 	
 end
 
@@ -331,7 +331,7 @@ function ientity.create_circle_entity(radius, slices, srt, name)
 		gvb[#gvb+1] = 0xffffffff
 	end
 	local mesh = create_mesh({"p3|c40niu", gvb}, circle_ib)
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_singlecolor.material", mesh, srt)
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line.material", mesh, srt)
 end
 
 function ientity.create_circle_mesh_entity(radius, slices, srt, mtl, name)

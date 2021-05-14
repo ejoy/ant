@@ -1,0 +1,13 @@
+fx:
+  fs: /pkg/ant.resources/shaders/mesh/fs_colormesh.sc
+  vs: /pkg/ant.resources/shaders/mesh/vs_colormesh.sc
+  setting:
+    surfacetype: foreground
+state:
+  ALPHA_REF: 1
+  CULL: CCW
+  DEPTH_TEST: ALWAYS
+  LINEAA: true
+  MSAA: true
+  PT: LINES
+  WRITE_MASK: RGBA

@@ -63,7 +63,7 @@ local function target_lock_test()
                 t = {16, 1, 6},
             },
             mesh = "/pkg/ant.resources/meshes/sphere.mesh",
-            material = "/pkg/ant.resources/materials/bunny.material",
+            material = "/pkg/ant.resources/materials/singlecolor.material",
             scene_entity = true,
         }
     }

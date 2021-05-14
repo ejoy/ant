@@ -1,7 +1,8 @@
 fx:
-  fs: /pkg/ant.resources/shaders/line/fs_line.sc
-  vs: /pkg/ant.resources/shaders/line/vs_line.sc
+  fs: /pkg/ant.resources/shaders/mesh/fs_colormesh.sc
+  vs: /pkg/ant.resources/shaders/mesh/vs_colormesh.sc
   setting:
+    surfacetype: translucent
     SINGLE_COLOR:1
 properties:
   u_color: {0, 0, 0, 1}

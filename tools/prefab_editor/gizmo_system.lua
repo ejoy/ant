@@ -145,7 +145,7 @@ local function create_arrow_widget(axis_root, axis_str)
 				r = local_rotator,
 				t = cylindere_t,
 			},
-			material = "/pkg/ant.resources/materials/t_gizmos.material",
+			material = "/pkg/ant.resources/materials/meshcolor_nodepth.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			name = "arrow.cylinder" .. axis_str
 		}
@@ -162,7 +162,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			scene_entity = true,
 			state = ies.create_state "visible",
 			transform = {s = {1, 1.5, 1, 0}, r = local_rotator, t = cone_t},
-			material = "/pkg/ant.resources/materials/t_gizmos.material",
+			material = "/pkg/ant.resources/materials/meshcolor_nodepth.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone" .. axis_str
 		}
@@ -255,7 +255,7 @@ function gizmo_sys:post_init()
 	create_arrow_widget(axis_root, "z")
 	local plane_xy_eid = computil.create_prim_plane_entity(
 		{t = {gizmo_const.MOVE_PLANE_OFFSET, gizmo_const.MOVE_PLANE_OFFSET, 0, 1}, s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0}, r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})},
-		"/pkg/ant.resources/materials/t_gizmos.material",
+		"/pkg/ant.resources/materials/meshcolor_nodepth.material",
 		"plane_xy")
 	ies.set_state(plane_xy_eid, "auxgeom", true)
 	imaterial.set_property(plane_xy_eid, "u_color", gizmo.txy.color)
@@ -264,7 +264,7 @@ function gizmo_sys:post_init()
 
 	plane_yz_eid = computil.create_prim_plane_entity(
 		{t = {0, gizmo_const.MOVE_PLANE_OFFSET, gizmo_const.MOVE_PLANE_OFFSET, 1}, s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0}, r = math3d.tovalue(math3d.quaternion{0, 0, math.rad(90)})},
-		"/pkg/ant.resources/materials/t_gizmos.material",
+		"/pkg/ant.resources/materials/meshcolor_nodepth.material",
 		"plane_yz")
 	ies.set_state(plane_yz_eid, "auxgeom", true)
 	imaterial.set_property(plane_yz_eid, "u_color", gizmo.tyz.color)
@@ -273,7 +273,7 @@ function gizmo_sys:post_init()
 
 	plane_zx_eid = computil.create_prim_plane_entity(
 		{t = {gizmo_const.MOVE_PLANE_OFFSET, 0, gizmo_const.MOVE_PLANE_OFFSET, 1}, s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0}},
-		"/pkg/ant.resources/materials/t_gizmos.material",
+		"/pkg/ant.resources/materials/meshcolor_nodepth.material",
 		"plane_zx")
 	ies.set_state(plane_zx_eid, "auxgeom", true)
 	imaterial.set_property(plane_zx_eid, "u_color", gizmo.tzx.color)
@@ -287,7 +287,7 @@ function gizmo_sys:post_init()
 	imaterial.set_property(uniform_rot_eid, "u_color", gizmo_const.COLOR_GRAY)
 	iss.set_parent(uniform_rot_eid, uniform_rot_root)
 	local function create_rotate_fan(radius, circle_trans)
-		local mesh_eid = computil.create_circle_mesh_entity(radius, gizmo_const.ROTATE_SLICES, circle_trans, "/pkg/ant.resources/materials/t_gizmos.material", "rotate_mesh_gizmo_uniform")
+		local mesh_eid = computil.create_circle_mesh_entity(radius, gizmo_const.ROTATE_SLICES, circle_trans, "/pkg/ant.resources/materials/meshcolor_nodepth.material", "rotate_mesh_gizmo_uniform")
 		imaterial.set_property(mesh_eid, "u_color", {0, 0, 1, 0.5})
 		ies.set_state(mesh_eid, "visible", false)
 		iss.set_parent(mesh_eid, axis_root)
@@ -330,7 +330,7 @@ function gizmo_sys:post_init()
 				scene_entity = true,
 				state = ies.create_state "visible|selectable",
 				transform = srt,
-				material = "/pkg/ant.resources/materials/t_gizmos.material",
+				material = "/pkg/ant.resources/materials/meshcolor_nodepth.material",
 				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
 				name = "scale_cube" .. axis_name
 			}

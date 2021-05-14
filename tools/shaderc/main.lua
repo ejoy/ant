@@ -1,5 +1,0 @@
-package.path = "engine/?.lua"
-require "bootstrap"
-require "fx.toolset"
-require "fx.compile"
-import_package "ant.shaderc"

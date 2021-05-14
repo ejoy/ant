@@ -1,3 +1,0 @@
-system "memory_stat_system"
-    .implement "memory_stat.lua"
-    .method "ui_update"

@@ -1,6 +1,6 @@
 fx:
-  fs: /pkg/ant.resources/shaders/simple/triangle/fs_simpletri.sc
-  vs: /pkg/ant.resources/shaders/simple/triangle/vs_simpletri.sc
+  fs: /pkg/ant.resources/shaders/mesh/fs_colormesh
+  vs: /pkg/ant.resources/shaders/mesh/fs_colormesh
   setting:
     SINGLE_COLOR: 1
 properties:

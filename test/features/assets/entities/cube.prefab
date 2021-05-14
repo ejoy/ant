@@ -8,7 +8,7 @@ data:
         s: {100, 100, 100, 0}
         t: {0, 0, 8, 1}
     bind_slot: "mixamorig:Head"
-    material: /pkg/ant.resources/materials/bunny.material
+    material: /pkg/ant.resources/materials/singlecolor.material
     mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
     state: 0x00000005
     scene_entity: true

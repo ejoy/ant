@@ -13,7 +13,7 @@ local function material_hierarchy_test()
         },
         data = {
             name = "hierarhcy_root",
-            material = "/pkg/ant.resources/materials/bunny.material"
+            material = "/pkg/ant.resources/materials/singlecolor.material"
         }
     }
 
