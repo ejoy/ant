@@ -95,7 +95,6 @@ local function init_config()
 	config.address = assert(c.address)
 	config.port = assert(c.port)
 	config.vfspath = assert(c.vfspath)
-	config.identity = assert(c.identity)
 	config.rootname = c.rootname
 	read_config(config.repopath .. "config", config)
 end
@@ -488,7 +487,7 @@ end
 local function waiting_for_root()
 	local resp = {}
 	local reading = connection.recvq
-	connection_send("ROOT", config.identity, config.rootname)
+	connection_send("ROOT", config.rootname)
 	while true do
 		local ok, err = connection_dispose(INTERVAL)
 		if not ok then

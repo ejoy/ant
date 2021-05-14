@@ -1,12 +1,4 @@
---[[
-identity:
-    osx_metal
-    ios_metal
-    windows_direct3d11
-]]
-
-local project, identity = ...
-identity = identity or "ios_metal"
+local project = ...
 _VFS_ROOT_ = assert(project, "Need project dir.")
 
 package.path = "engine/?.lua;tools/prebuilt/?.lua"
@@ -69,4 +61,4 @@ for _, config in ipairs(read_prebuilt()) do
     end
 end
 
-prebuilt.build(identity)
+prebuilt.build()

@@ -1,17 +1,13 @@
 local bgfx = require "bgfx"
 local datalist = require "datalist"
-local fs        = require "filesystem"
-local lfs       = require "filesystem.local"
+local fs = require "filesystem"
+local lfs = require "filesystem.local"
+local sha1 = require "hash".sha1
+local stringify = require "fx.stringify"
 
 local setting   = import_package "ant.settings".setting
-local FX_CACHE = {}
+local CACHE = {}
 local fxcompile = require "fx.compile"
-
-local function create_param(fx)
-    local param = require "fx.stringify"(fx.setting)
-    fx.param = param
-    return param
-end
 
 local function read_default_setting_from_file()
     local f = fs.open (fs.path "/pkg/ant.resources/settings/default.setting")
@@ -20,9 +16,15 @@ local function read_default_setting_from_file()
     return c
 end
 
-local default_setting       = datalist.parse(read_default_setting_from_file())
-default_setting.depth_type  = setting:get 'graphic/shadow/type'
-default_setting.bloom       = setting:get 'graphic/postprocess/bloom/enable' and "on" or "off"
+local defaultSetting       = datalist.parse(read_default_setting_from_file())
+defaultSetting.depth_type  = setting:get 'graphic/shadow/type'
+defaultSetting.bloom       = setting:get 'graphic/postprocess/bloom/enable' and "on" or "off"
+
+local IDENTITY
+
+local function set_identity(identity)
+    IDENTITY = identity
+end
 
 local function merge(a, b)
     for k, v in pairs(b) do
@@ -30,27 +32,34 @@ local function merge(a, b)
             a[k] = v
         end
     end
+    return a
 end
 
-local function read_fx(fx, setting)
-    setting = setting or {}
-    if fx.setting then
-        merge(setting, fx.setting)
+local function initFX(fx)
+    merge(fx.setting, defaultSetting)
+    fx.setting.identity = IDENTITY
+    local function updateStage(stage)
+        fx.setting.stage = stage
+        if fx[stage] then
+            fx[stage] = {
+                path = fx[stage],
+                stage = stage,
+                setting = fx.setting,
+                hash = sha1(stringify(fx.setting)):sub(1,7),
+            }
+        end
     end
-    merge(setting, default_setting)
-    return {
-        vs = fx.vs,
-        fs = fx.fs,
-        cs = fx.cs,
-        setting = setting
-    }
+    updateStage "cs"
+    updateStage "fs"
+    updateStage "vs"
+    fx.setting.stage = nil
 end
 
-local function get_hash(fx)
+local function getHash(fx)
     if fx.cs then
-        return fx.cs
+        return fx.cs.path..fx.cs.hash
     end
-    return fx.vs..fx.fs
+    return fx.vs.path..fx.fs.path..fx.vs.hash
 end
 
 local function create_uniform(h, mark)
@@ -68,7 +77,7 @@ local function uniform_info(shader, uniforms, mark)
     end
 end
 
-local function create_render_program(vs, fs)
+local function createRenderProgram(vs, fs)
     local prog = bgfx.create_program(vs, fs, false)
     if prog then
         local uniforms = {}
@@ -81,7 +90,7 @@ local function create_render_program(vs, fs)
     end
 end
 
-local function create_compute_program(cs)
+local function createComputeProgram(cs)
     local prog = bgfx.create_program(cs, false)
     if prog then
         local uniforms = {}
@@ -100,72 +109,59 @@ local function readfile(filename)
 	return data
 end
 
-local function load_shader(fx, stage)
-    local input = fx[stage]
-    if input == nil then
+local function loadShader(fx, stage)
+    local shader = fx[stage]
+    if shader == nil then
         error(("invalid stage:%s in fx file"):format(stage))
     end
-    local h = bgfx.create_shader(readfile(fxcompile.compile_shader(fx, stage)))
-    bgfx.set_name(h, input)
+    local h = bgfx.create_shader(readfile(fxcompile.compile_shader(shader)))
+    bgfx.set_name(h, shader.path)
     return h
 end
 
-local function create_program(fx)
+local function createProgram(fx)
     if fx.cs then
-        return create_compute_program(
-            load_shader(fx, "cs")
+        return createComputeProgram(
+            loadShader(fx, "cs")
         )
     else
-        return create_render_program(
-            load_shader(fx, "vs"),
-            load_shader(fx, "fs")
+        return createRenderProgram(
+            loadShader(fx, "vs"),
+            loadShader(fx, "fs")
         )
     end
 end
 
-local function get_fx_cache(fx)
-    local key = create_param(fx)
-    if not FX_CACHE[key] then
-        FX_CACHE[key] = {}
-    end
-    return FX_CACHE[key]
-end
-
-local function load(input, setting)
-    local fx = read_fx(input, setting)
-    local cache = get_fx_cache(fx)
-    local schash = get_hash(fx)
-    local res = cache[schash]
+local function load(fx)
+    initFX(fx)
+    local schash = getHash(fx)
+    local res = CACHE[schash]
     if res then
         return res
     end
-    fx.prog, fx.uniforms = create_program(fx)
-    cache[schash] = fx
-    return fx
+    res = {setting=fx.setting}
+    res.prog, res.uniforms = createProgram(fx)
+    CACHE[schash] = res
+    return res
 end
 
 local function unload(res)
     bgfx.destroy(assert(res.prog))
 end
 
-local function compile(input, setting)
-    local fx = read_fx(input, setting)
-    local cache = get_fx_cache(fx)
-    local schash = get_hash(fx)
-    local res = cache[schash]
-    if res then
-        return
-    end
+local function compile(fx)
+    fx.setting = fx.setting or {}
+    initFX(fx)
     if fx.cs then
-        fxcompile.compile_shader(fx, "cs")
+        fxcompile.compile_shader(fx.cs)
     else
-        fxcompile.compile_shader(fx, "vs")
-        fxcompile.compile_shader(fx, "fs")
+        fxcompile.compile_shader(fx.vs)
+        fxcompile.compile_shader(fx.fs)
     end
 end
 
 return {
-    set_identity = fxcompile.set_identity,
+    set_identity = set_identity,
     load = load,
     unload = unload,
     compile = compile,

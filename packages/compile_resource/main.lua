@@ -1,21 +1,7 @@
 local fx = require "fx.load"
 local lfs = require "filesystem.local"
 
-local cm
-if __ANT_RUNTIME__ then
-    local fs = require "filesystem"
-    cm = {}
-    function cm.set_identity()
-    end
-    function cm.compile_file(filename)
-        return filename
-    end
-    function cm.compile_path(pathstring)
-        return fs.path(pathstring:gsub("|", "/")):localpath()
-    end
-else
-    cm = require "compile"
-end
+local cm = require "compile"
 
 local function set_identity(v)
     fx.set_identity(v)
@@ -25,24 +11,19 @@ local function set_identity(v)
 end
 
 local function read_file(filename)
-    local f = assert(lfs.open(cm.compile_path(filename), "rb"))
+    local f = assert(lfs.open(cm.compile(filename), "rb"))
     local c = f:read "a"
     f:close()
     return c
 end
 
 local function compile(filename)
-    return cm.compile_file(cm.compile_path(filename))
-end
-
-local function compile_path(path)
-    return cm.compile_path(path)
+    return cm.compile(filename)
 end
 
 return {
     set_identity = set_identity,
     compile = compile,
-    compile_path = compile_path,
     read_file = read_file,
     load_fx = fx.load,
     compile_fx = fx.compile,

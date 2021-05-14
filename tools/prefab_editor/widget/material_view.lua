@@ -198,7 +198,7 @@ function MaterialView:set_model(eid)
                 local absolute_path
                 if fs.path(v.texture):is_absolute() then
                     print(v.texture)
-                    absolute_path = tostring(cr.compile_path(v.texture))
+                    absolute_path = tostring(cr.compile(v.texture))
                     print(absolute_path)
                 else
                     absolute_path = tostring(mtl_path) .. v.texture 

@@ -46,10 +46,11 @@ local function compile_resource(repo, path)
 	if ext ~= "sc" and ext ~= "glb"  and ext ~= "texture" then
 		return true
 	end
-	local realpath = repo._root / ".build" / ext / repo._identity / get_filename(repo, path)
+	local realpath = repo._root / ".build" / ext / get_filename(repo, path)
 	if not lfs.exists(realpath) then
 		return false
 	end
+	print('addmount', path, realpath)
 	access.addmount(repo, path, realpath)
 	return true
 end
