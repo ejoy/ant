@@ -119,13 +119,19 @@ local function load_fx(fx)
     fx_tasks[#fx_tasks+1] = fx
 end
 
-local function build(identity)
-    cr.set_identity(identity)
-    for _, task in ipairs(tasks) do
-        prebuilt(table.unpack(task))
-    end
-    for _, fx in ipairs(fx_tasks) do
-        prebuilt_fx(fx, fx.setting)
+local function build()
+    --TODO
+    for _, identity in ipairs {
+        "windows_direct3d11_hd0_obl0",
+        "ios_metal_hd0_obl0"
+    } do
+        cr.set_identity(identity)
+        for _, task in ipairs(tasks) do
+            prebuilt(table.unpack(task))
+        end
+        for _, fx in ipairs(fx_tasks) do
+            prebuilt_fx(fx, fx.setting)
+        end
     end
 end
 

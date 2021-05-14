@@ -927,7 +927,7 @@ function m.show()
                         local vfs = require "vfs"
                         anim_glb_path = "/" .. vfs.virtualpath(fs.path(glb_filename))
                         rc.compile(anim_glb_path)
-                        local external_path = rc.compile_path(anim_glb_path .. "|animations")
+                        local external_path = rc.compile(anim_glb_path .. "|animations")
                         for path in external_path:list_directory() do
                             if path:equal_extension ".ozz" then
                                 local filename = path:filename():string()

@@ -58,16 +58,29 @@ function assetmgr.resource(path, world)
 	return resource.proxy(fullpath)
 end
 
+local function merge(a, b)
+    for k, v in pairs(b) do
+        if not a[k] then
+            a[k] = v
+        end
+    end
+end
+
 function assetmgr.load_fx(fx, setting)
-	local function check_resolve_path(fx, p)
+	setting = setting or {}
+	local newfx = { setting = setting }
+	local function check_resolve_path(p)
 		if fx[p] then
-			fx[p] = absolute_path(fx[p])
+			newfx[p] = absolute_path(fx[p])
 		end
 	end
-	check_resolve_path(fx, "vs")
-	check_resolve_path(fx, "fs")
-	check_resolve_path(fx, "cs")
-	return cr.load_fx(fx, setting)
+	check_resolve_path "vs"
+	check_resolve_path "fs"
+	check_resolve_path "cs"
+    if fx.setting then
+        merge(setting, fx.setting)
+    end
+	return cr.load_fx(newfx)
 end
 
 assetmgr.edit = resource.edit

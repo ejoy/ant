@@ -1,18 +1,8 @@
 if __ANT_RUNTIME__ then
-    local lfs = require "filesystem.local"
-    local vfs = require "vfs"
     local fs = require "filesystem"
-    local sha1 = require "hash".sha1
     local m = {}
-    function m.set_identity()
-    end
-    function m.compile_shader(fx, stage)
-        if fx[stage] then
-            local hash = sha1(stage..fx.param):sub(1,7)
-            local path1 = (fs.path(fx[stage]) / hash / "main.bin"):localpath()
-            local path2 = vfs.compile(fx[stage], stage..fx.param)
-            return path1
-        end
+    function m.compile_shader(shader)
+        return (fs.path(shader.path) / shader.hash / "main.bin"):localpath()
     end
     return m
 end
@@ -22,11 +12,11 @@ local fs = require "filesystem"
 local sha1 = require "hash".sha1
 local datalist = require "datalist"
 local toolset = require "fx.toolset"
-local IDENTITY, IDENTITY_items
 local BINPATH = fs.path "":localpath() / ".build" / "sc"
 local SHARER_INC = lfs.absolute(fs.path "/pkg/ant.resources/shaders":localpath())
 local identity_util = require "identity"
 local setting = import_package "ant.settings".setting
+local serialize = import_package "ant.serialize".stringify
 
 local function get_filename(pathname)
     pathname = lfs.absolute(fs.path(pathname):localpath()):string():lower():lower()
@@ -45,11 +35,6 @@ local function readfile(filename)
 	local data = f:read "a"
 	f:close()
 	return data
-end
-
-local function set_identity(identity)
-    IDENTITY = identity
-    IDENTITY_items = identity_util.parse(identity)
 end
 
 local function do_build(depfile)
@@ -112,7 +97,8 @@ local SETTING_MAPPING = {
 
 local enable_cs = setting:data().graphic.lighting.cluster_shading ~= 0
 
-local function default_macros()
+local function default_macros(setting)
+    local IDENTITY_items = identity_util.parse(setting.identity)
     local m = {
         "ENABLE_SRGB_TEXTURE",
         "ENABLE_SRGB_FB",
@@ -128,7 +114,7 @@ local function default_macros()
 end
 
 local function get_macros(setting)
-    local macros = default_macros()
+    local macros = default_macros(setting)
 
     for k, v in pairs(setting) do
         local f = SETTING_MAPPING[k]
@@ -155,6 +141,7 @@ local function compile_debug_shader(platform, renderer)
 end
 
 local function do_compile(input, output, stage, setting)
+    local IDENTITY_items = identity_util.parse(setting.identity)
     input = fs.path(input):localpath():string()
     local ok, err, deps = toolset.compile {
         platform = IDENTITY_items.platform,
@@ -172,22 +159,22 @@ local function do_compile(input, output, stage, setting)
     return deps
 end
 
-local function compile_shader(fx, stage)
-    local path = fx[stage]
+local function compile_shader(shader)
+    local path = shader.path
+    local hash = shader.hash
     local hashpath = get_filename(path)
-    local hash = sha1(stage .. fx.param):sub(1,7)
-    local output = BINPATH / IDENTITY / hashpath / hash
+    local output = BINPATH / hashpath / hash
     local outfile = output / "main.bin"
     local depfile = output / ".dep"
     if not do_build(depfile) then
         lfs.create_directories(output)
-        local deps = do_compile(path, outfile, stage, fx.setting)
+        local deps = do_compile(path, outfile, shader.stage, shader.setting)
         create_depfile(depfile, deps)
+        writefile(output / ".setting", serialize(shader.setting))
     end
     return outfile
 end
 
 return {
-    set_identity = set_identity,
     compile_shader = compile_shader,
 }

@@ -60,29 +60,27 @@ local function watch_del(repo)
 	repo._closed = true
 end
 
-local function do_prebuilt(repopath, identity)
+local function do_prebuilt(repopath)
 	local sp = require "subprocess"
 	sp.spawn {
 		config.lua,
 		"-e", ("package.cpath=[[%s]]"):format(package.cpath),
 		"tools/prebuilt/main.lua",
 		repopath,
-		identity,
         hideWindow = true,
     } :wait()
 end
 
-local function repo_create(identity, reponame)
+local function repo_create(reponame)
 	local repopath = lfs.path(reponame)
 	LOG ("Open repo : ", tostring(repopath))
-	do_prebuilt(repopath, identity)
+	do_prebuilt(repopath)
 	assert(not repos[repopath:string()])
 	local repo = repo_new(repopath)
 	if not repo then
 		return
 	end
 	LOG ("Rebuild repo")
-	repo._identity = identity
 	if lfs.is_regular_file(repopath / ".repo" / "root") then
 		repo:index()
 	else
