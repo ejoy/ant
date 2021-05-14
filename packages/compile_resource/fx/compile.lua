@@ -1,8 +1,8 @@
 if __ANT_RUNTIME__ then
     local fs = require "filesystem"
     local m = {}
-    function m.compile_shader(shader)
-        return (fs.path(shader.path) / shader.hash / "main.bin"):localpath()
+    function m.compile_shader(url)
+        return (fs.path(url) / "main.bin"):localpath()
     end
     return m
 end
@@ -159,18 +159,28 @@ local function do_compile(input, output, stage, setting)
     return deps
 end
 
-local function compile_shader(shader)
-    local path = shader.path
-    local hash = shader.hash
+local function parseUrl(url)
+    local path, arguments = url:match "^([^?]*)%?(.*)$"
+    local setting = {}
+    arguments:gsub("([^=&]*)=([^=&]*)", function(k ,v)
+        setting[k] = v
+    end)
+    return path, setting, arguments
+end
+
+local function compile_shader(url)
+    local path, setting, arguments = parseUrl(url)
+    local hash = sha1(arguments):sub(1,7)
     local hashpath = get_filename(path)
     local output = BINPATH / hashpath / hash
     local outfile = output / "main.bin"
     local depfile = output / ".dep"
     if not do_build(depfile) then
         lfs.create_directories(output)
-        local deps = do_compile(path, outfile, shader.stage, shader.setting)
+        local deps = do_compile(path, outfile, setting.stage, setting)
         create_depfile(depfile, deps)
-        writefile(output / ".setting", serialize(shader.setting))
+        writefile(output / ".setting", serialize(setting))
+        writefile(output / ".arguments", arguments)
     end
     return outfile
 end

@@ -18,6 +18,13 @@ local function sha1(str)
 	return crypt.sha1(str):gsub(".", byte2hex)
 end
 
+local function readfile(filename)
+	local f = assert(lfs.open(filename))
+	local data = f:read "a"
+	f:close()
+	return data
+end
+
 local sha1_encoder = crypt.sha1_encoder()
 
 local function sha1_from_file(filename)
@@ -41,7 +48,9 @@ local function get_filename(repo, pathname)
     return filename.."_"..sha1(pathname)
 end
 
-local function compile_resource(repo, path)
+local repo_build_dir
+
+local function compile_resource(repo, name, path, cache, namehashcache, hashs)
 	local ext = path:match "[^/]%.([%w*?_%-]*)$"
 	if ext ~= "sc" and ext ~= "glb"  and ext ~= "texture" then
 		return true
@@ -50,9 +59,14 @@ local function compile_resource(repo, path)
 	if not lfs.exists(realpath) then
 		return false
 	end
-	print('addmount', path, realpath)
-	access.addmount(repo, path, realpath)
-	return true
+	for lpath in realpath:list_directory() do
+		local arguments = readfile(lpath / ".arguments")
+		local rpath = path .. "?" .. arguments
+		access.addmount(repo, rpath, lpath)
+		local hash = repo_build_dir(repo, rpath, cache, namehashcache)
+		table.insert(hashs, string.format("d %s %s", hash, name .. "?" .. arguments))
+	end
+	return false
 end
 
 local function addslash(name)
@@ -106,7 +120,7 @@ end
 -- build cache, cache is a table link list of sha1->{ filelist = ,  filename = , timestamp= , next= }
 -- filepath should be end of / or '' for root
 -- returns hash of dir
-local function repo_build_dir(self, filepath, cache, namehashcache)
+function repo_build_dir(self, filepath, cache, namehashcache)
 	local function add_item(hash, item)
 		item.next = cache[hash]
 		cache[hash] = item
@@ -121,7 +135,7 @@ local function repo_build_dir(self, filepath, cache, namehashcache)
 	local hashs = {}
 	for name, type in pairs(access.list_files(self, filepath)) do
 		local fullname = filepath == '' and name or filepath .. '/' .. name	-- full name in repo
-		if compile_resource(self, fullname) then
+		if compile_resource(self, name, fullname, cache, namehashcache, hashs) then
 			if type == "v" or lfs.is_directory(access.realpath(self, fullname)) then
 				local hash = repo_build_dir(self, fullname, cache, namehashcache)
 				table.insert(hashs, string.format("d %s %s", hash, name))
