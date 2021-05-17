@@ -58,6 +58,7 @@ local system_properties = {
 	s_LUT					= def_tex_prop(7, def_2dtex_handle),
 
 	-- shadow
+	--   csm
 	u_csm_matrix 		= {
 		math3d.ref(mc.IDENTITY_MAT),
 		math3d.ref(mc.IDENTITY_MAT),
@@ -68,11 +69,26 @@ local system_properties = {
 	u_depth_scale_offset= math3d.ref(mc.ZERO),
 	u_shadow_param1		= math3d.ref(mc.ZERO),
 	u_shadow_param2		= math3d.ref(mc.ZERO),
+	s_shadowmap			= def_tex_prop(8),
+
+	--   omni
+	u_omni_matrix = {
+		math3d.ref(mc.IDENTITY_MAT),
+		math3d.ref(mc.IDENTITY_MAT),
+		math3d.ref(mc.IDENTITY_MAT),
+		math3d.ref(mc.IDENTITY_MAT),
+	},
+
+	u_tetra_normal_Green	= {math3d.ref(mc.ZERO),},
+	u_tetra_normal_Yellow	= {math3d.ref(mc.ZERO),},
+	u_tetra_normal_Blue		= {math3d.ref(mc.ZERO),},
+	u_tetra_normal_Red		= {math3d.ref(mc.ZERO),},
+
+	s_omni_shadowmap	= def_tex_prop(9),
 
 	s_mainview_depth	= def_tex_prop(5),
 	s_mainview			= def_tex_prop(6),
 	s_postprocess_input	= def_tex_prop(7),
-	s_shadowmap			= def_tex_prop(8),
 }
 
 function m.get(n)
@@ -148,7 +164,7 @@ local function update_lighting_properties()
 	end
 end
 
-local function update_shadow_properties()
+local function update_csm_properties()
 	local csm_matrixs = system_properties.u_csm_matrix
 	local split_distances = {0, 0, 0, 0}
 	for _, eid in world:each "csm" do
@@ -178,6 +194,22 @@ local function update_shadow_properties()
 
 	system_properties["u_shadow_param1"].v = ishadow.shadow_param()
 	system_properties["u_shadow_param2"].v = ishadow.color()
+end
+
+local function update_omni_shadow_properties()
+	-- local ios = world:interface "ant.render|iomni_shadow"
+	-- local s = ios.setting()
+	-- system_properties["s_omni_shadowmap"].texture.handle = ios.fb_index()
+
+	-- --TODO: need put this info to cluster shading framework, only support 4 point light shadow
+	-- system_properties["u_omni_param"] = {4, 0, 0, 0}
+
+
+end
+
+local function update_shadow_properties()
+	update_csm_properties()
+	update_omni_shadow_properties()
 end
 
 local function update_postprocess_properties()

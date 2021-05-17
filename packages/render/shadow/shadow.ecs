@@ -49,3 +49,20 @@ interface "ishadow"
 
     .method "calc_split_frustums"
     .method "split_frustums"
+
+policy "omni_shadow"
+    .require_policy "ant.render|render_queue"
+    .require_system "ant.render|omni_shadow_system"
+    .require_interface "ant.render|iomni_shadow"
+    .component "omni"
+
+interface "iomni_shadow"
+    .implement "shadow/omni_shadow.lua"
+    .method "setting"
+    .method "fb_index"
+    .method "create"
+
+system "omni_shadow_system"
+    .implement "shadow/omni_shadow.lua"
+    .method "data_changed"
+    .method "update_camera"

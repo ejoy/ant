@@ -402,6 +402,18 @@ end
 
 local spt = ecs.transform "shadow_primitive_transform"
 
+local bgfx = require "bgfx"
+local omni_stencils = {
+	[0] = bgfx.make_stencil{
+		TEST="EQUAL",
+		FUNC_REF = 0,
+	},
+	[1] = bgfx.make_stencil{
+		TEST="EQUAL",
+		FUNC_REF = 1,
+	},
+}
+
 function spt.process_entity(e)
 	e.primitive_filter.insert_item = function (filter, fxtype, eid, rc)
 		local results = filter.result
@@ -412,6 +424,7 @@ function spt.process_entity(e)
 				fx = material.fx,
 				properties = material.properties or false,
 				state = irender.check_primitive_mode_state(rc.state, material.state),
+				stencil = e.omni and omni_stencils[e.omni.stencil_ref] or material.stencil,	--TODO: need merge with material setting
 			}, {__index=rc}))
 		else
 			ipf.remove_item(results.opaticy.items, eid)
