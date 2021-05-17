@@ -172,9 +172,9 @@ local function compile(pathstring)
         return fs.path(url):localpath()
     end
     for i = 2, #urllst do
-        url = compile_file(url) .. "/" .. urllst[i]
+        url = (compile_file(url) / urllst[i]):string()
     end
-    return url
+    return lfs.path(url)
 end
 
 return {
