@@ -588,4 +588,62 @@ function geometry.to_line_indices(tri_indices)
 	return indices
 end
 
+function geometry.tetrahedron(r, color, cross)
+	assert(type(color) == "number")
+	if cross then
+		--one edge is align z-axis, one edge is parallel to x-axis
+		--origin point in center of z-axis
+		local a = (math.sqrt(6.0)/3.0)*r
+		local ch = math.sqrt(2)*a
+
+		local bd = ch
+
+		return {
+			 0, 0,  a, color,
+			 0, 0, -a, color,
+			 a,-bd, 0, color,
+			-a,-bd, 0, color,
+		},{
+			0, 2, 1,
+			0, 1, 3,
+			0, 3, 2,
+			1, 2, 3,
+		}
+	else
+		--[[
+			set outter sphere radius: 'r'
+			set sphere origin: (0, 0, 0)
+			set tetrahedron height and edge: h, e
+			so origin to bottom face: d = h - r
+			bottom face to origin distance: d
+			set bottom face radius: 'c'
+			so: c = (2*sqrt(2)/3) * r
+				d = (1/3) * r
+				b = c/2 = (sqrt(2)/3)*r
+				a = (sqrt(6)/3)*r
+			so top vertex is: (0, r, 0)
+			vertex in z-axis is: (0.0, -d, c) = (0, -1/3*r, (2*sqrt(2)/3)*r)
+			another 2 vertices:
+				(-a, -d, -b) = (-sqrt(6)/3*r, -1/3*r, -(sqrt(2)/3)*r)
+				( a, -d, -b) = ( sqrt(6)/3*r, -1/3*r, -(sqrt(2)/3)*r)
+		]]
+		local c = (2*math.sqrt(2.0)/3.0)*r
+		local d = (1.0/3.0)*r
+		local b = c * 0.5
+		local a = (math.sqrt(6.0)/3.0)*r
+		return {
+			 0, r, 0, color,
+			 0,-d, c, color,
+			-a,-d,-b, color,
+			 a,-d,-b, color,
+		}, {
+			0, 3, 2,
+			0, 1, 3,
+			0, 2, 1,
+			1, 2, 3,
+		}
+	end
+
+end
+
 return geometry
