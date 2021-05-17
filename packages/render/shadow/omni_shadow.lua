@@ -6,6 +6,15 @@ local world = ecs.world
     1. GPU Pro 1 - Shadow Mapping for omnidiectional Light Using Tetrahedron Mapping
     2. Bgfx example 16
     3. GPU Pro 6 - Tile-Based Omnidirectional Shadows
+
+    it's hard to add too mush point light shadow in the scene. first, we should use tetrahedron shadow mapping
+    to make the omni shadow in 2d texture, then we need to alloc a large shadowmap, then put every omni shadow
+    in that large 2d texture, that time, if we can determine the point light far from us, we should use less
+    texture space for then, so we need to alats all the tetrahedron shadow map in that large 2d texture,
+    finally, shadow map is generated, in cluster shading, we need to put all the point light shadow info in
+    clusters, when render item, we should find that item use how many point light/shadow, and calcuate it's color
+
+    right now, this omni is disable
 ]]
 
 local fbmgr = require "framebuffer_mgr"
