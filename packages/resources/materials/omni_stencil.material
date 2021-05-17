@@ -1,0 +1,15 @@
+fx:
+    vs: /pkg/ant.resources/shaders/omni/vs_stencil.sc
+
+state:
+    ALPHA_REF: 0
+    CULL: CCW
+    DEPTH_TEST: ALWAYS
+    WRITE_MASK: Z
+stencil:
+    TEST: ALWAYS
+	FUNC_REF: 1
+	FUNC_RMASK: 0xff
+	OP_FAIL_S: REPLACE
+	OP_FAIL_Z: REPLACE
+	OP_PASS_Z: REPLACE

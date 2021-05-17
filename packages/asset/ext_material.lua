@@ -14,6 +14,11 @@ local function init(material)
     if material.state then
         material.state = bgfx.make_state(load_elem(material.state))
     end
+
+    if material.stencil then
+        material.state = bgfx.make_stencil(load_elem(material.stencil))
+    end
+
     material.setting = material.setting and load_elem(material.setting) or nil
     if material.properties then
         for _, v in pairs(material.properties) do

@@ -12,9 +12,10 @@ local function load_material(m, setting)
 		properties = {}
 	end
 	return {
-		fx = fx,
-		properties = properties,
-		state = m.state
+		fx			= fx,
+		properties	= properties,
+		state		= m.state,
+		stencil		= m.stencil,
 	}
 end
 
@@ -22,8 +23,11 @@ function mpt.process_prefab(e)
 	local m = e.material
 	if m then
 		local c = e._cache_prefab
-		local m = load_material(m, c.material_setting)
-		c.fx, c.properties, c.state = m.fx, m.properties, m.state
+		local mm = load_material(m, c.material_setting)
+		c.fx			= mm.fx
+		c.properties	= mm.properties
+		c.state			= mm.state
+		c.stencil		= mm.stencil
 	end
 end
 

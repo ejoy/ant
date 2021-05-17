@@ -34,6 +34,7 @@ function irender.draw(vid, ri)
 	ri:set_transform()
 
 	bgfx.set_state(ri.state)
+	bgfx.set_stencil(ri.stencil)
 	local properties = ri.properties
 	if properties then
 		for n, p in pairs(properties) do
