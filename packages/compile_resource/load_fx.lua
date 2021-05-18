@@ -2,11 +2,12 @@ local bgfx = require "bgfx"
 local datalist = require "datalist"
 local fs = require "filesystem"
 local lfs = require "filesystem.local"
-local stringify = require "fx.stringify"
+local stringify = require "stringify"
+local compile = require "compile"
+local config = require "config"
 
 local setting   = import_package "ant.settings".setting
 local CACHE = {}
-local fxcompile = require "fx.compile"
 
 local function read_default_setting_from_file()
     local f = fs.open (fs.path "/pkg/ant.resources/settings/default.setting")
@@ -18,12 +19,6 @@ end
 local defaultSetting       = datalist.parse(read_default_setting_from_file())
 defaultSetting.depth_type  = setting:get 'graphic/shadow/type'
 defaultSetting.bloom       = setting:get 'graphic/postprocess/bloom/enable' and "on" or "off"
-
-local IDENTITY
-
-local function set_identity(identity)
-    IDENTITY = identity
-end
 
 local function merge(a, b)
     for k, v in pairs(b) do
@@ -37,11 +32,14 @@ end
 local function initFX(fx)
     local res = {}
     merge(fx.setting, defaultSetting)
-    fx.setting.identity = IDENTITY
+    merge(fx.setting, config.get "sc".setting)
     local function updateStage(stage)
         if fx[stage] then
             fx.setting.stage = stage
-            res[stage] = fx[stage] .. "?" .. stringify(fx.setting)
+            res[stage] =  {
+                fx[stage] .. "?" .. stringify(fx.setting),
+                "main.bin",
+            }
         end
     end
     updateStage "cs"
@@ -54,9 +52,9 @@ end
 
 local function getHash(fx)
     if fx.cs then
-        return fx.cs
+        return fx.cs[1]
     end
-    return fx.vs..fx.fs
+    return fx.vs[1]..fx.fs[1]
 end
 
 local function create_uniform(h, mark)
@@ -99,8 +97,12 @@ local function createComputeProgram(cs)
     end
 end
 
-local function readfile(filename)
-	local f = assert(lfs.open(filename, "rb"))
+local function compile_shader(shader)
+    return compile.compile_dir(shader)
+end
+
+local function read_shader(shader)
+	local f = assert(lfs.open(compile_shader(shader), "rb"))
 	local data = f:read "a"
 	f:close()
 	return data
@@ -111,8 +113,8 @@ local function loadShader(fx, stage)
     if shader == nil then
         error(("invalid stage:%s in fx file"):format(stage))
     end
-    local h = bgfx.create_shader(readfile(fxcompile.compile_shader(shader)))
-    bgfx.set_name(h, shader)
+    local h = bgfx.create_shader(read_shader(shader))
+    bgfx.set_name(h, shader[1])
     return h
 end
 
@@ -146,24 +148,7 @@ local function unload(res)
     bgfx.destroy(assert(res.prog))
 end
 
-local function compile(fx, setting)
-    setting = setting or {}
-    if fx.setting then
-        merge(setting, fx.setting)
-    end
-    fx.setting = setting
-    fx = initFX(fx)
-    if fx.cs then
-        fxcompile.compile_shader(fx.cs)
-    else
-        fxcompile.compile_shader(fx.vs)
-        fxcompile.compile_shader(fx.fs)
-    end
-end
-
 return {
-    set_identity = set_identity,
     load = load,
     unload = unload,
-    compile = compile,
 }

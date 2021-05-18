@@ -60,21 +60,48 @@ local function watch_del(repo)
 	repo._closed = true
 end
 
-local function do_prebuilt(repopath)
+local function compile_output(repo, url)
+	local crypt = require "crypt"
+	local function byte2hex(c)
+		return ("%02x"):format(c:byte())
+	end
+	local function sha1(str)
+		return crypt.sha1(str):gsub(".", byte2hex)
+	end
+	local function get_filename(pathname)
+		pathname = pathname:lower()
+		local filename = pathname:match "[/]?([^/]*)$"
+		return filename.."_"..sha1(pathname)
+	end
+	local path, arguments = url:match "^([^?]*)%?(.*)$"
+	local hash = sha1(arguments):sub(1,7)
+	local ext = path:match "[^/]%.([%w*?_%-]*)$"
+	local keystring = repo:realpath(path):string():lower()
+	return repo._root / ".build" / ext / get_filename(keystring) / hash
+end
+
+local function compile_resource(repo, path)
 	local sp = require "subprocess"
-	sp.spawn {
+	local proc = sp.spawn {
 		config.lua,
 		"-e", ("package.cpath=[[%s]]"):format(package.cpath),
-		"tools/prebuilt/main.lua",
-		repopath,
-        hideWindow = true,
-    } :wait()
+		"packages/server/compile_resource.lua",
+		repo._root,
+		path,
+		hideWindow = true,
+		stdout = true,
+		stderr = true,
+	}
+	if 0 == proc:wait() then
+		return true, compile_output(repo, path)
+	else
+		return false, proc.stderr:read "a"
+	end
 end
 
 local function repo_create(reponame)
 	local repopath = lfs.path(reponame)
 	LOG ("Open repo : ", tostring(repopath))
-	do_prebuilt(repopath)
 	assert(not repos[repopath:string()])
 	local repo = repo_new(repopath)
 	if not repo then
@@ -118,7 +145,22 @@ function message:ROOT(reponame)
 	response(self, "ROOT", repo:root())
 end
 
+local function COMPILE(self, path)
+	local repo = self._repo
+	local ok, lpath = compile_resource(repo, path)
+	if not ok then
+		response(self, "MISSING", path)
+		return
+	end
+	local hash = repo:build_dir(path, lpath)
+	response(self, "COMPILE", path, hash)
+end
+
 function message:GET(hash)
+	if hash:match "%?" then
+		COMPILE(self, hash)
+		return
+	end
 	local repo = self._repo
 	local filename = repo:hash(hash)
 	if filename == nil then

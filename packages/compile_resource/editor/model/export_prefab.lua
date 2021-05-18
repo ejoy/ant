@@ -1,5 +1,5 @@
 local math3d = require "math3d"
-local utility = require "model.utility"
+local utility = require "editor.model.utility"
 
 local invalid_chars<const> = {
     '<', '>', ':', '/', '\\', '|', '?', '*', ' ', '\t', '\r', '%[', '%]', '%(', '%)'

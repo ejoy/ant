@@ -41,7 +41,8 @@ end
 function vfs.new(repopath)
 	local repo = {
 		path = repopath:gsub("[/\\]?$","/") .. ".repo/",
-		cache = setmetatable( {} , { __mode = "kv" } ),
+		cache = {},--setmetatable( {} , { __mode = "kv" } ),
+		compile = {},
 		root = nil,
 	}
 	repo.root = root_hash(repo)
@@ -63,11 +64,36 @@ local function dir_object(self, hash)
 			end
 		end
 		df:close()
+		local c = self.compile[hash]
+		if c then
+			local sub = {}
+			for h, fullpath in pairs(c) do
+				local path, name = fullpath:match "([^/]*)/?(.*)"
+				if name == "" then
+					dir[path] = {
+						dir = true,
+						hash = h,
+					}
+				else
+					sub[h] = {path=path, name=name}
+				end
+			end
+			self.compile[hash] = nil
+			for h, inf in pairs(sub) do
+				local d = assert(dir[inf.path])
+				local c = self.compile[d.hash]
+				if not c then
+					c = {}
+					self.compile[hash] = c
+				end
+				c[h] = inf.name
+			end
+		end
 		return dir
 	end
 end
 
-local function fetch_file(self, hash, fullpath)
+local function fetch_file(self, hash, fullpath, parent)
 	local dir = self.cache[hash]
 	if not dir then
 		dir = dir_object(self, hash)
@@ -83,8 +109,10 @@ local function fetch_file(self, hash, fullpath)
 		if name == "" then
 			return true, subpath.hash
 		elseif subpath.dir then
-			return fetch_file(self, subpath.hash, name)
+			return fetch_file(self, subpath.hash, name, parent.."/"..path)
 		end
+	elseif path:match "%?" then
+		return false, (parent.."/"..path):sub(2)
 	end
 	-- invalid repo, root change
 end
@@ -97,7 +125,7 @@ function vfs:list(path)
 		if not self.root then
 			return false
 		end
-		local ok, h = fetch_file(self, self.root, path)
+		local ok, h = fetch_file(self, self.root, path, "")
 		if not ok then
 			return false, h
 		end
@@ -114,6 +142,44 @@ function vfs:list(path)
 	return dir
 end
 
+local function fetch_hash(self, hash, fullpath, addhash)
+	local dir = self.cache[hash]
+	if not dir then
+		dir = dir_object(self, hash)
+		if not dir then
+			local c = self.compile[hash]
+			if not c then
+				c = {}
+				self.compile[hash] = c
+			end
+			c[addhash] = fullpath
+			return true
+		end
+		self.cache[hash] = dir
+	end
+	local path, name = fullpath:match "([^/]*)/?(.*)"
+	local subpath = dir[path]
+	if name == "" then
+		if subpath then
+			return
+		end
+		dir[path] = {
+			dir = true,
+			hash = addhash
+		}
+		return true
+	elseif subpath and subpath.dir then
+		return fetch_hash(self, subpath.hash, name, addhash)
+	end
+end
+
+function vfs:compilehash(path, hash)
+	if not self.root then
+		return false
+	end
+	return fetch_hash(self, self.root, path, hash)
+end
+
 function vfs:changeroot(hash)
 	local history = update_history(self, hash)
 	local f = assert(io.open(self.path .. "root", "wb"))
@@ -126,7 +192,7 @@ function vfs:realpath(path)
 	if not self.root then
 		return
 	end
-	local ok, hash = fetch_file(self, self.root, path)
+	local ok, hash = fetch_file(self, self.root, path, "")
 	if not ok then
 		return nil, hash
 	end

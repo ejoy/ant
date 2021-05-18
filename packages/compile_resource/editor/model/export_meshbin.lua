@@ -1,8 +1,8 @@
-local gltfutil  = require "model.glTF.util"
+local gltfutil  = require "editor.model.glTF.util"
 local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
 local math3d    = require "math3d"
-local utility   = require "model.utility"
+local utility   = require "editor.model.utility"
 
 local function sort_pairs(t)
     local s = {}
