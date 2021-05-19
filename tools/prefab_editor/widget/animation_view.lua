@@ -64,7 +64,12 @@ local function find_index(t, item)
         end
     end
 end
-
+local function anim_group_set_clips(eid, clips)
+    local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
+    for _, anim_eid in ipairs(group_eid) do
+        iani.set_clips(anim_eid, clips)
+    end
+end
 local function anim_group_set_time(eid, t)
     local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
     for _, anim_eid in ipairs(group_eid) do
@@ -336,7 +341,7 @@ local function to_runtime_clip()
         runtime_clips[#runtime_clips + 1] = to_runtime_group(all_clips, group)
     end
     if #runtime_clips < 1  then return end
-    iani.set_clips(current_eid, runtime_clips)
+    anim_group_set_clips(current_eid, runtime_clips)
 end
 
 
