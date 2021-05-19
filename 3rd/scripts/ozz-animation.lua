@@ -15,6 +15,7 @@ lm:build "ozz-animation_init" {
         "-DCMAKE_TOOLCHAIN_FILE=../ios-cmake/ios.toolchain.cmake",
         "-DPLATFORM=OS64",
         "-DENABLE_BITCODE=TRUE",
+        "-DENABLE_VISIBILITY=TRUE",
     },
     "-Dozz_build_msvc_rt_dll=ON",
     "-Dozz_build_samples=OFF",

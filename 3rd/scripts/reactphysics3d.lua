@@ -9,6 +9,7 @@ lm:build "reactphysics3d_init" {
         "-DCMAKE_TOOLCHAIN_FILE=../ios-cmake/ios.toolchain.cmake",
         "-DPLATFORM=OS64",
         "-DENABLE_BITCODE=TRUE",
+        "-DENABLE_VISIBILITY=TRUE",
     },
     "-DRP3D_LOGS_ENABLED=ON",
     "-G", "Ninja",
