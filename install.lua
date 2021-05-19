@@ -25,7 +25,6 @@ local function copy_directory(from, to, filter)
                 if argument["bytecode"] and fromfile:equal_extension ".lua" then
                     bytecode(fromfile, to / fromfile:filename())
                 else
-                    print("copy ", fromfile)
                     fs.copy_file(fromfile, to / fromfile:filename(), true)
                 end
             end
