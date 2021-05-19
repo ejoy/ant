@@ -16,9 +16,7 @@ lm.bindir = ("bin/%s/%s"):format(plat, lm.mode)
 local EnableEditor = true
 if lm.os == "ios" then
     lm.arch = "arm64"
-    lm.vendor = "apple"
     lm.sys = "ios13.0"
-    lm.compiler = "clang"
     EnableEditor = false
 end
 
