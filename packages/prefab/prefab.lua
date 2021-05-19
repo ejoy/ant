@@ -23,24 +23,67 @@ local cmd_handle
 local function command(w, set, name, ...)
 	local iom = w:interface "ant.objcontroller|obj_motion"
 	local iani = w:interface "ant.animation|animation"
-	
+	local ieff = w:interface "ant.effekseer|effekseer_playback"
 	if not cmd_handle then
 		cmd_handle = {
-			autoplay = iani.play,
-			play = function(eid, ...)
-				local ieff = w:interface "ant.effekseer|effekseer_playback"
+			get_eid = function(eid)
+				return eid
+			end,
+			link = function(eid, ceid)
+				w[ceid].parent = eid
+			end,
+			set_parent = function(eid, peid)
+				w[eid].parent = peid
+			end,
+			get_parent = function(eid)
+				return w[eid].parent
+			end,
+			play = function(eid, loop, pause)
 				if w[eid].effekseer then
-					ieff.play(eid, ...)
+					ieff.play(eid, loop or false)
+					ieff.pause(eid, pause or false)
 				else
-					iani.play(eid, ...)
-					iani.pause(eid, true)
+					iani.play(eid, loop or false)
+					iani.pause(eid, pause or false)
 				end
 			end,
-			time 			= iani.set_time,
+			play_clip = function(eid, loop, pause)
+				if w[eid].animation then
+					iani.play_clip(eid, loop or false)
+					iani.pause(eid, pause or false)
+				end
+			end,
+			play_group = function(eid, loop, pause)
+				if w[eid].animation then
+					iani.play_group(eid, loop or false)
+					iani.pause(eid, pause or false)
+				end
+			end,
+			speed = function(eid, ...)
+				if w[eid].effekseer then
+					ieff.set_speed(eid, ...)
+				else
+					iani.set_speed(eid, ...)
+				end
+			end,
+			time = function(eid, ...)
+				if w[eid].effekseer then
+					--ieff.set_time(eid, ...)
+				else
+					iani.set_time(eid, ...)
+				end
+			end,
 			set_clips 		= iani.set_clips,
+			get_clips		= iani.get_clips,
 			set_events 		= iani.set_events,
 			get_collider    = iani.get_collider,
-			duration 		= iani.get_duration,
+			duration = function(eid, ...)
+				if w[eid].effekseer then
+					return 0
+				else
+					return iani.get_duration(eid)
+				end
+			end,
 			set_position 	= iom.set_position,
 			set_rotation 	= function(eid, r)
 				iom.set_rotation(eid, math3d.quaternion{math.rad(r[1]), math.rad(r[2]), math.rad(r[3])})
@@ -52,10 +95,12 @@ local function command(w, set, name, ...)
 				local rad = math3d.totable(math3d.quat2euler(quat))
 				return { math.deg(rad[1]), math.deg(rad[2]), math.deg(rad[3]) }
 			end,
-			get_scale 		= iom.get_scale
+			get_scale 		= iom.get_scale,
+			remove_all		= function(eid)
+				w:remove_entity(eid)
+			end
 		}
 	end
-	--assert(name == "play_animation")
 	local ret
 	for _, eid in ipairs(set) do
 		if cmd_handle[name] then
@@ -136,6 +181,15 @@ function world:prefab_instance(filename)
 			local script = absolutePath(v.script, filename)
 			assert(fs.loadfile(script, "bt", env))(ant)
 		end
+	end
+	--load clips
+	local clips_filename = string.sub(filename, 1, -8) .. ".clips";
+	if fs.exists(fs.path(clips_filename)) then
+		local path = fs.path(clips_filename):localpath()
+		local f = assert(fs.open(path))
+		local data = f:read "a"
+		f:close()
+		self:prefab_event(p, "set_clips", "*", datalist.parse(data))
 	end
 	return p
 end

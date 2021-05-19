@@ -30,7 +30,7 @@ action:
 data:
   material: /pkg/tools.prefab_editor/res/duck.material
   mesh: /pkg/tools.prefab_editor/res/Duck.glb|meshes/LOD3spShape_P1.meshbin
-  name: tt
+  name: body
   scene_entity: true
   state: 7
   transform:

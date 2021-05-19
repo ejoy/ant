@@ -194,31 +194,31 @@ $EngineWinStylePath\bin\lua.exe main.lua
 end
 
 function m.gen_prebuild()
-    local content = [[
----
-path: /pkg/ant.resources/materials/fullscreen.material
----
-path: /pkg/ant.resources/materials/depth.material
-setting:
-    depth_type: inv_z
----
-path: /pkg/ant.resources/materials/depth.material
-setting:
-    depth_type: inv_z
-    skinning: GPU
----
-type: fx
-cs = /pkg/ant.resources/shaders/compute/cs_cluster_aabb.sc
-setting:
-    CLUSTER_BUILD_AABB: 1
----
-type: fx
-cs = /pkg/ant.resources/shaders/compute/cs_lightcull.sc
-setting:
-    CLUSTER_LIGHT_CULL: 1
----
-path: /pkg/ant.resources/materials/postprocess
-]]
-    utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\prebuild")), content)
+--     local content = [[
+-- ---
+-- path: /pkg/ant.resources/materials/fullscreen.material
+-- ---
+-- path: /pkg/ant.resources/materials/depth.material
+-- setting:
+--     depth_type: inv_z
+-- ---
+-- path: /pkg/ant.resources/materials/depth.material
+-- setting:
+--     depth_type: inv_z
+--     skinning: GPU
+-- ---
+-- type: fx
+-- cs = /pkg/ant.resources/shaders/compute/cs_cluster_aabb.sc
+-- setting:
+--     CLUSTER_BUILD_AABB: 1
+-- ---
+-- type: fx
+-- cs = /pkg/ant.resources/shaders/compute/cs_lightcull.sc
+-- setting:
+--     CLUSTER_LIGHT_CULL: 1
+-- ---
+-- path: /pkg/ant.resources/materials/postprocess
+-- ]]
+--     utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\prebuild")), content)
 end
 return m

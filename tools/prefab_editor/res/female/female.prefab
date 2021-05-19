@@ -42,7 +42,8 @@ data:
   scene_entity: true
   skeleton: /pkg/ant.resources.binary/meshes/female/female.glb|animations/skeleton.ozz
   state: 7
-  tag: testtag
+  tag:
+    body
   transform:
     r: {0, 0, 0, 1}
     s: {1, 1, 1}
@@ -59,20 +60,20 @@ policy:
 action:
   mount: 3
 data:
-  collider:
-    sphere:
-      ---
-      origin: {0, 0, 0, 1}
-      radius: 0.1
-  name: collider0
-  scene_entity: true
+  follow_flag: 1
+  name: empty1
+  slot: true
+  tag:
+    slot0
   transform:
-    s: 10
+    r: {0.7071067094802856, 0, 0, 0.7071067690849304}
+    s: {1, 1, 1}
+    t: {-2.441835880279541, 0, 0}
 policy:
   ant.general|name
-  ant.scene|hierarchy_policy
+  ant.scene|slot_policy
   ant.scene|transform_policy
-  ant.collision|collider_policy
+  ant.general|tag
 ---
 action:
   mount: root

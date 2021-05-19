@@ -10,21 +10,18 @@ struct ImDrawList;
 struct ImRect;
 namespace ImSequencer
 {
-   struct key_event
-   {
-       int type;
-       std::string event_type;
-   };
    struct clip_range
    {
-       clip_range(std::string_view nv, int s, int e)
+       clip_range(std::string_view nv, int s, int e, const std::vector<bool>& event_flags)
            : name{ nv }
            , start{ s }
            , end{ e }
+           , event_flags{ event_flags }
        {}
        std::string name;
        int start;
        int end;
+       std::vector<bool> event_flags;
    };
    struct anim_detail
    {
@@ -32,7 +29,7 @@ namespace ImSequencer
        float current_time{ 0.0f };
        bool is_playing{ false };
        float speed{ 1.0f };
-       std::vector<bool>        event_flags;
+       
        std::vector<clip_range>  clip_rangs;
        //imgui
        bool expand{ false };

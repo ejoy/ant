@@ -13,6 +13,14 @@ void effect_adapter::play()
 	play(0);
 }
 
+void effect_adapter::pause(bool p)
+{
+	if (handle_)
+	{
+		manager_->SetPaused(handle_, p);
+	}
+}
+
 void effect_adapter::play(int32_t startTime)
 {
 	if (!effect_.Get() || !manager_)

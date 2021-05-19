@@ -149,57 +149,93 @@ function iani.set_state(e, name)
 	end
 end
 
-function iani.play(eid, name, time)
-	local e = world[eid]
-	if not e or not e.animation then return false end
+function get_play_info(eid, name)
 
-	local anim = e.animation[name]
-	if not anim and not e.anim_clips then
-		print("anim:", name, "not exist")
-		return false
-	end
-	local real_clips
-	local start_ratio = 0.0
-	if not anim then
-		local function find_clip_by_name(clips, name)
-			for _, clip in ipairs(clips) do
-				if clip.name == name then return clip end
-			end
-		end
-		local clip = find_clip_by_name(e.anim_clips, name)
-		if clip and clip.subclips then
-			real_clips = #clip.subclips > 0 and {} or nil
-			for _, clip_index in ipairs(clip.subclips) do
-				local anim_name = e.anim_clips[clip_index].anim_name
-				real_clips[#real_clips + 1] = {e.animation[anim_name], e.anim_clips[clip_index]}
-			end
-		else
-			real_clips = clip and {{e.animation[clip.anim_name], clip }} or nil
-		end
-		
-		if not real_clips or #real_clips < 1 then
-			print("clip:", name, "not exist")
-			return false
-		end
-		anim = real_clips[1][1]
-		start_ratio = real_clips[1][2].range[1] / anim._handle:duration()
-	end
+end
 
+function do_play(e, anim, real_clips, isloop)
 	if e.state_machine then
 		e.state_machine._current = nil
 		play_animation(e, name, time)
 	else
+		local start_ratio = 0.0
+		if real_clips then
+			start_ratio = real_clips[1][2].range[1] / anim._handle:duration()
+		end
 		e._animation._current = {
 			animation = anim,
 			event_state = {
 				next_index = 1,
-				keyframe_events = e.keyframe_events and e.keyframe_events[name] or {}
+				keyframe_events = real_clips and real_clips[1][2].key_event or {}
 			},
 			clip_state = { current = {clip_index = 1, clips = real_clips}, clips = e.anim_clips or {}},
-			play_state = { ratio = start_ratio, previous_ratio = start_ratio, speed = 1.0, play = true, loop = true}
+			play_state = { ratio = start_ratio, previous_ratio = start_ratio, speed = 1.0, play = true, loop = isloop or false}
 		}
 	end
+end
+
+function iani.play(eid, name, loop)
+	local e = world[eid]
+	if not e or not e.animation then return false end
+
+	local anim = e.animation[name]
+	local test = anim._handle
+	if not anim then
+		print("animation:", name, "not exist")
+		return false
+	end
+	do_play(e, anim, nil, loop)
 	return true
+end
+
+local function find_clip_or_group(clips, name, group)
+	for _, clip in ipairs(clips) do
+		if clip.name == name then
+			if group then
+				if clip.subclips and #clip.subclips > 0 then
+					return clip
+				end
+			else
+				return clip
+			end
+		end
+	end
+end
+
+function iani.play_clip(eid, name, loop)
+	local e = world[eid]
+	if not e or not e.animation or not e.anim_clips then return false end
+	
+	local real_clips
+	local clip = find_clip_or_group(e.anim_clips, name)
+	if clip then
+		real_clips = {{e.animation[clip.anim_name], clip }}
+	end
+	if not clip or not real_clips then
+		print("clip:", name, "not exist")
+		return false
+	end
+	do_play(e, real_clips[1][1], real_clips, loop);
+end
+
+function iani.play_group(eid, name, loop)
+	local e = world[eid]
+	if not e or not e.animation or not e.anim_clips then return false end
+	
+	local real_clips
+	local group = find_clip_or_group(e.anim_clips, name, true)
+	if group then
+		real_clips = {}
+		for _, clip_index in ipairs(group.subclips) do
+			local anim_name = e.anim_clips[clip_index].anim_name
+			real_clips[#real_clips + 1] = {e.animation[anim_name], e.anim_clips[clip_index]}
+		end
+	end
+	if not group or #real_clips < 1 then
+		print("group:", name, "not exist")
+		return false
+	end
+	do_play(e, real_clips[1][1], real_clips, loop);
 end
 
 function iani.get_duration(eid)
@@ -311,6 +347,11 @@ function iani.set_clips(eid, clips)
 		f:close()
 		do_set_clips(eid, datalist.parse(data))
 	end
+end
+
+function iani.get_clips(eid)
+	local e = world[eid]
+	return e.anim_clips
 end
 
 function iani.set_value(e, name, key, value)

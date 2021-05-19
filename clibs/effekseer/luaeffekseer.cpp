@@ -215,6 +215,41 @@ lplay(lua_State* L) {
 }
 
 static int
+lpause(lua_State* L) {
+	int32_t eidx = get_effect_index(L);
+	if (eidx != -1) {
+		auto effect = g_effekseer->get_effect(eidx);
+		if (effect)
+		{
+			bool start = false;
+			if (lua_type(L, 2) == LUA_TBOOLEAN) {
+				start = lua_toboolean(L, 2);
+			}
+			effect->pause(start);
+		}
+	}
+	return 0;
+}
+
+static int
+lset_time(lua_State* L) {
+	int32_t eidx = get_effect_index(L);
+	if (eidx != -1) {
+		auto effect = g_effekseer->get_effect(eidx);
+		if (effect)
+		{
+			int32_t start = 0;
+			if (lua_type(L, 2) == LUA_TNUMBER) {
+				start = lua_tointeger(L, 2);
+			}
+			effect->play(start);
+			effect->pause(true);
+		}
+	}
+	return 0;
+}
+
+static int
 lstop(lua_State* L) {
 	int32_t eidx = get_effect_index(L);
 	if (eidx != -1) {
@@ -326,6 +361,8 @@ luaopen_effekseer(lua_State * L) {
 		{ "destroy", ldestroy},
 		{ "set_filename_callback", lset_filename_callback},
 		{ "play", lplay},
+		{ "pause", lpause},
+		{ "set_time", lset_time},
 		{ "stop", lstop},
 		{ "set_speed", lset_speed},
 		{ "set_loop", lset_loop},

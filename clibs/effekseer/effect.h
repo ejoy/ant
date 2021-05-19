@@ -8,6 +8,7 @@ public:
 		const Effekseer::EffectRef& effect);
 	void set_tranform(const Effekseer::Matrix43& mat);
 	void play();
+	void pause(bool p);
 	void play(int32_t startTime);
 	bool get_loop();
 	void set_loop(bool value);
