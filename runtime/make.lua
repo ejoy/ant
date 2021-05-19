@@ -68,31 +68,32 @@ lm:exe "ant" {
     },
     macos = {
         sources = "osx/main.cpp",
-        ldflags = {
-            "-framework", "Foundation",
-            "-framework", "Metal",
-            "-framework", "QuartzCore",
-            "-framework", "Cocoa"
+        frameworks = {
+            "Foundation",
+            "Metal",
+            "QuartzCore",
+            "Cocoa"
         }
     },
     ios = {
+        deps = "runtime_modules",
         includes = "../clibs/window/ios",
         sources = {
             "ios/ant/main.mm",
             "ios/ant/ios_error.mm",
         },
+        frameworks = {
+            "CoreText",
+            "UIKit",
+            "Metal",
+            "QuartzCore",
+            "OpenGLES",
+        },
         ldflags = {
-            "-framework", "CoreText",
-            "-framework", "UIKit",
-            "-framework", "Metal",
-            "-framework", "QuartzCore",
-            "-framework", "OpenGLES",
-            "-isysroot", "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk",
             "-fembed-bitcode",
             "-fobjc-arc"
         },
         flags = {
-            "-isysroot", "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk",
             "-fembed-bitcode",
             "-fobjc-arc"
         }

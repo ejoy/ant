@@ -10,8 +10,6 @@ lm.msvc = {
 
 lm.ios = {
     flags = {
-        "-isysroot",
-        "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk",
         "-fembed-bitcode",
         "-fobjc-arc"
     }
