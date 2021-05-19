@@ -1,0 +1,2 @@
+local lm = require "lightmapping"
+
