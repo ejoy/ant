@@ -57,49 +57,25 @@ end
 
 function util.spawn_process(commands)
     commands.stdout     = true
-    commands.stderr     = true
+    commands.stderr     = "stdout"
     commands.hideWindow = true
 	local prog = subprocess.spawn(commands)
 	local msg = {}
 	msg[#msg+1] = to_cmdline(commands)
+	msg[#msg+1] = "----------------------------"
 	if not prog then
-		msg[#msg+1] = "----------------------------"
 		msg[#msg+1] = "Failed"
 		msg[#msg+1] = "----------------------------"
 		return false, table.concat(msg, "\n")
 	end
 
-    local outmsg = {}
-    local errmsg = {}
-    while true do
-        local outn = subprocess.peek(prog.stdout)
-        if outn == nil then
-            errmsg[#errmsg+1] = prog.stderr:read "a"
-            break
-        elseif outn ~= 0 then
-            outmsg[#outmsg+1] = prog.stdout:read(outn)
-        end
-        local errn = subprocess.peek(prog.stderr)
-        if errn == nil then
-            outmsg[#outmsg+1] = prog.stdout:read "a"
-            break
-        elseif errn ~= 0 then
-            errmsg[#errmsg+1] = prog.stderr:read(errn)
-        end
-        if outn == 0 and errn == 0 then
-            thread.sleep(0.01)
-        end
-    end
-
-    if #outmsg > 0 then
-        msg[#msg+1] = "========== stdout =========="
-        msg[#msg+1] = table.concat(outmsg)
-    end
-    if #errmsg > 0 then
-        msg[#msg+1] = "========== stderr =========="
-        msg[#msg+1] = table.concat(errmsg)
-    end
+	for line in prog.stdout:lines() do
+		io.write(line)
+		io.write "\n"
+	end
+	io.flush()
 	msg[#msg+1] = "----------------------------"
+
 	local errcode = prog:wait()
 	if errcode ~= 0 then
 		msg[#msg+1] = string.format("Failed, error code:%x", errcode)

@@ -250,7 +250,7 @@ namespace ant::lua_subprocess {
             return (luaL_Stream*)r;
         }
 
-        static file::handle cast_stdio(lua_State* L, const char* name) {
+        static file::handle cast_stdio(lua_State* L, const char* name, const file::handle handle) {
             switch (lua_getfield(L, 1, name)) {
             case LUA_TUSERDATA: {
                 luaL_Stream* p = get_file(L, -1);
@@ -286,6 +286,13 @@ namespace ant::lua_subprocess {
                     return pipe.wr;
                 }
             }
+            case LUA_TSTRING: {
+                if (strcmp(name, "stderr") == 0 && strcmp(lua_tostring(L,-1), "stdout") == 0 && file::handle::invalid() != handle) {
+                    lua_pop(L, 1);
+                    lua_pushvalue(L, -1);
+                    return handle;
+                }
+            }
             default:
                 break;
             }
@@ -293,8 +300,8 @@ namespace ant::lua_subprocess {
             return file::handle::invalid();
         }
 
-        static file::handle cast_stdio(lua_State* L, subprocess::spawn& self, const char* name, subprocess::stdio type) {
-            file::handle f = cast_stdio(L, name);
+        static file::handle cast_stdio(lua_State* L, subprocess::spawn& self, const char* name, subprocess::stdio type, const file::handle handle = file::handle::invalid()) {
+            file::handle f = cast_stdio(L, name, handle);
             if (f) {
                 self.redirect(type, f);
             }
@@ -391,7 +398,7 @@ namespace ant::lua_subprocess {
 
             file::handle f_stdin = cast_stdio(L, spawn, "stdin", subprocess::stdio::eInput);
             file::handle f_stdout = cast_stdio(L, spawn, "stdout", subprocess::stdio::eOutput);
-            file::handle f_stderr = cast_stdio(L, spawn, "stderr", subprocess::stdio::eError);
+            file::handle f_stderr = cast_stdio(L, spawn, "stderr", subprocess::stdio::eError, f_stdout);
             if (!spawn.exec(args, cwd ? cwd->c_str() : 0)) {
                 lua_pushnil(L);
                 lua_pushstring(L, "spawn: error"); // TODO
