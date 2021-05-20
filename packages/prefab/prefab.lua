@@ -64,6 +64,9 @@ local function command(w, set, name, ...)
 				end
 			end,
 			get_time = iani.get_time,
+			step = function(eid, ...)
+				iani.step(w[eid]._animation._current, ...)
+			end,
 			time = function(eid, ...)
 				if w[eid].effekseer then
 					--ieff.set_time(eid, ...)

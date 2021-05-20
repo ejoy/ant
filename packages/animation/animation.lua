@@ -92,9 +92,12 @@ local function do_animation(poseresult, task, delta_time)
 		end
 		poseresult:do_blend("blend", #task, task.weight)
 	else
+		local play_state = task.play_state
+		if not play_state.manual_update and not play_state.play then 
+			iani.step(task, delta_time * 0.001)
+		end
 		local ani = task.animation
-		iani.step(task, delta_time * 0.001)
-		poseresult:do_sample(ani._sampling_context, ani._handle, task.play_state.ratio, task.weight)
+		poseresult:do_sample(ani._sampling_context, ani._handle, play_state.ratio, task.weight)
 	end
 end
 
