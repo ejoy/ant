@@ -8,9 +8,10 @@ lm:source_set "source_effekseer" {
     includes = {
         EffekseerDir.."/Effekseer",
         EffekseerDir.."/EffekseerRendererBGFX",
+        "../lua2struct",
         LuaInclude,
         BgfxInclude,
-        Ant3rd .."glm"
+        Ant3rd .."glm",
     },
     sources = {
         "*.cpp",

@@ -60,6 +60,7 @@ lm:lua_dll "rmlui" {
         Ant3rd .. "glm",
         Ant3rd .. "rmlui/Include",
         Ant3rd .. "bgfx/3rdparty",
+        "../lua2struct",
     },
     defines = {
         "FONT_EXPORT"
