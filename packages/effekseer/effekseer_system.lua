@@ -98,6 +98,13 @@ function effekseer_sys:init()
     filemgr.add("/pkg/ant.resources.binary/effekseer/Base")
 end
 
+local imgr = ecs.interface "filename_mgr"
+
+function imgr.add_path(path)
+    local filemgr = require "filemanager"
+    filemgr.add(path)
+end
+
 local iplay = ecs.interface "effekseer_playback"
 
 function iplay.play(eid, loop)

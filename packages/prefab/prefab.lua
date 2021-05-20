@@ -38,25 +38,22 @@ local function command(w, set, name, ...)
 			get_parent = function(eid)
 				return w[eid].parent
 			end,
-			play = function(eid, loop, pause)
+			play = function(eid, name, loop, manual)
 				if w[eid].effekseer then
 					ieff.play(eid, loop or false)
-					ieff.pause(eid, pause or false)
+					ieff.pause(eid, manual or false)
 				else
-					iani.play(eid, loop or false)
-					iani.pause(eid, pause or false)
+					iani.play(eid, name, loop or false, manual)
 				end
 			end,
-			play_clip = function(eid, loop, pause)
+			play_clip = function(eid, name, loop, manual)
 				if w[eid].animation then
-					iani.play_clip(eid, loop or false)
-					iani.pause(eid, pause or false)
+					iani.play_clip(eid, name, loop or false, manual)
 				end
 			end,
-			play_group = function(eid, loop, pause)
+			play_group = function(eid, name, loop, manual)
 				if w[eid].animation then
-					iani.play_group(eid, loop or false)
-					iani.pause(eid, pause or false)
+					iani.play_group(eid, name, loop or false, manual)
 				end
 			end,
 			speed = function(eid, ...)
@@ -66,6 +63,7 @@ local function command(w, set, name, ...)
 					iani.set_speed(eid, ...)
 				end
 			end,
+			get_time = iani.get_time,
 			time = function(eid, ...)
 				if w[eid].effekseer then
 					--ieff.set_time(eid, ...)
@@ -73,15 +71,37 @@ local function command(w, set, name, ...)
 					iani.set_time(eid, ...)
 				end
 			end,
+			clip_time = function(eid, ...)
+				if w[eid].effekseer then
+					--ieff.set_time(eid, ...)
+				else
+					iani.set_clip_time(eid, ...)
+				end
+			end,
+			group_time = function(eid, ...)
+				if w[eid].effekseer then
+					--ieff.set_time(eid, ...)
+				else
+					iani.set_group_time(eid, ...)
+				end
+			end,
 			set_clips 		= iani.set_clips,
 			get_clips		= iani.get_clips,
 			set_events 		= iani.set_events,
 			get_collider    = iani.get_collider,
 			duration = function(eid, ...)
-				if w[eid].effekseer then
-					return 0
-				else
+				if w[eid].animation then
 					return iani.get_duration(eid)
+				end
+			end,
+			clip_duration = function(eid, ...)
+				if w[eid].anim_clips then
+					return iani.get_clip_duration(eid, ...)
+				end
+			end,
+			group_duration = function(eid, ...)
+				if w[eid].anim_clips then
+					return iani.get_group_duration(eid, ...)
 				end
 			end,
 			set_position 	= iom.set_position,

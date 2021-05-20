@@ -27,29 +27,8 @@ local function get_current_anim_time(task)
 	return task.play_state.ratio * task.animation._handle:duration()
 end
 
-local function get_adjust_delta_time(task, delta)
-	local clip_state = task.clip_state
-	if not clip_state or not clip_state.current or not clip_state.current.clips then return delta end
-	local current_time = get_current_anim_time(task)
-	local index = clip_state.current.clip_index
-	local next_time = current_time + delta * 0.001
-	local clips = clip_state.current.clips
-	if next_time > clips[index][2].range[2] then
-		local excess = next_time - clips[index][2].range[2]
-		local index = index + 1
-		if index > #clips then
-			index = 1
-		end
-		clip_state.current.clip_index = index
-		if task.animation ~= clips[index][1] then
-			task.animation = clips[index][1]
-		end
-		--task.play_state.ratio = (clips[index][2].range[1] + excess) / task.animation._handle:duration()
-	end
-	return delta
-end
-
 local function process_keyframe_event(task)
+	if task.play_state.manual_update then return end
 	local event_state = task.event_state
 	local all_events = event_state.keyframe_events
 	local current_events = all_events and all_events[event_state.next_index] or nil
@@ -105,50 +84,7 @@ local function process_keyframe_event(task)
 	end
 end
 
-local function update_play_state(task, ms_delta)
-	local play_state = task.play_state
-	if not play_state.play then return end
-	
-	local clip_state = task.clip_state.current
-	local next_time = get_current_anim_time(task) + ms_delta * play_state.speed * 0.001
-	local duration = task.animation._handle:duration()
-	local clips = clip_state.clips
-	if clips then
-		local index = clip_state.clip_index
-		if next_time > clips[index][2].range[2] then
-			local excess = next_time - clips[index][2].range[2]
-			if index >= #clips then
-				if not play_state.loop then
-					play_state.ratio = clips[#clips][2].range[2] / duration
-					return
-				end
-				index = 1
-			else
-				index = index + 1
-			end
-			clip_state.clip_index = index
-			if task.animation ~= clips[index][1] then
-				task.animation = clips[index][1]
-			end
-			play_state.ratio = (clips[index][2].range[1] + excess) / task.animation._handle:duration()
-			--
-			task.event_state.keyframe_events = clips[index][2].key_event
-		else
-			play_state.ratio = next_time / duration
-		end
-		return
-	end
-	if next_time > duration then
-		if not play_state.loop then
-			play_state.ratio = 1.0
-		else
-			play_state.ratio = (next_time - duration) / duration
-		end
-	else
-		play_state.ratio = next_time / duration
-	end
-end
-
+local iani = world:interface "ant.animation|animation"
 local function do_animation(poseresult, task, delta_time)
 	if task.type == 'blend' then
 		for _, t in ipairs(task) do
@@ -157,7 +93,7 @@ local function do_animation(poseresult, task, delta_time)
 		poseresult:do_blend("blend", #task, task.weight)
 	else
 		local ani = task.animation
-		update_play_state(task, delta_time)
+		iani.step(task, delta_time * 0.001)
 		poseresult:do_sample(ani._sampling_context, ani._handle, task.play_state.ratio, task.weight)
 	end
 end
