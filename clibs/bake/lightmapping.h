@@ -117,8 +117,6 @@ lm_bool lmImageSaveTGAf(const char *filename, const float *image, int w, int h, 
 #include <assert.h>
 #include <limits.h>
 
-#define EXPORT_BGFX_INTERFACE
-#include "../bgfx/bgfx_interface.h"
 
 #define LM_SWAP(type, a, b) { type tmp = (a); (a) = (b); (b) = tmp; }
 
@@ -262,6 +260,11 @@ static int lm_convexClip(lm_vec2 *poly, int nPoly, const lm_vec2 *clip, int nCli
 	return nRes;
 }
 
+struct progromCode{
+		const char* vs, fs;
+		uint32_t vssize, fssize;
+};
+
 struct lm_context
 {
 	struct
@@ -339,7 +342,37 @@ struct lm_context
 		unsigned int fbHemiCountY;
 		unsigned int fbHemiIndex;
 		lm_ivec2 *fbHemiToLightmapLocation;
+#ifdef USE_BGFX
+		bgfx_view_id_t			viewids[2];
+		bgfx_frame_buffer_handle_t	fb[2];
+		bgfx_texture_handle_t	rbTexture[2];
+		bgfx_texture_handle_t	rbDepth;
 
+		bgfx_vertex_layout_t	layout;
+
+		struct {
+			progromCode progCode;
+			bgfx_program_handle_t	prog;
+			bgfx_uniform_handle_t	hemispheresTextureHandle;
+
+			bgfx_uniform_handle_t	weightsTextureHandle;
+			bgfx_texture_handle_t	weightsTexture;
+		} firstPass;
+
+		struct {
+			progromCode progCode;
+			bgfx_program_handle_t prog;
+			bgfx_uniform_handle_t hemispheresTextureHandle;
+		} downsamplePass;
+
+		struct
+		{
+			bgfx_view_id_t	blit_viewid;
+			bgfx_texture_handle_t texture;
+			lm_ivec2 writePosition;
+			lm_ivec2 *toLightmapLocation;
+		} storage;
+#else
 		GLuint fbTexture[2];
 		GLuint fb[2];
 		GLuint fbDepth;
@@ -362,6 +395,7 @@ struct lm_context
 			lm_ivec2 writePosition;
 			lm_ivec2 *toLightmapLocation;
 		} storage;
+#endif 
 	} hemisphere;
 
 	float interpolationThreshold;
@@ -620,19 +654,48 @@ static lm_bool lm_findNextConservativeTriangleRasterizerPosition(lm_context *ctx
 	return lm_findFirstConservativeTriangleRasterizerPosition(ctx);
 }
 
-static void lm_integrateHemisphereBatch(lm_context *ctx)
+static void lm_downsample(lm_context *ctx)
 {
-	if (!ctx->hemisphere.fbHemiIndex)
-		return; // nothing to do
-
-	glDisable(GL_DEPTH_TEST);
-	glBindVertexArray(ctx->hemisphere.vao);
-
 	int fbRead = 0;
 	int fbWrite = 1;
 
 	// weighted downsampling pass
 	int outHemiSize = ctx->hemisphere.size / 2;
+
+#ifdef USE_BGFX
+	BGFX(set_state)(BGFX_STATE_DEPTH_TEST_NEVER|BGFX_STATE_WRITE_RGB);
+	bgfx_transient_vertex_buffer_t tvb;
+	BGFX(alloc_transient_vertex_buffer)(&tvb, &ctx->hemisphere.layout, 4);	//not fill tvb.data, shader use gl_VertexID
+
+	BGFX(set_view_rect)(ctx->hemisphere.viewids[fbWrite], 0, 0, outHemiSize * ctx->hemisphere.fbHemiCountX, outHemiSize * ctx->hemisphere.fbHemiCountY);
+
+	// BGFX(vertex_layout_begin)(&l);
+	// BGFX(vertex_layout_add)(&l, BGFX_ATTRIB_POSITION, 3, BGFX_ATTRIB_TYPE_FLOAT, 0, 0);
+	// BGFX(vertex_layout_end)(&l);
+	BGFX(set_texture)(0, ctx->hemisphere.firstPass.hemispheresTextureHandle, ctx->hemisphere.rbTexture[fbRead], UINT32_MAX);
+	BGFX(set_texture)(1, ctx->hemisphere.firstPass.weightsTextureHandle, ctx->hemisphere.firstPass.weightsTexture, UINT32_MAX);
+	
+	BGFX(set_transient_vertex_buffer)(0, &tvb, 0, 4);
+	BGFX(submit)(ctx->hemisphere.viewids[fbWrite], ctx->hemisphere.firstPass.prog, 0, BGFX_DISCARD_ALL);
+
+	while (outHemiSize > 1)
+	{
+		LM_SWAP(int, fbRead, fbWrite);
+		outHemiSize /= 2;
+		BGFX(set_view_rect)(ctx->hemisphere.viewids[fbWrite], 0, 0, outHemiSize * ctx->hemisphere.fbHemiCountX, outHemiSize * ctx->hemisphere.fbHemiCountY);
+		BGFX(set_texture)(0, ctx->hemisphere.downsamplePass.hemispheresTextureHandle, ctx->hemisphere.rbTexture[fbRead], UINT32_MAX);
+
+		BGFX(submit)(ctx->hemisphere.viewids[fbWrite], ctx->hemisphere.downsamplePass.prog, 0, BGFX_DISCARD_ALL);
+	}
+
+	BGFX(blit)(ctx->hemisphere.storage.blit_viewid,
+		ctx->hemisphere.storage.texture, 0, ctx->hemisphere.storage.writePosition.x, ctx->hemisphere.storage.writePosition.y, 0, 
+		ctx->hemisphere.rbTexture[fbWrite], 0, 0, 0, 0, ctx->hemisphere.fbHemiCountX, ctx->hemisphere.fbHemiCountY, 0);
+
+#else
+	glDisable(GL_DEPTH_TEST);
+	glBindVertexArray(ctx->hemisphere.vao);
+
 	glBindFramebuffer(GL_FRAMEBUFFER, ctx->hemisphere.fb[fbWrite]);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ctx->hemisphere.fbTexture[fbWrite], 0);
 	glViewport(0, 0, outHemiSize * ctx->hemisphere.fbHemiCountX, outHemiSize * ctx->hemisphere.fbHemiCountY);
@@ -682,6 +745,15 @@ static void lm_integrateHemisphereBatch(lm_context *ctx)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glBindVertexArray(0);
 	glEnable(GL_DEPTH_TEST);
+#endif
+}
+
+static void lm_integrateHemisphereBatch(lm_context *ctx)
+{
+	if (!ctx->hemisphere.fbHemiIndex)
+		return; // nothing to do
+
+	lm_downsample(ctx);
 
 	// copy position mapping to storage
 	for (unsigned int y = 0; y < ctx->hemisphere.fbHemiCountY; y++)
@@ -710,12 +782,22 @@ static void lm_integrateHemisphereBatch(lm_context *ctx)
 	ctx->hemisphere.fbHemiIndex = 0;
 }
 
+static void lm_getLightmapTextureData(lm_context *ctx, float *hemi)
+{
+#ifdef USE_BGFX
+	uint32_t whichframe = BGFX(read_texture)(ctx->hemisphere.storage.texture, hemi, 0);
+	while (whichframe != BGFX(frame)());
+#else
+	glBindTexture(GL_TEXTURE_2D, ctx->hemisphere.storage.texture);
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, hemi);
+#endif 
+}
+
 static void lm_writeResultsToLightmap(lm_context *ctx)
 {
 	// do the GPU->CPU transfer of downsampled hemispheres
 	float *hemi = (float*)LM_CALLOC(ctx->lightmap.width * ctx->lightmap.height, 4 * sizeof(float));
-	glBindTexture(GL_TEXTURE_2D, ctx->hemisphere.storage.texture);
-	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, hemi);
+	lm_getLightmapTextureData(ctx, hemi);
 
 	// write results to lightmap texture
 	for (int y = 0; y < ctx->hemisphere.storage.writePosition.y + (int)ctx->hemisphere.fbHemiCountY; y++)
@@ -795,6 +877,30 @@ static void lm_setView(
 	proj[12] = 0.0f;          proj[13] = 0.0f;          proj[14] = f * n2 * ninf;  proj[15] = 0.0f;
 }
 
+static void lm_initFrameBuffer(lm_context *ctx)
+{
+#ifdef USE_BGFX
+	uint32_t color = 0;
+	color |= uint32_t(ctx->hemisphere.clearColor.r * 255) << 0;
+	color |= uint32_t(ctx->hemisphere.clearColor.g * 255) << 8;
+	color |= uint32_t(ctx->hemisphere.clearColor.b * 255) << 16;
+	color |= uint32_t(0xff) << 24;
+	BGFX(set_view_clear)(ctx->hemisphere.viewids[0], BGFX_CLEAR_COLOR|BGFX_CLEAR_DEPTH, color, 1.0f, 0);
+#else
+	// prepare hemisphere
+	glBindFramebuffer(GL_FRAMEBUFFER, ctx->hemisphere.fb[0]);
+	if (ctx->hemisphere.fbHemiIndex == 0)
+	{
+		// prepare hemisphere batch
+		glClearColor( // clear to valid background pixels!
+			ctx->hemisphere.clearColor.r,
+			ctx->hemisphere.clearColor.g,
+			ctx->hemisphere.clearColor.b, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	}
+#endif
+}
+
 // returns true if a hemisphere side was prepared for rendering and
 // false if we finished the current hemisphere
 static lm_bool lm_beginSampleHemisphere(lm_context *ctx, int* viewport, float* view, float* proj)
@@ -804,17 +910,7 @@ static lm_bool lm_beginSampleHemisphere(lm_context *ctx, int* viewport, float* v
 
 	if (ctx->meshPosition.hemisphere.side == 0)
 	{
-		// prepare hemisphere
-		glBindFramebuffer(GL_FRAMEBUFFER, ctx->hemisphere.fb[0]);
-		if (ctx->hemisphere.fbHemiIndex == 0)
-		{
-			// prepare hemisphere batch
-			glClearColor( // clear to valid background pixels!
-				ctx->hemisphere.clearColor.r,
-				ctx->hemisphere.clearColor.g,
-				ctx->hemisphere.clearColor.b, 1.0f);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		}
+		lm_initFrameBuffer(ctx);
 		ctx->hemisphere.fbHemiToLightmapLocation[ctx->hemisphere.fbHemiIndex] =
 			lm_i2(ctx->meshPosition.rasterizer.x, ctx->meshPosition.rasterizer.y);
 	}
@@ -874,12 +970,21 @@ static lm_bool lm_beginSampleHemisphere(lm_context *ctx, int* viewport, float* v
 	return LM_TRUE;
 }
 
+static void lm_endFramebuffer(lm_context *ctx)
+{
+#ifdef USE_BGFX
+	BGFX(frame)();
+#else
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif 
+}
+
 static void lm_endSampleHemisphere(lm_context *ctx)
 {
 	if (++ctx->meshPosition.hemisphere.side == 5)
 	{
 		// finish hemisphere
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		lm_endFramebuffer(ctx);
 		if (++ctx->hemisphere.fbHemiIndex == ctx->hemisphere.fbHemiCountX * ctx->hemisphere.fbHemiCountY)
 		{
 			// downsample new hemisphere batch and store the results
@@ -1076,6 +1181,14 @@ static void lm_setMeshPosition(lm_context *ctx, unsigned int indicesTriangleBase
 		ctx->meshPosition.hemisphere.side = 5; // no samples on this triangle! put hemisphere sampler into finished state
 }
 
+#ifdef USE_BGFX
+static bgfx_program_handle_t lm_loadProgrom(const progromCode *code)
+{
+	bgfx_shader_handle_t vs = BGFX(create_shader)(BGFX(copy)(code->vs, code->vssize));
+	bgfx_shader_handle_t fs = BGFX(create_shader)(BGFX(copy)(code->fs, code->fssize));
+	return BGFX(create_program)(vs, fs, false);
+}
+#else
 static GLuint lm_LoadShader(GLenum type, const char *source)
 {
 	GLuint shader = glCreateShader(type);
@@ -1140,48 +1253,33 @@ static GLuint lm_LoadProgram(const char *vp, const char *fp)
 	}
 	return program;
 }
-
+#endif 
 static float lm_defaultWeights(float cos_theta, void *userdata)
 {
 	return 1.0f;
 }
 
-lm_context *lmCreate(int hemisphereSize, float zNear, float zFar,
-	float clearR, float clearG, float clearB,
-	int interpolationPasses, float interpolationThreshold,
-	float cameraToSurfaceDistanceModifier)
+static void lm_initContext(lm_context *ctx, unsigned int w[2], unsigned int h[2])
 {
-	assert(hemisphereSize == 512 || hemisphereSize == 256 || hemisphereSize == 128 ||
-		   hemisphereSize ==  64 || hemisphereSize ==  32 || hemisphereSize ==  16);
-	assert(zNear < zFar && zNear > 0.0f);
-	assert(cameraToSurfaceDistanceModifier >= -1.0f);
-	assert(interpolationPasses >= 0 && interpolationPasses <= 8);
-	assert(interpolationThreshold >= 0.0f);
+#ifdef USE_BGFX
+#ifndef LIGHTMAP_BGFX_VIEWID
+#define LIGHTMAP_BGFX_VIEWID 190
+#endif //LIGHTMAP_BGFX_VIEWID
+	ctx->hemisphere.viewids[0] = LIGHTMAP_BGFX_VIEWID;
+	ctx->hemisphere.viewids[1] = LIGHTMAP_BGFX_VIEWID+1;
 
-	lm_context *ctx = (lm_context*)LM_CALLOC(1, sizeof(lm_context));
+	uint32_t flags = BGFX_SAMPLER_U_CLAMP|BGFX_SAMPLER_V_CLAMP|BGFX_SAMPLER_MIN_POINT|BGFX_SAMPLER_MAX_POINT;
+	for (int i=0; i<2; ++i){
+		ctx->hemisphere.rbTexture[i] = BGFX(create_texture_2d)(w[i], h[i], false, 1, BGFX_TEXTURE_FORMAT_RGBA32F, flags, NULL);
+	}
 
-	ctx->meshPosition.passCount = 1 + 3 * interpolationPasses;
-	ctx->interpolationThreshold = interpolationThreshold;
-	ctx->hemisphere.size = hemisphereSize;
-	ctx->hemisphere.zNear = zNear;
-	ctx->hemisphere.zFar = zFar;
-	ctx->hemisphere.cameraToSurfaceDistanceModifier = cameraToSurfaceDistanceModifier;
-	ctx->hemisphere.clearColor.r = clearR;
-	ctx->hemisphere.clearColor.g = clearG;
-	ctx->hemisphere.clearColor.b = clearB;
+	ctx->hemisphere.rbDepth = BGFX(create_texture_2d)(w[0], h[0], false, 1, BGFX_TEXTURE_FORMAT_D24, flags, NULL);
 
-	// calculate hemisphere batch size
-	ctx->hemisphere.fbHemiCountX = 1536 / (3 * ctx->hemisphere.size);
-	ctx->hemisphere.fbHemiCountY = 512 / ctx->hemisphere.size;
+	BGFX(create_frame_buffer)();
 
-	// hemisphere batch framebuffers
-	unsigned int w[] = {
-		ctx->hemisphere.fbHemiCountX * ctx->hemisphere.size * 3,
-		ctx->hemisphere.fbHemiCountX * ctx->hemisphere.size / 2 };
-	unsigned int h[] = {
-		ctx->hemisphere.fbHemiCountY * ctx->hemisphere.size,
-		ctx->hemisphere.fbHemiCountY * ctx->hemisphere.size / 2 };
-
+	ctx->hemisphere.firstPass.prog = lm_LoadProgram(ctx->hemisphere.firstPass.progCode);
+	ctx->hemisphere.downsamplePass.prog = lm_LoadProgram(ctx->hemisphere.downsamplePass.progCode);
+#else
 	glGenTextures(2, ctx->hemisphere.fbTexture);
 	glGenFramebuffers(2, ctx->hemisphere.fb);
 	glGenRenderbuffers(1, &ctx->hemisphere.fbDepth);
@@ -1319,20 +1417,73 @@ lm_context *lmCreate(int hemisphereSize, float zNear, float zFar,
 
 	// hemisphere weights texture
 	glGenTextures(1, &ctx->hemisphere.firstPass.weightsTexture);
-	lmSetHemisphereWeights(ctx, lm_defaultWeights, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+#endif
+}
+
+lm_context *lmCreate(int hemisphereSize, float zNear, float zFar,
+	float clearR, float clearG, float clearB,
+	int interpolationPasses, float interpolationThreshold,
+	float cameraToSurfaceDistanceModifier)
+{
+	assert(hemisphereSize == 512 || hemisphereSize == 256 || hemisphereSize == 128 ||
+		   hemisphereSize ==  64 || hemisphereSize ==  32 || hemisphereSize ==  16);
+	assert(zNear < zFar && zNear > 0.0f);
+	assert(cameraToSurfaceDistanceModifier >= -1.0f);
+	assert(interpolationPasses >= 0 && interpolationPasses <= 8);
+	assert(interpolationThreshold >= 0.0f);
+
+	lm_context *ctx = (lm_context*)LM_CALLOC(1, sizeof(lm_context));
+
+	ctx->meshPosition.passCount = 1 + 3 * interpolationPasses;
+	ctx->interpolationThreshold = interpolationThreshold;
+	ctx->hemisphere.size = hemisphereSize;
+	ctx->hemisphere.zNear = zNear;
+	ctx->hemisphere.zFar = zFar;
+	ctx->hemisphere.cameraToSurfaceDistanceModifier = cameraToSurfaceDistanceModifier;
+	ctx->hemisphere.clearColor.r = clearR;
+	ctx->hemisphere.clearColor.g = clearG;
+	ctx->hemisphere.clearColor.b = clearB;
+
+	// calculate hemisphere batch size
+	ctx->hemisphere.fbHemiCountX = 1536 / (3 * ctx->hemisphere.size);
+	ctx->hemisphere.fbHemiCountY = 512 / ctx->hemisphere.size;
+
+	// hemisphere batch framebuffers
+	unsigned int w[] = {
+		ctx->hemisphere.fbHemiCountX * ctx->hemisphere.size * 3,
+		ctx->hemisphere.fbHemiCountX * ctx->hemisphere.size / 2 };
+	unsigned int h[] = {
+		ctx->hemisphere.fbHemiCountY * ctx->hemisphere.size,
+		ctx->hemisphere.fbHemiCountY * ctx->hemisphere.size / 2 };
+
+	lm_initContext(ctx, w, h);
+	lmSetHemisphereWeights(ctx, lm_defaultWeights, 0);
 
 	// allocate batchPosition-to-lightmapPosition map
 	ctx->hemisphere.fbHemiToLightmapLocation = (lm_ivec2*)LM_CALLOC(ctx->hemisphere.fbHemiCountX * ctx->hemisphere.fbHemiCountY, sizeof(lm_ivec2));
-
 	return ctx;
 }
 
-void lmDestroy(lm_context *ctx)
+static void lm_destroyGPUData(lm_context *ctx)
 {
+#ifdef USE_BGFX
+	BGFX(destroy_frame_buffer)(ctx->hemisphere.fb[0]);
+	BGFX(destroy_frame_buffer)(ctx->hemisphere.fb[1]);
+
+	BGFX(destroy_texture)(ctx->hemisphere.rbTexture[0]);
+	BGFX(destroy_texture)(ctx->hemisphere.rbTexture[1]);
+	BGFX(destroy_texture)(ctx->hemisphere.rbDepth);
+
+	BGFX(destroy_texture)(ctx->hemisphere.firstPass.weightsTexture);
+	BGFX(destroy_texture)(ctx->hemisphere.storage.texture);
+
+	BGFX(destroy_program)(ctx->hemisphere.firstPass.prog);
+	BGFX(destroy_program)(ctx->hemisphere.downsamplePass.prog);
+#else
 	// reset state
 	glUseProgram(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -1353,6 +1504,12 @@ void lmDestroy(lm_context *ctx)
 	glDeleteTextures(2, ctx->hemisphere.fbTexture);
 	glDeleteTextures(1, &ctx->hemisphere.storage.texture);
 
+#endif
+}
+
+void lmDestroy(lm_context *ctx)
+{
+	lm_destroyGPUData(ctx);
 	// free memory
 	LM_FREE(ctx->hemisphere.storage.toLightmapLocation);
 	LM_FREE(ctx->hemisphere.fbHemiToLightmapLocation);
@@ -1360,6 +1517,21 @@ void lmDestroy(lm_context *ctx)
 	LM_FREE(ctx->lightmap.debug);
 #endif
 	LM_FREE(ctx);
+}
+
+void lm_updateWeightTexture(lm_context *ctx, const float *weights)
+{
+#ifdef USE_BGFX
+	const bgfx_memory_t *m = BGFX(copy)(weights, 3 * ctx->hemisphere.size, ctx->hemisphere.size * sizeof(float));
+	BGFX(update_texture_2d)(ctx->hemisphere.firstPass.weightsTexture, 
+		0, 0,	//layer, mipmap
+		0, 0, 3 * ctx->hemisphere.size, ctx->hemisphere.size, //x, y, w, h
+		m, 3 * ctx->hemisphere.size);
+#else
+	// upload weight texture
+	glBindTexture(GL_TEXTURE_2D, ctx->hemisphere.firstPass.weightsTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, 3 * ctx->hemisphere.size, ctx->hemisphere.size, 0, GL_RG, GL_FLOAT, weights);
+#endif
 }
 
 void lmSetHemisphereWeights(lm_context *ctx, lm_weight_func f, void *userdata)
@@ -1403,19 +1575,16 @@ void lmSetHemisphereWeights(lm_context *ctx, lm_weight_func f, void *userdata)
 	for (unsigned int i = 0; i < 2 * 3 * ctx->hemisphere.size * ctx->hemisphere.size; i++)
 		weights[i] *= weightScale;
 
-	// upload weight texture
-	glBindTexture(GL_TEXTURE_2D, ctx->hemisphere.firstPass.weightsTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, 3 * ctx->hemisphere.size, ctx->hemisphere.size, 0, GL_RG, GL_FLOAT, weights);
+	lm_updateWeightTexture(ctx, weights);
 	LM_FREE(weights);
 }
 
-void lmSetTargetLightmap(lm_context *ctx, float *outLightmap, int w, int h, int c)
+static void lm_checkSetTargetLightmap(lm_context *ctx)
 {
-	ctx->lightmap.data = outLightmap;
-	ctx->lightmap.width = w;
-	ctx->lightmap.height = h;
-	ctx->lightmap.channels = c;
-
+#ifdef USE_BGFX
+	uint32_t flags = BGFX_SAMPLER_U_CLAMP|BGFX_SAMPLER_V_CLAMP|BGFX_SAMPLER_MIN_POINT|BGFX_SAMPLER_MAX_POINT;
+	ctx->hemisphere.storage.texture = BGFX(create_texture_2d)(w[i], h[i], false, 1, BGFX_TEXTURE_FORMAT_RGBA32F, flags, NULL);
+#else
 	// allocate storage texture
 	if (!ctx->hemisphere.storage.texture)
 		glGenTextures(1, &ctx->hemisphere.storage.texture);
@@ -1425,7 +1594,17 @@ void lmSetTargetLightmap(lm_context *ctx, float *outLightmap, int w, int h, int 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, w, h, 0, GL_RGBA, GL_FLOAT, 0);
+#endif
+}
 
+void lmSetTargetLightmap(lm_context *ctx, float *outLightmap, int w, int h, int c)
+{
+	ctx->lightmap.data = outLightmap;
+	ctx->lightmap.width = w;
+	ctx->lightmap.height = h;
+	ctx->lightmap.channels = c;
+
+	lm_checkSetTargetLightmap(ctx);
 	// allocate storage position to lightmap position map
 	if (ctx->hemisphere.storage.toLightmapLocation)
 		LM_FREE(ctx->hemisphere.storage.toLightmapLocation);
