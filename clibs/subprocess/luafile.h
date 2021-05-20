@@ -121,12 +121,25 @@ namespace ant::lua {
         }
         return luaL_fileresult(L, status, NULL);
     }
+    static int g_read(lua_State* L, FILE* f, int first) {
+        int nargs = lua_gettop(L) - 1;
+        int success;
+        clearerr(f);
+        success = read_line(L, f, 1);
+        if (ferror(f))
+            return luaL_fileresult(L, 0, NULL);
+        if (!success) {
+            lua_pop(L, 1);
+            luaL_pushfail(L);
+        }
+        return 1;
+    }
     static int io_readline (lua_State *L) {
         luaL_Stream *p = (luaL_Stream *)lua_touserdata(L, lua_upvalueindex(1));
         if (isclosed(p))
             return luaL_error(L, "file is already closed");
         lua_settop(L , 1);
-        int n = read_line(L, p->f, 1);
+        int n = g_read(L, p->f, 2);
         lua_assert(n > 0);
         if (lua_toboolean(L, -n))
             return n;

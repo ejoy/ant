@@ -11,6 +11,7 @@ function m.show()
     if imgui.widget.BeginMainMenuBar() then
         if imgui.widget.BeginMenu("File") then
             if imgui.widget.MenuItem("New", "Ctrl+N") then
+                prefab_mgr:reset_prefab()
             end
             if imgui.widget.MenuItem("Open", "Ctrl+O") then
             end

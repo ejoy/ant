@@ -56,6 +56,8 @@ function MaterialView:_init()
     self.surfacetype:set_setter(function(value) self:on_set_surfacetype(value) end)      
     self.surfacetype:set_getter(function() return self:on_get_surfacetype() end)
     --
+    self.ui_occluder = {true}
+    self.ui_occludee = {true}
     self.ui_surfacetype = {text = "opaticy"}
     self.ui_lighting = {true}
     self.ui_shadow_receive = {false}
@@ -69,8 +71,8 @@ function MaterialView:on_set_mat(value)
     -- if origin_path:is_absolute() then
     --     relative_path = tostring(fs.relative(fs.path(value), gd.project_root))
     -- end
-    local new_eid = prefab_mgr:update_material(self.eid, value)
-    self:set_model(new_eid)
+    prefab_mgr:update_material(self.eid, value)
+    self:set_model(nil)
 end
 function MaterialView:on_get_mat()
     return tostring(world[self.eid].material)
@@ -208,6 +210,8 @@ function MaterialView:set_model(eid)
         end
         
         local setting = md.tdata.fx.setting
+        self.ui_occluder = { string.find(md.tdata.state.WRITE_MASK, 'Z') ~= nil }
+        self.ui_occludee = { md.tdata.state.DEPTH_TEST ~= "ALWAYS" }
         self.ui_lighting[1] = setting.lighting and setting.lighting == "on"
         self.ui_shadow_receive[1] = setting.shadow_receive and setting.shadow_receive == "on"
         self.ui_shadow_cast[1] = ies.can_cast(self.eid)
@@ -292,15 +296,35 @@ end
 function MaterialView:show()
     if not self.eid then return end
     BaseView.show(self)
+    
     local dirty
     if imgui.widget.TreeNode("Material", imgui.flags.TreeNode { "DefaultOpen" }) then
+        local state = mtldata_list[self.eid].tdata.state
+        local setting = mtldata_list[self.eid].tdata.fx.setting
         self.mat_file:show()
         self.save_mat:show()
         imgui.cursor.SameLine()
         self.save_as_mat:show()
         self.surfacetype:show()
+        imgui.widget.PropertyLabel("occluder")
+        if imgui.widget.Checkbox("##occluder", self.ui_occluder) then
+            if self.ui_occluder[1] then
+                state.WRITE_MASK = "RGBAZ"
+            else
+                state.WRITE_MASK = "RGBA"
+            end
+            dirty = true
+        end
+        imgui.widget.PropertyLabel("occludee")
+        if imgui.widget.Checkbox("##occludee", self.ui_occludee) then
+            if self.ui_occludee[1] then
+                state.DEPTH_TEST = "LESS"
+            else
+                state.DEPTH_TEST = "ALWAYS"
+            end
+            dirty = true
+        end
         imgui.widget.PropertyLabel("lighting")
-        local setting = mtldata_list[self.eid].tdata.fx.setting
         if imgui.widget.Checkbox("##lighting", self.ui_lighting) then
             if self.ui_lighting[1] then
                 setting.lighting = "on"
@@ -331,7 +355,6 @@ function MaterialView:show()
             end
             dirty = true
         end
-
         for i = 1, self.sampler_num do
             self.samplers[i]:show()
         end

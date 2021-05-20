@@ -1,4 +1,4 @@
-local texutil = require "texture.util"
+local texutil = require "editor.texture.util"
 local datalist = require "datalist"
 local lfs = require "filesystem.local"
 local ident_util = require "identity"
@@ -31,8 +31,8 @@ local function readdatalist(filepath)
 	return datalist.parse(data)
 end
 
-return function (input, output, identity, localpath)
-	local id = ident_util.parse(identity)
+return function (input, output, setting, localpath)
+	local id = ident_util.parse(setting.identity)
 	local ext = assert(extensions[id.renderer])
 	local binfile = (output / "main.bin"):replace_extension(ext)
 
@@ -41,5 +41,9 @@ return function (input, output, identity, localpath)
 	local texpath = localpath(assert(param.path))
 	param.format = assert(which_format(id.platform, param))
 
-	return texutil.convert_image(output, texpath, binfile, param)
+	local ok, err = texutil.convert_image(output, texpath, binfile, param)
+	if not ok then
+		return ok, err
+	end
+	return true, {input}
 end

@@ -1,63 +1,9 @@
-if __ANT_RUNTIME__ then
-    local fs = require "filesystem"
-    local m = {}
-    function m.compile_shader(url)
-        return (fs.path(url) / "main.bin"):localpath()
-    end
-    return m
-end
-
 local lfs = require "filesystem.local"
 local fs = require "filesystem"
-local sha1 = require "hash".sha1
-local datalist = require "datalist"
-local toolset = require "fx.toolset"
-local BINPATH = fs.path "":localpath() / ".build" / "sc"
+local toolset = require "editor.fx.toolset"
 local SHARER_INC = lfs.absolute(fs.path "/pkg/ant.resources/shaders":localpath())
 local identity_util = require "identity"
 local setting = import_package "ant.settings".setting
-local serialize = import_package "ant.serialize".stringify
-
-local function get_filename(pathname)
-    pathname = lfs.absolute(fs.path(pathname):localpath()):string():lower():lower()
-    local filename = pathname:match "[/]?([^/]*)$"
-    return filename.."_"..sha1(pathname)
-end
-
-local function writefile(filename, data)
-	local f = assert(lfs.open(filename, "wb"))
-	f:write(data)
-	f:close()
-end
-
-local function readfile(filename)
-	local f = assert(lfs.open(filename, "rb"))
-	local data = f:read "a"
-	f:close()
-	return data
-end
-
-local function do_build(depfile)
-    if not lfs.exists(depfile) then
-        return
-    end
-	for _, dep in ipairs(datalist.parse(readfile(depfile))) do
-		local timestamp, filename = dep[1], lfs.path(dep[2])
-		if not lfs.exists(filename) or timestamp ~= lfs.last_write_time(filename) then
-			return
-		end
-	end
-	return true
-end
-
-local function create_depfile(filename, deps)
-    local w = {}
-    for _, file in ipairs(deps) do
-        local path = lfs.path(file)
-        w[#w+1] = ("{%d, %q}"):format(lfs.last_write_time(path), lfs.absolute(path):string())
-    end
-    writefile(filename, table.concat(w, "\n"))
-end
 
 local function DEF_FUNC() end
 
@@ -140,51 +86,20 @@ local function compile_debug_shader(platform, renderer)
     end
 end
 
-local function do_compile(input, output, stage, setting)
+return function (input, output, setting)
     local IDENTITY_items = identity_util.parse(setting.identity)
-    input = fs.path(input):localpath():string()
     local ok, err, deps = toolset.compile {
         platform = IDENTITY_items.platform,
         renderer = IDENTITY_items.renderer,
         input = input,
-        output = output,
+        output = output / "main.bin",
         includes = {SHARER_INC},
-        stage = stage,
+        stage = setting.stage,
         macros = get_macros(setting),
         debug = compile_debug_shader(IDENTITY_items.platform, IDENTITY_items.renderer),
     }
     if not ok then
-        error("compile failed: " .. input .. "\n\n" .. err)
+        return false, ("compile failed: " .. input .. "\n\n" .. err)
     end
-    return deps
+    return true, deps
 end
-
-local function parseUrl(url)
-    local path, arguments = url:match "^([^?]*)%?(.*)$"
-    local setting = {}
-    arguments:gsub("([^=&]*)=([^=&]*)", function(k ,v)
-        setting[k] = v
-    end)
-    return path, setting, arguments
-end
-
-local function compile_shader(url)
-    local path, setting, arguments = parseUrl(url)
-    local hash = sha1(arguments):sub(1,7)
-    local hashpath = get_filename(path)
-    local output = BINPATH / hashpath / hash
-    local outfile = output / "main.bin"
-    local depfile = output / ".dep"
-    if not do_build(depfile) then
-        lfs.create_directories(output)
-        local deps = do_compile(path, outfile, setting.stage, setting)
-        create_depfile(depfile, deps)
-        writefile(output / ".setting", serialize(setting))
-        writefile(output / ".arguments", arguments)
-    end
-    return outfile
-end
-
-return {
-    compile_shader = compile_shader,
-}

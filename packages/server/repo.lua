@@ -405,4 +405,21 @@ function repo:dir(hash)
 	return { dir = dir, file = file }
 end
 
+function repo:build_dir(rpath, lpath)
+	local r = {
+		_root = self._root,
+		_repo = self._repo,
+		_namecache = {},
+		_mountname = {},
+		_mountpoint = {},
+	}
+	access.addmount(r, rpath, lpath)
+	setmetatable(r, repo)
+	local cache = {}
+	local roothash = repo_build_dir(r, rpath, cache, r._namecache)
+	repo_write_cache(r, cache)
+	access.addmount(self, rpath, lpath)
+	return roothash
+end
+
 return repo

@@ -8,7 +8,7 @@ function m:init()
 	if type(self) == "string" then
 		local res = assetmgr.resource(self)
 		return {
-			handle 		= effekseer.create(res.rawdata),
+			rawdata 	= res.rawdata,
 			speed 		= 1.0,
 			auto_play 	= true,
 			loop 		= true

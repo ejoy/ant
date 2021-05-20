@@ -1,5 +1,5 @@
 local fs = require "filesystem.local"
-local utility = require "model.utility"
+local utility = require "editor.model.utility"
 
 local datalist = require "datalist"
 

@@ -21,8 +21,8 @@ namespace ant::file {
         operator bool() { return *this != invalid(); }
         operator value_type() { return value; }
         value_type* operator &() { return &value; }
-        bool operator ==(handle other) { return value == other.value; }
-        bool operator !=(handle other) { return value != other.value; }
+        bool operator ==(const handle other) const { return value == other.value; }
+        bool operator !=(const handle other) const { return value != other.value; }
     private:
         value_type value;
     };

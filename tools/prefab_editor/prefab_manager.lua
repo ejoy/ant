@@ -463,9 +463,6 @@ local function do_remove_entity(eid)
     if world[eid].skeleton_eid then
         world:remove_entity(world[eid].skeleton_eid)
     end
-    if world[eid].effekseer then
-        effekseer.destroy(world[eid].effekseer.handle)
-    end
     local teml = hierarchy:get_template(eid)
     if teml and teml.children then
         remove_entitys(teml.children)
@@ -492,6 +489,8 @@ function m:reset_prefab()
     hierarchy:clear()
     self.root = create_simple_entity("scene root")
     self.prefab_script = ""
+    self.entities = {}
+    world:pub {"WindowTitle", ""}
     hierarchy:set_root(self.root)
 end
 
@@ -625,16 +624,21 @@ function m:add_effect(filename)
 end
 
 function m:add_prefab(filename)
+    local prefab_filename = filename
+    if string.sub(filename,-4) == ".glb" then
+        prefab_filename = filename .. "|mesh.prefab"
+    end
+    
     if not self.root then
         self:reset_prefab()
     end
     local mount_root, temp = create_simple_entity(gen_prefab_name())
     self.entities[#self.entities+1] = mount_root
-    local entities = world:instance(filename)
+    local entities = world:instance(prefab_filename)
     world[entities[1]].parent = mount_root
     world[mount_root].parent = gizmo.target_eid or self.root
     set_select_adapter(entities, mount_root)
-    hierarchy:add(mount_root, {filename = filename, template = temp.__class[1], children = entities}, world[mount_root].parent)
+    hierarchy:add(mount_root, {filename = prefab_filename, template = temp.__class[1], children = entities}, world[mount_root].parent)
 end
 
 function m:recreate_entity(eid)

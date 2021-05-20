@@ -238,10 +238,6 @@ function offline.GET(id, fullpath)
 	response_id(id, realpath, v.hash)
 end
 
-function offline.COMPILE(id, fullpath, setting)
-	error "TODO"
-end
-
 function offline.EXIT(id)
 	response_id(id, nil)
 	error "EXIT"
@@ -340,25 +336,25 @@ local function connection_dispose(timeout)
 	return true
 end
 
-local function request_file(id, hash, path, req)
+local function request_file(id, req, hash, res, path)
 	local hash_list = connection.request_hash[hash]
 	if hash_list then
 		hash_list[path] = true
 	else
 		connection.request_hash[hash] = { [path] = true }
-		connection_send("GET", hash)
+		connection_send(req, hash)
 	end
-	local path_req = connection.request_path[path]
-	if not path_req then
-		path_req = {}
-		connection.request_path[path] = path_req
+	local path_res = connection.request_path[path]
+	if not path_res then
+		path_res = {}
+		connection.request_path[path] = path_res
 	end
 	-- one request per id
-	if id and path_req[id] then
+	if id and path_res[id] then
 		print("More than one request from id", id)
 	end
 
-	path_req[id] = req
+	path_res[id] = res
 end
 
 -- file server update hash file
@@ -369,18 +365,18 @@ local function hash_complete(hash, exist)
 	end
 	connection.request_hash[hash] = nil
 	for path in pairs(hash_list) do
-		local path_req = connection.request_path[path]
-		if not path_req then
+		local path_res = connection.request_path[path]
+		if not path_res then
 			print("No request:", path)
 			return
 		end
 		connection.request_path[path] = nil
 		if exist then
-			for id, req in pairs(path_req) do
+			for id, req in pairs(path_res) do
 				online[req](id, path)	-- request/response path
 			end
 		else
-			for id in pairs(path_req) do
+			for id in pairs(path_res) do
 				response_err(id, "MISSING "..path)
 			end
 		end
@@ -484,6 +480,12 @@ function response.SLICE(hash, offset, data)
 	end
 end
 
+function response.COMPILE(fullpath, hash)
+	local res = repo.repo:compilehash(fullpath, hash)
+	print("COMPILE", fullpath, hash, res)
+	hash_complete(fullpath, true)
+end
+
 local function waiting_for_root()
 	local resp = {}
 	local reading = connection.recvq
@@ -526,7 +528,7 @@ function online.LIST(id, path)
 		end
 		response_id(id, result)
 	elseif hash then
-		request_file(id, hash, path, "LIST")
+		request_file(id, "GET", hash, "LIST", path)
 	else
 		print("Need Change Root", path)
 		response_id(id, nil)
@@ -546,7 +548,7 @@ local function fetch_all(path)
 			end
 		end
 	elseif hash then
-		request_file(false, hash, path, "FETCHALL")
+		request_file(false, "GET", hash, "FETCHALL", path)
 	else
 		print("Need Change Root", path)
 	end
@@ -576,7 +578,7 @@ function online.TYPE(id, fullpath)
 		end
 		return
 	elseif hash then
-		request_file(id, hash, fullpath, "TYPE")
+		request_file(id, "GET", hash, "TYPE", fullpath)
 	else
 		response_id(id, nil)
 	end
@@ -591,7 +593,7 @@ function online.GET(id, fullpath)
 	local dir, hash = repo.repo:list(path)
 	if not dir then
 		if hash then
-			request_file(id, hash, fullpath, "GET")
+			request_file(id, "GET", hash, "GET", fullpath)
 			return
 		end
 		response_err(id, "Not exist " .. path)
@@ -610,15 +612,11 @@ function online.GET(id, fullpath)
 	local realpath = repo.repo:hashpath(v.hash)
 	local f = io.open(realpath,"rb")
 	if not f then
-		request_file(id, v.hash, fullpath, "GET")
+		request_file(id, "GET", v.hash, "GET", fullpath)
 	else
 		f:close()
 		response_id(id, realpath, v.hash)
 	end
-end
-
-function online.COMPILE(id, fullpath, setting)
-	online.GET(id, fullpath .. "/" .. setting)
 end
 
 function online.PREFETCH(path)

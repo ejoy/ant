@@ -51,7 +51,7 @@ end
 
 local function process_keyframe_event(task)
 	local event_state = task.event_state
-	local all_events = event_state.keyframe_events.event
+	local all_events = event_state.keyframe_events
 	local current_events = all_events and all_events[event_state.next_index] or nil
 	if not current_events then return end
 
@@ -79,13 +79,19 @@ local function process_keyframe_event(task)
 					end
 				end
 			elseif event.event_type == "Effect" then
-				if not event.effect_eid and event.asset_path ~= "" then
-					local prefab = world:instance(event.asset_path)
-					event.effect_eid = prefab[1]
-					world[event.effect_eid].parent = event.link_info.slot_eid
+				if not event.effect and event.asset_path ~= "" then
+					-- local prefab = world:instance(event.asset_path)
+					-- event.effect_eid = prefab[1]
+					-- world[event.effect_eid].parent = event.link_info.slot_eid
+					event.effect = world:prefab_instance(event.asset_path)
+					world:prefab_event(event.effect, "set_parent", "root", event.link_info.slot_eid)
 				end
-				if event.effect_eid and world[event.effect_eid].parent ~= event.link_info.slot_eid then
-					world[event.effect_eid].parent = event.link_info.slot_eid
+				if event.effect then
+					local parent = world:prefab_event(event.effect, "get_parent", "root")
+					if event.link_info.slot_eid and parent ~= event.link_info.slot_eid then
+						world:prefab_event(event.effect, "set_parent", "root", event.link_info.slot_eid)
+					end
+					world:prefab_event(event.effect, "play", "root", false, false)
 				end
 			end
 		end
@@ -125,6 +131,8 @@ local function update_play_state(task, ms_delta)
 				task.animation = clips[index][1]
 			end
 			play_state.ratio = (clips[index][2].range[1] + excess) / task.animation._handle:duration()
+			--
+			task.event_state.keyframe_events = clips[index][2].key_event
 		else
 			play_state.ratio = next_time / duration
 		end
