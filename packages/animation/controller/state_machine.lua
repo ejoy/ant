@@ -153,7 +153,7 @@ function get_play_info(eid, name)
 
 end
 
-function do_play(e, anim, real_clips, isloop)
+function do_play(e, anim, real_clips, isloop, manual)
 	if e.state_machine then
 		e.state_machine._current = nil
 		play_animation(e, name, time)
@@ -169,12 +169,12 @@ function do_play(e, anim, real_clips, isloop)
 				keyframe_events = real_clips and real_clips[1][2].key_event or {}
 			},
 			clip_state = { current = {clip_index = 1, clips = real_clips}, clips = e.anim_clips or {}},
-			play_state = { ratio = start_ratio, previous_ratio = start_ratio, speed = 1.0, play = true, loop = isloop or false}
+			play_state = { ratio = start_ratio, previous_ratio = start_ratio, speed = 1.0, play = true, loop = isloop or false, manual_update = manual}
 		}
 	end
 end
 
-function iani.play(eid, name, loop)
+function iani.play(eid, name, loop, manual)
 	local e = world[eid]
 	if not e or not e.animation then return false end
 
@@ -184,7 +184,7 @@ function iani.play(eid, name, loop)
 		print("animation:", name, "not exist")
 		return false
 	end
-	do_play(e, anim, nil, loop)
+	do_play(e, anim, nil, loop, manual)
 	return true
 end
 
@@ -202,7 +202,7 @@ local function find_clip_or_group(clips, name, group)
 	end
 end
 
-function iani.play_clip(eid, name, loop)
+function iani.play_clip(eid, name, loop, manual)
 	local e = world[eid]
 	if not e or not e.animation or not e.anim_clips then return false end
 	
@@ -215,10 +215,10 @@ function iani.play_clip(eid, name, loop)
 		print("clip:", name, "not exist")
 		return false
 	end
-	do_play(e, real_clips[1][1], real_clips, loop);
+	do_play(e, real_clips[1][1], real_clips, loop, manual);
 end
 
-function iani.play_group(eid, name, loop)
+function iani.play_group(eid, name, loop, manual)
 	local e = world[eid]
 	if not e or not e.animation or not e.anim_clips then return false end
 	
@@ -235,7 +235,7 @@ function iani.play_group(eid, name, loop)
 		print("group:", name, "not exist")
 		return false
 	end
-	do_play(e, real_clips[1][1], real_clips, loop);
+	do_play(e, real_clips[1][1], real_clips, loop, manual);
 end
 
 function iani.get_duration(eid)
@@ -244,16 +244,135 @@ function iani.get_duration(eid)
 	return e._animation._current.animation._handle:duration()
 end
 
+function iani.get_clip_duration(eid, name)
+	local e = world[eid]
+	if not e or not e.animation or not e.anim_clips then return 0 end
+	local clip = find_clip_or_group(e.anim_clips, name)
+	if not clip then return end
+	return clip.range[2] - clip.range[1]
+end
+
+function iani.get_group_duration(eid, name)
+	local e = world[eid]
+	if not e or not e.animation or not e.anim_clips then return 0 end
+	local group = find_clip_or_group(e.anim_clips, name, true)
+	if not group then return end
+	local d = 0.0
+	for _, index in ipairs(group.subclips) do
+		local range = e.anim_clips[index].range
+		d = d + range[2] - range[1]
+	end
+	return d
+end
+
+function iani.step(task, s_delta, absolute)
+	local play_state = task.play_state
+	if play_state.manual_update or not play_state.play then return end
+	
+	local next_time = absolute and s_delta or (play_state.ratio * task.animation._handle:duration() + s_delta) * play_state.speed
+	local duration = task.animation._handle:duration()
+	local clip_state = task.clip_state.current
+	local clips = clip_state.clips
+	if clips then
+		local index = clip_state.clip_index
+		if next_time > clips[index][2].range[2] then
+			local excess = next_time - clips[index][2].range[2]
+			if index >= #clips then
+				if not play_state.loop then
+					play_state.ratio = clips[#clips][2].range[2] / duration
+					return
+				end
+				index = 1
+			else
+				index = index + 1
+			end
+			clip_state.clip_index = index
+			if task.animation ~= clips[index][1] then
+				task.animation = clips[index][1]
+			end
+			play_state.ratio = (clips[index][2].range[1] + excess) / task.animation._handle:duration()
+			
+			task.event_state.keyframe_events = clips[index][2].key_event
+		else
+			play_state.ratio = next_time / duration
+		end
+		return
+	end
+	if next_time > duration then
+		if not play_state.loop then
+			play_state.ratio = 1.0
+		else
+			play_state.ratio = (next_time - duration) / duration
+		end
+	else
+		play_state.ratio = next_time / duration
+	end
+end
+
 function iani.set_time(eid, second)
 	local e = world[eid]
 	if not e or not e.animation then return end
-	local ratio = second / e._animation._current.animation._handle:duration()
-	if ratio > 1.0 then
-		ratio = 1.0
-	elseif ratio < 0.0 then
-		ratio = 0.0
+	iani.step(e._animation._current, second, true)
+end
+
+function iani.set_clip_time(eid, second)
+	local e = world[eid]
+	if not e or not e.animation or not e._animation._current then return end
+	local range = e._animation._current.clip_state.current.clips[1][2].range
+	local duration = range[2] - range[1]
+	if second > duration then
+		if task.play_state.loop then
+			second = math.fmod(second, duration)
+		else
+			task.play_state.ratio = clips[index][2].range[2] / task.animation._handle:duration()
+			return
+		end
 	end
-	e._animation._current.play_state.ratio = ratio
+	task.play_state.ratio = (second + clips[index][2].range[1]) / task.animation._handle:duration()
+end
+
+function iani.set_group_time(eid, second)
+	local e = world[eid]
+	if not e or not e.animation or not e._animation._current then return end
+	
+	local task = e._animation._current
+	local clips = task.clip_state.current.clips
+	local duration = 0.0
+	for _, clip in ipairs(clips) do
+		duration = duration + (clip[2].range[2] - clip[2].range[1])
+	end
+	local reach_end
+	local index
+	if second > duration then
+		if task.play_state.loop then
+			second = math.fmod(second, duration)
+		else
+			index = #clips
+			reach_end = true
+		end
+	end
+	if not reach_end then
+		for i, clip in ipairs(clips) do
+			index = i
+			local d = clip[2].range[2] - clip[2].range[1]
+			if second < d then
+				break;
+			else
+				second = second - d
+			end
+		end
+	end
+	if task.clip_state.current.clip_index ~= index then
+		task.clip_state.current.clip_index = index
+		if task.animation ~= clips[index][1] then
+			task.animation = clips[index][1]
+		end
+	end
+	if reach_end then
+		task.play_state.ratio = clips[index][2].range[2] / task.animation._handle:duration()
+	else
+		task.play_state.ratio = (second + clips[index][2].range[1]) / task.animation._handle:duration()
+	end
 end
 
 function iani.get_time(eid)

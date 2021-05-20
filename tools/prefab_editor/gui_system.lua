@@ -4,7 +4,7 @@ local math3d    = require "math3d"
 local imgui     = require "imgui"
 local rhwi      = import_package "ant.hwi"
 local asset_mgr = import_package "ant.asset"
-local geometry_drawer = import_package "ant.geometry".drawer
+local effekseer_filename_mgr = world:interface "ant.effekseer|filename_mgr"
 local irq       = world:interface "ant.render|irenderqueue"
 local ies       = world:interface "ant.scene|ientity_state"
 local iom       = world:interface "ant.objcontroller|obj_motion"
@@ -152,6 +152,18 @@ local function choose_project()
                     ]]
                     log_widget.init_log_receiver()
                     console_widget.init_console_sender()
+                    local topname
+                    for _, package in ipairs(global_data.packages) do
+                        if package.path == global_data.project_root then
+                            topname = package.name
+                            break
+                        end
+                    end
+                    if topname then
+                        effekseer_filename_mgr.add_path(topname .. "/res")
+                    else
+                        print("Can not add effekseer resource seacher path.")
+                    end
                 else
                     logger.error({tag = "Editor", message = "no project exist!"})
                 end
@@ -170,6 +182,7 @@ local function choose_project()
             fw.add(global_data.project_root:string())
             local res_root_str = tostring(fs.path "":localpath())
             global_data.editor_root = fs.path(string.sub(res_root_str, 1, #res_root_str - 1))
+            effekseer_filename_mgr.add_path("/pkg/tools.prefab_editor/res")
         end
         imgui.windows.EndPopup()
     end
