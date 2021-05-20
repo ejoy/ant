@@ -213,7 +213,6 @@ end
 local iRmlUi    = world:interface "ant.rmlui|rmlui"
 local irq       = world:interface "ant.render|irenderqueue"
 local bgfx      = require "bgfx"
-local effect    = require "effect"
 local stat_window
 function m:ui_update()
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
@@ -277,10 +276,6 @@ function m:ui_update()
     local bgfxstat = bgfx.get_stats("sdcpnmtv")
     if bgfxstat then
         stat_window.postMessage(string.format("DrawCall: %d\nTriangle: %d\nTexture: %d\ncpu(ms): %f\ngpu(ms): %f\nfps: %d", bgfxstat.numDraw, bgfxstat.numTriList, bgfxstat.numTextures, bgfxstat.cpu, bgfxstat.gpu, bgfxstat.fps))
-    end
-    local particlestat = effect.particle_stat()
-    if particlestat then
-        stat_window.postMessage(string.format("Particle: " .. math.floor(particlestat.count)))
     end
 end
 
