@@ -9,6 +9,8 @@
 * Where that dedication is not recognized,                 *
 * you are granted a perpetual, irrevocable license to copy *
 * and modify this file however you want.                   *
+* From: kitchen.gz.020@gmail.com                           *
+* 2021-05-20: add bgfx support                             *
 ***********************************************************/
 
 #ifndef LIGHTMAPPER_H

@@ -3,7 +3,10 @@ local lm = require "luamake"
 dofile "../common.lua"
 
 lm:source_set "source_bake" {
-    includes = {LuaInclude, BgfxInclude},
+    includes = {
+        LuaInclude, BgfxInclude,
+        "../lua2struct"
+    },
     sources = {
         "lightmapping.cpp",
     }
