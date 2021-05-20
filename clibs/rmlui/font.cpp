@@ -23,8 +23,8 @@ Rml::TextureHandle FontEngine::GetFontTexHandle(const Rml::String &sourcename, R
         return Rml::TextureHandle(0);
     }
 
-    texture_dimensions.w = mcontext->font_tex.width;
-    texture_dimensions.h = mcontext->font_tex.height;
+    texture_dimensions.w = (float)mcontext->font_tex.width;
+    texture_dimensions.h = (float)mcontext->font_tex.height;
     return Rml::TextureHandle(itfound->second.fe);
 }
 

@@ -238,7 +238,7 @@ static float ComputeFontsize(const Property* property, Element* element) {
 			fontSize = parent->GetFontSize();
 		}
 		if (property->unit == Property::PERCENT) {
-			return fontSize * 0.01 * property->Get<float>();
+			return fontSize * 0.01f * property->Get<float>();
 		}
 		return fontSize * property->Get<float>();
 	}
@@ -1439,10 +1439,10 @@ void Element::UpdateClip() {
 		&& corners[2].y == corners[3].y
 	) {
 		clip_type = Clip::Scissor;
-		clip.scissor.x = std::floor(corners[0].x);
-		clip.scissor.y = std::floor(corners[0].y);
-		clip.scissor.z = std::ceil(corners[2].x - clip.scissor.x);
-		clip.scissor.w = std::ceil(corners[2].y - clip.scissor.y);
+		clip.scissor.x = (glm::u16)std::floor(corners[0].x);
+		clip.scissor.y = (glm::u16)std::floor(corners[0].y);
+		clip.scissor.z = (glm::u16)std::ceil(corners[2].x - clip.scissor.x);
+		clip.scissor.w = (glm::u16)std::ceil(corners[2].y - clip.scissor.y);
 		return;
 	}
 	clip_type = Clip::Shader;

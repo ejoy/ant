@@ -22,7 +22,7 @@ struct Property{
     union {
         float value[4];
         struct {
-            uint16_t stage;
+            uint8_t stage;
             uint16_t texid;
         };
     };

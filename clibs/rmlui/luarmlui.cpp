@@ -128,10 +128,10 @@ int
 lUpdateViewrect(lua_State *L){
     if (g_wrapper){
         Rect &r = g_wrapper->context.viewrect;
-        r.x = luaL_checknumber(L, 1);
-        r.y = luaL_checknumber(L, 2);
-        r.w = luaL_checknumber(L, 3);
-        r.h = luaL_checknumber(L, 4);
+        r.x = (int)luaL_checknumber(L, 1);
+        r.y = (int)luaL_checknumber(L, 2);
+        r.w = (int)luaL_checknumber(L, 3);
+        r.h = (int)luaL_checknumber(L, 4);
         g_wrapper->interface.m_renderer.UpdateViewRect();
     }
     return 0;

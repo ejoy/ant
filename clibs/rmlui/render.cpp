@@ -37,7 +37,7 @@ void Renderer::UpdateViewRect(){
     BGFX(set_view_rect)(mcontext->viewid, uint16_t(vr.x), uint16_t(vr.y), uint16_t(vr.w), uint16_t(vr.h));
 }
 
-static uint64_t getTextureFlags(Rml::SamplerFlag flags) {
+static uint32_t getTextureFlags(Rml::SamplerFlag flags) {
     switch (flags) {
     default:
     case Rml::SamplerFlag::Unset:
@@ -106,7 +106,8 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices, Rml::Inde
 
         static const Rml::String tex_property_name = "s_tex";
         if (tex_property_name == it.first){
-            BGFX(encoder_set_texture)(mEncoder, v.stage, { v.uniform_idx }, { v.texid }, getTextureFlags(flags));
+            BGFX(encoder_set_texture)(mEncoder, 
+                v.stage, {v.uniform_idx}, {v.texid}, getTextureFlags(flags));
         } else {
             BGFX(encoder_set_uniform)(mEncoder, {v.uniform_idx}, v.value, 1);
         }
