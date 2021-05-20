@@ -1,6 +1,7 @@
 #define LUA_LIB 1
 #include <lua.hpp>
 
+#define USE_BGFX 1
 #ifdef USE_BGFX
 #define EXPORT_BGFX_INTERFACE
 #include "../bgfx/bgfx_interface.h"
@@ -8,7 +9,6 @@
 
 #define LIGHTMAPPER_IMPLEMENTATION
 #include "lightmapping.h"
-
 
 static int
 lbake_lightmap(lua_State *L){

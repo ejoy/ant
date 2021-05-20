@@ -34,10 +34,18 @@ typedef int lm_bool;
 
 typedef int lm_type;
 #define LM_NONE           0
+#ifdef USE_BGFX
+#define LM_UNSIGNED_BYTE  1
+#define LM_UNSIGNED_SHORT 2
+#define LM_UNSIGNED_INT   3
+#define LM_FLOAT          4
+#else
 #define LM_UNSIGNED_BYTE  GL_UNSIGNED_BYTE
 #define LM_UNSIGNED_SHORT GL_UNSIGNED_SHORT
 #define LM_UNSIGNED_INT   GL_UNSIGNED_INT
 #define LM_FLOAT          GL_FLOAT
+#endif
+
 
 typedef struct lm_context lm_context;
 
@@ -261,7 +269,7 @@ static int lm_convexClip(lm_vec2 *poly, int nPoly, const lm_vec2 *clip, int nCli
 }
 
 struct progromCode{
-		const char* vs, fs;
+		const char *vs, *fs;
 		uint32_t vssize, fssize;
 };
 
@@ -663,9 +671,9 @@ static void lm_downsample(lm_context *ctx)
 	int outHemiSize = ctx->hemisphere.size / 2;
 
 #ifdef USE_BGFX
-	BGFX(set_state)(BGFX_STATE_DEPTH_TEST_NEVER|BGFX_STATE_WRITE_RGB);
+	BGFX(set_state)(BGFX_STATE_DEPTH_TEST_NEVER|BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A, 0);
 	bgfx_transient_vertex_buffer_t tvb;
-	BGFX(alloc_transient_vertex_buffer)(&tvb, &ctx->hemisphere.layout, 4);	//not fill tvb.data, shader use gl_VertexID
+	BGFX(alloc_transient_vertex_buffer)(&tvb, 4, &ctx->hemisphere.layout);	//not fill tvb.data, shader use gl_VertexID
 
 	BGFX(set_view_rect)(ctx->hemisphere.viewids[fbWrite], 0, 0, outHemiSize * ctx->hemisphere.fbHemiCountX, outHemiSize * ctx->hemisphere.fbHemiCountY);
 
@@ -786,7 +794,7 @@ static void lm_getLightmapTextureData(lm_context *ctx, float *hemi)
 {
 #ifdef USE_BGFX
 	uint32_t whichframe = BGFX(read_texture)(ctx->hemisphere.storage.texture, hemi, 0);
-	while (whichframe != BGFX(frame)());
+	while (whichframe != BGFX(frame)(false));
 #else
 	glBindTexture(GL_TEXTURE_2D, ctx->hemisphere.storage.texture);
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, hemi);
@@ -972,9 +980,7 @@ static lm_bool lm_beginSampleHemisphere(lm_context *ctx, int* viewport, float* v
 
 static void lm_endFramebuffer(lm_context *ctx)
 {
-#ifdef USE_BGFX
-	BGFX(frame)();
-#else
+#ifndef USE_BGFX
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #endif 
 }
@@ -1182,7 +1188,7 @@ static void lm_setMeshPosition(lm_context *ctx, unsigned int indicesTriangleBase
 }
 
 #ifdef USE_BGFX
-static bgfx_program_handle_t lm_loadProgrom(const progromCode *code)
+static bgfx_program_handle_t lm_LoadProgram(const progromCode *code)
 {
 	bgfx_shader_handle_t vs = BGFX(create_shader)(BGFX(copy)(code->vs, code->vssize));
 	bgfx_shader_handle_t fs = BGFX(create_shader)(BGFX(copy)(code->fs, code->fssize));
@@ -1268,17 +1274,20 @@ static void lm_initContext(lm_context *ctx, unsigned int w[2], unsigned int h[2]
 	ctx->hemisphere.viewids[0] = LIGHTMAP_BGFX_VIEWID;
 	ctx->hemisphere.viewids[1] = LIGHTMAP_BGFX_VIEWID+1;
 
-	uint32_t flags = BGFX_SAMPLER_U_CLAMP|BGFX_SAMPLER_V_CLAMP|BGFX_SAMPLER_MIN_POINT|BGFX_SAMPLER_MAX_POINT;
+	uint32_t flags = BGFX_SAMPLER_U_CLAMP|BGFX_SAMPLER_V_CLAMP|BGFX_SAMPLER_MIN_POINT|BGFX_SAMPLER_MAG_POINT;
 	for (int i=0; i<2; ++i){
 		ctx->hemisphere.rbTexture[i] = BGFX(create_texture_2d)(w[i], h[i], false, 1, BGFX_TEXTURE_FORMAT_RGBA32F, flags, NULL);
 	}
 
 	ctx->hemisphere.rbDepth = BGFX(create_texture_2d)(w[0], h[0], false, 1, BGFX_TEXTURE_FORMAT_D24, flags, NULL);
 
-	BGFX(create_frame_buffer)();
+	bgfx_texture_handle_t handles[2] = {ctx->hemisphere.rbTexture[0], ctx->hemisphere.rbDepth};
+	ctx->hemisphere.fb[0] = BGFX(create_frame_buffer_from_handles)(2, handles, false);
+	handles[0] = ctx->hemisphere.rbTexture[1];
+	ctx->hemisphere.fb[1] = BGFX(create_frame_buffer_from_handles)(1, handles, false);
 
-	ctx->hemisphere.firstPass.prog = lm_LoadProgram(ctx->hemisphere.firstPass.progCode);
-	ctx->hemisphere.downsamplePass.prog = lm_LoadProgram(ctx->hemisphere.downsamplePass.progCode);
+	ctx->hemisphere.firstPass.prog = lm_LoadProgram(&ctx->hemisphere.firstPass.progCode);
+	ctx->hemisphere.downsamplePass.prog = lm_LoadProgram(&ctx->hemisphere.downsamplePass.progCode);
 #else
 	glGenTextures(2, ctx->hemisphere.fbTexture);
 	glGenFramebuffers(2, ctx->hemisphere.fb);
@@ -1522,7 +1531,7 @@ void lmDestroy(lm_context *ctx)
 void lm_updateWeightTexture(lm_context *ctx, const float *weights)
 {
 #ifdef USE_BGFX
-	const bgfx_memory_t *m = BGFX(copy)(weights, 3 * ctx->hemisphere.size, ctx->hemisphere.size * sizeof(float));
+	const bgfx_memory_t *m = BGFX(copy)(weights, 3 * ctx->hemisphere.size * ctx->hemisphere.size * sizeof(float));
 	BGFX(update_texture_2d)(ctx->hemisphere.firstPass.weightsTexture, 
 		0, 0,	//layer, mipmap
 		0, 0, 3 * ctx->hemisphere.size, ctx->hemisphere.size, //x, y, w, h
@@ -1579,11 +1588,11 @@ void lmSetHemisphereWeights(lm_context *ctx, lm_weight_func f, void *userdata)
 	LM_FREE(weights);
 }
 
-static void lm_checkSetTargetLightmap(lm_context *ctx)
+static void lm_checkSetTargetLightmap(lm_context *ctx, int w, int h)
 {
 #ifdef USE_BGFX
-	uint32_t flags = BGFX_SAMPLER_U_CLAMP|BGFX_SAMPLER_V_CLAMP|BGFX_SAMPLER_MIN_POINT|BGFX_SAMPLER_MAX_POINT;
-	ctx->hemisphere.storage.texture = BGFX(create_texture_2d)(w[i], h[i], false, 1, BGFX_TEXTURE_FORMAT_RGBA32F, flags, NULL);
+	uint32_t flags = BGFX_SAMPLER_U_CLAMP|BGFX_SAMPLER_V_CLAMP|BGFX_SAMPLER_MIN_POINT|BGFX_SAMPLER_MAG_POINT;
+	ctx->hemisphere.storage.texture = BGFX(create_texture_2d)(w, h, false, 1, BGFX_TEXTURE_FORMAT_RGBA32F, flags, NULL);
 #else
 	// allocate storage texture
 	if (!ctx->hemisphere.storage.texture)
@@ -1604,7 +1613,7 @@ void lmSetTargetLightmap(lm_context *ctx, float *outLightmap, int w, int h, int 
 	ctx->lightmap.height = h;
 	ctx->lightmap.channels = c;
 
-	lm_checkSetTargetLightmap(ctx);
+	lm_checkSetTargetLightmap(ctx, w, h);
 	// allocate storage position to lightmap position map
 	if (ctx->hemisphere.storage.toLightmapLocation)
 		LM_FREE(ctx->hemisphere.storage.toLightmapLocation);
