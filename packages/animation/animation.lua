@@ -93,7 +93,7 @@ local function do_animation(poseresult, task, delta_time)
 		poseresult:do_blend("blend", #task, task.weight)
 	else
 		local play_state = task.play_state
-		if not play_state.manual_update and not play_state.play then 
+		if not play_state.manual_update and play_state.play then 
 			iani.step(task, delta_time * 0.001)
 		end
 		local ani = task.animation
