@@ -53,6 +53,7 @@ local current_clip
 local anim_group_eid = {}
 local all_clips = {}
 local all_groups = {}
+local all_collision = {}
 
 local clip_index = 0
 local group_index = 0
@@ -427,7 +428,7 @@ local function clear_event()
 end
 
 local shape_type = {
-    "sphere","box","capsule"
+    "sphere","box"
 }
 local collider_type = {
     "T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8"

@@ -158,7 +158,9 @@ function collider_sys:update_collider_transform()
 		local e = world[eid]
 		if e and e.collider then
 			local _, r, t = math3d.srt(iom.worldmat(eid))
-			set_obj_transform(e.collider._handle, t, r)
+			if e.collider._handle then
+				set_obj_transform(e.collider._handle, t, r)
+			end
 		end
     end
 end

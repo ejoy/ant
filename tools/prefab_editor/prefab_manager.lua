@@ -184,19 +184,20 @@ function m:create_collider(config)
             "ant.render|render",
             "ant.scene|hierarchy_policy",
             "ant.scene|transform_policy",
-            "ant.collision|collider_policy"
+            --"ant.collision|collider_policy"
         },
         data = {
             name = "collider" .. geometricidx,
             scene_entity = true,
             transform = {s = scale},
-            collider = { [config.type] = define },
+            --collider = { [config.type] = define },
             color = {1, 0.5, 0.5, 0.5},
             state = ies.create_state "visible|selectable",
             material = "/pkg/ant.resources/materials/singlecolor.material",
             mesh = (config.type == "box") and geom_mesh_file["cube"] or geom_mesh_file[config.type]
         }
     }
+    world[new_entity].collider = { [config.type] = define }
     imaterial.set_property(new_entity, "u_color", {1, 0.5, 0.5, 0.5})
     return new_entity, temp
 end
