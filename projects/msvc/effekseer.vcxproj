@@ -248,7 +248,6 @@
     <ClInclude Include="..\..\3rd\effekseer\Effekseer\Effekseer\Utils\Profiler.h" />
     <ClInclude Include="..\..\clibs\effekseer\effect.h" />
     <ClInclude Include="..\..\clibs\effekseer\effekseer_context.h" />
-    <ClInclude Include="..\..\clibs\effekseer\lua2struct.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="luadll.vcxproj">
@@ -306,7 +305,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/glm;../../3rd/bgfx/3rdparty;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/effekseer/Effekseer;../../3rd/effekseer/EffekseerRendererBGFX</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua2struct;../../clibs/lua;../../3rd/glm;../../3rd/bgfx/3rdparty;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/effekseer/Effekseer;../../3rd/effekseer/EffekseerRendererBGFX</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244</DisableSpecificWarnings>
     </ClCompile>
@@ -326,7 +325,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/glm;../../3rd/bgfx/3rdparty;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/effekseer/Effekseer;../../3rd/effekseer/EffekseerRendererBGFX</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua2struct;../../clibs/lua;../../3rd/glm;../../3rd/bgfx/3rdparty;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/effekseer/Effekseer;../../3rd/effekseer/EffekseerRendererBGFX</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244</DisableSpecificWarnings>
     </ClCompile>

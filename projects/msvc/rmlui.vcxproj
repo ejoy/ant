@@ -59,7 +59,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;RMLUI_STATIC_LIB;RMLUI_NO_FONT_INTERFACE_DEFAULT;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;_DEBUG;RMLUI_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/bgfx/3rdparty;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/RmlUi/Include;../../3rd/yoga;../../3rd/glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua2struct;../../clibs/lua;../../3rd/bgfx/3rdparty;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/RmlUi/Include;../../3rd/yoga;../../3rd/glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244</DisableSpecificWarnings>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -82,7 +82,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;RMLUI_STATIC_LIB;RMLUI_NO_FONT_INTERFACE_DEFAULT;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/bgfx/3rdparty;../../3rd/RmlUi/Include;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/yoga;../../3rd/glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua2struct;../../clibs/lua;../../3rd/bgfx/3rdparty;../../3rd/RmlUi/Include;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/yoga;../../3rd/glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244</DisableSpecificWarnings>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -303,7 +303,6 @@
     <ClInclude Include="..\..\clibs\rmlui\file.h" />
     <ClInclude Include="..\..\clibs\rmlui\font.h" />
     <ClInclude Include="..\..\clibs\rmlui\fonteffect.h" />
-    <ClInclude Include="..\..\clibs\rmlui\lua2struct.h" />
     <ClInclude Include="..\..\clibs\rmlui\luabind.h" />
     <ClInclude Include="..\..\clibs\rmlui\luaplugin.h" />
     <ClInclude Include="..\..\clibs\rmlui\pch.h" />

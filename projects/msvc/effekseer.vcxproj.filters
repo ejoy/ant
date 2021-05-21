@@ -763,9 +763,6 @@
     <ClInclude Include="..\..\clibs\effekseer\effekseer_context.h">
       <Filter>binding</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\clibs\effekseer\lua2struct.h">
-      <Filter>binding</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\effekseer\EffekseerRendererBGFX\EffekseerRenderer\EffekseerRendererBGFX.Texture.h">
       <Filter>effekseer\EffekseerRendererBGFX\EffekseerRenderer</Filter>
     </ClInclude>

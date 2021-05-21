@@ -294,9 +294,6 @@
     <ClInclude Include="..\..\clibs\rmlui\system.h">
       <Filter>binding\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\clibs\rmlui\lua2struct.h">
-      <Filter>binding\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\clibs\rmlui\context.h">
       <Filter>binding\Header Files</Filter>
     </ClInclude>
