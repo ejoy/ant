@@ -78,6 +78,26 @@ namespace lua_struct{
 
 LUA2STRUCT(geometry, worldmat, num, pos, normal, uv, index);
 
+//TODO: we should remove all render relate code from lightmapping.h
+struct shadinginfo{
+    uint16_t viewids[2];
+    struct downsampleT{
+        uint16_t prog;
+        uint16_t hemisphere;
+    };
+
+    struct weight_downsampleT : public downsampleT{
+        uint16_t weight;
+    };
+
+    weight_downsampleT weight_downsample;
+    downsampleT downsample;
+};
+
+LUA2STRUCT(shadinginfo::weight_downsampleT, prog, hemisphere, weight);
+LUA2STRUCT(shadinginfo::downsampleT, prog, hemisphere);
+LUA2STRUCT(shadinginfo, viewids, weight_downsample, downsample);
+
 static inline context*
 tocontext(lua_State *L, int index=1){
     return (context*)luaL_checkudata(L, index, "LM_CONTEXT_MT");
@@ -103,6 +123,19 @@ lcontext_set_geometry(lua_State *L){
         g.normal.type, g.normal.data,
         g.normal.stride, g.uv.type, g.uv.data, g.uv.stride,
         g.num, g.index.type, g.index.data);
+    return 0;
+}
+
+static int
+lcontext_set_shadering_info(lua_State *L){
+    auto ctx = tocontext(L, 1);
+    shadinginfo si;
+    lua_struct::unpack(L, 2, si);
+
+    lmSetDownsampleShaderingInfo(ctx->lm_ctx, si.viewids,
+        {si.weight_downsample.prog}, {si.weight_downsample.hemisphere}, {si.weight_downsample.weight},
+        {si.downsample.prog}, {si.downsample.hemisphere});
+
     return 0;
 }
 
@@ -135,6 +168,7 @@ llightmap_create_context(lua_State *L){
             {"__gc", lcontext_destroy},
             {"set_target_lightmap", lcontext_set_target_lightmap},
             {"set_geometry", lcontext_set_geometry},
+            {"set_shadering_info", lcontext_set_shadering_info},
             {"begin", lcontext_begin},
             {"end", lcontext_end},
             {nullptr, nullptr},
@@ -217,11 +251,18 @@ lcontext_set_target_lightmap(lua_State *L){
     return 1;
 }
 
+static int
+llightmap_context(lua_State *L){
+    luaL_getmetatable(L, "LM_CONTEXT_MT");
+    return 1;
+}
+
 extern "C"{
 LUAMOD_API int
 luaopen_bake(lua_State* L) {
     luaL_Reg lib[] = {
         { "create_lightmap_context", llightmap_create_context},
+        { "context_metatable", llightmap_context},
         { nullptr, nullptr },
     };
     luaL_newlib(L, lib);

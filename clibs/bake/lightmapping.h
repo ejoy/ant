@@ -81,6 +81,12 @@ void lmSetGeometry(lm_context *ctx,
 	lm_type lightmapCoordsType, const void *lightmapCoordsUV, int lightmapCoordsStride,                // lightmap atlas texture coordinates for the mesh [0..1]x[0..1] (integer types are normalized to 0..1 range).
 	int count, lm_type indicesType LM_DEFAULT_VALUE(LM_NONE), const void *indices LM_DEFAULT_VALUE(0));// if mesh indices are used, count = number of indices else count = number of vertices.
 
+#ifdef USE_BGFX
+void lmSetDownsampleShaderingInfo(lm_context *ctx,
+	const bgfx_view_id_t viewids[2],
+	bgfx_program_handle_t weightDownsampleProg, bgfx_uniform_handle_t weightHemisphereTextureHandle, bgfx_uniform_handle_t weightTextureHandle,
+	bgfx_program_handle_t downsampleProg, bgfx_uniform_handle_t hemisphereTextureHanle);
+#endif
 
 // as long as lmBegin returns true, the scene has to be rendered with the
 // returned camera and view parameters to the currently bound framebuffer.
@@ -361,7 +367,6 @@ struct lm_context
 		bgfx_vertex_layout_t	layout;
 
 		struct {
-			progromCode progCode;
 			bgfx_program_handle_t	prog;
 			bgfx_uniform_handle_t	hemispheresTextureHandle;
 
@@ -370,7 +375,6 @@ struct lm_context
 		} firstPass;
 
 		struct {
-			progromCode progCode;
 			bgfx_program_handle_t prog;
 			bgfx_uniform_handle_t hemispheresTextureHandle;
 		} downsamplePass;
@@ -1189,14 +1193,7 @@ static void lm_setMeshPosition(lm_context *ctx, unsigned int indicesTriangleBase
 		ctx->meshPosition.hemisphere.side = 5; // no samples on this triangle! put hemisphere sampler into finished state
 }
 
-#ifdef USE_BGFX
-static bgfx_program_handle_t lm_LoadProgram(const progromCode *code)
-{
-	bgfx_shader_handle_t vs = BGFX(create_shader)(BGFX(copy)(code->vs, code->vssize));
-	bgfx_shader_handle_t fs = BGFX(create_shader)(BGFX(copy)(code->fs, code->fssize));
-	return BGFX(create_program)(vs, fs, false);
-}
-#else
+#ifndef USE_BGFX
 static GLuint lm_LoadShader(GLenum type, const char *source)
 {
 	GLuint shader = glCreateShader(type);
@@ -1287,9 +1284,6 @@ static void lm_initContext(lm_context *ctx, unsigned int w[2], unsigned int h[2]
 	ctx->hemisphere.fb[0] = BGFX(create_frame_buffer_from_handles)(2, handles, false);
 	handles[0] = ctx->hemisphere.rbTexture[1];
 	ctx->hemisphere.fb[1] = BGFX(create_frame_buffer_from_handles)(1, handles, false);
-
-	ctx->hemisphere.firstPass.prog = lm_LoadProgram(&ctx->hemisphere.firstPass.progCode);
-	ctx->hemisphere.downsamplePass.prog = lm_LoadProgram(&ctx->hemisphere.downsamplePass.progCode);
 #else
 	glGenTextures(2, ctx->hemisphere.fbTexture);
 	glGenFramebuffers(2, ctx->hemisphere.fb);
@@ -1657,6 +1651,26 @@ void lmSetGeometry(lm_context *ctx,
 	ctx->meshPosition.pass = 0;
 	lm_setMeshPosition(ctx, 0);
 }
+
+#ifdef USE_BGFX
+void lmSetDownsampleShaderingInfo(lm_context *ctx,
+	const bgfx_view_id_t viewids[2],
+	bgfx_program_handle_t weightDownsampleProg, bgfx_uniform_handle_t weightHemisphereTextureHandle, bgfx_uniform_handle_t weightTextureHandle,
+	bgfx_program_handle_t downsampleProg, bgfx_uniform_handle_t hemisphereTextureHanle)
+{
+	for (int ii=0; ii<2; ++ii){
+		ctx->hemisphere.viewids[ii] = viewids[ii];
+		BGFX(set_view_frame_buffer)(viewids[ii], ctx->hemisphere.fb[ii]);
+	}
+
+	ctx->hemisphere.firstPass.prog						= weightDownsampleProg;
+	ctx->hemisphere.firstPass.hemispheresTextureHandle 	= weightHemisphereTextureHandle;
+	ctx->hemisphere.firstPass.weightsTextureHandle 		= weightTextureHandle;
+
+	ctx->hemisphere.downsamplePass.prog 				= downsampleProg;
+	ctx->hemisphere.downsamplePass.hemispheresTextureHandle = hemisphereTextureHanle;
+}
+#endif
 
 lm_bool lmBegin(lm_context *ctx, int* outViewport4, float* outView4x4, float* outProjection4x4)
 {
