@@ -50,6 +50,10 @@ function event.get_time(tag_name)
     return tag(tag_name) : get_time()
 end
 
+function event.step(tag_name, t)
+    tag(tag_name) : step(t)
+end
+
 function event.time(tag_name, t)
     tag(tag_name) : time(t)
 end

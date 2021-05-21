@@ -60,6 +60,9 @@ if lm.compiler == "msvc" then
         MSBuild, "/nologo", "@../bgfx/.build/projects/vs2019/bgfx.sln", "/m", "/v:m", "/t:build", ([[/p:Configuration=%s,Platform=x64]]):format(lm.mode),
         pool = "console",
     }
+    lm:build "bgfx_clean" {
+        MSBuild, "/nologo", "@../bgfx/.build/projects/vs2019/bgfx.sln", "/m", "/v:m", "/t:clean", ([[/p:Configuration=%s,Platform=x64]]):format(lm.mode),
+    }
 else
     local BgfxMake = {"make", "--no-print-directory", "-R", "-C", BGFX_MAKEFILE, "config="..lm.mode.."64", "-j8" }
     lm:build "bgfx_build" {
@@ -67,12 +70,11 @@ else
         EnableEditor and {"bgfx-shared-lib","shaderc","texturec"},
         pool = "console",
     }
+    lm:build "bgfx_clean" {
+        "make", "-C", BGFX_MAKEFILE, "clean",
+        pool = "console",
+    }
 end
-
-lm:build "bgfx_clean" {
-    "make", "-C", BGFX_MAKEFILE, "clean",
-    pool = "console",
-}
 
 if EnableEditor then
     lm:copy "copy_bgfx_texturec" {

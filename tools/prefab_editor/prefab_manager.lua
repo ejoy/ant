@@ -95,38 +95,38 @@ local geometricidx = 0
 local function gen_light_id() geometricidx = geometricidx + 1 return geometricidx end
 
 local function create_light_billboard(light_eid)
-    local bb_eid = world:create_entity{
-        policy = {
-            "ant.render|render",
-            "ant.effect|billboard",
-            "ant.general|name"
-        },
-        data = {
-            name = "billboard_light",
-            transform = {},
-            billboard = {lock = "camera"},
-            state = 1,
-            scene_entity = true,
-            material = gd.package_path .. "res/materials/billboard.material"
-        },
-        action = {
-            bind_billboard_camera = "camera"
-        }
-    }
-    local icons = require "common.icons"(assetmgr)
-    local light_type = world[light_eid].light_type
-    local light_icons = {
-        spot = "ICON_SPOTLIGHT",
-        point = "ICON_POINTLIGHT",
-        directional = "ICON_DIRECTIONALLIGHT",
-    }
-    local tex = icons[light_icons[light_type]].handle
-    imaterial.set_property(bb_eid, "s_basecolor", {stage = 0, texture = {handle = tex}})
-    iom.set_scale(bb_eid, 0.2)
-    ies.set_state(bb_eid, "auxgeom", true)
-    iom.set_position(bb_eid, iom.get_position(light_eid))
-    world[bb_eid].parent = world[light_eid].parent
-    light_gizmo.billboard[light_eid] = bb_eid
+    -- local bb_eid = world:create_entity{
+    --     policy = {
+    --         "ant.render|render",
+    --         "ant.effect|billboard",
+    --         "ant.general|name"
+    --     },
+    --     data = {
+    --         name = "billboard_light",
+    --         transform = {},
+    --         billboard = {lock = "camera"},
+    --         state = 1,
+    --         scene_entity = true,
+    --         material = gd.package_path .. "res/materials/billboard.material"
+    --     },
+    --     action = {
+    --         bind_billboard_camera = "camera"
+    --     }
+    -- }
+    -- local icons = require "common.icons"(assetmgr)
+    -- local light_type = world[light_eid].light_type
+    -- local light_icons = {
+    --     spot = "ICON_SPOTLIGHT",
+    --     point = "ICON_POINTLIGHT",
+    --     directional = "ICON_DIRECTIONALLIGHT",
+    -- }
+    -- local tex = icons[light_icons[light_type]].handle
+    -- imaterial.set_property(bb_eid, "s_basecolor", {stage = 0, texture = {handle = tex}})
+    -- iom.set_scale(bb_eid, 0.2)
+    -- ies.set_state(bb_eid, "auxgeom", true)
+    -- iom.set_position(bb_eid, iom.get_position(light_eid))
+    -- world[bb_eid].parent = world[light_eid].parent
+    -- light_gizmo.billboard[light_eid] = bb_eid
 end
 
 local geom_mesh_file = {
@@ -184,19 +184,20 @@ function m:create_collider(config)
             "ant.render|render",
             "ant.scene|hierarchy_policy",
             "ant.scene|transform_policy",
-            "ant.collision|collider_policy"
+            --"ant.collision|collider_policy"
         },
         data = {
             name = "collider" .. geometricidx,
             scene_entity = true,
             transform = {s = scale},
-            collider = { [config.type] = define },
+            --collider = { [config.type] = define },
             color = {1, 0.5, 0.5, 0.5},
             state = ies.create_state "visible|selectable",
             material = "/pkg/ant.resources/materials/singlecolor.material",
             mesh = (config.type == "box") and geom_mesh_file["cube"] or geom_mesh_file[config.type]
         }
     }
+    world[new_entity].collider = { [config.type] = define }
     imaterial.set_property(new_entity, "u_color", {1, 0.5, 0.5, 0.5})
     return new_entity, temp
 end

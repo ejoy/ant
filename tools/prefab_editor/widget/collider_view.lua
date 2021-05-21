@@ -23,26 +23,28 @@ function ColliderView:set_model(eid)
     if collider.sphere then
         self.radius:set_getter(function() return world[eid].collider.sphere[1].radius end)
         self.radius:set_setter(function(r)
-            tp.template.data.collider.sphere[1].radius = r
+            --tp.template.data.collider.sphere[1].radius = r
+            iom.set_scale(self.eid, r * 100)
             redefine = true
         end)
         
     elseif collider.capsule then
         self.radius:set_getter(function() return world[eid].collider.capsule[1].radius end)
         self.radius:set_setter(function(r)
-            tp.template.data.collider.capsule[1].radius = r
+            --tp.template.data.collider.capsule[1].radius = r
             redefine = true
         end)
         self.height:set_getter(function() return world[eid].collider.capsule[1].height end)
         self.height:set_setter(function(h)
-            tp.template.data.collider.capsule[1].height = h
+            --tp.template.data.collider.capsule[1].height = h
             redefine = true
         end)
     elseif collider.box then
         self.half_size:set_getter(function() return world[eid].collider.box[1].size end)
         self.half_size:set_setter(function(sz)
-            tp.template.data.collider.box[1].size = sz
-            collider.box.size = sz
+            --tp.template.data.collider.box[1].size = sz
+            -- collider.box.size = sz
+            iom.set_scale(self.eid, {sz[1] * 200, sz[2] * 200, sz[3] * 200})
             redefine = true
         end)
     end
@@ -69,10 +71,10 @@ end
 function ColliderView:show()
     if not world[self.eid] then return end
     
-    if redefine then
-        self:set_model(prefab_mgr:recreate_entity(self.eid))
-        redefine = false
-    end
+    -- if redefine then
+    --     self:set_model(prefab_mgr:recreate_entity(self.eid))
+    --     redefine = false
+    -- end
     BaseView.show(self)
     if world[self.eid].collider.sphere then
         self.radius:show()
@@ -100,6 +102,7 @@ end
 
 return function(w)
     world   = w
+    iom = world:interface "ant.objcontroller|obj_motion"
     prefab_mgr = require "prefab_manager"(world)
     require "widget.base_view"(world)
     return ColliderView

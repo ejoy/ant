@@ -1,4 +1,4 @@
 return {
-    name = "ant.argument",
+    name = "ant.baking",
 	entry = "main",
 }

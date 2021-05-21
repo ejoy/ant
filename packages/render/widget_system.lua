@@ -174,26 +174,26 @@ local physic_bounding_sys = ecs.system "physic_bounding_system"
 local iwd = world:interface "ant.render|iwidget_drawer"
 
 function physic_bounding_sys:widget()
-	for _, eid in world:each "collider" do
-		local e = world[eid]
-		local collider = e.collider
-		local srt = iom.srt(eid)
-		if collider.box then
-			for _, sh in ipairs(collider.box) do
-				iwd.draw_box(sh, srt)
-			end
-		end
-		if collider.capsule then
-			for _, sh in ipairs(collider.capsule) do
-				iwd.draw_capsule(sh, srt)
-			end
-		end
-		if collider.sphere then
-			for _, sh in ipairs(collider.sphere) do
-				iwd.draw_sphere(sh, srt)
-			end
-		end
-	end
+	-- for _, eid in world:each "collider" do
+	-- 	local e = world[eid]
+	-- 	local collider = e.collider
+	-- 	local srt = iom.srt(eid)
+	-- 	if collider.box then
+	-- 		for _, sh in ipairs(collider.box) do
+	-- 			iwd.draw_box(sh, srt)
+	-- 		end
+	-- 	end
+	-- 	if collider.capsule then
+	-- 		for _, sh in ipairs(collider.capsule) do
+	-- 			iwd.draw_capsule(sh, srt)
+	-- 		end
+	-- 	end
+	-- 	if collider.sphere then
+	-- 		for _, sh in ipairs(collider.sphere) do
+	-- 			iwd.draw_sphere(sh, srt)
+	-- 		end
+	-- 	end
+	-- end
 end
 
 local rmb_sys = ecs.system "render_mesh_bounding_system"

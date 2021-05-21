@@ -267,8 +267,6 @@ end
 
 function iani.step(task, s_delta, absolute)
 	local play_state = task.play_state
-	if play_state.manual_update or not play_state.play then return end
-	
 	local next_time = absolute and s_delta or (play_state.ratio * task.animation._handle:duration() + s_delta) * play_state.speed
 	local duration = task.animation._handle:duration()
 	local clip_state = task.clip_state.current
