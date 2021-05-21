@@ -4,7 +4,7 @@ local math3d = require "math3d"
 
 local iom = world:interface "ant.objcontroller|obj_motion"
 
-local cc_sys = ecs.system "camera_controller"
+local cc_sys = ecs.system "default_camera_controller"
 
 local kb_mb = world:sub {"keyboard"}
 local mouse_mb = world:sub {"mouse"}
