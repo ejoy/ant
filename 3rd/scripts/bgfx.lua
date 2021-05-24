@@ -62,6 +62,7 @@ if lm.compiler == "msvc" then
     }
     lm:build "bgfx_clean" {
         MSBuild, "/nologo", "@../bgfx/.build/projects/vs2019/bgfx.sln", "/m", "/v:m", "/t:clean", ([[/p:Configuration=%s,Platform=x64]]):format(lm.mode),
+        pool = "console",
     }
 else
     local BgfxMake = {"make", "--no-print-directory", "-R", "-C", BGFX_MAKEFILE, "config="..lm.mode.."64", "-j8" }
