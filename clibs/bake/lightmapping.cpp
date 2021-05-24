@@ -83,19 +83,19 @@ struct shadinginfo{
     uint16_t viewids[2];
     struct downsampleT{
         uint16_t prog;
-        uint16_t hemisphere;
+        uint16_t hemispheres;
     };
 
     struct weight_downsampleT : public downsampleT{
-        uint16_t weight;
+        uint16_t weights;
     };
 
     weight_downsampleT weight_downsample;
     downsampleT downsample;
 };
 
-LUA2STRUCT(shadinginfo::weight_downsampleT, prog, hemisphere, weight);
-LUA2STRUCT(shadinginfo::downsampleT, prog, hemisphere);
+LUA2STRUCT(shadinginfo::weight_downsampleT, prog, hemispheres, weights);
+LUA2STRUCT(shadinginfo::downsampleT, prog, hemispheres);
 LUA2STRUCT(shadinginfo, viewids, weight_downsample, downsample);
 
 static inline context*
@@ -133,8 +133,8 @@ lcontext_set_shadering_info(lua_State *L){
     lua_struct::unpack(L, 2, si);
 
     lmSetDownsampleShaderingInfo(ctx->lm_ctx, si.viewids,
-        {si.weight_downsample.prog}, {si.weight_downsample.hemisphere}, {si.weight_downsample.weight},
-        {si.downsample.prog}, {si.downsample.hemisphere});
+        {si.weight_downsample.prog}, {si.weight_downsample.hemispheres}, {si.weight_downsample.weights},
+        {si.downsample.prog}, {si.downsample.hemispheres});
 
     return 0;
 }

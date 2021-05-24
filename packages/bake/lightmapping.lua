@@ -14,7 +14,7 @@ local bake = require "bake"
 
 local ipf = world:interface "ant.scene|iprimitive_filter"
 local irender = world:interface "ant.render|irender"
-
+local imaterial = world:interface "ant.asset|imaterial"
 
 local lm_prim_trans = ecs.transform "lightmap_primitive_transform"
 function lm_prim_trans.process_entity(e)
@@ -41,8 +41,8 @@ local weight_downsample_material
 local downsample_material
 
 function lightmap_sys:init()
-    weight_downsample_material = assetmgr.load_fx "/pkg/ant.reousrces/materials/lightmap/weight_downsample.material"
-    downsample_material = assetmgr.load_fx "/pkg/ant.reousrces/materials/lightmap/downsample.material"
+    weight_downsample_material = imaterial.load "/pkg/ant.bake/materials/weight_downsample.material"
+    downsample_material = imaterial.load "/pkg/ant.bake/materials/downsample.material"
 
     world:create_entity {
         policy = {
@@ -88,9 +88,18 @@ function lightmap_sys:end_frame()
     local wds_fx = weight_downsample_material.fx
     local ds_fx = downsample_material.fx
 
-    ctx:set_shadering_info(viewids, 
-        wds_fx.prog, find_uniform_handle(wds_fx.uniforms, "hemispheres"), find_uniform_handle(wds_fx.uniforms, "weights"),
-        ds_fx.prog, find_uniform_handle(ds_fx.uniforms, "hemispheres"))
+    ctx:set_shadering_info{
+        viewids = viewids, 
+        weight_downsample = {
+            prog = 0xffff & wds_fx.prog,
+            hemispheres = find_uniform_handle(wds_fx.uniforms, "hemispheres"),
+            weights = find_uniform_handle(wds_fx.uniforms, "weights"),
+        },
+        downsample = {
+            prog = 0xffff & ds_fx.prog,
+            hemispheres = find_uniform_handle(ds_fx.uniforms, "hemispheres")
+        }
+    }
 
     local lm_e = world:singleton_entity "lightmap"
 

@@ -99,7 +99,7 @@ return function (input, output, setting)
         debug = compile_debug_shader(IDENTITY_items.platform, IDENTITY_items.renderer),
     }
     if not ok then
-        return false, ("compile failed: " .. input .. "\n\n" .. err)
+        return false, ("compile failed: " .. input:string() .. "\n\n" .. err)
     end
     return true, deps
 end

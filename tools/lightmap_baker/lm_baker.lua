@@ -3,9 +3,9 @@ local world = ecs.world
 
 local ientity = world:interface "ant.render|entity"
 
-local lm_test_sys = ecs.system "lightmap_test_system"
+local lm_baker = ecs.system "lightmap_baker_system"
 
-function lm_test_sys:init()
+function lm_baker:init()
     local function create_plane()
         local vb = {
             -1.0, 0.0, 1.0, 0xff0000ff, 0.0, 0.0, 0.0, 0.0,
@@ -92,6 +92,6 @@ function lm_test_sys:init()
     create_box()
 end
 
-function lm_test_sys:data_changed()
+function lm_baker:data_changed()
 
 end

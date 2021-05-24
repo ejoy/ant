@@ -1,9 +1,15 @@
 policy "lightmap"
     .require_system "ant.bake|lightmap_system"
     .require_transform "ant.bake|lightmap_primitive_transform"
-    .require_interface "ant.render|iprimitive_filter"
+    .require_transform "ant.bake|lightmap_transform"
+    .require_interface "ant.scene|iprimitive_filter"
     .component "primitive_filter"
     .unique_component "lightmap_tag"
+
+transform "lightmap_transform"
+    .implement "lightmapping.lua"
+    .method "process_entity"
+    .output "_lightmap"
 
 transform "lightmap_primitive_transform"
     .implement "lightmapping.lua"

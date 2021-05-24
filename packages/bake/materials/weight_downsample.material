@@ -1,0 +1,12 @@
+fx:
+    vs: /pkg/ant.bake/materials/shaders/vs_downsample.sc
+    fs: /pkg/ant.bake/materials/shaders/fs_weight_downsample.sc
+properties:
+    hemispheres:
+        stage:0
+        texture: /pkg/ant.resources/textures/default.texture
+    weights:
+        stage:1
+        texture: /pkg/ant.resources/textures/default.texture
+
+state: /pkg/ant.resources/materials/states/default.state

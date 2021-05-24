@@ -70,10 +70,8 @@ function util.spawn_process(commands)
 	end
 
 	for line in prog.stdout:lines() do
-		io.write(line)
-		io.write "\n"
+		msg[#msg+1] = line
 	end
-	io.flush()
 	msg[#msg+1] = "----------------------------"
 
 	local errcode = prog:wait()

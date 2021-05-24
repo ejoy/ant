@@ -1,8 +1,8 @@
 return {
-    name = "ant.test.ibl",
+    name = "ant.tool.lightmap_baker",
     ecs = {
         import = {
-            "@ant.test.ibl",
+            "@ant.tool.lightmap_baker",
         },
         pipeline = {
             "init",
@@ -10,7 +10,7 @@ return {
             "exit",
         },
         system = {
-            "ant.test.ibl|init_system",
+            "ant.tool.lightmap_baker|lightmap_baker_system",
         }
     }
 }
