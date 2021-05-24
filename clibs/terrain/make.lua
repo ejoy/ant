@@ -9,7 +9,10 @@ lm:source_set "source_terrain" {
     },
     sources = {
         "terrain.cpp",
-    }
+    },
+    defines = {
+        "GLM_FORCE_QUAT_DATA_XYZW",
+    },
 }
 
 lm:lua_dll "terrain" {

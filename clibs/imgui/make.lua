@@ -23,12 +23,13 @@ lm:lua_dll "imgui" {
         Ant3rd .. "imgui/imgui.cpp",
     },
     defines = {
+        "GLM_FORCE_QUAT_DATA_XYZW",
         "IMGUI_DISABLE_OBSOLETE_FUNCTIONS",
         "IMGUI_DISABLE_METRICS_WINDOW",
         "IMGUI_DISABLE_DEMO_WINDOWS",
         "IMGUI_DISABLE_DEFAULT_ALLOCATORS",
         "IMGUI_USER_CONFIG=<imgui_config.h>",
-        "_UNICODE"
+        "_UNICODE",
     },
     windows = {
         sources = {

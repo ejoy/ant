@@ -21,7 +21,10 @@ lm:source_set "source_effekseer" {
         flags = {
             "-wd4244"
         }
-    }
+    },
+    defines = {
+        "GLM_FORCE_QUAT_DATA_XYZW",
+    },
 }
 
 lm:lua_dll "effekseer" {

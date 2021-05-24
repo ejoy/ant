@@ -159,7 +159,8 @@ function init_loader_sys:init()
     --target_lock_test()
 
     --ientity.create_skybox()
-    world:instance "/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab"
+    --world:instance "/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab"
+    world:instance "/pkg/ant.resources.binary/meshes/cloud_run.glb|mesh.prefab"
     --world:instance "/pkg/ant.test.features/assets/CloudTestRun.glb|mesh.prefab"
 
     -- local eid = world:create_entity {

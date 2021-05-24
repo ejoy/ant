@@ -1,11 +1,11 @@
 #ifndef math3d_util_h
 #define math3d_util_h
 
-#include "glm/glm.hpp"
-#include "glm/gtc/constants.hpp"
-#include "glm/ext/scalar_constants.hpp"
-#include "glm/ext/scalar_relational.hpp"
-#include "glm/ext/vector_relational.hpp"
+#include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
+#include <glm/ext/scalar_constants.hpp>
+#include <glm/ext/scalar_relational.hpp>
+#include <glm/ext/vector_relational.hpp>
 
 template<typename T>
 inline bool

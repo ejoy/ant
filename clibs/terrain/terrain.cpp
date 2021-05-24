@@ -1,7 +1,7 @@
 #define LUA_LIB
 
 //#include "meshbase/meshbase.h"
-#include "glm/glm.hpp"
+#include <glm/glm.hpp>
 
 extern "C" {
 #include <lua.h>

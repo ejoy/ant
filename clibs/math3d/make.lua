@@ -16,6 +16,7 @@ lm:source_set "source_math3d" {
     },
     defines = {
         "_USE_MATH_DEFINES",
+        "GLM_FORCE_QUAT_DATA_XYZW",
     }
 }
 

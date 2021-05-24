@@ -30,7 +30,10 @@ lm:source_set "source_hierarchy" {
         "ozz_animation_offline" .. LIB_SUFFIX,
         "ozz_animation" .. LIB_SUFFIX,
         "ozz_base" .. LIB_SUFFIX,
-    }
+    },
+    defines = {
+        "GLM_FORCE_QUAT_DATA_XYZW",
+    },
 }
 
 lm:lua_dll "hierarchy" {
