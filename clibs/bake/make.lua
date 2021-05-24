@@ -4,8 +4,10 @@ dofile "../common.lua"
 
 lm:source_set "source_bake" {
     includes = {
-        LuaInclude, BgfxInclude,
-        "../lua2struct"
+        LuaInclude,
+        BgfxInclude,
+        "../lua2struct",
+        "../bgfx",
     },
     sources = {
         "lightmapping.cpp",

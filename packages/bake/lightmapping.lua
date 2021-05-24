@@ -1,19 +1,17 @@
 local ecs = ...
 local world = ecs.world
 
-local assetmgr = import_package "ant.asset"
-local mathpkg = import_package "ant.math"
+local mathpkg   = import_package "ant.math"
 local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
+local declmgr   = renderpkg.declmgr
 
-local mc = mathpkg.constant
+local math3d    = require "math3d"
+local bgfx      = require "bgfx"
+local bake      = require "bake"
 
-local math3d = require "math3d"
-local bgfx = require "bgfx"
-local bake = require "bake"
-
-local ipf = world:interface "ant.scene|iprimitive_filter"
-local irender = world:interface "ant.render|irender"
+local ipf       = world:interface "ant.scene|iprimitive_filter"
+local irender   = world:interface "ant.render|irender"
 local imaterial = world:interface "ant.asset|imaterial"
 
 local lm_prim_trans = ecs.transform "lightmap_primitive_transform"
@@ -59,7 +57,60 @@ function lightmap_sys:init()
 end
 
 local function load_geometry_info(item)
-    
+    local e = world[item.eid]
+    local m = e.mesh
+    local function get_type(t)
+        local types<const> = {
+            u = "B", i = "I", f = "f",
+        }
+
+        local tt = types[t]
+        assert(tt, "invalid type")
+        return types[tt]
+    end
+    local function get_attrib_item(name)
+        for _, vb in ipairs(m.vb) do
+            local offset = 0
+            local declname = vb.declname
+            for _, d in declname:gmatch "[^|]+" do
+                if d:sub(1, 2):match(name) then
+                    return {
+                        offset = offset,
+                        stride = declmgr.stride(declname),
+                        memory = bgfx.memory_buffer(vb.memory),
+                        type   = get_type(d:sub(6, 6)),
+                    }
+                end
+                offset = offset + declmgr.elemsize(d)
+            end
+        end
+    end
+
+    local ib = m.ib
+    local index
+    if ib then
+        local t
+        if ib.flag:match "d" then
+            t = "H"
+        else
+            t = "I"
+        end
+        index = {
+            offset = 0,
+            stride = t == "I" and 4 or 2,
+            memory = bgfx.memory_buffer(ib.memory),
+            type = t
+        }
+    end
+
+    return {
+        worldmat= math3d.pointer(item.worldmat),
+        num     = m.vb.num,
+        pos     = get_attrib_item "p",
+        normal  = get_attrib_item "n",
+        uv      = get_attrib_item "t1",
+        index   = index,
+    }
 end
 
 function lightmap_sys:end_frame()
@@ -109,43 +160,25 @@ function lightmap_sys:end_frame()
     for _, result in ipf.iter_filter(lm_e.primitive_filter) do
         for _, item in ipf.iter_target(result) do
             local e = world[item.eid]
-            local lm = ctx:set_target_lightmap(e.lightmap)
-            e._lightmap.data = lm
-
-            repeat
-                local finished, vp, view, proj = ctx:begin()
-                if finished then
-                    break
-                end
-
-                ctx:set_geometry{
-                    worldmat = nil,
-                    num = 0,
-                    pos = {
-                        data = nil,
-                        type = "f",
-                        stride = 0,
-                    },
-                    normal = {
-                        type = "f",
-                    },
-                    uv = {
-                        type = "f",
-                    },
-                    index = {
-                        data = nil,
-                        stride = 2, -- 2 or 4
-                        type = "H"  --H or I
-                    }
-                }
-
-                vp = math3d.tovalue(vp)
-                bgfx.set_view_rect(bake_viewid, vp[1], vp[2], vp[3], vp[4])
-                bgfx.set_view_transform(bake_viewid, view, proj)
-                irender.draw(bake_viewid, item)
-            until (true)
-
-            lm:postprocess()
+            if e then
+                local lm = ctx:set_target_lightmap(e.lightmap)
+                e._lightmap.data = lm
+                local g = load_geometry_info(item)
+                lm:set_geometry(g)
+                repeat
+                    local finished, vp, view, proj = ctx:begin()
+                    if finished then
+                        break
+                    end
+    
+                    vp = math3d.tovalue(vp)
+                    bgfx.set_view_rect(bake_viewid, vp[1], vp[2], vp[3], vp[4])
+                    bgfx.set_view_transform(bake_viewid, view, proj)
+                    irender.draw(bake_viewid, item)
+                until (true)
+    
+                lm:postprocess()
+            end
         end
     end
     

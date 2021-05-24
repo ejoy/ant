@@ -33,6 +33,13 @@ check_handle_type(lua_State *L, int type, int id, const char * tname) {
 	return (uint16_t)(id & 0xffff);
 }
 
+struct memory {
+	void *data;
+	size_t size;
+	int ref;
+	int constant;
+};
+
 #if LUA_VERSION_NUM < 504
 // lua 5.3
 

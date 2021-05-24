@@ -104,13 +104,6 @@ struct callback {
 	bool getlog;
 };
 
-struct memory {
-	void *data;
-	size_t size;
-	int ref;
-	int constant;
-};
-
 static int
 memory_tostring(lua_State *L) {
 	struct memory *mem = (struct memory *)lua_touserdata(L, 1);

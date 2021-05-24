@@ -11,6 +11,7 @@
 #include "lightmapping.h"
 
 #include "lua2struct.h"
+#include "luabgfx.h"
 
 struct context{
     lm_context *lm_ctx;
@@ -38,9 +39,13 @@ struct geometry{
     const float* worldmat;
     int num;
     struct attrib{
-        const uint8_t* data;
-        lm_type type;
+        const struct memory* m;
+        const void* data() const {
+            return (const uint8_t*)m->data + offset;
+        };
+        int offset;
         int stride;
+        lm_type type;
     };
     attrib pos;
     attrib normal;
@@ -53,11 +58,12 @@ namespace lua_struct{
     template <>
     inline void unpack<geometry::attrib>(lua_State* L, int idx, geometry::attrib& v, void*) {
         luaL_checktype(L, idx, LUA_TTABLE);
-        const int t = lua_getfield(L, idx, "data");
-        if (t == LUA_TLIGHTUSERDATA){
-            v.data = (const uint8_t *)lua_touserdata(L, -1);
-        }
+        const auto datatype = lua_getfield(L, idx, "memory");
+        v.m = (const struct memory*)luaL_testudata(L, idx, "BGFX_MEMORY");
         lua_pop(L, 1);
+
+        unpack_field(L, idx, "offset", v.offset);
+        unpack_field(L, idx, "stride", v.stride);
 
         lua_getfield(L, idx, "type");
         auto s = lua_tostring(L, -1);
@@ -69,14 +75,26 @@ namespace lua_struct{
             default: luaL_error(L, "invalid data type:%s", s);
         }
         lua_pop(L, 1);
+    }
 
-        lua_getfield(L, idx, "stride");
-        v.stride = (int)lua_tointeger(L, -1);
+    template<>
+    inline void unpack<geometry>(lua_State* L, int idx, geometry& g, void*){
+        unpack_field(L, idx, "num", g.num);
+        unpack_field(L, idx, "worldmat", g.worldmat);
+        unpack_field(L, idx, "pos", g.pos);
+        unpack_field(L, idx, "normal", g.normal);
+        unpack_field(L, idx, "uv", g.uv);
+
+        auto t = lua_getfield(L, idx, "index");
         lua_pop(L, 1);
+
+        if (t == LUA_TTABLE){
+            unpack_field(L, idx, "index", g.index);
+        }else{
+            g.index.type = LM_NONE;
+        }
     }
 }
-
-LUA2STRUCT(geometry, worldmat, num, pos, normal, uv, index);
 
 //TODO: we should remove all render relate code from lightmapping.h
 struct shadinginfo{
@@ -119,10 +137,10 @@ lcontext_set_geometry(lua_State *L){
     lua_struct::unpack(L, 2, g);
 
     lmSetGeometry(ctx->lm_ctx, g.worldmat, 
-        g.pos.type, g.pos.data, g.pos.stride,
-        g.normal.type, g.normal.data,
-        g.normal.stride, g.uv.type, g.uv.data, g.uv.stride,
-        g.num, g.index.type, g.index.data);
+        g.pos.type, g.pos.data(), g.pos.stride,
+        g.normal.type, g.normal.data(),
+        g.normal.stride, g.uv.type, g.uv.data(), g.uv.stride,
+        g.num, g.index.type, g.index.data());
     return 0;
 }
 

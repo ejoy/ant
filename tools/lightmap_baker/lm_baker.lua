@@ -5,7 +5,25 @@ local ientity = world:interface "ant.render|entity"
 
 local lm_baker = ecs.system "lightmap_baker_system"
 
+local function create_lm_entity(name, material, m, srt)
+    return world:create_entity {
+		policy = {
+			"ant.render|render",
+			"ant.general|name",
+		},
+		data = {
+			transform	= srt or {},
+			material	= material,
+			mesh		= m,
+			state		= ies.create_state "visible|lightmap",
+			name		= name,
+			scene_entity= true,
+		}
+	}
+end
+
 function lm_baker:init()
+    local testmaterial = "/pkg/ant.tool.lightmap_baker/assets/test.material"
     local function create_plane()
         local vb = {
             -1.0, 0.0, 1.0, 0xff0000ff, 0.0, 0.0, 0.0, 0.0,
@@ -20,7 +38,7 @@ function lm_baker:init()
         }
 
         local mesh = ientity.create_mesh({"p3|c40nui|t20|t21", vb}, ib)
-        return ientity.create_simple_render_entity("plane", "/pkg/ant.tool.lightmap_baker/assets/test.material", mesh)
+        return create_lm_entity("plane", testmaterial, mesh)
     end
 
     local function create_box()
@@ -85,11 +103,12 @@ function lm_baker:init()
         }
 
         local mesh = ientity.create_mesh({"p3|c40niu|t20|t21", vb}, ib)
-        return ientity.create_simple_render_entity("box", "/pkg/ant.tool.lightmap_baker/assets/test.material", mesh)
+        return create_lm_entity("box", testmaterial, mesh)
     end
 
     create_plane()
-    create_box()
+    local b = create_box()
+    print (world[b].name)
 end
 
 function lm_baker:data_changed()
