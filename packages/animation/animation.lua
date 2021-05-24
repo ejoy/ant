@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-local icoll     = world:interface "ant.collision|collider"
+--local icoll     = world:interface "ant.collision|collider"
 local assetmgr 		= import_package "ant.asset"
 local iom 			= world:interface "ant.objcontroller|obj_motion"
 local ani_module 	= require "hierarchy.animation"
@@ -53,9 +53,9 @@ local function process_keyframe_event(task)
 						local final_mat = math3d.mul(math3d.matrix{t = event.collision.offset.position, r = event.collision.offset.rotate, s = {1,1,1}}, iom.worldmat(col.eid))
 						iom.set_srt(col.eid, final_mat)
 					end
-					if event.collision.enable and icoll.test(world[coll.eid]) then
-						print("Overlaped!")
-					end
+					-- if event.collision.enable and icoll.test(world[coll.eid]) then
+					-- 	print("Overlaped!")
+					-- end
 				end
 			elseif event.event_type == "Effect" then
 				if not event.effect and event.asset_path ~= "" then
