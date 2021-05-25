@@ -132,12 +132,7 @@ local function load_geometry_info(item)
     local ib = m.ib
     local index
     if ib then
-        local t
-        if ib.flag:match "d" then
-            t = "H"
-        else
-            t = "I"
-        end
+        local t<const> = ib.flag:match "d" and "H" or "I"
         index = {
             offset = 0,
             stride = t == "I" and 4 or 2,
@@ -156,6 +151,14 @@ local function load_geometry_info(item)
     }
 end
 
+local function draw_scene(rq)
+    for _, result in ipf.iter_filter(rq.primitive_filter) do
+        for _, item in ipf.iter_target(result) do
+            irender.draw(bake_viewid, item)
+        end
+    end
+end
+
 local function bake_entity(eid)
     local e = world[eid]
     if e == nil then
@@ -169,8 +172,10 @@ local function bake_entity(eid)
     log.info("bake entity:%d, %s", eid, e.name or "")
     local lm = bake_ctx:set_target_lightmap(e.lightmap)
     e._lightmap.data = lm
-    local g = load_geometry_info(item)
+
+    local g = load_geometry_info(e._rendercache)
     lm:set_geometry(g)
+    local mq = world:singleton_entity "main_queue"
     repeat
         local finished, vp, view, proj = bake_ctx:begin()
         if finished then
@@ -180,7 +185,7 @@ local function bake_entity(eid)
         vp = math3d.tovalue(vp)
         bgfx.set_view_rect(bake_viewid, vp[1], vp[2], vp[3], vp[4])
         bgfx.set_view_transform(bake_viewid, view, proj)
-        irender.draw(bake_viewid, item)
+        draw_scene(mq)
     until (true)
 
     lm:postprocess()
