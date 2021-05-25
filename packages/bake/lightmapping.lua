@@ -176,8 +176,9 @@ local function bake_entity(eid)
     local g = load_geometry_info(e._rendercache)
     lm:set_geometry(g)
     local mq = world:singleton_entity "main_queue"
+    log.info("begin bake entity:%d-%s", eid, e.name or "")
     repeat
-        local finished, vp, view, proj = bake_ctx:begin()
+        local finished, vp, view, proj = bake_ctx:begin_patch()
         if finished then
             break
         end
@@ -186,9 +187,14 @@ local function bake_entity(eid)
         bgfx.set_view_rect(bake_viewid, vp[1], vp[2], vp[3], vp[4])
         bgfx.set_view_transform(bake_viewid, view, proj)
         draw_scene(mq)
+        bake_ctx:end_patch()
+        log.info("%d-%s process:%2f", eid, e.name or "", bake_ctx:process())
     until (true)
 
+    log.info("bake finish for entity: %d-%s", eid, e.name or "")
+
     lm:postprocess()
+    log.info("postprocess entity finish: %d-%s", eid, e.name or "")
 end
 
 local function bake_all()

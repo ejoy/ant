@@ -158,7 +158,7 @@ lcontext_set_shadering_info(lua_State *L){
 }
 
 static int
-lcontext_begin(lua_State *L){
+lcontext_begin_patch(lua_State *L){
     auto ctx = tocontext(L, 1);
     auto vp = (int*)lua_touserdata(L, 2);
     auto viewmat = (float*)lua_touserdata(L, 3);
@@ -168,12 +168,17 @@ lcontext_begin(lua_State *L){
 }
 
 static int
-lcontext_end(lua_State *L){
+lcontext_end_patch(lua_State *L){
     auto ctx = tocontext(L);
     lmEnd(ctx->lm_ctx);
     return 0;
 }
 
+static int
+lcontext_process(lua_State *L){
+    lua_pushnumber(L, lmProgress(tocontext(L, 1)->lm_ctx));
+    return 1;
+}
 
 static int
 llightmap_create_context(lua_State *L){
@@ -185,11 +190,12 @@ llightmap_create_context(lua_State *L){
         luaL_Reg l[] = {
             {"__gc", lcontext_destroy},
             {"set_target_lightmap", lcontext_set_target_lightmap},
-            {"set_geometry", lcontext_set_geometry},
-            {"set_shadering_info", lcontext_set_shadering_info},
-            {"begin", lcontext_begin},
-            {"end", lcontext_end},
-            {nullptr, nullptr},
+            {"set_geometry",        lcontext_set_geometry},
+            {"set_shadering_info",  lcontext_set_shadering_info},
+            {"begin_patch",         lcontext_begin_patch},
+            {"end_patch",           lcontext_end_patch},
+            {"process",             lcontext_process},
+            {nullptr,               nullptr},
         };
 
         luaL_setfuncs(L, l, 0);
