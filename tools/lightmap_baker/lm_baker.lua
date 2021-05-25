@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local ientity = world:interface "ant.render|entity"
-
+local ies = world:interface "ant.scene|ientity_state"
 local lm_baker = ecs.system "lightmap_baker_system"
 
 local function create_lm_entity(name, material, m, srt)
@@ -23,6 +23,9 @@ local function create_lm_entity(name, material, m, srt)
 end
 
 function lm_baker:init()
+    world:instance "/pkg/ant.tool.lightmap_baker/assets/light.prefab"
+    world:instance "/pkg/ant.tool.lightmap_baker/assets/skybox.prefab"
+
     local testmaterial = "/pkg/ant.tool.lightmap_baker/assets/test.material"
     local function create_plane()
         local vb = {
@@ -107,8 +110,7 @@ function lm_baker:init()
     end
 
     create_plane()
-    local b = create_box()
-    print (world[b].name)
+    create_box()
 end
 
 function lm_baker:data_changed()

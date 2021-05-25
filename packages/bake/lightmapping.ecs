@@ -4,7 +4,7 @@ policy "lightmap"
     .require_transform "ant.bake|lightmap_transform"
     .require_interface "ant.scene|iprimitive_filter"
     .component "primitive_filter"
-    .unique_component "lightmap_tag"
+    .unique_component "lightmap_baker"
 
 transform "lightmap_transform"
     .implement "lightmapping.lua"

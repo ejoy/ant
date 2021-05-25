@@ -1,0 +1,19 @@
+---
+policy:
+    ant.sky|skybox
+    ant.render|render
+    ant.general|name
+data:
+    name: skybox_test
+    scene_entity: true
+    state: 1
+    transform: {}
+    ibl:
+        irradiance:
+            size: 64
+        prefilter:
+            size: 256
+        LUT:
+            size: 256
+    material: /pkg/ant.resources/materials/sky/skybox.material
+    skybox: {}
