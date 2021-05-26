@@ -27,6 +27,10 @@ system "cull_system"
     .require_system "ant.scene|scenespace_system"
     .method "cull"
 
+interface "icull_primitive"
+    .implement "cull_system.lua"
+    .method "cull"
+
 system "end_frame_system"
     .implement "end_frame_system.lua"
     .method "end_frame"
