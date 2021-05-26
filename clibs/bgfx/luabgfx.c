@@ -17,7 +17,7 @@
 #include "bgfx_alloc.h"
 #include "transient_buffer.h"
 
-#if BGFX_API_VERSION != 114
+#if BGFX_API_VERSION != 115
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -3040,8 +3040,8 @@ lallocTB(lua_State *L) {
 		vd = get_layout(L, vd_index);
 	}
 
-	if (max_v && max_i && index32 == 0) {
-		if (!BGFX(alloc_transient_buffers)(&v->tvb, vd, max_v, &v->tib, max_i)) {
+	if (max_v && max_i) {
+		if (!BGFX(alloc_transient_buffers)(&v->tvb, vd, max_v, &v->tib, max_i, index32)) {
 			v->cap_v = 0;
 			v->cap_i = 0;
 			return luaL_error(L, "Alloc transient buffers failed");
