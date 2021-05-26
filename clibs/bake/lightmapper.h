@@ -894,11 +894,10 @@ static void lm_setView(
 static void lm_initFrameBuffer(lm_context *ctx)
 {
 #ifdef USE_BGFX
-	uint32_t color = 0;
-	color |= uint32_t(ctx->hemisphere.clearColor.r * 255) << 0;
-	color |= uint32_t(ctx->hemisphere.clearColor.g * 255) << 8;
-	color |= uint32_t(ctx->hemisphere.clearColor.b * 255) << 16;
-	color |= uint32_t(0xff) << 24;
+	uint32_t color =(uint32_t)(ctx->hemisphere.clearColor.r * 255) << 0 |
+					(uint32_t)(ctx->hemisphere.clearColor.g * 255) << 8 |
+					(uint32_t)(ctx->hemisphere.clearColor.b * 255) << 16|
+					(uint32_t)(0xff) << 24;
 	BGFX(set_view_clear)(ctx->hemisphere.viewids[0], BGFX_CLEAR_COLOR|BGFX_CLEAR_DEPTH, color, 1.0f, 0);
 #else
 	// prepare hemisphere
