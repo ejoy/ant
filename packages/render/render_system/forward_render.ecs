@@ -11,6 +11,6 @@ system "forward_render_system"
 
 policy "forward_render"
     .require_policy     "render_queue"
-    .require_transform  "ant.scene|visible_primitive_transform"
+    .require_transform  "ant.scene|primitive_filter_transform"
     .require_system     "forward_render_system"
     .component          "primitive_filter"

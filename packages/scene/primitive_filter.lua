@@ -131,7 +131,7 @@ function pf:init()
 end
 
 
-local vpt = ecs.transform "visible_primitive_transform"
+local vpt = ecs.transform "primitive_filter_transform"
 -- local function parse_rc(rc)
 -- 	local state = bgfx.parse_state(rc.state)
 -- 	local wm = state.WRITE_MASK:gsub("Z", "")
