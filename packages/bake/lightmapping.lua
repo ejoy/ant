@@ -187,7 +187,7 @@ local function bake_entity(eid, scene_pf)
     local g = load_geometry_info(e._rendercache)
     bake_ctx:set_geometry(g)
     log.info(("begin bake entity:[%d-%s]"):format(eid, e.name or ""))
-    repeat
+    while true do
         local haspatch, vp, view, proj = bake_ctx:begin_patch()
         if not haspatch then
             break
@@ -201,7 +201,7 @@ local function bake_entity(eid, scene_pf)
         draw_scene(scene_pf)
         bake_ctx:end_patch()
         log.info("%d-%s process:%2f", eid, e.name or "", bake_ctx:process())
-    until (true)
+    end
 
     log.info(("bake finish for entity: %d-%s"):format(eid, e.name or ""))
 
@@ -235,7 +235,8 @@ function lightmap_sys:end_frame()
         assert(bake_ctx, "invalid bake context, need check")
         local eid = msg[2]
         if eid then
-            bake_entity(eid)
+            local se = world:singleton_entity "scene_watcher"
+            bake_entity(eid, se.primitive_filter)
         else
             log.info("bake entity scene with lightmap setting")
             bake_all()

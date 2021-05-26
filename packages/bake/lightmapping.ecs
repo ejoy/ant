@@ -20,7 +20,7 @@ system "lightmap_system"
     .method "end_frame"
 
 policy "scene_watcher"
-    .require_transform "ant.bake|lightmap_system"
+    .require_system "ant.bake|lightmap_system"
     .require_transform "ant.scene|primitive_filter_transform"
     .require_interface "ant.scene|iprimitive_filter"
     .component "primitive_filter"

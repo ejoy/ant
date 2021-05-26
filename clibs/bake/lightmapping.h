@@ -1278,6 +1278,10 @@ static void lm_initContext(lm_context *ctx, unsigned int w[2], unsigned int h[2]
 		ctx->hemisphere.rbTexture[i] = BGFX(create_texture_2d)(w[i], h[i], false, 1, BGFX_TEXTURE_FORMAT_RGBA32F, flags, NULL);
 	}
 
+	BGFX(vertex_layout_begin)(&ctx->hemisphere.layout, BGFX_RENDERER_TYPE_NOOP);
+	BGFX(vertex_layout_skip)(&ctx->hemisphere.layout, 1);
+	BGFX(vertex_layout_end)(&ctx->hemisphere.layout);
+
 	ctx->hemisphere.rbDepth = BGFX(create_texture_2d)(w[0], h[0], false, 1, BGFX_TEXTURE_FORMAT_D24, flags, NULL);
 
 	bgfx_texture_handle_t handles[2] = {ctx->hemisphere.rbTexture[0], ctx->hemisphere.rbDepth};
