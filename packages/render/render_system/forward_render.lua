@@ -7,32 +7,6 @@ local irq = world:interface "ant.render|irenderqueue"
 local irender = world:interface "ant.render|irender"
 local default_comp 	= import_package "ant.general".default
 local icamera	= world:interface "ant.camera|camera"
-local vpt = ecs.transform "visible_primitive_transform"
-local function parse_rc(rc)
-	local state = bgfx.parse_state(rc.state)
-	local wm = state.WRITE_MASK:gsub("Z", "")
-	if wm ~= state.WRITE_MASK then
-		state.DEPTH_TEST = "EQUAL"
-		state.WRITE_MASK = wm
-		return setmetatable({
-			state = bgfx.make_state(state)
-		}, {__index=rc})
-	end
-	return rc
-end
-
-function vpt.process_entity(e)
-	local f = e.primitive_filter
-	f.insert_item = function (filter, fxtype, eid, rc)
-		local items = filter.result[fxtype].items
-		if rc then
-			rc.eid = eid
-			ipf.add_item(items, eid, rc) --parse_rc(rc))
-		else
-			ipf.remove_item(items, eid)
-		end
-	end
-end
 
 local fr_sys = ecs.system "forward_render_system"
 local pd_mbs = {}

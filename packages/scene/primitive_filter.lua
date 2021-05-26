@@ -99,7 +99,7 @@ local default_filter_order = {
 	"foreground", "opaticy", "background", "translucent", "decal", "ui"
 }
 
-local function gen_filter(needcull, sort)
+local function default_filter(needcull, sort)
 	return {
 		items = {},
 		visible_set = needcull and {n=0} or nil,
@@ -109,23 +109,51 @@ end
 
 function pf:init()
 	self.result = {
-		translucent = gen_filter(true),
-		opaticy = gen_filter(true),
-        decal = gen_filter(true),
-		foreground = gen_filter(),
-		background = gen_filter(),
-		ui = gen_filter(nil,
-			function (result)
-				local vs = result.visible_set or result.items
-				local n = vs.n or #vs
-				vs[n+1] = nil
-				table.sort(vs, function (lhs, rhs)
-					return lhs.depth > rhs.depth
-				end)
-			end)
+		translucent	= default_filter(true),
+		opaticy		= default_filter(true),
+        decal		= default_filter(true),
+		foreground	= default_filter(),
+		background	= default_filter(),
+		ui			= default_filter(nil,
+					function (result)
+						local vs = result.visible_set or result.items
+						local n = vs.n or #vs
+						vs[n+1] = nil
+						table.sort(vs, function (lhs, rhs)
+							return lhs.depth > rhs.depth
+						end)
+					end)
 	}
 	self.filter_mask = ies.filter_mask(self.filter_type)
 	self.exclude_mask = self.exclude_type and ies.filter_mask(self.exclude_type) or 0
 	self.filter_order = self.filter_order or default_filter_order
 	return self
+end
+
+
+local vpt = ecs.transform "visible_primitive_transform"
+-- local function parse_rc(rc)
+-- 	local state = bgfx.parse_state(rc.state)
+-- 	local wm = state.WRITE_MASK:gsub("Z", "")
+-- 	if wm ~= state.WRITE_MASK then
+-- 		state.DEPTH_TEST = "EQUAL"
+-- 		state.WRITE_MASK = wm
+-- 		return setmetatable({
+-- 			state = bgfx.make_state(state)
+-- 		}, {__index=rc})
+-- 	end
+-- 	return rc
+-- end
+
+function vpt.process_entity(e)
+	local f = e.primitive_filter
+	f.insert_item = function (filter, fxtype, eid, rc)
+		local items = filter.result[fxtype].items
+		if rc then
+			rc.eid = eid
+			ipf.add_item(items, eid, rc) --parse_rc(rc))
+		else
+			ipf.remove_item(items, eid)
+		end
+	end
 end
