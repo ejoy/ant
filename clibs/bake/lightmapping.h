@@ -1273,7 +1273,7 @@ static void lm_initContext(lm_context *ctx, unsigned int w[2], unsigned int h[2]
 	ctx->hemisphere.viewids[0] = LIGHTMAP_BGFX_VIEWID;
 	ctx->hemisphere.viewids[1] = LIGHTMAP_BGFX_VIEWID+1;
 
-	uint32_t flags = BGFX_SAMPLER_U_CLAMP|BGFX_SAMPLER_V_CLAMP|BGFX_SAMPLER_MIN_POINT|BGFX_SAMPLER_MAG_POINT;
+	uint64_t flags = BGFX_SAMPLER_U_CLAMP|BGFX_SAMPLER_V_CLAMP|BGFX_SAMPLER_MIN_POINT|BGFX_SAMPLER_MAG_POINT|BGFX_TEXTURE_RT;
 	for (int i=0; i<2; ++i){
 		ctx->hemisphere.rbTexture[i] = BGFX(create_texture_2d)(w[i], h[i], false, 1, BGFX_TEXTURE_FORMAT_RGBA32F, flags, NULL);
 	}
@@ -1476,15 +1476,15 @@ lm_context *lmCreate(int hemisphereSize, float zNear, float zFar,
 static void lm_destroyGPUData(lm_context *ctx)
 {
 #ifdef USE_BGFX
-	BGFX(destroy_frame_buffer)(ctx->hemisphere.fb[0]);
-	BGFX(destroy_frame_buffer)(ctx->hemisphere.fb[1]);
-
 	BGFX(destroy_texture)(ctx->hemisphere.rbTexture[0]);
 	BGFX(destroy_texture)(ctx->hemisphere.rbTexture[1]);
 	BGFX(destroy_texture)(ctx->hemisphere.rbDepth);
 
 	BGFX(destroy_texture)(ctx->hemisphere.firstPass.weightsTexture);
 	BGFX(destroy_texture)(ctx->hemisphere.storage.texture);
+
+	BGFX(destroy_frame_buffer)(ctx->hemisphere.fb[0]);
+	BGFX(destroy_frame_buffer)(ctx->hemisphere.fb[1]);
 
 	BGFX(destroy_program)(ctx->hemisphere.firstPass.prog);
 	BGFX(destroy_program)(ctx->hemisphere.downsamplePass.prog);
@@ -1587,7 +1587,8 @@ void lmSetHemisphereWeights(lm_context *ctx, lm_weight_func f, void *userdata)
 static void lm_checkSetTargetLightmap(lm_context *ctx, int w, int h)
 {
 #ifdef USE_BGFX
-	uint32_t flags = BGFX_SAMPLER_U_CLAMP|BGFX_SAMPLER_V_CLAMP|BGFX_SAMPLER_MIN_POINT|BGFX_SAMPLER_MAG_POINT;
+	uint64_t flags = BGFX_SAMPLER_U_CLAMP|BGFX_SAMPLER_V_CLAMP|BGFX_SAMPLER_MIN_POINT|BGFX_SAMPLER_MAG_POINT|
+					BGFX_TEXTURE_BLIT_DST|BGFX_TEXTURE_READ_BACK;
 	ctx->hemisphere.storage.texture = BGFX(create_texture_2d)(w, h, false, 1, BGFX_TEXTURE_FORMAT_RGBA32F, flags, NULL);
 #else
 	// allocate storage texture

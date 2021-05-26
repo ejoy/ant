@@ -9,6 +9,7 @@ local function create_lm_entity(name, material, m, srt)
     return world:create_entity {
 		policy = {
 			"ant.render|render",
+            "ant.bake|lightmap",
 			"ant.general|name",
 		},
 		data = {
@@ -16,6 +17,11 @@ local function create_lm_entity(name, material, m, srt)
 			material	= material,
 			mesh		= m,
 			state		= ies.create_state "visible|lightmap",
+            lightmap    = {
+                width = 64,
+                height = 64,
+                channels = 3,
+            },
 			name		= name,
 			scene_entity= true,
 		}
@@ -110,7 +116,9 @@ function lm_baker:init()
     end
 
     create_plane()
-    create_box()
+    local eid = create_box()
+
+    world:pub{"bake", eid}
 end
 
 function lm_baker:data_changed()

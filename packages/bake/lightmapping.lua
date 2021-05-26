@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
+require "bake_mathadapter"
 
-local mathpkg   = import_package "ant.math"
 local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
 local declmgr   = renderpkg.declmgr
@@ -13,20 +13,7 @@ local bake      = require "bake"
 local ipf       = world:interface "ant.scene|iprimitive_filter"
 local irender   = world:interface "ant.render|irender"
 local imaterial = world:interface "ant.asset|imaterial"
-
-local lm_prim_trans = ecs.transform "lightmap_primitive_transform"
-function lm_prim_trans.process_entity(e)
-    local pf = e.primitive_filter
-    pf.insert_item = function(filter, fxtype, eid, rc)
-        local items = filter.result[fxtype].items
-		if rc then
-			rc.eid = eid
-			ipf.add_item(items, eid, rc)
-		else
-			ipf.remove_item(items, eid)
-		end
-    end
-end
+local icp       = world:interface "ant.render|icull_primitive"
 
 local lm_trans = ecs.transform "lightmap_transform"
 function lm_trans.process_entity(e)
@@ -39,7 +26,7 @@ local context_setting = {
     size = 64,
     z_near = 0.1, z_far = 1,
     rgb = {1.0, 1.0, 1.0},
-    interp_pass_count = 8, interp_threshold = 0.1,
+    interp_pass_count = 2, interp_threshold = 0.001,
     cam2surf_dis_modifier = 0.0,
 }
 
@@ -72,22 +59,24 @@ function lightmap_sys:init()
         end
     end
 
+    local function touint16(h) return 0xffff & h end
+
     shading_info = {
         viewids = viewids,
         weight_downsample = {
-            prog        = 0xffff & wds_fx.prog,
-            hemispheres = find_uniform_handle(wds_fx.uniforms,  "hemispheres"),
-            weights     = find_uniform_handle(wds_fx.uniforms,  "weights"),
+            prog        = touint16(wds_fx.prog),
+            hemispheres = touint16(find_uniform_handle(wds_fx.uniforms,  "hemispheres")),
+            weights     = touint16(find_uniform_handle(wds_fx.uniforms,  "weights")),
         },
         downsample = {
-            prog        = 0xffff & ds_fx.prog,
-            hemispheres = find_uniform_handle(ds_fx.uniforms, "hemispheres")
+            prog        = touint16(ds_fx.prog),
+            hemispheres = touint16(find_uniform_handle(ds_fx.uniforms, "hemispheres"))
         }
     }
 
     world:create_entity {
         policy = {
-            "ant.bake|lightmap",
+            "ant.bake|lightmap_baker",
             "ant.general|name",
         },
         data = {
@@ -95,6 +84,19 @@ function lightmap_sys:init()
                 filter_type = "lightmap",
             },
             lightmap_baker = {},
+        }
+    }
+
+    world:create_entity {
+        policy = {
+            "ant.bake|scene_watcher",
+            "ant.general|name",
+        },
+        data = {
+            primitive_filter = {
+                filter_type = "visible",
+            },
+            scene_watcher = {},
         }
     }
 end
@@ -115,99 +117,110 @@ local function load_geometry_info(item)
         for _, vb in ipairs(m.vb) do
             local offset = 0
             local declname = vb.declname
-            for _, d in declname:gmatch "[^|]+" do
-                if d:sub(1, 2):match(name) then
+            local stride = declmgr.layout_stride(declname)
+            for d in declname:gmatch "%w+" do
+                if d:sub(1, 3):match(name) then
                     return {
                         offset = offset,
-                        stride = declmgr.stride(declname),
-                        memory = bgfx.memory_buffer(vb.memory),
+                        stride = stride,
+                        memory = bgfx.memory_buffer(table.unpack(vb.memory)),
                         type   = get_type(d:sub(6, 6)),
                     }
                 end
-                offset = offset + declmgr.elemsize(d)
+                offset = offset + declmgr.elem_size(d)
             end
         end
+
+        error(("not found attrib name:%s"):format(name))
     end
 
     local ib = m.ib
     local index
     if ib then
-        local t<const> = ib.flag:match "d" and "H" or "I"
+        local function is_uint32(f)
+            if f then
+                return f:match "d"
+            end
+        end
+        local t<const> = is_uint32(ib.flag) and "I" or "H"
         index = {
             offset = 0,
             stride = t == "I" and 4 or 2,
-            memory = bgfx.memory_buffer(ib.memory),
-            type = t
+            memory = bgfx.memory_buffer(table.unpack(ib.memory)),
+            type = t,
         }
     end
 
     return {
-        worldmat= math3d.pointer(item.worldmat),
-        num     = m.vb.num,
+        worldmat= math3d.value_ptr(item.worldmat),
+        num     = math.tointeger(m.vb.num),
         pos     = get_attrib_item "p",
         normal  = get_attrib_item "n",
-        uv      = get_attrib_item "t1",
+        uv      = get_attrib_item "t21",
         index   = index,
     }
 end
 
-local function draw_scene(rq)
-    for _, result in ipf.iter_filter(rq.primitive_filter) do
+local function draw_scene(pf)
+    for _, result in ipf.iter_filter(pf) do
         for _, item in ipf.iter_target(result) do
             irender.draw(bake_viewid, item)
         end
     end
 end
 
-local function bake_entity(eid)
+local function bake_entity(eid, scene_pf)
     local e = world[eid]
     if e == nil then
-        return log.warn("invalid entity:%d", eid)
+        return log.warn(("invalid entity:%d"):format(eid))
     end
 
     if e._lightmap == nil then
-        return log.warn("entity %s not set any lightmap info will not be baked", e.name or "")
+        return log.warn(("entity %s not set any lightmap info will not be baked"):format(e.name or ""))
     end
 
-    log.info("bake entity:%d, %s", eid, e.name or "")
-    local lm = bake_ctx:set_target_lightmap(e.lightmap)
-    e._lightmap.data = lm
+    log.info(("baking entity:[%d-%s]"):format(eid, e.name or ""))
+    local lm = e.lightmap
+    log.info(("set baking entity lightmap:[%d-%s], w:%d, h:%d, channels:%d"):format(eid, e.name or "", lm.width, lm.height, lm.channels))
+    e._lightmap.data = bake_ctx:set_target_lightmap(e.lightmap)
 
     local g = load_geometry_info(e._rendercache)
-    lm:set_geometry(g)
-    local mq = world:singleton_entity "main_queue"
-    log.info("begin bake entity:%d-%s", eid, e.name or "")
+    bake_ctx:set_geometry(g)
+    log.info(("begin bake entity:[%d-%s]"):format(eid, e.name or ""))
     repeat
-        local finished, vp, view, proj = bake_ctx:begin_patch()
-        if finished then
+        local haspatch, vp, view, proj = bake_ctx:begin_patch()
+        if not haspatch then
             break
         end
 
         vp = math3d.tovalue(vp)
         bgfx.set_view_rect(bake_viewid, vp[1], vp[2], vp[3], vp[4])
         bgfx.set_view_transform(bake_viewid, view, proj)
-        draw_scene(mq)
+        --TODO: need re-cull entity
+        icp.cull(scene_pf, math3d.mul(proj, view))
+        draw_scene(scene_pf)
         bake_ctx:end_patch()
         log.info("%d-%s process:%2f", eid, e.name or "", bake_ctx:process())
     until (true)
 
-    log.info("bake finish for entity: %d-%s", eid, e.name or "")
+    log.info(("bake finish for entity: %d-%s"):format(eid, e.name or ""))
 
     lm:postprocess()
-    log.info("postprocess entity finish: %d-%s", eid, e.name or "")
+    log.info(("postprocess entity finish: %d-%s"):format(eid, e.name or ""))
 end
 
 local function bake_all()
     local lm_e = world:singleton_entity "lightmap_baker"
+    local se = world:singleton_entity "scene_watcher"
     for _, result in ipf.iter_filter(lm_e.primitive_filter) do
         for _, item in ipf.iter_target(result) do
-            bake_entity(item.eid)
+            bake_entity(item.eid, se.primitive_filter)
         end
     end
 end
 
 local bake_mb = world:sub{"bake"}
-local lm_mb = world:sub{"component_register", "lightmap"}
+local lm_mb = world:sub{"component_register", "lightmap_baker"}
 
 local function init_bake_context(s)
     bake_ctx = bake.create_lightmap_context(s)
@@ -218,7 +231,6 @@ function lightmap_sys:end_frame()
     for msg in lm_mb:each() do
         init_bake_context(context_setting)
     end
-
     for msg in bake_mb:each() do
         assert(bake_ctx, "invalid bake context, need check")
         local eid = msg[2]

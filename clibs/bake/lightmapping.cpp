@@ -92,6 +92,9 @@ namespace lua_struct{
             unpack_field(L, idx, "index", g.index);
         }else{
             g.index.type = LM_NONE;
+            g.index.m = nullptr;
+            g.index.stride = 0;
+            g.index.offset = 0;
         }
     }
 }
@@ -160,10 +163,13 @@ lcontext_set_shadering_info(lua_State *L){
 static int
 lcontext_begin_patch(lua_State *L){
     auto ctx = tocontext(L, 1);
-    auto vp = (int*)lua_touserdata(L, 2);
+    auto vp = (float*)lua_touserdata(L, 2);
     auto viewmat = (float*)lua_touserdata(L, 3);
     auto projmat = (float*)lua_touserdata(L, 4);
-    lua_pushboolean(L, lmBegin(ctx->lm_ctx, vp, viewmat, projmat));
+    int vp_int[4];
+    lua_pushboolean(L, lmBegin(ctx->lm_ctx, vp_int, viewmat, projmat));
+    for (int ii=0; ii<4; ++ii)
+        vp[ii] = (float)vp_int[ii];
     return 1;
 }
 
@@ -180,9 +186,8 @@ lcontext_process(lua_State *L){
     return 1;
 }
 
-static int
-llightmap_create_context(lua_State *L){
-    auto ctx = (context*)lua_newuserdata(L, sizeof(context));
+static void
+register_lm_context_mt(lua_State *L){
     if (luaL_newmetatable(L, "LM_CONTEXT_MT")){
         lua_pushvalue(L, -1);
         lua_setfield(L, -2, "__index");
@@ -200,7 +205,21 @@ llightmap_create_context(lua_State *L){
 
         luaL_setfuncs(L, l, 0);
     }
+}
+
+static int
+llightmap_create_context(lua_State *L){
+    auto ctx = (context*)lua_newuserdata(L, sizeof(context));
+    if (LUA_TTABLE != luaL_getmetatable(L, "LM_CONTEXT_MT")){
+        return luaL_error(L, "LM_CONTEXT_MT not register");
+    }
     lua_setmetatable(L, -2);
+
+    lua_struct::unpack(L, 1, *ctx);
+    ctx->lm_ctx = lmCreate(ctx->size, ctx->z_near, ctx->z_far,
+        ctx->rgb[0], ctx->rgb[1], ctx->rgb[2],
+        ctx->interp_pass_count, ctx->interp_threshold, 
+        ctx->cam2surf_dis_modifier);
     return 1;
 }
 
@@ -269,8 +288,8 @@ lcontext_set_target_lightmap(lua_State *L){
     }
     lua_setmetatable(L, -2);
 
-    lm->data = new float[lm->width * lm->height * lm->channels * sizeof(float)];
-
+    lm->data = new float[lm->sizebytes()];
+    memset(lm->data, 0, lm->sizebytes());
     lmSetTargetLightmap(ctx->lm_ctx, lm->data, lm->width, lm->height, lm->channels);
     return 1;
 }
@@ -284,6 +303,8 @@ llightmap_context(lua_State *L){
 extern "C"{
 LUAMOD_API int
 luaopen_bake(lua_State* L) {
+    init_interface(L);
+    register_lm_context_mt(L);
     luaL_Reg lib[] = {
         { "create_lightmap_context", llightmap_create_context},
         { "context_metatable", llightmap_context},
