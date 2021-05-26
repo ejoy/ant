@@ -25,6 +25,16 @@ local local_space = false
 local global_axis_eid
 local axis_plane_area
 
+local inspector = require "widget.inspector"(world)
+function gizmo:update()
+	self:set_position()
+	self:set_rotation()
+	self:update_scale()
+	self:updata_uniform_scale()
+	self:update_axis_plane()
+	inspector.update_ui(false)
+end
+
 function gizmo:set_target(eid)
 	local target = hierarchy:get_select_adapter(eid)
 	if self.target_eid == target then
@@ -33,11 +43,7 @@ function gizmo:set_target(eid)
 	local old_target = self.target_eid
 	self.target_eid = target
 	if target then
-		self:set_position()
-		self:set_rotation()
-		self:update_scale()
-		self:updata_uniform_scale()
-		self:update_axis_plane()
+		self:update()
 	end
 	gizmo:show_by_state(target ~= nil)
 	world:pub {"Gizmo","ontarget", old_target, target}

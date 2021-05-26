@@ -11,6 +11,7 @@ local m = {}
 local world
 local worldedit
 local iom
+local anim_view
 local camera_mgr
 local light_panel
 local camera_panel
@@ -36,12 +37,12 @@ local camera_ui_data = {
 local function update_ui_data(eid)
     if not current_panel then return end
     -- update transform
-    if current_panel.super then
-        -- BaseView
-        current_panel.super.update(current_panel)
-    else
+    -- if current_panel.super then
+    --     -- BaseView
+    --     current_panel.super.update(current_panel)
+    -- else
         current_panel:update()
-    end
+    --end
 end
 
 function m.update_template_tranform(eid)
@@ -58,14 +59,18 @@ function m.update_template_tranform(eid)
         s = {ts[1], ts[2], ts[3]},
         t = {tt[1], tt[2], tt[3]}
     }
+
+    if world[eid].collider then
+        anim_view.record_collision(eid, ts, tr, tt)
+    end
 end
 
 function m.update_ui(ut)
     local eid = gizmo.target_eid
-    update_ui_data(eid)
     if ut then
         m.update_template_tranform(eid)
     end
+    update_ui_data(eid)
 end
 
 local function on_position_dirty(eid, pos)
@@ -288,6 +293,7 @@ return function(w)
     gizmo           = require "gizmo.gizmo"(world)
     light_gizmo     = require "gizmo.light"(world)
     light_view      = require "widget.light_view"(world)
+    anim_view       = require "widget.animation_view"(world, import_package "ant.asset")
     camera_view     = require "widget.camera_view"(world)
     material_view   = require "widget.material_view"(world)
     return m

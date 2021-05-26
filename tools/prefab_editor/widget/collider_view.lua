@@ -11,49 +11,67 @@ local prefab_mgr
 local collider_type = {"sphere", "box", "capsule"}
 function ColliderView:_init()
     BaseView._init(self)
-    self.radius = uiproperty.Float({label = "Radius", min = 0.01, max = 10.0, speed = 0.01}, {})
-    self.height = uiproperty.Float({label = "Height", min = 0.01, max = 10.0, speed = 0.01}, {})
-    self.half_size = uiproperty.Float({label = "HalfSize", min = 0.01, max = 10.0, speed = 0.01, dim = 3}, {})
+    self.radius     = uiproperty.Float({label = "Radius", min = 0.01, max = 10.0, speed = 0.01}, {})
+    self.height     = uiproperty.Float({label = "Height", min = 0.01, max = 10.0, speed = 0.01}, {})
+    self.half_size  = uiproperty.Float({label = "HalfSize", min = 0.01, max = 10.0, speed = 0.01, dim = 3}, {})
+    self.color      = uiproperty.Color({label = "Color", dim = 4})
 end
 local redefine = false
 function ColliderView:set_model(eid)
     if not BaseView.set_model(self, eid) then return false end
+
     local tp = hierarchy:get_template(eid)
     local collider = world[eid].collider
     if collider.sphere then
-        self.radius:set_getter(function() return world[eid].collider.sphere[1].radius end)
+        self.radius:set_getter(function()
+            local scale = math3d.totable(iom.get_scale(eid))
+            return scale[1] / 100
+        end)
         self.radius:set_setter(function(r)
-            --tp.template.data.collider.sphere[1].radius = r
             iom.set_scale(self.eid, r * 100)
+            prefab_mgr:update_current_aabb(self.eid)
             redefine = true
         end)
         
     elseif collider.capsule then
         self.radius:set_getter(function() return world[eid].collider.capsule[1].radius end)
         self.radius:set_setter(function(r)
-            --tp.template.data.collider.capsule[1].radius = r
             redefine = true
         end)
         self.height:set_getter(function() return world[eid].collider.capsule[1].height end)
         self.height:set_setter(function(h)
-            --tp.template.data.collider.capsule[1].height = h
             redefine = true
         end)
     elseif collider.box then
-        self.half_size:set_getter(function() return world[eid].collider.box[1].size end)
+        self.half_size:set_getter(function()
+            local scale = math3d.totable(iom.get_scale(eid))
+            return {scale[1] / 200, scale[2] / 200, scale[3] / 200}
+        end)
         self.half_size:set_setter(function(sz)
-            --tp.template.data.collider.box[1].size = sz
-            -- collider.box.size = sz
             iom.set_scale(self.eid, {sz[1] * 200, sz[2] * 200, sz[3] * 200})
+            prefab_mgr:update_current_aabb(self.eid)
             redefine = true
         end)
     end
+    
+    self.color:set_getter(function() return self:on_get_color() end)
+    self.color:set_setter(function(...) self:on_set_color(...) end)
     self:update()
     return true
 end
 
 function ColliderView:has_scale()
     return false
+end
+
+function ColliderView:on_set_color(...)
+    imaterial.set_property(self.eid, "u_color", ...)
+end
+
+function ColliderView:on_get_color()
+    local rc = imaterial.get_property(self.eid, "u_color")
+    local color = math3d.totable(rc.value)
+    return {color[1], color[2], color[3], color[4]}
 end
 
 function ColliderView:update()
@@ -66,6 +84,7 @@ function ColliderView:update()
     elseif world[self.eid].collider.box then
         self.half_size:update()
     end
+    self.color:update()
 end
 
 function ColliderView:show()
@@ -98,6 +117,7 @@ function ColliderView:show()
             imgui.widget.EndCombo()
         end
     end
+    self.color:show()
 end
 
 return function(w)

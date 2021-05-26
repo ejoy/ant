@@ -175,7 +175,7 @@ local geom_type = {
 local collider_type = {
     "sphere",
     "box",
-    "capsule"
+    --"capsule"
 }
 
 function m.show()

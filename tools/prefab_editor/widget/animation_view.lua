@@ -15,6 +15,7 @@ local prefab_mgr
 local ies
 local gizmo
 local iom
+local inspector
 
 local m = {}
 local edit_anims = {}
@@ -184,19 +185,8 @@ local function from_runtime_event(runtime_event)
                     e.link_info.slot_eid = hierarchy.slot_list[e.link_info.slot_name]
                 end
             elseif e.event_type == "Collision" then
-                local col_def = e.collision.shape_def
-                local def
-                if col_def.shape_type == "sphere" then
-                    def = {{origin = {0, 0, 0, 1}, radius = col_def.radius}}
-                elseif col_def.shape_type == "box" then
-                    def = {{origin = {0, 0, 0, 1}, size = col_def.halfsize}}
-                elseif col_def.shape_type == "capsule" then
-                    def = {{origin = {0, 0, 0, 1}, height = col_def.height, radius = col_def.radius}}
-                end
-                e.collision.eid_index = get_collider(col_def.shape_type, def)
                 e.collision.enable_ui = {e.collision.enable}
-                e.collision.shape_type = col_def.shape_type
-                iom.set_srt(collider_list[e.collision.eid_index], math3d.matrix{ s = world[collider_list[e.collision.eid_index]].transform.s, r = col_def.offset.rotate, t = col_def.offset.position })
+                e.collision.shape_type = e.collision.shape_type
             end
         end
         key_event[tostring(math.floor(ev.time * sample_ratio))] = ev.event_list
@@ -275,33 +265,25 @@ end
 local function do_to_runtime_event(evs)
     local list = {}
     for _, ev in ipairs(evs) do
-        local col_eid = ev.collision and collider_list[ev.collision.eid_index] or nil
-        local col_def = {}
-        if col_eid then
-            local col = world[col_eid].collider
-            col_def.offset = {position = math3d.totable(iom.get_position(col_eid)), rotation = math3d.totable(iom.get_rotation(col_eid))}
-            if col.sphere then
-                col_def.shape_type = "sphere"
-                col_def.radius = col.sphere[1].radius
-            elseif col.box then
-                col_def.shape_type = "box"
-                col_def.halfsize = col.box[1].size
-            elseif col.capsule then
-                col_def.shape_type = "capsule"
-                col_def.radius = col.capsule[1].radius
-                col_def.height = col.capsule[1].height
-            end
-        end
+        local col_eid = ev.collision and ev.collision.col_eid or -1
         list[#list + 1] = {
             event_type = ev.event_type,
             name = ev.name,
             rid = ev.rid,
             asset_path = ev.asset_path,
-            link_info = ev.link_info and {slot_name = ev.link_info.slot_name},
-            collision = col_eid and {
-                shape_def = col_def,
+            link_info = ev.link_info and {slot_name = ev.link_info.slot_name, slot_eid = ev.link_info.slot_eid},
+            collision = (col_eid ~= -1) and {
+                col_eid = col_eid,
+                name = world[col_eid].name,
+                shape_type = ev.collision.shape_type,
+                position = ev.collision.position,
+                size = ev.collision.size,
                 enable = ev.collision.enable,
-            } or nil
+            } or {
+                name = "None",
+                shape_type = "Node",
+                enable = false
+            }
         }
     end
     return list
@@ -375,9 +357,10 @@ local function add_event(et)
         rid_ui = {-1},
         asset_path_ui = (et == "Effect" or et == "Sound") and {text = ""} or nil,
         collision = (et == "Collision") and {
-            eid_index = get_collider("sphere"),
-            shape_type = "sphere",
+            col_eid = -1,
+            shape_type = "None",
             enable = true,
+            enable_ui = {true}
         } or nil
     }
     current_event = new_event
@@ -430,40 +413,6 @@ end
 local shape_type = {
     "sphere","box"
 }
-local collider_type = {
-    "T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8"
-}
-local collider_id = 1
-local function add_collider(ct)
-    if not current_clip.collider then
-        current_clip.collider = {}
-    end
-    if ct == "capsule" then return end
-
-    if #current_clip.collider >= collider_id then
-        collider_id = #current_clip.collider + 1
-    end 
-    
-    local shape = {type = ct, define = utils.deep_copy(default_collider_define[ct])}
-    local colname = "collider" .. collider_id
-    current_clip.collider[#current_clip.collider + 1] = {
-        hid = 0,
-        name = colname,
-        shape = shape,
-        type = collider_type[1],
-        slot_name = "",
-        --
-        eid = prefab_mgr:create("geometry", {type = "sphere"}),
-        hid_ui = {0},
-        name_ui = {text = colname},
-        radius_ui = {0.025, speed = 0.01},
-        height_ui = {0.025, speed = 0.01},
-        halfsize_ui = {0.025, 0.025, 0.025, speed = 0.01}
-    }
-    collider_id = collider_id + 1
-    local runtime_event = get_runtime_events()
-    runtime_event.collider = current_clip.collider
-end
 
 local function show_events()
     if selected_frame >= 0 and current_clip then
@@ -492,8 +441,9 @@ local function show_events()
         for idx, ke in ipairs(anim_state.current_event_list) do
             if imgui.widget.Selectable(ke.name, current_event and (current_event.name == ke.name)) then
                 current_event = ke
-                if current_event.collision and current_event.collision.collider then
-                    gizmo:set_target(current_event.collision.collider.eid)
+                if current_event.collision and current_event.collision.col_eid ~= -1 then
+                    gizmo:set_target(current_event.collision.col_eid)
+                    prefab_mgr:update_current_aabb(current_event.collision.col_eid)
                 end
             end
             if current_event and (current_event.name == ke.name) then
@@ -508,6 +458,15 @@ local function show_events()
         delete_event(delete_idx)
     end
 end
+
+local function do_record(collision, eid)
+    local tp = math3d.totable(iom.get_position(eid))
+    collision.position = {tp[1], tp[2], tp[3]}
+    local scale = math3d.totable(iom.get_scale(eid))
+    local factor = world[eid].collider.sphere and 100 or 200
+    collision.size = {scale[1] / factor, scale[2] / factor, scale[3] / factor}
+end
+
 local function show_current_event()
     if not current_event then return end
     imgui.widget.PropertyLabel("EventType")
@@ -520,46 +479,37 @@ local function show_current_event()
             dirty = true
         end
     end
-
-    imgui.widget.PropertyLabel("Name")
-    if imgui.widget.InputText("##Name", current_event.name_ui) then
-        current_event.name = tostring(current_event.name_ui.text)
-        dirty = true
-    end
     
     if current_event.event_type == "Collision" then
         local collision = current_event.collision
-        imgui.widget.PropertyLabel("ShapeType")
-        if imgui.widget.BeginCombo("##ShapeType", {collision.shape_type, flags = imgui.flags.Combo {}}) then
-            for _, type in ipairs(shape_type) do
-                if imgui.widget.Selectable(type, collision.shape_type == type) then
-                    collision.shape_type = type
-                    if collision.eid_index then
-                        prefab_mgr:remove_entity(collider_list[collision.eid_index])
-                        collider_list[collision.eid_index] = 0
-                    end
-                    collision.eid_index = get_collider(type)
-                end
+        local collider_list = hierarchy.collider_list
+        if collider_list and collision then
+            imgui.widget.PropertyLabel("Collider")
+            local col_name = "None"
+            if collision.col_eid ~= -1 and world[collision.col_eid] then
+                col_name = world[collision.col_eid].name
             end
-            imgui.widget.EndCombo()
+            if imgui.widget.BeginCombo("##Collider", {col_name, flags = imgui.flags.Combo {}}) then
+                for name, eid in pairs(collider_list) do
+                    if imgui.widget.Selectable(name, col_name == name) then
+                        collision.col_eid = eid
+                        if eid == -1 then
+                            collision.shape_type = "None"
+                        else
+                            collision.shape_type = world[eid].collider.sphere and "sphere" or "box"
+                            do_record(collision, eid)
+                        end
+                        dirty = true
+                    end
+                end
+                imgui.widget.EndCombo()
+            end
         end
+
         imgui.widget.PropertyLabel("Enable")
         if imgui.widget.Checkbox("##Enable", collision.enable_ui) then
             collision.enable = collision.enable_ui[1]
         end
-        -- if collision.shape_type ~= "None" then
-        --     if imgui.widget.TreeNode("Offset", imgui.flags.TreeNode { "DefaultOpen" }) then
-        --         imgui.widget.PropertyLabel("Position")
-        --         if imgui.widget.DragFloat("##Position", collision.offset_ui.position) then
-        --             collision.offset.position = {collision.offset_ui.position[1], collision.offset_ui.position[2], collision.offset_ui.position[3]}
-        --         end
-        --         imgui.widget.PropertyLabel("Rotate")
-        --         if imgui.widget.DragFloat("##Rotate", collision.offset_ui.rotate) then
-        --             collision.offset.rotate = {collision.offset_ui.rotate[1], collision.offset_ui.rotate[2], collision.offset_ui.rotate[3]}
-        --         end
-        --         imgui.widget.TreePop()
-        --     end
-        -- end
     elseif current_event.event_type == "Sound" then
         if imgui.widget.Button("SelectSound") then
         end
@@ -571,7 +521,7 @@ local function show_current_event()
                 local global_data = require "common.global_data"
                 local lfs         = require "filesystem.local"
                 local rp = lfs.relative(lfs.path(path), global_data.project_root)
-                local path = global_data.package_path .. tostring(rp)
+                local path = (global_data.package_path and global_data.package_path or global_data.editor_package_path) .. tostring(rp)
                 current_event.asset_path_ui.text = path
                 current_event.asset_path = path
                 dirty = true
@@ -606,16 +556,48 @@ local function set_clips_dirty(update)
     end
 end
 
-local function update_collision()
-    for _, shape in ipairs(collider_list) do
-        if shape > 0 then
-            ies.set_state(shape, "visible", false)
+function m.on_remove_entity(eid)
+    local dirty = false
+    for _, clip in ipairs(all_clips) do
+        if clip.key_event then
+            for _, ke in pairs(clip.key_event) do
+                for _, e in ipairs(ke) do
+                    if e.collision and e.collision.col_eid == eid then
+                        e.collision.col_eid = -1
+                        e.collision.shape_type = "None"
+                        e.collision.position = nil
+                        e.collision.size = nil
+                        e.collision.enable = false
+                        dirty = true
+                    end
+                end
+            end
         end
     end
+    if dirty then
+        set_event_dirty(-1)
+    end
+end
 
+function m.record_collision(eid, ts, tr, tt)
     for idx, ke in ipairs(anim_state.current_event_list) do
-        if ke.collision and ke.collision.eid_index then
-            ies.set_state(collider_list[ke.collision.eid_index], "visible", true)
+        if ke.collision and ke.collision.col_eid == eid then
+            do_record(ke.collision, eid)
+        end
+    end
+end
+
+local function update_collision()
+    for idx, ke in ipairs(anim_state.current_event_list) do
+        if ke.collision and ke.collision.col_eid ~= -1 then
+            local eid = ke.collision.col_eid
+            iom.set_position(eid, ke.collision.position)
+            local factor = world[eid].collider.sphere and 100 or 200
+            iom.set_scale(eid, {ke.collision.size[1] * factor, ke.collision.size[2] * factor, ke.collision.size[3] * factor})
+            if eid == gizmo.target_eid then
+                gizmo:update()
+                prefab_mgr:update_current_aabb(eid)
+            end
         end
     end
 end
@@ -704,6 +686,18 @@ local function save_clip()
                     if ev.effect then
                         ev.effect = nil
                     end
+                    if ev.link_info and ev.link_info.slot_eid then
+                        ev.link_info.slot_eid = nil
+                    end
+                    if ev.collision and ev.collision.col_eid then
+                        if ev.collision.col_eid ~= -1 then
+                            local rc = imaterial.get_property(ev.collision.col_eid, "u_color")
+                            local color = math3d.totable(rc.value)
+                            ev.collision.color = {color[1],color[2],color[3],color[4]}
+                        end
+                        ev.collision.col_eid = nil
+                    end
+
                 end
             end
         end
@@ -745,6 +739,7 @@ local function show_clips()
                 anim_group_play_clip(current_eid, cs.name, 0)
                 anim_group_set_loop(current_eid, false)
             end
+            anim_state.current_event_list = {}
         end
         if current_clip and (current_clip.name == cs.name) then
             if imgui.windows.BeginPopupContextItem(cs.name) then
@@ -1188,7 +1183,7 @@ local function construct_joints(eid)
     end
     setup_joint_list(joints[eid].root)
     world[eid].joint_list = joint_list
-    hierarchy:update_slot_list()
+    hierarchy:update_slot_list(world)
 end
 
 local function construct_edit_animations(eid)
@@ -1230,7 +1225,27 @@ local function construct_edit_animations(eid)
             local f = assert(fs.open(path))
             local data = f:read "a"
             f:close()
-            from_runtime_clip(datalist.parse(data))
+            local clips = datalist.parse(data)
+            for _, clip in ipairs(clips) do
+                if clip.key_event then
+                    for _, ke in pairs(clip.key_event) do
+                        for _, e in ipairs(ke.event_list) do
+                            if e.collision then
+                                if not hierarchy.collider_list or not hierarchy.collider_list[e.collision.name] then
+                                    local eid = prefab_mgr:create("collider", {type = e.collision.shape_type, define = utils.deep_copy(default_collider_define[e.collision.shape_type]), parent = prefab_mgr.root, add_to_hierarchy = true})
+                                    world[eid].name = e.collision.name
+                                    imaterial.set_property(eid, "u_color", e.collision.color or {1.0,0.5,0.5,0.8})
+                                    hierarchy:update_collider_list(world)
+                                end
+                                e.collision.col_eid = hierarchy.collider_list[e.collision.name]
+                                e.collision.name = nil
+                            end
+                        end
+                    end
+                end
+            end
+            hierarchy:update_slot_list(world)
+            from_runtime_clip(clips)
             set_event_dirty(-1)
         end
     end

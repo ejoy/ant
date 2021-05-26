@@ -44,18 +44,19 @@ local function process_keyframe_event(task)
 		for _, event in ipairs(current_events.event_list) do
 			--print("event trigger : ", current_time, event.name, event.event_type)
 			if event.event_type == "Collision" then
-				local col = event.collision.collider--colliders[event.collision.collider_index]
-				if col then
-					if col.joint_index == 0 then
-						local origin_s, _, _ = math3d.srt(iom.worldmat(col.eid))
-						iom.set_srt(col.eid, math3d.matrix{ s = origin_s, r = event.collision.offset.rotate, t = event.collision.offset.position })
-					else
-						local final_mat = math3d.mul(math3d.matrix{t = event.collision.offset.position, r = event.collision.offset.rotate, s = {1,1,1}}, iom.worldmat(col.eid))
-						iom.set_srt(col.eid, final_mat)
-					end
-					-- if event.collision.enable and icoll.test(world[coll.eid]) then
-					-- 	print("Overlaped!")
+				local collision = event.collision--colliders[event.collision.collider_index]
+				if collision and collision.col_eid and collision.col_eid ~= -1 then
+					-- if collision.joint_index == 0 then
+					-- 	local origin_s, _, _ = math3d.srt(iom.worldmat(collision.col_eid))
+					-- 	iom.set_srt(collision.eid, math3d.matrix{ s = origin_s, r = event.collision.offset.rotate, t = event.collision.offset.position })
+					-- else
+					-- 	local final_mat = math3d.mul(math3d.matrix{t = event.collision.position, r = event.collision.offset.rotate, s = {1,1,1}}, iom.worldmat(col.eid))
+					-- 	iom.set_srt(collision.eid, final_mat)
 					-- end
+					local eid = collision.col_eid
+            		iom.set_position(eid, collision.position)
+            		local factor = (collision.shape_type == "sphere") and 100 or 200
+            		iom.set_scale(eid, {collision.size[1] * factor, collision.size[2] * factor, collision.size[3] * factor})
 				end
 			elseif event.event_type == "Effect" then
 				if not event.effect and event.asset_path ~= "" then

@@ -107,7 +107,7 @@ local function create_light_billboard(light_eid)
     --         billboard = {lock = "camera"},
     --         state = 1,
     --         scene_entity = true,
-    --         material = gd.package_path .. "res/materials/billboard.material"
+    --         material = gd.editor_package_path .. "res/materials/billboard.material"
     --     },
     --     action = {
     --         bind_billboard_camera = "camera"
@@ -162,7 +162,7 @@ function m:create_slot()
     }
     slot_entity_id = slot_entity_id + 1
     self:add_entity(new_entity, gizmo.target_eid, temp)
-    hierarchy:update_slot_list()
+    hierarchy:update_slot_list(world)
 end
 
 function m:create_collider(config)
@@ -193,12 +193,12 @@ function m:create_collider(config)
             --collider = { [config.type] = define },
             color = {1, 0.5, 0.5, 0.5},
             state = ies.create_state "visible|selectable",
-            material = "/pkg/ant.resources/materials/singlecolor.material",
+            material = "/pkg/ant.resources/materials/singlecolor_translucent.material",
             mesh = (config.type == "box") and geom_mesh_file["cube"] or geom_mesh_file[config.type]
         }
     }
     world[new_entity].collider = { [config.type] = define }
-    imaterial.set_property(new_entity, "u_color", {1, 0.5, 0.5, 0.5})
+    imaterial.set_property(new_entity, "u_color", {1, 0.5, 0.5, 0.8})
     return new_entity, temp
 end
 
@@ -270,15 +270,15 @@ function m:create(what, config)
             self:add_entity(new_entity, config.parent or gizmo.target_eid, temp)
             return new_entity
         elseif config.type == "cube(prefab)" then
-            m:add_prefab(gd.package_path .. "res/cube.prefab")
+            m:add_prefab(gd.editor_package_path .. "res/cube.prefab")
         elseif config.type == "cone(prefab)" then
-            m:add_prefab(gd.package_path .. "res/cone.prefab")
+            m:add_prefab(gd.editor_package_path .. "res/cone.prefab")
         elseif config.type == "cylinder(prefab)" then
-            m:add_prefab(gd.package_path .. "res/cylinder.prefab")
+            m:add_prefab(gd.editor_package_path .. "res/cylinder.prefab")
         elseif config.type == "sphere(prefab)" then
-            m:add_prefab(gd.package_path .. "res/sphere.prefab")
+            m:add_prefab(gd.editor_package_path .. "res/sphere.prefab")
         elseif config.type == "torus(prefab)" then
-            m:add_prefab(gd.package_path .. "res/torus.prefab")
+            m:add_prefab(gd.editor_package_path .. "res/torus.prefab")
         end
     elseif what == "light" then
         if config.type == "directional" or config.type == "point" or config.type == "spot" then      
@@ -297,10 +297,11 @@ function m:create(what, config)
         end
     elseif what == "collider" then
         local new_entity, temp = self:create_collider(config)
-        self:add_entity(new_entity, config.parent or gizmo.target_eid, temp, not config.add_to_hierarchy)
+        self:add_entity(new_entity, self.root, temp, not config.add_to_hierarchy)
+        hierarchy:update_collider_list(world)
         return new_entity
     elseif what == "particle" then
-        local entities = world:instance(gd.package_path .. "res/particle.prefab")
+        local entities = world:instance(gd.editor_package_path .. "res/particle.prefab")
         self:add_entity(entities[1], gizmo.target_eid, entities)
     end
 end
@@ -708,7 +709,7 @@ function m:save_prefab(path)
     filename = filename or prefab_filename
     local saveas = (lfs.path(filename) ~= lfs.path(prefab_filename))
 
-    local new_template = hierarchy:update_prefab_template()
+    local new_template = hierarchy:update_prefab_template(world)
     new_template[1].script = (#self.prefab_script > 0) and self.prefab_script or "/pkg/ant.prefab/default_script.lua"
     
     if not saveas then
@@ -736,6 +737,8 @@ function m:remove_entity(eid)
     do_remove_entity(eid)
     world:remove_entity(eid)
     hierarchy:del(eid)
+    hierarchy:update_slot_list(world)
+    hierarchy:update_collider_list(world)
     self:internal_remove(eid)
     gizmo.target_eid = nil
 end

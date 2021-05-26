@@ -67,7 +67,7 @@ void rendererDrawData(ImGuiViewport* viewport) {
 		uint32_t numIndices = (uint32_t)drawList->IdxBuffer.size();
 
 		if (numVertices != BGFX(get_avail_transient_vertex_buffer)(numVertices, &g_layout)
-			|| numIndices != BGFX(get_avail_transient_index_buffer)(numIndices)) {
+			|| numIndices != BGFX(get_avail_transient_index_buffer)(numIndices, false)) {
 			break;
 		}
 

@@ -160,7 +160,8 @@ local function choose_project()
                         end
                     end
                     if topname then
-                        effekseer_filename_mgr.add_path(topname .. "/res")
+                        global_data.package_path = topname .. "/"
+                        effekseer_filename_mgr.add_path(global_data.package_path .. "res")
                     else
                         print("Can not add effekseer resource seacher path.")
                     end
@@ -304,6 +305,7 @@ local event_resource_browser = world:sub {"ResourceBrowser"}
 local event_window_title = world:sub {"WindowTitle"}
 local event_create = world:sub {"Create"}
 local event_gizmo = world:sub {"Gizmo"}
+
 local light_gizmo = require "gizmo.light"(world)
 
 local function on_target(old, new)
@@ -342,9 +344,6 @@ end
 local cmd_queue = require "gizmo.command_queue"(world)
 
 function m:data_changed()
-    -- if prefab_mgr.collider and icoll.test(world[prefab_mgr.collider["sphere"]]) then
-    --     print("sphere collision")
-    -- end
     for _, action, value1, value2 in event_gizmo:unpack() do
         if action == "update" or action == "ontarget" then
             inspector.update_ui(action == "update")
@@ -372,7 +371,9 @@ function m:data_changed()
             template.template.data.name = v1
             hierarchy:update_display_name(target, v1)
             if world[target].slot then
-                hierarchy:update_slot_list()
+                hierarchy:update_slot_list(world)
+            elseif world[target].collider then
+                hierarchy:update_collider_list(world)
             end
         elseif what == "parent" then
             hierarchy:set_parent(target, v1)
@@ -402,6 +403,9 @@ function m:data_changed()
         elseif what == "lock" then
             hierarchy:set_lock(eid, value)
         elseif what == "delete" then
+            if world[gizmo.target_eid].collider then
+                anim_view.on_remove_entity(gizmo.target_eid)
+            end
             prefab_mgr:remove_entity(eid)
         end
     end
@@ -440,6 +444,9 @@ function m:data_changed()
 
     for _, key, press, state in event_keyboard:unpack() do
         if key == "DELETE" and press == 1 then
+            if world[gizmo.target_eid].collider then
+                anim_view.on_remove_entity(gizmo.target_eid)
+            end
             prefab_mgr:remove_entity(gizmo.target_eid)
             gizmo:set_target(nil)
         elseif state.CTRL and key == "S" and press == 1 then

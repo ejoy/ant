@@ -83,6 +83,8 @@ function hierarchy:clear()
     self.all = {}
     self.select_adapter = {}
     self.select_adaptee = {}
+    self.collider_list = nil
+    self.slot_list = nil
 end
 
 function hierarchy:set_parent(eid, peid)
@@ -104,25 +106,13 @@ local function find_policy(t, policy)
     return nil
 end
 
-function hierarchy:update_prefab_template()
+function hierarchy:update_prefab_template(world)
     local prefab_template = {}
     local function construct_entity(eid, pt)
+        if world[eid].collider then return end
         local templ = self.all[eid].template.template
         if templ and templ.data then
-            if templ.data.collider then
-                local templ_copy = utils.deep_copy(templ)
-                templ_copy.data.color = nil
-                templ_copy.data.mesh = nil
-                templ_copy.data.material = nil
-                templ_copy.data.state = nil
-                templ_copy.policy = {
-                    "ant.general|name",
-                    "ant.scene|hierarchy_policy",
-                    "ant.scene|transform_policy",
-                    "ant.collision|collider_policy"
-                }
-                templ = templ_copy
-            elseif templ.data.tag then
+            if templ.data.tag then
                 local policy_name = "ant.general|tag"
                 local find = find_policy(templ.policy, policy_name)
                 if #templ.data.tag > 0 then
@@ -138,18 +128,6 @@ function hierarchy:update_prefab_template()
         table.insert(pt, templ)
 
         local pidx = (#pt < 1) and "root" or #pt
-        -- TODO: animation
-        -- local keyframe_templ = self.all[eid].template.keyframe
-        -- if keyframe_templ then
-        --     local templ_copy = utils.deep_copy(keyframe_templ)
-        --     for i, v in ipairs(templ_copy.data.frames) do
-        --         local tp = math3d.totable(keyframe_templ.data.frames[i].position)
-        --         local tr = math3d.totable(keyframe_templ.data.frames[i].rotation)
-        --         templ_copy.data.frames[i].position = {tp[1], tp[2], tp[3]}
-        --         templ_copy.data.frames[i].rotation = {tr[1], tr[2], tr[3], tr[4]}
-        --     end
-        --     table.insert(pt, templ_copy)
-        -- end
         local prefab_filename = self.all[eid].template.filename
         if prefab_filename then
             table.insert(pt, {args = {root = #pt}, prefab = prefab_filename})
@@ -224,7 +202,7 @@ function hierarchy:get_node(eid)
     return self.all[eid]
 end
 
-function hierarchy:update_slot_list()
+function hierarchy:update_slot_list(world)
     local slot_list = {["None"] = -1}
     for _, value in pairs(self.all) do
         if world[value.eid].slot then
@@ -234,6 +212,16 @@ function hierarchy:update_slot_list()
         end
     end
     self.slot_list = slot_list
+end
+
+function hierarchy:update_collider_list(world)
+    local collider_list = {["None"] = -1}
+    for _, value in pairs(self.all) do
+        if world[value.eid].collider then
+            collider_list[world[value.eid].name] = value.eid
+        end
+    end
+    self.collider_list = collider_list
 end
 
 return hierarchy
