@@ -5,11 +5,8 @@ local world = ecs.world
 local math3d = require "math3d"
 
 local icp = ecs.interface "icull_primitive"
-function icp.cull(e)
-	local filter = e.primitive_filter
-	local vp = world[e.camera_eid]._rendercache.viewprojmat
-	local frustum_planes = math3d.frustum_planes(vp)
-
+function icp.cull(filter, vp_mat)
+	local frustum_planes = math3d.frustum_planes(vp_mat)
 	local results = filter.result
 	for _, resulttarget in pairs(results) do
 		local vs = resulttarget.visible_set
@@ -30,7 +27,9 @@ function cull_sys:cull()
 	for _, eid in world:each "primitive_filter" do
 		local e = world[eid]
 		if e.visible then
-			icp.cull(e)
+			local filter = e.primitive_filter
+			local vp = world[e.camera_eid]._rendercache.viewprojmat
+			icp.cull(filter, vp)
 		end
 	end
 end
