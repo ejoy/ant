@@ -1267,12 +1267,6 @@ static float lm_defaultWeights(float cos_theta, void *userdata)
 static void lm_initContext(lm_context *ctx, unsigned int w[2], unsigned int h[2])
 {
 #ifdef USE_BGFX
-#ifndef LIGHTMAP_BGFX_VIEWID
-#define LIGHTMAP_BGFX_VIEWID 190
-#endif //LIGHTMAP_BGFX_VIEWID
-	ctx->hemisphere.viewids[0] = LIGHTMAP_BGFX_VIEWID;
-	ctx->hemisphere.viewids[1] = LIGHTMAP_BGFX_VIEWID+1;
-
 	uint64_t flags = BGFX_SAMPLER_U_CLAMP|BGFX_SAMPLER_V_CLAMP|BGFX_SAMPLER_MIN_POINT|BGFX_SAMPLER_MAG_POINT|BGFX_TEXTURE_RT;
 	for (int i=0; i<2; ++i){
 		ctx->hemisphere.rbTexture[i] = BGFX(create_texture_2d)(w[i], h[i], false, 1, BGFX_TEXTURE_FORMAT_RGBA32F, flags, NULL);

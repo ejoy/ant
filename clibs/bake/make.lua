@@ -10,7 +10,7 @@ lm:source_set "source_bake" {
         "../bgfx",
     },
     sources = {
-        "lightmapping.cpp",
+        "lightmapper.cpp",
     }
 }
 

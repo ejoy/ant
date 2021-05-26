@@ -8,7 +8,7 @@
 #endif //USE_BGFX
 
 #define LIGHTMAPPER_IMPLEMENTATION
-#include "lightmapping.h"
+#include "lightmapper.h"
 
 #include "lua2struct.h"
 #include "luabgfx.h"
@@ -99,7 +99,7 @@ namespace lua_struct{
     }
 }
 
-//TODO: we should remove all render relate code from lightmapping.h
+//TODO: we should remove all render relate code from lightmapper.h
 struct shadinginfo{
     uint16_t viewids[2];
     struct downsampleT{
