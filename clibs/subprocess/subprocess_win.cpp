@@ -291,7 +291,9 @@ namespace ant::win::subprocess {
     void spawn::do_duplicate_shutdown() {
         ::CloseHandle(si_.hStdInput);
         ::CloseHandle(si_.hStdOutput);
-        ::CloseHandle(si_.hStdError);
+        if (si_.hStdError != INVALID_HANDLE_VALUE && si_.hStdOutput != si_.hStdError) {
+            ::CloseHandle(si_.hStdError);
+        }
     }
 
     bool spawn::raw_exec(const wchar_t* application, wchar_t* commandline, const wchar_t* cwd) {
