@@ -724,10 +724,12 @@ function m:save_prefab(path)
             widget_utils.message_box({title = "SaveError", info = msg})
         else
             utils.write_file(filename, stringify(new_template))
+            anim_view.save_clip()
         end
         return
     end
     utils.write_file(filename, stringify(new_template))
+    anim_view.save_clip(string.sub(filename, 1, -8) .. ".clips")
     self:open(filename)
     world:pub {"ResourceBrowser", "dirty"}
 end
@@ -745,6 +747,10 @@ end
 
 function m:get_current_filename()
     return tostring(self.prefab)
+end
+
+function m.set_anim_view(aview)
+    anim_view = aview
 end
 
 return function(w)
