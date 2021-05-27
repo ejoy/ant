@@ -145,11 +145,13 @@ local default_collider_define = {
 
 local slot_entity_id = 1
 function m:create_slot()
-    if not gizmo.target_eid then return end
+    --if not gizmo.target_eid then return end
+    local auto_name = "empty" .. slot_entity_id
     local new_entity, temp = world:create_entity {
         action = { mount = 0 },
         policy = {
             "ant.general|name",
+            "ant.general|tag",
             "ant.scene|slot_policy",
             "ant.scene|transform_policy",
         },
@@ -157,11 +159,13 @@ function m:create_slot()
             transform = {},
             slot = true,
             follow_flag = 1,
-            name = "empty" .. slot_entity_id,
+            name = auto_name,
+            tag = auto_name,
         }
     }
     slot_entity_id = slot_entity_id + 1
-    self:add_entity(new_entity, gizmo.target_eid, temp)
+    world[new_entity].parent = gizmo.target_eid or self.root
+    self:add_entity(new_entity, world[new_entity].parent, temp)
     hierarchy:update_slot_list(world)
 end
 
