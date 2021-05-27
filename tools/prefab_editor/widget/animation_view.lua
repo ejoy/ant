@@ -737,14 +737,16 @@ local function show_clips()
     local anim_name
     for i, cs in ipairs(all_clips) do
         if imgui.widget.Selectable(cs.name, current_clip and (current_clip.name == cs.name), 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
-            current_clip = cs
-            set_current_anim(cs.anim_name)
-            anim_state.selected_clip_index = find_index(current_anim.clips, cs)
+            if current_clip ~= cs then
+                current_clip = cs
+                set_current_anim(cs.anim_name)
+                anim_state.selected_clip_index = find_index(current_anim.clips, cs)
+                anim_state.current_event_list = {}
+            end
             if imgui.util.IsMouseDoubleClicked(0) then
                 anim_group_play_clip(current_eid, cs.name, 0)
                 anim_group_set_loop(current_eid, false)
             end
-            anim_state.current_event_list = {}
         end
         if current_clip and (current_clip.name == cs.name) then
             if imgui.windows.BeginPopupContextItem(cs.name) then

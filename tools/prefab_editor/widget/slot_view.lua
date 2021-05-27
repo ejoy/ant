@@ -19,10 +19,13 @@ local joint_name_list = {}
 function SlotView:set_model(eid)
     if not joint_name_list[eid] then
         name_list = {}
-        local jlist = world[world[eid].parent].joint_list
-        if jlist then
-            for _, joint in ipairs(jlist) do
-                name_list[joint.index] = joint.name
+        local parent = world[eid].parent
+        if parent then
+            local jlist = world[parent].joint_list
+            if jlist then
+                for _, joint in ipairs(jlist) do
+                    name_list[joint.index] = joint.name
+                end
             end
         end
         joint_name_list[eid] = name_list
