@@ -160,7 +160,7 @@ function m:create_slot()
             slot = true,
             follow_flag = 1,
             name = auto_name,
-            tag = auto_name,
+            tag = {auto_name},
         }
     }
     slot_entity_id = slot_entity_id + 1
