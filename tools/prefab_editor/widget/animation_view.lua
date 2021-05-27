@@ -21,7 +21,6 @@ local m = {}
 local edit_anims = {}
 local current_eid
 local imgui_message
-local current_clip_name = "None"
 local current_anim
 local selected_frame = -1
 local sample_ratio = 30.0
@@ -710,6 +709,17 @@ function m.save_clip(path)
     utils.write_file(clip_filename, stringify(copy_clips))
 end
 
+local function set_current_clip(clip)
+    if current_clip == clip then return end
+    if clip then
+        set_current_anim(clip.anim_name)
+        anim_state.selected_clip_index = find_index(current_anim.clips, clip)
+    end
+    current_clip = clip
+    anim_state.current_event_list = {}
+    current_event = nil
+end
+
 local function show_clips()
     if imgui.widget.Button("NewClip") then
         local key = "Clip" .. clip_index
@@ -730,6 +740,7 @@ local function show_clips()
         table.sort(all_clips, function(a, b)
             return a.range[2] < b.range[1]
         end)
+        set_current_clip(new_clip)
         set_clips_dirty(true)
     end
     
@@ -737,12 +748,7 @@ local function show_clips()
     local anim_name
     for i, cs in ipairs(all_clips) do
         if imgui.widget.Selectable(cs.name, current_clip and (current_clip.name == cs.name), 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
-            if current_clip ~= cs then
-                current_clip = cs
-                set_current_anim(cs.anim_name)
-                anim_state.selected_clip_index = find_index(current_anim.clips, cs)
-                anim_state.current_event_list = {}
-            end
+            set_current_clip(cs)
             if imgui.util.IsMouseDoubleClicked(0) then
                 anim_group_play_clip(current_eid, cs.name, 0)
                 anim_group_set_loop(current_eid, false)
@@ -773,7 +779,7 @@ local function show_clips()
             table.remove(current_anim.clips, found)
         end
         table.remove(all_clips, delete_index)
-        current_clip = nil
+        set_current_clip(nil)
         set_clips_dirty(true)
     end
 end
@@ -1048,8 +1054,7 @@ function m.show()
                 for _, name in ipairs(edit_anims[current_eid].name_list) do
                     if imgui.widget.Selectable(name, current_anim.name == name) then
                         set_current_anim(name)
-                        current_clip_name = "None"
-                        current_clip = nil
+                        set_current_clip(nil)
                     end
                 end
                 imgui.widget.EndCombo()

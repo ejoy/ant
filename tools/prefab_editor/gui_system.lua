@@ -366,14 +366,17 @@ function m:data_changed()
         elseif what == "scale" then
             gizmo:set_scale(v2)
             cmd_queue:record {action = gizmo_const.SCALE, eid = target, oldvalue = v1, newvalue = v2}
-        elseif what == "name" then
+        elseif what == "name" or what == "tag" then
             transform_dirty = false
-            template.template.data.name = v1
-            hierarchy:update_display_name(target, v1)
-            if world[target].slot then
-                hierarchy:update_slot_list(world)
-            elseif world[target].collider then
-                hierarchy:update_collider_list(world)
+            if what == "name" then 
+                hierarchy:update_display_name(target, v1)
+                if world[target].collider then
+                    hierarchy:update_collider_list(world)
+                end
+            else
+                if world[target].slot then
+                    hierarchy:update_slot_list(world)
+                end
             end
         elseif what == "parent" then
             hierarchy:set_parent(target, v1)
