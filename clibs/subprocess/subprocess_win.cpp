@@ -135,7 +135,7 @@ namespace ant::win::subprocess {
 
     static bool join_job(HANDLE process) {
         static HANDLE job = create_job();
-        if (job) {
+        if (!job) {
             return false;
         }
         if (!AssignProcessToJobObject(job, process)) {

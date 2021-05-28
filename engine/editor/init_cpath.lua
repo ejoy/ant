@@ -1,5 +1,5 @@
 local path_sep = package.config:sub(3,3)
-if package.cpath:match(path_sep) then
+if arg and package.cpath:match(path_sep) then
 	local ext = package.cpath:match '[/\\]%?%.([a-z]+)'
 	package.cpath = (function ()
 		local i = 0

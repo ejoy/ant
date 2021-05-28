@@ -28,3 +28,6 @@
 [submodule "3rd/yoga"]
 	path = 3rd/yoga
 	url = https://github.com/facebook/yoga
+[submodule "3rd/ltask"]
+	path = 3rd/ltask
+	url = https://github.com/cloudwu/ltask

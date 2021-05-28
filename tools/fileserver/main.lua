@@ -1,81 +1,68 @@
 package.path = "engine/?.lua"
 require "bootstrap"
 
-local lfs = require "filesystem.local"
-local srv = import_package "ant.server"
-
-local event = {}
-
-local function luaexe()
-    local i = -1
-    while arg[i] ~= nil do i = i - 1 end
-    return arg[i + 1]
-end
-
-srv.init_server {
-    lua = luaexe(),
+local config = {
+    service_path = "tools/fileserver/service/?.lua;3rd/ltask/service/?.lua",
+    lua_path = "tools/fileserver/lualib/?.lua;3rd/ltask/lualib/?.lua",
+    bootstrap = { "listen", arg },
+    logger = { "log.server" },
+    exclusive = { "timer", "network" },
+    --debuglog = "log.txt",
 }
-srv.set_repopath(arg[1])
-srv.listen("0.0.0.0", 2018)
-srv.init_proxy()
 
-local _origin = os.time() - os.clock()
-local function os_date(fmt)
-    local ti, tf = math.modf(_origin + os.clock())
-    return os.date(fmt, ti):gsub('{ms}', ('%03d'):format(math.floor(tf*1000)))
+local boot = require "ltask.bootstrap"
+local ltask = require "ltask"
+
+local SERVICE_ROOT <const> = 1
+local MESSSAGE_SYSTEM <const> = 0
+
+local function searchpath(name)
+	return assert(package.searchpath(name, config.service_path))
 end
 
-local function readfile(filename)
-    local f <close> = assert(io.open(filename:string(), "rb"))
-    return f:read "a"
+local function new_service(id)
+	local sid = boot.new_service("@" .. searchpath "service", id)
+	assert(sid == id)
+	return sid
 end
 
-local function writefile(filename, data)
-    local f <close> = assert(io.open(filename:string(), "wb"))
-    f:write(data)
+local function bootstrap()
+	new_service(SERVICE_ROOT)
+	boot.init_root(SERVICE_ROOT)
+	-- send init message to root service
+	local init_msg, sz = ltask.pack("init", {
+		path = config.lua_path,
+		cpath = config.lua_cpath,
+		filename = searchpath "root",
+		args = {config}
+	})
+	-- self bootstrap
+	boot.post_message {
+		from = SERVICE_ROOT,
+		to = SERVICE_ROOT,
+		session = 0,	-- 0 for root init
+		type = MESSSAGE_SYSTEM,
+		message = init_msg,
+		size = sz,
+	}
 end
 
-function event.RUNTIME_CREATE(repo)
-    local logdir = repo._root / ".log"
-    repo._log_file = logdir / "runtime.log"
-    if lfs.exists(repo._log_file) then
-        lfs.create_directories(logdir / 'backup')
-        lfs.rename(repo._log_file, logdir / 'backup' / (readfile(logdir / ".timestamp") .. ".log"))
-    else
-        lfs.create_directories(logdir)
-    end
-    writefile(logdir / ".timestamp", os_date('%Y_%m_%d_%H_%M_%S_{ms}'))
+local function exclusive_thread(id)
+	local sid = new_service(id)
+	boot.new_thread(sid)
 end
 
-function event.RUNTIME_CLOSE(repo)
+function print(...)
+	boot.pushlog(ltask.pack(...))
 end
 
-function event.SERVER_LOG(_,_,...)
-    print(...)
+boot.init(config)
+boot.init_timer()
+
+for id = 2, 1 + #config.exclusive do
+	exclusive_thread(id)
 end
 
-function event.RUNTIME_LOG(repo, data)
-    local fp = assert(lfs.open(repo._log_file, 'a'))
-    fp:write(data)
-    fp:write('\n')
-    fp:close()
-end
+bootstrap()	-- launch root
 
-local function update_event()
-    if #srv.event > 0 then
-        for i, v in ipairs(srv.event) do
-            srv.event[i] = nil
-            local f = event[v[1]]
-            if f then
-                f(table.unpack(v, 2))
-            end
-        end
-    end
-end
-
-while true do
-    srv.update_network()
-    srv.update_server()
-    srv.update_proxy()
-    update_event()
-end
+boot.run()
