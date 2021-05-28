@@ -196,9 +196,9 @@ local function checkLog()
                 level = string.lower(rawlevel:match'^%s*(.*%S)' or '')
             end
         elseif type == "SERVER" then
-            level = msg[3]
-            msg_tag = msg[4]--"Server"
-            msg_str = "[" .. utils.time2str(msg[2]) .. "][" .. level:upper() .. "][".. msg_tag .. "]"
+            level = "info"
+            msg_tag = "Server"
+            msg_str = msg[2]
             for i = 5, #msg do
                 if i > 5 then
                     msg_str = msg_str .. "    "

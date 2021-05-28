@@ -198,6 +198,9 @@ namespace ImSequencer
 		for (int i = 0; i < current_anim->clip_rangs.size(); i++) {
 			auto start = current_anim->clip_rangs[i].start;
 			auto end = current_anim->clip_rangs[i].end;
+			if (start == -1 || end == -1 || end < start) {
+				continue;
+			}
 			ImVec2 pos = ImVec2(contentMin.x + legendWidth - firstFrameUsed * framePixelWidth, contentMin.y + 1);
 			pos.x -= 0.5 * framePixelWidth;
 			ImVec2 slotP1(pos.x + start * framePixelWidth, pos.y + 2);

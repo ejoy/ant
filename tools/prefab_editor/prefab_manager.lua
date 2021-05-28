@@ -145,11 +145,13 @@ local default_collider_define = {
 
 local slot_entity_id = 1
 function m:create_slot()
-    if not gizmo.target_eid then return end
+    --if not gizmo.target_eid then return end
+    local auto_name = "empty" .. slot_entity_id
     local new_entity, temp = world:create_entity {
         action = { mount = 0 },
         policy = {
             "ant.general|name",
+            "ant.general|tag",
             "ant.scene|slot_policy",
             "ant.scene|transform_policy",
         },
@@ -157,11 +159,13 @@ function m:create_slot()
             transform = {},
             slot = true,
             follow_flag = 1,
-            name = "empty" .. slot_entity_id,
+            name = auto_name,
+            tag = {auto_name},
         }
     }
     slot_entity_id = slot_entity_id + 1
-    self:add_entity(new_entity, gizmo.target_eid, temp)
+    world[new_entity].parent = gizmo.target_eid or self.root
+    self:add_entity(new_entity, world[new_entity].parent, temp)
     hierarchy:update_slot_list(world)
 end
 
@@ -724,10 +728,12 @@ function m:save_prefab(path)
             widget_utils.message_box({title = "SaveError", info = msg})
         else
             utils.write_file(filename, stringify(new_template))
+            anim_view.save_clip()
         end
         return
     end
     utils.write_file(filename, stringify(new_template))
+    anim_view.save_clip(string.sub(filename, 1, -8) .. ".clips")
     self:open(filename)
     world:pub {"ResourceBrowser", "dirty"}
 end
@@ -745,6 +751,10 @@ end
 
 function m:get_current_filename()
     return tostring(self.prefab)
+end
+
+function m.set_anim_view(aview)
+    anim_view = aview
 end
 
 return function(w)

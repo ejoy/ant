@@ -66,6 +66,8 @@ function BaseView:on_get_prefab()
 end
 
 function BaseView:on_set_name(value)
+    local template = hierarchy:get_template(self.eid)
+    template.template.data.name = value
     world[self.eid].name = value
     world:pub {"EntityEvent", "name", self.eid, value}
 end

@@ -1728,9 +1728,9 @@ wSequencer(lua_State* L) {
 
  					auto event_flags = std::vector(item.duration * 30, false);
  					init_event(event_flags);
-					if (start != -1 && end != -1 && end >= start) {
+					//if (start != -1 && end != -1 && end >= start) {
 						item.clip_rangs.emplace_back(nv, (int)start, (int)end, event_flags);
-					}
+					//}
 				}
 				lua_pop(L, 1);
 			}

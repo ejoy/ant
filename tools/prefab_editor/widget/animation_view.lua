@@ -21,7 +21,6 @@ local m = {}
 local edit_anims = {}
 local current_eid
 local imgui_message
-local current_clip_name = "None"
 local current_anim
 local selected_frame = -1
 local sample_ratio = 30.0
@@ -52,6 +51,7 @@ local current_event
 local current_collider
 local current_clip
 local anim_group_eid = {}
+local anim_clips = {}
 local all_clips = {}
 local all_groups = {}
 local all_collision = {}
@@ -197,11 +197,11 @@ end
 local function from_runtime_clip(runtime_clip)
     all_clips = {}
     all_groups = {}
-    for _, anim in pairs(edit_anims[current_eid]) do
-        if type(anim) == "table" and anim.clips then
-            anim.clips = {}
-        end
-    end
+    -- for _, anim in pairs(edit_anims[current_eid]) do
+    --     if type(anim) == "table" and anim.clips then
+    --         anim.clips = {}
+    --     end
+    -- end
     for _, clip in ipairs(runtime_clip) do
         if clip.range then
             local start_frame = math.floor(clip.range[1] * sample_ratio)
@@ -214,8 +214,9 @@ local function from_runtime_clip(runtime_clip)
                 name_ui = {text = clip.name},
                 range_ui = {start_frame, end_frame, speed = 1}
             }
-            local anim_clips = edit_anims[current_eid][clip.anim_name].clips
-            anim_clips[#anim_clips + 1] = new_clip
+            --local anim_clips = edit_anims[current_eid][clip.anim_name].clips
+            local clips = anim_clips[clip.anim_name]
+            clips[#clips + 1] = new_clip
             all_clips[#all_clips+1] = new_clip
         end
     end
@@ -675,8 +676,11 @@ local function get_clips_filename()
     return string.sub(prefab_filename, 1, -8) .. ".clips"
 end
 
-local function save_clip()
-    local clip_filename = get_clips_filename()
+function m.save_clip(path)
+    local clip_filename = path
+    if not clip_filename then
+        clip_filename = get_clips_filename()
+    end
     local clips = get_runtime_clips()
     local copy_clips = utils.deep_copy(clips)
     for _, clip in ipairs(copy_clips) do
@@ -705,6 +709,17 @@ local function save_clip()
     utils.write_file(clip_filename, stringify(copy_clips))
 end
 
+local function set_current_clip(clip)
+    if current_clip == clip then return end
+    if clip then
+        set_current_anim(clip.anim_name)
+        anim_state.selected_clip_index = find_index(current_anim.clips, clip)
+    end
+    current_clip = clip
+    anim_state.current_event_list = {}
+    current_event = nil
+end
+
 local function show_clips()
     if imgui.widget.Button("NewClip") then
         local key = "Clip" .. clip_index
@@ -725,6 +740,7 @@ local function show_clips()
         table.sort(all_clips, function(a, b)
             return a.range[2] < b.range[1]
         end)
+        set_current_clip(new_clip)
         set_clips_dirty(true)
     end
     
@@ -732,14 +748,11 @@ local function show_clips()
     local anim_name
     for i, cs in ipairs(all_clips) do
         if imgui.widget.Selectable(cs.name, current_clip and (current_clip.name == cs.name), 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
-            current_clip = cs
-            set_current_anim(cs.anim_name)
-            anim_state.selected_clip_index = find_index(current_anim.clips, cs)
+            set_current_clip(cs)
             if imgui.util.IsMouseDoubleClicked(0) then
                 anim_group_play_clip(current_eid, cs.name, 0)
                 anim_group_set_loop(current_eid, false)
             end
-            anim_state.current_event_list = {}
         end
         if current_clip and (current_clip.name == cs.name) then
             if imgui.windows.BeginPopupContextItem(cs.name) then
@@ -766,7 +779,7 @@ local function show_clips()
             table.remove(current_anim.clips, found)
         end
         table.remove(all_clips, delete_index)
-        current_clip = nil
+        set_current_clip(nil)
         set_clips_dirty(true)
     end
 end
@@ -1041,8 +1054,7 @@ function m.show()
                 for _, name in ipairs(edit_anims[current_eid].name_list) do
                     if imgui.widget.Selectable(name, current_anim.name == name) then
                         set_current_anim(name)
-                        current_clip_name = "None"
-                        current_clip = nil
+                        set_current_clip(nil)
                     end
                 end
                 imgui.widget.EndCombo()
@@ -1057,7 +1069,7 @@ function m.show()
             if all_clips then
                 imgui.cursor.SameLine()
                 if imgui.widget.Button("SaveClip") then
-                    save_clip()
+                    m.save_clip()
                 end
             end
             imgui.cursor.SameLine()
@@ -1197,10 +1209,13 @@ local function construct_edit_animations(eid)
     local animations = world[eid].animation
     local parentNode = hierarchy:get_node(world[eid].parent)
     for key, anim in pairs(animations) do
+        if not anim_clips[key] then
+            anim_clips[key] = {}
+        end
         edit_anim[key] = {
             name = key,
             duration = anim._handle:duration(),
-            clips = {}
+            clips = anim_clips[key]
         }
         edit_anim.name_list[#edit_anim.name_list + 1] = key
         if not anim_group_eid[anim] then
@@ -1281,6 +1296,7 @@ return function(w, am)
     iom = world:interface "ant.objcontroller|obj_motion"
     --rc =    require "compile_resource"
     prefab_mgr = require "prefab_manager"(world)
+    prefab_mgr.set_anim_view(m)
     gizmo = require "gizmo.gizmo"(world)
     return m
 end

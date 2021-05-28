@@ -1,0 +1,14 @@
+fx:
+  fs: /pkg/ant.resources/shaders/mesh/fs_colormesh.sc
+  vs: /pkg/ant.resources/shaders/mesh/vs_colormesh.sc
+  setting:
+    SINGLE_COLOR:1
+properties:
+  u_color: {1, 1, 1, 1}
+state:
+  ALPHA_REF: 0
+  CULL: NONE
+  DEPTH_TEST: ALWAYS
+  MSAA: true
+  BLEND: ALPHA
+  WRITE_MASK: RGBA
