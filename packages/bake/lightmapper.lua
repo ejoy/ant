@@ -196,7 +196,6 @@ local function bake_entity(eid, scene_pf)
         vp = math3d.tovalue(vp)
         bgfx.set_view_rect(bake_viewid, vp[1], vp[2], vp[3], vp[4])
         bgfx.set_view_transform(bake_viewid, view, proj)
-        --TODO: need re-cull entity
         icp.cull(scene_pf, math3d.mul(proj, view))
         draw_scene(scene_pf)
         bake_ctx:end_patch()
@@ -205,7 +204,7 @@ local function bake_entity(eid, scene_pf)
 
     log.info(("bake finish for entity: %d-%s"):format(eid, e.name or ""))
 
-    lm:postprocess()
+    e._lightmap.data:postprocess()
     log.info(("postprocess entity finish: %d-%s"):format(eid, e.name or ""))
 end
 

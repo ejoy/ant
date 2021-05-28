@@ -3,6 +3,7 @@ fx:
     fs: /pkg/ant.resources/shaders/sky/skybox/fs_skybox.sc
     setting:
         surfacetype: background
+        lighting: off
 properties:
     s_skybox:
         stage: 0
