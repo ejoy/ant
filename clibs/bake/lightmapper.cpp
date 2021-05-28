@@ -266,7 +266,7 @@ llm_tostring(lua_State *L){
     lua_pushinteger(L, size);
     return 2;
 }
-
+#ifdef _DEBUG
 static int
 llm_save(lua_State *L){
     auto lm = tolm(L, 1);
@@ -274,7 +274,7 @@ llm_save(lua_State *L){
     lmImageSaveTGAf(fn, lm->data, lm->width, lm->height, lm->channels, 1.0f);
     return 0;
 }
-
+#endif 
 static int
 lcontext_set_target_lightmap(lua_State *L){
     auto ctx = tocontext(L, 1);

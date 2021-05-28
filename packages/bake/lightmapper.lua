@@ -199,7 +199,7 @@ local function bake_entity(eid, scene_pf)
         icp.cull(scene_pf, math3d.mul(proj, view))
         draw_scene(scene_pf)
         bake_ctx:end_patch()
-        log.info("%d-%s process:%2f", eid, e.name or "", bake_ctx:process())
+        log.info(("%d-%s process:%2f"):format(eid, e.name or "", bake_ctx:process()))
     end
 
     log.info(("bake finish for entity: %d-%s"):format(eid, e.name or ""))
