@@ -268,6 +268,14 @@ llm_tostring(lua_State *L){
 }
 
 static int
+llm_save(lua_State *L){
+    auto lm = tolm(L, 1);
+    auto fn = lua_tostring(L, 2);
+    lmImageSaveTGAf(fn, lm->data, lm->width, lm->height, lm->channels, 1.0f);
+    return 0;
+}
+
+static int
 lcontext_set_target_lightmap(lua_State *L){
     auto ctx = tocontext(L, 1);
     lightmap *lm = (lightmap*)lua_newuserdata(L, sizeof(lightmap));
@@ -281,6 +289,9 @@ lcontext_set_target_lightmap(lua_State *L){
             {"__gc", llm_destroy},
             {"postprocess", llm_postprocess},
             {"tostring", llm_tostring},
+#ifdef _DEBUG
+            {"save", llm_save},
+#endif
             {nullptr, nullptr},
         };
 

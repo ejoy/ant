@@ -205,6 +205,7 @@ local function bake_entity(eid, scene_pf)
     log.info(("bake finish for entity: %d-%s"):format(eid, e.name or ""))
 
     e._lightmap.data:postprocess()
+    e._lightmap.data:save "d:/work/ant/tools/lightmap_baker/lm.tga"
     log.info(("postprocess entity finish: %d-%s"):format(eid, e.name or ""))
 end
 
