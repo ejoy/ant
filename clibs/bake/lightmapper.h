@@ -381,7 +381,6 @@ struct lm_context
 
 		struct
 		{
-			bgfx_view_id_t	blit_viewid;
 			bgfx_texture_handle_t texture;
 			lm_ivec2 writePosition;
 			lm_ivec2 *toLightmapLocation;
@@ -702,7 +701,7 @@ static void lm_downsample(lm_context *ctx)
 		BGFX(submit)(ctx->hemisphere.viewids[fbWrite], ctx->hemisphere.downsamplePass.prog, 0, BGFX_DISCARD_ALL);
 	}
 
-	BGFX(blit)(ctx->hemisphere.storage.blit_viewid,
+	BGFX(blit)(ctx->hemisphere.viewids[fbWrite],
 		ctx->hemisphere.storage.texture, 0, ctx->hemisphere.storage.writePosition.x, ctx->hemisphere.storage.writePosition.y, 0, 
 		ctx->hemisphere.rbTexture[fbWrite], 0, 0, 0, 0, ctx->hemisphere.fbHemiCountX, ctx->hemisphere.fbHemiCountY, 0);
 
