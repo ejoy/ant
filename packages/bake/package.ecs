@@ -1,1 +1,1 @@
-import "lightmapping.ecs"
+import "lightmapper.ecs"

@@ -10,12 +10,12 @@ policy "lightmap"
     .component "lightmap"
 
 transform "lightmap_transform"
-    .implement "lightmapping.lua"
+    .implement "lightmapper.lua"
     .method "process_entity"
     .output "_lightmap"
 
 system "lightmap_system"
-    .implement "lightmapping.lua"
+    .implement "lightmapper.lua"
     .method "init"
     .method "end_frame"
 
