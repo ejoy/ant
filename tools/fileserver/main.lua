@@ -4,6 +4,7 @@ require "bootstrap"
 local config = {
     service_path = "tools/fileserver/service/?.lua;3rd/ltask/service/?.lua",
     lua_path = "tools/fileserver/lualib/?.lua;3rd/ltask/lualib/?.lua",
+	lua_cpath = package.cpath,
     bootstrap = { "listen", arg },
     logger = { "log.server" },
     exclusive = { "timer", "network" },

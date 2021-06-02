@@ -91,7 +91,6 @@ lm:exe "ant" {
             "OpenGLES",
         },
         ldflags = {
-            "-lstdc++",
             "-fembed-bitcode",
             "-fobjc-arc"
         },
