@@ -117,7 +117,7 @@ template <size_t LANE>
 Float4 Float4::Dup()
 {
 	return (LANE < 2) ?
-		vdupq_lane_f32(vget_low_f32(s), LANE) :
+		vdupq_lane_f32(vget_low_f32(s), LANE % 2) :
 		vdupq_lane_f32(vget_high_f32(s), LANE & 1);
 }
 
