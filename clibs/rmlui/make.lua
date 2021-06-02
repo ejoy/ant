@@ -39,6 +39,7 @@ lm:source_set "source_rmlui" {
         Ant3rd .. "rmlui/Include",
         Ant3rd .. "bgfx/3rdparty",
         Ant3rd .. "yoga",
+        "../lua2struct",
     },
     sources = {
         "*.cpp",

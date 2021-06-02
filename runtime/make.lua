@@ -6,6 +6,7 @@ local Backlist = {
     filewatch = true,
     imgui = true,
     subprocess = true,
+    ltask = true,
 }
 
 local RuntimeModules = {}
@@ -90,6 +91,7 @@ lm:exe "ant" {
             "OpenGLES",
         },
         ldflags = {
+            "-lstdc++",
             "-fembed-bitcode",
             "-fobjc-arc"
         },
