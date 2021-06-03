@@ -16,7 +16,7 @@ function S.LOG(data)
 end
 
 function S.QUIT()
-    ltask.call(ServiceLogManager, "CLOSE", INDEX)
+    ltask.call(ServiceLogManager, "CLOSE", repopath, INDEX)
     ltask.quit()
 end
 
