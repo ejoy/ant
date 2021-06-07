@@ -12,7 +12,7 @@ local function sandbox_env(root, pkgname)
                 return filename
             end
         end
-        return nil, "no file '"..string.gsub(path, ';', "'\n\tno file '").."'"
+        return nil, "no file '"..path:gsub(';', "'\n\tno file '"):gsub('%?', name).."'"
     end
 
     local function searcher_lua(name)
