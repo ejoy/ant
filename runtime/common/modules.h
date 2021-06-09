@@ -2,4 +2,4 @@
 
 #include <lua.hpp>
 
-const luaL_Reg* ant_modules();
+extern "C" const luaL_Reg* ant_modules();
