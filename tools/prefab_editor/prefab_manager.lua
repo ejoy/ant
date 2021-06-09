@@ -621,7 +621,7 @@ function m:add_effect(filename)
         print("create effect faild : ", filename)
     else
         local eh = world[effect].effect_instance.handle
-        effekseer.set_loop(eh, true)
+        --effekseer.set_loop(eh, true)
         effekseer.play(eh)
     end
     self.entities[#self.entities+1] = effect

@@ -109,11 +109,18 @@ local iplay = ecs.interface "effekseer_playback"
 
 function iplay.play(eid, loop)
     local eh = world[eid].effect_instance.handle
+    if effekseer.is_playing(eh) then return end
+    print("Play Effect....")
     --effekseer.set_speed(eh, speed or 1.0)
-    local lp = loop or false
-    world[eid].loop = lp
-    effekseer.set_loop(eh, lp)
+    -- local lp = loop or false
+    -- world[eid].loop = lp
+    -- effekseer.set_loop(eh, lp)
     effekseer.play(eh)
+end
+
+function iplay.is_playing(eid)
+    local eh = world[eid].effect_instance.handle
+    return effekseer.is_playing(eh)
 end
 
 function iplay.pause(eid, b)
@@ -150,16 +157,16 @@ local iom = world:interface "ant.objcontroller|obj_motion"
 local event_entity_register = world:sub{"entity_register"}
 local event_entity_removed = world:sub{"entity_removed"}
 function effekseer_sys:ui_update()
-    for _, eid in event_entity_register:unpack() do
-        if world[eid] and world[eid].effect_instance then
-            local eh = world[eid].effect_instance.handle
-            effekseer.set_loop(eh, world[eid].loop)
-            effekseer.set_speed(eh, world[eid].speed)
-            if world[eid].auto_play then
-                effekseer.play(eh)
-            end
-        end
-    end
+    -- for _, eid in event_entity_register:unpack() do
+    --     if world[eid] and world[eid].effect_instance then
+    --         local eh = world[eid].effect_instance.handle
+    --         effekseer.set_loop(eh, world[eid].loop)
+    --         effekseer.set_speed(eh, world[eid].speed)
+    --         if world[eid].auto_play then
+    --             effekseer.play(eh)
+    --         end
+    --     end
+    -- end
     for msg in event_entity_removed:each() do
         local e = msg[3]
         if e.effect_instance then

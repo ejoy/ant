@@ -240,6 +240,7 @@ local function from_runtime_clip(runtime_clip)
 end
 
 local function get_runtime_clips()
+    if not current_eid then return end
     if not world[current_eid].anim_clips then
         iani.set_clips(current_eid, {})
     end
@@ -352,7 +353,7 @@ local function add_event(et)
         asset_path = (et == "Effect" or et == "Sound") and "" or nil,
         link_info = (et == "Effect") and {
             slot_name = "",
-            slot_eid = current_eid
+            slot_eid = nil
         } or nil,
         name_ui = {text = event_name},
         rid_ui = {-1},
@@ -677,11 +678,14 @@ local function get_clips_filename()
 end
 
 function m.save_clip(path)
+    local clips = get_runtime_clips()
+    if not clips then return end
+    
     local clip_filename = path
     if not clip_filename then
         clip_filename = get_clips_filename()
     end
-    local clips = get_runtime_clips()
+    
     local copy_clips = utils.deep_copy(clips)
     for _, clip in ipairs(copy_clips) do
         if clip.key_event then
