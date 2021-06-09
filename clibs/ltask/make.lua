@@ -4,7 +4,10 @@ dofile "../common.lua"
 
 lm:source_set "source_ltask" {
     includes = LuaInclude,
-    sources = Ant3rd .. "ltask/src/*.c",
+    sources = {
+        Ant3rd .. "ltask/src/*.c",
+        "!" .. Ant3rd .. "ltask/src/main.c",
+    },
     --defines = "DEBUGLOG",
     windows = {
         links = "user32",

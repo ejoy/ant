@@ -1,5 +1,4 @@
 #include "runtime.h"
-#include "searcher.h"
 #include "set_current.h"
 #include <string.h>
 
@@ -71,7 +70,6 @@ static int pmain(lua_State *L) {
     lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
     luaL_openlibs(L);
     createargtable(L, argc, argv);
-    searcher_init(L, 0);
     set_current(L);
     dostring(L, "local fw = require 'firmware' ; assert(fw.loadfile 'bootstrap.lua')()");
     return 0;
