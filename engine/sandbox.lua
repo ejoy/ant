@@ -55,7 +55,7 @@ local function sandbox_env(root, pkgname)
             return p
         end
         local init, extra, idx = require_load(name)
-        if not init or (idx >= 3 and package.loaded[name]) then
+        if not init or (idx ~= 2 and package.loaded[name]) then
             _LOADED[name] = package.loaded[name]
             return _LOADED[name]
         end
@@ -67,7 +67,7 @@ local function sandbox_env(root, pkgname)
         if _LOADED[name] == nil then
             _LOADED[name] = true
 		end
-		if idx >= 3 then
+		if idx ~= 2 then
 			package.loaded[name]= _LOADED[name]
 		end
         return _LOADED[name]

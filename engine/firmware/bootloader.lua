@@ -1,5 +1,6 @@
 local config = ...
 
+local vfs = require "vfs"
 local thread = require "thread"
 local errlog = thread.channel_produce "errlog"
 local errthread = thread.thread([[
@@ -15,21 +16,6 @@ local errthread = thread.thread([[
 	end
 ]])
 
-local fw = require "firmware"
-local vfs = assert(fw.loadfile "vfs.lua")()
-local repo = vfs.new(config.repopath)
-local function vfs_dofile(path)
-    local realpath = repo:realpath(path)
-    local f = assert(io.open(realpath))
-    local str = f:read 'a'
-    f:close()
-    return assert(load(str, "@/" .. path))()
-end
-
-local vfs = vfs_dofile 'engine/firmware/vfs.lua'
-repo = vfs.new(config.repopath)
-
-local thread = require "thread"
 local threadid = thread.id
 
 thread.newchannel "IOreq"
@@ -37,7 +23,7 @@ thread.newchannel ("IOresp" .. threadid) -- TODO: No need?
 
 local io_req = thread.channel_produce "IOreq"
 
-local firmware_io = repo:realpath("engine/firmware/io.lua")
+local firmware_io = vfs.realpath("engine/firmware/io.lua")
 thread.thread (([[
     -- IO thread
     local firmware_io = %q
@@ -54,26 +40,15 @@ thread.thread (([[
 ]]):format(firmware_io))
 
 local function vfs_init()
-    config.vfspath = repo:realpath("engine/firmware/vfs.lua")
+    config.vfspath = vfs.realpath("engine/firmware/vfs.lua")
 	io_req:push(config)
 end
 
 vfs_init()
-
-local openfile = vfs_dofile "engine/firmware/init_thread.lua"
-
-local function loadfile(path)
-    local f, err = openfile(path)
-    if not f then
-        return nil, err
-    end
-    local str = f:read 'a'
-    f:close()
-    return load(str, '@/' .. path)
-end
+vfs.dofile "engine/firmware/init_thread.lua"
 
 local function dofile(path)
-    local f, err = loadfile(path)
+    local f, err = vfs.loadfile(path)
     if not f then
         error(err)
     end

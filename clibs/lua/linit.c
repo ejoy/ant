@@ -54,7 +54,7 @@ static const luaL_Reg loadedlibs[] = {
 };
 
 #ifdef ANT_LIBRARIES
-extern const luaL_Reg *ant_modules();
+extern void ant_openlibs(lua_State *L);
 #endif
 
 LUALIB_API void luaL_openlibs (lua_State *L) {
@@ -65,12 +65,7 @@ LUALIB_API void luaL_openlibs (lua_State *L) {
     lua_pop(L, 1);  /* remove lib */
   }
 #ifdef ANT_LIBRARIES
-  luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
-  for (lib = ant_modules(); lib->func; lib++) {
-    lua_pushcfunction(L, lib->func);
-    lua_setfield(L, -2, lib->name);
-  }
-  lua_pop(L, 1);
+  ant_openlibs(L);
 #endif
 }
 
