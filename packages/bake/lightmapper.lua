@@ -179,14 +179,13 @@ local function bake_entity(eid, scene_pf)
         return log.warn(("entity %s not set any lightmap info will not be baked"):format(e.name or ""))
     end
 
-    log.info(("baking entity:[%d-%s]"):format(eid, e.name or ""))
     local lm = e.lightmap
-    log.info(("set baking entity lightmap:[%d-%s], w:%d, h:%d, channels:%d"):format(eid, e.name or "", lm.width, lm.height, lm.channels))
+    log.info(("[%d-%s] lightmap:w=%d, h=%d, channels=%d"):format(eid, e.name or "", lm.width, lm.height, lm.channels))
     e._lightmap.data = bake_ctx:set_target_lightmap(e.lightmap)
 
     local g = load_geometry_info(e._rendercache)
     bake_ctx:set_geometry(g)
-    log.info(("begin bake entity:[%d-%s]"):format(eid, e.name or ""))
+    log.info(("[%d-%s] bake: begin"):format(eid, e.name or ""))
     while true do
         local haspatch, vp, view, proj = bake_ctx:begin_patch()
         if not haspatch then
@@ -199,14 +198,15 @@ local function bake_entity(eid, scene_pf)
         icp.cull(scene_pf, math3d.mul(proj, view))
         draw_scene(scene_pf)
         bake_ctx:end_patch()
-        log.info(("%d-%s process:%2f"):format(eid, e.name or "", bake_ctx:process()))
+        log.info(("[%d-%s] process:%2f"):format(eid, e.name or "", bake_ctx:process()))
     end
 
-    log.info(("bake finish for entity: %d-%s"):format(eid, e.name or ""))
+    log.info(("[%d-%s] bake: end"):format(eid, e.name or ""))
 
     e._lightmap.data:postprocess()
     e._lightmap.data:save "d:/work/ant/tools/lightmap_baker/lm.tga"
-    log.info(("postprocess entity finish: %d-%s"):format(eid, e.name or ""))
+    log.info(("[%d-%s] postprocess: finish"):format(eid, e.name or ""))
+    
 end
 
 local function bake_all()
