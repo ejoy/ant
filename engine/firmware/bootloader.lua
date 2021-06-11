@@ -39,13 +39,13 @@ thread.thread (([[
     assert(loadfile(firmware_io, 'engine/firmware/io.lua'))(loadfile)
 ]]):format(firmware_io))
 
-local function vfs_init()
+local function initIOThread()
     config.vfspath = vfs.realpath("engine/firmware/vfs.lua")
 	io_req:push(config)
 end
 
-vfs_init()
-vfs.dofile "engine/firmware/init_thread.lua"
+initIOThread()
+vfs.initfunc "engine/firmware/init_thread.lua"
 
 local function dofile(path)
     local f, err = vfs.loadfile(path)

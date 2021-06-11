@@ -1,6 +1,13 @@
 #include <lua.hpp>
+#include <string>
+#include <string_view>
+#include <mutex>
 
-static const char script_init[] = R"(
+std::string initfunc;
+std::mutex mutex;
+
+static const std::string_view initscript = R"(
+local initfunc = ...
 local vfs = {}
 local io_open = io.open
 function vfs.realpath(path)
@@ -82,16 +89,59 @@ function vfs.searcher_Lua(name)
     end
     return func, filename
 end
+if initfunc then
+    assert(vfs.loadfile(initfunc))(vfs)
+end
 package.searchers[2] = vfs.searcher_Lua
 package.searchpath = vfs.searchpath
+loadfile = vfs.loadfile
+dofile = vfs.dofile
 return vfs
 )";
 
-#define LoadScript(L, script) if (luaL_loadbuffer(L, script, sizeof(script) - 1, "=module 'vfs'") != LUA_OK) { return lua_error(L); }
+static const std::string_view updateinitfunc = R"(
+local vfs, initfunc = ...
+if initfunc then
+    assert(vfs.loadfile(initfunc))(vfs)
+end
+)";
+
+#define LoadScript(L, script) if (luaL_loadbuffer(L, script.data(), script.size(), "=module 'vfs'") != LUA_OK) { return lua_error(L); }
+
+static int set_initfunc(lua_State* L) {
+    size_t sz = 0;
+    const char* str = luaL_checklstring(L, 1, &sz);
+    std::lock_guard<std::mutex> lock(mutex);
+    initfunc.assign(str, sz);
+    if (!lua_toboolean(L, 2)) {
+        LoadScript(L, updateinitfunc);
+        lua_pushvalue(L, lua_upvalueindex(1));
+        lua_pushvalue(L, 1);
+        lua_call(L, 2, 0);
+    }
+    return 0;
+}
+
+static int push_initfunc(lua_State* L) {
+    std::lock_guard<std::mutex> lock(mutex);
+    if (initfunc.empty()) {
+        lua_pushnil(L);
+        return 1;
+    }
+    lua_pushlstring(L, initfunc.data(), initfunc.size());
+    return 1;
+}
 
 extern "C"
 int luaopen_vfs(lua_State* L) {
-    LoadScript(L, script_init);
-    lua_call(L, 0, 1);
+    LoadScript(L, initscript);
+    push_initfunc(L);
+    lua_call(L, 1, 1);
+    luaL_Reg l[] = {
+        {"initfunc", set_initfunc},
+        {NULL, NULL},
+    };
+    lua_pushvalue(L, -1);
+    luaL_setfuncs(L, l, 1);
     return 1;
 }

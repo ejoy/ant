@@ -4,10 +4,50 @@ local lfs = require "filesystem.local"
 local access = require "vfs.repoaccess"
 
 local repo
+local io_open = io.open
 
 function localvfs.realpath(pathname)
 	local rp = access.realpath(repo, pathname)
 	return rp:string()
+end
+
+local function errmsg(err, filename, real_filename)
+    local first, last = err:find(real_filename, 1, true)
+    if not first then
+        return err
+    end
+    return err:sub(1, first-1) .. filename .. err:sub(last+1)
+end
+
+function localvfs.openfile(filename)
+    local real_filename = localvfs.realpath(filename)
+    if not real_filename then
+        return nil, ('%s:No such file or directory.'):format(filename)
+    end
+    local f, err, ec = io_open(real_filename, 'rb')
+    if not f then
+        err = errmsg(err, filename, real_filename)
+        return nil, err, ec
+    end
+    return f
+end
+
+function localvfs.loadfile(path)
+    local f, err = localvfs.openfile(path)
+    if not f then
+        return nil, err
+    end
+    local str = f:read 'a'
+    f:close()
+    return load(str, '@/' .. path)
+end
+
+function localvfs.dofile(path)
+    local f, err = localvfs.loadfile(path)
+    if not f then
+        error(err)
+    end
+    return f()
 end
 
 function localvfs.virtualpath(pathname)

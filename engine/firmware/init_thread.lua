@@ -11,7 +11,9 @@ local function npath(path)
 	return path:match "^/?(.-)/?$"
 end
 
-local vfs = require "vfs"
+__ANT_RUNTIME__ = 0.01
+
+local vfs = ...
 function vfs.realpath(path)
 	io_req("GET", threadid, npath(path))
 	return io_resp()
