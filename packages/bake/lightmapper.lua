@@ -169,7 +169,8 @@ local function draw_scene(pf)
     end
 end
 
-local function bake_entity(eid, scene_pf)
+local ilm = ecs.interface "ilightmap"
+function ilm.bake_entity(eid, pf)
     local e = world[eid]
     if e == nil then
         return log.warn(("invalid entity:%d"):format(eid))
@@ -195,8 +196,8 @@ local function bake_entity(eid, scene_pf)
         vp = math3d.tovalue(vp)
         bgfx.set_view_rect(bake_viewid, vp[1], vp[2], vp[3], vp[4])
         bgfx.set_view_transform(bake_viewid, view, proj)
-        icp.cull(scene_pf, math3d.mul(proj, view))
-        draw_scene(scene_pf)
+        icp.cull(pf, math3d.mul(proj, view))
+        draw_scene(pf)
         bake_ctx:end_patch()
         log.info(("[%d-%s] process:%2f"):format(eid, e.name or "", bake_ctx:process()))
     end
@@ -214,7 +215,7 @@ local function bake_all()
     local se = world:singleton_entity "scene_watcher"
     for _, result in ipf.iter_filter(lm_e.primitive_filter) do
         for _, item in ipf.iter_target(result) do
-            bake_entity(item.eid, se.primitive_filter)
+            ilm.bake_entity(item.eid, se.primitive_filter)
         end
     end
 end
@@ -236,7 +237,7 @@ function lightmap_sys:end_frame()
         local eid = msg[2]
         if eid then
             local se = world:singleton_entity "scene_watcher"
-            bake_entity(eid, se.primitive_filter)
+            ilm.bake_entity(eid, se.primitive_filter)
         else
             log.info("bake entity scene with lightmap setting")
             bake_all()

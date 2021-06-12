@@ -25,3 +25,7 @@ policy "scene_watcher"
     .require_interface "ant.scene|iprimitive_filter"
     .component "primitive_filter"
     .unique_component "scene_watcher"
+
+interface "ilightmap"
+    .implement "lightmapper.lua"
+    .method "bake_entity"
