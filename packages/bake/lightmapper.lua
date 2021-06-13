@@ -131,7 +131,7 @@ local function load_geometry_info(item)
             end
         end
 
-        error(("not found attrib name:%s"):format(name))
+        --error(("not found attrib name:%s"):format(name))
     end
 
     local ib = m.ib
@@ -156,7 +156,7 @@ local function load_geometry_info(item)
         num     = math.tointeger(m.vb.num),
         pos     = get_attrib_item "p",
         normal  = get_attrib_item "n",
-        uv      = get_attrib_item "t21",
+        uv      = get_attrib_item "t21" or get_attrib_item "t20",
         index   = index,
     }
 end
@@ -170,7 +170,7 @@ local function draw_scene(pf)
 end
 
 local ilm = ecs.interface "ilightmap"
-function ilm.bake_entity(eid, pf)
+function ilm.bake_entity(eid, pf, notcull)
     local e = world[eid]
     if e == nil then
         return log.warn(("invalid entity:%d"):format(eid))
@@ -196,7 +196,9 @@ function ilm.bake_entity(eid, pf)
         vp = math3d.tovalue(vp)
         bgfx.set_view_rect(bake_viewid, vp[1], vp[2], vp[3], vp[4])
         bgfx.set_view_transform(bake_viewid, view, proj)
-        icp.cull(pf, math3d.mul(proj, view))
+        if nil == notcull then
+            icp.cull(pf, math3d.mul(proj, view))
+        end
         draw_scene(pf)
         bake_ctx:end_patch()
         log.info(("[%d-%s] process:%2f"):format(eid, e.name or "", bake_ctx:process()))
@@ -208,6 +210,12 @@ function ilm.bake_entity(eid, pf)
     e._lightmap.data:save "d:/work/ant/tools/lightmap_baker/lm.tga"
     log.info(("[%d-%s] postprocess: finish"):format(eid, e.name or ""))
     
+end
+
+function ilm.init_bake_context(s)
+    s = s or context_setting
+    bake_ctx = bake.create_lightmap_context(s)
+    bake_ctx:set_shadering_info(shading_info)
 end
 
 local function bake_all()
@@ -223,14 +231,9 @@ end
 local bake_mb = world:sub{"bake"}
 local lm_mb = world:sub{"component_register", "lightmap_baker"}
 
-local function init_bake_context(s)
-    bake_ctx = bake.create_lightmap_context(s)
-    bake_ctx:set_shadering_info(shading_info)
-end
-
 function lightmap_sys:end_frame()
     for msg in lm_mb:each() do
-        init_bake_context(context_setting)
+        ilm.init_bake_context(context_setting)
     end
     for msg in bake_mb:each() do
         assert(bake_ctx, "invalid bake context, need check")

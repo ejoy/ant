@@ -490,12 +490,12 @@ namespace ant::lua_filesystem {
         ));
         LUA_TRY_END;
     }
-
+#if !defined(__cpp_lib_chrono) || __cpp_lib_chrono < 201907
     template <class DestClock, class SourceClock, class Duration>
     static auto clock_cast(const std::chrono::time_point<SourceClock, Duration>& t) {
         return DestClock::now() + (t - SourceClock::now());
     }
-
+#endif
     static int last_write_time(lua_State* L) {
         // TODO: need file_clock http://wg21.link/p0355r7
         using namespace std::chrono;

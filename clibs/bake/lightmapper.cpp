@@ -276,6 +276,12 @@ llm_save(lua_State *L){
 }
 #endif 
 static int
+llm_data(lua_State *L){
+    auto lm = tolm(L, 1);
+    lua_pushlightuserdata(L, lm->data);
+    return 1;
+}
+static int
 lcontext_set_target_lightmap(lua_State *L){
     auto ctx = tocontext(L, 1);
     lightmap *lm = (lightmap*)lua_newuserdata(L, sizeof(lightmap));
@@ -289,6 +295,7 @@ lcontext_set_target_lightmap(lua_State *L){
             {"__gc", llm_destroy},
             {"postprocess", llm_postprocess},
             {"tostring", llm_tostring},
+            {"data", llm_data},
 #ifdef _DEBUG
             {"save", llm_save},
 #endif

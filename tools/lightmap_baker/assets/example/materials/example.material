@@ -1,0 +1,10 @@
+fx:
+    vs: /pkg/ant.tool.lightmap_baker/assets/example/shaders/vs_example.sc
+    fs: /pkg/ant.tool.lightmap_baker/assets/example/shaders/fs_example.sc
+    setting:
+        lighting:off
+properties:
+    s_lightmap:
+        stage: 0
+        texture: /pkg/ant.resources/textures/default.texture
+state: /pkg/ant.resources/materials/states/default.state
