@@ -617,11 +617,11 @@ function m:add_effect(filename)
             loop = true
 		},
     }
-    if world[effect].effekseer.handle == -1 then
+    if world[effect].effect_instance.handle == -1 then
         print("create effect faild : ", filename)
     else
-        local eh = world[effect].effekseer.handle
-        effekseer.set_loop(eh, true)
+        local eh = world[effect].effect_instance.handle
+        --effekseer.set_loop(eh, true)
         effekseer.play(eh)
     end
     self.entities[#self.entities+1] = effect

@@ -277,6 +277,21 @@ lset_loop(lua_State* L) {
 }
 
 static int
+lis_playing(lua_State* L) {
+	bool isplay = false;
+	int32_t eidx = get_effect_index(L);
+	if (eidx != -1) {
+		auto effect = g_effekseer->get_effect(eidx);
+		if (effect)
+		{
+			isplay = effect->is_playing();
+		}
+	}
+	lua_pushboolean(L, isplay);
+	return 1;
+}
+
+static int
 lset_speed(lua_State* L) {
 	int32_t eidx = get_effect_index(L);
 	if (eidx != -1) {
@@ -366,6 +381,7 @@ luaopen_effekseer(lua_State * L) {
 		{ "stop", lstop},
 		{ "set_speed", lset_speed},
 		{ "set_loop", lset_loop},
+		{ "is_playing", lis_playing},
 		{ nullptr, nullptr },
 	};
 	luaL_newlib(L, l);

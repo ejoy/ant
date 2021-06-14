@@ -3,7 +3,7 @@ local threadid = thread.id
 local io_req = thread.channel_produce "IOreq"
 local io_resp = thread.channel_consume ("IOresp" .. threadid)
 
-local vfs = {}
+local vfs = require "vfs"
 
 local function npath(path)
 	return path:match "^/?(.-)/?$"
@@ -38,5 +38,3 @@ function vfs.type(path)
 	io_req("TYPE", threadid, npath(path))
 	return io_resp()
 end
-
-package.loaded.vfs = vfs

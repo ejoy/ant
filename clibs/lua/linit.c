@@ -53,6 +53,9 @@ static const luaL_Reg loadedlibs[] = {
   {NULL, NULL}
 };
 
+#ifdef ANT_LIBRARIES
+extern void ant_openlibs(lua_State *L);
+#endif
 
 LUALIB_API void luaL_openlibs (lua_State *L) {
   const luaL_Reg *lib;
@@ -61,5 +64,8 @@ LUALIB_API void luaL_openlibs (lua_State *L) {
     luaL_requiref(L, lib->name, lib->func, 1);
     lua_pop(L, 1);  /* remove lib */
   }
+#ifdef ANT_LIBRARIES
+  ant_openlibs(L);
+#endif
 }
 

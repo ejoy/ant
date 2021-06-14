@@ -29,7 +29,6 @@ lm:source_set "ant_common" {
     sources = {
         "common/modules.cpp",
         "common/runtime.cpp",
-        "common/searcher.cpp",
     },
     windows = {
         sources = "common/set_current_win32.cpp"

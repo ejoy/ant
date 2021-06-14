@@ -3,7 +3,6 @@
 
 #define USE_BGFX 1
 #ifdef USE_BGFX
-#define EXPORT_BGFX_INTERFACE
 #include "../bgfx/bgfx_interface.h"
 #endif //USE_BGFX
 

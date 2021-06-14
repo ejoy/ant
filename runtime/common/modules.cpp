@@ -1,4 +1,5 @@
 #include "modules.h"
+#include <bgfx/c99/bgfx.h>
 
 extern "C" {
 int luaopen_bgfx(lua_State* L);
@@ -27,12 +28,18 @@ int luaopen_window(lua_State* L);
 int luaopen_terrain(lua_State *L);
 int luaopen_font(lua_State *L);
 int luaopen_effekseer(lua_State* L);
+int luaopen_ltask(lua_State* L);
+int luaopen_ltask_bootstrap(lua_State* L);
+int luaopen_ltask_root(lua_State* L);
+int luaopen_ltask_exclusive(lua_State* L);
+int luaopen_vfs(lua_State* L);
 }
 
 const luaL_Reg* ant_modules() {
     static const luaL_Reg modules[] = {
         { "bgfx", luaopen_bgfx },
         { "bgfx.util", luaopen_bgfx_util },
+        { "bgfx_get_interface", (lua_CFunction)bgfx_get_interface },
         { "font", luaopen_font },
         { "crypt", luaopen_crypt },
         { "datalist", luaopen_datalist },
@@ -57,7 +64,24 @@ const luaL_Reg* ant_modules() {
         { "window", luaopen_window },
         { "terrain", luaopen_terrain},
         { "effekseer", luaopen_effekseer},
+        { "ltask", luaopen_ltask},
+        { "ltask.bootstrap", luaopen_ltask_bootstrap},
+        { "ltask.bootstrap", luaopen_ltask_bootstrap},
+        { "ltask.exclusive", luaopen_ltask_exclusive},
         { NULL, NULL },
     };
     return modules;
+}
+
+void ant_openlibs(lua_State* L) {
+    const luaL_Reg *lib;
+    luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
+    for (lib = ant_modules(); lib->func; lib++) {
+        lua_pushcfunction(L, lib->func);
+        lua_setfield(L, -2, lib->name);
+    }
+    lua_pop(L, 1);
+
+    luaL_requiref(L, "vfs", luaopen_vfs, 0);
+    lua_pop(L, 1);
 }

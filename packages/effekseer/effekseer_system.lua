@@ -26,7 +26,7 @@ local time_callback
 local ie_t = ecs.transform "instance_effect"
 
 function ie_t.process_entity(e)
-    e.instance = {
+    e.effect_instance = {
         handle 		= effekseer.create(e.effekseer.rawdata),
         speed 		= e.speed,
         auto_play 	= e.auto_play,
@@ -108,26 +108,33 @@ end
 local iplay = ecs.interface "effekseer_playback"
 
 function iplay.play(eid, loop)
-    local eh = world[eid].instance.handle
+    local eh = world[eid].effect_instance.handle
+    if effekseer.is_playing(eh) then return end
+    print("Play Effect....")
     --effekseer.set_speed(eh, speed or 1.0)
-    local lp = loop or false
-    world[eid].loop = lp
-    effekseer.set_loop(eh, lp)
+    -- local lp = loop or false
+    -- world[eid].loop = lp
+    -- effekseer.set_loop(eh, lp)
     effekseer.play(eh)
 end
 
+function iplay.is_playing(eid)
+    local eh = world[eid].effect_instance.handle
+    return effekseer.is_playing(eh)
+end
+
 function iplay.pause(eid, b)
-    local eh = world[eid].instance.handle
+    local eh = world[eid].effect_instance.handle
     effekseer.pause(eh, b)
 end
 
 function iplay.set_time(eid, frame)
-    local eh = world[eid].instance.handle
+    local eh = world[eid].effect_instance.handle
     effekseer.set_time(eh, frame)
 end
 
 function iplay.set_speed(eid, speed)
-    local eh = world[eid].instance.handle
+    local eh = world[eid].effect_instance.handle
     world[eid].speed = speed
     effekseer.set_speed(eh, speed)
 end
@@ -150,26 +157,26 @@ local iom = world:interface "ant.objcontroller|obj_motion"
 local event_entity_register = world:sub{"entity_register"}
 local event_entity_removed = world:sub{"entity_removed"}
 function effekseer_sys:ui_update()
-    for _, eid in event_entity_register:unpack() do
-        if world[eid] and world[eid].instance then
-            local eh = world[eid].instance.handle
-            effekseer.set_loop(eh, world[eid].loop)
-            effekseer.set_speed(eh, world[eid].speed)
-            if world[eid].auto_play then
-                effekseer.play(eh)
-            end
-        end
-    end
+    -- for _, eid in event_entity_register:unpack() do
+    --     if world[eid] and world[eid].effect_instance then
+    --         local eh = world[eid].effect_instance.handle
+    --         effekseer.set_loop(eh, world[eid].loop)
+    --         effekseer.set_speed(eh, world[eid].speed)
+    --         if world[eid].auto_play then
+    --             effekseer.play(eh)
+    --         end
+    --     end
+    -- end
     for msg in event_entity_removed:each() do
         local e = msg[3]
-        if e.instance then
-            effekseer.destroy(e.instance.handle)
+        if e.effect_instance then
+            effekseer.destroy(e.effect_instance.handle)
             print("---destroy handle")
         end
     end
     for _, eid in world:each "effekseer" do
 		local e = world[eid]
-		effekseer.update_transform(e.instance.handle, iom.worldmat(eid))
+		effekseer.update_transform(e.effect_instance.handle, iom.worldmat(eid))
     end
     local dt = time_callback and time_callback() or itimer.delta() * 0.001
     effekseer.update(dt)

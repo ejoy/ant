@@ -6,9 +6,23 @@ if lm.mode == "debug" and lm.target == "x64" and lm.compiler == "msvc" then
     }
 end
 
-lm:source_set "source_lua" {
+lm:source_set "source_lua_openlibs_runtime" {
+    sources = {
+        "linit.c",
+    },
+    defines = "ANT_LIBRARIES"
+}
+
+lm:source_set "source_lua_openlibs_editor" {
+    sources = {
+        "linit.c",
+    },
+}
+
+lm:source_set "source_lua_noopenlibs" {
     sources = {
         "*.c",
+        "!linit.c",
         "!lua.c",
         "!luac.c",
         "!utf8_lua.c",
@@ -24,6 +38,20 @@ lm:source_set "source_lua" {
         sources = {
             "!utf8_*.c"
         }
+    }
+}
+
+lm:source_set "source_lua" {
+    deps = {
+        "source_lua_noopenlibs",
+        "source_lua_openlibs_runtime"
+    }
+}
+
+lm:source_set "source_lua_editor" {
+    deps = {
+        "source_lua_noopenlibs",
+        "source_lua_openlibs_editor"
     }
 }
 
@@ -47,7 +75,7 @@ if lm.os == "windows" then
     }
 else
     lm:exe "lua" {
-        deps = "source_lua",
+        deps = "source_lua_editor",
         sources = {
             "lua.c",
         }
@@ -56,7 +84,7 @@ end
 
 
 lm:exe "luac" {
-    deps = "source_lua",
+    deps = "source_lua_editor",
     sources = {
         "luac.c",
     }

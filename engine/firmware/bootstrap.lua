@@ -22,8 +22,6 @@ local io_resp = thread.channel_consume ("IOresp" .. threadid)
 
 local errthread = thread.thread([[
 	-- Error Thread
-	package.searchers[1] = ...
-	package.searchers[2] = nil
 	local thread = require "thread"
 	local err = thread.channel_consume "errlog"
 	while true do
@@ -33,15 +31,13 @@ local errthread = thread.thread([[
 		end
 		print("ERROR:" .. msg)
 	end
-]], package.searchers[3])
+]])
 
 local iothread = thread.thread([[
 	-- IO Thread
-	package.searchers[1] = ...
-	package.searchers[2] = nil
 	local fw = require "firmware"
 	assert(fw.loadfile "io.lua")(fw.loadfile)
-]], package.searchers[3])
+]])
 
 local function vfs_init()
 	io_req:push(config)

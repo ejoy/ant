@@ -5,11 +5,11 @@
 static uint8_t keyboard_state(NSEvent* event) {
     int flags = [event modifierFlags];
 	return 0
-		| (0 != (flags & NSEventModifierFlagShift  ))  ? (uint8_t)(1 << KB_SHIFT)    : 0
-		| (0 != (flags & NSEventModifierFlagOption ))  ? (uint8_t)(1 << KB_ALT)      : 0
-		| (0 != (flags & NSEventModifierFlagControl))  ? (uint8_t)(1 << KB_CTRL)     : 0
-		| (0 != (flags & NSEventModifierFlagCommand))  ? (uint8_t)(1 << KB_SYS)      : 0
-		| (0 != (flags & NSEventModifierFlagCapsLock)) ? (uint8_t)(1 << KB_CAPSLOCK) : 0
+		| ((0 != (flags & NSEventModifierFlagShift  ))  ? (uint8_t)(1 << KB_SHIFT)    : 0)
+		| ((0 != (flags & NSEventModifierFlagOption ))  ? (uint8_t)(1 << KB_ALT)      : 0)
+		| ((0 != (flags & NSEventModifierFlagControl))  ? (uint8_t)(1 << KB_CTRL)     : 0)
+		| ((0 != (flags & NSEventModifierFlagCommand))  ? (uint8_t)(1 << KB_SYS)      : 0)
+		| ((0 != (flags & NSEventModifierFlagCapsLock)) ? (uint8_t)(1 << KB_CAPSLOCK) : 0)
 		;
 }
 
@@ -200,14 +200,12 @@ static int32_t clamp(int32_t v, int32_t min, int32_t max) {
 }
 - (BOOL)windowShouldClose:(NSWindow*)window {
 	assert(window);
-	[window setDelegate:nil];
 	assert(self->m_count);
 	self->m_count -= 1;
 	if (self->m_count == 0) {
 		[NSApp terminate:self];
-		return false;
 	}
-	return true;
+	return YES;
 }
 @end
 

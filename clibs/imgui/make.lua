@@ -28,7 +28,7 @@ lm:lua_dll "imgui" {
         "IMGUI_DISABLE_METRICS_WINDOW",
         "IMGUI_DISABLE_DEMO_WINDOWS",
         "IMGUI_DISABLE_DEFAULT_ALLOCATORS",
-        "IMGUI_USER_CONFIG=<imgui_config.h>",
+        "IMGUI_USER_CONFIG=\\\"imgui_config.h\\\"",
         "_UNICODE",
     },
     windows = {

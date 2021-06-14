@@ -186,7 +186,12 @@ local texture_used_idx = {
     ["s_emissive"]  = 3,
     ["s_metallic_roughness"] = 4,
 }
-
+local function raw_read_file(filename)
+    local f = assert(fs.open(filename, "rb"))
+    local c = f:read "a"
+    f:close()
+    return c
+end
 function MaterialView:set_model(eid)
     if not BaseView.set_model(self, eid) then return false end
 
@@ -194,6 +199,9 @@ function MaterialView:set_model(eid)
         --self.samplers = {}
         local mtl_filename = tostring(world[eid].material)
         local md = {filename = mtl_filename, tdata = datalist.parse(cr.read_file(mtl_filename))}
+        if type(md.tdata.state) == "string" then
+            md.tdata.state = datalist.parse(raw_read_file(fs.path(md.tdata.state)))
+        end
         local mtl_path = cr.compile(mtl_filename):remove_filename()
         for k, v in pairs(md.tdata.properties) do
             if is_sampler(k) then
