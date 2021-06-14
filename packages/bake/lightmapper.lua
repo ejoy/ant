@@ -24,7 +24,7 @@ local lightmap_sys = ecs.system "lightmap_system"
 
 local context_setting = {
     size = 64,
-    z_near = 0.1, z_far = 1,
+    z_near = 0.001, z_far = 100,
     rgb = {1.0, 1.0, 1.0},
     interp_pass_count = 2, interp_threshold = 0.001,
     cam2surf_dis_modifier = 0.0,
@@ -103,6 +103,41 @@ end
 
 local function load_geometry_info(item)
     local e = world[item.eid]
+    if item.simple_mesh then
+        local p, n, t, vc, i, ic = bake.read_obj(item.simple_mesh)
+        return {
+            worldmat= math3d.value_ptr(item.worldmat),
+            num     = math.tointeger(ic),
+            pos     = {
+                offset = 0,
+                stride = 12,
+                memory = p,
+                type   = "f",
+                native = true,
+            },
+            normal  = {
+                offset = 0,
+                stride = 12,
+                memory = n,
+                type   = "",
+                native = true,
+            },
+            uv      = {
+                offset = 0,
+                stride = 8,
+                memory = t,
+                type   = "f",
+                native = true,
+            },
+            index   = {
+                offset = 0,
+                stride = 2,
+                memory = i,
+                type   = "H",
+                native = true,
+            },
+        }
+    end
     local m = e.mesh
     local function get_type(t)
         local types<const> = {
@@ -153,7 +188,7 @@ local function load_geometry_info(item)
 
     return {
         worldmat= math3d.value_ptr(item.worldmat),
-        num     = math.tointeger(m.vb.num),
+        num     = math.tointeger(m.ib.num),
         pos     = get_attrib_item "p",
         normal  = get_attrib_item "n",
         uv      = get_attrib_item "t21" or get_attrib_item "t20",

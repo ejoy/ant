@@ -39,13 +39,18 @@ struct geometry{
     const float* worldmat;
     int num;
     struct attrib{
-        const struct memory* m;
+        union {
+            const struct memory* m;
+            const void *nd;
+        };
+        
         const void* data() const {
-            return (const uint8_t*)m->data + offset;
+            return (const uint8_t*)(native ? nd : m->data) + offset;
         };
         int offset;
         int stride;
         lm_type type;
+        bool native;
     };
     attrib pos;
     attrib normal;
@@ -58,8 +63,16 @@ namespace lua_struct{
     template <>
     inline void unpack<geometry::attrib>(lua_State* L, int idx, geometry::attrib& v, void*) {
         luaL_checktype(L, idx, LUA_TTABLE);
+        lua_getfield(L, idx, "native");
+        v.native = lua_toboolean(L, -1);
+        lua_pop(L, 1);
         const auto datatype = lua_getfield(L, idx, "memory");
-        v.m = (const struct memory*)luaL_testudata(L, idx, "BGFX_MEMORY");
+        if (v.native){
+            v.nd = lua_touserdata(L, -1);
+        } else {
+            v.m = (const struct memory*)luaL_testudata(L, -1, "BGFX_MEMORY");
+        }
+        
         lua_pop(L, 1);
 
         unpack_field(L, idx, "offset", v.offset);
@@ -72,6 +85,7 @@ namespace lua_struct{
             case 'H': v.type = LM_UNSIGNED_SHORT; break;
             case 'I': v.type = LM_UNSIGNED_INT; break;
             case 'f': v.type = LM_FLOAT; break;
+            case '\0':v.type = LM_NONE; break;
             default: luaL_error(L, "invalid data type:%s", s);
         }
         lua_pop(L, 1);
@@ -318,6 +332,83 @@ llightmap_context(lua_State *L){
     return 1;
 }
 
+static int
+lligthmap_read_obj(lua_State *L){
+    //static int loadSimpleObjFile(const char *filename, vertex_t **vertices, unsigned int *vertexCount, unsigned short **indices, unsigned int *indexCount)
+    const char* filename = luaL_checkstring(L, 1);
+	FILE *file = fopen(filename, "rt");
+	if (!file)
+		return 0;
+	char line[1024];
+
+	// first pass
+	unsigned int np = 0, nn = 0, nt = 0, nf = 0;
+	while (!feof(file))
+	{
+		fgets(line, 1024, file);
+		if (line[0] == '#') continue;
+		if (line[0] == 'v')
+		{
+			if (line[1] == ' ') { np++; continue; }
+			if (line[1] == 'n') { nn++; continue; }
+			if (line[1] == 't') { nt++; continue; }
+			assert(!"unknown vertex attribute");
+		}
+		if (line[0] == 'f') { nf++; continue; }
+		assert(!"unknown identifier");
+	}
+	assert(np && np == nn && np == nt && nf); // only supports obj files without separately indexed vertex attributes
+
+	// allocate memory
+	int vertexCount = np;
+
+    float *p = (float*)lua_newuserdata(L, np * sizeof(float) * 3);
+	float *n = (float*)lua_newuserdata(L, np * sizeof(float) * 3);
+    float *t = (float*)lua_newuserdata(L, np * sizeof(float) * 2);
+
+    lua_pushinteger(L, vertexCount);
+	int indexCount = nf * 3;
+	uint16_t *indices = (uint16_t*)lua_newuserdata(L, indexCount * sizeof(uint16_t));
+    lua_pushinteger(L, indexCount);
+
+	// second pass
+	fseek(file, 0, SEEK_SET);
+	unsigned int cp = 0, cn = 0, ct = 0, cf = 0;
+	while (!feof(file))
+	{
+		fgets(line, 1024, file);
+		if (line[0] == '#') continue;
+		if (line[0] == 'v')
+		{
+			if (line[1] == ' ') { float *pp = p+(cp++*3);char *e1, *e2; pp[0] = (float)strtod(line + 2, &e1); pp[1] = (float)strtod(e1, &e2); pp[2] = (float)strtod(e2, 0); continue; }
+			if (line[1] == 'n') { /*float *n = (*vertices)[cn++].n; char *e1, *e2; n[0] = (float)strtod(line + 3, &e1); n[1] = (float)strtod(e1, &e2); n[2] = (float)strtod(e2, 0);*/ continue; } // no normals needed
+			if (line[1] == 't') { float *tt = t+(ct++*2);char *e1;      tt[0] = (float)strtod(line + 3, &e1); tt[1] = (float)strtod(e1, 0);                                continue; }
+			assert(!"unknown vertex attribute");
+		}
+		if (line[0] == 'f')
+		{
+			unsigned short *tri = indices + cf;
+			cf += 3;
+			char *e1, *e2, *e3 = line + 1;
+			for (int i = 0; i < 3; i++)
+			{
+				unsigned long pi = strtoul(e3 + 1, &e1, 10);
+				assert(e1[0] == '/');
+				unsigned long ti = strtoul(e1 + 1, &e2, 10);
+				assert(e2[0] == '/');
+				unsigned long ni = strtoul(e2 + 1, &e3, 10);
+				assert(pi == ti && pi == ni);
+				tri[i] = (unsigned short)(pi - 1);
+			}
+			continue;
+		}
+		assert(!"unknown identifier");
+	}
+
+	fclose(file);
+	return 6;
+}
+
 extern "C"{
 LUAMOD_API int
 luaopen_bake(lua_State* L) {
@@ -326,6 +417,9 @@ luaopen_bake(lua_State* L) {
     luaL_Reg lib[] = {
         { "create_lightmap_context", llightmap_create_context},
         { "context_metatable", llightmap_context},
+        #ifdef _DEBUG
+        { "read_obj", lligthmap_read_obj},
+        #endif 
         { nullptr, nullptr },
     };
     luaL_newlib(L, lib);

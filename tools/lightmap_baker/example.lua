@@ -21,7 +21,7 @@ function example_sys:init()
             lightmap = {
                 width = 64,
                 height = 64,
-                channels = 3,
+                channels = 4,
             },
             transform = {},
             
@@ -34,6 +34,7 @@ function example_sys:init()
 
     local e = world[example_eid]
     local rc = e._rendercache
+    rc.simple_mesh = "c:/code/ant/tools/lightmap_baker/assets/example/meshes/gazebo.obj"
     rc.eid = example_eid
     rc.worldmat = e._rendercache.srt
     rc.set_transform = function (rc)
@@ -55,6 +56,8 @@ function example_sys:init()
     local lm = e._lightmap.data
     local lm1 = e.lightmap
 
+    lm:save "C:\\Users\\Kit020\\Desktop\\Games\\abc.tga"
+
     local size = lm1.width * lm1.height * lm1.channels
     local mem = bgfx.memory_buffer(lm:data(), size, lm)
 
@@ -65,7 +68,7 @@ function example_sys:init()
         V="CLAMP",
     }
 
-    local lm_handle = bgfx.create_texture2d(lm1.width, lm1.height, false, 1, "RGB8", flags, mem)
+    local lm_handle = bgfx.create_texture2d(lm1.width, lm1.height, false, 1, "RGBA8", flags, mem)
     imaterial.set_property(example_eid, "s_lightmap", {
         stage = 0,
         texture = {
