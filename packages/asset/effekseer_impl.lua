@@ -9,6 +9,7 @@ function m:init()
 		local res = assetmgr.resource(self)
 		return {
 			rawdata 	= res.rawdata,
+			filedir 	= res.filedir,
 			speed 		= 1.0,
 			auto_play 	= true,
 			loop 		= true
