@@ -37,12 +37,8 @@ local shading_info
 
 local bake_ctx
 
-local viewids<const> = {
-    viewidmgr.generate "weight_ds",
-    viewidmgr.generate "ds",
-}
-
-local bake_viewid<const> = viewids[1]
+local lightmap_viewid<const> = viewidmgr.generate "lightmap"
+local lightmap_storage_viewid<const> = viewidmgr.generate "lightmap_storage"
 
 function lightmap_sys:init()
     weight_downsample_material = imaterial.load "/pkg/ant.bake/materials/weight_downsample.material"
@@ -62,7 +58,8 @@ function lightmap_sys:init()
     local function touint16(h) return 0xffff & h end
 
     shading_info = {
-        viewids = viewids,
+        viewid = lightmap_viewid,
+        storage_viewid = lightmap_storage_viewid,
         weight_downsample = {
             prog        = touint16(wds_fx.prog),
             hemispheres = touint16(find_uniform_handle(wds_fx.uniforms,  "hemispheres")),
@@ -199,7 +196,7 @@ end
 local function draw_scene(pf)
     for _, result in ipf.iter_filter(pf) do
         for _, item in ipf.iter_target(result) do
-            irender.draw(bake_viewid, item)
+            irender.draw(lightmap_viewid, item)
         end
     end
 end
@@ -229,8 +226,8 @@ function ilm.bake_entity(eid, pf, notcull)
         end
 
         vp = math3d.tovalue(vp)
-        bgfx.set_view_rect(bake_viewid, vp[1], vp[2], vp[3], vp[4])
-        bgfx.set_view_transform(bake_viewid, view, proj)
+        bgfx.set_view_rect(lightmap_viewid, vp[1], vp[2], vp[3], vp[4])
+        bgfx.set_view_transform(lightmap_viewid, view, proj)
         if nil == notcull then
             icp.cull(pf, math3d.mul(proj, view))
         end

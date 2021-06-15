@@ -83,7 +83,7 @@ void lmSetGeometry(lm_context *ctx,
 
 #ifdef USE_BGFX
 void lmSetDownsampleShaderingInfo(lm_context *ctx,
-	const bgfx_view_id_t viewids[2],
+	bgfx_view_id_t viewid,
 	bgfx_program_handle_t weightDownsampleProg, bgfx_uniform_handle_t weightHemisphereTextureHandle, bgfx_uniform_handle_t weightTextureHandle,
 	bgfx_program_handle_t downsampleProg, bgfx_uniform_handle_t hemisphereTextureHanle);
 #endif
@@ -359,7 +359,7 @@ struct lm_context
 		unsigned int fbHemiIndex;
 		lm_ivec2 *fbHemiToLightmapLocation;
 #ifdef USE_BGFX
-		bgfx_view_id_t			viewids[2];
+		bgfx_view_id_t			viewid, storage_viewid;
 		bgfx_frame_buffer_handle_t	fb[2];
 		bgfx_texture_handle_t	rbTexture[2];
 		bgfx_texture_handle_t	rbDepth;
@@ -676,35 +676,41 @@ static void lm_downsample(lm_context *ctx)
 	int outHemiSize = ctx->hemisphere.size / 2;
 
 #ifdef USE_BGFX
-	BGFX(set_state)(BGFX_STATE_DEPTH_TEST_NEVER|BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A, 0);
 	bgfx_transient_vertex_buffer_t tvb;
 	BGFX(alloc_transient_vertex_buffer)(&tvb, 4, &ctx->hemisphere.layout);	//not fill tvb.data, shader use gl_VertexID
 
-	BGFX(set_view_rect)(ctx->hemisphere.viewids[fbWrite], 0, 0, outHemiSize * ctx->hemisphere.fbHemiCountX, outHemiSize * ctx->hemisphere.fbHemiCountY);
+	BGFX(set_view_frame_buffer)(ctx->hemisphere.viewid, ctx->hemisphere.fb[fbWrite]);
+	BGFX(set_state)(BGFX_STATE_DEPTH_TEST_NEVER|BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A, 0);
 
-	// BGFX(vertex_layout_begin)(&l);
-	// BGFX(vertex_layout_add)(&l, BGFX_ATTRIB_POSITION, 3, BGFX_ATTRIB_TYPE_FLOAT, 0, 0);
-	// BGFX(vertex_layout_end)(&l);
+	BGFX(set_view_rect)(ctx->hemisphere.viewid, 0, 0, outHemiSize * ctx->hemisphere.fbHemiCountX, outHemiSize * ctx->hemisphere.fbHemiCountY);
+
 	BGFX(set_texture)(0, ctx->hemisphere.firstPass.hemispheresTextureHandle, ctx->hemisphere.rbTexture[fbRead], UINT32_MAX);
 	BGFX(set_texture)(1, ctx->hemisphere.firstPass.weightsTextureHandle, ctx->hemisphere.firstPass.weightsTexture, UINT32_MAX);
 	
 	BGFX(set_transient_vertex_buffer)(0, &tvb, 0, 4);
-	BGFX(submit)(ctx->hemisphere.viewids[fbWrite], ctx->hemisphere.firstPass.prog, 0, BGFX_DISCARD_ALL);
+	BGFX(submit)(ctx->hemisphere.viewid, ctx->hemisphere.firstPass.prog, 0, BGFX_DISCARD_ALL);
 
 	while (outHemiSize > 1)
 	{
 		LM_SWAP(int, fbRead, fbWrite);
 		outHemiSize /= 2;
-		BGFX(set_view_rect)(ctx->hemisphere.viewids[fbWrite], 0, 0, outHemiSize * ctx->hemisphere.fbHemiCountX, outHemiSize * ctx->hemisphere.fbHemiCountY);
+
+		BGFX(set_view_frame_buffer)(ctx->hemisphere.viewid, ctx->hemisphere.fb[fbWrite]);
+		BGFX(set_state)(BGFX_STATE_DEPTH_TEST_NEVER|BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A, 0);
+
+		BGFX(set_view_rect)(ctx->hemisphere.viewid, 0, 0, outHemiSize * ctx->hemisphere.fbHemiCountX, outHemiSize * ctx->hemisphere.fbHemiCountY);
+
 		BGFX(set_texture)(0, ctx->hemisphere.downsamplePass.hemispheresTextureHandle, ctx->hemisphere.rbTexture[fbRead], UINT32_MAX);
 
-		BGFX(submit)(ctx->hemisphere.viewids[fbWrite], ctx->hemisphere.downsamplePass.prog, 0, BGFX_DISCARD_ALL);
+		BGFX(set_transient_vertex_buffer)(0, &tvb, 0, 4);
+		BGFX(submit)(ctx->hemisphere.viewid, ctx->hemisphere.downsamplePass.prog, 0, BGFX_DISCARD_ALL);
 	}
 
-	BGFX(blit)(ctx->hemisphere.viewids[fbWrite],
+	BGFX(blit)(ctx->hemisphere.storage_viewid,
 		ctx->hemisphere.storage.texture, 0, ctx->hemisphere.storage.writePosition.x, ctx->hemisphere.storage.writePosition.y, 0, 
 		ctx->hemisphere.rbTexture[fbWrite], 0, 0, 0, 0, ctx->hemisphere.fbHemiCountX, ctx->hemisphere.fbHemiCountY, 0);
 
+	BGFX(set_view_frame_buffer)(ctx->hemisphere.viewid, ctx->hemisphere.fb[0]);
 #else
 	glDisable(GL_DEPTH_TEST);
 	glBindVertexArray(ctx->hemisphere.vao);
@@ -799,7 +805,7 @@ static void lm_getLightmapTextureData(lm_context *ctx, float *hemi)
 {
 #ifdef USE_BGFX
 	uint32_t whichframe = BGFX(read_texture)(ctx->hemisphere.storage.texture, hemi, 0);
-	while (whichframe != BGFX(frame)(false));
+	while (BGFX(frame)(false) < whichframe);
 #else
 	glBindTexture(GL_TEXTURE_2D, ctx->hemisphere.storage.texture);
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, hemi);
@@ -897,7 +903,11 @@ static void lm_initFrameBuffer(lm_context *ctx)
 					(uint32_t)(ctx->hemisphere.clearColor.g * 255) << 8 |
 					(uint32_t)(ctx->hemisphere.clearColor.b * 255) << 16|
 					(uint32_t)(0xff) << 24;
-	BGFX(set_view_clear)(ctx->hemisphere.viewids[0], BGFX_CLEAR_COLOR|BGFX_CLEAR_DEPTH, color, 1.0f, 0);
+	if (ctx->hemisphere.fbHemiIndex == 0){
+		BGFX(set_view_clear)(ctx->hemisphere.viewid, BGFX_CLEAR_COLOR|BGFX_CLEAR_DEPTH, color, 1.0f, 0);
+	} else {
+		BGFX(set_view_clear)(ctx->hemisphere.viewid, BGFX_CLEAR_NONE, color, 1.0f, 0);
+	}
 #else
 	// prepare hemisphere
 	glBindFramebuffer(GL_FRAMEBUFFER, ctx->hemisphere.fb[0]);
@@ -1651,14 +1661,13 @@ void lmSetGeometry(lm_context *ctx,
 
 #ifdef USE_BGFX
 void lmSetDownsampleShaderingInfo(lm_context *ctx,
-	const bgfx_view_id_t viewids[2],
+	bgfx_view_id_t viewid, bgfx_view_id_t storage_viewid,
 	bgfx_program_handle_t weightDownsampleProg, bgfx_uniform_handle_t weightHemisphereTextureHandle, bgfx_uniform_handle_t weightTextureHandle,
 	bgfx_program_handle_t downsampleProg, bgfx_uniform_handle_t hemisphereTextureHanle)
 {
-	for (int ii=0; ii<2; ++ii){
-		ctx->hemisphere.viewids[ii] = viewids[ii];
-		BGFX(set_view_frame_buffer)(viewids[ii], ctx->hemisphere.fb[ii]);
-	}
+	BGFX(set_view_mode)(viewid, BGFX_VIEW_MODE_SEQUENTIAL);
+	ctx->hemisphere.viewid = viewid;
+	BGFX(set_view_frame_buffer)(viewid, ctx->hemisphere.fb[0]);
 
 	ctx->hemisphere.firstPass.prog						= weightDownsampleProg;
 	ctx->hemisphere.firstPass.hemispheresTextureHandle 	= weightHemisphereTextureHandle;
@@ -1666,6 +1675,8 @@ void lmSetDownsampleShaderingInfo(lm_context *ctx,
 
 	ctx->hemisphere.downsamplePass.prog 				= downsampleProg;
 	ctx->hemisphere.downsamplePass.hemispheresTextureHandle = hemisphereTextureHanle;
+
+	ctx->hemisphere.storage_viewid = storage_viewid;
 }
 #endif
 
@@ -1689,6 +1700,9 @@ lm_bool lmBegin(lm_context *ctx, int* outViewport4, float* outView4x4, float* ou
 			{ // ...and there are no triangles left: finish
 				lm_integrateHemisphereBatch(ctx); // integrate and store last batch
 				lm_writeResultsToLightmap(ctx); // read storage data from gpu memory and write it to the lightmap
+				if (false){
+					lmImageSaveTGAf("debug_bgfx_impl.tga", ctx->lightmap.data, ctx->lightmap.width, ctx->lightmap.height, ctx->lightmap.channels);
+				}
 
 				if (++ctx->meshPosition.pass == ctx->meshPosition.passCount)
 				{

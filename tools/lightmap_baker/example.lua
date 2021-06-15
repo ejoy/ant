@@ -34,7 +34,7 @@ function example_sys:init()
 
     local e = world[example_eid]
     local rc = e._rendercache
-    rc.simple_mesh = "c:/code/ant/tools/lightmap_baker/assets/example/meshes/gazebo.obj"
+    rc.simple_mesh = "d:/work/ant/tools/lightmap_baker/assets/example/meshes/gazebo.obj"
     rc.eid = example_eid
     rc.worldmat = e._rendercache.srt
     rc.set_transform = function (rc)
@@ -56,7 +56,7 @@ function example_sys:init()
     local lm = e._lightmap.data
     local lm1 = e.lightmap
 
-    lm:save "C:\\Users\\Kit020\\Desktop\\Games\\abc.tga"
+    lm:save "D:\\tmp\\abc.tga"
 
     local size = lm1.width * lm1.height * lm1.channels
     local mem = bgfx.memory_buffer(lm:data(), size, lm)

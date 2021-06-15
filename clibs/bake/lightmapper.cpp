@@ -114,7 +114,8 @@ namespace lua_struct{
 
 //TODO: we should remove all render relate code from lightmapper.h
 struct shadinginfo{
-    uint16_t viewids[2];
+    uint16_t viewid;
+    uint16_t storage_viewid;
     struct downsampleT{
         uint16_t prog;
         uint16_t hemispheres;
@@ -130,7 +131,7 @@ struct shadinginfo{
 
 LUA2STRUCT(shadinginfo::weight_downsampleT, prog, hemispheres, weights);
 LUA2STRUCT(shadinginfo::downsampleT, prog, hemispheres);
-LUA2STRUCT(shadinginfo, viewids, weight_downsample, downsample);
+LUA2STRUCT(shadinginfo, viewid, storage_viewid, weight_downsample, downsample);
 
 static inline context*
 tocontext(lua_State *L, int index=1){
@@ -166,7 +167,11 @@ lcontext_set_shadering_info(lua_State *L){
     shadinginfo si;
     lua_struct::unpack(L, 2, si);
 
-    lmSetDownsampleShaderingInfo(ctx->lm_ctx, si.viewids,
+    if (si.viewid >= si.storage_viewid){
+        return luaL_error(L, "storage_viewid:%d should larger than viewid:%d, blit operation should after draw", si.storage_viewid, si.viewid);
+    }
+
+    lmSetDownsampleShaderingInfo(ctx->lm_ctx, si.viewid, si.storage_viewid,
         {si.weight_downsample.prog}, {si.weight_downsample.hemispheres}, {si.weight_downsample.weights},
         {si.downsample.prog}, {si.downsample.hemispheres});
 

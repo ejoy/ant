@@ -1,6 +1,6 @@
 #include <bgfx_shader.sh>
 
-const vec2 ps[4] = {
+static vec2 ps[4] = {
    vec2(1, -1), vec2(1, 1), vec2(-1, -1), vec2(-1, 1)
 };
 
