@@ -17,6 +17,7 @@ lm:build "ozz-animation_init" {
         "-DENABLE_BITCODE=TRUE",
         "-DENABLE_VISIBILITY=TRUE",
     },
+    "-DCMAKE_CXX_FLAGS=\"/EHsc\"",
     "-Dozz_build_msvc_rt_dll=ON",
     "-Dozz_build_samples=OFF",
     "-Dozz_build_fbx=OFF",
