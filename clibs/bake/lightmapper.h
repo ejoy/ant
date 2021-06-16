@@ -83,7 +83,7 @@ void lmSetGeometry(lm_context *ctx,
 
 #ifdef USE_BGFX
 void lmSetDownsampleShaderingInfo(lm_context *ctx,
-	bgfx_view_id_t viewid,
+	bgfx_view_id_t viewid_base, uint16_t viewid_count, bgfx_view_id_t storage_viewid,
 	bgfx_program_handle_t weightDownsampleProg, bgfx_uniform_handle_t weightHemisphereTextureHandle, bgfx_uniform_handle_t weightTextureHandle,
 	bgfx_program_handle_t downsampleProg, bgfx_uniform_handle_t hemisphereTextureHanle);
 #endif
@@ -349,22 +349,26 @@ struct lm_context
 
 	struct
 	{
-		unsigned int size;
+		uint32_t size;
 		float zNear, zFar;
 		float cameraToSurfaceDistanceModifier;
 		struct { float r, g, b; } clearColor;
 
-		unsigned int fbHemiCountX;
-		unsigned int fbHemiCountY;
-		unsigned int fbHemiIndex;
+		uint32_t fbHemiCountX;
+		uint32_t fbHemiCountY;
+		uint32_t fbHemiIndex;
 		lm_ivec2 *fbHemiToLightmapLocation;
 #ifdef USE_BGFX
-		bgfx_view_id_t			viewid, storage_viewid;
+		struct {
+			bgfx_view_id_t	base;
+			uint16_t count;
+		}viewids;
+		bgfx_view_id_t			storage_viewid;
 		bgfx_frame_buffer_handle_t	fb[2];
 		bgfx_texture_handle_t	rbTexture[2];
 		bgfx_texture_handle_t	rbDepth;
 
-		bgfx_vertex_layout_t	layout;
+		bgfx_transient_vertex_buffer_t tvb;
 
 		struct {
 			bgfx_program_handle_t	prog;
@@ -676,41 +680,32 @@ static void lm_downsample(lm_context *ctx)
 	int outHemiSize = ctx->hemisphere.size / 2;
 
 #ifdef USE_BGFX
-	bgfx_transient_vertex_buffer_t tvb;
-	BGFX(alloc_transient_vertex_buffer)(&tvb, 4, &ctx->hemisphere.layout);	//not fill tvb.data, shader use gl_VertexID
-
-	BGFX(set_view_frame_buffer)(ctx->hemisphere.viewid, ctx->hemisphere.fb[fbWrite]);
+	// render state will not discard
 	BGFX(set_state)(BGFX_STATE_DEPTH_TEST_NEVER|BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A, 0);
+	BGFX(set_transient_vertex_buffer)(0, &ctx->hemisphere.tvb, 0, 4);
+	const uint32_t discardStates = BGFX_DISCARD_TRANSFORM|BGFX_DISCARD_STATE;
 
-	BGFX(set_view_rect)(ctx->hemisphere.viewid, 0, 0, outHemiSize * ctx->hemisphere.fbHemiCountX, outHemiSize * ctx->hemisphere.fbHemiCountY);
+	bgfx_view_id_t viewid = ctx->hemisphere.viewids.base;
 
 	BGFX(set_texture)(0, ctx->hemisphere.firstPass.hemispheresTextureHandle, ctx->hemisphere.rbTexture[fbRead], UINT32_MAX);
 	BGFX(set_texture)(1, ctx->hemisphere.firstPass.weightsTextureHandle, ctx->hemisphere.firstPass.weightsTexture, UINT32_MAX);
-	
-	BGFX(set_transient_vertex_buffer)(0, &tvb, 0, 4);
-	BGFX(submit)(ctx->hemisphere.viewid, ctx->hemisphere.firstPass.prog, 0, BGFX_DISCARD_ALL);
+
+	BGFX(submit)(++viewid, ctx->hemisphere.firstPass.prog, 0, discardStates);
 
 	while (outHemiSize > 1)
 	{
 		LM_SWAP(int, fbRead, fbWrite);
 		outHemiSize /= 2;
 
-		BGFX(set_view_frame_buffer)(ctx->hemisphere.viewid, ctx->hemisphere.fb[fbWrite]);
 		BGFX(set_state)(BGFX_STATE_DEPTH_TEST_NEVER|BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A, 0);
-
-		BGFX(set_view_rect)(ctx->hemisphere.viewid, 0, 0, outHemiSize * ctx->hemisphere.fbHemiCountX, outHemiSize * ctx->hemisphere.fbHemiCountY);
-
 		BGFX(set_texture)(0, ctx->hemisphere.downsamplePass.hemispheresTextureHandle, ctx->hemisphere.rbTexture[fbRead], UINT32_MAX);
-
-		BGFX(set_transient_vertex_buffer)(0, &tvb, 0, 4);
-		BGFX(submit)(ctx->hemisphere.viewid, ctx->hemisphere.downsamplePass.prog, 0, BGFX_DISCARD_ALL);
+		BGFX(submit)(++viewid, ctx->hemisphere.downsamplePass.prog, 0, discardStates);
 	}
 
 	BGFX(blit)(ctx->hemisphere.storage_viewid,
 		ctx->hemisphere.storage.texture, 0, ctx->hemisphere.storage.writePosition.x, ctx->hemisphere.storage.writePosition.y, 0, 
 		ctx->hemisphere.rbTexture[fbWrite], 0, 0, 0, 0, ctx->hemisphere.fbHemiCountX, ctx->hemisphere.fbHemiCountY, 0);
-
-	BGFX(set_view_frame_buffer)(ctx->hemisphere.viewid, ctx->hemisphere.fb[0]);
+	BGFX(frame)(false);
 #else
 	glDisable(GL_DEPTH_TEST);
 	glBindVertexArray(ctx->hemisphere.vao);
@@ -904,9 +899,9 @@ static void lm_initFrameBuffer(lm_context *ctx)
 					(uint32_t)(ctx->hemisphere.clearColor.b * 255) << 16|
 					(uint32_t)(0xff) << 24;
 	if (ctx->hemisphere.fbHemiIndex == 0){
-		BGFX(set_view_clear)(ctx->hemisphere.viewid, BGFX_CLEAR_COLOR|BGFX_CLEAR_DEPTH, color, 1.0f, 0);
+		BGFX(set_view_clear)(ctx->hemisphere.viewids.base, BGFX_CLEAR_COLOR|BGFX_CLEAR_DEPTH, color, 1.0f, 0);
 	} else {
-		BGFX(set_view_clear)(ctx->hemisphere.viewid, BGFX_CLEAR_NONE, color, 1.0f, 0);
+		BGFX(set_view_clear)(ctx->hemisphere.viewids.base, BGFX_CLEAR_NONE, color, 1.0f, 0);
 	}
 #else
 	// prepare hemisphere
@@ -1280,9 +1275,12 @@ static void lm_initContext(lm_context *ctx, unsigned int w[2], unsigned int h[2]
 		ctx->hemisphere.rbTexture[i] = BGFX(create_texture_2d)(w[i], h[i], false, 1, BGFX_TEXTURE_FORMAT_RGBA32F, flags, NULL);
 	}
 
-	BGFX(vertex_layout_begin)(&ctx->hemisphere.layout, BGFX_RENDERER_TYPE_NOOP);
-	BGFX(vertex_layout_skip)(&ctx->hemisphere.layout, 1);
-	BGFX(vertex_layout_end)(&ctx->hemisphere.layout);
+	bgfx_vertex_layout_t layout;
+	BGFX(vertex_layout_begin)(&layout, BGFX_RENDERER_TYPE_NOOP);
+	BGFX(vertex_layout_skip)(&layout, 1);	//need > 0
+	BGFX(vertex_layout_end)(&layout);
+
+	BGFX(alloc_transient_vertex_buffer)(&ctx->hemisphere.tvb, 4, &layout);	//not fill tvb.data, shader use gl_VertexID, 4 for quad vertex index
 
 	ctx->hemisphere.rbDepth = BGFX(create_texture_2d)(w[0], h[0], false, 1, BGFX_TEXTURE_FORMAT_D24, flags, NULL);
 
@@ -1661,13 +1659,22 @@ void lmSetGeometry(lm_context *ctx,
 
 #ifdef USE_BGFX
 void lmSetDownsampleShaderingInfo(lm_context *ctx,
-	bgfx_view_id_t viewid, bgfx_view_id_t storage_viewid,
+	bgfx_view_id_t viewid_base, uint16_t viewid_count, bgfx_view_id_t storage_viewid,
 	bgfx_program_handle_t weightDownsampleProg, bgfx_uniform_handle_t weightHemisphereTextureHandle, bgfx_uniform_handle_t weightTextureHandle,
 	bgfx_program_handle_t downsampleProg, bgfx_uniform_handle_t hemisphereTextureHanle)
 {
-	BGFX(set_view_mode)(viewid, BGFX_VIEW_MODE_SEQUENTIAL);
-	ctx->hemisphere.viewid = viewid;
-	BGFX(set_view_frame_buffer)(viewid, ctx->hemisphere.fb[0]);
+	ctx->hemisphere.viewids.base = viewid_base;
+	ctx->hemisphere.viewids.count = viewid_count;
+	uint32_t hemisize = ctx->hemisphere.size;
+	for (bgfx_view_id_t viewid=viewid_base; viewid < viewid_base+viewid_count-1; ++viewid){
+		BGFX(set_view_mode)(viewid, BGFX_VIEW_MODE_SEQUENTIAL);
+		int fbidx = (viewid-viewid_base) % 2;
+		BGFX(set_view_frame_buffer)(viewid, ctx->hemisphere.fb[fbidx]);
+		if (viewid != viewid_base){
+			BGFX(set_view_rect)(viewid, 0, 0, hemisize*ctx->hemisphere.fbHemiCountX, hemisize*ctx->hemisphere.fbHemiCountY);
+		}
+		hemisize /= 2;
+	}
 
 	ctx->hemisphere.firstPass.prog						= weightDownsampleProg;
 	ctx->hemisphere.firstPass.hemispheresTextureHandle 	= weightHemisphereTextureHandle;

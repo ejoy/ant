@@ -114,7 +114,11 @@ namespace lua_struct{
 
 //TODO: we should remove all render relate code from lightmapper.h
 struct shadinginfo{
-    uint16_t viewid;
+    struct viewid_range{
+        bgfx_view_id_t base;
+        uint16_t count;
+    } viewids;
+    
     uint16_t storage_viewid;
     struct downsampleT{
         uint16_t prog;
@@ -131,7 +135,8 @@ struct shadinginfo{
 
 LUA2STRUCT(shadinginfo::weight_downsampleT, prog, hemispheres, weights);
 LUA2STRUCT(shadinginfo::downsampleT, prog, hemispheres);
-LUA2STRUCT(shadinginfo, viewid, storage_viewid, weight_downsample, downsample);
+LUA2STRUCT(shadinginfo::viewid_range, base, count);
+LUA2STRUCT(shadinginfo, viewids, storage_viewid, weight_downsample, downsample);
 
 static inline context*
 tocontext(lua_State *L, int index=1){
@@ -167,11 +172,19 @@ lcontext_set_shadering_info(lua_State *L){
     shadinginfo si;
     lua_struct::unpack(L, 2, si);
 
-    if (si.viewid >= si.storage_viewid){
-        return luaL_error(L, "storage_viewid:%d should larger than viewid:%d, blit operation should after draw", si.storage_viewid, si.viewid);
+    if (si.viewids.count == 0)
+        return luaL_error(L, "invalid viewid count: 0");
+
+    if ((si.viewids.base + si.viewids.count-1) >= si.storage_viewid){
+        return luaL_error(L, "storage_viewid:%d should larger than viewid:%d, blit operation should after draw", 
+            si.storage_viewid, (si.viewids.base + si.viewids.count-1));
     }
 
-    lmSetDownsampleShaderingInfo(ctx->lm_ctx, si.viewid, si.storage_viewid,
+    if (std::pow(2, si.viewids.count) < ctx->lm_ctx->hemisphere.size){
+        return luaL_error(L, "not enough viewid for downsample, hemisphere size:%d, viewid count: %d", ctx->lm_ctx->hemisphere.size, si.viewids.count);
+    }
+
+    lmSetDownsampleShaderingInfo(ctx->lm_ctx, si.viewids.base, si.viewids.count, si.storage_viewid,
         {si.weight_downsample.prog}, {si.weight_downsample.hemispheres}, {si.weight_downsample.weights},
         {si.downsample.prog}, {si.downsample.hemispheres});
 

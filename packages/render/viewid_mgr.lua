@@ -44,7 +44,7 @@ end
 
 local function alloc_viewids(num, basename, afterviewid)
 	local vids = {}
-	local vid = afterviewid
+	local vid = afterviewid or bindings.main_view
 	for i=1, num do
 		vid = find_valid_viewid(vid)
 		if vid then

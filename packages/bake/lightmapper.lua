@@ -37,7 +37,13 @@ local shading_info
 
 local bake_ctx
 
-local lightmap_viewid<const> = viewidmgr.generate "lightmap"
+local downsample_viewid_count<const> = 10 --max 1024x1024->2^10
+local lightmap_downsample_viewids = viewidmgr.alloc_viewids(downsample_viewid_count, "lightmap_ds")
+local lightmap_viewid<const> = lightmap_downsample_viewids[1]
+--check is successive
+for idx, viewid in ipairs(lightmap_downsample_viewids) do
+    assert(viewid == lightmap_viewid+idx-1)
+end
 local lightmap_storage_viewid<const> = viewidmgr.generate "lightmap_storage"
 
 function lightmap_sys:init()
@@ -58,8 +64,8 @@ function lightmap_sys:init()
     local function touint16(h) return 0xffff & h end
 
     shading_info = {
-        viewid = lightmap_viewid,
-        storage_viewid = lightmap_storage_viewid,
+        viewids = {base=touint16(lightmap_viewid), count=touint16(downsample_viewid_count)},
+        storage_viewid = touint16(lightmap_storage_viewid),
         weight_downsample = {
             prog        = touint16(wds_fx.prog),
             hemispheres = touint16(find_uniform_handle(wds_fx.uniforms,  "hemispheres")),
