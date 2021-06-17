@@ -144,9 +144,20 @@ tocontext(lua_State *L, int index=1){
 }
 
 static int
+lcontext_gc_check(lua_State *L){
+    auto ctx = tocontext(L);
+    if (ctx->lm_ctx){
+        luaL_error(L, "lightmap context should call 'destroy' to release context");
+    }
+    return 0;
+}
+
+static int
 lcontext_destroy(lua_State *L){
     auto ctx = tocontext(L);
-    lmDestroy(ctx->lm_ctx);
+    if (ctx->lm_ctx){
+        lmDestroy(ctx->lm_ctx);
+    }
     return 0;
 }
 
@@ -224,7 +235,8 @@ register_lm_context_mt(lua_State *L){
         lua_setfield(L, -2, "__index");
 
         luaL_Reg l[] = {
-            {"__gc", lcontext_destroy},
+            {"__gc",                lcontext_gc_check},
+            {"destroy",             lcontext_destroy},
             {"set_target_lightmap", lcontext_set_target_lightmap},
             {"set_geometry",        lcontext_set_geometry},
             {"set_shadering_info",  lcontext_set_shadering_info},

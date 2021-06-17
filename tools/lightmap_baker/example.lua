@@ -50,8 +50,10 @@ function example_sys:init()
             }
         }
     }
-    ilm.init_bake_context()
-    ilm.bake_entity(example_eid, pf, true)
+    local bake_ctx = ilm.init_bake_context()
+    ilm.bake_entity(bake_ctx, example_eid, pf, true)
+    bake_ctx:destroy()
+    bake_ctx = nil
 
     local lm = e._lightmap.data
     local lm1 = e.lightmap

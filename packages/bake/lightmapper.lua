@@ -35,8 +35,6 @@ local downsample_material
 
 local shading_info
 
-local bake_ctx
-
 local downsample_viewid_count<const> = 10 --max 1024x1024->2^10
 local lightmap_downsample_viewids = viewidmgr.alloc_viewids(downsample_viewid_count, "lightmap_ds")
 local lightmap_viewid<const> = lightmap_downsample_viewids[1]
@@ -208,7 +206,7 @@ local function draw_scene(pf)
 end
 
 local ilm = ecs.interface "ilightmap"
-function ilm.bake_entity(eid, pf, notcull)
+function ilm.bake_entity(bake_ctx, eid, pf, notcull)
     local e = world[eid]
     if e == nil then
         return log.warn(("invalid entity:%d"):format(eid))
@@ -252,37 +250,37 @@ end
 
 function ilm.init_bake_context(s)
     s = s or context_setting
-    bake_ctx = bake.create_lightmap_context(s)
+    local bake_ctx = bake.create_lightmap_context(s)
     bake_ctx:set_shadering_info(shading_info)
+    return bake_ctx
 end
 
-local function bake_all()
+local function bake_all(bake_ctx)
     local lm_e = world:singleton_entity "lightmap_baker"
     local se = world:singleton_entity "scene_watcher"
     for _, result in ipf.iter_filter(lm_e.primitive_filter) do
         for _, item in ipf.iter_target(result) do
-            ilm.bake_entity(item.eid, se.primitive_filter)
+            ilm.bake_entity(bake_ctx, item.eid, se.primitive_filter)
         end
     end
 end
 
 local bake_mb = world:sub{"bake"}
-local lm_mb = world:sub{"component_register", "lightmap_baker"}
-
 function lightmap_sys:end_frame()
-    for msg in lm_mb:each() do
-        ilm.init_bake_context(context_setting)
-    end
     for msg in bake_mb:each() do
-        assert(bake_ctx, "invalid bake context, need check")
         local eid = msg[2]
+        local s = msg[3] or context_setting
+        local bake_ctx = ilm.init_bake_context(s)
         if eid then
             local se = world:singleton_entity "scene_watcher"
-            ilm.bake_entity(eid, se.primitive_filter)
+            ilm.bake_entity(bake_ctx, eid, se.primitive_filter)
         else
             log.info("bake entity scene with lightmap setting")
-            bake_all()
+            bake_all(bake_ctx)
         end
+
+        bake_ctx:destroy()
+        bake_ctx = nil
     end
 end
 

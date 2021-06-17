@@ -1707,9 +1707,6 @@ lm_bool lmBegin(lm_context *ctx, int* outViewport4, float* outView4x4, float* ou
 			{ // ...and there are no triangles left: finish
 				lm_integrateHemisphereBatch(ctx); // integrate and store last batch
 				lm_writeResultsToLightmap(ctx); // read storage data from gpu memory and write it to the lightmap
-				if (false){
-					lmImageSaveTGAf("debug_bgfx_impl.tga", ctx->lightmap.data, ctx->lightmap.width, ctx->lightmap.height, ctx->lightmap.channels);
-				}
 
 				if (++ctx->meshPosition.pass == ctx->meshPosition.passCount)
 				{
