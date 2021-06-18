@@ -894,14 +894,17 @@ static void lm_setView(
 static void lm_initFrameBuffer(lm_context *ctx)
 {
 #ifdef USE_BGFX
-	uint32_t color =(uint32_t)(ctx->hemisphere.clearColor.r * 255) << 0 |
-					(uint32_t)(ctx->hemisphere.clearColor.g * 255) << 8 |
-					(uint32_t)(ctx->hemisphere.clearColor.b * 255) << 16|
-					(uint32_t)(0xff) << 24;
-	if (ctx->hemisphere.fbHemiIndex == 0){
+	if (ctx->hemisphere.fbHemiIndex == 0)
+	{
+		uint32_t color =(uint32_t)(ctx->hemisphere.clearColor.r * 255) << 0 |
+						(uint32_t)(ctx->hemisphere.clearColor.g * 255) << 8 |
+						(uint32_t)(ctx->hemisphere.clearColor.b * 255) << 16|
+						(uint32_t)(0xff) << 24;
 		BGFX(set_view_clear)(ctx->hemisphere.viewids.base, BGFX_CLEAR_COLOR|BGFX_CLEAR_DEPTH, color, 1.0f, 0);
-	} else {
-		BGFX(set_view_clear)(ctx->hemisphere.viewids.base, BGFX_CLEAR_NONE, color, 1.0f, 0);
+		BGFX(set_view_rect)(ctx->hemisphere.viewids.base, 0, 0, ctx->hemisphere.fbHemiCountX * ctx->hemisphere.size * 3, ctx->hemisphere.fbHemiCountY * ctx->hemisphere.size);
+		BGFX(touch)(ctx->hemisphere.viewids.base);
+		BGFX(frame)(false);
+		BGFX(set_view_clear)(ctx->hemisphere.viewids.base, BGFX_CLEAR_NONE, 0, 0.f, 0);
 	}
 #else
 	// prepare hemisphere
