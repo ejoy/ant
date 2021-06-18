@@ -16,8 +16,13 @@ local it = ecs.interface "itimer"
 function it.current()
 	return current
 end
+
 function it.delta()
 	return delta
+end
+
+function it.fetch_time()
+	return gettime()
 end
 
 local time_sys = ecs.system "time_system"

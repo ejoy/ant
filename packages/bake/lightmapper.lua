@@ -224,6 +224,8 @@ function ilm.bake_entity(bake_ctx, eid, pf, notcull)
     local g = load_geometry_info(e._rendercache)
     bake_ctx:set_geometry(g)
     log.info(("[%d-%s] bake: begin"):format(eid, e.name or ""))
+
+    local c = itimer.fetch_time()
     while true do
         local haspatch, vp, view, proj = bake_ctx:begin_patch()
         if not haspatch then
@@ -238,7 +240,10 @@ function ilm.bake_entity(bake_ctx, eid, pf, notcull)
         end
         draw_scene(pf)
         bake_ctx:end_patch()
-        log.info(("[%d-%s] process:%2f"):format(eid, e.name or "", bake_ctx:process()))
+        local ec = itimer.fetch_time()
+        if ec - c >= 1000 then
+            log.info(("[%d-%s] process:%2f"):format(eid, e.name or "", bake_ctx:process()))
+        end
     end
 
     log.info(("[%d-%s] bake: end"):format(eid, e.name or ""))
