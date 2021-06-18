@@ -334,14 +334,14 @@ bool RendererImplemented::Initialize()
 	
 	auto shader_unlit = shaders_[static_cast<size_t>(EffekseerRenderer::RendererShaderType::Unlit)];
 	auto shader_ad_unlit = shaders_[static_cast<size_t>(EffekseerRenderer::RendererShaderType::AdvancedUnlit)];
-	for (auto& shader : { shader_ad_unlit, shader_unlit }) {
+	for (auto& shader : { /*shader_ad_unlit, */shader_unlit }) {
 		shader->SetVertexConstantBufferSize(sizeof(EffekseerRenderer::StandardRendererVertexBuffer));
 		shader->SetPixelConstantBufferSize(sizeof(EffekseerRenderer::PixelConstantBuffer));
 		
-		shader->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, GetValidUniform(shader, "mflipbookParameter"), sizeof(Effekseer::Matrix44) * 2 + sizeof(float) * 4);
-		shader->AddVertexConstantLayout(CONSTANT_TYPE_MATRIX44, GetValidUniform(shader, "mCamera"), 0);
-		shader->AddVertexConstantLayout(CONSTANT_TYPE_MATRIX44, GetValidUniform(shader, "mCameraProj"), sizeof(Effekseer::Matrix44));
-		shader->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, GetValidUniform(shader, "mUVInversed"), sizeof(Effekseer::Matrix44) * 2);
+		shader->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, GetValidUniform(shader, "u_flipbookParameter"), sizeof(Effekseer::Matrix44) * 2 + sizeof(float) * 4);
+		shader->AddVertexConstantLayout(CONSTANT_TYPE_MATRIX44, GetValidUniform(shader, "u_camera"), 0);
+		shader->AddVertexConstantLayout(CONSTANT_TYPE_MATRIX44, GetValidUniform(shader, "u_cameraProj"), sizeof(Effekseer::Matrix44));
+		shader->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, GetValidUniform(shader, "u_UVInversed"), sizeof(Effekseer::Matrix44) * 2);
 		shader->SetTextureSlot(0, GetValidUniform(shader, "s_sampler_colorTex"));
 		AssignPixelConstantBuffer(shader);
 	}
@@ -383,19 +383,19 @@ bool RendererImplemented::Initialize()
 	//	shader->SetVertexConstantBufferSize(sizeof(EffekseerRenderer::StandardRendererVertexBuffer));
 	//	shader->SetPixelConstantBufferSize(sizeof(EffekseerRenderer::PixelConstantBufferDistortion));
 
-	//	shader->AddVertexConstantLayout(CONSTANT_TYPE_MATRIX44, BGFX(create_uniform)("mCamera", bgfx::UniformType::Mat4)/*shader->GetUniformId("CBVS0.mCamera")*/, 0);
+	//	shader->AddVertexConstantLayout(CONSTANT_TYPE_MATRIX44, BGFX(create_uniform)("u_camera", bgfx::UniformType::Mat4)/*shader->GetUniformId("CBVS0.u_camera")*/, 0);
 
 	//	shader->AddVertexConstantLayout(
-	//		CONSTANT_TYPE_MATRIX44, BGFX(create_uniform)("mCameraProj", bgfx::UniformType::Mat4)/*shader->GetUniformId("CBVS0.mCameraProj")*/, sizeof(Effekseer::Matrix44));
+	//		CONSTANT_TYPE_MATRIX44, BGFX(create_uniform)("u_cameraProj", bgfx::UniformType::Mat4)/*shader->GetUniformId("CBVS0.u_cameraProj")*/, sizeof(Effekseer::Matrix44));
 
 	//	shader->AddVertexConstantLayout(
-	//		CONSTANT_TYPE_VECTOR4, BGFX(create_uniform)("mUVInversed", BGFX_UNIFORM_TYPE_VEC4)/*shader->GetUniformId("CBVS0.mUVInversed")*/, sizeof(Effekseer::Matrix44) * 2);
+	//		CONSTANT_TYPE_VECTOR4, BGFX(create_uniform)("u_UVInversed", BGFX_UNIFORM_TYPE_VEC4)/*shader->GetUniformId("CBVS0.u_UVInversed")*/, sizeof(Effekseer::Matrix44) * 2);
 
 	//	shader->SetTextureSlot(0, BGFX(create_uniform)("s_sampler_colorTex", bgfx::UniformType::Sampler)/*shader->GetUniformId("s_sampler_colorTex")*/);
 	//	shader->SetTextureSlot(1, BGFX(create_uniform)("Sampler_sampler_backTex", bgfx::UniformType::Sampler)/*shader->GetUniformId("Sampler_sampler_backTex")*/);
 
 	//	shader->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4,
-	//		BGFX(create_uniform)("mflipbookParameter", BGFX_UNIFORM_TYPE_VEC4)/*shader->GetUniformId("CBVS0.mflipbookParameter")*/,
+	//		BGFX(create_uniform)("u_flipbookParameter", BGFX_UNIFORM_TYPE_VEC4)/*shader->GetUniformId("CBVS0.u_flipbookParameter")*/,
 	//									sizeof(Effekseer::Matrix44) * 2 + sizeof(float) * 4);
 
 	//	AssignDistortionPixelConstantBuffer(shader);
@@ -411,13 +411,13 @@ bool RendererImplemented::Initialize()
 	//	shader->SetVertexConstantBufferSize(sizeof(EffekseerRenderer::StandardRendererVertexBuffer));
 	//	shader->SetPixelConstantBufferSize(sizeof(EffekseerRenderer::PixelConstantBuffer));
 
-	//	shader->AddVertexConstantLayout(CONSTANT_TYPE_MATRIX44, BGFX(create_uniform)("mCamera", bgfx::UniformType::Mat4)/*shader->GetUniformId("CBVS0.mCamera")*/, 0);
+	//	shader->AddVertexConstantLayout(CONSTANT_TYPE_MATRIX44, BGFX(create_uniform)("u_camera", bgfx::UniformType::Mat4)/*shader->GetUniformId("CBVS0.u_camera")*/, 0);
 
 	//	shader->AddVertexConstantLayout(
-	//		CONSTANT_TYPE_MATRIX44, BGFX(create_uniform)("mCameraProj", bgfx::UniformType::Mat4)/*shader->GetUniformId("CBVS0.mCameraProj")*/, sizeof(Effekseer::Matrix44));
+	//		CONSTANT_TYPE_MATRIX44, BGFX(create_uniform)("u_cameraProj", bgfx::UniformType::Mat4)/*shader->GetUniformId("CBVS0.u_cameraProj")*/, sizeof(Effekseer::Matrix44));
 
 	//	shader->AddVertexConstantLayout(
-	//		CONSTANT_TYPE_VECTOR4, BGFX(create_uniform)("mUVInversed", BGFX_UNIFORM_TYPE_VEC4)/*shader->GetUniformId("CBVS0.mUVInversed")*/, sizeof(Effekseer::Matrix44) * 2);
+	//		CONSTANT_TYPE_VECTOR4, BGFX(create_uniform)("u_UVInversed", BGFX_UNIFORM_TYPE_VEC4)/*shader->GetUniformId("CBVS0.u_UVInversed")*/, sizeof(Effekseer::Matrix44) * 2);
 
 	//	shader->SetTextureSlot(0, BGFX(create_uniform)("s_sampler_colorTex", bgfx::UniformType::Sampler)/*shader->GetUniformId("s_sampler_colorTex")*/);
 	//	shader->SetTextureSlot(1, BGFX(create_uniform)("Sampler_sampler_normalTex", bgfx::UniformType::Sampler)/*shader->GetUniformId("Sampler_sampler_normalTex")*/);
@@ -517,7 +517,7 @@ bool RendererImplemented::BeginRendering()
 
 	currentTextures_.clear();
 	m_renderState->GetActiveState().Reset();
-	m_renderState->Update(true);
+	//m_renderState->Update(true);
 
 	m_renderState->GetActiveState().TextureIDs.fill(0);
 
@@ -1014,42 +1014,56 @@ void RendererImplemented::SetPixelBufferToShader(const void* data, int32_t size,
 
 void RendererImplemented::SetTextures(Shader* shader, Effekseer::Backend::TextureRef* textures, int32_t count)
 {
-	//GLCheckError();
-
-	for (int i = count; i < currentTextures_.size(); i++)
-	{
+	for (int i = count; i < currentTextures_.size(); i++) {
 		m_renderState->GetActiveState().TextureIDs[i] = 0;
 	}
 
 	currentTextures_.resize(count);
 
-	for (int32_t i = 0; i < count; i++)
-	{
+	for (int32_t i = 0; i < count; i++) {
 		/*GLuint*/bgfx_texture_handle_t id;
-		if (textures[i] != nullptr)
-		{
+		if (textures[i] != nullptr) {
 			auto texture = static_cast<Backend::Texture*>(textures[i].Get());
 			id = texture->GetBuffer();
 		}
 
 		//GLExt::glActiveTexture(GL_TEXTURE0 + i);
 		//glBindTexture(GL_TEXTURE_2D, id);
-
-		if (textures[i] != nullptr)
-		{
-			m_renderState->GetActiveState().TextureIDs[i] = id.idx;
+		auto& activeState = m_renderState->GetActiveState();
+		if (textures[i] != nullptr) {
+			activeState.TextureIDs[i] = id.idx;
 			currentTextures_[i] = textures[i];
-		}
-		else
-		{
-			m_renderState->GetActiveState().TextureIDs[i] = 0;
+		} else {
+			activeState.TextureIDs[i] = 0;
 			currentTextures_[i].Reset();
 		}
 
 		if (shader->GetTextureSlotEnable(i))
 		{
-			//GLExt::glUniform1i(shader->GetTextureSlot(i), i);
-			BGFX(set_texture)(i, shader->GetTextureSlot(i), id, UINT32_MAX);
+			uint32_t flags = 0;
+			auto filter_ = activeState.TextureFilterTypes[i];
+			if (filter_ == ::Effekseer::TextureFilterType::Nearest) {
+				flags |= BGFX_SAMPLER_MAG_POINT;
+			}
+
+			if (textures[i]->GetHasMipmap()) {
+				if (filter_ == ::Effekseer::TextureFilterType::Nearest) {
+					flags |= BGFX_SAMPLER_MIP_POINT;
+				}
+			} else {
+				if (filter_ == ::Effekseer::TextureFilterType::Nearest) {
+					flags |= BGFX_SAMPLER_MIN_POINT;
+				}
+			}
+
+			auto wrap_ = activeState.TextureWrapTypes[i];
+			if (wrap_ == ::Effekseer::TextureWrapType::Repeat) {
+				flags |= BGFX_SAMPLER_U_MIRROR | BGFX_SAMPLER_V_MIRROR | BGFX_SAMPLER_W_MIRROR;
+			} else {
+				flags |= BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP | BGFX_SAMPLER_W_CLAMP;
+			}
+
+			BGFX(set_texture)(i, shader->GetTextureSlot(i), id, flags);
 		}
 	}
 	//GLExt::glActiveTexture(GL_TEXTURE0);

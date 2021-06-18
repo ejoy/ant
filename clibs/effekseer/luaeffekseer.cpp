@@ -78,6 +78,7 @@ bool effekseer_ctx::init()
 	if (!manager.Get()) {
 		return false;
 	}
+	manager->SetCoordinateSystem(Effekseer::CoordinateSystem::LH);
 	manager->SetSpriteRenderer(renderer->CreateSpriteRenderer());
 	manager->SetRibbonRenderer(renderer->CreateRibbonRenderer());
 	manager->SetRingRenderer(renderer->CreateRingRenderer());
@@ -86,7 +87,6 @@ bool effekseer_ctx::init()
 	manager->SetTextureLoader(renderer->CreateTextureLoader());
 	manager->SetModelLoader(renderer->CreateModelLoader());
 	manager->SetMaterialLoader(renderer->CreateMaterialLoader());
-	manager->SetCoordinateSystem(Effekseer::CoordinateSystem::LH);
 	//test
 // 	test_effect = Effekseer::Effect::Create(manager, u"D:/Github/EffekseerBGFX/Resources/Base/Laser03.efk");
 // 	test_handle = manager->Play(test_effect, { 0, 0, 0 });

@@ -110,7 +110,7 @@ static const int GL_InstanceCount = 10;
 // 			CONSTANT_TYPE_MATRIX44, BGFX(create_uniform)("uMatProjection", bgfx::UniformType::Mat4)/*shader->GetUniformId("uMatProjection")*/, parameterGenerator.VertexProjectionMatrixOffset);
 // 
 // 		shader->AddVertexConstantLayout(
-// 			CONSTANT_TYPE_VECTOR4, BGFX(create_uniform)("mUVInversed", BGFX_UNIFORM_TYPE_VEC4)/*shader->GetUniformId("mUVInversed")*/, parameterGenerator.VertexInversedFlagOffset);
+// 			CONSTANT_TYPE_VECTOR4, BGFX(create_uniform)("u_UVInversed", BGFX_UNIFORM_TYPE_VEC4)/*shader->GetUniformId("u_UVInversed")*/, parameterGenerator.VertexInversedFlagOffset);
 // 
 // 		shader->AddVertexConstantLayout(
 // 			CONSTANT_TYPE_VECTOR4, BGFX(create_uniform)("predefined_uniform", BGFX_UNIFORM_TYPE_VEC4)/*shader->GetUniformId("predefined_uniform")*/, parameterGenerator.VertexPredefinedOffset);
@@ -254,7 +254,7 @@ static const int GL_InstanceCount = 10;
 // 		}
 // 
 // 		shader->AddVertexConstantLayout(
-// 			CONSTANT_TYPE_VECTOR4, BGFX(create_uniform)("mUVInversed", BGFX_UNIFORM_TYPE_VEC4)/*shader->GetUniformId("mUVInversed")*/, parameterGenerator.VertexInversedFlagOffset);
+// 			CONSTANT_TYPE_VECTOR4, BGFX(create_uniform)("u_UVInversed", BGFX_UNIFORM_TYPE_VEC4)/*shader->GetUniformId("u_UVInversed")*/, parameterGenerator.VertexInversedFlagOffset);
 // 
 // 		shader->AddVertexConstantLayout(
 // 			CONSTANT_TYPE_VECTOR4, BGFX(create_uniform)("predefined_uniform", BGFX_UNIFORM_TYPE_VEC4)/*shader->GetUniformId("predefined_uniform")*/, parameterGenerator.VertexPredefinedOffset);
