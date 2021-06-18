@@ -242,6 +242,7 @@ function ilm.bake_entity(bake_ctx, eid, pf, notcull)
         bake_ctx:end_patch()
         local ec = itimer.fetch_time()
         if ec - c >= 1000 then
+            c = ec
             log.info(("[%d-%s] process:%2f"):format(eid, e.name or "", bake_ctx:process()))
         end
     end
