@@ -23,8 +23,11 @@ local function default_param(path)
 end
 
 return function (input, output, setting)
-    local binfile = texutil.what_bin_file(output, setting.identity)
-    local ok, err = texutil.convert_image(output, input, binfile, default_param(input))
+    local p = default_param()
+    p.binfile = texutil.what_bin_file(output, setting.identity)
+    p.local_texpath = input
+    p.name = input:string()
+    local ok, err = texutil.convert_image(output, p)
     if not ok then
 		return ok, err
 	end

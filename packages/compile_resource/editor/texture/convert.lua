@@ -32,18 +32,34 @@ local function readdatalist(filepath)
 end
 
 return function (input, output, setting, localpath)
-	local id = ident_util.parse(setting.identity)
-	local ext = assert(extensions[id.renderer])
-	local binfile = (output / "main.bin"):replace_extension(ext)
-
 	local param = readdatalist(input)
+	param.name = input:string()
+	local dependfiles = {input}
+	if param.path then
+		local id = ident_util.parse(setting.identity)
+		param.binfile = texutil.what_bin_file(output, id)
+		param.local_texpath = localpath(assert(param.path))
+		param.format = assert(which_format(id.platform, param))
 
-	local texpath = localpath(assert(param.path))
-	param.format = assert(which_format(id.platform, param))
+		dependfiles[#dependfiles+1] = param.path
+	else
+		assert(param.value, "memory texture should define the texture memory")
+	
+		if param.format ~= "RGBA8" then
+			error(("memory texture only support format RGBA8"))
+		end
+		
+		local s = param.size
+		local w,h = s[1], s[2]
+		if w*h*4 ~= #param.value then
+			error(("invalid image size [w, h]=[%d, %d], format:%s, value count:%d"):format(w, h, param.format, #param.value))
+		end
+	end
 
-	local ok, err = texutil.convert_image(output, texpath, binfile, param)
+	local ok, err = texutil.convert_image(output, param)
 	if not ok then
 		return ok, err
 	end
-	return true, {input}
+
+	return true, dependfiles
 end

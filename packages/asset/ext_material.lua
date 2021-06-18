@@ -22,7 +22,8 @@ local function init(material)
     material.setting = material.setting and load_elem(material.setting) or nil
     if material.properties then
         for _, v in pairs(material.properties) do
-            if v.stage then
+            if v.texture then
+                assert(v.stage ~= nil)
                 v.texture = assetmgr.resource(v.texture)
             end
         end

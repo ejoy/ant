@@ -88,36 +88,47 @@ local extensions = {
 }
 
 return {
-    convert_image = function (output, imgpath, binfile, param)
-        local commands = {
-            TEXTUREC
-        }
-        gen_commands(commands, param, imgpath, binfile)
-
-        local success, msg = subprocess.spawn_process(commands)
-        if success then
-            if msg:upper():find("ERROR:", 1, true) then
-                success = false
-            end
-        end
-        if not success then
-            return false, msg
-        end
-        assert(lfs.exists(binfile))
-        local config = {
-            name	= imgpath:string(),
+    convert_image = function (output, param)
+		local config = {
+			name = param.name,
             sampler = fill_default_sampler(param.sampler),
             flag	= samplerutil.sampler_flag(param.sampler),
         }
+
+		local imgpath = param.local_texpath
+		if imgpath then
+			local binfile = param.binfile
+			local commands = {
+				TEXTUREC
+			}
+			gen_commands(commands, param, imgpath, binfile)
+
+			local success, msg = subprocess.spawn_process(commands)
+			if success then
+				if msg:upper():find("ERROR:", 1, true) then
+					success = false
+				end
+			end
+			if not success then
+				return false, msg
+			end
+
+			config.name	= param.name or imgpath:string()
+			assert(lfs.exists(binfile))
+			lfs.rename(binfile, output / "main.bin")
+		else
+			config.size = param.size
+			config.format = param.format
+		end
+
         if param.colorspace == "sRGB" then
             config.flag = config.flag .. 'Sg'
         end
         writefile(output / "main.cfg", stringify(config))
-        lfs.rename(binfile, output / "main.bin")
         return true
     end,
     what_bin_file = function (output, identity)
-		local id = identity_util.parse(identity)
+		local id = type(identity) == "string" and identity_util.parse(identity) or identity
         local ext = assert(extensions[id.renderer])
         return (output / "main.bin"):replace_extension(ext)
     end,

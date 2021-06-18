@@ -6,5 +6,15 @@ fx:
 properties:
     s_lightmap:
         stage: 0
-        texture: /pkg/ant.resources/textures/default.texture
+        texture:
+            w: 1
+            h: 1
+            format: RGBA32F
+            sampler:
+                MAG: LINEAR
+                MIN: LINEAR
+                U: MIRROR
+                V: MIRROR
+            value: {0.0, 0.0, 0.0, 1.0}
+            
 state: /pkg/ant.resources/materials/states/default.state
