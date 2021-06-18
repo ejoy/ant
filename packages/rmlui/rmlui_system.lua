@@ -15,7 +15,7 @@ local fontmgr   = fontpkg.mgr
 
 local ifont     = world:interface "ant.render|ifont"
 local irq       = world:interface "ant.render|irenderqueue"
-local timer     = world:interface "ant.timer|timer"
+local timer     = world:interface "ant.timer|itimer"
 
 local thread     = require "thread"
 thread.newchannel "rmlui_req"

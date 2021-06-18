@@ -3,7 +3,7 @@ system "time_system"
     .method "init"
     .method "timer"
 
-interface "timer"
+interface "itimer"
     .implement "timer_system.lua"
     .require_system "time_system"
     .method "current"

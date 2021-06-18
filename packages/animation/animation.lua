@@ -19,7 +19,7 @@ end
 
 local ani_sys = ecs.system "animation_system"
 
-local timer = world:interface "ant.timer|timer"
+local timer = world:interface "ant.timer|itimer"
 
 local fix_root <const> = false
 

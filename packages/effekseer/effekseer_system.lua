@@ -142,7 +142,7 @@ function iplay.set_time_callback(callback)
     time_callback = callback
 end
 
-local itimer = world:interface "ant.timer|timer"
+local itimer = world:interface "ant.timer|itimer"
 
 function effekseer_sys:camera_usage()
     local mq = world:singleton_entity "main_queue"

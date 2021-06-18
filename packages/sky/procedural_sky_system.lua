@@ -273,7 +273,7 @@ local function update_hour(skycomp, deltatime, unit)
 	skycomp.which_hour = (skycomp.which_hour + deltatime) % unit
 end
 
-local timer = world:interface "ant.timer|timer"
+local timer = world:interface "ant.timer|itimer"
 
 local function update_sun()
 	local delta = timer.delta()

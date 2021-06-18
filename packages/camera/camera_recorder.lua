@@ -5,7 +5,7 @@ local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
 
 local math3d = require "math3d"
-local timer = world:interface "ant.timer|timer"
+local timer = world:interface "ant.timer|itimer"
 local icamera = world:interface "ant.camera|camera"
 local iom = world:interface "ant.objcontroller|obj_motion"
 

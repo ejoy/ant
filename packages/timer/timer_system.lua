@@ -11,12 +11,12 @@ local previous
 local current = 0
 local delta
 
-local timer = ecs.interface "timer"
+local it = ecs.interface "itimer"
 
-function timer.current()
+function it.current()
 	return current
 end
-function timer.delta()
+function it.delta()
 	return delta
 end
 

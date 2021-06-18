@@ -11,7 +11,7 @@ local mc		= import_package "ant.math".constant
 local iom		= world:interface "ant.objcontroller|obj_motion"
 local ishadow	= world:interface "ant.render|ishadow"
 local ilight	= world:interface "ant.render|light"
-local itimer	= world:interface "ant.timer|timer"
+local itimer	= world:interface "ant.timer|itimer"
 local icamera	= world:interface "ant.camera|camera"
 
 local m = ecs.interface "system_properties"

@@ -14,6 +14,7 @@ local ipf       = world:interface "ant.scene|iprimitive_filter"
 local irender   = world:interface "ant.render|irender"
 local imaterial = world:interface "ant.asset|imaterial"
 local icp       = world:interface "ant.render|icull_primitive"
+local itimer    = world:interface "ant.timer|itimer"
 
 local lm_trans = ecs.transform "lightmap_transform"
 function lm_trans.process_entity(e)
