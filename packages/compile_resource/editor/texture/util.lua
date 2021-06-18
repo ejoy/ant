@@ -87,6 +87,11 @@ local extensions = {
 	opengl 		= "ktx",
 }
 
+local mem_formats<const> = {
+	RGBA8 = "bbbb",
+	RGBA32F = "ffff",
+}
+
 return {
     convert_image = function (output, param)
 		local config = {
@@ -117,8 +122,11 @@ return {
 			assert(lfs.exists(binfile))
 			lfs.rename(binfile, output / "main.bin")
 		else
-			config.size = param.size
+			local s = param.size
+			config.width, config.height = s[1], s[2]
 			config.format = param.format
+			config.mem_format = assert(mem_formats[param.format], "not support memory texture format")
+			config.value = param.value
 		end
 
         if param.colorspace == "sRGB" then

@@ -11,7 +11,7 @@ local function readfile(filename)
 end
 
 local function fill_mem_texture_info(c, ti)
-	local w, h = c.size[1], c.size[2]
+	local w, h = c.width, c.height
 	ti.width, ti.height = w, h
 	ti.format = c.format
 	ti.mipmap = false
@@ -24,15 +24,11 @@ local function fill_mem_texture_info(c, ti)
 end
 
 local function create_mem_texture(c, ti)
-	local fmt = c.format
-	local s = c.size
-	local w, h = s[1], s[2]
 	local v = c.value
-	assert(fmt == "RGBA8")
 
 	fill_mem_texture_info(c, ti)
-	local m = bgfx.memory_buffer("bbbb", v)
-	return bgfx.create_texture2d(w, h, false, 1, fmt, c.flag, m)
+	local m = bgfx.memory_buffer(c.mem_format, v)
+	return bgfx.create_texture2d(c.width, c.height, false, 1, c.format, c.flag, m)
 end
 
 local function loader(filename)
