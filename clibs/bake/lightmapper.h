@@ -681,7 +681,8 @@ static void lm_downsample(lm_context *ctx)
 
 #ifdef USE_BGFX
 	// render state will not discard
-	BGFX(set_state)(BGFX_STATE_DEPTH_TEST_NEVER|BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A, 0);
+	uint64_t state = BGFX_STATE_DEPTH_TEST_NEVER|BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_PT_TRISTRIP;
+	BGFX(set_state)(state, 0);
 	BGFX(set_transient_vertex_buffer)(0, &ctx->hemisphere.tvb, 0, 4);
 	const uint32_t discardStates = BGFX_DISCARD_TRANSFORM|BGFX_DISCARD_STATE;
 
@@ -697,7 +698,7 @@ static void lm_downsample(lm_context *ctx)
 		LM_SWAP(int, fbRead, fbWrite);
 		outHemiSize /= 2;
 
-		BGFX(set_state)(BGFX_STATE_DEPTH_TEST_NEVER|BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A, 0);
+		BGFX(set_state)(state, 0);
 		BGFX(set_texture)(0, ctx->hemisphere.downsamplePass.hemispheresTextureHandle, ctx->hemisphere.rbTexture[fbRead], UINT32_MAX);
 		BGFX(submit)(++viewid, ctx->hemisphere.downsamplePass.prog, 0, discardStates);
 	}
