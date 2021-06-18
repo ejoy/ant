@@ -28,4 +28,11 @@ lm:phony "3rd_clean" {
     }
 }
 
+lm:phony "3rd"{
+    deps = {
+        "3rd_init",
+        "3rd_make"
+    }
+}
+
 lm:default "3rd_make"
