@@ -219,7 +219,20 @@ static int
 lcontext_end_patch(lua_State *L){
     auto ctx = tocontext(L);
     lmEnd(ctx->lm_ctx);
-    return 0;
+
+    auto lmctx = ctx->lm_ctx;
+    lua_createtable(L, 0, 0);
+    lua_pushinteger(L, lmctx->meshPosition.hemisphere.side);
+    lua_setfield(L, -2, "side");
+    lua_pushinteger(L, lmctx->hemisphere.fbHemiIndex);
+    lua_setfield(L, -2, "fbHemiIndex");
+
+    lua_pushinteger(L, lmctx->hemisphere.fbHemiCountX);
+    lua_setfield(L, -2, "fbHemiCountX");
+
+    lua_pushinteger(L, lmctx->hemisphere.fbHemiCountY);
+    lua_setfield(L, -2, "fbHemiCountY");
+    return 1;
 }
 
 static int

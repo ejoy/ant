@@ -1283,7 +1283,9 @@ static void lm_initContext(lm_context *ctx, unsigned int w[2], unsigned int h[2]
 	BGFX(alloc_transient_vertex_buffer)(&ctx->hemisphere.tvb, 4, &layout);	//not fill tvb.data, shader use gl_VertexID, 4 for quad vertex index
 
 	ctx->hemisphere.rbDepth = BGFX(create_texture_2d)(w[0], h[0], false, 1, BGFX_TEXTURE_FORMAT_D24, flags, NULL);
-
+	ctx->hemisphere.firstPass.weightsTexture = BGFX(create_texture_2d)(
+		3 * ctx->hemisphere.size, ctx->hemisphere.size, false, 1, BGFX_TEXTURE_FORMAT_RG32F, 
+		BGFX_SAMPLER_U_CLAMP|BGFX_SAMPLER_V_CLAMP|BGFX_SAMPLER_MIN_POINT|BGFX_SAMPLER_MAG_POINT, NULL);
 	bgfx_texture_handle_t handles[2] = {ctx->hemisphere.rbTexture[0], ctx->hemisphere.rbDepth};
 	ctx->hemisphere.fb[0] = BGFX(create_frame_buffer_from_handles)(2, handles, false);
 	handles[0] = ctx->hemisphere.rbTexture[1];
@@ -1531,7 +1533,7 @@ void lmDestroy(lm_context *ctx)
 void lm_updateWeightTexture(lm_context *ctx, const float *weights)
 {
 #ifdef USE_BGFX
-	const bgfx_memory_t *m = BGFX(copy)(weights, 3 * ctx->hemisphere.size * ctx->hemisphere.size * sizeof(float));
+	const bgfx_memory_t *m = BGFX(copy)(weights, 2 * 3 * ctx->hemisphere.size * ctx->hemisphere.size * sizeof(float));
 	BGFX(update_texture_2d)(ctx->hemisphere.firstPass.weightsTexture, 
 		0, 0,	//layer, mipmap
 		0, 0, 3 * ctx->hemisphere.size, ctx->hemisphere.size, //x, y, w, h
@@ -1591,6 +1593,10 @@ void lmSetHemisphereWeights(lm_context *ctx, lm_weight_func f, void *userdata)
 static void lm_checkSetTargetLightmap(lm_context *ctx, int w, int h)
 {
 #ifdef USE_BGFX
+	if ( BGFX_HANDLE_IS_VALID(ctx->hemisphere.storage.texture)){
+		BGFX(destroy_texture)(ctx->hemisphere.storage.texture);
+	}
+
 	uint64_t flags = BGFX_SAMPLER_U_CLAMP|BGFX_SAMPLER_V_CLAMP|BGFX_SAMPLER_MIN_POINT|BGFX_SAMPLER_MAG_POINT|
 					BGFX_TEXTURE_BLIT_DST|BGFX_TEXTURE_READ_BACK;
 	ctx->hemisphere.storage.texture = BGFX(create_texture_2d)(w, h, false, 1, BGFX_TEXTURE_FORMAT_RGBA32F, flags, NULL);
@@ -1758,6 +1764,12 @@ float lmProgress(lm_context *ctx)
 
 void lmEnd(lm_context *ctx)
 {
+#ifdef USE_BGFX
+	//why? bgfx viewid binded viewport rect, if the render items in the same viewid need different viewport rect
+	//bgfx will use the last viewport rect for all render items in the same viewid, if we need change viewport/clear color/scissor rect/ect...
+	//we need to call bgfx.frame to submit the render command.
+	BGFX(frame)(false);
+#endif //USE_BGFX
 	lm_endSampleHemisphere(ctx);
 }
 
