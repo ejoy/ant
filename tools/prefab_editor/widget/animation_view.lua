@@ -283,7 +283,7 @@ local function do_to_runtime_event(evs)
                 enable = ev.collision.enable,
             } or {
                 name = "None",
-                shape_type = "Node",
+                shape_type = "None",
                 enable = false
             }
         }
@@ -443,7 +443,7 @@ local function show_events()
         for idx, ke in ipairs(anim_state.current_event_list) do
             if imgui.widget.Selectable(ke.name, current_event and (current_event.name == ke.name)) then
                 current_event = ke
-                if current_event.collision and current_event.collision.col_eid ~= -1 then
+                if current_event.collision and current_event.collision.col_eid and current_event.collision.col_eid ~= -1 then
                     gizmo:set_target(current_event.collision.col_eid)
                     prefab_mgr:update_current_aabb(current_event.collision.col_eid)
                 end
@@ -488,7 +488,7 @@ local function show_current_event()
         if collider_list and collision then
             imgui.widget.PropertyLabel("Collider")
             local col_name = "None"
-            if collision.col_eid ~= -1 and world[collision.col_eid] then
+            if collision.col_eid and collision.col_eid ~= -1 and world[collision.col_eid] then
                 col_name = world[collision.col_eid].name
             end
             if imgui.widget.BeginCombo("##Collider", {col_name, flags = imgui.flags.Combo {}}) then
@@ -564,7 +564,7 @@ function m.on_remove_entity(eid)
         if clip.key_event then
             for _, ke in pairs(clip.key_event) do
                 for _, e in ipairs(ke) do
-                    if e.collision and e.collision.col_eid == eid then
+                    if e.collision and e.collision.col_eid and e.collision.col_eid == eid then
                         e.collision.col_eid = -1
                         e.collision.shape_type = "None"
                         e.collision.position = nil
@@ -591,7 +591,7 @@ end
 
 local function update_collision()
     for idx, ke in ipairs(anim_state.current_event_list) do
-        if ke.collision and ke.collision.col_eid ~= -1 then
+        if ke.collision and ke.collision.col_eid and ke.collision.col_eid ~= -1 then
             local eid = ke.collision.col_eid
             iom.set_position(eid, ke.collision.position)
             local factor = world[eid].collider.sphere and 100 or 200
@@ -1249,7 +1249,7 @@ local function construct_edit_animations(eid)
                 if clip.key_event then
                     for _, ke in pairs(clip.key_event) do
                         for _, e in ipairs(ke.event_list) do
-                            if e.collision then
+                            if e.collision and e.collision.shape_type ~= "None" then
                                 if not hierarchy.collider_list or not hierarchy.collider_list[e.collision.name] then
                                     local eid = prefab_mgr:create("collider", {type = e.collision.shape_type, define = utils.deep_copy(default_collider_define[e.collision.shape_type]), parent = prefab_mgr.root, add_to_hierarchy = true})
                                     world[eid].name = e.collision.name

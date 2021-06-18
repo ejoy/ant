@@ -103,13 +103,14 @@ end
 
 local function do_compile(cfg, setting, input, output)
     lfs.create_directories(output)
-    local ok, err = require(cfg.compiler)(input, output, setting, function (path)
+    local ok, deps = require(cfg.compiler)(input, output, setting, function (path)
         return absolute_path(input, path)
     end)
     if not ok then
+        local err = deps
         error("compile failed: " .. input:string() .. "\n" .. err)
     end
-    create_depfile(output / ".dep", input)
+    create_depfile(output / ".dep", deps or {})
 end
 
 local function parseUrl(url)

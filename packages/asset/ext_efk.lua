@@ -11,8 +11,10 @@ end
 return {
     loader = function (filename)
         local c = read_file(cr.compile(filename))
+        local dir = cr.compile(lfs.path(filename):remove_filename():string()):string()
         return {
-            rawdata = c
+            rawdata = c,
+            filedir = dir
         }
     end,
     unloader = function (res)

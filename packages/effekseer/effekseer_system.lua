@@ -27,7 +27,7 @@ local ie_t = ecs.transform "instance_effect"
 
 function ie_t.process_entity(e)
     e.effect_instance = {
-        handle 		= effekseer.create(e.effekseer.rawdata),
+        handle 		= effekseer.create(e.effekseer.rawdata, e.effekseer.filedir),
         speed 		= e.speed,
         auto_play 	= e.auto_play,
         loop 		= e.loop
@@ -110,7 +110,6 @@ local iplay = ecs.interface "effekseer_playback"
 function iplay.play(eid, loop)
     local eh = world[eid].effect_instance.handle
     if effekseer.is_playing(eh) then return end
-    print("Play Effect....")
     --effekseer.set_speed(eh, speed or 1.0)
     -- local lp = loop or false
     -- world[eid].loop = lp
@@ -171,7 +170,6 @@ function effekseer_sys:ui_update()
         local e = msg[3]
         if e.effect_instance then
             effekseer.destroy(e.effect_instance.handle)
-            print("---destroy handle")
         end
     end
     for _, eid in world:each "effekseer" do

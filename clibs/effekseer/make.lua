@@ -24,6 +24,7 @@ lm:source_set "source_effekseer" {
     },
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",
+        "__EFFEKSEER_RENDERER_INTERNAL_LOADER__",
     },
 }
 

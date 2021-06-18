@@ -120,7 +120,7 @@ void ModelRenderer::InitRenderer()
 	//	auto isAd = i < 2;
 
 	//	int vsOffset = 0;
-	//	shaders[i]->AddVertexConstantLayout(CONSTANT_TYPE_MATRIX44, shaders[i]->GetUniformId("CBVS0.mCameraProj"), vsOffset);
+	//	shaders[i]->AddVertexConstantLayout(CONSTANT_TYPE_MATRIX44, shaders[i]->GetUniformId("CBVS0.u_cameraProj"), vsOffset);
 
 	//	vsOffset += sizeof(Effekseer::Matrix44);
 
@@ -190,7 +190,7 @@ void ModelRenderer::InitRenderer()
 
 	//	vsOffset += sizeof(float[4]) * 1;
 
-	//	shaders[i]->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, shaders[i]->GetUniformId("CBVS0.mUVInversed"), vsOffset);
+	//	shaders[i]->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, shaders[i]->GetUniformId("CBVS0.u_UVInversed"), vsOffset);
 
 	//	vsOffset += sizeof(float[4]) * 1;
 
@@ -206,7 +206,7 @@ void ModelRenderer::InitRenderer()
 	//	auto isAd = i < 1;
 
 	//	int vsOffset = 0;
-	//	shaders_d[i]->AddVertexConstantLayout(CONSTANT_TYPE_MATRIX44, shaders_d[i]->GetUniformId("CBVS0.mCameraProj"), vsOffset);
+	//	shaders_d[i]->AddVertexConstantLayout(CONSTANT_TYPE_MATRIX44, shaders_d[i]->GetUniformId("CBVS0.u_cameraProj"), vsOffset);
 
 	//	vsOffset += sizeof(Effekseer::Matrix44);
 
@@ -276,7 +276,7 @@ void ModelRenderer::InitRenderer()
 
 	//	vsOffset += sizeof(float[4]) * 1;
 
-	//	shaders_d[i]->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, shaders_d[i]->GetUniformId("CBVS0.mUVInversed"), vsOffset);
+	//	shaders_d[i]->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, shaders_d[i]->GetUniformId("CBVS0.u_UVInversed"), vsOffset);
 
 	//	vsOffset += sizeof(float[4]) * 1;
 

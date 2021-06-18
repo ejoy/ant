@@ -25,21 +25,22 @@ extern bgfx_view_id_t g_view_id;
 }
 
 static effekseer_ctx* g_effekseer = nullptr;
-
+static std::string g_current_path = "";
 std::string get_ant_file_path(const std::string& path)
 {
-	lua_State* L = g_effekseer->lua_State_;
-	std::string result;
-	lua_pushlstring(L, path.data(), path.size());
-	lua_rawgeti(L, LUA_REGISTRYINDEX, g_effekseer->filename_callback_);
-	lua_insert(L, -2);
-	lua_call(L, 1, 1);
-	if (lua_type(L, -1) == LUA_TSTRING) {
-		size_t sz = 0;
-		const char* str = lua_tolstring(L, -1, &sz);
-		result.assign(str, sz);
-	}
-	return result;
+// 	lua_State* L = g_effekseer->lua_State_;
+// 	std::string result;
+// 	lua_pushlstring(L, path.data(), path.size());
+// 	lua_rawgeti(L, LUA_REGISTRYINDEX, g_effekseer->filename_callback_);
+// 	lua_insert(L, -2);
+// 	lua_call(L, 1, 1);
+// 	if (lua_type(L, -1) == LUA_TSTRING) {
+// 		size_t sz = 0;
+// 		const char* str = lua_tolstring(L, -1, &sz);
+// 		result.assign(str, sz);
+// 	}
+// 	return result;
+	return g_current_path + "/" + path;
 }
 
 effekseer_ctx::effekseer_ctx(lua_State* L, int idx)
@@ -77,6 +78,7 @@ bool effekseer_ctx::init()
 	if (!manager.Get()) {
 		return false;
 	}
+	manager->SetCoordinateSystem(Effekseer::CoordinateSystem::LH);
 	manager->SetSpriteRenderer(renderer->CreateSpriteRenderer());
 	manager->SetRibbonRenderer(renderer->CreateRibbonRenderer());
 	manager->SetRingRenderer(renderer->CreateRingRenderer());
@@ -85,7 +87,6 @@ bool effekseer_ctx::init()
 	manager->SetTextureLoader(renderer->CreateTextureLoader());
 	manager->SetModelLoader(renderer->CreateModelLoader());
 	manager->SetMaterialLoader(renderer->CreateMaterialLoader());
-	manager->SetCoordinateSystem(Effekseer::CoordinateSystem::LH);
 	//test
 // 	test_effect = Effekseer::Effect::Create(manager, u"D:/Github/EffekseerBGFX/Resources/Base/Laser03.efk");
 // 	test_handle = manager->Play(test_effect, { 0, 0, 0 });
@@ -137,11 +138,12 @@ leffekseer_update(lua_State* L) {
 
 static int
 lcreate(lua_State* L) {
-	if (lua_type(L, 1) == LUA_TSTRING) {
+	if (lua_type(L, 1) == LUA_TSTRING && lua_type(L, 2) == LUA_TSTRING) {
 		size_t sz;
+		g_current_path = std::string(lua_tolstring(L, 2, &sz));
 		const char* data = lua_tolstring(L, 1, &sz);
 		auto eidx = g_effekseer->create_effect(data, (int32_t)sz);
-		lua_pop(L, 1);
+		lua_pop(L, 2);
 		if (eidx != -1) {
 			lua_pushinteger(L, eidx);
 			return 1;
