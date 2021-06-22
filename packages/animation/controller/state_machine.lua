@@ -311,6 +311,27 @@ function iani.set_time(eid, second)
 	local e = world[eid]
 	if not e or not e.animation then return end
 	iani.step(e._animation._current, second, true)
+	-- effect
+	local current_time = iani.get_time(eid);
+	local all_events = e._animation._current.event_state.keyframe_events
+	if all_events then
+		for _, events in ipairs(all_events) do
+			if events.time > current_time then
+				break
+			end
+			for _, ev in ipairs(events.event_list) do
+				if ev.event_type == "Effect" then
+					if not ev.effect and ev.asset_path ~= "" then
+						ev.effect = world:prefab_instance(ev.asset_path)
+						world:prefab_event(ev.effect, "set_parent", "root", ev.link_info.slot_eid)
+					end
+					if ev.effect then
+						world:prefab_event(ev.effect, "time", "root", current_time - events.time)
+					end
+				end
+			end
+		end
+	end
 end
 
 function iani.set_clip_time(eid, second)
