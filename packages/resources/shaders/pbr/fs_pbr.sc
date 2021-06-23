@@ -49,9 +49,6 @@ struct material_info
 
     vec3 f90;                       // reflectance color at grazing angle
     float metallic;
-
-    //vec3 normal;
-    vec3 basecolor;
 };
 
 vec4 get_basecolor(vec2 texcoord)
@@ -75,24 +72,21 @@ vec3 get_normal(vec3 tangent, vec3 bitangent, vec3 normal, vec2 texcoord)
 }
 
 
-material_info get_metallic_roughness(material_info info, vec2 uv, float f0_ior)
+void get_metallic_roughness(out float metallic, out float roughness, vec2 uv)
 {
-    info.metallic = u_metallic_factor;
-    info.roughness = u_roughness_factor;
+    metallic = u_metallic_factor;
+    roughness = u_roughness_factor;
 
 #ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
     // Roughness is stored in the 'g' channel, metallic is stored in the 'b' channel.
     // This layout intentionally reserves the 'r' channel for (optional) occlusion map data
     vec4 mrSample = texture2D(s_metallic_roughness, uv);
-    info.roughness *= mrSample.g;
-    info.metallic *= mrSample.b;
+    roughness *= mrSample.g;
+    metallic *= mrSample.b;
 #endif
 
-    // Achromatic f0 based on IOR.
-    info.albedo = mix(info.basecolor.rgb * (1.0 - f0_ior),  vec3_splat(0.0), info.metallic);
-    info.f0 = mix(vec3_splat(f0_ior), info.basecolor.rgb, info.metallic);
-
-    return info;
+    roughness  = clamp(roughness, 0.0, 1.0);
+    metallic   = clamp(metallic, 0.0, 1.0);
 }
 
 float clamp_dot(vec3 x, vec3 y)
@@ -114,6 +108,26 @@ vec3 get_IBL_radiance_GGX(vec3 N, vec3 V, float NdotV, float roughness, vec3 spe
     vec2 lut = texture2D(s_LUT, lut_uv).rg;
     vec3 specular_light = textureCubeLod(s_prefilter, reflection, lod).rgb;
     return specular_light * (specular_color * lut.x + lut.y);
+}
+
+material_info get_material_info(vec4 basecolor, vec2 uv)
+{
+    material_info mi;
+    get_metallic_roughness(mi.metallic, mi.roughness, uv);
+    // Roughness is authored as perceptual roughness; as is convention,
+    // convert to material roughness by squaring the perceptual roughness.
+    mi.alpha_roughness = mi.roughness * mi.roughness;
+
+    // Achromatic f0 based on IOR.
+    vec3 f0_ior = vec3_splat(MIN_ROUGHNESS);
+    mi.albedo = mix(basecolor.rgb * (1.0 - f0_ior),  vec3_splat(0.0), mi.metallic);
+    mi.f0 = mix(f0_ior, basecolor.rgb, mi.metallic);
+    // Compute reflectance.
+    float reflectance = max(mi.f0.r, max(mi.f0.g, mi.f0.b));
+
+    // Anything less than 2% is physically impossible and is instead considered to be shadowing. Compare to "Real-Time-Rendering" 4th editon on page 325.
+    mi.f90 = vec3_splat(clamp(reflectance * 50.0, 0.0, 1.0));
+    return mi;
 }
 
 void main()
@@ -146,23 +160,7 @@ void main()
     vec3 V = normalize(u_eyepos.xyz - v_posWS.xyz);
     vec3 N = get_normal(v_tangent, v_bitangent, v_normal, uv);
 
-    material_info mi;
-    mi.basecolor  = basecolor.rgb;
-    mi            = get_metallic_roughness(mi, uv, MIN_ROUGHNESS);
-    mi.roughness  = clamp(mi.roughness, 0.0, 1.0);
-    mi.metallic   = clamp(mi.metallic, 0.0, 1.0);
-
-    // Roughness is authored as perceptual roughness; as is convention,
-    // convert to material roughness by squaring the perceptual roughness.
-    mi.alpha_roughness = mi.roughness * mi.roughness;
-
-    // Compute reflectance.
-    float reflectance = max(mi.f0.r, max(mi.f0.g, mi.f0.b));
-
-    // Anything less than 2% is physically impossible and is instead considered to be shadowing. Compare to "Real-Time-Rendering" 4th editon on page 325.
-    mi.f90 = vec3_splat(clamp(reflectance * 50.0, 0.0, 1.0));
-
-    //mi.normal = N;
+    material_info mi = get_material_info(basecolor, uv);
 
     // LIGHTING
     vec3 color = vec3_splat(0.0);
