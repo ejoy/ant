@@ -8,4 +8,9 @@ properties:
         stage: 0
         texture: /pkg/ant.tool.lightmap_baker/assets/example/materials/black.texture
 
-state: /pkg/ant.resources/materials/states/default.state
+state:
+    ALPHA_REF: 0
+    CULL: CCW
+    DEPTH_TEST: LESS
+    MSAA: true
+    WRITE_MASK: RGBAZ
