@@ -671,6 +671,54 @@ static lm_bool lm_findNextConservativeTriangleRasterizerPosition(lm_context *ctx
 	return lm_findFirstConservativeTriangleRasterizerPosition(ctx);
 }
 
+//#ifdef _DEBUG
+// static uint8_t* get_image_memory(bgfx_texture_handle_t tex, int w, int h, int elemsize)
+// {
+// 	uint8_t *tt = (uint8_t*)LM_CALLOC(w * h, elemsize);
+// 	uint32_t whichframe = BGFX(read_texture)(tex, tt, 0);
+// 	while (BGFX(frame)(false) < whichframe);
+// 	return tt;
+// }
+
+// static bgfx_texture_handle_t create_tex(int w, int h, bgfx_texture_format fmt = BGFX_TEXTURE_FORMAT_RGBA32F){
+// 	return BGFX(create_texture_2d)(w, h, false, 1, fmt, 
+// 	BGFX_SAMPLER_U_CLAMP|BGFX_SAMPLER_V_CLAMP|BGFX_SAMPLER_MIN_POINT|BGFX_SAMPLER_MAG_POINT|BGFX_TEXTURE_BLIT_DST|BGFX_TEXTURE_READ_BACK
+// 	,NULL);
+// };
+
+// static void copy_tex(uint16_t viewid, bgfx_texture_handle_t dsttex, bgfx_texture_handle_t srctex, int w, int h){
+// 	BGFX(blit)(viewid, dsttex, 
+// 	0, //dst mip
+// 	0, 0, 0, // dst x, y, z
+// 	srctex,
+// 	0, //src mip
+// 	0, 0, 0, w, h, 0);
+// };
+
+// static void save_bin(const char* filename, const float *mm, int w, int h, int numelem)
+// {
+// 	char* b = (char*)LM_CALLOC(w*h, 32);
+// 	char* p = b;
+// 	for (int jj=0; jj<h; ++jj){
+// 		for (int ii=0; ii<w; ++ii){
+// 			int idx = jj*w*numelem+ii;
+// 			for (int e=0; e<numelem; ++e){
+// 				p += sprintf(p, "%2f ", mm[idx+e]);
+// 			}
+// 		}
+
+// 		p += sprintf(p, "\n");
+// 	}
+
+// 	FILE *f = fopen(filename, "w");
+// 	fwrite(b, 1, p-b, f);
+// 	fclose(f);
+
+// 	LM_FREE(b);
+// }
+//#endif //_DEBUG
+
+
 static void lm_downsample(lm_context *ctx)
 {
 	int fbRead = 0;
@@ -681,7 +729,7 @@ static void lm_downsample(lm_context *ctx)
 
 #ifdef USE_BGFX
 	// render state will not discard
-	uint64_t state = BGFX_STATE_DEPTH_TEST_NEVER|BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_PT_TRISTRIP;
+	uint64_t state = BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_PT_TRISTRIP;
 	BGFX(set_state)(state, 0);
 	BGFX(set_transient_vertex_buffer)(0, &ctx->hemisphere.tvb, 0, 4);
 	const uint32_t discardStates = BGFX_DISCARD_TRANSFORM|BGFX_DISCARD_STATE;
@@ -1537,11 +1585,14 @@ void lmDestroy(lm_context *ctx)
 void lm_updateWeightTexture(lm_context *ctx, const float *weights)
 {
 #ifdef USE_BGFX
-	const bgfx_memory_t *m = BGFX(copy)(weights, 2 * 3 * ctx->hemisphere.size * ctx->hemisphere.size * sizeof(float));
+	const int w = 3 * ctx->hemisphere.size, h = ctx->hemisphere.size;
+	const int elemsize = 2 * sizeof(float);
+	const int pitch = w * elemsize;
+	const bgfx_memory_t *m = BGFX(copy)(weights, h * pitch);
 	BGFX(update_texture_2d)(ctx->hemisphere.firstPass.weightsTexture, 
 		0, 0,	//layer, mipmap
-		0, 0, 3 * ctx->hemisphere.size, ctx->hemisphere.size, //x, y, w, h
-		m, 3 * ctx->hemisphere.size);
+		0, 0, w, h, //x, y, w, h
+		m, pitch); // memory, pitch
 #else
 	// upload weight texture
 	glBindTexture(GL_TEXTURE_2D, ctx->hemisphere.firstPass.weightsTexture);
