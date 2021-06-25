@@ -34,13 +34,29 @@ is_space_codepoint(int codepoint){
     return 0;
 }
 
+static inline void
+lock(struct font_manager *F) {
+}
+
+static inline void
+unlock(struct font_manager *F) {
+}
+
 static inline const stbtt_fontinfo*
-get_ttf(struct font_manager *F, int fontid){
+get_ttf_unsafe(struct font_manager *F, int fontid){
 	#ifdef TEST_CASE
 	return (&F->ttf->fontinfo[fontid - 1]);
 	#else //!TEST_CASE
 	return truetype_font(F->ttf, fontid, F->L);
 	#endif //TEST_CASE
+}
+
+static inline const stbtt_fontinfo *
+get_ttf(struct font_manager *F, int fontid) {
+	lock(F);
+	const stbtt_fontinfo * r = get_ttf_unsafe(F, fontid);
+	unlock(F);
+	return r;
 }
 
 static inline int
@@ -53,8 +69,8 @@ ttf_with_family(struct font_manager *F, const char* family){
 	#endif //TEST_CASE
 }
 
-void
-font_manager_init(struct font_manager *F, struct truetype_font *ttf, void *L) {
+static void
+font_manager_init_unsafe(struct font_manager *F, struct truetype_font *ttf, void *L) {
 	F->version = 1;
 	F->count = 0;
 	F->ttf = ttf;
@@ -77,6 +93,13 @@ font_manager_init(struct font_manager *F, struct truetype_font *ttf, void *L) {
 	for (i=0;i<FONT_MANAGER_HASHSLOTS;i++) {
 		F->hash[i] = -1;	// empty slot
 	}
+}
+
+static void
+font_manager_init(struct font_manager *F, struct truetype_font *ttf, void *L) {
+	lock(F);
+	font_manager_init_unsafe(F, ttf, L);
+	unlock(F);
 }
 
 static inline int
@@ -170,7 +193,7 @@ touch_slot(struct font_manager *F, int slotid) {
 
 // 1 exist in cache. 0 not exist in cache , call font_manager_update. -1 failed.
 int
-font_manager_touch(struct font_manager *F, int font, int codepoint, struct font_glyph *glyph) {
+font_manager_touch_unsafe(struct font_manager *F, int font, int codepoint, struct font_glyph *glyph) {
 	int cp = codepoint_ttf(font, codepoint);
 	int slot = hash_lookup(F, cp);
 	if (slot >= 0) {
@@ -219,6 +242,14 @@ font_manager_touch(struct font_manager *F, int font, int codepoint, struct font_
 		return -1;
 
 	return 0;
+}
+
+int
+font_manager_touch(struct font_manager *F, int font, int codepoint, struct font_glyph *glyph) {
+	lock(F);
+	int r = font_manager_touch_unsafe(F, font, codepoint, glyph);
+	unlock(F);
+	return r;
 }
 
 static inline int
@@ -272,8 +303,9 @@ font_manager_boundingbox(struct font_manager *F, int fontid, int size, int *x0, 
 	*y1 = scale_font(*y1, scale, size);
 }
 
+// F->dpi_perinch is a constant, so do not need to lock
 int
-font_manager_pixelsize(struct font_manager *F, int fontid, int pointsize){
+font_manager_pixelsize(struct font_manager *F, int fontid, int pointsize) {
 	//TODO: need set dpi when init font_manager
 	const int defaultdpi = 96;
 	const int dpi = F->dpi_perinch == 0 ? defaultdpi : F->dpi_perinch;
@@ -298,8 +330,8 @@ font_manager_glyph(struct font_manager *F, int fontid, int codepoint, int size, 
     return updated;
 }
 
-const char *
-font_manager_update(struct font_manager *F, int fontid, int codepoint, struct font_glyph *glyph, uint8_t *buffer) {
+static const char *
+font_manager_update_unsafe(struct font_manager *F, int fontid, int codepoint, struct font_glyph *glyph, uint8_t *buffer) {
 	if (fontid <= 0)
 		return "Invalid font";
 	int cp = codepoint_ttf(fontid, codepoint);
@@ -350,14 +382,33 @@ font_manager_update(struct font_manager *F, int fontid, int codepoint, struct fo
 	return NULL;
 }
 
+const char *
+font_manager_update(struct font_manager *F, int fontid, int codepoint, struct font_glyph *glyph, uint8_t *buffer) {
+	lock(F);
+	const char *r = font_manager_update_unsafe(F, fontid, codepoint, glyph, buffer);
+	unlock(F);
+	return r;
+}
+
 void
 font_manager_flush(struct font_manager *F) {
+	// todo : atomic inc
+	lock(F);
 	++F->version;
+	unlock(F);
+}
+
+static int
+font_manager_addfont_with_family_unsafe(struct font_manager *F, const char* family) {
+	return ttf_with_family(F, family);
 }
 
 int
 font_manager_addfont_with_family(struct font_manager *F, const char* family) {
-	return ttf_with_family(F, family);
+	lock(F);
+	int r = font_manager_addfont_with_family_unsafe(F, family);
+	unlock(F);
+	return r;
 }
 
 static inline void

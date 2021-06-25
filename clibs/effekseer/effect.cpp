@@ -15,7 +15,7 @@ void effect_adapter::play()
 
 void effect_adapter::pause(bool p)
 {
-	if (handle_)
+	if (handle_ != -1)
 	{
 		manager_->SetPaused(handle_, p);
 	}
@@ -67,12 +67,16 @@ bool effect_adapter::is_playing()
 
 void effect_adapter::stop()
 {
-	manager_->StopEffect(handle_);
+	if (handle_ != -1) {
+		manager_->StopEffect(handle_);
+	}
 }
 
 void effect_adapter::stop_root()
 {
-	manager_->StopRoot(handle_);
+	if (handle_ != -1) {
+		manager_->StopRoot(handle_);
+	}
 }
 
 void effect_adapter::set_tranform(const Effekseer::Matrix43& mat)

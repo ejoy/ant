@@ -60,9 +60,6 @@ local function process_keyframe_event(task)
 				end
 			elseif event.event_type == "Effect" then
 				if not event.effect and event.asset_path ~= "" then
-					-- local prefab = world:instance(event.asset_path)
-					-- event.effect_eid = prefab[1]
-					-- world[event.effect_eid].parent = event.link_info.slot_eid
 					event.effect = world:prefab_instance(event.asset_path)
 					world:prefab_event(event.effect, "set_parent", "root", event.link_info.slot_eid)
 				end
@@ -71,7 +68,7 @@ local function process_keyframe_event(task)
 					if event.link_info.slot_eid and parent ~= event.link_info.slot_eid then
 						world:prefab_event(event.effect, "set_parent", "root", event.link_info.slot_eid)
 					end
-					world:prefab_event(event.effect, "play", "root", false, false)
+					world:prefab_event(event.effect, "play", "root", "", false, not task.play_state.play)
 				end
 			end
 		end

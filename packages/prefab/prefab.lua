@@ -69,7 +69,7 @@ local function command(w, set, name, ...)
 			end,
 			time = function(eid, ...)
 				if w[eid].effekseer then
-					--ieff.set_time(eid, ...)
+					ieff.set_time(eid, ...)
 				else
 					iani.set_time(eid, ...)
 				end

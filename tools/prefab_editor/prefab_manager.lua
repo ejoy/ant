@@ -605,10 +605,12 @@ function m:add_effect(filename)
             "ant.general|name",
             "ant.scene|hierarchy_policy",
             "ant.scene|transform_policy",
-            "ant.effekseer|effekseer_policy"
+            "ant.effekseer|effekseer_policy",
+            "ant.general|tag"
 		},
 		data = {
-            name = name,
+            name = "root",
+            tag = "root",
             scene_entity = true,
             transform = {},
             effekseer = filename,

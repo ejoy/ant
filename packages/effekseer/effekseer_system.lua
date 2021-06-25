@@ -111,9 +111,9 @@ function iplay.play(eid, loop)
     local eh = world[eid].effect_instance.handle
     if effekseer.is_playing(eh) then return end
     --effekseer.set_speed(eh, speed or 1.0)
-    -- local lp = loop or false
+    local lp = loop or false
     -- world[eid].loop = lp
-    -- effekseer.set_loop(eh, lp)
+    effekseer.set_loop(eh, lp)
     effekseer.play(eh)
 end
 
@@ -127,8 +127,9 @@ function iplay.pause(eid, b)
     effekseer.pause(eh, b)
 end
 
-function iplay.set_time(eid, frame)
+function iplay.set_time(eid, second)
     local eh = world[eid].effect_instance.handle
+    local frame = math.floor(second * 60)
     effekseer.set_time(eh, frame)
 end
 
