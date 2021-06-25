@@ -35,7 +35,15 @@ end
 
 local ic = ecs.interface "camera"
 
+local defaultcamera = {
+    eyepos  = {0, 0, 0, 1},
+    viewdir = {0, 0, 1, 0},
+    frustum = default_comp.frustum(),
+    name = "default_camera",
+}
+
 function ic.create(info)
+    info = info or defaultcamera
     local frustum = info.frustum
     if not frustum then
         frustum = default_comp.frustum()
