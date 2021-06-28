@@ -102,10 +102,6 @@ function event.get_clips(tag_name, clips)
     return tag(tag_name) : get_clips(clips)
 end
 
-function event.set_events(tag_name, anim_name, events)
-    tag(tag_name) : set_events(anim_name, events)
-end
-
 function event.get_collider(tag_name, anim_name, time)
     return tag(tag_name) : get_collider(anim_name, time)
 end

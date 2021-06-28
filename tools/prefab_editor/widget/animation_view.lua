@@ -23,11 +23,12 @@ local current_eid
 local imgui_message
 local current_anim
 local selected_frame = -1
-local sample_ratio = 30.0
+local sample_ratio = 50.0
 
 local anim_state = {
     duration = 0,
     current_time = 0,
+    current_frame = 0,
     is_playing = false,
     anim_name = "",
     key_event = {},
@@ -184,6 +185,10 @@ local function from_runtime_event(runtime_event)
                 if e.link_info and e.link_info.slot_name ~= '' then
                     e.link_info.slot_eid = hierarchy.slot_list[e.link_info.slot_name]
                 end
+                if e.event_type == "Effect" then
+                    e.breakable_ui = {e.breakable or false}
+                    e.life_time_ui = {e.life_time or 2}
+                end
             elseif e.event_type == "Collision" then
                 e.collision.enable_ui = {e.collision.enable}
                 e.collision.shape_type = e.collision.shape_type
@@ -273,6 +278,8 @@ local function do_to_runtime_event(evs)
             name = ev.name,
             rid = ev.rid,
             asset_path = ev.asset_path,
+            breakable = ev.breakable,
+            life_time = ev.life_time,
             link_info = ev.link_info and {slot_name = ev.link_info.slot_name, slot_eid = ev.link_info.slot_eid},
             collision = (col_eid ~= -1) and {
                 col_eid = col_eid,
@@ -341,10 +348,7 @@ end
 local event_id = 1
 local function add_event(et)
     if not current_clip then return end
-    local event_list = anim_state.current_event_list
-    if #event_list >= event_id then
-        event_id = event_id + 1
-    end 
+    event_id = event_id + 1
     local event_name = et..tostring(event_id)
     local new_event = {
         event_type = et,
@@ -353,8 +357,13 @@ local function add_event(et)
         asset_path = (et == "Effect" or et == "Sound") and "" or nil,
         link_info = (et == "Effect") and {
             slot_name = "",
-            slot_eid = nil
+            slot_eid = nil,
+            
         } or nil,
+        breakable = (et == "Effect") and false or nil,
+        breakable_ui = (et == "Effect") and {false} or nil,
+        life_time = (et == "Effect") and 2 or nil,
+        life_time_ui = (et == "Effect") and { 2 } or nil,
         name_ui = {text = event_name},
         rid_ui = {-1},
         asset_path_ui = (et == "Effect" or et == "Sound") and {text = ""} or nil,
@@ -366,6 +375,7 @@ local function add_event(et)
         } or nil
     }
     current_event = new_event
+    local event_list = anim_state.current_event_list
     event_list[#event_list + 1] = new_event
     set_event_dirty(1)
 end
@@ -473,7 +483,14 @@ local function show_current_event()
     if not current_event then return end
     imgui.widget.PropertyLabel("EventType")
     imgui.widget.Text(current_event.event_type)
+
     local dirty
+    imgui.widget.PropertyLabel("EventName")
+    if imgui.widget.InputText("##EventName", current_event.name_ui) then
+        current_event.name = tostring(current_event.name_ui.text)
+        dirty = true
+    end
+    
     if current_event.event_type == "Effect" or current_event.event_type == "Sound" then
         imgui.widget.PropertyLabel("RID")
         if imgui.widget.DragInt("##RID", current_event.rid_ui) then
@@ -544,6 +561,16 @@ local function show_current_event()
                 end
                 imgui.widget.EndCombo()
             end
+        end
+        imgui.widget.PropertyLabel("Breakable")
+        if imgui.widget.Checkbox("##Breakable", current_event.breakable_ui) then
+            current_event.breakable = current_event.breakable_ui[1]
+            dirty = true
+        end
+        imgui.widget.PropertyLabel("LifeTime")
+        if imgui.widget.DragInt("##LifeTime", current_event.life_time_ui) then
+            current_event.life_time = current_event.life_time_ui[1]
+            dirty = true
         end
     end
     if dirty then
@@ -625,7 +652,7 @@ local function on_move_keyframe(frame_idx, move_type)
     end
 end
 local function min_max_range_value(clip_index)
-    return 0, math.floor(current_anim.duration * sample_ratio) - 1
+    return 0, math.ceil(current_anim.duration * sample_ratio) - 1
 end
 
 local function on_move_clip(move_type, current_clip_index, move_delta)
@@ -692,6 +719,7 @@ function m.save_clip(path)
             for _, key_ev in ipairs(clip.key_event) do
                 for _, ev in ipairs(key_ev.event_list) do
                     if ev.effect then
+                        world:prefab_event(ev.effect, "remove", "*")
                         ev.effect = nil
                     end
                     if ev.link_info and ev.link_info.slot_eid then
@@ -702,6 +730,7 @@ function m.save_clip(path)
                             local rc = imaterial.get_property(ev.collision.col_eid, "u_color")
                             local color = math3d.totable(rc.value)
                             ev.collision.color = {color[1],color[2],color[3],color[4]}
+                            ev.collision.tag = world[ev.collision.col_eid].tag
                         end
                         ev.collision.col_eid = nil
                     end
@@ -725,6 +754,7 @@ local function set_current_clip(clip)
 end
 
 local function show_clips()
+    imgui.widget.PropertyLabel(" ")
     if imgui.widget.Button("NewClip") then
         local key = "Clip" .. clip_index
         clip_index = clip_index + 1
@@ -747,7 +777,6 @@ local function show_clips()
         set_current_clip(new_clip)
         set_clips_dirty(true)
     end
-    
     local delete_index
     local anim_name
     for i, cs in ipairs(all_clips) do
@@ -791,6 +820,7 @@ end
 local current_group
 
 local function show_groups()
+    imgui.widget.PropertyLabel(" ")
     if imgui.widget.Button("NewGroup") then
         local key = "Group" .. group_index
         group_index = group_index + 1
@@ -965,6 +995,9 @@ function m.show()
             if current_anim then
                 anim_state.current_time = iani.get_time(current_eid)
                 anim_state.is_playing = iani.is_playing(current_eid)
+                if anim_state.is_playing then
+                    anim_state.current_frame = math.floor(anim_state.current_time * sample_ratio)
+                end
             end
             imgui.cursor.SameLine()
             local title = "Add Animation"
@@ -1008,7 +1041,7 @@ function m.show()
                             current_external_anim = external_anim
                             anim_path = anim_glb_path .. "|animations/" .. external_anim
                             if #anim_name < 1 then
-                                anim_name = fs.path(anim_path):stem():string()--string.sub(external_anim, 1, -5)
+                                anim_name = fs.path(anim_path):stem():string()
                             end
                         end
                     end
@@ -1077,7 +1110,7 @@ function m.show()
                 end
             end
             imgui.cursor.SameLine()
-            imgui.widget.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d Time: %.2f/%.2f(s)", selected_frame, selected_frame / 30, math.floor(anim_state.current_time * 30), anim_state.current_time, anim_state.duration))
+            imgui.widget.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d Time: %.2f/%.2f(s)", selected_frame, selected_frame / sample_ratio, math.floor(anim_state.current_time * sample_ratio), anim_state.current_time, anim_state.duration))
             imgui_message = {}
             imgui.widget.Sequencer(edit_anims[current_eid], anim_state, imgui_message)
             -- clear dirty flag
@@ -1090,7 +1123,8 @@ function m.show()
             for k, v in pairs(imgui_message) do
                 if k == "pause" then
                     anim_group_pause(current_eid, true)
-                    anim_group_set_time(current_eid, v)
+                    anim_state.current_frame = v
+                    anim_group_set_time(current_eid, v / sample_ratio)
                 elseif k == "selected_frame" then
                     new_frame_idx = v
                 elseif k == "move_type" then
@@ -1253,6 +1287,7 @@ local function construct_edit_animations(eid)
                                 if not hierarchy.collider_list or not hierarchy.collider_list[e.collision.name] then
                                     local eid = prefab_mgr:create("collider", {type = e.collision.shape_type, define = utils.deep_copy(default_collider_define[e.collision.shape_type]), parent = prefab_mgr.root, add_to_hierarchy = true})
                                     world[eid].name = e.collision.name
+                                    world[eid].tag = e.collision.tag
                                     imaterial.set_property(eid, "u_color", e.collision.color or {1.0,0.5,0.5,0.8})
                                     hierarchy:update_collider_list(world)
                                 end

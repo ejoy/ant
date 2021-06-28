@@ -242,8 +242,10 @@ lset_time(lua_State* L) {
 				start = lua_tointeger(L, 2);
 			}
 			effect->stop();
-			effect->play(start);
-			effect->pause(true);
+			if (start >= 0) {
+				effect->play(start);
+				effect->pause(true);
+			}
 		}
 	}
 	return 0;
@@ -254,8 +256,7 @@ lstop(lua_State* L) {
 	int32_t eidx = get_effect_index(L);
 	if (eidx != -1) {
 		auto effect = g_effekseer->get_effect(eidx);
-		if (effect)
-		{
+		if (effect) {
 			effect->stop();
 		}
 	}
@@ -267,8 +268,7 @@ lset_loop(lua_State* L) {
 	int32_t eidx = get_effect_index(L);
 	if (eidx != -1) {
 		auto effect = g_effekseer->get_effect(eidx);
-		if (effect)
-		{
+		if (effect) {
 			luaL_checktype(L, 2, LUA_TBOOLEAN);
 			effect->set_loop(lua_toboolean(L, 2));
 		}

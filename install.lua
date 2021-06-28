@@ -51,6 +51,7 @@ copy_directory(BIN, output / "bin", function (path)
 end)
 copy_directory(input / "engine", output / "engine")
 copy_directory(input / "packages", output / "packages")
+copy_directory(input / "docs", output / "doc")
 copy_directory(input / "tools" / "prefab_editor", output / "tools" / "prefab_editor", function (path)
     return path ~= input / "tools" / "prefab_editor" / ".build"
 end)

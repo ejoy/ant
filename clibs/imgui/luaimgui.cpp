@@ -1679,8 +1679,7 @@ wPopTextWrapPos(lua_State* L) {
 
 namespace ImSequencer
 {
-	extern bool new_anim;
-	extern int current_id;
+	extern int anim_fps;
 	extern anim_detail* current_anim;
 	extern std::unordered_map<int, std::unordered_map<std::string, anim_detail>> anim_info;
 }
@@ -1726,7 +1725,7 @@ wSequencer(lua_State* L) {
 					}
 					lua_pop(L, 1);
 
- 					auto event_flags = std::vector(item.duration * 30, false);
+ 					auto event_flags = std::vector((int)std::ceil(item.duration * ImSequencer::anim_fps), false);
  					init_event(event_flags);
 					//if (start != -1 && end != -1 && end >= start) {
 						item.clip_rangs.emplace_back(nv, (int)start, (int)end, event_flags);
@@ -1752,7 +1751,6 @@ wSequencer(lua_State* L) {
 			lua_pop(L, 1);
 		}
 	};
-
 	static int selected_frame = -1;
 	static int current_frame = 0;
 	static std::string current_anim_name;
@@ -1791,8 +1789,13 @@ wSequencer(lua_State* L) {
 				ImSequencer::current_anim = &iter->second[current_anim_name];
 			}
 			ImSequencer::current_anim->is_playing = read_field_boolean(L, "is_playing", false, 2);
-			ImSequencer::current_anim->current_time = (float)read_field_float(L, "current_time", 0.0f, 2);
-			current_frame = (int)(ImSequencer::current_anim->current_time * 30.0f);
+// 			ImSequencer::current_anim->current_time = (float)read_field_float(L, "current_time", 0.0f, 2);
+// 			int maxframe = (int)std::ceil(ImSequencer::current_anim->duration * ImSequencer::anim_fps) - 1;
+// 			current_frame = (int)std::ceil(ImSequencer::current_anim->current_time * ImSequencer::anim_fps);
+// 			if (current_frame > maxframe) {
+// 				current_frame = maxframe;
+// 			}
+			current_frame = read_field_int(L, "current_frame", 0, 2);
 			auto event_dirty_num = read_field_int(L, "event_dirty", 0, 2);
 			auto clip_dirty_num = read_field_int(L, "clip_range_dirty", 0, 2);
 			selected_clip_index = read_field_int(L, "selected_clip_index", 0, 2) - 1;
@@ -1819,7 +1822,8 @@ wSequencer(lua_State* L) {
 	int current_select = selected_frame;
 	ImSequencer::Sequencer(pause, current_frame, current_select, move_type, selected_clip_index, move_delta);
 	if (pause) {
-		lua_pushnumber(L, current_frame / 30.0f);
+		//lua_pushnumber(L, current_frame / (float)ImSequencer::anim_fps);
+		lua_pushinteger(L, current_frame);
 		lua_setfield(L, -2, "pause");
 	}
 	if (move_type != -1) {

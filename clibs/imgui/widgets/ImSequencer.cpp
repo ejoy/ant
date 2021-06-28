@@ -13,12 +13,13 @@
 
 namespace ImSequencer
 {
+	int anim_fps = 50;
 	anim_detail* current_anim{ nullptr };
 	std::unordered_map<int, std::unordered_map<std::string, anim_detail>> anim_info;
 	constexpr int ItemHeight = 20;
 
 	int GetFrameMin() { return 0; }
-	int GetFrameMax() { return (int)std::ceil(current_anim->duration * 30.0f); }
+	int GetFrameMax() { return (int)std::ceil(current_anim->duration * anim_fps) - 1; }
 
 #ifndef IMGUI_DEFINE_MATH_OPERATORS
 	static ImVec2 operator+(const ImVec2& a, const ImVec2& b) { return ImVec2(a.x + b.x, a.y + b.y); }
@@ -244,7 +245,7 @@ namespace ImSequencer
 						continue;
 					if (!ImRect(childFramePos, childFramePos + childFrameSize).Contains(io.MousePos))
 						continue;
-					if (range_index == i) {
+					if (range_index == i && !MovingCurrentFrame) {
 						movingEntry = true;
 						movingPos = cx;
 						movingPart = j + 1;

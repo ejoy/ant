@@ -90,7 +90,6 @@ local function command(w, set, name, ...)
 			end,
 			set_clips 		= iani.set_clips,
 			get_clips		= iani.get_clips,
-			set_events 		= iani.set_events,
 			get_collider    = iani.get_collider,
 			duration = function(eid, ...)
 				if w[eid].animation then

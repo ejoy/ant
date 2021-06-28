@@ -28,7 +28,7 @@ local function get_current_anim_time(task)
 end
 
 local function process_keyframe_event(task)
-	if task.play_state.manual_update then return end
+	if task.play_state.manual_update or not task.play_state.play then return end
 	local event_state = task.event_state
 	local all_events = event_state.keyframe_events
 	local current_events = all_events and all_events[event_state.next_index] or nil
@@ -36,15 +36,13 @@ local function process_keyframe_event(task)
 
 	local current_time = get_current_anim_time(task)
 	if current_time < current_events.time and event_state.finish then
-		-- restart
 		event_state.next_index = 1
 		event_state.finish = false
 	end
 	while not event_state.finish and current_events.time <= current_time do
 		for _, event in ipairs(current_events.event_list) do
-			--print("event trigger : ", current_time, event.name, event.event_type)
 			if event.event_type == "Collision" then
-				local collision = event.collision--colliders[event.collision.collider_index]
+				local collision = event.collision
 				if collision and collision.col_eid and collision.col_eid ~= -1 then
 					-- if collision.joint_index == 0 then
 					-- 	local origin_s, _, _ = math3d.srt(iom.worldmat(collision.col_eid))
@@ -68,7 +66,7 @@ local function process_keyframe_event(task)
 					if event.link_info.slot_eid and parent ~= event.link_info.slot_eid then
 						world:prefab_event(event.effect, "set_parent", "root", event.link_info.slot_eid)
 					end
-					world:prefab_event(event.effect, "play", "root", "", false, not task.play_state.play)
+					world:prefab_event(event.effect, "play", "root", "", false, false)
 				end
 			end
 		end

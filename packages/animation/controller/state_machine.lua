@@ -316,15 +316,8 @@ function iani.set_time(eid, second)
 	local all_events = e._animation._current.event_state.keyframe_events
 	if all_events then
 		for _, events in ipairs(all_events) do
-			if events.time > current_time then
-				break
-			end
 			for _, ev in ipairs(events.event_list) do
 				if ev.event_type == "Effect" then
-					if not ev.effect and ev.asset_path ~= "" then
-						ev.effect = world:prefab_instance(ev.asset_path)
-						world:prefab_event(ev.effect, "set_parent", "root", ev.link_info.slot_eid)
-					end
 					if ev.effect then
 						world:prefab_event(ev.effect, "time", "root", current_time - events.time)
 					end
@@ -458,20 +451,24 @@ function iani.get_collider(eid, anim, time)
 	return colliders
 end
 
-function iani.set_events(eid, anim, events)
-	if type(events) == "table" then
-		do_set_event(eid, anim, events)
-	elseif type(events) == "string" then
-		local path = fs.path(events):localpath()
-		local f = assert(lfs.open(path))
-		local data = f:read "a"
-		f:close()
-		do_set_event(eid, anim, datalist.parse(data))
-	end
-end
-
 local function do_set_clips(eid, clips)
 	local e = world[eid]
+	if e.anim_clips then
+		for _, clip in ipairs(e.anim_clips) do 
+			if clip.key_event then
+				for _, ke in ipairs(clip.key_event) do
+					if ke.event_list then
+						for _, ev in ipairs(ke.event_list) do
+							if ev.event_type == "Effect" and ev.effect then
+								world:prefab_event(ev.effect, "remove", "*")
+								ev.effect = nil
+							end
+						end
+					end
+				end
+			end
+		end
+	end
 	e.anim_clips = clips
 end
 

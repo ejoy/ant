@@ -15,20 +15,21 @@ void effect_adapter::play()
 
 void effect_adapter::pause(bool p)
 {
-	if (handle_ != -1)
-	{
+	if (handle_ != -1) {
 		manager_->SetPaused(handle_, p);
 	}
 }
 
 void effect_adapter::play(int32_t startTime)
 {
-	if (!effect_.Get() || !manager_)
-	{
+	if (!effect_.Get() || !manager_) {
 		return;
 	}
 	Effekseer::Vector3D t;
 	tranform_.GetTranslation(t);
+	if (handle_ != -1) {
+		manager_->StopEffect(handle_);
+	}
 	handle_ = manager_->Play(effect_, t, startTime);
 	manager_->SetSpeed(handle_, speed_);
 }
@@ -86,15 +87,11 @@ void effect_adapter::set_tranform(const Effekseer::Matrix43& mat)
 
 void effect_adapter::update()
 {
-	if (!manager_->Exists(handle_))
-	{
-		if (loop_)
-		{
+	if (!manager_->Exists(handle_)) {
+		if (loop_) {
 			play();
 		}
-	}
-	else
-	{
+	} else {
 		manager_->SetMatrix(handle_, tranform_);
 	}
 }
