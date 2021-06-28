@@ -95,7 +95,7 @@ font_manager_init_unsafe(struct font_manager *F, struct truetype_font *ttf, void
 	}
 }
 
-static void
+void
 font_manager_init(struct font_manager *F, struct truetype_font *ttf, void *L) {
 	lock(F);
 	font_manager_init_unsafe(F, ttf, L);
