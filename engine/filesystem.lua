@@ -41,24 +41,6 @@ local function vfs_lines(filename, ...)
     error(errmsg(res, filename, real_filename))
 end
 
-local function vfs_loadfile(path, ...)
-    local f, err = vfs_open(path, 'r')
-    if not f then
-        return nil, err
-    end
-    local str = f:read 'a'
-    f:close()
-    return load(str, '@' .. path, ...)
-end
-
-local function vfs_dofile(path)
-    local f, err = vfs_loadfile(path)
-    if not f then
-        error(err)
-    end
-    return f()
-end
-
 local path_mt = {}
 path_mt.__name = 'vfs-filesystem'
 path_mt.__index = path_mt
@@ -318,20 +300,12 @@ function fs.lines(filepath, ...)
     return vfs_lines(filepath:string(), ...)
 end
 
-if __ANT_RUNTIME__ then
-    function fs.loadfile(filepath, ...)
-        return vfs_loadfile(filepath:string(), ...)
-    end
-    function fs.dofile(filepath)
-        return vfs_dofile(filepath:string())
-    end
-else
-    function fs.loadfile(filepath, ...)
-        return loadfile(filepath:localpath():string(), ...)
-    end
-    function fs.dofile(filepath)
-        return dofile(filepath:localpath():string())
-    end
+function fs.loadfile(filepath, ...)
+    return loadfile(filepath:string(), ...)
+end
+
+function fs.dofile(filepath)
+    return dofile(filepath:string())
 end
 
 return fs

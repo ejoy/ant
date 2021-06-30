@@ -19,8 +19,7 @@ local ServiceWindow = ltask.queryservice "window"
 ltask.send(ServiceWindow, "subscribe", "init", "exit")
 
 local function initargs(package)
-    local fs = require "filesystem"
-    local info = fs.dofile(fs.path("/pkg/"..package.."/package.lua"))
+    local info = dofile("/pkg/"..package.."/package.lua")
     return {
         ecs = info.ecs,
     }

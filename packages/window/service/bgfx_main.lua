@@ -1,4 +1,3 @@
-
 dofile "engine/common/init_bgfx.lua"
 local ltask = require "ltask"
 local exclusive = require "ltask.exclusive"
