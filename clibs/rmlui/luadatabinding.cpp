@@ -237,15 +237,15 @@ BindVariable(struct LuaDataModel* D, lua_State* L) {
 	const char* key = lua_tostring(L, -1);
 	if (lua_type(dataL, D->top) == LUA_TFUNCTION) {
 		D->constructor.BindEventCallback(key, [=](Rml::DataModelHandle, Rml::Event& event, const Rml::VariantList& list) {
-			lua_pushvalue(dataL, id);
-			lua_xmove(dataL, L, 1);
-			luabind::invoke(L, [&](){
+			luabind::invoke([&](lua_State* L){
+				lua_pushvalue(dataL, id);
+				lua_xmove(dataL, L, 1);
 				lua_pushevent(L, event);
 				for (auto const& e : list) {
 					lua_pushvariant(L, e);
 				}
 				lua_call(L, (int)list.size() + 1, 0);
-			}, luabind::errfunc, 1);
+			});
 		});
 	}
 	else {

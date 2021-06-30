@@ -9,5 +9,6 @@ lm:source_set "source_vfs" {
     }
 }
 
-lm:phony "vfs" {
+lm:lua_dll "vfs" {
+    deps = "source_vfs"
 }

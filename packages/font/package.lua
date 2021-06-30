@@ -1,4 +1,4 @@
 return {
     name = "ant.font",
-    entry = "entry"
+    entry = "main"
 }

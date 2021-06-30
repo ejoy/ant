@@ -20,8 +20,6 @@ enum class LuaEvent : int {
 	OnEvent,
 	OnEventAttach,
 	OnEventDetach,
-	OnUpdate,
-	OnShutdown,
 	OnOpenFile,
 };
 
@@ -38,19 +36,17 @@ public:
 	void OnElementCreate(Rml::Element* element) override;
 	void OnElementDestroy(Rml::Element* element) override;
 
-	bool initialize(const std::string& bootstrap, std::string& errmsg);
+	void register_event(lua_State* L);
 	int  ref(lua_State* L);
 	void unref(int ref);
-	void callref(int ref, size_t argn = 0, size_t retn = 0);
-	void call(LuaEvent eid, size_t argn = 0, size_t retn = 0);
+	void callref(lua_State* L, int ref, size_t argn = 0, size_t retn = 0);
+	void call(lua_State* L, LuaEvent eid, size_t argn = 0, size_t retn = 0);
 
-	lua_State* L = nullptr;
 	std::unique_ptr<luabind::reference> reference;
 	lua_event_listener_instancer* event_listener_instancer = nullptr;
 };
 
 lua_plugin* get_lua_plugin();
-int lua_plugin_apis(lua_State *L);
 void lua_pushvariant(lua_State *L, const Rml::Variant &v);
 void lua_getvariant(lua_State *L, int index, Rml::Variant* variant);
 void lua_pushevent(lua_State* L, const Rml::Event& event);

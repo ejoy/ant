@@ -63,9 +63,7 @@ end
 local arg
 local repopath
 local function luaexe()
-    local i = -1
-    while arg[i] ~= nil do i = i - 1 end
-    return arg[i + 1]
+    return "./bin/msvc/debug/lua.exe"
 end
 
 local function spawnFileServer()

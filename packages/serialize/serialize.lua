@@ -2,6 +2,10 @@ local thread = require "thread"
 local math3d = require "math3d"
 local fs = require "filesystem"
 local lfs = require "filesystem.local"
+
+local pack = thread.pack
+local unpack = thread.unpack
+
 local function write_file(filename, data)
     local f = lfs.open(fs.path(filename):localpath(), "wb")
     f:write(data)
@@ -18,7 +22,7 @@ local function save_meshbin(world, eid, filename)
             {t[4],t[5],t[6]},
         }
     end
-    write_file(filename, thread.pack(e.mesh))
+    write_file(filename, pack(e.mesh))
     e.mesh = world.component "mesh" (filename)
 end
 
@@ -31,4 +35,7 @@ return {
     save_prefab = save_prefab,
     stringify = require "stringify",
     patch = require "patch",
+
+    pack = pack,
+    unpack = unpack,
 }

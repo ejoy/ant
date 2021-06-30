@@ -1,9 +1,6 @@
 local ltask = require "ltask"
-local manager = require "ltask.manager"
 local fs = require "filesystem.cpp"
 local REPO = {}
-
-manager.register "log.manager"
 
 local _origin = os.time() - os.clock()
 local function os_date(fmt)

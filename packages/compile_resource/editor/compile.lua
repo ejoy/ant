@@ -34,7 +34,7 @@ local ResourceCompiler = {
 
 for ext, compiler in pairs(ResourceCompiler) do
     local cfg = config.get(ext)
-    cfg.binpath = fs.path "":localpath() / ".build" / ext
+    cfg.binpath = lfs.path ".build" / ext
     cfg.compiler = compiler
 end
 

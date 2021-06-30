@@ -1,13 +1,10 @@
 local ltask = require "ltask"
-local manager = require "ltask.manager"
 local socket = require "socket"
 local protocol = require "protocol"
 local LISTEN
 local FD
 
-manager.register "editor"
-
-ltask.timeout(0, function ()
+ltask.fork(function ()
     LISTEN = socket.bind("tcp", "127.0.0.1", 2019)
     while true do
         local newfd = socket.listen(LISTEN)

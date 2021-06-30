@@ -1,6 +1,6 @@
 local event = require "core.event"
-local thread = require "thread"
-local channel = thread.channel_produce "rmlui_res"
+local task = require "core.task"
+local ltask = require "ltask"
 
 local names = {}
 
@@ -19,7 +19,10 @@ end
 return function (document)
     local m = {}
     function m.postMessage(data)
-        channel("message", names[document], data)
+        local name = names[document]
+        task.new(function ()
+            ltask.send(ServiceWorld, "message", "rmlui", name, data)
+        end)
     end
     return m
 end

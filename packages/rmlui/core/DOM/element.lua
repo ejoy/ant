@@ -1,3 +1,4 @@
+local rmlui = require "rmlui"
 local event = require "core.event"
 
 local constructor

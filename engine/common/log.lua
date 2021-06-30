@@ -1,15 +1,23 @@
+local ltask = require "ltask"
+local LOG
+if not debug.getregistry().LTASK_ID then
+    --TODO
+    function LOG(...)
+        io.write(...)
+        io.write "\n"
+    end
+else
+    function LOG(...)
+        ltask.pushlog(ltask.pack(...))
+    end
+end
+
 local modes = {
     'info',
     'warn',
     'error'
 }
 local levels = {}
-
-local origin = os.time() - os.clock()
-local function os_date(fmt)
-    local ti, tf = math.modf(origin + os.clock())
-    return os.date(fmt, ti):gsub('{ms}', ('%03d'):format(math.floor(tf*1000)))
-end
 
 local function round(x, increment)
     increment = increment or 1
@@ -29,29 +37,22 @@ local function packstring(...)
     return table.concat(t, '\t')
 end
 
-
-
-local function fork()
-    local m = {}
-    m.level = 'info'
-    m.skip = nil
-    for i, name in ipairs(modes) do
-        levels[name] = i
-        m[name] = function(...)
-            if i < levels[m.level] then
-                return
-            end
-            local info = debug.getinfo(m.skip or 2, 'Sl')
-            m.skip = nil
-            local data = ('[%s][%-5s](%s:%3d) %s'):format(os_date('%Y-%m-%d %H:%M:%S:{ms}'), name:upper(), info.short_src, info.currentline, packstring(...))
-            m.raw(data)
+local m = {}
+m.level = 'info'
+m.skip = nil
+for i, name in ipairs(modes) do
+    levels[name] = i
+    m[name] = function(...)
+        if i < levels[m.level] then
+            return
         end
+        local info = debug.getinfo(m.skip or 2, 'Sl')
+        m.skip = nil
+        LOG(('[%-5s](%s:%3d) %s'):format(name:upper(), info.short_src, info.currentline, packstring(...)))
     end
-    return m
 end
 
-local m = fork()
-
-m.fork = fork
+log = m
+print = log.info
 
 return m

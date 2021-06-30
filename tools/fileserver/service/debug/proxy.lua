@@ -1,11 +1,10 @@
 require "init_package"
 local ltask = require "ltask"
-local manager = require "ltask.manager"
 local socket = require "socket"
 local protocol = require "protocol"
 local convert = require "converdbgpath"
-local ServiceDebugListen = manager.query "debug.listen"
-local ServiceVfs = manager.query "vfs"
+local ServiceDebugListen = ltask.uniqueservice "debug.listen"
+local ServiceVfs = ltask.uniqueservice "vfs"
 local RuntimeFD, VfsSessionId = ...
 local DebuggerFD = ltask.call(ServiceDebugListen, "LISTEN")
 
@@ -26,7 +25,7 @@ function S.MESSAGE(data)
     socket.send(DebuggerFD, convert.convertSend(pathToLocal, data))
 end
 
-ltask.timeout(0, function ()
+ltask.fork(function ()
     while true do
         local data = socket.recv(DebuggerFD)
         if data == nil then

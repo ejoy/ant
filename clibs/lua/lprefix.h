@@ -79,7 +79,7 @@
                 (unsigned)(__LINE__),        \
                 #e);                         \
             fflush(stderr);                  \
-            if (!lua_checkstack((l), 6)) {   \
+            if (!lua_checkstack((l), LUA_MINSTACK)) { \
                 abort();                     \
             }                                \
             luaL_traceback((l), (l), 0, 0);  \

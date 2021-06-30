@@ -1,4 +1,4 @@
-local thread = require "thread"
+local serialize = import_package "ant.serialize"
 local lfs = require "filesystem.local"
 local cr = import_package "ant.compile_resource"
 
@@ -13,7 +13,7 @@ end
 return {
     loader = function (filename)
         local c = read_file(cr.compile(filename))
-        local data = thread.unpack(c)
+        local data = serialize.unpack(c)
         local ibm = data.inverse_bind_matrices
         return {
             inverse_bind_pose 	= animodule.new_bind_pose(ibm.num, ibm.value),

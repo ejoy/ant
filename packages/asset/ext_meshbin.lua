@@ -1,5 +1,5 @@
 local cr = import_package "ant.compile_resource"
-local thread = require "thread"
+local serialize = import_package "ant.serialize"
 local math3d = require "math3d"
 local bgfx = require "bgfx"
 local declmgr = import_package "ant.render".declmgr
@@ -69,7 +69,7 @@ end
 
 local function loader(filename)
     local c = cr.read_file(filename)
-    local mesh = thread.unpack(c)
+    local mesh = serialize.unpack(c)
     create_bounding(mesh.bounding)
     return init(mesh)
 end

@@ -41,6 +41,7 @@ void rendererDrawData(ImGuiViewport* viewport) {
 	const ImVec2 clip_offset = drawData->DisplayPos;
 	const ImVec2& clip_scale = drawData->FramebufferScale;
 
+	bgfx_encoder_t* encoder = BGFX(encoder_begin)(false);
 	BGFX(set_view_name)(ud->viewid, "ImGui");
 	BGFX(set_view_mode)(ud->viewid, BGFX_VIEW_MODE_SEQUENTIAL);
 
@@ -92,8 +93,9 @@ void rendererDrawData(ImGuiViewport* viewport) {
 			const float y = (cmd.ClipRect.y - clip_offset.y) * clip_scale.y;
 			const float w = (cmd.ClipRect.z - cmd.ClipRect.x) * clip_scale.x;
 			const float h = (cmd.ClipRect.w - cmd.ClipRect.y) * clip_scale.y;
-			BGFX(set_scissor)(
-				uint16_t(std::min(std::max(x, 0.0f), 65535.0f))
+			
+			BGFX(encoder_set_scissor)(encoder
+				, uint16_t(std::min(std::max(x, 0.0f), 65535.0f))
 				, uint16_t(std::min(std::max(y, 0.0f), 65535.0f))
 				, uint16_t(std::min(std::max(w, 0.0f), 65535.0f))
 				, uint16_t(std::min(std::max(h, 0.0f), 65535.0f))
@@ -105,22 +107,23 @@ void rendererDrawData(ImGuiViewport* viewport) {
 				| BGFX_STATE_MSAA
 				| BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
 				;
-			BGFX(set_state)(state, 0);
+			BGFX(encoder_set_state)(encoder, state, 0);
 
-			BGFX(set_transient_vertex_buffer)(0, &tvb, 0, numVertices);
-			BGFX(set_transient_index_buffer)(&tib, offset, cmd.ElemCount);
+			BGFX(encoder_set_transient_vertex_buffer)(encoder, 0, &tvb, 0, numVertices);
+			BGFX(encoder_set_transient_index_buffer)(encoder, &tib, offset, cmd.ElemCount);
 			if (IMGUI_FLAGS_FONT == texture.s.flags) {
-				BGFX(set_texture)(0, g_fontTex, texture.s.handle, UINT32_MAX);
-				BGFX(submit)(ud->viewid, g_fontProgram, 0, BGFX_DISCARD_STATE);
+				BGFX(encoder_set_texture)(encoder, 0, g_fontTex, texture.s.handle, UINT32_MAX);
+				BGFX(encoder_submit)(encoder, ud->viewid, g_fontProgram, 0, BGFX_DISCARD_STATE);
 			}
 			else {
-				BGFX(set_texture)(0, g_imageTex, texture.s.handle, UINT32_MAX);
-				BGFX(submit)(ud->viewid, g_imageProgram, 0, BGFX_DISCARD_STATE);
+				BGFX(encoder_set_texture)(encoder, 0, g_imageTex, texture.s.handle, UINT32_MAX);
+				BGFX(encoder_submit)(encoder, ud->viewid, g_imageProgram, 0, BGFX_DISCARD_STATE);
 			}
 			offset += cmd.ElemCount;
 		}
 	}
-	BGFX(discard)(BGFX_DISCARD_ALL);
+	BGFX(encoder_discard)(encoder, BGFX_DISCARD_ALL);
+	BGFX(encoder_end)(encoder);
 }
 
 static int rendererGetViewId() {

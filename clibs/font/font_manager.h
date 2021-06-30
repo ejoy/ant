@@ -3,6 +3,7 @@
 
 #include <stb/stb_truetype.h>
 #include <stdint.h>
+#include "fontmutex.h"
 
 #define FONT_MANAGER_TEXSIZE 2048
 #define FONT_MANAGER_GLYPHSIZE 48
@@ -69,6 +70,7 @@ struct font_manager {
 	struct truetype_font* ttf;
 	void *L;
 	int dpi_perinch;
+	struct mutex_t* mutex;
 };
 
 struct font_glyph {
@@ -96,7 +98,8 @@ struct font_glyph {
 #	define FONT_API extern
 #endif //FONT_EXPORT
 
-void font_manager_init(struct font_manager *, struct truetype_font *ttf, void *L);
+void font_manager_init(struct font_manager *, void *L);
+FONT_API void font_manager_import(struct font_manager *F, const char* fontpath);
 FONT_API int font_manager_addfont_with_family(struct font_manager *F, const char* family);
 FONT_API void font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascent, int *descent, int *lineGap);
 FONT_API void font_manager_boundingbox(struct font_manager *F, int fontid, int size, int *x0, int *y0, int *x1, int *y1);

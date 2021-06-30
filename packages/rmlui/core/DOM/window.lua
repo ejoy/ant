@@ -1,3 +1,4 @@
+local rmlui = require "rmlui"
 local event = require "core.event"
 local timer = require "core.timer"
 local task = require "core.task"
@@ -87,7 +88,7 @@ end
 function event.OnDocumentCreate(document, globals)
     datamodels[document] = {}
     globals.window = createWindow(document)
-    globals.window.extern = createExternWindow(document)
+    rawset(globals.window, "extern", createExternWindow(document))
 end
 
 function event.OnDocumentDestroy(document)

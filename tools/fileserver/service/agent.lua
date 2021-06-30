@@ -1,9 +1,8 @@
 local ltask = require "ltask"
-local manager = require "ltask.manager"
 local socket = require "socket"
 local protocol = require "protocol"
 
-local arg = ltask.call(manager.query "arguments", "QUERY")
+local arg = ltask.call(ltask.queryservice "arguments", "QUERY")
 local FD = ...
 local REPOPATH = arg[1]
 
@@ -11,12 +10,12 @@ local message = {}
 local ServiceCompile
 local ServiceLogRuntime
 local ServiceDebugProxy
-local ServiceVfs = manager.query "vfs"
+local ServiceVfs = ltask.uniqueservice "vfs"
 local VfsSessionId
 
 local function compile_resource(path)
 	if not ServiceCompile then
-		ServiceCompile = manager.spawn("compile", REPOPATH)
+		ServiceCompile = ltask.spawn("compile", REPOPATH)
 	end
 	return pcall(ltask.call, ServiceCompile, "COMPILE", path)
 end
@@ -28,7 +27,7 @@ end
 function message.ROOT(path)
 	REPOPATH = assert(REPOPATH or path, "Need repo name")
 	print("ROOT", REPOPATH)
-	ServiceLogRuntime = manager.spawn("log.runtime", REPOPATH)
+	ServiceLogRuntime = ltask.spawn("log.runtime", REPOPATH)
 	local sid, roothash = ltask.call(ServiceVfs, "ROOT", REPOPATH)
 	VfsSessionId = sid
 	response("ROOT", roothash)
@@ -80,7 +79,7 @@ end
 
 function message.DBG(data)
 	--if not ServiceDebugProxy then
-	--	ServiceDebugProxy = manager.spawn("debug.proxy", FD, VfsSessionId)
+	--	ServiceDebugProxy = ltask.spawn("debug.proxy", FD, VfsSessionId)
 	--end
 	--ltask.send(ServiceDebugProxy, "MESSAGE", data)
 end

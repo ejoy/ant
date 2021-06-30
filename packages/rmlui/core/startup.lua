@@ -1,114 +1,114 @@
-local console = require "core.console"
-local sandbox = require "core.sandbox"
-local fileManager = require "core.fileManager"
+local rmlui = require "rmlui"
+
+local timer = require "core.timer"
+local task = require "core.task"
 local event = require "core.event"
-local createElement = require "core.DOM.element"
-local createEvent = require "core.DOM.event"
-local environment = require "core.environment"
-local contextManager = require "core.contextManager"
-require "core.DOM.document"
-require "core.DOM.window"
+local fileManager = require "core.fileManager"
+local windowManager = require "core.windowManager"
+local initRender = require "core.initRender"
+local ltask = require "ltask"
 
-local m = {}
+local quit
+local context
+local debuggerInitialized = false
 
-local events = {}
+local ServiceWindow = ltask.queryservice "window"
+ltask.send(ServiceWindow, "subscribe", "mouse")
 
-local function invoke(f, ...)
-	local ok, err = xpcall(f, function(msg)
-		return debug.traceback(msg)
-	end, ...)
-	if not ok then
-		console.warn(err)
-	end
-	return ok, err
-end
-function m.OnDocumentCreate(document)
-	local globals = sandbox()
-	event("OnDocumentCreate", document, globals)
-	globals.window.document = globals.document
-	environment[document] = globals
-end
-function m.OnDocumentDestroy(document)
-	event("OnDocumentDestroy", document)
-	environment[document] = nil
-end
-function m.OnLoadInlineScript(document, content, source_path, source_line)
-	local path = fileManager.realpath(source_path)
-	if not path then
-		console.warn(("file '%s' does not exist."):format(source_path))
-		return
-	end
-	local source = "--@"..path..":"..source_line.."\n "..content
-	local f, err = load(source, source, "t", environment[document])
-	if not f then
-		console.warn(err)
-		return
-	end
-	invoke(f)
-end
-function m.OnLoadExternalScript(document, source_path)
-	local path = fileManager.realpath(source_path)
-	if not path then
-		console.warn(("file '%s' does not exist."):format(source_path))
-		return
-	end
-	local f, err = loadfile(path, "bt", environment[document])
-	if not f then
-		console.warn(err)
-		return
-	end
-	invoke(f)
-end
-function m.OnEvent(ev, e)
-	local delegate = events[ev]
-	if not delegate then
-		return
-	end
-	local f = delegate[1]
-	if delegate[2] then
-		debug.setupvalue(f, delegate[2], createEvent(e))
-	end
-	invoke(f)
-end
-function m.OnEventAttach(ev, document, element, source)
-	if source == "" then
-		return
-	end
-	local globals = environment[document]
-	local code = ("local event;local this=...;return function()%s;end"):format(source)
-	local payload, err = load(code, source, "t", globals)
-	if not payload then
-		console.warn(err)
-		return
-	end
-	local ok, f = invoke(payload, createElement(element, document))
-	if not ok then
-		return
-	end
-	local upvalue = {}
-	local i = 1
-	while true do
-		local name = debug.getupvalue(f, i)
-		if not name then
-			break
-		end
-		upvalue[name] = i
-		i = i + 1
-	end
-	events[ev] = {f, upvalue.event}
-end
-function m.OnEventDetach(ev)
-	events[ev] = nil
+rmlui.RmlRegisterEevent(require "core.callback")
+
+local _, last = ltask.now()
+local function getDelta()
+    local _, now = ltask.now()
+    local delta = now - last
+    last = now
+    return delta * 10
 end
 
-function m.OnOpenFile(path)
-	return fileManager.realpath(path)
+local function Render()
+    local ServiceBgfxMain = ltask.queryservice "bgfx_main"
+    ltask.call(ServiceBgfxMain, "encoder_init")
+    while not quit do
+        local delta = getDelta()
+        if delta > 0 then
+            rmlui.SystemUpdate(delta)
+            timer.update(delta)
+        end
+        rmlui.RenderBegin()
+        rmlui.ContextUpdate(context)
+        rmlui.RenderFrame()
+        task.update()
+        ltask.call(ServiceBgfxMain, "encoder_frame")
+    end
+	ltask.call(ServiceBgfxMain, "encoder_release")
+    ltask.wakeup(quit)
 end
 
-function m.OnShutdown()
-	contextManager.destroy()
+local function updateContext(c)
+    context = c
+    event("OnContextChange", context)
 end
 
-m.OnUpdate = require "core.update"
+local S = {}
 
-return m
+function S.initialize(t)
+    ServiceWorld = t.service_world
+    require "font" (t.font_mgr)
+    initRender(t)
+    local c = rmlui.RmlCreateContext(t.viewrect.w, t.viewrect.h)
+    updateContext(c)
+    ltask.fork(Render)
+end
+
+function S.shutdown()
+    quit = {}
+    ltask.wait(quit)
+	ltask.send(ServiceWindow, "unsubscribe_all")
+    rmlui.RmlRemoveContext(context)
+    updateContext(nil)
+    rmlui.RmlShutdown()
+    ltask.quit()
+end
+
+function S.mouse(x, y, type, state)
+    local MOUSE_TYPE_NONE <const> = 0
+    local MOUSE_TYPE_LEFT <const> = 1
+    local MOUSE_TYPE_RIGHT <const> = 2
+    local MOUSE_TYPE_MIDDLE <const> = 3
+    local MOUSE_STATE_DOWN <const> = 1
+    local MOUSE_STATE_MOVE <const> = 2
+    local MOUSE_STATE_UP <const> = 3
+    if state == MOUSE_STATE_MOVE then
+        if type == MOUSE_TYPE_NONE then
+            rmlui.ContextProcessMouseMove(context, x, y)
+        end
+    elseif state == MOUSE_STATE_DOWN then
+        rmlui.ContextProcessMouseButtonDown(context, type-1)
+    elseif state == MOUSE_STATE_UP then
+        rmlui.ContextProcessMouseButtonUp(context, type-1)
+    end
+end
+
+function S.debugger(open)
+    if context then
+        if not debuggerInitialized then
+            rmlui.DebuggerInitialise(context)
+            debuggerInitialized = true
+        else
+            rmlui.DebuggerSetContext(context)
+        end
+        rmlui.DebuggerSetVisible(open)
+    end
+end
+
+function S.update_viewrect(x, y, w, h)
+    rmlui.UpdateViewrect(x, y, w, h)
+    rmlui.ContextUpdateSize(context, w, h)
+end
+
+S.open = windowManager.open
+S.close = windowManager.close
+S.postMessage = windowManager.postMessage
+S.add_resource_dir = fileManager.add
+
+return S

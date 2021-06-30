@@ -1,4 +1,3 @@
-local editor        = import_package "ant.imgui"
 local imgui         = require "imgui"
 local task          = require "task"
 local event         = require "event"
@@ -53,4 +52,4 @@ function cb.dropfiles(filelst)
     event("dropfiles", filelst)
 end
 
-editor.start(1440, 900, cb)
+return cb

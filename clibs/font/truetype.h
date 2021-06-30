@@ -10,6 +10,7 @@
 #define TRUETYPE_ID "TRUETYPE_ID"
 #define TRUETYPE_NAME "TRUETYPE_NAME"
 #define TRUETYPE_CSTRUCT "TRUETYPE_CSTRUCT"
+#define TRUETYPE_IMPORT "TRUETYPE_IMPORT"
 #define TRUETYPE_CAP 64
 
 struct truetype_font {
@@ -92,13 +93,33 @@ static inline int
 truetype_name(lua_State *L, const char *name) {
 	lua_pushcfunction(L, lget_fontid);
 	lua_pushlightuserdata(L, (void *)name);
-	if (lua_pcall(L, 1, 1, 0) != LUA_OK ) {
+	if (lua_pcall(L, 1, 1, 0) != LUA_OK) {
 		lua_pop(L, 1);
 		return -1;
 	}
 	int fontid = (int)lua_tointeger(L, -1);
 	lua_pop(L, 1);
 	return fontid;
+}
+
+static inline int
+import_font(lua_State *L) {
+	const char *fontpath = (const char *)lua_touserdata(L, 1);
+	if (lua_getfield(L, LUA_REGISTRYINDEX, TRUETYPE_IMPORT) != LUA_TFUNCTION) {
+		return 0;
+	}
+	lua_pushstring(L, fontpath);
+	lua_call(L, 1, 0);
+	return 0;
+}
+
+static inline void
+truetype_import(lua_State *L, const char *fontpath) {
+	lua_pushcfunction(L, import_font);
+	lua_pushlightuserdata(L, (void *)fontpath);
+	if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
+		lua_pop(L, 1);
+	}
 }
 
 #endif

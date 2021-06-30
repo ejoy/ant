@@ -1,5 +1,4 @@
 local ltask = require "ltask"
-local manager = require "ltask.manager"
 local socket = require "socket"
 local usbmuxd = require "usbmuxd"
 
@@ -28,7 +27,7 @@ while true do
         local info = devices[event.DeviceID]
         if not info then
             info = {}
-            info.sid = manager.spawn("ios.proxy", event.DeviceID)
+            info.sid = ltask.spawn("ios.proxy", event.DeviceID)
             devices[event.DeviceID] = info
         end
         info.sn = event.Properties.SerialNumber

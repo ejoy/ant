@@ -2,37 +2,18 @@ local ecs = ...
 local world = ecs.world
 
 local bgfx      = require "bgfx"
-local  lfont    = require "font"
 local math3d    = require "math3d"
-
 local declmgr   = require "vertexdecl_mgr"
+local font      = import_package "ant.font"
+local lfont     = require "font"
 
-local fontmgr   = import_package "ant.font".mgr
+font.init()
 
-local function create_font_texture2d()
-    local s = lfont.fonttexture_size
-    return bgfx.create_texture2d(s, s, false, 1, "A8")
-end
-
-local fonttex_handle    = create_font_texture2d()
+local fonttex_handle    = font.texture()
 local fonttex           = {stage=0, texture={handle=fonttex_handle}}
-local  layout_desc      = declmgr.correct_layout "p20nii|t20nii|c40niu"
+local layout_desc       = declmgr.correct_layout "p20nii|t20nii|c40niu"
 local fontquad_layout   = declmgr.get(layout_desc)
 local declformat        = declmgr.vertex_desc_str(layout_desc)
-
-local ifont             = ecs.interface "ifont"
-function ifont.font_tex_handle()
-    return fonttex_handle
-end
-
-function ifont.font_tex_dim()
-    local s = lfont.fonttexture_size
-    return s, s
-end
-
-function ifont.handle()
-    return lfont.font_manager
-end
 
 local imaterial = world:interface "ant.asset|imaterial"
 local irender = world:interface "ant.render|irender"
@@ -64,8 +45,8 @@ end
 
 local fontcomp = ecs.component "font"
 function fontcomp:init()
-    fontmgr.import(self.file)
-    self.id = fontmgr.name(self.family)
+    lfont.import(self.file:string())
+    self.id = lfont.name(self.family)
     return self
 end
 

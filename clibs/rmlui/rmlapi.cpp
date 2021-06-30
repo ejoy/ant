@@ -12,6 +12,49 @@
 #include "luaplugin.h"
 #include "luabind.h"
 
+#include "render.h"
+#include "file.h"
+#include "font.h"
+#include "system.h"
+#include "context.h"
+
+#define EXPORT_BGFX_INTERFACE
+#include "../bgfx/bgfx_interface.h"
+#include "../bgfx/luabgfx.h"
+#include <bgfx/c99/bgfx.h>
+#include <assert.h>
+#include <string.h>
+
+struct RmlInterface {
+    SystemInterface m_system;
+    FontEngine      m_font;
+    File            m_file;
+    Renderer        m_renderer;
+    RmlInterface(RmlContext* context)
+        : m_system()
+        , m_font(context)
+        , m_file(context)
+        , m_renderer(context)
+    {
+        Rml::SetSystemInterface(&m_system);
+        Rml::SetFontEngineInterface(&m_font);
+        Rml::SetFileInterface(&m_file);
+        Rml::SetRenderInterface(&m_renderer);
+    }
+};
+
+struct RmlWrapper {
+    RmlContext   context;
+    RmlInterface interface;
+    RmlWrapper(lua_State* L, int idx)
+        : context(L, idx)
+        , interface(&context)
+	{}
+};
+
+static RmlWrapper* g_wrapper = nullptr;
+static lua_plugin* g_plugin = nullptr;
+
 static void
 lua_pushobject(lua_State* L, void* handle) {
 	if (handle) {
@@ -41,7 +84,7 @@ lua_pushstdstring(lua_State* L, const std::string& str) {
 }
 
 namespace {
-	
+
 struct EventListener final : public Rml::EventListener {
 	EventListener(lua_State* L_, int idx)
 		: L(L_)
@@ -56,9 +99,9 @@ struct EventListener final : public Rml::EventListener {
 	}
 	void OnDetach(Rml::Element* element) override { delete this; }
 	void ProcessEvent(Rml::Event& event) override {
-		luabind::invoke(L, [&]() {
+		luabind::invoke([&](lua_State* L) {
 			lua_pushevent(L, event);
-			get_lua_plugin()->callref(ref, 1, 0);
+			get_lua_plugin()->callref(L, ref, 1, 0);
 		});
 	}
 	lua_State* L;
@@ -311,6 +354,29 @@ lElementSetProperty(lua_State* L) {
 }
 
 static int
+lRmlInitialise(lua_State* L) {
+    if (g_wrapper) {
+        return luaL_error(L, "RmlUi has been initialized.");
+    }
+    g_wrapper = new RmlWrapper(L, 1);
+    if (!Rml::Initialise()){
+        return luaL_error(L, "Failed to Initialise RmlUi.");
+    }
+	Rml::RegisterPlugin(g_plugin);
+    return 0;
+}
+
+static int
+lRmlShutdown(lua_State* L) {
+    Rml::Shutdown();
+    if (g_wrapper) {
+        delete g_wrapper;
+        g_wrapper = nullptr;
+    }
+    return 0;
+}
+
+static int
 lRmlCreateContext(lua_State* L) {
 	int w = luaL_checkinteger(L, 1);
 	int h = luaL_checkinteger(L, 2);
@@ -330,12 +396,58 @@ lRmlRemoveContext(lua_State* L) {
 }
 
 static int
+lRmlRegisterEevent(lua_State* L) {
+	lua_plugin* plugin = get_lua_plugin();
+	plugin->register_event(L);
+	return 0;
+}
+
+static int
 lLog(lua_State* L) {
 	Rml::Log::Type type = (Rml::Log::Type)luaL_checkinteger(L, 1);
 	size_t sz = 0;
 	const char* msg = luaL_checklstring(L, 2, &sz);
 	Rml::GetSystemInterface()->LogMessage(type, Rml::String(msg, sz));
 	return 0;
+}
+
+static int
+lRenderBegin(lua_State* L) {
+    if (g_wrapper) {
+        g_wrapper->interface.m_renderer.Begin();
+    }
+    return 0;
+}
+
+static int
+lRenderFrame(lua_State* L){
+    if (g_wrapper){
+        g_wrapper->interface.m_renderer.Frame();
+    }
+    return 0;
+}
+
+static int
+lSystemUpdate(lua_State* L) {
+	lua_plugin* plugin = get_lua_plugin();
+	double delta = luaL_checknumber(L, 1);
+	if (g_wrapper) {
+		g_wrapper->interface.m_system.update(delta);
+	}
+	return 0;
+}
+
+static int
+lUpdateViewrect(lua_State *L){
+    if (g_wrapper){
+        Rect &r = g_wrapper->context.viewrect;
+        r.x = (int)luaL_checknumber(L, 1);
+        r.y = (int)luaL_checknumber(L, 2);
+        r.w = (int)luaL_checknumber(L, 3);
+        r.h = (int)luaL_checknumber(L, 4);
+        g_wrapper->interface.m_renderer.UpdateViewRect();
+    }
+    return 0;
 }
 
 }
@@ -346,13 +458,21 @@ int lDataModelDelete(lua_State* L);
 int lDataModelGet(lua_State* L);
 int lDataModelSet(lua_State* L);
 int lDataModelDirty(lua_State* L);
-int lRenderBegin(lua_State* L);
-int lRenderFrame(lua_State* L);
-int lUpdateViewrect(lua_State *L);
 
+lua_plugin* get_lua_plugin() {
+    return g_plugin;
+}
+
+extern "C"
+#if defined(_WIN32)
+__declspec(dllexport)
+#endif
 int
-lua_plugin_apis(lua_State *L) {
+luaopen_rmlui(lua_State* L) {
 	luaL_checkversion(L);
+    init_interface(L);
+	luabind::getthread(L);
+	g_plugin = new lua_plugin;
 	luaL_Reg l[] = {
 		{ "ContextLoadDocument", lContextLoadDocument },
 		{ "ContextUnloadDocument", lContextUnloadDocument },
@@ -390,11 +510,14 @@ lua_plugin_apis(lua_State *L) {
 		{ "RenderBegin", lRenderBegin },
 		{ "RenderFrame", lRenderFrame },
 		{ "UpdateViewrect", lUpdateViewrect},
+		{ "RmlInitialise", lRmlInitialise },
+		{ "RmlShutdown", lRmlShutdown },
 		{ "RmlCreateContext", lRmlCreateContext },
 		{ "RmlRemoveContext", lRmlRemoveContext },
+		{ "RmlRegisterEevent", lRmlRegisterEevent },
+		{ "SystemUpdate", lSystemUpdate },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
-
 	return 1;
 }

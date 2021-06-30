@@ -70,7 +70,6 @@ if lm.os == "windows" then
         sources = {
             "utf8_lua.c",
             "utf8_crt.c",
-            "utf8_unicode.c",
         }
     }
 else

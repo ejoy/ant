@@ -1,3 +1,0 @@
-return {
-    mgr = require "manager"
-}

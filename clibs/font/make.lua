@@ -40,6 +40,7 @@ lm:lua_dll "font" {
             "-wd4244",
         },
         ldflags = {
+            "-export:luaopen_font_init",
             "-export:luaopen_font_truetype",
         }
     },

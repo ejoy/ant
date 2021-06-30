@@ -2,6 +2,8 @@
 
 #include <lua.h>
 #include <lauxlib.h>
+#include <lualib.h>
+#include "../bgfx/bgfx_interface.h"
 
 #include "font_manager.h"
 #include "truetype.h"
@@ -12,15 +14,6 @@
 #include <assert.h>
 #include <ctype.h>
 
-typedef void (*UPDATE_CHAR_FUNC)(uint16_t texid, 
-	uint16_t _layer, uint8_t _mip, 
-	uint16_t _x, uint16_t _y, uint16_t _width, uint16_t _height, uint16_t _pitch,
-	const uint8_t *mem, void (*release_fn)(void*, void*));
-struct font_context {
-    struct font_manager fm;
-	UPDATE_CHAR_FUNC update_char_func;
-};
-
 struct quad_text{
     int16_t p[2];
     int16_t u, v;
@@ -29,8 +22,7 @@ struct quad_text{
 
 static struct font_manager* 
 getF(lua_State *L){
-    struct font_context * t = (struct font_context*)lua_touserdata(L, lua_upvalueindex(1));
-	return &t->fm;
+    return (struct font_manager*)lua_touserdata(L, lua_upvalueindex(1));
 }
 
 /*
@@ -80,8 +72,7 @@ release_char_memory(void *d, void *u){
 }
 
 static void
-prepare_char(struct font_context *fc, uint16_t texid, int fontid, int codepoint, int *advance_x, int *advance_y) {
-	struct font_manager *F = &fc->fm;
+prepare_char(struct font_manager* F, uint16_t texid, int fontid, int codepoint, int *advance_x, int *advance_y) {
 	struct font_glyph g;
 	int ret = font_manager_touch(F, fontid, codepoint, &g);
 	*advance_x = g.advance_x;
@@ -93,19 +84,20 @@ prepare_char(struct font_context *fc, uint16_t texid, int fontid, int codepoint,
 	}
 
 	if (ret == 0) {
-		uint8_t *d = malloc(g.w * g.h);
-		const char * err = font_manager_update(F, fontid, codepoint, &g, d);
+		uint8_t *mem = malloc(g.w * g.h);
+		const char * err = font_manager_update(F, fontid, codepoint, &g, mem);
 		if (err){
 			return ;
 		}
-		fc->update_char_func(texid, 0, 0, g.u, g.v, g.w, g.h, g.w, d, release_char_memory);
+		bgfx_texture_handle_t th = { texid };
+		const bgfx_memory_t* m = BGFX(make_ref_release)(mem, g.w * g.h, release_char_memory, NULL);
+		BGFX(update_texture_2d)(th, 0, 0, g.u, g.v, g.w, g.h, m, g.w);
 	}
 }
 
 static int
 lprepare_text(lua_State *L) {
-    struct font_context *fc = (struct font_context *)lua_touserdata(L, lua_upvalueindex(1));
-	struct font_manager *F = &fc->fm;
+    struct font_manager *F = (struct font_manager *)lua_touserdata(L, lua_upvalueindex(1));
 	uint16_t texid = luaL_checkinteger(L, 1);
 	size_t sz;
 	const char * str = luaL_checklstring(L, 2, &sz);
@@ -121,7 +113,7 @@ lprepare_text(lua_State *L) {
 		str = utf8_decode(str, &codepoint, 1);
 		if (str) {
 			int x,y;
-			prepare_char(fc, texid, fontid, codepoint, &x, &y);
+			prepare_char(F, texid, fontid, codepoint, &x, &y);
 			advance_x += x;
 			if (y > advance_y) {
 				advance_y = y;
@@ -277,35 +269,96 @@ lsubmit(lua_State *L){
 }
 
 static int
-linit(lua_State *L){
-	struct font_context * t = (struct font_context*)lua_touserdata(L, lua_upvalueindex(1));
-	t->update_char_func	= (UPDATE_CHAR_FUNC)lua_touserdata(L, 1);
-	font_manager_init(&t->fm, truetype_cstruct(L), L);
+limport(lua_State *L) {
+	struct font_manager *F = getF(L);
+	const char* fontpath = luaL_checkstring(L, 1);
+	font_manager_import(F, fontpath);
 	return 0;
+}
+
+static int
+lname(lua_State *L) {
+	struct font_manager *F = getF(L);
+	const char* family = luaL_checkstring(L, 1);
+	font_manager_addfont_with_family(F, family);
+	return 0;
+}
+
+static int
+initfont(lua_State *L) {
+	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+	luaL_Reg l[] = {
+		{ "import",				limport },
+		{ "name",				lname },
+		{ "fontheight",			lfontheight },
+		{ "prepare_text",		lprepare_text },
+		{ "load_text_quad",		lload_text_quad },
+		{ "submit",				lsubmit },
+		{ NULL, 				NULL },
+	};
+	lua_settop(L, 2);
+	lua_pushinteger(L, FONT_MANAGER_TEXSIZE);
+	lua_setfield(L, 1, "fonttexture_size");
+	lua_pushvalue(L, 2);
+	lua_setfield(L, 1, "font_manager");
+	luaL_setfuncs(L, l, 1);
+	lua_settop(L, 1);
+	return 1;
 }
 
 LUAMOD_API int
 luaopen_font(lua_State *L) {
 	luaL_checkversion(L);
+	lua_newtable(L);
+	lua_newtable(L);
+	lua_pushcfunction(L, initfont);
+	lua_setfield(L, -2, "__call");
+	lua_setmetatable(L, -2);
+	return 1;
+}
 
-	luaL_Reg l[] = {
-		{ "fonttexture_size", NULL },
-		{ "font_manager",	NULL},
-		{ "init",			linit},
-		{ "fontheight", 	lfontheight },
-        { "prepare_text",   lprepare_text},
-        { "load_text_quad", lload_text_quad},
-		{ "submit",			lsubmit},
-		{ NULL, 			NULL },
-	};
-	luaL_newlibtable(L, l);
-	struct font_context * c = lua_newuserdatauv(L, sizeof(*c), 0);
-	luaL_setfuncs(L, l, 1);
-	lua_pushinteger(L, FONT_MANAGER_TEXSIZE);
-	lua_setfield(L, -2, "fonttexture_size");
+static int
+luavm_init(lua_State *L) {
+	luaL_openlibs(L);
+	const char* boot = (const char*)lua_touserdata(L, 1);
+	if (luaL_loadstring(L, boot) != LUA_OK) {
+		return lua_error(L);
+	}
+	lua_call(L, 0, 0);
+	return 0;
+}
 
-	lua_pushlightuserdata(L, &c->fm);
-	lua_setfield(L, -2, "font_manager");
+static lua_State*
+luavm_create(lua_State *L, const char* boot) {
+	lua_State* vL = luaL_newstate();
+	if (!vL) {
+		luaL_error(L, "not enough memory");
+		return NULL;
+	}
+	lua_pushcfunction(vL, luavm_init);
+	lua_pushlightuserdata(vL, (void*)boot);
+	if (lua_pcall(vL, 1, 0, 0) != LUA_OK) {
+		lua_pushstring(L, lua_tostring(vL, -1));
+		lua_close(vL);
+		lua_error(L);
+		return NULL;
+	}
+	return vL;
+}
 
+static int
+linit(lua_State *L){
+	struct font_manager *F = (struct font_manager*)lua_touserdata(L, lua_upvalueindex(1));
+	const char* boot = luaL_checkstring(L, 1);
+	font_manager_init(F, luavm_create(L, boot));
+	lua_pushlightuserdata(L, F);
+	return 1;
+}
+
+LUAMOD_API int
+luaopen_font_init(lua_State *L) {
+	luaL_checkversion(L);
+	struct font_manager * F = (struct font_manager *)lua_newuserdatauv(L, sizeof(*F), 0);
+	lua_pushcclosure(L, linit, 1);
 	return 1;
 }

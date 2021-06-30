@@ -2,7 +2,7 @@
 #include "lua.c"
 #undef main
 
-#include "utf8_unicode.h"
+#include "utf8_crt.h"
 
 void enable_vtmode_(HANDLE h) {
     if (h == INVALID_HANDLE_VALUE) {

@@ -2,7 +2,6 @@ local util = {}
 local subprocess = require "subprocess"
 local fs = require "filesystem.local"
 local platform = require "platform"
-local thread = require "thread"
 
 local function quote_arg(s)
     if type(s) ~= 'string' then

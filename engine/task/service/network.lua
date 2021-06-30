@@ -333,19 +333,22 @@ function S.close(h)
     end
 end
 
-exclusive.idle_func(function()
-    local rd, wr = socket.select(readfds, writefds, 0.001)
-    if rd then
-        for i = 1, #rd do
-            local fd = rd[i]
-            local s = status[fd]
-            s:on_read()
+ltask.fork(function()
+    while true do
+        local rd, wr = socket.select(readfds, writefds, 0.001)
+        if rd then
+            for i = 1, #rd do
+                local fd = rd[i]
+                local s = status[fd]
+                s:on_read()
+            end
+            for i = 1, #wr do
+                local fd = wr[i]
+                local s = status[fd]
+                s:on_write()
+            end
         end
-        for i = 1, #wr do
-            local fd = wr[i]
-            local s = status[fd]
-            s:on_write()
-        end
+        ltask.sleep(0)
     end
 end)
 

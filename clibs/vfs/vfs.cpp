@@ -4,15 +4,20 @@
 #include <mutex>
 
 std::string initfunc;
+std::string initargs;
 std::mutex mutex;
 
 static const std::string_view initscript = R"(
-local initfunc = ...
+local initfunc, initargs = ...
 local vfs = {}
 local io_open = io.open
+local runtime = package.preload.firmware ~= nil
 function vfs.realpath(path)
-    local repopath = "./"
+    if not runtime then
+        return path
+    end
     local fw = require "firmware"
+    local repopath = "./"
     local rawvfs = assert(fw.loadfile "vfs.lua")()
     local repo = rawvfs.new(repopath)
     local function realpath(path)
@@ -37,26 +42,23 @@ local function errmsg(err, filename, real_filename)
     end
     return err:sub(1, first-1) .. filename .. err:sub(last+1)
 end
-function vfs.openfile(filename)
-    local real_filename = vfs.realpath(filename)
-    if not real_filename then
-        return nil, ('%s:No such file or directory.'):format(filename)
+function vfs.loadfile(path, ...)
+    local realpath = vfs.realpath(path)
+    if not realpath then
+        return nil, ('%s:No such file or directory.'):format(path)
     end
-    local f, err, ec = io_open(real_filename, 'rb')
+    local f, err, ec = io_open(realpath, 'rb')
     if not f then
-        err = errmsg(err, filename, real_filename)
+        err = errmsg(err, path, realpath)
         return nil, err, ec
-    end
-    return f
-end
-function vfs.loadfile(path)
-    local f, err = vfs.openfile(path)
-    if not f then
-        return nil, err
     end
     local str = f:read 'a'
     f:close()
-    return load(str, '@/' .. path)
+    if runtime then
+        return load(str, '@' .. path, ...)
+    else
+        return load(str, '@' .. realpath, ...)
+    end
 end
 function vfs.dofile(path)
     local f, err = vfs.loadfile(path)
@@ -90,7 +92,7 @@ function vfs.searcher_Lua(name)
     return func, filename
 end
 if initfunc then
-    assert(vfs.loadfile(initfunc))(vfs)
+    assert(vfs.loadfile(initfunc))(vfs, initargs)
 end
 package.searchers[2] = vfs.searcher_Lua
 package.searchpath = vfs.searchpath
@@ -100,24 +102,28 @@ return vfs
 )";
 
 static const std::string_view updateinitfunc = R"(
-local vfs, initfunc = ...
+local vfs, initfunc, initargs = ...
 if initfunc then
-    assert(vfs.loadfile(initfunc))(vfs)
+    assert(vfs.loadfile(initfunc))(vfs, initargs)
 end
 )";
 
-#define LoadScript(L, script) if (luaL_loadbuffer(L, script.data(), script.size(), "=module 'vfs'") != LUA_OK) { return lua_error(L); }
+#define LoadScript(L, script) if (luaL_loadbuffer(L, script.data(), script.size(), script.data()) != LUA_OK) { return lua_error(L); }
 
-static int set_initfunc(lua_State* L) {
-    size_t sz = 0;
-    const char* str = luaL_checklstring(L, 1, &sz);
+static int setinitfunc(lua_State* L) {
+    size_t sz_initfunc = 0;
+    size_t sz_initargs = 0;
+    const char* s_initfunc = luaL_checklstring(L, 1, &sz_initfunc);
+    const char* s_initargs = luaL_optlstring(L, 2, "", &sz_initargs);
     std::lock_guard<std::mutex> lock(mutex);
-    initfunc.assign(str, sz);
-    if (!lua_toboolean(L, 2)) {
+    initfunc.assign(s_initfunc, sz_initfunc);
+    initargs.assign(s_initargs, sz_initargs);
+    if (!lua_toboolean(L, 3)) {
         LoadScript(L, updateinitfunc);
         lua_pushvalue(L, lua_upvalueindex(1));
         lua_pushvalue(L, 1);
-        lua_call(L, 2, 0);
+        lua_pushvalue(L, 2);
+        lua_call(L, 3, 0);
     }
     return 0;
 }
@@ -125,20 +131,19 @@ static int set_initfunc(lua_State* L) {
 static int push_initfunc(lua_State* L) {
     std::lock_guard<std::mutex> lock(mutex);
     if (initfunc.empty()) {
-        lua_pushnil(L);
-        return 1;
+        return 0;
     }
     lua_pushlstring(L, initfunc.data(), initfunc.size());
-    return 1;
+    lua_pushlstring(L, initargs.data(), initargs.size());
+    return 2;
 }
 
 extern "C"
 int luaopen_vfs(lua_State* L) {
     LoadScript(L, initscript);
-    push_initfunc(L);
-    lua_call(L, 1, 1);
+    lua_call(L, push_initfunc(L), 1);
     luaL_Reg l[] = {
-        {"initfunc", set_initfunc},
+        {"initfunc", setinitfunc},
         {NULL, NULL},
     };
     lua_pushvalue(L, -1);

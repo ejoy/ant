@@ -145,9 +145,9 @@ local function choose_project()
                     produce:push(arg, path)
                     local lthread = require "editor.thread"
                     fileserver_thread = lthread.create [[
-                        package.path = "engine/?.lua;tools/prefab_editor/?.lua"
+                        package.path = "engine/?.lua"
                         require "bootstrap"
-                        local fileserver = require "fileserver_adapter"()
+                        local fileserver = dofile "/pkg/tools.prefab_editor/fileserver_adapter.lua"()
                         fileserver.run()
                     ]]
                     log_widget.init_log_receiver()

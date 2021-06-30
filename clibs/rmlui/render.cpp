@@ -123,6 +123,7 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices, Rml::Inde
 
 void Renderer::Begin(){
     mEncoder = BGFX(encoder_begin)(false);
+    assert(mEncoder);
 }
 
 void Renderer::Frame(){

@@ -47,9 +47,6 @@ static int ref_function(luabind::reference& reference, lua_State* L, const char*
 
 lua_plugin::~lua_plugin() {
 	reference.reset();
-	if (L) {
-		lua_close(L);
-	}
 }
 
 int lua_plugin::GetEventClasses() {
@@ -66,34 +63,34 @@ void lua_plugin::OnShutdown() {
 }
 
 void lua_plugin::OnDocumentCreate(Rml::Document* document) {
-	luabind::invoke(L, [&]() {
+	luabind::invoke([&](lua_State* L) {
 		lua_pushlightuserdata(L, (void*)document);
-		call(LuaEvent::OnDocumentCreate, 1);
+		call(L, LuaEvent::OnDocumentCreate, 1);
 	});
 }
 
 void lua_plugin::OnDocumentDestroy(Rml::Document* document) {
-	luabind::invoke(L, [&]() {
+	luabind::invoke([&](lua_State* L) {
 		lua_pushlightuserdata(L, (void*)document);
-		call(LuaEvent::OnDocumentDestroy, 1);
+		call(L, LuaEvent::OnDocumentDestroy, 1);
 	});
 }
 
 void lua_plugin::OnLoadInlineScript(Rml::Document* document, const std::string& content, const std::string& source_path, int source_line) {
-	luabind::invoke(L, [&]() {
+	luabind::invoke([&](lua_State* L) {
 		lua_pushlightuserdata(L, (void*)document);
 		lua_pushlstring(L, content.data(), content.size());
 		lua_pushlstring(L, source_path.data(), source_path.size());
 		lua_pushinteger(L, source_line);
-		call(LuaEvent::OnLoadInlineScript, 4);
+		call(L, LuaEvent::OnLoadInlineScript, 4);
 	});
 }
 
 void lua_plugin::OnLoadExternalScript(Rml::Document* document, const std::string& source_path) {
-	luabind::invoke(L, [&]() {
+	luabind::invoke([&](lua_State* L) {
 		lua_pushlightuserdata(L, (void*)document);
 		lua_pushlstring(L, source_path.data(), source_path.size());
-		call(LuaEvent::OnLoadExternalScript, 2);
+		call(L, LuaEvent::OnLoadExternalScript, 2);
 	});
 }
 
@@ -103,46 +100,18 @@ void lua_plugin::OnElementCreate(Rml::Element* element) {
 void lua_plugin::OnElementDestroy(Rml::Element* element) {
 }
 
-bool lua_plugin::initialize(const std::string& bootstrap, std::string& errmsg) {
-	L = luaL_newstate();
-	if (L == NULL) {
-		errmsg = "Lua VM init failed";
-		return false;
-	}
-	auto initfunc = [&]() {	
-		luaL_openlibs(L);
-		luaL_requiref(L, "rmlui", lua_plugin_apis, 1);
-		reference.reset(new luabind::reference(L));
-		lua_pop(L, 1);
-		int err = luaL_loadbuffer(L, bootstrap.data(), bootstrap.size(), bootstrap.data());
-		if (err) {
-			lua_error(L);
-			return;
-		}
-		lua_call(L, 0, 1);
-		if (!lua_istable(L, -1)) {
-			luaL_error(L, "Init need a module table");
-		}
-		ref_function(*reference, L, "OnDocumentCreate");
-		ref_function(*reference, L, "OnDocumentDestroy");
-		ref_function(*reference, L, "OnLoadInlineScript");
-		ref_function(*reference, L, "OnLoadExternalScript");
-		ref_function(*reference, L, "OnEvent");
-		ref_function(*reference, L, "OnEventAttach");
-		ref_function(*reference, L, "OnEventDetach");
-		ref_function(*reference, L, "OnUpdate");
-		ref_function(*reference, L, "OnShutdown");
-		ref_function(*reference, L, "OnOpenFile");
-	};
-	auto errfunc = [&](const char* msg) {
-		errmsg = msg;
-	};
-	if (!luabind::invoke(L, initfunc, errfunc)) {
-		lua_close(L);
-		L = nullptr;
-		return false;
-	}
-	return true;
+void lua_plugin::register_event(lua_State* L) {
+	luaL_checktype(L, 1, LUA_TTABLE);
+	lua_settop(L, 1);
+	reference.reset(new luabind::reference(L));
+	ref_function(*reference, L, "OnDocumentCreate");
+	ref_function(*reference, L, "OnDocumentDestroy");
+	ref_function(*reference, L, "OnLoadInlineScript");
+	ref_function(*reference, L, "OnLoadExternalScript");
+	ref_function(*reference, L, "OnEvent");
+	ref_function(*reference, L, "OnEventAttach");
+	ref_function(*reference, L, "OnEventDetach");
+	ref_function(*reference, L, "OnOpenFile");
 }
 
 int  lua_plugin::ref(lua_State* L) {
@@ -153,44 +122,41 @@ void lua_plugin::unref(int ref) {
 	reference->unref(ref);
 }
 
-void lua_plugin::callref(int ref, size_t argn, size_t retn) {
+void lua_plugin::callref(lua_State* L, int ref, size_t argn, size_t retn) {
 	reference->get(L, ref);
 	lua_insert(L, -1 - (int)argn);
 	lua_call(L, (int)argn, (int)retn);
 }
 
-void lua_plugin::call(LuaEvent eid, size_t argn, size_t retn) {
-	callref((int)eid, argn, retn);
+void lua_plugin::call(lua_State* L, LuaEvent eid, size_t argn, size_t retn) {
+	callref(L, (int)eid, argn, retn);
 }
 
 lua_event_listener::lua_event_listener(lua_plugin* p, const Rml::String& code, Rml::Element* element)
 	: plugin(p) {
-	lua_State *L = plugin->L;
-	luabind::invoke(L, [&]() {
+	luabind::invoke([&](lua_State* L) {
 		Rml::Document* doc = element->GetOwnerDocument();
 		lua_pushlightuserdata(L, (void*)this);
 		lua_pushlightuserdata(L, (void*)doc);
 		lua_pushlightuserdata(L, (void*)element);
 		lua_pushlstring(L, code.c_str(), code.length());
-		plugin->call(LuaEvent::OnEventAttach, 4);
+		plugin->call(L, LuaEvent::OnEventAttach, 4);
 	});
 }
 
 lua_event_listener::~lua_event_listener() {
 	// element should be the same with Init
-	lua_State* L = plugin->L;
-	luabind::invoke(L, [&]() {
+	luabind::invoke([&](lua_State* L) {
 		lua_pushlightuserdata(L, (void*)this);
-		plugin->call(LuaEvent::OnEventDetach, 1);
+		plugin->call(L, LuaEvent::OnEventDetach, 1);
 	});
 }
 
 void lua_event_listener::ProcessEvent(Rml::Event& event) {
-	lua_State *L = plugin->L;
-	luabind::invoke(L, [&]() {
+	luabind::invoke([&](lua_State* L) {
 		lua_pushlightuserdata(L, (void*)this);
 		lua_pushevent(L, event);
-		plugin->call(LuaEvent::OnEvent, 2);
+		plugin->call(L, LuaEvent::OnEvent, 2);
 	});
 }
 

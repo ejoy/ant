@@ -1,4 +1,3 @@
-local editor = import_package "ant.imgui"
 local imgui = require "imgui"
 local bgfx = require "bgfx"
 
@@ -53,13 +52,12 @@ local function sortItems(a, b)
     return a.ID < b.ID
 end
 
-local function update()
-    local viewid = editor.viewids()[1]
+local function update(viewid)
     bgfx.set_view_clear(viewid, "CD", 0x303030ff, 1, 0)
 
     if imgui.windows.Begin ("test", imgui.flags.Window {'AlwaysAutoResize'}) then
         if imgui.table.Begin("split", 4, imgui.flags.Table {
-            'Resizable','Reorderable','Hideable','MultiSortable',
+            'Resizable','Reorderable','Hideable','Sortable',
             'RowBg','BordersOuter','BordersV','NoBordersInBody', 'ScrollY'
         }, 0, 400) then
             imgui.table.SetupColumn("ID", imgui.flags.TableColumn {'DefaultSort', 'WidthFixed'}, -1.0, MyItemColumnID_ID)
@@ -95,6 +93,6 @@ local function update()
     end
 end
 
-editor.start(1280, 720, {
-    update = update
-})
+return {
+    update = update,
+}

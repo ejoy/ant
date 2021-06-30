@@ -1,9 +1,8 @@
 local repopath = ...
 local ltask = require "ltask"
-local manager = require "ltask.manager"
-local ServiceLogManager = manager.query "log.manager"
+local ServiceLogManager = ltask.uniqueservice "log.manager"
 local INDEX, LOGFILE = ltask.call(ServiceLogManager, "CREATE", repopath)
-local ServiceEditor = manager.query "editor"
+local ServiceEditor = ltask.uniqueservice "editor"
 
 local S = {}
 

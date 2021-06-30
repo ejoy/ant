@@ -36,10 +36,12 @@ is_space_codepoint(int codepoint){
 
 static inline void
 lock(struct font_manager *F) {
+	mutex_acquire(F->mutex);
 }
 
 static inline void
 unlock(struct font_manager *F) {
+	mutex_release(F->mutex);
 }
 
 static inline const stbtt_fontinfo*
@@ -96,9 +98,10 @@ font_manager_init_unsafe(struct font_manager *F, struct truetype_font *ttf, void
 }
 
 void
-font_manager_init(struct font_manager *F, struct truetype_font *ttf, void *L) {
+font_manager_init(struct font_manager *F, void *L) {
+	F->mutex = mutex_create();
 	lock(F);
-	font_manager_init_unsafe(F, ttf, L);
+	font_manager_init_unsafe(F, truetype_cstruct(L), L);
 	unlock(F);
 }
 
@@ -395,6 +398,18 @@ font_manager_flush(struct font_manager *F) {
 	// todo : atomic inc
 	lock(F);
 	++F->version;
+	unlock(F);
+}
+
+static void
+font_manager_import_unsafe(struct font_manager *F, const char* fontpath) {
+	truetype_import(F->L, fontpath);
+}
+
+void
+font_manager_import(struct font_manager *F, const char* fontpath) {
+	lock(F);
+	font_manager_import_unsafe(F, fontpath);
 	unlock(F);
 }
 

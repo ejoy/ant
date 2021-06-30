@@ -2,6 +2,7 @@ local fs = require "filesystem"
 
 local cr = import_package "ant.compile_resource"
 local hwi = import_package "ant.hwi"
+local lfont = require "font"
 
 hwi.update_identity()
 
@@ -9,8 +10,22 @@ local m = {}
 
 local directorys  = {}
 
+local function import_font(path)
+    for p in path:list_directory() do
+        if fs.is_directory(p) then
+            import_font(p)
+        elseif fs.is_regular_file(p) then
+            if p:equal_extension "otf" or p:equal_extension "ttf" or p:equal_extension "ttc" then
+                lfont.import(p:string())
+            end
+        end
+    end
+end
+
 function m.add(dir)
-    directorys[#directorys+1] = fs.path(dir)
+    dir = fs.path(dir)
+    directorys[#directorys+1] = dir
+    import_font(dir)
 end
 
 local function compile_texture(path)

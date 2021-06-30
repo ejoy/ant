@@ -1,9 +1,8 @@
 local ltask = require "ltask"
-local manager = require "ltask.manager"
 
 local socket = {}
 
-local SERVICE_NETWORK <const> = manager.query "network"
+local SERVICE_NETWORK <const> = ltask.queryservice "network"
 
 function socket.connect(...)
 	return ltask.call(SERVICE_NETWORK, "connect", ...)

@@ -1,16 +1,12 @@
 local ttf = require "font.truetype"
-local lfont = require "font"
-local bgfxutil = require "bgfx.util"
-local fs = require "filesystem"
-
-lfont.init(bgfxutil.update_char_texture)
+local vfs = require "vfs"
 
 local font = {}
 
 local MAXFONT <const> = 64
 
 function font.loader(filename)
-	local f = assert(fs.open(fs.path(filename), "rb"))
+	local f = assert(io.open(vfs.realpath(filename), "rb"))
 	local data = f:read "a"
 	f:close()
 	return data
@@ -185,5 +181,7 @@ setmetatable(ttf.idtable, { __index = fetch_id })
 function font.info(id)
 	return ttf.idtable[id]
 end
+
+debug.getregistry().TRUETYPE_IMPORT = font.import
 
 return font

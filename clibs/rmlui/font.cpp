@@ -5,7 +5,6 @@
 
 extern "C"{
 #include "../font/font_manager.h"
-#include "../font/truetype.h"
 }
 
 #include <RmlUi/Core.h>
@@ -34,7 +33,7 @@ load_fontid(struct font_manager *F, const Rml::String &family){
     if (!family.empty() && family != "rmlui-debugger-font")
         name = family.c_str();
     
-    return truetype_name((lua_State*)F->L, name);
+    return font_manager_addfont_with_family(F, name);
 }
 
 Rml::FontFaceHandle FontEngine::GetFontFaceHandle(const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, int size){

@@ -1,3 +1,5 @@
+local rmlui = require "rmlui"
+
 local LT_ALWAYS <const> = 0
 local LT_ERROR <const> = 1
 local LT_ASSERT <const> = 2

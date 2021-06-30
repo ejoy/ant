@@ -1,11 +1,8 @@
 require "init_package"
 local ltask = require "ltask"
-local manager = require "ltask.manager"
 local fs = require "filesystem.cpp"
 local fw = require "filewatch"
 local repo_new = require "repo".new
-
-manager.register "vfs"
 
 local CACHE = {}
 local SESSION = {}
@@ -132,7 +129,7 @@ local function update_watch()
 	end
 end
 
-ltask.timeout(0, function ()
+ltask.fork(function ()
 	while true do
 		update_watch()
 		ltask.sleep(100)

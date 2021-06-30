@@ -25,4 +25,7 @@ unsigned long __stdcall utf8_FormatMessageA(
   va_list*      Arguments
 );
 
+wchar_t* u2w(const char *str);
+char* w2u(const wchar_t *str);
+
 #endif
