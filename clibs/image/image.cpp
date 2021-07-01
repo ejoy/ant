@@ -85,6 +85,7 @@ lparse(lua_State *L){
 
 extern "C" LUAMOD_API int
 luaopen_image(lua_State* L) {
+	init_interface(L);
     init_texture_formats(L);
     luaL_Reg lib[] = {
         { "parse", lparse },
