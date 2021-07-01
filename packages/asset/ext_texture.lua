@@ -46,11 +46,11 @@ local function loader(filename)
 		-- local texinfo = img.parse(m)
 
 		-- local imgdata = texfiledata	--TODO: cr.compile "main.bin" should be image data
-		-- if texinfo.depth == 0 then
-		-- 	bgfx.create_texture2d(texinfo.width, texinfo.height, texinfo.numMips ~= 0, texinfo.numLayers, texinfo.format, config.flag, imgdata)
-		-- elseif texinfo.cubeMap then
+		-- if texinfo.cubeMap then
 		-- 	assert(texinfo.width == texinfo.height)
 		-- 	bgfx.create_texturecube(texinfo.width, texinfo.numMips ~= 0, texinfo.numLayers, texinfo.format, config.flag, imgdata)
+		-- elseif texinfo.depth == 0 then
+		-- 	bgfx.create_texture2d(texinfo.width, texinfo.height, texinfo.numMips ~= 0, texinfo.numLayers, texinfo.format, config.flag, imgdata)
 		-- else
 		-- 	assert(texinfo.depth > 0)
 		--	error "not support 3d texture right now"
