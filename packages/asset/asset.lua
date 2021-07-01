@@ -19,12 +19,7 @@ local function absolute_path(path)
 	return base .. (path:match "^%./(.+)$" or path)
 end
 
-local extmapper = {
-	bmp = "image", png = "image", dds = "image"
-}
-
 local function require_ext(ext)
-	ext = extmapper[ext] or ext
 	return require("ext_" .. ext)
 end
 

@@ -1,98 +1,95 @@
 #define LUA_LIB 1
 #include <lua.hpp>
-#include <cstring>
-#include "bimg/decode.h"
-#include "bx/allocator.h"
-#include "bx/error.h"
+#include <string.h>
+#include <assert.h>
+#include <bimg/bimg.h>
+#include <bx/allocator.h>
+#include <bx/error.h>
+#include "bgfx_interface.h"
+#include "luabgfx.h"
 
-bx::DefaultAllocator s_imgallocator;
+#include <map>
+#include <string_view>
+static std::map<bgfx_texture_format_t, std::string_view> c_texture_formats;
 
-struct image {
-    bimg::ImageContainer *ic;
-};
-
-static inline image*
-get_image(lua_State *L, int idx=1){
-    return (image*)luaL_checkudata(L, idx, "IMAGE_CONTAINER");
-}
-
-static int
-limg_del(lua_State *L){
-    auto img = get_image(L);
-    BX_ALIGNED_FREE(&s_imgallocator, img->ic, 16);
-    return 1;
-}
-
-static int
-limg_size(lua_State *L){
-    auto ic = get_image(L)->ic;
-    lua_pushnumber(L, ic->m_width);
-    lua_pushnumber(L, ic->m_height);
-    return 2;
-}
-
-static int
-limg_data(lua_State *L){
-    auto ic = get_image(L)->ic;
-    lua_pushlightuserdata(L, ic->m_data);
-    lua_pushinteger(L, ic->m_size);
-    return 2;
-}
-
-static inline bimg::TextureFormat::Enum
-get_fmt(const char *s){
-    if (strcmp(s, "rgba8") == 0){
-        return bimg::TextureFormat::Enum::RGBA8;
+static void
+init_texture_formats(lua_State* L) {
+    if (LUA_TTABLE != lua_getfield(L, LUA_REGISTRYINDEX, "BGFX_TF")) {
+        luaL_error(L, "bgfx binding is not initialized.");
+        return;
     }
-
-    if (strcmp(s, "rgb8") == 0){
-        return bimg::TextureFormat::Enum::RGB8;
+    lua_pushnil(L);
+    while (lua_next(L, -2)) {
+        size_t sz = 0;
+        const char* s = luaL_checklstring(L, -2, &sz);
+        c_texture_formats.insert(std::make_pair(
+            bgfx_texture_format_t(luaL_checkinteger(L, -1)),
+            std::string_view {s,sz}
+        ));
+        lua_pop(L, 1);
     }
+    lua_pop(L, 1);
+}
 
-    if (strcmp(s, "r32f") == 0){
-        return bimg::TextureFormat::Enum::R32F;
+static void
+push_texture_formats(lua_State* L, bgfx_texture_format_t format) {
+    auto it = c_texture_formats.find(format);
+    if (it == c_texture_formats.end()) {
+        luaL_error(L, "Invalid texture format %d", format);
     }
-
-    return bimg::TextureFormat::Enum::Unknown;
+    lua_pushstring(L, it->second.data());
 }
 
 static int
 lparse(lua_State *L){
-    size_t len;
-    const char * c = lua_tolstring(L, 1, &len);
-    const char* s = luaL_checkstring(L, 2);
-    auto fmt = get_fmt(s);
-    if (fmt == bimg::TextureFormat::Enum::Unknown){
-        luaL_error(L, "fmt not support: %s", s);
-    }
+    struct memory *mem = (struct memory *)luaL_checkudata(L, 1, "BGFX_MEMORY");
     bx::Error err;
-    image* i = (image*)lua_newuserdatauv(L, sizeof(image), 0);
-    i->ic = bimg::imageParse(&s_imgallocator, c, (uint32_t)len, fmt, &err);
-
-    if (luaL_newmetatable(L, "IMAGE_CONTAINER")){
-        lua_pushvalue(L, -1);
-        lua_setfield(L, -2, "__index");
-        luaL_Reg l[] = {
-            {"size", limg_size},
-            {"data", limg_data},
-            {"__gc", limg_del},
-            {nullptr, nullptr},
-        };
-		luaL_setfuncs(L, l, 0);
+    bimg::ImageContainer imageContainer;
+    if (!bimg::imageParse(imageContainer, mem->data, mem->size, &err)) {
+        assert(!err.isOk());
+        auto errmsg = err.getMessage();
+        lua_pushlstring(L, errmsg.getPtr(), errmsg.getLength());
+        return lua_error(L);
     }
-
-    lua_setmetatable(L, -2);
+    bgfx_texture_info_t info;
+    BGFX(calc_texture_size)(&info
+        , (uint16_t)imageContainer.m_width
+        , (uint16_t)imageContainer.m_height
+        , (uint16_t)imageContainer.m_depth
+        , imageContainer.m_cubeMap
+        , imageContainer.m_numMips > 1
+        , imageContainer.m_numLayers
+        , bgfx_texture_format_t(imageContainer.m_format)
+        );
+    lua_newtable(L);
+    push_texture_formats(L, info.format);
+    lua_setfield(L, -2, "format");
+    lua_pushinteger(L, info.storageSize);
+    lua_setfield(L, -2, "storageSize");
+    lua_pushinteger(L, info.width);
+    lua_setfield(L, -2, "width");
+    lua_pushinteger(L, info.height);
+    lua_setfield(L, -2, "height");
+    lua_pushinteger(L, info.depth);
+    lua_setfield(L, -2, "depth");
+    lua_pushinteger(L, info.numLayers);
+    lua_setfield(L, -2, "numLayers");
+    lua_pushinteger(L, info.numMips);
+    lua_setfield(L, -2, "numMips");
+    lua_pushinteger(L, info.bitsPerPixel);
+    lua_setfield(L, -2, "bitsPerpixel");
+    lua_pushboolean(L, info.cubeMap);
+    lua_setfield(L, -2, "cubeMap");
     return 1;
 }
 
-extern "C"{
-    LUAMOD_API int
-    luaopen_image(lua_State* L) {
-        luaL_Reg lib[] = {
-            { "parse", lparse},
-            { nullptr, nullptr },
-        };
-        luaL_newlib(L, lib);
-        return 1;
-    }
+extern "C" LUAMOD_API int
+luaopen_image(lua_State* L) {
+    init_texture_formats(L);
+    luaL_Reg lib[] = {
+        { "parse", lparse },
+        { NULL, NULL },
+    };
+    luaL_newlib(L, lib);
+    return 1;
 }
