@@ -34,9 +34,31 @@ end
 local function loader(filename)
 	local config = datalist.parse(readfile(cr.compile(filename .. "|main.cfg")))
 	local ti = {}
-	local h = config.value and 
-		create_mem_texture(config, ti) or
-		bgfx.create_texture(readfile(cr.compile(filename .. "|main.bin")), config.flag, ti)
+	local h
+	if config.value then
+		h = create_mem_texture(config, ti)
+	else
+		local texfiledata = readfile(cr.compile(filename .. "|main.bin"))
+		h = bgfx.create_texture(texfiledata, config.flag, ti)
+
+		-- local img = require "image"
+		-- local m = bgfx.memory_buffer(texfiledata)
+		-- local texinfo = img.parse(m)
+
+		-- local imgdata = texfiledata	--TODO: cr.compile "main.bin" should be image data
+		-- if texinfo.depth == 0 then
+		-- 	bgfx.create_texture2d(texinfo.width, texinfo.height, texinfo.numMips ~= 0, texinfo.numLayers, texinfo.format, config.flag, imgdata)
+		-- elseif texinfo.cubeMap then
+		-- 	assert(texinfo.width == texinfo.height)
+		-- 	bgfx.create_texturecube(texinfo.width, texinfo.numMips ~= 0, texinfo.numLayers, texinfo.format, config.flag, imgdata)
+		-- else
+		-- 	assert(texinfo.depth > 0)
+		--	error "not support 3d texture right now"
+		-- 	--bgfx.create_texture3d(texinfo.width, texinfo.height, texinfo.depth, texinfo.numMips ~= 0, texinfo.numLayers, texinfo.format, config.flag, imgdata)
+		-- end
+	end
+
+
 	
 	bgfx.set_name(h, config.name)
 	return {
