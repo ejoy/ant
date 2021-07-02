@@ -6,6 +6,19 @@ local serialize = import_package "ant.serialize".stringify
 local datalist = require "datalist"
 local config = require "config"
 
+local function normalize(p)
+    local stack = {}
+    p:gsub('[^/]*', function (w)
+        if #w == 0 and #stack ~= 0 then
+        elseif w == '..' and #stack ~= 0 and stack[#stack] ~= '..' then
+            stack[#stack] = nil
+        elseif w ~= '.' then
+            stack[#stack + 1] = w
+        end
+    end)
+    return table.concat(stack, "/")
+end
+
 local function split(str)
     local r = {}
     str:gsub('[^|]*', function (w) r[#r+1] = w end)
@@ -16,7 +29,7 @@ local function split_path(pathstring)
     local pathlst = split(pathstring)
     local res = {}
     for i = 1, #pathlst - 1 do
-        local path = pathlst[i]
+        local path = normalize(pathlst[i])
         local ext = path:match "[^/]%.([%w*?_%-]*)$"
         local cfg = config.get(ext)
         res[#res+1] = path .. "?" .. cfg.arguments
@@ -34,7 +47,7 @@ local ResourceCompiler = {
 
 for ext, compiler in pairs(ResourceCompiler) do
     local cfg = config.get(ext)
-    cfg.binpath = lfs.path ".build" / ext
+    cfg.binpath = fs.path ".build":localpath() / ext
     cfg.compiler = compiler
 end
 
