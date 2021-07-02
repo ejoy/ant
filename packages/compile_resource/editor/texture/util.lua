@@ -98,7 +98,6 @@ end
 
 return function (output, param)
 	local config = {
-		name = param.name,
         sampler = fill_default_sampler(param.sampler),
         flag	= samplerutil.sampler_flag(param.sampler),
     }
@@ -107,8 +106,6 @@ return function (output, param)
     end
 	local imgpath = param.local_texpath
 	if imgpath then
-		config.name	= param.name or imgpath:string()
-
 		local id = identity_util.parse(param.setting.identity)
 		local ext = assert(extensions[id.renderer])
 		local binfile = output / ("main."..ext)

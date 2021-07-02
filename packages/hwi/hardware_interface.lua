@@ -68,12 +68,15 @@ local function bgfx_init(args)
 end
 
 function hw.update_identity()
+	local ltask = require "ltask"
     local os = platform.OS
     local renderer = hw.get_caps().rendererType
 
 	local view_setting = math3d.homogeneous_depth and "_hd" or ""
 	view_setting = view_setting .. (math3d.origin_bottom_left and "_obl" or "")
-	import_package "ant.compile_resource".set_identity((os.."_"..renderer .. view_setting):lower())
+	local v = (os.."_"..renderer .. view_setting):lower()
+	ltask.call(ltask.uniqueservice "resource", "set_identity", v)
+	import_package "ant.compile_resource".set_identity(v)
 end
 
 function hw.init(args)

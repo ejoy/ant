@@ -1,3 +1,7 @@
+local ltask = require "ltask"
+local ServiceResource = ltask.uniqueservice "resource"
+
+
 local cr        = import_package "ant.compile_resource"
 local bgfx 		= require "bgfx"
 local datalist  = require "datalist"
@@ -34,24 +38,34 @@ local function create_mem_texture(c)
 end
 
 local function loader(filename)
-	local config = datalist.parse(readall_s(cr.compile(filename .. "|main.cfg")))
-	local h
-	if config.value then
-		h = create_mem_texture(config)
-	else
-		local texdata = readall(cr.compile(filename .. "|main.bin"))
-		h = bgfx.create_texture(texdata, config.flag)
+	local result = ltask.call(ServiceResource, "texture_create", filename)
+	if result.uncomplete then
+		ltask.fork(function()
+			result.handle = ltask.call(ServiceResource, "texture_complete", filename)
+			result.uncomplete = nil
+		end)
 	end
-	bgfx.set_name(h, config.name)
-	return {
-		handle = h,
-		texinfo = config.info,
-		sampler = config.sampler
-	}
+	return result
+	--local config = datalist.parse(readall_s(cr.compile(filename .. "|main.cfg")))
+	--local h
+	--if config.value then
+	--	h = create_mem_texture(config)
+	--else
+	--	local texdata = readall(cr.compile(filename .. "|main.bin"))
+	--	h = bgfx.create_texture(texdata, config.flag)
+	--end
+	--bgfx.set_name(h, config.name)
+	--return {
+	--	handle = h,
+	--	texinfo = config.info,
+	--	sampler = config.sampler
+	--}
 end
 
 local function unloader(res)
-	bgfx.destroy(assert(res.handle))
+	--TODO
+	ltask.call(ServiceResource, "texture_destroy", res)
+	--bgfx.destroy(assert(res.handle))
 end
 
 return {
