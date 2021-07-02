@@ -270,7 +270,7 @@ namespace ImSequencer
 			}
 			if (range_index >= 0 && range_index < current_anim->clip_rangs.size()) {
 				const auto& flags = current_anim->clip_rangs[range_index].event_flags;
-				if (selected_frame < flags.size() && flags[selected_frame]) {
+				if (selected_frame >= 0 && selected_frame < flags.size() && flags[selected_frame]) {
 					movingEntry = true;
 					movingPos = cx;
 					movingKeyFrame = selected_frame;
@@ -279,8 +279,10 @@ namespace ImSequencer
 				}
 			}
 		}
-		int px = (int)canvas_pos.x + int(selected_frame * framePixelWidth) + legendWidth - int(firstFrameUsed * framePixelWidth);
-		draw_list->AddRect(ImVec2((float)px, contentMin.y), ImVec2((float)px + framePixelWidth, contentMin.y + ItemHeight), 0xFF1080FF);
+		if (selected_frame >= 0) {
+			int px = (int)canvas_pos.x + int(selected_frame * framePixelWidth) + legendWidth - int(firstFrameUsed * framePixelWidth);
+			draw_list->AddRect(ImVec2((float)px, contentMin.y), ImVec2((float)px + framePixelWidth, contentMin.y + ItemHeight), 0xFF1080FF);
+		}
 
 		// slots
 		customHeight = 0;

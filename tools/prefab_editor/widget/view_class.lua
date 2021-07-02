@@ -7,6 +7,7 @@ local material_view = class("MaterialView", base_view)
 local slot_view = class("SlotView", base_view)
 local collider_view = class("ColliderView", base_view)
 local effect_view = class("EffectView", base_view)
+local skybox_view = class("SkyboxView", material_view)
 return {
     BaseView    = base_view,
     CameraView  = camera_view,
@@ -14,5 +15,6 @@ return {
     MaterialView = material_view,
     SlotView    = slot_view,
     ColliderView = collider_view,
-    EffectView = effect_view
+    EffectView  = effect_view,
+    SkyboxView  = skybox_view
 }

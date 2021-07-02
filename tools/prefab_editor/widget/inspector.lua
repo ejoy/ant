@@ -21,6 +21,7 @@ local slot_panel
 local collider_panel
 local effect_panel
 local current_panel
+local skybox_panel
 local current_eid
 
 local camera_ui_data = {
@@ -61,7 +62,7 @@ function m.update_template_tranform(eid)
     }
 
     if world[eid].collider then
-        anim_view.record_collision(eid, ts, tr, tt)
+        anim_view.record_collision(eid)
     end
 end
 
@@ -245,6 +246,14 @@ local function get_effect_panel()
     end
     return effect_panel
 end
+
+local function get_skybox_panel()
+    if not skybox_panel then
+        skybox_panel = require "widget.skybox_view"(world)()
+    end
+    return skybox_panel
+end
+
 local function update_current()
     if current_eid == gizmo.target_eid then return end
     current_eid = gizmo.target_eid
@@ -257,10 +266,12 @@ local function update_current()
             current_panel = get_light_panel()
         elseif world[current_eid].slot then
             current_panel = get_slot_panel()
-        elseif world[current_eid].material then
-            current_panel = get_material_panel()
         elseif world[current_eid].effekseer then
             current_panel = get_effect_panel()
+        elseif world[current_eid].skybox then
+            current_panel = get_skybox_panel()
+        elseif world[current_eid].material then
+            current_panel = get_material_panel()
         else
             current_panel = get_base_panel()
         end

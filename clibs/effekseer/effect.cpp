@@ -18,6 +18,7 @@ void effect_adapter::pause(bool p)
 	if (handle_ != -1) {
 		manager_->SetPaused(handle_, p);
 	}
+	playing = !p;
 }
 
 void effect_adapter::play(int32_t startTime)
@@ -25,13 +26,25 @@ void effect_adapter::play(int32_t startTime)
 	if (!effect_.Get() || !manager_) {
 		return;
 	}
-	Effekseer::Vector3D t;
-	tranform_.GetTranslation(t);
 	if (handle_ != -1) {
 		manager_->StopEffect(handle_);
 	}
-	handle_ = manager_->Play(effect_, t, startTime);
+	handle_ = manager_->Play(effect_, {0.0f, 0.0f, 0.0f}, startTime);
 	manager_->SetSpeed(handle_, speed_);
+}
+
+void effect_adapter::set_time(int32_t frame)
+{
+	if (!effect_.Get() || !manager_ || frame < 0.0f) {
+		return;
+	}
+	if (!manager_->Exists(handle_)) {
+		handle_ = manager_->Play(effect_, 0.0f, 0.0f, 0.0f);
+		pause(true);
+	}
+	manager_->SetPaused(handle_, false);
+	manager_->UpdateHandleToMoveToFrame(handle_, frame);
+	manager_->SetPaused(handle_, !playing);
 }
 
 void effect_adapter::set_target_pos(const Effekseer::Vector3D& pos)

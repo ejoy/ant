@@ -281,7 +281,7 @@ function MaterialView:set_model(eid)
         end
     end
     table.sort(self.samplers, function(a, b) return a.label < b.label end)
-    self:update()
+    MaterialView.update(self)
     return true
 end
 

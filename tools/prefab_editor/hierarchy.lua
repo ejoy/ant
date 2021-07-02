@@ -224,4 +224,39 @@ function hierarchy:update_collider_list(world)
     self.collider_list = collider_list
 end
 
+local function find_table(eid)
+    local p = hierarchy.all[eid].parent
+    local t = hierarchy.all[p].children
+    for i, e in ipairs(t) do
+        if e.eid == eid then
+            return i, t
+        end
+    end
+    return -1, t
+end
+
+function hierarchy:move_top(eid)
+    local i, t = find_table(eid)
+    if i < 2 then return end
+    table.remove(t, i) 
+    table.insert(t, 1, self.all[eid])
+end
+function hierarchy:move_up(eid)
+    local i, t = find_table(eid)
+    if i < 2 then return end
+    table.remove(t, i) 
+    table.insert(t, i - 1 , self.all[eid])
+end
+function hierarchy:move_down(eid)
+    local i, t = find_table(eid)
+    if i == #t then return end
+    table.remove(t, i) 
+    table.insert(t, i + 1 , self.all[eid])
+end
+function hierarchy:move_bottom(eid)
+    local i, t = find_table(eid)
+    if i == #t then return end
+    table.remove(t, i)
+    table.insert(t, self.all[eid])
+end
 return hierarchy

@@ -22,12 +22,11 @@ local edit_anims = {}
 local current_eid
 local imgui_message
 local current_anim
-local selected_frame = -1
 local sample_ratio = 50.0
 
 local anim_state = {
     duration = 0,
-    current_time = 0,
+    selected_frame = -1,
     current_frame = 0,
     is_playing = false,
     anim_name = "",
@@ -180,16 +179,20 @@ local function from_runtime_event(runtime_event)
         for _, e in ipairs(ev.event_list) do
             e.name_ui = {text = e.name}
             if e.event_type == "Sound" or e.event_type == "Effect" then
-                e.rid_ui = {e.rid}
+                
                 e.asset_path_ui = {text = e.asset_path}
                 if e.link_info and e.link_info.slot_name ~= '' then
                     e.link_info.slot_eid = hierarchy.slot_list[e.link_info.slot_name]
                 end
                 if e.event_type == "Effect" then
-                    e.breakable_ui = {e.breakable or false}
-                    e.life_time_ui = {e.life_time or 2}
+                    e.breakable = e.breakable or false
+                    e.life_time = e.life_time or 2
+                    e.breakable_ui = {e.breakable}
+                    e.life_time_ui = {e.life_time}
                 end
             elseif e.event_type == "Collision" then
+                e.collision.tid = e.collision.tid or -1
+                e.collision.tid_ui = {e.collision.tid}
                 e.collision.enable_ui = {e.collision.enable}
                 e.collision.shape_type = e.collision.shape_type
             end
@@ -253,10 +256,6 @@ local function get_runtime_clips()
 end
 
 local function get_runtime_events()
-    -- if not world[current_eid].keyframe_events or not world[current_eid].keyframe_events[current_anim.name] then
-    --     iani.set_events(current_eid, current_anim.name, {})
-    -- end
-    -- return world[current_eid].keyframe_events[current_anim.name]
     if not current_clip then return end;
     return current_clip.key_event
 end
@@ -276,7 +275,6 @@ local function do_to_runtime_event(evs)
         list[#list + 1] = {
             event_type = ev.event_type,
             name = ev.name,
-            rid = ev.rid,
             asset_path = ev.asset_path,
             breakable = ev.breakable,
             life_time = ev.life_time,
@@ -288,6 +286,7 @@ local function do_to_runtime_event(evs)
                 position = ev.collision.position,
                 size = ev.collision.size,
                 enable = ev.collision.enable,
+                tid = ev.collision.tid,
             } or {
                 name = "None",
                 shape_type = "None",
@@ -353,21 +352,20 @@ local function add_event(et)
     local new_event = {
         event_type = et,
         name = event_name,
-        rid = (et == "Effect" or et == "Sound") and -1 or nil,
         asset_path = (et == "Effect" or et == "Sound") and "" or nil,
         link_info = (et == "Effect") and {
             slot_name = "",
             slot_eid = nil,
-            
         } or nil,
         breakable = (et == "Effect") and false or nil,
         breakable_ui = (et == "Effect") and {false} or nil,
         life_time = (et == "Effect") and 2 or nil,
         life_time_ui = (et == "Effect") and { 2 } or nil,
         name_ui = {text = event_name},
-        rid_ui = {-1},
         asset_path_ui = (et == "Effect" or et == "Sound") and {text = ""} or nil,
         collision = (et == "Collision") and {
+            tid = -1,
+            tid_ui = {-1},
             col_eid = -1,
             shape_type = "None",
             enable = true,
@@ -417,8 +415,8 @@ local function delete_event(idx)
 end
 
 local function clear_event()
-    current_clip.key_event[tostring(selected_frame)] = {}
-    anim_state.current_event_list = current_clip.key_event[tostring(selected_frame)]
+    current_clip.key_event[tostring(anim_state.selected_frame)] = {}
+    anim_state.current_event_list = current_clip.key_event[tostring(anim_state.selected_frame)]
     set_event_dirty(1)
 end
 
@@ -427,7 +425,7 @@ local shape_type = {
 }
 
 local function show_events()
-    if selected_frame >= 0 and current_clip then
+    if anim_state.selected_frame >= 0 and current_clip then
         imgui.cursor.SameLine()
         if imgui.widget.Button("AddEvent") then
             imgui.windows.OpenPopup("AddKeyEvent")
@@ -491,14 +489,6 @@ local function show_current_event()
         dirty = true
     end
     
-    if current_event.event_type == "Effect" or current_event.event_type == "Sound" then
-        imgui.widget.PropertyLabel("RID")
-        if imgui.widget.DragInt("##RID", current_event.rid_ui) then
-            current_event.rid = current_event.rid_ui[1]
-            dirty = true
-        end
-    end
-    
     if current_event.event_type == "Collision" then
         local collision = current_event.collision
         local collider_list = hierarchy.collider_list
@@ -524,10 +514,15 @@ local function show_current_event()
                 imgui.widget.EndCombo()
             end
         end
-
         imgui.widget.PropertyLabel("Enable")
         if imgui.widget.Checkbox("##Enable", collision.enable_ui) then
             collision.enable = collision.enable_ui[1]
+            dirty = true
+        end
+        imgui.widget.PropertyLabel("TID")
+        if imgui.widget.DragInt("##TID", collision.tid_ui) then
+            collision.tid = collision.tid_ui[1]
+            dirty = true
         end
     elseif current_event.event_type == "Sound" then
         if imgui.widget.Button("SelectSound") then
@@ -608,7 +603,7 @@ function m.on_remove_entity(eid)
     end
 end
 
-function m.record_collision(eid, ts, tr, tt)
+function m.record_collision(eid)
     for idx, ke in ipairs(anim_state.current_event_list) do
         if ke.collision and ke.collision.col_eid == eid then
             do_record(ke.collision, eid)
@@ -632,11 +627,11 @@ local function update_collision()
 end
 
 local function on_move_keyframe(frame_idx, move_type)
-    if not frame_idx or selected_frame == frame_idx then return end
-    local old_selected_frame = selected_frame
-    selected_frame = frame_idx
+    if not frame_idx or anim_state.selected_frame == frame_idx then return end
+    local old_selected_frame = anim_state.selected_frame
+    anim_state.selected_frame = frame_idx
     if not current_clip or not current_clip.key_event then return end
-    local newkey = tostring(selected_frame)
+    local newkey = tostring(anim_state.selected_frame)
     if move_type == 0 then
         local oldkey = tostring(old_selected_frame)
         current_clip.key_event[newkey] = current_clip.key_event[oldkey]
@@ -705,6 +700,7 @@ local function get_clips_filename()
 end
 
 function m.save_clip(path)
+    to_runtime_clip()
     local clips = get_runtime_clips()
     if not clips then return end
     
@@ -751,6 +747,7 @@ local function set_current_clip(clip)
     current_clip = clip
     anim_state.current_event_list = {}
     current_event = nil
+    anim_state.selected_frame = -1
 end
 
 local function show_clips()
@@ -993,10 +990,9 @@ function m.show()
     --if imgui.windows.Begin ("Animation", imgui.flags.Window {'AlwaysAutoResize'}) then
         if edit_anims[current_eid] then
             if current_anim then
-                anim_state.current_time = iani.get_time(current_eid)
                 anim_state.is_playing = iani.is_playing(current_eid)
                 if anim_state.is_playing then
-                    anim_state.current_frame = math.floor(anim_state.current_time * sample_ratio)
+                    anim_state.current_frame = math.floor(iani.get_time(current_eid) * sample_ratio)
                 end
             end
             imgui.cursor.SameLine()
@@ -1110,7 +1106,8 @@ function m.show()
                 end
             end
             imgui.cursor.SameLine()
-            imgui.widget.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d Time: %.2f/%.2f(s)", selected_frame, selected_frame / sample_ratio, math.floor(anim_state.current_time * sample_ratio), anim_state.current_time, anim_state.duration))
+            local current_time = iani.get_time(current_eid)
+            imgui.widget.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d Time: %.2f/%.2f(s)", anim_state.selected_frame, anim_state.selected_frame / sample_ratio, math.floor(current_time * sample_ratio), current_time, anim_state.duration))
             imgui_message = {}
             imgui.widget.Sequencer(edit_anims[current_eid], anim_state, imgui_message)
             -- clear dirty flag

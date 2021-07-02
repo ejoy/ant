@@ -147,9 +147,7 @@ lcreate(lua_State* L) {
 		if (eidx != -1) {
 			lua_pushinteger(L, eidx);
 			return 1;
-		}
-		else
-		{
+		} else {
 			return luaL_error(L, "create effect failed.");
 		}
 	}
@@ -237,15 +235,11 @@ lset_time(lua_State* L) {
 	if (eidx != -1) {
 		auto effect = g_effekseer->get_effect(eidx);
 		if (effect) {
-			int32_t start = 0;
+			int32_t frame = 0.0f;
 			if (lua_type(L, 2) == LUA_TNUMBER) {
-				start = lua_tointeger(L, 2);
+				frame = lua_tointeger(L, 2);
 			}
-			effect->stop();
-			if (start >= 0) {
-				effect->play(start);
-				effect->pause(true);
-			}
+			effect->set_time(frame);
 		}
 	}
 	return 0;

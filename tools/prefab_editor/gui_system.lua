@@ -410,6 +410,14 @@ function m:data_changed()
                 anim_view.on_remove_entity(gizmo.target_eid)
             end
             prefab_mgr:remove_entity(eid)
+        elseif what == "movetop" then
+            hierarchy:move_top(eid)
+        elseif what == "moveup" then
+            hierarchy:move_up(eid)
+        elseif what == "movedown" then
+            hierarchy:move_down(eid)
+        elseif what == "movebottom" then
+            hierarchy:move_bottom(eid)
         end
     end
     for _, filename in event_preopen_prefab:unpack() do

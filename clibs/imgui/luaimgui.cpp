@@ -1789,20 +1789,16 @@ wSequencer(lua_State* L) {
 				ImSequencer::current_anim = &iter->second[current_anim_name];
 			}
 			ImSequencer::current_anim->is_playing = read_field_boolean(L, "is_playing", false, 2);
-// 			ImSequencer::current_anim->current_time = (float)read_field_float(L, "current_time", 0.0f, 2);
-// 			int maxframe = (int)std::ceil(ImSequencer::current_anim->duration * ImSequencer::anim_fps) - 1;
-// 			current_frame = (int)std::ceil(ImSequencer::current_anim->current_time * ImSequencer::anim_fps);
-// 			if (current_frame > maxframe) {
-// 				current_frame = maxframe;
-// 			}
 			current_frame = read_field_int(L, "current_frame", 0, 2);
+			selected_frame = read_field_int(L, "selected_frame", 0, 2);
 			auto event_dirty_num = read_field_int(L, "event_dirty", 0, 2);
 			auto clip_dirty_num = read_field_int(L, "clip_range_dirty", 0, 2);
 			selected_clip_index = read_field_int(L, "selected_clip_index", 0, 2) - 1;
 			if (selected_clip_index >= 0 && selected_clip_index < ImSequencer::current_anim->clip_rangs.size()) {
 				// add or remove key event
 				if (event_dirty_num == 1) {
-					if (lua_getfield(L, 2, "current_event_list") == LUA_TTABLE) {
+					if (lua_getfield(L, 2, "current_event_list") == LUA_TTABLE
+						&& selected_frame >= 0) {
 						ImSequencer::current_anim->clip_rangs[selected_clip_index].event_flags[selected_frame] = ((int)lua_rawlen(L, -1) > 0);
 					}
 					lua_pop(L, 1);

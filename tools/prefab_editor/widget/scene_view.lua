@@ -27,6 +27,13 @@ local function node_context_menu(eid)
     if gizmo.target_eid ~= eid then return end
     if imgui.windows.BeginPopupContextItem(eid) then
         local current_lock = hierarchy:is_locked(eid)
+        if imgui.widget.Selectable("MoveTop", false) then
+            world:pub { "EntityState", "movetop", eid }
+        end
+        if imgui.widget.Selectable("MoveUp", false) then
+            world:pub { "EntityState", "moveup", eid }
+        end
+        imgui.cursor.Separator()
         if imgui.widget.Selectable(current_lock and "Unlock" or "lock", false) then
             world:pub { "EntityState", "lock", eid, not current_lock }
         end
@@ -37,6 +44,13 @@ local function node_context_menu(eid)
         imgui.cursor.Separator()
         if imgui.widget.Selectable("Delete", false) then
             world:pub { "EntityState", "delete", eid }
+        end
+        imgui.cursor.Separator()
+        if imgui.widget.Selectable("MoveDown", false) then
+            world:pub { "EntityState", "movedown", eid }
+        end
+        if imgui.widget.Selectable("MoveBottom", false) then
+            world:pub { "EntityState", "movebottom", eid }
         end
         imgui.windows.EndPopup()
     end
