@@ -1,13 +1,14 @@
 local cr        = import_package "ant.compile_resource"
 local bgfx 		= require "bgfx"
-local lfs       = require "filesystem.local"
 local datalist  = require "datalist"
+local fastio    = require "fastio"
 
-local function readfile(filename)
-	local f = assert(lfs.open(filename, "rb"))
-	local data = f:read "a"
-	f:close()
-	return data
+local function readall(filename)
+	return bgfx.memory_buffer(fastio.readall(filename:string()))
+end
+
+local function readall_s(filename)
+	return fastio.readall_s(filename:string())
 end
 
 local mem_formats <const> = {
@@ -33,13 +34,13 @@ local function create_mem_texture(c)
 end
 
 local function loader(filename)
-	local config = datalist.parse(readfile(cr.compile(filename .. "|main.cfg")))
+	local config = datalist.parse(readall_s(cr.compile(filename .. "|main.cfg")))
 	local h
 	if config.value then
 		h = create_mem_texture(config)
 	else
-		local texfiledata = readfile(cr.compile(filename .. "|main.bin"))
-		h = bgfx.create_texture(texfiledata, config.flag)
+		local texdata = readall(cr.compile(filename .. "|main.bin"))
+		h = bgfx.create_texture(texdata, config.flag)
 	end
 	bgfx.set_name(h, config.name)
 	return {
