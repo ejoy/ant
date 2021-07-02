@@ -2565,6 +2565,8 @@ lvertexConvert(lua_State *L) {
 		object lifetime (opt) userdata/string/table
 	type 4 :
 		integer size
+	type 5 :
+		userdata data
  */
 static int
 lmemoryBuffer(lua_State *L) {
@@ -2586,6 +2588,13 @@ lmemoryBuffer(lua_State *L) {
 			return 1;
 		}
 		lua_settop(L, 3);
+		newMemory(L, data, sz);
+		return 1;
+	} else if (t == LUA_TUSERDATA) {
+		// type 5
+		void * data = lua_touserdata(L, 1);
+		size_t sz = lua_rawlen(L, 1);
+		lua_settop(L, 1);
 		newMemory(L, data, sz);
 		return 1;
 	}
