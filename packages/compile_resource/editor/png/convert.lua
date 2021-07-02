@@ -1,4 +1,4 @@
-local texutil = require "editor.texture.util"
+local convert_image = require "editor.texture.util"
 
 local function default_param(path)
     return {
@@ -24,10 +24,10 @@ end
 
 return function (input, output, setting)
     local p = default_param()
-    p.binfile = texutil.what_bin_file(output, setting.identity)
+    p.setting = setting
     p.local_texpath = input
     p.name = input:string()
-    local ok, err = texutil.convert_image(output, p)
+    local ok, err = convert_image(output, p)
     if not ok then
 		return ok, err
 	end

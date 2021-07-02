@@ -10,60 +10,41 @@ local function readfile(filename)
 	return data
 end
 
-local function fill_mem_texture_info(c, ti)
-	local w, h = c.width, c.height
-	ti.width, ti.height = w, h
-	ti.format = c.format
-	ti.mipmap = false
-	ti.depth = 1
-	ti.numLayers = 1
-	ti.cubemap = false
-	ti.storageSize = w*h*4
-	ti.numMips = 1
-	ti.bitsPerPixel = 32
-end
+local mem_formats <const> = {
+	RGBA8 = "bbbb",
+	RGBA32F = "ffff",
+}
 
-local function create_mem_texture(c, ti)
+local function create_mem_texture(c)
+	local ti = c.info
 	local v = c.value
-
-	fill_mem_texture_info(c, ti)
-	local m = bgfx.memory_buffer(c.mem_format, v)
-	return bgfx.create_texture2d(c.width, c.height, false, 1, c.format, c.flag, m)
+	local memfmt = assert(mem_formats[ti.format], "not support memory texture format")
+	local m = bgfx.memory_buffer(memfmt, v)
+	if ti.cubeMap then
+		assert(ti.width == ti.height)
+		return bgfx.create_texturecube(ti.width, ti.numMips ~= 0, ti.numLayers, ti.format, c.flag, m)
+	elseif ti.depth == 1 then
+		return bgfx.create_texture2d(ti.width, ti.height, ti.numMips ~= 0, ti.numLayers, ti.format, c.flag, m)
+	else
+		assert(ti.depth > 1)
+		error "not support 3d texture right now"
+		return bgfx.create_texture3d(ti.width, ti.height, ti.depth, ti.numMips ~= 0, ti.numLayers, ti.format, c.flag, m)
+	end
 end
 
 local function loader(filename)
 	local config = datalist.parse(readfile(cr.compile(filename .. "|main.cfg")))
-	local ti = {}
 	local h
 	if config.value then
-		h = create_mem_texture(config, ti)
+		h = create_mem_texture(config)
 	else
 		local texfiledata = readfile(cr.compile(filename .. "|main.bin"))
-		h = bgfx.create_texture(texfiledata, config.flag, ti)
-
-		-- local img = require "image"
-		-- local m = bgfx.memory_buffer(texfiledata)
-		-- local texinfo = img.parse(m)
-
-		-- local imgdata = texfiledata	--TODO: cr.compile "main.bin" should be image data
-		-- if texinfo.cubeMap then
-		-- 	assert(texinfo.width == texinfo.height)
-		-- 	bgfx.create_texturecube(texinfo.width, texinfo.numMips ~= 0, texinfo.numLayers, texinfo.format, config.flag, imgdata)
-		-- elseif texinfo.depth == 0 then
-		-- 	bgfx.create_texture2d(texinfo.width, texinfo.height, texinfo.numMips ~= 0, texinfo.numLayers, texinfo.format, config.flag, imgdata)
-		-- else
-		-- 	assert(texinfo.depth > 0)
-		--	error "not support 3d texture right now"
-		-- 	--bgfx.create_texture3d(texinfo.width, texinfo.height, texinfo.depth, texinfo.numMips ~= 0, texinfo.numLayers, texinfo.format, config.flag, imgdata)
-		-- end
+		h = bgfx.create_texture(texfiledata, config.flag)
 	end
-
-
-	
 	bgfx.set_name(h, config.name)
 	return {
 		handle = h,
-		texinfo = ti,
+		texinfo = config.info,
 		sampler = config.sampler
 	}
 end

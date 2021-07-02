@@ -1,15 +1,7 @@
-local texutil = require "editor.texture.util"
+local convert_image = require "editor.texture.util"
 local datalist = require "datalist"
 local lfs = require "filesystem.local"
 local ident_util = require "identity"
-
-local extensions = {
-	direct3d11 	= "dds",
-	direct3d12 	= "dds",
-	metal 		= "ktx",
-	vulkan 		= "ktx",
-	opengl 		= "ktx",
-}
 
 local function which_format(plat, param)
 	local compress = param.compress
@@ -37,7 +29,7 @@ return function (input, output, setting, localpath)
 	local dependfiles = {input}
 	if param.path then
 		local id = ident_util.parse(setting.identity)
-		param.binfile = texutil.what_bin_file(output, id)
+		param.setting = setting
 		param.local_texpath = localpath(assert(param.path))
 		param.format = assert(which_format(id.platform, param))
 
@@ -56,7 +48,7 @@ return function (input, output, setting, localpath)
 		end
 	end
 
-	local ok, err = texutil.convert_image(output, param)
+	local ok, err = convert_image(output, param)
 	if not ok then
 		return ok, err
 	end

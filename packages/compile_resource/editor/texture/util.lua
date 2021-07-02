@@ -4,6 +4,8 @@ local stringify = import_package "ant.serialize".stringify
 local lfs = require "filesystem.local"
 local subprocess = require "sp_util"
 local identity_util = require "identity"
+local bgfx = require "bgfx"
+local image = require "image"
 
 local TEXTUREC = subprocess.tool_exe_path "texturec"
 
@@ -87,57 +89,65 @@ local extensions = {
 	opengl 		= "ktx",
 }
 
-local mem_formats<const> = {
-	RGBA8 = "bbbb",
-	RGBA32F = "ffff",
-}
+local function readall(filename)
+	local f = assert(lfs.open(filename, "rb"))
+	local data = f:read "a"
+	f:close()
+	return data
+end
 
-return {
-    convert_image = function (output, param)
-		local config = {
-			name = param.name,
-            sampler = fill_default_sampler(param.sampler),
-            flag	= samplerutil.sampler_flag(param.sampler),
-        }
+return function (output, param)
+	local config = {
+		name = param.name,
+        sampler = fill_default_sampler(param.sampler),
+        flag	= samplerutil.sampler_flag(param.sampler),
+    }
+    if param.colorspace == "sRGB" then
+        config.flag = config.flag .. 'Sg'
+    end
+	local imgpath = param.local_texpath
+	if imgpath then
+		config.name	= param.name or imgpath:string()
 
-		local imgpath = param.local_texpath
-		if imgpath then
-			local binfile = param.binfile
-			local commands = {
-				TEXTUREC
-			}
-			gen_commands(commands, param, imgpath, binfile)
-
-			local success, msg = subprocess.spawn_process(commands)
-			if success then
-				if msg:upper():find("ERROR:", 1, true) then
-					success = false
-				end
+		local id = identity_util.parse(param.setting.identity)
+		local ext = assert(extensions[id.renderer])
+		local binfile = output / ("main."..ext)
+		local commands = {
+			TEXTUREC
+		}
+		gen_commands(commands, param, imgpath, binfile)
+		local success, msg = subprocess.spawn_process(commands)
+		if success then
+			if msg:upper():find("ERROR:", 1, true) then
+				success = false
 			end
-			if not success then
-				return false, msg
-			end
-
-			config.name	= param.name or imgpath:string()
-			assert(lfs.exists(binfile))
-			lfs.rename(binfile, output / "main.bin")
-		else
-			local s = param.size
-			config.width, config.height = s[1], s[2]
-			config.format = param.format
-			config.mem_format = assert(mem_formats[param.format], "not support memory texture format")
-			config.value = param.value
 		end
-
-        if param.colorspace == "sRGB" then
-            config.flag = config.flag .. 'Sg'
-        end
-        writefile(output / "main.cfg", stringify(config))
-        return true
-    end,
-    what_bin_file = function (output, identity)
-		local id = type(identity) == "string" and identity_util.parse(identity) or identity
-        local ext = assert(extensions[id.renderer])
-        return (output / "main.bin"):replace_extension(ext)
-    end,
-}
+		if not success then
+			return false, msg
+		end
+		assert(lfs.exists(binfile))
+		lfs.rename(binfile, output / "main.bin")
+		
+		local m = bgfx.memory_buffer(readall(output / "main.bin"))
+		local info = image.parse(m)
+		config.info = info
+	else
+		local s = param.size
+		local fmt = param.format
+		local ti = {}
+		local w, h = s[1], s[2]
+		ti.width, ti.height = w, h
+		ti.format = fmt
+		ti.mipmap = false
+		ti.depth = 1
+		ti.numLayers = 1
+		ti.cubemap = false
+		ti.storageSize = w*h*4
+		ti.numMips = 1
+		ti.bitsPerPixel = 32
+		config.info = ti
+		config.value = param.value
+	end
+    writefile(output / "main.cfg", stringify(config))
+    return true
+end
