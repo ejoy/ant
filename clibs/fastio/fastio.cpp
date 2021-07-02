@@ -70,15 +70,19 @@ struct file_t {
     FILE* f;
 };
 
+static int pusherror(lua_State *L, const char *filename) {
+    int en = errno;
+    luaL_pushfail(L);
+    lua_pushfstring(L, "%s: %s", filename, strerror(en));
+    lua_pushinteger(L, en);
+    return 3;
+}
+
 static int readall(lua_State *L) {
     const char *filename = luaL_checkstring(L, 1);
     file_t f = file_t::open(L, filename);
     if (!f.suc()) {
-        int en = errno;
-        luaL_pushfail(L);
-        lua_pushfstring(L, "%s: %s", filename, strerror(en));
-        lua_pushinteger(L, en);
-        return 3;
+        return pusherror(L, filename);
     }
     size_t size = f.size();
     void* data = create_memory(L, size);
@@ -91,16 +95,12 @@ static int readall_s(lua_State *L) {
     const char *filename = luaL_checkstring(L, 1);
     file_t f = file_t::open(L, filename);
     if (!f.suc()) {
-        int en = errno;
-        luaL_pushfail(L);
-        lua_pushfstring(L, "%s: %s", filename, strerror(en));
-        lua_pushinteger(L, en);
-        return 3;
+        return pusherror(L, filename);
     }
     size_t size = f.size();
     void* data = create_memory(L, size);
     size_t nr = f.read(data, size);
-    lua_pushlstring(L, (const char*)data, size);
+    lua_pushlstring(L, (const char*)data, nr);
     return 1;
 }
 
