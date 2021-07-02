@@ -45,9 +45,10 @@ local ResourceCompiler = {
     sc = "editor.fx.convert",
 }
 
+local vfs = require "vfs"
 for ext, compiler in pairs(ResourceCompiler) do
     local cfg = config.get(ext)
-    cfg.binpath = fs.path ".build":localpath() / ext
+    cfg.binpath = lfs.path(vfs.repo._root) / ".build" / ext
     cfg.compiler = compiler
 end
 
