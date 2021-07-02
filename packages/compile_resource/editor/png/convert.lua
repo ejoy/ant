@@ -26,7 +26,6 @@ return function (input, output, setting)
     local p = default_param()
     p.setting = setting
     p.local_texpath = input
-    p.name = input:string()
     local ok, err = convert_image(output, p)
     if not ok then
 		return ok, err

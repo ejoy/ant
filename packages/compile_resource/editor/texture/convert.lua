@@ -25,7 +25,6 @@ end
 
 return function (input, output, setting, localpath)
 	local param = readdatalist(input)
-	param.name = input:string()
 	local dependfiles = {input}
 	if param.path then
 		local id = ident_util.parse(setting.identity)
