@@ -1,6 +1,7 @@
 #include <lua.hpp>
 #include <errno.h>
 #include <string.h>
+#include <assert.h>
 
 #if defined(LUA_USE_POSIX)
 #   include <sys/types.h>
@@ -87,8 +88,14 @@ static int readall(lua_State *L) {
     size_t size = f.size();
     void* data = create_memory(L, size);
     size_t nr = f.read(data, size);
-    lua_pushinteger(L, (lua_Integer)nr);
-    return 2;
+    assert(nr == size);
+    if (nr != size) {
+        lua_pushlightuserdata(L, data);
+        lua_pushinteger(L, nr);
+        lua_rotate(L, -3, 2);
+        return 3;
+    }
+    return 1;
 }
 
 static int readall_s(lua_State *L) {
