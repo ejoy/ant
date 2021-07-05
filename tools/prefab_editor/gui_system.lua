@@ -174,7 +174,7 @@ local function choose_project()
         if imgui.widget.Button("Quit") then
             local res_root_str = tostring(fs.path "":localpath())
             global_data.project_root = lfs.path(string.sub(res_root_str, 1, #res_root_str - 1))
-            global_data.packages = get_package(lfs.absolute(lfs.path(arg[0])):remove_filename(), false)
+            global_data.packages = get_package(global_data.project_root, false)
             imgui.windows.CloseCurrentPopup();
             show_mount_dialog = true
         end

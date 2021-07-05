@@ -43,17 +43,17 @@ function BaseView:set_model(eid)
     if template and template.filename then
         self.is_prefab = true
     end
-    local transform = {}
-    transform[#transform + 1] = self.base.name
-    transform[#transform + 1] = self.base.tag
-    transform[#transform + 1] = self.base.position
+    local property = {}
+    property[#property + 1] = self.base.name
+    property[#property + 1] = self.base.tag
+    property[#property + 1] = self.base.position
     if self:has_rotate() then
-        transform[#transform + 1] = self.base.rotate
+        property[#property + 1] = self.base.rotate
     end
     if self:has_scale() then
-        transform[#transform + 1] = self.base.scale
+        property[#property + 1] = self.base.scale
     end
-    self.general_property:set_subproperty(transform)
+    self.general_property:set_subproperty(property)
     BaseView.update(self)
     return true
 end
