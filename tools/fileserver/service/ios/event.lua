@@ -9,7 +9,11 @@ local function notify(MessageType, info)
     ltask.send(info.sid, MessageType)
 end
 
-local eventfd = socket.connect(usbmuxd.get_address())
+local eventfd, err = socket.connect(usbmuxd.get_address())
+if not eventfd then
+    print("Error:", err)
+    return
+end
 local a, b = usbmuxd.create_listen_package()
 socket.send(eventfd, a)
 socket.send(eventfd, b)

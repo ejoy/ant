@@ -48,7 +48,7 @@ local ResourceCompiler = {
 local vfs = require "vfs"
 for ext, compiler in pairs(ResourceCompiler) do
     local cfg = config.get(ext)
-    cfg.binpath = lfs.path(vfs.repo._root) / ".build" / ext
+    cfg.binpath = lfs.path(vfs.repopath()) / ".build" / ext
     cfg.compiler = compiler
 end
 

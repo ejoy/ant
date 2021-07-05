@@ -1,19 +1,18 @@
 local boot = require "ltask.bootstrap"
 local ltask = require "ltask"
-local fs = require "filesystem.cpp"
 
 local SERVICE_ROOT <const> = 1
 local MESSSAGE_SYSTEM <const> = 0
 
 local config
-local init_service
+local init_exclusive_service
 
 local function searchpath(name)
 	return assert(package.searchpath(name, config.service_path))
 end
 
 local function new_service(label, id)
-	local sid = boot.new_service(label, init_service, id)
+	local sid = boot.new_service(label, init_exclusive_service, id)
 	assert(sid == id)
 	return sid
 end
@@ -51,50 +50,55 @@ end
 
 local function init(c)
 	config = c
-	if config.lua_path then
-		config.lua_path = config.lua_path .. ";engine/task/lualib/?.lua"
-	else
-		config.lua_path = "engine/task/lualib/?.lua"
-	end
 	if config.service_path then
 		config.service_path = config.service_path .. ";engine/task/service/?.lua"
 	else
 		config.service_path = "engine/task/service/?.lua"
 	end
 	config.lua_cpath = config.lua_cpath or package.cpath
+	table.insert(config.exclusive, "vfs")
 
+	local initstr = ""
 	if __ANT_RUNTIME__ then
-		local servicelua = searchpath "service"
-		init_service = ([[dofile %q]]):format(servicelua)
-		config.init_service = ([[
+	else
+		initstr = [[
+dofile "engine/editor/vfs.lua"
+]]
+		local dbg = debug.getregistry()["lua-debug"]
+		if dbg then
+			dbg:event("setThreadName", "Bootstrap")
+			initstr = initstr .. [[
+local ltask = require "ltask"
+local name = ("Service:%d <%s>"):format(ltask.self(), debug.getregistry().SERVICE_LABEL or "unk")
+dofile "engine/debugger.lua"
+	:event("setThreadName", name)
+	:event "wait"
+]]
+		end
+	end
+	local servicelua = searchpath "service"
+	init_exclusive_service = initstr .. ([[dofile %q]]):format(servicelua)
+	config.init_service = initstr .. ([[
+local initfunc = assert(loadfile %q)
 local ltask = require "ltask"
 local vfs = require "vfs"
-local initfunc = assert(loadfile %q)
-function vfs.realpath(path)
+local ServiceVfs
+local function request(...)
 	if not ServiceVfs then
 		ServiceVfs = ltask.queryservice "vfs"
 	end
-	return ltask.call(ServiceVfs, "get", path)
+	return ltask.call(ServiceVfs, ...)
+end
+function vfs.realpath(path)
+	return request("GET", path)
+end
+function vfs.list(path)
+	return request("LIST", path)
+end
+function vfs.type(path)
+	return request("TYPE", path)
 end
 initfunc()]]):format(servicelua)
-		table.insert(config.exclusive, "vfs")
-		return
-	end
-	config.init_service = ([[
-dofile "engine/editor/vfs.lua"
-dofile %q]]):format(searchpath "service")
-	local dbg = debug.getregistry()["lua-debug"]
-	if dbg then
-		dbg:event("setThreadName", "Bootstrap")
-		config.init_service = [[
-local ltask = require "ltask"
-local name = ("Service:%d <%s>"):format(ltask.self(), debug.getregistry().SERVICE_LABEL or "unk")
-dofile "engine/task/debugger.lua"
-	:event("setThreadName", name)
-	:event "wait"
-]] .. config.init_service
-	end
-	init_service = config.init_service
 end
 
 return function (c)

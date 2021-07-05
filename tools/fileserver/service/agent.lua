@@ -10,7 +10,7 @@ local message = {}
 local ServiceCompile
 local ServiceLogRuntime
 local ServiceDebugProxy
-local ServiceVfs = ltask.uniqueservice "vfs"
+local ServiceVfsMgr = ltask.uniqueservice "vfsmgr"
 local VfsSessionId
 
 local function compile_resource(path)
@@ -28,7 +28,7 @@ function message.ROOT(path)
 	REPOPATH = assert(REPOPATH or path, "Need repo name")
 	print("ROOT", REPOPATH)
 	ServiceLogRuntime = ltask.spawn("log.runtime", REPOPATH)
-	local sid, roothash = ltask.call(ServiceVfs, "ROOT", REPOPATH)
+	local sid, roothash = ltask.call(ServiceVfsMgr, "ROOT", REPOPATH)
 	VfsSessionId = sid
 	response("ROOT", roothash)
 end
@@ -39,7 +39,7 @@ local function COMPILE(path)
 		response("MISSING", path)
 		return
 	end
-	local hash = ltask.call(ServiceVfs, "BUILD", VfsSessionId, path, lpath)
+	local hash = ltask.call(ServiceVfsMgr, "BUILD", VfsSessionId, path, lpath)
 	response("COMPILE", path, hash)
 end
 
@@ -48,7 +48,7 @@ function message.GET(hash)
 		COMPILE(hash)
 		return
 	end
-	local filename = ltask.call(ServiceVfs, "GET", VfsSessionId, hash)
+	local filename = ltask.call(ServiceVfsMgr, "GET", VfsSessionId, hash)
 	if filename == nil then
 		response("MISSING", hash)
 		return
@@ -117,7 +117,7 @@ end
 
 local function quit()
 	if VfsSessionId then
-		ltask.send(ServiceVfs, "CLOSE", VfsSessionId)
+		ltask.send(ServiceVfsMgr, "CLOSE", VfsSessionId)
 	end
 	if ServiceCompile then
 		ltask.send(ServiceCompile, "QUIT")
@@ -130,5 +130,10 @@ local function quit()
 	end
 end
 
-dispatch(FD)
-quit()
+ltask.fork(function()
+	dispatch(FD)
+	quit()
+	ltask.quit()
+end)
+
+return {}
