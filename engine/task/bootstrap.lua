@@ -62,7 +62,7 @@ local function init(c)
 	if __ANT_RUNTIME__ then
 	else
 		initstr = [[
-dofile "engine/editor/vfs.lua"
+require "vfs"
 ]]
 		local dbg = debug.getregistry()["lua-debug"]
 		if dbg then

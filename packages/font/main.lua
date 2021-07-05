@@ -11,7 +11,7 @@ function m.init()
         lfont(fontinit [[dofile "/pkg/ant.font/manager.lua"]])
     else
         lfont(fontinit [[
-            dofile "engine/editor/vfs.lua"
+            require "vfs"
             dofile "/pkg/ant.font/manager.lua"
         ]])
     end
