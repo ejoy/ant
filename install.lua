@@ -49,7 +49,9 @@ end
 copy_directory(BIN, output / "bin", function (path)
    return path:equal_extension '.dll' or path:equal_extension'.exe'
 end)
-copy_directory(input / "engine", output / "engine")
+copy_directory(input / "engine", output / "engine", function (path)
+    return path:filename():string() ~= ".gitignore"
+end)
 copy_directory(input / "packages", output / "packages")
 copy_directory(input / "docs", output / "doc")
 copy_directory(input / "tools" / "prefab_editor", output / "tools" / "prefab_editor", function (path)
