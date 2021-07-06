@@ -7,5 +7,5 @@ task {
     bootstrap = { "listen", arg },
     logger = { "log.server" },
     exclusive = { "timer", "network" },
-    --debuglog = "log.txt",
+    debuglog = "log.txt",
 }

@@ -103,7 +103,9 @@ end
 
 function S.update_viewrect(x, y, w, h)
     rmlui.UpdateViewrect(x, y, w, h)
-    rmlui.ContextUpdateSize(context, w, h)
+    if context then
+        rmlui.ContextUpdateSize(context, w, h)
+    end
 end
 
 S.open = windowManager.open

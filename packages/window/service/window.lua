@@ -13,6 +13,7 @@ local event = {
     mouse = {},
     touch = {},
     keyboard = {},
+    char = {},
 }
 
 local function dispatch(CMD,...)
