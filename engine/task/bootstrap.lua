@@ -89,6 +89,7 @@ local function request(...)
 	end
 	return ltask.call(ServiceVfs, ...)
 end
+vfs.sync = {realpath=vfs.realpath,list=vfs.list,type=vfs.type}
 function vfs.realpath(path)
 	return request("GET", path)
 end
@@ -98,6 +99,7 @@ end
 function vfs.type(path)
 	return request("TYPE", path)
 end
+vfs.async = {realpath=vfs.realpath,list=vfs.list,type=vfs.type}
 initfunc()]]):format(servicelua)
 end
 
