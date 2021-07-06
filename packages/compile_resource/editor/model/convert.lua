@@ -13,7 +13,7 @@ return function (input, output, _, tolocalpath)
     export_meshbin(output, glbdata, exports)
     export_material(output, glbdata, exports, tolocalpath)
     export_animation(input, output, exports)
-    export_prefab(output, glbdata, exports)
+    export_prefab(output, glbdata, exports, tolocalpath)
     return true, {
         input,
         input .. ".patch"

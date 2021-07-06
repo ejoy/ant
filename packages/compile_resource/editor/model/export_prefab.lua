@@ -1,6 +1,8 @@
 local math3d = require "math3d"
 local utility = require "editor.model.utility"
 
+local fs = require "filesystem.local"
+
 local invalid_chars<const> = {
     '<', '>', ':', '/', '\\', '|', '?', '*', ' ', '\t', '\r', '%[', '%]', '%(', '%)'
 }
@@ -66,7 +68,96 @@ local function update_transform(ptrans, transform)
         t = {math3d.index(t, 1, 2, 3)}
     }
 end
-local function create_mesh_node_entity(gltfscene, nodeidx, ptrans, parent, exports)
+
+local function is_mirror_transform(scale)
+    for _, s in ipairs(scale) do
+        if s < 0 then
+            return true
+        end
+    end
+end
+
+local function duplicate_table(m)
+    local t = {}
+    for k, v in pairs(m) do
+        t[k] = type(v) == "table" and
+             duplicate_table(v) or
+             v
+    end
+    return t
+end
+
+local primitive_state_names = {
+    "POINTS",
+    "LINES",
+    false, --LINELOOP, not support
+    "LINESTRIP",
+    "",         --TRIANGLES
+    "TRISTRIP", --TRIANGLE_STRIP
+    false, --TRIANGLE_FAN not support
+}
+
+local materials = {}
+
+local function generate_material(mi, mode, cull, deffile)
+    local sname = primitive_state_names[mode+1]
+    if not sname then
+        error(("not support primitate state, mode:%d"):format(mode))
+    end
+    local cullname = cull or "NONE"
+    local filename = deffile or mi.filename
+    local key = sname .. cullname .. filename:string()
+
+    local m = materials[key]
+    if m == nil then
+        local change = true
+        if sname == "" and cull == "CW" then
+            m = mi
+            change = nil
+        else
+            local f = mi.filename
+            local basename = f:stem():string()
+
+            local nm = duplicate_table(mi.material)
+            local s = nm.state
+            s.CULL = cullname
+            if sname == "" then
+                s.PT = nil
+            else
+                s.PT = sname
+                basename = basename .. "_" .. sname
+            end
+
+            basename = basename .. "_" .. cullname
+            filename = f:parent_path() / basename:lower() .. ".material"
+            m = {
+                filename = filename,
+                material = nm
+            }
+        end
+
+        materials[key] = m
+
+        if change or not deffile then
+            utility.save_txt_file(filename:string(), m.material)
+        end
+    end
+
+    return filename
+end
+
+local function read_datalist(filename)
+    local f = fs.open(filename)
+    local c = f:read "a"
+    f:close()
+    return c
+end
+
+local default_material_info = {
+    filename = fs.path "./materials/pbr_default_cw.material",
+}
+
+local function create_mesh_node_entity(gltfscene, nodeidx, ptrans, parent, exports, tolocalpath)
     local node = gltfscene.nodes[nodeidx+1]
     local transform = update_transform(ptrans, get_transform(node))
     local meshidx = node.mesh
@@ -75,16 +166,22 @@ local function create_mesh_node_entity(gltfscene, nodeidx, ptrans, parent, expor
     for primidx, prim in ipairs(mesh.primitives) do
         local meshname = mesh.name and fix_invalid_name(mesh.name) or ("mesh" .. meshidx)
         local materialfile
+        local mode = prim.mode or 4
         if prim.material then 
             if exports.material and next(exports.material) then
-                local mm = exports.material[prim.material+1]
-                local mode = prim.mode or 4
-                materialfile = assert(mm[mode])
+                local mi = exports.material[prim.material+1]
+                local cull = is_mirror_transform(transform.s) and "CW" or "CCW"
+                materialfile = generate_material(mi, mode, cull):string()
             else
                 error(("primitive need material, but no material files output:%s %d"):format(meshname, prim.material))
             end
         else
-            materialfile = "/pkg/ant.resources/materials/pbr_default_cw.material"
+            local default_material_path<const> = fs.path "/pkg/ant.resources/materials/pbr_default_cw.material"
+            if default_material_info.material == nil then
+                default_material_info.material = read_datalist(tolocalpath(default_material_path))
+            end
+            local cull = is_mirror_transform(transform.s) and "CW" or "CCW"
+            materialfile = generate_material(default_material_info, mode, cull, default_material_path):string()
         end
 
         local meshfile = exports.mesh[meshidx+1][primidx]
@@ -187,7 +284,7 @@ local function righthand2lefthand_transform()
     }
 end
 
-return function(output, glbdata, exports)
+return function(output, glbdata, exports, tolocalpath)
     prefab = {}
 
     local gltfscene = glbdata.info
