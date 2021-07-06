@@ -1,4 +1,4 @@
-$input v_color0, v_texcoord0, v_ppos
+$input v_ppos, v_texcoord0, v_color0
 
 #include <common.sh>
 

@@ -76,7 +76,7 @@ local function get_package(entry_path, readmount)
     if readmount then
         access.readmount(repo)
     end
-    local merged_repo = vfs.merge_mount(repo)
+    local merged_repo = repo--vfs.merge_mount(repo)
     local packages = {}
     for _, name in ipairs(merged_repo._mountname) do
         local key
@@ -174,7 +174,7 @@ local function choose_project()
         if imgui.widget.Button("Quit") then
             local res_root_str = tostring(fs.path "":localpath())
             global_data.project_root = lfs.path(string.sub(res_root_str, 1, #res_root_str - 1))
-            global_data.packages = get_package(global_data.project_root, false)
+            global_data.packages = get_package(global_data.project_root, true)
             imgui.windows.CloseCurrentPopup();
             show_mount_dialog = true
         end

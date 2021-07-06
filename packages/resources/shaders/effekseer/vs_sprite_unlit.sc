@@ -1,5 +1,5 @@
 $input a_position, a_color0, a_texcoord0
-$output v_color0, v_texcoord0, v_ppos
+$output v_ppos, v_texcoord0, v_color0
 
 #include <common.sh>
 
