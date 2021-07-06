@@ -2016,8 +2016,15 @@ winSetTabItemClosed(lua_State *L) {
 
 static int
 winOpenPopup(lua_State *L) {
-	const char * id = luaL_checkstring(L, INDEX_ID);
-	ImGui::OpenPopup(id);
+	//TODO: ImGuiPopupFlags
+	if (lua_isinteger(L, INDEX_ID)) {
+		ImGuiID id = (ImGuiID)lua_tointeger(L, INDEX_ID);
+		ImGui::OpenPopup(id);
+	}
+	else {
+		const char * id = luaL_checkstring(L, INDEX_ID);
+		ImGui::OpenPopup(id);
+	}
 	return 0;
 }
 
@@ -2344,13 +2351,6 @@ static int
 winPopStyleVar(lua_State *L) {
 	int count = (int)luaL_optinteger(L, 1, 1);
 	ImGui::PopStyleVar(count);
-	return 0;
-}
-
-static int
-winSetWindowFontScale(lua_State* L) {
-	float scale = (float)luaL_checknumber(L, 1);
-	ImGui::SetWindowFontScale(scale);
 	return 0;
 }
 
@@ -2903,7 +2903,7 @@ uCaptureMouseFromApp(lua_State * L) {
 
 static int
 uIsMouseDoubleClicked(lua_State * L) {
-	int btn = (int)luaL_checkinteger(L, 1);
+	ImGuiMouseButton btn = (ImGuiMouseButton)luaL_checkinteger(L, 1);
 	bool clicked = ImGui::IsMouseDoubleClicked(btn);
 	lua_pushboolean(L, clicked);
 	return 1;
@@ -3249,6 +3249,7 @@ static struct enum_pair eTableRowFlags[] = {
 
 static struct enum_pair eTableColumnFlags[] = {
 	ENUM(ImGuiTableColumnFlags, None),
+	ENUM(ImGuiTableColumnFlags, Disabled),
 	ENUM(ImGuiTableColumnFlags, DefaultHide),
 	ENUM(ImGuiTableColumnFlags, DefaultSort),
 	ENUM(ImGuiTableColumnFlags, WidthStretch),
@@ -3260,6 +3261,7 @@ static struct enum_pair eTableColumnFlags[] = {
 	ENUM(ImGuiTableColumnFlags, NoSort),
 	ENUM(ImGuiTableColumnFlags, NoSortAscending),
 	ENUM(ImGuiTableColumnFlags, NoSortDescending),
+	ENUM(ImGuiTableColumnFlags, NoHeaderLabel),
 	ENUM(ImGuiTableColumnFlags, NoHeaderWidth),
 	ENUM(ImGuiTableColumnFlags, PreferSortAscending),
 	ENUM(ImGuiTableColumnFlags, PreferSortDescending),
@@ -3857,7 +3859,6 @@ luaopen_imgui(lua_State *L) {
 		{ "PopStyleColor", winPopStyleColor },
 		{ "PushStyleVar", winPushStyleVar },
 		{ "PopStyleVar", winPopStyleVar },
-		{ "SetWindowFontScale", winSetWindowFontScale },
 		{ NULL, NULL },
 	};
 

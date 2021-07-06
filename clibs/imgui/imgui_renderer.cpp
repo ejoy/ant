@@ -86,8 +86,9 @@ void rendererDrawData(ImGuiViewport* viewport) {
 			if (0 == cmd.ElemCount) {
 				continue;
 			}
-			assert(NULL != cmd.TextureId);
-			ImGuiTexture texture = { cmd.TextureId };
+			ImTextureID texid = cmd.GetTexID();
+			assert(NULL != texid);
+			ImGuiTexture texture = { texid };
 
 			const float x = (cmd.ClipRect.x - clip_offset.x) * clip_scale.x;
 			const float y = (cmd.ClipRect.y - clip_offset.y) * clip_scale.y;
