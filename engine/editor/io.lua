@@ -64,7 +64,9 @@ function CMD.LIST(path)
 	local item = {}
 	for filename in pairs(access.list_files(repo, path)) do
 		local realpath = access.realpath(repo, path .. filename)
-		item[filename] = not not lfs.is_directory(realpath)
+		if realpath then
+			item[filename] = not not lfs.is_directory(realpath)
+		end
 	end
 	return item
 end
