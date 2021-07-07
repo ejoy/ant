@@ -182,8 +182,7 @@ function world:instance_prefab(prefab, args, owned)
 end
 
 function world:remove_entity(eid)
-	local e = assert(self[eid])
-	e.removed = true
+	self:enable_tag(eid, "removed")
 end
 
 local function component_next(set, index)
