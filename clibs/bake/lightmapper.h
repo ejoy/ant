@@ -432,9 +432,6 @@ static const float lm_baseAngles[3][3] = {
 
 static lm_bool lm_trySamplingConservativeTriangleRasterizerPosition(lm_context *ctx)
 {
-	if (lm_hasConservativeTriangleRasterizerFinished(ctx))
-		return LM_FALSE;
-
 	// check if lightmap pixel was already set
 	float *pixelValue = lm_getLightmapPixel(ctx, ctx->meshPosition.rasterizer.x, ctx->meshPosition.rasterizer.y);
 	for (int j = 0; j < ctx->lightmap.channels; j++)
@@ -592,25 +589,6 @@ static lm_bool lm_trySamplingConservativeTriangleRasterizerPosition(lm_context *
 #endif
 }
 
-// returns true if a sampling position was found and
-// false if we finished rasterizing the current triangle
-static lm_bool lm_findFirstConservativeTriangleRasterizerPosition(lm_context *ctx)
-{
-	while (!lm_trySamplingConservativeTriangleRasterizerPosition(ctx))
-	{
-		lm_moveToNextPotentialConservativeTriangleRasterizerPosition(ctx);
-		if (lm_hasConservativeTriangleRasterizerFinished(ctx))
-			return LM_FALSE;
-	}
-	return LM_TRUE;
-}
-
-static lm_bool lmFindNextConservativeTriangleRasterizerPosition(lm_context *ctx)
-{
-	lm_moveToNextPotentialConservativeTriangleRasterizerPosition(ctx);
-	return lm_findFirstConservativeTriangleRasterizerPosition(ctx);
-}
-
 //#ifdef _DEBUG
 // static uint8_t* get_image_memory(bgfx_texture_handle_t tex, int w, int h, int elemsize)
 // {
@@ -661,6 +639,7 @@ static lm_bool lmFindNextConservativeTriangleRasterizerPosition(lm_context *ctx)
 
 static void lmIntegrateHemisphereBatch(lm_context *ctx)
 {
+	assert(ctx->hemisphere.fbHemiIndex > 0);
 	ctx->render.downsample(ctx);
 
 	// copy position mapping to storage
@@ -686,6 +665,8 @@ static void lmIntegrateHemisphereBatch(lm_context *ctx)
 		ctx->hemisphere.storage.writePosition.y += ctx->hemisphere.fbHemiCountY;
 		assert(ctx->hemisphere.storage.writePosition.y + (int)ctx->hemisphere.fbHemiCountY < ctx->lightmap.height);
 	}
+
+	ctx->hemisphere.fbHemiIndex = 0;
 }
 
 static void lmWriteResultsToLightmap(lm_context *ctx)
@@ -877,7 +858,13 @@ static lm_vec3 lm_transformPosition(const float *m, lm_vec3 v)
 	return r;
 }
 
-static void lm_updateMeshPosition(lm_context *ctx)
+static lm_bool lm_isRasterizerPositionValid(lm_context *ctx)
+{
+	return	ctx->meshPosition.rasterizer.x <= ctx->meshPosition.rasterizer.maxx &&
+			ctx->meshPosition.rasterizer.y <= ctx->meshPosition.rasterizer.maxy;
+}
+
+static void lm_initMeshRasterizerPosition(lm_context *ctx)
 {
 	// load and transform triangle to process next
 	lm_vec2 uvMin = lm_v2(FLT_MAX, FLT_MAX), uvMax = lm_v2(-FLT_MAX, -FLT_MAX);
@@ -1003,6 +990,10 @@ static void lm_updateMeshPosition(lm_context *ctx)
 	ctx->meshPosition.rasterizer.x = ctx->meshPosition.rasterizer.minx + lm_passOffsetX(ctx);
 	ctx->meshPosition.rasterizer.y = ctx->meshPosition.rasterizer.miny + lm_passOffsetY(ctx);
 
+	if (!lm_isRasterizerPositionValid(ctx))
+	{
+		lm_moveToNextPotentialConservativeTriangleRasterizerPosition(ctx);
+	}
 	// // try moving to first valid sample position
 	// if (ctx->meshPosition.rasterizer.x <= ctx->meshPosition.rasterizer.maxx &&
 	// 	ctx->meshPosition.rasterizer.y <= ctx->meshPosition.rasterizer.maxy &&
@@ -1146,19 +1137,18 @@ lm_bool lmBake(lm_context *ctx)
 			ctx->meshPosition.triangle.baseIndex + 3 < ctx->mesh.count;
 			ctx->meshPosition.triangle.baseIndex += 3)
 		{
-			lm_updateMeshPosition(ctx);
-
-			for(;ctx->meshPosition.rasterizer.x <= ctx->meshPosition.rasterizer.maxx &&
-				ctx->meshPosition.rasterizer.y <= ctx->meshPosition.rasterizer.maxy &&
-				lm_findFirstConservativeTriangleRasterizerPosition(ctx); 
+			for(lm_initMeshRasterizerPosition(ctx);
+				!lm_hasConservativeTriangleRasterizerFinished(ctx);
 				lm_moveToNextPotentialConservativeTriangleRasterizerPosition(ctx))
 			{
+				if (!lm_trySamplingConservativeTriangleRasterizerPosition(ctx))
+					continue;
+
 				if (ctx->hemisphere.fbHemiIndex == 0)
-				{
 					ctx->render.init_buffer(ctx);
-					ctx->hemisphere.fbHemiToLightmapLocation[ctx->hemisphere.fbHemiIndex] =
-					lm_i2(ctx->meshPosition.rasterizer.x, ctx->meshPosition.rasterizer.y);
-				}
+
+				ctx->hemisphere.fbHemiToLightmapLocation[ctx->hemisphere.fbHemiIndex] =
+				lm_i2(ctx->meshPosition.rasterizer.x, ctx->meshPosition.rasterizer.y);
 
 				for (ctx->meshPosition.hemisphere.side=0; 
 					ctx->meshPosition.hemisphere.side < 5;
@@ -1172,20 +1162,22 @@ lm_bool lmBake(lm_context *ctx)
 					ctx->render.render_scene(ctx, outViewport4, outView4x4, outProjection4x4);
 				}
 
-				++ctx->hemisphere.fbHemiIndex;
-
 				// finish hemisphere
-				if (ctx->hemisphere.fbHemiIndex == ctx->hemisphere.fbHemiCountX * ctx->hemisphere.fbHemiCountY)
+				if (++ctx->hemisphere.fbHemiIndex == ctx->hemisphere.fbHemiCountX * ctx->hemisphere.fbHemiCountY)
 				{
 					// downsample new hemisphere batch and store the results
 					lmIntegrateHemisphereBatch(ctx);
-					ctx->hemisphere.fbHemiIndex = 0;
 				}
 
 				ctx->render.process(ctx);
 			}
 		}
+		if (0 != ctx->hemisphere.fbHemiIndex)
+			lmIntegrateHemisphereBatch(ctx);
 		lmWriteResultsToLightmap(ctx); // read storage data from gpu memory and write it to the lightmap
+		// {
+		// 	lmImageSaveTGAf("d:/tmp/lm1.tga", ctx->lightmap.data, ctx->lightmap.width, ctx->lightmap.height, ctx->lightmap.channels, 0.0f);
+		// }
 	}
 
 	assert(ctx->meshPosition.triangle.baseIndex+3 == ctx->mesh.count);
