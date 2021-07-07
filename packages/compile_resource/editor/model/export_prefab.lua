@@ -87,7 +87,7 @@ local function duplicate_table(m)
     return t
 end
 
-local primitive_state_names = {
+local primitive_names = {
     "POINTS",
     "LINES",
     false, --LINELOOP, not support
@@ -99,21 +99,31 @@ local primitive_state_names = {
 
 local materials = {}
 
-local function generate_material(mi, mode, cull, deffile)
-    local sname = primitive_state_names[mode+1]
+local function generate_material(mi, mode, mirror_transform)
+    local sname = primitive_names[mode+1]
     if not sname then
         error(("not support primitate state, mode:%d"):format(mode))
     end
-    local cullname = cull or "NONE"
-    local filename = deffile or mi.filename
+    --defualt cull is CCW
+    local function what_cull()
+        local cull_rempper<const> = {
+            CW = mirror_transform and "CCW" or "CW",
+            CCW= mirror_transform and "CW" or "CCW",
+            NONE="NONE",
+        }
+        
+        return cull_rempper[mi.material.state.CULL]
+    end
+
+    local cullname = what_cull()
+
+    local filename = mi.filename
     local key = filename:string() .. sname .. cullname
 
     local m = materials[key]
     if m == nil then
-        local change = true
-        if sname == "" and cull == "CW" then
+        if sname == "" and cullname == mi.material.state.CULL then
             m = mi
-            change = nil
         else
             local f = mi.filename
             local basename = f:stem():string()
@@ -137,15 +147,9 @@ local function generate_material(mi, mode, cull, deffile)
         end
 
         materials[key] = m
-
-        if change or not deffile then
-            utility.save_txt_file(filename:string(), m.material)
-        end
-    else
-        filename = m.filename
     end
 
-    return filename
+    return m
 end
 
 local function read_datalist(filename)
@@ -158,6 +162,12 @@ end
 local default_material_info = {
     filename = fs.path "./materials/pbr_default_cw.material",
 }
+
+local function save_material(mi)
+    if not fs.exists(mi.filename) then
+        utility.save_txt_file(mi.filename:string(), mi.material)
+    end
+end
 
 local function create_mesh_node_entity(gltfscene, nodeidx, ptrans, parent, exports, tolocalpath)
     local node = gltfscene.nodes[nodeidx+1]
@@ -172,8 +182,9 @@ local function create_mesh_node_entity(gltfscene, nodeidx, ptrans, parent, expor
         if prim.material then 
             if exports.material and next(exports.material) then
                 local mi = exports.material[prim.material+1]
-                local cull = is_mirror_transform(transform.s) and "CW" or "CCW"
-                materialfile = generate_material(mi, mode, cull):string()
+                local materialinfo = generate_material(mi, mode, is_mirror_transform(transform.s))
+                save_material(materialinfo)
+                materialfile = materialinfo.filename
             else
                 error(("primitive need material, but no material files output:%s %d"):format(meshname, prim.material))
             end
@@ -182,8 +193,13 @@ local function create_mesh_node_entity(gltfscene, nodeidx, ptrans, parent, expor
             if default_material_info.material == nil then
                 default_material_info.material = read_datalist(tolocalpath(default_material_path))
             end
-            local cull = is_mirror_transform(transform.s) and "CW" or "CCW"
-            materialfile = generate_material(default_material_info, mode, cull, default_material_path):string()
+            local materialinfo = generate_material(default_material_info, mode, is_mirror_transform(transform.s))
+            if materialinfo.filename ~= default_material_path then
+                save_material(materialinfo)
+                materialfile = materialinfo.filename
+            else
+                materialfile = default_material_path
+            end
         end
 
         local meshfile = exports.mesh[meshidx+1][primidx]
@@ -195,7 +211,7 @@ local function create_mesh_node_entity(gltfscene, nodeidx, ptrans, parent, expor
             scene_entity= true,
             transform   = transform,
             mesh        = meshfile,
-            material    = materialfile,
+            material    = materialfile:string(),
             name        = node.name or "",
             state       = DEFAULT_STATE,
         }

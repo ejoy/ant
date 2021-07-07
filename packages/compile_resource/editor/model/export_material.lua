@@ -292,6 +292,10 @@ return function (output, glbdata, exports, tolocalpath)
             setting["ALPHAMODE_MASK"] = 1
         end
 
+        if mat.doubleSided then
+            material.state.CULL = "NONE"
+        end
+
         material.fx.setting = setting
         local function refine_name(name)
             local newname = name:gsub("['\\/:*?\"<>|]", "_")
