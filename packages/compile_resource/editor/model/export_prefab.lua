@@ -106,7 +106,7 @@ local function generate_material(mi, mode, cull, deffile)
     end
     local cullname = cull or "NONE"
     local filename = deffile or mi.filename
-    local key = sname .. cullname .. filename:string()
+    local key = filename:string() .. sname .. cullname
 
     local m = materials[key]
     if m == nil then
@@ -129,7 +129,7 @@ local function generate_material(mi, mode, cull, deffile)
             end
 
             basename = basename .. "_" .. cullname
-            filename = f:parent_path() / basename:lower() .. ".material"
+            filename = f:parent_path() / basename .. ".material"
             m = {
                 filename = filename,
                 material = nm
@@ -141,6 +141,8 @@ local function generate_material(mi, mode, cull, deffile)
         if change or not deffile then
             utility.save_txt_file(filename:string(), m.material)
         end
+    else
+        filename = m.filename
     end
 
     return filename
