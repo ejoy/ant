@@ -178,9 +178,7 @@ local function add_polylines(polymesh, line_width, color, material)
     imaterial.set_property(eid, "u_color",      color)
     imaterial.set_property(eid, "u_line_info",  lineinfo)
 
-    polylines[eid] = {
-        mailbox = world:sub{"entity_removed", eid},
-    }
+    polylines[eid] = true
 
     return eid
 end
@@ -269,8 +267,8 @@ end
 
 local pl_sys = ecs.system "polyline_system"
 function pl_sys:data_changed()
-    for eid, data in pairs(polylines) do
-        for _ in data.mailbox:unpack() do
+    for _, eid in world:each "removed" do
+        if polylines[eid] then
             local e = world[eid]
             if e.polyline then
                 local vb = e._rendercache.vb
@@ -280,7 +278,6 @@ function pl_sys:data_changed()
                 elseif dyn_linelist_vb.handle == vbhandle then
                     dyn_linelist_vb:free(vb)
                 end
-                
             end
         end
     end

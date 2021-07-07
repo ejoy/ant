@@ -255,7 +255,7 @@ end
 
 local dl_eid
 local create_light_mb = world:sub{"component_register", "make_shadow"}
-local remove_light_mb
+local remove_light
 local light_trans_mb
 
 local function set_csm_visible(v)
@@ -281,20 +281,20 @@ function sm:data_changed()
 	for msg in create_light_mb:each() do
 		local eid = msg[3]
 		if find_directional_light(eid) then
-			remove_light_mb = world:sub{"entity_removed", eid}
+			remove_light = eid
 
 			light_trans_mb = world:sub{"component_changed", "transform", eid}
 			set_csm_visible(true)
 		end
 	end
 
-	if remove_light_mb then
-		for msg in remove_light_mb:each() do
-			local eid = msg[2]
-			assert(eid == dl_eid)
-			dl_eid = nil
-
-			set_csm_visible(false)
+	if remove_light then
+		for _, eid in world:each "removed" do
+			if remove_light == eid then
+				assert(eid == dl_eid)
+				dl_eid = nil
+				set_csm_visible(false)
+			end
 		end
 	end
 

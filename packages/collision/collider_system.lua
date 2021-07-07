@@ -106,6 +106,18 @@ function collcomp:delete()
 	end
 end
 
+--local s = ecs.system "collider_component_system"
+--
+--function s:component_delete()
+--	for _, eid in world:select "removed collider" do
+--		local e = world[eid]
+--		local c = e.collider
+--		if c._handle then
+--			w:body_destroy(c._handle)
+--		end
+--	end
+--end
+
 local icoll = ecs.interface "collider"
 
 local function set_obj_transform(obj, t, r)

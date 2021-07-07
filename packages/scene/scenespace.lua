@@ -23,7 +23,6 @@ local sp_sys = ecs.system "scenespace_system"
 
 local se_mb = world:sub {"component_register", "scene_entity"}
 local pc_mb = world:sub {"component_changed", "parent"}
-local eremove_mb = world:sub {"entity_removed"}
 
 local hie_scene = require "hierarchy.scene"
 local scenequeue = hie_scene.queue()
@@ -88,7 +87,7 @@ function sp_sys:update_hierarchy()
 	end
 
     local needclear
-    for _, eid in eremove_mb:unpack() do
+    for _, eid in world:each "removed" do
 		--TODO: fix remove branch
 		local function mount_children()
 			local children = {}
