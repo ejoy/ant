@@ -37,6 +37,7 @@ local output = fs.path "../ant_release"
 local BIN = fs.exe_path():parent_path()
 local PLAT = BIN:parent_path():filename():string()
 
+print "remove ant_release/* ..."
 if fs.exists(output) then
     fs.remove_all(output / "bin")
     fs.remove_all(output / "engine")
@@ -45,6 +46,8 @@ if fs.exists(output) then
 else
     fs.create_directories(output)
 end
+
+print "copy data to ant_release/* ..."
 
 copy_directory(BIN, output / "bin", function (path)
    return path:equal_extension '.dll' or path:equal_extension'.exe'
@@ -61,6 +64,57 @@ end)
 fs.copy_file(input / "run_editor.bat", output / "run_editor.bat", true)
 
 if PLAT == "msvc" then
+    print "copy msvc depend dll"
     local msvc = require "tools.install.msvc_helper"
     msvc.copy_vcrt("x64", output / "bin")
+end
+
+local function check_need_submit(...)
+    for i=1, select('#', ...) do
+        local a = select(1, ...)
+        if a:match "submit" then
+            return true
+        end
+    end
+end
+
+if check_need_submit(...) then
+    print "submit ant_release ..."
+
+    local subprocess = require "subprocess"
+
+    local cwd<const> = "../ant_release"
+    local function spawn(cmd)
+        print("spawn process:", cmd .. table.concat(cmd, " "))
+        cmd.stdout = true
+        cmd.stderr = true
+        local p = subprocess.spawn(cmd)
+
+        if p.stdout then
+            print("stdout:", p.stdout:read "a")
+        end
+
+        if p.stderr then
+            print("stderr:", p.stderr:read "a")
+        end
+
+        local errcode = p:wait()
+        if errcode ~= 0 then
+            print("error:", errcode)
+        end
+    end
+
+    spawn{"git", "add", "."}
+    local function find_commit_msg_in_arg(...)
+        for i=1, select('#', ...) do
+            local a = select(1, ...)
+            local msg = a:match"commitmsg=(.+)"
+            if msg then
+                return msg
+            end
+        end
+    end
+    local commitmsg = find_commit_msg_in_arg(...) or "new"
+    spawn{"git", "commit", "-m", commitmsg, "."}
+    spawn{"git", "push"}
 end
