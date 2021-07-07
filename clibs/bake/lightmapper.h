@@ -1175,6 +1175,9 @@ lm_bool lmBake(lm_context *ctx)
 		if (0 != ctx->hemisphere.fbHemiIndex)
 			lmIntegrateHemisphereBatch(ctx);
 		lmWriteResultsToLightmap(ctx); // read storage data from gpu memory and write it to the lightmap
+		{
+			lmImageSaveTGAf("d:/tmp/lm1.tga", ctx->lightmap.data, ctx->lightmap.width, ctx->lightmap.height, 4, 0.0f);
+		}
 		// {
 		// 	lmImageSaveTGAf("d:/tmp/lm1.tga", ctx->lightmap.data, ctx->lightmap.width, ctx->lightmap.height, ctx->lightmap.channels, 0.0f);
 		// }

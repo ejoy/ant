@@ -111,7 +111,7 @@ local function create_hemisphere_weights_texture(hemisize, weight_func)
         U="CLAMP",
         V="CLAMP",
     }
-    return bgfx.create_texture2d(3*hemisize, hemisize, false, 1, "RG32F", flags)
+    return bgfx.create_texture2d(3*hemisize, hemisize, false, 1, "RG32F", flags, bgfx.memory_buffer("ff", weights))
 end
 
 local function get_weight_texture(size)
@@ -332,6 +332,60 @@ local function update_bake_shading(lm)
     shading_info.weight_tex = {stage=1, texture = {handle=get_weight_texture(lmsize)}}
 end
 
+local function read_tex(hemix, hemiy, srctex)
+    local function get_image_memory(tex, w, h, elemsize)
+        local m = bgfx.memory_buffer(w*h*elemsize)
+        local whichframe = bgfx.read_texture(tex, m)
+        while bgfx.frame() < whichframe do end
+        return m
+    end
+
+    local function create_tex(w, h, fmt)
+        fmt = fmt or "RGBA32F"
+        local flags = sampler.sampler_flag{
+                MIN="POINT",
+                MAG="POINT",
+                U="CLAMP",
+                V="CLAMP",
+                BLIT="BLIT_READWRITE",
+        }
+        return bgfx.create_texture2d(w, h, false, 1, fmt, flags)
+    end
+
+    local function copy_tex(viewid, dsttex, srctex, w, h)
+        bgfx.blit(viewid,
+        dsttex, 0, 0,
+        srctex, 0, 0, w, h)
+    end
+
+    local function save_bin(filename, mm, w, h, numelem)
+        local ss = tostring(mm)
+        local t = {}
+        for jj=0, h-1 do
+            for ii=0, w-1 do
+                local idx = jj*w*numelem+ii
+                local fmt = ("f"):rep(numelem)
+                local tt = table.pack(fmt:unpack(ss:sub(idx, idx+16)))
+                for ee=1, numelem do
+                    t[#t+1] = ("%2f "):format(tt[ee])
+                end
+            end
+            t[#t+1] = "\n"
+        end
+
+        local cc = table.concat(t, "")
+        local f = io.open(filename, "w")
+        f:write(cc)
+        f:close()
+    end
+
+    local tt = create_tex(hemix, hemiy, "RGBA32F")
+    copy_tex(lightmap_storage_viewid+1, tt, srctex, hemix, hemiy)
+    local mm = get_image_memory(tt, hemix, hemiy, 16)
+    bake.save_tga("d:/tmp/aa.tga", mm, hemix, hemiy, 4);
+    save_bin("d:/tmp/t.bin", mm, hemix, hemiy, 4)
+end
+
 local skycolor = 0xffffffff
 
 function ilm.bake_entity(eid, pf, notcull)
@@ -406,9 +460,10 @@ function ilm.bake_entity(eid, pf, notcull)
             end
 
             local hemix, hemiy = bake.hemi_count(size)
+            local dsttex = shading_info.fb.render_textures[write].texture.handle
             bgfx.blit(lightmap_storage_viewid,
                 shading_info.storage_rb, writex, writey,
-                shading_info.fb.render_textures[write].texture.handle, 0, 0, hemix, hemiy)
+                dsttex, 0, 0, hemix, hemiy)
             bgfx.frame()
         end,
         read_lightmap = function(size)

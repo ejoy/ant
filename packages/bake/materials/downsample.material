@@ -8,7 +8,6 @@ properties:
         stage:0
         texture: /pkg/ant.resources/textures/default.texture
 state:
-    CULL: CCW
-    DEPTH_TEST: LESS
+    CULL: NONE
     PT: TRISTRIP
     WRITE_MASK: RGBA

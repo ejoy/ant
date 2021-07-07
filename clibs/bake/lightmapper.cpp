@@ -389,7 +389,7 @@ llightmap_context(lua_State *L){
 
 #ifdef _DEBUG
 static int
-lligthmap_read_obj(lua_State *L){
+llightmap_read_obj(lua_State *L){
     //static int loadSimpleObjFile(const char *filename, vertex_t **vertices, unsigned int *vertexCount, unsigned short **indices, unsigned int *indexCount)
     const char* filename = luaL_checkstring(L, 1);
 	FILE *file = fopen(filename, "rt");
@@ -486,6 +486,21 @@ llightmap_hemi_count(lua_State *L){
     return 2;
 }
 
+#ifdef _DEBUG
+static int
+llightmap_save_tga(lua_State *L){
+    auto fn = luaL_checkstring(L, 1);
+    auto m = (struct memory*)luaL_checkudata(L, 2, "BGFX_MEMORY");
+    auto w = (int)luaL_checkinteger(L, 3);
+    auto h = (int)luaL_checkinteger(L, 4);
+    auto c = (int)luaL_checkinteger(L, 5);
+    if (w*h*c*sizeof(float) != m->size){
+        luaL_error(L, "memory size not equal to w * h * c * sizeof(float)");
+    }
+    lmImageSaveTGAf(fn, (float*)m->data, w, h, c);
+    return 0;
+}
+#endif //_DEBUG
 extern "C"{
 LUAMOD_API int
 luaopen_bake(lua_State* L) {
@@ -497,7 +512,8 @@ luaopen_bake(lua_State* L) {
         {"framebuffer_size", llightmap_framebuffer_size},
         {"hemi_count", llightmap_hemi_count},
         #ifdef _DEBUG
-        { "read_obj", lligthmap_read_obj},
+        {"read_obj", llightmap_read_obj},
+        {"save_tga", llightmap_save_tga},
         #endif 
         { nullptr, nullptr },
     };
