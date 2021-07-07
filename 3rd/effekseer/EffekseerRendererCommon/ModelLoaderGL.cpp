@@ -1,4 +1,16 @@
 #include "ModelLoaderGL.h"
+#include <locale>
+#include <codecvt>
+static std::string w2u(const std::u16string& source)
+{
+	return std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t>().to_bytes(source);
+}
+static std::u16string u2w(const std::string& source)
+{
+	return std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t>().from_bytes(source);
+}
+
+std::string get_ant_file_path(const std::string& path);
 
 namespace EffekseerRenderer
 {
@@ -20,7 +32,9 @@ ModelLoader::~ModelLoader()
 
 ::Effekseer::ModelRef ModelLoader::Load(const char16_t* path)
 {
-	std::unique_ptr<::Effekseer::FileReader> reader(fileInterface_->OpenRead(path));
+	auto ant_path = u2w(get_ant_file_path(w2u(path)));
+
+	std::unique_ptr<::Effekseer::FileReader> reader(fileInterface_->OpenRead(ant_path.data()));
 	if (reader.get() == nullptr)
 	{
 		return nullptr;

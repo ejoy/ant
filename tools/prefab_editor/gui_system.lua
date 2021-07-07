@@ -76,9 +76,9 @@ local function get_package(entry_path, readmount)
     if readmount then
         access.readmount(repo)
     end
-    local merged_repo = repo--vfs.merge_mount(repo)
     local packages = {}
-    for _, name in ipairs(merged_repo._mountname) do
+    for _, name in ipairs(repo._mountname) do
+        vfs.mount(name, repo._mountpoint[name]:string())
         local key
         local skip = false
         if utils.start_with(name, "pkg/ant.") then
@@ -95,7 +95,7 @@ local function get_package(entry_path, readmount)
             end
         end
         if not skip then
-            packages[#packages + 1] = {name = key, path = merged_repo._mountpoint[name]}
+            packages[#packages + 1] = {name = key, path = repo._mountpoint[name]}
         end
     end
     return packages

@@ -155,7 +155,6 @@ end
 
 local iom = world:interface "ant.objcontroller|obj_motion"
 local event_entity_register = world:sub{"entity_register"}
-local event_entity_removed = world:sub{"entity_removed"}
 function effekseer_sys:ui_update()
     -- for _, eid in event_entity_register:unpack() do
     --     if world[eid] and world[eid].effect_instance then
@@ -167,8 +166,8 @@ function effekseer_sys:ui_update()
     --         end
     --     end
     -- end
-    for msg in event_entity_removed:each() do
-        local e = msg[3]
+    for _, eid in world:each "removed" do
+        local e = world[eid]
         if e.effect_instance then
             effekseer.destroy(e.effect_instance.handle)
         end

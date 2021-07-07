@@ -182,14 +182,7 @@ function world:instance_prefab(prefab, args, owned)
 end
 
 function world:remove_entity(eid)
-	local e = assert(self[eid])
-	self[eid] = nil
-	self._entity[eid] = nil
-
-	local removed = self._removed
-	removed[#removed+1] = e
-
-	self:pub {"entity_removed", eid, e,}
+	self:enable_tag(eid, "removed")
 end
 
 local function component_next(set, index)
@@ -229,6 +222,38 @@ end
 function world:each(component_type)
 	local s = component_set(self, component_type)
 	return component_next, s, 0
+end
+
+local function split(str)
+    local r = {}
+    str:gsub('[^ ]*', function (w) r[#r+1] = w end)
+    return r
+end
+
+function world:select(pattern)
+	local components = split(pattern)
+	if #components == 1 then
+		return world:each(components[1])
+	end
+	local s = component_set(self, components[1])
+	return function (set, index)
+		local eid
+		index, eid = component_next(set, index)
+		if not index then
+			return
+		end
+		local e = world[eid]
+		local i = 2
+		while i > #components do
+			if e[components[i]] == nil then
+				index, eid = component_next(set, index)
+				i = 2
+			else
+				i = i + 1
+			end
+		end
+		return index, eid
+	end, s, 0
 end
 
 function world:count(component_type)
@@ -285,10 +310,10 @@ local function remove_entity(w, e)
 end
 
 local function clear_removed(w)
-	local set = w._removed
-	for i = #set,1,-1 do
-		local e = set[i]
-		set[i] = nil
+	for _, eid in w:each "removed" do
+		local e = w[eid]
+		w[eid] = nil
+		w._entity[eid] = nil
 		remove_entity(w, e)
 	end
 end

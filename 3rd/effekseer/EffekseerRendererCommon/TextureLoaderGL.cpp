@@ -1,35 +1,16 @@
 #ifdef __EFFEKSEER_RENDERER_INTERNAL_LOADER__
 
 #include "TextureLoaderGL.h"
-#include <string_view>
-#if defined(_WIN32)
-#include <Windows.h>
-static std::u16string u2w(const std::string_view& str) {
-	if (str.empty()) {
-		return u"";
-	}
-	int wlen = ::MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), NULL, 0);
-	if (wlen <= 0) {
-		return u"";
-	}
-	std::vector<char16_t> result(wlen);
-	::MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), reinterpret_cast<LPWSTR>(result.data()), wlen);
-	return std::u16string(result.data(), result.size());
+#include <locale>
+#include <codecvt>
+static std::string w2u(const std::u16string& source)
+{
+	return std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t>().to_bytes(source);
 }
-
-static std::string w2u(const std::u16string_view& wstr) {
-	if (wstr.empty()) {
-		return "";
-	}
-	int len = ::WideCharToMultiByte(CP_UTF8, 0, reinterpret_cast<LPCWSTR>(wstr.data()), (int)wstr.size(), NULL, 0, 0, 0);
-	if (len <= 0) {
-		return "";
-	}
-	std::vector<char> result(len);
-	::WideCharToMultiByte(CP_UTF8, 0, reinterpret_cast<LPCWSTR>(wstr.data()), (int)wstr.size(), result.data(), len, 0, 0);
-	return std::string(result.data(), result.size());
+static std::u16string u2w(const std::string& source)
+{
+	return std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t>().from_bytes(source);
 }
-#endif
 
 std::string get_ant_file_path(const std::string& path);
 
@@ -58,7 +39,6 @@ TextureLoader::~TextureLoader()
 Effekseer::TextureRef TextureLoader::Load(const char16_t* path, ::Effekseer::TextureType textureType)
 {
 	auto ant_path = u2w(get_ant_file_path(w2u(path)));
-
 	std::unique_ptr<::Effekseer::FileReader> reader(m_fileInterface->OpenRead(ant_path.data()));
 
 	if (reader.get() != nullptr)
