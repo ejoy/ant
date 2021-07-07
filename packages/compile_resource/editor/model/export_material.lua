@@ -48,7 +48,6 @@ local default_pbr_param = {
     },
     occlusion = {
         texture = "/pkg/ant.resources/textures/pbr/default/occlusion.texture",
-        factor = {0, 0, 0, 0},
         stage = 4,
     }
 }
@@ -263,7 +262,7 @@ return function (output, glbdata, exports, tolocalpath)
                 u_pbr_factor         = {
                     pbr_mr.metallicFactor or 1.0,
                     pbr_mr.roughnessFactor or 1.0,
-                    mat.alphaCutoff or 0.0,
+                    mat.alphaCutoff or 0.5,
                     1.0, --occlusion strength
                 },
             },
