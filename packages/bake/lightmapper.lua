@@ -125,12 +125,11 @@ local function get_weight_texture(size)
 end
 
 local function create_downsample()
-    local m = ientity.create_mesh{"p1", {0, 0, 0, 0}}   --shader will not use the vertex data, use gl_VertexID
     return {
         weight_ds_eid = ientity.create_simple_render_entity("lightmap_weight_downsample", 
-                            "/pkg/ant.bake/materials/weight_downsample.material", m, nil, 0),
+                            "/pkg/ant.bake/materials/weight_downsample.material", ientity.create_mesh{"p1", {0, 0, 0, 0}}, nil, 0),
         ds_eid = ientity.create_simple_render_entity("lightmap_downsample", 
-                            "/pkg/ant.bake/materials/downsample.material", m, nil, 0)
+                            "/pkg/ant.bake/materials/downsample.material", ientity.create_mesh{"p1", {0, 0, 0, 0}}, nil, 0)
     }
 end
 
