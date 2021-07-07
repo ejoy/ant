@@ -4,6 +4,8 @@ local bgfx = require "bgfx"
 local example_sys = ecs.system "lightmap_example"
 local ilm = world:interface "ant.bake|ilightmap"
 local imaterial = world:interface "ant.asset|imaterial"
+local iom = world:interface "ant.objcontroller|obj_motion"
+local math3d = require "math3d"
 
 local renderpkg = import_package "ant.render"
 local sampler = renderpkg.sampler
@@ -51,17 +53,15 @@ function example_sys:init()
     local lm = e._lightmap.data
     local lm1 = e.lightmap
 
-    local s = lm1.size * lm1.size * 4
+    local s = lm1.size * lm1.size * 4 * 4
     local mem = bgfx.memory_buffer(lm:data(), s, lm)
 
     local flags = sampler.sampler_flag {
         MIN="LINEAR",
         MAG="LINEAR",
-        U="CLAMP",
-        V="CLAMP",
     }
 
-    local lm_handle = bgfx.create_texture2d(lm1.size, lm1.size, false, 1, "RGBA8", flags, mem)
+    local lm_handle = bgfx.create_texture2d(lm1.size, lm1.size, false, 1, "RGBA32F", flags, mem)
     imaterial.set_property(example_eid, "s_lightmap", {
         stage = 0,
         texture = {
@@ -71,6 +71,11 @@ function example_sys:init()
 
     rc.worldmat = nil
     rc.eid = nil
+end
+
+function example_sys:post_init()
+    local mq = world:singleton_entity "main_queue"
+    iom.set_position(mq.camera_eid, math3d.vector(0, 0, -2))
 end
 
 function example_sys:data_changed()
