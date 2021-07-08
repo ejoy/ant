@@ -237,8 +237,8 @@ return function (output, glbdata, exports, tolocalpath)
 
     local function get_state(translucent)
         local name = translucent and 
-            "/pkg/ant.resources/materials/states/translucent_cw.state" or 
-            "/pkg/ant.resources/materials/states/default_cw.state"
+            "/pkg/ant.resources/materials/states/translucent.state" or 
+            "/pkg/ant.resources/materials/states/default.state"
         return read_datalist(tolocalpath(name))
     end
 
