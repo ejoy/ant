@@ -791,19 +791,19 @@ void RendererImplemented::SetIndexBuffer(bgfx_dynamic_index_buffer_handle_t inde
 	//}
 }
 */
-void RendererImplemented::SetVertexBuffer(const Effekseer::Backend::VertexBufferRef& vertexBuffer, int32_t size)
+void RendererImplemented::SetVertexBuffer(const Effekseer::Backend::VertexBufferRef& vertexBuffer, int32_t stride)
 {
-	//auto vb = static_cast<Backend::VertexBuffer*>(vertexBuffer.Get());
+	auto vb = static_cast<Backend::VertexBuffer*>(vertexBuffer.Get());
 	//SetVertexBuffer(vb->GetBuffer(), size);
 
-	BGFX(set_dynamic_vertex_buffer)(vertexBuffer->GetInterface(), 0, vertexBuffer->GetSize() / size);
+	BGFX(set_dynamic_vertex_buffer)(0, vb->GetInterface(), 0, vb->GetSize() / stride);
 }
 
 void RendererImplemented::SetIndexBuffer(const Effekseer::Backend::IndexBufferRef& indexBuffer)
 {
-	//auto ib = static_cast<Backend::IndexBuffer*>(indexBuffer.Get());
+	auto ib = static_cast<Backend::IndexBuffer*>(indexBuffer.Get());
 	//SetIndexBuffer(ib->GetBuffer());
-	BGFX(set_dynamic_index_buffer)(indexBuffer->GetInterface(), 0, indexBuffer->GetElementCount());
+	BGFX(set_dynamic_index_buffer)(ib->GetInterface(), 0, ib->GetElementCount());
 }
 
 void RendererImplemented::SetVertexArray(VertexArray* vertexArray)
