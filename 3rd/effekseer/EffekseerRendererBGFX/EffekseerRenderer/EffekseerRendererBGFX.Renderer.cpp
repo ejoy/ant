@@ -11,14 +11,13 @@
 #include "EffekseerRendererBGFX.ModelRenderer.h"
 #include "EffekseerRendererBGFX.Shader.h"
 #include "EffekseerRendererBGFX.VertexBuffer.h"
-#include "EffekseerRendererBGFX.Texture.h"
-
+#include "EffekseerRendererBGFX.RenderResources.h"
+#include "EffekseerRendererBGFX.ModelLoader.h"
 #include "../../EffekseerRendererCommon/EffekseerRenderer.Renderer_Impl.h"
 #include "../../EffekseerRendererCommon/EffekseerRenderer.RibbonRendererBase.h"
 #include "../../EffekseerRendererCommon/EffekseerRenderer.RingRendererBase.h"
 #include "../../EffekseerRendererCommon/EffekseerRenderer.SpriteRendererBase.h"
 #include "../../EffekseerRendererCommon/EffekseerRenderer.TrackRendererBase.h"
-#include "../../EffekseerRendererCommon/ModelLoaderGL.h"
 
 #ifdef __EFFEKSEER_RENDERER_INTERNAL_LOADER__
 #include "../../EffekseerRendererCommon/TextureLoaderGL.h"
@@ -75,7 +74,7 @@ namespace EffekseerRendererBGFX
 ::Effekseer::ModelLoaderRef CreateModelLoader(::Effekseer::FileInterface* fileInterface/*, OpenGLDeviceType deviceType*/)
 {
 	auto gd = ::Effekseer::MakeRefPtr<Backend::GraphicsDevice>(/*OpenGLDeviceType::OpenGL2*/);
-	auto ret = ::Effekseer::MakeRefPtr<EffekseerRenderer::ModelLoader>(gd, fileInterface);
+	auto ret = Effekseer::MakeRefPtr<EffekseerRendererBGFX::ModelLoader>(gd, fileInterface);// ::Effekseer::MakeRefPtr<EffekseerRenderer::ModelLoader>(gd, fileInterface);
 	return ret;
 }
 
@@ -91,7 +90,7 @@ Effekseer::Backend::TextureRef CreateTexture(Effekseer::Backend::GraphicsDeviceR
 	return gd->CreateTexture(buffer, hasMipmap, onDisposed);
 }
 
-std::vector<bgfx_context> Renderer::s_bgfx_context_;
+std::vector<bgfx_context> Renderer::s_bgfx_sprite_context_;
 
 RendererRef Renderer::Create(int32_t squareMaxCount/*, OpenGLDeviceType deviceType, bool isExtensionsEnabled*/)
 {
@@ -278,8 +277,8 @@ bool RendererImplemented::Initialize()
 	auto shaderCount = static_cast<size_t>(EffekseerRenderer::RendererShaderType::Material) + 1;
 	shaders_.resize(shaderCount);
 	for (int i = 0; i < shaderCount; i++) {
-		shaders_[i] = Shader::Create(s_bgfx_context_[i].program_);
-		shaders_[i]->uniforms_ = std::move(s_bgfx_context_[i].uniforms_);
+		shaders_[i] = Shader::Create(s_bgfx_sprite_context_[i].program_);
+		shaders_[i]->uniforms_ = std::move(s_bgfx_sprite_context_[i].uniforms_);
 	}
 // 	shader_ad_unlit_ = Shader::Create("vs_sprite_unlit", "fs_model_unlit");
 // 	if (shader_ad_unlit_ == nullptr)
@@ -648,7 +647,7 @@ void RendererImplemented::SetSquareMaxCount(int32_t count)
 
 		// generate a vertex buffer
 		{
-			bgfxBuffer.m_vertexBuffer = VertexBuffer::Create(calculate_stride(EffekseerRenderer::RendererShaderType(i)) * m_squareMaxCount * 4, true, *s_bgfx_context_[i].vertex_layout_);
+			bgfxBuffer.m_vertexBuffer = VertexBuffer::Create(calculate_stride(EffekseerRenderer::RendererShaderType(i)) * m_squareMaxCount * 4, true, *s_bgfx_sprite_context_[i].vertex_layout_);
 			if (bgfxBuffer.m_vertexBuffer == nullptr)
 				return;
 		}
@@ -712,7 +711,7 @@ void RendererImplemented::SetSquareMaxCount(int32_t count)
 
 ::Effekseer::ModelLoaderRef RendererImplemented::CreateModelLoader(::Effekseer::FileInterface* fileInterface)
 {
-	return ::Effekseer::MakeRefPtr<EffekseerRenderer::ModelLoader>(graphicsDevice_, fileInterface);
+	return ::Effekseer::MakeRefPtr<EffekseerRendererBGFX::ModelLoader>(graphicsDevice_, fileInterface);
 }
 
 ::Effekseer::MaterialLoaderRef RendererImplemented::CreateMaterialLoader(::Effekseer::FileInterface* fileInterface)
@@ -796,12 +795,15 @@ void RendererImplemented::SetVertexBuffer(const Effekseer::Backend::VertexBuffer
 {
 	//auto vb = static_cast<Backend::VertexBuffer*>(vertexBuffer.Get());
 	//SetVertexBuffer(vb->GetBuffer(), size);
+
+	BGFX(set_dynamic_vertex_buffer)(vertexBuffer->GetInterface(), 0, vertexBuffer->GetSize() / size);
 }
 
 void RendererImplemented::SetIndexBuffer(const Effekseer::Backend::IndexBufferRef& indexBuffer)
 {
 	//auto ib = static_cast<Backend::IndexBuffer*>(indexBuffer.Get());
 	//SetIndexBuffer(ib->GetBuffer());
+	BGFX(set_dynamic_index_buffer)(indexBuffer->GetInterface(), 0, indexBuffer->GetElementCount());
 }
 
 void RendererImplemented::SetVertexArray(VertexArray* vertexArray)
@@ -863,6 +865,7 @@ void RendererImplemented::DrawSprites(int32_t spriteCount, int32_t vertexOffset)
 //----------------------------------------------------------------------------------
 void RendererImplemented::DrawPolygon(int32_t vertexCount, int32_t indexCount)
 {
+	//indexBufferCurrentStride_ = indexBuffer->GetStride();
 	//GLCheckError();
 
 	//impl->drawcallCount++;

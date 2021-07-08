@@ -27,7 +27,10 @@ local fs = require "filesystem"
 local lfs = require "filesystem.local"
 
 function utils.write_file(filename, data)
-    local f = assert(lfs.open(fs.path(filename):localpath(), "wb"))
+    local filepath = fs.path(filename)
+    local name = filepath:filename()
+    local path = filepath:remove_filename()
+    local f = assert(lfs.open(path:localpath() / name:string(), "wb"))
     f:write(data)
     f:close()
 end

@@ -13,10 +13,10 @@ extern "C" {
 #include "effect.h"
 #include "effekseer_context.h"
 #include <../EffekseerRendererCommon/EffekseerRenderer.CommonUtils.h>
-
+#include <../EffekseerRendererBGFX/EffekseerRenderer/EffekseerRendererBGFX.ModelRenderer.h>
 #include "lua2struct.h"
 
-LUA2STRUCT(struct effekseer_ctx, viewid, square_max_count, programs, unlit_layout, lit_layout, distortion_layout, ad_unlit_layout, ad_lit_layout, ad_distortion_layout, mtl_layout);
+LUA2STRUCT(struct effekseer_ctx, viewid, square_max_count, sprite_programs, model_programs, unlit_layout, lit_layout, distortion_layout, ad_unlit_layout, ad_lit_layout, ad_distortion_layout, mtl_layout, model_layout);
 LUA2STRUCT(struct program, prog, uniforms);
 LUA2STRUCT(struct program::uniform, handle, name);
 
@@ -52,23 +52,28 @@ effekseer_ctx::effekseer_ctx(lua_State* L, int idx)
 
 bool effekseer_ctx::init()
 {
-	auto shaderCount = static_cast<size_t>(EffekseerRenderer::RendererShaderType::Material) + 1;
-	auto& bgfx_ctx = ::EffekseerRendererBGFX::Renderer::s_bgfx_context_;
-	bgfx_ctx.resize(shaderCount);
-	for (int i = 0; i < shaderCount; i++) {
-		bgfx_ctx[i].program_.idx = programs[i].prog;
-		//bgfx_ctx[i].vertex_layout_ = layouts[i];
-		for (auto& uniformInfo : programs[i].uniforms) {
-			bgfx_ctx[i].uniforms_[uniformInfo.name].idx = uniformInfo.handle;
+	::EffekseerRendererBGFX::ModelRenderer::model_vertex_layout_ = model_layout;
+
+	auto init_ctx = [this](std::vector<EffekseerRendererBGFX::bgfx_context>& ctx, const std::vector<program>& prog) {
+		auto shaderCount = static_cast<size_t>(EffekseerRenderer::RendererShaderType::Material) + 1;
+		ctx.resize(shaderCount);
+		for (int i = 0; i < shaderCount; i++) {
+			ctx[i].program_.idx = prog[i].prog;
+			for (auto& uniformInfo : prog[i].uniforms) {
+				ctx[i].uniforms_[uniformInfo.name].idx = uniformInfo.handle;
+			}
 		}
-	}
-	bgfx_ctx[static_cast<size_t>(EffekseerRenderer::RendererShaderType::Unlit)].vertex_layout_ = unlit_layout;
-	bgfx_ctx[static_cast<size_t>(EffekseerRenderer::RendererShaderType::Lit)].vertex_layout_ = lit_layout;
-	bgfx_ctx[static_cast<size_t>(EffekseerRenderer::RendererShaderType::BackDistortion)].vertex_layout_ = distortion_layout;
-	bgfx_ctx[static_cast<size_t>(EffekseerRenderer::RendererShaderType::AdvancedUnlit)].vertex_layout_ = ad_unlit_layout;
-	bgfx_ctx[static_cast<size_t>(EffekseerRenderer::RendererShaderType::AdvancedLit)].vertex_layout_ = ad_lit_layout;
-	bgfx_ctx[static_cast<size_t>(EffekseerRenderer::RendererShaderType::AdvancedBackDistortion)].vertex_layout_ = ad_distortion_layout;
-	bgfx_ctx[static_cast<size_t>(EffekseerRenderer::RendererShaderType::Material)].vertex_layout_ = mtl_layout;
+		ctx[static_cast<size_t>(EffekseerRenderer::RendererShaderType::Unlit)].vertex_layout_ = unlit_layout;
+		ctx[static_cast<size_t>(EffekseerRenderer::RendererShaderType::Lit)].vertex_layout_ = lit_layout;
+		ctx[static_cast<size_t>(EffekseerRenderer::RendererShaderType::BackDistortion)].vertex_layout_ = distortion_layout;
+		ctx[static_cast<size_t>(EffekseerRenderer::RendererShaderType::AdvancedUnlit)].vertex_layout_ = ad_unlit_layout;
+		ctx[static_cast<size_t>(EffekseerRenderer::RendererShaderType::AdvancedLit)].vertex_layout_ = ad_lit_layout;
+		ctx[static_cast<size_t>(EffekseerRenderer::RendererShaderType::AdvancedBackDistortion)].vertex_layout_ = ad_distortion_layout;
+		ctx[static_cast<size_t>(EffekseerRenderer::RendererShaderType::Material)].vertex_layout_ = mtl_layout;
+	};
+	
+	init_ctx(::EffekseerRendererBGFX::Renderer::s_bgfx_sprite_context_, sprite_programs);
+	init_ctx(::EffekseerRendererBGFX::ModelRenderer::s_bgfx_model_context_, model_programs);
 
 	renderer = ::EffekseerRendererBGFX::Renderer::Create(square_max_count);
 	if (!renderer.Get()) {

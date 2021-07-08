@@ -34,44 +34,33 @@ function ie_t.process_entity(e)
     }
 end
 
+local shader_type = {
+    "unlit","lit","distortion","ad_unlit","ad_lit","ad_distortion","mtl"
+}
+
 function effekseer_sys:init()
-    local shader_defines = {
-        unlit = {
-            fs = "/pkg/ant.resources/shaders/effekseer/fs_model_unlit.sc",
-            vs = "/pkg/ant.resources/shaders/effekseer/vs_sprite_unlit.sc",
-            setting = {}
-        },
-        lit = {
-            fs = "/pkg/ant.resources/shaders/effekseer/fs_model_unlit.sc",
-            vs = "/pkg/ant.resources/shaders/effekseer/vs_sprite_unlit.sc",
-            setting = {}
-        },
-        distortion = {
-            fs = "/pkg/ant.resources/shaders/effekseer/fs_model_unlit.sc",
-            vs = "/pkg/ant.resources/shaders/effekseer/vs_sprite_unlit.sc",
-            setting = {}
-        },
-        ad_unlit = {
-            fs = "/pkg/ant.resources/shaders/effekseer/fs_model_unlit.sc",
-            vs = "/pkg/ant.resources/shaders/effekseer/vs_sprite_unlit.sc",
-            setting = {}
-        },
-        ad_lit = {
-            fs = "/pkg/ant.resources/shaders/effekseer/fs_model_unlit.sc",
-            vs = "/pkg/ant.resources/shaders/effekseer/vs_sprite_unlit.sc",
-            setting = {}
-        },
-        ad_distortion = {
-            fs = "/pkg/ant.resources/shaders/effekseer/fs_model_unlit.sc",
-            vs = "/pkg/ant.resources/shaders/effekseer/vs_sprite_unlit.sc",
-            setting = {}
-        },
-        mtl = {
-            fs = "/pkg/ant.resources/shaders/effekseer/fs_model_unlit.sc",
-            vs = "/pkg/ant.resources/shaders/effekseer/vs_sprite_unlit.sc",
+    local path = "/pkg/ant.resources/shaders/effekseer/"
+    local sprite_shader_defines = {}
+    local model_shader_defines = {}
+    for _, type in ipairs(shader_type) do
+        sprite_shader_defines[type] = {
+            -- fs = path .. "fs_model_" .. type .. ".sc",
+            -- vs = path .. "vs_sprite_" .. type .. ".sc",
+            fs = path .. "fs_model_unlit.sc",
+            vs = path .. "vs_sprite_unlit.sc",
             setting = {}
         }
-    }
+    end
+    for _, type in ipairs(shader_type) do
+        model_shader_defines[type] = {
+            -- fs = path .. "fs_model_" .. type .. ".sc",
+            -- vs = path .. "vs_model_" .. type .. ".sc",
+            fs = path .. "fs_model_unlit.sc",
+            vs = path .. "vs_model_unlit.sc",
+            setting = {}
+        }
+    end
+
     local function create_shaders(def)
         local programs = {}
         for k, v in pairs(def) do
@@ -83,14 +72,16 @@ function effekseer_sys:init()
     effekseer.init {
         viewid = viewidmgr.get "main_view",
         square_max_count = 8000,
-        programs = create_shaders(shader_defines),
+        sprite_programs = create_shaders(sprite_shader_defines),
+        model_programs = create_shaders(model_shader_defines),
         unlit_layout = declmgr.get "p3|c40niu|t20".handle,
         lit_layout = declmgr.get "p3|c40niu|n40niu|T40niu|t20|t21".handle,
         distortion_layout = declmgr.get "p3|c40niu|n40niu|T40niu|t20|t21".handle,
         ad_unlit_layout = declmgr.get "p3|c40niu|t20|t41|t42|t43".handle,
         ad_lit_layout = declmgr.get "p3|c40niu|n40niu|T40niu|t20|t21|t42|t43|t44".handle,
         ad_distortion_layout = declmgr.get "p3|c40niu|n40niu|T40niu|t20|t21|t42|t43|t44".handle,
-        mtl_layout = declmgr.get "p3|c40niu|n40niu|T40niu|t20|t21|t42|t43".handle
+        mtl_layout = declmgr.get "p3|c40niu|n40niu|T40niu|t20|t21|t42|t43".handle,
+        model_layout = declmgr.get "p3|n3|b3|T3|c40niu|t20".handle
     }
 
     local filemgr = require "filemanager"

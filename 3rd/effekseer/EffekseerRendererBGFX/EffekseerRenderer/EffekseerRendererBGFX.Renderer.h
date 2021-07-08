@@ -35,7 +35,7 @@ protected:
 	Renderer(){}
 	virtual ~Renderer() {}
 public:
-	static std::vector<bgfx_context> s_bgfx_context_;
+	static std::vector<bgfx_context> s_bgfx_sprite_context_;
 	static RendererRef Create(int32_t squareMaxCount/*, OpenGLDeviceType deviceType = OpenGLDeviceType::OpenGL2, bool isExtensionsEnabled = true*/);
 	static RendererRef Create(Effekseer::Backend::GraphicsDeviceRef graphicsDevice, int32_t squareMaxCount);
 	virtual int32_t GetSquareMaxCount() const = 0;

@@ -107,5 +107,53 @@ bool VertexBuffer::IsValid()
 {
 	return BGFX_HANDLE_IS_VALID(m_buffer);
 }
+namespace Backend
+{
+	Effekseer::Backend::VertexBufferRef VertexBuffer::Create(int size, const bgfx_vertex_layout_t& layout, const void* initialData, bool isDynamic)
+	{
+		return Effekseer::MakeRefPtr<VertexBuffer>(size, layout, initialData, isDynamic);
+	}
 
+	VertexBuffer::VertexBuffer(int size, const bgfx_vertex_layout_t& layout,
+		const void* initialData, bool isDynamic)
+		: m_size{ size }
+		, m_is_dynamic{ isDynamic }
+	{
+		if (initialData) {
+			m_buffer = BGFX(create_dynamic_vertex_buffer_mem)(
+				BGFX(copy)(initialData, m_size),
+				&layout,
+				BGFX_BUFFER_NONE
+				);
+		} else {
+			m_buffer = BGFX(create_dynamic_vertex_buffer)(size, &layout,
+				BGFX_BUFFER_NONE);
+		}
+	}
+
+	VertexBuffer::~VertexBuffer()
+	{
+		Deallocate();
+	}
+	
+	bool VertexBuffer::Allocate(int32_t size, bool isDynamic)
+	{
+		return true;
+	}
+
+	void VertexBuffer::Deallocate()
+	{
+		BGFX(destroy_dynamic_vertex_buffer)(m_buffer);
+	}
+
+	bool VertexBuffer::Init(int32_t size, bool isDynamic)
+	{
+		return true;
+	}
+
+	void VertexBuffer::UpdateData(const void* src, int32_t size, int32_t offset)
+	{
+		BGFX(update_dynamic_vertex_buffer)(m_buffer, offset, BGFX(copy)(src, size));
+	}
+}
 } // namespace EffekseerRendererBGFX

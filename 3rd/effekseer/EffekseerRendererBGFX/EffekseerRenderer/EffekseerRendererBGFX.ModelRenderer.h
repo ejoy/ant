@@ -17,7 +17,8 @@ class ModelRenderer : public ::EffekseerRenderer::ModelRendererBase
 {
 public:
 	static const int32_t MaxInstanced = 20;
-
+	static std::vector<bgfx_context> s_bgfx_model_context_;
+	static bgfx_vertex_layout_t* model_vertex_layout_;
 private:
 	RendererImplemented* m_renderer;
 

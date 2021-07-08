@@ -25,7 +25,7 @@ protected:
 	bool m_isDynamic;
 	bool m_isLock;
 	uint8_t* m_resource;
-	int32_t stride_ = 2;
+	int32_t m_stride = 2;
 
 public:
 	IndexBufferBase(int maxCount, bool isDynamic);

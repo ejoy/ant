@@ -32,7 +32,8 @@ struct effekseer_ctx
 	bool init();
 	uint16_t				viewid;
 	int32_t					square_max_count{4000};
-	std::vector<program>	programs;
+	std::vector<program>	sprite_programs;
+	std::vector<program>	model_programs;
 	//std::vector<bgfx_vertex_layout_t*> layouts;
 	bgfx_vertex_layout_t*	unlit_layout{ nullptr };
 	bgfx_vertex_layout_t*	lit_layout{ nullptr };
@@ -41,6 +42,7 @@ struct effekseer_ctx
 	bgfx_vertex_layout_t*	ad_lit_layout{ nullptr };
 	bgfx_vertex_layout_t*	ad_distortion_layout{ nullptr };
 	bgfx_vertex_layout_t*	mtl_layout{ nullptr };
+	bgfx_vertex_layout_t*	model_layout{ nullptr };
 	lua_State*				lua_State_{ nullptr };
 	//
 	Effekseer::Matrix44		view_mat;
