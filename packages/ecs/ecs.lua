@@ -232,19 +232,18 @@ end
 
 function world:select(pattern)
 	local components = split(pattern)
-	if #components == 1 then
-		return world:each(components[1])
-	end
 	local s = component_set(self, components[1])
-	return function (set, index)
+	local n = #components
+	local index
+	return function (set)
 		local eid
 		index, eid = component_next(set, index)
 		if not index then
 			return
 		end
-		local e = world[eid]
+		local e = self[eid]
 		local i = 2
-		while i > #components do
+		while i > n do
 			if e[components[i]] == nil then
 				index, eid = component_next(set, index)
 				i = 2
@@ -252,7 +251,7 @@ function world:select(pattern)
 				i = i + 1
 			end
 		end
-		return index, eid
+		return e
 	end, s, 0
 end
 
