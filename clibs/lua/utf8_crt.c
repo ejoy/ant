@@ -7,6 +7,16 @@
 #include <Windows.h>
 #include <io.h>
 
+#if defined(__GNUC__)
+#   define thread_local __thread
+#elif __STDC_VERSION__ >= 201112L
+#   define thread_local _Thread_local
+#elif defined(_MSC_VER)
+#   define thread_local __declspec(thread)
+#else
+#   error Cannot define thread_local
+#endif
+
 wchar_t* u2w(const char *str) {
     int len = 0;
     int out_len = 0;
@@ -118,7 +128,7 @@ char* __cdecl utf8_getenv(const char* varname)
 	if (!wret) {
 		return NULL;
 	}
-	static __declspec(thread) char* ret = NULL;
+	static thread_local char* ret = NULL;
 	if (ret) {
 		free(ret);
 	}
