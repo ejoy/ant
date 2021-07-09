@@ -49,11 +49,11 @@ end
 
 local s = ecs.system "pickup_primitive_system"
 
-local evadd = world:sub {"primitive_filter", "add"}
-local evdel = world:sub {"primitive_filter", "del"}
+local evadd = world:sub {"primitive_filter", "pickup", "add"}
+local evdel = world:sub {"primitive_filter", "pickup", "del"}
 
 function s.update_filter()
-	for _, _, eid, filter in evadd:unpack() do
+	for _, _, _, eid, filter in evadd:unpack() do
 		local opaticy, translucent = filter.result.opaticy, filter.result.translucent
 		local e = world[eid]
 		local rc = e._rendercache
@@ -69,7 +69,7 @@ function s.update_filter()
 			state		= irender.check_primitive_mode_state(rc.state, translucent_material.state),
 		}, {__index=rc}))
 	end
-	for _, _, eid, filter in evdel:unpack() do
+	for _, _, _, eid, filter in evdel:unpack() do
 		local opaticy, translucent = filter.result.opaticy, filter.result.translucent
 		ipf.remove_item(opaticy.items, eid)
 		ipf.remove_item(translucent.items, eid)
@@ -264,7 +264,8 @@ local function add_pick_entity()
 				fb_idx = fbidx,
 			},
 			primitive_filter = {
-				filter_type = "selectable"
+				filter_type = "selectable",
+				update_type = "pickup",
 			},
 			name = "pickup_renderqueue",
 			visible = false,

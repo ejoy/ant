@@ -94,6 +94,7 @@ function irender.create_view_queue(view_rect, view_name, exclude)
 
 			primitive_filter = {
 				filter_type = "visible",
+				update_type = "primitive",
 				exclude_type = exclude
 			},
 
@@ -145,6 +146,7 @@ function irender.create_orthoview_queue(view_rect, orthoface, queuename)
 
 			primitive_filter = {
 				filter_type = "visible",
+				update_type = "primitive",
 			},
 
 			render_target = {
@@ -206,6 +208,7 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 			camera_eid = camera_eid,
 			primitive_filter = {
 				filter_type = "visible",
+				update_type = "depth",
 			},
 			render_target = {
 				viewid = viewidmgr.get "depth",
@@ -286,6 +289,7 @@ function irender.create_main_queue(view_rect, camera_eid)
 			},
 			primitive_filter = {
 				filter_type = "visible",
+				update_type = "primitive",
 			},
 			visible = true,
 			name = "main render queue",
@@ -327,6 +331,7 @@ function irender.create_blit_queue(viewrect)
 			},
 			primitive_filter = {
 				filter_type = "blit_view",
+				update_type = "primitive",
 			},
 			visible = true,
 			blit_queue = true,

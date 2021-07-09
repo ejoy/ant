@@ -19,9 +19,9 @@ function ipf.select_filters(eid)
 		local filter = world[feid].primitive_filter
 		local add = needadd and ((state & filter.filter_mask) ~= 0) and ((state & filter.exclude_mask) == 0)
 		if add then
-			world:pub {"primitive_filter", "add", eid, filter}
+			world:pub {"primitive_filter", filter.update_type, "add", eid, filter}
 		else
-			world:pub {"primitive_filter", "del", eid, filter}
+			world:pub {"primitive_filter", filter.update_type, "del", eid, filter}
 		end
 	end
 end
@@ -133,11 +133,11 @@ end
 
 local s = ecs.system "primitive_filter_system"
 
-local evadd = world:sub {"primitive_filter", "add"}
-local evdel = world:sub {"primitive_filter", "del"}
+local evadd = world:sub {"primitive_filter", "primitive", "add"}
+local evdel = world:sub {"primitive_filter", "primitive", "del"}
 
 function s.update_filter()
-	for _, _, eid, filter in evadd:unpack() do
+	for _, _, _, eid, filter in evadd:unpack() do
 		local e = world[eid]
 		local rc = e._rendercache
 		local fx = rc.fx
@@ -146,7 +146,7 @@ function s.update_filter()
 		rc.eid = eid
 		ipf.add_item(items, eid, rc)
 	end
-	for _, _, eid, filter in evdel:unpack() do
+	for _, _, _, eid, filter in evdel:unpack() do
 		local e = world[eid]
 		local rc = e._rendercache
 		local fx = rc.fx

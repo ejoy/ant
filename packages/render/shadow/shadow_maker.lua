@@ -204,6 +204,7 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 			},
 			primitive_filter = {
 				filter_type = "cast_shadow",
+				update_type = "shadow",
 			},
 			camera_eid = cameraeid,
 			render_target = {
@@ -414,11 +415,11 @@ local omni_stencils = {
 	},
 }
 
-local evadd = world:sub {"primitive_filter", "add"}
-local evdel = world:sub {"primitive_filter", "del"}
+local evadd = world:sub {"primitive_filter", "shadow", "add"}
+local evdel = world:sub {"primitive_filter", "shadow", "del"}
 
 function s.update_filter()
-	for _, _, eid, filter in evadd:unpack() do
+	for _, _, _, eid, filter in evadd:unpack() do
 		local e = world[eid]
 		local rc = e._rendercache
 		local fx = rc.fx
@@ -433,7 +434,7 @@ function s.update_filter()
 			stencil = e.omni and omni_stencils[e.omni.stencil_ref] or material.stencil,	--TODO: need merge with material setting
 		}, {__index=rc}))
 	end
-	for _, _, eid, filter in evdel:unpack() do
+	for _, _, _, eid, filter in evdel:unpack() do
 		local results = filter.result
 		ipf.remove_item(results.opaticy.items, eid)
 		ipf.remove_item(results.translucent.items, eid)

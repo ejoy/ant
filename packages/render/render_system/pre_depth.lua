@@ -20,8 +20,8 @@ end
 
 local s = ecs.system "pre_depth_primitive_system"
 
-local evadd = world:sub {"primitive_filter", "add"}
-local evdel = world:sub {"primitive_filter", "del"}
+local evadd = world:sub {"primitive_filter", "depth", "add"}
+local evdel = world:sub {"primitive_filter", "depth", "del"}
 
 function s.update_filter()
 	if pre_depth_material == nil then
@@ -29,7 +29,7 @@ function s.update_filter()
 		pre_depth_skinning_material = imaterial.load(pre_depth_material_file, {depth_type="linear", skinning="GPU"})
 	end
 
-	for _, _, eid, filter in evadd:unpack() do
+	for _, _, _, eid, filter in evadd:unpack() do
 		local e = world[eid]
 		local rc = e._rendercache
 		local fx = rc.fx
@@ -47,7 +47,7 @@ function s.update_filter()
 			end
 		end
 	end
-	for _, _, eid, filter in evdel:unpack() do
+	for _, _, _, eid, filter in evdel:unpack() do
 		local e = world[eid]
 		local rc = e._rendercache
 		local fx = rc.fx
