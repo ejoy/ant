@@ -31,3 +31,6 @@
 [submodule "3rd/ltask"]
 	path = 3rd/ltask
 	url = https://github.com/cloudwu/ltask
+[submodule "3rd/luaecs"]
+	path = 3rd/luaecs
+	url = https://github.com/cloudwu/luaecs
