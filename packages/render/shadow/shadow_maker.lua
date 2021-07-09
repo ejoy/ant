@@ -400,7 +400,7 @@ local function which_material(eid)
 	end
 end
 
-local spt = ecs.transform "shadow_primitive_transform"
+local s = ecs.system "shadow_primitive_system"
 
 local bgfx = require "bgfx"
 local omni_stencils = {
@@ -414,21 +414,28 @@ local omni_stencils = {
 	},
 }
 
-function spt.process_entity(e)
-	e.primitive_filter.insert_item = function (filter, fxtype, eid, rc)
+local evadd = world:sub {"primitive_filter", "add"}
+local evdel = world:sub {"primitive_filter", "del"}
+
+function s.update_filter()
+	for _, _, eid, filter in evadd:unpack() do
+		local e = world[eid]
+		local rc = e._rendercache
+		local fx = rc.fx
+		local fxtype = fx.setting.surfacetype
 		local results = filter.result
-		if rc then
-			rc.eid = eid
-			local material = which_material(eid)
-			ipf.add_item(results[fxtype].items, eid, setmetatable({
-				fx = material.fx,
-				properties = material.properties or false,
-				state = irender.check_primitive_mode_state(rc.state, material.state),
-				stencil = e.omni and omni_stencils[e.omni.stencil_ref] or material.stencil,	--TODO: need merge with material setting
-			}, {__index=rc}))
-		else
-			ipf.remove_item(results.opaticy.items, eid)
-			ipf.remove_item(results.translucent.items, eid)
-		end
+		rc.eid = eid
+		local material = which_material(eid)
+		ipf.add_item(results[fxtype].items, eid, setmetatable({
+			fx = material.fx,
+			properties = material.properties or false,
+			state = irender.check_primitive_mode_state(rc.state, material.state),
+			stencil = e.omni and omni_stencils[e.omni.stencil_ref] or material.stencil,	--TODO: need merge with material setting
+		}, {__index=rc}))
+	end
+	for _, _, eid, filter in evdel:unpack() do
+		local results = filter.result
+		ipf.remove_item(results.opaticy.items, eid)
+		ipf.remove_item(results.translucent.items, eid)
 	end
 end

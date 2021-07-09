@@ -2,6 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local ipf = ecs.interface "iprimitive_filter"
+
 function ipf.select_filters(eid)
 	local e = world[eid]
 	local rc = e._rendercache
@@ -9,18 +10,18 @@ function ipf.select_filters(eid)
 	if state == nil then
 		return
 	end
-
+	local fx = rc.fx
+	if not fx then
+		return
+	end
 	local needadd = rc.vb and rc.fx and rc.state
 	for _, feid in world:each "primitive_filter" do
 		local filter = world[feid].primitive_filter
-		local fx = rc.fx
-		if fx then
-			local item
-			if needadd and ((state & filter.filter_mask) ~= 0) and ((state & filter.exclude_mask) == 0) then
-				item = rc
-			end
-
-			filter:insert_item(fx.setting.surfacetype, eid, item)
+		local add = needadd and ((state & filter.filter_mask) ~= 0) and ((state & filter.exclude_mask) == 0)
+		if add then
+			world:pub {"primitive_filter", "add", eid, filter}
+		else
+			world:pub {"primitive_filter", "del", eid, filter}
 		end
 	end
 end
@@ -130,30 +131,27 @@ function pf:init()
 	return self
 end
 
+local s = ecs.system "primitive_filter_system"
 
-local vpt = ecs.transform "primitive_filter_transform"
--- local function parse_rc(rc)
--- 	local state = bgfx.parse_state(rc.state)
--- 	local wm = state.WRITE_MASK:gsub("Z", "")
--- 	if wm ~= state.WRITE_MASK then
--- 		state.DEPTH_TEST = "EQUAL"
--- 		state.WRITE_MASK = wm
--- 		return setmetatable({
--- 			state = bgfx.make_state(state)
--- 		}, {__index=rc})
--- 	end
--- 	return rc
--- end
+local evadd = world:sub {"primitive_filter", "add"}
+local evdel = world:sub {"primitive_filter", "del"}
 
-function vpt.process_entity(e)
-	local f = e.primitive_filter
-	f.insert_item = function (filter, fxtype, eid, rc)
+function s.update_filter()
+	for _, _, eid, filter in evadd:unpack() do
+		local e = world[eid]
+		local rc = e._rendercache
+		local fx = rc.fx
+		local fxtype = fx.setting.surfacetype
 		local items = filter.result[fxtype].items
-		if rc then
-			rc.eid = eid
-			ipf.add_item(items, eid, rc) --parse_rc(rc))
-		else
-			ipf.remove_item(items, eid)
-		end
+		rc.eid = eid
+		ipf.add_item(items, eid, rc)
+	end
+	for _, _, eid, filter in evdel:unpack() do
+		local e = world[eid]
+		local rc = e._rendercache
+		local fx = rc.fx
+		local fxtype = fx.setting.surfacetype
+		local items = filter.result[fxtype].items
+		ipf.remove_item(items, eid)
 	end
 end

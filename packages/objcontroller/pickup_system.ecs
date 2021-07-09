@@ -13,14 +13,12 @@ system "pickup_system"
 
 policy "pickup"
     .require_system "pickup_system"
-    .require_transform "pickup_primitive_transform"
+    .require_system "pickup_primitive_system"
     .unique_component "pickup"
 
-transform "pickup_primitive_transform"
+system "pickup_primitive_system"
     .implement "pickup_system.lua"
-    .input "primitive_filter"
-    .output "primitive_filter.pickup"
-    .method "process_entity"
+    .method "update_filter"
 
 policy "select"
     .require_system "pickup_system"

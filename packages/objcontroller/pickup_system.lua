@@ -47,28 +47,32 @@ local function get_properties(eid, fx)
 	return p
 end
 
-local pfpt = ecs.transform "pickup_primitive_transform"
-function pfpt.process_entity(e)
-	local f = e.primitive_filter
-	f.insert_item = function (filter, fxtype, eid, rc)
-		local opaticy, translucent = filter.result.opaticy, filter.result.translucent
-		if rc then
-			rc.eid = eid
-			ipf.add_item(opaticy.items, eid, setmetatable({
-				fx = opacity_material.fx,
-				properties = get_properties(eid, opacity_material.fx),
-				state = irender.check_primitive_mode_state(rc.state, opacity_material.state),
-			}, {__index=rc}))
-			ipf.add_item(translucent.items, eid, setmetatable({
-				fx			= translucent_material.fx,
-				properties	= get_properties(eid, translucent_material.fx),
-				state		= irender.check_primitive_mode_state(rc.state, translucent_material.state),
-			}, {__index=rc}))
-		else
-			ipf.remove_item(opaticy.items, eid)
-			ipf.remove_item(translucent.items, eid)
-		end
+local s = ecs.system "pickup_primitive_system"
 
+local evadd = world:sub {"primitive_filter", "add"}
+local evdel = world:sub {"primitive_filter", "del"}
+
+function s.update_filter()
+	for _, _, eid, filter in evadd:unpack() do
+		local opaticy, translucent = filter.result.opaticy, filter.result.translucent
+		local e = world[eid]
+		local rc = e._rendercache
+		rc.eid = eid
+		ipf.add_item(opaticy.items, eid, setmetatable({
+			fx = opacity_material.fx,
+			properties = get_properties(eid, opacity_material.fx),
+			state = irender.check_primitive_mode_state(rc.state, opacity_material.state),
+		}, {__index=rc}))
+		ipf.add_item(translucent.items, eid, setmetatable({
+			fx			= translucent_material.fx,
+			properties	= get_properties(eid, translucent_material.fx),
+			state		= irender.check_primitive_mode_state(rc.state, translucent_material.state),
+		}, {__index=rc}))
+	end
+	for _, _, eid, filter in evdel:unpack() do
+		local opaticy, translucent = filter.result.opaticy, filter.result.translucent
+		ipf.remove_item(opaticy.items, eid)
+		ipf.remove_item(translucent.items, eid)
 	end
 end
 

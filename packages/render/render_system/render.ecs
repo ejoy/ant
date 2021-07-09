@@ -35,11 +35,9 @@ system "end_frame_system"
     .implement "end_frame_system.lua"
     .method "end_frame"
 
-transform "pre_depth_primitive_transform"
+system "pre_depth_primitive_system"
     .implement "render_system/pre_depth.lua"
-    .input "primitive_filter"
-    .output "primitive_filter.visible"
-    .method "process_entity"
+    .method "update_filter"
 
 policy "blit_queue"
     .require_policy "ant.render|render_queue"
@@ -47,7 +45,7 @@ policy "blit_queue"
     .unique_component "blit_queue"
 
 policy "pre_depth_queue"
-    .require_transform  "pre_depth_primitive_transform"
+    .require_system  "pre_depth_primitive_system"
     .unique_component   "pre_depth_queue"
 
 policy "main_queue"
