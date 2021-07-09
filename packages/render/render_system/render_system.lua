@@ -20,19 +20,17 @@ end
 
 function render_sys:render_submit()
 	for _, eid in world:each "render_target" do
-		local rq = world[eid]
-		if rq.visible then
-			local viewid = rq.render_target.viewid
+		local e = world[eid]
+		if e.visible and e.primitive_filter.update_type ~= "primitive" then
+			local viewid = e.render_target.viewid
 			bgfx.touch(viewid)
-			update_view_proj(viewid, rq.camera_eid)
-
-			for _, result in ipf.iter_filter(rq.primitive_filter) do
+			update_view_proj(viewid, e.camera_eid)
+			for _, result in ipf.iter_filter(e.primitive_filter) do
 				for _, item in ipf.iter_target(result) do
 					irender.draw(viewid, item)
 				end
 			end
 		end
-		
 	end
 end
 

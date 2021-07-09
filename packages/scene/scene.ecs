@@ -59,7 +59,17 @@ component "primitive_filter"
 
 system "primitive_filter_system"
     .implement  "primitive_filter.lua"
+    .require_system "luaecs_filter_system"
     .method     "update_filter"
+
+system "luaecs_filter_system"
+    .implement  "luaecs_filter_system.lua"
+    .require_system "luaecs_filter_system"
+    .require_interface "ant.render|irender"
+    .method     "init"
+    .method     "data_changed"
+    .method     "update_filter"
+    .method     "render_submit"
 
 interface "iprimitive_filter"
     .implement "primitive_filter.lua"

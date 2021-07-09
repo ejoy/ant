@@ -137,21 +137,21 @@ local evadd = world:sub {"primitive_filter", "primitive", "add"}
 local evdel = world:sub {"primitive_filter", "primitive", "del"}
 
 function s.update_filter()
-	for _, _, _, eid, filter in evadd:unpack() do
-		local e = world[eid]
-		local rc = e._rendercache
-		local fx = rc.fx
-		local fxtype = fx.setting.surfacetype
-		local items = filter.result[fxtype].items
-		rc.eid = eid
-		ipf.add_item(items, eid, rc)
-	end
-	for _, _, _, eid, filter in evdel:unpack() do
-		local e = world[eid]
-		local rc = e._rendercache
-		local fx = rc.fx
-		local fxtype = fx.setting.surfacetype
-		local items = filter.result[fxtype].items
-		ipf.remove_item(items, eid)
-	end
+	--for _, _, _, eid, filter in evadd:unpack() do
+	--	local e = world[eid]
+	--	local rc = e._rendercache
+	--	local fx = rc.fx
+	--	local fxtype = fx.setting.surfacetype
+	--	local items = filter.result[fxtype].items
+	--	rc.eid = eid
+	--	ipf.add_item(items, eid, rc)
+	--end
+	--for _, _, _, eid, filter in evdel:unpack() do
+	--	local e = world[eid]
+	--	local rc = e._rendercache
+	--	local fx = rc.fx
+	--	local fxtype = fx.setting.surfacetype
+	--	local items = filter.result[fxtype].items
+	--	ipf.remove_item(items, eid)
+	--end
 end
