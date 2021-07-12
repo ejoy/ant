@@ -315,20 +315,20 @@ end
 
 local ilm = ecs.interface "ilightmap"
 
-local function create_context_setting(lm)
+local function create_context_setting(hemisize)
     return {
-        size = lm.size,
+        size = hemisize,
         z_near = 0.001, z_far = 100,
-        interp_pass_count = 2, interp_threshold = 0.001,
+        interp_pass_count = 0, interp_threshold = 0.001,
         cam2surf_dis_modifier = 0.0,
     }
 end
 
-local function update_bake_shading(lm)
-    local lmsize = lm.size
-
-    shading_info.storage_rb = fbmgr.get_rb(get_storage_buffer(lmsize)).handle
-    shading_info.weight_tex = {stage=1, texture = {handle=get_weight_texture(lmsize)}}
+local function update_bake_shading(hemix, hemiy, lightmapsize)
+    assert(hemix == hemiy)
+    local s = math.max(hemix, lightmapsize)
+    shading_info.storage_rb = fbmgr.get_rb(get_storage_buffer(s)).handle
+    shading_info.weight_tex = {stage=1, texture = {handle=get_weight_texture(s)}}
 end
 
 local function read_tex(hemix, hemiy, srctex)
@@ -398,12 +398,14 @@ function ilm.bake_entity(eid, pf, notcull)
     end
 
     local lm = e.lightmap
-    local s = create_context_setting(lm)
+    local hemisize = lm.hemisize
+    
+    local s = create_context_setting(hemisize)
     local bake_ctx = bake.create_lightmap_context(s)
-
-    update_bake_shading(lm)
-
-    local li = {width=lm.size, height=lm.size, channels=4}
+    local hemix, hemiy = bake_ctx:hemi_count()
+    local lmsize = lm.size
+    update_bake_shading(hemix, hemiy, lmsize)
+    local li = {width=lmsize, height=lmsize, channels=4}
     log.info(("[%d-%s] lightmap:w=%d, h=%d, channels=%d"):format(eid, e.name or "", li.width, li.height, li.channels))
     e._lightmap.data = bake_ctx:set_target_lightmap(li)
 
@@ -458,7 +460,6 @@ function ilm.bake_entity(eid, pf, notcull)
                 hsize = hsize/2
             end
 
-            local hemix, hemiy = bake.hemi_count(size)
             local dsttex = shading_info.fb.render_textures[write].texture.handle
             bgfx.blit(lightmap_storage_viewid,
                 shading_info.storage_rb, writex, writey,
@@ -485,7 +486,7 @@ function ilm.bake_entity(eid, pf, notcull)
     log.info(("[%d-%s] bake: end"):format(eid, e.name or ""))
 
     e._lightmap.data:postprocess()
-    e._lightmap.data:save "d:/work/ant/tools/lightmap_baker/lm.tga"
+    --e._lightmap.data:save "d:/work/ant/tools/lightmap_baker/lm.tga"
     log.info(("[%d-%s] postprocess: finish"):format(eid, e.name or ""))
 end
 

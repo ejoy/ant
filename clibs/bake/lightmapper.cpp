@@ -91,7 +91,13 @@ namespace lua_struct{
         unpack_field(L, idx, "num", g.num);
         unpack_field(L, idx, "worldmat", g.worldmat);
         unpack_field(L, idx, "pos", g.pos);
-        unpack_field(L, idx, "normal", g.normal);
+        if (LUA_TTABLE == lua_getfield(L, idx, "normal")){
+            unpack(L, -1, g.normal);
+        } else {
+            g.normal.type = LM_NONE;
+        }
+        lua_pop(L, 1);
+
         unpack_field(L, idx, "uv", g.uv);
 
         auto t = lua_getfield(L, idx, "index");
@@ -257,6 +263,16 @@ lcontext_bake(lua_State *L){
     return 0;
 }
 
+static int
+lcontext_hemi_count(lua_State *L){
+    auto ctx = tocontext(L, 1);
+    int hemix, hemiy;
+    lmHemiCount(ctx->lm_ctx->hemisphere.size, &hemix, &hemiy);
+    lua_pushinteger(L, hemix);
+    lua_pushinteger(L, hemiy);
+    return 2;
+}
+
 static void
 register_lm_context_mt(lua_State *L){
     if (luaL_newmetatable(L, "LM_CONTEXT_MT")){
@@ -268,6 +284,7 @@ register_lm_context_mt(lua_State *L){
             {"destroy",             lcontext_destroy},
             {"set_target_lightmap", lcontext_set_target_lightmap},
             {"set_geometry",        lcontext_set_geometry},
+            {"hemi_count",          lcontext_hemi_count},
             {"bake",                lcontext_bake},
             {"process",             lcontext_process},
             {nullptr,               nullptr},

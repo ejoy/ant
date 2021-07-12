@@ -5,12 +5,37 @@ local example_sys = ecs.system "lightmap_example"
 local ilm = world:interface "ant.bake|ilightmap"
 local imaterial = world:interface "ant.asset|imaterial"
 local iom = world:interface "ant.objcontroller|obj_motion"
+local ientity = world:interface "ant.render|entity"
 local math3d = require "math3d"
 
 local renderpkg = import_package "ant.render"
 local sampler = renderpkg.sampler
 
 local example_eid
+
+local function create_example_mesh()
+	local vb = {
+       -1.0, 0.0, 1.0, 0.0,     0.0,
+        1.0, 0.0, 1.0, 0.9999,  0.0,
+        1.0, 0.0,-1.0, 0.9999,  0.9999,
+       -1.0, 0.0,-1.0, 0.0,     0.9999,
+       -1.0, 1.0, 0.0, 0.0,     0.0,
+        1.0, 1.0, 0.0, 0.9999,  0.0,
+        1.0,-1.0, 0.0, 0.9999,  0.9999,
+       -1.0,-1.0, 0.0, 0.0, 	0.9999,
+    }
+	
+    local ib = {
+        0, 3, 2,
+        0, 2, 1,
+
+        4, 7, 6,
+        4, 6, 5,
+    }
+	
+	return ientity.create_mesh({"p3|t2", vb}, ib)
+end
+
 function example_sys:init()
     example_eid = world:create_entity {
         policy = {
@@ -21,12 +46,13 @@ function example_sys:init()
         data = {
             scene_entity = true,
             lightmap = {
-                size = 64
+                size = 16,
+                hemisize = 64,
             },
             transform = {},
-            
             material = "/pkg/ant.tool.lightmap_baker/assets/example/materials/example.material",
-            mesh = "/pkg/ant.tool.lightmap_baker/assets/example/meshes/gazebo.glb|meshes/Node-Mesh_P1.meshbin",
+            --mesh = "/pkg/ant.tool.lightmap_baker/assets/example/meshes/gazebo.glb|meshes/Node-Mesh_P1.meshbin",
+            mesh = create_example_mesh(),
             name = "lightmap_example",
             state = 1,
         }
@@ -35,7 +61,7 @@ function example_sys:init()
 
     local e = world[example_eid]
     local rc = e._rendercache
-    rc.simple_mesh = "d:/work/ant/tools/lightmap_baker/assets/example/meshes/gazebo.obj"
+    --rc.simple_mesh = "d:/work/ant/tools/lightmap_baker/assets/example/meshes/gazebo.obj"
     rc.eid = example_eid
     rc.worldmat = e._rendercache.srt
 
