@@ -70,7 +70,7 @@ local function default_weight()
     return 1.0
 end
 
-local function create_hemisphere_weights_texture(hemisize, weight_func)
+local function gen_hemisphere_weights(hemisize, weight_func)
     weight_func = weight_func or default_weight
     local weights = {}
  	local center = (hemisize - 1) * 0.5
@@ -105,12 +105,33 @@ local function create_hemisphere_weights_texture(hemisize, weight_func)
         weights[i] = weights[i] * weightScale;
     end
 
+    return weights
+end
+
+local function create_hemisphere_weights_texture(hemisize, weight_func)
+    local weights = gen_hemisphere_weights(hemisize, weight_func)
+
     local flags = sampler.sampler_flag {
         MIN="POINT",
         MAG="POINT",
         U="CLAMP",
         V="CLAMP",
     }
+
+    
+    -- do
+    --     local w = {}
+    --     for i=1, #weights/2 do
+    --         local ridx = (i-1) * 2
+    --         local lidx = (i-1) * 3
+    --         w[lidx+1]    = weights[ridx+1]
+    --         w[lidx+2]    = weights[ridx+2]
+    --         w[lidx+3]    = 0.0
+    --     end
+    --     local mm = bgfx.memory_buffer("fff", w)
+    --     bake.save_tga("d:/tmp/weight.tga", mm, 3*hemisize, hemisize, 3)
+    -- end
+    
     return bgfx.create_texture2d(3*hemisize, hemisize, false, 1, "RG32F", flags, bgfx.memory_buffer("ff", weights))
 end
 
@@ -471,7 +492,7 @@ function ilm.bake_entity(eid, pf, notcull)
                 storagerb.handle, writex, writey,
                 dsttex, 0, 0, hemix, hemiy)
             bgfx.frame()
-            --read_tex(storagerb.w, storagerb.h, storagerb.handle, "d:/tmp/22.tga")
+            read_tex(storagerb.w, storagerb.h, storagerb.handle, "d:/tmp/22.tga")
         end,
         read_lightmap = function(size)
             local storagerb = fbmgr.get_rb(shading_info.storage_rbidx)
