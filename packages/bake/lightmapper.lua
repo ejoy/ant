@@ -52,7 +52,7 @@ end
 
 local function get_storage_buffer(size)
     local sb = get_csb(size)
-    if sb.storage_rb == nil then
+    if sb.storage_rbidx == nil then
         local flags = sampler.sampler_flag{
             MIN="POINT",
             MAG="POINT",
@@ -60,10 +60,10 @@ local function get_storage_buffer(size)
             V="CLAMP",
             BLIT="BLIT_READWRITE",
         }
-        sb.storage_rb = fbmgr.create_rb{w=size, h=size, layers = 1, format="RGBA32F", flags=flags}
+        sb.storage_rbidx = fbmgr.create_rb{w=size, h=size, layers = 1, format="RGBA32F", flags=flags}
     end
 
-    return sb.storage_rb
+    return sb.storage_rbidx
 end
 
 local function default_weight()
@@ -328,7 +328,7 @@ local function update_bake_shading(hemisize, lightmapsize)
     local hemix, hemiy = bake.hemi_count(hemisize)
     assert(hemix == hemiy)
     local s = math.max(hemix, lightmapsize)
-    shading_info.storage_rb = fbmgr.get_rb(get_storage_buffer(s)).handle
+    shading_info.storage_rbidx = get_storage_buffer(s)
     shading_info.weight_tex = {stage=1, texture = {handle=get_weight_texture(hemisize)}}
 end
 
@@ -466,15 +466,18 @@ function ilm.bake_entity(eid, pf, notcull)
             end
 
             local dsttex = shading_info.fb.render_textures[write].texture.handle
+            local storagerb = fbmgr.get_rb(shading_info.storage_rbidx)
             bgfx.blit(lightmap_storage_viewid,
-                shading_info.storage_rb, writex, writey,
+                storagerb.handle, writex, writey,
                 dsttex, 0, 0, hemix, hemiy)
             bgfx.frame()
-            --read_tex(hemix, hemiy, shading_info.storage_rb, "d:/tmp/22.tga")
+            --read_tex(storagerb.w, storagerb.h, storagerb.handle, "d:/tmp/22.tga")
         end,
         read_lightmap = function(size)
+            local storagerb = fbmgr.get_rb(shading_info.storage_rbidx)
+            assert(storagerb.w * storagerb.h * 16 == size) --16 for RGBA32F
             local m = bgfx.memory_buffer(size)
-            local readend = bgfx.read_texture(shading_info.storage_rb, m)
+            local readend = bgfx.read_texture(storagerb.handle, m)
             while (bgfx.frame() < readend) do end
             return m
         end,
