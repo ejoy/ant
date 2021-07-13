@@ -588,7 +588,7 @@ static lm_bool lm_trySamplingConservativeTriangleRasterizerPosition(lm_context *
 	int rx = ctx->meshPosition.rasterizer.x % 3;
 	int ry = ctx->meshPosition.rasterizer.y % 3;
 	static const float lm_pi = 3.14159265358979f;
-	float phi = 2.0f * lm_pi * lm_baseAngles[ry][rx] + 0.1f * ((float)rand() / (float)RAND_MAX);
+	float phi = 2.0f * lm_pi * lm_baseAngles[ry][rx];// + 0.1f * ((float)rand() / (float)RAND_MAX);
 	ctx->meshPosition.sample.up = lm_normalize3(lm_add3(lm_scale3(side, cosf(phi)), lm_scale3(up, sinf(phi))));
 	return LM_TRUE;
 #endif

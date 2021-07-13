@@ -14,15 +14,18 @@ local sampler = renderpkg.sampler
 local example_eid
 
 local function create_example_mesh()
+    local s = 0.3
+    local dv, maxuv = 0.49999, 0.99999
+
 	local vb = {
-       -1.0, 0.0, 1.0, 0.0,     0.0,
-        1.0, 0.0, 1.0, 0.9999,  0.0,
-        1.0, 0.0,-1.0, 0.9999,  0.9999,
-       -1.0, 0.0,-1.0, 0.0,     0.9999,
-       -1.0, 1.0, 0.0, 0.0,     0.0,
-        1.0, 1.0, 0.0, 0.9999,  0.0,
-        1.0,-1.0, 0.0, 0.9999,  0.9999,
-       -1.0,-1.0, 0.0, 0.0, 	0.9999,
+       -s, 0.0, s, 0.0,     0.0,
+        s, 0.0, s, maxuv,   0.0,
+        s, 0.0,-s, maxuv,   dv,
+       -s, 0.0,-s, 0.0,     dv,
+       -s, s, 0.0, 0.0,     dv,
+        s, s, 0.0, maxuv,   dv,
+        s,-s, 0.0, maxuv,   maxuv,
+       -s,-s, 0.0, 0.0, 	maxuv,
     }
 	
     local ib = {
@@ -81,6 +84,8 @@ function example_sys:init()
 
     local s = lm1.size * lm1.size * 4 * 4
     local mem = bgfx.memory_buffer(lm:data(), s, lm)
+
+    lm:save "d:/tmp/lresult.tga"
 
     local flags = sampler.sampler_flag {
         MIN="LINEAR",
