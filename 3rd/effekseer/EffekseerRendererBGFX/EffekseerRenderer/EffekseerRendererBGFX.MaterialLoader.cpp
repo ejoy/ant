@@ -52,8 +52,8 @@ namespace EffekseerRendererBGFX
 		if (materialFile.GetHasRefraction()) {
 			shaderTypeCount = 2;
 		}
+		auto dir = currentPath_.substr(0, currentPath_.find("/tools/") + 1) + "packages/resources/shaders/effekseer/";
 		auto startPos = currentPath_.rfind('/');
-		auto dir = currentPath_.substr(0, startPos + 1);
 		auto fileName = currentPath_.substr(startPos + 1, currentPath_.rfind('.') - startPos - 1);
 
 		auto create_shader = [&dir, &fileName](::Effekseer::CompiledMaterialBinary* binary,
