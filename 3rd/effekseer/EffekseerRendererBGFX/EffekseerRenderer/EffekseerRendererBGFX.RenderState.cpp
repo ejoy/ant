@@ -43,7 +43,7 @@ void RenderState::Update(bool forced)
 	{
 		if (m_next.DepthTest)
 		{
-			state |= BGFX_STATE_DEPTH_TEST_LESS;
+			state |= BGFX_STATE_DEPTH_TEST_LEQUAL;
 		}
 		else
 		{
@@ -143,7 +143,8 @@ void RenderState::Update(bool forced)
 			}
 		}
 	}
-	BGFX(set_state)(state, 0);
+	m_renderer->SetCurrentState(state);
+	//BGFX(set_state)(state, 0);
 	m_active = m_next;
 }
 

@@ -5,10 +5,11 @@
 namespace EffekseerRendererBGFX {
 bgfx_view_id_t g_view_id = 0;
 
-Shader::Shader(bgfx_program_handle_t programHandle)
+Shader::Shader(bgfx_program_handle_t programHandle, std::unordered_map<std::string, bgfx_uniform_handle_t>&& uniforms)
 	: m_vertexConstantBuffer(nullptr)
 	, m_pixelConstantBuffer(nullptr)
 	, m_program{ programHandle }
+	, uniforms_{ std::move(uniforms) }
 {
 	m_textureSlots.fill(BGFX_INVALID_HANDLE/*0*/);
 	m_textureSlotEnables.fill(false);
@@ -22,18 +23,13 @@ Shader::~Shader()
 	ES_SAFE_DELETE_ARRAY(m_pixelConstantBuffer);
 }
 
-Shader* Shader::Create(bgfx_program_handle_t program)
+Shader* Shader::Create(bgfx_program_handle_t program, std::unordered_map<std::string, bgfx_uniform_handle_t>&& uniforms)
 {
 	if (BGFX_HANDLE_IS_VALID(program)) {
-		return new Shader(program);
+		return new Shader(program, std::move(uniforms));
 	} else {
 		return nullptr;
 	}
-}
-
-void Shader::SetUniforms(std::unordered_map<std::string, bgfx_uniform_handle_t>&& uniforms)
-{
-	uniforms_ = std::move(uniforms);
 }
 
 bgfx_program_handle_t Shader::GetInterface() const
@@ -47,6 +43,11 @@ void Shader::BeginScene()
 }
 
 void Shader::EndScene()
+{
+	
+}
+
+void Shader::Submit()
 {
 	BGFX(submit)(g_view_id, m_program, 0, BGFX_DISCARD_ALL);
 }
@@ -170,4 +171,14 @@ bool Shader::IsValid() const
 	return BGFX_HANDLE_IS_VALID(m_program);
 }
 
+bgfx_uniform_handle_t Shader::GetUniformId(const char* name)
+{
+	auto it = uniforms_.find(name);
+	if (it != uniforms_.end()) {
+		return it->second;
+	}
+	else {
+		return { UINT16_MAX };
+	}
+}
 } // namespace EffekseerRendererBGFX

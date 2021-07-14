@@ -21,8 +21,7 @@ namespace EffekseerRendererBGFX
 		: graphicsDevice_(graphicsDevice)
 		, fileInterface_(fileInterface)
 	{
-		if (fileInterface == nullptr)
-		{
+		if (!fileInterface) {
 			fileInterface_ = &defaultFileInterface_;
 		}
 	}

@@ -155,7 +155,7 @@ namespace EffekseerRendererBGFX {
 			: Effekseer::Model(data, size)
 		{
 			for (int32_t f = 0; f < GetFrameCount(); f++) {
-				models_[f].vertexBuffer = Backend::VertexBuffer::Create(GetVertexCount(f), *ModelRenderer::model_vertex_layout_, models_[f].vertexes.data());//
+				models_[f].vertexBuffer = Backend::VertexBuffer::Create(GetVertexCount(f) * sizeof(Effekseer::Model::Vertex), *ModelRenderer::model_vertex_layout_, models_[f].vertexes.data());//
 				models_[f].indexBuffer = Backend::IndexBuffer::Create(3 * GetFaceCount(f), Effekseer::Backend::IndexBufferStrideType::Stride4, models_[f].faces.data());
 			}
 		}

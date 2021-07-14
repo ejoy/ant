@@ -42,6 +42,8 @@ struct effekseer_ctx
 	bgfx_vertex_layout_t*	ad_lit_layout{ nullptr };
 	bgfx_vertex_layout_t*	ad_distortion_layout{ nullptr };
 	bgfx_vertex_layout_t*	mtl_layout{ nullptr };
+	bgfx_vertex_layout_t*	mtl1_layout{ nullptr };
+	bgfx_vertex_layout_t*	mtl2_layout{ nullptr };
 	bgfx_vertex_layout_t*	model_layout{ nullptr };
 	lua_State*				lua_State_{ nullptr };
 	//
@@ -58,5 +60,5 @@ struct effekseer_ctx
 	void destroy_effect(int32_t eidx);
 	void draw(float deltaTime);
 	void update();
-	int filename_callback_ = LUA_REFNIL;
+	int fxloader_ = LUA_REFNIL;
 };
