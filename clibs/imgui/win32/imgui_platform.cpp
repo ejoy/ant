@@ -131,9 +131,10 @@ static HWND platformCreateMainWindow(lua_State* L, int w, int h) {
 	RegisterClassExW(&wndclass);
 
 	HWND window = CreateWindowExW(0, L"ImGui Host Viewport", NULL,
-		WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0,
-		rect.right - rect.left, rect.bottom - rect.top,
+		WS_OVERLAPPEDWINDOW,
 		0, 0,
+		rect.right - rect.left, rect.bottom - rect.top,
+		NULL, NULL,
 		GetModuleHandleW(NULL),
 		cb);
 	if (!window) {
