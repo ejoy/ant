@@ -9,6 +9,8 @@
 #include "lua2struct.h"
 #include "luabgfx.h"
 
+#include "glm/glm.hpp"
+
 struct context{
     lm_context *lm_ctx;
     int size;
@@ -518,6 +520,51 @@ llightmap_save_tga(lua_State *L){
     return 0;
 }
 #endif //_DEBUG
+
+
+static int 
+llightmap_set_view(lua_State *L){
+    int x = (int)luaL_checkinteger(L, 1);
+    int y = (int)luaL_checkinteger(L, 2);
+    int size = (int)luaL_checkinteger(L, 3);
+    int side = (int)luaL_checkinteger(L, 4);
+    float zNear = (float)luaL_checknumber(L, 5);
+    float zFar = (float)luaL_checknumber(L, 6);
+
+    const lm_vec3* pos =(lm_vec3*)lua_touserdata(L, 7);
+    const lm_vec3* dir =(lm_vec3*)lua_touserdata(L, 8);
+    const lm_vec3* up = (lm_vec3*)lua_touserdata(L, 9);
+
+    // glm::vec3 right = glm::cross(up, dir);
+    // glm::vec3 nright = -right;
+    // glm::vec3 ndir = -dir;
+    // glm::vec3 nup = -up;
+    //#define P(_V) *(lm_vec3*)(&(_V.x))
+
+    int vp[4];
+    float view[16], proj[16];
+    lm_sampleHemisphere(x, y, size, side, zNear, zFar, *pos, *dir, *up, vp, view, proj);
+
+    lua_createtable(L, 4, 0);
+    for (int ii=0; ii<4; ++ii){
+        lua_pushnumber(L, (float)vp[ii]);
+        lua_seti(L, -2, ii+1);
+    }
+
+    lua_createtable(L, 16, 0);
+    for (int ii=0; ii<16; ++ii){
+        lua_pushnumber(L, view[ii]);
+        lua_seti(L, -2, ii+1);
+    }
+
+    lua_createtable(L, 16, 0);
+    for (int ii=0; ii<16; ++ii){
+        lua_pushnumber(L, proj[ii]);
+        lua_seti(L, -2, ii+1);
+    }
+    return 3;
+}
+
 extern "C"{
 LUAMOD_API int
 luaopen_bake(lua_State* L) {
@@ -532,6 +579,7 @@ luaopen_bake(lua_State* L) {
         {"read_obj", llightmap_read_obj},
         {"save_tga", llightmap_save_tga},
         #endif 
+        {"set_view", llightmap_set_view},
         { nullptr, nullptr },
     };
     luaL_newlib(L, lib);

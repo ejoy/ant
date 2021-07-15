@@ -6,8 +6,7 @@ fx:
 properties:
     s_lightmap:
         stage: 0
-        texture: /pkg/ant.tool.lightmap_baker/assets/example/materials/black.texture
-        #texture: /pkg/ant.tool.lightmap_baker/assets/textures/lm.texture
+        texture: /pkg/ant.tool.lightmap_baker/assets/textures/face.texture
 
 state:
     ALPHA_REF: 0

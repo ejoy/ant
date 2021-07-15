@@ -377,8 +377,15 @@ local tex_reader = {
         dsttex, 0, 0,
         srctex, 0, 0, w, h)
     end,
-
     save_bin = function (filename, mm, w, h, numelem)
+        local header = ("III"):pack(w, h, numelem)
+        local f = io.open(filename, "wb")
+        f:write(header)
+        f:write(tostring(mm))
+        f:close()
+    end,
+
+    save_bytes = function (filename, mm, w, h, numelem)
         local ss = tostring(mm)
         local t = {}
         for jj=0, h-1 do
@@ -400,13 +407,16 @@ local tex_reader = {
     end
 }
 
-local function read_tex(hemix, hemiy, srctex, fn)
+local function read_tex(hemix, hemiy, srctex, fn, fn_bin)
     local tt = tex_reader.create_tex(hemix, hemiy, "RGBA32F")
     tex_reader.copy_tex(lightmap_storage_viewid+1, tt, srctex, hemix, hemiy)
     local mm = tex_reader.get_image_memory(tt, hemix, hemiy, 16)
     fn = fn or "d:/tmp/aa.tga"
-    bake.save_tga(fn, mm, hemix, hemiy, 4);
-    --tex_reader.save_bin("d:/tmp/t.bin", mm, hemix, hemiy, 4)
+    bake.save_tga(fn, mm, hemix, hemiy, 4)
+    
+    if fn_bin then
+        tex_reader.save_bin(fn_bin, mm, hemix, hemiy, 4)
+    end
 end
 
 local skycolor = 0xffffffff
@@ -468,11 +478,12 @@ function ilm.bake_entity(eid, pf, notcull)
 
             local read, write = 1, 2
 
-            --read_tex(512*3, 512, shading_info.fb.render_textures[read].texture.handle, "d:/tmp/11.tga")
+            --read_tex(512*3, 512, shading_info.fb.render_textures[read].texture.handle, "d:/tmp/11.tga", "d:/tmp/dx.bin")
 
             imaterial.set_property(ds.weight_ds_eid, "hemispheres", shading_info.fb.render_textures[read])
             imaterial.set_property(ds.weight_ds_eid, "weights", shading_info.weight_tex)
             irender.draw(viewid, world[ds.weight_ds_eid]._rendercache)
+            --read_tex(256, 256, shading_info.fb.render_textures[write].texture.handle, "d:/tmp/22.tga", "d:/tmp/dx22.bin")
 
             while hsize > 1 do
                 viewid = viewid + 1
@@ -492,7 +503,7 @@ function ilm.bake_entity(eid, pf, notcull)
                 storagerb.handle, writex, writey,
                 dsttex, 0, 0, hemix, hemiy)
             bgfx.frame()
-            read_tex(storagerb.w, storagerb.h, storagerb.handle, "d:/tmp/22.tga")
+            --read_tex(storagerb.w, storagerb.h, storagerb.handle, "d:/tmp/22.tga")
         end,
         read_lightmap = function(size)
             local storagerb = fbmgr.get_rb(shading_info.storage_rbidx)

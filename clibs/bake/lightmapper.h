@@ -564,7 +564,6 @@ static lm_bool lm_trySamplingConservativeTriangleRasterizerPosition(lm_context *
 	lm_vec3 nv1 = lm_sub3(n1, n0);
 	lm_vec3 nv2 = lm_sub3(n2, n0);
 	ctx->meshPosition.sample.direction = lm_normalize3(lm_add3(n0, lm_add3(lm_scale3(nv2, uv.x), lm_scale3(nv1, uv.y))));
-	ctx->meshPosition.sample.direction = lm_normalize3(ctx->meshPosition.sample.direction);
 	float cameraToSurfaceDistance = (1.0f + ctx->hemisphere.cameraToSurfaceDistanceModifier) * ctx->hemisphere.zNear * sqrtf(2.0f);
 	ctx->meshPosition.sample.position = lm_add3(ctx->meshPosition.sample.position, lm_scale3(ctx->meshPosition.sample.direction, cameraToSurfaceDistance));
 
@@ -575,16 +574,18 @@ static lm_bool lm_trySamplingConservativeTriangleRasterizerPosition(lm_context *
 
 	lm_vec3 up = lm_v3(0.0f, 1.0f, 0.0f);
 	if (lm_absf(lm_dot3(up, ctx->meshPosition.sample.direction)) > 0.8f)
-		up = lm_v3(0.0f, 0.0f, 1.0f);
+		up = lm_v3(0.0f, 0.0f, -1.0f);
 
-#if 0
+#if 1
 	// triangle-consistent up vector
-	ctx->meshPosition.sample.up = lm_normalize3(lm_cross3(up, ctx->meshPosition.sample.direction));
+	//ctx->meshPosition.sample.up = lm_normalize3(lm_cross3(up, ctx->meshPosition.sample.direction));
+	lm_vec3 side = lm_normalize3(lm_cross3(up, ctx->meshPosition.sample.direction));
+	ctx->meshPosition.sample.up = lm_normalize3(lm_cross3(ctx->meshPosition.sample.direction, side));
 	return LM_TRUE;
 #else
 	// "randomized" rotation with pattern
 	lm_vec3 side = lm_normalize3(lm_cross3(up, ctx->meshPosition.sample.direction));
-	up = lm_normalize3(lm_cross3(side, ctx->meshPosition.sample.direction));
+	up = lm_normalize3(lm_cross3(ctx->meshPosition.sample.direction, side));
 	int rx = ctx->meshPosition.rasterizer.x % 3;
 	int ry = ctx->meshPosition.rasterizer.y % 3;
 	static const float lm_pi = 3.14159265358979f;
@@ -752,21 +753,82 @@ static void lm_setView(
 	// viewport
 	viewport[0] = x; viewport[1] = y; viewport[2] = w; viewport[3] = h;
 
-	// view matrix: lookAt(pos, pos + dir, up)
-	lm_vec3 side = lm_cross3(dir, up);
-	//up = cross(side, dir);
-	dir = lm_negate3(dir); pos = lm_negate3(pos);
-	view[ 0] = side.x;             view[ 1] = up.x;             view[ 2] = dir.x;             view[ 3] = 0.0f;
-	view[ 4] = side.y;             view[ 5] = up.y;             view[ 6] = dir.y;             view[ 7] = 0.0f;
-	view[ 8] = side.z;             view[ 9] = up.z;             view[10] = dir.z;             view[11] = 0.0f;
-	view[12] = lm_dot3(side, pos); view[13] = lm_dot3(up, pos); view[14] = lm_dot3(dir, pos); view[15] = 1.0f;
+	// view matrix: lookAt(pos, pos + dir, up), left hand
+	// lm_vec3 side = lm_cross3(dir, up);
+	// //up = cross(side, dir);
+	// dir = lm_negate3(dir); pos = lm_negate3(pos);
+	// view[ 0] = side.x;             view[ 1] = up.x;             view[ 2] = dir.x;             view[ 3] = 0.0f;
+	// view[ 4] = side.y;             view[ 5] = up.y;             view[ 6] = dir.y;             view[ 7] = 0.0f;
+	// view[ 8] = side.z;             view[ 9] = up.z;             view[10] = dir.z;             view[11] = 0.0f;
+	// view[12] = lm_dot3(side, pos); view[13] = lm_dot3(up, pos); view[14] = lm_dot3(dir, pos); view[15] = 1.0f;
 
-	// projection matrix: frustum(l, r, b, t, n, f)
-	float ilr = 1.0f / (r - l), ibt = 1.0f / (t - b), ninf = -1.0f / (f - n), n2 = 2.0f * n;
-	proj[ 0] = n2 * ilr;      proj[ 1] = 0.0f;          proj[ 2] = 0.0f;           proj[ 3] = 0.0f;
-	proj[ 4] = 0.0f;          proj[ 5] = n2 * ibt;      proj[ 6] = 0.0f;           proj[ 7] = 0.0f;
-	proj[ 8] = (r + l) * ilr; proj[ 9] = (t + b) * ibt; proj[10] = (f + n) * ninf; proj[11] = -1.0f;
-	proj[12] = 0.0f;          proj[13] = 0.0f;          proj[14] = f * n2 * ninf;  proj[15] = 0.0f;
+	lm_vec3 side = lm_cross3(up, dir);
+
+	view[ 0] = side.x; 				view[ 1] = up.x; 				view[ 2] = dir.x; 				view[ 3] = 0.f;
+	view[ 4] = side.y; 				view[ 5] = up.y; 				view[ 6] = dir.y; 				view[ 7] = 0.f;
+	view[ 8] = side.z; 				view[ 9] = up.z; 				view[10] = dir.z; 				view[11] = 0.f;
+	view[12] = -lm_dot3(side, pos); view[13] = -lm_dot3(up, pos);	view[14] = -lm_dot3(dir, pos); 	view[15] = 1.f;
+
+	// projection matrix: frustum(l, r, b, t, n, f), depth: [0, 1]
+	// float ilr = 1.0f / (r - l), ibt = 1.0f / (t - b), ninf = -1.0f / (f - n), n2 = 2.0f * n;
+	// proj[ 0] = n2 * ilr;      proj[ 1] = 0.0f;          proj[ 2] = 0.0f;           proj[ 3] = 0.0f;
+	// proj[ 4] = 0.0f;          proj[ 5] = n2 * ibt;      proj[ 6] = 0.0f;           proj[ 7] = 0.0f;
+	// proj[ 8] = (r + l) * ilr; proj[ 9] = (t + b) * ibt; proj[10] = (f + n) * ninf; proj[11] = -1.0f;
+	// proj[12] = 0.0f;          proj[13] = 0.0f;          proj[14] = f * n2 * ninf;  proj[15] = 0.0f;
+
+	proj[0] = 2.f*n/(r-l);	proj[1] = 0.f; 			proj[2]	= 0.f; 				proj[3] = 0.f;
+	proj[4] = 0.f;			proj[5] = (2.f*n)/(t-b);proj[6] = 0.f; 				proj[7] = 0.f;
+	proj[8] = (r+l) / (r-l);proj[9] = (t+b)/(t-b);	proj[10]= (f+n)/(f-n); 		proj[11]= 1.f;
+	proj[12]= 0.f;			proj[13] =0.f;			proj[14]= (-2.f*f*n)/(f-n);	proj[15]= 0.f;
+}
+
+static lm_bool lm_sampleHemisphere(
+	int x, int y, int size, int side,
+	float zNear, float zFar,
+	lm_vec3 pos, lm_vec3 dir, lm_vec3 up,
+	int *vp, float *view, float *proj)
+{
+	lm_vec3 right = lm_cross3(up, dir);
+	// find the view parameters of the hemisphere side that we will render next
+	// hemisphere layout in the framebuffer:
+	//       +-------+---+---+-------+
+	//       |       |   |   |   D   |
+	//       |   C   | R | L +-------+
+	//       |       |   |   |   U   |
+	//       +-------+---+---+-------+
+	switch (side)
+	{
+	case 0: // center
+		lm_setView(vp, x, y, size, size,
+				   view,     pos, dir, up,
+				   proj,     -zNear, zNear, -zNear, zNear, zNear, zFar);
+		break;
+	case 1: // right
+		lm_setView(vp, size + x, y, size / 2, size,
+				   view,     pos, right, dir,
+				   proj,     -zNear, 0.0f, -zNear, zNear, zNear, zFar);
+		break;
+	case 2: // left
+		lm_setView(vp, size + x + size / 2, y, size / 2, size,
+				   view,     pos, lm_negate3(right), dir,
+				   proj,     0.0f, zNear, -zNear, zNear, zNear, zFar);
+		break;
+	case 3: // down
+		lm_setView(vp, 2 * size + x, y + size / 2, size, size / 2,
+				   view,     pos, lm_negate3(up), dir,
+				   proj,     -zNear, zNear, 0.0f, zNear, zNear, zFar);
+		break;
+	case 4: // up
+		lm_setView(vp, 2 * size + x, y, size, size / 2,
+				   view,     pos, up, dir,
+				   proj,     -zNear, zNear, -zNear, 0.0f, zNear, zFar);
+		break;
+	default:
+		assert(LM_FALSE);
+		break;
+	}
+
+	return LM_TRUE;
 }
 
 static lm_bool lmSampleHemisphere(lm_context *ctx, int* viewport, float* view, float* proj)
@@ -782,48 +844,12 @@ static lm_bool lmSampleHemisphere(lm_context *ctx, int* viewport, float* view, f
 	lm_vec3 pos = ctx->meshPosition.sample.position;
 	lm_vec3 dir = ctx->meshPosition.sample.direction;
 	lm_vec3 up = ctx->meshPosition.sample.up;
-	lm_vec3 right = lm_cross3(dir, up);
 
-	// find the view parameters of the hemisphere side that we will render next
-	// hemisphere layout in the framebuffer:
-	//       +-------+---+---+-------+
-	//       |       |   |   |   D   |
-	//       |   C   | R | L +-------+
-	//       |       |   |   |   U   |
-	//       +-------+---+---+-------+
-	switch (ctx->meshPosition.hemisphere.side)
-	{
-	case 0: // center
-		lm_setView(viewport, x, y, size, size,
-				   view,     pos, dir, up,
-				   proj,     -zNear, zNear, -zNear, zNear, zNear, zFar);
-		break;
-	case 1: // right
-		lm_setView(viewport, size + x, y, size / 2, size,
-				   view,     pos, right, up,
-				   proj,     -zNear, 0.0f, -zNear, zNear, zNear, zFar);
-		break;
-	case 2: // left
-		lm_setView(viewport, size + x + size / 2, y, size / 2, size,
-				   view,     pos, lm_negate3(right), up,
-				   proj,     0.0f, zNear, -zNear, zNear, zNear, zFar);
-		break;
-	case 3: // down
-		lm_setView(viewport, 2 * size + x, y + size / 2, size, size / 2,
-				   view,     pos, lm_negate3(up), dir,
-				   proj,     -zNear, zNear, 0.0f, zNear, zNear, zFar);
-		break;
-	case 4: // up
-		lm_setView(viewport, 2 * size + x, y, size, size / 2,
-				   view,     pos, up, lm_negate3(dir),
-				   proj,     -zNear, zNear, -zNear, 0.0f, zNear, zFar);
-		break;
-	default:
-		assert(LM_FALSE);
-		break;
-	}
-
-	return LM_TRUE;
+	return lm_sampleHemisphere(x, y, size,
+			ctx->meshPosition.hemisphere.side,
+			zNear, zFar,
+			pos, dir, up, 
+			viewport, view, proj);
 }
 
 static void lm_inverseTranspose(const float *m44, float *n33)
@@ -972,8 +998,8 @@ static void lm_initMeshRasterizerPosition(lm_context *ctx)
 	}
 
 	lm_vec3 flatNormal = lm_cross3(
-		lm_sub3(ctx->meshPosition.triangle.p[1], ctx->meshPosition.triangle.p[0]),
-		lm_sub3(ctx->meshPosition.triangle.p[2], ctx->meshPosition.triangle.p[0]));
+		lm_sub3(ctx->meshPosition.triangle.p[2], ctx->meshPosition.triangle.p[0]),
+		lm_sub3(ctx->meshPosition.triangle.p[1], ctx->meshPosition.triangle.p[0]));
 
 	for (int i = 0; i < 3; i++)
 	{
