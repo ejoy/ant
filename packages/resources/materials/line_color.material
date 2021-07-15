@@ -4,6 +4,7 @@ fx:
   setting:
     surfacetype: translucent
     SINGLE_COLOR:1
+    lighting:off
 properties:
   u_color: {0, 0, 0, 1}
 state:
