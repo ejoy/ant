@@ -139,6 +139,7 @@ end
 
 function ic.set_frustum(eid, frustum)
     local rc = world[eid]._rendercache
+    rc.frustum = {}
     for k, v in pairs(frustum) do rc.frustum[k] = v end
     world:pub {"component_changed", "frustum", eid}
 end
