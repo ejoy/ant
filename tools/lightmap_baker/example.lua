@@ -421,9 +421,22 @@ function example_sys:post_init()
 end
 
 local keymb = world:sub{"keyboard"}
-
+local defaultcamera
 function example_sys:data_changed()
-    
+    if defaultcamera == nil then
+        local ceid = world:singleton_entity "main_queue".camera_eid
+        local icamera = world:interface "ant.camera|camera"
+
+        local f = icamera.get_frustum(ceid)
+        local df = {}
+        for k, v in pairs(f) do df[k] = v end
+        defaultcamera = {
+            frustum = df,
+            eyepos = math3d.ref(iom.get_position(ceid)),
+            viewdir = math3d.ref(iom.get_direction(ceid)),
+            updir = math3d.ref(iom.get_updir(ceid)),
+        }
+    end
     for _, key, press, status in keymb:unpack() do
         if key == "SPACE" and press == 0 then
             if side == 6 then
@@ -431,8 +444,27 @@ function example_sys:data_changed()
             end
 
             set_view()
-
+            print("change view:", viewnames[side])
             side = side + 1
+        end
+
+        if key == "C" and press == 0 then
+            local mq = world:singleton_entity "main_queue"
+            local ceid = mq.camera_eid
+            local icamera = world:interface "ant.camera|camera"
+            local vp = icamera.calc_viewproj(ceid)
+            local points = math3d.frustum_points(vp)
+            ientity.create_frustum_entity(points)
+            ientity.create_axis_entity()
+            print("add frustum:", viewnames[side])
+        end
+
+        if key == "R" and press == 0 then
+            local mq = world:singleton_entity "main_queue"
+            local ceid = mq.camera_eid
+            local icamera = world:interface "ant.camera|camera"
+            icamera.set_frustum(ceid, defaultcamera.frustum)
+            icamera.lookto(ceid, defaultcamera.eyepos, defaultcamera.viewdir, defaultcamera.updir)
         end
     end
 end
