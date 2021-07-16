@@ -227,10 +227,10 @@ local function face_test()
     local du = 1.0/6.0
     local vb = {
         --left:
-        lbf[1], lbf[2], lbf[3], 0, 0,
-        lbn[1], lbn[2], lbn[3], du,0,
-        ltf[1], ltf[2], ltf[3], du,1,
-        ltn[1], ltn[2], ltn[3], 0, 1,
+        ltn[1], ltn[2], ltn[3], 0, 0,
+        ltf[1], ltf[2], ltf[3], du,0,
+        lbf[1], lbf[2], lbf[3], du,1,
+        lbn[1], lbn[2], lbn[3], 0, 1,
         --right
         rtf[1], rtf[2], rtf[3], du, 0,
         rtn[1], rtn[2], rtn[3],2*du,0,
@@ -250,16 +250,16 @@ local function face_test()
         lbn[1], lbn[2], lbn[3], 3*du,1,
 
         --near
-        ltf[1], ltf[2], ltf[3], 4*du,0,
-        rtf[1], rtf[2], rtf[3], 5*du,0,
-        rbf[1], rbf[2], rbf[3], 5*du,1,
-        lbf[1], lbf[2], lbf[3], 4*du,1,
+        rtn[1], rtn[2], rtn[3], 4*du,0,
+        ltn[1], ltn[2], ltn[3], 5*du,0,
+        lbn[1], lbn[2], lbn[3], 5*du,1,
+        rbn[1], rbn[2], rbn[3], 4*du,1,
 
         --far
-        lbn[1], lbn[2], lbn[3], 5*du,0,
-        rbn[1], rbn[2], rbn[3], 6*du,0,
-        rtn[1], rtn[2], rtn[3], 6*du,1,
-        ltn[1], ltn[2], ltn[3], 5*du,1,
+        ltf[1], ltf[2], ltf[3], 5*du,0,
+        rtf[1], rtf[2], rtf[3], 6*du,0,
+        rbf[1], rbf[2], rbf[3], 6*du,1,
+        lbf[1], lbf[2], lbf[3], 5*du,1,
     }
 
     --face to origin

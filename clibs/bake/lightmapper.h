@@ -776,10 +776,18 @@ static void lm_setView(
 	// proj[ 8] = (r + l) * ilr; proj[ 9] = (t + b) * ibt; proj[10] = (f + n) * ninf; proj[11] = -1.0f;
 	// proj[12] = 0.0f;          proj[13] = 0.0f;          proj[14] = f * n2 * ninf;  proj[15] = 0.0f;
 
-	proj[0] = 2.f*n/(r-l);	proj[1] = 0.f; 			proj[2]	= 0.f; 				proj[3] = 0.f;
-	proj[4] = 0.f;			proj[5] = (2.f*n)/(t-b);proj[6] = 0.f; 				proj[7] = 0.f;
-	proj[8] = (r+l) / (r-l);proj[9] = (t+b)/(t-b);	proj[10]= (f+n)/(f-n); 		proj[11]= 1.f;
-	proj[12]= 0.f;			proj[13] =0.f;			proj[14]= (-2.f*f*n)/(f-n);	proj[15]= 0.f;
+	int homogeneous_depth = 0;
+	if (homogeneous_depth){
+		proj[0] = 2.f*n/(r-l);	proj[1] = 0.f; 			proj[2]	= 0.f; 				proj[3] = 0.f;
+		proj[4] = 0.f;			proj[5] = (2.f*n)/(t-b);proj[6] = 0.f; 				proj[7] = 0.f;
+		proj[8] = -(r+l)/(r-l);	proj[9] = -(t+b)/(t-b);	proj[10]= (f+n)/(f-n); 		proj[11]= 1.f;
+		proj[12]= 0.f;			proj[13] =0.f;			proj[14]= (-2.f*f*n)/(f-n);	proj[15]= 0.f;
+	} else {
+		proj[0] = 2.f*n/(r-l);	proj[1] = 0.f;			proj[2]	= 0.f;				proj[3] = 0.f;
+		proj[4] = 0.f;			proj[5] = 2.f*n/(t-b);	proj[6] = 0.f;				proj[7] = 0.f;
+		proj[8] = -(r+l)/(r-l);	proj[9]	= -(t+b)/(t-b);	proj[10]= f/(f-n);			proj[11]= 1.f;
+		proj[12]= 0.f;			proj[13]= 0.f;			proj[14]= -(f*n)/(f-n);		proj[15]= 0.f;
+	}
 }
 
 static lm_bool lm_sampleHemisphere(
@@ -805,12 +813,12 @@ static lm_bool lm_sampleHemisphere(
 		break;
 	case 1: // right
 		lm_setView(vp, size + x, y, size / 2, size,
-				   view,     pos, right, dir,
+				   view,     pos, right, up,
 				   proj,     -zNear, 0.0f, -zNear, zNear, zNear, zFar);
 		break;
 	case 2: // left
 		lm_setView(vp, size + x + size / 2, y, size / 2, size,
-				   view,     pos, lm_negate3(right), dir,
+				   view,     pos, lm_negate3(right), up,
 				   proj,     0.0f, zNear, -zNear, zNear, zNear, zFar);
 		break;
 	case 3: // down
@@ -820,7 +828,7 @@ static lm_bool lm_sampleHemisphere(
 		break;
 	case 4: // up
 		lm_setView(vp, 2 * size + x, y, size, size / 2,
-				   view,     pos, up, dir,
+				   view,     pos, up, lm_negate3(dir),
 				   proj,     -zNear, zNear, -zNear, 0.0f, zNear, zFar);
 		break;
 	default:
