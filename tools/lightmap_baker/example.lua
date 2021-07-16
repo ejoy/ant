@@ -192,25 +192,26 @@ local function create_example_mesh()
     local dv, maxuv = 0.49999, 0.99999
 
 	local vb = {
-       -s, 0.0, s, 0.0,     0.0,
-        s, 0.0, s, maxuv,   0.0,
-        s, 0.0,-s, maxuv,   dv,
-       -s, 0.0,-s, 0.0,     dv,
-       -s, s, 0.0, 0.0,     dv,
-        s, s, 0.0, maxuv,   dv,
-        s,-s, 0.0, maxuv,   maxuv,
-       -s,-s, 0.0, 0.0, 	maxuv,
+       -s, 0.0, s, 0.0,     0.0, 0xff00ff00,
+        s, 0.0, s, maxuv,   0.0, 0xff00ff00,
+        s, 0.0,-s, maxuv,   dv, 0xff00ff00,
+       -s, 0.0,-s, 0.0,     dv, 0xff00ff00,
+
+       -s, s, 0.0, 0.0,     dv, 0xffff0000,
+        s, s, 0.0, maxuv,   dv, 0xffff0000,
+        s,-s, 0.0, maxuv,   maxuv, 0xffff0000,
+       -s,-s, 0.0, 0.0, 	maxuv, 0xffff0000,
     }
 	
     local ib = {
-        0, 3, 2,
-        0, 2, 1,
+        0, 1, 2,
+        2, 3, 0,
 
-        4, 7, 6,
-        4, 6, 5,
+        4, 5, 6,
+        6, 7, 4,
     }
 	
-	return ientity.create_mesh({"p3|t2", vb}, ib)
+	return ientity.create_mesh({"p3|t2|c40niu", vb}, ib)
 end
 
 local function face_test()
@@ -287,19 +288,18 @@ function example_sys:init()
         data = {
             scene_entity = true,
             lightmap = {
-                size = 16,
+                size = 4,
                 hemisize = 64,
             },
             transform = {},
-            --material = "/pkg/ant.tool.lightmap_baker/assets/example/materials/example.material",
-            material = "/pkg/ant.tool.lightmap_baker/assets/face_test.material",
+            material = "/pkg/ant.tool.lightmap_baker/assets/example/materials/example.material",
+            --material = "/pkg/ant.tool.lightmap_baker/assets/face_test.material",
             --mesh = "/pkg/ant.tool.lightmap_baker/assets/example/meshes/gazebo.glb|meshes/Node-Mesh_P1.meshbin",
-            --mesh = create_example_mesh(),
-            mesh = face_test(),
+            mesh = create_example_mesh(),
+            --mesh = face_test(),
             name = "lightmap_example",
             state = 1,
         }
-        
     }
 
     local e = world[example_eid]
@@ -342,37 +342,82 @@ function example_sys:init()
     --     }
     -- })
 
-    local function render(side)
-        local vp, view, proj = bake.set_view(
-            0, 0, 64,
-            side, 
-            0.001, 100,
-            sample.pos.p, sample.dir.p, sample.up.p
-        )
+    -- local function render(side)
+    --     local vp, view, proj = bake.set_view(
+    --         0, 0, 64,
+    --         side, 
+    --         0.001, 100,
+    --         sample.pos.p, sample.dir.p, sample.up.p
+    --     )
 
-        local viewid = 40
-        bgfx.touch(viewid)
-        local rc = world[example_eid]._rendercache
-        bgfx.set_view_rect(viewid, vp[1], vp[2], vp[3], vp[4])
-        bgfx.set_view_transform(viewid, view, proj)
-        irender.draw(viewid, rc)
+    --     local viewid = 40
+    --     bgfx.touch(viewid)
+    --     local rc = world[example_eid]._rendercache
+    --     bgfx.set_view_rect(viewid, vp[1], vp[2], vp[3], vp[4])
+    --     bgfx.set_view_transform(viewid, view, proj)
+    --     irender.draw(viewid, rc)
 
-        bgfx.frame()
-    end
+    --     bgfx.frame()
+    -- end
 
-    render(0)
-    render(1)
-    render(2)
-    render(3)
-    render(4)
+
+    -- render(0)
+    -- render(1)
+    -- render(2)
+    -- render(3)
+    -- render(4)
 
     rc.worldmat = nil
     rc.eid = nil
 end
+local viewnames = {"center", "left", "right", "up", "down"}
+local side = 1
+local function set_view()
+    local mq = world:singleton_entity "main_queue"
+    --iom.set_position(mq.camera_eid, math3d.vector(0, 0, -2))
+    world[example_eid]._rendercache.eid = example_eid
+    world[example_eid]._rendercache.worldmat = world[example_eid]._rendercache.srt
+    local p, d, u = ilm.find_sample(example_eid, 0)
+    p, d, u = math3d.vector(p), math3d.vector(d), math3d.vector(u)
+    local znear, zfar = 0.001, 100
+    local r = math3d.cross(u, d)
+    local views = {
+        center = {
+            lookto = {p=p, d=d, u=u,},
+            frustum = {l=-znear, r=znear, b=-znear, t=znear, n=znear, f=zfar}
+        },
+        left = {
+            lookto = {p=p, d=math3d.inverse(r), u=u,},
+            frustum = {l=0, r=znear, b=-znear, t=znear, n=znear, f=zfar}
+        },
+        right = {
+            lookto = {p=p, d=r, u=u,},
+            frustum = {l=-znear, r=0, b=-znear, t=znear, n=znear, f=zfar}
+        },
+        up = {
+            lookto = {p=p, d=u, u=math3d.inverse(d),},
+            frustum = {l=-znear, r=znear, b=-znear, t=0, n=znear, f=zfar}
+        },
+        down = {
+            lookto = {p=p, d=math3d.inverse(u), u=d,},
+            frustum = {l=-znear, r=znear, b=0, t=znear, n=znear, f=zfar}
+        }
+    }
+
+    local icamera = world:interface "ant.camera|camera"
+    local viewname = viewnames[side]
+    local view = views[viewname]
+    local lookto = view.lookto
+    icamera.lookto(mq.camera_eid, lookto.p, lookto.d, lookto.u)
+
+    
+    icamera.set_frustum(mq.camera_eid, view.frustum)
+    world[example_eid]._rendercache.eid = nil
+    world[example_eid]._rendercache.worldmat = nil
+end
 
 function example_sys:post_init()
-    local mq = world:singleton_entity "main_queue"
-    iom.set_position(mq.camera_eid, math3d.vector(0, 0, -2))
+
 end
 
 local keymb = world:sub{"keyboard"}
@@ -381,7 +426,13 @@ function example_sys:data_changed()
     
     for _, key, press, status in keymb:unpack() do
         if key == "SPACE" and press == 0 then
+            if side == 6 then
+                side = 1
+            end
 
+            set_view()
+
+            side = side + 1
         end
     end
 end

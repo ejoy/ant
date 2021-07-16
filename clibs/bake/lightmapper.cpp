@@ -165,6 +165,46 @@ lcontext_destroy(lua_State *L){
     return 0;
 }
 
+static int
+lcontext_find_sample(lua_State *L){
+    auto ctx = tocontext(L, 1);
+    uint32_t triangleidx = (uint32_t)luaL_checkinteger(L, 2);
+
+    auto lmctx = ctx->lm_ctx;
+    lmctx->meshPosition.triangle.baseIndex = triangleidx;
+    
+    for(lm_initMeshRasterizerPosition(lmctx);
+		!lm_hasConservativeTriangleRasterizerFinished(lmctx);
+		lm_moveToNextPotentialConservativeTriangleRasterizerPosition(lmctx))
+	{
+		if (lm_trySamplingConservativeTriangleRasterizerPosition(lmctx))
+			break;
+    }
+    
+    const auto& sample = lmctx->meshPosition.sample;
+    lua_createtable(L, 3, 0);
+    for(int ii=0; ii<3; ++ii){
+        const float *v = &sample.position.x;
+        lua_pushnumber(L, v[ii]);
+        lua_seti(L, -2, ii+1);
+    }
+
+    lua_createtable(L, 3, 0);
+    for(int ii=0; ii<3; ++ii){
+        const float *v = &sample.direction.x;
+        lua_pushnumber(L, v[ii]);
+        lua_seti(L, -2, ii+1);
+    }
+
+    lua_createtable(L, 3, 0);
+    for(int ii=0; ii<3; ++ii){
+        const float *v = &sample.up.x;
+        lua_pushnumber(L, v[ii]);
+        lua_seti(L, -2, ii+1);
+    }
+    return 3;
+}
+
 static int lcontext_set_target_lightmap(lua_State *L);
 
 static int
@@ -289,6 +329,7 @@ register_lm_context_mt(lua_State *L){
             {"hemi_count",          lcontext_hemi_count},
             {"bake",                lcontext_bake},
             {"process",             lcontext_process},
+            {"find_sample",         lcontext_find_sample},
             {nullptr,               nullptr},
         };
 

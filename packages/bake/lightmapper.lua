@@ -421,6 +421,31 @@ end
 
 local skycolor = 0xffffffff
 
+function ilm.find_sample(eid, triangleidx)
+    local e = world[eid]
+    if e == nil then
+        return log.warn(("invalid entity:%d"):format(eid))
+    end
+
+    if e._lightmap == nil then
+        return log.warn(("entity %s not set any lightmap info will not be baked"):format(e.name or ""))
+    end
+
+    local lm = e.lightmap
+    local hemisize = lm.hemisize
+
+    local s = create_context_setting(hemisize)
+    local bake_ctx = bake.create_lightmap_context(s)
+    local g = load_geometry_info(e._rendercache)
+    bake_ctx:set_geometry(g)
+    local lmsize = lm.size
+    local li = {width=lmsize, height=lmsize, channels=4}
+    log.info(("[%d-%s] lightmap:w=%d, h=%d, channels=%d"):format(eid, e.name or "", li.width, li.height, li.channels))
+    e._lightmap.data = bake_ctx:set_target_lightmap(li)
+
+    return bake_ctx:find_sample(triangleidx)
+end
+
 function ilm.bake_entity(eid, pf, notcull)
     local e = world[eid]
     if e == nil then
