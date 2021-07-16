@@ -3,6 +3,7 @@ fx:
   vs: /pkg/ant.resources/shaders/mesh/vs_colormesh.sc
   setting:
     surfacetype: translucent
+    lighting:off
 state:
   ALPHA_REF: 1
   CULL: CCW
