@@ -282,14 +282,15 @@ local frustum_ib = {
 
 function ientity.create_frustum_entity(frustum_points, name, color)
 	local vb = {}
-	color = color or 0xff00000f
+	color = color or {1.0, 1.0, 1.0, 1.0}
 	for i=1, #frustum_points do
 		local p = math3d.totable(frustum_points[i])
 		table.move(p, 1, 3, #vb+1, vb)
-		vb[#vb+1] = color
 	end
-	local mesh = create_mesh({"p3|c40niu", vb}, frustum_ib)
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh)
+	local mesh = create_mesh({"p3", vb}, frustum_ib)
+	local eid = create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh)
+	imaterial.set_property(eid, "u_color", color)
+	return eid
 end
 
 local axis_ib = {
