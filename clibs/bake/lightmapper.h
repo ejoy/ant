@@ -1006,8 +1006,8 @@ static void lm_initMeshRasterizerPosition(lm_context *ctx)
 	}
 
 	lm_vec3 flatNormal = lm_cross3(
-		lm_sub3(ctx->meshPosition.triangle.p[2], ctx->meshPosition.triangle.p[0]),
-		lm_sub3(ctx->meshPosition.triangle.p[1], ctx->meshPosition.triangle.p[0]));
+		lm_sub3(ctx->meshPosition.triangle.p[1], ctx->meshPosition.triangle.p[0]),
+		lm_sub3(ctx->meshPosition.triangle.p[2], ctx->meshPosition.triangle.p[0]));
 
 	for (int i = 0; i < 3; i++)
 	{
