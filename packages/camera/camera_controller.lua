@@ -28,9 +28,9 @@ function cc_sys:data_changed()
         local key, press, status = msg[2], msg[3], msg[4]
         if press == 1 then
             if key == "W" then
-                toforward = -0.01
+                toforward = 0.1
             elseif key == "S" then
-                toforward = 0.01
+                toforward = -0.1
             end
         else
             toforward = nil
