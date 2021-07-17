@@ -822,12 +822,12 @@ static lm_bool lm_sampleHemisphere(
 				   proj,     0.0f, zNear, -zNear, zNear, zNear, zFar);
 		break;
 	case 3: // down
-		lm_setView(vp, 2 * size + x, y + size / 2, size, size / 2,
+		lm_setView(vp, 2 * size + x, y, size, size / 2,
 				   view,     pos, lm_negate3(up), dir,
 				   proj,     -zNear, zNear, 0.0f, zNear, zNear, zFar);
 		break;
 	case 4: // up
-		lm_setView(vp, 2 * size + x, y, size, size / 2,
+		lm_setView(vp, 2 * size + x, y + size / 2, size, size / 2,
 				   view,     pos, up, lm_negate3(dir),
 				   proj,     -zNear, zNear, -zNear, 0.0f, zNear, zFar);
 		break;
