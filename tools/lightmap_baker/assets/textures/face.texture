@@ -1,5 +1,5 @@
 normalmap: false
-path: /pkg/ant.resources.binary/textures/color_text.png
+path: /pkg/ant.tool.lightmap_baker/assets/color_text.png
 sRGB: true
 compress:
   android: ASTC6x6

@@ -278,6 +278,50 @@ local function face_test()
     return ientity.create_mesh({"p3|t2", vb}, ib)
 end
 
+local function plane_mesh()
+    local l = 0.1
+
+    local vb = {
+        -l, 0, l, 0, 0,
+         l, 0, l, 0.99999,  0,
+         l, 0,-l, 0.99999,  0.99999,
+        -l, 0,-l, 0,        0.99999,
+    }
+
+    local ib = {
+        0, 1, 2, 2, 0, 3,
+    }
+
+    return ientity.create_mesh({"p3|t2", vb}, ib)
+end
+
+local function draw_face_test()
+    local function render(side)
+        local vp, view, proj = bake.set_view(
+            0, 0, 64,
+            side, 
+            0.001, 100,
+            sample.pos.p, sample.dir.p, sample.up.p
+        )
+
+        local viewid = 40
+        bgfx.touch(viewid)
+        local rc = world[example_eid]._rendercache
+        bgfx.set_view_rect(viewid, vp[1], vp[2], vp[3], vp[4])
+        bgfx.set_view_transform(viewid, view, proj)
+        irender.draw(viewid, rc)
+
+        bgfx.frame()
+    end
+
+
+    render(0)
+    render(1)
+    render(2)
+    render(3)
+    render(4)
+end
+
 function example_sys:init()
     example_eid = world:create_entity {
         policy = {
@@ -288,87 +332,97 @@ function example_sys:init()
         data = {
             scene_entity = true,
             lightmap = {
-                size = 4,
-                hemisize = 64,
+                size = 16,
+                hemisize = 512,
             },
             transform = {},
             material = "/pkg/ant.tool.lightmap_baker/assets/example/materials/example.material",
             --material = "/pkg/ant.tool.lightmap_baker/assets/face_test.material",
             --mesh = "/pkg/ant.tool.lightmap_baker/assets/example/meshes/gazebo.glb|meshes/Node-Mesh_P1.meshbin",
             mesh = create_example_mesh(),
+            --mesh = plane_mesh(),
             --mesh = face_test(),
             name = "lightmap_example",
             state = 1,
         }
     }
 
-    local e = world[example_eid]
-    local rc = e._rendercache
-    --rc.simple_mesh = "d:/work/ant/tools/lightmap_baker/assets/example/meshes/gazebo.obj"
-    rc.eid = example_eid
-    rc.worldmat = e._rendercache.srt
+    local cubeeid = world:create_entity{
+        policy = {
+            "ant.general|name",
+            "ant.render|render"
+        },
+        data = {
+            scene_entity = true,
+            transform = {},
+            material = "/pkg/ant.tool.lightmap_baker/assets/face_test.material",
+            mesh = face_test(),
+            name = "cube",
+            state = 0,
+        }
+    }
 
-    -- local pf = {
-    --     filter_order = {"opaticy"},
-    --     result = {
-    --         opaticy = {
-    --             items = {rc},
-    --             visible_set = {rc},
-    --         }
-    --     }
-    -- }
-    -- ilm.bake_entity(example_eid, pf, true)
+    local function init_entity(eid)
+        local e = world[eid]
+        local rc = e._rendercache
+        --rc.simple_mesh = "d:/work/ant/tools/lightmap_baker/assets/example/meshes/gazebo.obj"
+        rc.eid = eid
+        rc.worldmat = e._rendercache.srt
+        return rc
+    end
 
-    -- local lm = e._lightmap.data
-    -- local lm1 = e.lightmap
+    local plane_rc = init_entity(example_eid)
+    local cube_rc = init_entity(cubeeid)
 
-    -- local s = lm1.size * lm1.size * 4 * 4
-    -- local mem = bgfx.memory_buffer(lm:data(), s, lm)
+    local rl = {plane_rc} --{cube_rc, plane_rc,}
 
-    -- lm:save "d:/tmp/lresult.tga"
+    local pf = {
+        filter_order = {"opaticy"},
+        result = {
+            opaticy = {
+                items = rl,
+                visible_set = rl,
+            }
+        }
+    }
+    ilm.bake_entity(example_eid, pf, true)
 
-    -- local flags = sampler.sampler_flag {
-    --     MIN="LINEAR",
-    --     MAG="LINEAR",
-    -- }
+    local function update_lightmap(eid)
+        local e = world[eid]
+        local lm = e._lightmap.data
+        local lm1 = e.lightmap
+    
+        local s = lm1.size * lm1.size * 4 * 4
+        local mem = bgfx.memory_buffer(lm:data(), s, lm)
+    
+        lm:save "lresult.tga"
+    
+        local flags = sampler.sampler_flag {
+            MIN="LINEAR",
+            MAG="LINEAR",
+        }
+    
+        local lm_handle = bgfx.create_texture2d(lm1.size, lm1.size, false, 1, "RGBA32F", flags, mem)
+        -- local assetmgr = import_package "ant.asset"
+        -- local lm_handle = assetmgr.resource "/pkg/ant.lightmap_baker/textures/lm.texture".handle
+        imaterial.set_property(example_eid, "s_lightmap", {
+            stage = 0,
+            texture = {
+                handle = lm_handle
+            }
+        })
+    end
 
-    -- local lm_handle = bgfx.create_texture2d(lm1.size, lm1.size, false, 1, "RGBA32F", flags, mem)
-    -- -- local assetmgr = import_package "ant.asset"
-    -- -- local lm_handle = assetmgr.resource "/pkg/ant.lightmap_baker/textures/lm.texture".handle
-    -- imaterial.set_property(example_eid, "s_lightmap", {
-    --     stage = 0,
-    --     texture = {
-    --         handle = lm_handle
-    --     }
-    -- })
+    update_lightmap(example_eid)
 
-    -- local function render(side)
-    --     local vp, view, proj = bake.set_view(
-    --         0, 0, 64,
-    --         side, 
-    --         0.001, 100,
-    --         sample.pos.p, sample.dir.p, sample.up.p
-    --     )
+    local function recover_entity(eid)
+        local rc = world[eid]._rendercache
+        rc.worldmat = nil
+        rc.eid = nil
+    end
 
-    --     local viewid = 40
-    --     bgfx.touch(viewid)
-    --     local rc = world[example_eid]._rendercache
-    --     bgfx.set_view_rect(viewid, vp[1], vp[2], vp[3], vp[4])
-    --     bgfx.set_view_transform(viewid, view, proj)
-    --     irender.draw(viewid, rc)
-
-    --     bgfx.frame()
-    -- end
-
-
-    -- render(0)
-    -- render(1)
-    -- render(2)
-    -- render(3)
-    -- render(4)
-
-    rc.worldmat = nil
-    rc.eid = nil
+    recover_entity(example_eid)
+    recover_entity(cubeeid)
 end
 local viewnames = {"center", "left", "right", "up", "down"}
 local side = 1

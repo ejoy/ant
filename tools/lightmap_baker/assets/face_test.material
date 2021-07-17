@@ -11,7 +11,6 @@ properties:
 state:
     ALPHA_REF: 0
     CULL: NONE
-    FRONT_CCW: true
     DEPTH_TEST: LESS
     MSAA: true
     WRITE_MASK: RGBAZ
