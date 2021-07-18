@@ -332,14 +332,14 @@ function example_sys:init()
         data = {
             scene_entity = true,
             lightmap = {
-                size = 16,
-                hemisize = 512,
+                size = 64,
+                hemisize = 64,
             },
             transform = {},
             material = "/pkg/ant.tool.lightmap_baker/assets/example/materials/example.material",
             --material = "/pkg/ant.tool.lightmap_baker/assets/face_test.material",
-            --mesh = "/pkg/ant.tool.lightmap_baker/assets/example/meshes/gazebo.glb|meshes/Node-Mesh_P1.meshbin",
-            mesh = create_example_mesh(),
+            mesh = "/pkg/ant.tool.lightmap_baker/assets/example/meshes/gazebo.glb|meshes/Node-Mesh_P1.meshbin",
+            --mesh = create_example_mesh(),
             --mesh = plane_mesh(),
             --mesh = face_test(),
             name = "lightmap_example",
