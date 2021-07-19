@@ -5,6 +5,7 @@ local bgfx = require "bgfx"
 
 local APIS = {
     "init",
+    "frame",
     "shutdown",
     "set_debug",
     "encoder_frame",
