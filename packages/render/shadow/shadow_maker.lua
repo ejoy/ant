@@ -239,6 +239,9 @@ function sm:init()
 		local vr = {x=(ii-1)*s, y=0, w=s, h=s}
 		local eid = create_csm_entity(ii, vr, fbidx, dt)
 		irq.set_view_clear(eid, "D", nil, 1, nil, true)
+		local f = world[eid].primitive_filter
+		f.shadow_material 		= shadow_material
+		f.gpu_skinning_material = gpu_skinning_material
 	end
 end
 

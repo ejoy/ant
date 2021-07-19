@@ -37,6 +37,7 @@ system "end_frame_system"
 
 system "pre_depth_primitive_system"
     .implement "render_system/pre_depth.lua"
+    .method "init"
     .method "update_filter"
 
 policy "blit_queue"

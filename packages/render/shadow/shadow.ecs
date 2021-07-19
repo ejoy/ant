@@ -28,6 +28,7 @@ policy "csm_policy"
     .require_system "shadow_primitive_system"
     .require_interface "ant.render|ishadow"
     .component "csm"
+    .component "material"
 
 interface "ishadow"
     .implement "shadow/shadow.lua"

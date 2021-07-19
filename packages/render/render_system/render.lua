@@ -196,7 +196,7 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 		}
 	}
 
-	return world:create_entity{
+	local eid = world:create_entity{
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|pre_depth_queue",
@@ -229,6 +229,12 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 			watch_screen_buffer = true,
 		}
 	}
+
+	local pef = world[eid].primitive_filter
+	local pre_depth_material_file<const> 	= "/pkg/ant.resources/materials/predepth.material"
+	pef.pre_depth_material 			= imaterial.load(pre_depth_material_file, {depth_type="linear"})
+	pef.pre_depth_skinning_material = imaterial.load(pre_depth_material_file, {depth_type="linear", skinning="GPU"})
+	return eid
 end
 
 function irender.create_main_queue(view_rect, camera_eid)

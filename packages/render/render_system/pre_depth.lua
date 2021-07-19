@@ -9,9 +9,6 @@ local irender = world:interface "ant.render|irender"
 local imaterial		= world:interface "ant.asset|imaterial"
 local ipf			= world:interface "ant.scene|iprimitive_filter"
 
-local pre_depth_material_file<const> 	= "/pkg/ant.resources/materials/predepth.material"
-local pre_depth_material, pre_depth_skinning_material
-
 local function can_write_depth(state)
 	local s = bgfx.parse_state(state)
 	local wm = s.WRITE_MASK
@@ -23,12 +20,12 @@ local s = ecs.system "pre_depth_primitive_system"
 local evadd = world:sub {"primitive_filter", "depth", "add"}
 local evdel = world:sub {"primitive_filter", "depth", "del"}
 
-function s.update_filter()
-	if pre_depth_material == nil then
-		pre_depth_material 			= imaterial.load(pre_depth_material_file, {depth_type="linear"})
-		pre_depth_skinning_material = imaterial.load(pre_depth_material_file, {depth_type="linear", skinning="GPU"})
-	end
+local function which_material(eid)
+	local pef = world:singleton_entity "pre_depth_queue"
+	return world[eid].skinning_type == "GPU" and pef.pre_depth_skinning_material or pef.pre_depth_material
+end
 
+function s.update_filter()
 	for _, _, _, eid, filter in evadd:unpack() do
 		local e = world[eid]
 		local rc = e._rendercache
@@ -36,7 +33,7 @@ function s.update_filter()
 		local fxtype = fx.setting.surfacetype
 		if fxtype == "opaticy" then
 			local items = filter.result[fxtype].items
-			local material = world[eid].skinning_type == "GPU" and pre_depth_skinning_material or pre_depth_material
+			local material = assert(which_material(eid))
 			if can_write_depth(rc.state) then
 				ipf.add_item(items, eid, setmetatable({
 					eid			= eid,
