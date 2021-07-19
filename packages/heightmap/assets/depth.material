@@ -1,0 +1,17 @@
+fx:
+  fs: /pkg/ant.resources/shaders/depth/fs_depth.sc
+  vs: /pkg/ant.resources/shaders/depth/vs_depth.sc
+  setting:
+    lighting: off
+    surfacetype: opaticy
+    shadow_cast: off
+    shadow_receive: off
+    subsurface: off
+    skinning: UNKNOWN
+    depth_type: linear
+    bloom: off
+state:
+  ALPHA_REF: 0
+  CULL: CW
+  DEPTH_TEST: LESS
+  WRITE_MASK: RGBAZ

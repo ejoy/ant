@@ -170,13 +170,15 @@ function init_loader_sys:init()
         data = {
             auto_heightmap = true,
             transform = {},
-            material = "/pkg/ant.test.features/assets/glb/Duck.glb|materials/1.material",
-            mesh = "/pkg/ant.test.features/assets/glb/Duck.glb|meshes/1.meshbin",
+            material = "/pkg/ant.test.features/assets/glb/Duck.glb|materials/blinn3-fx_CW.material",
+            mesh = "/pkg/ant.test.features/assets/glb/Duck.glb|meshes/LOD3spShape_P1.meshbin",
             state = 1,
             scene_entity = true,
             name = "test_auot_heightmap",
         }
     }
+
+    world:pub{"fetch_heightmap"}
 
     --world:instance "/pkg/ant.resources.binary/meshes/cloud_run.glb|mesh.prefab"
     --world:instance "/pkg/ant.test.features/assets/CloudTestRun.glb|mesh.prefab"
