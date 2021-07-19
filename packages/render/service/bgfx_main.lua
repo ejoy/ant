@@ -57,6 +57,25 @@ function S.encoder_frame()
     wait_frame()
 end
 
+local pause_token
+local continue_token
+
+function S.pause()
+    if pause_token then
+        error "Can't pause twice"
+    end
+    pause_token = {}
+    ltask.wait(pause_token)
+    pause_token = nil
+end
+
+function S.continue()
+    if not continue_token then
+        error "Not pause"
+    end
+    ltask.wakeup(continue_token)
+end
+
 ltask.fork(function()
     while true do
         ltask.sleep(0)
@@ -64,6 +83,12 @@ ltask.fork(function()
             encoder_frame = encoder_frame + 1
             encoder_cur = 0
             bgfx.frame()
+            if pause_token then
+                ltask.wakeup(pause_token)
+                continue_token = {}
+                ltask.wait(continue_token)
+                continue_token = nil
+            end
             wakeup_frame()
         else
             exclusive.sleep(1)
