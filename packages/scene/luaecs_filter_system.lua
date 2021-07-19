@@ -61,7 +61,7 @@ local function render_queue_update(rq, eid)
     local e = world[eid]
     local rc = e._rendercache
     local fx = rc.fx
-    for v in w:select(rq.tag .. " eid:in") do
+    for v in w:select "eid:in" do
         if v.eid == eid then
             for i = 1, #Filter do
                 v[rq.tag.."_"..Filter[i]] = false
@@ -75,7 +75,7 @@ local function render_queue_update(rq, eid)
 end
 
 local function render_queue_del(rq, eid)
-    for v in w:select(rq.tag .. " eid:in") do
+    for v in w:select "eid:in" do
         if v.eid == eid then
             for i = 1, #Filter do
                 v[rq.tag.."_"..Filter[i]] = false
@@ -131,13 +131,15 @@ function s:update_filter()
             local rq = v.render_queue
             local filter = rq.filter
             local add = needadd and ((state & filter.filter_mask) ~= 0) and ((state & filter.exclude_mask) == 0)
-            if add then
-                if what ~= "del" then
-                    render_queue_update(rq, eid)
-                end
-            else
-                if what ~= "add" then
-                    render_queue_del(rq, eid)
+            if filter.update_type == "primitive" then
+                if add then
+                    if what ~= "del" then
+                        render_queue_update(rq, eid)
+                    end
+                else
+                    if what ~= "add" then
+                        render_queue_del(rq, eid)
+                    end
                 end
             end
         end
