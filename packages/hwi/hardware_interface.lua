@@ -156,7 +156,7 @@ end
 
 hw.frames = nil
 function hw.frame()
-	hw.frames = bgfx.frame()
+	hw.frames = bgfx.encoder_frame()
 	return hw.frames
 end
 
