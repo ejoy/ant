@@ -37,7 +37,7 @@ data:
     running-fast: /pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz
     walking: /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
   animation_birth: idle
-  material: /pkg/ant.resources.binary/meshes/female/female.glb|materials/asdf1_Beta_HighLimbsGeoSG2.material
+  material: /pkg/ant.resources.binary/meshes/female/female.glb|materials/asdf1_Beta_HighLimbsGeoSG2_CW.material
   mesh: /pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Surface_P1.meshbin
   meshskin: /pkg/ant.resources.binary/meshes/female/female.glb|meshes/skin2.skinbin
   name: Beta_Surface.1
