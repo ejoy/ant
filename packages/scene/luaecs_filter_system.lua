@@ -7,14 +7,25 @@ local s = ecs.system "luaecs_filter_system"
 local evCreate = world:sub {"component_register", "primitive_filter"}
 local evUpdate = world:sub {"primitive_filter", "primitive"}
 
-local Filter <const> = {
-	"foreground", "opaticy", "background", "translucent", "decal", "ui"
+local Layer <const> = {
+    primitive = {
+        "foreground", "opaticy", "background", "translucent", "decal", "ui"
+    },
+    shadow = {
+        "opaticy", "translucent"
+    },
+    pickup = {
+        "opaticy", "translucent"
+    },
+    depth = {
+        "opaticy"
+    },
 }
 
-local function sync_filter(tag)
+local function sync_filter(tag, layer)
     local r = {}
-    for i = 1, #Filter do
-        r[#r+1] = tag .. "_" .. Filter[i] .. "?out"
+    for i = 1, #layer do
+        r[#r+1] = tag .. "_" .. layer[i] .. "?out"
     end
     return table.concat(r, " ")
 end
@@ -23,6 +34,12 @@ local function render_queue_create(e)
     local viewid = e.render_target.viewid
     local filter = e.primitive_filter
     local camera_eid = e.camera_eid
+    local filter_type = filter.update_type
+    local layer = {}
+    for i, n in ipairs(Layer[filter_type]) do
+        layer[i] = n
+        layer[n] = i
+    end
 
     local mgr = w:singleton "render_queue_manager"
     mgr.tag = mgr.tag + 1
@@ -30,15 +47,17 @@ local function render_queue_create(e)
     w:register {
         name = tagname,
     }
-    for i = 1, #Filter do
+    for i = 1, #layer do
         w:register {
-            name = tagname .."_"..Filter[i],
+            name = tagname .."_"..layer[i],
         }
     end
     w:new {
+        [filter_type.."_filter"] = true,
         render_queue = {
             tag = tagname,
             filter = filter,
+            layer = layer,
             viewid = viewid,
             camera_eid = camera_eid,
             update_queue = {},
@@ -50,9 +69,13 @@ local function render_queue_add(rq, eid)
     local e = world[eid]
     local rc = e._rendercache
     local fx = rc.fx
+    local surfacetype = fx.setting.surfacetype
+    if not rq.layer[surfacetype] then
+        return
+    end
     w:new {
         [rq.tag] = true,
-        [rq.tag .."_"..fx.setting.surfacetype] = true,
+        [rq.tag .."_"..surfacetype] = true,
         render_object = rc
     }
 end
@@ -61,13 +84,17 @@ local function render_queue_update(rq, eid)
     local e = world[eid]
     local rc = e._rendercache
     local fx = rc.fx
+    local surfacetype = fx.setting.surfacetype
+    if not rq.layer[surfacetype] then
+        return
+    end
     for v in w:select "eid:in" do
         if v.eid == eid then
-            for i = 1, #Filter do
-                v[rq.tag.."_"..Filter[i]] = false
+            for i = 1, #rq.layer do
+                v[rq.tag.."_"..rq.layer[i]] = false
             end
-            v[rq.tag.."_"..fx.setting.surfacetype] = true
-            w:sync(v, sync_filter(rq.tag))
+            v[rq.tag.."_"..surfacetype] = true
+            w:sync(v, sync_filter(rq.tag, rq.layer))
             return
         end
     end
@@ -77,11 +104,11 @@ end
 local function render_queue_del(rq, eid)
     for v in w:select "eid:in" do
         if v.eid == eid then
-            for i = 1, #Filter do
-                v[rq.tag.."_"..Filter[i]] = false
+            for i = 1, #rq.layer do
+                v[rq.tag.."_"..rq.layer[i]] = false
             end
             v[rq.tag] = false
-            w:sync(v, sync_filter(rq.tag))
+            w:sync(v, sync_filter(rq.tag, rq.layer))
             return
         end
     end
@@ -103,6 +130,18 @@ function s:init()
     w:register {
         name = "eid",
         type = "int",
+    }
+    w:register {
+        name = "primitive_filter",
+    }
+    w:register {
+        name = "pickup_filter",
+    }
+    w:register {
+        name = "shadow_filter",
+    }
+    w:register {
+        name = "depth_filter",
     }
     w:new {
         render_queue_manager = {
@@ -131,15 +170,13 @@ function s:update_filter()
             local rq = v.render_queue
             local filter = rq.filter
             local add = needadd and ((state & filter.filter_mask) ~= 0) and ((state & filter.exclude_mask) == 0)
-            if filter.update_type == "primitive" then
-                if add then
-                    if what ~= "del" then
-                        render_queue_update(rq, eid)
-                    end
-                else
-                    if what ~= "add" then
-                        render_queue_del(rq, eid)
-                    end
+            if add then
+                if what ~= "del" then
+                    render_queue_update(rq, eid)
+                end
+            else
+                if what ~= "add" then
+                    render_queue_del(rq, eid)
                 end
             end
         end
@@ -151,14 +188,14 @@ local irender = world:interface "ant.render|irender"
 local bgfx = require "bgfx"
 
 function s:render_submit()
-    for v in w:select "render_queue:in" do
+    for v in w:select "primitive_filter render_queue:in" do
         local rq = v.render_queue
         local viewid = rq.viewid
         local camera = world[rq.camera_eid]._rendercache
         bgfx.touch(viewid)
         bgfx.set_view_transform(viewid, camera.viewmat, camera.projmat)
-        for i = 1, #Filter do
-            for u in w:select(rq.tag .. "_" .. Filter[i] .. " render_object:in") do
+        for i = 1, #rq.layer do
+            for u in w:select(rq.tag .. "_" .. rq.layer[i] .. " render_object:in") do
                 irender.draw(viewid, u.render_object)
             end
         end
