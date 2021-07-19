@@ -2,6 +2,24 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
+local function create_singlton(name)
+    return function (value)
+        w:register {
+            name = name,
+            type = "lua",
+        }
+        w:new {
+            [name] = value
+        }
+    end
+end
+
+local function register_tag(name)
+    w:register {
+        name = name,
+    }
+end
+
 local s = ecs.system "luaecs_filter_system"
 
 local evCreate = world:sub {"component_register", "primitive_filter"}
@@ -124,29 +142,15 @@ function s:init()
         type = "lua",
     }
     w:register {
-        name = "render_queue_manager",
-        type = "lua",
-    }
-    w:register {
         name = "eid",
         type = "int",
     }
-    w:register {
-        name = "primitive_filter",
-    }
-    w:register {
-        name = "pickup_filter",
-    }
-    w:register {
-        name = "shadow_filter",
-    }
-    w:register {
-        name = "depth_filter",
-    }
-    w:new {
-        render_queue_manager = {
-            tag = 0
-        }
+    register_tag "primitive_filter"
+    register_tag "pickup_filter"
+    register_tag "shadow_filter"
+    register_tag "depth_filter"
+    create_singlton "render_queue_manager" {
+        tag = 0
     }
 end
 
