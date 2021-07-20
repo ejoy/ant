@@ -4,101 +4,16 @@ local world = ecs.world
 local ipf = ecs.interface "iprimitive_filter"
 
 function ipf.select_filters(eid)
-	local e = world[eid]
-	local rc = e._rendercache
-	local state = rc.entity_state
-	if state == nil then
-		return
-	end
-	local fx = rc.fx
-	if not fx then
-		return
-	end
-	local needadd = rc.vb and rc.fx and rc.state
-	for _, feid in world:each "primitive_filter" do
-		local filter = world[feid].primitive_filter
-		local add = needadd and ((state & filter.filter_mask) ~= 0) and ((state & filter.exclude_mask) == 0)
-		if add then
-			world:pub {"primitive_filter", filter.update_type, "add", eid, filter}
-		else
-			world:pub {"primitive_filter", filter.update_type, "del", eid, filter}
-		end
-	end
+	world:pub {"sync_filter", eid}
 end
 
 function ipf.reset_filters(eid)
-	for _, feid in world:each "primitive_filter" do
-		local filter = world[feid].primitive_filter
-
-		for n, f in pairs(filter.result) do
-			ipf.remove_item(f.items, eid)
-		end
-	end
-end
-
-function ipf.filter_order(eid)
-	return world[eid].filter_order
-end
-
-function ipf.find_item(items, eid)
-	for i=1, #items do
-		if items[i].eid == eid then
-			return i
-		end
-	end
-end
-
-function ipf.remove_item(items, eid)
-	local idx = ipf.find_item(items, eid)
-	if idx then
-		table.remove(items, idx)
-	end
-end
-
-function ipf.add_item(items, eid, item)
-	local idx = ipf.find_item(items, eid) or (#items+1)
-	items[idx] = assert(item)
-end
-
-function ipf.set_sort(eid, surfacetype, sortfunc)
-	world[eid].primitive_filter.result[surfacetype].sort = sortfunc
-end
-
-function ipf.iter_target(result)
-	local vs = result.visible_set or result.items
-	local n = vs.n or #vs
-	return function (t, idx)
-		if idx < n then
-			idx = idx + 1
-			return idx, t[idx]
-		end
-	end, vs, 0
-end
-
-function ipf.iter_filter(filter)
-	local results = filter.result
-	local orders = filter.filter_order
-	local n = #orders
-	return function (t, idx)
-		if idx < n then
-			idx = idx + 1
-			local fn = t[idx]
-			local r = results[fn]
-			if r.sort then
-				r:sort()
-			end
-			return idx, r
-		end
-	end, orders, 0
+	world:pub {"sync_filter", eid}
 end
 
 local ies = world:interface "ant.scene|ientity_state"
 
 local pf = ecs.component "primitive_filter"
-
-local default_filter_order = {
-	"foreground", "opaticy", "background", "translucent", "decal", "ui"
-}
 
 local function default_filter(needcull, sort)
 	return {
@@ -127,31 +42,68 @@ function pf:init()
 	}
 	self.filter_mask = ies.filter_mask(self.filter_type)
 	self.exclude_mask = self.exclude_type and ies.filter_mask(self.exclude_type) or 0
-	self.filter_order = self.filter_order or default_filter_order
 	return self
 end
 
 local s = ecs.system "primitive_filter_system"
+local w = world.w
 
-local evadd = world:sub {"primitive_filter", "primitive", "add"}
-local evdel = world:sub {"primitive_filter", "primitive", "del"}
+local irender = world:interface "ant.render|irender"
 
-function s.update_filter()
-	--for _, _, _, eid, filter in evadd:unpack() do
-	--	local e = world[eid]
-	--	local rc = e._rendercache
-	--	local fx = rc.fx
-	--	local fxtype = fx.setting.surfacetype
-	--	local items = filter.result[fxtype].items
-	--	rc.eid = eid
-	--	ipf.add_item(items, eid, rc)
-	--end
-	--for _, _, _, eid, filter in evdel:unpack() do
-	--	local e = world[eid]
-	--	local rc = e._rendercache
-	--	local fx = rc.fx
-	--	local fxtype = fx.setting.surfacetype
-	--	local items = filter.result[fxtype].items
-	--	ipf.remove_item(items, eid)
-	--end
+local function sync_filter(mainkey, tag, layer)
+    local r = {mainkey}
+    for i = 1, #layer do
+        r[#r+1] = tag .. "_" .. layer[i] .. "?out"
+    end
+    return table.concat(r, " ")
+end
+
+local function render_queue_update(v, rq, mainkey)
+    local rc = v.render_object
+    local fx = rc.fx
+    local surfacetype = fx.setting.surfacetype
+    if not rq.layer[surfacetype] then
+        return
+    end
+    for i = 1, #rq.layer do
+        v[rq.tag.."_"..rq.layer[i]] = false
+    end
+    v[rq.tag.."_"..surfacetype] = true
+    w:sync(sync_filter(mainkey, rq.tag, rq.layer), v)
+end
+
+local function render_queue_del(v, rq, mainkey)
+    for i = 1, #rq.layer do
+        v[rq.tag.."_"..rq.layer[i]] = false
+    end
+    v[rq.tag] = false
+    w:sync(sync_filter(mainkey, rq.tag, rq.layer), v)
+end
+
+function s:update_filter()
+    for v in w:select "render_object_update render_object:in" do
+        local rc = v.render_object
+        local state = rc.entity_state
+        for u in w:select "primitive_filter render_queue:in" do
+            local rq = u.render_queue
+            local add = ((state & rq.mask) ~= 0) and ((state & rq.exclude_mask) == 0)
+            if add then
+                render_queue_update(v, rq, "render_object_update")
+            else
+                render_queue_del(v, rq, "render_object_update")
+            end
+        end
+    end
+end
+
+function s:render_submit()
+    for v in w:select "primitive_filter visible render_queue:in" do
+        local rq = v.render_queue
+        local viewid = rq.viewid
+        for i = 1, #rq.layer do
+            for u in w:select(rq.tag .. "_" .. rq.layer[i] .. " render_object:in") do
+                irender.draw(viewid, u.render_object)
+            end
+        end
+    end
 end

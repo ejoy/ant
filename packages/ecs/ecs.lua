@@ -334,6 +334,7 @@ end
 function world:pipeline_update()
 	self._update_func()
 	clear_removed(self)
+	self.w:update()
 end
 
 function world:enable_system(name, enable)
@@ -362,7 +363,6 @@ function m.new_world(config)
 		_switchs = {},	-- for enable/disable
 		_uniques = {},
 		w = luaecs.world(),
-		dataw = luaecs.world(),
 	}, world)
 
 	event.init(world)

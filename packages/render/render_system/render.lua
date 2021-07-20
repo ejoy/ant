@@ -67,6 +67,43 @@ function irender.draw(vid, ri)
 	bgfx.submit(vid, ri.fx.prog, 0)
 end
 
+function irender.draw_mat(vid, ri, mat)
+	ri:set_transform()
+
+	bgfx.set_state(mat.state)
+	bgfx.set_stencil(mat.stencil or ri.stencil)
+	local properties = mat.properties
+	if properties then
+		for n, p in pairs(properties) do
+			p:set()
+		end
+	end
+	local ib, vb = ri.ib, ri.vb
+
+	if ib and ib.num ~= 0 then
+		--TODO: need set function for set_index_buffer
+		if type(ib.handle) == "number" then
+			bgfx.set_index_buffer(ib.handle, ib.start, ib.num)
+		else
+			ib.handle:setI(ib.start, ib.num)
+		end
+	end
+
+	local start_v, num_v = vb.start, vb.num
+	if num_v ~= 0 then
+		for idx, h in ipairs(vb.handles) do
+			--TODO: need set function for set_index_buffer
+			if type(h) == "number" then
+				bgfx.set_vertex_buffer(idx-1, h, start_v, num_v)
+			else
+				h:setV(idx-1, start_v, num_v)
+			end
+		end
+	end
+
+	bgfx.submit(vid, mat.fx.prog, 0)
+end
+
 function irender.get_main_view_rendertexture()
 	local mq = world:singleton_entity "main_queue"
 	local fb = fbmgr.get(mq.render_target.fb_idx)

@@ -21,7 +21,10 @@ policy "shadow_cast_policy"
 
 system "shadow_primitive_system"
     .implement "shadow/shadow_maker.lua"
-    .method "update_filter"
+    .require_system "ant.scene|luaecs_filter_system"
+    .require_interface "ant.render|irender"
+    .method     "update_filter"
+    .method     "render_submit"
 
 policy "csm_policy"
     .require_system "shadow_system"

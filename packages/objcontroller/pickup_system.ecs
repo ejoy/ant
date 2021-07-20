@@ -18,7 +18,10 @@ policy "pickup"
 
 system "pickup_primitive_system"
     .implement "pickup_system.lua"
-    .method "update_filter"
+    .require_system "ant.scene|luaecs_filter_system"
+    .require_interface "ant.render|irender"
+    .method     "update_filter"
+    .method     "render_submit"
 
 policy "select"
     .require_system "pickup_system"
