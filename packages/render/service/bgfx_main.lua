@@ -105,7 +105,9 @@ ltask.fork(function()
 end)
 
 for _, name in ipairs(APIS) do
-    S[name] = bgfx[name]
+    if not S[name] then
+        S[name] = bgfx[name]
+    end
 end
 
 return S
