@@ -80,12 +80,18 @@ function effekseer_sys:init()
         ad_unlit_layout = declmgr.get "p3|c40niu|t20|t41|t42|t43".handle,
         ad_lit_layout = declmgr.get "p3|c40niu|n40niu|T40niu|t20|t21|t42|t43|t44".handle,
         ad_distortion_layout = declmgr.get "p3|c40niu|n40niu|T40niu|t20|t21|t42|t43|t44".handle,
-        mtl_layout = declmgr.get "p3|c40niu|n40niu|T40niu|t20|t21|t42|t43".handle,
-        model_layout = declmgr.get "p3|n3|b3|T3|c40niu|t20".handle
+        mtl_layout = declmgr.get "p3|c40niu|t20".handle,
+        mtl1_layout = declmgr.get "p3|c40niu|n40niu|b40niu|t20|t21|t42".handle,
+        mtl2_layout = declmgr.get "p3|c40niu|n40niu|b40niu|t20|t21|t42|t43".handle,
+        model_layout = declmgr.get "p3|n3|b3|T3|t20|c40niu".handle
     }
 
+    local fxloader = function(vspath, fspath)
+        return assetmgr.load_fx { fs = fspath, vs = vspath, setting = {} }
+    end
+    effekseer.set_fxloader(fxloader)
+
     local filemgr = require "filemanager"
-    effekseer.set_filename_callback(filemgr.realpath)
     filemgr.add("/pkg/ant.resources.binary/effekseer/Base")
 end
 

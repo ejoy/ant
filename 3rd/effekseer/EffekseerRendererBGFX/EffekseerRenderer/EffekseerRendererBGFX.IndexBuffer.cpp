@@ -53,13 +53,13 @@ namespace Backend
 		elementCount_ = count;
 		m_stride = (strideType == Effekseer::Backend::IndexBufferStrideType::Stride4) ? 4 : 2;
 		auto size = count * m_stride;
-		m_resources.resize(count * m_stride);
+		m_resources.resize(size);
 		uint16_t flags = 0
 			| ((m_stride == 4) ? BGFX_BUFFER_INDEX32 : 0);
 		if (initialData) {
 			m_buffer = BGFX(create_dynamic_index_buffer_mem)(BGFX(copy)(initialData, size), flags);
 		} else {
-			m_buffer = BGFX(create_dynamic_index_buffer)(size, flags);
+			m_buffer = BGFX(create_dynamic_index_buffer)(count, flags);
 		}
 	}
 

@@ -6,8 +6,8 @@ namespace EffekseerRendererBGFX {
 class VertexBuffer : public ::EffekseerRenderer::VertexBufferBase
 {
 private:
-	uint16_t m_stride;
-	bgfx_dynamic_vertex_buffer_handle_t m_buffer{ BGFX_INVALID_HANDLE };
+	bgfx_vertex_layout_t m_layout;
+	bgfx_transient_vertex_buffer_t m_transient_vertex_buffer;
 	uint32_t m_vertexRingStart;
 	uint32_t m_vertexRingOffset;
 	bool m_ringBufferLock;
@@ -15,12 +15,13 @@ private:
 public:
 	virtual ~VertexBuffer();
 	static VertexBuffer* Create(int size, bool isDynamic, const bgfx_vertex_layout_t& layout);
-	bgfx_dynamic_vertex_buffer_handle_t GetInterface();
+	bgfx_transient_vertex_buffer_t* GetInterface();
 	void Lock();
 	bool RingBufferLock(int32_t size, int32_t& offset, void*& data, int32_t alignment) override;
 	bool TryRingBufferLock(int32_t size, int32_t& offset, void*& data, int32_t alignment) override;
 	void Unlock();
 	bool IsValid();
+	int GetSize() const override;
 };
 namespace Backend
 {

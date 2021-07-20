@@ -1,3 +1,7 @@
+#include <lua.hpp>
+#define EXPORT_BGFX_INTERFACE
+#include "../bgfx/bgfx_interface.h"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -6,17 +10,13 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/compatibility.hpp>
 
-#define EXPORT_BGFX_INTERFACE
-extern "C" {
-#include "../bgfx/bgfx_interface.h"
-}
 #include "effect.h"
 #include "effekseer_context.h"
 #include <../EffekseerRendererCommon/EffekseerRenderer.CommonUtils.h>
 #include <../EffekseerRendererBGFX/EffekseerRenderer/EffekseerRendererBGFX.ModelRenderer.h>
 #include "lua2struct.h"
 
-LUA2STRUCT(struct effekseer_ctx, viewid, square_max_count, sprite_programs, model_programs, unlit_layout, lit_layout, distortion_layout, ad_unlit_layout, ad_lit_layout, ad_distortion_layout, mtl_layout, model_layout);
+LUA2STRUCT(struct effekseer_ctx, viewid, square_max_count, sprite_programs, model_programs, unlit_layout, lit_layout, distortion_layout, ad_unlit_layout, ad_lit_layout, ad_distortion_layout, mtl_layout, mtl1_layout, mtl2_layout, model_layout);
 LUA2STRUCT(struct program, prog, uniforms);
 LUA2STRUCT(struct program::uniform, handle, name);
 
@@ -28,19 +28,27 @@ static effekseer_ctx* g_effekseer = nullptr;
 static std::string g_current_path = "";
 std::string get_ant_file_path(const std::string& path)
 {
-// 	lua_State* L = g_effekseer->lua_State_;
-// 	std::string result;
-// 	lua_pushlstring(L, path.data(), path.size());
-// 	lua_rawgeti(L, LUA_REGISTRYINDEX, g_effekseer->filename_callback_);
-// 	lua_insert(L, -2);
-// 	lua_call(L, 1, 1);
-// 	if (lua_type(L, -1) == LUA_TSTRING) {
-// 		size_t sz = 0;
-// 		const char* str = lua_tolstring(L, -1, &sz);
-// 		result.assign(str, sz);
-// 	}
-// 	return result;
 	return g_current_path + "/" + path;
+}
+
+void load_fx(const std::string& vspath, const std::string& fspath, bgfx_program_handle_t& prog,
+	std::unordered_map<std::string, bgfx_uniform_handle_t>& uniforms)
+{
+	lua_State* L = g_effekseer->lua_State_;
+	std::string result;
+	lua_pushlstring(L, vspath.data(), vspath.size());
+	lua_pushlstring(L, fspath.data(), fspath.size());
+	lua_rawgeti(L, LUA_REGISTRYINDEX, g_effekseer->fxloader_);
+	lua_insert(L, -3);
+	lua_call(L, 2, 1);
+	program fx;
+	if (lua_type(L, -1) == LUA_TTABLE) {
+		lua_struct::unpack(L, -1, fx);
+		prog.idx = fx.prog;
+		for (auto& uniformInfo : fx.uniforms) {
+			uniforms[uniformInfo.name].idx = uniformInfo.handle;
+		}
+	}
 }
 
 effekseer_ctx::effekseer_ctx(lua_State* L, int idx)
@@ -55,9 +63,10 @@ bool effekseer_ctx::init()
 	::EffekseerRendererBGFX::ModelRenderer::model_vertex_layout_ = model_layout;
 
 	auto init_ctx = [this](std::vector<EffekseerRendererBGFX::bgfx_context>& ctx, const std::vector<program>& prog) {
-		auto shaderCount = static_cast<size_t>(EffekseerRenderer::RendererShaderType::Material) + 1;
+		// 
+		auto shaderCount = static_cast<size_t>(EffekseerRenderer::RendererShaderType::Material) + 1 + 1;
 		ctx.resize(shaderCount);
-		for (int i = 0; i < shaderCount; i++) {
+		for (int i = 0; i < (shaderCount - 1); i++) {
 			ctx[i].program_.idx = prog[i].prog;
 			for (auto& uniformInfo : prog[i].uniforms) {
 				ctx[i].uniforms_[uniformInfo.name].idx = uniformInfo.handle;
@@ -70,12 +79,16 @@ bool effekseer_ctx::init()
 		ctx[static_cast<size_t>(EffekseerRenderer::RendererShaderType::AdvancedLit)].vertex_layout_ = ad_lit_layout;
 		ctx[static_cast<size_t>(EffekseerRenderer::RendererShaderType::AdvancedBackDistortion)].vertex_layout_ = ad_distortion_layout;
 		ctx[static_cast<size_t>(EffekseerRenderer::RendererShaderType::Material)].vertex_layout_ = mtl_layout;
+		// with custom data1
+		ctx[static_cast<size_t>(EffekseerRenderer::RendererShaderType::Material) + 1].vertex_layout_ = mtl1_layout;
+		// with custom data2
+		// ...
 	};
 	
 	init_ctx(::EffekseerRendererBGFX::Renderer::s_bgfx_sprite_context_, sprite_programs);
 	init_ctx(::EffekseerRendererBGFX::ModelRenderer::s_bgfx_model_context_, model_programs);
 
-	renderer = ::EffekseerRendererBGFX::Renderer::Create(square_max_count);
+	renderer = ::EffekseerRendererBGFX::Renderer::Create(2000/*square_max_count*/);
 	if (!renderer.Get()) {
 		return false;
 	}
@@ -170,8 +183,8 @@ ldestroy(lua_State* L) {
 }
 
 static int
-lset_filename_callback(lua_State* L) {
-	g_effekseer->filename_callback_ = luaL_ref(L, LUA_REGISTRYINDEX);
+lset_fxloader(lua_State* L) {
+	g_effekseer->fxloader_ = luaL_ref(L, LUA_REGISTRYINDEX);
 	return 0;
 }
 
@@ -322,12 +335,13 @@ void effekseer_ctx::draw(float delta)
 	BGFX(set_view_transform)(viewid, view_mat.Values, proj_mat.Values);
 	renderer->SetCameraMatrix(view_mat);
 	renderer->SetProjectionMatrix(proj_mat);
-	float deltaFrames = delta * 60.0f;
-	int iterations = std::max(1, (int)roundf(deltaFrames));
-	float advance = deltaFrames / iterations;
-	for (int i = 0; i < iterations; i++) {
-		manager->Update(advance);
-	}
+// 	float deltaFrames = delta * 60.0f;
+// 	int iterations = std::max(1, (int)roundf(deltaFrames));
+// 	float advance = deltaFrames / iterations;
+// 	for (int i = 0; i < iterations; i++) {
+// 		manager->Update(advance);
+// 	}
+	manager->Update(/*delta*/);
 	renderer->SetTime(renderer->GetTime() + delta);
 	renderer->BeginRendering();
 	manager->Draw();
@@ -373,7 +387,7 @@ luaopen_effekseer(lua_State * L) {
 		{ "update_transform", lupdate_transform },
 		{ "create", lcreate},
 		{ "destroy", ldestroy},
-		{ "set_filename_callback", lset_filename_callback},
+		{ "set_fxloader", lset_fxloader},
 		{ "play", lplay},
 		{ "pause", lpause},
 		{ "set_time", lset_time},

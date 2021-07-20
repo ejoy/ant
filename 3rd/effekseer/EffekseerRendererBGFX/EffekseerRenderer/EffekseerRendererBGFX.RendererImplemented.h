@@ -5,11 +5,10 @@
 #include "EffekseerRendererBGFX.Renderer.h"
 #include "GraphicsDevice.h"
 
-extern "C" {
-	extern bgfx_interface_vtbl_t* ibgfx();
-}
-
+extern bgfx_interface_vtbl_t* ibgfx();
+#ifndef BGFX
 #define BGFX(api) ibgfx()->api
+#endif
 
 namespace EffekseerRendererBGFX
 {
@@ -44,14 +43,9 @@ class RendererImplemented : public Renderer, public ::Effekseer::ReferenceObject
 
 private:
 	Backend::GraphicsDeviceRef graphicsDevice_ = nullptr;
-	struct BGFXBuffer
-	{
-		VertexBuffer* m_vertexBuffer{ nullptr };
-		IndexBuffer* m_indexBuffer{ nullptr };
-		IndexBuffer* m_indexBufferForWireframe{ nullptr };
-	};
-	std::vector<BGFXBuffer> bgfx_buffer_;
-
+	std::vector<VertexBuffer*> m_vertexBuffers;
+	IndexBuffer* m_indexBuffer{ nullptr };
+	IndexBuffer* m_indexBufferForWireframe{ nullptr };
 	int32_t m_squareMaxCount;
 
 	std::vector<Shader*> shaders_;
@@ -71,7 +65,14 @@ private:
 	::Effekseer::Backend::TextureRef m_backgroundGL;
 
 	// textures which are specified currently
-	std::vector<::Effekseer::Backend::TextureRef> currentTextures_;
+	struct TextureState
+	{
+		bgfx_texture_handle_t texture;
+		uint32_t flags;
+	};
+	std::vector<TextureState> currentTextures_;
+
+	uint64_t current_state_{ 0 };
 
 	int32_t indexBufferStride_ = 2;
 
@@ -134,8 +135,7 @@ public:
 	void SetPixelBufferToShader(const void* data, int32_t size, int32_t dstOffset);
 	void SetTextures(Shader* shader, Effekseer::Backend::TextureRef* textures, int32_t count);
 	void ResetRenderState() override;
-
-	const std::vector<::Effekseer::Backend::TextureRef>& GetCurrentTextures() const { return currentTextures_; }
+	void SetCurrentState(uint64_t state) { current_state_ = state; }
 	bool IsVertexArrayObjectSupported() const override;
 	Backend::GraphicsDeviceRef& GetIntetnalGraphicsDevice() { return graphicsDevice_; }
 	Effekseer::Backend::GraphicsDeviceRef GetGraphicsDevice() const override { return graphicsDevice_; }
@@ -144,6 +144,7 @@ public:
 	virtual int Release() override { return ::Effekseer::ReferenceObject::Release(); }
 
 private:
+	void DoDraw();
 	void GenerateIndexData();
 
 	template <typename T>

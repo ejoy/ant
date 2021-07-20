@@ -30,7 +30,7 @@
 #define LUA_ERREVENT_PANIC 0x10
 
 #if LUA_VERSION_NUM >= 504
-#define luai_errevent_(L, errcode) luaD_hook(L, LUA_HOOKEXCEPTION, errcode, L->top - L->stack, 1)
+#define luai_errevent_(L, errcode) luaD_hook(L, LUA_HOOKEXCEPTION, cast_int(L->top - L->stack), 0, errcode)
 #else
 #define luai_errevent_(L, errcode) LUA_CALLHOOK(L, LUA_HOOKEXCEPTION, errcode)
 #endif
