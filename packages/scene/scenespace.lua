@@ -86,29 +86,27 @@ function sp_sys:update_hierarchy()
 		scenequeue:mount(eid, e.parent or 0)
 	end
 
-    local needclear
-    for _, eid in world:each "removed" do
-		--TODO: fix remove branch
-		local function mount_children()
-			local children = {}
-			for _, ceid in world:each "scene_entity" do
-				local ce = world[ceid]
-				if ce.parent == eid then
-					scenequeue:mount(ceid, 0)
-					ce.parent = nil
-				end
-			end
-			return children
-		end
-		mount_children()
-		scenequeue:mount(eid)
-		ipf.reset_filters(eid)
-        needclear = true
-    end
+	local need_remove_eids = {}
+	for _, eid in world:each "removed" do
+		need_remove_eids[eid] = true
+	end
 
-    if needclear then
-        scenequeue:clear()
-    end
+	if next(need_remove_eids) then
+		local function is_parent_removed(eid)
+			return need_remove_eids[eid]
+		end
+
+		for _, eid in ipairs(scenequeue) do
+			if need_remove_eids[eid] then
+				scenequeue:mount(eid)
+				ipf.reset_filters(eid)
+			elseif is_parent_removed(world[eid].parent) then
+				scenequeue:mount(eid, 0)
+				iss.set_parent(eid, nil)
+			end
+		end
+		scenequeue:clear()
+	end
 end
 
 
