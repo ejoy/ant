@@ -55,13 +55,10 @@ local function render_queue_create(e)
     local mgr = w:singleton "render_queue_manager"
     mgr.tag = mgr.tag + 1
     local tagname = "render" .. "_" .. mgr.tag
-    w:register {
-        name = tagname,
-    }
+    register_tag(tagname)
+    register_tag(tagname .. "_cull")
     for i = 1, #layer do
-        w:register {
-            name = tagname .."_"..layer[i],
-        }
+        register_tag(tagname .."_"..layer[i])
     end
     w:new {
         [filter_type.."_filter"] = true,

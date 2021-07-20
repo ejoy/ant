@@ -15,31 +15,7 @@ local ies = world:interface "ant.scene|ientity_state"
 
 local pf = ecs.component "primitive_filter"
 
-local function default_filter(needcull, sort)
-	return {
-		items = {},
-		visible_set = needcull and {n=0} or nil,
-		sort = sort,
-	}
-end
-
 function pf:init()
-	self.result = {
-		translucent	= default_filter(true),
-		opaticy		= default_filter(true),
-        decal		= default_filter(true),
-		foreground	= default_filter(),
-		background	= default_filter(),
-		ui			= default_filter(nil,
-					function (result)
-						local vs = result.visible_set or result.items
-						local n = vs.n or #vs
-						vs[n+1] = nil
-						table.sort(vs, function (lhs, rhs)
-							return lhs.depth > rhs.depth
-						end)
-					end)
-	}
 	self.filter_mask = ies.filter_mask(self.filter_type)
 	self.exclude_mask = self.exclude_type and ies.filter_mask(self.exclude_type) or 0
 	return self
@@ -100,8 +76,9 @@ function s:render_submit()
     for v in w:select "primitive_filter visible render_queue:in" do
         local rq = v.render_queue
         local viewid = rq.viewid
+        local CullTag = rq.tag.."_cull"
         for i = 1, #rq.layer do
-            for u in w:select(rq.tag .. "_" .. rq.layer[i] .. " render_object:in") do
+            for u in w:select(rq.tag .. "_" .. rq.layer[i] .. " " .. CullTag .. " render_object:in") do
                 irender.draw(viewid, u.render_object)
             end
         end

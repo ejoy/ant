@@ -78,8 +78,9 @@ function s:render_submit()
     for v in w:select "depth_filter visible render_queue:in" do
         local rq = v.render_queue
         local viewid = rq.viewid
+        local CullTag = rq.tag.."_cull"
         for i = 1, #rq.layer do
-            for u in w:select(rq.tag .. "_" .. rq.layer[i] .. " render_object:in filter_material:in") do
+            for u in w:select(rq.tag .. "_" .. rq.layer[i] .. " " .. CullTag .. " render_object:in filter_material:in") do
                 irender.draw_mat(viewid, u.render_object, u.filter_material[rq.tag])
             end
         end
