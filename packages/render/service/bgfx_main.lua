@@ -5,9 +5,15 @@ local bgfx = require "bgfx"
 
 local APIS = {
     "init",
+    "dbg_text_clear",
+    "dbg_text_print",
+    "dbg_text_image",
     "frame",
     "shutdown",
+    "request_screenshot",
+    "reset",
     "set_debug",
+
     "encoder_frame",
 }
 local S = {}
