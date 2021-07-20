@@ -55,23 +55,27 @@ local function render_queue_create(e)
     local mgr = w:singleton "render_queue_manager"
     mgr.tag = mgr.tag + 1
     local tagname = "render" .. "_" .. mgr.tag
-    register_tag(tagname)
-    register_tag(tagname .. "_cull")
+    local rq = {
+        tag = tagname,
+        cull_tag = tagname .. "_cull",
+        layer_tag = {},
+        mask = filter.filter_mask,
+        exclude_mask = filter.exclude_mask,
+        layer = layer,
+        viewid = viewid,
+        camera_eid = camera_eid,
+        update_queue = {},
+    }
+    register_tag(rq.tag)
+    register_tag(rq.cull_tag)
     for i = 1, #layer do
-        register_tag(tagname .."_"..layer[i])
+        rq.layer_tag[i] = tagname .."_"..layer[i]
+        register_tag(rq.layer_tag[i])
     end
     w:new {
         [filter_type.."_filter"] = true,
         visible = e.visible,
-        render_queue = {
-            tag = tagname,
-            mask = filter.filter_mask,
-            exclude_mask = filter.exclude_mask,
-            layer = layer,
-            viewid = viewid,
-            camera_eid = camera_eid,
-            update_queue = {},
-        }
+        render_queue = rq
     }
 end
 

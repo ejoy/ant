@@ -21,10 +21,10 @@ end
 local s = ecs.system "pre_depth_primitive_system"
 local w = world.w
 
-local function sync_filter(mainkey, tag, layer)
+local function sync_filter(mainkey, rq)
     local r = {mainkey}
-    for i = 1, #layer do
-        r[#r+1] = tag .. "_" .. layer[i] .. "?out"
+    for i = 1, #rq.layer_tag do
+        r[#r+1] = rq.layer_tag[i] .. "?out"
     end
     return table.concat(r, " ")
 end
@@ -36,19 +36,19 @@ local function render_queue_update(v, rq, mainkey)
     if not rq.layer[surfacetype] then
         return
     end
-    for i = 1, #rq.layer do
-        v[rq.tag.."_"..rq.layer[i]] = false
+    for i = 1, #rq.layer_tag do
+        v[rq.layer_tag[i]] = false
     end
     v[rq.tag.."_"..surfacetype] = true
-    w:sync(sync_filter(mainkey, rq.tag, rq.layer), v)
+    w:sync(sync_filter(mainkey, rq), v)
 end
 
 local function render_queue_del(v, rq, mainkey)
-    for i = 1, #rq.layer do
-        v[rq.tag.."_"..rq.layer[i]] = false
+    for i = 1, #rq.layer_tag do
+        v[rq.layer_tag[i]] = false
     end
     v[rq.tag] = false
-    w:sync(sync_filter(mainkey, rq.tag, rq.layer), v)
+    w:sync(sync_filter(mainkey, rq), v)
 end
 
 function s:update_filter()
@@ -78,11 +78,11 @@ function s:render_submit()
     for v in w:select "depth_filter visible render_queue:in" do
         local rq = v.render_queue
         local viewid = rq.viewid
-        local CullTag = rq.tag.."_cull"
-        for i = 1, #rq.layer do
-            for u in w:select(rq.tag .. "_" .. rq.layer[i] .. " " .. CullTag .. " render_object:in filter_material:in") do
+        for i = 1, #rq.layer_tag do
+            for u in w:select(rq.layer_tag[i] .. " " .. rq.cull_tag .. " render_object:in filter_material:in") do
                 irender.draw_mat(viewid, u.render_object, u.filter_material[rq.tag])
             end
         end
+		w:clear(rq.cull_tag)
     end
 end

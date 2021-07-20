@@ -22,19 +22,18 @@ function cull_sys:cull()
 		local rq = v.render_queue
 		local vp_mat = world[rq.camera_eid]._rendercache.viewprojmat
 		local frustum_planes = math3d.frustum_planes(vp_mat)
-		local CullTag = rq.tag.."_cull"
-		w:clear(CullTag)
-		for i = 1, #rq.layer do
+		local cull_tag = rq.cull_tag
+		for i = 1, #rq.layer_tag do
 			if NeedCull[rq.layer[i]] then
-				for u in w:select(rq.tag .. "_" .. rq.layer[i] .. " render_object:in " .. CullTag .. ":temp") do
+				for u in w:select(rq.layer_tag[i] .. " render_object:in " .. cull_tag .. ":temp") do
 					local aabb = u.render_object.aabb
 					if not aabb or math3d.frustum_intersect_aabb(frustum_planes, aabb) >= 0 then
-						u[CullTag] = true
+						u[cull_tag] = true
 					end
 				end
 			else
-				for u in w:select(rq.tag .. "_" .. rq.layer[i] .. " " .. CullTag .. ":temp") do
-					u[CullTag] = true
+				for u in w:select(rq.layer_tag[i] .. " " .. cull_tag .. ":temp") do
+					u[cull_tag] = true
 				end
 			end
 		end
