@@ -1,6 +1,7 @@
 --luacheck: ignore self
 local ecs = ...
 local world = ecs.world
+local w = world.w
 
 local mu 		= import_package "ant.math".util
 local mc 		= import_package "ant.math".constant
@@ -48,7 +49,6 @@ local function get_properties(eid, fx)
 end
 
 local s = ecs.system "pickup_primitive_system"
-local w = world.w
 
 local function sync_filter(mainkey, rq)
     local r = {mainkey}
@@ -120,6 +120,10 @@ local function enable_pickup(enable)
 	local e = world:singleton_entity "pickup"
 	e.visible = enable
 	e.pickup.nextstep = enable and "blit" or nil
+
+	for v in w:select "pickup_filter visible?out" do
+		v.visible = enable
+	end
 end
 
 local function update_camera(e, clickpt) 
@@ -392,35 +396,21 @@ local state_list = {
 }
 
 local function check_next_step(pickupcomp)
-	pickupcomp.nextstep = state_list[pickupcomp.nextstep]	
-end
-
-local function has_any_visible_set(results)
-	for _, f in pairs(results) do
-		if f.visible_set then
-			return true
-		end
-	end
+	pickupcomp.nextstep = state_list[pickupcomp.nextstep]
 end
 
 function pickup_sys:pickup()
 	local pickupentity = world:singleton_entity "pickup"
 
-	if pickupentity.visible then 
-		local needcheck = has_any_visible_set(pickupentity.primitive_filter.result)
+	if pickupentity.visible then
 		local pickupcomp = pickupentity.pickup
 		local nextstep = pickupcomp.nextstep
-		if nextstep == "blit" and needcheck then
+		if nextstep == "blit" then
 			local fb = fbmgr.get(pickupentity.render_target.fb_idx)
 			local rb = fbmgr.get_rb(fb[1])
 			blit(pickupcomp.blit_buffer, rb)
 		elseif nextstep	== "select_obj" then
-			if needcheck then
-				select_obj(pickupcomp,pickupcomp.blit_buffer, pickupentity.render_target.view_rect)
-			else
-				world:pub {"pickup",nil,{}}
-				print("not found any eid")
-			end
+			select_obj(pickupcomp, pickupcomp.blit_buffer, pickupentity.render_target.view_rect)
 			enable_pickup(false)
 		end
 
