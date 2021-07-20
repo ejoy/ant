@@ -3,6 +3,15 @@ local packagename, w, h = ...
 package.path = "engine/?.lua"
 require "bootstrap"
 
+local ltask     = require "ltask"
+local bgfx      = require "bgfx"
+local ServiceBgfxMain = ltask.queryservice "bgfx_main"
+for _, name in ipairs(ltask.call(ServiceBgfxMain, "APIS")) do
+	bgfx[name] = function (...)
+		return ltask.call(ServiceBgfxMain, name, ...)
+	end
+end
+
 local imgui       = require "imgui"
 local renderpkg   = import_package "ant.render"
 local viewidmgr   = renderpkg.viewidmgr
@@ -155,6 +164,10 @@ ltask.fork(function ()
         width = init_width,
         height = init_height,
     }
+    bgfx.encoder_init()
+	renderpkg.init_bgfx()
+    bgfx.encoder_begin()
+    ltask.call(ServiceBgfxMain, "encoder_init")
     cb.init(init_width, init_height)
 
     initialized = true
@@ -188,12 +201,16 @@ ltask.fork(function ()
         updateIO()
         cb.update(viewids[1], timer_delta())
         imgui.Render()
+        bgfx.encoder_end()
         rhwi.frame()
         thread.sleep(0.01)
+        bgfx.encoder_begin()
         ltask.sleep(0)
     end
     cb.exit()
     imgui.Destroy()
+    bgfx.encoder_end()
+	ltask.call(ServiceBgfxMain, "encoder_release")
     rhwi.shutdown()
     multi_wakeup "quit"
     print "exit"
