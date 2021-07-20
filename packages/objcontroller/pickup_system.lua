@@ -14,7 +14,6 @@ local viewidmgr = renderpkg.viewidmgr
 
 local bgfx 		= require "bgfx"
 
-local ipf		= world:interface "ant.scene|iprimitive_filter"
 local irender	= world:interface "ant.render|irender"
 
 local opacity_material, translucent_material

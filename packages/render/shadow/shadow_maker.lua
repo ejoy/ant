@@ -13,7 +13,6 @@ local ishadow	= world:interface "ant.render|ishadow"
 local irender	= world:interface "ant.render|irender"
 
 local iom		= world:interface "ant.objcontroller|obj_motion"
-local ipf		= world:interface "ant.scene|iprimitive_filter"
 local irq		= world:interface "ant.render|irenderqueue"
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
