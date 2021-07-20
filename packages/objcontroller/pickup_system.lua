@@ -47,29 +47,72 @@ local function get_properties(eid, fx)
 	return p
 end
 
-local pfpt = ecs.transform "pickup_primitive_transform"
-function pfpt.process_entity(e)
-	local f = e.primitive_filter
-	f.insert_item = function (filter, fxtype, eid, rc)
-		local opaticy, translucent = filter.result.opaticy, filter.result.translucent
-		if rc then
-			rc.eid = eid
-			ipf.add_item(opaticy.items, eid, setmetatable({
-				fx = opacity_material.fx,
-				properties = get_properties(eid, opacity_material.fx),
-				state = irender.check_primitive_mode_state(rc.state, opacity_material.state),
-			}, {__index=rc}))
-			ipf.add_item(translucent.items, eid, setmetatable({
-				fx			= translucent_material.fx,
-				properties	= get_properties(eid, translucent_material.fx),
-				state		= irender.check_primitive_mode_state(rc.state, translucent_material.state),
-			}, {__index=rc}))
-		else
-			ipf.remove_item(opaticy.items, eid)
-			ipf.remove_item(translucent.items, eid)
-		end
+local s = ecs.system "pickup_primitive_system"
+local w = world.w
 
-	end
+local function sync_filter(mainkey, rq)
+    local r = {mainkey}
+    for i = 1, #rq.layer_tag do
+        r[#r+1] = rq.layer_tag[i] .. "?out"
+    end
+    return table.concat(r, " ")
+end
+
+local function render_queue_update(v, rq, mainkey)
+    local rc = v.render_object
+    local fx = rc.fx
+    local surfacetype = fx.setting.surfacetype
+    if not rq.layer[surfacetype] then
+        return
+    end
+    for i = 1, #rq.layer_tag do
+        v[rq.layer_tag[i]] = false
+    end
+    v[rq.tag.."_"..surfacetype] = true
+    w:sync(sync_filter(mainkey, rq), v)
+end
+
+local function render_queue_del(v, rq, mainkey)
+    for i = 1, #rq.layer_tag do
+        v[rq.layer_tag[i]] = false
+    end
+    v[rq.tag] = false
+    w:sync(sync_filter(mainkey, rq), v)
+end
+
+function s:update_filter()
+    for v in w:select "render_object_update render_object:in eid:in filter_material:in" do
+        local rc = v.render_object
+        local state = rc.entity_state
+        for u in w:select "pickup_filter render_queue:in" do
+            local rq = u.render_queue
+            local add = ((state & rq.mask) ~= 0) and ((state & rq.exclude_mask) == 0)
+            if add then
+                render_queue_update(v, rq, "render_object_update")
+                v.filter_material[rq.tag] = {
+					fx = opacity_material.fx,
+					properties = get_properties(v.eid, opacity_material.fx),
+					state = irender.check_primitive_mode_state(rc.state, opacity_material.state),
+				}
+            else
+                render_queue_del(v, rq, "render_object_update")
+				v.filter_material[rq.tag] = nil
+            end
+        end
+    end
+end
+
+function s:render_submit()
+    for v in w:select "pickup_filter visible render_queue:in" do
+        local rq = v.render_queue
+        local viewid = rq.viewid
+        for i = 1, #rq.layer_tag do
+            for u in w:select(rq.layer_tag[i] .. " " .. rq.cull_tag .. " render_object:in filter_material:in") do
+                irender.draw_mat(viewid, u.render_object, u.filter_material[rq.tag])
+            end
+        end
+		w:clear(rq.cull_tag)
+    end
 end
 
 --update pickup view
@@ -260,7 +303,8 @@ local function add_pick_entity()
 				fb_idx = fbidx,
 			},
 			primitive_filter = {
-				filter_type = "selectable"
+				filter_type = "selectable",
+				update_type = "pickup",
 			},
 			name = "pickup_renderqueue",
 			visible = false,
@@ -273,9 +317,13 @@ end
 local imaterial = world:interface "ant.asset|imaterial"
 
 function pickup_sys:init()
-	add_pick_entity()
-	opacity_material = imaterial.load '/pkg/ant.resources/materials/pickup_opacity.material'
-	translucent_material = imaterial.load '/pkg/ant.resources/materials/pickup_transparent.material'
+	local eid = add_pick_entity()
+	opacity_material	= imaterial.load '/pkg/ant.resources/materials/pickup_opacity.material'
+	translucent_material= imaterial.load '/pkg/ant.resources/materials/pickup_transparent.material'
+
+	local f = world[eid].primitive_filter
+	f.opacity_material	= opacity_material
+	f.translucent_material= translucent_material
 end
 
 local leftmousepress_mb = world:sub {"mouse", "LEFT"}

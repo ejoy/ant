@@ -67,6 +67,43 @@ function irender.draw(vid, ri)
 	bgfx.submit(vid, ri.fx.prog, 0)
 end
 
+function irender.draw_mat(vid, ri, mat)
+	ri:set_transform()
+
+	bgfx.set_state(mat.state)
+	bgfx.set_stencil(mat.stencil or ri.stencil)
+	local properties = mat.properties
+	if properties then
+		for n, p in pairs(properties) do
+			p:set()
+		end
+	end
+	local ib, vb = ri.ib, ri.vb
+
+	if ib and ib.num ~= 0 then
+		--TODO: need set function for set_index_buffer
+		if type(ib.handle) == "number" then
+			bgfx.set_index_buffer(ib.handle, ib.start, ib.num)
+		else
+			ib.handle:setI(ib.start, ib.num)
+		end
+	end
+
+	local start_v, num_v = vb.start, vb.num
+	if num_v ~= 0 then
+		for idx, h in ipairs(vb.handles) do
+			--TODO: need set function for set_index_buffer
+			if type(h) == "number" then
+				bgfx.set_vertex_buffer(idx-1, h, start_v, num_v)
+			else
+				h:setV(idx-1, start_v, num_v)
+			end
+		end
+	end
+
+	bgfx.submit(vid, mat.fx.prog, 0)
+end
+
 function irender.get_main_view_rendertexture()
 	local mq = world:singleton_entity "main_queue"
 	local fb = fbmgr.get(mq.render_target.fb_idx)
@@ -94,6 +131,7 @@ function irender.create_view_queue(view_rect, view_name, exclude)
 
 			primitive_filter = {
 				filter_type = "visible",
+				update_type = "primitive",
 				exclude_type = exclude
 			},
 
@@ -145,6 +183,7 @@ function irender.create_orthoview_queue(view_rect, orthoface, queuename)
 
 			primitive_filter = {
 				filter_type = "visible",
+				update_type = "primitive",
 			},
 
 			render_target = {
@@ -194,7 +233,7 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 		}
 	}
 
-	return world:create_entity{
+	local eid = world:create_entity{
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|pre_depth_queue",
@@ -206,6 +245,7 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 			camera_eid = camera_eid,
 			primitive_filter = {
 				filter_type = "visible",
+				update_type = "depth",
 			},
 			render_target = {
 				viewid = viewidmgr.get "depth",
@@ -226,6 +266,12 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 			watch_screen_buffer = true,
 		}
 	}
+
+	local pef = world[eid].primitive_filter
+	local pre_depth_material_file<const> 	= "/pkg/ant.resources/materials/predepth.material"
+	pef.pre_depth_material 			= imaterial.load(pre_depth_material_file, {depth_type="linear"})
+	pef.pre_depth_skinning_material = imaterial.load(pre_depth_material_file, {depth_type="linear", skinning="GPU"})
+	return eid
 end
 
 function irender.create_main_queue(view_rect, camera_eid)
@@ -286,6 +332,7 @@ function irender.create_main_queue(view_rect, camera_eid)
 			},
 			primitive_filter = {
 				filter_type = "visible",
+				update_type = "primitive",
 			},
 			visible = true,
 			name = "main render queue",
@@ -327,6 +374,7 @@ function irender.create_blit_queue(viewrect)
 			},
 			primitive_filter = {
 				filter_type = "blit_view",
+				update_type = "primitive",
 			},
 			visible = true,
 			blit_queue = true,
