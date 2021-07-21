@@ -84,7 +84,7 @@ function S.continue()
 end
 
 function S.frame()
-    if not pause_token then
+    if not continue_token then
         error "Can only be used in pause."
     end
     return bgfx.frame()
