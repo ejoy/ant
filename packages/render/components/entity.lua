@@ -307,7 +307,7 @@ function ientity.create_axis_entity(srt, name, color)
 		0, 0, 1, color or 0xffff0000,
 	}
 	local mesh = create_mesh({"p3|c40niu", axis_vb}, axis_ib)
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt)
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line.material", mesh, srt)
 end
 
 function ientity.create_line_entity(srt, p0, p1, name, color)
