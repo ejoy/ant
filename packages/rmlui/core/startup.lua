@@ -71,6 +71,9 @@ function S.shutdown()
 end
 
 function S.mouse(x, y, type, state)
+    if not context then
+        return
+    end
     local MOUSE_TYPE_NONE <const> = 0
     local MOUSE_TYPE_LEFT <const> = 1
     local MOUSE_TYPE_RIGHT <const> = 2
