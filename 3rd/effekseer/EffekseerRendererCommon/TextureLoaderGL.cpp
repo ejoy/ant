@@ -1,18 +1,7 @@
 #ifdef __EFFEKSEER_RENDERER_INTERNAL_LOADER__
 
 #include "TextureLoaderGL.h"
-#include <locale>
-#include <codecvt>
-static std::string w2u(const std::u16string& source)
-{
-	return std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t>().to_bytes(source);
-}
-static std::u16string u2w(const std::string& source)
-{
-	return std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t>().from_bytes(source);
-}
-
-std::string get_ant_file_path(const std::string& path);
+#include "PathUtils.h"
 
 namespace EffekseerRenderer
 {

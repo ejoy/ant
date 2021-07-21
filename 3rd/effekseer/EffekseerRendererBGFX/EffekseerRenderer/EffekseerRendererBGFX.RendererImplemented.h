@@ -16,24 +16,6 @@ namespace EffekseerRendererBGFX
 using Vertex = EffekseerRenderer::SimpleVertex;
 //using VertexDistortion = EffekseerRenderer::VertexDistortion;
 
-struct RenderStateSet
-{
-	//GLboolean blend;
-	//GLboolean cullFace;
-	//GLboolean depthTest;
-	//GLboolean depthWrite;
-	//GLboolean texture;
-	//GLint depthFunc;
-	//GLint cullFaceMode;
-	//GLint blendSrc;
-	//GLint blendDst;
-	//GLint blendEquation;
-	//GLint vao;
-	//GLint arrayBufferBinding;
-	//GLint elementArrayBufferBinding;
-	//std::array<GLint, ::Effekseer::TextureSlotMax> boundTextures;
-};
-
 class RendererImplemented;
 using RendererImplementedRef = ::Effekseer::RefPtr<RendererImplemented>;
 
@@ -54,9 +36,6 @@ private:
 	EffekseerRenderer::StandardRenderer<RendererImplemented, Shader>* m_standardRenderer;
 
 	::EffekseerRenderer::RenderStateBase* m_renderState;
-
-	// for restoring states
-	RenderStateSet m_originalState;
 
 	bool m_restorationOfStates;
 

@@ -91,8 +91,8 @@ function effekseer_sys:init()
     end
     effekseer.set_fxloader(fxloader)
 
-    local filemgr = require "filemanager"
-    filemgr.add("/pkg/ant.resources.binary/effekseer/Base")
+    -- local filemgr = require "filemanager"
+    -- filemgr.add("/pkg/ant.resources.binary/effekseer/Base")
 end
 
 local imgr = ecs.interface "filename_mgr"
@@ -152,17 +152,13 @@ end
 
 local iom = world:interface "ant.objcontroller|obj_motion"
 local event_entity_register = world:sub{"entity_register"}
-function effekseer_sys:ui_update()
-    -- for _, eid in event_entity_register:unpack() do
-    --     if world[eid] and world[eid].effect_instance then
-    --         local eh = world[eid].effect_instance.handle
-    --         effekseer.set_loop(eh, world[eid].loop)
-    --         effekseer.set_speed(eh, world[eid].speed)
-    --         if world[eid].auto_play then
-    --             effekseer.play(eh)
-    --         end
-    --     end
-    -- end
+
+function effekseer_sys:render_submit()
+    local dt = time_callback and time_callback() or itimer.delta() * 0.001
+    effekseer.update(dt)
+end
+
+function effekseer_sys:follow_transform_updated()
     for _, eid in world:each "removed" do
         local e = world[eid]
         if e.effect_instance then
@@ -173,12 +169,6 @@ function effekseer_sys:ui_update()
 		local e = world[eid]
 		effekseer.update_transform(e.effect_instance.handle, iom.worldmat(eid))
     end
-    local dt = time_callback and time_callback() or itimer.delta() * 0.001
-    effekseer.update(dt)
-end
-
-function effekseer_sys:follow_transform_updated()
-
 end
 
 function effekseer_sys:exit()

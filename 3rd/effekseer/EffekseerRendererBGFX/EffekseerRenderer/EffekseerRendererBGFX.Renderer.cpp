@@ -78,10 +78,10 @@ namespace EffekseerRendererBGFX
 	return ret;
 }
 
-::Effekseer::MaterialLoaderRef CreateMaterialLoader(::Effekseer::Backend::GraphicsDeviceRef graphicsDevice,
+::Effekseer::MaterialLoaderRef CreateMaterialLoader(Renderer* renderer,
 													::Effekseer::FileInterface* fileInterface)
 {
-	return ::Effekseer::MakeRefPtr<MaterialLoader>(graphicsDevice.DownCast<Backend::GraphicsDevice>(), fileInterface);
+	return ::Effekseer::MakeRefPtr<MaterialLoader>(renderer, fileInterface);
 }
 
 Effekseer::Backend::TextureRef CreateTexture(Effekseer::Backend::GraphicsDeviceRef graphicsDevice, bgfx_texture_handle_t buffer, bool hasMipmap, const std::function<void()>& onDisposed)
@@ -213,7 +213,7 @@ bool RendererImplemented::Initialize()
 	auto shaderCount = static_cast<size_t>(EffekseerRenderer::RendererShaderType::Material) + 1;
 	shaders_.resize(shaderCount);
 	for (int i = 0; i < shaderCount; i++) {
-		shaders_[i] = Shader::Create(s_bgfx_sprite_context_[i].program_, std::move(s_bgfx_sprite_context_[i].uniforms_));
+		shaders_[i] = Shader::Create(this, s_bgfx_sprite_context_[i].program_, std::move(s_bgfx_sprite_context_[i].uniforms_));
 	}
 	
 	auto applyPSAdvancedRendererParameterTexture = [](Shader* shader, int32_t offset) -> void {
@@ -368,66 +368,8 @@ bool RendererImplemented::BeginRendering()
 
 bool RendererImplemented::EndRendering()
 {
-	//GLCheckError();
-
 	// reset renderer
 	m_standardRenderer->ResetAndRenderingIfRequired();
-
-	// restore states
-	//if (m_restorationOfStates)
-	//{
-	//	if (GLExt::IsSupportedVertexArray())
-	//	{
-	//		GLExt::glBindVertexArray(m_originalState.vao);
-	//	}
-
-	//	for (size_t i = 0; i < m_originalState.boundTextures.size(); i++)
-	//	{
-	//		GLExt::glActiveTexture(GL_TEXTURE0 + (GLenum)i);
-	//		glBindTexture(GL_TEXTURE_2D, m_originalState.boundTextures[i]);
-	//	}
-	//	GLExt::glActiveTexture(GL_TEXTURE0);
-
-	//	if (m_originalState.blend)
-	//		glEnable(GL_BLEND);
-	//	else
-	//		glDisable(GL_BLEND);
-	//	if (m_originalState.cullFace)
-	//		glEnable(GL_CULL_FACE);
-	//	else
-	//		glDisable(GL_CULL_FACE);
-	//	if (m_originalState.depthTest)
-	//		glEnable(GL_DEPTH_TEST);
-	//	else
-	//		glDisable(GL_DEPTH_TEST);
-
-	//	if (GetDeviceType() == OpenGLDeviceType::OpenGL2)
-	//	{
-	//		if (m_originalState.texture)
-	//			glEnable(GL_TEXTURE_2D);
-	//		else
-	//			glDisable(GL_TEXTURE_2D);
-	//	}
-
-	//	glDepthFunc(m_originalState.depthFunc);
-	//	glDepthMask(m_originalState.depthWrite);
-	//	glCullFace(m_originalState.cullFaceMode);
-	//	glBlendFunc(m_originalState.blendSrc, m_originalState.blendDst);
-	//	GLExt::glBlendEquation(m_originalState.blendEquation);
-
-	//	GLExt::glBindBuffer(GL_ARRAY_BUFFER, m_originalState.arrayBufferBinding);
-	//	GLExt::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_originalState.elementArrayBufferBinding);
-
-	//	if (GetDeviceType() == OpenGLDeviceType::OpenGL3 || GetDeviceType() == OpenGLDeviceType::OpenGLES3)
-	//	{
-	//		for (int32_t i = 0; i < 4; i++)
-	//		{
-	//			GLExt::glBindSampler(i, 0);
-	//		}
-	//	}
-	//}
-
-	//GLCheckError();
 
 	return true;
 }
@@ -552,7 +494,7 @@ void RendererImplemented::SetSquareMaxCount(int32_t count)
 
 ::Effekseer::MaterialLoaderRef RendererImplemented::CreateMaterialLoader(::Effekseer::FileInterface* fileInterface)
 {
-	return ::Effekseer::MakeRefPtr<MaterialLoader>(GetIntetnalGraphicsDevice(), fileInterface);
+	return ::Effekseer::MakeRefPtr<MaterialLoader>(this, fileInterface);
 }
 
 void RendererImplemented::SetBackground(bgfx_texture_handle_t background, bool hasMipmap)
@@ -583,7 +525,7 @@ void RendererImplemented::SetDistortingCallback(EffekseerRenderer::DistortingCal
 
 void RendererImplemented::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t size)
 {
-	BGFX(set_transient_vertex_buffer)(0, vertexBuffer->GetInterface(), 0, vertexBuffer->GetSize()/size);
+	BGFX(encoder_set_transient_vertex_buffer)(encoder_, 0, vertexBuffer->GetInterface(), 0, vertexBuffer->GetSize()/size);
 }
 
 /*
@@ -629,14 +571,14 @@ void RendererImplemented::SetVertexBuffer(const Effekseer::Backend::VertexBuffer
 	auto vb = static_cast<Backend::VertexBuffer*>(vertexBuffer.Get());
 	//SetVertexBuffer(vb->GetBuffer(), size);
 
-	BGFX(set_dynamic_vertex_buffer)(0, vb->GetInterface(), 0, vb->GetSize() / stride);
+	BGFX(encoder_set_dynamic_vertex_buffer)(encoder_, 0, vb->GetInterface(), 0, vb->GetSize() / stride);
 }
 
 void RendererImplemented::SetIndexBuffer(const Effekseer::Backend::IndexBufferRef& indexBuffer)
 {
 	auto ib = static_cast<Backend::IndexBuffer*>(indexBuffer.Get());
 	//SetIndexBuffer(ib->GetBuffer());
-	BGFX(set_dynamic_index_buffer)(ib->GetInterface(), 0, ib->GetElementCount());
+	BGFX(encoder_set_dynamic_index_buffer)(encoder_, ib->GetInterface(), 0, ib->GetElementCount());
 }
 
 void RendererImplemented::SetVertexArray(VertexArray* vertexArray)
@@ -654,10 +596,10 @@ void RendererImplemented::DoDraw()
 	if (currentShader) {
 		for (int32_t i = 0; i < currentTextures_.size(); i++) {
 			if (currentShader->GetTextureSlotEnable(i)) {
-				BGFX(set_texture)(i, currentShader->GetTextureSlot(i), currentTextures_[i].texture, currentTextures_[i].flags);
+				BGFX(encoder_set_texture)(encoder_, i, currentShader->GetTextureSlot(i), currentTextures_[i].texture, currentTextures_[i].flags);
 			}
 		}
-		BGFX(set_state)(current_state_, 0);
+		BGFX(encoder_set_state)(encoder_, current_state_, 0);
 		currentShader->Submit();
 	}
 }
@@ -668,7 +610,7 @@ void RendererImplemented::DrawSprites(int32_t spriteCount, int32_t vertexOffset)
 	impl->drawvertexCount += spriteCount * 4;
 
 	auto indexBuffer = GetIndexBuffer();
-	BGFX(set_dynamic_index_buffer)(indexBuffer->GetInterface(), 0/*vertexOffset / 4 * 6*/, spriteCount * 6);
+	BGFX(encoder_set_dynamic_index_buffer)(encoder_, indexBuffer->GetInterface(), 0/*vertexOffset / 4 * 6*/, spriteCount * 6);
 	indexBufferCurrentStride_ = indexBuffer->GetStride();
 
 	DoDraw();

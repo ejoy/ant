@@ -34,7 +34,7 @@ std::string get_ant_file_path(const std::string& path)
 void load_fx(const std::string& vspath, const std::string& fspath, bgfx_program_handle_t& prog,
 	std::unordered_map<std::string, bgfx_uniform_handle_t>& uniforms)
 {
-	lua_State* L = g_effekseer->lua_State_;
+	lua_State* L = g_effekseer->lua_state;
 	std::string result;
 	lua_pushlstring(L, vspath.data(), vspath.size());
 	lua_pushlstring(L, fspath.data(), fspath.size());
@@ -52,7 +52,7 @@ void load_fx(const std::string& vspath, const std::string& fspath, bgfx_program_
 }
 
 effekseer_ctx::effekseer_ctx(lua_State* L, int idx)
-	: lua_State_{ L }
+	: lua_state{ L }
 {
 	lua_struct::unpack(L, idx, *this);
 	EffekseerRendererBGFX::g_view_id = viewid;
@@ -88,27 +88,23 @@ bool effekseer_ctx::init()
 	init_ctx(::EffekseerRendererBGFX::Renderer::s_bgfx_sprite_context_, sprite_programs);
 	init_ctx(::EffekseerRendererBGFX::ModelRenderer::s_bgfx_model_context_, model_programs);
 
-	renderer = ::EffekseerRendererBGFX::Renderer::Create(2000/*square_max_count*/);
-	if (!renderer.Get()) {
+	renderer_ = ::EffekseerRendererBGFX::Renderer::Create(2000/*square_max_count*/);
+	if (!renderer_.Get()) {
 		return false;
 	}
-	manager = ::Effekseer::Manager::Create(square_max_count);
-	if (!manager.Get()) {
+	manager_ = ::Effekseer::Manager::Create(square_max_count);
+	if (!manager_.Get()) {
 		return false;
 	}
-	manager->SetCoordinateSystem(Effekseer::CoordinateSystem::LH);
-	manager->SetSpriteRenderer(renderer->CreateSpriteRenderer());
-	manager->SetRibbonRenderer(renderer->CreateRibbonRenderer());
-	manager->SetRingRenderer(renderer->CreateRingRenderer());
-	manager->SetTrackRenderer(renderer->CreateTrackRenderer());
-	manager->SetModelRenderer(renderer->CreateModelRenderer());
-	manager->SetTextureLoader(renderer->CreateTextureLoader());
-	manager->SetModelLoader(renderer->CreateModelLoader());
-	manager->SetMaterialLoader(renderer->CreateMaterialLoader());
-	//test
-// 	test_effect = Effekseer::Effect::Create(manager, u"D:/Github/EffekseerBGFX/Resources/Base/Laser03.efk");
-// 	test_handle = manager->Play(test_effect, { 0, 0, 0 });
-	//manager->SetPaused(test_handle, true);
+	manager_->SetCoordinateSystem(Effekseer::CoordinateSystem::LH);
+	manager_->SetSpriteRenderer(renderer_->CreateSpriteRenderer());
+	manager_->SetRibbonRenderer(renderer_->CreateRibbonRenderer());
+	manager_->SetRingRenderer(renderer_->CreateRingRenderer());
+	manager_->SetTrackRenderer(renderer_->CreateTrackRenderer());
+	manager_->SetModelRenderer(renderer_->CreateModelRenderer());
+	manager_->SetTextureLoader(renderer_->CreateTextureLoader());
+	manager_->SetModelLoader(renderer_->CreateModelLoader());
+	manager_->SetMaterialLoader(renderer_->CreateMaterialLoader());
 
 	return true;
 }
@@ -127,9 +123,8 @@ leffekseer_init(lua_State* L) {
 
 static int
 leffekseer_shutdown(lua_State* L) {
-	g_effekseer->test_effect.Reset();
-	g_effekseer->manager.Reset();
-	g_effekseer->renderer.Reset();
+	g_effekseer->manager_.Reset();
+	g_effekseer->renderer_.Reset();
 	if (g_effekseer) {
 		delete g_effekseer;
 		g_effekseer = nullptr;
@@ -141,8 +136,8 @@ static int
 leffekseer_update_view_proj(lua_State* L) {
 	const glm::mat4& viewmat = *(glm::mat4*)lua_touserdata(L, 1);
 	const glm::mat4& projmat = *(glm::mat4*)lua_touserdata(L, 2);
-	memcpy(g_effekseer->view_mat.Values, (float*)glm::value_ptr(viewmat), sizeof(float) * 16);
-	memcpy(g_effekseer->proj_mat.Values, (float*)glm::value_ptr(projmat), sizeof(float) * 16);
+	memcpy(g_effekseer->view_mat_.Values, (float*)glm::value_ptr(viewmat), sizeof(float) * 16);
+	memcpy(g_effekseer->proj_mat_.Values, (float*)glm::value_ptr(projmat), sizeof(float) * 16);
 	return 0;
 }
 
@@ -320,7 +315,7 @@ lset_speed(lua_State* L) {
 
 void effekseer_ctx::update()
 {
-	for (auto& eff : effects)
+	for (auto& eff : effects_)
 	{
 		eff.update();
 	}
@@ -328,48 +323,53 @@ void effekseer_ctx::update()
 
 void effekseer_ctx::draw(float delta)
 {
-	if (effects.empty())
-	{
+	if (effects_.empty()) {
 		return;
 	}
-	BGFX(set_view_transform)(viewid, view_mat.Values, proj_mat.Values);
-	renderer->SetCameraMatrix(view_mat);
-	renderer->SetProjectionMatrix(proj_mat);
-// 	float deltaFrames = delta * 60.0f;
-// 	int iterations = std::max(1, (int)roundf(deltaFrames));
-// 	float advance = deltaFrames / iterations;
-// 	for (int i = 0; i < iterations; i++) {
-// 		manager->Update(advance);
-// 	}
-	manager->Update(/*delta*/);
-	renderer->SetTime(renderer->GetTime() + delta);
-	renderer->BeginRendering();
-	manager->Draw();
-	renderer->EndRendering();
+	auto encoder = BGFX(encoder_begin)(false);
+	assert(encoder);
+	renderer_->SetCurrentEncoder(encoder);
+
+	BGFX(set_view_transform)(viewid, view_mat_.Values, proj_mat_.Values);
+	renderer_->SetCameraMatrix(view_mat_);
+	renderer_->SetProjectionMatrix(proj_mat_);
+	float deltaFrames = delta * 60.0f;
+	int iterations = std::max(1, (int)roundf(deltaFrames));
+	float advance = deltaFrames / iterations;
+	for (int i = 0; i < iterations; i++) {
+		manager_->Update(advance);
+	}
+	manager_->Update(delta);
+	renderer_->SetTime(renderer_->GetTime() + delta);
+	renderer_->BeginRendering();
+	manager_->Draw();
+	renderer_->EndRendering();
+
+	BGFX(encoder_end)(encoder);
 }
 
 int32_t effekseer_ctx::create_effect(const void* data, int32_t size)
 {
-	auto effect = Effekseer::Effect::Create(manager, data, size);
+	auto effect = Effekseer::Effect::Create(manager_, data, size);
 	if (effect.Get()) {
-		effects.emplace_back(manager.Get(), effect);
-		return (int32_t)effects.size() - 1;
+		effects_.emplace_back(manager_.Get(), effect);
+		return (int32_t)effects_.size() - 1;
 	}
 	return -1;
 }
 
 effect_adapter* effekseer_ctx::get_effect(int32_t eidx)
 {
-	if (eidx < effects.size() && eidx >= 0)
+	if (eidx < effects_.size() && eidx >= 0)
 	{
-		return &effects[eidx];
+		return &effects_[eidx];
 	}
 	return nullptr;
 }
 
 void effekseer_ctx::destroy_effect(int32_t eidx)
 {
-	effects[eidx].destroy();
+	effects_[eidx].destroy();
 }
 
 extern "C"

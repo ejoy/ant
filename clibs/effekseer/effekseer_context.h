@@ -28,8 +28,6 @@ struct program {
 
 struct effekseer_ctx
 {
-	effekseer_ctx(lua_State* L, int idx);
-	bool init();
 	uint16_t				viewid;
 	int32_t					square_max_count{4000};
 	std::vector<program>	sprite_programs;
@@ -45,20 +43,20 @@ struct effekseer_ctx
 	bgfx_vertex_layout_t*	mtl1_layout{ nullptr };
 	bgfx_vertex_layout_t*	mtl2_layout{ nullptr };
 	bgfx_vertex_layout_t*	model_layout{ nullptr };
-	lua_State*				lua_State_{ nullptr };
+	lua_State*				lua_state{ nullptr };
 	//
-	Effekseer::Matrix44		view_mat;
-	Effekseer::Matrix44		proj_mat;
-	Effekseer::EffectRef	test_effect;
-	Effekseer::Handle		test_handle;
-	Effekseer::ManagerRef	manager;
-	EffekseerRendererBGFX::RendererRef renderer;
-	
-	std::vector<effect_adapter> effects;
+	Effekseer::Matrix44		view_mat_;
+	Effekseer::Matrix44		proj_mat_;
+	Effekseer::ManagerRef	manager_;
+	EffekseerRendererBGFX::RendererRef renderer_;
+	int fxloader_ = LUA_REFNIL;
+	std::vector<effect_adapter> effects_;
+	//
+	effekseer_ctx(lua_State* L, int idx);
+	bool init();
 	effect_adapter* get_effect(int32_t eidx);
 	int32_t create_effect(const void* data, int32_t size);
 	void destroy_effect(int32_t eidx);
 	void draw(float deltaTime);
 	void update();
-	int fxloader_ = LUA_REFNIL;
 };

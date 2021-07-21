@@ -5,16 +5,15 @@
 namespace EffekseerRendererBGFX {
 bgfx_view_id_t g_view_id = 0;
 
-Shader::Shader(bgfx_program_handle_t programHandle, std::unordered_map<std::string, bgfx_uniform_handle_t>&& uniforms)
+Shader::Shader(Renderer* renderer, bgfx_program_handle_t programHandle, std::unordered_map<std::string, bgfx_uniform_handle_t>&& uniforms)
 	: m_vertexConstantBuffer(nullptr)
 	, m_pixelConstantBuffer(nullptr)
 	, m_program{ programHandle }
-	, uniforms_{ std::move(uniforms) }
+	, m_uniforms{ std::move(uniforms) }
+	, m_renderer{ renderer }
 {
 	m_textureSlots.fill(BGFX_INVALID_HANDLE/*0*/);
 	m_textureSlotEnables.fill(false);
-
-	//baseInstance_ = GLExt::glGetUniformLocation(m_program, "SPIRV_Cross_BaseInstance");
 }
 
 Shader::~Shader()
@@ -23,10 +22,10 @@ Shader::~Shader()
 	ES_SAFE_DELETE_ARRAY(m_pixelConstantBuffer);
 }
 
-Shader* Shader::Create(bgfx_program_handle_t program, std::unordered_map<std::string, bgfx_uniform_handle_t>&& uniforms)
+Shader* Shader::Create(Renderer* renderer, bgfx_program_handle_t program, std::unordered_map<std::string, bgfx_uniform_handle_t>&& uniforms)
 {
 	if (BGFX_HANDLE_IS_VALID(program)) {
-		return new Shader(program, std::move(uniforms));
+		return new Shader(renderer, program, std::move(uniforms));
 	} else {
 		return nullptr;
 	}
@@ -49,7 +48,7 @@ void Shader::EndScene()
 
 void Shader::Submit()
 {
-	BGFX(submit)(g_view_id, m_program, 0, BGFX_DISCARD_ALL);
+	BGFX(encoder_submit)(m_renderer->GetCurrentEncoder(), g_view_id, m_program, 0, BGFX_DISCARD_ALL);
 }
 
 void Shader::SetVertexConstantBufferSize(int32_t size)
@@ -103,7 +102,7 @@ void Shader::SetConstantBuffer()
 			//memcpy(mat.Values, data, sizeof(float) * 16);
 			//mat.Transpose();
 			if (BGFX_HANDLE_IS_VALID(m_vertexConstantLayout[i].ID)) {
-				BGFX(set_uniform)(m_vertexConstantLayout[i].ID, data, m_vertexConstantLayout[i].Count);
+				BGFX(encoder_set_uniform)(m_renderer->GetCurrentEncoder(), m_vertexConstantLayout[i].ID, data, m_vertexConstantLayout[i].Count);
 			}
 		}
 
@@ -113,7 +112,7 @@ void Shader::SetConstantBuffer()
 			data += m_vertexConstantLayout[i].Offset;
 			//GLExt::glUniform4fv(m_vertexConstantLayout[i].ID, m_vertexConstantLayout[i].Count, (const GLfloat*)data);
 			if (BGFX_HANDLE_IS_VALID(m_vertexConstantLayout[i].ID)) {
-				BGFX(set_uniform)(m_vertexConstantLayout[i].ID, data, m_vertexConstantLayout[i].Count);
+				BGFX(encoder_set_uniform)(m_renderer->GetCurrentEncoder(), m_vertexConstantLayout[i].ID, data, m_vertexConstantLayout[i].Count);
 			}
 		}
 	}
@@ -129,7 +128,7 @@ void Shader::SetConstantBuffer()
 			//memcpy(mat.Values, data, sizeof(float) * 16);
 			//mat.Transpose();
 			if (BGFX_HANDLE_IS_VALID(m_pixelConstantLayout[i].ID)) {
-				BGFX(set_uniform)(m_pixelConstantLayout[i].ID, data, m_pixelConstantLayout[i].Count);
+				BGFX(encoder_set_uniform)(m_renderer->GetCurrentEncoder(), m_pixelConstantLayout[i].ID, data, m_pixelConstantLayout[i].Count);
 			}
 		}
 
@@ -139,7 +138,7 @@ void Shader::SetConstantBuffer()
 			data += m_pixelConstantLayout[i].Offset;
 			//GLExt::glUniform4fv(m_pixelConstantLayout[i].ID, m_pixelConstantLayout[i].Count, (const GLfloat*)data);
 			if (BGFX_HANDLE_IS_VALID(m_pixelConstantLayout[i].ID)) {
-				BGFX(set_uniform)(m_pixelConstantLayout[i].ID, data, m_pixelConstantLayout[i].Count);
+				BGFX(encoder_set_uniform)(m_renderer->GetCurrentEncoder(), m_pixelConstantLayout[i].ID, data, m_pixelConstantLayout[i].Count);
 			}
 		}
 	}
@@ -173,8 +172,8 @@ bool Shader::IsValid() const
 
 bgfx_uniform_handle_t Shader::GetUniformId(const char* name)
 {
-	auto it = uniforms_.find(name);
-	if (it != uniforms_.end()) {
+	auto it = m_uniforms.find(name);
+	if (it != m_uniforms.end()) {
 		return it->second;
 	}
 	else {

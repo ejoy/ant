@@ -1,28 +1,15 @@
-#include <locale>
-#include <codecvt>
-
 #include "EffekseerRendererBGFX.MaterialLoader.h"
 #include "EffekseerRendererBGFX.ModelRenderer.h"
 #include "EffekseerRendererBGFX.Shader.h"
 
 #include <iostream>
 #include <fstream>
-
+#include "../EffekseerRendererCommon/PathUtils.h"
 #include "../EffekseerMaterialCompiler/EffekseerMaterialCompilerBGFX.h"
 #include "Effekseer/Material/Effekseer.CompiledMaterial.h"
 
 #undef min
 
-static std::string w2u(const std::u16string& source)
-{
-	return std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t>().to_bytes(source);
-}
-static std::u16string u2w(const std::string& source)
-{
-	return std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t>().from_bytes(source);
-}
-
-std::string get_ant_file_path(const std::string& path);
 void load_fx(const std::string& vspath, const std::string& fspath, bgfx_program_handle_t& program,
 	std::unordered_map<std::string, bgfx_uniform_handle_t>& uniforms);
 
@@ -56,7 +43,7 @@ namespace EffekseerRendererBGFX
 		auto startPos = currentPath_.rfind('/');
 		auto fileName = currentPath_.substr(startPos + 1, currentPath_.rfind('.') - startPos - 1);
 
-		auto create_shader = [&dir, &fileName](::Effekseer::CompiledMaterialBinary* binary,
+		auto create_shader = [this, &dir, &fileName](::Effekseer::CompiledMaterialBinary* binary,
 			Effekseer::MaterialShaderType type, bool isModel) {
 				auto vsFileName = "vs_" + fileName;
 				if (isModel) {
@@ -82,7 +69,7 @@ namespace EffekseerRendererBGFX
 				bgfx_program_handle_t program;
 				std::unordered_map<std::string, bgfx_uniform_handle_t> uniforms;
 				load_fx(vsFullName, fsFullName, program, uniforms);
-				return Shader::Create(program, std::move(uniforms));
+				return Shader::Create(renderer_, program, std::move(uniforms));
 		};
 
 		for (int32_t st = 0; st < shaderTypeCount; st++)
@@ -311,8 +298,8 @@ namespace EffekseerRendererBGFX
 		return material;
 	}
 
-	MaterialLoader::MaterialLoader(Backend::GraphicsDeviceRef graphicsDevice, ::Effekseer::FileInterface* fileInterface, bool canLoadFromCache)
-		: graphicsDevice_(graphicsDevice)
+	MaterialLoader::MaterialLoader(Renderer* renderer, ::Effekseer::FileInterface* fileInterface, bool canLoadFromCache)
+		: renderer_(renderer)
 		, fileInterface_(fileInterface)
 		, canLoadFromCache_(canLoadFromCache)
 	{

@@ -280,7 +280,7 @@ ModelRendererRef ModelRenderer::Create(RendererImplemented* renderer)
 	std::vector<Shader*> shaders;
 	shaders.resize(shaderCount);
 	for (int i = 0; i < shaderCount; i++) {
-		shaders[i] = Shader::Create(s_bgfx_model_context_[i].program_, std::move(s_bgfx_model_context_[i].uniforms_));
+		shaders[i] = Shader::Create(renderer, s_bgfx_model_context_[i].program_, std::move(s_bgfx_model_context_[i].uniforms_));
 	}
 
 	return ModelRendererRef(new ModelRenderer(renderer,

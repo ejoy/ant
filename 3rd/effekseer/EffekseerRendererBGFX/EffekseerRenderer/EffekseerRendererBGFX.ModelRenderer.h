@@ -22,8 +22,6 @@ public:
 private:
 	RendererImplemented* m_renderer;
 
-	//VertexArray* m_va[6];
-
 	Shader* shader_ad_lit_ = nullptr;
 	Shader* shader_ad_unlit_ = nullptr;
 	Shader* shader_ad_distortion_ = nullptr;
