@@ -238,9 +238,6 @@ function sm:init()
 		local vr = {x=(ii-1)*s, y=0, w=s, h=s}
 		local eid = create_csm_entity(ii, vr, fbidx, dt)
 		irq.set_view_clear(eid, "D", nil, 1, nil, true)
-		local f = world[eid].primitive_filter
-		f.shadow_material 		= shadow_material
-		f.gpu_skinning_material = gpu_skinning_material
 	end
 end
 
@@ -261,9 +258,13 @@ local create_light_mb = world:sub{"component_register", "make_shadow"}
 local remove_light
 local light_trans_mb
 
-local function set_csm_visible(v)
+local function set_csm_visible(enable)
 	for _, ceid in world:each "csm" do
-		world[ceid].visible = v
+		world[ceid].visible = enable
+	end
+	local w = world.w
+	for v in w:select "shadow_filter visible?out" do
+		v.visible = enable
 	end
 end
 

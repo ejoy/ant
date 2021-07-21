@@ -12,9 +12,12 @@ local function can_write_depth(state)
 	return wm == nil or wm:match "Z"
 end
 
+
+local pre_depth_material
+local pre_depth_skinning_material
+
 local function which_material(eid)
-	local pef = world:singleton_entity "pre_depth_queue"
-	return world[eid].skinning_type == "GPU" and pef.pre_depth_skinning_material or pef.pre_depth_material
+	return world[eid].skinning_type == "GPU" and pre_depth_skinning_material or pre_depth_material
 end
 
 
@@ -49,6 +52,12 @@ local function render_queue_del(v, rq, mainkey)
     end
     v[rq.tag] = false
     w:sync(sync_filter(mainkey, rq), v)
+end
+
+function s:init()
+    local pre_depth_material_file<const> 	= "/pkg/ant.resources/materials/predepth.material"
+    pre_depth_material 			= imaterial.load(pre_depth_material_file, {depth_type="linear"})
+    pre_depth_skinning_material = imaterial.load(pre_depth_material_file, {depth_type="linear", skinning="GPU"})
 end
 
 function s:update_filter()

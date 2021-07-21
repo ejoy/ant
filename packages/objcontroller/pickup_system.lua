@@ -323,10 +323,6 @@ function pickup_sys:init()
 	local eid = add_pick_entity()
 	opacity_material	= imaterial.load '/pkg/ant.resources/materials/pickup_opacity.material'
 	translucent_material= imaterial.load '/pkg/ant.resources/materials/pickup_transparent.material'
-
-	local f = world[eid].primitive_filter
-	f.opacity_material	= opacity_material
-	f.translucent_material= translucent_material
 end
 
 local leftmousepress_mb = world:sub {"mouse", "LEFT"}

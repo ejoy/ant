@@ -11,16 +11,6 @@ function ipf.reset_filters(eid)
 	world:pub {"sync_filter", eid}
 end
 
-local ies = world:interface "ant.scene|ientity_state"
-
-local pf = ecs.component "primitive_filter"
-
-function pf:init()
-	self.filter_mask = ies.filter_mask(self.filter_type)
-	self.exclude_mask = self.exclude_type and ies.filter_mask(self.exclude_type) or 0
-	return self
-end
-
 local s = ecs.system "primitive_filter_system"
 local w = world.w
 

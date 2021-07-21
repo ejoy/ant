@@ -40,7 +40,7 @@ function ies.set_state(eid, name, v)
 		rc.entity_state = rc.entity_state & (~STATE_TYPE[name])
 	end
 	ipf.select_filters(eid)
-	world:pub{"component_changed", "state"}
+	world:pub {"component_changed", "state"}
 end
 
 function ies.can_visible(eid)

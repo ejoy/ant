@@ -267,10 +267,6 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 		}
 	}
 
-	local pef = world[eid].primitive_filter
-	local pre_depth_material_file<const> 	= "/pkg/ant.resources/materials/predepth.material"
-	pef.pre_depth_material 			= imaterial.load(pre_depth_material_file, {depth_type="linear"})
-	pef.pre_depth_skinning_material = imaterial.load(pre_depth_material_file, {depth_type="linear", skinning="GPU"})
 	return eid
 end
 

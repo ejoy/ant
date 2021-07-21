@@ -22,8 +22,9 @@ local function register_tag(name)
 end
 
 local s = ecs.system "luaecs_filter_system"
+local ies = world:interface "ant.scene|ientity_state"
 
-local evCreate = world:sub {"component_register", "primitive_filter"}
+local evCreate = world:sub {"create_filter"}
 local evUpdate = world:sub {"sync_filter"}
 
 local Layer <const> = {
@@ -43,11 +44,15 @@ local Layer <const> = {
 
 local function render_queue_create(e)
     local viewid = e.render_target.viewid
-    local filter = e.primitive_filter
     local camera_eid = e.camera_eid
-    local filter_type = filter.update_type
+    local visible = e.visible
+    local filter = e.primitive_filter
+    local type = filter.update_type
+    local mask = ies.filter_mask(filter.filter_type)
+    local exclude_mask = filter.exclude_type and ies.filter_mask(filter.exclude_type) or 0
+
     local layer = {}
-    for i, n in ipairs(Layer[filter_type]) do
+    for i, n in ipairs(Layer[type]) do
         layer[i] = n
         layer[n] = i
     end
@@ -59,8 +64,8 @@ local function render_queue_create(e)
         tag = tagname,
         cull_tag = tagname .. "_cull",
         layer_tag = {},
-        mask = filter.filter_mask,
-        exclude_mask = filter.exclude_mask,
+        mask = mask,
+        exclude_mask = exclude_mask,
         layer = layer,
         viewid = viewid,
         camera_eid = camera_eid,
@@ -73,8 +78,8 @@ local function render_queue_create(e)
         register_tag(rq.layer_tag[i])
     end
     w:new {
-        [filter_type.."_filter"] = true,
-        visible = e.visible,
+        [type.."_filter"] = true,
+        visible = visible,
         render_queue = rq
     }
 end
@@ -136,8 +141,7 @@ function s:init()
 end
 
 function s:data_changed()
-    for _,_, eid in evCreate:unpack() do
-        local e = world[eid]
+    for _, e in evCreate:unpack() do
         render_queue_create(e)
     end
 end
