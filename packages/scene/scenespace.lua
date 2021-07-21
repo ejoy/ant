@@ -67,27 +67,6 @@ function sp_sys:update_hierarchy()
 		local e = world[eid]
 		scenequeue:mount(eid, e.parent or 0)
 	end
-
-	local need_remove_eids = {}
-	for _, eid in world:each "removed" do
-		need_remove_eids[eid] = true
-	end
-
-	if next(need_remove_eids) then
-		local function is_parent_removed(eid)
-			return need_remove_eids[eid]
-		end
-
-		for _, eid in ipairs(scenequeue) do
-			if need_remove_eids[eid] then
-				scenequeue:mount(eid)
-			elseif is_parent_removed(world[eid].parent) then
-				scenequeue:mount(eid, 0)
-				iss.set_parent(eid, nil)
-			end
-		end
-		scenequeue:clear()
-	end
 end
 
 
@@ -127,6 +106,29 @@ end
 function sp_sys:update_transform()
 	for _, eid in ipairs(scenequeue) do
 		update_transform(eid)
+	end
+end
+
+function sp_sys:end_frame()
+	local need_remove_eids = {}
+	for _, eid in world:each "removed" do
+		need_remove_eids[eid] = true
+	end
+
+	if next(need_remove_eids) then
+		local function is_parent_removed(eid)
+			return need_remove_eids[eid]
+		end
+
+		for _, eid in ipairs(scenequeue) do
+			if need_remove_eids[eid] then
+				scenequeue:mount(eid)
+			elseif is_parent_removed(world[eid].parent) then
+				scenequeue:mount(eid, 0)
+				iss.set_parent(eid, nil)
+			end
+		end
+		scenequeue:clear()
 	end
 end
 

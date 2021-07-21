@@ -6,6 +6,7 @@ system "scenespace_system"
     .require_interface "ant.objcontroller|obj_motion"
     .method "update_hierarchy"
     .method "update_transform"
+    .method "end_frame"
 
 policy "slot_policy"
     .component "slot"
