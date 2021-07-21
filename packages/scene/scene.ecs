@@ -14,6 +14,7 @@ policy "slot_policy"
 
 policy "hierarchy_policy"
     .require_system "scenespace_system"
+    .require_system "luaecs_sync_system"
     .require_transform "ant.general|rendercache_transform"
     .component "scene_entity"
 
@@ -68,17 +69,16 @@ system "luaecs_filter_system"
     .method     "end_filter"
     .method     "render_submit"
 
+system "luaecs_sync_system"
+    .implement  "luaecs_sync_system.lua"
+    .method     "update_hierarchy"
+
 system "primitive_filter_system"
-    .implement  "luaecs_filter_system.lua"
+    .implement  "primitive_filter.lua"
     .require_system "luaecs_filter_system"
     .require_interface "ant.render|irender"
     .method     "update_filter"
     .method     "render_submit"
-
-interface "iprimitive_filter"
-    .implement "primitive_filter.lua"
-    .method "select_filters"
-    .method "reset_filters"
 
 interface "iscenespace"
     .implement "scenespace.lua"

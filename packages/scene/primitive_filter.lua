@@ -1,16 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-local ipf = ecs.interface "iprimitive_filter"
-
-function ipf.select_filters(eid)
-	world:pub {"sync_filter", eid}
-end
-
-function ipf.reset_filters(eid)
-	world:pub {"sync_filter", eid}
-end
-
 local s = ecs.system "primitive_filter_system"
 local w = world.w
 

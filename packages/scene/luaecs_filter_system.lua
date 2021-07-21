@@ -24,8 +24,10 @@ end
 local s = ecs.system "luaecs_filter_system"
 local ies = world:interface "ant.scene|ientity_state"
 
-local evCreate = world:sub {"create_filter"}
-local evUpdate = world:sub {"sync_filter"}
+local evCreateFilter = world:sub {"luaecs", "create_filter"}
+local evCreateEntity = world:sub {"luaecs", "create_entity"}
+local evUpdateEntity = world:sub {"luaecs", "update_entity"}
+local evRemoveEntity = world:sub {"luaecs", "remove_entity"}
 
 local Layer <const> = {
     primitive = {
@@ -141,26 +143,46 @@ function s:init()
 end
 
 function s:data_changed()
-    for _, e in evCreate:unpack() do
+    for _, _, e in evCreateFilter:unpack() do
         render_queue_create(e)
     end
 end
 
 function s:begin_filter()
-    for _, eid in evUpdate:unpack() do
+    for _, _, eid in evCreateEntity:unpack() do
         local e = world[eid]
         local rc = e._rendercache
         local state = rc.entity_state
-        if state == nil or rc.fx == nil then
-            goto continue
+        if state and rc.fx then
+            local needadd = rc.vb and rc.fx and rc.state
+            if needadd then
+                render_object_add(eid)
+            end
         end
-        local needadd = rc.vb and rc.fx and rc.state
-        if needadd then
-            render_object_add(eid)
-        else
-            render_object_del(eid)
+    end
+    for _, _, eid in evUpdateEntity:unpack() do
+        local e = world[eid]
+        local rc = e._rendercache
+        local state = rc.entity_state
+        if state and rc.fx then
+            local needadd = rc.vb and rc.fx and rc.state
+            if needadd then
+                render_object_add(eid)
+            else
+                render_object_del(eid)
+            end
         end
-        ::continue::
+    end
+    for _, _, eid in evRemoveEntity:unpack() do
+        local e = world[eid]
+        local rc = e._rendercache
+        local state = rc.entity_state
+        if state and rc.fx then
+            local needadd = rc.vb and rc.fx and rc.state
+            if needadd then
+                render_object_del(eid)
+            end
+        end
     end
 end
 

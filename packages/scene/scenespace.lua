@@ -3,8 +3,6 @@ local world = ecs.world
 
 local math3d = require "math3d"
 
-local ipf = world:interface "ant.scene|iprimitive_filter"
-
 ----iscenespace----
 local m = ecs.action "mount"
 function m.init(prefab, i, value)
@@ -27,25 +25,13 @@ local pc_mb = world:sub {"component_changed", "parent"}
 local hie_scene = require "hierarchy.scene"
 local scenequeue = hie_scene.queue()
 
-local function bind_joint_entity(e)
-	local joint = e.follow_joint
-	if joint then
-		local pe = world[e.parent]
-		local pr = pe.pose_result
-		if pr and pe.skeleton then
-			local ske = assert(pe.skeleton)._handle
-			e._follow_joint_idx = ske:joint_index(joint)
-		end
-	end
-end
-
 local function inherit_entity_state(e)
 	local s = e.state or 0
 	local pe = world[e.parent]
 	local ps = pe.state
 	if ps then
-		local m = s & 0xffffffff00000000
-		e.state = (m | (s & 0xffffffff)|(ps & 0xfffffff))
+		local MASK <const> = (1 << 32) - 1
+		e.state = ((s>>32) | s | ps) & MASK
 	end
 end
 
@@ -70,17 +56,13 @@ end
 function sp_sys:update_hierarchy()
 	for _, _, eid in se_mb:unpack() do
 		local e = world[eid]
-		if e then
-			scenequeue:mount(eid, e.parent or 0)
-			if e.parent then
-				bind_joint_entity(e)
-				inherit_entity_state(e)
-				inherit_material(e)
-			end
-			ipf.select_filters(eid)
+		scenequeue:mount(eid, e.parent or 0)
+		if e.parent then
+			inherit_entity_state(e)
+			inherit_material(e)
 		end
 	end
-	
+
 	for _, _, eid in pc_mb:unpack() do
 		local e = world[eid]
 		scenequeue:mount(eid, e.parent or 0)
@@ -99,7 +81,6 @@ function sp_sys:update_hierarchy()
 		for _, eid in ipairs(scenequeue) do
 			if need_remove_eids[eid] then
 				scenequeue:mount(eid)
-				ipf.reset_filters(eid)
 			elseif is_parent_removed(world[eid].parent) then
 				scenequeue:mount(eid, 0)
 				iss.set_parent(eid, nil)
@@ -133,18 +114,6 @@ local function update_transform(eid)
 		-- combine parent transform
 		if e.lock_target == nil then
 			local pe = world[e.parent]
-			-- need apply before tr.worldmat
-			local joint_idx = e._follow_joint_idx
-			if joint_idx then
-				local adjust_mat = pe.pose_result:joint(joint_idx)
-				local scale, rotate, pos = math3d.srt(adjust_mat)
-				if e.follow_flag == 1 then
-					adjust_mat = math3d.matrix {s=1, r={0,0,0,1}, t=pos}
-				elseif e.follow_flag == 2 then
-					adjust_mat = math3d.matrix {s=1, r=rotate, t=pos}
-				end
-				rc.worldmat = math3d.mul(adjust_mat, rc.worldmat)
-			end
 			local p_rc = pe._rendercache
 			if p_rc.worldmat then
 				rc.worldmat = rc.worldmat and math3d.mul(p_rc.worldmat, rc.worldmat) or math3d.matrix(p_rc.worldmat)
