@@ -74,6 +74,7 @@ pipeline "exit"
 
 pipeline "update"
     .stage "timer"
+    .stage "start_frame"
     .pipeline "scene_changed"
     .pipeline "scene_render"
     .pipeline "select"
