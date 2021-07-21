@@ -2,7 +2,6 @@ local ecs = ...
 local world = ecs.world
 
 local bgfx = require "bgfx"
-local ipf = world:interface "ant.scene|iprimitive_filter"
 local irq = world:interface "ant.render|irenderqueue"
 local irender = world:interface "ant.render|irender"
 local default_comp 	= import_package "ant.general".default

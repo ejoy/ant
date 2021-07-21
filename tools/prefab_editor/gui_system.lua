@@ -98,6 +98,7 @@ local function get_package(entry_path, readmount)
             packages[#packages + 1] = {name = key, path = repo._mountpoint[name]}
         end
     end
+    global_data.repo = repo
     return packages
 end
 

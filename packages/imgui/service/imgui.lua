@@ -55,8 +55,8 @@ function message.dropfiles(filelst)
 end
 function message.size(width,height)
 	if initialized then
-		cb.size(width, height)
-		rhwi.reset(nil, width, height)
+		--cb.size(width, height)
+		--rhwi.reset(nil, width, height)
 	else
 		init_width = width
 		init_height = height

@@ -4,6 +4,9 @@ local hierarchy = require "hierarchy"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local utils     = require "common.utils"
+local vfs       = require "vfs"
+local access    = require "vfs.repoaccess"
+local global_data = require "common.global_data"
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 local datalist  = require "datalist"
@@ -532,7 +535,6 @@ local function show_current_event()
         if imgui.widget.Button("SelectEffect") then
             local path = uiutils.get_open_file_path("Prefab", ".prefab")
             if path then
-                local global_data = require "common.global_data"
                 local lfs         = require "filesystem.local"
                 local rp = lfs.relative(lfs.path(path), global_data.project_root)
                 local path = (global_data.package_path and global_data.package_path or global_data.editor_package_path) .. tostring(rp)
@@ -1044,7 +1046,7 @@ function m.show()
                         external_anim_list = {}
                         current_external_anim = nil
                         local vfs = require "vfs"
-                        anim_glb_path = "/" .. vfs.virtualpath(fs.path(glb_filename))
+                        anim_glb_path = "/" .. access.virtualpath(global_data.repo, fs.path(glb_filename))
                         rc.compile(anim_glb_path)
                         local external_path = rc.compile(anim_glb_path .. "|animations")
                         for path in external_path:list_directory() do

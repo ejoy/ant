@@ -95,9 +95,12 @@ truetype_name(lua_State *L, const char *name) {
 	lua_pushlightuserdata(L, (void *)name);
 	if (lua_pcall(L, 1, 1, 0) != LUA_OK) {
 		lua_pop(L, 1);
-		return -1;
+		return 0;
 	}
-	int fontid = (int)lua_tointeger(L, -1);
+	int fontid = 0;
+	if (lua_type(L, -1) == LUA_TNUMBER) {
+		fontid = (int)lua_tointeger(L, -1);
+	}
 	lua_pop(L, 1);
 	return fontid;
 }
