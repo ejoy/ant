@@ -21,7 +21,7 @@ local depthmaterial
 local auto_hm_viewid = viewidmgr.generate "auto_heightmap"
 
 local unit_pre_tex<const>   = 1  --one texel for 1 meter
-local rbsize<const>         = 512
+local rbsize<const>         = 128
 local hrbsize               = rbsize/2
 
 local flags = sampler.sampler_flag{
@@ -62,7 +62,7 @@ function auto_hm_sys:init()
             l = -hrbsize,
             r = hrbsize,
             b = -hrbsize,
-            t = rbsize,
+            t = hrbsize,
             n = 0.01,
             f = 100,
         },
@@ -95,6 +95,7 @@ local function read_back()
 
     local m = bgfx.memory_buffer(rbsize * rbsize * 4) -- 4 for sizeof(float)
     local frame_readback = bgfx.read_texture(dst_handle, m)
+    bgfx.encoder_end()
     repeat until bgfx.frame() == frame_readback
 
     local s = tostring(m)
@@ -181,6 +182,7 @@ local function fetch_heightmap_data()
             iom.set_position(camera_eid, camerapos)
 
             local viewmat, projmat = icamera.calc_viewmat(camera_eid), icamera.calc_projmat(camera_eid)
+            bgfx.encoder_begin()
             bgfx.touch(auto_hm_viewid)
             bgfx.set_view_transform(auto_hm_viewid, viewmat, projmat)
             for _, ri in ipairs(items) do
@@ -191,7 +193,7 @@ local function fetch_heightmap_data()
         end
     end
 
-    write_to_file("abc.dds", buffers, xnumpass, znumpass)
+    --write_to_file("abc.dds", buffers, xnumpass, znumpass)
 end
 
 local hm_mb = world:sub {"fetch_heightmap"}

@@ -170,7 +170,7 @@ function init_loader_sys:init()
         data = {
             auto_heightmap = true,
             transform = {},
-            material = "/pkg/ant.test.features/assets/glb/Duck.glb|materials/blinn3-fx_CW.material",
+            material = "/pkg/ant.resources/materials/depth.material",
             mesh = "/pkg/ant.test.features/assets/glb/Duck.glb|meshes/LOD3spShape_P1.meshbin",
             state = 1,
             scene_entity = true,
