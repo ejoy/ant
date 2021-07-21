@@ -65,11 +65,11 @@ function auto_hm_sys:init()
             t = hrbsize,
             n = 0.01,
             f = 100,
+            ortho   = true,
         },
         eyepos  = math3d.vector(0, 0, 0, 1),
         viewdir = math3d.vector(0,-1, 0, 0),
         updir   = math3d.vector(0, 0, 1, 0),
-        ortho   = true,
     }
 
     -- local hm_eid = world:create_entity{
@@ -89,14 +89,12 @@ end
 local function read_back()
     local src_handle = fbmgr.get_rb(fbmgr.get(fbidx)[1]).handle
     local dst_handle = fbmgr.get_rb(blitrb).handle
-    bgfx.blit(blit_viewid, 
-        src_handle, 0, 0,
-        dst_handle, 0, 0, rbsize, rbsize)
+    bgfx.blit(blit_viewid, dst_handle, 0, 0, src_handle)
 
     local m = bgfx.memory_buffer(rbsize * rbsize * 4) -- 4 for sizeof(float)
     local frame_readback = bgfx.read_texture(dst_handle, m)
     bgfx.encoder_end()
-    repeat until bgfx.frame() == frame_readback
+    while bgfx.frame() < frame_readback do end
 
     local s = tostring(m)
     local fmt = ('f'):rep(16)   --16 float one time
@@ -107,6 +105,9 @@ local function read_back()
             local t = {fmt:unpack(s, offset)}
             for i=1, #fmt do
                 buffer[offset+i] = t[i]
+                if t[i] ~= 0.0 then
+                    print(t[i])
+                end
             end
         end
     end
@@ -156,8 +157,10 @@ local function fetch_heightmap_data()
         }
     end
 
-    local _, extent = math3d.aabb_center_extents(sceneaabb)
-    local xlen, ylen, zlen = math3d.index(extent, 1, 2, 3)
+    local aabb_min, aabb_max = math3d.index(sceneaabb, 1, 2)
+    local aabb_len = math3d.sub(aabb_max, aabb_min)
+    aabb_min, aabb_max = math3d.tovalue(aabb_min), math3d.tovalue(aabb_max)
+    local xlen, ylen, zlen = math3d.index(aabb_len, 1, 2, 3)
 
     local xnumpass = xlen // rbsize + 1
     local znumpass = zlen // rbsize + 1
@@ -175,9 +178,9 @@ local function fetch_heightmap_data()
 
     local buffers ={}
     for iz=1, znumpass do
-        local zpos = (iz-1) * movestep + zoffset
+        local zpos = (iz-1) * movestep + zoffset + aabb_min[3]
         for ix=1, xnumpass do
-            local xpos = (ix-1) * movestep + xoffset
+            local xpos = (ix-1) * movestep + xoffset + aabb_min[1]
             local camerapos = math3d.vector(xpos, ypos, zpos)
             iom.set_position(camera_eid, camerapos)
 
