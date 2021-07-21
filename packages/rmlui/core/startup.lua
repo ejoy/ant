@@ -13,7 +13,6 @@ local context
 local debuggerInitialized = false
 
 local ServiceWindow = ltask.queryservice "window"
-ltask.send(ServiceWindow, "subscribe", "mouse")
 
 rmlui.RmlRegisterEevent(require "core.callback")
 
@@ -71,6 +70,9 @@ function S.shutdown()
 end
 
 function S.mouse(x, y, type, state)
+    if not context then
+        return
+    end
     local MOUSE_TYPE_NONE <const> = 0
     local MOUSE_TYPE_LEFT <const> = 1
     local MOUSE_TYPE_RIGHT <const> = 2
@@ -112,5 +114,7 @@ S.open = windowManager.open
 S.close = windowManager.close
 S.postMessage = windowManager.postMessage
 S.add_resource_dir = fileManager.add
+
+ltask.send(ServiceWindow, "subscribe", "mouse")
 
 return S

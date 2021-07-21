@@ -1,4 +1,5 @@
 policy "camera"
+    .require_policy "ant.scene|hierarchy_policy"
     .require_transform "ant.camera|camera_motion_transform"
     .require_transform "ant.camera|camera_transform"
     .require_transform "ant.general|init_transform"
