@@ -13,7 +13,6 @@ local context
 local debuggerInitialized = false
 
 local ServiceWindow = ltask.queryservice "window"
-ltask.send(ServiceWindow, "subscribe", "mouse")
 
 rmlui.RmlRegisterEevent(require "core.callback")
 
@@ -115,5 +114,7 @@ S.open = windowManager.open
 S.close = windowManager.close
 S.postMessage = windowManager.postMessage
 S.add_resource_dir = fileManager.add
+
+ltask.send(ServiceWindow, "subscribe", "mouse")
 
 return S
