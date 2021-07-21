@@ -59,26 +59,3 @@ end
 function event.exit()
     --w.exit()
 end
--- function event.prefab_viewer()
---     for _ in imgui_windows("prefab_viewer", wndflags) do
---         w.show()
---     end
--- end
-
--- function event.prefab_editor()
---     for _ in imgui_windows("prefab_editor", wndflags) do
---         if imgui.widget.Button "Save" then
---             world:pub {"serialize_prefab", VIEWER .. "root/mesh.prefab"}
---         end
---         for _, eid in ipairs(entities) do
---             local e = world[eid]
---             if e.mesh then
---                 local ies = world:interface "ant.scene|ientity_state"
---                 local change, value = imgui.widget.Checkbox(e.name, ies.can_visible(eid))
---                 if change then
---                     ies.set_state(eid, "visible", value)
---                 end
---             end
---         end
---     end
--- end
