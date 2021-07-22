@@ -53,14 +53,21 @@ end
 function message.dropfiles(filelst)
 	cb.dropfiles(filelst)
 end
+
+local size_dirty
 function message.size(width,height)
 	if initialized then
-		--cb.size(width, height)
-		--rhwi.reset(nil, width, height)
-	else
-		init_width = width
-		init_height = height
+		size_dirty = true
 	end
+	init_width = width
+	init_height = height
+end
+
+local function update_size()
+	if not size_dirty then return end
+	cb.size(init_width, init_height)
+	rhwi.reset(nil, init_width, init_height)
+	size_dirty = false
 end
 
 local mouse = {}
@@ -199,6 +206,7 @@ ltask.fork(function ()
     end
     while imgui.NewFrame() do
         updateIO()
+		update_size()
         cb.update(viewids[1], timer_delta())
         imgui.Render()
         bgfx.encoder_end()
