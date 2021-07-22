@@ -220,8 +220,12 @@ end
 local cameraview_sys = ecs.system "camera_view_system"
 
 local function update_camera(eid)
-    local rc = world[eid]._rendercache
-    local worldmat = rc.worldmat
+    local e = world[eid]
+    local rc = e._rendercache
+    local w = world.w
+    local scene_node = w:object("scene_node", e._scene_id)
+    local worldmat = scene_node.worldmat
+    rc.worldmat = worldmat
     rc.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), rc.updir)
     rc.projmat = math3d.projmat(rc.frustum)
     rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)

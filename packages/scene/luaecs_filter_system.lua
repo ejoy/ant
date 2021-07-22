@@ -25,9 +25,6 @@ local s = ecs.system "luaecs_filter_system"
 local ies = world:interface "ant.scene|ientity_state"
 
 local evCreateFilter = world:sub {"luaecs", "create_filter"}
-local evCreateEntity = world:sub {"luaecs", "create_entity"}
-local evUpdateEntity = world:sub {"luaecs", "update_entity"}
-local evRemoveEntity = world:sub {"luaecs", "remove_entity"}
 
 local Layer <const> = {
     primitive = {
@@ -86,52 +83,11 @@ local function render_queue_create(e)
     }
 end
 
-local function render_object_add(eid)
-    local e = world[eid]
-    local rc = e._rendercache
-    for v in w:select "eid:in" do
-        if v.eid == eid then
-            v.render_object = rc
-            v.render_object_update = true
-            w:sync("eid render_object:out render_object_update:temp", v)
-            return
-        end
-    end
-    w:new {
-        eid = eid,
-        render_object = rc,
-        render_object_update = true,
-        filter_material = {},
-    }
-end
-
-local function render_object_del(eid)
-    for v in w:select "eid:in" do
-        if v.eid == eid then
-            w:remove(v)
-            return
-        end
-    end
-end
-
 function s:init()
     w:register {
         name = "render_queue",
         type = "lua",
     }
-    w:register {
-        name = "render_object",
-        type = "lua",
-    }
-    w:register {
-        name = "eid",
-        type = "int",
-    }
-    w:register {
-        name = "filter_material",
-        type = "lua",
-    }
-    register_tag "render_object_update"
     register_tag "visible"
     register_tag "primitive_filter"
     register_tag "pickup_filter"
@@ -145,44 +101,6 @@ end
 function s:data_changed()
     for _, _, e in evCreateFilter:unpack() do
         render_queue_create(e)
-    end
-end
-
-function s:begin_filter()
-    for _, _, eid in evCreateEntity:unpack() do
-        local e = world[eid]
-        local rc = e._rendercache
-        local state = rc.entity_state
-        if state and rc.fx then
-            local needadd = rc.vb and rc.fx and rc.state
-            if needadd then
-                render_object_add(eid)
-            end
-        end
-    end
-    for _, _, eid in evUpdateEntity:unpack() do
-        local e = world[eid]
-        local rc = e._rendercache
-        local state = rc.entity_state
-        if state and rc.fx then
-            local needadd = rc.vb and rc.fx and rc.state
-            if needadd then
-                render_object_add(eid)
-            else
-                render_object_del(eid)
-            end
-        end
-    end
-    for _, _, eid in evRemoveEntity:unpack() do
-        local e = world[eid]
-        local rc = e._rendercache
-        local state = rc.entity_state
-        if state and rc.fx then
-            local needadd = rc.vb and rc.fx and rc.state
-            if needadd then
-                render_object_del(eid)
-            end
-        end
     end
 end
 
