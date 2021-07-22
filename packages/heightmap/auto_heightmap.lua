@@ -18,39 +18,55 @@ local ientity   = world:interface "ant.render|entity"
 local auto_hm_sys = ecs.system "auto_heightmap_system"
 local depthmaterial
 
-local auto_hm_viewid = viewidmgr.generate "auto_heightmap"
-
 local unit_pre_tex<const>   = 1  --one texel for 1 meter
 local rbsize<const>         = 128
 local hrbsize               = rbsize/2
 
-local flags = sampler.sampler_flag{
-    RT="RT_ON",
-    MIN="LINEAR",
-    MAG="LINEAR",
-    U="CLAMP",
-    V="CLAMP",
+local renderinfo = {
+    flags = sampler.sampler_flag{
+        RT="RT_ON",
+        MIN="LINEAR",
+        MAG="LINEAR",
+        U="CLAMP",
+        V="CLAMP",
+    },
+    
+    blitflags = sampler.sampler_flag{
+        MIN="LINEAR",
+        MAG="LINEAR",
+        U="CLAMP",
+        V="CLAMP",
+        BLIT="BLIT_READWRITE"
+    },
+    
+    init = function (ri)
+        ri.auto_hm_viewid = viewidmgr.generate "auto_heightmap"
+        ri.fbidx = fbmgr.create{
+            fbmgr.create_rb{w=rbsize, h=rbsize, layers=1, flags = ri.flags, format="R32F"},
+            fbmgr.create_rb{w=rbsize, h=rbsize, layers=1, flags = ri.flags, format="D24S8"},
+        }
+        bgfx.set_view_clear(ri.auto_hm_viewid, "CD", 0, 1, 0)
+        bgfx.set_view_rect(ri.auto_hm_viewid, 0, 0, rbsize, rbsize)
+        bgfx.set_view_frame_buffer(ri.auto_hm_viewid, fbmgr.get(ri.fbidx).handle)
+
+        ri.blit_viewid = viewidmgr.generate "blit_hm_viewid"
+        ri.blitrb = fbmgr.create_rb{w=rbsize, h=rbsize, layers=1, flags=ri.blitflags, format="R32F"}
+    end,
+    color_handle = function (ri)
+        return fbmgr.get_rb(fbmgr.get(ri.fbidx)[1]).handle
+    end,
+    read_depth_buffer = function (ri)
+        local src_handle = ri:color_handle()
+        local dst_handle = fbmgr.get_rb(ri.blitrb).handle
+        bgfx.blit(ri.blit_viewid, dst_handle, 0, 0, src_handle)
+    
+        local m = bgfx.memory_buffer(rbsize * rbsize * 4) -- 4 for sizeof(float)
+        local frame_readback = bgfx.read_texture(dst_handle, m)
+        bgfx.encoder_end()
+        while bgfx.frame() < frame_readback do end
+        return m
+    end
 }
-
-local fbidx = fbmgr.create{
-    fbmgr.create_rb{w=rbsize, h=rbsize, layers=1, flags = flags, format="R32F"},
-    fbmgr.create_rb{w=rbsize, h=rbsize, layers=1, flags = flags, format="D24S8"},
-}
-
-bgfx.set_view_frame_buffer(auto_hm_viewid, fbmgr.get(fbidx).handle)
-
-local blitflags = sampler.sampler_flag{
-    MIN="LINEAR",
-    MAG="LINEAR",
-    U="CLAMP",
-    V="CLAMP",
-    BLIT="BLIT_READWRITE"
-}
-
-local blit_viewid = viewidmgr.generate "blit_hm_viewid"
-local blitrb = fbmgr.create_rb{w=rbsize, h=rbsize, layers=1, flags=blitflags, format="R32F"}
-
-bgfx.set_view_rect(auto_hm_viewid, 0, 0, rbsize, rbsize)
 
 local camera_eid
 
@@ -72,8 +88,10 @@ function auto_hm_sys:init()
         updir   = math3d.vector(0, 0, 1, 0),
     }
 
-    local eid = ientity.create_quad_entity({x=0, y=0, w=rbsize, h=rbsize}, "/pkg/ant.resources/materials/texquad.material", "quadtest")
-    imaterial.set_property(eid, "s_tex", {stage=0, texture={handle=fbmgr.get_rb(fbmgr.get(fbidx)[1]).handle}})
+    renderinfo:init()
+
+    local eid = ientity.create_quad_entity({x=0, y=0, w=2, h=2}, "/pkg/ant.resources/materials/texquad.material", "quadtest")
+    imaterial.set_property(eid, "s_tex", {stage=0, texture={handle=renderinfo:color_handle()}})
     -- local hm_eid = world:create_entity{ 
     --     policy = {
     --         "ant.general|name",
@@ -89,15 +107,7 @@ function auto_hm_sys:init()
 end
 
 local function read_back()
-    local src_handle = fbmgr.get_rb(fbmgr.get(fbidx)[1]).handle
-    local dst_handle = fbmgr.get_rb(blitrb).handle
-    bgfx.blit(blit_viewid, dst_handle, 0, 0, src_handle)
-
-    local m = bgfx.memory_buffer(rbsize * rbsize * 4) -- 4 for sizeof(float)
-    local frame_readback = bgfx.read_texture(dst_handle, m)
-    bgfx.encoder_end()
-    while bgfx.frame() < frame_readback do end
-
+    local m = renderinfo:read_depth_buffer()
     local s = tostring(m)
     local fmt = ('f'):rep(16)   --16 float one time
     local buffer = {}
@@ -187,14 +197,14 @@ local function fetch_heightmap_data()
             iom.set_position(camera_eid, camerapos)
 
             local viewmat, projmat = icamera.calc_viewmat(camera_eid), icamera.calc_projmat(camera_eid)
-            --bgfx.encoder_begin()
-            bgfx.touch(auto_hm_viewid)
-            bgfx.set_view_transform(auto_hm_viewid, viewmat, projmat)
+            bgfx.encoder_begin()
+            bgfx.touch(renderinfo.auto_hm_viewid)
+            bgfx.set_view_transform(renderinfo.auto_hm_viewid, viewmat, projmat)
             for _, ri in ipairs(items) do
-                irender.draw(auto_hm_viewid, ri)
+                irender.draw(renderinfo.auto_hm_viewid, ri)
             end
 
-            --buffers[#buffers+1] = read_back()
+            buffers[#buffers+1] = read_back()
         end
     end
 
@@ -204,11 +214,11 @@ end
 local hm_mb = world:sub {"fetch_heightmap"}
 function auto_hm_sys:follow_transform_updated()
     for _ in hm_mb:each() do
-        -- ltask.fork(function ()
-        --     local ServiceBgfxMain = ltask.queryservice "bgfx_main"
-        --     ltask.call(ServiceBgfxMain, "pause")
+        ltask.fork(function ()
+            local ServiceBgfxMain = ltask.queryservice "bgfx_main"
+            ltask.call(ServiceBgfxMain, "pause")
             fetch_heightmap_data()
-        --     ltask.call(ServiceBgfxMain, "continue")
-        -- end)
+            ltask.call(ServiceBgfxMain, "continue")
+        end)
     end
 end
