@@ -14,7 +14,7 @@ local irender   = world:interface "ant.render|irender"
 local icamera   = world:interface "ant.camera|camera"
 local iom       = world:interface "ant.objcontroller|obj_motion"
 local imaterial = world:interface "ant.asset|imaterial"
-
+local ientity   = world:interface "ant.render|entity"
 local auto_hm_sys = ecs.system "auto_heightmap_system"
 local depthmaterial
 
@@ -72,7 +72,9 @@ function auto_hm_sys:init()
         updir   = math3d.vector(0, 0, 1, 0),
     }
 
-    -- local hm_eid = world:create_entity{
+    local eid = ientity.create_quad_entity({x=0, y=0, w=rbsize, h=rbsize}, "/pkg/ant.resources/materials/texquad.material", "quadtest")
+    imaterial.set_property(eid, "s_tex", {stage=0, texture={handle=fbmgr.get_rb(fbmgr.get(fbidx)[1]).handle}})
+    -- local hm_eid = world:create_entity{ 
     --     policy = {
     --         "ant.general|name",
     --         "ant.heightmap|auto_heightmap",
@@ -185,14 +187,14 @@ local function fetch_heightmap_data()
             iom.set_position(camera_eid, camerapos)
 
             local viewmat, projmat = icamera.calc_viewmat(camera_eid), icamera.calc_projmat(camera_eid)
-            bgfx.encoder_begin()
+            --bgfx.encoder_begin()
             bgfx.touch(auto_hm_viewid)
             bgfx.set_view_transform(auto_hm_viewid, viewmat, projmat)
             for _, ri in ipairs(items) do
                 irender.draw(auto_hm_viewid, ri)
             end
 
-            buffers[#buffers+1] = read_back()
+            --buffers[#buffers+1] = read_back()
         end
     end
 
@@ -200,13 +202,13 @@ local function fetch_heightmap_data()
 end
 
 local hm_mb = world:sub {"fetch_heightmap"}
-function auto_hm_sys:data_changed()
+function auto_hm_sys:follow_transform_updated()
     for _ in hm_mb:each() do
-        ltask.fork(function ()
-            local ServiceBgfxMain = ltask.queryservice "bgfx_main"
-            ltask.call(ServiceBgfxMain, "pause")
+        -- ltask.fork(function ()
+        --     local ServiceBgfxMain = ltask.queryservice "bgfx_main"
+        --     ltask.call(ServiceBgfxMain, "pause")
             fetch_heightmap_data()
-            ltask.call(ServiceBgfxMain, "continue")
-        end)
+        --     ltask.call(ServiceBgfxMain, "continue")
+        -- end)
     end
 end

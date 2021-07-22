@@ -172,7 +172,7 @@ function init_loader_sys:init()
             transform = {},
             material = "/pkg/ant.resources/materials/depth.material",
             mesh = "/pkg/ant.test.features/assets/glb/Duck.glb|meshes/LOD3spShape_P1.meshbin",
-            state = 1,
+            state = 7,
             scene_entity = true,
             name = "test_auot_heightmap",
         }
