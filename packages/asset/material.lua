@@ -98,7 +98,7 @@ function imaterial.set_property_directly(properties, who, what)
 	end
 	if p.type == "s" then
 		if type(what) ~= "table" then
-			error(("texture property must resource data:%s"):fromat(who))
+			error(("texture property must resource data:%s"):format(who))
 		end
 
 		if p.ref then

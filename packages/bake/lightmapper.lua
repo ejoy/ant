@@ -5,6 +5,11 @@ require "bake_mathadapter"
 local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
 local declmgr   = renderpkg.declmgr
+local fbmgr     = renderpkg.fbmgr
+local sampler   = renderpkg.sampler
+
+local mathpkg   = import_package "ant.math"
+local mc        = mathpkg.constant
 
 local math3d    = require "math3d"
 local bgfx      = require "bgfx"
@@ -15,6 +20,7 @@ local irender   = world:interface "ant.render|irender"
 local imaterial = world:interface "ant.asset|imaterial"
 local icp       = world:interface "ant.render|icull_primitive"
 local itimer    = world:interface "ant.timer|itimer"
+local ientity   = world:interface "ant.render|entity"
 
 local lm_trans = ecs.transform "lightmap_transform"
 function lm_trans.process_entity(e)
@@ -22,17 +28,6 @@ function lm_trans.process_entity(e)
 end
 
 local lightmap_sys = ecs.system "lightmap_system"
-
-local context_setting = {
-    size = 64,
-    z_near = 0.001, z_far = 100,
-    rgb = {1.0, 1.0, 1.0},
-    interp_pass_count = 2, interp_threshold = 0.001,
-    cam2surf_dis_modifier = 0.0,
-}
-
-local weight_downsample_material
-local downsample_material
 
 local shading_info
 
@@ -45,36 +40,169 @@ for idx, viewid in ipairs(lightmap_downsample_viewids) do
 end
 local lightmap_storage_viewid<const> = viewidmgr.generate "lightmap_storage"
 
-function lightmap_sys:init()
-    weight_downsample_material = imaterial.load "/pkg/ant.bake/materials/weight_downsample.material"
-    downsample_material = imaterial.load "/pkg/ant.bake/materials/downsample.material"
+local cache_size_buffers = {}
+local function get_csb(size)
+    local sb = cache_size_buffers[size]
+    if sb == nil then
+        sb = {}
+        cache_size_buffers[size] = sb
+    end
+    return sb
+end
 
-    local wds_fx = weight_downsample_material.fx
-    local ds_fx = downsample_material.fx
+local function get_storage_buffer(size)
+    local sb = get_csb(size)
+    if sb.storage_rbidx == nil then
+        local flags = sampler.sampler_flag{
+            MIN="POINT",
+            MAG="POINT",
+            U="CLAMP",
+            V="CLAMP",
+            BLIT="BLIT_READWRITE",
+        }
+        sb.storage_rbidx = fbmgr.create_rb{w=size, h=size, layers = 1, format="RGBA32F", flags=flags}
+    end
 
-    local function find_uniform_handle(uniforms, name)
-        for _, u in ipairs(uniforms) do
-            if u.name == name then
-                return u.handle
-            end
+    return sb.storage_rbidx
+end
+
+local function default_weight()
+    return 1.0
+end
+
+local function gen_hemisphere_weights(hemisize, weight_func)
+    weight_func = weight_func or default_weight
+    local weights = {}
+ 	local center = (hemisize - 1) * 0.5
+ 	local sum = 0;
+ 	for y = 0, hemisize-1 do
+         local dy = 2.0 * (y-center)/hemisize
+           for x=0, hemisize-1 do
+             local dx = 2.0 * (x-center)/hemisize
+             local v = math3d.tovalue(math3d.normalize(math3d.vector(dx, dy, 1.0)))
+
+ 			local solidAngle = v[3] * v[3] * v[3]
+            
+            local w0 = 2 * (y * (3 * hemisize) + x)
+            local w1 = w0 + 2 * hemisize
+            local w2 = w1 + 2 * hemisize
+
+ 			-- center weights
+ 			weights[w0+1] = solidAngle * weight_func(v[3]);
+ 			weights[w0+2] = solidAngle
+ 			-- left/right side weights
+ 			weights[w1+1] = solidAngle * weight_func(math.abs(v[1]))
+ 			weights[w1+2] = solidAngle
+ 			-- up/down side weights
+ 			weights[w2+1] = solidAngle * weight_func(math.abs(v[1]))
+ 			weights[w2+2] = solidAngle
+ 			sum = sum + 3.0 * solidAngle
+       end
+    end
+
+    local weightScale = 1.0 / sum
+    for i=1, #weights do
+        weights[i] = weights[i] * weightScale;
+    end
+
+    return weights
+end
+
+local function create_hemisphere_weights_texture(hemisize, weight_func)
+    local weights = gen_hemisphere_weights(hemisize, weight_func)
+
+    local flags = sampler.sampler_flag {
+        MIN="POINT",
+        MAG="POINT",
+        U="CLAMP",
+        V="CLAMP",
+    }
+
+    
+    -- do
+    --     local w = {}
+    --     for i=1, #weights/2 do
+    --         local ridx = (i-1) * 2
+    --         local lidx = (i-1) * 3
+    --         w[lidx+1]    = weights[ridx+1]
+    --         w[lidx+2]    = weights[ridx+2]
+    --         w[lidx+3]    = 0.0
+    --     end
+    --     local mm = bgfx.memory_buffer("fff", w)
+    --     bake.save_tga("d:/tmp/weight.tga", mm, 3*hemisize, hemisize, 3)
+    -- end
+    
+    return bgfx.create_texture2d(3*hemisize, hemisize, false, 1, "RG32F", flags, bgfx.memory_buffer("ff", weights))
+end
+
+local function get_weight_texture(size)
+    local sb = get_csb(size)
+    if sb.weight_tex == nil then
+        -- weight texture should not depend 'size'
+        sb.weight_tex = create_hemisphere_weights_texture(size)
+    end
+
+    return sb.weight_tex
+end
+
+local function create_downsample()
+    return {
+        weight_ds_eid = ientity.create_simple_render_entity("lightmap_weight_downsample", 
+                            "/pkg/ant.bake/materials/weight_downsample.material", ientity.create_mesh{"p1", {0, 0, 0, 0}}, nil, 0),
+        ds_eid = ientity.create_simple_render_entity("lightmap_downsample", 
+                            "/pkg/ant.bake/materials/downsample.material", ientity.create_mesh{"p1", {0, 0, 0, 0}}, nil, 0)
+    }
+end
+
+local bake_fbw, bake_fbh, fb_hemi_unit_size = bake.framebuffer_size()
+
+local function init_shading_info()
+    local flags = sampler.sampler_flag{
+        MIN="POINT",
+        MAG="POINT",
+        U="CLAMP",
+        V="CLAMP",
+        RT="RT_ON",
+    }
+
+    local hsize = fb_hemi_unit_size/2
+    local fb = {
+        fbmgr.create{
+            fbmgr.create_rb{w=bake_fbw, h=bake_fbh, layers=1, format="RGBA32F", flags=flags},
+            fbmgr.create_rb{w=bake_fbw, h=bake_fbh, layers=1, format="D24S8", flags=flags},
+        },
+        fbmgr.create{
+            fbmgr.create_rb{w=hsize, h=hsize, layers=1, format="RGBA32F", flags=flags},
+        }
+    }
+    local function get_rb(fbidx)
+        return fbmgr.get_rb(fbmgr.get(fb[fbidx])[1]).handle
+    end
+
+    fb.render_textures = {
+        {stage=0, texture={handle=get_rb(1)}},
+        {stage=0, texture={handle=get_rb(2)}},
+    }
+    for ii=0, downsample_viewid_count-1 do
+        local vid = lightmap_viewid+ii
+        local idx = ii % 2
+        fbmgr.bind(vid, fb[idx+1])
+        if vid == lightmap_viewid then
+            bgfx.set_view_rect(vid, 0, 0, bake_fbw, bake_fbh)
+        else
+            bgfx.set_view_rect(vid, 0, 0, hsize, hsize)
+            hsize = hsize / 2
         end
     end
 
-    local function touint16(h) return 0xffff & h end
-
-    shading_info = {
-        viewids = {base=touint16(lightmap_viewid), count=touint16(downsample_viewid_count)},
-        storage_viewid = touint16(lightmap_storage_viewid),
-        weight_downsample = {
-            prog        = touint16(wds_fx.prog),
-            hemispheres = touint16(find_uniform_handle(wds_fx.uniforms,  "hemispheres")),
-            weights     = touint16(find_uniform_handle(wds_fx.uniforms,  "weights")),
-        },
-        downsample = {
-            prog        = touint16(ds_fx.prog),
-            hemispheres = touint16(find_uniform_handle(ds_fx.uniforms, "hemispheres"))
-        }
+    return {
+        fb = fb,
+        downsample = create_downsample(),
     }
+end
+
+function lightmap_sys:init()
+    shading_info = init_shading_info()
 
     world:create_entity {
         policy = {
@@ -207,7 +335,93 @@ local function draw_scene(pf)
 end
 
 local ilm = ecs.interface "ilightmap"
-function ilm.bake_entity(bake_ctx, eid, pf, notcull)
+
+local function create_context_setting(hemisize)
+    return {
+        size = hemisize,
+        z_near = 0.001, z_far = 100,
+        interp_pass_count = 0, interp_threshold = 0.001,
+        cam2surf_dis_modifier = 0.0,
+    }
+end
+
+local function update_bake_shading(hemisize, lightmapsize)
+    local hemix, hemiy = bake.hemi_count(hemisize)
+    assert(hemix == hemiy)
+    local s = math.max(hemix, lightmapsize)
+    shading_info.storage_rbidx = get_storage_buffer(s)
+    shading_info.weight_tex = {stage=1, texture = {handle=get_weight_texture(hemisize)}}
+end
+
+local tex_reader = {
+    get_image_memory = function (tex, w, h, elemsize)
+        local m = bgfx.memory_buffer(w*h*elemsize)
+        local whichframe = bgfx.read_texture(tex, m)
+        while bgfx.frame() < whichframe do end
+        return m
+    end,
+
+    create_tex = function (w, h, fmt)
+        fmt = fmt or "RGBA32F"
+        local flags = sampler.sampler_flag{
+                MIN="POINT",
+                MAG="POINT",
+                U="CLAMP",
+                V="CLAMP",
+                BLIT="BLIT_READWRITE",
+        }
+        return bgfx.create_texture2d(w, h, false, 1, fmt, flags)
+    end,
+    copy_tex = function (viewid, dsttex, srctex, w, h)
+        bgfx.blit(viewid,
+        dsttex, 0, 0,
+        srctex, 0, 0, w, h)
+    end,
+    save_bin = function (filename, mm, w, h, numelem)
+        local header = ("III"):pack(w, h, numelem)
+        local f = io.open(filename, "wb")
+        f:write(header)
+        f:write(tostring(mm))
+        f:close()
+    end,
+
+    save_bytes = function (filename, mm, w, h, numelem)
+        local ss = tostring(mm)
+        local t = {}
+        for jj=0, h-1 do
+            for ii=0, w-1 do
+                local idx = jj*w*numelem+ii
+                local fmt = ("f"):rep(numelem)
+                local tt = table.pack(fmt:unpack(ss:sub(idx, idx+16)))
+                for ee=1, numelem do
+                    t[#t+1] = ("%2f "):format(tt[ee])
+                end
+            end
+            t[#t+1] = "\n"
+        end
+
+        local cc = table.concat(t, "")
+        local f = io.open(filename, "w")
+        f:write(cc)
+        f:close()
+    end
+}
+
+local function read_tex(hemix, hemiy, srctex, fn, fn_bin)
+    local tt = tex_reader.create_tex(hemix, hemiy, "RGBA32F")
+    tex_reader.copy_tex(lightmap_storage_viewid+1, tt, srctex, hemix, hemiy)
+    local mm = tex_reader.get_image_memory(tt, hemix, hemiy, 16)
+    fn = fn or "d:/tmp/aa.tga"
+    bake.save_tga(fn, mm, hemix, hemiy, 4)
+    
+    if fn_bin then
+        tex_reader.save_bin(fn_bin, mm, hemix, hemiy, 4)
+    end
+end
+
+local skycolor = 0xffffffff
+
+function ilm.find_sample(eid, triangleidx)
     local e = world[eid]
     if e == nil then
         return log.warn(("invalid entity:%d"):format(eid))
@@ -218,56 +432,136 @@ function ilm.bake_entity(bake_ctx, eid, pf, notcull)
     end
 
     local lm = e.lightmap
-    log.info(("[%d-%s] lightmap:w=%d, h=%d, channels=%d"):format(eid, e.name or "", lm.width, lm.height, lm.channels))
-    e._lightmap.data = bake_ctx:set_target_lightmap(e.lightmap)
+    local hemisize = lm.hemisize
+
+    local s = create_context_setting(hemisize)
+    local bake_ctx = bake.create_lightmap_context(s)
+    local g = load_geometry_info(e._rendercache)
+    bake_ctx:set_geometry(g)
+    local lmsize = lm.size
+    local li = {width=lmsize, height=lmsize, channels=4}
+    log.info(("[%d-%s] lightmap:w=%d, h=%d, channels=%d"):format(eid, e.name or "", li.width, li.height, li.channels))
+    e._lightmap.data = bake_ctx:set_target_lightmap(li)
+
+    return bake_ctx:find_sample(triangleidx)
+end
+
+function ilm.bake_entity(eid, pf, notcull)
+    local e = world[eid]
+    if e == nil then
+        return log.warn(("invalid entity:%d"):format(eid))
+    end
+
+    if e._lightmap == nil then
+        return log.warn(("entity %s not set any lightmap info will not be baked"):format(e.name or ""))
+    end
+
+    local lm = e.lightmap
+    local hemisize = lm.hemisize
+    
+    local s = create_context_setting(hemisize)
+    local bake_ctx = bake.create_lightmap_context(s)
+    local hemix, hemiy = bake_ctx:hemi_count()
+    local lmsize = lm.size
+    update_bake_shading(hemisize, lmsize)
+    local li = {width=lmsize, height=lmsize, channels=4}
+    log.info(("[%d-%s] lightmap:w=%d, h=%d, channels=%d"):format(eid, e.name or "", li.width, li.height, li.channels))
+    e._lightmap.data = bake_ctx:set_target_lightmap(li)
 
     local g = load_geometry_info(e._rendercache)
     bake_ctx:set_geometry(g)
     log.info(("[%d-%s] bake: begin"):format(eid, e.name or ""))
 
     local c = itimer.fetch_time()
-    while true do
-        local haspatch, vp, view, proj = bake_ctx:begin_patch()
-        if not haspatch then
-            break
-        end
+    local cb = {
+        init_buffer = function ()
+            bgfx.set_view_clear(lightmap_viewid, "CD", skycolor, 1.0)
+            bgfx.set_view_rect(lightmap_viewid, 0, 0, bake_fbw, bake_fbh)
+            bgfx.touch(lightmap_viewid)
+            bgfx.frame()    --wait for clear, avoid some draw call push in lightmap_viewid queue
 
-        vp = math3d.tovalue(vp)
-        bgfx.set_view_rect(lightmap_viewid, vp[1], vp[2], vp[3], vp[4])
-        bgfx.set_view_transform(lightmap_viewid, view, proj)
-        if nil == notcull then
-            icp.cull(pf, math3d.mul(proj, view))
+            --we will change view rect many time before next clear needed
+            --will not clear after another view rect is applied
+            bgfx.set_view_clear(lightmap_viewid, "")
+        end,
+        render_scene = function (vp, view, proj)
+            bgfx.set_view_rect(lightmap_viewid, vp[1], vp[2], vp[3], vp[4])
+            bgfx.set_view_transform(lightmap_viewid, view, proj)
+            if nil == notcull then
+                icp.cull(pf, math3d.mul(proj, view))
+            end
+            draw_scene(pf)
+            bgfx.frame()
+        end,
+        downsample = function(size, writex, writey)
+            local hsize = size/2
+            local viewid = lightmap_viewid + 1
+            local ds = shading_info.downsample
+
+            world[ds.weight_ds_eid]._rendercache.worldmat = mc.IDENTITY_MAT
+            world[ds.ds_eid]._rendercache.worldmat = mc.IDENTITY_MAT
+
+            local read, write = 1, 2
+
+            --read_tex(512*3, 512, shading_info.fb.render_textures[read].texture.handle, "d:/tmp/11.tga", "d:/tmp/dx.bin")
+
+            imaterial.set_property(ds.weight_ds_eid, "hemispheres", shading_info.fb.render_textures[read])
+            imaterial.set_property(ds.weight_ds_eid, "weights", shading_info.weight_tex)
+            irender.draw(viewid, world[ds.weight_ds_eid]._rendercache)
+            --read_tex(256, 256, shading_info.fb.render_textures[write].texture.handle, "d:/tmp/22.tga", "d:/tmp/dx22.bin")
+
+            while hsize > 1 do
+                viewid = viewid + 1
+                assert(viewid < lightmap_viewid+downsample_viewid_count, 
+                    ("lightmap size too large:%d, count:%d"):format(size, downsample_viewid_count))
+
+                read, write = write, read
+                imaterial.set_property(ds.ds_eid, "hemispheres", shading_info.fb.render_textures[read])
+                
+                irender.draw(viewid, world[ds.ds_eid]._rendercache)
+                hsize = hsize/2
+            end
+
+            local dsttex = shading_info.fb.render_textures[write].texture.handle
+            local storagerb = fbmgr.get_rb(shading_info.storage_rbidx)
+            bgfx.blit(lightmap_storage_viewid,
+                storagerb.handle, writex, writey,
+                dsttex, 0, 0, hemix, hemiy)
+            bgfx.frame()
+            --read_tex(storagerb.w, storagerb.h, storagerb.handle, "d:/tmp/22.tga")
+        end,
+        read_lightmap = function(size)
+            local storagerb = fbmgr.get_rb(shading_info.storage_rbidx)
+            assert(storagerb.w * storagerb.h * 16 == size) --16 for RGBA32F
+            local m = bgfx.memory_buffer(size)
+            local readend = bgfx.read_texture(storagerb.handle, m)
+            while (bgfx.frame() < readend) do end
+            return m
+        end,
+        process = function(p)
+            local ec = itimer.fetch_time()
+            if ec - c >= 1000 then
+                c = ec
+                log.info(("[%d-%s] process:%2f"):format(eid, e.name or "", p))
+            end
         end
-        draw_scene(pf)
-        bake_ctx:end_patch()
-        local ec = itimer.fetch_time()
-        if ec - c >= 1000 then
-            c = ec
-            log.info(("[%d-%s] process:%2f"):format(eid, e.name or "", bake_ctx:process()))
-        end
-    end
+    }
+
+    bake_ctx:bake(cb)
 
     log.info(("[%d-%s] bake: end"):format(eid, e.name or ""))
 
     e._lightmap.data:postprocess()
-    e._lightmap.data:save "d:/work/ant/tools/lightmap_baker/lm.tga"
+    --e._lightmap.data:save "d:/work/ant/tools/lightmap_baker/lm.tga"
     log.info(("[%d-%s] postprocess: finish"):format(eid, e.name or ""))
-    
 end
 
-function ilm.init_bake_context(s)
-    s = s or context_setting
-    local bake_ctx = bake.create_lightmap_context(s)
-    bake_ctx:set_shadering_info(shading_info)
-    return bake_ctx
-end
-
-local function bake_all(bake_ctx)
+local function bake_all()
     local lm_e = world:singleton_entity "lightmap_baker"
     local se = world:singleton_entity "scene_watcher"
     for _, result in ipf.iter_filter(lm_e.primitive_filter) do
         for _, item in ipf.iter_target(result) do
-            ilm.bake_entity(bake_ctx, item.eid, se.primitive_filter)
+            ilm.bake_entity(item.eid, se.primitive_filter)
         end
     end
 end
@@ -276,18 +570,13 @@ local bake_mb = world:sub{"bake"}
 function lightmap_sys:end_frame()
     for msg in bake_mb:each() do
         local eid = msg[2]
-        local s = msg[3] or context_setting
-        local bake_ctx = ilm.init_bake_context(s)
         if eid then
             local se = world:singleton_entity "scene_watcher"
-            ilm.bake_entity(bake_ctx, eid, se.primitive_filter)
+            ilm.bake_entity(eid, se.primitive_filter)
         else
             log.info("bake entity scene with lightmap setting")
-            bake_all(bake_ctx)
+            bake_all()
         end
-
-        bake_ctx:destroy()
-        bake_ctx = nil
     end
 end
 

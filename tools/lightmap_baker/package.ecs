@@ -20,6 +20,7 @@ system "lightmap_example"
     .require_policy "ant.render|shadow_cast_policy"
     .require_policy "ant.sky|skybox"
     .method "init"
+    .method "post_init"
     .method "data_changed"
 
 system "lightmap_baker_system"

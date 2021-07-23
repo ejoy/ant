@@ -1,0 +1,12 @@
+normalmap: false
+path: /pkg/ant.tool.lightmap_baker/assets/textures/result.tga
+sRGB: true
+compress:
+  android: ASTC6x6
+  ios: ASTC6x6
+  windows: BC3
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  U: MIRROR
+  V: MIRROR

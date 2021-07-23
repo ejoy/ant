@@ -1,10 +1,7 @@
 #define LUA_LIB 1
 #include <lua.hpp>
 
-#define USE_BGFX 1
-#ifdef USE_BGFX
 #include "../bgfx/bgfx_interface.h"
-#endif //USE_BGFX
 
 #define LIGHTMAPPER_IMPLEMENTATION
 #include "lightmapper.h"
@@ -12,17 +9,18 @@
 #include "lua2struct.h"
 #include "luabgfx.h"
 
+#include "glm/glm.hpp"
+
 struct context{
     lm_context *lm_ctx;
     int size;
     float z_near, z_far;
-    float rgb[3];
     int interp_pass_count;
     float interp_threshold;
     float cam2surf_dis_modifier;
 };
 
-LUA2STRUCT(context, size, z_near, z_far, rgb, interp_pass_count, interp_threshold, cam2surf_dis_modifier);
+LUA2STRUCT(context, size, z_near, z_far, interp_pass_count, interp_threshold, cam2surf_dis_modifier);
 
 struct lightmap{
     float* data;
@@ -95,7 +93,13 @@ namespace lua_struct{
         unpack_field(L, idx, "num", g.num);
         unpack_field(L, idx, "worldmat", g.worldmat);
         unpack_field(L, idx, "pos", g.pos);
-        unpack_field(L, idx, "normal", g.normal);
+        if (LUA_TTABLE == lua_getfield(L, idx, "normal")){
+            unpack(L, -1, g.normal);
+        } else {
+            g.normal.type = LM_NONE;
+        }
+        lua_pop(L, 1);
+
         unpack_field(L, idx, "uv", g.uv);
 
         auto t = lua_getfield(L, idx, "index");
@@ -161,6 +165,46 @@ lcontext_destroy(lua_State *L){
     return 0;
 }
 
+static int
+lcontext_find_sample(lua_State *L){
+    auto ctx = tocontext(L, 1);
+    uint32_t triangleidx = (uint32_t)luaL_checkinteger(L, 2);
+
+    auto lmctx = ctx->lm_ctx;
+    lmctx->meshPosition.triangle.baseIndex = triangleidx;
+    
+    for(lm_initMeshRasterizerPosition(lmctx);
+		!lm_hasConservativeTriangleRasterizerFinished(lmctx);
+		lm_moveToNextPotentialConservativeTriangleRasterizerPosition(lmctx))
+	{
+		if (lm_trySamplingConservativeTriangleRasterizerPosition(lmctx))
+			break;
+    }
+    
+    const auto& sample = lmctx->meshPosition.sample;
+    lua_createtable(L, 3, 0);
+    for(int ii=0; ii<3; ++ii){
+        const float *v = &sample.position.x;
+        lua_pushnumber(L, v[ii]);
+        lua_seti(L, -2, ii+1);
+    }
+
+    lua_createtable(L, 3, 0);
+    for(int ii=0; ii<3; ++ii){
+        const float *v = &sample.direction.x;
+        lua_pushnumber(L, v[ii]);
+        lua_seti(L, -2, ii+1);
+    }
+
+    lua_createtable(L, 3, 0);
+    for(int ii=0; ii<3; ++ii){
+        const float *v = &sample.up.x;
+        lua_pushnumber(L, v[ii]);
+        lua_seti(L, -2, ii+1);
+    }
+    return 3;
+}
+
 static int lcontext_set_target_lightmap(lua_State *L);
 
 static int
@@ -177,68 +221,98 @@ lcontext_set_geometry(lua_State *L){
     return 0;
 }
 
-static int
-lcontext_set_shadering_info(lua_State *L){
-    auto ctx = tocontext(L, 1);
-    shadinginfo si;
-    lua_struct::unpack(L, 2, si);
-
-    if (si.viewids.count == 0)
-        return luaL_error(L, "invalid viewid count: 0");
-
-    if ((si.viewids.base + si.viewids.count-1) >= si.storage_viewid){
-        return luaL_error(L, "storage_viewid:%d should larger than viewid:%d, blit operation should after draw", 
-            si.storage_viewid, (si.viewids.base + si.viewids.count-1));
+static inline lua_State* toL(lm_context*ctx) {return (lua_State*)ctx->render.userdata;}
+static inline void 
+load_call_cb_func(lua_State *L, int index, const char* name){
+    if (lua_type(L, index) != LUA_TTABLE){
+        luaL_error(L, "arg:%d, must be a table with callback function", index);
     }
-
-    if (std::pow(2, si.viewids.count) < ctx->lm_ctx->hemisphere.size){
-        return luaL_error(L, "not enough viewid for downsample, hemisphere size:%d, viewid count: %d", ctx->lm_ctx->hemisphere.size, si.viewids.count);
+    auto t = lua_getfield(L, index, name);
+    if (t != LUA_TFUNCTION){
+        luaL_error(L, "not found call back function: %s", name);
     }
-
-    lmSetDownsampleShaderingInfo(ctx->lm_ctx, si.viewids.base, si.viewids.count, si.storage_viewid,
-        {si.weight_downsample.prog}, {si.weight_downsample.hemispheres}, {si.weight_downsample.weights},
-        {si.downsample.prog}, {si.downsample.hemispheres});
-
-    return 0;
+}
+static void
+cb_init_buffer(lm_context *ctx){
+    auto L = toL(ctx);
+    load_call_cb_func(L, 2, "init_buffer");
+    lua_call(L, 0, 0);
 }
 
-static int
-lcontext_begin_patch(lua_State *L){
-    auto ctx = tocontext(L, 1);
-    auto vp = (float*)lua_touserdata(L, 2);
-    auto viewmat = (float*)lua_touserdata(L, 3);
-    auto projmat = (float*)lua_touserdata(L, 4);
-    int vp_int[4];
-    lua_pushboolean(L, lmBegin(ctx->lm_ctx, vp_int, viewmat, projmat));
-    for (int ii=0; ii<4; ++ii)
-        vp[ii] = (float)vp_int[ii];
-    return 1;
+static void
+cb_render_scene(lm_context *ctx, int *vp, float *view, float *proj){
+    auto L = toL(ctx);
+
+    auto pusharray = [L](auto v, int n){
+        lua_createtable(L, n, 0);
+        for(int ii=0; ii<n; ++ii){
+            lua_pushnumber(L, float(v[ii]));
+            lua_seti(L, -2, ii+1);
+        }
+    };
+
+    load_call_cb_func(L, 2, "render_scene");
+    pusharray(vp, 4);
+    pusharray(view, 16);
+    pusharray(proj, 16);
+    lua_call(L, 3, 0);
 }
 
-static int
-lcontext_end_patch(lua_State *L){
-    auto ctx = tocontext(L);
-    lmEnd(ctx->lm_ctx);
+static void
+cb_downsample(lm_context *ctx){
+    auto L= toL(ctx);
+    load_call_cb_func(L, 2, "downsample");
+    lua_pushinteger(L, ctx->hemisphere.size);
+    lua_pushinteger(L, ctx->hemisphere.storage.writePosition.x);
+    lua_pushinteger(L, ctx->hemisphere.storage.writePosition.y);
+    lua_call(L, 3, 0);
+}
 
-    auto lmctx = ctx->lm_ctx;
-    lua_createtable(L, 0, 0);
-    lua_pushinteger(L, lmctx->meshPosition.hemisphere.side);
-    lua_setfield(L, -2, "side");
-    lua_pushinteger(L, lmctx->hemisphere.fbHemiIndex);
-    lua_setfield(L, -2, "fbHemiIndex");
+static float*
+cb_read_lightmap(lm_context *ctx, int size){
+    auto L = toL(ctx);
+    load_call_cb_func(L, 2, "read_lightmap");
+    lua_pushinteger(L, size);
+    lua_call(L, 1, 1);
+    auto m = (struct memory*)luaL_checkudata(L, -1, "BGFX_MEMORY");
+    return (float*)m->data;
+}
 
-    lua_pushinteger(L, lmctx->hemisphere.fbHemiCountX);
-    lua_setfield(L, -2, "fbHemiCountX");
-
-    lua_pushinteger(L, lmctx->hemisphere.fbHemiCountY);
-    lua_setfield(L, -2, "fbHemiCountY");
-    return 1;
+static void
+cb_process(lm_context *ctx){
+    auto L = toL(ctx);
+    load_call_cb_func(L, 2, "process");
+    lua_pushnumber(L, lmProgress(ctx));
+    lua_call(L, 1, 0);
 }
 
 static int
 lcontext_process(lua_State *L){
     lua_pushnumber(L, lmProgress(tocontext(L, 1)->lm_ctx));
     return 1;
+}
+
+static int
+lcontext_bake(lua_State *L){
+    auto ctx = tocontext(L, 1);
+    ctx->lm_ctx->render.init_buffer     = cb_init_buffer;
+    ctx->lm_ctx->render.render_scene    = cb_render_scene;
+    ctx->lm_ctx->render.downsample      = cb_downsample;
+    ctx->lm_ctx->render.read_lightmap   = cb_read_lightmap;
+    ctx->lm_ctx->render.process         = cb_process;
+    ctx->lm_ctx->render.userdata        = L;
+    lmBake(ctx->lm_ctx);
+    return 0;
+}
+
+static int
+lcontext_hemi_count(lua_State *L){
+    auto ctx = tocontext(L, 1);
+    int hemix, hemiy;
+    lmHemiCount(ctx->lm_ctx->hemisphere.size, &hemix, &hemiy);
+    lua_pushinteger(L, hemix);
+    lua_pushinteger(L, hemiy);
+    return 2;
 }
 
 static void
@@ -252,10 +326,10 @@ register_lm_context_mt(lua_State *L){
             {"destroy",             lcontext_destroy},
             {"set_target_lightmap", lcontext_set_target_lightmap},
             {"set_geometry",        lcontext_set_geometry},
-            {"set_shadering_info",  lcontext_set_shadering_info},
-            {"begin_patch",         lcontext_begin_patch},
-            {"end_patch",           lcontext_end_patch},
+            {"hemi_count",          lcontext_hemi_count},
+            {"bake",                lcontext_bake},
             {"process",             lcontext_process},
+            {"find_sample",         lcontext_find_sample},
             {nullptr,               nullptr},
         };
 
@@ -273,7 +347,6 @@ llightmap_create_context(lua_State *L){
 
     lua_struct::unpack(L, 1, *ctx);
     ctx->lm_ctx = lmCreate(ctx->size, ctx->z_near, ctx->z_far,
-        ctx->rgb[0], ctx->rgb[1], ctx->rgb[2],
         ctx->interp_pass_count, ctx->interp_threshold, 
         ctx->cam2surf_dis_modifier);
     return 1;
@@ -374,8 +447,9 @@ llightmap_context(lua_State *L){
     return 1;
 }
 
+#ifdef _DEBUG
 static int
-lligthmap_read_obj(lua_State *L){
+llightmap_read_obj(lua_State *L){
     //static int loadSimpleObjFile(const char *filename, vertex_t **vertices, unsigned int *vertexCount, unsigned short **indices, unsigned int *indexCount)
     const char* filename = luaL_checkstring(L, 1);
 	FILE *file = fopen(filename, "rt");
@@ -450,6 +524,87 @@ lligthmap_read_obj(lua_State *L){
 	fclose(file);
 	return 6;
 }
+#endif //_DEBUG
+
+static int
+llightmap_framebuffer_size(lua_State *L){
+    int w = 0, h = 0;
+    lmFramebufferSize(&w, &h);
+    lua_pushinteger(L, w);
+    lua_pushinteger(L, h);
+    lua_pushinteger(L, HEMI_FRAMEBUFFER_UNIT_SIZE);
+    return 3;
+}
+
+static int
+llightmap_hemi_count(lua_State *L){
+    int X, Y;
+    int size = (int)luaL_checkinteger(L, 1);
+    lmHemiCount(size, &X, &Y);
+    lua_pushinteger(L, X);
+    lua_pushinteger(L, Y);
+    return 2;
+}
+
+#ifdef _DEBUG
+static int
+llightmap_save_tga(lua_State *L){
+    auto fn = luaL_checkstring(L, 1);
+    auto m = (struct memory*)luaL_checkudata(L, 2, "BGFX_MEMORY");
+    auto w = (int)luaL_checkinteger(L, 3);
+    auto h = (int)luaL_checkinteger(L, 4);
+    auto c = (int)luaL_checkinteger(L, 5);
+    if (w*h*c*sizeof(float) != m->size){
+        luaL_error(L, "memory size not equal to w * h * c * sizeof(float)");
+    }
+    lmImageSaveTGAf(fn, (float*)m->data, w, h, c);
+    return 0;
+}
+#endif //_DEBUG
+
+
+static int 
+llightmap_set_view(lua_State *L){
+    int x = (int)luaL_checkinteger(L, 1);
+    int y = (int)luaL_checkinteger(L, 2);
+    int size = (int)luaL_checkinteger(L, 3);
+    int side = (int)luaL_checkinteger(L, 4);
+    float zNear = (float)luaL_checknumber(L, 5);
+    float zFar = (float)luaL_checknumber(L, 6);
+
+    const lm_vec3* pos =(lm_vec3*)lua_touserdata(L, 7);
+    const lm_vec3* dir =(lm_vec3*)lua_touserdata(L, 8);
+    const lm_vec3* up = (lm_vec3*)lua_touserdata(L, 9);
+
+    // glm::vec3 right = glm::cross(up, dir);
+    // glm::vec3 nright = -right;
+    // glm::vec3 ndir = -dir;
+    // glm::vec3 nup = -up;
+    //#define P(_V) *(lm_vec3*)(&(_V.x))
+
+    int vp[4];
+    float view[16], proj[16];
+    lm_sampleHemisphere(x, y, size, side, zNear, zFar, *pos, *dir, *up, vp, view, proj);
+
+    lua_createtable(L, 4, 0);
+    for (int ii=0; ii<4; ++ii){
+        lua_pushnumber(L, (float)vp[ii]);
+        lua_seti(L, -2, ii+1);
+    }
+
+    lua_createtable(L, 16, 0);
+    for (int ii=0; ii<16; ++ii){
+        lua_pushnumber(L, view[ii]);
+        lua_seti(L, -2, ii+1);
+    }
+
+    lua_createtable(L, 16, 0);
+    for (int ii=0; ii<16; ++ii){
+        lua_pushnumber(L, proj[ii]);
+        lua_seti(L, -2, ii+1);
+    }
+    return 3;
+}
 
 extern "C"{
 LUAMOD_API int
@@ -459,9 +614,13 @@ luaopen_bake(lua_State* L) {
     luaL_Reg lib[] = {
         { "create_lightmap_context", llightmap_create_context},
         { "context_metatable", llightmap_context},
+        {"framebuffer_size", llightmap_framebuffer_size},
+        {"hemi_count", llightmap_hemi_count},
         #ifdef _DEBUG
-        { "read_obj", lligthmap_read_obj},
+        {"read_obj", llightmap_read_obj},
+        {"save_tga", llightmap_save_tga},
         #endif 
+        {"set_view", llightmap_set_view},
         { nullptr, nullptr },
     };
     luaL_newlib(L, lib);
