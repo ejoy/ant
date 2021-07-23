@@ -701,32 +701,6 @@ local function get_clips_filename()
     return string.sub(prefab_filename, 1, -8) .. ".clips"
 end
 
-local function TableToString(obj, cnt)
-    local str = ""
-    local cnt = cnt or 0
-    if type(obj) == "table" then
-        str = str .. "\n" .. string.rep("    ", cnt) .. "{\n"
-        cnt = cnt + 1
-        for k,v in pairs(obj) do
-            if type(k) == "string" then
-                str = str .. string.rep("    ",cnt) .. '["'..k..'"]' .. ' = '
-            end
-            if type(k) == "number" then
-                str = str .. string.rep("    ",cnt) .. "["..k.."]" .. " = "
-            end
-            str = str .. TableToString(v, cnt)
-            str = str .. ",\n"
-        end
-        cnt = cnt-1
-        str = str .. string.rep("    ", cnt) .. "}"
-    elseif type(obj) == "string" then
-        str = str .. string.format("%q", obj)
-    else
-        str = str .. tostring(obj)
-    end 
-    return str
-end
-
 function m.save_clip(path)
     to_runtime_clip()
     local clips = get_runtime_clips()
@@ -764,7 +738,7 @@ function m.save_clip(path)
         end
     end
     utils.write_file(clip_filename, stringify(copy_clips))
-    utils.write_file(clip_filename .. ".lua", "return " .. TableToString(copy_clips))
+    utils.write_file(clip_filename .. ".lua", "return " .. utils.table_to_string(copy_clips))
 end
 
 local function set_current_clip(clip)
@@ -1264,9 +1238,9 @@ end
 
 local function construct_edit_animations(eid)
     edit_anims[eid] = {
-        id = eid,
-        name_list = {},
-        birth = world[eid].animation_birth,
+        id          = eid,
+        name_list   = {},
+        birth       = world[eid].animation_birth,
     }
     local edit_anim = edit_anims[eid]
     
@@ -1343,12 +1317,6 @@ function m.bind(eid)
     end
 end
 
--- function m.reload_all_animation()
---     prefab_mgr:recreate_entity(current_eid)
---     m.clear()
---     construct_edit_animations(current_eid)
--- end
-
 function m.get_current_joint()
     return current_joint and current_joint.index or 0
 end
@@ -1359,7 +1327,6 @@ return function(w, am)
     iani = world:interface "ant.animation|animation"
     ies = world:interface "ant.scene|ientity_state"
     iom = world:interface "ant.objcontroller|obj_motion"
-    --rc =    require "compile_resource"
     prefab_mgr = require "prefab_manager"(world)
     prefab_mgr.set_anim_view(m)
     gizmo = require "gizmo.gizmo"(world)
