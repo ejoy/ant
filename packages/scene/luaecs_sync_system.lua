@@ -81,10 +81,13 @@ function s:luaecs_sync()
 			srt = rc.srt,
 			lock_target = e.lock_target,
 			bounding = e._bounding,
-			initializing = eid,
+			_self = eid,
 			_parent = parent,
 		}
-		local id = w:ref("scene_node", scene_node)
+		local id = w:ref("scene_node", {
+			scene_node = scene_node,
+			initializing = true,
+		})
 		initargs.scene_id = id
 		e._scene_id = id
 

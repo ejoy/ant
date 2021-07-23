@@ -87,19 +87,7 @@ local function update_scene_node(node)
 end
 
 local function sync_scene_node()
-	w:clear "scene_sorted"
-	for _, id in ipairs(scenequeue) do
-		w:new {
-			scene_sorted = id,
-		}
-	end
-end
-
-function s:init()
-	w:register {
-		name = "scene_sorted",
-		type = "int"
-	}
+	w:order("scene_sorted", "scene_node", scenequeue)
 end
 
 function s:luaecs_init_entity()
@@ -123,17 +111,15 @@ function s:luaecs_init_entity()
 
 	if needsync then
 		sync_scene_node()
-		for v in w:select "scene_node(scene_sorted):in" do
+		for v in w:select "scene_sorted initializing scene_node:in" do
 			local node = v.scene_node
-			if node.initializing then
-				local eid = node.initializing
-				local e = world[eid]
-				if e.parent then
-					inherit_entity_state(e)
-					inherit_material(e)
-				end
-				node.initializing = nil
+			local eid = node._self
+			local e = world[eid]
+			if e.parent then
+				inherit_entity_state(e)
+				inherit_material(e)
 			end
+			node._self = nil
 		end
 	end
 end
@@ -142,7 +128,7 @@ function s:update_hierarchy()
 end
 
 function s:update_transform()
-	for v in w:select "scene_node(scene_sorted):in" do
+	for v in w:select "scene_sorted scene_node:in" do
 		update_scene_node(v.scene_node)
 	end
 	for v in w:select "render_object:in scene_node(scene_id):in" do
@@ -163,9 +149,8 @@ function s:end_frame()
 		removed[id] = true
 		w:release("scene_node", id)
 	end
-	if next(removed) then
-		for v in w:select "scene_sorted:in" do
-			local id = v.scene_sorted
+	if removed then
+		for _, id in ipairs(scenequeue) do
 			if removed[id] then
 				scenequeue:mount(id)
 			else
