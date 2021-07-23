@@ -1,7 +1,6 @@
 policy "lightmap_baker"
     .require_system "ant.bake|lightmap_system"
-    .require_transform "ant.scene|primitive_filter_transform"
-    .require_interface "ant.scene|iprimitive_filter"
+    .require_system "ant.scene|primitive_filter_system"
     .component "primitive_filter"
     .unique_component "lightmap_baker"
 
@@ -21,8 +20,7 @@ system "lightmap_system"
 
 policy "scene_watcher"
     .require_system "ant.bake|lightmap_system"
-    .require_transform "ant.scene|primitive_filter_transform"
-    .require_interface "ant.scene|iprimitive_filter"
+    .require_system "ant.scene|primitive_filter_system"
     .component "primitive_filter"
     .unique_component "scene_watcher"
 

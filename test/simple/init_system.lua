@@ -46,4 +46,8 @@ function m:init()
     -- world:prefab_event(prefab, "autoplay", tag, "Clip0")
     -- world:prefab_event(prefab, "autoplay", tag, "Clip1")
     -- world:prefab_event(prefab, "autoplay", tag, "Group0")
+
+    --for eid = 19, 25 do
+    --    world:remove_entity(eid)
+    --end
 end

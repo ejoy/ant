@@ -47,6 +47,7 @@ pipeline "exit"
 
 pipeline "update"
     .stage "timer"
+    .stage "start_frame"
     .stage "data_changed"
     .pipeline "sky"
     .pipeline "scene"

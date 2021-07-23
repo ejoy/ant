@@ -1,7 +1,7 @@
 #include "GraphicsDevice.h"
 #include "EffekseerRendererBGFX.Base.h"
 #include "EffekseerRendererBGFX.RendererImplemented.h"
-#include "EffekseerRendererBGFX.Texture.h"
+#include "EffekseerRendererBGFX.RenderResources.h"
 
 namespace EffekseerRendererBGFX {
 	namespace Backend {

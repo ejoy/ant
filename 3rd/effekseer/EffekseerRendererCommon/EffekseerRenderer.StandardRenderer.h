@@ -509,7 +509,6 @@ public:
 
 		if (m_state.Collector.ShaderType == RendererShaderType::Material)
 		{
-			/*
 			if (m_state.Collector.MaterialDataPtr->IsRefractionRequired)
 			{
 				if (renderPass == 0)
@@ -531,7 +530,6 @@ public:
 			{
 				shader_ = (SHADER*)m_state.Collector.MaterialDataPtr->UserPtr;
 			}
-			*/
 
 			// validate
 			if (shader_ == nullptr)

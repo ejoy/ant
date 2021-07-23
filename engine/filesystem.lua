@@ -308,4 +308,18 @@ function fs.dofile(filepath)
     return dofile(filepath:string())
 end
 
+function fs.switch_sync()
+    if vfs.sync then
+        assert(vfs.async)
+        for k, v in pairs(vfs.sync) do
+            vfs[k] = v
+        end
+        return setmetatable({}, {__close=function ()
+            for k, v in pairs(vfs.async) do
+                vfs[k] = v
+            end
+        end})
+    end
+end
+
 return fs

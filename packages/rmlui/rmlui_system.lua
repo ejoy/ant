@@ -24,7 +24,7 @@ function rmlui_sys:init()
     local default_texid = assetmgr.resource "/pkg/ant.resources/textures/default/1x1_white.texture".handle
     local ft_handle, ft_w, ft_h = font.texture()
     ServiceRmlUi = ltask.spawn "rmlui"
-    ltask.send(ServiceRmlUi, "initialize", {
+    ltask.call(ServiceRmlUi, "initialize", {
         service_world = ltask.self(),
         viewid = vid,
         font_mgr = font.handle(),
@@ -65,7 +65,7 @@ end
 local maxID = 0
 
 function iRmlUi.preload_dir(dir)
-    ltask.send(ServiceRmlUi, "add_resource_dir", dir)
+    ltask.call(ServiceRmlUi, "add_resource_dir", dir)
 end
 
 function iRmlUi.update_viewrect(x, y, w, h)

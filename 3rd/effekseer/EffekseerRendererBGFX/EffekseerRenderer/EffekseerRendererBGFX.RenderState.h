@@ -12,11 +12,9 @@ private:
 	bool m_isCCW = true;
 
 	//std::array<GLuint, Effekseer::TextureSlotMax> m_samplers;
-
 public:
 	RenderState(RendererImplemented* renderer);
 	virtual ~RenderState();
-
 	void Update(bool forced);
 };
 } // namespace EffekseerRendererBGFX

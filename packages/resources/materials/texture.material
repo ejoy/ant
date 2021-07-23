@@ -2,7 +2,7 @@ fx:
   fs: /pkg/ant.resources/shaders/simple/quad/fs_simplequad.sc
   vs: /pkg/ant.resources/shaders/simple/quad/vs_simplequad.sc
 properties:
-  s_texColor:
+  s_tex:
     stage: 0
     texture: /pkg/ant.resources/PVPScene/siegeweapon_d.texture
 state:

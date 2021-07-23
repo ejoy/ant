@@ -34,44 +34,33 @@ function ie_t.process_entity(e)
     }
 end
 
+local shader_type = {
+    "unlit","lit","distortion","ad_unlit","ad_lit","ad_distortion","mtl"
+}
+
 function effekseer_sys:init()
-    local shader_defines = {
-        unlit = {
-            fs = "/pkg/ant.resources/shaders/effekseer/fs_model_unlit.sc",
-            vs = "/pkg/ant.resources/shaders/effekseer/vs_sprite_unlit.sc",
-            setting = {}
-        },
-        lit = {
-            fs = "/pkg/ant.resources/shaders/effekseer/fs_model_unlit.sc",
-            vs = "/pkg/ant.resources/shaders/effekseer/vs_sprite_unlit.sc",
-            setting = {}
-        },
-        distortion = {
-            fs = "/pkg/ant.resources/shaders/effekseer/fs_model_unlit.sc",
-            vs = "/pkg/ant.resources/shaders/effekseer/vs_sprite_unlit.sc",
-            setting = {}
-        },
-        ad_unlit = {
-            fs = "/pkg/ant.resources/shaders/effekseer/fs_model_unlit.sc",
-            vs = "/pkg/ant.resources/shaders/effekseer/vs_sprite_unlit.sc",
-            setting = {}
-        },
-        ad_lit = {
-            fs = "/pkg/ant.resources/shaders/effekseer/fs_model_unlit.sc",
-            vs = "/pkg/ant.resources/shaders/effekseer/vs_sprite_unlit.sc",
-            setting = {}
-        },
-        ad_distortion = {
-            fs = "/pkg/ant.resources/shaders/effekseer/fs_model_unlit.sc",
-            vs = "/pkg/ant.resources/shaders/effekseer/vs_sprite_unlit.sc",
-            setting = {}
-        },
-        mtl = {
-            fs = "/pkg/ant.resources/shaders/effekseer/fs_model_unlit.sc",
-            vs = "/pkg/ant.resources/shaders/effekseer/vs_sprite_unlit.sc",
+    local path = "/pkg/ant.resources/shaders/effekseer/"
+    local sprite_shader_defines = {}
+    local model_shader_defines = {}
+    for _, type in ipairs(shader_type) do
+        sprite_shader_defines[type] = {
+            -- fs = path .. "fs_model_" .. type .. ".sc",
+            -- vs = path .. "vs_sprite_" .. type .. ".sc",
+            fs = path .. "fs_model_unlit.sc",
+            vs = path .. "vs_sprite_unlit.sc",
             setting = {}
         }
-    }
+    end
+    for _, type in ipairs(shader_type) do
+        model_shader_defines[type] = {
+            -- fs = path .. "fs_model_" .. type .. ".sc",
+            -- vs = path .. "vs_model_" .. type .. ".sc",
+            fs = path .. "fs_model_unlit.sc",
+            vs = path .. "vs_model_unlit.sc",
+            setting = {}
+        }
+    end
+
     local function create_shaders(def)
         local programs = {}
         for k, v in pairs(def) do
@@ -83,19 +72,27 @@ function effekseer_sys:init()
     effekseer.init {
         viewid = viewidmgr.get "main_view",
         square_max_count = 8000,
-        programs = create_shaders(shader_defines),
+        sprite_programs = create_shaders(sprite_shader_defines),
+        model_programs = create_shaders(model_shader_defines),
         unlit_layout = declmgr.get "p3|c40niu|t20".handle,
         lit_layout = declmgr.get "p3|c40niu|n40niu|T40niu|t20|t21".handle,
         distortion_layout = declmgr.get "p3|c40niu|n40niu|T40niu|t20|t21".handle,
         ad_unlit_layout = declmgr.get "p3|c40niu|t20|t41|t42|t43".handle,
         ad_lit_layout = declmgr.get "p3|c40niu|n40niu|T40niu|t20|t21|t42|t43|t44".handle,
         ad_distortion_layout = declmgr.get "p3|c40niu|n40niu|T40niu|t20|t21|t42|t43|t44".handle,
-        mtl_layout = declmgr.get "p3|c40niu|n40niu|T40niu|t20|t21|t42|t43".handle
+        mtl_layout = declmgr.get "p3|c40niu|t20".handle,
+        mtl1_layout = declmgr.get "p3|c40niu|n40niu|b40niu|t20|t21|t42".handle,
+        mtl2_layout = declmgr.get "p3|c40niu|n40niu|b40niu|t20|t21|t42|t43".handle,
+        model_layout = declmgr.get "p3|n3|b3|T3|t20|c40niu".handle
     }
 
-    local filemgr = require "filemanager"
-    effekseer.set_filename_callback(filemgr.realpath)
-    filemgr.add("/pkg/ant.resources.binary/effekseer/Base")
+    local fxloader = function(vspath, fspath)
+        return assetmgr.load_fx { fs = fspath, vs = vspath, setting = {} }
+    end
+    effekseer.set_fxloader(fxloader)
+
+    -- local filemgr = require "filemanager"
+    -- filemgr.add("/pkg/ant.resources.binary/effekseer/Base")
 end
 
 local imgr = ecs.interface "filename_mgr"
@@ -155,20 +152,15 @@ end
 
 local iom = world:interface "ant.objcontroller|obj_motion"
 local event_entity_register = world:sub{"entity_register"}
-local event_entity_removed = world:sub{"entity_removed"}
-function effekseer_sys:ui_update()
-    -- for _, eid in event_entity_register:unpack() do
-    --     if world[eid] and world[eid].effect_instance then
-    --         local eh = world[eid].effect_instance.handle
-    --         effekseer.set_loop(eh, world[eid].loop)
-    --         effekseer.set_speed(eh, world[eid].speed)
-    --         if world[eid].auto_play then
-    --             effekseer.play(eh)
-    --         end
-    --     end
-    -- end
-    for msg in event_entity_removed:each() do
-        local e = msg[3]
+
+function effekseer_sys:render_submit()
+    local dt = time_callback and time_callback() or itimer.delta() * 0.001
+    effekseer.update(dt)
+end
+
+function effekseer_sys:follow_transform_updated()
+    for _, eid in world:each "removed" do
+        local e = world[eid]
         if e.effect_instance then
             effekseer.destroy(e.effect_instance.handle)
         end
@@ -177,12 +169,6 @@ function effekseer_sys:ui_update()
 		local e = world[eid]
 		effekseer.update_transform(e.effect_instance.handle, iom.worldmat(eid))
     end
-    local dt = time_callback and time_callback() or itimer.delta() * 0.001
-    effekseer.update(dt)
-end
-
-function effekseer_sys:follow_transform_updated()
-
 end
 
 function effekseer_sys:exit()

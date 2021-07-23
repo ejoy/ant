@@ -180,7 +180,6 @@ local lightsys = ecs.system "light_system"
 local light_trans_mb = world:sub{"component_changed", "transform"}
 local light_comp_mb = world:sub{"component_changed", "light"}
 local light_register_mb = world:sub{"component_register", "light_type"}
-local light_remove_mb = world:sub{"entity_removed"}
 
 function lightsys:data_changed()
 	local changed = false
@@ -207,8 +206,8 @@ function lightsys:data_changed()
 	end
 
 	if not changed then
-		for msg in light_remove_mb:each() do
-			local e = msg[3]
+		for _, eid in world:each "removed" do
+			local e = world[eid]
 			if e.light_type then
 				changed = true
 				break

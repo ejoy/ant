@@ -178,7 +178,7 @@ function S.connect(...)
     local s = {
         fd = fd,
         wait_write = {},
-        shutdown_r = false,
+        shutdown_r = true,
         shutdown_w = false,
         on_write = ltask.wakeup,
     }
@@ -189,6 +189,7 @@ function S.connect(...)
     if ok then
         s.readbuf = ""
         s.wait_read = {}
+        s.shutdown_r = false
         s.on_read = stream_on_read
         s.on_write = stream_on_write
         fd_set_read(s.fd)
@@ -202,7 +203,7 @@ function S.connect(...)
         s.shutdown_w = true
         fd_clr_write(s.fd)
         close(s)
-        error(err)
+        return nil, err
     end
 end
 

@@ -16,10 +16,7 @@ local errthread = thread.thread([[
 	end
 ]])
 
-local threadid = thread.id
-
 thread.newchannel "IOreq"
-thread.newchannel ("IOresp" .. threadid) -- TODO: No need?
 
 local io_req = thread.channel_produce "IOreq"
 
@@ -34,7 +31,7 @@ thread.thread (([[
         end
         local str = f:read 'a'
         f:close()
-		return load(str, "@/" .. name)
+        return load(str, "@/" .. name)
     end
     assert(loadfile(firmware_io, 'engine/firmware/io.lua'))(loadfile)
 ]]):format(firmware_io))

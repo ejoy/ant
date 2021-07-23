@@ -48,7 +48,6 @@ local default_pbr_param = {
     },
     occlusion = {
         texture = "/pkg/ant.resources/textures/pbr/default/occlusion.texture",
-        factor = {0, 0, 0, 0},
         stage = 4,
     }
 }
@@ -118,23 +117,18 @@ local function get_default_fx()
     }
 end
 
-local primitive_state_names = {
-    "POINTS",
-    "LINES",
-    false, --LINELOOP, not support
-    "LINESTRIP",
-    "",         --TRIANGLES
-    "TRISTRIP", --TRIANGLE_STRIP
-    false, --TRIANGLE_FAN not support
-}
-
 local states = {}
 
 local function read_datalist(statefile)
-    local f = fs.open(statefile)
-    local c = f:read "a"
-    f:close()
-    return datalist.parse(c)
+    local s = states[statefile]
+    if s == nil then
+        local f = fs.open(statefile)
+        local c = f:read "a"
+        f:close()
+        s = datalist.parse(c)
+    end
+
+    return s
 end
 
 return function (output, glbdata, exports, tolocalpath)
@@ -241,42 +235,11 @@ return function (output, glbdata, exports, tolocalpath)
         end
     end
 
-    local function find_material_modes()
-        local pp = {}
-        for meshidx, mesh in ipairs(glbscene.meshes) do
-            for primidx, prim in ipairs(mesh.primitives) do
-                if prim.material then
-                    local matidx = prim.material+1
-                    local m = pp[matidx]
-                    if m == nil then
-                        m = {}
-                        pp[matidx] = m
-                    end
-
-                    local mode = prim.mode or 4
-                    m[mode] = {meshidx, primidx}
-                end
-            end
-        end
-
-        return pp
-    end
-
-    local material_modes = find_material_modes()
-
-    local function get_state(primitivemode, translucent)
-        local s = states[primitivemode]
-        if s then
-            return s
-        end
-
-        local defstate = translucent and 
-                    "/pkg/ant.resources/materials/states/translucent_cw.state" or 
-                    "/pkg/ant.resources/materials/states/default_cw.state"
-        s = read_datalist(tolocalpath(defstate))
-        local PT = primitive_state_names[primitivemode+1]
-        s.PT = PT ~= "" and PT or nil
-        return s
+    local function get_state(translucent)
+        local name = translucent and 
+            "/pkg/ant.resources/materials/states/translucent.state" or 
+            "/pkg/ant.resources/materials/states/default.state"
+        return read_datalist(tolocalpath(name))
     end
 
     exports.material = {}
@@ -284,67 +247,63 @@ return function (output, glbdata, exports, tolocalpath)
         local name = mat.name or tostring(matidx)
         local pbr_mr = mat.pbrMetallicRoughness
 
-        local modes = material_modes[matidx]
-
-        for mode in pairs(modes) do
-            local isopaque = mat.alphaMode == nil or mat.alphaMode == "OPAQUE"
-            local material = {
-                fx          = get_default_fx(),
-                state       = get_state(mode, not isopaque),
-                properties  = {
-                    s_basecolor          = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),
-                    s_metallic_roughness = handle_texture(pbr_mr.metallicRoughnessTexture, "metallic_roughness", false, "linear"),
-                    s_normal             = handle_texture(mat.normalTexture, "normal", true, "linear"),
-                    s_emissive           = handle_texture(mat.emissiveTexture, "emissive", false, "sRGB"),
-                    s_occlusion          = handle_texture(mat.occlusionTexture, "occlusion", false, "linear"),
-                    u_basecolor_factor   = tov4(pbr_mr.baseColorFactor, default_pbr_param.basecolor.factor),
-                    u_emissive_factor    = tov4(mat.emissiveFactor, default_pbr_param.emissive.factor),
-                    u_pbr_factor         = {
-                        pbr_mr.metallicFactor or 1.0,
-                        pbr_mr.roughnessFactor or 1.0,
-                        mat.alphaCutoff or 0.0,
-                        1.0, --occlusion strength
-                    },
+        local isopaque = mat.alphaMode == nil or mat.alphaMode == "OPAQUE"
+        local material = {
+            fx          = get_default_fx(),
+            state       = get_state(not isopaque),
+            properties  = {
+                s_basecolor          = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),
+                s_metallic_roughness = handle_texture(pbr_mr.metallicRoughnessTexture, "metallic_roughness", false, "linear"),
+                s_normal             = handle_texture(mat.normalTexture, "normal", true, "linear"),
+                s_emissive           = handle_texture(mat.emissiveTexture, "emissive", false, "sRGB"),
+                s_occlusion          = handle_texture(mat.occlusionTexture, "occlusion", false, "linear"),
+                u_basecolor_factor   = tov4(pbr_mr.baseColorFactor, default_pbr_param.basecolor.factor),
+                u_emissive_factor    = tov4(mat.emissiveFactor, default_pbr_param.emissive.factor),
+                u_pbr_factor         = {
+                    pbr_mr.metallicFactor or 1.0,
+                    pbr_mr.roughnessFactor or 1.0,
+                    mat.alphaCutoff or 0.5,
+                    1.0, --occlusion strength
                 },
-            }
+            },
+        }
 
-            local p = material.properties
-            local setting = {}
-            local tex_names = {
-                s_basecolor = "HAS_BASECOLOR_TEXTURE",
-                s_metallic_roughness = "HAS_METALLIC_ROUGHNESS_TEXTURE",
-                s_normal = "HAS_NORMAL_TEXTURE",
-                s_emissive = "HAS_EMISSIVE_TEXTURE",
-                s_occlusion = "HAS_OCCLUSION_TEXTURE",
-            }
-            for k, n in pairs(tex_names) do
-                if p[k] then
-                    setting[n] = 1
-                end
+        local p = material.properties
+        local setting = {}
+        local tex_names = {
+            s_basecolor = "HAS_BASECOLOR_TEXTURE",
+            s_metallic_roughness = "HAS_METALLIC_ROUGHNESS_TEXTURE",
+            s_normal = "HAS_NORMAL_TEXTURE",
+            s_emissive = "HAS_EMISSIVE_TEXTURE",
+            s_occlusion = "HAS_OCCLUSION_TEXTURE",
+        }
+        for k, n in pairs(tex_names) do
+            if p[k] then
+                setting[n] = 1
             end
-            if isopaque then
-                setting["ALPHAMODE_OPAQUE"] = 1
-            else
-                setting["MATERIAL_UNLIT"] = 1
-            end
-            if mat.alphaCutoff then
-                setting["ALPHAMODE_MASK"] = 1
-            end
-
-            material.fx.setting = setting
-    
-            local function refine_name(name)
-                local newname = name:gsub("['\\/:*?\"<>|]", "_")
-                return newname
-            end
-            local filename = "./materials/" .. refine_name(name) .. ".material"
-            utility.save_txt_file(filename, material)
-            local mm = exports.material[matidx]
-            if mm == nil then
-                mm = {}
-                exports.material[matidx] = mm
-            end
-            mm[mode] = filename
         end
+        if isopaque then
+            setting["ALPHAMODE_OPAQUE"] = 1
+        else
+            setting["MATERIAL_UNLIT"] = 1
+        end
+        if mat.alphaCutoff then
+            setting["ALPHAMODE_MASK"] = 1
+        end
+
+        if mat.doubleSided then
+            material.state.CULL = "NONE"
+        end
+
+        material.fx.setting = setting
+        local function refine_name(name)
+            local newname = name:gsub("['\\/:*?\"<>|]", "_")
+            return newname
+        end
+        local materialname = refine_name(name)
+        exports.material[matidx] = {
+            filename = fs.path "./materials/" .. materialname .. ".material",
+            material = material,
+        }
     end
 end

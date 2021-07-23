@@ -1,4 +1,4 @@
-$input v_color0, v_texcoord0, v_ppos
+$input v_PosP, v_UV1, v_VColor
 
 #include <common.sh>
 
@@ -38,8 +38,8 @@ float SoftParticle(float backgroundZ, float meshZ, vec4 softparticleParam, vec4 
 
 void main()
 {
-	vec4 Output = texture2D(s_sampler_colorTex, v_texcoord0) * v_color0;
-    vec4 screenPos = v_ppos / v_ppos.w;
+	vec4 Output = texture2D(s_sampler_colorTex, v_UV1) * v_VColor;
+    vec4 screenPos = v_PosP / v_PosP.w;
     vec2 screenUV = (screenPos.xy + vec2_splat(1.0)) / vec2_splat(2.0);
     screenUV.y = 1.0 - screenUV.y;
     screenUV.y = 1.0 - screenUV.y;

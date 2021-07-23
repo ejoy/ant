@@ -4,16 +4,16 @@ local socket = require "socket"
 local protocol = require "protocol"
 local convert = require "converdbgpath"
 local ServiceDebugListen = ltask.uniqueservice "debug.listen"
-local ServiceVfs = ltask.uniqueservice "vfs"
+local ServiceVfsMgr = ltask.uniqueservice "vfsmgr"
 local RuntimeFD, VfsSessionId = ...
 local DebuggerFD = ltask.call(ServiceDebugListen, "LISTEN")
 
 local function pathToLocal(path)
-    return ltask.call(ServiceVfs, "REALPATH", VfsSessionId, path)
+    return ltask.call(ServiceVfsMgr, "REALPATH", VfsSessionId, path)
 end
 
 local function pathToDA(path)
-    return ltask.call(ServiceVfs, "VIRTUALPATH", VfsSessionId, path)
+    return ltask.call(ServiceVfsMgr, "VIRTUALPATH", VfsSessionId, path)
 end
 
 local S = {}

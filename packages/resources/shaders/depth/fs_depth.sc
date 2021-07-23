@@ -11,7 +11,7 @@ void main()
 #   ifdef PACK_RGBA8
 	gl_FragColor = packFloatToRgba(depth);
 #   else
-	gl_FragColor = vec4(depth, 0.0, 0.0, 0.0);
+	gl_FragColor = vec4_splat(depth);
 #   endif
 # else //!DEPTH_LINEAR
 	gl_FragColor = vec4_splat(1.0);

@@ -1,24 +1,21 @@
-local vfs, rootpath = ...
+local thread = require "thread"
+if thread.id ~= 0 then
+    return
+end
+
 local lfs = require "filesystem.local"
-local access = require "vfs.repoaccess"
+local repopath = lfs.absolute(lfs.path(arg[0])):remove_filename():string()
 
-local function create_repo(path)
-    path = lfs.path (path)
-	if not lfs.is_directory(path) then
-		return nil, "Not a dir"
-	end
-	local repo = {
-		_root = path,
-	}
-	access.readmount(repo)
-	return repo
+thread.newchannel "IOreq"
+thread.thread (([[
+-- IO thread
+local dbg = dofile "engine/debugger.lua"
+if dbg then
+    dbg:event("setThreadName", "IO")
+    dbg:event "wait"
 end
+assert(loadfile "engine/editor/io.lua")(%q)
+]]):format(repopath))
 
-local repo = assert(create_repo(rootpath))
-vfs.repo = repo
-function vfs.realpath(pathname)
-	local rp = access.realpath(repo, pathname)
-	if lfs.exists(rp) then
-		return rp:string()
-	end
-end
+local vfs = require "vfs"
+vfs.initfunc "engine/firmware/init_thread.lua"

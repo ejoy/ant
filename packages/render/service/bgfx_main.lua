@@ -5,9 +5,16 @@ local bgfx = require "bgfx"
 
 local APIS = {
     "init",
+    "dbg_text_clear",
+    "dbg_text_print",
+    "dbg_text_image",
     "frame",
     "shutdown",
-    "set_debug"
+    "request_screenshot",
+    "reset",
+    "set_debug",
+
+    "encoder_frame",
 }
 local S = {}
 
@@ -26,9 +33,9 @@ local function wait_frame()
     tokens[#tokens+1] = t
     ltask.wait(t)
 end
-local function wakeup_frame()
+local function wakeup_frame(...)
     for i, token in ipairs(tokens) do
-        ltask.wakeup(token)
+        ltask.wakeup(token, ...)
         tokens[i] = nil
     end
 end
@@ -54,7 +61,33 @@ function S.encoder_frame()
         encoder[who] = encoder_frame
         encoder_cur = encoder_cur + 1
     end
-    wait_frame()
+    return wait_frame()
+end
+
+local pause_token
+local continue_token
+
+function S.pause()
+    if pause_token then
+        error "Can't pause twice."
+    end
+    pause_token = {}
+    ltask.wait(pause_token)
+    pause_token = nil
+end
+
+function S.continue()
+    if not continue_token then
+        error "Not pause."
+    end
+    ltask.wakeup(continue_token)
+end
+
+function S.frame()
+    if not continue_token then
+        error "Can only be used in pause."
+    end
+    return bgfx.frame()
 end
 
 ltask.fork(function()
@@ -63,8 +96,14 @@ ltask.fork(function()
         if encoder_num > 0 and encoder_cur == encoder_num then
             encoder_frame = encoder_frame + 1
             encoder_cur = 0
-            bgfx.frame()
-            wakeup_frame()
+            local f = bgfx.frame()
+            if pause_token then
+                ltask.wakeup(pause_token)
+                continue_token = {}
+                ltask.wait(continue_token)
+                continue_token = nil
+            end
+            wakeup_frame(f)
         else
             exclusive.sleep(1)
         end
@@ -72,8 +111,9 @@ ltask.fork(function()
 end)
 
 for _, name in ipairs(APIS) do
-    S[name] = bgfx[name]
+    if not S[name] then
+        S[name] = bgfx[name]
+    end
 end
-S.frame = S.encoder_frame
 
 return S

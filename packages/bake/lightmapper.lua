@@ -212,6 +212,7 @@ function lightmap_sys:init()
         data = {
             primitive_filter = {
                 filter_type = "lightmap",
+				update_type = "primitive",
             },
             lightmap_baker = {},
         }
@@ -225,6 +226,7 @@ function lightmap_sys:init()
         data = {
             primitive_filter = {
                 filter_type = "visible",
+                update_type = "primitive",
             },
             scene_watcher = {},
         }

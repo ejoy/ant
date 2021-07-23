@@ -4,6 +4,9 @@ local hierarchy = require "hierarchy"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local utils     = require "common.utils"
+local vfs       = require "vfs"
+local access    = require "vfs.repoaccess"
+local global_data = require "common.global_data"
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 local datalist  = require "datalist"
@@ -532,7 +535,6 @@ local function show_current_event()
         if imgui.widget.Button("SelectEffect") then
             local path = uiutils.get_open_file_path("Prefab", ".prefab")
             if path then
-                local global_data = require "common.global_data"
                 local lfs         = require "filesystem.local"
                 local rp = lfs.relative(lfs.path(path), global_data.project_root)
                 local path = (global_data.package_path and global_data.package_path or global_data.editor_package_path) .. tostring(rp)
@@ -736,6 +738,7 @@ function m.save_clip(path)
         end
     end
     utils.write_file(clip_filename, stringify(copy_clips))
+    utils.write_file(string.sub(clip_filename, 1, -7) .. ".lua", "return " .. utils.table_to_string(copy_clips))
 end
 
 local function set_current_clip(clip)
@@ -1017,7 +1020,7 @@ function m.show()
                         external_anim_list = {}
                         current_external_anim = nil
                         local vfs = require "vfs"
-                        anim_glb_path = "/" .. vfs.virtualpath(fs.path(glb_filename))
+                        anim_glb_path = "/" .. access.virtualpath(global_data.repo, fs.path(glb_filename))
                         rc.compile(anim_glb_path)
                         local external_path = rc.compile(anim_glb_path .. "|animations")
                         for path in external_path:list_directory() do
@@ -1235,9 +1238,9 @@ end
 
 local function construct_edit_animations(eid)
     edit_anims[eid] = {
-        id = eid,
-        name_list = {},
-        birth = world[eid].animation_birth,
+        id          = eid,
+        name_list   = {},
+        birth       = world[eid].animation_birth,
     }
     local edit_anim = edit_anims[eid]
     
@@ -1314,12 +1317,6 @@ function m.bind(eid)
     end
 end
 
--- function m.reload_all_animation()
---     prefab_mgr:recreate_entity(current_eid)
---     m.clear()
---     construct_edit_animations(current_eid)
--- end
-
 function m.get_current_joint()
     return current_joint and current_joint.index or 0
 end
@@ -1330,7 +1327,6 @@ return function(w, am)
     iani = world:interface "ant.animation|animation"
     ies = world:interface "ant.scene|ientity_state"
     iom = world:interface "ant.objcontroller|obj_motion"
-    --rc =    require "compile_resource"
     prefab_mgr = require "prefab_manager"(world)
     prefab_mgr.set_anim_view(m)
     gizmo = require "gizmo.gizmo"(world)

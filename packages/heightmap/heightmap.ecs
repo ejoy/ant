@@ -1,0 +1,9 @@
+system "auto_heightmap_system"
+    .implement "auto_heightmap.lua"
+    .method "init"
+    --.method "data_changed"
+    .method "follow_transform_updated"
+
+policy "auto_heightmap"
+    .component "auto_heightmap"
+    .require_system "auto_heightmap_system"

@@ -2,6 +2,7 @@
 
 local ecs = ...
 local world = ecs.world
+local w     = world.w
 
 local viewidmgr = require "viewid_mgr"
 
@@ -13,7 +14,6 @@ local ishadow	= world:interface "ant.render|ishadow"
 local irender	= world:interface "ant.render|irender"
 
 local iom		= world:interface "ant.objcontroller|obj_motion"
-local ipf		= world:interface "ant.scene|iprimitive_filter"
 local irq		= world:interface "ant.render|irenderqueue"
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
@@ -204,6 +204,7 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 			},
 			primitive_filter = {
 				filter_type = "cast_shadow",
+				update_type = "shadow",
 			},
 			camera_eid = cameraeid,
 			render_target = {
@@ -255,12 +256,15 @@ end
 
 local dl_eid
 local create_light_mb = world:sub{"component_register", "make_shadow"}
-local remove_light_mb
+local remove_light
 local light_trans_mb
 
-local function set_csm_visible(v)
+local function set_csm_visible(enable)
 	for _, ceid in world:each "csm" do
-		world[ceid].visible = v
+		world[ceid].visible = enable
+	end
+	for v in w:select "shadow_filter visible?out" do
+		v.visible = enable
 	end
 end
 
@@ -281,20 +285,20 @@ function sm:data_changed()
 	for msg in create_light_mb:each() do
 		local eid = msg[3]
 		if find_directional_light(eid) then
-			remove_light_mb = world:sub{"entity_removed", eid}
+			remove_light = eid
 
 			light_trans_mb = world:sub{"component_changed", "transform", eid}
 			set_csm_visible(true)
 		end
 	end
 
-	if remove_light_mb then
-		for msg in remove_light_mb:each() do
-			local eid = msg[2]
-			assert(eid == dl_eid)
-			dl_eid = nil
-
-			set_csm_visible(false)
+	if remove_light then
+		for _, eid in world:each "removed" do
+			if remove_light == eid then
+				assert(eid == dl_eid)
+				dl_eid = nil
+				set_csm_visible(false)
+			end
 		end
 	end
 
@@ -308,10 +312,16 @@ function sm:data_changed()
 	end
 end
 
+local function getMainQueueCamera()
+    for v in w:select "main_queue render_queue:in" do
+        local rq = v.render_queue
+        return w:object("camera_node", rq.camera_id)
+    end
+end
+
 function sm:update_camera()
 	if dl_eid then
-		local mq = world:singleton_entity "main_queue"
-		local c = world[mq.camera_eid]._rendercache
+		local c = getMainQueueCamera()
 	
 		local changed
 	
@@ -400,8 +410,6 @@ local function which_material(eid)
 	end
 end
 
-local spt = ecs.transform "shadow_primitive_transform"
-
 local bgfx = require "bgfx"
 local omni_stencils = {
 	[0] = bgfx.make_stencil{
@@ -414,21 +422,73 @@ local omni_stencils = {
 	},
 }
 
-function spt.process_entity(e)
-	e.primitive_filter.insert_item = function (filter, fxtype, eid, rc)
-		local results = filter.result
-		if rc then
-			rc.eid = eid
-			local material = which_material(eid)
-			ipf.add_item(results[fxtype].items, eid, setmetatable({
-				fx = material.fx,
-				properties = material.properties or false,
-				state = irender.check_primitive_mode_state(rc.state, material.state),
-				stencil = e.omni and omni_stencils[e.omni.stencil_ref] or material.stencil,	--TODO: need merge with material setting
-			}, {__index=rc}))
-		else
-			ipf.remove_item(results.opaticy.items, eid)
-			ipf.remove_item(results.translucent.items, eid)
-		end
-	end
+local s = ecs.system "shadow_primitive_system"
+local w = world.w
+
+local function sync_filter(mainkey, rq)
+    local r = {mainkey}
+    for i = 1, #rq.layer_tag do
+        r[#r+1] = rq.layer_tag[i] .. "?out"
+    end
+    return table.concat(r, " ")
+end
+
+local function render_queue_update(v, rq, mainkey)
+    local rc = v.render_object
+    local fx = rc.fx
+    local surfacetype = fx.setting.surfacetype
+    if not rq.layer[surfacetype] then
+        return
+    end
+    for i = 1, #rq.layer_tag do
+        v[rq.layer_tag[i]] = false
+    end
+    v[rq.tag.."_"..surfacetype] = true
+    w:sync(sync_filter(mainkey, rq), v)
+end
+
+local function render_queue_del(v, rq, mainkey)
+    for i = 1, #rq.layer_tag do
+        v[rq.layer_tag[i]] = false
+    end
+    v[rq.tag] = false
+    w:sync(sync_filter(mainkey, rq), v)
+end
+
+function s:update_filter()
+    for v in w:select "render_object_update render_object:in eid:in filter_material:in" do
+        local rc = v.render_object
+        local state = rc.entity_state
+        for u in w:select "shadow_filter render_queue:in" do
+            local rq = u.render_queue
+            local add = ((state & rq.mask) ~= 0) and ((state & rq.exclude_mask) == 0)
+            if add then
+                render_queue_update(v, rq, "render_object_update")
+				local e = world[v.eid]
+				local mat = which_material(v.eid)
+                v.filter_material[rq.tag] = {
+					fx = mat.fx,
+					properties = mat.properties or false,
+					state = irender.check_primitive_mode_state(rc.state, mat.state),
+					stencil = e.omni and omni_stencils[e.omni.stencil_ref] or mat.stencil,	--TODO: need merge with material setting
+				}
+            else
+                render_queue_del(v, rq, "render_object_update")
+				v.filter_material[rq.tag] = nil
+            end
+        end
+    end
+end
+
+function s:render_submit()
+    for v in w:select "shadow_filter visible render_queue:in" do
+        local rq = v.render_queue
+        local viewid = rq.viewid
+        for i = 1, #rq.layer_tag do
+            for u in w:select(rq.layer_tag[i] .. " " .. rq.cull_tag .. ":absent  render_object:in filter_material:in") do
+                irender.draw_mat(viewid, u.render_object, u.filter_material[rq.tag])
+            end
+        end
+		w:clear(rq.cull_tag)
+    end
 end

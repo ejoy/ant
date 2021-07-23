@@ -1,6 +1,8 @@
 local math3d = require "math3d"
 local utility = require "editor.model.utility"
 
+local fs = require "filesystem.local"
+
 local invalid_chars<const> = {
     '<', '>', ':', '/', '\\', '|', '?', '*', ' ', '\t', '\r', '%[', '%]', '%(', '%)'
 }
@@ -56,9 +58,8 @@ local STATE_TYPE = {
 }
 
 local DEFAULT_STATE = STATE_TYPE.visible|STATE_TYPE.cast_shadow|STATE_TYPE.selectable
-local function update_transform(ptrans, transform)
+local function update_transform(transform)
     local lm = math3d.matrix(transform)
-    lm = math3d.mul(ptrans, lm)
     local s, r, t = math3d.srt(lm)
     return {
         s = {math3d.index(s, 1, 2, 3)},
@@ -66,25 +67,160 @@ local function update_transform(ptrans, transform)
         t = {math3d.index(t, 1, 2, 3)}
     }
 end
-local function create_mesh_node_entity(gltfscene, nodeidx, ptrans, parent, exports)
+
+local function is_mirror_transform(trans)
+    local s = math3d.matrix_scale(trans)
+    s = math3d.tovalue(s)
+    local n = 0
+    for i=1, #s do
+        if s[i] < 0 then
+            n = n + 1
+        end
+    end
+
+    return n == 1 or n == 3
+end
+
+local function duplicate_table(m)
+    local t = {}
+    for k, v in pairs(m) do
+        t[k] = type(v) == "table" and
+             duplicate_table(v) or
+             v
+    end
+    return t
+end
+
+local primitive_names = {
+    "POINTS",
+    "LINES",
+    false, --LINELOOP, not support
+    "LINESTRIP",
+    "",         --TRIANGLES
+    "TRISTRIP", --TRIANGLE_STRIP
+    false, --TRIANGLE_FAN not support
+}
+
+local materials = {}
+
+local function generate_material(mi, mode, mirror_transform)
+    local sname = primitive_names[mode+1]
+    if not sname then
+        error(("not support primitate state, mode:%d"):format(mode))
+    end
+    --defualt cull is CCW
+    local function what_cull()
+        local cull_rempper<const> = {
+            CW = mirror_transform and "CCW" or "CW",
+            CCW= mirror_transform and "CW" or "CCW",
+            NONE="NONE",
+        }
+        
+        return cull_rempper[mi.material.state.CULL]
+    end
+
+    local cullname = what_cull()
+
+    local filename = mi.filename
+    local key = filename:string() .. sname .. cullname
+
+    local m = materials[key]
+    if m == nil then
+        if sname == "" and cullname == mi.material.state.CULL then
+            m = mi
+        else
+            local f = mi.filename
+            local basename = f:stem():string()
+
+            local nm = duplicate_table(mi.material)
+            local s = nm.state
+            s.CULL = cullname
+            if sname == "" then
+                s.PT = nil
+            else
+                s.PT = sname
+                basename = basename .. "_" .. sname
+            end
+
+            basename = basename .. "_" .. cullname
+            filename = f:parent_path() / basename .. ".material"
+            m = {
+                filename = filename,
+                material = nm
+            }
+        end
+
+        materials[key] = m
+    end
+
+    return m
+end
+
+local function read_datalist(filename)
+    local f = fs.open(filename)
+    local c = f:read "a"
+    f:close()
+    return c
+end
+
+local default_material_info = {
+    filename = fs.path "./materials/pbr_default_cw.material",
+}
+
+local function save_material(mi)
+    if not fs.exists(mi.filename) then
+        utility.save_txt_file(mi.filename:string(), mi.material)
+    end
+end
+
+local function parent_transform(parent)
+    local t = prefab[parent]
+    if t == nil then
+        return nil
+    end
+    local trans = t.data.transform
+    local m = math3d.matrix(trans or {})
+    if t.action.mount then
+        local pm = parent_transform(t.action.mount)
+        return pm and math3d.mul(pm, m) or m
+    end
+    return m
+end
+
+local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports, tolocalpath)
     local node = gltfscene.nodes[nodeidx+1]
-    local transform = update_transform(ptrans, get_transform(node))
+    local transform = update_transform(get_transform(node))
+    local finaltransform = math3d.mul(parent_transform(parent), math3d.matrix(transform))
     local meshidx = node.mesh
     local mesh = gltfscene.meshes[meshidx+1]
+
+    local mirror_trans = is_mirror_transform(finaltransform)
 
     for primidx, prim in ipairs(mesh.primitives) do
         local meshname = mesh.name and fix_invalid_name(mesh.name) or ("mesh" .. meshidx)
         local materialfile
-        if prim.material then 
-            if exports.material and next(exports.material) then
-                local mm = exports.material[prim.material+1]
-                local mode = prim.mode or 4
-                materialfile = assert(mm[mode])
+        local mode = prim.mode or 4
+        if prim.material then
+            if exports.material and #exports.material > 0 then
+                local mi = assert(exports.material[prim.material+1])
+                local materialinfo = generate_material(mi, mode, mirror_trans)
+                save_material(materialinfo)
+                materialfile = materialinfo.filename
             else
                 error(("primitive need material, but no material files output:%s %d"):format(meshname, prim.material))
             end
         else
-            materialfile = "/pkg/ant.resources/materials/pbr_default_cw.material"
+            local default_material_path<const> = fs.path "/pkg/ant.resources/materials/pbr_default_cw.material"
+            if default_material_info.material == nil then
+                default_material_info.material = read_datalist(tolocalpath(default_material_path))
+            end
+            local materialinfo = generate_material(default_material_info, mode, mirror_trans)
+            if materialinfo.filename ~= default_material_path then
+                save_material(materialinfo)
+                materialfile = materialinfo.filename
+            else
+                materialfile = default_material_path
+            end
         end
 
         local meshfile = exports.mesh[meshidx+1][primidx]
@@ -96,7 +232,7 @@ local function create_mesh_node_entity(gltfscene, nodeidx, ptrans, parent, expor
             scene_entity= true,
             transform   = transform,
             mesh        = meshfile,
-            material    = materialfile,
+            material    = materialfile:string(),
             name        = node.name or "",
             state       = DEFAULT_STATE,
         }
@@ -180,14 +316,11 @@ local function find_mesh_nodes(gltfscene, scenenodes)
 
     return meshnodes
 end
+local r2l_mat = {
+    s = {-1.0, 1.0, 1.0}
+}
 
-local function righthand2lefthand_transform()
-    return math3d.matrix {
-        s = {-1.0, 1.0, 1.0}
-    }
-end
-
-return function(output, glbdata, exports)
+return function(output, glbdata, exports, tolocalpath)
     prefab = {}
 
     local gltfscene = glbdata.info
@@ -200,12 +333,10 @@ return function(output, glbdata, exports)
         },
         data = {
             name = scene.name or "Rootscene",
-            transform = {},
+            transform = r2l_mat,
         },
         parent = "root",
     }
-
-    local r2l_trans = righthand2lefthand_transform()
 
     local meshnodes = find_mesh_nodes(gltfscene, scene.nodes)
 
@@ -227,7 +358,7 @@ return function(output, glbdata, exports)
         assert(C[nodeidx] == nil)
         C[nodeidx] = parent
         assert(nodeidx == mesh_nodeidx)
-        create_mesh_node_entity(gltfscene, nodeidx, r2l_trans, parent, exports)
+        create_mesh_node_entity(gltfscene, nodeidx, parent, exports, tolocalpath)
     end
     utility.save_txt_file("./mesh.prefab", prefab)
 end

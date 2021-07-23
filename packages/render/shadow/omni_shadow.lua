@@ -236,6 +236,7 @@ function ios.create(point_eid)
 				},
                 primitive_filter = {
                     filter_type = "cast_shadow",
+                    update_type = "shadow",
                 },
                 omni = {
                     name = k,

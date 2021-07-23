@@ -13,13 +13,14 @@ namespace EffekseerRendererBGFX
 class MaterialLoader : public ::Effekseer::MaterialLoader
 {
 private:
-	Backend::GraphicsDeviceRef graphicsDevice_ = nullptr;
+	Renderer* renderer_;
+	std::string currentPath_;
 	bool canLoadFromCache_ = false;
 	::Effekseer::FileInterface* fileInterface_ = nullptr;
 	::Effekseer::DefaultFileInterface defaultFileInterface_;
 	::Effekseer::MaterialRef LoadAcutually(::Effekseer::MaterialFile& materialFile, ::Effekseer::CompiledMaterialBinary* binary);
 public:
-	MaterialLoader(Backend::GraphicsDeviceRef graphicsDevice, ::Effekseer::FileInterface* fileInterface, bool canLoadFromCache = true);
+	MaterialLoader(Renderer* renderer, ::Effekseer::FileInterface* fileInterface, bool canLoadFromCache = false);
 	virtual ~MaterialLoader();
 	::Effekseer::MaterialRef Load(const char16_t* path) override;
 	::Effekseer::MaterialRef Load(const void* data, int32_t size, Effekseer::MaterialFileType fileType) override;

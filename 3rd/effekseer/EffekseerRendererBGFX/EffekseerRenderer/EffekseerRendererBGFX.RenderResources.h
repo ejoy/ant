@@ -25,5 +25,14 @@ namespace EffekseerRendererBGFX {
 			bool Init(bgfx_texture_handle_t buffer, bool hasMipmap, const std::function<void()>& onDisposed);
 			bgfx_texture_handle_t GetBuffer() const { return buffer_; }
 		};
+
+		class Model : public Effekseer::Model
+		{
+		public:
+			Model(const void* data, int32_t size);
+			~Model();
+		private:
+			friend class ModelLoader;
+		};
 	}
 } // namespace EffekseerRendererBGFX

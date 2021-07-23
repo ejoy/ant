@@ -2,6 +2,7 @@ local typeclass = require "typeclass"
 local system = require "system"
 local policy = require "policy"
 local event = require "event"
+local luaecs = import_package "ant.luaecs"
 
 local world = {}
 world.__index = world
@@ -59,6 +60,11 @@ local function instance_entity(w, eid, entity, owned)
 		end
 		w._uniques[c] = eid
 	end
+	--for _, c in ipairs(entity.component) do
+	--	if entity.template[c] == nil then
+	--		error(("component `%s` must exists"):format(c))
+	--	end
+	--end
 	for c in pairs(entity.template) do
 		local set = w._set[c]
 		if set then
@@ -182,14 +188,7 @@ function world:instance_prefab(prefab, args, owned)
 end
 
 function world:remove_entity(eid)
-	local e = assert(self[eid])
-	self[eid] = nil
-	self._entity[eid] = nil
-
-	local removed = self._removed
-	removed[#removed+1] = e
-
-	self:pub {"entity_removed", eid, e,}
+	self:enable_tag(eid, "removed")
 end
 
 local function component_next(set, index)
@@ -229,6 +228,37 @@ end
 function world:each(component_type)
 	local s = component_set(self, component_type)
 	return component_next, s, 0
+end
+
+local function split(str)
+    local r = {}
+    str:gsub('[^ ]*', function (w) r[#r+1] = w end)
+    return r
+end
+
+function world:select(pattern)
+	local components = split(pattern)
+	local s = component_set(self, components[1])
+	local n = #components
+	local index
+	return function (set)
+		local eid
+		index, eid = component_next(set, index)
+		if not index then
+			return
+		end
+		local e = self[eid]
+		local i = 2
+		while i > n do
+			if e[components[i]] == nil then
+				index, eid = component_next(set, index)
+				i = 2
+			else
+				i = i + 1
+			end
+		end
+		return e
+	end, s, 0
 end
 
 function world:count(component_type)
@@ -285,10 +315,10 @@ local function remove_entity(w, e)
 end
 
 local function clear_removed(w)
-	local set = w._removed
-	for i = #set,1,-1 do
-		local e = set[i]
-		set[i] = nil
+	for _, eid in w:each "removed" do
+		local e = w[eid]
+		w[eid] = nil
+		w._entity[eid] = nil
 		remove_entity(w, e)
 	end
 end
@@ -309,6 +339,7 @@ end
 function world:pipeline_update()
 	self._update_func()
 	clear_removed(self)
+	self.w:update()
 end
 
 function world:enable_system(name, enable)
@@ -336,6 +367,7 @@ function m.new_world(config)
 		_removed = {},	-- A list of { eid, component_name, component } / { eid, entity }
 		_switchs = {},	-- for enable/disable
 		_uniques = {},
+		w = luaecs.world(),
 	}, world)
 
 	event.init(world)

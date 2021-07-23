@@ -23,8 +23,6 @@ end
 
 local ies = ecs.interface "ientity_state"
 
-local ipf = world:interface "ant.scene|iprimitive_filter"
-
 function ies.has_state(eid, name)
 	return ((world[eid]._rendercache.entity_state) & STATE_TYPE[name]) ~= 0
 end
@@ -39,8 +37,8 @@ function ies.set_state(eid, name, v)
 	else
 		rc.entity_state = rc.entity_state & (~STATE_TYPE[name])
 	end
-	ipf.select_filters(eid)
-	world:pub{"component_changed", "state"}
+	world:pub {"luaecs", "update_entity", eid}
+	world:pub {"component_changed", "state"}
 end
 
 function ies.can_visible(eid)

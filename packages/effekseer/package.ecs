@@ -7,7 +7,7 @@ system "effekseer_system"
     .require_interface "ant.render|irenderqueue"
     .method "init"
     .method "camera_usage"
-    .method "ui_update"
+    .method "render_submit"
     .method "follow_transform_updated"
     .method "exit"
 

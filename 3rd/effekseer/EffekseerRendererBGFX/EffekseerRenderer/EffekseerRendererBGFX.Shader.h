@@ -42,7 +42,7 @@ private:
 		int32_t Offset;
 		int32_t Count;
 	};
-
+	Renderer* m_renderer;
 	bgfx_program_handle_t m_program;
 
 	uint8_t* m_vertexConstantBuffer;
@@ -56,16 +56,14 @@ private:
 
 	bool isTransposeEnabled_ = false;
 
-	Shader(bgfx_program_handle_t programHandle);
+	Shader(Renderer* renderer, bgfx_program_handle_t programHandle, std::unordered_map<std::string, bgfx_uniform_handle_t>&& uniforms);
 public:
-	std::unordered_map<std::string, bgfx_uniform_handle_t> uniforms_;
+	std::unordered_map<std::string, bgfx_uniform_handle_t> m_uniforms;
 	virtual ~Shader();
 
-	static Shader* Create(bgfx_program_handle_t program);
-
+	static Shader* Create(Renderer* renderer, bgfx_program_handle_t program, std::unordered_map<std::string, bgfx_uniform_handle_t>&& uniforms);
 	bgfx_program_handle_t GetInterface() const;
 
-	void SetUniforms(std::unordered_map<std::string, bgfx_uniform_handle_t>&& uniforms);
 	void BeginScene();
 	void EndScene();
 
@@ -94,7 +92,8 @@ public:
 	{
 		isTransposeEnabled_ = isTransposeEnabled;
 	}
-
+	bgfx_uniform_handle_t GetUniformId(const char* name);
 	bool IsValid() const;
+	void Submit();
 };
 } // namespace EffekseerRendererBGFX

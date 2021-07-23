@@ -75,7 +75,8 @@ local DefaultTexture = createTexture {
         MIN = "LINEAR",
         U = "MIRROR",
         V = "MIRROR",
-    }
+    },
+    name = "<default>"
 }
 
 local queue = {}

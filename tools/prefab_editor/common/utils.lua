@@ -27,7 +27,10 @@ local fs = require "filesystem"
 local lfs = require "filesystem.local"
 
 function utils.write_file(filename, data)
-    local f = assert(lfs.open(fs.path(filename):localpath(), "wb"))
+    local filepath = fs.path(filename)
+    local name = filepath:filename()
+    local path = filepath:remove_filename()
+    local f = assert(lfs.open(path:localpath() / name:string(), "wb"))
     f:write(data)
     f:close()
 end
@@ -83,6 +86,32 @@ end
  
 function utils.end_with(str, ending)
     return ending == "" or str:sub(-#ending) == ending
+end
+
+function utils.table_to_string(obj, cnt)
+    local str = ""
+    local cnt = cnt or 0
+    if type(obj) == "table" then
+        str = str .. "\n" .. string.rep("    ", cnt) .. "{\n"
+        cnt = cnt + 1
+        for k,v in pairs(obj) do
+            if type(k) == "string" then
+                str = str .. string.rep("    ",cnt) .. '["'..k..'"]' .. ' = '
+            end
+            if type(k) == "number" then
+                str = str .. string.rep("    ",cnt) .. "["..k.."]" .. " = "
+            end
+            str = str .. utils.table_to_string(v, cnt)
+            str = str .. ",\n"
+        end
+        cnt = cnt-1
+        str = str .. string.rep("    ", cnt) .. "}"
+    elseif type(obj) == "string" then
+        str = str .. string.format("%q", obj)
+    else
+        str = str .. tostring(obj)
+    end 
+    return str
 end
 
 return utils

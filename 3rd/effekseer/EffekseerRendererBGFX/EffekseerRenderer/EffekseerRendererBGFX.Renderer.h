@@ -13,7 +13,10 @@ namespace EffekseerRendererBGFX
 
 ::Effekseer::ModelLoaderRef CreateModelLoader(::Effekseer::FileInterface* fileInterface = nullptr/*, OpenGLDeviceType deviceType = OpenGLDeviceType::OpenGL2*/);
 
-::Effekseer::MaterialLoaderRef CreateMaterialLoader(Effekseer::Backend::GraphicsDeviceRef graphicsDevice,
+class Renderer;
+using RendererRef = ::Effekseer::RefPtr<Renderer>;
+
+::Effekseer::MaterialLoaderRef CreateMaterialLoader(Renderer*,
 	::Effekseer::FileInterface* fileInterface = nullptr);
 
 Effekseer::Backend::TextureRef CreateTexture(Effekseer::Backend::GraphicsDeviceRef graphicsDevice,
@@ -26,16 +29,16 @@ struct bgfx_context
 	std::unordered_map<std::string, bgfx_uniform_handle_t> uniforms_;
 };
 
-class Renderer;
-using RendererRef = ::Effekseer::RefPtr<Renderer>;
-
 class Renderer : public ::EffekseerRenderer::Renderer
 {
 protected:
 	Renderer(){}
 	virtual ~Renderer() {}
 public:
-	static std::vector<bgfx_context> s_bgfx_context_;
+	bgfx_encoder_t* encoder_{ nullptr };
+	void SetCurrentEncoder(bgfx_encoder_t* encoder) { encoder_ = encoder; }
+	bgfx_encoder_t* GetCurrentEncoder() const { return encoder_; }
+	static std::vector<bgfx_context> s_bgfx_sprite_context_;
 	static RendererRef Create(int32_t squareMaxCount/*, OpenGLDeviceType deviceType = OpenGLDeviceType::OpenGL2, bool isExtensionsEnabled = true*/);
 	static RendererRef Create(Effekseer::Backend::GraphicsDeviceRef graphicsDevice, int32_t squareMaxCount);
 	virtual int32_t GetSquareMaxCount() const = 0;

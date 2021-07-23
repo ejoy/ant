@@ -149,7 +149,7 @@ local icc = world:interface "ant.test.features|icamera_controller"
 local iccqs = world:interface "ant.quad_sphere|icamera_controller"
 
 function init_loader_sys:init()
-    point_light_test()
+    --point_light_test()
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
 
     --world:instance "/pkg/ant.test.features/assets/entities/font_tt.prefab"
@@ -159,8 +159,28 @@ function init_loader_sys:init()
     --target_lock_test()
 
     --ientity.create_skybox()
-    --world:instance "/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab"
-    world:instance "/pkg/ant.resources.binary/meshes/cloud_run.glb|mesh.prefab"
+    --world:instance "/pkg/ant.test.features/assets/glb/Duck.glb|mesh.prefab"
+
+    world:create_entity{
+        policy = {
+            "ant.render|render",
+            "ant.heightmap|auto_heightmap",
+            "ant.general|name",
+        },
+        data = {
+            auto_heightmap = true,
+            transform = {},
+            material = "/pkg/ant.resources/materials/depth.material",
+            mesh = "/pkg/ant.test.features/assets/glb/Duck.glb|meshes/LOD3spShape_P1.meshbin",
+            state = 7,
+            scene_entity = true,
+            name = "test_auot_heightmap",
+        }
+    }
+
+    world:pub{"fetch_heightmap"}
+
+    --world:instance "/pkg/ant.resources.binary/meshes/cloud_run.glb|mesh.prefab"
     --world:instance "/pkg/ant.test.features/assets/CloudTestRun.glb|mesh.prefab"
 
     -- local eid = world:create_entity {

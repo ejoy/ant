@@ -2,9 +2,9 @@ local ecs = ...
 local world = ecs.world
 
 local math3d 	= require "math3d"
-local end_frame_sys = ecs.system "end_frame_system"
+local start_frame_sys = ecs.system "start_frame_system"
 
-function end_frame_sys:end_frame()
+function start_frame_sys:start_frame()
 	for _, eid in world:each "scene_entity" do
 		local rc = world[eid]._rendercache
 		rc.worldmat = nil

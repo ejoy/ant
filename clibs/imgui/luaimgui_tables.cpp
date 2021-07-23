@@ -99,6 +99,13 @@ static int TableGetColumnFlags(lua_State* L) {
 	return 1;
 }
 
+static int TableSetColumnEnabled(lua_State* L) {
+	int column = (int)luaL_checkinteger(L, 1);
+	bool v = lua_toboolean(L, 2);
+	ImGui::TableSetColumnEnabled(column, v);
+	return 0;
+}
+
 static int TableGetSortSpecs(lua_State* L) {
 	ImGuiTableSortSpecs* specs = ImGui::TableGetSortSpecs();
 	if (!specs->SpecsDirty) {
@@ -212,6 +219,7 @@ void init(lua_State* L) {
 		{ "GetColumnCount", TableGetColumnCount },
 		{ "GetColumnName", TableGetColumnName },
 		{ "GetColumnFlags", TableGetColumnFlags },
+		{ "SetColumnEnabled", TableSetColumnEnabled },
 		{ "GetSortSpecs", TableGetSortSpecs },
 		{ "SetBgColor", TableSetBgColor },
 		{ "Clipper", Clipper },

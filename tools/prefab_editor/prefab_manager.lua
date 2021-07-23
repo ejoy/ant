@@ -154,10 +154,12 @@ function m:create_slot()
             "ant.general|tag",
             "ant.scene|slot_policy",
             "ant.scene|transform_policy",
+            "ant.scene|hierarchy_policy",
         },
         data = {
             transform = {},
             slot = true,
+            scene_entity = true,
             follow_flag = 1,
             name = auto_name,
             tag = {auto_name},

@@ -3,6 +3,7 @@ local assetmgr  = import_package "ant.asset"
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 local vfs       = require "vfs"
+local access    = require "vfs.repoaccess"
 local cr        = import_package "ant.compile_resource"
 local datalist  = require "datalist"
 local stringify = import_package "ant.serialize".stringify
@@ -64,7 +65,7 @@ function MaterialView:_init()
     self.ui_shadow_cast = {false}
     self.ui_postprocess = {false}
 end
-local gd = require "common.global_data"
+local global_data = require "common.global_data"
 function MaterialView:on_set_mat(value)
     -- local origin_path = fs.path(value)
     -- local relative_path = tostring(origin_path)
@@ -141,7 +142,7 @@ function MaterialView:on_saveas_mat()
     local path = uiutils.get_saveas_path("Material", ".material")
     if path then
         do_save(self.eid, path)
-        local vpath = "/" .. tostring(vfs.virtualpath(fs.path(path)))
+        local vpath = "/" .. tostring(access.virtualpath(global_data.repo, fs.path(path)))
         if vpath == self.mat_file:get_path() then
             assetmgr.unload(vpath)
         end

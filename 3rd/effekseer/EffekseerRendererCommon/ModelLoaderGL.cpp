@@ -1,4 +1,5 @@
 #include "ModelLoaderGL.h"
+#include "PathUtils.h"
 
 namespace EffekseerRenderer
 {
@@ -20,7 +21,9 @@ ModelLoader::~ModelLoader()
 
 ::Effekseer::ModelRef ModelLoader::Load(const char16_t* path)
 {
-	std::unique_ptr<::Effekseer::FileReader> reader(fileInterface_->OpenRead(path));
+	auto ant_path = u2w(get_ant_file_path(w2u(path)));
+
+	std::unique_ptr<::Effekseer::FileReader> reader(fileInterface_->OpenRead(ant_path.data()));
 	if (reader.get() == nullptr)
 	{
 		return nullptr;

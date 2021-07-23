@@ -4,7 +4,7 @@ fx:
     setting:
         surfacetype: translucent
 properties:
-    s_texColor:
+    s_tex:
         stage: 0
         texture: /pkg/ant.resources/textures/test/gamma_test.texture
 state:

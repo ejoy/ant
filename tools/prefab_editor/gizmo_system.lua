@@ -223,10 +223,12 @@ function gizmo_sys:post_init()
 		policy = {
 			"ant.general|name",
 			"ant.scene|transform_policy",
+			"ant.scene|hierarchy_policy",
 		},
 		data = {
 			transform = {},
 			name = "axis root",
+			scene_entity = true,
 		},
 	}
 	gizmo.root_eid = axis_root
@@ -234,10 +236,12 @@ function gizmo_sys:post_init()
 		policy = {
 			"ant.general|name",
 			"ant.scene|transform_policy",
+			"ant.scene|hierarchy_policy",
 		},
 		data = {
 			transform = srt,
 			name = "rot root",
+			scene_entity = true,
 		},
 	}
 
@@ -248,10 +252,12 @@ function gizmo_sys:post_init()
 		policy = {
 			"ant.general|name",
 			"ant.scene|transform_policy",
+			"ant.scene|hierarchy_policy",
 		},
 		data = {
 			transform = srt,
 			name = "rot root",
+			scene_entity = true,
 		},
 	}
 	gizmo.uniform_rot_root_eid = uniform_rot_root
@@ -367,10 +373,12 @@ function gizmo_sys:post_init()
 		policy = {
 			"ant.general|name",
 			"ant.scene|transform_policy",
+			"ant.scene|hierarchy_policy",
 		},
 		data = {
 			transform = srt,
 			name = "global axis root",
+			scene_entity = true,
 		},
 	}
 	ies.set_state(global_axis_eid, "auxgeom", true)
