@@ -151,7 +151,7 @@ function s:end_frame()
 		removed[id] = true
 		w:release("scene_node", id)
 	end
-	if removed then
+	if next(removed) then
 		for _, id in ipairs(scenequeue) do
 			if removed[id] then
 				scenequeue:mount(id)
