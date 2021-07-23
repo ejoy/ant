@@ -18,8 +18,10 @@ function iss.set_parent(eid, peid)
 	if e.scene_entity then
 		if peid == nil or world[peid].scene_entity then
 			world:pub {"component_changed", "parent", eid}
+			return
 		end
 	end
+	assert(false)
 end
 
 ----scenespace_system----

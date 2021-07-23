@@ -87,10 +87,12 @@ local function create_gizmo_root()
 		policy = {
 			"ant.general|name",
 			"ant.scene|transform_policy",
+            "ant.scene|hierarchy_policy",
 		},
 		data = {
 			transform = {},
 			name = "gizmo root",
+            scene_entity = true,
 		},
     }
 end

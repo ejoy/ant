@@ -123,7 +123,6 @@ function s:luaecs_sync()
 			local v = findEntity(eid)
 			if v then
 				w:remove(v)
-				break
 			end
 		end
 	end

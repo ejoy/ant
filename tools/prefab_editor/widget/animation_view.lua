@@ -738,7 +738,7 @@ function m.save_clip(path)
         end
     end
     utils.write_file(clip_filename, stringify(copy_clips))
-    utils.write_file(clip_filename .. ".lua", "return " .. utils.table_to_string(copy_clips))
+    utils.write_file(string.sub(clip_filename, 1, -7) .. ".lua", "return " .. utils.table_to_string(copy_clips))
 end
 
 local function set_current_clip(clip)
