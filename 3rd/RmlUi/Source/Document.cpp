@@ -375,12 +375,12 @@ static void GenerateKeyModifierEventParameters(Dictionary& parameters, int key_m
 	}
 }
 
-static void GenerateMouseEventParameters(Dictionary& parameters, const Point& mouse_position, int button_index = -1) {
+static void GenerateMouseEventParameters(Dictionary& parameters, const Point& mouse_position, MouseButton button) {
 	parameters.reserve(3);
 	parameters["x"] = mouse_position.x;
 	parameters["y"] = mouse_position.y;
-	if (button_index >= 0)
-		parameters["button"] = button_index;
+	if (button != MouseButton::None)
+		parameters["button"] = (int)button;
 }
 
 bool Document::ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state) {
@@ -397,7 +397,7 @@ bool Document::ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state) {
 	return body->DispatchEvent(EventId::Keyup, parameters);
 }
 
-void Document::ProcessMouseMove(int x, int y, int key_modifier_state) {
+void Document::ProcessMouseMove(MouseButton button, int x, int y, int key_modifier_state) {
 	// Check whether the mouse moved since the last event came through.
 	Point old_mouse_position = mouse_position;
 	bool mouse_moved = (x != mouse_position.x) || (y != mouse_position.y);
@@ -408,11 +408,11 @@ void Document::ProcessMouseMove(int x, int y, int key_modifier_state) {
 
 	// Generate the parameters for the mouse events (there could be a few!).
 	Dictionary parameters;
-	GenerateMouseEventParameters(parameters, mouse_position);
+	GenerateMouseEventParameters(parameters, mouse_position, button);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 
 	Dictionary drag_parameters;
-	GenerateMouseEventParameters(drag_parameters, mouse_position);
+	GenerateMouseEventParameters(drag_parameters, mouse_position, MouseButton::None);
 	GenerateKeyModifierEventParameters(drag_parameters, key_modifier_state);
 
 	// Update the current hover chain. This will send all necessary 'onmouseout', 'onmouseover', 'ondragout' and
@@ -427,12 +427,12 @@ void Document::ProcessMouseMove(int x, int y, int key_modifier_state) {
 	}
 }
 
-void Document::ProcessMouseButtonDown(int button_index, int key_modifier_state) {
+void Document::ProcessMouseButtonDown(MouseButton button, int key_modifier_state) {
 	Dictionary parameters;
-	GenerateMouseEventParameters(parameters, mouse_position, button_index);
+	GenerateMouseEventParameters(parameters, mouse_position, button);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 
-	if (button_index == 0)
+	if (button == MouseButton::Left)
 	{
 		active = hover;
 
@@ -481,13 +481,13 @@ void Document::ProcessMouseButtonDown(int button_index, int key_modifier_state) 
 	}
 }
 
-void Document::ProcessMouseButtonUp(int button_index, int key_modifier_state) {
+void Document::ProcessMouseButtonUp(MouseButton button, int key_modifier_state) {
 	Dictionary parameters;
-	GenerateMouseEventParameters(parameters, mouse_position, button_index);
+	GenerateMouseEventParameters(parameters, mouse_position, button);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 
 	// Process primary click.
-	if (button_index == 0)
+	if (button == MouseButton::Left)
 	{
 		// The elements in the new hover chain have the 'onmouseup' event called on them.
 		if (hover)
@@ -553,7 +553,7 @@ void Document::OnElementDetach(Element* element) {
 	if (it_hover != hover_chain.end())
 	{
 		Dictionary parameters;
-		GenerateMouseEventParameters(parameters, mouse_position);
+		GenerateMouseEventParameters(parameters, mouse_position, MouseButton::None);
 		element->DispatchEvent(EventId::Mouseout, parameters);
 
 		hover_chain.erase(it_hover);

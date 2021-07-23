@@ -153,27 +153,27 @@ bool Context::ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state) {
 	return focus->ProcessKeyUp(key, key_modifier_state);
 }
 
-bool Context::ProcessMouseMove(int x, int y, int key_modifier_state) {
+bool Context::ProcessMouseMove(MouseButton button, int x, int y, int key_modifier_state) {
 	if (!focus) {
 		return false;
 	}
-	focus->ProcessMouseMove(x, y, key_modifier_state);
+	focus->ProcessMouseMove(button, x, y, key_modifier_state);
 	return true;
 }
 
-bool Context::ProcessMouseButtonDown(int button_index, int key_modifier_state) {
+bool Context::ProcessMouseButtonDown(MouseButton button, int key_modifier_state) {
 	if (!focus) {
 		return false;
 	}
-	focus->ProcessMouseButtonDown(button_index, key_modifier_state);
+	focus->ProcessMouseButtonDown(button, key_modifier_state);
 	return true;
 }
 
-bool Context::ProcessMouseButtonUp(int button_index, int key_modifier_state) {
+bool Context::ProcessMouseButtonUp(MouseButton button, int key_modifier_state) {
 	if (!focus) {
 		return false;
 	}
-	focus->ProcessMouseButtonUp(button_index, key_modifier_state);
+	focus->ProcessMouseButtonUp(button, key_modifier_state);
 	return true;
 }
 

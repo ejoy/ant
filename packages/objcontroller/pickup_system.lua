@@ -125,23 +125,31 @@ local function enable_pickup(enable)
 	end
 end
 
-local function update_camera(e, clickpt)
+local function getMainQueueCamera()
+    for v in w:select "main_queue render_queue:in" do
+        local rq = v.render_queue
+        return w:object("camera_node", rq.camera_id)
+    end
+end
+
+local function update_camera(v, clickpt)
 	local mq = world:singleton_entity "main_queue"
 	local rt = mq.render_target.view_rect
 
 	local ndc2D = mu.pt2D_to_NDC(clickpt, rt)
 	local eye, at = mu.NDC_near_far_pt(ndc2D)
 
-	local vp = world[mq.camera_eid]._rendercache.viewprojmat
+    local mainCamera = getMainQueueCamera()
+	local vp = mainCamera.viewprojmat
 	local ivp = math3d.inverse(vp)
 	eye = math3d.transformH(ivp, eye, 1)
 	at = math3d.transformH(ivp, at, 1)
 
-	local rc = world[e.camera_eid]._rendercache
+	local camera = w:object("camera_node", v.render_queue.camera_id)
 	local viewdir = math3d.normalize(math3d.sub(at, eye))
-	rc.viewmat = math3d.lookto(eye, viewdir, rc.updir)
-	rc.projmat = math3d.projmat(rc.frustum)
-	rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
+	camera.viewmat = math3d.lookto(eye, viewdir, camera.updir)
+	camera.projmat = math3d.projmat(camera.frustum)
+	camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 end
 
 
@@ -336,9 +344,8 @@ function pickup_sys:data_changed()
 	end
 end
 function pickup_sys:update_camera()
-	local pickupentity = world:singleton_entity "pickup"
-	if pickupentity.visible then
-		update_camera(pickupentity, clickpt)
+    for v in w:select "pickup_filter visible render_queue:in" do
+		update_camera(v, clickpt)
 	end
 end
 
