@@ -14,6 +14,7 @@ local mc        = mathpkg.constant
 local math3d    = require "math3d"
 local bgfx      = require "bgfx"
 local bake      = require "bake"
+local ltask     = require "ltask"
 
 local ipf       = world:interface "ant.scene|iprimitive_filter"
 local irender   = world:interface "ant.render|irender"
@@ -504,13 +505,9 @@ function ilm.bake_entity(eid, pf, notcull)
             world[ds.ds_eid]._rendercache.worldmat = mc.IDENTITY_MAT
 
             local read, write = 1, 2
-
-            --read_tex(512*3, 512, shading_info.fb.render_textures[read].texture.handle, "d:/tmp/11.tga", "d:/tmp/dx.bin")
-
             imaterial.set_property(ds.weight_ds_eid, "hemispheres", shading_info.fb.render_textures[read])
             imaterial.set_property(ds.weight_ds_eid, "weights", shading_info.weight_tex)
             irender.draw(viewid, world[ds.weight_ds_eid]._rendercache)
-            --read_tex(256, 256, shading_info.fb.render_textures[write].texture.handle, "d:/tmp/22.tga", "d:/tmp/dx22.bin")
 
             while hsize > 1 do
                 viewid = viewid + 1
@@ -530,7 +527,6 @@ function ilm.bake_entity(eid, pf, notcull)
                 storagerb.handle, writex, writey,
                 dsttex, 0, 0, hemix, hemiy)
             bgfx.frame()
-            --read_tex(storagerb.w, storagerb.h, storagerb.handle, "d:/tmp/22.tga")
         end,
         read_lightmap = function(size)
             local storagerb = fbmgr.get_rb(shading_info.storage_rbidx)
@@ -554,7 +550,6 @@ function ilm.bake_entity(eid, pf, notcull)
     log.info(("[%d-%s] bake: end"):format(eid, e.name or ""))
 
     e._lightmap.data:postprocess()
-    --e._lightmap.data:save "d:/work/ant/tools/lightmap_baker/lm.tga"
     log.info(("[%d-%s] postprocess: finish"):format(eid, e.name or ""))
 end
 
@@ -568,17 +563,26 @@ local function bake_all()
     end
 end
 
+local function _bake(eid)
+    if eid then
+        local se = world:singleton_entity "scene_watcher"
+        ilm.bake_entity(eid, se.primitive_filter)
+    else
+        log.info("bake entity scene with lightmap setting")
+        bake_all()
+    end
+end
+
 local bake_mb = world:sub{"bake"}
 function lightmap_sys:end_frame()
     for msg in bake_mb:each() do
         local eid = msg[2]
-        if eid then
-            local se = world:singleton_entity "scene_watcher"
-            ilm.bake_entity(eid, se.primitive_filter)
-        else
-            log.info("bake entity scene with lightmap setting")
-            bake_all()
-        end
+        ltask.fork(function ()
+            local ServiceBgfxMain = ltask.queryservice "bgfx_main"
+            ltask.call(ServiceBgfxMain, "pause")
+            _bake(eid)
+            ltask.call(ServiceBgfxMain, "continue")
+        end)
     end
 end
 
