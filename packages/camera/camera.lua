@@ -211,8 +211,8 @@ end
 
 local cameraview_sys = ecs.system "camera_view_system"
 
-local function update_camera(e)
-    local rq = e.render_queue
+local function update_camera(v)
+    local rq = v.render_queue
     local camera = w:object("camera_node", rq.camera_id)
     local worldmat = camera.worldmat
     camera.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), camera.updir)

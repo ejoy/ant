@@ -2,6 +2,7 @@
 
 local ecs = ...
 local world = ecs.world
+local w     = world.w
 
 local viewidmgr = require "viewid_mgr"
 
@@ -262,7 +263,6 @@ local function set_csm_visible(enable)
 	for _, ceid in world:each "csm" do
 		world[ceid].visible = enable
 	end
-	local w = world.w
 	for v in w:select "shadow_filter visible?out" do
 		v.visible = enable
 	end
@@ -312,10 +312,16 @@ function sm:data_changed()
 	end
 end
 
+local function getMainQueueCamera()
+    for v in w:select "main_queue render_queue:in" do
+        local rq = v.render_queue
+        return w:object("camera_node", rq.camera_id)
+    end
+end
+
 function sm:update_camera()
 	if dl_eid then
-		local mq = world:singleton_entity "main_queue"
-		local c = world[mq.camera_eid]._rendercache
+		local c = getMainQueueCamera()
 	
 		local changed
 	
