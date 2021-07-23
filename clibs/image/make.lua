@@ -7,7 +7,8 @@ lm:source_set "source_image" {
         LuaInclude,
         BgfxInclude,
         Ant3rd .. "bimg/include",
-        "../bgfx"
+        "../bgfx",
+        "../lua2struct"
     },
     sources = {
         "image.cpp",

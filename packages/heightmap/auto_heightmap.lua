@@ -4,6 +4,7 @@ local world = ecs.world
 local math3d    = require "math3d"
 local bgfx      = require "bgfx"
 local ltask     = require "ltask"
+local image     = require "image"
 
 local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
@@ -55,7 +56,7 @@ local renderinfo = {
     color_handle = function (ri)
         return fbmgr.get_rb(fbmgr.get(ri.fbidx)[1]).handle
     end,
-    read_depth_buffer = function (ri)
+    read_buffer = function (ri)
         local src_handle = ri:color_handle()
         local dst_handle = fbmgr.get_rb(ri.blitrb).handle
         bgfx.blit(ri.blit_viewid, dst_handle, 0, 0, src_handle)
@@ -106,46 +107,28 @@ function auto_hm_sys:init()
     -- }
 end
 
-local function read_back()
-    local m = renderinfo:read_depth_buffer()
-    local s = tostring(m)
-    local fmt = ('f'):rep(16)   --16 float one time
-    local buffer = {}
-    for ih=1, rbsize do
-        for iw=1, rbsize / #fmt do
-            local offset = (ih-1) * rbsize + (iw-1) * #fmt
-            local t = {fmt:unpack(s, offset)}
-            for i=1, #fmt do
-                buffer[offset+i] = t[i]
-                if t[i] ~= 0.0 then
-                    print(t[i])
-                end
-            end
-        end
-    end
-
-    return buffer
+local function default_tex_info(w, h, fmt)
+    local bits = image.getBitsPerPixel(fmt)
+    local s = (bits//8) * w * h
+    return {
+        width=w, height=h, format=fmt,
+        numLayers=1, numMips=1, storageSize=s,
+        bitsPerPixel=bits,
+        depth=1, cubeMap=false,
+    }
 end
 
 local function write_to_file(filename, buffers, width, height)
-    --ppm format for test
-    local data = {}
-    local wsize = width * rbsize
-    local hsize = height * rbsize
-    for ih=1, hsize do
-        for iw=1, wsize do
-            local hoffset = (ih-1)*wsize
-            local dataidx = hoffset+iw
-            local h = hoffset // rbsize
-            local w = iw // rbsize + 1
-            local whichbuffer = h * width + w
-            local b = buffers[whichbuffer]
-            local bidx = iw % rbsize + 1
-            data[dataidx] = b[bidx]
-        end
-    end
+    local pm = bgfx.memory_buffer(width*height*rbsize*rbsize*4)
+    image.pack_memory(buffers, rbsize*4, rbsize, width, height, pm)
+    local wsize, hsize = math.tointeger(width*rbsize), math.tointeger(height*rbsize)
+    local ti = default_tex_info(wsize, hsize, "R32F")
+    local c = image.encode_image(ti, pm, {type="dds", srgb=false})
 
-    --TODO
+    local fslocal = require "filesystem.local"
+    local f = fslocal.open(fslocal.path(filename), "wb")
+    f:write(c)
+    f:close()
 end
 
 local function fetch_heightmap_data()
@@ -204,11 +187,11 @@ local function fetch_heightmap_data()
                 irender.draw(renderinfo.auto_hm_viewid, ri)
             end
 
-            buffers[#buffers+1] = read_back()
+            buffers[#buffers+1] = renderinfo:read_buffer()
         end
     end
 
-    --write_to_file("abc.dds", buffers, xnumpass, znumpass)
+    write_to_file("abc.dds", buffers, xnumpass, znumpass)
 end
 
 local hm_mb = world:sub {"fetch_heightmap"}
