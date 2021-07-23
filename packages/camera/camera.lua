@@ -90,6 +90,17 @@ function ic.bind(eid, which_queue)
     bind_queue(eid, qeid)
 end
 
+function ic.controller(eid, ceid)
+    local e = world[eid]
+    local old_ceid = e.controller_eid
+
+    if ceid == nil then
+        return old_ceid
+    end
+    e.controller_eid = ceid
+    world:pub{"camera_controller_changed", ceid, old_ceid}
+end
+
 ic.bind_queue = bind_queue
 
 function ic.calc_viewmat(eid)
@@ -202,10 +213,7 @@ local cameraview_sys = ecs.system "camera_view_system"
 local function update_camera(eid)
     local e = world[eid]
     local rc = e._rendercache
-    local w = world.w
-    local scene_node = w:object("scene_node", e._scene_id)
-    local worldmat = scene_node.worldmat
-    rc.worldmat = worldmat
+    local worldmat = rc.worldmat
     rc.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), rc.updir)
     rc.projmat = math3d.projmat(rc.frustum)
     rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)

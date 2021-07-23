@@ -13,6 +13,8 @@ data:
     type: mat
   name: DEFAULT_CAMERA
   tag: camera
+  scene_entity: true
+  camera: true
 policy:
   ant.general|name
   ant.camera|camera

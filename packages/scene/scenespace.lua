@@ -145,9 +145,13 @@ function s:update_transform()
 	for v in w:select "scene_node(scene_sorted):in" do
 		update_scene_node(v.scene_node)
 	end
-	for v in w:select "render_object scene_node(scene_id):in" do
+	for v in w:select "render_object:in scene_node(scene_id):in" do
 		local r, n = v.render_object, v.scene_node
 		r.aabb = n.aabb
+		r.worldmat = n.worldmat
+	end
+	for v in w:select "camera:in scene_node(scene_id):in" do
+		local r, n = v.camera.rendercache, v.scene_node
 		r.worldmat = n.worldmat
 	end
 end

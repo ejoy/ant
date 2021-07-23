@@ -12,6 +12,10 @@ local function isRenderObject(e)
 	return rc.entity_state and rc.fx and rc.vb and rc.fx and rc.state
 end
 
+local function isCamera(e)
+	return e.camera ~= nil
+end
+
 local function findEntity(eid)
     for v in w:select "eid:in" do
         if v.eid == eid then
@@ -39,6 +43,12 @@ function s:init()
     }
     w:register {
         name = "filter_material",
+        type = "lua",
+    }
+
+	-- Camera
+    w:register {
+        name = "camera",
         type = "lua",
     }
 
@@ -82,6 +92,14 @@ function s:luaecs_sync()
 			initargs.render_object = rc
 			initargs.render_object_update = true
 			initargs.filter_material = {}
+		end
+		if isCamera(e) then
+			initargs.camera = {
+				frustum     = e.frustum,
+				clip_range  = e.clip_range,
+				dof         = e.dof,
+				rendercache = rc, -- TODO?
+			}
 		end
 		w:new(initargs)
 	end

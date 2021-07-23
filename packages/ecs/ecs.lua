@@ -60,6 +60,11 @@ local function instance_entity(w, eid, entity, owned)
 		end
 		w._uniques[c] = eid
 	end
+	--for _, c in ipairs(entity.component) do
+	--	if entity.template[c] == nil then
+	--		error(("component `%s` must exists"):format(c))
+	--	end
+	--end
 	for c in pairs(entity.template) do
 		local set = w._set[c]
 		if set then

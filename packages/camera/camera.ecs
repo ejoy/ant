@@ -41,6 +41,7 @@ interface "camera"
     .method "set_dof_focus_obj"
     .method "set_dof"
     .method "focus_obj"
+    .method "controller"
 
 pipeline "camera"
     .stage "update_mainview_camera"
