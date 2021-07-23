@@ -106,7 +106,7 @@ function s:render_submit()
         local rq = v.render_queue
         local viewid = rq.viewid
         for i = 1, #rq.layer_tag do
-            for u in w:select(rq.layer_tag[i] .. " " .. rq.cull_tag .. " render_object:in filter_material:in") do
+            for u in w:select(rq.layer_tag[i] .. " " .. rq.cull_tag .. ":absent render_object:in filter_material:in") do
                 irender.draw_mat(viewid, u.render_object, u.filter_material[rq.tag])
             end
         end
@@ -125,7 +125,7 @@ local function enable_pickup(enable)
 	end
 end
 
-local function update_camera(e, clickpt) 
+local function update_camera(e, clickpt)
 	local mq = world:singleton_entity "main_queue"
 	local rt = mq.render_target.view_rect
 

@@ -5,6 +5,7 @@ local stringify = require "stringify"
 local serialize = import_package "ant.serialize".stringify
 local datalist = require "datalist"
 local config = require "config"
+local compile
 
 local function normalize(p)
     local stack = {}
@@ -110,6 +111,9 @@ end
 
 local function absolute_path(base, path)
 	if path:sub(1,1) == "/" then
+        if path:find("|", 1, true) then
+            return compile(path)
+        end
 		return fs.path(path):localpath()
 	end
 	return lfs.absolute(base:parent_path() / (path:match "^%./(.+)$" or path))
@@ -163,7 +167,7 @@ local function compile_dir(urllst)
     return lfs.path(url)
 end
 
-local function compile(pathstring)
+function compile(pathstring)
     return compile_dir(split_path(pathstring))
 end
 

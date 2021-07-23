@@ -65,7 +65,7 @@ function MaterialView:_init()
     self.ui_shadow_cast = {false}
     self.ui_postprocess = {false}
 end
-local gd = require "common.global_data"
+local global_data = require "common.global_data"
 function MaterialView:on_set_mat(value)
     -- local origin_path = fs.path(value)
     -- local relative_path = tostring(origin_path)

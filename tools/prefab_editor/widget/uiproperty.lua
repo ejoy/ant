@@ -5,7 +5,11 @@ local datalist  = require "datalist"
 local uiconfig  = require "widget.config"
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
+local vfs       = require "vfs"
+local access    = require "vfs.repoaccess"
+local global_data = require "common.global_data"
 local utils     = require "common.utils"
+local rc        = import_package "ant.compile_resource"
 local class     = utils.class 
 
 local PropertyBase = class("PropertyBase")
@@ -241,6 +245,17 @@ end
 function TextureResource:on_dragdrop()
     self:do_update()
 end
+local glb_path
+local image_path
+local filelist = {}
+local selected_file
+
+function TextureResource:set_file(path)
+    local t = assetmgr.resource(path, { compile = true })
+    self.runtimedata._data.handle = t.handle
+    self.metadata.path = path
+    self.uidata2.text = self.metadata.path
+end
 
 function TextureResource:show()
     ResourcePath.show(self)
@@ -259,14 +274,9 @@ function TextureResource:show()
         if imgui.widget.BeginDragDropTarget() then
             local payload = imgui.widget.AcceptDragDropPayload("DragFile")
             if payload then
-                local relative_path = lfs.relative(lfs.path(payload), fs.path "":localpath())
-                local extension = tostring(relative_path:extension())
-                local path_str = tostring(relative_path)
-                if extension == ".png" or extension == ".dds" then
-                    local t = assetmgr.resource(path_str, { compile = true })
-                    self.runtimedata._data.handle = t.handle
-                    self.metadata.path = path_str
-                    self.uidata2.text = self.metadata.path
+                local path = fs.path(payload);
+                if path:equal_extension ".png" or path:equal_extension ".dds" then
+                    self:set_file(tostring(path))
                 end
             end
             imgui.widget.EndDragDropTarget()
@@ -274,7 +284,6 @@ function TextureResource:show()
 
         imgui.util.PushID("Save" .. self.label)
         if imgui.widget.Button("Save") then
-            self.metadata.path = tostring(lfs.relative(lfs.path(self.metadata.path), lfs.path(self.path):remove_filename()))
             utils.write_file(self.path, stringify(self.metadata))
         end
         imgui.util.PopID()
@@ -284,11 +293,36 @@ function TextureResource:show()
             local path = uiutils.get_saveas_path("Texture", ".texture")
             if path then
                 path = tostring(lfs.relative(lfs.path(path), fs.path "":localpath()))
-                self.metadata.path = tostring(lfs.relative(lfs.path(self.metadata.path), lfs.path(path):remove_filename()))
                 utils.write_file(path, stringify(self.metadata))
             end
         end
         imgui.util.PopID()
+        imgui.cursor.SameLine()
+        
+        if imgui.widget.Button("Select...") then
+            local glb_filename = uiutils.get_open_file_path("Textures", ".glb")
+            if glb_filename then
+                glb_path = "/" .. access.virtualpath(global_data.repo, fs.path(glb_filename))
+                rc.compile(glb_path)
+                image_path = rc.compile(glb_path .. "|images")
+                imgui.windows.OpenPopup("select_image")
+            end
+        end
+        imgui.cursor.SameLine()
+        if image_path then
+            if imgui.windows.BeginPopup("select_image") then
+                for path in image_path:list_directory() do
+                    if path:equal_extension ".png" or path:equal_extension ".dds" then
+                        local filename = path:filename():string()
+                        if imgui.widget.Selectable(filename, false) then
+                            self:set_file(glb_path .. "|images/" .. filename)
+                            image_path = nil
+                        end
+                    end
+                end
+                imgui.windows.EndPopup()
+            end
+        end
         imgui.table.End()
     end
 end

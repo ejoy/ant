@@ -5,10 +5,7 @@ local imgui         = require "imgui"
 local import_prefab = require "import_prefab"
 local w
 local world
-local eventPrefab
 local wndflags = imgui.flags.Window { "NoTitleBar", "NoBackground", "NoResize", "NoScrollbar", "NoBringToFrontOnFocus" }
---local VIEWER <const> = "/pkg/tools.viewer.prefab_viewer/res/"
-local VIEWER <const> = "/pkg/tools.prefab_editor/res/"
 local function ONCE(t, s)
     if not s then return t end
 end
@@ -43,7 +40,6 @@ function event.init(pw, ph)
             }
         }
     }
-    --eventPrefab = world:sub {"editor", "prefab"}
     w.init()
 end
 
@@ -52,10 +48,7 @@ function event.dropfiles(filelst)
 end
 
 function event.update()
-    -- for _,_,e in eventPrefab:unpack() do
-    --     entities = e
-    -- end
 end
+
 function event.exit()
-    --w.exit()
 end

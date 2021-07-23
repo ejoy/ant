@@ -25,9 +25,6 @@ local s = ecs.system "luaecs_filter_system"
 local ies = world:interface "ant.scene|ientity_state"
 
 local evCreateFilter = world:sub {"luaecs", "create_filter"}
-local evCreateEntity = world:sub {"luaecs", "create_entity"}
-local evUpdateEntity = world:sub {"luaecs", "update_entity"}
-local evRemoveEntity = world:sub {"luaecs", "remove_entity"}
 
 local Layer <const> = {
     primitive = {
@@ -43,6 +40,14 @@ local Layer <const> = {
         "opaticy"
     },
 }
+
+local function findCamera(eid)
+    local v = w:bsearch("eid", "eid", eid)
+    if v then
+        w:sync("eid camera_id:in", v)
+        return v.camera_id
+    end
+end
 
 local function render_queue_create(e)
     local viewid = e.render_target.viewid
@@ -70,7 +75,7 @@ local function render_queue_create(e)
         exclude_mask = exclude_mask,
         layer = layer,
         viewid = viewid,
-        camera_eid = camera_eid,
+        camera_id = assert(findCamera(camera_eid), "not found camera"),
         update_queue = {},
     }
     register_tag(rq.tag)
@@ -82,36 +87,10 @@ local function render_queue_create(e)
     w:new {
         [type.."_filter"] = true,
         visible = visible,
+        main_queue = e.main_queue,
+        blit_queue = e.blit_queue,
         render_queue = rq
     }
-end
-
-local function render_object_add(eid)
-    local e = world[eid]
-    local rc = e._rendercache
-    for v in w:select "eid:in" do
-        if v.eid == eid then
-            v.render_object = rc
-            v.render_object_update = true
-            w:sync("eid render_object:out render_object_update:temp", v)
-            return
-        end
-    end
-    w:new {
-        eid = eid,
-        render_object = rc,
-        render_object_update = true,
-        filter_material = {},
-    }
-end
-
-local function render_object_del(eid)
-    for v in w:select "eid:in" do
-        if v.eid == eid then
-            w:remove(v)
-            return
-        end
-    end
 end
 
 function s:init()
@@ -119,20 +98,9 @@ function s:init()
         name = "render_queue",
         type = "lua",
     }
-    w:register {
-        name = "render_object",
-        type = "lua",
-    }
-    w:register {
-        name = "eid",
-        type = "int",
-    }
-    w:register {
-        name = "filter_material",
-        type = "lua",
-    }
-    register_tag "render_object_update"
     register_tag "visible"
+    register_tag "main_queue"
+    register_tag "blit_queue"
     register_tag "primitive_filter"
     register_tag "pickup_filter"
     register_tag "shadow_filter"
@@ -142,47 +110,9 @@ function s:init()
     }
 end
 
-function s:data_changed()
+function s:luaecs_init_entity()
     for _, _, e in evCreateFilter:unpack() do
         render_queue_create(e)
-    end
-end
-
-function s:begin_filter()
-    for _, _, eid in evCreateEntity:unpack() do
-        local e = world[eid]
-        local rc = e._rendercache
-        local state = rc.entity_state
-        if state and rc.fx then
-            local needadd = rc.vb and rc.fx and rc.state
-            if needadd then
-                render_object_add(eid)
-            end
-        end
-    end
-    for _, _, eid in evUpdateEntity:unpack() do
-        local e = world[eid]
-        local rc = e._rendercache
-        local state = rc.entity_state
-        if state and rc.fx then
-            local needadd = rc.vb and rc.fx and rc.state
-            if needadd then
-                render_object_add(eid)
-            else
-                render_object_del(eid)
-            end
-        end
-    end
-    for _, _, eid in evRemoveEntity:unpack() do
-        local e = world[eid]
-        local rc = e._rendercache
-        local state = rc.entity_state
-        if state and rc.fx then
-            local needadd = rc.vb and rc.fx and rc.state
-            if needadd then
-                render_object_del(eid)
-            end
-        end
     end
 end
 
@@ -194,7 +124,7 @@ function s:render_submit()
     for v in w:select "visible render_queue:in" do
         local rq = v.render_queue
         local viewid = rq.viewid
-        local camera = world[rq.camera_eid]._rendercache
+        local camera = w:object("camera_node", rq.camera_id)
         bgfx.touch(viewid)
         bgfx.set_view_transform(viewid, camera.viewmat, camera.projmat)
     end
