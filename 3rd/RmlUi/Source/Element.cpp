@@ -880,7 +880,7 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 
 void Element::ProcessDefaultAction(Event& event)
 {
-	if (event.GetId() == EventId::Mousedown && event.GetParameter<int>("button", 0) == 0) {
+	if (event.GetId() == EventId::Mousedown && event.GetParameter<int>("button", 0) == (int)MouseButton::Left) {
 		SetPseudoClass("active", true);
 	}
 

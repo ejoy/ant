@@ -221,5 +221,12 @@ enum class EventId : uint16_t
 	FirstCustomId = NumDefinedIds,
 };
 
+enum class MouseButton {
+	None = -1,
+	Left = 0,
+	Right = 1,
+	Middle = 2,
+};
+
 } // namespace Rml
 #endif

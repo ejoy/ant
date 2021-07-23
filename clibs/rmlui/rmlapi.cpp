@@ -131,16 +131,17 @@ lContextUnloadDocument(lua_State* L) {
 static int
 lContextProcessMouseMove(lua_State* L) {
 	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
-	int x = luaL_checkinteger(L, 2);
-	int y = luaL_checkinteger(L, 3);
-	ctx->ProcessMouseMove(x, y, 0);
+	Rml::MouseButton button = (Rml::MouseButton)luaL_checkinteger(L, 2);
+	int x = luaL_checkinteger(L, 3);
+	int y = luaL_checkinteger(L, 4);
+	ctx->ProcessMouseMove(button, x, y, 0);
 	return 0;
 }
 
 static int
 lContextProcessMouseButtonDown(lua_State* L) {
 	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
-	int button = luaL_checkinteger(L, 2);
+	Rml::MouseButton button = (Rml::MouseButton)luaL_checkinteger(L, 2);
 	ctx->ProcessMouseButtonDown(button, 0);
 	return 0;
 }
@@ -148,7 +149,7 @@ lContextProcessMouseButtonDown(lua_State* L) {
 static int
 lContextProcessMouseButtonUp(lua_State* L) {
 	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
-	int button = luaL_checkinteger(L, 2);
+	Rml::MouseButton button = (Rml::MouseButton)luaL_checkinteger(L, 2);
 	ctx->ProcessMouseButtonUp(button, 0);
 	return 0;
 }

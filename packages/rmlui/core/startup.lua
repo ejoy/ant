@@ -81,9 +81,7 @@ function S.mouse(x, y, type, state)
     local MOUSE_STATE_MOVE <const> = 2
     local MOUSE_STATE_UP <const> = 3
     if state == MOUSE_STATE_MOVE then
-        if type == MOUSE_TYPE_NONE then
-            rmlui.ContextProcessMouseMove(context, x, y)
-        end
+        rmlui.ContextProcessMouseMove(context, type-1, x, y)
     elseif state == MOUSE_STATE_DOWN then
         rmlui.ContextProcessMouseButtonDown(context, type-1)
     elseif state == MOUSE_STATE_UP then
