@@ -138,8 +138,8 @@ function s:update_transform()
 		r.aabb = n.aabb
 		r.worldmat = n.worldmat
 	end
-	for v in w:select "camera:in scene_node(scene_id):in" do
-		local r, n = v.camera.rendercache, v.scene_node
+	for v in w:select "camera_node(camera_id):in scene_node(scene_id):in" do
+		local r, n = v.camera_node, v.scene_node
 		r.worldmat = n.worldmat
 	end
 end

@@ -65,7 +65,7 @@ system "luaecs_filter_system"
     .implement  "luaecs_filter_system.lua"
     .require_interface "ientity_state"
     .method     "init"
-    .method     "data_changed"
+    .method     "luaecs_init_entity"
     .method     "end_filter"
     .method     "render_submit"
 

@@ -17,11 +17,7 @@ local function isCamera(e)
 end
 
 local function findEntity(eid)
-    for v in w:select "eid:in" do
-        if v.eid == eid then
-            return v
-        end
-    end
+	return w:bsearch("eid", "eid", eid)
 end
 
 function s:init()
@@ -51,6 +47,15 @@ function s:init()
         name = "camera",
         type = "lua",
     }
+    w:register {
+        name = "camera_id",
+        type = "int",
+    }
+    w:register {
+        name = "camera_node",
+        type = "lua",
+        ref = true,
+    }
 
 	-- SceneObject
 	w:register {
@@ -73,23 +78,25 @@ function s:luaecs_sync()
 		local e = world[eid]
 		local initargs = { eid = eid, initializing = true }
 		local rc = e._rendercache
-		local parent
-		if e.parent and world[e.parent].scene_entity then
-			parent = e.parent
+		do
+			local parent
+			if e.parent and world[e.parent].scene_entity then
+				parent = e.parent
+			end
+			local scene_node = {
+				srt = rc.srt,
+				lock_target = e.lock_target,
+				bounding = e._bounding,
+				_self = eid,
+				_parent = parent,
+			}
+			local id = w:ref("scene_node", {
+				scene_node = scene_node,
+				initializing = true,
+			})
+			initargs.scene_id = id
+			e._scene_id = id
 		end
-		local scene_node = {
-			srt = rc.srt,
-			lock_target = e.lock_target,
-			bounding = e._bounding,
-			_self = eid,
-			_parent = parent,
-		}
-		local id = w:ref("scene_node", {
-			scene_node = scene_node,
-			initializing = true,
-		})
-		initargs.scene_id = id
-		e._scene_id = id
 
 		if isRenderObject(e) then
 			initargs.render_object = rc
@@ -97,11 +104,14 @@ function s:luaecs_sync()
 			initargs.filter_material = {}
 		end
 		if isCamera(e) then
+			local id = w:ref("camera_node", {
+				camera_node = rc
+			})
+			initargs.camera_id = id
 			initargs.camera = {
 				frustum     = e.frustum,
 				clip_range  = e.clip_range,
 				dof         = e.dof,
-				rendercache = rc, -- TODO?
 			}
 		end
 		w:new(initargs)
@@ -125,6 +135,15 @@ function s:luaecs_sync()
 				w:remove(v)
 			end
 		end
+	end
+
+	--debug
+	local eid
+	for v in w:select "eid:in" do
+		if eid and eid >= v.eid then
+			error("eid is not sorted")
+		end
+		eid = v.eid
 	end
 end
 

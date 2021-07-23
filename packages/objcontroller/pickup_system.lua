@@ -125,7 +125,7 @@ local function enable_pickup(enable)
 	end
 end
 
-local function update_camera(e, clickpt) 
+local function update_camera(e, clickpt)
 	local mq = world:singleton_entity "main_queue"
 	local rt = mq.render_target.view_rect
 

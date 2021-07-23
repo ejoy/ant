@@ -41,6 +41,14 @@ local Layer <const> = {
     },
 }
 
+local function findCamera(eid)
+    local v = w:bsearch("eid", "eid", eid)
+    if v then
+        w:sync("eid camera_id:in", v)
+        return v.camera_id
+    end
+end
+
 local function render_queue_create(e)
     local viewid = e.render_target.viewid
     local camera_eid = e.camera_eid
@@ -67,7 +75,7 @@ local function render_queue_create(e)
         exclude_mask = exclude_mask,
         layer = layer,
         viewid = viewid,
-        camera_eid = camera_eid,
+        camera_id = assert(findCamera(camera_eid), "not found camera"),
         update_queue = {},
     }
     register_tag(rq.tag)
@@ -79,6 +87,8 @@ local function render_queue_create(e)
     w:new {
         [type.."_filter"] = true,
         visible = visible,
+        main_queue = e.main_queue,
+        blit_queue = e.blit_queue,
         render_queue = rq
     }
 end
@@ -89,6 +99,8 @@ function s:init()
         type = "lua",
     }
     register_tag "visible"
+    register_tag "main_queue"
+    register_tag "blit_queue"
     register_tag "primitive_filter"
     register_tag "pickup_filter"
     register_tag "shadow_filter"
@@ -98,7 +110,7 @@ function s:init()
     }
 end
 
-function s:data_changed()
+function s:luaecs_init_entity()
     for _, _, e in evCreateFilter:unpack() do
         render_queue_create(e)
     end
@@ -112,7 +124,7 @@ function s:render_submit()
     for v in w:select "visible render_queue:in" do
         local rq = v.render_queue
         local viewid = rq.viewid
-        local camera = world[rq.camera_eid]._rendercache
+        local camera = w:object("camera_node", rq.camera_id)
         bgfx.touch(viewid)
         bgfx.set_view_transform(viewid, camera.viewmat, camera.projmat)
     end

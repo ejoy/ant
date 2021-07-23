@@ -1,5 +1,6 @@
 local ecs       = ...
 local world     = ecs.world
+local w         = world.w
 
 local mc = import_package "ant.math".constant
 local math3d    = require "math3d"
@@ -210,20 +211,22 @@ end
 
 local cameraview_sys = ecs.system "camera_view_system"
 
-local function update_camera(eid)
-    local e = world[eid]
-    local rc = e._rendercache
-    local worldmat = rc.worldmat
-    rc.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), rc.updir)
-    rc.projmat = math3d.projmat(rc.frustum)
-    rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
+local function update_camera(e)
+    local rq = e.render_queue
+    local camera = w:object("camera_node", rq.camera_id)
+    local worldmat = camera.worldmat
+    camera.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), camera.updir)
+    camera.projmat = math3d.projmat(camera.frustum)
+    camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 end
 
 function cameraview_sys:update_mainview_camera()
-    local mq = world:singleton_entity "main_queue"
-    update_camera(mq.camera_eid)
-    local bq = world:singleton_entity "blit_queue"
-    update_camera(bq.camera_eid)
+    for v in w:select "main_queue render_queue:in" do
+        update_camera(v)
+    end
+    for v in w:select "blit_queue render_queue:in" do
+        update_camera(v)
+    end
 end
 
 local bm = ecs.action "bind_camera"
