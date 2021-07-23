@@ -57,7 +57,7 @@ function s:render_submit()
         local rq = v.render_queue
         local viewid = rq.viewid
         for i = 1, #rq.layer_tag do
-            for u in w:select(rq.layer_tag[i] .. " " .. rq.cull_tag .. " render_object:in eid:in") do
+            for u in w:select(rq.layer_tag[i] .. " " .. rq.cull_tag .. ":absent render_object:in eid:in") do
                 irender.draw(viewid, u.render_object)
             end
         end

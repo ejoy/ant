@@ -82,7 +82,8 @@ function icc.is_active()
     local e = world[cceid]
     local ceid = e._camera_controller.camera_eid
     if ceid and world[ceid] then
-        return icamera.controller(ceid) == cceid
+        --TODO
+        return true
     end
 end
 

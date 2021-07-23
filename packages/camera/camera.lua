@@ -6,14 +6,6 @@ local math3d    = require "math3d"
 local default_comp 	= import_package "ant.general".default
 local irq = world:interface "ant.render|irenderqueue"
 
-local cm = ecs.transform "camera_transform"
-function cm.process_entity(e)
-    local f = e.frustum
-    e._camera = {
-        clip_range = e.clip_range and e.clip_range or {f.n, f.f}
-    }
-end
-
 local cmm = ecs.transform "camera_motion_transform"
 
 function cmm.process_entity(e)
@@ -70,11 +62,11 @@ function ic.create(info)
     return world:create_entity {
         policy = policy,
         data = {
-            transform   = math3d.ref(math3d.inverse(viewmat)),
-            frustum     = frustum,
-            lock_target = info.locktarget,
-            updir       = info.updir,
             name        = info.name or "DEFAULT_CAMERA",
+            transform   = math3d.ref(math3d.inverse(viewmat)),
+            updir       = info.updir,
+            lock_target = info.locktarget,
+            frustum     = frustum,
             clip_range  = info.clip_range,
             scene_entity= true,
             camera      = true,
@@ -87,18 +79,6 @@ local function bind_queue(cameraeid, qeid)
     irq.set_camera(qeid, cameraeid)
     local vr = irq.view_rect(qeid)
     ic.set_frustum_aspect(cameraeid, vr.w / vr.h)
-end
-
-function ic.controller(eid, ceid)
-    local e = world[eid]
-    local c = e._camera
-    local old_ceid = c.controller_eid
-
-    if ceid == nil then
-        return old_ceid
-    end
-    c.controller_eid = ceid
-    world:pub{"camera_controller_changed", ceid, old_ceid}
 end
 
 function ic.bind(eid, which_queue)
