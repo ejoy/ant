@@ -118,11 +118,13 @@ local function default_tex_info(w, h, fmt)
     }
 end
 
-local function write_to_file(filename, buffers, width, height)
-    local pm = bgfx.memory_buffer(width*height*rbsize*rbsize*4)
-    image.pack_memory(buffers, rbsize*4, rbsize, width, height, pm)
-    local wsize, hsize = math.tointeger(width*rbsize), math.tointeger(height*rbsize)
-    local ti = default_tex_info(wsize, hsize, "R32F")
+local function write_to_file(filename, buffers, fmt, bw, bh, width, height)
+    local numbits = image.getBitsPerPixel(fmt)
+    local numbytes = numbits // 8
+    local pm = bgfx.memory_buffer(width*height*bw*bh*numbytes)
+    image.pack_memory(buffers, bw*numbytes, bh, width, height, pm)
+    local wsize, hsize = math.tointeger(width*bw), math.tointeger(height*bw)
+    local ti = default_tex_info(wsize, hsize, fmt)
     local c = image.encode_image(ti, pm, {type="dds", srgb=false})
 
     local fslocal = require "filesystem.local"
@@ -191,7 +193,16 @@ local function fetch_heightmap_data()
         end
     end
 
-    write_to_file("abc.dds", buffers, xnumpass, znumpass)
+    -- do
+    --     local bbb = {
+    --         bgfx.memory_buffer("f", {1.0, 2.0, 3.0, 4.0}),
+    --         bgfx.memory_buffer("f", {5.0, 6.0, 7.0, 8.0}),
+    --     }
+
+    --     write_to_file("abc1.dds", bbb, "R32F", 2, 2, 2, 1)
+    -- end
+
+    write_to_file("abc.dds", buffers, "R32F", rbsize, rbsize, xnumpass, znumpass)
 end
 
 local hm_mb = world:sub {"fetch_heightmap"}

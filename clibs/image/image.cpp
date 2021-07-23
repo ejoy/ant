@@ -84,7 +84,7 @@ lpack_memory(lua_State *L){
     for (uint32_t ish=0; ish<sizeheight; ++ish){
         const uint32_t iph = ish/memoryheight;
         const uint32_t ph_idx = iph*packwidth;
-        const uint32_t ish_offset = ish*memorywidth;
+        const uint32_t ish_offset = ish*memorywidth*packwidth;
         const uint32_t mh = ish % memoryheight;
         const uint32_t moffset = mh*memorywidth;
         for (uint32_t ipw=0; ipw<packwidth; ++ipw){
@@ -101,11 +101,11 @@ lpack_memory(lua_State *L){
 
 static int
 lencode_image(lua_State *L){
-    const char* image_type = luaL_checkstring(L, 1);
-    bimg::TextureInfo info;
+    bimg::ImageContainer ic;
     {
-        lua_struct::unpack(L, 2, info);
-        lua_getfield(L, 2, "format");
+        bimg::TextureInfo info;
+        lua_struct::unpack(L, 1, info);
+        lua_getfield(L, 1, "format");
         const char* fmtname = lua_tostring(L, -1);
         info.format = bimg::getFormat(fmtname);
         lua_pop(L, 1);
@@ -113,22 +113,34 @@ lencode_image(lua_State *L){
         if (info.format == bimg::TextureFormat::Count){
             return luaL_error(L, "invalid format:%s", fmtname);
         }
+
+        ic.m_width  = info.width;
+        ic.m_height = info.height;
+        ic.m_format = info.format;
+        ic.m_size   = info.storageSize;
+        ic.m_numLayers = info.numLayers;
+        ic.m_numMips = info.numMips;
+        ic.m_offset = 0;
+        ic.m_depth = info.depth;
+        ic.m_cubeMap = info.cubeMap;
+        ic.m_data = nullptr;
+        ic.m_allocator = nullptr;
     }
 
-    struct memory *m = (struct memory *)luaL_checkudata(L, 3, "BGFX_MEMORY");
+    struct memory *m = (struct memory *)luaL_checkudata(L, 2, "BGFX_MEMORY");
 
-    bimg::ImageContainer ic;
-    ic.m_width  = info.width;
-    ic.m_height = info.height;
-    ic.m_format = info.format;
-    ic.m_size   = info.storageSize;
-    ic.m_numLayers = info.numLayers;
-    ic.m_numMips = info.numMips;
-    ic.m_offset = 0;
-    ic.m_depth = info.depth;
-    ic.m_cubeMap = info.cubeMap;
-    ic.m_data = m->data;
-    ic.m_allocator = nullptr;
+    luaL_checktype(L, 3, LUA_TTABLE);
+    auto get_type = [L](int idx){
+        auto t = lua_getfield(L, idx, "type");
+        if (t != LUA_TSTRING){
+            luaL_error(L, "invalid 'type' define in arg: %d, need string, like:dds, tga, png", t);
+        }
+        auto tt = lua_tostring(L, -1);
+        lua_pop(L, 1);
+        return tt;
+    };
+
+    const char* image_type = get_type(3);
 
     bx::Error err;
     if (strcmp(image_type, "dds") == 0){
@@ -136,10 +148,8 @@ lencode_image(lua_State *L){
         bx::MemoryBlock mb(&allocator);
         bx::MemoryWriter sw(&mb);
         ic.m_ktx = ic.m_ktxLE = false;
-        encode_dds_info ei = {false};
-        if (!lua_isnoneornil(L, 4)){
-            lua_struct::unpack(L, 4, ei);
-        }
+        encode_dds_info ei;
+        lua_struct::unpack(L, 3, ei);
         ic.m_srgb = ei.srgb;
         
         const int32_t filesize = bimg::imageWriteDds(&sw, ic, m->data, (uint32_t)m->size, &err);
