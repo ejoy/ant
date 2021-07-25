@@ -430,7 +430,6 @@ lRenderFrame(lua_State* L){
 
 static int
 lSystemUpdate(lua_State* L) {
-	lua_plugin* plugin = get_lua_plugin();
 	double delta = luaL_checknumber(L, 1);
 	if (g_wrapper) {
 		g_wrapper->interface.m_system.update(delta);

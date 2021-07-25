@@ -4,11 +4,8 @@
 #include "EffekseerRendererBGFX.Base.h"
 #include "EffekseerRendererBGFX.Renderer.h"
 #include "GraphicsDevice.h"
+#include "../../../clibs/bgfx/bgfx_interface.h"
 
-extern bgfx_interface_vtbl_t* ibgfx();
-#ifndef BGFX
-#define BGFX(api) ibgfx()->api
-#endif
 
 namespace EffekseerRendererBGFX
 {

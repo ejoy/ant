@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "render.h"
+#include "../bgfx/bgfx_interface.h"
 
 #include <RmlUi/Core.h>
 #include <RmlUi/FileInterface.h>
@@ -8,9 +9,6 @@
 #ifdef RMLUI_MATRIX_ROW_MAJOR
 error "need matrix type as column major"
 #endif //RMLUI_MATRIX_ROW_MAJOR
-
-extern bgfx_interface_vtbl_t* ibgfx();
-#define BGFX(api) ibgfx()->api
 
 #define RENDER_STATE (BGFX_STATE_WRITE_RGB|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA)
 Renderer::Renderer(const RmlContext* context)
