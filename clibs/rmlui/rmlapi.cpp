@@ -18,7 +18,6 @@
 #include "system.h"
 #include "context.h"
 
-#define EXPORT_BGFX_INTERFACE
 #include "../bgfx/bgfx_interface.h"
 #include "../bgfx/luabgfx.h"
 #include <bgfx/c99/bgfx.h>

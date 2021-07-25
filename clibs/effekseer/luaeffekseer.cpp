@@ -1,5 +1,4 @@
 #include <lua.hpp>
-#define EXPORT_BGFX_INTERFACE
 #include "../bgfx/bgfx_interface.h"
 
 #include <glm/glm.hpp>
