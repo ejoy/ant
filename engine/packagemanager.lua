@@ -49,7 +49,7 @@ local function register_package(path)
     --TODO: editor模式统一使用vfs.dofile
     local config = __ANT_RUNTIME__
         and dofile(cfgpath:string())
-        or dofile(cfgpath:localpath():string())
+        or dofile(cfgpath:string())
     for _, field in ipairs {'name'} do
         if not config[field] then
             error(('Missing `%s` field in `%s`.'):format(field, cfgpath:string()))

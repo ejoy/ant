@@ -61,9 +61,10 @@ local function init(c)
 	local initstr = ""
 	if __ANT_RUNTIME__ then
 	else
-		initstr = [[
+		initstr = ([[
+package.cpath = %q
 require "vfs"
-]]
+]]):format(package.cpath)
 		local dbg = debug.getregistry()["lua-debug"]
 		if dbg then
 			dbg:event("setThreadName", "Bootstrap")

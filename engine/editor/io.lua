@@ -1,6 +1,7 @@
-local repopath = ...
+local cpath, repopath = ...
 
 package.path = "engine/?.lua"
+package.cpath = cpath
 
 local lfs = require "filesystem.local"
 local access = require "vfs.repoaccess"

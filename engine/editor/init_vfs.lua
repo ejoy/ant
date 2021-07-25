@@ -14,8 +14,8 @@ if dbg then
     dbg:event("setThreadName", "IO")
     dbg:event "wait"
 end
-assert(loadfile "engine/editor/io.lua")(%q)
-]]):format(repopath))
+assert(loadfile "engine/editor/io.lua")(%q, %q)
+]]):format(package.cpath, repopath))
 
 local vfs = require "vfs"
 vfs.initfunc "engine/firmware/init_thread.lua"
