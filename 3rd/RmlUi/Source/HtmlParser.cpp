@@ -353,10 +353,10 @@ void HtmlParser::EnterOpenElement(char c) {
 				case '>':
 					m_handler->OnElementBegin(accum.c_str());
 					m_stack_items.push(accum);
+					m_handler->OnElementClose();
 					return;
 				case '/':
 					m_handler->OnElementBegin(accum.c_str());
-					m_handler->OnCloseSingleElement(accum.c_str());
 					state = st_single;
 					break;
 				case ' ':
@@ -377,7 +377,6 @@ void HtmlParser::EnterOpenElement(char c) {
 				break;
 			case st_end_name:
 				if (c == '/') {
-					m_handler->OnCloseSingleElement(accum.c_str());
 					m_stack_items.pop();
 					state = st_single;
 				}
@@ -397,11 +396,11 @@ void HtmlParser::EnterOpenElement(char c) {
 			case st_end_attr:
 				switch (c) {
 				case '/':
-					m_handler->OnCloseSingleElement(accum.c_str());
 					m_stack_items.pop();
 					state = st_single;
 					break;
 				case '>':
+					m_handler->OnElementClose();
 					return;
 				default:
 					HtmlAttribute attr;
@@ -425,6 +424,8 @@ void HtmlParser::EnterOpenElement(char c) {
 					ThrowException(HtmlError::SPE_WHITESPASE_CLOSE);
 					break;
 				case '>':
+					m_handler->OnElementClose();
+					m_handler->OnCloseSingleElement(accum.c_str());
 					return;
 				default:
 					ThrowException(HtmlError::SPE_MISSING_CLOSING);
