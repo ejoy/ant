@@ -131,8 +131,8 @@ static int
 lContextProcessMouseMove(lua_State* L) {
 	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
 	Rml::MouseButton button = (Rml::MouseButton)luaL_checkinteger(L, 2);
-	int x = luaL_checkinteger(L, 3);
-	int y = luaL_checkinteger(L, 4);
+	int x = (int)luaL_checkinteger(L, 3);
+	int y = (int)luaL_checkinteger(L, 4);
 	ctx->ProcessMouseMove(button, x, y, 0);
 	return 0;
 }
@@ -378,9 +378,9 @@ lRmlShutdown(lua_State* L) {
 
 static int
 lRmlCreateContext(lua_State* L) {
-	int w = luaL_checkinteger(L, 1);
-	int h = luaL_checkinteger(L, 2);
-	Rml::Context* ctx = new Rml::Context(Rml::Size(w, h));
+	int w = (int)luaL_checkinteger(L, 1);
+	int h = (int)luaL_checkinteger(L, 2);
+	Rml::Context* ctx = new Rml::Context(Rml::Size((float)w, (float)h));
 	if (!ctx) {
 		return 0;
 	}
