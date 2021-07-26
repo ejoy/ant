@@ -47,7 +47,7 @@ end
 
 local function do_create_entity(vb, ib, srt, name)
 	local mesh = create_dynamic_mesh("p3|c40niu", vb, ib)
-	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line.material", name, mesh)
+	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line_color.material", name, mesh)
 end
 
 function m.create_dynamic_frustum(frustum_points, name, color)

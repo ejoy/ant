@@ -167,7 +167,8 @@ function effekseer_sys:follow_transform_updated()
     end
     for _, eid in world:each "effekseer" do
 		local e = world[eid]
-		effekseer.update_transform(e.effect_instance.handle, iom.worldmat(eid))
+        local worldmat = world.w:object("scene_node", e._scene_id).worldmat
+		effekseer.update_transform(e.effect_instance.handle, worldmat)
     end
 end
 

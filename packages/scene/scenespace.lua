@@ -74,17 +74,17 @@ local function update_scene_node(node)
 	if node.srt == nil and node.parent == nil then
 		return
 	end
-	node.worldmat = node.srt and math3d.matrix(node.srt) or nil
-	if node.parent and node.lock_target == nil then
+	node._worldmat = node.srt and math3d.matrix(node.srt) or nil
+	if node.parent then
 		local pnode = w:object("scene_node", node.parent)
-		if pnode.worldmat then
-			node.worldmat = node.worldmat and math3d.mul(pnode.worldmat, node.worldmat) or math3d.matrix(pnode.worldmat)
+		if pnode._worldmat then
+			node._worldmat = node._worldmat and math3d.mul(pnode._worldmat, node._worldmat) or math3d.matrix(pnode._worldmat)
 		end
 	end
-	if node.worldmat == nil or node.bounding == nil then
-		node.aabb = nil
+	if node._worldmat == nil or node.aabb == nil then
+		node._aabb = nil
 	else
-		node.aabb = math3d.aabb_transform(node.worldmat, node.bounding.aabb)
+		node._aabb = math3d.aabb_transform(node._worldmat, node.aabb)
 	end
 end
 
@@ -92,7 +92,7 @@ local function sync_scene_node()
 	w:order("scene_sorted", "scene_node", scenequeue)
 end
 
-function s:luaecs_init_entity()
+function s:entity_init()
 	local needsync = false
 
 	for v in w:select "initializing scene_id:in" do
@@ -135,12 +135,12 @@ function s:update_transform()
 	end
 	for v in w:select "render_object:in scene_node(scene_id):in" do
 		local r, n = v.render_object, v.scene_node
-		r.aabb = n.aabb
-		r.worldmat = n.worldmat
+		r.aabb = n._aabb
+		r.worldmat = n._worldmat
 	end
 	for v in w:select "camera_node(camera_id):in scene_node(scene_id):in" do
 		local r, n = v.camera_node, v.scene_node
-		r.worldmat = n.worldmat
+		r.worldmat = n._worldmat
 	end
 end
 

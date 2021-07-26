@@ -2,7 +2,6 @@ local typeclass = require "typeclass"
 local system = require "system"
 local policy = require "policy"
 local event = require "event"
-local luaecs = import_package "ant.luaecs"
 
 local world = {}
 world.__index = world
@@ -339,7 +338,6 @@ end
 function world:pipeline_update()
 	self._update_func()
 	clear_removed(self)
-	self.w:update()
 end
 
 function world:enable_system(name, enable)
@@ -367,7 +365,7 @@ function m.new_world(config)
 		_removed = {},	-- A list of { eid, component_name, component } / { eid, entity }
 		_switchs = {},	-- for enable/disable
 		_uniques = {},
-		w = luaecs.world(),
+		w = config.w
 	}, world)
 
 	event.init(world)

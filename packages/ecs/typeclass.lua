@@ -69,7 +69,7 @@ local check_map = {
 	action = "action",
 }
 
-local OBJECT = {"system","policy","transform","interface","component","pipeline","action"}
+local OBJECT = {"system","policy","policy_v2","transform","interface","component","component_v2","pipeline","action"}
 
 local function solve_object(o, w, what, fullname)
 	local decl = w._decl[what][fullname]
@@ -98,6 +98,15 @@ function copy.policy(v)
 		action = v.action,
 	}
 end
+function copy.policy_v2(v)
+	local t = {}
+	table_append(t, v.component)
+	table_append(t, v.unique_component)
+	return {
+		policy_v2 = v.require_policy_v2,
+		component_v2 = t,
+	}
+end
 function copy.transform(v)
 	return {
 		policy = v.require_policy,
@@ -114,6 +123,7 @@ end
 function copy.system() return {} end
 function copy.interface() return {} end
 function copy.component() return {} end
+function copy.component_v2() return {} end
 function copy.action() return {} end
 
 local function create_importor(w, ecs, declaration)
@@ -251,6 +261,9 @@ local function init(w, config)
 
 	for _, k in ipairs(config.ecs.import) do
 		import_decl(w, k)
+	end
+	if config.update_decl then
+		config.update_decl(w)
 	end
 
 	for _, objname in ipairs(OBJECT) do

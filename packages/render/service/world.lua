@@ -4,7 +4,7 @@ package.path = "engine/?.lua"
 require "bootstrap"
 
 local inputmgr  = import_package "ant.inputmgr"
-local ecs       = import_package "ant.ecs"
+local ecs       = import_package "ant.luaecs"
 local rhwi      = import_package "ant.hwi"
 
 local bgfx      = require "bgfx"

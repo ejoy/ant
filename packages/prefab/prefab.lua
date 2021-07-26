@@ -24,6 +24,7 @@ local function command(w, set, name, ...)
 	local iom = w:interface "ant.objcontroller|obj_motion"
 	local iani = w:interface "ant.animation|animation"
 	local ieff = w:interface "ant.effekseer|effekseer_playback"
+	local iss = w:interface "ant.scene|iscenespace"
 	if not cmd_handle then
 		cmd_handle = {
 			get_eid = function(eid)
@@ -33,7 +34,8 @@ local function command(w, set, name, ...)
 				w[ceid].parent = eid
 			end,
 			set_parent = function(eid, peid)
-				w[eid].parent = peid
+				--w[eid].parent = peid
+				iss.set_parent(eid, peid)
 			end,
 			get_parent = function(eid)
 				return w[eid].parent

@@ -1,4 +1,4 @@
-local ecs      = import_package "ant.ecs"
+local ecs      = import_package "ant.luaecs"
 local inputmgr = import_package "ant.inputmgr"
 
 local function create_world(config)

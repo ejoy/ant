@@ -226,6 +226,9 @@ function TextureResource:do_update()
     self.path:gsub('[^|]*', function (w) r[#r+1] = w end)
     if #r > 1 then
         self.metadata = datalist.parse(cr.read_file(self.path))
+        if self.metadata.path[1] ~= '/' then
+            self.metadata.path = r[1] .. "|images/" .. fs.path(self.metadata.path):filename():string()
+        end
     else
         self.metadata = utils.readtable(self.path)
     end
@@ -284,7 +287,9 @@ function TextureResource:show()
 
         imgui.util.PushID("Save" .. self.label)
         if imgui.widget.Button("Save") then
-            utils.write_file(self.path, stringify(self.metadata))
+            if not self.path:find("|", 1, true) then
+                utils.write_file(self.path, stringify(self.metadata))
+            end
         end
         imgui.util.PopID()
         imgui.cursor.SameLine()
