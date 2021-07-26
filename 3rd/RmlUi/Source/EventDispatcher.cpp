@@ -224,8 +224,7 @@ bool EventDispatcher::DispatchEvent(Element* target_element, const EventId id, c
 void EventDispatcher::CollectListeners(int dom_distance_from_target, const EventId event_id, const EventPhase event_executes_in_phases, Vector<CollectedListener>& collect_listeners)
 {
 	// Find all the entries with a matching id, given that listeners are sorted by id first.
-	Listeners::iterator begin, end;
-	std::tie(begin, end) = std::equal_range(listeners.begin(), listeners.end(), EventListenerEntry(event_id, nullptr, false), CompareId());
+	auto [begin, end] = std::equal_range(listeners.begin(), listeners.end(), EventListenerEntry(event_id, nullptr, false), CompareId());
 
 	const bool in_target_phase = (dom_distance_from_target == 0);
 
