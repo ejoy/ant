@@ -21,72 +21,26 @@ local function findEntity(eid)
 end
 
 function s:init()
-    w:register {
-        name = "initializing",
-    }
-
-	-- RenderObject
-    w:register {
-        name = "render_object_update",
-    }
-    w:register {
-        name = "eid",
-        type = "int",
-    }
-    w:register {
-        name = "render_object",
-        type = "lua",
-    }
-    w:register {
-        name = "filter_material",
-        type = "lua",
-    }
-
-	-- Camera
-    w:register {
-        name = "camera",
-        type = "lua",
-    }
-    w:register {
-        name = "camera_id",
-        type = "int",
-    }
-    w:register {
-        name = "camera_node",
-        type = "lua",
-        ref = true,
-    }
-
-	-- SceneObject
-	w:register {
-		name = "scene_node",
-		type = "lua",
-		ref = true,
-	}
-	w:register {
-		name = "scene_id",
-		type = "int",
-	}
-	w:register {
-		name = "transform",
-		type = "lua",
-	}
 end
 
 function s:luaecs_sync()
 	for _, _, eid in evCreate:unpack() do
 		local e = world[eid]
-		local initargs = { eid = eid, initializing = true }
+		local policy = {}
+		local data = { eid = eid, initializing = true }
 		local rc = e._rendercache
 		do
 			local parent
 			if e.parent and world[e.parent].scene_entity then
 				parent = e.parent
 			end
+			local aabb
+			if e.mesh and e.mesh.bounding and e.mesh.bounding.aabb then
+				aabb = e.mesh.bounding.aabb
+			end
 			local scene_node = {
 				srt = rc.srt,
-				lock_target = e.lock_target,
-				bounding = e._bounding,
+				aabb = aabb,
 				_self = eid,
 				_parent = parent,
 			}
@@ -94,27 +48,33 @@ function s:luaecs_sync()
 				scene_node = scene_node,
 				initializing = true,
 			})
-			initargs.scene_id = id
+			data.scene_id = id
 			e._scene_id = id
+			policy[#policy+1] = "ant.scene|scene_object"
 		end
 
 		if isRenderObject(e) then
-			initargs.render_object = rc
-			initargs.render_object_update = true
-			initargs.filter_material = {}
+			data.render_object = rc
+			data.render_object_update = true
+			data.filter_material = {}
+			policy[#policy+1] = "ant.scene|render_object"
 		end
 		if isCamera(e) then
 			local id = w:ref("camera_node", {
 				camera_node = rc
 			})
-			initargs.camera_id = id
-			initargs.camera = {
+			data.camera_id = id
+			data.camera = {
 				frustum     = e.frustum,
 				clip_range  = e.clip_range,
 				dof         = e.dof,
 			}
+			policy[#policy+1] = "ant.scene|camera"
 		end
-		w:new(initargs)
+		world:luaecs_create_entity {
+			policy = policy,
+			data = data
+		}
 	end
 	for _, _, eid in evUpdateEntity:unpack() do
 		local e = world[eid]
@@ -145,8 +105,4 @@ function s:luaecs_sync()
 		end
 		eid = v.eid
 	end
-end
-
-function s:luaecs_sync_done()
-	w:clear "initializing"
 end

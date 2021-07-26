@@ -110,7 +110,8 @@ function s:init()
     }
 end
 
-function s:luaecs_init_entity()
+function s:entity_init()
+    --TODO
     for _, _, e in evCreateFilter:unpack() do
         render_queue_create(e)
     end

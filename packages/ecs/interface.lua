@@ -96,6 +96,17 @@ local attribute = {
 		"pipeline",
 		"stage",
 	},
+	policy_v2 = {
+		"require_system",
+		"require_interface",
+		"require_policy_v2",
+		"component",
+		"unique_component",
+	},
+	component_v2 = {
+		"require_system",
+		"type",
+	},
 }
 
 local no_packspace = {
@@ -103,12 +114,14 @@ local no_packspace = {
 	pipeline = true,
 	action = true,
 	none = true,
+	component_v2 = true,
 }
 
 local check_map = {
 	require_system = "system",
 	require_interface = "interface",
 	require_policy = "policy",
+	require_policy_v2 = "policy_v2",
 	require_transform = "transform",
 	action = "action",
 	unique_component = "none",
