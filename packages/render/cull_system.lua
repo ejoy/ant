@@ -26,7 +26,7 @@ function cull_sys:cull()
 		local cull_tag = rq.cull_tag
 		for i = 1, #rq.layer_tag do
 			if NeedCull[rq.layer[i]] then
-				for u in w:select(rq.layer_tag[i] .. " render_object:in " .. cull_tag .. ":temp") do
+				for u in w:select(rq.layer_tag[i] .. " render_object:in " .. cull_tag .. "?out") do
 					local aabb = u.render_object.aabb
 					if aabb and math3d.frustum_intersect_aabb(frustum_planes, aabb) < 0 then
 						u[cull_tag] = true
