@@ -123,7 +123,7 @@ function s:luaecs_sync()
 			if v then
 				v.render_object = e._rendercache
 				v.render_object_update = true
-				w:sync("eid render_object:out render_object_update:out", v)
+				w:sync("eid render_object:out render_object_update?out", v)
 			end
 		end
 	end

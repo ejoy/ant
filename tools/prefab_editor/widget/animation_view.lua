@@ -208,11 +208,6 @@ end
 local function from_runtime_clip(runtime_clip)
     all_clips = {}
     all_groups = {}
-    -- for _, anim in pairs(edit_anims[current_eid]) do
-    --     if type(anim) == "table" and anim.clips then
-    --         anim.clips = {}
-    --     end
-    -- end
     for _, clip in ipairs(runtime_clip) do
         if clip.range then
             local start_frame = math.floor(clip.range[1] * sample_ratio)
@@ -225,8 +220,7 @@ local function from_runtime_clip(runtime_clip)
                 name_ui = {text = clip.name},
                 range_ui = {start_frame, end_frame, speed = 1}
             }
-            --local anim_clips = edit_anims[current_eid][clip.anim_name].clips
-            local clips = anim_clips[clip.anim_name]
+            local clips = anim_clips[clip.anim_name] or {}
             clips[#clips + 1] = new_clip
             all_clips[#all_clips+1] = new_clip
         end
@@ -335,10 +329,10 @@ local function to_runtime_clip()
         runtime_clips[#runtime_clips + 1] = to_runtime_group(all_clips, group)
     end
     if #runtime_clips < 1  then return end
-    anim_group_set_clips(current_eid, runtime_clips)
+    if current_eid then
+        anim_group_set_clips(current_eid, runtime_clips)
+    end
 end
-
-
 
 local function set_event_dirty(num)
     anim_state.event_dirty = num
@@ -1236,6 +1230,42 @@ local function construct_joints(eid)
     hierarchy:update_slot_list(world)
 end
 
+function m.load_clips()
+    if #all_clips == 0 then
+        local clips_filename = get_clips_filename();
+        if fs.exists(fs.path(clips_filename)) then
+            local path = fs.path(clips_filename):localpath()
+            local f = assert(fs.open(path))
+            local data = f:read "a"
+            f:close()
+            local clips = datalist.parse(data)
+            for _, clip in ipairs(clips) do
+                if clip.key_event then
+                    for _, ke in pairs(clip.key_event) do
+                        for _, e in ipairs(ke.event_list) do
+                            if e.collision and e.collision.shape_type ~= "None" then
+                                if not hierarchy.collider_list or not hierarchy.collider_list[e.collision.name] then
+                                    local eid = prefab_mgr:create("collider", {type = e.collision.shape_type, define = utils.deep_copy(default_collider_define[e.collision.shape_type]), parent = prefab_mgr.root, add_to_hierarchy = true})
+                                    world[eid].name = e.collision.name
+                                    world[eid].tag = e.collision.tag
+                                    imaterial.set_property(eid, "u_color", e.collision.color or {1.0,0.5,0.5,0.8})
+                                    hierarchy:update_collider_list(world)
+                                end
+                                e.collision.col_eid = hierarchy.collider_list[e.collision.name]
+                                e.collision.name = nil
+                            end
+                        end
+                    end
+                end
+            end
+            hierarchy:update_slot_list(world)
+            from_runtime_clip(clips)
+            set_event_dirty(-1)
+        end
+    end
+    to_runtime_clip()
+end
+
 local function construct_edit_animations(eid)
     edit_anims[eid] = {
         id          = eid,
@@ -1271,39 +1301,7 @@ local function construct_edit_animations(eid)
     end
     table.sort(edit_anim.name_list)
     set_current_anim(edit_anim.birth)
-    if #all_clips == 0 then
-        local clips_filename = get_clips_filename();
-        if fs.exists(fs.path(clips_filename)) then
-            local path = fs.path(clips_filename):localpath()
-            local f = assert(fs.open(path))
-            local data = f:read "a"
-            f:close()
-            local clips = datalist.parse(data)
-            for _, clip in ipairs(clips) do
-                if clip.key_event then
-                    for _, ke in pairs(clip.key_event) do
-                        for _, e in ipairs(ke.event_list) do
-                            if e.collision and e.collision.shape_type ~= "None" then
-                                if not hierarchy.collider_list or not hierarchy.collider_list[e.collision.name] then
-                                    local eid = prefab_mgr:create("collider", {type = e.collision.shape_type, define = utils.deep_copy(default_collider_define[e.collision.shape_type]), parent = prefab_mgr.root, add_to_hierarchy = true})
-                                    world[eid].name = e.collision.name
-                                    world[eid].tag = e.collision.tag
-                                    imaterial.set_property(eid, "u_color", e.collision.color or {1.0,0.5,0.5,0.8})
-                                    hierarchy:update_collider_list(world)
-                                end
-                                e.collision.col_eid = hierarchy.collider_list[e.collision.name]
-                                e.collision.name = nil
-                            end
-                        end
-                    end
-                end
-            end
-            hierarchy:update_slot_list(world)
-            from_runtime_clip(clips)
-            set_event_dirty(-1)
-        end
-    end
-    to_runtime_clip()
+    m.load_clips()
     construct_joints(eid)
 end
 

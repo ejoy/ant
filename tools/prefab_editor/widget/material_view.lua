@@ -135,6 +135,9 @@ end
 
 function MaterialView:on_save_mat()
     local path = self.mat_file:get_path()
+    if path:find("|", 1, true) then
+        return
+    end
     do_save(self.eid, path)
     assetmgr.unload(path)
 end
@@ -208,9 +211,7 @@ function MaterialView:set_model(eid)
             if is_sampler(k) then
                 local absolute_path
                 if fs.path(v.texture):is_absolute() then
-                    print(v.texture)
                     absolute_path = tostring(cr.compile(v.texture))
-                    print(absolute_path)
                 else
                     absolute_path = tostring(mtl_path) .. v.texture 
                 end
@@ -248,12 +249,13 @@ function MaterialView:set_model(eid)
                     local runtime_tex = assetmgr.resource(value)
                     local tdata = mtldata_list[eid].tdata
                     local used_flags = tdata.properties.u_texture_flags
-                    used_flags[texture_used_idx[k]] = 1
-                    imaterial.set_property(eid, "u_texture_flags", used_flags)
+                    if used_flags then
+                        used_flags[texture_used_idx[k]] = 1
+                        imaterial.set_property(eid, "u_texture_flags", used_flags)
+                    end
                     local prop = imaterial.get_property(eid, k)
                     local mtl_filename = tostring(world[eid].material)
-                    --local relative_path = lfs.relative(lfs.path(value), lfs.path(mtl_filename):remove_filename())
-                    tdata.properties[k].texture = value--relative_path:string()
+                    tdata.properties[k].texture = value
                     imaterial.set_property(eid, k, {stage = prop.value.stage, texture = {handle = runtime_tex._data.handle}})
                 end
             )

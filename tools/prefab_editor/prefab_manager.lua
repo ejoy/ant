@@ -578,11 +578,8 @@ function m:open_prefab(prefab)
         self.entities[#self.entities + 1] = e
     end
 
+    anim_view.load_clips()
     camera_mgr.bind_main_camera()
-
-    -- if not ilight.directional_light() then
-    --     world:pub { "Create", "light", {type = "directional"}}
-    -- end
 end
 
 function m:reload()
