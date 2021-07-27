@@ -57,6 +57,7 @@ enum class ShorthandId : uint8_t
 	PerspectiveOrigin,
 	TransformOrigin,
 
+	BackgroundSize,
 	BackgroundPosition,
 	Background, 
 	TextShadow,
