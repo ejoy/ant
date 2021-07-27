@@ -4,8 +4,6 @@
 *.DS_Store
 *.dll
 *.exe
-*.o
-*.a
 
 .cache
 .vscode
@@ -16,14 +14,11 @@
 
 build
 
-/3rd/bin
 /bin
-/clibs/*/o
 
 editor.user.setting
 editor.user.ini
 script_runner.user.lua
-
 
 projects/xcode/lua/Build
 projects/xcode/lua/DerivedData
