@@ -31,18 +31,6 @@ function mgr.get(fb_idx)
 	return framebuffers[fb_idx]
 end
 
-function mgr.use(fb_idx)
-	local fb = mgr.get(fb_idx)
-	fb.using = true
-	return fb
-end
-
-function mgr.not_use(fb_idx)
-	local fb = mgr.get(fb_idx)
-	fb.using = nil
-	return fb
-end
-
 local function unique_idx_generator()
 	local seed_idx = 0
 	return function ()
