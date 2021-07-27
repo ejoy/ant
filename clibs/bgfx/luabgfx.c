@@ -2883,7 +2883,8 @@ ENCODER_API(lsetVertexBuffer) {
 	int stream = 0;
 	int start = 0;
 	int numv = UINT32_MAX;
-	int id;
+	int id = UINT32_MAX;
+	struct transient_buffer *tb = NULL;
 
 	struct vertex_layout* layout = NULL;
 	if (lua_gettop(L) <= 1) {
@@ -2893,56 +2894,81 @@ ENCODER_API(lsetVertexBuffer) {
 			BGFX_ENCODER(set_vertex_buffer, encoder, stream, handle, start, numv);
 			return 0;
 		}
-		id = luaL_checkinteger(L, 1);
+		if (lua_type(L, 1) == LUA_TUSERDATA){
+			tb = luaL_checkudata(L, 1, "BGFX_TB");
+		} else {
+			id = luaL_checkinteger(L, 1);
+		}
 	} else {
 		stream = luaL_checkinteger(L, 1);
-		id = luaL_optinteger(L, 2, BGFX_HANDLE_VERTEX_BUFFER | UINT16_MAX);
+		if (lua_type(L, 2) == LUA_TUSERDATA){
+			tb = luaL_checkudata(L, 2, "BGFX_TB");
+		} else {
+			id = luaL_optinteger(L, 2, BGFX_HANDLE_VERTEX_BUFFER | UINT16_MAX);
+		}
 		start = luaL_optinteger(L, 3, 0);
 		numv = luaL_optinteger(L, 4, UINT32_MAX);
 		layout = lua_isnoneornil(L, 5) ? NULL : (struct vertex_layout *)lua_touserdata(L, 5);
 	}
 
-	int idtype = id >> 16;
-	int idx = id & 0xffff;
-	if (idtype == BGFX_HANDLE_VERTEX_BUFFER) {
-		bgfx_vertex_buffer_handle_t handle = { idx };
-		BGFX_ENCODER(set_vertex_buffer, encoder, stream, handle, start, numv);
-	} else {
-		if (idtype == BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER){
-			bgfx_dynamic_vertex_buffer_handle_t handle = { idx };
-			BGFX_ENCODER(set_dynamic_vertex_buffer, encoder, stream, handle, start, numv);
-		} else if (idtype == BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS) {
-			if (layout == NULL){
-				return luaL_error(L, "dynamic vertex buffer of typeless must pass 'vertex_layout'");
-			}
-
-			bgfx_dynamic_vertex_buffer_handle_t handle = { idx };
-			BGFX_ENCODER(set_dynamic_vertex_buffer_with_layout, encoder, stream, handle, start, numv, get_vertex_layout_handle(layout));
+	if (tb == NULL){
+		int idtype = id >> 16;
+		int idx = id & 0xffff;
+		if (idtype == BGFX_HANDLE_VERTEX_BUFFER) {
+			bgfx_vertex_buffer_handle_t handle = { idx };
+			BGFX_ENCODER(set_vertex_buffer, encoder, stream, handle, start, numv);
 		} else {
-			return luaL_error(L, "Invalid vertex buffer type %d", idtype);
+			if (idtype == BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER){
+				bgfx_dynamic_vertex_buffer_handle_t handle = { idx };
+				BGFX_ENCODER(set_dynamic_vertex_buffer, encoder, stream, handle, start, numv);
+			} else if (idtype == BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS) {
+				if (layout == NULL){
+					return luaL_error(L, "dynamic vertex buffer of typeless must pass 'vertex_layout'");
+				}
+
+				bgfx_dynamic_vertex_buffer_handle_t handle = { idx };
+				BGFX_ENCODER(set_dynamic_vertex_buffer_with_layout, encoder, stream, handle, start, numv, get_vertex_layout_handle(layout));
+			} else {
+				return luaL_error(L, "Invalid vertex buffer type %d", idtype);
+			}
 		}
+	} else {
+		BGFX(set_transient_vertex_buffer)(stream, &tb->tvb, start, numv);
 	}
+
 	return 0;
 }
 
 ENCODER_API(lsetIndexBuffer) {
-	int id = luaL_optinteger(L, 1, BGFX_HANDLE_INDEX_BUFFER | UINT16_MAX);
+	int id = UINT32_MAX;
+	struct transient_buffer *tb = NULL;
+	if (lua_type(L, 1) == LUA_TUSERDATA){
+		tb = luaL_checkudata(L, 1, "BGFX_TB");
+	} else {
+		id = luaL_optinteger(L, 1, BGFX_HANDLE_INDEX_BUFFER | UINT16_MAX);
+	}
+	
 	int idtype = id >> 16;
 	int idx = id & 0xffff;
 	int start = luaL_optinteger(L, 2, 0);
 	uint32_t end = luaL_optinteger(L, 3, UINT32_MAX); 
 
-	if (idtype == BGFX_HANDLE_INDEX_BUFFER) {
-		bgfx_index_buffer_handle_t handle = { idx };
-		BGFX_ENCODER(set_index_buffer, encoder, handle, start, end);
-	} else {
-		if (idtype != BGFX_HANDLE_DYNAMIC_INDEX_BUFFER &&
-			idtype != BGFX_HANDLE_DYNAMIC_INDEX_BUFFER_32) {
-			return luaL_error(L, "Invalid index buffer type %d", idtype);
+	if (tb == NULL){
+		if (idtype == BGFX_HANDLE_INDEX_BUFFER) {
+			bgfx_index_buffer_handle_t handle = { idx };
+			BGFX_ENCODER(set_index_buffer, encoder, handle, start, end);
+		} else {
+			if (idtype != BGFX_HANDLE_DYNAMIC_INDEX_BUFFER &&
+				idtype != BGFX_HANDLE_DYNAMIC_INDEX_BUFFER_32) {
+				return luaL_error(L, "Invalid index buffer type %d", idtype);
+			}
+			bgfx_dynamic_index_buffer_handle_t handle = { idx };
+			BGFX_ENCODER(set_dynamic_index_buffer, encoder, handle, start, end);
 		}
-		bgfx_dynamic_index_buffer_handle_t handle = { idx };
-		BGFX_ENCODER(set_dynamic_index_buffer, encoder, handle, start, end);
+	} else {
+		BGFX(set_transient_index_buffer)(&tb->tib, start, end);
 	}
+
 	return 0;
 }
 
