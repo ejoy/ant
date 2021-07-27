@@ -81,7 +81,8 @@ class DocumentHtmlHandler: public HtmlHandler {
 	ElementAttributes     m_attributes;
 	SharedPtr<StyleSheet> m_style_sheet;
 	std::stack<Element*>  m_stack;
-	Element*              m_current = nullptr;
+	Element*              m_parent = nullptr;
+	Element*			  m_current = nullptr;
 	size_t                m_line = 0;
 
 public:
@@ -104,10 +105,14 @@ public:
 		if (!m_current) {
 			return;
 		}
-		Element* parent = m_current;
-		m_stack.push(parent);
+		m_stack.push(m_current);
+		m_parent = m_current;
 		m_current = new Element(&m_doc, szName);
-		parent->AppendChild(ElementPtr(m_current));
+	}
+	void OnElementClose() override {
+		if (m_parent && m_current) {
+			m_parent->AppendChild(ElementPtr(m_current));
+		}
 	}
 	void OnElementEnd(const  char* szName) override {
 		if (!m_current) {
@@ -271,7 +276,9 @@ void Document::Show() {
 
 void Document::Hide() {
 	body->DispatchEvent(EventId::Hide, Dictionary());
-	GetContext()->SetFocus(nullptr);
+	if (GetContext()->GetFocus() == this) {
+		GetContext()->SetFocus(nullptr);
+	}
 }
 
 // Close this document

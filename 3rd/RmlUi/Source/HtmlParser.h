@@ -8,6 +8,7 @@ public:
     virtual void OnDocumentBegin() {}
     virtual void OnDocumentEnd() {}
     virtual void OnElementBegin(const char* szName) {}
+    virtual void OnElementClose() {}
     virtual void OnElementEnd(const  char* szName) {}
     virtual void OnCloseSingleElement(const  char* szName) {}
     virtual void OnAttribute(const char* szName, const char* szValue) {}

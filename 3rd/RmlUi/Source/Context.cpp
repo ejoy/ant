@@ -128,11 +128,15 @@ void Context::UnloadDocument(Document* document) {
 }
 
 void Context::SetFocus(Document* document) {
-	RMLUI_ASSERT(document->GetContext() == this);
+	RMLUI_ASSERT(!document || document->GetContext() == this);
 	if (focus) {
-		focus->Hide();
+		Document* doc = focus;
+		focus = document;
+		doc->Hide();
 	}
-	focus = document;
+	else {
+		focus = document;
+	}
 }
 
 Document* Context::GetFocus() const {

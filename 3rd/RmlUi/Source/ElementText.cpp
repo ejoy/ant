@@ -328,7 +328,7 @@ void ElementText::UpdateDecoration(const FontFaceHandle font_face_handle) {
 	ColorApplyOpacity(color, GetOpacity());
 	for (const Line& line : lines) {
 		Point position = line.position;
-		float width = line.width;
+		float width = (float)line.width;
 		float underline_thickness = 0;
 		float underline_position = 0;
 		GetFontEngineInterface()->GetUnderline(font_face_handle, underline_position, underline_thickness);
@@ -597,7 +597,7 @@ FontFaceHandle ElementText::GetFontFaceHandle() {
 	String family = StringUtilities::ToLower(GetProperty(PropertyId::FontFamily)->Get<String>());
 	Style::FontStyle style   = (Style::FontStyle)GetProperty(PropertyId::FontStyle)->Get<int>();
 	Style::FontWeight weight = (Style::FontWeight)GetProperty(PropertyId::FontWeight)->Get<int>();
-	int size = parent->GetFontSize();
+	int size = (int)parent->GetFontSize();
 	font_handle = GetFontEngineInterface()->GetFontFaceHandle(family, style, weight, size);
 	if (font_handle == 0) {
 		Log::Message(Log::LT_ERROR, "Load font %s failed.", family.c_str());

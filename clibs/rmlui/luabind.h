@@ -27,49 +27,30 @@ namespace luabind {
 		f(L);
 		return 0;
 	}
-	inline lua_State* createthread(lua_State* mL) {
-		lua_State* L;
-		if (LUA_TTHREAD != lua_getfield(mL, LUA_REGISTRYINDEX, "LUABIND_INVOKE")) {
-			L = lua_newthread(mL);
-			lua_setfield(mL, LUA_REGISTRYINDEX, "LUABIND_INVOKE");
-		}
-		else {
-			L = lua_tothread(mL, -1);
-			lua_pop(mL, 1);
-		}
-		return L;
+	template <typename T>
+	struct global {
+		static inline T v = T();
+	};
+	inline void setthread(lua_State* L) {
+		global<lua_State*>::v = L;
 	}
-	inline lua_State* getthread(lua_State* mL) {
-		static lua_State* L = createthread(mL);
-		return L;
+	inline lua_State* getthread() {
+		return global<lua_State*>::v;
 	}
 	inline bool invoke(call_t f) {
-		lua_State* L = getthread(NULL);
-		if (!lua_checkstack(L, 2)) {
+		lua_State* L = getthread();
+		if (!lua_checkstack(L, 3)) {
 			errfunc("stack overflow");
 			return false;
 		}
+		lua_pushcfunction(L, errhandler);
 		lua_pushcfunction(L, function_call);
 		lua_pushlightuserdata(L, &f);
-		int nresults = 0;
-		int r = lua_resume(L, NULL, 1, &nresults);
+		int r = lua_pcall(L, 1, 0, -3);
 		if (r == LUA_OK) {
-			assert(nresults == 0);
-			lua_settop(L, 0);
+			lua_pop(L, 1);
 			return true;
 		}
-		if (r == LUA_YIELD) {
-			errfunc("shouldn't yield");
-			assert(nresults == 0);
-			lua_settop(L, 0);
-			return false;
-		}
-		if (!lua_checkstack(L, LUA_MINSTACK)) {
-			errfunc(lua_tostring(L, -1));
-			lua_pop(L, 1);
-			return false;
-		}
-		luaL_traceback(L, L, lua_tostring(L, -1), 0);
 		errfunc(lua_tostring(L, -1));
 		lua_pop(L, 2);
 		return false;
