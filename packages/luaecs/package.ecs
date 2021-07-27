@@ -4,6 +4,7 @@ pipeline "_update"
     .stage "entity_init"
     .stage "entity_done"
     .pipeline "update"
+    .stage "luaecs_sync_remove"
     .stage "entity_remove"
     .stage "update_world"
 

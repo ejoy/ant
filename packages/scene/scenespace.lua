@@ -144,7 +144,7 @@ function s:update_transform()
 	end
 end
 
-function s:end_frame()
+function s:entity_remove()
 	local removed = {}
 	for v in w:select "REMOVED scene_id:in" do
 		local id = v.scene_id

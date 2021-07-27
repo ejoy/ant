@@ -87,15 +87,6 @@ function s:luaecs_sync()
 			end
 		end
 	end
-	for _, eid in world:each "removed" do
-		local e = world[eid]
-		if e.scene_entity then
-			local v = findEntity(eid)
-			if v then
-				w:remove(v)
-			end
-		end
-	end
 
 	--debug
 	local eid
@@ -104,5 +95,17 @@ function s:luaecs_sync()
 			error("eid is not sorted")
 		end
 		eid = v.eid
+	end
+end
+
+function s:luaecs_sync_remove()
+	for _, eid in world:each "removed" do
+		local e = world[eid]
+		if e.scene_entity then
+			local v = findEntity(eid)
+			if v then
+				w:remove(v)
+			end
+		end
 	end
 end
