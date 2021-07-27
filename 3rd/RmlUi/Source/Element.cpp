@@ -78,7 +78,6 @@ Element::Element(Document* owner, const String& tag)
 	, dirty_transition(false)
 {
 	RMLUI_ASSERT(tag == StringUtilities::ToLower(tag));
-	GetLayout().SetContext(this);
 	parent = nullptr;
 	z_index = 0;
 	stacking_context_dirty = true;
