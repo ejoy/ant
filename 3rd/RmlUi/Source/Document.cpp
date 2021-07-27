@@ -276,7 +276,9 @@ void Document::Show() {
 
 void Document::Hide() {
 	body->DispatchEvent(EventId::Hide, Dictionary());
-	GetContext()->SetFocus(nullptr);
+	if (GetContext()->GetFocus() == this) {
+		GetContext()->SetFocus(nullptr);
+	}
 }
 
 // Close this document
