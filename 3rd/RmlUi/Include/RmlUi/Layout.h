@@ -44,7 +44,7 @@ public:
 		EdgeInsets<float> contentInsets{};
 		EdgeInsets<float> borderWidth{};
 		EdgeInsets<float> overflowInset{};
-		bool visible{};
+		bool visible = true;
 
 		Rect getContentFrame() const {
 			return Rect {

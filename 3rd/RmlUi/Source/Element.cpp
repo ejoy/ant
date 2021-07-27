@@ -127,6 +127,9 @@ void Element::UpdateProperties() {
 }
 
 void Element::OnRender() {
+	if (!IsVisible()) {
+		return;
+	}
 	UpdateTransform();
 	UpdatePerspective();
 	UpdateClip();
