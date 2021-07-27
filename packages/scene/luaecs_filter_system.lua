@@ -44,7 +44,7 @@ local Layer <const> = {
 local function findCamera(eid)
     local v = w:bsearch("eid", "eid", eid)
     if v then
-        w:sync("eid camera_id:in", v)
+        w:sync("camera_id:in", v)
         return v.camera_id
     end
 end

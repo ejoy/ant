@@ -49,15 +49,15 @@ end
 
 local s = ecs.system "pickup_primitive_system"
 
-local function sync_filter(mainkey, rq)
-    local r = {mainkey}
+local function sync_filter(rq)
+    local r = {}
     for i = 1, #rq.layer_tag do
         r[#r+1] = rq.layer_tag[i] .. "?out"
     end
     return table.concat(r, " ")
 end
 
-local function render_queue_update(v, rq, mainkey)
+local function render_queue_update(v, rq)
     local rc = v.render_object
     local fx = rc.fx
     local surfacetype = fx.setting.surfacetype
@@ -68,15 +68,15 @@ local function render_queue_update(v, rq, mainkey)
         v[rq.layer_tag[i]] = false
     end
     v[rq.tag.."_"..surfacetype] = true
-    w:sync(sync_filter(mainkey, rq), v)
+    w:sync(sync_filter(rq), v)
 end
 
-local function render_queue_del(v, rq, mainkey)
+local function render_queue_del(v, rq)
     for i = 1, #rq.layer_tag do
         v[rq.layer_tag[i]] = false
     end
     v[rq.tag] = false
-    w:sync(sync_filter(mainkey, rq), v)
+    w:sync(sync_filter(rq), v)
 end
 
 function s:update_filter()
@@ -87,14 +87,14 @@ function s:update_filter()
             local rq = u.render_queue
             local add = ((state & rq.mask) ~= 0) and ((state & rq.exclude_mask) == 0)
             if add then
-                render_queue_update(v, rq, "render_object_update")
+                render_queue_update(v, rq)
                 v.filter_material[rq.tag] = {
 					fx = opacity_material.fx,
 					properties = get_properties(v.eid, opacity_material.fx),
 					state = irender.check_primitive_mode_state(rc.state, opacity_material.state),
 				}
             else
-                render_queue_del(v, rq, "render_object_update")
+                render_queue_del(v, rq)
 				v.filter_material[rq.tag] = nil
             end
         end
