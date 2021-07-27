@@ -95,7 +95,7 @@ end
 function s:entity_init()
 	local needsync = false
 
-	for v in w:select "initializing scene_id:in" do
+	for v in w:select "INIT scene_id:in" do
 		mount_scene_node(v.scene_id)
 		needsync = true
 	end
@@ -113,7 +113,7 @@ function s:entity_init()
 
 	if needsync then
 		sync_scene_node()
-		for v in w:select "scene_sorted initializing scene_node:in" do
+		for v in w:select "scene_sorted INIT scene_node:in" do
 			local node = v.scene_node
 			local eid = node._self
 			local e = world[eid]
