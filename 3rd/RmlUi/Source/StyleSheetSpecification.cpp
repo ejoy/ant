@@ -407,6 +407,7 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 		.AddParser("length_percent");
 	RegisterProperty(PropertyId::BackgroundSizeY, "background-size-y", "0px", false, false)
 		.AddParser("length_percent");
+	RegisterShorthand(ShorthandId::BackgroundSize, "background-size", "background-size-x, background-size-y", ShorthandType::FallThrough);
 	RegisterProperty(PropertyId::BackgroundPositionX, "background-position-x", "0%", false, false)
 		.AddParser("keyword", "left, center, right")
 		.AddParser("length_percent");

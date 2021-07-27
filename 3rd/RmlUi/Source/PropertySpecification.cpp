@@ -211,13 +211,19 @@ bool PropertySpecification::ParsePropertyDeclaration(PropertyDictionary& diction
 {
 	// Try as a property first
 	PropertyId property_id = property_map->GetId(property_name);
-	if (property_id != PropertyId::Invalid)
-		return ParsePropertyDeclaration(dictionary, property_id, property_value);
+	if (property_id != PropertyId::Invalid) {
+		if (ParsePropertyDeclaration(dictionary, property_id, property_value)) {
+			return true;
+		}
+	}
 
 	// Then, as a shorthand
 	ShorthandId shorthand_id = shorthand_map->GetId(property_name);
-	if (shorthand_id != ShorthandId::Invalid)
-		return ParseShorthandDeclaration(dictionary, shorthand_id, property_value);
+	if (shorthand_id != ShorthandId::Invalid) {
+		if (ParseShorthandDeclaration(dictionary, shorthand_id, property_value)){
+			return true;
+		}
+	}
 
 	return false;
 }
