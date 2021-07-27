@@ -243,6 +243,11 @@ end
 function TextureResource:update()
     ResourcePath.update(self)
     self:do_update()
+    if string.find(self.metadata.path, "|") then
+        self.readonly = true
+    else
+        self.readonly = false
+    end
 end
 
 function TextureResource:on_dragdrop()
@@ -285,14 +290,17 @@ function TextureResource:show()
             imgui.widget.EndDragDropTarget()
         end
 
-        imgui.util.PushID("Save" .. self.label)
-        if imgui.widget.Button("Save") then
-            if not self.path:find("|", 1, true) then
-                utils.write_file(self.path, stringify(self.metadata))
+        if not self.readonly then
+            imgui.util.PushID("Save" .. self.label)
+            if imgui.widget.Button("Save") then
+                if not self.path:find("|", 1, true) then
+                    utils.write_file(self.path, stringify(self.metadata))
+                end
             end
+            imgui.util.PopID()
+            imgui.cursor.SameLine()
         end
-        imgui.util.PopID()
-        imgui.cursor.SameLine()
+        
         imgui.util.PushID("Save As" .. self.label)
         if imgui.widget.Button("Save As") then
             local path = uiutils.get_saveas_path("Texture", ".texture")

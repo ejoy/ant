@@ -301,6 +301,11 @@ function MaterialView:update()
     for i = 1, #self.uniforms do
         self.uniforms[i]:update()
     end
+    if string.find(self.mat_file:get_path(), "|") then
+        self.readonly = true
+    else
+        self.readonly = false
+    end
 end
 
 
@@ -313,8 +318,10 @@ function MaterialView:show()
         local state = mtldata_list[self.eid].tdata.state
         local setting = mtldata_list[self.eid].tdata.fx.setting
         self.mat_file:show()
-        self.save_mat:show()
-        imgui.cursor.SameLine()
+        if not self.readonly then
+            self.save_mat:show()
+            imgui.cursor.SameLine()
+        end
         self.save_as_mat:show()
         self.surfacetype:show()
         imgui.widget.PropertyLabel("occluder")
