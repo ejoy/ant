@@ -32,6 +32,7 @@
 #include <utility>
 #include <type_traits>
 #include "Header.h"
+#include "Debug.h"
 
 namespace Rml {
 
@@ -39,8 +40,14 @@ struct RMLUICORE_API ObserverPtrBlock {
 	int num_observers;
 	void* pointed_to_object;
 };
-RMLUICORE_API ObserverPtrBlock* AllocateObserverPtrBlock();
-RMLUICORE_API void DeallocateObserverPtrBlockIfEmpty(ObserverPtrBlock* block);
+
+inline void DeallocateObserverPtrBlockIfEmpty(ObserverPtrBlock* block) {
+	RMLUI_ASSERT(block->num_observers >= 0);
+	if (block->num_observers == 0 && block->pointed_to_object == nullptr) {
+		delete block;
+	}
+}
+
 
 template<typename T>
 class EnableObserverPtr;
@@ -178,7 +185,7 @@ private:
 	{
 		if (!block)
 		{
-			block = AllocateObserverPtrBlock();
+			block = new ObserverPtrBlock;
 			block->num_observers = 0;
 			block->pointed_to_object = static_cast<void*>(static_cast<T*>(this));
 		}
