@@ -75,9 +75,6 @@ namespace StringUtilities
 	/// Converts lower-case characters in string to upper-case.
 	RMLUICORE_API String ToUpper(const String& string);
 
-	/// Encode RML characters, eg. '<' to '&lt;'
-	RMLUICORE_API String EncodeRml(const String& string);
-
 	// Replaces all occurences of 'search' in 'subject' with 'replace'.
 	RMLUICORE_API String Replace(String subject, const String& search, const String& replace);
 	// Replaces all occurences of 'search' in 'subject' with 'replace'.
@@ -99,20 +96,9 @@ namespace StringUtilities
 	/// @warning If the string does not represent a number _with_ a decimal point, the result is ill-defined.
 	RMLUICORE_API void TrimTrailingDotZeros(String& string);
 
-	/// Case insensitive string comparison. Returns true if they compare equal.
-	RMLUICORE_API bool StringCompareCaseInsensitive(StringView lhs, StringView rhs);
-
 	// Decode the first code point in a zero-terminated UTF-8 string.
 	RMLUICORE_API Character ToCharacter(const char* p);
 
-	// Encode a single code point as a UTF-8 string.
-	RMLUICORE_API String ToUTF8(Character character);
-
-	// Encode an array of code points as a UTF-8 string.
-	RMLUICORE_API String ToUTF8(const Character* characters, int num_characters);
-
-	/// Returns number of characters in a UTF-8 string.
-	RMLUICORE_API size_t LengthUTF8(StringView string_view);
 
 	// Seek forward in a UTF-8 string, skipping continuation bytes.
 	inline const char* SeekForwardUTF8(const char* p, const char* p_end)
@@ -129,15 +115,8 @@ namespace StringUtilities
 		return p;
 	}
 
-	/// Converts a string in UTF-8 encoding to a u16string in UTF-16 encoding.
-	/// Reports a warning if some or all characters could not be converted.
-	RMLUICORE_API U16String ToUTF16(const String& str);
 
-	/// Converts a u16string in UTF-16 encoding into a string in UTF-8 encoding.
-	/// Reports a warning if some or all characters could not be converted.
-	RMLUICORE_API String ToUTF8(const U16String& u16str);
 }
-
 
 /*
 	A poor man's string view. 
@@ -172,14 +151,6 @@ private:
 };
 
 
-/*
-	An iterator for UTF-8 strings. 
-
-	The increment and decrement operations will move to the beginning of the next or the previous
-	UTF-8 character, respectively. The dereference operator will resolve the current code point.
-
-*/
-
 class RMLUICORE_API StringIteratorU8 {
 public:
 	StringIteratorU8(const char* p_begin, const char* p, const char* p_end);
@@ -189,9 +160,7 @@ public:
 
 	// Seeks forward to the next UTF-8 character. Iterator must be valid.
 	StringIteratorU8& operator++();
-	// Seeks back to the previous UTF-8 character. Iterator must be valid.
-	StringIteratorU8& operator--();
-
+	
 	// Returns the codepoint at the current position. The iterator must be dereferencable.
 	inline Character operator*() const { return StringUtilities::ToCharacter(p); }
 
@@ -215,9 +184,6 @@ private:
 	inline void SeekForward();
 	inline void SeekBack();
 };
-
-
-
 
 } // namespace Rml
 #endif

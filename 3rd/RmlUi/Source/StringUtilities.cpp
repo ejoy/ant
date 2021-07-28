@@ -105,24 +105,6 @@ String StringUtilities::ToUpper(const String& string)
 	return str_upper;
 }
 
-RMLUICORE_API String StringUtilities::EncodeRml(const String& string)
-{
-	String result;
-	result.reserve(string.size());
-	for (char c : string)
-	{
-		switch (c)
-		{
-		case '<': result += "&lt;"; break;
-		case '>': result += "&gt;"; break;
-		case '&': result += "&amp;"; break;
-		case '"': result += "&quot;"; break;
-		default: result += c; break;
-		}
-	}
-	return result;
-}
-
 String StringUtilities::Replace(String subject, const String& search, const String& replace)
 {
 	size_t pos = 0;
@@ -301,24 +283,6 @@ void StringUtilities::TrimTrailingDotZeros(String& string)
 		string.resize(new_size);
 }
 
-bool StringUtilities::StringCompareCaseInsensitive(const StringView lhs, const StringView rhs)
-{
-	if (lhs.size() != rhs.size())
-		return false;
-
-	const char* left = lhs.begin();
-	const char* right = rhs.begin();
-	const char* const left_end = lhs.end();
-
-	for (; left != left_end; ++left, ++right)
-	{
-		if (CharToLower(*left) != CharToLower(*right))
-			return false;
-	}
-
-	return true;
-}
-
 Character StringUtilities::ToCharacter(const char* p)
 {
 	if ((*p & (1 << 7)) == 0)
@@ -364,161 +328,6 @@ Character StringUtilities::ToCharacter(const char* p)
 	return static_cast<Character>(code);
 }
 
-String StringUtilities::ToUTF8(Character character)
-{
-	return ToUTF8(&character, 1);
-}
-
-String StringUtilities::ToUTF8(const Character* characters, int num_characters)
-{
-	String result;
-	result.reserve(num_characters);
-
-	bool invalid_character = false;
-
-	for (int i = 0; i < num_characters; i++)
-	{
-		char32_t c = (char32_t)characters[i];
-
-		constexpr int l3 = 0b0000'0111;
-		constexpr int l4 = 0b0000'1111;
-		constexpr int l5 = 0b0001'1111;
-		constexpr int l6 = 0b0011'1111;
-		constexpr int h1 = 0b1000'0000;
-		constexpr int h2 = 0b1100'0000;
-		constexpr int h3 = 0b1110'0000;
-		constexpr int h4 = 0b1111'0000;
-
-		if (c < 0x80)
-			result += (char)c;
-		else if (c < 0x800)
-			result += { char(((c >> 6) & l5) | h2), char((c & l6) | h1) };
-		else if (c < 0x10000)
-			result += { char(((c >> 12) & l4) | h3), char(((c >> 6) & l6) | h1), char((c & l6) | h1) };
-		else if (c <= 0x10FFFF)
-			result += { char(((c >> 18) & l3) | h4), char(((c >> 12) & l6) | h1), char(((c >> 6) & l6) | h1), char((c & l6) | h1) };
-		else
-			invalid_character = true;
-	}
-
-	if (invalid_character)
-		Log::Message(Log::LT_WARNING, "One or more invalid code points encountered while encoding to UTF-8.");
-
-	return result;
-}
-
-
-size_t StringUtilities::LengthUTF8(StringView string_view)
-{
-	const char* const p_end = string_view.end();
-
-	// Skip any continuation bytes at the beginning
-	const char* p = string_view.begin();
-
-	size_t num_continuation_bytes = 0;
-
-	while (p != p_end)
-	{
-		if ((*p & 0b1100'0000) == 0b1000'0000)
-			++num_continuation_bytes;
-		++p;
-	}
-
-	return string_view.size() - num_continuation_bytes;
-}
-
-U16String StringUtilities::ToUTF16(const String& input)
-{
-	U16String result;
-
-	if (input.empty())
-		return result;
-
-	Vector<Character> characters;
-	characters.reserve(input.size());
-
-	for (auto it = StringIteratorU8(input); it; ++it)
-		characters.push_back(*it);
-
-	result.reserve(input.size());
-
-	bool valid_characters = true;
-
-	for (Character character : characters)
-	{
-		char32_t c = (char32_t)character;
-
-		if (c <= 0xD7FF || (c >= 0xE000 && c <= 0xFFFF))
-		{
-			// Single 16-bit code unit.
-			result += (char16_t)c;
-		}
-		else if (c >= 0x10000 && c <= 0x10FFFF)
-		{
-			// Encode as two 16-bit code units.
-			char32_t c_shift = c - 0x10000;
-			char16_t w1 = (0xD800 | ((c_shift >> 10) & 0x3FF));
-			char16_t w2 = (0xDC00 | (c_shift & 0x3FF));
-			result += {w1, w2};
-		}
-		else
-		{
-			valid_characters = false;
-		}
-	}
-
-	if (!valid_characters)
-		Log::Message(Log::LT_WARNING, "Invalid characters encountered while converting UTF-8 string to UTF-16.");
-
-	return result;
-}
-
-String StringUtilities::ToUTF8(const U16String& input)
-{
-	Vector<Character> characters;
-	characters.reserve(input.size());
-
-	bool valid_input = true;
-	char16_t w1 = 0;
-
-	for (char16_t w : input)
-	{
-		if (w <= 0xD7FF || w >= 0xE000)
-		{
-			// Single 16-bit code unit.
-			characters.push_back((Character)(w));
-		}
-		else
-		{
-			// Two 16-bit code units.
-			if (!w1 && w < 0xDC00)
-			{
-				w1 = w;
-			}
-			else if (w1 && w >= 0xDC00)
-			{
-				characters.push_back((Character)(((((char32_t)w1 & 0x3FF) << 10) | ((char32_t)(w) & 0x3FF)) + 0x10000u));
-				w1 = 0;
-			}
-			else
-			{
-				valid_input = false;
-			}
-		}
-	}
-
-	String result;
-
-	if (characters.size() > 0)
-		result = StringUtilities::ToUTF8(characters.data(), (int)characters.size());
-
-	if (!valid_input)
-		Log::Message(Log::LT_WARNING, "Invalid characters encountered while converting UTF-16 string to UTF-8.");
-
-	return result;
-}
-
-
 StringView::StringView()
 {
 	const char* empty_string = "";
@@ -555,15 +364,6 @@ StringIteratorU8& StringIteratorU8::operator++() {
 	++p;
 	SeekForward();
 	return *this;
-}
-StringIteratorU8& StringIteratorU8::operator--() {
-	RMLUI_ASSERT(p >= view.begin());
-	--p;
-	SeekBack();
-	return *this;
-}
-inline void StringIteratorU8::SeekBack() {
-	p = StringUtilities::SeekBackwardUTF8(p, view.begin());
 }
 
 inline void StringIteratorU8::SeekForward() {
