@@ -64,6 +64,7 @@ local check_map = {
 	require_system = "system",
 	require_interface = "interface",
 	require_policy = "policy",
+	require_policy_v2 = "policy_v2",
 	require_transform = "transform",
 	component_v2 = "component_v2",
 	pipeline = "pipeline",
