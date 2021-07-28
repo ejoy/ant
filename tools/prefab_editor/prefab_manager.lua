@@ -495,6 +495,7 @@ function m:reset_prefab()
     end
     light_gizmo.clear()
     hierarchy:clear()
+    anim_view.clear()
     self.root = create_simple_entity("scene root")
     self.prefab_script = ""
     self.entities = {}

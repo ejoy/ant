@@ -87,9 +87,6 @@ public:
 	void SwapChild(Layout const& child, uint32_t index);
 	void RemoveChild(Layout const& child);
 	void RemoveAllChildren();
-	YGNodeRef GetSelf() const;
-	YGNodeRef GetParent() const;
-	void SetContext(void* context);
 
 private:
 	YGNodeRef node;

@@ -71,12 +71,14 @@ local function find_index(t, item)
 end
 local function anim_group_set_clips(eid, clips)
     local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
+    if not group_eid then return end
     for _, anim_eid in ipairs(group_eid) do
         iani.set_clips(anim_eid, clips)
     end
 end
 local function anim_group_set_time(eid, t)
     local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
+    if not group_eid then return end
     for _, anim_eid in ipairs(group_eid) do
         iani.set_time(anim_eid, t)
     end
@@ -84,18 +86,21 @@ end
 
 local function anim_group_play_group(eid, ...)
     local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
+    if not group_eid then return end
     for _, anim_eid in ipairs(group_eid) do
         iani.play_group(anim_eid, ...)
     end
 end
 local function anim_group_play_clip(eid, ...)
     local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
+    if not group_eid then return end
     for _, anim_eid in ipairs(group_eid) do
         iani.play_clip(anim_eid, ...)
     end
 end
 local function anim_group_play(eid, ...)
     local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
+    if not group_eid then return end
     for _, anim_eid in ipairs(group_eid) do
         iani.play(anim_eid, ...)
     end
@@ -103,6 +108,7 @@ end
 
 local function anim_group_set_loop(eid, ...)
     local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
+    if not group_eid then return end
     for _, anim_eid in ipairs(group_eid) do
         iani.set_loop(anim_eid, ...)
     end
@@ -110,6 +116,7 @@ end
 
 local function anim_group_delete(eid, anim_name)
     local group_eid = anim_group_eid[world[eid].animation[anim_name]]
+    if not group_eid then return end
     for _, anim_eid in ipairs(group_eid) do
         local template = hierarchy:get_template(anim_eid)
         local animation_map = template.template.data.animation
@@ -1076,6 +1083,11 @@ function m.show()
             imgui.cursor.SameLine()
             if imgui.widget.Button("Remove") then
                 anim_group_delete(current_eid, current_anim.name)
+                local nextanim = edit_anims[current_eid].name_list[1]
+                if nextanim then
+                    set_current_anim(nextanim)
+                    set_current_clip(nil)
+                end
                 reload = true
             end
             imgui.cursor.SameLine()

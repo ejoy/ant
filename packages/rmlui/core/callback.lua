@@ -51,6 +51,8 @@ function m.OnLoadExternalScript(document, source_path)
 		console.warn(("file '%s' does not exist."):format(source_path))
 		return
 	end
+	local fs = require "filesystem"
+    local _ <close> = fs.switch_sync()
 	local f, err = loadfile(path, "bt", environment[document])
 	if not f then
 		console.warn(err)

@@ -31,10 +31,7 @@
 #include "../Include/RmlUi/Property.h"
 #include "../Include/RmlUi/ElementText.h"
 #include "ElementStyle.h"
-
-#define DEBUG
 #include <yoga/YGNodePrint.h>
-#undef DEBUG
 
 namespace Rml {
 
@@ -78,18 +75,6 @@ void Layout::RemoveChild(Layout const& child) {
 
 void Layout::RemoveAllChildren() {
 	YGNodeRemoveAllChildren(node);
-}
-
-YGNodeRef Layout::GetSelf() const {
-	return node;
-}
-
-YGNodeRef Layout::GetParent() const {
-	return YGNodeGetParent(node);
-}
-
-void Layout::SetContext(void* context) {
-	YGNodeSetContext(node, context);
 }
 
 std::string Layout::ToString() const {

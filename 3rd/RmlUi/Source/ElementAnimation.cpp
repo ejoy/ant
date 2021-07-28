@@ -38,6 +38,9 @@ namespace Rml {
 
 static Property InterpolateProperties(const Property& p0, const Property& p1, float alpha, Element& element)
 {
+	if (alpha > 1.f) alpha = 1.f;
+	if (alpha < 0.f) alpha = 0.f;
+
 	if ((p0.unit & Property::NUMBER_LENGTH_PERCENT) && (p1.unit & Property::NUMBER_LENGTH_PERCENT))
 	{
 		assert(p0.unit == p1.unit);

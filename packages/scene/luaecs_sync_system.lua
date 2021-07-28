@@ -83,16 +83,7 @@ function s:luaecs_sync()
 			if v then
 				v.render_object = e._rendercache
 				v.render_object_update = true
-				w:sync("eid render_object:out render_object_update?out", v)
-			end
-		end
-	end
-	for _, eid in world:each "removed" do
-		local e = world[eid]
-		if e.scene_entity then
-			local v = findEntity(eid)
-			if v then
-				w:remove(v)
+				w:sync("render_object:out render_object_update?out", v)
 			end
 		end
 	end
@@ -104,5 +95,17 @@ function s:luaecs_sync()
 			error("eid is not sorted")
 		end
 		eid = v.eid
+	end
+end
+
+function s:luaecs_sync_remove()
+	for _, eid in world:each "removed" do
+		local e = world[eid]
+		if e.scene_entity then
+			local v = findEntity(eid)
+			if v then
+				w:remove(v)
+			end
+		end
 	end
 end

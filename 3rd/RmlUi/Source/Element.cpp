@@ -78,7 +78,6 @@ Element::Element(Document* owner, const String& tag)
 	, dirty_transition(false)
 {
 	RMLUI_ASSERT(tag == StringUtilities::ToLower(tag));
-	GetLayout().SetContext(this);
 	parent = nullptr;
 	z_index = 0;
 	stacking_context_dirty = true;
@@ -1292,16 +1291,17 @@ void Element::UpdateTransform() {
 		return;
 	dirty_transform = false;
 	glm::mat4x4 new_transform(1);
+	glm::vec3 origin(metrics.frame.origin.x, metrics.frame.origin.y, 0);
 	auto computedTransform = GetProperty(PropertyId::Transform)->Get<TransformPtr>();
 	if (computedTransform && !computedTransform->empty()) {
-		glm::vec3 origin {
+		glm::vec3 transform_origin = origin + glm::vec3 {
 			ComputePropertyW(GetProperty(PropertyId::TransformOriginX), this),
 			ComputePropertyH(GetProperty(PropertyId::TransformOriginY), this),
 			ComputeProperty (GetProperty(PropertyId::TransformOriginZ), this),
 		};
-		new_transform = glm::translate(origin) * computedTransform->GetMatrix(*this) * glm::translate(-origin);
+		new_transform = glm::translate(transform_origin) * computedTransform->GetMatrix(*this) * glm::translate(-transform_origin);
 	}
-	new_transform = glm::translate(new_transform, glm::vec3(metrics.frame.origin.x, metrics.frame.origin.y, 0));
+	new_transform = glm::translate(new_transform, origin);
 	if (parent) {
 		if (parent->perspective) {
 			new_transform = *parent->perspective * new_transform;
