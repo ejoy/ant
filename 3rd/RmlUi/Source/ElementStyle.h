@@ -133,8 +133,7 @@ private:
 	// Sets a list of properties as dirty.
 	void DirtyProperties(const PropertyIdSet& properties);
 
-	const Property* GetLocalProperty(PropertyId id, const ElementDefinition * definition) const;
-	const Property* GetProperty(PropertyId id, const ElementDefinition * definition) const;
+	const Property* GetPropertyByDefinition(PropertyId id, const ElementDefinition* definition) const;
 	void TransitionPropertyChanges(PropertyIdSet & properties, const ElementDefinition * new_definition);
 	bool TransitionPropertyChanges(PropertyId id, const Property& property);
 
