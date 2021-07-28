@@ -1,5 +1,6 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 local math3d = require "math3d"
 
 local iom = world:interface "ant.objcontroller|obj_motion"
@@ -13,17 +14,29 @@ local mouse_mb = world:sub {"mouse"}
 local viewat<const> = math3d.ref(math3d.vector(0, 0, 0))
 
 function cc_sys:post_init()
-    local mq = world:singleton_entity "main_queue"
-    local cameraeid = mq.camera_eid
-    local eyepos = math3d.vector(0, 0, -10)
-    iom.set_position(cameraeid, eyepos)
-    local dir = math3d.normalize(math3d.sub(viewat, eyepos))
-    iom.set_direction(cameraeid, dir)
+    
 end
 
 local mouse_lastx, mouse_lasty
 local toforward
 function cc_sys:data_changed()
+    for v in w:select "INIT mian_queue camera_id:in" do
+        local eyepos = math3d.vector(0, 0, -10)
+
+        local camera = w:object("camera_node", v.camera_id)
+        local sceneid = camera.scene_id
+        local dir = math3d.normalize(math3d.sub(viewat, eyepos))
+
+        local sn = w:object("scene_node", sceneid)
+        assert(sn.parent == nil)
+        sn.srt[4] = eyepos
+        if sn.updir then
+            sn.srt.id = math3d.inverse(math3d.lookto(eyepos, dir, sn.updir))
+        else
+            sn.srt[3] = dir
+        end
+    end
+
     for msg in kb_mb:each() do
         local key, press, status = msg[2], msg[3], msg[4]
         if press == 1 then

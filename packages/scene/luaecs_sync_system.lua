@@ -50,7 +50,7 @@ function s:luaecs_sync()
 				},
 				data = {
 					scene_node = scene_node,
-					initializing = true,
+					INIT = true,
 				}
 			}
 			data.scene_id = id

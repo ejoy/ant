@@ -26,21 +26,6 @@ local ies = world:interface "ant.scene|ientity_state"
 
 local evCreateFilter = world:sub {"luaecs", "create_filter"}
 
-local Layer <const> = {
-    primitive = {
-        "foreground", "opaticy", "background", "translucent", "decal", "ui"
-    },
-    shadow = {
-        "opaticy", "translucent"
-    },
-    pickup = {
-        "opaticy", "translucent"
-    },
-    depth = {
-        "opaticy"
-    },
-}
-
 local function findCamera(eid)
     local v = w:bsearch("eid", "eid", eid)
     if v then
@@ -94,27 +79,27 @@ local function render_queue_create(e)
 end
 
 function s:init()
-    w:register {
-        name = "render_queue",
-        type = "lua",
-    }
-    register_tag "visible"
-    register_tag "main_queue"
-    register_tag "blit_queue"
-    register_tag "primitive_filter"
-    register_tag "pickup_filter"
-    register_tag "shadow_filter"
-    register_tag "depth_filter"
-    create_singlton "render_queue_manager" {
-        tag = 0
-    }
+    -- w:register {
+    --     name = "render_queue",
+    --     type = "lua",
+    -- }
+    -- register_tag "visible"
+    -- register_tag "main_queue"
+    -- register_tag "blit_queue"
+    -- register_tag "primitive_filter"
+    -- register_tag "pickup_filter"
+    -- register_tag "shadow_filter"
+    -- register_tag "depth_filter"
+    -- create_singlton "render_queue_manager" {
+    --     tag = 0
+    -- }
 end
 
 function s:entity_init()
     --TODO
-    for _, _, e in evCreateFilter:unpack() do
-        render_queue_create(e)
-    end
+    -- for _, _, e in evCreateFilter:unpack() do
+    --     render_queue_create(e)
+    -- end
 end
 
 function s:end_filter()
@@ -122,9 +107,10 @@ function s:end_filter()
 end
 
 function s:render_submit()
-    for v in w:select "visible render_queue:in" do
-        local rq = v.render_queue
-        local viewid = rq.viewid
+    --for v in w:select "visible render_queue:in" do
+    for v in w:select "visible camera_id:in render_target:in" do
+        local rt = v.render_target
+        local viewid = rt.viewid
         local camera = w:object("camera_node", rq.camera_id)
         bgfx.touch(viewid)
         bgfx.set_view_transform(viewid, camera.viewmat, camera.projmat)

@@ -116,12 +116,14 @@ function s:entity_init()
 		for v in w:select "scene_sorted INIT scene_node:in" do
 			local node = v.scene_node
 			local eid = node._self
-			local e = world[eid]
-			if e.parent then
-				inherit_entity_state(e)
-				inherit_material(e)
+			if eid then
+				local e = world[eid]
+				if e.parent then
+					inherit_entity_state(e)
+					inherit_material(e)
+				end
+				node._self = nil
 			end
-			node._self = nil
 		end
 	end
 end

@@ -20,6 +20,8 @@ system "render_system"
     .require_policy "ant.general|name"
     .require_interface "system_properties"
     .method "update_system_properties"
+    .method "update_filter"
+    .method "render_submit"
 
 system "cull_system"
     .implement "cull_system.lua"

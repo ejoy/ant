@@ -74,7 +74,7 @@ end
 local w = world.w
 local m = ecs.system "compute_system"
 function m:entity_init()
-    for v in w:select "dispatch_size:in render_object:in" do
+    for v in w:select "INIT dispatch_size:in render_object:in" do
         v.render_object = v.dispatch_size
     end
 end

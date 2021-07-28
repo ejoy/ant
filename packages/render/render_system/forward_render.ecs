@@ -10,11 +10,9 @@ system "forward_render_system"
 
 policy "forward_render"
     .require_policy     "render_queue"
-    .require_system     "ant.scene|primitive_filter_system"
     .require_system     "forward_render_system"
 
 --forward_render_v2
 policy_v2 "forward_render"
     .require_policy_v2     "ant.render|render_queue"
-    .require_system     "ant.scene|primitive_filter_system"
     .require_system     "forward_render_system"

@@ -1,66 +1,73 @@
 local ecs = ...
 local world = ecs.world
 
-local s = ecs.system "primitive_filter_system"
 local w = world.w
 
-local irender = world:interface "ant.render|irender"
+local LAYER_NAMES<const> = {"foreground", "opaticy", "background", "translucent", "decal", "ui"}
 
-local function sync_filter(rq)
-    local r = {}
-    for i = 1, #rq.layer_tag do
-        r[#r+1] = rq.layer_tag[i] .. "?out"
+local LAYERS <const> = {
+    main_queue = LAYER_NAMES,
+    blit_queue = {
+        "opaticy",
+    },
+    csm = {
+        "opaticy", "translucent"
+    },
+    pickup_queue = {
+        "opaticy", "translucent"
+    },
+    pre_depth_queue = {
+        "opaticy"
+    },
+}
+
+local FILTERS = {}
+for k, q in pairs(LAYERS) do
+    local f = {}
+    for idx, n in ipairs(q) do
+        f[idx] = n .. "_primitive_filter"
     end
-    return table.concat(r, " ")
+
+    FILTERS[k] = f
 end
 
-local function render_queue_update(v, rq)
-    local rc = v.render_object
-    local fx = rc.fx
-    local surfacetype = fx.setting.surfacetype
-    if not rq.layer[surfacetype] then
-        return
-    end
-    for i = 1, #rq.layer_tag do
-        v[rq.layer_tag[i]] = false
-    end
-    v[rq.tag.."_"..surfacetype] = true
-    w:sync(sync_filter(rq), v)
+local ipf = ecs.interface "iprimitive_filter"
+function ipf.names()
+    return LAYER_NAMES
 end
 
-local function render_queue_del(v, rq)
-    for i = 1, #rq.layer_tag do
-        v[rq.layer_tag[i]] = false
-    end
-    v[rq.tag] = false
-    w:sync(sync_filter(rq), v)
+function ipf.layers(filter_name)
+    return assert(LAYERS[filter_name])
 end
 
-function s:update_filter()
-    for v in w:select "render_object_update render_object:in" do
-        local rc = v.render_object
-        local state = rc.entity_state
-        for u in w:select "primitive_filter render_queue:in" do
-            local rq = u.render_queue
-            local add = ((state & rq.mask) ~= 0) and ((state & rq.exclude_mask) == 0)
-            if add then
-                render_queue_update(v, rq)
-            else
-                render_queue_del(v, rq)
-            end
-        end
-    end
+function ipf.filters(filter_name)
+    return assert(FILTERS[filter_name])
 end
 
-function s:render_submit()
-    for v in w:select "primitive_filter visible render_queue:in" do
-        local rq = v.render_queue
-        local viewid = rq.viewid
-        for i = 1, #rq.layer_tag do
-            for u in w:select(rq.layer_tag[i] .. " " .. rq.cull_tag .. ":absent render_object:in eid:in") do
-                irender.draw(viewid, u.render_object)
-            end
-        end
-		w:clear(rq.cull_tag)
+function ipf.sync_filter(filter_name)
+    local t = {}
+    for _, n in ipairs(LAYERS[filter_name]) do
+        t[#t+1] = n .. "?out"
     end
+
+    return table.concat(t, ' ')
+end
+
+local function clear_tag(filter_name, o)
+    local t = {}
+	for _, n in ipairs(ipf.layers(filter_name)) do
+		o[n] = false
+        t = n .. "?out"
+	end
+    return table.concat(t, " ")
+end
+
+function ipf.update_filter_tag(filter_name, layername, layervalue, o)
+    if layervalue == nil then
+        error "should not be 'nil'"
+    end
+    local sf = clear_tag(filter_name)
+    o[layername] = layervalue
+	o[filter_name] = layervalue
+    w:sync(sf, o)
 end

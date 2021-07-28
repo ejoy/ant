@@ -52,7 +52,6 @@
 #include "ElementBackgroundImage.h"
 #include "PluginRegistry.h"
 #include "PropertiesIterator.h"
-#include "Pool.h"
 #include "StyleSheetParser.h"
 #include "StyleSheetNode.h"
 #include <algorithm>

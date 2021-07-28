@@ -51,5 +51,5 @@ policy_v2 "lock_traget_policy"
     .component_v2 "transform"
 
 system "entity_state_system"
-    .implement "entity_state.lua"
+    .implement "entity_state_v2.lua"
     .method "entity_init"

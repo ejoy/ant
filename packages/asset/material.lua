@@ -275,7 +275,7 @@ end
 local w = world.w
 local ms = ecs.system "material_system"
 function ms:entity_init()
-    for v in w:select "material:in render_object:in" do
+    for v in w:select "INIT material:in render_object:in" do
 		local ro = v.render_object
 		local m = v.material
 		ro.fx = m.fx

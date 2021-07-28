@@ -62,15 +62,6 @@ function ic.create(info, v2)
     local viewmat = math3d.lookto(info.eyepos, info.viewdir, info.updir)
 
     if v2 then
-        local cameraid = world:luaecs_create_ref {
-            policy = {
-                "ant.camera|camera_node"
-            },
-            data = {
-                camera_node = {}
-            }
-        }
-
         local sceneid = world:luaecs_create_ref{
             policy = {
                 "ant.scene|scene_node",
@@ -81,6 +72,17 @@ function ic.create(info, v2)
                 },
                 INIT = true,
             },
+        }
+
+        local cameraid = world:luaecs_create_ref {
+            policy = {
+                "ant.camera|camera_node"
+            },
+            data = {
+                camera_node = {
+                    scene_id = sceneid,
+                }
+            }
         }
         world:luaecs_create_entity{
             policy = policy,
@@ -250,9 +252,8 @@ end
 
 local cameraview_sys = ecs.system "camera_view_system"
 
-local function update_camera(v)
-    local rq = v.render_queue
-    local camera = w:object("camera_node", rq.camera_id)
+local function update_camera(cameraid)
+    local camera = w:object("camera_node", cameraid)
     local worldmat = camera.worldmat
     camera.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), camera.updir)
     camera.projmat = math3d.projmat(camera.frustum)
@@ -260,11 +261,11 @@ local function update_camera(v)
 end
 
 function cameraview_sys:update_mainview_camera()
-    for v in w:select "main_queue render_queue:in" do
-        update_camera(v)
+    for v in w:select "main_queue camera_id:in" do
+        update_camera(v.camera_id)
     end
-    for v in w:select "blit_queue render_queue:in" do
-        update_camera(v)
+    for v in w:select "blit_queue camera_id:in" do
+        update_camera(v.camera_id)
     end
 end
 

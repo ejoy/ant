@@ -34,6 +34,7 @@ function is:data_changed()
         },
         data = {
             name = "test_luaecs",
+            filter_material = {},
             scene_id = world:luaecs_create_ref{
                 policy = {
                     "ant.scene|scene_node",
@@ -50,8 +51,9 @@ function is:data_changed()
                 t = {0, 1, 0},
             },
             material = "/pkg/ant.resources/materials/singlecolor.material",
-            state = 7,
             mesh = m,
+            state = 7,
+            INIT = true,
         }
     }
 end

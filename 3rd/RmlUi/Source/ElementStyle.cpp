@@ -130,8 +130,7 @@ const ElementDefinition* ElementStyle::GetDefinition() const
 	return definition.get();
 }
 
-// Returns one of this element's properties.
-const Property* ElementStyle::GetLocalProperty(PropertyId id, const ElementDefinition* definition) const {
+const Property* ElementStyle::GetLocalProperty(PropertyId id) const {
 	const Property* property = inline_properties.GetProperty(id);
 	if (property)
 		return property;
@@ -140,10 +139,9 @@ const Property* ElementStyle::GetLocalProperty(PropertyId id, const ElementDefin
 	return nullptr;
 }
 
-// Returns one of this element's properties.
-const Property* ElementStyle::GetProperty(PropertyId id, const ElementDefinition* definition) const
+const Property* ElementStyle::GetProperty(PropertyId id) const
 {
-	const Property* local_property = GetLocalProperty(id, definition);
+	const Property* local_property = GetLocalProperty(id);
 	if (local_property)
 		return local_property;
 	const PropertyDefinition* property = StyleSheetSpecification::GetProperty(id);
@@ -161,8 +159,30 @@ const Property* ElementStyle::GetProperty(PropertyId id, const ElementDefinition
 	return property->GetDefaultValue();
 }
 
+const Property* ElementStyle::GetPropertyByDefinition(PropertyId id, const ElementDefinition* definition) const {
+	const Property* property = definition->GetProperty(id);
+	if (property)
+		return property;
+	property = inline_properties.GetProperty(id);
+	if (property)
+		return property;
+	const PropertyDefinition* propertyDef = StyleSheetSpecification::GetProperty(id);
+	if (!propertyDef)
+		return nullptr;
+	if (propertyDef->IsInherited()) {
+		Element* parent = element->GetParentNode();
+		while (parent) {
+			const Property* parent_property = parent->GetStyle()->GetLocalProperty(id);
+			if (parent_property)
+				return parent_property;
+			parent = parent->GetParentNode();
+		}
+	}
+	return propertyDef->GetDefaultValue();
+}
+
 void ElementStyle::TransitionPropertyChanges(PropertyIdSet& properties, const ElementDefinition* new_definition) {
-	const Property* transition_property = GetProperty(PropertyId::Transition, new_definition);
+	const Property* transition_property = GetPropertyByDefinition(PropertyId::Transition, new_definition);
 	if (!transition_property) {
 		return;
 	}
@@ -172,7 +192,7 @@ void ElementStyle::TransitionPropertyChanges(PropertyIdSet& properties, const El
 	}
 	auto add_transition = [&](const Transition& transition) {
 		const Property* from = GetProperty(transition.id);
-		const Property* to = GetProperty(transition.id, new_definition);
+		const Property* to = GetPropertyByDefinition(transition.id, new_definition);
 		if (from && to && (from->unit == to->unit) && (*from != *to)) {
 			return element->StartTransition(transition, *from, *to, true);
 		}
@@ -253,7 +273,7 @@ void ElementStyle::UpdateDefinition() {
 			if (definition && new_definition) {
 				for (PropertyId id : changed_properties) {
 					const Property* p0 = GetProperty(id);
-					const Property* p1 = GetProperty(id, new_definition.get());
+					const Property* p1 = GetPropertyByDefinition(id, new_definition.get());
 					if (p0 && p1 && *p0 == *p1)
 						changed_properties.Erase(id);
 				}
@@ -384,18 +404,6 @@ void ElementStyle::RemoveProperty(PropertyId id)
 
 	if(inline_properties.GetNumProperties() != size_before)
 		DirtyProperty(id);
-}
-
-// Returns one of this element's properties.
-const Property* ElementStyle::GetProperty(PropertyId id) const
-{
-	return GetProperty(id, definition.get());
-}
-
-// Returns one of this element's properties.
-const Property* ElementStyle::GetLocalProperty(PropertyId id) const
-{
-	return GetLocalProperty(id, definition.get());
 }
 
 void ElementStyle::DirtyDefinition()

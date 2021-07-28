@@ -15,8 +15,9 @@ local viewidmgr = renderpkg.viewidmgr
 local bgfx 		= require "bgfx"
 
 local irender	= world:interface "ant.render|irender"
+local ipf		= world:interface "ant.scene|iprimitive_filter"
 
-local opacity_material, translucent_material
+local pickup_materials = {}
 
 local function packeid_as_rgba(eid)
     return {(eid & 0x000000ff) / 0xff,
@@ -49,68 +50,45 @@ end
 
 local s = ecs.system "pickup_primitive_system"
 
-local function sync_filter(rq)
-    local r = {}
-    for i = 1, #rq.layer_tag do
-        r[#r+1] = rq.layer_tag[i] .. "?out"
-    end
-    return table.concat(r, " ")
-end
-
-local function render_queue_update(v, rq)
-    local rc = v.render_object
-    local fx = rc.fx
-    local surfacetype = fx.setting.surfacetype
-    if not rq.layer[surfacetype] then
-        return
-    end
-    for i = 1, #rq.layer_tag do
-        v[rq.layer_tag[i]] = false
-    end
-    v[rq.tag.."_"..surfacetype] = true
-    w:sync(sync_filter(rq), v)
-end
-
-local function render_queue_del(v, rq)
-    for i = 1, #rq.layer_tag do
-        v[rq.layer_tag[i]] = false
-    end
-    v[rq.tag] = false
-    w:sync(sync_filter(rq), v)
-end
-
 function s:update_filter()
     for v in w:select "render_object_update render_object:in eid:in filter_material:in" do
         local rc = v.render_object
+		local surfacetype = rc.fx.setting.surfacetype
         local state = rc.entity_state
-        for u in w:select "pickup_filter render_queue:in" do
-            local rq = u.render_queue
-            local add = ((state & rq.mask) ~= 0) and ((state & rq.exclude_mask) == 0)
-            if add then
-                render_queue_update(v, rq)
-                v.filter_material[rq.tag] = {
-					fx = opacity_material.fx,
-					properties = get_properties(v.eid, opacity_material.fx),
-					state = irender.check_primitive_mode_state(rc.state, opacity_material.state),
-				}
-            else
-                render_queue_del(v, rq)
-				v.filter_material[rq.tag] = nil
-            end
-        end
+		local eid = v.eid
+		for _, ln in ipairs(ipf.layers "pickup_queue") do
+			for vv in w:select(ln .. " pickup_queue primitive_filter:in") do
+				local p = vv.primitive_filter
+				local add = ((state & p.mask) ~= 0) and ((state & p.exclude_mask) == 0)
+				ipf.update_filter_tag("pickup_queue", surfacetype, add, v)
+				local m = assert(pickup_materials[ln])
+				v.filter_material[ln] = add and {
+					fx = m.fx,
+					properties = get_properties(eid, m.fx),
+					state = irender.check_primitive_mode_state(rc.state, m.state),
+				} or nil
+			end
+		end
+
     end
 end
 
 function s:render_submit()
-    for v in w:select "pickup_filter visible render_queue:in" do
-        local rq = v.render_queue
-        local viewid = rq.viewid
-        for i = 1, #rq.layer_tag do
-            for u in w:select(rq.layer_tag[i] .. " " .. rq.cull_tag .. ":absent render_object:in filter_material:in") do
-                irender.draw(viewid, u.render_object, u.filter_material[rq.tag])
-            end
-        end
-		w:clear(rq.cull_tag)
+    for v in w:select "pickup_queue visible render_target:in" do
+        local rt = v.render_target
+        local viewid = rt.viewid
+		for _, ln in ipairs(ipf.layers "pickup_queue") do
+			for vv in w:select "pickup_queue opaticy render_object:in filter_material:in" do
+				irender.draw(viewid, vv.render_object, vv.filter_material[ln])
+			end
+		end
+
+        -- for i = 1, #rq.layer_tag do
+        --     for u in w:select(rq.layer_tag[i] .. " " .. rq.cull_tag .. ":absent render_object:in filter_material:in") do
+        --         irender.draw(viewid, u.render_object, u.filter_material[rq.tag])
+        --     end
+        -- end
+		-- w:clear(rq.cull_tag)
     end
 end
 
@@ -125,31 +103,24 @@ local function enable_pickup(enable)
 	end
 end
 
-local function getMainQueueCamera()
-    for v in w:select "main_queue render_queue:in" do
-        local rq = v.render_queue
-        return w:object("camera_node", rq.camera_id)
-    end
-end
-
-local function update_camera(v, clickpt)
-	local mq = world:singleton_entity "main_queue"
-	local rt = mq.render_target.view_rect
-
-	local ndc2D = mu.pt2D_to_NDC(clickpt, rt)
-	local eye, at = mu.NDC_near_far_pt(ndc2D)
-
-    local mainCamera = getMainQueueCamera()
-	local vp = mainCamera.viewprojmat
-	local ivp = math3d.inverse(vp)
-	eye = math3d.transformH(ivp, eye, 1)
-	at = math3d.transformH(ivp, at, 1)
-
-	local camera = w:object("camera_node", v.render_queue.camera_id)
-	local viewdir = math3d.normalize(math3d.sub(at, eye))
-	camera.viewmat = math3d.lookto(eye, viewdir, camera.updir)
-	camera.projmat = math3d.projmat(camera.frustum)
-	camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
+local function update_camera(pu_cameraid, clickpt)
+	for mq in w:select "main_queue camera_id:in render_target:in" do	--main queue must visible
+		local ndc2D = mu.pt2D_to_NDC(clickpt, mq.render_target.view_rect)
+		local eye, at = mu.NDC_near_far_pt(ndc2D)
+	
+		local maincamera = w:object("camera_node", mq.camera_id)
+		local vp = maincamera.viewprojmat
+		local ivp = math3d.inverse(vp)
+		eye = math3d.transformH(ivp, eye, 1)
+		at = math3d.transformH(ivp, at, 1)
+	
+		local camera = w:object("camera_node", pu_cameraid)
+		local viewdir = math3d.normalize(math3d.sub(at, eye))
+		camera.viewmat = math3d.lookto(eye, viewdir, camera.updir)
+		camera.projmat = math3d.projmat(camera.frustum)
+		camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
+		break
+	end
 end
 
 
@@ -257,7 +228,7 @@ local fb_renderbuffer_flag = samplerutil.sampler_flag {
 local icamera = world:interface "ant.camera|camera"
 
 local function add_pick_entity()
-	local cameraeid = icamera.create {
+	local cameraeid = icamera.create({
 		viewdir = mc.ZAXIS,
 		updir = mc.YAXIS,
 		eyepos = mc.ZERO_PT,
@@ -265,7 +236,7 @@ local function add_pick_entity()
 			type="mat", n=0.1, f=100, fov=0.5, aspect=pickup_buffer_w / pickup_buffer_h
 		},
 		name = "camera.pickup",
-	}
+	}, true)
 
 	local fbidx = fbmgr.create {
 		fbmgr.create_rb {
@@ -327,10 +298,11 @@ end
 
 local imaterial = world:interface "ant.asset|imaterial"
 
+
 function pickup_sys:init()
-	local eid = add_pick_entity()
-	opacity_material	= imaterial.load '/pkg/ant.resources/materials/pickup_opacity.material'
-	translucent_material= imaterial.load '/pkg/ant.resources/materials/pickup_transparent.material'
+	add_pick_entity()
+	pickup_materials.opacity	= imaterial.load '/pkg/ant.resources/materials/pickup_opacity.material'
+	pickup_materials.translucent= imaterial.load '/pkg/ant.resources/materials/pickup_transparent.material'
 end
 
 local leftmousepress_mb = world:sub {"mouse", "LEFT"}
@@ -344,8 +316,8 @@ function pickup_sys:data_changed()
 	end
 end
 function pickup_sys:update_camera()
-    for v in w:select "pickup_filter visible render_queue:in" do
-		update_camera(v, clickpt)
+    for v in w:select "pickup_queue visible camera_id:in" do
+		update_camera(v.camear_id, clickpt)
 	end
 end
 
@@ -397,25 +369,23 @@ local state_list = {
 	wait = "select_obj",
 }
 
-local function check_next_step(pickupcomp)
-	pickupcomp.nextstep = state_list[pickupcomp.nextstep]
+local function check_next_step(pc)
+	pc.nextstep = state_list[pc.nextstep]
 end
 
 function pickup_sys:pickup()
-	local pickupentity = world:singleton_entity "pickup"
-
-	if pickupentity.visible then
-		local pickupcomp = pickupentity.pickup
-		local nextstep = pickupcomp.nextstep
+	for v in w:select "pickup_queue visible pickup:in render_target:in" do
+		local pc = v.pickup
+		local nextstep = pc.nextstep
 		if nextstep == "blit" then
-			local fb = fbmgr.get(pickupentity.render_target.fb_idx)
+			local fb = fbmgr.get(v.render_target.fb_idx)
 			local rb = fbmgr.get_rb(fb[1])
-			blit(pickupcomp.blit_buffer, rb)
+			blit(pc.blit_buffer, rb)
 		elseif nextstep	== "select_obj" then
-			select_obj(pickupcomp, pickupcomp.blit_buffer, pickupentity.render_target.view_rect)
+			select_obj(pc, pc.blit_buffer, v.render_target.view_rect)
 			enable_pickup(false)
 		end
 
-		check_next_step(pickupcomp)
+		check_next_step(pc)
 	end
 end

@@ -85,7 +85,7 @@ end
 local w = world.w
 local m = ecs.system "mesh_system"
 function m:entity_init()
-    for v in w:select "mesh:in render_object:in" do
+    for v in w:select "INIT mesh:in render_object:in" do
 		local ro, mesh = v.render_object, v.mesh
 		local handles = {}
 		ro.vb = {
