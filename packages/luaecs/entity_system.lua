@@ -3,16 +3,6 @@ local w = ecs.world.w
 
 local m = ecs.system "entity_system"
 
-function m:init()
-    w:register {
-        name = "create_entity",
-        type = "lua"
-    }
-    w:register {
-        name = "initializing",
-    }
-end
-
 function m:entity_create()
     for v in w:select "create_entity:in" do
         local initargs = v.create_entity
