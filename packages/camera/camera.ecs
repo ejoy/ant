@@ -95,8 +95,11 @@ action "dof_focus_obj"
 
 --camera_v2
 policy_v2 "camera"
-    .component "camera"
-    .component "camera_id"
+    .component_v2 "camera"
+    .component_v2 "camera_id"
+
+policy_v2 "camera_node"
+    .component_v2 "camera_node"
 
 component_v2 "camera"
     .type "lua"

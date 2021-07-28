@@ -2,6 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 local mc = import_package "ant.math".constant
+local math3d = require "math3d"
 
 local default_comp 	= import_package "ant.general".default
 local setting		= import_package "ant.settings".setting
@@ -267,7 +268,7 @@ local function create_main_fb(view_rect, sd)
 	return fbmgr.create(render_buffers)
 end
 
-function irender.create_main_queue(view_rect, camera_eid)
+function irender.create_main_queue(view_rect, camera_id)
 	local sd = setting:data()
 	local fbidx = create_main_fb(view_rect, sd)
 
@@ -281,7 +282,7 @@ function irender.create_main_queue(view_rect, camera_eid)
 		},
 		data = {
 			name = "main render queue",
-			camera_eid = camera_eid,
+			camera_eid = camera_id,
 			render_target = {
 				viewid = viewidmgr.get "main_view",
 				view_mode = "s",
@@ -305,14 +306,6 @@ end
 
 local blitviewid = viewidmgr.get "blit"
 function irender.create_blit_queue(viewrect)
-	local cameraeid = icamera.create {
-		eyepos = mc.ZERO_PT,
-		viewdir = mc.ZAXIS,
-		updir = mc.YAXIS,
-		frustum = default_comp.frustum(viewrect.w / viewrect.h),
-		name = "blit_camera",
-	}
-
 	create_primitive_filter_entities(FILTERS["blit_queue"])
 
 	world:luaecs_create_entity {
@@ -323,7 +316,13 @@ function irender.create_blit_queue(viewrect)
 			"ant.general|name",
 		},
 		data = {
-			camera_eid = cameraeid,
+			camera_id = icamera.create({
+				eyepos = mc.ZERO_PT,
+				viewdir = mc.ZAXIS,
+				updir = mc.YAXIS,
+				frustum = default_comp.frustum(viewrect.w / viewrect.h),
+				name = "blit_camera",
+			}, true),
 			render_target = {
 				viewid = blitviewid,
 				view_mode = "",
@@ -347,9 +346,22 @@ function irender.create_blit_queue(viewrect)
 		policy = {
 			"ant.general|name",
 			"ant.render|render",
+			"ant.scene|render_object",
+			"ant.scene|scene_object",
 		},
 		data = {
-			transform = {},
+			render_object = {},
+			scene_id = world:luaecs_create_ref{
+				policy = {
+					"ant.scene|scene_node",
+				},
+				data = {
+					scene_node = {
+						srt = math3d.ref(mc.IDENTITY_MAT),
+					},
+					INIT = true,
+				}
+			},
 			material = "/pkg/ant.resources/materials/fullscreen.material",
 			state = ies.create_state "blit_view",
 			name = "full_quad",

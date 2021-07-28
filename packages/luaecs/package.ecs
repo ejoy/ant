@@ -10,7 +10,11 @@ pipeline "_update"
 
 system "entity_system"
     .implement "entity_system.lua"
-    .method "init"
     .method "entity_create"
     .method "entity_done"
     .method "update_world"
+
+component_v2 "initializing"
+
+component_v2 "create_entity"
+    .type "lua"

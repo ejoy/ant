@@ -60,7 +60,45 @@ function ic.create(info, v2)
     end
 
     local viewmat = math3d.lookto(info.eyepos, info.viewdir, info.updir)
-    local ce = {
+
+    if v2 then
+        local cameraid = world:luaecs_create_ref {
+            policy = {
+                "ant.camera|camera_node"
+            },
+            data = {
+                camera_node = {}
+            }
+        }
+
+        local sceneid = world:luaecs_create_ref{
+            policy = {
+                "ant.scene|scene_node",
+            },
+            data = {
+                scene_node = {
+                    srt = math3d.inverse(viewmat),
+                },
+                INIT = true,
+            },
+        }
+        world:luaecs_create_entity{
+            policy = policy,
+            data = {
+                name        = info.name or "DEFAULT_CAMERA",
+                scene_id = sceneid,
+                camera_id = cameraid,
+                camera = {
+                    clip_range  = info.clip_range,
+                    frustum     = info.frustum,
+                    dof         = info.dof,
+                },
+            }
+        }
+
+        return cameraid
+    end
+    return world:create_entity{
         policy = policy,
         data = {
             name        = info.name or "DEFAULT_CAMERA",
@@ -74,12 +112,6 @@ function ic.create(info, v2)
             dof         = dof,
         }
     }
-
-    if v2 then
-        world:luaecs_create_entity(ce)
-        
-    end
-    return world:create_entity(ce)
 end
 
 local function bind_queue(cameraeid, qeid)

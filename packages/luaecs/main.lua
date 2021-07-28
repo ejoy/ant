@@ -11,14 +11,30 @@ end
 
 function world:luaecs_create_entity(v)
     local res = policy.create(self, v.policy)
+    local t = {}
     for _, c in ipairs(res.component) do
-        if v.data[c] == nil then
+        local d = v.data[c]
+        if d == nil then
             error(("component `%s` must exists"):format(c))
         end
+        t[c] = d
     end
     self.w:new {
-        create_entity = v.data
+        create_entity = t
     }
+end
+
+function world:luaecs_create_ref(v)
+    local res = policy.create_ref(self, v.policy)
+    local t = {}
+    for _, c in ipairs(res.component) do
+        local d = v.data[c]
+        if d == nil then
+            error(("component `%s` must exists"):format(c))
+        end
+        t[c] = d
+    end
+    return self.w:ref(res.mainkey, t)
 end
 
 local function update_decl(self)

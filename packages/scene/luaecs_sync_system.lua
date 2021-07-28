@@ -44,10 +44,15 @@ function s:luaecs_sync()
 				_self = eid,
 				_parent = parent,
 			}
-			local id = w:ref("scene_node", {
-				scene_node = scene_node,
-				INIT = true,
-			})
+			local id = world:luaecs_create_ref {
+				policy = {
+					"ant.scene|scene_node"
+				},
+				data = {
+					scene_node = scene_node,
+					initializing = true,
+				}
+			}
 			data.scene_id = id
 			e._scene_id = id
 			policy[#policy+1] = "ant.scene|scene_object"
@@ -60,16 +65,21 @@ function s:luaecs_sync()
 			policy[#policy+1] = "ant.scene|render_object"
 		end
 		if isCamera(e) then
-			local id = w:ref("camera_node", {
-				camera_node = rc
-			})
+			local id = world:luaecs_create_ref {
+				policy = {
+					"ant.camera|camera_node"
+				},
+				data = {
+					camera_node = rc
+				}
+			}
 			data.camera_id = id
 			data.camera = {
 				frustum     = e.frustum,
 				clip_range  = e.clip_range,
 				dof         = e.dof,
 			}
-			policy[#policy+1] = "ant.scene|camera"
+			policy[#policy+1] = "ant.camera|camera"
 		end
 		world:luaecs_create_entity {
 			policy = policy,

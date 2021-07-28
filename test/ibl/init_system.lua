@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-
+local math3d = require "math3d"
 local ientity = world:interface "ant.render|entity"
 local imaterial = world:interface "ant.asset|imaterial"
 
@@ -29,9 +29,22 @@ function is:data_changed()
         policy = {
             "ant.render|render",
             "ant.general|name",
+            "ant.scene|render_object",
+            "ant.scene|scene_object",
         },
         data = {
             name = "test_luaecs",
+            scene_id = world:luaecs_create_ref{
+                policy = {
+                    "ant.scene|scene_node",
+                },
+                data = {
+                    scene_node = {
+                        srt = math3d.ref(math3d.matrix()),
+                    },
+                    INIT = true,
+                }
+            },
             render_object = {},
             transform = {
                 t = {0, 1, 0},

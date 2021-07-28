@@ -34,16 +34,16 @@ end
 
 function fr_sys:init()
 	local vr = {w=world.args.width,h=world.args.height}
-	local camera_eid = icamera.create{
+	local camera_id = icamera.create({
 		eyepos  = {0, 0, 0, 1},
 		viewdir = {0, 0, 1, 0},
 		frustum = default_comp.frustum(vr.w/vr.h),
         name = "default_camera",
-	}
+	}, true)
 
 	irender.create_blit_queue(vr)
 	--local deid = irender.create_pre_depth_queue(vr, camera_eid)
-	local meid = irender.create_main_queue(vr, camera_eid)
+	local meid = irender.create_main_queue(vr, camera_id)
 
 	--watch_main_queue(meid, deid)
 end
