@@ -3,9 +3,9 @@ component_v2 "eid"
 
 --RenderObject
 policy_v2 "render_object"
-    .component "render_object_update"
-    .component "render_object"
-    .component "filter_material"
+    .component_v2 "render_object_update"
+    .component_v2 "render_object"
+    .component_v2 "filter_material"
 
 component_v2 "render_object_update"
 
@@ -17,8 +17,8 @@ component_v2 "filter_material"
 
 --Camera
 policy_v2 "camera"
-    .component "camera"
-    .component "camera_id"
+    .component_v2 "camera"
+    .component_v2 "camera_id"
 
 component_v2 "camera"
     .type "lua"
@@ -31,7 +31,7 @@ component_v2 "camera_node"
 
 --SceneObject
 policy_v2 "scene_object"
-    .component "scene_id"
+    .component_v2 "scene_id"
 
 component_v2 "scene_id"
     .type "int"

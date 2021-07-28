@@ -56,6 +56,7 @@ local attribute = {
 		"require_system",
 		"require_interface",
 		"require_policy",
+		"require_policy_v2",
 		"method",
 	},
 	policy = {
@@ -81,6 +82,7 @@ local attribute = {
 		"require_system",
 		"require_interface",
 		"require_policy",
+		"require_policy_v2",
 		"method",
 	},
 	action = {
@@ -100,7 +102,7 @@ local attribute = {
 		"require_system",
 		"require_interface",
 		"require_policy_v2",
-		"component",
+		"component_v2",
 		"unique_component",
 	},
 	component_v2 = {
@@ -123,6 +125,7 @@ local check_map = {
 	require_policy = "policy",
 	require_policy_v2 = "policy_v2",
 	require_transform = "transform",
+	component_v2 = "component_v2",
 	action = "action",
 	unique_component = "none",
 	pipeline = "none",
