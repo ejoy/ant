@@ -65,6 +65,7 @@ local check_map = {
 	require_interface = "interface",
 	require_policy = "policy",
 	require_transform = "transform",
+	component_v2 = "component_v2",
 	pipeline = "pipeline",
 	action = "action",
 }
@@ -100,7 +101,7 @@ function copy.policy(v)
 end
 function copy.policy_v2(v)
 	local t = {}
-	table_append(t, v.component)
+	table_append(t, v.component_v2)
 	table_append(t, v.unique_component)
 	return {
 		policy_v2 = v.require_policy_v2,
@@ -120,10 +121,14 @@ function copy.pipeline(v)
 		value = v.value
 	}
 end
+function copy.component_v2(v)
+	return {
+		type = v.type[1]
+	}
+end
 function copy.system() return {} end
 function copy.interface() return {} end
 function copy.component() return {} end
-function copy.component_v2() return {} end
 function copy.action() return {} end
 
 local function create_importor(w, ecs, declaration)
@@ -273,6 +278,9 @@ local function init(w, config)
 			end
 		end
 	end
+    --for _, objname in ipairs(OBJECT) do
+	--	setmetatable(w._class[objname], nil)
+	--end
 	w._initializing = false
 
     for _, objname in ipairs(OBJECT) do
