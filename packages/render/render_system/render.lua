@@ -1,5 +1,6 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 local mc = import_package "ant.math".constant
 
 local default_comp 	= import_package "ant.general".default
@@ -65,103 +66,111 @@ function irender.get_main_view_rendertexture()
 	return fbmgr.get_rb(fb[1]).handle
 end
 
-function irender.create_view_queue(view_rect, view_name, exclude)
-	local mq = world:singleton_entity "main_queue"
-	local rt = mq.render_target
-	local cs = rt.clear_state
-	return world:create_entity {
-		policy = {
-			"ant.render|render_queue",
-			"ant.render|view_queue",
-			"ant.render|watch_screen_buffer",
-			"ant.general|name",
-		},
-		data = {
-			camera_eid = icamera.create{
-				eyepos  = {0, 0, 0, 1},
-				viewdir = {0, 0, 1, 0},
-				frustum = default_comp.frustum(view_rect.w / view_rect.h),
-				name = view_name,
-			},
-
-			primitive_filter = {
-				filter_type = "visible",
-				update_type = "primitive",
-				exclude_type = exclude
-			},
-
-			render_target = {
-				viewid = viewidmgr.generate(view_name),
-				view_mode = "s",
-				clear_state = {
-					color = cs.clear_color,
-					depth = cs.clear_depth,
-					stencil = cs.clear_stencil,
-					clear = cs.clear,
-				},
-				view_rect = {
-					x = view_rect.x or 0, y = view_rect.y or 0,
-					w = view_rect.w or 1, h = view_rect.h or 1,
-				},
-				fb_idx = rt.fb_idx,
-			},
-			visible = true,
-			name = view_name,
-			view_queue = true,
-			watch_screen_buffer = true,
-		}
+local FILTERS<const> = {
+	main_queue = {
+		"foreground", "opaticy", "background", "translucent", "decal", "ui"
+	},
+	blit_queue = {
+		"opaticy",
+	},
+	pre_depth_queue = {
+		"foreground", "opaticy", "background", "translucent",
 	}
+}
+
+local function create_primitive_filter_entities(filters, exclude)
+	for _, fn in ipairs(filters) do
+		local filter_pn = ("ant.scene|%s_primitive_filter"):format(fn)
+		world:luaecs_create_entity{
+			policy = {
+				filter_pn,
+				"ant.render|main_queue",
+			},
+			data = {
+				primitive_filter = {
+					filter_type = "visible",
+					exclude = exclude,
+				},
+				[fn] = true,
+				main_queue = true,
+			}
+		}
+	end
+end
+
+function irender.create_view_queue(view_rect, view_name, exclude)
+	create_primitive_filter_entities(FILTERS["main_queue"], exclude)
+	for v in w:select "main_queue render_target:in" do
+		local rt = v.render_target
+		world:luaecs_create_entity {
+			policy = {
+				"ant.render|render_queue",
+				"ant.render|view_queue",
+				"ant.render|watch_screen_buffer",
+				"ant.general|name",
+			},
+			data = {
+				camera_eid = icamera.create{
+					eyepos  = {0, 0, 0, 1},
+					viewdir = {0, 0, 1, 0},
+					frustum = default_comp.frustum(view_rect.w / view_rect.h),
+					name = view_name,
+				},
+				render_target = {
+					viewid = viewidmgr.generate(view_name),
+					view_mode = "s",
+					clear_state = rt.clear_state,
+					view_rect = view_rect,
+					fb_idx = rt.fb_idx,
+				},
+				visible = true,
+				name = view_name,
+				view_queue = true,
+				watch_screen_buffer = true,
+			}
+		}
+		break
+	end
 end
 
 function irender.create_orthoview_queue(view_rect, orthoface, queuename)
-	local mq = world:singleton_entity "main_queue"
-	local rt = mq.render_target
-	local cs = rt.clear_state
-	return world:create_entity {
-		policy = {
-			"ant.render|render_queue",
-			"ant.render|orthoview_queue",
-			--"ant.render|watch_screen_buffer",
-			"ant.general|name",
-		},
-		data = {
-			camera_eid = icamera.create {
-				eyepos  = {0, 0, 0, 1},
-				viewdir = {0, 0, 1, 0},
-				updir = {0, 1, 0, 0},
-				frustum = {
-					l=-1, r=1, b=-1, t=1, n=0.25, f=250,
-					ortho = true,
-				},
-				name = orthoface,
+	create_primitive_filter_entities(FILTERS["main_queue"])
+	for v in w:select "main_queue render_target:in" do
+		local rt = v.render_target
+		world:luaecs_create_entity {
+			policy = {
+				"ant.render|render_queue",
+				"ant.render|orthoview_queue",
+				"ant.render|watch_screen_buffer",
+				"ant.general|name",
 			},
+			data = {
+				camera_eid = icamera.create {
+					eyepos  = {0, 0, 0, 1},
+					viewdir = {0, 0, 1, 0},
+					updir = {0, 1, 0, 0},
+					frustum = {
+						l=-1, r=1, b=-1, t=1, n=0.25, f=250,
+						ortho = true,
+					},
+					name = orthoface,
+				},
 
-			primitive_filter = {
-				filter_type = "visible",
-				update_type = "primitive",
-			},
-
-			render_target = {
-				viewid = viewidmgr.generate(orthoface),
-				view_mode = "s",
-				clear_state = {
-					color = cs.clear_color,
-					depth = cs.clear_depth,
-					stencil = cs.clear_stencil,
-					clear = cs.clear,
+				render_target = {
+					viewid		= viewidmgr.generate(orthoface),
+					view_mode 	= "s",
+					clear_state	= rt.clear_state,
+					view_rect	= view_rect,
+					fb_idx		= rt.fb_idx,
 				},
-				view_rect = {
-					x = view_rect.x or 0, y = view_rect.y or 0,
-					w = view_rect.w or 1, h = view_rect.h or 1,
-				},
-				fb_idx = rt.fb_idx,
-			},
-			visible = false,
-			orthoview = orthoface,
-			--watch_screen_buffer = true,
-			name = orthoface or queuename,
+				visible = false,
+				orthoview = orthoface,
+				watch_screen_buffer = true,
+				name = orthoface or queuename,
+			}
 		}
-	}
+		break
+	end
 end
 
 local rb_flag = samplerutil.sampler_flag {
@@ -173,6 +182,8 @@ local rb_flag = samplerutil.sampler_flag {
 }
 
 function irender.create_pre_depth_queue(view_rect, camera_eid)
+	create_primitive_filter_entities(FILTERS["pre_depth_queue"])
+
 	local fbidx = fbmgr.create{
 		fbmgr.create_rb{
 			format = "R32F",
@@ -260,25 +271,8 @@ function irender.create_main_queue(view_rect, camera_eid)
 	local sd = setting:data()
 	local fbidx = create_main_fb(view_rect, sd)
 
-	
-
-	world:create_entity{
-		primitive_filter = {
-			filter_type = "visible",
-		},
-		opaticy = true,
-		main_queue = true,
-	}
-
-	world:create_entity{
-		primitive_filter = {
-			filter_type = "visible",
-		},
-		transparent = true,
-		main_queue = true,
-	}
-
-	return world:create_entity {
+	create_primitive_filter_entities(FILTERS["main_queue"])
+	return world:luaecs_create_entity {
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|watch_screen_buffer",
@@ -319,7 +313,9 @@ function irender.create_blit_queue(viewrect)
 		name = "blit_camera",
 	}
 
-	world:create_entity {
+	create_primitive_filter_entities(FILTERS["blit_queue"])
+
+	world:luaecs_create_entity {
 		policy = {
 			"ant.render|blit_queue",
 			"ant.render|render_queue",
@@ -339,10 +335,6 @@ function irender.create_blit_queue(viewrect)
 					w = viewrect.w or 1, h = viewrect.h or 1,
 				},
 			},
-			primitive_filter = {
-				filter_type = "blit_view",
-				update_type = "primitive",
-			},
 			visible = true,
 			blit_queue = true,
 			watch_screen_buffer = true,
@@ -351,7 +343,7 @@ function irender.create_blit_queue(viewrect)
 	}
 
 	local ies = world:interface "ant.scene|ientity_state"
-	world:create_entity {
+	world:luaecs_create_entity {
 		policy = {
 			"ant.general|name",
 			"ant.render|render",

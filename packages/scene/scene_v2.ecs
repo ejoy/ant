@@ -1,0 +1,56 @@
+component_v2 "primitive_filter"
+    .type "lua"
+
+component_v2 "foreground"
+component_v2 "opaticy"
+component_v2 "background"
+component_v2 "translucent"
+component_v2 "decal"
+component_v2 "ui"
+
+-- filter policy
+policy_v2 "foreground_primitive_filter"
+    .component "primitive_filter"
+    .component "foreground"
+
+policy_v2 "opaticy_primitive_filter"
+    .component "primitive_filter"
+    .component "opaticy"
+
+policy_v2 "background_primitive_filter"
+    .component "primitive_filter"
+    .component "background"
+
+policy_v2 "translucent_primitive_filter"
+    .component "primitive_filter"
+    .component "translucent"
+
+policy_v2 "decal_primitive_filter"
+    .component "primitive_filter"
+    .component "decal"
+
+policy_v2 "ui_primitive_filter"
+    .component "primitive_filter"
+    .component "ui"
+
+component_v2 "scene_entity"
+policy_v2 "hierarchy_policy"
+    .require_system "scenespace_system"
+    .require_system "luaecs_sync_system"
+    .component "scene_entity"
+
+component_v2 "state".type "lua"
+    .require_system "ant.scene|entity_state_system"
+
+component_v2 "lock_target".type "lua"
+    .require_system "ant.scene|scenespace_system"
+
+policy_v2 "lock_traget_policy"
+    .require_policy_v2 "hierarchy_policy"
+    .require_system "ant.scene|scenespace_system"
+    .component "lock_target"
+    .component "transform"
+
+system "entity_state_system"
+    .implement "entity_state.lua"
+    .method "entity_init"

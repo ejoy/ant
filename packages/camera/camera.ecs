@@ -92,3 +92,17 @@ transform "dof_transform"
 action "dof_focus_obj"
     .implement "camera.lua"
     .method "init"
+
+--camera_v2
+policy_v2 "camera"
+    .component "camera"
+    .component "camera_id"
+
+component_v2 "camera"
+    .type "lua"
+
+component_v2 "camera_id"
+    .type "int"
+
+component_v2 "camera_node"
+    .type "ref"

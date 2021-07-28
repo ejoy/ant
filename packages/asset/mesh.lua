@@ -1,5 +1,5 @@
 local ecs = ...
-
+local world = ecs.world
 local m = ecs.component "mesh"
 
 local assetmgr = require "asset"
@@ -79,4 +79,37 @@ end
 
 function imesh.create_ib(ib)
 	return ext_meshbin.proxy_ib(ib)
+end
+
+----mesh_v2
+local w = world.w
+local m = ecs.system "mesh_system"
+function m:entity_init()
+    for v in w:select "mesh:in render_object:in" do
+		local ro, mesh = v.render_object, v.mesh
+		local handles = {}
+		ro.vb = {
+			start   = mesh.vb.start,
+			num     = mesh.vb.num,
+			handles = handles,
+		}
+		for _, vv in ipairs(mesh.vb) do
+			handles[#handles+1] = vv.handle
+		end
+		if mesh.ib then
+			local ib = mesh.ib
+			ro.ib = {
+				start	=ib.start,
+				num 	=ib.num,
+				handle	=ib.handle,
+			}
+		else
+			ro.ib = nil
+		end
+	end
+
+	for v in w:select "simplemesh:in render_object:in" do
+		local ro, sm = v.render_object, v.simplemesh
+		ro.vb, ro.ib = sm.vb, sm.ib
+	end
 end

@@ -270,3 +270,16 @@ function mt.process_entity(e)
 	rc.properties 	= generate_properties(c.fx, c.properties)
 	rc.state 		= c.state
 end
+
+----material_v2
+local w = world.w
+local ms = ecs.system "material_system"
+function ms:entity_init()
+    for v in w:select "material:in render_object:in" do
+		local ro = v.render_object
+		local m = v.material
+		ro.fx = m.fx
+		ro.properties = generate_properties(m.fx, m.properties)
+		ro.state = m.state
+	end
+end

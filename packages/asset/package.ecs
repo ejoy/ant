@@ -86,3 +86,5 @@ interface "imesh"
     .implement "mesh.lua"
     .method "create_vb"
     .method "create_ib"
+
+import "asset_v2.ecs"

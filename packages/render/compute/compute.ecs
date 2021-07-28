@@ -19,3 +19,17 @@ interface "icompute"
     .method "create_compute_entity"
     .method "create_buffer_property"
     .method "create_image_property"
+
+--compute_v2
+system "compute_system"
+    .implement "compute/compute.lua"
+    .method "entity_init"
+
+component_v2 "compute"
+component_v2 "dispatch_size".type "lua"
+    .require_system "ant.render|compute_system"
+
+policy_v2 "compute_policy"
+    .component "material"
+    .component "compute"
+    .component "dispatch_size"

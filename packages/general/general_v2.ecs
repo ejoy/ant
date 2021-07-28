@@ -1,0 +1,11 @@
+policy_v2 "name"
+    .component "name"
+
+system "init_transform_system"
+    .implement "general_v2.lua"
+
+component_v2 "transform".type "lua"
+    .require_system "ant.general|init_transform_system"
+
+policy_v2 "transform_policy"
+    .component "transform"

@@ -35,7 +35,7 @@ local defaultcamera = {
     name = "default_camera",
 }
 
-function ic.create(info)
+function ic.create(info, v2)
     info = info or defaultcamera
     local frustum = info.frustum
     if not frustum then
@@ -60,11 +60,11 @@ function ic.create(info)
     end
 
     local viewmat = math3d.lookto(info.eyepos, info.viewdir, info.updir)
-    return world:create_entity {
+    local ce = {
         policy = policy,
         data = {
             name        = info.name or "DEFAULT_CAMERA",
-            transform   = math3d.ref(math3d.inverse(viewmat)),
+            transform   = math3d.inverse(viewmat),
             updir       = info.updir,
             lock_target = info.locktarget,
             frustum     = frustum,
@@ -74,6 +74,12 @@ function ic.create(info)
             dof         = dof,
         }
     }
+
+    if v2 then
+        world:luaecs_create_entity(ce)
+        
+    end
+    return world:create_entity(ce)
 end
 
 local function bind_queue(cameraeid, qeid)

@@ -1,5 +1,6 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 
 local bgfx = require "bgfx"
 local fbmgr = require "framebuffer_mgr"
@@ -143,12 +144,15 @@ function irq.update_rendertarget(rt)
 	end
 end
 
-local rt = ecs.component "render_target"
-function rt:init()
-	irq.update_rendertarget(self)
-	return self
+local rt_sys = ecs.system "render_target_system"
+function rt_sys:entity_init()
+	for v in w:select "INIT render_target:in" do
+		irq.update_rendertarget(v.render_target)
+	end
 end
 
-function rt:delete()
-	fbmgr.unbind(self.viewid)
+function rt_sys:entity_remove()
+	for v in w:select "REMOVED render_target:in" do
+		fbmgr.unbind(v.render_target.viewid)
+	end
 end
