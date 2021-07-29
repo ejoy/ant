@@ -41,7 +41,6 @@ class ElementText;
 class StyleSheet;
 class DataModel;
 class DataModelConstructor;
-class DataTypeRegister;
 
 class RMLUICORE_API Document {
 public:
@@ -101,7 +100,6 @@ public:
 private:
 	using DataModels = UnorderedMap<String, UniquePtr<DataModel>>;
 	DataModels data_models;
-	UniquePtr<DataTypeRegister> data_type_register;
 
 private:
 

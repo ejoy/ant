@@ -84,7 +84,6 @@ enum class Instruction {
 	NotEqual     = 'N',     //       R = L != R
 	Ternary      = '?',     //       R = L ? C : R
 	Arguments    = 'a',     //      A+ = S-  (Repeated D times, where D gives the num. arguments)
-	TransformFnc = 'T',     //       R = DataModel.Execute( D, R, A ); A.Clear();  (D determines function name, R the input value, A the arguments)
 	EventFnc     = 'E',     //       DataModel.EventCallback(D, A); A.Clear();
 	Assign       = 'A',     //       DataModel.SetVariable(D, R)
 };
@@ -394,24 +393,7 @@ namespace Parse {
 			switch (parser.Look())
 			{
 			case '&': And(parser); break;
-			case '|':
-			{
-				parser.Match('|', false);
-				if (parser.Look() == '|')
-					Or(parser);
-				else
-				{
-					parser.SkipWhitespace();
-					const String fnc_name = VariableName(parser);
-					if (fnc_name.empty()) {
-						parser.Error("Expected a transform function name but got an empty name.");
-						return;
-					}
-
-					Function(parser, Instruction::TransformFnc, fnc_name);
-				}
-			}
-			break;
+			case '|': Or(parser); break;
 			case '?': Ternary(parser); break;
 			default:
 				looping = false;
@@ -621,7 +603,7 @@ namespace Parse {
 	}
 	static void Or(DataParser& parser)
 	{
-		// We already skipped the first '|' during expression
+		parser.Match('|', false);
 		parser.Match('|');
 		parser.Push();
 		Relational(parser);
@@ -702,7 +684,7 @@ namespace Parse {
 	}
 	static void Function(DataParser& parser, Instruction function_type, const String& func_name)
 	{
-		RMLUI_ASSERT(function_type == Instruction::TransformFnc || function_type == Instruction::EventFnc);
+		RMLUI_ASSERT(function_type == Instruction::EventFnc);
 
 		// We already matched the variable name (and '|' for transform functions)
 		if (parser.Look() == '(')
@@ -915,25 +897,6 @@ private:
 			}
 		}
 		break;
-		case Instruction::TransformFnc:
-		{
-			const String function_name = data.Get<String>();
-			
-			if (!expression_interface.CallTransform(function_name, R, arguments))
-			{
-				String arguments_str;
-				for (size_t i = 0; i < arguments.size(); i++)
-				{
-					arguments_str += arguments[i].Get<String>();
-					if (i < arguments.size() - 1)
-						arguments_str += ", ";
-				}
-				Error(CreateString(50 + function_name.size() + arguments_str.size(), "Failed to execute data function: %s(%s)", function_name.c_str(), arguments_str.c_str()));
-			}
-
-			arguments.clear();
-		}
-		break;
 		case Instruction::EventFnc:
 		{
 			const String function_name = data.Get<String>();
@@ -1053,11 +1016,6 @@ bool DataExpressionInterface::SetValue(const DataAddress& address, const Variant
 			data_model->DirtyVariable(address.front().name);
 	}
 	return result;
-}
-
-bool DataExpressionInterface::CallTransform(const String& name, Variant& inout_variant, const VariantList& arguments)
-{
-	return data_model ? data_model->CallTransform(name, inout_variant, arguments) : false;
 }
 
 bool DataExpressionInterface::EventCallback(const String& name, const VariantList& arguments)

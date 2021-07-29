@@ -580,25 +580,18 @@ void Document::OnElementDetach(Element* element) {
 }
 
 DataModelConstructor Document::CreateDataModel(const String& name) {
-	if (!data_type_register)
-		data_type_register = MakeUnique<DataTypeRegister>();
-
-	auto result = data_models.emplace(name, MakeUnique<DataModel>(data_type_register->GetTransformFuncRegister()));
+	auto result = data_models.emplace(name, MakeUnique<DataModel>());
 	bool inserted = result.second;
 	if (inserted)
-		return DataModelConstructor(result.first->second.get(), data_type_register.get());
+		return DataModelConstructor(result.first->second.get());
 
 	Log::Message(Log::LT_ERROR, "Data model name '%s' already exists.", name.c_str());
 	return DataModelConstructor();
 }
 
 DataModelConstructor Document::GetDataModel(const String& name) {
-	if (data_type_register)
-	{
-		if (DataModel* model = GetDataModelPtr(name))
-			return DataModelConstructor(model, data_type_register.get());
-	}
-
+	if (DataModel* model = GetDataModelPtr(name))
+		return DataModelConstructor(model);
 	Log::Message(Log::LT_ERROR, "Data model name '%s' could not be found.", name.c_str());
 	return DataModelConstructor();
 }

@@ -35,8 +35,6 @@
 namespace Rml {
 
 class VariableDefinition;
-class DataTypeRegister;
-class TransformFuncRegister;
 class DataModelHandle;
 class DataVariable;
 

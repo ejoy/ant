@@ -44,7 +44,7 @@ class Element;
 
 class DataModel : NonCopyMoveable {
 public:
-	DataModel(const TransformFuncRegister* transform_register = nullptr);
+	DataModel();
 	~DataModel();
 
 	void AddView(DataViewPtr view);
@@ -67,8 +67,6 @@ public:
 	void DirtyVariable(const String& variable_name);
 	bool IsVariableDirty(const String& variable_name) const;
 
-	bool CallTransform(const String& name, Variant& inout_result, const VariantList& arguments) const;
-
 	// Elements declaring 'data-model' need to be attached.
 	void AttachModelRootElement(Element* element);
 	ElementList GetAttachedModelRootElements() const;
@@ -89,8 +87,6 @@ private:
 
 	using ScopedAliases = UnorderedMap<Element*, SmallUnorderedMap<String, DataAddress>>;
 	ScopedAliases aliases;
-
-	const TransformFuncRegister* transform_register;
 
 	SmallUnorderedSet<Element*> attached_elements;
 };

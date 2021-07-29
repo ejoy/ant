@@ -44,10 +44,10 @@ void DataModelHandle::DirtyVariable(const String& variable_name) {
 }
 
 
-DataModelConstructor::DataModelConstructor() : model(nullptr), type_register(nullptr) {}
+DataModelConstructor::DataModelConstructor() : model(nullptr) {}
 
-DataModelConstructor::DataModelConstructor(DataModel* model, DataTypeRegister* type_register) : model(model), type_register(type_register) {
-	RMLUI_ASSERT(model && type_register);
+DataModelConstructor::DataModelConstructor(DataModel* model) : model(model) {
+	RMLUI_ASSERT(model);
 }
 
 DataModelHandle DataModelConstructor::GetModelHandle() const {

@@ -33,7 +33,7 @@
 #include "Types.h"
 #include "Traits.h"
 #include "DataTypes.h"
-#include "DataTypeRegister.h"
+#include "DataVariable.h"
 
 namespace Rml {
 
@@ -60,7 +60,7 @@ public:
 	using DataEventMemberFunc = void(T::*)(DataModelHandle, Event&, const VariantList&);
 
 	DataModelConstructor();
-	DataModelConstructor(DataModel* model, DataTypeRegister* type_register);
+	DataModelConstructor(DataModel* model);
 
 	// Return a handle to the data model being constructed, which can later be used to synchronize variables and update the model.
 	DataModelHandle GetModelHandle() const;
@@ -85,20 +85,12 @@ public:
 		return BindVariable(name, data_variable);
 	}
 
-	// Register a transform function.
-	// A transform function modifies a variant with optional arguments. It can be called in data expressions using the pipe '|' operator.
-	// @note The transform function applies to every data model associated with the current Context.
-	void RegisterTransformFunc(const String& name, DataTransformFunc transform_func) {
-		type_register->GetTransformFuncRegister()->Register(name, std::move(transform_func));
-	}
-
-	explicit operator bool() { return model && type_register; }
+	explicit operator bool() { return model; }
 
 private:
 	bool BindVariable(const String& name, DataVariable data_variable);
 
 	DataModel* model;
-	DataTypeRegister* type_register;
 };
 
 } // namespace Rml

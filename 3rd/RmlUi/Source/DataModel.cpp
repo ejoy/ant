@@ -27,7 +27,6 @@
  */
 
 #include "DataModel.h"
-#include "../Include/RmlUi/DataTypeRegister.h"
 #include "../Include/RmlUi/Element.h"
 #include "DataController.h"
 #include "DataView.h"
@@ -120,7 +119,7 @@ static String DataAddressToString(const DataAddress& address)
 	return result;
 }
 
-DataModel::DataModel(const TransformFuncRegister* transform_register) : transform_register(transform_register)
+DataModel::DataModel()
 {
 	views = MakeUnique<DataViews>();
 	controllers = MakeUnique<DataControllers>();
@@ -339,13 +338,6 @@ bool DataModel::IsVariableDirty(const String& variable_name) const
 {
 	RMLUI_ASSERTMSG(LegalVariableName(variable_name) == nullptr, "Illegal variable name provided. Only top-level variables can be dirtied.");
 	return dirty_variables.count(variable_name) == 1;
-}
-
-bool DataModel::CallTransform(const String& name, Variant& inout_result, const VariantList& arguments) const
-{
-	if (transform_register)
-		return transform_register->Call(name, inout_result, arguments);
-	return false;
 }
 
 void DataModel::AttachModelRootElement(Element* element)
