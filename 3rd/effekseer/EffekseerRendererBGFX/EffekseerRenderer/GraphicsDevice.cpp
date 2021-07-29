@@ -2,6 +2,9 @@
 #include "EffekseerRendererBGFX.Base.h"
 #include "EffekseerRendererBGFX.RendererImplemented.h"
 #include "EffekseerRendererBGFX.RenderResources.h"
+#include "EffekseerRendererBGFX.VertexBuffer.h"
+#include "EffekseerRendererBGFX.IndexBuffer.h"
+#include "EffekseerRendererBGFX.ModelRenderer.h"
 
 namespace EffekseerRendererBGFX {
 	namespace Backend {
@@ -44,6 +47,7 @@ namespace EffekseerRendererBGFX {
 
 		Effekseer::Backend::VertexBufferRef GraphicsDevice::CreateVertexBuffer(int32_t size, const void* initialData, bool isDynamic)
 		{
+			return EffekseerRendererBGFX::Backend::VertexBuffer::Create(size, *ModelRenderer::model_vertex_layout_, initialData);
 			//auto ret = Effekseer::MakeRefPtr<VertexBuffer>(this);
 
 			//if (!ret->Init(size, isDynamic))
@@ -54,11 +58,12 @@ namespace EffekseerRendererBGFX {
 			//ret->UpdateData(initialData, size, 0);
 
 			//return ret;
-			return nullptr;
+			//return nullptr;
 		}
 
 		Effekseer::Backend::IndexBufferRef GraphicsDevice::CreateIndexBuffer(int32_t elementCount, const void* initialData, Effekseer::Backend::IndexBufferStrideType stride)
 		{
+			return EffekseerRendererBGFX::Backend::IndexBuffer::Create(elementCount, Effekseer::Backend::IndexBufferStrideType::Stride4, initialData);
 			//auto ret = Effekseer::MakeRefPtr<IndexBuffer>(this);
 
 			//if (!ret->Init(elementCount, stride == Effekseer::Backend::IndexBufferStrideType::Stride4 ? 4 : 2))
@@ -69,7 +74,7 @@ namespace EffekseerRendererBGFX {
 			//ret->UpdateData(initialData, elementCount * (stride == Effekseer::Backend::IndexBufferStrideType::Stride4 ? 4 : 2), 0);
 
 			//return ret;
-			return nullptr;
+			//return nullptr;
 		}
 
 		Effekseer::Backend::TextureRef GraphicsDevice::CreateTexture(const Effekseer::Backend::TextureParameter& param)

@@ -150,19 +150,28 @@ namespace EffekseerRendererBGFX {
 
 			return true;
 		}
-
+		Model::Model(const Effekseer::CustomVector<Model::Vertex>& vertecies, const Effekseer::CustomVector<Model::Face>& faces)
+			: Effekseer::Model(vertecies, faces)
+		{
+			//create_buffer();
+		}
 		Model::Model(const void* data, int32_t size)
 			: Effekseer::Model(data, size)
 		{
-			for (int32_t f = 0; f < GetFrameCount(); f++) {
-				models_[f].vertexBuffer = Backend::VertexBuffer::Create(GetVertexCount(f) * sizeof(Effekseer::Model::Vertex), *ModelRenderer::model_vertex_layout_, models_[f].vertexes.data());//
-				models_[f].indexBuffer = Backend::IndexBuffer::Create(3 * GetFaceCount(f), Effekseer::Backend::IndexBufferStrideType::Stride4, models_[f].faces.data());
-			}
+			//create_buffer();
 		}
 
 		Model::~Model()
 		{
 
+		}
+		void Model::create_buffer()
+		{
+			for (int32_t f = 0; f < GetFrameCount(); f++) {
+				models_[f].vertexBuffer = Backend::VertexBuffer::Create(GetVertexCount(f) * sizeof(Effekseer::Model::Vertex), *ModelRenderer::model_vertex_layout_, models_[f].vertexes.data());//
+				models_[f].indexBuffer = Backend::IndexBuffer::Create(3 * GetFaceCount(f), Effekseer::Backend::IndexBufferStrideType::Stride4, models_[f].faces.data());
+			}
+			isBufferStoredOnGPU_ = true;
 		}
 	}
 } // namespace EffekseerRendererBGFX
