@@ -33,7 +33,7 @@ load_fontid(struct font_manager *F, const Rml::String &family){
     if (!family.empty() && family != "rmlui-debugger-font")
         name = family.c_str();
     
-    return font_manager_addfont_with_family(F, name);
+    return F->font_manager_addfont_with_family(F, name);
 }
 
 Rml::FontFaceHandle FontEngine::GetFontFaceHandle(const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, int size){
@@ -63,7 +63,8 @@ struct TextEffectVisitor {
     : context(ctx)
     { }
     void operator() (Rml::TextShadow const& t) {
-        int8_t edgevalue_offset = int8_t(font_manager_sdf_mask(context->font_mgr) * 0.85f);
+        font_manager* F = context->font_mgr;
+        int8_t edgevalue_offset = int8_t(F->font_manager_sdf_mask(F) * 0.85f);
         result = new SDFFontEffectShadow(
             context->font_tex.texid,
             edgevalue_offset,
@@ -72,7 +73,8 @@ struct TextEffectVisitor {
         );
     }
     void operator() (Rml::TextStroke const& t) {
-        int8_t edgevalue_offset = int8_t(font_manager_sdf_mask(context->font_mgr) * 0.85f);
+        font_manager* F = context->font_mgr;
+        int8_t edgevalue_offset = int8_t(F->font_manager_sdf_mask(F) * 0.85f);
         result = new TSDFFontEffectOutline<FontEffectType(FE_Outline|FE_FontTex)>(
             context->font_tex.texid,
             t.width,
@@ -104,12 +106,13 @@ int FontEngine::GetSize(Rml::FontFaceHandle handle){
 struct font_glyph
 FontEngine::GetGlyph(const FontFace &face, int codepoint, struct font_glyph *og_){
     struct font_glyph g, og;
-    if (0 == font_manager_glyph(mcontext->font_mgr, face.fontid, codepoint, face.pixelsize, &g, &og)){
+    font_manager* F = mcontext->font_mgr;
+    if (0 == F->font_manager_glyph(F, face.fontid, codepoint, face.pixelsize, &g, &og)){
         auto ri = static_cast<Renderer*>(Rml::GetRenderInterface());
         const uint32_t bufsize = og.w * og.h;
         uint8_t *buffer = new uint8_t[bufsize];
         memset(buffer, 0, bufsize);
-        if (NULL == font_manager_update(mcontext->font_mgr, face.fontid, codepoint, &og, buffer)){
+        if (NULL == F->font_manager_update(F, face.fontid, codepoint, &og, buffer)){
             SDFFontEffectDefault t(mcontext->font_tex.texid);
             ri->UpdateTexture(Rml::TextureHandle(&t), Rect{og.u, og.v, og.w, og.h}, buffer);
         } else {
@@ -133,7 +136,8 @@ int FontEngine::GetLineHeight(Rml::FontFaceHandle handle){
     const auto &face = mFontFaces[idx];
 
     int ascent, descent, lineGap;
-    font_manager_fontheight(mcontext->font_mgr, face.fontid, face.pixelsize, &ascent, &descent, &lineGap);
+    font_manager* F = mcontext->font_mgr;
+    F->font_manager_fontheight(F, face.fontid, face.pixelsize, &ascent, &descent, &lineGap);
     return ascent - descent + lineGap;
 }
 
@@ -142,14 +146,16 @@ int FontEngine::GetBaseline(Rml::FontFaceHandle handle){
     const auto &face = mFontFaces[idx];
 
     int ascent, descent, lineGap;
-    font_manager_fontheight(mcontext->font_mgr, face.fontid, face.pixelsize, &ascent, &descent, &lineGap);
+    font_manager* F = mcontext->font_mgr;
+    F->font_manager_fontheight(F, face.fontid, face.pixelsize, &ascent, &descent, &lineGap);
     return -descent + lineGap;
 }
 
 void FontEngine::GetUnderline(Rml::FontFaceHandle handle, float& position, float &thickness){
     size_t idx = static_cast<size_t>(handle)-1;
     const auto &face = mFontFaces[idx];
-    font_manager_underline(mcontext->font_mgr, face.fontid, face.pixelsize, &position, &thickness);
+    font_manager* F = mcontext->font_mgr;
+    F->font_manager_underline(F, face.fontid, face.pixelsize, &position, &thickness);
 }
 
 int FontEngine::GetStringWidth(Rml::FontFaceHandle handle, const Rml::String& string, Rml::Character prior_character /*= Character::Null*/){

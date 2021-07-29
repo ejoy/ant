@@ -54,7 +54,7 @@ public:
     virtual Rml::String GenerateKey() const = 0;
     virtual bool GetProperties(struct font_manager* F, const shader_info &si, PropertyMap &properties) const{
         Property m;
-        m.value[0] = font_manager_sdf_mask(F) - font_manager_sdf_distance(F, mEdgeValueOffset);
+        m.value[0] = F->font_manager_sdf_mask(F) - F->font_manager_sdf_distance(F, mEdgeValueOffset);
         m.value[1] = mDistMultiplier;
         m.value[2] = m.value[3] = 0.0f;
         const char* mn = "u_mask";
@@ -156,7 +156,7 @@ private:
 
 static Rml::String
 get_default_mask_offset_str(struct font_manager* F){
-    const int v = int(font_manager_sdf_mask(F) * 0.85f);
+    const int v = int(F->font_manager_sdf_mask(F) * 0.85f);
     return std::to_string(v);
 }
 
