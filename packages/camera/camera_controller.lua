@@ -20,21 +20,12 @@ end
 local mouse_lastx, mouse_lasty
 local toforward
 function cc_sys:data_changed()
-    for v in w:select "INIT mian_queue camera_id:in" do
+    for v in w:select "INIT mian_queue camera_eid:in" do
         local eyepos = math3d.vector(0, 0, -10)
-
-        local camera = w:object("camera_node", v.camera_id)
-        local sceneid = camera.scene_id
+        local ceid = v.camera_eid
+        iom.set_position(ceid, eyepos)
         local dir = math3d.normalize(math3d.sub(viewat, eyepos))
-
-        local sn = w:object("scene_node", sceneid)
-        assert(sn.parent == nil)
-        sn.srt[4] = eyepos
-        if sn.updir then
-            sn.srt.id = math3d.inverse(math3d.lookto(eyepos, dir, sn.updir))
-        else
-            sn.srt[3] = dir
-        end
+        iom.set_direction(ceid, dir)
     end
 
     for msg in kb_mb:each() do

@@ -70,20 +70,21 @@ function irender.get_main_view_rendertexture()
 end
 
 local function create_primitive_filter_entities(filtername, exclude)
+	local quene_policy = "ant.render|" .. filtername
 	for _, fn in ipairs(ipf.layers(filtername)) do
 		local filter_pn = ("ant.scene|%s_primitive_filter"):format(fn)
 		world:luaecs_create_entity{
 			policy = {
 				filter_pn,
-				"ant.render|main_queue",
+				quene_policy,
 			},
 			data = {
 				primitive_filter = {
 					filter_type = "visible",
 					exclude = exclude,
 				},
-				[fn] = true,
-				main_queue = true,
+				[fn] 			= true,
+				[filtername] 	= true,
 			}
 		}
 	end
@@ -136,7 +137,7 @@ function irender.create_orthoview_queue(view_rect, orthoface, queuename)
 				"ant.general|name",
 			},
 			data = {
-				camera_id = icamera.create({
+				camera_eid = icamera.create({
 					eyepos  = {0, 0, 0, 1},
 					viewdir = {0, 0, 1, 0},
 					updir = {0, 1, 0, 0},
@@ -145,7 +146,7 @@ function irender.create_orthoview_queue(view_rect, orthoface, queuename)
 						ortho = true,
 					},
 					name = orthoface,
-				}, true),
+				}),
 
 				render_target = {
 					viewid		= viewidmgr.generate(orthoface),
@@ -255,7 +256,7 @@ local function create_main_fb(view_rect, sd)
 	return fbmgr.create(render_buffers)
 end
 
-function irender.create_main_queue(view_rect, camera_id)
+function irender.create_main_queue(view_rect, camera_eid)
 	local sd = setting:data()
 	local fbidx = create_main_fb(view_rect, sd)
 
@@ -269,7 +270,7 @@ function irender.create_main_queue(view_rect, camera_id)
 		},
 		data = {
 			name = "main_queue",
-			camera_id = camera_id,
+			camera_eid = camera_eid,
 			render_target = {
 				viewid = viewidmgr.get "main_view",
 				view_mode = "s",
@@ -304,13 +305,13 @@ function irender.create_blit_queue(viewrect)
 			"ant.general|name",
 		},
 		data = {
-			camera_id = icamera.create({
+			camera_eid = icamera.create({
 				eyepos = mc.ZERO_PT,
 				viewdir = mc.ZAXIS,
 				updir = mc.YAXIS,
 				frustum = default_comp.frustum(viewrect.w / viewrect.h),
 				name = "blit_camera",
-			}, true),
+			}),
 			render_target = {
 				viewid = blitviewid,
 				view_mode = "",

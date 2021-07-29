@@ -106,12 +106,21 @@ function s:end_filter()
     w:clear "render_object_update"
 end
 
+local function find_camera(cameraeid)
+    for v in w:select "camera_id:in" do
+		local cn = w:object("camera_node", v.camera_id)
+		if cameraeid == cn.eid then
+			return cn
+		end
+    end
+end
+
 function s:render_submit()
     --for v in w:select "visible render_queue:in" do
-    for v in w:select "visible camera_id:in render_target:in" do
+    for v in w:select "visible camera_eid:in render_target:in" do
         local rt = v.render_target
         local viewid = rt.viewid
-        local camera = w:object("camera_node", rq.camera_id)
+        local camera = find_camera(v.camera_eid)
         bgfx.touch(viewid)
         bgfx.set_view_transform(viewid, camera.viewmat, camera.projmat)
     end

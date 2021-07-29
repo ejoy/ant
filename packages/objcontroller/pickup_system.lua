@@ -103,18 +103,27 @@ local function enable_pickup(enable)
 	end
 end
 
-local function update_camera(pu_cameraid, clickpt)
-	for mq in w:select "main_queue camera_id:in render_target:in" do	--main queue must visible
+local function find_camera(cameraeid)
+    for v in w:select "camera_id:in" do
+		local cn = w:object("camera_node", v.camera_id)
+		if cameraeid == cn.eid then
+			return cn
+		end
+    end
+end
+
+local function update_camera(pu_cameraeid, clickpt)
+	for mq in w:select "main_queue camera_eid:in render_target:in" do	--main queue must visible
 		local ndc2D = mu.pt2D_to_NDC(clickpt, mq.render_target.view_rect)
 		local eye, at = mu.NDC_near_far_pt(ndc2D)
 	
-		local maincamera = w:object("camera_node", mq.camera_id)
+		local maincamera = find_camera(mq.camera_eid)
 		local vp = maincamera.viewprojmat
 		local ivp = math3d.inverse(vp)
 		eye = math3d.transformH(ivp, eye, 1)
 		at = math3d.transformH(ivp, at, 1)
 	
-		local camera = w:object("camera_node", pu_cameraid)
+		local camera = find_camera(pu_cameraeid)
 		local viewdir = math3d.normalize(math3d.sub(at, eye))
 		camera.viewmat = math3d.lookto(eye, viewdir, camera.updir)
 		camera.projmat = math3d.projmat(camera.frustum)
@@ -315,9 +324,10 @@ function pickup_sys:data_changed()
 		end
 	end
 end
+
 function pickup_sys:update_camera()
-    for v in w:select "pickup_queue visible camera_id:in" do
-		update_camera(v.camear_id, clickpt)
+    for v in w:select "pickup_queue visible camera_eid:in" do
+		update_camera(v.camear_eid, clickpt)
 	end
 end
 

@@ -252,8 +252,17 @@ end
 
 local cameraview_sys = ecs.system "camera_view_system"
 
-local function update_camera(cameraid)
-    local camera = w:object("camera_node", cameraid)
+local function find_camera(cameraeid)
+    for v in w:select "camera_id:in" do
+		local cn = w:object("camera_node", v.camera_id)
+		if cameraeid == cn.eid then
+			return cn
+		end
+    end
+end
+
+local function update_camera(cameraeid)
+    local camera = find_camera(cameraeid)
     local worldmat = camera.worldmat
     camera.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), camera.updir)
     camera.projmat = math3d.projmat(camera.frustum)
@@ -261,11 +270,11 @@ local function update_camera(cameraid)
 end
 
 function cameraview_sys:update_mainview_camera()
-    for v in w:select "main_queue camera_id:in" do
-        update_camera(v.camera_id)
+    for v in w:select "main_queue camera_eid:in" do
+        update_camera(v.camera_eid)
     end
-    for v in w:select "blit_queue camera_id:in" do
-        update_camera(v.camera_id)
+    for v in w:select "blit_queue camera_eid:in" do
+        update_camera(v.camera_eid)
     end
 end
 

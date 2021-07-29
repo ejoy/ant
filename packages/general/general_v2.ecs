@@ -1,6 +1,6 @@
 component_v2 "INIT"
 
-component_v2 "name"
+component_v2 "name".type "lua"
 policy_v2 "name"
     .component_v2 "name"
 
