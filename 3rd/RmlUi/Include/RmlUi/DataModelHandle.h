@@ -65,14 +65,6 @@ public:
 	// Return a handle to the data model being constructed, which can later be used to synchronize variables and update the model.
 	DataModelHandle GetModelHandle() const;
 
-	// Bind a data variable.
-	// @note For non-scalar types make sure they first have been registered with the appropriate 'Register...()' functions.
-	template<typename T>
-	bool Bind(const String& name, T* ptr) {
-		RMLUI_ASSERTMSG(ptr, "Invalid pointer to data variable");
-		return BindVariable(name, DataVariable(type_register->GetOrAddScalar<T>(), ptr));
-	}
-
 	// Bind a get/set function pair.
 	bool BindFunc(const String& name, DataGetFunc get_func, DataSetFunc set_func = {});
 
@@ -91,23 +83,6 @@ public:
 	// For advanced use cases, for example for binding variables to a custom 'VariableDefinition'.
 	bool BindCustomDataVariable(const String& name, DataVariable data_variable) {
 		return BindVariable(name, data_variable);
-	}
-
-	// Register a struct type.
-	// @note The type applies to every data model associated with the current Context.
-	// @return A handle which can be used to register struct members.
-	template<typename T>
-	StructHandle<T> RegisterStruct() {
-		return type_register->RegisterStruct<T>();
-	}
-
-	// Register an array type.
-	// @note The type applies to every data model associated with the current Context.
-	// @note If 'Container::value_type' represents a non-scalar type, that type must already have been registered with the appropriate 'Register...()' functions.
-	// @note Container requires the following functions to be implemented: size() and begin(). This is satisfied by several containers such as std::vector and std::array.
-	template<typename Container>
-	bool RegisterArray() {
-		return type_register->RegisterArray<Container>();
 	}
 
 	// Register a transform function.

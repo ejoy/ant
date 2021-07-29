@@ -70,7 +70,6 @@ struct TransitionList;
 struct Rectangle;
 enum class EventId : uint16_t;
 enum class PropertyId : uint8_t;
-enum class FamilyId : int;
 
 // Types for external interfaces.
 using FileHandle = uintptr_t;
@@ -290,10 +289,6 @@ template <> struct hash<::Rml::PropertyId> {
 template <> struct hash<::Rml::Character> {
 	using utype = typename ::std::underlying_type<::Rml::Character>::type;
 	size_t operator() (const ::Rml::Character& t) const { ::Rml::Hash<utype> h; return h(static_cast<utype>(t)); }
-};
-template <> struct hash<::Rml::FamilyId> {
-	using utype = typename ::std::underlying_type<::Rml::FamilyId>::type;
-	size_t operator() (const ::Rml::FamilyId& t) const { ::std::hash<utype> h; return h(static_cast<utype>(t)); }
 };
 }
 
