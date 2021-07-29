@@ -15,7 +15,7 @@
                 text-decoration: none;
                 border-radius: 15px;
                 border-radius: 10px;
-                border: 1px solid black;
+                border: 1px black;
                 opacity: 0.5;
                 
                 transition: color background-color transform 2s elastic-out;

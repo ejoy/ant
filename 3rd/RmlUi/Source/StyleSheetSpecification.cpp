@@ -418,7 +418,7 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 	
 	RegisterProperty(PropertyId::BackgroundRepeat, "background-repeat", "repeat", false, false)
 		.AddParser("keyword", "repeat, repeat-x, repeat-y, no-repeat");
-	RegisterShorthand(ShorthandId::Background, "background", "background-image, background-position, background-size-x, background-size-y", ShorthandType::FallThrough);
+	RegisterShorthand(ShorthandId::Background, "background", "background-image, background-position-x, background-position-y, background-size-x, background-size-y", ShorthandType::FallThrough);
 
 	RegisterProperty(PropertyId::TextShadowH, "text-shadow-h", "0px", true, false)
 		.AddParser("length");
