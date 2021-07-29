@@ -152,7 +152,6 @@
     <ClCompile Include="..\..\clibs\lua\lvm.c" />
     <ClCompile Include="..\..\clibs\lua\lzio.c" />
     <ClCompile Include="..\..\clibs\lua\utf8_crt.c" />
-    <ClCompile Include="..\..\clibs\lua\utf8_unicode.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\clibs\lua\lvm.s" />
