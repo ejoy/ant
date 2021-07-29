@@ -40,11 +40,7 @@ class DataVariable;
 
 using DataGetFunc = Function<void(Variant&)>;
 using DataSetFunc = Function<void(const Variant&)>;
-using DataTransformFunc = Function<bool(Variant&, const VariantList&)>;
 using DataEventFunc = Function<void(DataModelHandle, Event&, const VariantList&)>;
-
-template<typename T> using MemberGetFunc = void(T::*)(Variant&);
-template<typename T> using MemberSetFunc = void(T::*)(const Variant&);
 
 using DirtyVariables = SmallUnorderedSet<String>;
 

@@ -49,10 +49,6 @@ lua_plugin::~lua_plugin() {
 	reference.reset();
 }
 
-int lua_plugin::GetEventClasses() {
-	return EVT_BASIC | EVT_DOCUMENT;
-}
-
 void lua_plugin::OnInitialise() {
 	event_listener_instancer = new lua_event_listener_instancer(this);
 	Rml::Factory::RegisterEventListenerInstancer(event_listener_instancer);
@@ -92,12 +88,6 @@ void lua_plugin::OnLoadExternalScript(Rml::Document* document, const std::string
 		lua_pushlstring(L, source_path.data(), source_path.size());
 		call(L, LuaEvent::OnLoadExternalScript, 2);
 	});
-}
-
-void lua_plugin::OnElementCreate(Rml::Element* element) {
-}
-
-void lua_plugin::OnElementDestroy(Rml::Element* element) {
 }
 
 void lua_plugin::register_event(lua_State* L) {

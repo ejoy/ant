@@ -174,38 +174,6 @@ bool Factory::InstanceElementText(Element* parent, const String& str)
 	return true;
 }
 
-// Creates a style sheet containing the passed in styles.
-SharedPtr<StyleSheet> Factory::InstanceStyleSheetString(const String& string)
-{
-	auto memory_stream = MakeUnique<StreamMemory>((const byte*) string.c_str(), string.size());
-	return InstanceStyleSheetStream(memory_stream.get());
-}
-
-// Creates a style sheet from a file.
-SharedPtr<StyleSheet> Factory::InstanceStyleSheetFile(const String& file_name)
-{
-	auto file_stream = MakeUnique<StreamFile>();
-	file_stream->Open(file_name);
-	return InstanceStyleSheetStream(file_stream.get());
-}
-
-// Creates a style sheet from an Stream.
-SharedPtr<StyleSheet> Factory::InstanceStyleSheetStream(Stream* stream)
-{
-	SharedPtr<StyleSheet> style_sheet = MakeShared<StyleSheet>();
-	if (style_sheet->LoadStyleSheet(stream))
-	{
-		return style_sheet;
-	}
-	return nullptr;
-}
-
-// Clears the style sheet cache. This will force style sheets to be reloaded.
-void Factory::ClearStyleSheetCache()
-{
-	StyleSheetFactory::ClearStyleSheetCache();
-}
-
 // Register an instancer for all event listeners
 void Factory::RegisterEventListenerInstancer(EventListenerInstancer* instancer)
 {

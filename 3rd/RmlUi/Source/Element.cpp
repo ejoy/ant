@@ -83,14 +83,12 @@ Element::Element(Document* owner, const String& tag)
 	structure_dirty = false;
 	meta = new ElementMeta(this);
 	data_model = nullptr;
-	PluginRegistry::NotifyElementCreate(this);
 }
 
 Element::~Element() {
 	RMLUI_ASSERT(parent == nullptr);
 	//GetOwnerDocument()->OnElementDetach(this);
 	SetDataModel(nullptr);
-	PluginRegistry::NotifyElementDestroy(this);
 	for (ElementPtr& child : children) {
 		child->SetParent(nullptr);
 	}

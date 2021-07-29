@@ -71,21 +71,6 @@ public:
 	/// @return True if the string was parsed without error, false otherwise.
 	static bool InstanceElementText(Element* parent, const String& text);
 
-	/// Creates a style sheet from a user-generated string.
-	/// @param[in] string The contents of the style sheet.
-	/// @return A pointer to the newly created style sheet.
-	static SharedPtr<StyleSheet> InstanceStyleSheetString(const String& string);
-	/// Creates a style sheet from a file.
-	/// @param[in] file_name The location of the style sheet file.
-	/// @return A pointer to the newly created style sheet.
-	static SharedPtr<StyleSheet> InstanceStyleSheetFile(const String& file_name);
-	/// Creates a style sheet from an Stream.
-	/// @param[in] stream A pointer to the stream containing the style sheet's contents.
-	/// @return A pointer to the newly created style sheet.
-	static SharedPtr<StyleSheet> InstanceStyleSheetStream(Stream* stream);
-	/// Clears the style sheet cache. This will force style sheets to be reloaded.
-	static void ClearStyleSheetCache();
-
 	/// Register the instancer to be used for all event listeners.
 	/// @lifetime The instancer must be kept alive until after the call to Rml::Shutdown, or until a new instancer is set.
 	static void RegisterEventListenerInstancer(EventListenerInstancer* instancer);

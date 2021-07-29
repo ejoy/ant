@@ -47,8 +47,6 @@ public:
 	static void NotifyDocumentDestroy(Document* document);
 	static void NotifyLoadInlineScript(Document* document, const std::string& content, const std::string& source_path, int source_line);
 	static void NotifyLoadExternalScript(Document* document, const std::string& source_path);
-	static void NotifyElementCreate(Element* element);
-	static void NotifyElementDestroy(Element* element);
 
 private:
 	PluginRegistry();

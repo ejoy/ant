@@ -31,66 +31,45 @@
 
 namespace Rml {
 
-typedef Vector< Plugin* > PluginList;
-static PluginList basic_plugins;
-static PluginList document_plugins;
-static PluginList element_plugins;
+static Plugin* g_plugin = nullptr;
 
 PluginRegistry::PluginRegistry()
 { }
 
 void PluginRegistry::RegisterPlugin(Plugin* plugin) {
-	int event_classes = plugin->GetEventClasses();
-	if (event_classes & Plugin::EVT_BASIC)
-		basic_plugins.push_back(plugin);
-	if (event_classes & Plugin::EVT_DOCUMENT)
-		document_plugins.push_back(plugin);
-	if (event_classes & Plugin::EVT_ELEMENT)
-		element_plugins.push_back(plugin);
+	g_plugin = plugin;
 }
 
 void PluginRegistry::NotifyInitialise() {
-	for (size_t i = 0; i < basic_plugins.size(); ++i)
-		basic_plugins[i]->OnInitialise();
+	if (g_plugin)
+		g_plugin->OnInitialise();
 }
 
 void PluginRegistry::NotifyShutdown() {
-	while (!basic_plugins.empty()) {
-		basic_plugins.back()->OnShutdown();
-		basic_plugins.pop_back();
+	if (g_plugin) {
+		g_plugin->OnShutdown();
+		g_plugin = nullptr;
 	}
-	document_plugins.clear();
-	element_plugins.clear();
 }
 
 void PluginRegistry::NotifyDocumentCreate(Document* document) {
-	for (size_t i = 0; i < document_plugins.size(); ++i)
-		document_plugins[i]->OnDocumentCreate(document);
+	if (g_plugin)
+		g_plugin->OnDocumentCreate(document);
 }
 
 void PluginRegistry::NotifyDocumentDestroy(Document* document) {
-	for (size_t i = 0; i < document_plugins.size(); ++i)
-		document_plugins[i]->OnDocumentDestroy(document);
+	if (g_plugin)
+		g_plugin->OnDocumentDestroy(document);
 }
 
 void PluginRegistry::NotifyLoadInlineScript(Document* document, const std::string& content, const std::string& source_path, int source_line) {
-	for (size_t i = 0; i < document_plugins.size(); ++i)
-		document_plugins[i]->OnLoadInlineScript(document, content, source_path, source_line);
+	if (g_plugin)
+		g_plugin->OnLoadInlineScript(document, content, source_path, source_line);
 }
 
 void PluginRegistry::NotifyLoadExternalScript(Document* document, const std::string& source_path) {
-	for (size_t i = 0; i < document_plugins.size(); ++i)
-		document_plugins[i]->OnLoadExternalScript(document, source_path);
-}
-
-void PluginRegistry::NotifyElementCreate(Element* element) {
-	for (size_t i = 0; i < element_plugins.size(); ++i)
-		element_plugins[i]->OnElementCreate(element);
-}
-
-void PluginRegistry::NotifyElementDestroy(Element* element) {
-	for (size_t i = 0; i < element_plugins.size(); ++i)
-		element_plugins[i]->OnElementDestroy(element);
+	if (g_plugin)
+		g_plugin->OnLoadExternalScript(document, source_path);
 }
 
 } // namespace Rml
