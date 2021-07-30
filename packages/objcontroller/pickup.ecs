@@ -1,0 +1,14 @@
+--v2
+system "pickup_primitive_system"
+    .implement "pickup_system.lua"
+    .require_system "ant.scene|luaecs_filter_system"
+    .require_interface "ant.render|irender"
+    .method     "update_filter"
+    .method     "render_submit"
+
+component_v2 "pickup_queue_cull"
+component_v2 "pickup"
+policy_v2 "pickup"
+    .require_system "pickup_primitive_system"
+    .component_v2 "pickup"
+

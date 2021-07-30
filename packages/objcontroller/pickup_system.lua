@@ -18,83 +18,6 @@ local irender	= world:interface "ant.render|irender"
 local ipf		= world:interface "ant.scene|iprimitive_filter"
 local ies		= world:interface "ant.scene|ientity_state"
 
-local pickup_materials = {}
-
-local function packeid_as_rgba(eid)
-    return {(eid & 0x000000ff) / 0xff,
-            ((eid & 0x0000ff00) >> 8) / 0xff,
-            ((eid & 0x00ff0000) >> 16) / 0xff,
-            ((eid & 0xff000000) >> 24) / 0xff}    -- rgba
-end
-
-local uid_cache = {}
-local function get_properties(eid, fx)
-	local p = uid_cache[eid]
-	if p then
-		return p
-	end
-	local imaterial = world:interface "ant.asset|imaterial"
-	local v = math3d.ref(math3d.vector(packeid_as_rgba(eid)))
-	local u = fx.uniforms[1]
-	assert(u.name == "u_id")
-	p = {
-		u_id = {
-			value = v,
-			handle = u.handle,
-			type = u.type,
-			set = imaterial.property_set_func "u"
-		},
-	}
-	uid_cache[eid] = p
-	return p
-end
-
-local s = ecs.system "pickup_primitive_system"
-
-function s:update_filter()
-    for v in w:select "render_object_update render_object:in eid:in filter_material:in" do
-        local rc = v.render_object
-		local st = rc.fx.setting.surfacetype
-        local state = rc.entity_state
-		local eid = v.eid
-
-		for vv in w:select(st .. " pickup_queue primitive_filter:in") do
-			local pf = vv.primitive_filter
-			local mask = ies.filter_mask(pf.filter_type)
-			local exclude_mask = pf.exclude_type and ies.filter_mask(pf.exclude_type) or 0
-
-			local add = ((state & mask) ~= 0) and ((state & exclude_mask) == 0)
-			ipf.update_filter_tag("pickup_queue", st, add, v)
-			local m = assert(pickup_materials[st])
-			v.filter_material[st] = add and {
-				fx = m.fx,
-				properties = get_properties(eid, m.fx),
-				state = irender.check_primitive_mode_state(rc.state, m.state),
-			} or nil
-		end
-
-    end
-end
-
-function s:render_submit()
-    for v in w:select "pickup_queue visible render_target:in" do
-        local rt = v.render_target
-        local viewid = rt.viewid
-		for _, ln in ipairs(ipf.layers "pickup_queue") do
-			for vv in w:select "pickup_queue opaticy render_object:in filter_material:in pickup_queue_cull:absent" do
-				irender.draw(viewid, vv.render_object, vv.filter_material[ln])
-			end
-		end
-
-        -- for i = 1, #rq.layer_tag do
-        --     for u in w:select(rq.layer_tag[i] .. " " .. rq.cull_tag .. ":absent render_object:in filter_material:in") do
-        --         irender.draw(viewid, u.render_object, u.filter_material[rq.tag])
-        --     end
-        -- end
-		-- w:clear(rq.cull_tag)
-    end
-end
-
 --update pickup view
 local function enable_pickup(enable)
 	local e = world:singleton_entity "pickup"
@@ -192,7 +115,6 @@ local function which_entity_hitted(blitdata, viewrect, elemsize)
 end
 
 local pickup_sys = ecs.system "pickup_system"
--- pickup_system
 
 local function blit_buffer_init(self)
 	self.handle = bgfx.memory_texture(self.w*self.h * self.elemsize)
@@ -238,7 +160,7 @@ local fb_renderbuffer_flag = samplerutil.sampler_flag {
 
 local icamera = world:interface "ant.camera|camera"
 
-local function add_pick_entity()
+local function create_pick_entity()
 	local cameraeid = icamera.create({
 		viewdir = mc.ZAXIS,
 		updir = mc.YAXIS,
@@ -266,7 +188,7 @@ local function add_pick_entity()
 		}
 	}
 
-	return world:create_entity {
+	world:luaecs_create_entity {
 		policy = {
 			"ant.general|name",
 			"ant.render|render_queue",
@@ -295,25 +217,18 @@ local function add_pick_entity()
 				},
 				fb_idx = fbidx,
 			},
-			primitive_filter = {
-				filter_type = "selectable",
-				update_type = "pickup",
-			},
-			name = "pickup_renderqueue",
+			name 		= "pickup_queue",
+			queue_name 	= "pickup_queue",
+			pickup_queue= true,
+			INIT		= true,
 			visible = false,
 		}
 
 	}
 end
 
-
-local imaterial = world:interface "ant.asset|imaterial"
-
-
 function pickup_sys:init()
-	add_pick_entity()
-	pickup_materials.opacity	= imaterial.load '/pkg/ant.resources/materials/pickup_opacity.material'
-	pickup_materials.translucent= imaterial.load '/pkg/ant.resources/materials/pickup_transparent.material'
+	create_pick_entity()
 end
 
 local leftmousepress_mb = world:sub {"mouse", "LEFT"}
