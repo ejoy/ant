@@ -68,7 +68,6 @@ static bool initialised = false;
 
 bool Initialise() {
 	RMLUI_ASSERTMSG(!initialised, "Rml::Initialise() called, but RmlUi is already initialised!");
-	Log::Initialise();
 	if (!render_interface) {
 		Log::Message(Log::LT_ERROR, "No render interface set!");
 		return false;
@@ -118,8 +117,6 @@ void Shutdown() {
 	system_interface = nullptr;
 
 	default_file_interface.reset();
-
-	Log::Shutdown();
 }
 
 // Returns the version of this RmlUi library.

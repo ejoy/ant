@@ -35,8 +35,23 @@
 
 namespace Rml {
 
+static int YogaLogger(YGConfigRef config, YGNodeRef node, YGLogLevel level, const char* format, va_list args) {
+	return vprintf(format, args);
+}
+
+static YGConfigRef createDefaultYogaConfig() {
+	YGConfigRef config = YGConfigNew();
+	YGConfigSetLogger(config, YogaLogger);
+	return config;
+}
+
+static YGConfigRef DefaultYogaConfig() {
+	static YGConfigRef config = createDefaultYogaConfig();
+	return config;
+}
+
 Layout::Layout()
-: node(YGNodeNew())
+: node(YGNodeNewWithConfig(DefaultYogaConfig()))
 { }
 
 Layout::~Layout() {

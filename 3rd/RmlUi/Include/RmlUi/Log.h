@@ -55,22 +55,10 @@ public:
 	};
 	
 public:
-	/// Initialises the logging interface.
-	/// @return True if the logging interface was successful, false if not.
-	static bool Initialise();
-	/// Shutdown the log interface.
-	static void Shutdown();
-
 	/// Log the specified message via the registered log interface
 	/// @param[in] type Type of message.
 	/// @param[in] format The message, with sprintf-style parameters.
 	static void Message(Type type, const char* format, ...);
-
-	/// Log a parse error on the specified file and line number.
-	/// @param[in] filename Name of the file with the parse error.
-	/// @param[in] line_number Line the error occured on.
-	/// @param[in] format The error message, with sprintf-style parameters.
-	static void ParseError(const String& filename, int line_number, const char* format, ...);
 };
 
 } // namespace Rml

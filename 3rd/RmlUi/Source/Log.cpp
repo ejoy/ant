@@ -38,17 +38,6 @@
 
 namespace Rml {
 
-// Initialises the logging interface.
-bool Log::Initialise()
-{
-	return true;
-}
-
-// Shutdown the log interface.
-void Log::Shutdown()
-{
-}
-
 // Log the specified message via the registered log interface
 void Log::Message(Log::Type type, const char* fmt, ...)
 {
@@ -67,29 +56,6 @@ void Log::Message(Log::Type type, const char* fmt, ...)
 	va_end(argument_list);
 
 	GetSystemInterface()->LogMessage(type, buffer);
-}
-
-// Log a parse error on the specified file and line number.
-void Log::ParseError(const String& filename, int line_number, const char* fmt, ...)
-{
-	const int buffer_size = 1024;
-	char buffer[buffer_size];
-	va_list argument_list;
-
-	// Print the message to the buffer.
-	va_start(argument_list, fmt);
-	int len = vsnprintf(buffer, buffer_size - 2, fmt, argument_list);	
-	if (len < 0 || len > buffer_size - 2)	
-	{
-		len = buffer_size - 2;
-	}	
-	buffer[len] = '\0';
-	va_end(argument_list);
-
-	if (line_number >= 0)
-		Message(Log::LT_ERROR, "%s:%d: %s", filename.c_str(), line_number, buffer);
-	else
-		Message(Log::LT_ERROR, "%s: %s", filename.c_str(), buffer);
 }
 
 bool Assert(const char* msg, const char* file, int line)
