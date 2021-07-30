@@ -21,13 +21,6 @@ function render_sys:update_filter()
         local state = ro.entity_state
 		local st = ro.fx.setting.surfacetype
 
-		--TODO: need remove this if check
-		if ro.set_transform == nil then
-			ro.set_transform = function (ri)
-				bgfx.set_transform(ri.worldmat)
-			end
-		end
-
 		for _, qn in ipairs{"main_queue", "blit_queue"} do
 			for vv in w:select(("%s %s primitive_filter:in"):format(st, qn)) do
 				local pf = vv.primitive_filter
@@ -55,7 +48,7 @@ function render_sys:render_submit()
 			local viewid = e.render_target.viewid
 			local culltag = qn .. "_cull"
 			for _, ln in ipairs(ipf.layers(qn)) do
-				local s = ("%s %s %s:absent render_object:in"):format(ln, qn, culltag)
+				local s = ("%s %s %s:absent render_object:in name:in"):format(ln, qn, culltag)
 				for ee in w:select(s) do
 					irender.draw(viewid, ee.render_object)
 				end

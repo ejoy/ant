@@ -25,6 +25,13 @@ function wmt.process_entity(e)
 	rc.set_transform = set_world_matrix
 end
 
+local world_trans_sys = ecs.system "world_transform_system"
+function world_trans_sys:entity_init()
+	for e in w:select "INIT render_object:in" do
+		e.render_object.set_transform = set_world_matrix
+	end
+end
+
 local irender		= ecs.interface "irender"
 function irender.check_primitive_mode_state(state, template_state)
 	local s = bgfx.parse_state(state)
