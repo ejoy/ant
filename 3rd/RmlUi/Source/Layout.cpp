@@ -240,6 +240,10 @@ void Layout::SetElementText(ElementText* element) {
 	YGNodeSetBaselineFunc(node, BaselineFunc);
 }
 
+bool Layout::IsDirty() {
+	return YGNodeIsDirty(node);
+}
+
 void Layout::MarkDirty() {
 	YGNodeMarkDirty(node);
 }

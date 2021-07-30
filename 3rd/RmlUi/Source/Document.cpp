@@ -620,6 +620,7 @@ DataModel* Document::GetDataModelPtr(const String& name) const {
 
 void Document::SetDimensions(const Size& _dimensions) {
 	if (dimensions != _dimensions) {
+		dirty_dimensions = true;
 		dimensions = _dimensions;
 		body->DispatchEvent(EventId::Resize, Dictionary());
 	}
@@ -627,7 +628,10 @@ void Document::SetDimensions(const Size& _dimensions) {
 
 void Document::Update() {
 	body->Update();
-	body->GetLayout().CalculateLayout(dimensions);
+	if (dirty_dimensions || body->GetLayout().IsDirty()) {
+		dirty_dimensions = false;
+		body->GetLayout().CalculateLayout(dimensions);
+	}
 	body->UpdateLayout();
 }
 

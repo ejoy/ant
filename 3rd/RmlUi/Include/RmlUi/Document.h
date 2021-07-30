@@ -128,6 +128,7 @@ private:
 	std::set<Element*> hover_chain;
 	std::vector<Element*> active_chain;
 	Size dimensions;
+	bool dirty_dimensions = false;
 
 	friend class Rml::Context;
 	friend class Rml::Factory;
