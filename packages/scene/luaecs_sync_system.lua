@@ -17,7 +17,11 @@ local function isCamera(e)
 end
 
 local function findEntity(eid)
-	return w:bsearch("eid", "eid", eid)
+	for v in w:select "eid:in" do
+		if v.eid == eid then
+			return v
+		end
+	end
 end
 
 function s:init()
@@ -96,15 +100,6 @@ function s:luaecs_sync()
 				w:sync("render_object:out render_object_update?out", v)
 			end
 		end
-	end
-
-	--debug
-	local eid
-	for v in w:select "eid:in" do
-		if eid and eid >= v.eid then
-			error("eid is not sorted")
-		end
-		eid = v.eid
 	end
 end
 
