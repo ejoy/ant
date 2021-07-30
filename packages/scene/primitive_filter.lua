@@ -10,7 +10,7 @@ local LAYERS <const> = {
     blit_queue = {
         "opaticy",
     },
-    csm = {
+    csm_queue = {
         "opaticy", "translucent"
     },
     pickup_queue = {
@@ -44,6 +44,14 @@ function ipf.filters(filter_name)
     return assert(FILTERS[filter_name])
 end
 
+function ipf.is_valid_layer(filter_name, ln)
+    for _, n in ipairs(LAYERS[filter_name]) do
+        if n == ln then
+            return true
+        end
+    end
+end
+
 function ipf.sync_filter(filter_name)
     local t = {}
     for _, n in ipairs(LAYERS[filter_name]) do
@@ -57,7 +65,7 @@ local function clear_tag(filter_name, o)
     local t = {}
 	for _, n in ipairs(ipf.layers(filter_name)) do
 		o[n] = false
-        t = n .. "?out"
+        t[#t+1] = n .. "?out"
 	end
     return table.concat(t, " ")
 end
@@ -66,7 +74,7 @@ function ipf.update_filter_tag(filter_name, layername, layervalue, o)
     if layervalue == nil then
         error "should not be 'nil'"
     end
-    local sf = clear_tag(filter_name)
+    local sf = clear_tag(filter_name, o)
     o[layername] = layervalue
 	o[filter_name] = layervalue
     w:sync(sf, o)

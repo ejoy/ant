@@ -69,7 +69,7 @@ function irender.get_main_view_rendertexture()
 	return fbmgr.get_rb(fb[1]).handle
 end
 
-local function create_primitive_filter_entities(filtername, exclude)
+function irender.create_primitive_filter_entities(filtername, exclude)
 	local quene_policy = "ant.render|" .. filtername
 	for _, fn in ipairs(ipf.layers(filtername)) do
 		local filter_pn = ("ant.scene|%s_primitive_filter"):format(fn)
@@ -90,8 +90,8 @@ local function create_primitive_filter_entities(filtername, exclude)
 	end
 end
 
-function irender.create_view_queue(view_rect, view_name, exclude)
-	create_primitive_filter_entities("main_queue", exclude)
+function irender.create_view_queue(view_rect, view_name, exclude, queuename)
+	irender.create_primitive_filter_entities("main_queue", exclude)
 	for v in w:select "main_queue render_target:in" do
 		local rt = v.render_target
 		world:luaecs_create_entity {
@@ -119,14 +119,16 @@ function irender.create_view_queue(view_rect, view_name, exclude)
 				name = view_name,
 				view_queue = true,
 				watch_screen_buffer = true,
+				queuename = view_name,
 			}
 		}
 		break
 	end
 end
 
-function irender.create_orthoview_queue(view_rect, orthoface, queuename)
-	create_primitive_filter_entities "main_queue"
+function irender.create_orthoview_queue(view_rect, orthoface)
+	irender.create_primitive_filter_entities "main_queue"
+	assert(orthoface)
 	for v in w:select "main_queue render_target:in" do
 		local rt = v.render_target
 		world:luaecs_create_entity {
@@ -155,10 +157,11 @@ function irender.create_orthoview_queue(view_rect, orthoface, queuename)
 					view_rect	= view_rect,
 					fb_idx		= rt.fb_idx,
 				},
-				name 				= orthoface or queuename,
+				name 				= orthoface,
+				orthoview 			= orthoface,
+				queue_name			= orthoface,
 				visible 			= false,
 				watch_screen_buffer	= true,
-				orthoview 			= orthoface,
 				INIT				= true,
 			}
 		}
@@ -200,7 +203,7 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 			"ant.general|name",
 		},
 		data = {
-			name = "pre_z",
+			name = "pre_depth_queue",
 			camera_eid = camera_eid,
 			render_target = {
 				viewid = viewidmgr.get "depth",
@@ -219,6 +222,7 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 			visible = true,
 			pre_depth_queue = true,
 			watch_screen_buffer = true,
+			queue_name = "pre_depth_queue",
 		}
 	}
 
@@ -260,7 +264,7 @@ function irender.create_main_queue(view_rect, camera_eid)
 	local sd = setting:data()
 	local fbidx = create_main_fb(view_rect, sd)
 
-	create_primitive_filter_entities "main_queue"
+	irender.create_primitive_filter_entities "main_queue"
 	world:luaecs_create_entity {
 		policy = {
 			"ant.render|render_queue",
@@ -289,13 +293,14 @@ function irender.create_main_queue(view_rect, camera_eid)
 			INIT = true,
 			main_queue = true,
 			watch_screen_buffer = true,
+			queue_name = "main_queue",
 		}
 	}
 end
 
 local blitviewid = viewidmgr.get "blit"
 function irender.create_blit_queue(viewrect)
-	create_primitive_filter_entities "blit_queue"
+	irender.create_primitive_filter_entities "blit_queue"
 
 	world:luaecs_create_entity {
 		policy = {
@@ -327,7 +332,8 @@ function irender.create_blit_queue(viewrect)
 			blit_queue = true,
 			watch_screen_buffer = true,
 			INIT = true,
-			name = "blitqueue",
+			name = "blit_queue",
+			queue_name  = "blit_queue",
 		}
 	}
 
@@ -360,6 +366,7 @@ function irender.create_blit_queue(viewrect)
 			mesh = world:interface "ant.render|entity".fullquad_mesh(),
 			INIT = true,
 			render_object_update = true,
+			queue_name = true,
 		}
 	}
 end

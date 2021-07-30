@@ -20,7 +20,7 @@ end
 local mouse_lastx, mouse_lasty
 local toforward
 function cc_sys:data_changed()
-    for v in w:select "INIT mian_queue camera_eid:in" do
+    for v in w:select "INIT main_queue camera_eid:in" do
         local eyepos = math3d.vector(0, 0, -10)
         local ceid = v.camera_eid
         iom.set_position(ceid, eyepos)

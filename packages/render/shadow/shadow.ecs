@@ -52,6 +52,13 @@ interface "ishadow"
     .method "calc_split_frustums"
     .method "split_frustums"
 
+component_v2 "csm".type "lua"
+policy_v2 "csm_queue"
+    .require_system "shadow_system"
+    .require_system "shadow_primitive_system"
+    .require_interface "ant.render|ishadow"
+    .component_v2 "csm"
+
 --disable omni shadow, need more work
 
 -- policy "omni_shadow"

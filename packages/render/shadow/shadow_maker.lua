@@ -9,12 +9,12 @@ local viewidmgr = require "viewid_mgr"
 local mc 		= import_package "ant.math".constant
 local math3d	= require "math3d"
 local icamera	= world:interface "ant.camera|camera"
+local ipf		= world:interface "ant.scene|iprimitive_filter"
 local ilight	= world:interface "ant.render|light"
 local ishadow	= world:interface "ant.render|ishadow"
 local irender	= world:interface "ant.render|irender"
-
-local iom		= world:interface "ant.objcontroller|obj_motion"
 local irq		= world:interface "ant.render|irenderqueue"
+local iom		= world:interface "ant.objcontroller|obj_motion"
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
 
@@ -179,7 +179,8 @@ end
 local sm = ecs.system "shadow_system"
 
 local function create_csm_entity(index, viewrect, fbidx, depth_type)
-	local cameraname = "csm" .. index
+	local csmname = "csm" .. index
+	local queuename = "csm_queue" .. index
 	local cameraeid = icamera.create {
 			updir 	= mc.YAXIS,
 			viewdir = mc.ZAXIS,
@@ -188,10 +189,30 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 				l = -1, r = 1, t = -1, b = 1,
 				n = 1, f = 100, ortho = true,
 			},
-			name = cameraname
+			name = csmname
 		}
 
-	return world:create_entity {
+	do
+		for _, fn in ipairs(ipf.layers "csm_queue") do
+			local filter_pn = ("ant.scene|%s_primitive_filter"):format(fn)
+			world:luaecs_create_entity{
+				policy = {
+					filter_pn,
+					"ant.render|csm_queue",
+				},
+				data = {
+					primitive_filter = {
+						filter_type = "visible",
+						csm_index = index,
+					},
+					[fn] 			= true,
+					csm_queue 		= true,
+				}
+			}
+		end
+	end
+
+	world:luaecs_create_entity {
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|csm_policy",
@@ -202,13 +223,9 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 				index = index,
 				split_distance_VS = 0,
 			},
-			primitive_filter = {
-				filter_type = "cast_shadow",
-				update_type = "shadow",
-			},
 			camera_eid = cameraeid,
 			render_target = {
-				viewid = viewidmgr.get(cameraname),
+				viewid = viewidmgr.get(csmname),
 				view_mode = "s",
 				view_rect = viewrect,
 				clear_state = {
@@ -220,6 +237,7 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 				fb_idx = fbidx,
 			},
 			visible = false,
+			queue_name = queuename,
 			name = "csm" .. index,
 		},
 	}
@@ -312,16 +330,23 @@ function sm:data_changed()
 	end
 end
 
-local function getMainQueueCamera()
-    for v in w:select "main_queue render_queue:in" do
-        local rq = v.render_queue
-        return w:object("camera_node", rq.camera_id)
+local function find_camera(cameraeid)
+    for v in w:select "eid:in camera_id:in" do
+		if cameraeid == v.eid then
+			return w:object("camera_node", v.camera_id)
+		end
     end
+end
+
+local function find_main_camera()
+	for v in w:select "main_queue camera_eid:in" do
+		return find_camera(w.camera_eid)
+	end
 end
 
 function sm:update_camera()
 	if dl_eid then
-		local c = getMainQueueCamera()
+		local c = find_main_camera()
 	
 		local changed
 	
@@ -424,71 +449,42 @@ local omni_stencils = {
 
 local s = ecs.system "shadow_primitive_system"
 local w = world.w
-
-local function sync_filter(rq)
-    local r = {}
-    for i = 1, #rq.layer_tag do
-        r[#r+1] = rq.layer_tag[i] .. "?out"
-    end
-    return table.concat(r, " ")
-end
-
-local function render_queue_update(v, rq)
-    local rc = v.render_object
-    local fx = rc.fx
-    local surfacetype = fx.setting.surfacetype
-    if not rq.layer[surfacetype] then
-        return
-    end
-    for i = 1, #rq.layer_tag do
-        v[rq.layer_tag[i]] = false
-    end
-    v[rq.tag.."_"..surfacetype] = true
-    w:sync(sync_filter(rq), v)
-end
-
-local function render_queue_del(v, rq)
-    for i = 1, #rq.layer_tag do
-        v[rq.layer_tag[i]] = false
-    end
-    v[rq.tag] = false
-    w:sync(sync_filter(rq), v)
-end
-
 function s:update_filter()
-    for v in w:select "render_object_update render_object:in eid:in filter_material:in" do
+    for v in w:select "render_object_update render_object:in eid:in filter_material:in csm:in" do
         local rc = v.render_object
         local state = rc.entity_state
-        for u in w:select "shadow_filter render_queue:in" do
-            local rq = u.render_queue
-            local add = ((state & rq.mask) ~= 0) and ((state & rq.exclude_mask) == 0)
-            if add then
-                render_queue_update(v, rq)
-				local e = world[v.eid]
-				local mat = which_material(v.eid)
-                v.filter_material[rq.tag] = {
-					fx = mat.fx,
-					properties = mat.properties or false,
-					state = irender.check_primitive_mode_state(rc.state, mat.state),
-					stencil = e.omni and omni_stencils[e.omni.stencil_ref] or mat.stencil,	--TODO: need merge with material setting
-				}
-            else
-                render_queue_del(v, rq)
-				v.filter_material[rq.tag] = nil
-            end
-        end
+		local st = rc.fx.setting.surfacetype
+		local eid = v.eid
+		local fm = v.filter_material
+		local csm_index = v.csm.index
+		for vv in w:select(st .. " csm_queue primitive_filter:in") do
+			local pf = vv.primitive_filter
+			if pf.index == csm_index then
+				local mask = ies.filter_mask(pf.filter_type)
+				local exclude_mask = pf.exclude_type and ies.filter_mask(pf.exclude_type) or 0
+				local add = ((state & mask) ~= 0) and ((state & exclude_mask) == 0)
+				ipf.update_filter_tag("csm_queue", st, add, v)
+				local m = which_material(eid)
+				fm[st] = add and {
+					fx = m.fx,
+					properties = m.properties,
+					state = irender.check_primitive_mode_state(rc.state, m.state),
+				} or nil
+			end
+		end
     end
 end
 
 function s:render_submit()
-    for v in w:select "shadow_filter visible render_queue:in" do
-        local rq = v.render_queue
-        local viewid = rq.viewid
-        for i = 1, #rq.layer_tag do
-            for u in w:select(rq.layer_tag[i] .. " " .. rq.cull_tag .. ":absent  render_object:in filter_material:in") do
-                irender.draw(viewid, u.render_object, u.filter_material[rq.tag])
-            end
-        end
-		w:clear(rq.cull_tag)
+    for v in w:select "csm_queue visible render_target:in queue_name:in" do
+        local viewid = v.render_target.viewid
+        local culltag = v.queue_name .. "_cull"
+		local tag = " " .. v.queue_name .. " " .. culltag .. ":absent render_object:in filter_material:in"
+		for _, ln in ipairs(ipf.layers "csm_queue") do
+			for u in w:select(ln .. tag) do
+				irender.draw(viewid, u.render_object, u.filter_material[ln])
+			end
+		end
+		w:clear(culltag)
     end
 end

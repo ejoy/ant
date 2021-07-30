@@ -46,10 +46,12 @@ function is:data_changed()
                     INIT = true,
                 }
             },
+            eid = 0,
             render_object = {},
             transform = {
                 t = {0, 1, 0},
             },
+            render_object_update = true,
             material = "/pkg/ant.resources/materials/singlecolor.material",
             mesh = m,
             state = 7,

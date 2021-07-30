@@ -16,6 +16,7 @@ local bgfx 		= require "bgfx"
 
 local irender	= world:interface "ant.render|irender"
 local ipf		= world:interface "ant.scene|iprimitive_filter"
+local ies		= world:interface "ant.scene|ientity_state"
 
 local pickup_materials = {}
 
@@ -53,21 +54,23 @@ local s = ecs.system "pickup_primitive_system"
 function s:update_filter()
     for v in w:select "render_object_update render_object:in eid:in filter_material:in" do
         local rc = v.render_object
-		local surfacetype = rc.fx.setting.surfacetype
+		local st = rc.fx.setting.surfacetype
         local state = rc.entity_state
 		local eid = v.eid
-		for _, ln in ipairs(ipf.layers "pickup_queue") do
-			for vv in w:select(ln .. " pickup_queue primitive_filter:in") do
-				local p = vv.primitive_filter
-				local add = ((state & p.mask) ~= 0) and ((state & p.exclude_mask) == 0)
-				ipf.update_filter_tag("pickup_queue", surfacetype, add, v)
-				local m = assert(pickup_materials[ln])
-				v.filter_material[ln] = add and {
-					fx = m.fx,
-					properties = get_properties(eid, m.fx),
-					state = irender.check_primitive_mode_state(rc.state, m.state),
-				} or nil
-			end
+
+		for vv in w:select(st .. " pickup_queue primitive_filter:in") do
+			local pf = vv.primitive_filter
+			local mask = ies.filter_mask(pf.filter_type)
+			local exclude_mask = pf.exclude_type and ies.filter_mask(pf.exclude_type) or 0
+
+			local add = ((state & mask) ~= 0) and ((state & exclude_mask) == 0)
+			ipf.update_filter_tag("pickup_queue", st, add, v)
+			local m = assert(pickup_materials[st])
+			v.filter_material[st] = add and {
+				fx = m.fx,
+				properties = get_properties(eid, m.fx),
+				state = irender.check_primitive_mode_state(rc.state, m.state),
+			} or nil
 		end
 
     end
@@ -78,7 +81,7 @@ function s:render_submit()
         local rt = v.render_target
         local viewid = rt.viewid
 		for _, ln in ipairs(ipf.layers "pickup_queue") do
-			for vv in w:select "pickup_queue opaticy render_object:in filter_material:in" do
+			for vv in w:select "pickup_queue opaticy render_object:in filter_material:in pickup_queue_cull:absent" do
 				irender.draw(viewid, vv.render_object, vv.filter_material[ln])
 			end
 		end
@@ -104,10 +107,9 @@ local function enable_pickup(enable)
 end
 
 local function find_camera(cameraeid)
-    for v in w:select "camera_id:in" do
-		local cn = w:object("camera_node", v.camera_id)
-		if cameraeid == cn.eid then
-			return cn
+    for v in w:select "eid:in camera_id:in" do
+		if cameraeid == v.eid then
+			return w:object("camera_node", v.camera_id)
 		end
     end
 end

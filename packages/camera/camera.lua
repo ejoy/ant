@@ -253,15 +253,17 @@ end
 local cameraview_sys = ecs.system "camera_view_system"
 
 local function find_camera(cameraeid)
-    for v in w:select "camera_id:in" do
-		local cn = w:object("camera_node", v.camera_id)
-		if cameraeid == cn.eid then
-			return cn
+    for v in w:select "eid:in camera_id:in" do
+		if cameraeid == v.eid then
+			return w:object("camera_node", v.camera_id)
 		end
     end
 end
 
 local function update_camera(cameraeid)
+    if cameraeid == nil then    --TODO: need remove
+        return
+    end
     local camera = find_camera(cameraeid)
     local worldmat = camera.worldmat
     camera.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), camera.updir)

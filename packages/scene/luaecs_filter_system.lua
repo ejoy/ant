@@ -107,10 +107,9 @@ function s:end_filter()
 end
 
 local function find_camera(cameraeid)
-    for v in w:select "camera_id:in" do
-		local cn = w:object("camera_node", v.camera_id)
-		if cameraeid == cn.eid then
-			return cn
+    for v in w:select "eid:in camera_id:in" do
+		if cameraeid == v.eid then
+			return w:object("camera_node", v.camera_id)
 		end
     end
 end

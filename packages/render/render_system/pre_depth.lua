@@ -3,8 +3,8 @@ local world = ecs.world
 
 local bgfx = require "bgfx"
 
-local irender = world:interface "ant.render|irender"
-
+local irender   = world:interface "ant.render|irender"
+local ipf       = world:interface "ant.scene|iprimitive_filter"
 
 local function can_write_depth(state)
 	local s = bgfx.parse_state(state)
@@ -63,35 +63,39 @@ end
 function s:update_filter()
     for v in w:select "render_object_update render_object:in eid:in filter_material:in" do
         local rc = v.render_object
+        local st = rc.fx.setting.surfacetype
         local state = rc.entity_state
-        for u in w:select "depth_filter render_queue:in" do
-            local rq = u.render_queue
-            local add = ((state & rq.mask) ~= 0) and ((state & rq.exclude_mask) == 0)
-            if add and can_write_depth(rc.state) then
-                render_queue_update(v, rq)
-				local mat = assert(which_material(v.eid))
-                v.filter_material[rq.tag] = {
-					properties	= mat.properties,
-					fx			= mat.fx,
-					state		= irender.check_primitive_mode_state(rc.state, mat.state),
-				}
-            else
-                render_queue_del(v, rq)
-				v.filter_material[rq.tag] = nil
-            end
+        local render_state = rc.state
+        local eid = v.eid
+        for vv in w:select(st .. " pre_depth_queue primitive_filter:in") do
+            local pf = vv.primitive_filter
+            local mask = ies.filter_mask(pf.filter_type)
+            local exclude_mask = pf.exclude_type and ies.filter_mask(pf.exclude_type) or 0
+
+            local add = ((state & mask) ~= 0) and 
+                        ((state & exclude_mask) == 0) and
+                        can_write_depth(render_state)
+
+            ipf.update_filter_tag("pre_depth_queue", st, add, v)
+
+            local m = assert(which_material(eid))
+            v.filter_material[st] = add and {
+                fx          = m.fx,
+                properties  = m.properties,
+                state       = irender.check_primitive_mode_state(rc.state, m.state),
+            } or nil
         end
     end
 end
 
 function s:render_submit()
-    for v in w:select "depth_filter visible render_queue:in" do
-        local rq = v.render_queue
-        local viewid = rq.viewid
-        for i = 1, #rq.layer_tag do
-            for u in w:select(rq.layer_tag[i] .. " " .. rq.cull_tag .. ":absent render_object:in filter_material:in") do
-                irender.draw(viewid, u.render_object, u.filter_material[rq.tag])
+    for v in w:select "pre_depth_queue visible render_target:in" do
+        local viewid = v.render_target.viewid
+        for _, ln in ipairs(ipf.layers "pre_depth_queue") do
+            for u in w:select(ln .. " pre_depth_queue_cull:absent render_object:in filter_material:in") do
+                irender.draw(viewid, u.render_object, u.filter_material[ln])
             end
+            w:clear "pre_depth_queue_cull"
         end
-		w:clear(rq.cull_tag)
     end
 end
