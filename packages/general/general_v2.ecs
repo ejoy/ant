@@ -13,3 +13,5 @@ component_v2 "transform".type "lua"
 
 policy_v2 "transform_policy"
     .component_v2 "transform"
+
+policy "debug_TEST"

@@ -142,11 +142,16 @@ end
 
 local itimer = world:interface "ant.timer|itimer"
 
+local function main_camera_eid()
+    for v in world.w:select "main_queue camera_eid:in" do
+        return v.camera_eid
+    end
+end
+
 function effekseer_sys:camera_usage()
-    local mq = world:singleton_entity "main_queue"
     local icamera = world:interface "ant.camera|camera"
-    local rc = world[mq.camera_eid]._rendercache
-    effekseer.update_view_proj(math3d.value_ptr(rc.viewmat), math3d.value_ptr(rc.projmat))
+    local c = icamera.find_camera(main_camera_eid())
+    effekseer.update_view_proj(math3d.value_ptr(c.viewmat), math3d.value_ptr(c.projmat))
 end
 
 

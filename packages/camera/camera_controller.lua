@@ -17,6 +17,12 @@ function cc_sys:post_init()
     
 end
 
+local function main_camera_eid()
+    for v in w:select "main_queu camera_eid:in" do
+        return v.camera_eid
+    end
+end
+
 local mouse_lastx, mouse_lasty
 local toforward
 function cc_sys:data_changed()
@@ -53,15 +59,12 @@ function cc_sys:data_changed()
     end
 
     if toforward then
-        local mq = world:singleton_entity "main_queue"
-        local cameraeid = mq.camera_eid
+        local cameraeid = main_camera_eid()
         iom.move_forward(cameraeid, toforward)
     end
 
     if dx or dy then
-        local mq = world:singleton_entity "main_queue"
-
-        local cameraeid = mq.camera_eid
+        local cameraeid = main_camera_eid()
         iom.rotate_around_point2(cameraeid, viewat, dy, dx)
     end
 end

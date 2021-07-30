@@ -1,10 +1,10 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 
 local bgfx      = require "bgfx"
 local declmgr   = require "vertexdecl_mgr"
 local ilight    = world:interface "ant.render|light"
-local irender   = world:interface "ant.render|irender"
 local icompute  = world:interface "ant.render|icompute"
 
 local cfs = ecs.system "cluster_forward_system"
@@ -133,10 +133,14 @@ local function check_light_index_list()
         return true
     end
 end
+local function main_viewid()
+    for v in w:select "main_queue render_target:in" do
+        return v.render_target.viewid
+    end
+end
 
 local function build_cluster_aabb_struct()
-    local mq = world:singleton_entity "main_queue"
-    icompute.dispatch(mq.render_target.viewid, world[cs_entities.buildeid]._rendercache)
+    icompute.dispatch(main_viewid(), world[cs_entities.buildeid]._rendercache)
 end
 
 local cr_camera_mb
@@ -203,8 +207,7 @@ function cfs:post_init()
 end
 
 local function cull_lights()
-    local mq = world:singleton_entity "main_queue"
-    icompute.dispatch(mq.render_target.viewid, world[cs_entities.culleid]._rendercache)
+    icompute.dispatch(main_viewid(), world[cs_entities.culleid]._rendercache)
 end
 
 function cfs:render_preprocess()

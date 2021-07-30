@@ -54,6 +54,7 @@ interface "ishadow"
 
 component_v2 "csm_queue_cull"
 component_v2 "csm".type "lua"
+component_v2 "csm_queue"
 policy_v2 "csm_queue"
     .require_system "shadow_system"
     .require_system "shadow_primitive_system"

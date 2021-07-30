@@ -42,6 +42,7 @@ interface "camera"
     .method "set_dof"
     .method "focus_obj"
     .method "controller"
+    .method "find_camera"   --TODO: need remove
 
 pipeline "camera"
     .stage "update_mainview_camera"

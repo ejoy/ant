@@ -330,17 +330,9 @@ function sm:data_changed()
 	end
 end
 
-local function find_camera(cameraeid)
-    for v in w:select "eid:in camera_id:in" do
-		if cameraeid == v.eid then
-			return w:object("camera_node", v.camera_id)
-		end
-    end
-end
-
 local function find_main_camera()
 	for v in w:select "main_queue camera_eid:in" do
-		return find_camera(w.camera_eid)
+		return icamera.find_camera(v.camera_eid)
 	end
 end
 

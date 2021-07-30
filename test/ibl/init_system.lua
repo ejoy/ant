@@ -46,7 +46,7 @@ function is:data_changed()
                     INIT = true,
                 }
             },
-            eid = 0,
+            eid = world:create_entity{policy = {"ant.general|debug_TEST"}, data = {}},
             render_object = {},
             transform = {
                 t = {0, 1, 0},

@@ -231,6 +231,16 @@ function ic.set_dof_focus_obj(eid, focus_eid)
     world:pub{"component_changed", "dof", focus_eid, "focus_entity",}
 end
 
+local function find_camera(cameraeid)
+    for v in w:select "eid:in camera_id:in" do
+		if cameraeid == v.eid then
+			return w:object("camera_node", v.camera_id)
+		end
+    end
+end
+
+ic.find_camera = find_camera
+
 local function set_dof(e, dof)
     e._dof = {
         aperture_fstop      = dof.aperture_fstop,
@@ -251,14 +261,6 @@ function ic.set_dof(eid, dof)
 end
 
 local cameraview_sys = ecs.system "camera_view_system"
-
-local function find_camera(cameraeid)
-    for v in w:select "eid:in camera_id:in" do
-		if cameraeid == v.eid then
-			return w:object("camera_node", v.camera_id)
-		end
-    end
-end
 
 local function update_camera(cameraeid)
     if cameraeid == nil then    --TODO: need remove

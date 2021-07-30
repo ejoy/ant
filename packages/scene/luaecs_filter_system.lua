@@ -3,6 +3,8 @@ local world = ecs.world
 local w = world.w
 local bgfx = require "bgfx"
 
+local icamera = world:interface "ant.camera|camera"
+
 local function create_singlton(name)
     return function (value)
         w:register {
@@ -106,20 +108,11 @@ function s:end_filter()
     w:clear "render_object_update"
 end
 
-local function find_camera(cameraeid)
-    for v in w:select "eid:in camera_id:in" do
-		if cameraeid == v.eid then
-			return w:object("camera_node", v.camera_id)
-		end
-    end
-end
-
 function s:render_submit()
-    --for v in w:select "visible render_queue:in" do
     for v in w:select "visible camera_eid:in render_target:in" do
         local rt = v.render_target
         local viewid = rt.viewid
-        local camera = find_camera(v.camera_eid)
+        local camera = icamera.find_camera(v.camera_eid)
         bgfx.touch(viewid)
         bgfx.set_view_transform(viewid, camera.viewmat, camera.projmat)
     end

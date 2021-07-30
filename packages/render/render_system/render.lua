@@ -354,7 +354,7 @@ function irender.create_blit_queue(viewrect)
 					INIT = true,
 				}
 			},
-			eid = 0,
+			eid = world:create_entity{policy = {"ant.general|debug_TEST"}, data = {}},
 			render_object = {},
 			filter_material = {},
 			material = "/pkg/ant.resources/materials/fullscreen.material",

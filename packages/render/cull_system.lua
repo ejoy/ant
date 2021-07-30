@@ -3,6 +3,7 @@ local world = ecs.world
 local w = world.w
 
 local math3d = require "math3d"
+local icamera = world:interface "ant.camera|camera"
 
 local icp = ecs.interface "icull_primitive"
 
@@ -17,17 +18,9 @@ local NeedCull <const> = {
 	decal		= true,
 }
 
-local function find_camera(cameraeid)
-    for v in w:select "eid:in camera_id:in" do
-		if cameraeid == v.eid then
-			return w:object("camera_node", v.camera_id)
-		end
-    end
-end
-
 function cull_sys:cull()
 	for v in w:select "visible camera_eid:in render_target:in queue_name:in" do
-		local camera = find_camera(v.camera_eid)
+		local camera = icamera.find_camera(v.camera_eid)
 		local vp_mat = camera.viewprojmat
 		local frustum_planes = math3d.frustum_planes(vp_mat)
 		local culltag = v.queue_name .. "_cull?out"

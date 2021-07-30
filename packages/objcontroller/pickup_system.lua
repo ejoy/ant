@@ -14,9 +14,7 @@ local viewidmgr = renderpkg.viewidmgr
 
 local bgfx 		= require "bgfx"
 
-local irender	= world:interface "ant.render|irender"
-local ipf		= world:interface "ant.scene|iprimitive_filter"
-local ies		= world:interface "ant.scene|ientity_state"
+local icamera	= world:interface "ant.camera|camera"
 
 --update pickup view
 local function enable_pickup(enable)
@@ -29,26 +27,18 @@ local function enable_pickup(enable)
 	end
 end
 
-local function find_camera(cameraeid)
-    for v in w:select "eid:in camera_id:in" do
-		if cameraeid == v.eid then
-			return w:object("camera_node", v.camera_id)
-		end
-    end
-end
-
 local function update_camera(pu_cameraeid, clickpt)
 	for mq in w:select "main_queue camera_eid:in render_target:in" do	--main queue must visible
 		local ndc2D = mu.pt2D_to_NDC(clickpt, mq.render_target.view_rect)
 		local eye, at = mu.NDC_near_far_pt(ndc2D)
 	
-		local maincamera = find_camera(mq.camera_eid)
+		local maincamera = icamera.find_camera(mq.camera_eid)
 		local vp = maincamera.viewprojmat
 		local ivp = math3d.inverse(vp)
 		eye = math3d.transformH(ivp, eye, 1)
 		at = math3d.transformH(ivp, at, 1)
 	
-		local camera = find_camera(pu_cameraeid)
+		local camera = icamera.find_camera(pu_cameraeid)
 		local viewdir = math3d.normalize(math3d.sub(at, eye))
 		camera.viewmat = math3d.lookto(eye, viewdir, camera.updir)
 		camera.projmat = math3d.projmat(camera.frustum)

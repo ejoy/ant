@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-
+local w = world.w
 local fbmgr		= require "framebuffer_mgr"
 local sampler = require "sampler"
 local math3d	= require "math3d"
@@ -107,9 +107,22 @@ local function get_sky_entity()
 	return sky_eid
 end
 
+local function main_camera_eid()
+	for v in w:select "main_queue camera_eid:in" do
+		return v.camera_eid
+	end
+end
+
+local function main_render_target()
+	for v in w:select "main_queue render_target:in" do
+		return v.render_target
+	end
+end
+
+
 local function update_lighting_properties()
-	local mq = world:singleton_entity "main_queue"
-	system_properties["u_eyepos"].id = iom.get_position(mq.camera_eid)
+	local cameraeid = main_camera_eid()
+	system_properties["u_eyepos"].id = iom.get_position(cameraeid)
 
 	system_properties["u_light_count"].v = {world:count "light_type", 0, 0, 0}
 
@@ -127,13 +140,13 @@ local function update_lighting_properties()
 	update_ibl_tex(ibl)
 
 	if ilight.use_cluster_shading() then
-		local mc_eid = mq.camera_eid
-		local vr = mq.render_target.view_rect
+		local rt = main_render_target()
+		local vr = rt.view_rect
 	
 		local cs = world:singleton_entity "cluster_render"
 		local cluster_size = cs.cluster_render.cluster_size
 		system_properties["u_cluster_size"].v	= cluster_size
-		local f = icamera.get_frustum(mc_eid)
+		local f = icamera.get_frustum(cameraeid)
 		local near, far = f.n, f.f
 		system_properties["u_cluster_shading_param"].v	= {vr.w, vr.h, near, far}
 		local num_depth_slices = cluster_size[3]
@@ -167,18 +180,15 @@ end
 local function update_csm_properties()
 	local csm_matrixs = system_properties.u_csm_matrix
 	local split_distances = {0, 0, 0, 0}
-	for _, eid in world:each "csm" do
-		local se = world[eid]
-		if se.visible then
-			local csm = se.csm
+	for v in w:select "csm_queue visible csm:in camera_eid:in" do
+		local csm = v.csm
 
-			local idx = csm.index
-			local split_distanceVS = csm.split_distance_VS
-			if split_distanceVS then
-				split_distances[idx] = split_distanceVS
-				local rc = world[se.camera_eid]._rendercache
-				csm_matrixs[csm.index].id = math3d.mul(ishadow.crop_matrix(idx), rc.viewprojmat)
-			end
+		local idx = csm.index
+		local split_distanceVS = csm.split_distance_VS
+		if split_distanceVS then
+			split_distances[idx] = split_distanceVS
+			local camera = icamera.find_camera(v.camera_eid)
+			csm_matrixs[csm.index].id = math3d.mul(ishadow.crop_matrix(idx), camera.viewprojmat)
 		end
 	end
 
@@ -213,9 +223,9 @@ local function update_shadow_properties()
 end
 
 local function update_postprocess_properties()
-	local mq = world:singleton_entity "main_queue"
+	local rt = main_render_target()
 
-	local fbidx = mq.render_target.fb_idx
+	local fbidx = rt.fb_idx
 	local fb = fbmgr.get(fbidx)
 
 	local mv = system_properties["s_mainview"]
