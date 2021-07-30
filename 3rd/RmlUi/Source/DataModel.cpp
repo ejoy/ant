@@ -143,20 +143,20 @@ bool DataModel::BindVariable(const String& name, DataVariable variable)
 	const char* name_error_str = LegalVariableName(name);
 	if (name_error_str)
 	{
-		Log::Message(Log::LT_WARNING, "Could not bind data variable '%s'. %s", name.c_str(), name_error_str);
+		Log::Message(Log::Level::Warning, "Could not bind data variable '%s'. %s", name.c_str(), name_error_str);
 		return false;
 	}
 
 	if (!variable)
 	{
-		Log::Message(Log::LT_WARNING, "Could not bind variable '%s' to data model, data type not registered.", name.c_str());
+		Log::Message(Log::Level::Warning, "Could not bind variable '%s' to data model, data type not registered.", name.c_str());
 		return false;
 	}
 
 	bool inserted = variables.emplace(name, variable).second;
 	if (!inserted)
 	{
-		Log::Message(Log::LT_WARNING, "Data model variable with name '%s' already exists.", name.c_str());
+		Log::Message(Log::Level::Warning, "Data model variable with name '%s' already exists.", name.c_str());
 		return false;
 	}
 
@@ -170,7 +170,7 @@ bool DataModel::BindFunc(const String& name, DataGetFunc get_func, DataSetFunc s
 	bool inserted = result.second;
 	if (!inserted)
 	{
-		Log::Message(Log::LT_ERROR, "Data get/set function with name %s already exists in model", name.c_str());
+		Log::Message(Log::Level::Error, "Data get/set function with name %s already exists in model", name.c_str());
 		return false;
 	}
 	auto& func_definition_ptr = it->second;
@@ -184,20 +184,20 @@ bool DataModel::BindEventCallback(const String& name, DataEventFunc event_func)
 	const char* name_error_str = LegalVariableName(name);
 	if (name_error_str)
 	{
-		Log::Message(Log::LT_WARNING, "Could not bind data event callback '%s'. %s", name.c_str(), name_error_str);
+		Log::Message(Log::Level::Warning, "Could not bind data event callback '%s'. %s", name.c_str(), name_error_str);
 		return false;
 	}
 
 	if (!event_func)
 	{
-		Log::Message(Log::LT_WARNING, "Could not bind data event callback '%s' to data model, empty function provided.", name.c_str());
+		Log::Message(Log::Level::Warning, "Could not bind data event callback '%s' to data model, empty function provided.", name.c_str());
 		return false;
 	}
 
 	bool inserted = event_callbacks.emplace(name, std::move(event_func)).second;
 	if (!inserted)
 	{
-		Log::Message(Log::LT_WARNING, "Data event callback with name '%s' already exists.", name.c_str());
+		Log::Message(Log::Level::Warning, "Data event callback with name '%s' already exists.", name.c_str());
 		return false;
 	}
 
@@ -208,18 +208,18 @@ bool DataModel::InsertAlias(Element* element, const String& alias_name, DataAddr
 {
 	if (replace_with_address.empty() || replace_with_address.front().name.empty())
 	{
-		Log::Message(Log::LT_WARNING, "Could not add alias variable '%s' to data model, replacement address invalid.", alias_name.c_str());
+		Log::Message(Log::Level::Warning, "Could not add alias variable '%s' to data model, replacement address invalid.", alias_name.c_str());
 		return false;
 	}
 
 	if (variables.count(alias_name) == 1)
-		Log::Message(Log::LT_WARNING, "Alias variable '%s' is shadowed by a global variable.", alias_name.c_str());
+		Log::Message(Log::Level::Warning, "Alias variable '%s' is shadowed by a global variable.", alias_name.c_str());
 
 	auto& map = aliases.emplace(element, SmallUnorderedMap<String, DataAddress>()).first->second;
 	
 	auto it = map.find(alias_name);
 	if (it != map.end())
-		Log::Message(Log::LT_WARNING, "Alias name '%s' in data model already exists, replaced.", alias_name.c_str());
+		Log::Message(Log::Level::Warning, "Alias name '%s' in data model already exists, replaced.", alias_name.c_str());
 
 	map[alias_name] = std::move(replace_with_address);
 
@@ -273,7 +273,7 @@ DataAddress DataModel::ResolveAddress(const String& address_str, Element* elemen
 		ancestor = ancestor->GetParentNode();
 	}
 
-	Log::Message(Log::LT_WARNING, "Could not find variable name '%s' in data model.", address_str.c_str());
+	Log::Message(Log::Level::Warning, "Could not find variable name '%s' in data model.", address_str.c_str());
 
 	return DataAddress();
 }
@@ -312,7 +312,7 @@ const DataEventFunc* DataModel::GetEventCallback(const String& name)
 	auto it = event_callbacks.find(name);
 	if (it == event_callbacks.end())
 	{
-		Log::Message(Log::LT_WARNING, "Could not find data event callback '%s' in data model.", name.c_str());
+		Log::Message(Log::Level::Warning, "Could not find data event callback '%s' in data model.", name.c_str());
 		return nullptr;
 	}
 
@@ -323,7 +323,7 @@ bool DataModel::GetVariableInto(const DataAddress& address, Variant& out_value) 
 	DataVariable variable = GetVariable(address);
 	bool result = (variable && variable.Get(out_value));
 	if (!result)
-		Log::Message(Log::LT_WARNING, "Could not get value from data variable '%s'.", DataAddressToString(address).c_str());
+		Log::Message(Log::Level::Warning, "Could not get value from data variable '%s'.", DataAddressToString(address).c_str());
 	return result;
 }
 

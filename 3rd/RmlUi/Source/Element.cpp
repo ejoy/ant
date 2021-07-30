@@ -270,7 +270,7 @@ float Element::GetOpacity() {
 bool Element::SetProperty(const String& name, const String& value) {
 	PropertyDictionary properties;
 	if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name, value)) {
-		Log::Message(Log::LT_WARNING, "Syntax error parsing inline property declaration '%s: %s;'.", name.c_str(), value.c_str());
+		Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s: %s;'.", name.c_str(), value.c_str());
 		return false;
 	}
 	for (auto& property : properties.GetProperties()) {
@@ -283,7 +283,7 @@ bool Element::SetProperty(const String& name, const String& value) {
 bool Element::SetPropertyImmediate(const String& name, const String& value) {
 	PropertyDictionary properties;
 	if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name, value)) {
-		Log::Message(Log::LT_WARNING, "Syntax error parsing inline property declaration '%s: %s;'.", name.c_str(), value.c_str());
+		Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s: %s;'.", name.c_str(), value.c_str());
 		return false;
 	}
 	for (auto& property : properties.GetProperties()) {
@@ -703,7 +703,7 @@ Element* Element::QuerySelector(const String& selectors)
 
 	if (leaf_nodes.empty())
 	{
-		Log::Message(Log::LT_WARNING, "Query selector '%s' is empty. In element %s", selectors.c_str(), GetAddress().c_str());
+		Log::Message(Log::Level::Warning, "Query selector '%s' is empty. In element %s", selectors.c_str(), GetAddress().c_str());
 		return nullptr;
 	}
 
@@ -717,7 +717,7 @@ void Element::QuerySelectorAll(ElementList& elements, const String& selectors)
 
 	if (leaf_nodes.empty())
 	{
-		Log::Message(Log::LT_WARNING, "Query selector '%s' is empty. In element %s", selectors.c_str(), GetAddress().c_str());
+		Log::Message(Log::Level::Warning, "Query selector '%s' is empty. In element %s", selectors.c_str(), GetAddress().c_str());
 		return;
 	}
 
@@ -763,7 +763,7 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes)
 		}
 		else if (it->second.GetType() != Variant::NONE)
 		{
-			Log::Message(Log::LT_WARNING, "Invalid 'style' attribute, string type required. In element: %s", GetAddress().c_str());
+			Log::Message(Log::Level::Warning, "Invalid 'style' attribute, string type required. In element: %s", GetAddress().c_str());
 		}
 	}
 	
@@ -992,7 +992,7 @@ void Element::SetParent(Element* _parent) {
 		else if (parent->data_model)
 		{
 			String name = it->second.Get<String>();
-			Log::Message(Log::LT_ERROR, "Nested data models are not allowed. Data model '%s' given in element %s.", name.c_str(), GetAddress().c_str());
+			Log::Message(Log::Level::Error, "Nested data models are not allowed. Data model '%s' given in element %s.", name.c_str(), GetAddress().c_str());
 		}
 		else if (Document* document = GetOwnerDocument())
 		{
@@ -1003,7 +1003,7 @@ void Element::SetParent(Element* _parent) {
 				SetDataModel(model);
 			}
 			else
-				Log::Message(Log::LT_ERROR, "Could not locate data model '%s' in element %s.", name.c_str(), GetAddress().c_str());
+				Log::Message(Log::Level::Error, "Could not locate data model '%s' in element %s.", name.c_str(), GetAddress().c_str());
 		}
 	}
 }

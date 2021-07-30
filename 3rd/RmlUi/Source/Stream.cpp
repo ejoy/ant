@@ -29,6 +29,7 @@
 #include "../Include/RmlUi/Stream.h"
 #include "../Include/RmlUi/Math.h"
 #include "../Include/RmlUi/Debug.h"
+#include "../Include/RmlUi/Log.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -125,7 +126,7 @@ size_t Stream::PushFront(const void* RMLUI_UNUSED_PARAMETER(buffer), size_t RMLU
 	RMLUI_UNUSED(buffer);
 	RMLUI_UNUSED(bytes);
 
-	RMLUI_ERRORMSG("No generic way to PushFront to a stream.");
+	Log::Message(Log::Level::Error, "No generic way to PushFront to a stream.");
 	return false;
 }
 
@@ -144,7 +145,7 @@ size_t Stream::PopFront(size_t RMLUI_UNUSED_PARAMETER(bytes))
 {
 	RMLUI_UNUSED(bytes);
 
-	RMLUI_ERRORMSG("No generic way to PopFront from a stream.");
+	Log::Message(Log::Level::Error, "No generic way to PopFront from a stream.");
 	return 0;
 }
 

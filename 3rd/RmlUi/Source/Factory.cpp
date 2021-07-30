@@ -161,7 +161,7 @@ bool Factory::InstanceElementText(Element* parent, const String& str)
 
 	TextPtr text(new ElementText(parent->GetOwnerDocument(), str));
 	if (!text) {
-		Log::Message(Log::LT_ERROR, "Failed to instance text element '%s', instancer returned nullptr.", str.c_str());
+		Log::Message(Log::Level::Error, "Failed to instance text element '%s', instancer returned nullptr.", str.c_str());
 		return false;
 	}
 	if (has_data_expression) {
@@ -204,14 +204,14 @@ void Factory::RegisterDataViewInstancer(DataViewInstancer* instancer, const Stri
 	}
 	
 	if (!inserted)
-		Log::Message(Log::LT_WARNING, "Could not register data view instancer '%s'. The given name is already registered.", name.c_str());
+		Log::Message(Log::Level::Warning, "Could not register data view instancer '%s'. The given name is already registered.", name.c_str());
 }
 
 void Factory::RegisterDataControllerInstancer(DataControllerInstancer* instancer, const String& name)
 {
 	bool inserted = data_controller_instancers.emplace(name, instancer).second;
 	if (!inserted)
-		Log::Message(Log::LT_WARNING, "Could not register data controller instancer '%s'. The given name is already registered.", name.c_str());
+		Log::Message(Log::Level::Warning, "Could not register data controller instancer '%s'. The given name is already registered.", name.c_str());
 }
 
 DataViewPtr Factory::InstanceDataView(const String& type_name, Element* element, bool is_structural_view)

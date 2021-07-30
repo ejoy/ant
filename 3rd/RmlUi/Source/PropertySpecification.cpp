@@ -63,7 +63,7 @@ PropertyDefinition& PropertySpecification::RegisterProperty(const String& proper
 		// We don't want to owerwrite an existing entry.
 		if (properties[index])
 		{
-			Log::Message(Log::LT_ERROR, "While registering property '%s': The property is already registered.", property_name.c_str());
+			Log::Message(Log::Level::Error, "While registering property '%s': The property is already registered.", property_name.c_str());
 			return *properties[index];
 		}
 	}
@@ -163,7 +163,7 @@ ShorthandId PropertySpecification::RegisterShorthand(const String& shorthand_nam
 
 		if (item.type == ShorthandItemType::Invalid)
 		{
-			Log::Message(Log::LT_ERROR, "Shorthand property '%s' was registered with invalid property '%s'.", shorthand_name.c_str(), name.c_str());
+			Log::Message(Log::Level::Error, "Shorthand property '%s' was registered with invalid property '%s'.", shorthand_name.c_str(), name.c_str());
 			return ShorthandId::Invalid;
 		}
 		property_shorthand->items.push_back(item);
@@ -179,7 +179,7 @@ ShorthandId PropertySpecification::RegisterShorthand(const String& shorthand_nam
 		// We don't want to owerwrite an existing entry.
 		if (shorthands[index])
 		{
-			Log::Message(Log::LT_ERROR, "The shorthand '%s' already exists, ignoring.", shorthand_name.c_str());
+			Log::Message(Log::Level::Error, "The shorthand '%s' already exists, ignoring.", shorthand_name.c_str());
 			return ShorthandId::Invalid;
 		}
 	}
@@ -283,7 +283,7 @@ bool PropertySpecification::ParseShorthandDeclaration(PropertyDictionary& dictio
 			box_side_to_value_index = { 0,1,2,1 };
 			break;
 		default:
-			RMLUI_ERROR;
+			assert(false);
 			break;
 		}
 

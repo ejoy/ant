@@ -200,7 +200,7 @@ public:
 				m_style_sheet = sub_sheet;
 		}
 		else
-			Log::Message(Log::LT_ERROR, "Failed to load style sheet %s.", source_path.c_str());
+			Log::Message(Log::Level::Error, "Failed to load style sheet %s.", source_path.c_str());
 	}
 	void OnStyleEnd(const char* szValue) override {
 		auto it = m_attributes.find("path");
@@ -229,7 +229,7 @@ bool Document::Load(const String& path) {
 		body->UpdateProperties();
 	}
 	catch (HtmlParserException& e) {
-		Log::Message(Log::LT_ERROR, "%s Line: %d Column: %d", e.what(), e.GetLine(), e.GetColumn());
+		Log::Message(Log::Level::Error, "%s Line: %d Column: %d", e.what(), e.GetLine(), e.GetColumn());
 		return false;
 	}
 	return true;
@@ -299,7 +299,7 @@ TextPtr Document::CreateTextNode(const String& str)
 	TextPtr text(new ElementText(this, str));
 	if (!text)
 	{
-		Log::Message(Log::LT_ERROR, "Failed to create text element, instancer didn't return a derivative of ElementText.");
+		Log::Message(Log::Level::Error, "Failed to create text element, instancer didn't return a derivative of ElementText.");
 		return nullptr;
 	}
 	return text;
@@ -584,14 +584,14 @@ DataModelConstructor Document::CreateDataModel(const String& name) {
 	if (inserted)
 		return DataModelConstructor(result.first->second.get());
 
-	Log::Message(Log::LT_ERROR, "Data model name '%s' already exists.", name.c_str());
+	Log::Message(Log::Level::Error, "Data model name '%s' already exists.", name.c_str());
 	return DataModelConstructor();
 }
 
 DataModelConstructor Document::GetDataModel(const String& name) {
 	if (DataModel* model = GetDataModelPtr(name))
 		return DataModelConstructor(model);
-	Log::Message(Log::LT_ERROR, "Data model name '%s' could not be found.", name.c_str());
+	Log::Message(Log::Level::Error, "Data model name '%s' could not be found.", name.c_str());
 	return DataModelConstructor();
 }
 

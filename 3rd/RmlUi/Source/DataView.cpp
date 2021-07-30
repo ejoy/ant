@@ -39,7 +39,7 @@ Element* DataView::GetElement() const
 {
 	Element* result = attached_element.get();
 	if (!result)
-		Log::Message(Log::LT_WARNING, "Could not retrieve element in view, was it destroyed?");
+		Log::Message(Log::Level::Warning, "Could not retrieve element in view, was it destroyed?");
 	return result;
 }
 

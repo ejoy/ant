@@ -600,7 +600,7 @@ FontFaceHandle ElementText::GetFontFaceHandle() {
 	int size = (int)parent->GetFontSize();
 	font_handle = GetFontEngineInterface()->GetFontFaceHandle(family, style, weight, size);
 	if (font_handle == 0) {
-		Log::Message(Log::LT_ERROR, "Load font %s failed.", family.c_str());
+		Log::Message(Log::Level::Error, "Load font %s failed.", family.c_str());
 	}
 	return font_handle;
 }

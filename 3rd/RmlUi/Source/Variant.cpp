@@ -374,7 +374,7 @@ bool Variant::operator==(const Variant & other) const
 		return true;
 		break;
 	}
-	RMLUI_ERRORMSG("Variant comparison not implemented for this type.");
+	Log::Message(Log::Level::Error, "Variant comparison not implemented for this type.");
 	return false;
 }
 

@@ -63,7 +63,7 @@ bool FileInterface::LoadFile(const String& path, String& out_data)
 	
 	if (length != read_length)
 	{
-		Log::Message(Log::LT_WARNING, "Could only read %zu of %zu bytes from file %s", read_length, length, path.c_str());
+		Log::Message(Log::Level::Warning, "Could only read %zu of %zu bytes from file %s", read_length, length, path.c_str());
 	}
 
 	Close(handle);

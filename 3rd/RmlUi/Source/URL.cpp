@@ -93,7 +93,7 @@ bool URL::SetURL(const String& _url)
 		{
 			char malformed_terminator[4] = {0, 0, 0, 0};
 			strncpy(malformed_terminator, host_begin, 3);
-			Log::Message(Log::LT_ERROR, "Malformed protocol identifier found in URL %s; expected %s://, found %s%s.\n", _url.c_str(), protocol.c_str(), protocol.c_str(), malformed_terminator);
+			Log::Message(Log::Level::Error, "Malformed protocol identifier found in URL %s; expected %s://, found %s%s.\n", _url.c_str(), protocol.c_str(), protocol.c_str(), malformed_terminator);
 
 			return false;
 		}
@@ -142,7 +142,7 @@ bool URL::SetURL(const String& _url)
 		{
 			if (1 != sscanf(port_begin, ":%d", &port))
 			{
-				Log::Message(Log::LT_ERROR, "Malformed port number found in URL %s.\n", _url.c_str());
+				Log::Message(Log::Level::Error, "Malformed port number found in URL %s.\n", _url.c_str());
 				return false;
 			}
 

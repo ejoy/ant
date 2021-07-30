@@ -33,7 +33,7 @@ namespace Rml {
 template <typename SourceType, typename DestType>
 bool TypeConverter<SourceType, DestType>::Convert(const SourceType& /*src*/, DestType& /*dest*/)
 {
-	RMLUI_ERRORMSG("No converter specified.");
+	Log::Message(Log::Level::Error, "No converter specified.");
 	return false;
 }
 

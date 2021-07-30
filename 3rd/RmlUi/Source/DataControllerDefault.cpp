@@ -70,7 +70,7 @@ void DataControllerValue::ProcessEvent(Event& event)
 		auto it = parameters.find("value");
 		if (it == parameters.end())
 		{
-			Log::Message(Log::LT_WARNING, "A 'change' event was received, but it did not contain a value. During processing of 'data-value' in %s", element->GetAddress().c_str());
+			Log::Message(Log::Level::Warning, "A 'change' event was received, but it did not contain a value. During processing of 'data-value' in %s", element->GetAddress().c_str());
 			return;
 		}
 
@@ -126,7 +126,7 @@ bool DataControllerEvent::Initialize(DataModel& model, Element* element, const S
 	id = EventSpecificationInterface::GetIdOrInsert(modifier);
 	if (id == EventId::Invalid)
 	{
-		Log::Message(Log::LT_WARNING, "Event type '%s' could not be recognized, while adding 'data-event' to %s", modifier.c_str(), element->GetAddress().c_str());
+		Log::Message(Log::Level::Warning, "Event type '%s' could not be recognized, while adding 'data-event' to %s", modifier.c_str(), element->GetAddress().c_str());
 		return false;
 	}
 

@@ -143,7 +143,7 @@ SharedPtr<StyleSheet> StyleSheetFactory::GetStyleSheet(const StringList& sheets)
 				sheet = sub_sheet;
 		}
 		else
-			Log::Message(Log::LT_ERROR, "Failed to load style sheet %s.", sheets[i].c_str());
+			Log::Message(Log::Level::Error, "Failed to load style sheet %s.", sheets[i].c_str());
 	}
 
 	if (!sheet)

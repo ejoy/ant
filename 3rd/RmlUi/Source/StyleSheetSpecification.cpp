@@ -108,7 +108,7 @@ bool StyleSheetSpecification::RegisterParser(const String& parser_name, Property
 	ParserMap::iterator iterator = instance->parsers.find(parser_name);
 	if (iterator != instance->parsers.end())
 	{
-		Log::Message(Log::LT_WARNING, "Parser with name %s already exists!", parser_name.c_str());
+		Log::Message(Log::Level::Warning, "Parser with name %s already exists!", parser_name.c_str());
 		return false;
 	}
 

@@ -66,16 +66,16 @@ static bool initialised = false;
 bool Initialise() {
 	RMLUI_ASSERTMSG(!initialised, "Rml::Initialise() called, but RmlUi is already initialised!");
 	if (!render_interface) {
-		Log::Message(Log::LT_ERROR, "No render interface set!");
+		Log::Message(Log::Level::Error, "No render interface set!");
 		return false;
 	}
 	if (!file_interface) {
-		Log::Message(Log::LT_ERROR, "No file interface set!");
+		Log::Message(Log::Level::Error, "No file interface set!");
 		return false;
 	}
 	EventSpecificationInterface::Initialize();
 	if (!font_interface) {
-		Log::Message(Log::LT_ERROR, "No font interface set!");
+		Log::Message(Log::Level::Error, "No font interface set!");
 		return false;
 	}
 	StyleSheetSpecification::Initialise();

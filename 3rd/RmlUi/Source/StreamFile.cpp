@@ -59,7 +59,7 @@ bool StreamFile::Open(const String& path)
 	file_handle = GetFileInterface()->Open(fixed_path);
 	if (!file_handle)
 	{
-		Log::Message(Log::LT_WARNING, "Unable to open file %s.", fixed_path.c_str());
+		Log::Message(Log::Level::Warning, "Unable to open file %s.", fixed_path.c_str());
 		return false;
 	}
 
@@ -109,8 +109,6 @@ size_t StreamFile::Write(const void* RMLUI_UNUSED_PARAMETER(buffer), size_t RMLU
 {
 	RMLUI_UNUSED(buffer);
 	RMLUI_UNUSED(bytes);
-
-	RMLUI_ERROR;
 	return 0;
 }
 
@@ -118,8 +116,6 @@ size_t StreamFile::Write(const void* RMLUI_UNUSED_PARAMETER(buffer), size_t RMLU
 size_t StreamFile::Truncate(size_t RMLUI_UNUSED_PARAMETER(bytes))
 {
 	RMLUI_UNUSED(bytes);
-
-	RMLUI_ERROR;
 	return 0;
 }
 

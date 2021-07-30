@@ -35,7 +35,7 @@ namespace Rml {
 Texture::Texture(const String& _source)
 	: source(_source) {
 	if (!GetRenderInterface()->LoadTexture(handle, dimensions, source)) {
-		Log::Message(Log::LT_WARNING, "Failed to load texture from %s.", source.c_str());
+		Log::Message(Log::Level::Warning, "Failed to load texture from %s.", source.c_str());
 		handle = 0;
 		dimensions = Size(0, 0);
 	}
@@ -67,7 +67,7 @@ void Texture::Shutdown() {
 		num_leaks_file += (texture.second.use_count() > 1);
 	}
 	if (num_leaks_file > 0) {
-		Log::Message(Log::LT_ERROR, "Textures leaked during shutdown. Total: %d.", num_leaks_file);
+		Log::Message(Log::Level::Error, "Textures leaked during shutdown. Total: %d.", num_leaks_file);
 	}
 #endif
 	textures.clear();

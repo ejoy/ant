@@ -141,7 +141,7 @@ bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const Str
 {
 	if (!IsValidIdentifier(identifier))
 	{
-		Log::Message(Log::LT_WARNING, "Invalid keyframes identifier '%s' at %s:%d", identifier.c_str(), stream_file_name.c_str(), line_number);
+		Log::Message(Log::Level::Warning, "Invalid keyframes identifier '%s' at %s:%d", identifier.c_str(), stream_file_name.c_str(), line_number);
 		return false;
 	}
 	if (properties.GetNumProperties() == 0)
@@ -169,7 +169,7 @@ bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const Str
 
 	if (rule_values.empty())
 	{
-		Log::Message(Log::LT_WARNING, "Invalid keyframes rule(s) '%s' at %s:%d", rules.c_str(), stream_file_name.c_str(), line_number);
+		Log::Message(Log::Level::Warning, "Invalid keyframes rule(s) '%s' at %s:%d", rules.c_str(), stream_file_name.c_str(), line_number);
 		return false;
 	}
 
@@ -248,7 +248,7 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 				}
 				else
 				{
-					Log::Message(Log::LT_WARNING, "Invalid character '%c' found while parsing stylesheet at %s:%d. Trying to proceed.", token, stream_file_name.c_str(), line_number);
+					Log::Message(Log::Level::Warning, "Invalid character '%c' found while parsing stylesheet at %s:%d. Trying to proceed.", token, stream_file_name.c_str(), line_number);
 				}
 			}
 			break;
@@ -268,13 +268,13 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 						// Invalid identifier, should ignore
 						at_rule_name.clear();
 						state = State::Global;
-						Log::Message(Log::LT_WARNING, "Invalid at-rule identifier '%s' found in stylesheet at %s:%d", at_rule_identifier.c_str(), stream_file_name.c_str(), line_number);
+						Log::Message(Log::Level::Warning, "Invalid at-rule identifier '%s' found in stylesheet at %s:%d", at_rule_identifier.c_str(), stream_file_name.c_str(), line_number);
 					}
 
 				}
 				else
 				{
-					Log::Message(Log::LT_WARNING, "Invalid character '%c' found while parsing at-rule identifier in stylesheet at %s:%d", token, stream_file_name.c_str(), line_number);
+					Log::Message(Log::Level::Warning, "Invalid character '%c' found while parsing at-rule identifier in stylesheet at %s:%d", token, stream_file_name.c_str(), line_number);
 					state = State::Invalid;
 				}
 			}
@@ -299,13 +299,13 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 				}
 				else
 				{
-					Log::Message(Log::LT_WARNING, "Invalid character '%c' found while parsing keyframe block in stylesheet at %s:%d", token, stream_file_name.c_str(), line_number);
+					Log::Message(Log::Level::Warning, "Invalid character '%c' found while parsing keyframe block in stylesheet at %s:%d", token, stream_file_name.c_str(), line_number);
 					state = State::Invalid;
 				}
 			}
 			break;
 			default:
-				RMLUI_ERROR;
+				assert(false);
 				state = State::Invalid;
 				break;
 			}
@@ -377,7 +377,7 @@ bool StyleSheetParser::ReadProperties(AbstractPropertyParser& property_parser)
 					name = StringUtilities::StripWhitespace(name);
 					if (!name.empty())
 					{
-						Log::Message(Log::LT_WARNING, "Found name with no value while parsing property declaration '%s' at %s:%d", name.c_str(), stream_file_name.c_str(), line_number);
+						Log::Message(Log::Level::Warning, "Found name with no value while parsing property declaration '%s' at %s:%d", name.c_str(), stream_file_name.c_str(), line_number);
 						name.clear();
 					}
 				}
@@ -385,7 +385,7 @@ bool StyleSheetParser::ReadProperties(AbstractPropertyParser& property_parser)
 				{
 					name = StringUtilities::StripWhitespace(name);
 					if (!name.empty())
-						Log::Message(Log::LT_WARNING, "End of rule encountered while parsing property declaration '%s' at %s:%d", name.c_str(), stream_file_name.c_str(), line_number);
+						Log::Message(Log::Level::Warning, "End of rule encountered while parsing property declaration '%s' at %s:%d", name.c_str(), stream_file_name.c_str(), line_number);
 					return true;
 				}
 				else if (character == ':')
@@ -405,7 +405,7 @@ bool StyleSheetParser::ReadProperties(AbstractPropertyParser& property_parser)
 					value = StringUtilities::StripWhitespace(value);
 
 					if (!property_parser.Parse(name, value))
-						Log::Message(Log::LT_WARNING, "Syntax error parsing property declaration '%s: %s;' in %s: %d.", name.c_str(), value.c_str(), stream_file_name.c_str(), line_number);
+						Log::Message(Log::Level::Warning, "Syntax error parsing property declaration '%s: %s;' in %s: %d.", name.c_str(), value.c_str(), stream_file_name.c_str(), line_number);
 
 					name.clear();
 					value.clear();
@@ -443,11 +443,11 @@ bool StyleSheetParser::ReadProperties(AbstractPropertyParser& property_parser)
 		value = StringUtilities::StripWhitespace(value);
 
 		if (!property_parser.Parse(name, value))
-			Log::Message(Log::LT_WARNING, "Syntax error parsing property declaration '%s: %s;' in %s: %d.", name.c_str(), value.c_str(), stream_file_name.c_str(), line_number);
+			Log::Message(Log::Level::Warning, "Syntax error parsing property declaration '%s: %s;' in %s: %d.", name.c_str(), value.c_str(), stream_file_name.c_str(), line_number);
 	}
 	else if (!name.empty() || !value.empty())
 	{
-		Log::Message(Log::LT_WARNING, "Invalid property declaration '%s':'%s' at %s:%d", name.c_str(), value.c_str(), stream_file_name.c_str(), line_number);
+		Log::Message(Log::Level::Warning, "Invalid property declaration '%s':'%s' at %s:%d", name.c_str(), value.c_str(), stream_file_name.c_str(), line_number);
 	}
 	
 	return true;

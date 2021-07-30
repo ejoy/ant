@@ -340,7 +340,7 @@ bool DataViewText::Update(DataModel& model)
 		}
 		else
 		{
-			Log::Message(Log::LT_WARNING, "Could not update data view text, element no longer valid. Was it destroyed?");
+			Log::Message(Log::Level::Warning, "Could not update data view text, element no longer valid. Was it destroyed?");
 		}
 	}
 
@@ -409,7 +409,7 @@ bool DataViewFor::Initialize(DataModel& model, Element* element, const String& i
 
 	if (iterator_container_pair.empty() || iterator_container_pair.size() > 2 || iterator_container_pair.front().empty() || iterator_container_pair.back().empty())
 	{
-		Log::Message(Log::LT_WARNING, "Invalid syntax in data-for '%s'", in_expression.c_str());
+		Log::Message(Log::Level::Warning, "Invalid syntax in data-for '%s'", in_expression.c_str());
 		return false;
 	}
 
@@ -420,7 +420,7 @@ bool DataViewFor::Initialize(DataModel& model, Element* element, const String& i
 
 		if (iterator_index_pair.empty())
 		{
-			Log::Message(Log::LT_WARNING, "Invalid syntax in data-for '%s'", in_expression.c_str());
+			Log::Message(Log::Level::Warning, "Invalid syntax in data-for '%s'", in_expression.c_str());
 			return false;
 		}
 		else if (iterator_index_pair.size() == 1)
