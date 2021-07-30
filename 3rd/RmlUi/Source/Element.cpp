@@ -1375,7 +1375,10 @@ void Element::UpdateGeometry() {
 
 void Element::UpdateLayout() {
 	if (Node::UpdateMetrics() && Node::IsVisible()) {
-		DirtyLayout();
+		DirtyTransform();
+		dirty_background = true;
+		dirty_image = true;
+		dirty_border = true;
 		for (auto& child : children) {
 			child->UpdateLayout();
 		}
@@ -1464,13 +1467,6 @@ void Element::SetRednerStatus() {
 void Element::DirtyTransform() {
 	dirty_transform = true;
 	dirty_clip = true;
-}
-
-void Element::DirtyLayout() {
-	DirtyTransform();
-	dirty_background = true;
-	dirty_image = true;
-	dirty_border = true;
 }
 
 } // namespace Rml

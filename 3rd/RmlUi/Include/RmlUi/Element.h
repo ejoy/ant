@@ -365,7 +365,6 @@ protected:
 	void UpdatePerspective();
 	void UpdateGeometry();
 	void DirtyTransform();
-	void DirtyLayout();
 	void UpdateClip();
 
 	/// Start an animation, replacing any existing animations of the same property name. If start_value is null, the element's current value is used.
