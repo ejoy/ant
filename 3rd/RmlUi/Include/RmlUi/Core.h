@@ -47,8 +47,6 @@ enum class DefaultActionPhase;
 RMLUICORE_API bool Initialise();
 RMLUICORE_API void Shutdown();
 RMLUICORE_API String GetVersion();
-RMLUICORE_API void SetSystemInterface(SystemInterface* system_interface);
-RMLUICORE_API SystemInterface* GetSystemInterface();
 RMLUICORE_API void SetRenderInterface(RenderInterface* render_interface);
 RMLUICORE_API RenderInterface* GetRenderInterface();
 RMLUICORE_API void SetFileInterface(FileInterface* file_interface);

@@ -33,7 +33,6 @@
 #include "../Include/RmlUi/FontEngineInterface.h"
 #include "../Include/RmlUi/Plugin.h"
 #include "../Include/RmlUi/RenderInterface.h"
-#include "../Include/RmlUi/SystemInterface.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/Types.h"
 #include "../Include/RmlUi/Texture.h"
@@ -49,8 +48,6 @@ namespace Rml {
 
 // RmlUi's renderer interface.
 static RenderInterface* render_interface = nullptr;
-/// RmlUi's system interface.
-static SystemInterface* system_interface = nullptr;
 // RmlUi's file I/O interface.
 static FileInterface* file_interface = nullptr;
 // RmlUi's font engine interface.
@@ -70,10 +67,6 @@ bool Initialise() {
 	RMLUI_ASSERTMSG(!initialised, "Rml::Initialise() called, but RmlUi is already initialised!");
 	if (!render_interface) {
 		Log::Message(Log::LT_ERROR, "No render interface set!");
-		return false;
-	}
-	if (!system_interface) {	
-		Log::Message(Log::LT_ERROR, "No system interface set!");
 		return false;
 	}
 	if (!file_interface) {
@@ -114,7 +107,6 @@ void Shutdown() {
 
 	render_interface = nullptr;
 	file_interface = nullptr;
-	system_interface = nullptr;
 
 	default_file_interface.reset();
 }
@@ -123,18 +115,6 @@ void Shutdown() {
 String GetVersion()
 {
 	return RMLUI_VERSION;
-}
-
-// Sets the interface through which all RmlUi messages will be routed.
-void SetSystemInterface(SystemInterface* _system_interface)
-{
-	system_interface = _system_interface;
-}
-
-// Returns RmlUi's system interface.
-SystemInterface* GetSystemInterface()
-{
-	return system_interface;
 }
 
 // Sets the interface through which all rendering requests are made.

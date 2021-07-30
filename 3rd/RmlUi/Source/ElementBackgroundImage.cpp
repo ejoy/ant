@@ -33,7 +33,6 @@
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/Geometry.h"
 #include "../Include/RmlUi/Document.h"
-#include "../Include/RmlUi/SystemInterface.h"
 #include "../Include/RmlUi/Core.h"
 
 namespace Rml {

@@ -33,7 +33,6 @@
 #include "../Include/RmlUi/StreamMemory.h"
 #include "../Include/RmlUi/StyleSheet.h"
 #include "../Include/RmlUi/Core.h"
-#include "../Include/RmlUi/SystemInterface.h"
 #include "../Include/RmlUi/DataModelHandle.h"
 #include "../Include/RmlUi/FileInterface.h"
 #include "../Include/RmlUi/ElementUtilities.h"
@@ -457,7 +456,7 @@ void Document::ProcessMouseButtonDown(MouseButton button, int key_modifier_state
 			float mouse_distance_squared = distance.x * distance.x + distance.y * distance.y;
 			float max_mouse_distance = DOUBLE_CLICK_MAX_DIST * GetContext()->GetDensityIndependentPixelRatio();
 
-			double click_time = GetSystemInterface()->GetElapsedTime();
+			double click_time = GetContext()->GetElapsedTime();
 
 			if (active == last_click_element &&
 				float(click_time - last_click_time) < DOUBLE_CLICK_TIME &&

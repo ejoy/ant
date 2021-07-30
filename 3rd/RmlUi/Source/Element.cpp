@@ -41,7 +41,6 @@
 #include "../Include/RmlUi/Transform.h"
 #include "../Include/RmlUi/RenderInterface.h"
 #include "../Include/RmlUi/StreamMemory.h"
-#include "../Include/RmlUi/SystemInterface.h"
 #include "DataModel.h"
 #include "ElementAnimation.h"
 #include "ElementBackgroundBorder.h"
@@ -1056,7 +1055,7 @@ void Element::StartAnimation(PropertyId property_id, const Property* start_value
 		return;
 	}
 	ElementAnimationOrigin origin = (initiated_by_animation_property ? ElementAnimationOrigin::Animation : ElementAnimationOrigin::User);
-	double start_time = GetSystemInterface()->GetElapsedTime() + (double)delay;
+	double start_time = GetContext()->GetElapsedTime() + (double)delay;
 
 	ElementAnimation animation{ property_id, origin, value, *this, start_time, 0.0f, num_iterations, alternate_direction };
 	auto it = std::find_if(animations.begin(), animations.end(), [&](const ElementAnimation& el) { return el.GetPropertyId() == property_id; });
@@ -1101,7 +1100,7 @@ bool Element::StartTransition(const Transition& transition, const Property& star
 		return false;
 
 	float duration = transition.duration;
-	double start_time = GetSystemInterface()->GetElapsedTime() + (double)transition.delay;
+	double start_time = GetContext()->GetElapsedTime() + (double)transition.delay;
 
 	if (it == animations.end()) {
 		// Add transition as new animation
@@ -1243,7 +1242,7 @@ void Element::AdvanceAnimations()
 	if (animations.empty()) {
 		return;
 	}
-	double time = GetSystemInterface()->GetElapsedTime();
+	double time = GetContext()->GetElapsedTime();
 
 	for (auto& animation : animations)
 	{

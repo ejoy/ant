@@ -35,7 +35,6 @@
 #include "../Include/RmlUi/EventListenerInstancer.h"
 #include "../Include/RmlUi/StreamMemory.h"
 #include "../Include/RmlUi/StyleSheet.h"
-#include "../Include/RmlUi/SystemInterface.h"
 #include "DataControllerDefault.h"
 #include "DataViewDefault.h"
 #include "PluginRegistry.h"

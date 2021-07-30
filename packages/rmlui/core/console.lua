@@ -14,7 +14,6 @@ local function output(type, ...)
 		s[#s+1] = tostring(t[i])
 	end
 	s = table.concat(s, '\t')
-	rmlui.Log(type, s)
 	print(s)
 end
 

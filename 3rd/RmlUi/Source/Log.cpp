@@ -29,7 +29,6 @@
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/StringUtilities.h"
-#include "../Include/RmlUi/SystemInterface.h"
 
 #include <stdarg.h>
 #ifdef RMLUI_PLATFORM_WIN32
@@ -37,6 +36,32 @@
 #endif
 
 namespace Rml {
+
+#ifdef RMLUI_PLATFORM_WIN32
+static bool LogMessage(Log::Type logtype, const String& message)
+{
+	// By default we just send a platform message
+	if (logtype == Log::LT_ASSERT)
+	{
+		String message_user = CreateString(1024, "%s\nWould you like to interrupt execution?", message.c_str());	
+
+		// Return TRUE if the user presses NO (continue execution)
+		return (IDNO == MessageBoxA(nullptr, message_user.c_str(), "Assertion Failure", MB_YESNO | MB_ICONSTOP | MB_DEFBUTTON2 | MB_TASKMODAL));
+	}
+	else
+	{
+		OutputDebugStringA(message.c_str());
+		OutputDebugStringA("\r\n");
+	}
+	return true;
+}
+#else
+static bool LogMessage(Log::Type /*logtype*/, const String& message)
+{
+	fprintf(stderr,"%s\n", message.c_str());
+	return true;
+}
+#endif
 
 // Log the specified message via the registered log interface
 void Log::Message(Log::Type type, const char* fmt, ...)
@@ -55,13 +80,13 @@ void Log::Message(Log::Type type, const char* fmt, ...)
 	buffer[len] = '\0';
 	va_end(argument_list);
 
-	GetSystemInterface()->LogMessage(type, buffer);
+	LogMessage(type, buffer);
 }
 
 bool Assert(const char* msg, const char* file, int line)
 {
 	String message = CreateString(1024, "%s\n%s:%d", msg, file, line);
-	return GetSystemInterface()->LogMessage(Log::LT_ASSERT, message);
+	return LogMessage(Log::LT_ASSERT, message);
 }
 
 } // namespace Rml
