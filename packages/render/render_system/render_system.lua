@@ -21,6 +21,7 @@ function render_sys:update_filter()
         local state = ro.entity_state
 		local st = ro.fx.setting.surfacetype
 
+		local sync_tag = {st .. "?out"}
 		for _, qn in ipairs{"main_queue", "blit_queue"} do
 			for vv in w:select(("%s %s primitive_filter:in"):format(st, qn)) do
 				local pf = vv.primitive_filter
@@ -28,9 +29,13 @@ function render_sys:update_filter()
 				local exclude_mask = pf.exclude_type and ies.filter_mask(pf.exclude_type) or 0
 
 				local add = ((state & mask) ~= 0) and ((state & exclude_mask) == 0)
-				ipf.update_filter_tag(qn, st, add, e)
+				e[qn] = add
+				e[st] = add
+				sync_tag[#sync_tag+1] = qn .. "?out"
+				--ipf.update_filter_tag(qn, st, add, e)
 			end
 		end
+		w:sync(table.concat(sync_tag, " "), e)
     end
 end
 
