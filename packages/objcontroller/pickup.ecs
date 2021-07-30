@@ -1,7 +1,7 @@
 --v2
 system "pickup_primitive_system"
     .implement "pickup_system.lua"
-    .require_system "ant.scene|luaecs_filter_system"
+    .require_system "ant.render|end_filter_system"
     .require_interface "ant.render|irender"
     .method     "update_filter"
     .method     "render_submit"

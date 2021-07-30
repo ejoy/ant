@@ -8,6 +8,7 @@ local isp		= world:interface "ant.render|system_properties"
 local irender	= world:interface "ant.render|irender"
 local ipf		= world:interface "ant.scene|iprimitive_filter"
 local ies		= world:interface "ant.scene|ientity_state"
+local icamera	= world:interface "ant.camera|camera"
 local render_sys = ecs.system "render_system"
 
 function render_sys:update_system_properties()
@@ -41,6 +42,14 @@ function render_sys:update_filter()
 end
 
 function render_sys:render_submit()
+	for v in w:select "visible camera_eid:in render_target:in" do
+        local rt = v.render_target
+        local viewid = rt.viewid
+        local camera = icamera.find_camera(v.camera_eid)
+        bgfx.touch(viewid)
+        bgfx.set_view_transform(viewid, camera.viewmat, camera.projmat)
+    end
+
 	for _, qn in ipairs{"main_queue", "blit_queue"} do
 		for e in w:select(qn .. " visible render_target:in") do
 			local viewid = e.render_target.viewid
@@ -54,4 +63,9 @@ function render_sys:render_submit()
 			w:clear(culltag)
 		end
 	end
+end
+
+local s = ecs.system "end_filter_system"
+function s:end_filter()
+	w:clear "render_object_update"
 end
