@@ -61,12 +61,6 @@ public:
 	/// @return Elapsed time, in seconds.
 	virtual double GetElapsedTime() = 0;
 
-	/// Joins the path of an RML or RCSS file with the path of a resource specified within the file.
-	/// @param[out] translated_path The joined path.
-	/// @param[in] document_path The path of the source document (including the file name).
-	/// @param[in] path The path of the resource specified in the document.
-	virtual void JoinPath(String& translated_path, const String& document_path, const String& path);
-
 	/// Log the specified message.
 	/// @param[in] type Type of log message, ERROR, WARNING, etc.
 	/// @param[in] message Message to log.

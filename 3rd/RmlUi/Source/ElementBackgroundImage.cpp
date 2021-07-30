@@ -80,8 +80,7 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		ComputePropertyH(element->GetProperty(PropertyId::BackgroundPositionY), element)
 	};
 
-	String path;
-	GetSystemInterface()->JoinPath(path, StringUtilities::Replace(element->GetOwnerDocument()->GetSourceURL(), '|', ':'), image->Get<String>());
+	String path = image->Get<String>();
 	auto texture = Texture::Fetch(path);
 	geometry.SetTexture(texture);
 	geometry.SetSamplerFlag(repeat);
