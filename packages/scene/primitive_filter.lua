@@ -62,7 +62,9 @@ function ipf.sync_filter(filter_name)
 end
 
 local function clear_tag(filter_name, o)
-    local t = {}
+    local t = {
+        filter_name .. "?out"
+    }
 	for _, n in ipairs(ipf.layers(filter_name)) do
 		o[n] = false
         t[#t+1] = n .. "?out"

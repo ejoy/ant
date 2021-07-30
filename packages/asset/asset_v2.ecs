@@ -6,6 +6,7 @@ system "mesh_system"
     .implement "mesh.lua"
     .method "entity_init"
 
+component_v2 "material_setting".type "lua"
 component_v2 "material".type "lua"
     .require_system "ant.asset|material_system"
 

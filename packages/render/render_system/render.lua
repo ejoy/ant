@@ -69,7 +69,7 @@ function irender.get_main_view_rendertexture()
 	return fbmgr.get_rb(fb[1]).handle
 end
 
-function irender.create_primitive_filter_entities(filtername, exclude)
+function irender.create_primitive_filter_entities(filtername, filtertype, exclude)
 	local quene_policy = "ant.render|" .. filtername
 	for _, fn in ipairs(ipf.layers(filtername)) do
 		local filter_pn = ("ant.scene|%s_primitive_filter"):format(fn)
@@ -80,7 +80,7 @@ function irender.create_primitive_filter_entities(filtername, exclude)
 			},
 			data = {
 				primitive_filter = {
-					filter_type = "visible",
+					filter_type = filtertype or "visible",
 					exclude = exclude,
 				},
 				[fn] 			= true,
@@ -90,8 +90,8 @@ function irender.create_primitive_filter_entities(filtername, exclude)
 	end
 end
 
-function irender.create_view_queue(view_rect, view_name, exclude, queuename)
-	irender.create_primitive_filter_entities("main_queue", exclude)
+function irender.create_view_queue(view_rect, view_name, exclude)
+	irender.create_primitive_filter_entities("main_queue", "visible", exclude)
 	for v in w:select "main_queue render_target:in" do
 		local rt = v.render_target
 		world:luaecs_create_entity {
@@ -297,7 +297,7 @@ end
 
 local blitviewid = viewidmgr.get "blit"
 function irender.create_blit_queue(viewrect)
-	irender.create_primitive_filter_entities "blit_queue"
+	irender.create_primitive_filter_entities("blit_queue", "blit_view")
 
 	world:luaecs_create_entity {
 		policy = {

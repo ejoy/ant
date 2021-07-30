@@ -175,11 +175,15 @@ end
 
 local m = ecs.component "material"
 
-function m:init()
-	if type(self) == "string" then
-		return assetmgr.resource(self)
+local function init_material(mm)
+	if type(mm) == "string" then
+		return assetmgr.resource(mm)
 	end
-	return ext_material.init(self)
+	return ext_material.init(mm)
+end
+
+function m:init()
+	return init_material(self)
 end
 
 local mt = ecs.transform "material_transform"
@@ -275,11 +279,13 @@ end
 local w = world.w
 local ms = ecs.system "material_system"
 function ms:entity_init()
-    for v in w:select "INIT material:in render_object:in" do
+    for v in w:select "INIT material:in material_setting?in render_object:in name:in" do
 		local ro = v.render_object
-		local m = v.material
-		ro.fx = m.fx
-		ro.properties = generate_properties(m.fx, m.properties)
-		ro.state = m.state
+
+		local mm = load_material(init_material(v.material), v.material_setting)
+
+		ro.fx 			= mm.fx
+		ro.properties	= generate_properties(mm.fx, mm.properties)
+		ro.state		= mm.state
 	end
 end
