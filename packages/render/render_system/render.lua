@@ -178,7 +178,7 @@ local rb_flag = samplerutil.sampler_flag {
 }
 
 function irender.create_pre_depth_queue(view_rect, camera_eid)
-	create_primitive_filter_entities "pre_depth_queue"
+	irender.create_primitive_filter_entities "pre_depth_queue"
 
 	local fbidx = fbmgr.create{
 		fbmgr.create_rb{
@@ -203,7 +203,6 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 			"ant.general|name",
 		},
 		data = {
-			name = "pre_depth_queue",
 			camera_eid = camera_eid,
 			render_target = {
 				viewid = viewidmgr.get "depth",
@@ -213,16 +212,14 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 					depth = 1,
 				},
 				view_mode = "s",
-				view_rect = {
-					x=view_rect.x or 0, y = view_rect.y or 0,
-					w=view_rect.w, h=view_rect.h,
-				},
+				view_rect = view_rect,
 				fb_idx = fbidx,
 			},
+			queue_name = "pre_depth_queue",
+			name = "pre_depth_queue",
 			visible = true,
 			pre_depth_queue = true,
 			watch_screen_buffer = true,
-			queue_name = "pre_depth_queue",
 		}
 	}
 
