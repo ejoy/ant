@@ -89,7 +89,7 @@ function s:render_submit()
         local viewid = rq.viewid
         for i = 1, #rq.layer_tag do
             for u in w:select(rq.layer_tag[i] .. " " .. rq.cull_tag .. ":absent render_object:in filter_material:in") do
-                irender.draw_mat(viewid, u.render_object, u.filter_material[rq.tag])
+                irender.draw(viewid, u.render_object, u.filter_material[rq.tag])
             end
         end
 		w:clear(rq.cull_tag)

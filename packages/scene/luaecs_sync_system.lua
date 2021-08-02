@@ -27,7 +27,7 @@ function s:luaecs_sync()
 	for _, _, eid in evCreate:unpack() do
 		local e = world[eid]
 		local policy = {}
-		local data = { eid = eid, initializing = true }
+		local data = { eid = eid, INIT = true }
 		local rc = e._rendercache
 		do
 			local parent

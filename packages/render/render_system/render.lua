@@ -30,12 +30,14 @@ function irender.check_primitive_mode_state(state, template_state)
 	return bgfx.make_state(ts)
 end
 
-function irender.draw(vid, ri)
+function irender.draw(vid, ri, mat)
 	ri:set_transform()
 
-	bgfx.set_state(ri.state)
-	bgfx.set_stencil(ri.stencil)
-	local properties = ri.properties
+	local _mat = mat or ri
+
+	bgfx.set_state(_mat.state)
+	bgfx.set_stencil(_mat.stencil)
+	local properties = _mat.properties
 	if properties then
 		for n, p in pairs(properties) do
 			p:set()
@@ -44,64 +46,17 @@ function irender.draw(vid, ri)
 	local ib, vb = ri.ib, ri.vb
 
 	if ib and ib.num ~= 0 then
-		--TODO: need set function for set_index_buffer
-		if type(ib.handle) == "number" then
-			bgfx.set_index_buffer(ib.handle, ib.start, ib.num)
-		else
-			ib.handle:setI(ib.start, ib.num)
-		end
+		bgfx.set_index_buffer(ib.handle, ib.start, ib.num)
 	end
 
 	local start_v, num_v = vb.start, vb.num
 	if num_v ~= 0 then
 		for idx, h in ipairs(vb.handles) do
-			--TODO: need set function for set_index_buffer
-			if type(h) == "number" then
-				bgfx.set_vertex_buffer(idx-1, h, start_v, num_v)
-			else
-				h:setV(idx-1, start_v, num_v)
-			end
+			bgfx.set_vertex_buffer(idx-1, h, start_v, num_v)
 		end
 	end
 
-	bgfx.submit(vid, ri.fx.prog, 0)
-end
-
-function irender.draw_mat(vid, ri, mat)
-	ri:set_transform()
-
-	bgfx.set_state(mat.state)
-	bgfx.set_stencil(mat.stencil or ri.stencil)
-	local properties = mat.properties
-	if properties then
-		for n, p in pairs(properties) do
-			p:set()
-		end
-	end
-	local ib, vb = ri.ib, ri.vb
-
-	if ib and ib.num ~= 0 then
-		--TODO: need set function for set_index_buffer
-		if type(ib.handle) == "number" then
-			bgfx.set_index_buffer(ib.handle, ib.start, ib.num)
-		else
-			ib.handle:setI(ib.start, ib.num)
-		end
-	end
-
-	local start_v, num_v = vb.start, vb.num
-	if num_v ~= 0 then
-		for idx, h in ipairs(vb.handles) do
-			--TODO: need set function for set_index_buffer
-			if type(h) == "number" then
-				bgfx.set_vertex_buffer(idx-1, h, start_v, num_v)
-			else
-				h:setV(idx-1, start_v, num_v)
-			end
-		end
-	end
-
-	bgfx.submit(vid, mat.fx.prog, 0)
+	bgfx.submit(vid, _mat.fx.prog, 0)
 end
 
 function irender.get_main_view_rendertexture()
@@ -270,10 +225,8 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 	return eid
 end
 
-function irender.create_main_queue(view_rect, camera_eid)
+local function create_main_fb(view_rect, sd)
 	local render_buffers = {}
-
-	local sd = setting:data()
 	local main_display_format = sd.graphic.hdr.enable and "RGBA16F" or "RGBA8"
 	render_buffers[#render_buffers+1] = fbmgr.create_rb(
 		default_comp.render_buffer(
@@ -288,8 +241,6 @@ function irender.create_main_queue(view_rect, camera_eid)
 		)
 	end
 
-	local rs = sd.graphic.render
-
 	local function get_depth_buffer()
 		return fbmgr.create_rb(
 			default_comp.render_buffer(
@@ -302,6 +253,30 @@ function irender.create_main_queue(view_rect, camera_eid)
 	end
 
 	render_buffers[#render_buffers+1] = get_depth_buffer()
+	return fbmgr.create(render_buffers)
+end
+
+function irender.create_main_queue(view_rect, camera_eid)
+	local sd = setting:data()
+	local fbidx = create_main_fb(view_rect, sd)
+
+	
+
+	world:create_entity{
+		primitive_filter = {
+			filter_type = "visible",
+		},
+		opaticy = true,
+		main_queue = true,
+	}
+
+	world:create_entity{
+		primitive_filter = {
+			filter_type = "visible",
+		},
+		transparent = true,
+		main_queue = true,
+	}
 
 	return world:create_entity {
 		policy = {
@@ -311,27 +286,23 @@ function irender.create_main_queue(view_rect, camera_eid)
 			"ant.general|name",
 		},
 		data = {
+			name = "main render queue",
 			camera_eid = camera_eid,
-			
 			render_target = {
 				viewid = viewidmgr.get "main_view",
 				view_mode = "s",
 				clear_state = {
-					color = rs.clear_color or 0x000000ff,
+					color = sd.graphic.render.clear_color or 0x000000ff,
+					depth = 1.0,
 					clear = "CD",
 				},
 				view_rect = {
 					x = view_rect.x or 0, y = view_rect.y or 0,
 					w = view_rect.w or 1, h = view_rect.h or 1,
 				},
-				fb_idx = fbmgr.create(render_buffers),
-			},
-			primitive_filter = {
-				filter_type = "visible",
-				update_type = "primitive",
+				fb_idx = fbidx,
 			},
 			visible = true,
-			name = "main render queue",
 			main_queue = true,
 			watch_screen_buffer = true,
 		}
