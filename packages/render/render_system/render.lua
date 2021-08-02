@@ -299,6 +299,10 @@ function irender.create_main_queue(view_rect, camera_eid)
 		data = {
 			name = "main_queue",
 			camera_eid = camera_eid,
+			primitive_filter = {
+				filter_type = "visible",
+				update_type = "primitive",
+			},
 			render_target = {
 				viewid = viewidmgr.get "main_view",
 				view_mode = "s",
