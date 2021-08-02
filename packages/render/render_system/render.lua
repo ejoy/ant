@@ -260,24 +260,6 @@ function irender.create_main_queue(view_rect, camera_eid)
 	local sd = setting:data()
 	local fbidx = create_main_fb(view_rect, sd)
 
-	
-
-	world:create_entity{
-		primitive_filter = {
-			filter_type = "visible",
-		},
-		opaticy = true,
-		main_queue = true,
-	}
-
-	world:create_entity{
-		primitive_filter = {
-			filter_type = "visible",
-		},
-		transparent = true,
-		main_queue = true,
-	}
-
 	return world:create_entity {
 		policy = {
 			"ant.render|render_queue",
@@ -288,6 +270,10 @@ function irender.create_main_queue(view_rect, camera_eid)
 		data = {
 			name = "main render queue",
 			camera_eid = camera_eid,
+			primitive_filter = {
+				filter_type = "visible",
+				update_type = "primitive",
+			},
 			render_target = {
 				viewid = viewidmgr.get "main_view",
 				view_mode = "s",

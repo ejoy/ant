@@ -14,7 +14,7 @@ system "entity_system"
     .method "entity_done"
     .method "update_world"
 
-component_v2 "initializing"
+component_v2 "INIT"
 
 component_v2 "create_entity"
     .type "lua"

@@ -41,7 +41,7 @@ policy_v2 "scene_object"
 
 policy_v2 "scene_node"
     .component_v2 "scene_node"
-    .component_v2 "initializing"
+    .component_v2 "INIT"
 
 component_v2 "scene_id"
     .type "int"
