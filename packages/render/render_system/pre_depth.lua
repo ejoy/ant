@@ -4,7 +4,6 @@ local world = ecs.world
 local bgfx = require "bgfx"
 
 local irender   = world:interface "ant.render|irender"
-local ipf       = world:interface "ant.scene|iprimitive_filter"
 
 local function can_write_depth(state)
 	local s = bgfx.parse_state(state)

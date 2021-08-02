@@ -13,8 +13,6 @@ local fbmgr			= require "framebuffer_mgr"
 local samplerutil	= require "sampler"
 local icamera		= world:interface "ant.camera|camera"
 
-local ipf			= world:interface "ant.scene|iprimitive_filter"
-
 local wmt = ecs.transform "world_matrix_transform"
 local function set_world_matrix(rc)
 	bgfx.set_transform(rc.worldmat)
@@ -201,7 +199,7 @@ local rb_flag = samplerutil.sampler_flag {
 }
 
 function irender.create_pre_depth_queue(view_rect, camera_eid)
-	local fnames, ct = irender.create_primitive_filter_entities "pre_depth_queue"
+	local fnames, ct = create_primitive_filter_entities "pre_depth_queue"
 
 	local fbidx = fbmgr.create{
 		fbmgr.create_rb{
@@ -287,7 +285,7 @@ function irender.create_main_queue(view_rect, camera_eid)
 	local sd = setting:data()
 	local fbidx = create_main_fb(view_rect, sd)
 
-	local filternames, ct = irender.create_primitive_filter_entities "main_queue"
+	local filternames, ct = create_primitive_filter_entities "main_queue"
 	world:luaecs_create_entity {
 		policy = {
 			"ant.render|render_queue",
@@ -330,7 +328,7 @@ end
 
 local blitviewid = viewidmgr.get "blit"
 function irender.create_blit_queue(viewrect)
-	local fitlernames = irender.create_primitive_filter_entities("blit_queue", "blit_view")
+	local fitlernames = create_primitive_filter_entities("blit_queue", "blit_view")
 
 	world:luaecs_create_entity {
 		policy = {

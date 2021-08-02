@@ -9,7 +9,6 @@ local viewidmgr = require "viewid_mgr"
 local mc 		= import_package "ant.math".constant
 local math3d	= require "math3d"
 local icamera	= world:interface "ant.camera|camera"
-local ipf		= world:interface "ant.scene|iprimitive_filter"
 local ilight	= world:interface "ant.render|light"
 local ishadow	= world:interface "ant.render|ishadow"
 local irender	= world:interface "ant.render|irender"
@@ -438,41 +437,47 @@ local omni_stencils = {
 }
 
 local s = ecs.system "shadow_primitive_system"
-local w = world.w
+
 function s:update_filter()
-    for v in w:select "render_object_update render_object:in eid:in filter_material:in csm:in" do
-        local rc = v.render_object
+    for e in w:select "render_object_update render_object:in eid:in filter_material:in" do
+        local rc = e.render_object
         local state = rc.entity_state
 		local st = rc.fx.setting.surfacetype
-		local eid = v.eid
-		local fm = v.filter_material
-		local csm_index = v.csm.index
-		for vv in w:select(st .. " csm_queue primitive_filter:in") do
-			local pf = vv.primitive_filter
-			if pf.index == csm_index then
-				local mask = ies.filter_mask(pf.filter_type)
-				local exclude_mask = pf.exclude_type and ies.filter_mask(pf.exclude_type) or 0
-				local add = ((state & mask) ~= 0) and ((state & exclude_mask) == 0)
-				ipf.update_filter_tag("csm_queue", st, add, v)
-				local m = which_material(eid)
-				fm[st] = add and {
-					fx = m.fx,
-					properties = m.properties,
-					state = irender.check_primitive_mode_state(rc.state, m.state),
-				} or nil
+		local m = which_material(e.eid)
+		local fm = e.filter_material
+
+		for qe in w:select "csm_queue filter_names:in" do
+			for _, fn in ipairs(qe.filter_names) do
+				for fe in w:select(fn .. " primitive_filter") do
+					local pf = fe.primitive_filter
+					local mask = ies.filter_mask(pf.filter_type)
+					local exclude_mask = pf.exclude_type and ies.filter_mask(pf.exclude_type) or 0
+					local add = ((state & mask) ~= 0) and ((state & exclude_mask) == 0)
+					e[fn] = add
+					w:sync(fn .. "?out", e)
+
+					fm[st] = add and {
+						fx = m.fx,
+						properties = m.properties,
+						state = irender.check_primitive_mode_state(rc.state, m.state),
+					} or nil
+				end
 			end
 		end
-    end
+	end
 end
 
 function s:render_submit()
-    for v in w:select "csm_queue visible render_target:in queue_name:in" do
-        local viewid = v.render_target.viewid
-        local culltag = v.queue_name .. "_cull"
-		local tag = " " .. v.queue_name .. " " .. culltag .. ":absent render_object:in filter_material:in"
-		for _, ln in ipairs(ipf.layers "csm_queue") do
-			for u in w:select(ln .. tag) do
-				irender.draw(viewid, u.render_object, u.filter_material[ln])
+    for qe in w:select "csm_queue visible render_target:in filter_names:in cull_tag:in" do
+        local viewid = qe.render_target.viewid
+		local filternames, culltag = qe.filter_names, qe.cull_tag
+		assert(#filternames == #culltag)
+
+		for idx, fn in ipairs(filternames) do
+			for e in w:select("%s %s:absent render_object:in filter_material:in"):format(fn, culltag[idx]) do
+				local ro = e.render_object
+				local st = ro.fx.setting.surfacetype
+				irender.draw(viewid, ro, e.filter_material[st])
 			end
 		end
     end

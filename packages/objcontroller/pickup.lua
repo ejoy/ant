@@ -4,7 +4,6 @@ local w = world.w
 
 local math3d = require "math3d"
 
-local ipf       = world:interface "ant.scene|iprimitive_filter"
 local irender   = world:interface "ant.render|irender"
 local imaterial = world:interface "ant.asset|imaterial"
 
