@@ -93,18 +93,11 @@ void PropertyDictionary::Merge(const PropertyDictionary& other, int specificity_
 	}
 }
 
-void PropertyDictionary::SetSourceOfAllProperties(const std::shared_ptr<const PropertySource>& property_source)
-{
-	for (auto& p : properties)
-		p.second.source = property_source;
-}
-
 // Sets a property on the dictionary and its specificity.
 void PropertyDictionary::SetProperty(PropertyId id, const Property& property, int specificity)
 {
 	PropertyMap::iterator iterator = properties.find(id);
-	if (iterator != properties.end() &&
-		iterator->second.specificity > specificity)
+	if (iterator != properties.end() && iterator->second.specificity > specificity)
 		return;
 
 	Property& new_property = (properties[id] = property);

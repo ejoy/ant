@@ -111,7 +111,7 @@ static bool ApplyDataViewsControllersInternal(Element* element, const bool const
 				if (initializer)
 				{
 					initializer.type = std::move(type_name);
-					initializer.expression = attribute.second.Get<std::string>();
+					initializer.expression = attribute.second;
 
 					initializer_list.push_back(std::move(initializer));
 				}

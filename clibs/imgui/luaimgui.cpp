@@ -2910,6 +2910,14 @@ uIsMouseDoubleClicked(lua_State * L) {
 }
 
 static int
+uIsKeyPressed(lua_State * L) {
+	ImGuiKey key = (ImGuiKey)luaL_checkinteger(L, 1);
+	bool pressed = ImGui::IsKeyPressed(key);
+	lua_pushboolean(L, pressed);
+	return 1;
+}
+
+static int
 uPushID(lua_State* L) {
 	if (lua_isinteger(L, INDEX_ID)) {
 		int id = (int)lua_tointeger(L, INDEX_ID);
@@ -3893,7 +3901,8 @@ luaopen_imgui(lua_State *L) {
 		{ "SaveIniSettings", uSaveIniSettings },
 		{ "CaptureKeyboardFromApp", uCaptureKeyboardFromApp },
 		{ "CaptureMouseFromApp", uCaptureMouseFromApp },
-		{ "IsMouseDoubleClicked",uIsMouseDoubleClicked},
+		{ "IsMouseDoubleClicked", uIsMouseDoubleClicked},
+		{ "IsKeyPressed", uIsKeyPressed},
 		{ "PushID",uPushID},
 		{ "PopID",uPopID},
 		{ "CalcTextSize",uCalcTextSize},

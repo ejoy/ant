@@ -18,7 +18,7 @@ function world:luaecs_create_entity(v)
         end
     end
     self.w:new {
-        create_entity = v
+        create_entity = v.data
     }
 end
 
@@ -30,7 +30,7 @@ function world:luaecs_create_ref(v)
             error(("component `%s` must exists"):format(c))
         end
     end
-    return self.w:ref(res.mainkey, v)
+    return self.w:ref(res.mainkey, v.data)
 end
 
 local function update_decl(self)

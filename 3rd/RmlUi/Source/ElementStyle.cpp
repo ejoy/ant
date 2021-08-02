@@ -402,7 +402,7 @@ void ElementStyle::RemoveProperty(PropertyId id)
 	int size_before = inline_properties.GetNumProperties();
 	inline_properties.RemoveProperty(id);
 
-	if(inline_properties.GetNumProperties() != size_before)
+	if (inline_properties.GetNumProperties() != size_before)
 		DirtyProperty(id);
 }
 

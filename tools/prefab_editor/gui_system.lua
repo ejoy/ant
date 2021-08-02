@@ -411,6 +411,8 @@ function m:data_changed()
                 anim_view.on_remove_entity(gizmo.target_eid)
             end
             prefab_mgr:remove_entity(eid)
+            prefab_mgr:update_current_aabb()
+            gizmo:set_target(nil)
         elseif what == "movetop" then
             hierarchy:move_top(eid)
         elseif what == "moveup" then
@@ -460,6 +462,7 @@ function m:data_changed()
                 anim_view.on_remove_entity(gizmo.target_eid)
             end
             prefab_mgr:remove_entity(gizmo.target_eid)
+            prefab_mgr:update_current_aabb()
             gizmo:set_target(nil)
         elseif state.CTRL and key == "S" and press == 1 then
             prefab_mgr:save_prefab()

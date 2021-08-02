@@ -98,7 +98,6 @@ local function show_scene_node(node)
                 gizmo:set_target(eid)
             end
         end
-
         if world[eid].camera or world[eid].light_type then
             return
         end
@@ -166,6 +165,14 @@ local function show_scene_node(node)
         end
         imgui.widget.TreePop()
     end
+    --key == "DELETE"
+    -- if imgui.util.IsKeyPressed('a') or imgui.util.IsKeyPressed('A') then
+    --     print("press a/A")
+    -- end
+    -- if imgui.util.IsKeyPressed(10) then
+    --     print("press delete")
+    --     world:pub { "EntityState", "delete", eid }
+    -- end
 end
 
 local light_type = {
