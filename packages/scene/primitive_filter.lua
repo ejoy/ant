@@ -3,26 +3,6 @@ local world = ecs.world
 
 local w = world.w
 
-local LAYER_NAMES<const> = {"foreground", "opaticy", "background", "translucent", "decal", "ui"}
-
-local LAYERS <const> = {
-    main_queue = LAYER_NAMES,
-    blit_queue = {"opaticy",},
-    csm_queue = {"opaticy",},
-    pickup_queue = {"opaticy", "translucent"},
-    pre_depth_queue = {"opaticy"},
-}
-
-local FILTERS = {}
-for k, q in pairs(LAYERS) do
-    local f = {}
-    for idx, n in ipairs(q) do
-        f[idx] = n .. "_primitive_filter"
-    end
-
-    FILTERS[k] = f
-end
-
 local ipf = ecs.interface "iprimitive_filter"
 function ipf.names()
     return LAYER_NAMES
@@ -30,10 +10,6 @@ end
 
 function ipf.layers(filter_name)
     return assert(LAYERS[filter_name])
-end
-
-function ipf.filters(filter_name)
-    return assert(FILTERS[filter_name])
 end
 
 function ipf.is_valid_layer(filter_name, ln)

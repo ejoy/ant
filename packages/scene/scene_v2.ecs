@@ -1,37 +1,3 @@
-component_v2 "primitive_filter".type "lua"
-
-component_v2 "foreground"
-component_v2 "opaticy"
-component_v2 "background"
-component_v2 "translucent"
-component_v2 "decal"
-component_v2 "ui"
-
--- -- filter policy
--- policy_v2 "foreground_primitive_filter"
---     .component_v2 "primitive_filter"
---     .component_v2 "foreground"
-
--- policy_v2 "opaticy_primitive_filter"
---     .component_v2 "primitive_filter"
---     .component_v2 "opaticy"
-
--- policy_v2 "background_primitive_filter"
---     .component_v2 "primitive_filter"
---     .component_v2 "background"
-
--- policy_v2 "translucent_primitive_filter"
---     .component_v2 "primitive_filter"
---     .component_v2 "translucent"
-
--- policy_v2 "decal_primitive_filter"
---     .component_v2 "primitive_filter"
---     .component_v2 "decal"
-
--- policy_v2 "ui_primitive_filter"
---     .component_v2 "primitive_filter"
---     .component_v2 "ui"
-
 component_v2 "scene_entity"
 policy_v2 "hierarchy_policy"
     .require_system "scenespace_system"
@@ -54,11 +20,14 @@ system "entity_state_system"
     .implement "entity_state_v2.lua"
     .method "entity_init"
 
+--TODO: should move to render package ?
+component_v2 "primitive_filter".type "lua"
+policy_v2 "primitive_filter"
+    .component_v2 "primitive_filter"
 interface "iprimitive_filter"
     .implement "primitive_filter.lua"
     .method "names"
     .method "layers"
-    .method "filters"
     .method "sync_filter"
     .method "update_filter_tag"
     .method "is_valid_layer"

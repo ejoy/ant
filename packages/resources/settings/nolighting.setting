@@ -1,5 +1,5 @@
 lighting: off
-surfacetype: opaticy
+surfacetype: opacity
 shadow_cast: off
 shadow_receive: off
 subsurface: off

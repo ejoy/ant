@@ -192,25 +192,19 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 			name = csmname
 		}
 
-	do
-		for _, fn in ipairs(ipf.layers "csm_queue") do
-			local filter_pn = ("ant.scene|%s_primitive_filter"):format(fn)
-			world:luaecs_create_entity{
-				policy = {
-					filter_pn,
-					"ant.render|csm_queue",
-				},
-				data = {
-					primitive_filter = {
-						filter_type = "visible",
-						csm_index = index,
-					},
-					[fn] 			= true,
-					csm_queue 		= true,
-				}
-			}
-		end
-	end
+	w:register {name = queuename}
+
+	world:luaecs_create_entity{
+		policy = {
+			"ant.scene|primitive_filter",
+		},
+		data = {
+			primitive_filter = {
+				filter_type = "visible",
+			},
+			[queuename .. "_opacity"]	= true,
+		}
+	}
 
 	world:luaecs_create_entity {
 		policy = {
@@ -381,7 +375,7 @@ function sm:refine_camera()
 	-- 			return sceneaabb
 	-- 		end
 	
-	-- 		sceneaabb = merge_scene_aabb(sceneaabb, filter.opaticy)
+	-- 		sceneaabb = merge_scene_aabb(sceneaabb, filter.opacity)
 	-- 		sceneaabb = merge_scene_aabb(sceneaabb, filter.translucent)
 	
 	-- 		if math3d.aabb_isvalid(sceneaabb) then
@@ -477,6 +471,5 @@ function s:render_submit()
 				irender.draw(viewid, u.render_object, u.filter_material[ln])
 			end
 		end
-		w:clear(culltag)
     end
 end

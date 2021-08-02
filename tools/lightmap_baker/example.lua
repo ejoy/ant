@@ -377,9 +377,9 @@ function example_sys:init()
     local rl = {plane_rc} --{cube_rc, plane_rc,}
 
     local pf = {
-        filter_order = {"opaticy"},
+        filter_order = {"opacity"},
         result = {
-            opaticy = {
+            opacity = {
                 items = rl,
                 visible_set = rl,
             }

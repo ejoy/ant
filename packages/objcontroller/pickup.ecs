@@ -6,17 +6,7 @@ system "pickup_primitive_system"
     .method     "update_filter"
     .method     "render_submit"
 
-component_v2 "pickup_queue_cull"
 component_v2 "pickup"
 policy_v2 "pickup"
     .require_system "pickup_primitive_system"
     .component_v2 "pickup"
-
-
-component_v2 "pickup_queue_opaticy"
-policy_v2 "pickup_queue_opaticy"
-    .component_v2 "pickup_queue_opaticy"
-
-component_v2 "pickup_queue_translucent"
-policy_v2 "pickup_queue_translucent"
-    .component_v2 "pickup_queue_translucent"

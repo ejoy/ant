@@ -3,7 +3,7 @@ fx:
   vs: /pkg/ant.resources/shaders/depth/vs_depth.sc
   setting:
     lighting: off
-    surfacetype: opaticy
+    surfacetype: opacity
     shadow_cast: off
     shadow_receive: off
     subsurface: off

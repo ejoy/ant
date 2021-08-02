@@ -69,7 +69,3 @@ policy_v2 "render_queue"
     .component_v2 "visible"
     .component_v2 "queue_name"
     .component_v2 "camera_eid"
-
-component_v2 "blit_queue_cull"
-component_v2 "main_queue_cull"
-component_v2 "pre_depth_queue_cull"

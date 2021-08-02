@@ -32,6 +32,23 @@ function world_trans_sys:entity_init()
 	end
 end
 
+local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent", "decal", "ui"}
+
+local FILTER_TYPES <const> = {
+    main_queue = LAYER_NAMES,
+    blit_queue = {"opacity",},
+    pre_depth_queue = {"opacity"},
+}
+
+for qn, l in pairs(FILTER_TYPES) do
+    for _, f in ipairs(l) do
+        local culltag = ("%s_%s_cull"):format(qn, f)
+        local tag = ("%s_%s"):format(qn, f)
+        w:register{name = culltag}
+        w:register{name = tag}
+    end
+end
+
 local irender		= ecs.interface "irender"
 function irender.check_primitive_mode_state(state, template_state)
 	local s = bgfx.parse_state(state)
@@ -76,20 +93,16 @@ function irender.get_main_view_rendertexture()
 	return fbmgr.get_rb(fb[1]).handle
 end
 
-function irender.create_primitive_filter_entities(filtername, filtertype, exclude, filterpkg)
-	filterpkg = filterpkg or "ant.render"
-	for _, fn in ipairs(ipf.layers(filtername)) do
-		--TODO: should cache this var
-		local t = ("%s_%s"):format(filtername, fn)
+function irender.create_primitive_filter_entities(quenename, filtertype)
+	for _, fn in ipairs(FILTER_TYPES[quenename]) do
+		local t = ("%s_%s"):format(quenename, fn)
 		world:luaecs_create_entity{
 			policy = {
 				"ant.scene|primitive_filter",
-				("%s|%s"):format(filterpkg, t)
 			},
 			data = {
 				primitive_filter = {
 					filter_type = filtertype or "visible",
-					exclude = exclude,
 				},
 				[t] = true,
 			}
@@ -97,8 +110,7 @@ function irender.create_primitive_filter_entities(filtername, filtertype, exclud
 	end
 end
 
-function irender.create_view_queue(view_rect, view_name, exclude, pkgname)
-	irender.create_primitive_filter_entities(view_name, "visible", exclude, pkgname)
+function irender.create_view_queue(view_rect, view_name)
 	for v in w:select "main_queue render_target:in" do
 		local rt = v.render_target
 		world:luaecs_create_entity {
@@ -134,7 +146,6 @@ function irender.create_view_queue(view_rect, view_name, exclude, pkgname)
 end
 
 function irender.create_orthoview_queue(view_rect, orthoface, pkgname)
-	irender.create_primitive_filter_entities(orthoface, "visible", nil, pkgname)
 	assert(orthoface)
 	for v in w:select "main_queue render_target:in" do
 		local rt = v.render_target

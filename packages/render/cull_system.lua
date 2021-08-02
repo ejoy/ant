@@ -13,9 +13,8 @@ end
 local cull_sys = ecs.system "cull_system"
 
 local NeedCull <const> = {
-	translucent	= true,
-	opaticy		= true,
-	decal		= true,
+	"translucent",
+	"opacity",
 }
 
 function cull_sys:cull()
@@ -24,11 +23,16 @@ function cull_sys:cull()
 		local vp_mat = camera.viewprojmat
 		local frustum_planes = math3d.frustum_planes(vp_mat)
 		local culltag = v.queue_name .. "_cull?out"
-		for vv in w:select("render_object:in " .. culltag) do
-			local aabb = vv.render_object.aabb
-			if aabb and math3d.frustum_intersect_aabb(frustum_planes, aabb) < 0 then
- 				vv[culltag] = true
- 			end
+		w:clear(culltag)
+
+		for _, c in ipairs(NeedCull) do
+			local s = ("render_object:in %s_%s_cull?out"):format(v.queue_name, c)
+			for vv in w:select(s) do
+				local aabb = vv.render_object.aabb
+				if aabb and math3d.frustum_intersect_aabb(frustum_planes, aabb) < 0 then
+					vv[culltag] = true
+				end
+			end
 		end
 	end
 end

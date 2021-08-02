@@ -178,6 +178,30 @@ local function create_pick_entity()
 		}
 	}
 
+	world:luaecs_create_entity{
+		policy = {
+			"ant.scene|primitive_filter",
+		},
+		data = {
+			primitive_filter = {
+				filter_type = "selectable",
+			},
+			pickup_queue_opacity = true,
+		}
+	}
+
+	world:luaecs_create_entity{
+		policy = {
+			"ant.scene|primitive_filter",
+		},
+		data = {
+			primitive_filter = {
+				filter_type = "selectable",
+			},
+			pickup_queue_translucent = true,
+		}
+	}
+
 	world:luaecs_create_entity {
 		policy = {
 			"ant.general|name",

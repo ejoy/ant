@@ -56,7 +56,6 @@ function render_sys:render_submit()
 					irender.draw(viewid, ee.render_object)
 				end
 			end
-			w:clear(culltag)
 		end
 	end
 end

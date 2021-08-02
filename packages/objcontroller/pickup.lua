@@ -8,6 +8,11 @@ local ipf       = world:interface "ant.scene|iprimitive_filter"
 local irender   = world:interface "ant.render|irender"
 local imaterial = world:interface "ant.asset|imaterial"
 
+w:register "pickup_queue_opacity"
+w:register "pickup_queue_opacity_cull"
+w:register "pickup_queue_translucent"
+w:register "pickup_queue_translucent_cull"
+
 local pickup_materials = {}
 
 local function packeid_as_rgba(eid)
@@ -53,13 +58,17 @@ function s:update_filter()
         local state = rc.entity_state
 		local eid = v.eid
 
-		for vv in w:select(st .. " pickup_queue primitive_filter:in") do
+		local tag = "pickup_queue_" .. st
+		local sync = tag .. "?out"
+		for vv in w:select(tag .. " primitive_filter:in") do
 			local pf = vv.primitive_filter
 			local mask = ies.filter_mask(pf.filter_type)
 			local exclude_mask = pf.exclude_type and ies.filter_mask(pf.exclude_type) or 0
 
 			local add = ((state & mask) ~= 0) and ((state & exclude_mask) == 0)
-			ipf.update_filter_tag("pickup_queue", st, add, v)
+			--ipf.update_filter_tag("pickup_queue", st, add, v)
+			v[tag] = add
+			w:sync(sync, v)
 			local m = assert(pickup_materials[st])
 			v.filter_material[st] = add and {
 				fx = m.fx,
@@ -75,10 +84,13 @@ function s:render_submit()
     for v in w:select "pickup_queue visible render_target:in" do
         local rt = v.render_target
         local viewid = rt.viewid
-		for _, ln in ipairs(ipf.layers "pickup_queue") do
-			for vv in w:select "pickup_queue opaticy render_object:in filter_material:in pickup_queue_cull:absent" do
-				irender.draw(viewid, vv.render_object, vv.filter_material[ln])
-			end
+
+		for vv in w:select "pickup_queue_opacity render_object:in filter_material:in pickup_queue_opacity_cull:absent" do
+			irender.draw(viewid, vv.render_object, vv.filter_material["opacity"])
+		end
+
+		for vv in w:select "pickup_queue_translucent render_object:in filter_material:in pickup_queue_translucent_cull:absent" do
+			irender.draw(viewid, vv.render_object, vv.filter_material["translucent"])
 		end
     end
 end
