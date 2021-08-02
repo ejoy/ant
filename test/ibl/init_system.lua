@@ -21,10 +21,9 @@ function is:data_changed()
     if test == nil then
         test = true
         local m = ientity.create_mesh{"p3", {
-            -1, 0, 1,
-            1, 0, 1,
-            1, 0,-1,
-            -1, 0,-1,
+            -1, 1, 1,
+             1, 1, 1,
+             1, -1,1,
         }}
 
         world:luaecs_create_entity {

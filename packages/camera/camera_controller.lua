@@ -18,7 +18,7 @@ function cc_sys:post_init()
 end
 
 local function main_camera_eid()
-    for v in w:select "main_queu camera_eid:in" do
+    for v in w:select "main_queue camera_eid:in" do
         return v.camera_eid
     end
 end
