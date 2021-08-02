@@ -8,6 +8,12 @@ lm.msvc = {
     }
 }
 
+if lm.mode == "release" then
+    lm.msvc.ldflags = {
+        "/DEBUG:FASTLINK"
+    }
+end
+
 lm.ios = {
     flags = {
         "-fembed-bitcode",

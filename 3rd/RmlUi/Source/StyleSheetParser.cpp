@@ -44,7 +44,7 @@ namespace Rml {
 
 class AbstractPropertyParser {
 public:
-	virtual bool Parse(const String& name, const String& value) = 0;
+	virtual bool Parse(const std::string& name, const std::string& value) = 0;
 };
 
 /*
@@ -62,7 +62,7 @@ private:
 public:
 	PropertySpecificationParser(PropertyDictionary& properties, const PropertySpecification& specification) : properties(properties), specification(specification) {}
 
-	bool Parse(const String& name, const String& value) override
+	bool Parse(const std::string& name, const std::string& value) override
 	{
 		return specification.ParsePropertyDeclaration(properties, name, value);
 	}
@@ -87,7 +87,7 @@ void StyleSheetParser::Shutdown()
 {
 }
 
-static bool IsValidIdentifier(const String& str)
+static bool IsValidIdentifier(const std::string& str)
 {
 	if (str.empty())
 		return false;
@@ -137,20 +137,20 @@ static void PostprocessKeyframes(KeyframesMap& keyframes_map)
 }
 
 
-bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const String& identifier, const String& rules, const PropertyDictionary& properties)
+bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const std::string& identifier, const std::string& rules, const PropertyDictionary& properties)
 {
 	if (!IsValidIdentifier(identifier))
 	{
-		Log::Message(Log::LT_WARNING, "Invalid keyframes identifier '%s' at %s:%d", identifier.c_str(), stream_file_name.c_str(), line_number);
+		Log::Message(Log::Level::Warning, "Invalid keyframes identifier '%s' at %s:%d", identifier.c_str(), stream_file_name.c_str(), line_number);
 		return false;
 	}
 	if (properties.GetNumProperties() == 0)
 		return true;
 
-	StringList rule_list;
+	std::vector<std::string> rule_list;
 	StringUtilities::ExpandString(rule_list, rules);
 
-	Vector<float> rule_values;
+	std::vector<float> rule_values;
 	rule_values.reserve(rule_list.size());
 
 	for (auto rule : rule_list)
@@ -169,7 +169,7 @@ bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const Str
 
 	if (rule_values.empty())
 	{
-		Log::Message(Log::LT_WARNING, "Invalid keyframes rule(s) '%s' at %s:%d", rules.c_str(), stream_file_name.c_str(), line_number);
+		Log::Message(Log::Level::Warning, "Invalid keyframes rule(s) '%s' at %s:%d", rules.c_str(), stream_file_name.c_str(), line_number);
 		return false;
 	}
 
@@ -206,12 +206,12 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 	State state = State::Global;
 
 	// At-rules given by the following syntax in global space: @identifier name { block }
-	String at_rule_name;
+	std::string at_rule_name;
 
 	// Look for more styles while data is available
 	while (FillBuffer())
 	{
-		String pre_token_str;
+		std::string pre_token_str;
 		
 		while (char token = FindToken(pre_token_str, "{@}", true))
 		{
@@ -229,13 +229,13 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 					if (!ReadProperties(parser))
 						continue;
 
-					StringList rule_name_list;
+					std::vector<std::string> rule_name_list;
 					StringUtilities::ExpandString(rule_name_list, pre_token_str);
 
 					// Add style nodes to the root of the tree
 					for (size_t i = 0; i < rule_name_list.size(); i++)
 					{
-						auto source = MakeShared<PropertySource>(stream_file_name, rule_line_number, rule_name_list[i]);
+						auto source = std::make_shared<PropertySource>(stream_file_name, rule_line_number, rule_name_list[i]);
 						properties.SetSourceOfAllProperties(source);
 						ImportProperties(node, rule_name_list[i], properties, rule_count);
 					}
@@ -248,7 +248,7 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 				}
 				else
 				{
-					Log::Message(Log::LT_WARNING, "Invalid character '%c' found while parsing stylesheet at %s:%d. Trying to proceed.", token, stream_file_name.c_str(), line_number);
+					Log::Message(Log::Level::Warning, "Invalid character '%c' found while parsing stylesheet at %s:%d. Trying to proceed.", token, stream_file_name.c_str(), line_number);
 				}
 			}
 			break;
@@ -256,7 +256,7 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 			{
 				if (token == '{')
 				{
-					String at_rule_identifier = pre_token_str.substr(0, pre_token_str.find(' '));
+					std::string at_rule_identifier = pre_token_str.substr(0, pre_token_str.find(' '));
 					at_rule_name = StringUtilities::StripWhitespace(pre_token_str.substr(at_rule_identifier.size()));
 
 					if (at_rule_identifier == "keyframes")
@@ -268,13 +268,13 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 						// Invalid identifier, should ignore
 						at_rule_name.clear();
 						state = State::Global;
-						Log::Message(Log::LT_WARNING, "Invalid at-rule identifier '%s' found in stylesheet at %s:%d", at_rule_identifier.c_str(), stream_file_name.c_str(), line_number);
+						Log::Message(Log::Level::Warning, "Invalid at-rule identifier '%s' found in stylesheet at %s:%d", at_rule_identifier.c_str(), stream_file_name.c_str(), line_number);
 					}
 
 				}
 				else
 				{
-					Log::Message(Log::LT_WARNING, "Invalid character '%c' found while parsing at-rule identifier in stylesheet at %s:%d", token, stream_file_name.c_str(), line_number);
+					Log::Message(Log::Level::Warning, "Invalid character '%c' found while parsing at-rule identifier in stylesheet at %s:%d", token, stream_file_name.c_str(), line_number);
 					state = State::Invalid;
 				}
 			}
@@ -299,13 +299,13 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 				}
 				else
 				{
-					Log::Message(Log::LT_WARNING, "Invalid character '%c' found while parsing keyframe block in stylesheet at %s:%d", token, stream_file_name.c_str(), line_number);
+					Log::Message(Log::Level::Warning, "Invalid character '%c' found while parsing keyframe block in stylesheet at %s:%d", token, stream_file_name.c_str(), line_number);
 					state = State::Invalid;
 				}
 			}
 			break;
 			default:
-				RMLUI_ERROR;
+				assert(false);
 				state = State::Invalid;
 				break;
 			}
@@ -323,7 +323,7 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 	return rule_count;
 }
 
-bool StyleSheetParser::ParseProperties(PropertyDictionary& parsed_properties, const String& properties)
+bool StyleSheetParser::ParseProperties(PropertyDictionary& parsed_properties, const std::string& properties)
 {
 	RMLUI_ASSERT(!stream);
 	StreamMemory stream_owner((const byte*)properties.c_str(), properties.size());
@@ -334,16 +334,16 @@ bool StyleSheetParser::ParseProperties(PropertyDictionary& parsed_properties, co
 	return success;
 }
 
-StyleSheetNodeListRaw StyleSheetParser::ConstructNodes(StyleSheetNode& root_node, const String& selectors)
+StyleSheetNodeListRaw StyleSheetParser::ConstructNodes(StyleSheetNode& root_node, const std::string& selectors)
 {
 	const PropertyDictionary empty_properties;
 
-	StringList selector_list;
+	std::vector<std::string> selector_list;
 	StringUtilities::ExpandString(selector_list, selectors);
 
 	StyleSheetNodeListRaw leaf_nodes;
 
-	for (const String& selector : selector_list)
+	for (const std::string& selector : selector_list)
 	{
 		StyleSheetNode* leaf_node = ImportProperties(&root_node, selector, empty_properties, 0);
 
@@ -356,8 +356,8 @@ StyleSheetNodeListRaw StyleSheetParser::ConstructNodes(StyleSheetNode& root_node
 
 bool StyleSheetParser::ReadProperties(AbstractPropertyParser& property_parser)
 {
-	String name;
-	String value;
+	std::string name;
+	std::string value;
 
 	enum ParseState { NAME, VALUE, QUOTE };
 	ParseState state = NAME;
@@ -377,7 +377,7 @@ bool StyleSheetParser::ReadProperties(AbstractPropertyParser& property_parser)
 					name = StringUtilities::StripWhitespace(name);
 					if (!name.empty())
 					{
-						Log::Message(Log::LT_WARNING, "Found name with no value while parsing property declaration '%s' at %s:%d", name.c_str(), stream_file_name.c_str(), line_number);
+						Log::Message(Log::Level::Warning, "Found name with no value while parsing property declaration '%s' at %s:%d", name.c_str(), stream_file_name.c_str(), line_number);
 						name.clear();
 					}
 				}
@@ -385,7 +385,7 @@ bool StyleSheetParser::ReadProperties(AbstractPropertyParser& property_parser)
 				{
 					name = StringUtilities::StripWhitespace(name);
 					if (!name.empty())
-						Log::Message(Log::LT_WARNING, "End of rule encountered while parsing property declaration '%s' at %s:%d", name.c_str(), stream_file_name.c_str(), line_number);
+						Log::Message(Log::Level::Warning, "End of rule encountered while parsing property declaration '%s' at %s:%d", name.c_str(), stream_file_name.c_str(), line_number);
 					return true;
 				}
 				else if (character == ':')
@@ -405,7 +405,7 @@ bool StyleSheetParser::ReadProperties(AbstractPropertyParser& property_parser)
 					value = StringUtilities::StripWhitespace(value);
 
 					if (!property_parser.Parse(name, value))
-						Log::Message(Log::LT_WARNING, "Syntax error parsing property declaration '%s: %s;' in %s: %d.", name.c_str(), value.c_str(), stream_file_name.c_str(), line_number);
+						Log::Message(Log::Level::Warning, "Syntax error parsing property declaration '%s: %s;' in %s: %d.", name.c_str(), value.c_str(), stream_file_name.c_str(), line_number);
 
 					name.clear();
 					value.clear();
@@ -443,25 +443,25 @@ bool StyleSheetParser::ReadProperties(AbstractPropertyParser& property_parser)
 		value = StringUtilities::StripWhitespace(value);
 
 		if (!property_parser.Parse(name, value))
-			Log::Message(Log::LT_WARNING, "Syntax error parsing property declaration '%s: %s;' in %s: %d.", name.c_str(), value.c_str(), stream_file_name.c_str(), line_number);
+			Log::Message(Log::Level::Warning, "Syntax error parsing property declaration '%s: %s;' in %s: %d.", name.c_str(), value.c_str(), stream_file_name.c_str(), line_number);
 	}
 	else if (!name.empty() || !value.empty())
 	{
-		Log::Message(Log::LT_WARNING, "Invalid property declaration '%s':'%s' at %s:%d", name.c_str(), value.c_str(), stream_file_name.c_str(), line_number);
+		Log::Message(Log::Level::Warning, "Invalid property declaration '%s':'%s' at %s:%d", name.c_str(), value.c_str(), stream_file_name.c_str(), line_number);
 	}
 	
 	return true;
 }
 
-StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, String rule_name, const PropertyDictionary& properties, int rule_specificity)
+StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, std::string rule_name, const PropertyDictionary& properties, int rule_specificity)
 {
 	StyleSheetNode* leaf_node = node;
 
-	StringList nodes;
+	std::vector<std::string> nodes;
 
 	// Find child combinators, the RCSS '>' rule.
 	size_t i_child = rule_name.find('>');
-	while (i_child != String::npos)
+	while (i_child != std::string::npos)
 	{
 		// So we found one! Next, we want to format the rule such that the '>' is located at the 
 		// end of the left-hand-side node, and that there is a space to the right-hand-side. This ensures that
@@ -481,12 +481,12 @@ StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, String 
 	// Create each node going down the tree
 	for (size_t i = 0; i < nodes.size(); i++)
 	{
-		const String& name = nodes[i];
+		const std::string& name = nodes[i];
 
-		String tag;
-		String id;
-		StringList classes;
-		StringList pseudo_classes;
+		std::string tag;
+		std::string id;
+		std::vector<std::string> classes;
+		std::vector<std::string> pseudo_classes;
 		StructuralSelectorList structural_pseudo_classes;
 		bool child_combinator = false;
 
@@ -504,7 +504,7 @@ StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, String 
 				   name[end_index] != '>')
 				end_index++;
 
-			String identifier = name.substr(start_index, end_index - start_index);
+			std::string identifier = name.substr(start_index, end_index - start_index);
 			if (!identifier.empty())
 			{
 				switch (identifier[0])
@@ -513,7 +513,7 @@ StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, String 
 					case '.':	classes.push_back(identifier.substr(1)); break;
 					case ':':
 					{
-						String pseudo_class_name = identifier.substr(1);
+						std::string pseudo_class_name = identifier.substr(1);
 						StructuralSelector node_selector = StyleSheetFactory::GetSelector(pseudo_class_name);
 						if (node_selector.selector)
 							structural_pseudo_classes.push_back(node_selector);
@@ -545,7 +545,7 @@ StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, String 
 	return leaf_node;
 }
 
-char StyleSheetParser::FindToken(String& buffer, const char* tokens, bool remove_token)
+char StyleSheetParser::FindToken(std::string& buffer, const char* tokens, bool remove_token)
 {
 	buffer.clear();
 	char character;

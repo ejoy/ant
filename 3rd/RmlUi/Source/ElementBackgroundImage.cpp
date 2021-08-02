@@ -33,7 +33,6 @@
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/Geometry.h"
 #include "../Include/RmlUi/Document.h"
-#include "../Include/RmlUi/SystemInterface.h"
 #include "../Include/RmlUi/Core.h"
 
 namespace Rml {
@@ -80,8 +79,7 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		ComputePropertyH(element->GetProperty(PropertyId::BackgroundPositionY), element)
 	};
 
-	String path;
-	GetSystemInterface()->JoinPath(path, StringUtilities::Replace(element->GetOwnerDocument()->GetSourceURL(), '|', ':'), image->Get<String>());
+	std::string path = image->Get<std::string>();
 	auto texture = Texture::Fetch(path);
 	geometry.SetTexture(texture);
 	geometry.SetSamplerFlag(repeat);

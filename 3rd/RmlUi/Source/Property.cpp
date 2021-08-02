@@ -37,12 +37,12 @@ Property::Property() : unit(UNKNOWN), specificity(-1)
 	parser_index = -1;
 }
 
-String Property::ToString() const
+std::string Property::ToString() const
 {
 	if (!definition)
-		return value.Get< String >();
+		return value.Get< std::string >();
 
-	String string;
+	std::string string;
 	definition->GetValue(string, *this);
 	return string;
 }

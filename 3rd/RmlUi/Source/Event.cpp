@@ -148,7 +148,7 @@ EventId Event::GetId() const {
 	return id;
 }
 
-String Event::GetType() const {
+std::string Event::GetType() const {
 	return EventSpecificationInterface::Get(id).type;
 }
 

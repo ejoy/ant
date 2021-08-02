@@ -52,7 +52,7 @@ public:
 	bool operator==(const Tween& other) const;
     bool operator!=(const Tween& other) const;
 
-	String to_string() const;
+	std::string to_string() const;
 
 private:
 	float tween(Type type, float t) const;

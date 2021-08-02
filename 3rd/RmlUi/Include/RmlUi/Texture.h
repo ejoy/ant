@@ -42,15 +42,15 @@ namespace Rml {
 
 struct RMLUICORE_API Texture {
 public:
-	Texture(const String& path);
+	Texture(const std::string& path);
 	~Texture();
 	TextureHandle GetHandle() const;
 	const Size& GetDimensions() const;
 public:
 	static void Shutdown();
-	static SharedPtr<Texture> Fetch(const String& path);
+	static std::shared_ptr<Texture> Fetch(const std::string& path);
 private:
-	String source;
+	std::string source;
 	TextureHandle handle;
 	Size dimensions;
 };

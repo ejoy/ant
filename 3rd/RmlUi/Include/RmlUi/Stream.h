@@ -85,7 +85,7 @@ public:
 	/// Read from the stream into another stream.
 	virtual size_t Read(Stream* stream, size_t bytes) const;
 	/// Read from the stream and append to the string buffer
-	virtual size_t Read(String& buffer, size_t bytes) const;
+	virtual size_t Read(std::string& buffer, size_t bytes) const;
 	/// Read from the stream, without increasing the stream offset.
 	virtual size_t Peek(void* buffer, size_t bytes) const;
 
@@ -96,7 +96,7 @@ public:
 	/// Write a character array to the stream.
 	virtual size_t Write(const char* string);
 	/// Write a string to the stream
-	virtual size_t Write(const String& string);
+	virtual size_t Write(const std::string& string);
 
 	/// Truncate the stream to the specified length.
 	virtual size_t Truncate(size_t bytes) = 0;

@@ -102,7 +102,7 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices, Rml::Inde
         if(v.uniform_idx == UINT16_MAX)
             continue;
 
-        static const Rml::String tex_property_name = "s_tex";
+        static const std::string tex_property_name = "s_tex";
         if (tex_property_name == it.first){
             BGFX(encoder_set_texture)(mEncoder, 
                 v.stage, {v.uniform_idx}, {v.texid}, getTextureFlags(flags));
@@ -194,11 +194,11 @@ void Renderer::SetClipRect(glm::vec4 r[2]) {
 }
 
 static inline bool
-CustomTexture(const Rml::String &key){
+CustomTexture(const std::string &key){
     return (!key.empty() && key[0] == '?');
 }
 
-bool Renderer::LoadTexture(Rml::TextureHandle& handle, Rml::Size& dimensions, const Rml::String& path){
+bool Renderer::LoadTexture(Rml::TextureHandle& handle, Rml::Size& dimensions, const std::string& path){
     auto ifont = static_cast<FontEngine*>(Rml::GetFontEngineInterface());
     if (ifont->IsFontTexResource(path)){
         handle = ifont->GetFontTexHandle(path, dimensions);

@@ -150,9 +150,9 @@ bool Tween::operator!=(const Tween& other) const
 	return !(*this == other);
 }
 
-String Tween::to_string() const
+std::string Tween::to_string() const
 {
-	static const Array<String, size_t(Count)> type_str = { { "none", "back", "bounce", "circular", "cubic", "elastic", "exponential", "linear", "quadratic", "quartic", "quintic", "sine", "callback" } };
+	static const std::array<std::string, size_t(Count)> type_str = { { "none", "back", "bounce", "circular", "cubic", "elastic", "exponential", "linear", "quadratic", "quartic", "quintic", "sine", "callback" } };
 
 	if (size_t(type_in) < type_str.size() && size_t(type_out) < type_str.size())
 	{
@@ -162,19 +162,19 @@ String Tween::to_string() const
 		}
 		else if (type_in == type_out)
 		{
-			return type_str[size_t(type_in)] + String("-in-out");
+			return type_str[size_t(type_in)] + std::string("-in-out");
 		}
 		else if (type_in == None)
 		{
-			return type_str[size_t(type_out)] + String("-out");
+			return type_str[size_t(type_out)] + std::string("-out");
 		}
 		else if (type_out == None)
 		{
-			return type_str[size_t(type_in)] + String("-in");
+			return type_str[size_t(type_in)] + std::string("-in");
 		}
 		else if (type_in != type_out)
 		{
-			return type_str[size_t(type_in)] + String("-in-") + type_str[size_t(type_out)] + String("-out");
+			return type_str[size_t(type_in)] + std::string("-in-") + type_str[size_t(type_out)] + std::string("-out");
 		}
 	}
 	return "unknown";

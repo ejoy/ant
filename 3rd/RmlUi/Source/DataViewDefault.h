@@ -38,26 +38,26 @@ namespace Rml {
 
 class Element;
 class DataExpression;
-using DataExpressionPtr = UniquePtr<DataExpression>;
+using DataExpressionPtr = std::unique_ptr<DataExpression>;
 
 
 class DataViewCommon : public DataView {
 public:
-	DataViewCommon(Element* element, String override_modifier = String());
+	DataViewCommon(Element* element, std::string override_modifier = std::string());
 
-	bool Initialize(DataModel& model, Element* element, const String& expression, const String& modifier) override;
+	bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& modifier) override;
 
-	StringList GetVariableNameList() const override;
+	std::vector<std::string> GetVariableNameList() const override;
 
 protected:
-	const String& GetModifier() const;
+	const std::string& GetModifier() const;
 	DataExpression& GetExpression();
 
 	// Delete this
 	void Release() override;
 
 private:
-	String modifier;
+	std::string modifier;
 	DataExpressionPtr expression;
 };
 
@@ -65,7 +65,7 @@ private:
 class DataViewAttribute : public DataViewCommon {
 public:
 	DataViewAttribute(Element* element);
-	DataViewAttribute(Element* element, String override_attribute);
+	DataViewAttribute(Element* element, std::string override_attribute);
 
 	bool Update(DataModel& model) override;
 };
@@ -105,7 +105,7 @@ public:
 	bool Update(DataModel& model) override;
 
 private:
-	String previous_rml;
+	std::string previous_rml;
 };
 
 
@@ -129,25 +129,25 @@ class DataViewText final : public DataView {
 public:
 	DataViewText(Element* in_element);
 
-	bool Initialize(DataModel& model, Element* element, const String& expression, const String& modifier) override;
+	bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& modifier) override;
 
 	bool Update(DataModel& model) override;
-	StringList GetVariableNameList() const override;
+	std::vector<std::string> GetVariableNameList() const override;
 
 protected:
 	void Release() override;
 
 private:
-	String BuildText() const;
+	std::string BuildText() const;
 
 	struct DataEntry {
 		size_t index = 0; // Index into 'text'
 		DataExpressionPtr data_expression;
-		String value;
+		std::string value;
 	};
 
-	String text;
-	Vector<DataEntry> data_entries;
+	std::string text;
+	std::vector<DataEntry> data_entries;
 };
 
 
@@ -155,20 +155,20 @@ class DataViewFor final : public DataView {
 public:
 	DataViewFor(Element* element);
 
-	bool Initialize(DataModel& model, Element* element, const String& expression, const String& inner_rml) override;
+	bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& inner_rml) override;
 
 	bool Update(DataModel& model) override;
 
-	StringList GetVariableNameList() const override;
+	std::vector<std::string> GetVariableNameList() const override;
 
 protected:
 	void Release() override;
 
 private:
 	DataAddress container_address;
-	String iterator_name;
-	String iterator_index_name;
-	String rml_contents;
+	std::string iterator_name;
+	std::string iterator_index_name;
+	std::string rml_contents;
 	ElementAttributes attributes;
 
 	ElementList elements;

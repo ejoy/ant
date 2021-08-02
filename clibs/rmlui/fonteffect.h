@@ -28,9 +28,9 @@ struct Property{
     };
 };
 
-using PropertyMap = std::unordered_map<Rml::String, Property>;
+using PropertyMap = std::unordered_map<std::string, Property>;
 
-static const Rml::String DEFAULT_FONT_TEX_NAME("?FONT_TEX");
+static const std::string DEFAULT_FONT_TEX_NAME("?FONT_TEX");
 
 class SDFFontEffect {
 public:
@@ -51,10 +51,10 @@ public:
     void SetEdgeValueOffset(int8_t e)  { mEdgeValueOffset = e; }
 
 public:
-    virtual Rml::String GenerateKey() const = 0;
+    virtual std::string GenerateKey() const = 0;
     virtual bool GetProperties(struct font_manager* F, const shader_info &si, PropertyMap &properties) const{
         Property m;
-        m.value[0] = font_manager_sdf_mask(F) - font_manager_sdf_distance(F, mEdgeValueOffset);
+        m.value[0] = F->font_manager_sdf_mask(F) - F->font_manager_sdf_distance(F, mEdgeValueOffset);
         m.value[1] = mDistMultiplier;
         m.value[2] = m.value[3] = 0.0f;
         const char* mn = "u_mask";
@@ -73,8 +73,8 @@ public:
     }
 
 public:
-    static bool IsFontTexResource(const Rml::String &sroucename){
-        return sroucename.find(DEFAULT_FONT_TEX_NAME) != Rml::String::npos;
+    static bool IsFontTexResource(const std::string &sroucename){
+        return sroucename.find(DEFAULT_FONT_TEX_NAME) != std::string::npos;
     }
 
 protected:
@@ -108,7 +108,7 @@ private:
 class SDFFontEffectDefault : public SDFFontEffect{
 public:
     SDFFontEffectDefault(uint16_t texid, bool simpletex = false) : SDFFontEffect(texid, 0, simpletex ? FE_None : FE_FontTex){}
-    virtual Rml::String GenerateKey() const override {
+    virtual std::string GenerateKey() const override {
         return DEFAULT_FONT_TEX_NAME;
     }
 };
@@ -123,7 +123,7 @@ public:
     , mcolor(c)
     { }
 
-    virtual Rml::String GenerateKey() const override{
+    virtual std::string GenerateKey() const override{
         std::ostringstream oss;
         
         oss << std::setprecision(std::numeric_limits<long double>::digits10 + 1) 
@@ -154,9 +154,9 @@ private:
     Rml::Color mcolor;
 };
 
-static Rml::String
+static std::string
 get_default_mask_offset_str(struct font_manager* F){
-    const int v = int(font_manager_sdf_mask(F) * 0.85f);
+    const int v = int(F->font_manager_sdf_mask(F) * 0.85f);
     return std::to_string(v);
 }
 
@@ -170,7 +170,7 @@ SDFFontEffectShadow(uint16_t texid, int8_t eo, const Rml::Point &offset, Rml::Co
     { }
 
     Rml::Point GetOffset() const { return moffset; }
-    virtual Rml::String GenerateKey() const override{
+    virtual std::string GenerateKey() const override{
         std::ostringstream oss;
         
         oss << std::setprecision(std::numeric_limits<long double>::digits10 + 1) 

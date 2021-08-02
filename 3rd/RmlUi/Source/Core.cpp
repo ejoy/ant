@@ -33,7 +33,6 @@
 #include "../Include/RmlUi/FontEngineInterface.h"
 #include "../Include/RmlUi/Plugin.h"
 #include "../Include/RmlUi/RenderInterface.h"
-#include "../Include/RmlUi/SystemInterface.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/Types.h"
 #include "../Include/RmlUi/Texture.h"
@@ -49,16 +48,14 @@ namespace Rml {
 
 // RmlUi's renderer interface.
 static RenderInterface* render_interface = nullptr;
-/// RmlUi's system interface.
-static SystemInterface* system_interface = nullptr;
 // RmlUi's file I/O interface.
 static FileInterface* file_interface = nullptr;
 // RmlUi's font engine interface.
 static FontEngineInterface* font_interface = nullptr;
 
 // Default interfaces should be created and destroyed on Initialise and Shutdown, respectively.
-static UniquePtr<FileInterface> default_file_interface;
-static UniquePtr<FontEngineInterface> default_font_interface;
+static std::unique_ptr<FileInterface> default_file_interface;
+static std::unique_ptr<FontEngineInterface> default_font_interface;
 
 static bool initialised = false;
 
@@ -68,22 +65,17 @@ static bool initialised = false;
 
 bool Initialise() {
 	RMLUI_ASSERTMSG(!initialised, "Rml::Initialise() called, but RmlUi is already initialised!");
-	Log::Initialise();
 	if (!render_interface) {
-		Log::Message(Log::LT_ERROR, "No render interface set!");
-		return false;
-	}
-	if (!system_interface) {	
-		Log::Message(Log::LT_ERROR, "No system interface set!");
+		Log::Message(Log::Level::Error, "No render interface set!");
 		return false;
 	}
 	if (!file_interface) {
-		Log::Message(Log::LT_ERROR, "No file interface set!");
+		Log::Message(Log::Level::Error, "No file interface set!");
 		return false;
 	}
 	EventSpecificationInterface::Initialize();
 	if (!font_interface) {
-		Log::Message(Log::LT_ERROR, "No font interface set!");
+		Log::Message(Log::Level::Error, "No font interface set!");
 		return false;
 	}
 	StyleSheetSpecification::Initialise();
@@ -115,29 +107,14 @@ void Shutdown() {
 
 	render_interface = nullptr;
 	file_interface = nullptr;
-	system_interface = nullptr;
 
 	default_file_interface.reset();
-
-	Log::Shutdown();
 }
 
 // Returns the version of this RmlUi library.
-String GetVersion()
+std::string GetVersion()
 {
 	return RMLUI_VERSION;
-}
-
-// Sets the interface through which all RmlUi messages will be routed.
-void SetSystemInterface(SystemInterface* _system_interface)
-{
-	system_interface = _system_interface;
-}
-
-// Returns RmlUi's system interface.
-SystemInterface* GetSystemInterface()
-{
-	return system_interface;
 }
 
 // Sets the interface through which all rendering requests are made.

@@ -164,12 +164,6 @@ function effekseer_sys:render_submit()
 end
 
 function effekseer_sys:follow_transform_updated()
-    for _, eid in world:each "removed" do
-        local e = world[eid]
-        if e.effect_instance then
-            effekseer.destroy(e.effect_instance.handle)
-        end
-    end
     for _, eid in world:each "effekseer" do
 		local e = world[eid]
         if e._scene_id then
@@ -177,6 +171,15 @@ function effekseer_sys:follow_transform_updated()
             if worldmat then
 		        effekseer.update_transform(e.effect_instance.handle, worldmat)
             end
+        end
+    end
+end
+
+function effekseer_sys:end_frame()
+    for _, eid in world:each "removed" do
+        local e = world[eid]
+        if e.effect_instance then
+            effekseer.destroy(e.effect_instance.handle)
         end
     end
 end

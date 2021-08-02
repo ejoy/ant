@@ -10,10 +10,11 @@ function m.init()
     if __ANT_RUNTIME__ then
         lfont(fontinit [[dofile "/pkg/ant.font/manager.lua"]])
     else
-        lfont(fontinit [[
+        lfont(fontinit (([[
+            package.cpath = %q
             require "vfs"
             dofile "/pkg/ant.font/manager.lua"
-        ]])
+        ]]):format(package.cpath)))
     end
     TextureW = lfont.fonttexture_size
     TextureH = lfont.fonttexture_size

@@ -37,10 +37,10 @@ namespace Rml {
 class PropertyDefinition;
 
 struct RMLUICORE_API PropertySource {
-	PropertySource(String path, int line_number, String rule_name) : path(path), line_number(line_number), rule_name(rule_name) {}
-	String path;
+	PropertySource(std::string path, int line_number, std::string rule_name) : path(path), line_number(line_number), rule_name(rule_name) {}
+	std::string path;
 	int line_number;
-	String rule_name;
+	std::string rule_name;
 };
 
 struct FloatValue;
@@ -59,7 +59,7 @@ public:
 
 		KEYWORD = 1 << 1,           // generic keyword; fetch as < int >
 
-		STRING = 1 << 2,            // generic string; fetch as < String >
+		STRING = 1 << 2,            // generic string; fetch as < std::string >
 
 		// Absolute values.
 		NUMBER = 1 << 3,            // number unsuffixed; fetch as < float >
@@ -106,7 +106,7 @@ public:
 	Property(EnumType value) : value(static_cast<int>(value)), unit(KEYWORD), specificity(-1) {}
 
 	/// Get the value of the property as a string.
-	String ToString() const;
+	std::string ToString() const;
 
 	FloatValue ToFloatValue() const;
 
@@ -127,7 +127,7 @@ public:
 	const PropertyDefinition* definition = nullptr;
 	int parser_index = -1;
 
-	SharedPtr<const PropertySource> source;
+	std::shared_ptr<const PropertySource> source;
 };
 
 struct FloatValue {

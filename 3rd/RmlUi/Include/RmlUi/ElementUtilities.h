@@ -54,7 +54,7 @@ public:
 	/// Creates data views that use a raw inner xml content string to construct child elements.
 	/// Right now, this only applies to the 'data-for' view.
 	/// @return True if a data view was constructed.
-	static bool ApplyStructuralDataViews(Element* element, const String& inner_rml);
+	static bool ApplyStructuralDataViews(Element* element, const std::string& inner_rml);
 };
 
 } // namespace Rml

@@ -190,7 +190,7 @@ PropertyParserColour::~PropertyParserColour()
 }
 
 // Called to parse a RCSS colour declaration.
-bool PropertyParserColour::ParseValue(Property& property, const String& value, const ParameterMap& RMLUI_UNUSED_PARAMETER(parameters)) const
+bool PropertyParserColour::ParseValue(Property& property, const std::string& value, const ParameterMap& RMLUI_UNUSED_PARAMETER(parameters)) const
 {
 	RMLUI_UNUSED(parameters);
 
@@ -244,11 +244,11 @@ bool PropertyParserColour::ParseValue(Property& property, const String& value, c
 	}
 	else if (value.substr(0, 3) == "rgb")
 	{
-		StringList values;
+		std::vector<std::string> values;
 		values.reserve(4);
 
 		size_t find = value.find('(');
-		if (find == String::npos)
+		if (find == std::string::npos)
 			return false;
 
 		size_t begin_values = find + 1;

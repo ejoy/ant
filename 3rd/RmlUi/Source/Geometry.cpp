@@ -71,15 +71,15 @@ void Geometry::Render() {
 	);
 }
 
-Vector<Vertex>& Geometry::GetVertices() {
+std::vector<Vertex>& Geometry::GetVertices() {
 	return vertices;
 }
 
-Vector<Index>& Geometry::GetIndices() {
+std::vector<Index>& Geometry::GetIndices() {
 	return indices;
 }
 
-void Geometry::SetTexture(SharedPtr<Texture> _texture) {
+void Geometry::SetTexture(std::shared_ptr<Texture> _texture) {
 	texture = _texture;
 }
 

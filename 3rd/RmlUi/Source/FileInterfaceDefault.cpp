@@ -37,7 +37,7 @@ FileInterfaceDefault::~FileInterfaceDefault()
 }
 
 // Opens a file.
-FileHandle FileInterfaceDefault::Open(const String& path)
+FileHandle FileInterfaceDefault::Open(const std::string& path)
 {
 	return (FileHandle)fopen(path.c_str(), "rb");	
 }

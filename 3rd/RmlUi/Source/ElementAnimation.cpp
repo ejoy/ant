@@ -65,7 +65,7 @@ static Property InterpolateProperties(const Property& p0, const Property& p1, fl
 		auto& t1 = p1.value.GetReference<TransformPtr>();
 		auto t = t0->Interpolate(*t1, alpha);
 		if (!t) {
-			RMLUI_ERRORMSG("Transform primitives can not be interpolated.");
+			Log::Message(Log::Level::Error, "Transform primitives can not be interpolated.");
 			return Property{ t0, Property::TRANSFORM };
 		}
 		return Property{ TransformPtr(std::move(t)), Property::TRANSFORM };
@@ -139,7 +139,7 @@ static bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element)
 static bool PrepareTransforms(Property& property, Element& element) {
 	RMLUI_ASSERT(property.value.GetType() == Variant::TRANSFORMPTR);
 	if (!property.value.GetReference<TransformPtr>()) {
-		property.value = MakeShared<Transform>();
+		property.value = std::make_shared<Transform>();
 	}
 	return true;
 }
@@ -151,10 +151,10 @@ static bool PrepareTransforms(AnimationKey& key, Element& element) {
 		return false;
 	}
 	if (!prop0.value.GetReference<TransformPtr>()) {
-		prop0.value = MakeShared<Transform>();
+		prop0.value = std::make_shared<Transform>();
 	}
 	if (!prop1.value.GetReference<TransformPtr>()) {
-		prop1.value = MakeShared<Transform>();
+		prop1.value = std::make_shared<Transform>();
 	}
 	auto& t0 = prop0.value.GetReference<TransformPtr>();
 	auto& t1 = prop1.value.GetReference<TransformPtr>();
@@ -174,7 +174,7 @@ ElementAnimation::ElementAnimation(PropertyId property_id, ElementAnimationOrigi
 	, origin(origin)
 {
 	if (!current_value.definition) {
-		Log::Message(Log::LT_WARNING, "Property in animation key did not have a definition (while adding key '%s').", current_value.ToString().c_str());
+		Log::Message(Log::Level::Warning, "Property in animation key did not have a definition (while adding key '%s').", current_value.ToString().c_str());
 	}
 	InternalAddKey(0.0f, current_value, element, Tween{});
 }
@@ -183,7 +183,7 @@ ElementAnimation::ElementAnimation(PropertyId property_id, ElementAnimationOrigi
 bool ElementAnimation::InternalAddKey(float time, const Property& out_prop, Element& element, Tween tween)
 {
 	if (!(out_prop.unit & (Property::NUMBER_LENGTH_PERCENT | Property::ANGLE | Property::COLOUR | Property::TRANSFORM | Property::KEYWORD))) {
-		Log::Message(Log::LT_WARNING, "Property '%s' is not a valid target for interpolation.", out_prop.ToString().c_str());
+		Log::Message(Log::Level::Warning, "Property '%s' is not a valid target for interpolation.", out_prop.ToString().c_str());
 		return false;
 	}
 
@@ -195,7 +195,7 @@ bool ElementAnimation::InternalAddKey(float time, const Property& out_prop, Elem
 		result = PrepareTransforms(keys.back(), element);
 	}
 	if (!result) {
-		Log::Message(Log::LT_WARNING, "Could not add animation key with property '%s'.", out_prop.ToString().c_str());
+		Log::Message(Log::Level::Warning, "Could not add animation key with property '%s'.", out_prop.ToString().c_str());
 		keys.pop_back();
 	}
 	return result;
@@ -204,7 +204,7 @@ bool ElementAnimation::InternalAddKey(float time, const Property& out_prop, Elem
 
 bool ElementAnimation::AddKey(float target_time, const Property & in_property, Element& element, Tween tween, bool remove) {
 	if (!IsInitalized()) {
-		Log::Message(Log::LT_WARNING, "Element animation was not initialized properly, can't add key.");
+		Log::Message(Log::Level::Warning, "Element animation was not initialized properly, can't add key.");
 		return false;
 	}
 	if (!InternalAddKey(target_time, in_property, element, tween)) {

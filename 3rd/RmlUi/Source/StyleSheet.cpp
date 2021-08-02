@@ -42,7 +42,7 @@ namespace Rml {
 template <class T>
 inline void HashCombine(std::size_t& seed, const T& v)
 {
-	Hash<T> hasher;
+	std::hash<T> hasher;
 	seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
 
@@ -54,7 +54,7 @@ inline static bool StyleSheetNodeSort(const StyleSheetNode* lhs, const StyleShee
 
 StyleSheet::StyleSheet()
 {
-	root = MakeUnique<StyleSheetNode>();
+	root = std::make_unique<StyleSheetNode>();
 	specificity_offset = 0;
 }
 
@@ -70,9 +70,9 @@ bool StyleSheet::LoadStyleSheet(Stream* stream, int begin_line_number)
 }
 
 /// Combines this style sheet with another one, producing a new sheet
-SharedPtr<StyleSheet> StyleSheet::CombineStyleSheet(const StyleSheet& other_sheet) const
+std::shared_ptr<StyleSheet> StyleSheet::CombineStyleSheet(const StyleSheet& other_sheet) const
 {
-	SharedPtr<StyleSheet> new_sheet = MakeShared<StyleSheet>();
+	std::shared_ptr<StyleSheet> new_sheet = std::make_shared<StyleSheet>();
 	
 	new_sheet->root = root->DeepCopy();
 	new_sheet->root->MergeHierarchy(other_sheet.root.get(), specificity_offset);
@@ -98,7 +98,7 @@ void StyleSheet::BuildNodeIndex()
 }
 
 // Returns the Keyframes of the given name, or null if it does not exist.
-Keyframes * StyleSheet::GetKeyframes(const String & name)
+Keyframes * StyleSheet::GetKeyframes(const std::string & name)
 {
 	auto it = keyframes.find(name);
 	if (it != keyframes.end())
@@ -106,40 +106,40 @@ Keyframes * StyleSheet::GetKeyframes(const String & name)
 	return nullptr;
 }
 
-size_t StyleSheet::NodeHash(const String& tag, const String& id)
+size_t StyleSheet::NodeHash(const std::string& tag, const std::string& id)
 {
 	size_t seed = 0;
 	if (!tag.empty())
-		seed = Hash<String>()(tag);
+		seed = std::hash<std::string>()(tag);
 	if(!id.empty())
 		HashCombine(seed, id);
 	return seed;
 }
 
 // Returns the compiled element definition for a given element hierarchy.
-SharedPtr<ElementDefinition> StyleSheet::GetElementDefinition(const Element* element) const
+std::shared_ptr<ElementDefinition> StyleSheet::GetElementDefinition(const Element* element) const
 {
 	// See if there are any styles defined for this element.
 	// Using static to avoid allocations. Make sure we don't call this function recursively.
-	static Vector< const StyleSheetNode* > applicable_nodes;
+	static std::vector< const StyleSheetNode* > applicable_nodes;
 	applicable_nodes.clear();
 
-	const String& tag = element->GetTagName();
-	const String& id = element->GetId();
+	const std::string& tag = element->GetTagName();
+	const std::string& id = element->GetId();
 
 	// The styled_node_index is hashed with the tag and id of the RCSS rule. However, we must also check
 	// the rules which don't have them defined, because they apply regardless of tag and id.
-	Array<size_t, 4> node_hash;
+	std::array<size_t, 4> node_hash;
 	int num_hashes = 2;
 
 	node_hash[0] = 0;
-	node_hash[1] = NodeHash(tag, String());
+	node_hash[1] = NodeHash(tag, std::string());
 
 	// If we don't have an id, we can safely skip nodes that define an id. Otherwise, we also check the id nodes.
 	if (!id.empty())
 	{
 		num_hashes = 4;
-		node_hash[2] = NodeHash(String(), id);
+		node_hash[2] = NodeHash(std::string(), id);
 		node_hash[3] = NodeHash(tag, id);
 	}
 
@@ -178,12 +178,12 @@ SharedPtr<ElementDefinition> StyleSheet::GetElementDefinition(const Element* ele
 	auto cache_iterator = node_cache.find(seed);
 	if (cache_iterator != node_cache.end())
 	{
-		SharedPtr<ElementDefinition>& definition = (*cache_iterator).second;
+		std::shared_ptr<ElementDefinition>& definition = (*cache_iterator).second;
 		return definition;
 	}
 
 	// Create the new definition and add it to our cache.
-	auto new_definition = MakeShared<ElementDefinition>(applicable_nodes);
+	auto new_definition = std::make_shared<ElementDefinition>(applicable_nodes);
 	node_cache[seed] = new_definition;
 
 	return new_definition;

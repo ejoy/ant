@@ -73,7 +73,7 @@ public:
 	Element* GetTargetElement() const;
 
 	/// Get the event type.
-	String GetType() const;
+	std::string GetType() const;
 	/// Get the event id.
 	EventId GetId() const;
 
@@ -93,7 +93,7 @@ public:
 	/// @param key[in] The name of the desired parameter.
 	/// @return The value of the requested parameter.
 	template < typename T >
-	T GetParameter(const String& key, const T& default_value) const
+	T GetParameter(const std::string& key, const T& default_value) const
 	{
 		return Get(parameters, key, default_value);
 	}

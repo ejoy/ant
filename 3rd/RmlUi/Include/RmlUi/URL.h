@@ -44,7 +44,7 @@ public:
 	/// Constructs an empty URL.
 	URL();
 	/// Constructs a new URL from the given string.
-	URL(const String& url);
+	URL(const std::string& url);
 	/// Constructs a new URL from the given string. A little more scripting
 	/// engine friendly.
 	URL(const char* url);
@@ -53,29 +53,29 @@ public:
 
 	/// Assigns a new URL to the object. This will return false if the URL
 	/// is malformed.
-	bool SetURL(const String& url);
+	bool SetURL(const std::string& url);
 	/// Returns the entire URL.
-	const String& GetURL() const;
+	const std::string& GetURL() const;
 
 	/// Sets the URL's protocol.
-	bool SetProtocol(const String& protocol);
+	bool SetProtocol(const std::string& protocol);
 	/// Returns the protocol this URL is utilising.
-	const String& GetProtocol() const;
+	const std::string& GetProtocol() const;
 
 	/// Sets the URL's login
-	bool SetLogin( const String& login );
+	bool SetLogin( const std::string& login );
 	/// Returns the URL's login
-	const String& GetLogin() const;
+	const std::string& GetLogin() const;
 
 	/// Sets the URL's password
-	bool SetPassword( const String& password );
+	bool SetPassword( const std::string& password );
 	/// Returns the URL's password
-	const String& GetPassword() const;
+	const std::string& GetPassword() const;
 
 	/// Sets the URL's host.
-	bool SetHost(const String& host);
+	bool SetHost(const std::string& host);
 	/// Returns the URL's host.
-	const String& GetHost() const;
+	const std::string& GetHost() const;
 
 	/// Sets the URL's port number.
 	bool SetPort(int port);
@@ -83,41 +83,41 @@ public:
 	int GetPort() const;
 
 	/// Sets the URL's path.
-	bool SetPath(const String& path);
+	bool SetPath(const std::string& path);
 	/// Prefixes the URL's existing path with the given prefix.
-	bool PrefixPath(const String& prefix);
+	bool PrefixPath(const std::string& prefix);
 	/// Returns the URL's path.
-	const String& GetPath() const;
+	const std::string& GetPath() const;
 
 	/// Sets the URL's file name.
-	bool SetFileName(const String& file_name);
+	bool SetFileName(const std::string& file_name);
 	/// Returns the URL's file name.
-	const String& GetFileName() const;
+	const std::string& GetFileName() const;
 
 	/// Sets the URL's file extension.
-	bool SetExtension(const String& extension);
+	bool SetExtension(const std::string& extension);
 	/// Returns the URL's file extension.
-	const String& GetExtension() const;
+	const std::string& GetExtension() const;
 	
 	/// Access the url parameters
-	typedef UnorderedMap< String, String > Parameters;
+	typedef std::unordered_map< std::string, std::string > Parameters;
 	const Parameters& GetParameters() const;
-	void SetParameter(const String& name, const String& value);
+	void SetParameter(const std::string& name, const std::string& value);
 	void SetParameters( const Parameters& parameters );
 	void ClearParameters();
 	
 	/// Returns the URL's path, file name and extension.
-	String GetPathedFileName() const;
+	std::string GetPathedFileName() const;
 	/// Builds and returns a url query string ( key=value&key2=value2 )		
-	String GetQueryString() const;
+	std::string GetQueryString() const;
 
 	/// Less-than operator for use as a key in STL containers.
 	bool operator<(const URL& rhs) const;
 
 	/// Since URLs often contain characters outside the ASCII set, 
 	/// the URL has to be converted into a valid ASCII format and back.
-	static String UrlEncode(const String &value);
-	static String UrlDecode(const String &value);
+	static std::string UrlEncode(const std::string &value);
+	static std::string UrlDecode(const std::string &value);
 
 private:
 	void ConstructURL() const;
@@ -128,14 +128,14 @@ private:
 	/// (copied from libcurl sources)
 	static bool IsUnreservedChar(const char c);
 
-	mutable String url;
-	String protocol;
-	String login;
-	String password;
-	String host;		
-	String path;
-	String file_name;
-	String extension;
+	mutable std::string url;
+	std::string protocol;
+	std::string login;
+	std::string password;
+	std::string host;		
+	std::string path;
+	std::string file_name;
+	std::string extension;
 
 	Parameters parameters;
 

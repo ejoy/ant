@@ -42,10 +42,10 @@ namespace Rml {
 class StringView;
 
 /// Construct a string using sprintf-style syntax.
-RMLUICORE_API String CreateString(size_t max_size, const char* format, ...) RMLUI_ATTRIBUTE_FORMAT_PRINTF(2,3);
+RMLUICORE_API std::string CreateString(size_t max_size, const char* format, ...) RMLUI_ATTRIBUTE_FORMAT_PRINTF(2,3);
 
 /// Format to a string using sprintf-style syntax.
-RMLUICORE_API int FormatString(String& string, size_t max_size, const char* format, ...) RMLUI_ATTRIBUTE_FORMAT_PRINTF(3,4);
+RMLUICORE_API int FormatString(std::string& string, size_t max_size, const char* format, ...) RMLUI_ATTRIBUTE_FORMAT_PRINTF(3,4);
 
 
 namespace StringUtilities
@@ -53,32 +53,32 @@ namespace StringUtilities
 	/// Expands character-delimited list of values in a single string to a whitespace-trimmed list
 	/// of values.
 	/// @param[out] string_list Resulting list of values.
-	/// @param[in] string String to expand.
+	/// @param[in] string std::string to expand.
 	/// @param[in] delimiter Delimiter found between entries in the string list.
-	RMLUICORE_API void ExpandString(StringList& string_list, const String& string, const char delimiter = ',');
+	RMLUICORE_API void ExpandString(std::vector<std::string>& string_list, const std::string& string, const char delimiter = ',');
 	/// Expands character-delimited list of values with custom quote characters.
 	/// @param[out] string_list Resulting list of values.
-	/// @param[in] string String to expand.
+	/// @param[in] string std::string to expand.
 	/// @param[in] delimiter Delimiter found between entries in the string list.
 	/// @param[in] quote_character Begin quote
 	/// @param[in] unquote_character End quote
 	/// @param[in] ignore_repeated_delimiters If true, repeated values of the delimiter will not add additional entries to the list.
-	RMLUICORE_API void ExpandString(StringList& string_list, const String& string, const char delimiter, char quote_character, char unquote_character, bool ignore_repeated_delimiters = false);
+	RMLUICORE_API void ExpandString(std::vector<std::string>& string_list, const std::string& string, const char delimiter, char quote_character, char unquote_character, bool ignore_repeated_delimiters = false);
 	/// Joins a list of string values into a single string separated by a character delimiter.
 	/// @param[out] string Resulting concatenated string.
 	/// @param[in] string_list Input list of string values.
 	/// @param[in] delimiter Delimiter to insert between the individual values.
-	RMLUICORE_API void JoinString(String& string, const StringList& string_list, const char delimiter = ',');
+	RMLUICORE_API void JoinString(std::string& string, const std::vector<std::string>& string_list, const char delimiter = ',');
 
 	/// Converts upper-case characters in string to lower-case.
-	RMLUICORE_API String ToLower(const String& string);
+	RMLUICORE_API std::string ToLower(const std::string& string);
 	/// Converts lower-case characters in string to upper-case.
-	RMLUICORE_API String ToUpper(const String& string);
+	RMLUICORE_API std::string ToUpper(const std::string& string);
 
 	// Replaces all occurences of 'search' in 'subject' with 'replace'.
-	RMLUICORE_API String Replace(String subject, const String& search, const String& replace);
+	RMLUICORE_API std::string Replace(std::string subject, const std::string& search, const std::string& replace);
 	// Replaces all occurences of 'search' in 'subject' with 'replace'.
-	RMLUICORE_API String Replace(String subject, char search, char replace);
+	RMLUICORE_API std::string Replace(std::string subject, char search, char replace);
 
 	/// Checks if a given value is a whitespace character.
 	inline bool IsWhitespace(const char x)
@@ -87,14 +87,14 @@ namespace StringUtilities
 	}
 
 	/// Strip whitespace characters from the beginning and end of a string.
-	RMLUICORE_API String StripWhitespace(const String& string);
+	RMLUICORE_API std::string StripWhitespace(const std::string& string);
 
 	/// Strip whitespace characters from the beginning and end of a string.
-	RMLUICORE_API String StripWhitespace(StringView string);
+	RMLUICORE_API std::string StripWhitespace(StringView string);
 
 	/// Trim trailing zeros and the dot from a string-representation of a number with a decimal point.
 	/// @warning If the string does not represent a number _with_ a decimal point, the result is ill-defined.
-	RMLUICORE_API void TrimTrailingDotZeros(String& string);
+	RMLUICORE_API void TrimTrailingDotZeros(std::string& string);
 
 	// Decode the first code point in a zero-terminated UTF-8 string.
 	RMLUICORE_API Character ToCharacter(const char* p);
@@ -128,11 +128,11 @@ class RMLUICORE_API StringView {
 public:
 	StringView();
 	StringView(const char* p_begin, const char* p_end);
-	StringView(const String& string);
-	StringView(const String& string, size_t offset);
-	StringView(const String& string, size_t offset, size_t count);
+	StringView(const std::string& string);
+	StringView(const std::string& string, size_t offset);
+	StringView(const std::string& string, size_t offset, size_t count);
 
-	// String comparison to another view
+	// std::string comparison to another view
 	bool operator==(const StringView& other) const;
 	inline bool operator!=(const StringView& other) const { return !(*this == other); }
 
@@ -141,8 +141,8 @@ public:
 
 	inline size_t size() const { return size_t(p_end - p_begin); }
 
-	explicit inline operator String() const {
-		return String(p_begin, p_end);
+	explicit inline operator std::string() const {
+		return std::string(p_begin, p_end);
 	}
 
 private:
@@ -154,9 +154,9 @@ private:
 class RMLUICORE_API StringIteratorU8 {
 public:
 	StringIteratorU8(const char* p_begin, const char* p, const char* p_end);
-	StringIteratorU8(const String& string);
-	StringIteratorU8(const String& string, size_t offset);
-	StringIteratorU8(const String& string, size_t offset, size_t count);
+	StringIteratorU8(const std::string& string);
+	StringIteratorU8(const std::string& string, size_t offset);
+	StringIteratorU8(const std::string& string, size_t offset, size_t count);
 
 	// Seeks forward to the next UTF-8 character. Iterator must be valid.
 	StringIteratorU8& operator++();

@@ -31,7 +31,7 @@
 
 namespace Rml {
 
-static const UnorderedMap<String, Property::Unit> g_property_unit_string_map =
+static const std::unordered_map<std::string, Property::Unit> g_property_unit_string_map =
 {
 	{"", Property::NUMBER},
 	{"%", Property::PERCENT},
@@ -56,7 +56,7 @@ PropertyParserNumber::~PropertyParserNumber()
 {}
 
 // Called to parse a RCSS number declaration.
-bool PropertyParserNumber::ParseValue(Property& property, const String& value, const ParameterMap& RMLUI_UNUSED_PARAMETER(parameters)) const
+bool PropertyParserNumber::ParseValue(Property& property, const std::string& value, const ParameterMap& RMLUI_UNUSED_PARAMETER(parameters)) const
 {
 	RMLUI_UNUSED(parameters);
 
@@ -72,8 +72,8 @@ bool PropertyParserNumber::ParseValue(Property& property, const String& value, c
 		}
 	}
 
-	String str_number = value.substr(0, unit_pos);
-	String str_unit = StringUtilities::ToLower(value.substr(unit_pos));
+	std::string str_number = value.substr(0, unit_pos);
+	std::string str_unit = StringUtilities::ToLower(value.substr(unit_pos));
 
 	char* str_end = nullptr;
 	float float_value = strtof(str_number.c_str(), &str_end);

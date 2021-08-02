@@ -44,12 +44,12 @@ namespace Rml {
  */
 
 struct Line {
-	Line(const String& text, const Point& position) : text(text), position(position), width(0) {}
-	String text;
+	Line(const std::string& text, const Point& position) : text(text), position(position), width(0) {}
+	std::string text;
 	Point position;
 	int width;
 };
-typedef Vector<Line> LineList;
+typedef std::vector<Line> LineList;
 
 class RMLUICORE_API FontEngineInterface
 {
@@ -64,7 +64,7 @@ public:
 	/// @param[in] weight The weight of the desired font handle.
 	/// @param[in] size The size of desired handle, in points.
 	/// @return A valid handle if a matching (or closely matching) font face was found, NULL otherwise.
-	virtual FontFaceHandle GetFontFaceHandle(const String& family, Style::FontStyle style, Style::FontWeight weight, int size);
+	virtual FontFaceHandle GetFontFaceHandle(const std::string& family, Style::FontStyle style, Style::FontWeight weight, int size);
 
 	/// Called by RmlUi when a list of font effects is resolved for an element with a given font face.
 	/// @param[in] handle The font handle.
@@ -101,7 +101,7 @@ public:
 	/// @param[in] string The string to measure.
 	/// @param[in] prior_character The optionally-specified character that immediately precedes the string. This may have an impact on the string width due to kerning.
 	/// @return The width, in pixels, this string will occupy if rendered with this handle.
-	virtual int GetStringWidth(FontFaceHandle handle, const String& string, Character prior_character = Character::Null);
+	virtual int GetStringWidth(FontFaceHandle handle, const std::string& string, Character prior_character = Character::Null);
 
 	/// Called by RmlUi when it wants to retrieve the geometry required to render a single line of text.
 	/// @param[in] face_handle The font handle.

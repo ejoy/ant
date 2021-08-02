@@ -35,7 +35,6 @@
 #include "../Include/RmlUi/EventListenerInstancer.h"
 #include "../Include/RmlUi/StreamMemory.h"
 #include "../Include/RmlUi/StyleSheet.h"
-#include "../Include/RmlUi/SystemInterface.h"
 #include "DataControllerDefault.h"
 #include "DataViewDefault.h"
 #include "PluginRegistry.h"
@@ -48,19 +47,19 @@
 namespace Rml {
 
 // Data view instancers.
-using DataViewInstancerMap = UnorderedMap< String, DataViewInstancer* >;
+using DataViewInstancerMap = std::unordered_map< std::string, DataViewInstancer* >;
 static DataViewInstancerMap data_view_instancers;
 
 // Data controller instancers.
-using DataControllerInstancerMap = UnorderedMap< String, DataControllerInstancer* >;
+using DataControllerInstancerMap = std::unordered_map< std::string, DataControllerInstancer* >;
 static DataControllerInstancerMap data_controller_instancers;
 
 // Structural data view instancers.
-using StructuralDataViewInstancerMap = SmallUnorderedMap< String, DataViewInstancer* >;
+using StructuralDataViewInstancerMap = std::unordered_map< std::string, DataViewInstancer* >;
 static StructuralDataViewInstancerMap structural_data_view_instancers;
 
 // Structural data view names.
-static StringList structural_data_view_attribute_names;
+static std::vector<std::string> structural_data_view_attribute_names;
 
 // Event listener instancer.
 static EventListenerInstancer* event_listener_instancer = nullptr;
@@ -85,7 +84,7 @@ struct DefaultInstancers {
 	DataControllerInstancerDefault<DataControllerEvent> data_controller_event;
 };
 
-static UniquePtr<DefaultInstancers> default_instancers;
+static std::unique_ptr<DefaultInstancers> default_instancers;
 
 
 Factory::Factory()
@@ -99,7 +98,7 @@ Factory::~Factory()
 
 bool Factory::Initialise()
 {
-	default_instancers = MakeUnique<DefaultInstancers>();
+	default_instancers = std::make_unique<DefaultInstancers>();
 
 	// No default event listener instancer
 	if (!event_listener_instancer)
@@ -137,7 +136,7 @@ void Factory::Shutdown()
 }
 
 // Instances a single text element containing a string.
-bool Factory::InstanceElementText(Element* parent, const String& str)
+bool Factory::InstanceElementText(Element* parent, const std::string& str)
 {
 	RMLUI_ASSERT(parent);
 
@@ -162,7 +161,7 @@ bool Factory::InstanceElementText(Element* parent, const String& str)
 
 	TextPtr text(new ElementText(parent->GetOwnerDocument(), str));
 	if (!text) {
-		Log::Message(Log::LT_ERROR, "Failed to instance text element '%s', instancer returned nullptr.", str.c_str());
+		Log::Message(Log::Level::Error, "Failed to instance text element '%s', instancer returned nullptr.", str.c_str());
 		return false;
 	}
 	if (has_data_expression) {
@@ -174,38 +173,6 @@ bool Factory::InstanceElementText(Element* parent, const String& str)
 	return true;
 }
 
-// Creates a style sheet containing the passed in styles.
-SharedPtr<StyleSheet> Factory::InstanceStyleSheetString(const String& string)
-{
-	auto memory_stream = MakeUnique<StreamMemory>((const byte*) string.c_str(), string.size());
-	return InstanceStyleSheetStream(memory_stream.get());
-}
-
-// Creates a style sheet from a file.
-SharedPtr<StyleSheet> Factory::InstanceStyleSheetFile(const String& file_name)
-{
-	auto file_stream = MakeUnique<StreamFile>();
-	file_stream->Open(file_name);
-	return InstanceStyleSheetStream(file_stream.get());
-}
-
-// Creates a style sheet from an Stream.
-SharedPtr<StyleSheet> Factory::InstanceStyleSheetStream(Stream* stream)
-{
-	SharedPtr<StyleSheet> style_sheet = MakeShared<StyleSheet>();
-	if (style_sheet->LoadStyleSheet(stream))
-	{
-		return style_sheet;
-	}
-	return nullptr;
-}
-
-// Clears the style sheet cache. This will force style sheets to be reloaded.
-void Factory::ClearStyleSheetCache()
-{
-	StyleSheetFactory::ClearStyleSheetCache();
-}
-
 // Register an instancer for all event listeners
 void Factory::RegisterEventListenerInstancer(EventListenerInstancer* instancer)
 {
@@ -213,7 +180,7 @@ void Factory::RegisterEventListenerInstancer(EventListenerInstancer* instancer)
 }
 
 // Instance an event listener with the given string
-EventListener* Factory::InstanceEventListener(const String& value, Element* element)
+EventListener* Factory::InstanceEventListener(const std::string& value, Element* element)
 {
 	// If we have an event listener instancer, use it
 	if (event_listener_instancer)
@@ -222,14 +189,14 @@ EventListener* Factory::InstanceEventListener(const String& value, Element* elem
 	return nullptr;
 }
 
-void Factory::RegisterDataViewInstancer(DataViewInstancer* instancer, const String& name, bool is_structural_view)
+void Factory::RegisterDataViewInstancer(DataViewInstancer* instancer, const std::string& name, bool is_structural_view)
 {
 	bool inserted = false;
 	if (is_structural_view)
 	{
 		inserted = structural_data_view_instancers.emplace(name, instancer).second;
 		if (inserted)
-			structural_data_view_attribute_names.push_back(String("data-") + name);
+			structural_data_view_attribute_names.push_back(std::string("data-") + name);
 	}
 	else
 	{
@@ -237,17 +204,17 @@ void Factory::RegisterDataViewInstancer(DataViewInstancer* instancer, const Stri
 	}
 	
 	if (!inserted)
-		Log::Message(Log::LT_WARNING, "Could not register data view instancer '%s'. The given name is already registered.", name.c_str());
+		Log::Message(Log::Level::Warning, "Could not register data view instancer '%s'. The given name is already registered.", name.c_str());
 }
 
-void Factory::RegisterDataControllerInstancer(DataControllerInstancer* instancer, const String& name)
+void Factory::RegisterDataControllerInstancer(DataControllerInstancer* instancer, const std::string& name)
 {
 	bool inserted = data_controller_instancers.emplace(name, instancer).second;
 	if (!inserted)
-		Log::Message(Log::LT_WARNING, "Could not register data controller instancer '%s'. The given name is already registered.", name.c_str());
+		Log::Message(Log::Level::Warning, "Could not register data controller instancer '%s'. The given name is already registered.", name.c_str());
 }
 
-DataViewPtr Factory::InstanceDataView(const String& type_name, Element* element, bool is_structural_view)
+DataViewPtr Factory::InstanceDataView(const std::string& type_name, Element* element, bool is_structural_view)
 {
 	RMLUI_ASSERT(element);
 
@@ -266,7 +233,7 @@ DataViewPtr Factory::InstanceDataView(const String& type_name, Element* element,
 	return nullptr;
 }
 
-DataControllerPtr Factory::InstanceDataController(const String& type_name, Element* element)
+DataControllerPtr Factory::InstanceDataController(const std::string& type_name, Element* element)
 {
 	auto it = data_controller_instancers.find(type_name);
 	if (it != data_controller_instancers.end())
@@ -274,12 +241,12 @@ DataControllerPtr Factory::InstanceDataController(const String& type_name, Eleme
 	return DataControllerPtr();
 }
 
-bool Factory::IsStructuralDataView(const String& type_name)
+bool Factory::IsStructuralDataView(const std::string& type_name)
 {
 	return structural_data_view_instancers.find(type_name) != structural_data_view_instancers.end();
 }
 
-const StringList& Factory::GetStructuralDataViewAttributeNames()
+const std::vector<std::string>& Factory::GetStructuralDataViewAttributeNames()
 {
 	return structural_data_view_attribute_names;
 }

@@ -39,7 +39,7 @@
 
 namespace Rml {
 
-static bool ApplyDataViewsControllersInternal(Element* element, const bool construct_structural_view, const String& structural_view_inner_rml)
+static bool ApplyDataViewsControllersInternal(Element* element, const bool construct_structural_view, const std::string& structural_view_inner_rml)
 {
 	RMLUI_ASSERT(element);
 	bool result = false;
@@ -48,9 +48,9 @@ static bool ApplyDataViewsControllersInternal(Element* element, const bool const
 	if (DataModel* data_model = element->GetDataModel())
 	{
 		struct ViewControllerInitializer {
-			String type;
-			String modifier_or_inner_rml;
-			String expression;
+			std::string type;
+			std::string modifier_or_inner_rml;
+			std::string expression;
 			DataViewPtr view;
 			DataControllerPtr controller;
 			explicit operator bool() const { return view || controller; }
@@ -59,7 +59,7 @@ static bool ApplyDataViewsControllersInternal(Element* element, const bool const
 		// Since data views and controllers may modify the element's attributes during initialization, we 
 		// need to iterate over all the attributes _before_ initializing any views or controllers. We store
 		// the information needed to initialize them in the following container.
-		Vector<ViewControllerInitializer> initializer_list;
+		std::vector<ViewControllerInitializer> initializer_list;
 
 		for (auto& attribute : element->GetAttributes())
 		{
@@ -68,13 +68,13 @@ static bool ApplyDataViewsControllersInternal(Element* element, const bool const
 
 			constexpr size_t data_str_length = sizeof("data-") - 1;
 
-			const String& name = attribute.first;
+			const std::string& name = attribute.first;
 
 			if (name.size() > data_str_length && name[0] == 'd' && name[1] == 'a' && name[2] == 't' && name[3] == 'a' && name[4] == '-')
 			{
 				const size_t type_end = name.find('-', data_str_length);
-				const size_t type_size = (type_end == String::npos ? String::npos : type_end - data_str_length);
-				String type_name = name.substr(data_str_length, type_size);
+				const size_t type_size = (type_end == std::string::npos ? std::string::npos : type_end - data_str_length);
+				std::string type_name = name.substr(data_str_length, type_size);
 
 				ViewControllerInitializer initializer;
 
@@ -111,7 +111,7 @@ static bool ApplyDataViewsControllersInternal(Element* element, const bool const
 				if (initializer)
 				{
 					initializer.type = std::move(type_name);
-					initializer.expression = attribute.second.Get<String>();
+					initializer.expression = attribute.second.Get<std::string>();
 
 					initializer_list.push_back(std::move(initializer));
 				}
@@ -132,7 +132,7 @@ static bool ApplyDataViewsControllersInternal(Element* element, const bool const
 					result = true;
 				}
 				else
-					Log::Message(Log::LT_WARNING, "Could not add data-%s view to element: %s", initializer.type.c_str(), element->GetAddress().c_str());
+					Log::Message(Log::Level::Warning, "Could not add data-%s view to element: %s", initializer.type.c_str(), element->GetAddress().c_str());
 			}
 
 			if (controller)
@@ -143,7 +143,7 @@ static bool ApplyDataViewsControllersInternal(Element* element, const bool const
 					result = true;
 				}
 				else
-					Log::Message(Log::LT_WARNING, "Could not add data-%s controller to element: %s", initializer.type.c_str(), element->GetAddress().c_str());
+					Log::Message(Log::Level::Warning, "Could not add data-%s controller to element: %s", initializer.type.c_str(), element->GetAddress().c_str());
 			}
 		}
 	}
@@ -154,10 +154,10 @@ static bool ApplyDataViewsControllersInternal(Element* element, const bool const
 
 bool ElementUtilities::ApplyDataViewsControllers(Element* element)
 {
-	return ApplyDataViewsControllersInternal(element, false, String());
+	return ApplyDataViewsControllersInternal(element, false, std::string());
 }
 
-bool ElementUtilities::ApplyStructuralDataViews(Element* element, const String& inner_rml)
+bool ElementUtilities::ApplyStructuralDataViews(Element* element, const std::string& inner_rml)
 {
 	return ApplyDataViewsControllersInternal(element, true, inner_rml);
 }

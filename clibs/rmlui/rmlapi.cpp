@@ -7,7 +7,6 @@
 #include "RmlUi/EventListener.h"
 #include "RmlUi/PropertyDictionary.h"
 #include "RmlUi/StyleSheetSpecification.h"
-#include "RmlUi/SystemInterface.h"
 
 #include "luaplugin.h"
 #include "luabind.h"
@@ -15,7 +14,6 @@
 #include "render.h"
 #include "file.h"
 #include "font.h"
-#include "system.h"
 #include "context.h"
 
 #include "../bgfx/bgfx_interface.h"
@@ -25,17 +23,14 @@
 #include <string.h>
 
 struct RmlInterface {
-    SystemInterface m_system;
     FontEngine      m_font;
     File            m_file;
     Renderer        m_renderer;
     RmlInterface(RmlContext* context)
-        : m_system()
-        , m_font(context)
+        : m_font(context)
         , m_file(context)
         , m_renderer(context)
     {
-        Rml::SetSystemInterface(&m_system);
         Rml::SetFontEngineInterface(&m_font);
         Rml::SetFileInterface(&m_file);
         Rml::SetRenderInterface(&m_renderer);
@@ -162,7 +157,8 @@ static int
 lContextUpdate(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
-	ctx->Update();
+	double delta = luaL_checknumber(L, 2);
+	ctx->Update(delta);
 	return 0;
 }
 
@@ -213,7 +209,7 @@ static int
 lDocumentGetSourceURL(lua_State *L) {
 	luabind::setthread(L);
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	const Rml::String &url = doc->GetSourceURL();
+	const std::string &url = doc->GetSourceURL();
 	lua_pushlstring(L, url.c_str(), url.length());
 	return 1;
 }
@@ -245,8 +241,7 @@ lDocumentDispatchEvent(lua_State* L) {
 				lua_pop(L, 1);
 				continue;
 			}
-			Rml::Dictionary::value_type v;
-			v.first = lua_checkstdstring(L, -2);
+			Rml::Dictionary::value_type v {lua_checkstdstring(L, -2), Rml::Variant{}};
 			lua_getvariant(L, -1, &v.second);
 			params.emplace(v);
 			lua_pop(L, 1);
@@ -260,7 +255,7 @@ static int
 lElementGetInnerRML(lua_State *L) {
 	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	const Rml::String &rml = e->GetInnerRML();
+	const std::string &rml = e->GetInnerRML();
 	lua_pushlstring(L, rml.c_str(), rml.length());
 	return 1;
 }
@@ -372,8 +367,8 @@ static int
 lElementSetProperty(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	Rml::String name = lua_checkstdstring(L, 2);
-	Rml::String value = lua_checkstdstring(L, 3);
+	std::string name = lua_checkstdstring(L, 2);
+	std::string value = lua_checkstdstring(L, 3);
 	bool ok = e->SetProperty(name, value);
 	lua_pushboolean(L, ok);
 	return 1;
@@ -434,15 +429,6 @@ lRmlRegisterEevent(lua_State* L) {
 }
 
 static int
-lLog(lua_State* L) {
-	Rml::Log::Type type = (Rml::Log::Type)luaL_checkinteger(L, 1);
-	size_t sz = 0;
-	const char* msg = luaL_checklstring(L, 2, &sz);
-	Rml::GetSystemInterface()->LogMessage(type, Rml::String(msg, sz));
-	return 0;
-}
-
-static int
 lRenderBegin(lua_State* L) {
     if (g_wrapper) {
         g_wrapper->interface.m_renderer.Begin();
@@ -456,15 +442,6 @@ lRenderFrame(lua_State* L){
         g_wrapper->interface.m_renderer.Frame();
     }
     return 0;
-}
-
-static int
-lSystemUpdate(lua_State* L) {
-	double delta = luaL_checknumber(L, 1);
-	if (g_wrapper) {
-		g_wrapper->interface.m_system.update(delta);
-	}
-	return 0;
 }
 
 static int
@@ -535,7 +512,6 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementRemoveProperty", lElementRemoveProperty },
 		{ "ElementSetAttribute", lElementSetAttribute },
 		{ "ElementSetProperty", lElementSetProperty },
-		{ "Log", lLog },
 		{ "RenderBegin", lRenderBegin },
 		{ "RenderFrame", lRenderFrame },
 		{ "UpdateViewrect", lUpdateViewrect},
@@ -544,7 +520,6 @@ luaopen_rmlui(lua_State* L) {
 		{ "RmlCreateContext", lRmlCreateContext },
 		{ "RmlRemoveContext", lRmlRemoveContext },
 		{ "RmlRegisterEevent", lRmlRegisterEevent },
-		{ "SystemUpdate", lSystemUpdate },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

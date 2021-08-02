@@ -125,8 +125,8 @@ private:
 	void Set(const char* value);
 	void Set(void* value);
 	void Set(const Color& value);
-	void Set(const String& value);
-	void Set(String&& value);
+	void Set(const std::string& value);
+	void Set(std::string&& value);
 	void Set(const TransformPtr& value);
 	void Set(TransformPtr&& value);
 	void Set(const TransitionList& value);
@@ -134,7 +134,7 @@ private:
 	void Set(const AnimationList& value);
 	void Set(AnimationList&& value);
 	
-	static constexpr size_t LOCAL_DATA_SIZE = (sizeof(TransitionList) > sizeof(String) ? sizeof(TransitionList) : sizeof(String));
+	static constexpr size_t LOCAL_DATA_SIZE = (sizeof(TransitionList) > sizeof(std::string) ? sizeof(TransitionList) : sizeof(std::string));
 
 	Type type;
 	alignas(TransitionList) char data[LOCAL_DATA_SIZE];

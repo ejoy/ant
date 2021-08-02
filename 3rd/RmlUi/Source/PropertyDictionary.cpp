@@ -93,7 +93,7 @@ void PropertyDictionary::Merge(const PropertyDictionary& other, int specificity_
 	}
 }
 
-void PropertyDictionary::SetSourceOfAllProperties(const SharedPtr<const PropertySource>& property_source)
+void PropertyDictionary::SetSourceOfAllProperties(const std::shared_ptr<const PropertySource>& property_source)
 {
 	for (auto& p : properties)
 		p.second.source = property_source;

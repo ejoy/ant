@@ -44,7 +44,7 @@ PropertyParserTransform::~PropertyParserTransform()
 }
 
 // Called to parse a RCSS transform declaration.
-bool PropertyParserTransform::ParseValue(Property& property, const String& value, const ParameterMap& /*parameters*/) const
+bool PropertyParserTransform::ParseValue(Property& property, const std::string& value, const ParameterMap& /*parameters*/) const
 {
 	if(value == "none")
 	{
@@ -53,7 +53,7 @@ bool PropertyParserTransform::ParseValue(Property& property, const String& value
 		return true;
 	}
 
-	TransformPtr transform = MakeShared<Transform>();
+	TransformPtr transform = std::make_shared<Transform>();
 
 	char const* next = value.c_str();
 
@@ -200,7 +200,7 @@ bool PropertyParserTransform::Scan(int& out_bytes_read, const char* str, const c
 	/* use the quicker stack-based argument buffer, if possible */
 	char *arg = 0;
 	char arg_stack[1024];
-	String arg_heap;
+	std::string arg_heap;
 	if (strlen(str) < sizeof(arg_stack))
 	{
 		arg = arg_stack;
@@ -254,7 +254,7 @@ bool PropertyParserTransform::Scan(int& out_bytes_read, const char* str, const c
 
 		bytes_read = 0;
 		if (sscanf(str, " %[^,)] %n", arg, &bytes_read), bytes_read
-			&& parsers[i]->ParseValue(prop, String(arg), ParameterMap()))
+			&& parsers[i]->ParseValue(prop, std::string(arg), ParameterMap()))
 		{
 			args[i].value = prop.value.Get<float>();
 			args[i].unit = prop.unit;

@@ -35,28 +35,22 @@
 namespace Rml {
 
 class VariableDefinition;
-class DataTypeRegister;
-class TransformFuncRegister;
 class DataModelHandle;
 class DataVariable;
 
-using DataGetFunc = Function<void(Variant&)>;
-using DataSetFunc = Function<void(const Variant&)>;
-using DataTransformFunc = Function<bool(Variant&, const VariantList&)>;
-using DataEventFunc = Function<void(DataModelHandle, Event&, const VariantList&)>;
+using DataGetFunc = std::function<void(Variant&)>;
+using DataSetFunc = std::function<void(const Variant&)>;
+using DataEventFunc = std::function<void(DataModelHandle, Event&, const VariantList&)>;
 
-template<typename T> using MemberGetFunc = void(T::*)(Variant&);
-template<typename T> using MemberSetFunc = void(T::*)(const Variant&);
-
-using DirtyVariables = SmallUnorderedSet<String>;
+using DirtyVariables = std::unordered_set<std::string>;
 
 struct DataAddressEntry {
-	DataAddressEntry(String name) : name(name), index(-1) { }
+	DataAddressEntry(std::string name) : name(name), index(-1) { }
 	DataAddressEntry(int index) : index(index) { }
-	String name;
+	std::string name;
 	int index;
 };
-using DataAddress = Vector<DataAddressEntry>;
+using DataAddress = std::vector<DataAddressEntry>;
 
 } // namespace Rml
 #endif

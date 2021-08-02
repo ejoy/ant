@@ -33,7 +33,7 @@ namespace Rml {
 template <typename SourceType, typename DestType>
 bool TypeConverter<SourceType, DestType>::Convert(const SourceType& /*src*/, DestType& /*dest*/)
 {
-	RMLUI_ERRORMSG("No converter specified.");
+	Log::Message(Log::Level::Error, "No converter specified.");
 	return false;
 }
 
@@ -87,7 +87,7 @@ PASS_THROUGH(bool);
 PASS_THROUGH(char);
 PASS_THROUGH(Character);
 PASS_THROUGH(Color);
-PASS_THROUGH(String);
+PASS_THROUGH(std::string);
 
 // Pointer types need to be typedef'd
 typedef void* voidPtr;
@@ -134,10 +134,10 @@ BASIC_CONVERTER(char, Character);
 
 #define STRING_FLOAT_CONVERTER(type) \
 template<> \
-class TypeConverter< String, type > \
+class TypeConverter< std::string, type > \
 { \
 public: \
-	static bool Convert(const String& src, type& dest) \
+	static bool Convert(const std::string& src, type& dest) \
 	{ \
 		dest = (type) atof(src.c_str()); \
 		return true; \
@@ -147,52 +147,52 @@ STRING_FLOAT_CONVERTER(float);
 STRING_FLOAT_CONVERTER(double);
 
 template<>
-class TypeConverter< String, int >
+class TypeConverter< std::string, int >
 {
 public:
-	static bool Convert(const String& src, int& dest)
+	static bool Convert(const std::string& src, int& dest)
 	{
 		return sscanf(src.c_str(), "%d", &dest) == 1;
 	}
 };
 
 template<>
-class TypeConverter< String, unsigned int >
+class TypeConverter< std::string, unsigned int >
 {
 public:
-	static bool Convert(const String& src, unsigned int& dest)
+	static bool Convert(const std::string& src, unsigned int& dest)
 	{
 		return sscanf(src.c_str(), "%u", &dest) == 1;
 	}
 };
 
 template<>
-class TypeConverter< String, int64_t >
+class TypeConverter< std::string, int64_t >
 {
 public:
-	static bool Convert(const String& src, int64_t& dest)
+	static bool Convert(const std::string& src, int64_t& dest)
 	{
 		return sscanf(src.c_str(), "%" SCNd64, &dest) == 1;
 	}
 };
 
 template<>
-class TypeConverter< String, byte >
+class TypeConverter< std::string, byte >
 {
 public:
-	static bool Convert(const String& src, byte& dest)
+	static bool Convert(const std::string& src, byte& dest)
 	{
 		return sscanf(src.c_str(), "%hhu", &dest) == 1;
 	}
 };
 
 template<>
-class TypeConverter< String, bool >
+class TypeConverter< std::string, bool >
 {
 public:
-	static bool Convert(const String& src, bool& dest)
+	static bool Convert(const std::string& src, bool& dest)
 	{
-		String lower = StringUtilities::ToLower(src);
+		std::string lower = StringUtilities::ToLower(src);
 		if (lower == "1" || lower == "true")
 		{
 			dest = true;
@@ -211,15 +211,15 @@ template< typename DestType, typename InternalType, int count >
 class TypeConverterStringVector
 {
 public:
-	static bool Convert(const String& src, DestType& dest)
+	static bool Convert(const std::string& src, DestType& dest)
 	{
-		StringList string_list;
+		std::vector<std::string> string_list;
 		StringUtilities::ExpandString(string_list, src);
 		if (string_list.size() < count)
 			return false;
 		for (int i = 0; i < count; i++)
 		{
-			if (!TypeConverter< String, InternalType >::Convert(string_list[i], dest[i]))
+			if (!TypeConverter< std::string, InternalType >::Convert(string_list[i], dest[i]))
 				return false;
 		}
 		return true;
@@ -228,10 +228,10 @@ public:
 
 #define STRING_VECTOR_CONVERTER(type, internal_type, count) \
 template<> \
-class TypeConverter< String, type > \
+class TypeConverter< std::string, type > \
 { \
 public: \
-	static bool Convert(const String& src, type& dest) \
+	static bool Convert(const std::string& src, type& dest) \
 	{ \
 		return TypeConverterStringVector< type, internal_type, count >::Convert(src, dest); \
 	} \
@@ -240,15 +240,15 @@ public: \
 STRING_VECTOR_CONVERTER(Color, byte, 4);
 
 /////////////////////////////////////////////////
-// To String Converters
+// To std::string Converters
 /////////////////////////////////////////////////
 
 #define FLOAT_STRING_CONVERTER(type) \
 template<> \
-class TypeConverter< type, String > \
+class TypeConverter< type, std::string > \
 { \
 public: \
-	static bool Convert(const type& src, String& dest) \
+	static bool Convert(const type& src, std::string& dest) \
 	{ \
 		if(FormatString(dest, 32, "%.3f", src) == 0) \
 			return false; \
@@ -260,50 +260,50 @@ FLOAT_STRING_CONVERTER(float);
 FLOAT_STRING_CONVERTER(double);
 
 template<>
-class TypeConverter< int, String >
+class TypeConverter< int, std::string >
 {
 public:
-	static bool Convert(const int& src, String& dest)
+	static bool Convert(const int& src, std::string& dest)
 	{
 		return FormatString(dest, 32, "%d", src) > 0;
 	}
 };
 
 template<>
-class TypeConverter< unsigned int, String >
+class TypeConverter< unsigned int, std::string >
 {
 public:
-	static bool Convert(const unsigned int& src, String& dest)
+	static bool Convert(const unsigned int& src, std::string& dest)
 	{
 		return FormatString(dest, 32, "%u", src) > 0;
 	}
 };
 
 template<>
-class TypeConverter< int64_t, String >
+class TypeConverter< int64_t, std::string >
 {
 public:
-	static bool Convert(const int64_t& src, String& dest)
+	static bool Convert(const int64_t& src, std::string& dest)
 	{
 		return FormatString(dest, 32, "%" PRId64, src) > 0;
 	}
 };
 
 template<>
-class TypeConverter< byte, String >
+class TypeConverter< byte, std::string >
 {
 public:
-	static bool Convert(const byte& src, String& dest)
+	static bool Convert(const byte& src, std::string& dest)
 	{
 		return FormatString(dest, 32, "%hhu", src) > 0;
 	}
 };
 
 template<>
-class TypeConverter< bool, String >
+class TypeConverter< bool, std::string >
 {
 public:
-	static bool Convert(const bool& src, String& dest)
+	static bool Convert(const bool& src, std::string& dest)
 	{
 		dest = src ? "1" : "0";
 		return true;
@@ -311,10 +311,10 @@ public:
 };
 
 template<>
-class TypeConverter< char*, String >
+class TypeConverter< char*, std::string >
 {
 public:
-	static bool Convert(char* const & src, String& dest)
+	static bool Convert(char* const & src, std::string& dest)
 	{
 		dest = src;
 		return true;
@@ -325,13 +325,13 @@ template< typename SourceType, typename InternalType, int count >
 class TypeConverterVectorString
 {
 public:
-	static bool Convert(const SourceType& src, String& dest)
+	static bool Convert(const SourceType& src, std::string& dest)
 	{
 		dest = "";
 		for (int i = 0; i < count; i++)
 		{
-			String value;
-			if (!TypeConverter< InternalType, String >::Convert(src[i], value))
+			std::string value;
+			if (!TypeConverter< InternalType, std::string >::Convert(src[i], value))
 				return false;
 			
 			dest += value;
@@ -344,10 +344,10 @@ public:
 
 #define VECTOR_STRING_CONVERTER(type, internal_type, count) \
 template<> \
-class TypeConverter< type, String > \
+class TypeConverter< type, std::string > \
 { \
 public: \
-	static bool Convert(const type& src, String& dest) \
+	static bool Convert(const type& src, std::string& dest) \
 	{ \
 		return TypeConverterVectorString< type, internal_type, count >::Convert(src, dest); \
 	} \

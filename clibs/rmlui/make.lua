@@ -52,27 +52,6 @@ lm:source_set "source_rmlui" {
 
 lm:lua_dll "rmlui" {
     deps = {
-        "yoga",
-        "rmlui_core",
-        "font",
-    },
-    includes = {
-        LuaInclude,
-        Ant3rd .. "bgfx/include",
-        Ant3rd .. "bx/include",
-        Ant3rd .. "glm",
-        Ant3rd .. "rmlui/Include",
-        Ant3rd .. "bgfx/3rdparty",
-        Ant3rd .. "yoga",
-        "../lua2struct",
-    },
-    defines = {
-        "FONT_EXPORT",
-    },
-    sources = {
-        "*.cpp",
-    },
-    windows = {
-        links = "user32"
+        "source_rmlui",
     }
 }

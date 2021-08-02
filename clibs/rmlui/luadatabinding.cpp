@@ -34,7 +34,7 @@ lua_pushvariant(lua_State *L, const Rml::Variant &v) {
 		lua_pushinteger(L, v.GetReference<int64_t>());
 		break;
 	case Rml::Variant::Type::STRING: {
-		const Rml::String &s = v.GetReference<Rml::String>();
+		const std::string &s = v.GetReference<std::string>();
 		lua_pushlstring(L, s.c_str(), s.length());
 		break; }
 	case Rml::Variant::Type::NONE:
@@ -82,7 +82,7 @@ lua_getvariant(lua_State *L, int index, Rml::Variant* variant) {
 		}
 		break;
 	case LUA_TSTRING:
-		*variant = Rml::String(lua_tostring(L, index));
+		*variant = std::string(lua_tostring(L, index));
 		break;
 	case LUA_TNIL:
 	default:	// todo
@@ -101,7 +101,7 @@ struct LuaDataModel {
 	LuaTableDef* tableDef;
 	lua_State* dataL;
 	int top;
-	LuaDataModel(Rml::Document* document, const Rml::String& name);
+	LuaDataModel(Rml::Document* document, const std::string& name);
 	~LuaDataModel() { release(); }
 	void release();
 	bool valid() { return !!constructor; }
@@ -331,7 +331,7 @@ lDataModelDelete(lua_State* L) {
 	return 0;
 }
 
-LuaDataModel::LuaDataModel(Rml::Document* document, const Rml::String& name)
+LuaDataModel::LuaDataModel(Rml::Document* document, const std::string& name)
 	: constructor(document->CreateDataModel(name))
 	, handle(constructor.GetModelHandle())
 	, scalarDef(new LuaScalarDef(this))
@@ -352,7 +352,7 @@ void LuaDataModel::release() {
 int
 lDataModelCreate(lua_State *L) {
 	Rml::Document* document = (Rml::Document*)lua_touserdata(L, 1);
-	Rml::String name = luaL_checkstring(L, 2);
+	std::string name = luaL_checkstring(L, 2);
 	luaL_checktype(L, 3, LUA_TTABLE);
 
 	struct LuaDataModel* D = (struct LuaDataModel*)lua_newuserdata(L, sizeof(*D));

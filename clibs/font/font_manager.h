@@ -60,19 +60,6 @@ struct priority_list {
 
 struct truetype_font;
 
-struct font_manager {
-	int version;
-	int count;
-	int16_t list_head;
-	struct font_slot slots[FONT_MANAGER_SLOTS];
-	struct priority_list priority[FONT_MANAGER_SLOTS];
-	int16_t hash[FONT_MANAGER_HASHSLOTS];
-	struct truetype_font* ttf;
-	void *L;
-	int dpi_perinch;
-	struct mutex_t* mutex;
-};
-
 struct font_glyph {
 	int16_t offset_x;
 	int16_t offset_y;
@@ -84,38 +71,51 @@ struct font_glyph {
 	uint16_t v;
 };
 
-#ifdef FONT_EXPORT
-#	ifdef _WIN32
-#		ifdef FONT_IMP
-#			define FONT_API __declspec(dllexport)
-#		else //!FONT_IMP
-#			define FONT_API __declspec(dllimport)
-#		endif//FONT_IMP
-#	else
-#		define FONT_API extern
-#	endif
-#else //!FONT_EXPORT
-#	define FONT_API extern
-#endif //FONT_EXPORT
+struct font_manager {
+	int version;
+	int count;
+	int16_t list_head;
+	struct font_slot slots[FONT_MANAGER_SLOTS];
+	struct priority_list priority[FONT_MANAGER_SLOTS];
+	int16_t hash[FONT_MANAGER_HASHSLOTS];
+	struct truetype_font* ttf;
+	void *L;
+	int dpi_perinch;
+	struct mutex_t* mutex;
+
+	void (*font_manager_import)(struct font_manager *F, const char* fontpath);
+	int  (*font_manager_addfont_with_family)(struct font_manager *F, const char* family);
+	void (*font_manager_fontheight)(struct font_manager *F, int fontid, int size, int *ascent, int *descent, int *lineGap);
+	void (*font_manager_boundingbox)(struct font_manager *F, int fontid, int size, int *x0, int *y0, int *x1, int *y1);
+	int  (*font_manager_pixelsize)(struct font_manager *F, int fontid, int pointsize);
+	// return 0 for need updated
+	int  (*font_manager_glyph)(struct font_manager *F, int fontid, int codepoint, int size, struct font_glyph *g, struct font_glyph *og);
+
+	// 1 exist in cache. 0 not exist in cache, call font_manager_update. -1 failed.
+	int  (*font_manager_touch)(struct font_manager *, int font, int codepoint, struct font_glyph *glyph);
+	// buffer size should be [ glyph->w * glyph->h ] ,  NULL succ , otherwise returns error msg
+	const char* (*font_manager_update)(struct font_manager *, int font, int codepoint, struct font_glyph *glyph, uint8_t *buffer);
+	void (*font_manager_flush)(struct font_manager *);
+	void (*font_manager_scale)(struct font_manager *F, struct font_glyph *glyph, int size);
+	void (*font_manager_underline)(struct font_manager *F, int fontid, int size, float *underline_position, float *thickness);
+
+	float (*font_manager_sdf_mask)(struct font_manager *F);
+	float (*font_manager_sdf_distance)(struct font_manager *F, uint8_t numpixel);
+};
 
 void font_manager_init(struct font_manager *, void *L);
-FONT_API void font_manager_import(struct font_manager *F, const char* fontpath);
-FONT_API int font_manager_addfont_with_family(struct font_manager *F, const char* family);
-FONT_API void font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascent, int *descent, int *lineGap);
-FONT_API void font_manager_boundingbox(struct font_manager *F, int fontid, int size, int *x0, int *y0, int *x1, int *y1);
-FONT_API int font_manager_pixelsize(struct font_manager *F, int fontid, int pointsize);
-// return 0 for need updated
-FONT_API int font_manager_glyph(struct font_manager *F, int fontid, int codepoint, int size, struct font_glyph *g, struct font_glyph *og);
-
-// 1 exist in cache. 0 not exist in cache, call font_manager_update. -1 failed.
-FONT_API int font_manager_touch(struct font_manager *, int font, int codepoint, struct font_glyph *glyph);
-// buffer size should be [ glyph->w * glyph->h ] ,  NULL succ , otherwise returns error msg
-FONT_API const char * font_manager_update(struct font_manager *, int font, int codepoint, struct font_glyph *glyph, uint8_t *buffer);
-FONT_API void font_manager_flush(struct font_manager *);
-FONT_API void font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size);
-FONT_API void font_manager_underline(struct font_manager *F, int fontid, int size, float *underline_position, float *thickness);
-
-FONT_API float font_manager_sdf_mask(struct font_manager *F);
-FONT_API float font_manager_sdf_distance(struct font_manager *F, uint8_t numpixel);
+void font_manager_import(struct font_manager *F, const char* fontpath);
+int font_manager_addfont_with_family(struct font_manager *F, const char* family);
+void font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascent, int *descent, int *lineGap);
+void font_manager_boundingbox(struct font_manager *F, int fontid, int size, int *x0, int *y0, int *x1, int *y1);
+int font_manager_pixelsize(struct font_manager *F, int fontid, int pointsize);
+int font_manager_glyph(struct font_manager *F, int fontid, int codepoint, int size, struct font_glyph *g, struct font_glyph *og);
+int font_manager_touch(struct font_manager *, int font, int codepoint, struct font_glyph *glyph);
+const char * font_manager_update(struct font_manager *, int font, int codepoint, struct font_glyph *glyph, uint8_t *buffer);
+void font_manager_flush(struct font_manager *);
+void font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size);
+void font_manager_underline(struct font_manager *F, int fontid, int size, float *underline_position, float *thickness);
+float font_manager_sdf_mask(struct font_manager *F);
+float font_manager_sdf_distance(struct font_manager *F, uint8_t numpixel);
 
 #endif //font_manager_h

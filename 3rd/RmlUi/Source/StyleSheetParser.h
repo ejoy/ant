@@ -39,7 +39,7 @@ class Stream;
 class StyleSheetNode;
 class AbstractPropertyParser;
 struct PropertySource;
-using StyleSheetNodeListRaw = Vector<StyleSheetNode*>;
+using StyleSheetNodeListRaw = std::vector<StyleSheetNode*>;
 
 /**
 	Helper class for parsing a style sheet into its memory representation.
@@ -63,13 +63,13 @@ public:
 	/// @param parsed_properties The properties dictionary the properties will be read into
 	/// @param properties The properties to parse
 	/// @return True if the parse was successful, or false if an error occured.
-	bool ParseProperties(PropertyDictionary& parsed_properties, const String& properties);
+	bool ParseProperties(PropertyDictionary& parsed_properties, const std::string& properties);
 
 	// Converts a selector query to a tree of nodes.
 	// @param root_node Node to construct into.
 	// @param selectors The selector rules as a string value.
 	// @return The list of leaf nodes in the constructed tree, which are all owned by the root node.
-	static StyleSheetNodeListRaw ConstructNodes(StyleSheetNode& root_node, const String& selectors);
+	static StyleSheetNodeListRaw ConstructNodes(StyleSheetNode& root_node, const std::string& selectors);
 
 	// Initialises property parsers. Call after initialisation of StylesheetSpecification.
 	static void Initialise();
@@ -80,12 +80,12 @@ private:
 	// Stream we're parsing from.
 	Stream* stream;
 	// Parser memory buffer.
-	String parse_buffer;
+	std::string parse_buffer;
 	// How far we've read through the buffer.
 	size_t parse_buffer_pos;
 
 	// The name of the file we're parsing.
-	String stream_file_name;
+	std::string stream_file_name;
 	// Current line number we're parsing.
 	size_t line_number;
 
@@ -99,17 +99,17 @@ private:
 	// @param properties The dictionary of properties
 	// @param rule_specificity The specifity of the rule
 	// @return The leaf node of the rule
-	static StyleSheetNode* ImportProperties(StyleSheetNode* node, String rule_name, const PropertyDictionary& properties, int rule_specificity);
+	static StyleSheetNode* ImportProperties(StyleSheetNode* node, std::string rule_name, const PropertyDictionary& properties, int rule_specificity);
 
 	// Attempts to parse a @keyframes block
-	bool ParseKeyframeBlock(KeyframesMap & keyframes_map, const String & identifier, const String & rules, const PropertyDictionary & properties);
+	bool ParseKeyframeBlock(KeyframesMap & keyframes_map, const std::string & identifier, const std::string & rules, const PropertyDictionary & properties);
 
 	// Attempts to find one of the given character tokens in the active stream
 	// If it's found, buffer is filled with all content up until the token
 	// @param buffer The buffer that receives the content
 	// @param characters The character tokens to find
 	// @param remove_token If the token that caused the find to stop should be removed from the stream
-	char FindToken(String& buffer, const char* tokens, bool remove_token);
+	char FindToken(std::string& buffer, const char* tokens, bool remove_token);
 
 	// Attempts to find the next character in the active stream.
 	// If it's found, buffer is filled with the character

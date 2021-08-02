@@ -36,7 +36,7 @@
 
 namespace Rml {
 
-static int FormatString(String& string, size_t max_size, const char* format, va_list argument_list)
+static int FormatString(std::string& string, size_t max_size, const char* format, va_list argument_list)
 {
 	const int INTERNAL_BUFFER_SIZE = 1024;
 	static char buffer[INTERNAL_BUFFER_SIZE];
@@ -50,7 +50,7 @@ static int FormatString(String& string, size_t max_size, const char* format, va_
 #ifdef RMLUI_DEBUG
 	if (length == -1)
 	{
-		Log::Message(Log::LT_WARNING, "FormatString: String truncated to %d bytes when processing %s", max_size, format);
+		Log::Message(Log::Level::Warning, "FormatString: std::string truncated to %d bytes when processing %s", max_size, format);
 	}
 #endif
 
@@ -62,7 +62,7 @@ static int FormatString(String& string, size_t max_size, const char* format, va_
 	return length;
 }
 
-int FormatString(String& string, size_t max_size, const char* format, ...)
+int FormatString(std::string& string, size_t max_size, const char* format, ...)
 {
 	va_list argument_list;
 	va_start(argument_list, format);
@@ -70,9 +70,9 @@ int FormatString(String& string, size_t max_size, const char* format, ...)
 	va_end(argument_list);
 	return result;
 }
-String CreateString(size_t max_size, const char* format, ...)
+std::string CreateString(size_t max_size, const char* format, ...)
 {
-	String result;
+	std::string result;
 	result.reserve(max_size);
 	va_list argument_list;
 	va_start(argument_list, format);
@@ -87,15 +87,15 @@ static inline char CharToLower(char c) {
 	return c;
 }
 
-String StringUtilities::ToLower(const String& string) {
-	String str_lower = string;
+std::string StringUtilities::ToLower(const std::string& string) {
+	std::string str_lower = string;
 	std::transform(str_lower.begin(), str_lower.end(), str_lower.begin(), &CharToLower);
 	return str_lower;
 }
 
-String StringUtilities::ToUpper(const String& string)
+std::string StringUtilities::ToUpper(const std::string& string)
 {
-	String str_upper = string;
+	std::string str_upper = string;
 	std::transform(str_upper.begin(), str_upper.end(), str_upper.begin(), [](char c) {
 		if (c >= 'a' && c <= 'z')
 			c -= char('a' - 'A');
@@ -105,17 +105,17 @@ String StringUtilities::ToUpper(const String& string)
 	return str_upper;
 }
 
-String StringUtilities::Replace(String subject, const String& search, const String& replace)
+std::string StringUtilities::Replace(std::string subject, const std::string& search, const std::string& replace)
 {
 	size_t pos = 0;
-	while ((pos = subject.find(search, pos)) != String::npos) {
+	while ((pos = subject.find(search, pos)) != std::string::npos) {
 		subject.replace(pos, search.length(), replace);
 		pos += replace.length();
 	}
 	return subject;
 }
 
-String StringUtilities::Replace(String subject, char search, char replace)
+std::string StringUtilities::Replace(std::string subject, char search, char replace)
 {
 	const size_t size = subject.size();
 	for (size_t i = 0; i < size; i++)
@@ -128,7 +128,7 @@ String StringUtilities::Replace(String subject, char search, char replace)
 
 
 // Expands character-delimited list of values in a single string to a whitespace-trimmed list of values.
-void StringUtilities::ExpandString(StringList& string_list, const String& string, const char delimiter)
+void StringUtilities::ExpandString(std::vector<std::string>& string_list, const std::string& string, const char delimiter)
 {	
 	char quote = 0;
 	bool last_char_delimiter = true;
@@ -185,7 +185,7 @@ void StringUtilities::ExpandString(StringList& string_list, const String& string
 }
 
 
-void StringUtilities::ExpandString(StringList& string_list, const String& string, const char delimiter, char quote_character, char unquote_character, bool ignore_repeated_delimiters)
+void StringUtilities::ExpandString(std::vector<std::string>& string_list, const std::string& string, const char delimiter, char quote_character, char unquote_character, bool ignore_repeated_delimiters)
 {
 	int quote_mode_depth = 0;
 	const char* ptr = string.c_str();
@@ -231,7 +231,7 @@ void StringUtilities::ExpandString(StringList& string_list, const String& string
 }
 
 // Joins a list of string values into a single string separated by a character delimiter.
-void StringUtilities::JoinString(String& string, const StringList& string_list, const char delimiter)
+void StringUtilities::JoinString(std::string& string, const std::vector<std::string>& string_list, const char delimiter)
 {
 	for (size_t i = 0; i < string_list.size(); i++)
 	{
@@ -241,12 +241,12 @@ void StringUtilities::JoinString(String& string, const StringList& string_list, 
 	}
 }
 
-String StringUtilities::StripWhitespace(const String& string)
+std::string StringUtilities::StripWhitespace(const std::string& string)
 {
 	return StripWhitespace(StringView(string));
 }
 
-RMLUICORE_API String StringUtilities::StripWhitespace(StringView string)
+RMLUICORE_API std::string StringUtilities::StripWhitespace(StringView string)
 {
 	const char* start = string.begin();
 	const char* end = string.end();
@@ -258,12 +258,12 @@ RMLUICORE_API String StringUtilities::StripWhitespace(StringView string)
 		end--;
 
 	if (start < end)
-		return String(start, end);
+		return std::string(start, end);
 
-	return String();
+	return std::string();
 }
 
-void StringUtilities::TrimTrailingDotZeros(String& string)
+void StringUtilities::TrimTrailingDotZeros(std::string& string)
 {
 	size_t new_size = string.size();
 	for (size_t i = string.size() - 1; i < string.size(); i--)
@@ -339,11 +339,11 @@ StringView::StringView(const char* p_begin, const char* p_end) : p_begin(p_begin
 {
 	RMLUI_ASSERT(p_end >= p_begin);
 }
-StringView::StringView(const String& string) : p_begin(string.data()), p_end(string.data() + string.size())
+StringView::StringView(const std::string& string) : p_begin(string.data()), p_end(string.data() + string.size())
 {}
-StringView::StringView(const String& string, size_t offset) : p_begin(string.data() + offset), p_end(string.data() + string.size())
+StringView::StringView(const std::string& string, size_t offset) : p_begin(string.data() + offset), p_end(string.data() + string.size())
 {}
-StringView::StringView(const String& string, size_t offset, size_t count) : p_begin(string.data() + offset), p_end(string.data() + std::min<size_t>(offset + count, string.size()))
+StringView::StringView(const std::string& string, size_t offset, size_t count) : p_begin(string.data() + offset), p_end(string.data() + std::min<size_t>(offset + count, string.size()))
 {}
 
 bool StringView::operator==(const StringView& other) const { 
@@ -353,11 +353,11 @@ bool StringView::operator==(const StringView& other) const {
 
 StringIteratorU8::StringIteratorU8(const char* p_begin, const char* p, const char* p_end) : view(p_begin, p_end), p(p) 
 {}
-StringIteratorU8::StringIteratorU8(const String& string) : view(string), p(string.data())
+StringIteratorU8::StringIteratorU8(const std::string& string) : view(string), p(string.data())
 {}
-StringIteratorU8::StringIteratorU8(const String& string, size_t offset) : view(string), p(string.data() + offset)
+StringIteratorU8::StringIteratorU8(const std::string& string, size_t offset) : view(string), p(string.data() + offset)
 {}
-StringIteratorU8::StringIteratorU8(const String& string, size_t offset, size_t count) : view(string, 0, offset + count), p(string.data() + offset)
+StringIteratorU8::StringIteratorU8(const std::string& string, size_t offset, size_t count) : view(string, 0, offset + count), p(string.data() + offset)
 {}
 StringIteratorU8& StringIteratorU8::operator++() {
 	RMLUI_ASSERT(p < view.end());

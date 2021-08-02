@@ -29,9 +29,11 @@ namespace EffekseerRendererBGFX {
 		class Model : public Effekseer::Model
 		{
 		public:
+			Model(const Effekseer::CustomVector<Model::Vertex>& vertecies, const Effekseer::CustomVector<Model::Face>& faces);
 			Model(const void* data, int32_t size);
 			~Model();
 		private:
+			void create_buffer();
 			friend class ModelLoader;
 		};
 	}

@@ -9,6 +9,7 @@ system "effekseer_system"
     .method "camera_usage"
     .method "render_submit"
     .method "follow_transform_updated"
+    .method "end_frame"
     .method "exit"
 
 interface "effekseer_playback"

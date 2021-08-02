@@ -37,8 +37,8 @@ namespace Rml {
 
 template <typename ID>
 class IdNameMap {
-	Vector<String> name_map;  // IDs are indices into the name_map
-	UnorderedMap<String, ID> reverse_map;
+	std::vector<std::string> name_map;  // IDs are indices into the name_map
+	std::unordered_map<std::string, ID> reverse_map;
 
 protected:
 	IdNameMap() {
@@ -47,7 +47,7 @@ protected:
 	}
 
 public:
-	void AddPair(ID id, const String& name)
+	void AddPair(ID id, const std::string& name)
 	{
 		// Should only be used for defined IDs
 		if ((size_t)id >= name_map.size())
@@ -60,25 +60,25 @@ public:
 
 	bool AssertAllInserted(ID number_of_defined_ids) const
 	{
-		std::ptrdiff_t cnt = std::count_if(name_map.begin(), name_map.end(), [](const String& name) { return !name.empty(); });
+		std::ptrdiff_t cnt = std::count_if(name_map.begin(), name_map.end(), [](const std::string& name) { return !name.empty(); });
 		return cnt == (std::ptrdiff_t)number_of_defined_ids && reverse_map.size() == (size_t)number_of_defined_ids;
 	}
 
-	ID GetId(const String& name) const
+	ID GetId(const std::string& name) const
 	{
 		auto it = reverse_map.find(name);
 		if (it != reverse_map.end())
 			return it->second;
 		return ID::Invalid;
 	}
-	const String& GetName(ID id) const
+	const std::string& GetName(ID id) const
 	{
 		if (static_cast<size_t>(id) < name_map.size())
 			return name_map[static_cast<size_t>(id)];
 		return name_map[static_cast<size_t>(ID::Invalid)];
 	}
 
-	ID GetOrCreateId(const String& name)
+	ID GetOrCreateId(const std::string& name)
 	{
 		// All predefined properties must be set before possibly adding custom properties here
 		RMLUI_ASSERT(name_map.size() == reverse_map.size());

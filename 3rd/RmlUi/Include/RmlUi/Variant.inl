@@ -82,7 +82,7 @@ bool Variant::GetInto(T& value) const
 		break;
 
 	case STRING:
-		return TypeConverter< String, T >::Convert(*(String*)data, value);
+		return TypeConverter< std::string, T >::Convert(*(std::string*)data, value);
 		break;
 
 	case COLOURB:

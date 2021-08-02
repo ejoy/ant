@@ -49,7 +49,7 @@ size_t FileInterface::Length(FileHandle file)
     return length;
 }
 
-bool FileInterface::LoadFile(const String& path, String& out_data)
+bool FileInterface::LoadFile(const std::string& path, std::string& out_data)
 {
 	FileHandle handle = Open(path);
 	if (!handle)
@@ -57,13 +57,13 @@ bool FileInterface::LoadFile(const String& path, String& out_data)
 
 	const size_t length = Length(handle);
 
-	out_data = String(length, 0);
+	out_data = std::string(length, 0);
 
 	const size_t read_length = Read(&out_data[0], length, handle);
 	
 	if (length != read_length)
 	{
-		Log::Message(Log::LT_WARNING, "Could only read %zu of %zu bytes from file %s", read_length, length, path.c_str());
+		Log::Message(Log::Level::Warning, "Could only read %zu of %zu bytes from file %s", read_length, length, path.c_str());
 	}
 
 	Close(handle);
