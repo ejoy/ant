@@ -76,29 +76,29 @@ function irender.get_main_view_rendertexture()
 	return fbmgr.get_rb(fb[1]).handle
 end
 
-function irender.create_primitive_filter_entities(filtername, filtertype, exclude)
-	local quene_policy = "ant.render|" .. filtername
+function irender.create_primitive_filter_entities(filtername, filtertype, exclude, filterpkg)
+	filterpkg = filterpkg or "ant.render"
 	for _, fn in ipairs(ipf.layers(filtername)) do
-		local filter_pn = ("ant.scene|%s_primitive_filter"):format(fn)
+		--TODO: should cache this var
+		local t = ("%s_%s"):format(filtername, fn)
 		world:luaecs_create_entity{
 			policy = {
-				filter_pn,
-				quene_policy,
+				"ant.scene|primitive_filter",
+				("%s|%s"):format(filterpkg, t)
 			},
 			data = {
 				primitive_filter = {
 					filter_type = filtertype or "visible",
 					exclude = exclude,
 				},
-				[fn] 			= true,
-				[filtername] 	= true,
+				[t] = true,
 			}
 		}
 	end
 end
 
-function irender.create_view_queue(view_rect, view_name, exclude)
-	irender.create_primitive_filter_entities("main_queue", "visible", exclude)
+function irender.create_view_queue(view_rect, view_name, exclude, pkgname)
+	irender.create_primitive_filter_entities(view_name, "visible", exclude, pkgname)
 	for v in w:select "main_queue render_target:in" do
 		local rt = v.render_target
 		world:luaecs_create_entity {
@@ -133,8 +133,8 @@ function irender.create_view_queue(view_rect, view_name, exclude)
 	end
 end
 
-function irender.create_orthoview_queue(view_rect, orthoface)
-	irender.create_primitive_filter_entities "main_queue"
+function irender.create_orthoview_queue(view_rect, orthoface, pkgname)
+	irender.create_primitive_filter_entities(orthoface, "visible", nil, pkgname)
 	assert(orthoface)
 	for v in w:select "main_queue render_target:in" do
 		local rt = v.render_target

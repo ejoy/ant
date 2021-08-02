@@ -61,6 +61,10 @@ policy_v2 "csm_queue"
     .require_interface "ant.render|ishadow"
     .component_v2 "csm"
 
+component_v2 "csm_queue_opaticy"
+policy_v2 "csm_queue_opaticy"
+    .component_v2 "csm_queue_opaticy"
+
 --disable omni shadow, need more work
 
 -- policy "omni_shadow"

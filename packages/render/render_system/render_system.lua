@@ -21,21 +21,18 @@ function render_sys:update_filter()
         local state = ro.entity_state
 		local st = ro.fx.setting.surfacetype
 
-		local sync_tag = {st .. "?out"}
 		for _, qn in ipairs{"main_queue", "blit_queue"} do
-			for vv in w:select(("%s %s primitive_filter:in"):format(st, qn)) do
+			local tag = ("%s_%s?out"):format(qn, st)
+			for vv in w:select(tag .. " primitive_filter:in") do
 				local pf = vv.primitive_filter
 				local mask = ies.filter_mask(pf.filter_type)
 				local exclude_mask = pf.exclude_type and ies.filter_mask(pf.exclude_type) or 0
 
 				local add = ((state & mask) ~= 0) and ((state & exclude_mask) == 0)
-				e[qn] = add
-				e[st] = add
-				sync_tag[#sync_tag+1] = qn .. "?out"
-				--ipf.update_filter_tag(qn, st, add, e)
+				e[tag] = add
 			end
+			w:sync(tag, e)
 		end
-		w:sync(table.concat(sync_tag, " "), e)
     end
 end
 
@@ -48,12 +45,13 @@ function render_sys:render_submit()
         bgfx.set_view_transform(viewid, camera.viewmat, camera.projmat)
     end
 
+	--TODO: should put all render queue here
 	for _, qn in ipairs{"main_queue", "blit_queue"} do
 		for e in w:select(qn .. " visible render_target:in") do
 			local viewid = e.render_target.viewid
 			local culltag = qn .. "_cull"
 			for _, ln in ipairs(ipf.layers(qn)) do
-				local s = ("%s %s %s:absent render_object:in name:in"):format(ln, qn, culltag)
+				local s = ("%s_%s %s:absent render_object:in name:in"):format(qn, ln, culltag)
 				for ee in w:select(s) do
 					irender.draw(viewid, ee.render_object)
 				end

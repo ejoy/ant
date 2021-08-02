@@ -1,0 +1,12 @@
+
+for _, q in ipairs{
+    "main_queue", "blit_queue", "pre_depth_queue",
+} do
+    for _, f in ipairs{
+        "foreground", "opaticy", "background", "translucent", "decal", "ui"
+    } do
+        local n = ("%s_%s"):format(q, f)
+        component_v2(n)
+        policy_v2(f).component_v2(n)
+    end
+end

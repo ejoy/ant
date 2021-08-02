@@ -7,18 +7,10 @@ local LAYER_NAMES<const> = {"foreground", "opaticy", "background", "translucent"
 
 local LAYERS <const> = {
     main_queue = LAYER_NAMES,
-    blit_queue = {
-        "opaticy",
-    },
-    csm_queue = {
-        "opaticy", "translucent"
-    },
-    pickup_queue = {
-        "opaticy", "translucent"
-    },
-    pre_depth_queue = {
-        "opaticy"
-    },
+    blit_queue = {"opaticy",},
+    csm_queue = {"opaticy",},
+    pickup_queue = {"opaticy", "translucent"},
+    pre_depth_queue = {"opaticy"},
 }
 
 local FILTERS = {}
