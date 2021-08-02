@@ -189,7 +189,6 @@ local function from_runtime_event(runtime_event)
         for _, e in ipairs(ev.event_list) do
             e.name_ui = {text = e.name}
             if e.event_type == "Sound" or e.event_type == "Effect" then
-                
                 e.asset_path_ui = {text = e.asset_path}
                 if e.link_info and e.link_info.slot_name ~= '' then
                     e.link_info.slot_eid = hierarchy.slot_list[e.link_info.slot_name]
