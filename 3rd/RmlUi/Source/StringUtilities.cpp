@@ -370,4 +370,35 @@ inline void StringIteratorU8::SeekForward() {
 	p = StringUtilities::SeekForwardUTF8(p, view.end());
 }
 
+
+template <>
+float FromString<float>(const std::string& str, float def) {
+	errno = 0;
+	float r = strtof(str.c_str(), NULL);
+	if (errno != 0) {
+		return def;
+	}
+	return r;
+}
+
+template <>
+int FromString<int>(const std::string& str, int def) {
+	errno = 0;
+	long r = strtol(str.c_str(), NULL, 10);
+	if (errno != 0) {
+		return def;
+	}
+	return r;
+}
+
+template <>
+std::string ToString<float>(const float& v) {
+	return std::to_string(v);
+}
+
+template <>
+std::string ToString<int>(const int& v) {
+	return std::to_string(v);
+}
+
 } // namespace Rml

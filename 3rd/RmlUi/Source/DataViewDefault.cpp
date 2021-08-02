@@ -36,6 +36,8 @@
 #include "../Include/RmlUi/Factory.h"
 #include "../Include/RmlUi/Variant.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
+#include "../Include/RmlUi/Log.h"
+#include "../Include/RmlUi/StringUtilities.h"
 
 namespace Rml {
 
@@ -91,7 +93,7 @@ bool DataViewAttribute::Update(DataModel& model)
 
 	if (element && GetExpression().Run(expr_interface, variant))
 	{
-		const std::string value = variant.Get<std::string>();
+		const std::string value = GetVariant<std::string>(variant);
 		const std::string* attribute = element->GetAttribute(attribute_name);
 		
 		if (!attribute || (attribute && *attribute != value))
@@ -117,7 +119,7 @@ bool DataViewAttributeIf::Update(DataModel& model)
 
 	if (element && GetExpression().Run(expr_interface, variant))
 	{
-		const bool value = variant.Get<bool>();
+		const bool value = GetVariant<bool>(variant);
 		bool has = element->HasAttribute(attribute_name);
 		if (has != value) {
 			if (value)
@@ -148,7 +150,7 @@ bool DataViewStyle::Update(DataModel& model)
 	
 	if (element && GetExpression().Run(expr_interface, variant))
 	{
-		const std::string value = variant.Get<std::string>();
+		const std::string value = GetVariant<std::string>(variant);
 		const Property* p = element->GetStyle()->GetLocalProperty(StyleSheetSpecification::GetPropertyId(property_name));
 		if (!p || p->Get<std::string>() != value)
 		{
@@ -173,7 +175,7 @@ bool DataViewClass::Update(DataModel& model)
 
 	if (element && GetExpression().Run(expr_interface, variant))
 	{
-		const bool activate = variant.Get<bool>();
+		const bool activate = GetVariant<bool>(variant);
 		const bool is_set = element->IsClassSet(class_name);
 		if (activate != is_set)
 		{
@@ -197,7 +199,7 @@ bool DataViewRml::Update(DataModel & model)
 
 	if (element && GetExpression().Run(expr_interface, variant))
 	{
-		std::string new_rml = variant.Get<std::string>();
+		std::string new_rml = GetVariant<std::string>(variant);
 		if (new_rml != previous_rml)
 		{
 			element->SetInnerRML(new_rml);
@@ -221,7 +223,7 @@ bool DataViewIf::Update(DataModel& model)
 
 	if (element && GetExpression().Run(expr_interface, variant))
 	{
-		const bool value = variant.Get<bool>();
+		const bool value = GetVariant<bool>(variant);
 		if (element->IsVisible() != value) {
 			element->SetVisible(value);
 			result = true;
@@ -243,7 +245,7 @@ bool DataViewVisible::Update(DataModel& model)
 
 	if (element && GetExpression().Run(expr_interface, variant))
 	{
-		const bool value = variant.Get<bool>();
+		const bool value = GetVariant<bool>(variant);
 		if (element->IsVisible() != value)
 		{
 			element->SetVisible(value);
@@ -316,7 +318,7 @@ bool DataViewText::Update(DataModel& model)
 			RMLUI_ASSERT(entry.data_expression);
 			Variant variant;
 			bool result = entry.data_expression->Run(expression_interface, variant);
-			const std::string value = variant.Get<std::string>();
+			const std::string value = GetVariant<std::string>(variant);
 			if (result && entry.value != value)
 			{
 				entry.value = value;

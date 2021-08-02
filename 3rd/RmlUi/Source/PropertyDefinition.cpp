@@ -29,6 +29,7 @@
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
+#include "../Include/RmlUi/StringUtilities.h"
 
 namespace Rml {
 
@@ -66,19 +67,13 @@ PropertyDefinition& PropertyDefinition::AddParser(const std::string& parser_name
 			new_parser.parameters[parameter_list[i]] = (int) i;
 	}
 
-	const int parser_index = (int)parsers.size();
 	parsers.push_back(new_parser);
 
 	// If the default value has not been parsed successfully yet, run it through the new parser.
 	if (default_value.unit == Property::UNKNOWN)
 	{
-		std::string unparsed_value = default_value.value.Get< std::string >();
-		if (new_parser.parser->ParseValue(default_value, unparsed_value, new_parser.parameters))
-		{
-			default_value.parser_index = parser_index;
-		}
-		else
-		{
+		std::string unparsed_value = default_value.Get<std::string>();
+		if (!new_parser.parser->ParseValue(default_value, unparsed_value, new_parser.parameters)) {
 			default_value.value = unparsed_value;
 			default_value.unit = Property::UNKNOWN;
 		}
@@ -95,7 +90,6 @@ bool PropertyDefinition::ParseValue(Property& property, const std::string& value
 		if (parsers[i].parser->ParseValue(property, value, parsers[i].parameters))
 		{
 			property.definition = this;
-			property.parser_index = (int) i;
 			return true;
 		}
 	}
@@ -107,47 +101,21 @@ bool PropertyDefinition::ParseValue(Property& property, const std::string& value
 // Called to convert a parsed property back into a value.
 bool PropertyDefinition::GetValue(std::string& value, const Property& property) const
 {
-	value = property.value.Get< std::string >();
+	value = property.Get<std::string>();
 
 	switch (property.unit)
 	{
 		case Property::KEYWORD:
 		{
-			int parser_index = property.parser_index;
-			if (parser_index < 0 || parser_index >= (int)parsers.size())
-			{
-				// Look for the keyword parser in the property's list of parsers
-				const auto* keyword_parser = StyleSheetSpecification::GetParser("keyword");
-				for(int i = 0; i < (int)parsers.size(); i++)
-				{
-					if (parsers[i].parser == keyword_parser)
-					{
-						parser_index = i;
-						break;
-					}
-				}
-				// If we couldn't find it, exit now
-				if (parser_index < 0 || parser_index >= (int)parsers.size())
-					return false;
-			}
-
-			int keyword = property.value.Get< int >();
-			for (ParameterMap::const_iterator i = parsers[parser_index].parameters.begin(); i != parsers[parser_index].parameters.end(); ++i)
-			{
-				if ((*i).second == keyword)
-				{
-					value = (*i).first;
-					break;
-				}
-			}
-
-			return false;
+			int keyword = property.Get<int>();
+			value = "keyword<" + std::to_string(keyword) + ">";
+			break;
 		}
 		break;
 
 		case Property::COLOUR:
 		{
-			Color colour = property.value.Get< Color >();
+			Color colour = property.Get<Color>();
 			value = CreateString(32, "rgba(%d,%d,%d,%d)", colour.r, colour.g, colour.b, colour.a);
 		}
 		break;

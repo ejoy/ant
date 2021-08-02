@@ -86,7 +86,7 @@ public:
 	/// @param[in] bubbles True if the event should execute the bubble phase
 	/// @param[in] default_action_phase The phases to execute default actions in
 	/// @return True if the event was not consumed (ie, was prevented from propagating by an element), false if it was.
-	static bool DispatchEvent(Element* target_element, EventId id, const Dictionary& parameters, bool interruptible, bool bubbles, DefaultActionPhase default_action_phase);
+	static bool DispatchEvent(Element* target_element, EventId id, const EventDictionary& parameters, bool interruptible, bool bubbles, DefaultActionPhase default_action_phase);
 
 private:
 	Element* element;

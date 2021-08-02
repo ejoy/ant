@@ -43,7 +43,7 @@ bool PropertyParserString::ParseValue(Property& property, const std::string& val
 {
 	RMLUI_UNUSED(parameters);
 
-	property.value = Variant(value);
+	property.value = value;
 	property.unit = Property::STRING;
 
 	return true;

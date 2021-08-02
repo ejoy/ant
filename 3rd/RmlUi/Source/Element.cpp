@@ -34,13 +34,14 @@
 #include "../Include/RmlUi/Document.h"
 #include "../Include/RmlUi/ElementUtilities.h"
 #include "../Include/RmlUi/Factory.h"
-#include "../Include/RmlUi/Dictionary.h"
 #include "../Include/RmlUi/PropertyIdSet.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/Transform.h"
 #include "../Include/RmlUi/RenderInterface.h"
 #include "../Include/RmlUi/StreamMemory.h"
+#include "../Include/RmlUi/Log.h"
+#include "../Include/RmlUi/StringUtilities.h"
 #include "DataModel.h"
 #include "ElementAnimation.h"
 #include "ElementBackgroundBorder.h"
@@ -500,17 +501,17 @@ void Element::RemoveEventListener(EventId id, EventListener* listener, bool in_c
 	meta->event_dispatcher.DetachEvent(id, listener, in_capture_phase);
 }
 
-bool Element::DispatchEvent(const std::string& type, const Dictionary& parameters) {
+bool Element::DispatchEvent(const std::string& type, const EventDictionary& parameters) {
 	const EventSpecification& specification = EventSpecificationInterface::GetOrInsert(type);
 	return EventDispatcher::DispatchEvent(this, specification.id, parameters, specification.interruptible, specification.bubbles, specification.default_action_phase);
 }
 
-bool Element::DispatchEvent(const std::string& type, const Dictionary& parameters, bool interruptible, bool bubbles) {
+bool Element::DispatchEvent(const std::string& type, const EventDictionary& parameters, bool interruptible, bool bubbles) {
 	const EventSpecification& specification = EventSpecificationInterface::GetOrInsert(type);
 	return EventDispatcher::DispatchEvent(this, specification.id, parameters, interruptible, bubbles, specification.default_action_phase);
 }
 
-bool Element::DispatchEvent(EventId id, const Dictionary& parameters) {
+bool Element::DispatchEvent(EventId id, const EventDictionary& parameters) {
 	const EventSpecification& specification = EventSpecificationInterface::Get(id);
 	return EventDispatcher::DispatchEvent(this, specification.id, parameters, specification.interruptible, specification.bubbles, specification.default_action_phase);
 }
@@ -1251,7 +1252,7 @@ void Element::AdvanceAnimations()
 	// Move all completed animations to the end of the list
 	auto it_completed = std::partition(animations.begin(), animations.end(), [](const ElementAnimation& animation) { return !animation.IsComplete(); });
 
-	std::vector<Dictionary> dictionary_list;
+	std::vector<EventDictionary> dictionary_list;
 	std::vector<bool> is_transition;
 	dictionary_list.reserve(animations.end() - it_completed);
 	is_transition.reserve(animations.end() - it_completed);
@@ -1261,7 +1262,7 @@ void Element::AdvanceAnimations()
 		const std::string& property_name = StyleSheetSpecification::GetPropertyName(it->GetPropertyId());
 
 		dictionary_list.emplace_back();
-		dictionary_list.back().emplace("property", Variant(property_name));
+		dictionary_list.back().emplace("property", property_name);
 		is_transition.push_back(it->IsTransition());
 
 		it->Release(*this);

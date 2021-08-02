@@ -28,6 +28,7 @@
 
 #include "DataControllerDefault.h"
 #include "../Include/RmlUi/Element.h"
+#include "../Include/RmlUi/Log.h"
 #include "DataController.h"
 #include "DataExpression.h"
 #include "DataModel.h"
@@ -74,7 +75,7 @@ void DataControllerValue::ProcessEvent(Event& event)
 			return;
 		}
 
-		SetValue(it->second);
+		SetValue(CopyVariant(it->second));
 	}
 }
 

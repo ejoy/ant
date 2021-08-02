@@ -37,6 +37,8 @@
 #include "../Include/RmlUi/FontEngineInterface.h"
 #include "../Include/RmlUi/RenderInterface.h"
 #include "../Include/RmlUi/Property.h"
+#include "../Include/RmlUi/Log.h"
+#include "../Include/RmlUi/StringUtilities.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Rml {

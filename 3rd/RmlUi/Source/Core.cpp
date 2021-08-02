@@ -36,7 +36,7 @@
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/Types.h"
 #include "../Include/RmlUi/Texture.h"
-
+#include "../Include/RmlUi/Log.h"
 #include "EventSpecification.h"
 #include "FileInterfaceDefault.h"
 #include "PluginRegistry.h"

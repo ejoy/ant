@@ -41,6 +41,7 @@
 #include <memory>
 #include <set>
 #include <unordered_set>
+#include <variant>
 
 #include <cstdlib>
 
@@ -60,6 +61,7 @@ enum class Character : char32_t { Null, Replacement = 0xfffd };
 
 #include "Colour.h"
 #include "ObserverPtr.h"
+#include "Variant.h"
 
 namespace Rml {
 
@@ -71,7 +73,6 @@ class ElementAnimation;
 class Context;
 class Event;
 class Property;
-class Variant;
 class Transform;
 class PropertyIdSet;
 struct Animation;
@@ -101,7 +102,7 @@ using PseudoClassList = std::unordered_set< std::string >;
 using AttributeNameList = std::unordered_set< std::string >;
 using PropertyMap = std::unordered_map< PropertyId, Property >;
 
-using Dictionary = std::unordered_map< std::string, Variant >;
+using EventDictionary = std::unordered_map< std::string, EventVariant >;
 using ElementAttributes = std::unordered_map< std::string, std::string >;
 
 using AnimationList = std::vector<Animation>;

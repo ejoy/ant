@@ -33,6 +33,7 @@
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/Transform.h"
+#include "../Include/RmlUi/Log.h"
 
 namespace Rml {
 
@@ -46,23 +47,23 @@ static Property InterpolateProperties(const Property& p0, const Property& p1, fl
 		assert(p0.unit == p1.unit);
 		// If we have the same units, we can just interpolate regardless of what the value represents.
 		// Or if we have distinct units but no definition, all bets are off. This shouldn't occur, just interpolate values.
-		float f0 = p0.value.Get<float>();
-		float f1 = p1.value.Get<float>();
+		float f0 = p0.Get<float>();
+		float f1 = p1.Get<float>();
 		float f = (1.0f - alpha) * f0 + alpha * f1;
 		return Property{ f, p0.unit };
 	}
 
 	if (p0.unit == Property::COLOUR && p1.unit == Property::COLOUR)
 	{
-		Color c0 = p0.value.Get<Color>();
-		Color c1 = p1.value.Get<Color>();
+		Color c0 = p0.Get<Color>();
+		Color c1 = p1.Get<Color>();
 		return Property{ ColorInterpolate(c0, c1, alpha), Property::COLOUR };
 	}
 
 	if (p0.unit == Property::TRANSFORM && p1.unit == Property::TRANSFORM)
 	{
-		auto& t0 = p0.value.GetReference<TransformPtr>();
-		auto& t1 = p1.value.GetReference<TransformPtr>();
+		auto& t0 = p0.Get<TransformPtr>();
+		auto& t1 = p1.Get<TransformPtr>();
 		auto t = t0->Interpolate(*t1, alpha);
 		if (!t) {
 			Log::Message(Log::Level::Error, "Transform primitives can not be interpolated.");
@@ -137,8 +138,8 @@ static bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element)
 
 
 static bool PrepareTransforms(Property& property, Element& element) {
-	RMLUI_ASSERT(property.value.GetType() == Variant::TRANSFORMPTR);
-	if (!property.value.GetReference<TransformPtr>()) {
+	RMLUI_ASSERT(property.unit == Property::TRANSFORM);
+	if (!property.Has<TransformPtr>()) {
 		property.value = std::make_shared<Transform>();
 	}
 	return true;
@@ -150,14 +151,14 @@ static bool PrepareTransforms(AnimationKey& key, Element& element) {
 	if (prop0.unit != Property::TRANSFORM || prop1.unit != Property::TRANSFORM) {
 		return false;
 	}
-	if (!prop0.value.GetReference<TransformPtr>()) {
+	if (!prop0.Has<TransformPtr>()) {
 		prop0.value = std::make_shared<Transform>();
 	}
-	if (!prop1.value.GetReference<TransformPtr>()) {
+	if (!prop1.Has<TransformPtr>()) {
 		prop1.value = std::make_shared<Transform>();
 	}
-	auto& t0 = prop0.value.GetReference<TransformPtr>();
-	auto& t1 = prop1.value.GetReference<TransformPtr>();
+	auto& t0 = prop0.Get<TransformPtr>();
+	auto& t1 = prop1.Get<TransformPtr>();
 	return PrepareTransformPair(*t0, *t1, element);
 }
 

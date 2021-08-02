@@ -47,6 +47,10 @@ RMLUICORE_API std::string CreateString(size_t max_size, const char* format, ...)
 /// Format to a string using sprintf-style syntax.
 RMLUICORE_API int FormatString(std::string& string, size_t max_size, const char* format, ...) RMLUI_ATTRIBUTE_FORMAT_PRINTF(3,4);
 
+template <typename  T>
+T FromString(const std::string& str, T def = T{});
+template <typename  T>
+std::string ToString(const T& v);
 
 namespace StringUtilities
 {

@@ -8,6 +8,7 @@ extern "C"{
 }
 
 #include <RmlUi/Core.h>
+#include <RmlUi/StringUtilities.h>
 #include <cassert>
 #include <cstring>
 #include <variant>

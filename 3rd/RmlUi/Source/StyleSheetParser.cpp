@@ -37,6 +37,7 @@
 #include "../Include/RmlUi/StreamMemory.h"
 #include "../Include/RmlUi/StyleSheet.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
+#include "../Include/RmlUi/StringUtilities.h"
 #include <algorithm>
 #include <string.h>
 

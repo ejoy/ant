@@ -117,9 +117,6 @@ public:
 	/// @param dictionary[in-out] The dictionary to set the default values on.
 	void SetPropertyDefaults(PropertyDictionary& dictionary) const;
 
-	/// Returns the properties of dictionary converted to a string.
-	std::string PropertiesToString(const PropertyDictionary& dictionary) const;
-
 private:
 	using Properties = std::vector< std::unique_ptr<PropertyDefinition> >;
 	using Shorthands = std::vector< std::unique_ptr<ShorthandDefinition> >;

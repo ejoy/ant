@@ -30,7 +30,7 @@
 #define RMLUI_CORE_EVENT_H
 
 #include "Header.h"
-#include "Dictionary.h"
+#include "Types.h"
 #include "ID.h"
 
 namespace Rml {
@@ -41,6 +41,26 @@ struct EventSpecification;
 
 enum class EventPhase { None, Capture = 1, Target = 2, Bubble = 4 };
 enum class DefaultActionPhase { None, Target = (int)EventPhase::Target, TargetAndBubble = ((int)Target | (int)EventPhase::Bubble) };
+
+template<typename T>
+inline const T* GetIf(const EventDictionary& dictionary, const std::string& key) {
+	auto it = dictionary.find(key);
+	if (it != dictionary.end()) {
+		const T* r = std::get_if<T>(&it->second);
+		if (r) {
+			return r;
+		}
+	}
+	return nullptr;
+}
+
+template <typename T>
+inline T Get(const EventDictionary& dictionary, const std::string& key, const T& default_value) {
+	if (const T* r = GetIf<T>(dictionary, key)) {
+		return *r;
+	}
+	return default_value;
+}
 
 /**
 	An event that propogates through the element hierarchy. Events follow the DOM3 event specification. See
@@ -56,7 +76,7 @@ public:
 	/// @param[in] target The target element of this event
 	/// @param[in] parameters The event parameters
 	/// @param[in] interruptible Can this event have is propagation stopped?
-	Event(Element* target, EventId id, const Dictionary& parameters, bool interruptible);
+	Event(Element* target, EventId id, const EventDictionary& parameters, bool interruptible);
 	/// Destructor
 	virtual ~Event();
 
@@ -99,10 +119,10 @@ public:
 	}
 	/// Access the dictionary of parameters
 	/// @return The dictionary of parameters
-	const Dictionary& GetParameters() const;
+	const EventDictionary& GetParameters() const;
 
 protected:
-	Dictionary parameters;
+	EventDictionary parameters;
 	Element* target_element = nullptr;
 	Element* current_element = nullptr;
 

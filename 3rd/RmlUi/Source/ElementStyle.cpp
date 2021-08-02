@@ -42,6 +42,7 @@
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/Transform.h"
 #include "../Include/RmlUi/ElementText.h"
+#include "../Include/RmlUi/StringUtilities.h"
 #include "ElementDefinition.h"
 #include "PropertiesIterator.h"
 #include <algorithm>

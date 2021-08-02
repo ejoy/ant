@@ -31,6 +31,7 @@
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/PropertyDictionary.h"
+#include "../Include/RmlUi/StringUtilities.h"
 #include "PropertyShorthandDefinition.h"
 #include "IdNameMap.h"
 #include <limits.h>
@@ -391,17 +392,6 @@ void PropertySpecification::SetPropertyDefaults(PropertyDictionary& dictionary) 
 			dictionary.SetProperty(property->GetId(), *property->GetDefaultValue());
 	}
 }
-
-std::string PropertySpecification::PropertiesToString(const PropertyDictionary& dictionary) const
-{
-	std::string result;
-	for (auto& pair : dictionary.GetProperties())
-	{
-		result += property_map->GetName(pair.first) + ": " + pair.second.ToString() + '\n';
-	}
-	return result;
-}
-
 
 bool PropertySpecification::ParsePropertyValues(std::vector<std::string>& values_list, const std::string& values, bool split_values) const
 {

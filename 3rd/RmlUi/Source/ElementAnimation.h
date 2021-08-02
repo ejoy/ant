@@ -32,6 +32,8 @@
 #include "../Include/RmlUi/Header.h"
 #include "../Include/RmlUi/Property.h"
 #include "../Include/RmlUi/Tween.h"
+#include "../Include/RmlUi/ID.h"
+
 
 namespace Rml {
 

@@ -36,6 +36,7 @@
 #include "../Include/RmlUi/DataModelHandle.h"
 #include "../Include/RmlUi/FileInterface.h"
 #include "../Include/RmlUi/ElementUtilities.h"
+#include "../Include/RmlUi/Log.h"
 #include "ElementStyle.h"
 #include "EventDispatcher.h"
 #include "StreamFile.h"
@@ -270,11 +271,11 @@ const std::shared_ptr<StyleSheet>& Document::GetStyleSheet() const
 
 void Document::Show() {
 	GetContext()->SetFocus(this);
-	body->DispatchEvent(EventId::Show, Dictionary());
+	body->DispatchEvent(EventId::Show, EventDictionary());
 }
 
 void Document::Hide() {
-	body->DispatchEvent(EventId::Hide, Dictionary());
+	body->DispatchEvent(EventId::Hide, EventDictionary());
 	if (GetContext()->GetFocus() == this) {
 		GetContext()->SetFocus(nullptr);
 	}
@@ -354,7 +355,7 @@ private:
 	ElementObserverList* elements;
 };
 
-static void SendEvents(const ElementSet& old_items, const ElementSet& new_items, EventId id, const Dictionary& parameters) {
+static void SendEvents(const ElementSet& old_items, const ElementSet& new_items, EventId id, const EventDictionary& parameters) {
 	// We put our elements in observer pointers in case some of them are deleted during dispatch.
 	ElementObserverList elements;
 	std::set_difference(old_items.begin(), old_items.end(), new_items.begin(), new_items.end(), ElementObserverListBackInserter(elements));
@@ -365,11 +366,11 @@ static void SendEvents(const ElementSet& old_items, const ElementSet& new_items,
 	}
 }
 
-static void GenerateKeyEventParameters(Dictionary& parameters, Input::KeyIdentifier key) {
+static void GenerateKeyEventParameters(EventDictionary& parameters, Input::KeyIdentifier key) {
 	parameters["key"] = (int)key;
 }
 
-static void GenerateKeyModifierEventParameters(Dictionary& parameters, int key_modifier_state) {
+static void GenerateKeyModifierEventParameters(EventDictionary& parameters, int key_modifier_state) {
 	static const std::string property_names[] = {
 		"ctrlKey",
 		"shiftKey",
@@ -381,7 +382,7 @@ static void GenerateKeyModifierEventParameters(Dictionary& parameters, int key_m
 	}
 }
 
-static void GenerateMouseEventParameters(Dictionary& parameters, const Point& mouse_position, MouseButton button) {
+static void GenerateMouseEventParameters(EventDictionary& parameters, const Point& mouse_position, MouseButton button) {
 	parameters.reserve(3);
 	parameters["x"] = mouse_position.x;
 	parameters["y"] = mouse_position.y;
@@ -390,14 +391,14 @@ static void GenerateMouseEventParameters(Dictionary& parameters, const Point& mo
 }
 
 bool Document::ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state) {
-	Dictionary parameters;
+	EventDictionary parameters;
 	GenerateKeyEventParameters(parameters, key);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 	return body->DispatchEvent(EventId::Keydown, parameters);
 }
 
 bool Document::ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state) {
-	Dictionary parameters;
+	EventDictionary parameters;
 	GenerateKeyEventParameters(parameters, key);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 	return body->DispatchEvent(EventId::Keyup, parameters);
@@ -413,11 +414,11 @@ void Document::ProcessMouseMove(MouseButton button, int x, int y, int key_modifi
 	}
 
 	// Generate the parameters for the mouse events (there could be a few!).
-	Dictionary parameters;
+	EventDictionary parameters;
 	GenerateMouseEventParameters(parameters, mouse_position, button);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 
-	Dictionary drag_parameters;
+	EventDictionary drag_parameters;
 	GenerateMouseEventParameters(drag_parameters, mouse_position, MouseButton::None);
 	GenerateKeyModifierEventParameters(drag_parameters, key_modifier_state);
 
@@ -434,7 +435,7 @@ void Document::ProcessMouseMove(MouseButton button, int x, int y, int key_modifi
 }
 
 void Document::ProcessMouseButtonDown(MouseButton button, int key_modifier_state) {
-	Dictionary parameters;
+	EventDictionary parameters;
 	GenerateMouseEventParameters(parameters, mouse_position, button);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 
@@ -488,7 +489,7 @@ void Document::ProcessMouseButtonDown(MouseButton button, int key_modifier_state
 }
 
 void Document::ProcessMouseButtonUp(MouseButton button, int key_modifier_state) {
-	Dictionary parameters;
+	EventDictionary parameters;
 	GenerateMouseEventParameters(parameters, mouse_position, button);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 
@@ -524,7 +525,7 @@ void Document::ProcessMouseButtonUp(MouseButton button, int key_modifier_state) 
 
 void Document::ProcessMouseWheel(float wheel_delta, int key_modifier_state) {
 	if (hover) {
-		Dictionary scroll_parameters;
+		EventDictionary scroll_parameters;
 		GenerateKeyModifierEventParameters(scroll_parameters, key_modifier_state);
 		scroll_parameters["wheel_delta"] = wheel_delta;
 
@@ -532,7 +533,7 @@ void Document::ProcessMouseWheel(float wheel_delta, int key_modifier_state) {
 	}
 }
 
-void Document::UpdateHoverChain(const Dictionary& parameters, const Dictionary& drag_parameters, const Point& old_mouse_position) {
+void Document::UpdateHoverChain(const EventDictionary& parameters, const EventDictionary& drag_parameters, const Point& old_mouse_position) {
 	Point position = mouse_position;
 
 	hover = body->GetElementAtPoint(position);
@@ -558,7 +559,7 @@ void Document::OnElementDetach(Element* element) {
 	auto it_hover = hover_chain.find(element);
 	if (it_hover != hover_chain.end())
 	{
-		Dictionary parameters;
+		EventDictionary parameters;
 		GenerateMouseEventParameters(parameters, mouse_position, MouseButton::None);
 		element->DispatchEvent(EventId::Mouseout, parameters);
 
@@ -622,7 +623,7 @@ void Document::SetDimensions(const Size& _dimensions) {
 	if (dimensions != _dimensions) {
 		dirty_dimensions = true;
 		dimensions = _dimensions;
-		body->DispatchEvent(EventId::Resize, Dictionary());
+		body->DispatchEvent(EventId::Resize, EventDictionary());
 	}
 }
 

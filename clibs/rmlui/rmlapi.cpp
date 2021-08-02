@@ -233,7 +233,7 @@ static int
 lDocumentDispatchEvent(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	Rml::Dictionary params;
+	Rml::EventDictionary params;
 	if (lua_type(L, 3) == LUA_TTABLE) {
 		lua_pushnil(L);
 		while (lua_next(L, 3)) {
@@ -241,7 +241,7 @@ lDocumentDispatchEvent(lua_State* L) {
 				lua_pop(L, 1);
 				continue;
 			}
-			Rml::Dictionary::value_type v {lua_checkstdstring(L, -2), Rml::Variant{}};
+			Rml::EventDictionary::value_type v {lua_checkstdstring(L, -2), Rml::EventVariant{}};
 			lua_getvariant(L, -1, &v.second);
 			params.emplace(v);
 			lua_pop(L, 1);

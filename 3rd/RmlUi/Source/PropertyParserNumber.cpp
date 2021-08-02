@@ -27,6 +27,8 @@
  */
 
 #include "PropertyParserNumber.h"
+#include "../Include/RmlUi/StringUtilities.h"
+
 #include <stdlib.h>
 
 namespace Rml {
@@ -106,7 +108,7 @@ bool PropertyParserNumber::ParseValue(Property& property, const std::string& val
 		if (zero_unit != Property::UNKNOWN && float_value == 0.0f)
 		{
 			property.unit = zero_unit;
-			property.value = Variant(0.0f);
+			property.value = 0.0f;
 			return true;
 		}
 	}

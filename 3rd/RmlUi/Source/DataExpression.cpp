@@ -30,6 +30,8 @@
 #include "../Include/RmlUi/DataModelHandle.h"
 #include "../Include/RmlUi/Event.h"
 #include "../Include/RmlUi/Variant.h"
+#include "../Include/RmlUi/Log.h"
+#include "../Include/RmlUi/StringUtilities.h"
 #include "DataModel.h"
 #include <stack>
 
@@ -517,7 +519,7 @@ namespace Parse {
 			return;
 		}
 
-		const double number = FromString(str, 0.0);
+		const float number = FromString(str, 0.0f);
 
 		parser.Emit(Instruction::Literal, Variant(number));
 	}
@@ -773,7 +775,7 @@ public:
 		std::string str;
 		for (size_t i = 0; i < program.size(); i++)
 		{
-			std::string instruction_str = program[i].data.Get<std::string>();
+			std::string instruction_str = GetVariant<std::string>(program[i].data);
 			str += CreateString(50 + instruction_str.size(), "  %4zu  '%c'  %s\n", i, char(program[i].instruction), instruction_str.c_str());
 		}
 		return str;
@@ -796,7 +798,7 @@ private:
 	bool Execute(const Instruction instruction, const Variant& data)
 	{
 		auto AnyString = [](const Variant& v1, const Variant& v2) {
-			return v1.GetType() == Variant::STRING || v2.GetType() == Variant::STRING;
+			return std::holds_alternative<std::string>(v1) || std::holds_alternative<std::string>(v2);
 		};
 
 		switch (instruction)
@@ -804,7 +806,7 @@ private:
 		case Instruction::Push:
 		{
 			stack.push(std::move(R));
-			R.Clear();
+			R = Variant {};
 		}
 		break;
 		case Instruction::Pop:
@@ -812,7 +814,7 @@ private:
 			if (stack.empty())
 				return Error("Cannot pop stack, it is empty.");
 
-			Register reg = Register(data.Get<int>(-1));
+			Register reg = Register(GetVariant<int>(data, -1));
 			switch (reg) {
 			case Register::R:  R = stack.top(); stack.pop(); break;
 			case Register::L:  L = stack.top(); stack.pop(); break;
@@ -829,7 +831,7 @@ private:
 		break;
 		case Instruction::Variable:
 		{
-			size_t variable_index = size_t(data.Get<int>(-1));
+			size_t variable_index = size_t(GetVariant<int>(data, -1));
 			if (variable_index < addresses.size())
 				R = expression_interface.GetValue(addresses[variable_index]);
 			else
@@ -839,40 +841,40 @@ private:
 		case Instruction::Add:
 		{
 			if (AnyString(L, R))
-				R = Variant(L.Get<std::string>() + R.Get<std::string>());
+				R = Variant(GetVariant<std::string>(L) + GetVariant<std::string>(R));
 			else
-				R = Variant(L.Get<double>() + R.Get<double>());
+				R = Variant(GetVariant<float>(L) + GetVariant<float>(R));
 		}
 		break;
-		case Instruction::Subtract:  R = Variant(L.Get<double>() - R.Get<double>());  break;
-		case Instruction::Multiply:  R = Variant(L.Get<double>() * R.Get<double>());  break;
-		case Instruction::Divide:    R = Variant(L.Get<double>() / R.Get<double>());  break;
-		case Instruction::Not:       R = Variant(!R.Get<bool>());                     break;
-		case Instruction::And:       R = Variant(L.Get<bool>() && R.Get<bool>());     break;
-		case Instruction::Or:        R = Variant(L.Get<bool>() || R.Get<bool>());     break;
-		case Instruction::Less:      R = Variant(L.Get<double>() < R.Get<double>());  break;
-		case Instruction::LessEq:    R = Variant(L.Get<double>() <= R.Get<double>()); break;
-		case Instruction::Greater:   R = Variant(L.Get<double>() > R.Get<double>());  break;
-		case Instruction::GreaterEq: R = Variant(L.Get<double>() >= R.Get<double>()); break;
+		case Instruction::Subtract:  R = Variant(GetVariant<float>(L) - GetVariant<float>(R));  break;
+		case Instruction::Multiply:  R = Variant(GetVariant<float>(L) * GetVariant<float>(R));  break;
+		case Instruction::Divide:    R = Variant(GetVariant<float>(L) / GetVariant<float>(R));  break;
+		case Instruction::Not:       R = Variant(!GetVariant<bool>(R));                     break;
+		case Instruction::And:       R = Variant(GetVariant<bool>(L) && GetVariant<bool>(R));     break;
+		case Instruction::Or:        R = Variant(GetVariant<bool>(L) || GetVariant<bool>(R));     break;
+		case Instruction::Less:      R = Variant(GetVariant<float>(L) < GetVariant<float>(R));  break;
+		case Instruction::LessEq:    R = Variant(GetVariant<float>(L) <= GetVariant<float>(R)); break;
+		case Instruction::Greater:   R = Variant(GetVariant<float>(L) > GetVariant<float>(R));  break;
+		case Instruction::GreaterEq: R = Variant(GetVariant<float>(L) >= GetVariant<float>(R)); break;
 		case Instruction::Equal:
 		{
 			if (AnyString(L, R))
-				R = Variant(L.Get<std::string>() == R.Get<std::string>());
+				R = Variant(GetVariant<std::string>(L) == GetVariant<std::string>(R));
 			else
-				R = Variant(L.Get<double>() == R.Get<double>());
+				R = Variant(GetVariant<float>(L) == GetVariant<float>(R));
 		}
 		break;
 		case Instruction::NotEqual:
 		{
 			if (AnyString(L, R))
-				R = Variant(L.Get<std::string>() != R.Get<std::string>());
+				R = Variant(GetVariant<std::string>(L) != GetVariant<std::string>(R));
 			else
-				R = Variant(L.Get<double>() != R.Get<double>());
+				R = Variant(GetVariant<float>(L) != GetVariant<float>(R));
 		}
 		break;
 		case Instruction::Ternary:
 		{
-			if (L.Get<bool>())
+			if (GetVariant<bool>(L))
 				R = C;
 		}
 		break;
@@ -881,7 +883,7 @@ private:
 			if (!arguments.empty())
 				return Error("Argument stack is not empty.");
 
-			int num_arguments = data.Get<int>(-1);
+			int num_arguments = GetVariant<int>(data, -1);
 			if (num_arguments < 0)
 				return Error("Invalid number of arguments.");
 			if (stack.size() < size_t(num_arguments))
@@ -897,14 +899,14 @@ private:
 		break;
 		case Instruction::EventFnc:
 		{
-			const std::string function_name = data.Get<std::string>();
+			const std::string function_name = GetVariant<std::string>(data);
 
 			if (!expression_interface.EventCallback(function_name, arguments))
 			{
 				std::string arguments_str;
 				for (size_t i = 0; i < arguments.size(); i++)
 				{
-					arguments_str += arguments[i].Get<std::string>();
+					arguments_str += GetVariant<std::string>(arguments[i]);
 					if (i < arguments.size() - 1)
 						arguments_str += ", ";
 				}
@@ -916,7 +918,7 @@ private:
 		break;
 		case Instruction::Assign:
 		{
-			size_t variable_index = size_t(data.Get<int>(-1));
+			size_t variable_index = size_t(GetVariant<int>(data, -1));
 			if (variable_index < addresses.size())
 			{
 				if (!expression_interface.SetValue(addresses[variable_index], R))
@@ -992,8 +994,9 @@ Variant DataExpressionInterface::GetValue(const DataAddress& address) const
 	{
 		auto& parameters = event->GetParameters();
 		auto it = parameters.find(address.back().name);
-		if (it != parameters.end())
-			result = it->second;
+		if (it != parameters.end()){
+			result = CopyVariant(it->second);
+		}
 	}
 	else if (data_model)
 	{

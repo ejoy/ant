@@ -114,7 +114,7 @@ private:
 
 	Context* context;
 
-	void UpdateHoverChain(const Dictionary& parameters, const Dictionary& drag_parameters, const Point& old_mouse_position);
+	void UpdateHoverChain(const EventDictionary& parameters, const EventDictionary& drag_parameters, const Point& old_mouse_position);
 
 	Point mouse_position = Point(0,0);
 

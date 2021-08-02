@@ -28,19 +28,19 @@
 
 #include "../Include/RmlUi/Property.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
+#include "../Include/RmlUi/StringUtilities.h"
 
 namespace Rml {
 
 Property::Property() : unit(UNKNOWN), specificity(-1)
 {
 	definition = nullptr;
-	parser_index = -1;
 }
 
 std::string Property::ToString() const
 {
 	if (!definition)
-		return value.Get< std::string >();
+		return Get<std::string>();
 
 	std::string string;
 	definition->GetValue(string, *this);
@@ -57,9 +57,30 @@ FloatValue Property::ToFloatValue() const {
 		}
 	}
 	return {
-		value.Get<float>(),
+		Get<float>(),
 		unit,
 	};
+}
+
+template <>
+std::string ToString<FloatValue>(const FloatValue& v) {
+	std::string value = std::to_string(v.value);
+	switch (v.unit) {
+		case Property::PX:		value += "px"; break;
+		case Property::DEG:		value += "deg"; break;
+		case Property::RAD:		value += "rad"; break;
+		case Property::DP:		value += "dp"; break;
+		case Property::EM:		value += "em"; break;
+		case Property::REM:		value += "rem"; break;
+		case Property::PERCENT:	value += "%"; break;
+		case Property::INCH:	value += "in"; break;
+		case Property::CM:		value += "cm"; break;
+		case Property::MM:		value += "mm"; break;
+		case Property::PT:		value += "pt"; break;
+		case Property::PC:		value += "pc"; break;
+		default:					break;
+	}
+	return value;
 }
 
 } // namespace Rml

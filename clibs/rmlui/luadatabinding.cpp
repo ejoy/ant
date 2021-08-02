@@ -13,39 +13,78 @@ extern "C" {
 #include <RmlUi/Element.h>
 #include <RmlUi/Document.h>
 
+struct LuaPushVariantVisitor {
+	lua_State* L;
+	void operator()(float const& p) {
+		lua_pushnumber(L, p);
+	}
+	void operator()(int const& p) {
+		lua_pushinteger(L, p);
+	}
+	void operator()(std::string const& p) {
+		lua_pushlstring(L, p.c_str(), p.length());
+	}
+	void operator()(bool const& p) {
+		lua_pushboolean(L, p);
+	}
+	void operator()(std::monostate const& p) {
+		lua_pushnil(L);
+	}
+};
+
 void
 lua_pushvariant(lua_State *L, const Rml::Variant &v) {
-	switch (v.GetType()) {
-	case Rml::Variant::Type::BOOL:
-		lua_pushboolean(L, v.GetReference<bool>());
+	std::visit(LuaPushVariantVisitor{L}, v);
+}
+
+void
+lua_pushvariant(lua_State *L, const Rml::EventVariant &v) {
+	std::visit(LuaPushVariantVisitor{L}, v);
+}
+
+void
+lua_getvariant(lua_State *L, int index, Rml::Variant* variant) {
+	if (!variant)
+		return;
+	switch(lua_type(L, index)) {
+	case LUA_TBOOLEAN:
+		*variant = (bool)lua_toboolean(L, index);
 		break;
-	case Rml::Variant::Type::BYTE:
-	case Rml::Variant::Type::CHAR:
-	case Rml::Variant::Type::INT:
-		lua_pushinteger(L, v.GetReference<int>());
+	case LUA_TNUMBER:
+		if (lua_isinteger(L, index)) {
+			*variant = (int)lua_tointeger(L, index);
+		} else {
+			*variant = (float)lua_tonumber(L, index);
+		}
 		break;
-	case Rml::Variant::Type::FLOAT:
-		lua_pushnumber(L, v.GetReference<float>());
+	case LUA_TSTRING:
+		*variant = std::string(lua_tostring(L, index));
 		break;
-	case Rml::Variant::Type::DOUBLE:
-		lua_pushnumber(L, v.GetReference<double>());
+	case LUA_TNIL:
+	default:	// todo
+		*variant = Rml::Variant {};
 		break;
-	case Rml::Variant::Type::INT64:
-		lua_pushinteger(L, v.GetReference<int64_t>());
+	}
+}
+
+void
+lua_getvariant(lua_State *L, int index, Rml::EventVariant* variant) {
+	if (!variant)
+		return;
+	switch(lua_type(L, index)) {
+	case LUA_TNUMBER:
+		if (lua_isinteger(L, index)) {
+			*variant = (int)lua_tointeger(L, index);
+		} else {
+			*variant = (float)lua_tonumber(L, index);
+		}
 		break;
-	case Rml::Variant::Type::STRING: {
-		const std::string &s = v.GetReference<std::string>();
-		lua_pushlstring(L, s.c_str(), s.length());
-		break; }
-	case Rml::Variant::Type::NONE:
-	case Rml::Variant::Type::COLOURB:
-	case Rml::Variant::Type::TRANSFORMPTR:
-	case Rml::Variant::Type::TRANSITIONLIST:
-	case Rml::Variant::Type::ANIMATIONLIST:
-	case Rml::Variant::Type::VOIDPTR:
-	default:
-		// todo
-		lua_pushnil(L);
+	case LUA_TSTRING:
+		*variant = std::string(lua_tostring(L, index));
+		break;
+	case LUA_TNIL:
+	default:	// todo
+		*variant = Rml::EventVariant {};
 		break;
 	}
 }
@@ -64,31 +103,6 @@ lua_pushevent(lua_State* L, const Rml::Event& event) {
 	Rml::Element* target = event.GetTargetElement();
 	target? lua_pushlightuserdata(L, target): lua_pushnil(L);
 	lua_setfield(L, -2, "target");
-}
-
-void
-lua_getvariant(lua_State *L, int index, Rml::Variant* variant) {
-	if (!variant)
-		return;
-	switch(lua_type(L, index)) {
-	case LUA_TBOOLEAN:
-		*variant = (bool)lua_toboolean(L, index);
-		break;
-	case LUA_TNUMBER:
-		if (lua_isinteger(L, index)) {
-			*variant = (int64_t)lua_tointeger(L, index);
-		} else {
-			*variant = (double)lua_tonumber(L, index);
-		}
-		break;
-	case LUA_TSTRING:
-		*variant = std::string(lua_tostring(L, index));
-		break;
-	case LUA_TNIL:
-	default:	// todo
-		*variant = Rml::Variant();
-		break;
-	}
 }
 
 class LuaScalarDef;

@@ -29,6 +29,7 @@
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/PropertyIdSet.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
+#include "../Include/RmlUi/Log.h"
 #include "PropertyParserNumber.h"
 #include "PropertyParserAnimation.h"
 #include "PropertyParserColour.h"

@@ -23,7 +23,7 @@ Context::Context(const Size& dimensions_)
 
 Context::~Context() {
 	for (auto& document : documents) {
-		document->body->DispatchEvent(EventId::Unload, Dictionary());
+		document->body->DispatchEvent(EventId::Unload, EventDictionary());
 		PluginRegistry::NotifyDocumentDestroy(document);
 		unloaded_documents.push_back(document);
 	}
@@ -81,7 +81,7 @@ Document* Context::LoadDocument(const std::string& document_path) {
 		return nullptr;
 	}
 	documents.push_back(document.get());
-	document->body->DispatchEvent(EventId::Load, Dictionary());
+	document->body->DispatchEvent(EventId::Load, EventDictionary());
 	document->UpdateDataModel(false);
 	document->Update();
 	return document.release();
@@ -93,7 +93,7 @@ void Context::UnloadDocument(Document* document) {
 		if (unloaded_documents[i] == document)
 			return;
 	}
-	document->body->DispatchEvent(EventId::Unload, Dictionary());
+	document->body->DispatchEvent(EventId::Unload, EventDictionary());
 	PluginRegistry::NotifyDocumentDestroy(document);
 	unloaded_documents.push_back(document);
 }

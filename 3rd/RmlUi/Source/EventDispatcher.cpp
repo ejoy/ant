@@ -136,7 +136,7 @@ struct CollectedListener {
 };
 
 
-bool EventDispatcher::DispatchEvent(Element* target_element, const EventId id, const Dictionary& parameters, const bool interruptible, const bool bubbles, const DefaultActionPhase default_action_phase)
+bool EventDispatcher::DispatchEvent(Element* target_element, const EventId id, const EventDictionary& parameters, const bool interruptible, const bool bubbles, const DefaultActionPhase default_action_phase)
 {
 	RMLUI_ASSERTMSG(!((int)default_action_phase & (int)EventPhase::Capture), "We assume here that the default action phases cannot include capture phase.");
 

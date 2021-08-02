@@ -31,6 +31,7 @@
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/Factory.h"
+#include "../Include/RmlUi/Log.h"
 #include "DataController.h"
 #include "DataModel.h"
 #include "DataView.h"
