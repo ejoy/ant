@@ -159,6 +159,15 @@ function effekseer_sys:render_submit()
 end
 
 function effekseer_sys:follow_transform_updated()
+    -- for _, eid in event_entity_register:unpack() do
+    --     local effect = world[eid].effect_instance
+    --     if effect then
+    --         if effect.auto_play then
+    --             effekseer.set_loop(effect.handle, effect.loop)
+    --             effekseer.play(effect.handle) 
+    --         end
+    --     end
+    -- end
     for _, eid in world:each "effekseer" do
 		local e = world[eid]
         if e._scene_id then

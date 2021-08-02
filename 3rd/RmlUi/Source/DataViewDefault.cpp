@@ -92,9 +92,9 @@ bool DataViewAttribute::Update(DataModel& model)
 	if (element && GetExpression().Run(expr_interface, variant))
 	{
 		const std::string value = variant.Get<std::string>();
-		const Variant* attribute = element->GetAttribute(attribute_name);
+		const std::string* attribute = element->GetAttribute(attribute_name);
 		
-		if (!attribute || (attribute && attribute->Get<std::string>() != value))
+		if (!attribute || (attribute && *attribute != value))
 		{
 			element->SetAttribute(attribute_name, value);
 			result = true;
@@ -118,9 +118,8 @@ bool DataViewAttributeIf::Update(DataModel& model)
 	if (element && GetExpression().Run(expr_interface, variant))
 	{
 		const bool value = variant.Get<bool>();
-		const bool is_set = static_cast<bool>(element->GetAttribute(attribute_name));
-		if (is_set != value)
-		{
+		bool has = element->HasAttribute(attribute_name);
+		if (has != value) {
 			if (value)
 				element->SetAttribute(attribute_name, std::string());
 			else

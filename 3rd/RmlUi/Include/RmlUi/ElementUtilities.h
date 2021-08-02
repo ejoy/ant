@@ -34,10 +34,6 @@
 
 namespace Rml {
 
-class Layout;
-class Context;
-namespace Style { struct ComputedValues; }
-
 /**
 	Utility functions for dealing with elements.
 

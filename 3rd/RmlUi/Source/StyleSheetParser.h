@@ -38,7 +38,6 @@ class PropertyDictionary;
 class Stream;
 class StyleSheetNode;
 class AbstractPropertyParser;
-struct PropertySource;
 using StyleSheetNodeListRaw = std::vector<StyleSheetNode*>;
 
 /**

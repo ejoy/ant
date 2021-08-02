@@ -134,13 +134,8 @@ public:
 	/// from an ancestor, the default value will be returned.
 	/// @param[in] name The name of the property to fetch the value for.
 	/// @return The value of this property for this element, or nullptr if no property exists with the given name.
-	const Property* GetProperty(const std::string& name);		
-	const Property* GetProperty(PropertyId id);		
-	/// Returns the values of one of this element's properties.		
-	/// @param[in] name The name of the property to get.
-	/// @return The value of this property.
-	template < typename T >
-	T GetProperty(const std::string& name);
+	const Property* GetProperty(const std::string& name);
+	const Property* GetProperty(PropertyId id);
 
 	/// Project a 2D point in pixel coordinates onto the element's plane.
 	/// @param[in-out] point The point to project in, and the resulting projected point out.
@@ -175,17 +170,11 @@ public:
 	/// Sets an attribute on the element.
 	/// @param[in] name Name of the attribute.
 	/// @param[in] value Value of the attribute.
-	template< typename T >
-	void SetAttribute(const std::string& name, const T& value);
+	void SetAttribute(const std::string& name, const std::string& value);
 	/// Gets the specified attribute.
 	/// @param[in] name Name of the attribute to retrieve.
 	/// @return A variant representing the attribute, or nullptr if the attribute doesn't exist.
-	Variant* GetAttribute(const std::string& name);
-	/// Gets the specified attribute, with default value.
-	/// @param[in] name Name of the attribute to retrieve.
-	/// @param[in] default_value Value to return if the attribute doesn't exist.
-	template< typename T >
-	T GetAttribute(const std::string& name, const T& default_value) const;
+	const std::string* GetAttribute(const std::string& name) const;
 	/// Checks if the element has a certain attribute.
 	/// @param[in] name The name of the attribute to check for.
 	/// @return True if the element has the given attribute, false if not.
@@ -199,9 +188,6 @@ public:
 	/// Get the attributes of the element.
 	/// @return The attributes
 	const ElementAttributes& GetAttributes() const { return attributes; }
-	/// Returns the number of attributes on the element.
-	/// @return The number of attributes on the element.
-	int GetNumAttributes() const;
 	//@}
 
 
@@ -449,7 +435,5 @@ protected:
 };
 
 } // namespace Rml
-
-#include "Element.inl"
 
 #endif

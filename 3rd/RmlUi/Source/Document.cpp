@@ -81,7 +81,7 @@ class DocumentHtmlHandler: public HtmlHandler {
 	std::shared_ptr<StyleSheet> m_style_sheet;
 	std::stack<Element*>  m_stack;
 	Element*              m_parent = nullptr;
-	Element*			  m_current = nullptr;
+	Element*              m_current = nullptr;
 	size_t                m_line = 0;
 
 public:
@@ -129,13 +129,13 @@ public:
 		if (szName == "script"sv) {
 			auto it = m_attributes.find("path");
 			if (it != m_attributes.end()) {
-				m_doc.LoadExternalScript(it->second.Get<std::string>());
+				m_doc.LoadExternalScript(it->second);
 			}
 		}
 		else if (szName == "style"sv) {
 			auto it = m_attributes.find("path");
 			if (it != m_attributes.end()) {
-				LoadExternalStyle(it->second.Get<std::string>());
+				LoadExternalStyle(it->second);
 			}
 		}
 		else {
@@ -169,7 +169,7 @@ public:
 			m_doc.LoadInlineScript(szValue, m_doc.GetSourceURL(), m_line);
 		}
 		else {
-			m_doc.LoadExternalScript(it->second.Get<std::string>());
+			m_doc.LoadExternalScript(it->second);
 		}
 	}
 	void OnStyleBegin(unsigned int line) override {
@@ -208,7 +208,7 @@ public:
 			LoadInlineStyle(szValue, m_doc.GetSourceURL(), m_line);
 		}
 		else {
-			LoadExternalStyle(it->second.Get<std::string>());
+			LoadExternalStyle(it->second);
 		}
 	}
 };

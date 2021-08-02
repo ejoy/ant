@@ -375,9 +375,20 @@ const PseudoClassList& Element::GetActivePseudoClasses() const
 	return meta->style.GetActivePseudoClasses();
 }
 
-Variant* Element::GetAttribute(const std::string& name)
+void Element::SetAttribute(const std::string& name, const std::string& value) {
+	attributes[name] = value;
+    ElementAttributes changed_attributes;
+    changed_attributes.emplace(name, value);
+	OnAttributeChange(changed_attributes);
+}
+
+const std::string* Element::GetAttribute(const std::string& name) const
 {
-	return GetIf(attributes, name);
+	auto it = attributes.find(name);
+	if (it == attributes.end()) {
+		return nullptr;
+	}
+	return &it->second;
 }
 
 bool Element::HasAttribute(const std::string& name) const
@@ -393,7 +404,7 @@ void Element::RemoveAttribute(const std::string& name)
 		attributes.erase(it);
 
 		ElementAttributes changed_attributes;
-		changed_attributes.emplace(name, Variant());
+		changed_attributes.emplace(name, std::string());
 		OnAttributeChange(changed_attributes);
 	}
 }
@@ -412,11 +423,6 @@ void Element::SetAttributes(const ElementAttributes& _attributes)
 		attributes[pair.first] = pair.second;
 
 	OnAttributeChange(_attributes);
-}
-
-int Element::GetNumAttributes() const
-{
-	return (int)attributes.size();
 }
 
 const std::string& Element::GetTagName() const
@@ -737,33 +743,26 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes)
 	auto it = changed_attributes.find("id");
 	if (it != changed_attributes.end())
 	{
-		id = it->second.Get<std::string>();
+		id = it->second;
 		meta->style.DirtyDefinition();
 	}
 
 	it = changed_attributes.find("class");
 	if (it != changed_attributes.end())
 	{
-		meta->style.SetClassNames(it->second.Get<std::string>());
+		meta->style.SetClassNames(it->second);
 	}
 
 	it = changed_attributes.find("style");
 	if (it != changed_attributes.end())
 	{
-		if (it->second.GetType() == Variant::STRING)
-		{
-			PropertyDictionary properties;
-			StyleSheetParser parser;
-			parser.ParseProperties(properties, it->second.GetReference<std::string>());
+		PropertyDictionary properties;
+		StyleSheetParser parser;
+		parser.ParseProperties(properties, it->second);
 
-			for (const auto& name_value : properties.GetProperties())
-			{
-				meta->style.SetProperty(name_value.first, name_value.second);
-			}
-		}
-		else if (it->second.GetType() != Variant::NONE)
+		for (const auto& name_value : properties.GetProperties())
 		{
-			Log::Message(Log::Level::Warning, "Invalid 'style' attribute, string type required. In element: %s", GetAddress().c_str());
+			meta->style.SetProperty(name_value.first, name_value.second);
 		}
 	}
 	
@@ -771,7 +770,7 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes)
 	{
 		if (pair.first.size() > 2 && pair.first[0] == 'o' && pair.first[1] == 'n')
 		{
-			EventListener* listener = Factory::InstanceEventListener(pair.second.Get<std::string>(), this);
+			EventListener* listener = Factory::InstanceEventListener(pair.second, this);
 			if (listener)
 				AddEventListener(pair.first.substr(2), listener, false);
 		}
@@ -922,10 +921,8 @@ std::string Element::GetOuterRML() const {
 	rml += tag;
 	for (auto& pair : attributes) {
 		auto& name = pair.first;
-		auto& variant = pair.second;
-		std::string value;
-		if (variant.GetInto(value))
-			rml += " " + name + "=\"" + value + "\"";
+		auto& value = pair.second;
+		rml += " " + name + "=\"" + value + "\"";
 	}
 	if (!children.empty()) {
 		rml += ">";
@@ -991,12 +988,12 @@ void Element::SetParent(Element* _parent) {
 		}
 		else if (parent->data_model)
 		{
-			std::string name = it->second.Get<std::string>();
+			std::string const& name = it->second;
 			Log::Message(Log::Level::Error, "Nested data models are not allowed. Data model '%s' given in element %s.", name.c_str(), GetAddress().c_str());
 		}
 		else if (Document* document = GetOwnerDocument())
 		{
-			std::string name = it->second.Get<std::string>();
+			std::string const& name = it->second;
 			if (DataModel* model = document->GetDataModelPtr(name))
 			{
 				model->AttachModelRootElement(this);

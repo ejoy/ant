@@ -166,7 +166,7 @@ bool Factory::InstanceElementText(Element* parent, const std::string& str)
 	}
 	if (has_data_expression) {
 		ElementAttributes attributes;
-		attributes.emplace("data-text", Variant());
+		attributes.emplace("data-text", std::string());
 		text->SetAttributes(attributes);
 	}
 	parent->AppendChild(std::move(text));
