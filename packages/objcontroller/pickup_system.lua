@@ -232,6 +232,10 @@ local function create_pick_entity()
 				},
 				fb_idx = fbidx,
 			},
+			filter_names = {
+				"pickup_queue_opacity",
+				"pickup_queue_translucent",
+			},
 			cull_tag = {
 				"pickup_queue_opacity_cull",
 				"pickup_queue_translucent_cull",

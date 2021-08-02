@@ -93,8 +93,9 @@ function irender.get_main_view_rendertexture()
 	return fbmgr.get_rb(fb[1]).handle
 end
 
-function irender.create_primitive_filter_entities(quenename, filtertype)
+local function create_primitive_filter_entities(quenename, filtertype)
 	local culltags = {}
+	local filter_names = {}
 	for _, fn in ipairs(FILTER_TYPES[quenename]) do
 		local t = ("%s_%s"):format(quenename, fn)
 		world:luaecs_create_entity{
@@ -108,9 +109,10 @@ function irender.create_primitive_filter_entities(quenename, filtertype)
 				[t] = true,
 			}
 		}
+		filter_names[#filter_names+1] = t
 		culltags[#culltags+1] = t .. "_cull"
 	end
-	return culltags
+	return filter_names, culltags
 end
 
 function irender.create_view_queue(view_rect, view_name)
@@ -199,7 +201,7 @@ local rb_flag = samplerutil.sampler_flag {
 }
 
 function irender.create_pre_depth_queue(view_rect, camera_eid)
-	local ct = irender.create_primitive_filter_entities "pre_depth_queue"
+	local fnames, ct = irender.create_primitive_filter_entities "pre_depth_queue"
 
 	local fbidx = fbmgr.create{
 		fbmgr.create_rb{
@@ -237,6 +239,7 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 				view_rect = view_rect,
 				fb_idx = fbidx,
 			},
+			filter_names = fnames,
 			cull_tag = ct,
 			queue_name = "pre_depth_queue",
 			name = "pre_depth_queue",
@@ -284,7 +287,7 @@ function irender.create_main_queue(view_rect, camera_eid)
 	local sd = setting:data()
 	local fbidx = create_main_fb(view_rect, sd)
 
-	local ct = irender.create_primitive_filter_entities "main_queue"
+	local filternames, ct = irender.create_primitive_filter_entities "main_queue"
 	world:luaecs_create_entity {
 		policy = {
 			"ant.render|render_queue",
@@ -310,6 +313,7 @@ function irender.create_main_queue(view_rect, camera_eid)
 				},
 				fb_idx = fbidx,
 			},
+			filter_names = filternames,
 			cull_tag = ct,
 			visible = true,
 			INIT = true,
@@ -322,7 +326,7 @@ end
 
 local blitviewid = viewidmgr.get "blit"
 function irender.create_blit_queue(viewrect)
-	irender.create_primitive_filter_entities("blit_queue", "blit_view")
+	local fitlernames = irender.create_primitive_filter_entities("blit_queue", "blit_view")
 
 	world:luaecs_create_entity {
 		policy = {
@@ -350,6 +354,7 @@ function irender.create_blit_queue(viewrect)
 					w = viewrect.w or 1, h = viewrect.h or 1,
 				},
 			},
+			filter_names = fitlernames,
 			visible = true,
 			blit_queue = true,
 			watch_screen_buffer = true,

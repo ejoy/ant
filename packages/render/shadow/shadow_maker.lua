@@ -232,6 +232,7 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 				},
 				fb_idx = fbidx,
 			},
+			filter_names = {filtertag},
 			cull_tag = {filtertag .. "_cull"},
 			visible = false,
 			queue_name = queuename,
