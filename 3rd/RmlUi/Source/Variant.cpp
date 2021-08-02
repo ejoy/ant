@@ -35,7 +35,7 @@ Variant::Variant() : type(NONE)
 {
 	// Make sure our object size assumptions fit inside the static buffer
 	static_assert(sizeof(Color) <= LOCAL_DATA_SIZE, "Local data too small for Color");
-	static_assert(sizeof(String) <= LOCAL_DATA_SIZE, "Local data too small for String");
+	static_assert(sizeof(std::string) <= LOCAL_DATA_SIZE, "Local data too small for std::string");
 	static_assert(sizeof(TransformPtr) <= LOCAL_DATA_SIZE, "Local data too small for TransformPtr");
 	static_assert(sizeof(TransitionList) <= LOCAL_DATA_SIZE, "Local data too small for TransitionList");
 	static_assert(sizeof(AnimationList) <= LOCAL_DATA_SIZE, "Local data too small for AnimationList");
@@ -64,8 +64,8 @@ void Variant::Clear()
 		case STRING:
 		{
 			// Clean up the string.
-			String* string = (String*)data;
-			string->~String();
+			std::string* string = (std::string*)data;
+			string->~basic_string<char>();
 		}
 		break;
 		case TRANSFORMPTR:
@@ -108,7 +108,7 @@ void Variant::Set(const Variant& copy)
 	switch (copy.type)
 	{
 	case STRING:
-		Set(*(String*)copy.data);
+		Set(*(std::string*)copy.data);
 		break;
 
 	case TRANSFORMPTR:
@@ -136,7 +136,7 @@ void Variant::Set(Variant&& other)
 	switch (other.type)
 	{
 	case STRING:
-		Set(std::move(*(String*)other.data));
+		Set(std::move(*(std::string*)other.data));
 		break;
 
 	case TRANSFORMPTR:
@@ -203,7 +203,7 @@ void Variant::Set(const int64_t value)
 
 void Variant::Set(const char* value) 
 {
-	Set(String(value));
+	Set(std::string(value));
 }
 
 void Variant::Set(void* voidptr) 
@@ -218,28 +218,28 @@ void Variant::Set(const Color& value)
 	SET_VARIANT(Color);
 }
 
-void Variant::Set(const String& value)
+void Variant::Set(const std::string& value)
 {
 	if (type == STRING)
 	{
-		(*(String*)data) = value;
+		(*(std::string*)data) = value;
 	}
 	else
 	{
 		type = STRING;
-		new(data) String(value);
+		new(data) std::string(value);
 	}
 }
-void Variant::Set(String&& value)
+void Variant::Set(std::string&& value)
 {
 	if (type == STRING)
 	{
-		(*(String*)data) = std::move(value);
+		(*(std::string*)data) = std::move(value);
 	}
 	else
 	{
 		type = STRING;
-		new(data) String(std::move(value));
+		new(data) std::string(std::move(value));
 	}
 }
 
@@ -359,7 +359,7 @@ bool Variant::operator==(const Variant & other) const
 	case INT64:
 		return DEFAULT_VARIANT_COMPARE(int64_t);
 	case STRING:
-		return DEFAULT_VARIANT_COMPARE(String);
+		return DEFAULT_VARIANT_COMPARE(std::string);
 	case COLOURB:
 		return DEFAULT_VARIANT_COMPARE(Color);
 	case VOIDPTR:

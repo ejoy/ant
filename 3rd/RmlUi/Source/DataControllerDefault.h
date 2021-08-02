@@ -40,7 +40,7 @@ namespace Rml {
 class Element;
 class DataModel;
 class DataExpression;
-using DataExpressionPtr = UniquePtr<DataExpression>;
+using DataExpressionPtr = std::unique_ptr<DataExpression>;
 
 
 class DataControllerValue final : public DataController, private EventListener {
@@ -48,7 +48,7 @@ public:
     DataControllerValue(Element* element);
     ~DataControllerValue();
 
-    bool Initialize(DataModel& model, Element* element, const String& expression, const String& modifier) override;
+    bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& modifier) override;
 
 protected:
     // Responds to 'Change' events.
@@ -69,7 +69,7 @@ public:
     DataControllerEvent(Element* element);
     ~DataControllerEvent();
 
-    bool Initialize(DataModel& model, Element* element, const String& expression, const String& modifier) override;
+    bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& modifier) override;
 
 protected:
     // Responds to the event type specified in the attribute modifier.

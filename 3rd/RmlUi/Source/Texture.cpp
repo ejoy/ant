@@ -32,7 +32,7 @@
 
 namespace Rml {
 
-Texture::Texture(const String& _source)
+Texture::Texture(const std::string& _source)
 	: source(_source) {
 	if (!GetRenderInterface()->LoadTexture(handle, dimensions, source)) {
 		Log::Message(Log::Level::Warning, "Failed to load texture from %s.", source.c_str());
@@ -56,7 +56,7 @@ const Size& Texture::GetDimensions() const {
 	return dimensions;
 }
 
-using TextureMap = UnorderedMap<String, SharedPtr<Texture>>;
+using TextureMap = std::unordered_map<std::string, std::shared_ptr<Texture>>;
 static TextureMap textures;
 
 void Texture::Shutdown() {
@@ -73,12 +73,12 @@ void Texture::Shutdown() {
 	textures.clear();
 }
 
-SharedPtr<Texture> Texture::Fetch(const String& path) {
+std::shared_ptr<Texture> Texture::Fetch(const std::string& path) {
 	auto iterator = textures.find(path);
 	if (iterator != textures.end()) {
 		return iterator->second;
 	}
-	auto resource = MakeShared<Texture>(path);
+	auto resource = std::make_shared<Texture>(path);
 	textures[path] = resource;
 	return resource;
 }

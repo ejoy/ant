@@ -90,7 +90,7 @@ void StyleSheetFactory::Shutdown()
 	}
 }
 
-SharedPtr<StyleSheet> StyleSheetFactory::GetStyleSheet(const String& sheet_name)
+std::shared_ptr<StyleSheet> StyleSheetFactory::GetStyleSheet(const std::string& sheet_name)
 {
 	// Look up the sheet definition in the cache
 	StyleSheets::iterator itr = instance->stylesheets.find(sheet_name);
@@ -100,7 +100,7 @@ SharedPtr<StyleSheet> StyleSheetFactory::GetStyleSheet(const String& sheet_name)
 	}
 
 	// Don't currently have the sheet, attempt to load it
-	SharedPtr<StyleSheet> sheet = instance->LoadStyleSheet(sheet_name);
+	std::shared_ptr<StyleSheet> sheet = instance->LoadStyleSheet(sheet_name);
 	if (!sheet)
 		return nullptr;
 
@@ -110,10 +110,10 @@ SharedPtr<StyleSheet> StyleSheetFactory::GetStyleSheet(const String& sheet_name)
 	return sheet;
 }
 
-SharedPtr<StyleSheet> StyleSheetFactory::GetStyleSheet(const StringList& sheets)
+std::shared_ptr<StyleSheet> StyleSheetFactory::GetStyleSheet(const std::vector<std::string>& sheets)
 {
 	// Generate a unique key for these sheets
-	String combined_key;
+	std::string combined_key;
 	for (size_t i = 0; i < sheets.size(); i++)
 	{		
 		URL path(sheets[i]);
@@ -128,15 +128,15 @@ SharedPtr<StyleSheet> StyleSheetFactory::GetStyleSheet(const StringList& sheets)
 	}
 
 	// Load and combine the sheets.
-	SharedPtr<StyleSheet> sheet;
+	std::shared_ptr<StyleSheet> sheet;
 	for (size_t i = 0; i < sheets.size(); i++)
 	{
-		SharedPtr<StyleSheet> sub_sheet = GetStyleSheet(sheets[i]);
+		std::shared_ptr<StyleSheet> sub_sheet = GetStyleSheet(sheets[i]);
 		if (sub_sheet)
 		{
 			if (sheet)
 			{
-				SharedPtr<StyleSheet> new_sheet = sheet->CombineStyleSheet(*sub_sheet);
+				std::shared_ptr<StyleSheet> new_sheet = sheet->CombineStyleSheet(*sub_sheet);
 				sheet = std::move(new_sheet);
 			}
 			else
@@ -162,12 +162,12 @@ void StyleSheetFactory::ClearStyleSheetCache()
 }
 
 // Returns one of the available node selectors.
-StructuralSelector StyleSheetFactory::GetSelector(const String& name)
+StructuralSelector StyleSheetFactory::GetSelector(const std::string& name)
 {
 	SelectorMap::const_iterator it;
 	const size_t parameter_start = name.find('(');
 
-	if (parameter_start == String::npos)
+	if (parameter_start == std::string::npos)
 		it = instance->selectors.find(name);
 	else
 		it = instance->selectors.find(name.substr(0, parameter_start));
@@ -180,10 +180,10 @@ StructuralSelector StyleSheetFactory::GetSelector(const String& name)
 	int b = 0;
 
 	const size_t parameter_end = name.find(')', parameter_start + 1);
-	if (parameter_start != String::npos &&
-		parameter_end != String::npos)
+	if (parameter_start != std::string::npos &&
+		parameter_end != std::string::npos)
 	{
-		String parameters = StringUtilities::StripWhitespace(name.substr(parameter_start + 1, parameter_end - (parameter_start + 1)));
+		std::string parameters = StringUtilities::StripWhitespace(name.substr(parameter_start + 1, parameter_end - (parameter_start + 1)));
 
 		// Check for 'even' or 'odd' first.
 		if (parameters == "even")
@@ -200,7 +200,7 @@ StructuralSelector StyleSheetFactory::GetSelector(const String& name)
 		{
 			// Alrighty; we've got an equation in the form of [[+/-]an][(+/-)b]. So, foist up, we split on 'n'.
 			const size_t n_index = parameters.find('n');
-			if (n_index == String::npos)
+			if (n_index == std::string::npos)
 			{
 				// The equation is 0n + b. So a = 0, and we only have to parse b.
 				a = 0;
@@ -212,7 +212,7 @@ StructuralSelector StyleSheetFactory::GetSelector(const String& name)
 					a = 1;
 				else
 				{
-					const String a_parameter = parameters.substr(0, n_index);
+					const std::string a_parameter = parameters.substr(0, n_index);
 					if (StringUtilities::StripWhitespace(a_parameter) == "-")
 						a = -1;
 					else
@@ -220,16 +220,16 @@ StructuralSelector StyleSheetFactory::GetSelector(const String& name)
 				}
 
 				size_t pm_index = parameters.find('+', n_index + 1);
-				if (pm_index != String::npos)
+				if (pm_index != std::string::npos)
 					b = 1;
 				else
 				{
 					pm_index = parameters.find('-', n_index + 1);
-					if (pm_index != String::npos)
+					if (pm_index != std::string::npos)
 						b = -1;
 				}
 
-				if (n_index == parameters.size() - 1 || pm_index == String::npos)
+				if (n_index == parameters.size() - 1 || pm_index == std::string::npos)
 					b = 0;
 				else
 					b = b * atoi(parameters.data() + pm_index + 1);
@@ -240,16 +240,16 @@ StructuralSelector StyleSheetFactory::GetSelector(const String& name)
 	return StructuralSelector(it->second, a, b);
 }
 
-SharedPtr<StyleSheet> StyleSheetFactory::LoadStyleSheet(const String& sheet)
+std::shared_ptr<StyleSheet> StyleSheetFactory::LoadStyleSheet(const std::string& sheet)
 {
-	SharedPtr<StyleSheet> new_style_sheet;
+	std::shared_ptr<StyleSheet> new_style_sheet;
 
 	// Open stream, construct new sheet and pass the stream into the sheet
 	// TODO: Make this support ASYNC
-	auto stream = MakeUnique<StreamFile>();
+	auto stream = std::make_unique<StreamFile>();
 	if (stream->Open(sheet))
 	{
-		new_style_sheet = MakeShared<StyleSheet>();
+		new_style_sheet = std::make_shared<StyleSheet>();
 		if (!new_style_sheet->LoadStyleSheet(stream.get()))
 		{
 			new_style_sheet = nullptr;

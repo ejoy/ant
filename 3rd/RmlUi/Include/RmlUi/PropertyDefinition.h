@@ -42,7 +42,7 @@ namespace Rml {
 class RMLUICORE_API PropertyDefinition final
 {
 public:
-	PropertyDefinition(PropertyId id, const String& default_value, bool inherited, bool forces_layout);
+	PropertyDefinition(PropertyId id, const std::string& default_value, bool inherited, bool forces_layout);
 	PropertyDefinition(const PropertyDefinition &) = delete; 
 	PropertyDefinition& operator=(const PropertyDefinition &) = delete;
 	~PropertyDefinition();
@@ -51,19 +51,19 @@ public:
 	/// @param[in] parser_name The name of the parser (default parsers are 'string', 'keyword', 'number' and 'colour').
 	/// @param[in] parser_parameters A comma-separated list of validation parameters for the parser.
 	/// @return This property definition.
-	PropertyDefinition& AddParser(const String& parser_name, const String& parser_parameters = "");
+	PropertyDefinition& AddParser(const std::string& parser_name, const std::string& parser_parameters = "");
 
 
 	/// Called when parsing a RCSS declaration.
 	/// @param property[out] The property to set the parsed value onto.
 	/// @param value[in] The raw value defined for this property.
 	/// @return True if all values were parsed successfully, false otherwise.
-	bool ParseValue(Property& property, const String& value) const;
+	bool ParseValue(Property& property, const std::string& value) const;
 	/// Called to convert a parsed property back into a value.
 	/// @param value[out] The string to return the value in.
 	/// @param property[in] The processed property to parse.
 	/// @return True if the property was reverse-engineered successfully, false otherwise.
-	bool GetValue(String& value, const Property& property) const;
+	bool GetValue(std::string& value, const Property& property) const;
 
 	/// Returns true if this property is inherited from parent to child elements.
 	bool IsInherited() const;
@@ -90,7 +90,7 @@ private:
 		ParameterMap parameters;
 	};
 
-	Vector< ParserState > parsers;
+	std::vector< ParserState > parsers;
 };
 
 } // namespace Rml

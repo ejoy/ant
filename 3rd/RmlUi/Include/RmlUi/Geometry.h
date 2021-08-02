@@ -49,9 +49,9 @@ public:
 	Geometry& operator=(Geometry&& other);
 	~Geometry();
 	void Render();
-	Vector< Vertex >& GetVertices();
-	Vector< Index >& GetIndices();
-	void SetTexture(SharedPtr<Texture> texture);
+	std::vector< Vertex >& GetVertices();
+	std::vector< Index >& GetIndices();
+	void SetTexture(std::shared_ptr<Texture> texture);
 	void SetSamplerFlag(SamplerFlag flags);
 	void Release();
 	explicit operator bool() const;
@@ -78,13 +78,13 @@ public:
 
 private:
 	void MoveFrom(Geometry& other);
-	Vector<Vertex> vertices;
-	Vector<Index> indices;
-	SharedPtr<Texture> texture; 
+	std::vector<Vertex> vertices;
+	std::vector<Index> indices;
+	std::shared_ptr<Texture> texture; 
 	SamplerFlag flags = SamplerFlag::Unset;
 };
 
-using GeometryList = Vector< Geometry >;
+using GeometryList = std::vector< Geometry >;
 
 } // namespace Rml
 #endif

@@ -54,8 +54,8 @@ static FileInterface* file_interface = nullptr;
 static FontEngineInterface* font_interface = nullptr;
 
 // Default interfaces should be created and destroyed on Initialise and Shutdown, respectively.
-static UniquePtr<FileInterface> default_file_interface;
-static UniquePtr<FontEngineInterface> default_font_interface;
+static std::unique_ptr<FileInterface> default_file_interface;
+static std::unique_ptr<FontEngineInterface> default_font_interface;
 
 static bool initialised = false;
 
@@ -112,7 +112,7 @@ void Shutdown() {
 }
 
 // Returns the version of this RmlUi library.
-String GetVersion()
+std::string GetVersion()
 {
 	return RMLUI_VERSION;
 }

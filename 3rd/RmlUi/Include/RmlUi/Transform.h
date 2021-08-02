@@ -179,12 +179,12 @@ struct TransformPrimitive : public Transforms::Primitive {
 	void   ConvertToGenericType();
 	bool   Interpolate(const TransformPrimitive& other, float alpha);
 	TransformType GetType() const;
-	String ToString() const;
+	std::string ToString() const;
 };
 
-class Transform : public Vector<TransformPrimitive> {
+class Transform : public std::vector<TransformPrimitive> {
 public:
-	UniquePtr<Transform> Interpolate(const Transform& other, float alpha);
+	std::unique_ptr<Transform> Interpolate(const Transform& other, float alpha);
 	glm::mat4x4 GetMatrix(Element& e) const;
 	bool Combine(Element& e, size_t start);
 };

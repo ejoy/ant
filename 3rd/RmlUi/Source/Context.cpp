@@ -72,7 +72,7 @@ void Context::Update(double delta) {
 }
 
 // Load a document into the context.
-Document* Context::LoadDocument(const String& document_path) {	
+Document* Context::LoadDocument(const std::string& document_path) {	
 	DocumentPtr document(new Document(dimensions));
 	document->context = this;
 	PluginRegistry::NotifyDocumentCreate(document.get());

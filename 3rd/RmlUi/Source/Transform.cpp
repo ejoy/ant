@@ -314,28 +314,28 @@ struct InterpolateVisitor {
 };
 
 struct ToStringVisitor {
-	String operator()(const Transforms::SkewX& p) {
+	std::string operator()(const Transforms::SkewX& p) {
 		return "skewX(" + ToString(p.x) + ")";
 	}
-	String operator()(const Transforms::SkewY& p) {
+	std::string operator()(const Transforms::SkewY& p) {
 		return "skewY(" + ToString(p.y) + ")";
 	}
-	String operator()(const Transforms::Skew2D& p) {
+	std::string operator()(const Transforms::Skew2D& p) {
 		return "skew(" + ToString(p.x) + "," + ToString(p.y) + ")";
 	}
-	String operator()(const Transforms::RotateX& p) {
+	std::string operator()(const Transforms::RotateX& p) {
 		return "rotateX(" + ToString(p.angle) + ")";
 	}
-	String operator()(const Transforms::RotateY& p) {
+	std::string operator()(const Transforms::RotateY& p) {
 		return "rotateY(" + ToString(p.angle) + ")";
 	}
-	String operator()(const Transforms::RotateZ& p) {
+	std::string operator()(const Transforms::RotateZ& p) {
 		return "rotateZ(" + ToString(p.angle) + ")";
 	}
-	String operator()(const Transforms::Rotate2D& p) {
+	std::string operator()(const Transforms::Rotate2D& p) {
 		return "rotate(" + ToString(p.angle) + ")";
 	}
-	String operator()(const Transforms::Rotate3D& p) {
+	std::string operator()(const Transforms::Rotate3D& p) {
 		return "rotate3d("
 			+ ToString(p.axis.x) + ","
 			+ ToString(p.axis.y) + ","
@@ -343,47 +343,47 @@ struct ToStringVisitor {
 			+ ToString(p.angle)
 			+ ")";
 	}
-	String operator()(const Transforms::ScaleX& p) {
+	std::string operator()(const Transforms::ScaleX& p) {
 		return "scaleX(" + ToString(p.x) + ")";
 	}
-	String operator()(const Transforms::ScaleY& p) {
+	std::string operator()(const Transforms::ScaleY& p) {
 		return "scaleY(" + ToString(p.y) + ")";
 	}
-	String operator()(const Transforms::ScaleZ& p) {
+	std::string operator()(const Transforms::ScaleZ& p) {
 		return "scaleZ(" + ToString(p.z) + ")";
 	}
-	String operator()(const Transforms::Scale2D& p) {
+	std::string operator()(const Transforms::Scale2D& p) {
 		return "scale(" + ToString(p.x) + "," + ToString(p.y) + ")";
 	}
-	String operator()(const Transforms::Scale3D& p) {
+	std::string operator()(const Transforms::Scale3D& p) {
 		return "scale3d(" + ToString(p.x) + "," + ToString(p.y) + "," + ToString(p.z) + ")";
 	}
-	String operator()(const Transforms::TranslateX& p) {
+	std::string operator()(const Transforms::TranslateX& p) {
 		return "translateX(" + ToString(p.x) + ")";
 	}
-	String operator()(const Transforms::TranslateY& p) {
+	std::string operator()(const Transforms::TranslateY& p) {
 		return "translateY(" + ToString(p.y) + ")";
 	}
-	String operator()(const Transforms::TranslateZ& p) {
+	std::string operator()(const Transforms::TranslateZ& p) {
 		return "translateZ(" + ToString(p.z) + ")";
 	}
-	String operator()(const Transforms::Translate2D& p) {
+	std::string operator()(const Transforms::Translate2D& p) {
 		return "translate(" + ToString(p.x) + "," + ToString(p.y) + ")";
 	}
-	String operator()(const Transforms::Translate3D& p) {
+	std::string operator()(const Transforms::Translate3D& p) {
 		return "translate3d(" + ToString(p.x) + "," + ToString(p.y) + "," + ToString(p.z) + ")";
 	}
-	String operator()(const Transforms::Perspective& p) {
+	std::string operator()(const Transforms::Perspective& p) {
 		return "perspective(" + ToString(p.distance) + ")";
 	}
-	String operator()(const Transforms::Matrix2D& p) {
+	std::string operator()(const Transforms::Matrix2D& p) {
 		return "matrix("
 			+ ToString(p[0][0]) + "," + ToString(p[0][1]) + ","
 			+ ToString(p[1][0]) + "," + ToString(p[1][1]) + ","
 			+ ToString(p[2][0]) + "," + ToString(p[2][1])
 			+ ")";
 	}
-	String operator()(const Transforms::Matrix3D& p) {
+	std::string operator()(const Transforms::Matrix3D& p) {
 		return "matrix3d("
 			+ ToString(p[0][0]) + "," + ToString(p[0][1]) + "," + ToString(p[0][2]) + "," + ToString(p[0][3]) + ","
 			+ ToString(p[1][0]) + "," + ToString(p[1][1]) + "," + ToString(p[1][2]) + "," + ToString(p[1][3]) + ","
@@ -391,7 +391,7 @@ struct ToStringVisitor {
 			+ ToString(p[3][0]) + "," + ToString(p[3][1]) + "," + ToString(p[3][2]) + "," + ToString(p[3][3])
 			+ ")";
 	}
-	String operator()(const Transforms::DecomposedMatrix4& p) noexcept {
+	std::string operator()(const Transforms::DecomposedMatrix4& p) noexcept {
 		static const Transforms::DecomposedMatrix4 d{
 			glm::vec4(0, 0, 0, 1),
 			glm::quat(0, 0, 0, 1),
@@ -399,7 +399,7 @@ struct ToStringVisitor {
 			glm::vec3(1, 1, 1),
 			glm::vec3(0, 0, 0)
 		};
-		String result;
+		std::string result;
 		if (p.perspective != d.perspective)
 			result += "perspective(" + glm::to_string(p.perspective) + "), ";
 		if (p.quaternion != d.quaternion)
@@ -479,7 +479,7 @@ bool TransformPrimitive::Interpolate(const TransformPrimitive& other, float alph
 	return std::visit(InterpolateVisitor{ other, alpha }, static_cast<Transforms::Primitive&>(*this));
 }
 
-String TransformPrimitive::ToString() const {
+std::string TransformPrimitive::ToString() const {
 	return std::visit(ToStringVisitor{}, static_cast<Transforms::Primitive const&>(*this));
 }
 
@@ -487,11 +487,11 @@ TransformType TransformPrimitive::GetType() const {
 	return std::visit(GetTypeVisitor{}, static_cast<Transforms::Primitive const&>(*this));
 }
 
-UniquePtr<Transform> Transform::Interpolate(const Transform& other, float alpha) {
+std::unique_ptr<Transform> Transform::Interpolate(const Transform& other, float alpha) {
 	if (size() != other.size()) {
 		return {};
 	}
-	UniquePtr<Transform> new_transform(new Transform);
+	std::unique_ptr<Transform> new_transform(new Transform);
 	new_transform->reserve(size());
 	for (size_t i = 0; i < size(); ++i) {
 		TransformPrimitive p = (*this)[i];

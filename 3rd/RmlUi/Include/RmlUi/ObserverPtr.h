@@ -60,7 +60,7 @@ class EnableObserverPtr;
 
 	Usage: Given a class T, derive from EnableObserverPtr<T>. Then, we can use the observer pointer as follows:
 
-		auto object = MakeUnique<T>();
+		auto object = std::make_unique<T>();
 		ObserverPtr<T> observer_ptr = object->GetObserverPtr();
 		// ...
 		if(obserer_ptr) { 

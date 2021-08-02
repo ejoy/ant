@@ -30,7 +30,6 @@
 #define RMLUI_CORE_TRAITS_H
 
 #include "Header.h"
-#include "Config.h"
 #include <type_traits>
 
 namespace Rml {

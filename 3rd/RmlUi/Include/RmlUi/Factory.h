@@ -69,7 +69,7 @@ public:
 	/// @param[in] parent The element any instanced elements will be parented to.
 	/// @param[in] text The text to instance the element (or elements) from.
 	/// @return True if the string was parsed without error, false otherwise.
-	static bool InstanceElementText(Element* parent, const String& text);
+	static bool InstanceElementText(Element* parent, const std::string& text);
 
 	/// Register the instancer to be used for all event listeners.
 	/// @lifetime The instancer must be kept alive until after the call to Rml::Shutdown, or until a new instancer is set.
@@ -77,7 +77,7 @@ public:
 	/// Instance an event listener with the given string. This is used for instancing listeners for the on* events from RML.
 	/// @param[in] value The parameters to the event listener.
 	/// @return The instanced event listener.
-	static EventListener* InstanceEventListener(const String& value, Element* element);
+	static EventListener* InstanceEventListener(const std::string& value, Element* element);
 
 	/// Register an instancer for data views.
 	/// Structural views start a special XML parsing procedure when encountering a declaration of the view. Instead of instancing
@@ -86,25 +86,25 @@ public:
 	/// @param[in] type_name  The type name of the view, determines the element attribute that is used to initialize it.
 	/// @param[in] is_structural_view  Set true if the view should be parsed as a structural view.
 	/// @lifetime The instancer must be kept alive until after the call to Rml::Shutdown.
-	static void RegisterDataViewInstancer(DataViewInstancer* instancer, const String& type_name, bool is_structural_view = false);
+	static void RegisterDataViewInstancer(DataViewInstancer* instancer, const std::string& type_name, bool is_structural_view = false);
 
 	/// Register an instancer for data controllers.
 	/// @param[in] instancer  The instancer to be called.
 	/// @param[in] type_name  The type name of the controller, determines the element attribute that is used to initialize it.
 	/// @lifetime The instancer must be kept alive until after the call to Rml::Shutdown.
-	static void RegisterDataControllerInstancer(DataControllerInstancer* instancer, const String& type_name);
+	static void RegisterDataControllerInstancer(DataControllerInstancer* instancer, const std::string& type_name);
 
 	/// Instance the data view with the given type name.
-	static DataViewPtr InstanceDataView(const String& type_name, Element* element, bool is_structural_view);
+	static DataViewPtr InstanceDataView(const std::string& type_name, Element* element, bool is_structural_view);
 
 	/// Instance the data controller with the given type name.
-	static DataControllerPtr InstanceDataController(const String& type_name, Element* element);
+	static DataControllerPtr InstanceDataController(const std::string& type_name, Element* element);
 
 	/// Returns true if the given type name is a structural data view.
-	static bool IsStructuralDataView(const String& type_name);
+	static bool IsStructuralDataView(const std::string& type_name);
 
 	/// Returns the list of element attribute names with an associated structural data view instancer.
-	static const StringList& GetStructuralDataViewAttributeNames();
+	static const std::vector<std::string>& GetStructuralDataViewAttributeNames();
 
 private:
 	Factory();

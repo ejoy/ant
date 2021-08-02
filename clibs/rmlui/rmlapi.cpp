@@ -209,7 +209,7 @@ static int
 lDocumentGetSourceURL(lua_State *L) {
 	luabind::setthread(L);
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	const Rml::String &url = doc->GetSourceURL();
+	const std::string &url = doc->GetSourceURL();
 	lua_pushlstring(L, url.c_str(), url.length());
 	return 1;
 }
@@ -241,8 +241,7 @@ lDocumentDispatchEvent(lua_State* L) {
 				lua_pop(L, 1);
 				continue;
 			}
-			Rml::Dictionary::value_type v;
-			v.first = lua_checkstdstring(L, -2);
+			Rml::Dictionary::value_type v {lua_checkstdstring(L, -2), Rml::Variant{}};
 			lua_getvariant(L, -1, &v.second);
 			params.emplace(v);
 			lua_pop(L, 1);
@@ -256,7 +255,7 @@ static int
 lElementGetInnerRML(lua_State *L) {
 	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	const Rml::String &rml = e->GetInnerRML();
+	const std::string &rml = e->GetInnerRML();
 	lua_pushlstring(L, rml.c_str(), rml.length());
 	return 1;
 }
@@ -368,8 +367,8 @@ static int
 lElementSetProperty(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	Rml::String name = lua_checkstdstring(L, 2);
-	Rml::String value = lua_checkstdstring(L, 3);
+	std::string name = lua_checkstdstring(L, 2);
+	std::string value = lua_checkstdstring(L, 3);
 	bool ok = e->SetProperty(name, value);
 	lua_pushboolean(L, ok);
 	return 1;

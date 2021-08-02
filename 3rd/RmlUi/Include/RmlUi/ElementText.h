@@ -39,11 +39,11 @@ namespace Rml {
 
 class RMLUICORE_API ElementText final : public Element {
 public:
-	ElementText(Document* owner, const String& text);
+	ElementText(Document* owner, const std::string& text);
 	virtual ~ElementText();
 
-	void SetText(const String& text);
-	const String& GetText() const;
+	void SetText(const std::string& text);
+	const std::string& GetText() const;
 
 	Size Measure(float minWidth, float maxWidth, float minHeight, float maxHeight);
 	float GetBaseline();
@@ -60,9 +60,9 @@ private:
 	void UpdateGeometry(const FontFaceHandle font_face_handle);
 	void UpdateDecoration(const FontFaceHandle font_face_handle);
 
-	bool GenerateLine(String& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix);
+	bool GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix);
 	void ClearLines();
-	void AddLine(const Point& line_position, const String& line);
+	void AddLine(const Point& line_position, const std::string& line);
 
 	float GetLineHeight();
 	Style::TextAlign GetAlign();
@@ -81,7 +81,7 @@ private:
 	bool dirty_effects = false;
 	bool dirty_font = false;
 
-	String text;
+	std::string text;
 	LineList lines;
 	GeometryList geometrys;
 	Geometry decoration;

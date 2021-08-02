@@ -38,7 +38,7 @@ FontEngineInterface::~FontEngineInterface()
 {
 }
 
-FontFaceHandle FontEngineInterface::GetFontFaceHandle(const String& /*family*/, Style::FontStyle /*style*/,
+FontFaceHandle FontEngineInterface::GetFontFaceHandle(const std::string& /*family*/, Style::FontStyle /*style*/,
 	Style::FontWeight /*weight*/, int /*size*/)
 {
 	return 0;
@@ -73,7 +73,7 @@ void FontEngineInterface::GetUnderline(FontFaceHandle /*handle*/, float& /*posit
 {
 }
 
-int FontEngineInterface::GetStringWidth(FontFaceHandle /*handle*/, const String& /*string*/, Character /*prior_character*/)
+int FontEngineInterface::GetStringWidth(FontFaceHandle /*handle*/, const std::string& /*string*/, Character /*prior_character*/)
 {
 	return 0;
 }

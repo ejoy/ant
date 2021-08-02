@@ -76,14 +76,14 @@ public:
 	// @param[in] expression The value of the element's 'data-' attribute which spawned the view (see above).
 	// @param[in] modifier_or_inner_rml The modifier for the given view type (see above), or the inner rml contents for structural data views.
 	// @return True on success.
-	virtual bool Initialize(DataModel& model, Element* element, const String& expression, const String& modifier_or_inner_rml) = 0;
+	virtual bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& modifier_or_inner_rml) = 0;
 
 	// Update the data view.
 	// Returns true if the update resulted in a document change.
 	virtual bool Update(DataModel& model) = 0;
 
 	// Returns the list of data variable name(s) which can modify this view.
-	virtual StringList GetVariableNameList() const = 0;
+	virtual std::vector<std::string> GetVariableNameList() const = 0;
 
 	// Returns the attached element if it still exists.
 	Element* GetElement() const;
@@ -116,14 +116,14 @@ public:
 	bool Update(DataModel& model, const DirtyVariables& dirty_variables);
 
 private:
-	using DataViewList = Vector<DataViewPtr>;
+	using DataViewList = std::vector<DataViewPtr>;
 
 	DataViewList views;
 	
 	DataViewList views_to_add;
 	DataViewList views_to_remove;
 
-	using NameViewMap = UnorderedMultimap<String, DataView*>;
+	using NameViewMap = std::unordered_multimap<std::string, DataView*>;
 	NameViewMap name_view_map;
 };
 

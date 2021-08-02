@@ -39,7 +39,7 @@ bool TypeConverter<TransformPtr, TransformPtr>::Convert(const TransformPtr& src,
 	return true;
 }
 
-bool TypeConverter<TransformPtr, String>::Convert(const TransformPtr& src, String& dest)
+bool TypeConverter<TransformPtr, std::string>::Convert(const TransformPtr& src, std::string& dest)
 {
 	if (src)
 	{
@@ -65,22 +65,22 @@ bool TypeConverter<TransitionList, TransitionList>::Convert(const TransitionList
 	return true;
 }
 
-bool TypeConverter<TransitionList, String>::Convert(const TransitionList& src, String& dest)
+bool TypeConverter<TransitionList, std::string>::Convert(const TransitionList& src, std::string& dest)
 {
 	if (src.none)
 	{
 		dest = "none";
 		return true;
 	}
-	String tmp;
+	std::string tmp;
 	for (size_t i = 0; i < src.transitions.size(); i++)
 	{
 		const Transition& t = src.transitions[i];
 		dest += StyleSheetSpecification::GetPropertyName(t.id) + " ";
 		dest += t.tween.to_string() + " ";
-		if (TypeConverter< float, String >::Convert(t.duration, tmp)) dest += tmp + "s ";
-		if (t.delay > 0.0f && TypeConverter< float, String >::Convert(t.delay, tmp)) dest += tmp + "s ";
-		if (t.reverse_adjustment_factor > 0.0f && TypeConverter< float, String >::Convert(t.delay, tmp)) dest += tmp;
+		if (TypeConverter< float, std::string >::Convert(t.duration, tmp)) dest += tmp + "s ";
+		if (t.delay > 0.0f && TypeConverter< float, std::string >::Convert(t.delay, tmp)) dest += tmp + "s ";
+		if (t.reverse_adjustment_factor > 0.0f && TypeConverter< float, std::string >::Convert(t.delay, tmp)) dest += tmp;
 		if (dest.size() > 0) dest.resize(dest.size() - 1);
 		if (i != src.transitions.size() - 1) dest += ", ";
 	}
@@ -93,19 +93,19 @@ bool TypeConverter<AnimationList, AnimationList>::Convert(const AnimationList& s
 	return true;
 }
 
-bool TypeConverter<AnimationList, String>::Convert(const AnimationList& src, String& dest)
+bool TypeConverter<AnimationList, std::string>::Convert(const AnimationList& src, std::string& dest)
 {
-	String tmp;
+	std::string tmp;
 	for (size_t i = 0; i < src.size(); i++)
 	{
 		const Animation& a = src[i];
-		if (TypeConverter< float, String >::Convert(a.duration, tmp)) dest += tmp + "s ";
+		if (TypeConverter< float, std::string >::Convert(a.duration, tmp)) dest += tmp + "s ";
 		dest += a.tween.to_string() + " ";
-		if (a.delay > 0.0f && TypeConverter< float, String >::Convert(a.delay, tmp)) dest += tmp + "s ";
+		if (a.delay > 0.0f && TypeConverter< float, std::string >::Convert(a.delay, tmp)) dest += tmp + "s ";
 		if (a.alternate) dest += "alternate ";
 		if (a.paused) dest += "paused ";
 		if (a.num_iterations == -1) dest += "infinite ";
-		else if (TypeConverter< int, String >::Convert(a.num_iterations, tmp)) dest += tmp + " ";
+		else if (TypeConverter< int, std::string >::Convert(a.num_iterations, tmp)) dest += tmp + " ";
 		dest += a.name;
 		if (i != src.size() - 1) dest += ", ";
 	}

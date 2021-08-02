@@ -71,12 +71,12 @@ StyleSheetSpecification::~StyleSheetSpecification()
 	instance = nullptr;
 }
 
-PropertyDefinition& StyleSheetSpecification::RegisterProperty(PropertyId id, const String& property_name, const String& default_value, bool inherited, bool forces_layout)
+PropertyDefinition& StyleSheetSpecification::RegisterProperty(PropertyId id, const std::string& property_name, const std::string& default_value, bool inherited, bool forces_layout)
 {
 	return properties.RegisterProperty(property_name, default_value, inherited, forces_layout, id);
 }
 
-ShorthandId StyleSheetSpecification::RegisterShorthand(ShorthandId id, const String& shorthand_name, const String& property_names, ShorthandType type)
+ShorthandId StyleSheetSpecification::RegisterShorthand(ShorthandId id, const std::string& shorthand_name, const std::string& property_names, ShorthandType type)
 {
 	return properties.RegisterShorthand(shorthand_name, property_names, type, id);
 }
@@ -103,7 +103,7 @@ void StyleSheetSpecification::Shutdown()
 }
 
 // Registers a parser for use in property definitions.
-bool StyleSheetSpecification::RegisterParser(const String& parser_name, PropertyParser* parser)
+bool StyleSheetSpecification::RegisterParser(const std::string& parser_name, PropertyParser* parser)
 {
 	ParserMap::iterator iterator = instance->parsers.find(parser_name);
 	if (iterator != instance->parsers.end())
@@ -117,7 +117,7 @@ bool StyleSheetSpecification::RegisterParser(const String& parser_name, Property
 }
 
 // Returns the parser registered with a specific name.
-PropertyParser* StyleSheetSpecification::GetParser(const String& parser_name)
+PropertyParser* StyleSheetSpecification::GetParser(const std::string& parser_name)
 {
 	ParserMap::iterator iterator = instance->parsers.find(parser_name);
 	if (iterator == instance->parsers.end())
@@ -127,7 +127,7 @@ PropertyParser* StyleSheetSpecification::GetParser(const String& parser_name)
 }
 
 // Returns a property definition.
-const PropertyDefinition* StyleSheetSpecification::GetProperty(const String& property_name)
+const PropertyDefinition* StyleSheetSpecification::GetProperty(const std::string& property_name)
 {
 	return instance->properties.GetProperty(property_name);
 }
@@ -153,7 +153,7 @@ const PropertyIdSet& StyleSheetSpecification::GetRegisteredPropertiesForcingLayo
 }
 
 // Returns a shorthand definition.
-const ShorthandDefinition* StyleSheetSpecification::GetShorthand(const String& shorthand_name)
+const ShorthandDefinition* StyleSheetSpecification::GetShorthand(const std::string& shorthand_name)
 {
 	return instance->properties.GetShorthand(shorthand_name);
 }
@@ -164,27 +164,27 @@ const ShorthandDefinition* StyleSheetSpecification::GetShorthand(ShorthandId id)
 }
 
 // Parses a property declaration, setting any parsed and validated properties on the given dictionary.
-bool StyleSheetSpecification::ParsePropertyDeclaration(PropertyDictionary& dictionary, const String& property_name, const String& property_value)
+bool StyleSheetSpecification::ParsePropertyDeclaration(PropertyDictionary& dictionary, const std::string& property_name, const std::string& property_value)
 {
 	return instance->properties.ParsePropertyDeclaration(dictionary, property_name, property_value);
 }
 
-PropertyId StyleSheetSpecification::GetPropertyId(const String& property_name)
+PropertyId StyleSheetSpecification::GetPropertyId(const std::string& property_name)
 {
 	return instance->properties.property_map->GetId(property_name);
 }
 
-ShorthandId StyleSheetSpecification::GetShorthandId(const String& shorthand_name)
+ShorthandId StyleSheetSpecification::GetShorthandId(const std::string& shorthand_name)
 {
 	return instance->properties.shorthand_map->GetId(shorthand_name);
 }
 
-const String& StyleSheetSpecification::GetPropertyName(PropertyId id)
+const std::string& StyleSheetSpecification::GetPropertyName(PropertyId id)
 {
 	return instance->properties.property_map->GetName(id);
 }
 
-const String& StyleSheetSpecification::GetShorthandName(ShorthandId id)
+const std::string& StyleSheetSpecification::GetShorthandName(ShorthandId id)
 {
 	return instance->properties.shorthand_map->GetName(id);
 }

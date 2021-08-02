@@ -84,7 +84,7 @@ public:
     // @param[in] expression The value of the element's 'data-' attribute which spawned the controller (see above).
     // @param[in] modifier The modifier for the given controller type (see above).
     // @return True on success.
-    virtual bool Initialize(DataModel& model, Element* element, const String& expression, const String& modifier) = 0;
+    virtual bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& modifier) = 0;
 
     // Returns the attached element if it still exists.
     Element* GetElement() const;
@@ -110,7 +110,7 @@ public:
     void OnElementRemove(Element* element);
 
 private:
-    using ElementControllersMap = UnorderedMultimap<Element*, DataControllerPtr>;
+    using ElementControllersMap = std::unordered_multimap<Element*, DataControllerPtr>;
     ElementControllersMap controllers;
 };
 

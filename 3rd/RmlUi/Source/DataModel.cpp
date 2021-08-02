@@ -33,9 +33,9 @@
 
 namespace Rml {
 
-static DataAddress ParseAddress(const String& address_str)
+static DataAddress ParseAddress(const std::string& address_str)
 {
-	StringList list;
+	std::vector<std::string> list;
 	StringUtilities::ExpandString(list, address_str, '.');
 
 	DataAddress address;
@@ -52,10 +52,10 @@ static DataAddress ParseAddress(const String& address_str)
 
 		address.emplace_back(item.substr(0, i_open));
 
-		while (i_open != String::npos)
+		while (i_open != std::string::npos)
 		{
 			size_t i_close = item.find(']', i_open + 1);
-			if (i_close == String::npos)
+			if (i_close == std::string::npos)
 				return DataAddress();
 
 			int index = FromString<int>(item.substr(i_open + 1, i_close - i_open), -1);
@@ -75,14 +75,14 @@ static DataAddress ParseAddress(const String& address_str)
 }
 
 // Returns an error string on error, or nullptr on success.
-static const char* LegalVariableName(const String& name)
+static const char* LegalVariableName(const std::string& name)
 {
-	static SmallUnorderedSet<String> reserved_names{ "it", "ev", "true", "false", "size", "literal" };
+	static std::unordered_set<std::string> reserved_names{ "it", "ev", "true", "false", "size", "literal" };
 	
 	if (name.empty())
 		return "Name cannot be empty.";
 	
-	const String name_lower = StringUtilities::ToLower(name);
+	const std::string name_lower = StringUtilities::ToLower(name);
 
 	const char first = name_lower.front();
 	if (!(first >= 'a' && first <= 'z'))
@@ -100,9 +100,9 @@ static const char* LegalVariableName(const String& name)
 	return nullptr;
 }
 
-static String DataAddressToString(const DataAddress& address)
+static std::string DataAddressToString(const DataAddress& address)
 {
-	String result;
+	std::string result;
 	bool is_first = true;
 	for (auto& entry : address)
 	{
@@ -121,8 +121,8 @@ static String DataAddressToString(const DataAddress& address)
 
 DataModel::DataModel()
 {
-	views = MakeUnique<DataViews>();
-	controllers = MakeUnique<DataControllers>();
+	views = std::make_unique<DataViews>();
+	controllers = std::make_unique<DataControllers>();
 }
 
 DataModel::~DataModel()
@@ -138,7 +138,7 @@ void DataModel::AddController(DataControllerPtr controller) {
 	controllers->Add(std::move(controller));
 }
 
-bool DataModel::BindVariable(const String& name, DataVariable variable)
+bool DataModel::BindVariable(const std::string& name, DataVariable variable)
 {
 	const char* name_error_str = LegalVariableName(name);
 	if (name_error_str)
@@ -163,7 +163,7 @@ bool DataModel::BindVariable(const String& name, DataVariable variable)
 	return true;
 }
 
-bool DataModel::BindFunc(const String& name, DataGetFunc get_func, DataSetFunc set_func)
+bool DataModel::BindFunc(const std::string& name, DataGetFunc get_func, DataSetFunc set_func)
 {
 	auto result = function_variable_definitions.emplace(name, nullptr);
 	auto& it = result.first;
@@ -174,12 +174,12 @@ bool DataModel::BindFunc(const String& name, DataGetFunc get_func, DataSetFunc s
 		return false;
 	}
 	auto& func_definition_ptr = it->second;
-	func_definition_ptr = MakeUnique<FuncDefinition>(std::move(get_func), std::move(set_func));
+	func_definition_ptr = std::make_unique<FuncDefinition>(std::move(get_func), std::move(set_func));
 
 	return BindVariable(name, DataVariable(func_definition_ptr.get(), nullptr));
 }
 
-bool DataModel::BindEventCallback(const String& name, DataEventFunc event_func)
+bool DataModel::BindEventCallback(const std::string& name, DataEventFunc event_func)
 {
 	const char* name_error_str = LegalVariableName(name);
 	if (name_error_str)
@@ -204,7 +204,7 @@ bool DataModel::BindEventCallback(const String& name, DataEventFunc event_func)
 	return true;
 }
 
-bool DataModel::InsertAlias(Element* element, const String& alias_name, DataAddress replace_with_address)
+bool DataModel::InsertAlias(Element* element, const std::string& alias_name, DataAddress replace_with_address)
 {
 	if (replace_with_address.empty() || replace_with_address.front().name.empty())
 	{
@@ -215,7 +215,7 @@ bool DataModel::InsertAlias(Element* element, const String& alias_name, DataAddr
 	if (variables.count(alias_name) == 1)
 		Log::Message(Log::Level::Warning, "Alias variable '%s' is shadowed by a global variable.", alias_name.c_str());
 
-	auto& map = aliases.emplace(element, SmallUnorderedMap<String, DataAddress>()).first->second;
+	auto& map = aliases.emplace(element, std::unordered_map<std::string, DataAddress>()).first->second;
 	
 	auto it = map.find(alias_name);
 	if (it != map.end())
@@ -231,14 +231,14 @@ bool DataModel::EraseAliases(Element* element)
 	return aliases.erase(element) == 1;
 }
 
-DataAddress DataModel::ResolveAddress(const String& address_str, Element* element) const
+DataAddress DataModel::ResolveAddress(const std::string& address_str, Element* element) const
 {
 	DataAddress address = ParseAddress(address_str);
 
 	if (address.empty())
 		return address;
 
-	const String& first_name = address.front().name;
+	const std::string& first_name = address.front().name;
 
 	auto it = variables.find(first_name);
 	if (it != variables.end())
@@ -307,7 +307,7 @@ DataVariable DataModel::GetVariable(const DataAddress& address) const
 	return DataVariable();
 }
 
-const DataEventFunc* DataModel::GetEventCallback(const String& name)
+const DataEventFunc* DataModel::GetEventCallback(const std::string& name)
 {
 	auto it = event_callbacks.find(name);
 	if (it == event_callbacks.end())
@@ -327,14 +327,14 @@ bool DataModel::GetVariableInto(const DataAddress& address, Variant& out_value) 
 	return result;
 }
 
-void DataModel::DirtyVariable(const String& variable_name)
+void DataModel::DirtyVariable(const std::string& variable_name)
 {
 	RMLUI_ASSERTMSG(LegalVariableName(variable_name) == nullptr, "Illegal variable name provided. Only top-level variables can be dirtied.");
 	RMLUI_ASSERTMSG(variables.count(variable_name) == 1, "In DirtyVariable: Variable name not found among added variables.");
 	dirty_variables.emplace(variable_name);
 }
 
-bool DataModel::IsVariableDirty(const String& variable_name) const
+bool DataModel::IsVariableDirty(const std::string& variable_name) const
 {
 	RMLUI_ASSERTMSG(LegalVariableName(variable_name) == nullptr, "Illegal variable name provided. Only top-level variables can be dirtied.");
 	return dirty_variables.count(variable_name) == 1;

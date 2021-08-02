@@ -60,28 +60,28 @@ public:
 	/// Sets or removes a pseudo-class on the element.
 	/// @param[in] pseudo_class The pseudo class to activate or deactivate.
 	/// @param[in] activate True if the pseudo-class is to be activated, false to be deactivated.
-	void SetPseudoClass(const String& pseudo_class, bool activate);
+	void SetPseudoClass(const std::string& pseudo_class, bool activate);
 	/// Checks if a specific pseudo-class has been set on the element.
 	/// @param[in] pseudo_class The name of the pseudo-class to check for.
 	/// @return True if the pseudo-class is set on the element, false if not.
-	bool IsPseudoClassSet(const String& pseudo_class) const;
+	bool IsPseudoClassSet(const std::string& pseudo_class) const;
 	/// Gets a list of the current active pseudo classes
 	const PseudoClassList& GetActivePseudoClasses() const;
 
 	/// Sets or removes a class on the element.
 	/// @param[in] class_name The name of the class to add or remove from the class list.
 	/// @param[in] activate True if the class is to be added, false to be removed.
-	void SetClass(const String& class_name, bool activate);
+	void SetClass(const std::string& class_name, bool activate);
 	/// Checks if a class is set on the element.
 	/// @param[in] class_name The name of the class to check for.
 	/// @return True if the class is set on the element, false otherwise.
-	bool IsClassSet(const String& class_name) const;
+	bool IsClassSet(const std::string& class_name) const;
 	/// Specifies the entire list of classes for this element. This will replace any others specified.
 	/// @param[in] class_names The list of class names to set on the style, separated by spaces.
-	void SetClassNames(const String& class_names);
+	void SetClassNames(const std::string& class_names);
 	/// Return the active class list.
 	/// @return A string containing all the classes on the element, separated by spaces.
-	String GetClassNames() const;
+	std::string GetClassNames() const;
 
 	/// Sets a local property override on the element to a pre-parsed value.
 	/// @param[in] name The name of the new property.
@@ -141,14 +141,14 @@ private:
 	Element* element;
 
 	// The list of classes applicable to this object.
-	StringList classes;
+	std::vector<std::string> classes;
 	// This element's current pseudo-classes.
 	PseudoClassList pseudo_classes;
 
 	// Any properties that have been overridden in this element.
 	PropertyDictionary inline_properties;
 	// The definition of this element, provides applicable properties from the stylesheet.
-	SharedPtr<ElementDefinition> definition;
+	std::shared_ptr<ElementDefinition> definition;
 	// Set if a new element definition should be fetched from the style.
 	bool definition_dirty;
 

@@ -39,28 +39,28 @@
 
 namespace Rml {
 
-DataViewCommon::DataViewCommon(Element* element, String override_modifier) : DataView(element), modifier(std::move(override_modifier))
+DataViewCommon::DataViewCommon(Element* element, std::string override_modifier) : DataView(element), modifier(std::move(override_modifier))
 {}
 
-bool DataViewCommon::Initialize(DataModel& model, Element* element, const String& expression_str, const String& in_modifier)
+bool DataViewCommon::Initialize(DataModel& model, Element* element, const std::string& expression_str, const std::string& in_modifier)
 {
 	// The modifier can be overriden in the constructor
 	if (modifier.empty())
 		modifier = in_modifier;
 
-	expression = MakeUnique<DataExpression>(expression_str);
+	expression = std::make_unique<DataExpression>(expression_str);
 	DataExpressionInterface expr_interface(&model, element);
 
 	bool result = expression->Parse(expr_interface, false);
 	return result;
 }
 
-StringList DataViewCommon::GetVariableNameList() const {
+std::vector<std::string> DataViewCommon::GetVariableNameList() const {
 	RMLUI_ASSERT(expression);
 	return expression->GetVariableNameList();
 }
 
-const String& DataViewCommon::GetModifier() const {
+const std::string& DataViewCommon::GetModifier() const {
 	return modifier;
 }
 
@@ -78,12 +78,12 @@ void DataViewCommon::Release()
 DataViewAttribute::DataViewAttribute(Element* element) : DataViewCommon(element)
 {}
 
-DataViewAttribute::DataViewAttribute(Element * element, String override_attribute) : DataViewCommon(element, std::move(override_attribute))
+DataViewAttribute::DataViewAttribute(Element * element, std::string override_attribute) : DataViewCommon(element, std::move(override_attribute))
 {}
 
 bool DataViewAttribute::Update(DataModel& model)
 {
-	const String& attribute_name = GetModifier();
+	const std::string& attribute_name = GetModifier();
 	bool result = false;
 	Variant variant;
 	Element* element = GetElement();
@@ -91,10 +91,10 @@ bool DataViewAttribute::Update(DataModel& model)
 
 	if (element && GetExpression().Run(expr_interface, variant))
 	{
-		const String value = variant.Get<String>();
+		const std::string value = variant.Get<std::string>();
 		const Variant* attribute = element->GetAttribute(attribute_name);
 		
-		if (!attribute || (attribute && attribute->Get<String>() != value))
+		if (!attribute || (attribute && attribute->Get<std::string>() != value))
 		{
 			element->SetAttribute(attribute_name, value);
 			result = true;
@@ -109,7 +109,7 @@ DataViewAttributeIf::DataViewAttributeIf(Element* element) : DataViewCommon(elem
 
 bool DataViewAttributeIf::Update(DataModel& model)
 {
-	const String& attribute_name = GetModifier();
+	const std::string& attribute_name = GetModifier();
 	bool result = false;
 	Variant variant;
 	Element* element = GetElement();
@@ -122,7 +122,7 @@ bool DataViewAttributeIf::Update(DataModel& model)
 		if (is_set != value)
 		{
 			if (value)
-				element->SetAttribute(attribute_name, String());
+				element->SetAttribute(attribute_name, std::string());
 			else
 				element->RemoveAttribute(attribute_name);
 			result = true;
@@ -141,7 +141,7 @@ DataViewStyle::DataViewStyle(Element* element) : DataViewCommon(element)
 
 bool DataViewStyle::Update(DataModel& model)
 {
-	const String& property_name = GetModifier();
+	const std::string& property_name = GetModifier();
 	bool result = false;
 	Variant variant;
 	Element* element = GetElement();
@@ -149,9 +149,9 @@ bool DataViewStyle::Update(DataModel& model)
 	
 	if (element && GetExpression().Run(expr_interface, variant))
 	{
-		const String value = variant.Get<String>();
+		const std::string value = variant.Get<std::string>();
 		const Property* p = element->GetStyle()->GetLocalProperty(StyleSheetSpecification::GetPropertyId(property_name));
-		if (!p || p->Get<String>() != value)
+		if (!p || p->Get<std::string>() != value)
 		{
 			element->SetPropertyImmediate(property_name, value);
 			result = true;
@@ -166,7 +166,7 @@ DataViewClass::DataViewClass(Element* element) : DataViewCommon(element)
 
 bool DataViewClass::Update(DataModel& model)
 {
-	const String& class_name = GetModifier();
+	const std::string& class_name = GetModifier();
 	bool result = false;
 	Variant variant;
 	Element* element = GetElement();
@@ -198,7 +198,7 @@ bool DataViewRml::Update(DataModel & model)
 
 	if (element && GetExpression().Run(expr_interface, variant))
 	{
-		String new_rml = variant.Get<String>();
+		std::string new_rml = variant.Get<std::string>();
 		if (new_rml != previous_rml)
 		{
 			element->SetInnerRML(new_rml);
@@ -258,7 +258,7 @@ bool DataViewVisible::Update(DataModel& model)
 DataViewText::DataViewText(Element* element) : DataView(element)
 {}
 
-bool DataViewText::Initialize(DataModel& model, Element* element, const String& RMLUI_UNUSED_PARAMETER(expression), const String& RMLUI_UNUSED_PARAMETER(modifier))
+bool DataViewText::Initialize(DataModel& model, Element* element, const std::string& RMLUI_UNUSED_PARAMETER(expression), const std::string& RMLUI_UNUSED_PARAMETER(modifier))
 {
 	RMLUI_UNUSED(expression);
 	RMLUI_UNUSED(modifier);
@@ -267,7 +267,7 @@ bool DataViewText::Initialize(DataModel& model, Element* element, const String& 
 	if (!element_text)
 		return false;
 
-	const String& in_text = element_text->GetText();
+	const std::string& in_text = element_text->GetText();
 	
 	text.reserve(in_text.size());
 
@@ -275,19 +275,19 @@ bool DataViewText::Initialize(DataModel& model, Element* element, const String& 
 
 	size_t previous_close_brackets = 0;
 	size_t begin_brackets = 0;
-	while ((begin_brackets = in_text.find("{{", begin_brackets)) != String::npos)
+	while ((begin_brackets = in_text.find("{{", begin_brackets)) != std::string::npos)
 	{
 		text.insert(text.end(), in_text.begin() + previous_close_brackets, in_text.begin() + begin_brackets);
 
 		const size_t begin_name = begin_brackets + 2;
 		const size_t end_name = in_text.find("}}", begin_name);
 
-		if (end_name == String::npos)
+		if (end_name == std::string::npos)
 			return false;
 
 		DataEntry entry;
 		entry.index = text.size();
-		entry.data_expression = MakeUnique<DataExpression>(String(in_text.begin() + begin_name, in_text.begin() + end_name));
+		entry.data_expression = std::make_unique<DataExpression>(std::string(in_text.begin() + begin_name, in_text.begin() + end_name));
 
 		if (entry.data_expression->Parse(expression_interface, false))
 			data_entries.push_back(std::move(entry));
@@ -317,7 +317,7 @@ bool DataViewText::Update(DataModel& model)
 			RMLUI_ASSERT(entry.data_expression);
 			Variant variant;
 			bool result = entry.data_expression->Run(expression_interface, variant);
-			const String value = variant.Get<String>();
+			const std::string value = variant.Get<std::string>();
 			if (result && entry.value != value)
 			{
 				entry.value = value;
@@ -334,7 +334,7 @@ bool DataViewText::Update(DataModel& model)
 
 			if (ElementText* text_element = static_cast<ElementText*>(element))
 			{
-				String new_text = BuildText();
+				std::string new_text = BuildText();
 				text_element->SetText(new_text);
 			}
 		}
@@ -347,19 +347,19 @@ bool DataViewText::Update(DataModel& model)
 	return entries_modified;
 }
 
-StringList DataViewText::GetVariableNameList() const
+std::vector<std::string> DataViewText::GetVariableNameList() const
 {
-	StringList full_list;
+	std::vector<std::string> full_list;
 	full_list.reserve(data_entries.size());
 
 	for (const DataEntry& entry : data_entries)
 	{
 		RMLUI_ASSERT(entry.data_expression);
 
-		StringList entry_list = entry.data_expression->GetVariableNameList();
+		std::vector<std::string> entry_list = entry.data_expression->GetVariableNameList();
 		full_list.insert(full_list.end(),
-			MakeMoveIterator(entry_list.begin()),
-			MakeMoveIterator(entry_list.end())
+			std::make_move_iterator(entry_list.begin()),
+			std::make_move_iterator(entry_list.end())
 		);
 	}
 
@@ -371,14 +371,14 @@ void DataViewText::Release()
 	delete this;
 }
 
-String DataViewText::BuildText() const
+std::string DataViewText::BuildText() const
 {
 	size_t reserve_size = text.size();
 
 	for (const DataEntry& entry : data_entries)
 		reserve_size += entry.value.size();
 
-	String result;
+	std::string result;
 	result.reserve(reserve_size);
 
 	size_t previous_index = 0;
@@ -400,11 +400,11 @@ String DataViewText::BuildText() const
 DataViewFor::DataViewFor(Element* element) : DataView(element)
 {}
 
-bool DataViewFor::Initialize(DataModel& model, Element* element, const String& in_expression, const String& in_rml_content)
+bool DataViewFor::Initialize(DataModel& model, Element* element, const std::string& in_expression, const std::string& in_rml_content)
 {
 	rml_contents = in_rml_content;
 
-	StringList iterator_container_pair;
+	std::vector<std::string> iterator_container_pair;
 	StringUtilities::ExpandString(iterator_container_pair, in_expression, ':');
 
 	if (iterator_container_pair.empty() || iterator_container_pair.size() > 2 || iterator_container_pair.front().empty() || iterator_container_pair.back().empty())
@@ -415,7 +415,7 @@ bool DataViewFor::Initialize(DataModel& model, Element* element, const String& i
 
 	if (iterator_container_pair.size() == 2)
 	{
-		StringList iterator_index_pair;
+		std::vector<std::string> iterator_index_pair;
 		StringUtilities::ExpandString(iterator_index_pair, iterator_container_pair.front(), ',');
 
 		if (iterator_index_pair.empty())
@@ -440,7 +440,7 @@ bool DataViewFor::Initialize(DataModel& model, Element* element, const String& i
 	if (iterator_index_name.empty())
 		iterator_index_name = "it_index";
 
-	const String& container_name = iterator_container_pair.back();
+	const std::string& container_name = iterator_container_pair.back();
 
 	container_address = model.ResolveAddress(container_name, element);
 	if (container_address.empty())
@@ -514,9 +514,9 @@ bool DataViewFor::Update(DataModel& model)
 	return result;
 }
 
-StringList DataViewFor::GetVariableNameList() const {
+std::vector<std::string> DataViewFor::GetVariableNameList() const {
 	RMLUI_ASSERT(!container_address.empty());
-	return StringList{ container_address.front().name };
+	return std::vector<std::string>{ container_address.front().name };
 }
 
 void DataViewFor::Release()

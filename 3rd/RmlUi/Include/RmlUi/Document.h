@@ -47,18 +47,18 @@ public:
 	Document(const Size& dimensions);
 	virtual ~Document();
 
-	bool Load(const String& path);
+	bool Load(const std::string& path);
 
 	/// Returns the document's context.
 	Context* GetContext();
 
 	/// Returns the source address of this document.
-	const String& GetSourceURL() const;
+	const std::string& GetSourceURL() const;
 
 	/// Sets the style sheet this document, and all of its children, uses.
-	void SetStyleSheet(SharedPtr<StyleSheet> style_sheet);
+	void SetStyleSheet(std::shared_ptr<StyleSheet> style_sheet);
 	/// Returns the document's style sheet.
-	const SharedPtr<StyleSheet>& GetStyleSheet() const;
+	const std::shared_ptr<StyleSheet>& GetStyleSheet() const;
 
 	/// Show the document.
 	void Show();
@@ -69,13 +69,13 @@ public:
 
 	/// Creates the named element.
 	/// @param[in] name The tag name of the element.
-	ElementPtr CreateElement(const String& name);
+	ElementPtr CreateElement(const std::string& name);
 	/// Create a text element with the given text content.
 	/// @param[in] text The text content of the text element.
-	TextPtr CreateTextNode(const String& text);
+	TextPtr CreateTextNode(const std::string& text);
 
-	virtual void LoadInlineScript(const String& content, const String& source_path, int source_line);
-	virtual void LoadExternalScript(const String& source_path);
+	virtual void LoadInlineScript(const std::string& content, const std::string& source_path, int source_line);
+	virtual void LoadExternalScript(const std::string& source_path);
 
 	bool ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state);
 	bool ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state);
@@ -91,14 +91,14 @@ public:
 	std::unique_ptr<ElementDocument> body;
 
 public:
-	DataModelConstructor CreateDataModel(const String& name);
-	DataModelConstructor GetDataModel(const String& name);
-	bool RemoveDataModel(const String& name);
+	DataModelConstructor CreateDataModel(const std::string& name);
+	DataModelConstructor GetDataModel(const std::string& name);
+	bool RemoveDataModel(const std::string& name);
 	void UpdateDataModel(bool clear_dirty_variables);
-	DataModel* GetDataModelPtr(const String& name) const;
+	DataModel* GetDataModelPtr(const std::string& name) const;
 
 private:
-	using DataModels = UnorderedMap<String, UniquePtr<DataModel>>;
+	using DataModels = std::unordered_map<std::string, std::unique_ptr<DataModel>>;
 	DataModels data_models;
 
 private:
@@ -107,10 +107,10 @@ private:
 	void DirtyDpProperties();
 
 	// The original path this document came from
-	String source_url;
+	std::string source_url;
 
 	// The document's style sheet.
-	SharedPtr<StyleSheet> style_sheet;
+	std::shared_ptr<StyleSheet> style_sheet;
 
 	Context* context;
 

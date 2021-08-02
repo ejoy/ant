@@ -53,7 +53,7 @@ public:
 	/// Instance an event listener object.
 	/// @param value Value of the event.
 	/// @param element Element that triggers the events.
-	virtual EventListener* InstanceEventListener(const String& value, Element* element) = 0;
+	virtual EventListener* InstanceEventListener(const std::string& value, Element* element) = 0;
 };
 
 } // namespace Rml

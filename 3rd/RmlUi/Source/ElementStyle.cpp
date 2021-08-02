@@ -254,7 +254,7 @@ void ElementStyle::UpdateDefinition() {
 	if (definition_dirty) {
 		definition_dirty = false;
 
-		SharedPtr<ElementDefinition> new_definition;
+		std::shared_ptr<ElementDefinition> new_definition;
 		
 		if (auto& style_sheet = element->GetStyleSheet()) {
 			new_definition = style_sheet->GetElementDefinition(element);
@@ -294,7 +294,7 @@ void ElementStyle::UpdateDefinition() {
 
 
 // Sets or removes a pseudo-class on the element.
-void ElementStyle::SetPseudoClass(const String& pseudo_class, bool activate)
+void ElementStyle::SetPseudoClass(const std::string& pseudo_class, bool activate)
 {
 	bool changed = false;
 
@@ -310,7 +310,7 @@ void ElementStyle::SetPseudoClass(const String& pseudo_class, bool activate)
 }
 
 // Checks if a specific pseudo-class has been set on the element.
-bool ElementStyle::IsPseudoClassSet(const String& pseudo_class) const
+bool ElementStyle::IsPseudoClassSet(const std::string& pseudo_class) const
 {
 	return (pseudo_classes.count(pseudo_class) == 1);
 }
@@ -321,9 +321,9 @@ const PseudoClassList& ElementStyle::GetActivePseudoClasses() const
 }
 
 // Sets or removes a class on the element.
-void ElementStyle::SetClass(const String& class_name, bool activate)
+void ElementStyle::SetClass(const std::string& class_name, bool activate)
 {
-	StringList::iterator class_location = std::find(classes.begin(), classes.end(), class_name);
+	std::vector<std::string>::iterator class_location = std::find(classes.begin(), classes.end(), class_name);
 
 	if (activate)
 	{
@@ -344,13 +344,13 @@ void ElementStyle::SetClass(const String& class_name, bool activate)
 }
 
 // Checks if a class is set on the element.
-bool ElementStyle::IsClassSet(const String& class_name) const
+bool ElementStyle::IsClassSet(const std::string& class_name) const
 {
 	return std::find(classes.begin(), classes.end(), class_name) != classes.end();
 }
 
 // Specifies the entire list of classes for this element. This will replace any others specified.
-void ElementStyle::SetClassNames(const String& class_names)
+void ElementStyle::SetClassNames(const std::string& class_names)
 {
 	classes.clear();
 	StringUtilities::ExpandString(classes, class_names, ' ');
@@ -358,9 +358,9 @@ void ElementStyle::SetClassNames(const String& class_names)
 }
 
 // Returns the list of classes specified for this element.
-String ElementStyle::GetClassNames() const
+std::string ElementStyle::GetClassNames() const
 {
-	String class_names;
+	std::string class_names;
 	for (size_t i = 0; i < classes.size(); i++)
 	{
 		if (i != 0)

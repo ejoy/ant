@@ -46,7 +46,7 @@ DataControllerValue::~DataControllerValue()
 	}
 }
 
-bool DataControllerValue::Initialize(DataModel& model, Element* element, const String& variable_name, const String& /*modifier*/)
+bool DataControllerValue::Initialize(DataModel& model, Element* element, const std::string& variable_name, const std::string& /*modifier*/)
 {
 	RMLUI_ASSERT(element);
 
@@ -113,11 +113,11 @@ DataControllerEvent::~DataControllerEvent()
 	}
 }
 
-bool DataControllerEvent::Initialize(DataModel& model, Element* element, const String& expression_str, const String& modifier)
+bool DataControllerEvent::Initialize(DataModel& model, Element* element, const std::string& expression_str, const std::string& modifier)
 {
 	RMLUI_ASSERT(element);
 
-	expression = MakeUnique<DataExpression>(expression_str);
+	expression = std::make_unique<DataExpression>(expression_str);
 	DataExpressionInterface expr_interface(&model, element);
 
 	if (!expression->Parse(expr_interface, true))

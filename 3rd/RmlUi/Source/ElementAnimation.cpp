@@ -139,7 +139,7 @@ static bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element)
 static bool PrepareTransforms(Property& property, Element& element) {
 	RMLUI_ASSERT(property.value.GetType() == Variant::TRANSFORMPTR);
 	if (!property.value.GetReference<TransformPtr>()) {
-		property.value = MakeShared<Transform>();
+		property.value = std::make_shared<Transform>();
 	}
 	return true;
 }
@@ -151,10 +151,10 @@ static bool PrepareTransforms(AnimationKey& key, Element& element) {
 		return false;
 	}
 	if (!prop0.value.GetReference<TransformPtr>()) {
-		prop0.value = MakeShared<Transform>();
+		prop0.value = std::make_shared<Transform>();
 	}
 	if (!prop1.value.GetReference<TransformPtr>()) {
-		prop1.value = MakeShared<Transform>();
+		prop1.value = std::make_shared<Transform>();
 	}
 	auto& t0 = prop0.value.GetReference<TransformPtr>();
 	auto& t1 = prop1.value.GetReference<TransformPtr>();

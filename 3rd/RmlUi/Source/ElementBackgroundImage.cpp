@@ -79,7 +79,7 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		ComputePropertyH(element->GetProperty(PropertyId::BackgroundPositionY), element)
 	};
 
-	String path = image->Get<String>();
+	std::string path = image->Get<std::string>();
 	auto texture = Texture::Fetch(path);
 	geometry.SetTexture(texture);
 	geometry.SetSamplerFlag(repeat);

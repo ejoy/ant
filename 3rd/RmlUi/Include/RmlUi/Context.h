@@ -23,7 +23,7 @@ public:
 
 	void Update(double delta);
 
-	Document* LoadDocument(const String& document_path);
+	Document* LoadDocument(const std::string& document_path);
 	void UnloadDocument(Document* document);
 
 	void SetFocus(Document* document);

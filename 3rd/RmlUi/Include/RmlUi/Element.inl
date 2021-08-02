@@ -30,7 +30,7 @@ namespace Rml {
 
 // Returns the values of one of this element's properties.
 template < typename T >
-T Element::GetProperty(const String& name)
+T Element::GetProperty(const std::string& name)
 {
 	const Property* property = GetProperty(name);
 	if (!property)
@@ -43,7 +43,7 @@ T Element::GetProperty(const String& name)
 
 // Sets an attribute on the element.
 template< typename T >
-void Element::SetAttribute(const String& name, const T& value)
+void Element::SetAttribute(const std::string& name, const T& value)
 {
 	Variant variant(value);
 	attributes[name] = variant;
@@ -54,7 +54,7 @@ void Element::SetAttribute(const String& name, const T& value)
 
 // Gets the specified attribute, with default value.
 template< typename T >
-T Element::GetAttribute(const String& name, const T& default_value) const
+T Element::GetAttribute(const std::string& name, const T& default_value) const
 {
 	return Get(attributes, name, default_value);
 }

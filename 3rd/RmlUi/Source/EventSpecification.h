@@ -37,7 +37,7 @@ namespace Rml {
 
 struct EventSpecification {
 	EventId id;
-	String type;
+	std::string type;
 	bool interruptible;
 	bool bubbles;
 	DefaultActionPhase default_action_phase;
@@ -53,11 +53,11 @@ namespace EventSpecificationInterface {
 
 	// Get event specification for the given type.
 	// If not found: Inserts a new entry with default values.
-	const EventSpecification& GetOrInsert(const String& event_type);
+	const EventSpecification& GetOrInsert(const std::string& event_type);
 
 	// Get event id for the given name.
 	// If not found: Inserts a new entry with default values.
-	EventId GetIdOrInsert(const String& event_type);
+	EventId GetIdOrInsert(const std::string& event_type);
 }
 
 } // namespace Rml

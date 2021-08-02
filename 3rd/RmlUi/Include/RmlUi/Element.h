@@ -65,7 +65,7 @@ struct StackingOrderedChild;
 class RMLUICORE_API Element : public Node, public EnableObserverPtr<Element>
 {
 public:
-	Element(Document* owner, const String& tag);
+	Element(Document* owner, const std::string& tag);
 	virtual ~Element();
 
 	/** @name Classes
@@ -74,22 +74,22 @@ public:
 	/// Sets or removes a class on the element.
 	/// @param[in] class_name The name of the class to add or remove from the class list.
 	/// @param[in] activate True if the class is to be added, false to be removed.
-	void SetClass(const String& class_name, bool activate);
+	void SetClass(const std::string& class_name, bool activate);
 	/// Checks if a class is set on the element.
 	/// @param[in] class_name The name of the class to check for.
 	/// @return True if the class is set on the element, false otherwise.
-	bool IsClassSet(const String& class_name) const;
+	bool IsClassSet(const std::string& class_name) const;
 	/// Specifies the entire list of classes for this element. This will replace any others specified.
 	/// @param[in] class_names The list of class names to set on the style, separated by spaces.
-	void SetClassNames(const String& class_names);
+	void SetClassNames(const std::string& class_names);
 	/// Return the active class list.
 	/// @return The space-separated list of classes active on the element.
-	String GetClassNames() const;
+	std::string GetClassNames() const;
 	//@}
 
 	/// Returns the active style sheet for this element. This may be nullptr.
 	/// @return The element's style sheet.
-	virtual const SharedPtr<StyleSheet>& GetStyleSheet() const;
+	virtual const std::shared_ptr<StyleSheet>& GetStyleSheet() const;
 
 	/// Returns the element's definition.
 	/// @return The element's definition.
@@ -98,7 +98,7 @@ public:
 	/// Fills a string with the full address of this element.
 	/// @param[in] include_pseudo_classes True if the address is to include the pseudo-classes of the leaf element.
 	/// @return The address of the element, including its full parentage.
-	String GetAddress(bool include_pseudo_classes = false, bool include_parents = true) const;
+	std::string GetAddress(bool include_pseudo_classes = false, bool include_parents = true) const;
 
 	/// Checks if a given point in screen coordinates lies within the bordered area of this element.
 	/// @param[in] point The point to test.
@@ -118,8 +118,8 @@ public:
 	/// @param[in] name The name of the new property.
 	/// @param[in] value The new property to set.
 	/// @return True if the property parsed successfully, false otherwise.
-	bool SetProperty(const String& name, const String& value);
-	bool SetPropertyImmediate(const String& name, const String& value);
+	bool SetProperty(const std::string& name, const std::string& value);
+	bool SetPropertyImmediate(const std::string& name, const std::string& value);
 	/// Sets a local property override on the element to a pre-parsed value.
 	/// @param[in] name The name of the new property.
 	/// @param[in] property The parsed property to set.
@@ -128,19 +128,19 @@ public:
 	bool SetPropertyImmediate(PropertyId id, const Property& property);
 	/// Removes a local property override on the element; its value will revert to that defined in the style sheet.
 	/// @param[in] name The name of the local property definition to remove.
-	void RemoveProperty(const String& name);
+	void RemoveProperty(const std::string& name);
 	void RemoveProperty(PropertyId id);
 	/// Returns one of this element's properties. If the property is not defined for this element and not inherited 
 	/// from an ancestor, the default value will be returned.
 	/// @param[in] name The name of the property to fetch the value for.
 	/// @return The value of this property for this element, or nullptr if no property exists with the given name.
-	const Property* GetProperty(const String& name);		
+	const Property* GetProperty(const std::string& name);		
 	const Property* GetProperty(PropertyId id);		
 	/// Returns the values of one of this element's properties.		
 	/// @param[in] name The name of the property to get.
 	/// @return The value of this property.
 	template < typename T >
-	T GetProperty(const String& name);
+	T GetProperty(const std::string& name);
 
 	/// Project a 2D point in pixel coordinates onto the element's plane.
 	/// @param[in-out] point The point to project in, and the resulting projected point out.
@@ -155,11 +155,11 @@ public:
 	/// Sets or removes a pseudo-class on the element.
 	/// @param[in] pseudo_class The pseudo class to activate or deactivate.
 	/// @param[in] activate True if the pseudo-class is to be activated, false to be deactivated.
-	void SetPseudoClass(const String& pseudo_class, bool activate);
+	void SetPseudoClass(const std::string& pseudo_class, bool activate);
 	/// Checks if a specific pseudo-class has been set on the element.
 	/// @param[in] pseudo_class The name of the pseudo-class to check for.
 	/// @return True if the pseudo-class is set on the element, false if not.
-	bool IsPseudoClassSet(const String& pseudo_class) const;
+	bool IsPseudoClassSet(const std::string& pseudo_class) const;
 	/// Checks if a complete set of pseudo-classes are set on the element.
 	/// @param[in] pseudo_classes The set of pseudo-classes to check for.
 	/// @return True if all of the pseudo-classes are set, false if not.
@@ -176,23 +176,23 @@ public:
 	/// @param[in] name Name of the attribute.
 	/// @param[in] value Value of the attribute.
 	template< typename T >
-	void SetAttribute(const String& name, const T& value);
+	void SetAttribute(const std::string& name, const T& value);
 	/// Gets the specified attribute.
 	/// @param[in] name Name of the attribute to retrieve.
 	/// @return A variant representing the attribute, or nullptr if the attribute doesn't exist.
-	Variant* GetAttribute(const String& name);
+	Variant* GetAttribute(const std::string& name);
 	/// Gets the specified attribute, with default value.
 	/// @param[in] name Name of the attribute to retrieve.
 	/// @param[in] default_value Value to return if the attribute doesn't exist.
 	template< typename T >
-	T GetAttribute(const String& name, const T& default_value) const;
+	T GetAttribute(const std::string& name, const T& default_value) const;
 	/// Checks if the element has a certain attribute.
 	/// @param[in] name The name of the attribute to check for.
 	/// @return True if the element has the given attribute, false if not.
-	bool HasAttribute(const String& name) const;
+	bool HasAttribute(const std::string& name) const;
 	/// Removes the attribute from the element.
 	/// @param[in] name Name of the attribute.
-	void RemoveAttribute(const String& name);
+	void RemoveAttribute(const std::string& name);
 	/// Set a group of attributes.
 	/// @param[in] attributes Attributes to set.
 	void SetAttributes(const ElementAttributes& attributes);
@@ -215,14 +215,14 @@ public:
 
 	/// Gets the name of the element.
 	/// @return The name of the element.
-	const String& GetTagName() const;
+	const std::string& GetTagName() const;
 
 	/// Gets the id of the element.
 	/// @return The element's id.
-	const String& GetId() const;
+	const std::string& GetId() const;
 	/// Sets the id of the element.
 	/// @param[in] id The new id of the element.
-	void SetId(const String& id);
+	void SetId(const std::string& id);
 
 	/// Gets the object representing the declarations of an element's style attributes.
 	/// @return The element's style.
@@ -241,9 +241,9 @@ public:
 	/// @return The number of children.
 	int GetNumChildren() const;
 
-	String GetInnerRML() const;
-	String GetOuterRML() const;
-	void SetInnerRML(const String& rml);
+	std::string GetInnerRML() const;
+	std::string GetOuterRML() const;
+	void SetInnerRML(const std::string& rml);
 
 	//@}
 
@@ -257,7 +257,7 @@ public:
 	/// @param[in] in_capture_phase True to attach in the capture phase, false in bubble phase.
 	/// @lifetime The added listener must stay alive until after the dispatched call from EventListener::OnDetach(). This occurs
 	///     eg. when the element is destroyed or when RemoveEventListener() is called with the same parameters passed here.
-	void AddEventListener(const String& event, EventListener* listener, bool in_capture_phase = false);
+	void AddEventListener(const std::string& event, EventListener* listener, bool in_capture_phase = false);
 	/// Adds an event listener to this element by id.
 	/// @lifetime The added listener must stay alive until after the dispatched call from EventListener::OnDetach(). This occurs
 	///     eg. when the element is destroyed or when RemoveEventListener() is called with the same parameters passed here.
@@ -266,16 +266,16 @@ public:
 	/// @param[in] event Event to detach from.
 	/// @param[in] listener The listener object to be detached.
 	/// @param[in] in_capture_phase True to detach from the capture phase, false from the bubble phase.
-	void RemoveEventListener(const String& event, EventListener* listener, bool in_capture_phase = false);
+	void RemoveEventListener(const std::string& event, EventListener* listener, bool in_capture_phase = false);
 	/// Removes an event listener from this element by id.
 	void RemoveEventListener(EventId id, EventListener* listener, bool in_capture_phase = false);
 	/// Sends an event to this element.
 	/// @param[in] type Event type in string form.
 	/// @param[in] parameters The event parameters.
 	/// @return True if the event was not consumed (ie, was prevented from propagating by an element), false if it was.
-	bool DispatchEvent(const String& type, const Dictionary& parameters);
+	bool DispatchEvent(const std::string& type, const Dictionary& parameters);
 	/// Sends an event to this element, overriding the default behavior for the given event type.
-	bool DispatchEvent(const String& type, const Dictionary& parameters, bool interruptible, bool bubbles = true);
+	bool DispatchEvent(const std::string& type, const Dictionary& parameters, bool interruptible, bool bubbles = true);
 	/// Sends an event to this element by event id.
 	bool DispatchEvent(EventId id, const Dictionary& parameters);
 
@@ -296,25 +296,25 @@ public:
 	/// Get a child element by its ID.
 	/// @param[in] id Id of the the child element
 	/// @return The child of this element with the given ID, or nullptr if no such child exists.
-	Element* GetElementById(const String& id);
+	Element* GetElementById(const std::string& id);
 	/// Get all descendant elements with the given tag.
 	/// @param[out] elements Resulting elements.
 	/// @param[in] tag Tag to search for.
-	void GetElementsByTagName(ElementList& elements, const String& tag);
+	void GetElementsByTagName(ElementList& elements, const std::string& tag);
 	/// Get all descendant elements with the given class set on them.
 	/// @param[out] elements Resulting elements.
 	/// @param[in] tag Tag to search for.
-	void GetElementsByClassName(ElementList& elements, const String& class_name);
+	void GetElementsByClassName(ElementList& elements, const std::string& class_name);
 	/// Returns the first descendent element matching the RCSS selector query.
 	/// @param[in] selectors The selector or comma-separated selectors to match against.
 	/// @return The first matching element during a depth-first traversal.
 	/// @performance Prefer GetElementById/TagName/ClassName whenever possible.
-	Element* QuerySelector(const String& selector);
+	Element* QuerySelector(const std::string& selector);
 	/// Returns all descendent elements matching the RCSS selector query.
 	/// @param[out] elements The list of matching elements.
 	/// @param[in] selectors The selector or comma-separated selectors to match against.
 	/// @performance Prefer GetElementById/TagName/ClassName whenever possible.
-	void QuerySelectorAll(ElementList& elements, const String& selectors);
+	void QuerySelectorAll(ElementList& elements, const std::string& selectors);
 
 
 	//@}
@@ -388,10 +388,10 @@ protected:
 	void AdvanceAnimations();
 
 	// Original tag this element came from.
-	String tag;
+	std::string tag;
 
 	// The optional, unique ID of this object.
-	String id;
+	std::string id;
 
 	// The owning document
 	Document* owner_document;
@@ -411,9 +411,9 @@ protected:
 	bool structure_dirty;
 
 	bool dirty_perspective;
-	UniquePtr<glm::mat4x4> perspective;
+	std::unique_ptr<glm::mat4x4> perspective;
 	mutable bool have_inv_transform = true;
-	mutable UniquePtr<glm::mat4x4> inv_transform;
+	mutable std::unique_ptr<glm::mat4x4> inv_transform;
 
 	ElementAnimationList animations;
 	bool dirty_animation;
@@ -424,8 +424,8 @@ protected:
 	bool dirty_background = false;
 	bool dirty_border = false;
 	bool dirty_image = false;
-	UniquePtr<Geometry> geometry_border;
-	UniquePtr<Geometry> geometry_image;
+	std::unique_ptr<Geometry> geometry_border;
+	std::unique_ptr<Geometry> geometry_image;
 	Geometry::Path padding_edge;
 
 	float font_size = 16.f;

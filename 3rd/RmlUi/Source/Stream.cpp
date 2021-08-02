@@ -94,7 +94,7 @@ size_t Stream::Read(Stream* stream, size_t bytes) const
 }
 
 // Read from one stream into another
-size_t Stream::Read(String& string, size_t bytes) const
+size_t Stream::Read(std::string& string, size_t bytes) const
 {
 	size_t string_size = string.size();
 	string.resize(string_size + bytes + 1);
@@ -115,7 +115,7 @@ size_t Stream::Write(const char* string)
 	return Write(string, strlen(string));
 }
 
-size_t Stream::Write(const String& string)
+size_t Stream::Write(const std::string& string)
 {
 	return Write(string.c_str(), string.size());
 }

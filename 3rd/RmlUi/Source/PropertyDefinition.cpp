@@ -32,7 +32,7 @@
 
 namespace Rml {
 
-PropertyDefinition::PropertyDefinition(PropertyId id, const String& _default_value, bool _inherited, bool _forces_layout) 
+PropertyDefinition::PropertyDefinition(PropertyId id, const std::string& _default_value, bool _inherited, bool _forces_layout) 
 	: id(id), default_value(_default_value, Property::UNKNOWN)
 {
 	inherited = _inherited;
@@ -45,7 +45,7 @@ PropertyDefinition::~PropertyDefinition()
 }
 
 // Registers a parser to parse values for this definition.
-PropertyDefinition& PropertyDefinition::AddParser(const String& parser_name, const String& parser_parameters)
+PropertyDefinition& PropertyDefinition::AddParser(const std::string& parser_name, const std::string& parser_parameters)
 {
 	ParserState new_parser;
 
@@ -60,7 +60,7 @@ PropertyDefinition& PropertyDefinition::AddParser(const String& parser_name, con
 	// Split the parameter list, and set up the map.
 	if (!parser_parameters.empty())
 	{
-		StringList parameter_list;
+		std::vector<std::string> parameter_list;
 		StringUtilities::ExpandString(parameter_list, StringUtilities::ToLower(parser_parameters));
 		for (size_t i = 0; i < parameter_list.size(); i++)
 			new_parser.parameters[parameter_list[i]] = (int) i;
@@ -72,7 +72,7 @@ PropertyDefinition& PropertyDefinition::AddParser(const String& parser_name, con
 	// If the default value has not been parsed successfully yet, run it through the new parser.
 	if (default_value.unit == Property::UNKNOWN)
 	{
-		String unparsed_value = default_value.value.Get< String >();
+		std::string unparsed_value = default_value.value.Get< std::string >();
 		if (new_parser.parser->ParseValue(default_value, unparsed_value, new_parser.parameters))
 		{
 			default_value.parser_index = parser_index;
@@ -88,7 +88,7 @@ PropertyDefinition& PropertyDefinition::AddParser(const String& parser_name, con
 }
 
 // Called when parsing a RCSS declaration.
-bool PropertyDefinition::ParseValue(Property& property, const String& value) const
+bool PropertyDefinition::ParseValue(Property& property, const std::string& value) const
 {
 	for (size_t i = 0; i < parsers.size(); i++)
 	{
@@ -105,9 +105,9 @@ bool PropertyDefinition::ParseValue(Property& property, const String& value) con
 }
 
 // Called to convert a parsed property back into a value.
-bool PropertyDefinition::GetValue(String& value, const Property& property) const
+bool PropertyDefinition::GetValue(std::string& value, const Property& property) const
 {
-	value = property.value.Get< String >();
+	value = property.value.Get< std::string >();
 
 	switch (property.unit)
 	{

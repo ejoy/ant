@@ -39,7 +39,7 @@ PropertyParserKeyword::~PropertyParserKeyword()
 }
 
 // Called to parse a RCSS keyword declaration.
-bool PropertyParserKeyword::ParseValue(Property& property, const String& value, const ParameterMap& parameters) const
+bool PropertyParserKeyword::ParseValue(Property& property, const std::string& value, const ParameterMap& parameters) const
 {
 	ParameterMap::const_iterator iterator = parameters.find(StringUtilities::ToLower(value));
 	if (iterator == parameters.end())

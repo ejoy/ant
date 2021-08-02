@@ -51,10 +51,10 @@ public:
 	/// @param[in] value The raw value defined for this property.
 	/// @param[in] parameters The parameters defined for this property; not used for this parser.
 	/// @return True if the value was parsed successfully, false otherwise.
-	bool ParseValue(Property& property, const String& value, const ParameterMap& parameters) const override;
+	bool ParseValue(Property& property, const std::string& value, const ParameterMap& parameters) const override;
 
 private:
-	using ColourMap = UnorderedMap< String, Color>;
+	using ColourMap = std::unordered_map< std::string, Color>;
 	ColourMap html_colours;
 };
 

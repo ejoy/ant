@@ -68,7 +68,7 @@ struct ElementMeta {
 	Style::ComputedValues computed_values;
 };
 
-Element::Element(Document* owner, const String& tag)
+Element::Element(Document* owner, const std::string& tag)
 	: owner_document(owner)
 	, tag(tag)
 	, dirty_perspective(false)
@@ -146,31 +146,31 @@ void Element::OnRender() {
 	}
 }
 
-void Element::SetClass(const String& class_name, bool activate)
+void Element::SetClass(const std::string& class_name, bool activate)
 {
 	meta->style.SetClass(class_name, activate);
 }
 
-bool Element::IsClassSet(const String& class_name) const
+bool Element::IsClassSet(const std::string& class_name) const
 {
 	return meta->style.IsClassSet(class_name);
 }
 
-void Element::SetClassNames(const String& class_names)
+void Element::SetClassNames(const std::string& class_names)
 {
 	SetAttribute("class", class_names);
 }
 
-String Element::GetClassNames() const
+std::string Element::GetClassNames() const
 {
 	return meta->style.GetClassNames();
 }
 
-const SharedPtr<StyleSheet>& Element::GetStyleSheet() const
+const std::shared_ptr<StyleSheet>& Element::GetStyleSheet() const
 {
 	if (Document * document = GetOwnerDocument())
 		return document->GetStyleSheet();
-	static SharedPtr<StyleSheet> null_style_sheet;
+	static std::shared_ptr<StyleSheet> null_style_sheet;
 	return null_style_sheet;
 }
 
@@ -179,9 +179,9 @@ const ElementDefinition* Element::GetDefinition()
 	return meta->style.GetDefinition();
 }
 
-String Element::GetAddress(bool include_pseudo_classes, bool include_parents) const
+std::string Element::GetAddress(bool include_pseudo_classes, bool include_parents) const
 {
-	String address(tag);
+	std::string address(tag);
 
 	if (!id.empty())
 	{
@@ -189,7 +189,7 @@ String Element::GetAddress(bool include_pseudo_classes, bool include_parents) co
 		address += id;
 	}
 
-	String classes = meta->style.GetClassNames();
+	std::string classes = meta->style.GetClassNames();
 	if (!classes.empty())
 	{
 		classes = StringUtilities::Replace(classes, ' ', '.');
@@ -267,7 +267,7 @@ float Element::GetOpacity() {
 	return property->Get<float>();
 }
 
-bool Element::SetProperty(const String& name, const String& value) {
+bool Element::SetProperty(const std::string& name, const std::string& value) {
 	PropertyDictionary properties;
 	if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name, value)) {
 		Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s: %s;'.", name.c_str(), value.c_str());
@@ -280,7 +280,7 @@ bool Element::SetProperty(const String& name, const String& value) {
 	return true;
 }
 
-bool Element::SetPropertyImmediate(const String& name, const String& value) {
+bool Element::SetPropertyImmediate(const std::string& name, const std::string& value) {
 	PropertyDictionary properties;
 	if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name, value)) {
 		Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s: %s;'.", name.c_str(), value.c_str());
@@ -301,7 +301,7 @@ bool Element::SetPropertyImmediate(PropertyId id, const Property& property) {
 	return meta->style.SetPropertyImmediate(id, property);
 }
 
-void Element::RemoveProperty(const String& name)
+void Element::RemoveProperty(const std::string& name)
 {
 	meta->style.RemoveProperty(StyleSheetSpecification::GetPropertyId(name));
 }
@@ -311,7 +311,7 @@ void Element::RemoveProperty(PropertyId id)
 	meta->style.RemoveProperty(id);
 }
 
-const Property* Element::GetProperty(const String& name)
+const Property* Element::GetProperty(const std::string& name)
 {
 	return meta->style.GetProperty(StyleSheetSpecification::GetPropertyId(name));
 }
@@ -325,7 +325,7 @@ bool Element::Project(Point& point) const noexcept {
 	if (!inv_transform) {
 		have_inv_transform = 0.f != glm::determinant(transform);
 		if (have_inv_transform) {
-			inv_transform = MakeUnique<glm::mat4x4>(glm::inverse(transform));
+			inv_transform = std::make_unique<glm::mat4x4>(glm::inverse(transform));
 		}
 	}
 	if (!have_inv_transform) {
@@ -349,12 +349,12 @@ bool Element::Project(Point& point) const noexcept {
 	return false;
 }
 
-void Element::SetPseudoClass(const String& pseudo_class, bool activate)
+void Element::SetPseudoClass(const std::string& pseudo_class, bool activate)
 {
 	meta->style.SetPseudoClass(pseudo_class, activate);
 }
 
-bool Element::IsPseudoClassSet(const String& pseudo_class) const
+bool Element::IsPseudoClassSet(const std::string& pseudo_class) const
 {
 	return meta->style.IsPseudoClassSet(pseudo_class);
 }
@@ -375,17 +375,17 @@ const PseudoClassList& Element::GetActivePseudoClasses() const
 	return meta->style.GetActivePseudoClasses();
 }
 
-Variant* Element::GetAttribute(const String& name)
+Variant* Element::GetAttribute(const std::string& name)
 {
 	return GetIf(attributes, name);
 }
 
-bool Element::HasAttribute(const String& name) const
+bool Element::HasAttribute(const std::string& name) const
 {
 	return attributes.find(name) != attributes.end();
 }
 
-void Element::RemoveAttribute(const String& name)
+void Element::RemoveAttribute(const std::string& name)
 {
 	auto it = attributes.find(name);
 	if (it != attributes.end())
@@ -419,17 +419,17 @@ int Element::GetNumAttributes() const
 	return (int)attributes.size();
 }
 
-const String& Element::GetTagName() const
+const std::string& Element::GetTagName() const
 {
 	return tag;
 }
 
-const String& Element::GetId() const
+const std::string& Element::GetId() const
 {
 	return id;
 }
 
-void Element::SetId(const String& _id)
+void Element::SetId(const std::string& _id)
 {
 	SetAttribute("id", _id);
 }
@@ -454,7 +454,7 @@ int Element::GetNumChildren() const {
 	return (int)children.size();
 }
 
-void Element::SetInnerRML(const String& rml) {
+void Element::SetInnerRML(const std::string& rml) {
 	//while ((int) children.size() > 0)
 	//	RemoveChild(children.front().get());
 	//if (rml.empty()) {
@@ -463,10 +463,10 @@ void Element::SetInnerRML(const String& rml) {
 	//
 	//if (std::all_of(rml.begin(), rml.end(), &StringUtilities::IsWhitespace))
 	//	return;
-	//auto stream = MakeUnique<StreamMemory>(rml.size() + 32);
+	//auto stream = std::make_unique<StreamMemory>(rml.size() + 32);
 	//Context* context = parent->GetContext();
-	//String open_tag = "<" + tag + ">";
-	//String close_tag = "</" + tag + ">";
+	//std::string open_tag = "<" + tag + ">";
+	//std::string close_tag = "</" + tag + ">";
 	//stream->Write(open_tag.c_str(), open_tag.size());
 	//stream->Write(rml);
 	//stream->Write(close_tag.c_str(), close_tag.size());
@@ -475,7 +475,7 @@ void Element::SetInnerRML(const String& rml) {
 	//parser.Parse(stream.get());
 }
 
-void Element::AddEventListener(const String& event, EventListener* listener, bool in_capture_phase) {
+void Element::AddEventListener(const std::string& event, EventListener* listener, bool in_capture_phase) {
 	EventId id = EventSpecificationInterface::GetIdOrInsert(event);
 	meta->event_dispatcher.AttachEvent(id, listener, in_capture_phase);
 }
@@ -484,7 +484,7 @@ void Element::AddEventListener(EventId id, EventListener* listener, bool in_capt
 	meta->event_dispatcher.AttachEvent(id, listener, in_capture_phase);
 }
 
-void Element::RemoveEventListener(const String& event, EventListener* listener, bool in_capture_phase) {
+void Element::RemoveEventListener(const std::string& event, EventListener* listener, bool in_capture_phase) {
 	EventId id = EventSpecificationInterface::GetIdOrInsert(event);
 	meta->event_dispatcher.DetachEvent(id, listener, in_capture_phase);
 }
@@ -494,12 +494,12 @@ void Element::RemoveEventListener(EventId id, EventListener* listener, bool in_c
 	meta->event_dispatcher.DetachEvent(id, listener, in_capture_phase);
 }
 
-bool Element::DispatchEvent(const String& type, const Dictionary& parameters) {
+bool Element::DispatchEvent(const std::string& type, const Dictionary& parameters) {
 	const EventSpecification& specification = EventSpecificationInterface::GetOrInsert(type);
 	return EventDispatcher::DispatchEvent(this, specification.id, parameters, specification.interruptible, specification.bubbles, specification.default_action_phase);
 }
 
-bool Element::DispatchEvent(const String& type, const Dictionary& parameters, bool interruptible, bool bubbles) {
+bool Element::DispatchEvent(const std::string& type, const Dictionary& parameters, bool interruptible, bool bubbles) {
 	const EventSpecification& specification = EventSpecificationInterface::GetOrInsert(type);
 	return EventDispatcher::DispatchEvent(this, specification.id, parameters, interruptible, bubbles, specification.default_action_phase);
 }
@@ -584,7 +584,7 @@ ElementPtr Element::RemoveChild(Element* child) {
 	return nullptr;
 }
 
-Element* Element::GetElementById(const String& id) {
+Element* Element::GetElementById(const std::string& id) {
 	if (id == "#self")
 		return this;
 	else if (id == "#document")
@@ -596,7 +596,7 @@ Element* Element::GetElementById(const String& id) {
 		search_root = this;
 		
 	// Breadth first search on elements for the corresponding id
-	typedef Queue<Element*> SearchQueue;
+	typedef std::queue<Element*> SearchQueue;
 	SearchQueue search_queue;
 	search_queue.push(search_root);
 
@@ -616,9 +616,9 @@ Element* Element::GetElementById(const String& id) {
 	return nullptr;
 }
 
-void Element::GetElementsByTagName(ElementList& elements, const String& tag) {
+void Element::GetElementsByTagName(ElementList& elements, const std::string& tag) {
 	// Breadth first search on elements for the corresponding id
-	typedef Queue< Element* > SearchQueue;
+	typedef std::queue< Element* > SearchQueue;
 	SearchQueue search_queue;
 	for (int i = 0; i < GetNumChildren(); ++i)
 		search_queue.push(GetChild(i));
@@ -636,10 +636,10 @@ void Element::GetElementsByTagName(ElementList& elements, const String& tag) {
 	}
 }
 
-void Element::GetElementsByClassName(ElementList& elements, const String& class_name)
+void Element::GetElementsByClassName(ElementList& elements, const std::string& class_name)
 {
 	// Breadth first search on elements for the corresponding id
-	typedef Queue< Element* > SearchQueue;
+	typedef std::queue< Element* > SearchQueue;
 	SearchQueue search_queue;
 	for (int i = 0; i < GetNumChildren(); ++i)
 		search_queue.push(GetChild(i));
@@ -696,7 +696,7 @@ static void QuerySelectorAllMatchRecursive(ElementList& matching_elements, const
 	}
 }
 
-Element* Element::QuerySelector(const String& selectors)
+Element* Element::QuerySelector(const std::string& selectors)
 {
 	StyleSheetNode root_node;
 	StyleSheetNodeListRaw leaf_nodes = StyleSheetParser::ConstructNodes(root_node, selectors);
@@ -710,7 +710,7 @@ Element* Element::QuerySelector(const String& selectors)
 	return QuerySelectorMatchRecursive(leaf_nodes, this);
 }
 
-void Element::QuerySelectorAll(ElementList& elements, const String& selectors)
+void Element::QuerySelectorAll(ElementList& elements, const std::string& selectors)
 {
 	StyleSheetNode root_node;
 	StyleSheetNodeListRaw leaf_nodes = StyleSheetParser::ConstructNodes(root_node, selectors);
@@ -737,14 +737,14 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes)
 	auto it = changed_attributes.find("id");
 	if (it != changed_attributes.end())
 	{
-		id = it->second.Get<String>();
+		id = it->second.Get<std::string>();
 		meta->style.DirtyDefinition();
 	}
 
 	it = changed_attributes.find("class");
 	if (it != changed_attributes.end())
 	{
-		meta->style.SetClassNames(it->second.Get<String>());
+		meta->style.SetClassNames(it->second.Get<std::string>());
 	}
 
 	it = changed_attributes.find("style");
@@ -754,7 +754,7 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes)
 		{
 			PropertyDictionary properties;
 			StyleSheetParser parser;
-			parser.ParseProperties(properties, it->second.GetReference<String>());
+			parser.ParseProperties(properties, it->second.GetReference<std::string>());
 
 			for (const auto& name_value : properties.GetProperties())
 			{
@@ -771,7 +771,7 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes)
 	{
 		if (pair.first.size() > 2 && pair.first[0] == 'o' && pair.first[1] == 'n')
 		{
-			EventListener* listener = Factory::InstanceEventListener(pair.second.Get<String>(), this);
+			EventListener* listener = Factory::InstanceEventListener(pair.second.Get<std::string>(), this);
 			if (listener)
 				AddEventListener(pair.first.substr(2), listener, false);
 		}
@@ -903,8 +903,8 @@ const Style::ComputedValues& Element::GetComputedValues() const
 	return meta->computed_values;
 }
 
-String Element::GetInnerRML() const {
-	String rml;
+std::string Element::GetInnerRML() const {
+	std::string rml;
 	for (auto& child : children) {
 		if (child->GetType() == Node::Type::Text) {
 			rml += ((ElementText&)*child).GetText();
@@ -916,14 +916,14 @@ String Element::GetInnerRML() const {
 	return rml;
 }
 
-String Element::GetOuterRML() const {
-	String rml;
+std::string Element::GetOuterRML() const {
+	std::string rml;
 	rml += "<";
 	rml += tag;
 	for (auto& pair : attributes) {
 		auto& name = pair.first;
 		auto& variant = pair.second;
-		String value;
+		std::string value;
 		if (variant.GetInto(value))
 			rml += " " + name + "=\"" + value + "\"";
 	}
@@ -991,12 +991,12 @@ void Element::SetParent(Element* _parent) {
 		}
 		else if (parent->data_model)
 		{
-			String name = it->second.Get<String>();
+			std::string name = it->second.Get<std::string>();
 			Log::Message(Log::Level::Error, "Nested data models are not allowed. Data model '%s' given in element %s.", name.c_str(), GetAddress().c_str());
 		}
 		else if (Document* document = GetOwnerDocument())
 		{
-			String name = it->second.Get<String>();
+			std::string name = it->second.Get<std::string>();
 			if (DataModel* model = document->GetDataModelPtr(name))
 			{
 				model->AttachModelRootElement(this);
@@ -1254,14 +1254,14 @@ void Element::AdvanceAnimations()
 	// Move all completed animations to the end of the list
 	auto it_completed = std::partition(animations.begin(), animations.end(), [](const ElementAnimation& animation) { return !animation.IsComplete(); });
 
-	Vector<Dictionary> dictionary_list;
-	Vector<bool> is_transition;
+	std::vector<Dictionary> dictionary_list;
+	std::vector<bool> is_transition;
 	dictionary_list.reserve(animations.end() - it_completed);
 	is_transition.reserve(animations.end() - it_completed);
 
 	for (auto it = it_completed; it != animations.end(); ++it)
 	{
-		const String& property_name = StyleSheetSpecification::GetPropertyName(it->GetPropertyId());
+		const std::string& property_name = StyleSheetSpecification::GetPropertyName(it->GetPropertyId());
 
 		dictionary_list.emplace_back();
 		dictionary_list.back().emplace("property", Variant(property_name));
@@ -1336,7 +1336,7 @@ void Element::UpdatePerspective() {
 		};
 		
 		if (!perspective || new_perspective != *perspective) {
-			perspective = MakeUnique<glm::mat4x4>(new_perspective);
+			perspective = std::make_unique<glm::mat4x4>(new_perspective);
 			changed = true;
 		}
 	}

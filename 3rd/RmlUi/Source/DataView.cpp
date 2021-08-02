@@ -93,7 +93,7 @@ bool DataViews::Update(DataModel& model, const DirtyVariables& dirty_variables)
 	//   Without the loop, newly added views won't be updated until the next Update() call.
 	for(int i = 0; i == 0 || (!views_to_add.empty() && i < 10); i++)
 	{
-		Vector<DataView*> dirty_views;
+		std::vector<DataView*> dirty_views;
 
 		if (!views_to_add.empty())
 		{
@@ -101,7 +101,7 @@ bool DataViews::Update(DataModel& model, const DirtyVariables& dirty_variables)
 			for (auto&& view : views_to_add)
 			{
 				dirty_views.push_back(view.get());
-				for (const String& variable_name : view->GetVariableNameList())
+				for (const std::string& variable_name : view->GetVariableNameList())
 					name_view_map.emplace(variable_name, view.get());
 
 				views.push_back(std::move(view));
@@ -109,7 +109,7 @@ bool DataViews::Update(DataModel& model, const DirtyVariables& dirty_variables)
 			views_to_add.clear();
 		}
 
-		for (const String& variable_name : dirty_variables)
+		for (const std::string& variable_name : dirty_variables)
 		{
 			auto pair = name_view_map.equal_range(variable_name);
 			for (auto it = pair.first; it != pair.second; ++it)

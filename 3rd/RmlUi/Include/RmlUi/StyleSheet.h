@@ -45,10 +45,10 @@ struct KeyframeBlock {
 	PropertyDictionary properties;
 };
 struct Keyframes {
-	Vector<PropertyId> property_ids;
-	Vector<KeyframeBlock> blocks;
+	std::vector<PropertyId> property_ids;
+	std::vector<KeyframeBlock> blocks;
 };
-using KeyframesMap = UnorderedMap<String, Keyframes>;
+using KeyframesMap = std::unordered_map<std::string, Keyframes>;
 
 /**
 	StyleSheet maintains a single stylesheet definition. A stylesheet can be combined with another stylesheet to create
@@ -60,8 +60,8 @@ using KeyframesMap = UnorderedMap<String, Keyframes>;
 class RMLUICORE_API StyleSheet : public NonCopyMoveable
 {
 public:
-	typedef Vector< StyleSheetNode* > NodeList;
-	typedef UnorderedMap< size_t, NodeList > NodeIndex;
+	typedef std::vector< StyleSheetNode* > NodeList;
+	typedef std::unordered_map< size_t, NodeList > NodeIndex;
 
 	StyleSheet();
 	virtual ~StyleSheet();
@@ -70,23 +70,23 @@ public:
 	bool LoadStyleSheet(Stream* stream, int begin_line_number = 1);
 
 	/// Combines this style sheet with another one, producing a new sheet.
-	SharedPtr<StyleSheet> CombineStyleSheet(const StyleSheet& sheet) const;
+	std::shared_ptr<StyleSheet> CombineStyleSheet(const StyleSheet& sheet) const;
 	/// Builds the node index for a combined style sheet.
 	void BuildNodeIndex();
 
 	/// Returns the Keyframes of the given name, or null if it does not exist.
-	Keyframes* GetKeyframes(const String& name);
+	Keyframes* GetKeyframes(const std::string& name);
 
 	/// Returns the compiled element definition for a given element hierarchy. A reference count will be added for the
 	/// caller, so another should not be added. The definition should be released by removing the reference count.
-	SharedPtr<ElementDefinition> GetElementDefinition(const Element* element) const;
+	std::shared_ptr<ElementDefinition> GetElementDefinition(const Element* element) const;
 
 	/// Retrieve the hash key used to look-up applicable nodes in the node index.
-	static size_t NodeHash(const String& tag, const String& id);
+	static size_t NodeHash(const std::string& tag, const std::string& id);
 
 private:
 	// Root level node, attributes from special nodes like "body" get added to this node
-	UniquePtr<StyleSheetNode> root;
+	std::unique_ptr<StyleSheetNode> root;
 
 	// The maximum specificity offset used in this style sheet to distinguish between properties in
 	// similarly-specific rules, but declared on different lines. When style sheets are merged, the
@@ -101,7 +101,7 @@ private:
 	// Map of all styled nodes, that is, they have one or more properties.
 	NodeIndex styled_node_index;
 
-	using ElementDefinitionCache = UnorderedMap< size_t, SharedPtr<ElementDefinition> >;
+	using ElementDefinitionCache = std::unordered_map< size_t, std::shared_ptr<ElementDefinition> >;
 	// Index of node sets to element definitions.
 	mutable ElementDefinitionCache node_cache;
 };

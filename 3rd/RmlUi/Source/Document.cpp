@@ -67,7 +67,7 @@ Document::~Document() {
 using namespace std::literals;
 
 static bool isDataViewElement(Element* e) {
-	for (const String& name : Factory::GetStructuralDataViewAttributeNames()) {
+	for (const std::string& name : Factory::GetStructuralDataViewAttributeNames()) {
 		if (e->GetTagName() == name) {
 			return true;
 		}
@@ -78,7 +78,7 @@ static bool isDataViewElement(Element* e) {
 class DocumentHtmlHandler: public HtmlHandler {
 	Document&             m_doc;
 	ElementAttributes     m_attributes;
-	SharedPtr<StyleSheet> m_style_sheet;
+	std::shared_ptr<StyleSheet> m_style_sheet;
 	std::stack<Element*>  m_stack;
 	Element*              m_parent = nullptr;
 	Element*			  m_current = nullptr;
@@ -176,12 +176,12 @@ public:
 		m_line = line;
 	}
 	void LoadInlineStyle(const std::string& content, const std::string& source_path, int line) {
-		UniquePtr<StyleSheet> inline_sheet = MakeUnique<StyleSheet>();
-		auto stream = MakeUnique<StreamMemory>((const byte*)content.data(), content.size());
+		std::unique_ptr<StyleSheet> inline_sheet = std::make_unique<StyleSheet>();
+		auto stream = std::make_unique<StreamMemory>((const byte*)content.data(), content.size());
 		stream->SetSourceURL(source_path);
 		if (inline_sheet->LoadStyleSheet(stream.get(), line)) {
 			if (m_style_sheet) {
-				SharedPtr<StyleSheet> combined_sheet = m_style_sheet->CombineStyleSheet(*inline_sheet);
+				std::shared_ptr<StyleSheet> combined_sheet = m_style_sheet->CombineStyleSheet(*inline_sheet);
 				m_style_sheet = combined_sheet;
 			}
 			else
@@ -190,10 +190,10 @@ public:
 		stream.reset();
 	}
 	void LoadExternalStyle(const std::string& source_path) {
-		SharedPtr<StyleSheet> sub_sheet = StyleSheetFactory::GetStyleSheet(source_path);
+		std::shared_ptr<StyleSheet> sub_sheet = StyleSheetFactory::GetStyleSheet(source_path);
 		if (sub_sheet) {
 			if (m_style_sheet) {
-				SharedPtr<StyleSheet> combined_sheet = m_style_sheet->CombineStyleSheet(*sub_sheet);
+				std::shared_ptr<StyleSheet> combined_sheet = m_style_sheet->CombineStyleSheet(*sub_sheet);
 				m_style_sheet = std::move(combined_sheet);
 			}
 			else
@@ -213,7 +213,7 @@ public:
 	}
 };
 
-bool Document::Load(const String& path) {
+bool Document::Load(const std::string& path) {
 	try {
 		std::ifstream input(GetFileInterface()->GetPath(path));
 		if (!input) {
@@ -241,13 +241,13 @@ Context* Document::GetContext()
 	return context;
 }
 
-const String& Document::GetSourceURL() const
+const std::string& Document::GetSourceURL() const
 {
 	return source_url;
 }
 
 // Sets the style sheet this document, and all of its children, uses.
-void Document::SetStyleSheet(SharedPtr<StyleSheet> _style_sheet)
+void Document::SetStyleSheet(std::shared_ptr<StyleSheet> _style_sheet)
 {
 	if (style_sheet == _style_sheet)
 		return;
@@ -263,7 +263,7 @@ void Document::SetStyleSheet(SharedPtr<StyleSheet> _style_sheet)
 }
 
 // Returns the document's style sheet.
-const SharedPtr<StyleSheet>& Document::GetStyleSheet() const
+const std::shared_ptr<StyleSheet>& Document::GetStyleSheet() const
 {
 	return style_sheet;
 }
@@ -287,14 +287,14 @@ void Document::Close()
 		context->UnloadDocument(this);
 }
 
-ElementPtr Document::CreateElement(const String& name)
+ElementPtr Document::CreateElement(const std::string& name)
 {
 	ElementPtr element(new Element(this, name));
 	return element;
 }
 
 // Create a text element.
-TextPtr Document::CreateTextNode(const String& str)
+TextPtr Document::CreateTextNode(const std::string& str)
 {
 	TextPtr text(new ElementText(this, str));
 	if (!text)
@@ -306,13 +306,13 @@ TextPtr Document::CreateTextNode(const String& str)
 }
 
 // Default load inline script implementation
-void Document::LoadInlineScript(const String& content, const String& source_path, int source_line)
+void Document::LoadInlineScript(const std::string& content, const std::string& source_path, int source_line)
 {
 	PluginRegistry::NotifyLoadInlineScript(this, content, source_path, source_line);
 }
 
 // Default load external script implementation
-void Document::LoadExternalScript(const String& source_path)
+void Document::LoadExternalScript(const std::string& source_path)
 {
 	PluginRegistry::NotifyLoadExternalScript(this, source_path);
 }
@@ -330,7 +330,7 @@ void Document::DirtyDpProperties()
 
 using ElementSet = std::set<Element*>;
 
-using ElementObserverList = Vector< ObserverPtr<Element> >;
+using ElementObserverList = std::vector< ObserverPtr<Element> >;
 
 class ElementObserverListBackInserter {
 public:
@@ -370,7 +370,7 @@ static void GenerateKeyEventParameters(Dictionary& parameters, Input::KeyIdentif
 }
 
 static void GenerateKeyModifierEventParameters(Dictionary& parameters, int key_modifier_state) {
-	static const String property_names[] = {
+	static const std::string property_names[] = {
 		"ctrlKey",
 		"shiftKey",
 		"altKey",
@@ -578,8 +578,8 @@ void Document::OnElementDetach(Element* element) {
 	}
 }
 
-DataModelConstructor Document::CreateDataModel(const String& name) {
-	auto result = data_models.emplace(name, MakeUnique<DataModel>());
+DataModelConstructor Document::CreateDataModel(const std::string& name) {
+	auto result = data_models.emplace(name, std::make_unique<DataModel>());
 	bool inserted = result.second;
 	if (inserted)
 		return DataModelConstructor(result.first->second.get());
@@ -588,14 +588,14 @@ DataModelConstructor Document::CreateDataModel(const String& name) {
 	return DataModelConstructor();
 }
 
-DataModelConstructor Document::GetDataModel(const String& name) {
+DataModelConstructor Document::GetDataModel(const std::string& name) {
 	if (DataModel* model = GetDataModelPtr(name))
 		return DataModelConstructor(model);
 	Log::Message(Log::Level::Error, "Data model name '%s' could not be found.", name.c_str());
 	return DataModelConstructor();
 }
 
-bool Document::RemoveDataModel(const String& name) {
+bool Document::RemoveDataModel(const std::string& name) {
 	auto it = data_models.find(name);
 	if (it == data_models.end())
 		return false;
@@ -611,7 +611,7 @@ bool Document::RemoveDataModel(const String& name) {
 	return true;
 }
 
-DataModel* Document::GetDataModelPtr(const String& name) const {
+DataModel* Document::GetDataModelPtr(const std::string& name) const {
 	auto it = data_models.find(name);
 	if (it != data_models.end())
 		return it->second.get();

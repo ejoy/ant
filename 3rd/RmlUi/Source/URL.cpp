@@ -44,7 +44,7 @@ URL::URL()
 }
 
 // Constructs a new URL from the given string.
-URL::URL(const String& _url)
+URL::URL(const std::string& _url)
 {
 	port = 0;
 	RMLUI_VERIFY(SetURL(_url));
@@ -63,7 +63,7 @@ URL::~URL()
 }
 
 // Assigns a new URL to the object.
-bool URL::SetURL(const String& _url)
+bool URL::SetURL(const std::string& _url)
 {
 	url_dirty = false;
 	url = _url;
@@ -88,7 +88,7 @@ bool URL::SetURL(const String& _url)
 	const char* host_begin = strchr(_url.c_str(), ':');
 	if (nullptr != host_begin)
 	{
-		protocol = String(_url.c_str(), host_begin);
+		protocol = std::string(_url.c_str(), host_begin);
 		if (0 != strncmp(host_begin, "://", 3))
 		{
 			char malformed_terminator[4] = {0, 0, 0, 0};
@@ -118,15 +118,15 @@ bool URL::SetURL(const String& _url)
 		const char* at_symbol = strchr( host_begin, '@' );
 		if ( at_symbol )
 		{
-			String login_password;
-			login_password = String( host_begin, at_symbol );			
+			std::string login_password;
+			login_password = std::string( host_begin, at_symbol );			
 			host_begin = at_symbol + 1;
 
 			const char* password_ptr = strchr( login_password.c_str(), ':' );
 			if ( password_ptr )
 			{
-				login = String( login_password.c_str(), password_ptr );
-				password = String( password_ptr + 1 );
+				login = std::string( login_password.c_str(), password_ptr );
+				password = std::string( password_ptr + 1 );
 			}
 			else
 			{
@@ -146,7 +146,7 @@ bool URL::SetURL(const String& _url)
 				return false;
 			}
 
-			host = String(host_begin, port_begin);
+			host = std::string(host_begin, port_begin);
 
 			// Don't continue if there is no path.
 			if (nullptr == path_begin)
@@ -170,7 +170,7 @@ bool URL::SetURL(const String& _url)
 			{
 				// Assign the host name, then increment the path string past the
 				// trailing slash.
-				host = String(host_begin, path_begin);
+				host = std::string(host_begin, path_begin);
 				++path_begin;
 			}
 		}
@@ -181,21 +181,21 @@ bool URL::SetURL(const String& _url)
 	}
 	
 	// Check for parameters
-	String path_segment;
+	std::string path_segment;
 	const char* parameters = strchr(path_begin, '?');
 	if ( parameters )
 	{
 		// Pull the path segment out, so further processing doesn't read the parameters
-		path_segment = String(path_begin, parameters);
+		path_segment = std::string(path_begin, parameters);
 		path_begin = path_segment.c_str();
 		
 		// Loop through all parameters, loading them
-		StringList parameter_list;
+		std::vector<std::string> parameter_list;
 		StringUtilities::ExpandString( parameter_list, parameters + 1, '&' );
 		for ( size_t i = 0; i < parameter_list.size(); i++ )
 		{
 			// Split into key and value
-			StringList key_value;
+			std::vector<std::string> key_value;
 			StringUtilities::ExpandString( key_value, parameter_list[i], '=' );
 
 			key_value[0] = UrlDecode(key_value[0]);
@@ -219,15 +219,15 @@ bool URL::SetURL(const String& _url)
 	else
 	{
 		// Copy the path including the trailing slash.
-		path = String(path_begin, ++file_name_begin);
+		path = std::string(path_begin, ++file_name_begin);
 
 		// Normalise the path, stripping any ../'s from it
-		size_t parent_dir_pos = String::npos;
-		while ((parent_dir_pos = path.find("/..")) != String::npos && parent_dir_pos != 0)
+		size_t parent_dir_pos = std::string::npos;
+		while ((parent_dir_pos = path.find("/..")) != std::string::npos && parent_dir_pos != 0)
 		{
 			// Find the start of the parent directory.
 			size_t parent_dir_start_pos = path.rfind('/', parent_dir_pos - 1);
-			if (parent_dir_start_pos == String::npos)
+			if (parent_dir_start_pos == std::string::npos)
 				parent_dir_start_pos = 0;
 
 			// Strip out the parent dir and the /..
@@ -249,7 +249,7 @@ bool URL::SetURL(const String& _url)
 	}
 	else
 	{
-		file_name = String(file_name_begin, extension_begin);
+		file_name = std::string(file_name_begin, extension_begin);
 		extension = extension_begin + 1;
 	}
 	
@@ -257,7 +257,7 @@ bool URL::SetURL(const String& _url)
 }
 
 // Returns the entire URL.
-const String& URL::GetURL() const
+const std::string& URL::GetURL() const
 {
 	if (url_dirty)
 		ConstructURL();
@@ -266,7 +266,7 @@ const String& URL::GetURL() const
 }
 
 // Sets the URL's protocol.
-bool URL::SetProtocol(const String& _protocol)
+bool URL::SetProtocol(const std::string& _protocol)
 {
 	protocol = _protocol;
 	url_dirty = true;
@@ -275,13 +275,13 @@ bool URL::SetProtocol(const String& _protocol)
 }
 
 // Returns the protocol this URL is utilising.
-const String& URL::GetProtocol() const
+const std::string& URL::GetProtocol() const
 {
 	return protocol;
 }
 
 /// Sets the URL's login
-bool URL::SetLogin( const String& _login )
+bool URL::SetLogin( const std::string& _login )
 {
 	login = _login;
 	url_dirty = true;
@@ -289,13 +289,13 @@ bool URL::SetLogin( const String& _login )
 }
 
 /// Returns the URL's login
-const String& URL::GetLogin() const
+const std::string& URL::GetLogin() const
 {
 	return login;
 }
 
 /// Sets the URL's password
-bool URL::SetPassword(const String& _password)
+bool URL::SetPassword(const std::string& _password)
 {
 	password = _password;
 	url_dirty = true;
@@ -303,13 +303,13 @@ bool URL::SetPassword(const String& _password)
 }
 
 /// Returns the URL's password
-const String& URL::GetPassword() const
+const std::string& URL::GetPassword() const
 {
 	return password;
 }
 
 // Sets the URL's host.
-bool URL::SetHost(const String& _host)
+bool URL::SetHost(const std::string& _host)
 {
 	host = _host;
 	url_dirty = true;
@@ -318,7 +318,7 @@ bool URL::SetHost(const String& _host)
 }
 
 // Returns the URL's host.
-const String& URL::GetHost() const
+const std::string& URL::GetHost() const
 {
 	return host;
 }
@@ -339,7 +339,7 @@ int URL::GetPort() const
 }
 
 // Sets the URL's path.
-bool URL::SetPath(const String& _path)
+bool URL::SetPath(const std::string& _path)
 {
 	path = _path;
 	url_dirty = true;
@@ -348,7 +348,7 @@ bool URL::SetPath(const String& _path)
 }
 
 // Prefixes the URL's existing path with the given prefix.
-bool URL::PrefixPath(const String& prefix)
+bool URL::PrefixPath(const std::string& prefix)
 {
 	// If there's no trailing slash on the end of the prefix, add one.
 	if (!prefix.empty() &&
@@ -363,13 +363,13 @@ bool URL::PrefixPath(const String& prefix)
 }
 
 // Returns the URL's path.
-const String& URL::GetPath() const
+const std::string& URL::GetPath() const
 {
 	return path;
 }
 
 // Sets the URL's file name.
-bool URL::SetFileName(const String& _file_name)
+bool URL::SetFileName(const std::string& _file_name)
 {
 	file_name = _file_name;
 	url_dirty = true;
@@ -378,13 +378,13 @@ bool URL::SetFileName(const String& _file_name)
 }
 
 // Returns the URL's file name.
-const String& URL::GetFileName() const
+const std::string& URL::GetFileName() const
 {
 	return file_name;
 }
 
 // Sets the URL's file extension.
-bool URL::SetExtension(const String& _extension)
+bool URL::SetExtension(const std::string& _extension)
 {
 	extension = _extension;
 	url_dirty = true;
@@ -393,7 +393,7 @@ bool URL::SetExtension(const String& _extension)
 }
 
 // Returns the URL's file extension.
-const String& URL::GetExtension() const
+const std::string& URL::GetExtension() const
 {
 	return extension;
 }
@@ -405,7 +405,7 @@ const URL::Parameters& URL::GetParameters() const
 }
 
 // Set an individual parameter
-void URL::SetParameter(const String& key, const String& value)
+void URL::SetParameter(const std::string& key, const std::string& value)
 {
 	parameters[key] = value;
 	url_dirty = true;
@@ -425,9 +425,9 @@ void URL::ClearParameters()
 }
 
 // Returns the URL's path, file name and extension.
-String URL::GetPathedFileName() const
+std::string URL::GetPathedFileName() const
 {
-	String pathed_file_name = path;
+	std::string pathed_file_name = path;
 	
 	// Append the file name.
 	pathed_file_name += file_name;
@@ -442,9 +442,9 @@ String URL::GetPathedFileName() const
 	return pathed_file_name;
 }
 
-String URL::GetQueryString() const
+std::string URL::GetQueryString() const
 {
-	String query_string;
+	std::string query_string;
 	
 	int count = 0;
 	for ( Parameters::const_iterator itr = parameters.begin(); itr != parameters.end(); ++itr )
@@ -541,15 +541,15 @@ void URL::ConstructURL() const
 	url_dirty = false;
 }
 
-String URL::UrlEncode(const String &value)
+std::string URL::UrlEncode(const std::string &value)
 {
-	String encoded;
+	std::string encoded;
 	char hex[4] = {0,0,0,0};
 
 	encoded.clear();
 
 	const char *value_c = value.c_str();
-	for (String::size_type i = 0; value_c[i]; i++) 
+	for (std::string::size_type i = 0; value_c[i]; i++) 
 	{
 		char c = value_c[i];
 		if (IsUnreservedChar(c))
@@ -564,15 +564,15 @@ String URL::UrlEncode(const String &value)
 	return encoded;
 }
 
-String URL::UrlDecode(const String &value)
+std::string URL::UrlDecode(const std::string &value)
 {
-	String decoded;
+	std::string decoded;
 
 	decoded.clear();
 
 	const char *value_c = value.c_str();
-	String::size_type value_len = value.size();
-	for (String::size_type i = 0; i < value_len; i++) 
+	std::string::size_type value_len = value.size();
+	for (std::string::size_type i = 0; i < value_len; i++) 
 	{
 		char c = value_c[i];
 		if (c == '+')
@@ -582,7 +582,7 @@ String URL::UrlDecode(const String &value)
 		else if (c == '%')
 		{
 			char *endp;
-			String t = value.substr(i+1, 2);
+			std::string t = value.substr(i+1, 2);
 			int ch = strtol(t.c_str(), &endp, 16);
 			if (*endp == '\0')
 				decoded += char(ch);

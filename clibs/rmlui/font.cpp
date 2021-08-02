@@ -12,11 +12,11 @@ extern "C"{
 #include <cstring>
 #include <variant>
 
-bool FontEngine::IsFontTexResource(const Rml::String &sourcename) const{
+bool FontEngine::IsFontTexResource(const std::string &sourcename) const{
     return SDFFontEffect::IsFontTexResource(sourcename);
 }
 
-Rml::TextureHandle FontEngine::GetFontTexHandle(const Rml::String &sourcename, Rml::Size& texture_dimensions) const{
+Rml::TextureHandle FontEngine::GetFontTexHandle(const std::string &sourcename, Rml::Size& texture_dimensions) const{
     auto itfound = mFontResources.find(sourcename);
     if (itfound == mFontResources.end()){
         return Rml::TextureHandle(0);
@@ -28,7 +28,7 @@ Rml::TextureHandle FontEngine::GetFontTexHandle(const Rml::String &sourcename, R
 }
 
 static inline int
-load_fontid(struct font_manager *F, const Rml::String &family){
+load_fontid(struct font_manager *F, const std::string &family){
     const char* name = "宋体";
     if (!family.empty() && family != "rmlui-debugger-font")
         name = family.c_str();
@@ -36,7 +36,7 @@ load_fontid(struct font_manager *F, const Rml::String &family){
     return F->font_manager_addfont_with_family(F, name);
 }
 
-Rml::FontFaceHandle FontEngine::GetFontFaceHandle(const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, int size){
+Rml::FontFaceHandle FontEngine::GetFontFaceHandle(const std::string& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, int size){
     int fontid = load_fontid(mcontext->font_mgr, family);
 
     if (fontid > 0){
@@ -158,7 +158,7 @@ void FontEngine::GetUnderline(Rml::FontFaceHandle handle, float& position, float
     F->font_manager_underline(F, face.fontid, face.pixelsize, &position, &thickness);
 }
 
-int FontEngine::GetStringWidth(Rml::FontFaceHandle handle, const Rml::String& string, Rml::Character prior_character /*= Character::Null*/){
+int FontEngine::GetStringWidth(Rml::FontFaceHandle handle, const std::string& string, Rml::Character prior_character /*= Character::Null*/){
     size_t idx = static_cast<size_t>(handle)-1;
     const auto &face = mFontFaces[idx];
 
@@ -174,7 +174,7 @@ int FontEngine::GetStringWidth(Rml::FontFaceHandle handle, const Rml::String& st
 const FontEngine::FontResource& 
 FontEngine::FindOrAddFontResource(Rml::TextEffectsHandle font_effects_handle){
     auto sdffe = reinterpret_cast<SDFFontEffect*>(font_effects_handle);
-    Rml::String key = sdffe->GenerateKey();
+    std::string key = sdffe->GenerateKey();
 
     auto itfound = mFontResources.find(key);
 	if (itfound == mFontResources.end()){
@@ -190,7 +190,7 @@ FontEngine::FindOrAddFontResource(Rml::TextEffectsHandle font_effects_handle){
 int FontEngine::GenerateString(
     Rml::FontFaceHandle handle,
     Rml::TextEffectsHandle text_effects_handle,
-    const Rml::String& string, const
+    const std::string& string, const
     Rml::Point& position,
     const Rml::Color& colour,
     Rml::GeometryList& geometrys) {

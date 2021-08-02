@@ -29,10 +29,20 @@
 #ifndef RMLUI_CORE_TYPES_H
 #define RMLUI_CORE_TYPES_H
 
-#include "Config.h"
+#include <utility>
+#include <vector>
+#include <string>
+#include <stack>
+#include <list>
+#include <functional>
+#include <queue>
+#include <array>
+#include <unordered_map>
+#include <memory>
+#include <set>
+#include <unordered_set>
 
 #include <cstdlib>
-#include <memory>
 
 #include "Traits.h"
 
@@ -77,34 +87,34 @@ using TextureHandle = uintptr_t;
 using FontFaceHandle = uintptr_t;
 using TextEffectsHandle = uintptr_t;
 
-using DocumentPtr = UniquePtr<Document>;
-using ElementPtr = UniquePtr<Element>;
-using TextPtr = ElementPtr;// UniquePtr<ElementText>;
+using DocumentPtr = std::unique_ptr<Document>;
+using ElementPtr = std::unique_ptr<Element>;
+using TextPtr = ElementPtr;// std::unique_ptr<ElementText>;
 
 // Container types for common classes
-using ElementList = Vector< Element* >;
-using OwnedElementList = Vector< ElementPtr >;
-using VariantList = Vector< Variant >;
-using ElementAnimationList = Vector< ElementAnimation >;
+using ElementList = std::vector< Element* >;
+using OwnedElementList = std::vector< ElementPtr >;
+using VariantList = std::vector< Variant >;
+using ElementAnimationList = std::vector< ElementAnimation >;
 
-using PseudoClassList = SmallUnorderedSet< String >;
-using AttributeNameList = SmallUnorderedSet< String >;
-using PropertyMap = UnorderedMap< PropertyId, Property >;
+using PseudoClassList = std::unordered_set< std::string >;
+using AttributeNameList = std::unordered_set< std::string >;
+using PropertyMap = std::unordered_map< PropertyId, Property >;
 
-using Dictionary = SmallUnorderedMap< String, Variant >;
+using Dictionary = std::unordered_map< std::string, Variant >;
 using ElementAttributes = Dictionary;
 using XMLAttributes = Dictionary;
 
-using AnimationList = Vector<Animation>;
+using AnimationList = std::vector<Animation>;
 
 // Additional smart pointers
-using TransformPtr = SharedPtr< Transform >;
+using TransformPtr = std::shared_ptr< Transform >;
 
 // Data binding types
 class DataView;
-using DataViewPtr = UniqueReleaserPtr<DataView>;
+using DataViewPtr = std::unique_ptr<DataView, Releaser<DataView>>;
 class DataController;
-using DataControllerPtr = UniqueReleaserPtr<DataController>;
+using DataControllerPtr = std::unique_ptr<DataController, Releaser<DataController>>;
 
 struct Point {
 	float x{};
@@ -284,11 +294,11 @@ namespace std {
 // Hash specialization for enum class types (required on some older compilers)
 template <> struct hash<::Rml::PropertyId> {
 	using utype = typename ::std::underlying_type<::Rml::PropertyId>::type;
-	size_t operator() (const ::Rml::PropertyId& t) const { ::Rml::Hash<utype> h; return h(static_cast<utype>(t)); }
+	size_t operator() (const ::Rml::PropertyId& t) const { std::hash<utype> h; return h(static_cast<utype>(t)); }
 };
 template <> struct hash<::Rml::Character> {
 	using utype = typename ::std::underlying_type<::Rml::Character>::type;
-	size_t operator() (const ::Rml::Character& t) const { ::Rml::Hash<utype> h; return h(static_cast<utype>(t)); }
+	size_t operator() (const ::Rml::Character& t) const { std::hash<utype> h; return h(static_cast<utype>(t)); }
 };
 }
 

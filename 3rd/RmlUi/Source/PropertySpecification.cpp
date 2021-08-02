@@ -40,7 +40,7 @@ namespace Rml {
 
 PropertySpecification::PropertySpecification() :
 	properties(), shorthands(),
-	property_map(MakeUnique<PropertyIdNameMap>()), shorthand_map(MakeUnique<ShorthandIdNameMap>())
+	property_map(std::make_unique<PropertyIdNameMap>()), shorthand_map(std::make_unique<ShorthandIdNameMap>())
 {
 }
 
@@ -49,7 +49,7 @@ PropertySpecification::~PropertySpecification()
 }
 
 // Registers a property with a new definition.
-PropertyDefinition& PropertySpecification::RegisterProperty(const String& property_name, const String& default_value, bool inherited, bool forces_layout, PropertyId id)
+PropertyDefinition& PropertySpecification::RegisterProperty(const std::string& property_name, const std::string& default_value, bool inherited, bool forces_layout, PropertyId id)
 {
 	if (id == PropertyId::Invalid)
 		id = property_map->GetOrCreateId(property_name);
@@ -74,7 +74,7 @@ PropertyDefinition& PropertySpecification::RegisterProperty(const String& proper
 	}
 
 	// Create and insert the new property
-	properties[index] = MakeUnique<PropertyDefinition>(id, default_value, inherited, forces_layout);
+	properties[index] = std::make_unique<PropertyDefinition>(id, default_value, inherited, forces_layout);
 	property_ids.Insert(id);
 	if (inherited)
 		property_ids_inherited.Insert(id);
@@ -93,7 +93,7 @@ const PropertyDefinition* PropertySpecification::GetProperty(PropertyId id) cons
 	return properties[(size_t)id].get();
 }
 
-const PropertyDefinition* PropertySpecification::GetProperty(const String& property_name) const
+const PropertyDefinition* PropertySpecification::GetProperty(const std::string& property_name) const
 {
 	return GetProperty(property_map->GetId(property_name));
 }
@@ -116,24 +116,24 @@ const PropertyIdSet& PropertySpecification::GetRegisteredPropertiesForcingLayout
 }
 
 // Registers a shorthand property definition.
-ShorthandId PropertySpecification::RegisterShorthand(const String& shorthand_name, const String& property_names, ShorthandType type, ShorthandId id)
+ShorthandId PropertySpecification::RegisterShorthand(const std::string& shorthand_name, const std::string& property_names, ShorthandType type, ShorthandId id)
 {
 	if (id == ShorthandId::Invalid)
 		id = shorthand_map->GetOrCreateId(shorthand_name);
 	else
 		shorthand_map->AddPair(id, shorthand_name);
 
-	StringList property_list;
+	std::vector<std::string> property_list;
 	StringUtilities::ExpandString(property_list, StringUtilities::ToLower(property_names));
 
 	// Construct the new shorthand definition and resolve its properties.
-	UniquePtr<ShorthandDefinition> property_shorthand(new ShorthandDefinition());
+	std::unique_ptr<ShorthandDefinition> property_shorthand(new ShorthandDefinition());
 
-	for (const String& raw_name : property_list)
+	for (const std::string& raw_name : property_list)
 	{
 		ShorthandItem item;
 		bool optional = false;
-		String name = raw_name;
+		std::string name = raw_name;
 
 		if (!raw_name.empty() && raw_name.back() == '?')
 		{
@@ -202,12 +202,12 @@ const ShorthandDefinition* PropertySpecification::GetShorthand(ShorthandId id) c
 	return shorthands[(size_t)id].get();
 }
 
-const ShorthandDefinition* PropertySpecification::GetShorthand(const String& shorthand_name) const
+const ShorthandDefinition* PropertySpecification::GetShorthand(const std::string& shorthand_name) const
 {
 	return GetShorthand(shorthand_map->GetId(shorthand_name));
 }
 
-bool PropertySpecification::ParsePropertyDeclaration(PropertyDictionary& dictionary, const String& property_name, const String& property_value) const
+bool PropertySpecification::ParsePropertyDeclaration(PropertyDictionary& dictionary, const std::string& property_name, const std::string& property_value) const
 {
 	// Try as a property first
 	PropertyId property_id = property_map->GetId(property_name);
@@ -228,14 +228,14 @@ bool PropertySpecification::ParsePropertyDeclaration(PropertyDictionary& diction
 	return false;
 }
 
-bool PropertySpecification::ParsePropertyDeclaration(PropertyDictionary& dictionary, PropertyId property_id, const String& property_value) const
+bool PropertySpecification::ParsePropertyDeclaration(PropertyDictionary& dictionary, PropertyId property_id, const std::string& property_value) const
 {
 	// Parse as a single property.
 	const PropertyDefinition* property_definition = GetProperty(property_id);
 	if (!property_definition)
 		return false;
 
-	StringList property_values;
+	std::vector<std::string> property_values;
 	if (!ParsePropertyValues(property_values, property_value, false) || property_values.size() == 0)
 		return false;
 
@@ -248,9 +248,9 @@ bool PropertySpecification::ParsePropertyDeclaration(PropertyDictionary& diction
 }
 
 // Parses a property declaration, setting any parsed and validated properties on the given dictionary.
-bool PropertySpecification::ParseShorthandDeclaration(PropertyDictionary& dictionary, ShorthandId shorthand_id, const String& property_value) const
+bool PropertySpecification::ParseShorthandDeclaration(PropertyDictionary& dictionary, ShorthandId shorthand_id, const std::string& property_value) const
 {
-	StringList property_values;
+	std::vector<std::string> property_values;
 	if (!ParsePropertyValues(property_values, property_value, true) || property_values.size() == 0)
 		return false;
 
@@ -265,7 +265,7 @@ bool PropertySpecification::ParseShorthandDeclaration(PropertyDictionary& dictio
 		property_values.size() < 4)
 	{
 		// This array tells which property index each side is parsed from
-		Array<int, 4> box_side_to_value_index = { 0,0,0,0 };
+		std::array<int, 4> box_side_to_value_index = { 0,0,0,0 };
 		switch (property_values.size())
 		{
 		case 1:
@@ -318,7 +318,7 @@ bool PropertySpecification::ParseShorthandDeclaration(PropertyDictionary& dictio
 	}
 	else if (shorthand_definition->type == ShorthandType::RecursiveCommaSeparated)
 	{
-		StringList subvalues;
+		std::vector<std::string> subvalues;
 		StringUtilities::ExpandString(subvalues, property_value);
 
 		size_t num_optional = 0;
@@ -392,9 +392,9 @@ void PropertySpecification::SetPropertyDefaults(PropertyDictionary& dictionary) 
 	}
 }
 
-String PropertySpecification::PropertiesToString(const PropertyDictionary& dictionary) const
+std::string PropertySpecification::PropertiesToString(const PropertyDictionary& dictionary) const
 {
-	String result;
+	std::string result;
 	for (auto& pair : dictionary.GetProperties())
 	{
 		result += property_map->GetName(pair.first) + ": " + pair.second.ToString() + '\n';
@@ -403,9 +403,9 @@ String PropertySpecification::PropertiesToString(const PropertyDictionary& dicti
 }
 
 
-bool PropertySpecification::ParsePropertyValues(StringList& values_list, const String& values, bool split_values) const
+bool PropertySpecification::ParsePropertyValues(std::vector<std::string>& values_list, const std::string& values, bool split_values) const
 {
-	String value;
+	std::string value;
 
 	enum ParseState { VALUE, VALUE_PARENTHESIS, VALUE_QUOTE };
 	ParseState state = VALUE;

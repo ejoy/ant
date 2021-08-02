@@ -107,7 +107,7 @@ namespace Parse {
 
 class DataParser {
 public:
-	DataParser(String expression, DataExpressionInterface expression_interface) : expression(std::move(expression)), expression_interface(expression_interface) {}
+	DataParser(std::string expression, DataExpressionInterface expression_interface) : expression(std::move(expression)), expression_interface(expression_interface) {}
 
 	char Look() {
 		if (reached_end)
@@ -139,17 +139,17 @@ public:
 			c = Next();
 	}
 
-	void Error(const String message)
+	void Error(const std::string message)
 	{
 		parse_error = true;
 		Log::Message(Log::Level::Warning, "Error in data expression at %d. %s", index, message.c_str());
 		Log::Message(Log::Level::Warning, "  \"%s\"", expression.c_str());
 		
 		const size_t cursor_offset = size_t(index) + 3;
-		const String cursor_string = String(cursor_offset, ' ') + '^';
+		const std::string cursor_string = std::string(cursor_offset, ' ') + '^';
 		Log::Message(Log::Level::Warning, cursor_string.c_str());
 	}
-	void Expected(String expected_symbols) {
+	void Expected(std::string expected_symbols) {
 		const char c = Look();
 		if (c == '\0')
 			Error(CreateString(expected_symbols.size() + 50, "Expected %s but found end of string.", expected_symbols.c_str()));
@@ -157,7 +157,7 @@ public:
 			Error(CreateString(expected_symbols.size() + 50, "Expected %s but found character '%c'.", expected_symbols.c_str(), c));
 	}
 	void Expected(char expected) {
-		Expected(String(1, '\'') + expected + '\'');
+		Expected(std::string(1, '\'') + expected + '\'');
 	}
 
 	bool Parse(bool is_assignment_expression)
@@ -225,15 +225,15 @@ public:
 		program_stack_size -= num_arguments;
 		program.push_back(InstructionData{ Instruction::Arguments, Variant(int(num_arguments)) });
 	}
-	void Variable(const String& name) {
+	void Variable(const std::string& name) {
 		VariableGetSet(name, false);
 	}
-	void Assign(const String& name) {
+	void Assign(const std::string& name) {
 		VariableGetSet(name, true);
 	}
 
 private:
-	void VariableGetSet(const String& name, bool is_assignment)
+	void VariableGetSet(const std::string& name, bool is_assignment)
 	{
 		DataAddress address = expression_interface.ParseAddress(name);
 		if (address.empty()) {
@@ -245,7 +245,7 @@ private:
 		program.push_back(InstructionData{ is_assignment ? Instruction::Assign : Instruction::Variable, Variant(int(index)) });
 	}
 
-	const String expression;
+	const std::string expression;
 	DataExpressionInterface expression_interface;
 
 	size_t index = 0;
@@ -289,7 +289,7 @@ namespace Parse {
 	static void NotEqual(DataParser& parser);
 
 	static void Ternary(DataParser& parser);
-	static void Function(DataParser& parser, Instruction function_type, const String& name);
+	static void Function(DataParser& parser, Instruction function_type, const std::string& name);
 
 	// Helper functions
 	static bool IsVariableCharacter(char c, bool is_first_character)
@@ -310,9 +310,9 @@ namespace Parse {
 
 		return false;
 	}
-	static String VariableName(DataParser& parser)
+	static std::string VariableName(DataParser& parser)
 	{
-		String name;
+		std::string name;
 
 		bool is_first_character = true;
 		char c = parser.Look();
@@ -325,7 +325,7 @@ namespace Parse {
 		}
 
 		// Right trim spaces in name
-		size_t new_size = String::npos;
+		size_t new_size = std::string::npos;
 		for (int i = int(name.size()) - 1; i >= 1; i--)
 		{
 			if (name[i] == ' ')
@@ -333,7 +333,7 @@ namespace Parse {
 			else
 				break;
 		}
-		if (new_size != String::npos)
+		if (new_size != std::string::npos)
 			name.resize(new_size);
 
 		return name;
@@ -347,7 +347,7 @@ namespace Parse {
 		{
 			if (parser.Look() != '\0')
 			{
-				const String variable_name = VariableName(parser);
+				const std::string variable_name = VariableName(parser);
 				if (variable_name.empty()) {
 					parser.Error("Expected a variable for assignment but got an empty name.");
 					return;
@@ -491,7 +491,7 @@ namespace Parse {
 
 	static void NumberLiteral(DataParser& parser)
 	{
-		String str;
+		std::string str;
 
 		bool first_match = false;
 		bool has_dot = false;
@@ -523,7 +523,7 @@ namespace Parse {
 	}
 	static void StringLiteral(DataParser& parser)
 	{
-		String str;
+		std::string str;
 
 		char c = parser.Look();
 		char c_prev = '\0';
@@ -546,7 +546,7 @@ namespace Parse {
 	}
 	static void Variable(DataParser& parser)
 	{
-		String name = VariableName(parser);
+		std::string name = VariableName(parser);
 		if (name.empty()) {
 			parser.Error("Expected a variable but got an empty name.");
 			return;
@@ -682,7 +682,7 @@ namespace Parse {
 		parser.Pop(Register::L);
 		parser.Emit(Instruction::Ternary);
 	}
-	static void Function(DataParser& parser, Instruction function_type, const String& func_name)
+	static void Function(DataParser& parser, Instruction function_type, const std::string& func_name)
 	{
 		RMLUI_ASSERT(function_type == Instruction::EventFnc);
 
@@ -737,7 +737,7 @@ public:
 	DataInterpreter(const Program& program, const AddressList& addresses, DataExpressionInterface expression_interface)
 		: program(program), addresses(addresses), expression_interface(expression_interface) {}
 
-	bool Error(String message) const
+	bool Error(std::string message) const
 	{
 		Log::Message(Log::Level::Error, "Error during execution. %s", message.c_str());
 		return false;
@@ -760,7 +760,7 @@ public:
 
 		if(!success)
 		{
-			String program_str = DumpProgram();
+			std::string program_str = DumpProgram();
 			Log::Message(Log::Level::Warning, "Failed to execute program with %d instructions:", program.size());
 			Log::Message(Log::Level::Warning, program_str.c_str());
 		}
@@ -768,12 +768,12 @@ public:
 		return success;
 	}
 
-	String DumpProgram() const
+	std::string DumpProgram() const
 	{
-		String str;
+		std::string str;
 		for (size_t i = 0; i < program.size(); i++)
 		{
-			String instruction_str = program[i].data.Get<String>();
+			std::string instruction_str = program[i].data.Get<std::string>();
 			str += CreateString(50 + instruction_str.size(), "  %4zu  '%c'  %s\n", i, char(program[i].instruction), instruction_str.c_str());
 		}
 		return str;
@@ -786,8 +786,8 @@ public:
 
 private:
 	Variant R, L, C;
-	Stack<Variant> stack;
-	Vector<Variant> arguments;
+	std::stack<Variant> stack;
+	std::vector<Variant> arguments;
 
 	const Program& program;
 	const AddressList& addresses;
@@ -839,7 +839,7 @@ private:
 		case Instruction::Add:
 		{
 			if (AnyString(L, R))
-				R = Variant(L.Get<String>() + R.Get<String>());
+				R = Variant(L.Get<std::string>() + R.Get<std::string>());
 			else
 				R = Variant(L.Get<double>() + R.Get<double>());
 		}
@@ -857,7 +857,7 @@ private:
 		case Instruction::Equal:
 		{
 			if (AnyString(L, R))
-				R = Variant(L.Get<String>() == R.Get<String>());
+				R = Variant(L.Get<std::string>() == R.Get<std::string>());
 			else
 				R = Variant(L.Get<double>() == R.Get<double>());
 		}
@@ -865,7 +865,7 @@ private:
 		case Instruction::NotEqual:
 		{
 			if (AnyString(L, R))
-				R = Variant(L.Get<String>() != R.Get<String>());
+				R = Variant(L.Get<std::string>() != R.Get<std::string>());
 			else
 				R = Variant(L.Get<double>() != R.Get<double>());
 		}
@@ -897,14 +897,14 @@ private:
 		break;
 		case Instruction::EventFnc:
 		{
-			const String function_name = data.Get<String>();
+			const std::string function_name = data.Get<std::string>();
 
 			if (!expression_interface.EventCallback(function_name, arguments))
 			{
-				String arguments_str;
+				std::string arguments_str;
 				for (size_t i = 0; i < arguments.size(); i++)
 				{
-					arguments_str += arguments[i].Get<String>();
+					arguments_str += arguments[i].Get<std::string>();
 					if (i < arguments.size() - 1)
 						arguments_str += ", ";
 				}
@@ -934,7 +934,7 @@ private:
 };
 
 
-DataExpression::DataExpression(String expression) : expression(expression)
+DataExpression::DataExpression(std::string expression) : expression(expression)
 {}
 
 DataExpression::~DataExpression()
@@ -963,9 +963,9 @@ bool DataExpression::Run(const DataExpressionInterface& expression_interface, Va
 	return true;
 }
 
-StringList DataExpression::GetVariableNameList() const
+std::vector<std::string> DataExpression::GetVariableNameList() const
 {
-	StringList list;
+	std::vector<std::string> list;
 	list.reserve(addresses.size());
 	for (const DataAddress& address : addresses)
 	{
@@ -978,7 +978,7 @@ StringList DataExpression::GetVariableNameList() const
 DataExpressionInterface::DataExpressionInterface(DataModel* data_model, Element* element, Event* event) : data_model(data_model), element(element), event(event)
 {}
 
-DataAddress DataExpressionInterface::ParseAddress(const String& address_str) const
+DataAddress DataExpressionInterface::ParseAddress(const std::string& address_str) const
 {
 	if (address_str.size() >= 4 && address_str[0] == 'e' && address_str[1] == 'v' && address_str[2] == '.')
 		return DataAddress{ DataAddressEntry("ev"), DataAddressEntry(address_str.substr(3)) };
@@ -1016,7 +1016,7 @@ bool DataExpressionInterface::SetValue(const DataAddress& address, const Variant
 	return result;
 }
 
-bool DataExpressionInterface::EventCallback(const String& name, const VariantList& arguments)
+bool DataExpressionInterface::EventCallback(const std::string& name, const VariantList& arguments)
 {
 	if (!data_model || !event)
 		return false;
