@@ -54,7 +54,7 @@ public:
 	/// Opens a file.
 	/// @param path The path to the file to open.
 	/// @return A valid file handle, or nullptr on failure
-	virtual FileHandle Open(const String& path) = 0;
+	virtual FileHandle Open(const std::string& path) = 0;
 	/// Closes a previously opened file.
 	/// @param file The file handle previously opened through Open().
 	virtual void Close(FileHandle file) = 0;
@@ -86,9 +86,9 @@ public:
 	/// @param path The path to the file to load.
 	/// @param out_data The string contents of the file.
 	/// @return True on success.
-	virtual bool LoadFile(const String& path, String& out_data);
+	virtual bool LoadFile(const std::string& path, std::string& out_data);
 
-	virtual String GetPath(const String& path) = 0;
+	virtual std::string GetPath(const std::string& path) = 0;
 };
 
 } // namespace Rml

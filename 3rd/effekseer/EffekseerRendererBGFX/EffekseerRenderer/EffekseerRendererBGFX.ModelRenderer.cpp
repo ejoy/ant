@@ -356,12 +356,12 @@ void ModelRenderer::EndRendering(const efkModelNodeParam& parameter, void* userD
 		return;
 	}
 
-// 	model->StoreBufferToGPU(graphicsDevice_.Get());
-// 	if (!model->GetIsBufferStoredOnGPU())
-// 	{
-// 		return;
-// 	}
-// 
+	model->StoreBufferToGPU(graphicsDevice_.Get());
+	if (!model->GetIsBufferStoredOnGPU())
+	{
+		return;
+	}
+
 // 	if (m_renderer->GetRenderMode() == Effekseer::RenderMode::Wireframe)
 // 	{
 // 		model->GenerateWireIndexBuffer(graphicsDevice_.Get());

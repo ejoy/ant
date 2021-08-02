@@ -33,7 +33,7 @@
 #include "Types.h"
 #include "Traits.h"
 #include "DataTypes.h"
-#include "DataTypeRegister.h"
+#include "DataVariable.h"
 
 namespace Rml {
 
@@ -44,8 +44,8 @@ class RMLUICORE_API DataModelHandle {
 public:
 	DataModelHandle(DataModel* model = nullptr);
 
-	bool IsVariableDirty(const String& variable_name);
-	void DirtyVariable(const String& variable_name);
+	bool IsVariableDirty(const std::string& variable_name);
+	void DirtyVariable(const std::string& variable_name);
 
 	explicit operator bool() { return model; }
 
@@ -60,28 +60,20 @@ public:
 	using DataEventMemberFunc = void(T::*)(DataModelHandle, Event&, const VariantList&);
 
 	DataModelConstructor();
-	DataModelConstructor(DataModel* model, DataTypeRegister* type_register);
+	DataModelConstructor(DataModel* model);
 
 	// Return a handle to the data model being constructed, which can later be used to synchronize variables and update the model.
 	DataModelHandle GetModelHandle() const;
 
-	// Bind a data variable.
-	// @note For non-scalar types make sure they first have been registered with the appropriate 'Register...()' functions.
-	template<typename T>
-	bool Bind(const String& name, T* ptr) {
-		RMLUI_ASSERTMSG(ptr, "Invalid pointer to data variable");
-		return BindVariable(name, DataVariable(type_register->GetOrAddScalar<T>(), ptr));
-	}
-
 	// Bind a get/set function pair.
-	bool BindFunc(const String& name, DataGetFunc get_func, DataSetFunc set_func = {});
+	bool BindFunc(const std::string& name, DataGetFunc get_func, DataSetFunc set_func = {});
 
 	// Bind an event callback.
-	bool BindEventCallback(const String& name, DataEventFunc event_func);
+	bool BindEventCallback(const std::string& name, DataEventFunc event_func);
 
 	// Convenience wrapper around BindEventCallback for member functions.
 	template<typename T>
-	bool BindEventCallback(const String& name, DataEventMemberFunc<T> member_func, T* object_pointer) {
+	bool BindEventCallback(const std::string& name, DataEventMemberFunc<T> member_func, T* object_pointer) {
 		return BindEventCallback(name, [member_func, object_pointer](DataModelHandle handle, Event& event, const VariantList& arguments) {
 			(object_pointer->*member_func)(handle, event, arguments);
 		});
@@ -89,41 +81,16 @@ public:
 
 	// Bind a user-declared DataVariable.
 	// For advanced use cases, for example for binding variables to a custom 'VariableDefinition'.
-	bool BindCustomDataVariable(const String& name, DataVariable data_variable) {
+	bool BindCustomDataVariable(const std::string& name, DataVariable data_variable) {
 		return BindVariable(name, data_variable);
 	}
 
-	// Register a struct type.
-	// @note The type applies to every data model associated with the current Context.
-	// @return A handle which can be used to register struct members.
-	template<typename T>
-	StructHandle<T> RegisterStruct() {
-		return type_register->RegisterStruct<T>();
-	}
-
-	// Register an array type.
-	// @note The type applies to every data model associated with the current Context.
-	// @note If 'Container::value_type' represents a non-scalar type, that type must already have been registered with the appropriate 'Register...()' functions.
-	// @note Container requires the following functions to be implemented: size() and begin(). This is satisfied by several containers such as std::vector and std::array.
-	template<typename Container>
-	bool RegisterArray() {
-		return type_register->RegisterArray<Container>();
-	}
-
-	// Register a transform function.
-	// A transform function modifies a variant with optional arguments. It can be called in data expressions using the pipe '|' operator.
-	// @note The transform function applies to every data model associated with the current Context.
-	void RegisterTransformFunc(const String& name, DataTransformFunc transform_func) {
-		type_register->GetTransformFuncRegister()->Register(name, std::move(transform_func));
-	}
-
-	explicit operator bool() { return model && type_register; }
+	explicit operator bool() { return model; }
 
 private:
-	bool BindVariable(const String& name, DataVariable data_variable);
+	bool BindVariable(const std::string& name, DataVariable data_variable);
 
 	DataModel* model;
-	DataTypeRegister* type_register;
 };
 
 } // namespace Rml

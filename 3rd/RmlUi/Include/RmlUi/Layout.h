@@ -77,6 +77,8 @@ public:
 	void SetElementText(ElementText* element);
 	void CalculateLayout(Size const& size);
 	void SetProperty(PropertyId id, const Property* property, Element* element);
+	
+	bool IsDirty();
 	void MarkDirty();
 	std::string ToString() const;
 	bool UpdateMetrics(Layout::Metrics& metrics);

@@ -34,7 +34,7 @@
 
 namespace Rml {
 
-using ParameterMap = UnorderedMap< String, int >;
+using ParameterMap = std::unordered_map< std::string, int >;
 
 /**
 	A property parser takes a property declaration in string form, validates it, and converts it to a Property.
@@ -52,7 +52,7 @@ public:
 	/// @param[in] value The raw value defined for this property.
 	/// @param[in] parameters The list of parameters defined for this property.
 	/// @return True if the value was parsed successfully, false otherwise.
-	virtual bool ParseValue(Property& property, const String& value, const ParameterMap& parameters) const = 0;
+	virtual bool ParseValue(Property& property, const std::string& value, const ParameterMap& parameters) const = 0;
 };
 
 } // namespace Rml

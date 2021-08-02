@@ -31,10 +31,6 @@ lm:lua_dll "font" {
         "*.c",
         "!luabgfxui.c"
     },
-    defines = {
-        "FONT_EXPORT",
-        "FONT_IMP",
-    },
     msvc = {
         flags = {
             "-wd4244",

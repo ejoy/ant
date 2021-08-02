@@ -44,30 +44,28 @@ class Element;
 
 class DataModel : NonCopyMoveable {
 public:
-	DataModel(const TransformFuncRegister* transform_register = nullptr);
+	DataModel();
 	~DataModel();
 
 	void AddView(DataViewPtr view);
 	void AddController(DataControllerPtr controller);
 
-	bool BindVariable(const String& name, DataVariable variable);
-	bool BindFunc(const String& name, DataGetFunc get_func, DataSetFunc set_func);
+	bool BindVariable(const std::string& name, DataVariable variable);
+	bool BindFunc(const std::string& name, DataGetFunc get_func, DataSetFunc set_func);
 
-	bool BindEventCallback(const String& name, DataEventFunc event_func);
+	bool BindEventCallback(const std::string& name, DataEventFunc event_func);
 
-	bool InsertAlias(Element* element, const String& alias_name, DataAddress replace_with_address);
+	bool InsertAlias(Element* element, const std::string& alias_name, DataAddress replace_with_address);
 	bool EraseAliases(Element* element);
 
-	DataAddress ResolveAddress(const String& address_str, Element* element) const;
-	const DataEventFunc* GetEventCallback(const String& name);
+	DataAddress ResolveAddress(const std::string& address_str, Element* element) const;
+	const DataEventFunc* GetEventCallback(const std::string& name);
 
 	DataVariable GetVariable(const DataAddress& address) const;
 	bool GetVariableInto(const DataAddress& address, Variant& out_value) const;
 
-	void DirtyVariable(const String& variable_name);
-	bool IsVariableDirty(const String& variable_name) const;
-
-	bool CallTransform(const String& name, Variant& inout_result, const VariantList& arguments) const;
+	void DirtyVariable(const std::string& variable_name);
+	bool IsVariableDirty(const std::string& variable_name) const;
 
 	// Elements declaring 'data-model' need to be attached.
 	void AttachModelRootElement(Element* element);
@@ -78,21 +76,19 @@ public:
 	bool Update(bool clear_dirty_variables);
 
 private:
-	UniquePtr<DataViews> views;
-	UniquePtr<DataControllers> controllers;
+	std::unique_ptr<DataViews> views;
+	std::unique_ptr<DataControllers> controllers;
 
-	UnorderedMap<String, DataVariable> variables;
+	std::unordered_map<std::string, DataVariable> variables;
 	DirtyVariables dirty_variables;
 
-	UnorderedMap<String, UniquePtr<FuncDefinition>> function_variable_definitions;
-	UnorderedMap<String, DataEventFunc> event_callbacks;
+	std::unordered_map<std::string, std::unique_ptr<FuncDefinition>> function_variable_definitions;
+	std::unordered_map<std::string, DataEventFunc> event_callbacks;
 
-	using ScopedAliases = UnorderedMap<Element*, SmallUnorderedMap<String, DataAddress>>;
+	using ScopedAliases = std::unordered_map<Element*, std::unordered_map<std::string, DataAddress>>;
 	ScopedAliases aliases;
 
-	const TransformFuncRegister* transform_register;
-
-	SmallUnorderedSet<Element*> attached_elements;
+	std::unordered_set<Element*> attached_elements;
 };
 
 

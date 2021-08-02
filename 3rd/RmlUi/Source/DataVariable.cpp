@@ -52,19 +52,19 @@ DataVariableType DataVariable::Type() {
 
 
 bool VariableDefinition::Get(void* /*ptr*/, Variant& /*variant*/) {
-    Log::Message(Log::LT_WARNING, "Values can only be retrieved from scalar data types.");
+    Log::Message(Log::Level::Warning, "Values can only be retrieved from scalar data types.");
     return false;
 }
 bool VariableDefinition::Set(void* /*ptr*/, const Variant& /*variant*/) {
-    Log::Message(Log::LT_WARNING, "Values can only be assigned to scalar data types.");
+    Log::Message(Log::Level::Warning, "Values can only be assigned to scalar data types.");
     return false;
 }
 int VariableDefinition::Size(void* /*ptr*/) {
-    Log::Message(Log::LT_WARNING, "Tried to get the size from a non-array data type.");
+    Log::Message(Log::Level::Warning, "Tried to get the size from a non-array data type.");
     return 0;
 }
 DataVariable VariableDefinition::Child(void* /*ptr*/, const DataAddressEntry& /*address*/) {
-    Log::Message(Log::LT_WARNING, "Tried to get the child of a scalar type.");
+    Log::Message(Log::Level::Warning, "Tried to get the child of a scalar type.");
     return DataVariable();
 }
 

@@ -33,10 +33,6 @@ namespace Rml {
 Plugin::~Plugin()
 { }
 
-int Plugin::GetEventClasses() {
-	return EVT_ALL;
-}
-
 void Plugin::OnInitialise()
 { }
 
@@ -55,14 +51,6 @@ void Plugin::OnLoadInlineScript(Document* document, const std::string& content, 
 }
 
 void Plugin::OnLoadExternalScript(Document* document, const std::string& source_path) {
-}
-
-void Plugin::OnElementCreate(Element* RMLUI_UNUSED_PARAMETER(element)) {
-	RMLUI_UNUSED(element);
-}
-
-void Plugin::OnElementDestroy(Element* RMLUI_UNUSED_PARAMETER(element)) {
-	RMLUI_UNUSED(element);
 }
 
 } // namespace Rml

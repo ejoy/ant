@@ -2,6 +2,7 @@ local typeclass = require "typeclass"
 local system = require "system"
 local policy = require "policy"
 local event = require "event"
+local ltask = require "ltask"
 
 local world = {}
 world.__index = world
@@ -295,9 +296,35 @@ function world:pipeline_func(what)
 		for i = 1, #list do
 			local v = list[i]
 			local f, proxy = v[1], v[2]
+			--local _ <close> = self:memory_stat(v[5] .. "|" .. v[3] .. "." .. v[4])
 			f(proxy)
 		end
 	end
+end
+
+local function finish_memory_stat(ms)
+	local start = ms.start
+	local finish = ms.finish
+	local res = ms.res
+	ltask.mem_count(finish)
+	for k, v in pairs(finish) do
+		local diff = v - start[k]
+		if diff > 0 then
+			res[k] = (res[k] or 0) + diff
+		end
+	end
+end
+
+function world:memory_stat(what)
+	local ms = self._memory_stat
+	local res = self._memory[what]
+	if not res then
+		res = {}
+		self._memory[what] = res
+	end
+	ms.res = res
+	ltask.mem_count(ms.start)
+	return ms
 end
 
 local function remove_entity(w, e)
@@ -365,6 +392,8 @@ function m.new_world(config)
 		_removed = {},	-- A list of { eid, component_name, component } / { eid, entity }
 		_switchs = {},	-- for enable/disable
 		_uniques = {},
+		_memory = {},
+		_memory_stat = setmetatable({start={}, finish={}}, {__close = finish_memory_stat}),
 		w = config.w
 	}, world)
 

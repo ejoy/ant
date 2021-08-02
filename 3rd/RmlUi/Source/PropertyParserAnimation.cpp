@@ -53,7 +53,7 @@ struct Keyword {
 };
 
 
-static const UnorderedMap<String, Keyword> keywords = {
+static const std::unordered_map<std::string, Keyword> keywords = {
 		{"none", {Keyword::NONE} },
 		{"all", {Keyword::ALL}},
 		{"alternate", {Keyword::ALTERNATE}},
@@ -113,15 +113,15 @@ PropertyParserAnimation::PropertyParserAnimation(Type type) : type(type)
 }
 
 
-static bool ParseAnimation(Property & property, const StringList& animation_values)
+static bool ParseAnimation(Property & property, const std::vector<std::string>& animation_values)
 {
 	AnimationList animation_list;
 
-	for (const String& single_animation_value : animation_values)
+	for (const std::string& single_animation_value : animation_values)
 	{
 		Animation animation;
 
-		StringList arguments;
+		std::vector<std::string> arguments;
 		StringUtilities::ExpandString(arguments, single_animation_value, ' ');
 
 		bool duration_found = false;
@@ -227,17 +227,17 @@ static bool ParseAnimation(Property & property, const StringList& animation_valu
 }
 
 
-static bool ParseTransition(Property & property, const StringList& transition_values)
+static bool ParseTransition(Property & property, const std::vector<std::string>& transition_values)
 {
 	TransitionList transition_list{ false, false, {} };
 
-	for (const String& single_transition_value : transition_values)
+	for (const std::string& single_transition_value : transition_values)
 	{
 
 		Transition transition;
 		PropertyIdSet target_property_names;
 
-		StringList arguments;
+		std::vector<std::string> arguments;
 		StringUtilities::ExpandString(arguments, single_transition_value, ' ');
 
 
@@ -352,9 +352,9 @@ static bool ParseTransition(Property & property, const StringList& transition_va
 }
 
 
-bool PropertyParserAnimation::ParseValue(Property & property, const String & value, const ParameterMap & /*parameters*/) const
+bool PropertyParserAnimation::ParseValue(Property & property, const std::string & value, const ParameterMap & /*parameters*/) const
 {
-	StringList list_of_values;
+	std::vector<std::string> list_of_values;
 	{
 		auto lowercase_value = StringUtilities::ToLower(value);
 		StringUtilities::ExpandString(list_of_values, lowercase_value, ',');

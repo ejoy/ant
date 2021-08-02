@@ -30,11 +30,10 @@ local function Render()
     while not quit do
         local delta = getDelta()
         if delta > 0 then
-            rmlui.SystemUpdate(delta)
             timer.update(delta)
         end
         rmlui.RenderBegin()
-        rmlui.ContextUpdate(context)
+        rmlui.ContextUpdate(context, delta)
         rmlui.RenderFrame()
         task.update()
         ltask.call(ServiceBgfxMain, "encoder_frame")

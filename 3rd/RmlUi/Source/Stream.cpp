@@ -29,6 +29,7 @@
 #include "../Include/RmlUi/Stream.h"
 #include "../Include/RmlUi/Math.h"
 #include "../Include/RmlUi/Debug.h"
+#include "../Include/RmlUi/Log.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -93,7 +94,7 @@ size_t Stream::Read(Stream* stream, size_t bytes) const
 }
 
 // Read from one stream into another
-size_t Stream::Read(String& string, size_t bytes) const
+size_t Stream::Read(std::string& string, size_t bytes) const
 {
 	size_t string_size = string.size();
 	string.resize(string_size + bytes + 1);
@@ -114,7 +115,7 @@ size_t Stream::Write(const char* string)
 	return Write(string, strlen(string));
 }
 
-size_t Stream::Write(const String& string)
+size_t Stream::Write(const std::string& string)
 {
 	return Write(string.c_str(), string.size());
 }
@@ -125,7 +126,7 @@ size_t Stream::PushFront(const void* RMLUI_UNUSED_PARAMETER(buffer), size_t RMLU
 	RMLUI_UNUSED(buffer);
 	RMLUI_UNUSED(bytes);
 
-	RMLUI_ERRORMSG("No generic way to PushFront to a stream.");
+	Log::Message(Log::Level::Error, "No generic way to PushFront to a stream.");
 	return false;
 }
 
@@ -144,7 +145,7 @@ size_t Stream::PopFront(size_t RMLUI_UNUSED_PARAMETER(bytes))
 {
 	RMLUI_UNUSED(bytes);
 
-	RMLUI_ERRORMSG("No generic way to PopFront from a stream.");
+	Log::Message(Log::Level::Error, "No generic way to PopFront from a stream.");
 	return 0;
 }
 

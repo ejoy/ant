@@ -78,12 +78,12 @@ public:
 	/// @param[in] forces_layout True if this property requires its parent to be reformatted if changed.
 	/// @param[in] id If 'Invalid' then automatically assigns a new id, otherwise assigns the given id.
 	/// @return The new property definition, ready to have parsers attached.
-	PropertyDefinition& RegisterProperty(const String& property_name, const String& default_value, bool inherited, bool forces_layout, PropertyId id = PropertyId::Invalid);
+	PropertyDefinition& RegisterProperty(const std::string& property_name, const std::string& default_value, bool inherited, bool forces_layout, PropertyId id = PropertyId::Invalid);
 	/// Returns a property definition.
 	/// @param[in] id The id of the desired property.
 	/// @return The appropriate property definition if it could be found, nullptr otherwise.
 	const PropertyDefinition* GetProperty(PropertyId id) const;
-	const PropertyDefinition* GetProperty(const String& property_name) const;
+	const PropertyDefinition* GetProperty(const std::string& property_name) const;
 
 	/// Returns the id set of all registered property definitions.
 	const PropertyIdSet& GetRegisteredProperties() const;
@@ -98,43 +98,43 @@ public:
 	/// @param[in] type The type of shorthand to declare.
 	/// @param[in] id If 'Invalid' then automatically assigns a new id, otherwise assigns the given id.
 	/// @param True if all the property names exist, false otherwise.
-	ShorthandId RegisterShorthand(const String& shorthand_name, const String& property_names, ShorthandType type, ShorthandId id = ShorthandId::Invalid);
+	ShorthandId RegisterShorthand(const std::string& shorthand_name, const std::string& property_names, ShorthandType type, ShorthandId id = ShorthandId::Invalid);
 	/// Returns a shorthand definition.
 	/// @param[in] shorthand_name The name of the desired shorthand.
 	/// @return The appropriate shorthand definition if it could be found, nullptr otherwise.
 	const ShorthandDefinition* GetShorthand(ShorthandId id) const;
-	const ShorthandDefinition* GetShorthand(const String& shorthand_name) const;
+	const ShorthandDefinition* GetShorthand(const std::string& shorthand_name) const;
 
 	/// Parse declaration by name, whether it's a property or shorthand.
-	bool ParsePropertyDeclaration(PropertyDictionary& dictionary, const String& property_name, const String& property_value) const;
+	bool ParsePropertyDeclaration(PropertyDictionary& dictionary, const std::string& property_name, const std::string& property_value) const;
 	/// Parse property declaration by ID.
-	bool ParsePropertyDeclaration(PropertyDictionary& dictionary, PropertyId property_id, const String& property_value) const;
+	bool ParsePropertyDeclaration(PropertyDictionary& dictionary, PropertyId property_id, const std::string& property_value) const;
 	/// Parses a shorthand declaration, setting any parsed and validated properties on the given dictionary.
 	/// @return True if all properties were parsed successfully, false otherwise.
-	bool ParseShorthandDeclaration(PropertyDictionary& dictionary, ShorthandId shorthand_id, const String& property_value) const;
+	bool ParseShorthandDeclaration(PropertyDictionary& dictionary, ShorthandId shorthand_id, const std::string& property_value) const;
 
 	/// Sets all undefined properties in the dictionary to their defaults.
 	/// @param dictionary[in-out] The dictionary to set the default values on.
 	void SetPropertyDefaults(PropertyDictionary& dictionary) const;
 
 	/// Returns the properties of dictionary converted to a string.
-	String PropertiesToString(const PropertyDictionary& dictionary) const;
+	std::string PropertiesToString(const PropertyDictionary& dictionary) const;
 
 private:
-	using Properties = Vector< UniquePtr<PropertyDefinition> >;
-	using Shorthands = Vector< UniquePtr<ShorthandDefinition> >;
+	using Properties = std::vector< std::unique_ptr<PropertyDefinition> >;
+	using Shorthands = std::vector< std::unique_ptr<ShorthandDefinition> >;
 
 	Properties properties;
 	Shorthands shorthands;
 
-	UniquePtr<PropertyIdNameMap> property_map;
-	UniquePtr<ShorthandIdNameMap> shorthand_map;
+	std::unique_ptr<PropertyIdNameMap> property_map;
+	std::unique_ptr<ShorthandIdNameMap> shorthand_map;
 
 	PropertyIdSet property_ids;
 	PropertyIdSet property_ids_inherited;
 	PropertyIdSet property_ids_forcing_layout;
 
-	bool ParsePropertyValues(StringList& values_list, const String& values, bool split_values) const;
+	bool ParsePropertyValues(std::vector<std::string>& values_list, const std::string& values, bool split_values) const;
 
 	friend class Rml::StyleSheetSpecification;
 };

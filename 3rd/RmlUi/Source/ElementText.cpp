@@ -41,10 +41,10 @@
 
 namespace Rml {
 
-static bool BuildToken(String& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline, Style::TextTransform text_transformation);
+static bool BuildToken(std::string& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline, Style::TextTransform text_transformation);
 static bool LastToken(const char* token_begin, const char* string_end, bool collapse_white_space, bool break_at_endline);
 
-ElementText::ElementText(Document* owner, const String& text_)
+ElementText::ElementText(Document* owner, const std::string& text_)
 	: Element(owner, "#text")
 	, text(text_)
 	, decoration() 
@@ -57,14 +57,14 @@ ElementText::ElementText(Document* owner, const String& text_)
 ElementText::~ElementText()
 { }
 
-void ElementText::SetText(const String& _text) {
+void ElementText::SetText(const std::string& _text) {
 	if (text != _text) {
 		text = _text;
 		DirtyLayout();
 	}
 }
 
-const String& ElementText::GetText() const
+const std::string& ElementText::GetText() const
 {
 	return text;
 }
@@ -105,7 +105,7 @@ void ElementText::OnRender() {
 	}
 }
 
-bool ElementText::GenerateLine(String& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix) {
+bool ElementText::GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix) {
 	FontFaceHandle font_face_handle = GetFontFaceHandle();
 
 	// Initialise the output variables.
@@ -142,7 +142,7 @@ bool ElementText::GenerateLine(String& line, int& line_length, float& line_width
 	const char* string_end = text.c_str() + text.size();
 	while (token_begin != string_end)
 	{
-		String token;
+		std::string token;
 		const char* next_token_begin = token_begin;
 		Character previous_codepoint = Character::Null;
 		if (!line.empty())
@@ -223,7 +223,7 @@ void ElementText::ClearLines() {
 	dirty_decoration = true;
 }
 
-void ElementText::AddLine(const Point& position, const String& line) {
+void ElementText::AddLine(const Point& position, const std::string& line) {
 	lines.push_back(Line(line, metrics.frame.origin + position));
 	dirty_geometry = true;
 }
@@ -363,7 +363,7 @@ void ElementText::UpdateDecoration(const FontFaceHandle font_face_handle) {
 	}
 }
 
-static bool BuildToken(String& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline, Style::TextTransform text_transformation)
+static bool BuildToken(std::string& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline, Style::TextTransform text_transformation)
 {
 	RMLUI_ASSERT(token_begin != string_end);
 
@@ -594,13 +594,13 @@ FontFaceHandle ElementText::GetFontFaceHandle() {
 		return font_handle;
 	}
 	dirty_font = false;
-	String family = StringUtilities::ToLower(GetProperty(PropertyId::FontFamily)->Get<String>());
+	std::string family = StringUtilities::ToLower(GetProperty(PropertyId::FontFamily)->Get<std::string>());
 	Style::FontStyle style   = (Style::FontStyle)GetProperty(PropertyId::FontStyle)->Get<int>();
 	Style::FontWeight weight = (Style::FontWeight)GetProperty(PropertyId::FontWeight)->Get<int>();
 	int size = (int)parent->GetFontSize();
 	font_handle = GetFontEngineInterface()->GetFontFaceHandle(family, style, weight, size);
 	if (font_handle == 0) {
-		Log::Message(Log::LT_ERROR, "Load font %s failed.", family.c_str());
+		Log::Message(Log::Level::Error, "Load font %s failed.", family.c_str());
 	}
 	return font_handle;
 }

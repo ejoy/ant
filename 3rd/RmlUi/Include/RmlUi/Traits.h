@@ -30,7 +30,6 @@
 #define RMLUI_CORE_TRAITS_H
 
 #include "Header.h"
-#include "Config.h"
 #include <type_traits>
 
 namespace Rml {
@@ -68,32 +67,6 @@ public:
 	void operator()(T* target) const {
 		static_assert(std::is_base_of<Releasable, T>::value, "Rml::Releaser can only operate with classes derived from ::Rml::Releasable.");
 		Release(static_cast<Releasable*>(target));
-	}
-};
-
-
-enum class FamilyId : int {};
-
-class RMLUICORE_API FamilyBase {
-protected:
-	static int GetNewId() {
-		static int id = 0;
-		return id++;
-	}
-	template<typename T>
-	static FamilyId GetId() {
-		static int id = GetNewId();
-		return static_cast<FamilyId>(id);
-	}
-};
-
-template<typename T>
-class Family : FamilyBase {
-public:
-	// Get a unique ID for a given type.
-	// Note: IDs will be unique across DLL-boundaries even for the same type.
-	static FamilyId Id() {
-		return GetId< typename std::remove_cv< typename std::remove_reference< T >::type >::type >();
 	}
 };
 

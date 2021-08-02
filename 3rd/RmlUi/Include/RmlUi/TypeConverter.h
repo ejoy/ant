@@ -56,16 +56,16 @@ public:
 };
 
 template<typename T>
-inline String ToString(const T& value, String default_value = String()) {
-	String result = default_value;
-	TypeConverter<T, String>::Convert(value, result);
+inline std::string ToString(const T& value, std::string default_value = std::string()) {
+	std::string result = default_value;
+	TypeConverter<T, std::string>::Convert(value, result);
 	return result;
 }
 
 template<typename T>
-inline T FromString(const String& string, T default_value = T()) {
+inline T FromString(const std::string& string, T default_value = T()) {
 	T result = default_value;
-	TypeConverter<String, T>::Convert(string, result);
+	TypeConverter<std::string, T>::Convert(string, result);
 	return result;
 }
 
@@ -77,27 +77,27 @@ public:
 	RMLUICORE_API static bool Convert(const TransformPtr& src, TransformPtr& dest);
 };
 
-template<> class TypeConverter< TransformPtr, String > {
+template<> class TypeConverter< TransformPtr, std::string > {
 public:
-	RMLUICORE_API static bool Convert(const TransformPtr& src, String& dest);
+	RMLUICORE_API static bool Convert(const TransformPtr& src, std::string& dest);
 };
 
 template<> class TypeConverter< TransitionList, TransitionList > {
 public:
 	RMLUICORE_API static bool Convert(const TransitionList& src, TransitionList& dest);
 };
-template<> class TypeConverter< TransitionList, String > {
+template<> class TypeConverter< TransitionList, std::string > {
 public:
-	RMLUICORE_API static bool Convert(const TransitionList& src, String& dest);
+	RMLUICORE_API static bool Convert(const TransitionList& src, std::string& dest);
 };
 
 template<> class TypeConverter< AnimationList, AnimationList > {
 public:
 	RMLUICORE_API static bool Convert(const AnimationList& src, AnimationList& dest);
 };
-template<> class TypeConverter< AnimationList, String > {
+template<> class TypeConverter< AnimationList, std::string > {
 public:
-	RMLUICORE_API static bool Convert(const AnimationList& src, String& dest);
+	RMLUICORE_API static bool Convert(const AnimationList& src, std::string& dest);
 };
 
 } // namespace Rml

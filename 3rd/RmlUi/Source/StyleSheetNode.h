@@ -47,8 +47,8 @@ struct StructuralSelector {
 inline bool operator==(const StructuralSelector& a, const StructuralSelector& b) { return a.selector == b.selector && a.a == b.a && a.b == b.b; }
 inline bool operator<(const StructuralSelector& a, const StructuralSelector& b) { return std::tie(a.selector, a.a, a.b) < std::tie(b.selector, b.a, b.b); }
 
-using StructuralSelectorList = Vector< StructuralSelector >;
-using StyleSheetNodeList = Vector< UniquePtr<StyleSheetNode> >;
+using StructuralSelectorList = std::vector< StructuralSelector >;
+using StyleSheetNodeList = std::vector< std::unique_ptr<StyleSheetNode> >;
 
 
 /**
@@ -61,18 +61,18 @@ class StyleSheetNode
 {
 public:
 	StyleSheetNode();
-	StyleSheetNode(StyleSheetNode* parent, const String& tag, const String& id, const StringList& classes, const StringList& pseudo_classes, const StructuralSelectorList& structural_selectors, bool child_combinator);
-	StyleSheetNode(StyleSheetNode* parent, String&& tag, String&& id, StringList&& classes, StringList&& pseudo_classes, StructuralSelectorList&& structural_selectors, bool child_combinator);
+	StyleSheetNode(StyleSheetNode* parent, const std::string& tag, const std::string& id, const std::vector<std::string>& classes, const std::vector<std::string>& pseudo_classes, const StructuralSelectorList& structural_selectors, bool child_combinator);
+	StyleSheetNode(StyleSheetNode* parent, std::string&& tag, std::string&& id, std::vector<std::string>&& classes, std::vector<std::string>&& pseudo_classes, StructuralSelectorList&& structural_selectors, bool child_combinator);
 
 	/// Retrieves a child node with the given requirements if they match an existing node, or else creates a new one.
-	StyleSheetNode* GetOrCreateChildNode(String&& tag, String&& id, StringList&& classes, StringList&& pseudo_classes, StructuralSelectorList&& structural_selectors, bool child_combinator);
+	StyleSheetNode* GetOrCreateChildNode(std::string&& tag, std::string&& id, std::vector<std::string>&& classes, std::vector<std::string>&& pseudo_classes, StructuralSelectorList&& structural_selectors, bool child_combinator);
 	/// Retrieves or creates a child node with requirements equivalent to the 'other' node.
 	StyleSheetNode* GetOrCreateChildNode(const StyleSheetNode& other);
 
 	/// Merges an entire tree hierarchy into our hierarchy.
 	void MergeHierarchy(StyleSheetNode* node, int specificity_offset = 0);
 	/// Copy this node including all descendent nodes.
-	UniquePtr<StyleSheetNode> DeepCopy(StyleSheetNode* parent = nullptr) const;
+	std::unique_ptr<StyleSheetNode> DeepCopy(StyleSheetNode* parent = nullptr) const;
 	/// Recursively set structural volatility.
 	bool SetStructurallyVolatileRecursive(bool ancestor_is_structurally_volatile);
 	/// Builds up a style sheet's index recursively.
@@ -99,7 +99,7 @@ public:
 
 private:
 	// Returns true if the requirements of this node equals the given arguments.
-	bool EqualRequirements(const String& tag, const String& id, const StringList& classes, const StringList& pseudo_classes, const StructuralSelectorList& structural_pseudo_classes, bool child_combinator) const;
+	bool EqualRequirements(const std::string& tag, const std::string& id, const std::vector<std::string>& classes, const std::vector<std::string>& pseudo_classes, const StructuralSelectorList& structural_pseudo_classes, bool child_combinator) const;
 
 	void CalculateAndSetSpecificity();
 
@@ -112,10 +112,10 @@ private:
 	StyleSheetNode* parent = nullptr;
 
 	// Node requirements
-	String tag;
-	String id;
-	StringList class_names;
-	StringList pseudo_class_names;
+	std::string tag;
+	std::string id;
+	std::vector<std::string> class_names;
+	std::vector<std::string> pseudo_class_names;
 	StructuralSelectorList structural_selectors; // Represents structural pseudo classes
 	bool child_combinator = false; // The '>' combinator: This node only matches if the element is a parent of the previous matching element.
 

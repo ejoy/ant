@@ -42,7 +42,7 @@ struct Animation {
 	bool alternate = false;
 	bool paused = false;
 	int num_iterations = 1;
-	String name;
+	std::string name;
 };
 
 /* Data parsed from the 'transition' property. */
@@ -57,10 +57,10 @@ struct Transition {
 struct TransitionList {
 	bool none = true;
 	bool all = false;
-	Vector<Transition> transitions;
+	std::vector<Transition> transitions;
 
 	TransitionList() {}
-	TransitionList(bool none, bool all, Vector<Transition> transitions) :
+	TransitionList(bool none, bool all, std::vector<Transition> transitions) :
 		none(none), all(all), transitions(transitions) {}
 };
 

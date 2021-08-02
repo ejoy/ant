@@ -29,10 +29,10 @@ class System;
 struct shader_info {
     struct uniforms {
         uint32_t    handle;
-        Rml::String name;
+        std::string name;
     };
     uint32_t prog;
-    Rml::Vector<uniforms> uniforms;
+    std::vector<uniforms> uniforms;
 
     uint16_t find_uniform(const char*name) const {
         for(auto it:uniforms){

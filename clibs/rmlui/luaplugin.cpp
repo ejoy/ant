@@ -20,7 +20,7 @@ class lua_plugin;
 
 class lua_event_listener final : public Rml::EventListener {
 public:
-	lua_event_listener(lua_plugin* p, const Rml::String& code, Rml::Element* element);
+	lua_event_listener(lua_plugin* p, const std::string& code, Rml::Element* element);
 	~lua_event_listener();
 private:
 	void OnDetach(Rml::Element* element) override;
@@ -32,7 +32,7 @@ class lua_event_listener_instancer : public Rml::EventListenerInstancer {
 public:
 	lua_event_listener_instancer(lua_plugin *p) : plugin(p) {}
 private:
-	Rml::EventListener* InstanceEventListener(const Rml::String& code, Rml::Element* element) override {
+	Rml::EventListener* InstanceEventListener(const std::string& code, Rml::Element* element) override {
 		return new lua_event_listener(plugin, code, element);
 	}
 	lua_plugin *plugin;
@@ -47,10 +47,6 @@ static int ref_function(luabind::reference& reference, lua_State* L, const char*
 
 lua_plugin::~lua_plugin() {
 	reference.reset();
-}
-
-int lua_plugin::GetEventClasses() {
-	return EVT_BASIC | EVT_DOCUMENT;
 }
 
 void lua_plugin::OnInitialise() {
@@ -94,12 +90,6 @@ void lua_plugin::OnLoadExternalScript(Rml::Document* document, const std::string
 	});
 }
 
-void lua_plugin::OnElementCreate(Rml::Element* element) {
-}
-
-void lua_plugin::OnElementDestroy(Rml::Element* element) {
-}
-
 void lua_plugin::register_event(lua_State* L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
 	lua_settop(L, 1);
@@ -132,7 +122,7 @@ void lua_plugin::call(lua_State* L, LuaEvent eid, size_t argn, size_t retn) {
 	callref(L, (int)eid, argn, retn);
 }
 
-lua_event_listener::lua_event_listener(lua_plugin* p, const Rml::String& code, Rml::Element* element)
+lua_event_listener::lua_event_listener(lua_plugin* p, const std::string& code, Rml::Element* element)
 	: plugin(p) {
 	luabind::invoke([&](lua_State* L) {
 		Rml::Document* doc = element->GetOwnerDocument();

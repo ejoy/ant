@@ -58,7 +58,7 @@ struct ShorthandItem {
 };
 
 // A list of shorthands or properties
-using ShorthandItemList = Vector< ShorthandItem >;
+using ShorthandItemList = std::vector< ShorthandItem >;
 
 struct ShorthandDefinition
 {

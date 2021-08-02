@@ -33,10 +33,10 @@
 namespace Rml {
 
 // An EventId is an index into the specifications vector.
-static Vector<EventSpecification> specifications = { { EventId::Invalid, "invalid", false, false, DefaultActionPhase::None } };
+static std::vector<EventSpecification> specifications = { { EventId::Invalid, "invalid", false, false, DefaultActionPhase::None } };
 
 // Reverse lookup map from event type to id.
-static UnorderedMap<String, EventId> type_lookup;
+static std::unordered_map<std::string, EventId> type_lookup;
 
 
 namespace EventSpecificationInterface {
@@ -114,7 +114,7 @@ static EventSpecification& GetMutable(EventId id)
 
 // Get event specification for the given type.
 // If not found: Inserts a new entry with given values.
-static EventSpecification& GetOrInsert(const String& event_type, bool interruptible, bool bubbles, DefaultActionPhase default_action_phase)
+static EventSpecification& GetOrInsert(const std::string& event_type, bool interruptible, bool bubbles, DefaultActionPhase default_action_phase)
 {
 	auto it = type_lookup.find(event_type);
 
@@ -134,7 +134,7 @@ const EventSpecification& Get(EventId id)
 	return GetMutable(id);
 }
 
-const EventSpecification& GetOrInsert(const String& event_type)
+const EventSpecification& GetOrInsert(const std::string& event_type)
 {
 	// Default values for new event types defined as follows:
 	constexpr bool interruptible = true;
@@ -144,7 +144,7 @@ const EventSpecification& GetOrInsert(const String& event_type)
 	return GetOrInsert(event_type, interruptible, bubbles, default_action_phase);
 }
 
-EventId GetIdOrInsert(const String& event_type)
+EventId GetIdOrInsert(const std::string& event_type)
 {
 	auto it = type_lookup.find(event_type);
 	if (it != type_lookup.end())

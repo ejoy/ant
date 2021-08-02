@@ -35,7 +35,7 @@ std::string File::GetPath(const std::string& path) {
     return result;
 }
 
-Rml::FileHandle File::Open(const Rml::String& path) {
+Rml::FileHandle File::Open(const std::string& path) {
     std::string result = GetPath(path);
 #if defined(_WIN32)
     return (Rml::FileHandle)_wfopen(u2w(result).c_str(), L"rb");

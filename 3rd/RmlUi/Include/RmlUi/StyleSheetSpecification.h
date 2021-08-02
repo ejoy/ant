@@ -56,16 +56,16 @@ public:
 	/// @param[in] parser A non-owning pointer to the parser to register.
 	/// @return True if the parser was registered successfully, false otherwise.
 	/// @lifetime The parser must be kept alive until after the call to Rml::Shutdown.
-	static bool RegisterParser(const String& parser_name, PropertyParser* parser);
+	static bool RegisterParser(const std::string& parser_name, PropertyParser* parser);
 	/// Returns the parser registered with a specific name.
 	/// @param[in] parser_name The name of the desired parser.
 	/// @return The parser registered under the given name, or nullptr if no such parser exists.
-	static PropertyParser* GetParser(const String& parser_name);
+	static PropertyParser* GetParser(const std::string& parser_name);
 
 	// Returns a property definition.
 	/// @param[in] property_name The name of the desired property.
 	/// @return The appropriate property definition if it could be found, nullptr otherwise.
-	static const PropertyDefinition* GetProperty(const String& property_name);
+	static const PropertyDefinition* GetProperty(const std::string& property_name);
 	static const PropertyDefinition* GetProperty(PropertyId id);
 
 	/// Returns the id set of all registered property definitions.
@@ -78,7 +78,7 @@ public:
 	/// Returns a shorthand definition.
 	/// @param[in] shorthand_name The name of the desired shorthand.
 	/// @return The appropriate shorthand definition if it could be found, nullptr otherwise.
-	static const ShorthandDefinition* GetShorthand(const String& shorthand_name);
+	static const ShorthandDefinition* GetShorthand(const std::string& shorthand_name);
 	static const ShorthandDefinition* GetShorthand(ShorthandId id);
 
 	/// Parses a property declaration, setting any parsed and validated properties on the given dictionary.
@@ -88,12 +88,12 @@ public:
 	/// @param[in] source_file The file where this property was declared. Used for error reporting, debugging and relative paths for referenced assets.
 	/// @param[in] line_number The location of the source file where this property was declared. Used for error reporting and debugging.
 	/// @return True if all properties were parsed successfully, false otherwise.
-	static bool ParsePropertyDeclaration(PropertyDictionary& dictionary, const String& property_name, const String& property_value);
+	static bool ParsePropertyDeclaration(PropertyDictionary& dictionary, const std::string& property_name, const std::string& property_value);
 
-	static PropertyId GetPropertyId(const String& property_name);
-	static ShorthandId GetShorthandId(const String& shorthand_name);
-	static const String& GetPropertyName(PropertyId id);
-	static const String& GetShorthandName(ShorthandId id);
+	static PropertyId GetPropertyId(const std::string& property_name);
+	static ShorthandId GetShorthandId(const std::string& shorthand_name);
+	static const std::string& GetPropertyName(PropertyId id);
+	static const std::string& GetShorthandName(ShorthandId id);
 
 	// Get the underlying property ids associated by a shorthand.
 	static PropertyIdSet GetShorthandUnderlyingProperties(ShorthandId id);
@@ -104,8 +104,8 @@ private:
 	StyleSheetSpecification();
 	~StyleSheetSpecification();
 
-	PropertyDefinition& RegisterProperty(PropertyId id, const String& property_name, const String& default_value, bool inherited, bool forces_layout = false);
-	ShorthandId RegisterShorthand(ShorthandId id, const String& shorthand_name, const String& property_names, ShorthandType type);
+	PropertyDefinition& RegisterProperty(PropertyId id, const std::string& property_name, const std::string& default_value, bool inherited, bool forces_layout = false);
+	ShorthandId RegisterShorthand(ShorthandId id, const std::string& shorthand_name, const std::string& property_names, ShorthandType type);
 
 	// Registers RmlUi's default parsers.
 	void RegisterDefaultParsers();
@@ -113,13 +113,13 @@ private:
 	void RegisterDefaultProperties();
 
 	// Parsers used by all property definitions.
-	typedef UnorderedMap< String, PropertyParser* > ParserMap;
+	typedef std::unordered_map< std::string, PropertyParser* > ParserMap;
 	ParserMap parsers;
 
 	// The properties defined in the style sheet specification.
 	PropertySpecification properties;
 
-	UniquePtr<DefaultStyleSheetParsers> default_parsers;
+	std::unique_ptr<DefaultStyleSheetParsers> default_parsers;
 };
 
 } // namespace Rml

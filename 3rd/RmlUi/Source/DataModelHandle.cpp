@@ -35,34 +35,34 @@ namespace Rml {
 DataModelHandle::DataModelHandle(DataModel* model) : model(model)
 {}
 
-bool DataModelHandle::IsVariableDirty(const String& variable_name) {
+bool DataModelHandle::IsVariableDirty(const std::string& variable_name) {
 	return model->IsVariableDirty(variable_name);
 }
 
-void DataModelHandle::DirtyVariable(const String& variable_name) {
+void DataModelHandle::DirtyVariable(const std::string& variable_name) {
 	model->DirtyVariable(variable_name);
 }
 
 
-DataModelConstructor::DataModelConstructor() : model(nullptr), type_register(nullptr) {}
+DataModelConstructor::DataModelConstructor() : model(nullptr) {}
 
-DataModelConstructor::DataModelConstructor(DataModel* model, DataTypeRegister* type_register) : model(model), type_register(type_register) {
-	RMLUI_ASSERT(model && type_register);
+DataModelConstructor::DataModelConstructor(DataModel* model) : model(model) {
+	RMLUI_ASSERT(model);
 }
 
 DataModelHandle DataModelConstructor::GetModelHandle() const {
 	return DataModelHandle(model);
 }
 
-bool DataModelConstructor::BindFunc(const String& name, DataGetFunc get_func, DataSetFunc set_func) {
+bool DataModelConstructor::BindFunc(const std::string& name, DataGetFunc get_func, DataSetFunc set_func) {
 	return model->BindFunc(name, std::move(get_func), std::move(set_func));
 }
 
-bool DataModelConstructor::BindEventCallback(const String& name, DataEventFunc event_func) {
+bool DataModelConstructor::BindEventCallback(const std::string& name, DataEventFunc event_func) {
 	return model->BindEventCallback(name, std::move(event_func));
 }
 
-bool DataModelConstructor::BindVariable(const String& name, DataVariable data_variable) {
+bool DataModelConstructor::BindVariable(const std::string& name, DataVariable data_variable) {
 	return model->BindVariable(name, data_variable);
 }
 

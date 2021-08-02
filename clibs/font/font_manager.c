@@ -97,14 +97,6 @@ font_manager_init_unsafe(struct font_manager *F, struct truetype_font *ttf, void
 	}
 }
 
-void
-font_manager_init(struct font_manager *F, void *L) {
-	F->mutex = mutex_create();
-	lock(F);
-	font_manager_init_unsafe(F, truetype_cstruct(L), L);
-	unlock(F);
-}
-
 static inline int
 codepoint_ttf(int font, int codepoint) {
 	return (font << 24 | codepoint);
@@ -315,6 +307,27 @@ font_manager_pixelsize(struct font_manager *F, int fontid, int pointsize) {
 	return (int)((pointsize / 72.f) * dpi + 0.5f);
 }
 
+static inline void
+scale(short *v, int size) {
+	*v = (*v * size + ORIGINAL_SIZE/2) / ORIGINAL_SIZE;
+}
+
+static inline void
+uscale(uint16_t *v, int size) {
+	*v = (*v * size + ORIGINAL_SIZE/2) / ORIGINAL_SIZE;
+}
+
+void
+font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size) {
+	(void)F;
+	scale(&glyph->offset_x, size);
+	scale(&glyph->offset_y, size);
+	scale(&glyph->advance_x, size);
+	scale(&glyph->advance_y, size);
+	uscale(&glyph->w, size);
+	uscale(&glyph->h, size);
+}
+
 int
 font_manager_glyph(struct font_manager *F, int fontid, int codepoint, int size, struct font_glyph *g, struct font_glyph *og){
     int updated = font_manager_touch(F, fontid, codepoint, g);
@@ -426,27 +439,6 @@ font_manager_addfont_with_family(struct font_manager *F, const char* family) {
 	return r;
 }
 
-static inline void
-scale(short *v, int size) {
-	*v = (*v * size + ORIGINAL_SIZE/2) / ORIGINAL_SIZE;
-}
-
-static inline void
-uscale(uint16_t *v, int size) {
-	*v = (*v * size + ORIGINAL_SIZE/2) / ORIGINAL_SIZE;
-}
-
-void
-font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size) {
-	(void)F;
-	scale(&glyph->offset_x, size);
-	scale(&glyph->offset_y, size);
-	scale(&glyph->advance_x, size);
-	scale(&glyph->advance_y, size);
-	uscale(&glyph->w, size);
-	uscale(&glyph->h, size);
-}
-
 float
 font_manager_sdf_mask(struct font_manager *F){
 	return (ONEDGE_VALUE) / 255.f;
@@ -455,6 +447,29 @@ font_manager_sdf_mask(struct font_manager *F){
 float
 font_manager_sdf_distance(struct font_manager *F, uint8_t numpixel){
 	return (numpixel * PIXEL_DIST_SCALE) / 255.f;
+}
+
+void
+font_manager_init(struct font_manager *F, void *L) {
+	F->mutex = mutex_create();
+	lock(F);
+	font_manager_init_unsafe(F, truetype_cstruct(L), L);
+	#define SETAPI(n) F->n = n
+	SETAPI(font_manager_import);
+	SETAPI(font_manager_addfont_with_family);
+	SETAPI(font_manager_fontheight);
+	SETAPI(font_manager_boundingbox);
+	SETAPI(font_manager_pixelsize);
+	SETAPI(font_manager_glyph);
+	SETAPI(font_manager_touch);
+	SETAPI(font_manager_update);
+	SETAPI(font_manager_flush);
+	SETAPI(font_manager_scale);
+	SETAPI(font_manager_underline);
+	SETAPI(font_manager_sdf_mask);
+	SETAPI(font_manager_sdf_distance);
+	#undef SETAPI
+	unlock(F);
 }
 
 #ifdef TEST_CASE
