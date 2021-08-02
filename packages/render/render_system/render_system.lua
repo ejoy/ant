@@ -47,7 +47,7 @@ function render_sys:render_submit()
 
 	--TODO: should put all render queue here
 	for _, qn in ipairs{"main_queue", "blit_queue"} do
-		for e in w:select(qn .. " visible render_target:in") do
+		for e in w:select(qn .. " visible render_target:in cull_tag?in") do
 			local viewid = e.render_target.viewid
 			local culltag = qn .. "_cull"
 			for _, ln in ipairs(ipf.layers(qn)) do

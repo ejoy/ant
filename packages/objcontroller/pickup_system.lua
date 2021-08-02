@@ -206,6 +206,7 @@ local function create_pick_entity()
 		policy = {
 			"ant.general|name",
 			"ant.render|render_queue",
+			"ant.render|cull",
 			"ant.objcontroller|pickup",
 		},
 		data = {
@@ -230,6 +231,10 @@ local function create_pick_entity()
 					clear = "CDS"
 				},
 				fb_idx = fbidx,
+			},
+			cull_tag = {
+				"pickup_queue_opacity_cull",
+				"pickup_queue_translucent_cull",
 			},
 			name 		= "pickup_queue",
 			queue_name 	= "pickup_queue",

@@ -69,3 +69,8 @@ policy_v2 "render_queue"
     .component_v2 "visible"
     .component_v2 "queue_name"
     .component_v2 "camera_eid"
+
+component_v2 "cull_tag".type "lua"
+policy_v2 "cull"
+    .require_system "cull_system"
+    .component_v2 "cull_tag"

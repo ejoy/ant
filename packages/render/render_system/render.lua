@@ -94,6 +94,7 @@ function irender.get_main_view_rendertexture()
 end
 
 function irender.create_primitive_filter_entities(quenename, filtertype)
+	local culltags = {}
 	for _, fn in ipairs(FILTER_TYPES[quenename]) do
 		local t = ("%s_%s"):format(quenename, fn)
 		world:luaecs_create_entity{
@@ -107,7 +108,9 @@ function irender.create_primitive_filter_entities(quenename, filtertype)
 				[t] = true,
 			}
 		}
+		culltags[#culltags+1] = t .. "_cull"
 	end
+	return culltags
 end
 
 function irender.create_view_queue(view_rect, view_name)
@@ -196,7 +199,7 @@ local rb_flag = samplerutil.sampler_flag {
 }
 
 function irender.create_pre_depth_queue(view_rect, camera_eid)
-	irender.create_primitive_filter_entities "pre_depth_queue"
+	local ct = irender.create_primitive_filter_entities "pre_depth_queue"
 
 	local fbidx = fbmgr.create{
 		fbmgr.create_rb{
@@ -218,6 +221,7 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 			"ant.render|render_queue",
 			"ant.render|pre_depth_queue",
 			"ant.render|watch_screen_buffer",
+			"ant.render|cull",
 			"ant.general|name",
 		},
 		data = {
@@ -233,6 +237,7 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 				view_rect = view_rect,
 				fb_idx = fbidx,
 			},
+			cull_tag = ct,
 			queue_name = "pre_depth_queue",
 			name = "pre_depth_queue",
 			visible = true,
@@ -279,12 +284,13 @@ function irender.create_main_queue(view_rect, camera_eid)
 	local sd = setting:data()
 	local fbidx = create_main_fb(view_rect, sd)
 
-	irender.create_primitive_filter_entities "main_queue"
+	local ct = irender.create_primitive_filter_entities "main_queue"
 	world:luaecs_create_entity {
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|watch_screen_buffer",
 			"ant.render|main_queue",
+			"ant.render|cull",
 			"ant.general|name",
 		},
 		data = {
@@ -304,6 +310,7 @@ function irender.create_main_queue(view_rect, camera_eid)
 				},
 				fb_idx = fbidx,
 			},
+			cull_tag = ct,
 			visible = true,
 			INIT = true,
 			main_queue = true,
