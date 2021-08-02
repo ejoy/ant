@@ -175,17 +175,15 @@ public:
 	/// Sets an attribute on the element.
 	/// @param[in] name Name of the attribute.
 	/// @param[in] value Value of the attribute.
-	template< typename T >
-	void SetAttribute(const std::string& name, const T& value);
+	void SetAttribute(const std::string& name, const std::string& value);
 	/// Gets the specified attribute.
 	/// @param[in] name Name of the attribute to retrieve.
 	/// @return A variant representing the attribute, or nullptr if the attribute doesn't exist.
-	Variant* GetAttribute(const std::string& name);
+	const std::string* GetAttribute(const std::string& name) const;
 	/// Gets the specified attribute, with default value.
 	/// @param[in] name Name of the attribute to retrieve.
 	/// @param[in] default_value Value to return if the attribute doesn't exist.
-	template< typename T >
-	T GetAttribute(const std::string& name, const T& default_value) const;
+	std::string GetAttribute(const std::string& name, const std::string& default_value) const;
 	/// Checks if the element has a certain attribute.
 	/// @param[in] name The name of the attribute to check for.
 	/// @return True if the element has the given attribute, false if not.
@@ -448,8 +446,17 @@ protected:
 	friend class Rml::Document;
 };
 
-} // namespace Rml
+template < typename T >
+T Element::GetProperty(const std::string& name) {
+	const Property* property = GetProperty(name);
+	if (!property)
+	{
+		Log::Message(Log::Level::Warning, "Invalid property name %s.", name.c_str());
+		return T{};
+	}
+	return property->Get< T >();
+}
 
-#include "Element.inl"
+} // namespace Rml
 
 #endif

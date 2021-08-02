@@ -102,8 +102,7 @@ using AttributeNameList = std::unordered_set< std::string >;
 using PropertyMap = std::unordered_map< PropertyId, Property >;
 
 using Dictionary = std::unordered_map< std::string, Variant >;
-using ElementAttributes = Dictionary;
-using XMLAttributes = Dictionary;
+using ElementAttributes = std::unordered_map< std::string, std::string >;
 
 using AnimationList = std::vector<Animation>;
 

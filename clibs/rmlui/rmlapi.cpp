@@ -264,11 +264,11 @@ static int
 lElementGetAttribute(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	const Rml::Variant* attr = e->GetAttribute(lua_checkstdstring(L, 2));
+	const std::string* attr = e->GetAttribute(lua_checkstdstring(L, 2));
 	if (!attr) {
 		return 0;
 	}
-	lua_pushvariant(L, *attr);
+	lua_pushlstring(L, attr->data(), attr->size());
 	return 1;
 }
 
@@ -357,9 +357,7 @@ static int
 lElementSetAttribute(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	Rml::Variant attr;
-	lua_getvariant(L, 3, &attr);
-	e->SetAttribute(lua_checkstdstring(L, 2), attr);
+	e->SetAttribute(lua_checkstdstring(L, 2), lua_checkstdstring(L, 3));
 	return 0;
 }
 
