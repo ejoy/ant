@@ -146,7 +146,7 @@ end
 
 local rt_sys = ecs.system "render_target_system"
 function rt_sys:entity_init()
-	for v in w:select "INIT render_target:in" do
+	for v in w:select "INIT render_target:in name:in" do
 		irq.update_rendertarget(v.render_target)
 	end
 end

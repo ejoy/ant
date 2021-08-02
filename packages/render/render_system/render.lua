@@ -32,13 +32,13 @@ end
 
 local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent", "decal", "ui"}
 
-local FILTER_TYPES <const> = {
+local SURFACE_TYPES <const> = {
     main_queue = LAYER_NAMES,
     blit_queue = {"opacity",},
     pre_depth_queue = {"opacity"},
 }
 
-for qn, l in pairs(FILTER_TYPES) do
+for qn, l in pairs(SURFACE_TYPES) do
     for _, f in ipairs(l) do
         local culltag = ("%s_%s_cull"):format(qn, f)
         local tag = ("%s_%s"):format(qn, f)
@@ -86,15 +86,17 @@ function irender.draw(vid, ri, mat)
 end
 
 function irender.get_main_view_rendertexture()
-	local mq = world:singleton_entity "main_queue"
-	local fb = fbmgr.get(mq.render_target.fb_idx)
-	return fbmgr.get_rb(fb[1]).handle
+	for e in w:select "main_queue render_target:in" do
+		local fb = fbmgr.get(e.render_target.fb_idx)
+		return fbmgr.get_rb(fb[1]).handle
+	end
 end
 
-local function create_primitive_filter_entities(quenename, filtertype)
+local function create_primitive_filter_entities(quenename, filtertype, surface_types)
 	local culltags = {}
 	local filter_names = {}
-	for _, fn in ipairs(FILTER_TYPES[quenename]) do
+	local types = surface_types or SURFACE_TYPES[quenename]
+	for _, fn in ipairs(types) do
 		local t = ("%s_%s"):format(quenename, fn)
 		world:luaecs_create_entity{
 			policy = {
@@ -148,7 +150,15 @@ function irender.create_view_queue(view_rect, view_name)
 	end
 end
 
-function irender.create_orthoview_queue(view_rect, orthoface, pkgname)
+function irender.create_orthoview_queue(view_rect, orthoface, camera_eid, need_register_tag)
+	local st_types = SURFACE_TYPES["main_queue"]
+	local filter_names, cull_tag = create_primitive_filter_entities(orthoface, "visible", st_types)
+	if need_register_tag then
+		for _, fn in ipairs(filter_names) do
+			w:register {name = fn,}
+		end
+	end
+
 	assert(orthoface)
 	for v in w:select "main_queue render_target:in" do
 		local rt = v.render_target
@@ -160,7 +170,7 @@ function irender.create_orthoview_queue(view_rect, orthoface, pkgname)
 				"ant.general|name",
 			},
 			data = {
-				camera_eid = icamera.create({
+				camera_eid = camera_eid or icamera.create({
 					eyepos  = {0, 0, 0, 1},
 					viewdir = {0, 0, 1, 0},
 					updir = {0, 1, 0, 0},
@@ -181,6 +191,8 @@ function irender.create_orthoview_queue(view_rect, orthoface, pkgname)
 				name 				= orthoface,
 				orthoview 			= orthoface,
 				queue_name			= orthoface,
+				filter_names		= filter_names,
+				cull_tag			= cull_tag,
 				visible 			= false,
 				watch_screen_buffer	= true,
 				INIT				= true,
@@ -407,14 +419,15 @@ function irender.set_view_frame_buffer(viewid, fbidx)
 	end
 end
 
-function irender.screen_capture(world, force_read)
-	local mq = world:singleton_entity "main_queue"
-	local fbidx = mq.render_target.fb_idx
-	local fb = fbmgr.get(fbidx)
-	local s = setting:data()
-	local format = s.graphic.hdr.enable and s.graphic.hdr.format or "RGBA8"
-	local handle, width, height, pitch = irender.read_render_buffer_content(format, fb[1], force_read)
-	return width, height, pitch, tostring(handle)
+function irender.screen_capture(force_read)
+	for e in w:select "main_queue render_target:in" do
+		local fbidx = e.render_target.fb_idx
+		local fb = fbmgr.get(fbidx)
+		local s = setting:data()
+		local format = s.graphic.hdr.enable and s.graphic.hdr.format or "RGBA8"
+		local handle, width, height, pitch = irender.read_render_buffer_content(format, fb[1], force_read)
+		return width, height, pitch, tostring(handle)
+	end
 end
 
 function irender.read_render_buffer_content(format, rb_idx, force_read, size)

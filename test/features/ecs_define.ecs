@@ -77,6 +77,11 @@ system "init_loader_system"
     .require_policy "ant.sky|procedural_sky"
     .require_policy "ant.sky|skybox"
     .require_policy "ant.scene|hierarchy_policy"
+    .require_policy_v2 "ant.general|name"
+    .require_policy_v2 "ant.scene|scene_object"
+    .require_policy_v2 "ant.scene|scene_node"
+    .require_policy_v2 "ant.render|render"
+    .require_policy_v2 "ant.render|render_queue"
     
     .require_interface "ant.camera|camera"
     .require_interface "ant.objcontroller|obj_motion"
@@ -85,7 +90,7 @@ system "init_loader_system"
     .require_interface "ant.terrain|terrain"
 
     .method "init"
-    .method "post_init"
+    .method "entity_init"
     .method "data_changed"
 
 

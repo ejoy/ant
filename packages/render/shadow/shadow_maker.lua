@@ -9,11 +9,10 @@ local viewidmgr = require "viewid_mgr"
 local mc 		= import_package "ant.math".constant
 local math3d	= require "math3d"
 local icamera	= world:interface "ant.camera|camera"
-local ilight	= world:interface "ant.render|light"
 local ishadow	= world:interface "ant.render|ishadow"
 local irender	= world:interface "ant.render|irender"
-local irq		= world:interface "ant.render|irenderqueue"
 local iom		= world:interface "ant.objcontroller|obj_motion"
+local ies		= world:interface "ant.scene|ientity_state"
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
 
@@ -210,7 +209,7 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|cull",
-			"ant.render|csm_policy",
+			"ant.render|csm_queue",
 			"ant.general|name",
 		},
 		data = {
@@ -235,6 +234,7 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 			cull_tag = {filtertag .. "_cull"},
 			visible = false,
 			queue_name = queuename,
+			csm_queue = true,
 			name = "csm" .. index,
 		},
 	}
@@ -252,21 +252,22 @@ function sm:init()
 	gpu_skinning_material = imaterial.load(originmatrial, {depth_type=dt, skinning="GPU"})
 	for ii=1, ishadow.split_num() do
 		local vr = {x=(ii-1)*s, y=0, w=s, h=s}
-		local eid = create_csm_entity(ii, vr, fbidx, dt)
-		irq.set_view_clear(eid, "D", nil, 1, nil, true)
+		create_csm_entity(ii, vr, fbidx, dt)
 	end
 end
 
 local viewcamera_changed_mb
 local viewcamera_trans_mb, viewcamera_frustum_mb
 
-function sm:post_init()
-	local mq = world:singleton_entity "main_queue"
-	viewcamera_trans_mb = world:sub{"component_changed", "transform", mq.camera_eid}
-	viewcamera_frustum_mb = world:sub{"component_changed", "frusutm", mq.camera_eid}
-
-	viewcamera_changed_mb = world:sub{"component_changed", "viewcamera", mq.camera_eid}
-	world:pub{"component_changed", "viewcamera", mq.camera_eid}	--init shadowmap
+function sm:entity_init()
+	for e in w:select "INIT main_queue camera_eid:in" do
+		local cameraeid = e.camera_eid
+		viewcamera_trans_mb = world:sub{"component_changed", "transform", cameraeid}
+		viewcamera_frustum_mb = world:sub{"component_changed", "frusutm", cameraeid}
+	
+		viewcamera_changed_mb = world:sub{"component_changed", "viewcamera", cameraeid}
+		world:pub{"component_changed", "viewcamera", cameraeid}	--init shadowmap
+	end
 end
 
 local dl_eid
@@ -448,7 +449,7 @@ function s:update_filter()
 
 		for qe in w:select "csm_queue filter_names:in" do
 			for _, fn in ipairs(qe.filter_names) do
-				for fe in w:select(fn .. " primitive_filter") do
+				for fe in w:select(fn .. " primitive_filter:in") do
 					local pf = fe.primitive_filter
 					local mask = ies.filter_mask(pf.filter_type)
 					local exclude_mask = pf.exclude_type and ies.filter_mask(pf.exclude_type) or 0

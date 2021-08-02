@@ -1,7 +1,8 @@
 local ecs = ...
 local world = ecs.world
-
+local w = world.w
 local math3d = require "math3d"
+local icamera = world:interface "ant.camera|camera"
 local irender = world:interface "ant.render|irender"
 local iom = world:interface "ant.objcontroller|obj_motion"
 local irenderqueue = world:interface "ant.render|irenderqueue"
@@ -9,18 +10,19 @@ local svs = ecs.system "splitviews_system"
 
 local orthoview
 local mainqueue_rect = {}
+local function copy_rect(rt, dst_rt)
+    for k, v in pairs(rt) do dst_rt[k] = v end
+end
 local function backup_mainqueue_rect()
-    local mq = world:singleton_entity "main_queue"
-    local vr = mq.render_target.view_rect
-    mainqueue_rect.x, mainqueue_rect.y = vr.x, vr.y
-    mainqueue_rect.w, mainqueue_rect.h = vr.w, vr.h
+    for e in w:select "main_queue camera_eid:in render_target:in" do
+        copy_rect(e.render_target.view_rect, mainqueue_rect)
+    end
 end
 
 local function recover_mainqueue_rect()
-    local mq = world:singleton_entity "main_queue"
-    local vr = mq.render_target.view_rect
-    vr.x, vr.y = mainqueue_rect.x, mainqueue_rect.y
-    vr.w, vr.h = mainqueue_rect.w, mainqueue_rect.h
+    for e in w:select "main_queue camera_eid:in" do
+        mainqueue_rect(mainqueue_rect, e.render_target.view_rect)
+    end
 end
 
 local function rect_from_ratio(rc, ratio)
@@ -32,71 +34,88 @@ local function rect_from_ratio(rc, ratio)
     }
 end
 
-function svs:post_init()
-    backup_mainqueue_rect()
+function svs:entity_init()
+    for e in w:select "INIT main_queue camera_eid:in render_target:in" do
+        copy_rect(e.render_target.view_rect, mainqueue_rect)
 
-    orthoview = {
-        front = {
-            viewdir = {0, 0, 1, 0},
-            updir = {0, 1, 0, 0},
-            eyepos = {0, 0, -5, 0},
-            name = "ortho_front",
-            view_ratio = {
-                x = 0.5, y = 0, w = 0.5, h = 0.5,
+        orthoview = {
+            front = {
+                camrea_eid = icamera.create{
+                    viewdir = {0, 0, 1, 0},
+                    updir   = {0, 1, 0, 0},
+                    eyepos  = {0, 0, -5, 0},
+                    ortho   = true,
+                },
+                name = "ortho_front",
+                view_ratio = {
+                    x = 0.5, y = 0, w = 0.5, h = 0.5,
+                },
             },
-        },
-        back = {
-            viewdir = {0, 0, -1, 0},
-            updir = {0, 1, 0, 0},
-            eyepos = {0, 0, 5, 0},
-            name = "ortho_back",
-            view_ratio = {
-                x = 0.5, y = 0, w = 0.5, h = 0.5,
+            back = {
+                camrea_eid = icamera.create{
+                    viewdir = {0, 0, -1, 0},
+                    updir   = {0, 1, 0, 0},
+                    eyepos  = {0, 0, 5, 0},
+                    ortho   = true,
+                },
+                name = "ortho_back",
+                view_ratio = {
+                    x = 0.5, y = 0, w = 0.5, h = 0.5,
+                },
             },
-        },
-        left = {
-            viewdir = {1, 0, 0, 0},
-            updir = {0, 1, 0, 0},
-            eyepos = {-5, 0, 0, 0},
-            name = "ortho_left",
-            view_ratio = {
-                x = 0, y = 0.5, w = 0.5, h = 0.5,
+            left = {
+                camrea_eid = icamera.create{
+                    viewdir = {1, 0, 0, 0},
+                    updir   = {0, 1, 0, 0},
+                    eyepos  = {-5, 0, 0, 0},
+                    ortho   = true,
+                },
+                name = "ortho_left",
+                view_ratio = {
+                    x = 0, y = 0.5, w = 0.5, h = 0.5,
+                },
             },
-        },
-        right = {
-            viewdir = {-1, 0, 0, 0},
-            updir = {0, 1, 0, 0},
-            eyepos = {5, 0, 0, 0},
-            name = "ortho_right",
-            view_ratio = {
-                x = 0, y = 0.5, w = 0.5, h = 0.5,
+            right = {
+                camrea_eid = icamera.create{
+                    viewdir = {-1, 0, 0, 0},
+                    updir   = {0, 1, 0, 0},
+                    eyepos  = {5, 0, 0, 0},
+                    ortho   = true,
+                },
+                name = "ortho_right",
+                view_ratio = {
+                    x = 0, y = 0.5, w = 0.5, h = 0.5,
+                },
             },
-        },
-        top = {
-            viewdir = {0, -1, 0, 0},
-            updir = {0, 0, 1, 0},
-            eyepos = {0, 5, 0, 0},
-            name = "ortho_top",
-            view_ratio = {
-                x = 0.5, y = 0.5, w = 0.5, h = 0.5,
+            top = {
+                camrea_eid = icamera.create{
+                    viewdir = {0, -1, 0, 0},
+                    updir   = {0, 0, 1, 0},
+                    eyepos  = {0, 5, 0, 0},
+                    ortho   = true,
+                },
+                name = "ortho_top",
+                view_ratio = {
+                    x = 0.5, y = 0.5, w = 0.5, h = 0.5,
+                },
             },
-        },
-        bottom = {
-            viewdir = {0, 1, 0, 0},
-            updir = {0, 0, -1, 0},
-            eyepos = {0, -5, 0, 0},
-            name = "ortho_bottom",
-            view_ratio = {
-                x = 0.5, y = 0.5, w = 0.5, h = 0.5,
+            bottom = {
+                camrea_eid = icamera.create{
+                viewdir = {0, 1, 0, 0},
+                updir   = {0, 0, -1, 0},
+                eyepos  = {0, -5, 0, 0},
+                ortho   = true,
+                },
+                name = "ortho_bottom",
+                view_ratio = {
+                    x = 0.5, y = 0.5, w = 0.5, h = 0.5,
+                },
             },
-        },
-    }
+        }
 
-    for k, v in pairs(orthoview) do
-        local eid = irender.create_orthoview_queue(rect_from_ratio(mainqueue_rect, v.view_ratio), v.name)
-        local cameraeid = world[eid].camera_eid
-        iom.lookto(cameraeid, v.eyepos, v.viewdir, v.updir)
-        orthoview[k].eid = eid
+        for k, v in pairs(orthoview) do
+            irender.create_orthoview_queue(rect_from_ratio(mainqueue_rect, v.view_ratio), v.name, v.camera_eid, true)
+        end
     end
 end
 

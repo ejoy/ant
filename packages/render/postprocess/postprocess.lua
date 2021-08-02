@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-
+local w = world.w
 local fbmgr             = require "framebuffer_mgr"
 local viewidmgr         = require "viewid_mgr"
 local isys_properties   = world:interface "ant.render|system_properties"
@@ -67,8 +67,13 @@ function pp_sys:init()
 end
 
 local mainview_rbhandle
-function pp_sys:post_init()
-    mainview_rbhandle = ipp.get_rbhandle(fbmgr.get_fb_idx(viewidmgr.get "main_view"), 1)
+function pp_sys:entity_init()
+    if mainview_rbhandle == nil then
+        for e in w:select "INIT main_queue render_target:in" do
+            local fbidx = e.render_target.fb_idx
+            mainview_rbhandle = ipp.get_rbhandle(fbidx, 1)
+        end
+    end
 end
 
 local function render_pass(input, out_viewid, pass)
@@ -110,7 +115,12 @@ function pp_sys:combine_postprocess()
 end
 
 function ipp.main_rb_size(main_fbidx)
-    main_fbidx = main_fbidx or fbmgr.get_fb_idx(viewidmgr.get "main_view")
+    if main_fbidx == nil then
+        for e in w:select "main_queue render_target:in" do
+            main_fbidx = e.render_target.fb_idx
+            break
+        end
+    end
 
     local fb = fbmgr.get(main_fbidx)
     local rb = fbmgr.get_rb(fb[1])

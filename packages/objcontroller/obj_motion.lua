@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-
+local w = world.w
 local math3d = require "math3d"
 local mu     = import_package "ant.math".util
 local mc     = import_package "ant.math".constant
@@ -252,9 +252,9 @@ function iobj_motion.rotate_around_point(eid, targetpt, distance, rotateX, rotat
 end
 
 local function main_queue_viewport_size()
-    local mq = world:singleton_entity "main_queue"
-    local vp_rt = mq.render_target.view_rect
-    return {w=vp_rt.w, h=vp_rt.h}
+    for e in w:select "main_queue render_target:in" do
+        return e.render_target.view_rect
+    end
 end
 
 function iobj_motion.ray(eid, pt2d, vp_size)

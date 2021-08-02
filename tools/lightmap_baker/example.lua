@@ -1,5 +1,6 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 local bgfx = require "bgfx"
 local example_sys = ecs.system "lightmap_example"
 local ilm = world:interface "ant.bake|ilightmap"
@@ -426,8 +427,13 @@ function example_sys:init()
 end
 local viewnames = {"center", "left", "right", "up", "down"}
 local side = 1
+
+local function main_camera_eid()
+    for e in w:select "main_queue camera_eid:in" do
+        return e.camera_eid
+    end
+end
 local function set_view()
-    local mq = world:singleton_entity "main_queue"
     --iom.set_position(mq.camera_eid, math3d.vector(0, 0, -2))
     world[example_eid]._rendercache.eid = example_eid
     world[example_eid]._rendercache.worldmat = world[example_eid]._rendercache.srt
@@ -458,14 +464,15 @@ local function set_view()
         }
     }
 
+    local cameraeid = main_camera_eid()
     local icamera = world:interface "ant.camera|camera"
     local viewname = viewnames[side]
     local view = views[viewname]
     local lookto = view.lookto
-    icamera.lookto(mq.camera_eid, lookto.p, lookto.d, lookto.u)
+    icamera.lookto(cameraeid, lookto.p, lookto.d, lookto.u)
 
     
-    icamera.set_frustum(mq.camera_eid, view.frustum)
+    icamera.set_frustum(cameraeid, view.frustum)
     world[example_eid]._rendercache.eid = nil
     world[example_eid]._rendercache.worldmat = nil
 end
@@ -478,7 +485,7 @@ local keymb = world:sub{"keyboard"}
 local defaultcamera
 function example_sys:data_changed()
     if defaultcamera == nil then
-        local ceid = world:singleton_entity "main_queue".camera_eid
+        local ceid = main_camera_eid()
         local icamera = world:interface "ant.camera|camera"
 
         local f = icamera.get_frustum(ceid)
@@ -503,8 +510,7 @@ function example_sys:data_changed()
         end
 
         if key == "C" and press == 0 then
-            local mq = world:singleton_entity "main_queue"
-            local ceid = mq.camera_eid
+            local ceid = main_camera_eid()
             local icamera = world:interface "ant.camera|camera"
             local vp = icamera.calc_viewproj(ceid)
             local points = math3d.frustum_points(vp)
@@ -514,8 +520,7 @@ function example_sys:data_changed()
         end
 
         if key == "R" and press == 0 then
-            local mq = world:singleton_entity "main_queue"
-            local ceid = mq.camera_eid
+            local ceid = main_camera_eid()
             local icamera = world:interface "ant.camera|camera"
             icamera.set_frustum(ceid, defaultcamera.frustum)
             icamera.lookto(ceid, defaultcamera.eyepos, defaultcamera.viewdir, defaultcamera.updir)

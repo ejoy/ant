@@ -1,5 +1,6 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 local irq           = world:interface "ant.render|irenderqueue"
 local icamera       = world:interface "ant.camera|camera"
 local entity        = world:interface "ant.render|entity"
@@ -11,7 +12,13 @@ local gd            = require "common.global_data"
 local bb_a = ecs.action "bind_billboard_camera"
 function bb_a.init(prefab, idx, value)
     local eid = prefab[idx]
-    world[eid]._rendercache.camera_eid = prefab[value] or world:singleton_entity "main_queue".camera_eid
+    local cameraeid = prefab[value]
+    if cameraeid == nil then
+        for e in w:select "main_queue camera_eid:in" do
+            cameraeid = e.camera_eid
+        end
+    end
+    world[eid]._rendercache.camera_eid = cameraeid
 end
 
 local m = ecs.system 'init_system'
