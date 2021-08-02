@@ -36,13 +36,6 @@ namespace Rml {
 
 class PropertyDefinition;
 
-struct RMLUICORE_API PropertySource {
-	PropertySource(std::string path, int line_number, std::string rule_name) : path(path), line_number(line_number), rule_name(rule_name) {}
-	std::string path;
-	int line_number;
-	std::string rule_name;
-};
-
 struct FloatValue;
 
 
@@ -127,7 +120,6 @@ public:
 	const PropertyDefinition* definition = nullptr;
 	int parser_index = -1;
 
-	std::shared_ptr<const PropertySource> source;
 };
 
 struct FloatValue {

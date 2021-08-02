@@ -72,9 +72,6 @@ public:
 	/// @param[in] specificity_offset The specificities of all incoming properties will be offset by this value.
 	void Merge(const PropertyDictionary& property_dictionary, int specificity_offset = 0);
 
-	/// Set the source of all properties in the dictionary to the given one.
-	void SetSourceOfAllProperties(const std::shared_ptr<const PropertySource>& property_source);
-
 private:
 	// Sets a property on the dictionary and its specificity if there is no name conflict, or its
 	// specificity (given by the parameter, not read from the property itself) is at least equal to

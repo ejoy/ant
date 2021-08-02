@@ -375,6 +375,13 @@ const PseudoClassList& Element::GetActivePseudoClasses() const
 	return meta->style.GetActivePseudoClasses();
 }
 
+void Element::SetAttribute(const std::string& name, const std::string& value) {
+	attributes[name] = value;
+    ElementAttributes changed_attributes;
+    changed_attributes.emplace(name, value);
+	OnAttributeChange(changed_attributes);
+}
+
 const std::string* Element::GetAttribute(const std::string& name) const
 {
 	auto it = attributes.find(name);
@@ -416,11 +423,6 @@ void Element::SetAttributes(const ElementAttributes& _attributes)
 		attributes[pair.first] = pair.second;
 
 	OnAttributeChange(_attributes);
-}
-
-int Element::GetNumAttributes() const
-{
-	return (int)attributes.size();
 }
 
 const std::string& Element::GetTagName() const
@@ -1462,21 +1464,6 @@ void Element::SetRednerStatus() {
 void Element::DirtyTransform() {
 	dirty_transform = true;
 	dirty_clip = true;
-}
-
-void Element::SetAttribute(const std::string& name, const std::string& value) {
-	attributes[name] = value;
-    ElementAttributes changed_attributes;
-    changed_attributes.emplace(name, value);
-	OnAttributeChange(changed_attributes);
-}
-
-std::string Element::GetAttribute(const std::string& name, const std::string& default_value) const {
-	const std::string* r = GetAttribute(name);
-	if (!r) {
-		return default_value;
-	}
-	return *r;
 }
 
 } // namespace Rml

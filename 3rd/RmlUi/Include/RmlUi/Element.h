@@ -134,13 +134,8 @@ public:
 	/// from an ancestor, the default value will be returned.
 	/// @param[in] name The name of the property to fetch the value for.
 	/// @return The value of this property for this element, or nullptr if no property exists with the given name.
-	const Property* GetProperty(const std::string& name);		
-	const Property* GetProperty(PropertyId id);		
-	/// Returns the values of one of this element's properties.		
-	/// @param[in] name The name of the property to get.
-	/// @return The value of this property.
-	template < typename T >
-	T GetProperty(const std::string& name);
+	const Property* GetProperty(const std::string& name);
+	const Property* GetProperty(PropertyId id);
 
 	/// Project a 2D point in pixel coordinates onto the element's plane.
 	/// @param[in-out] point The point to project in, and the resulting projected point out.
@@ -180,10 +175,6 @@ public:
 	/// @param[in] name Name of the attribute to retrieve.
 	/// @return A variant representing the attribute, or nullptr if the attribute doesn't exist.
 	const std::string* GetAttribute(const std::string& name) const;
-	/// Gets the specified attribute, with default value.
-	/// @param[in] name Name of the attribute to retrieve.
-	/// @param[in] default_value Value to return if the attribute doesn't exist.
-	std::string GetAttribute(const std::string& name, const std::string& default_value) const;
 	/// Checks if the element has a certain attribute.
 	/// @param[in] name The name of the attribute to check for.
 	/// @return True if the element has the given attribute, false if not.
@@ -197,9 +188,6 @@ public:
 	/// Get the attributes of the element.
 	/// @return The attributes
 	const ElementAttributes& GetAttributes() const { return attributes; }
-	/// Returns the number of attributes on the element.
-	/// @return The number of attributes on the element.
-	int GetNumAttributes() const;
 	//@}
 
 
@@ -445,17 +433,6 @@ protected:
 	friend class Rml::ElementStyle;
 	friend class Rml::Document;
 };
-
-template < typename T >
-T Element::GetProperty(const std::string& name) {
-	const Property* property = GetProperty(name);
-	if (!property)
-	{
-		Log::Message(Log::Level::Warning, "Invalid property name %s.", name.c_str());
-		return T{};
-	}
-	return property->Get< T >();
-}
 
 } // namespace Rml
 

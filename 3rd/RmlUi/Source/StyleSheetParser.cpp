@@ -235,8 +235,6 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 					// Add style nodes to the root of the tree
 					for (size_t i = 0; i < rule_name_list.size(); i++)
 					{
-						auto source = std::make_shared<PropertySource>(stream_file_name, rule_line_number, rule_name_list[i]);
-						properties.SetSourceOfAllProperties(source);
 						ImportProperties(node, rule_name_list[i], properties, rule_count);
 					}
 

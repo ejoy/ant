@@ -118,9 +118,8 @@ bool DataViewAttributeIf::Update(DataModel& model)
 	if (element && GetExpression().Run(expr_interface, variant))
 	{
 		const bool value = variant.Get<bool>();
-		const bool is_set = static_cast<bool>(element->GetAttribute(attribute_name));
-		if (is_set != value)
-		{
+		bool has = element->HasAttribute(attribute_name);
+		if (has != value) {
 			if (value)
 				element->SetAttribute(attribute_name, std::string());
 			else
