@@ -24,11 +24,11 @@ Context::Context(const Size& dimensions_)
 Context::~Context() {
 	for (auto& document : documents) {
 		document->body->DispatchEvent(EventId::Unload, EventDictionary());
-		PluginRegistry::NotifyDocumentDestroy(document);
 		unloaded_documents.push_back(document);
 	}
 	for (auto& document : unloaded_documents) {
 		document->body->GetEventDispatcher()->DetachAllEvents();
+		PluginRegistry::NotifyDocumentDestroy(document);
 		delete document;
 	}
 	documents.clear();

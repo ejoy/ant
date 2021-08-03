@@ -77,7 +77,7 @@ void DataControllerValue::ProcessEvent(Event& event)
 			return;
 		}
 
-		SetValue(CopyVariant(it->second));
+		SetValue(VariantHelper::Copy(it->second));
 	}
 }
 
