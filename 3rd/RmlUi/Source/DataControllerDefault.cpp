@@ -111,10 +111,10 @@ DataControllerEvent::DataControllerEvent(Element* element)
 
 DataControllerEvent::~DataControllerEvent()
 {
-	if (Element* element = GetElement())
-	{
-		if (id != EventId::Invalid)
+	if (Element* element = GetElement()) {
+		if (id != EventId::Invalid) {
 			element->RemoveEventListener(this);
+		}
 	}
 }
 
@@ -129,15 +129,12 @@ bool DataControllerEvent::Initialize(DataModel& model, Element* element, const s
 		return false;
 
 	id = EventSpecificationInterface::GetIdOrInsert(modifier);
-	if (id == EventId::Invalid)
-	{
+	if (id == EventId::Invalid) {
 		Log::Message(Log::Level::Warning, "Event type '%s' could not be recognized, while adding 'data-event' to %s", modifier.c_str(), element->GetAddress().c_str());
 		return false;
 	}
 
-	EventListener::id = id;
 	element->AddEventListener(this);
-
 	return true;
 }
 

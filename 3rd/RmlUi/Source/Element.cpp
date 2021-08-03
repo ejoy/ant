@@ -72,17 +72,9 @@ struct ElementMeta {
 Element::Element(Document* owner, const std::string& tag)
 	: owner_document(owner)
 	, tag(tag)
-	, dirty_perspective(false)
-	, dirty_animation(false)
-	, dirty_transition(false)
+	, meta(new ElementMeta(this))
 {
 	RMLUI_ASSERT(tag == StringUtilities::ToLower(tag));
-	parent = nullptr;
-	z_index = 0;
-	stacking_context_dirty = true;
-	structure_dirty = false;
-	meta = new ElementMeta(this);
-	data_model = nullptr;
 }
 
 Element::~Element() {
@@ -973,10 +965,10 @@ void Element::SetParent(Element* _parent) {
 }
 
 void Element::UpdateStackingContext() {
-	if (!stacking_context_dirty) {
+	if (!dirty_stacking_context) {
 		return;
 	}
-	stacking_context_dirty = false;
+	dirty_stacking_context = false;
 	stacking_context.clear();
 	stacking_context.reserve(children.size());
 	for (auto& child : children) {
@@ -990,16 +982,16 @@ void Element::UpdateStackingContext() {
 }
 
 void Element::DirtyStackingContext() {
-	stacking_context_dirty = true;
+	dirty_stacking_context = true;
 }
 
 void Element::DirtyStructure() {
-	structure_dirty = true;
+	dirty_structure = true;
 }
 
 void Element::UpdateStructure() {
-	if (structure_dirty) {
-		structure_dirty = false;
+	if (dirty_structure) {
+		dirty_structure = false;
 		GetStyle()->DirtyDefinition();
 	}
 }

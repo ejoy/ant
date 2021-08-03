@@ -359,34 +359,24 @@ protected:
 	Document* owner_document;
 
 	// Active data model for this element.
-	DataModel* data_model;
+	DataModel* data_model = nullptr;
 	// Attributes on this element.
 	ElementAttributes attributes;
 
 	OwnedElementList children;
 
-	float z_index;
+	float z_index = 0;
 
 	ElementList stacking_context;
-	bool stacking_context_dirty;
-
-	bool structure_dirty;
-
-	bool dirty_perspective;
 	std::unique_ptr<glm::mat4x4> perspective;
 	mutable bool have_inv_transform = true;
 	mutable std::unique_ptr<glm::mat4x4> inv_transform;
 
 	ElementAnimationList animations;
-	bool dirty_animation;
-	bool dirty_transition;
 
 	ElementMeta* meta;
 	std::vector<EventListener*> listeners;
 
-	bool dirty_background = false;
-	bool dirty_border = false;
-	bool dirty_image = false;
 	std::unique_ptr<Geometry> geometry_border;
 	std::unique_ptr<Geometry> geometry_image;
 	Geometry::Path padding_edge;
@@ -406,6 +396,15 @@ protected:
 		glm::u16vec4 scissor;
 		glm::vec4 shader[2];
 	} clip;
+
+	bool dirty_stacking_context = false;
+	bool dirty_structure = false;
+	bool dirty_perspective = false;
+	bool dirty_animation = false;
+	bool dirty_transition = false;
+	bool dirty_background = false;
+	bool dirty_border = false;
+	bool dirty_image = false;
 
 	friend class Rml::ElementStyle;
 	friend class Rml::Document;

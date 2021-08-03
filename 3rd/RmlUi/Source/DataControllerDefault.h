@@ -75,7 +75,6 @@ protected:
     void Release() override;
 
 private:
-    EventId id = EventId::Invalid;
     DataExpressionPtr expression;
 };
 
