@@ -38,15 +38,15 @@ private:
 	lua_plugin *plugin;
 };
 
-static int ref_function(luabind::reference& reference, lua_State* L, const char* funcname) {
+static int ref_function(luaref reference, lua_State* L, const char* funcname) {
 	if (lua_getfield(L, -1, funcname) != LUA_TFUNCTION) {
 		luaL_error(L, "Missing %s", funcname);
 	}
-	return reference.ref(L);
+	return luaref_ref(reference, L);
 }
 
 lua_plugin::~lua_plugin() {
-	reference.reset();
+	luaref_close(reference);
 }
 
 void lua_plugin::OnInitialise() {
@@ -93,27 +93,27 @@ void lua_plugin::OnLoadExternalScript(Rml::Document* document, const std::string
 void lua_plugin::register_event(lua_State* L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
 	lua_settop(L, 1);
-	reference.reset(new luabind::reference(L));
-	ref_function(*reference, L, "OnDocumentCreate");
-	ref_function(*reference, L, "OnDocumentDestroy");
-	ref_function(*reference, L, "OnLoadInlineScript");
-	ref_function(*reference, L, "OnLoadExternalScript");
-	ref_function(*reference, L, "OnEvent");
-	ref_function(*reference, L, "OnEventAttach");
-	ref_function(*reference, L, "OnEventDetach");
-	ref_function(*reference, L, "OnOpenFile");
+	reference = luaref_init(L);
+	ref_function(reference, L, "OnDocumentCreate");
+	ref_function(reference, L, "OnDocumentDestroy");
+	ref_function(reference, L, "OnLoadInlineScript");
+	ref_function(reference, L, "OnLoadExternalScript");
+	ref_function(reference, L, "OnEvent");
+	ref_function(reference, L, "OnEventAttach");
+	ref_function(reference, L, "OnEventDetach");
+	ref_function(reference, L, "OnOpenFile");
 }
 
 int  lua_plugin::ref(lua_State* L) {
-	return reference->ref(L);
+	return luaref_ref(reference, L);
 }
 
 void lua_plugin::unref(int ref) {
-	reference->unref(ref);
+	luaref_unref(reference, ref);
 }
 
 void lua_plugin::callref(lua_State* L, int ref, size_t argn, size_t retn) {
-	reference->get(L, ref);
+	luaref_get(reference, L, ref);
 	lua_insert(L, -1 - (int)argn);
 	lua_call(L, (int)argn, (int)retn);
 }
