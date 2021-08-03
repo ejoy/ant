@@ -1,41 +1,43 @@
-<rml><head>
-<script type="text/x-lua">
-	local bgfx_model = window.createModel "bgfx_stat" {
-		content = "bgfx stat"
-	}
-	local particle_model = window.createModel "particle_stat" {
-		content = "particle stat"
-	}
-	window.addEventListener("message", function(event)
-		if string.sub(event.data, 1, 8) == "Particle" then
-			particle_model.content = event.data
-		else
-			bgfx_model.content = event.data
-		end
-    end)
-</script>
-<style>
-	bgfx {
-		width: auto;
-		height: auto;
-		font: 100% "宋体";
-		color: #FF0000;
-		text-align:"left"
-	}
-	particle {
-		width: auto;
-		height: 24px;
-		font: 100% "宋体";
-		color: #FF0000;
-		text-align:"right"
-	}
-</style>
-</head>
+<rml>
+	<head>
+		<script type="text/x-lua">
+			local bgfx_model = window.createModel "bgfx_stat" {
+				content = "bgfx stat"
+			}
+			local particle_model = window.createModel "particle_stat" {
+				content = "particle stat"
+			}
+			window.addEventListener("message", function(event)
+				if string.sub(event.data, 1, 8) == "Particle" then
+					particle_model.content = event.data
+				else
+					bgfx_model.content = event.data
+				end
+			end)
+		</script>
+		<style>
+			bgfx {
+				width: auto;
+				height: auto;
+				font: 100% "宋体";
+				color: #FF0000;
+				text-align:"left"
+			}
+			particle {
+				width: auto;
+				height: 24px;
+				font: 100% "宋体";
+				color: #FF0000;
+				text-align:"right"
+			}
+		</style>
+	</head>
 	<body onload="">
-	<bgfx data-model="bgfx_stat">
-		{{content}}
-	</bgfx>
-	<particle data-model="particle_stat">
-		{{content}}
-	</particle>
+		<bgfx data-model="bgfx_stat">
+			{{content}}
+		</bgfx>
+		<particle data-model="particle_stat">
+			{{content}}
+		</particle>
+	</body>
 </rml>
