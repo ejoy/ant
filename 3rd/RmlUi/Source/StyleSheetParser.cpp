@@ -222,8 +222,6 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 			{
 				if (token == '{')
 				{
-					const int rule_line_number = (int)line_number;
-					
 					// Read the attributes
 					PropertyDictionary properties;
 					PropertySpecificationParser parser(properties, StyleSheetSpecification::GetPropertySpecification());

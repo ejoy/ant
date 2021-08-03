@@ -140,31 +140,11 @@ static void DrawRectUV(Vertex* vtx, const Rect& uv) {
 	DrawQuadUV(vtx, topLeft, Point(bottomRight.x, topLeft.y), bottomRight, Point(topLeft.x, bottomRight.y));
 }
 
-static Point PointMin(const Point& a, const Point& b) {
-	return Point(
-		a.x < b.x ? a.x : b.x,
-		a.y < b.y ? a.y : b.y
-	);
-}
-static Point PointMax(const Point& a, const Point& b) {
-	return Point(
-		a.x > b.x ? a.x : b.x,
-		a.y > b.y ? a.y : b.y
-	);
-}
 static Point PointClamp(const Point& v, const Point& mn, const Point& mx) {
 	return Point(
 		(v.x < mn.x) ? mn.x : (v.x > mx.x) ? mx.x : v.x,
 		(v.y < mn.y) ? mn.y : (v.y > mx.y) ? mx.y : v.y
 	);
-}
-static void PointNormalize(float& vx, float& vy) {
-	float d2 = vx * vx + vy * vy;
-	if (d2 > 0.0f) {
-		float inv_len = 1.0f / sqrtf(d2);
-		vx *= inv_len;
-		vy *= inv_len;
-	}
 }
 
 void Geometry::AddRect(const Rect& rect, Color col) {

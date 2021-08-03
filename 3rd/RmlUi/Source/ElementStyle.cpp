@@ -114,10 +114,6 @@ float ComputePropertyH(const Property* property, Element* e) {
 	return ComputePropertyH(property->ToFloatValue(), e);
 }
 
-static FloatValue ComputeOrigin(const Property* property) {
-	return property->ToFloatValue();
-}
-
 ElementStyle::ElementStyle(Element* _element)
 {
 	definition = nullptr;
@@ -546,9 +542,6 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values) {
 		case PropertyId::FlexShrink:
 			element->GetLayout().SetProperty(id, p, element);
 			break;
-		}
-
-		switch (id) {
 		case PropertyId::BorderTopColor:
 			values.border_color.top = p->GetColor();
 			break;

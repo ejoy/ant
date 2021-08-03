@@ -58,13 +58,6 @@ Layout::~Layout() {
 	YGNodeFree(node);
 }
 
-static float YGValueToFloat(YGValue v) {
-	if (v.unit == YGUnitUndefined) {
-		return 0.0f;
-	}
-	return v.value;
-}
-
 static float YGValueToFloat(float v) {
 	if (YGFloatIsUndefined(v)) {
 		return 0.0f;

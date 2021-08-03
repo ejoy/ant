@@ -136,15 +136,6 @@ static bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element)
 	return true;
 }
 
-
-static bool PrepareTransforms(Property& property, Element& element) {
-	RMLUI_ASSERT(property.unit == Property::TRANSFORM);
-	if (!property.Has<TransformPtr>()) {
-		property.value = std::make_shared<Transform>();
-	}
-	return true;
-}
-
 static bool PrepareTransforms(AnimationKey& key, Element& element) {
 	auto& prop0 = key.in;
 	auto& prop1 = key.out;

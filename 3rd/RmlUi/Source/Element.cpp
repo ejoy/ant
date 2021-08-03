@@ -70,8 +70,8 @@ struct ElementMeta {
 };
 
 Element::Element(Document* owner, const std::string& tag)
-	: owner_document(owner)
-	, tag(tag)
+	: tag(tag)
+	, owner_document(owner)
 	, meta(new ElementMeta(this))
 {
 	RMLUI_ASSERT(tag == StringUtilities::ToLower(tag));
@@ -531,8 +531,6 @@ ElementPtr Element::RemoveChild(Element* child) {
 		// Add the element to the delete list
 		if (itr->get() == child)
 		{
-			Element* ancestor = child;
-
 			ElementPtr detached_child = std::move(*itr);
 			children.erase(itr);
 

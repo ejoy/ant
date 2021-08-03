@@ -29,7 +29,7 @@ struct RmlInterface {
     Renderer        m_renderer;
     RmlInterface(RmlContext* context)
         : m_font(context)
-        , m_file(context)
+        , m_file()
         , m_renderer(context)
     {
         Rml::SetFontEngineInterface(&m_font);

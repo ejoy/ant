@@ -193,11 +193,6 @@ void Renderer::SetClipRect(glm::vec4 r[2]) {
     BGFX(encoder_set_scissor_cached)(mEncoder, UINT16_MAX);
 }
 
-static inline bool
-CustomTexture(const std::string &key){
-    return (!key.empty() && key[0] == '?');
-}
-
 bool Renderer::LoadTexture(Rml::TextureHandle& handle, Rml::Size& dimensions, const std::string& path){
     auto ifont = static_cast<FontEngine*>(Rml::GetFontEngineInterface());
     if (ifont->IsFontTexResource(path)){
