@@ -71,16 +71,12 @@ public:
 
 private:
 	PropertyId id;
-
 	Property default_value;
 	bool inherited;
-
-	struct ParserState
-	{
+	struct ParserState {
 		PropertyParser* parser;
 		ParameterMap parameters;
 	};
-
 	std::vector< ParserState > parsers;
 };
 

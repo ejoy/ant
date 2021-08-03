@@ -256,8 +256,7 @@ bool PropertyParserTransform::Scan(int& out_bytes_read, const char* str, const c
 		if (sscanf(str, " %[^,)] %n", arg, &bytes_read), bytes_read
 			&& parsers[i]->ParseValue(prop, std::string(arg), ParameterMap()))
 		{
-			args[i].value = prop.Get<float>();
-			args[i].unit = prop.unit;
+			args[i] = prop.ToFloatValue();
 			str += bytes_read;
 			total_bytes_read += bytes_read;
 		}

@@ -110,18 +110,22 @@ public:
 		, specificity(specificity)
 	{}
 
-	/// Get the value of the property as a string.
 	std::string ToString() const;
-
 	FloatValue ToFloatValue() const;
 
-	template <typename T>
-	T const& Get() const { return std::get<T>(value); }
-	template <typename T>
-	T& Get() { return std::get<T>(value); }
+	float           GetFloat() const;
+	Color           GetColor() const;
+	int             GetKeyword() const;
+	std::string     GetString() const;
+	TransformPtr&   GetTransformPtr();
+	TransitionList& GetTransitionList();
+	AnimationList&  GetAnimationList();
+	TransformPtr const&   GetTransformPtr() const;
+	TransitionList const& GetTransitionList() const;
+	AnimationList const&  GetAnimationList() const;
+
 	template <typename T>
 	bool Has() const { return std::holds_alternative<T>(value); }
-
 
 	bool operator==(const Property& other) const { return unit == other.unit && value == other.value; }
 	bool operator!=(const Property& other) const { return !(*this == other); }

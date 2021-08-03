@@ -71,7 +71,7 @@ PropertyDefinition& PropertyDefinition::AddParser(const std::string& parser_name
 	// If the default value has not been parsed successfully yet, run it through the new parser.
 	if (default_value.unit == Property::UNKNOWN)
 	{
-		std::string unparsed_value = default_value.Get<std::string>();
+		std::string unparsed_value = std::get<std::string>(default_value.value);
 		if (!new_parser.parser->ParseValue(default_value, unparsed_value, new_parser.parameters)) {
 			default_value.value = unparsed_value;
 			default_value.unit = Property::UNKNOWN;

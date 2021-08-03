@@ -142,8 +142,6 @@ bool EventDispatcher::DispatchEvent(Element* target_element, const EventId id, c
 
 	std::vector<CollectedListener> listeners;
 	std::vector<ObserverPtr<Element>> default_action_elements;
-
-	const EventPhase phases_to_execute = EventPhase((int)EventPhase::Capture | (int)EventPhase::Target | (bubbles ? (int)EventPhase::Bubble : 0));
 	
 	// Walk the DOM tree from target to root, collecting all possible listeners and elements with default actions in the process.
 	int dom_distance_from_target = 0;
@@ -151,7 +149,7 @@ bool EventDispatcher::DispatchEvent(Element* target_element, const EventId id, c
 	while (walk_element)
 	{
 		EventDispatcher* dispatcher = walk_element->GetEventDispatcher();
-		dispatcher->CollectListeners(dom_distance_from_target, id, phases_to_execute, listeners);
+		dispatcher->CollectListeners(dom_distance_from_target, id, bubbles, listeners);
 
 		if(dom_distance_from_target == 0)
 		{
@@ -221,31 +219,19 @@ bool EventDispatcher::DispatchEvent(Element* target_element, const EventId id, c
 }
 
 
-void EventDispatcher::CollectListeners(int dom_distance_from_target, const EventId event_id, const EventPhase event_executes_in_phases, std::vector<CollectedListener>& collect_listeners)
-{
-	// Find all the entries with a matching id, given that listeners are sorted by id first.
+void EventDispatcher::CollectListeners(int dom_distance_from_target, const EventId event_id, const bool bubbles, std::vector<CollectedListener>& collect_listeners) {
 	auto [begin, end] = std::equal_range(listeners.begin(), listeners.end(), EventListenerEntry(event_id, nullptr, false), CompareId());
-
 	const bool in_target_phase = (dom_distance_from_target == 0);
-
-	if (in_target_phase)
-	{
-		// Listeners always attach to target phase, but make sure the event can actually execute in target phase.
-		if ((int)event_executes_in_phases & (int)EventPhase::Target)
-		{
-			for (auto it = begin; it != end; ++it)
-				collect_listeners.emplace_back(element, it->listener, dom_distance_from_target, false);
+	if (in_target_phase) {
+		for (auto it = begin; it != end; ++it) {
+			collect_listeners.emplace_back(element, it->listener, dom_distance_from_target, false);
 		}
 	}
-	else
-	{
-		// Iterate through all the listeners and collect those matching the event execution phase.
-		for (auto it = begin; it != end; ++it)
-		{
-			// Listeners will either attach to capture or bubble phase, make sure the event can execute in the same phase.
-			const EventPhase listener_executes_in_phase = (it->in_capture_phase ? EventPhase::Capture : EventPhase::Bubble);
-			if ((int)event_executes_in_phases & (int)listener_executes_in_phase)
+	else {
+		for (auto it = begin; it != end; ++it) {
+			if (it->in_capture_phase || bubbles) {
 				collect_listeners.emplace_back(element, it->listener, dom_distance_from_target, it->in_capture_phase);
+			}
 		}
 	}
 }

@@ -47,23 +47,23 @@ static Property InterpolateProperties(const Property& p0, const Property& p1, fl
 		assert(p0.unit == p1.unit);
 		// If we have the same units, we can just interpolate regardless of what the value represents.
 		// Or if we have distinct units but no definition, all bets are off. This shouldn't occur, just interpolate values.
-		float f0 = p0.Get<float>();
-		float f1 = p1.Get<float>();
+		float f0 = p0.GetFloat();
+		float f1 = p1.GetFloat();
 		float f = (1.0f - alpha) * f0 + alpha * f1;
 		return Property{ f, p0.unit };
 	}
 
 	if (p0.unit == Property::COLOUR && p1.unit == Property::COLOUR)
 	{
-		Color c0 = p0.Get<Color>();
-		Color c1 = p1.Get<Color>();
+		Color c0 = p0.GetColor();
+		Color c1 = p1.GetColor();
 		return Property{ ColorInterpolate(c0, c1, alpha), Property::COLOUR };
 	}
 
 	if (p0.unit == Property::TRANSFORM && p1.unit == Property::TRANSFORM)
 	{
-		auto& t0 = p0.Get<TransformPtr>();
-		auto& t1 = p1.Get<TransformPtr>();
+		auto& t0 = p0.GetTransformPtr();
+		auto& t1 = p1.GetTransformPtr();
 		auto t = t0->Interpolate(*t1, alpha);
 		if (!t) {
 			Log::Message(Log::Level::Error, "Transform primitives can not be interpolated.");
@@ -157,8 +157,8 @@ static bool PrepareTransforms(AnimationKey& key, Element& element) {
 	if (!prop1.Has<TransformPtr>()) {
 		prop1.value = std::make_shared<Transform>();
 	}
-	auto& t0 = prop0.Get<TransformPtr>();
-	auto& t1 = prop1.Get<TransformPtr>();
+	auto& t0 = prop0.GetTransformPtr();
+	auto& t1 = prop1.GetTransformPtr();
 	return PrepareTransformPair(*t0, *t1, element);
 }
 

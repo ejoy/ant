@@ -47,7 +47,7 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	}
 
 	Layout::Metrics const& metrics = element->GetMetrics();
-	Style::BoxType origin = (Style::BoxType)element->GetProperty(PropertyId::BackgroundOrigin)->Get<int>();
+	Style::BoxType origin = (Style::BoxType)element->GetProperty(PropertyId::BackgroundOrigin)->GetKeyword();
 
 	Rect surface = Rect{ {0, 0}, metrics.frame.size };
 	if (surface.size.IsEmpty()) {
@@ -68,8 +68,8 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		return;
 	}
 
-	SamplerFlag repeat = (SamplerFlag)element->GetProperty(PropertyId::BackgroundRepeat)->Get<int>();
-	Style::BackgroundSize backgroundSize = (Style::BackgroundSize)element->GetProperty(PropertyId::BackgroundSize)->Get<int>();
+	SamplerFlag repeat = (SamplerFlag)element->GetProperty(PropertyId::BackgroundRepeat)->GetKeyword();
+	Style::BackgroundSize backgroundSize = (Style::BackgroundSize)element->GetProperty(PropertyId::BackgroundSize)->GetKeyword();
 	Size texSize {
 		ComputePropertyW(element->GetProperty(PropertyId::BackgroundSizeX), element),
 		ComputePropertyH(element->GetProperty(PropertyId::BackgroundSizeY), element)
@@ -79,7 +79,7 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		ComputePropertyH(element->GetProperty(PropertyId::BackgroundPositionY), element)
 	};
 
-	std::string path = image->Get<std::string>();
+	std::string path = image->GetString();
 	auto texture = Texture::Fetch(path);
 	geometry.SetTexture(texture);
 	geometry.SetSamplerFlag(repeat);

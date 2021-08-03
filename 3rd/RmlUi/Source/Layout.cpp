@@ -185,10 +185,10 @@ static void SetIntProperty(YGNodeRef node, PropertyId id, int v) {
 void Layout::SetProperty(PropertyId id, const Property* property, Element* element) {
 	switch (property->unit) {
 	case Property::PERCENT:
-		SetPercentProperty(node, id, property->Get<float>());
+		SetPercentProperty(node, id, property->GetFloat());
 		break;
 	case Property::KEYWORD:
-		SetIntProperty(node, id, property->Get<int>());
+		SetIntProperty(node, id, property->GetKeyword());
 		break;
 	default:
 		SetFloatProperty(node, id, ComputeProperty(property, element));

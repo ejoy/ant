@@ -237,13 +237,13 @@ static float ComputeFontsize(const Property* property, Element* element) {
 			fontSize = parent->GetFontSize();
 		}
 		if (property->unit == Property::PERCENT) {
-			return fontSize * 0.01f * property->Get<float>();
+			return fontSize * 0.01f * property->GetFloat();
 		}
-		return fontSize * property->Get<float>();
+		return fontSize * property->GetFloat();
 	}
 	if (property->unit == Property::REM) {
 		if (element == element->GetOwnerDocument()->body.get()) {
-			return property->Get<float>() * 16;
+			return property->GetFloat() * 16;
 		}
 	}
 	return ComputeProperty(property, element);
@@ -265,7 +265,7 @@ bool Element::UpdataFontSize() {
 
 float Element::GetOpacity() {
 	const Property* property = GetProperty(PropertyId::Opacity);
-	return property->Get<float>();
+	return property->GetFloat();
 }
 
 bool Element::SetProperty(const std::string& name, const std::string& value) {
@@ -784,7 +784,7 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 		float new_z_index = 0;
 		const Property* property = GetProperty(PropertyId::ZIndex);
 		if (property->unit != Property::KEYWORD) {
-			new_z_index = property->Get<float>();
+			new_z_index = property->GetFloat();
 		}
 		if (z_index != new_z_index) {
 			z_index = new_z_index;
@@ -862,25 +862,25 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 	}
 }
 
-void Element::ProcessDefaultAction(Event& event)
-{
-	if (event.GetId() == EventId::Mousedown && event.GetParameter<int>("button", 0) == (int)MouseButton::Left) {
-		SetPseudoClass("active", true);
-	}
-
-	if (event.GetPhase() == EventPhase::Target)
-	{
-		switch (event.GetId())
-		{
-		case EventId::Mouseover:
+void Element::ProcessDefaultAction(Event& event) {
+	switch (event.GetId()) {
+	case EventId::Mouseover:
+		if (event.GetPhase() == EventPhase::Target) {
 			SetPseudoClass("hover", true);
-			break;
-		case EventId::Mouseout:
-			SetPseudoClass("hover", false);
-			break;
-		default:
-			break;
 		}
+		break;
+	case EventId::Mouseout:
+		if (event.GetPhase() == EventPhase::Target) {
+			SetPseudoClass("hover", false);
+		}
+		break;
+	case EventId::Mousedown:
+		if (event.GetParameter<int>("button", 0) == (int)MouseButton::Left) {
+			SetPseudoClass("active", true);
+		}
+		break;
+	default:
+		break;
 	}
 }
 
@@ -1272,7 +1272,7 @@ void Element::UpdateTransform() {
 	dirty_transform = false;
 	glm::mat4x4 new_transform(1);
 	glm::vec3 origin(metrics.frame.origin.x, metrics.frame.origin.y, 0);
-	auto computedTransform = GetProperty(PropertyId::Transform)->Get<TransformPtr>();
+	auto computedTransform = GetProperty(PropertyId::Transform)->GetTransformPtr();
 	if (computedTransform && !computedTransform->empty()) {
 		glm::vec3 transform_origin = origin + glm::vec3 {
 			ComputePropertyW(GetProperty(PropertyId::TransformOriginX), this),

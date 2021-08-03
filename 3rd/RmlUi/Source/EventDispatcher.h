@@ -97,7 +97,7 @@ private:
 	Listeners listeners;
 
 	// Collect all the listeners from this dispatcher that are allowed to execute given the input arguments.
-	void CollectListeners(int dom_distance_from_target, EventId event_id, EventPhase phases_to_execute, std::vector<CollectedListener>& collect_listeners);
+	void CollectListeners(int dom_distance_from_target, EventId event_id, const bool bubbles, std::vector<CollectedListener>& collect_listeners);
 };
 
 

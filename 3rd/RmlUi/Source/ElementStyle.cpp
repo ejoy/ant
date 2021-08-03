@@ -187,7 +187,7 @@ void ElementStyle::TransitionPropertyChanges(PropertyIdSet& properties, const El
 	if (!transition_property) {
 		return;
 	}
-	auto transition_list = transition_property->Get<TransitionList>();
+	auto transition_list = transition_property->GetTransitionList();
 	if (transition_list.none) {
 		return;
 	}
@@ -224,7 +224,7 @@ bool ElementStyle::TransitionPropertyChanges(PropertyId id, const Property& prop
 	if (!transition_property) {
 		return false;
 	}
-	auto transition_list = transition_property->Get<TransitionList>();
+	auto transition_list = transition_property->GetTransitionList();
 	if (transition_list.none) {
 		return false;
 	}
@@ -550,16 +550,16 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values) {
 
 		switch (id) {
 		case PropertyId::BorderTopColor:
-			values.border_color.top = p->Get<Color>();
+			values.border_color.top = p->GetColor();
 			break;
 		case PropertyId::BorderRightColor:
-			values.border_color.right = p->Get<Color>();
+			values.border_color.right = p->GetColor();
 			break;
 		case PropertyId::BorderBottomColor:
-			values.border_color.bottom = p->Get<Color>();
+			values.border_color.bottom = p->GetColor();
 			break;
 		case PropertyId::BorderLeftColor:
-			values.border_color.left = p->Get<Color>();
+			values.border_color.left = p->GetColor();
 			break;
 		case PropertyId::BorderTopLeftRadius:
 			values.border_radius.topLeft = ComputeProperty(p, element);
@@ -575,14 +575,14 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values) {
 			break;
 
 		case PropertyId::BackgroundColor:
-			values.background_color = p->Get<Color>();
+			values.background_color = p->GetColor();
 			break;
 
 		case PropertyId::Transition:
-			values.transition = p->Get<TransitionList>();
+			values.transition = p->GetTransitionList();
 			break;
 		case PropertyId::Animation:
-			values.animation = p->Get<AnimationList>();
+			values.animation = p->GetAnimationList();
 			break;
 		default:
 			break;
