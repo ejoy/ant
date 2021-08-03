@@ -97,46 +97,6 @@ bool PropertyDefinition::ParseValue(Property& property, const std::string& value
 	return false;
 }
 
-// Called to convert a parsed property back into a value.
-bool PropertyDefinition::GetValue(std::string& value, const Property& property) const
-{
-	value = property.Get<std::string>();
-
-	switch (property.unit)
-	{
-		case Property::KEYWORD:
-		{
-			int keyword = property.Get<int>();
-			value = "keyword<" + std::to_string(keyword) + ">";
-			break;
-		}
-		break;
-
-		case Property::COLOUR:
-		{
-			Color colour = property.Get<Color>();
-			value = CreateString(32, "rgba(%d,%d,%d,%d)", colour.r, colour.g, colour.b, colour.a);
-		}
-		break;
-
-		case Property::PX:		value += "px"; break;
-		case Property::DEG:		value += "deg"; break;
-		case Property::RAD:		value += "rad"; break;
-		case Property::DP:		value += "dp"; break;
-		case Property::EM:		value += "em"; break;
-		case Property::REM:		value += "rem"; break;
-		case Property::PERCENT:	value += "%"; break;
-		case Property::INCH:	value += "in"; break;
-		case Property::CM:		value += "cm"; break;
-		case Property::MM:		value += "mm"; break;
-		case Property::PT:		value += "pt"; break;
-		case Property::PC:		value += "pc"; break;
-		default:					break;
-	}
-
-	return true;
-}
-
 // Returns true if this property is inherited from a parent to child elements.
 bool PropertyDefinition::IsInherited() const
 {

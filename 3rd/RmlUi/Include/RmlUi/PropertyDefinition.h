@@ -59,11 +59,6 @@ public:
 	/// @param value[in] The raw value defined for this property.
 	/// @return True if all values were parsed successfully, false otherwise.
 	bool ParseValue(Property& property, const std::string& value) const;
-	/// Called to convert a parsed property back into a value.
-	/// @param value[out] The string to return the value in.
-	/// @param property[in] The processed property to parse.
-	/// @return True if the property was reverse-engineered successfully, false otherwise.
-	bool GetValue(std::string& value, const Property& property) const;
 
 	/// Returns true if this property is inherited from parent to child elements.
 	bool IsInherited() const;

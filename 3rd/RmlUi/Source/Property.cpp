@@ -37,14 +37,41 @@ Property::Property() : unit(UNKNOWN), specificity(-1)
 	definition = nullptr;
 }
 
-std::string Property::ToString() const
-{
-	if (!definition)
+std::string Property::ToString() const {
+	std::string value = Get<std::string>();
+	switch (unit) {
+	case Property::STRING:
 		return Get<std::string>();
-
-	std::string string;
-	definition->GetValue(string, *this);
-	return string;
+	case Property::KEYWORD: {
+		int keyword = Get<int>();
+		return "<keyword," + std::to_string(keyword) + ">";
+	}
+	case Property::COLOUR: {
+		Color colour = Get<Color>();
+		return CreateString(32, "rgba(%d,%d,%d,%d)", colour.r, colour.g, colour.b, colour.a);
+	}
+	case Property::TRANSFORM:
+		return "<transform>";
+	case Property::TRANSITION:
+		return "<transition>";
+	case Property::ANIMATION:
+		return "<animation>";
+	case Property::NUMBER:	return std::to_string(Get<float>());
+	case Property::PX:		return std::to_string(Get<float>()) + "px";
+	case Property::DEG:		return std::to_string(Get<float>()) + "deg";
+	case Property::RAD:		return std::to_string(Get<float>()) + "rad";
+	case Property::DP:		return std::to_string(Get<float>()) + "dp";
+	case Property::EM:		return std::to_string(Get<float>()) + "em";
+	case Property::REM:		return std::to_string(Get<float>()) + "rem";
+	case Property::PERCENT:	return std::to_string(Get<float>()) + "%";
+	case Property::INCH:	return std::to_string(Get<float>()) + "in";
+	case Property::CM:		return std::to_string(Get<float>()) + "cm";
+	case Property::MM:		return std::to_string(Get<float>()) + "mm";
+	case Property::PT:		return std::to_string(Get<float>()) + "pt";
+	case Property::PC:		return std::to_string(Get<float>()) + "pc";
+	default:
+		return "<unknown, " + std::to_string(unit) + ">";
+	}
 }
 
 FloatValue Property::ToFloatValue() const {
