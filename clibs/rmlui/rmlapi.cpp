@@ -81,8 +81,9 @@ lua_pushstdstring(lua_State* L, const std::string& str) {
 namespace {
 
 struct EventListener final : public Rml::EventListener {
-	EventListener(lua_State* L_, int idx)
-		: L(L_)
+	EventListener(lua_State* L_, int idx, Rml::EventId id, bool use_capture)
+		: Rml::EventListener(id, use_capture)
+		, L(L_)
 		, ref(LUA_NOREF)
 	{
 		luaL_checktype(L, idx, LUA_TFUNCTION);
@@ -179,7 +180,7 @@ lDocumentAddEventListener(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
 	Rml::EventId id = Rml::EventSpecificationInterface::GetIdOrInsert(lua_checkstdstring(L, 2));
-	doc->body->AddEventListener(id, new EventListener(L, 3), lua_toboolean(L, 4));
+	doc->body->AddEventListener(new EventListener(L, 3, id, lua_toboolean(L, 4)));
 	return 0;
 }
 
@@ -229,7 +230,7 @@ lElementAddEventListener(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	Rml::EventId id = Rml::EventSpecificationInterface::GetIdOrInsert(lua_checkstdstring(L, 2));
-	e->AddEventListener(id, new EventListener(L, 3), lua_toboolean(L, 4));
+	e->AddEventListener(new EventListener(L, 3, id, lua_toboolean(L, 4)));
 	return 0;
 }
 static int

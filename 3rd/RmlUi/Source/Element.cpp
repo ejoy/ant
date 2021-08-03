@@ -482,22 +482,22 @@ void Element::SetInnerRML(const std::string& rml) {
 	//parser.Parse(stream.get());
 }
 
-void Element::AddEventListener(EventId id, EventListener* listener, bool in_capture_phase) {
-	meta->event_dispatcher.AttachEvent(id, listener, in_capture_phase);
+void Element::AddEventListener(EventListener* listener) {
+	meta->event_dispatcher.AddEventListener(listener);
 }
 
-void Element::RemoveEventListener(EventId id, EventListener* listener, bool in_capture_phase) {
-	meta->event_dispatcher.DetachEvent(id, listener, in_capture_phase);
+void Element::RemoveEventListener(EventListener* listener) {
+	meta->event_dispatcher.RemoveEventListener(listener);
 }
 
 bool Element::DispatchEvent(EventId id, const EventDictionary& parameters, bool interruptible, bool bubbles) {
-	const EventSpecification& specification = EventSpecificationInterface::Get(id);
-	return EventDispatcher::DispatchEvent(this, specification.id, parameters, interruptible, bubbles, specification.default_action_phase);
+	Event event(this, id, parameters, interruptible);
+	return EventDispatcher::DispatchEvent(event, bubbles);
 }
 
 bool Element::DispatchEvent(EventId id, const EventDictionary& parameters) {
 	const EventSpecification& specification = EventSpecificationInterface::Get(id);
-	return EventDispatcher::DispatchEvent(this, specification.id, parameters, specification.interruptible, specification.bubbles, specification.default_action_phase);
+	return DispatchEvent(specification.id, parameters, specification.interruptible, specification.bubbles);
 }
 
 Element* Element::AppendChild(ElementPtr child) {
@@ -755,10 +755,10 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes)
 	{
 		if (pair.first.size() > 2 && pair.first[0] == 'o' && pair.first[1] == 'n')
 		{
-			EventListener* listener = Factory::InstanceEventListener(pair.second, this);
+			EventId id = EventSpecificationInterface::GetIdOrInsert(pair.first.substr(2));
+			EventListener* listener = Factory::InstanceEventListener(this, pair.second, id, false);
 			if (listener) {
-				EventId id = EventSpecificationInterface::GetIdOrInsert(pair.first.substr(2));
-				AddEventListener(id, listener, false);
+				AddEventListener(listener);
 			}
 		}
 	}

@@ -40,7 +40,6 @@ struct EventSpecification {
 	std::string type;
 	bool interruptible;
 	bool bubbles;
-	DefaultActionPhase default_action_phase;
 };
 
 namespace EventSpecificationInterface {

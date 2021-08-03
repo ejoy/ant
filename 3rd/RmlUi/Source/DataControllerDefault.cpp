@@ -36,14 +36,16 @@
 
 namespace Rml {
 
-DataControllerValue::DataControllerValue(Element* element) : DataController(element)
+DataControllerValue::DataControllerValue(Element* element)
+	: DataController(element)
+	, EventListener(EventId::Change, false)
 {}
 
 DataControllerValue::~DataControllerValue()
 {
 	if (Element* element = GetElement())
 	{
-		element->RemoveEventListener(EventId::Change, this);
+		element->RemoveEventListener(this);
 	}
 }
 
@@ -58,7 +60,7 @@ bool DataControllerValue::Initialize(DataModel& model, Element* element, const s
 	if (model.GetVariable(variable_address))
 		address = std::move(variable_address);
 	
-	element->AddEventListener(EventId::Change, this);
+	element->AddEventListener(this);
 
 	return true;
 }
@@ -102,7 +104,9 @@ void DataControllerValue::SetValue(const Variant& value)
 }
 
 
-DataControllerEvent::DataControllerEvent(Element* element) : DataController(element)
+DataControllerEvent::DataControllerEvent(Element* element)
+	: DataController(element)
+	, EventListener(EventId::Invalid, false)
 {}
 
 DataControllerEvent::~DataControllerEvent()
@@ -110,7 +114,7 @@ DataControllerEvent::~DataControllerEvent()
 	if (Element* element = GetElement())
 	{
 		if (id != EventId::Invalid)
-			element->RemoveEventListener(id, this);
+			element->RemoveEventListener(this);
 	}
 }
 
@@ -131,7 +135,8 @@ bool DataControllerEvent::Initialize(DataModel& model, Element* element, const s
 		return false;
 	}
 
-	element->AddEventListener(id, this);
+	EventListener::id = id;
+	element->AddEventListener(this);
 
 	return true;
 }

@@ -182,11 +182,11 @@ void Factory::RegisterEventListenerInstancer(EventListenerInstancer* instancer)
 }
 
 // Instance an event listener with the given string
-EventListener* Factory::InstanceEventListener(const std::string& value, Element* element)
+EventListener* Factory::InstanceEventListener(Element* element, const std::string& code, EventId id, bool use_capture)
 {
 	// If we have an event listener instancer, use it
 	if (event_listener_instancer)
-		return event_listener_instancer->InstanceEventListener(value, element);
+		return event_listener_instancer->InstanceEventListener(element, code, id, use_capture);
 
 	return nullptr;
 }
@@ -235,7 +235,7 @@ DataViewPtr Factory::InstanceDataView(const std::string& type_name, Element* ele
 	return nullptr;
 }
 
-DataControllerPtr Factory::InstanceDataController(const std::string& type_name, Element* element)
+DataControllerPtr Factory::InstanceDataController(Element* element, const std::string& type_name)
 {
 	auto it = data_controller_instancers.find(type_name);
 	if (it != data_controller_instancers.end())

@@ -51,10 +51,8 @@ public:
     bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& modifier) override;
 
 protected:
-    // Responds to 'Change' events.
+    void OnDetach(Element *) override {}
     void ProcessEvent(Event& event) override;
-    
-    // Delete this.
     void Release() override;
 
 private:
@@ -72,10 +70,8 @@ public:
     bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& modifier) override;
 
 protected:
-    // Responds to the event type specified in the attribute modifier.
+    void OnDetach(Element *) override {}
     void ProcessEvent(Event& event) override;
-
-    // Delete this.
     void Release() override;
 
 private:

@@ -237,8 +237,8 @@ public:
 	 */
 	//@{
 
-	void AddEventListener(EventId id, EventListener* listener, bool in_capture_phase = false);
-	void RemoveEventListener(EventId id, EventListener* listener, bool in_capture_phase = false);
+	void AddEventListener(EventListener* listener);
+	void RemoveEventListener(EventListener* listener);
 	bool DispatchEvent(EventId id, const EventDictionary& parameters, bool interruptible, bool bubbles = true);
 	bool DispatchEvent(EventId id, const EventDictionary& parameters);
 
