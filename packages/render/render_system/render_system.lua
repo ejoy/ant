@@ -14,26 +14,43 @@ function render_sys:update_system_properties()
 	isp.update()
 end
 
+local function has_filter_tag(queuename, t)
+	for qe in w:select (queuename .. " filter_names:in") do
+		for _, fn in ipairs(qe.filter_names) do
+			if fn == t then
+				return true
+			end
+		end
+	end
+end
+
 function render_sys:update_filter()
-    for e in w:select "render_object_update render_object:in name:in" do
+    for e in w:select "render_object_update render_object:in" do
         local ro = e.render_object
         local state = ro.entity_state
 		local st = ro.fx.setting.surfacetype
 
 		for _, qn in ipairs{"main_queue", "blit_queue"} do
 			local tag = ("%s_%s"):format(qn, st)
-			local synctag = tag .. "?out"
-			for fe in w:select(tag .. " primitive_filter:in") do
-				local pf = fe.primitive_filter
-				local mask = ies.filter_mask(pf.filter_type)
-				local exclude_mask = pf.exclude_type and ies.filter_mask(pf.exclude_type) or 0
+			
+			if has_filter_tag(qn, tag) then
+				local synctag = tag .. "?out"
+				for fe in w:select(tag .. " primitive_filter:in") do
+					local pf = fe.primitive_filter
+					local mask = ies.filter_mask(pf.filter_type)
+					local exclude_mask = pf.exclude_type and ies.filter_mask(pf.exclude_type) or 0
 
-				local add = ((state & mask) ~= 0) and ((state & exclude_mask) == 0)
-				e[tag] = add
+					local add = ((state & mask) ~= 0) and ((state & exclude_mask) == 0)
+					e[tag] = add
+				end
+				w:sync(synctag, e)
 			end
-			w:sync(synctag, e)
 		end
     end
+
+	for v in w:select "main_queue_opacity name:in" do
+		print(v.name)
+	end
 end
 
 function render_sys:render_submit()
@@ -47,9 +64,14 @@ function render_sys:render_submit()
 
 	--TODO: should put all render queue here
 	for _, qn in ipairs{"main_queue", "blit_queue"} do
-		for qe in w:select(qn .. " visible render_target:in filter_names:in cull_tag?in") do
+		for qe in w:select(qn .. " visible camera_eid:in render_target:in filter_names:in cull_tag?in") do
 			local viewid = qe.render_target.viewid
 			local filternames, culltag = qe.filter_names, qe.cull_tag
+			local ww = world
+
+			for v in w:select "main_queue_opacity name:in" do
+				print(v.name)
+			end
 
 			if culltag then
 				for idx, fn in ipairs(filternames) do
