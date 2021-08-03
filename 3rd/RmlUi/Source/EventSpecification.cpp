@@ -26,7 +26,7 @@
  *
  */
 
-#include "EventSpecification.h"
+#include "../Include/RmlUi/EventSpecification.h"
 #include "../Include/RmlUi/ID.h"
 
 
@@ -76,15 +76,7 @@ void Initialize()
 		{EventId::Scroll        , "scroll"        , false , true  , DefaultActionPhase::None},
 		{EventId::Animationend  , "animationend"  , false , true  , DefaultActionPhase::None},
 		{EventId::Transitionend , "transitionend" , false , true  , DefaultActionPhase::None},
-								 				 
 		{EventId::Change        , "change"        , false , true  , DefaultActionPhase::None},
-		{EventId::Submit        , "submit"        , true  , true  , DefaultActionPhase::None},
-		{EventId::Tabchange     , "tabchange"     , false , true  , DefaultActionPhase::None},
-		{EventId::Columnadd     , "columnadd"     , false , true  , DefaultActionPhase::None},
-		{EventId::Rowadd        , "rowadd"        , false , true  , DefaultActionPhase::None},
-		{EventId::Rowchange     , "rowchange"     , false , true  , DefaultActionPhase::None},
-		{EventId::Rowremove     , "rowremove"     , false , true  , DefaultActionPhase::None},
-		{EventId::Rowupdate     , "rowupdate"     , false , true  , DefaultActionPhase::None},
 	};
 
 	type_lookup.clear();
@@ -104,53 +96,38 @@ void Initialize()
 #endif
 }
 
-static EventSpecification& GetMutable(EventId id)
-{
+const EventSpecification& Get(EventId id) {
 	size_t i = static_cast<size_t>(id);
 	if (i < specifications.size())
 		return specifications[i];
 	return specifications[0];
 }
 
-// Get event specification for the given type.
-// If not found: Inserts a new entry with given values.
-static EventSpecification& GetOrInsert(const std::string& event_type, bool interruptible, bool bubbles, DefaultActionPhase default_action_phase)
-{
+EventId GetId(const std::string& event_type) {
 	auto it = type_lookup.find(event_type);
-
 	if (it != type_lookup.end())
-		return GetMutable(it->second);
+		return it->second;
+	return EventId::Invalid;
+}
 
+EventId GetIdOrInsert(const std::string& event_type) {
+	EventId id = GetId(event_type);
+	if (id != EventId::Invalid) {
+		return id;
+	}
+
+	constexpr bool interruptible = true;
+	constexpr bool bubbles = true;
+	constexpr DefaultActionPhase default_action_phase = DefaultActionPhase::None;
+	
 	const size_t new_id_num = specifications.size();
 	// No specification found for this name, insert a new entry with default values
 	EventId new_id = static_cast<EventId>(new_id_num);
 	specifications.push_back(EventSpecification{ new_id, event_type, interruptible, bubbles, default_action_phase });
 	type_lookup.emplace(event_type, new_id);
-	return specifications.back();
-}
+	EventSpecification& spec = specifications.back();
 
-const EventSpecification& Get(EventId id)
-{
-	return GetMutable(id);
-}
-
-const EventSpecification& GetOrInsert(const std::string& event_type)
-{
-	// Default values for new event types defined as follows:
-	constexpr bool interruptible = true;
-	constexpr bool bubbles = true;
-	constexpr DefaultActionPhase default_action_phase = DefaultActionPhase::None;
-
-	return GetOrInsert(event_type, interruptible, bubbles, default_action_phase);
-}
-
-EventId GetIdOrInsert(const std::string& event_type)
-{
-	auto it = type_lookup.find(event_type);
-	if (it != type_lookup.end())
-		return it->second;
-
-	return GetOrInsert(event_type).id;
+	return spec.id;
 }
 
 }

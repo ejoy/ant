@@ -42,7 +42,7 @@ namespace Rml {
 class RMLUICORE_API PropertyDefinition final
 {
 public:
-	PropertyDefinition(PropertyId id, const std::string& default_value, bool inherited, bool forces_layout);
+	PropertyDefinition(PropertyId id, const std::string& default_value, bool inherited);
 	PropertyDefinition(const PropertyDefinition &) = delete; 
 	PropertyDefinition& operator=(const PropertyDefinition &) = delete;
 	~PropertyDefinition();
@@ -68,9 +68,6 @@ public:
 	/// Returns true if this property is inherited from parent to child elements.
 	bool IsInherited() const;
 
-	/// Returns true if this property forces a re-layout when changed.
-	bool IsLayoutForced() const;
-
 	/// Returns the default defined for this property.
 	const Property* GetDefaultValue() const;
 
@@ -82,7 +79,6 @@ private:
 
 	Property default_value;
 	bool inherited;
-	bool forces_layout;
 
 	struct ParserState
 	{

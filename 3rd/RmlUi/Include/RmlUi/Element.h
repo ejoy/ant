@@ -237,32 +237,9 @@ public:
 	 */
 	//@{
 
-	/// Adds an event listener to this element.
-	/// @param[in] event Event to attach to.
-	/// @param[in] listener The listener object to be attached.
-	/// @param[in] in_capture_phase True to attach in the capture phase, false in bubble phase.
-	/// @lifetime The added listener must stay alive until after the dispatched call from EventListener::OnDetach(). This occurs
-	///     eg. when the element is destroyed or when RemoveEventListener() is called with the same parameters passed here.
-	void AddEventListener(const std::string& event, EventListener* listener, bool in_capture_phase = false);
-	/// Adds an event listener to this element by id.
-	/// @lifetime The added listener must stay alive until after the dispatched call from EventListener::OnDetach(). This occurs
-	///     eg. when the element is destroyed or when RemoveEventListener() is called with the same parameters passed here.
 	void AddEventListener(EventId id, EventListener* listener, bool in_capture_phase = false);
-	/// Removes an event listener from this element.
-	/// @param[in] event Event to detach from.
-	/// @param[in] listener The listener object to be detached.
-	/// @param[in] in_capture_phase True to detach from the capture phase, false from the bubble phase.
-	void RemoveEventListener(const std::string& event, EventListener* listener, bool in_capture_phase = false);
-	/// Removes an event listener from this element by id.
 	void RemoveEventListener(EventId id, EventListener* listener, bool in_capture_phase = false);
-	/// Sends an event to this element.
-	/// @param[in] type Event type in string form.
-	/// @param[in] parameters The event parameters.
-	/// @return True if the event was not consumed (ie, was prevented from propagating by an element), false if it was.
-	bool DispatchEvent(const std::string& type, const EventDictionary& parameters);
-	/// Sends an event to this element, overriding the default behavior for the given event type.
-	bool DispatchEvent(const std::string& type, const EventDictionary& parameters, bool interruptible, bool bubbles = true);
-	/// Sends an event to this element by event id.
+	bool DispatchEvent(EventId id, const EventDictionary& parameters, bool interruptible, bool bubbles = true);
 	bool DispatchEvent(EventId id, const EventDictionary& parameters);
 
 	/// Append a child to this element.

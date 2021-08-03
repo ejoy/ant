@@ -31,7 +31,7 @@
 #include "../Include/RmlUi/Event.h"
 #include "../Include/RmlUi/EventListener.h"
 #include "../Include/RmlUi/Factory.h"
-#include "EventSpecification.h"
+#include "../Include/RmlUi/EventSpecification.h"
 #include <algorithm>
 #include <limits.h>
 

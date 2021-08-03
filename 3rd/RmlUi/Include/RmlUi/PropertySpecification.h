@@ -75,10 +75,9 @@ public:
 	/// @param[in] property_name The name to register the new property under.
 	/// @param[in] default_value The default value to be used for an element if it has no other definition provided.
 	/// @param[in] inherited True if this property is inherited from parent to child, false otherwise.
-	/// @param[in] forces_layout True if this property requires its parent to be reformatted if changed.
 	/// @param[in] id If 'Invalid' then automatically assigns a new id, otherwise assigns the given id.
 	/// @return The new property definition, ready to have parsers attached.
-	PropertyDefinition& RegisterProperty(const std::string& property_name, const std::string& default_value, bool inherited, bool forces_layout, PropertyId id = PropertyId::Invalid);
+	PropertyDefinition& RegisterProperty(const std::string& property_name, const std::string& default_value, bool inherited, PropertyId id = PropertyId::Invalid);
 	/// Returns a property definition.
 	/// @param[in] id The id of the desired property.
 	/// @return The appropriate property definition if it could be found, nullptr otherwise.
@@ -89,8 +88,6 @@ public:
 	const PropertyIdSet& GetRegisteredProperties() const;
 	/// Returns the id set of all registered inherited property definitions.
 	const PropertyIdSet& GetRegisteredInheritedProperties() const;
-	/// Returns the id set of all registered property definitions that may dirty the layout.
-	const PropertyIdSet& GetRegisteredPropertiesForcingLayout() const;
 
 	/// Registers a shorthand property definition.
 	/// @param[in] shorthand_name The name to register the new shorthand property under.
@@ -113,10 +110,6 @@ public:
 	/// @return True if all properties were parsed successfully, false otherwise.
 	bool ParseShorthandDeclaration(PropertyDictionary& dictionary, ShorthandId shorthand_id, const std::string& property_value) const;
 
-	/// Sets all undefined properties in the dictionary to their defaults.
-	/// @param dictionary[in-out] The dictionary to set the default values on.
-	void SetPropertyDefaults(PropertyDictionary& dictionary) const;
-
 private:
 	using Properties = std::vector< std::unique_ptr<PropertyDefinition> >;
 	using Shorthands = std::vector< std::unique_ptr<ShorthandDefinition> >;
@@ -129,7 +122,6 @@ private:
 
 	PropertyIdSet property_ids;
 	PropertyIdSet property_ids_inherited;
-	PropertyIdSet property_ids_forcing_layout;
 
 	bool ParsePropertyValues(std::vector<std::string>& values_list, const std::string& values, bool split_values) const;
 

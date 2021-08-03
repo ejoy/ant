@@ -32,7 +32,7 @@
 #include "DataController.h"
 #include "DataExpression.h"
 #include "DataModel.h"
-#include "EventSpecification.h"
+#include "../Include/RmlUi/EventSpecification.h"
 
 namespace Rml {
 

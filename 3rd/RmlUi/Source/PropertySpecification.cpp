@@ -50,7 +50,7 @@ PropertySpecification::~PropertySpecification()
 }
 
 // Registers a property with a new definition.
-PropertyDefinition& PropertySpecification::RegisterProperty(const std::string& property_name, const std::string& default_value, bool inherited, bool forces_layout, PropertyId id)
+PropertyDefinition& PropertySpecification::RegisterProperty(const std::string& property_name, const std::string& default_value, bool inherited, PropertyId id)
 {
 	if (id == PropertyId::Invalid)
 		id = property_map->GetOrCreateId(property_name);
@@ -75,12 +75,10 @@ PropertyDefinition& PropertySpecification::RegisterProperty(const std::string& p
 	}
 
 	// Create and insert the new property
-	properties[index] = std::make_unique<PropertyDefinition>(id, default_value, inherited, forces_layout);
+	properties[index] = std::make_unique<PropertyDefinition>(id, default_value, inherited);
 	property_ids.Insert(id);
 	if (inherited)
 		property_ids_inherited.Insert(id);
-	if (forces_layout)
-		property_ids_forcing_layout.Insert(id);
 
 	return *properties[index];
 }
@@ -109,11 +107,6 @@ const PropertyIdSet& PropertySpecification::GetRegisteredProperties(void) const
 const PropertyIdSet& PropertySpecification::GetRegisteredInheritedProperties(void) const
 {
 	return property_ids_inherited;
-}
-
-const PropertyIdSet& PropertySpecification::GetRegisteredPropertiesForcingLayout() const
-{
-	return property_ids_forcing_layout;
 }
 
 // Registers a shorthand property definition.
@@ -381,16 +374,6 @@ bool PropertySpecification::ParseShorthandDeclaration(PropertyDictionary& dictio
 	}
 
 	return true;
-}
-
-// Sets all undefined properties in the dictionary to their defaults.
-void PropertySpecification::SetPropertyDefaults(PropertyDictionary& dictionary) const
-{
-	for (const auto& property : properties)
-	{
-		if (property && dictionary.GetProperty(property->GetId()) == nullptr)
-			dictionary.SetProperty(property->GetId(), *property->GetDefaultValue());
-	}
 }
 
 bool PropertySpecification::ParsePropertyValues(std::vector<std::string>& values_list, const std::string& values, bool split_values) const

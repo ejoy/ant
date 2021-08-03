@@ -205,17 +205,7 @@ enum class EventId : uint16_t
 	Scroll,
 	Animationend,
 	Transitionend,
-
-	// Form control events
 	Change,
-	Submit,
-	Tabchange,
-	Columnadd,
-	Rowadd,
-	Rowchange,
-	Rowremove,
-	Rowupdate,
-
 	NumDefinedIds,
 
 	// Custom IDs start here

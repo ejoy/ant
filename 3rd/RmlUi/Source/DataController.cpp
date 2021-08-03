@@ -28,7 +28,7 @@
 
 #include "DataController.h"
 #include "../Include/RmlUi/Element.h"
-#include "EventSpecification.h"
+#include "../Include/RmlUi/EventSpecification.h"
 
 namespace Rml {
 

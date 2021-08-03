@@ -29,7 +29,7 @@
 #include "../Include/RmlUi/Event.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/Document.h"
-#include "EventSpecification.h"
+#include "../Include/RmlUi/EventSpecification.h"
 
 namespace Rml {
 

@@ -306,7 +306,7 @@ lDataModelSet(lua_State *L) {
 	lua_pushvalue(L, 2);
 	lua_xmove(L, dataL, 1);
 	if (lua_rawget(dataL, 1) == LUA_TNUMBER) {
-		int id = lua_tointeger(dataL, -1);
+		int id = (int)lua_tointeger(dataL, -1);
 		lua_pop(dataL, 1);
 		lua_xmove(L, dataL, 1);
 		lua_replace(dataL, id);

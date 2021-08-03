@@ -37,12 +37,11 @@
 #include "../Include/RmlUi/Types.h"
 #include "../Include/RmlUi/Texture.h"
 #include "../Include/RmlUi/Log.h"
-#include "EventSpecification.h"
+#include "../Include/RmlUi/EventSpecification.h"
 #include "FileInterfaceDefault.h"
 #include "PluginRegistry.h"
 #include "StyleSheetFactory.h"
 #include "StyleSheetParser.h"
-#include "EventSpecification.h"
 
 namespace Rml {
 

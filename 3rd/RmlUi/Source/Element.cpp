@@ -42,13 +42,13 @@
 #include "../Include/RmlUi/StreamMemory.h"
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/StringUtilities.h"
+#include "../Include/RmlUi/EventSpecification.h"
 #include "DataModel.h"
 #include "ElementAnimation.h"
 #include "ElementBackgroundBorder.h"
 #include "ElementDefinition.h"
 #include "ElementStyle.h"
 #include "EventDispatcher.h"
-#include "EventSpecification.h"
 #include "ElementBackgroundImage.h"
 #include "PluginRegistry.h"
 #include "PropertiesIterator.h"
@@ -482,32 +482,16 @@ void Element::SetInnerRML(const std::string& rml) {
 	//parser.Parse(stream.get());
 }
 
-void Element::AddEventListener(const std::string& event, EventListener* listener, bool in_capture_phase) {
-	EventId id = EventSpecificationInterface::GetIdOrInsert(event);
-	meta->event_dispatcher.AttachEvent(id, listener, in_capture_phase);
-}
-
 void Element::AddEventListener(EventId id, EventListener* listener, bool in_capture_phase) {
 	meta->event_dispatcher.AttachEvent(id, listener, in_capture_phase);
 }
 
-void Element::RemoveEventListener(const std::string& event, EventListener* listener, bool in_capture_phase) {
-	EventId id = EventSpecificationInterface::GetIdOrInsert(event);
+void Element::RemoveEventListener(EventId id, EventListener* listener, bool in_capture_phase) {
 	meta->event_dispatcher.DetachEvent(id, listener, in_capture_phase);
 }
 
-void Element::RemoveEventListener(EventId id, EventListener* listener, bool in_capture_phase)
-{
-	meta->event_dispatcher.DetachEvent(id, listener, in_capture_phase);
-}
-
-bool Element::DispatchEvent(const std::string& type, const EventDictionary& parameters) {
-	const EventSpecification& specification = EventSpecificationInterface::GetOrInsert(type);
-	return EventDispatcher::DispatchEvent(this, specification.id, parameters, specification.interruptible, specification.bubbles, specification.default_action_phase);
-}
-
-bool Element::DispatchEvent(const std::string& type, const EventDictionary& parameters, bool interruptible, bool bubbles) {
-	const EventSpecification& specification = EventSpecificationInterface::GetOrInsert(type);
+bool Element::DispatchEvent(EventId id, const EventDictionary& parameters, bool interruptible, bool bubbles) {
+	const EventSpecification& specification = EventSpecificationInterface::Get(id);
 	return EventDispatcher::DispatchEvent(this, specification.id, parameters, interruptible, bubbles, specification.default_action_phase);
 }
 
@@ -772,8 +756,10 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes)
 		if (pair.first.size() > 2 && pair.first[0] == 'o' && pair.first[1] == 'n')
 		{
 			EventListener* listener = Factory::InstanceEventListener(pair.second, this);
-			if (listener)
-				AddEventListener(pair.first.substr(2), listener, false);
+			if (listener) {
+				EventId id = EventSpecificationInterface::GetIdOrInsert(pair.first.substr(2));
+				AddEventListener(id, listener, false);
+			}
 		}
 	}
 }

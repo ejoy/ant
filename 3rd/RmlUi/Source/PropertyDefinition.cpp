@@ -33,11 +33,10 @@
 
 namespace Rml {
 
-PropertyDefinition::PropertyDefinition(PropertyId id, const std::string& _default_value, bool _inherited, bool _forces_layout) 
+PropertyDefinition::PropertyDefinition(PropertyId id, const std::string& _default_value, bool _inherited) 
 	: id(id), default_value(_default_value, Property::UNKNOWN)
 {
 	inherited = _inherited;
-	forces_layout = _forces_layout;
 	default_value.definition = this;
 }
 
@@ -142,12 +141,6 @@ bool PropertyDefinition::GetValue(std::string& value, const Property& property) 
 bool PropertyDefinition::IsInherited() const
 {
 	return inherited;
-}
-
-// Returns true if this property forces a re-layout when changed.
-bool PropertyDefinition::IsLayoutForced() const
-{
-	return forces_layout;
 }
 
 // Returns the default for this property.

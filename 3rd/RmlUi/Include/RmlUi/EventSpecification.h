@@ -44,19 +44,10 @@ struct EventSpecification {
 };
 
 namespace EventSpecificationInterface {
-
 	void Initialize();
-
-	// Get event specification for the given id.
-	// Returns the 'invalid' event type if no specification exists for id.
 	const EventSpecification& Get(EventId id);
 
-	// Get event specification for the given type.
-	// If not found: Inserts a new entry with default values.
-	const EventSpecification& GetOrInsert(const std::string& event_type);
-
-	// Get event id for the given name.
-	// If not found: Inserts a new entry with default values.
+	EventId GetId(const std::string& event_type);
 	EventId GetIdOrInsert(const std::string& event_type);
 }
 

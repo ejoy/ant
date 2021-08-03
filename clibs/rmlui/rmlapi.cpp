@@ -7,6 +7,7 @@
 #include "RmlUi/EventListener.h"
 #include "RmlUi/PropertyDictionary.h"
 #include "RmlUi/StyleSheetSpecification.h"
+#include "RmlUi/EventSpecification.h"
 
 #include "luaplugin.h"
 #include "luabind.h"
@@ -177,7 +178,8 @@ static int
 lDocumentAddEventListener(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	doc->body->AddEventListener(lua_checkstdstring(L, 2), new EventListener(L, 3), lua_toboolean(L, 4));
+	Rml::EventId id = Rml::EventSpecificationInterface::GetIdOrInsert(lua_checkstdstring(L, 2));
+	doc->body->AddEventListener(id, new EventListener(L, 3), lua_toboolean(L, 4));
 	return 0;
 }
 
@@ -226,7 +228,8 @@ static int
 lElementAddEventListener(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	e->AddEventListener(lua_checkstdstring(L, 2), new EventListener(L, 3), lua_toboolean(L, 4));
+	Rml::EventId id = Rml::EventSpecificationInterface::GetIdOrInsert(lua_checkstdstring(L, 2));
+	e->AddEventListener(id, new EventListener(L, 3), lua_toboolean(L, 4));
 	return 0;
 }
 static int
@@ -247,7 +250,8 @@ lDocumentDispatchEvent(lua_State* L) {
 			lua_pop(L, 1);
 		}
 	}
-	doc->body->DispatchEvent(lua_checkstdstring(L, 2), params);
+	Rml::EventId id = Rml::EventSpecificationInterface::GetIdOrInsert(lua_checkstdstring(L, 2));
+	doc->body->DispatchEvent(id, params);
 	return 0;
 }
 
