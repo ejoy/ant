@@ -47,10 +47,6 @@ function render_sys:update_filter()
 			end
 		end
     end
-
-	for v in w:select "main_queue_opacity name:in" do
-		print(v.name)
-	end
 end
 
 function render_sys:render_submit()
@@ -67,12 +63,6 @@ function render_sys:render_submit()
 		for qe in w:select(qn .. " visible camera_eid:in render_target:in filter_names:in cull_tag?in") do
 			local viewid = qe.render_target.viewid
 			local filternames, culltag = qe.filter_names, qe.cull_tag
-			local ww = world
-
-			for v in w:select "main_queue_opacity name:in" do
-				print(v.name)
-			end
-
 			if culltag then
 				for idx, fn in ipairs(filternames) do
 					for e in w:select(("%s %s:absent render_object:in"):format(fn, culltag[idx])) do

@@ -60,6 +60,10 @@ function s:luaecs_sync()
 			data.scene_id = id
 			e._scene_id = id
 			policy[#policy+1] = "ant.scene|scene_object"
+			if e.name then
+				policy[#policy+1] = "ant.general|name"
+				data.name = e.name
+			end
 		end
 
 		if isRenderObject(e) then
