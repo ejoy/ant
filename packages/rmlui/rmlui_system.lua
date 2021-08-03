@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-
+local w = world.w
 local assetmgr = import_package "ant.asset"
 
 local ltask     = require "ltask"
@@ -11,34 +11,40 @@ local fbmgr     = renderpkg.fbmgr
 local font      = import_package "ant.font"
 local irq       = world:interface "ant.render|irenderqueue"
 
-local ServiceRmlUi
+local ServiceRmlUi = ltask.spawn "rmlui"
 
 local rmlui_sys = ecs.system "rmlui_system"
 local iRmlUi = ecs.interface "rmlui"
 
 function rmlui_sys:init()
-    local mq_eid = world:singleton_entity_id "main_queue"
-    local vid = viewidmgr.get "uiruntime"
-    local vr = irq.view_rect(mq_eid)
-    fbmgr.bind(vid, irq.frame_buffer(mq_eid))
     local default_texid = assetmgr.resource "/pkg/ant.resources/textures/default/1x1_white.texture".handle
     local ft_handle, ft_w, ft_h = font.texture()
-    ServiceRmlUi = ltask.spawn "rmlui"
+    
     ltask.call(ServiceRmlUi, "initialize", {
         service_world = ltask.self(),
-        viewid = vid,
+        viewid = viewidmgr.get "uiruntime",
         font_mgr = font.handle(),
         font_tex = {
             texid = ft_handle,
             width = ft_w, height = ft_h,
         },
-        viewrect = vr,
+        viewrect = {x=0, y=0, w=1, h=1},
         default_tex = {
             width = 1, height = 1,
             texid = default_texid,
         },
     })
     iRmlUi.preload_dir "/pkg/ant.resources.binary/ui/test/assets/font/"
+end
+
+function rmlui_sys:entity_init()
+    for qe in w:select "INIT main_queue render_target:in" do
+        local vid = viewidmgr.get "uiruntime"
+        local rt = qe.render_target
+        fbmgr.bind(vid, rt.fb_idx)
+        local vr = rt.view_rect
+        ltask.send(ServiceRmlUi, "update_viewrect", vr.x, vr.y, vr.w, vr.h)
+    end
 end
 
 local windows = {}

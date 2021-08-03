@@ -6,11 +6,12 @@ local math3d = require "math3d"
 
 local irender   = world:interface "ant.render|irender"
 local imaterial = world:interface "ant.asset|imaterial"
+local ies		= world:interface "ant.scene|ientity_state"
 
-w:register "pickup_queue_opacity"
-w:register "pickup_queue_opacity_cull"
-w:register "pickup_queue_translucent"
-w:register "pickup_queue_translucent_cull"
+w:register{name = "pickup_queue_opacity"}
+w:register{name = "pickup_queue_opacity_cull"}
+w:register{name = "pickup_queue_translucent"}
+w:register{name = "pickup_queue_translucent_cull"}
 
 local pickup_materials = {}
 
@@ -59,23 +60,34 @@ function s:update_filter()
 
 		local tag = "pickup_queue_" .. st
 		local sync = tag .. "?out"
-		for vv in w:select(tag .. " primitive_filter:in") do
-			local pf = vv.primitive_filter
-			local mask = ies.filter_mask(pf.filter_type)
-			local exclude_mask = pf.exclude_type and ies.filter_mask(pf.exclude_type) or 0
+		for qe in w:select "pickup_queue filter_names:in" do
+			local function has_tag(t)
+				for _, fn in ipairs(qe.filter_names) do
+					if t == fn then
+						return true
+					end
+				end
+			end
 
-			local add = ((state & mask) ~= 0) and ((state & exclude_mask) == 0)
-			--ipf.update_filter_tag("pickup_queue", st, add, v)
-			v[tag] = add
-			w:sync(sync, v)
-			local m = assert(pickup_materials[st])
-			v.filter_material[st] = add and {
-				fx = m.fx,
-				properties = get_properties(eid, m.fx),
-				state = irender.check_primitive_mode_state(rc.state, m.state),
-			} or nil
+			if has_tag(tag) then
+				for vv in w:select(tag .. " primitive_filter:in") do
+					local pf = vv.primitive_filter
+					local mask = ies.filter_mask(pf.filter_type)
+					local exclude_mask = pf.exclude_type and ies.filter_mask(pf.exclude_type) or 0
+		
+					local add = ((state & mask) ~= 0) and ((state & exclude_mask) == 0)
+					--ipf.update_filter_tag("pickup_queue", st, add, v)
+					v[tag] = add
+					w:sync(sync, v)
+					local m = assert(pickup_materials[st])
+					v.filter_material[st] = add and {
+						fx = m.fx,
+						properties = get_properties(eid, m.fx),
+						state = irender.check_primitive_mode_state(rc.state, m.state),
+					} or nil
+				end
+			end
 		end
-
     end
 end
 

@@ -1,16 +1,19 @@
 local ecs = ...
 local world = ecs.world
-local iom = world:interface "ant.objcontroller|obj_motion"
-local camera_mgr = require "camera_manager"(world)
-local math3d  = require "math3d"
-local utils = require "mathutils"(world)
+local w = world.w
+
+local iom		= world:interface "ant.objcontroller|obj_motion"
+local camera_mgr= require "camera_manager"(world)
+local math3d	= require "math3d"
+local utils		= require "mathutils"(world)
 local inspector = require "widget.inspector"(world)
-local m = ecs.system "camera_system"
+
+local m			= ecs.system "camera_system"
 
 local event_camera_control = world:sub {"camera"}
 local camera_init_eye_pos <const> = {5, 5, 10, 1}
 local camera_init_target <const> = {0, 0,  0, 1}
-local camera_target
+local camera_target = math3d.ref(math3d.vector(0, 0, 0, 1))
 local camera_distance
 local camera_id
 local zoom_speed <const> = 1
@@ -21,10 +24,6 @@ local rotation_speed <const> = 1
 local function view_to_world(view_pos)
 	local camerasrt = iom.srt(camera_id)
 	return math3d.transform(camerasrt, view_pos, 0)
-end
-
-local function world_to_screen(world_pos)
-	
 end
 
 local function camera_update_eye_pos(camera)
@@ -54,14 +53,15 @@ local function camera_reset(eyepos, target)
 	iom.set_view(camera_id, eyepos, math3d.normalize(math3d.sub(camera_target, eyepos)))
 end
 
-local function camera_init()
-	camera_target = math3d.ref()
-	camera_id = world[world:singleton_entity_id "main_queue"].camera_eid
+local function camera_init(cameraeid)
+	camera_id		= cameraeid
 end
 
-function m:post_init()
-	camera_init()
-	camera_reset(camera_init_eye_pos, camera_init_target)
+function m:entity_init()
+	for qe in w:select "INIT main_queue camera_eid:in" do
+		camera_init(qe.camera_eid)
+		camera_reset(camera_init_eye_pos, camera_init_target)
+	end
 end
 local keypress_mb = world:sub{"keyboard"}
 local PAN_LEFT = false
@@ -105,7 +105,7 @@ local function selectBoundary(hp)
 	return 0
 end
 
-function m:data_changed()	
+function m:data_changed()
 	--camera_mgr.select_frustum = false
 	for _, what, x, y in mouse_move:unpack() do
 		if what == "UNKNOWN" then

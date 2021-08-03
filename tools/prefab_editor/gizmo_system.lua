@@ -1,5 +1,7 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
+
 local math3d = require "math3d"
 
 local iss = world:interface "ant.scene|iscenespace"
@@ -394,9 +396,14 @@ function gizmo_sys:post_init()
 	ies.set_state(new_eid, "auxgeom", true)
 	imaterial.set_property(new_eid, "u_color", gizmo_const.COLOR_Z)
 	iss.set_parent(new_eid, global_axis_eid)
-	update_global_axis()
-	gizmo:update_scale()
-	gizmo:show_by_state(false)
+end
+
+function gizmo_sys:entity_done()
+	for _ in w:select "INIT main_queue" do
+		update_global_axis()
+		gizmo:update_scale()
+		gizmo:show_by_state(false)
+	end
 end
 
 local function gizmo_dir_to_world(localDir)

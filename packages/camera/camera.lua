@@ -116,19 +116,24 @@ function ic.create(info, v2)
     }
 end
 
-local function bind_queue(cameraeid, qeid)
-    irq.set_camera(qeid, cameraeid)
-    local vr = irq.view_rect(qeid)
+local function bind_queue(cameraeid, queuename)
+    irq.set_camera(queuename, cameraeid)
+    local vr = irq.view_rect(queuename)
     ic.set_frustum_aspect(cameraeid, vr.w / vr.h)
 end
 
+local function has_queue(qn)
+    for _ in w:select(qn) do
+        return true
+    end
+end
+
 function ic.bind(eid, which_queue)
-    local qeid = world:singleton_entity_id(which_queue)
-    if qeid == nil then
-        error(string.format("not find queue:%s", which_queue))
+    if not has_queue(which_queue) then
+        error(("not find queue:%s"):format(which_queue))
     end
 
-    bind_queue(eid, qeid)
+    bind_queue(eid, which_queue)
 end
 
 function ic.controller(eid, ceid)
@@ -267,10 +272,12 @@ local function update_camera(cameraeid)
         return
     end
     local camera = find_camera(cameraeid)
-    local worldmat = camera.worldmat
-    camera.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), camera.updir)
-    camera.projmat = math3d.projmat(camera.frustum)
-    camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
+    if camera then
+        local worldmat = camera.worldmat
+        camera.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), camera.updir)
+        camera.projmat = math3d.projmat(camera.frustum)
+        camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
+    end
 end
 
 function cameraview_sys:update_mainview_camera()

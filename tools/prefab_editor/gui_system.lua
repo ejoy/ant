@@ -255,7 +255,7 @@ function m:ui_update()
     if dirty then
         local mvp = imgui.GetMainViewport()
         local viewport = {x = x - mvp.WorkPos[1], y = y - mvp.WorkPos[2] + uiconfig.MenuHeight, w = width, h = height}
-        irq.set_view_rect(world:singleton_entity_id "main_queue", viewport)
+        irq.set_view_rect("main_queue", viewport)
 
         iRmlUi.update_viewrect(viewport.x, viewport.y, viewport.w, viewport.h)
 

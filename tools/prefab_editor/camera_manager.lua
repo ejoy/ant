@@ -13,7 +13,8 @@ local m = {
     FRUSTUM_TOP     = 2,
     FRUSTUM_RIGHT   = 3,
     FRUSTUM_BOTTOM  = 4,
-    camera_list     = {}
+    camera_list     = {},
+    second_view     = "second_view",
 }
 
 local normal_color      = {1, 0.3, 0.3, 1}
@@ -117,7 +118,7 @@ function m.show_frustum(eid, visible)
     -- if m.second_camera ~= eid then
     --     return
     -- end
-    world[m.second_view].visible = visible
+    irq.set_visible(m.second_view, visible)
     if m.camera_list[eid] and m.camera_list[eid].frustum_eid then
         local state = "visible"
         ies.set_state(m.camera_list[eid].frustum_eid, state, visible)

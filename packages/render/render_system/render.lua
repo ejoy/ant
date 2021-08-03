@@ -92,7 +92,7 @@ function irender.get_main_view_rendertexture()
 	end
 end
 
-local function create_primitive_filter_entities(quenename, filtertype, surface_types)
+local function create_primitive_filter_entities(quenename, filtertype, surface_types, exclude)
 	local culltags = {}
 	local filter_names = {}
 	local types = surface_types or SURFACE_TYPES[quenename]
@@ -105,6 +105,7 @@ local function create_primitive_filter_entities(quenename, filtertype, surface_t
 			data = {
 				primitive_filter = {
 					filter_type = filtertype or "visible",
+					exclude_type = exclude,
 				},
 				[t] = true,
 			}
@@ -115,91 +116,81 @@ local function create_primitive_filter_entities(quenename, filtertype, surface_t
 	return filter_names, culltags
 end
 
-function irender.create_view_queue(view_rect, view_name)
-	for v in w:select "main_queue render_target:in" do
-		local rt = v.render_target
-		world:luaecs_create_entity {
-			policy = {
-				"ant.render|render_queue",
-				"ant.render|view_queue",
-				"ant.render|watch_screen_buffer",
-				"ant.general|name",
-			},
-			data = {
-				camera_eid = icamera.create{
-					eyepos  = {0, 0, 0, 1},
-					viewdir = {0, 0, 1, 0},
-					frustum = default_comp.frustum(view_rect.w / view_rect.h),
-					name = view_name,
-				},
-				render_target = {
-					viewid = viewidmgr.generate(view_name),
-					view_mode = "s",
-					clear_state = rt.clear_state,
-					view_rect = view_rect,
-					fb_idx = rt.fb_idx,
-				},
-				visible = true,
-				name = view_name,
-				view_queue = true,
-				watch_screen_buffer = true,
-				queuename = view_name,
-			}
-		}
-		break
-	end
-end
+-- function irender.create_view_queue(view_rect, view_name)
+-- 	for v in w:select "main_queue render_target:in" do
+-- 		local rt = v.render_target
+-- 		world:luaecs_create_entity {
+-- 			policy = {
+-- 				"ant.render|render_queue",
+-- 				"ant.render|view_queue",
+-- 				"ant.render|watch_screen_buffer",
+-- 				"ant.general|name",
+-- 			},
+-- 			data = {
+-- 				camera_eid = icamera.create{
+-- 					eyepos  = {0, 0, 0, 1},
+-- 					viewdir = {0, 0, 1, 0},
+-- 					frustum = default_comp.frustum(view_rect.w / view_rect.h),
+-- 					name = view_name,
+-- 				},
+-- 				render_target = {
+-- 					viewid = viewidmgr.generate(view_name),
+-- 					view_mode = "s",
+-- 					clear_state = rt.clear_state,
+-- 					view_rect = view_rect,
+-- 					fb_idx = rt.fb_idx,
+-- 				},
+-- 				visible = true,
+-- 				name = view_name,
+-- 				view_queue = true,
+-- 				watch_screen_buffer = true,
+-- 				queuename = view_name,
+-- 			}
+-- 		}
+-- 		break
+-- 	end
+-- end
 
-function irender.create_orthoview_queue(view_rect, orthoface, camera_eid, need_register_tag)
+local settingdata = setting:data()
+local default_clear_state<const> = {
+	color = settingdata.graphic.render.clear_color or 0x000000ff,
+	depth = 1.0,
+	clear = "CD",
+}
+
+function irender.create_view_queue(view_rect, view_queuename, camera_eid, exclude)
 	local st_types = SURFACE_TYPES["main_queue"]
-	local filter_names, cull_tag = create_primitive_filter_entities(orthoface, "visible", st_types)
-	if need_register_tag then
-		for _, fn in ipairs(filter_names) do
-			w:register {name = fn,}
-		end
+	w:register{name = view_queuename}
+	local filter_names, cull_tag = create_primitive_filter_entities(view_queuename, "visible", st_types, exclude)
+	for _, fn in ipairs(filter_names) do
+		w:register {name = fn,}
 	end
 
-	assert(orthoface)
-	for v in w:select "main_queue render_target:in" do
-		local rt = v.render_target
-		world:luaecs_create_entity {
-			policy = {
-				"ant.render|render_queue",
-				"ant.render|orthoview_queue",
-				"ant.render|watch_screen_buffer",
-				"ant.general|name",
+	local fbidx = fbmgr.get_byviewid(viewidmgr.get "main_view")
+	world:luaecs_create_entity {
+		policy = {
+			"ant.render|render_queue",
+			"ant.render|watch_screen_buffer",
+			"ant.general|name",
+		},
+		data = {
+			camera_eid = assert(camera_eid),
+			render_target = {
+				viewid		= viewidmgr.generate(view_queuename),
+				view_mode 	= "s",
+				clear_state	= default_clear_state,
+				view_rect	= view_rect,
+				fb_idx		= fbidx,
 			},
-			data = {
-				camera_eid = camera_eid or icamera.create({
-					eyepos  = {0, 0, 0, 1},
-					viewdir = {0, 0, 1, 0},
-					updir = {0, 1, 0, 0},
-					frustum = {
-						l=-1, r=1, b=-1, t=1, n=0.25, f=250,
-						ortho = true,
-					},
-					name = orthoface,
-				}),
-
-				render_target = {
-					viewid		= viewidmgr.generate(orthoface),
-					view_mode 	= "s",
-					clear_state	= rt.clear_state,
-					view_rect	= view_rect,
-					fb_idx		= rt.fb_idx,
-				},
-				name 				= orthoface,
-				orthoview 			= orthoface,
-				queue_name			= orthoface,
-				filter_names		= filter_names,
-				cull_tag			= cull_tag,
-				visible 			= false,
-				watch_screen_buffer	= true,
-				INIT				= true,
-			}
+			[view_queuename]	= true,
+			name 				= view_queuename,
+			queue_name			= view_queuename,
+			filter_names		= filter_names,
+			cull_tag			= cull_tag,
+			visible 			= false,
+			watch_screen_buffer	= true,
 		}
-		break
-	end
+	}
 end
 
 local rb_flag = samplerutil.sampler_flag {
@@ -228,7 +219,7 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 		}
 	}
 
-	local eid = world:create_entity{
+	world:luaecs_create_entity{
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|pre_depth_queue",
@@ -258,19 +249,17 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 			watch_screen_buffer = true,
 		}
 	}
-
-	return eid
 end
 
-local function create_main_fb(view_rect, sd)
+local function create_main_fb(view_rect)
 	local render_buffers = {}
-	local main_display_format = sd.graphic.hdr.enable and "RGBA16F" or "RGBA8"
+	local main_display_format = settingdata.graphic.hdr.enable and "RGBA16F" or "RGBA8"
 	render_buffers[#render_buffers+1] = fbmgr.create_rb(
 		default_comp.render_buffer(
 		view_rect.w, view_rect.h, main_display_format, rb_flag)
 	)
 
-	local bloom = sd.graphic.postprocess.bloom
+	local bloom = settingdata.graphic.postprocess.bloom
 	if bloom.enable then
 		render_buffers[#render_buffers+1] = fbmgr.create_rb(
 			default_comp.render_buffer(
@@ -294,8 +283,7 @@ local function create_main_fb(view_rect, sd)
 end
 
 function irender.create_main_queue(view_rect, camera_eid)
-	local sd = setting:data()
-	local fbidx = create_main_fb(view_rect, sd)
+	local fbidx = create_main_fb(view_rect)
 
 	local filternames, ct = create_primitive_filter_entities "main_queue"
 	world:luaecs_create_entity {
@@ -316,11 +304,7 @@ function irender.create_main_queue(view_rect, camera_eid)
 			render_target = {
 				viewid = viewidmgr.get "main_view",
 				view_mode = "s",
-				clear_state = {
-					color = sd.graphic.render.clear_color or 0x000000ff,
-					depth = 1.0,
-					clear = "CD",
-				},
+				clear_state = default_clear_state,
 				view_rect = {
 					x = view_rect.x or 0, y = view_rect.y or 0,
 					w = view_rect.w or 1, h = view_rect.h or 1,

@@ -40,7 +40,7 @@ function svs:entity_init()
 
         orthoview = {
             front = {
-                camrea_eid = icamera.create{
+                camera_eid = icamera.create{
                     viewdir = {0, 0, 1, 0},
                     updir   = {0, 1, 0, 0},
                     eyepos  = {0, 0, -5, 0},
@@ -52,7 +52,7 @@ function svs:entity_init()
                 },
             },
             back = {
-                camrea_eid = icamera.create{
+                camera_eid = icamera.create{
                     viewdir = {0, 0, -1, 0},
                     updir   = {0, 1, 0, 0},
                     eyepos  = {0, 0, 5, 0},
@@ -64,7 +64,7 @@ function svs:entity_init()
                 },
             },
             left = {
-                camrea_eid = icamera.create{
+                camera_eid = icamera.create{
                     viewdir = {1, 0, 0, 0},
                     updir   = {0, 1, 0, 0},
                     eyepos  = {-5, 0, 0, 0},
@@ -76,7 +76,7 @@ function svs:entity_init()
                 },
             },
             right = {
-                camrea_eid = icamera.create{
+                camera_eid = icamera.create{
                     viewdir = {-1, 0, 0, 0},
                     updir   = {0, 1, 0, 0},
                     eyepos  = {5, 0, 0, 0},
@@ -88,7 +88,7 @@ function svs:entity_init()
                 },
             },
             top = {
-                camrea_eid = icamera.create{
+                camera_eid = icamera.create{
                     viewdir = {0, -1, 0, 0},
                     updir   = {0, 0, 1, 0},
                     eyepos  = {0, 5, 0, 0},
@@ -100,7 +100,7 @@ function svs:entity_init()
                 },
             },
             bottom = {
-                camrea_eid = icamera.create{
+                camera_eid = icamera.create{
                 viewdir = {0, 1, 0, 0},
                 updir   = {0, 0, -1, 0},
                 eyepos  = {0, -5, 0, 0},
@@ -114,7 +114,7 @@ function svs:entity_init()
         }
 
         for k, v in pairs(orthoview) do
-            irender.create_orthoview_queue(rect_from_ratio(mainqueue_rect, v.view_ratio), v.name, v.camera_eid, true)
+            irender.create_view_queue(rect_from_ratio(mainqueue_rect, v.view_ratio), v.name, v.camera_eid, true)
         end
     end
 end

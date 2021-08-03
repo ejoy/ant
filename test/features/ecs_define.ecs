@@ -82,7 +82,8 @@ system "init_loader_system"
     .require_policy_v2 "ant.scene|scene_node"
     .require_policy_v2 "ant.render|render"
     .require_policy_v2 "ant.render|render_queue"
-    
+    .require_policy_v2 "ant.objcontroller|pickup"
+
     .require_interface "ant.camera|camera"
     .require_interface "ant.objcontroller|obj_motion"
     .require_interface "ant.render|iwidget_drawer"

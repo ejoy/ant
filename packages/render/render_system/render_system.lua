@@ -54,8 +54,10 @@ function render_sys:render_submit()
         local rt = v.render_target
         local viewid = rt.viewid
         local camera = icamera.find_camera(v.camera_eid)
-        bgfx.touch(viewid)
-        bgfx.set_view_transform(viewid, camera.viewmat, camera.projmat)
+		if camera then
+			bgfx.touch(viewid)
+			bgfx.set_view_transform(viewid, camera.viewmat, camera.projmat)
+		end
     end
 
 	--TODO: should put all render queue here

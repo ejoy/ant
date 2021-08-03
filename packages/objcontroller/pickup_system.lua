@@ -18,12 +18,9 @@ local icamera	= world:interface "ant.camera|camera"
 
 --update pickup view
 local function enable_pickup(enable)
-	local e = world:singleton_entity "pickup"
-	e.visible = enable
-	e.pickup.nextstep = enable and "blit" or nil
-
-	for v in w:select "pickup_filter visible?out" do
-		v.visible = enable
+	for e in w:select "pickup_queue pickup:in visible?out" do
+		e.visible = enable
+		e.pickup.nextstep = enable and "blit" or nil
 	end
 end
 
@@ -106,11 +103,11 @@ end
 
 local pickup_sys = ecs.system "pickup_system"
 
-local function blit_buffer_init(self)
-	self.handle = bgfx.memory_texture(self.w*self.h * self.elemsize)
-	self.rb_idx = fbmgr.create_rb {
-		w = self.w,
-		h = self.h,
+local function blit_buffer_init(blit_buffer)
+	blit_buffer.handle = bgfx.memory_texture(blit_buffer.w*blit_buffer.h * blit_buffer.elemsize)
+	blit_buffer.rb_idx = fbmgr.create_rb {
+		w = blit_buffer.w,
+		h = blit_buffer.h,
 		layers = 1,
 		format = "RGBA8",
 		flags = samplerutil.sampler_flag {
@@ -121,21 +118,8 @@ local function blit_buffer_init(self)
 			V="CLAMP",
 		}
 	}
-	self.blit_viewid = viewidmgr.get "pickup_blit"
-	return self
+	blit_buffer.blit_viewid = viewidmgr.get "pickup_blit"
 end
-
-local pu = ecs.component "pickup"
-
-function pu:init()
-	self.pickup_cache = {
-		last_pick = -1,
-		pick_ids = {},
-	}
-	self.blit_buffer = blit_buffer_init(self.blit_buffer)
-	return self
-end
-
 
 local pickup_buffer_w, pickup_buffer_h = 8, 8
 local pickupviewid = viewidmgr.get "pickup"
@@ -254,6 +238,17 @@ function pickup_sys:init()
 	create_pick_entity()
 end
 
+function pickup_sys:entity_init()
+	for e in w:select "INIT pickup_queue pickup:in" do
+		local pickup = e.pickup
+		pickup.pickup_cache = {
+			last_pick = -1,
+			pick_ids = {},
+		}
+		blit_buffer_init(pickup.blit_buffer)
+	end
+end
+
 local leftmousepress_mb = world:sub {"mouse", "LEFT"}
 local clickpt = {}
 function pickup_sys:data_changed()
@@ -266,8 +261,8 @@ function pickup_sys:data_changed()
 end
 
 function pickup_sys:update_camera()
-    for v in w:select "pickup_queue visible camera_eid:in" do
-		update_camera(v.camear_eid, clickpt)
+    for e in w:select "pickup_queue visible camera_eid:in" do
+		update_camera(e.camera_eid, clickpt)
 	end
 end
 

@@ -151,7 +151,9 @@ end
 function effekseer_sys:camera_usage()
     local icamera = world:interface "ant.camera|camera"
     local c = icamera.find_camera(main_camera_eid())
-    effekseer.update_view_proj(math3d.value_ptr(c.viewmat), math3d.value_ptr(c.projmat))
+    if c then
+        effekseer.update_view_proj(math3d.value_ptr(c.viewmat), math3d.value_ptr(c.projmat))
+    end
 end
 
 
