@@ -27,7 +27,7 @@ Context::~Context() {
 		unloaded_documents.push_back(document);
 	}
 	for (auto& document : unloaded_documents) {
-		document->body->GetEventDispatcher()->DetachAllEvents();
+		document->body->RemoveAllEvents();
 		PluginRegistry::NotifyDocumentDestroy(document);
 		delete document;
 	}
@@ -168,7 +168,7 @@ void Context::ReleaseUnloadedDocuments() {
 	std::vector<Document*> documents = std::move(unloaded_documents);
 	unloaded_documents.clear();
 	for (auto document : documents) {
-		document->body->GetEventDispatcher()->DetachAllEvents();
+		document->body->RemoveAllEvents();
 		auto pos = std::find(std::begin(documents), std::end(documents), document);
 		std::rotate(pos, pos + 1, std::end(documents));
 		documents.pop_back();

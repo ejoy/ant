@@ -43,6 +43,7 @@
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/StringUtilities.h"
 #include "../Include/RmlUi/EventSpecification.h"
+#include "../Include/RmlUi/EventListener.h"
 #include "DataModel.h"
 #include "ElementAnimation.h"
 #include "ElementBackgroundBorder.h"
@@ -63,8 +64,7 @@
 namespace Rml {
 
 struct ElementMeta {
-	ElementMeta(Element* el) : event_dispatcher(el), style(el) {}
-	EventDispatcher event_dispatcher;
+	ElementMeta(Element* el) : style(el) {}
 	ElementStyle style;
 	Style::ComputedValues computed_values;
 };
@@ -89,10 +89,12 @@ Element::~Element() {
 	RMLUI_ASSERT(parent == nullptr);
 	//GetOwnerDocument()->OnElementDetach(this);
 	SetDataModel(nullptr);
-	for (ElementPtr& child : children) {
+	for (auto& child : children) {
 		child->SetParent(nullptr);
 	}
-	delete meta;
+	for (const auto& listener : listeners) {
+		listener->OnDetach(this);
+	}
 }
 
 void Element::Update() {
@@ -482,24 +484,6 @@ void Element::SetInnerRML(const std::string& rml) {
 	//parser.Parse(stream.get());
 }
 
-void Element::AddEventListener(EventListener* listener) {
-	meta->event_dispatcher.AddEventListener(listener);
-}
-
-void Element::RemoveEventListener(EventListener* listener) {
-	meta->event_dispatcher.RemoveEventListener(listener);
-}
-
-bool Element::DispatchEvent(EventId id, const EventDictionary& parameters, bool interruptible, bool bubbles) {
-	Event event(this, id, parameters, interruptible);
-	return EventDispatcher::DispatchEvent(event, bubbles);
-}
-
-bool Element::DispatchEvent(EventId id, const EventDictionary& parameters) {
-	const EventSpecification& specification = EventSpecificationInterface::Get(id);
-	return DispatchEvent(specification.id, parameters, specification.interruptible, specification.bubbles);
-}
-
 Element* Element::AppendChild(ElementPtr child) {
 	RMLUI_ASSERT(child);
 	Element* child_ptr = child.get();
@@ -713,10 +697,6 @@ void Element::QuerySelectorAll(ElementList& elements, const std::string& selecto
 	}
 
 	QuerySelectorAllMatchRecursive(elements, leaf_nodes, this);
-}
-
-EventDispatcher* Element::GetEventDispatcher() const {
-	return &meta->event_dispatcher;
 }
 
 DataModel* Element::GetDataModel() const {
@@ -1451,6 +1431,45 @@ void Element::SetRednerStatus() {
 void Element::DirtyTransform() {
 	dirty_transform = true;
 	dirty_clip = true;
+}
+
+void Element::AddEventListener(EventListener* listener) {
+	auto it = std::find(listeners.begin(), listeners.end(), listener);
+	if (it == listeners.end()) {
+		listeners.emplace(it, listener);
+	}
+}
+
+void Element::RemoveEventListener(EventListener* listener) {
+	auto it = std::find(listeners.begin(), listeners.end(), listener);
+	if (it != listeners.end()) {
+		listeners.erase(it);
+		listener->OnDetach(this);
+	}
+}
+
+bool Element::DispatchEvent(EventId id, const EventDictionary& parameters, bool interruptible, bool bubbles) {
+	Event event(this, id, parameters, interruptible);
+	return Rml::DispatchEvent(event, bubbles);
+}
+
+bool Element::DispatchEvent(EventId id, const EventDictionary& parameters) {
+	const EventSpecification& specification = EventSpecificationInterface::Get(id);
+	return DispatchEvent(specification.id, parameters, specification.interruptible, specification.bubbles);
+}
+
+void Element::RemoveAllEvents() {
+	for (const auto& listener : listeners) {
+		listener->OnDetach(this);
+	}
+	listeners.clear();
+	for (auto& child : children) {
+		child->RemoveAllEvents();
+	}
+}
+
+std::vector<EventListener*> const& Element::GetEventListeners() const {
+	return listeners;
 }
 
 } // namespace Rml

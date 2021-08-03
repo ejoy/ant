@@ -39,40 +39,6 @@ namespace Rml {
 
 enum class DefaultActionPhase { None, Target, TargetAndBubble };
 
-EventDispatcher::EventDispatcher(Element* _element) {
-	element = _element;
-}
-
-EventDispatcher::~EventDispatcher() {
-	for (const auto& listener : listeners)
-		listener->OnDetach(element);
-}
-
-void EventDispatcher::AddEventListener(EventListener* listener) {
-	auto it = std::find(listeners.begin(), listeners.end(), listener);
-	if (it == listeners.end()) {
-		listeners.emplace(it, listener);
-	}
-}
-
-void EventDispatcher::RemoveEventListener(EventListener* listener) {
-	auto it = std::find(listeners.begin(), listeners.end(), listener);
-	if (it != listeners.end()) {
-		listeners.erase(it);
-		listener->OnDetach(element);
-	}
-}
-
-void EventDispatcher::DetachAllEvents() {
-	for (const auto& listener : listeners)
-		listener->OnDetach(element);
-
-	listeners.clear();
-
-	for (int i = 0; i < element->GetNumChildren(); ++i)
-		element->GetChild(i)->GetEventDispatcher()->DetachAllEvents();
-}
-
 struct CollectedListener {
 	CollectedListener(Element* _element, EventListener* _listener, int depth, bool in_capture_phase)
 		: element(_element->GetObserverPtr())
@@ -116,7 +82,7 @@ static DefaultActionPhase getDefaultActionPhase(Event& e) {
 	return DefaultActionPhase::None;
 }
 
-bool EventDispatcher::DispatchEvent(Event& e, bool bubbles) {
+bool DispatchEvent(Event& e, bool bubbles) {
 	const DefaultActionPhase default_action_phase = getDefaultActionPhase(e);
 
 	std::vector<CollectedListener> listeners;
@@ -125,9 +91,7 @@ bool EventDispatcher::DispatchEvent(Event& e, bool bubbles) {
 	EventId id = e.GetId();
 	Element* walk_element = e.GetTargetElement();
 	while (walk_element) {
-		EventDispatcher* dispatcher = walk_element->GetEventDispatcher();
-
-		for (auto const& listener : dispatcher->listeners) {
+		for (auto const& listener : walk_element->GetEventListeners()) {
 			if (listener->id == id) {
 				if (listener->use_capture) {
 					listeners.emplace_back(walk_element, listener, depth, true);

@@ -45,7 +45,6 @@ namespace Rml {
 
 class Context;
 class DataModel;
-class EventDispatcher;
 class EventListener;
 class ElementDefinition;
 class Document;
@@ -241,6 +240,8 @@ public:
 	void RemoveEventListener(EventListener* listener);
 	bool DispatchEvent(EventId id, const EventDictionary& parameters, bool interruptible, bool bubbles = true);
 	bool DispatchEvent(EventId id, const EventDictionary& parameters);
+	void RemoveAllEvents();
+	std::vector<EventListener*> const& GetEventListeners() const;
 
 	/// Append a child to this element.
 	/// @param[in] element The element to append as a child.
@@ -286,8 +287,6 @@ public:
 		@name Internal Functions
 	 */
 	//@{
-	/// Access the event dispatcher for this element.
-	EventDispatcher* GetEventDispatcher() const;
 	/// Returns the data model of this element.
 	DataModel* GetDataModel() const;
 	//@}
@@ -383,6 +382,7 @@ protected:
 	bool dirty_transition;
 
 	ElementMeta* meta;
+	std::vector<EventListener*> listeners;
 
 	bool dirty_background = false;
 	bool dirty_border = false;
