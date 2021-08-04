@@ -166,7 +166,7 @@ function irender.create_view_queue(view_rect, view_queuename, camera_eid, exclud
 		w:register {name = fn,}
 	end
 
-	local fbidx = fbmgr.get_byviewid(viewidmgr.get "main_view")
+	local fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
 	world:luaecs_create_entity {
 		policy = {
 			"ant.render|render_queue",

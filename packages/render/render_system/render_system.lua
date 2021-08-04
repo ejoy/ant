@@ -25,7 +25,7 @@ local function has_filter_tag(queuename, t)
 end
 
 function render_sys:update_filter()
-    for e in w:select "render_object_update render_object:in" do
+    for e in w:select "render_object_update render_object:in name?in" do
         local ro = e.render_object
         local state = ro.entity_state
 		local st = ro.fx.setting.surfacetype
