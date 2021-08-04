@@ -32,13 +32,7 @@ local event_type = {
 	"animationend"  ,
 	"transitionend" ,
 	"change"        ,
-	"submit"        ,
-	"tabchange"     ,
-	"columnadd"     ,
-	"rowadd"        ,
-	"rowchange"     ,
-	"rowremove"     ,
-	"rowupdate"     ,
+	"message"       ,
 }
 
 return function (e)

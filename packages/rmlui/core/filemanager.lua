@@ -22,18 +22,17 @@ local function import_font(path)
     end
 end
 
-function m.add(dir)
+local function compile_texture(path)
+    return cr.compile(path:string() .. "|main.bin"):string()
+end
+
+function m.preload_dir(dir)
     dir = fs.path(dir)
     directorys[#directorys+1] = dir
     import_font(dir)
 end
 
-local function compile_texture(path)
-    return cr.compile(path:string() .. "|main.bin"):string()
-end
-
 function m.realpath(path)
-    local _ <close> = fs.switch_sync()
     for i = #directorys, 1, -1 do
         local file = directorys[i] / path
         if fs.exists(file) then
@@ -41,6 +40,15 @@ function m.realpath(path)
                 return compile_texture(file)
             end
             return file:localpath():string()
+        end
+    end
+end
+
+function m.exists(path)
+    for i = #directorys, 1, -1 do
+        local file = directorys[i] / path
+        if fs.exists(file) then
+            return true
         end
     end
 end
