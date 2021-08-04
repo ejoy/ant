@@ -55,7 +55,7 @@ function s:end_filter()
 	for e in w:select "filter_result:in render_object:in eid:in filter_material:out" do
 		local eid = e.eid
 		local fr = e.filter_result
-		local st = e.render_object.fx.setting.surface_type
+		local st = e.render_object.fx.setting.surfacetype
 		for qe in w:select "pickup_queue filter_names:in" do
 			for _, fn in ipairs(qe.filter_names) do
 				if fr[fn] then

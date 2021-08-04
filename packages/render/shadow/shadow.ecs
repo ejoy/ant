@@ -24,7 +24,6 @@ system "shadow_primitive_system"
     .require_system "end_filter_system"
     .require_interface "ant.render|irender"
     .method     "end_filter"
-    .method     "render_submit"
 
 -- policy "csm_policy"
 --     .require_system "shadow_system"
