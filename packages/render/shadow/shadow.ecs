@@ -23,7 +23,7 @@ system "shadow_primitive_system"
     .implement "shadow/shadow_maker.lua"
     .require_system "end_filter_system"
     .require_interface "ant.render|irender"
-    .method     "update_filter"
+    .method     "end_filter"
     .method     "render_submit"
 
 -- policy "csm_policy"

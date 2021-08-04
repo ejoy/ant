@@ -40,7 +40,6 @@ local function update_camera(pu_cameraeid, clickpt)
 		camera.viewmat = math3d.lookto(eye, viewdir, camera.updir)
 		camera.projmat = math3d.projmat(camera.frustum)
 		camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
-		break
 	end
 end
 
@@ -135,7 +134,7 @@ local fb_renderbuffer_flag = samplerutil.sampler_flag {
 local icamera = world:interface "ant.camera|camera"
 
 local function create_pick_entity()
-	local cameraeid = icamera.create({
+	local cameraeid = icamera.create{
 		viewdir = mc.ZAXIS,
 		updir = mc.YAXIS,
 		eyepos = mc.ZERO_PT,
@@ -143,7 +142,7 @@ local function create_pick_entity()
 			type="mat", n=0.1, f=100, fov=0.5, aspect=pickup_buffer_w / pickup_buffer_h
 		},
 		name = "camera.pickup",
-	}, true)
+	}
 
 	local fbidx = fbmgr.create {
 		fbmgr.create_rb {
@@ -228,7 +227,7 @@ local function create_pick_entity()
 			queue_name 	= "pickup_queue",
 			pickup_queue= true,
 			INIT		= true,
-			visible = false,
+			visible = true,
 		}
 
 	}
@@ -250,7 +249,7 @@ function pickup_sys:entity_init()
 end
 
 local leftmousepress_mb = world:sub {"mouse", "LEFT"}
-local clickpt = {}
+local clickpt = {920, 402}
 function pickup_sys:data_changed()
 	for _,_,state,x,y in leftmousepress_mb:unpack() do
 		if state == "DOWN" then
@@ -261,7 +260,7 @@ function pickup_sys:data_changed()
 end
 
 function pickup_sys:update_camera()
-    for e in w:select "pickup_queue visible camera_eid:in" do
+    for e in w:select "pickup_queue camera_eid:in" do
 		update_camera(e.camera_eid, clickpt)
 	end
 end
@@ -319,7 +318,7 @@ local function check_next_step(pc)
 end
 
 function pickup_sys:pickup()
-	for v in w:select "pickup_queue visible pickup:in render_target:in" do
+	for v in w:select "pickup_queue pickup:in render_target:in" do
 		local pc = v.pickup
 		local nextstep = pc.nextstep
 		if nextstep == "blit" then

@@ -29,41 +29,21 @@ function s:init()
     pre_depth_skinning_material = imaterial.load(pre_depth_material_file, {depth_type="linear", skinning="GPU"})
 end
 
-function s:update_filter()
-    for v in w:select "render_object_update render_object:in eid:in filter_material:in" do
-        local rc = v.render_object
-        local st = rc.fx.setting.surfacetype
-        local state = rc.entity_state
-        local render_state = rc.state
-        local eid = v.eid
-        local t = "pre_depth_queue_" .. st
-        local sync = t .. "?out"
-        for vv in w:select(sync .. " primitive_filter:in") do
-            local pf = vv.primitive_filter
-            local mask = ies.filter_mask(pf.filter_type)
-            local exclude_mask = pf.exclude_type and ies.filter_mask(pf.exclude_type) or 0
-
-            local add = ((state & mask) ~= 0) and 
-                        ((state & exclude_mask) == 0) and
-                        can_write_depth(render_state)
-
-            w:sync(sync, v)
-
-            local m = assert(which_material(eid))
-            v.filter_material[st] = add and {
-                fx          = m.fx,
-                properties  = m.properties,
-                state       = irender.check_primitive_mode_state(rc.state, m.state),
-            } or nil
-        end
-    end
-end
-
-function s:render_submit()
-    for v in w:select "pre_depth_queue visible render_target:in" do
-        local viewid = v.render_target.viewid
-        for u in w:select("pre_depth_queue_opacity_cull:absent render_object:in filter_material:in") do
-            irender.draw(viewid, u.render_object, u.filter_material["opacity"])
+function s:end_filter()
+    for e in w:select "fitler_result:in render_object:in eid:in filter_material:in" do
+        local m = assert(which_material(e.eid))
+        local fr = e.filter_result
+        local state = e.render_object.state
+        for qe in w:select "pre_depth_queue filter_names:in" do
+            for _, fn in ipairs(qe.filter_names) do
+                if fr[fn] then
+                    e.filter_material[fn] = {
+                        fx          = m.fx,
+                        properties  = m.properties,
+                        state       = irender.check_primitive_mode_state(state, m.state),
+                    }
+                end
+            end
         end
     end
 end

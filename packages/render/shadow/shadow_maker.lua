@@ -439,8 +439,8 @@ local omni_stencils = {
 
 local s = ecs.system "shadow_primitive_system"
 
-function s:update_filter()
-    for e in w:select "render_object_update render_object:in eid:in filter_material:in" do
+function s:end_filter()
+    for e in w:select "filter_result:in render_object:in eid:in filter_material:in" do
         local rc = e.render_object
         local state = rc.entity_state
 		local st = rc.fx.setting.surfacetype
@@ -449,37 +449,12 @@ function s:update_filter()
 
 		for qe in w:select "csm_queue filter_names:in" do
 			for _, fn in ipairs(qe.filter_names) do
-				for fe in w:select(fn .. " primitive_filter:in") do
-					local pf = fe.primitive_filter
-					local mask = ies.filter_mask(pf.filter_type)
-					local exclude_mask = pf.exclude_type and ies.filter_mask(pf.exclude_type) or 0
-					local add = ((state & mask) ~= 0) and ((state & exclude_mask) == 0)
-					e[fn] = add
-					w:sync(fn .. "?out", e)
-
-					fm[st] = add and {
-						fx = m.fx,
-						properties = m.properties,
-						state = irender.check_primitive_mode_state(rc.state, m.state),
-					} or nil
-				end
+				fm[fn] = {
+					fx = m.fx,
+					properties = m.properties,
+					state = irender.check_primitive_mode_state(rc.state, m.state),
+				}
 			end
 		end
 	end
-end
-
-function s:render_submit()
-    for qe in w:select "csm_queue visible render_target:in filter_names:in cull_tag:in" do
-        local viewid = qe.render_target.viewid
-		local filternames, culltag = qe.filter_names, qe.cull_tag
-		assert(#filternames == #culltag)
-
-		for idx, fn in ipairs(filternames) do
-			for e in w:select("%s %s:absent render_object:in filter_material:in"):format(fn, culltag[idx]) do
-				local ro = e.render_object
-				local st = ro.fx.setting.surfacetype
-				irender.draw(viewid, ro, e.filter_material[st])
-			end
-		end
-    end
 end

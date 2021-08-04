@@ -51,57 +51,24 @@ function s:init()
 	pickup_materials.translucent= imaterial.load '/pkg/ant.resources/materials/pickup_transparent.material'
 end
 
-function s:update_filter()
-    for v in w:select "render_object_update render_object:in eid:in filter_material:in" do
-        local rc = v.render_object
-		local st = rc.fx.setting.surfacetype
-        local state = rc.entity_state
-		local eid = v.eid
-
-		local tag = "pickup_queue_" .. st
-		local sync = tag .. "?out"
+function s:end_filter()
+	for e in w:select "filter_result:in render_object:in eid:in filter_material:out" do
+		local eid = e.eid
+		local fr = e.filter_result
+		local st = e.render_object.fx.setting.surface_type
 		for qe in w:select "pickup_queue filter_names:in" do
-			local function has_tag(t)
-				for _, fn in ipairs(qe.filter_names) do
-					if t == fn then
-						return true
-					end
-				end
-			end
-
-			if has_tag(tag) then
-				for vv in w:select(tag .. " primitive_filter:in") do
-					local pf = vv.primitive_filter
-					local mask = ies.filter_mask(pf.filter_type)
-					local exclude_mask = pf.exclude_type and ies.filter_mask(pf.exclude_type) or 0
-		
-					local add = ((state & mask) ~= 0) and ((state & exclude_mask) == 0)
-					--ipf.update_filter_tag("pickup_queue", st, add, v)
-					v[tag] = add
-					w:sync(sync, v)
+			for _, fn in ipairs(qe.filter_names) do
+				if fr[fn] then
 					local m = assert(pickup_materials[st])
-					v.filter_material[st] = add and {
-						fx = m.fx,
-						properties = get_properties(eid, m.fx),
-						state = irender.check_primitive_mode_state(rc.state, m.state),
-					} or nil
+					local state = e.render_object.state
+					e.filter_material[fn] = {
+						fx			= m.fx,
+						properties	= get_properties(eid, m.fx),
+						state		= irender.check_primitive_mode_state(state, m.state),
+					}
 				end
 			end
 		end
-    end
-end
 
-function s:render_submit()
-    for v in w:select "pickup_queue visible render_target:in" do
-        local rt = v.render_target
-        local viewid = rt.viewid
-
-		for vv in w:select "pickup_queue_opacity render_object:in filter_material:in pickup_queue_opacity_cull:absent" do
-			irender.draw(viewid, vv.render_object, vv.filter_material["opacity"])
-		end
-
-		for vv in w:select "pickup_queue_translucent render_object:in filter_material:in pickup_queue_translucent_cull:absent" do
-			irender.draw(viewid, vv.render_object, vv.filter_material["translucent"])
-		end
-    end
+	end
 end

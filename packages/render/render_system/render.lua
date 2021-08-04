@@ -116,41 +116,6 @@ local function create_primitive_filter_entities(quenename, filtertype, surface_t
 	return filter_names, culltags
 end
 
--- function irender.create_view_queue(view_rect, view_name)
--- 	for v in w:select "main_queue render_target:in" do
--- 		local rt = v.render_target
--- 		world:luaecs_create_entity {
--- 			policy = {
--- 				"ant.render|render_queue",
--- 				"ant.render|view_queue",
--- 				"ant.render|watch_screen_buffer",
--- 				"ant.general|name",
--- 			},
--- 			data = {
--- 				camera_eid = icamera.create{
--- 					eyepos  = {0, 0, 0, 1},
--- 					viewdir = {0, 0, 1, 0},
--- 					frustum = default_comp.frustum(view_rect.w / view_rect.h),
--- 					name = view_name,
--- 				},
--- 				render_target = {
--- 					viewid = viewidmgr.generate(view_name),
--- 					view_mode = "s",
--- 					clear_state = rt.clear_state,
--- 					view_rect = view_rect,
--- 					fb_idx = rt.fb_idx,
--- 				},
--- 				visible = true,
--- 				name = view_name,
--- 				view_queue = true,
--- 				watch_screen_buffer = true,
--- 				queuename = view_name,
--- 			}
--- 		}
--- 		break
--- 	end
--- end
-
 local settingdata = setting:data()
 local default_clear_state<const> = {
 	color = settingdata.graphic.render.clear_color or 0x000000ff,
