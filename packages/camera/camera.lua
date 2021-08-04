@@ -166,6 +166,14 @@ function ic.set_frustum_fov(eid, fov)
     frustum_changed(eid, "fov", fov)
 end
 
+function ic.set_frustum_near(eid, n)
+    frustum_changed(eid, "n", n)
+end
+
+function ic.set_frustum_far(eid, f)
+    frustum_changed(eid, "f", f)
+end
+
 local iom = world:interface "ant.objcontroller|obj_motion"
 function ic.lookto(eid, ...)
     iom.lookto(eid, ...)

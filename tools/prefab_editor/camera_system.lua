@@ -179,17 +179,11 @@ function m:data_changed()
 		elseif what == "dist" then
 			camera_mgr.set_dist_to_target(eid, value)
 		elseif what == "fov" then
-			icamera.set_frustum(eid, {
-				fov = value
-			})
+			icamera.set_frustum_fov(eid, value)
 		elseif what == "near" then
-			icamera.set_frustum(eid, {
-				n = value,
-			})
+			icamera.set_frustum_near(eid, value)
 		elseif what == "far" then
-			icamera.set_frustum(eid, {
-				f = value
-			})
+			icamera.set_frustum_far(eid, value)
 		end
 	end
 	
