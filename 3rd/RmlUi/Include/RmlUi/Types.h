@@ -116,6 +116,18 @@ using DataViewPtr = std::unique_ptr<DataView, Releaser<DataView>>;
 class DataController;
 using DataControllerPtr = std::unique_ptr<DataController, Releaser<DataController>>;
 
+typedef uint8_t PseudoClassSet;
+
+enum class PseudoClass : uint8_t {
+	Hover  = 0x01,
+	Active = 0x02,
+};
+
+inline PseudoClassSet operator| (PseudoClass a, PseudoClass b) { return (uint8_t)a | (uint8_t)b; }
+inline PseudoClassSet operator| (PseudoClassSet a, PseudoClass b) { return a | (uint8_t)b; }
+inline PseudoClassSet operator~ (PseudoClass a) { return ~(uint8_t)a; }
+inline PseudoClassSet operator& (PseudoClassSet a, PseudoClass b) { return a & (uint8_t)b; }
+
 struct Point {
 	float x{};
 	float y{};

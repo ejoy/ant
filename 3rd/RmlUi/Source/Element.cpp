@@ -194,12 +194,9 @@ std::string Element::GetAddress(bool include_pseudo_classes, bool include_parent
 
 	if (include_pseudo_classes)
 	{
-		const PseudoClassList& pseudo_classes = meta->style.GetActivePseudoClasses();		
-		for (PseudoClassList::const_iterator i = pseudo_classes.begin(); i != pseudo_classes.end(); ++i)
-		{
-			address += ":";
-			address += (*i);
-		}
+		PseudoClassSet pseudo_classes = GetActivePseudoClasses();
+		if (pseudo_classes & PseudoClass::Active) { address += ":active"; }
+		if (pseudo_classes & PseudoClass::Hover) { address += ":hover"; }
 	}
 
 	if (include_parents && parent)
@@ -344,28 +341,17 @@ bool Element::Project(Point& point) const noexcept {
 	return false;
 }
 
-void Element::SetPseudoClass(const std::string& pseudo_class, bool activate)
+void Element::SetPseudoClass(PseudoClass pseudo_class, bool activate)
 {
 	meta->style.SetPseudoClass(pseudo_class, activate);
 }
 
-bool Element::IsPseudoClassSet(const std::string& pseudo_class) const
+bool Element::IsPseudoClassSet(PseudoClassSet pseudo_class) const
 {
 	return meta->style.IsPseudoClassSet(pseudo_class);
 }
 
-bool Element::ArePseudoClassesSet(const PseudoClassList& pseudo_classes) const
-{
-	for (PseudoClassList::const_iterator i = pseudo_classes.begin(); i != pseudo_classes.end(); ++i)
-	{
-		if (!IsPseudoClassSet(*i))
-			return false;
-	}
-
-	return true;
-}
-
-const PseudoClassList& Element::GetActivePseudoClasses() const
+PseudoClassSet Element::GetActivePseudoClasses() const
 {
 	return meta->style.GetActivePseudoClasses();
 }
@@ -834,19 +820,13 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 void Element::ProcessDefaultAction(Event& event) {
 	switch (event.GetId()) {
 	case EventId::Mouseover:
-		if (event.GetPhase() == EventPhase::Target) {
-			SetPseudoClass("hover", true);
-		}
+		SetPseudoClass(PseudoClass::Hover, true);
 		break;
 	case EventId::Mouseout:
-		if (event.GetPhase() == EventPhase::Target) {
-			SetPseudoClass("hover", false);
-		}
+		SetPseudoClass(PseudoClass::Hover, false);
 		break;
 	case EventId::Mousedown:
-		if (event.GetParameter<int>("button", 0) == (int)MouseButton::Left) {
-			SetPseudoClass("active", true);
-		}
+		SetPseudoClass(PseudoClass::Active, true);
 		break;
 	default:
 		break;

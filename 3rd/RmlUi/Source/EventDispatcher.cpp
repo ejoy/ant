@@ -119,8 +119,6 @@ bool DispatchEvent(Event& e, bool bubbles) {
 		Element* element = listener_desc.element.get();
 		if (element) {
 			if (listener_desc.default_action) {
-				e.SetCurrentElement(element);
-				e.SetPhase(listener_desc.GetPhase());
 				element->ProcessDefaultAction(e);
 			}
 			else {

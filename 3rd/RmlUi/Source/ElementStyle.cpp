@@ -288,32 +288,22 @@ void ElementStyle::UpdateDefinition() {
 	}
 }
 
-
-
-// Sets or removes a pseudo-class on the element.
-void ElementStyle::SetPseudoClass(const std::string& pseudo_class, bool activate)
-{
-	bool changed = false;
-
+void ElementStyle::SetPseudoClass(PseudoClass pseudo_class, bool activate) {
+	PseudoClassSet old = pseudo_classes;
 	if (activate)
-		changed = pseudo_classes.insert(pseudo_class).second;
+		pseudo_classes = pseudo_classes | pseudo_class;
 	else
-		changed = (pseudo_classes.erase(pseudo_class) == 1);
-
-	if (changed)
-	{
+		pseudo_classes = pseudo_classes & ~pseudo_class;
+	if (old != pseudo_classes) {
 		DirtyDefinition();
 	}
 }
 
-// Checks if a specific pseudo-class has been set on the element.
-bool ElementStyle::IsPseudoClassSet(const std::string& pseudo_class) const
-{
-	return (pseudo_classes.count(pseudo_class) == 1);
+bool ElementStyle::IsPseudoClassSet(PseudoClassSet pseudo_class) const {
+	return (pseudo_class & ~pseudo_classes) == 0;
 }
 
-const PseudoClassList& ElementStyle::GetActivePseudoClasses() const
-{
+PseudoClassSet ElementStyle::GetActivePseudoClasses() const {
 	return pseudo_classes;
 }
 

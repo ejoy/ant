@@ -510,7 +510,7 @@ void Document::ProcessMouseButtonUp(MouseButton button, int key_modifier_state) 
 		// Unset the 'active' pseudo-class on all the elements in the active chain; because they may not necessarily
 		// have had 'onmouseup' called on them, we can't guarantee this has happened already.
 		std::for_each(active_chain.begin(), active_chain.end(), [](Element* element) {
-			element->SetPseudoClass("active", false);
+			element->SetPseudoClass(PseudoClass::Active, false);
 		});
 		active_chain.clear();
 		active = nullptr;

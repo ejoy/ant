@@ -143,25 +143,10 @@ public:
 	
 	///@}
 
-	/** @name Pseudo-classes
-	 */
-	//@{
-	/// Sets or removes a pseudo-class on the element.
-	/// @param[in] pseudo_class The pseudo class to activate or deactivate.
-	/// @param[in] activate True if the pseudo-class is to be activated, false to be deactivated.
-	void SetPseudoClass(const std::string& pseudo_class, bool activate);
-	/// Checks if a specific pseudo-class has been set on the element.
-	/// @param[in] pseudo_class The name of the pseudo-class to check for.
-	/// @return True if the pseudo-class is set on the element, false if not.
-	bool IsPseudoClassSet(const std::string& pseudo_class) const;
-	/// Checks if a complete set of pseudo-classes are set on the element.
-	/// @param[in] pseudo_classes The set of pseudo-classes to check for.
-	/// @return True if all of the pseudo-classes are set, false if not.
-	bool ArePseudoClassesSet(const PseudoClassList& pseudo_classes) const;
-	/// Gets a list of the current active pseudo-classes.
-	/// @return The list of active pseudo-classes.
-	const PseudoClassList& GetActivePseudoClasses() const;
-	//@}
+	void SetPseudoClass(PseudoClass pseudo_class, bool activate);
+	bool IsPseudoClassSet(PseudoClassSet pseudo_class) const;
+	PseudoClassSet GetActivePseudoClasses() const;
+
 
 	/** @name Attributes
 	 */
