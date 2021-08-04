@@ -206,6 +206,7 @@ enum class EventId : uint16_t
 	Animationend,
 	Transitionend,
 	Change,
+	Message,
 	NumDefinedIds,
 
 	// Custom IDs start here

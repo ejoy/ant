@@ -61,8 +61,9 @@ private:
     DataAddress address;
 };
 
+struct DataControllerEventListener;
 
-class DataControllerEvent final : public DataController, private EventListener {
+class DataControllerEvent final : public DataController {
 public:
     DataControllerEvent(Element* element);
     ~DataControllerEvent();
@@ -70,12 +71,10 @@ public:
     bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& modifier) override;
 
 protected:
-    void OnDetach(Element *) override {}
-    void ProcessEvent(Event& event) override;
     void Release() override;
 
 private:
-    DataExpressionPtr expression;
+    std::unique_ptr<DataControllerEventListener> listener;
 };
 
 } // namespace Rml

@@ -725,8 +725,7 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes)
 	{
 		if (pair.first.size() > 2 && pair.first[0] == 'o' && pair.first[1] == 'n')
 		{
-			EventId id = EventSpecificationInterface::GetIdOrInsert(pair.first.substr(2));
-			EventListener* listener = Factory::InstanceEventListener(this, pair.second, id, false);
+			EventListener* listener = Factory::InstanceEventListener(this, pair.first.substr(2), pair.second, false);
 			if (listener) {
 				AddEventListener(listener);
 			}
@@ -1444,7 +1443,7 @@ bool Element::DispatchEvent(EventId id, const EventDictionary& parameters, bool 
 }
 
 bool Element::DispatchEvent(EventId id, const EventDictionary& parameters) {
-	const EventSpecification& specification = EventSpecificationInterface::Get(id);
+	const EventSpecification& specification = EventSpecification::Get(id);
 	return DispatchEvent(specification.id, parameters, specification.interruptible, specification.bubbles);
 }
 

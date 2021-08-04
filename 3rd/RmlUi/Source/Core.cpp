@@ -37,7 +37,6 @@
 #include "../Include/RmlUi/Types.h"
 #include "../Include/RmlUi/Texture.h"
 #include "../Include/RmlUi/Log.h"
-#include "../Include/RmlUi/EventSpecification.h"
 #include "FileInterfaceDefault.h"
 #include "PluginRegistry.h"
 #include "StyleSheetFactory.h"
@@ -72,7 +71,6 @@ bool Initialise() {
 		Log::Message(Log::Level::Error, "No file interface set!");
 		return false;
 	}
-	EventSpecificationInterface::Initialize();
 	if (!font_interface) {
 		Log::Message(Log::Level::Error, "No font interface set!");
 		return false;

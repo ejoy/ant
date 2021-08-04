@@ -182,11 +182,11 @@ void Factory::RegisterEventListenerInstancer(EventListenerInstancer* instancer)
 }
 
 // Instance an event listener with the given string
-EventListener* Factory::InstanceEventListener(Element* element, const std::string& code, EventId id, bool use_capture)
+EventListener* Factory::InstanceEventListener(Element* element, const std::string& type, const std::string& code, bool use_capture)
 {
 	// If we have an event listener instancer, use it
 	if (event_listener_instancer)
-		return event_listener_instancer->InstanceEventListener(element, code, id, use_capture);
+		return event_listener_instancer->InstanceEventListener(element, type, code, use_capture);
 
 	return nullptr;
 }

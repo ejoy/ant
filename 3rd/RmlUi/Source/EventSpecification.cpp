@@ -29,22 +29,9 @@
 #include "../Include/RmlUi/EventSpecification.h"
 #include "../Include/RmlUi/ID.h"
 
-
 namespace Rml {
 
-// An EventId is an index into the specifications vector.
-static std::vector<EventSpecification> specifications = { { EventId::Invalid, "invalid", false, false } };
-
-// Reverse lookup map from event type to id.
-static std::unordered_map<std::string, EventId> type_lookup;
-
-
-namespace EventSpecificationInterface {
-
-void Initialize()
-{
-	// Must be specified in the same order as in EventId
-	specifications = {
+static std::vector<EventSpecification> specifications = {
 		//      id                 type      interruptible  bubbles
 		{EventId::Invalid       , "invalid"       , false , false},
 		{EventId::Mousedown     , "mousedown"     , true  , true },
@@ -77,57 +64,41 @@ void Initialize()
 		{EventId::Animationend  , "animationend"  , false , true },
 		{EventId::Transitionend , "transitionend" , false , true },
 		{EventId::Change        , "change"        , false , true },
+		{EventId::Message       , "message"       , true  , true },
 	};
 
-	type_lookup.clear();
+static auto createLoolup() {
+	std::unordered_map<std::string, EventId> type_lookup;
 	type_lookup.reserve(specifications.size());
-	for (auto& specification : specifications)
+	for (auto& specification : specifications) {
 		type_lookup.emplace(specification.type, specification.id);
-
-#ifdef RMLUI_DEBUG
-	// Verify that all event ids are specified
-	RMLUI_ASSERT((int)specifications.size() == (int)EventId::NumDefinedIds);
-
-	for (int i = 0; i < (int)specifications.size(); i++)
-	{
-		// Verify correct order
-		RMLUI_ASSERT(i == (int)specifications[i].id);
 	}
-#endif
+	return type_lookup;
 }
 
-const EventSpecification& Get(EventId id) {
+static std::unordered_map<std::string, EventId> type_lookup = createLoolup();
+
+const EventSpecification& EventSpecification::Get(EventId id) {
 	size_t i = static_cast<size_t>(id);
 	if (i < specifications.size())
 		return specifications[i];
 	return specifications[0];
 }
 
-EventId GetId(const std::string& event_type) {
+EventId EventSpecification::GetId(const std::string& event_type) {
 	auto it = type_lookup.find(event_type);
 	if (it != type_lookup.end())
 		return it->second;
 	return EventId::Invalid;
 }
 
-EventId GetIdOrInsert(const std::string& event_type) {
-	EventId id = GetId(event_type);
-	if (id != EventId::Invalid) {
-		return id;
-	}
-
-	constexpr bool interruptible = true;
-	constexpr bool bubbles = true;
-	
+EventId EventSpecification::NewId(const std::string& event_type, bool interruptible, bool bubbles) {
 	const size_t new_id_num = specifications.size();
-	// No specification found for this name, insert a new entry with default values
 	EventId new_id = static_cast<EventId>(new_id_num);
 	specifications.push_back(EventSpecification{ new_id, event_type, interruptible, bubbles });
 	type_lookup.emplace(event_type, new_id);
 	EventSpecification& spec = specifications.back();
-
 	return spec.id;
 }
 
 }
-} // namespace Rml

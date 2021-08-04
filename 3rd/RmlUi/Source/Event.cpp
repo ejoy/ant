@@ -147,7 +147,7 @@ EventId Event::GetId() const {
 }
 
 std::string Event::GetType() const {
-	return EventSpecificationInterface::Get(id).type;
+	return EventSpecification::Get(id).type;
 }
 
 } // namespace Rml

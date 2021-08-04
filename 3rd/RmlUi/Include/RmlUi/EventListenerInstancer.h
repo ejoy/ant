@@ -41,7 +41,7 @@ class EventListener;
 class EventListenerInstancer {
 public:
 	virtual ~EventListenerInstancer();
-	virtual EventListener* InstanceEventListener(Rml::Element* element, const std::string& code, Rml::EventId id, bool use_capture) = 0;
+	virtual EventListener* InstanceEventListener(Rml::Element* element, const std::string& type, const std::string& code, bool use_capture) = 0;
 };
 
 } // namespace Rml

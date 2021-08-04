@@ -81,15 +81,11 @@ lua_pushstdstring(lua_State* L, const std::string& str) {
 namespace {
 
 struct EventListener final : public Rml::EventListener {
-	EventListener(lua_State* L_, int idx, Rml::EventId id, bool use_capture)
-		: Rml::EventListener(id, use_capture)
+	EventListener(lua_State* L_, const std::string& type, int funcref, bool use_capture)
+		: Rml::EventListener(type, use_capture)
 		, L(L_)
-		, ref(LUA_NOREF)
-	{
-		luaL_checktype(L, idx, LUA_TFUNCTION);
-		lua_pushvalue(L, idx);
-		ref = get_lua_plugin()->ref(L);
-	}
+		, ref(funcref)
+	{}
 	~EventListener() {
 		get_lua_plugin()->unref(ref);
 	}
@@ -177,13 +173,14 @@ lContextUpdateSize(lua_State *L){
 
 static void
 ElementAddEventListener(Rml::Element* e, const std::string& name, bool userCapture, lua_State* L, int idx) {
-	Rml::EventId id = Rml::EventSpecificationInterface::GetIdOrInsert(name);
-	e->AddEventListener(new EventListener(L, 3, id, lua_toboolean(L, 4)));
+	luaL_checktype(L, 3, LUA_TFUNCTION);
+	lua_pushvalue(L, 3);
+	e->AddEventListener(new EventListener(L, name, get_lua_plugin()->ref(L), lua_toboolean(L, 4)));
 }
 
 static void
 ElementDispatchEvent(Rml::Element* e, const std::string& name, lua_State* L, int idx) {
-	Rml::EventId id = Rml::EventSpecificationInterface::GetId(name);
+	Rml::EventId id = Rml::EventSpecification::GetId(name);
 	if (id == Rml::EventId::Invalid) {
 		return;
 	}
