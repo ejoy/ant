@@ -156,7 +156,7 @@ local effect_view
 local main_fbidx
 local render_target
 function effekseer_sys:render_submit()
-    if render_target then
+    if not render_target then
         effect_view = viewidmgr.get "effect_view"
         main_fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
         render_target = world:singleton_entity "main_queue".render_target
