@@ -83,7 +83,7 @@ private:
 
 	std::string text;
 	LineList lines;
-	GeometryList geometrys;
+	Geometry geometry;
 	Geometry decoration;
 	bool decoration_under = true;
 	TextEffectsHandle text_effects_handle = 0;
