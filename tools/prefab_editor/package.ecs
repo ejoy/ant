@@ -55,7 +55,7 @@ system "camera_system"
     .implement "camera_system.lua"
     .require_interface "ant.camera|camera"
     .require_interface "ant.objcontroller|obj_motion"
-    .method "entity_init"
+    .method "entity_done"
     .method "data_changed"
 
 system "input_system"

@@ -70,7 +70,7 @@ function m:entity_init()
         local main_camera = icamera.create {
             eyepos = {-200, 100, 200, 1},
             viewdir = {2, -1, -2, 0},
-            frustum = {n = 1, f = 100 }
+            frustum = {n = 1, f = 1000 }
         }
         icamera.bind(main_camera, "main_queue")
         camera_mgr.main_camera = main_camera

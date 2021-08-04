@@ -3,6 +3,7 @@ local world = ecs.world
 local w = world.w
 
 local iom		= world:interface "ant.objcontroller|obj_motion"
+local irq		= world:interface "ant.render|irenderqueue"
 local camera_mgr= require "camera_manager"(world)
 local math3d	= require "math3d"
 local utils		= require "mathutils"(world)
@@ -15,29 +16,29 @@ local camera_init_eye_pos <const> = {5, 5, 10, 1}
 local camera_init_target <const> = {0, 0,  0, 1}
 local camera_target = math3d.ref(math3d.vector(0, 0, 0, 1))
 local camera_distance
-local camera_id
 local zoom_speed <const> = 1
 local wheel_speed <const> = 0.5
 local pan_speed <const> = 0.5
 local rotation_speed <const> = 1
 
 local function view_to_world(view_pos)
-	local camerasrt = iom.srt(camera_id)
+	local camerasrt = iom.srt(irq.main_camera())
 	return math3d.transform(camerasrt, view_pos, 0)
 end
 
 local function camera_update_eye_pos(camera)
-	iom.set_position(camera_id, math3d.sub(camera_target, math3d.mul(iom.get_direction(camera_id), camera_distance)))
+	local cameraeid = irq.main_camera()
+	iom.set_position(cameraeid, math3d.sub(camera_target, math3d.mul(iom.get_direction(cameraeid), camera_distance)))
 end
 
 local function camera_rotate(dx, dy)
-	iom.rotate(camera_id, dy * rotation_speed, dx * rotation_speed)
+	iom.rotate(irq.main_camera(), dy * rotation_speed, dx * rotation_speed)
 	camera_update_eye_pos()
 end
 
 local function camera_pan(dx, dy)
 	local world_dir = view_to_world({dy * pan_speed, dx * pan_speed, 0})
-	local viewdir = iom.get_direction(camera_id)
+	local viewdir = iom.get_direction(irq.main_camera())
 	camera_target.v = math3d.add(camera_target, math3d.cross(viewdir, world_dir))
 	camera_update_eye_pos()
 end
@@ -50,16 +51,13 @@ end
 local function camera_reset(eyepos, target)
 	camera_target.v = target
 	camera_distance = math3d.length(math3d.sub(camera_target, eyepos))
-	iom.set_view(camera_id, eyepos, math3d.normalize(math3d.sub(camera_target, eyepos)))
+	iom.set_view(irq.main_camera(), eyepos, math3d.normalize(math3d.sub(camera_target, eyepos)))
 end
 
-local function camera_init(cameraeid)
-	camera_id		= cameraeid
-end
+local mb_camera_changed = world:sub{"component_changed", "camera_eid", "main_queue"}
 
-function m:entity_init()
-	for qe in w:select "INIT main_queue camera_eid:in" do
-		camera_init(qe.camera_eid)
+function m:entity_done()
+	for _ in mb_camera_changed:each() do
 		camera_reset(camera_init_eye_pos, camera_init_target)
 	end
 end
