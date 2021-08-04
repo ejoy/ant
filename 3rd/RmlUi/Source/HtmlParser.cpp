@@ -308,7 +308,7 @@ void HtmlParser::Parse(std::string_view stream, HtmlHandler* handler) {
 			break;
 		case st_finish_extra:
 			switch (c) {
-			case'!':
+			case '!':
 				EnterComment();
 				state = st_finish;
 				break;

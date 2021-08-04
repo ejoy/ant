@@ -308,17 +308,18 @@ function fs.dofile(filepath)
     return dofile(filepath:string())
 end
 
+local close_sync = setmetatable({}, {__close=function ()
+    for k, v in pairs(vfs.async) do
+        vfs[k] = v
+    end
+end})
+
 function fs.switch_sync()
-    if vfs.sync then
-        assert(vfs.async)
+    if vfs.sync and vfs.type ~= vfs.sync.type then
         for k, v in pairs(vfs.sync) do
             vfs[k] = v
         end
-        return setmetatable({}, {__close=function ()
-            for k, v in pairs(vfs.async) do
-                vfs[k] = v
-            end
-        end})
+        return close_sync
     end
 end
 

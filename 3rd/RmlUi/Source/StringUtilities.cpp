@@ -93,18 +93,6 @@ std::string StringUtilities::ToLower(const std::string& string) {
 	return str_lower;
 }
 
-std::string StringUtilities::ToUpper(const std::string& string)
-{
-	std::string str_upper = string;
-	std::transform(str_upper.begin(), str_upper.end(), str_upper.begin(), [](char c) {
-		if (c >= 'a' && c <= 'z')
-			c -= char('a' - 'A');
-		return c;
-		}
-	);
-	return str_upper;
-}
-
 std::string StringUtilities::Replace(std::string subject, const std::string& search, const std::string& replace)
 {
 	size_t pos = 0;
@@ -230,17 +218,6 @@ void StringUtilities::ExpandString(std::vector<std::string>& string_list, const 
 		string_list.emplace_back(start_ptr, end_ptr + 1);
 }
 
-// Joins a list of string values into a single string separated by a character delimiter.
-void StringUtilities::JoinString(std::string& string, const std::vector<std::string>& string_list, const char delimiter)
-{
-	for (size_t i = 0; i < string_list.size(); i++)
-	{
-		string += string_list[i];
-		if (delimiter != '\0' && i < string_list.size() - 1)
-			string += delimiter;
-	}
-}
-
 std::string StringUtilities::StripWhitespace(const std::string& string)
 {
 	return StripWhitespace(StringView(string));
@@ -261,26 +238,6 @@ RMLUICORE_API std::string StringUtilities::StripWhitespace(StringView string)
 		return std::string(start, end);
 
 	return std::string();
-}
-
-void StringUtilities::TrimTrailingDotZeros(std::string& string)
-{
-	size_t new_size = string.size();
-	for (size_t i = string.size() - 1; i < string.size(); i--)
-	{
-		if (string[i] == '.')
-		{
-			new_size = i;
-			break;
-		}
-		else if (string[i] == '0')
-			new_size = i;
-		else
-			break;
-	}
-
-	if (new_size < string.size())
-		string.resize(new_size);
 }
 
 Character StringUtilities::ToCharacter(const char* p)
@@ -368,6 +325,37 @@ StringIteratorU8& StringIteratorU8::operator++() {
 
 inline void StringIteratorU8::SeekForward() {
 	p = StringUtilities::SeekForwardUTF8(p, view.end());
+}
+
+
+template <>
+float FromString<float>(const std::string& str, float def) {
+	errno = 0;
+	float r = strtof(str.c_str(), NULL);
+	if (errno != 0) {
+		return def;
+	}
+	return r;
+}
+
+template <>
+int FromString<int>(const std::string& str, int def) {
+	errno = 0;
+	long r = strtol(str.c_str(), NULL, 10);
+	if (errno != 0) {
+		return def;
+	}
+	return r;
+}
+
+template <>
+std::string ToString<float>(const float& v) {
+	return std::to_string(v);
+}
+
+template <>
+std::string ToString<int>(const int& v) {
+	return std::to_string(v);
 }
 
 } // namespace Rml

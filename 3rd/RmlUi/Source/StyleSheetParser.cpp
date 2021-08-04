@@ -37,6 +37,7 @@
 #include "../Include/RmlUi/StreamMemory.h"
 #include "../Include/RmlUi/StyleSheet.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
+#include "../Include/RmlUi/StringUtilities.h"
 #include <algorithm>
 #include <string.h>
 
@@ -221,8 +222,6 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 			{
 				if (token == '{')
 				{
-					const int rule_line_number = (int)line_number;
-					
 					// Read the attributes
 					PropertyDictionary properties;
 					PropertySpecificationParser parser(properties, StyleSheetSpecification::GetPropertySpecification());
@@ -533,8 +532,17 @@ StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, std::st
 		std::sort(pseudo_classes.begin(), pseudo_classes.end());
 		std::sort(structural_pseudo_classes.begin(), structural_pseudo_classes.end());
 
+		PseudoClassSet set = 0;
+		for (auto& name : pseudo_classes) {
+			if (name == "active") {
+				set = set | PseudoClass::Active;
+			}
+			else if (name == "hover") {
+				set = set | PseudoClass::Hover;
+			}
+		}
 		// Get the named child node.
-		leaf_node = leaf_node->GetOrCreateChildNode(std::move(tag), std::move(id), std::move(classes), std::move(pseudo_classes), std::move(structural_pseudo_classes), child_combinator);
+		leaf_node = leaf_node->GetOrCreateChildNode(std::move(tag), std::move(id), std::move(classes), set, std::move(structural_pseudo_classes), child_combinator);
 	}
 
 	// Merge the new properties with those already on the leaf node.

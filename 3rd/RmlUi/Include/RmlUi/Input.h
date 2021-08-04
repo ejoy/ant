@@ -200,7 +200,7 @@ namespace Input
 		/*
 		 * Fujitsu/OASYS kbd definitions
 		 */
-		KI_OEM_FJ_JISHO = 133,		// 'Dictionary' key.
+		KI_OEM_FJ_JISHO = 133,		// 'EventDictionary' key.
 		KI_OEM_FJ_MASSHOU = 134,	// 'Unregister word' key.
 		KI_OEM_FJ_TOUROKU = 135,	// 'Register word' key.
 		KI_OEM_FJ_LOYA = 136,		// 'Left OYAYUBI' key.

@@ -9,7 +9,7 @@
 class Renderer : public Rml::RenderInterface {
 public:
     Renderer(const RmlContext* context);
-    void RenderGeometry(Rml::Vertex* vertices, int num_vertices, Rml::Index* indices, int num_indices,  Rml::TextureHandle texture, Rml::SamplerFlag flags) override;
+    void RenderGeometry(Rml::Vertex* vertices, size_t num_vertices, Rml::Index* indices, size_t num_indices,  Rml::TextureHandle texture, Rml::SamplerFlag flags) override;
     bool LoadTexture(Rml::TextureHandle& handle, Rml::Size& dimensions, const std::string& path) override;
     void ReleaseTexture(Rml::TextureHandle texture) override;
     void SetTransform(const glm::mat4x4& transform) override;

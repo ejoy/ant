@@ -19,7 +19,8 @@ local bindings = {
 	main_view 	= 30,
 	pickup 		= 31,
 	pickup_blit = 32,
-
+	
+	effect_view = max_viewid - max_uieditor - 4,
 	uiruntime	= max_viewid - max_uieditor - 3,
 	blit		= max_viewid - max_uieditor - 2,
 

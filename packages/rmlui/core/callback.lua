@@ -1,10 +1,11 @@
-local console = require "core.console"
-local sandbox = require "core.sandbox"
+local console = require "core.sandbox.console"
+local createSandbox = require "core.sandbox.create"
 local fileManager = require "core.fileManager"
 local event = require "core.event"
 local createElement = require "core.DOM.element"
 local createEvent = require "core.DOM.event"
 local environment = require "core.environment"
+local fs = require "filesystem"
 require "core.DOM.document"
 require "core.DOM.window"
 
@@ -22,7 +23,7 @@ local function invoke(f, ...)
 	return ok, err
 end
 function m.OnDocumentCreate(document)
-	local globals = sandbox()
+	local globals = createSandbox()
 	event("OnDocumentCreate", document, globals)
 	globals.window.document = globals.document
 	environment[document] = globals
@@ -32,6 +33,7 @@ function m.OnDocumentDestroy(document)
 	environment[document] = nil
 end
 function m.OnLoadInlineScript(document, content, source_path, source_line)
+    local _ <close> = fs.switch_sync()
 	local path = fileManager.realpath(source_path)
 	if not path then
 		console.warn(("file '%s' does not exist."):format(source_path))
@@ -46,13 +48,12 @@ function m.OnLoadInlineScript(document, content, source_path, source_line)
 	invoke(f)
 end
 function m.OnLoadExternalScript(document, source_path)
+    local _ <close> = fs.switch_sync()
 	local path = fileManager.realpath(source_path)
 	if not path then
 		console.warn(("file '%s' does not exist."):format(source_path))
 		return
 	end
-	local fs = require "filesystem"
-    local _ <close> = fs.switch_sync()
 	local f, err = loadfile(path, "bt", environment[document])
 	if not f then
 		console.warn(err)
@@ -103,6 +104,7 @@ function m.OnEventDetach(ev)
 end
 
 function m.OnOpenFile(path)
+    local _ <close> = fs.switch_sync()
 	return fileManager.realpath(path)
 end
 

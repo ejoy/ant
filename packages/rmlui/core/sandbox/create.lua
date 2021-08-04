@@ -1,4 +1,4 @@
-local console = require "core.console"
+local createPackage = require "core.sandbox.package"
 
 local stdlib = {
     math = math,
@@ -27,9 +27,11 @@ local stdlib = {
     xpcall = xpcall,
     _VERSION = _VERSION,
 
-    console = console,
+    console = require "core.sandbox.console",
 }
 
 return function ()
-    return setmetatable({}, {__index = stdlib})
+    local env = {}
+    createPackage(env)
+    return setmetatable(env, {__index = stdlib})
 end

@@ -28,38 +28,202 @@
 
 #include "../Include/RmlUi/Property.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
+#include "../Include/RmlUi/StringUtilities.h"
 
 namespace Rml {
+
+constexpr float UndefinedFloat = std::numeric_limits<float>::quiet_NaN();
 
 Property::Property() : unit(UNKNOWN), specificity(-1)
 {
 	definition = nullptr;
-	parser_index = -1;
 }
 
-std::string Property::ToString() const
-{
-	if (!definition)
-		return value.Get< std::string >();
+std::string Property::ToString() const {
+	switch (unit) {
+	case Property::STRING:
+		return std::get<std::string>(value);
+	case Property::KEYWORD: {
+		int keyword = std::get<int>(value);
+		return "<keyword," + std::to_string(keyword) + ">";
+	}
+	case Property::COLOUR: {
+		Color colour = std::get<Color>(value);
+		return CreateString(32, "rgba(%d,%d,%d,%d)", colour.r, colour.g, colour.b, colour.a);
+	}
+	case Property::TRANSFORM:
+		return "<transform>";
+	case Property::TRANSITION:
+		return "<transition>";
+	case Property::ANIMATION:
+		return "<animation>";
+	case Property::NUMBER:	return std::to_string(std::get<float>(value));
+	case Property::PX:		return std::to_string(std::get<float>(value)) + "px";
+	case Property::DEG:		return std::to_string(std::get<float>(value)) + "deg";
+	case Property::RAD:		return std::to_string(std::get<float>(value)) + "rad";
+	case Property::DP:		return std::to_string(std::get<float>(value)) + "dp";
+	case Property::EM:		return std::to_string(std::get<float>(value)) + "em";
+	case Property::REM:		return std::to_string(std::get<float>(value)) + "rem";
+	case Property::PERCENT:	return std::to_string(std::get<float>(value)) + "%";
+	case Property::INCH:	return std::to_string(std::get<float>(value)) + "in";
+	case Property::CM:		return std::to_string(std::get<float>(value)) + "cm";
+	case Property::MM:		return std::to_string(std::get<float>(value)) + "mm";
+	case Property::PT:		return std::to_string(std::get<float>(value)) + "pt";
+	case Property::PC:		return std::to_string(std::get<float>(value)) + "pc";
+	default:
+		return "<unknown, " + std::to_string(unit) + ">";
+	}
+}
 
-	std::string string;
-	definition->GetValue(string, *this);
-	return string;
+float Property::GetFloat() const {
+	switch (unit) {
+	case Property::NUMBER:
+	case Property::PX:
+	case Property::DEG:
+	case Property::RAD:
+	case Property::DP:
+	case Property::EM:
+	case Property::REM:
+	case Property::PERCENT:
+	case Property::INCH:
+	case Property::CM:
+	case Property::MM:
+	case Property::PT:
+	case Property::PC:
+		return std::get<float>(value);
+	default:
+		return UndefinedFloat;
+	}
+}
+
+Color Property::GetColor() const {
+	switch (unit) {
+	case Property::COLOUR:
+		return std::get<Color>(value);
+	default:
+		return Color{};
+	}
+}
+
+int Property::GetKeyword() const {
+	switch (unit) {
+	case Property::KEYWORD:
+		return std::get<int>(value);
+	default:
+		return 0;
+	}
+}
+
+std::string Property::GetString() const {
+	switch (unit) {
+	case Property::STRING:
+		return std::get<std::string>(value);
+	default:
+		return "";
+	}
+}
+
+TransformPtr& Property::GetTransformPtr() {
+	switch (unit) {
+	case Property::TRANSFORM:
+		return std::get<TransformPtr>(value);
+	default: {
+		static TransformPtr dummy {};
+		return dummy;
+	}
+	}
+}
+
+TransitionList& Property::GetTransitionList() {
+	switch (unit) {
+	case Property::TRANSITION:
+		return std::get<TransitionList>(value);
+	default: {
+		static TransitionList dummy {};
+		return dummy;
+	}
+	}
+}
+
+AnimationList& Property::GetAnimationList() {
+	switch (unit) {
+	case Property::ANIMATION:
+		return std::get<AnimationList>(value);
+	default: {
+		static AnimationList dummy {};
+		return dummy;
+	}
+	}
+}
+
+TransformPtr const& Property::GetTransformPtr() const {
+	switch (unit) {
+	case Property::TRANSFORM:
+		return std::get<TransformPtr>(value);
+	default: {
+		static TransformPtr dummy {};
+		return dummy;
+	}
+	}
+}
+
+TransitionList const& Property::GetTransitionList() const {
+	switch (unit) {
+	case Property::TRANSITION:
+		return std::get<TransitionList>(value);
+	default: {
+		static TransitionList dummy {};
+		return dummy;
+	}
+	}
+}
+
+AnimationList const& Property::GetAnimationList() const {
+	switch (unit) {
+	case Property::ANIMATION:
+		return std::get<AnimationList>(value);
+	default: {
+		static AnimationList dummy {};
+		return dummy;
+	}
+	}
 }
 
 FloatValue Property::ToFloatValue() const {
 	if (unit & Property::KEYWORD) {
-		switch (Get<int>()) {
+		switch (std::get<int>(value)) {
 		default:
 		case 0 /* left/top     */: return { 0.0f, Property::Unit::PERCENT }; break;
 		case 1 /* center       */: return { 50.0f, Property::Unit::PERCENT }; break;
 		case 2 /* right/bottom */: return { 100.0f, Property::Unit::PERCENT }; break;
 		}
 	}
-	return {
-		value.Get<float>(),
-		unit,
-	};
+	float v = GetFloat();
+	if (v == UndefinedFloat) {
+		return { v, Property::UNKNOWN };
+	}
+	return { v, unit };
+}
+
+template <>
+std::string ToString<FloatValue>(const FloatValue& v) {
+	std::string value = std::to_string(v.value);
+	switch (v.unit) {
+		case Property::PX:		value += "px"; break;
+		case Property::DEG:		value += "deg"; break;
+		case Property::RAD:		value += "rad"; break;
+		case Property::DP:		value += "dp"; break;
+		case Property::EM:		value += "em"; break;
+		case Property::REM:		value += "rem"; break;
+		case Property::PERCENT:	value += "%"; break;
+		case Property::INCH:	value += "in"; break;
+		case Property::CM:		value += "cm"; break;
+		case Property::MM:		value += "mm"; break;
+		case Property::PT:		value += "pt"; break;
+		case Property::PC:		value += "pc"; break;
+		default:					break;
+	}
+	return value;
 }
 
 } // namespace Rml

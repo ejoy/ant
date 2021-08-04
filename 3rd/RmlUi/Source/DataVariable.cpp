@@ -27,6 +27,7 @@
  */
 
 #include "../Include/RmlUi/DataVariable.h"
+#include "../Include/RmlUi/Log.h"
 
 namespace Rml {
 

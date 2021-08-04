@@ -28,6 +28,7 @@
 
 #include "PropertyParserColour.h"
 #include "../Include/RmlUi/Math.h"
+#include "../Include/RmlUi/StringUtilities.h"
 #include <string.h>
 
 namespace Rml {
@@ -294,7 +295,7 @@ bool PropertyParserColour::ParseValue(Property& property, const std::string& val
 			colour = (*iterator).second;
 	}
 
-	property.value = Variant(colour);
+	property.value = colour;
 	property.unit = Property::COLOUR;
 
 	return true;

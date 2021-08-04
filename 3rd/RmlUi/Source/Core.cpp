@@ -36,13 +36,11 @@
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/Types.h"
 #include "../Include/RmlUi/Texture.h"
-
-#include "EventSpecification.h"
+#include "../Include/RmlUi/Log.h"
 #include "FileInterfaceDefault.h"
 #include "PluginRegistry.h"
 #include "StyleSheetFactory.h"
 #include "StyleSheetParser.h"
-#include "EventSpecification.h"
 
 namespace Rml {
 
@@ -73,7 +71,6 @@ bool Initialise() {
 		Log::Message(Log::Level::Error, "No file interface set!");
 		return false;
 	}
-	EventSpecificationInterface::Initialize();
 	if (!font_interface) {
 		Log::Message(Log::Level::Error, "No font interface set!");
 		return false;

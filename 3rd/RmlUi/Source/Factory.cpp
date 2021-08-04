@@ -35,6 +35,8 @@
 #include "../Include/RmlUi/EventListenerInstancer.h"
 #include "../Include/RmlUi/StreamMemory.h"
 #include "../Include/RmlUi/StyleSheet.h"
+#include "../Include/RmlUi/StringUtilities.h"
+#include "../Include/RmlUi/Log.h"
 #include "DataControllerDefault.h"
 #include "DataViewDefault.h"
 #include "PluginRegistry.h"
@@ -180,11 +182,11 @@ void Factory::RegisterEventListenerInstancer(EventListenerInstancer* instancer)
 }
 
 // Instance an event listener with the given string
-EventListener* Factory::InstanceEventListener(const std::string& value, Element* element)
+EventListener* Factory::InstanceEventListener(Element* element, const std::string& type, const std::string& code, bool use_capture)
 {
 	// If we have an event listener instancer, use it
 	if (event_listener_instancer)
-		return event_listener_instancer->InstanceEventListener(value, element);
+		return event_listener_instancer->InstanceEventListener(element, type, code, use_capture);
 
 	return nullptr;
 }
@@ -233,7 +235,7 @@ DataViewPtr Factory::InstanceDataView(const std::string& type_name, Element* ele
 	return nullptr;
 }
 
-DataControllerPtr Factory::InstanceDataController(const std::string& type_name, Element* element)
+DataControllerPtr Factory::InstanceDataController(Element* element, const std::string& type_name)
 {
 	auto it = data_controller_instancers.find(type_name);
 	if (it != data_controller_instancers.end())

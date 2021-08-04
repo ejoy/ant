@@ -41,6 +41,7 @@
 #include <memory>
 #include <set>
 #include <unordered_set>
+#include <variant>
 
 #include <cstdlib>
 
@@ -60,6 +61,7 @@ enum class Character : char32_t { Null, Replacement = 0xfffd };
 
 #include "Colour.h"
 #include "ObserverPtr.h"
+#include "Variant.h"
 
 namespace Rml {
 
@@ -71,7 +73,6 @@ class ElementAnimation;
 class Context;
 class Event;
 class Property;
-class Variant;
 class Transform;
 class PropertyIdSet;
 struct Animation;
@@ -101,7 +102,7 @@ using PseudoClassList = std::unordered_set< std::string >;
 using AttributeNameList = std::unordered_set< std::string >;
 using PropertyMap = std::unordered_map< PropertyId, Property >;
 
-using Dictionary = std::unordered_map< std::string, Variant >;
+using EventDictionary = std::unordered_map< std::string, EventVariant >;
 using ElementAttributes = std::unordered_map< std::string, std::string >;
 
 using AnimationList = std::vector<Animation>;
@@ -114,6 +115,18 @@ class DataView;
 using DataViewPtr = std::unique_ptr<DataView, Releaser<DataView>>;
 class DataController;
 using DataControllerPtr = std::unique_ptr<DataController, Releaser<DataController>>;
+
+typedef uint8_t PseudoClassSet;
+
+enum class PseudoClass : uint8_t {
+	Hover  = 0x01,
+	Active = 0x02,
+};
+
+inline PseudoClassSet operator| (PseudoClass a, PseudoClass b) { return (uint8_t)a | (uint8_t)b; }
+inline PseudoClassSet operator| (PseudoClassSet a, PseudoClass b) { return a | (uint8_t)b; }
+inline PseudoClassSet operator~ (PseudoClass a) { return ~(uint8_t)a; }
+inline PseudoClassSet operator& (PseudoClassSet a, PseudoClass b) { return a & (uint8_t)b; }
 
 struct Point {
 	float x{};

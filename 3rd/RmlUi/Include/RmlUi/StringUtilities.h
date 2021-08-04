@@ -47,6 +47,10 @@ RMLUICORE_API std::string CreateString(size_t max_size, const char* format, ...)
 /// Format to a string using sprintf-style syntax.
 RMLUICORE_API int FormatString(std::string& string, size_t max_size, const char* format, ...) RMLUI_ATTRIBUTE_FORMAT_PRINTF(3,4);
 
+template <typename  T>
+T FromString(const std::string& str, T def = T{});
+template <typename  T>
+std::string ToString(const T& v);
 
 namespace StringUtilities
 {
@@ -64,16 +68,9 @@ namespace StringUtilities
 	/// @param[in] unquote_character End quote
 	/// @param[in] ignore_repeated_delimiters If true, repeated values of the delimiter will not add additional entries to the list.
 	RMLUICORE_API void ExpandString(std::vector<std::string>& string_list, const std::string& string, const char delimiter, char quote_character, char unquote_character, bool ignore_repeated_delimiters = false);
-	/// Joins a list of string values into a single string separated by a character delimiter.
-	/// @param[out] string Resulting concatenated string.
-	/// @param[in] string_list Input list of string values.
-	/// @param[in] delimiter Delimiter to insert between the individual values.
-	RMLUICORE_API void JoinString(std::string& string, const std::vector<std::string>& string_list, const char delimiter = ',');
 
 	/// Converts upper-case characters in string to lower-case.
 	RMLUICORE_API std::string ToLower(const std::string& string);
-	/// Converts lower-case characters in string to upper-case.
-	RMLUICORE_API std::string ToUpper(const std::string& string);
 
 	// Replaces all occurences of 'search' in 'subject' with 'replace'.
 	RMLUICORE_API std::string Replace(std::string subject, const std::string& search, const std::string& replace);
@@ -91,10 +88,6 @@ namespace StringUtilities
 
 	/// Strip whitespace characters from the beginning and end of a string.
 	RMLUICORE_API std::string StripWhitespace(StringView string);
-
-	/// Trim trailing zeros and the dot from a string-representation of a number with a decimal point.
-	/// @warning If the string does not represent a number _with_ a decimal point, the result is ill-defined.
-	RMLUICORE_API void TrimTrailingDotZeros(std::string& string);
 
 	// Decode the first code point in a zero-terminated UTF-8 string.
 	RMLUICORE_API Character ToCharacter(const char* p);
@@ -114,8 +107,6 @@ namespace StringUtilities
 			--p;
 		return p;
 	}
-
-
 }
 
 /*

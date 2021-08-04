@@ -29,7 +29,9 @@ void effect_adapter::play(int32_t startTime)
 	if (handle_ != -1) {
 		manager_->StopEffect(handle_);
 	}
-	handle_ = manager_->Play(effect_, {0.0f, 0.0f, 0.0f}, startTime);
+	Effekseer::Vector3D pos;
+	tranform_.GetTranslation(pos);
+	handle_ = manager_->Play(effect_, pos, startTime);
 	manager_->SetSpeed(handle_, speed_);
 }
 

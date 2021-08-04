@@ -48,8 +48,7 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 		}
 	}
 
-	geometry.GetVertices().clear();
-	geometry.GetIndices().clear();
+	geometry.Release();
 	const Layout::Metrics& metrics = element->GetMetrics();
 
 	bool topLeftInnerRounded     = metrics.borderWidth.left  < computed.border_radius.topLeft     && metrics.borderWidth.top    < computed.border_radius.topLeft;

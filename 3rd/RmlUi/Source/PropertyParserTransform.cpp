@@ -48,7 +48,7 @@ bool PropertyParserTransform::ParseValue(Property& property, const std::string& 
 {
 	if(value == "none")
 	{
-		property.value = Variant(TransformPtr());
+		property.value = TransformPtr();
 		property.unit = Property::TRANSFORM;
 		return true;
 	}
@@ -185,7 +185,7 @@ bool PropertyParserTransform::ParseValue(Property& property, const std::string& 
 		}
 	}
 	
-	property.value = Variant(std::move(transform));
+	property.value = std::move(transform);
 	property.unit = Property::TRANSFORM;
 
 	return true;
@@ -256,8 +256,7 @@ bool PropertyParserTransform::Scan(int& out_bytes_read, const char* str, const c
 		if (sscanf(str, " %[^,)] %n", arg, &bytes_read), bytes_read
 			&& parsers[i]->ParseValue(prop, std::string(arg), ParameterMap()))
 		{
-			args[i].value = prop.value.Get<float>();
-			args[i].unit = prop.unit;
+			args[i] = prop.ToFloatValue();
 			str += bytes_read;
 			total_bytes_read += bytes_read;
 		}

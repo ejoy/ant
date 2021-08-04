@@ -72,8 +72,6 @@ public:
 	static const PropertyIdSet& GetRegisteredProperties();
 	/// Returns the id set of all registered inherited property definitions.
 	static const PropertyIdSet& GetRegisteredInheritedProperties();
-	/// Returns the id set of all registered property definitions that may dirty the layout.
-	static const PropertyIdSet& GetRegisteredPropertiesForcingLayout();
 
 	/// Returns a shorthand definition.
 	/// @param[in] shorthand_name The name of the desired shorthand.
@@ -104,7 +102,7 @@ private:
 	StyleSheetSpecification();
 	~StyleSheetSpecification();
 
-	PropertyDefinition& RegisterProperty(PropertyId id, const std::string& property_name, const std::string& default_value, bool inherited, bool forces_layout = false);
+	PropertyDefinition& RegisterProperty(PropertyId id, const std::string& property_name, const std::string& default_value, bool inherited);
 	ShorthandId RegisterShorthand(ShorthandId id, const std::string& shorthand_name, const std::string& property_names, ShorthandType type);
 
 	// Registers RmlUi's default parsers.

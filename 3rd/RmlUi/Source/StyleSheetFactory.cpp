@@ -28,6 +28,7 @@
 
 #include "StyleSheetFactory.h"
 #include "../Include/RmlUi/StyleSheet.h"
+#include "../Include/RmlUi/StringUtilities.h"
 #include "StyleSheetNode.h"
 #include "StreamFile.h"
 #include "StyleSheetNodeSelectorNthChild.h"

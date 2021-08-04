@@ -29,8 +29,12 @@
 #ifndef RMLUI_CORE_PROPERTY_H
 #define RMLUI_CORE_PROPERTY_H
 
-#include "Variant.h"
 #include "Header.h"
+#include "Colour.h"
+#include "Types.h"
+#include "Animation.h"
+#include <variant>
+#include <string>
 
 namespace Rml {
 
@@ -38,13 +42,22 @@ class PropertyDefinition;
 
 struct FloatValue;
 
+using PropertyVariant = std::variant<
+	std::monostate,
+	float,
+	int,
+	Color,
+	std::string,
+	TransformPtr,
+	TransitionList,
+	AnimationList
+>;
 
 /**
 	@author Peter Curry
  */
 
-class RMLUICORE_API Property
-{
+class Property {
 public:
 	enum Unit
 	{
@@ -89,37 +102,38 @@ public:
 	};
 
 	Property();
+
 	template < typename PropertyType >
-	Property(PropertyType value, Unit unit, int specificity = -1) : value(value), unit(unit), specificity(specificity)
-	{
-		definition = nullptr;
-		parser_index = -1;
-	}
-	template<typename EnumType, typename = typename std::enable_if< std::is_enum<EnumType>::value, EnumType >::type>
-	Property(EnumType value) : value(static_cast<int>(value)), unit(KEYWORD), specificity(-1) {}
+	Property(PropertyType value, Unit unit, int specificity = -1)
+		: value(value)
+		, unit(unit)
+		, specificity(specificity)
+	{}
 
-	/// Get the value of the property as a string.
 	std::string ToString() const;
-
 	FloatValue ToFloatValue() const;
 
-	/// Templatised accessor.
+	float           GetFloat() const;
+	Color           GetColor() const;
+	int             GetKeyword() const;
+	std::string     GetString() const;
+	TransformPtr&   GetTransformPtr();
+	TransitionList& GetTransitionList();
+	AnimationList&  GetAnimationList();
+	TransformPtr const&   GetTransformPtr() const;
+	TransitionList const& GetTransitionList() const;
+	AnimationList const&  GetAnimationList() const;
+
 	template <typename T>
-	T Get() const
-	{
-		return value.Get<T>();
-	}
+	bool Has() const { return std::holds_alternative<T>(value); }
 
 	bool operator==(const Property& other) const { return unit == other.unit && value == other.value; }
 	bool operator!=(const Property& other) const { return !(*this == other); }
 
-	Variant value;
+	PropertyVariant value;
 	Unit unit;
 	int specificity;
-
 	const PropertyDefinition* definition = nullptr;
-	int parser_index = -1;
-
 };
 
 struct FloatValue {

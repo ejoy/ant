@@ -42,7 +42,6 @@ class FileInterface;
 class FontEngineInterface;
 class RenderInterface;
 class SystemInterface;
-enum class DefaultActionPhase;
 
 RMLUICORE_API bool Initialise();
 RMLUICORE_API void Shutdown();

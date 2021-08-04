@@ -38,8 +38,6 @@ namespace Math {
 
 const float RMLUI_PI = 3.141592653f;
 
-static constexpr float FZERO = 0.0001f;
-
 // Calculates the absolute value of a number.
 RMLUICORE_API float AbsoluteValue(float value)
 {

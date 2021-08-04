@@ -106,7 +106,12 @@ public:
 	}
 	bool Set(void* ptr, const Variant& variant) override
 	{
-		return variant.GetInto<T>(*static_cast<T*>(ptr));
+		const T* r = std::get_if<T>(&variant);
+		if (!r) {
+			return false;
+		}
+		*static_cast<T*>(ptr) = *r;
+		return true;
 	}
 };
 

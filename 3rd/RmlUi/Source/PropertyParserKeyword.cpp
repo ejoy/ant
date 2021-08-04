@@ -27,6 +27,7 @@
  */
 
 #include "PropertyParserKeyword.h"
+#include "../Include/RmlUi/StringUtilities.h"
 
 namespace Rml {
 
@@ -45,7 +46,7 @@ bool PropertyParserKeyword::ParseValue(Property& property, const std::string& va
 	if (iterator == parameters.end())
 		return false;
 
-	property.value = Variant((*iterator).second);
+	property.value = iterator->second;
 	property.unit = Property::KEYWORD;
 
 	return true;

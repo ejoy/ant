@@ -72,6 +72,12 @@ system "gui_system"
     .method "ui_update"
     .method "widget"
 
+system "grid_brush_system"
+    .implement "grid_brush_system.lua"
+    .method "init"
+    .method "post_init"
+    .method "data_changed"
+
 pipeline "init"
     .stage "init"
     .stage "post_init"

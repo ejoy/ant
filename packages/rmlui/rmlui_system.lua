@@ -71,7 +71,7 @@ end
 local maxID = 0
 
 function iRmlUi.preload_dir(dir)
-    ltask.call(ServiceRmlUi, "add_resource_dir", dir)
+    ltask.call(ServiceRmlUi, "preload_dir", dir)
 end
 
 function iRmlUi.update_viewrect(x, y, w, h)

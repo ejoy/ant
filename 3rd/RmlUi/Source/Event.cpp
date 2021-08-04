@@ -29,11 +29,11 @@
 #include "../Include/RmlUi/Event.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/Document.h"
-#include "EventSpecification.h"
+#include "../Include/RmlUi/EventSpecification.h"
 
 namespace Rml {
 
-Event::Event(Element* _target_element, EventId id, const Dictionary& _parameters, bool interruptible)
+Event::Event(Element* _target_element, EventId id, const EventDictionary& _parameters, bool interruptible)
 	: parameters(_parameters)
 	, target_element(_target_element)
 	, id(id)
@@ -66,14 +66,12 @@ Event::~Event()
 { }
 
 void Event::InitMouseEvent() {
-	const Variant* x = GetIf(parameters, "x");
-	const Variant* y = GetIf(parameters, "y");
+	const float* x = GetIf<float>(parameters, "x");
+	const float* y = GetIf<float>(parameters, "y");
 	if (!x || !y) {
 		return;
 	}
-	Point client(0,0);
-	x->GetInto(client.x);
-	y->GetInto(client.y);
+	Point client(*x,*y);
 
 	parameters["clientX"] = client.x;
 	parameters["clientY"] = client.y;
@@ -140,7 +138,7 @@ void Event::StopImmediatePropagation() {
 	}
 }
 
-const Dictionary& Event::GetParameters() const {
+const EventDictionary& Event::GetParameters() const {
 	return parameters;
 }
 
@@ -149,7 +147,7 @@ EventId Event::GetId() const {
 }
 
 std::string Event::GetType() const {
-	return EventSpecificationInterface::Get(id).type;
+	return EventSpecification::Get(id).type;
 }
 
 } // namespace Rml

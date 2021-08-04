@@ -34,20 +34,22 @@
 #include "../Include/RmlUi/Document.h"
 #include "../Include/RmlUi/ElementUtilities.h"
 #include "../Include/RmlUi/Factory.h"
-#include "../Include/RmlUi/Dictionary.h"
 #include "../Include/RmlUi/PropertyIdSet.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/Transform.h"
 #include "../Include/RmlUi/RenderInterface.h"
 #include "../Include/RmlUi/StreamMemory.h"
+#include "../Include/RmlUi/Log.h"
+#include "../Include/RmlUi/StringUtilities.h"
+#include "../Include/RmlUi/EventSpecification.h"
+#include "../Include/RmlUi/EventListener.h"
 #include "DataModel.h"
 #include "ElementAnimation.h"
 #include "ElementBackgroundBorder.h"
 #include "ElementDefinition.h"
 #include "ElementStyle.h"
 #include "EventDispatcher.h"
-#include "EventSpecification.h"
 #include "ElementBackgroundImage.h"
 #include "PluginRegistry.h"
 #include "PropertiesIterator.h"
@@ -62,36 +64,29 @@
 namespace Rml {
 
 struct ElementMeta {
-	ElementMeta(Element* el) : event_dispatcher(el), style(el) {}
-	EventDispatcher event_dispatcher;
+	ElementMeta(Element* el) : style(el) {}
 	ElementStyle style;
 	Style::ComputedValues computed_values;
 };
 
 Element::Element(Document* owner, const std::string& tag)
-	: owner_document(owner)
-	, tag(tag)
-	, dirty_perspective(false)
-	, dirty_animation(false)
-	, dirty_transition(false)
+	: tag(tag)
+	, owner_document(owner)
+	, meta(new ElementMeta(this))
 {
 	RMLUI_ASSERT(tag == StringUtilities::ToLower(tag));
-	parent = nullptr;
-	z_index = 0;
-	stacking_context_dirty = true;
-	structure_dirty = false;
-	meta = new ElementMeta(this);
-	data_model = nullptr;
 }
 
 Element::~Element() {
 	RMLUI_ASSERT(parent == nullptr);
 	//GetOwnerDocument()->OnElementDetach(this);
 	SetDataModel(nullptr);
-	for (ElementPtr& child : children) {
+	for (auto& child : children) {
 		child->SetParent(nullptr);
 	}
-	delete meta;
+	for (const auto& listener : listeners) {
+		listener->OnDetach(this);
+	}
 }
 
 void Element::Update() {
@@ -199,12 +194,9 @@ std::string Element::GetAddress(bool include_pseudo_classes, bool include_parent
 
 	if (include_pseudo_classes)
 	{
-		const PseudoClassList& pseudo_classes = meta->style.GetActivePseudoClasses();		
-		for (PseudoClassList::const_iterator i = pseudo_classes.begin(); i != pseudo_classes.end(); ++i)
-		{
-			address += ":";
-			address += (*i);
-		}
+		PseudoClassSet pseudo_classes = GetActivePseudoClasses();
+		if (pseudo_classes & PseudoClass::Active) { address += ":active"; }
+		if (pseudo_classes & PseudoClass::Hover) { address += ":hover"; }
 	}
 
 	if (include_parents && parent)
@@ -236,13 +228,13 @@ static float ComputeFontsize(const Property* property, Element* element) {
 			fontSize = parent->GetFontSize();
 		}
 		if (property->unit == Property::PERCENT) {
-			return fontSize * 0.01f * property->Get<float>();
+			return fontSize * 0.01f * property->GetFloat();
 		}
-		return fontSize * property->Get<float>();
+		return fontSize * property->GetFloat();
 	}
 	if (property->unit == Property::REM) {
 		if (element == element->GetOwnerDocument()->body.get()) {
-			return property->Get<float>() * 16;
+			return property->GetFloat() * 16;
 		}
 	}
 	return ComputeProperty(property, element);
@@ -264,7 +256,7 @@ bool Element::UpdataFontSize() {
 
 float Element::GetOpacity() {
 	const Property* property = GetProperty(PropertyId::Opacity);
-	return property->Get<float>();
+	return property->GetFloat();
 }
 
 bool Element::SetProperty(const std::string& name, const std::string& value) {
@@ -349,28 +341,17 @@ bool Element::Project(Point& point) const noexcept {
 	return false;
 }
 
-void Element::SetPseudoClass(const std::string& pseudo_class, bool activate)
+void Element::SetPseudoClass(PseudoClass pseudo_class, bool activate)
 {
 	meta->style.SetPseudoClass(pseudo_class, activate);
 }
 
-bool Element::IsPseudoClassSet(const std::string& pseudo_class) const
+bool Element::IsPseudoClassSet(PseudoClassSet pseudo_class) const
 {
 	return meta->style.IsPseudoClassSet(pseudo_class);
 }
 
-bool Element::ArePseudoClassesSet(const PseudoClassList& pseudo_classes) const
-{
-	for (PseudoClassList::const_iterator i = pseudo_classes.begin(); i != pseudo_classes.end(); ++i)
-	{
-		if (!IsPseudoClassSet(*i))
-			return false;
-	}
-
-	return true;
-}
-
-const PseudoClassList& Element::GetActivePseudoClasses() const
+PseudoClassSet Element::GetActivePseudoClasses() const
 {
 	return meta->style.GetActivePseudoClasses();
 }
@@ -481,40 +462,6 @@ void Element::SetInnerRML(const std::string& rml) {
 	//parser.Parse(stream.get());
 }
 
-void Element::AddEventListener(const std::string& event, EventListener* listener, bool in_capture_phase) {
-	EventId id = EventSpecificationInterface::GetIdOrInsert(event);
-	meta->event_dispatcher.AttachEvent(id, listener, in_capture_phase);
-}
-
-void Element::AddEventListener(EventId id, EventListener* listener, bool in_capture_phase) {
-	meta->event_dispatcher.AttachEvent(id, listener, in_capture_phase);
-}
-
-void Element::RemoveEventListener(const std::string& event, EventListener* listener, bool in_capture_phase) {
-	EventId id = EventSpecificationInterface::GetIdOrInsert(event);
-	meta->event_dispatcher.DetachEvent(id, listener, in_capture_phase);
-}
-
-void Element::RemoveEventListener(EventId id, EventListener* listener, bool in_capture_phase)
-{
-	meta->event_dispatcher.DetachEvent(id, listener, in_capture_phase);
-}
-
-bool Element::DispatchEvent(const std::string& type, const Dictionary& parameters) {
-	const EventSpecification& specification = EventSpecificationInterface::GetOrInsert(type);
-	return EventDispatcher::DispatchEvent(this, specification.id, parameters, specification.interruptible, specification.bubbles, specification.default_action_phase);
-}
-
-bool Element::DispatchEvent(const std::string& type, const Dictionary& parameters, bool interruptible, bool bubbles) {
-	const EventSpecification& specification = EventSpecificationInterface::GetOrInsert(type);
-	return EventDispatcher::DispatchEvent(this, specification.id, parameters, interruptible, bubbles, specification.default_action_phase);
-}
-
-bool Element::DispatchEvent(EventId id, const Dictionary& parameters) {
-	const EventSpecification& specification = EventSpecificationInterface::Get(id);
-	return EventDispatcher::DispatchEvent(this, specification.id, parameters, specification.interruptible, specification.bubbles, specification.default_action_phase);
-}
-
 Element* Element::AppendChild(ElementPtr child) {
 	RMLUI_ASSERT(child);
 	Element* child_ptr = child.get();
@@ -570,8 +517,6 @@ ElementPtr Element::RemoveChild(Element* child) {
 		// Add the element to the delete list
 		if (itr->get() == child)
 		{
-			Element* ancestor = child;
-
 			ElementPtr detached_child = std::move(*itr);
 			children.erase(itr);
 
@@ -730,10 +675,6 @@ void Element::QuerySelectorAll(ElementList& elements, const std::string& selecto
 	QuerySelectorAllMatchRecursive(elements, leaf_nodes, this);
 }
 
-EventDispatcher* Element::GetEventDispatcher() const {
-	return &meta->event_dispatcher;
-}
-
 DataModel* Element::GetDataModel() const {
 	return data_model;
 }
@@ -770,9 +711,10 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes)
 	{
 		if (pair.first.size() > 2 && pair.first[0] == 'o' && pair.first[1] == 'n')
 		{
-			EventListener* listener = Factory::InstanceEventListener(pair.second, this);
-			if (listener)
-				AddEventListener(pair.first.substr(2), listener, false);
+			EventListener* listener = Factory::InstanceEventListener(this, pair.first.substr(2), pair.second, false);
+			if (listener) {
+				AddEventListener(listener);
+			}
 		}
 	}
 }
@@ -797,7 +739,7 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 		float new_z_index = 0;
 		const Property* property = GetProperty(PropertyId::ZIndex);
 		if (property->unit != Property::KEYWORD) {
-			new_z_index = property->Get<float>();
+			new_z_index = property->GetFloat();
 		}
 		if (z_index != new_z_index) {
 			z_index = new_z_index;
@@ -875,25 +817,19 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 	}
 }
 
-void Element::ProcessDefaultAction(Event& event)
-{
-	if (event.GetId() == EventId::Mousedown && event.GetParameter<int>("button", 0) == (int)MouseButton::Left) {
-		SetPseudoClass("active", true);
-	}
-
-	if (event.GetPhase() == EventPhase::Target)
-	{
-		switch (event.GetId())
-		{
-		case EventId::Mouseover:
-			SetPseudoClass("hover", true);
-			break;
-		case EventId::Mouseout:
-			SetPseudoClass("hover", false);
-			break;
-		default:
-			break;
-		}
+void Element::ProcessDefaultAction(Event& event) {
+	switch (event.GetId()) {
+	case EventId::Mouseover:
+		SetPseudoClass(PseudoClass::Hover, true);
+		break;
+	case EventId::Mouseout:
+		SetPseudoClass(PseudoClass::Hover, false);
+		break;
+	case EventId::Mousedown:
+		SetPseudoClass(PseudoClass::Active, true);
+		break;
+	default:
+		break;
 	}
 }
 
@@ -1006,10 +942,10 @@ void Element::SetParent(Element* _parent) {
 }
 
 void Element::UpdateStackingContext() {
-	if (!stacking_context_dirty) {
+	if (!dirty_stacking_context) {
 		return;
 	}
-	stacking_context_dirty = false;
+	dirty_stacking_context = false;
 	stacking_context.clear();
 	stacking_context.reserve(children.size());
 	for (auto& child : children) {
@@ -1023,16 +959,16 @@ void Element::UpdateStackingContext() {
 }
 
 void Element::DirtyStackingContext() {
-	stacking_context_dirty = true;
+	dirty_stacking_context = true;
 }
 
 void Element::DirtyStructure() {
-	structure_dirty = true;
+	dirty_structure = true;
 }
 
 void Element::UpdateStructure() {
-	if (structure_dirty) {
-		structure_dirty = false;
+	if (dirty_structure) {
+		dirty_structure = false;
 		GetStyle()->DirtyDefinition();
 	}
 }
@@ -1251,7 +1187,7 @@ void Element::AdvanceAnimations()
 	// Move all completed animations to the end of the list
 	auto it_completed = std::partition(animations.begin(), animations.end(), [](const ElementAnimation& animation) { return !animation.IsComplete(); });
 
-	std::vector<Dictionary> dictionary_list;
+	std::vector<EventDictionary> dictionary_list;
 	std::vector<bool> is_transition;
 	dictionary_list.reserve(animations.end() - it_completed);
 	is_transition.reserve(animations.end() - it_completed);
@@ -1261,7 +1197,7 @@ void Element::AdvanceAnimations()
 		const std::string& property_name = StyleSheetSpecification::GetPropertyName(it->GetPropertyId());
 
 		dictionary_list.emplace_back();
-		dictionary_list.back().emplace("property", Variant(property_name));
+		dictionary_list.back().emplace("property", property_name);
 		is_transition.push_back(it->IsTransition());
 
 		it->Release(*this);
@@ -1285,7 +1221,7 @@ void Element::UpdateTransform() {
 	dirty_transform = false;
 	glm::mat4x4 new_transform(1);
 	glm::vec3 origin(metrics.frame.origin.x, metrics.frame.origin.y, 0);
-	auto computedTransform = GetProperty(PropertyId::Transform)->Get<TransformPtr>();
+	auto computedTransform = GetProperty(PropertyId::Transform)->GetTransformPtr();
 	if (computedTransform && !computedTransform->empty()) {
 		glm::vec3 transform_origin = origin + glm::vec3 {
 			ComputePropertyW(GetProperty(PropertyId::TransformOriginX), this),
@@ -1464,6 +1400,45 @@ void Element::SetRednerStatus() {
 void Element::DirtyTransform() {
 	dirty_transform = true;
 	dirty_clip = true;
+}
+
+void Element::AddEventListener(EventListener* listener) {
+	auto it = std::find(listeners.begin(), listeners.end(), listener);
+	if (it == listeners.end()) {
+		listeners.emplace(it, listener);
+	}
+}
+
+void Element::RemoveEventListener(EventListener* listener) {
+	auto it = std::find(listeners.begin(), listeners.end(), listener);
+	if (it != listeners.end()) {
+		listeners.erase(it);
+		listener->OnDetach(this);
+	}
+}
+
+bool Element::DispatchEvent(EventId id, const EventDictionary& parameters, bool interruptible, bool bubbles) {
+	Event event(this, id, parameters, interruptible);
+	return Rml::DispatchEvent(event, bubbles);
+}
+
+bool Element::DispatchEvent(EventId id, const EventDictionary& parameters) {
+	const EventSpecification& specification = EventSpecification::Get(id);
+	return DispatchEvent(specification.id, parameters, specification.interruptible, specification.bubbles);
+}
+
+void Element::RemoveAllEvents() {
+	for (const auto& listener : listeners) {
+		listener->OnDetach(this);
+	}
+	listeners.clear();
+	for (auto& child : children) {
+		child->RemoveAllEvents();
+	}
+}
+
+std::vector<EventListener*> const& Element::GetEventListeners() const {
+	return listeners;
 }
 
 } // namespace Rml

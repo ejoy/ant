@@ -29,6 +29,7 @@
 #include "../Include/RmlUi/Texture.h"
 #include "../Include/RmlUi/RenderInterface.h"
 #include "../Include/RmlUi/Core.h"
+#include "../Include/RmlUi/Log.h"
 
 namespace Rml {
 

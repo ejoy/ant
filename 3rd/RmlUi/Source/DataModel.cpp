@@ -28,6 +28,8 @@
 
 #include "DataModel.h"
 #include "../Include/RmlUi/Element.h"
+#include "../Include/RmlUi/Log.h"
+#include "../Include/RmlUi/StringUtilities.h"
 #include "DataController.h"
 #include "DataView.h"
 

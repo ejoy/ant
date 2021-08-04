@@ -42,6 +42,7 @@
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/Transform.h"
 #include "../Include/RmlUi/ElementText.h"
+#include "../Include/RmlUi/StringUtilities.h"
 #include "ElementDefinition.h"
 #include "PropertiesIterator.h"
 #include <algorithm>
@@ -113,10 +114,6 @@ float ComputePropertyH(const Property* property, Element* e) {
 	return ComputePropertyH(property->ToFloatValue(), e);
 }
 
-static FloatValue ComputeOrigin(const Property* property) {
-	return property->ToFloatValue();
-}
-
 ElementStyle::ElementStyle(Element* _element)
 {
 	definition = nullptr;
@@ -186,7 +183,7 @@ void ElementStyle::TransitionPropertyChanges(PropertyIdSet& properties, const El
 	if (!transition_property) {
 		return;
 	}
-	auto transition_list = transition_property->Get<TransitionList>();
+	auto transition_list = transition_property->GetTransitionList();
 	if (transition_list.none) {
 		return;
 	}
@@ -223,7 +220,7 @@ bool ElementStyle::TransitionPropertyChanges(PropertyId id, const Property& prop
 	if (!transition_property) {
 		return false;
 	}
-	auto transition_list = transition_property->Get<TransitionList>();
+	auto transition_list = transition_property->GetTransitionList();
 	if (transition_list.none) {
 		return false;
 	}
@@ -291,32 +288,22 @@ void ElementStyle::UpdateDefinition() {
 	}
 }
 
-
-
-// Sets or removes a pseudo-class on the element.
-void ElementStyle::SetPseudoClass(const std::string& pseudo_class, bool activate)
-{
-	bool changed = false;
-
+void ElementStyle::SetPseudoClass(PseudoClass pseudo_class, bool activate) {
+	PseudoClassSet old = pseudo_classes;
 	if (activate)
-		changed = pseudo_classes.insert(pseudo_class).second;
+		pseudo_classes = pseudo_classes | pseudo_class;
 	else
-		changed = (pseudo_classes.erase(pseudo_class) == 1);
-
-	if (changed)
-	{
+		pseudo_classes = pseudo_classes & ~pseudo_class;
+	if (old != pseudo_classes) {
 		DirtyDefinition();
 	}
 }
 
-// Checks if a specific pseudo-class has been set on the element.
-bool ElementStyle::IsPseudoClassSet(const std::string& pseudo_class) const
-{
-	return (pseudo_classes.count(pseudo_class) == 1);
+bool ElementStyle::IsPseudoClassSet(PseudoClassSet pseudo_class) const {
+	return (pseudo_class & ~pseudo_classes) == 0;
 }
 
-const PseudoClassList& ElementStyle::GetActivePseudoClasses() const
-{
+PseudoClassSet ElementStyle::GetActivePseudoClasses() const {
 	return pseudo_classes;
 }
 
@@ -545,20 +532,17 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values) {
 		case PropertyId::FlexShrink:
 			element->GetLayout().SetProperty(id, p, element);
 			break;
-		}
-
-		switch (id) {
 		case PropertyId::BorderTopColor:
-			values.border_color.top = p->Get<Color>();
+			values.border_color.top = p->GetColor();
 			break;
 		case PropertyId::BorderRightColor:
-			values.border_color.right = p->Get<Color>();
+			values.border_color.right = p->GetColor();
 			break;
 		case PropertyId::BorderBottomColor:
-			values.border_color.bottom = p->Get<Color>();
+			values.border_color.bottom = p->GetColor();
 			break;
 		case PropertyId::BorderLeftColor:
-			values.border_color.left = p->Get<Color>();
+			values.border_color.left = p->GetColor();
 			break;
 		case PropertyId::BorderTopLeftRadius:
 			values.border_radius.topLeft = ComputeProperty(p, element);
@@ -574,14 +558,14 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values) {
 			break;
 
 		case PropertyId::BackgroundColor:
-			values.background_color = p->Get<Color>();
+			values.background_color = p->GetColor();
 			break;
 
 		case PropertyId::Transition:
-			values.transition = p->Get<TransitionList>();
+			values.transition = p->GetTransitionList();
 			break;
 		case PropertyId::Animation:
-			values.animation = p->Get<AnimationList>();
+			values.animation = p->GetAnimationList();
 			break;
 		default:
 			break;

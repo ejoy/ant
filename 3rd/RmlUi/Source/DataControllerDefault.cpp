@@ -28,21 +28,24 @@
 
 #include "DataControllerDefault.h"
 #include "../Include/RmlUi/Element.h"
+#include "../Include/RmlUi/Log.h"
 #include "DataController.h"
 #include "DataExpression.h"
 #include "DataModel.h"
-#include "EventSpecification.h"
+#include "../Include/RmlUi/EventSpecification.h"
 
 namespace Rml {
 
-DataControllerValue::DataControllerValue(Element* element) : DataController(element)
+DataControllerValue::DataControllerValue(Element* element)
+	: DataController(element)
+	, EventListener("change", false)
 {}
 
 DataControllerValue::~DataControllerValue()
 {
 	if (Element* element = GetElement())
 	{
-		element->RemoveEventListener(EventId::Change, this);
+		element->RemoveEventListener(this);
 	}
 }
 
@@ -57,7 +60,7 @@ bool DataControllerValue::Initialize(DataModel& model, Element* element, const s
 	if (model.GetVariable(variable_address))
 		address = std::move(variable_address);
 	
-	element->AddEventListener(EventId::Change, this);
+	element->AddEventListener(this);
 
 	return true;
 }
@@ -74,7 +77,7 @@ void DataControllerValue::ProcessEvent(Event& event)
 			return;
 		}
 
-		SetValue(it->second);
+		SetValue(VariantHelper::Copy(it->second));
 	}
 }
 
@@ -100,52 +103,48 @@ void DataControllerValue::SetValue(const Variant& value)
 	}
 }
 
+struct DataControllerEventListener : public EventListener {
+	DataControllerEventListener(const std::string& type, bool use_capture, const std::string& expression_str)
+		: EventListener(type, use_capture)
+		, expression(expression_str)
+	{ }
+	bool Parse(const DataExpressionInterface& expression_interface, bool is_assignment_expression) {
+		return expression.Parse(expression_interface, is_assignment_expression);
+	}
+	void OnDetach(Element *) override {}
+	void ProcessEvent(Event& event) override {
+		Element* element = event.GetTargetElement();
+		DataExpressionInterface expr_interface(element->GetDataModel(), element, &event);
+		Variant unused_value_out;
+		expression.Run(expr_interface, unused_value_out);
+	}
+	DataExpression expression;
+};
 
-DataControllerEvent::DataControllerEvent(Element* element) : DataController(element)
+DataControllerEvent::DataControllerEvent(Element* element)
+	: DataController(element)
 {}
 
 DataControllerEvent::~DataControllerEvent()
 {
-	if (Element* element = GetElement())
-	{
-		if (id != EventId::Invalid)
-			element->RemoveEventListener(id, this);
+	if (Element* element = GetElement()) {
+		if (listener) {
+			element->RemoveEventListener(listener.get());
+		}
 	}
 }
 
 bool DataControllerEvent::Initialize(DataModel& model, Element* element, const std::string& expression_str, const std::string& modifier)
 {
 	RMLUI_ASSERT(element);
-
-	expression = std::make_unique<DataExpression>(expression_str);
+	listener = std::make_unique<DataControllerEventListener>(modifier, false, expression_str);
 	DataExpressionInterface expr_interface(&model, element);
-
-	if (!expression->Parse(expr_interface, true))
-		return false;
-
-	id = EventSpecificationInterface::GetIdOrInsert(modifier);
-	if (id == EventId::Invalid)
-	{
-		Log::Message(Log::Level::Warning, "Event type '%s' could not be recognized, while adding 'data-event' to %s", modifier.c_str(), element->GetAddress().c_str());
+	if (!listener->Parse(expr_interface, true)) {
+		listener.reset();
 		return false;
 	}
-
-	element->AddEventListener(id, this);
-
+	element->AddEventListener(listener.get());
 	return true;
-}
-
-void DataControllerEvent::ProcessEvent(Event& event)
-{
-	if (!expression)
-		return;
-
-	if (Element* element = GetElement())
-	{
-		DataExpressionInterface expr_interface(element->GetDataModel(), element, &event);
-		Variant unused_value_out;
-		expression->Run(expr_interface, unused_value_out);
-	}
 }
 
 void DataControllerEvent::Release()

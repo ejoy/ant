@@ -1,5 +1,9 @@
 local ecs = ...
 local world = ecs.world
+
+-- local fbmgr         = require "framebuffer_mgr"
+-- local viewidmgr     = require "viewid_mgr"
+
 local assetmgr      = import_package "ant.asset"
 local math3d        = require "math3d"
 local effekseer     = require "effekseer"
@@ -7,21 +11,15 @@ local effekseer     = require "effekseer"
 local renderpkg     = import_package "ant.render"
 local declmgr       = renderpkg.declmgr
 local viewidmgr     = renderpkg.viewidmgr
+local fbmgr         = renderpkg.fbmgr
+
+local bgfx = require "bgfx"
 
 local math3d_adapter = require "math3d.adapter"
 effekseer.update_transform = math3d_adapter.matrix(effekseer.update_transform, 2, 1)
 
 local effekseer_sys = ecs.system "effekseer_system"
 local time_callback
--- local m = ecs.component "effekseer"
-
--- function m:init()
--- 	effekseer.set_loop(self.handle, self.loop)
---     effekseer.set_speed(self.handle, self.speed)
---     if e.auto_play then
---         effekseer.play(self.handle)
---     end
--- end
 
 local ie_t = ecs.transform "instance_effect"
 
@@ -35,7 +33,7 @@ function ie_t.process_entity(e)
 end
 
 local shader_type = {
-    "unlit","lit","distortion","ad_unlit","ad_lit","ad_distortion","mtl"
+    "unlit", "lit", "distortion", "ad_unlit", "ad_lit", "ad_distortion", "mtl"
 }
 
 function effekseer_sys:init()
@@ -68,9 +66,10 @@ function effekseer_sys:init()
         end
         return programs
     end
-
+    
     effekseer.init {
-        viewid = viewidmgr.get "main_view",
+        viewid = viewidmgr.get "effect_view",
+        --viewid = viewidmgr.get "main_view",
         square_max_count = 8000,
         sprite_programs = create_shaders(sprite_shader_defines),
         model_programs = create_shaders(model_shader_defines),
@@ -160,21 +159,32 @@ end
 local iom = world:interface "ant.objcontroller|obj_motion"
 local event_entity_register = world:sub{"entity_register"}
 
+local effect_view
+local main_fbidx
+local render_target
 function effekseer_sys:render_submit()
+    if not render_target then
+        effect_view = viewidmgr.get "effect_view"
+        main_fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
+        render_target = world:singleton_entity "main_queue".render_target
+    end
+    fbmgr.bind(effect_view, main_fbidx)
+    local vr = render_target.view_rect
+    bgfx.set_view_rect(effect_view, vr.x, vr.y, vr.w, vr.h)
     local dt = time_callback and time_callback() or itimer.delta() * 0.001
     effekseer.update(dt)
 end
 
 function effekseer_sys:follow_transform_updated()
-    -- for _, eid in event_entity_register:unpack() do
-    --     local effect = world[eid].effect_instance
-    --     if effect then
-    --         if effect.auto_play then
-    --             effekseer.set_loop(effect.handle, effect.loop)
-    --             effekseer.play(effect.handle) 
-    --         end
-    --     end
-    -- end
+    for _, eid in event_entity_register:unpack() do
+        local effect = world[eid].effect_instance
+        if effect then
+            if effect.auto_play then
+                effekseer.set_loop(effect.handle, effect.loop)
+                effekseer.play(effect.handle) 
+            end
+        end
+    end
     for _, eid in world:each "effekseer" do
 		local e = world[eid]
         if e._scene_id then

@@ -19,6 +19,7 @@ local ies
 local gizmo
 local iom
 local inspector
+local logger
 
 local m = {}
 local edit_anims = {}
@@ -139,7 +140,16 @@ local function anim_group_pause(eid, p)
     end
 end
 
+local widget_utils  = require "widget.utils"
+
 local function set_current_anim(anim_name)
+    if not edit_anims[current_eid][anim_name] then
+        local msg = anim_name .. " not exist."
+        logger.error({tag = "Editor", message = msg})
+        widget_utils.message_box({title = "AnimationError", info = msg})
+        return false
+    end
+
     if current_anim and current_anim.collider then
         for _, col in ipairs(current_anim.collider) do
             if col.collider then
@@ -148,7 +158,7 @@ local function set_current_anim(anim_name)
         end
     end
     current_anim = edit_anims[current_eid][anim_name]
-    if current_anim and current_anim.collider then
+    if current_anim.collider then
         for _, col in ipairs(current_anim.collider) do
             if col.collider then
                 ies.set_state(col.eid, "visible", true)
@@ -167,6 +177,7 @@ local function set_current_anim(anim_name)
     -- if not iani.is_playing(current_eid) then
     --     anim_group_pause(current_eid, false)
     -- end
+    return true
 end
 
 local default_collider_define = {
@@ -694,7 +705,7 @@ end
 local current_event_file
 local current_clip_file
 local stringify     = import_package "ant.serialize".stringify
-local widget_utils  = require "widget.utils"
+
 
 local function get_clips_filename()
     local prefab_filename = prefab_mgr:get_current_filename()
@@ -744,7 +755,9 @@ end
 local function set_current_clip(clip)
     if current_clip == clip then return end
     if clip then
-        set_current_anim(clip.anim_name)
+        if not set_current_anim(clip.anim_name) then
+            return
+        end
         anim_state.selected_clip_index = find_index(current_anim.clips, clip)
     end
     current_clip = clip
@@ -1339,5 +1352,7 @@ return function(w, am)
     prefab_mgr = require "prefab_manager"(world)
     prefab_mgr.set_anim_view(m)
     gizmo = require "gizmo.gizmo"(world)
+    local asset_mgr = import_package "ant.asset"
+    logger = require "widget.log"(asset_mgr)
     return m
 end

@@ -2,6 +2,7 @@
 #define ant_rml_lua_plugin_h
 
 #include "luabind.h"
+#include "luaref.h"
 #include "RmlUi/Plugin.h"
 
 class lua_event_listener;
@@ -13,7 +14,7 @@ class Document;
 }
 
 enum class LuaEvent : int {
-	OnDocumentCreate = 1,
+	OnDocumentCreate = 2,
 	OnDocumentDestroy,
 	OnLoadInlineScript,
 	OnLoadExternalScript,
@@ -39,13 +40,16 @@ public:
 	void callref(lua_State* L, int ref, size_t argn = 0, size_t retn = 0);
 	void call(lua_State* L, LuaEvent eid, size_t argn = 0, size_t retn = 0);
 
-	std::unique_ptr<luabind::reference> reference;
+	luaref reference = 0;
 	lua_event_listener_instancer* event_listener_instancer = nullptr;
 };
 
 lua_plugin* get_lua_plugin();
 void lua_pushvariant(lua_State *L, const Rml::Variant &v);
 void lua_getvariant(lua_State *L, int index, Rml::Variant* variant);
+void lua_pushvariant(lua_State *L, const Rml::EventVariant &v);
+void lua_getvariant(lua_State *L, int index, Rml::EventVariant* variant);
 void lua_pushevent(lua_State* L, const Rml::Event& event);
+
 
 #endif

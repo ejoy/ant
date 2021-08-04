@@ -31,6 +31,7 @@
 #include "StyleSheetFactory.h"
 #include "StyleSheetNodeSelector.h"
 #include <algorithm>
+#include <bit>
 
 namespace Rml {
 
@@ -39,14 +40,14 @@ StyleSheetNode::StyleSheetNode()
 	CalculateAndSetSpecificity();
 }
 
-StyleSheetNode::StyleSheetNode(StyleSheetNode* parent, const std::string& tag, const std::string& id, const std::vector<std::string>& classes, const std::vector<std::string>& pseudo_classes, const StructuralSelectorList& structural_selectors, bool child_combinator)
-	: parent(parent), tag(tag), id(id), class_names(classes), pseudo_class_names(pseudo_classes), structural_selectors(structural_selectors), child_combinator(child_combinator)
+StyleSheetNode::StyleSheetNode(StyleSheetNode* parent, const std::string& tag, const std::string& id, const std::vector<std::string>& classes, PseudoClassSet pseudo_classes, const StructuralSelectorList& structural_selectors, bool child_combinator)
+	: parent(parent), tag(tag), id(id), class_names(classes), pseudo_classes(pseudo_classes), structural_selectors(structural_selectors), child_combinator(child_combinator)
 {
 	CalculateAndSetSpecificity();
 }
 
-StyleSheetNode::StyleSheetNode(StyleSheetNode* parent, std::string&& tag, std::string&& id, std::vector<std::string>&& classes, std::vector<std::string>&& pseudo_classes, StructuralSelectorList&& structural_selectors, bool child_combinator)
-	: parent(parent), tag(std::move(tag)), id(std::move(id)), class_names(std::move(classes)), pseudo_class_names(std::move(pseudo_classes)), structural_selectors(std::move(structural_selectors)), child_combinator(child_combinator)
+StyleSheetNode::StyleSheetNode(StyleSheetNode* parent, std::string&& tag, std::string&& id, std::vector<std::string>&& classes, PseudoClassSet pseudo_classes, StructuralSelectorList&& structural_selectors, bool child_combinator)
+	: parent(parent), tag(std::move(tag)), id(std::move(id)), class_names(std::move(classes)), pseudo_classes(pseudo_classes), structural_selectors(std::move(structural_selectors)), child_combinator(child_combinator)
 {
 	CalculateAndSetSpecificity();
 }
@@ -56,12 +57,12 @@ StyleSheetNode* StyleSheetNode::GetOrCreateChildNode(const StyleSheetNode& other
 	// See if we match the target child
 	for (const auto& child : children)
 	{
-		if (child->EqualRequirements(other.tag, other.id, other.class_names, other.pseudo_class_names, other.structural_selectors, other.child_combinator))
+		if (child->EqualRequirements(other.tag, other.id, other.class_names, other.pseudo_classes, other.structural_selectors, other.child_combinator))
 			return child.get();
 	}
 
 	// We don't, so create a new child
-	auto child = std::make_unique<StyleSheetNode>(this, other.tag, other.id, other.class_names, other.pseudo_class_names, other.structural_selectors, other.child_combinator);
+	auto child = std::make_unique<StyleSheetNode>(this, other.tag, other.id, other.class_names, other.pseudo_classes, other.structural_selectors, other.child_combinator);
 	StyleSheetNode* result = child.get();
 
 	children.push_back(std::move(child));
@@ -69,7 +70,7 @@ StyleSheetNode* StyleSheetNode::GetOrCreateChildNode(const StyleSheetNode& other
 	return result;
 }
 
-StyleSheetNode* StyleSheetNode::GetOrCreateChildNode(std::string&& tag, std::string&& id, std::vector<std::string>&& classes, std::vector<std::string>&& pseudo_classes, StructuralSelectorList&& structural_pseudo_classes, bool child_combinator)
+StyleSheetNode* StyleSheetNode::GetOrCreateChildNode(std::string&& tag, std::string&& id, std::vector<std::string>&& classes, PseudoClassSet pseudo_classes, StructuralSelectorList&& structural_pseudo_classes, bool child_combinator)
 {
 	// See if we match an existing child
 	for (const auto& child : children)
@@ -102,7 +103,7 @@ void StyleSheetNode::MergeHierarchy(StyleSheetNode* node, int specificity_offset
 
 std::unique_ptr<StyleSheetNode> StyleSheetNode::DeepCopy(StyleSheetNode* in_parent) const
 {
-	auto node = std::make_unique<StyleSheetNode>(in_parent, tag, id, class_names, pseudo_class_names, structural_selectors, child_combinator);
+	auto node = std::make_unique<StyleSheetNode>(in_parent, tag, id, class_names, pseudo_classes, structural_selectors, child_combinator);
 
 	node->properties = properties;
 	node->children.resize(children.size());
@@ -153,7 +154,7 @@ bool StyleSheetNode::SetStructurallyVolatileRecursive(bool ancestor_is_structura
 	return (self_is_structural_pseudo_class || descendant_is_structural_pseudo_class);
 }
 
-bool StyleSheetNode::EqualRequirements(const std::string& _tag, const std::string& _id, const std::vector<std::string>& _class_names, const std::vector<std::string>& _pseudo_class_names, const StructuralSelectorList& _structural_selectors, bool _child_combinator) const
+bool StyleSheetNode::EqualRequirements(const std::string& _tag, const std::string& _id, const std::vector<std::string>& _class_names, PseudoClassSet _pseudo_classes, const StructuralSelectorList& _structural_selectors, bool _child_combinator) const
 {
 	if (tag != _tag)
 		return false;
@@ -161,7 +162,7 @@ bool StyleSheetNode::EqualRequirements(const std::string& _tag, const std::strin
 		return false;
 	if (class_names != _class_names)
 		return false;
-	if (pseudo_class_names != _pseudo_class_names)
+	if (pseudo_classes != _pseudo_classes)
 		return false;
 	if (structural_selectors != _structural_selectors)
 		return false;
@@ -209,19 +210,11 @@ inline bool StyleSheetNode::Match(const Element* element) const
 
 inline bool StyleSheetNode::MatchClassPseudoClass(const Element* element) const
 {
-	for (auto& name : class_names)
-	{
+	for (auto& name : class_names) 	{
 		if (!element->IsClassSet(name))
 			return false;
 	}
-
-	for (auto& name : pseudo_class_names)
-	{
-		if (!element->IsPseudoClassSet(name))
-			return false;
-	}
-
-	return true;
+	return element->IsPseudoClassSet(pseudo_classes);
 }
 
 inline bool StyleSheetNode::MatchStructuralSelector(const Element* element) const
@@ -300,7 +293,7 @@ void StyleSheetNode::CalculateAndSetSpecificity()
 		specificity += 1'000'000;
 
 	specificity += 100'000*(int)class_names.size();
-	specificity += 100'000*(int)pseudo_class_names.size();
+	specificity += 100'000*(int)std::popcount(pseudo_classes);
 	specificity += 100'000*(int)structural_selectors.size();
 
 	// Add our parent's specificity onto ours.

@@ -34,7 +34,7 @@
 #include "../Include/RmlUi/PropertyIdSet.h"
 #include "../Include/RmlUi/StringUtilities.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
-
+#include "../Include/RmlUi/Tween.h"
 
 namespace Rml {
 

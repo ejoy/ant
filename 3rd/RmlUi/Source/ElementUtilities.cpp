@@ -31,6 +31,7 @@
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/Factory.h"
+#include "../Include/RmlUi/Log.h"
 #include "DataController.h"
 #include "DataModel.h"
 #include "DataView.h"
@@ -104,7 +105,7 @@ static bool ApplyDataViewsControllersInternal(Element* element, const bool const
 					if (DataViewPtr view = Factory::InstanceDataView(type_name, element, false))
 						initializer.view = std::move(view);
 
-					if (DataControllerPtr controller = Factory::InstanceDataController(type_name, element))
+					if (DataControllerPtr controller = Factory::InstanceDataController(element, type_name))
 						initializer.controller = std::move(controller);
 				}
 

@@ -45,7 +45,6 @@ namespace Rml {
 
 class Context;
 class DataModel;
-class EventDispatcher;
 class EventListener;
 class ElementDefinition;
 class Document;
@@ -144,25 +143,10 @@ public:
 	
 	///@}
 
-	/** @name Pseudo-classes
-	 */
-	//@{
-	/// Sets or removes a pseudo-class on the element.
-	/// @param[in] pseudo_class The pseudo class to activate or deactivate.
-	/// @param[in] activate True if the pseudo-class is to be activated, false to be deactivated.
-	void SetPseudoClass(const std::string& pseudo_class, bool activate);
-	/// Checks if a specific pseudo-class has been set on the element.
-	/// @param[in] pseudo_class The name of the pseudo-class to check for.
-	/// @return True if the pseudo-class is set on the element, false if not.
-	bool IsPseudoClassSet(const std::string& pseudo_class) const;
-	/// Checks if a complete set of pseudo-classes are set on the element.
-	/// @param[in] pseudo_classes The set of pseudo-classes to check for.
-	/// @return True if all of the pseudo-classes are set, false if not.
-	bool ArePseudoClassesSet(const PseudoClassList& pseudo_classes) const;
-	/// Gets a list of the current active pseudo-classes.
-	/// @return The list of active pseudo-classes.
-	const PseudoClassList& GetActivePseudoClasses() const;
-	//@}
+	void SetPseudoClass(PseudoClass pseudo_class, bool activate);
+	bool IsPseudoClassSet(PseudoClassSet pseudo_class) const;
+	PseudoClassSet GetActivePseudoClasses() const;
+
 
 	/** @name Attributes
 	 */
@@ -237,33 +221,12 @@ public:
 	 */
 	//@{
 
-	/// Adds an event listener to this element.
-	/// @param[in] event Event to attach to.
-	/// @param[in] listener The listener object to be attached.
-	/// @param[in] in_capture_phase True to attach in the capture phase, false in bubble phase.
-	/// @lifetime The added listener must stay alive until after the dispatched call from EventListener::OnDetach(). This occurs
-	///     eg. when the element is destroyed or when RemoveEventListener() is called with the same parameters passed here.
-	void AddEventListener(const std::string& event, EventListener* listener, bool in_capture_phase = false);
-	/// Adds an event listener to this element by id.
-	/// @lifetime The added listener must stay alive until after the dispatched call from EventListener::OnDetach(). This occurs
-	///     eg. when the element is destroyed or when RemoveEventListener() is called with the same parameters passed here.
-	void AddEventListener(EventId id, EventListener* listener, bool in_capture_phase = false);
-	/// Removes an event listener from this element.
-	/// @param[in] event Event to detach from.
-	/// @param[in] listener The listener object to be detached.
-	/// @param[in] in_capture_phase True to detach from the capture phase, false from the bubble phase.
-	void RemoveEventListener(const std::string& event, EventListener* listener, bool in_capture_phase = false);
-	/// Removes an event listener from this element by id.
-	void RemoveEventListener(EventId id, EventListener* listener, bool in_capture_phase = false);
-	/// Sends an event to this element.
-	/// @param[in] type Event type in string form.
-	/// @param[in] parameters The event parameters.
-	/// @return True if the event was not consumed (ie, was prevented from propagating by an element), false if it was.
-	bool DispatchEvent(const std::string& type, const Dictionary& parameters);
-	/// Sends an event to this element, overriding the default behavior for the given event type.
-	bool DispatchEvent(const std::string& type, const Dictionary& parameters, bool interruptible, bool bubbles = true);
-	/// Sends an event to this element by event id.
-	bool DispatchEvent(EventId id, const Dictionary& parameters);
+	void AddEventListener(EventListener* listener);
+	void RemoveEventListener(EventListener* listener);
+	bool DispatchEvent(EventId id, const EventDictionary& parameters, bool interruptible, bool bubbles = true);
+	bool DispatchEvent(EventId id, const EventDictionary& parameters);
+	void RemoveAllEvents();
+	std::vector<EventListener*> const& GetEventListeners() const;
 
 	/// Append a child to this element.
 	/// @param[in] element The element to append as a child.
@@ -309,8 +272,6 @@ public:
 		@name Internal Functions
 	 */
 	//@{
-	/// Access the event dispatcher for this element.
-	EventDispatcher* GetEventDispatcher() const;
 	/// Returns the data model of this element.
 	DataModel* GetDataModel() const;
 	//@}
@@ -383,33 +344,24 @@ protected:
 	Document* owner_document;
 
 	// Active data model for this element.
-	DataModel* data_model;
+	DataModel* data_model = nullptr;
 	// Attributes on this element.
 	ElementAttributes attributes;
 
 	OwnedElementList children;
 
-	float z_index;
+	float z_index = 0;
 
 	ElementList stacking_context;
-	bool stacking_context_dirty;
-
-	bool structure_dirty;
-
-	bool dirty_perspective;
 	std::unique_ptr<glm::mat4x4> perspective;
 	mutable bool have_inv_transform = true;
 	mutable std::unique_ptr<glm::mat4x4> inv_transform;
 
 	ElementAnimationList animations;
-	bool dirty_animation;
-	bool dirty_transition;
 
 	ElementMeta* meta;
+	std::vector<EventListener*> listeners;
 
-	bool dirty_background = false;
-	bool dirty_border = false;
-	bool dirty_image = false;
 	std::unique_ptr<Geometry> geometry_border;
 	std::unique_ptr<Geometry> geometry_image;
 	Geometry::Path padding_edge;
@@ -429,6 +381,15 @@ protected:
 		glm::u16vec4 scissor;
 		glm::vec4 shader[2];
 	} clip;
+
+	bool dirty_stacking_context = false;
+	bool dirty_structure = false;
+	bool dirty_perspective = false;
+	bool dirty_animation = false;
+	bool dirty_transition = false;
+	bool dirty_background = false;
+	bool dirty_border = false;
+	bool dirty_image = false;
 
 	friend class Rml::ElementStyle;
 	friend class Rml::Document;

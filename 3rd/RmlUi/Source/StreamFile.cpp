@@ -30,6 +30,7 @@
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/FileInterface.h"
 #include "../Include/RmlUi/StringUtilities.h"
+#include "../Include/RmlUi/Log.h"
 
 namespace Rml {
 

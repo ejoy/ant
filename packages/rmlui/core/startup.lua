@@ -110,7 +110,7 @@ end
 S.open = windowManager.open
 S.close = windowManager.close
 S.postMessage = windowManager.postMessage
-S.add_resource_dir = fileManager.add
+S.preload_dir = fileManager.preload_dir
 
 ltask.send(ServiceWindow, "subscribe", "mouse")
 
