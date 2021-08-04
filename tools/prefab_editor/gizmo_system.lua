@@ -276,7 +276,7 @@ function gizmo_sys:post_init()
 	iss.set_parent(plane_xy_eid, axis_root)
 	gizmo.txy.eid = {plane_xy_eid, plane_xy_eid}
 
-	plane_yz_eid = computil.create_prim_plane_entity(
+	local plane_yz_eid = computil.create_prim_plane_entity(
 		{t = {0, gizmo_const.MOVE_PLANE_OFFSET, gizmo_const.MOVE_PLANE_OFFSET, 1}, s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0}, r = math3d.tovalue(math3d.quaternion{0, 0, math.rad(90)})},
 		"/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 		"plane_yz")
@@ -285,7 +285,7 @@ function gizmo_sys:post_init()
 	iss.set_parent(plane_yz_eid, axis_root)
 	gizmo.tyz.eid = {plane_yz_eid, plane_yz_eid}
 
-	plane_zx_eid = computil.create_prim_plane_entity(
+	local plane_zx_eid = computil.create_prim_plane_entity(
 		{t = {gizmo_const.MOVE_PLANE_OFFSET, 0, gizmo_const.MOVE_PLANE_OFFSET, 1}, s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0}},
 		"/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 		"plane_zx")
@@ -397,9 +397,9 @@ function gizmo_sys:post_init()
 	imaterial.set_property(new_eid, "u_color", gizmo_const.COLOR_Z)
 	iss.set_parent(new_eid, global_axis_eid)
 end
-
+local mb_main_camera_changed = world:sub{"component_changed", "camera_eid", "main_queue"}
 function gizmo_sys:entity_done()
-	for _ in w:select "INIT main_queue" do
+	for _ in mb_main_camera_changed:each() do
 		update_global_axis()
 		gizmo:update_scale()
 		gizmo:show_by_state(false)
