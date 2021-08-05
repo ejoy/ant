@@ -260,7 +260,7 @@ function pickup_sys:data_changed()
 end
 
 function pickup_sys:update_camera()
-    for e in w:select "pickup_queue camera_eid:in" do
+    for e in w:select "pickup_queue visible camera_eid:in" do
 		update_camera(e.camera_eid, clickpt)
 	end
 end
@@ -318,7 +318,7 @@ local function check_next_step(pc)
 end
 
 function pickup_sys:pickup()
-	for v in w:select "pickup_queue pickup:in render_target:in" do
+	for v in w:select "pickup_queue visible pickup:in render_target:in" do
 		local pc = v.pickup
 		local nextstep = pc.nextstep
 		if nextstep == "blit" then
