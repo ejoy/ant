@@ -54,4 +54,3 @@ pipeline "ui"
     .stage "ui_start"
     .stage "ui_update"
     .stage "ui_end"
-
