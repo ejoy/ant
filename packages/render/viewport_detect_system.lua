@@ -1,7 +1,8 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
+
 local fbmgr 	= require "framebuffer_mgr"
-local viewidmgr = require "viewid_mgr"
 
 local vp_detect_sys = ecs.system "viewport_detect_system"
 
@@ -50,8 +51,8 @@ local function update_camera_viewrect(viewsize)
 		update_render_queue(world[eid], viewsize)
 	end
 
-	for _, eid in world:each "render_target" do
-		local rt = world[eid].render_target
+	for qe in w:select "render_target:in" do
+		local rt = qe.render_target
 		local viewid = rt.viewid
 		local fbidx = rt.fb_idx
 		fbmgr.bind(viewid, fbidx)
