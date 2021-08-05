@@ -40,10 +40,7 @@ local widget_utils = require "widget.utils"
 local utils = require "common.utils"
 local m = ecs.system 'gui_system'
 local drag_file = nil
-local last_x = -1
-local last_y = -1
-local last_width = -1
-local last_height = -1
+
 local second_view_width = 384
 local second_vew_height = 216
 
@@ -229,6 +226,11 @@ local iRmlUi    = world:interface "ant.rmlui|rmlui"
 local irq       = world:interface "ant.render|irenderqueue"
 local bgfx      = require "bgfx"
 local stat_window
+local dock_x, dock_y, dock_width, dock_height
+local last_x = -1
+local last_y = -1
+local last_width = -1
+local last_height = -1
 function m:ui_update()
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.2, 0.2, 0.2, 1)
@@ -237,7 +239,7 @@ function m:ui_update()
     widget_utils.show_message_box()
     menu.show()
     toolbar.show()
-    local x, y, width, height = show_dock_space(0, uiconfig.ToolBarHeight)
+    dock_x, dock_y, dock_width, dock_height = show_dock_space(0, uiconfig.ToolBarHeight)
     scene_view.show()
     particle_emitter.show()
     inspector.show()
@@ -247,22 +249,7 @@ function m:ui_update()
     log_widget.show()
     imgui.windows.PopStyleColor(2)
     imgui.windows.PopStyleVar()
-    local dirty = false
-    if last_x ~= x then last_x = x dirty = true end
-    if last_y ~= y then last_y = y dirty = true  end
-    if last_width ~= width then last_width = width dirty = true  end
-    if last_height ~= height then last_height = height dirty = true  end
-    if dirty then
-        local mvp = imgui.GetMainViewport()
-        local viewport = {x = x - mvp.WorkPos[1], y = y - mvp.WorkPos[2] + uiconfig.MenuHeight, w = width, h = height}
-        irq.set_view_rect("main_queue", viewport)
-
-        iRmlUi.update_viewrect(viewport.x, viewport.y, viewport.w, viewport.h)
-
-        local secondViewport = {x = viewport.x + (width - second_view_width), y = viewport.y + (height - second_vew_height), w = second_view_width, h = second_vew_height}
-        irq.set_view_rect(camera_mgr.second_view, secondViewport)
-        world:pub {"ViewportDirty", viewport}
-    end
+    
     --drag file to view
     if imgui.util.IsMouseDragging(0) then
         local x, y = imgui.util.GetMousePos()
@@ -483,6 +470,26 @@ local anim_entity
 local anim_transform = math3d.ref()
 local current_skeleton
 local skeleton_eid
+
+function m:end_frame()
+    local dirty = false
+    if last_x ~= dock_x then last_x = dock_x dirty = true end
+    if last_y ~= dock_y then last_y = dock_y dirty = true  end
+    if last_width ~= dock_width then last_width = dock_width dirty = true  end
+    if last_height ~= dock_height then last_height = dock_height dirty = true  end
+    if dirty then
+        local mvp = imgui.GetMainViewport()
+        local viewport = {x = dock_x - mvp.WorkPos[1], y = dock_y - mvp.WorkPos[2] + uiconfig.MenuHeight, w = dock_width, h = dock_height}
+        irq.set_view_rect("main_queue", viewport)
+
+        iRmlUi.update_viewrect(viewport.x, viewport.y, viewport.w, viewport.h)
+
+        local secondViewport = {x = viewport.x + (dock_width - second_view_width), y = viewport.y + (dock_height - second_vew_height), w = second_view_width, h = second_vew_height}
+        irq.set_view_rect(camera_mgr.second_view, secondViewport)
+        world:pub {"ViewportDirty", viewport}
+    end
+end
+
 function m:widget()
     -- if skeleton_eid then
     --     ies.set_state(skeleton_eid, "visible", false)

@@ -71,6 +71,7 @@ system "gui_system"
     .method "data_changed"
     .method "ui_update"
     .method "widget"
+    .method "end_frame"
 
 system "grid_brush_system"
     .implement "grid_brush_system.lua"

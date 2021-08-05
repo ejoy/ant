@@ -10,7 +10,7 @@ local fbmgr     = renderpkg.fbmgr
 
 local font      = import_package "ant.font"
 local irq       = world:interface "ant.render|irenderqueue"
-
+local icamera   = world:interface "ant.camera|camera"
 local ServiceRmlUi = ltask.spawn "rmlui"
 
 local rmlui_sys = ecs.system "rmlui_system"
@@ -75,6 +75,14 @@ function iRmlUi.preload_dir(dir)
 end
 
 function iRmlUi.update_viewrect(x, y, w, h)
+    for qe in world.w:select "main_queue render_target:in" do
+        local vid = viewidmgr.get "uiruntime"
+        local rt = qe.render_target
+        if qe.camera_eid then
+            icamera.set_frustum_aspect(qe.camera_eid, w/h)
+        end
+        fbmgr.bind(vid, rt.fb_idx)
+    end
     ltask.send(ServiceRmlUi, "update_viewrect", x, y, w, h)
 end
 

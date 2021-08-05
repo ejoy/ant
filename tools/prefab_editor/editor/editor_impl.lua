@@ -36,7 +36,8 @@ function event.init(pw, ph)
                 "tools.prefab_editor|input_system",
                 "tools.prefab_editor|camera_system",
                 "tools.prefab_editor|gui_system",
-                "ant.objcontroller|pickup_system"
+                "ant.objcontroller|pickup_system",
+                "tools.prefab_editor|grid_brush_system"
             }
         }
     }
