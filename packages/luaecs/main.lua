@@ -5,7 +5,7 @@ local ecs = import_package "ant.ecs"
 local world = {}
 
 function world:pipeline_init()
-    self:pipeline_func "init" ()
+    self:pipeline_func "_init" ()
     self._update_func = self:pipeline_func "_update"
 end
 
