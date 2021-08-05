@@ -240,7 +240,7 @@ bool PropertyParserColour::ParseValue(Property& property, const std::string& val
 				ones == -1)
 				return false;
 
-			colour[i] = (byte) (tens * 16 + ones);
+			colour[i] = (uint8_t) (tens * 16 + ones);
 		}
 	}
 	else if (value.substr(0, 3) == "rgb")
@@ -282,7 +282,7 @@ bool PropertyParserColour::ParseValue(Property& property, const std::string& val
 			else
 				component = atoi(values[i].c_str());
 
-			colour[i] = (byte) (Math::Clamp(component, 0, 255));
+			colour[i] = (uint8_t) (Math::Clamp(component, 0, 255));
 		}
 	}
 	else

@@ -42,23 +42,8 @@
 #include <set>
 #include <unordered_set>
 #include <variant>
-
 #include <cstdlib>
-
 #include "Traits.h"
-
-namespace Rml {
-
-// Commonly used basic types
-using byte = unsigned char;
-using ScriptObject = void*;
-using std::size_t;
-
-// Unicode code point
-enum class Character : char32_t { Null, Replacement = 0xfffd };
-
-}
-
 #include "Colour.h"
 #include "ObserverPtr.h"
 #include "Variant.h"
@@ -78,7 +63,6 @@ class PropertyIdSet;
 struct Animation;
 struct Transition;
 struct TransitionList;
-struct Rectangle;
 enum class EventId : uint16_t;
 enum class PropertyId : uint8_t;
 
@@ -98,7 +82,6 @@ using OwnedElementList = std::vector< ElementPtr >;
 using VariantList = std::vector< Variant >;
 using ElementAnimationList = std::vector< ElementAnimation >;
 
-using PseudoClassList = std::unordered_set< std::string >;
 using AttributeNameList = std::unordered_set< std::string >;
 using PropertyMap = std::unordered_map< PropertyId, Property >;
 
@@ -115,6 +98,8 @@ class DataView;
 using DataViewPtr = std::unique_ptr<DataView, Releaser<DataView>>;
 class DataController;
 using DataControllerPtr = std::unique_ptr<DataController, Releaser<DataController>>;
+
+enum class Character : char32_t { Null, Replacement = 0xfffd };
 
 typedef uint8_t PseudoClassSet;
 

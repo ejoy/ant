@@ -47,7 +47,7 @@ public:
 	/// Empty memory stream with specified buffer size
 	StreamMemory(size_t initial_size);
 	/// Read only memory stream based on the existing buffer
-	StreamMemory(const byte* buffer, size_t buffer_size);
+	StreamMemory(const uint8_t* buffer, size_t buffer_size);
 	virtual ~StreamMemory();
 
 	/// Close the stream
@@ -86,7 +86,7 @@ public:
 	size_t PopFront(size_t bytes) override;
 
 	/// Raw access to the stream
-	const byte* RawStream() const;
+	const uint8_t* RawStream() const;
 
 	/// Erase a section of the stream
 	void Erase(size_t offset, size_t bytes);
@@ -103,8 +103,8 @@ public:
 
 private:
 
-	byte* buffer;
-	mutable byte* buffer_ptr;
+	uint8_t* buffer;
+	mutable uint8_t* buffer_ptr;
 	size_t buffer_size;
 	size_t buffer_used;
 	bool owns_buffer;

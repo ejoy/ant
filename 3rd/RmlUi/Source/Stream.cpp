@@ -80,7 +80,7 @@ size_t Stream::Peek(void* buffer, size_t bytes) const
 // Read from one stream into another
 size_t Stream::Read(Stream* stream, size_t bytes) const
 {
-	byte buffer[ READ_BLOCK_SIZE ];
+	uint8_t buffer[ READ_BLOCK_SIZE ];
 	size_t total_bytes_read = 0;
 	while (total_bytes_read < bytes)
 	{

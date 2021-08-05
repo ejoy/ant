@@ -57,9 +57,9 @@ StreamMemory::StreamMemory(size_t initial_size)
 	Reallocate(initial_size);
 }
 
-StreamMemory::StreamMemory(const byte* _buffer, size_t _buffer_size)
+StreamMemory::StreamMemory(const uint8_t* _buffer, size_t _buffer_size)
 {
-	buffer = (byte*)_buffer;
+	buffer = (uint8_t*)_buffer;
 	buffer_size = _buffer_size;
 	buffer_used = _buffer_size;
 	owns_buffer = false;
@@ -145,7 +145,7 @@ size_t StreamMemory::Truncate( size_t bytes )
 // Set pointer to the specified offset
 bool StreamMemory::Seek( long offset, int origin ) const
 {
-	byte* new_ptr = nullptr;
+	uint8_t* new_ptr = nullptr;
 
 	switch ( origin )
 	{
@@ -189,7 +189,7 @@ size_t StreamMemory::PopFront( size_t bytes )
 	return bytes;
 }
 
-const byte* StreamMemory::RawStream() const 
+const uint8_t* StreamMemory::RawStream() const 
 {
 	return buffer;
 }
@@ -223,7 +223,7 @@ bool StreamMemory::Reallocate( size_t size )
 	if ( !owns_buffer )
 		return false;
 	
-	byte *new_buffer = (byte*)realloc( buffer, buffer_size + size );
+	uint8_t *new_buffer = (uint8_t*)realloc( buffer, buffer_size + size );
 	if ( new_buffer == nullptr )
 		return false;
 
