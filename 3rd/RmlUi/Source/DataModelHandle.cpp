@@ -31,7 +31,6 @@
 
 namespace Rml {
 
-
 DataModelHandle::DataModelHandle(DataModel* model) : model(model)
 {}
 
@@ -43,7 +42,6 @@ void DataModelHandle::DirtyVariable(const std::string& variable_name) {
 	model->DirtyVariable(variable_name);
 }
 
-
 DataModelConstructor::DataModelConstructor() : model(nullptr) {}
 
 DataModelConstructor::DataModelConstructor(DataModel* model) : model(model) {
@@ -52,10 +50,6 @@ DataModelConstructor::DataModelConstructor(DataModel* model) : model(model) {
 
 DataModelHandle DataModelConstructor::GetModelHandle() const {
 	return DataModelHandle(model);
-}
-
-bool DataModelConstructor::BindFunc(const std::string& name, DataGetFunc get_func, DataSetFunc set_func) {
-	return model->BindFunc(name, std::move(get_func), std::move(set_func));
 }
 
 bool DataModelConstructor::BindEventCallback(const std::string& name, DataEventFunc event_func) {
