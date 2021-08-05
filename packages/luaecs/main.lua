@@ -60,7 +60,7 @@ function m.new_world(config)
 	do
 		local cfg = config.ecs
 		cfg.pipeline = {
-			"init", "_update", "exit"
+			"_init", "_update", "exit"
 		}
 		cfg.import = cfg.import or {}
 		table.insert(cfg.import, "@ant.luaecs")

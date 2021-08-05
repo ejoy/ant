@@ -1,12 +1,24 @@
-pipeline "_update"
+pipeline "_frame_start"
     .stage "luaecs_sync"
     .stage "entity_create"
     .stage "entity_init"
     .stage "entity_done"
-    .pipeline "update"
+
+pipeline "_frame_finish"
     .stage "luaecs_sync_remove"
     .stage "entity_remove"
     .stage "update_world"
+
+pipeline "_init"
+    .pipeline "init"
+    .pipeline "_frame_start"
+    .stage "init_world"
+    .pipeline "_frame_finish"
+
+pipeline "_update"
+    .pipeline "_frame_start"
+    .pipeline "update"
+    .pipeline "_frame_finish"
 
 system "entity_system"
     .implement "entity_system.lua"
