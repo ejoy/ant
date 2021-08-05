@@ -18,7 +18,6 @@ return {
             "ant.scene|scene_node",
             "ant.render|render",
             "ant.render|render_queue",
-            "ant.objcontroller|pickup",
         }
     }
 }
