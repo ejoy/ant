@@ -55,12 +55,6 @@ interface "ientity_state"
     .method "set_state"
     .method "filter_mask"
 
-transform "luaecs_filter_transform"
-    .implement "luaecs_filter_transform.lua"
-    .input "primitive_filter"
-    .output "primitive_filter.1"
-    .method "process_entity"
-
 system "luaecs_sync_system"
     .implement  "luaecs_sync_system.lua"
     .method     "init"
