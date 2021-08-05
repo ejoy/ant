@@ -12,6 +12,15 @@ end
 
 local cull_sys = ecs.system "cull_system"
 
+function cull_sys:entity_init()
+	for qe in w:select "INIT filter_names:in cull_tag:in" do
+		local culltag = qe.cull_tag
+		for idx, fn in ipairs(qe.filter_names) do
+			culltag[idx] = fn .. "_cull"
+		end
+	end
+end
+
 function cull_sys:cull()
 	for v in w:select "visible camera_eid:in render_target:in cull_tag:in" do
 		local camera = icamera.find_camera(v.camera_eid)

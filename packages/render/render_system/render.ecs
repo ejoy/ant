@@ -27,6 +27,7 @@ system "render_system"
 system "cull_system"
     .implement "cull_system.lua"
     .require_system "ant.scene|scenespace_system"
+    .method "entity_init"
     .method "cull"
 
 interface "icull_primitive"

@@ -93,7 +93,6 @@ function irender.get_main_view_rendertexture()
 end
 
 local function create_primitive_filter_entities(quenename, filtertype, surface_types, exclude)
-	local culltags = {}
 	local filter_names = {}
 	local types = surface_types or SURFACE_TYPES[quenename]
 	for _, fn in ipairs(types) do
@@ -111,9 +110,8 @@ local function create_primitive_filter_entities(quenename, filtertype, surface_t
 			}
 		}
 		filter_names[#filter_names+1] = t
-		culltags[#culltags+1] = t .. "_cull"
 	end
-	return filter_names, culltags
+	return filter_names
 end
 
 local settingdata = setting:data()
@@ -250,7 +248,7 @@ end
 function irender.create_main_queue(view_rect, camera_eid)
 	local fbidx = create_main_fb(view_rect)
 
-	local filternames, ct = create_primitive_filter_entities "main_queue"
+	local filternames = create_primitive_filter_entities "main_queue"
 	world:luaecs_create_entity {
 		policy = {
 			"ant.render|render_queue",
@@ -277,7 +275,7 @@ function irender.create_main_queue(view_rect, camera_eid)
 				fb_idx = fbidx,
 			},
 			filter_names = filternames,
-			cull_tag = ct,
+			cull_tag = {},
 			visible = true,
 			INIT = true,
 			main_queue = true,

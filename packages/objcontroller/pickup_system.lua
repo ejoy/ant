@@ -219,10 +219,7 @@ local function create_pick_entity()
 				"pickup_queue_opacity",
 				"pickup_queue_translucent",
 			},
-			cull_tag = {
-				"pickup_queue_opacity_cull",
-				"pickup_queue_translucent_cull",
-			},
+			cull_tag	= {},
 			name 		= "pickup_queue",
 			queue_name 	= "pickup_queue",
 			pickup_queue= true,
