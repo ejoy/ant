@@ -18,7 +18,15 @@ return {
         interface = {
             "ant.objcontroller|obj_motion",
             "ant.animation|animation",
-            "ant.effekseer|effekseer_playback",
+            --"ant.effekseer|effekseer_playback",
+        },
+        policy_v2 = {
+            "ant.general|name",
+            "ant.scene|scene_object",
+            "ant.scene|scene_node",
+            "ant.render|render",
+            "ant.render|render_queue",
+            "ant.objcontroller|pickup",
         }
     }
 }

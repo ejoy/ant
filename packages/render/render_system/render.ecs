@@ -176,7 +176,6 @@ policy "render_pipeline"
 
 policy "render_queue"
     .require_policy "ant.render|render_pipeline"
-    .require_transform "ant.scene|luaecs_filter_transform"
     .component "render_target"
     .component "camera_eid"
     .component "primitive_filter"
