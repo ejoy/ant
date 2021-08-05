@@ -47,11 +47,11 @@ end
 
 local function update_camera_viewrect(viewsize)
 	rb_cache = {}
-	for _, eid in world:each "watch_screen_buffer" do
-		update_render_queue(world[eid], viewsize)
+	for qe in w:select "watch_screen_buffer render_target:in camera_eid:in" do
+		update_render_queue(qe, viewsize)
 	end
 
-	for qe in w:select "render_target:in" do
+	for qe in w:select "render_target:in watch_screen_buffer:absent" do
 		local rt = qe.render_target
 		local viewid = rt.viewid
 		local fbidx = rt.fb_idx
