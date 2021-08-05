@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-
+local w = world.w
 -- local fbmgr         = require "framebuffer_mgr"
 -- local viewidmgr     = require "viewid_mgr"
 
@@ -69,7 +69,6 @@ function effekseer_sys:init()
     
     effekseer.init {
         viewid = viewidmgr.get "effect_view",
-        --viewid = viewidmgr.get "main_view",
         square_max_count = 8000,
         sprite_programs = create_shaders(sprite_shader_defines),
         model_programs = create_shaders(model_shader_defines),
@@ -159,20 +158,17 @@ end
 local iom = world:interface "ant.objcontroller|obj_motion"
 local event_entity_register = world:sub{"entity_register"}
 
-local effect_view
-local main_fbidx
-local render_target
 function effekseer_sys:render_submit()
-    if not render_target then
-        effect_view = viewidmgr.get "effect_view"
-        main_fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
-        render_target = world:singleton_entity "main_queue".render_target
+    for qe in w:select "main_queue render_target:in" do
+        local rt = qe.render_target
+        local fbidx = rt.fb_idx
+        local effect_view = viewidmgr.get "effect_view"
+        fbmgr.bind(effect_view, fbidx)
+        local vr = rt.view_rect
+        bgfx.set_view_rect(effect_view, vr.x, vr.y, vr.w, vr.h)
+        local dt = time_callback and time_callback() or itimer.delta() * 0.001
+        effekseer.update(dt)
     end
-    fbmgr.bind(effect_view, main_fbidx)
-    local vr = render_target.view_rect
-    bgfx.set_view_rect(effect_view, vr.x, vr.y, vr.w, vr.h)
-    local dt = time_callback and time_callback() or itimer.delta() * 0.001
-    effekseer.update(dt)
 end
 
 function effekseer_sys:follow_transform_updated()
