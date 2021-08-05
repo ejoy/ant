@@ -18,6 +18,11 @@ local function set_world_matrix(rc)
 	bgfx.set_transform(rc.worldmat)
 end
 
+local function set_skinning_transform(rc)
+	local sm = rc.skinning_matrices
+	bgfx.set_multi_transforms(sm:pointer(), sm:count())
+end
+
 function wmt.process_entity(e)
 	local rc = e._rendercache
 	rc.set_transform = set_world_matrix
@@ -26,7 +31,13 @@ end
 local world_trans_sys = ecs.system "world_transform_system"
 function world_trans_sys:entity_init()
 	for e in w:select "INIT render_object:in" do
-		e.render_object.set_transform = set_world_matrix
+		local ro = e.render_object
+		--TODO: should check skinning_type whether it is CPU skinning
+		if ro.skinning_matrices == nil then
+			e.render_object.set_transform = set_world_matrix
+		else
+			e.render_object.set_transform = set_skinning_transform
+		end
 	end
 end
 
