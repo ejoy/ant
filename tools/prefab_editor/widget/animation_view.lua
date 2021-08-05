@@ -215,6 +215,9 @@ local function from_runtime_event(runtime_event)
                 e.collision.tid_ui = {e.collision.tid}
                 e.collision.enable_ui = {e.collision.enable}
                 e.collision.shape_type = e.collision.shape_type
+            elseif e.event_type == "Message" then
+                e.msg_content = e.msg_content or ""
+                e.msg_content_ui = {text = e.msg_content}
             end
         end
         key_event[tostring(math.floor(ev.time * sample_ratio))] = ev.event_list
@@ -292,6 +295,7 @@ local function do_to_runtime_event(evs)
             asset_path = ev.asset_path,
             breakable = ev.breakable,
             life_time = ev.life_time,
+            msg_content = ev.msg_content,
             link_info = ev.link_info and {slot_name = ev.link_info.slot_name, slot_eid = ev.link_info.slot_eid},
             collision = (col_eid ~= -1) and {
                 col_eid = col_eid,
@@ -301,11 +305,12 @@ local function do_to_runtime_event(evs)
                 size = ev.collision.size,
                 enable = ev.collision.enable,
                 tid = ev.collision.tid,
-            } or {
-                name = "None",
-                shape_type = "None",
-                enable = false
-            }
+            } or nil
+            -- {
+            --     name = "None",
+            --     shape_type = "None",
+            --     enable = false
+            -- }
         }
     end
     return list
@@ -376,6 +381,8 @@ local function add_event(et)
         life_time = (et == "Effect") and 2 or nil,
         life_time_ui = (et == "Effect") and { 2 } or nil,
         name_ui = {text = event_name},
+        msg_content = (et == "Message") and "" or nil,
+        msg_content_ui = (et == "Message") and {text = ""} or nil,
         asset_path_ui = (et == "Effect" or et == "Sound") and {text = ""} or nil,
         collision = (et == "Collision") and {
             tid = -1,
@@ -578,6 +585,12 @@ local function show_current_event()
         imgui.widget.PropertyLabel("LifeTime")
         if imgui.widget.DragInt("##LifeTime", current_event.life_time_ui) then
             current_event.life_time = current_event.life_time_ui[1]
+            dirty = true
+        end
+    elseif current_event.event_type == "Message" then
+        imgui.widget.PropertyLabel("Content")
+        if imgui.widget.InputText("##Content", current_event.msg_content_ui) then
+            current_event.msg_content = tostring(current_event.msg_content_ui.text)
             dirty = true
         end
     end

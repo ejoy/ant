@@ -39,57 +39,27 @@ namespace Rml {
 
 class DataModel;
 
-
-class RMLUICORE_API DataModelHandle {
+class DataModelHandle {
 public:
 	DataModelHandle(DataModel* model = nullptr);
-
 	bool IsVariableDirty(const std::string& variable_name);
 	void DirtyVariable(const std::string& variable_name);
-
 	explicit operator bool() { return model; }
 
 private:
 	DataModel* model;
 };
 
-
-class RMLUICORE_API DataModelConstructor {
+class DataModelConstructor {
 public:
-	template<typename T>
-	using DataEventMemberFunc = void(T::*)(DataModelHandle, Event&, const VariantList&);
-
 	DataModelConstructor();
 	DataModelConstructor(DataModel* model);
-
-	// Return a handle to the data model being constructed, which can later be used to synchronize variables and update the model.
 	DataModelHandle GetModelHandle() const;
-
-	// Bind a get/set function pair.
-	bool BindFunc(const std::string& name, DataGetFunc get_func, DataSetFunc set_func = {});
-
-	// Bind an event callback.
 	bool BindEventCallback(const std::string& name, DataEventFunc event_func);
-
-	// Convenience wrapper around BindEventCallback for member functions.
-	template<typename T>
-	bool BindEventCallback(const std::string& name, DataEventMemberFunc<T> member_func, T* object_pointer) {
-		return BindEventCallback(name, [member_func, object_pointer](DataModelHandle handle, Event& event, const VariantList& arguments) {
-			(object_pointer->*member_func)(handle, event, arguments);
-		});
-	}
-
-	// Bind a user-declared DataVariable.
-	// For advanced use cases, for example for binding variables to a custom 'VariableDefinition'.
-	bool BindCustomDataVariable(const std::string& name, DataVariable data_variable) {
-		return BindVariable(name, data_variable);
-	}
-
+	bool BindVariable(const std::string& name, DataVariable data_variable);
 	explicit operator bool() { return model; }
 
 private:
-	bool BindVariable(const std::string& name, DataVariable data_variable);
-
 	DataModel* model;
 };
 

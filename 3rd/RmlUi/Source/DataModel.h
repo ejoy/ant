@@ -51,7 +51,6 @@ public:
 	void AddController(DataControllerPtr controller);
 
 	bool BindVariable(const std::string& name, DataVariable variable);
-	bool BindFunc(const std::string& name, DataGetFunc get_func, DataSetFunc set_func);
 
 	bool BindEventCallback(const std::string& name, DataEventFunc event_func);
 
@@ -82,7 +81,6 @@ private:
 	std::unordered_map<std::string, DataVariable> variables;
 	DirtyVariables dirty_variables;
 
-	std::unordered_map<std::string, std::unique_ptr<FuncDefinition>> function_variable_definitions;
 	std::unordered_map<std::string, DataEventFunc> event_callbacks;
 
 	using ScopedAliases = std::unordered_map<Element*, std::unordered_map<std::string, DataAddress>>;

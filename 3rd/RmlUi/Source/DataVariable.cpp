@@ -47,11 +47,6 @@ DataVariable DataVariable::Child(const DataAddressEntry& address) {
     return definition->Child(ptr, address);
 }
 
-DataVariableType DataVariable::Type() {
-    return definition->Type();
-}
-
-
 bool VariableDefinition::Get(void* /*ptr*/, Variant& /*variant*/) {
     Log::Message(Log::Level::Warning, "Values can only be retrieved from scalar data types.");
     return false;
@@ -71,7 +66,7 @@ DataVariable VariableDefinition::Child(void* /*ptr*/, const DataAddressEntry& /*
 
 class LiteralIntDefinition final : public VariableDefinition {
 public:
-    LiteralIntDefinition() : VariableDefinition(DataVariableType::Scalar) {}
+    LiteralIntDefinition() : VariableDefinition() {}
 
     bool Get(void* ptr, Variant& variant) override
     {

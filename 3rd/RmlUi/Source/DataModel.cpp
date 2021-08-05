@@ -165,22 +165,6 @@ bool DataModel::BindVariable(const std::string& name, DataVariable variable)
 	return true;
 }
 
-bool DataModel::BindFunc(const std::string& name, DataGetFunc get_func, DataSetFunc set_func)
-{
-	auto result = function_variable_definitions.emplace(name, nullptr);
-	auto& it = result.first;
-	bool inserted = result.second;
-	if (!inserted)
-	{
-		Log::Message(Log::Level::Error, "Data get/set function with name %s already exists in model", name.c_str());
-		return false;
-	}
-	auto& func_definition_ptr = it->second;
-	func_definition_ptr = std::make_unique<FuncDefinition>(std::move(get_func), std::move(set_func));
-
-	return BindVariable(name, DataVariable(func_definition_ptr.get(), nullptr));
-}
-
 bool DataModel::BindEventCallback(const std::string& name, DataEventFunc event_func)
 {
 	const char* name_error_str = LegalVariableName(name);

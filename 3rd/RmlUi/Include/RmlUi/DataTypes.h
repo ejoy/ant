@@ -38,8 +38,6 @@ class VariableDefinition;
 class DataModelHandle;
 class DataVariable;
 
-using DataGetFunc = std::function<void(Variant&)>;
-using DataSetFunc = std::function<void(const Variant&)>;
 using DataEventFunc = std::function<void(DataModelHandle, Event&, const VariantList&)>;
 
 using DirtyVariables = std::unordered_set<std::string>;
