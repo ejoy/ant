@@ -205,33 +205,36 @@ end
 function lightmap_sys:init()
     shading_info = init_shading_info()
 
-    world:create_entity {
-        policy = {
-            "ant.bake|lightmap_baker",
-            "ant.general|name",
-        },
-        data = {
-            primitive_filter = {
-                filter_type = "lightmap",
-				update_type = "primitive",
-            },
-            lightmap_baker = {},
-        }
-    }
+    local camera_eid = icamera.create{}
+    irender.create_vew_queue({x=0, y=0, w=1, h=1}, camera_eid, "lightmap_queue", "lightmap")
 
-    world:create_entity {
-        policy = {
-            "ant.bake|scene_watcher",
-            "ant.general|name",
-        },
-        data = {
-            primitive_filter = {
-                filter_type = "visible",
-                update_type = "primitive",
-            },
-            scene_watcher = {},
-        }
-    }
+    -- world:create_entity {
+    --     policy = {
+    --         "ant.bake|lightmap_baker",
+    --         "ant.general|name",
+    --     },
+    --     data = {
+    --         primitive_filter = {
+    --             filter_type = "lightmap",
+	-- 			update_type = "primitive",
+    --         },
+    --         lightmap_baker = {},
+    --     }
+    -- }
+
+    -- world:create_entity {
+    --     policy = {
+    --         "ant.bake|scene_watcher",
+    --         "ant.general|name",
+    --     },
+    --     data = {
+    --         primitive_filter = {
+    --             filter_type = "visible",
+    --             update_type = "primitive",
+    --         },
+    --         scene_watcher = {},
+    --     }
+    -- }
 end
 
 local function load_geometry_info(item)

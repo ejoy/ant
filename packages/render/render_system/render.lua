@@ -132,10 +132,10 @@ local default_clear_state<const> = {
 	clear = "CD",
 }
 
-function irender.create_view_queue(view_rect, view_queuename, camera_eid, exclude)
+function irender.create_view_queue(view_rect, view_queuename, camera_eid, filtertype, exclude)
 	local st_types = SURFACE_TYPES["main_queue"]
 	w:register{name = view_queuename}
-	local filter_names = create_primitive_filter_entities(view_queuename, "visible", st_types, exclude)
+	local filter_names = create_primitive_filter_entities(view_queuename, filtertype or "visible", st_types, exclude)
 	for _, fn in ipairs(filter_names) do
 		w:register {name = fn,}
 	end

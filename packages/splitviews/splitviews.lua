@@ -114,7 +114,7 @@ function svs:entity_init()
         }
 
         for k, v in pairs(orthoview) do
-            irender.create_view_queue(rect_from_ratio(mainqueue_rect, v.view_ratio), v.name, v.camera_eid, true)
+            irender.create_view_queue(rect_from_ratio(mainqueue_rect, v.view_ratio), v.name, v.camera_eid)
         end
     end
 end

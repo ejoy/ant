@@ -86,7 +86,7 @@ function gizmo:set_position(worldpos)
 		iom.set_position(self.target_eid, localPos)
 		newpos = worldpos
 	else
-		local s,r,t = math3d.srt(iom.calc_worldmat(gizmo.target_eid))
+		local s,r,t = math3d.srt(iom.worldmat(gizmo.target_eid))
 		newpos = math3d.totable(t)
 	end
 	iom.set_position(self.root_eid, newpos)

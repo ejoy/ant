@@ -45,8 +45,7 @@ local function create_second_view()
             viewdir = {0, 0, 1, 0},
             frustum = default_comp.frustum(vr.w / vr.h),
             name = camera_mgr.second_view,
-        },
-        "auxgeom")
+        }, "visible", "auxgeom")
 end
 
 function m:init()
