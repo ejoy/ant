@@ -198,7 +198,7 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 		},
 		data = {
 			primitive_filter = {
-				filter_type = "visible",
+				filter_type = "cast_shadow",
 			},
 			[filtertag]	= true,
 		}
