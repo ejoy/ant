@@ -1,6 +1,7 @@
 #define LUA_LIB 1
 #include <lua.hpp>
 #include <assert.h>
+#include <cstring>
 #include <bimg/bimg.h>
 #include <bx/error.h>
 #include <bx/readerwriter.h>

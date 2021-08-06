@@ -23,10 +23,8 @@ void* EFK_STDCALL InternalAlignedMalloc(unsigned int size, unsigned int aligneme
 {
 #if defined(__EMSCRIPTEN__) && __EMSCRIPTEN_minor__ < 38
 	return malloc(size);
-#elif defined(_MSC_VER)
+#elif defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)
 	return _mm_malloc(size, alignement);
-#elif defined(__MINGW32__)
-	return _aligned_malloc(alignement, size);
 #else
 	void* ptr = nullptr;
 	posix_memalign(&ptr, alignement, size);
@@ -38,10 +36,10 @@ void EFK_STDCALL InternalAlignedFree(void* p, unsigned int size)
 {
 #if defined(__EMSCRIPTEN__) && __EMSCRIPTEN_minor__ < 38
 	free(p);
-#elif defined(_MSC_VER)
+#elif defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)
 	_mm_free(p);
-#elif defined(__MINGW32__)
-	return _aligned_free(p);
+//#elif defined(__MINGW32__) || define(__MINGW64__)
+//	return _aligned_free(p);
 #else
 	return free(p);
 #endif
