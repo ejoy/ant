@@ -10,7 +10,7 @@ return {
             "exit",
         },
         system = {
-            "ant.tool.lightmap_baker|lightmap_example",
+            "ant.tool.lightmap_baker|lightmap_baker_system",
         }
     }
 }
