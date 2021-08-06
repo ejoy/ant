@@ -57,30 +57,51 @@ local function inherit_material(e)
 	end
 end
 
+local current_changed = 0
+
 local function mount_scene_node(scene_id)
-	local scene_node = w:object("scene_node", scene_id)
-	if scene_node._parent then
-		local parent = world[scene_node._parent]._scene_id
+	local node = w:object("scene_node", scene_id)
+	node.changed = current_changed
+	if node._parent then
+		local parent = world[node._parent]._scene_id
 		assert(parent)
-		scene_node.parent = parent
-		scene_node._parent = nil
+		node.parent = parent
+		node._parent = nil
 		scenequeue:mount(scene_id, parent)
 	else
 		scenequeue:mount(scene_id, 0)
 	end
 end
 
-local function update_scene_node(node)
-	if node.srt == nil and node.parent == nil then
+local function update_worldmat(node)
+	if not node.parent then
+		if node.srt == nil then
+			node._worldmat = nil
+		else
+			node._worldmat = math3d.matrix(node.srt)
+		end
 		return
 	end
-	node._worldmat = node.srt and math3d.matrix(node.srt) or nil
-	if node.parent then
-		local pnode = w:object("scene_node", node.parent)
-		if pnode._worldmat then
-			node._worldmat = node._worldmat and math3d.mul(pnode._worldmat, node._worldmat) or math3d.matrix(pnode._worldmat)
+	local pnode = w:object("scene_node", node.parent)
+	if pnode.changed > node.changed then
+		node.changed = pnode.changed
+	end
+	if pnode._worldmat then
+		if node.srt == nil then
+			node._worldmat = math3d.matrix(pnode._worldmat)
+		else
+			node._worldmat = math3d.mul(pnode._worldmat, math3d.matrix(node.srt))
+		end
+	else
+		if node.srt == nil then
+			node._worldmat = nil
+		else
+			node._worldmat = math3d.matrix(node.srt)
 		end
 	end
+end
+
+local function update_aabb(node)
 	if node._worldmat == nil or node.aabb == nil then
 		node._aabb = nil
 	else
@@ -94,6 +115,7 @@ end
 
 function s:entity_init()
 	local needsync = false
+	current_changed = current_changed + 1
 
 	for v in w:select "INIT scene_id:in" do
 		mount_scene_node(v.scene_id)
@@ -131,22 +153,47 @@ end
 function s:update_hierarchy()
 end
 
+local evSceneChanged = world:sub {"scene_changed"}
+
 function s:update_transform()
-	for v in w:select "scene_sorted scene_node:in" do
-		update_scene_node(v.scene_node)
+	for _, eid in evSceneChanged:unpack() do
+		local node
+		if type(eid) == "table" then
+			local ref = eid
+			w:sync("scene_node(scene_id):in", ref)
+			node = ref.node
+		else
+			local e = world[eid]
+			local id = e._scene_id
+			node = w:object("scene_node", id)
+		end
+		node.changed = current_changed
 	end
-	for v in w:select "render_object:in scene_node(scene_id):in" do
+	for v in w:select "scene_sorted scene_node:in" do
+		local node = v.scene_node
+		update_worldmat(node)
+		update_aabb(node)
+	end
+	for v in w:select "render_object:in scene_node(scene_id):in scene_changed?out" do
 		local r, n = v.render_object, v.scene_node
 		r.aabb = n._aabb
 		r.worldmat = n._worldmat
+		if n.changed == current_changed then
+			v.scene_changed = true
+		end
 	end
-	for v in w:select "camera_node(camera_id):in scene_node(scene_id):in" do
+	for v in w:select "camera_node(camera_id):in scene_node(scene_id):in scene_changed?out" do
 		local r, n = v.camera_node, v.scene_node
 		r.worldmat = n._worldmat
+		if n.changed == current_changed then
+			v.scene_changed = true
+		end
 	end
 end
 
 function s:entity_remove()
+	w:clear "scene_changed"
+
 	local removed = {}
 	for v in w:select "REMOVED scene_id:in" do
 		local id = v.scene_id

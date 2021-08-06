@@ -26,10 +26,9 @@ local frustum_colors = {
 }
 
 local function find_csm_entity(index)
-	for _, seid in world:each "csm" do
-		local se = world[seid]
+	for se in w:select "csm_queue csm:in" do
 		if se.csm.index == index then
-			return seid
+			return se.csm
 		end
 	end
 end
@@ -59,15 +58,14 @@ local function create_debug_entity()
 		end
 	end
 	
-	for _, seid in world:each "csm" do
-		local s = world[seid]
-		local idx = s.csm.index
-		local ce = world[s.camera_eid]
+	for se in w:select "csm_queue csm:in camera_eid:in name:in" do
+		local idx = se.csm.index
+		local ce = world[se.camera_eid]
 		local rc = ce._rendercache
 		local frustum_points = math3d.frustum_points(rc.viewprojmat)
 		local color = frustum_colors[idx]
 
-		debug_entities[#debug_entities+1] = ientity.create_frustum_entity(frustum_points, "frusutm:" .. s.name, color)
+		debug_entities[#debug_entities+1] = ientity.create_frustum_entity(frustum_points, "frusutm:" .. se.name, color)
 		debug_entities[#debug_entities+1] = ientity.create_axis_entity(math3d.tovalue(rc.worldmat), "csm_axis:" .. idx, color)
 	end
 end
@@ -229,9 +227,8 @@ function shadowdbg_sys:camera_usage()
 			create_debug_entity()
 		elseif key == "L" and press == 0 then
 			local eids = {}
-			for _, eid in world:each "csm" do
-				local e = world[eid]
-				eids[e.csm.index] = e.camera_eid
+			for se in w:select "csm_queue camera_eid:in csm:in" do
+				eids[se.csm.index] = se.camera_eid
 			end
 			world:pub{"splitview", "change_camera", eids}
 		end

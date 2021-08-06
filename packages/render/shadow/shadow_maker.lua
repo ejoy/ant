@@ -165,11 +165,10 @@ local function update_shadow_camera(dl_eid, camera)
 	local viewfrustum = camera.frustum
 	local csmfrustums = ishadow.calc_split_frustums(viewfrustum)
 
-	for _, eid in world:each "csm" do
-		local e = world[eid]
-		local csm = e.csm
+	for qe in w:select "csm_queue camera_eid:in csm:in" do
+		local csm = qe.csm
 		local cf = csmfrustums[csm.index]
-		calc_shadow_camera(camera, cf, lightdir, setting.shadowmap_size, setting.stabilize, e.camera_eid)
+		calc_shadow_camera(camera, cf, lightdir, setting.shadowmap_size, setting.stabilize, qe.camera_eid)
 		csm.split_distance_VS = cf.f - viewfrustum.n
 	end
 end
@@ -199,7 +198,7 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 		},
 		data = {
 			primitive_filter = {
-				filter_type = "visible",
+				filter_type = "cast_shadow",
 			},
 			[filtertag]	= true,
 		}
@@ -257,14 +256,12 @@ function sm:init()
 end
 
 local viewcamera_changed_mb
-local viewcamera_trans_mb, viewcamera_frustum_mb
+local viewcamera_frustum_mb
 
 function sm:entity_init()
 	for e in w:select "INIT main_queue camera_eid:in" do
 		local cameraeid = e.camera_eid
-		viewcamera_trans_mb = world:sub{"component_changed", "transform", cameraeid}
 		viewcamera_frustum_mb = world:sub{"component_changed", "frusutm", cameraeid}
-	
 		viewcamera_changed_mb = world:sub{"component_changed", "viewcamera", cameraeid}
 		world:pub{"component_changed", "viewcamera", cameraeid}	--init shadowmap
 	end
@@ -273,37 +270,31 @@ end
 local dl_eid
 local create_light_mb = world:sub{"component_register", "make_shadow"}
 local remove_light
-local light_trans_mb
 
 local function set_csm_visible(enable)
-	for _, ceid in world:each "csm" do
-		world[ceid].visible = enable
-	end
-	for v in w:select "shadow_filter visible?out" do
+	for v in w:select "csm_queue visible?out" do
 		v.visible = enable
 	end
 end
 
-function sm:data_changed()
-	local function find_directional_light(eid)
-		local e = world[eid]
-		if e.light_type == "directional" and e.make_shadow then
-			if dl_eid then
-				log.warn("already has directional light for making shadow")
-			else
-				dl_eid = eid
-			end
-
-			return dl_eid
+local function find_directional_light(eid)
+	local e = world[eid]
+	if e.light_type == "directional" and e.make_shadow then
+		if dl_eid then
+			log.warn("already has directional light for making shadow")
+		else
+			dl_eid = eid
 		end
-	end
 
+		return dl_eid
+	end
+end
+
+function sm:data_changed()
 	for msg in create_light_mb:each() do
 		local eid = msg[3]
 		if find_directional_light(eid) then
 			remove_light = eid
-
-			light_trans_mb = world:sub{"component_changed", "transform", eid}
 			set_csm_visible(true)
 		end
 	end
@@ -318,13 +309,12 @@ function sm:data_changed()
 		end
 	end
 
-	for _, mb in ipairs{
-		viewcamera_trans_mb,
-		viewcamera_frustum_mb,
-	} do
-		for msg in mb:each() do
-			world:pub{"component_changed", "viewcamera", msg[3]}
-		end
+	for v in w:select "scene_changed main_queue eid:in" do
+		world:pub{"component_changed", "viewcamera", v.eid}
+	end
+
+	for msg in viewcamera_frustum_mb:each() do
+		world:pub{"component_changed", "viewcamera", msg[3]}
 	end
 end
 
@@ -336,26 +326,29 @@ end
 
 function sm:update_camera()
 	if dl_eid then
-		local c = find_main_camera()
-	
 		local changed
-	
-		local mbs = {viewcamera_changed_mb}
-		if light_trans_mb then
-			mbs[#mbs+1] = light_trans_mb
-		end
-		for _, mb in ipairs(mbs) do
-			for _ in mb:each() do
+
+		for v in w:select "scene_changed eid:in" do
+			if find_directional_light(v.eid) then
 				changed = true
 			end
 		end
+
+		for _ in viewcamera_changed_mb:each() do
+			changed = true
+		end
 	
 		if changed then
-			update_shadow_camera(dl_eid, c)
+			local maincamrea = find_main_camera()
+			if maincamrea then
+				update_shadow_camera(dl_eid, maincamrea)
+			end
 		else
-			for _, eid in world:each "csm" do
-				local camera_eid = world[eid].camera_eid
-				update_camera_matrices(world[camera_eid]._rendercache)
+			for qe in w:select "csm_queue camera_eid:in" do
+				local camera = icamera.find_camera(qe.camera_eid)
+				if camera then
+					update_camera_matrices(camera)
+				end
 			end
 		end
 	end
@@ -364,9 +357,9 @@ end
 
 function sm:refine_camera()
 	-- local setting = ishadow.setting()
-	-- for _, eid in world:each "csm" do
+	-- for se in w:select "csm_queue filter_names:in"
 	-- 	local se = world[eid]
-	-- 	if se.visible then
+	-- assert(false && "should move code new ecs")
 	-- 		local filter = se.primitive_filter.result
 	-- 		local sceneaabb = math3d.aabb()
 	
@@ -413,7 +406,6 @@ function sm:refine_camera()
 	-- 			local lightdir = math3d.index(camera_rc.worldmat, 3)
 	-- 			calc_shadow_camera_from_corners(aabb_corners_WS, lightdir, setting.shadowmap_size, setting.stabilize, camera_rc)
 	-- 		end
-	-- 	end
 	-- end
 end
 

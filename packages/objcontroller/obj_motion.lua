@@ -8,51 +8,60 @@ local mc     = import_package "ant.math".constant
 local iobj_motion = ecs.interface "obj_motion"
 local icamera = world:interface "ant.camera|camera"
 
+local function get_transform(eid)
+    if type(eid) == "table" then
+        local ref = eid
+        w:sync("camera_node:in", ref)
+        return ref.camera_node
+    end
+    return world[eid]._rendercache
+end
+
+local function get_srt(eid)
+    return get_transform(eid).srt
+end
+
+local function set_changed(eid)
+    world:pub {"scene_changed", eid}
+end
+
 function iobj_motion.get_position(eid)
-    return math3d.index(world[eid]._rendercache.srt, 4)
+    return math3d.index(get_srt(eid), 4)
 end
 
 function iobj_motion.set_position(eid, pos)
-    world[eid]._rendercache.srt[4] = pos
-    world:pub{"component_changed", "transform", eid}
+    local srt = get_srt(eid)
+    srt[4] = pos
+    set_changed(eid)
 end
 
 function iobj_motion.get_direction(eid)
-    return math3d.index(world[eid]._rendercache.srt, 3)
+    return math3d.index(get_srt(eid), 3)
 end
 
 function iobj_motion.set_direction(eid, dir)
-    local e = world[eid]
-    local rc = e._rendercache
+    local rc = get_transform(eid)
     local srt = rc.srt
     if rc.updir then
         srt.id = math3d.inverse(math3d.lookto(math3d.index(srt, 4), dir, rc.updir))
     else
         srt.r = math3d.torotation(dir)
     end
-    
-    world:pub{"component_changed", "transform", eid}
+    set_changed(eid)
 end
 
 function iobj_motion.get_updir(eid, dir)
-    local e = world[eid]
-    local rc = e._rendercache
-    local srt = rc.srt
+    local srt = get_srt(eid)
     return math3d.index(srt, 2)
 end
 
-function iobj_motion.srt(eid)
-    if world[eid]._rendercache then return world[eid]._rendercache.srt end
-end
-
 function iobj_motion.set_srt(eid, srt)
-    world[eid]._rendercache.srt.m = srt
-    world:pub{"component_changed", "transform", eid}
+    get_srt(eid).m = srt
+    set_changed(eid)
 end
 
 function iobj_motion.set_view(eid, pos, dir, updir)
-    local e = world[eid]
-    local rc = e._rendercache
+    local rc = get_transform(eid)
     local srt = rc.srt
     if rc.updir then
         srt.id = math3d.inverse(math3d.lookto(pos, dir, updir or rc.updir))
@@ -60,29 +69,25 @@ function iobj_motion.set_view(eid, pos, dir, updir)
         local s = math3d.matrix_scale(srt)
         srt.id = math3d.matrix{s=s, r=math3d.torotation(dir), t=pos}
     end
-
-    world:pub{"component_changed", "transform", eid}
-end
-
-function iobj_motion.set_scale_no_check(eid, scale)
-    world[eid]._rendercache.srt.s = scale
-    world:pub{"component_changed", "transform", eid}
+    set_changed(eid)
 end
 
 function iobj_motion.set_scale(eid, scale)
+    local srt = get_srt(eid)
     if type(scale) == "number" then
-        iobj_motion.set_scale_no_check(eid, {scale, scale, scale})
+        srt.s = {scale, scale, scale}
+    else
+        srt.s = scale
     end
-    iobj_motion.set_scale_no_check(eid, scale)
+    set_changed(eid)
 end
 
 function iobj_motion.get_scale(eid)
-    return math3d.matrix_scale(world[eid]._rendercache.srt)
+    return math3d.matrix_scale(get_srt(eid))
 end
 
 function iobj_motion.set_rotation(eid, rot)
-    local e = world[eid]
-    local rc = e._rendercache
+    local rc = get_transform(eid)
     local srt = rc.srt
     if rc.updir then
         local viewdir
@@ -95,20 +100,19 @@ function iobj_motion.set_rotation(eid, rot)
     else
         srt.r = rot
     end
-    world:pub{"component_changed", "transform", eid}
+    set_changed(eid)
 end
 
 function iobj_motion.get_rotation(eid)
-    return world[eid]._rendercache.srt.r
+    return get_srt(eid).r
 end
 
 function iobj_motion.worldmat(eid)
-    return world[eid]._rendercache.worldmat
+    return get_transform(eid).worldmat
 end
 
 function iobj_motion.lookto(eid, eyepos, viewdir, updir)
-    local e = world[eid]
-    local rc = e._rendercache
+    local rc = get_transform(eid)
     if updir then
         if rc.updir == nil then
             rc.updir = math3d.ref(math3d.vector(0, 1, 0, 0))
@@ -116,11 +120,11 @@ function iobj_motion.lookto(eid, eyepos, viewdir, updir)
         rc.updir.v = updir
     end
     rc.srt.id = math3d.inverse(math3d.lookto(eyepos, viewdir, updir))
-    world:pub{"component_changed", "transform", eid}
+    set_changed(eid)
 end
 
 function iobj_motion.move_delta(eid, delta_vec)
-    local srt = world[eid]._rendercache.srt
+    local srt = get_srt(eid)
     local pos = math3d.add(math3d.index(srt, 4), delta_vec)
     iobj_motion.set_position(eid, pos)
 end
@@ -131,7 +135,7 @@ function iobj_motion.move_along_axis(eid, axis, delta)
 end
 
 function iobj_motion.move(eid, v)
-    local srt = world[eid]._rendercache.srt
+    local srt = get_srt(eid)
     local p = math3d.index(srt, 4)
     for i=1, 3 do
         p = math3d.muladd(v[i], math3d.index(srt, i), p)
@@ -140,15 +144,9 @@ function iobj_motion.move(eid, v)
 end
 
 function iobj_motion.move_forward(eid, v)
-    local srt = world[eid]._rendercache.srt
+    local srt = get_srt(eid)
     local f = math3d.normalize(math3d.index(srt, 3))
     iobj_motion.move_along_axis(eid, f, v)
-end
-
-function iobj_motion.set_lock_target(eid, lt)
-    local nlt = {}; for k, v in pairs(lt) do nlt[k] = v end
-    world[eid]._rendercache.lock_target = nlt
-    world:pub{"component_changed", "lock_target", eid}
 end
 
 local function add_rotation(srt, rotateX, rotateY, threshold)
@@ -182,7 +180,7 @@ end
 
 function iobj_motion.rotate_forward_vector(eid, rotateX, rotateY)
     if rotateX or rotateY then
-        local rc = world[eid]._rendercache
+        local rc = get_transform(eid)
         local srt = rc.srt
         local eyepos = srt[4]
         local viewdir = rotate_forword_vector(srt, rotateX, rotateY)
@@ -193,13 +191,12 @@ function iobj_motion.rotate_forward_vector(eid, rotateX, rotateY)
             local yaxis = math3d.cross(viewdir, xaxis)
             srt[1], srt[2], srt[3] = xaxis, yaxis, viewdir
         end
-
-        world:pub{"component_changed", "transform", eid}
+        set_changed(eid)
     end
 end
 
 function iobj_motion.rotate_around_point2(eid, viewpt, dx, dy, distance)
-    local srt = world[eid]._rendercache.srt
+    local srt = get_transform(eid).srt
     local right, up = math3d.index(srt, 1), math3d.index(srt, 2)
     local pos = math3d.index(srt, 4)
 
@@ -221,21 +218,20 @@ end
 
 function iobj_motion.rotate(eid, rotateX, rotateY)
     if rotateX or rotateY then
-        local rc = world[eid]._rendercache
+        local rc = get_transform(eid)
         local srt = rc.srt
         srt.id = add_rotation(srt, rotateX, rotateY)
         if rc.updir then
             local viewdir, eyepos = srt[3], srt[4]
             srt.id = math3d.inverse(math3d.lookto(eyepos, viewdir, rc.updir))
         end
-
-        world:pub{"component_changed", "transform", eid}
+        set_changed(eid)
     end
 end
 
 function iobj_motion.rotate_around_point(eid, targetpt, distance, rotateX, rotateY, threshold)
     if rotateX or rotateY then
-        local rc = world[eid]._rendercache
+        local rc = get_transform(eid)
         local srt = rc.srt
         local newsrt = math3d.set_index(srt, 4, targetpt)
         newsrt = add_rotation(newsrt, rotateX, rotateY, threshold)
@@ -246,15 +242,13 @@ function iobj_motion.rotate_around_point(eid, targetpt, distance, rotateX, rotat
             local viewdir, eyepos = srt[3], srt[4]
             srt.id = math3d.inverse(math3d.lookto(eyepos, viewdir, rc.updir))
         end
-
-        world:pub{"component_changed", "transform", eid}
+        set_changed(eid)
     end
 end
 
 local function main_queue_viewport_size()
-    for e in w:select "main_queue render_target:in" do
-        return e.render_target.view_rect
-    end
+    local e = w:singleton("main_queue", "render_target:in")
+    return e.render_target.view_rect
 end
 
 function iobj_motion.ray(eid, pt2d, vp_size)
@@ -272,27 +266,4 @@ function iobj_motion.ray(eid, pt2d, vp_size)
         origin = pt_near_WS,
         dir = dir,
     }
-end
-
-local function calc_worldmat(eid, c_mt)
-    if not eid then
-        return math3d.matrix()
-    end
-    local srt = world[eid]._rendercache.srt
-    local wm
-    if srt then
-        wm = c_mt and math3d.mul(srt, c_mt) or math3d.matrix(srt)
-    else
-        wm = c_mt
-    end
-
-	local e = world[eid]
-	if e.parent then
-		return calc_worldmat(e.parent, wm)
-	end
-	return wm
-end
-
-function iobj_motion.calc_worldmat(eid)
-    return calc_worldmat(eid)
 end

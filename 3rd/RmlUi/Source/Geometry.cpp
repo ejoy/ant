@@ -185,13 +185,13 @@ void Geometry::AddPolygon(const Path& points, Color col) {
 	Vertex* vtx = &vertices[vsz];
 	Index* idx = &indices[isz];
 
-	for (int i = 0; i < points_count; ++i) {
+	for (size_t i = 0; i < points_count; ++i) {
 		vtx[i].pos = points[i];
 		vtx[i].col = col;
 	}
 
 	Index offset = (Index)vsz;
-	for (int i = 0; i < points_count - 2; ++i) {
+	for (size_t i = 0; i < points_count - 2; ++i) {
 		idx[0] = offset + 0;
 		idx[1] = offset + i + 1;
 		idx[2] = offset + i + 2;

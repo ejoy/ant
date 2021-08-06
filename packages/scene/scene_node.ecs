@@ -31,3 +31,5 @@ component_v2 "scene_id"
 
 component_v2 "scene_node"
     .type "ref"
+
+component_v2 "scene_changed"

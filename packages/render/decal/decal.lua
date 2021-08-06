@@ -1,5 +1,6 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 
 local math3d = require "math3d"
 
@@ -44,16 +45,13 @@ local decal_register_mb = world:sub{"component_register", "decal"}
 local decal_entity_remove_mb = world:sub{"entity_remove", "decal"}
 
 local decal_changed_mb = {}
-local decal_transform_mb = {}
 function ds:data_changed()
     for _, _, eid in decal_register_mb:unpack() do
         decal_changed_mb[eid] = world:sub{"component_changed", "decal", eid}
-        decal_transform_mb[eid] = world:sub{"component_changed", "transform", eid}
     end
 
     for _, _, eid in decal_entity_remove_mb:unpack() do
         decal_changed_mb[eid] = nil
-        decal_transform_mb[eid] = nil
     end
 
     for eid, mb in pairs(decal_changed_mb) do
@@ -62,11 +60,13 @@ function ds:data_changed()
         end
     end
 
-    for eid, mb in pairs(decal_transform_mb) do
-        for _, _, eid in mb:unpack() do
-            update_decal(world[eid])
+	for v in w:select "scene_changed eid:in" do
+        local e = world[v.eid]
+        if e.decal then
+            update_decal(e)
         end
-    end
+	end
+
 end
 
 -- rotate Z Axis -> Y Axis
