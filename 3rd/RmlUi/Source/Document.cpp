@@ -178,7 +178,7 @@ public:
 	}
 	void LoadInlineStyle(const std::string& content, const std::string& source_path, int line) {
 		std::unique_ptr<StyleSheet> inline_sheet = std::make_unique<StyleSheet>();
-		auto stream = std::make_unique<StreamMemory>((const byte*)content.data(), content.size());
+		auto stream = std::make_unique<StreamMemory>((const uint8_t*)content.data(), content.size());
 		stream->SetSourceURL(source_path);
 		if (inline_sheet->LoadStyleSheet(stream.get(), line)) {
 			if (m_style_sheet) {

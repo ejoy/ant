@@ -1,5 +1,6 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 
 local declmgr	= require "vertexdecl_mgr"
 local math3d	= require "math3d"
@@ -177,14 +178,13 @@ function ilight.light_buffer()
 end
 
 local lightsys = ecs.system "light_system"
-local light_trans_mb = world:sub{"component_changed", "transform"}
 local light_comp_mb = world:sub{"component_changed", "light"}
 local light_register_mb = world:sub{"component_register", "light_type"}
 
 function lightsys:data_changed()
 	local changed = false
-	for msg in light_trans_mb:each() do
-		local le = world[msg[3]]
+	for v in w:select "scene_changed eid:in" do
+		local le = world[v.eid]
 		if le and le.light_type then
 			changed = true
 			break

@@ -7,10 +7,9 @@ local fbmgr = require "framebuffer_mgr"
 local icamera = world:interface "ant.camera|camera"
 local irq = ecs.interface "irenderqueue"
 
-local function get_rt(qn)
-	for qe in w:select(qn .. " render_target:in") do
-		return qe.render_target
-	end
+local function get_rt(queuename)
+	local qe = w:singleton(queuename, "render_target:in")
+	return qe.render_target
 end
 
 function irq.viewid(queuename)
@@ -30,18 +29,13 @@ function irq.frame_buffer(queuename)
 end
 
 function irq.camera(queuename)
-	for qe in w:select(queuename .. " camera_eid:in") do
-		return qe.camera_eid
-	end
+	local qe = w:singleton(queuename, "camera_eid:in")
+	return qe.camera_eid
 end
 
 function irq.visible(queuename)
-	-- visible is 'tag'
-	for _ in w:select(queuename .. " visible") do
-		return true
-	end
-
-	return false
+	local qe = w:singleton(queuename, "visible:in")
+	return qe.visible
 end
 
 function irq.main_camera()
@@ -109,15 +103,14 @@ function irq.set_view_clear(queuename, what, color, depth, stencil)
 end
 
 function irq.set_view_rect(queuename, rect)
-	for qe in w:select(queuename .. " render_target:in camera_eid:in") do
-		local rt = qe.render_target
-		local vr = rt.view_rect
-		vr.x, vr.y = rect.x, rect.y
-		vr.w, vr.h = rect.w, rect.h
-		icamera.set_frustum_aspect(qe.camera_eid, vr.w/vr.h)
-		bgfx.set_view_rect(rt.viewid, vr.x, vr.y, vr.w, vr.h)
-		world:pub{"component_changed", "view_rect", queuename}
-	end
+	local qe = w:singleton(queuename, "render_target:in camera_eid:in")
+	local rt = qe.render_target
+	local vr = rt.view_rect
+	vr.x, vr.y = rect.x, rect.y
+	vr.w, vr.h = rect.w, rect.h
+	icamera.set_frustum_aspect(qe.camera_eid, vr.w/vr.h)
+	bgfx.set_view_rect(rt.viewid, vr.x, vr.y, vr.w, vr.h)
+	world:pub{"component_changed", "view_rect", queuename}
 end
 
 function irq.set_frame_buffer(queuename, fbidx)
@@ -126,18 +119,15 @@ function irq.set_frame_buffer(queuename, fbidx)
 end
 
 function irq.set_camera(queuename, cameraeid)
-	for qe in w:select(queuename .. " camera_eid:out") do
-		qe.camera_eid = cameraeid
-		world:pub{"component_changed", "camera_eid", queuename}
-	end
+	local qe = {camera_eid = cameraeid}
+	w:singleton(queuename, "camera_eid:out", qe)
+	world:pub{"component_changed", "camera_eid", queuename}
 end
 
 function irq.set_visible(queuename, b)
-	for qe in w:select(queuename .. " visible:out") do
-		qe.visible = b
-	
-		world:pub{"component_changed", "visible", queuename}
-	end
+	local qe = {visible = b}
+	w:singleton(queuename, "visible?out", qe)
+	world:pub{"component_changed", "visible", b}
 end
 
 function irq.update_rendertarget(rt)

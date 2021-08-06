@@ -599,16 +599,3 @@ function ientity.create_arrow_entity(origin, forward, scale, data)
 
 	imaterial.set_property(coneeid, "u_color", data.cone_color or {1, 0, 0, 1})
 end
-
-local iom = "ant.objcontroller|obj_motion"
-function ientity.entity_bounding(eid)
-	local e = world[eid]
-	local m = e.mesh
-	if m and ies.can_visible(eid) then
-		local b = m.bounding
-		if b then
-			local aabbtransformd = math3d.aabb_transform(iom.calc_worldmat(eid), b.aabb)
-			return aabbtransformd
-		end
-	end
-end

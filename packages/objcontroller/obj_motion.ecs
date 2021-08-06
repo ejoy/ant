@@ -35,4 +35,3 @@ interface "obj_motion"
     .method "ray"
 
     .method "set_lock_target"
-    .method "calc_worldmat"

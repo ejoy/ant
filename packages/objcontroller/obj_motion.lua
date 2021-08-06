@@ -13,8 +13,9 @@ function iobj_motion.get_position(eid)
 end
 
 function iobj_motion.set_position(eid, pos)
-    world[eid]._rendercache.srt[4] = pos
-    world:pub{"component_changed", "transform", eid}
+    local rc = world[eid]._rendercache
+    rc.srt[4] = pos
+    world:pub {"scene_changed", eid}
 end
 
 function iobj_motion.get_direction(eid)
@@ -30,8 +31,7 @@ function iobj_motion.set_direction(eid, dir)
     else
         srt.r = math3d.torotation(dir)
     end
-    
-    world:pub{"component_changed", "transform", eid}
+    world:pub {"scene_changed", eid}
 end
 
 function iobj_motion.get_updir(eid, dir)
@@ -42,12 +42,15 @@ function iobj_motion.get_updir(eid, dir)
 end
 
 function iobj_motion.srt(eid)
-    if world[eid]._rendercache then return world[eid]._rendercache.srt end
+    if world[eid]._rendercache then
+        return world[eid]._rendercache.srt
+    end
 end
 
 function iobj_motion.set_srt(eid, srt)
-    world[eid]._rendercache.srt.m = srt
-    world:pub{"component_changed", "transform", eid}
+    local rc = world[eid]._rendercache
+    rc.srt.m = srt
+    world:pub {"scene_changed", eid}
 end
 
 function iobj_motion.set_view(eid, pos, dir, updir)
@@ -60,13 +63,13 @@ function iobj_motion.set_view(eid, pos, dir, updir)
         local s = math3d.matrix_scale(srt)
         srt.id = math3d.matrix{s=s, r=math3d.torotation(dir), t=pos}
     end
-
-    world:pub{"component_changed", "transform", eid}
+    world:pub {"scene_changed", eid}
 end
 
 function iobj_motion.set_scale_no_check(eid, scale)
-    world[eid]._rendercache.srt.s = scale
-    world:pub{"component_changed", "transform", eid}
+    local rc = world[eid]._rendercache
+    rc.srt.s = scale
+    world:pub {"scene_changed", eid}
 end
 
 function iobj_motion.set_scale(eid, scale)
@@ -95,7 +98,7 @@ function iobj_motion.set_rotation(eid, rot)
     else
         srt.r = rot
     end
-    world:pub{"component_changed", "transform", eid}
+    world:pub {"scene_changed", eid}
 end
 
 function iobj_motion.get_rotation(eid)
@@ -116,7 +119,7 @@ function iobj_motion.lookto(eid, eyepos, viewdir, updir)
         rc.updir.v = updir
     end
     rc.srt.id = math3d.inverse(math3d.lookto(eyepos, viewdir, updir))
-    world:pub{"component_changed", "transform", eid}
+    world:pub {"scene_changed", eid}
 end
 
 function iobj_motion.move_delta(eid, delta_vec)
@@ -193,8 +196,7 @@ function iobj_motion.rotate_forward_vector(eid, rotateX, rotateY)
             local yaxis = math3d.cross(viewdir, xaxis)
             srt[1], srt[2], srt[3] = xaxis, yaxis, viewdir
         end
-
-        world:pub{"component_changed", "transform", eid}
+        world:pub {"scene_changed", eid}
     end
 end
 
@@ -228,8 +230,7 @@ function iobj_motion.rotate(eid, rotateX, rotateY)
             local viewdir, eyepos = srt[3], srt[4]
             srt.id = math3d.inverse(math3d.lookto(eyepos, viewdir, rc.updir))
         end
-
-        world:pub{"component_changed", "transform", eid}
+        world:pub {"scene_changed", eid}
     end
 end
 
@@ -246,15 +247,13 @@ function iobj_motion.rotate_around_point(eid, targetpt, distance, rotateX, rotat
             local viewdir, eyepos = srt[3], srt[4]
             srt.id = math3d.inverse(math3d.lookto(eyepos, viewdir, rc.updir))
         end
-
-        world:pub{"component_changed", "transform", eid}
+        world:pub {"scene_changed", eid}
     end
 end
 
 local function main_queue_viewport_size()
-    for e in w:select "main_queue render_target:in" do
-        return e.render_target.view_rect
-    end
+    local e = w:singleton("main_queue", "render_target:in")
+    return e.render_target.view_rect
 end
 
 function iobj_motion.ray(eid, pt2d, vp_size)
@@ -272,27 +271,4 @@ function iobj_motion.ray(eid, pt2d, vp_size)
         origin = pt_near_WS,
         dir = dir,
     }
-end
-
-local function calc_worldmat(eid, c_mt)
-    if not eid then
-        return math3d.matrix()
-    end
-    local srt = world[eid]._rendercache.srt
-    local wm
-    if srt then
-        wm = c_mt and math3d.mul(srt, c_mt) or math3d.matrix(srt)
-    else
-        wm = c_mt
-    end
-
-	local e = world[eid]
-	if e.parent then
-		return calc_worldmat(e.parent, wm)
-	end
-	return wm
-end
-
-function iobj_motion.calc_worldmat(eid)
-    return calc_worldmat(eid)
 end
