@@ -135,7 +135,7 @@ local default_clear_state<const> = {
 function irender.create_view_queue(view_rect, view_queuename, camera_eid, exclude)
 	local st_types = SURFACE_TYPES["main_queue"]
 	w:register{name = view_queuename}
-	local filter_names, cull_tag = create_primitive_filter_entities(view_queuename, "visible", st_types, exclude)
+	local filter_names = create_primitive_filter_entities(view_queuename, "visible", st_types, exclude)
 	for _, fn in ipairs(filter_names) do
 		w:register {name = fn,}
 	end
@@ -160,7 +160,7 @@ function irender.create_view_queue(view_rect, view_queuename, camera_eid, exclud
 			name 				= view_queuename,
 			queue_name			= view_queuename,
 			filter_names		= filter_names,
-			cull_tag			= cull_tag,
+			cull_tag			= {},
 			visible 			= false,
 			watch_screen_buffer	= true,
 		}
