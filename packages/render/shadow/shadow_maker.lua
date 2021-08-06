@@ -257,14 +257,12 @@ function sm:init()
 end
 
 local viewcamera_changed_mb
-local viewcamera_trans_mb, viewcamera_frustum_mb
+local viewcamera_frustum_mb
 
 function sm:entity_init()
 	for e in w:select "INIT main_queue camera_eid:in" do
 		local cameraeid = e.camera_eid
-		viewcamera_trans_mb = world:sub{"component_changed", "transform", cameraeid}
 		viewcamera_frustum_mb = world:sub{"component_changed", "frusutm", cameraeid}
-	
 		viewcamera_changed_mb = world:sub{"component_changed", "viewcamera", cameraeid}
 		world:pub{"component_changed", "viewcamera", cameraeid}	--init shadowmap
 	end
@@ -273,7 +271,6 @@ end
 local dl_eid
 local create_light_mb = world:sub{"component_register", "make_shadow"}
 local remove_light
-local light_trans_mb
 
 local function set_csm_visible(enable)
 	for _, ceid in world:each "csm" do
@@ -284,26 +281,24 @@ local function set_csm_visible(enable)
 	end
 end
 
-function sm:data_changed()
-	local function find_directional_light(eid)
-		local e = world[eid]
-		if e.light_type == "directional" and e.make_shadow then
-			if dl_eid then
-				log.warn("already has directional light for making shadow")
-			else
-				dl_eid = eid
-			end
-
-			return dl_eid
+local function find_directional_light(eid)
+	local e = world[eid]
+	if e.light_type == "directional" and e.make_shadow then
+		if dl_eid then
+			log.warn("already has directional light for making shadow")
+		else
+			dl_eid = eid
 		end
-	end
 
+		return dl_eid
+	end
+end
+
+function sm:data_changed()
 	for msg in create_light_mb:each() do
 		local eid = msg[3]
 		if find_directional_light(eid) then
 			remove_light = eid
-
-			light_trans_mb = world:sub{"component_changed", "transform", eid}
 			set_csm_visible(true)
 		end
 	end
@@ -318,13 +313,12 @@ function sm:data_changed()
 		end
 	end
 
-	for _, mb in ipairs{
-		viewcamera_trans_mb,
-		viewcamera_frustum_mb,
-	} do
-		for msg in mb:each() do
-			world:pub{"component_changed", "viewcamera", msg[3]}
-		end
+	for v in w:select "scene_changed main_queue eid:in" do
+		world:pub{"component_changed", "viewcamera", v.eid}
+	end
+
+	for msg in viewcamera_frustum_mb:each() do
+		world:pub{"component_changed", "viewcamera", msg[3]}
 	end
 end
 
@@ -339,15 +333,15 @@ function sm:update_camera()
 		local c = find_main_camera()
 	
 		local changed
-	
-		local mbs = {viewcamera_changed_mb}
-		if light_trans_mb then
-			mbs[#mbs+1] = light_trans_mb
-		end
-		for _, mb in ipairs(mbs) do
-			for _ in mb:each() do
+
+		for v in w:select "scene_changed eid:in" do
+			if find_directional_light(v.eid) then
 				changed = true
 			end
+		end
+
+		for _ in viewcamera_changed_mb:each() do
+			changed = true
 		end
 	
 		if changed then
