@@ -1,6 +1,0 @@
-interface "iquad_sphere_debug"
-    .implement "quad_sphere_debug.lua"
-    .method "add_trunk_line_grid"
-    .method "add_inscribed_cube"
-    .method "add_solid_angle"
-    .method "add_axis"
