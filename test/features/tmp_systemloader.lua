@@ -146,11 +146,14 @@ local function point_light_test()
 end
 
 local icc = world:interface "ant.test.features|icamera_controller"
-local iccqs = world:interface "ant.quad_sphere|icamera_controller"
 
 function init_loader_sys:init()
     --point_light_test()
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
+    local eid = world:instance "/pkg/ant.test.features/assets/entities/light_directional.prefab"[1]
+    local eid2 = world:instance "/pkg/ant.resources.binary/meshes/box.glb|mesh.prefab"[1]
+    local s = iom.get_scale(eid2)
+    iom.set_scale(eid2, math3d.mul(s, {100, 100, 100, 0}))
 
     --world:instance "/pkg/ant.test.features/assets/entities/font_tt.prefab"
     --world:instance "/pkg/ant.resources.binary/meshes/female/female.glb|mesh.prefab"
@@ -159,7 +162,7 @@ function init_loader_sys:init()
     --target_lock_test()
 
     --ientity.create_skybox()
-    world:instance "/pkg/ant.test.features/assets/glb/Duck.glb|mesh.prefab"
+    --world:instance "/pkg/ant.test.features/assets/glb/Duck.glb|mesh.prefab"
 
     --world:instance "/pkg/ant.resources.binary/meshes/cloud_run.glb|mesh.prefab"
     --world:instance "/pkg/ant.test.features/assets/CloudTestRun.glb|mesh.prefab"
@@ -182,7 +185,6 @@ function init_loader_sys:init()
     -- }
 
     icc.create()
-    iccqs.create()
 end
 
 local camera_cache = {
@@ -212,7 +214,6 @@ function init_loader_sys:entity_init()
         iom.set_scale(eid, 0.1)
     
         icc.attach(cameraeid)
-        iccqs.attach(cameraeid)
         icamera.controller(cameraeid, icc.get())
     
         camera_cache.icc.pos.v = {-10.5, 10, -5.5, 1}
@@ -295,7 +296,7 @@ function init_loader_sys:data_changed()
             local uc = isicc and camera_cache.iccqs or camera_cache.icc
 
             iom.lookto(cameraeid, uc.pos, uc.dir, uc.updir)
-            icamera.controller(cameraeid, isicc and iccqs.get() or icc.get())
+            icamera.controller(cameraeid, icc.get())
         end
 
         local function light_entity()
