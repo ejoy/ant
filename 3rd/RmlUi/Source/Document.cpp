@@ -377,7 +377,7 @@ static void GenerateKeyModifierEventParameters(EventDictionary& parameters, int 
 		"altKey",
 		"metaKey",
 	};
-	for (int i = 0; i < sizeof(property_names) /sizeof(property_names[0]); ++i) {
+	for (size_t i = 0; i < sizeof(property_names) /sizeof(property_names[0]); ++i) {
 		parameters[property_names[i]] = (int)((key_modifier_state & (1 << i)) > 0);
 	}
 }

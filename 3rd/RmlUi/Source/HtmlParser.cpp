@@ -640,7 +640,7 @@ void HtmlParser::EnterAttribute(void* attr, char c) {
 	attribute->m_value.clear();
 	typedef enum { st_name, st_end_name, st_begin_value, st_value } TEState;
 	TEState state = st_name;
-	char open;
+	char open = 0;
 	std::string temp;
 
 	try {
