@@ -157,9 +157,16 @@ local evSceneChanged = world:sub {"scene_changed"}
 
 function s:update_transform()
 	for _, eid in evSceneChanged:unpack() do
-		local e = world[eid]
-		local id = e._scene_id
-		local node = w:object("scene_node", id)
+		local node
+		if type(eid) == "table" then
+			local ref = eid
+			w:sync("scene_node(scene_id):in", ref)
+			node = ref.node
+		else
+			local e = world[eid]
+			local id = e._scene_id
+			node = w:object("scene_node", id)
+		end
 		node.changed = current_changed
 	end
 	for v in w:select "scene_sorted scene_node:in" do
