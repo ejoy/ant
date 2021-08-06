@@ -165,11 +165,10 @@ local function update_shadow_camera(dl_eid, camera)
 	local viewfrustum = camera.frustum
 	local csmfrustums = ishadow.calc_split_frustums(viewfrustum)
 
-	for _, eid in world:each "csm" do
-		local e = world[eid]
-		local csm = e.csm
+	for qe in w:select "csm_queue camera_eid:in csm:in" do
+		local csm = qe.csm
 		local cf = csmfrustums[csm.index]
-		calc_shadow_camera(camera, cf, lightdir, setting.shadowmap_size, setting.stabilize, e.camera_eid)
+		calc_shadow_camera(camera, cf, lightdir, setting.shadowmap_size, setting.stabilize, qe.camera_eid)
 		csm.split_distance_VS = cf.f - viewfrustum.n
 	end
 end
@@ -276,10 +275,7 @@ local remove_light
 local light_trans_mb
 
 local function set_csm_visible(enable)
-	for _, ceid in world:each "csm" do
-		world[ceid].visible = enable
-	end
-	for v in w:select "shadow_filter visible?out" do
+	for v in w:select "csm_queue visible?out" do
 		v.visible = enable
 	end
 end
@@ -336,8 +332,6 @@ end
 
 function sm:update_camera()
 	if dl_eid then
-		local c = find_main_camera()
-	
 		local changed
 	
 		local mbs = {viewcamera_changed_mb}
@@ -351,11 +345,16 @@ function sm:update_camera()
 		end
 	
 		if changed then
-			update_shadow_camera(dl_eid, c)
+			local maincamrea = find_main_camera()
+			if maincamrea then
+				update_shadow_camera(dl_eid, maincamrea)
+			end
 		else
-			for _, eid in world:each "csm" do
-				local camera_eid = world[eid].camera_eid
-				update_camera_matrices(world[camera_eid]._rendercache)
+			for qe in w:select "csm_queue camera_eid:in" do
+				local camera = icamera.find_camera(qe.camera_eid)
+				if camera then
+					update_camera_matrices(camera)
+				end
 			end
 		end
 	end
@@ -364,9 +363,9 @@ end
 
 function sm:refine_camera()
 	-- local setting = ishadow.setting()
-	-- for _, eid in world:each "csm" do
+	-- for se in w:select "csm_queue filter_names:in"
 	-- 	local se = world[eid]
-	-- 	if se.visible then
+	-- assert(false && "should move code new ecs")
 	-- 		local filter = se.primitive_filter.result
 	-- 		local sceneaabb = math3d.aabb()
 	
@@ -413,7 +412,6 @@ function sm:refine_camera()
 	-- 			local lightdir = math3d.index(camera_rc.worldmat, 3)
 	-- 			calc_shadow_camera_from_corners(aabb_corners_WS, lightdir, setting.shadowmap_size, setting.stabilize, camera_rc)
 	-- 		end
-	-- 	end
 	-- end
 end
 
