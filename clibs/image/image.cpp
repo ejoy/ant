@@ -1,4 +1,3 @@
-#define LUA_LIB 1
 #include <lua.hpp>
 #include <assert.h>
 #include <cstring>
@@ -179,7 +178,7 @@ lgetBitsPerPixel(lua_State *L){
     return 1;
 }
 
-extern "C" LUAMOD_API int
+extern "C" int
 luaopen_image(lua_State* L) {
     luaL_Reg lib[] = {
         { "parse", lparse },
