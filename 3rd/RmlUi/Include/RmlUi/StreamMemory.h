@@ -99,7 +99,7 @@ public:
 
 	/// Sets this streams source URL, useful data that is stored
 	/// in memory streams that originated from files
-	void SetSourceURL(const URL& url);
+	void SetSourceURL(const std::string& url);
 
 private:
 
