@@ -1,28 +1,25 @@
-policy "lightmap_baker"
-    .require_system "ant.bake|lightmap_system"
-    .component "primitive_filter"
-    .unique_component "lightmap_baker"
 
-policy "lightmap"
-    .require_transform "ant.bake|lightmap_transform"
-    .component "lightmap"
-
-transform "lightmap_transform"
+system "lightmap_init_system"
     .implement "lightmapper.lua"
-    .method "process_entity"
-    .output "_lightmap"
 
 system "lightmap_system"
     .implement "lightmapper.lua"
     .method "init"
+    .method "entity_init"
     .method "end_frame"
 
-policy "scene_watcher"
+component_v2 "lightmap".type "lua"
     .require_system "ant.bake|lightmap_system"
-    .component "primitive_filter"
-    .unique_component "scene_watcher"
+    .require_system "ant.bake|lightmap_init_system"
+
+policy_v2 "lightmap"
+    .component_v2 "lightmap"
+
+component_v2 "lightmap_queue"
 
 interface "ilightmap"
     .implement "lightmapper.lua"
+    .method "find_bake_obj"
     .method "bake_entity"
+    .method "bake_from_eid"
     .method "find_sample"

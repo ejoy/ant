@@ -1,5 +1,6 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 require "bake_mathadapter"
 
 local renderpkg = import_package "ant.render"
@@ -22,11 +23,6 @@ local imaterial = world:interface "ant.asset|imaterial"
 local icp       = world:interface "ant.render|icull_primitive"
 local itimer    = world:interface "ant.timer|itimer"
 local ientity   = world:interface "ant.render|entity"
-
-local lm_trans = ecs.transform "lightmap_transform"
-function lm_trans.process_entity(e)
-    e._lightmap = {}
-end
 
 local lightmap_sys = ecs.system "lightmap_system"
 
@@ -207,34 +203,6 @@ function lightmap_sys:init()
 
     local camera_eid = icamera.create{}
     irender.create_vew_queue({x=0, y=0, w=1, h=1}, camera_eid, "lightmap_queue", "lightmap")
-
-    -- world:create_entity {
-    --     policy = {
-    --         "ant.bake|lightmap_baker",
-    --         "ant.general|name",
-    --     },
-    --     data = {
-    --         primitive_filter = {
-    --             filter_type = "lightmap",
-	-- 			update_type = "primitive",
-    --         },
-    --         lightmap_baker = {},
-    --     }
-    -- }
-
-    -- world:create_entity {
-    --     policy = {
-    --         "ant.bake|scene_watcher",
-    --         "ant.general|name",
-    --     },
-    --     data = {
-    --         primitive_filter = {
-    --             filter_type = "visible",
-    --             update_type = "primitive",
-    --         },
-    --         scene_watcher = {},
-    --     }
-    -- }
 end
 
 local function load_geometry_info(item)
@@ -427,58 +395,39 @@ end
 
 local skycolor = 0xffffffff
 
-function ilm.find_sample(eid, triangleidx)
-    local e = world[eid]
-    if e == nil then
-        return log.warn(("invalid entity:%d"):format(eid))
-    end
-
-    if e._lightmap == nil then
-        return log.warn(("entity %s not set any lightmap info will not be baked"):format(e.name or ""))
-    end
-
-    local lm = e.lightmap
-    local hemisize = lm.hemisize
+function ilm.find_sample(lightmap, renderobj, triangleidx)
+    local hemisize = lightmap.hemisize
 
     local s = create_context_setting(hemisize)
     local bake_ctx = bake.create_lightmap_context(s)
-    local g = load_geometry_info(e._rendercache)
+    local g = load_geometry_info(renderobj)
     bake_ctx:set_geometry(g)
-    local lmsize = lm.size
+    local lmsize = lightmap.size
     local li = {width=lmsize, height=lmsize, channels=4}
-    log.info(("[%d-%s] lightmap:w=%d, h=%d, channels=%d"):format(eid, e.name or "", li.width, li.height, li.channels))
-    e._lightmap.data = bake_ctx:set_target_lightmap(li)
+    log.info(("lightmap:w=%d, h=%d, channels=%d"):format(li.width, li.height, li.channels))
+    lightmap.data = bake_ctx:set_target_lightmap(li)
 
     return bake_ctx:find_sample(triangleidx)
 end
 
-function ilm.bake_entity(eid, pf, notcull)
-    local e = world[eid]
-    if e == nil then
-        return log.warn(("invalid entity:%d"):format(eid))
-    end
-
-    if e._lightmap == nil then
-        return log.warn(("entity %s not set any lightmap info will not be baked"):format(e.name or ""))
-    end
-
-    local lm = e.lightmap
-    local hemisize = lm.hemisize
+local function bake_entity(lightmap, bakeobj, scene_objects)
+    local hemisize = lightmap.hemisize
     
     local s = create_context_setting(hemisize)
     local bake_ctx = bake.create_lightmap_context(s)
     local hemix, hemiy = bake_ctx:hemi_count()
-    local lmsize = lm.size
+    local lmsize = lightmap.size
     update_bake_shading(hemisize, lmsize)
     local li = {width=lmsize, height=lmsize, channels=4}
-    log.info(("[%d-%s] lightmap:w=%d, h=%d, channels=%d"):format(eid, e.name or "", li.width, li.height, li.channels))
-    e._lightmap.data = bake_ctx:set_target_lightmap(li)
+    log.info(("lightmap:w=%d, h=%d, channels=%d"):format(li.width, li.height, li.channels))
+    lightmap.data = bake_ctx:set_target_lightmap(li)
 
-    local g = load_geometry_info(e._rendercache)
+    local g = load_geometry_info(bakeobj)
     bake_ctx:set_geometry(g)
-    log.info(("[%d-%s] bake: begin"):format(eid, e.name or ""))
+    log.info "bake: begin"
 
     local c = itimer.fetch_time()
+    --TODO: we should move all bake logic code in lua, and put all rasterizier code in c
     local cb = {
         init_buffer = function ()
             bgfx.set_view_clear(lightmap_viewid, "CD", skycolor, 1.0)
@@ -493,10 +442,7 @@ function ilm.bake_entity(eid, pf, notcull)
         render_scene = function (vp, view, proj)
             bgfx.set_view_rect(lightmap_viewid, vp[1], vp[2], vp[3], vp[4])
             bgfx.set_view_transform(lightmap_viewid, view, proj)
-            if nil == notcull then
-                icp.cull(pf, math3d.mul(proj, view))
-            end
-            draw_scene(pf)
+            draw_scene(scene_objects)
             bgfx.frame()
         end,
         downsample = function(size, writex, writey)
@@ -543,35 +489,69 @@ function ilm.bake_entity(eid, pf, notcull)
             local ec = itimer.fetch_time()
             if ec - c >= 1000 then
                 c = ec
-                log.info(("[%d-%s] process:%2f"):format(eid, e.name or "", p))
+                log.info(("process:%2f"):format(p))
             end
         end
     }
 
     bake_ctx:bake(cb)
 
-    log.info(("[%d-%s] bake: end"):format(eid, e.name or ""))
-
-    e._lightmap.data:postprocess()
-    log.info(("[%d-%s] postprocess: finish"):format(eid, e.name or ""))
+    lightmap.data:postprocess()
+    log.info "postprocess: finish"
 end
 
-local function bake_all()
-    local lm_e = world:singleton_entity "lightmap_baker"
-    local se = world:singleton_entity "scene_watcher"
-    for _, result in ipf.iter_filter(lm_e.primitive_filter) do
-        for _, item in ipf.iter_target(result) do
-            ilm.bake_entity(item.eid, se.primitive_filter)
+
+local function find_scene_render_objects(queuename)
+    local q = w:singleton(queuename, "filter_names:in")
+    local renderobjects = {}
+    for _, fn in ipairs(q.filter_names) do
+        for e in w:select(fn .. " render_object:in widget_entity:absent") do
+            renderobjects[#renderobjects+1] = e.render_object
+        end
+    end
+
+    return renderobjects
+end
+
+function ilm.bake_entity(bakeobj, lightmap)
+    local scene_renderobjs = find_scene_render_objects "main_queue"
+    return bake_entity(lightmap, bakeobj, scene_renderobjs)
+end
+
+local function find_bake_obj(eid)
+    for e in w:select "eid:in render_object:in lightmap:in" do
+        if e.eid == eid then
+            return e.render_object, e.lightmap
         end
     end
 end
 
-local function _bake(eid)
-    if eid then
-        local se = world:singleton_entity "scene_watcher"
-        ilm.bake_entity(eid, se.primitive_filter)
+ilm.find_bake_obj = find_bake_obj
+
+function ilm.bake_from_eid(eid)
+    local bakeobj, lightmap = find_bake_obj(eid)
+    return ilm.bake_entity(bakeobj, lightmap)
+end
+
+local function bake_all()
+    local scene_renderobjects = find_scene_render_objects "main_queue"
+
+    local lm_queue = w:singleton("lightmap_queue", "filter_names:in")
+    for _, fn in ipairs(lm_queue.filter_names) do
+        for le in w:select (fn .. " render_object:in lightmap:in widget_entity:absent name?in") do
+            log.info(("start bake entity: %s"):format(le.name))
+            bake_entity(le.render_object, le.lightmap, scene_renderobjects)
+            log.info(("end bake entity: %s"):format(le.name))
+        end
+    end
+end
+
+local function _bake(id)
+    if id then
+        local bakeobj, lightmap = find_bake_obj(id)
+        ilm.bake_entity(bakeobj, lightmap, find_scene_render_objects "main_queue")
     else
-        log.info("bake entity scene with lightmap setting")
+        log.info "bake entity scene with lightmap setting"
         bake_all()
     end
 end
@@ -579,11 +559,11 @@ end
 local bake_mb = world:sub{"bake"}
 function lightmap_sys:end_frame()
     for msg in bake_mb:each() do
-        local eid = msg[2]
+        local id = msg[2]
         ltask.fork(function ()
             local ServiceBgfxMain = ltask.queryservice "bgfx_main"
             ltask.call(ServiceBgfxMain, "pause")
-            _bake(eid)
+            _bake(id)
             ltask.call(ServiceBgfxMain, "continue")
         end)
     end
