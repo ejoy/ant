@@ -19,3 +19,5 @@ policy_v2 "lock_traget_policy"
 system "entity_state_system"
     .implement "entity_state_v2.lua"
     .method "entity_init"
+
+component_v2 "widget_entity"

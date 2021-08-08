@@ -19,7 +19,7 @@ local ltask     = require "ltask"
 
 local irender   = world:interface "ant.render|irender"
 local imaterial = world:interface "ant.asset|imaterial"
-local icp       = world:interface "ant.render|icull_primitive"
+local icamera   = world:interface "ant.camera|camera"
 local itimer    = world:interface "ant.timer|itimer"
 local ientity   = world:interface "ant.render|entity"
 
@@ -200,8 +200,13 @@ end
 function lightmap_sys:init()
     shading_info = init_shading_info()
 
-    local camera_eid = icamera.create{}
-    irender.create_vew_queue({x=0, y=0, w=1, h=1}, camera_eid, "lightmap_queue", "lightmap")
+    --we will not use this camera
+    local camera_eid = icamera.create{
+        viewdir = mc.ZAXIS,
+        eyepos = mc.ZERO_PT,
+        name = "lightmap camera"
+    }
+    irender.create_view_queue({x=0, y=0, w=1, h=1}, "lightmap_queue", camera_eid, "lightmap")
 end
 
 local function load_geometry_info(item)
@@ -299,15 +304,31 @@ local function load_geometry_info(item)
     }
 end
 
-local function draw_scene(pf)
-    for _, result in ipf.iter_filter(pf) do
-        for _, item in ipf.iter_target(result) do
-            irender.draw(lightmap_viewid, item)
+local function find_bake_obj(eid)
+    for e in w:select "eid:in render_object:in lightmap:in" do
+        if e.eid == eid then
+            return e.render_object, e.lightmap
         end
     end
 end
 
-local ilm = ecs.interface "ilightmap"
+local function find_scene_render_objects(queuename)
+    local q = w:singleton(queuename, "filter_names:in")
+    local renderobjects = {}
+    for _, fn in ipairs(q.filter_names) do
+        for e in w:select(fn .. " render_object:in widget_entity:absent") do
+            renderobjects[#renderobjects+1] = e.render_object
+        end
+    end
+
+    return renderobjects
+end
+
+local function draw_scene(renderobjs)
+    for _, ro in ipairs(renderobjs) do
+        irender.draw(lightmap_viewid, ro)
+    end
+end
 
 local function create_context_setting(hemisize)
     return {
@@ -394,20 +415,6 @@ end
 
 local skycolor = 0xffffffff
 
-function ilm.find_sample(lightmap, renderobj, triangleidx)
-    local hemisize = lightmap.hemisize
-
-    local s = create_context_setting(hemisize)
-    local bake_ctx = bake.create_lightmap_context(s)
-    local g = load_geometry_info(renderobj)
-    bake_ctx:set_geometry(g)
-    local lmsize = lightmap.size
-    local li = {width=lmsize, height=lmsize, channels=4}
-    log.info(("lightmap:w=%d, h=%d, channels=%d"):format(li.width, li.height, li.channels))
-    lightmap.data = bake_ctx:set_target_lightmap(li)
-
-    return bake_ctx:find_sample(triangleidx)
-end
 
 local function bake_entity(lightmap, bakeobj, scene_objects)
     local hemisize = lightmap.hemisize
@@ -499,39 +506,6 @@ local function bake_entity(lightmap, bakeobj, scene_objects)
     log.info "postprocess: finish"
 end
 
-
-local function find_scene_render_objects(queuename)
-    local q = w:singleton(queuename, "filter_names:in")
-    local renderobjects = {}
-    for _, fn in ipairs(q.filter_names) do
-        for e in w:select(fn .. " render_object:in widget_entity:absent") do
-            renderobjects[#renderobjects+1] = e.render_object
-        end
-    end
-
-    return renderobjects
-end
-
-function ilm.bake_entity(bakeobj, lightmap)
-    local scene_renderobjs = find_scene_render_objects "main_queue"
-    return bake_entity(lightmap, bakeobj, scene_renderobjs)
-end
-
-local function find_bake_obj(eid)
-    for e in w:select "eid:in render_object:in lightmap:in" do
-        if e.eid == eid then
-            return e.render_object, e.lightmap
-        end
-    end
-end
-
-ilm.find_bake_obj = find_bake_obj
-
-function ilm.bake_from_eid(eid)
-    local bakeobj, lightmap = find_bake_obj(eid)
-    return ilm.bake_entity(bakeobj, lightmap)
-end
-
 local function bake_all()
     local scene_renderobjects = find_scene_render_objects "main_queue"
 
@@ -548,7 +522,7 @@ end
 local function _bake(id)
     if id then
         local bakeobj, lightmap = find_bake_obj(id)
-        ilm.bake_entity(bakeobj, lightmap, find_scene_render_objects "main_queue")
+        bake_entity(bakeobj, lightmap, find_scene_render_objects "main_queue")
     else
         log.info "bake entity scene with lightmap setting"
         bake_all()
@@ -566,4 +540,35 @@ function lightmap_sys:end_frame()
             ltask.call(ServiceBgfxMain, "continue")
         end)
     end
+end
+
+------------------------------------------------------------------------
+local ilm = ecs.interface "ilightmap"
+
+function ilm.find_sample(lightmap, renderobj, triangleidx)
+    local hemisize = lightmap.hemisize
+
+    local s = create_context_setting(hemisize)
+    local bake_ctx = bake.create_lightmap_context(s)
+    local g = load_geometry_info(renderobj)
+    bake_ctx:set_geometry(g)
+    local lmsize = lightmap.size
+    local li = {width=lmsize, height=lmsize, channels=4}
+    log.info(("lightmap:w=%d, h=%d, channels=%d"):format(li.width, li.height, li.channels))
+    lightmap.data = bake_ctx:set_target_lightmap(li)
+
+    return bake_ctx:find_sample(triangleidx)
+end
+
+
+function ilm.bake_entity(bakeobj, lightmap)
+    local scene_renderobjs = find_scene_render_objects "main_queue"
+    return bake_entity(lightmap, bakeobj, scene_renderobjs)
+end
+
+ilm.find_bake_obj = find_bake_obj
+
+function ilm.bake_from_eid(eid)
+    local bakeobj, lightmap = find_bake_obj(eid)
+    return ilm.bake_entity(bakeobj, lightmap)
 end

@@ -1,11 +1,13 @@
 local ecs = ...
 local world = ecs.world
 
-local ientity = world:interface "ant.render|entity"
-local ies = world:interface "ant.scene|ientity_state"
-local iom = world:interface "ant.objcontroller|obj_motion"
 local math3d = require "math3d"
 
+local ientity 	= world:interface "ant.render|entity"
+local ies 		= world:interface "ant.scene|ientity_state"
+local iom 		= world:interface "ant.objcontroller|obj_motion"
+local icamera 	= world:interface "ant.camera|camera"
+local irq		= world:interface "ant.render|irenderqueue"
 local lm_baker = ecs.system "lightmap_baker_system"
 
 local function create_lm_entity(name, material, m, srt)
@@ -38,8 +40,16 @@ function lm_baker:init()
 	local eid = p[1]
     local s = iom.get_scale(eid)
     iom.set_scale(eid, math3d.mul(s, {100, 100, 100, 0}))
+end
 
-    world:pub{"bake", eid}
+function lm_baker:init_world()
+	local mceid = irq.main_camera()
+	local srt = world[mceid]._rendercache.srt
+	local p = math3d.vector(0, 5, 12)
+	iom.set_position(mceid, p)
+	iom.set_direction(mceid, math3d.inverse(p))
+
+	world:pub{"bake"}	--bake all scene
 end
 
 function lm_baker:data_changed()
