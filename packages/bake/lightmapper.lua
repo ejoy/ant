@@ -26,6 +26,7 @@ local ientity   = world:interface "ant.render|entity"
 local lightmap_sys = ecs.system "lightmap_system"
 
 local shading_info
+local lightmap_bake_material
 
 local downsample_viewid_count<const> = 10 --max 1024x1024->2^10
 local lightmap_downsample_viewids = viewidmgr.alloc_viewids(downsample_viewid_count, "lightmap_ds")
@@ -197,6 +198,9 @@ local function init_shading_info()
     }
 end
 
+local lightmap_queue_surface_types<const> = {
+    "foreground", "opaticy", "background",
+}
 function lightmap_sys:init()
     shading_info = init_shading_info()
 
@@ -206,7 +210,24 @@ function lightmap_sys:init()
         eyepos = mc.ZERO_PT,
         name = "lightmap camera"
     }
-    irender.create_view_queue({x=0, y=0, w=1, h=1}, "lightmap_queue", camera_eid, "lightmap")
+    irender.create_view_queue({x=0, y=0, w=1, h=1}, "lightmap_queue", camera_eid, "lightmap", nil, lightmap_queue_surface_types)
+    lightmap_bake_material = imaterial.load "/pkg/ant.bake/materials/bake.material"
+end
+
+function lightmap_sys:end_filter()
+    for e in w:select "filter_result:in render_object:in filter_material:out" do
+        local fr = e.filter_result
+        local fm = e.filter_material
+        local le = w:singleton("lightmap_queue", "filter_names:in")
+        
+        for _, fn in ipairs(le.filter_names) do
+            fm[fn] = {
+                fx          = lightmap_bake_material.fx,
+                properties  = lightmap_bake_material.properties,
+                state       = lightmap_bake_material.state,
+            }
+        end
+    end
 end
 
 local function load_geometry_info(item)

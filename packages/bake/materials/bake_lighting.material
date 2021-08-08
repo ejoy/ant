@@ -1,0 +1,4 @@
+fx:
+    vs: /pkg/ant.bake/materials/shaders/vs_bake_lighting.sc
+    fs: /pkg/ant.bake/materials/shaders/fs_bake_lighting.sc
+state: /pkg/ant.resources/materials/states/default.state
