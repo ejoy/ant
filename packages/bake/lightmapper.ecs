@@ -1,7 +1,4 @@
 
-system "lightmap_init_system"
-    .implement "lightmapper.lua"
-
 system "lightmap_system"
     .implement "lightmapper.lua"
     .method "init"
@@ -10,12 +7,15 @@ system "lightmap_system"
 
 component_v2 "lightmap".type "lua"
     .require_system "ant.bake|lightmap_system"
-    .require_system "ant.bake|lightmap_init_system"
 
 policy_v2 "lightmap"
     .component_v2 "lightmap"
 
 component_v2 "lightmap_queue"
+
+policy "lightmap"
+    .require_system "ant.bake|lightmap_system"
+    .component "lightmap"
 
 interface "ilightmap"
     .implement "lightmapper.lua"

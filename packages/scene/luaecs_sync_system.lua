@@ -23,6 +23,9 @@ local function findEntity(eid)
 		end
 	end
 end
+local function isLightmapEntity(e)
+	return e.lightmap ~= nil
+end
 
 function s:init()
 end
@@ -88,6 +91,10 @@ function s:luaecs_sync()
 				dof         = e.dof,
 			}
 			policy[#policy+1] = "ant.camera|camera"
+		end
+		if isLightmapEntity(e) then
+			data.lightmap = e.lightmap
+			policy[#policy+1] = "ant.baker|lightmap"
 		end
 		world:luaecs_create_entity {
 			policy = policy,

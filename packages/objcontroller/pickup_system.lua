@@ -163,7 +163,7 @@ local function create_pick_entity()
 
 	world:luaecs_create_entity{
 		policy = {
-			"ant.scene|primitive_filter",
+			"ant.render|primitive_filter",
 		},
 		data = {
 			primitive_filter = {
@@ -175,7 +175,7 @@ local function create_pick_entity()
 
 	world:luaecs_create_entity{
 		policy = {
-			"ant.scene|primitive_filter",
+			"ant.render|primitive_filter",
 		},
 		data = {
 			primitive_filter = {

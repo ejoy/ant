@@ -17,7 +17,6 @@ local bgfx      = require "bgfx"
 local bake      = require "bake"
 local ltask     = require "ltask"
 
-local ipf       = world:interface "ant.scene|iprimitive_filter"
 local irender   = world:interface "ant.render|irender"
 local imaterial = world:interface "ant.asset|imaterial"
 local icp       = world:interface "ant.render|icull_primitive"
@@ -568,4 +567,3 @@ function lightmap_sys:end_frame()
         end)
     end
 end
-

@@ -110,7 +110,7 @@ local function create_primitive_filter_entities(quenename, filtertype, surface_t
 		local t = ("%s_%s"):format(quenename, fn)
 		world:luaecs_create_entity{
 			policy = {
-				"ant.scene|primitive_filter",
+				"ant.render|primitive_filter",
 			},
 			data = {
 				primitive_filter = {
