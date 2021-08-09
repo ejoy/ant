@@ -70,7 +70,7 @@ function brush_sys:handle_event()
         end
     end
 
-    if not grid then return end
+    if #grid < 1 then return end
     for _, what, sx, sy in mouse_down:unpack() do
 		if what == "LEFT" then
             local hitpos = utils.ray_hit_plane(iom.ray(camera_mgr.main_camera, {sx, sy}), {dir = {0,1,0}, pos = {0,0,0}})
