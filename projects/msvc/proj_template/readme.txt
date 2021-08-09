@@ -1,1 +1,0 @@
-put it in : C:\Users\{user_name}\Documents\Visual Studio 2017\My Exported Templates
