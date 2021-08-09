@@ -143,17 +143,64 @@ function m.set_emitter(emitter_eid)
     create_emitter_panel()
 end
 
+local grid_size_ui = {0.2, speed = 0.1, min = 0.1, max = 10}
+local grid_row_ui = {2, speed = 1, min = 2, max = 1000}
+local grid_col_ui = {2, speed = 1, min = 2, max = 1000}
+local brush_color_ui = {1.0, 1.0, 1.0, 0.5}
+
 function m.show()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1] + viewport.WorkSize[1] - uiconfig.PropertyWidgetWidth, viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
     imgui.windows.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
-    for _ in uiutils.imgui_windows("ParticleEmitter", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
-        show_panel(property)
+    for _ in uiutils.imgui_windows("GridMesh", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
+        local title = "CreateGridMesh"
+        if imgui.widget.Button("Create") then
+            imgui.windows.OpenPopup(title)
+        end
+        local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize"})
+        if change then
+            local label = "Grid Size : "
+            imgui.widget.Text(label)
+            imgui.cursor.SameLine()
+            if imgui.widget.DragFloat("##"..label, grid_size_ui) then
+            
+            end
+            
+            label = "      Row : "
+            imgui.widget.Text(label)
+            imgui.cursor.SameLine()
+            if imgui.widget.DragInt("##"..label, grid_row_ui) then
+
+            end
+            
+            label = "      Col : "
+            imgui.widget.Text(label)
+            imgui.cursor.SameLine()
+            if imgui.widget.DragInt("##"..label, grid_col_ui) then
+
+            end
+            
+            if imgui.widget.Button("    OK    ") then
+                world:pub {"GridMesh", "create", grid_size_ui[1], grid_row_ui[1], grid_col_ui[1]}
+                imgui.windows.CloseCurrentPopup()
+            end
+            imgui.cursor.SameLine()
+            if imgui.widget.Button("  Cancel  ") then
+                imgui.windows.CloseCurrentPopup()
+            end
+            imgui.windows.EndPopup()
+        end
+        local color_label = "BrushColor"
+        imgui.widget.PropertyLabel(color_label)
+        if imgui.widget.ColorEdit("##"..color_label, brush_color_ui) then
+            world:pub {"GridMesh", "brushcolor", brush_color_ui[1], brush_color_ui[2], brush_color_ui[3], brush_color_ui[4]}
+        end
+
+        --show_panel(property)
     end
 end
 
 return function(w)
     world = w
-    prefab_mgr = require "prefab_manager"(world)
     return m
 end

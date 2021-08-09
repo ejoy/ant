@@ -267,3 +267,9 @@ function iobj_motion.ray(eid, pt2d, vp_size)
         dir = dir,
     }
 end
+
+function iobj_motion.screen_to_ndc(eid, pt2d, vp_size)
+    vp_size = vp_size or main_queue_viewport_size()
+    local ndc = mu.pt2D_to_NDC(pt2d, vp_size)
+    return {ndc[1], ndc[2], pt2d[3]}
+end

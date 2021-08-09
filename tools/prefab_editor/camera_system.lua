@@ -12,7 +12,7 @@ local inspector = require "widget.inspector"(world)
 local m			= ecs.system "camera_system"
 
 local event_camera_control = world:sub {"camera"}
-local camera_init_eye_pos <const> = {5, 5, 10, 1}
+local camera_init_eye_pos <const> = {5, 5, 5, 1}
 local camera_init_target <const> = {0, 0,  0, 1}
 local camera_target = math3d.ref(math3d.vector(0, 0, 0, 1))
 local camera_distance
@@ -22,8 +22,9 @@ local pan_speed <const> = 0.5
 local rotation_speed <const> = 1
 
 local function view_to_world(view_pos)
-	local camerasrt = iom.srt(irq.main_camera())
-	return math3d.transform(camerasrt, view_pos, 0)
+	--local camerasrt = iom.srt(irq.main_camera())
+	iom.worldmat(irq.main_camera())
+	return math3d.transform(iom.worldmat(irq.main_camera()), view_pos, 0)
 end
 
 local function camera_update_eye_pos(camera)
@@ -103,7 +104,7 @@ local function selectBoundary(hp)
 	return 0
 end
 
-function m:data_changed()
+function m:handle_event()
 	--camera_mgr.select_frustum = false
 	for _, what, x, y in mouse_move:unpack() do
 		if what == "UNKNOWN" then

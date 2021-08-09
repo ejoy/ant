@@ -14,7 +14,7 @@ local iom
 local iss
 local icons
 local function is_editable(eid)
-    if --not iom.srt(eid) or
+    if not world[eid].scene_entity or
         not hierarchy:is_visible(eid) or
         hierarchy:is_locked(eid) then
         return false

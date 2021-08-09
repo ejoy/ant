@@ -75,7 +75,7 @@ function gizmo:set_position(worldpos)
 	end
 	local newpos
 	if worldpos then
-		local parent_worldmat = iom.calc_worldmat(world[gizmo.target_eid].parent)
+		local parent_worldmat = iom.worldmat(world[gizmo.target_eid].parent)
 		local localPos
 		if not parent_worldmat then
 			localPos = worldpos
@@ -86,7 +86,7 @@ function gizmo:set_position(worldpos)
 		iom.set_position(self.target_eid, localPos)
 		newpos = worldpos
 	else
-		local s,r,t = math3d.srt(iom.worldmat(gizmo.target_eid))
+		local t = iom.get_position(gizmo.target_eid)
 		newpos = math3d.totable(t)
 	end
 	iom.set_position(self.root_eid, newpos)
@@ -196,14 +196,15 @@ end
 
 local function update_global_axis()
 	if not global_data.viewport or not global_axis_eid then return end
-	local worldPos = mouse_hit_plane({50, global_data.viewport.h  - 50}, {dir = {0,1,0}, pos = {0,0,0}})
+	local worldPos = utils.ndc_to_world(camera_mgr.main_camera, iom.screen_to_ndc(camera_mgr.main_camera, {global_data.viewport.x + 50, global_data.viewport.y + global_data.viewport.h - 50, 0.5}))--mouse_hit_plane({global_data.viewport.x + 50, global_data.viewport.y + global_data.viewport.h  - 50}, {dir = {0,1,0}, pos = {0,0,0}})
 	if worldPos then
 		iom.set_position(global_axis_eid, math3d.totable(worldPos))
 	end
 	--print("gizmo_scale", gizmo_scale)
 	--todo：
-	local adjustScale = (gizmo_scale < 4.5) and 4.5 or gizmo_scale
-	iom.set_scale(global_axis_eid, adjustScale * 0.5)
+	-- local adjustScale = (gizmo_scale < 4.5) and 4.5 or gizmo_scale
+	-- print("global_axis_eid scale:", adjustScale * 0.5)
+	-- iom.set_scale(global_axis_eid, adjustScale * 0.5)
 end
 
 function gizmo:update_scale()
@@ -396,6 +397,7 @@ function gizmo_sys:post_init()
 	ies.set_state(new_eid, "auxgeom", true)
 	imaterial.set_property(new_eid, "u_color", gizmo_const.COLOR_Z)
 	iss.set_parent(new_eid, global_axis_eid)
+	iom.set_scale(global_axis_eid, 2.5)
 end
 local mb_main_camera_changed = world:sub{"component_changed", "camera_eid", "main_queue"}
 function gizmo_sys:entity_done()
@@ -960,7 +962,7 @@ local function on_mouse_move()
 		is_mouse_move = true
 	end
 	if is_mouse_move and gizmo.mode ~= gizmo_const.SELECT then
-		local vx, vy = utils.mouse_pos_in_view(mouse_pos_x, mouse_pos_y)
+		local vx, vy = mouse_pos_x, mouse_pos_y--utils.mouse_pos_in_view(mouse_pos_x, mouse_pos_y)
 		if vx and vy then
 			--world:pub {"mousemove", "UNKNOWN", vx, vy}
 			if select_light_gizmo(vx, vy) == 0 then
@@ -976,7 +978,7 @@ local function on_mouse_move()
 	end
 end
 
-function gizmo_sys:data_changed()
+function gizmo_sys:handle_event()
 	for _, vp in viewpos_event:unpack() do
 		global_data.viewport = vp
 		update_global_axis()
@@ -1036,7 +1038,7 @@ function gizmo_sys:data_changed()
 					elseif gizmo.mode == gizmo_const.ROTATE then
 						cmd_queue:record({action = gizmo_const.ROTATE, eid = target, oldvalue = math3d.totable(last_rotate), newvalue = math3d.totable(iom.get_rotation(target))})
 					elseif gizmo.mode == gizmo_const.MOVE then
-						local localPos = math3d.totable(math3d.transform(math3d.inverse(iom.calc_worldmat(world[target].parent)), last_gizmo_pos, 1))
+						local localPos = math3d.totable(math3d.transform(math3d.inverse(iom.worldmat(world[target].parent)), last_gizmo_pos, 1))
 						cmd_queue:record({action = gizmo_const.MOVE, eid = target, oldvalue = localPos, newvalue = math3d.totable(iom.get_position(target))})
 					end
 				end
@@ -1047,7 +1049,7 @@ function gizmo_sys:data_changed()
 	end
 	
 	on_mouse_move()
-	
+
 	for _, what, x, y, dx, dy in mouse_drag:unpack() do
 		if what == "LEFT" then
 			if light_gizmo_mode ~= 0 then

@@ -31,3 +31,4 @@ interface "obj_motion"
     .method "rotate_around_point2"
 
     .method "ray"
+    .method "screen_to_ndc"
