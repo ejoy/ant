@@ -162,7 +162,7 @@ function irender.create_view_queue(view_rect, view_queuename, camera_eid, filter
 			queue_name			= view_queuename,
 			filter_names		= filter_names,
 			cull_tag			= {},
-			visible 			= visible,
+			visible 			= true,
 			watch_screen_buffer	= true,
 		}
 	}

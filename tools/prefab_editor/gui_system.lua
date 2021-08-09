@@ -25,7 +25,7 @@ local console_widget = require "widget.console"(asset_mgr)
 local toolbar = require "widget.toolbar"(world, asset_mgr)
 local scene_view = require "widget.scene_view"(world, asset_mgr)
 local inspector = require "widget.inspector"(world)
-local particle_emitter = require "widget.particle_emitter"(world)
+local gridmesh_view = require "widget.gridmesh_view"(world)
 local uiconfig = require "widget.config"
 local prefab_mgr = require "prefab_manager"(world)
 local menu = require "widget.menu"(world, prefab_mgr)
@@ -241,7 +241,7 @@ function m:ui_update()
     toolbar.show()
     dock_x, dock_y, dock_width, dock_height = show_dock_space(0, uiconfig.ToolBarHeight)
     scene_view.show()
-    particle_emitter.show()
+    gridmesh_view.show()
     inspector.show()
     resource_browser.show()
     anim_view.show()
@@ -310,8 +310,8 @@ local function on_target(old, new)
             camera_mgr.set_second_camera(new, true)
         elseif new_entity.light_type then
             light_gizmo.bind(new)
-        elseif new_entity.emitter then
-            particle_emitter.set_emitter(new)
+        -- elseif new_entity.emitter then
+        --     particle_emitter.set_emitter(new)
         end
     end
     prefab_mgr:update_current_aabb(new)
@@ -331,7 +331,7 @@ end
 
 local cmd_queue = require "gizmo.command_queue"(world)
 
-function m:data_changed()
+function m:handle_event()
     for _, action, value1, value2 in event_gizmo:unpack() do
         if action == "update" or action == "ontarget" then
             inspector.update_ui(action == "update")
@@ -368,8 +368,8 @@ function m:data_changed()
             end
         elseif what == "parent" then
             hierarchy:set_parent(target, v1)
-            local sourceWorldMat = iom.calc_worldmat(target)
-            local targetWorldMat = iom.calc_worldmat(v1)
+            local sourceWorldMat = iom.worldmat(target)
+            local targetWorldMat = iom.worldmat(v1)
             iom.set_srt(target, math3d.mul(math3d.inverse(targetWorldMat), sourceWorldMat))
             iss.set_parent(target, v1)
             if not world[v1].slot and world[target].collider then
@@ -410,6 +410,7 @@ function m:data_changed()
             hierarchy:move_bottom(eid)
         end
     end
+    
     for _, filename in event_preopen_prefab:unpack() do
         anim_view:clear()
         material_view:clear()
@@ -504,10 +505,10 @@ function m:widget()
     --         world:remove_entity(skeleton_eid)
     --     end
     --     local desc={vb={}, ib={}}
-    --     geometry_drawer.draw_skeleton(e.skeleton._handle, e.pose_result, DEFAULT_COLOR, iom.calc_worldmat(eid), desc)
+    --     geometry_drawer.draw_skeleton(e.skeleton._handle, e.pose_result, DEFAULT_COLOR, iom.worldmat(eid), desc)
     --     skeleton_eid = geo_utils.create_dynamic_lines(e.transform, desc.vb, desc.ib, "skeleton", DEFAULT_COLOR)
     --     ies.set_state(skeleton_eid, "auxgeom", true)
-    --     anim_transform.m = iom.calc_worldmat(eid)
+    --     anim_transform.m = iom.worldmat(eid)
     --     anim_entity = e
     -- end
     -- if skeleton_eid then
