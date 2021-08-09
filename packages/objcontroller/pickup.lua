@@ -56,19 +56,18 @@ function s:end_filter()
 		local eid = e.eid
 		local fr = e.filter_result
 		local st = e.render_object.fx.setting.surfacetype
-		for qe in w:select "pickup_queue filter_names:in" do
-			for _, fn in ipairs(qe.filter_names) do
-				if fr[fn] then
-					local m = assert(pickup_materials[st])
-					local state = e.render_object.state
-					e.filter_material[fn] = {
-						fx			= m.fx,
-						properties	= get_properties(eid, m.fx),
-						state		= irender.check_primitive_mode_state(state, m.state),
-					}
-				end
+		local fm = e.filter_material
+		local qe = w:singleton("pickup_queue", "filter_names:in")
+		for _, fn in ipairs(qe.filter_names) do
+			if fr[fn] then
+				local m = assert(pickup_materials[st])
+				local state = e.render_object.state
+				fm[fn] = {
+					fx			= m.fx,
+					properties	= get_properties(eid, m.fx),
+					state		= irender.check_primitive_mode_state(state, m.state),
+				}
 			end
 		end
-
 	end
 end

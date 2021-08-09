@@ -434,18 +434,18 @@ local s = ecs.system "shadow_primitive_system"
 function s:end_filter()
     for e in w:select "filter_result:in render_object:in eid:in filter_material:in" do
         local rc = e.render_object
-        local state = rc.entity_state
-		local st = rc.fx.setting.surfacetype
 		local m = which_material(e.eid)
 		local fm = e.filter_material
-
+		local fr = e.filter_result
 		for qe in w:select "csm_queue filter_names:in" do
 			for _, fn in ipairs(qe.filter_names) do
-				fm[fn] = {
-					fx = m.fx,
-					properties = m.properties,
-					state = irender.check_primitive_mode_state(rc.state, m.state),
-				}
+				if fr[fn] then
+					fm[fn] = {
+						fx = m.fx,
+						properties = m.properties,
+						state = irender.check_primitive_mode_state(rc.state, m.state),
+					}
+				end
 			end
 		end
 	end

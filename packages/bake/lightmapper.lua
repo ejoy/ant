@@ -221,11 +221,13 @@ function lightmap_sys:end_filter()
         local le = w:singleton("lightmap_queue", "filter_names:in")
         
         for _, fn in ipairs(le.filter_names) do
-            fm[fn] = {
-                fx          = lightmap_bake_material.fx,
-                properties  = lightmap_bake_material.properties,
-                state       = lightmap_bake_material.state,
-            }
+            if fr[fn] then
+                fm[fn] = {
+                    fx          = lightmap_bake_material.fx,
+                    properties  = lightmap_bake_material.properties,
+                    state       = lightmap_bake_material.state,
+                }
+            end
         end
     end
 end
