@@ -331,7 +331,7 @@ end
 
 local cmd_queue = require "gizmo.command_queue"(world)
 
-function m:data_changed()
+function m:handle_event()
     for _, action, value1, value2 in event_gizmo:unpack() do
         if action == "update" or action == "ontarget" then
             inspector.update_ui(action == "update")
@@ -410,6 +410,7 @@ function m:data_changed()
             hierarchy:move_bottom(eid)
         end
     end
+    
     for _, filename in event_preopen_prefab:unpack() do
         anim_view:clear()
         material_view:clear()
