@@ -80,15 +80,14 @@ local rotateYZ_MAT = math3d.ref(
 
 function ds:follow_transform_updated()
     for _, eid in world:each "decal" do
-        local de = world[eid]
-        local rc = de._rendercache
+        local camera = icamera.find_camera(eid)
 
-        local mm = math3d.mul(rotateYZ_MAT, rc.worldmat)
+        local mm = math3d.mul(rotateYZ_MAT, camera.worldmat)
 
-        rc.viewmat = math3d.inverse(mm)
-        rc.projmat = math3d.projmat(rc.frustum)
-        rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
+        camera.viewmat = math3d.inverse(mm)
+        camera.projmat = math3d.projmat(camera.frustum)
+        camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 
-        imaterial.set_property(eid, "u_decal_mat", math3d.mul(rc.worldmat, rc.viewprojmat))
+        imaterial.set_property(eid, "u_decal_mat", math3d.mul(camera.worldmat, camera.viewprojmat))
     end
 end

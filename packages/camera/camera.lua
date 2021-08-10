@@ -15,15 +15,6 @@ function cmm.process_entity(e)
     for k, v in pairs(e.frustum) do f[k] = v end
     rc.frustum = f
     rc.updir = math3d.ref(e.updir and math3d.vector(e.updir) or mc.YAXIS)
-
-    local lt = e.lock_target
-    if lt then
-        local nlt = {}
-        for k, v in pairs(lt) do
-            nlt[k] = v
-        end
-        rc.lock_target = nlt
-    end
 end
 
 local ic = ecs.interface "camera"
@@ -60,53 +51,12 @@ function ic.create(info, v2)
     end
 
     local viewmat = math3d.lookto(info.eyepos, info.viewdir, info.updir)
-
-    if v2 then
-        local sceneid = world:luaecs_create_ref{
-            policy = {
-                "ant.scene|scene_node",
-            },
-            data = {
-                scene_node = {
-                    srt = math3d.inverse(viewmat),
-                },
-                INIT = true,
-            },
-        }
-
-        local cameraid = world:luaecs_create_ref {
-            policy = {
-                "ant.camera|camera_node"
-            },
-            data = {
-                camera_node = {
-                    scene_id = sceneid,
-                }
-            }
-        }
-        world:luaecs_create_entity{
-            policy = policy,
-            data = {
-                name        = info.name or "DEFAULT_CAMERA",
-                scene_id = sceneid,
-                camera_id = cameraid,
-                camera = {
-                    clip_range  = info.clip_range,
-                    frustum     = info.frustum,
-                    dof         = info.dof,
-                },
-            }
-        }
-
-        return cameraid
-    end
-    return world:create_entity{
+    return world:create_entity {
         policy = policy,
         data = {
             name        = info.name or "DEFAULT_CAMERA",
             transform   = math3d.inverse(viewmat),
             updir       = info.updir,
-            lock_target = info.locktarget,
             frustum     = frustum,
             clip_range  = info.clip_range,
             scene_entity= true,
@@ -245,9 +195,9 @@ function ic.set_dof_focus_obj(eid, focus_eid)
 end
 
 local function find_camera(cameraeid)
-    for v in w:select "eid:in camera_id:in" do
+    for v in w:select "eid:in camera:in" do
 		if cameraeid == v.eid then
-			return w:object("camera_node", v.camera_id)
+			return v.camera
 		end
     end
 end

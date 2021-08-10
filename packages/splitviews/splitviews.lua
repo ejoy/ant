@@ -207,11 +207,10 @@ end
 
 function svs:update_camera()
     for _, eid in world:each "orthoview" do
-        local e = world[world[eid].camera_eid]
-        local rc = e._rendercache
-        local worldmat = rc.worldmat
-        rc.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), rc.updir)
-        rc.projmat = math3d.projmat(rc.frustum)
-        rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
+        local camera = icamera.find_camera(world[eid].camera_eid)
+        local worldmat = camera.worldmat
+        camera.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), camera.updir)
+        camera.projmat = math3d.projmat(camera.frustum)
+        camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
     end
 end
