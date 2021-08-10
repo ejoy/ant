@@ -1,4 +1,4 @@
 fx:
-    vs: /pkg/ant.bake/materials/shaders/vs_bake_lighting.sc
-    fs: /pkg/ant.bake/materials/shaders/fs_bake_lighting.sc
+    vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
+    fs: /pkg/ant.resources/shaders/pbr/fs_pbr.sc
 state: /pkg/ant.resources/materials/states/default.state

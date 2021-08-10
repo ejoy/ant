@@ -1,49 +1,30 @@
 local ecs = ...
 local world = ecs.world
 
+local math3d		= require "math3d"
+local bgfx			= require "bgfx"
+
 local assetmgr		= require "asset"
 local ext_material	= require "ext_material"
 
-local mpt = ecs.transform "material_prefab_transform"
-local function load_material(m, setting)
-	local fx = assetmgr.load_fx(m.fx, setting)
+local function load_material(m, c)
+	local fx = assetmgr.load_fx(m.fx, c.setting)
 	local properties = m.properties
 	if not properties and #fx.uniforms > 0 then
 		properties = {}
 	end
-	return {
-		fx			= fx,
-		properties	= properties,
-		state		= m.state,
-		stencil		= m.stencil,
-	}
-end
-
-function mpt.process_prefab(e)
-	local m = e.material
-	if m then
-		local c = e._cache_prefab
-		local mm = load_material(m, c.material_setting)
-		c.fx			= mm.fx
-		c.properties	= mm.properties
-		c.state			= mm.state
-		c.stencil		= mm.stencil
-	end
-end
-
-local mst = ecs.transform "material_setting_transform"
-function mst.process_prefab(e)
-	e._cache_prefab.material_setting = {}
+	c.fx			= fx
+	c.properties	= properties
+	c.state			= m.state
+	c.stencil		= m.stencil
 end
 
 local imaterial = ecs.interface "imaterial"
-function imaterial.load(materialpath, setting)
-	local m = world.component "material"(materialpath)
-	return load_material(m, setting)
+function imaterial.load(m, setting)
+	local mm = type(m) == "string" and world.component "material"(m) or m
+	assert(type(mm) == "table")
+	return load_material(mm, setting)
 end
-
-local math3d = require "math3d"
-local bgfx = require "bgfx"
 
 local function set_uniform(p)
 	return bgfx.set_uniform(p.handle, p.value)
@@ -182,8 +163,18 @@ local function init_material(mm)
 	return ext_material.init(mm)
 end
 
-function m:init()
-	return init_material(self)
+m.init = init_material
+
+local mpt = ecs.transform "material_prefab_transform"
+
+function mpt.process_prefab(e)
+	local c = e._cache_prefab
+	load_material(e.material, c.material_setting, c)
+end
+
+local mst = ecs.transform "material_setting_transform"
+function mst.process_prefab(e)
+	e._cache_prefab.material_setting = {}
 end
 
 local mt = ecs.transform "material_transform"

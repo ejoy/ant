@@ -26,7 +26,6 @@ local ientity   = world:interface "ant.render|entity"
 local lightmap_sys = ecs.system "lightmap_system"
 
 local shading_info
-local lightmap_bake_material
 
 local downsample_viewid_count<const> = 10 --max 1024x1024->2^10
 local lightmap_downsample_viewids = viewidmgr.alloc_viewids(downsample_viewid_count, "lightmap_ds")
@@ -211,21 +210,39 @@ function lightmap_sys:init()
         name = "lightmap camera"
     }
     irender.create_view_queue({x=0, y=0, w=1, h=1}, "lightmap_queue", camera_eid, "lightmap", nil, lightmap_queue_surface_types)
-    lightmap_bake_material = imaterial.load "/pkg/ant.bake/materials/bake.material"
+    
+end
+
+local function load_new_material(material, fx)
+    local s = {BAKING = 1}
+    for k, v in pairs(fx.setting) do
+        s[k] = v
+    end
+    return imaterial.load(material, s)
+end
+
+local function to_none_cull_state(state)
+    local s = bgfx.parse_state(state)
+	s.CULL = "NONE"
+	return bgfx.make_state(s)
 end
 
 function lightmap_sys:end_filter()
-    for e in w:select "filter_result:in render_object:in filter_material:out" do
+    for e in w:select "filter_result:in material:in render_object:in filter_material:out" do
         local fr = e.filter_result
         local fm = e.filter_material
         local le = w:singleton("lightmap_queue", "filter_names:in")
-        
+        local ro = e.render_object
+        local material = e.material
+        material = material._data and tostring(material) or material
         for _, fn in ipairs(le.filter_names) do
             if fr[fn] then
+                local nm = load_new_material(material, ro.fx)
                 fm[fn] = {
-                    fx          = lightmap_bake_material.fx,
-                    properties  = lightmap_bake_material.properties,
-                    state       = lightmap_bake_material.state,
+                    fx          = nm.fx,
+                    properties  = nm.properties,
+                    state       = to_none_cull_state(nm.state),
+                    stencil     = nm.stencil,
                 }
             end
         end
