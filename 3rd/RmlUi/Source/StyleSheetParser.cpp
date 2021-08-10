@@ -178,19 +178,7 @@ bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const std
 
 	for(float selector : rule_values)
 	{
-		auto it = std::find_if(keyframes.blocks.begin(), keyframes.blocks.end(), [selector](const KeyframeBlock& keyframe_block) { return Math::AbsoluteValue(keyframe_block.normalized_time - selector) < 0.0001f; });
-		if (it == keyframes.blocks.end())
-		{
-			keyframes.blocks.emplace_back(selector);
-			it = (keyframes.blocks.end() - 1);
-		}
-		else
-		{
-			// In case of duplicate keyframes, we only use the latest definition as per CSS rules
-			it->properties = PropertyDictionary();
-		}
-
-		it->properties.Import(properties);
+		keyframes.blocks.emplace_back(KeyframeBlock { selector, properties });
 	}
 
 	return true;
