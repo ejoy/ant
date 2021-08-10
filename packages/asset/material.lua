@@ -266,13 +266,15 @@ local function generate_properties(fx, properties)
 	return new_properties
 end
 
-function mt.process_entity(e)
-	local rc = e._rendercache
-	local c = e._cache_prefab
+local function to_renderobj(m, ro)
+	ro.fx 			= m.fx
+	ro.properties 	= generate_properties(m.fx, m.properties)
+	ro.state 		= m.state
+	ro.stencil		= m.stencil
+end
 
-	rc.fx 			= c.fx
-	rc.properties 	= generate_properties(c.fx, c.properties)
-	rc.state 		= c.state
+function mt.process_entity(e)
+	to_renderobj(e._cache_prefab, e._rendercache)
 end
 
 ----material_v2
@@ -280,12 +282,7 @@ local w = world.w
 local ms = ecs.system "material_system"
 function ms:entity_init()
     for v in w:select "INIT material:in material_setting?in render_object:in name:in" do
-		local ro = v.render_object
-
 		local mm = load_material(init_material(v.material), v.material_setting)
-
-		ro.fx 			= mm.fx
-		ro.properties	= generate_properties(mm.fx, mm.properties)
-		ro.state		= mm.state
+		to_renderobj(mm, v.render_object)
 	end
 end
