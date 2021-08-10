@@ -73,7 +73,7 @@ static Property InterpolateProperties(const Property& p0, const Property& p1, fl
 	}
 
 	// Fall back to discrete interpolation for incompatible units.
-	return alpha < 0.5f ? p0 : p1;
+	return alpha != 1.f ? p0 : p1;
 }
 
 //
