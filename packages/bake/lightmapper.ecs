@@ -2,7 +2,7 @@
 system "lightmap_system"
     .implement "lightmapper.lua"
     .method "init"
-    --.method "entity_init"
+    .method "entity_done"
     .method "end_frame"
 
 component_v2 "lightmap".type "lua"
@@ -11,9 +11,18 @@ component_v2 "lightmap".type "lua"
 policy_v2 "lightmap"
     .component_v2 "lightmap"
 
+component_v2 "lightmap_result".type "lua"
+    .require_system "ant.bake|lightmap_system"
+policy_v2 "lightmap_result"
+    .component_v2 "lightmap_result"
+
 policy "lightmap"
     .require_system "ant.bake|lightmap_system"
-    .component "lightmap"
+    .component "lightmap_result"
+
+policy "lightmap_result"
+    .require_system "ant.bake|lightmap_system"
+    .component "lightmap_result"
 
 interface "ilightmap"
     .implement "lightmapper.lua"

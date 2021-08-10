@@ -179,21 +179,33 @@ local function init_shading_info()
         {stage=0, texture={handle=get_rb(1)}},
         {stage=0, texture={handle=get_rb(2)}},
     }
-    for ii=0, downsample_viewid_count-1 do
+    fbmgr.bind(lightmap_viewid, fb[1])
+    bgfx.set_view_rect(lightmap_viewid, 0, 0, bake_fbw, bake_fbh)
+    for ii=1, downsample_viewid_count-1 do
         local vid = lightmap_viewid+ii
         local idx = ii % 2
         fbmgr.bind(vid, fb[idx+1])
-        if vid == lightmap_viewid then
-            bgfx.set_view_rect(vid, 0, 0, bake_fbw, bake_fbh)
-        else
-            bgfx.set_view_rect(vid, 0, 0, hsize, hsize)
-            hsize = hsize / 2
-        end
+        bgfx.set_view_rect(vid, 0, 0, hsize, hsize)
+        hsize = hsize / 2
     end
 
     return {
         fb = fb,
         downsample = create_downsample(),
+    }
+end
+
+local lm_result_eid
+local function create_lightmap_result_entity()
+    return world:create_entity{
+        policy = {
+            "ant.bake|lightmap_result",
+            "ant.general|name",
+        },
+        data = {
+            name = "lightmap_result",
+            lightmap_result = {},
+        },
     }
 end
 
@@ -210,7 +222,15 @@ function lightmap_sys:init()
         name = "lightmap camera"
     }
     irender.create_view_queue({x=0, y=0, w=1, h=1}, "lightmap_queue", camera_eid, "lightmap", nil, lightmap_queue_surface_types)
-    
+    lm_result_eid = create_lightmap_result_entity()
+end
+
+function lightmap_sys:entity_done()
+    local lm_result = w:singleton("lightmap_result")
+
+    for e in w:select "lightmap:in eid:in render_object:in" do
+        
+    end
 end
 
 local function load_new_material(material, fx)
@@ -567,6 +587,8 @@ local function _bake(id)
         log.info "bake entity scene with lightmap setting"
         bake_all()
     end
+
+    world:pub{"bake_finish", id}
 end
 
 local bake_mb = world:sub{"bake"}
