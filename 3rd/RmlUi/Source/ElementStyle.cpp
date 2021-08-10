@@ -545,16 +545,16 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values) {
 			values.border_color.left = p->GetColor();
 			break;
 		case PropertyId::BorderTopLeftRadius:
-			values.border_radius.topLeft = ComputeProperty(p, element);
+			values.border_radius.topLeft = p->ToFloatValue();
 			break;
 		case PropertyId::BorderTopRightRadius:
-			values.border_radius.topRight = ComputeProperty(p, element);
+			values.border_radius.topRight = p->ToFloatValue();
 			break;
 		case PropertyId::BorderBottomRightRadius:
-			values.border_radius.bottomRight = ComputeProperty(p, element);
+			values.border_radius.bottomRight = p->ToFloatValue();
 			break;
 		case PropertyId::BorderBottomLeftRadius:
-			values.border_radius.bottomLeft = ComputeProperty(p, element);
+			values.border_radius.bottomLeft = p->ToFloatValue();
 			break;
 
 		case PropertyId::BackgroundColor:
