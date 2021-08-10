@@ -2,6 +2,8 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
+local math3d = require "math3d"
+
 local s = ecs.system "luaecs_sync_system"
 
 local evCreate = world:sub {"component_register", "scene_entity"}
@@ -47,6 +49,7 @@ function s:luaecs_sync()
 			end
 			local scene_node = {
 				srt = rc.srt,
+				updir = e.updir and math3d.ref(math3d.vector(e.updir)) or nil,
 				aabb = aabb,
 				_self = eid,
 				_parent = parent,
@@ -74,27 +77,16 @@ function s:luaecs_sync()
 			data.render_object_update = true
 			data.filter_material = {}
 			policy[#policy+1] = "ant.scene|render_object"
-		end
-		if isCamera(e) then
-			local id = world:luaecs_create_ref {
-				policy = {
-					"ant.camera|camera_node"
-				},
-				data = {
-					camera_node = rc
-				}
-			}
-			data.camera_id = id
+		elseif isLightmapEntity(e) then
+			data.lightmap = e.lightmap
+			policy[#policy+1] = "ant.baker|lightmap"
+		elseif isCamera(e) then
 			data.camera = {
 				frustum     = e.frustum,
 				clip_range  = e.clip_range,
 				dof         = e.dof,
 			}
 			policy[#policy+1] = "ant.camera|camera"
-		end
-		if isLightmapEntity(e) then
-			data.lightmap = e.lightmap
-			policy[#policy+1] = "ant.baker|lightmap"
 		end
 		world:luaecs_create_entity {
 			policy = policy,

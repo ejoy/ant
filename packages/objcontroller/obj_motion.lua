@@ -11,8 +11,8 @@ local icamera = world:interface "ant.camera|camera"
 local function get_transform(eid)
     if type(eid) == "table" then
         local ref = eid
-        w:sync("camera_node:in", ref)
-        return ref.camera_node
+        w:sync("scene_node(scene_id):in", ref)
+        return ref.scene_node
     end
     return world[eid]._rendercache
 end

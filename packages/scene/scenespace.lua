@@ -161,7 +161,7 @@ function s:update_transform()
 		if type(eid) == "table" then
 			local ref = eid
 			w:sync("scene_node(scene_id):in", ref)
-			node = ref.node
+			node = ref.scene_node
 		else
 			local e = world[eid]
 			local id = e._scene_id
@@ -182,9 +182,11 @@ function s:update_transform()
 			v.scene_changed = true
 		end
 	end
-	for v in w:select "camera_node(camera_id):in scene_node(scene_id):in scene_changed?out" do
-		local r, n = v.camera_node, v.scene_node
+	for v in w:select "camera:in scene_node(scene_id):in scene_changed?out" do
+		local r, n = v.camera, v.scene_node
 		r.worldmat = n._worldmat
+		r.srt = n.srt
+		r.updir = n.updir
 		if n.changed == current_changed then
 			v.scene_changed = true
 		end

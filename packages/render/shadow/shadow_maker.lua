@@ -155,7 +155,7 @@ local function calc_shadow_camera(camera, frustum, lightdir, shadowmap_size, sta
 	local vp = math3d.mul(math3d.projmat(frustum), camera.viewmat)
 
 	local corners_WS = math3d.frustum_points(vp)
-	local camera_rc = world[sc_eid]._rendercache
+	local camera_rc = icamera.find_camera(sc_eid)
 	calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, camera_rc)
 end
 

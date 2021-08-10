@@ -279,11 +279,11 @@ function omni_shadow_sys:data_changed()
     end
 end
 
-local function update_camera_matrices(rc)
-    rc.viewmat	= math3d.inverse(rc.srt)
-    rc.worldmat	= rc.srt
-    rc.projmat	= math3d.projmat(rc.frustum)
-    rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
+local function update_camera_matrices(camera)
+    camera.viewmat	= math3d.inverse(camera.srt)
+    camera.worldmat	= camera.srt
+    camera.projmat	= math3d.projmat(camera.frustum)
+    camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 end
 
 function omni_shadow_sys:update_camera()
@@ -291,8 +291,8 @@ function omni_shadow_sys:update_camera()
         local e = world[eid]
         local leid = e.omni.light_eid
         if world[leid] then
-            local ce = world[e.camera_eid]
-            update_camera_matrices(ce._rendercache)
+            local camera = icamera.find_camera(e.camera_eid)
+            update_camera_matrices(camera)
         else
             log.warn(("entity id:%d, is not exist, but omni shadow entity still here"):format(leid))
         end
