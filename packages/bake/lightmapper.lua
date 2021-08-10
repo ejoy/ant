@@ -16,6 +16,7 @@ local math3d    = require "math3d"
 local bgfx      = require "bgfx"
 local bake      = require "bake"
 local ltask     = require "ltask"
+local crypt     = require "crypt"
 
 local irender   = world:interface "ant.render|irender"
 local imaterial = world:interface "ant.asset|imaterial"
@@ -225,11 +226,12 @@ function lightmap_sys:init()
     lm_result_eid = create_lightmap_result_entity()
 end
 
-function lightmap_sys:entity_done()
-    local lm_result = w:singleton("lightmap_result")
-
-    for e in w:select "lightmap:in eid:in render_object:in" do
-        
+function lightmap_sys:entity_init()
+    for e in w:select "INIT lightmap:in" do
+        local lm = e.lightmap
+        if lm.bake_id == nil then
+            lm.bake_id = "radiosity_" .. crypt.uuid()
+        end
     end
 end
 
