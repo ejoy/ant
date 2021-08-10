@@ -1,11 +1,13 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local math3d = require "math3d"
-local icamera = world:interface "ant.camera|camera"
-local irender = world:interface "ant.render|irender"
-local iom = world:interface "ant.objcontroller|obj_motion"
-local irenderqueue = world:interface "ant.render|irenderqueue"
+local math3d    = require "math3d"
+
+local icamera   = world:interface "ant.camera|camera"
+local irender   = world:interface "ant.render|irender"
+local iom       = world:interface "ant.objcontroller|obj_motion"
+local irq       = world:interface "ant.render|irenderqueue"
+
 local svs = ecs.system "splitviews_system"
 
 local orthoview
@@ -34,87 +36,93 @@ local function rect_from_ratio(rc, ratio)
     }
 end
 
+function svs:init()
+    orthoview = {
+        front = {
+            camera_eid = icamera.create{
+                viewdir = {0, 0, 1, 0},
+                updir   = {0, 1, 0, 0},
+                eyepos  = {0, 0, -5, 0},
+                ortho   = true,
+            },
+            name = "ortho_front",
+            view_ratio = {
+                x = 0.5, y = 0, w = 0.5, h = 0.5,
+            },
+        },
+        back = {
+            camera_eid = icamera.create{
+                viewdir = {0, 0, -1, 0},
+                updir   = {0, 1, 0, 0},
+                eyepos  = {0, 0, 5, 0},
+                ortho   = true,
+            },
+            name = "ortho_back",
+            view_ratio = {
+                x = 0.5, y = 0, w = 0.5, h = 0.5,
+            },
+        },
+        left = {
+            camera_eid = icamera.create{
+                viewdir = {1, 0, 0, 0},
+                updir   = {0, 1, 0, 0},
+                eyepos  = {-5, 0, 0, 0},
+                ortho   = true,
+            },
+            name = "ortho_left",
+            view_ratio = {
+                x = 0, y = 0.5, w = 0.5, h = 0.5,
+            },
+        },
+        right = {
+            camera_eid = icamera.create{
+                viewdir = {-1, 0, 0, 0},
+                updir   = {0, 1, 0, 0},
+                eyepos  = {5, 0, 0, 0},
+                ortho   = true,
+            },
+            name = "ortho_right",
+            view_ratio = {
+                x = 0, y = 0.5, w = 0.5, h = 0.5,
+            },
+        },
+        top = {
+            camera_eid = icamera.create{
+                viewdir = {0, -1, 0, 0},
+                updir   = {0, 0, 1, 0},
+                eyepos  = {0, 5, 0, 0},
+                ortho   = true,
+            },
+            name = "ortho_top",
+            view_ratio = {
+                x = 0.5, y = 0.5, w = 0.5, h = 0.5,
+            },
+        },
+        bottom = {
+            camera_eid = icamera.create{
+            viewdir = {0, 1, 0, 0},
+            updir   = {0, 0, -1, 0},
+            eyepos  = {0, -5, 0, 0},
+            ortho   = true,
+            },
+            name = "ortho_bottom",
+            view_ratio = {
+                x = 0.5, y = 0.5, w = 0.5, h = 0.5,
+            },
+        },
+    }
+
+    for k, v in pairs(orthoview) do
+        irender.create_view_queue({x=0, y=0, w=1, h=1}, v.name, v.camera_eid)
+    end
+end
+
 function svs:entity_init()
     for e in w:select "INIT main_queue camera_eid:in render_target:in" do
-        copy_rect(e.render_target.view_rect, mainqueue_rect)
-
-        orthoview = {
-            front = {
-                camera_eid = icamera.create{
-                    viewdir = {0, 0, 1, 0},
-                    updir   = {0, 1, 0, 0},
-                    eyepos  = {0, 0, -5, 0},
-                    ortho   = true,
-                },
-                name = "ortho_front",
-                view_ratio = {
-                    x = 0.5, y = 0, w = 0.5, h = 0.5,
-                },
-            },
-            back = {
-                camera_eid = icamera.create{
-                    viewdir = {0, 0, -1, 0},
-                    updir   = {0, 1, 0, 0},
-                    eyepos  = {0, 0, 5, 0},
-                    ortho   = true,
-                },
-                name = "ortho_back",
-                view_ratio = {
-                    x = 0.5, y = 0, w = 0.5, h = 0.5,
-                },
-            },
-            left = {
-                camera_eid = icamera.create{
-                    viewdir = {1, 0, 0, 0},
-                    updir   = {0, 1, 0, 0},
-                    eyepos  = {-5, 0, 0, 0},
-                    ortho   = true,
-                },
-                name = "ortho_left",
-                view_ratio = {
-                    x = 0, y = 0.5, w = 0.5, h = 0.5,
-                },
-            },
-            right = {
-                camera_eid = icamera.create{
-                    viewdir = {-1, 0, 0, 0},
-                    updir   = {0, 1, 0, 0},
-                    eyepos  = {5, 0, 0, 0},
-                    ortho   = true,
-                },
-                name = "ortho_right",
-                view_ratio = {
-                    x = 0, y = 0.5, w = 0.5, h = 0.5,
-                },
-            },
-            top = {
-                camera_eid = icamera.create{
-                    viewdir = {0, -1, 0, 0},
-                    updir   = {0, 0, 1, 0},
-                    eyepos  = {0, 5, 0, 0},
-                    ortho   = true,
-                },
-                name = "ortho_top",
-                view_ratio = {
-                    x = 0.5, y = 0.5, w = 0.5, h = 0.5,
-                },
-            },
-            bottom = {
-                camera_eid = icamera.create{
-                viewdir = {0, 1, 0, 0},
-                updir   = {0, 0, -1, 0},
-                eyepos  = {0, -5, 0, 0},
-                ortho   = true,
-                },
-                name = "ortho_bottom",
-                view_ratio = {
-                    x = 0.5, y = 0.5, w = 0.5, h = 0.5,
-                },
-            },
-        }
-
+        local vr = e.render_target.view_rect
+        copy_rect(vr, mainqueue_rect)
         for k, v in pairs(orthoview) do
-            irender.create_view_queue(rect_from_ratio(mainqueue_rect, v.view_ratio), v.name, v.camera_eid)
+            irq.set_view_rect(v.name, rect_from_ratio(vr, v.view_ratio))
         end
     end
 end
@@ -128,21 +136,19 @@ local viewqueue = {
 }
 
 local function show_ortho_view()
-    irenderqueue.set_view_rect(world:singleton_entity_id "main_queue", {x=mainqueue_rect.x, y=mainqueue_rect.y, w=mainqueue_rect.w*0.5, h=mainqueue_rect.h*0.5})
+    irq.set_view_rect(world:singleton_entity_id "main_queue", {x=mainqueue_rect.x, y=mainqueue_rect.y, w=mainqueue_rect.w*0.5, h=mainqueue_rect.h*0.5})
 
     for _, n in ipairs(viewqueue[viewidx]) do
         local v = orthoview[n]
-        local eid = v.eid
-        irenderqueue.set_view_rect(eid, rect_from_ratio(mainqueue_rect, v.view_ratio))
-        irenderqueue.set_visible(eid, true)
+        irq.set_view_rect(v.name, rect_from_ratio(mainqueue_rect, v.view_ratio))
+        irq.set_visible(v.name, true)
     end
 end
 
 local function hide_ortho_view()
-    irenderqueue.set_view_rect(world:singleton_entity_id "main_queue", mainqueue_rect)
-    for _, n in ipairs(viewqueue[viewidx]) do
-        local eid = orthoview[n].eid
-        irenderqueue.set_visible(eid, false)
+    irq.set_view_rect("main_queue", mainqueue_rect)
+    for _, v in pairs(orthoview) do
+        irq.set_visible(v.name, false)
     end
 end
 
@@ -199,7 +205,7 @@ function svs:data_changed()
         for _, _, cameraeids in svcc_mb:unpack() do
             local vq = viewqueue[viewidx]
             for idx, n in ipairs(vq) do
-                irenderqueue.set_camera(orthoview[n].eid, cameraeids[idx])
+                irq.set_camera(orthoview[n].name, cameraeids[idx])
             end
         end
     end
@@ -208,8 +214,8 @@ end
 function svs:update_camera()
     for k, v in pairs(orthoview) do
         local qn = v.name
-        local cameraeid = w:singleton(qn, "camera_eid:in")
-        local camera = icamera.find_camera(cameraeid)
+        local qe = w:singleton(qn, "camera_eid:in")
+        local camera = icamera.find_camera(qe.camera_eid)
         local worldmat = camera.worldmat
         camera.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), camera.updir)
         camera.projmat = math3d.projmat(camera.frustum)

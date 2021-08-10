@@ -1,5 +1,6 @@
 system "splitviews_system"
     .implement "splitviews.lua"
+    .method "init"
     .method "entity_init"
     .method "data_changed"
     .method "update_camera"

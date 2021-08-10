@@ -7,8 +7,8 @@ local bgfx			= require "bgfx"
 local assetmgr		= require "asset"
 local ext_material	= require "ext_material"
 
-local function load_material(m, c)
-	local fx = assetmgr.load_fx(m.fx, c.setting)
+local function load_material(m, c, setting)
+	local fx = assetmgr.load_fx(m.fx, setting)
 	local properties = m.properties
 	if not properties and #fx.uniforms > 0 then
 		properties = {}
@@ -17,13 +17,15 @@ local function load_material(m, c)
 	c.properties	= properties
 	c.state			= m.state
 	c.stencil		= m.stencil
+	return c
 end
 
 local imaterial = ecs.interface "imaterial"
 function imaterial.load(m, setting)
 	local mm = type(m) == "string" and world.component "material"(m) or m
 	assert(type(mm) == "table")
-	return load_material(mm, setting)
+	
+	return load_material(mm, {}, setting)
 end
 
 local function set_uniform(p)
@@ -169,7 +171,7 @@ local mpt = ecs.transform "material_prefab_transform"
 
 function mpt.process_prefab(e)
 	local c = e._cache_prefab
-	load_material(e.material, c.material_setting, c)
+	load_material(e.material, c, c.material_setting)
 end
 
 local mst = ecs.transform "material_setting_transform"
@@ -273,7 +275,7 @@ local w = world.w
 local ms = ecs.system "material_system"
 function ms:entity_init()
     for v in w:select "INIT material:in material_setting?in render_object:in name:in" do
-		local mm = load_material(init_material(v.material), v.material_setting)
+		local mm = load_material(init_material(v.material), {}, v.material_setting)
 		to_renderobj(mm, v.render_object)
 	end
 end

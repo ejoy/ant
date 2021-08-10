@@ -56,14 +56,6 @@ local function reset_viewid_idx()
 end
 
 function pp_sys:init()
-    quad_mesh_eid = world:create_entity {
-        policy = {
-            "ant.render|render",
-        },
-        data = {
-            mesh = ientity.quad_mesh {x=-1, y=-1, w=2, h=2},
-        }
-    }
 end
 
 local mainview_rbhandle
@@ -150,7 +142,7 @@ function ipp.create_pass(name, material, rt, transform, cameraeid)
     local eid = world:create_entity {
         policy = {"ant.render|simplerender"},
         data = {
-            simplemesh  = world[quad_mesh_eid]._rendercache,
+            simplemesh  = ientity.quad_mesh(),
             material    = material,
             transform   = transform,
         }
