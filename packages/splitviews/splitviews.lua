@@ -206,8 +206,10 @@ function svs:data_changed()
 end
 
 function svs:update_camera()
-    for _, eid in world:each "orthoview" do
-        local camera = icamera.find_camera(world[eid].camera_eid)
+    for k, v in pairs(orthoview) do
+        local qn = v.name
+        local cameraeid = w:singleton(qn, "camera_eid:in")
+        local camera = icamera.find_camera(cameraeid)
         local worldmat = camera.worldmat
         camera.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), camera.updir)
         camera.projmat = math3d.projmat(camera.frustum)
