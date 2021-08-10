@@ -85,10 +85,10 @@ function ds:follow_transform_updated()
 
         local mm = math3d.mul(rotateYZ_MAT, rc.worldmat)
 
-        rc.viewmat = math3d.inverse(mm)
-        rc.projmat = math3d.projmat(rc.frustum)
-        rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
+        local viewmat = math3d.inverse(mm)
+        local projmat = math3d.projmat(rc.frustum)
+        local viewprojmat = math3d.mul(projmat, viewmat)
 
-        imaterial.set_property(eid, "u_decal_mat", math3d.mul(rc.worldmat, rc.viewprojmat))
+        imaterial.set_property(eid, "u_decal_mat", math3d.mul(viewprojmat, rc.worldmat))
     end
 end
