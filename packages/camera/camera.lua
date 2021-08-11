@@ -19,6 +19,18 @@ end
 
 local ic = ecs.interface "camera"
 
+local function find_camera(cameraeid)
+    for v in w:select "eid:in camera:in" do
+		if cameraeid == v.eid then
+			return v.camera
+		end
+    end
+    --TODO
+    return world[cameraeid]
+end
+
+ic.find_camera = find_camera
+
 local defaultcamera = {
     eyepos  = {0, 0, 0, 1},
     viewdir = {0, 0, 1, 0},
@@ -100,12 +112,14 @@ end
 ic.bind_queue = bind_queue
 
 function ic.calc_viewmat(eid)
-    local rc = world[eid]._rendercache
-    return math3d.lookto(math3d.index(rc.srt, 4), math3d.index(rc.srt, 3), rc.updir)
+    --TODO
+    local iobj_motion = world:interface "ant.objcontroller|obj_motion"
+    return iobj_motion.calc_viewmat(eid)
 end
 
 function ic.calc_projmat(eid)
-    return math3d.projmat(world[eid]._rendercache.frustum)
+    local camera = find_camera(eid)
+    return math3d.projmat(camera.frustum)
 end
 
 local function view_proj(worldmat, updir, frustum)
@@ -115,36 +129,31 @@ local function view_proj(worldmat, updir, frustum)
 end
 
 function ic.calc_viewproj(eid)
-    local rc = world[eid]._rendercache
-    local _, _, vp = view_proj(rc.srt, rc.updir, rc.frustum)
+    local camera = find_camera(eid)
+    local _, _, vp = view_proj(camera.srt, camera.updir, camera.frustum)
     return vp
 end
 
 function ic.get_frustum(eid)
-    return world[eid]._rendercache.frustum
+    local camera = find_camera(eid)
+    return camera.frustum
 end
 
 function ic.set_frustum(eid, frustum)
-    local rc = world[eid]._rendercache
-    rc.frustum = {}
-    for k, v in pairs(frustum) do rc.frustum[k] = v end
+    local camera = find_camera(eid)
+    camera.frustum = {}
+    for k, v in pairs(frustum) do
+        camera.frustum[k] = v
+    end
     world:pub {"component_changed", "frustum", eid}
 end
 
-function ic.set_updir(eid, updir)
-    world[eid]._rendercache.updir.v = updir
-    world:pub {"component_changed", "updir", eid}
-end
-
 local function frustum_changed(eid, name, value)
-    local e = world[eid]
-    local rc = e._rendercache
-    local f = rc.frustum
-
+    local camera = find_camera(eid)
+    local f = camera.frustum
     if f.ortho then
         error("ortho frustum can not set aspect")
     end
-    
     if f.aspect then
         f[name] = value
         world:pub {"component_changed", "frustum", eid}
@@ -193,16 +202,6 @@ function ic.set_dof_focus_obj(eid, focus_eid)
     dof.focus_eid = focus_eid
     world:pub{"component_changed", "dof", focus_eid, "focus_entity",}
 end
-
-local function find_camera(cameraeid)
-    for v in w:select "eid:in camera:in" do
-		if cameraeid == v.eid then
-			return v.camera
-		end
-    end
-end
-
-ic.find_camera = find_camera
 
 local function set_dof(e, dof)
     e._dof = {
