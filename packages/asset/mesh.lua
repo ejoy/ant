@@ -28,6 +28,31 @@ function mbt.process_entity(e)
 end
 
 local mpt = ecs.transform "mesh_prefab_transform"
+
+local function crete_rendermesh(mesh)
+	if mesh then
+		local handles = {}
+		local vb = {
+			start   = mesh.vb.start,
+			num     = mesh.vb.num,
+			handles = handles,
+		}
+		for _, v in ipairs(mesh.vb) do
+			handles[#handles+1] = v.handle
+		end
+		local ib
+		if mesh.ib then
+			ib = {
+				start	= mesh.ib.start,
+				num 	= mesh.ib.num,
+				handle	= mesh.ib.handle,
+			}
+		end
+
+		return vb, ib
+	end
+end
+
 function mpt.process_prefab(e)
 	local mesh = e.mesh
 	local c = e._cache_prefab
@@ -80,6 +105,8 @@ end
 function imesh.create_ib(ib)
 	return ext_meshbin.proxy_ib(ib)
 end
+
+imesh.create_rendermesh = crete_rendermesh
 
 ----mesh_v2
 local w = world.w
