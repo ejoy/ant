@@ -34,8 +34,11 @@ private:
 
     struct ScissorRect{
         glm::vec4 rectVerteices[2]{glm::vec4(0), glm::vec4(0)};
+        uint16_t lastScissorId = UINT16_MAX;
         bool needShaderClipRect = false;
         void submitScissorRect(bgfx_encoder_t* encoder, const shader_info &si);
+        void setScissorRect(bgfx_encoder_t* encoder, const glm::u16vec4 *r);
+        void setShaderScissorRect(bgfx_encoder_t* encoder, const glm::vec4 r[2]);
 
         #ifdef _DEBUG
         void drawDebugScissorRect(bgfx_encoder_t *encoder, uint16_t viewid, uint16_t progid);

@@ -163,12 +163,32 @@ void Renderer::ScissorRect::drawDebugScissorRect(bgfx_encoder_t *encoder, uint16
 }
 #endif //_DEBUG
 
+void Renderer::ScissorRect::setShaderScissorRect(bgfx_encoder_t* encoder, const glm::vec4 r[2]){
+    needShaderClipRect = true;
+    lastScissorId = UINT16_MAX;
+    rectVerteices[0] = r[0];
+    rectVerteices[1] = r[1];
+    BGFX(encoder_set_scissor_cached)(encoder, UINT16_MAX);
+}
+
+void Renderer::ScissorRect::setScissorRect(bgfx_encoder_t* encoder, const glm::u16vec4 *r) {
+    needShaderClipRect = false;
+    if (r == nullptr){
+        lastScissorId = UINT16_MAX;
+        BGFX(encoder_set_scissor_cached)(encoder, UINT16_MAX);
+    } else {
+        lastScissorId = BGFX(encoder_set_scissor)(encoder, r->x, r->y, r->z, r->w);
+    }
+}
+
 void Renderer::ScissorRect::submitScissorRect(bgfx_encoder_t* encoder, const shader_info &si){
     if (needShaderClipRect) {
         auto uniformIdx = si.find_uniform("u_clip_rect");
         if (uniformIdx != UINT16_MAX) {
             BGFX(encoder_set_uniform)(encoder, { uniformIdx }, rectVerteices, sizeof(rectVerteices) / sizeof(rectVerteices[0]));
         }
+    } else {
+        BGFX(encoder_set_scissor_cached)(encoder, lastScissorId);
     }
 }
 
@@ -177,20 +197,15 @@ void Renderer::SetTransform(const glm::mat4x4& transform) {
 }
 
 void Renderer::SetClipRect() {
-    mScissorRect.needShaderClipRect = false;
-    BGFX(encoder_set_scissor_cached)(mEncoder, UINT16_MAX);
+    mScissorRect.setScissorRect(mEncoder, nullptr);
 }
 
 void Renderer::SetClipRect(const glm::u16vec4& r) {
-    mScissorRect.needShaderClipRect = false;
-    BGFX(encoder_set_scissor)(mEncoder, r.x, r.y, r.z, r.w);
+    mScissorRect.setScissorRect(mEncoder, &r);
 }
 
 void Renderer::SetClipRect(glm::vec4 r[2]) {
-    mScissorRect.needShaderClipRect = true;
-    mScissorRect.rectVerteices[0] = r[0];
-    mScissorRect.rectVerteices[1] = r[1];
-    BGFX(encoder_set_scissor_cached)(mEncoder, UINT16_MAX);
+    mScissorRect.setShaderScissorRect(mEncoder, r);
 }
 
 bool Renderer::LoadTexture(Rml::TextureHandle& handle, Rml::Size& dimensions, const std::string& path){
