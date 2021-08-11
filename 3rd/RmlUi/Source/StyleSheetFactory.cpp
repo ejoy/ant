@@ -111,50 +111,6 @@ std::shared_ptr<StyleSheet> StyleSheetFactory::GetStyleSheet(const std::string& 
 	return sheet;
 }
 
-std::shared_ptr<StyleSheet> StyleSheetFactory::GetStyleSheet(const std::vector<std::string>& sheets)
-{
-	// Generate a unique key for these sheets
-	std::string combined_key;
-	for (size_t i = 0; i < sheets.size(); i++)
-	{		
-		URL path(sheets[i]);
-		combined_key += path.GetFileName();
-	}
-
-	// Look up the sheet definition in the cache.
-	StyleSheets::iterator itr = instance->stylesheet_cache.find(combined_key);
-	if (itr != instance->stylesheet_cache.end())
-	{
-		return (*itr).second;
-	}
-
-	// Load and combine the sheets.
-	std::shared_ptr<StyleSheet> sheet;
-	for (size_t i = 0; i < sheets.size(); i++)
-	{
-		std::shared_ptr<StyleSheet> sub_sheet = GetStyleSheet(sheets[i]);
-		if (sub_sheet)
-		{
-			if (sheet)
-			{
-				std::shared_ptr<StyleSheet> new_sheet = sheet->CombineStyleSheet(*sub_sheet);
-				sheet = std::move(new_sheet);
-			}
-			else
-				sheet = sub_sheet;
-		}
-		else
-			Log::Message(Log::Level::Error, "Failed to load style sheet %s.", sheets[i].c_str());
-	}
-
-	if (!sheet)
-		return nullptr;
-
-	// Add to cache, and a reference to the sheet to hold it in the cache.
-	instance->stylesheet_cache[combined_key] = sheet;
-	return sheet;
-}
-
 // Clear the style sheet cache.
 void StyleSheetFactory::ClearStyleSheetCache()
 {
