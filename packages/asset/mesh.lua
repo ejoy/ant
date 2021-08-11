@@ -89,7 +89,7 @@ function imesh.create_ib(ib)
 	return ext_meshbin.proxy_ib(ib)
 end
 
-imesh.create_rendermesh = crete_rendermesh
+imesh.create_rendermesh = create_rendermesh
 
 ----mesh_v2
 local w = world.w
