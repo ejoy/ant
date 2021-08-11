@@ -312,6 +312,7 @@ protected:
 	void UpdatePerspective();
 	void UpdateGeometry();
 	void DirtyTransform();
+	void DirtyClip();
 	void UpdateClip();
 
 	/// Start an animation, replacing any existing animations of the same property name. If start_value is null, the element's current value is used.
@@ -372,15 +373,18 @@ protected:
 	bool dirty_transform = false;
 
 	bool dirty_clip = false;
-	enum class Clip {
-		None,
-		Scissor,
-		Shader,
-	} clip_type = Clip::None;
-	union {
-		glm::u16vec4 scissor;
-		glm::vec4 shader[2];
+	struct Clip {
+		enum class Type {
+			None,
+			Scissor,
+			Shader,
+		} type = Type::None;
+		union {
+			glm::u16vec4 scissor;
+			glm::vec4 shader[2];
+		};
 	} clip;
+	void UnionClip(Clip& clip);
 
 	bool dirty_stacking_context = false;
 	bool dirty_structure = false;
