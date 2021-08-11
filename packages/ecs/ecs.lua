@@ -296,7 +296,9 @@ function world:pipeline_func(what)
 		for i = 1, #list do
 			local v = list[i]
 			local f, proxy = v[1], v[2]
-			--local _ <close> = self:memory_stat(v[5] .. "|" .. v[3] .. "." .. v[4])
+			--local key = v[5] .. "|" .. v[3] .. "." .. v[4]
+			--local _ <close> = self:memory_stat(key)
+			--local _ <close> = self:cpu_stat(key)
 			f(proxy)
 		end
 	end
@@ -325,6 +327,25 @@ function world:memory_stat(what)
 	ms.res = res
 	ltask.mem_count(ms.start)
 	return ms
+end
+
+local function finish_cpu_stat(cs)
+	local _, now = ltask.now()
+	local delta = now - cs.now
+	local t = cs.total[cs.what]
+	if t then
+		cs.total[cs.what] = t + delta
+	else
+		cs.total[cs.what] = delta
+	end
+end
+
+function world:cpu_stat(what)
+	local cs = self._cpu_stat
+	local _, now = ltask.now()
+	cs.now = now
+	cs.what = what
+	return cs
 end
 
 local function remove_entity(w, e)
@@ -394,6 +415,7 @@ function m.new_world(config)
 		_uniques = {},
 		_memory = {},
 		_memory_stat = setmetatable({start={}, finish={}}, {__close = finish_memory_stat}),
+		_cpu_stat = setmetatable({total={}}, {__close = finish_cpu_stat}),
 		w = config.w
 	}, world)
 
