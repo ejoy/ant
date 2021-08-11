@@ -63,8 +63,7 @@ local function submit_render_objects(viewid, filternames, culltag)
 			("%s render_object:in filter_material?in"):format(fn)
 
 		for e in w:select(s) do
-			local fm = e.filter_material
-			irender.draw(viewid, e.render_object, fm and fm[fn] or nil)
+			irender.draw(viewid, e.render_object, e.filter_material[fn])
 		end
 	end
 end
