@@ -12,12 +12,13 @@ void main()
 	mat4 wm = u_world[0];
 #else //!BAKING
 	mat4 wm = get_world_matrix();
-	v_posWS = mul(wm, vec4(a_position, 1.0));
-#	ifdef ENABLE_SHADOW
-	v_posWS.w = mul(u_view, v_posWS).z;
-#	endif //ENABLE_SHADOW
 #endif //BAKING
+
+	v_posWS = mul(wm, vec4(a_position, 1.0));
 	gl_Position   = mul(u_viewProj, v_posWS);
+#if !defined(BAKING) &&	defined(ENABLE_SHADOW)
+	v_posWS.w = mul(u_view, v_posWS).z;
+#endif //ENABLE_SHADOW
 
 	//TODO: normal and tangent should use inverse transpose matrix
 	v_normal	= normalize(mul(wm, vec4(a_normal, 0.0)).xyz);
