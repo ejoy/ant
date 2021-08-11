@@ -25,8 +25,6 @@ local function find_camera(cameraeid)
 			return v.camera
 		end
     end
-    --TODO
-    return world[cameraeid]
 end
 
 ic.find_camera = find_camera
@@ -38,7 +36,7 @@ local defaultcamera = {
     name = "default_camera",
 }
 
-function ic.create(info, v2)
+function ic.create(info)
     info = info or defaultcamera
     local frustum = info.frustum
     if not frustum then
@@ -52,36 +50,42 @@ function ic.create(info, v2)
         end
     end
 
-    local policy = {
-        "ant.camera|camera",
-        "ant.general|name",
-    }
-
-    local dof = info.dof
-    if dof then
-        policy[#policy+1] = "ant.camera|dof"
-    end
-
     local viewmat = math3d.lookto(info.eyepos, info.viewdir, info.updir)
-    return world:create_entity {
-        policy = policy,
+    local eid = world:register_entity()
+    world:luaecs_create_entity {
+        policy = {
+            "ant.general|name",
+            "ant.camera|camera",
+            "ant.scene|scene_object",
+        },
         data = {
-            name        = info.name or "DEFAULT_CAMERA",
-            transform   = math3d.inverse(viewmat),
-            updir       = info.updir,
-            frustum     = frustum,
-            clip_range  = info.clip_range,
-            scene_entity= true,
-            camera      = true,
-            dof         = dof,
+            eid = eid,
+            camera = {
+                frustum = frustum,
+                clip_range = info.clip_range,
+                dof = info.dof,
+            },
+            name = info.name or "DEFAULT_CAMERA",
+            scene_id = world:luaecs_create_ref {
+                policy = {
+                    "ant.scene|scene_node"
+                },
+                data = {
+                    scene_node = {
+                        srt = math3d.ref(math3d.matrix(math3d.inverse(viewmat))),
+                        updir = info.updir and math3d.ref(math3d.vector(info.updir)) or nil,
+                        _self = eid,
+                    },
+                    INIT = true,
+                }
+            }
         }
     }
+    return eid
 end
 
 local function bind_queue(cameraeid, queuename)
     irq.set_camera(queuename, cameraeid)
-    local vr = irq.view_rect(queuename)
-    ic.set_frustum_aspect(cameraeid, vr.w / vr.h)
 end
 
 local function has_queue(qn)

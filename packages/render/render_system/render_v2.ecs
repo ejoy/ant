@@ -62,6 +62,7 @@ policy_v2 "render_pipeline"
 
 component_v2 "visible"
 component_v2 "camera_eid".type "int"
+component_v2 "camera_changed"
 component_v2 "queue_name".type "lua"
 component_v2 "filter_names".type "lua"
 policy_v2 "render_queue"

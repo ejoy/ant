@@ -140,7 +140,7 @@ function s:entity_init()
 			local eid = node._self
 			if eid then
 				local e = world[eid]
-				if e.parent then
+				if e and e.parent then
 					inherit_entity_state(e)
 					inherit_material(e)
 				end

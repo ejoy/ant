@@ -119,8 +119,8 @@ function irq.set_frame_buffer(queuename, fbidx)
 end
 
 function irq.set_camera(queuename, cameraeid)
-	local qe = {camera_eid = cameraeid}
-	w:singleton(queuename, "camera_eid:out", qe)
+	local qe = {camera_eid = cameraeid, camera_changed = true}
+	w:singleton(queuename, "camera_eid:out camera_changed?out", qe)
 	world:pub{"component_changed", "camera_eid", queuename}
 end
 
@@ -152,6 +152,11 @@ function rt_sys:entity_init()
 	for v in w:select "INIT render_target:in name:in" do
 		irq.update_rendertarget(v.render_target)
 	end
+	for v in w:select "camera_changed camera_eid:in render_target:in" do
+		local vr = v.render_target.view_rect
+		icamera.set_frustum_aspect(v.camera_eid, vr.w / vr.h)
+	end
+	w:clear "camera_changed"
 end
 
 function rt_sys:entity_remove()

@@ -55,7 +55,7 @@ function S.init(nwh, context, width, height)
 		width = width,
 		height = height,
 	}
-	bgfx.set_debug "ST"
+	--bgfx.set_debug "ST"
 	bgfx.encoder_init()
 	import_package "ant.render".init_bgfx()
 	bgfx.encoder_begin()

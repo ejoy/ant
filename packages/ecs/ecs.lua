@@ -140,6 +140,12 @@ function world:create_entity_template(v)
 	}
 end
 
+function world:register_entity()
+	local eid = self._entity_id + 1
+	self._entity_id = eid
+	return eid
+end
+
 function world:create_entity(v)
 	local args = {}
 	if v.action and v.action.mount then
