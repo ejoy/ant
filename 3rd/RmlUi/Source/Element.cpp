@@ -798,6 +798,14 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 		changed_properties.Contains(PropertyId::TransformOriginZ))
 	{
 		DirtyTransform();
+		if (clip.type != Clip::Type::None) {
+			DirtyClip();
+		}
+	}
+
+	if (changed_properties.Contains(PropertyId::Overflow))
+	{
+		DirtyClip();
 	}
 
 	if (changed_properties.Contains(PropertyId::Animation))
@@ -908,6 +916,7 @@ void Element::SetParent(Element* _parent) {
 
 	// The transform state may require recalculation.
 	DirtyTransform();
+	DirtyClip();
 	DirtyPerspective();
 
 	if (!parent)
@@ -1309,6 +1318,7 @@ void Element::UpdateGeometry() {
 void Element::UpdateLayout() {
 	if (Node::UpdateMetrics() && Node::IsVisible()) {
 		DirtyTransform();
+		DirtyClip();
 		dirty_background = true;
 		dirty_image = true;
 		dirty_border = true;
@@ -1343,18 +1353,58 @@ Element* Element::GetElementAtPoint(Point point, const Element* ignore_element) 
 	return nullptr;
 }
 
+static glm::u16vec4 UnionScissor(const glm::u16vec4& a, glm::u16vec4& b) {
+	auto x = std::max(a.x, b.x);
+	auto y = std::max(a.y, b.y);
+	auto mx = std::min(a.x+a.z, b.x+b.z);
+	auto my = std::min(a.y+a.w, b.y+b.w);
+	return {x, y, mx - x, my - y};
+}
+
+void Element::UnionClip(Clip& c) {
+	switch (clip.type) {
+	case Clip::Type::None:
+		return;
+	case Clip::Type::Shader:
+		c = clip;
+		return;
+	case Clip::Type::Scissor:
+		break;
+	}
+	switch (c.type) {
+	case Clip::Type::None:
+		c = clip;
+		return;
+	case Clip::Type::Shader:
+		c = clip;
+		return;
+	case Clip::Type::Scissor:
+		c.scissor = UnionScissor(c.scissor, clip.scissor);
+		return;
+	}
+}
+
 void Element::UpdateClip() {
 	if (!dirty_clip)
 		return;
 	dirty_clip = false;
+	for (auto& child : children) {
+		child->DirtyClip();
+	}
 
 	if (GetLayout().GetOverflow() == Layout::Overflow::Visible) {
-		clip_type = Clip::None;
+		clip.type = Clip::Type::None;
+		if (parent) {
+			parent->UnionClip(clip);
+		}
 		return;
 	}
 	Size size = GetMetrics().frame.size;
 	if (size.IsEmpty()) {
-		clip_type = Clip::None;
+		clip.type = Clip::Type::None;
+		if (parent) {
+			parent->UnionClip(clip);
+		}
 		return;
 	}
 	Rect scissorRect{ {}, size };
@@ -1373,32 +1423,40 @@ void Element::UpdateClip() {
 		&& corners[2].x == corners[1].x
 		&& corners[2].y == corners[3].y
 	) {
-		clip_type = Clip::Scissor;
+		clip.type = Clip::Type::Scissor;
 		clip.scissor.x = (glm::u16)std::floor(corners[0].x);
 		clip.scissor.y = (glm::u16)std::floor(corners[0].y);
 		clip.scissor.z = (glm::u16)std::ceil(corners[2].x - clip.scissor.x);
 		clip.scissor.w = (glm::u16)std::ceil(corners[2].y - clip.scissor.y);
-		return;
 	}
-	clip_type = Clip::Shader;
-	clip.shader[0].x = corners[0].x; clip.shader[0].y = corners[0].y;
-	clip.shader[0].z = corners[1].x; clip.shader[0].w = corners[1].y;
-	clip.shader[1].z = corners[2].x; clip.shader[1].w = corners[2].y;
-	clip.shader[1].x = corners[3].x; clip.shader[1].y = corners[3].y;
+	else {
+		clip.type = Clip::Type::Shader;
+		clip.shader[0].x = corners[0].x; clip.shader[0].y = corners[0].y;
+		clip.shader[0].z = corners[1].x; clip.shader[0].w = corners[1].y;
+		clip.shader[1].z = corners[2].x; clip.shader[1].w = corners[2].y;
+		clip.shader[1].x = corners[3].x; clip.shader[1].y = corners[3].y;
+	}
+
+	if (parent) {
+		parent->UnionClip(clip);
+	}
 }
 
 void Element::SetRednerStatus() {
 	auto render = GetRenderInterface();
 	render->SetTransform(transform);
-	switch (clip_type) {
-	case Clip::None:    render->SetClipRect();             break;
-	case Clip::Scissor: render->SetClipRect(clip.scissor); break;
-	case Clip::Shader:  render->SetClipRect(clip.shader);  break;
+	switch (clip.type) {
+	case Clip::Type::None:    render->SetClipRect();             break;
+	case Clip::Type::Scissor: render->SetClipRect(clip.scissor); break;
+	case Clip::Type::Shader:  render->SetClipRect(clip.shader);  break;
 	}
 }
 
 void Element::DirtyTransform() {
 	dirty_transform = true;
+}
+
+void Element::DirtyClip() {
 	dirty_clip = true;
 }
 
