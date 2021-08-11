@@ -50,11 +50,6 @@ function iobj_motion.set_direction(eid, dir)
     set_changed(eid)
 end
 
-function iobj_motion.get_updir(eid, dir)
-    local srt = get_srt(eid)
-    return math3d.index(srt, 2)
-end
-
 function iobj_motion.set_srt(eid, srt)
     get_srt(eid).m = srt
     set_changed(eid)
@@ -272,4 +267,9 @@ function iobj_motion.screen_to_ndc(eid, pt2d, vp_size)
     vp_size = vp_size or main_queue_viewport_size()
     local ndc = mu.pt2D_to_NDC(pt2d, vp_size)
     return {ndc[1], ndc[2], pt2d[3]}
+end
+
+function iobj_motion.calc_viewmat(eid)
+    local rc = get_transform(eid)
+    return math3d.lookto(math3d.index(rc.srt, 4), math3d.index(rc.srt, 3), rc.updir)
 end

@@ -8,7 +8,6 @@ interface "obj_motion"
     .method "get_direction"
     .method "get_rotation"
     .method "set_rotation"
-    .method "get_updir"
     --
 
     .method "get_scale"
@@ -32,3 +31,5 @@ interface "obj_motion"
 
     .method "ray"
     .method "screen_to_ndc"
+
+    .method "calc_viewmat"
