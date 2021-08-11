@@ -62,7 +62,7 @@ function m:entity_done()
 		camera_reset(camera_init_eye_pos, camera_init_target)
 	end
 end
-local keypress_mb = world:sub{"keyboard"}
+
 local PAN_LEFT = false
 local PAN_RIGHT = false
 local ZOOM_FORWARD = false
@@ -76,6 +76,7 @@ local function update_second_view_camera()
 	rc.viewprojmat = icamera.calc_viewproj(camera_mgr.second_camera)
 end
 
+local keypress_mb = world:sub{"keyboard"}
 local event_camera_edit = world:sub{"CameraEdit"}
 local mouse_drag = world:sub {"mousedrag"}
 local mouse_move = world:sub {"mousemove"}
@@ -104,8 +105,71 @@ local function selectBoundary(hp)
 	return 0
 end
 
+local ctrl_state = false
+
 function m:handle_event()
 	--camera_mgr.select_frustum = false
+
+	for _, what, eid, value in event_camera_edit:unpack() do
+		if what == "target" then
+			camera_mgr.set_target(eid, value)
+			inspector.update_ui()
+		elseif what == "dist" then
+			camera_mgr.set_dist_to_target(eid, value)
+		elseif what == "fov" then
+			icamera.set_frustum_fov(eid, value)
+		elseif what == "near" then
+			icamera.set_frustum_near(eid, value)
+		elseif what == "far" then
+			icamera.set_frustum_far(eid, value)
+		end
+	end
+	
+	update_second_view_camera()
+
+	camera_mgr.select_frustum = (select_area ~= 0)
+	
+	for _, key, press, state in keypress_mb:unpack() do
+		if not state.CTRL and not state.SHIFT then
+			if key == "W" then
+				if press == 1 then
+					ZOOM_FORWARD = true
+				elseif press == 0 then
+					ZOOM_FORWARD = false
+				end
+			elseif key == "S" then
+				if press == 1 then
+					ZOOM_BACK = true
+				elseif press == 0 then
+					ZOOM_BACK = false
+				end
+			elseif key == "A" then
+				if press == 1 then
+					PAN_LEFT = true
+				elseif press == 0 then
+					PAN_LEFT = false
+				end
+			elseif key == "D" then
+				if press == 1 then
+					PAN_RIGHT = true
+				elseif press == 0 then
+					PAN_RIGHT = false
+				end
+			end
+		end
+		ctrl_state = state.CTRL
+	end
+
+	if PAN_LEFT then
+		camera_pan(0.2, 0)
+	elseif PAN_RIGHT then
+		camera_pan(-0.2, 0)
+	elseif ZOOM_FORWARD then
+		camera_zoom(-0.2)
+	elseif ZOOM_BACK then
+		camera_zoom(0.2)
+	end
+	
 	for _, what, x, y in mouse_move:unpack() do
 		if what == "UNKNOWN" then
 			if camera_mgr.camera_list[camera_mgr.second_camera] then
@@ -156,6 +220,20 @@ function m:handle_event()
 		end
 		select_area = 0
 	end
+	
+	for _,what,x,y in event_camera_control:unpack() do
+		if not camera_mgr.select_frustum then
+			if what == "rotate" then
+				camera_rotate(x, y)
+			elseif what == "pan" and not ctrl_state then
+				camera_pan(x, y)
+			elseif what == "zoom" then
+				camera_zoom(x)
+			elseif what == "reset" then
+				camera_reset(camera_init_eye_pos, camera_init_target)
+			end
+		end
+	end
 
 	for _, what, x, y, dx, dy in mouse_drag:unpack() do
 		if what == "LEFT" and select_area ~= 0 then
@@ -171,76 +249,4 @@ function m:handle_event()
 		end
 	end
 
-	for _, what, eid, value in event_camera_edit:unpack() do
-		if what == "target" then
-			camera_mgr.set_target(eid, value)
-			inspector.update_ui()
-		elseif what == "dist" then
-			camera_mgr.set_dist_to_target(eid, value)
-		elseif what == "fov" then
-			icamera.set_frustum_fov(eid, value)
-		elseif what == "near" then
-			icamera.set_frustum_near(eid, value)
-		elseif what == "far" then
-			icamera.set_frustum_far(eid, value)
-		end
-	end
-	
-	update_second_view_camera()
-
-	camera_mgr.select_frustum = (select_area ~= 0)
-
-	for _,what,x,y in event_camera_control:unpack() do
-		if not camera_mgr.select_frustum then
-			if what == "rotate" then
-				camera_rotate(x, y)
-			elseif what == "pan" then
-				camera_pan(x, y)
-			elseif what == "zoom" then
-				camera_zoom(x)
-			elseif what == "reset" then
-				camera_reset(camera_init_eye_pos, camera_init_target)
-			end
-		end
-	end
-	
-	for _, key, press, state in keypress_mb:unpack() do
-		if not state.CTRL and not state.SHIFT then
-			if key == "W" then
-				if press == 1 then
-					ZOOM_FORWARD = true
-				elseif press == 0 then
-					ZOOM_FORWARD = false
-				end
-			elseif key == "S" then
-				if press == 1 then
-					ZOOM_BACK = true
-				elseif press == 0 then
-					ZOOM_BACK = false
-				end
-			elseif key == "A" then
-				if press == 1 then
-					PAN_LEFT = true
-				elseif press == 0 then
-					PAN_LEFT = false
-				end
-			elseif key == "D" then
-				if press == 1 then
-					PAN_RIGHT = true
-				elseif press == 0 then
-					PAN_RIGHT = false
-				end
-			end
-		end
-	end
-
-	if PAN_LEFT then
-		camera_pan(0.2, 0)
-	elseif PAN_RIGHT then
-		camera_pan(-0.2, 0)
-	elseif ZOOM_FORWARD then
-		camera_zoom(-0.2)
-	elseif ZOOM_BACK then
-		camera_zoom(0.2)
-	end
 end

@@ -946,6 +946,8 @@ local mouse_pos_x
 local mouse_pos_y
 local imgui = require "imgui"
 
+local ctrl_state = false
+
 local function on_mouse_move()
 	if gizmo_seleted then return end
 	local viewport = imgui.GetMainViewport()
@@ -1049,7 +1051,7 @@ function gizmo_sys:handle_event()
 	end
 	
 	on_mouse_move()
-
+	
 	for _, what, x, y, dx, dy in mouse_drag:unpack() do
 		if what == "LEFT" then
 			if light_gizmo_mode ~= 0 then
@@ -1063,7 +1065,9 @@ function gizmo_sys:handle_event()
 			elseif gizmo.mode == gizmo_const.ROTATE and rotate_axis then
 				rotate_gizmo(x, y)
 			else
-				world:pub { "camera", "pan", dx, dy }
+				if not ctrl_state then
+					world:pub { "camera", "pan", dx, dy }
+				end
 			end
 		elseif what == "RIGHT" then
 			world:pub { "camera", "rotate", dx, dy }
@@ -1073,7 +1077,7 @@ function gizmo_sys:handle_event()
 	end
 	
 	for _,pick_id,pick_ids in pickup_mb:unpack() do
-        local eid = pick_id
+		local eid = pick_id
 		if eid and world[eid] then
 			if gizmo.mode ~= gizmo_const.SELECT and not gizmo_seleted then
 				gizmo:set_target(eid)
@@ -1099,6 +1103,7 @@ function gizmo_sys:handle_event()
 				end
 			end
 		end
+		ctrl_state = state.CTRL
 	end
 	update_global_axis()
 end

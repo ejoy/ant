@@ -3,8 +3,8 @@ local math3d    = require "math3d"
 local hierarchy = require "hierarchy"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
-local uiproperty    = require "widget.uiproperty"
-
+local uiproperty = require "widget.uiproperty"
+local global_data = require "common.global_data"
 local world
 local prefab_mgr
 local m = {}
@@ -147,6 +147,13 @@ local grid_size_ui = {0.2, speed = 0.1, min = 0.1, max = 10}
 local grid_row_ui = {2, speed = 1, min = 2, max = 1000}
 local grid_col_ui = {2, speed = 1, min = 2, max = 1000}
 local brush_color_ui = {1.0, 1.0, 1.0, 0.5}
+local visible_ui = {true}
+local current_grid
+
+function m.set_grid(grid)
+    current_grid = grid
+    visible_ui[1] = grid.visible
+end
 
 function m.show()
     local viewport = imgui.GetMainViewport()
@@ -157,6 +164,7 @@ function m.show()
         if imgui.widget.Button("Create") then
             imgui.windows.OpenPopup(title)
         end
+
         local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize"})
         if change then
             local label = "Grid Size : "
@@ -190,13 +198,29 @@ function m.show()
             end
             imgui.windows.EndPopup()
         end
-        local color_label = "BrushColor"
-        imgui.widget.PropertyLabel(color_label)
-        if imgui.widget.ColorEdit("##"..color_label, brush_color_ui) then
-            world:pub {"GridMesh", "brushcolor", brush_color_ui[1], brush_color_ui[2], brush_color_ui[3], brush_color_ui[4]}
+        imgui.cursor.SameLine()
+        if imgui.widget.Button("Load") then
+            local path = uiutils.get_open_file_path("Lua", ".lua")
+            if path then
+                current_grid:load(string.sub(path, #global_data.project_root:string() + 2, -5))
+            end
         end
-
-        --show_panel(property)
+        if current_grid then
+            imgui.widget.PropertyLabel("Show")
+            if imgui.widget.Checkbox("##Show", visible_ui) then
+                current_grid:show(visible_ui[1])
+            end
+            local color_label = "BrushColor"
+            imgui.widget.PropertyLabel(color_label)
+            if imgui.widget.ColorEdit("##"..color_label, brush_color_ui) then
+                world:pub {"GridMesh", "brushcolor", brush_color_ui[1], brush_color_ui[2], brush_color_ui[3], brush_color_ui[4]}
+            end
+            if current_grid.data then
+                if imgui.widget.Button("Save") then
+                    current_grid:save()
+                end
+            end
+        end
     end
 end
 
