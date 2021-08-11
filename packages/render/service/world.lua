@@ -37,6 +37,7 @@ local function Render()
 			world:pipeline_update()
 			bgfx.encoder_end()
 			encoderBegin = false
+			--local _ <close> = world:cpu_stat "bgfx.frame"
 			rhwi.frame()
 		end
 		if world then
@@ -54,7 +55,7 @@ function S.init(nwh, context, width, height)
 		width = width,
 		height = height,
 	}
-	--bgfx.set_debug "ST"
+	bgfx.set_debug "ST"
 	bgfx.encoder_init()
 	import_package "ant.render".init_bgfx()
 	bgfx.encoder_begin()
