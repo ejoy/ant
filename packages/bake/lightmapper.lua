@@ -202,7 +202,7 @@ local function init_shading_info()
 end
 
 local lightmap_queue_surface_types<const> = {
-    "foreground", "opaticy", "background",
+    "foreground", "opacity", "background",
 }
 function lightmap_sys:init()
     shading_info = init_shading_info()
