@@ -21,7 +21,7 @@ policy "collider_policy"
 component_v2 "collider"
     .type "lua"
 
-policy_v2 "collider_policy"
+policy_v2 "collider"
     .require_system "ant.collision|collider_system"
     .component_v2 "collider"
 

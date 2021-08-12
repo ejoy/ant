@@ -81,7 +81,7 @@ function s:luaecs_sync()
 			policy[#policy+1] = "ant.baker|lightmap"
 		elseif isCollider(e) then
 			data.collider = e.collider
-			policy[#policy+1] = "ant.collider|collider"
+			policy[#policy+1] = "ant.collision|collider"
 		elseif isEffekseer(e) then
 			data.effekseer = e.effekseer
 			policy[#policy+1] = "ant.effekseer|effekseer"
