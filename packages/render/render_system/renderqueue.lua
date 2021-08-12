@@ -119,9 +119,9 @@ function irq.set_frame_buffer(queuename, fbidx)
 end
 
 function irq.set_camera(queuename, cameraeid)
-	local qe = {camera_eid = cameraeid, camera_changed = true}
-	w:singleton(queuename, "camera_eid:out camera_changed?out", qe)
-	world:pub{"component_changed", "camera_eid", queuename}
+	local qe = {camera_changed = true}
+	w:singleton(queuename, "camera_changed?out shadow_render_queue:in", qe)
+	qe.shadow_render_queue.camera_eid = cameraeid
 end
 
 function irq.set_visible(queuename, b)
@@ -152,9 +152,14 @@ function rt_sys:entity_init()
 	for v in w:select "INIT render_target:in name:in" do
 		irq.update_rendertarget(v.render_target)
 	end
-	for v in w:select "camera_changed camera_eid:in render_target:in" do
+	for v in w:select "camera_changed camera_eid:out render_target:in shadow_render_queue:in main_queue?out" do
 		local vr = v.render_target.view_rect
+		v.camera_eid = v.shadow_render_queue.camera_eid
 		icamera.set_frustum_aspect(v.camera_eid, vr.w / vr.h)
+		--TODO
+		if v.main_queue then
+			world:pub{"component_changed", "camera_eid", "main_queue"}
+		end
 	end
 	w:clear "camera_changed"
 end

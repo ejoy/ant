@@ -164,6 +164,7 @@ function irender.create_view_queue(view_rect, view_queuename, camera_eid, filter
 			cull_tag			= {},
 			visible 			= false,
 			watch_screen_buffer	= true,
+			shadow_render_queue = {},
 		}
 	}
 end
@@ -222,6 +223,7 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 			visible = true,
 			pre_depth_queue = true,
 			watch_screen_buffer = true,
+			shadow_render_queue = {},
 		}
 	}
 end
@@ -289,6 +291,7 @@ function irender.create_main_queue(view_rect, camera_eid)
 			main_queue = true,
 			watch_screen_buffer = true,
 			queue_name = "main_queue",
+			shadow_render_queue = {},
 		}
 	}
 end
@@ -330,6 +333,7 @@ function irender.create_blit_queue(viewrect)
 			INIT = true,
 			name = "blit_queue",
 			queue_name  = "blit_queue",
+			shadow_render_queue = {},
 		}
 	}
 

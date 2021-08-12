@@ -235,6 +235,7 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 			queue_name = queuename,
 			csm_queue = true,
 			name = "csm" .. index,
+			shadow_render_queue = {},
 		},
 	}
 end

@@ -60,6 +60,9 @@ policy_v2 "render_pipeline"
     .require_policy_v2 "ant.render|forward_render"
     .require_policy_v2 "ant.render|cluster_render"
 
+component_v2 "shadow_render_queue"
+    .type "lua"
+
 component_v2 "visible"
 component_v2 "camera_eid".type "int"
 component_v2 "camera_changed"
@@ -72,6 +75,7 @@ policy_v2 "render_queue"
     .component_v2 "queue_name"
     .component_v2 "camera_eid"
     .component_v2 "filter_names"
+    .component_v2 "shadow_render_queue"
 
 component_v2 "cull_tag".type "lua"
 policy_v2 "cull"

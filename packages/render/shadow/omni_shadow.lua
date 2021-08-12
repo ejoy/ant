@@ -249,6 +249,7 @@ function ios.create(point_eid)
                 INIT = true,
                 visible = false,
                 omni_queue = true,
+                shadow_render_queue = {},
             },
         }
     end

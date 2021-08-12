@@ -225,6 +225,7 @@ local function create_pick_entity()
 			pickup_queue= true,
 			INIT		= true,
 			visible		= false,
+			shadow_render_queue = {},
 		}
 
 	}
