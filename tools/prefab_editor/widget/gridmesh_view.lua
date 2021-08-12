@@ -4,7 +4,6 @@ local hierarchy = require "hierarchy"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local uiproperty = require "widget.uiproperty"
-local global_data = require "common.global_data"
 local world
 local prefab_mgr
 local m = {}
@@ -202,7 +201,7 @@ function m.show()
         if imgui.widget.Button("Load") then
             local path = uiutils.get_open_file_path("Lua", ".lua")
             if path then
-                current_grid:load(string.sub(path, #global_data.project_root:string() + 2, -5))
+                current_grid:load(path)
             end
         end
         if current_grid then
@@ -217,7 +216,13 @@ function m.show()
             end
             if current_grid.data then
                 if imgui.widget.Button("Save") then
-                    current_grid:save()
+                    current_grid:save(current_grid.filename)
+                end
+                if current_grid.filename then
+                    imgui.cursor.SameLine()
+                    if imgui.widget.Button("SaveAs") then
+                        current_grid:save()
+                    end
                 end
             end
         end

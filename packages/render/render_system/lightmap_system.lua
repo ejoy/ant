@@ -3,14 +3,15 @@ local world = ecs.world
 local w = world.w
 
 local imaterial = world:interface "ant.asset|imaterial"
+local assetmgr = import_package "ant.asset"
 
-local lm_rt_sys = ecs.system "lightmap_system"
+local lm_sys = ecs.system "lightmap_system"
 
-function lm_rt_sys:entity_init()
+function lm_sys:entity_init()
     for e in w:select "INIT lightmap_result:in" do
         local lmr = e.lightmap_result
         for _, bi in pairs(lmr) do
-            bi.texture.handle = imaterial.load_texture(bi.texture.path)
+            bi.texture = assetmgr.resource(bi.texture)
         end
     end
 end
@@ -23,7 +24,7 @@ local function get_baked_material(mf, setting)
     return imaterial.load(mf, s)
 end
 
-function lm_rt_sys:end_filter()
+function lm_sys:end_filter()
     for e in w:select "filter_result:in lightmap:in render_object:in filter_material:in material:in" do
         local lr_e = w:singleton "lightmap_result"
         local r = lr_e.lightmap_result

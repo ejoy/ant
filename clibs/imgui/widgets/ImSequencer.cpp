@@ -347,7 +347,7 @@ namespace ImSequencer
 			int diffFrame = int((cx - movingPos) / framePixelWidth);
 			movingPos += int(diffFrame * framePixelWidth);
 			if (io.KeyAlt/*move_keyframe*/) {
-				if (std::abs(diffFrame) > 0 && sourceKeyFrame > 0) {
+				if (std::abs(diffFrame) > 0 && sourceKeyFrame >= 0) {
 					if (movingPart == 3) {
 						movingKeyFrame += diffFrame;
 					}

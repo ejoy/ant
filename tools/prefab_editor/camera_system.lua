@@ -23,13 +23,13 @@ local rotation_speed <const> = 1
 
 local function view_to_world(view_pos)
 	--local camerasrt = iom.srt(irq.main_camera())
-	iom.worldmat(irq.main_camera())
-	return math3d.transform(iom.worldmat(irq.main_camera()), view_pos, 0)
+	local camer_worldmat = iom.worldmat(irq.main_camera())
+	return math3d.transform(camer_worldmat, view_pos, 0)
 end
 
 local function camera_update_eye_pos(camera)
-	local cameraeid = irq.main_camera()
-	iom.set_position(cameraeid, math3d.sub(camera_target, math3d.mul(iom.get_direction(cameraeid), camera_distance)))
+	local camera_ref = irq.main_camera()
+	iom.set_position(camera_ref, math3d.sub(camera_target, math3d.mul(iom.get_direction(camera_ref), camera_distance)))
 end
 
 local function camera_rotate(dx, dy)
@@ -55,7 +55,7 @@ local function camera_reset(eyepos, target)
 	iom.set_view(irq.main_camera(), eyepos, math3d.normalize(math3d.sub(camera_target, eyepos)))
 end
 
-local mb_camera_changed = world:sub{"component_changed", "camera_eid", "main_queue"}
+local mb_camera_changed = world:sub{"camera_changed", "main_queue"}
 
 function m:entity_done()
 	for _ in mb_camera_changed:each() do
@@ -70,10 +70,10 @@ local ZOOM_BACK = false
 local icamera = world:interface "ant.camera|camera"
 local function update_second_view_camera()
     if not camera_mgr.second_camera then return end
-    local rc = world[camera_mgr.second_camera]._rendercache
-	rc.viewmat = icamera.calc_viewmat(camera_mgr.second_camera)
-    rc.projmat = icamera.calc_projmat(camera_mgr.second_camera)--math3d.projmat(world[camera_mgr.second_camera]._rendercache.frustum)--
-	rc.viewprojmat = icamera.calc_viewproj(camera_mgr.second_camera)
+    -- local rc = world[camera_mgr.second_camera]._rendercache
+	-- rc.viewmat = icamera.calc_viewmat(camera_mgr.second_camera)
+    -- rc.projmat = icamera.calc_projmat(camera_mgr.second_camera)--math3d.projmat(world[camera_mgr.second_camera]._rendercache.frustum)--
+	-- rc.viewprojmat = icamera.calc_viewproj(camera_mgr.second_camera)
 end
 
 local keypress_mb = world:sub{"keyboard"}

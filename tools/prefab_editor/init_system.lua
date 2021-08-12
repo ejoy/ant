@@ -16,13 +16,13 @@ local gd            = require "common.global_data"
 local bb_a = ecs.action "bind_billboard_camera"
 function bb_a.init(prefab, idx, value)
     local eid = prefab[idx]
-    local cameraeid = prefab[value]
-    if cameraeid == nil then
-        for e in w:select "main_queue camera_eid:in" do
-            cameraeid = e.camera_eid
+    local camera_ref = prefab[value]
+    if camera_ref == nil then
+        for e in w:select "main_queue camera_ref:in" do
+            camera_ref = e.camera_ref
         end
     end
-    world[eid]._rendercache.camera_eid = cameraeid
+    world[eid]._rendercache.camera_ref = camera_ref
 end
 
 local m = ecs.system 'init_system'
@@ -69,7 +69,8 @@ function m:entity_init()
         local main_camera = icamera.create {
             eyepos = {-200, 100, 200, 1},
             viewdir = {2, -1, -2, 0},
-            frustum = {n = 1, f = 1000 }
+            frustum = {n = 1, f = 1000 },
+            updir = {0.0, 1.0, 0.0, 0}
         }
         icamera.bind(main_camera, "main_queue")
         camera_mgr.main_camera = main_camera
@@ -79,12 +80,13 @@ function m:entity_init()
         local second_camera = icamera.create {
             eyepos = {2, 2, -2, 1},
             viewdir = {-2, -1, 2, 0},
-            frustum = {n = 1, f = 100 }
+            frustum = {n = 1, f = 100 },
+            updir = {0.0, 1.0, 0.0, 0}
         }
-        local rc = world[second_camera]._rendercache
-        rc.viewmat = icamera.calc_viewmat(second_camera)
-        rc.projmat = icamera.calc_projmat(second_camera)
-        rc.viewprojmat = icamera.calc_viewproj(second_camera)
+        -- local rc = icamera.find_camera(second_camera)
+        -- rc.viewmat = icamera.calc_viewmat(second_camera)
+        -- rc.projmat = icamera.calc_projmat(second_camera)
+        -- rc.viewprojmat = icamera.calc_viewproj(second_camera)
         camera_mgr.second_view_camera = second_camera
         camera_mgr.set_second_camera(second_camera, false)
     end

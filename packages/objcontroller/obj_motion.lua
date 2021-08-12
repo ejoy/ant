@@ -18,8 +18,6 @@ local function get_transform(eid)
     if e then
         return e._rendercache
     end
-    --TODO
-    return icamera.find_camera(eid)
 end
 
 local function get_srt(eid)
@@ -108,7 +106,24 @@ function iobj_motion.get_rotation(eid)
 end
 
 function iobj_motion.worldmat(eid)
-    return get_transform(eid).worldmat
+    if type(eid) == "table" then
+        --camera
+        local camera = icamera.find_camera(eid)
+        return camera.worldmat
+    end
+    local e = world[eid]
+    if e then
+        if e.mesh then
+            --render object
+            return e._rendercache.worldmat
+        end
+        for v in w:select "eid:in" do
+            if v.eid == eid then
+                w:sync("scene_node(scene_id):in", v)
+                return v.scene_node._worldmat
+            end
+        end
+    end
 end
 
 function iobj_motion.lookto(eid, eyepos, viewdir, updir)

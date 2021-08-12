@@ -148,10 +148,6 @@ local camera_frustum_mb
 local light_mb = world:sub{"component_register", "light_type"}
 
 function cfs:post_init()
-    -- local mq_eid = world:singleton_entity_id "main_queue"
-    -- cr_camera_mb = world:sub{"component_changed", "camera_eid", mq_eid}
-    -- camera_frustum_mb = world:sub{"component_changed", "frustum", world[mq_eid].camera_eid}
-
     cluster_buffers.light_info.handle = ilight.light_buffer()
 
     --build
@@ -219,15 +215,6 @@ function cfs:render_preprocess()
         check_light_index_list()
     end
 
-    -- local mq = world:singleton_entity "main_queue"
-    -- for _ in cr_camera_mb:each() do
-        build_cluster_aabb_struct()
-    --     camera_frustum_mb = world:sub{"component_changed", "frustum", mq.camera_eid}
-    -- end
-
-    --for _ in camera_frustum_mb:each() do
-    --    build_cluster_aabb_struct()
-    --end
-
+    build_cluster_aabb_struct()
     cull_lights()
 end

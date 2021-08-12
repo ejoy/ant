@@ -130,7 +130,7 @@ local default_clear_state<const> = {
 	clear = "CD",
 }
 
-function irender.create_view_queue(view_rect, view_queuename, camera_eid, filtertype, exclude, surfacetypes)
+function irender.create_view_queue(view_rect, view_queuename, camera_ref, filtertype, exclude, surfacetypes)
 	surfacetypes = surfacetypes or SURFACE_TYPES["main_queue"]
 	filtertype = filtertype or "visible"
 	w:register{name = view_queuename}
@@ -147,7 +147,7 @@ function irender.create_view_queue(view_rect, view_queuename, camera_eid, filter
 			"ant.general|name",
 		},
 		data = {
-			camera_eid = assert(camera_eid),
+			camera_ref = assert(camera_ref),
 			render_target = {
 				viewid		= viewidmgr.generate(view_queuename),
 				view_mode 	= "s",
@@ -175,8 +175,8 @@ local rb_flag = samplerutil.sampler_flag {
 	V="CLAMP",
 }
 
-function irender.create_pre_depth_queue(view_rect, camera_eid)
-	local fnames, ct = create_primitive_filter_entities "pre_depth_queue"
+function irender.create_pre_depth_queue(view_rect, camera_ref)
+	local fnames = create_primitive_filter_entities "pre_depth_queue"
 
 	local fbidx = fbmgr.create{
 		fbmgr.create_rb{
@@ -202,7 +202,7 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 			"ant.general|name",
 		},
 		data = {
-			camera_eid = camera_eid,
+			camera_ref = camera_ref,
 			render_target = {
 				viewid = viewidmgr.get "depth",
 				clear_state = {
@@ -214,13 +214,14 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 				view_rect = view_rect,
 				fb_idx = fbidx,
 			},
-			filter_names = fnames,
-			cull_tag = ct,
-			queue_name = "pre_depth_queue",
-			name = "pre_depth_queue",
-			visible = true,
+			filter_names 	= fnames,
+			cull_tag 		= {},
+			queue_name 		= "pre_depth_queue",
+			name 			= "pre_depth_queue",
+			visible 		= true,
 			pre_depth_queue = true,
 			watch_screen_buffer = true,
+			INIT			= true,
 			shadow_render_queue = {},
 		}
 	}
@@ -257,7 +258,7 @@ local function create_main_fb(view_rect)
 	return fbmgr.create(render_buffers)
 end
 
-function irender.create_main_queue(view_rect, camera_eid)
+function irender.create_main_queue(view_rect, camera_ref)
 	local fbidx = create_main_fb(view_rect)
 
 	local filternames = create_primitive_filter_entities "main_queue"
@@ -271,7 +272,7 @@ function irender.create_main_queue(view_rect, camera_eid)
 		},
 		data = {
 			name = "main_queue",
-			camera_eid = camera_eid,
+			camera_ref = camera_ref,
 			render_target = {
 				viewid = viewidmgr.get "main_view",
 				view_mode = "s",
@@ -306,7 +307,7 @@ function irender.create_blit_queue(viewrect)
 			"ant.general|name",
 		},
 		data = {
-			camera_eid = icamera.create({
+			camera_ref = icamera.create({
 				eyepos = mc.ZERO_PT,
 				viewdir = mc.ZAXIS,
 				updir = mc.YAXIS,
@@ -324,13 +325,13 @@ function irender.create_blit_queue(viewrect)
 					w = viewrect.w or 1, h = viewrect.h or 1,
 				},
 			},
-			filter_names = fitlernames,
-			visible = true,
-			blit_queue = true,
+			filter_names 	= fitlernames,
+			visible 		= true,
+			blit_queue 		= true,
 			watch_screen_buffer = true,
-			INIT = true,
-			name = "blit_queue",
-			queue_name  = "blit_queue",
+			INIT 			= true,
+			name 			= "blit_queue",
+			queue_name  	= "blit_queue",
 			shadow_render_queue = {},
 		}
 	}

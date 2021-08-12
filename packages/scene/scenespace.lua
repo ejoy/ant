@@ -136,7 +136,7 @@ function s:entity_init()
 	current_changed = current_changed + 1
 
 	local hashmap = {}
-	for v in w:select "INIT scene:in scene_id:out eid:in" do
+	for v in w:select "INIT scene:in scene_id:out" do
 		local scene = v.scene
 		v.scene_id = world:luaecs_create_ref {
 			scene_node = scene,
@@ -145,14 +145,14 @@ function s:entity_init()
 		if scene._self then
 			hashmap[scene._self] = v.scene_id
 		end
-		local e = world[v.eid]
-		if e then
-			e._scene_id = v.scene_id
-		end
 	end
 	w:clear "scene"
 
-	for v in w:select "INIT scene_id:in" do
+	for v in w:select "INIT scene_id:in eid:in" do
+		local e = world[v.eid]
+		if e and e.parent and not hashmap[e.parent] then
+			hashmap[e.parent] = findSceneId(e.parent)
+		end
 		mount_scene_node(hashmap, v.scene_id)
 		needsync = true
 	end

@@ -58,16 +58,16 @@ end
 
 local icamera
 local global_data = require "common.global_data"
-function m.world_to_screen(camera_eid, world_pos)
-	local vp = icamera.calc_viewproj(camera_eid)
-	local proj_pos = math3d.totable(math3d.transform(vp, world_pos, 1))
-	return {(1 + proj_pos[1] / proj_pos[4]) * global_data.viewport.w * 0.5, (1 - proj_pos[2] / proj_pos[4]) * global_data.viewport.h * 0.5, 0}
+function m.world_to_screen(camera_ref, world_pos)
+	local vp = icamera.calc_viewproj(camera_ref)
+	local proj_pos = math3d.totable(math3d.transformH(vp, world_pos, 1))
+	return {(proj_pos[1] + 1) * global_data.viewport.w * 0.5, (1 - (proj_pos[2] + 1) * 0.5) * global_data.viewport.h, 0}
 end
 
 local mu = import_package "ant.math".util
 
-function m.ndc_to_world(camera_eid, ndc)
-	local viewproj = icamera.calc_viewproj(camera_eid)
+function m.ndc_to_world(camera_ref, ndc)
+	local viewproj = icamera.calc_viewproj(camera_ref)
     local invviewproj = math3d.inverse(viewproj)
 	return math3d.transformH(invviewproj, ndc, 1)
 end

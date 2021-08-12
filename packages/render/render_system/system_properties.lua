@@ -107,9 +107,9 @@ local function get_sky_entity()
 	return sky_eid
 end
 
-local function main_camera_eid()
-	for v in w:select "main_queue camera_eid:in" do
-		return v.camera_eid
+local function main_camera_ref()
+	for v in w:select "main_queue camera_ref:in" do
+		return v.camera_ref
 	end
 end
 
@@ -121,8 +121,8 @@ end
 
 
 local function update_lighting_properties()
-	local cameraeid = main_camera_eid()
-	system_properties["u_eyepos"].id = iom.get_position(cameraeid)
+	local camera_ref = main_camera_ref()
+	system_properties["u_eyepos"].id = iom.get_position(camera_ref)
 
 	system_properties["u_light_count"].v = {world:count "light_type", 0, 0, 0}
 
@@ -146,7 +146,7 @@ local function update_lighting_properties()
 		local cs = world:singleton_entity "cluster_render"
 		local cluster_size = cs.cluster_render.cluster_size
 		system_properties["u_cluster_size"].v	= cluster_size
-		local f = icamera.get_frustum(cameraeid)
+		local f = icamera.get_frustum(camera_ref)
 		local near, far = f.n, f.f
 		system_properties["u_cluster_shading_param"].v	= {vr.w, vr.h, near, far}
 		local num_depth_slices = cluster_size[3]
@@ -180,14 +180,14 @@ end
 local function update_csm_properties()
 	local csm_matrixs = system_properties.u_csm_matrix
 	local split_distances = {0, 0, 0, 0}
-	for v in w:select "csm_queue visible csm:in camera_eid:in" do
+	for v in w:select "csm_queue visible csm:in camera_ref:in" do
 		local csm = v.csm
 
 		local idx = csm.index
 		local split_distanceVS = csm.split_distance_VS
 		if split_distanceVS then
 			split_distances[idx] = split_distanceVS
-			local camera = icamera.find_camera(v.camera_eid)
+			local camera = icamera.find_camera(v.camera_ref)
 			csm_matrixs[csm.index].id = math3d.mul(ishadow.crop_matrix(idx), camera.viewprojmat)
 		end
 	end

@@ -1,6 +1,9 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
+
+local lfs = require "filesystem.local"
+local image = require "image"
 require "bake_mathadapter"
 
 local renderpkg = import_package "ant.render"
@@ -217,12 +220,12 @@ function lightmap_sys:init()
     shading_info = init_shading_info()
 
     --we will not use this camera
-    local camera_eid = icamera.create{
+    local camera_ref = icamera.create{
         viewdir = mc.ZAXIS,
         eyepos = mc.ZERO_PT,
         name = "lightmap camera"
     }
-    irender.create_view_queue({x=0, y=0, w=1, h=1}, "lightmap_queue", camera_eid, "lightmap", nil, lightmap_queue_surface_types)
+    irender.create_view_queue({x=0, y=0, w=1, h=1}, "lightmap_queue", camera_ref, "lightmap", nil, lightmap_queue_surface_types)
     lm_result_eid = create_lightmap_result_entity()
 end
 
@@ -235,10 +238,96 @@ function lightmap_sys:entity_init()
     end
 end
 
+local bake_finish_mb = world:sub{"bake_finish"}
+local function gen_name(bakeid, name)
+    if name == nil then
+        return bakeid
+    end
+    return name .. bakeid:sub(#bakeid-8, #bakeid)
+end
+
+local function default_tex_info(w, h, fmt)
+    local bits = image.getBitsPerPixel(fmt)
+    local s = (bits//8) * w * h
+    return {
+        width=w, height=h, format=fmt,
+        numLayers=1, numMips=1, storageSize=s,
+        bitsPerPixel=bits,
+        depth=1, cubeMap=false,
+    }
+end
+
+local texfile_content<const> = [[
+normalmap: false
+path: %s
+sRGB: true
+compress:
+    android: ASTC6x6
+    ios: ASTC6x6
+    windows: BC3
+sampler:
+    MAG: LINEAR
+    MIN: LINEAR
+    U: CLAMP
+    V: CLAMP
+]]
+
+local function save_lightmap(e)
+    local lm = e.lightmap
+    local lme = w:singleton("lightmap_path:in", "lightmap_result:in")
+
+    local filename = lme.lightmap_path / gen_name(lm.bakeid, e.name)
+    lme.lightmap_result[lm.bake_id] = filename
+
+    local ti = default_tex_info(lm.size, lm.size, "RGBA32F")
+    local lmdata = lm.data
+    local m = bgfx.memory_buffer(lmdata:data(), ti.storageSize, lmdata)
+    local c = image.encode_image(ti, m, {type = "dds", format="RGBA8", srgb=false})
+    local f = lfs.open(filename, "wb")
+    f:write(c)
+    f:close()
+
+    local tc = texfile_content:format(filename:string())
+    local texfile = filename:replace_extension "texture"
+    f = lfs.open(texfile, "w")
+    f:write(tc)
+    f:close()
+    
+    lme.lightmap_result[lm.bake_id] = texfile
+end
+
+function lightmap_sys:data_changed()
+    for e in w:select "bake_finished lightmap:in render_object:in" do
+        e.render_object_update = true
+        local lm = e.lightmap
+        save_lightmap(e)
+
+        local s = lm.size * lm.size * 4 * 4
+        local mem = bgfx.memory_buffer(lm:data(), s, lm)
+        local flags = sampler.sampler_flag {
+            MIN="LINEAR",
+            MAG="LINEAR",
+        }
+    
+        local lm_handle = bgfx.create_texture2d(lm.size, lm.size, false, 1, "RGBA32F", flags, mem)
+        -- local assetmgr = import_package "ant.asset"
+        -- local lm_handle = assetmgr.resource "/pkg/ant.lightmap_baker/textures/lm.texture".handle
+        imaterial.set_property(example_eid, "s_lightmap", {
+            stage = 0,
+            texture = {
+                handle = lm_handle
+            }
+        })
+    end
+
+end
+
 local function load_new_material(material, fx)
-    local s = {BAKING = 1}
+    local s = {BAKING_LIGHTMAP = 1}
     for k, v in pairs(fx.setting) do
-        s[k] = v
+        if k ~= "ENABLE_SHADOW" then
+            s[k] = v
+        end
     end
     return imaterial.load(material, s)
 end

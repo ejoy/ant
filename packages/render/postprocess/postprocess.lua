@@ -77,8 +77,8 @@ local function render_pass(input, out_viewid, pass)
         error("input and output as same render buffer handle")
     end
 
-    if pass.camera_eid then
-        local camera_rc = world[pass.camera_eid]._rendercache
+    if pass.camera_ref then
+        local camera_rc = icamera.find_camera(pass.camera_ref)
         bgfx.set_view_transform(out_viewid, camera_rc.viewmat, camera_rc.projmat)
     else
         bgfx.set_view_transform(out_viewid, mc.IDENTITY_MAT, mc.IDENTITY_MAT)
@@ -138,7 +138,7 @@ function ipp.add_technique(name, tech)
     techniques[name] = tech
 end
 
-function ipp.create_pass(name, material, rt, transform, cameraeid)
+function ipp.create_pass(name, material, rt, transform, camera_ref)
     local eid = world:create_entity {
         policy = {"ant.render|simplerender"},
         data = {
@@ -152,7 +152,7 @@ function ipp.create_pass(name, material, rt, transform, cameraeid)
         name            = name,
         renderitem      = world[eid]._rendercache,
         render_target   = rt,
-        camera_eid      = cameraeid,
+        camera_ref      = camera_ref,
         eid             = eid,
     }
 end

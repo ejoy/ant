@@ -69,12 +69,12 @@ local renderinfo = {
     end
 }
 
-local camera_eid
+local camera_ref
 
 function auto_hm_sys:init()
     depthmaterial = imaterial.load "/pkg/ant.heightmap/assets/depth.material"
 
-    camera_eid = icamera.create{
+    camera_ref = icamera.create{
         frustum = {
             l = -hrbsize,
             r = hrbsize,
@@ -169,9 +169,9 @@ local function fetch_heightmap_data()
     local xoffset, zoffset = movestep/2, movestep/2
     local ypos = math3d.index(math3d.index(sceneaabb, 2), 2)
 
-    local f = icamera.get_frustum(camera_eid)
+    local f = icamera.get_frustum(camera_ref)
     f.n, f.f = znear, zfar
-    icamera.set_frustum(camera_eid, f)
+    icamera.set_frustum(camera_ref, f)
 
     local buffers ={}
     for iz=1, znumpass do
@@ -179,9 +179,9 @@ local function fetch_heightmap_data()
         for ix=1, xnumpass do
             local xpos = (ix-1) * movestep + xoffset + aabb_min[1]
             local camerapos = math3d.vector(xpos, ypos, zpos)
-            iom.set_position(camera_eid, camerapos)
+            iom.set_position(camera_ref, camerapos)
 
-            local viewmat, projmat = icamera.calc_viewmat(camera_eid), icamera.calc_projmat(camera_eid)
+            local viewmat, projmat = icamera.calc_viewmat(camera_ref), icamera.calc_projmat(camera_ref)
             bgfx.encoder_begin()
             bgfx.touch(renderinfo.auto_hm_viewid)
             bgfx.set_view_transform(renderinfo.auto_hm_viewid, viewmat, projmat)

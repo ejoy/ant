@@ -1,0 +1,8 @@
+---
+prefab: ./light.prefab
+---
+prefab: ./camera.prefab
+---
+prefab: ./procedural_sky.prefab
+---
+prefab: ./box.prefab
