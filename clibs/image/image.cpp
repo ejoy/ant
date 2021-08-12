@@ -99,60 +99,62 @@ lpack_memory(lua_State *L){
     return 0;
 }
 
+static bimg::TextureFormat::Enum
+format_from_field(lua_State *L, int idx, const char* fieldname){
+    auto t = lua_getfield(L, idx, fieldname);
+    if (t == LUA_TSTRING){
+        const char* fmtname = lua_tostring(L, -1);
+        lua_pop(L, 1);
+        return bimg::getFormat(fmtname);
+    }
+    lua_pop(L, 1);
+    return bimg::TextureFormat::Unknown;
+}
+
 static int
 lencode_image(lua_State *L){
-    bimg::ImageContainer ic;
-    {
-        bimg::TextureInfo info;
-        lua_struct::unpack(L, 1, info);
-        lua_getfield(L, 1, "format");
-        const char* fmtname = lua_tostring(L, -1);
-        info.format = bimg::getFormat(fmtname);
-        lua_pop(L, 1);
-
-        if (info.format == bimg::TextureFormat::Count){
-            return luaL_error(L, "invalid format:%s", fmtname);
-        }
-
-        ic.m_width  = info.width;
-        ic.m_height = info.height;
-        ic.m_format = info.format;
-        ic.m_size   = info.storageSize;
-        ic.m_numLayers = info.numLayers;
-        ic.m_numMips = info.numMips;
-        ic.m_offset = 0;
-        ic.m_depth = info.depth;
-        ic.m_cubeMap = info.cubeMap;
-        ic.m_data = nullptr;
-        ic.m_allocator = nullptr;
-    }
-
+    bx::DefaultAllocator allocator;
+    
+    bimg::TextureInfo info;
+    lua_struct::unpack(L, 1, info);
+    info.format = format_from_field(L, 1, "format");
+    assert(info.format != bimg::TextureFormat::Unknown);
     struct memory *m = (struct memory *)luaL_checkudata(L, 2, "BGFX_MEMORY");
 
-    luaL_checktype(L, 3, LUA_TTABLE);
-    auto get_type = [L](int idx){
-        auto t = lua_getfield(L, idx, "type");
-        if (t != LUA_TSTRING){
-            luaL_error(L, "invalid 'type' define in arg: %d, need string, like:dds, tga, png", t);
-        }
-        auto tt = lua_tostring(L, -1);
-        lua_pop(L, 1);
-        return tt;
-    };
+    bimg::ImageContainer ic;
+    ic.m_width      = info.width;
+    ic.m_height     = info.height;
+    ic.m_format     = info.format;
+    ic.m_size       = info.storageSize;
+    ic.m_numLayers  = info.numLayers;
+    ic.m_numMips    = info.numMips;
+    ic.m_offset     = 0;
+    ic.m_depth      = info.depth;
+    ic.m_cubeMap    = info.cubeMap;
+    ic.m_data       = m->data;
+    ic.m_allocator  = nullptr;
 
-    const char* image_type = get_type(3);
+    luaL_checktype(L, 3, LUA_TTABLE);
+    const char* image_type = nullptr;
+    lua_struct::unpack_field(L, 3, "type", image_type);
+    bimg::TextureFormat::Enum dst_format = format_from_field(L, 3, "format");
+    
+    bimg::ImageContainer *new_ic = nullptr;
+    if (dst_format != bimg::TextureFormat::Unknown && dst_format != ic.m_format){
+        new_ic = bimg::imageConvert(&allocator, dst_format, ic, true);
+    }
 
     bx::Error err;
     if (strcmp(image_type, "dds") == 0){
-        bx::DefaultAllocator allocator;
         bx::MemoryBlock mb(&allocator);
         bx::MemoryWriter sw(&mb);
-        ic.m_ktx = ic.m_ktxLE = false;
-        encode_dds_info ei;
-        lua_struct::unpack(L, 3, ei);
-        ic.m_srgb = ei.srgb;
-        
-        const int32_t filesize = bimg::imageWriteDds(&sw, ic, m->data, (uint32_t)m->size, &err);
+
+        auto t_ic = new_ic ? new_ic : &ic;
+
+        t_ic->m_ktx = t_ic->m_ktxLE = false;
+        lua_struct::unpack_field(L, 3, "srgb", t_ic->m_srgb);
+
+        const int32_t filesize = bimg::imageWriteDds(&sw, *t_ic, t_ic->m_data, (uint32_t)m->size, &err);
         lua_pushlstring(L, (const char*)mb.more(), filesize);
     } else if (strcmp(image_type, "ktx") == 0){
 
@@ -166,6 +168,10 @@ lencode_image(lua_State *L){
 
     if (!err.isOk()){
         luaL_error(L, err.getMessage().getPtr());
+    }
+
+    if (new_ic){
+        bimg::imageFree(new_ic);
     }
     return 1;
 }
