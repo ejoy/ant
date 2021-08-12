@@ -281,13 +281,13 @@ local function save_lightmap(e, lme)
 end
 
 function lightmap_sys:data_changed()
-    local lme = w:singleton("lightmap_path:in", "lightmap_result:in")
-    for e in w:select "bake_finish lightmap:in render_object:in render_object_update:out" do
-        e.render_object_update = true
-        save_lightmap(e, lme)
+    for lme in w:select "lightmapper lightmap_path:in lightmap_result:in" do
+        for e in w:select "bake_finish lightmap:in render_object:in render_object_update:out" do
+            e.render_object_update = true
+            save_lightmap(e, lme)
+        end
+        w:clear "bake_finish"
     end
-
-    w:clear "bake_finish"
 end
 
 local function load_new_material(material, fx)

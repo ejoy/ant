@@ -14,6 +14,7 @@ function lm_sys:init()
         },
         data = {
             name = "lightmap_result",
+            lightmapper = true,
             lightmap_result = {},
             lightmap_path = "",
         },
@@ -30,7 +31,7 @@ end
 
 function lm_sys:end_filter()
     for e in w:select "filter_result:in lightmap:in render_object:in filter_material:in material:in" do
-        local lr_e = w:singleton "lightmap_result"
+        local lr_e = w:singleton("lightmapper", "lightmap_result:in")
         local r = lr_e.lightmap_result
         local mq = w:singleton("main_queue", "filter_names")
         local fr = e.filter_result

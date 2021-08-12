@@ -14,10 +14,12 @@ policy_v2 "lightmap"
     .component_v2 "lightmap"
 
 component_v2 "bake_finish"
+component_v2 "lightmapper"
 component_v2 "lightmap_path".type "lua"
 component_v2 "lightmap_result".type "lua"
     .require_system "ant.bake|lightmap_system"
 policy_v2 "lightmap_result"
+    .component_v2 "lightmapper"
     .component_v2 "lightmap_result"
     .component_v2 "lightmap_path"
 

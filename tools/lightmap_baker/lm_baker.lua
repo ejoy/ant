@@ -12,9 +12,12 @@ local sceneprefab_baked<const> = "/pkg/ant.tool.lightmap_baker/assets/scene/scen
 
 function lm_baker:init_world()
 	world:instance(sceneprefab)
-	local lme = w:singleton "ligthamap_path:out"
-	lme.lightmap_path = "/pkg/ant.tool.lightmap_baker/lightmaps"
-	lfs.create_directories(lfs.path(lme.lightmap_path))
+
+	for e in w:select "lightmapper lightmap_path:out" do
+		local p = "/pkg/ant.tool.lightmap_baker/lightmaps"
+		e.lightmap_path = p
+		lfs.create_directories(lfs.path(p))
+	end
 	--world:pub{"bake"}	--bake all scene
 end
 
@@ -33,7 +36,7 @@ end
 
 function lm_baker:data_changed()
 	for _ in bake_finish_mb:each() do
-		for e in w:select "lightmap_result:in lightmap_path:in" do
+		for e in w:select "lightmapper lightmap_result:in lightmap_path:in" do
 			local pp = lfs.path(sceneprefab_baked)
 			save_txt_file(pp:parent_path() / "lightmap_result.prefab", e)
 		end
