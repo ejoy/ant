@@ -274,8 +274,10 @@ end
 local w = world.w
 local ms = ecs.system "material_system"
 function ms:entity_init()
-    for v in w:select "INIT material:in material_setting?in render_object:in name:in" do
-		local mm = load_material(init_material(v.material), {}, v.material_setting)
-		to_renderobj(mm, v.render_object)
+    for e in w:select "INIT material:in material_setting?in render_object:in name:in" do
+		if type(e.material) == "string" then
+			local mm = load_material(init_material(e.material), {}, e.material_setting)
+			to_renderobj(mm, e.render_object)
+		end
 	end
 end

@@ -11,7 +11,7 @@ local sceneprefab<const> = "/pkg/ant.tool.lightmap_baker/assets/scene/scene.pref
 local sceneprefab_baked<const> = "/pkg/ant.tool.lightmap_baker/assets/scene/scene_baked.prefab"
 
 function lm_baker:init_world()
-	world:instance(sceneprefab)
+	local p = world:instance(sceneprefab)
 
 	for e in w:select "lightmapper lightmap_path:out" do
 		local p = "/pkg/ant.tool.lightmap_baker/lightmaps"

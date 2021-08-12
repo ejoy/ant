@@ -5,6 +5,7 @@ system "material_system"
 system "mesh_system"
     .implement "mesh.lua"
     .method "entity_init"
+    .method "end_frame"
 
 component_v2 "material_setting".type "lua"
 component_v2 "material".type "lua"
@@ -15,4 +16,4 @@ component_v2 "mesh".type "lua"
 
 component_v2 "simplemesh".type "lua"
     .require_system "ant.asset|mesh_system"
-
+component_v2 "procedural_mesh"

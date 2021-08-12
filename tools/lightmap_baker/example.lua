@@ -353,7 +353,8 @@ local function create_test_entities()
     example_eid = world:create_entity {
         policy = {
             "ant.general|name",
-            "ant.bake|lightmap",
+            "ant.render|lightmap",
+            "ant.bake|bake_lightmap",
             "ant.render|render",
         },
         data = {

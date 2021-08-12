@@ -293,10 +293,14 @@ end
 local function load_new_material(material, fx)
     local s = {BAKING_LIGHTMAP = 1}
     for k, v in pairs(fx.setting) do
-        if k ~= "ENABLE_SHADOW" then
-            s[k] = v
-        end
+        s[k] = v
     end
+    s["ENABLE_SHADOW"] = nil
+    s["identity"] = nil
+    s['shadow_cast'] = 'off'
+    s['shadow_receive'] = 'off'
+    s['skinning'] = 'UNKNOWN'
+    s['bloom'] = 'off'
     return imaterial.load(material, s)
 end
 
@@ -309,13 +313,14 @@ end
 function lightmap_sys:end_filter()
     for e in w:select "filter_result:in material:in render_object:in filter_material:out" do
         local fr = e.filter_result
-        local fm = e.filter_material
         local le = w:singleton("lightmap_queue", "filter_names:in")
-        local ro = e.render_object
-        local material = e.material
-        material = material._data and tostring(material) or material
         for _, fn in ipairs(le.filter_names) do
             if fr[fn] then
+                local fm = e.filter_material
+                local ro = e.render_object
+                local material = e.material
+                --TODO: e.material should be string
+                material = type(material) == "string" and material or tostring(material)
                 local nm = load_new_material(material, ro.fx)
                 fm[fn] = {
                     fx          = nm.fx,
@@ -527,7 +532,7 @@ end
 local skycolor = 0xffffffff
 
 
-local function bake_entity(lightmap, bakeobj, scene_objects)
+local function bake_entity(bakeobj, lightmap, scene_objects)
     local hemisize = lightmap.hemisize
     
     local s = create_context_setting(hemisize)
@@ -684,5 +689,5 @@ end
 
 function ilm.bake_entity(bakeobj, lightmap)
     local scene_renderobjs = find_scene_render_objects "main_queue"
-    return bake_entity(lightmap, bakeobj, scene_renderobjs)
+    return bake_entity(bakeobj, lightmap, scene_renderobjs)
 end

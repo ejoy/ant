@@ -9,7 +9,7 @@ $output v_texcoord0, v_posWS, v_normal, v_tangent, v_bitangent
 void main()
 {
 #ifdef BAKING_LIGHTMAP
-	mat4 wm = u_world[0];
+	mat4 wm = u_model[0];
 #else //!BAKING_LIGHTMAP
 	mat4 wm = get_world_matrix();
 #endif //BAKING_LIGHTMAP

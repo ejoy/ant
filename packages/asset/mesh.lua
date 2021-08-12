@@ -5,13 +5,15 @@ local m = ecs.component "mesh"
 local assetmgr = require "asset"
 local ext_meshbin = require "ext_meshbin"
 
-function m:init()
+local function init_mesh(self)
 	if type(self) == "string" then
 		return assetmgr.resource(self)
 	end
 	self.procedural_mesh = true
     return ext_meshbin.init(self)
 end
+
+m.init = init_mesh
 
 function m:delete()
 	if self.procedural_mesh then
@@ -95,31 +97,30 @@ imesh.create_rendermesh = create_rendermesh
 local w = world.w
 local m = ecs.system "mesh_system"
 function m:entity_init()
-    for v in w:select "INIT mesh:in render_object:in" do
-		local ro, mesh = v.render_object, v.mesh
-		local handles = {}
-		ro.vb = {
-			start   = mesh.vb.start,
-			num     = mesh.vb.num,
-			handles = handles,
-		}
-		for _, vv in ipairs(mesh.vb) do
-			handles[#handles+1] = vv.handle
-		end
-		if mesh.ib then
-			local ib = mesh.ib
-			ro.ib = {
-				start	=ib.start,
-				num 	=ib.num,
-				handle	=ib.handle,
-			}
-		else
-			ro.ib = nil
+    for e in w:select "INIT mesh:in render_object:in" do
+		--TODO: e.mesh must string or mesh with vb/ib
+		if 	type(e.mesh) == "string" or 
+			(type(e.mesh) == "table" and e.mesh._data == nil) then
+			local ro = e.render_object
+			local mm = init_mesh(e.mesh)
+			ro.vb, ro.ib = create_rendermesh(mm)
+			if mm.procedural_mesh then
+				e.procedural_mesh = true
+				w:sync("procedural_mesh?out", e)
+			end
 		end
 	end
 
-	for v in w:select "simplemesh:in render_object:in" do
-		local ro, sm = v.render_object, v.simplemesh
+	for e in w:select "INIT simplemesh:in render_object:in" do
+		local ro, sm = e.render_object, e.simplemesh
 		ro.vb, ro.ib = sm.vb, sm.ib
+	end
+end
+
+function m:end_frame()
+	for e in w:select "REMOVED procedural_mesh render_object:in mesh:in" do
+		if e.procedural_mesh then
+			ext_meshbin.delete(e.render_object)
+		end
 	end
 end

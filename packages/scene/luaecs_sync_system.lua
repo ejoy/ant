@@ -74,17 +74,21 @@ function s:luaecs_sync()
 		if isRenderObject(e) then
 			data.render_object = rc
 			data.render_object_update = true
+			data.material = e.material
+			data.mesh	= e.mesh
 			data.filter_material = {}
 			policy[#policy+1] = "ant.scene|render_object"
-		elseif isLightmapEntity(e) then
-			data.lightmap = e.lightmap
-			policy[#policy+1] = "ant.baker|lightmap"
 		elseif isCollider(e) then
 			data.collider = e.collider
 			policy[#policy+1] = "ant.collision|collider"
 		elseif isEffekseer(e) then
 			data.effekseer = e.effekseer
 			policy[#policy+1] = "ant.effekseer|effekseer"
+		end
+
+		if isLightmapEntity(e) then
+			data.lightmap = e.lightmap
+			policy[#policy+1] = "ant.bake|bake_lightmap"
 		end
 		world:luaecs_create_entity {
 			policy = policy,

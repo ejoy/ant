@@ -9,7 +9,7 @@ local lm_sys = ecs.system "lightmap_system"
 function lm_sys:init()
     world:luaecs_create_entity{
         policy = {
-            "ant.bake|lightmap_result",
+            "ant.render|lightmap_result",
             "ant.general|name",
         },
         data = {
@@ -33,22 +33,22 @@ function lm_sys:end_filter()
     for e in w:select "filter_result:in lightmap:in render_object:in filter_material:in material:in" do
         local lr_e = w:singleton("lightmapper", "lightmap_result:in")
         local r = lr_e.lightmap_result
-        local mq = w:singleton("main_queue", "filter_names")
+        local mq = w:singleton("main_queue", "filter_names:in")
         local fr = e.filter_result
         local material = e.material
         for _, fn in ipairs(mq.filter_names) do
             if fr[fn] then
-                local fm = e.filter_material
+                
                 local lm = e.lightmap
                 local bakeid = lm.bake_id
                 local bi = r[bakeid]
                 if bi then
                     bi.texture = assetmgr.resource(bi.texture_path)
-                    local mf = material._data and tostring(material) or material
+                    local mf = type(material) == "string" and material or tostring(material)
                     local bm = get_baked_material(mf, material.fx.setting)
                     local pm = bm.properties["s_lightmap"]
                     pm.texture.handle = bi.texture.handle
-                    fm[fn] = {
+                    e.filter_material[fn] = {
                         fx          = bm.fx,
                         properties  = bm.properties,
                         state       = bm.state,
