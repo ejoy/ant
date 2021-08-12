@@ -285,11 +285,12 @@ local function save_lightmap(e)
 end
 
 function lightmap_sys:data_changed()
-    for e in w:select "bake_finished lightmap:in render_object:in render_object_update:out" do
+    for e in w:select "bake_finish lightmap:in render_object:in render_object_update:out" do
         e.render_object_update = true
         save_lightmap(e)
     end
 
+    w:clear "bake_finish"
 end
 
 local function load_new_material(material, fx)
@@ -624,10 +625,11 @@ local function bake_all()
 
     local lm_queue = w:singleton("lightmap_queue", "filter_names:in")
     for _, fn in ipairs(lm_queue.filter_names) do
-        for le in w:select (fn .. " render_object:in lightmap:in widget_entity:absent name?in") do
-            log.info(("start bake entity: %s"):format(le.name))
-            bake_entity(le.render_object, le.lightmap, scene_renderobjects)
-            log.info(("end bake entity: %s"):format(le.name))
+        for e in w:select (fn .. " render_object:in lightmap:in widget_entity:absent name?in bake_finish?out") do
+            log.info(("start bake entity: %s"):format(e.name))
+            bake_entity(e.render_object, e.lightmap, scene_renderobjects)
+            e.bake_finish = true
+            log.info(("end bake entity: %s"):format(e.name))
         end
     end
 end
@@ -638,6 +640,8 @@ local function _bake(id)
             local lm = e.lightmap
             if id == lm.bake_id then
                 bake_entity(e.render_object, lm, find_scene_render_objects "main_queue")
+                e.bake_finish = true
+                w:sync("bake_finish?out", e)
                 break
             end
         end
