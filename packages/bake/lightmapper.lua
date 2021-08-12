@@ -441,14 +441,6 @@ local function load_geometry_info(item)
     }
 end
 
-local function find_bake_obj(eid)
-    for e in w:select "eid:in render_object:in lightmap:in" do
-        if e.eid == eid then
-            return e.render_object, e.lightmap
-        end
-    end
-end
-
 local function find_scene_render_objects(queuename)
     local q = w:singleton(queuename, "filter_names:in")
     local renderobjects = {}
@@ -658,8 +650,13 @@ end
 
 local function _bake(id)
     if id then
-        local bakeobj, lightmap = find_bake_obj(id)
-        bake_entity(bakeobj, lightmap, find_scene_render_objects "main_queue")
+        for e in w:select "render_object:in lightmap:in" do
+            local lm = e.lightmap
+            if id == lm.bake_id then
+                bake_entity(e.render_object, lm, find_scene_render_objects "main_queue")
+                break
+            end
+        end
     else
         log.info "bake entity scene with lightmap setting"
         bake_all()
