@@ -11,7 +11,7 @@ function lm_sys:entity_init()
     for e in w:select "INIT lightmap_result:in" do
         local lmr = e.lightmap_result
         for _, bi in pairs(lmr) do
-            bi.texture = assetmgr.resource(bi.texture)
+            bi.texture = assetmgr.resource(bi.texture_path)
         end
     end
 end

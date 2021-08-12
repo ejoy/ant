@@ -15,6 +15,8 @@ local sampler   = renderpkg.sampler
 local mathpkg   = import_package "ant.math"
 local mc        = mathpkg.constant
 
+local assetmgr  = import_package "ant.asset"
+
 local math3d    = require "math3d"
 local bgfx      = require "bgfx"
 local bake      = require "bake"
@@ -277,7 +279,6 @@ local function save_lightmap(e)
     local lme = w:singleton("lightmap_path:in", "lightmap_result:in")
 
     local filename = lme.lightmap_path / gen_name(lm.bakeid, e.name)
-    lme.lightmap_result[lm.bake_id] = filename
 
     local ti = default_tex_info(lm.size, lm.size, "RGBA32F")
     local lmdata = lm.data
@@ -293,31 +294,16 @@ local function save_lightmap(e)
     f:write(tc)
     f:close()
     
-    lme.lightmap_result[lm.bake_id] = texfile
+    lme.lightmap_result[lm.bake_id] = {
+        texture_path = texfile,
+        texture = assetmgr.resource(texfile),
+    }
 end
 
 function lightmap_sys:data_changed()
-    for e in w:select "bake_finished lightmap:in render_object:in" do
+    for e in w:select "bake_finished lightmap:in render_object:in render_object_update:out" do
         e.render_object_update = true
-        local lm = e.lightmap
         save_lightmap(e)
-
-        local s = lm.size * lm.size * 4 * 4
-        local mem = bgfx.memory_buffer(lm:data(), s, lm)
-        local flags = sampler.sampler_flag {
-            MIN="LINEAR",
-            MAG="LINEAR",
-        }
-    
-        local lm_handle = bgfx.create_texture2d(lm.size, lm.size, false, 1, "RGBA32F", flags, mem)
-        -- local assetmgr = import_package "ant.asset"
-        -- local lm_handle = assetmgr.resource "/pkg/ant.lightmap_baker/textures/lm.texture".handle
-        imaterial.set_property(example_eid, "s_lightmap", {
-            stage = 0,
-            texture = {
-                handle = lm_handle
-            }
-        })
     end
 
 end
