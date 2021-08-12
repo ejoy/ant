@@ -152,7 +152,7 @@ function rt_sys:entity_init()
 	for v in w:select "INIT render_target:in name:in" do
 		irq.update_rendertarget(v.render_target)
 	end
-	for v in w:select "camera_changed camera_eid:out render_target:in shadow_render_queue:in main_queue?out" do
+	for v in w:select "camera_changed camera_eid:out render_target:in shadow_render_queue:in main_queue?in" do
 		local vr = v.render_target.view_rect
 		v.camera_eid = v.shadow_render_queue.camera_eid
 		icamera.set_frustum_aspect(v.camera_eid, vr.w / vr.h)

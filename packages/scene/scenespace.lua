@@ -197,7 +197,6 @@ function s:update_transform()
 	for v in w:select "camera:in scene_node(scene_id):in scene_changed?out" do
 		local r, n = v.camera, v.scene_node
 		r.worldmat = n._worldmat
-		r.srt = n.srt
 		r.updir = n.updir
 		if n.changed == current_changed then
 			v.scene_changed = true

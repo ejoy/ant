@@ -51,6 +51,7 @@ function ic.create(info)
     end
 
     local viewmat = math3d.lookto(info.eyepos, info.viewdir, info.updir)
+    local srt = math3d.ref(math3d.matrix(math3d.inverse(viewmat)))
     local eid = world:register_entity()
     world:luaecs_create_entity {
         policy = {
@@ -64,10 +65,11 @@ function ic.create(info)
                 frustum = frustum,
                 clip_range = info.clip_range,
                 dof = info.dof,
+                srt = srt,
             },
             name = info.name or "DEFAULT_CAMERA",
             scene = {
-                srt = math3d.ref(math3d.matrix(math3d.inverse(viewmat))),
+                srt = srt,
                 updir = info.updir and math3d.ref(math3d.vector(info.updir)) or nil,
             }
         }

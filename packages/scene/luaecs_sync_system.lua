@@ -74,6 +74,7 @@ function s:luaecs_sync()
 				frustum     = e.frustum,
 				clip_range  = e.clip_range,
 				dof         = e.dof,
+				srt         = data.scene.srt,
 			}
 			policy[#policy+1] = "ant.camera|camera"
 		end
