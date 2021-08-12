@@ -201,34 +201,18 @@ local function init_shading_info()
     }
 end
 
-local lm_result_eid
-local function create_lightmap_result_entity()
-    return world:create_entity{
-        policy = {
-            "ant.bake|lightmap_result",
-            "ant.general|name",
-        },
-        data = {
-            name = "lightmap_result",
-            lightmap_result = {},
-        },
-    }
-end
-
 local lightmap_queue_surface_types<const> = {
     "foreground", "opaticy", "background",
 }
 function lightmap_sys:init()
     shading_info = init_shading_info()
 
-    --we will not use this camera
-    local camera_ref = icamera.create{
+    local camera_ref_WONT_USED = icamera.create{
         viewdir = mc.ZAXIS,
         eyepos = mc.ZERO_PT,
         name = "lightmap camera"
     }
-    irender.create_view_queue({x=0, y=0, w=1, h=1}, "lightmap_queue", camera_ref, "lightmap", nil, lightmap_queue_surface_types)
-    lm_result_eid = create_lightmap_result_entity()
+    irender.create_view_queue({x=0, y=0, w=1, h=1}, "lightmap_queue", camera_ref_WONT_USED, "lightmap", nil, lightmap_queue_surface_types)
 end
 
 function lightmap_sys:entity_init()
@@ -666,8 +650,29 @@ local function _bake(id)
 end
 
 local bake_mb = world:sub{"bake"}
+local function check_create_lightmap_result_entity()
+    local should_create = false
+    for e in w:select "lightmap_result:in" do
+        w:remove(e)
+    end
+
+    if should_create then
+        world:create_entity{
+            policy = {
+                "ant.bake|lightmap_result",
+                "ant.general|name",
+            },
+            data = {
+                name = "lightmap_result",
+                lightmap_result = {},
+            },
+        }
+    end
+end
+
 function lightmap_sys:end_frame()
     for msg in bake_mb:each() do
+        check_create_lightmap_result_entity()
         local id = msg[2]
         ltask.fork(function ()
             local ServiceBgfxMain = ltask.queryservice "bgfx_main"
@@ -696,15 +701,7 @@ function ilm.find_sample(lightmap, renderobj, triangleidx)
     return bake_ctx:find_sample(triangleidx)
 end
 
-
 function ilm.bake_entity(bakeobj, lightmap)
     local scene_renderobjs = find_scene_render_objects "main_queue"
     return bake_entity(lightmap, bakeobj, scene_renderobjs)
-end
-
-ilm.find_bake_obj = find_bake_obj
-
-function ilm.bake_from_eid(eid)
-    local bakeobj, lightmap = find_bake_obj(eid)
-    return ilm.bake_entity(bakeobj, lightmap)
 end
