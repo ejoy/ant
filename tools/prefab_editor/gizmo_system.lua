@@ -533,7 +533,7 @@ local function select_axis(x, y)
 	local start = utils.world_to_screen(camera_mgr.main_camera, gizmo_obj_pos)
 	uniform_scale = false
 	-- uniform scale
-	local hp = {x, y, 0}
+	local hp = {x - global_data.viewport.x, y - global_data.viewport.y, 0}
 	if gizmo.mode == gizmo_const.SCALE then
 		local radius = math3d.length(math3d.sub(hp, start))
 		if radius < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
