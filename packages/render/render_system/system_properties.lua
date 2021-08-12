@@ -122,6 +122,9 @@ end
 
 local function update_lighting_properties()
 	local cameraeid = main_camera_eid()
+	if icamera.find_camera(cameraeid) == nil then
+		return
+	end
 	system_properties["u_eyepos"].id = iom.get_position(cameraeid)
 
 	system_properties["u_light_count"].v = {world:count "light_type", 0, 0, 0}

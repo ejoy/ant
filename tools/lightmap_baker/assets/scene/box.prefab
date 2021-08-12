@@ -1,0 +1,223 @@
+---
+action:
+  mount: root
+data:
+  name: Scene
+  scene_entity: true
+  transform:
+    s: {-100, 100, 100}
+policy:
+  ant.general|name
+  ant.scene|hierarchy_policy
+  ant.scene|transform_policy
+---
+action:
+  mount: 1
+data:
+  material: /pkg/ant.tool.lightmap_baker/assets/box.glb|materials/white.material
+  mesh: "/pkg/ant.tool.lightmap_baker/assets/box.glb|meshes/网格.006_P1.meshbin"
+  name: pCylinder1
+  scene_entity: true
+  state: 7
+  transform:
+    r: {0.4055798053741455, 0.5792279839515686, -0.5792278647422791, 0.4055798053741455}
+    s: {0.009999997913837433, 0.009999997913837433, 0.009999999776482582}
+    t: {-0.022499999031424522, 0.010999999940395355, 0}
+policy:
+  ant.general|name
+  ant.render|render
+  ant.scene|hierarchy_policy
+---
+action:
+  mount: 1
+data:
+  name: polySurface13
+  scene_entity: true
+  transform:
+    r: {0.7071068286895752, 0, 0, 0.7071067094802856}
+    s: {0.009999999776482582, 0.009999999776482582, 0.009999999776482582}
+policy:
+  ant.general|name
+  ant.scene|hierarchy_policy
+  ant.scene|transform_policy
+---
+action:
+  mount: 3
+data:
+  material: /pkg/ant.tool.lightmap_baker/assets/box.glb|materials/blue.material
+  mesh: "/pkg/ant.tool.lightmap_baker/assets/box.glb|meshes/网格.002_P1.meshbin"
+  name: polySurface14
+  scene_entity: true
+  state: 7
+  transform:
+    r: {0, 0, 0, 1}
+    s: {1, 1, 1}
+    t: {0, 0, 0}
+policy:
+  ant.general|name
+  ant.render|render
+  ant.scene|hierarchy_policy
+---
+action:
+  mount: 1
+data:
+  name: polySurface1
+  scene_entity: true
+  transform:
+    r: {0.7071068286895752, 0, 0, 0.7071067094802856}
+    s: {0.009999999776482582, 0.009999999776482582, 0.009999999776482582}
+policy:
+  ant.general|name
+  ant.scene|hierarchy_policy
+  ant.scene|transform_policy
+---
+action:
+  mount: 5
+data:
+  name: polySurface3
+  scene_entity: true
+  transform: {}
+policy:
+  ant.general|name
+  ant.scene|hierarchy_policy
+  ant.scene|transform_policy
+---
+action:
+  mount: 6
+data:
+  name: polySurface6
+  scene_entity: true
+  transform: {}
+policy:
+  ant.general|name
+  ant.scene|hierarchy_policy
+  ant.scene|transform_policy
+---
+action:
+  mount: 7
+data:
+  name: polySurface8
+  scene_entity: true
+  transform: {}
+policy:
+  ant.general|name
+  ant.scene|hierarchy_policy
+  ant.scene|transform_policy
+---
+action:
+  mount: 8
+data:
+  name: polySurface10
+  scene_entity: true
+  transform: {}
+policy:
+  ant.general|name
+  ant.scene|hierarchy_policy
+  ant.scene|transform_policy
+---
+action:
+  mount: 9
+data:
+  material: /pkg/ant.tool.lightmap_baker/assets/box.glb|materials/white.material
+  mesh: "/pkg/ant.tool.lightmap_baker/assets/box.glb|meshes/网格_P1.meshbin"
+  name: polySurface11
+  scene_entity: true
+  state: 7
+  transform:
+    r: {0, 0, 0, 1}
+    s: {1, 1, 1}
+    t: {0, 0, 0}
+policy:
+  ant.general|name
+  ant.render|render
+  ant.scene|hierarchy_policy
+---
+action:
+  mount: 9
+data:
+  material: /pkg/ant.tool.lightmap_baker/assets/box.glb|materials/white.material
+  mesh: "/pkg/ant.tool.lightmap_baker/assets/box.glb|meshes/网格.001_P1.meshbin"
+  name: polySurface12
+  scene_entity: true
+  state: 7
+  transform:
+    r: {0, 0, -0.7071067690849304, 0.7071067690849304}
+    s: {1, 1, 1}
+    t: {2.500000238418579, -2.500000476837158, 0}
+policy:
+  ant.general|name
+  ant.render|render
+  ant.scene|hierarchy_policy
+---
+action:
+  mount: 3
+data:
+  name: polySurface15
+  scene_entity: true
+  transform: {}
+policy:
+  ant.general|name
+  ant.scene|hierarchy_policy
+  ant.scene|transform_policy
+---
+action:
+  mount: 12
+data:
+  name: polySurface17
+  scene_entity: true
+  transform: {}
+policy:
+  ant.general|name
+  ant.scene|hierarchy_policy
+  ant.scene|transform_policy
+---
+action:
+  mount: 13
+data:
+  material: /pkg/ant.tool.lightmap_baker/assets/box.glb|materials/white.material
+  mesh: "/pkg/ant.tool.lightmap_baker/assets/box.glb|meshes/网格.005_P1.meshbin"
+  name: polySurface19
+  scene_entity: true
+  state: 7
+  transform:
+    r: {0, 0, 0, 1}
+    s: {1, 1, 1}
+    t: {0, 0, 0}
+policy:
+  ant.general|name
+  ant.render|render
+  ant.scene|hierarchy_policy
+---
+action:
+  mount: 13
+data:
+  material: /pkg/ant.tool.lightmap_baker/assets/box.glb|materials/green.material
+  mesh: "/pkg/ant.tool.lightmap_baker/assets/box.glb|meshes/网格.004_P1.meshbin"
+  name: polySurface18
+  scene_entity: true
+  state: 7
+  transform:
+    r: {0, 0, 0, 1}
+    s: {1, 1, 1}
+    t: {0, 0, 0}
+policy:
+  ant.general|name
+  ant.render|render
+  ant.scene|hierarchy_policy
+---
+action:
+  mount: 12
+data:
+  material: /pkg/ant.tool.lightmap_baker/assets/box.glb|materials/phong2.material
+  mesh: "/pkg/ant.tool.lightmap_baker/assets/box.glb|meshes/网格.003_P1.meshbin"
+  name: polySurface16
+  scene_entity: true
+  state: 7
+  transform:
+    r: {0, 0, 0, 1}
+    s: {1, 1, 1}
+    t: {0, 0, 0}
+policy:
+  ant.general|name
+  ant.render|render
+  ant.scene|hierarchy_policy

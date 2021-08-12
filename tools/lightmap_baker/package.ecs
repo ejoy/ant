@@ -48,7 +48,6 @@ system "lightmap_baker_system"
     .require_policy_v2 "ant.scene|scene_node"
     .require_policy_v2 "ant.render|render"
     .require_policy_v2 "ant.render|render_queue"
-    .method "init"
     .method "init_world"
     .method "data_changed"
 

@@ -140,7 +140,9 @@ end
 
 function ic.get_frustum(eid)
     local camera = find_camera(eid)
-    return camera.frustum
+    if camera then
+        return camera.frustum
+    end
 end
 
 function ic.set_frustum(eid, frustum)
@@ -154,6 +156,9 @@ end
 
 local function frustum_changed(eid, name, value)
     local camera = find_camera(eid)
+    if camera == nil then
+        return
+    end
     local f = camera.frustum
     if f.ortho then
         error("ortho frustum can not set aspect")

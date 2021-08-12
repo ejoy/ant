@@ -7,6 +7,9 @@
                 margin-right: 10%;
                 margin-top: 10%;
                 margin-bottom: 50%;
+                width: 50%;
+                height: 50%;
+                overflow: hidden;
             }
             button {
                 margin: 10px;
@@ -59,6 +62,26 @@
     </head>
     <body>
         <div id="test" data-model="start">
+            <button id = "new" data-event-click="new()">新游戏</button>
+            <button data-event-click="load()">载入游戏</button>
+            <button data-event-click="setting()">设置</button>
+            <button data-if="show">隐藏菜单</button>
+            <button data-event-click="exit()">退出</button>
+            <button id = "new" data-event-click="new()">新游戏</button>
+            <button data-event-click="load()">载入游戏</button>
+            <button data-event-click="setting()">设置</button>
+            <button data-if="show">隐藏菜单</button>
+            <button data-event-click="exit()">退出</button>
+            <button id = "new" data-event-click="new()">新游戏</button>
+            <button data-event-click="load()">载入游戏</button>
+            <button data-event-click="setting()">设置</button>
+            <button data-if="show">隐藏菜单</button>
+            <button data-event-click="exit()">退出</button>
+            <button id = "new" data-event-click="new()">新游戏</button>
+            <button data-event-click="load()">载入游戏</button>
+            <button data-event-click="setting()">设置</button>
+            <button data-if="show">隐藏菜单</button>
+            <button data-event-click="exit()">退出</button>
             <button id = "new" data-event-click="new()">新游戏</button>
             <button data-event-click="load()">载入游戏</button>
             <button data-event-click="setting()">设置</button>

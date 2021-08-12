@@ -24,12 +24,16 @@ SAMPLER2D(s_normal,             2);
 SAMPLER2D(s_emissive,           3);
 SAMPLER2D(s_occlusion,          4);
 
-#ifndef BAKING
+#ifndef BAKING_LIGHTMAP 
 // IBL
 SAMPLERCUBE(s_irradiance,       5);
 SAMPLERCUBE(s_prefilter,        6);
 SAMPLER2D(s_LUT,                7);
-#endif //!BAKING
+#endif //!BAKING_LIGHTMAP
+
+#ifdef USING_LIGHTMAP
+SAMPLER2D(s_lightmap,           8);
+#endif //USING_LIGHTMAP
 
 uniform vec4 u_basecolor_factor;
 uniform vec4 u_emissive_factor;
@@ -39,10 +43,10 @@ uniform vec4 u_pbr_factor;
 #define u_alpha_mask_cutoff  u_pbr_factor.z
 #define u_occlusion_strength u_pbr_factor.w
 
-#ifndef BAKING
+#ifndef BAKING_LIGHTMAP
 uniform vec4 u_ibl_param;
 #define u_ibl_prefilter_mipmap_count u_ibl_param.x
-#endif //!BAKING
+#endif //!BAKING_LIGHTMAP
 
 struct material_info
 {
@@ -99,7 +103,7 @@ float clamp_dot(vec3 x, vec3 y)
     return clamp(dot(x, y), 0.0, 1.0);
 }
 
-#ifndef BAKING
+#ifndef BAKING_LIGHTMAP
 vec3 get_IBL_radiance_Lambertian(vec3 n, vec3 diffuseColor)
 {
     return textureCube(s_irradiance, n).rgb * diffuseColor;
@@ -115,7 +119,7 @@ vec3 get_IBL_radiance_GGX(vec3 N, vec3 V, float NdotV, float roughness, vec3 spe
     vec3 specular_light = textureCubeLod(s_prefilter, reflection, lod).rgb;
     return specular_light * (specular_color * lut.x + lut.y);
 }
-#endif //!BAKING
+#endif //!BAKING_LIGHTMAP
 
 material_info get_material_info(vec4 basecolor, vec2 uv)
 {
@@ -139,15 +143,15 @@ material_info get_material_info(vec4 basecolor, vec2 uv)
 
 void main()
 {
-#ifdef BAKING
+#ifdef BAKING_LIGHTMAP
     vec2 uv = v_texcoord0;
-#else //!BAKING
+#else //!BAKING_LIGHTMAP
 #ifdef UV_MOTION
 	vec2 uv = uv_motion(v_texcoord0);
 #else //!UV_MOTION
 	vec2 uv = v_texcoord0;
 #endif //UV_MOTION
-#endif //!BAKING
+#endif //!BAKING_LIGHTMAP
     vec4 basecolor = get_basecolor(uv);
 
 #ifdef ALPHAMODE_OPAQUE
@@ -233,7 +237,7 @@ void main()
     color += texture2D(s_emissive, uv).rgb * u_emissive_factor.rgb;
 #endif
 
-#ifndef BAKING
+#ifndef BAKING_LIGHTMAP
 #ifdef ENABLE_SHADOW
 	color = shadow_visibility(v_distanceVS, vec4(v_posWS.xyz, 1.0), color);
 #endif //ENABLE_SHADOW
@@ -243,6 +247,6 @@ void main()
     color +=    get_IBL_radiance_GGX(N, V, NdotV, mi.roughness, mi.f0) +
                 get_IBL_radiance_Lambertian(N, mi.albedo);
 #endif
-#endif //!BAKING
+#endif //!BAKING_LIGHTMAP
     gl_FragColor = vec4(color, basecolor.a);
 }
