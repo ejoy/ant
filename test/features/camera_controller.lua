@@ -34,12 +34,12 @@ function icc.create(ceid)
 	return cceid
 end
 
-function icc.attach(ceid)
+function icc.attach(camera_ref)
 	local cc = world[cceid]._camera_controller
 	local old_camera_ref = cc.camera_ref
-	cc.camera_ref = ceid
-	world:pub{"camera_controller_changed", "camera", ceid, old_camera_ref}
-	icamera.controller(ceid, cceid)
+	cc.camera_ref = camera_ref
+	world:pub{"camera_controller_changed", "camera", camera_ref, old_camera_ref}
+	icamera.controller(camera_ref, cceid)
 end
 
 function icc.get()
