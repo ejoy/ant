@@ -28,6 +28,12 @@ end
 local function isLightmapEntity(e)
 	return e.lightmap ~= nil
 end
+local function isCollider(e)
+	return e.collider ~= nil
+end
+local function isEffekseer(e)
+	return e.effekseer ~= nil
+end
 
 function s:init()
 end
@@ -73,6 +79,12 @@ function s:luaecs_sync()
 		elseif isLightmapEntity(e) then
 			data.lightmap = e.lightmap
 			policy[#policy+1] = "ant.baker|lightmap"
+		elseif isCollider(e) then
+			data.collider = e.collider
+			policy[#policy+1] = "ant.collider|collider"
+		elseif isEffekseer(e) then
+			data.effekseer = e.effekseer
+			policy[#policy+1] = "ant.effekseer|effekseer"
 		end
 		world:luaecs_create_entity {
 			policy = policy,
