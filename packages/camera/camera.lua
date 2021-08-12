@@ -119,10 +119,9 @@ function ic.bind(eid, which_queue)
     bind_queue(eid, which_queue)
 end
 
-function ic.controller(eid, ceid)
-    local e = world[eid]
+function ic.controller(camera_ref, ceid)
+    local e = find_camera(camera_ref)
     local old_ceid = e.controller_eid
-
     if ceid == nil then
         return old_ceid
     end

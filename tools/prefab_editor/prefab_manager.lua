@@ -500,6 +500,7 @@ function m:reset_prefab()
     self.prefab_script = ""
     self.entities = {}
     world:pub {"WindowTitle", ""}
+    world:pub {"ResetEditor", ""}
     hierarchy:set_root(self.root)
 end
 

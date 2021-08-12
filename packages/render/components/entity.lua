@@ -1,8 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local ientity = ecs.interface "entity"
-
+local ientity 	= ecs.interface "entity"
 local declmgr   = require "vertexdecl_mgr"
 local math3d    = require "math3d"
 local hwi		= import_package "ant.hwi"
@@ -16,6 +15,7 @@ local mc		= mathpkg.constant
 local ies = world:interface "ant.scene|ientity_state"
 local imaterial = world:interface "ant.asset|imaterial"
 local irender = world:interface "ant.render|irender"
+local imesh 	= world:interface "ant.asset|imesh"
 local bgfx = require "bgfx"
 
 local function create_mesh(vb_lst, ib)
@@ -139,27 +139,38 @@ end
 
 local prim_plane_mesh
 
-local function get_prim_plane_mesh()
-	if not prim_plane_mesh then
-		local vb = {
-			-0.5, 0, 0.5, 0, 1, 0,	--left top
-			0.5,  0, 0.5, 0, 1, 0,	--right top
-			-0.5, 0,-0.5, 0, 1, 0,	--left bottom
-			-0.5, 0,-0.5, 0, 1, 0,
-			0.5,  0, 0.5, 0, 1, 0,
-			0.5,  0,-0.5, 0, 1, 0,	--right bottom
-		}
-		prim_plane_mesh = create_mesh({"p3|n3", vb})
-		prim_plane_mesh.bounding = {
-			aabb = math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))
-		}
+local function get_prim_plane_mesh(sharedmesh)
+	local vb = {
+		-0.5, 0, 0.5, 0, 1, 0,	--left top
+		0.5,  0, 0.5, 0, 1, 0,	--right top
+		-0.5, 0,-0.5, 0, 1, 0,	--left bottom
+		-0.5, 0,-0.5, 0, 1, 0,
+		0.5,  0, 0.5, 0, 1, 0,
+		0.5,  0,-0.5, 0, 1, 0,	--right bottom
+	}
+	if sharedmesh then
+		if not prim_plane_mesh then
+			local tempmesh = create_mesh({"p3|n3", vb})
+			tempmesh.bounding = {
+				aabb = math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))
+			}
+			local internal_vb, internal_ib = imesh.create_rendermesh(tempmesh)
+			prim_plane_mesh = {vb = internal_vb, ib = internal_ib}
+		end
+
+		return prim_plane_mesh
 	end
-	return prim_plane_mesh
+
+	local mesh = create_mesh({"p3|n3", vb})
+	mesh.bounding = {
+		aabb = math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))
+	}
+	return mesh
 end
 
-function ientity.create_prim_plane_entity(srt, materialpath, name, entity_info)
+function ientity.create_prim_plane_entity(srt, materialpath, name, sharedmesh, entity_info)
 	local policy = {
-		"ant.render|render",
+		sharedmesh and "ant.render|simplerender" or "ant.render|render",
 		"ant.general|name",
 	}
 
@@ -169,8 +180,12 @@ function ientity.create_prim_plane_entity(srt, materialpath, name, entity_info)
 		state = ies.create_state "visible",
 		name = name or "Plane",
 		scene_entity = true,
-		mesh = get_prim_plane_mesh(),
 	}
+	if sharedmesh then
+		data.simplemesh = get_prim_plane_mesh(sharedmesh)
+	else
+		data.mesh = get_prim_plane_mesh()
+	end
 
 	if entity_info then
 		for policy_name, dd in pairs(entity_info) do

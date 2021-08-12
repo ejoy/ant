@@ -431,7 +431,7 @@ function gizmo:update_axis_plane()
 	local eyepos = iom.get_position(camera_mgr.main_camera)
 
 	local project = math3d.sub(eyepos, math3d.mul(plane_xy.n, math3d.dot(plane_xy.n, eyepos) + plane_xy.d))
-	local invmat = math3d.inverse(iom.srt(self.root_eid))
+	local invmat = math3d.inverse(iom.worldmat(self.root_eid))
 	local tp = math3d.totable(math3d.transform(invmat, project, 1))
 	iom.set_position(self.txy.eid[1], {(tp[1] > 0) and gizmo_const.MOVE_PLANE_OFFSET or -gizmo_const.MOVE_PLANE_OFFSET, (tp[2] > 0) and gizmo_const.MOVE_PLANE_OFFSET or -gizmo_const.MOVE_PLANE_OFFSET, 0})
 	self.txy.area = (tp[1] > 0) and ((tp[2] > 0) and gizmo_const.RIGHT_TOP or gizmo_const.RIGHT_BOTTOM) or (((tp[2] > 0) and gizmo_const.LEFT_TOP or gizmo_const.LEFT_BOTTOM))
@@ -553,6 +553,7 @@ local function select_axis(x, y)
 	local end_x = utils.world_to_screen(camera_mgr.main_camera, math3d.add(gizmo_obj_pos, math3d.vector(gizmo_dir_to_world({line_len, 0, 0}))))
 	
 	local axis = (gizmo.mode == gizmo_const.SCALE) and gizmo.sx or gizmo.tx
+	print("start-end_x : ", start[1], start[2], start[3], end_x[1], end_x[2], end_x[3])
 	if utils.point_to_line_distance2D(start, end_x, hp) < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
 		return axis
 	end
@@ -674,7 +675,7 @@ local function move_light_gizmo(x, y)
 	if light_gizmo_mode == 0 then return end
 	local circle_centre
 	if light_gizmo_mode == 4 or light_gizmo_mode == 5 then
-		local mat = iom.srt(light_gizmo.current_light)
+		local mat = iom.worldmat(light_gizmo.current_light)
 		circle_centre = math3d.transform(mat, math3d.vector{0, 0, ilight.range(light_gizmo.current_light)}, 1)
 	end
 	local lightPos = iom.get_position(light_gizmo.current_light)
@@ -876,7 +877,7 @@ local function select_light_gizmo(x, y)
 		end
 	elseif world[light_gizmo.current_light].light_type == "spot" then
 		local dir = math3d.totable(math3d.transform(iom.get_rotation(light_gizmo.current_light), math3d.vector{0, 0, 1}, 0))
-		local mat = iom.srt(light_gizmo.current_light)
+		local mat = iom.worldmat(light_gizmo.current_light)
 		local centre = math3d.transform(mat, math3d.vector{0, 0, ilight.range(light_gizmo.current_light)}, 1)
 		if hit_test_circle(dir, ilight.radian(light_gizmo.current_light), centre) then
 			click_dir_spot_light = dir
@@ -904,7 +905,7 @@ function gizmo:select_gizmo(x, y)
 			if mode == 5 then
 				last_spot_range = ilight.range(light_gizmo.current_light)
 				last_gizmo_pos = math3d.totable(iom.get_position(light_gizmo.current_light))
-				local mat = iom.srt(light_gizmo.current_light)
+				local mat = iom.worldmat(light_gizmo.current_light)
 				local circle_centre = math3d.transform(mat, math3d.vector{0, 0, ilight.range(light_gizmo.current_light)}, 1)
 				local move_dir = math3d.sub(circle_centre, iom.get_position(light_gizmo.current_light))
 				init_offset.v = utils.view_to_axis_constraint(iom.ray(camera_mgr.main_camera, {x, y}), iom.get_position(camera_mgr.main_camera), gizmo_dir_to_world(move_dir), last_gizmo_pos)
