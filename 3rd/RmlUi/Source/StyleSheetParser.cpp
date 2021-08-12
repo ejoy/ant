@@ -80,14 +80,6 @@ StyleSheetParser::~StyleSheetParser()
 {
 }
 
-void StyleSheetParser::Initialise()
-{
-}
-
-void StyleSheetParser::Shutdown()
-{
-}
-
 static bool IsValidIdentifier(const std::string& str)
 {
 	if (str.empty())

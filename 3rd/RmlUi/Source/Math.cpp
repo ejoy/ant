@@ -38,22 +38,10 @@ namespace Math {
 
 const float RMLUI_PI = 3.141592653f;
 
-// Calculates the absolute value of a number.
-RMLUICORE_API float AbsoluteValue(float value)
-{
-	return fabsf(value);
-}
-
 // Calculates the cosine of an angle.
 RMLUICORE_API float Cos(float angle)
 {
 	return cosf(angle);
-}
-
-// Calculates the arc-cosine of an value.
-RMLUICORE_API float ACos(float value)
-{
-	return acosf(value);
 }
 
 // Calculates the sine of an angle.
@@ -62,34 +50,10 @@ RMLUICORE_API float Sin(float angle)
 	return sinf(angle);
 }
 
-// Calculates the arc-sine of an value.
-RMLUICORE_API float ASin(float angle)
-{
-	return asinf(angle);
-}
-
-// Calculates the tangent of an angle.
-RMLUICORE_API float Tan(float angle)
-{
-	return tanf(angle);
-}
-
-// Calculates the angle of a two-dimensional line.
-RMLUICORE_API float ATan2(float y, float x)
-{
-	return atan2f(y, x);
-}
-
 // Evaluates the natural exponential function on a value.
 RMLUICORE_API float Exp(float value)
 {
 	return expf(value);
-}
-
-// Converts an angle from radians to degrees.
-RMLUICORE_API float RadiansToDegrees(float angle)
-{
-	return angle * (180.0f / RMLUI_PI);
 }
 
 // Converts an angle from degrees to radians.

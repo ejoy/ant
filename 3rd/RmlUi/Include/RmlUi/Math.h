@@ -69,45 +69,19 @@ Type Clamp(Type value, Type min, Type max)
 	return (value < min) ? min : (value > max) ? max : value;
 }
 
-/// Calculates the absolute value of a number.
-/// @param[in] value The number of get the absolute value of.
-/// @return The absolute value of the number.
-RMLUICORE_API float AbsoluteValue(float value);
-
 /// Calculates the cosine of an angle.
 /// @param[in] angle The angle to calculate the cosine of, in radians.
 /// @return The cosine of the angle.
 RMLUICORE_API float Cos(float angle);
-/// Calculates the arc-cosine of an value.
-/// @param[in] angle The value to calculate the arc-cosine of.
-/// @return The angle, in radians.
-RMLUICORE_API float ACos(float value);
 /// Calculates the sine of an angle.
 /// @param[in] angle The angle to calculate the sine of, in radians.
 /// @return The sine of the angle.
 RMLUICORE_API float Sin(float angle);
-/// Calculates the arc-sine of an value.
-/// @param[in] angle The value to calculate the arc-sine of.
-/// @return The angle, in radians.
-RMLUICORE_API float ASin(float angle);
-/// Calculates the tangent of an angle.
-/// @param[in] angle The angle to calculate the tangent of, in radians.
-/// @return The tanget of the angle.
-RMLUICORE_API float Tan(float angle);
-/// Calculates the angle of a two-dimensional line.
-/// @param[in] y The y-component of the line.
-/// @param[in] x The x-component of the line.
-/// @return The angle of the line in radians.
-RMLUICORE_API float ATan2(float y, float x);
 /// Evaluates the natural exponential function on a value.
 /// @param[in] value The value
 /// @return e^(value)
 RMLUICORE_API float Exp(float value);
 
-/// Converts an angle from radians to degrees.
-/// @param[in] The angle, in radians.
-/// @return The angle converted to degrees.
-RMLUICORE_API float RadiansToDegrees(float angle);
 /// Converts an angle from degrees to radians.
 /// @param[in] The angle, in degrees.
 /// @return The angle converted to radians.
