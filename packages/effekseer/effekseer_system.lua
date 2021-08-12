@@ -181,13 +181,12 @@ function effekseer_sys:follow_transform_updated()
             end
         end
     end
-    for _, eid in world:each "effekseer" do
-		local e = world[eid]
-        if e._scene_id then
-            local worldmat = world.w:object("scene_node", e._scene_id)._worldmat
-            if worldmat then
-		        effekseer.update_transform(e.effect_instance.handle, worldmat)
-            end
+    --TODO
+    for v in w:select "eid:in scene_node(scene_id):in" do
+        local e = world[v.eid]
+        if e and e.effekseer then
+            local node = v.scene_node
+            effekseer.update_transform(e.effect_instance.handle, node._worldmat)
         end
     end
 end

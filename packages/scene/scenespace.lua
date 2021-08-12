@@ -59,11 +59,11 @@ end
 
 local current_changed = 0
 
-local function mount_scene_node(scene_id)
+local function mount_scene_node(hashmap, scene_id)
 	local node = w:object("scene_node", scene_id)
 	node.changed = current_changed
 	if node._parent then
-		local parent = world[node._parent]._scene_id
+		local parent = hashmap[node._parent]
 		assert(parent)
 		node.parent = parent
 		node._parent = nil
@@ -113,15 +113,38 @@ local function sync_scene_node()
 	w:order("scene_sorted", "scene_node", scenequeue)
 end
 
+local function findSceneId(eid)
+	for v in w:select "eid:in" do
+		if v.eid == eid then
+			w:sync("scene_id:in", v)
+			return v
+		end
+	end
+end
+
+local function findSceneNode(eid)
+	for v in w:select "eid:in" do
+		if v.eid == eid then
+			w:sync("scene_node(scene_id):in", v)
+			return v
+		end
+	end
+end
+
 function s:entity_init()
 	local needsync = false
 	current_changed = current_changed + 1
 
+	local hashmap = {}
 	for v in w:select "INIT scene:in scene_id:out eid:in" do
+		local scene = v.scene
 		v.scene_id = world:luaecs_create_ref {
-			scene_node = v.scene,
+			scene_node = scene,
 			INIT = true,
 		}
+		if scene._self then
+			hashmap[scene._self] = v.scene_id
+		end
 		local e = world[v.eid]
 		if e then
 			e._scene_id = v.scene_id
@@ -130,18 +153,21 @@ function s:entity_init()
 	w:clear "scene"
 
 	for v in w:select "INIT scene_id:in" do
-		mount_scene_node(v.scene_id)
+		mount_scene_node(hashmap, v.scene_id)
 		needsync = true
 	end
 
 	for _, _, eid in evChangedParent:unpack() do
 		local e = world[eid]
-		local id = e._scene_id
+		local scene_id = findSceneId(eid)
+		local node = w:object("scene_node", scene_id)
+		node.changed = current_changed
 		if e.parent then
-			local scene_node = w:object("scene_node", id)
-			scene_node._parent = e.parent
+			node.parent = findSceneId(e.parent)
+			scenequeue:mount(scene_id, node.parent)
+		else
+			scenequeue:mount(scene_id, 0)
 		end
-		mount_scene_node(id)
 		needsync = true
 	end
 
@@ -175,9 +201,7 @@ function s:update_transform()
 			w:sync("scene_node(scene_id):in", ref)
 			node = ref.scene_node
 		else
-			local e = world[eid]
-			local id = e._scene_id
-			node = w:object("scene_node", id)
+			node = findSceneNode(eid)
 		end
 		node.changed = current_changed
 	end
