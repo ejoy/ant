@@ -18,7 +18,7 @@ function lm_baker:init_world()
 		e.lightmap_path = p
 		lfs.create_directories(lfs.path(p))
 	end
-	--world:pub{"bake"}	--bake all scene
+	world:pub{"bake"}	--bake all scene
 end
 
 local bake_finish_mb = world:sub{"bake_finish"}

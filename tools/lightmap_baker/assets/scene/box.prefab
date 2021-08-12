@@ -18,7 +18,7 @@ data:
   mesh: "/pkg/ant.tool.lightmap_baker/assets/box.glb|meshes/网格.006_P1.meshbin"
   name: pCylinder1
   scene_entity: true
-  state: 7
+  state: 23
   transform:
     r: {0.4055798053741455, 0.5792279839515686, -0.5792278647422791, 0.4055798053741455}
     s: {0.009999997913837433, 0.009999997913837433, 0.009999999776482582}
@@ -48,7 +48,7 @@ data:
   mesh: "/pkg/ant.tool.lightmap_baker/assets/box.glb|meshes/网格.002_P1.meshbin"
   name: polySurface14
   scene_entity: true
-  state: 7
+  state: 23
   transform:
     r: {0, 0, 0, 1}
     s: {1, 1, 1}
@@ -122,7 +122,7 @@ data:
   mesh: "/pkg/ant.tool.lightmap_baker/assets/box.glb|meshes/网格_P1.meshbin"
   name: polySurface11
   scene_entity: true
-  state: 7
+  state: 23
   transform:
     r: {0, 0, 0, 1}
     s: {1, 1, 1}
@@ -139,7 +139,7 @@ data:
   mesh: "/pkg/ant.tool.lightmap_baker/assets/box.glb|meshes/网格.001_P1.meshbin"
   name: polySurface12
   scene_entity: true
-  state: 7
+  state: 23
   transform:
     r: {0, 0, -0.7071067690849304, 0.7071067690849304}
     s: {1, 1, 1}
@@ -178,7 +178,7 @@ data:
   mesh: "/pkg/ant.tool.lightmap_baker/assets/box.glb|meshes/网格.005_P1.meshbin"
   name: polySurface19
   scene_entity: true
-  state: 7
+  state: 23
   transform:
     r: {0, 0, 0, 1}
     s: {1, 1, 1}
@@ -195,7 +195,7 @@ data:
   mesh: "/pkg/ant.tool.lightmap_baker/assets/box.glb|meshes/网格.004_P1.meshbin"
   name: polySurface18
   scene_entity: true
-  state: 7
+  state: 23
   transform:
     r: {0, 0, 0, 1}
     s: {1, 1, 1}
@@ -212,7 +212,7 @@ data:
   mesh: "/pkg/ant.tool.lightmap_baker/assets/box.glb|meshes/网格.003_P1.meshbin"
   name: polySurface16
   scene_entity: true
-  state: 7
+  state: 23
   transform:
     r: {0, 0, 0, 1}
     s: {1, 1, 1}
