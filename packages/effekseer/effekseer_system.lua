@@ -140,15 +140,15 @@ end
 
 local itimer = world:interface "ant.timer|itimer"
 
-local function main_camera_eid()
-    for v in world.w:select "main_queue camera_eid:in" do
-        return v.camera_eid
+local function main_camera_ref()
+    for v in world.w:select "main_queue camera_ref:in" do
+        return v.camera_ref
     end
 end
 
 function effekseer_sys:camera_usage()
     local icamera = world:interface "ant.camera|camera"
-    local c = icamera.find_camera(main_camera_eid())
+    local c = icamera.find_camera(main_camera_ref())
     if c then
         effekseer.update_view_proj(math3d.value_ptr(c.viewmat), math3d.value_ptr(c.projmat))
     end

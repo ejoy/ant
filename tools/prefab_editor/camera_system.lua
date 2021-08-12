@@ -28,8 +28,8 @@ local function view_to_world(view_pos)
 end
 
 local function camera_update_eye_pos(camera)
-	local cameraeid = irq.main_camera()
-	iom.set_position(cameraeid, math3d.sub(camera_target, math3d.mul(iom.get_direction(cameraeid), camera_distance)))
+	local camera_ref = irq.main_camera()
+	iom.set_position(camera_ref, math3d.sub(camera_target, math3d.mul(iom.get_direction(camera_ref), camera_distance)))
 end
 
 local function camera_rotate(dx, dy)
@@ -55,7 +55,7 @@ local function camera_reset(eyepos, target)
 	iom.set_view(irq.main_camera(), eyepos, math3d.normalize(math3d.sub(camera_target, eyepos)))
 end
 
-local mb_camera_changed = world:sub{"component_changed", "camera_eid", "main_queue"}
+local mb_camera_changed = world:sub{"camera_changed", "main_queue"}
 
 function m:entity_done()
 	for _ in mb_camera_changed:each() do

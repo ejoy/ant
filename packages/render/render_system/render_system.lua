@@ -69,9 +69,9 @@ local function submit_render_objects(viewid, filternames, culltag)
 end
 
 function render_sys:render_submit()
-	for qe in w:select "visible camera_eid:in render_target:in filter_names:in cull_tag?in" do
+	for qe in w:select "visible camera_ref:in render_target:in filter_names:in cull_tag?in" do
 		--TODO: should keep camera always vaild
-        local camera = icamera.find_camera(qe.camera_eid)
+        local camera = icamera.find_camera(qe.camera_ref)
 		if camera then
 			local rt = qe.render_target
 			local viewid = rt.viewid

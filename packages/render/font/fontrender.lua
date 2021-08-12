@@ -19,11 +19,13 @@ local imaterial = world:interface "ant.asset|imaterial"
 local irender = world:interface "ant.render|irender"
 
 local irq = world:interface "ant.render|irenderqueue"
+
 local function calc_screen_pos(pos3d, queueeid)
     queueeid = queueeid or world:singleton_entity_id "main_queue"
 
+    --TODO
     local q = world[queueeid]
-    local vp = world[q.camera_eid]._rendercache.viewprojmat
+    local vp = world[q.camera_ref]._rendercache.viewprojmat
     local posNDC = math3d.transformH(vp, pos3d)
 
     local mask<const>, offset<const> = {0.5, 0.5, 1, 1}, {0.5, 0.5, 0, 0}

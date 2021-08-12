@@ -132,7 +132,7 @@ local default_clear_state<const> = {
 	clear = "CD",
 }
 
-function irender.create_view_queue(view_rect, view_queuename, camera_eid, filtertype, exclude, surfacetypes)
+function irender.create_view_queue(view_rect, view_queuename, camera_ref, filtertype, exclude, surfacetypes)
 	surfacetypes = surfacetypes or SURFACE_TYPES["main_queue"]
 	filtertype = filtertype or "visible"
 	w:register{name = view_queuename}
@@ -149,7 +149,7 @@ function irender.create_view_queue(view_rect, view_queuename, camera_eid, filter
 			"ant.general|name",
 		},
 		data = {
-			camera_eid = assert(camera_eid),
+			camera_ref = assert(camera_ref),
 			render_target = {
 				viewid		= viewidmgr.generate(view_queuename),
 				view_mode 	= "s",
@@ -177,7 +177,7 @@ local rb_flag = samplerutil.sampler_flag {
 	V="CLAMP",
 }
 
-function irender.create_pre_depth_queue(view_rect, camera_eid)
+function irender.create_pre_depth_queue(view_rect, camera_ref)
 	local fnames, ct = create_primitive_filter_entities "pre_depth_queue"
 
 	local fbidx = fbmgr.create{
@@ -204,7 +204,7 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 			"ant.general|name",
 		},
 		data = {
-			camera_eid = camera_eid,
+			camera_ref = camera_ref,
 			render_target = {
 				viewid = viewidmgr.get "depth",
 				clear_state = {
@@ -259,7 +259,7 @@ local function create_main_fb(view_rect)
 	return fbmgr.create(render_buffers)
 end
 
-function irender.create_main_queue(view_rect, camera_eid)
+function irender.create_main_queue(view_rect, camera_ref)
 	local fbidx = create_main_fb(view_rect)
 
 	local filternames = create_primitive_filter_entities "main_queue"
@@ -273,7 +273,7 @@ function irender.create_main_queue(view_rect, camera_eid)
 		},
 		data = {
 			name = "main_queue",
-			camera_eid = camera_eid,
+			camera_ref = camera_ref,
 			render_target = {
 				viewid = viewidmgr.get "main_view",
 				view_mode = "s",
@@ -308,7 +308,7 @@ function irender.create_blit_queue(viewrect)
 			"ant.general|name",
 		},
 		data = {
-			camera_eid = icamera.create({
+			camera_ref = icamera.create({
 				eyepos = mc.ZERO_PT,
 				viewdir = mc.ZAXIS,
 				updir = mc.YAXIS,

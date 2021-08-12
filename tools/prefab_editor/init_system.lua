@@ -16,13 +16,13 @@ local gd            = require "common.global_data"
 local bb_a = ecs.action "bind_billboard_camera"
 function bb_a.init(prefab, idx, value)
     local eid = prefab[idx]
-    local cameraeid = prefab[value]
-    if cameraeid == nil then
-        for e in w:select "main_queue camera_eid:in" do
-            cameraeid = e.camera_eid
+    local camera_ref = prefab[value]
+    if camera_ref == nil then
+        for e in w:select "main_queue camera_ref:in" do
+            camera_ref = e.camera_ref
         end
     end
-    world[eid]._rendercache.camera_eid = cameraeid
+    world[eid]._rendercache.camera_ref = camera_ref
 end
 
 local m = ecs.system 'init_system'

@@ -52,10 +52,9 @@ end
 
 local function instance_entity(w, eid, entity, owned)
 	if entity.template.camera then
-		local icamera = w:interface "ant.camera|camera"
-		icamera.create_entity(eid, entity.template)
 		w._entity[eid] = nil
-		return eid
+		local icamera = w:interface "ant.camera|camera"
+		return icamera.create_entity(eid, entity.template)
 	end
 	local e = {}
 	w[eid] = e

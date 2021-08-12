@@ -17,21 +17,21 @@ function cc_sys:post_init()
     
 end
 
-local function main_camera_eid()
-    for v in w:select "main_queue camera_eid:in" do
-        return v.camera_eid
+local function main_camera_ref()
+    for v in w:select "main_queue camera_ref:in" do
+        return v.camera_ref
     end
 end
 
 local mouse_lastx, mouse_lasty
 local toforward
 function cc_sys:data_changed()
-    for v in w:select "INIT main_queue camera_eid:in" do
+    for v in w:select "INIT main_queue camera_ref:in" do
         local eyepos = math3d.vector(0, 0, -10)
-        local ceid = v.camera_eid
-        iom.set_position(ceid, eyepos)
+        local camera_ref = v.camera_ref
+        iom.set_position(camera_ref, eyepos)
         local dir = math3d.normalize(math3d.sub(viewat, eyepos))
-        iom.set_direction(ceid, dir)
+        iom.set_direction(camera_ref, dir)
     end
 
     for msg in kb_mb:each() do
@@ -59,12 +59,12 @@ function cc_sys:data_changed()
     end
 
     if toforward then
-        local cameraeid = main_camera_eid()
-        iom.move_forward(cameraeid, toforward)
+        local camera_ref = main_camera_ref()
+        iom.move_forward(camera_ref, toforward)
     end
 
     if dx or dy then
-        local cameraeid = main_camera_eid()
-        iom.rotate_around_point2(cameraeid, viewat, dy, dx)
+        local camera_ref = main_camera_ref()
+        iom.rotate_around_point2(camera_ref, viewat, dy, dx)
     end
 end

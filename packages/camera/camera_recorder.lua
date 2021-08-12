@@ -14,7 +14,7 @@ local cq_trans = ecs.transform "camera_recorder_transform"
 function cq_trans.process_entity(e)
     e._playing = {
         cursor = 0,
-        camera_eid = nil,
+        camera_ref = nil,
     }
     for i, v in ipairs(e.frames) do
         local tp = v.position
@@ -38,14 +38,14 @@ function cr.start(name)
     }
 end
 
-function cr.add(recordereid, cameraeid, idx)
+function cr.add(recordereid, camera_ref, idx)
     local e = world[recordereid]
     idx = idx or #e.frames+1
 
-    local frustum = icamera.get_frustum(cameraeid)
+    local frustum = icamera.get_frustum(camera_ref)
     table.insert(e.frames, idx, {
-        position = math3d.ref(iom.get_position(cameraeid)),
-        rotation = math3d.ref(iom.get_rotation(cameraeid)),
+        position = math3d.ref(iom.get_position(camera_ref)),
+        rotation = math3d.ref(iom.get_rotation(camera_ref)),
         nearclip = frustum.n,
         farclip  = frustum.f,
         fov      = frustum.fov,
@@ -69,10 +69,10 @@ function cr.stop(recordereid)
     --TODO
 end
 
-function cr.play(recordereid, cameraeid)
+function cr.play(recordereid, camera_ref)
     local q = world[recordereid]
     local p = q._playing
-    p.camera_eid = cameraeid
+    p.camera_ref = camera_ref
     p.cursor = 0
     world:pub{"camera_recorder", "play", recordereid}
 end
@@ -92,7 +92,7 @@ local function play_camera_recorder()
     local frames = r.frames
     if #frames >= 2 then
         local p = r._playing
-        local cameraeid = p.camera_eid
+        local camera_ref = p.camera_ref
 
         local function which_frames(cursor)
             local duration = 0
@@ -117,13 +117,13 @@ local function play_camera_recorder()
                 local farclip  = mu.lerp(cf.farclip, nf.farclip, t)
                 local fov      = mu.lerp(cf.fov, nf.fov, t)
 
-                local frusutm = icamera.get_frustum(cameraeid)
+                local frusutm = icamera.get_frustum(camera_ref)
                 frusutm.n = nearclip
                 frusutm.f = farclip
                 frusutm.fov = fov
-                icamera.set_frustum(cameraeid, frusutm)
+                icamera.set_frustum(camera_ref, frusutm)
                 
-                iom.lookto(cameraeid, position, math3d.todirection(rotation))
+                iom.lookto(camera_ref, position, math3d.todirection(rotation))
             else
                 error(("not support interpolation mode"):format(cf.mode))
             end

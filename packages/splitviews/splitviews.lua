@@ -16,13 +16,13 @@ local function copy_rect(rt, dst_rt)
     for k, v in pairs(rt) do dst_rt[k] = v end
 end
 local function backup_mainqueue_rect()
-    for e in w:select "main_queue camera_eid:in render_target:in" do
+    for e in w:select "main_queue camera_ref:in render_target:in" do
         copy_rect(e.render_target.view_rect, mainqueue_rect)
     end
 end
 
 local function recover_mainqueue_rect()
-    for e in w:select "main_queue camera_eid:in" do
+    for e in w:select "main_queue camera_ref:in" do
         mainqueue_rect(mainqueue_rect, e.render_target.view_rect)
     end
 end
@@ -39,7 +39,7 @@ end
 function svs:init()
     orthoview = {
         front = {
-            camera_eid = icamera.create{
+            camera_ref = icamera.create{
                 viewdir = {0, 0, 1, 0},
                 updir   = {0, 1, 0, 0},
                 eyepos  = {0, 0, -5, 0},
@@ -51,7 +51,7 @@ function svs:init()
             },
         },
         back = {
-            camera_eid = icamera.create{
+            camera_ref = icamera.create{
                 viewdir = {0, 0, -1, 0},
                 updir   = {0, 1, 0, 0},
                 eyepos  = {0, 0, 5, 0},
@@ -63,7 +63,7 @@ function svs:init()
             },
         },
         left = {
-            camera_eid = icamera.create{
+            camera_ref = icamera.create{
                 viewdir = {1, 0, 0, 0},
                 updir   = {0, 1, 0, 0},
                 eyepos  = {-5, 0, 0, 0},
@@ -75,7 +75,7 @@ function svs:init()
             },
         },
         right = {
-            camera_eid = icamera.create{
+            camera_ref = icamera.create{
                 viewdir = {-1, 0, 0, 0},
                 updir   = {0, 1, 0, 0},
                 eyepos  = {5, 0, 0, 0},
@@ -87,7 +87,7 @@ function svs:init()
             },
         },
         top = {
-            camera_eid = icamera.create{
+            camera_ref = icamera.create{
                 viewdir = {0, -1, 0, 0},
                 updir   = {0, 0, 1, 0},
                 eyepos  = {0, 5, 0, 0},
@@ -99,7 +99,7 @@ function svs:init()
             },
         },
         bottom = {
-            camera_eid = icamera.create{
+            camera_ref = icamera.create{
             viewdir = {0, 1, 0, 0},
             updir   = {0, 0, -1, 0},
             eyepos  = {0, -5, 0, 0},
@@ -113,12 +113,12 @@ function svs:init()
     }
 
     for k, v in pairs(orthoview) do
-        irender.create_view_queue({x=0, y=0, w=1, h=1}, v.name, v.camera_eid)
+        irender.create_view_queue({x=0, y=0, w=1, h=1}, v.name, v.camera_ref)
     end
 end
 
 function svs:entity_init()
-    for e in w:select "INIT main_queue camera_eid:in render_target:in" do
+    for e in w:select "INIT main_queue camera_ref:in render_target:in" do
         local vr = e.render_target.view_rect
         copy_rect(vr, mainqueue_rect)
         for k, v in pairs(orthoview) do
@@ -202,10 +202,10 @@ function svs:data_changed()
     end
     
     if splitview then
-        for _, _, cameraeids in svcc_mb:unpack() do
+        for _, _, camera_refs in svcc_mb:unpack() do
             local vq = viewqueue[viewidx]
             for idx, n in ipairs(vq) do
-                irq.set_camera(orthoview[n].name, cameraeids[idx])
+                irq.set_camera(orthoview[n].name, camera_refs[idx])
             end
         end
     end
@@ -214,8 +214,8 @@ end
 function svs:update_camera()
     for k, v in pairs(orthoview) do
         local qn = v.name
-        local qe = w:singleton(qn, "camera_eid:in")
-        local camera = icamera.find_camera(qe.camera_eid)
+        local qe = w:singleton(qn, "camera_ref:in")
+        local camera = icamera.find_camera(qe.camera_ref)
         local worldmat = camera.worldmat
         camera.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), camera.updir)
         camera.projmat = math3d.projmat(camera.frustum)

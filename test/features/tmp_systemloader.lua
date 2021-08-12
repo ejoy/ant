@@ -200,29 +200,29 @@ local camera_cache = {
     }
 }
 
-local function main_camera_eid()
-    for e in w:select "main_queue camera_eid:in" do
-        return e.camera_eid
+local function main_camera_ref()
+    for e in w:select "main_queue camera_ref:in" do
+        return e.camera_ref
     end
 end
 
 function init_loader_sys:entity_init()
-    for e in w:select "INIT main_queue camera_eid:in" do
-        local cameraeid = e.camera_eid
+    for e in w:select "INIT main_queue camera_ref:in" do
+        local camera_ref = e.camera_ref
 
         local eid = world:instance "/pkg/ant.test.features/assets/entities/cube.prefab"[1]
         iom.set_scale(eid, 0.1)
     
-        icc.attach(cameraeid)
-        icamera.controller(cameraeid, icc.get())
+        icc.attach(camera_ref)
+        icamera.controller(camera_ref, icc.get())
     
         camera_cache.icc.pos.v = {-10.5, 10, -5.5, 1}
         camera_cache.icc.dir.v = math3d.sub(mc.ZERO_PT, camera_cache.icc.pos)
         camera_cache.icc.updir.v = mc.YAXIS
-        icamera.lookto(cameraeid, camera_cache.icc.pos, camera_cache.icc.dir)
+        icamera.lookto(camera_ref, camera_cache.icc.pos, camera_cache.icc.dir)
     
-        iom.set_rotation(cameraeid, math3d.quaternion(0.3893,0.1568,-0.0674,0.9052))
-        -- icamera.set_dof(cameraeid, {
+        iom.set_rotation(camera_ref, math3d.quaternion(0.3893,0.1568,-0.0674,0.9052))
+        -- icamera.set_dof(camera_ref, {
         --     -- aperture_fstop      = 2.8,
         --     -- aperture_blades     = 0,
         --     -- aperture_rotation   = 0,
@@ -243,7 +243,7 @@ function init_loader_sys:entity_init()
         --     enable              = true,
         -- })
         -- local dir = {0, 0, 1, 0}
-        -- icamera.lookto(cameraeid, {0, 0, -8, 1}, dir)
+        -- icamera.lookto(camera_ref, {0, 0, -8, 1}, dir)
         -- local ipl = world:interface "ant.render|ipolyline"
         -- ipl.add_strip_lines({
         --     {0, 0, 0}, {0.5, 0, 1}, {1, 0, 0},
@@ -285,18 +285,18 @@ local kb_mb = world:sub{"keyboard"}
 function init_loader_sys:data_changed()
     for _, key, press, status in kb_mb:unpack() do
         if key == "X" and press == 0 then
-            local cameraeid = main_camera_eid()
+            local camera_ref = main_camera_ref()
 
-            local isicc = icc.get() == icamera.controller(cameraeid)
+            local isicc = icc.get() == icamera.controller(camera_ref)
             local c = isicc and camera_cache.icc or camera_cache.iccqs
-            c.pos.v = iom.get_position(cameraeid)
-            c.dir.v = iom.get_direction(cameraeid)
-            c.updir.v = iom.get_updir(cameraeid)
+            c.pos.v = iom.get_position(camera_ref)
+            c.dir.v = iom.get_direction(camera_ref)
+            c.updir.v = iom.get_updir(camera_ref)
 
             local uc = isicc and camera_cache.iccqs or camera_cache.icc
 
-            iom.lookto(cameraeid, uc.pos, uc.dir, uc.updir)
-            icamera.controller(cameraeid, icc.get())
+            iom.lookto(camera_ref, uc.pos, uc.dir, uc.updir)
+            icamera.controller(camera_ref, icc.get())
         end
 
         local function light_entity()
@@ -336,9 +336,9 @@ function init_loader_sys:data_changed()
                 pos = iom.get_position(lighteid),
             }
             
-            local cameraeid = main_camera_eid()
-            local viewmat = icamera.calc_viewmat(cameraeid)
-            local frustum = icamera.get_frustum(cameraeid)
+            local camera_ref = main_camera_ref()
+            local viewmat = icamera.calc_viewmat(camera_ref)
+            local frustum = icamera.get_frustum(camera_ref)
             local near, far = frustum.n, frustum.f
 
             local aabb = {
@@ -353,7 +353,7 @@ function init_loader_sys:data_changed()
             end
 
             local pt = {0, 1, 0, 1}
-            local projmat = icamera.calc_projmat(cameraeid)
+            local projmat = icamera.calc_projmat(camera_ref)
             local ptClip = math3d.transform(projmat, math3d.transform(viewmat, pt, 1), 1)
             local ptNDC = math3d.mul(ptClip, 1.0/math3d.index(ptClip, 4))
             local sx, sy = math3d.index(math3d.muladd(ptNDC, 0.5, math3d.vector(0.5, 0.5, 0.0, 0.0)), 1, 2)
@@ -448,15 +448,15 @@ function init_loader_sys:data_changed()
                 local rt = e.render_target.view_rect
                 screensize = {rt.w, rt.h}
             end
-            local cameraeid = main_camera_eid()
-            local frustum = icamera.get_frustum(cameraeid)
+            local camera_ref = main_camera_ref()
+            local frustum = icamera.get_frustum(camera_ref)
             local near, far = frustum.n, frustum.f
-            local invproj = math3d.inverse(icamera.calc_projmat(cameraeid))
+            local invproj = math3d.inverse(icamera.calc_projmat(camera_ref))
             
             local v_posWS = {0.36984, 0.75826, -0.30619, 1.0}
             local xsize, ysize, zsize = 16, 9, 24
             local id1
-            local viewmat = icamera.calc_viewmat(cameraeid)
+            local viewmat = icamera.calc_viewmat(camera_ref)
             local posVS = math3d.transform(viewmat, v_posWS, 1)
             for z=1, zsize do
                 for y=1, ysize do
@@ -482,11 +482,11 @@ function init_loader_sys:data_changed()
                 local rt = e.render_target.view_rect
                 screensize = {rt.w, rt.h}
             end
-            local cameraeid = main_camera_eid()
-            local frustum = icamera.get_frustum(cameraeid)
+            local camera_ref = main_camera_ref()
+            local frustum = icamera.get_frustum(camera_ref)
             local u_nearZ, u_farZ = frustum.n, frustum.f
-            local invproj = math3d.inverse(icamera.calc_projmat(cameraeid))
-            local invview = math3d.inverse(icamera.calc_viewmat(cameraeid))
+            local invproj = math3d.inverse(icamera.calc_projmat(camera_ref))
+            local invview = math3d.inverse(icamera.calc_viewmat(camera_ref))
             local vb = {}
             local ib = {}
             local function add_frustum_wireframe(ib, offset)

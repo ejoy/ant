@@ -19,12 +19,9 @@ end
 
 local ic = ecs.interface "camera"
 
-local function find_camera(cameraeid)
-    for v in w:select "eid:in camera:in" do
-		if cameraeid == v.eid then
-			return v.camera
-		end
-    end
+local function find_camera(camera_ref)
+    w:sync("camera:in", camera_ref)
+    return camera_ref.camera
 end
 
 ic.find_camera = find_camera
@@ -39,13 +36,14 @@ local defaultcamera = {
 function ic.create_entity(eid, info)
     info.updir = mc.YAXIS
     local srt = math3d.ref(info.transform and math3d.matrix(info.transform) or mc.IDENTITY_MAT)
-    world:luaecs_create_entity {
+    return world:luaecs_create_entity {
         policy = {
             "ant.general|name",
             "ant.camera|camera",
             "ant.scene|scene_object",
         },
         data = {
+            reference = true,
             eid = eid,
             camera = {
                 frustum = info.frustum,
@@ -79,13 +77,14 @@ function ic.create(info)
     local viewmat = math3d.lookto(info.eyepos, info.viewdir, info.updir)
     local srt = math3d.ref(math3d.matrix(math3d.inverse(viewmat)))
     local eid = world:register_entity()
-    world:luaecs_create_entity {
+    return world:luaecs_create_entity {
         policy = {
             "ant.general|name",
             "ant.camera|camera",
             "ant.scene|scene_object",
         },
         data = {
+            reference = true,
             eid = eid,
             camera = {
                 frustum = frustum,
@@ -100,11 +99,10 @@ function ic.create(info)
             }
         }
     }
-    return eid
 end
 
-local function bind_queue(cameraeid, queuename)
-    irq.set_camera(queuename, cameraeid)
+local function bind_queue(camera_ref, queuename)
+    irq.set_camera(queuename, camera_ref)
 end
 
 local function has_queue(qn)
@@ -206,7 +204,7 @@ function ic.lookto(eid, ...)
     iom.lookto(eid, ...)
 end
 
-function ic.focus_obj(cameraeid, eid)
+function ic.focus_obj(camera_ref, eid)
     local fe = world[eid]
     local aabb = fe._rendercache.aabb
     if aabb then
@@ -216,7 +214,7 @@ function ic.focus_obj(cameraeid, eid)
         local viewdir = math3d.normalize(math3d.inverse(nviewdir))
 
         local pos = math3d.muladd(3, nviewdir, center)
-        iom.lookto(cameraeid, pos, viewdir)
+        iom.lookto(camera_ref, pos, viewdir)
     end
 end
 
@@ -247,11 +245,11 @@ end
 
 local cameraview_sys = ecs.system "camera_view_system"
 
-local function update_camera(cameraeid)
-    if cameraeid == nil then    --TODO: need remove
+local function update_camera(camera_ref)
+    if camera_ref == nil then    --TODO: need remove
         return
     end
-    local camera = find_camera(cameraeid)
+    local camera = find_camera(camera_ref)
     if camera then
         local worldmat = camera.worldmat
         camera.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), camera.updir)
@@ -261,21 +259,21 @@ local function update_camera(cameraeid)
 end
 
 function cameraview_sys:update_mainview_camera()
-    for v in w:select "main_queue camera_eid:in" do
-        update_camera(v.camera_eid)
+    for v in w:select "main_queue camera_ref:in" do
+        update_camera(v.camera_ref)
     end
-    for v in w:select "blit_queue camera_eid:in" do
-        update_camera(v.camera_eid)
+    for v in w:select "blit_queue camera_ref:in" do
+        update_camera(v.camera_ref)
     end
 end
 
 local bm = ecs.action "bind_camera"
 function bm.init(prefab, idx, value)
     local eid
-    if not value.camera_eid then
+    if not value.camera_ref then
         eid = prefab[idx]
     else
-        eid = prefab[idx][value.camera_eid]
+        eid = prefab[idx][value.camera_ref]
     end
     
     ic.bind(eid, value.which)

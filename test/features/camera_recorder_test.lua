@@ -17,15 +17,15 @@ function cr_test.data_changed()
                 icr.stop(which_cr)
             end
         elseif code == "SPACE" and press == 0 then
-            for e in w:seelct "main_queue camera_eid:in" do
-                icr.add(which_cr, e.camera_eid)
+            for e in w:seelct "main_queue camera_ref:in" do
+                icr.add(which_cr, e.camera_ref)
             end
         elseif state.CTRL and code == "P" and press == 0 then
             if recording then
                 print("camera is recording, please stop before play")
             else
-                for e in w:seelct "main_queue camera_eid:in" do
-                    icr.play(which_cr, e.camera_eid)
+                for e in w:seelct "main_queue camera_ref:in" do
+                    icr.play(which_cr, e.camera_ref)
                 end
             end
         end
