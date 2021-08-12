@@ -81,7 +81,7 @@ function m:entity_init()
             viewdir = {-2, -1, 2, 0},
             frustum = {n = 1, f = 100 }
         }
-        local rc = world[second_camera]._rendercache
+        local rc = icamera.find_camera(second_camera)
         rc.viewmat = icamera.calc_viewmat(second_camera)
         rc.projmat = icamera.calc_projmat(second_camera)
         rc.viewprojmat = icamera.calc_viewproj(second_camera)

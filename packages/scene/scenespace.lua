@@ -146,8 +146,8 @@ function s:entity_init()
 			hashmap[scene._self] = v.scene_id
 		end
 		local e = world[v.eid]
-		if e then
-			e._scene_id = v.scene_id
+		if e.parent then
+			hashmap[e.parent] = findSceneId(e.parent)
 		end
 	end
 	w:clear "scene"
