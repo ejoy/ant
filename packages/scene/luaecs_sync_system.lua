@@ -35,6 +35,10 @@ end
 function s:luaecs_sync()
 	for _, _, eid in evCreate:unpack() do
 		local e = world[eid]
+		if isCamera(e) then
+			assert(false)
+			goto continue
+		end
 		local policy = {}
 		local data = { eid = eid, INIT = true }
 		local rc = e._rendercache
@@ -69,19 +73,12 @@ function s:luaecs_sync()
 		elseif isLightmapEntity(e) then
 			data.lightmap = e.lightmap
 			policy[#policy+1] = "ant.baker|lightmap"
-		elseif isCamera(e) then
-			data.camera = {
-				frustum     = e.frustum,
-				clip_range  = e.clip_range,
-				dof         = e.dof,
-				srt         = data.scene.srt,
-			}
-			policy[#policy+1] = "ant.camera|camera"
 		end
 		world:luaecs_create_entity {
 			policy = policy,
 			data = data
 		}
+		::continue::
 	end
 	for _, _, eid in evUpdateEntity:unpack() do
 		local e = world[eid]

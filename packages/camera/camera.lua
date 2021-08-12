@@ -36,6 +36,32 @@ local defaultcamera = {
     name = "default_camera",
 }
 
+function ic.create_entity(eid, info)
+    info.updir = mc.YAXIS
+    local srt = math3d.ref(info.transform and math3d.matrix(info.transform) or mc.IDENTITY_MAT)
+    world:luaecs_create_entity {
+        policy = {
+            "ant.general|name",
+            "ant.camera|camera",
+            "ant.scene|scene_object",
+        },
+        data = {
+            eid = eid,
+            camera = {
+                frustum = info.frustum,
+                clip_range = info.clip_range,
+                dof = info.dof,
+                srt = srt,
+            },
+            name = info.name or "DEFAULT_CAMERA",
+            scene = {
+                srt = srt,
+                updir = info.updir and math3d.ref(math3d.vector(info.updir)) or nil,
+            }
+        }
+    }
+end
+
 function ic.create(info)
     info = info or defaultcamera
     local frustum = info.frustum

@@ -117,7 +117,7 @@ local function findSceneId(eid)
 	for v in w:select "eid:in" do
 		if v.eid == eid then
 			w:sync("scene_id:in", v)
-			return v
+			return v.scene_id
 		end
 	end
 end
@@ -126,7 +126,7 @@ local function findSceneNode(eid)
 	for v in w:select "eid:in" do
 		if v.eid == eid then
 			w:sync("scene_node(scene_id):in", v)
-			return v
+			return v.scene_node
 		end
 	end
 end

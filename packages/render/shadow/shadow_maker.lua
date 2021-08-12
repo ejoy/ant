@@ -280,7 +280,7 @@ end
 
 local function find_directional_light(eid)
 	local e = world[eid]
-	if e.light_type == "directional" and e.make_shadow then
+	if e and e.light_type == "directional" and e.make_shadow then
 		if dl_eid then
 			log.warn("already has directional light for making shadow")
 		else
