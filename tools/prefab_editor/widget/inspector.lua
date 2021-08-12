@@ -53,7 +53,7 @@ function m.update_template_tranform(eid)
     
     if not template or not template.template then return end
 
-    local s, r, t = math3d.srt(iom.srt(eid))
+    local s, r, t = iom.get_scale(eid), iom.get_rotation(eid), iom.get_position(eid)
     local ts, tr, tt = math3d.totable(s), math3d.totable(r), math3d.totable(t)
     template.template.data.transform = {
         r = {tr[1], tr[2], tr[3], tr[4]},

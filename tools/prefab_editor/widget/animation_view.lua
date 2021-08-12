@@ -208,7 +208,7 @@ local function from_runtime_event(runtime_event)
                     e.breakable = e.breakable or false
                     e.life_time = e.life_time or 2
                     e.breakable_ui = {e.breakable}
-                    e.life_time_ui = {e.life_time}
+                    e.life_time_ui = {e.life_time, speed = 0.02, min = 0, max = 100}
                 end
             elseif e.event_type == "Collision" then
                 e.collision.tid = e.collision.tid or -1
@@ -379,7 +379,7 @@ local function add_event(et)
         breakable = (et == "Effect") and false or nil,
         breakable_ui = (et == "Effect") and {false} or nil,
         life_time = (et == "Effect") and 2 or nil,
-        life_time_ui = (et == "Effect") and { 2 } or nil,
+        life_time_ui = (et == "Effect") and { 2, speed = 0.02, min = 0, max = 100} or nil,
         name_ui = {text = event_name},
         msg_content = (et == "Message") and "" or nil,
         msg_content_ui = (et == "Message") and {text = ""} or nil,
@@ -583,7 +583,7 @@ local function show_current_event()
             dirty = true
         end
         imgui.widget.PropertyLabel("LifeTime")
-        if imgui.widget.DragInt("##LifeTime", current_event.life_time_ui) then
+        if imgui.widget.DragFloat("##LifeTime", current_event.life_time_ui) then
             current_event.life_time = current_event.life_time_ui[1]
             dirty = true
         end
@@ -1163,6 +1163,7 @@ function m.show()
                 elseif k == "move_delta" then
                     move_delta = v
                 end
+                print("move_type: ", move_type)
             end
             on_move_keyframe(new_frame_idx, move_type)
             if move_type and move_type ~= 0 then

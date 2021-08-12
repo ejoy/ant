@@ -69,7 +69,8 @@ function m:entity_init()
         local main_camera = icamera.create {
             eyepos = {-200, 100, 200, 1},
             viewdir = {2, -1, -2, 0},
-            frustum = {n = 1, f = 1000 }
+            frustum = {n = 1, f = 1000 },
+            updir = {0.0, 1.0, 0.0, 0}
         }
         icamera.bind(main_camera, "main_queue")
         camera_mgr.main_camera = main_camera
@@ -79,7 +80,8 @@ function m:entity_init()
         local second_camera = icamera.create {
             eyepos = {2, 2, -2, 1},
             viewdir = {-2, -1, 2, 0},
-            frustum = {n = 1, f = 100 }
+            frustum = {n = 1, f = 100 },
+            updir = {0.0, 1.0, 0.0, 0}
         }
         local rc = icamera.find_camera(second_camera)
         rc.viewmat = icamera.calc_viewmat(second_camera)

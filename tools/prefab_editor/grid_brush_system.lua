@@ -10,13 +10,54 @@ local iss = world:interface "ant.scene|iscenespace"
 local computil = world:interface "ant.render|entity"
 local utils     = require "common.utils"
 local brush_sys = ecs.system "grid_brush_system"
+local global_data = require "common.global_data"
 
 local default_color = {0, 0, 1, 0.5}
-local brush_color = {1, 1, 1, 0.5}
-local grid = {}
+local current_brush_color = {1, 1, 1, 0.5}
+local current_brush_id
+local grid = {
+    brush = {}
+}
+
+local function color_clamp(c)
+    if c < 0 then return 0 end
+    if c > 255 then return 255 end
+    return c
+end
+
+
+local function colorf2i(fc)
+    return color_clamp(math.floor(fc[1] * 255.0)) << 24 | color_clamp(math.floor(fc[2] * 255.0)) << 16 | color_clamp(math.floor(fc[3] * 255.0)) << 8 | color_clamp(math.floor(fc[4] * 255.0))
+end
+
+local function colori2f(ic)
+    return {((ic & 0xFF000000) >> 24) / 255.0, ((ic & 0x00FF0000) >> 16) / 255.0, ((ic & 0x0000FF00) >> 8) / 255.0, (ic & 0xFF) / 255.0 }
+end
+
+local function fromhex(str)
+    return (str:gsub('..', function (cc)
+        return string.char(tonumber(cc, 16))
+    end))
+end
+
+local function tohex(str)
+    return (str:gsub('.', function (c)
+        return string.format('%02X', string.byte(c))
+    end))
+end
+
+local function get_brush_id(color)
+    for i, c in ipairs(grid.brush) do
+        if color == c then
+            return i
+        end
+    end
+    grid.brush[#grid.brush + 1] = color
+    return #grid.brush
+end
 
 function grid:clear()
-    if self.data and self.data > 0 then
+    if self.data and #self.data > 0 then
         for i = 1, self.row do
             for j = 1, self.col do
                 world:remove_entity(self.data[i][j].eid)
@@ -34,16 +75,20 @@ function grid:init(size, row, col)
     self.total_height = size * row
     self.data = {}
     self.visible = true
+    local cid = get_brush_id(colorf2i(default_color))
     for i = 1, row do
         local temp_row = {}
         local posz = 0.5 * size - self.total_width * 0.5 + (i - 1) * size
         for j = 1, col do
             local posx = 0.5 * size - self.total_height * 0.5 + (j  - 1) * size
             local tile_eid = computil.create_prim_plane_entity({t = {posx, 0, posz, 1}, s = {size * 0.95, 0, size * 0.95, 0}},
-		                "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material", "grid")
+		                "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material", "grid", true)
 	        ies.set_state(tile_eid, "auxgeom", true)
 	        imaterial.set_property(tile_eid, "u_color", default_color)
-            temp_row[#temp_row + 1] = {eid = tile_eid, color = default_color}
+            local gd = {}
+            gd.eid = tile_eid
+            gd[1] = cid
+            temp_row[#temp_row + 1] = gd
         end
         self.data[#self.data + 1] = temp_row
     end
@@ -58,25 +103,8 @@ function grid:show(show)
     end
 end
 
-local function color_clamp(c)
-    if c < 0 then return 0 end
-    if c > 255 then return 255 end
-    return c
-end
-
-local function fromhex(str)
-    return (str:gsub('..', function (cc)
-        return string.char(tonumber(cc, 16))
-    end))
-end
-
-local function tohex(str)
-    return (str:gsub('.', function (c)
-        return string.format('%02X', string.byte(c))
-    end))
-end
-
-function grid:load(filename)
+function grid:load(path)
+    local filename = string.sub(path, #global_data.project_root:string() + 2, -5)
     local source = require(string.gsub(filename, "/", "."))
     if not source or not source.size or not source.row or not source.col then return end
     for i = 1, source.row do
@@ -85,11 +113,9 @@ function grid:load(filename)
             local tile = source.data[i][j]
             local posx = 0.5 * source.size - source.total_height * 0.5 + (j  - 1) * source.size
             local eid = computil.create_prim_plane_entity({t = {posx, 0, posz, 1}, s = {source.size * 0.95, 0, source.size * 0.95, 0}},
-		                "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material", "grid")
+		                "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material", "grid", true)
 	        ies.set_state(eid, "auxgeom", true)
-            local ic = tonumber(tile.color, 16)
-            tile.color = {((ic & 0xFF000000) >> 24) / 255.0, ((ic & 0x00FF0000) >> 16) / 255.0, ((ic & 0x0000FF00) >> 8) / 255.0, (ic & 0xFF) / 255.0 }
-	        imaterial.set_property(eid, "u_color", tile.color)
+	        imaterial.set_property(eid, "u_color", colori2f(source.brush[tile[1]]))
             tile.eid = eid
         end
     end
@@ -100,14 +126,16 @@ function grid:load(filename)
     self.total_width = source.total_width
     self.total_height = source.total_height
     self.data = source.data
+    self.brush = source.brush
+    self.filename = path
     self.visible = true
 end
 
-function grid:save()
-    if not self.filename then
-        local filename = widget_utils.get_saveas_path("Lua", ".lua")
-        if not filename then return end
-        self.filename = filename
+function grid:save(filename)
+    if not filename then
+        local newfilename = widget_utils.get_saveas_path("Lua", ".lua")
+        if not newfilename then return end
+        self.filename = newfilename
     end
 
     local temp = utils.deep_copy(self)
@@ -120,7 +148,7 @@ function grid:save()
     for _, row in ipairs(temp.data) do
         for _, tile in ipairs(row) do
             tile.eid = nil
-            tile.color = string.format("%02X", color_clamp(math.floor(tile.color[1] * 255.0)) << 24 | color_clamp(math.floor(tile.color[2] * 255.0)) << 16 | color_clamp(math.floor(tile.color[3] * 255.0)) << 8 | color_clamp(math.floor(tile.color[4] * 255.0)))
+            --tile.color = string.format("%02X", color_clamp(math.floor(tile.color[1] * 255.0)) << 24 | color_clamp(math.floor(tile.color[2] * 255.0)) << 16 | color_clamp(math.floor(tile.color[3] * 255.0)) << 8 | color_clamp(math.floor(tile.color[4] * 255.0)))
         end
     end
     utils.write_file(self.filename, "return " .. utils.table_to_string(temp))
@@ -149,8 +177,8 @@ local last_row, last_col
 local function on_row_col_select(row, col)
     if not row or not col or (last_row==row and last_col==col) then return end
     local tile = grid.data[row][col]
-    tile.color = brush_color
-    imaterial.set_property(tile.eid, "u_color", brush_color)
+    tile[1] = current_brush_id
+    imaterial.set_property(tile.eid, "u_color", current_brush_color)
     last_row, last_col = row, col
 end
 
@@ -160,10 +188,16 @@ local event_mouseup = world:sub {"mouseup"}
 local event_mouse_drag = world:sub {"mousedrag"}
 local event_gridmesh = world:sub {"GridMesh"}
 
+local event_reset = world:sub {"ResetEditor"}
+
 local brush_state = false
 
 function brush_sys:handle_event()
     if not grid then return end
+
+    for _, what in event_reset:unpack() do
+        grid:clear()
+    end
 
     for _, what, x, y in event_mouseup:unpack() do
 		if what == "LEFT" then
@@ -175,7 +209,7 @@ function brush_sys:handle_event()
         if what == "create" then
             grid:init(p1, p2, p3)
         elseif what == "brushcolor" then
-            brush_color = {p1, p2, p3, p4}
+            current_brush_color = {p1, p2, p3, p4}
         elseif what == "load" then
             load_grid(p1)
         end
@@ -184,9 +218,14 @@ function brush_sys:handle_event()
     for _, key, press, state in event_keyboard:unpack() do
         brush_state = state.CTRL
     end
-    
+
+    local brush_id
     for _, what, sx, sy, dx, dy in event_mouse_drag:unpack() do
 		if what == "LEFT" and brush_state then
+            if not brush_id then
+                current_brush_id = get_brush_id(colorf2i(current_brush_color))
+                brush_id = current_brush_id
+            end
             on_row_col_select(get_row_col(sx, sy))
         end
     end

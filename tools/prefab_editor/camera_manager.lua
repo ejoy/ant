@@ -25,10 +25,10 @@ local default_far_clip  = 100
 local default_fov       = 30
         
 function m.set_second_camera(eid, show)
-    local rc = world[eid]._rendercache
-	rc.viewmat = icamera.calc_viewmat(eid)
-    rc.projmat = icamera.calc_projmat(eid)
-    rc.viewprojmat = icamera.calc_viewproj(eid)
+    -- local rc = world[eid]._rendercache
+	-- rc.viewmat = icamera.calc_viewmat(eid)
+    -- rc.projmat = icamera.calc_projmat(eid)
+    -- rc.viewprojmat = icamera.calc_viewproj(eid)
     icamera.bind_queue(eid, m.second_view)
     m.second_camera = eid
     m.show_frustum(eid, show)
