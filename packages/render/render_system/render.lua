@@ -88,9 +88,7 @@ function irender.draw(vid, ri, mat)
 
 	local start_v, num_v = vb.start, vb.num
 	if num_v ~= 0 then
-		for idx, h in ipairs(vb.handles) do
-			bgfx.set_vertex_buffer(idx-1, h, start_v, num_v)
-		end
+		bgfx.set_vertex_buffer(vb.handles, start_v, num_v)
 	end
 
 	bgfx.submit(vid, _mat.fx.prog, 0)

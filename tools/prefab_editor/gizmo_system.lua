@@ -533,7 +533,7 @@ local function select_axis(x, y)
 	local start = utils.world_to_screen(camera_mgr.main_camera, gizmo_obj_pos)
 	uniform_scale = false
 	-- uniform scale
-	local hp = {x, y, 0}
+	local hp = {x - global_data.viewport.x, y - global_data.viewport.y, 0}
 	if gizmo.mode == gizmo_const.SCALE then
 		local radius = math3d.length(math3d.sub(hp, start))
 		if radius < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
@@ -1040,7 +1040,8 @@ function gizmo_sys:handle_event()
 					elseif gizmo.mode == gizmo_const.ROTATE then
 						cmd_queue:record({action = gizmo_const.ROTATE, eid = target, oldvalue = math3d.totable(last_rotate), newvalue = math3d.totable(iom.get_rotation(target))})
 					elseif gizmo.mode == gizmo_const.MOVE then
-						local localPos = math3d.totable(math3d.transform(math3d.inverse(iom.worldmat(world[target].parent)), last_gizmo_pos, 1))
+						local pw = iom.worldmat(world[target].parent)
+						local localPos = math3d.totable(math3d.transform(math3d.inverse(pw), last_gizmo_pos, 1))
 						cmd_queue:record({action = gizmo_const.MOVE, eid = target, oldvalue = localPos, newvalue = math3d.totable(iom.get_position(target))})
 					end
 				end

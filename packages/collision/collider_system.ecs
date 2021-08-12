@@ -18,6 +18,13 @@ policy "collider_policy"
     .component "transform"
     .component "collider"
 
+component_v2 "collider"
+    .type "lua"
+
+policy_v2 "collider"
+    .require_system "ant.collision|collider_system"
+    .component_v2 "collider"
+
 policy "terrain_collider_policy"
     .require_transform "terrain_collider_transform"
     .component "collider"

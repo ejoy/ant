@@ -1163,7 +1163,6 @@ function m.show()
                 elseif k == "move_delta" then
                     move_delta = v
                 end
-                print("move_type: ", move_type)
             end
             on_move_keyframe(new_frame_idx, move_type)
             if move_type and move_type ~= 0 then
