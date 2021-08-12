@@ -47,8 +47,8 @@ local function create_debug_entity()
 	end
 
 	do
-		for e in w:select "main_queue camera_eid:in" do
-			local camera = icamera.find_camera(e.camera_eid)
+		for e in w:select "main_queue camera_ref:in" do
+			local camera = icamera.find_camera(e.camera_ref)
 			for idx, f in ipairs(ishadow.split_frustums()) do
 				local vp = math3d.mul(math3d.projmat(f), camera.viewmat)
 				debug_entities[#debug_entities+1] = ientity.create_frustum_entity(
@@ -58,9 +58,9 @@ local function create_debug_entity()
 		end
 	end
 	
-	for se in w:select "csm_queue csm:in camera_eid:in name:in" do
+	for se in w:select "csm_queue csm:in camera_ref:in name:in" do
 		local idx = se.csm.index
-		local ce = world[se.camera_eid]
+		local ce = icamera.find_camera(se.camera_ref)
 		local rc = ce._rendercache
 		local frustum_points = math3d.frustum_points(rc.viewprojmat)
 		local color = frustum_colors[idx]
@@ -91,14 +91,14 @@ local function check_shadow_matrix()
 	local lightdir = iom.get_direction(directional_light())
 	print("light direction:", math3d.tostring(lightdir))
 
-	for e in w:select "main_queue camera_eid:in" do
-		print("eye posision:", math3d.tostring(iom.get_position(e.camera_eid)))
-		print("view direction:", math3d.tostring(iom.get_direction(e.camera_eid)))
+	for e in w:select "main_queue camera_ref:in" do
+		print("eye posision:", math3d.tostring(iom.get_position(e.camera_ref)))
+		print("view direction:", math3d.tostring(iom.get_direction(e.camera_ref)))
 
-		local camera_2_origin = math3d.length(iom.get_position(e.camera_eid))
+		local camera_2_origin = math3d.length(iom.get_position(e.camera_ref))
 		print("check eye position to [0, 0, 0] distance:", camera_2_origin)
 
-		local f = ishadow.calc_split_frustums(icamera.get_frustum(e.camera_eid))[1]
+		local f = ishadow.calc_split_frustums(icamera.get_frustum(e.camera_ref))[1]
 		local dis_n, dis_f = f.n, f.f
 		print("csm1 distance:", dis_n, dis_f)
 
@@ -110,9 +110,9 @@ local function check_shadow_matrix()
 	
 
 		local csm_index = se.csm.index
-		local ff = ishadow.calc_split_frustums(icamera.get_frustum(e.camera_eid))
+		local ff = ishadow.calc_split_frustums(icamera.get_frustum(e.camera_ref))
 		local split_frustum_desc = ff[csm_index]
-		local viewmat = icamera.calc_viewmat(e.camera_eid)
+		local viewmat = icamera.calc_viewmat(e.camera_ref)
 		local vp = math3d.mul(math3d.projmat(split_frustum_desc), viewmat)
 
 		local frustum_points = math3d.frustum_points(vp)
@@ -149,17 +149,17 @@ local function check_shadow_matrix()
 		ientity.create_frustum_entity(new_light_frustum_points, "lua calc view frustum",  0xff0000ff)
 		
 		---------------------------------------------------------------------------------------------------------
-		local shadowcameraeid = se.camera_eid
-		print("shadow camera view direction:", math3d.tostring(iom.get_direction(shadowcameraeid)))
-		print("shadow camera position:", math3d.tostring(iom.get_position(shadowcameraeid)))
+		local shadow_camera_ref = se.camera_ref
+		print("shadow camera view direction:", math3d.tostring(iom.get_direction(shadow_camera_ref)))
+		print("shadow camera position:", math3d.tostring(iom.get_position(shadow_camera_ref)))
 
-		local shadowcamera_frustum_desc = icamera.get_frustum(shadowcameraeid)
+		local shadowcamera_frustum_desc = icamera.get_frustum(shadow_camera_ref)
 		print(string.format("shadow camera frustum:[l=%f, r=%f, b=%f, t=%f, n=%f, f=%f]", 
 			shadowcamera_frustum_desc.l, shadowcamera_frustum_desc.r, 
 			shadowcamera_frustum_desc.b, shadowcamera_frustum_desc.t, 
 			shadowcamera_frustum_desc.n, shadowcamera_frustum_desc.f))
 
-		local shadow_viewproj = icamera.calc_viewproj(shadowcameraeid)
+		local shadow_viewproj = icamera.calc_viewproj(shadow_camera_ref)
 		local shadowcamera_frustum_points = math3d.frustum_points(shadow_viewproj)
 
 		print("shadow view frustm point")
@@ -210,9 +210,9 @@ local function check_shadow_matrix()
 end
 
 local function log_split_distance()
-	for e in w:select "main_queue camera_eid:in" do
-		local c = icamera.find_camera(e.camera_eid)
-		for idx, f in ipairs(ishadow.calc_split_frustums(icamera.get_frustum(e.camera_eid))) do
+	for e in w:select "main_queue camera_ref:in" do
+		local c = icamera.find_camera(e.camera_ref)
+		for idx, f in ipairs(ishadow.calc_split_frustums(icamera.get_frustum(e.camera_ref))) do
 			print(string.format("csm%d, distance[%f, %f]", idx, f.n, f.f))
 		end
 	end
@@ -227,8 +227,8 @@ function shadowdbg_sys:camera_usage()
 			create_debug_entity()
 		elseif key == "L" and press == 0 then
 			local eids = {}
-			for se in w:select "csm_queue camera_eid:in csm:in" do
-				eids[se.csm.index] = se.camera_eid
+			for se in w:select "csm_queue camera_ref:in csm:in" do
+				eids[se.csm.index] = se.camera_ref
 			end
 			world:pub{"splitview", "change_camera", eids}
 		end

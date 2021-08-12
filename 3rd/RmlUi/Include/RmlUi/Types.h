@@ -68,7 +68,6 @@ enum class PropertyId : uint8_t;
 
 // Types for external interfaces.
 using FileHandle = uintptr_t;
-using TextureHandle = uintptr_t;
 using FontFaceHandle = uintptr_t;
 using TextEffectsHandle = uintptr_t;
 

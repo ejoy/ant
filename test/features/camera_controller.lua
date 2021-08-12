@@ -36,9 +36,9 @@ end
 
 function icc.attach(ceid)
 	local cc = world[cceid]._camera_controller
-	local old_cameraeid = cc.camera_eid
-	cc.camera_eid = ceid
-	world:pub{"camera_controller_changed", "camera", ceid, old_cameraeid}
+	local old_camera_ref = cc.camera_ref
+	cc.camera_ref = ceid
+	world:pub{"camera_controller_changed", "camera", ceid, old_camera_ref}
 	icamera.controller(ceid, cceid)
 end
 
@@ -47,11 +47,11 @@ function icc.get()
 end
 
 function icc.camera()
-	return world[cceid]._camera_controller.camera_eid
+	return world[cceid]._camera_controller.camera_ref
 end
 
 function icc.is_active()
-	local ceid = world[cceid]._camera_controller.camera_eid
+	local ceid = world[cceid]._camera_controller.camera_ref
 	if ceid and world[ceid] then
 		return icamera.controller(ceid) == cceid
 	end
@@ -89,21 +89,21 @@ end
 local svs_mb = world:sub{"splitviews", "selected"}
 local mw_mb = world:sub{"mouse_wheel"}
 
-local function can_orthoview_scale(cameraeid)
-	local f = icamera.get_frustum(cameraeid)
+local function can_orthoview_scale(camera_ref)
+	local f = icamera.get_frustum(camera_ref)
 	return f.ortho
 end
 
-local function scale_orthoview(cameraeid, delta)
+local function scale_orthoview(camera_ref, delta)
 	local scale_speed = 0.25
-	local f = icamera.get_frustum(cameraeid)
+	local f = icamera.get_frustum(camera_ref)
 	local d = delta * scale_speed
 	f.l = f.l - d
 	f.r = f.r + d
 	f.b = f.b - d
 	f.t = f.t + d
 
-	icamera.set_frustum(cameraeid, f)
+	icamera.set_frustum(camera_ref, f)
 end
 
 function cc_sys:data_changed()
@@ -112,33 +112,33 @@ function cc_sys:data_changed()
 		return
 	end
 
-	local cameraeid
+	local camera_ref
 	for _, t, eid in svs_mb:unpack() do
-		cameraeid = world[eid].camera_eid
+		camera_ref = world[eid].camera_ref
 	end
 
-	cameraeid = cameraeid or icc.camera()
+	camera_ref = camera_ref or icc.camera()
 
-	if can_rotate(cameraeid) then
+	if can_rotate(camera_ref) then
 		for _, e in ipairs(mouse_events) do
 			for _,_,state,x,y in e:unpack() do
 				if state == "MOVE" and mouse_lastx then
 					local ux = (x - mouse_lastx) / dpi_x * kMouseSpeed
 					local uy = (y - mouse_lasty) / dpi_y * kMouseSpeed
-					iom.rotate_forward_vector(cameraeid, uy, ux)
+					iom.rotate_forward_vector(camera_ref, uy, ux)
 				end
 				mouse_lastx, mouse_lasty = x, y
 			end
 		end
 	end
 
-	if can_orthoview_scale(cameraeid) then
+	if can_orthoview_scale(camera_ref) then
 		for _, delta in mw_mb:unpack() do
-			scale_orthoview(cameraeid, delta)
+			scale_orthoview(camera_ref, delta)
 		end
 	end
 
-	if can_move(cameraeid) then
+	if can_move(camera_ref) then
 		local keyboard_delta = {0 , 0, 0}
 		for _,code,press in eventKeyboard:unpack() do
 			local delta = (press>0) and kKeyboardSpeed or 0
@@ -157,7 +157,7 @@ function cc_sys:data_changed()
 			end
 		end
 		if keyboard_delta[1] ~= 0 or keyboard_delta[2] ~= 0 or keyboard_delta[3] ~= 0 then
-			iom.move(cameraeid, keyboard_delta)
+			iom.move(camera_ref, keyboard_delta)
 		end
 	end
 end

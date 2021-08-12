@@ -16,7 +16,7 @@ local mc        = mathpkg.constant
 local simpledof = ecs.system "simpledof_system"
 
 function simpledof.entity_init()
-    for e in w:select "INIT main_queue camera_eid:in render_target:in" do
+    for e in w:select "INIT main_queue camera_ref:in render_target:in" do
         local main_fbidx = e.render_target.fb_idx
         local fbw, fbh = ipp.main_rb_size(main_fbidx)
         local hfbw, hfbh = fbw/2, fbh/2
@@ -44,7 +44,7 @@ function simpledof.entity_init()
         local blurpass = ipp.create_pass(
             "simpledof_blur", 
             "/pkg/ant.resources/materials/postprocess/dof/simple_blur.material", 
-            blurrt, nil, e.camera_eid)
+            blurrt, nil, e.camera_ref)
 
         local mergert = {
             clear_state = {clear=""},
@@ -62,7 +62,7 @@ function simpledof.entity_init()
         local mergepass = ipp.create_pass(
             "simpledof_merge",
             "/pkg/ant.resources/materials/postprocess/dof/simple_merge.material",
-            mergert, nil, e.camera_eid)
+            mergert, nil, e.camera_ref)
         local outfocus_handle = fbmgr.get_rb(fbmgr.get(blurrt.fb_idx)[1]).handle
         imaterial.set_property(mergepass.eid, "s_outfocus", {stage=0, texture={handle=outfocus_handle}})
         ipp.add_technique("simpledof", {blurpass, mergepass})

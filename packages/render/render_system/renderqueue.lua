@@ -29,8 +29,8 @@ function irq.frame_buffer(queuename)
 end
 
 function irq.camera(queuename)
-	local qe = w:singleton(queuename, "camera_eid:in")
-	return qe.camera_eid
+	local qe = w:singleton(queuename, "camera_ref:in")
+	return qe.camera_ref
 end
 
 function irq.visible(queuename)
@@ -103,12 +103,12 @@ function irq.set_view_clear(queuename, what, color, depth, stencil)
 end
 
 function irq.set_view_rect(queuename, rect)
-	local qe = w:singleton(queuename, "render_target:in camera_eid:in")
+	local qe = w:singleton(queuename, "render_target:in camera_ref:in")
 	local rt = qe.render_target
 	local vr = rt.view_rect
 	vr.x, vr.y = rect.x, rect.y
 	vr.w, vr.h = rect.w, rect.h
-	icamera.set_frustum_aspect(qe.camera_eid, vr.w/vr.h)
+	icamera.set_frustum_aspect(qe.camera_ref, vr.w/vr.h)
 	bgfx.set_view_rect(rt.viewid, vr.x, vr.y, vr.w, vr.h)
 	world:pub{"component_changed", "view_rect", queuename}
 end
@@ -118,10 +118,10 @@ function irq.set_frame_buffer(queuename, fbidx)
 	rt.fb_idx = fbidx
 end
 
-function irq.set_camera(queuename, cameraeid)
-	local qe = {camera_eid = cameraeid, camera_changed = true}
-	w:singleton(queuename, "camera_eid:out camera_changed?out", qe)
-	world:pub{"component_changed", "camera_eid", queuename}
+function irq.set_camera(queuename, camera_ref)
+	local qe = {camera_changed = true}
+	w:singleton(queuename, "camera_changed?out shadow_render_queue:in", qe)
+	qe.shadow_render_queue.camera_ref = camera_ref
 end
 
 function irq.set_visible(queuename, b)
@@ -152,9 +152,14 @@ function rt_sys:entity_init()
 	for v in w:select "INIT render_target:in name:in" do
 		irq.update_rendertarget(v.render_target)
 	end
-	for v in w:select "camera_changed camera_eid:in render_target:in" do
+	for v in w:select "camera_changed camera_ref:out render_target:in shadow_render_queue:in main_queue?in" do
 		local vr = v.render_target.view_rect
-		icamera.set_frustum_aspect(v.camera_eid, vr.w / vr.h)
+		v.camera_ref = v.shadow_render_queue.camera_ref
+		icamera.set_frustum_aspect(v.camera_ref, vr.w / vr.h)
+		--TODO
+		if v.main_queue then
+			world:pub{"camera_changed", "main_queue"}
+		end
 	end
 	w:clear "camera_changed"
 end

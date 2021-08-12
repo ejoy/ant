@@ -207,7 +207,7 @@ function ios.create(point_eid)
         local queuename = "omni_" .. k
         local worldmat = math3d.matrix{r=t.rotation}
         local updir, viewdir = math3d.index(worldmat, 2, 3)
-        local cameraeid = icamera.create {
+        local camera_ref = icamera.create {
                 updir 	= updir,
                 viewdir = viewdir,
                 eyepos 	= pos,
@@ -224,7 +224,7 @@ function ios.create(point_eid)
                 "ant.general|name",
             },
             data = {
-                camera_eid = cameraeid,
+                camera_ref = camera_ref,
                 render_target = {
                     view_rect = t.view_rect,
                     view_mode = "s",
@@ -249,6 +249,7 @@ function ios.create(point_eid)
                 INIT = true,
                 visible = false,
                 omni_queue = true,
+                shadow_render_queue = {},
             },
         }
     end
@@ -291,10 +292,10 @@ local function update_camera_matrices(camera)
 end
 
 function omni_shadow_sys:update_camera()
-    for oe in w:select "omni:in camera_eid:in" do
+    for oe in w:select "omni:in camera_ref:in" do
         local leid = oe.omni.light_eid
         if world[leid] then
-            local camera = icamera.find_camera(oe.camera_eid)
+            local camera = icamera.find_camera(oe.camera_ref)
             update_camera_matrices(camera)
         else
             log.warn(("entity id:%d, is not exist, but omni shadow entity still here"):format(leid))

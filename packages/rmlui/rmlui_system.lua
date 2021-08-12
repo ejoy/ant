@@ -78,8 +78,8 @@ function iRmlUi.update_viewrect(x, y, w, h)
     for qe in world.w:select "main_queue render_target:in" do
         local vid = viewidmgr.get "uiruntime"
         local rt = qe.render_target
-        if qe.camera_eid then
-            icamera.set_frustum_aspect(qe.camera_eid, w/h)
+        if qe.camera_ref then
+            icamera.set_frustum_aspect(qe.camera_ref, w/h)
         end
         fbmgr.bind(vid, rt.fb_idx)
     end

@@ -56,7 +56,6 @@ function gizmo:updata_uniform_scale()
 	self.rw.dir = math3d.totable(iom.get_direction(camera_mgr.main_camera))
 	--update_camera
 	local r = iom.get_rotation(camera_mgr.main_camera)
-	-- local s,r,t = math3d.srt(world[cameraeid].transform)
 	iom.set_rotation(self.rw.eid[1], r)
 	iom.set_rotation(self.rw.eid[3], r)
 	iom.set_rotation(self.rw.eid[4], r)
@@ -399,7 +398,7 @@ function gizmo_sys:post_init()
 	iss.set_parent(new_eid, global_axis_eid)
 	iom.set_scale(global_axis_eid, 2.5)
 end
-local mb_main_camera_changed = world:sub{"component_changed", "camera_eid", "main_queue"}
+local mb_main_camera_changed = world:sub{"camera_changed", "main_queue"}
 function gizmo_sys:entity_done()
 	for _ in mb_main_camera_changed:each() do
 		update_global_axis()

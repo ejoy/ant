@@ -76,7 +76,6 @@ bool Initialise() {
 		return false;
 	}
 	StyleSheetSpecification::Initialise();
-	StyleSheetParser::Initialise();
 	StyleSheetFactory::Initialise();
 	Factory::Initialise();
 	PluginRegistry::NotifyInitialise();
@@ -92,7 +91,6 @@ void Shutdown() {
 
 	Factory::Shutdown();
 	StyleSheetFactory::Shutdown();
-	StyleSheetParser::Shutdown();
 	StyleSheetSpecification::Shutdown();
 
 	font_interface = nullptr;

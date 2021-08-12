@@ -177,7 +177,6 @@ policy "render_pipeline"
 policy "render_queue"
     .require_policy "ant.render|render_pipeline"
     .component "render_target"
-    .component "camera_eid"
     .component "primitive_filter"
     .component "visible"
 

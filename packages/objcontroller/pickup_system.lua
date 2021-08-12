@@ -24,18 +24,18 @@ local function enable_pickup(enable)
 	end
 end
 
-local function update_camera(pu_cameraeid, clickpt)
-	for mq in w:select "main_queue camera_eid:in render_target:in" do	--main queue must visible
+local function update_camera(pu_camera_ref, clickpt)
+	for mq in w:select "main_queue camera_ref:in render_target:in" do	--main queue must visible
 		local ndc2D = mu.pt2D_to_NDC(clickpt, mq.render_target.view_rect)
 		local eye, at = mu.NDC_near_far_pt(ndc2D)
 	
-		local maincamera = icamera.find_camera(mq.camera_eid)
+		local maincamera = icamera.find_camera(mq.camera_ref)
 		local vp = maincamera.viewprojmat
 		local ivp = math3d.inverse(vp)
 		eye = math3d.transformH(ivp, eye, 1)
 		at = math3d.transformH(ivp, at, 1)
 	
-		local camera = icamera.find_camera(pu_cameraeid)
+		local camera = icamera.find_camera(pu_camera_ref)
 		local viewdir = math3d.normalize(math3d.sub(at, eye))
 		camera.viewmat = math3d.lookto(eye, viewdir, camera.updir)
 		camera.projmat = math3d.projmat(camera.frustum)
@@ -134,7 +134,7 @@ local fb_renderbuffer_flag = samplerutil.sampler_flag {
 local icamera = world:interface "ant.camera|camera"
 
 local function create_pick_entity()
-	local cameraeid = icamera.create{
+	local camera_ref = icamera.create{
 		viewdir = mc.ZAXIS,
 		updir = mc.YAXIS,
 		eyepos = mc.ZERO_PT,
@@ -200,7 +200,7 @@ local function create_pick_entity()
 					elemsize = 4,
 				},
 			},
-			camera_eid = cameraeid,
+			camera_ref = camera_ref,
 			render_target = {
 				viewid = pickupviewid,
 				view_mode = "s",
@@ -225,6 +225,7 @@ local function create_pick_entity()
 			pickup_queue= true,
 			INIT		= true,
 			visible		= false,
+			shadow_render_queue = {},
 		}
 
 	}
@@ -257,8 +258,8 @@ function pickup_sys:data_changed()
 end
 
 function pickup_sys:update_camera()
-    for e in w:select "pickup_queue visible camera_eid:in" do
-		update_camera(e.camera_eid, clickpt)
+    for e in w:select "pickup_queue visible camera_ref:in" do
+		update_camera(e.camera_ref, clickpt)
 	end
 end
 

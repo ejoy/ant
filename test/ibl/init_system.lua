@@ -36,16 +36,8 @@ function is:data_changed()
             data = {
                 name = "test_luaecs",
                 filter_material = {},
-                scene_id = world:luaecs_create_ref{
-                    policy = {
-                        "ant.scene|scene_node",
-                    },
-                    data = {
-                        scene_node = {
-                            srt = math3d.ref(math3d.matrix()),
-                        },
-                        INIT = true,
-                    }
+                scene = {
+                    srt = math3d.ref(math3d.matrix()),
                 },
                 eid = world:create_entity{policy = {"ant.general|debug_TEST"}, data = {}},
                 render_object = {},

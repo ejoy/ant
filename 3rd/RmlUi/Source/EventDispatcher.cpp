@@ -30,10 +30,8 @@
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/Event.h"
 #include "../Include/RmlUi/EventListener.h"
-#include "../Include/RmlUi/Factory.h"
 #include "../Include/RmlUi/EventSpecification.h"
 #include <algorithm>
-#include <limits.h>
 
 namespace Rml {
 

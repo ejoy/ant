@@ -18,7 +18,7 @@ local ies		= world:interface "ant.scene|ientity_state"
 
 -- 	local csm = shadow.csm
 -- 	local csmindex = csm.index
--- 	local shadowcamera = world[shadow.camera_eid].camera
+-- 	local shadowcamera = world[shadow.camera_ref].camera
 -- 	local shadow_viewmatrix = mu.view_proj(shadowcamera)
 
 -- 	local bb_LS = get_frustum_points(view_camera, view_camera.frustum, shadow_viewmatrix, shadow.csm.split_ratios)
@@ -165,10 +165,10 @@ local function update_shadow_camera(dl_eid, camera)
 	local viewfrustum = camera.frustum
 	local csmfrustums = ishadow.calc_split_frustums(viewfrustum)
 
-	for qe in w:select "csm_queue camera_eid:in csm:in" do
+	for qe in w:select "csm_queue camera_ref:in csm:in" do
 		local csm = qe.csm
 		local cf = csmfrustums[csm.index]
-		calc_shadow_camera(camera, cf, lightdir, setting.shadowmap_size, setting.stabilize, qe.camera_eid)
+		calc_shadow_camera(camera, cf, lightdir, setting.shadowmap_size, setting.stabilize, qe.camera_ref)
 		csm.split_distance_VS = cf.f - viewfrustum.n
 	end
 end
@@ -178,7 +178,7 @@ local sm = ecs.system "shadow_system"
 local function create_csm_entity(index, viewrect, fbidx, depth_type)
 	local csmname = "csm" .. index
 	local queuename = "csm_queue" .. index
-	local cameraeid = icamera.create {
+	local camera_ref = icamera.create {
 			updir 	= mc.YAXIS,
 			viewdir = mc.ZAXIS,
 			eyepos 	= mc.ZERO_PT,
@@ -216,7 +216,7 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 				index = index,
 				split_distance_VS = 0,
 			},
-			camera_eid = cameraeid,
+			camera_ref = camera_ref,
 			render_target = {
 				viewid = viewidmgr.get(csmname),
 				view_mode = "s",
@@ -235,6 +235,7 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 			queue_name = queuename,
 			csm_queue = true,
 			name = "csm" .. index,
+			shadow_render_queue = {},
 		},
 	}
 end
@@ -259,11 +260,11 @@ local viewcamera_changed_mb
 local viewcamera_frustum_mb
 
 function sm:entity_init()
-	for e in w:select "INIT main_queue camera_eid:in" do
-		local cameraeid = e.camera_eid
-		viewcamera_frustum_mb = world:sub{"component_changed", "frusutm", cameraeid}
-		viewcamera_changed_mb = world:sub{"component_changed", "viewcamera", cameraeid}
-		world:pub{"component_changed", "viewcamera", cameraeid}	--init shadowmap
+	for e in w:select "INIT main_queue camera_ref:in" do
+		local camera_ref = e.camera_ref
+		viewcamera_frustum_mb = world:sub{"component_changed", "frusutm", camera_ref}
+		viewcamera_changed_mb = world:sub{"component_changed", "viewcamera", camera_ref}
+		world:pub{"component_changed", "viewcamera", camera_ref}	--init shadowmap
 	end
 end
 
@@ -279,7 +280,7 @@ end
 
 local function find_directional_light(eid)
 	local e = world[eid]
-	if e.light_type == "directional" and e.make_shadow then
+	if e and e.light_type == "directional" and e.make_shadow then
 		if dl_eid then
 			log.warn("already has directional light for making shadow")
 		else
@@ -319,8 +320,8 @@ function sm:data_changed()
 end
 
 local function find_main_camera()
-	for v in w:select "main_queue camera_eid:in" do
-		return icamera.find_camera(v.camera_eid)
+	for v in w:select "main_queue camera_ref:in" do
+		return icamera.find_camera(v.camera_ref)
 	end
 end
 
@@ -344,8 +345,8 @@ function sm:update_camera()
 				update_shadow_camera(dl_eid, maincamrea)
 			end
 		else
-			for qe in w:select "csm_queue camera_eid:in" do
-				local camera = icamera.find_camera(qe.camera_eid)
+			for qe in w:select "csm_queue camera_ref:in" do
+				local camera = icamera.find_camera(qe.camera_ref)
 				if camera then
 					update_camera_matrices(camera)
 				end
@@ -376,7 +377,7 @@ function sm:refine_camera()
 	-- 		sceneaabb = merge_scene_aabb(sceneaabb, filter.translucent)
 	
 	-- 		if math3d.aabb_isvalid(sceneaabb) then
-	-- 			local camera_rc = world[se.camera_eid]._rendercache
+	-- 			local camera_rc = world[se.camera_ref]._rendercache
 	
 	-- 			local function calc_refine_frustum_corners(rc)
 	-- 				local frustm_points_WS = math3d.frustum_points(rc.viewprojmat)

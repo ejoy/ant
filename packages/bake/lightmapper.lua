@@ -220,12 +220,12 @@ function lightmap_sys:init()
     shading_info = init_shading_info()
 
     --we will not use this camera
-    local camera_eid = icamera.create{
+    local camera_ref = icamera.create{
         viewdir = mc.ZAXIS,
         eyepos = mc.ZERO_PT,
         name = "lightmap camera"
     }
-    irender.create_view_queue({x=0, y=0, w=1, h=1}, "lightmap_queue", camera_eid, "lightmap", nil, lightmap_queue_surface_types)
+    irender.create_view_queue({x=0, y=0, w=1, h=1}, "lightmap_queue", camera_ref, "lightmap", nil, lightmap_queue_surface_types)
     lm_result_eid = create_lightmap_result_entity()
 end
 

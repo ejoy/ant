@@ -140,15 +140,15 @@ end
 
 local itimer = world:interface "ant.timer|itimer"
 
-local function main_camera_eid()
-    for v in world.w:select "main_queue camera_eid:in" do
-        return v.camera_eid
+local function main_camera_ref()
+    for v in world.w:select "main_queue camera_ref:in" do
+        return v.camera_ref
     end
 end
 
 function effekseer_sys:camera_usage()
     local icamera = world:interface "ant.camera|camera"
-    local c = icamera.find_camera(main_camera_eid())
+    local c = icamera.find_camera(main_camera_ref())
     if c then
         effekseer.update_view_proj(math3d.value_ptr(c.viewmat), math3d.value_ptr(c.projmat))
     end
@@ -181,13 +181,12 @@ function effekseer_sys:follow_transform_updated()
             end
         end
     end
-    for _, eid in world:each "effekseer" do
-		local e = world[eid]
-        if e._scene_id then
-            local worldmat = world.w:object("scene_node", e._scene_id)._worldmat
-            if worldmat then
-		        effekseer.update_transform(e.effect_instance.handle, worldmat)
-            end
+    --TODO
+    for v in w:select "eid:in scene_node(scene_id):in" do
+        local e = world[v.eid]
+        if e and e.effekseer then
+            local node = v.scene_node
+            effekseer.update_transform(e.effect_instance.handle, node._worldmat)
         end
     end
 end

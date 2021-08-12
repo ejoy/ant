@@ -51,6 +51,11 @@ local function register_entity(w)
 end
 
 local function instance_entity(w, eid, entity, owned)
+	if entity.template.camera then
+		w._entity[eid] = nil
+		local icamera = w:interface "ant.camera|camera"
+		return icamera.create_entity(eid, entity.template)
+	end
 	local e = {}
 	w[eid] = e
 	setmetatable(e, {__index = entity.template, __owned = owned})

@@ -14,7 +14,12 @@ local function get_transform(eid)
         w:sync("scene_node(scene_id):in", ref)
         return ref.scene_node
     end
-    return world[eid]._rendercache
+    local e = world[eid]
+    if e then
+        return e._rendercache
+    end
+    --TODO
+    return icamera.find_camera(eid)
 end
 
 local function get_srt(eid)
