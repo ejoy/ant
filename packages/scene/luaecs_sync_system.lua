@@ -47,24 +47,13 @@ function s:luaecs_sync()
 			if e.mesh and e.mesh.bounding and e.mesh.bounding.aabb then
 				aabb = e.mesh.bounding.aabb
 			end
-			local scene_node = {
+			data.scene = {
 				srt = rc.srt,
 				updir = e.updir and math3d.ref(math3d.vector(e.updir)) or nil,
 				aabb = aabb,
 				_self = eid,
 				_parent = parent,
 			}
-			local id = world:luaecs_create_ref {
-				policy = {
-					"ant.scene|scene_node"
-				},
-				data = {
-					scene_node = scene_node,
-					INIT = true,
-				}
-			}
-			data.scene_id = id
-			e._scene_id = id
 			policy[#policy+1] = "ant.scene|scene_object"
 			if e.name then
 				policy[#policy+1] = "ant.general|name"

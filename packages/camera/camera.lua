@@ -66,18 +66,9 @@ function ic.create(info)
                 dof = info.dof,
             },
             name = info.name or "DEFAULT_CAMERA",
-            scene_id = world:luaecs_create_ref {
-                policy = {
-                    "ant.scene|scene_node"
-                },
-                data = {
-                    scene_node = {
-                        srt = math3d.ref(math3d.matrix(math3d.inverse(viewmat))),
-                        updir = info.updir and math3d.ref(math3d.vector(info.updir)) or nil,
-                        _self = eid,
-                    },
-                    INIT = true,
-                }
+            scene = {
+                srt = math3d.ref(math3d.matrix(math3d.inverse(viewmat))),
+                updir = info.updir and math3d.ref(math3d.vector(info.updir)) or nil,
             }
         }
     }

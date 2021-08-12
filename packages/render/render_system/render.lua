@@ -342,16 +342,8 @@ function irender.create_blit_queue(viewrect)
 			"ant.scene|scene_object",
 		},
 		data = {
-			scene_id = world:luaecs_create_ref{
-				policy = {
-					"ant.scene|scene_node",
-				},
-				data = {
-					scene_node = {
-						srt = math3d.ref(mc.IDENTITY_MAT),
-					},
-					INIT = true,
-				}
+			scene = {
+				srt = math3d.ref(mc.IDENTITY_MAT),
 			},
 			eid = world:create_entity{policy = {"ant.general|debug_TEST"}, data = {}},
 			render_object = {},

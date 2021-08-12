@@ -117,6 +117,18 @@ function s:entity_init()
 	local needsync = false
 	current_changed = current_changed + 1
 
+	for v in w:select "INIT scene:in scene_id:out eid:in" do
+		v.scene_id = world:luaecs_create_ref {
+			scene_node = v.scene,
+			INIT = true,
+		}
+		local e = world[v.eid]
+		if e then
+			e._scene_id = v.scene_id
+		end
+	end
+	w:clear "scene"
+
 	for v in w:select "INIT scene_id:in" do
 		mount_scene_node(v.scene_id)
 		needsync = true
@@ -140,7 +152,7 @@ function s:entity_init()
 			local eid = node._self
 			if eid then
 				local e = world[eid]
-				if e and e.parent then
+				if e.parent then
 					inherit_entity_state(e)
 					inherit_material(e)
 				end
