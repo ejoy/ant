@@ -177,7 +177,7 @@ local rb_flag = samplerutil.sampler_flag {
 }
 
 function irender.create_pre_depth_queue(view_rect, camera_eid)
-	local fnames, ct = create_primitive_filter_entities "pre_depth_queue"
+	local fnames = create_primitive_filter_entities "pre_depth_queue"
 
 	local fbidx = fbmgr.create{
 		fbmgr.create_rb{
@@ -215,13 +215,14 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 				view_rect = view_rect,
 				fb_idx = fbidx,
 			},
-			filter_names = fnames,
-			cull_tag = ct,
-			queue_name = "pre_depth_queue",
-			name = "pre_depth_queue",
-			visible = true,
+			filter_names 	= fnames,
+			cull_tag 		= {},
+			queue_name 		= "pre_depth_queue",
+			name 			= "pre_depth_queue",
+			visible 		= true,
 			pre_depth_queue = true,
 			watch_screen_buffer = true,
+			INIT			= true,
 		}
 	}
 end
@@ -323,13 +324,13 @@ function irender.create_blit_queue(viewrect)
 					w = viewrect.w or 1, h = viewrect.h or 1,
 				},
 			},
-			filter_names = fitlernames,
-			visible = true,
-			blit_queue = true,
+			filter_names 	= fitlernames,
+			queue_name  	= "blit_queue",
+			name 			= "blit_queue",
+			visible 		= true,
+			blit_queue 		= true,
 			watch_screen_buffer = true,
-			INIT = true,
-			name = "blit_queue",
-			queue_name  = "blit_queue",
+			INIT 			= true,
 		}
 	}
 
