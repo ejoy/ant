@@ -258,9 +258,8 @@ sampler:
     V: CLAMP
 ]]
 
-local function save_lightmap(e)
+local function save_lightmap(e, lme)
     local lm = e.lightmap
-    local lme = w:singleton("lightmap_path:in", "lightmap_result:in")
 
     local filename = lme.lightmap_path / gen_name(lm.bakeid, e.name)
 
@@ -278,16 +277,14 @@ local function save_lightmap(e)
     f:write(tc)
     f:close()
     
-    lme.lightmap_result[lm.bake_id] = {
-        texture_path = texfile,
-        texture = assetmgr.resource(texfile),
-    }
+    lme.lightmap_result[lm.bake_id] = {texture_path = texfile,}
 end
 
 function lightmap_sys:data_changed()
+    local lme = w:singleton("lightmap_path:in", "lightmap_result:in")
     for e in w:select "bake_finish lightmap:in render_object:in render_object_update:out" do
         e.render_object_update = true
-        save_lightmap(e)
+        save_lightmap(e, lme)
     end
 
     w:clear "bake_finish"
@@ -654,29 +651,9 @@ local function _bake(id)
 end
 
 local bake_mb = world:sub{"bake"}
-local function check_create_lightmap_result_entity()
-    local should_create = false
-    for e in w:select "lightmap_result:in" do
-        w:remove(e)
-    end
-
-    if should_create then
-        world:create_entity{
-            policy = {
-                "ant.bake|lightmap_result",
-                "ant.general|name",
-            },
-            data = {
-                name = "lightmap_result",
-                lightmap_result = {},
-            },
-        }
-    end
-end
 
 function lightmap_sys:end_frame()
     for msg in bake_mb:each() do
-        check_create_lightmap_result_entity()
         local id = msg[2]
         ltask.fork(function ()
             local ServiceBgfxMain = ltask.queryservice "bgfx_main"

@@ -88,5 +88,5 @@ policy_v2 "primitive_filter"
 
 system "lightmap_system"
     .implement "render_system/lightmap_system.lua"
-    .method "entity_init"
+    .method "init"
     .method "end_filter"

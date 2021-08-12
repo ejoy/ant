@@ -12,6 +12,9 @@ local sceneprefab_baked<const> = "/pkg/ant.tool.lightmap_baker/assets/scene/scen
 
 function lm_baker:init_world()
 	world:instance(sceneprefab)
+	local lme = w:singleton "ligthamap_path:out"
+	lme.lightmap_path = "/pkg/ant.tool.lightmap_baker/lightmaps"
+	lfs.create_directories(lfs.path(lme.lightmap_path))
 	--world:pub{"bake"}	--bake all scene
 end
 

@@ -6,14 +6,18 @@ local imaterial = world:interface "ant.asset|imaterial"
 local assetmgr = import_package "ant.asset"
 
 local lm_sys = ecs.system "lightmap_system"
-
-function lm_sys:entity_init()
-    for e in w:select "INIT lightmap_result:in" do
-        local lmr = e.lightmap_result
-        for _, bi in pairs(lmr) do
-            bi.texture = assetmgr.resource(bi.texture_path)
-        end
-    end
+function lm_sys:init()
+    world:luaecs_create_entity{
+        policy = {
+            "ant.bake|lightmap_result",
+            "ant.general|name",
+        },
+        data = {
+            name = "lightmap_result",
+            lightmap_result = {},
+            lightmap_path = "",
+        },
+    }
 end
 
 local function get_baked_material(mf, setting)
@@ -38,6 +42,7 @@ function lm_sys:end_filter()
                 local bakeid = lm.bake_id
                 local bi = r[bakeid]
                 if bi then
+                    bi.texture = assetmgr.resource(bi.texture_path)
                     local mf = material._data and tostring(material) or material
                     local bm = get_baked_material(mf, material.fx.setting)
                     local pm = bm.properties["s_lightmap"]
