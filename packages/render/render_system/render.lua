@@ -95,10 +95,9 @@ function irender.draw(vid, ri, mat)
 end
 
 function irender.get_main_view_rendertexture()
-	for e in w:select "main_queue render_target:in" do
-		local fb = fbmgr.get(e.render_target.fb_idx)
-		return fbmgr.get_rb(fb[1]).handle
-	end
+	local mq = w:singleton("main_queue", "render_target:in")
+	local fb = fbmgr.get(mq.render_target.fb_idx)
+	return fbmgr.get_rb(fb[1]).handle
 end
 
 local function create_primitive_filter_entities(quenename, filtertype, surface_types, exclude)

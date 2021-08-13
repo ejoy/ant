@@ -43,6 +43,8 @@ typedef int lm_type;
 
 #define HEMI_FRAMEBUFFER_UNIT_SIZE	512
 
+#include <vector>
+
 typedef struct lm_context lm_context;
 
 // creates a lightmapper instance. it can be used to render multiple lightmaps.
@@ -257,108 +259,116 @@ static int lm_convexClip(lm_vec2 *poly, int nPoly, const lm_vec2 *clip, int nCli
 	return nRes;
 }
 
+struct Mesh
+{
+	const float *modelMatrix;
+	float normalMatrix[9];
+
+	const uint8_t *positions;
+	lm_type positionsType;
+	uint32_t positionsStride;
+	const uint8_t *normals;
+	lm_type normalsType;
+	uint32_t normalsStride;
+	const uint8_t *uvs;
+	lm_type uvsType;
+	uint32_t uvsStride;
+	const uint8_t *indices;
+	lm_type indicesType;
+	uint32_t count;
+};
+
+struct Triangle
+{
+	uint32_t baseIndex;
+	lm_vec3 p[3];
+	lm_vec3 n[3];
+	lm_vec2 uv[3];
+};
+
+struct Rasterizer
+{
+	uint16_t minx, miny;
+	uint16_t maxx, maxy;
+	uint16_t x, y;
+};
+
+struct Sample
+{
+	lm_vec3 position;
+	lm_vec3 direction;
+	lm_vec3 up;
+};
+
+struct MeshPosition
+{
+	uint16_t			pass;
+	uint16_t			passCount;
+	struct Triangle		triangle;
+	struct Rasterizer	rasterizer;
+	struct Sample		sample;
+
+	struct
+	{
+		uint8_t side;
+	} hemisphere;
+};
+
+struct Lightmap
+{
+	float *data;
+	uint16_t width;
+	uint16_t height;
+	uint8_t channels;
+#ifdef LM_DEBUG_INTERPOLATION
+	uint8_t *debug;
+#endif
+};
+
+struct Storage
+{
+	lm_uivec2 writePosition;
+	lm_ivec2 *toLightmapLocation;
+	uint16_t width;
+	uint16_t height;
+};
+
+struct Hemisphere
+{
+	float zNear, zFar;
+	float cameraToSurfaceDistanceModifier;
+
+	uint16_t size;
+	uint16_t fbHemiCountX;
+	uint16_t fbHemiCountY;
+	uint32_t fbHemiIndex;
+	lm_ivec2 *fbHemiToLightmapLocation;
+
+	struct Storage storage;
+};
+
 typedef void (*initbuffer_callback)(lm_context*);
 typedef void (*render_callback)(lm_context*, int*, float*, float *);
 typedef void (*downsample_callback)(lm_context*);
 typedef float* (*readlightmap_callback)(lm_context*, int size);
 typedef void (*process_callback)(lm_context*);
 
+struct Render{
+	initbuffer_callback		init_buffer;
+	render_callback			render_scene;
+	downsample_callback		downsample;
+	readlightmap_callback 	read_lightmap;
+	process_callback		process;
+	void* userdata;
+};
+
 struct lm_context
 {
-	struct
-	{
-		const float *modelMatrix;
-		float normalMatrix[9];
-
-		const uint8_t *positions;
-		lm_type positionsType;
-		uint32_t positionsStride;
-		const uint8_t *normals;
-		lm_type normalsType;
-		uint32_t normalsStride;
-		const uint8_t *uvs;
-		lm_type uvsType;
-		uint32_t uvsStride;
-		const uint8_t *indices;
-		lm_type indicesType;
-		uint32_t count;
-	} mesh;
-
-	struct
-	{
-		uint16_t pass;
-		uint16_t passCount;
-
-		struct
-		{
-			uint32_t baseIndex;
-			lm_vec3 p[3];
-			lm_vec3 n[3];
-			lm_vec2 uv[3];
-		} triangle;
-
-		struct
-		{
-			uint16_t minx, miny;
-			uint16_t maxx, maxy;
-			uint16_t x, y;
-		} rasterizer;
-
-		struct
-		{
-			lm_vec3 position;
-			lm_vec3 direction;
-			lm_vec3 up;
-		} sample;
-
-		struct
-		{
-			uint8_t side;
-		} hemisphere;
-	} meshPosition;
-
-	struct
-	{
-		float *data;
-		uint16_t width;
-		uint16_t height;
-		uint8_t channels;
-#ifdef LM_DEBUG_INTERPOLATION
-		uint8_t *debug;
-#endif
-	} lightmap;
-
-	struct
-	{
-		float zNear, zFar;
-		float cameraToSurfaceDistanceModifier;
-
-		uint16_t size;
-		uint16_t fbHemiCountX;
-		uint16_t fbHemiCountY;
-		uint32_t fbHemiIndex;
-		lm_ivec2 *fbHemiToLightmapLocation;
-
-		struct
-		{
-			//bgfx_texture_handle_t texture;
-			lm_uivec2 writePosition;
-			lm_ivec2 *toLightmapLocation;
-			uint16_t width;
-			uint16_t height;
-		} storage;
-
-		
-	} hemisphere;
-
-	struct {
-		initbuffer_callback		init_buffer;
-		render_callback			render_scene;
-		downsample_callback		downsample;
-		readlightmap_callback 	read_lightmap;
-		process_callback		process;
-		void* userdata;
-	} render;
+	struct Mesh			mesh;
+	struct MeshPosition	meshPosition;
+	struct Lightmap		lightmap;
+	struct Hemisphere	hemisphere;
+	struct Render		render;
 
 	float interpolationThreshold;
 };
@@ -370,61 +380,61 @@ struct lm_context
 // 5 6 5 6 5
 // 0 4 1 4 0
 
-static uint32_t lm_passStepSize(lm_context *ctx)
+static uint32_t lm_passStepSize(const MeshPosition &meshPosition)
 {
-	uint32_t shift = ctx->meshPosition.passCount / 3 - (ctx->meshPosition.pass - 1) / 3;
+	uint32_t shift = meshPosition.passCount / 3 - (meshPosition.pass - 1) / 3;
 	uint32_t step = (1 << shift);
 	assert(step > 0);
 	return step;
 }
 
-static uint32_t lm_passOffsetX(lm_context *ctx)
+static uint32_t lm_passOffsetX(const MeshPosition &meshPosition)
 {
-	if (!ctx->meshPosition.pass)
+	if (!meshPosition.pass)
 		return 0;
-	int passType = (ctx->meshPosition.pass - 1) % 3;
-	uint32_t halfStep = lm_passStepSize(ctx) >> 1;
+	int passType = (meshPosition.pass - 1) % 3;
+	uint32_t halfStep = lm_passStepSize(meshPosition) >> 1;
 	return passType != 1 ? halfStep : 0;
 }
 
-static uint32_t lm_passOffsetY(lm_context *ctx)
+static uint32_t lm_passOffsetY(const MeshPosition &meshPosition)
 {
-	if (!ctx->meshPosition.pass)
+	if (!meshPosition.pass)
 		return 0;
-	int passType = (ctx->meshPosition.pass - 1) % 3;
-	uint32_t halfStep = lm_passStepSize(ctx) >> 1;
+	int passType = (meshPosition.pass - 1) % 3;
+	uint32_t halfStep = lm_passStepSize(meshPosition) >> 1;
 	return passType != 0 ? halfStep : 0;
 }
 
-static lm_bool lm_hasConservativeTriangleRasterizerFinished(lm_context *ctx)
+static lm_bool lm_hasConservativeTriangleRasterizerFinished(const MeshPosition &meshPosition)
 {
-	return ctx->meshPosition.rasterizer.y >= ctx->meshPosition.rasterizer.maxy;
+	return meshPosition.rasterizer.y >= meshPosition.rasterizer.maxy;
 }
 
-static void lm_moveToNextPotentialConservativeTriangleRasterizerPosition(lm_context *ctx)
+static void lm_moveToNextPotentialConservativeTriangleRasterizerPosition(MeshPosition &meshPosition)
 {
-	uint32_t step = lm_passStepSize(ctx);
-	ctx->meshPosition.rasterizer.x += step;
-	while (ctx->meshPosition.rasterizer.x >= ctx->meshPosition.rasterizer.maxx)
+	uint32_t step = lm_passStepSize(meshPosition);
+	meshPosition.rasterizer.x += step;
+	while (meshPosition.rasterizer.x >= meshPosition.rasterizer.maxx)
 	{
-		ctx->meshPosition.rasterizer.x = ctx->meshPosition.rasterizer.minx + lm_passOffsetX(ctx);
-		ctx->meshPosition.rasterizer.y += step;
-		if (lm_hasConservativeTriangleRasterizerFinished(ctx))
+		meshPosition.rasterizer.x = meshPosition.rasterizer.minx + lm_passOffsetX(meshPosition);
+		meshPosition.rasterizer.y += step;
+		if (lm_hasConservativeTriangleRasterizerFinished(meshPosition))
 			break;
 	}
 }
 
-static float *lm_getLightmapPixel(lm_context *ctx, uint32_t x, uint32_t y)
+static const float *lm_getLightmapPixel(const Lightmap &lightmap, uint32_t x, uint32_t y)
 {
-	assert(0 <= x && x < ctx->lightmap.width && 0 <= y && y < ctx->lightmap.height);
-	return ctx->lightmap.data + (y * ctx->lightmap.width + x) * ctx->lightmap.channels;
+	assert(0 <= x && x < lightmap.width && 0 <= y && y < lightmap.height);
+	return lightmap.data + (y * lightmap.width + x) * lightmap.channels;
 }
 
-static void lm_setLightmapPixel(lm_context *ctx, int x, int y, float *in)
+static void lm_setLightmapPixel(Lightmap &lightmap, int x, int y, float *in)
 {
-	assert(0 <= x && x < ctx->lightmap.width && 0 <= y && y < ctx->lightmap.height);
-	float *p = ctx->lightmap.data + (y * ctx->lightmap.width + x) * ctx->lightmap.channels;
-	for (uint8_t j = 0; j < ctx->lightmap.channels; ++j)
+	assert(0 <= x && x < lightmap.width && 0 <= y && y < lightmap.height);
+	float *p = lightmap.data + (y * lightmap.width + x) * lightmap.channels;
+	for (uint8_t j = 0; j < lightmap.channels; ++j)
 		*p++ = *in++;
 }
 
@@ -435,23 +445,27 @@ static const float lm_baseAngles[3][3] = {
 	{ lm_baseAngle + 2.0f / 3.0f, lm_baseAngle, lm_baseAngle + 1.0f / 3.0f }
 };
 
-static lm_bool lm_trySamplingConservativeTriangleRasterizerPosition(lm_context *ctx)
+static lm_bool lm_trySamplingConservativeTriangleRasterizerPosition(
+	MeshPosition &meshPosition, 
+	Lightmap &lightmap,
+	Hemisphere &hemisphere,
+	float interpolationThreshold)
 {
 	// check if lightmap pixel was already set
-	float *pixelValue = lm_getLightmapPixel(ctx, ctx->meshPosition.rasterizer.x, ctx->meshPosition.rasterizer.y);
-	for (int j = 0; j < ctx->lightmap.channels; j++)
+	const float *pixelValue = lm_getLightmapPixel(lightmap, meshPosition.rasterizer.x, meshPosition.rasterizer.y);
+	for (int j = 0; j < lightmap.channels; j++)
 		if (pixelValue[j] != 0.0f)
 			return LM_FALSE;
 
 	// try calculating centroid by clipping the pixel against the triangle
 	lm_vec2 pixel[16];
-	pixel[0] = lm_v2i(ctx->meshPosition.rasterizer.x, ctx->meshPosition.rasterizer.y);
-	pixel[1] = lm_v2i(ctx->meshPosition.rasterizer.x + 1, ctx->meshPosition.rasterizer.y);
-	pixel[2] = lm_v2i(ctx->meshPosition.rasterizer.x + 1, ctx->meshPosition.rasterizer.y + 1);
-	pixel[3] = lm_v2i(ctx->meshPosition.rasterizer.x, ctx->meshPosition.rasterizer.y + 1);
+	pixel[0] = lm_v2i(meshPosition.rasterizer.x, meshPosition.rasterizer.y);
+	pixel[1] = lm_v2i(meshPosition.rasterizer.x + 1, meshPosition.rasterizer.y);
+	pixel[2] = lm_v2i(meshPosition.rasterizer.x + 1, meshPosition.rasterizer.y + 1);
+	pixel[3] = lm_v2i(meshPosition.rasterizer.x, meshPosition.rasterizer.y + 1);
 
 	lm_vec2 res[16];
-	int nRes = lm_convexClip(pixel, 4, ctx->meshPosition.triangle.uv, 3, res);
+	int nRes = lm_convexClip(pixel, 4, meshPosition.triangle.uv, 3, res);
 	if (nRes == 0)
 		return LM_FALSE; // nothing left
 
@@ -471,40 +485,40 @@ static lm_bool lm_trySamplingConservativeTriangleRasterizerPosition(lm_context *
 
 	// calculate barycentric coords
 	lm_vec2 uv = lm_toBarycentric(
-		ctx->meshPosition.triangle.uv[0],
-		ctx->meshPosition.triangle.uv[1],
-		ctx->meshPosition.triangle.uv[2],
+		meshPosition.triangle.uv[0],
+		meshPosition.triangle.uv[1],
+		meshPosition.triangle.uv[2],
 		centroid);
 
 	if (!lm_finite2(uv))
 		return LM_FALSE; // degenerate
 
 	// try to interpolate color from neighbors:
-	if (ctx->meshPosition.pass > 0)
+	if (meshPosition.pass > 0)
 	{
-		float *neighbors[4];
+		const float *neighbors[4];
 		int neighborCount = 0;
 		int neighborsExpected = 0;
-		int d = (int)lm_passStepSize(ctx) / 2;
-		int dirs = ((ctx->meshPosition.pass - 1) % 3) + 1;
+		int d = (int)lm_passStepSize(meshPosition) / 2;
+		int dirs = ((meshPosition.pass - 1) % 3) + 1;
 		if (dirs & 1) // check x-neighbors with distance d
 		{
 			neighborsExpected += 2;
-			if (ctx->meshPosition.rasterizer.x - d >= ctx->meshPosition.rasterizer.minx &&
-				ctx->meshPosition.rasterizer.x + d <= ctx->meshPosition.rasterizer.maxx)
+			if (meshPosition.rasterizer.x - d >= meshPosition.rasterizer.minx &&
+				meshPosition.rasterizer.x + d <= meshPosition.rasterizer.maxx)
 			{
-				neighbors[neighborCount++] = lm_getLightmapPixel(ctx, ctx->meshPosition.rasterizer.x - d, ctx->meshPosition.rasterizer.y);
-				neighbors[neighborCount++] = lm_getLightmapPixel(ctx, ctx->meshPosition.rasterizer.x + d, ctx->meshPosition.rasterizer.y);
+				neighbors[neighborCount++] = lm_getLightmapPixel(lightmap, meshPosition.rasterizer.x - d, meshPosition.rasterizer.y);
+				neighbors[neighborCount++] = lm_getLightmapPixel(lightmap, meshPosition.rasterizer.x + d, meshPosition.rasterizer.y);
 			}
 		}
 		if (dirs & 2) // check y-neighbors with distance d
 		{
 			neighborsExpected += 2;
-			if (ctx->meshPosition.rasterizer.y - d >= ctx->meshPosition.rasterizer.miny &&
-				ctx->meshPosition.rasterizer.y + d <= ctx->meshPosition.rasterizer.maxy)
+			if (meshPosition.rasterizer.y - d >= meshPosition.rasterizer.miny &&
+				meshPosition.rasterizer.y + d <= meshPosition.rasterizer.maxy)
 			{
-				neighbors[neighborCount++] = lm_getLightmapPixel(ctx, ctx->meshPosition.rasterizer.x, ctx->meshPosition.rasterizer.y - d);
-				neighbors[neighborCount++] = lm_getLightmapPixel(ctx, ctx->meshPosition.rasterizer.x, ctx->meshPosition.rasterizer.y + d);
+				neighbors[neighborCount++] = lm_getLightmapPixel(lightmap, meshPosition.rasterizer.x, meshPosition.rasterizer.y - d);
+				neighbors[neighborCount++] = lm_getLightmapPixel(lightmap, meshPosition.rasterizer.x, meshPosition.rasterizer.y + d);
 			}
 		}
 		if (neighborCount == neighborsExpected) // are all interpolation neighbors available?
@@ -512,10 +526,10 @@ static lm_bool lm_trySamplingConservativeTriangleRasterizerPosition(lm_context *
 			// calculate average neighbor pixel value
 			float avg[4] = { 0 };
 			for (int i = 0; i < neighborCount; i++)
-				for (int j = 0; j < ctx->lightmap.channels; j++)
+				for (int j = 0; j < lightmap.channels; j++)
 					avg[j] += neighbors[i][j];
 			float ni = 1.0f / neighborCount;
-			for (int j = 0; j < ctx->lightmap.channels; j++)
+			for (int j = 0; j < lightmap.channels; j++)
 				avg[j] *= ni;
 
 			// check if error from average pixel to neighbors is above the interpolation threshold
@@ -523,11 +537,11 @@ static lm_bool lm_trySamplingConservativeTriangleRasterizerPosition(lm_context *
 			for (int i = 0; i < neighborCount; i++)
 			{
 				lm_bool zero = LM_TRUE;
-				for (int j = 0; j < ctx->lightmap.channels; j++)
+				for (int j = 0; j < lightmap.channels; j++)
 				{
 					if (neighbors[i][j] != 0.0f)
 						zero = LM_FALSE;
-					if (fabs(neighbors[i][j] - avg[j]) > ctx->interpolationThreshold)
+					if (fabs(neighbors[i][j] - avg[j]) > interpolationThreshold)
 						interpolate = LM_FALSE;
 				}
 				if (zero)
@@ -539,10 +553,10 @@ static lm_bool lm_trySamplingConservativeTriangleRasterizerPosition(lm_context *
 			// set interpolated value and return if interpolation is acceptable
 			if (interpolate)
 			{
-				lm_setLightmapPixel(ctx, ctx->meshPosition.rasterizer.x, ctx->meshPosition.rasterizer.y, avg);
+				lm_setLightmapPixel(lightmap, meshPosition.rasterizer.x, meshPosition.rasterizer.y, avg);
 #ifdef LM_DEBUG_INTERPOLATION
 				// set interpolated pixel to green in debug output
-				ctx->lightmap.debug[(ctx->meshPosition.rasterizer.y * ctx->lightmap.width + ctx->meshPosition.rasterizer.x) * 3 + 1] = 255;
+				lightmap->debug[(meshPosition.rasterizer.y * ctx->lightmap.width + meshPosition.rasterizer.x) * 3 + 1] = 255;
 #endif
 				return LM_FALSE;
 			}
@@ -551,46 +565,46 @@ static lm_bool lm_trySamplingConservativeTriangleRasterizerPosition(lm_context *
 
 	// could not interpolate. must render a hemisphere.
 	// calculate 3D sample position and orientation
-	lm_vec3 p0 = ctx->meshPosition.triangle.p[0];
-	lm_vec3 p1 = ctx->meshPosition.triangle.p[1];
-	lm_vec3 p2 = ctx->meshPosition.triangle.p[2];
+	lm_vec3 p0 = meshPosition.triangle.p[0];
+	lm_vec3 p1 = meshPosition.triangle.p[1];
+	lm_vec3 p2 = meshPosition.triangle.p[2];
 	lm_vec3 v1 = lm_sub3(p1, p0);
 	lm_vec3 v2 = lm_sub3(p2, p0);
-	ctx->meshPosition.sample.position = lm_add3(p0, lm_add3(lm_scale3(v2, uv.x), lm_scale3(v1, uv.y)));
+	meshPosition.sample.position = lm_add3(p0, lm_add3(lm_scale3(v2, uv.x), lm_scale3(v1, uv.y)));
 
-	lm_vec3 n0 = ctx->meshPosition.triangle.n[0];
-	lm_vec3 n1 = ctx->meshPosition.triangle.n[1];
-	lm_vec3 n2 = ctx->meshPosition.triangle.n[2];
+	lm_vec3 n0 = meshPosition.triangle.n[0];
+	lm_vec3 n1 = meshPosition.triangle.n[1];
+	lm_vec3 n2 = meshPosition.triangle.n[2];
 	lm_vec3 nv1 = lm_sub3(n1, n0);
 	lm_vec3 nv2 = lm_sub3(n2, n0);
-	ctx->meshPosition.sample.direction = lm_normalize3(lm_add3(n0, lm_add3(lm_scale3(nv2, uv.x), lm_scale3(nv1, uv.y))));
-	float cameraToSurfaceDistance = (1.0f + ctx->hemisphere.cameraToSurfaceDistanceModifier) * ctx->hemisphere.zNear * sqrtf(2.0f);
-	ctx->meshPosition.sample.position = lm_add3(ctx->meshPosition.sample.position, lm_scale3(ctx->meshPosition.sample.direction, cameraToSurfaceDistance));
+	meshPosition.sample.direction = lm_normalize3(lm_add3(n0, lm_add3(lm_scale3(nv2, uv.x), lm_scale3(nv1, uv.y))));
+	float cameraToSurfaceDistance = (1.0f + hemisphere.cameraToSurfaceDistanceModifier) * hemisphere.zNear * sqrtf(2.0f);
+	meshPosition.sample.position = lm_add3(meshPosition.sample.position, lm_scale3(meshPosition.sample.direction, cameraToSurfaceDistance));
 
-	if (!lm_finite3(ctx->meshPosition.sample.position) ||
-		!lm_finite3(ctx->meshPosition.sample.direction) ||
-		lm_length3sq(ctx->meshPosition.sample.direction) < 0.5f) // don't allow 0.0f. should always be ~1.0f
+	if (!lm_finite3(meshPosition.sample.position) ||
+		!lm_finite3(meshPosition.sample.direction) ||
+		lm_length3sq(meshPosition.sample.direction) < 0.5f) // don't allow 0.0f. should always be ~1.0f
 		return LM_FALSE;
 
 	lm_vec3 up = lm_v3(0.0f, 1.0f, 0.0f);
-	if (lm_absf(lm_dot3(up, ctx->meshPosition.sample.direction)) > 0.8f)
+	if (lm_absf(lm_dot3(up, meshPosition.sample.direction)) > 0.8f)
 		up = lm_v3(0.0f, 0.0f, -1.0f);
 
 #if 1
 	// triangle-consistent up vector
-	//ctx->meshPosition.sample.up = lm_normalize3(lm_cross3(up, ctx->meshPosition.sample.direction));
-	lm_vec3 side = lm_normalize3(lm_cross3(up, ctx->meshPosition.sample.direction));
-	ctx->meshPosition.sample.up = lm_normalize3(lm_cross3(ctx->meshPosition.sample.direction, side));
+	//meshPosition.sample.up = lm_normalize3(lm_cross3(up, meshPosition.sample.direction));
+	lm_vec3 side = lm_normalize3(lm_cross3(up, meshPosition.sample.direction));
+	meshPosition.sample.up = lm_normalize3(lm_cross3(meshPosition.sample.direction, side));
 	return LM_TRUE;
 #else
 	// "randomized" rotation with pattern
-	lm_vec3 side = lm_normalize3(lm_cross3(up, ctx->meshPosition.sample.direction));
-	up = lm_normalize3(lm_cross3(ctx->meshPosition.sample.direction, side));
-	int rx = ctx->meshPosition.rasterizer.x % 3;
-	int ry = ctx->meshPosition.rasterizer.y % 3;
+	lm_vec3 side = lm_normalize3(lm_cross3(up, meshPosition.sample.direction));
+	up = lm_normalize3(lm_cross3(meshPosition.sample.direction, side));
+	int rx = meshPosition.rasterizer.x % 3;
+	int ry = meshPosition.rasterizer.y % 3;
 	static const float lm_pi = 3.14159265358979f;
 	float phi = 2.0f * lm_pi * lm_baseAngles[ry][rx];// + 0.1f * ((float)rand() / (float)RAND_MAX);
-	ctx->meshPosition.sample.up = lm_normalize3(lm_add3(lm_scale3(side, cosf(phi)), lm_scale3(up, sinf(phi))));
+	meshPosition.sample.up = lm_normalize3(lm_add3(lm_scale3(side, cosf(phi)), lm_scale3(up, sinf(phi))));
 	return LM_TRUE;
 #endif
 }
@@ -680,7 +694,6 @@ static lm_bool lm_updateStoragePosition(lm_context *ctx)
 
 static void lm_writeResultsToLightmap(lm_context *ctx)
 {
-	assert(lm_isStorageFull(ctx));
 	// do the GPU->CPU transfer of downsampled hemispheres
 	const float *hemi = ctx->render.read_lightmap(ctx, ctx->hemisphere.storage.width * ctx->hemisphere.storage.height * 4 * sizeof(float));
 
@@ -740,8 +753,7 @@ static void lm_writeResultsToLightmap(lm_context *ctx)
 static void lm_integrateHemisphereBatch(lm_context *ctx)
 {
 	ctx->render.downsample(ctx);
-	lm_updateStoragePosition(ctx);
-	if (lm_isStorageFull(ctx))
+	if (lm_updateStoragePosition(ctx))
 		lm_writeResultsToLightmap(ctx); // read storage data from gpu memory and write it to the lightmap
 }
 
@@ -910,10 +922,10 @@ static lm_vec3 lm_transformPosition(const float *m, lm_vec3 v)
 	return r;
 }
 
-static lm_bool lm_isRasterizerPositionValid(lm_context *ctx)
+static lm_bool lm_isRasterizerPositionValid(const MeshPosition &meshPosition)
 {
-	return	ctx->meshPosition.rasterizer.x <= ctx->meshPosition.rasterizer.maxx &&
-			ctx->meshPosition.rasterizer.y <= ctx->meshPosition.rasterizer.maxy;
+	return	meshPosition.rasterizer.x <= meshPosition.rasterizer.maxx &&
+			meshPosition.rasterizer.y <= meshPosition.rasterizer.maxy;
 }
 
 static void lm_initMeshRasterizerPosition(lm_context *ctx)
@@ -1039,12 +1051,12 @@ static void lm_initMeshRasterizerPosition(lm_context *ctx)
 	ctx->meshPosition.rasterizer.maxy = lm_mini((int)bbMax.y + 1, ctx->lightmap.height - 1);
 	assert(ctx->meshPosition.rasterizer.minx <= ctx->meshPosition.rasterizer.maxx &&
 		   ctx->meshPosition.rasterizer.miny <= ctx->meshPosition.rasterizer.maxy);
-	ctx->meshPosition.rasterizer.x = ctx->meshPosition.rasterizer.minx + lm_passOffsetX(ctx);
-	ctx->meshPosition.rasterizer.y = ctx->meshPosition.rasterizer.miny + lm_passOffsetY(ctx);
+	ctx->meshPosition.rasterizer.x = ctx->meshPosition.rasterizer.minx + lm_passOffsetX(ctx->meshPosition);
+	ctx->meshPosition.rasterizer.y = ctx->meshPosition.rasterizer.miny + lm_passOffsetY(ctx->meshPosition);
 
-	if (!lm_isRasterizerPositionValid(ctx))
+	if (!lm_isRasterizerPositionValid(ctx->meshPosition))
 	{
-		lm_moveToNextPotentialConservativeTriangleRasterizerPosition(ctx);
+		lm_moveToNextPotentialConservativeTriangleRasterizerPosition(ctx->meshPosition);
 	}
 	// // try moving to first valid sample position
 	// if (ctx->meshPosition.rasterizer.x <= ctx->meshPosition.rasterizer.maxx &&
@@ -1169,6 +1181,42 @@ void lmSetGeometry(lm_context *ctx,
 	lm_inverseTranspose(transformationMatrix, ctx->mesh.normalMatrix);
 }
 
+struct RasterizerPosition
+{
+	uint16_t x, y;
+};
+
+struct SamplePosition {
+	Sample				sample;
+	RasterizerPosition	pos;
+};
+
+void lmSamplePositions(lm_context *ctx, std::vector<SamplePosition> &samples)
+{
+	for (ctx->meshPosition.pass = 0; 
+	ctx->meshPosition.pass < ctx->meshPosition.passCount; 
+	++ctx->meshPosition.pass)
+	{
+		for (ctx->meshPosition.triangle.baseIndex=0; 
+			ctx->meshPosition.triangle.baseIndex + 3 < ctx->mesh.count;
+			ctx->meshPosition.triangle.baseIndex += 3)
+		{
+			for(lm_initMeshRasterizerPosition(ctx);
+				!lm_hasConservativeTriangleRasterizerFinished(ctx->meshPosition);
+				lm_moveToNextPotentialConservativeTriangleRasterizerPosition(ctx->meshPosition))
+			{
+				if (!lm_trySamplingConservativeTriangleRasterizerPosition(
+					ctx->meshPosition,
+					ctx->lightmap, ctx->hemisphere,
+					ctx->interpolationThreshold))
+					continue;
+				RasterizerPosition pos = {ctx->meshPosition.rasterizer.x, ctx->meshPosition.rasterizer.y};
+				samples.push_back({ctx->meshPosition.sample, pos});
+			}
+		}
+	}
+}
+
 lm_bool lmBake(lm_context *ctx)
 {
 	//	foreach pass
@@ -1194,10 +1242,14 @@ lm_bool lmBake(lm_context *ctx)
 			ctx->meshPosition.triangle.baseIndex += 3)
 		{
 			for(lm_initMeshRasterizerPosition(ctx);
-				!lm_hasConservativeTriangleRasterizerFinished(ctx);
-				lm_moveToNextPotentialConservativeTriangleRasterizerPosition(ctx))
+				!lm_hasConservativeTriangleRasterizerFinished(ctx->meshPosition);
+				lm_moveToNextPotentialConservativeTriangleRasterizerPosition(ctx->meshPosition))
 			{
-				if (!lm_trySamplingConservativeTriangleRasterizerPosition(ctx))
+				if (!lm_trySamplingConservativeTriangleRasterizerPosition(
+					ctx->meshPosition,
+					ctx->lightmap,
+					ctx->hemisphere,
+					ctx->interpolationThreshold))
 					continue;
 
 				if (ctx->hemisphere.fbHemiIndex == 0)

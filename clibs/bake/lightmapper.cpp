@@ -176,10 +176,14 @@ lcontext_find_sample(lua_State *L){
     lmctx->meshPosition.triangle.baseIndex = triangleidx;
     
     for(lm_initMeshRasterizerPosition(lmctx);
-		!lm_hasConservativeTriangleRasterizerFinished(lmctx);
-		lm_moveToNextPotentialConservativeTriangleRasterizerPosition(lmctx))
+		!lm_hasConservativeTriangleRasterizerFinished(lmctx->meshPosition);
+		lm_moveToNextPotentialConservativeTriangleRasterizerPosition(lmctx->meshPosition))
 	{
-		if (lm_trySamplingConservativeTriangleRasterizerPosition(lmctx))
+		if (lm_trySamplingConservativeTriangleRasterizerPosition(
+            lmctx->meshPosition,
+            lmctx->lightmap,
+            lmctx->hemisphere,
+            lmctx->interpolationThreshold))
 			break;
     }
     
