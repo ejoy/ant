@@ -5,27 +5,20 @@ local w = world.w
 local math3d = require "math3d"
 
 ----iscenespace----
-local m = ecs.action "mount"
-function m.init(prefab, i, value)
-	local e = world[prefab[i]]
-	--TODO
-	if e then
-		e.parent = prefab[value]
-	end
-end
-
 local iss = ecs.interface "iscenespace"
 function iss.set_parent(eid, peid)
 	local e = world[eid]
-	e.parent = peid
-	if e.scene_entity then
-		if peid == nil or world[peid].scene_entity then
-			world:pub {"component_changed", "parent", eid}
-			return
-		end
+	local pe = world[peid]
+	if (not e or e.scene_entity) and (not pe or pe.scene_entity) then
+		world:pub {"component_changed", "parent", eid, peid}
 	end
-	assert(false)
 end
+
+local m = ecs.action "mount"
+function m.init(prefab, i, value)
+	iss.set_parent(prefab[i], prefab[value])
+end
+
 
 ----scenespace_system----
 local s = ecs.system "scenespace_system"
@@ -61,20 +54,6 @@ local function inherit_material(e)
 end
 
 local current_changed = 0
-
-local function mount_scene_node(hashmap, scene_id)
-	local node = w:object("scene_node", scene_id)
-	node.changed = current_changed
-	if node._parent then
-		local parent = hashmap[node._parent]
-		assert(parent)
-		node.parent = parent
-		node._parent = nil
-		scenequeue:mount(scene_id, parent)
-	else
-		scenequeue:mount(scene_id, 0)
-	end
-end
 
 local function update_worldmat(node)
 	if not node.parent then
@@ -116,13 +95,26 @@ local function sync_scene_node()
 	w:order("scene_sorted", "scene_node", scenequeue)
 end
 
-local function findSceneId(eid)
-	for v in w:select "eid:in" do
-		if v.eid == eid then
-			w:sync("scene_id:in", v)
-			return v.scene_id
+local function findSceneId(hashmap, eid)
+	local id = hashmap[eid]
+	if id then
+		return id
+	end
+	local e
+	if type(eid) == "table" then
+		e = eid
+	else
+		for v in w:select "eid:in" do
+			if v.eid == eid then
+				e = v
+				break
+			end
 		end
 	end
+	w:sync("scene_id:in", e)
+	id = e.scene_id
+	hashmap[eid] = id
+	return id
 end
 
 local function findSceneNode(eid)
@@ -145,29 +137,20 @@ function s:entity_init()
 			scene_node = scene,
 			initializing = true,
 		}
+		scenequeue:mount(v.scene_id, 0)
+		needsync = true
 		if scene._self then
 			hashmap[scene._self] = v.scene_id
 		end
 	end
 	w:clear "scene"
 
-	for v in w:select "INIT scene_id:in eid:in" do
-		local e = world[v.eid]
-		if e and e.parent and not hashmap[e.parent] then
-			hashmap[e.parent] = findSceneId(e.parent)
-		end
-		mount_scene_node(hashmap, v.scene_id)
-		needsync = true
-	end
-
-	for _, _, eid in evChangedParent:unpack() do
-		local e = world[eid]
-		local scene_id = findSceneId(eid)
+	for _, _, eid, peid in evChangedParent:unpack() do
+		local scene_id = findSceneId(hashmap, eid)
 		local node = w:object("scene_node", scene_id)
 		node.changed = current_changed
-		if e.parent then
-			node.parent = findSceneId(e.parent)
-			scenequeue:mount(scene_id, node.parent)
+		if peid then
+			scenequeue:mount(scene_id, findSceneId(hashmap, peid))
 		else
 			scenequeue:mount(scene_id, 0)
 		end
