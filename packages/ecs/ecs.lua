@@ -425,9 +425,11 @@ end
 function world:memory(async)
 	local m = {
 		bgfx = require "bgfx".get_memory(),
-		imgui = require "imgui".memory(),
 		rp3d = require "rp3d.core".memory(),
 	}
+	if require "platform".OS:lower() == "windows" then
+		m.imgui = require "imgui".memory()
+	end
 
 	if async then
 		local SERVICE_ROOT <const> = 1
