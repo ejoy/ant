@@ -116,4 +116,41 @@ for _, name in ipairs(APIS) do
     end
 end
 
+do
+    local thread = require "thread"
+    local bgfx_req = thread.channel_consume "Bgfx"
+    local function request(ok, threadid, cmd, ...)
+        if not ok then
+            return
+        end
+        local f = S[cmd]
+        if not f then
+            return
+        end
+        local bgfx_resp = thread.channel_produce ("Bgfx-" .. threadid)
+        bgfx_resp(f(...))
+        return true
+    end
+    ltask.fork(function ()
+        while true do
+            if not request(bgfx_req:pop()) then
+                ltask.sleep(10)
+            end
+        end
+    end)
+end
+
+--[[
+    do
+        local thread = require "thread"
+        local threadid = thread.id
+        local bgfx_req = thread.channel_produce "Bgfx"
+        local bgfx_resp = thread.channel_consume ("Bgfx-" .. threadid)
+        local function call_bgfx(what, ...)
+            bgfx_req(threadid, what, ...)
+            return bgfx_resp()
+        end
+    end
+]]
+
 return S
