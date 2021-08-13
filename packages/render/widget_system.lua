@@ -207,8 +207,7 @@ function rmb_sys:widget()
 			local rc = e._rendercache
 			if rc.debug_mesh_bounding and e._bounding and e._bounding.aabb then
 				if rc and rc.vb and ies.can_visible(eid) then
-					local w = iom.calc_worldmat(eid)
-					local aabb = math3d.aabb_transform(w, e._bounding.aabb)
+					local aabb = rc.aabb
 					local v = math3d.tovalue(aabb)
 					local aabb_shape = {min=v, max={v[5], v[6], v[7]}}
 					geometry_drawer.draw_aabb_box(aabb_shape, DEFAULT_COLOR, nil, desc)

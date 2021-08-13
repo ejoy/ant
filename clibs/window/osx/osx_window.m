@@ -319,6 +319,7 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
         msg.u.mouse.y = g_my;
 		cb->message(cb->ud, &msg);
         break;
+	case NSEventTypeKeyDown:
 	case NSEventTypeKeyUp:
 		msg.type = ANT_WINDOW_KEYBOARD;
 		msg.u.keyboard.state = keyboard_state(event);

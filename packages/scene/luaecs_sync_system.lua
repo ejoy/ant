@@ -2,6 +2,8 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
+local math3d = require "math3d"
+
 local s = ecs.system "luaecs_sync_system"
 
 local evCreate = world:sub {"component_register", "scene_entity"}
@@ -17,7 +19,20 @@ local function isCamera(e)
 end
 
 local function findEntity(eid)
-	return w:bsearch("eid", "eid", eid)
+	for v in w:select "eid:in" do
+		if v.eid == eid then
+			return v
+		end
+	end
+end
+local function isLightmapEntity(e)
+	return e.lightmap ~= nil
+end
+local function isCollider(e)
+	return e.collider ~= nil
+end
+local function isEffekseer(e)
+	return e.effekseer ~= nil
 end
 
 function s:init()
@@ -26,6 +41,10 @@ end
 function s:luaecs_sync()
 	for _, _, eid in evCreate:unpack() do
 		local e = world[eid]
+		if isCamera(e) then
+			assert(false)
+			goto continue
+		end
 		local policy = {}
 		local data = { eid = eid, INIT = true }
 		local rc = e._rendercache
@@ -38,53 +57,44 @@ function s:luaecs_sync()
 			if e.mesh and e.mesh.bounding and e.mesh.bounding.aabb then
 				aabb = e.mesh.bounding.aabb
 			end
-			local scene_node = {
+			data.scene = {
 				srt = rc.srt,
+				updir = e.updir and math3d.ref(math3d.vector(e.updir)) or nil,
 				aabb = aabb,
 				_self = eid,
 				_parent = parent,
 			}
-			local id = world:luaecs_create_ref {
-				policy = {
-					"ant.scene|scene_node"
-				},
-				data = {
-					scene_node = scene_node,
-					INIT = true,
-				}
-			}
-			data.scene_id = id
-			e._scene_id = id
 			policy[#policy+1] = "ant.scene|scene_object"
+			if e.name then
+				policy[#policy+1] = "ant.general|name"
+				data.name = e.name
+			end
 		end
 
 		if isRenderObject(e) then
 			data.render_object = rc
 			data.render_object_update = true
+			data.material = e.material
+			data.mesh	= e.mesh
 			data.filter_material = {}
 			policy[#policy+1] = "ant.scene|render_object"
+		elseif isCollider(e) then
+			data.collider = e.collider
+			policy[#policy+1] = "ant.collision|collider"
+		elseif isEffekseer(e) then
+			data.effekseer = e.effekseer
+			policy[#policy+1] = "ant.effekseer|effekseer"
 		end
-		if isCamera(e) then
-			local id = world:luaecs_create_ref {
-				policy = {
-					"ant.scene|camera_node"
-				},
-				data = {
-					camera_node = rc
-				}
-			}
-			data.camera_id = id
-			data.camera = {
-				frustum     = e.frustum,
-				clip_range  = e.clip_range,
-				dof         = e.dof,
-			}
-			policy[#policy+1] = "ant.scene|camera"
+
+		if isLightmapEntity(e) then
+			data.lightmap = e.lightmap
+			policy[#policy+1] = "ant.bake|bake_lightmap"
 		end
 		world:luaecs_create_entity {
 			policy = policy,
 			data = data
 		}
+		::continue::
 	end
 	for _, _, eid in evUpdateEntity:unpack() do
 		local e = world[eid]
@@ -96,15 +106,6 @@ function s:luaecs_sync()
 				w:sync("render_object:out render_object_update?out", v)
 			end
 		end
-	end
-
-	--debug
-	local eid
-	for v in w:select "eid:in" do
-		if eid and eid >= v.eid then
-			error("eid is not sorted")
-		end
-		eid = v.eid
 	end
 end
 

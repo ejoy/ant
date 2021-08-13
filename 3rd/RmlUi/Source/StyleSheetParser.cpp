@@ -80,14 +80,6 @@ StyleSheetParser::~StyleSheetParser()
 {
 }
 
-void StyleSheetParser::Initialise()
-{
-}
-
-void StyleSheetParser::Shutdown()
-{
-}
-
 static bool IsValidIdentifier(const std::string& str)
 {
 	if (str.empty())
@@ -178,19 +170,7 @@ bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const std
 
 	for(float selector : rule_values)
 	{
-		auto it = std::find_if(keyframes.blocks.begin(), keyframes.blocks.end(), [selector](const KeyframeBlock& keyframe_block) { return Math::AbsoluteValue(keyframe_block.normalized_time - selector) < 0.0001f; });
-		if (it == keyframes.blocks.end())
-		{
-			keyframes.blocks.emplace_back(selector);
-			it = (keyframes.blocks.end() - 1);
-		}
-		else
-		{
-			// In case of duplicate keyframes, we only use the latest definition as per CSS rules
-			it->properties = PropertyDictionary();
-		}
-
-		it->properties.Import(properties);
+		keyframes.blocks.emplace_back(KeyframeBlock { selector, properties });
 	}
 
 	return true;
@@ -201,7 +181,7 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 	int rule_count = 0;
 	line_number = begin_line_number;
 	stream = _stream;
-	stream_file_name = StringUtilities::Replace(stream->GetSourceURL().GetURL(), '|', ':');
+	stream_file_name = stream->GetSourceURL();
 
 	enum class State { Global, AtRuleIdentifier, KeyframeBlock, Invalid };
 	State state = State::Global;
@@ -222,8 +202,6 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 			{
 				if (token == '{')
 				{
-					const int rule_line_number = (int)line_number;
-					
 					// Read the attributes
 					PropertyDictionary properties;
 					PropertySpecificationParser parser(properties, StyleSheetSpecification::GetPropertySpecification());
@@ -325,7 +303,7 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 bool StyleSheetParser::ParseProperties(PropertyDictionary& parsed_properties, const std::string& properties)
 {
 	RMLUI_ASSERT(!stream);
-	StreamMemory stream_owner((const byte*)properties.c_str(), properties.size());
+	StreamMemory stream_owner((const uint8_t*)properties.c_str(), properties.size());
 	stream = &stream_owner;
 	PropertySpecificationParser parser(parsed_properties, StyleSheetSpecification::GetPropertySpecification());
 	bool success = ReadProperties(parser);
@@ -534,8 +512,17 @@ StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, std::st
 		std::sort(pseudo_classes.begin(), pseudo_classes.end());
 		std::sort(structural_pseudo_classes.begin(), structural_pseudo_classes.end());
 
+		PseudoClassSet set = 0;
+		for (auto& name : pseudo_classes) {
+			if (name == "active") {
+				set = set | PseudoClass::Active;
+			}
+			else if (name == "hover") {
+				set = set | PseudoClass::Hover;
+			}
+		}
 		// Get the named child node.
-		leaf_node = leaf_node->GetOrCreateChildNode(std::move(tag), std::move(id), std::move(classes), std::move(pseudo_classes), std::move(structural_pseudo_classes), child_combinator);
+		leaf_node = leaf_node->GetOrCreateChildNode(std::move(tag), std::move(id), std::move(classes), set, std::move(structural_pseudo_classes), child_combinator);
 	}
 
 	// Merge the new properties with those already on the leaf node.

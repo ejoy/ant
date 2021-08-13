@@ -40,7 +40,6 @@ class Element;
 struct EventSpecification;
 
 enum class EventPhase { None, Capture = 1, Target = 2, Bubble = 4 };
-enum class DefaultActionPhase { None, Target = (int)EventPhase::Target, TargetAndBubble = ((int)Target | (int)EventPhase::Bubble) };
 
 template<typename T>
 inline const T* GetIf(const EventDictionary& dictionary, const std::string& key) {

@@ -73,7 +73,7 @@ static Property InterpolateProperties(const Property& p0, const Property& p1, fl
 	}
 
 	// Fall back to discrete interpolation for incompatible units.
-	return alpha < 0.5f ? p0 : p1;
+	return alpha != 1.f ? p0 : p1;
 }
 
 //
@@ -132,15 +132,6 @@ static bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element)
 		if (t0[i].index() != t1[i].index()) {
 			return t0.Combine(element, i) && t1.Combine(element, i);
 		}
-	}
-	return true;
-}
-
-
-static bool PrepareTransforms(Property& property, Element& element) {
-	RMLUI_ASSERT(property.unit == Property::TRANSFORM);
-	if (!property.Has<TransformPtr>()) {
-		property.value = std::make_shared<Transform>();
 	}
 	return true;
 }

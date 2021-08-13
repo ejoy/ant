@@ -48,7 +48,7 @@ enum class SamplerFlag {
 
 class RenderInterface : public NonCopyMoveable {
 public:
-	virtual void RenderGeometry(Vertex* vertices, int num_vertices, Index* indices, int num_indices, TextureHandle texture, SamplerFlag flags) = 0;
+	virtual void RenderGeometry(Vertex* vertices, size_t num_vertices, Index* indices, size_t num_indices, TextureHandle texture, SamplerFlag flags) = 0;
 	virtual bool LoadTexture(TextureHandle& handle, Size& dimensions, const std::string& path) = 0;
 	virtual void ReleaseTexture(TextureHandle texture) = 0;
 	virtual void SetTransform(const glm::mat4x4& transform) = 0;

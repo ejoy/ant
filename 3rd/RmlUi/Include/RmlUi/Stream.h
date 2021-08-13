@@ -32,7 +32,6 @@
 #include "Header.h"
 #include "Traits.h"
 #include "Types.h"
-#include "URL.h"
 
 namespace Rml {
 
@@ -67,7 +66,7 @@ public:
 	int GetStreamMode() const;
 
 	/// Obtain the source url of this stream (if available)
-	const URL& GetSourceURL() const;
+	const std::string& GetSourceURL() const;
 
 	/// Are we at the end of the stream
 	virtual bool IsEOS() const;
@@ -122,10 +121,10 @@ public:
 
 protected:
 	/// Sets the mode on the stream; should be called by a stream when it is opened.
-	void SetStreamDetails(const URL& url, int stream_mode);		
+	void SetStreamDetails(const std::string& url, int stream_mode);		
 
 private:
-	URL url;
+	std::string url;
 	int stream_mode;
 };
 

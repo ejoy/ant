@@ -29,106 +29,76 @@
 #include "../Include/RmlUi/EventSpecification.h"
 #include "../Include/RmlUi/ID.h"
 
-
 namespace Rml {
 
-// An EventId is an index into the specifications vector.
-static std::vector<EventSpecification> specifications = { { EventId::Invalid, "invalid", false, false, DefaultActionPhase::None } };
-
-// Reverse lookup map from event type to id.
-static std::unordered_map<std::string, EventId> type_lookup;
-
-
-namespace EventSpecificationInterface {
-
-void Initialize()
-{
-	// Must be specified in the same order as in EventId
-	specifications = {
-		//      id                 type      interruptible  bubbles     default_action
-		{EventId::Invalid       , "invalid"       , false , false , DefaultActionPhase::None},
-		{EventId::Mousedown     , "mousedown"     , true  , true  , DefaultActionPhase::TargetAndBubble},
-		{EventId::Mousescroll   , "mousescroll"   , true  , true  , DefaultActionPhase::TargetAndBubble},
-		{EventId::Mouseover     , "mouseover"     , true  , true  , DefaultActionPhase::Target},
-		{EventId::Mouseout      , "mouseout"      , true  , true  , DefaultActionPhase::Target},
-		{EventId::Focus         , "focus"         , false , false , DefaultActionPhase::Target},
-		{EventId::Blur          , "blur"          , false , false , DefaultActionPhase::Target},
-		{EventId::Keydown       , "keydown"       , true  , true  , DefaultActionPhase::TargetAndBubble},
-		{EventId::Keyup         , "keyup"         , true  , true  , DefaultActionPhase::TargetAndBubble},
-		{EventId::Textinput     , "textinput"     , true  , true  , DefaultActionPhase::TargetAndBubble},
-		{EventId::Mouseup       , "mouseup"       , true  , true  , DefaultActionPhase::TargetAndBubble},
-		{EventId::Click         , "click"         , true  , true  , DefaultActionPhase::TargetAndBubble},
-		{EventId::Dblclick      , "dblclick"      , true  , true  , DefaultActionPhase::TargetAndBubble},
-		{EventId::Load          , "load"          , false , false , DefaultActionPhase::None},
-		{EventId::Unload        , "unload"        , false , false , DefaultActionPhase::None},
-		{EventId::Show          , "show"          , false , false , DefaultActionPhase::None},
-		{EventId::Hide          , "hide"          , false , false , DefaultActionPhase::None},
-		{EventId::Mousemove     , "mousemove"     , true  , true  , DefaultActionPhase::None},
-		{EventId::Dragmove      , "dragmove"      , true  , true  , DefaultActionPhase::None},
-		{EventId::Drag          , "drag"          , false , true  , DefaultActionPhase::Target},
-		{EventId::Dragstart     , "dragstart"     , false , true  , DefaultActionPhase::Target},
-		{EventId::Dragover      , "dragover"      , true  , true  , DefaultActionPhase::None},
-		{EventId::Dragdrop      , "dragdrop"      , true  , true  , DefaultActionPhase::None},
-		{EventId::Dragout       , "dragout"       , true  , true  , DefaultActionPhase::None},
-		{EventId::Dragend       , "dragend"       , true  , true  , DefaultActionPhase::None},
-		{EventId::Handledrag    , "handledrag"    , false , true  , DefaultActionPhase::None},
-		{EventId::Resize        , "resize"        , false , false , DefaultActionPhase::None},
-		{EventId::Scroll        , "scroll"        , false , true  , DefaultActionPhase::None},
-		{EventId::Animationend  , "animationend"  , false , true  , DefaultActionPhase::None},
-		{EventId::Transitionend , "transitionend" , false , true  , DefaultActionPhase::None},
-		{EventId::Change        , "change"        , false , true  , DefaultActionPhase::None},
+static std::vector<EventSpecification> specifications = {
+		//      id                 type      interruptible  bubbles
+		{EventId::Invalid       , "invalid"       , false , false},
+		{EventId::Mousedown     , "mousedown"     , true  , true },
+		{EventId::Mousescroll   , "mousescroll"   , true  , true },
+		{EventId::Mouseover     , "mouseover"     , true  , true },
+		{EventId::Mouseout      , "mouseout"      , true  , true },
+		{EventId::Focus         , "focus"         , false , false},
+		{EventId::Blur          , "blur"          , false , false},
+		{EventId::Keydown       , "keydown"       , true  , true },
+		{EventId::Keyup         , "keyup"         , true  , true },
+		{EventId::Textinput     , "textinput"     , true  , true },
+		{EventId::Mouseup       , "mouseup"       , true  , true },
+		{EventId::Click         , "click"         , true  , true },
+		{EventId::Dblclick      , "dblclick"      , true  , true },
+		{EventId::Load          , "load"          , false , false},
+		{EventId::Unload        , "unload"        , false , false},
+		{EventId::Show          , "show"          , false , false},
+		{EventId::Hide          , "hide"          , false , false},
+		{EventId::Mousemove     , "mousemove"     , true  , true },
+		{EventId::Dragmove      , "dragmove"      , true  , true },
+		{EventId::Drag          , "drag"          , false , true },
+		{EventId::Dragstart     , "dragstart"     , false , true },
+		{EventId::Dragover      , "dragover"      , true  , true },
+		{EventId::Dragdrop      , "dragdrop"      , true  , true },
+		{EventId::Dragout       , "dragout"       , true  , true },
+		{EventId::Dragend       , "dragend"       , true  , true },
+		{EventId::Handledrag    , "handledrag"    , false , true },
+		{EventId::Resize        , "resize"        , false , false},
+		{EventId::Scroll        , "scroll"        , false , true },
+		{EventId::Animationend  , "animationend"  , false , true },
+		{EventId::Transitionend , "transitionend" , false , true },
+		{EventId::Change        , "change"        , false , true },
+		{EventId::Message       , "message"       , true  , true },
 	};
 
-	type_lookup.clear();
+static auto createLoolup() {
+	std::unordered_map<std::string, EventId> type_lookup;
 	type_lookup.reserve(specifications.size());
-	for (auto& specification : specifications)
+	for (auto& specification : specifications) {
 		type_lookup.emplace(specification.type, specification.id);
-
-#ifdef RMLUI_DEBUG
-	// Verify that all event ids are specified
-	RMLUI_ASSERT((int)specifications.size() == (int)EventId::NumDefinedIds);
-
-	for (int i = 0; i < (int)specifications.size(); i++)
-	{
-		// Verify correct order
-		RMLUI_ASSERT(i == (int)specifications[i].id);
 	}
-#endif
+	return type_lookup;
 }
 
-const EventSpecification& Get(EventId id) {
+static std::unordered_map<std::string, EventId> type_lookup = createLoolup();
+
+const EventSpecification& EventSpecification::Get(EventId id) {
 	size_t i = static_cast<size_t>(id);
 	if (i < specifications.size())
 		return specifications[i];
 	return specifications[0];
 }
 
-EventId GetId(const std::string& event_type) {
+EventId EventSpecification::GetId(const std::string& event_type) {
 	auto it = type_lookup.find(event_type);
 	if (it != type_lookup.end())
 		return it->second;
 	return EventId::Invalid;
 }
 
-EventId GetIdOrInsert(const std::string& event_type) {
-	EventId id = GetId(event_type);
-	if (id != EventId::Invalid) {
-		return id;
-	}
-
-	constexpr bool interruptible = true;
-	constexpr bool bubbles = true;
-	constexpr DefaultActionPhase default_action_phase = DefaultActionPhase::None;
-	
+EventId EventSpecification::NewId(const std::string& event_type, bool interruptible, bool bubbles) {
 	const size_t new_id_num = specifications.size();
-	// No specification found for this name, insert a new entry with default values
 	EventId new_id = static_cast<EventId>(new_id_num);
-	specifications.push_back(EventSpecification{ new_id, event_type, interruptible, bubbles, default_action_phase });
+	specifications.push_back(EventSpecification{ new_id, event_type, interruptible, bubbles });
 	type_lookup.emplace(event_type, new_id);
 	EventSpecification& spec = specifications.back();
-
 	return spec.id;
 }
 
 }
-} // namespace Rml

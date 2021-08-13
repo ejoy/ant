@@ -139,7 +139,7 @@ public:
 };
 
 LuaTableDef::LuaTableDef(const struct LuaDataModel *model)
-	: VariableDefinition(Rml::DataVariableType::Scalar)
+	: VariableDefinition()
 	, model(model)
 {}
 
@@ -263,7 +263,7 @@ BindVariable(struct LuaDataModel* D, lua_State* L) {
 		});
 	}
 	else {
-		D->constructor.BindCustomDataVariable(key,
+		D->constructor.BindVariable(key,
 			Rml::DataVariable(D->scalarDef, (void*)(intptr_t)id)
 		);
 	}

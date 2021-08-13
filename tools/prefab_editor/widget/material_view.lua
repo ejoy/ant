@@ -23,7 +23,7 @@ local mtldata_list = {
 
 local surfacetype = {
     "foreground",
-    "opaticy",
+    "opacity",
     "background",
     "translucent",
     "decal",
@@ -59,7 +59,7 @@ function MaterialView:_init()
     --
     self.ui_occluder = {true}
     self.ui_occludee = {true}
-    self.ui_surfacetype = {text = "opaticy"}
+    self.ui_surfacetype = {text = "opacity"}
     self.ui_lighting = {true}
     self.ui_shadow_receive = {false}
     self.ui_shadow_cast = {false}
@@ -94,7 +94,7 @@ function MaterialView:on_set_surfacetype(value)
     mtldata_list[self.eid].tdata.fx.setting.surfacetype = value
 end
 function MaterialView:on_get_surfacetype()
-    return mtldata_list[self.eid].tdata.fx.setting.surfacetype or "opaticy"
+    return mtldata_list[self.eid].tdata.fx.setting.surfacetype or "opacity"
 end
 
 local function convert_path(path, current_path)
@@ -226,7 +226,7 @@ function MaterialView:set_model(eid)
         self.ui_shadow_receive[1] = setting.shadow_receive and setting.shadow_receive == "on"
         self.ui_shadow_cast[1] = ies.can_cast(self.eid)
         self.ui_postprocess[1] = setting.bloom and setting.bloom == "on"
-        self.ui_surfacetype.text = setting.surfacetype or "opaticy"
+        self.ui_surfacetype.text = setting.surfacetype or "opacity"
         mtldata_list[eid] = md
     end
 

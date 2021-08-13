@@ -1,5 +1,9 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
+
+local lfs = require "filesystem.local"
+local image = require "image"
 require "bake_mathadapter"
 
 local renderpkg = import_package "ant.render"
@@ -11,22 +15,19 @@ local sampler   = renderpkg.sampler
 local mathpkg   = import_package "ant.math"
 local mc        = mathpkg.constant
 
+local assetmgr  = import_package "ant.asset"
+
 local math3d    = require "math3d"
 local bgfx      = require "bgfx"
 local bake      = require "bake"
 local ltask     = require "ltask"
+local crypt     = require "crypt"
 
-local ipf       = world:interface "ant.scene|iprimitive_filter"
 local irender   = world:interface "ant.render|irender"
 local imaterial = world:interface "ant.asset|imaterial"
-local icp       = world:interface "ant.render|icull_primitive"
+local icamera   = world:interface "ant.camera|camera"
 local itimer    = world:interface "ant.timer|itimer"
 local ientity   = world:interface "ant.render|entity"
-
-local lm_trans = ecs.transform "lightmap_transform"
-function lm_trans.process_entity(e)
-    e._lightmap = {}
-end
 
 local lightmap_sys = ecs.system "lightmap_system"
 
@@ -184,16 +185,14 @@ local function init_shading_info()
         {stage=0, texture={handle=get_rb(1)}},
         {stage=0, texture={handle=get_rb(2)}},
     }
-    for ii=0, downsample_viewid_count-1 do
+    fbmgr.bind(lightmap_viewid, fb[1])
+    bgfx.set_view_rect(lightmap_viewid, 0, 0, bake_fbw, bake_fbh)
+    for ii=1, downsample_viewid_count-1 do
         local vid = lightmap_viewid+ii
         local idx = ii % 2
         fbmgr.bind(vid, fb[idx+1])
-        if vid == lightmap_viewid then
-            bgfx.set_view_rect(vid, 0, 0, bake_fbw, bake_fbh)
-        else
-            bgfx.set_view_rect(vid, 0, 0, hsize, hsize)
-            hsize = hsize / 2
-        end
+        bgfx.set_view_rect(vid, 0, 0, hsize, hsize)
+        hsize = hsize / 2
     end
 
     return {
@@ -202,36 +201,136 @@ local function init_shading_info()
     }
 end
 
+local lightmap_queue_surface_types<const> = {
+    "foreground", "opacity", "background",
+}
 function lightmap_sys:init()
     shading_info = init_shading_info()
 
-    world:create_entity {
-        policy = {
-            "ant.bake|lightmap_baker",
-            "ant.general|name",
-        },
-        data = {
-            primitive_filter = {
-                filter_type = "lightmap",
-				update_type = "primitive",
-            },
-            lightmap_baker = {},
-        }
+    local camera_ref_WONT_USED = icamera.create{
+        viewdir = mc.ZAXIS,
+        eyepos = mc.ZERO_PT,
+        name = "lightmap camera"
     }
+    irender.create_view_queue({x=0, y=0, w=1, h=1}, "lightmap_queue", camera_ref_WONT_USED, "lightmap", nil, lightmap_queue_surface_types)
+end
 
-    world:create_entity {
-        policy = {
-            "ant.bake|scene_watcher",
-            "ant.general|name",
-        },
-        data = {
-            primitive_filter = {
-                filter_type = "visible",
-                update_type = "primitive",
-            },
-            scene_watcher = {},
-        }
+function lightmap_sys:entity_init()
+    for e in w:select "INIT lightmap:in" do
+        local lm = e.lightmap
+        if lm.bake_id == nil then
+            lm.bake_id = "radiosity_" .. crypt.uuid()
+        end
+    end
+end
+
+local bake_finish_mb = world:sub{"bake_finish"}
+local function gen_name(bakeid, name)
+    if name == nil then
+        return bakeid
+    end
+    return name .. bakeid:sub(#bakeid-8, #bakeid)
+end
+
+local function default_tex_info(w, h, fmt)
+    local bits = image.getBitsPerPixel(fmt)
+    local s = (bits//8) * w * h
+    return {
+        width=w, height=h, format=fmt,
+        numLayers=1, numMips=1, storageSize=s,
+        bitsPerPixel=bits,
+        depth=1, cubeMap=false,
     }
+end
+
+local texfile_content<const> = [[
+normalmap: false
+path: %s
+sRGB: true
+compress:
+    android: ASTC6x6
+    ios: ASTC6x6
+    windows: BC3
+sampler:
+    MAG: LINEAR
+    MIN: LINEAR
+    U: CLAMP
+    V: CLAMP
+]]
+
+local function save_lightmap(e, lme)
+    local lm = e.lightmap
+
+    local filename = lme.lightmap_path / gen_name(lm.bakeid, e.name)
+
+    local ti = default_tex_info(lm.size, lm.size, "RGBA32F")
+    local lmdata = lm.data
+    local m = bgfx.memory_buffer(lmdata:data(), ti.storageSize, lmdata)
+    local c = image.encode_image(ti, m, {type = "dds", format="RGBA8", srgb=false})
+    local f = lfs.open(filename, "wb")
+    f:write(c)
+    f:close()
+
+    local tc = texfile_content:format(filename:string())
+    local texfile = filename:replace_extension "texture"
+    f = lfs.open(texfile, "w")
+    f:write(tc)
+    f:close()
+    
+    lme.lightmap_result[lm.bake_id] = {texture_path = texfile,}
+end
+
+function lightmap_sys:data_changed()
+    for lme in w:select "lightmapper lightmap_path:in lightmap_result:in" do
+        for e in w:select "bake_finish lightmap:in render_object:in render_object_update:out" do
+            e.render_object_update = true
+            save_lightmap(e, lme)
+        end
+        w:clear "bake_finish"
+    end
+end
+
+local function load_new_material(material, fx)
+    local s = {BAKING_LIGHTMAP = 1}
+    for k, v in pairs(fx.setting) do
+        s[k] = v
+    end
+    s["ENABLE_SHADOW"] = nil
+    s["identity"] = nil
+    s['shadow_cast'] = 'off'
+    s['shadow_receive'] = 'off'
+    s['skinning'] = 'UNKNOWN'
+    s['bloom'] = 'off'
+    return imaterial.load(material, s)
+end
+
+local function to_none_cull_state(state)
+    local s = bgfx.parse_state(state)
+	s.CULL = "NONE"
+	return bgfx.make_state(s)
+end
+
+function lightmap_sys:end_filter()
+    for e in w:select "filter_result:in material:in render_object:in filter_material:out" do
+        local fr = e.filter_result
+        local le = w:singleton("lightmap_queue", "filter_names:in")
+        for _, fn in ipairs(le.filter_names) do
+            if fr[fn] then
+                local fm = e.filter_material
+                local ro = e.render_object
+                local material = e.material
+                --TODO: e.material should be string
+                material = type(material) == "string" and material or tostring(material)
+                local nm = load_new_material(material, ro.fx)
+                fm[fn] = {
+                    fx          = nm.fx,
+                    properties  = nm.properties,
+                    state       = to_none_cull_state(nm.state),
+                    stencil     = nm.stencil,
+                }
+            end
+        end
+    end
 end
 
 local function load_geometry_info(item)
@@ -329,15 +428,23 @@ local function load_geometry_info(item)
     }
 end
 
-local function draw_scene(pf)
-    for _, result in ipf.iter_filter(pf) do
-        for _, item in ipf.iter_target(result) do
-            irender.draw(lightmap_viewid, item)
+local function find_scene_render_objects(queuename)
+    local q = w:singleton(queuename, "filter_names:in")
+    local renderobjects = {}
+    for _, fn in ipairs(q.filter_names) do
+        for e in w:select(fn .. " render_object:in widget_entity:absent") do
+            renderobjects[#renderobjects+1] = e.render_object
         end
     end
+
+    return renderobjects
 end
 
-local ilm = ecs.interface "ilightmap"
+local function draw_scene(renderobjs)
+    for _, ro in ipairs(renderobjs) do
+        irender.draw(lightmap_viewid, ro)
+    end
+end
 
 local function create_context_setting(hemisize)
     return {
@@ -424,58 +531,25 @@ end
 
 local skycolor = 0xffffffff
 
-function ilm.find_sample(eid, triangleidx)
-    local e = world[eid]
-    if e == nil then
-        return log.warn(("invalid entity:%d"):format(eid))
-    end
 
-    if e._lightmap == nil then
-        return log.warn(("entity %s not set any lightmap info will not be baked"):format(e.name or ""))
-    end
-
-    local lm = e.lightmap
-    local hemisize = lm.hemisize
-
-    local s = create_context_setting(hemisize)
-    local bake_ctx = bake.create_lightmap_context(s)
-    local g = load_geometry_info(e._rendercache)
-    bake_ctx:set_geometry(g)
-    local lmsize = lm.size
-    local li = {width=lmsize, height=lmsize, channels=4}
-    log.info(("[%d-%s] lightmap:w=%d, h=%d, channels=%d"):format(eid, e.name or "", li.width, li.height, li.channels))
-    e._lightmap.data = bake_ctx:set_target_lightmap(li)
-
-    return bake_ctx:find_sample(triangleidx)
-end
-
-function ilm.bake_entity(eid, pf, notcull)
-    local e = world[eid]
-    if e == nil then
-        return log.warn(("invalid entity:%d"):format(eid))
-    end
-
-    if e._lightmap == nil then
-        return log.warn(("entity %s not set any lightmap info will not be baked"):format(e.name or ""))
-    end
-
-    local lm = e.lightmap
-    local hemisize = lm.hemisize
+local function bake_entity(bakeobj, lightmap, scene_objects)
+    local hemisize = lightmap.hemisize
     
     local s = create_context_setting(hemisize)
     local bake_ctx = bake.create_lightmap_context(s)
     local hemix, hemiy = bake_ctx:hemi_count()
-    local lmsize = lm.size
+    local lmsize = lightmap.size
     update_bake_shading(hemisize, lmsize)
     local li = {width=lmsize, height=lmsize, channels=4}
-    log.info(("[%d-%s] lightmap:w=%d, h=%d, channels=%d"):format(eid, e.name or "", li.width, li.height, li.channels))
-    e._lightmap.data = bake_ctx:set_target_lightmap(li)
+    log.info(("lightmap:w=%d, h=%d, channels=%d"):format(li.width, li.height, li.channels))
+    lightmap.data = bake_ctx:set_target_lightmap(li)
 
-    local g = load_geometry_info(e._rendercache)
+    local g = load_geometry_info(bakeobj)
     bake_ctx:set_geometry(g)
-    log.info(("[%d-%s] bake: begin"):format(eid, e.name or ""))
+    log.info "bake: begin"
 
     local c = itimer.fetch_time()
+    --TODO: we should move all bake logic code in lua, and put all rasterizier code in c
     local cb = {
         init_buffer = function ()
             bgfx.set_view_clear(lightmap_viewid, "CD", skycolor, 1.0)
@@ -490,10 +564,7 @@ function ilm.bake_entity(eid, pf, notcull)
         render_scene = function (vp, view, proj)
             bgfx.set_view_rect(lightmap_viewid, vp[1], vp[2], vp[3], vp[4])
             bgfx.set_view_transform(lightmap_viewid, view, proj)
-            if nil == notcull then
-                icp.cull(pf, math3d.mul(proj, view))
-            end
-            draw_scene(pf)
+            draw_scene(scene_objects)
             bgfx.frame()
         end,
         downsample = function(size, writex, writey)
@@ -540,49 +611,83 @@ function ilm.bake_entity(eid, pf, notcull)
             local ec = itimer.fetch_time()
             if ec - c >= 1000 then
                 c = ec
-                log.info(("[%d-%s] process:%2f"):format(eid, e.name or "", p))
+                log.info(("process:%2f"):format(p))
             end
         end
     }
 
     bake_ctx:bake(cb)
 
-    log.info(("[%d-%s] bake: end"):format(eid, e.name or ""))
-
-    e._lightmap.data:postprocess()
-    log.info(("[%d-%s] postprocess: finish"):format(eid, e.name or ""))
+    lightmap.data:postprocess()
+    log.info "postprocess: finish"
 end
 
 local function bake_all()
-    local lm_e = world:singleton_entity "lightmap_baker"
-    local se = world:singleton_entity "scene_watcher"
-    for _, result in ipf.iter_filter(lm_e.primitive_filter) do
-        for _, item in ipf.iter_target(result) do
-            ilm.bake_entity(item.eid, se.primitive_filter)
+    local scene_renderobjects = find_scene_render_objects "main_queue"
+
+    local lm_queue = w:singleton("lightmap_queue", "filter_names:in")
+    for _, fn in ipairs(lm_queue.filter_names) do
+        for e in w:select (fn .. " render_object:in lightmap:in widget_entity:absent name?in bake_finish?out") do
+            log.info(("start bake entity: %s"):format(e.name))
+            bake_entity(e.render_object, e.lightmap, scene_renderobjects)
+            e.bake_finish = true
+            log.info(("end bake entity: %s"):format(e.name))
         end
     end
 end
 
-local function _bake(eid)
-    if eid then
-        local se = world:singleton_entity "scene_watcher"
-        ilm.bake_entity(eid, se.primitive_filter)
+local function _bake(id)
+    if id then
+        for e in w:select "render_object:in lightmap:in" do
+            local lm = e.lightmap
+            if id == lm.bake_id then
+                bake_entity(e.render_object, lm, find_scene_render_objects "main_queue")
+                e.bake_finish = true
+                w:sync("bake_finish?out", e)
+                break
+            end
+        end
     else
-        log.info("bake entity scene with lightmap setting")
+        log.info "bake entity scene with lightmap setting"
         bake_all()
     end
+
+    world:pub{"bake_finish", id}
 end
 
 local bake_mb = world:sub{"bake"}
+
 function lightmap_sys:end_frame()
     for msg in bake_mb:each() do
-        local eid = msg[2]
+        local id = msg[2]
         ltask.fork(function ()
             local ServiceBgfxMain = ltask.queryservice "bgfx_main"
             ltask.call(ServiceBgfxMain, "pause")
-            _bake(eid)
+            _bake(id)
             ltask.call(ServiceBgfxMain, "continue")
         end)
     end
 end
 
+------------------------------------------------------------------------
+local ilm = ecs.interface "ilightmap"
+
+function ilm.find_sample(lightmap, renderobj, triangleidx)
+    local hemisize = lightmap.hemisize
+
+    local s = create_context_setting(hemisize)
+    local bake_ctx = bake.create_lightmap_context(s)
+    local g = load_geometry_info(renderobj)
+    bake_ctx:set_geometry(g)
+    local lmsize = lightmap.size
+    local li = {width=lmsize, height=lmsize, channels=4}
+    log.info(("lightmap:w=%d, h=%d, channels=%d"):format(li.width, li.height, li.channels))
+    lightmap.data = bake_ctx:set_target_lightmap(li)
+
+    return bake_ctx:find_sample(triangleidx)
+end
+
+function ilm.bake_entity(bakeobj, lightmap)
+    local scene_renderobjs = find_scene_render_objects "main_queue"
+    return bake_entity(bakeobj, lightmap, scene_renderobjs)
+end

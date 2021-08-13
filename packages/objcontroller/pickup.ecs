@@ -1,0 +1,14 @@
+--v2
+system "pickup_primitive_system"
+    .implement "pickup.lua"
+    .require_system "ant.render|end_filter_system"
+    .require_interface "ant.render|irender"
+    .method "init"
+    .method "end_filter"
+
+component_v2 "pickup_queue"
+component_v2 "pickup".type "lua"
+policy_v2 "pickup"
+    .require_system "pickup_primitive_system"
+    .require_system "pickup_system"
+    .component_v2 "pickup"

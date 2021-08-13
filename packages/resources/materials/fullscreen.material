@@ -1,7 +1,5 @@
 fx:
   fs: /pkg/ant.resources/shaders/simple/quad/fs_mainview.sc
   vs: /pkg/ant.resources/shaders/simple/quad/vs_simple_texquad.sc
-  setting:
-    lighting: off
-setting: /pkg/ant.resources/settings/default.setting
+  setting: /pkg/ant.resources/settings/nolighting.setting
 state: /pkg/ant.resources/materials/states/quad.state

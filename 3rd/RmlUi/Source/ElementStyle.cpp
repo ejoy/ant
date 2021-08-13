@@ -114,10 +114,6 @@ float ComputePropertyH(const Property* property, Element* e) {
 	return ComputePropertyH(property->ToFloatValue(), e);
 }
 
-static FloatValue ComputeOrigin(const Property* property) {
-	return property->ToFloatValue();
-}
-
 ElementStyle::ElementStyle(Element* _element)
 {
 	definition = nullptr;
@@ -292,32 +288,22 @@ void ElementStyle::UpdateDefinition() {
 	}
 }
 
-
-
-// Sets or removes a pseudo-class on the element.
-void ElementStyle::SetPseudoClass(const std::string& pseudo_class, bool activate)
-{
-	bool changed = false;
-
+void ElementStyle::SetPseudoClass(PseudoClass pseudo_class, bool activate) {
+	PseudoClassSet old = pseudo_classes;
 	if (activate)
-		changed = pseudo_classes.insert(pseudo_class).second;
+		pseudo_classes = pseudo_classes | pseudo_class;
 	else
-		changed = (pseudo_classes.erase(pseudo_class) == 1);
-
-	if (changed)
-	{
+		pseudo_classes = pseudo_classes & ~pseudo_class;
+	if (old != pseudo_classes) {
 		DirtyDefinition();
 	}
 }
 
-// Checks if a specific pseudo-class has been set on the element.
-bool ElementStyle::IsPseudoClassSet(const std::string& pseudo_class) const
-{
-	return (pseudo_classes.count(pseudo_class) == 1);
+bool ElementStyle::IsPseudoClassSet(PseudoClassSet pseudo_class) const {
+	return (pseudo_class & ~pseudo_classes) == 0;
 }
 
-const PseudoClassList& ElementStyle::GetActivePseudoClasses() const
-{
+PseudoClassSet ElementStyle::GetActivePseudoClasses() const {
 	return pseudo_classes;
 }
 
@@ -546,9 +532,6 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values) {
 		case PropertyId::FlexShrink:
 			element->GetLayout().SetProperty(id, p, element);
 			break;
-		}
-
-		switch (id) {
 		case PropertyId::BorderTopColor:
 			values.border_color.top = p->GetColor();
 			break;
@@ -562,16 +545,16 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values) {
 			values.border_color.left = p->GetColor();
 			break;
 		case PropertyId::BorderTopLeftRadius:
-			values.border_radius.topLeft = ComputeProperty(p, element);
+			values.border_radius.topLeft = p->ToFloatValue();
 			break;
 		case PropertyId::BorderTopRightRadius:
-			values.border_radius.topRight = ComputeProperty(p, element);
+			values.border_radius.topRight = p->ToFloatValue();
 			break;
 		case PropertyId::BorderBottomRightRadius:
-			values.border_radius.bottomRight = ComputeProperty(p, element);
+			values.border_radius.bottomRight = p->ToFloatValue();
 			break;
 		case PropertyId::BorderBottomLeftRadius:
-			values.border_radius.bottomLeft = ComputeProperty(p, element);
+			values.border_radius.bottomLeft = p->ToFloatValue();
 			break;
 
 		case PropertyId::BackgroundColor:

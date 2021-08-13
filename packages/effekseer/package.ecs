@@ -33,6 +33,13 @@ policy "effekseer_policy"
     .component "speed"
     .component "auto_play"
 
+component_v2 "effekseer"
+    .type "lua"
+
+policy_v2 "effekseer"
+    .require_system "effekseer_system"
+    .component_v2 "effekseer"
+
 transform "instance_effect"
     .implement "effekseer_system.lua"
     .input "effekseer"

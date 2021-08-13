@@ -1,5 +1,9 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
+-- local fbmgr         = require "framebuffer_mgr"
+-- local viewidmgr     = require "viewid_mgr"
+
 local assetmgr      = import_package "ant.asset"
 local math3d        = require "math3d"
 local effekseer     = require "effekseer"
@@ -7,21 +11,15 @@ local effekseer     = require "effekseer"
 local renderpkg     = import_package "ant.render"
 local declmgr       = renderpkg.declmgr
 local viewidmgr     = renderpkg.viewidmgr
+local fbmgr         = renderpkg.fbmgr
+
+local bgfx = require "bgfx"
 
 local math3d_adapter = require "math3d.adapter"
 effekseer.update_transform = math3d_adapter.matrix(effekseer.update_transform, 2, 1)
 
 local effekseer_sys = ecs.system "effekseer_system"
 local time_callback
--- local m = ecs.component "effekseer"
-
--- function m:init()
--- 	effekseer.set_loop(self.handle, self.loop)
---     effekseer.set_speed(self.handle, self.speed)
---     if e.auto_play then
---         effekseer.play(self.handle)
---     end
--- end
 
 local ie_t = ecs.transform "instance_effect"
 
@@ -35,7 +33,7 @@ function ie_t.process_entity(e)
 end
 
 local shader_type = {
-    "unlit","lit","distortion","ad_unlit","ad_lit","ad_distortion","mtl"
+    "unlit", "lit", "distortion", "ad_unlit", "ad_lit", "ad_distortion", "mtl"
 }
 
 function effekseer_sys:init()
@@ -68,9 +66,9 @@ function effekseer_sys:init()
         end
         return programs
     end
-
+    
     effekseer.init {
-        viewid = viewidmgr.get "main_view",
+        viewid = viewidmgr.get "effect_view",
         square_max_count = 8000,
         sprite_programs = create_shaders(sprite_shader_defines),
         model_programs = create_shaders(model_shader_defines),
@@ -142,11 +140,18 @@ end
 
 local itimer = world:interface "ant.timer|itimer"
 
+local function main_camera_ref()
+    for v in world.w:select "main_queue camera_ref:in" do
+        return v.camera_ref
+    end
+end
+
 function effekseer_sys:camera_usage()
-    local mq = world:singleton_entity "main_queue"
     local icamera = world:interface "ant.camera|camera"
-    local rc = world[mq.camera_eid]._rendercache
-    effekseer.update_view_proj(math3d.value_ptr(rc.viewmat), math3d.value_ptr(rc.projmat))
+    local c = icamera.find_camera(main_camera_ref())
+    if c then
+        effekseer.update_view_proj(math3d.value_ptr(c.viewmat), math3d.value_ptr(c.projmat))
+    end
 end
 
 
@@ -154,8 +159,16 @@ local iom = world:interface "ant.objcontroller|obj_motion"
 local event_entity_register = world:sub{"entity_register"}
 
 function effekseer_sys:render_submit()
-    local dt = time_callback and time_callback() or itimer.delta() * 0.001
-    effekseer.update(dt)
+    for qe in w:select "main_queue render_target:in" do
+        local rt = qe.render_target
+        local fbidx = rt.fb_idx
+        local effect_view = viewidmgr.get "effect_view"
+        fbmgr.bind(effect_view, fbidx)
+        local vr = rt.view_rect
+        bgfx.set_view_rect(effect_view, vr.x, vr.y, vr.w, vr.h)
+        local dt = time_callback and time_callback() or itimer.delta() * 0.001
+        effekseer.update(dt)
+    end
 end
 
 function effekseer_sys:follow_transform_updated()
@@ -168,14 +181,10 @@ function effekseer_sys:follow_transform_updated()
             end
         end
     end
-    for _, eid in world:each "effekseer" do
-		local e = world[eid]
-        if e._scene_id then
-            local worldmat = world.w:object("scene_node", e._scene_id)._worldmat
-            if worldmat then
-		        effekseer.update_transform(e.effect_instance.handle, worldmat)
-            end
-        end
+
+    for v in w:select "effekseer:in scene_node(scene_id):in" do
+        local node = v.scene_node
+        effekseer.update_transform(v.effect_instance.handle, node._worldmat)
     end
 end
 

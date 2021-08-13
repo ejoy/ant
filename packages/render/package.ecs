@@ -8,3 +8,5 @@ import "postprocess/postprocess.ecs"
 import "shadow/shadow.ecs"
 import "decal/decal.ecs"
 import "polyline/polyline.ecs"
+
+import "render_system/render_v2.ecs"

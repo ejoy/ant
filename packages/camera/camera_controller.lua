@@ -1,5 +1,6 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 local math3d = require "math3d"
 
 local iom = world:interface "ant.objcontroller|obj_motion"
@@ -13,17 +14,26 @@ local mouse_mb = world:sub {"mouse"}
 local viewat<const> = math3d.ref(math3d.vector(0, 0, 0))
 
 function cc_sys:post_init()
-    local mq = world:singleton_entity "main_queue"
-    local cameraeid = mq.camera_eid
-    local eyepos = math3d.vector(0, 0, -10)
-    iom.set_position(cameraeid, eyepos)
-    local dir = math3d.normalize(math3d.sub(viewat, eyepos))
-    iom.set_direction(cameraeid, dir)
+    
+end
+
+local function main_camera_ref()
+    for v in w:select "main_queue camera_ref:in" do
+        return v.camera_ref
+    end
 end
 
 local mouse_lastx, mouse_lasty
 local toforward
 function cc_sys:data_changed()
+    for v in w:select "INIT main_queue camera_ref:in" do
+        local eyepos = math3d.vector(0, 0, -10)
+        local camera_ref = v.camera_ref
+        iom.set_position(camera_ref, eyepos)
+        local dir = math3d.normalize(math3d.sub(viewat, eyepos))
+        iom.set_direction(camera_ref, dir)
+    end
+
     for msg in kb_mb:each() do
         local key, press, status = msg[2], msg[3], msg[4]
         if press == 1 then
@@ -49,15 +59,12 @@ function cc_sys:data_changed()
     end
 
     if toforward then
-        local mq = world:singleton_entity "main_queue"
-        local cameraeid = mq.camera_eid
-        iom.move_forward(cameraeid, toforward)
+        local camera_ref = main_camera_ref()
+        iom.move_forward(camera_ref, toforward)
     end
 
     if dx or dy then
-        local mq = world:singleton_entity "main_queue"
-
-        local cameraeid = mq.camera_eid
-        iom.rotate_around_point2(cameraeid, viewat, dy, dx)
+        local camera_ref = main_camera_ref()
+        iom.rotate_around_point2(camera_ref, viewat, dy, dx)
     end
 end

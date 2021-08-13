@@ -61,11 +61,11 @@ class StyleSheetNode
 {
 public:
 	StyleSheetNode();
-	StyleSheetNode(StyleSheetNode* parent, const std::string& tag, const std::string& id, const std::vector<std::string>& classes, const std::vector<std::string>& pseudo_classes, const StructuralSelectorList& structural_selectors, bool child_combinator);
-	StyleSheetNode(StyleSheetNode* parent, std::string&& tag, std::string&& id, std::vector<std::string>&& classes, std::vector<std::string>&& pseudo_classes, StructuralSelectorList&& structural_selectors, bool child_combinator);
+	StyleSheetNode(StyleSheetNode* parent, const std::string& tag, const std::string& id, const std::vector<std::string>& classes, PseudoClassSet pseudo_classes, const StructuralSelectorList& structural_selectors, bool child_combinator);
+	StyleSheetNode(StyleSheetNode* parent, std::string&& tag, std::string&& id, std::vector<std::string>&& classes, PseudoClassSet pseudo_classes, StructuralSelectorList&& structural_selectors, bool child_combinator);
 
 	/// Retrieves a child node with the given requirements if they match an existing node, or else creates a new one.
-	StyleSheetNode* GetOrCreateChildNode(std::string&& tag, std::string&& id, std::vector<std::string>&& classes, std::vector<std::string>&& pseudo_classes, StructuralSelectorList&& structural_selectors, bool child_combinator);
+	StyleSheetNode* GetOrCreateChildNode(std::string&& tag, std::string&& id, std::vector<std::string>&& classes, PseudoClassSet pseudo_classes, StructuralSelectorList&& structural_selectors, bool child_combinator);
 	/// Retrieves or creates a child node with requirements equivalent to the 'other' node.
 	StyleSheetNode* GetOrCreateChildNode(const StyleSheetNode& other);
 
@@ -99,7 +99,7 @@ public:
 
 private:
 	// Returns true if the requirements of this node equals the given arguments.
-	bool EqualRequirements(const std::string& tag, const std::string& id, const std::vector<std::string>& classes, const std::vector<std::string>& pseudo_classes, const StructuralSelectorList& structural_pseudo_classes, bool child_combinator) const;
+	bool EqualRequirements(const std::string& tag, const std::string& id, const std::vector<std::string>& classes, PseudoClassSet pseudo_classes, const StructuralSelectorList& structural_pseudo_classes, bool child_combinator) const;
 
 	void CalculateAndSetSpecificity();
 
@@ -115,7 +115,7 @@ private:
 	std::string tag;
 	std::string id;
 	std::vector<std::string> class_names;
-	std::vector<std::string> pseudo_class_names;
+	PseudoClassSet pseudo_classes;
 	StructuralSelectorList structural_selectors; // Represents structural pseudo classes
 	bool child_combinator = false; // The '>' combinator: This node only matches if the element is a parent of the previous matching element.
 

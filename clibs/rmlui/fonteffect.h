@@ -40,6 +40,7 @@ public:
         , mEdgeValueOffset(eo)
         , mDistMultiplier(1.f)
     {}
+    virtual ~SDFFontEffect() {}
     
     uint16_t GetTexID() const           { return mTexID; }
     FontEffectType GetType()  const     { return mFEType;}
@@ -153,12 +154,6 @@ private:
     const float mWidth;
     Rml::Color mcolor;
 };
-
-static std::string
-get_default_mask_offset_str(struct font_manager* F){
-    const int v = int(F->font_manager_sdf_mask(F) * 0.85f);
-    return std::to_string(v);
-}
 
 ///shadow//////////////////////////////////////////////////////////////////
 class SDFFontEffectShadow : public SDFFontEffect{

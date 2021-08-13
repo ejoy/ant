@@ -1,44 +1,45 @@
 local ecs = ...
 local world = ecs.world
-local iom = world:interface "ant.objcontroller|obj_motion"
-local camera_mgr = require "camera_manager"(world)
-local math3d  = require "math3d"
-local utils = require "mathutils"(world)
+local w = world.w
+
+local iom		= world:interface "ant.objcontroller|obj_motion"
+local irq		= world:interface "ant.render|irenderqueue"
+local camera_mgr= require "camera_manager"(world)
+local math3d	= require "math3d"
+local utils		= require "mathutils"(world)
 local inspector = require "widget.inspector"(world)
-local m = ecs.system "camera_system"
+
+local m			= ecs.system "camera_system"
 
 local event_camera_control = world:sub {"camera"}
-local camera_init_eye_pos <const> = {5, 5, 10, 1}
+local camera_init_eye_pos <const> = {5, 5, 5, 1}
 local camera_init_target <const> = {0, 0,  0, 1}
-local camera_target
+local camera_target = math3d.ref(math3d.vector(0, 0, 0, 1))
 local camera_distance
-local camera_id
 local zoom_speed <const> = 1
 local wheel_speed <const> = 0.5
 local pan_speed <const> = 0.5
 local rotation_speed <const> = 1
 
 local function view_to_world(view_pos)
-	local camerasrt = iom.srt(camera_id)
-	return math3d.transform(camerasrt, view_pos, 0)
-end
-
-local function world_to_screen(world_pos)
-	
+	--local camerasrt = iom.srt(irq.main_camera())
+	local camer_worldmat = iom.worldmat(irq.main_camera())
+	return math3d.transform(camer_worldmat, view_pos, 0)
 end
 
 local function camera_update_eye_pos(camera)
-	iom.set_position(camera_id, math3d.sub(camera_target, math3d.mul(iom.get_direction(camera_id), camera_distance)))
+	local camera_ref = irq.main_camera()
+	iom.set_position(camera_ref, math3d.sub(camera_target, math3d.mul(iom.get_direction(camera_ref), camera_distance)))
 end
 
 local function camera_rotate(dx, dy)
-	iom.rotate(camera_id, dy * rotation_speed, dx * rotation_speed)
+	iom.rotate(irq.main_camera(), dy * rotation_speed, dx * rotation_speed)
 	camera_update_eye_pos()
 end
 
 local function camera_pan(dx, dy)
 	local world_dir = view_to_world({dy * pan_speed, dx * pan_speed, 0})
-	local viewdir = iom.get_direction(camera_id)
+	local viewdir = iom.get_direction(irq.main_camera())
 	camera_target.v = math3d.add(camera_target, math3d.cross(viewdir, world_dir))
 	camera_update_eye_pos()
 end
@@ -51,19 +52,17 @@ end
 local function camera_reset(eyepos, target)
 	camera_target.v = target
 	camera_distance = math3d.length(math3d.sub(camera_target, eyepos))
-	iom.set_view(camera_id, eyepos, math3d.normalize(math3d.sub(camera_target, eyepos)))
+	iom.set_view(irq.main_camera(), eyepos, math3d.normalize(math3d.sub(camera_target, eyepos)))
 end
 
-local function camera_init()
-	camera_target = math3d.ref()
-	camera_id = world[world:singleton_entity_id "main_queue"].camera_eid
+local mb_camera_changed = world:sub{"camera_changed", "main_queue"}
+
+function m:entity_done()
+	for _ in mb_camera_changed:each() do
+		camera_reset(camera_init_eye_pos, camera_init_target)
+	end
 end
 
-function m:post_init()
-	camera_init()
-	camera_reset(camera_init_eye_pos, camera_init_target)
-end
-local keypress_mb = world:sub{"keyboard"}
 local PAN_LEFT = false
 local PAN_RIGHT = false
 local ZOOM_FORWARD = false
@@ -71,12 +70,13 @@ local ZOOM_BACK = false
 local icamera = world:interface "ant.camera|camera"
 local function update_second_view_camera()
     if not camera_mgr.second_camera then return end
-    local rc = world[camera_mgr.second_camera]._rendercache
-	rc.viewmat = icamera.calc_viewmat(camera_mgr.second_camera)
-    rc.projmat = icamera.calc_projmat(camera_mgr.second_camera)--math3d.projmat(world[camera_mgr.second_camera]._rendercache.frustum)--
-	rc.viewprojmat = icamera.calc_viewproj(camera_mgr.second_camera)
+    -- local rc = world[camera_mgr.second_camera]._rendercache
+	-- rc.viewmat = icamera.calc_viewmat(camera_mgr.second_camera)
+    -- rc.projmat = icamera.calc_projmat(camera_mgr.second_camera)--math3d.projmat(world[camera_mgr.second_camera]._rendercache.frustum)--
+	-- rc.viewprojmat = icamera.calc_viewproj(camera_mgr.second_camera)
 end
 
+local keypress_mb = world:sub{"keyboard"}
 local event_camera_edit = world:sub{"CameraEdit"}
 local mouse_drag = world:sub {"mousedrag"}
 local mouse_move = world:sub {"mousemove"}
@@ -105,8 +105,71 @@ local function selectBoundary(hp)
 	return 0
 end
 
-function m:data_changed()	
+local ctrl_state = false
+
+function m:handle_event()
 	--camera_mgr.select_frustum = false
+
+	for _, what, eid, value in event_camera_edit:unpack() do
+		if what == "target" then
+			camera_mgr.set_target(eid, value)
+			inspector.update_ui()
+		elseif what == "dist" then
+			camera_mgr.set_dist_to_target(eid, value)
+		elseif what == "fov" then
+			icamera.set_frustum_fov(eid, value)
+		elseif what == "near" then
+			icamera.set_frustum_near(eid, value)
+		elseif what == "far" then
+			icamera.set_frustum_far(eid, value)
+		end
+	end
+	
+	update_second_view_camera()
+
+	camera_mgr.select_frustum = (select_area ~= 0)
+	
+	for _, key, press, state in keypress_mb:unpack() do
+		if not state.CTRL and not state.SHIFT then
+			if key == "W" then
+				if press == 1 then
+					ZOOM_FORWARD = true
+				elseif press == 0 then
+					ZOOM_FORWARD = false
+				end
+			elseif key == "S" then
+				if press == 1 then
+					ZOOM_BACK = true
+				elseif press == 0 then
+					ZOOM_BACK = false
+				end
+			elseif key == "A" then
+				if press == 1 then
+					PAN_LEFT = true
+				elseif press == 0 then
+					PAN_LEFT = false
+				end
+			elseif key == "D" then
+				if press == 1 then
+					PAN_RIGHT = true
+				elseif press == 0 then
+					PAN_RIGHT = false
+				end
+			end
+		end
+		ctrl_state = state.CTRL
+	end
+
+	if PAN_LEFT then
+		camera_pan(0.2, 0)
+	elseif PAN_RIGHT then
+		camera_pan(-0.2, 0)
+	elseif ZOOM_FORWARD then
+		camera_zoom(-0.2)
+	elseif ZOOM_BACK then
+		camera_zoom(0.2)
+	end
+	
 	for _, what, x, y in mouse_move:unpack() do
 		if what == "UNKNOWN" then
 			if camera_mgr.camera_list[camera_mgr.second_camera] then
@@ -157,6 +220,20 @@ function m:data_changed()
 		end
 		select_area = 0
 	end
+	
+	for _,what,x,y in event_camera_control:unpack() do
+		if not camera_mgr.select_frustum then
+			if what == "rotate" then
+				camera_rotate(x, y)
+			elseif what == "pan" and not ctrl_state then
+				camera_pan(x, y)
+			elseif what == "zoom" then
+				camera_zoom(x)
+			elseif what == "reset" then
+				camera_reset(camera_init_eye_pos, camera_init_target)
+			end
+		end
+	end
 
 	for _, what, x, y, dx, dy in mouse_drag:unpack() do
 		if what == "LEFT" and select_area ~= 0 then
@@ -172,82 +249,4 @@ function m:data_changed()
 		end
 	end
 
-	for _, what, eid, value in event_camera_edit:unpack() do
-		if what == "target" then
-			camera_mgr.set_target(eid, value)
-			inspector.update_ui()
-		elseif what == "dist" then
-			camera_mgr.set_dist_to_target(eid, value)
-		elseif what == "fov" then
-			icamera.set_frustum(eid, {
-				fov = value
-			})
-		elseif what == "near" then
-			icamera.set_frustum(eid, {
-				n = value,
-			})
-		elseif what == "far" then
-			icamera.set_frustum(eid, {
-				f = value
-			})
-		end
-	end
-	
-	update_second_view_camera()
-
-	camera_mgr.select_frustum = (select_area ~= 0)
-
-	for _,what,x,y in event_camera_control:unpack() do
-		if not camera_mgr.select_frustum then
-			if what == "rotate" then
-				camera_rotate(x, y)
-			elseif what == "pan" then
-				camera_pan(x, y)
-			elseif what == "zoom" then
-				camera_zoom(x)
-			elseif what == "reset" then
-				camera_reset(camera_init_eye_pos, camera_init_target)
-			end
-		end
-	end
-	
-	for _, key, press, state in keypress_mb:unpack() do
-		if not state.CTRL and not state.SHIFT then
-			if key == "W" then
-				if press == 1 then
-					ZOOM_FORWARD = true
-				elseif press == 0 then
-					ZOOM_FORWARD = false
-				end
-			elseif key == "S" then
-				if press == 1 then
-					ZOOM_BACK = true
-				elseif press == 0 then
-					ZOOM_BACK = false
-				end
-			elseif key == "A" then
-				if press == 1 then
-					PAN_LEFT = true
-				elseif press == 0 then
-					PAN_LEFT = false
-				end
-			elseif key == "D" then
-				if press == 1 then
-					PAN_RIGHT = true
-				elseif press == 0 then
-					PAN_RIGHT = false
-				end
-			end
-		end
-	end
-
-	if PAN_LEFT then
-		camera_pan(0.2, 0)
-	elseif PAN_RIGHT then
-		camera_pan(-0.2, 0)
-	elseif ZOOM_FORWARD then
-		camera_zoom(-0.2)
-	elseif ZOOM_BACK then
-		camera_zoom(0.2)
-	end
 end

@@ -1,8 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local ientity = ecs.interface "entity"
-
+local ientity 	= ecs.interface "entity"
 local declmgr   = require "vertexdecl_mgr"
 local math3d    = require "math3d"
 local hwi		= import_package "ant.hwi"
@@ -16,6 +15,7 @@ local mc		= mathpkg.constant
 local ies = world:interface "ant.scene|ientity_state"
 local imaterial = world:interface "ant.asset|imaterial"
 local irender = world:interface "ant.render|irender"
+local imesh 	= world:interface "ant.asset|imesh"
 local bgfx = require "bgfx"
 
 local function create_mesh(vb_lst, ib)
@@ -137,7 +137,9 @@ local function get_plane_mesh()
 	return plane_mesh
 end
 
-local function get_prim_plane_mesh()
+local prim_plane_mesh
+
+local function get_prim_plane_mesh(sharedmesh)
 	local vb = {
 		-0.5, 0, 0.5, 0, 1, 0,	--left top
 		0.5,  0, 0.5, 0, 1, 0,	--right top
@@ -146,16 +148,29 @@ local function get_prim_plane_mesh()
 		0.5,  0, 0.5, 0, 1, 0,
 		0.5,  0,-0.5, 0, 1, 0,	--right bottom
 	}
-	local prim_plane_mesh = create_mesh({"p3|n3", vb})
-	prim_plane_mesh.bounding = {
+	if sharedmesh then
+		if not prim_plane_mesh then
+			local tempmesh = create_mesh({"p3|n3", vb})
+			tempmesh.bounding = {
+				aabb = math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))
+			}
+			local internal_vb, internal_ib = imesh.create_rendermesh(tempmesh)
+			prim_plane_mesh = {vb = internal_vb, ib = internal_ib}
+		end
+
+		return prim_plane_mesh
+	end
+
+	local mesh = create_mesh({"p3|n3", vb})
+	mesh.bounding = {
 		aabb = math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))
 	}
-	return prim_plane_mesh
+	return mesh
 end
 
-function ientity.create_prim_plane_entity(srt, materialpath, name, entity_info)
+function ientity.create_prim_plane_entity(srt, materialpath, name, sharedmesh, entity_info)
 	local policy = {
-		"ant.render|render",
+		sharedmesh and "ant.render|simplerender" or "ant.render|render",
 		"ant.general|name",
 	}
 
@@ -165,8 +180,12 @@ function ientity.create_prim_plane_entity(srt, materialpath, name, entity_info)
 		state = ies.create_state "visible",
 		name = name or "Plane",
 		scene_entity = true,
-		mesh = get_prim_plane_mesh(),
 	}
+	if sharedmesh then
+		data.simplemesh = get_prim_plane_mesh(sharedmesh)
+	else
+		data.mesh = get_prim_plane_mesh()
+	end
 
 	if entity_info then
 		for policy_name, dd in pairs(entity_info) do
@@ -598,17 +617,4 @@ function ientity.create_arrow_entity(origin, forward, scale, data)
 	}
 
 	imaterial.set_property(coneeid, "u_color", data.cone_color or {1, 0, 0, 1})
-end
-
-local iom = "ant.objcontroller|obj_motion"
-function ientity.entity_bounding(eid)
-	local e = world[eid]
-	local m = e.mesh
-	if m and ies.can_visible(eid) then
-		local b = m.bounding
-		if b then
-			local aabbtransformd = math3d.aabb_transform(iom.calc_worldmat(eid), b.aabb)
-			return aabbtransformd
-		end
-	end
 end

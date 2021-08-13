@@ -127,7 +127,8 @@ function CameraView:on_set_fov(value)
     end
     local template = hierarchy:get_template(self.eid)
     template.template.data.frustum.fov = value
-    icamera.set_frustum(self.eid, {fov = value})
+    icamera.set_frustum_fov(self.eid, value)
+    camera_mgr.update_frustrum(self.eid)
 end
 function CameraView:on_get_fov()
     if #self.frames > 0 then
@@ -142,7 +143,8 @@ function CameraView:on_set_near(value)
     end
     local template = hierarchy:get_template(self.eid)
     template.template.data.frustum.n = value
-    icamera.set_frustum(self.eid, {n = value})
+    icamera.set_frustum_near(self.eid, value)
+    camera_mgr.update_frustrum(self.eid)
 end
 function CameraView:on_get_near()
     if #self.frames > 0 then
@@ -157,7 +159,8 @@ function CameraView:on_set_far(value)
     end
     local template = hierarchy:get_template(self.eid)
     template.template.data.frustum.f = value
-    icamera.set_frustum(self.eid, {f = value})
+    icamera.set_frustum_far(self.eid, value)
+    camera_mgr.update_frustrum(self.eid)
 end
 function CameraView:on_get_far()
     if #self.frames > 0 then

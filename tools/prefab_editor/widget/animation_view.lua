@@ -19,6 +19,7 @@ local ies
 local gizmo
 local iom
 local inspector
+local logger
 
 local m = {}
 local edit_anims = {}
@@ -139,7 +140,16 @@ local function anim_group_pause(eid, p)
     end
 end
 
+local widget_utils  = require "widget.utils"
+
 local function set_current_anim(anim_name)
+    if not edit_anims[current_eid][anim_name] then
+        local msg = anim_name .. " not exist."
+        logger.error({tag = "Editor", message = msg})
+        widget_utils.message_box({title = "AnimationError", info = msg})
+        return false
+    end
+
     if current_anim and current_anim.collider then
         for _, col in ipairs(current_anim.collider) do
             if col.collider then
@@ -148,7 +158,7 @@ local function set_current_anim(anim_name)
         end
     end
     current_anim = edit_anims[current_eid][anim_name]
-    if current_anim and current_anim.collider then
+    if current_anim.collider then
         for _, col in ipairs(current_anim.collider) do
             if col.collider then
                 ies.set_state(col.eid, "visible", true)
@@ -167,6 +177,7 @@ local function set_current_anim(anim_name)
     -- if not iani.is_playing(current_eid) then
     --     anim_group_pause(current_eid, false)
     -- end
+    return true
 end
 
 local default_collider_define = {
@@ -197,13 +208,16 @@ local function from_runtime_event(runtime_event)
                     e.breakable = e.breakable or false
                     e.life_time = e.life_time or 2
                     e.breakable_ui = {e.breakable}
-                    e.life_time_ui = {e.life_time}
+                    e.life_time_ui = {e.life_time, speed = 0.02, min = 0, max = 100}
                 end
             elseif e.event_type == "Collision" then
                 e.collision.tid = e.collision.tid or -1
                 e.collision.tid_ui = {e.collision.tid}
                 e.collision.enable_ui = {e.collision.enable}
                 e.collision.shape_type = e.collision.shape_type
+            elseif e.event_type == "Message" then
+                e.msg_content = e.msg_content or ""
+                e.msg_content_ui = {text = e.msg_content}
             end
         end
         key_event[tostring(math.floor(ev.time * sample_ratio))] = ev.event_list
@@ -281,6 +295,7 @@ local function do_to_runtime_event(evs)
             asset_path = ev.asset_path,
             breakable = ev.breakable,
             life_time = ev.life_time,
+            msg_content = ev.msg_content,
             link_info = ev.link_info and {slot_name = ev.link_info.slot_name, slot_eid = ev.link_info.slot_eid},
             collision = (col_eid ~= -1) and {
                 col_eid = col_eid,
@@ -290,11 +305,12 @@ local function do_to_runtime_event(evs)
                 size = ev.collision.size,
                 enable = ev.collision.enable,
                 tid = ev.collision.tid,
-            } or {
-                name = "None",
-                shape_type = "None",
-                enable = false
-            }
+            } or nil
+            -- {
+            --     name = "None",
+            --     shape_type = "None",
+            --     enable = false
+            -- }
         }
     end
     return list
@@ -363,8 +379,10 @@ local function add_event(et)
         breakable = (et == "Effect") and false or nil,
         breakable_ui = (et == "Effect") and {false} or nil,
         life_time = (et == "Effect") and 2 or nil,
-        life_time_ui = (et == "Effect") and { 2 } or nil,
+        life_time_ui = (et == "Effect") and { 2, speed = 0.02, min = 0, max = 100} or nil,
         name_ui = {text = event_name},
+        msg_content = (et == "Message") and "" or nil,
+        msg_content_ui = (et == "Message") and {text = ""} or nil,
         asset_path_ui = (et == "Effect" or et == "Sound") and {text = ""} or nil,
         collision = (et == "Collision") and {
             tid = -1,
@@ -565,8 +583,14 @@ local function show_current_event()
             dirty = true
         end
         imgui.widget.PropertyLabel("LifeTime")
-        if imgui.widget.DragInt("##LifeTime", current_event.life_time_ui) then
+        if imgui.widget.DragFloat("##LifeTime", current_event.life_time_ui) then
             current_event.life_time = current_event.life_time_ui[1]
+            dirty = true
+        end
+    elseif current_event.event_type == "Message" then
+        imgui.widget.PropertyLabel("Content")
+        if imgui.widget.InputText("##Content", current_event.msg_content_ui) then
+            current_event.msg_content = tostring(current_event.msg_content_ui.text)
             dirty = true
         end
     end
@@ -694,7 +718,7 @@ end
 local current_event_file
 local current_clip_file
 local stringify     = import_package "ant.serialize".stringify
-local widget_utils  = require "widget.utils"
+
 
 local function get_clips_filename()
     local prefab_filename = prefab_mgr:get_current_filename()
@@ -744,7 +768,9 @@ end
 local function set_current_clip(clip)
     if current_clip == clip then return end
     if clip then
-        set_current_anim(clip.anim_name)
+        if not set_current_anim(clip.anim_name) then
+            return
+        end
         anim_state.selected_clip_index = find_index(current_anim.clips, clip)
     end
     current_clip = clip
@@ -1339,5 +1365,7 @@ return function(w, am)
     prefab_mgr = require "prefab_manager"(world)
     prefab_mgr.set_anim_view(m)
     gizmo = require "gizmo.gizmo"(world)
+    local asset_mgr = import_package "ant.asset"
+    logger = require "widget.log"(asset_mgr)
     return m
 end

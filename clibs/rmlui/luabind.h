@@ -2,7 +2,6 @@
 
 #include <lua.hpp>
 #include <functional>
-#include <deque>
 
 namespace luabind {
 	typedef std::function<void(lua_State*)> call_t;
@@ -55,64 +54,4 @@ namespace luabind {
 		lua_pop(L, 2);
 		return false;
 	}
-
-	struct reference {
-		reference(lua_State* L)
-			: dataL(NULL) {
-			dataL = lua_newthread(L);
-			lua_rawsetp(L, LUA_REGISTRYINDEX, this);
-		}
-		~reference() {
-			lua_pushnil(dataL);
-			lua_rawsetp(dataL, LUA_REGISTRYINDEX, this);
-		}
-		int ref(lua_State* L) {
-			if (!lua_checkstack(dataL, 2)) {
-				return -1;
-			}
-			lua_xmove(L, dataL, 1);
-			if (freelist.empty()) {
-				return lua_gettop(dataL);
-			}
-			else {
-				int r = freelist.back();
-				freelist.pop_back();
-				lua_replace(dataL, r);
-				return r;
-			}
-		}
-		void unref(int ref) {
-			int top = lua_gettop(dataL);
-			if (top != ref) {
-				for (auto it = freelist.begin(); it != freelist.end(); ++it) {
-					if (ref < *it) {
-						freelist.insert(it, ref);
-						return;
-					}
-				}
-				freelist.push_back(ref);
-				return;
-			}
-			--top;
-			if (freelist.empty()) {
-				lua_settop(dataL, top);
-				return;
-			}
-			for (auto it = freelist.begin(); it != freelist.end(); --top, ++it) {
-				if (top != *it) {
-					lua_settop(dataL, top);
-					freelist.erase(freelist.begin(), it);
-					return;
-				}
-			}
-			lua_settop(dataL, 0);
-			freelist.clear();
-		}
-		void get(lua_State* L, int ref) {
-			lua_pushvalue(dataL, ref);
-			lua_xmove(dataL, L, 1);
-		}
-		lua_State* dataL;
-		std::deque<int> freelist;
-	};
 }

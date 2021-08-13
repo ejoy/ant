@@ -194,8 +194,7 @@ int FontEngine::GenerateString(
     const std::string& string, const
     Rml::Point& position,
     const Rml::Color& colour,
-    Rml::GeometryList& geometrys) {
-    Rml::Geometry& geometry = geometrys[0];
+    Rml::Geometry& geometry) {
 
     const auto& res = FindOrAddFontResource(text_effects_handle);
     geometry.SetTexture(res.tex);
@@ -239,18 +238,10 @@ int FontEngine::GenerateString(
     return x - int(position.x + 0.5f);
 }
 
-void FontEngine::GenerateString(
-    Rml::FontFaceHandle handle,
-    Rml::TextEffectsHandle text_effects_handle,
-    Rml::LineList& lines, 
-    const Rml::Color& colour,
-    Rml::GeometryList& geometrys){
-    for (size_t i = 0; i < geometrys.size(); ++i) {
-        geometrys[i].Release();
-    }
-    geometrys.resize(1);
+void FontEngine::GenerateString(Rml::FontFaceHandle handle, Rml::TextEffectsHandle text_effects_handle, Rml::LineList& lines, const Rml::Color& colour, Rml::Geometry& geometry){
+    geometry.Release();
     for (size_t i = 0; i < lines.size(); ++i) {
         Rml::Line& line = lines[i];
-        line.width = GenerateString(handle, text_effects_handle, line.text, line.position, colour, geometrys);
+        line.width = GenerateString(handle, text_effects_handle, line.text, line.position, colour, geometry);
     }
 }

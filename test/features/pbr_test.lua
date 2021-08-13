@@ -16,7 +16,6 @@ local function create_pbr_entity(name, srt, material,
         policy = {
             "ant.render|render",
             "ant.general|name",
-            "ant.objcontroller|select",
         },
         data = {
             name        = name,

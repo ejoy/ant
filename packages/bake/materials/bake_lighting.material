@@ -1,0 +1,4 @@
+fx:
+    vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
+    fs: /pkg/ant.resources/shaders/pbr/fs_pbr.sc
+state: /pkg/ant.resources/materials/states/default.state

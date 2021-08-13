@@ -8,14 +8,11 @@ interface "obj_motion"
     .method "get_direction"
     .method "get_rotation"
     .method "set_rotation"
-    .method "get_updir"
     --
 
     .method "get_scale"
     .method "set_scale"
-    .method "set_scale_no_check"
 
-    .method "srt"
     .method "set_srt"
     .method "worldmat"
     .method "set_view"
@@ -33,6 +30,6 @@ interface "obj_motion"
     .method "rotate_around_point2"
 
     .method "ray"
+    .method "screen_to_ndc"
 
-    .method "set_lock_target"
-    .method "calc_worldmat"
+    .method "calc_viewmat"

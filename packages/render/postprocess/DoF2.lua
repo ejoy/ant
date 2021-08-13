@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-
+local w = world.w
 local sampler   = require "sampler"
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
@@ -15,58 +15,58 @@ local mc        = mathpkg.constant
 
 local simpledof = ecs.system "simpledof_system"
 
-function simpledof.post_init()
-    local main_fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
-    local fbw, fbh = ipp.main_rb_size(main_fbidx)
-    local hfbw, hfbh = fbw/2, fbh/2
+function simpledof.entity_init()
+    for e in w:select "INIT main_queue camera_ref:in render_target:in" do
+        local main_fbidx = e.render_target.fb_idx
+        local fbw, fbh = ipp.main_rb_size(main_fbidx)
+        local hfbw, hfbh = fbw/2, fbh/2
 
-    local rbflags = sampler.sampler_flag {
-        RT="RT_ON",
-        MIN="LINEAR",
-        MAG="LINEAR",
-        U="CLAMP",
-        V="CLAMP",
-    }
-    
-    local blurrt = {
-        clear_state = {clear=""},
-        view_rect = {x=0, y=0, w=hfbw, h=hfbh},
-        fb_idx = fbmgr.create{
-            fbmgr.create_rb {
-                format = "RGBA16F",
-                layers = 1,
-                w = hfbw, h = hfbh,
-                flags = rbflags,
-            }
-        },
-    }
+        local rbflags = sampler.sampler_flag {
+            RT="RT_ON",
+            MIN="LINEAR",
+            MAG="LINEAR",
+            U="CLAMP",
+            V="CLAMP",
+        }
+        
+        local blurrt = {
+            clear_state = {clear=""},
+            view_rect = {x=0, y=0, w=hfbw, h=hfbh},
+            fb_idx = fbmgr.create{
+                fbmgr.create_rb {
+                    format = "RGBA16F",
+                    layers = 1,
+                    w = hfbw, h = hfbh,
+                    flags = rbflags,
+                }
+            },
+        }
+        local blurpass = ipp.create_pass(
+            "simpledof_blur", 
+            "/pkg/ant.resources/materials/postprocess/dof/simple_blur.material", 
+            blurrt, nil, e.camera_ref)
 
-    local mq = world:singleton_entity "main_queue"
-    local blurpass = ipp.create_pass(
-        "simpledof_blur", 
-        "/pkg/ant.resources/materials/postprocess/dof/simple_blur.material", 
-        blurrt, nil, mq.camera_eid)
+        local mergert = {
+            clear_state = {clear=""},
+            view_rect = {x=0, y=0, w=fbw, h=fbh},
+            fb_idx = fbmgr.create{
+                fbmgr.create_rb {
+                    format = "RGBA16F",
+                    layers = 1,
+                    w = fbw, h = fbh,
+                    flags = rbflags,
+                }
+            },
+        }
 
-    local mergert = {
-        clear_state = {clear=""},
-        view_rect = {x=0, y=0, w=fbw, h=fbh},
-        fb_idx = fbmgr.create{
-            fbmgr.create_rb {
-                format = "RGBA16F",
-                layers = 1,
-                w = fbw, h = fbh,
-                flags = rbflags,
-            }
-        },
-    }
-
-    local mergepass = ipp.create_pass(
-        "simpledof_merge",
-        "/pkg/ant.resources/materials/postprocess/dof/simple_merge.material",
-        mergert, nil, mq.camera_eid)
-    local outfocus_handle = fbmgr.get_rb(fbmgr.get(blurrt.fb_idx)[1]).handle
-    imaterial.set_property(mergepass.eid, "s_outfocus", {stage=0, texture={handle=outfocus_handle}})
-    ipp.add_technique("simpledof", {blurpass, mergepass})
+        local mergepass = ipp.create_pass(
+            "simpledof_merge",
+            "/pkg/ant.resources/materials/postprocess/dof/simple_merge.material",
+            mergert, nil, e.camera_ref)
+        local outfocus_handle = fbmgr.get_rb(fbmgr.get(blurrt.fb_idx)[1]).handle
+        imaterial.set_property(mergepass.eid, "s_outfocus", {stage=0, texture={handle=outfocus_handle}})
+        ipp.add_technique("simpledof", {blurpass, mergepass})
+    end
 end
 
 local function update_dof_param(e, eid)

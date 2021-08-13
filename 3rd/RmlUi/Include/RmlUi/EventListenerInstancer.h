@@ -38,22 +38,10 @@ namespace Rml {
 
 class EventListener;
 
-/**
-	Abstract instancer interface for instancing event listeners. This is required to be overridden for scripting
-	systems.
-
-	@author Lloyd Weehuizen
- */
-
-class RMLUICORE_API EventListenerInstancer
-{
+class EventListenerInstancer {
 public:
 	virtual ~EventListenerInstancer();
-
-	/// Instance an event listener object.
-	/// @param value Value of the event.
-	/// @param element Element that triggers the events.
-	virtual EventListener* InstanceEventListener(const std::string& value, Element* element) = 0;
+	virtual EventListener* InstanceEventListener(Rml::Element* element, const std::string& type, const std::string& code, bool use_capture) = 0;
 };
 
 } // namespace Rml

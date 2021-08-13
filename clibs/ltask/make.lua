@@ -26,10 +26,12 @@ lm:source_set "source_ltask" {
     },
     --defines = "DEBUGLOG",
     windows = {
-        links = "user32",
+        links = {
+            "user32",
+            "winmm",
+        }
     },
     msvc = {
-        links = "winmm",
         ldflags = {
             "-export:luaopen_ltask",
             "-export:luaopen_ltask_bootstrap",

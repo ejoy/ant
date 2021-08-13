@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-
+local w = world.w
 local math3d = require "math3d"
 
 local ientity = world:interface "ant.render|entity"
@@ -146,11 +146,14 @@ local function point_light_test()
 end
 
 local icc = world:interface "ant.test.features|icamera_controller"
-local iccqs = world:interface "ant.quad_sphere|icamera_controller"
 
 function init_loader_sys:init()
     --point_light_test()
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
+    local eid = world:instance "/pkg/ant.test.features/assets/entities/light_directional.prefab"[1]
+    local eid2 = world:instance "/pkg/ant.resources.binary/meshes/box.glb|mesh.prefab"[1]
+    local s = iom.get_scale(eid2)
+    iom.set_scale(eid2, math3d.mul(s, {100, 100, 100, 0}))
 
     --world:instance "/pkg/ant.test.features/assets/entities/font_tt.prefab"
     --world:instance "/pkg/ant.resources.binary/meshes/female/female.glb|mesh.prefab"
@@ -160,25 +163,6 @@ function init_loader_sys:init()
 
     --ientity.create_skybox()
     --world:instance "/pkg/ant.test.features/assets/glb/Duck.glb|mesh.prefab"
-
-    world:create_entity{
-        policy = {
-            "ant.render|render",
-            "ant.heightmap|auto_heightmap",
-            "ant.general|name",
-        },
-        data = {
-            auto_heightmap = true,
-            transform = {},
-            material = "/pkg/ant.resources/materials/depth.material",
-            mesh = "/pkg/ant.test.features/assets/glb/Duck.glb|meshes/LOD3spShape_P1.meshbin",
-            state = 7,
-            scene_entity = true,
-            name = "test_auot_heightmap",
-        }
-    }
-
-    world:pub{"fetch_heightmap"}
 
     --world:instance "/pkg/ant.resources.binary/meshes/cloud_run.glb|mesh.prefab"
     --world:instance "/pkg/ant.test.features/assets/CloudTestRun.glb|mesh.prefab"
@@ -201,7 +185,6 @@ function init_loader_sys:init()
     -- }
 
     icc.create()
-    iccqs.create()
 end
 
 local camera_cache = {
@@ -217,48 +200,56 @@ local camera_cache = {
     }
 }
 
-function init_loader_sys:post_init()
-    local mq = world:singleton_entity "main_queue"
+local function main_camera_ref()
+    for e in w:select "main_queue camera_ref:in" do
+        return e.camera_ref
+    end
+end
 
-    local eid = world:instance "/pkg/ant.test.features/assets/entities/cube.prefab"[1]
-    iom.set_scale(eid, 0.1)
+function init_loader_sys:entity_init()
+    for e in w:select "INIT main_queue camera_ref:in" do
+        local camera_ref = e.camera_ref
 
-    icc.attach(mq.camera_eid)
-    iccqs.attach(mq.camera_eid)
-    icamera.controller(mq.camera_eid, icc.get())
+        local eid = world:instance "/pkg/ant.test.features/assets/entities/cube.prefab"[1]
+        iom.set_scale(eid, 0.1)
+    
+        icc.attach(camera_ref)
+        icamera.controller(camera_ref, icc.get())
+    
+        camera_cache.icc.pos.v = {-10.5, 10, -5.5, 1}
+        camera_cache.icc.dir.v = math3d.sub(mc.ZERO_PT, camera_cache.icc.pos)
+        camera_cache.icc.updir.v = mc.YAXIS
+        icamera.lookto(camera_ref, camera_cache.icc.pos, camera_cache.icc.dir)
+    
+        iom.set_rotation(camera_ref, math3d.quaternion(0.3893,0.1568,-0.0674,0.9052))
+        -- icamera.set_dof(camera_ref, {
+        --     -- aperture_fstop      = 2.8,
+        --     -- aperture_blades     = 0,
+        --     -- aperture_rotation   = 0,
+        --     -- aperture_ratio      = 1,
+        --     -- sensor_size         = 100,
+        --     -- focus_distance      = 5,
+        --     -- focal_len           = 84,
+        --     focuseid            = world:create_entity {
+        --         policy = {
+        --             "ant.render|simplerender"
+        --         },
+        --         data = {
+        --             transform = {},
+        --             simplemesh = {},
+        --             state = "",
+        --         }
+        --     },
+        --     enable              = true,
+        -- })
+        -- local dir = {0, 0, 1, 0}
+        -- icamera.lookto(camera_ref, {0, 0, -8, 1}, dir)
+        -- local ipl = world:interface "ant.render|ipolyline"
+        -- ipl.add_strip_lines({
+        --     {0, 0, 0}, {0.5, 0, 1}, {1, 0, 0},
+        -- }, 15, {1.0, 1.0, 0.0, 1.0})
+    end
 
-    camera_cache.icc.pos.v = {-10.5, 10, -5.5, 1}
-    camera_cache.icc.dir.v = math3d.sub(mc.ZERO_PT, camera_cache.icc.pos)
-    camera_cache.icc.updir.v = mc.YAXIS
-    icamera.lookto(mq.camera_eid, camera_cache.icc.pos, camera_cache.icc.dir)
-
-    iom.set_rotation(mq.camera_eid, math3d.quaternion(0.3893,0.1568,-0.0674,0.9052))
-    -- icamera.set_dof(mq.camera_eid, {
-    --     -- aperture_fstop      = 2.8,
-    --     -- aperture_blades     = 0,
-    --     -- aperture_rotation   = 0,
-    --     -- aperture_ratio      = 1,
-    --     -- sensor_size         = 100,
-    --     -- focus_distance      = 5,
-    --     -- focal_len           = 84,
-    --     focuseid            = world:create_entity {
-    --         policy = {
-    --             "ant.render|simplerender"
-    --         },
-    --         data = {
-    --             transform = {},
-    --             simplemesh = {},
-    --             state = "",
-    --         }
-    --     },
-    --     enable              = true,
-    -- })
-    -- local dir = {0, 0, 1, 0}
-    -- icamera.lookto(mq.camera_eid, {0, 0, -8, 1}, dir)
-    -- local ipl = world:interface "ant.render|ipolyline"
-    -- ipl.add_strip_lines({
-    --     {0, 0, 0}, {0.5, 0, 1}, {1, 0, 0},
-    -- }, 15, {1.0, 1.0, 0.0, 1.0})
 end
 
 
@@ -294,18 +285,18 @@ local kb_mb = world:sub{"keyboard"}
 function init_loader_sys:data_changed()
     for _, key, press, status in kb_mb:unpack() do
         if key == "X" and press == 0 then
-            local mq = world:singleton_entity "main_queue"
+            local camera_ref = main_camera_ref()
 
-            local isicc = icc.get() == icamera.controller(mq.camera_eid)
+            local isicc = icc.get() == icamera.controller(camera_ref)
             local c = isicc and camera_cache.icc or camera_cache.iccqs
-            c.pos.v = iom.get_position(mq.camera_eid)
-            c.dir.v = iom.get_direction(mq.camera_eid)
-            c.updir.v = iom.get_updir(mq.camera_eid)
+            c.pos.v = iom.get_position(camera_ref)
+            c.dir.v = iom.get_direction(camera_ref)
+            c.updir.v = iom.get_updir(camera_ref)
 
             local uc = isicc and camera_cache.iccqs or camera_cache.icc
 
-            iom.lookto(mq.camera_eid, uc.pos, uc.dir, uc.updir)
-            icamera.controller(mq.camera_eid, isicc and iccqs.get() or icc.get())
+            iom.lookto(camera_ref, uc.pos, uc.dir, uc.updir)
+            icamera.controller(camera_ref, icc.get())
         end
 
         local function light_entity()
@@ -344,20 +335,25 @@ function init_loader_sys:data_changed()
                 range = ilight.range(lighteid),
                 pos = iom.get_position(lighteid),
             }
-            local mq = world:singleton_entity "main_queue"
-            local cameraeid = mq.camera_eid
-            local viewmat = icamera.calc_viewmat(cameraeid)
-            local frustum = icamera.get_frustum(cameraeid)
+            
+            local camera_ref = main_camera_ref()
+            local viewmat = icamera.calc_viewmat(camera_ref)
+            local frustum = icamera.get_frustum(camera_ref)
             local near, far = frustum.n, frustum.f
 
             local aabb = {
                 minv = {-0.15881, 0.11909, 0.25},
                 maxv = {-0.1042, 0.17866, 0.33338},
             }
-            local screensize = {mq.render_target.view_rect.w, mq.render_target.view_rect.h}
+
+            local screensize
+            for e in w:select "main_queue render_target:in" do
+                local rt = e.render_target.view_rect
+                screensize = {rt.w, rt.h}
+            end
 
             local pt = {0, 1, 0, 1}
-            local projmat = icamera.calc_projmat(cameraeid)
+            local projmat = icamera.calc_projmat(camera_ref)
             local ptClip = math3d.transform(projmat, math3d.transform(viewmat, pt, 1), 1)
             local ptNDC = math3d.mul(ptClip, 1.0/math3d.index(ptClip, 4))
             local sx, sy = math3d.index(math3d.muladd(ptNDC, 0.5, math3d.vector(0.5, 0.5, 0.0, 0.0)), 1, 2)
@@ -447,16 +443,20 @@ function init_loader_sys:data_changed()
 
         if key == 'T' and press == 0 then
             local clusterid = {8, 3, 11}
-            local mq = world:singleton_entity "main_queue"
-            local screensize = {mq.render_target.view_rect.w, mq.render_target.view_rect.h}
-            local frustum = icamera.get_frustum(mq.camera_eid)
+            local screensize
+            for e in w:select "main_queue render_target:in" do
+                local rt = e.render_target.view_rect
+                screensize = {rt.w, rt.h}
+            end
+            local camera_ref = main_camera_ref()
+            local frustum = icamera.get_frustum(camera_ref)
             local near, far = frustum.n, frustum.f
-            local invproj = math3d.inverse(icamera.calc_projmat(mq.camera_eid))
+            local invproj = math3d.inverse(icamera.calc_projmat(camera_ref))
             
             local v_posWS = {0.36984, 0.75826, -0.30619, 1.0}
             local xsize, ysize, zsize = 16, 9, 24
             local id1
-            local viewmat = icamera.calc_viewmat(mq.camera_eid)
+            local viewmat = icamera.calc_viewmat(camera_ref)
             local posVS = math3d.transform(viewmat, v_posWS, 1)
             for z=1, zsize do
                 for y=1, ysize do
@@ -477,12 +477,16 @@ function init_loader_sys:data_changed()
         end
 
         if key == 'F' and press == 0 then
-            local mq = world:singleton_entity "main_queue"
-            local screensize = {mq.render_target.view_rect.w, mq.render_target.view_rect.h}
-            local frustum = icamera.get_frustum(mq.camera_eid)
+                        local screensize
+            for e in w:select "main_queue render_target:in" do
+                local rt = e.render_target.view_rect
+                screensize = {rt.w, rt.h}
+            end
+            local camera_ref = main_camera_ref()
+            local frustum = icamera.get_frustum(camera_ref)
             local u_nearZ, u_farZ = frustum.n, frustum.f
-            local invproj = math3d.inverse(icamera.calc_projmat(mq.camera_eid))
-            local invview = math3d.inverse(icamera.calc_viewmat(mq.camera_eid))
+            local invproj = math3d.inverse(icamera.calc_projmat(camera_ref))
+            local invview = math3d.inverse(icamera.calc_viewmat(camera_ref))
             local vb = {}
             local ib = {}
             local function add_frustum_wireframe(ib, offset)

@@ -37,6 +37,7 @@ local function Render()
 			world:pipeline_update()
 			bgfx.encoder_end()
 			encoderBegin = false
+			--local _ <close> = world:cpu_stat "bgfx.frame"
 			rhwi.frame()
 		end
 		if world then

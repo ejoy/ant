@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-
+local w = world.w
 local fbmgr             = require "framebuffer_mgr"
 local viewidmgr         = require "viewid_mgr"
 local isys_properties   = world:interface "ant.render|system_properties"
@@ -56,19 +56,16 @@ local function reset_viewid_idx()
 end
 
 function pp_sys:init()
-    quad_mesh_eid = world:create_entity {
-        policy = {
-            "ant.render|render",
-        },
-        data = {
-            mesh = ientity.quad_mesh {x=-1, y=-1, w=2, h=2},
-        }
-    }
 end
 
 local mainview_rbhandle
-function pp_sys:post_init()
-    mainview_rbhandle = ipp.get_rbhandle(fbmgr.get_fb_idx(viewidmgr.get "main_view"), 1)
+function pp_sys:entity_init()
+    if mainview_rbhandle == nil then
+        for e in w:select "INIT main_queue render_target:in" do
+            local fbidx = e.render_target.fb_idx
+            mainview_rbhandle = ipp.get_rbhandle(fbidx, 1)
+        end
+    end
 end
 
 local function render_pass(input, out_viewid, pass)
@@ -80,8 +77,8 @@ local function render_pass(input, out_viewid, pass)
         error("input and output as same render buffer handle")
     end
 
-    if pass.camera_eid then
-        local camera_rc = world[pass.camera_eid]._rendercache
+    if pass.camera_ref then
+        local camera_rc = icamera.find_camera(pass.camera_ref)
         bgfx.set_view_transform(out_viewid, camera_rc.viewmat, camera_rc.projmat)
     else
         bgfx.set_view_transform(out_viewid, mc.IDENTITY_MAT, mc.IDENTITY_MAT)
@@ -110,7 +107,12 @@ function pp_sys:combine_postprocess()
 end
 
 function ipp.main_rb_size(main_fbidx)
-    main_fbidx = main_fbidx or fbmgr.get_fb_idx(viewidmgr.get "main_view")
+    if main_fbidx == nil then
+        for e in w:select "main_queue render_target:in" do
+            main_fbidx = e.render_target.fb_idx
+            break
+        end
+    end
 
     local fb = fbmgr.get(main_fbidx)
     local rb = fbmgr.get_rb(fb[1])
@@ -136,11 +138,11 @@ function ipp.add_technique(name, tech)
     techniques[name] = tech
 end
 
-function ipp.create_pass(name, material, rt, transform, cameraeid)
+function ipp.create_pass(name, material, rt, transform, camera_ref)
     local eid = world:create_entity {
         policy = {"ant.render|simplerender"},
         data = {
-            simplemesh  = world[quad_mesh_eid]._rendercache,
+            simplemesh  = ientity.quad_mesh(),
             material    = material,
             transform   = transform,
         }
@@ -150,7 +152,7 @@ function ipp.create_pass(name, material, rt, transform, cameraeid)
         name            = name,
         renderitem      = world[eid]._rendercache,
         render_target   = rt,
-        camera_eid      = cameraeid,
+        camera_ref      = camera_ref,
         eid             = eid,
     }
 end

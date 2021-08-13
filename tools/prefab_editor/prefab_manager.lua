@@ -24,8 +24,8 @@ local worldedit
 local m = {
     entities = {}
 }
-local aabb_color_i = 0x6060ffff
-local aabb_color = {1.0, 0.38, 0.38, 1.0}
+local aabb_color_i <const> = 0x6060ffff
+local aabb_color <const> = {1.0, 0.38, 0.38, 1.0}
 local highlight_aabb_eid
 function m:update_current_aabb(eid)
     if not highlight_aabb_eid then
@@ -40,14 +40,14 @@ function m:update_current_aabb(eid)
     local aabb = nil
     local e = world[eid]
     if e.mesh and e.mesh.bounding then
-        local w = iom.calc_worldmat(eid)
+        local w = iom.worldmat(eid)
         aabb = math3d.aabb_transform(w, e.mesh.bounding.aabb)
     else
         local adaptee = hierarchy:get_select_adaptee(eid)
         for _, eid in ipairs(adaptee) do
             local e = world[eid]
             if e.mesh and e.mesh.bounding then
-                local newaabb = math3d.aabb_transform(iom.calc_worldmat(eid), e.mesh.bounding.aabb)
+                local newaabb = math3d.aabb_transform(iom.worldmat(eid), e.mesh.bounding.aabb)
                 aabb = aabb and math3d.aabb_merge(aabb, newaabb) or newaabb
             end
         end
@@ -69,7 +69,7 @@ function m:normalize_aabb()
     for _, eid in ipairs(self.entities) do
         local e = world[eid]
         if e.mesh and e.mesh.bounding then
-            local newaabb = math3d.aabb_transform(iom.calc_worldmat(eid), e.mesh.bounding.aabb)
+            local newaabb = math3d.aabb_transform(iom.worldmat(eid), e.mesh.bounding.aabb)
             aabb = aabb and math3d.aabb_merge(aabb, newaabb) or newaabb
         end
     end
@@ -500,6 +500,7 @@ function m:reset_prefab()
     self.prefab_script = ""
     self.entities = {}
     world:pub {"WindowTitle", ""}
+    world:pub {"ResetEditor", ""}
     hierarchy:set_root(self.root)
 end
 

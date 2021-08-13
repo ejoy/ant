@@ -25,7 +25,7 @@ local console_widget = require "widget.console"(asset_mgr)
 local toolbar = require "widget.toolbar"(world, asset_mgr)
 local scene_view = require "widget.scene_view"(world, asset_mgr)
 local inspector = require "widget.inspector"(world)
-local particle_emitter = require "widget.particle_emitter"(world)
+local gridmesh_view = require "widget.gridmesh_view"(world)
 local uiconfig = require "widget.config"
 local prefab_mgr = require "prefab_manager"(world)
 local menu = require "widget.menu"(world, prefab_mgr)
@@ -40,10 +40,7 @@ local widget_utils = require "widget.utils"
 local utils = require "common.utils"
 local m = ecs.system 'gui_system'
 local drag_file = nil
-local last_x = -1
-local last_y = -1
-local last_width = -1
-local last_height = -1
+
 local second_view_width = 384
 local second_vew_height = 216
 
@@ -229,6 +226,11 @@ local iRmlUi    = world:interface "ant.rmlui|rmlui"
 local irq       = world:interface "ant.render|irenderqueue"
 local bgfx      = require "bgfx"
 local stat_window
+local dock_x, dock_y, dock_width, dock_height
+local last_x = -1
+local last_y = -1
+local last_width = -1
+local last_height = -1
 function m:ui_update()
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.2, 0.2, 0.2, 1)
@@ -237,9 +239,9 @@ function m:ui_update()
     widget_utils.show_message_box()
     menu.show()
     toolbar.show()
-    local x, y, width, height = show_dock_space(0, uiconfig.ToolBarHeight)
+    dock_x, dock_y, dock_width, dock_height = show_dock_space(0, uiconfig.ToolBarHeight)
     scene_view.show()
-    particle_emitter.show()
+    gridmesh_view.show()
     inspector.show()
     resource_browser.show()
     anim_view.show()
@@ -247,22 +249,7 @@ function m:ui_update()
     log_widget.show()
     imgui.windows.PopStyleColor(2)
     imgui.windows.PopStyleVar()
-    local dirty = false
-    if last_x ~= x then last_x = x dirty = true end
-    if last_y ~= y then last_y = y dirty = true  end
-    if last_width ~= width then last_width = width dirty = true  end
-    if last_height ~= height then last_height = height dirty = true  end
-    if dirty then
-        local mvp = imgui.GetMainViewport()
-        local viewport = {x = x - mvp.WorkPos[1], y = y - mvp.WorkPos[2] + uiconfig.MenuHeight, w = width, h = height}
-        irq.set_view_rect(world:singleton_entity_id "main_queue", viewport)
-
-        iRmlUi.update_viewrect(viewport.x, viewport.y, viewport.w, viewport.h)
-
-        local secondViewport = {x = viewport.x + (width - second_view_width), y = viewport.y + (height - second_vew_height), w = second_view_width, h = second_vew_height}
-        irq.set_view_rect(camera_mgr.second_view, secondViewport)
-        world:pub {"ViewportDirty", viewport}
-    end
+    
     --drag file to view
     if imgui.util.IsMouseDragging(0) then
         local x, y = imgui.util.GetMousePos()
@@ -323,8 +310,8 @@ local function on_target(old, new)
             camera_mgr.set_second_camera(new, true)
         elseif new_entity.light_type then
             light_gizmo.bind(new)
-        elseif new_entity.emitter then
-            particle_emitter.set_emitter(new)
+        -- elseif new_entity.emitter then
+        --     particle_emitter.set_emitter(new)
         end
     end
     prefab_mgr:update_current_aabb(new)
@@ -344,7 +331,7 @@ end
 
 local cmd_queue = require "gizmo.command_queue"(world)
 
-function m:data_changed()
+function m:handle_event()
     for _, action, value1, value2 in event_gizmo:unpack() do
         if action == "update" or action == "ontarget" then
             inspector.update_ui(action == "update")
@@ -381,8 +368,8 @@ function m:data_changed()
             end
         elseif what == "parent" then
             hierarchy:set_parent(target, v1)
-            local sourceWorldMat = iom.calc_worldmat(target)
-            local targetWorldMat = iom.calc_worldmat(v1)
+            local sourceWorldMat = iom.worldmat(target)
+            local targetWorldMat = iom.worldmat(v1)
             iom.set_srt(target, math3d.mul(math3d.inverse(targetWorldMat), sourceWorldMat))
             iss.set_parent(target, v1)
             if not world[v1].slot and world[target].collider then
@@ -423,6 +410,7 @@ function m:data_changed()
             hierarchy:move_bottom(eid)
         end
     end
+    
     for _, filename in event_preopen_prefab:unpack() do
         anim_view:clear()
         material_view:clear()
@@ -483,6 +471,26 @@ local anim_entity
 local anim_transform = math3d.ref()
 local current_skeleton
 local skeleton_eid
+
+function m:end_frame()
+    local dirty = false
+    if last_x ~= dock_x then last_x = dock_x dirty = true end
+    if last_y ~= dock_y then last_y = dock_y dirty = true  end
+    if last_width ~= dock_width then last_width = dock_width dirty = true  end
+    if last_height ~= dock_height then last_height = dock_height dirty = true  end
+    if dirty then
+        local mvp = imgui.GetMainViewport()
+        local viewport = {x = dock_x - mvp.WorkPos[1], y = dock_y - mvp.WorkPos[2] + uiconfig.MenuHeight, w = dock_width, h = dock_height}
+        irq.set_view_rect("main_queue", viewport)
+
+        iRmlUi.update_viewrect(viewport.x, viewport.y, viewport.w, viewport.h)
+
+        local secondViewport = {x = viewport.x + (dock_width - second_view_width), y = viewport.y + (dock_height - second_vew_height), w = second_view_width, h = second_vew_height}
+        irq.set_view_rect(camera_mgr.second_view, secondViewport)
+        world:pub {"ViewportDirty", viewport}
+    end
+end
+
 function m:widget()
     -- if skeleton_eid then
     --     ies.set_state(skeleton_eid, "visible", false)
@@ -497,10 +505,10 @@ function m:widget()
     --         world:remove_entity(skeleton_eid)
     --     end
     --     local desc={vb={}, ib={}}
-    --     geometry_drawer.draw_skeleton(e.skeleton._handle, e.pose_result, DEFAULT_COLOR, iom.calc_worldmat(eid), desc)
+    --     geometry_drawer.draw_skeleton(e.skeleton._handle, e.pose_result, DEFAULT_COLOR, iom.worldmat(eid), desc)
     --     skeleton_eid = geo_utils.create_dynamic_lines(e.transform, desc.vb, desc.ib, "skeleton", DEFAULT_COLOR)
     --     ies.set_state(skeleton_eid, "auxgeom", true)
-    --     anim_transform.m = iom.calc_worldmat(eid)
+    --     anim_transform.m = iom.worldmat(eid)
     --     anim_entity = e
     -- end
     -- if skeleton_eid then

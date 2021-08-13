@@ -17,34 +17,18 @@ component_v2 "render_object"
 component_v2 "filter_material"
     .type "lua"
 
---Camera
-policy_v2 "camera"
-    .component_v2 "camera"
-    .component_v2 "camera_id"
-
-policy_v2 "camera_node"
-    .component_v2 "camera_node"
-
-component_v2 "camera"
-    .type "lua"
-
-component_v2 "camera_id"
-    .type "int"
-
-component_v2 "camera_node"
-    .type "ref"
-
 --SceneObject
 policy_v2 "scene_object"
-    .component_v2 "scene_id"
+    .component_v2 "scene"
     .component_v2 "eid"
-
-policy_v2 "scene_node"
-    .component_v2 "scene_node"
-    .component_v2 "INIT"
 
 component_v2 "scene_id"
     .type "int"
 
 component_v2 "scene_node"
     .type "ref"
+
+component_v2 "scene_changed"
+
+component_v2 "scene"
+    .type "lua"

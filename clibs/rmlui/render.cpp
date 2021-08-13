@@ -51,20 +51,20 @@ static uint32_t getTextureFlags(Rml::SamplerFlag flags) {
     }
 }
 
-void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices, Rml::Index* indices, int num_indices, Rml::TextureHandle texture, Rml::SamplerFlag flags) {
+void Renderer::RenderGeometry(Rml::Vertex* vertices, size_t num_vertices, Rml::Index* indices, size_t num_indices, Rml::TextureHandle texture, Rml::SamplerFlag flags) {
     BGFX(encoder_set_state)(mEncoder, RENDER_STATE, 0);
     bgfx_transient_vertex_buffer_t tvb;
-    BGFX(alloc_transient_vertex_buffer)(&tvb, num_vertices, (bgfx_vertex_layout_t*)mcontext->layout);
+    BGFX(alloc_transient_vertex_buffer)(&tvb, (uint32_t)num_vertices, (bgfx_vertex_layout_t*)mcontext->layout);
 
     memcpy(tvb.data, vertices, num_vertices * sizeof(Rml::Vertex));
-    BGFX(encoder_set_transient_vertex_buffer)(mEncoder, 0, &tvb, 0, num_vertices);
+    BGFX(encoder_set_transient_vertex_buffer)(mEncoder, 0, &tvb, 0, (uint32_t)num_vertices);
 
     bgfx_transient_index_buffer_t tib;
-    BGFX(alloc_transient_index_buffer)(&tib, num_indices, true);
+    BGFX(alloc_transient_index_buffer)(&tib, (uint32_t)num_indices, true);
 
     static_assert(sizeof(Rml::Index) == sizeof(uint32_t));
     memcpy(tib.data, indices, num_indices * sizeof(Rml::Index));
-    BGFX(encoder_set_transient_index_buffer)(mEncoder, &tib, 0, num_indices);
+    BGFX(encoder_set_transient_index_buffer)(mEncoder, &tib, 0, (uint32_t)num_indices);
 
     auto fe = FE(texture);
     auto get_shader = [&](){
@@ -163,12 +163,32 @@ void Renderer::ScissorRect::drawDebugScissorRect(bgfx_encoder_t *encoder, uint16
 }
 #endif //_DEBUG
 
+void Renderer::ScissorRect::setShaderScissorRect(bgfx_encoder_t* encoder, const glm::vec4 r[2]){
+    needShaderClipRect = true;
+    lastScissorId = UINT16_MAX;
+    rectVerteices[0] = r[0];
+    rectVerteices[1] = r[1];
+    BGFX(encoder_set_scissor_cached)(encoder, UINT16_MAX);
+}
+
+void Renderer::ScissorRect::setScissorRect(bgfx_encoder_t* encoder, const glm::u16vec4 *r) {
+    needShaderClipRect = false;
+    if (r == nullptr){
+        lastScissorId = UINT16_MAX;
+        BGFX(encoder_set_scissor_cached)(encoder, UINT16_MAX);
+    } else {
+        lastScissorId = BGFX(encoder_set_scissor)(encoder, r->x, r->y, r->z, r->w);
+    }
+}
+
 void Renderer::ScissorRect::submitScissorRect(bgfx_encoder_t* encoder, const shader_info &si){
     if (needShaderClipRect) {
         auto uniformIdx = si.find_uniform("u_clip_rect");
         if (uniformIdx != UINT16_MAX) {
             BGFX(encoder_set_uniform)(encoder, { uniformIdx }, rectVerteices, sizeof(rectVerteices) / sizeof(rectVerteices[0]));
         }
+    } else {
+        BGFX(encoder_set_scissor_cached)(encoder, lastScissorId);
     }
 }
 
@@ -177,25 +197,15 @@ void Renderer::SetTransform(const glm::mat4x4& transform) {
 }
 
 void Renderer::SetClipRect() {
-    mScissorRect.needShaderClipRect = false;
-    BGFX(encoder_set_scissor_cached)(mEncoder, UINT16_MAX);
+    mScissorRect.setScissorRect(mEncoder, nullptr);
 }
 
 void Renderer::SetClipRect(const glm::u16vec4& r) {
-    mScissorRect.needShaderClipRect = false;
-    BGFX(encoder_set_scissor)(mEncoder, r.x, r.y, r.z, r.w);
+    mScissorRect.setScissorRect(mEncoder, &r);
 }
 
 void Renderer::SetClipRect(glm::vec4 r[2]) {
-    mScissorRect.needShaderClipRect = true;
-    mScissorRect.rectVerteices[0] = r[0];
-    mScissorRect.rectVerteices[1] = r[1];
-    BGFX(encoder_set_scissor_cached)(mEncoder, UINT16_MAX);
-}
-
-static inline bool
-CustomTexture(const std::string &key){
-    return (!key.empty() && key[0] == '?');
+    mScissorRect.setShaderScissorRect(mEncoder, r);
 }
 
 bool Renderer::LoadTexture(Rml::TextureHandle& handle, Rml::Size& dimensions, const std::string& path){

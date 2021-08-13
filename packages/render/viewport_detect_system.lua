@@ -1,7 +1,8 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
+
 local fbmgr 	= require "framebuffer_mgr"
-local viewidmgr = require "viewid_mgr"
 
 local vp_detect_sys = ecs.system "viewport_detect_system"
 
@@ -39,19 +40,19 @@ local function update_render_queue(q, viewsize)
 		vr.w, vr.h = viewsize.w, viewsize.h
 	end
 
-	icamera.set_frustum_aspect(q.camera_eid, vr.w/vr.h)
+	icamera.set_frustum_aspect(q.camera_ref, vr.w/vr.h)
 	resize_framebuffer(vr.w, vr.h, rt.fb_idx)
 	irq.update_rendertarget(rt)
 end
 
 local function update_camera_viewrect(viewsize)
 	rb_cache = {}
-	for _, eid in world:each "watch_screen_buffer" do
-		update_render_queue(world[eid], viewsize)
+	for qe in w:select "watch_screen_buffer render_target:in camera_ref:in" do
+		update_render_queue(qe, viewsize)
 	end
 
-	for _, eid in world:each "render_target" do
-		local rt = world[eid].render_target
+	for qe in w:select "render_target:in watch_screen_buffer:absent" do
+		local rt = qe.render_target
 		local viewid = rt.viewid
 		local fbidx = rt.fb_idx
 		fbmgr.bind(viewid, fbidx)

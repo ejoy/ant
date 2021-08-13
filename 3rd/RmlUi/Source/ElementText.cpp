@@ -99,9 +99,7 @@ void ElementText::OnRender() {
 	if (decoration_under) {
 		decoration.Render();
 	}
-	for (auto& geometry : geometrys) {
-		geometry.Render();
-	}
+	geometry.Render();
 	if (!decoration_under) {
 		decoration.Render();
 	}
@@ -313,7 +311,7 @@ void ElementText::UpdateGeometry(const FontFaceHandle font_face_handle) {
 	dirty_decoration = true;
 	Color color = GetTextColor();
 	ColorApplyOpacity(color, GetOpacity());
-	GetFontEngineInterface()->GenerateString(font_face_handle, text_effects_handle, lines, color, geometrys);
+	GetFontEngineInterface()->GenerateString(font_face_handle, text_effects_handle, lines, color, geometry);
 }
 
 void ElementText::UpdateDecoration(const FontFaceHandle font_face_handle) {

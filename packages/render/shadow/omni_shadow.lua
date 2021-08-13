@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-
+local w = world.w
 --[[
     see:
     1. GPU Pro 1 - Shadow Mapping for omnidiectional Light Using Tetrahedron Mapping
@@ -17,17 +17,18 @@ local world = ecs.world
     right now, this omni is disable
 ]]
 
-local fbmgr = require "framebuffer_mgr"
-local viewidmgr = require "viewid_mgr"
+local fbmgr         = require "framebuffer_mgr"
+local viewidmgr     = require "viewid_mgr"
+local samplerutil   = require "sampler"
+local shadowcommon  = require "shadow.common"
 
-local samplerutil = require "sampler"
-local shadowcommon = require "shadow.common"
-local math3d = require "math3d"
+local math3d        = require "math3d"
 
-local iom = world:interface "ant.objcontroller|obj_motion"
-local ilight = world:interface "ant.render|light"
-local icamera = world:interface "ant.camera|camera"
-local ientity = world:interface "ant.render|entity"
+local iom       = world:interface "ant.objcontroller|obj_motion"
+local ilight    = world:interface "ant.render|light"
+local icamera   = world:interface "ant.camera|camera"
+local ientity   = world:interface "ant.render|entity"
+local irender   = world:interface "ant.render|irender"
 
 local function get_render_buffers(width, height)
     return fbmgr.create_rb{
@@ -195,37 +196,39 @@ function ios.create(point_eid)
     local range = ilight.range(point_eid)
     local pos = iom.get_position(point_eid)
     local frustum = {
-        fov = fovy,
-        aspect = aspect,
-        n = 1, f = range,
+        fov     = fovy,
+        aspect  = aspect,
+        n = 1,  f = range,
     }
 
     add_stencil_entity()
 
     for k, t in pairs(TetrahedronFaces) do
-        local name = "omni_" .. k
+        local queuename = "omni_" .. k
         local worldmat = math3d.matrix{r=t.rotation}
         local updir, viewdir = math3d.index(worldmat, 2, 3)
-        local cameraeid = icamera.create {
+        local camera_ref = icamera.create {
                 updir 	= updir,
                 viewdir = viewdir,
                 eyepos 	= pos,
                 frustum = frustum,
-                name = "camera_" .. name
+                name = "camera_" .. queuename
             }
 
-        eids[k] = world:create_entity{
+        local filternames = irender.create_primitive_filter_entities(queuename, "cast_shadow", {"opacity"})
+        world:luaecs_create_entity{
             policy = {
                 "ant.render|omni_shadow",
                 "ant.render|render_queue",
+                "ant.render|cull",
                 "ant.general|name",
             },
             data = {
-                camera_eid = cameraeid,
+                camera_ref = camera_ref,
                 render_target = {
-                    view_rect = k.view_rect,
+                    view_rect = t.view_rect,
                     view_mode = "s",
-                    viewid = viewidmgr.get(name),
+                    viewid = viewidmgr.get(queuename),
                     fb_idx = fb_index,
                 },
                 clear_state = {
@@ -234,17 +237,19 @@ function ios.create(point_eid)
 					stencil = 0,
 					clear = "DS",
 				},
-                primitive_filter = {
-                    filter_type = "cast_shadow",
-                    update_type = "shadow",
-                },
                 omni = {
                     name = k,
                     light_eid = point_eid,
                     stencil_ref = t.stencil_ref,
                 },
+                filter_names = filternames,
+                queue_name = queuename,
+                cull_tag = {},
+                name = queuename,
+                INIT = true,
                 visible = false,
-                name = name,
+                omni_queue = true,
+                shadow_render_queue = {},
             },
         }
     end
@@ -279,20 +284,19 @@ function omni_shadow_sys:data_changed()
     end
 end
 
-local function update_camera_matrices(rc)
-    rc.viewmat	= math3d.inverse(rc.srt)
-    rc.worldmat	= rc.srt
-    rc.projmat	= math3d.projmat(rc.frustum)
-    rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
+local function update_camera_matrices(camera)
+    camera.viewmat	= math3d.inverse(camera.srt)
+    camera.worldmat	= camera.srt
+    camera.projmat	= math3d.projmat(camera.frustum)
+    camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 end
 
 function omni_shadow_sys:update_camera()
-    for _, eid in world:each "omni" do
-        local e = world[eid]
-        local leid = e.omni.light_eid
+    for oe in w:select "omni:in camera_ref:in" do
+        local leid = oe.omni.light_eid
         if world[leid] then
-            local ce = world[e.camera_eid]
-            update_camera_matrices(ce._rendercache)
+            local camera = icamera.find_camera(oe.camera_ref)
+            update_camera_matrices(camera)
         else
             log.warn(("entity id:%d, is not exist, but omni shadow entity still here"):format(leid))
         end

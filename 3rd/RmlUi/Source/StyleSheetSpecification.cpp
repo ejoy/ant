@@ -281,10 +281,10 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 	RegisterShorthand(ShorthandId::BorderLeft, "border-left", "border-left-width, border-left-color", ShorthandType::FallThrough);
 	RegisterShorthand(ShorthandId::Border, "border", "border-top, border-right, border-bottom, border-left", ShorthandType::RecursiveRepeat);
 
-	RegisterProperty(PropertyId::BorderTopLeftRadius, "border-top-left-radius", "0px", false).AddParser("length");
-	RegisterProperty(PropertyId::BorderTopRightRadius, "border-top-right-radius", "0px", false).AddParser("length");
-	RegisterProperty(PropertyId::BorderBottomRightRadius, "border-bottom-right-radius", "0px", false).AddParser("length");
-	RegisterProperty(PropertyId::BorderBottomLeftRadius, "border-bottom-left-radius", "0px", false).AddParser("length");
+	RegisterProperty(PropertyId::BorderTopLeftRadius, "border-top-left-radius", "0px", false).AddParser("length_percent");
+	RegisterProperty(PropertyId::BorderTopRightRadius, "border-top-right-radius", "0px", false).AddParser("length_percent");
+	RegisterProperty(PropertyId::BorderBottomRightRadius, "border-bottom-right-radius", "0px", false).AddParser("length_percent");
+	RegisterProperty(PropertyId::BorderBottomLeftRadius, "border-bottom-left-radius", "0px", false).AddParser("length_percent");
 	RegisterShorthand(ShorthandId::BorderRadius, "border-radius", "border-top-left-radius, border-top-right-radius, border-bottom-right-radius, border-bottom-left-radius", ShorthandType::Box);
 
 	RegisterProperty(PropertyId::Display, "display", "flex", false).AddParser("keyword", "flex, none");

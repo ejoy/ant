@@ -2879,62 +2879,111 @@ lsetViewTransform(lua_State *L) {
 	return 0;
 }
 
+struct vertexbuffer {
+	int handle;
+	struct transient_buffer *tb;
+};
+
+static struct vertexbuffer *
+next_vb_handle(lua_State *L, int stream, struct vertexbuffer *vb) {
+	switch (lua_geti(L, 1, stream+1)) {
+	case LUA_TNIL:
+		vb = NULL;
+		break;
+	case LUA_TNUMBER:
+		vb->handle = lua_tointeger(L, -1);
+		vb->tb = NULL;
+		if (vb->handle == 0)
+			vb = NULL;
+		break;
+	case LUA_TUSERDATA:
+		vb->handle = 0;
+		vb->tb = luaL_checkudata(L, 1, "BGFX_TB");
+		break;
+	default:
+		luaL_error(L, "Invalid vertex buffer");
+	}
+	lua_pop(L, 1);
+	return vb;
+}
+
 ENCODER_API(lsetVertexBuffer) {
 	int stream = 0;
 	int start = 0;
 	int numv = UINT32_MAX;
-	int id = UINT32_MAX;
-	struct transient_buffer *tb = NULL;
-
 	struct vertex_layout* layout = NULL;
-	if (lua_gettop(L) <= 1) {
-		if (lua_isnoneornil(L, 1)) {
-			// empty
-			bgfx_vertex_buffer_handle_t handle = { UINT16_MAX };
-			BGFX_ENCODER(set_vertex_buffer, encoder, stream, handle, start, numv);
-			return 0;
-		}
-		if (lua_type(L, 1) == LUA_TUSERDATA){
-			tb = luaL_checkudata(L, 1, "BGFX_TB");
-		} else {
-			id = luaL_checkinteger(L, 1);
-		}
-	} else {
-		stream = luaL_checkinteger(L, 1);
-		if (lua_type(L, 2) == LUA_TUSERDATA){
-			tb = luaL_checkudata(L, 2, "BGFX_TB");
-		} else {
-			id = luaL_optinteger(L, 2, BGFX_HANDLE_VERTEX_BUFFER | UINT16_MAX);
-		}
-		start = luaL_optinteger(L, 3, 0);
-		numv = luaL_optinteger(L, 4, UINT32_MAX);
-		layout = lua_isnoneornil(L, 5) ? NULL : (struct vertex_layout *)lua_touserdata(L, 5);
+	struct vertexbuffer vb;
+
+	if (lua_isnoneornil(L, 1)) {
+		// empty
+		bgfx_vertex_buffer_handle_t handle = { UINT16_MAX };
+		BGFX_ENCODER(set_vertex_buffer, encoder, stream, handle, start, numv);
+		return 0;
 	}
 
-	if (tb == NULL){
-		int idtype = id >> 16;
-		int idx = id & 0xffff;
-		if (idtype == BGFX_HANDLE_VERTEX_BUFFER) {
-			bgfx_vertex_buffer_handle_t handle = { idx };
-			BGFX_ENCODER(set_vertex_buffer, encoder, stream, handle, start, numv);
-		} else {
-			if (idtype == BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER){
-				bgfx_dynamic_vertex_buffer_handle_t handle = { idx };
-				BGFX_ENCODER(set_dynamic_vertex_buffer, encoder, stream, handle, start, numv);
-			} else if (idtype == BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS) {
-				if (layout == NULL){
-					return luaL_error(L, "dynamic vertex buffer of typeless must pass 'vertex_layout'");
-				}
+	int is_array = (lua_type(L, 1) == LUA_TTABLE);
 
-				bgfx_dynamic_vertex_buffer_handle_t handle = { idx };
-				BGFX_ENCODER(set_dynamic_vertex_buffer_with_layout, encoder, stream, handle, start, numv, get_vertex_layout_handle(layout));
+	if (lua_gettop(L) <= 1) {
+		if (lua_type(L, 1) == LUA_TUSERDATA) {
+			vb.handle = 0;
+			vb.tb = luaL_checkudata(L, 1, "BGFX_TB");
+		} else if (is_array) {
+			if (next_vb_handle(L, 0, &vb) == NULL) {
+				return luaL_error(L, "No vertexbuffer in array");
+			}
+		} else {
+			vb.handle = luaL_checkinteger(L, 1);
+			vb.tb = NULL;
+		}
+	} else {
+		int lua_base;
+		if (is_array) {
+			if (next_vb_handle(L, 0, &vb) == NULL) {
+				return luaL_error(L, "No vertexbuffer in array");
+			}
+			lua_base = 1;
+		} else {
+			stream = luaL_checkinteger(L, 1);
+			lua_base = 2;
+			if (lua_type(L, lua_base) == LUA_TUSERDATA) {
+				vb.handle = 0;
+				vb.tb = luaL_checkudata(L, lua_base, "BGFX_TB");
 			} else {
-				return luaL_error(L, "Invalid vertex buffer type %d", idtype);
+				vb.handle = luaL_optinteger(L, lua_base, BGFX_HANDLE_VERTEX_BUFFER | UINT16_MAX);
+				vb.tb = NULL;
+			}
+			start = luaL_optinteger(L, lua_base + 1, 0);
+			numv = luaL_optinteger(L, lua_base + 2, UINT32_MAX);
+			layout = lua_isnoneornil(L, lua_base + 3) ? NULL : (struct vertex_layout *)lua_touserdata(L, lua_base + 3);
+		}
+	}
+
+	do {
+		if (vb.tb) {
+			BGFX(set_transient_vertex_buffer)(stream, &vb.tb->tvb, start, numv);
+		} else {
+			int idtype = vb.handle >> 16;
+			int idx = vb.handle & 0xffff;
+			if (idtype == BGFX_HANDLE_VERTEX_BUFFER) {
+				bgfx_vertex_buffer_handle_t handle = { idx };
+				BGFX_ENCODER(set_vertex_buffer, encoder, stream, handle, start, numv);
+			} else {
+				if (idtype == BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER) {
+					bgfx_dynamic_vertex_buffer_handle_t handle = { idx };
+					BGFX_ENCODER(set_dynamic_vertex_buffer, encoder, stream, handle, start, numv);
+				} else if (idtype == BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS) {
+					if (layout == NULL){
+						return luaL_error(L, "dynamic vertex buffer of typeless must pass 'vertex_layout'");
+					}
+
+					bgfx_dynamic_vertex_buffer_handle_t handle = { idx };
+					BGFX_ENCODER(set_dynamic_vertex_buffer_with_layout, encoder, stream, handle, start, numv, get_vertex_layout_handle(layout));
+				} else {
+					return luaL_error(L, "Invalid vertex buffer type %d", idtype);
+				}
 			}
 		}
-	} else {
-		BGFX(set_transient_vertex_buffer)(stream, &tb->tvb, start, numv);
-	}
+	} while (is_array && next_vb_handle(L, ++stream, &vb));
 
 	return 0;
 }

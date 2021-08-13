@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-
+local w = world.w
 local cr_test = ecs.system "camera_recorder_test_system"
 local which_cr
 local recording = false
@@ -17,14 +17,16 @@ function cr_test.data_changed()
                 icr.stop(which_cr)
             end
         elseif code == "SPACE" and press == 0 then
-            local ceid = world:singleton_entity "main_queue".camera_eid
-            icr.add(which_cr, ceid)
+            for e in w:seelct "main_queue camera_ref:in" do
+                icr.add(which_cr, e.camera_ref)
+            end
         elseif state.CTRL and code == "P" and press == 0 then
             if recording then
                 print("camera is recording, please stop before play")
             else
-                local ceid = world:singleton_entity "main_queue".camera_eid
-                icr.play(which_cr, ceid)
+                for e in w:seelct "main_queue camera_ref:in" do
+                    icr.play(which_cr, e.camera_ref)
+                end
             end
         end
     end

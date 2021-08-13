@@ -1,49 +1,32 @@
 local ecs = ...
 local world = ecs.world
 
+local math3d		= require "math3d"
+local bgfx			= require "bgfx"
+
 local assetmgr		= require "asset"
 local ext_material	= require "ext_material"
 
-local mpt = ecs.transform "material_prefab_transform"
-local function load_material(m, setting)
+local function load_material(m, c, setting)
 	local fx = assetmgr.load_fx(m.fx, setting)
 	local properties = m.properties
 	if not properties and #fx.uniforms > 0 then
 		properties = {}
 	end
-	return {
-		fx			= fx,
-		properties	= properties,
-		state		= m.state,
-		stencil		= m.stencil,
-	}
-end
-
-function mpt.process_prefab(e)
-	local m = e.material
-	if m then
-		local c = e._cache_prefab
-		local mm = load_material(m, c.material_setting)
-		c.fx			= mm.fx
-		c.properties	= mm.properties
-		c.state			= mm.state
-		c.stencil		= mm.stencil
-	end
-end
-
-local mst = ecs.transform "material_setting_transform"
-function mst.process_prefab(e)
-	e._cache_prefab.material_setting = {}
+	c.fx			= fx
+	c.properties	= properties
+	c.state			= m.state
+	c.stencil		= m.stencil
+	return c
 end
 
 local imaterial = ecs.interface "imaterial"
-function imaterial.load(materialpath, setting)
-	local m = world.component "material"(materialpath)
-	return load_material(m, setting)
+function imaterial.load(m, setting)
+	local mm = type(m) == "string" and world.component "material"(m) or m
+	assert(type(mm) == "table")
+	
+	return load_material(mm, {}, setting)
 end
-
-local math3d = require "math3d"
-local bgfx = require "bgfx"
 
 local function set_uniform(p)
 	return bgfx.set_uniform(p.handle, p.value)
@@ -175,11 +158,25 @@ end
 
 local m = ecs.component "material"
 
-function m:init()
-	if type(self) == "string" then
-		return assetmgr.resource(self)
+local function init_material(mm)
+	if type(mm) == "string" then
+		return assetmgr.resource(mm)
 	end
-	return ext_material.init(self)
+	return ext_material.init(mm)
+end
+
+m.init = init_material
+
+local mpt = ecs.transform "material_prefab_transform"
+
+function mpt.process_prefab(e)
+	local c = e._cache_prefab
+	load_material(e.material, c, c.material_setting)
+end
+
+local mst = ecs.transform "material_setting_transform"
+function mst.process_prefab(e)
+	e._cache_prefab.material_setting = {}
 end
 
 local mt = ecs.transform "material_transform"
@@ -262,11 +259,25 @@ local function generate_properties(fx, properties)
 	return new_properties
 end
 
-function mt.process_entity(e)
-	local rc = e._rendercache
-	local c = e._cache_prefab
+local function to_renderobj(m, ro)
+	ro.fx 			= m.fx
+	ro.properties 	= generate_properties(m.fx, m.properties)
+	ro.state 		= m.state
+	ro.stencil		= m.stencil
+end
 
-	rc.fx 			= c.fx
-	rc.properties 	= generate_properties(c.fx, c.properties)
-	rc.state 		= c.state
+function mt.process_entity(e)
+	to_renderobj(e._cache_prefab, e._rendercache)
+end
+
+----material_v2
+local w = world.w
+local ms = ecs.system "material_system"
+function ms:entity_init()
+    for e in w:select "INIT material:in material_setting?in render_object:in name:in" do
+		if type(e.material) == "string" then
+			local mm = load_material(init_material(e.material), {}, e.material_setting)
+			to_renderobj(mm, e.render_object)
+		end
+	end
 end

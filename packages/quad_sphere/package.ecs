@@ -1,6 +1,0 @@
-import "quad_sphere.ecs"
-import "trunk.ecs"
-import "camera_controller.ecs"
-
-import "quad_sphere_debug.ecs"
-

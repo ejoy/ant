@@ -1,10 +1,10 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 
 local bgfx      = require "bgfx"
 local declmgr   = require "vertexdecl_mgr"
 local ilight    = world:interface "ant.render|light"
-local irender   = world:interface "ant.render|irender"
 local icompute  = world:interface "ant.render|icompute"
 
 local cfs = ecs.system "cluster_forward_system"
@@ -133,10 +133,14 @@ local function check_light_index_list()
         return true
     end
 end
+local function main_viewid()
+    for v in w:select "main_queue render_target:in" do
+        return v.render_target.viewid
+    end
+end
 
 local function build_cluster_aabb_struct()
-    local mq = world:singleton_entity "main_queue"
-    icompute.dispatch(mq.render_target.viewid, world[cs_entities.buildeid]._rendercache)
+    icompute.dispatch(main_viewid(), world[cs_entities.buildeid]._rendercache)
 end
 
 local cr_camera_mb
@@ -144,10 +148,6 @@ local camera_frustum_mb
 local light_mb = world:sub{"component_register", "light_type"}
 
 function cfs:post_init()
-    local mq_eid = world:singleton_entity_id "main_queue"
-    cr_camera_mb = world:sub{"component_changed", "camera_eid", mq_eid}
-    camera_frustum_mb = world:sub{"component_changed", "frustum", world[mq_eid].camera_eid}
-
     cluster_buffers.light_info.handle = ilight.light_buffer()
 
     --build
@@ -203,8 +203,7 @@ function cfs:post_init()
 end
 
 local function cull_lights()
-    local mq = world:singleton_entity "main_queue"
-    icompute.dispatch(mq.render_target.viewid, world[cs_entities.culleid]._rendercache)
+    icompute.dispatch(main_viewid(), world[cs_entities.culleid]._rendercache)
 end
 
 function cfs:render_preprocess()
@@ -216,15 +215,6 @@ function cfs:render_preprocess()
         check_light_index_list()
     end
 
-    local mq = world:singleton_entity "main_queue"
-    for _ in cr_camera_mb:each() do
-        build_cluster_aabb_struct()
-        camera_frustum_mb = world:sub{"component_changed", "frustum", mq.camera_eid}
-    end
-
-    for _ in camera_frustum_mb:each() do
-        build_cluster_aabb_struct()
-    end
-
+    build_cluster_aabb_struct()
     cull_lights()
 end

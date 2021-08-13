@@ -13,7 +13,8 @@ local m = {
     FRUSTUM_TOP     = 2,
     FRUSTUM_RIGHT   = 3,
     FRUSTUM_BOTTOM  = 4,
-    camera_list     = {}
+    camera_list     = {},
+    second_view     = "second_view",
 }
 
 local normal_color      = {1, 0.3, 0.3, 1}
@@ -24,10 +25,10 @@ local default_far_clip  = 100
 local default_fov       = 30
         
 function m.set_second_camera(eid, show)
-    local rc = world[eid]._rendercache
-	rc.viewmat = icamera.calc_viewmat(eid)
-    rc.projmat = icamera.calc_projmat(eid)
-    rc.viewprojmat = icamera.calc_viewproj(eid)
+    -- local rc = world[eid]._rendercache
+	-- rc.viewmat = icamera.calc_viewmat(eid)
+    -- rc.projmat = icamera.calc_projmat(eid)
+    -- rc.viewprojmat = icamera.calc_viewproj(eid)
     icamera.bind_queue(eid, m.second_view)
     m.second_camera = eid
     m.show_frustum(eid, show)
@@ -51,16 +52,16 @@ function m.highlight_frustum(eid, dir, highlight)
     end
 end
 
-function m.set_frustum_fov(camera_eid, fov)
-    icamera.set_frustum_fov(camera_eid, fov)
-    m.update_frustrum(camera_eid)
+function m.set_frustum_fov(camera_ref, fov)
+    icamera.set_frustum_fov(camera_ref, fov)
+    m.update_frustrum(camera_ref)
 end
 
 function m.update_frustrum(cam_eid)
     if not cam_eid or not world[cam_eid].camera then return end
 
     if not m.camera_list[cam_eid] then
-        m.camera_list[cam_eid] = { camera_eid = cam_eid, target = -1, dist_to_target = 5 }
+        m.camera_list[cam_eid] = { camera_ref = cam_eid, target = -1, dist_to_target = 5 }
     end
 
     local frustum_points = math3d.frustum_points(icamera.calc_viewproj(cam_eid))
@@ -117,7 +118,7 @@ function m.show_frustum(eid, visible)
     -- if m.second_camera ~= eid then
     --     return
     -- end
-    world[m.second_view].visible = visible
+    irq.set_visible(m.second_view, visible)
     if m.camera_list[eid] and m.camera_list[eid].frustum_eid then
         local state = "visible"
         ies.set_state(m.camera_list[eid].frustum_eid, state, visible)

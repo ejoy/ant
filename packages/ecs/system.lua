@@ -37,7 +37,7 @@ local function solve_depend(res, step, pipeline, what)
 				error(("pipeline has duplicate step `%s`"):format(name))
 			elseif step[name] ~= nil then
 				table_append(res, step[name])
-				step[name] = false
+				--step[name] = false
 			end
 		elseif type == "pipeline" then
 			solve_depend(res, step, pipeline, name)

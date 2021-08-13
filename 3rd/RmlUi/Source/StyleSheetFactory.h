@@ -55,11 +55,6 @@ public:
 	/// @param sheet name of sheet to load
 	static std::shared_ptr<StyleSheet> GetStyleSheet(const std::string& sheet);
 
-	/// Builds and returns a stylesheet based on the list of input sheets
-	/// Generated sheets will be cached for later use
-	/// @param sheets List of sheets to combine into one	
-	static std::shared_ptr<StyleSheet> GetStyleSheet(const std::vector<std::string>& sheets);
-
 	/// Clear the style sheet cache.
 	static void ClearStyleSheetCache();
 

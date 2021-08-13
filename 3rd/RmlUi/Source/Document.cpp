@@ -178,7 +178,7 @@ public:
 	}
 	void LoadInlineStyle(const std::string& content, const std::string& source_path, int line) {
 		std::unique_ptr<StyleSheet> inline_sheet = std::make_unique<StyleSheet>();
-		auto stream = std::make_unique<StreamMemory>((const byte*)content.data(), content.size());
+		auto stream = std::make_unique<StreamMemory>((const uint8_t*)content.data(), content.size());
 		stream->SetSourceURL(source_path);
 		if (inline_sheet->LoadStyleSheet(stream.get(), line)) {
 			if (m_style_sheet) {
@@ -377,7 +377,7 @@ static void GenerateKeyModifierEventParameters(EventDictionary& parameters, int 
 		"altKey",
 		"metaKey",
 	};
-	for (int i = 0; i < sizeof(property_names) /sizeof(property_names[0]); ++i) {
+	for (size_t i = 0; i < sizeof(property_names) /sizeof(property_names[0]); ++i) {
 		parameters[property_names[i]] = (int)((key_modifier_state & (1 << i)) > 0);
 	}
 }
@@ -510,7 +510,7 @@ void Document::ProcessMouseButtonUp(MouseButton button, int key_modifier_state) 
 		// Unset the 'active' pseudo-class on all the elements in the active chain; because they may not necessarily
 		// have had 'onmouseup' called on them, we can't guarantee this has happened already.
 		std::for_each(active_chain.begin(), active_chain.end(), [](Element* element) {
-			element->SetPseudoClass("active", false);
+			element->SetPseudoClass(PseudoClass::Active, false);
 		});
 		active_chain.clear();
 		active = nullptr;

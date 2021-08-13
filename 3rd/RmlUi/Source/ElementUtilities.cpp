@@ -105,7 +105,7 @@ static bool ApplyDataViewsControllersInternal(Element* element, const bool const
 					if (DataViewPtr view = Factory::InstanceDataView(type_name, element, false))
 						initializer.view = std::move(view);
 
-					if (DataControllerPtr controller = Factory::InstanceDataController(type_name, element))
+					if (DataControllerPtr controller = Factory::InstanceDataController(element, type_name))
 						initializer.controller = std::move(controller);
 				}
 

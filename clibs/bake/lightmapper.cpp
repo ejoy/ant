@@ -3,6 +3,8 @@
 
 #include "../bgfx/bgfx_interface.h"
 
+#include <cstring>
+
 #define LIGHTMAPPER_IMPLEMENTATION
 #include "lightmapper.h"
 

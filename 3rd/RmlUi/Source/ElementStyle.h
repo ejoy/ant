@@ -57,16 +57,9 @@ public:
 	/// Update this definition if required
 	void UpdateDefinition();
 
-	/// Sets or removes a pseudo-class on the element.
-	/// @param[in] pseudo_class The pseudo class to activate or deactivate.
-	/// @param[in] activate True if the pseudo-class is to be activated, false to be deactivated.
-	void SetPseudoClass(const std::string& pseudo_class, bool activate);
-	/// Checks if a specific pseudo-class has been set on the element.
-	/// @param[in] pseudo_class The name of the pseudo-class to check for.
-	/// @return True if the pseudo-class is set on the element, false if not.
-	bool IsPseudoClassSet(const std::string& pseudo_class) const;
-	/// Gets a list of the current active pseudo classes
-	const PseudoClassList& GetActivePseudoClasses() const;
+	void SetPseudoClass(PseudoClass pseudo_class, bool activate);
+	bool IsPseudoClassSet(PseudoClassSet pseudo_class) const;
+	PseudoClassSet GetActivePseudoClasses() const;
 
 	/// Sets or removes a class on the element.
 	/// @param[in] class_name The name of the class to add or remove from the class list.
@@ -143,7 +136,7 @@ private:
 	// The list of classes applicable to this object.
 	std::vector<std::string> classes;
 	// This element's current pseudo-classes.
-	PseudoClassList pseudo_classes;
+	PseudoClassSet pseudo_classes = 0;
 
 	// Any properties that have been overridden in this element.
 	PropertyDictionary inline_properties;

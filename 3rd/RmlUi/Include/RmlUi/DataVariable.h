@@ -34,11 +34,9 @@
 #include "Traits.h"
 #include "Variant.h"
 #include "DataTypes.h"
-#include <iterator>
 
 namespace Rml {
 
-enum class DataVariableType { Scalar, Array, Struct, Function, MemberFunction };
 
 
 /*
@@ -58,7 +56,6 @@ public:
 	bool Set(const Variant& variant);
 	int Size();
 	DataVariable Child(const DataAddressEntry& address);
-	DataVariableType Type();
 
 private:
 	VariableDefinition* definition = nullptr;
@@ -75,7 +72,6 @@ private:
 class RMLUICORE_API VariableDefinition {
 public:
 	virtual ~VariableDefinition() = default;
-	DataVariableType Type() const { return type; }
 
 	virtual bool Get(void* ptr, Variant& variant);
 	virtual bool Set(void* ptr, const Variant& variant);
@@ -84,61 +80,11 @@ public:
 	virtual DataVariable Child(void* ptr, const DataAddressEntry& address);
 
 protected:
-	VariableDefinition(DataVariableType type) : type(type) {}
-
-private:
-	DataVariableType type;
+	VariableDefinition() {}
 };
-
 
 RMLUICORE_API DataVariable MakeLiteralIntVariable(int value);
 
-
-template<typename T>
-class ScalarDefinition final : public VariableDefinition {
-public:
-	ScalarDefinition() : VariableDefinition(DataVariableType::Scalar) {}
-
-	bool Get(void* ptr, Variant& variant) override
-	{
-		variant = *static_cast<T*>(ptr);
-		return true;
-	}
-	bool Set(void* ptr, const Variant& variant) override
-	{
-		const T* r = std::get_if<T>(&variant);
-		if (!r) {
-			return false;
-		}
-		*static_cast<T*>(ptr) = *r;
-		return true;
-	}
-};
-
-
-class FuncDefinition final : public VariableDefinition {
-public:
-
-	FuncDefinition(DataGetFunc get, DataSetFunc set) : VariableDefinition(DataVariableType::Function), get(std::move(get)), set(std::move(set)) {}
-
-	bool Get(void* /*ptr*/, Variant& variant) override
-	{
-		if (!get)
-			return false;
-		get(variant);
-		return true;
-	}
-	bool Set(void* /*ptr*/, const Variant& variant) override
-	{
-		if (!set)
-			return false;
-		set(variant);
-		return true;
-	}
-private:
-	DataGetFunc get;
-	DataSetFunc set;
-};
 
 } // namespace Rml
 #endif

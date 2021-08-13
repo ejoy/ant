@@ -9,18 +9,16 @@ local viewidmgr = require "viewid_mgr"
 local mc 		= import_package "ant.math".constant
 local math3d	= require "math3d"
 local icamera	= world:interface "ant.camera|camera"
-local ilight	= world:interface "ant.render|light"
 local ishadow	= world:interface "ant.render|ishadow"
 local irender	= world:interface "ant.render|irender"
-
 local iom		= world:interface "ant.objcontroller|obj_motion"
-local irq		= world:interface "ant.render|irenderqueue"
+local ies		= world:interface "ant.scene|ientity_state"
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
 
 -- 	local csm = shadow.csm
 -- 	local csmindex = csm.index
--- 	local shadowcamera = world[shadow.camera_eid].camera
+-- 	local shadowcamera = world[shadow.camera_ref].camera
 -- 	local shadow_viewmatrix = mu.view_proj(shadowcamera)
 
 -- 	local bb_LS = get_frustum_points(view_camera, view_camera.frustum, shadow_viewmatrix, shadow.csm.split_ratios)
@@ -157,7 +155,7 @@ local function calc_shadow_camera(camera, frustum, lightdir, shadowmap_size, sta
 	local vp = math3d.mul(math3d.projmat(frustum), camera.viewmat)
 
 	local corners_WS = math3d.frustum_points(vp)
-	local camera_rc = world[sc_eid]._rendercache
+	local camera_rc = icamera.find_camera(sc_eid)
 	calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, camera_rc)
 end
 
@@ -167,11 +165,10 @@ local function update_shadow_camera(dl_eid, camera)
 	local viewfrustum = camera.frustum
 	local csmfrustums = ishadow.calc_split_frustums(viewfrustum)
 
-	for _, eid in world:each "csm" do
-		local e = world[eid]
-		local csm = e.csm
+	for qe in w:select "csm_queue camera_ref:in csm:in" do
+		local csm = qe.csm
 		local cf = csmfrustums[csm.index]
-		calc_shadow_camera(camera, cf, lightdir, setting.shadowmap_size, setting.stabilize, e.camera_eid)
+		calc_shadow_camera(camera, cf, lightdir, setting.shadowmap_size, setting.stabilize, qe.camera_ref)
 		csm.split_distance_VS = cf.f - viewfrustum.n
 	end
 end
@@ -179,8 +176,9 @@ end
 local sm = ecs.system "shadow_system"
 
 local function create_csm_entity(index, viewrect, fbidx, depth_type)
-	local cameraname = "csm" .. index
-	local cameraeid = icamera.create {
+	local csmname = "csm" .. index
+	local queuename = "csm_queue" .. index
+	local camera_ref = icamera.create {
 			updir 	= mc.YAXIS,
 			viewdir = mc.ZAXIS,
 			eyepos 	= mc.ZERO_PT,
@@ -188,13 +186,29 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 				l = -1, r = 1, t = -1, b = 1,
 				n = 1, f = 100, ortho = true,
 			},
-			name = cameraname
+			name = csmname
 		}
 
-	return world:create_entity {
+	w:register {name = queuename}
+
+	local filtertag = queuename .. "_opacity"
+	world:luaecs_create_entity{
+		policy = {
+			"ant.render|primitive_filter",
+		},
+		data = {
+			primitive_filter = {
+				filter_type = "cast_shadow",
+			},
+			[filtertag]	= true,
+		}
+	}
+
+	world:luaecs_create_entity {
 		policy = {
 			"ant.render|render_queue",
-			"ant.render|csm_policy",
+			"ant.render|cull",
+			"ant.render|csm_queue",
 			"ant.general|name",
 		},
 		data = {
@@ -202,13 +216,9 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 				index = index,
 				split_distance_VS = 0,
 			},
-			primitive_filter = {
-				filter_type = "cast_shadow",
-				update_type = "shadow",
-			},
-			camera_eid = cameraeid,
+			camera_ref = camera_ref,
 			render_target = {
-				viewid = viewidmgr.get(cameraname),
+				viewid = viewidmgr.get(csmname),
 				view_mode = "s",
 				view_rect = viewrect,
 				clear_state = {
@@ -219,8 +229,13 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 				},
 				fb_idx = fbidx,
 			},
+			filter_names = {filtertag},
+			cull_tag = {},
 			visible = false,
+			queue_name = queuename,
+			csm_queue = true,
 			name = "csm" .. index,
+			shadow_render_queue = {},
 		},
 	}
 end
@@ -237,57 +252,50 @@ function sm:init()
 	gpu_skinning_material = imaterial.load(originmatrial, {depth_type=dt, skinning="GPU"})
 	for ii=1, ishadow.split_num() do
 		local vr = {x=(ii-1)*s, y=0, w=s, h=s}
-		local eid = create_csm_entity(ii, vr, fbidx, dt)
-		irq.set_view_clear(eid, "D", nil, 1, nil, true)
+		create_csm_entity(ii, vr, fbidx, dt)
 	end
 end
 
 local viewcamera_changed_mb
-local viewcamera_trans_mb, viewcamera_frustum_mb
+local viewcamera_frustum_mb
 
-function sm:post_init()
-	local mq = world:singleton_entity "main_queue"
-	viewcamera_trans_mb = world:sub{"component_changed", "transform", mq.camera_eid}
-	viewcamera_frustum_mb = world:sub{"component_changed", "frusutm", mq.camera_eid}
-
-	viewcamera_changed_mb = world:sub{"component_changed", "viewcamera", mq.camera_eid}
-	world:pub{"component_changed", "viewcamera", mq.camera_eid}	--init shadowmap
+function sm:entity_init()
+	for e in w:select "INIT main_queue camera_ref:in" do
+		local camera_ref = e.camera_ref
+		viewcamera_frustum_mb = world:sub{"component_changed", "frusutm", camera_ref}
+		viewcamera_changed_mb = world:sub{"component_changed", "viewcamera", camera_ref}
+		world:pub{"component_changed", "viewcamera", camera_ref}	--init shadowmap
+	end
 end
 
 local dl_eid
 local create_light_mb = world:sub{"component_register", "make_shadow"}
 local remove_light
-local light_trans_mb
 
 local function set_csm_visible(enable)
-	for _, ceid in world:each "csm" do
-		world[ceid].visible = enable
-	end
-	for v in w:select "shadow_filter visible?out" do
+	for v in w:select "csm_queue visible?out" do
 		v.visible = enable
 	end
 end
 
-function sm:data_changed()
-	local function find_directional_light(eid)
-		local e = world[eid]
-		if e.light_type == "directional" and e.make_shadow then
-			if dl_eid then
-				log.warn("already has directional light for making shadow")
-			else
-				dl_eid = eid
-			end
-
-			return dl_eid
+local function find_directional_light(eid)
+	local e = world[eid]
+	if e and e.light_type == "directional" and e.make_shadow then
+		if dl_eid then
+			log.warn("already has directional light for making shadow")
+		else
+			dl_eid = eid
 		end
-	end
 
+		return dl_eid
+	end
+end
+
+function sm:data_changed()
 	for msg in create_light_mb:each() do
 		local eid = msg[3]
 		if find_directional_light(eid) then
 			remove_light = eid
-
-			light_trans_mb = world:sub{"component_changed", "transform", eid}
 			set_csm_visible(true)
 		end
 	end
@@ -302,45 +310,46 @@ function sm:data_changed()
 		end
 	end
 
-	for _, mb in ipairs{
-		viewcamera_trans_mb,
-		viewcamera_frustum_mb,
-	} do
-		for msg in mb:each() do
-			world:pub{"component_changed", "viewcamera", msg[3]}
-		end
+	for v in w:select "scene_changed main_queue eid:in" do
+		world:pub{"component_changed", "viewcamera", v.eid}
+	end
+
+	for msg in viewcamera_frustum_mb:each() do
+		world:pub{"component_changed", "viewcamera", msg[3]}
 	end
 end
 
-local function getMainQueueCamera()
-    for v in w:select "main_queue render_queue:in" do
-        local rq = v.render_queue
-        return w:object("camera_node", rq.camera_id)
-    end
+local function find_main_camera()
+	for v in w:select "main_queue camera_ref:in" do
+		return icamera.find_camera(v.camera_ref)
+	end
 end
 
 function sm:update_camera()
 	if dl_eid then
-		local c = getMainQueueCamera()
-	
 		local changed
-	
-		local mbs = {viewcamera_changed_mb}
-		if light_trans_mb then
-			mbs[#mbs+1] = light_trans_mb
-		end
-		for _, mb in ipairs(mbs) do
-			for _ in mb:each() do
+
+		for v in w:select "scene_changed eid:in" do
+			if find_directional_light(v.eid) then
 				changed = true
 			end
 		end
+
+		for _ in viewcamera_changed_mb:each() do
+			changed = true
+		end
 	
 		if changed then
-			update_shadow_camera(dl_eid, c)
+			local maincamrea = find_main_camera()
+			if maincamrea then
+				update_shadow_camera(dl_eid, maincamrea)
+			end
 		else
-			for _, eid in world:each "csm" do
-				local camera_eid = world[eid].camera_eid
-				update_camera_matrices(world[camera_eid]._rendercache)
+			for qe in w:select "csm_queue camera_ref:in" do
+				local camera = icamera.find_camera(qe.camera_ref)
+				if camera then
+					update_camera_matrices(camera)
+				end
 			end
 		end
 	end
@@ -349,9 +358,9 @@ end
 
 function sm:refine_camera()
 	-- local setting = ishadow.setting()
-	-- for _, eid in world:each "csm" do
+	-- for se in w:select "csm_queue filter_names:in"
 	-- 	local se = world[eid]
-	-- 	if se.visible then
+	-- assert(false && "should move code new ecs")
 	-- 		local filter = se.primitive_filter.result
 	-- 		local sceneaabb = math3d.aabb()
 	
@@ -364,11 +373,11 @@ function sm:refine_camera()
 	-- 			return sceneaabb
 	-- 		end
 	
-	-- 		sceneaabb = merge_scene_aabb(sceneaabb, filter.opaticy)
+	-- 		sceneaabb = merge_scene_aabb(sceneaabb, filter.opacity)
 	-- 		sceneaabb = merge_scene_aabb(sceneaabb, filter.translucent)
 	
 	-- 		if math3d.aabb_isvalid(sceneaabb) then
-	-- 			local camera_rc = world[se.camera_eid]._rendercache
+	-- 			local camera_rc = world[se.camera_ref]._rendercache
 	
 	-- 			local function calc_refine_frustum_corners(rc)
 	-- 				local frustm_points_WS = math3d.frustum_points(rc.viewprojmat)
@@ -398,7 +407,6 @@ function sm:refine_camera()
 	-- 			local lightdir = math3d.index(camera_rc.worldmat, 3)
 	-- 			calc_shadow_camera_from_corners(aabb_corners_WS, lightdir, setting.shadowmap_size, setting.stabilize, camera_rc)
 	-- 		end
-	-- 	end
 	-- end
 end
 
@@ -423,72 +431,23 @@ local omni_stencils = {
 }
 
 local s = ecs.system "shadow_primitive_system"
-local w = world.w
 
-local function sync_filter(rq)
-    local r = {}
-    for i = 1, #rq.layer_tag do
-        r[#r+1] = rq.layer_tag[i] .. "?out"
-    end
-    return table.concat(r, " ")
-end
-
-local function render_queue_update(v, rq)
-    local rc = v.render_object
-    local fx = rc.fx
-    local surfacetype = fx.setting.surfacetype
-    if not rq.layer[surfacetype] then
-        return
-    end
-    for i = 1, #rq.layer_tag do
-        v[rq.layer_tag[i]] = false
-    end
-    v[rq.tag.."_"..surfacetype] = true
-    w:sync(sync_filter(rq), v)
-end
-
-local function render_queue_del(v, rq)
-    for i = 1, #rq.layer_tag do
-        v[rq.layer_tag[i]] = false
-    end
-    v[rq.tag] = false
-    w:sync(sync_filter(rq), v)
-end
-
-function s:update_filter()
-    for v in w:select "render_object_update render_object:in eid:in filter_material:in" do
-        local rc = v.render_object
-        local state = rc.entity_state
-        for u in w:select "shadow_filter render_queue:in" do
-            local rq = u.render_queue
-            local add = ((state & rq.mask) ~= 0) and ((state & rq.exclude_mask) == 0)
-            if add then
-                render_queue_update(v, rq)
-				local e = world[v.eid]
-				local mat = which_material(v.eid)
-                v.filter_material[rq.tag] = {
-					fx = mat.fx,
-					properties = mat.properties or false,
-					state = irender.check_primitive_mode_state(rc.state, mat.state),
-					stencil = e.omni and omni_stencils[e.omni.stencil_ref] or mat.stencil,	--TODO: need merge with material setting
-				}
-            else
-                render_queue_del(v, rq)
-				v.filter_material[rq.tag] = nil
-            end
-        end
-    end
-end
-
-function s:render_submit()
-    for v in w:select "shadow_filter visible render_queue:in" do
-        local rq = v.render_queue
-        local viewid = rq.viewid
-        for i = 1, #rq.layer_tag do
-            for u in w:select(rq.layer_tag[i] .. " " .. rq.cull_tag .. ":absent  render_object:in filter_material:in") do
-                irender.draw(viewid, u.render_object, u.filter_material[rq.tag])
-            end
-        end
-		w:clear(rq.cull_tag)
-    end
+function s:end_filter()
+    for e in w:select "filter_result:in render_object:in eid:in filter_material:in" do
+        local rc = e.render_object
+		local m = which_material(e.eid)
+		local fm = e.filter_material
+		local fr = e.filter_result
+		for qe in w:select "csm_queue filter_names:in" do
+			for _, fn in ipairs(qe.filter_names) do
+				if fr[fn] then
+					fm[fn] = {
+						fx = m.fx,
+						properties = m.properties,
+						state = irender.check_primitive_mode_state(rc.state, m.state),
+					}
+				end
+			end
+		end
+	end
 end

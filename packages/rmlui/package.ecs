@@ -10,6 +10,7 @@ system "rmlui_system"
     .require_interface "ant.render|irenderqueue"
     .require_interface "ant.timer|itimer"
     .method "init"
+    .method "entity_init"
     .method "ui_update"
     .method "exit"
 

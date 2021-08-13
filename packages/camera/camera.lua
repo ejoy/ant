@@ -15,18 +15,16 @@ function cmm.process_entity(e)
     for k, v in pairs(e.frustum) do f[k] = v end
     rc.frustum = f
     rc.updir = math3d.ref(e.updir and math3d.vector(e.updir) or mc.YAXIS)
-
-    local lt = e.lock_target
-    if lt then
-        local nlt = {}
-        for k, v in pairs(lt) do
-            nlt[k] = v
-        end
-        rc.lock_target = nlt
-    end
 end
 
 local ic = ecs.interface "camera"
+
+local function find_camera(camera_ref)
+    w:sync("camera:in", camera_ref)
+    return camera_ref.camera
+end
+
+ic.find_camera = find_camera
 
 local defaultcamera = {
     eyepos  = {0, 0, 0, 1},
@@ -34,6 +32,33 @@ local defaultcamera = {
     frustum = default_comp.frustum(),
     name = "default_camera",
 }
+
+function ic.create_entity(eid, info)
+    info.updir = mc.YAXIS
+    local srt = math3d.ref(info.transform and math3d.matrix(info.transform) or mc.IDENTITY_MAT)
+    return world:luaecs_create_entity {
+        policy = {
+            "ant.general|name",
+            "ant.camera|camera",
+            "ant.scene|scene_object",
+        },
+        data = {
+            reference = true,
+            eid = eid,
+            camera = {
+                frustum = info.frustum,
+                clip_range = info.clip_range,
+                dof = info.dof,
+                srt = srt,
+            },
+            name = info.name or "DEFAULT_CAMERA",
+            scene = {
+                srt = srt,
+                updir = info.updir and math3d.ref(math3d.vector(info.updir)) or nil,
+            }
+        }
+    }
+end
 
 function ic.create(info)
     info = info or defaultcamera
@@ -49,52 +74,54 @@ function ic.create(info)
         end
     end
 
-    local policy = {
-        "ant.camera|camera",
-        "ant.general|name",
-    }
-
-    local dof = info.dof
-    if dof then
-        policy[#policy+1] = "ant.camera|dof"
-    end
-
     local viewmat = math3d.lookto(info.eyepos, info.viewdir, info.updir)
-    return world:create_entity {
-        policy = policy,
+    local srt = math3d.ref(math3d.matrix(math3d.inverse(viewmat)))
+    local eid = world:register_entity()
+    return world:luaecs_create_entity {
+        policy = {
+            "ant.general|name",
+            "ant.camera|camera",
+            "ant.scene|scene_object",
+        },
         data = {
-            name        = info.name or "DEFAULT_CAMERA",
-            transform   = math3d.ref(math3d.inverse(viewmat)),
-            updir       = info.updir,
-            lock_target = info.locktarget,
-            frustum     = frustum,
-            clip_range  = info.clip_range,
-            scene_entity= true,
-            camera      = true,
-            dof         = dof,
+            reference = true,
+            eid = eid,
+            camera = {
+                frustum = frustum,
+                clip_range = info.clip_range,
+                dof = info.dof,
+                srt = srt,
+            },
+            name = info.name or "DEFAULT_CAMERA",
+            scene = {
+                srt = srt,
+                updir = info.updir and math3d.ref(math3d.vector(info.updir)) or nil,
+            }
         }
     }
 end
 
-local function bind_queue(cameraeid, qeid)
-    irq.set_camera(qeid, cameraeid)
-    local vr = irq.view_rect(qeid)
-    ic.set_frustum_aspect(cameraeid, vr.w / vr.h)
+local function bind_queue(camera_ref, queuename)
+    irq.set_camera(queuename, camera_ref)
+end
+
+local function has_queue(qn)
+    for _ in w:select(qn) do
+        return true
+    end
 end
 
 function ic.bind(eid, which_queue)
-    local qeid = world:singleton_entity_id(which_queue)
-    if qeid == nil then
-        error(string.format("not find queue:%s", which_queue))
+    if not has_queue(which_queue) then
+        error(("not find queue:%s"):format(which_queue))
     end
 
-    bind_queue(eid, qeid)
+    bind_queue(eid, which_queue)
 end
 
-function ic.controller(eid, ceid)
-    local e = world[eid]
+function ic.controller(camera_ref, ceid)
+    local e = find_camera(camera_ref)
     local old_ceid = e.controller_eid
-
     if ceid == nil then
         return old_ceid
     end
@@ -105,12 +132,14 @@ end
 ic.bind_queue = bind_queue
 
 function ic.calc_viewmat(eid)
-    local rc = world[eid]._rendercache
-    return math3d.lookto(math3d.index(rc.srt, 4), math3d.index(rc.srt, 3), rc.updir)
+    --TODO
+    local iobj_motion = world:interface "ant.objcontroller|obj_motion"
+    return iobj_motion.calc_viewmat(eid)
 end
 
 function ic.calc_projmat(eid)
-    return math3d.projmat(world[eid]._rendercache.frustum)
+    local camera = find_camera(eid)
+    return math3d.projmat(camera.frustum)
 end
 
 local function view_proj(worldmat, updir, frustum)
@@ -120,36 +149,36 @@ local function view_proj(worldmat, updir, frustum)
 end
 
 function ic.calc_viewproj(eid)
-    local rc = world[eid]._rendercache
-    local _, _, vp = view_proj(rc.srt, rc.updir, rc.frustum)
+    local camera = find_camera(eid)
+    local _, _, vp = view_proj(camera.srt, camera.updir, camera.frustum)
     return vp
 end
 
 function ic.get_frustum(eid)
-    return world[eid]._rendercache.frustum
+    local camera = find_camera(eid)
+    if camera then
+        return camera.frustum
+    end
 end
 
 function ic.set_frustum(eid, frustum)
-    local rc = world[eid]._rendercache
-    rc.frustum = {}
-    for k, v in pairs(frustum) do rc.frustum[k] = v end
+    local camera = find_camera(eid)
+    camera.frustum = {}
+    for k, v in pairs(frustum) do
+        camera.frustum[k] = v
+    end
     world:pub {"component_changed", "frustum", eid}
 end
 
-function ic.set_updir(eid, updir)
-    world[eid]._rendercache.updir.v = updir
-    world:pub {"component_changed", "updir", eid}
-end
-
 local function frustum_changed(eid, name, value)
-    local e = world[eid]
-    local rc = e._rendercache
-    local f = rc.frustum
-
+    local camera = find_camera(eid)
+    if camera == nil then
+        return
+    end
+    local f = camera.frustum
     if f.ortho then
         error("ortho frustum can not set aspect")
     end
-    
     if f.aspect then
         f[name] = value
         world:pub {"component_changed", "frustum", eid}
@@ -166,12 +195,20 @@ function ic.set_frustum_fov(eid, fov)
     frustum_changed(eid, "fov", fov)
 end
 
+function ic.set_frustum_near(eid, n)
+    frustum_changed(eid, "n", n)
+end
+
+function ic.set_frustum_far(eid, f)
+    frustum_changed(eid, "f", f)
+end
+
 local iom = world:interface "ant.objcontroller|obj_motion"
 function ic.lookto(eid, ...)
     iom.lookto(eid, ...)
 end
 
-function ic.focus_obj(cameraeid, eid)
+function ic.focus_obj(camera_ref, eid)
     local fe = world[eid]
     local aabb = fe._rendercache.aabb
     if aabb then
@@ -181,7 +218,7 @@ function ic.focus_obj(cameraeid, eid)
         local viewdir = math3d.normalize(math3d.inverse(nviewdir))
 
         local pos = math3d.muladd(3, nviewdir, center)
-        iom.lookto(cameraeid, pos, viewdir)
+        iom.lookto(camera_ref, pos, viewdir)
     end
 end
 
@@ -212,31 +249,35 @@ end
 
 local cameraview_sys = ecs.system "camera_view_system"
 
-local function update_camera(v)
-    local rq = v.render_queue
-    local camera = w:object("camera_node", rq.camera_id)
-    local worldmat = camera.worldmat
-    camera.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), camera.updir)
-    camera.projmat = math3d.projmat(camera.frustum)
-    camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
+local function update_camera(camera_ref)
+    if camera_ref == nil then    --TODO: need remove
+        return
+    end
+    local camera = find_camera(camera_ref)
+    if camera then
+        local worldmat = camera.worldmat
+        camera.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), camera.updir)
+        camera.projmat = math3d.projmat(camera.frustum)
+        camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
+    end
 end
 
 function cameraview_sys:update_mainview_camera()
-    for v in w:select "main_queue render_queue:in" do
-        update_camera(v)
+    for v in w:select "main_queue camera_ref:in" do
+        update_camera(v.camera_ref)
     end
-    for v in w:select "blit_queue render_queue:in" do
-        update_camera(v)
+    for v in w:select "blit_queue camera_ref:in" do
+        update_camera(v.camera_ref)
     end
 end
 
 local bm = ecs.action "bind_camera"
 function bm.init(prefab, idx, value)
     local eid
-    if not value.camera_eid then
+    if not value.camera_ref then
         eid = prefab[idx]
     else
-        eid = prefab[idx][value.camera_eid]
+        eid = prefab[idx][value.camera_ref]
     end
     
     ic.bind(eid, value.which)

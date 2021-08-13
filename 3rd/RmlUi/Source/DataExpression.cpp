@@ -775,7 +775,7 @@ public:
 		std::string str;
 		for (size_t i = 0; i < program.size(); i++)
 		{
-			std::string instruction_str = GetVariant<std::string>(program[i].data);
+			std::string instruction_str = VariantHelper::Get<std::string>(program[i].data);
 			str += CreateString(50 + instruction_str.size(), "  %4zu  '%c'  %s\n", i, char(program[i].instruction), instruction_str.c_str());
 		}
 		return str;
@@ -814,7 +814,7 @@ private:
 			if (stack.empty())
 				return Error("Cannot pop stack, it is empty.");
 
-			Register reg = Register(GetVariant<int>(data, -1));
+			Register reg = Register(VariantHelper::Get<int>(data, -1));
 			switch (reg) {
 			case Register::R:  R = stack.top(); stack.pop(); break;
 			case Register::L:  L = stack.top(); stack.pop(); break;
@@ -831,7 +831,7 @@ private:
 		break;
 		case Instruction::Variable:
 		{
-			size_t variable_index = size_t(GetVariant<int>(data, -1));
+			size_t variable_index = size_t(VariantHelper::Get<int>(data, -1));
 			if (variable_index < addresses.size())
 				R = expression_interface.GetValue(addresses[variable_index]);
 			else
@@ -841,40 +841,40 @@ private:
 		case Instruction::Add:
 		{
 			if (AnyString(L, R))
-				R = Variant(GetVariant<std::string>(L) + GetVariant<std::string>(R));
+				R = Variant(VariantHelper::Get<std::string>(L) + VariantHelper::Get<std::string>(R));
 			else
-				R = Variant(GetVariant<float>(L) + GetVariant<float>(R));
+				R = Variant(VariantHelper::Get<float>(L) + VariantHelper::Get<float>(R));
 		}
 		break;
-		case Instruction::Subtract:  R = Variant(GetVariant<float>(L) - GetVariant<float>(R));  break;
-		case Instruction::Multiply:  R = Variant(GetVariant<float>(L) * GetVariant<float>(R));  break;
-		case Instruction::Divide:    R = Variant(GetVariant<float>(L) / GetVariant<float>(R));  break;
-		case Instruction::Not:       R = Variant(!GetVariant<bool>(R));                     break;
-		case Instruction::And:       R = Variant(GetVariant<bool>(L) && GetVariant<bool>(R));     break;
-		case Instruction::Or:        R = Variant(GetVariant<bool>(L) || GetVariant<bool>(R));     break;
-		case Instruction::Less:      R = Variant(GetVariant<float>(L) < GetVariant<float>(R));  break;
-		case Instruction::LessEq:    R = Variant(GetVariant<float>(L) <= GetVariant<float>(R)); break;
-		case Instruction::Greater:   R = Variant(GetVariant<float>(L) > GetVariant<float>(R));  break;
-		case Instruction::GreaterEq: R = Variant(GetVariant<float>(L) >= GetVariant<float>(R)); break;
+		case Instruction::Subtract:  R = Variant(VariantHelper::Get<float>(L) - VariantHelper::Get<float>(R));  break;
+		case Instruction::Multiply:  R = Variant(VariantHelper::Get<float>(L) * VariantHelper::Get<float>(R));  break;
+		case Instruction::Divide:    R = Variant(VariantHelper::Get<float>(L) / VariantHelper::Get<float>(R));  break;
+		case Instruction::Not:       R = Variant(!VariantHelper::Get<bool>(R));                     break;
+		case Instruction::And:       R = Variant(VariantHelper::Get<bool>(L) && VariantHelper::Get<bool>(R));     break;
+		case Instruction::Or:        R = Variant(VariantHelper::Get<bool>(L) || VariantHelper::Get<bool>(R));     break;
+		case Instruction::Less:      R = Variant(VariantHelper::Get<float>(L) < VariantHelper::Get<float>(R));  break;
+		case Instruction::LessEq:    R = Variant(VariantHelper::Get<float>(L) <= VariantHelper::Get<float>(R)); break;
+		case Instruction::Greater:   R = Variant(VariantHelper::Get<float>(L) > VariantHelper::Get<float>(R));  break;
+		case Instruction::GreaterEq: R = Variant(VariantHelper::Get<float>(L) >= VariantHelper::Get<float>(R)); break;
 		case Instruction::Equal:
 		{
 			if (AnyString(L, R))
-				R = Variant(GetVariant<std::string>(L) == GetVariant<std::string>(R));
+				R = Variant(VariantHelper::Get<std::string>(L) == VariantHelper::Get<std::string>(R));
 			else
-				R = Variant(GetVariant<float>(L) == GetVariant<float>(R));
+				R = Variant(VariantHelper::Get<float>(L) == VariantHelper::Get<float>(R));
 		}
 		break;
 		case Instruction::NotEqual:
 		{
 			if (AnyString(L, R))
-				R = Variant(GetVariant<std::string>(L) != GetVariant<std::string>(R));
+				R = Variant(VariantHelper::Get<std::string>(L) != VariantHelper::Get<std::string>(R));
 			else
-				R = Variant(GetVariant<float>(L) != GetVariant<float>(R));
+				R = Variant(VariantHelper::Get<float>(L) != VariantHelper::Get<float>(R));
 		}
 		break;
 		case Instruction::Ternary:
 		{
-			if (GetVariant<bool>(L))
+			if (VariantHelper::Get<bool>(L))
 				R = C;
 		}
 		break;
@@ -883,7 +883,7 @@ private:
 			if (!arguments.empty())
 				return Error("Argument stack is not empty.");
 
-			int num_arguments = GetVariant<int>(data, -1);
+			int num_arguments = VariantHelper::Get<int>(data, -1);
 			if (num_arguments < 0)
 				return Error("Invalid number of arguments.");
 			if (stack.size() < size_t(num_arguments))
@@ -899,14 +899,14 @@ private:
 		break;
 		case Instruction::EventFnc:
 		{
-			const std::string function_name = GetVariant<std::string>(data);
+			const std::string function_name = VariantHelper::Get<std::string>(data);
 
 			if (!expression_interface.EventCallback(function_name, arguments))
 			{
 				std::string arguments_str;
 				for (size_t i = 0; i < arguments.size(); i++)
 				{
-					arguments_str += GetVariant<std::string>(arguments[i]);
+					arguments_str += VariantHelper::Get<std::string>(arguments[i]);
 					if (i < arguments.size() - 1)
 						arguments_str += ", ";
 				}
@@ -918,7 +918,7 @@ private:
 		break;
 		case Instruction::Assign:
 		{
-			size_t variable_index = size_t(GetVariant<int>(data, -1));
+			size_t variable_index = size_t(VariantHelper::Get<int>(data, -1));
 			if (variable_index < addresses.size())
 			{
 				if (!expression_interface.SetValue(addresses[variable_index], R))
@@ -995,7 +995,7 @@ Variant DataExpressionInterface::GetValue(const DataAddress& address) const
 		auto& parameters = event->GetParameters();
 		auto it = parameters.find(address.back().name);
 		if (it != parameters.end()){
-			result = CopyVariant(it->second);
+			result = VariantHelper::Copy(it->second);
 		}
 	}
 	else if (data_model)

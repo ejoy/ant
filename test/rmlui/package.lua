@@ -11,6 +11,12 @@ return {
         },
         system = {
             "ant.test.rmlui|init_system",
+        },
+        policy_v2 = {
+            "ant.general|name",
+            "ant.scene|scene_object",
+            "ant.render|render",
+            "ant.render|render_queue",
         }
     }
 }

@@ -60,7 +60,7 @@ struct ComputedValues {
 	AnimationList animation;
 
 	EdgeInsets<Color> border_color;
-	CornerInsets<float> border_radius{};
+	CornerInsets<FloatValue> border_radius{};
 
 	Color background_color = Color(255, 255, 255, 0);
 };

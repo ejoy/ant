@@ -65,6 +65,7 @@ data:
   follow_joint: "mixamorig:LeftHand"
   name: slot1
   slot: true
+  scene_entity: true
   transform: {}
 policy:
   ant.general|name
@@ -96,6 +97,7 @@ data:
   follow_joint: "mixamorig:RightHand"
   name: slot2
   slot: true
+  scene_entity: true
   transform:
     r: {0, 0, 0, 1}
     s: {1, 1, 1}
@@ -115,6 +117,7 @@ data:
   radian: 0.7853981633974483
   range: 0
   state: 1
+  scene_entity: true
   transform:
     r: {0.03485451266169548, 0.8202439546585083, -0.34508469700813293, -0.45486438274383545}
     s: {1, 1, 1}

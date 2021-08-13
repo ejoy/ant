@@ -15,7 +15,8 @@ return {
             "tools.prefab_editor|input_system",
             "tools.prefab_editor|camera_system",
             "tools.prefab_editor|gui_system",
-            "tools.prefab_editor|physic_system"
+            "tools.prefab_editor|physic_system",
+            "tools.prefab_editor|grid_brush_system"
         }
     }
 }

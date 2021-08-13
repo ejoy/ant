@@ -43,6 +43,7 @@
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/StringUtilities.h"
 #include "../Include/RmlUi/EventSpecification.h"
+#include "../Include/RmlUi/EventListener.h"
 #include "DataModel.h"
 #include "ElementAnimation.h"
 #include "ElementBackgroundBorder.h"
@@ -63,36 +64,29 @@
 namespace Rml {
 
 struct ElementMeta {
-	ElementMeta(Element* el) : event_dispatcher(el), style(el) {}
-	EventDispatcher event_dispatcher;
+	ElementMeta(Element* el) : style(el) {}
 	ElementStyle style;
 	Style::ComputedValues computed_values;
 };
 
 Element::Element(Document* owner, const std::string& tag)
-	: owner_document(owner)
-	, tag(tag)
-	, dirty_perspective(false)
-	, dirty_animation(false)
-	, dirty_transition(false)
+	: tag(tag)
+	, owner_document(owner)
+	, meta(new ElementMeta(this))
 {
 	RMLUI_ASSERT(tag == StringUtilities::ToLower(tag));
-	parent = nullptr;
-	z_index = 0;
-	stacking_context_dirty = true;
-	structure_dirty = false;
-	meta = new ElementMeta(this);
-	data_model = nullptr;
 }
 
 Element::~Element() {
 	RMLUI_ASSERT(parent == nullptr);
 	//GetOwnerDocument()->OnElementDetach(this);
 	SetDataModel(nullptr);
-	for (ElementPtr& child : children) {
+	for (auto& child : children) {
 		child->SetParent(nullptr);
 	}
-	delete meta;
+	for (const auto& listener : listeners) {
+		listener->OnDetach(this);
+	}
 }
 
 void Element::Update() {
@@ -200,12 +194,9 @@ std::string Element::GetAddress(bool include_pseudo_classes, bool include_parent
 
 	if (include_pseudo_classes)
 	{
-		const PseudoClassList& pseudo_classes = meta->style.GetActivePseudoClasses();		
-		for (PseudoClassList::const_iterator i = pseudo_classes.begin(); i != pseudo_classes.end(); ++i)
-		{
-			address += ":";
-			address += (*i);
-		}
+		PseudoClassSet pseudo_classes = GetActivePseudoClasses();
+		if (pseudo_classes & PseudoClass::Active) { address += ":active"; }
+		if (pseudo_classes & PseudoClass::Hover) { address += ":hover"; }
 	}
 
 	if (include_parents && parent)
@@ -350,28 +341,17 @@ bool Element::Project(Point& point) const noexcept {
 	return false;
 }
 
-void Element::SetPseudoClass(const std::string& pseudo_class, bool activate)
+void Element::SetPseudoClass(PseudoClass pseudo_class, bool activate)
 {
 	meta->style.SetPseudoClass(pseudo_class, activate);
 }
 
-bool Element::IsPseudoClassSet(const std::string& pseudo_class) const
+bool Element::IsPseudoClassSet(PseudoClassSet pseudo_class) const
 {
 	return meta->style.IsPseudoClassSet(pseudo_class);
 }
 
-bool Element::ArePseudoClassesSet(const PseudoClassList& pseudo_classes) const
-{
-	for (PseudoClassList::const_iterator i = pseudo_classes.begin(); i != pseudo_classes.end(); ++i)
-	{
-		if (!IsPseudoClassSet(*i))
-			return false;
-	}
-
-	return true;
-}
-
-const PseudoClassList& Element::GetActivePseudoClasses() const
+PseudoClassSet Element::GetActivePseudoClasses() const
 {
 	return meta->style.GetActivePseudoClasses();
 }
@@ -482,24 +462,6 @@ void Element::SetInnerRML(const std::string& rml) {
 	//parser.Parse(stream.get());
 }
 
-void Element::AddEventListener(EventId id, EventListener* listener, bool in_capture_phase) {
-	meta->event_dispatcher.AttachEvent(id, listener, in_capture_phase);
-}
-
-void Element::RemoveEventListener(EventId id, EventListener* listener, bool in_capture_phase) {
-	meta->event_dispatcher.DetachEvent(id, listener, in_capture_phase);
-}
-
-bool Element::DispatchEvent(EventId id, const EventDictionary& parameters, bool interruptible, bool bubbles) {
-	const EventSpecification& specification = EventSpecificationInterface::Get(id);
-	return EventDispatcher::DispatchEvent(this, specification.id, parameters, interruptible, bubbles, specification.default_action_phase);
-}
-
-bool Element::DispatchEvent(EventId id, const EventDictionary& parameters) {
-	const EventSpecification& specification = EventSpecificationInterface::Get(id);
-	return EventDispatcher::DispatchEvent(this, specification.id, parameters, specification.interruptible, specification.bubbles, specification.default_action_phase);
-}
-
 Element* Element::AppendChild(ElementPtr child) {
 	RMLUI_ASSERT(child);
 	Element* child_ptr = child.get();
@@ -555,8 +517,6 @@ ElementPtr Element::RemoveChild(Element* child) {
 		// Add the element to the delete list
 		if (itr->get() == child)
 		{
-			Element* ancestor = child;
-
 			ElementPtr detached_child = std::move(*itr);
 			children.erase(itr);
 
@@ -715,10 +675,6 @@ void Element::QuerySelectorAll(ElementList& elements, const std::string& selecto
 	QuerySelectorAllMatchRecursive(elements, leaf_nodes, this);
 }
 
-EventDispatcher* Element::GetEventDispatcher() const {
-	return &meta->event_dispatcher;
-}
-
 DataModel* Element::GetDataModel() const {
 	return data_model;
 }
@@ -755,10 +711,9 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes)
 	{
 		if (pair.first.size() > 2 && pair.first[0] == 'o' && pair.first[1] == 'n')
 		{
-			EventListener* listener = Factory::InstanceEventListener(pair.second, this);
+			EventListener* listener = Factory::InstanceEventListener(this, pair.first.substr(2), pair.second, false);
 			if (listener) {
-				EventId id = EventSpecificationInterface::GetIdOrInsert(pair.first.substr(2));
-				AddEventListener(id, listener, false);
+				AddEventListener(listener);
 			}
 		}
 	}
@@ -843,6 +798,14 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 		changed_properties.Contains(PropertyId::TransformOriginZ))
 	{
 		DirtyTransform();
+		if (clip.type != Clip::Type::None) {
+			DirtyClip();
+		}
+	}
+
+	if (changed_properties.Contains(PropertyId::Overflow))
+	{
+		DirtyClip();
 	}
 
 	if (changed_properties.Contains(PropertyId::Animation))
@@ -865,19 +828,13 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 void Element::ProcessDefaultAction(Event& event) {
 	switch (event.GetId()) {
 	case EventId::Mouseover:
-		if (event.GetPhase() == EventPhase::Target) {
-			SetPseudoClass("hover", true);
-		}
+		SetPseudoClass(PseudoClass::Hover, true);
 		break;
 	case EventId::Mouseout:
-		if (event.GetPhase() == EventPhase::Target) {
-			SetPseudoClass("hover", false);
-		}
+		SetPseudoClass(PseudoClass::Hover, false);
 		break;
 	case EventId::Mousedown:
-		if (event.GetParameter<int>("button", 0) == (int)MouseButton::Left) {
-			SetPseudoClass("active", true);
-		}
+		SetPseudoClass(PseudoClass::Active, true);
 		break;
 	default:
 		break;
@@ -959,6 +916,7 @@ void Element::SetParent(Element* _parent) {
 
 	// The transform state may require recalculation.
 	DirtyTransform();
+	DirtyClip();
 	DirtyPerspective();
 
 	if (!parent)
@@ -993,10 +951,10 @@ void Element::SetParent(Element* _parent) {
 }
 
 void Element::UpdateStackingContext() {
-	if (!stacking_context_dirty) {
+	if (!dirty_stacking_context) {
 		return;
 	}
-	stacking_context_dirty = false;
+	dirty_stacking_context = false;
 	stacking_context.clear();
 	stacking_context.reserve(children.size());
 	for (auto& child : children) {
@@ -1010,16 +968,16 @@ void Element::UpdateStackingContext() {
 }
 
 void Element::DirtyStackingContext() {
-	stacking_context_dirty = true;
+	dirty_stacking_context = true;
 }
 
 void Element::DirtyStructure() {
-	structure_dirty = true;
+	dirty_structure = true;
 }
 
 void Element::UpdateStructure() {
-	if (structure_dirty) {
-		structure_dirty = false;
+	if (dirty_structure) {
+		dirty_structure = false;
 		GetStyle()->DirtyDefinition();
 	}
 }
@@ -1360,6 +1318,7 @@ void Element::UpdateGeometry() {
 void Element::UpdateLayout() {
 	if (Node::UpdateMetrics() && Node::IsVisible()) {
 		DirtyTransform();
+		DirtyClip();
 		dirty_background = true;
 		dirty_image = true;
 		dirty_border = true;
@@ -1394,18 +1353,58 @@ Element* Element::GetElementAtPoint(Point point, const Element* ignore_element) 
 	return nullptr;
 }
 
+static glm::u16vec4 UnionScissor(const glm::u16vec4& a, glm::u16vec4& b) {
+	auto x = std::max(a.x, b.x);
+	auto y = std::max(a.y, b.y);
+	auto mx = std::min(a.x+a.z, b.x+b.z);
+	auto my = std::min(a.y+a.w, b.y+b.w);
+	return {x, y, mx - x, my - y};
+}
+
+void Element::UnionClip(Clip& c) {
+	switch (clip.type) {
+	case Clip::Type::None:
+		return;
+	case Clip::Type::Shader:
+		c = clip;
+		return;
+	case Clip::Type::Scissor:
+		break;
+	}
+	switch (c.type) {
+	case Clip::Type::None:
+		c = clip;
+		return;
+	case Clip::Type::Shader:
+		c = clip;
+		return;
+	case Clip::Type::Scissor:
+		c.scissor = UnionScissor(c.scissor, clip.scissor);
+		return;
+	}
+}
+
 void Element::UpdateClip() {
 	if (!dirty_clip)
 		return;
 	dirty_clip = false;
+	for (auto& child : children) {
+		child->DirtyClip();
+	}
 
 	if (GetLayout().GetOverflow() == Layout::Overflow::Visible) {
-		clip_type = Clip::None;
+		clip.type = Clip::Type::None;
+		if (parent) {
+			parent->UnionClip(clip);
+		}
 		return;
 	}
 	Size size = GetMetrics().frame.size;
 	if (size.IsEmpty()) {
-		clip_type = Clip::None;
+		clip.type = Clip::Type::None;
+		if (parent) {
+			parent->UnionClip(clip);
+		}
 		return;
 	}
 	Rect scissorRect{ {}, size };
@@ -1424,33 +1423,80 @@ void Element::UpdateClip() {
 		&& corners[2].x == corners[1].x
 		&& corners[2].y == corners[3].y
 	) {
-		clip_type = Clip::Scissor;
+		clip.type = Clip::Type::Scissor;
 		clip.scissor.x = (glm::u16)std::floor(corners[0].x);
 		clip.scissor.y = (glm::u16)std::floor(corners[0].y);
 		clip.scissor.z = (glm::u16)std::ceil(corners[2].x - clip.scissor.x);
 		clip.scissor.w = (glm::u16)std::ceil(corners[2].y - clip.scissor.y);
-		return;
 	}
-	clip_type = Clip::Shader;
-	clip.shader[0].x = corners[0].x; clip.shader[0].y = corners[0].y;
-	clip.shader[0].z = corners[1].x; clip.shader[0].w = corners[1].y;
-	clip.shader[1].z = corners[2].x; clip.shader[1].w = corners[2].y;
-	clip.shader[1].x = corners[3].x; clip.shader[1].y = corners[3].y;
+	else {
+		clip.type = Clip::Type::Shader;
+		clip.shader[0].x = corners[0].x; clip.shader[0].y = corners[0].y;
+		clip.shader[0].z = corners[1].x; clip.shader[0].w = corners[1].y;
+		clip.shader[1].z = corners[2].x; clip.shader[1].w = corners[2].y;
+		clip.shader[1].x = corners[3].x; clip.shader[1].y = corners[3].y;
+	}
+
+	if (parent) {
+		parent->UnionClip(clip);
+	}
 }
 
 void Element::SetRednerStatus() {
 	auto render = GetRenderInterface();
 	render->SetTransform(transform);
-	switch (clip_type) {
-	case Clip::None:    render->SetClipRect();             break;
-	case Clip::Scissor: render->SetClipRect(clip.scissor); break;
-	case Clip::Shader:  render->SetClipRect(clip.shader);  break;
+	switch (clip.type) {
+	case Clip::Type::None:    render->SetClipRect();             break;
+	case Clip::Type::Scissor: render->SetClipRect(clip.scissor); break;
+	case Clip::Type::Shader:  render->SetClipRect(clip.shader);  break;
 	}
 }
 
 void Element::DirtyTransform() {
 	dirty_transform = true;
+}
+
+void Element::DirtyClip() {
 	dirty_clip = true;
+}
+
+void Element::AddEventListener(EventListener* listener) {
+	auto it = std::find(listeners.begin(), listeners.end(), listener);
+	if (it == listeners.end()) {
+		listeners.emplace(it, listener);
+	}
+}
+
+void Element::RemoveEventListener(EventListener* listener) {
+	auto it = std::find(listeners.begin(), listeners.end(), listener);
+	if (it != listeners.end()) {
+		listeners.erase(it);
+		listener->OnDetach(this);
+	}
+}
+
+bool Element::DispatchEvent(EventId id, const EventDictionary& parameters, bool interruptible, bool bubbles) {
+	Event event(this, id, parameters, interruptible);
+	return Rml::DispatchEvent(event, bubbles);
+}
+
+bool Element::DispatchEvent(EventId id, const EventDictionary& parameters) {
+	const EventSpecification& specification = EventSpecification::Get(id);
+	return DispatchEvent(specification.id, parameters, specification.interruptible, specification.bubbles);
+}
+
+void Element::RemoveAllEvents() {
+	for (const auto& listener : listeners) {
+		listener->OnDetach(this);
+	}
+	listeners.clear();
+	for (auto& child : children) {
+		child->RemoveAllEvents();
+	}
+}
+
+std::vector<EventListener*> const& Element::GetEventListeners() const {
+	return listeners;
 }
 
 } // namespace Rml

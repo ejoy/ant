@@ -42,23 +42,8 @@
 #include <set>
 #include <unordered_set>
 #include <variant>
-
 #include <cstdlib>
-
 #include "Traits.h"
-
-namespace Rml {
-
-// Commonly used basic types
-using byte = unsigned char;
-using ScriptObject = void*;
-using std::size_t;
-
-// Unicode code point
-enum class Character : char32_t { Null, Replacement = 0xfffd };
-
-}
-
 #include "Colour.h"
 #include "ObserverPtr.h"
 #include "Variant.h"
@@ -78,13 +63,11 @@ class PropertyIdSet;
 struct Animation;
 struct Transition;
 struct TransitionList;
-struct Rectangle;
 enum class EventId : uint16_t;
 enum class PropertyId : uint8_t;
 
 // Types for external interfaces.
 using FileHandle = uintptr_t;
-using TextureHandle = uintptr_t;
 using FontFaceHandle = uintptr_t;
 using TextEffectsHandle = uintptr_t;
 
@@ -98,7 +81,6 @@ using OwnedElementList = std::vector< ElementPtr >;
 using VariantList = std::vector< Variant >;
 using ElementAnimationList = std::vector< ElementAnimation >;
 
-using PseudoClassList = std::unordered_set< std::string >;
 using AttributeNameList = std::unordered_set< std::string >;
 using PropertyMap = std::unordered_map< PropertyId, Property >;
 
@@ -115,6 +97,20 @@ class DataView;
 using DataViewPtr = std::unique_ptr<DataView, Releaser<DataView>>;
 class DataController;
 using DataControllerPtr = std::unique_ptr<DataController, Releaser<DataController>>;
+
+enum class Character : char32_t { Null, Replacement = 0xfffd };
+
+typedef uint8_t PseudoClassSet;
+
+enum class PseudoClass : uint8_t {
+	Hover  = 0x01,
+	Active = 0x02,
+};
+
+inline PseudoClassSet operator| (PseudoClass a, PseudoClass b) { return (uint8_t)a | (uint8_t)b; }
+inline PseudoClassSet operator| (PseudoClassSet a, PseudoClass b) { return a | (uint8_t)b; }
+inline PseudoClassSet operator~ (PseudoClass a) { return ~(uint8_t)a; }
+inline PseudoClassSet operator& (PseudoClassSet a, PseudoClass b) { return a & (uint8_t)b; }
 
 struct Point {
 	float x{};

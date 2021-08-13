@@ -8,10 +8,15 @@ $output v_texcoord0, v_posWS, v_normal, v_tangent, v_bitangent
 
 void main()
 {
+#ifdef BAKING_LIGHTMAP
+	mat4 wm = u_model[0];
+#else //!BAKING_LIGHTMAP
 	mat4 wm = get_world_matrix();
+#endif //BAKING_LIGHTMAP
+
 	v_posWS = mul(wm, vec4(a_position, 1.0));
 	gl_Position   = mul(u_viewProj, v_posWS);
-#ifdef ENABLE_SHADOW
+#if !defined(BAKING_LIGHTMAP) &&	defined(ENABLE_SHADOW)
 	v_posWS.w = mul(u_view, v_posWS).z;
 #endif //ENABLE_SHADOW
 
