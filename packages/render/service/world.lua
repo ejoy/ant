@@ -30,20 +30,23 @@ local S = {}
 local config = initargs(packagename)
 local world
 local encoderBegin = false
+local quit
 
 local function Render()
 	while true do
-		if world then
-			world:pipeline_update()
-			bgfx.encoder_end()
-			encoderBegin = false
+		world:pipeline_update()
+		bgfx.encoder_end()
+		encoderBegin = false
+		do
 			--local _ <close> = world:cpu_stat "bgfx.frame"
 			rhwi.frame()
 		end
-		if world then
-			bgfx.encoder_begin()
-			encoderBegin = true
+		if quit then
+			ltask.wakeup(quit)
+			return
 		end
+		bgfx.encoder_begin()
+		encoderBegin = true
 		ltask.sleep(0)
 	end
 end
@@ -76,7 +79,10 @@ function S.init(nwh, context, width, height)
 
 	ltask.fork(Render)
 end
+
 function S.exit()
+	quit = {}
+	ltask.wait(quit)
 	if world then
 		world:pipeline_exit()
         world = nil
