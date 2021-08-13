@@ -150,7 +150,7 @@ function m:create_slot()
     --if not gizmo.target_eid then return end
     local auto_name = "empty" .. slot_entity_id
     local new_entity, temp = world:create_entity {
-        action = { mount = 0 },
+        --action = { mount = 0 },
         policy = {
             "ant.general|name",
             "ant.general|tag",
@@ -186,7 +186,7 @@ function m:create_collider(config)
     end
     
     local new_entity, temp = world:create_entity {
-        action = { mount = 0 },
+        --action = { mount = 0 },
         policy = {
             "ant.general|name",
             "ant.render|render",
@@ -258,7 +258,7 @@ function m:create(what, config)
             or config.type == "sphere"
             or config.type == "torus" then
             local new_entity, temp = world:create_entity {
-                action = { mount = 0 },
+                --action = { mount = 0 },
                 policy = {
                     "ant.render|render",
                     "ant.general|name",
