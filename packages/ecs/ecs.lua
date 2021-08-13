@@ -413,6 +413,51 @@ function world:interface(fullname)
 	return self._class.interface[fullname]
 end
 
+local function memstr(v)
+	for _, b in ipairs {"B","KB","MB","GB","TB"} do
+		if v < 1024 then
+			return ("%.3f%s"):format(v, b)
+		end
+		v = v / 1024
+	end
+end
+
+function world:memory(async)
+	local m = {
+		bgfx = require "bgfx".get_memory(),
+		imgui = require "imgui".memory(),
+		rp3d = require "rp3d.core".memory(),
+	}
+
+	if async then
+		local SERVICE_ROOT <const> = 1
+		local services = ltask.call(SERVICE_ROOT, "label")
+		local request = ltask.request()
+		for id in pairs(services) do
+			if id ~= 0 then
+				request:add { id, proto = "system", "memory" }
+			end
+		end
+		for req, resp in request:select() do
+			if resp then
+				local name = services[req[1]]
+				local memory = resp[1]
+				m["service-"..name] = memory
+			end
+		end
+	else
+		m.lua = collectgarbage "count" * 1024
+	end
+
+	local total = 0
+	for k, v in pairs(m) do
+		m[k] = memstr(v)
+		total = total + v
+	end
+	m.total = memstr(total)
+	return m
+end
+
 local m = {}
 
 function m.new_world(config)
