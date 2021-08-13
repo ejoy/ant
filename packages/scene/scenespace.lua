@@ -8,7 +8,10 @@ local math3d = require "math3d"
 local m = ecs.action "mount"
 function m.init(prefab, i, value)
 	local e = world[prefab[i]]
-    e.parent = prefab[value]
+	--TODO
+	if e then
+		e.parent = prefab[value]
+	end
 end
 
 local iss = ecs.interface "iscenespace"
@@ -140,7 +143,7 @@ function s:entity_init()
 		local scene = v.scene
 		v.scene_id = world:luaecs_create_ref {
 			scene_node = scene,
-			INIT = true,
+			initializing = true,
 		}
 		if scene._self then
 			hashmap[scene._self] = v.scene_id
@@ -173,7 +176,7 @@ function s:entity_init()
 
 	if needsync then
 		sync_scene_node()
-		for v in w:select "scene_sorted INIT scene_node:in" do
+		for v in w:select "scene_sorted initializing scene_node:in" do
 			local node = v.scene_node
 			local eid = node._self
 			if eid then
@@ -185,6 +188,7 @@ function s:entity_init()
 				node._self = nil
 			end
 		end
+		w:clear "initializing"
 	end
 end
 

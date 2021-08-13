@@ -21,3 +21,5 @@ system "entity_state_system"
     .method "entity_init"
 
 component_v2 "widget_entity"
+
+component_v2 "initializing"
