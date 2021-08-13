@@ -118,6 +118,7 @@ end
 
 do
     local thread = require "thread"
+    thread.newchannel "Bgfx"
     local bgfx_req = thread.channel_consume "Bgfx"
     local function request(ok, threadid, cmd, ...)
         if not ok then
@@ -145,6 +146,7 @@ end
         local thread = require "thread"
         local threadid = thread.id
         local bgfx_req = thread.channel_produce "Bgfx"
+        thread.newchannel ("Bgfx-" .. threadid)
         local bgfx_resp = thread.channel_consume ("Bgfx-" .. threadid)
         local function call_bgfx(what, ...)
             bgfx_req(threadid, what, ...)
