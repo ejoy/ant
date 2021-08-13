@@ -556,7 +556,7 @@ linit(lua_State *L) {
 	init.resolution.maxFrameLatency = 0;
 
 	init.limits.maxEncoders     = 8;	// BGFX_CONFIG_DEFAULT_MAX_ENCODERS;
-	init.limits.minResourceCbSize = (64<<10); // BGFX_CONFIG_MIN_RESOURCE_COMMAND_BUFFER_SIZE
+	init.limits.minResourceCbSize = (64<<10); // BGFX_CONFIG_MIN_RESOURCE_setter_buffer_SIZE
 	init.limits.transientVbSize = (6<<20);	// BGFX_CONFIG_TRANSIENT_VERTEX_BUFFER_SIZE
 	init.limits.transientIbSize = (2<<20);	// BGFX_CONFIG_TRANSIENT_INDEX_BUFFER_SIZE;
 
@@ -3831,15 +3831,6 @@ lsetName(lua_State *L) {
 	return 0;
 }
 
-static uint32_t
-texture_sampler_flags(lua_State *L, uint64_t flags) {
-	uint32_t sampler = (uint32_t)flags;
-	if (sampler != flags) {
-		luaL_error(L, "Invalid sampler flags");
-	}
-	return sampler;
-}
-
 ENCODER_API(lsetTexture) {
 	int stage = luaL_checkinteger(L, 1);
 	int uid = luaL_checkinteger(L, 2);
@@ -3848,15 +3839,19 @@ ENCODER_API(lsetTexture) {
 		return luaL_error(L, "The uniform is not a sampler");
 	}
 	uint16_t texture_id = BGFX_LUAHANDLE_ID(TEXTURE, luaL_checkinteger(L, 3));
-	uint64_t flags = UINT32_MAX;
+	uint32_t flags = UINT32_MAX;
 	if (!lua_isnoneornil(L, 4)) {
 		const char * f = lua_tostring(L, 4);
-		flags = get_texture_flags(L, f);
+		uint64_t ret = get_texture_flags(L, f);
+		flags = (uint32_t)ret;
+		if (ret != flags) {
+			return luaL_error(L, "Invalid sampler flags %s", f);
+		}
 	}
 	bgfx_uniform_handle_t uh = {uniform_id};
 	bgfx_texture_handle_t th = {texture_id};
 
-	BGFX_ENCODER(set_texture, encoder, stage, uh, th, texture_sampler_flags(L, flags));
+	BGFX_ENCODER(set_texture, encoder, stage, uh, th, flags);
 
 	return 0;
 }
@@ -4792,6 +4787,243 @@ lgetLog(lua_State *L) {
 	return 1;
 }
 
+#define SET_UNIFORM 0
+#define SET_TEXTURE 1
+#define SET_BUFFER 2
+
+#define SETTER_HEADER uint8_t type;
+
+struct setter_header {
+	SETTER_HEADER
+};
+
+// cache set_uniform/set_texture/set_buffer
+struct setter_uniform {
+	SETTER_HEADER
+	uint8_t size;
+	uint16_t handle;
+	int number;
+	float value[1];
+};
+
+static int
+lcommand_set_uniform_(lua_State *L, uint16_t handle, int size) {
+	int number = lua_gettop(L) - 1;
+	luaL_Buffer b;
+	size_t sz = sizeof(struct setter_uniform) + sizeof(float) * (size * number - 1);
+	struct setter_uniform * cmd = (struct setter_uniform *)luaL_buffinitsize(L, &b, sz);
+	cmd->type = SET_UNIFORM;
+	cmd->size = size;
+	cmd->number = number;
+	cmd->handle = handle;
+
+	int i,j;
+	int t = lua_type(L, 2);	// the first value type
+	switch(t) {
+	case LUA_TTABLE: {
+		// vector or matrix
+		for (i=0;i<number;i++) {
+			luaL_checktype(L, 2+i, LUA_TTABLE);
+			for (j=0;j<size;j++) {
+				if (lua_geti(L, 2+i, j+1) != LUA_TNUMBER) {
+					return luaL_error(L, "[%d,%d] should be number", i+2,j+1);
+				}
+				cmd->value[i*size+j] = lua_tonumber(L, -1);
+				lua_pop(L, 1);
+			}
+		}
+		break;
+	}
+	case LUA_TUSERDATA:
+	case LUA_TLIGHTUSERDATA:
+		// vector or matrix
+		for (i=0;i<number;i++) {
+			void * ud = lua_touserdata(L, 2+i);
+			if (ud == NULL) {
+				return luaL_error(L, "Uniform need userdata at index %d", i+2);
+			}
+			memcpy(cmd->value + i * size, ud, size*sizeof(float));
+		}
+		break;
+	default:
+		return luaL_error(L, "Invalid value type : %s", lua_typename(L, t));
+	}
+	luaL_addsize(&b, sz);
+	luaL_pushresult(&b);
+	return 1;
+}
+
+static int
+lsetUniformCommand(lua_State *L) {
+	int id = luaL_checkinteger(L, 1);
+	uint16_t uniformid = BGFX_LUAHANDLE_ID(UNIFORM, id);
+	int sz = uniform_size(L, id);
+	return lcommand_set_uniform_(L, uniformid, sz);
+}
+
+static int
+lsetUniformVectorCommand(lua_State *L) {
+	int id = luaL_checkinteger(L, 1);
+	uint16_t uniformid = BGFX_LUAHANDLE_ID(UNIFORM, id);
+	int sz = uniform_size(L, id);
+	if (sz != 4) {
+		return luaL_error(L, "Need a vector");
+	}
+	return lcommand_set_uniform_(L, uniformid, sz);
+}
+
+static int
+lsetUniformMatrixCommand(lua_State *L) {
+	int id = luaL_checkinteger(L, 1);
+	uint16_t uniformid = BGFX_LUAHANDLE_ID(UNIFORM, id);
+	int sz = uniform_size(L, id);
+	if (sz <= 4) {
+		return luaL_error(L, "Need a matrix");
+	}
+	return lcommand_set_uniform_(L, uniformid, sz);
+}
+
+struct setter_texture {
+	SETTER_HEADER
+	uint8_t stage;
+	uint16_t uhandle;
+	uint16_t texture;
+	uint32_t flags;
+};
+
+static int
+lsetTextureCommand(lua_State *L) {
+	int stage = luaL_checkinteger(L, 1);
+	int uid = luaL_checkinteger(L, 2);
+	uint16_t uniform_id = BGFX_LUAHANDLE_ID(UNIFORM, uid);
+	if (BGFX_LUAHANDLE_SUBTYPE(uid) != BGFX_UNIFORM_TYPE_SAMPLER) {
+		return luaL_error(L, "The uniform is not a sampler");
+	}
+	uint16_t texture_id = BGFX_LUAHANDLE_ID(TEXTURE, luaL_checkinteger(L, 3));
+	uint32_t flags = UINT32_MAX;
+	if (!lua_isnoneornil(L, 4)) {
+		const char * f = lua_tostring(L, 4);
+		uint64_t ret = get_texture_flags(L, f);
+		flags = (uint32_t)ret;
+		if (ret != flags) {
+			return luaL_error(L, "Invalid set texture flags %s", f);
+		}
+	}
+	struct setter_texture buf;
+	buf.type = SET_TEXTURE;
+	buf.stage = stage;
+	buf.uhandle = uniform_id;
+	buf.texture = texture_id;
+	buf.flags = flags;
+	lua_pushlstring(L, (const char *)&buf, sizeof(buf));
+	return 1;
+}
+
+struct setter_buffer {
+	SETTER_HEADER
+	uint8_t stage;
+	uint8_t subtype;
+	uint8_t access;
+	uint16_t handle;
+};
+
+static int
+lsetBufferCommand(lua_State *L) {
+	struct setter_buffer cmd;
+	cmd.type = SET_BUFFER;
+	cmd.stage = (uint8_t)luaL_checkinteger(L, 1);
+	int idx = luaL_checkinteger(L, 2);
+	cmd.subtype = (uint8_t)(idx >> 16);
+	cmd.handle = (uint16_t)(idx & 0xffff);
+	const char * access = luaL_checkstring(L, 3);
+	cmd.access = (uint8_t)access_string(L, access);
+	lua_pushlstring(L, (const char *)&cmd, sizeof(cmd));
+	return 1;
+}
+
+static const char *
+execute_set_uniform(bgfx_encoder_t * encoder, const char *command) {
+	struct setter_uniform *cmd = (struct setter_uniform *)command;
+	bgfx_uniform_handle_t uh = { cmd->handle };
+	BGFX_ENCODER(set_uniform, encoder, uh, cmd->value, cmd->number);
+	size_t sz = sizeof(*cmd) + sizeof(float) * (cmd->size * cmd->number - 1);
+	return command + sz;
+}
+
+static const char *
+execute_set_texture(bgfx_encoder_t * encoder, const char *command) {
+	struct setter_texture *cmd = (struct setter_texture *)command;
+	bgfx_uniform_handle_t uh = {cmd->uhandle};
+	bgfx_texture_handle_t th = {cmd->texture};
+
+	BGFX_ENCODER(set_texture, encoder, cmd->stage, uh, th, cmd->flags);
+	return command + sizeof(*cmd);
+}
+
+static const char *
+execute_set_buffer(bgfx_encoder_t * encoder, const char *command) {
+	struct setter_buffer *cmd = (struct setter_buffer *)command;
+	switch(cmd->subtype) {
+	case BGFX_HANDLE_VERTEX_BUFFER: {
+		bgfx_vertex_buffer_handle_t handle = { cmd->handle };
+		BGFX_ENCODER(set_compute_vertex_buffer, encoder, cmd->stage, handle, (bgfx_access_t)cmd->access);
+		break;
+	}
+	case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS:
+	case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER: {
+		bgfx_dynamic_vertex_buffer_handle_t handle = { cmd->handle };
+		BGFX_ENCODER(set_compute_dynamic_vertex_buffer, encoder, cmd->stage, handle, (bgfx_access_t)cmd->access);
+		break;
+	}
+	case BGFX_HANDLE_INDEX_BUFFER: {
+		bgfx_index_buffer_handle_t handle = { cmd->handle };
+		BGFX_ENCODER(set_compute_index_buffer, encoder, cmd->stage, handle, (bgfx_access_t)cmd->access);
+		break;
+	}
+	case BGFX_HANDLE_DYNAMIC_INDEX_BUFFER_32:
+	case BGFX_HANDLE_DYNAMIC_INDEX_BUFFER: {
+		bgfx_dynamic_index_buffer_handle_t handle = { cmd->handle };
+		BGFX_ENCODER(set_compute_dynamic_index_buffer, encoder, cmd->stage, handle, (bgfx_access_t)cmd->access);
+		break;
+	}
+	case BGFX_HANDLE_INDIRECT_BUFFER: {
+		bgfx_indirect_buffer_handle_t handle = { cmd->handle };
+		BGFX_ENCODER(set_compute_indirect_buffer, encoder, cmd->stage, handle, (bgfx_access_t)cmd->access);
+		break;
+	}
+	}
+	return command + sizeof(*cmd);
+}
+
+static const char *
+execute_(lua_State *L, bgfx_encoder_t * encoder, const char *command) {
+	const struct setter_header * uc = (const struct setter_header *)command;
+	switch (uc->type) {
+	case SET_UNIFORM:
+		command = execute_set_uniform(encoder, command);
+		break;
+	case SET_TEXTURE:
+		command = execute_set_texture(encoder, command);
+		break;
+	case SET_BUFFER:
+		command = execute_set_buffer(encoder, command);
+		break;
+	default:
+		luaL_error(L, "Invalid setter command %d", uc->type);
+	}
+	return command;
+}
+
+ENCODER_API(lexecuteSetter) {
+	size_t sz;
+	const char * command = luaL_checklstring(L, 1, &sz);
+	const char * end_ptr = command + sz;
+	while (command < end_ptr) {
+		command = execute_(L, encoder, command);
+	}
+	return 0;
+}
+
 static int
 lbeginEncoder(lua_State *L) {
 	if (lua_rawgetp(L, LUA_REGISTRYINDEX, ENCODER) != LUA_TUSERDATA) {
@@ -4844,6 +5076,7 @@ linitEncoder(lua_State *L) {
 		{ "set_instance_count", lsetInstanceCount_encoder },
 		{ "submit_indirect", lsubmitIndirect_encoder },
 		{ "set_image", lsetImage_encoder },
+		{ "execute_setter", lexecuteSetter_encoder },
 
 		{ NULL, NULL },
 	};
@@ -4998,7 +5231,13 @@ luaopen_bgfx(lua_State *L) {
 		{ "update", lupdate },
 		{ "update_texture2d", lupdateTexture2D },
 		{ "update_texturecube", lupdateTextureCube},
-	
+
+		{ "set_uniform_command", lsetUniformCommand },
+		{ "set_uniform_matrix_command", lsetUniformMatrixCommand },
+		{ "set_uniform_vector_command", lsetUniformVectorCommand },
+		{ "set_texture_command", lsetTextureCommand },
+		{ "set_buffer_command", lsetBufferCommand },
+
 		// encoder apis
 		{ "touch", ltouch },
 		{ "submit", lsubmit },
@@ -5025,6 +5264,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "set_instance_count", lsetInstanceCount },
 		{ "submit_indirect", lsubmitIndirect },
 		{ "set_image", lsetImage },
+		{ "execute_setter", lexecuteSetter },
 
 		{ "encoder_begin", lbeginEncoder },
 		{ "encoder_end", lendEncoder },
