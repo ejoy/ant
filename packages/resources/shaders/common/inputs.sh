@@ -4,7 +4,7 @@
 #error "input.sh file should define before bgfx_shader.sh"
 #endif //BGFX_SHADER_H_HEADER_GUARD
 
-#define BGFX_CONFIG_MAX_BONES 128
+#define BGFX_CONFIG_MAX_BONES 256
 #define DEFAULT_SKINNING_INPUTS $input a_position, a_indices, a_weight
 
 #else //!GPU_SKINNING
