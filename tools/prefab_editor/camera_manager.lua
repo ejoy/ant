@@ -58,8 +58,8 @@ function m.set_frustum_fov(camera_ref, fov)
 end
 
 function m.update_frustrum(cam_eid)
-    if not cam_eid or not world[cam_eid].camera then return end
-
+    --if not cam_eid or not world[cam_eid].camera then return end
+    if not cam_eid then return end
     if not m.camera_list[cam_eid] then
         m.camera_list[cam_eid] = { camera_ref = cam_eid, target = -1, dist_to_target = 5 }
     end
@@ -218,9 +218,10 @@ function m.play_recorder(eid)
 end
 
 function m.get_recorder_frames(eid)
-    local recorder_eid = m.camera_list[eid].recorder
-    if not recorder_eid then return {} end
-    return world[recorder_eid].frames
+    return {}
+    -- local recorder_eid = m.camera_list[eid].recorder
+    -- if not recorder_eid then return {} end
+    -- return world[recorder_eid].frames
 end
 
 local function do_remove_camera(cam)

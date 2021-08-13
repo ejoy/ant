@@ -134,7 +134,8 @@ function CameraView:on_get_fov()
     if #self.frames > 0 then
         return self.frames[self.current_frame].fov
     else
-        return world[self.eid].frustum.fov
+        local e = icamera.find_camera(self.eid)
+        return e.frustum.fov
     end
 end
 function CameraView:on_set_near(value)
@@ -150,7 +151,8 @@ function CameraView:on_get_near()
     if #self.frames > 0 then
         return self.frames[self.current_frame].n or 1
     else
-        return world[self.eid].frustum.n or 1
+        local e = icamera.find_camera(self.eid)
+        return e.frustum.n or 1
     end
 end
 function CameraView:on_set_far(value)
@@ -166,7 +168,8 @@ function CameraView:on_get_far()
     if #self.frames > 0 then
         return self.frames[self.current_frame].f or 100
     else
-        return world[self.eid].frustum.f
+        local e = icamera.find_camera(self.eid)
+        return e.frustum.f
     end
 end
 function CameraView:update()
