@@ -15,9 +15,9 @@ end
 
 function EffectView:set_model(eid)
     if not BaseView.set_model(self, eid) then return false end
-    if world[eid].effect_instance then
+    if world[eid].effekseer and world[eid].effekseer.effect_instance then
         --local tp = hierarchy:get_template(eid)
-        self.speed:set_getter(function() return world[eid].effect_instance.speed end)
+        self.speed:set_getter(function() return world[eid].effekseer.effect_instance.speed end)
         self.speed:set_setter(function(v) self:on_set_speed(v) end)
     end
     self:update()
@@ -27,8 +27,8 @@ end
 function EffectView:update()
     BaseView.update(self)
     self.speed:update()
-    ui_auto_play[1] = world[self.eid].effect_instance.auto_play
-    ui_loop[1] = world[self.eid].effect_instance.loop
+    ui_auto_play[1] = world[self.eid].effekseer.effect_instance.auto_play
+    ui_loop[1] = world[self.eid].effekseer.effect_instance.loop
 end
 
 function EffectView:show()
@@ -45,17 +45,17 @@ function EffectView:show()
 end
 
 function EffectView:on_set_speed(value)
-    local instance = world[self.eid].effect_instance
+    local instance = world[self.eid].effekseer.effect_instance
     instance.speed = value
     effekseer.set_speed(instance.handle, value)
 end
 
 function EffectView:on_set_auto_play(value)
-    world[self.eid].effect_instance.auto_play = value
+    world[self.eid].effekseer.effect_instance.auto_play = value
 end
 
 function EffectView:on_set_loop(value)
-    local instance = world[self.eid].effect_instance
+    local instance = world[self.eid].effekseer.effect_instance
     instance.loop = value
     effekseer.set_loop(instance.handle, value)
 end

@@ -4,10 +4,10 @@ local hierarchy = require "hierarchy"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local uiproperty = require "widget.uiproperty"
+local brush_def = require "brush_def"
 local world
 local prefab_mgr
 local m = {}
-
 local interp_type = {"linear", "const"}
 local current_emitter_eid
 
@@ -148,10 +148,23 @@ local grid_col_ui = {2, speed = 1, min = 2, max = 1000}
 local brush_color_ui = {1.0, 1.0, 1.0, 0.5}
 local visible_ui = {true}
 local current_grid
-
+local current_label = "default"
+local current_color = {1.0, 1.0, 1.0, 0.5}
 function m.set_grid(grid)
     current_grid = grid
+    current_grid.brush = brush_def.color
     visible_ui[1] = grid.visible
+end
+
+local function colori2f(ic)
+    return {((ic & 0xFF000000) >> 24) / 255.0, ((ic & 0x00FF0000) >> 16) / 255.0, ((ic & 0x0000FF00) >> 8) / 255.0, (ic & 0xFF) / 255.0 }
+end
+
+local function update_color()
+    brush_color_ui[1] = current_color[1]
+    brush_color_ui[2] = current_color[2]
+    brush_color_ui[3] = current_color[3]
+    brush_color_ui[4] = current_color[4]
 end
 
 function m.show()
@@ -209,11 +222,28 @@ function m.show()
             if imgui.widget.Checkbox("##Show", visible_ui) then
                 current_grid:show(visible_ui[1])
             end
-            local color_label = "BrushColor"
-            imgui.widget.PropertyLabel(color_label)
-            if imgui.widget.ColorEdit("##"..color_label, brush_color_ui) then
-                world:pub {"GridMesh", "brushcolor", brush_color_ui[1], brush_color_ui[2], brush_color_ui[3], brush_color_ui[4]}
+            
+            imgui.widget.PropertyLabel("Brush")
+            if imgui.widget.BeginCombo("##Brush", {current_label, flags = imgui.flags.Combo {}}) then
+                for index, label in ipairs(brush_def.label) do
+                    if imgui.widget.Selectable(label, current_label == label) then
+                        current_label = label
+                        local color = brush_def.color[index]
+                        world:pub {"GridMesh", "brushcolor", index, color}
+                        current_color = colori2f(color)
+                        update_color()
+                    end
+                end
+                imgui.widget.EndCombo()
             end
+
+            local color_label = "BrushColor"
+            --imgui.widget.PropertyLabel(color_label)
+            if imgui.widget.ColorEdit("##"..color_label, brush_color_ui) then
+                update_color()
+                --world:pub {"GridMesh", "brushcolor", brush_color_ui[1], brush_color_ui[2], brush_color_ui[3], brush_color_ui[4]}
+            end
+
             if current_grid.data then
                 if imgui.widget.Button("Save") then
                     current_grid:save(current_grid.filename)
