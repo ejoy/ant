@@ -46,7 +46,7 @@ function s:luaecs_sync()
 			goto continue
 		end
 		local policy = {}
-		local data = { eid = eid, INIT = true }
+		local data = { eid = eid }
 		local rc = e._rendercache
 		do
 			local parent

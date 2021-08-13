@@ -24,7 +24,7 @@ local time_callback
 local ie_t = ecs.transform "instance_effect"
 
 function ie_t.process_entity(e)
-    e.effect_instance = {
+    e.effekseer.effect_instance = {
         handle 		= effekseer.create(e.effekseer.rawdata, e.effekseer.filedir),
         speed 		= e.speed,
         auto_play 	= e.auto_play,
@@ -103,7 +103,7 @@ end
 local iplay = ecs.interface "effekseer_playback"
 
 function iplay.play(eid, loop)
-    local eh = world[eid].effect_instance.handle
+    local eh = world[eid].effekseer.effect_instance.handle
     if effekseer.is_playing(eh) then return end
     --effekseer.set_speed(eh, speed or 1.0)
     local lp = loop or false
@@ -113,23 +113,23 @@ function iplay.play(eid, loop)
 end
 
 function iplay.is_playing(eid)
-    local eh = world[eid].effect_instance.handle
+    local eh = world[eid].effekseer.effect_instance.handle
     return effekseer.is_playing(eh)
 end
 
 function iplay.pause(eid, b)
-    local eh = world[eid].effect_instance.handle
+    local eh = world[eid].effekseer.effect_instance.handle
     effekseer.pause(eh, b)
 end
 
 function iplay.set_time(eid, second)
-    local eh = world[eid].effect_instance.handle
+    local eh = world[eid].effekseer.effect_instance.handle
     local frame = math.floor(second * 60)
     effekseer.set_time(eh, frame)
 end
 
 function iplay.set_speed(eid, speed)
-    local eh = world[eid].effect_instance.handle
+    local eh = world[eid].effekseer.effect_instance.handle
     world[eid].speed = speed
     effekseer.set_speed(eh, speed)
 end
@@ -173,7 +173,7 @@ end
 
 function effekseer_sys:follow_transform_updated()
     for _, eid in event_entity_register:unpack() do
-        local effect = world[eid].effect_instance
+        local effect = world[eid].effekseer and world[eid].effekseer.effect_instance or nil
         if effect then
             if effect.auto_play then
                 effekseer.set_loop(effect.handle, effect.loop)
@@ -184,15 +184,15 @@ function effekseer_sys:follow_transform_updated()
 
     for v in w:select "effekseer:in scene_node(scene_id):in" do
         local node = v.scene_node
-        effekseer.update_transform(v.effect_instance.handle, node._worldmat)
+        effekseer.update_transform(v.effekseer.effect_instance.handle, node._worldmat)
     end
 end
 
 function effekseer_sys:end_frame()
     for _, eid in world:each "removed" do
         local e = world[eid]
-        if e.effect_instance then
-            effekseer.destroy(e.effect_instance.handle)
+        if e.effekseer and e.effekseer.effect_instance then
+            effekseer.destroy(e.effekseer.effect_instance.handle)
         end
     end
 end

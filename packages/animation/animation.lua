@@ -60,7 +60,7 @@ local function process_keyframe_event(task)
 				if not event.effect and event.asset_path ~= "" then
 					event.effect = world:prefab_instance(event.asset_path)
 					local eeid = world:prefab_event(event.effect, "get_eid", "root")
-					local effect = world[eeid].effect_instance
+					local effect = world[eeid].effekseer.effect_instance
 					if effect then
 						effect.auto_play = false
 					end
