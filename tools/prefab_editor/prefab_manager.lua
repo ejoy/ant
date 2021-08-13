@@ -28,6 +28,8 @@ local aabb_color_i <const> = 0x6060ffff
 local aabb_color <const> = {1.0, 0.38, 0.38, 1.0}
 local highlight_aabb_eid
 function m:update_current_aabb(eid)
+    if type(eid) == "table" then return end
+
     if not highlight_aabb_eid then
         highlight_aabb_eid = geo_utils.create_dynamic_aabb({}, "highlight_aabb")
         imaterial.set_property(highlight_aabb_eid, "u_color", aabb_color)
@@ -502,6 +504,18 @@ function m:reset_prefab()
     world:pub {"WindowTitle", ""}
     world:pub {"ResetEditor", ""}
     hierarchy:set_root(self.root)
+
+    self.post_init_camera = {}
+end
+
+function m:init_camera()
+    if not self.post_init_camera then return end
+    for _, eid in ipairs(self.post_init_camera) do
+        if #eid == 0 then return end 
+        camera_mgr.update_frustrum(eid)
+        camera_mgr.show_frustum(eid, false)
+    end
+    self.post_init_camera = {}
 end
 
 function m:open_prefab(prefab)
@@ -521,11 +535,17 @@ function m:open_prefab(prefab)
     local last_camera
     for i, entity in ipairs(entities) do
         if type(entity) == "table" then
-            local templ = hierarchy:get_template(entity.root)
-            templ.filename = template_class[i].prefab
-            set_select_adapter(entity, entity.root)
-            templ.children = entity
-            remove_entity[#remove_entity+1] = entity
+            if entity.root then
+                local templ = hierarchy:get_template(entity.root)
+                templ.filename = template_class[i].prefab
+                set_select_adapter(entity, entity.root)
+                templ.children = entity
+                remove_entity[#remove_entity+1] = entity
+            elseif #entity == 0 then
+                -- camera
+                hierarchy:add(entity, {template = template_class[i]}, self.root)
+                self.post_init_camera[#self.post_init_camera + 1] = entity
+            end
         else
             local keyframes = template_class[i].data.frames
             if keyframes and last_camera then

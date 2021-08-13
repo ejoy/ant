@@ -297,16 +297,17 @@ local event_gizmo = world:sub {"Gizmo"}
 local light_gizmo = require "gizmo.light"(world)
 
 local function on_target(old, new)
-    if old and world[old] then
-        if world[old].camera then
+    local old_entity = type(old) == "table" and icamera.find_camera(old) or world[old]
+    if old and old_entity then
+        if old_entity.frustum then
             camera_mgr.show_frustum(old, false)
-        elseif world[old].light_type then
+        elseif old_entity.light_type then
             light_gizmo.bind(nil)
         end
     end
     if new then
-        local new_entity = world[new]
-        if new_entity.camera then
+        local new_entity = type(new) == "table" and icamera.find_camera(new) or world[new]
+        if new_entity.frustum then
             camera_mgr.set_second_camera(new, true)
         elseif new_entity.light_type then
             light_gizmo.bind(new)
@@ -321,9 +322,10 @@ end
 local function on_update(eid)
     if not eid then return end
     prefab_mgr:update_current_aabb(eid)
-    if world[eid].camera then
+    local e = type(eid) == "table" and icamera.find_camera(eid) or world[eid]
+    if e.frustum then
         camera_mgr.update_frustrum(eid)
-    elseif world[eid].light_type then
+    elseif e.light_type then
         light_gizmo.update()
     end
     inspector.update_template_tranform(eid)
@@ -489,6 +491,8 @@ function m:end_frame()
         irq.set_view_rect(camera_mgr.second_view, secondViewport)
         world:pub {"ViewportDirty", viewport}
     end
+
+    prefab_mgr:init_camera()
 end
 
 function m:widget()
