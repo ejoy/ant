@@ -145,14 +145,20 @@ local function create_downsample()
     }
 end
 
-local tex_reader = {
-    get_image_memory = function (tex, w, h, elemsize)
-        local m = bgfx.memory_buffer(w*h*elemsize)
-        local whichframe = bgfx.read_texture(tex, m)
-        while bgfx_frame() < whichframe do end
-        return m
-    end,
+local function get_image_memory(tex, w, h, elemsize)
+    local size = w * h * elemsize
+    local m = bgfx.memory_buffer(size)
+    local readend = bgfx.read_texture(tex, m)
+    repeat
+        bgfx.encoder_end()
+        local fidx = bgfx.frame()
+        bgfx.encoder_begin()
+    until fidx < readend
+    return m
+end
 
+local tex_reader = {
+    get_image_memory = get_image_memory, 
     create_tex = function (w, h, fmt)
         fmt = fmt or "RGBA32F"
         local flags = sampler.sampler_flag{
@@ -358,15 +364,10 @@ end
 local skycolor = 0xffffffff
 
 local function init_buffer()
+    bgfx.encoder_begin()
     bgfx.set_view_clear(lightmap_viewid, "CD", skycolor, 1.0)
     bgfx.set_view_rect(lightmap_viewid, 0, 0, bake_fbw, bake_fbh)
-    bgfx.encoder_begin()
     bgfx.touch(lightmap_viewid)
-    bgfx.encoder_end()
-    bgfx.frame()    --wait for clear, avoid some draw call push in lightmap_viewid queue
-    bgfx.encoder_begin()
-    --we will change view rect many time before next clear needed
-    --will not clear after another view rect is applied
     bgfx.set_view_clear(lightmap_viewid, "")
 end
 
@@ -377,12 +378,10 @@ local function draw_scene(renderobjs)
 end
 
 local function render_scene(vp, view, proj, sceneobjs)
+    bgfx.touch(lightmap_viewid)
     bgfx.set_view_rect(lightmap_viewid, vp[1], vp[2], vp[3], vp[4])
     bgfx.set_view_transform(lightmap_viewid, view, proj)
     draw_scene(sceneobjs)
-    bgfx.encoder_end()
-    bgfx.frame()
-    bgfx.encoder_begin()
 end
 
 local hemisize = 64
@@ -401,19 +400,22 @@ end
 
 local storage = {}; storage.__index = storage
 
-function storage.new(hemix, hemiy, num)
+function storage.new(hemix, hemiy, lm_w, lm_h)
+    local nx, ny = math.ceil(lm_w / hemix), math.ceil(lm_h / hemiy)
+    local w, h = nx * hemix, ny * hemiy
     return setmetatable({
         index = 0,
+        nx = nx, ny = ny,
+        w = w, h = h,
         hemix = hemix, hemiy = hemiy,
-        num = num,
     }, storage)
 end
 
 function storage:position()
     local idx = self.index
     assert(self.index < self.num)
-    return  (idx %  self.hemix) * self.hemix,
-            (idx // self.hemix) * self.hemiy
+    return  (idx %  self.nx) * self.hemix,
+            (idx // self.nx) * self.hemiy
 end
 
 function storage:is_full()
@@ -425,14 +427,9 @@ function storage:next()
     return self:is_full()
 end
 
-function storage:reset()
-    self.index = 0
-end
-
 local hemisphere_batcher = {}; hemisphere_batcher.__index = hemisphere_batcher
 
 function hemisphere_batcher.new(bake_ctx, hemisize, hemix, hemiy, lm)
-    local numstorage = (lm.w // hemix) * (lm.h // hemiy)
     return setmetatable(
         {
             bake_ctx = bake_ctx,
@@ -442,7 +439,7 @@ function hemisphere_batcher.new(bake_ctx, hemisize, hemix, hemiy, lm)
             lightmap = lm,
             index = 0,
             count = hemix * hemiy,
-            storage = storage.new(hemix, hemiy, numstorage)
+            storage = storage.new(hemix, hemiy, lm.w, lm.h)
         }, hemisphere_batcher)
 end
 
@@ -470,7 +467,7 @@ end
 
 function hemisphere_batcher:_write2lightmap(bake_ctx)
     local m = self:_read_lightmap()
-    bake_ctx:write_lightmap()
+    bake_ctx:write_lightmap(m, self.lightmap.data, self.hemix, self.hemi.y, storage.nx, storage.ny)
 end
 
 function hemisphere_batcher:_downsample()
@@ -507,9 +504,7 @@ function hemisphere_batcher:_storage_downsample_result(dsttex)
     bgfx.blit(lightmap_storage_viewid,
         storagerb.handle, wx, wy,
         dsttex, 0, 0, self.hemix, self.hemiy)
-    bgfx.encoder_end()
-    bgfx.frame()
-    bgfx.encoder_begin()
+    bgfx.touch(lightmap_storage_viewid)
 
     if self.storage:next() then
         self:_write2lightmap()
@@ -520,15 +515,7 @@ end
 function hemisphere_batcher:_read_lightmap()
     local storagerb = fbmgr.get_rb(shading_info.storage_rbidx)
     local lm = self.lightmap
-    local size = lm.w * lm.h * 16   -- 16 for RGBA32F
-    local m = bgfx.memory_buffer(size)
-    local readend = bgfx.read_texture(storagerb.handle, m)
-    repeat
-        bgfx.encoder_end()
-        local fidx = bgfx.frame()
-        bgfx.encoder_begin()
-    until fidx < readend
-    return m
+    return get_image_memory(storagerb.handle, lm.w, lm.h, 16)
 end
 
 function hemisphere_batcher:integrate()

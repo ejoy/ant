@@ -362,6 +362,16 @@ struct Render{
 	void* userdata;
 };
 
+struct RasterizerPosition
+{
+	uint16_t x, y;
+};
+
+struct SamplePosition {
+	Sample				sample;
+	RasterizerPosition	pos;
+};
+
 struct lm_context
 {
 	struct Mesh			mesh;
@@ -369,6 +379,8 @@ struct lm_context
 	struct Lightmap		lightmap;
 	struct Hemisphere	hemisphere;
 	struct Render		render;
+
+	std::vector<SamplePosition> samples;
 
 	float interpolationThreshold;
 };
@@ -1181,18 +1193,9 @@ void lmSetGeometry(lm_context *ctx,
 	lm_inverseTranspose(transformationMatrix, ctx->mesh.normalMatrix);
 }
 
-struct RasterizerPosition
+void lmSamplePositions(lm_context *ctx)
 {
-	uint16_t x, y;
-};
-
-struct SamplePosition {
-	Sample				sample;
-	RasterizerPosition	pos;
-};
-
-void lmSamplePositions(lm_context *ctx, std::vector<SamplePosition> &samples)
-{
+	auto &samples = ctx->samples;
 	for (ctx->meshPosition.pass = 0; 
 	ctx->meshPosition.pass < ctx->meshPosition.passCount; 
 	++ctx->meshPosition.pass)
