@@ -20,8 +20,6 @@ local mc        = mathpkg.constant
 
 local bake_fbw, bake_fbh, fb_hemi_unit_size = bake.framebuffer_size()
 
-local shading_info
-
 local downsample_viewid_count<const> = 10 --max 1024x1024->2^10
 local lightmap_downsample_viewids = viewidmgr.alloc_viewids(downsample_viewid_count, "lightmap_ds")
 local lightmap_viewid<const> = lightmap_downsample_viewids[1]
@@ -30,32 +28,6 @@ for sampleidx, viewid in ipairs(lightmap_downsample_viewids) do
     assert(viewid == lightmap_viewid+sampleidx-1)
 end
 local lightmap_storage_viewid<const> = viewidmgr.generate "lightmap_storage"
-
-local cache_size_buffers = {}
-local function get_csb(size)
-    local sb = cache_size_buffers[size]
-    if sb == nil then
-        sb = {}
-        cache_size_buffers[size] = sb
-    end
-    return sb
-end
-
-local function get_storage_buffer(size)
-    local sb = get_csb(size)
-    if sb.storage_rbidx == nil then
-        local flags = sampler.sampler_flag{
-            MIN="POINT",
-            MAG="POINT",
-            U="CLAMP",
-            V="CLAMP",
-            BLIT="BLIT_READWRITE",
-        }
-        sb.storage_rbidx = fbmgr.create_rb{w=size, h=size, layers = 1, format="RGBA32F", flags=flags}
-    end
-
-    return sb.storage_rbidx
-end
 
 local function default_weight()
     return 1.0
@@ -99,7 +71,16 @@ local function gen_hemisphere_weights(hemisize, weight_func)
     return weights
 end
 
-local function create_hemisphere_weights_texture(hemisize, weight_func)
+local hemisize = 64
+
+local setting = {
+    size = hemisize,
+    z_near = 0.001, z_far = 100,
+    interp_pass_count = 0, interp_threshold = 0.001,
+    cam2surf_dis_modifier = 0.0,
+}
+
+local function create_hemisphere_weights_texture(weight_func)
     local weights = gen_hemisphere_weights(hemisize, weight_func)
 
     local flags = sampler.sampler_flag {
@@ -126,15 +107,9 @@ local function create_hemisphere_weights_texture(hemisize, weight_func)
     return bgfx.create_texture2d(3*hemisize, hemisize, false, 1, "RG32F", flags, bgfx.memory_buffer("ff", weights))
 end
 
-local function get_weight_texture(size)
-    local sb = get_csb(size)
-    if sb.weight_tex == nil then
-        -- weight texture should not depend 'size'
-        sb.weight_tex = create_hemisphere_weights_texture(size)
-    end
-
-    return sb.weight_tex
-end
+local shading_info = {
+    weight_tex = create_hemisphere_weights_texture(),
+}
 
 local function create_downsample()
     return {
@@ -254,10 +229,8 @@ function ibaker.init_shading_info()
         hsize = hsize / 2
     end
 
-    shading_info = {
-        fb = fb,
-        downsample = create_downsample(),
-    }
+    shading_info.fb         = fb
+    shading_info.downsample = create_downsample()
 end
 
 
@@ -384,30 +357,24 @@ local function render_scene(vp, view, proj, sceneobjs)
     draw_scene(sceneobjs)
 end
 
-local hemisize = 64
-
-local setting = {
-    size = hemisize,
-    z_near = 0.001, z_far = 100,
-    interp_pass_count = 0, interp_threshold = 0.001,
-    cam2surf_dis_modifier = 0.0,
-}
-
-local function update_bake_shading(size)
-    shading_info.storage_rbidx = get_storage_buffer(size)
-    shading_info.weight_tex = {stage=1, texture = {handle=get_weight_texture(hemisize)}}
-end
-
 local storage = {}; storage.__index = storage
-
+local storage_flags<const> = sampler.sampler_flag{
+    MIN="POINT",
+    MAG="POINT",
+    U="CLAMP",
+    V="CLAMP",
+    BLIT="BLIT_READWRITE",
+}
 function storage.new(hemix, hemiy, lm_w, lm_h)
     local nx, ny = math.ceil(lm_w / hemix), math.ceil(lm_h / hemiy)
     local w, h = nx * hemix, ny * hemiy
+
     return setmetatable({
         index = 0,
         nx = nx, ny = ny,
         w = w, h = h,
         hemix = hemix, hemiy = hemiy,
+        storage_rbidx = fbmgr.create_rb{w=w, h=h, layers = 1, format="RGBA32F", flags=storage_flags}
     }, storage)
 end
 
@@ -425,6 +392,23 @@ end
 function storage:next()
     self.index = self.index + 1
     return self:is_full()
+end
+
+function storage:copy2storage(tex)
+    local storagerb = fbmgr.get_rb(self.storage_rbidx)
+    local wx, wy = self:position()
+    assert(wx < self.w and wy < self.h)
+    bgfx.blit(lightmap_storage_viewid,
+        storagerb.handle, wx, wy,
+        tex, 0, 0, self.hemix, self.hemiy)
+    bgfx.touch(lightmap_storage_viewid)
+
+    self:next()
+end
+
+function storage:read_memory()
+    local storagerb = fbmgr.get_rb(self.storage_rbidx)
+    return get_image_memory(storagerb.handle, self.w, self.h, 16)
 end
 
 local hemisphere_batcher = {}; hemisphere_batcher.__index = hemisphere_batcher
@@ -466,7 +450,7 @@ function hemisphere_batcher:step()
 end
 
 function hemisphere_batcher:_write2lightmap(bake_ctx)
-    local m = self:_read_lightmap()
+    local m = self.storage:read_memory()
     bake_ctx:write_lightmap(m, self.lightmap.data, self.hemix, self.hemi.y, storage.nx, storage.ny)
 end
 
@@ -498,29 +482,9 @@ function hemisphere_batcher:_downsample()
     return shading_info.fb.render_textures[write].texture.handle
 end
 
-function hemisphere_batcher:_storage_downsample_result(dsttex)
-    local storagerb = fbmgr.get_rb(shading_info.storage_rbidx)
-    local wx, wy = self.storage:position()
-    bgfx.blit(lightmap_storage_viewid,
-        storagerb.handle, wx, wy,
-        dsttex, 0, 0, self.hemix, self.hemiy)
-    bgfx.touch(lightmap_storage_viewid)
-
-    if self.storage:next() then
-        self:_write2lightmap()
-        self.storage:reset()
-    end
-end
-
-function hemisphere_batcher:_read_lightmap()
-    local storagerb = fbmgr.get_rb(shading_info.storage_rbidx)
-    local lm = self.lightmap
-    return get_image_memory(storagerb.handle, lm.w, lm.h, 16)
-end
-
 function hemisphere_batcher:integrate()
     if self.index >= self.count then
-        self:_storage_downsample_result(self:_downsample())
+        self.storage:copy2storage(self:_downsample())
     end
 end
 
@@ -529,7 +493,6 @@ function ibaker.bake_entity(worldmat, bakeobj_mesh, lightmap, scene_objects)
     local bake_ctx = bake.create_lightmap_context(s)
     local hemix, hemiy = bake_ctx:hemi_count()
     local lmsize = lightmap.size
-    update_bake_shading(hemisize, lmsize)
     local li = {width=lmsize, height=lmsize, channels=4}
     log.info(("lightmap:w=%d, h=%d, channels=%d"):format(li.width, li.height, li.channels))
     lightmap.data = bake_ctx:set_target_lightmap(li)
