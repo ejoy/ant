@@ -26,7 +26,7 @@ end
 
 local cr = ecs.interface "icamera_recorder"
 function cr.start(name)
-    return world:create_entity{
+    return world:deprecated_create_entity{
         policy = {
             "ant.camera|camera_recorder",
             "ant.general|name",

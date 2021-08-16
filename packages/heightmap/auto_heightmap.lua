@@ -93,7 +93,7 @@ function auto_hm_sys:init()
 
     local eid = ientity.create_quad_entity({x=0, y=0, w=2, h=2}, "/pkg/ant.resources/materials/texquad.material", "quadtest")
     imaterial.set_property(eid, "s_tex", {stage=0, texture={handle=renderinfo:color_handle()}})
-    -- local hm_eid = world:create_entity{ 
+    -- local hm_eid = world:deprecated_create_entity{ 
     --     policy = {
     --         "ant.general|name",
     --         "ant.heightmap|auto_heightmap",

@@ -58,8 +58,8 @@ function s:luaecs_sync()
 				aabb = e.mesh.bounding.aabb
 			end
 			data.scene = {
-				srt = rc.srt,
-				updir = e.updir and math3d.ref(math3d.vector(e.updir)) or nil,
+				srt = e.transform or {},
+				updir = e.updir,
 				aabb = aabb,
 				_self = eid,
 				_parent = parent,
@@ -90,7 +90,7 @@ function s:luaecs_sync()
 			data.lightmap = e.lightmap
 			policy[#policy+1] = "ant.bake|bake_lightmap"
 		end
-		world:luaecs_create_entity {
+		world:create_entity {
 			policy = policy,
 			data = data
 		}

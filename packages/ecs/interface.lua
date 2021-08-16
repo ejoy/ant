@@ -103,7 +103,7 @@ local attribute = {
 		"require_interface",
 		"require_policy_v2",
 		"component_v2",
-		"unique_component",
+		"component_opt",
 	},
 	component_v2 = {
 		"require_system",
@@ -126,6 +126,7 @@ local check_map = {
 	require_policy_v2 = "policy_v2",
 	require_transform = "transform",
 	component_v2 = "component_v2",
+	component_opt = "component_v2",
 	action = "action",
 	unique_component = "none",
 	pipeline = "none",

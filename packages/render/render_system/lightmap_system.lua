@@ -7,7 +7,7 @@ local assetmgr = import_package "ant.asset"
 
 local lm_sys = ecs.system "lightmap_system"
 function lm_sys:init()
-    world:luaecs_create_entity{
+    world:create_entity{
         policy = {
             "ant.render|lightmap_result",
             "ant.general|name",

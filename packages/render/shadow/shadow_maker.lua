@@ -190,7 +190,7 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 		}
 
 	w:register {name = queuename}
-	world:luaecs_create_entity {
+	world:create_entity {
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|cull",

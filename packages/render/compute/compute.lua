@@ -19,7 +19,7 @@ end
 
 
 function ic.create_compute_entity(name, materialfile, size)
-    return world:create_entity {
+    return world:deprecated_create_entity {
         policy = {
             "ant.render|compute_policy",
             "ant.general|name",

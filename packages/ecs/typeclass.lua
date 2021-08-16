@@ -67,6 +67,7 @@ local check_map = {
 	require_policy_v2 = "policy_v2",
 	require_transform = "transform",
 	component_v2 = "component_v2",
+	component_opt = "component_v2",
 	pipeline = "pipeline",
 	action = "action",
 }
@@ -101,12 +102,10 @@ function copy.policy(v)
 	}
 end
 function copy.policy_v2(v)
-	local t = {}
-	table_append(t, v.component_v2)
-	table_append(t, v.unique_component)
 	return {
 		policy_v2 = v.require_policy_v2,
-		component_v2 = t,
+		component_v2 = v.component_v2,
+		component_opt = v.component_opt,
 	}
 end
 function copy.transform(v)

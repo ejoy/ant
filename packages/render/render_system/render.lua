@@ -104,7 +104,7 @@ function irender.create_view_queue(view_rect, view_queuename, camera_ref, filter
 	w:register{name = view_queuename}
 
 	local fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
-	world:luaecs_create_entity {
+	world:create_entity {
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|watch_screen_buffer",
@@ -159,7 +159,7 @@ function irender.create_pre_depth_queue(view_rect, camera_ref)
 		}
 	}
 
-	world:luaecs_create_entity{
+	world:create_entity{
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|pre_depth_queue",
@@ -229,7 +229,7 @@ end
 
 function irender.create_main_queue(view_rect, camera_ref)
 	local fbidx = create_main_fb(view_rect)
-	world:luaecs_create_entity {
+	world:create_entity {
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|watch_screen_buffer",
@@ -264,7 +264,7 @@ end
 
 local blitviewid = viewidmgr.get "blit"
 function irender.create_blit_queue(viewrect)
-	world:luaecs_create_entity {
+	world:create_entity {
 		policy = {
 			"ant.render|blit_queue",
 			"ant.render|render_queue",
@@ -302,7 +302,7 @@ function irender.create_blit_queue(viewrect)
 	}
 
 	local ies = world:interface "ant.scene|ientity_state"
-	world:luaecs_create_entity {
+	world:create_entity {
 		policy = {
 			"ant.general|name",
 			"ant.render|render",
@@ -313,7 +313,7 @@ function irender.create_blit_queue(viewrect)
 			scene = {
 				srt = math3d.ref(mc.IDENTITY_MAT),
 			},
-			eid = world:create_entity{policy = {"ant.general|debug_TEST"}, data = {}},
+			eid = world:deprecated_create_entity{policy = {"ant.general|debug_TEST"}, data = {}},
 			render_object = {},
 			filter_material = {},
 			material = "/pkg/ant.resources/materials/fullscreen.material",

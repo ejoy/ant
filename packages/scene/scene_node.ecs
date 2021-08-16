@@ -8,6 +8,7 @@ policy_v2 "render_object"
     .component_v2 "render_object_update"
     .component_v2 "render_object"
     .component_v2 "filter_material"
+    .component_v2 "eid"
 
 component_v2 "render_object_update"
 
@@ -20,7 +21,7 @@ component_v2 "filter_material"
 --SceneObject
 policy_v2 "scene_object"
     .component_v2 "scene"
-    .component_v2 "eid"
+    .component_opt "scene_id"
 
 component_v2 "scene_id"
     .type "int"

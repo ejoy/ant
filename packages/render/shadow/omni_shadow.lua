@@ -176,7 +176,7 @@ local function add_stencil_entity()
         stencil_mesh = ientity.create_mesh{"p3", stencil_tri_vertices}
     end
 
-    return world:create_entity {
+    return world:deprecated_create_entity {
 		policy = {
 			"ant.render|render",
 			"ant.general|name",
@@ -215,7 +215,7 @@ function ios.create(point_eid)
                 name = "camera_" .. queuename
             }
 
-        world:luaecs_create_entity{
+        world:create_entity{
             policy = {
                 "ant.render|omni_shadow",
                 "ant.render|render_queue",

@@ -50,7 +50,7 @@ local icamera = world:interface "ant.camera|camera"
 local iom = world:interface "ant.objcontroller|obj_motion"
 
 local function target_lock_test()
-    local eid = world:create_entity{
+    local eid = world:deprecated_create_entity{
         policy = {
             "ant.general|name",
             "ant.render|render",
@@ -68,7 +68,7 @@ local function target_lock_test()
         }
     }
 
-    local lock_eid = world:create_entity {
+    local lock_eid = world:deprecated_create_entity {
         policy = {
             "ant.general|name",
             "ant.render|render",
@@ -167,7 +167,7 @@ function init_loader_sys:init()
     --world:instance "/pkg/ant.resources.binary/meshes/cloud_run.glb|mesh.prefab"
     --world:instance "/pkg/ant.test.features/assets/CloudTestRun.glb|mesh.prefab"
 
-    -- local eid = world:create_entity {
+    -- local eid = world:deprecated_create_entity {
     --     policy = {
     --         "ant.general|name",
     --         "ant.render|render",

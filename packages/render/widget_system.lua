@@ -45,7 +45,7 @@ function dmb_trans.process_entity(e)
 end
 
 function widget_drawer_sys:init()
-	world:create_entity {
+	world:deprecated_create_entity {
 		policy = {
 			"ant.render|render",
 			"ant.render|bounding_draw",

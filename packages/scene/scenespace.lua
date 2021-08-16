@@ -131,18 +131,38 @@ function s:entity_init()
 	current_changed = current_changed + 1
 
 	local hashmap = {}
+	for v in w:select "INIT camera:in scene:out" do
+		local camera = v.camera
+		local viewmat = math3d.lookto(camera.eyepos, camera.viewdir, camera.updir)
+		v.scene = {
+			srt = math3d.inverse(viewmat),
+			updir = camera.updir
+		}
+	end
 	for v in w:select "INIT scene:in scene_id:out" do
 		local node = v.scene
-		v.scene_id = world:luaecs_create_ref {
+		if node.srt then
+			node.srt = math3d.ref(math3d.matrix(node.srt))
+		end
+		if node.updir then
+			node.updir = math3d.ref(math3d.vector(node.updir))
+		end
+		node.changed = current_changed
+		v.scene_id = world:create_ref {
 			scene_node = node,
 			initializing = true,
 		}
-		node.changed = current_changed
 		scenequeue:mount(v.scene_id, 0)
 		needsync = true
 		if node._self then
 			hashmap[node._self] = v.scene_id
 		end
+	end
+	for v in w:select "INIT camera:in scene:in" do
+		v.camera.srt = v.scene.srt
+	end
+	for v in w:select "INIT render_object:in scene:in" do
+		v.render_object.srt = v.scene.srt
 	end
 	w:clear "scene"
 

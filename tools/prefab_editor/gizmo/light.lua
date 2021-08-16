@@ -83,7 +83,7 @@ function m.highlight(b)
 end
 
 local function create_gizmo_root()
-    return world:create_entity{
+    return world:deprecated_create_entity{
 		policy = {
 			"ant.general|name",
 			"ant.scene|transform_policy",
