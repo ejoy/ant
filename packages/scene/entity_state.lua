@@ -66,6 +66,10 @@ function ies.create_state(namelist)
 	return state
 end
 
-function ies.filter_mask(t)
-	return STATE_TYPE[t]
+function ies.filter_mask(namelist)
+	local s = 0
+	for name in namelist:gmatch "[%w_]+" do
+		s = s | STATE_TYPE[name]
+	end
+	return s
 end
