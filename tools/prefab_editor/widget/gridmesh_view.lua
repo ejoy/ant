@@ -145,11 +145,10 @@ end
 local grid_size_ui = {0.2, speed = 0.1, min = 0.1, max = 10}
 local grid_row_ui = {2, speed = 1, min = 2, max = 1000}
 local grid_col_ui = {2, speed = 1, min = 2, max = 1000}
-local brush_color_ui = {1.0, 1.0, 1.0, 0.5}
 local visible_ui = {true}
 local current_grid
 local current_label = "default"
-local current_color = {1.0, 1.0, 1.0, 0.5}
+
 function m.set_grid(grid)
     current_grid = grid
     current_grid.brush = brush_def.color
@@ -166,6 +165,9 @@ local function update_color()
     brush_color_ui[3] = current_color[3]
     brush_color_ui[4] = current_color[4]
 end
+
+local current_color = colori2f(brush_def.color[1])
+local brush_color_ui = {current_color[1], current_color[2], current_color[3], current_color[4]}
 
 function m.show()
     local viewport = imgui.GetMainViewport()
