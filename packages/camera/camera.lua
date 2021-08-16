@@ -75,12 +75,12 @@ function ic.create(info)
         },
         data = {
             camera = {
-                eyepos = info.eyepos,
-                viewdir = info.viewdir,
-                updir = info.updir,
+                eyepos  = assert(info.eyepos),
+                viewdir = assert(info.viewdir),
+                updir   = assert(info.updir),
                 frustum = frustum,
                 clip_range = info.clip_range,
-                dof = info.dof,
+                dof     = info.dof,
             },
             name = info.name or "DEFAULT_CAMERA",
         }

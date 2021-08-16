@@ -11,6 +11,9 @@ local fbmgr     = renderpkg.fbmgr
 local sampler   = renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
 
+local mathpkg   = import_package "ant.math"
+local mc        = mathpkg.constant
+
 local irender   = world:interface "ant.render|irender"
 local icamera   = world:interface "ant.camera|camera"
 local iom       = world:interface "ant.objcontroller|obj_motion"
@@ -84,9 +87,9 @@ function auto_hm_sys:init()
             f = 100,
             ortho   = true,
         },
-        eyepos  = math3d.vector(0, 0, 0, 1),
-        viewdir = math3d.vector(0,-1, 0, 0),
-        updir   = math3d.vector(0, 0, 1, 0),
+        eyepos  = mc.ZERO_PT,
+        viewdir = mc.ZAXIS,
+        updir   = mc.YAXIS,
     }
 
     renderinfo:init()

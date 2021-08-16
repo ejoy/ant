@@ -14,8 +14,8 @@ function fr_sys:init()
 	local vr = {x=0, y=0, w=world.args.width,h=world.args.height}
 	local camera = icamera.create({
 		eyepos  = mc.ZERO_PT,
-		viewdir = mc.Z_AXIS,
-		updir	= mc.Y_AXIS,
+		viewdir = mc.ZAXIS,
+		updir	= mc.YAXIS,
 		frustum = default.frustum(vr.w/vr.h),
         name = "default_camera",
 	})
