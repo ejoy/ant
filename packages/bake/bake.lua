@@ -107,8 +107,47 @@ local function create_hemisphere_weights_texture(weight_func)
     return bgfx.create_texture2d(3*hemisize, hemisize, false, 1, "RG32F", flags, bgfx.memory_buffer("ff", weights))
 end
 
+local function create_fb()
+    local flags = sampler.sampler_flag{
+        MIN="POINT",
+        MAG="POINT",
+        U="CLAMP",
+        V="CLAMP",
+        RT="RT_ON",
+    }
+
+    local hsize = fb_hemi_unit_size/2
+    local fb = {
+        fbmgr.create{
+            fbmgr.create_rb{w=bake_fbw, h=bake_fbh, layers=1, format="RGBA32F", flags=flags},
+            fbmgr.create_rb{w=bake_fbw, h=bake_fbh, layers=1, format="D24S8", flags=flags},
+        },
+        fbmgr.create{
+            fbmgr.create_rb{w=hsize, h=hsize, layers=1, format="RGBA32F", flags=flags},
+        }
+    }
+    local function get_rb(fbidx)
+        return fbmgr.get_rb(fbmgr.get(fb[fbidx])[1]).handle
+    end
+
+    fb.render_textures = {
+        {stage=0, texture={handle=get_rb(1)}},
+        {stage=0, texture={handle=get_rb(2)}},
+    }
+    fbmgr.bind(lightmap_viewid, fb[1])
+    bgfx.set_view_rect(lightmap_viewid, 0, 0, bake_fbw, bake_fbh)
+    for ii=1, downsample_viewid_count-1 do
+        local vid = lightmap_viewid+ii
+        local sampleidx = ii % 2
+        fbmgr.bind(vid, fb[sampleidx+1])
+        bgfx.set_view_rect(vid, 0, 0, hsize, hsize)
+        hsize = hsize / 2
+    end
+end
+
 local shading_info = {
-    weight_tex = create_hemisphere_weights_texture(),
+    weight_tex  = create_hemisphere_weights_texture(),
+    fb          = create_fb(),
 }
 
 local function create_downsample()
@@ -193,43 +232,6 @@ local function read_tex(hemix, hemiy, srctex, fn, fn_bin)
 end
 
 function ibaker.init_shading_info()
-    local flags = sampler.sampler_flag{
-        MIN="POINT",
-        MAG="POINT",
-        U="CLAMP",
-        V="CLAMP",
-        RT="RT_ON",
-    }
-
-    local hsize = fb_hemi_unit_size/2
-    local fb = {
-        fbmgr.create{
-            fbmgr.create_rb{w=bake_fbw, h=bake_fbh, layers=1, format="RGBA32F", flags=flags},
-            fbmgr.create_rb{w=bake_fbw, h=bake_fbh, layers=1, format="D24S8", flags=flags},
-        },
-        fbmgr.create{
-            fbmgr.create_rb{w=hsize, h=hsize, layers=1, format="RGBA32F", flags=flags},
-        }
-    }
-    local function get_rb(fbidx)
-        return fbmgr.get_rb(fbmgr.get(fb[fbidx])[1]).handle
-    end
-
-    fb.render_textures = {
-        {stage=0, texture={handle=get_rb(1)}},
-        {stage=0, texture={handle=get_rb(2)}},
-    }
-    fbmgr.bind(lightmap_viewid, fb[1])
-    bgfx.set_view_rect(lightmap_viewid, 0, 0, bake_fbw, bake_fbh)
-    for ii=1, downsample_viewid_count-1 do
-        local vid = lightmap_viewid+ii
-        local sampleidx = ii % 2
-        fbmgr.bind(vid, fb[sampleidx+1])
-        bgfx.set_view_rect(vid, 0, 0, hsize, hsize)
-        hsize = hsize / 2
-    end
-
-    shading_info.fb         = fb
     shading_info.downsample = create_downsample()
 end
 
@@ -328,11 +330,6 @@ local function load_geometry_info(worldmat, mesh)
 end
 
 ibaker.load_geometry_info = load_geometry_info
-
-
-local function sample_hemisphere(sample)
-
-end
 
 local skycolor = 0xffffffff
 
@@ -449,7 +446,7 @@ function hemisphere_batcher:step()
     return self:hemi_pos()
 end
 
-function hemisphere_batcher:_write2lightmap(bake_ctx)
+function hemisphere_batcher:write2lightmap(bake_ctx)
     local m = self.storage:read_memory()
     bake_ctx:write_lightmap(m, self.lightmap.data, self.hemix, self.hemi.y, storage.nx, storage.ny)
 end
@@ -483,9 +480,7 @@ function hemisphere_batcher:_downsample()
 end
 
 function hemisphere_batcher:integrate()
-    if self.index >= self.count then
-        self.storage:copy2storage(self:_downsample())
-    end
+    self.storage:copy2storage(self:_downsample())
 end
 
 function ibaker.bake_entity(worldmat, bakeobj_mesh, lightmap, scene_objects)
@@ -518,4 +513,5 @@ function ibaker.bake_entity(worldmat, bakeobj_mesh, lightmap, scene_objects)
     end
 
     batcher:integrate()
+    batcher:write2lightmap()
 end
