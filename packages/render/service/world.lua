@@ -72,7 +72,8 @@ function S.init(nwh, context, width, height)
 	S.mouse = ev.mouse
 	S.touch = ev.touch
 	S.keyboard = ev.keyboard
-	ltask.send(ServiceWindow, "subscribe", "mouse_wheel", "mouse", "touch", "keyboard")
+	S.size = ev.size
+	ltask.send(ServiceWindow, "subscribe", "mouse_wheel", "mouse", "touch", "keyboard","size")
 
 	world:pub {"resize", width, height}
 	world:pipeline_init()
