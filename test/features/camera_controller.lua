@@ -1,60 +1,20 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 
 local rhwi      = import_package "ant.hwi"
 
 local icamera = world:interface "ant.camera|camera"
 
-local cct = ecs.transform "camera_controller"
-function cct.process_entity(e)
-	e._camera_controller = {}
-end
-
 local icc = ecs.interface "icamera_controller"
 
-local cceid
-function icc.create(ceid)
-	if cceid then
-		error("could not create more than two time")
-	end
-
-	cceid = world:create_entity{
-		policy = {
-			"ant.test.features|camera_controller",
-			"ant.general|name",
-		},
-		data = {
-			camera_controller = {},
-			name = "test",
-			test_feature_camera_controller = true,
-		}
-	}
-
-	icc.camera(ceid)
-	return cceid
-end
-
+local controller = {}
 function icc.attach(camera_ref)
-	local cc = world[cceid]._camera_controller
-	local old_camera_ref = cc.camera_ref
-	cc.camera_ref = camera_ref
-	world:pub{"camera_controller_changed", "camera", camera_ref, old_camera_ref}
-	icamera.controller(camera_ref, cceid)
-end
-
-function icc.get()
-	return cceid
+	controller.camera_ref = camera_ref
 end
 
 function icc.camera()
-	return world[cceid]._camera_controller.camera_ref
-end
-
-function icc.is_active()
-	local ceid = world[cceid]._camera_controller.camera_ref
-	if ceid and world[ceid] then
-		return icamera.controller(ceid) == cceid
-	end
+	return controller.camera_ref
 end
 
 local cc_sys = ecs.system "camera_controller_system"
@@ -76,17 +36,16 @@ function cc_sys:post_init()
 	dpi_x, dpi_y = rhwi.dpi()
 end
 
-local function can_rotate(eid)
-	local lock_target = world[eid].lock_target
-	return lock_target and lock_target.type ~= "rotate" or true
+local function can_rotate(camera)
+	local lt = camera.lock_target
+	return lt and lt.type ~= "rotate" or true
 end
 
-local function can_move(eid)
-	local lock_target = world[eid].lock_target
+local function can_move(camera)
+	local lock_target = camera.lock_target
 	return lock_target and lock_target.type ~= "move" or true
 end
 
-local svs_mb = world:sub{"splitviews", "selected"}
 local mw_mb = world:sub{"mouse_wheel"}
 
 local function can_orthoview_scale(camera_ref)
@@ -106,18 +65,14 @@ local function scale_orthoview(camera_ref, delta)
 	icamera.set_frustum(camera_ref, f)
 end
 
+function cc_sys:init_world()
+	for e in w:select "INIT main_queue camera_ref:in" do
+        icc.attach(e.camera_ref)
+    end
+end
+
 function cc_sys:data_changed()
-	--TODO: need another ortho view camera_controller
-	if not icc.is_active() then
-		return
-	end
-
-	local camera_ref
-	for _, t, eid in svs_mb:unpack() do
-		camera_ref = world[eid].camera_ref
-	end
-
-	camera_ref = camera_ref or icc.camera()
+	local camera_ref = icc.camera()
 
 	if can_rotate(camera_ref) then
 		for _, e in ipairs(mouse_events) do
@@ -157,7 +112,34 @@ function cc_sys:data_changed()
 			end
 		end
 		if keyboard_delta[1] ~= 0 or keyboard_delta[2] ~= 0 or keyboard_delta[3] ~= 0 then
-			iom.move(camera_ref, keyboard_delta)
+			local srt = camera_ref.scene_node.srt
+			local math3d = require "math3d"
+			print "srt========="
+			local function print_srt(srt)
+				local x, y, z, w = math3d.index(srt, 1, 2, 3, 4)
+			
+				print(math3d.tostring(x))
+				print(math3d.tostring(y))
+				print(math3d.tostring(z))
+				print(math3d.tostring(w))
+			end
+
+			print_srt(srt)
+
+			local x, y, z, w = math3d.index(srt, 1, 2, 3, 4)
+			w = math3d.muladd(x, keyboard_delta[1], w)
+			w = math3d.muladd(y, keyboard_delta[2], w)
+			w = math3d.muladd(z, keyboard_delta[3], w)
+
+			print "new pos---------------"
+			print(math3d.tostring(w))
+
+			print "srt changed ---------------"
+			srt.m = math3d.set_index(srt, 4, w)
+
+			print_srt(srt)
+
+			--iom.move(camera_ref, keyboard_delta)
 		end
 	end
 end

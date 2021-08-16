@@ -119,16 +119,6 @@ function ic.bind(eid, which_queue)
     bind_queue(eid, which_queue)
 end
 
-function ic.controller(camera_ref, ceid)
-    local e = find_camera(camera_ref)
-    local old_ceid = e.controller_eid
-    if ceid == nil then
-        return old_ceid
-    end
-    e.controller_eid = ceid
-    world:pub{"camera_controller_changed", ceid, old_ceid}
-end
-
 ic.bind_queue = bind_queue
 
 function ic.calc_viewmat(eid)

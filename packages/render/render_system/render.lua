@@ -244,10 +244,7 @@ function irender.create_main_queue(view_rect, camera_ref)
 				viewid = viewidmgr.get "main_view",
 				view_mode = "s",
 				clear_state = default_clear_state,
-				view_rect = {
-					x = view_rect.x or 0, y = view_rect.y or 0,
-					w = view_rect.w or 1, h = view_rect.h or 1,
-				},
+				view_rect = view_rect,
 				fb_idx = fbidx,
 			},
 			primitive_filter = {

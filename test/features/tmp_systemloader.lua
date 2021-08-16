@@ -183,22 +183,7 @@ function init_loader_sys:init()
     --         mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
     --     }
     -- }
-
-    icc.create()
 end
-
-local camera_cache = {
-    icc = {
-        pos = math3d.ref(math3d.vector()),
-        dir = math3d.ref(math3d.vector()),
-        updir = math3d.ref(math3d.vector()),
-    },
-    iccqs = {
-        pos = math3d.ref(math3d.vector()),
-        dir = math3d.ref(math3d.vector()),
-        updir = math3d.ref(math3d.vector()),
-    }
-}
 
 local function main_camera_ref()
     for e in w:select "main_queue camera_ref:in" do
@@ -207,48 +192,6 @@ local function main_camera_ref()
 end
 
 function init_loader_sys:entity_init()
-    for e in w:select "INIT main_queue camera_ref:in" do
-        local camera_ref = e.camera_ref
-
-        local eid = world:instance "/pkg/ant.test.features/assets/entities/cube.prefab"[1]
-        iom.set_scale(eid, 0.1)
-    
-        icc.attach(camera_ref)
-        icamera.controller(camera_ref, icc.get())
-    
-        camera_cache.icc.pos.v = {-10.5, 10, -5.5, 1}
-        camera_cache.icc.dir.v = math3d.sub(mc.ZERO_PT, camera_cache.icc.pos)
-        camera_cache.icc.updir.v = mc.YAXIS
-        icamera.lookto(camera_ref, camera_cache.icc.pos, camera_cache.icc.dir)
-    
-        iom.set_rotation(camera_ref, math3d.quaternion(0.3893,0.1568,-0.0674,0.9052))
-        -- icamera.set_dof(camera_ref, {
-        --     -- aperture_fstop      = 2.8,
-        --     -- aperture_blades     = 0,
-        --     -- aperture_rotation   = 0,
-        --     -- aperture_ratio      = 1,
-        --     -- sensor_size         = 100,
-        --     -- focus_distance      = 5,
-        --     -- focal_len           = 84,
-        --     focuseid            = world:create_entity {
-        --         policy = {
-        --             "ant.render|simplerender"
-        --         },
-        --         data = {
-        --             transform = {},
-        --             simplemesh = {},
-        --             state = "",
-        --         }
-        --     },
-        --     enable              = true,
-        -- })
-        -- local dir = {0, 0, 1, 0}
-        -- icamera.lookto(camera_ref, {0, 0, -8, 1}, dir)
-        -- local ipl = world:interface "ant.render|ipolyline"
-        -- ipl.add_strip_lines({
-        --     {0, 0, 0}, {0.5, 0, 1}, {1, 0, 0},
-        -- }, 15, {1.0, 1.0, 0.0, 1.0})
-    end
 
 end
 
@@ -276,9 +219,9 @@ end
 
 local function interset_aabb(l, aabb, viewmat)
     local r = l.range
-    local center = math3d.transform(viewmat, l.pos, 1.0);
-    local sq_dist = sphere_closest_pt_to_aabb(math3d.tovalue(center), aabb);
-    return sq_dist <= (r * r);
+    local center = math3d.transform(viewmat, l.pos, 1.0)
+    local sq_dist = sphere_closest_pt_to_aabb(math3d.tovalue(center), aabb)
+    return sq_dist <= (r * r)
 end
 
 local kb_mb = world:sub{"keyboard"}

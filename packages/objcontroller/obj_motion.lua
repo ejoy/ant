@@ -20,16 +20,16 @@ local function get_transform(eid)
     end
 end
 
-local function get_srt(eid)
-    return get_transform(eid).srt
+local function get_srt(camera)
+    return get_transform(camera).srt
 end
 
-local function set_changed(eid)
-    world:pub {"scene_changed", eid}
+local function set_changed(camera)
+    world:pub {"scene_changed", camera}
 end
 
-function iobj_motion.get_position(eid)
-    return math3d.index(get_srt(eid), 4)
+function iobj_motion.get_position(camera)
+    return math3d.index(get_srt(camera), 4)
 end
 
 function iobj_motion.set_position(eid, pos)
