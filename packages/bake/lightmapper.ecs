@@ -8,6 +8,7 @@ system "lightmap_system"
     .method "end_frame"
 
 component_v2 "bake_finish"
+component_v2 "lightmap_queue"
 
 policy_v2 "bake_lightmap"
     .require_system "ant.bake|lightmap_system"

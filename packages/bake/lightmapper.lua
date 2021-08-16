@@ -6,44 +6,18 @@ local lfs = require "filesystem.local"
 local image = require "image"
 require "bake_mathadapter"
 
-local renderpkg = import_package "ant.render"
-local viewidmgr = renderpkg.viewidmgr
-local declmgr   = renderpkg.declmgr
-local fbmgr     = renderpkg.fbmgr
-local sampler   = renderpkg.sampler
-
-local mathpkg   = import_package "ant.math"
-local mc        = mathpkg.constant
-
-local assetmgr  = import_package "ant.asset"
-
-local math3d    = require "math3d"
 local bgfx      = require "bgfx"
 local bake      = require "bake"
 local ltask     = require "ltask"
 local crypt     = require "crypt"
 
-local irender   = world:interface "ant.render|irender"
 local imaterial = world:interface "ant.asset|imaterial"
-local icamera   = world:interface "ant.camera|camera"
-local itimer    = world:interface "ant.timer|itimer"
-local ientity   = world:interface "ant.render|entity"
 local ibaker    = world:interface "ant.baker|ibaker"
 
 local lightmap_sys = ecs.system "lightmap_system"
 
-local lightmap_queue_surface_types<const> = {
-    "foreground", "opacity", "background",
-}
 function lightmap_sys:init()
     ibaker.init_shading_info()
-
-    local camera_ref_WONT_USED = icamera.create{
-        viewdir = mc.ZAXIS,
-        eyepos = mc.ZERO_PT,
-        name = "lightmap camera"
-    }
-    irender.create_view_queue({x=0, y=0, w=1, h=1}, "lightmap_queue", camera_ref_WONT_USED, "lightmap", nil, lightmap_queue_surface_types)
 end
 
 function lightmap_sys:entity_init()
@@ -144,8 +118,8 @@ end
 function lightmap_sys:end_filter()
     for e in w:select "filter_result:in material:in render_object:in filter_material:out" do
         local fr = e.filter_result
-        local le = w:singleton("lightmap_queue", "filter_names:in")
-        for _, fn in ipairs(le.filter_names) do
+        local le = w:singleton("lightmap_queue", "primitive_filter:in")
+        for _, fn in ipairs(le.primitive_filter) do
             if fr[fn] then
                 local fm = e.filter_material
                 local ro = e.render_object
@@ -165,9 +139,9 @@ function lightmap_sys:end_filter()
 end
 
 local function find_scene_render_objects(queuename)
-    local q = w:singleton(queuename, "filter_names:in")
+    local q = w:singleton(queuename, "primitive_filter:in")
     local renderobjects = {}
-    for _, fn in ipairs(q.filter_names) do
+    for _, fn in ipairs(q.primitive_filter) do
         for e in w:select(fn .. " render_object:in widget_entity:absent") do
             renderobjects[#renderobjects+1] = e.render_object
         end
@@ -188,8 +162,8 @@ end
 local function bake_all()
     local scene_renderobjects = find_scene_render_objects "main_queue"
 
-    local lm_queue = w:singleton("lightmap_queue", "filter_names:in")
-    for _, fn in ipairs(lm_queue.filter_names) do
+    local lm_queue = w:singleton("lightmap_queue", "primitive_filter:in")
+    for _, fn in ipairs(lm_queue.primitive_filter) do
         for e in w:select (fn .. " mesh:in lightmap:in render_object:in widget_entity:absent name?in bake_finish?out") do
             log.info(("start bake entity: %s"):format(e.name))
             ibaker.bake_entity(e.render_object.worldmat, e.mesh, e.lightmap, scene_renderobjects)
@@ -252,5 +226,5 @@ end
 
 function ilm.bake_entity(bakeobj, lightmap)
     local scene_renderobjs = find_scene_render_objects "main_queue"
-    return bake_entity(bakeobj, lightmap, scene_renderobjs)
+    return ibaker.bake_entity(bakeobj, lightmap, scene_renderobjs)
 end
