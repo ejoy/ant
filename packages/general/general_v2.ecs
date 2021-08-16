@@ -2,6 +2,10 @@ component_v2 "name".type "lua"
 policy_v2 "name"
     .component_v2 "name"
 
+component_v2 "tag".type "lua"
+policy_v2 "tag"
+    .component_v2 "tag"
+
 component_v2 "transform".type "lua"
 
 policy_v2 "transform_policy"

@@ -233,6 +233,11 @@ function m:add_entity(new_entity, parent, temp, no_hierarchy)
     end
 end
 
+local function camera_init()
+
+    
+end
+
 function m:create(what, config)
     if not self.root then
         self:reset_prefab()
@@ -240,17 +245,9 @@ function m:create(what, config)
     if what == "slot" then
         self:create_slot()
     elseif what == "camera" then
-        local new_camera, camera_templ = camera_mgr.ceate_camera()
-        local s, r, t = math3d.srt(iom.srt(new_camera))
-        local ts, tr, tt = math3d.totable(s), math3d.totable(r), math3d.totable(t)
-        camera_templ.data.transform = {s = {ts[1],ts[2],ts[3]}, r = {tr[1],tr[2],tr[3],tr[4]}, t = {tt[1],tt[2],tt[3]}}
-
-        local recorder, recorder_templ = icamera_recorder.start(gen_camera_recorder_name())
-        camera_mgr.bind_recorder(new_camera, recorder)
-        camera_mgr.add_recorder_frame(new_camera)
-        local node = hierarchy:add(new_camera, {template = camera_templ, keyframe = recorder_templ.__class[1]}, self.root)
-        node.camera = true
-        self.entities[#self.entities+1] = new_camera
+        local new_camera = camera_mgr.ceate_camera()
+        self.new_camera[#self.new_camera + 1] = new_camera
+       
     elseif what == "geometry" then
         if config.type == "cube"
             or config.type == "cone"
@@ -465,9 +462,7 @@ function m:open(filename)
 end
 
 local function do_remove_entity(eid)
-    if world[eid].camera then
-        camera_mgr.remove_camera(eid)
-    elseif world[eid].light_type then
+    if world[eid].light_type then
         light_gizmo.on_remove_light(eid)
     end
     if world[eid].skeleton_eid then
@@ -486,14 +481,13 @@ function m:reset_prefab()
     camera_mgr.clear()
     for _, eid in ipairs(self.entities) do
         if type(eid) == "table" then
-            assert(false)
+            --camera
+            camera_mgr.remove_camera(eid)
+            world.w:remove(eid)
+        else
+            do_remove_entity(eid)
+            world:remove_entity(eid)
         end
-        -- local teml = hierarchy:get_template(eid)
-        -- if teml and teml.children then
-        --     remove_entitys(teml.children)
-        -- end
-        do_remove_entity(eid)
-        world:remove_entity(eid)
     end
     light_gizmo.clear()
     hierarchy:clear()
@@ -506,16 +500,55 @@ function m:reset_prefab()
     hierarchy:set_root(self.root)
 
     self.post_init_camera = {}
+    self.new_camera = {}
 end
 
 function m:init_camera()
-    if not self.post_init_camera then return end
-    for _, eid in ipairs(self.post_init_camera) do
-        if #eid == 0 then return end 
-        camera_mgr.update_frustrum(eid)
-        camera_mgr.show_frustum(eid, false)
+    if self.new_camera and #self.new_camera >= 1 then
+        for _, eid in ipairs(self.new_camera) do
+            if #eid == 0 then return end
+            local t = iom.get_position(camera_mgr.main_camera)
+            local r = iom.get_rotation(camera_mgr.main_camera)
+            iom.set_position(eid, t)
+            iom.set_rotation(eid, r)
+            camera_mgr.update_frustrum(eid)
+            camera_mgr.set_second_camera(eid, false)
+
+            local tr, tt = math3d.totable(r), math3d.totable(t)
+            eid.template.data.transform = {s = {1,1,1}, r = {tr[1],tr[2],tr[3],tr[4]}, t = {tt[1],tt[2],tt[3]}}
+
+            local recorder, recorder_templ = icamera_recorder.start(gen_camera_recorder_name())
+            camera_mgr.bind_recorder(eid, recorder)
+            camera_mgr.add_recorder_frame(eid)
+            local node = hierarchy:add(eid, {template = {
+                policy = {
+                    "ant.general|name",
+                    "ant.general|tag",
+                    "ant.camera|camera"
+                },
+                data = {
+                    camera      = true,
+                    scene_entity = true,
+                    frustum     = eid.template.data.camera.frustum,
+                    name        = eid.template.data.name,
+                    transform   = {s = {1,1,1}, r = tr, t = tt},
+                    updir       = {0, 1, 0},
+                    tag         = {"camera"}
+                }
+            }}, self.root)
+            node.camera = true
+            self.entities[#self.entities+1] = eid
+        end
+        self.new_camera = {}
     end
-    self.post_init_camera = {}
+    if self.post_init_camera and #self.post_init_camera >= 1 then
+        for _, eid in ipairs(self.post_init_camera) do
+            if #eid == 0 then return end 
+            camera_mgr.update_frustrum(eid)
+            camera_mgr.show_frustum(eid, false)
+        end
+        self.post_init_camera = {}
+    end
 end
 
 function m:open_prefab(prefab)

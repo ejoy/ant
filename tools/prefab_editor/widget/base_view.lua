@@ -101,7 +101,7 @@ end
 
 function BaseView:on_get_tag()
     local template = hierarchy:get_template(self.eid)
-    local tags = is_camera(self.eid) and template.template.data.tag or world[self.eid].tag
+    local tags = is_camera(self.eid) and template.template.data.tag-- or world[self.eid].tag
     if not tags then return "" end
     if type(tags) == "table" then
         return table.concat(tags, "|")

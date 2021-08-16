@@ -156,19 +156,51 @@ local function gen_camera_name() cameraidx = cameraidx + 1 return "camera" .. ca
 
 function m.ceate_camera()
     local main_frustum = icamera.get_frustum(m.main_camera)
-    local new_camera, camera_template = icamera.create {
+    local info = {
         eyepos = {2, 2, -2, 1},
         viewdir = {-2, -1, 2, 0},
         frustum = {n = default_near_clip, f = default_far_clip, aspect = main_frustum.aspect, fov = main_frustum.fov },
         updir = {0, 1, 0},
         name = gen_camera_name()
     }
-    world[new_camera].camera = true
-    iom.set_position(new_camera, iom.get_position(m.main_camera))
-    iom.set_rotation(new_camera, iom.get_rotation(m.main_camera))
-    m.update_frustrum(new_camera)
-    m.set_second_camera(new_camera, false)
-    return new_camera, camera_template.__class[1]
+
+    local viewmat = math3d.lookto(info.eyepos, info.viewdir, info.updir)
+    local srt = math3d.ref(math3d.matrix(math3d.inverse(viewmat)))
+    local temp = {
+        policy = {
+            "ant.general|name",
+            "ant.general|tag",
+            "ant.camera|camera",
+            "ant.scene|scene_object"
+        },
+        data = {
+            reference = true,
+            eid = world:register_entity(),
+            camera = {
+                frustum = info.frustum,
+                clip_range = info.clip_range,
+                dof = info.dof,
+                srt = srt,
+            },
+            name = info.name or "DEFAULT_CAMERA",
+            scene = {
+                srt = srt,
+                updir = info.updir and math3d.ref(math3d.vector(info.updir)) or nil,
+            },
+            tag = {"camera"}
+        }
+    }
+    local new_camera = world:luaecs_create_entity(temp)
+    
+    new_camera.template = temp
+    return new_camera
+
+    -- world[new_camera].camera = true
+    -- iom.set_position(new_camera, iom.get_position(m.main_camera))
+    -- iom.set_rotation(new_camera, iom.get_rotation(m.main_camera))
+    -- m.update_frustrum(new_camera)
+    -- m.set_second_camera(new_camera, false)
+    -- return new_camera--, camera_template.__class[1]
 end
 
 function m.bind_recorder(eid, recorder)
