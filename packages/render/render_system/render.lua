@@ -51,9 +51,7 @@ local SURFACE_TYPES <const> = {
 
 for qn, l in pairs(SURFACE_TYPES) do
     for _, f in ipairs(l) do
-        local culltag = ("%s_%s_cull"):format(qn, f)
         local tag = ("%s_%s"):format(qn, f)
-        w:register{name = culltag}
         w:register{name = tag}
     end
 end
@@ -129,7 +127,7 @@ local default_clear_state<const> = {
 	clear = "CD",
 }
 
-function irender.create_view_queue(view_rect, view_queuename, camera_ref, filtertype, exclude, surfacetypes)
+function irender.create_view_queue(view_rect, view_queuename, camera_ref, filtertype, exclude, surfacetypes, visible)
 	surfacetypes = surfacetypes or SURFACE_TYPES["main_queue"]
 	filtertype = filtertype or "visible"
 	w:register{name = view_queuename}
@@ -159,7 +157,7 @@ function irender.create_view_queue(view_rect, view_queuename, camera_ref, filter
 			queue_name			= view_queuename,
 			filter_names		= filter_names,
 			cull_tag			= {},
-			visible 			= false,
+			visible 			= visible or false,
 			watch_screen_buffer	= true,
 			shadow_render_queue = {},
 		}

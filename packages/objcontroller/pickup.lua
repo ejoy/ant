@@ -9,9 +9,7 @@ local imaterial = world:interface "ant.asset|imaterial"
 local ies		= world:interface "ant.scene|ientity_state"
 
 w:register{name = "pickup_queue_opacity"}
-w:register{name = "pickup_queue_opacity_cull"}
 w:register{name = "pickup_queue_translucent"}
-w:register{name = "pickup_queue_translucent_cull"}
 
 local pickup_materials = {}
 
