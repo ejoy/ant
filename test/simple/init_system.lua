@@ -8,15 +8,17 @@ function m:init_world()
 
     world:instance "res/scenes.prefab"
     world:instance "res/female.prefab"
-    world:create_object {
+    --world:instance "res/camera.prefab"
+    local object = world:create_object {
         "res/camera.prefab",
         init = function(o)
+            print(o)
         end,
-        ready = function(o)
+        message = function (o, msg)
+            print(msg)
         end,
-        message = function(o)
-        end,
-        destroy = function(o)
+        update = function (o)
         end,
     }
+    object:send "hello"
 end
