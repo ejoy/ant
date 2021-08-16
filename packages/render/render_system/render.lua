@@ -100,8 +100,7 @@ end
 
 local function create_primitive_filter_entities(quenename, filtertype, surface_types, exclude)
 	local filter_names = {}
-	local types = surface_types or SURFACE_TYPES[quenename]
-	for _, fn in ipairs(types) do
+	for _, fn in ipairs(surface_types) do
 		local t = ("%s_%s"):format(quenename, fn)
 		world:luaecs_create_entity{
 			policy = {
@@ -173,7 +172,7 @@ local rb_flag = samplerutil.sampler_flag {
 }
 
 function irender.create_pre_depth_queue(view_rect, camera_ref)
-	local fnames = create_primitive_filter_entities "pre_depth_queue"
+	local fnames = create_primitive_filter_entities("pre_depth_queue", "visible", SURFACE_TYPES["pre_depth_queue"])
 
 	local fbidx = fbmgr.create{
 		fbmgr.create_rb{
@@ -258,7 +257,7 @@ end
 function irender.create_main_queue(view_rect, camera_ref)
 	local fbidx = create_main_fb(view_rect)
 
-	local filternames = create_primitive_filter_entities "main_queue"
+	local filternames = create_primitive_filter_entities("main_queue", "visible", SURFACE_TYPES["main_queue"])
 	world:luaecs_create_entity {
 		policy = {
 			"ant.render|render_queue",
@@ -294,7 +293,7 @@ end
 
 local blitviewid = viewidmgr.get "blit"
 function irender.create_blit_queue(viewrect)
-	local fitlernames = create_primitive_filter_entities("blit_queue", "blit_view")
+	local fitlernames = create_primitive_filter_entities("blit_queue", "blit_view", SURFACE_TYPES["blit_queue"])
 
 	world:luaecs_create_entity {
 		policy = {
