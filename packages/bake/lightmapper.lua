@@ -12,12 +12,16 @@ local ltask     = require "ltask"
 local crypt     = require "crypt"
 
 local imaterial = world:interface "ant.asset|imaterial"
-local ibaker    = world:interface "ant.baker|ibaker"
+local ibaker    = world:interface "ant.bake|ibaker"
 
 local lightmap_sys = ecs.system "lightmap_system"
 
 function lightmap_sys:init()
-    ibaker.init_shading_info()
+    ibaker.init()
+end
+
+function lightmap_sys:init_world()
+    ibaker.init_framebuffer()
 end
 
 function lightmap_sys:entity_init()

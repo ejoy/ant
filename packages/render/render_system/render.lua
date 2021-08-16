@@ -322,7 +322,6 @@ function irender.create_blit_queue(vr)
 			mesh = world:interface "ant.render|entity".fullquad_mesh(),
 			INIT = true,
 			render_object_update = true,
-			queue_name = true,
 		}
 	}
 end

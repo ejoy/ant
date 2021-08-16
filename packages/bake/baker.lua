@@ -8,12 +8,13 @@ local bake      = require "bake"
 local bgfx      = require "bgfx"
 local math3d    =   require "math3d"
 
-local sampler   = require "sampler"
-local declmgr   = require "vertexdecl_mgr"
-local fbmgr     = require "framebuffer_mgr"
-local viewidmgr = require "viewid_mgr"
+local renderpkg = import_package "ant.render"
+local sampler   = renderpkg.sampler
+local declmgr   = renderpkg.declmgr
+local fbmgr     = renderpkg.fbmgr
+local viewidmgr = renderpkg.viewidmgr
 
-local ientity   = world:interface "ant.render|ientity"
+local ientity   = world:interface "ant.render|entity"
 local irender   = world:interface "ant.render|irender"
 local imaterial = world:interface "ant.asset|imaterial"
 local icamera   = world:interface "ant.camera|camera"
@@ -120,6 +121,7 @@ local rb_flags = sampler.sampler_flag{
 
 local function create_downsample()
     local function create_ds(tag, material)
+        w:register {name = tag}
         world:create_entity{
             policy = {
                 "ant.render|render",
@@ -128,10 +130,16 @@ local function create_downsample()
             data = {
                 name = "tag",
                 material = material,
+                filter_material = {},
+                eid = world:deprecated_create_entity{policy = {"ant.general|debug_TEST"}, data = {}},
                 mesh = ientity.create_mesh{"p1", {0, 0, 0, 0}},
-                transform = {},
+                scene = {
+                    srt = math3d.ref(mc.IDENTITY_MAT),
+                },
                 state = 0,  --force not include to any render queue
                 [tag] = true,
+                INIT = true,
+                render_object_update = true,
             }
         }
     end
@@ -213,10 +221,14 @@ local function read_tex(hemix, hemiy, srctex, fn, fn_bin)
 end
 
 local downsampler = {}
-function downsampler:init(fbs)
+function downsampler:init()
     self.weight_tex  = create_hemisphere_weights_texture()
+    create_downsample()
+end
+
+function downsampler:update(fbs)
     local function gen_rb_tex(fbidx)
-        local handle = fbmgr.get_rb(fbmgr.get(fbs[fbidx])[1]).handle
+        local handle = fbmgr.get_rb(fbmgr.get(fbidx)[1]).handle
         return {stage=0, texture={handle = handle}}
     end
 
@@ -235,8 +247,6 @@ function downsampler:init(fbs)
         bgfx.set_view_rect(vid, 0, 0, hsize, hsize)
         hsize = hsize / 2
     end
-
-    create_downsample()
 end
 
 function downsampler:downsample()
@@ -278,11 +288,11 @@ local function create_lightmap_queue()
     local fbidx = fbmgr.create{
         fbmgr.create_rb{w=bake_fbw, h=bake_fbh, layers=1, format="RGBA32F", flags=rb_flags},
         fbmgr.create_rb{w=bake_fbw, h=bake_fbh, layers=1, format="D24S8", flags=rb_flags},
-    },
+    }
 
     world:create_entity{
         policy = {
-            "ant.render|renderqueue",
+            "ant.render|render_queue",
             "ant.render|cull",
             "ant.general|name",
         },
@@ -540,11 +550,15 @@ function hemisphere_batcher:integrate()
     self.storage:copy2storage(downsampler:downsample())
 end
 
-function ibaker.init_shading_info()
+function ibaker.init()
     create_lightmap_queue()
+    downsampler:init()
+
+end
+
+function ibaker.init_framebuffer()
     local le = w:singleton("lightmap_queue", "render_target:in")
-    
-    downsampler:init{le.render_target.fb_idx, storage.blit_fbidx}
+    downsampler:update{le.render_target.fb_idx, storage.blit_fbidx}
 end
 
 function ibaker.bake_entity(worldmat, bakeobj_mesh, lightmap, scene_objects)
