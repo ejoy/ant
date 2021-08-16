@@ -14,9 +14,7 @@ function lm_baker:init_world()
 	local p = world:instance(sceneprefab)
 
 	for e in w:select "lightmapper lightmap_path:out" do
-		local p = "/pkg/ant.tool.lightmap_baker/lightmaps"
-		e.lightmap_path = p
-		lfs.create_directories(lfs.path(p))
+		e.lightmap_path = lfs.path(sceneprefab):parent_path()
 	end
 	world:pub{"bake"}	--bake all scene
 end
@@ -36,9 +34,18 @@ end
 
 function lm_baker:data_changed()
 	for _ in bake_finish_mb:each() do
+		local lmr_path
 		for e in w:select "lightmapper lightmap_result:in lightmap_path:in" do
-			local pp = lfs.path(sceneprefab_baked)
-			save_txt_file(pp:parent_path() / "lightmap_result.prefab", e)
+			lmr_path = e.lightmap_path / "lightmap_result.prefab"
+			save_txt_file(lmr_path, e)
 		end
+
+		local datalist = require "datalist"
+		local f = lfs.open(sceneprefab, "r")
+		local c = f:read "a"
+		f:close()
+		local p = datalist.parse(c)
+		p[#p+1] = lmr_path
+		save_txt_file(sceneprefab_baked, p)
 	end
 end
