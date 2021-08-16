@@ -176,7 +176,7 @@ function cfs:post_init()
     cs_entities.culleid = culleid
 
     --render
-    local rendereid = world:create_entity {
+    local rendereid = world:deprecated_create_entity {
         policy = {
             "ant.render|cluster_render_entity",
             "ant.general|name",

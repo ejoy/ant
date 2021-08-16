@@ -151,7 +151,7 @@ function world:register_entity()
 	return eid
 end
 
-function world:create_entity(v)
+function world:deprecated_create_entity(v)
 	local args = {}
 	if v.action and v.action.mount then
 		args["_mount"] = v.action.mount

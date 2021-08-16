@@ -35,7 +35,7 @@ local defaultcamera = {
 
 function ic.create_entity(_, info)
     info.updir = mc.YAXIS
-    return world:luaecs_create_entity {
+    return world:create_entity {
         policy = {
             "ant.general|name",
             "ant.camera|camera",
@@ -68,7 +68,7 @@ function ic.create(info)
         end
     end
 
-    return world:luaecs_create_entity {
+    return world:create_entity {
         policy = {
             "ant.general|name",
             "ant.camera|camera",

@@ -159,7 +159,7 @@ local function generate_stripline_vertices(points)
 end
 
 local function add_polylines(polymesh, line_width, color, material)
-    local eid = world:create_entity {
+    local eid = world:deprecated_create_entity {
         policy = {
             "ant.render|simplerender",
             "ant.render|polyline",

@@ -148,7 +148,7 @@ function s:entity_init()
 			node.updir = math3d.ref(math3d.vector(node.updir))
 		end
 		node.changed = current_changed
-		v.scene_id = world:luaecs_create_ref {
+		v.scene_id = world:create_ref {
 			scene_node = node,
 			initializing = true,
 		}

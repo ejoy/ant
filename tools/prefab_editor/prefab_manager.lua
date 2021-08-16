@@ -97,7 +97,7 @@ local geometricidx = 0
 local function gen_light_id() geometricidx = geometricidx + 1 return geometricidx end
 
 local function create_light_billboard(light_eid)
-    -- local bb_eid = world:create_entity{
+    -- local bb_eid = world:deprecated_create_entity{
     --     policy = {
     --         "ant.render|render",
     --         "ant.effect|billboard",
@@ -149,7 +149,7 @@ local slot_entity_id = 1
 function m:create_slot()
     --if not gizmo.target_eid then return end
     local auto_name = "empty" .. slot_entity_id
-    local new_entity, temp = world:create_entity {
+    local new_entity, temp = world:deprecated_create_entity {
         --action = { mount = 0 },
         policy = {
             "ant.general|name",
@@ -185,7 +185,7 @@ function m:create_collider(config)
     elseif config.type == "capsule" then
     end
     
-    local new_entity, temp = world:create_entity {
+    local new_entity, temp = world:deprecated_create_entity {
         --action = { mount = 0 },
         policy = {
             "ant.general|name",
@@ -211,7 +211,7 @@ function m:create_collider(config)
 end
 
 local function create_simple_entity(name)
-    return world:create_entity{
+    return world:deprecated_create_entity{
 		policy = {
             "ant.general|name",
             "ant.scene|hierarchy_policy",
@@ -257,7 +257,7 @@ function m:create(what, config)
             or config.type == "cylinder"
             or config.type == "sphere"
             or config.type == "torus" then
-            local new_entity, temp = world:create_entity {
+            local new_entity, temp = world:deprecated_create_entity {
                 --action = { mount = 0 },
                 policy = {
                     "ant.render|render",
@@ -621,7 +621,7 @@ function m:add_effect(filename)
         self:reset_prefab()
     end
     
-    local effect, temp = world:create_entity{
+    local effect, temp = world:deprecated_create_entity{
 		policy = {
             "ant.general|name",
             "ant.scene|hierarchy_policy",
@@ -675,7 +675,7 @@ function m:recreate_entity(eid)
     world:rebuild_entity(eid, prefab.template)
     
     -- local copy_prefab = utils.deep_copy(prefab)
-    -- local new_eid = world:create_entity(copy_prefab.template)
+    -- local new_eid = world:deprecated_create_entity(copy_prefab.template)
     -- iom.set_srt(new_eid, iom.srt(eid))
     local scale = 1
     local col = world[eid].collider

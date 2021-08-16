@@ -18,7 +18,7 @@ function icc.create(ceid)
 		error("could not create more than two time")
 	end
 
-	cceid = world:create_entity{
+	cceid = world:deprecated_create_entity{
 		policy = {
 			"ant.test.features|camera_controller",
 			"ant.general|name",

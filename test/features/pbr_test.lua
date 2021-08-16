@@ -12,7 +12,7 @@ local imaterial = world:interface "ant.asset|imaterial"
 local function create_pbr_entity(name, srt, material,
     color, metallic, roughness)
 
-    local eid = world:create_entity {
+    local eid = world:deprecated_create_entity {
         policy = {
             "ant.render|render",
             "ant.general|name",

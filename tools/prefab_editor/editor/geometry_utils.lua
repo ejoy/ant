@@ -19,7 +19,7 @@ local function create_dynamic_mesh(layout, vb, ib)
 end
 
 local function create_simple_render_entity(srt, material, name, mesh, state)
-	return world:create_entity {
+	return world:deprecated_create_entity {
 		policy = {
 			"ant.render|render",
 			"ant.general|name",

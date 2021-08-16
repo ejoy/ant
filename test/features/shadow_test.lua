@@ -12,7 +12,7 @@ local ilight = world:interface "ant.render|light"
 local iom = world:interface "ant.objcontroller|obj_motion"
 
 function st_sys:init()
-	world:create_entity {
+	world:deprecated_create_entity {
 		policy = {
 			"ant.render|render",
 			"ant.render|shadow_cast_policy",
@@ -31,7 +31,7 @@ function st_sys:init()
 		}
 	}
 
-	local rooteid = world:create_entity {
+	local rooteid = world:deprecated_create_entity {
 		policy = {
 			"ant.scene|transform_policy",
 			"ant.general|name",

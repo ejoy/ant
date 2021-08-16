@@ -350,7 +350,7 @@ local function update_lightmap(eid)
 end
 
 local function create_test_entities()
-    example_eid = world:create_entity {
+    example_eid = world:deprecated_create_entity {
         policy = {
             "ant.general|name",
             "ant.render|lightmap",
@@ -375,7 +375,7 @@ local function create_test_entities()
         }
     }
 
-    local cubeeid = world:create_entity{
+    local cubeeid = world:deprecated_create_entity{
         policy = {
             "ant.general|name",
             "ant.render|render"

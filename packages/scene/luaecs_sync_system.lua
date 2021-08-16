@@ -90,7 +90,7 @@ function s:luaecs_sync()
 			data.lightmap = e.lightmap
 			policy[#policy+1] = "ant.bake|bake_lightmap"
 		end
-		world:luaecs_create_entity {
+		world:create_entity {
 			policy = policy,
 			data = data
 		}

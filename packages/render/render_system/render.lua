@@ -103,7 +103,7 @@ local function create_primitive_filter_entities(quenename, filtertype, surface_t
 	local types = surface_types or SURFACE_TYPES[quenename]
 	for _, fn in ipairs(types) do
 		local t = ("%s_%s"):format(quenename, fn)
-		world:luaecs_create_entity{
+		world:create_entity{
 			policy = {
 				"ant.render|primitive_filter",
 			},
@@ -137,7 +137,7 @@ function irender.create_view_queue(view_rect, view_queuename, camera_ref, filter
 	end
 
 	local fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
-	world:luaecs_create_entity {
+	world:create_entity {
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|watch_screen_buffer",
@@ -190,7 +190,7 @@ function irender.create_pre_depth_queue(view_rect, camera_ref)
 		}
 	}
 
-	world:luaecs_create_entity{
+	world:create_entity{
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|pre_depth_queue",
@@ -259,7 +259,7 @@ function irender.create_main_queue(view_rect, camera_ref)
 	local fbidx = create_main_fb(view_rect)
 
 	local filternames = create_primitive_filter_entities "main_queue"
-	world:luaecs_create_entity {
+	world:create_entity {
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|watch_screen_buffer",
@@ -296,7 +296,7 @@ local blitviewid = viewidmgr.get "blit"
 function irender.create_blit_queue(viewrect)
 	local fitlernames = create_primitive_filter_entities("blit_queue", "blit_view")
 
-	world:luaecs_create_entity {
+	world:create_entity {
 		policy = {
 			"ant.render|blit_queue",
 			"ant.render|render_queue",
@@ -334,7 +334,7 @@ function irender.create_blit_queue(viewrect)
 	}
 
 	local ies = world:interface "ant.scene|ientity_state"
-	world:luaecs_create_entity {
+	world:create_entity {
 		policy = {
 			"ant.general|name",
 			"ant.render|render",
@@ -345,7 +345,7 @@ function irender.create_blit_queue(viewrect)
 			scene = {
 				srt = math3d.ref(mc.IDENTITY_MAT),
 			},
-			eid = world:create_entity{policy = {"ant.general|debug_TEST"}, data = {}},
+			eid = world:deprecated_create_entity{policy = {"ant.general|debug_TEST"}, data = {}},
 			render_object = {},
 			filter_material = {},
 			material = "/pkg/ant.resources/materials/fullscreen.material",

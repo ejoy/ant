@@ -9,7 +9,7 @@ function world:pipeline_init()
     self._update_func = self:pipeline_func "_update"
 end
 
-function world:luaecs_create_entity(v)
+function world:create_entity(v)
     local res = policy.create(self, v.policy)
     local data = v.data
     for c, def in pairs(res.component_opt) do
@@ -37,7 +37,7 @@ function world:luaecs_create_entity(v)
     return ref
 end
 
-function world:luaecs_create_ref(v)
+function world:create_ref(v)
     local mainkey = policy.find_mainkey(self, v)
     return self.w:ref(mainkey, v)
 end

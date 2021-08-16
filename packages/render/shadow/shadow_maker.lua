@@ -192,7 +192,7 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 	w:register {name = queuename}
 
 	local filtertag = queuename .. "_opacity"
-	world:luaecs_create_entity{
+	world:create_entity{
 		policy = {
 			"ant.render|primitive_filter",
 		},
@@ -204,7 +204,7 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 		}
 	}
 
-	world:luaecs_create_entity {
+	world:create_entity {
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|cull",

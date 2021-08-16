@@ -139,7 +139,7 @@ function ipp.add_technique(name, tech)
 end
 
 function ipp.create_pass(name, material, rt, transform, camera_ref)
-    local eid = world:create_entity {
+    local eid = world:deprecated_create_entity {
         policy = {"ant.render|simplerender"},
         data = {
             simplemesh  = ientity.quad_mesh(),
