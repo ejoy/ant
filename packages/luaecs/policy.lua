@@ -1,7 +1,7 @@
 local function create(w, policies)
     local res = {
         component = {},
-        unique_component = {},
+        component_opt = {},
     }
     local componentset = {}
     local unionset = {}
@@ -30,19 +30,23 @@ local function create(w, policies)
                 res.component[#res.component+1] = v
             end
         end
+        for _, v in ipairs(class.component_opt) do
+            if res.component_opt[v] == nil then
+                local component_class = w._decl.component_v2
+                local component_type =  component_class[v].type[1]
+                if component_type == nil then
+                    res.component_opt[v] = true
+                elseif component_type == "lua" then
+                    res.component_opt[v] = false
+                else
+                    res.component_opt[v] = 0
+                end
+            end
+        end
     end
     for _, name in ipairs(policies) do
         import_policy(name)
     end
-
-    table.sort(res.component)
-
-    for _, c in ipairs(res.component) do
-        if w._class.unique[c] then
-            res.unique_component[#res.unique_component+1] = c
-        end
-    end
-
     return res
 end
 

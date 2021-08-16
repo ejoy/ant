@@ -33,29 +33,23 @@ local defaultcamera = {
     name = "default_camera",
 }
 
-function ic.create_entity(eid, info)
+function ic.create_entity(_, info)
     info.updir = mc.YAXIS
-    local srt = math3d.ref(info.transform and math3d.matrix(info.transform) or mc.IDENTITY_MAT)
     return world:luaecs_create_entity {
         policy = {
             "ant.general|name",
             "ant.camera|camera",
-            "ant.scene|scene_object",
         },
         data = {
-            reference = true,
-            eid = eid,
             camera = {
+                eyepos = info.transform.t,
+                viewdir = math3d.todirection(math3d.quaternion(info.transform.r)),
+                updir = info.updir,
                 frustum = info.frustum,
                 clip_range = info.clip_range,
                 dof = info.dof,
-                srt = srt,
             },
             name = info.name or "DEFAULT_CAMERA",
-            scene = {
-                srt = srt,
-                updir = info.updir and math3d.ref(math3d.vector(info.updir)) or nil,
-            }
         }
     }
 end
@@ -74,29 +68,21 @@ function ic.create(info)
         end
     end
 
-    local viewmat = math3d.lookto(info.eyepos, info.viewdir, info.updir)
-    local srt = math3d.ref(math3d.matrix(math3d.inverse(viewmat)))
-    local eid = world:register_entity()
     return world:luaecs_create_entity {
         policy = {
             "ant.general|name",
             "ant.camera|camera",
-            "ant.scene|scene_object",
         },
         data = {
-            reference = true,
-            eid = eid,
             camera = {
+                eyepos = info.eyepos,
+                viewdir = info.viewdir,
+                updir = info.updir,
                 frustum = frustum,
                 clip_range = info.clip_range,
                 dof = info.dof,
-                srt = srt,
             },
             name = info.name or "DEFAULT_CAMERA",
-            scene = {
-                srt = srt,
-                updir = info.updir and math3d.ref(math3d.vector(info.updir)) or nil,
-            }
         }
     }
 end

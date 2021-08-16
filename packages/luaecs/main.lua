@@ -12,15 +12,16 @@ end
 function world:luaecs_create_entity(v)
     local res = policy.create(self, v.policy)
     local data = v.data
+    for c, def in pairs(res.component_opt) do
+        if data[c] == nil then
+            data[c] = def
+        end
+    end
     for _, c in ipairs(res.component) do
         local d = data[c]
         if d == nil then
             error(("component `%s` must exists"):format(c))
         end
-    end
-    --TODO?
-    if data.scene then
-        data.scene_id = 0
     end
     if not data.reference then
         self.w:new {
@@ -46,6 +47,9 @@ local function update_decl(self)
     local decl = self._decl
     local component = decl.component_v2
     for name, info in pairs(component) do
+        if name == "reference" then
+            goto continue
+        end
         local type = info.type[1]
         if type == "ref" then
             w:register {
@@ -59,6 +63,7 @@ local function update_decl(self)
                 type = type
             }
         end
+        ::continue::
     end
 end
 
