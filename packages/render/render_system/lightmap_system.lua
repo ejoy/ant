@@ -33,10 +33,10 @@ function lm_sys:end_filter()
     for e in w:select "filter_result:in lightmap:in render_object:in filter_material:in material:in" do
         local lr_e = w:singleton("lightmapper", "lightmap_result:in")
         local r = lr_e.lightmap_result
-        local mq = w:singleton("main_queue", "filter_names:in")
+        local mq = w:singleton("main_queue", "primitive_filter:in")
         local fr = e.filter_result
         local material = e.material
-        for _, fn in ipairs(mq.filter_names) do
+        for _, fn in ipairs(mq.primitive_filter) do
             if fr[fn] then
                 
                 local lm = e.lightmap

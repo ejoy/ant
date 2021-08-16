@@ -49,13 +49,6 @@ local SURFACE_TYPES <const> = {
     pre_depth_queue = {"opacity"},
 }
 
-for qn, l in pairs(SURFACE_TYPES) do
-    for _, f in ipairs(l) do
-        local tag = ("%s_%s"):format(qn, f)
-        w:register{name = tag}
-    end
-end
-
 local irender		= ecs.interface "irender"
 function irender.check_primitive_mode_state(state, template_state)
 	local s = bgfx.parse_state(state)
@@ -98,27 +91,6 @@ function irender.get_main_view_rendertexture()
 	return fbmgr.get_rb(fb[1]).handle
 end
 
-local function create_primitive_filter_entities(quenename, filtertype, surface_types, exclude)
-	local filter_names = {}
-	for _, fn in ipairs(surface_types) do
-		local t = ("%s_%s"):format(quenename, fn)
-		world:luaecs_create_entity{
-			policy = {
-				"ant.render|primitive_filter",
-			},
-			data = {
-				primitive_filter = {
-					filter_type = filtertype or "visible",
-					exclude_type = exclude,
-				},
-				[t] = true,
-			}
-		}
-		filter_names[#filter_names+1] = t
-	end
-	return filter_names
-end
-
 local settingdata = setting:data()
 local default_clear_state<const> = {
 	color = settingdata.graphic.render.clear_color or 0x000000ff,
@@ -130,10 +102,6 @@ function irender.create_view_queue(view_rect, view_queuename, camera_ref, filter
 	surfacetypes = surfacetypes or SURFACE_TYPES["main_queue"]
 	filtertype = filtertype or "visible"
 	w:register{name = view_queuename}
-	local filter_names = create_primitive_filter_entities(view_queuename, filtertype, surfacetypes, exclude)
-	for _, fn in ipairs(filter_names) do
-		w:register {name = fn,}
-	end
 
 	local fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
 	world:luaecs_create_entity {
@@ -154,7 +122,11 @@ function irender.create_view_queue(view_rect, view_queuename, camera_ref, filter
 			[view_queuename]	= true,
 			name 				= view_queuename,
 			queue_name			= view_queuename,
-			filter_names		= filter_names,
+			primitive_filter	= {
+				filter_type = filtertype,
+				exclude_type = exclude,
+				table.unpack(surfacetypes),
+			},
 			cull_tag			= {},
 			visible 			= visible or false,
 			watch_screen_buffer	= true,
@@ -172,8 +144,6 @@ local rb_flag = samplerutil.sampler_flag {
 }
 
 function irender.create_pre_depth_queue(view_rect, camera_ref)
-	local fnames = create_primitive_filter_entities("pre_depth_queue", "visible", SURFACE_TYPES["pre_depth_queue"])
-
 	local fbidx = fbmgr.create{
 		fbmgr.create_rb{
 			format = "R32F",
@@ -210,7 +180,10 @@ function irender.create_pre_depth_queue(view_rect, camera_ref)
 				view_rect = view_rect,
 				fb_idx = fbidx,
 			},
-			filter_names 	= fnames,
+			primitive_filter = {
+				filter_type = "visible",
+				table.unpack(SURFACE_TYPES["pre_depth_queue"]),
+			},
 			cull_tag 		= {},
 			queue_name 		= "pre_depth_queue",
 			name 			= "pre_depth_queue",
@@ -256,8 +229,6 @@ end
 
 function irender.create_main_queue(view_rect, camera_ref)
 	local fbidx = create_main_fb(view_rect)
-
-	local filternames = create_primitive_filter_entities("main_queue", "visible", SURFACE_TYPES["main_queue"])
 	world:luaecs_create_entity {
 		policy = {
 			"ant.render|render_queue",
@@ -279,7 +250,10 @@ function irender.create_main_queue(view_rect, camera_ref)
 				},
 				fb_idx = fbidx,
 			},
-			filter_names = filternames,
+			primitive_filter = {
+				filter_type = "visible",
+				table.unpack(SURFACE_TYPES["main_queue"]),
+			},
 			cull_tag = {},
 			visible = true,
 			INIT = true,
@@ -293,8 +267,6 @@ end
 
 local blitviewid = viewidmgr.get "blit"
 function irender.create_blit_queue(viewrect)
-	local fitlernames = create_primitive_filter_entities("blit_queue", "blit_view", SURFACE_TYPES["blit_queue"])
-
 	world:luaecs_create_entity {
 		policy = {
 			"ant.render|blit_queue",
@@ -316,12 +288,12 @@ function irender.create_blit_queue(viewrect)
 				clear_state = {
 					clear = "",
 				},
-				view_rect = {
-					x = viewrect.x or 0, y = viewrect.y or 0,
-					w = viewrect.w or 1, h = viewrect.h or 1,
-				},
+				view_rect = viewrect,
 			},
-			filter_names 	= fitlernames,
+			primitive_filter = {
+				filter_type = "blit_view",
+				table.unpack(SURFACE_TYPES["blit_queue"]),
+			},
 			visible 		= true,
 			blit_queue 		= true,
 			watch_screen_buffer = true,

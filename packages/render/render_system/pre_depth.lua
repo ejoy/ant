@@ -34,8 +34,8 @@ function s:end_filter()
         local m = assert(which_material(e.eid))
         local fr = e.filter_result
         local state = e.render_object.state
-        for qe in w:select "pre_depth_queue filter_names:in" do
-            for _, fn in ipairs(qe.filter_names) do
+        for qe in w:select "pre_depth_queue primitive_filter:in" do
+            for _, fn in ipairs(qe.primitive_filter) do
                 if fr[fn] then
                     e.filter_material[fn] = {
                         fx          = m.fx,

@@ -161,30 +161,6 @@ local function create_pick_entity()
 		}
 	}
 
-	world:luaecs_create_entity{
-		policy = {
-			"ant.render|primitive_filter",
-		},
-		data = {
-			primitive_filter = {
-				filter_type = "selectable",
-			},
-			pickup_queue_opacity = true,
-		}
-	}
-
-	world:luaecs_create_entity{
-		policy = {
-			"ant.render|primitive_filter",
-		},
-		data = {
-			primitive_filter = {
-				filter_type = "selectable",
-			},
-			pickup_queue_translucent = true,
-		}
-	}
-
 	world:luaecs_create_entity {
 		policy = {
 			"ant.general|name",
@@ -215,9 +191,10 @@ local function create_pick_entity()
 				},
 				fb_idx = fbidx,
 			},
-			filter_names = {
-				"pickup_queue_opacity",
-				"pickup_queue_translucent",
+			primitive_filter = {
+				filter_type = "selectable",
+				"opacity",
+				"translucent",
 			},
 			cull_tag	= {},
 			name 		= "pickup_queue",

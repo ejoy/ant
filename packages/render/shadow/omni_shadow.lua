@@ -215,7 +215,6 @@ function ios.create(point_eid)
                 name = "camera_" .. queuename
             }
 
-        local filternames = irender.create_primitive_filter_entities(queuename, "cast_shadow", {"opacity"})
         world:luaecs_create_entity{
             policy = {
                 "ant.render|omni_shadow",
@@ -242,7 +241,10 @@ function ios.create(point_eid)
                     light_eid = point_eid,
                     stencil_ref = t.stencil_ref,
                 },
-                filter_names = filternames,
+                primitive_filter = {
+                    filter_type = "cast_shadow",
+                    "opacity",
+                },
                 queue_name = queuename,
                 cull_tag = {},
                 name = queuename,

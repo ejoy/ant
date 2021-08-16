@@ -6,10 +6,6 @@ local math3d = require "math3d"
 
 local irender   = world:interface "ant.render|irender"
 local imaterial = world:interface "ant.asset|imaterial"
-local ies		= world:interface "ant.scene|ientity_state"
-
-w:register{name = "pickup_queue_opacity"}
-w:register{name = "pickup_queue_translucent"}
 
 local pickup_materials = {}
 
@@ -55,8 +51,8 @@ function s:end_filter()
 		local fr = e.filter_result
 		local st = e.render_object.fx.setting.surfacetype
 		local fm = e.filter_material
-		local qe = w:singleton("pickup_queue", "filter_names:in")
-		for _, fn in ipairs(qe.filter_names) do
+		local qe = w:singleton("pickup_queue", "primitive_filter:in")
+		for _, fn in ipairs(qe.primitive_filter) do
 			if fr[fn] then
 				local m = assert(pickup_materials[st])
 				local state = e.render_object.state

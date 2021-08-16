@@ -190,20 +190,6 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 		}
 
 	w:register {name = queuename}
-
-	local filtertag = queuename .. "_opacity"
-	world:luaecs_create_entity{
-		policy = {
-			"ant.render|primitive_filter",
-		},
-		data = {
-			primitive_filter = {
-				filter_type = "cast_shadow",
-			},
-			[filtertag]	= true,
-		}
-	}
-
 	world:luaecs_create_entity {
 		policy = {
 			"ant.render|render_queue",
@@ -229,7 +215,10 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 				},
 				fb_idx = fbidx,
 			},
-			filter_names = {filtertag},
+			primitive_filter = {
+				filter_type = "cast_shadow",
+				"opacity",
+			},
 			cull_tag = {},
 			visible = false,
 			queue_name = queuename,
@@ -358,7 +347,7 @@ end
 
 function sm:refine_camera()
 	-- local setting = ishadow.setting()
-	-- for se in w:select "csm_queue filter_names:in"
+	-- for se in w:select "csm_queue primitive_filter:in"
 	-- 	local se = world[eid]
 	-- assert(false && "should move code new ecs")
 	-- 		local filter = se.primitive_filter.result
@@ -438,8 +427,8 @@ function s:end_filter()
 		local m = which_material(e.eid)
 		local fm = e.filter_material
 		local fr = e.filter_result
-		for qe in w:select "csm_queue filter_names:in" do
-			for _, fn in ipairs(qe.filter_names) do
+		for qe in w:select "csm_queue primitive_filter:in" do
+			for _, fn in ipairs(qe.primitive_filter) do
 				if fr[fn] then
 					fm[fn] = {
 						fx = m.fx,
