@@ -66,7 +66,7 @@ local function scale_orthoview(camera_ref, delta)
 end
 
 function cc_sys:init_world()
-	for e in w:select "INIT main_queue camera_ref:in" do
+	for e in w:select "main_queue camera_ref:in" do
         icc.attach(e.camera_ref)
     end
 end
