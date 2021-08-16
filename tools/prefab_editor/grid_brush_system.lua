@@ -11,8 +11,8 @@ local computil = world:interface "ant.render|entity"
 local utils     = require "common.utils"
 local brush_sys = ecs.system "grid_brush_system"
 local global_data = require "common.global_data"
-
-local default_color = {1.0, 1.0, 1.0, 0.5}
+local brush_def = require "brush_def"
+--local default_color = {1.0, 1.0, 1.0, 0.5}
 local current_brush_color = {1, 1, 1, 0.5}
 local current_brush_id
 local grid = {
@@ -75,6 +75,7 @@ function grid:init(size, row, col)
     self.total_height = size * row
     self.data = {}
     self.visible = true
+    local default_color = colori2f(brush_def.color[1])
     for i = 1, row do
         local temp_row = {}
         local posz = 0.5 * size - self.total_width * 0.5 + (i - 1) * size

@@ -10,6 +10,7 @@ function iss.set_parent(eid, peid)
 	local e = world[eid]
 	local pe = world[peid]
 	if (not e or e.scene_entity) and (not pe or pe.scene_entity) then
+		e.parent = peid
 		world:pub {"component_changed", "parent", eid, peid}
 	end
 end
