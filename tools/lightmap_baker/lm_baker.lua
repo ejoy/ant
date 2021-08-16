@@ -14,7 +14,7 @@ function lm_baker:init_world()
 	local p = world:instance(sceneprefab)
 
 	for e in w:select "lightmapper lightmap_path:out" do
-		e.lightmap_path = lfs.path(sceneprefab):parent_path()
+		e.lightmap_path = lfs.path(sceneprefab):parent_path() / "lightmap"
 	end
 	world:pub{"bake"}	--bake all scene
 end
@@ -34,18 +34,12 @@ end
 
 function lm_baker:data_changed()
 	for _ in bake_finish_mb:each() do
-		local lmr_path
-		for e in w:select "lightmapper lightmap_result:in lightmap_path:in" do
-			lmr_path = e.lightmap_path / "lightmap_result.prefab"
-			save_txt_file(lmr_path, e)
+		for e in w:select "lightmapper lightmap_result:in" do
+			local bake_scened = {
+				{prefab = sceneprefab,},
+				e,
+			}
+			save_txt_file(sceneprefab_baked, bake_scened)
 		end
-
-		local datalist = require "datalist"
-		local f = lfs.open(sceneprefab, "r")
-		local c = f:read "a"
-		f:close()
-		local p = datalist.parse(c)
-		p[#p+1] = lmr_path
-		save_txt_file(sceneprefab_baked, p)
 	end
 end
