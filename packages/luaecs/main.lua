@@ -145,6 +145,11 @@ function object_proxy:send(...)
     end
 end
 
+function object_proxy:remove()
+    local e = self.e
+    self.w:pub {"object_remove", e}
+end
+
 function world:create_object(v)
     local prefab = assetmgr.resource(v[1], { create_template = function (_,...) return create_template(self,...) end })
     local ref = instance(self, prefab)
