@@ -29,7 +29,8 @@ local function update_pre_depth_queue()
 	for de in w:select "pre_depth_queue render_target:out camera_eid:out" do
 		for me in w:select "main_queue render_target:in camera_eid:in" do
 			de.camera_eid = me.camera_eid
-			de.render_target.view_rect = me.render_target.view_rect
+			local vr = me.render_target.view_rect
+			de.render_target.view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h}
 		end
 	end
 end

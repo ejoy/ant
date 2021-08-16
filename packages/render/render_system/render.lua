@@ -143,17 +143,17 @@ local rb_flag = samplerutil.sampler_flag {
 	V="CLAMP",
 }
 
-function irender.create_pre_depth_queue(view_rect, camera_ref)
+function irender.create_pre_depth_queue(vr, camera_ref)
 	local fbidx = fbmgr.create{
 		fbmgr.create_rb{
 			format = "R32F",
-			w = view_rect.w, h=view_rect.h,
+			w = vr.w, h=vr.h,
 			layers = 1,
 			flags = rb_flag,
 		},
 		fbmgr.create_rb{
 			format = "D24S8",
-			w = view_rect.w, h=view_rect.h,
+			w = vr.w, h=vr.h,
 			layers = 1,
 			flags = rb_flag,
 		}
@@ -177,7 +177,7 @@ function irender.create_pre_depth_queue(view_rect, camera_ref)
 					depth = 1,
 				},
 				view_mode = "s",
-				view_rect = view_rect,
+				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
 				fb_idx = fbidx,
 			},
 			primitive_filter = {
@@ -227,8 +227,8 @@ local function create_main_fb(view_rect)
 	return fbmgr.create(render_buffers)
 end
 
-function irender.create_main_queue(view_rect, camera_ref)
-	local fbidx = create_main_fb(view_rect)
+function irender.create_main_queue(vr, camera_ref)
+	local fbidx = create_main_fb(vr)
 	world:create_entity {
 		policy = {
 			"ant.render|render_queue",
@@ -244,7 +244,7 @@ function irender.create_main_queue(view_rect, camera_ref)
 				viewid = viewidmgr.get "main_view",
 				view_mode = "s",
 				clear_state = default_clear_state,
-				view_rect = view_rect,
+				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
 				fb_idx = fbidx,
 			},
 			primitive_filter = {
@@ -263,7 +263,7 @@ function irender.create_main_queue(view_rect, camera_ref)
 end
 
 local blitviewid = viewidmgr.get "blit"
-function irender.create_blit_queue(viewrect)
+function irender.create_blit_queue(vr)
 	world:create_entity {
 		policy = {
 			"ant.render|blit_queue",
@@ -276,7 +276,7 @@ function irender.create_blit_queue(viewrect)
 				eyepos = mc.ZERO_PT,
 				viewdir = mc.ZAXIS,
 				updir = mc.YAXIS,
-				frustum = default_comp.frustum(viewrect.w / viewrect.h),
+				frustum = default_comp.frustum(vr.w / vr.h),
 				name = "blit_camera",
 			}),
 			render_target = {
@@ -285,7 +285,7 @@ function irender.create_blit_queue(viewrect)
 				clear_state = {
 					clear = "",
 				},
-				view_rect = viewrect,
+				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
 			},
 			primitive_filter = {
 				filter_type = "blit_view",

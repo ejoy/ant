@@ -175,7 +175,7 @@ end
 
 local sm = ecs.system "shadow_system"
 
-local function create_csm_entity(index, viewrect, fbidx, depth_type)
+local function create_csm_entity(index, vr, fbidx, depth_type)
 	local csmname = "csm" .. index
 	local queuename = "csm_queue" .. index
 	local camera_ref = icamera.create {
@@ -206,7 +206,7 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 			render_target = {
 				viewid = viewidmgr.get(csmname),
 				view_mode = "s",
-				view_rect = viewrect,
+				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
 				clear_state = {
 					color = 0xffffffff,
 					depth = 1,
