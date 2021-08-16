@@ -26,6 +26,12 @@ system "entity_system"
     .method "entity_done"
     .method "update_world"
 
+system "prefab_system"
+    .implement "prefab_system.lua"
+    .method "entity_init"
+    .method "entity_remove"
+    .method "data_changed"
+
 component_v2 "INIT"
 
 component_v2 "create_entity"
