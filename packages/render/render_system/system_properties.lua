@@ -143,8 +143,8 @@ local function update_lighting_properties()
 		local rt = main_render_target()
 		local vr = rt.view_rect
 	
-		local cs = world:singleton_entity "cluster_render"
-		local cluster_size = cs.cluster_render.cluster_size
+		local cr = w:object("cluster_render", 1)
+		local cluster_size = cr.cluster_size
 		system_properties["u_cluster_size"].v	= cluster_size
 		local f = icamera.get_frustum(camera_ref)
 		local near, far = f.n, f.f
@@ -158,7 +158,7 @@ local function update_lighting_properties()
 			vr.w / cluster_size[1], vr.h/cluster_size[2],
 		}
 
-		local cs_p = cs.cluster_render.properties
+		local cs_p = cr.properties
 		local function update_buffer(name, ...)
 			if name then
 				local sp, p = system_properties[name], cs_p[name]

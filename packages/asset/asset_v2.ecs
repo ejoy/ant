@@ -7,6 +7,8 @@ system "mesh_system"
     .method "entity_init"
     .method "end_frame"
 
+component_v2 "material_result".type "lua"
+    .require_system "ant.asset|material_system"
 component_v2 "material_setting".type "lua"
 component_v2 "material".type "lua"
     .require_system "ant.asset|material_system"

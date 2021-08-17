@@ -154,7 +154,6 @@ function init_loader_sys:init()
     local eid2 = world:instance "/pkg/ant.resources.binary/meshes/box.glb|mesh.prefab"[1]
     local s = iom.get_scale(eid2)
     iom.set_scale(eid2, math3d.mul(s, {100, 100, 100, 0}))
-
     --world:instance "/pkg/ant.test.features/assets/entities/font_tt.prefab"
     --world:instance "/pkg/ant.resources.binary/meshes/female/female.glb|mesh.prefab"
 
@@ -189,6 +188,10 @@ local function main_camera_ref()
     for e in w:select "main_queue camera_ref:in" do
         return e.camera_ref
     end
+end
+
+function init_loader_sys:init_world()
+
 end
 
 function init_loader_sys:entity_init()

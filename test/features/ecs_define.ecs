@@ -79,6 +79,7 @@ system "init_loader_system"
     .require_interface "ant.terrain|terrain"
 
     .method "init"
+    .method "init_world"
     .method "entity_init"
     .method "data_changed"
 

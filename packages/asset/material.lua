@@ -269,19 +269,21 @@ function imaterial.load(m, setting)
 	local mm = type(m) == "string" and world.component "material"(m) or m
 	assert(type(mm) == "table")
 	
-	local ro = {}
-	build_material(load_material(mm, {}, setting), ro)
-	return ro
+	local mr = {}
+	build_material(load_material(mm, {}, setting), mr)
+	return mr
 end
 
 ----material_v2
 local w = world.w
 local ms = ecs.system "material_system"
 function ms:entity_init()
-    for e in w:select "INIT material:in material_setting?in render_object:in" do
+	w:clear "material_result"
+    for e in w:select "INIT material:in material_setting?in material_result:temp" do
 		if type(e.material) == "string" then
 			local mm = load_material(init_material(e.material), {}, e.material_setting)
-			build_material(mm, e.render_object)
+			e.material_result = {}
+			build_material(mm, e.material_result)
 		end
 	end
 end

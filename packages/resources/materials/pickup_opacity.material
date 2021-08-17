@@ -1,4 +1,6 @@
 fx:
   fs: /pkg/ant.resources/shaders/picking/fs_picking.sc
   vs: /pkg/ant.resources/shaders/picking/vs_picking.sc
+properties:
+  u_id: {0, 0, 0, 0}
 state: /pkg/ant.resources/materials/states/default.state
