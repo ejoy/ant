@@ -21,12 +21,6 @@ local function load_material(m, c, setting)
 end
 
 local imaterial = ecs.interface "imaterial"
-function imaterial.load(m, setting)
-	local mm = type(m) == "string" and world.component "material"(m) or m
-	assert(type(mm) == "table")
-	
-	return load_material(mm, {}, setting)
-end
 
 local function set_uniform(p)
 	return bgfx.set_uniform(p.handle, p.value)
@@ -259,7 +253,7 @@ local function generate_properties(fx, properties)
 	return new_properties
 end
 
-local function to_renderobj(m, ro)
+local function build_material(m, ro)
 	ro.fx 			= m.fx
 	ro.properties 	= generate_properties(m.fx, m.properties)
 	ro.state 		= m.state
@@ -267,7 +261,17 @@ local function to_renderobj(m, ro)
 end
 
 function mt.process_entity(e)
-	to_renderobj(e._cache_prefab, e._rendercache)
+	build_material(e._cache_prefab, e._rendercache)
+end
+
+
+function imaterial.load(m, setting)
+	local mm = type(m) == "string" and world.component "material"(m) or m
+	assert(type(mm) == "table")
+	
+	local ro = {}
+	build_material(load_material(mm, {}, setting), ro)
+	return ro
 end
 
 ----material_v2
@@ -277,7 +281,7 @@ function ms:entity_init()
     for e in w:select "INIT material:in material_setting?in render_object:in" do
 		if type(e.material) == "string" then
 			local mm = load_material(init_material(e.material), {}, e.material_setting)
-			to_renderobj(mm, e.render_object)
+			build_material(mm, e.render_object)
 		end
 	end
 end
