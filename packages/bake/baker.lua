@@ -443,7 +443,7 @@ local function render_scene(vp, view, proj, sceneobjs)
     bgfx.set_view_rect(lightmap_viewid, vp[1], vp[2], vp[3], vp[4])
     bgfx.set_view_transform(lightmap_viewid, view, proj)
     local vr = {x=vp[1], y=vp[2], w=vp[3], h=vp[4]}
-    local camerapos = {view[4], view[8], view[12], 1.0}
+    local camerapos = math3d.vector(view[4], view[8], view[12], 1.0)
     isp.update_lighting_properties(vr, camerapos, setting.z_near, setting.z_far)
     ics.build_cluster_aabbs()
     ics.cull_lights()
