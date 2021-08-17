@@ -227,3 +227,7 @@ function cfs:render_preprocess()
 
     cull_lights()
 end
+
+local ics = ecs.interface "icluster_render"
+ics.build_cluster_aabbs     = build_cluster_aabb_struct
+ics.cull_lights             = cull_lights

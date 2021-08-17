@@ -146,14 +146,13 @@ local function point_light_test()
 end
 
 local icc = world:interface "ant.test.features|icamera_controller"
-
+local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
     --point_light_test()
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
     local eid = world:instance "/pkg/ant.test.features/assets/entities/light_directional.prefab"[1]
     local eid2 = world:instance "/pkg/ant.resources.binary/meshes/box.glb|mesh.prefab"[1]
-    local s = iom.get_scale(eid2)
-    iom.set_scale(eid2, math3d.mul(s, {100, 100, 100, 0}))
+    world:pub{"after_init", eid2}
     --world:instance "/pkg/ant.test.features/assets/entities/font_tt.prefab"
     --world:instance "/pkg/ant.resources.binary/meshes/female/female.glb|mesh.prefab"
 
@@ -191,7 +190,11 @@ local function main_camera_ref()
 end
 
 function init_loader_sys:init_world()
-
+    for msg in after_init_mb:each() do
+        local eid = msg[2]
+        local s = iom.get_scale(eid)
+        iom.set_scale(eid, math3d.mul(s, {100, 100, 100, 0}))
+    end
 end
 
 function init_loader_sys:entity_init()

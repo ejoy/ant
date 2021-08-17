@@ -18,3 +18,8 @@ policy_v2 "cluster_render_entity"
     .require_system "ant.render|cluster_forward_system"
     .require_interface "ant.render|icompute"
     .component_v2 "cluster_render"
+
+interface "icluster_render"
+    .implement "render_system/cluster_render.lua"
+    .method "build_cluster_aabbs"
+    .method "cull_lights"

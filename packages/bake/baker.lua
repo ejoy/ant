@@ -18,6 +18,9 @@ local ientity   = world:interface "ant.render|entity"
 local irender   = world:interface "ant.render|irender"
 local imaterial = world:interface "ant.asset|imaterial"
 local icamera   = world:interface "ant.camera|camera"
+local ics       = world:interface "ant.render|icluster_render"
+local isp       = world:interface "ant.render|isystem_properties"
+
 local mathpkg   = import_package "ant.math"
 local mc        = mathpkg.constant
 
@@ -439,6 +442,11 @@ local function render_scene(vp, view, proj, sceneobjs)
     bgfx.touch(lightmap_viewid)
     bgfx.set_view_rect(lightmap_viewid, vp[1], vp[2], vp[3], vp[4])
     bgfx.set_view_transform(lightmap_viewid, view, proj)
+    local vr = {x=vp[1], y=vp[2], w=vp[3], h=vp[4]}
+    local camerapos = {view[4], view[8], view[12], 1.0}
+    isp.update_lighting_properties(vr, camerapos, setting.z_near, setting.z_far)
+    ics.build_cluster_aabbs()
+    ics.cull_lights()
     draw_scene(sceneobjs)
 end
 

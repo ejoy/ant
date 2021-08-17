@@ -63,6 +63,7 @@ policy_v2 "render_pipeline"
 component_v2 "shadow_render_queue"
     .type "lua"
 
+component_v2 "filter_result".type "lua"
 component_v2 "filter_created"
 component_v2 "visible"
 component_v2 "camera_ref".type "lua"

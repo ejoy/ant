@@ -54,8 +54,6 @@ local function has_filter_tag(t, filter)
 	end
 end
 
-w:register{name = "filter_result", type = "lua"}
-
 function render_sys:update_filter()
 	w:clear "filter_result"
     for e in w:select "render_object_update render_object:in filter_result:temp" do

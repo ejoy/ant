@@ -119,10 +119,36 @@ local function main_render_target()
 	end
 end
 
+local function update_cluster_render_properties(vr, near, far)
+	local cr = w:object("cluster_render", 1)
+	local cluster_size = cr.cluster_size
+	system_properties["u_cluster_size"].v	= cluster_size
+	system_properties["u_cluster_shading_param"].v	= {vr.w, vr.h, near, far}
+	local num_depth_slices = cluster_size[3]
+	local log_farnear = math.log(far/near, 2)
+	local log_near = math.log(near, 2)
 
-local function update_lighting_properties()
-	local camera_ref = main_camera_ref()
-	system_properties["u_eyepos"].id = iom.get_position(camera_ref)
+	system_properties["u_cluster_shading_param2"].v	= {
+		num_depth_slices / log_farnear, -num_depth_slices * log_near / log_farnear,
+		vr.w / cluster_size[1], vr.h/cluster_size[2],
+	}
+
+	local cs_p = cr.properties
+	local function update_buffer(name, ...)
+		if name then
+			local sp, p = system_properties[name], cs_p[name]
+			sp.stage  = p.stage
+			sp.handle = p.handle
+			sp.access = p.access
+			update_buffer(...)
+		end
+	end
+	update_buffer("b_light_grids", "b_light_index_lists", "b_light_info")
+end
+
+
+local function update_lighting_properties(viewrect, camerapos, near, far)
+	system_properties["u_eyepos"].id = camerapos
 
 	system_properties["u_light_count"].v = {world:count "light_type", 0, 0, 0}
 
@@ -140,35 +166,7 @@ local function update_lighting_properties()
 	update_ibl_tex(ibl)
 
 	if ilight.use_cluster_shading() then
-		local rt = main_render_target()
-		local vr = rt.view_rect
-	
-		local cr = w:object("cluster_render", 1)
-		local cluster_size = cr.cluster_size
-		system_properties["u_cluster_size"].v	= cluster_size
-		local f = icamera.get_frustum(camera_ref)
-		local near, far = f.n, f.f
-		system_properties["u_cluster_shading_param"].v	= {vr.w, vr.h, near, far}
-		local num_depth_slices = cluster_size[3]
-		local log_farnear = math.log(far/near, 2)
-		local log_near = math.log(near, 2)
-	
-		system_properties["u_cluster_shading_param2"].v	= {
-			num_depth_slices / log_farnear, -num_depth_slices * log_near / log_farnear,
-			vr.w / cluster_size[1], vr.h/cluster_size[2],
-		}
-
-		local cs_p = cr.properties
-		local function update_buffer(name, ...)
-			if name then
-				local sp, p = system_properties[name], cs_p[name]
-				sp.stage  = p.stage
-				sp.handle = p.handle
-				sp.access = p.access
-				update_buffer(...)
-			end
-		end
-		update_buffer("b_light_grids", "b_light_index_lists", "b_light_info")
+		update_cluster_render_properties(viewrect, near, far)
 	else
 		local li = system_properties.b_light_info
 		li.stage = 12
@@ -176,6 +174,8 @@ local function update_lighting_properties()
 		li.access = "r"
 	end
 end
+
+m.update_lighting_properties = update_lighting_properties
 
 local function update_csm_properties()
 	local csm_matrixs = system_properties.u_csm_matrix
@@ -248,7 +248,11 @@ end
 
 function m.update()
 	update_timer_properties()
-	update_lighting_properties()
+	local cameraref = main_camera_ref()
+	local camerapos = iom.get_position(cameraref)
+	local f = icamera.get_frustum(cameraref)
+	local mainrt = main_render_target()
+	update_lighting_properties(mainrt.view_rect, camerapos, f.n, f.f)
 	update_shadow_properties()
 	update_postprocess_properties()
 end

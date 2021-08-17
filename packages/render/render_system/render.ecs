@@ -165,6 +165,7 @@ interface "system_properties"
     .method "get"
     .method "properties"
     .method "update"
+    .method "update_lighting_properties"
 
 import "render_system/forward_render.ecs"
 import "render_system/cluster_render.ecs"
