@@ -312,6 +312,13 @@ lcontext_bake(lua_State *L){
 }
 
 static int
+lcontext_pass_count(lua_State *L){
+    auto ctx = tocontext(L, 1);
+    lua_pushinteger(L, ctx->lm_ctx->meshPosition.passCount);
+    return 1;
+}
+
+static int
 lcontext_hemi_count(lua_State *L){
     auto ctx = tocontext(L, 1);
     int hemix, hemiy;
@@ -324,7 +331,11 @@ lcontext_hemi_count(lua_State *L){
 static int
 lcontext_fetch_samples(lua_State *L){
     auto ctx = tocontext(L, 1);
-    lmSamplePositions(ctx->lm_ctx);
+    auto pass = (int)luaL_checkinteger(L, 2);
+    if (pass < 1 || pass > ctx->lm_ctx->meshPosition.passCount){
+        luaL_error(L, "invalid 'pass': %d, pass count:%d", pass, ctx->lm_ctx->meshPosition.passCount);
+    }
+    lmSamplePositions(ctx->lm_ctx, pass-1);
     lua_pushinteger(L, ctx->lm_ctx->samples.size());
     return 1;
 }
@@ -359,7 +370,7 @@ lcontext_sample_hemisphere(lua_State *L){
     const auto& sp = ctx->lm_ctx->samples[sampleidx];
     int vp[4];
     float viewmat[16], projmat[16];
-    lm_sampleHemisphere(x, y, hemisize, side, znear, zfar, sp.sample.position, sp.sample.direction, sp.sample.up, vp, viewmat, projmat);
+    lm_sampleHemisphere(x, y, hemisize, side-1, znear, zfar, sp.sample.position, sp.sample.direction, sp.sample.up, vp, viewmat, projmat);
 
     auto create_table = [L](auto v, int n){
         lua_createtable(L, n, 0);
@@ -460,6 +471,7 @@ register_lm_context_mt(lua_State *L){
             {"set_geometry",        lcontext_set_geometry},
             {"hemi_count",          lcontext_hemi_count},
             {"bake",                lcontext_bake},
+            {"pass_count",          lcontext_pass_count},
             {"fetch_samples",       lcontext_fetch_samples},
             {"sample_hemisphere",   lcontext_sample_hemisphere},
             {"write2lightmap",      lcontext_write2lightmap},

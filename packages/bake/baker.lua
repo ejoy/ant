@@ -515,14 +515,14 @@ function hemisphere_batcher.new(bake_ctx, hemisize, hemix, hemiy, lm)
             lightmap = lm,
             index = 0,
             count = hemix * hemiy,
-            storage = storage.new(hemix, hemiy, lm.w, lm.h)
+            storage = storage.new(hemix, hemiy, lm.size, lm.size)
         }, hemisphere_batcher)
 end
 
-function hemisphere_batcher:hemi_pos()
+function hemisphere_batcher:hemi_pos(index)
     return 
-        (self.hemisize % self.hemix) * self.hemisize * 3,
-        (self.hemisize / self.hemix) * self.hemisize
+        (index % self.hemix) * self.hemisize * 3,
+        (index //self.hemix) * self.hemisize
 end
 
 function hemisphere_batcher:step()
@@ -537,8 +537,10 @@ function hemisphere_batcher:step()
         init_buffer()
         index = index + 1
     end
+
+    local x, y = self:hemi_pos(self.index)
     self.index = index
-    return self:hemi_pos()
+    return x, y
 end
 
 function hemisphere_batcher:write2lightmap(bake_ctx)
@@ -573,23 +575,24 @@ function ibaker.bake_entity(worldmat, bakeobj_mesh, lightmap, scene_objects)
     local g = load_geometry_info(worldmat, bakeobj_mesh)
     bake_ctx:set_geometry(g)
     log.info "bake: begin"
-    local samplecount = bake_ctx:fetch_samples()
+    local passcount = bake_ctx:pass_count()
+    for pass=1, passcount do
+        local batcher = hemisphere_batcher.new(bake_ctx, hemisize, hemix, hemiy, lightmap)
+        local numsample = bake_ctx:fetch_samples(pass)
+        for sampleidx=1, numsample do
+            local hx, hy = batcher:step()
 
-    local batcher = hemisphere_batcher.new(bake_ctx, hemisize, hemix, hemiy)
-    local numsample = samplecount
-    for sampleidx=1, numsample do
-        local hx, hy = batcher:step()
+            for side=1, 5 do
+                local vp, view, proj = bake_ctx:sample_hemisphere(hx, hy, hemisize, side, setting.z_near, setting.z_far, sampleidx)
+                render_scene(vp, view, proj, scene_objects)
+            end
 
-        for side=1, 5 do
-            local vp, view, proj = bake_ctx:sample_hemisphere(hx, hy, hemisize, side, setting.z_near, setting.z_far, sampleidx)
-            render_scene(vp, view, proj)
+            local process = sampleidx / numsample
+
+            log.info(("process: %d"):format(process))
         end
 
-        local process = sampleidx / numsample
-
-        log.info(("process: %d"):format(process))
+        batcher:integrate()
+        batcher:write2lightmap()
     end
-
-    batcher:integrate()
-    batcher:write2lightmap()
 end

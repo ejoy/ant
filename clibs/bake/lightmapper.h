@@ -44,6 +44,7 @@ typedef int lm_type;
 #define HEMI_FRAMEBUFFER_UNIT_SIZE	512
 
 #include <vector>
+#include <set>
 
 typedef struct lm_context lm_context;
 
@@ -362,16 +363,18 @@ struct Render{
 	void* userdata;
 };
 
-struct RasterizerPosition
-{
-	uint16_t x, y;
+union RasterizerPosition{
+	struct {
+		uint16_t x, y;
+	};
+	uint32_t hashidx;
 };
 
 struct SamplePosition {
 	Sample				sample;
 	RasterizerPosition	pos;
 };
-
+typedef std::vector<SamplePosition> SamplePositions;
 struct lm_context
 {
 	struct Mesh			mesh;
@@ -380,7 +383,7 @@ struct lm_context
 	struct Hemisphere	hemisphere;
 	struct Render		render;
 
-	std::vector<SamplePosition> samples;
+	SamplePositions		samples;
 
 	float interpolationThreshold;
 };
@@ -1112,6 +1115,7 @@ lm_context *lmCreate(int hemisphereSize, float zNear, float zFar,
 	assert(interpolationThreshold >= 0.0f);
 
 	lm_context *ctx = (lm_context*)LM_CALLOC(1, sizeof(lm_context));
+	new (&ctx->samples) SamplePositions;
 
 	ctx->meshPosition.passCount = 1 + 3 * interpolationPasses;
 	ctx->interpolationThreshold = interpolationThreshold;
@@ -1140,6 +1144,8 @@ void lmDestroy(lm_context *ctx)
 #ifdef LM_DEBUG_INTERPOLATION
 	LM_FREE(ctx->lightmap.debug);
 #endif
+	
+	ctx->samples.~SamplePositions();
 	LM_FREE(ctx);
 }
 
@@ -1193,28 +1199,36 @@ void lmSetGeometry(lm_context *ctx,
 	lm_inverseTranspose(transformationMatrix, ctx->mesh.normalMatrix);
 }
 
-void lmSamplePositions(lm_context *ctx)
+void lmSamplePositions(lm_context *ctx, uint16_t pass)
 {
+	std::set<uint32_t>	duplicate_test;
 	auto &samples = ctx->samples;
-	for (ctx->meshPosition.pass = 0; 
-	ctx->meshPosition.pass < ctx->meshPosition.passCount; 
-	++ctx->meshPosition.pass)
+	assert(pass < ctx->meshPosition.passCount);
+	ctx->meshPosition.pass = pass;
+
+	const uint32_t maxsample = ctx->lightmap.width * ctx->lightmap.height;
+	samples.reserve(maxsample);
+
+	for (ctx->meshPosition.triangle.baseIndex=0; 
+		ctx->meshPosition.triangle.baseIndex + 3 < ctx->mesh.count;
+		ctx->meshPosition.triangle.baseIndex += 3)
 	{
-		for (ctx->meshPosition.triangle.baseIndex=0; 
-			ctx->meshPosition.triangle.baseIndex + 3 < ctx->mesh.count;
-			ctx->meshPosition.triangle.baseIndex += 3)
+		for(lm_initMeshRasterizerPosition(ctx);
+			!lm_hasConservativeTriangleRasterizerFinished(ctx->meshPosition);
+			lm_moveToNextPotentialConservativeTriangleRasterizerPosition(ctx->meshPosition))
 		{
-			for(lm_initMeshRasterizerPosition(ctx);
-				!lm_hasConservativeTriangleRasterizerFinished(ctx->meshPosition);
-				lm_moveToNextPotentialConservativeTriangleRasterizerPosition(ctx->meshPosition))
-			{
-				if (!lm_trySamplingConservativeTriangleRasterizerPosition(
-					ctx->meshPosition,
-					ctx->lightmap, ctx->hemisphere,
-					ctx->interpolationThreshold))
-					continue;
-				RasterizerPosition pos = {ctx->meshPosition.rasterizer.x, ctx->meshPosition.rasterizer.y};
-				samples.push_back({ctx->meshPosition.sample, pos});
+			if (!lm_trySamplingConservativeTriangleRasterizerPosition(
+				ctx->meshPosition,
+				ctx->lightmap, ctx->hemisphere,
+				ctx->interpolationThreshold))
+				continue;
+
+			RasterizerPosition pos = {ctx->meshPosition.rasterizer.x, ctx->meshPosition.rasterizer.y};
+			auto itfound = duplicate_test.find(pos.hashidx);
+			if (itfound == duplicate_test.end()){
+				duplicate_test.insert(pos.hashidx);
+				SamplePosition s = {ctx->meshPosition.sample, pos};
+				samples.push_back(s);
 			}
 		}
 	}
