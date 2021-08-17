@@ -14,7 +14,7 @@ local ilight	= world:interface "ant.render|light"
 local itimer	= world:interface "ant.timer|itimer"
 local icamera	= world:interface "ant.camera|camera"
 
-local m = ecs.interface "system_properties"
+local isp = ecs.interface "isystem_properties"
 
 local flags = sampler.sampler_flag {
 	MIN="LINEAR",
@@ -91,7 +91,7 @@ local system_properties = {
 	s_postprocess_input	= def_tex_prop(7),
 }
 
-function m.get(n)
+function isp.get(n)
 	return system_properties[n]
 end
 
@@ -175,7 +175,7 @@ local function update_lighting_properties(viewrect, camerapos, near, far)
 	end
 end
 
-m.update_lighting_properties = update_lighting_properties
+isp.update_lighting_properties = update_lighting_properties
 
 local function update_csm_properties()
 	local csm_matrixs = system_properties.u_csm_matrix
@@ -242,11 +242,11 @@ local function update_timer_properties()
 	t.v = {itimer.current()-starttime, itimer.delta(), 0, 0}
 end
 
-function m.properties()
+function isp.properties()
 	return system_properties
 end
 
-function m.update()
+function isp.update()
 	update_timer_properties()
 	local cameraref = main_camera_ref()
 	local camerapos = iom.get_position(cameraref)

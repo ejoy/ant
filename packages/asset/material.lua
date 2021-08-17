@@ -103,7 +103,7 @@ function imaterial.set_property_directly(properties, who, what)
 end
 
 function imaterial.set_property(eid, who, what)
-	if world:interface "ant.render|system_properties".get(who) then
+	if world:interface "ant.render|isystem_properties".get(who) then
 		error(("global property could not been set:%s"):format(who))
 	end
 
@@ -204,7 +204,7 @@ local function generate_properties(fx, properties)
 	end
 
 	local uniforms = fx.uniforms
-	local isp 		= world:interface "ant.render|system_properties"
+	local isp 		= world:interface "ant.render|isystem_properties"
 	local new_properties
 	properties = properties or {}
 	if uniforms and #uniforms > 0 then

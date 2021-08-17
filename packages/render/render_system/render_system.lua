@@ -4,7 +4,7 @@ local w = world.w
 
 local bgfx = require "bgfx"
 
-local isp		= world:interface "ant.render|system_properties"
+local isp		= world:interface "ant.render|isystem_properties"
 local irender	= world:interface "ant.render|irender"
 local ies		= world:interface "ant.scene|ientity_state"
 local icamera	= world:interface "ant.camera|camera"

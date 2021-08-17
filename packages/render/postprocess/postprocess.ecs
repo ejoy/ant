@@ -1,6 +1,6 @@
 system "postprocess_system"
     .implement "postprocess/postprocess.lua"
-    .require_interface "ant.render|system_properties"
+    .require_interface "ant.render|isystem_properties"
     .method "init"
     .method "entity_init"
     .method "combine_postprocess"

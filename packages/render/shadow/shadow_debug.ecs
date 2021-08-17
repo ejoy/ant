@@ -1,6 +1,6 @@
 system "shadow_debug_system"
     .implement "shadow/shadow_debug.lua"
-    .require_interface "system_properties"
+    .require_interface "ant.render|isystem_properties"
     .method "camera_usage"
 
 policy "shadow_debug_policy"
