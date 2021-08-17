@@ -195,7 +195,8 @@ end
 
 local function update_global_axis()
 	if not global_data.viewport or not global_axis_eid then return end
-	local worldPos = utils.ndc_to_world(camera_mgr.main_camera, iom.screen_to_ndc(camera_mgr.main_camera, {global_data.viewport.x + 50, global_data.viewport.y + global_data.viewport.h - 50, 0.5}))--mouse_hit_plane({global_data.viewport.x + 50, global_data.viewport.y + global_data.viewport.h  - 50}, {dir = {0,1,0}, pos = {0,0,0}})
+	local screenpos = {global_data.viewport.x + 50, global_data.viewport.y + global_data.viewport.h - 50}
+	local worldPos = utils.ndc_to_world(camera_mgr.main_camera, iom.screen_to_ndc(camera_mgr.main_camera, {screenpos[1], screenpos[2], 0.5}))--mouse_hit_plane({global_data.viewport.x + 50, global_data.viewport.y + global_data.viewport.h  - 50}, {dir = {0,1,0}, pos = {0,0,0}})
 	if worldPos then
 		iom.set_position(global_axis_eid, math3d.totable(worldPos))
 	end
@@ -553,7 +554,6 @@ local function select_axis(x, y)
 	local end_x = utils.world_to_screen(camera_mgr.main_camera, math3d.add(gizmo_obj_pos, math3d.vector(gizmo_dir_to_world({line_len, 0, 0}))))
 	
 	local axis = (gizmo.mode == gizmo_const.SCALE) and gizmo.sx or gizmo.tx
-	print("start-end_x : ", start[1], start[2], start[3], end_x[1], end_x[2], end_x[3])
 	if utils.point_to_line_distance2D(start, end_x, hp) < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
 		return axis
 	end
