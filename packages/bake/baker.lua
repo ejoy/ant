@@ -226,7 +226,7 @@ end
 
 local downsampler = {}
 function downsampler:init()
-    self.weight_tex  = create_hemisphere_weights_texture()
+    self.weight_tex  = {stage=1, texture={handle=create_hemisphere_weights_texture()}}
     create_downsample()
 end
 
@@ -262,8 +262,8 @@ function downsampler:downsample()
     local ros = {we.render_object, se.render_object}
 
     local read, write = 1, 2
-    imaterial.set_property_directly(ros[read], "hemispheres",    self.render_textures[read])
-    imaterial.set_property_directly(ros[read], "weights",        self.weight_tex)
+    imaterial.set_property_directly(ros[read].properties, "hemispheres",    self.render_textures[read])
+    imaterial.set_property_directly(ros[read].properties, "weights",        self.weight_tex)
     irender.draw(viewid, ros[read])
 
     while hsize > 1 do
@@ -272,7 +272,7 @@ function downsampler:downsample()
             ("lightmap size too large:%d, count:%d"):format(fb_hemi_half_size, downsample_viewid_count))
 
         read, write = write, read
-        imaterial.set_property_directly(ros[read], "hemispheres", self.render_textures[read])
+        imaterial.set_property_directly(ros[read].properties, "hemispheres", self.render_textures[read])
 
         irender.draw(viewid, ros[read])
         hsize = hsize/2
