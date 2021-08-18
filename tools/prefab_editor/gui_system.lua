@@ -315,7 +315,8 @@ local function on_target(old, new)
         --     particle_emitter.set_emitter(new)
         end
     end
-    prefab_mgr:update_current_aabb(new)
+    --prefab_mgr:update_current_aabb(new)
+    world:pub {"UpdateAABB", new}
     anim_view.bind(new)
 end
 
@@ -332,8 +333,11 @@ local function on_update(eid)
 end
 
 local cmd_queue = require "gizmo.command_queue"(world)
-
+local event_update_aabb = world:sub {"UpdateAABB"}
 function m:handle_event()
+    for _, col_eid in event_update_aabb:unpack() do
+        prefab_mgr:update_current_aabb(col_eid)
+    end
     for _, action, value1, value2 in event_gizmo:unpack() do
         if action == "update" or action == "ontarget" then
             inspector.update_ui(action == "update")

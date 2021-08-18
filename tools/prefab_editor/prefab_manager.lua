@@ -20,6 +20,7 @@ local gizmo
 local camera_mgr
 local world
 local iom
+local iss
 local worldedit
 local m = {
     entities = {}
@@ -168,8 +169,7 @@ function m:create_slot()
         }
     }
     slot_entity_id = slot_entity_id + 1
-    world[new_entity].parent = gizmo.target_eid or self.root
-    self:add_entity(new_entity, world[new_entity].parent, temp)
+    self:add_entity(new_entity, gizmo.target_eid or self.root, temp)
     hierarchy:update_slot_list(world)
 end
 
@@ -227,7 +227,7 @@ end
 
 function m:add_entity(new_entity, parent, temp, no_hierarchy)
     self.entities[#self.entities+1] = new_entity
-    world[new_entity].parent = parent or self.root
+    iss.set_parent(new_entity, parent or self.root)
     if not no_hierarchy then
         hierarchy:add(new_entity, {template = temp.__class[1]}, world[new_entity].parent)
     end
@@ -254,6 +254,17 @@ function m:create(what, config)
             or config.type == "cylinder"
             or config.type == "sphere"
             or config.type == "torus" then
+            local tran = {s = 50}
+            local parent_eid = config.parent or gizmo.target_eid
+            if parent_eid then
+                local parent_worldmat = iom.worldmat(parent_eid)
+                local local_mat = math3d.matrix(tran)
+                local s, r, t = math3d.srt(math3d.mul(math3d.inverse(parent_worldmat), local_mat))
+                local ts, tr, tt = math3d.totable(s), math3d.totable(r), math3d.totable(t)
+                tran.s = {ts[1],ts[2],ts[2]}
+                tran.r = {tr[1],tr[2],tr[2],tr[3]}
+                tran.t = {tt[1],tt[2],tt[2]}
+            end
             local new_entity, temp = world:deprecated_create_entity {
                 --action = { mount = 0 },
                 policy = {
@@ -265,14 +276,14 @@ function m:create(what, config)
                     color = {1, 1, 1, 1},
                     scene_entity = true,
                     state = ies.create_state "visible|selectable",
-                    transform = {s = 50},
+                    transform = tran,
                     material = "/pkg/ant.resources/materials/singlecolor.material",
                     mesh = geom_mesh_file[config.type],
                     name = config.type .. geometricidx
                 }
             }
             imaterial.set_property(new_entity, "u_color", {1, 1, 1, 1})
-            self:add_entity(new_entity, config.parent or gizmo.target_eid, temp)
+            self:add_entity(new_entity, parent_eid, temp)
             return new_entity
         elseif config.type == "cube(prefab)" then
             m:add_prefab(gd.editor_package_path .. "res/cube.prefab")
@@ -602,7 +613,8 @@ function m:open_prefab(prefab)
                     if world[entity].parent and world[world[entity].parent].slot then
                         world[new_entity].slot_name = world[world[entity].parent].name
                     end
-                    world[new_entity].parent = world[entity].parent or self.root
+                    --world[new_entity].parent = world[entity].parent or self.root
+                    iss.set_parent(new_entity, world[entity].parent or self.root)
                     hierarchy:add(new_entity, {template = temp.__class[1]}, world[new_entity].parent)
                     add_entity[#add_entity + 1] = new_entity
                     remove_entity[#remove_entity+1] = entity
@@ -681,7 +693,8 @@ function m:add_effect(filename)
         effekseer.play(eh)
     end
     self.entities[#self.entities+1] = effect
-    world[effect].parent = gizmo.target_eid or self.root
+    --world[effect].parent = gizmo.target_eid or self.root
+    iss.set_parent(effect, gizmo.target_eid or self.root)
     hierarchy:add(effect, {template = temp.__class[1]}, world[effect].parent)
 end
 
@@ -697,8 +710,8 @@ function m:add_prefab(filename)
     local mount_root, temp = create_simple_entity(gen_prefab_name())
     self.entities[#self.entities+1] = mount_root
     local entities = world:instance(prefab_filename)
-    world[entities[1]].parent = mount_root
-    world[mount_root].parent = gizmo.target_eid or self.root
+    iss.set_parent(entities[1], mount_root)
+    iss.set_parent(mount_root, gizmo.target_eid or self.root)
     set_select_adapter(entities, mount_root)
     hierarchy:add(mount_root, {filename = prefab_filename, template = temp.__class[1], children = entities}, world[mount_root].parent)
 end
@@ -817,6 +830,7 @@ return function(w)
     world       = w
     camera_mgr  = require "camera_manager"(world)
     iom         = world:interface "ant.objcontroller|obj_motion"
+    iss         = world:interface "ant.scene|iscenespace"
     worldedit   = import_package "ant.editor".worldedit(world)
     ilight      = world:interface "ant.render|light"
     light_gizmo = require "gizmo.light"(world)
