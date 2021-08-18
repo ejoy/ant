@@ -426,7 +426,6 @@ ibaker.load_geometry_info = load_geometry_info
 local skycolor = 0xffffffff
 
 local function init_buffer()
-    bgfx.encoder_begin()
     bgfx.set_view_clear(lightmap_viewid, "CD", skycolor, 1.0)
     bgfx.set_view_rect(lightmap_viewid, 0, 0, bake_fbw, bake_fbh)
     bgfx.touch(lightmap_viewid)

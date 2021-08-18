@@ -204,7 +204,9 @@ function lightmap_sys:end_frame()
         ltask.fork(function ()
             local ServiceBgfxMain = ltask.queryservice "bgfx_main"
             ltask.call(ServiceBgfxMain, "pause")
+            bgfx.encoder_begin()
             _bake(id)
+            bgfx.encoder_end()
             ltask.call(ServiceBgfxMain, "continue")
         end)
     end
