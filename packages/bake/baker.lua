@@ -539,11 +539,10 @@ function hemisphere_batcher:step()
 
     if index == 0 then
         init_buffer()
-        index = index + 1
     end
 
-    local x, y = self:hemi_pos(self.index)
-    self.index = index
+    local x, y = self:hemi_pos(index)
+    self.index = index + 1
     return x, y
 end
 
