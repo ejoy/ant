@@ -238,29 +238,29 @@ function s:update_transform()
 	end
 end
 
-function s:entity_remove()
+function s:scene_remove()
 	w:clear "scene_changed"
 
 	local removed = {}
 	for v in w:select "REMOVED scene_id:in" do
 		local id = v.scene_id
+		scenequeue:mount(id)
 		removed[id] = true
-		w:release("scene_node", id)
 	end
 	if next(removed) then
-		for _, id in ipairs(scenequeue) do
-			if removed[id] then
-				scenequeue:mount(id)
-			else
-				local node = w:object("scene_node", id)
-				if node.parent and removed[node.parent] then
-					--TODO: remove parent in old ecs?
-					scenequeue:mount(id, 0)
-					node.parent = nil
-				end
+		local removed_id = scenequeue:clear()
+		if removed_id then
+			for _, id in ipairs(removed_id) do
+				removed[id] = true
 			end
 		end
-		scenequeue:clear()
+		for v in w:select "scene_id:in" do
+			local id = v.scene_id
+			if removed[id] then
+				w:remove(v)
+				w:release("scene_node", id)
+			end
+		end
 		sync_scene_node()
 	end
 end

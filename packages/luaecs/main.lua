@@ -94,7 +94,8 @@ local function create_entity_template(w, v)
     data.reference = true
     return {
         action = v.action,
-        template = data
+        template = data,
+        tag = v.tag,
     }
 end
 
@@ -135,27 +136,116 @@ local function run_action(w, res, prefab)
 	end
 end
 
-local object_proxy = {}
-object_proxy.__index = object_proxy
+local function add_tag(dict, tag, eid)
+	if dict[tag] then
+		table.insert(dict[tag], eid)
+	else
+		dict[tag] = {eid}
+	end
+end
 
-function object_proxy:send(...)
-    local e = self.e
-    if e.message then
-        self.w:pub {"object_message", e, ...}
+local function each_prefab(entities, template, f)
+    for i, e in ipairs(template) do
+        if e.prefab then
+            each_prefab(entities[i], e.prefab, f)
+        else
+            f(entities[i], template.tag)
+        end
     end
 end
 
-function object_proxy:remove()
-    local e = self.e
-    self.w:pub {"object_remove", e}
+local function create_tagdict(entities, template)
+    local dict = {['*']={}}
+    each_prefab(entities, template, function (e, tag)
+        if tag then
+            if type(tag) == "table" then
+                for _, tag_ in ipairs(tag) do
+                    add_tag(dict, tag_, e)
+                end
+            else
+                add_tag(dict, tag, e)
+            end
+        end
+        table.insert(dict['*'], e)
+    end)
+    return dict
 end
 
-function world:create_object(v)
-    local prefab = assetmgr.resource(v[1], { create_template = function (_,...) return create_template(self,...) end })
-    local ref = instance(self, prefab)
-    run_action(self, ref, prefab)
-    self:pub {"object_create", v, ref}
-    return setmetatable({e = v, w = self}, object_proxy)
+local function create_proxy(w, event, entities, template)
+    local init = event.init
+    local update = event.update
+    local message = event.message
+    if not init and not update and not message then
+        return
+    end
+
+    local dict = create_tagdict(entities, template)
+    local inner_proxy = {}
+    local proxy_entity = {
+        reference = true,
+        prefab = {entities=dict['*']},
+    }
+    function inner_proxy:tag(tag)
+        return dict[tag]
+    end
+    if init then
+        function proxy_entity.prefab_init()
+            init(inner_proxy)
+        end
+    end
+    if update then
+        function proxy_entity.prefab_update()
+            update(inner_proxy)
+        end
+    end
+    local prefab = create_entity(w, proxy_entity)
+
+    if not update and not message then
+        w:pub {"object_detach", prefab}
+        return
+    end
+
+    local outer_proxy = {}
+    function outer_proxy:root()
+    end
+    if message then
+        function outer_proxy:message(...)
+            w:pub {"object_message", message, inner_proxy, ...}
+        end
+        function inner_proxy:message(...)
+            w:pub {"object_message", message, inner_proxy, ...}
+        end
+    end
+    function outer_proxy:detach()
+        w:pub {"object_detach", prefab}
+    end
+    function inner_proxy:detach()
+        w:pub {"object_detach", prefab}
+    end
+
+    local proxy = {}
+    local proxy_mt = { __index = proxy, __newindex = proxy }
+    setmetatable(outer_proxy, proxy_mt)
+    setmetatable(inner_proxy, proxy_mt)
+    return outer_proxy
+end
+
+function world:create_object(e)
+    local w = self
+    local template = assetmgr.resource(e[1], { create_template = function (_,...) return create_template(w,...) end })
+    local entities = instance(w, template)
+    run_action(w, entities, template)
+    return create_proxy(w, e, entities, template)
+end
+
+function world:command(entity, ...)
+    self:pub {"entity_command", entity, ...}
+end
+
+function world:command_broadcast(set, ...)
+    for i = 1, #set do
+        self:pub {"entity_command", set[i], ...}
+    end
 end
 
 local function update_decl(self)

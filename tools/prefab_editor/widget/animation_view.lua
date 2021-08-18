@@ -474,7 +474,7 @@ local function show_events()
                 current_event = ke
                 if current_event.collision and current_event.collision.col_eid and current_event.collision.col_eid ~= -1 then
                     gizmo:set_target(current_event.collision.col_eid)
-                    prefab_mgr:update_current_aabb(current_event.collision.col_eid)
+                    world:pub {"UpdateAABB", current_event.collision.col_eid}
                 end
             end
             if current_event and (current_event.name == ke.name) then
@@ -646,7 +646,7 @@ local function update_collision()
             iom.set_scale(eid, {ke.collision.size[1] * factor, ke.collision.size[2] * factor, ke.collision.size[3] * factor})
             if eid == gizmo.target_eid then
                 gizmo:update()
-                prefab_mgr:update_current_aabb(eid)
+                world:pub {"UpdateAABB", eid}
             end
         end
     end

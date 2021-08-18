@@ -31,7 +31,8 @@ function ColliderView:set_model(eid)
         end)
         self.radius:set_setter(function(r)
             iom.set_scale(self.eid, r * 100)
-            prefab_mgr:update_current_aabb(self.eid)
+            --prefab_mgr:update_current_aabb(self.eid)
+            world:pub {"UpdateAABB", self.eid}
             anim_view.record_collision(self.eid)
         end)
         
@@ -47,7 +48,8 @@ function ColliderView:set_model(eid)
         end)
         self.half_size:set_setter(function(sz)
             iom.set_scale(self.eid, {sz[1] * 200, sz[2] * 200, sz[3] * 200})
-            prefab_mgr:update_current_aabb(self.eid)
+            --prefab_mgr:update_current_aabb(self.eid)
+            world:pub {"UpdateAABB", self.eid}
             anim_view.record_collision(self.eid)
         end)
     end

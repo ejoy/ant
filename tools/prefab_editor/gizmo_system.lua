@@ -68,10 +68,7 @@ function gizmo:set_scale(inscale)
 	iom.set_scale(self.target_eid, inscale)
 end
 
-function gizmo:set_position(worldpos)
-	if not self.target_eid or hierarchy:is_locked(self.target_eid) then
-		return
-	end
+function gizmo:update_position(worldpos)
 	local newpos
 	if worldpos then
 		local parent_worldmat = iom.worldmat(world[gizmo.target_eid].parent)
@@ -81,15 +78,22 @@ function gizmo:set_position(worldpos)
 		else
 			localPos = math3d.totable(math3d.transform(math3d.inverse(parent_worldmat), math3d.vector(worldpos), 1))
 		end
-		
 		iom.set_position(self.target_eid, localPos)
 		newpos = worldpos
 	else
-		local t = iom.get_position(gizmo.target_eid)
+		local wm = iom.worldmat(gizmo.target_eid)
+		local s, r, t = math3d.srt(wm)
 		newpos = math3d.totable(t)
 	end
 	iom.set_position(self.root_eid, newpos)
 	iom.set_position(self.uniform_rot_root_eid, newpos)
+end
+
+function gizmo:set_position(worldpos)
+	if not self.target_eid or hierarchy:is_locked(self.target_eid) then
+		return
+	end
+	world:pub {"Gizmo", "UpdatePosition", worldpos}
 end
 
 function gizmo:set_rotation(inrot)
@@ -980,7 +984,16 @@ local function on_mouse_move()
 	end
 end
 
+local gizmo_event = world:sub{"Gizmo"}
+
 function gizmo_sys:handle_event()
+
+	for _, what, wp in gizmo_event:unpack() do
+		if what == "UpdatePosition" then
+			gizmo:update_position(wp)
+		end
+	end
+
 	for _, vp in viewpos_event:unpack() do
 		global_data.viewport = vp
 		update_global_axis()
