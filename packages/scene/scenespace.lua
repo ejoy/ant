@@ -241,20 +241,22 @@ end
 function s:scene_remove()
 	w:clear "scene_changed"
 
-	local removed = false
+	local removed = {}
 	for v in w:select "REMOVED scene_id:in" do
 		local id = v.scene_id
 		scenequeue:mount(id)
-		removed = true
+		removed[id] = true
 	end
-	if removed then
-		local removed_id = {}
-		for _, id in ipairs(scenequeue:clear()) do
-			removed_id[id] = true
+	if next(removed) then
+		local removed_id = scenequeue:clear()
+		if removed_id then
+			for _, id in ipairs(removed_id) do
+				removed[id] = true
+			end
 		end
 		for v in w:select "scene_id:in" do
 			local id = v.scene_id
-			if removed_id[id] then
+			if removed[id] then
 				w:remove(v)
 				w:release("scene_node", id)
 			end

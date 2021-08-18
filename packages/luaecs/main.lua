@@ -180,45 +180,54 @@ local function create_proxy(w, event, entities, template)
     end
 
     local dict = create_tagdict(entities, template)
-    local proxy = {}
-    function proxy:command(tag, ...)
-        local set = dict[tag]
-        if set then
-            for _, entity in ipairs(set) do
-                w:pub {"entity_command", entity, ...}
-            end
-        end
-    end
-
+    local inner_proxy = {}
     local proxy_entity = {
         reference = true,
         prefab = {entities=dict['*']},
     }
+    function inner_proxy:tag(tag)
+        return dict[tag]
+    end
     if init then
         function proxy_entity.prefab_init()
-            init(proxy)
+            init(inner_proxy)
         end
     end
     if update then
         function proxy_entity.prefab_update()
-            update(proxy)
+            update(inner_proxy)
         end
     end
     local prefab = create_entity(w, proxy_entity)
+
     if not update and not message then
         w:pub {"object_detach", prefab}
         return
     end
 
+    local outer_proxy = {}
+    function outer_proxy:root()
+    end
     if message then
-        function proxy:message(...)
-            w:pub {"object_message", message, proxy, ...}
+        function outer_proxy:message(...)
+            w:pub {"object_message", message, inner_proxy, ...}
+        end
+        function inner_proxy:message(...)
+            w:pub {"object_message", message, inner_proxy, ...}
         end
     end
-    function proxy:detach()
+    function outer_proxy:detach()
         w:pub {"object_detach", prefab}
     end
-    return proxy
+    function inner_proxy:detach()
+        w:pub {"object_detach", prefab}
+    end
+
+    local proxy = {}
+    local proxy_mt = { __index = proxy, __newindex = proxy }
+    setmetatable(outer_proxy, proxy_mt)
+    setmetatable(inner_proxy, proxy_mt)
+    return outer_proxy
 end
 
 function world:create_object(e)
@@ -227,6 +236,16 @@ function world:create_object(e)
     local entities = instance(w, template)
     run_action(w, entities, template)
     return create_proxy(w, e, entities, template)
+end
+
+function world:command(entity, ...)
+    self:pub {"entity_command", entity, ...}
+end
+
+function world:command_broadcast(set, ...)
+    for i = 1, #set do
+        self:pub {"entity_command", set[i], ...}
+    end
 end
 
 local function update_decl(self)
