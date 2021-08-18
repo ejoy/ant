@@ -11,14 +11,15 @@ function m:init_world()
     --world:instance "res/camera.prefab"
     local object = world:create_object {
         "res/camera.prefab",
-        init = function(o)
-            print(o)
+        init = function(object)
+            print(object)
         end,
-        message = function (o, msg)
-            print(msg)
+        message = function (object, msg)
+            print(object, msg)
         end,
         update = function (o)
+            --print "update"
         end,
     }
-    object:send "hello"
+    object:message "hello"
 end

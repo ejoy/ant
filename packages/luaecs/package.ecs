@@ -6,6 +6,7 @@ pipeline "_frame_start"
 
 pipeline "_frame_finish"
     .stage "luaecs_sync_remove"
+    .stage "scene_remove"
     .stage "entity_remove"
     .stage "update_world"
 
@@ -35,4 +36,11 @@ system "prefab_system"
 component_v2 "INIT"
 
 component_v2 "create_entity"
+    .type "lua"
+
+component_v2 "prefab"
+    .type "lua"
+component_v2 "prefab_init"
+    .type "lua"
+component_v2 "prefab_update"
     .type "lua"

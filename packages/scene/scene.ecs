@@ -7,7 +7,7 @@ system "scenespace_system"
     .method "entity_init"
     .method "update_hierarchy"
     .method "update_transform"
-    .method "entity_remove"
+    .method "scene_remove"
 
 policy "slot_policy"
     .component "slot"
