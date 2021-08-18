@@ -97,7 +97,7 @@ function lightmap_sys:data_changed()
     -- end
 end
 
-local function load_new_material(material, fx)
+local function load_bake_material(material, fx)
     local s = {BAKING_LIGHTMAP = 1}
     for k, v in pairs(fx.setting) do
         s[k] = v
@@ -128,7 +128,7 @@ function lightmap_sys:end_filter()
                 local material = e.material
                 --TODO: e.material should be string
                 material = type(material) == "string" and material or tostring(material)
-                local nm = load_new_material(material, ro.fx)
+                local nm = load_bake_material(material, ro.fx)
                 fm[fn] = {
                     fx          = nm.fx,
                     properties  = nm.properties,

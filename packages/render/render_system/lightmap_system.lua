@@ -21,11 +21,17 @@ function lm_sys:init()
     }
 end
 
-local function get_baked_material(mf, setting)
-    local s = {USE_BAKED=1}
+local function load_lightmap_material(mf, setting)
+    local s = {USING_LIGHTMAP=1}
     for k, v in pairs(setting) do
         s[k] = v
     end
+    s["ENABLE_SHADOW"] = nil
+    s["identity"] = nil
+    s['shadow_cast'] = 'off'
+    s['shadow_receive'] = 'off'
+    s['skinning'] = 'UNKNOWN'
+    s['bloom'] = 'off'
     return imaterial.load(mf, s)
 end
 
@@ -45,7 +51,7 @@ function lm_sys:end_filter()
                 if bi then
                     bi.texture = assetmgr.resource(bi.texture_path)
                     local mf = type(material) == "string" and material or tostring(material)
-                    local bm = get_baked_material(mf, material.fx.setting)
+                    local bm = load_lightmap_material(mf, material.fx.setting)
                     local pm = bm.properties["s_lightmap"]
                     pm.texture.handle = bi.texture.handle
                     e.filter_material[fn] = {
