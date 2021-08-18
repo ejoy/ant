@@ -20,7 +20,7 @@ void main()
 
 	v_posWS = mul(wm, vec4(a_position, 1.0));
 	gl_Position   = mul(u_viewProj, v_posWS);
-#if !defined(BAKING_LIGHTMAP) &&	defined(ENABLE_SHADOW)
+#if !(defined(BAKING_LIGHTMAP) || defined(USING_LIGHTMAP)) &&	defined(ENABLE_SHADOW)
 	v_posWS.w = mul(u_view, v_posWS).z;
 #endif //ENABLE_SHADOW
 
