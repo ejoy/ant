@@ -77,7 +77,7 @@ local function create_instance(w, prefab)
 	return res
 end
 
-local function create_entity_template(w, v)
+local function create_entity_template(w, detach, v)
     local res = policy.create(w, v.policy)
     local data = v.data
     for c, def in pairs(res.component_opt) do
@@ -91,7 +91,7 @@ local function create_entity_template(w, v)
             error(("component `%s` must exists"):format(c))
         end
     end
-    data.reference = true
+    data.reference = detach == nil
     return {
         action = v.action,
         template = data,
@@ -99,16 +99,16 @@ local function create_entity_template(w, v)
     }
 end
 
-local function create_template(w, t)
+local function create_template(w, detach, t)
 	local prefab = {}
 	for _, v in ipairs(t) do
 		if v.prefab then
 			prefab[#prefab+1] = {
-                prefab = assetmgr.resource(v[1], { create_template = function (_,...) return create_template(w,...) end }),
+                prefab = assetmgr.resource(v[1], { create_template = function (_,...) return create_template(w,detach,...) end }),
 				args = v.args,
 			}
 		else
-			prefab[#prefab+1] = create_entity_template(w, v)
+			prefab[#prefab+1] = create_entity_template(w, detach, v)
 		end
 	end
     return prefab
@@ -181,7 +181,7 @@ function world:create_object(inner_proxy)
     end
     local proxy_entity = {
         reference = true,
-        prefab = {entities=inner_proxy.tag['*']},
+        prefab = inner_proxy,
     }
     if on_init then
         function proxy_entity.prefab_init()
@@ -223,14 +223,27 @@ function world:create_object(inner_proxy)
     return outer_proxy
 end
 
-function world:create_instance(filename)
+function world:create_instance(filename, detach)
     local w = self
-    local template = assetmgr.resource(filename, { create_template = function (_,...) return create_template(w,...) end })
+    local template = assetmgr.resource(filename, { create_template = function (_,...) return create_template(w, detach, ...) end })
     local entities = create_instance(w, template)
     run_action(w, entities, template)
     return {
         tag = create_tags(entities, template)
     }
+end
+
+local function isValidReference(reference)
+    return reference[1] ~= nil
+end
+
+function world:detach_instance(instance)
+    local w = self.w
+    for _, entity in ipairs(instance.tag["*"]) do
+        if isValidReference(entity) then
+            w:remove_reference(entity)
+        end
+    end
 end
 
 local function run_command(e, name, ...)

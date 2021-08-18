@@ -32,11 +32,7 @@ function m:entity_remove()
     for _, prefab in evObjectDetach:unpack() do
         if isValidReference(prefab) then
             w:sync("prefab:in", prefab)
-            for _, entity in ipairs(prefab.entities) do
-                if isValidReference(entity) then
-                    w:remove_reference(entity)
-                end
-            end
+            world:detach_instance(prefab.prefab)
             w:remove(prefab)
         end
     end
