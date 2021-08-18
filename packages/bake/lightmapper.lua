@@ -35,10 +35,8 @@ end
 
 local bake_finish_mb = world:sub{"bake_finish"}
 local function gen_name(bakeid, name)
-    if name == nil then
-        return bakeid
-    end
-    return name .. bakeid:sub(#bakeid-8, #bakeid)
+    local n = name and name .. bakeid:sub(#bakeid-8, #bakeid) or bakeid
+    return n .. ".dds"
 end
 
 local function default_tex_info(w, h, fmt)
@@ -70,8 +68,8 @@ sampler:
 local function save_lightmap(e, lme)
     local lm = e.lightmap
 
-    local filename = lme.lightmap_path / gen_name(lm.bakeid, e.name)
-
+    local filename = lme.lightmap_path / gen_name(lm.bake_id, e.name)
+    assert(not lfs.exists(filename))
     local ti = default_tex_info(lm.size, lm.size, "RGBA32F")
     local lmdata = lm.data
     local m = bgfx.memory_buffer(lmdata:data(), ti.storageSize, lmdata)
@@ -86,17 +84,17 @@ local function save_lightmap(e, lme)
     f:write(tc)
     f:close()
     
-    lme.lightmap_result[lm.bake_id] = {texture_path = texfile,}
+    lme.lightmap_result[lm.bake_id] = {texture_path = texfile:string(),}
 end
 
 function lightmap_sys:data_changed()
-    for lme in w:select "lightmapper lightmap_path:in lightmap_result:in" do
-        for e in w:select "bake_finish lightmap:in render_object:in render_object_update:out" do
-            e.render_object_update = true
-            save_lightmap(e, lme)
-        end
-        w:clear "bake_finish"
-    end
+    -- for lme in w:select "lightmapper lightmap_path:in lightmap_result:in" do
+    --     for e in w:select "bake_finish lightmap:in render_object:in render_object_update:out" do
+    --         e.render_object_update = true
+    --         save_lightmap(e, lme)
+    --     end
+    --     w:clear "bake_finish"
+    -- end
 end
 
 local function load_new_material(material, fx)
@@ -163,16 +161,29 @@ local function create_context_setting(hemisize)
     }
 end
 
+local function bake_entity(e, scene_renderobjects, lme)
+    log.info(("start bake entity: %s"):format(e.name))
+    ibaker.bake_entity(e.render_object.worldmat, e.mesh, e.lightmap, scene_renderobjects)
+    save_lightmap(e, lme)
+    e.render_object_update = true
+    w:sync("render_object_update?out", e)
+    log.info(("end bake entity: %s"):format(e.name))
+end
+
+local function get_lme()
+    local lme = w:singleton("lightmapper", "lightmap_result:in")
+    w:sync("lightmap_path:in", lme)
+    return lme
+end
+
 local function bake_all()
     local scene_renderobjects = find_scene_render_objects "main_queue"
 
-    local lm_queue = w:singleton("lightmap_queue", "primitive_filter:in")
-    for _, fn in ipairs(lm_queue.primitive_filter) do
-        for e in w:select (fn .. " mesh:in lightmap:in render_object:in widget_entity:absent name?in bake_finish?out") do
-            log.info(("start bake entity: %s"):format(e.name))
-            ibaker.bake_entity(e.render_object.worldmat, e.mesh, e.lightmap, scene_renderobjects)
-            e.bake_finish = true
-            log.info(("end bake entity: %s"):format(e.name))
+    local lmq = w:singleton("lightmap_queue", "primitive_filter:in")
+    local lme = get_lme()
+    for _, fn in ipairs(lmq.primitive_filter) do
+        for e in w:select (fn .. " mesh:in lightmap:in render_object:in widget_entity:absent name?in") do
+            bake_entity(e, scene_renderobjects, lme)
         end
     end
 end
@@ -180,11 +191,8 @@ end
 local function _bake(id)
     if id then
         for e in w:select "mesh:in lightmap:in render_object:in" do
-            local lm = e.lightmap
-            if id == lm.bake_id then
-                ibaker.bake_entity(e.render_object.worldmat, e.mesh, lm, find_scene_render_objects "main_queue")
-                e.bake_finish = true
-                w:sync("bake_finish?out", e)
+            if id == e.lightmap.bake_id then
+                bake_entity(e, find_scene_render_objects "main_queue", get_lme())
                 break
             end
         end
