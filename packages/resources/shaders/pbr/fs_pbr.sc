@@ -1,4 +1,4 @@
-$input v_texcoord0, v_posWS, v_normal, v_tangent, v_bitangent
+$input v_texcoord0, v_texcoord1, v_posWS, v_normal, v_tangent, v_bitangent
 #include <bgfx_shader.sh>
 #include <bgfx_compute.sh>
 #include <shaderlib.sh>
@@ -159,7 +159,7 @@ void main()
 #endif
 
 #ifdef ALPHAMODE_MASK
-    // Late discard to avaoid samplig artifacts. See https://github.com/KhronosGroup/glTF-Sample-Viewer/issues/267
+    // Late discard to avoid samplig artifacts. See https://github.com/KhronosGroup/glTF-Sample-Viewer/issues/267
     if(basecolor.a < u_alpha_mask_cutoff)
     {
         discard;
@@ -171,6 +171,11 @@ void main()
     gl_FragColor = basecolor;
     return;
 #endif
+
+#ifdef USING_LIGHTMAP
+    gl_FragColor = basecolor * texture2D(s_lightmap, v_texcoord1);
+    return ;
+#endif //USING_LIGHTMAP
 
     vec3 V = normalize(u_eyepos.xyz - v_posWS.xyz);
     vec3 N = get_normal(v_tangent, v_bitangent, v_normal, uv);
