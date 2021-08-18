@@ -583,6 +583,14 @@ function ibaker.bake_entity(worldmat, bakeobj_mesh, lightmap, scene_objects)
     for pass=1, passcount do
         local batcher = hemisphere_batcher.new(bake_ctx, hemisize, hemix, hemiy, lightmap)
         local numsample = bake_ctx:fetch_samples(pass)
+        local last_process = 0
+        local function log_process(process)
+            local p = math.floor(process * 10)
+            if p ~= last_process then
+                log.info(("process: %2f"):format(process))
+                last_process = p
+            end
+        end
         for sampleidx=1, numsample do
             local hx, hy = batcher:step()
 
@@ -592,8 +600,7 @@ function ibaker.bake_entity(worldmat, bakeobj_mesh, lightmap, scene_objects)
             end
 
             local process = sampleidx / numsample
-
-            log.info(("process: %2f"):format(process))
+            log_process(process)
         end
 
         batcher:integrate()
