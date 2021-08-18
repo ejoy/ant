@@ -6,15 +6,9 @@ local m = ecs.system "prefab_system"
 
 local evObjectMessage = world:sub {"object_message"}
 local evObjectDetach  = world:sub {"object_detach"}
-local evEntityCommand = world:sub {"entity_command"}
 
 local function isValidReference(reference)
     return reference[1] ~= nil
-end
-
-local function run_command(e, name, ...)
-    --TODO
-    print(e, name, ...)
 end
 
 function m:entity_init()
@@ -28,9 +22,6 @@ function m:data_changed()
     for msg in evObjectMessage:each() do
         local f = msg[2]
         f(table.unpack(msg, 3))
-    end
-    for msg in evEntityCommand:each() do
-        run_command(table.unpack(msg, 2))
     end
     for v in w:select "prefab_update:in" do
         v.prefab_update()

@@ -49,10 +49,6 @@ function s:luaecs_sync()
 		local data = { eid = eid }
 		local rc = e._rendercache
 		do
-			local parent
-			if e.parent and world[e.parent].scene_entity then
-				parent = e.parent
-			end
 			local aabb
 			if e.mesh and e.mesh.bounding and e.mesh.bounding.aabb then
 				aabb = e.mesh.bounding.aabb
@@ -61,8 +57,6 @@ function s:luaecs_sync()
 				srt = e.transform or {},
 				updir = e.updir,
 				aabb = aabb,
-				_self = eid,
-				_parent = parent,
 			}
 			policy[#policy+1] = "ant.scene|scene_object"
 			if e.name then

@@ -11,8 +11,8 @@ local icamera = world:interface "ant.camera|camera"
 local function findSceneNode(eid)
 	for v in w:select "eid:in" do
 		if v.eid == eid then
-			w:sync("scene_node(scene_id):in", v)
-			return v.scene_node
+			w:sync("scene:in", v)
+			return v.scene
 		end
 	end
 end
@@ -20,8 +20,8 @@ end
 local function get_transform(eid)
     if type(eid) == "table" then
         local ref = eid
-        w:sync("scene_node(scene_id):in", ref)
-        return ref.scene_node
+        w:sync("scene:in", ref)
+        return ref.scene
     end
     local node = findSceneNode(eid)
     if node then
@@ -132,8 +132,8 @@ function iobj_motion.worldmat(eid)
         end
         for v in w:select "eid:in" do
             if v.eid == eid then
-                w:sync("scene_node(scene_id):in", v)
-                return v.scene_node._worldmat
+                w:sync("scene:in", v)
+                return v.scene._worldmat
             end
         end
     end

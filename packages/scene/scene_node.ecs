@@ -21,15 +21,12 @@ component_v2 "filter_material"
 --SceneObject
 policy_v2 "scene_object"
     .component_v2 "scene"
-    .component_opt "scene_id"
-
-component_v2 "scene_id"
-    .type "int"
-
-component_v2 "scene_node"
-    .type "ref"
+    .component_opt "scene_sorted"
 
 component_v2 "scene_changed"
 
 component_v2 "scene"
     .type "lua"
+
+component_v2 "scene_sorted"
+    .type "order"

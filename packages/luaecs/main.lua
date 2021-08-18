@@ -64,12 +64,12 @@ function world:create_ref(v)
     return self.w:ref(mainkey, v)
 end
 
-local function instance(w, prefab)
+local function create_instance(w, prefab)
 	local res = {}
     local _ = prefab[1]
 	for k, v in pairs(prefab) do
 		if v.prefab then
-			res[k] = instance(w, v.prefab)
+			res[k] = create_instance(w, v.prefab)
 		else
 			res[k] = create_entity(w, v.template)
 		end
@@ -149,71 +149,64 @@ local function each_prefab(entities, template, f)
         if e.prefab then
             each_prefab(entities[i], e.prefab, f)
         else
-            f(entities[i], template.tag)
+            f(entities[i], e.tag)
         end
     end
 end
 
-local function create_tagdict(entities, template)
-    local dict = {['*']={}}
+local function create_tags(entities, template)
+    local tags = {['*']={}}
     each_prefab(entities, template, function (e, tag)
         if tag then
             if type(tag) == "table" then
                 for _, tag_ in ipairs(tag) do
-                    add_tag(dict, tag_, e)
+                    add_tag(tags, tag_, e)
                 end
             else
-                add_tag(dict, tag, e)
+                add_tag(tags, tag, e)
             end
         end
-        table.insert(dict['*'], e)
+        table.insert(tags['*'], e)
     end)
-    return dict
+    return tags
 end
 
-local function create_proxy(w, event, entities, template)
-    local init = event.init
-    local update = event.update
-    local message = event.message
-    if not init and not update and not message then
+function world:create_object(inner_proxy)
+    local w = self
+    local on_init = inner_proxy.on_init
+    local on_update = inner_proxy.on_update
+    local on_message = inner_proxy.on_message
+    if not on_init and not on_update and not on_message then
         return
     end
-
-    local dict = create_tagdict(entities, template)
-    local inner_proxy = {}
     local proxy_entity = {
         reference = true,
-        prefab = {entities=dict['*']},
+        prefab = {entities=inner_proxy.tag['*']},
     }
-    function inner_proxy:tag(tag)
-        return dict[tag]
-    end
-    if init then
+    if on_init then
         function proxy_entity.prefab_init()
-            init(inner_proxy)
+            on_init(inner_proxy)
         end
     end
-    if update then
+    if on_update then
         function proxy_entity.prefab_update()
-            update(inner_proxy)
+            on_update(inner_proxy)
         end
     end
     local prefab = create_entity(w, proxy_entity)
 
-    if not update and not message then
+    if not on_update and not on_message then
         w:pub {"object_detach", prefab}
         return
     end
 
     local outer_proxy = {}
-    function outer_proxy:root()
-    end
-    if message then
-        function outer_proxy:message(...)
-            w:pub {"object_message", message, inner_proxy, ...}
+    if on_message then
+        function outer_proxy:send(...)
+            w:pub {"object_message", on_message, inner_proxy, ...}
         end
-        function inner_proxy:message(...)
-            w:pub {"object_message", message, inner_proxy, ...}
+        function inner_proxy:send(...)
+            w:pub {"object_message", on_message, inner_proxy, ...}
         end
     end
     function outer_proxy:detach()
@@ -230,21 +223,36 @@ local function create_proxy(w, event, entities, template)
     return outer_proxy
 end
 
-function world:create_object(e)
+function world:create_instance(filename)
     local w = self
-    local template = assetmgr.resource(e[1], { create_template = function (_,...) return create_template(w,...) end })
-    local entities = instance(w, template)
+    local template = assetmgr.resource(filename, { create_template = function (_,...) return create_template(w,...) end })
+    local entities = create_instance(w, template)
     run_action(w, entities, template)
-    return create_proxy(w, e, entities, template)
+    return {
+        tag = create_tags(entities, template)
+    }
 end
 
-function world:command(entity, ...)
-    self:pub {"entity_command", entity, ...}
+local function run_command(e, name, ...)
+    --TODO
+    print(e, name, ...)
 end
 
-function world:command_broadcast(set, ...)
+function world:call(entity, ...)
+    return run_command(entity, ...)
+end
+
+function world:multicall(set, ...)
+    local res = {}
     for i = 1, #set do
-        self:pub {"entity_command", set[i], ...}
+        res[i] = run_command(set[i], ...)
+    end
+    return res
+end
+
+function world:multicast(set, ...)
+    for i = 1, #set do
+        run_command(set[i], ...)
     end
 end
 
@@ -257,7 +265,12 @@ local function update_decl(self)
             goto continue
         end
         local type = info.type[1]
-        if type == "ref" then
+        if type == "order" then
+            w:register {
+                name = name,
+                order = true
+            }
+        elseif type == "ref" then
             w:register {
                 name = name,
                 type = "lua",
