@@ -363,11 +363,11 @@ lcontext_sample_hemisphere(lua_State *L){
     lua_struct::unpack(L, 7, zfar);
     uint32_t sampleidx;
     lua_struct::unpack(L, 8, sampleidx);
-
     if (sampleidx > ctx->lm_ctx->samples.size()){
         luaL_error(L, "invalid sample index:%d", sampleidx);
     }
-    const auto& sp = ctx->lm_ctx->samples[sampleidx-1];
+    --sampleidx;
+    const auto& sp = ctx->lm_ctx->samples[sampleidx];
     int vp[4];
     float viewmat[16], projmat[16];
     lm_sampleHemisphere(x, y, hemisize, side-1, znear, zfar, sp.sample.position, sp.sample.direction, sp.sample.up, vp, viewmat, projmat);
@@ -412,7 +412,7 @@ lcontext_write2lightmap(lua_State *L){
 
         auto mem_idx = storage_y * hemicount * storage_nx + storage_x * hemicount + hemi_idx;
 
-        if (mem_idx * 16 < m->size){
+        if (mem_idx * 16 >= m->size){
             luaL_error(L, "invalid index, sampleidx:%d, storage:{nx=%d, ny=%d, x=%d, y=%d}, hemi_idx=%d", 
             sampleidx, storage_nx, storage_ny, storage_x, storage_y, hemi_idx);
         }

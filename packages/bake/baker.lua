@@ -132,17 +132,18 @@ local function create_downsample()
             },
             data = {
                 name = "tag",
-                material = material,
-                filter_material = {},
                 eid = world:deprecated_create_entity{policy = {"ant.general|debug_TEST"}, data = {}},
                 mesh = ientity.create_mesh{"p1", {0, 0, 0, 0}},
+                material = material,
+                filter_material = {},
+                render_object = {},
+                render_object_update = true,
                 scene = {
                     srt = math3d.ref(mc.IDENTITY_MAT),
                 },
                 state = 0,  --force not include to any render queue
                 [tag] = true,
                 INIT = true,
-                render_object_update = true,
             }
         }
     end
@@ -267,8 +268,8 @@ function downsampler:downsample()
 
     while hsize > 1 do
         viewid = viewid + 1
-        assert(viewid < lightmap_viewid+downsample_viewid_count, 
-            ("lightmap size too large:%d, count:%d"):format(self.hemisize, downsample_viewid_count))
+        assert(viewid < (lightmap_viewid+downsample_viewid_count),
+            ("lightmap size too large:%d, count:%d"):format(fb_hemi_half_size, downsample_viewid_count))
 
         read, write = write, read
         imaterial.set_property_directly(ros[read], "hemispheres", self.render_textures[read])
@@ -476,13 +477,13 @@ end
 
 function storage:position()
     local idx = self.index
-    assert(self.index < self.num)
+    assert(self.index < (self.nx*self.ny))
     return  (idx %  self.nx) * self.hemix,
             (idx // self.nx) * self.hemiy
 end
 
 function storage:is_full()
-    return self.index >= self.num
+    return self.index >= (self.nx*self.ny)
 end
 
 function storage:next()
@@ -549,7 +550,7 @@ end
 
 function hemisphere_batcher:write2lightmap(bake_ctx)
     local m = self.storage:read_memory()
-    bake_ctx:write_lightmap(m, self.lightmap.data, self.hemix, self.hemi.y, storage.nx, storage.ny)
+    bake_ctx:write2lightmap(m, self.lightmap.data, self.hemix, self.hemiy, self.storage.nx, self.storage.ny)
 end
 
 function hemisphere_batcher:integrate()
@@ -597,6 +598,6 @@ function ibaker.bake_entity(worldmat, bakeobj_mesh, lightmap, scene_objects)
         end
 
         batcher:integrate()
-        batcher:write2lightmap()
+        batcher:write2lightmap(bake_ctx)
     end
 end
