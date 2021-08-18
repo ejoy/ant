@@ -413,6 +413,9 @@ function world:interface(fullname)
 	return self._class.interface[fullname]
 end
 
+function world:require(filename)
+end
+
 local function memstr(v)
 	for _, b in ipairs {"B","KB","MB","GB","TB"} do
 		if v < 1024 then
