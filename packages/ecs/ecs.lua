@@ -3,6 +3,8 @@ local system = require "system"
 local policy = require "policy"
 local event = require "event"
 local ltask = require "ltask"
+local fs = require "filesystem"
+local pm = require "packagemanager"
 
 local world = {}
 world.__index = world
@@ -413,7 +415,15 @@ function world:interface(fullname)
 	return self._class.interface[fullname]
 end
 
-function world:require(filename)
+function world:dofile(filename)
+	local path = fs.path(filename)
+	local package = path:package_name()
+	local module, err = fs.loadfile(path, "bt", pm.loadenv(package))
+	if not module then
+		error(("module '%s' load failed:%s"):format(filename, err))
+	end
+	log.info(("ecs loaded %q"):format(filename))
+	return module(self._ecs[package])
 end
 
 local function memstr(v)
@@ -477,6 +487,8 @@ function m.new_world(config)
 		_memory = {},
 		_memory_stat = setmetatable({start={}, finish={}}, {__close = finish_memory_stat}),
 		_cpu_stat = setmetatable({total={}}, {__close = finish_cpu_stat}),
+		_ecs = {},
+		_loaded = {},
 		w = config.w
 	}, world)
 
