@@ -133,13 +133,12 @@ local function check_light_index_list()
         return true
     end
 end
-local function main_viewid()
-    return viewidmgr.get "main_view"
-end
 
-local function build_cluster_aabb_struct()
+local main_viewid = viewidmgr.get "main_view"
+
+local function build_cluster_aabb_struct(viewid)
     local e = w:singleton("cluster_build_aabb", "dispatch:in")
-    icompute.dispatch(e.dispatch)
+    icompute.dispatch(viewid, e.dispatch)
 end
 
 local cr_camera_mb      = world:sub{"camera_changed", "main_queue"}
@@ -147,13 +146,14 @@ local camera_frustum_mb = world:sub{"component_changed", "frustum"}
 local light_mb = world:sub{"component_register", "light_type"}
 
 function cfs:init()
-    local viewid = main_viewid()
-    icompute.create_compute_entity(viewid, 
+    icompute.create_compute_entity(
         "cluster_build_aabb", 
-        "/pkg/ant.resources/materials/cluster_build.material", cluster_size)
-    icompute.create_compute_entity(viewid, 
-        "cluster_cull_light", 
-        "/pkg/ant.resources/materials/cluster_light_cull.material", {1, 1, cluster_cull_light_size})
+        "/pkg/ant.resources/materials/cluster_build.material",
+        cluster_size)
+    icompute.create_compute_entity(
+        "cluster_cull_light",
+        "/pkg/ant.resources/materials/cluster_light_cull.material",
+        {1, 1, cluster_cull_light_size})
 
     world:create_entity {
         policy = {
@@ -200,9 +200,9 @@ function cfs:init_world()
     world:pub{"camera_changed", "main_queue"}
 end
 
-local function cull_lights()
+local function cull_lights(viewid)
     local e = w:singleton("cluster_cull_light", "dispatch:in")
-    icompute.dispatch(e.dispatch)
+    icompute.dispatch(viewid, e.dispatch)
 end
 
 function cfs:render_preprocess()
@@ -215,17 +215,17 @@ function cfs:render_preprocess()
     end
 
     for _ in cr_camera_mb:each() do
-        build_cluster_aabb_struct()
+        build_cluster_aabb_struct(main_viewid)
     end
 
     for msg in camera_frustum_mb:each() do
         local qe = w:singleton("main_queue", "camera_ref:in")
         if qe.camera_ref == msg[3] then
-            build_cluster_aabb_struct()
+            build_cluster_aabb_struct(main_viewid)
         end
     end
 
-    cull_lights()
+    cull_lights(main_viewid)
 end
 
 local ics = ecs.interface "icluster_render"

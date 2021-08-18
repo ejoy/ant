@@ -5,7 +5,7 @@ local bgfx = require "bgfx"
 
 local ic = ecs.interface "icompute"
 
-function ic.dispatch(ds)
+function ic.dispatch(viewid, ds)
 	local properties = ds.properties
 	if properties then
 		for n, p in pairs(properties) do
@@ -14,10 +14,10 @@ function ic.dispatch(ds)
 	end
 
 	local s = ds.size
-	bgfx.dispatch(ds.viewid, ds.fx.prog, s[1], s[2], s[3])
+	bgfx.dispatch(viewid, ds.fx.prog, s[1], s[2], s[3])
 end
 
-function ic.create_compute_entity(viewid, name, materialfile, size)
+function ic.create_compute_entity(name, materialfile, size)
     w:register{ name = name}
     world:create_entity {
         policy = {
@@ -28,7 +28,6 @@ function ic.create_compute_entity(viewid, name, materialfile, size)
             name        = name,
             material    = materialfile,
             dispatch    ={
-                viewid  = viewid,
                 size    = size,
             },
             compute     = true,

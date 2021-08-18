@@ -364,10 +364,10 @@ lcontext_sample_hemisphere(lua_State *L){
     uint32_t sampleidx;
     lua_struct::unpack(L, 8, sampleidx);
 
-    if (sampleidx >= ctx->lm_ctx->samples.size()){
+    if (sampleidx > ctx->lm_ctx->samples.size()){
         luaL_error(L, "invalid sample index:%d", sampleidx);
     }
-    const auto& sp = ctx->lm_ctx->samples[sampleidx];
+    const auto& sp = ctx->lm_ctx->samples[sampleidx-1];
     int vp[4];
     float viewmat[16], projmat[16];
     lm_sampleHemisphere(x, y, hemisize, side-1, znear, zfar, sp.sample.position, sp.sample.direction, sp.sample.up, vp, viewmat, projmat);

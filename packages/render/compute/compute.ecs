@@ -9,7 +9,6 @@ system "compute_system"
     .implement "compute/compute.lua"
     .method "entity_done"
 
-component_v2 "dispatch_viewid".type "int"
 component_v2 "compute"
 component_v2 "dispatch".type "lua"
 

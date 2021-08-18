@@ -432,12 +432,6 @@ local function init_buffer()
     bgfx.set_view_clear(lightmap_viewid, "")
 end
 
-local function draw_scene(renderobjs)
-    for _, ro in ipairs(renderobjs) do
-        irender.draw(lightmap_viewid, ro)
-    end
-end
-
 local function render_scene(vp, view, proj, sceneobjs)
     bgfx.touch(lightmap_viewid)
     bgfx.set_view_rect(lightmap_viewid, vp[1], vp[2], vp[3], vp[4])
@@ -445,9 +439,11 @@ local function render_scene(vp, view, proj, sceneobjs)
     local vr = {x=vp[1], y=vp[2], w=vp[3], h=vp[4]}
     local camerapos = math3d.vector(view[4], view[8], view[12], 1.0)
     isp.update_lighting_properties(vr, camerapos, setting.z_near, setting.z_far)
-    ics.build_cluster_aabbs()
-    ics.cull_lights()
-    draw_scene(sceneobjs)
+    ics.build_cluster_aabbs(lightmap_viewid)
+    ics.cull_lights(lightmap_viewid)
+    for _, ro in ipairs(sceneobjs) do
+        irender.draw(lightmap_viewid, ro)
+    end
 end
 
 local storage = {
@@ -597,7 +593,7 @@ function ibaker.bake_entity(worldmat, bakeobj_mesh, lightmap, scene_objects)
 
             local process = sampleidx / numsample
 
-            log.info(("process: %d"):format(process))
+            log.info(("process: %2f"):format(process))
         end
 
         batcher:integrate()
