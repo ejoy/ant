@@ -265,7 +265,12 @@ local function update_decl(self)
             goto continue
         end
         local type = info.type[1]
-        if type == "ref" then
+        if type == "order" then
+            w:register {
+                name = name,
+                order = true
+            }
+        elseif type == "ref" then
             w:register {
                 name = name,
                 type = "lua",
