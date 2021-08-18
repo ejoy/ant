@@ -1,4 +1,8 @@
-$input v_texcoord0, v_texcoord1, v_posWS, v_normal, v_tangent, v_bitangent
+#ifdef USING_LIGHTMAP
+$input v_texcoord0, v_texcoord1
+#else   //!USING_LIGHTMAP
+$input v_texcoord0, v_posWS, v_normal, v_tangent, v_bitangent
+#endif //USING_LIGHTMAP
 #include <bgfx_shader.sh>
 #include <bgfx_compute.sh>
 #include <shaderlib.sh>
