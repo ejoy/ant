@@ -178,9 +178,7 @@ void main()
 
 #ifdef USING_LIGHTMAP
     gl_FragColor = basecolor * texture2D(s_lightmap, v_texcoord1);
-    return ;
-#endif //USING_LIGHTMAP
-
+#else //!USING_LIGHTMAP
     vec3 V = normalize(u_eyepos.xyz - v_posWS.xyz);
     vec3 N = get_normal(v_tangent, v_bitangent, v_normal, uv);
 
@@ -258,4 +256,5 @@ void main()
 #endif
 #endif //!BAKING_LIGHTMAP
     gl_FragColor = vec4(color, basecolor.a);
+#endif //USING_LIGHTMAP
 }
