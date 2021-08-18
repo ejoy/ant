@@ -146,10 +146,20 @@ local default_collider_define = {
     ["capsule"] = {{origin = {0, 0, 0, 1}, height = 1.0, radius = 0.25}}
 }
 
+local function get_local_transform(tran, parent_eid)
+    if not parent_eid then return tran end
+    local parent_worldmat = iom.worldmat(parent_eid)
+    local worldmat = math3d.matrix(tran)
+    local s, r, t = math3d.srt(math3d.mul(math3d.inverse(parent_worldmat), worldmat))
+    local ts, tr, tt = math3d.totable(s), math3d.totable(r), math3d.totable(t)
+    return {s = {ts[1], ts[2], ts[2]}, r = {tr[1], tr[2], tr[2], tr[3]}, t = {tt[1], tt[2], tt[2]}}
+end
+
 local slot_entity_id = 1
 function m:create_slot()
     --if not gizmo.target_eid then return end
     local auto_name = "empty" .. slot_entity_id
+    local parent_eid = gizmo.target_eid or self.root
     local new_entity, temp = world:deprecated_create_entity {
         --action = { mount = 0 },
         policy = {
@@ -160,7 +170,7 @@ function m:create_slot()
             "ant.scene|hierarchy_policy",
         },
         data = {
-            transform = {},
+            transform = get_local_transform({}, parent_eid),
             slot = true,
             scene_entity = true,
             follow_flag = 1,
@@ -169,7 +179,7 @@ function m:create_slot()
         }
     }
     slot_entity_id = slot_entity_id + 1
-    self:add_entity(new_entity, gizmo.target_eid or self.root, temp)
+    self:add_entity(new_entity, parent_eid, temp)
     hierarchy:update_slot_list(world)
 end
 
@@ -254,17 +264,7 @@ function m:create(what, config)
             or config.type == "cylinder"
             or config.type == "sphere"
             or config.type == "torus" then
-            local tran = {s = 50}
             local parent_eid = config.parent or gizmo.target_eid
-            if parent_eid then
-                local parent_worldmat = iom.worldmat(parent_eid)
-                local local_mat = math3d.matrix(tran)
-                local s, r, t = math3d.srt(math3d.mul(math3d.inverse(parent_worldmat), local_mat))
-                local ts, tr, tt = math3d.totable(s), math3d.totable(r), math3d.totable(t)
-                tran.s = {ts[1],ts[2],ts[2]}
-                tran.r = {tr[1],tr[2],tr[2],tr[3]}
-                tran.t = {tt[1],tt[2],tt[2]}
-            end
             local new_entity, temp = world:deprecated_create_entity {
                 --action = { mount = 0 },
                 policy = {
@@ -276,7 +276,7 @@ function m:create(what, config)
                     color = {1, 1, 1, 1},
                     scene_entity = true,
                     state = ies.create_state "visible|selectable",
-                    transform = tran,
+                    transform = get_local_transform({s = 50}, parent_eid),
                     material = "/pkg/ant.resources/materials/singlecolor.material",
                     mesh = geom_mesh_file[config.type],
                     name = config.type .. geometricidx
