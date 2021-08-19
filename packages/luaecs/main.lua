@@ -171,6 +171,18 @@ local function create_tags(entities, template)
     return tags
 end
 
+local function create_scene_entity(w)
+    local e = {}
+    w.w:new {
+        reference = e,
+        scene = {
+            srt = {},
+        }
+    }
+    w:call(e, "init_scene")
+    return e
+end
+
 function world:create_object(inner_proxy)
     local w = self
     local on_init = inner_proxy.on_init
@@ -207,6 +219,10 @@ function world:create_object(inner_proxy)
     end
 
     local outer_proxy = {}
+    outer_proxy.root = create_scene_entity(self)
+    --TODO
+    w:multicast(inner_proxy.tag['*'], "set_parent", outer_proxy.root)
+
     if on_message then
         function outer_proxy:send(...)
             w:pub {"object_message", on_message, inner_proxy, ...}

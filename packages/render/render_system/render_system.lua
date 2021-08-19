@@ -56,7 +56,7 @@ end
 
 function render_sys:update_filter()
 	w:clear "filter_result"
-    for e in w:select "render_object_update render_object:in filter_result:temp" do
+    for e in w:select "render_object_update render_object:in filter_result:new" do
         local ro = e.render_object
         local state = ro.entity_state
 		local st = ro.fx.setting.surfacetype
