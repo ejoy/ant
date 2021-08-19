@@ -404,7 +404,7 @@ function gizmo_sys:post_init()
 	iom.set_scale(global_axis_eid, 2.5)
 end
 local mb_main_camera_changed = world:sub{"camera_changed", "main_queue"}
-function gizmo_sys:entity_done()
+function gizmo_sys:entity_ready()
 	for _ in mb_main_camera_changed:each() do
 		update_global_axis()
 		gizmo:update_scale()
