@@ -306,3 +306,7 @@ function iobj_motion.calc_viewmat(eid)
     local rc = get_transform(eid)
     return math3d.lookto(math3d.index(rc.srt, 4), math3d.index(rc.srt, 3), rc.updir)
 end
+
+for n, f in pairs(iobj_motion) do
+    ecs.method[n] = f
+end

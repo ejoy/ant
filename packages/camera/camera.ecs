@@ -99,7 +99,6 @@ action "dof_focus_obj"
 policy_v2 "camera"
     .component_v2 "camera"
     .component_opt "scene"
-    .component_opt "scene_sorted"
     .component_opt "reference"
 
 component_v2 "reference"

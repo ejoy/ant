@@ -18,6 +18,13 @@ function m:entity_init()
     w:clear "prefab_init"
 end
 
+function m:entity_ready()
+    for v in w:select "prefab_ready:in" do
+        v.prefab_ready()
+    end
+    w:clear "prefab_ready"
+end
+
 function m:data_changed()
     for msg in evObjectMessage:each() do
         local f = msg[2]

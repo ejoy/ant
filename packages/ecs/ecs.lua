@@ -489,6 +489,7 @@ function m.new_world(config)
 		_cpu_stat = setmetatable({total={}}, {__close = finish_cpu_stat}),
 		_ecs = {},
 		_loaded = {},
+		_methods = {},
 		w = config.w
 	}, world)
 

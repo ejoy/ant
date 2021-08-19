@@ -35,12 +35,15 @@ void effect_adapter::play(int32_t startTime)
 	manager_->SetSpeed(handle_, speed_);
 }
 
-void effect_adapter::set_time(int32_t frame)
+void effect_adapter::set_time(int32_t frame, bool shouldExist)
 {
 	if (!effect_.Get() || !manager_ || frame < 0.0f) {
 		return;
 	}
 	if (!manager_->Exists(handle_)) {
+		if (shouldExist) {
+			return;
+		}
 		handle_ = manager_->Play(effect_, 0.0f, 0.0f, 0.0f);
 		pause(true);
 	}

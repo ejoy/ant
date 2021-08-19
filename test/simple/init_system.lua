@@ -8,5 +8,6 @@ function m:init_world()
     world:instance "res/scenes.prefab"
     world:instance "res/female.prefab"
     local camera = ecs.require "camera"
+    world:call(camera.root, "set_position", {1, 1, 1})
     camera:send "hello"
 end

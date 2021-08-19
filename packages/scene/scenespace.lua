@@ -11,7 +11,7 @@ function iss.set_parent(eid, peid)
 	local pe = world[peid]
 	if (not e or e.scene_entity) and (not pe or pe.scene_entity) then
 		e.parent = peid
-		world:pub {"component_changed", "parent", eid, peid}
+		world:pub {"old_parent_changed", eid, peid}
 	end
 end
 
@@ -24,7 +24,8 @@ end
 ----scenespace_system----
 local s = ecs.system "scenespace_system"
 
-local evChangedParent = world:sub {"component_changed", "parent"}
+local evOldParentChanged = world:sub {"old_parent_changed"}
+local evNewParentChanged = world:sub {"new_parent_changed"}
 
 local function inherit_entity_state(e)
 	local state = e.state or 0
@@ -53,6 +54,11 @@ end
 
 local current_changed = 0
 local current_sceneid = 0
+
+local function new_sceneid()
+	current_sceneid = current_sceneid + 1
+	return current_sceneid
+end
 
 local function update_worldmat(node, parent)
 	if not parent then
@@ -134,10 +140,14 @@ local function forEachScene(f)
 				cache[scene.id] = scene
 				f(v, scene, parent)
 			else
-				v.order = false -- yield
+				v.scene_sorted = false -- yield
 			end
 		end
 	end
+end
+
+local function isValidReference(reference)
+    return reference[1] ~= nil
 end
 
 function s:entity_init()
@@ -153,7 +163,7 @@ function s:entity_init()
 			updir = camera.updir
 		}
 	end
-	for v in w:select "INIT scene:in eid?in" do
+	for v in w:select "INIT scene:in eid?in scene_sorted?new" do
 		local scene = v.scene
 		if scene.srt then
 			scene.srt = math3d.ref(math3d.matrix(scene.srt))
@@ -163,11 +173,11 @@ function s:entity_init()
 		end
 		scene.changed = current_changed
 
-		current_sceneid = current_sceneid + 1
-		scene.id = current_sceneid
+		scene.id = new_sceneid()
 		if v.eid then
 			hashmap[v.eid] = scene
 		end
+		v.scene_sorted = true
 		needsync = true
 	end
 	for v in w:select "INIT camera:in scene:in" do
@@ -177,7 +187,12 @@ function s:entity_init()
 		v.render_object.srt = v.scene.srt
 	end
 
-	for _, _, eid, peid in evChangedParent:unpack() do
+	for v in w:select "scene_unsorted scene_sorted?new" do
+		v.scene_sorted = true
+	end
+	w:clear "scene_unsorted"
+
+	for _, eid, peid in evOldParentChanged:unpack() do
 		local scene = findScene(hashmap, eid)
 		scene.changed = current_changed
 		if peid then
@@ -188,8 +203,21 @@ function s:entity_init()
 		needsync = true
 	end
 
+	for _, e, parent in evNewParentChanged:unpack() do
+		if isValidReference(e) then
+			w:sync("scene:in", e)
+			e.scene.changed = current_changed
+			if not parent or not isValidReference(parent) then
+				e.scene.parent = nil
+			else
+				w:sync("scene:in", parent)
+				e.scene.parent = parent.scene.id
+			end
+			needsync = true
+		end
+	end
+
 	if needsync then
-		local cache = {}
 		forEachScene(function (v, scene, parent)
 			w:sync("eid?in INIT?in", v)
 			if v.INIT and v.eid then
@@ -260,4 +288,21 @@ function s:scene_remove()
 			end
 		end)
 	end
+end
+
+function ecs.method.init_scene(e)
+	e.scene_unsorted = true
+	w:sync("scene:in scene_unsorted?out", e)
+	local scene = e.scene
+	scene.id = new_sceneid()
+	if scene.srt then
+		scene.srt = math3d.ref(math3d.matrix(scene.srt))
+	end
+	if scene.updir then
+		scene.updir = math3d.ref(math3d.vector(scene.updir))
+	end
+end
+
+function ecs.method.set_parent(e, parent)
+	world:pub {"new_parent_changed", e, parent}
 end

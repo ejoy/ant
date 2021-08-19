@@ -19,7 +19,7 @@ local function splitname(fullname)
 end
 
 local function register_pkg(w, package)
-	local ecs = { world = w }
+	local ecs = { world = w, method = w._set_methods }
 	local declaration = w._decl
 	local import = w._import
 	local function register(what)
@@ -46,6 +46,9 @@ local function register_pkg(w, package)
 				local callback = keys(decl.method)
 				local object = import[what](fullname)
 				setmetatable(r, {
+					__pairs = function ()
+						return pairs(object)
+					end,
 					__index = object,
 					__newindex = function(_, key, func)
 						if type(func) ~= "function" then
@@ -266,6 +269,17 @@ local function init(w, config)
 		return assert(fs.loadfile(file))
 	end)
 	w._import = create_importor(w)
+	w._set_methods = setmetatable({}, {
+		__index = w._methods,
+		__newindex = function(_, name, f)
+			if w._methods[name] then
+				local info = debug.getinfo(w._methods[name], "Sl")
+				assert(info.source:sub(1,1) == "@")
+				error(string.format("Method `%s` has already defined at %s(%d).", name, info.source:sub(2), info.linedefined))
+			end
+			w._methods[name] = f
+		end,
+	})
 	setmetatable(w._ecs, {__index = function (_, package)
 		return register_pkg(w, package)
 	end})

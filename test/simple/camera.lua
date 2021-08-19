@@ -5,7 +5,10 @@ local object = world:create_instance "res/camera.prefab"
 local camera = object.tag.camera[1]
 
 function object:on_init()
-    world:call(camera, "get_postion")
+end
+
+function object:on_ready()
+    world:call(camera, "get_position")
 end
 
 function object:on_message(msg)

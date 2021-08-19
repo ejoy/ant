@@ -251,7 +251,11 @@ lset_time(lua_State* L) {
 			if (lua_type(L, 2) == LUA_TNUMBER) {
 				frame = lua_tointeger(L, 2);
 			}
-			effect->set_time(frame);
+			bool should_exist = true;
+			if (!lua_isnoneornil(L, 3)) {
+				should_exist = lua_toboolean(L, 3);
+			}
+			effect->set_time(frame, should_exist);
 		}
 	}
 	return 0;
@@ -288,8 +292,7 @@ lis_playing(lua_State* L) {
 	int32_t eidx = get_effect_index(L);
 	if (eidx != -1) {
 		auto effect = g_effekseer->get_effect(eidx);
-		if (effect)
-		{
+		if (effect) {
 			isplay = effect->is_playing();
 		}
 	}
@@ -314,8 +317,7 @@ lset_speed(lua_State* L) {
 
 void effekseer_ctx::update()
 {
-	for (auto& eff : effects_)
-	{
+	for (auto& eff : effects_) {
 		eff.update();
 	}
 }
