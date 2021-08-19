@@ -54,8 +54,8 @@ function event.step(tag_name, t)
     tag(tag_name) : step(t)
 end
 
-function event.time(tag_name, t)
-    tag(tag_name) : time(t)
+function event.time(tag_name, t, b)
+    tag(tag_name) : time(t, b)
 end
 
 function event.clip_time(tag_name, t)

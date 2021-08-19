@@ -36,9 +36,13 @@ policy "effekseer_policy"
 component_v2 "effekseer"
     .type "lua"
 
+component_v2 "effect_instance"
+    .type "lua"
+
 policy_v2 "effekseer"
     .require_system "effekseer_system"
     .component_v2 "effekseer"
+    .component_v2 "effect_instance"
 
 transform "instance_effect"
     .implement "effekseer_system.lua"

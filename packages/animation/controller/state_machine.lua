@@ -319,7 +319,7 @@ function iani.set_time(eid, second)
 			for _, ev in ipairs(events.event_list) do
 				if ev.event_type == "Effect" then
 					if ev.effect then
-						world:prefab_event(ev.effect, "time", "root", current_time - events.time)
+						world:prefab_event(ev.effect, "time", "root", current_time - events.time, false)
 					end
 				end
 			end

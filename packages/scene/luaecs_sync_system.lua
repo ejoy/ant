@@ -77,6 +77,7 @@ function s:luaecs_sync()
 			policy[#policy+1] = "ant.collision|collider"
 		elseif isEffekseer(e) then
 			data.effekseer = e.effekseer
+			data.effect_instance = e.effect_instance
 			policy[#policy+1] = "ant.effekseer|effekseer"
 		end
 
