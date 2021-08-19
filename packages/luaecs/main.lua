@@ -114,26 +114,25 @@ local function create_template(w, detach, t)
     return prefab
 end
 
-local function run_action(w, res, prefab)
-	for i, entity in ipairs(prefab) do
-		if entity.action then
-			for name, target in sortpairs(entity.action) do
-				local object = w._class.action[name]
-				assert(object and object.init)
-				object.init(res, i, target)
-			end
-		end
-	end
-	for i, v in ipairs(prefab) do
-		if v.prefab then
-			if v.args then
-				for k, v in pairs(v.args) do
-					res[i][k] = res[v]
-				end
-			end
-			run_action(w, res[i], v.prefab)
-		end
-	end
+local function run_action(w, entities, template)
+    for i, entity in ipairs(template) do
+        if entity.action then
+            for name, target in sortpairs(entity.action) do
+                w:call(entities[i], name, target)
+            end
+        end
+    end
+    --TODO
+	--for i, v in ipairs(template) do
+	--	if v.prefab then
+	--		if v.args then
+	--			for k, v in pairs(v.args) do
+	--				entities[i][k] = entities[v]
+	--			end
+	--		end
+	--		run_action(w, entities[i], v.prefab)
+	--	end
+	--end
 end
 
 local function add_tag(dict, tag, eid)
@@ -218,11 +217,7 @@ function world:create_object(inner_proxy)
         return
     end
 
-    local outer_proxy = {}
-    outer_proxy.root = create_scene_entity(self)
-    --TODO
-    w:multicast(inner_proxy.tag['*'], "set_parent", outer_proxy.root)
-
+    local outer_proxy = {root = inner_proxy.root}
     if on_message then
         function outer_proxy:send(...)
             w:pub {"object_message", on_message, inner_proxy, ...}
@@ -245,12 +240,16 @@ function world:create_object(inner_proxy)
     return outer_proxy
 end
 
-function world:create_instance(filename, detach)
+function world:create_instance(filename, options)
     local w = self
+    local detach = options and options.detach
     local template = assetmgr.resource(filename, { create_template = function (_,...) return create_template(w, detach, ...) end })
+    local root = create_scene_entity(w)
     local entities = create_instance(w, template)
+    w:multicast(entities, "set_parent", root)
     run_action(w, entities, template)
     return {
+        root = root,
         tag = create_tags(entities, template)
     }
 end

@@ -259,6 +259,8 @@ function bm.init(prefab, idx, value)
     ic.bind(eid, value.which)
 end
 
+ecs.method.bind_camera = ic.bind
+
 local dof_trans = ecs.transform "dof_transform"
 function dof_trans.process_entity(e)
     local dof = e.dof
