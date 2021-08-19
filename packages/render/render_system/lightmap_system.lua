@@ -52,8 +52,7 @@ function lm_sys:end_filter()
                     bi.texture = assetmgr.resource(bi.texture_path)
                     local mf = type(material) == "string" and material or tostring(material)
                     local bm = load_lightmap_material(mf, material.fx.setting)
-                    local pm = bm.properties["s_lightmap"]
-                    pm.texture.handle = bi.texture.handle
+                    imaterial.set_property_directly(bm.properties, "s_lightmap", {stage=8, texture={handle=bi.texture.handle}})
                     e.filter_material[fn] = {
                         fx          = bm.fx,
                         properties  = bm.properties,

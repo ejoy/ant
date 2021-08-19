@@ -3,6 +3,7 @@ local world = ecs.world
 local w = world.w
 
 local lfs = require "filesystem.local"
+local fs = require "filesystem"
 local image = require "image"
 require "bake_mathadapter"
 
@@ -68,19 +69,23 @@ sampler:
 local function save_lightmap(e, lme)
     local lm = e.lightmap
 
-    local filename = lme.lightmap_path / gen_name(lm.bake_id, e.name)
-    assert(not lfs.exists(filename))
+    local local_lmpath = lme.lightmap_path:localpath()
+    local name = gen_name(lm.bake_id, e.name)
+    local filename = lme.lightmap_path / name
+    assert(not fs.exists(filename))
+    local local_filename = local_lmpath / name
     local ti = default_tex_info(lm.size, lm.size, "RGBA32F")
     local lmdata = lm.data
     local m = bgfx.memory_buffer(lmdata:data(), ti.storageSize, lmdata)
     local c = image.encode_image(ti, m, {type = "dds", format="RGBA8", srgb=false})
-    local f = lfs.open(filename, "wb")
+    local f = lfs.open(local_filename, "wb")
     f:write(c)
     f:close()
 
     local tc = texfile_content:format(filename:string())
     local texfile = filename:replace_extension "texture"
-    f = lfs.open(texfile, "w")
+    local local_texfile = local_lmpath / texfile:filename():string()
+    f = lfs.open(local_texfile, "w")
     f:write(tc)
     f:close()
     
