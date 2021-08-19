@@ -112,6 +112,11 @@ function iplay.play(eid, loop)
     effekseer.play(eh)
 end
 
+function iplay.stop(eid)
+    local eh = world[eid].effect_instance.handle
+    effekseer.stop(eh)
+end
+
 function iplay.is_playing(eid)
     local eh = world[eid].effect_instance.handle
     return effekseer.is_playing(eh)

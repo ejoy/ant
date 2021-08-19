@@ -85,6 +85,14 @@ local function anim_group_set_time(eid, t)
     end
 end
 
+local function anim_group_stop_effect(eid)
+    local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
+    if not group_eid then return end
+    for _, anim_eid in ipairs(group_eid) do
+        iani.stop_effect(anim_eid)
+    end
+end
+
 local function anim_group_play_group(eid, ...)
     local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
     if not group_eid then return end
@@ -767,6 +775,9 @@ end
 
 local function set_current_clip(clip)
     if current_clip == clip then return end
+    
+    anim_group_stop_effect(current_eid)
+
     if clip then
         if not set_current_anim(clip.anim_name) then
             return

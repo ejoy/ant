@@ -29,6 +29,7 @@ interface "animation"
     .method "set_state"
     .method "set_value"
     .method "get_collider"
+    .method "stop_effect"
 
 policy "animation_controller.state_machine"
     .require_system "state_machine_system"

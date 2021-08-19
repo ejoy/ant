@@ -327,6 +327,23 @@ function iani.set_time(eid, second)
 	end
 end
 
+function iani.stop_effect(eid)
+	local e = world[eid]
+	if not e or not e.animation then return end
+	local all_events = e._animation._current.event_state.keyframe_events
+	if all_events then
+		for _, events in ipairs(all_events) do
+			for _, ev in ipairs(events.event_list) do
+				if ev.event_type == "Effect" then
+					if ev.effect then
+						world:prefab_event(ev.effect, "stop", "root")
+					end
+				end
+			end
+		end
+	end
+end
+
 function iani.set_clip_time(eid, second)
 	local e = world[eid]
 	if not e or not e.animation or not e._animation._current then return end
