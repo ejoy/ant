@@ -212,9 +212,14 @@ local function generate_properties(fx, properties)
 		for _, u in ipairs(uniforms) do
 			local n = u.name
 			if not n:match "@data" then
-				local v = to_v(properties[n]) or isp.get(n)
-				if v == nil then
-					error(("not found property:%s"):format(n))
+				local v
+				if "s_lightmap" == n then
+					v = {stage = 8, texture={}}
+				else
+					v = to_v(properties[n]) or isp.get(n)
+					if v == nil then
+						error(("not found property:%s"):format(n))
+					end
 				end
 				new_properties[n] = {
 					value = v,
