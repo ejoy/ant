@@ -152,15 +152,19 @@ local function create_downsample()
     create_ds("simple_ds", "/pkg/ant.bake/materials/downsample.material")
 end
 
+local function frame()
+    bgfx.encoder_end()
+    local fidx = bgfx.frame()
+    bgfx.encoder_begin()
+    return fidx
+end
+
 local function get_image_memory(tex, w, h, elemsize)
     local size = w * h * elemsize
     local m = bgfx.memory_buffer(size)
     local readend = bgfx.read_texture(tex, m)
     repeat
-        bgfx.encoder_end()
-        local fidx = bgfx.frame()
-        bgfx.encoder_begin()
-    until fidx < readend
+    until frame() < readend
     return m
 end
 
@@ -444,6 +448,7 @@ local function render_scene(vp, view, proj, sceneobjs)
     for _, ro in ipairs(sceneobjs) do
         irender.draw(lightmap_viewid, ro)
     end
+    frame()
 end
 
 local storage = {
@@ -497,7 +502,7 @@ function storage:copy2storage(tex)
     bgfx.blit(lightmap_storage_viewid,
         storagerb.handle, wx, wy,
         tex, 0, 0, self.hemix, self.hemiy)
-    bgfx.touch(lightmap_storage_viewid)
+    frame()
 
     self:next()
 end
