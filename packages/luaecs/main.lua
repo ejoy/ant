@@ -174,6 +174,7 @@ end
 function world:create_object(inner_proxy)
     local w = self
     local on_init = inner_proxy.on_init
+    local on_ready = inner_proxy.on_ready
     local on_update = inner_proxy.on_update
     local on_message = inner_proxy.on_message
     if not on_init and not on_update and not on_message then
@@ -186,6 +187,11 @@ function world:create_object(inner_proxy)
     if on_init then
         function proxy_entity.prefab_init()
             on_init(inner_proxy)
+        end
+    end
+    if on_ready then
+        function proxy_entity.prefab_ready()
+            on_ready(inner_proxy)
         end
     end
     if on_update then
@@ -246,26 +252,33 @@ function world:detach_instance(instance)
     end
 end
 
-local function run_command(e, name, ...)
-    --TODO
-    print(e, name, ...)
+function world:call(e, name, ...)
+    local f = self._methods[name]
+    if not f then
+        error(("Method `%s` is not defined."):format(name))
+    end
+    return f(e, ...)
 end
 
-function world:call(entity, ...)
-    return run_command(entity, ...)
-end
-
-function world:multicall(set, ...)
+function world:multicall(set, name, ...)
+    local f = self._methods[name]
+    if not f then
+        error(("Method `%s` is not defined."):format(name))
+    end
     local res = {}
     for i = 1, #set do
-        res[i] = run_command(set[i], ...)
+        res[i] = f(set[i], ...)
     end
     return res
 end
 
-function world:multicast(set, ...)
+function world:multicast(set, name, ...)
+    local f = self._methods[name]
+    if not f then
+        error(("Method `%s` is not defined."):format(name))
+    end
     for i = 1, #set do
-        run_command(set[i], ...)
+        f(set[i], ...)
     end
 end
 

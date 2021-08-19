@@ -31,7 +31,7 @@ function render_sys:entity_init()
 	end
 end
 
-function render_sys:entity_done()
+function render_sys:entity_ready()
 	for e in w:select "material_result:in render_object:in" do
 		local ro = e.render_object
 		local mr = e.material_result

@@ -189,7 +189,6 @@ function s:entity_init()
 	end
 
 	if needsync then
-		local cache = {}
 		forEachScene(function (v, scene, parent)
 			w:sync("eid?in INIT?in", v)
 			if v.INIT and v.eid then
