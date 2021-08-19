@@ -1,6 +1,6 @@
 ---
 action:
-    bind_camera: {which = main_queue}
+    bind_camera: main_queue
 data:
   camera:
     eyepos: {-1, 1, 2, 1}
