@@ -108,8 +108,9 @@ function iplay.play(eid, loop)
     --effekseer.set_speed(eh, speed or 1.0)
     local lp = loop or false
     -- world[eid].loop = lp
-    effekseer.set_loop(eh, lp)
-    effekseer.play(eh)
+    -- effekseer.set_loop(eh, lp)
+    -- effekseer.play(eh)
+    world:pub {"play_effect", eh, lp}
 end
 
 function iplay.stop(eid)
@@ -159,10 +160,10 @@ function effekseer_sys:camera_usage()
     end
 end
 
-
 local iom = world:interface "ant.objcontroller|obj_motion"
 local event_entity_register = world:sub{"entity_register"}
-
+local event_play_effect = world:sub{"play_effect"}
+local event_do_play = world:sub{"do_play"}
 function effekseer_sys:render_submit()
     for qe in w:select "main_queue render_target:in" do
         local rt = qe.render_target
@@ -177,18 +178,28 @@ function effekseer_sys:render_submit()
 end
 
 function effekseer_sys:follow_transform_updated()
+    for v in w:select "effect_instance:in scene:in" do
+        effekseer.update_transform(v.effect_instance.handle, v.scene._worldmat)
+    end
+
     for _, eid in event_entity_register:unpack() do
         local effect = world[eid].effekseer and world[eid].effect_instance or nil
         if effect then
             if effect.auto_play then
-                effekseer.set_loop(effect.handle, effect.loop)
-                effekseer.play(effect.handle) 
+                -- effekseer.set_loop(effect.handle, effect.loop)
+                -- effekseer.play(effect.handle)
+                world:pub {"play_effect", effect.handle, effect.loop}
             end
         end
     end
-
-    for v in w:select "effect_instance:in scene:in" do
-        effekseer.update_transform(v.effect_instance.handle, v.scene._worldmat)
+    
+    for _, eh, lp in event_do_play:unpack() do
+        effekseer.set_loop(eh, lp)
+        effekseer.play(eh)
+    end
+    
+    for _, eh, lp in event_play_effect:unpack() do
+        world:pub {"do_play", eh, lp}
     end
 end
 

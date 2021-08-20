@@ -44,7 +44,9 @@ void effect_adapter::set_time(int32_t frame, bool shouldExist)
 		if (shouldExist) {
 			return;
 		}
-		handle_ = manager_->Play(effect_, 0.0f, 0.0f, 0.0f);
+		Effekseer::Vector3D pos;
+		tranform_.GetTranslation(pos);
+		handle_ = manager_->Play(effect_, pos, 0);
 		pause(true);
 	}
 	manager_->SetPaused(handle_, false);

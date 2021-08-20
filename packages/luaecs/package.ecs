@@ -34,6 +34,11 @@ system "prefab_system"
     .method "entity_remove"
     .method "data_changed"
 
+system "debug_system"
+    .implement "debug_system.lua"
+    .method "init"
+    .method "update_world"
+
 component_v2 "INIT"
 
 component_v2 "create_entity"

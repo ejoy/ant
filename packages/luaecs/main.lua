@@ -340,6 +340,7 @@ function m.new_world(config)
 		cfg.system = cfg.system or {}
 		table.insert(cfg.system, "ant.luaecs|entity_system")
 		table.insert(cfg.system, "ant.luaecs|prefab_system")
+		table.insert(cfg.system, "ant.luaecs|debug_system")
 	end
     config.w = luaecs.world()
     config.update_decl = update_decl
