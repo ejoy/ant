@@ -1,6 +1,6 @@
 
 system "bake_lightmap_system"
-    .implement "lightmapper.lua"
+    .implement "bake_lightmap.lua"
     .method "init"
     .method "init_world"
     .method "entity_init"
@@ -18,7 +18,7 @@ policy "bake_lightmap"
     .require_policy "ant.render|lightmap"
 
 interface "ilightmap"
-    .implement "lightmapper.lua"
+    .implement "bake_lightmap.lua"
     .method "bake_entity"
     .method "find_sample"
 
