@@ -102,7 +102,8 @@ end
 
 function grid:load(path)
     local filename = string.sub(path, #global_data.project_root:string() + 2, -5)
-    local source = require(string.gsub(filename, "/", "."))
+    local source = dofile(path)
+    --local source = require(string.gsub(filename, "/", "."))
     if not source or not source.size or not source.row or not source.col then return end
     for i = 1, source.row do
         local posz = 0.5 * source.size - source.total_width * 0.5 + (i - 1) * source.size
