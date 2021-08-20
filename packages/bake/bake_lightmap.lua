@@ -115,7 +115,7 @@ end
 function bake_lm_sys:end_filter()
     for e in w:select "filter_result:in material:in render_object:in filter_material:out" do
         local fr = e.filter_result
-        local le = w:singleton("lightmap_queue", "primitive_filter:in")
+        local le = w:singleton("bake_lightmap_queue", "primitive_filter:in")
         for _, fn in ipairs(le.primitive_filter) do
             if fr[fn] then
                 local fm = e.filter_material
@@ -174,7 +174,7 @@ end
 local function bake_all()
     local scene_renderobjects = find_scene_render_objects "main_queue"
 
-    local lmq = w:singleton("lightmap_queue", "primitive_filter:in")
+    local lmq = w:singleton("bake_lightmap_queue", "primitive_filter:in")
     local lme = get_lme()
     for _, fn in ipairs(lmq.primitive_filter) do
         for e in w:select (fn .. " mesh:in lightmap:in render_object:in widget_entity:absent name?in") do
