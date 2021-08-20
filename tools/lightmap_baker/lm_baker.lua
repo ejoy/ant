@@ -22,7 +22,8 @@ function lm_baker:init_world()
 
 	for e in w:select "lightmapper lightmap_path:out" do
 		e.lightmap_path = scenepath / "lightmaps"
-		lfs.create_directories(e.lightmap_path:localpath())
+		local local_lmpath = scenepath:localpath() / "lightmaps"
+		lfs.create_directories(local_lmpath)
 	end
 
 	local mq = w:singleton("main_queue", "camera_ref:in")
