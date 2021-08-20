@@ -163,8 +163,7 @@ local function get_image_memory(tex, w, h, elemsize)
     local size = w * h * elemsize
     local m = bgfx.memory_buffer(size)
     local readend = bgfx.read_texture(tex, m)
-    repeat
-    until frame() < readend
+    while frame() < readend do end
     return m
 end
 
