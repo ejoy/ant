@@ -321,11 +321,11 @@ local function create_lightmap_queue()
                 },
                 fb_idx = fbidx,
             },
-            name = "lightmap_queue",
-            lightmap_queue = true,
+            name = "bake_lightmap_queue",
+            bake_lightmap_queue = true,
             visible = true,
             INIT = true,
-            queue_name = "lightmap_queue",
+            queue_name = "bake_lightmap_queue",
             cull_tag = {},
             shadow_render_queue = {},
         }
@@ -567,7 +567,7 @@ function ibaker.init()
 end
 
 function ibaker.init_framebuffer()
-    local le = w:singleton("lightmap_queue", "render_target:in")
+    local le = w:singleton("bake_lightmap_queue", "render_target:in")
     downsampler:update{le.render_target.fb_idx, storage.blit_fbidx}
 end
 

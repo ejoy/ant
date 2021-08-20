@@ -1,25 +1,24 @@
 
-system "lightmap_system"
-    .implement "lightmapper.lua"
+system "bake_lightmap_system"
+    .implement "bake_lightmap.lua"
     .method "init"
     .method "init_world"
-    .method "data_changed"
     .method "entity_init"
     .method "end_filter"
     .method "end_frame"
 
 component_v2 "bake_finish"
-component_v2 "lightmap_queue"
+component_v2 "bake_lightmap_queue"
 
 policy_v2 "bake_lightmap"
-    .require_system "ant.bake|lightmap_system"
+    .require_system "ant.bake|bake_lightmap_system"
     .require_policy_v2 "ant.render|lightmap"
 
 policy "bake_lightmap"
     .require_policy "ant.render|lightmap"
 
 interface "ilightmap"
-    .implement "lightmapper.lua"
+    .implement "bake_lightmap.lua"
     .method "bake_entity"
     .method "find_sample"
 
