@@ -187,8 +187,9 @@ function s:entity_init()
 		v.render_object.srt = v.scene.srt
 	end
 
-	for v in w:select "scene_unsorted scene_sorted?new" do
+	for v in w:select "scene_unsorted scene:in scene_sorted?new" do
 		v.scene_sorted = true
+		v.scene.changed = current_changed
 	end
 	w:clear "scene_unsorted"
 
