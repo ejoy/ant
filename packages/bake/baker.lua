@@ -257,18 +257,18 @@ function downsampler:update(fbs)
     end
 end
 
-function downsampler:downsample()
-    local hsize = fb_hemi_half_size
+function downsampler:downsample(hemisize)
+    local hsize = hemisize//2
     local viewid = lightmap_viewid + 1
     
     local we = w:singleton("weight_ds", "render_object:in")
     local se = w:singleton("simple_ds", "render_object:in")
-    local ros = {we.render_object, se.render_object}
+    local we_obj, se_obj = we.render_object, se.render_object
 
     local read, write = 1, 2
-    imaterial.set_property_directly(ros[read].properties, "hemispheres",    self.render_textures[read])
-    imaterial.set_property_directly(ros[read].properties, "weights",        self.weight_tex)
-    irender.draw(viewid, ros[read])
+    imaterial.set_property_directly(we_obj.properties, "hemispheres",    self.render_textures[read])
+    imaterial.set_property_directly(we_obj.properties, "weights",        self.weight_tex)
+    irender.draw(viewid, we_obj)
 
     while hsize > 1 do
         viewid = viewid + 1
@@ -276,9 +276,9 @@ function downsampler:downsample()
             ("lightmap size too large:%d, count:%d"):format(fb_hemi_half_size, downsample_viewid_count))
 
         read, write = write, read
-        imaterial.set_property_directly(ros[read].properties, "hemispheres", self.render_textures[read])
+        imaterial.set_property_directly(se_obj.properties, "hemispheres", self.render_textures[read])
 
-        irender.draw(viewid, ros[read])
+        irender.draw(viewid, se_obj)
         hsize = hsize/2
     end
 
@@ -433,7 +433,6 @@ local function init_buffer()
     bgfx.set_view_clear(lightmap_viewid, "CD", skycolor, 1.0)
     bgfx.set_view_rect(lightmap_viewid, 0, 0, bake_fbw, bake_fbh)
     bgfx.touch(lightmap_viewid)
-    bgfx.set_view_clear(lightmap_viewid, "")
 end
 
 local function render_scene(vp, view, proj, sceneobjs)
@@ -557,7 +556,7 @@ function hemisphere_batcher:write2lightmap(bake_ctx)
 end
 
 function hemisphere_batcher:integrate()
-    self.storage:copy2storage(downsampler:downsample())
+    self.storage:copy2storage(downsampler:downsample(self.hemisize))
 end
 
 function ibaker.init()
