@@ -59,17 +59,6 @@ policy:
 action:
   mount: 4
 data:
-  name: polySurface17
-  scene_entity: true
-  transform: {}
-policy:
-  ant.general|name
-  ant.scene|hierarchy_policy
-  ant.scene|transform_policy
----
-action:
-  mount: 5
-data:
   material: /pkg/ant.tool.lightmap_baker/assets/box.glb|materials/white.material
   mesh: "/pkg/ant.tool.lightmap_baker/assets/box.glb|meshes/网格.005_P1.meshbin"
   name: polySurface19
