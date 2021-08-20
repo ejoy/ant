@@ -22,6 +22,7 @@ function lm_baker:init_world()
 
 	for e in w:select "lightmapper lightmap_path:out" do
 		e.lightmap_path = scenepath / "lightmaps"
+		assert(fs.exists(scenepath))
 		local local_lmpath = scenepath:localpath() / "lightmaps"
 		lfs.create_directories(local_lmpath)
 	end
