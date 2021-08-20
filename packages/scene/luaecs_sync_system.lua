@@ -34,6 +34,9 @@ end
 local function isEffekseer(e)
 	return e.effekseer ~= nil
 end
+local function hasAnimation(e)
+	return e.animation ~= nil and e.skeleton ~= nil
+end
 
 function s:init()
 end
@@ -72,15 +75,32 @@ function s:luaecs_sync()
 			data.mesh	= e.mesh
 			data.filter_material = {}
 			policy[#policy+1] = "ant.scene|render_object"
-		elseif isCollider(e) then
+			if hasAnimation(e) then
+				data.animation = e.animation
+				data.skeleton = e.skeleton
+				data.pose_result = false
+				data._animation = {}
+				data.skinning = {}
+				data.skinning_type = "GPU"
+				data.material_setting = { skinning = "GPU"}
+				data.meshskin = e.meshskin
+				policy[#policy+1] = "ant.animation|animation"
+				policy[#policy+1] = "ant.animation|skinning"
+				if e.animation_birth then
+					data.animation_birth = e.animation_birth
+					policy[#policy+1] = "ant.animation|animation_controller.birth"
+				end
+			end
+		end
+		if isCollider(e) then
 			data.collider = e.collider
 			policy[#policy+1] = "ant.collision|collider"
-		elseif isEffekseer(e) then
+		end
+		if isEffekseer(e) then
 			data.effekseer = e.effekseer
 			data.effect_instance = e.effect_instance
 			policy[#policy+1] = "ant.effekseer|effekseer"
 		end
-
 		if isLightmapEntity(e) then
 			data.lightmap = e.lightmap
 			policy[#policy+1] = "ant.bake|bake_lightmap"

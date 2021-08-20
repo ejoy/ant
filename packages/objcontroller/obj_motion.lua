@@ -120,9 +120,8 @@ end
 
 function iobj_motion.worldmat(eid)
     if type(eid) == "table" then
-        --camera
-        local camera = icamera.find_camera(eid)
-        return camera.worldmat
+        w:sync("scene:in", eid)
+        return eid.scene._worldmat
     end
     local e = world[eid]
     if e then

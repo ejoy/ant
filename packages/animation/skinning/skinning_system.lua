@@ -1,5 +1,6 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 
 local animodule = require "hierarchy.animation"
 local bgfx 		= require "bgfx"
@@ -18,8 +19,7 @@ local skinning_sys = ecs.system "skinning_system"
 local iom = world:interface "ant.objcontroller|obj_motion"
 
 function skinning_sys:skin_mesh()
-	for _, eid in world:each "skinning" do
-		local e = world[eid]
+	for e in w:select "pose_result:in skinning:in skinning_type:in" do
 		local skinning = e.skinning
 		local skin = skinning.skin
 		local skinning_matrices = skinning.skinning_matrices
@@ -37,7 +37,7 @@ function skinning_sys:skin_mesh()
 				bgfx.update(handle, 0, bgfx.memory_buffer(updatedata:pointer(), job.buffersize, updatedata))
 			end
 		else
-			animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap, iom.worldmat(eid))
+			animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap, iom.worldmat(e))
 		end
 	end
 end
