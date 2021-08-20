@@ -159,15 +159,15 @@ local function colori2f(ic)
     return {((ic & 0xFF000000) >> 24) / 255.0, ((ic & 0x00FF0000) >> 16) / 255.0, ((ic & 0x0000FF00) >> 8) / 255.0, (ic & 0xFF) / 255.0 }
 end
 
+local current_color = colori2f(brush_def.color[1])
+local brush_color_ui = {current_color[1], current_color[2], current_color[3], current_color[4]}
+
 local function update_color()
     brush_color_ui[1] = current_color[1]
     brush_color_ui[2] = current_color[2]
     brush_color_ui[3] = current_color[3]
     brush_color_ui[4] = current_color[4]
 end
-
-local current_color = colori2f(brush_def.color[1])
-local brush_color_ui = {current_color[1], current_color[2], current_color[3], current_color[4]}
 
 function m.show()
     local viewport = imgui.GetMainViewport()

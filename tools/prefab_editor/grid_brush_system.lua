@@ -218,13 +218,14 @@ function brush_sys:handle_event()
         brush_state = state.CTRL
     end
 
-    local brush_id
+    for _, what, sx, sy in event_mouse_down:unpack() do
+		if what == "LEFT" and brush_state then
+            on_row_col_select(get_row_col(sx, sy))
+        end
+    end
+    
     for _, what, sx, sy, dx, dy in event_mouse_drag:unpack() do
 		if what == "LEFT" and brush_state then
-            if not brush_id then
-                --current_brush_id = get_brush_id(colorf2i(current_brush_color))
-                brush_id = current_brush_id
-            end
             on_row_col_select(get_row_col(sx, sy))
         end
     end

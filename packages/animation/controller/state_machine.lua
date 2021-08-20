@@ -153,7 +153,7 @@ function get_play_info(eid, name)
 
 end
 
-function do_play(e, anim, real_clips, isloop, manual)
+local function do_play(e, anim, real_clips, isloop, manual)
 	if e.state_machine then
 		e.state_machine._current = nil
 		play_animation(e, name, time)
