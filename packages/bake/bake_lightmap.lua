@@ -12,10 +12,16 @@ local bake      = require "bake"
 local ltask     = require "ltask"
 local crypt     = require "crypt"
 
+local assetmgr  = import_package "ant.asset"
+
 local imaterial = world:interface "ant.asset|imaterial"
 local ibaker    = world:interface "ant.bake|ibaker"
 
 local bake_lm_sys = ecs.system "bake_lightmap_system"
+local bake_fx<const> = {
+    vs = "/pkg/ant.bake/materials/shaders/vs_pbr_baked.sc",
+    fs = "/pkg/ant.bake/materials/shaders/fs_pbr_baked.sc",
+}
 
 function bake_lm_sys:init()
     ibaker.init()
@@ -92,18 +98,24 @@ local function save_lightmap(e, lme)
     lme.lightmap_result[lm.bake_id] = {texture_path = texfile:string(),}
 end
 
-local function load_bake_material(material, fx)
+local function load_bake_material(ro)
     local s = {BAKING_LIGHTMAP = 1}
-    for k, v in pairs(fx.setting) do
+    for k, v in pairs(ro.fx.setting) do
         s[k] = v
     end
     s["ENABLE_SHADOW"] = nil
     s["identity"] = nil
-    s['shadow_cast'] = 'off'
-    s['shadow_receive'] = 'off'
-    s['skinning'] = 'UNKNOWN'
-    s['bloom'] = 'off'
-    return imaterial.load(material, s)
+    s['shadow_cast'] = nil
+    s['shadow_receive'] = nil
+    s['skinning'] = nil
+    s['bloom'] = nil
+    local fx = assetmgr.load_fx(bake_fx, s)
+    return {
+        fx          = fx,
+        properties  = ro.properties,
+        state       = ro.state,
+        stencil     = ro.stencil,
+    }
 end
 
 local function to_none_cull_state(state)
@@ -113,17 +125,14 @@ local function to_none_cull_state(state)
 end
 
 function bake_lm_sys:end_filter()
-    for e in w:select "filter_result:in material:in render_object:in filter_material:out" do
+    for e in w:select "filter_result:in render_object:in filter_material:out" do
         local fr = e.filter_result
         local le = w:singleton("bake_lightmap_queue", "primitive_filter:in")
         for _, fn in ipairs(le.primitive_filter) do
             if fr[fn] then
                 local fm = e.filter_material
                 local ro = e.render_object
-                local material = e.material
-                --TODO: e.material should be string
-                material = type(material) == "string" and material or tostring(material)
-                local nm = load_bake_material(material, ro.fx)
+                local nm = load_bake_material(ro)
                 fm[fn] = {
                     fx          = nm.fx,
                     properties  = nm.properties,

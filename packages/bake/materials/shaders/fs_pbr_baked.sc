@@ -1,4 +1,4 @@
-$input v_texcoord0, v_normal, v_tangent, v_bitangent
+$input v_texcoord0, v_normal, v_tangent, v_bitangent, v_posWS
 
 #include <bgfx_shader.sh>
 #include <bgfx_compute.sh>
@@ -172,7 +172,7 @@ void main()
 
         vec3 L = normalize(pt2l);
         float NdotL = clamp_dot(N, L);
-        color += intensity * NdotL * BRDF_lambertian(mi.f0, mi.f90, mi.albedo, VdotH);
+        color += intensity * NdotL * BRDF_lambertian_baked(mi.albedo);
     }
 
 #ifdef HAS_EMISSIVE_TEXTURE
