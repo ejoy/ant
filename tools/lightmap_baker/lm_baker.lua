@@ -5,6 +5,12 @@ local w = world.w
 local serialize = import_package "ant.serialize"
 local fs = require "filesystem"
 local lfs = require "filesystem.local"
+local math3d = require "math3d"
+
+local mathpkg = import_package "ant.math"
+local mc = mathpkg.constant
+
+local iom = world:interface "ant.objcontroller|obj_motion"
 
 local lm_baker = ecs.system "lightmap_baker_system"
 
@@ -18,6 +24,14 @@ function lm_baker:init_world()
 		e.lightmap_path = scenepath / "lightmaps"
 		lfs.create_directories(e.lightmap_path:localpath())
 	end
+
+	local mq = w:singleton("main_queue", "camera_ref:in")
+    local eyepos = math3d.vector(0, 10, -10)
+    local camera_ref = mq.camera_ref
+    iom.set_position(camera_ref, eyepos)
+    local dir = math3d.normalize(math3d.sub(mc.ZERO_PT, eyepos))
+    iom.set_direction(camera_ref, dir)
+
 	world:pub{"bake"}	--bake all scene
 end
 

@@ -5,4 +5,4 @@ prefab: ./light.prefab
 ---
 prefab: ./procedural_sky.prefab
 ---
-prefab: ./box.prefab
+prefab: ./box2.prefab
