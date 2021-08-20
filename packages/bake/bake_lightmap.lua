@@ -15,17 +15,17 @@ local crypt     = require "crypt"
 local imaterial = world:interface "ant.asset|imaterial"
 local ibaker    = world:interface "ant.bake|ibaker"
 
-local lightmap_sys = ecs.system "lightmap_system"
+local bake_lm_sys = ecs.system "bake_lightmap_system"
 
-function lightmap_sys:init()
+function bake_lm_sys:init()
     ibaker.init()
 end
 
-function lightmap_sys:init_world()
+function bake_lm_sys:init_world()
     ibaker.init_framebuffer()
 end
 
-function lightmap_sys:entity_init()
+function bake_lm_sys:entity_init()
     for e in w:select "INIT lightmap:in" do
         local lm = e.lightmap
         if lm.bake_id == nil then
@@ -92,16 +92,6 @@ local function save_lightmap(e, lme)
     lme.lightmap_result[lm.bake_id] = {texture_path = texfile:string(),}
 end
 
-function lightmap_sys:data_changed()
-    -- for lme in w:select "lightmapper lightmap_path:in lightmap_result:in" do
-    --     for e in w:select "bake_finish lightmap:in render_object:in render_object_update:out" do
-    --         e.render_object_update = true
-    --         save_lightmap(e, lme)
-    --     end
-    --     w:clear "bake_finish"
-    -- end
-end
-
 local function load_bake_material(material, fx)
     local s = {BAKING_LIGHTMAP = 1}
     for k, v in pairs(fx.setting) do
@@ -122,7 +112,7 @@ local function to_none_cull_state(state)
 	return bgfx.make_state(s)
 end
 
-function lightmap_sys:end_filter()
+function bake_lm_sys:end_filter()
     for e in w:select "filter_result:in material:in render_object:in filter_material:out" do
         local fr = e.filter_result
         local le = w:singleton("lightmap_queue", "primitive_filter:in")
@@ -211,7 +201,7 @@ end
 
 local bake_mb = world:sub{"bake"}
 
-function lightmap_sys:end_frame()
+function bake_lm_sys:end_frame()
     for msg in bake_mb:each() do
         local id = msg[2]
         ltask.fork(function ()
