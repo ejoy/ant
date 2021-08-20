@@ -13,6 +13,15 @@ local mouse_mb = world:sub {"mouse"}
 
 local viewat<const> = math3d.ref(math3d.vector(0, 0, 0))
 
+function cc_sys:init_world()
+    local mq = w:singleton("main_queue", "camera_ref:in")
+    local eyepos = math3d.vector(0, 0, -10)
+    local camera_ref = mq.camera_ref
+    iom.set_position(camera_ref, eyepos)
+    local dir = math3d.normalize(math3d.sub(viewat, eyepos))
+    iom.set_direction(camera_ref, dir)
+end
+
 function cc_sys:post_init()
     
 end
@@ -26,14 +35,6 @@ end
 local mouse_lastx, mouse_lasty
 local toforward
 function cc_sys:data_changed()
-    for v in w:select "INIT main_queue camera_ref:in" do
-        local eyepos = math3d.vector(0, 0, -10)
-        local camera_ref = v.camera_ref
-        iom.set_position(camera_ref, eyepos)
-        local dir = math3d.normalize(math3d.sub(viewat, eyepos))
-        iom.set_direction(camera_ref, dir)
-    end
-
     for msg in kb_mb:each() do
         local key, press, status = msg[2], msg[3], msg[4]
         if press == 1 then
