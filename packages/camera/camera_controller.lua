@@ -13,19 +13,6 @@ local mouse_mb = world:sub {"mouse"}
 
 local viewat<const> = math3d.ref(math3d.vector(0, 0, 0))
 
-function cc_sys:init_world()
-    local mq = w:singleton("main_queue", "camera_ref:in")
-    local eyepos = math3d.vector(0, 0, -10)
-    local camera_ref = mq.camera_ref
-    iom.set_position(camera_ref, eyepos)
-    local dir = math3d.normalize(math3d.sub(viewat, eyepos))
-    iom.set_direction(camera_ref, dir)
-end
-
-function cc_sys:post_init()
-    
-end
-
 local function main_camera_ref()
     for v in w:select "main_queue camera_ref:in" do
         return v.camera_ref
