@@ -400,6 +400,8 @@ lcontext_write2lightmap(lua_State *L){
     auto storage_nx = luaL_checkinteger(L, 6);
     auto storage_ny = luaL_checkinteger(L, 7);
 
+    auto w = hemix * storage_nx;
+
     auto hemicount = hemix * hemiy;
     const auto &samples = ctx->lm_ctx->samples;
     for (size_t sampleidx=0; sampleidx<samples.size(); ++sampleidx){
@@ -408,13 +410,15 @@ lcontext_write2lightmap(lua_State *L){
         auto storage_x = storage_idx % storage_nx;
         auto storage_y = storage_idx / storage_nx;
 
-        auto hemi_idx = sampleidx % hemicount;
+        auto hemiidx = sampleidx-storage_idx*hemicount;
+        auto local_hx = hemiidx % hemix;
+        auto local_hy = hemiidx / hemiy;
 
-        auto mem_idx = storage_y * hemicount * storage_nx + storage_x * hemicount + hemi_idx;
+        auto mem_idx = (local_hy + storage_y * hemiy) * w + (local_hx + storage_x * hemix);
 
         if (mem_idx * 16 >= m->size){
-            luaL_error(L, "invalid index, sampleidx:%d, storage:{nx=%d, ny=%d, x=%d, y=%d}, hemi_idx=%d", 
-            sampleidx, storage_nx, storage_ny, storage_x, storage_y, hemi_idx);
+            luaL_error(L, "invalid index, sampleidx:%d, storage:{nx=%d, ny=%d, x=%d, y=%d}, mem_idx=%d", 
+            sampleidx, storage_nx, storage_ny, storage_x, storage_y, mem_idx);
         }
 
         const glm::vec4 &c = *((glm::vec4 *)m->data + mem_idx);
