@@ -52,7 +52,7 @@ local function inherit_material(e)
 	end
 end
 
-local current_changed = 0
+local current_changed = 1
 local current_sceneid = 0
 
 local function new_sceneid()
@@ -60,15 +60,15 @@ local function new_sceneid()
 	return current_sceneid
 end
 
-local function update_worldmat(node, parent)
-	if not parent then
-		if node.srt == nil then
-			node._worldmat = nil
-		else
-			node._worldmat = math3d.matrix(node.srt)
-		end
-		return
+local function update_worldmat_noparent(node)
+	if node.srt == nil then
+		node._worldmat = nil
+	else
+		node._worldmat = math3d.matrix(node.srt)
 	end
+end
+
+local function update_worldmat(node, parent)
 	if parent.changed > node.changed then
 		node.changed = parent.changed
 	end
@@ -152,7 +152,6 @@ end
 
 function s:entity_init()
 	local needsync = false
-	current_changed = current_changed + 1
 
 	local hashmap = {}
 	for v in w:select "INIT camera:in scene:out" do
@@ -250,27 +249,41 @@ function s:update_transform()
 		scene.changed = current_changed
 	end
 
-	forEachScene(function (_, scene, parent)
-		update_worldmat(scene, parent)
-		update_aabb(scene)
-	end)
-
-	for v in w:select "render_object:in scene:in scene_changed?out" do
+	local cache = {}
+	for v in w:select "scene_sorted scene:in scene_changed?out" do
+		local scene = v.scene
+		if scene.parent == nil then
+			cache[scene.id] = scene
+			update_worldmat_noparent(scene)
+			update_aabb(scene)
+			if scene.changed == current_changed then
+				v.scene_changed = true
+			end
+		else
+			local parent = cache[scene.parent]
+			if parent then
+				cache[scene.id] = scene
+				update_worldmat(scene, parent)
+				update_aabb(scene)
+				if scene.changed == current_changed then
+					v.scene_changed = true
+				end
+			else
+				v.scene_sorted = false -- yield
+			end
+		end
+	end
+	for v in w:select "render_object:in scene:in" do
 		local r, n = v.render_object, v.scene
 		r.aabb = n._aabb
 		r.worldmat = n._worldmat
-		if n.changed == current_changed then
-			v.scene_changed = true
-		end
 	end
-	for v in w:select "camera:in scene:in scene_changed?out" do
+	for v in w:select "camera:in scene:in" do
 		local r, n = v.camera, v.scene
 		r.worldmat = n._worldmat
 		r.updir = n.updir
-		if n.changed == current_changed then
-			v.scene_changed = true
-		end
 	end
+	current_changed = current_changed + 1
 end
 
 local function hasSceneRemove()
@@ -282,12 +295,24 @@ end
 function s:scene_remove()
 	w:clear "scene_changed"
 	if hasSceneRemove() then
-		forEachScene(function (v, scene, parent)
-			if not scene.removed and parent and parent.removed then
-				scene.removed = true
-				w:remove(v)
+		local cache = {}
+		for v in w:select "scene_sorted scene:in" do
+			local scene = v.scene
+			if scene.parent == nil then
+				cache[scene.id] = scene
+			else
+				local parent = cache[scene.parent]
+				if parent then
+					cache[scene.id] = scene
+					if not scene.removed and parent.removed then
+						scene.removed = true
+						w:remove(v)
+					end
+				else
+					v.scene_sorted = false -- yield
+				end
 			end
-		end)
+		end
 	end
 end
 
