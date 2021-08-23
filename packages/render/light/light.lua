@@ -139,23 +139,34 @@ local lighttypes = {
 	spot = 2,
 }
 
-local function create_light_buffers()
-	local lights = {}
+local function count_visible_light()
+	local l = {}
 	for _, leid in world:each "light_type" do
 		local le = world[leid]
 		if ies.can_visible(leid) then
-			local p	= math3d.tovalue(iom.get_position(leid))
-			local d	= math3d.tovalue(math3d.inverse(iom.get_direction(leid)))
-			local c = ilight.color(leid)
-			local t	= le.light_type
-			local enable<const> = 1
-			lights[#lights+1] = ('f'):rep(16):pack(
-				p[1], p[2], p[3], ilight.range(leid) or math.maxinteger,
-				d[1], d[2], d[3], enable,
-				c[1], c[2], c[3], c[4],
-				lighttypes[t], ilight.intensity(leid),
-				ilight.inner_cutoff(leid) or 0,	ilight.outter_cutoff(leid) or 0)
+			l[#l+1] = leid
 		end
+	end
+	return l
+end
+
+ilight.count_visible_light = count_visible_light
+
+local function create_light_buffers()
+	local lights = {}
+	for _, leid in ipairs(count_visible_light()) do
+		local le = world[leid]
+		local p	= math3d.tovalue(iom.get_position(leid))
+		local d	= math3d.tovalue(math3d.inverse(iom.get_direction(leid)))
+		local c = ilight.color(leid)
+		local t	= le.light_type
+		local enable<const> = 1
+		lights[#lights+1] = ('f'):rep(16):pack(
+			p[1], p[2], p[3], ilight.range(leid) or math.maxinteger,
+			d[1], d[2], d[3], enable,
+			c[1], c[2], c[3], c[4],
+			lighttypes[t], ilight.intensity(leid),
+			ilight.inner_cutoff(leid) or 0,	ilight.outter_cutoff(leid) or 0)
 	end
     return lights
 end
@@ -179,6 +190,7 @@ end
 
 local lightsys = ecs.system "light_system"
 local light_comp_mb = world:sub{"component_changed", "light"}
+local light_state_mb = world:sub{"component_changed", "state"}
 local light_register_mb = world:sub{"component_register", "light_type"}
 
 function lightsys:data_changed()
@@ -194,6 +206,17 @@ function lightsys:data_changed()
 	if not changed then
 		for _ in light_comp_mb:each() do
 			changed = true
+			break
+		end
+	end
+
+	if not changed then
+		for msg in light_state_mb:each() do
+			local eid = msg[3]
+			local le = world[eid]
+			if le and le.light_type then
+				changed = true
+			end
 			break
 		end
 	end
