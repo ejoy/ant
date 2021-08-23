@@ -4,7 +4,9 @@ if thread.id ~= 0 then
 end
 
 local lfs = require "filesystem.local"
-local repopath = lfs.absolute(lfs.path(arg[0])):remove_filename():string()
+local repopath = _VFS_ROOT_
+    and lfs.absolute(lfs.path(_VFS_ROOT_)):string()
+    or lfs.absolute(lfs.path(arg[0])):remove_filename():string()
 
 thread.newchannel "IOreq"
 thread.thread (([[

@@ -1,0 +1,43 @@
+_ios:
+  graphic:
+    api: metal
+_osx:
+  graphic:
+    api: metal
+_windows:
+  graphic:
+    api: d3d11
+animation:
+  skinning:
+    type: CPU
+    CPU:
+      enable: true
+      max_indices: 5
+    GPU:
+      enable: true
+graphic:
+  lighting:
+    cluster_shading: 1
+  render:
+    clear_color: 0x000000ff
+    clear_depth: 1
+    clear_stencil: 0
+    clear: CDS
+  hdr:
+    enable: true
+    format: RGBA16F
+  postprocess:
+    bloom:
+      enable: true
+      format: RGBA16F
+      sample_times: 4
+  shadow:
+    enable: true
+    size: 1024
+    type: inv_z
+    bias: 0.003
+    normal_offset: 0
+    color: {0.0, 0.0, 0.0, 1}
+    stabilize: true
+    split_lamada: 1
+    split_num: 4
