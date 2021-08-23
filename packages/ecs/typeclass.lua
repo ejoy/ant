@@ -1,35 +1,5 @@
 local interface = require "interface"
 local fs = require "filesystem"
-local pm = require "packagemanager"
-
-local current_package = {}
-local function getCurrentPackage()
-	return current_package[#current_package]
-end
-local function pushCurrentPackage(package)
-	current_package[#current_package+1] = package
-end
-local function popCurrentPackage()
-	current_package[#current_package] = nil
-end
-
-local imported = {}
-local function import_impl(file, ecs)
-	if imported[file] then
-		return
-	end
-	imported[file] = true
-	local path = fs.path(file)
-	local packname = path:package_name()
-	local module, err = fs.loadfile(path, "bt", pm.loadenv(packname))
-	if not module then
-		error(("module '%s' load failed:%s"):format(file, err))
-	end
-	log.info(("Import impl %q"):format(path:string()))
-	pushCurrentPackage(packname)
-	module(ecs)
-	popCurrentPackage()
-end
 
 local function sourceinfo()
 	local info = debug.getinfo(3, "Sl")
@@ -46,6 +16,95 @@ end
 
 local function splitname(fullname)
     return fullname:match "^([^|]*)|(.*)$"
+end
+
+local function register_pkg(w, package)
+	local ecs = { world = w, method = w._set_methods }
+	local declaration = w._decl
+	local import = w._import
+	local function register(what)
+		local class_set = {}
+		ecs[what] = function(name)
+			local fullname = name
+			if what ~= "action" and what ~= "component" then
+				fullname = package .. "|" .. name
+			end
+			local r = class_set[fullname]
+			if r == nil then
+				log.info("Register", #what<8 and what.."  " or what, fullname)
+				r = {}
+				class_set[fullname] = r
+				local decl = declaration[what][fullname]
+				if not decl then
+					error(("%s `%s` has no declaration."):format(what, fullname))
+				end
+				if not decl.method then
+					error(("%s `%s` has no method."):format(what, fullname))
+				end
+				decl.source = {}
+				decl.defined = sourceinfo()
+				local callback = keys(decl.method)
+				local object = import[what](fullname)
+				setmetatable(r, {
+					__pairs = function ()
+						return pairs(object)
+					end,
+					__index = object,
+					__newindex = function(_, key, func)
+						if type(func) ~= "function" then
+							error("Method should be a function")
+						end
+						if callback[key] == nil then
+							error("Invalid callback function " .. key)
+						end
+						if decl.source[key] ~= nil then
+							error("Method " .. key .. " has already defined at " .. decl.source[key])
+						end
+						decl.source[key] = sourceinfo()
+						object[key] = func
+					end,
+				})
+			end
+			return r
+		end
+	end
+	register "system"
+	register "transform"
+	register "interface"
+	register "action"
+	register "component"
+	function ecs.require(fullname)
+		local pkg, file = splitname(fullname)
+		if not pkg then
+			pkg = package
+			file = fullname
+		end
+		local path = "/pkg/"..package.."/"..file:gsub("%.", "/")..".lua"
+		local loaded = w._loaded
+		local r = loaded[path]
+		if r ~= nil then
+			return r
+		end
+		r = w:dofile(path)
+		if r == nil then
+			r = true
+		end
+		loaded[path] = r
+		return r
+	end
+	w._ecs[package] = ecs
+	return ecs
+end
+
+local function import_impl(w, package, file)
+	local loaded = w._loaded
+	local path = "/pkg/"..package.."/"..file
+	local r = loaded[path]
+	if r ~= nil then
+		return
+	end
+	loaded[path] = true
+	w:dofile(path)
 end
 
 local function solve_policy(fullname, v)
@@ -67,6 +126,7 @@ local check_map = {
 	require_policy_v2 = "policy_v2",
 	require_transform = "transform",
 	component_v2 = "component_v2",
+	component_opt = "component_v2",
 	pipeline = "pipeline",
 	action = "action",
 }
@@ -101,12 +161,10 @@ function copy.policy(v)
 	}
 end
 function copy.policy_v2(v)
-	local t = {}
-	table_append(t, v.component_v2)
-	table_append(t, v.unique_component)
 	return {
 		policy_v2 = v.require_policy_v2,
-		component_v2 = t,
+		component_v2 = v.component_v2,
+		component_opt = v.component_opt,
 	}
 end
 function copy.transform(v)
@@ -132,7 +190,8 @@ function copy.interface() return {} end
 function copy.component() return {} end
 function copy.action() return {} end
 
-local function create_importor(w, ecs, declaration)
+local function create_importor(w)
+	local declaration = w._decl
 	local import = {}
     for _, objname in ipairs(OBJECT) do
 		w._class[objname] = setmetatable({}, {__index=function(_, name)
@@ -179,7 +238,7 @@ local function create_importor(w, ecs, declaration)
 			end
 			if v.implement then
 				for _, impl in ipairs(v.implement) do
-					import_impl("/pkg/"..v.packname.."/"..impl, ecs)
+					import_impl(w, v.packname, impl)
 				end
 			end
 			return res
@@ -202,76 +261,40 @@ local function import_decl(w, fullname)
 end
 
 local function init(w, config)
+	w._initializing = true
 	w._class = { unique = {} }
-
-	local ecs = { world = w }
-	local declaration = interface.new(function(packname, filename)
+	w._decl = interface.new(function(packname, filename)
 		local file = fs.path "/pkg" / packname / filename
 		log.info(("Import decl %q"):format(file:string()))
-        return assert(fs.loadfile(file))
+		return assert(fs.loadfile(file))
 	end)
-
-	w._decl = declaration
-	w._initializing = true
-
-	local import = create_importor(w, ecs, declaration)
-
-	local function register(what)
-		local class_set = {}
-		ecs[what] = function(name)
-			local fullname = name
-			if what ~= "action" and what ~= "component" then
-				fullname = getCurrentPackage() .. "|" .. name
+	w._import = create_importor(w)
+	w._set_methods = setmetatable({}, {
+		__index = w._methods,
+		__newindex = function(_, name, f)
+			if w._methods[name] then
+				local info = debug.getinfo(w._methods[name], "Sl")
+				assert(info.source:sub(1,1) == "@")
+				error(string.format("Method `%s` has already defined at %s(%d).", name, info.source:sub(2), info.linedefined))
 			end
-			local r = class_set[fullname]
-			if r == nil then
-				log.info("Register", #what<8 and what.."  " or what, fullname)
-				r = {}
-				class_set[fullname] = r
-				local decl = declaration[what][fullname]
-				if not decl then
-					error(("%s `%s` has no declaration."):format(what, fullname))
-				end
-				if not decl.method then
-					error(("%s `%s` has no method."):format(what, fullname))
-				end
-				decl.source = {}
-				decl.defined = sourceinfo()
-				local callback = keys(decl.method)
-				local object = import[what](fullname)
-				setmetatable(r, {
-					__index = object,
-					__newindex = function(_, key, func)
-						if type(func) ~= "function" then
-							error("Method should be a function")
-						end
-						if callback[key] == nil then
-							error("Invalid callback function " .. key)
-						end
-						if decl.source[key] ~= nil then
-							error("Method " .. key .. " has already defined at " .. decl.source[key])
-						end
-						decl.source[key] = sourceinfo()
-						object[key] = func
-					end,
-				})
-			end
-			return r
+			w._methods[name] = f
+		end,
+	})
+	setmetatable(w._ecs, {__index = function (_, package)
+		return register_pkg(w, package)
+	end})
+
+	config.ecs = config.ecs or {}
+	if config.ecs.import then
+		for _, k in ipairs(config.ecs.import) do
+			import_decl(w, k)
 		end
-	end
-	register "system"
-	register "transform"
-	register "interface"
-	register "action"
-	register "component"
-
-	for _, k in ipairs(config.ecs.import) do
-		import_decl(w, k)
 	end
 	if config.update_decl then
 		config.update_decl(w)
 	end
 
+	local import = w._import
 	for _, objname in ipairs(OBJECT) do
 		if config.ecs[objname] then
 			for _, k in ipairs(config.ecs[objname]) do

@@ -11,8 +11,8 @@ local computil = world:interface "ant.render|entity"
 local utils     = require "common.utils"
 local brush_sys = ecs.system "grid_brush_system"
 local global_data = require "common.global_data"
-
-local default_color = {0, 0, 1, 0.5}
+local brush_def = require "brush_def"
+--local default_color = {1.0, 1.0, 1.0, 0.5}
 local current_brush_color = {1, 1, 1, 0.5}
 local current_brush_id
 local grid = {
@@ -75,7 +75,7 @@ function grid:init(size, row, col)
     self.total_height = size * row
     self.data = {}
     self.visible = true
-    local cid = get_brush_id(colorf2i(default_color))
+    local default_color = colori2f(brush_def.color[1])
     for i = 1, row do
         local temp_row = {}
         local posz = 0.5 * size - self.total_width * 0.5 + (i - 1) * size
@@ -85,10 +85,7 @@ function grid:init(size, row, col)
 		                "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material", "grid", true)
 	        ies.set_state(tile_eid, "auxgeom", true)
 	        imaterial.set_property(tile_eid, "u_color", default_color)
-            local gd = {}
-            gd.eid = tile_eid
-            gd[1] = cid
-            temp_row[#temp_row + 1] = gd
+            temp_row[#temp_row + 1] = {1, eid = tile_eid}
         end
         self.data[#self.data + 1] = temp_row
     end
@@ -105,7 +102,8 @@ end
 
 function grid:load(path)
     local filename = string.sub(path, #global_data.project_root:string() + 2, -5)
-    local source = require(string.gsub(filename, "/", "."))
+    local source = dofile(path)
+    --local source = require(string.gsub(filename, "/", "."))
     if not source or not source.size or not source.row or not source.col then return end
     for i = 1, source.row do
         local posz = 0.5 * source.size - source.total_width * 0.5 + (i - 1) * source.size
@@ -115,7 +113,7 @@ function grid:load(path)
             local eid = computil.create_prim_plane_entity({t = {posx, 0, posz, 1}, s = {source.size * 0.95, 0, source.size * 0.95, 0}},
 		                "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material", "grid", true)
 	        ies.set_state(eid, "auxgeom", true)
-	        imaterial.set_property(eid, "u_color", colori2f(source.brush[tile[1]]))
+	        imaterial.set_property(eid, "u_color", colori2f(self.brush[tile[1]]))
             tile.eid = eid
         end
     end
@@ -126,7 +124,6 @@ function grid:load(path)
     self.total_width = source.total_width
     self.total_height = source.total_height
     self.data = source.data
-    self.brush = source.brush
     self.filename = path
     self.visible = true
 end
@@ -145,6 +142,7 @@ function grid:save(filename)
     temp.init = nil
     temp.clear = nil
     temp.load = nil
+    temp.brush = nil
     for _, row in ipairs(temp.data) do
         for _, tile in ipairs(row) do
             tile.eid = nil
@@ -209,7 +207,8 @@ function brush_sys:handle_event()
         if what == "create" then
             grid:init(p1, p2, p3)
         elseif what == "brushcolor" then
-            current_brush_color = {p1, p2, p3, p4}
+            current_brush_id = p1
+            current_brush_color = colori2f(p2)--{p1, p2, p3, p4}
         elseif what == "load" then
             load_grid(p1)
         end
@@ -219,13 +218,14 @@ function brush_sys:handle_event()
         brush_state = state.CTRL
     end
 
-    local brush_id
+    for _, what, sx, sy in event_mouse_down:unpack() do
+		if what == "LEFT" and brush_state then
+            on_row_col_select(get_row_col(sx, sy))
+        end
+    end
+    
     for _, what, sx, sy, dx, dy in event_mouse_drag:unpack() do
 		if what == "LEFT" and brush_state then
-            if not brush_id then
-                current_brush_id = get_brush_id(colorf2i(current_brush_color))
-                brush_id = current_brush_id
-            end
             on_row_col_select(get_row_col(sx, sy))
         end
     end

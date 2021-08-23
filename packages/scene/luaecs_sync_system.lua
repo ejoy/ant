@@ -34,6 +34,9 @@ end
 local function isEffekseer(e)
 	return e.effekseer ~= nil
 end
+local function hasAnimation(e)
+	return e.animation ~= nil and e.skeleton ~= nil
+end
 
 function s:init()
 end
@@ -46,23 +49,17 @@ function s:luaecs_sync()
 			goto continue
 		end
 		local policy = {}
-		local data = { eid = eid, INIT = true }
+		local data = { eid = eid }
 		local rc = e._rendercache
 		do
-			local parent
-			if e.parent and world[e.parent].scene_entity then
-				parent = e.parent
-			end
 			local aabb
 			if e.mesh and e.mesh.bounding and e.mesh.bounding.aabb then
 				aabb = e.mesh.bounding.aabb
 			end
 			data.scene = {
-				srt = rc.srt,
-				updir = e.updir and math3d.ref(math3d.vector(e.updir)) or nil,
+				srt = e.transform or {},
+				updir = e.updir,
 				aabb = aabb,
-				_self = eid,
-				_parent = parent,
 			}
 			policy[#policy+1] = "ant.scene|scene_object"
 			if e.name then
@@ -78,19 +75,37 @@ function s:luaecs_sync()
 			data.mesh	= e.mesh
 			data.filter_material = {}
 			policy[#policy+1] = "ant.scene|render_object"
-		elseif isCollider(e) then
+			if hasAnimation(e) then
+				data.animation = e.animation
+				data.skeleton = e.skeleton
+				data.pose_result = false
+				data._animation = {}
+				data.skinning = {}
+				data.skinning_type = "GPU"
+				data.material_setting = { skinning = "GPU"}
+				data.meshskin = e.meshskin
+				policy[#policy+1] = "ant.animation|animation"
+				policy[#policy+1] = "ant.animation|skinning"
+				if e.animation_birth then
+					data.animation_birth = e.animation_birth
+					policy[#policy+1] = "ant.animation|animation_controller.birth"
+				end
+			end
+		end
+		if isCollider(e) then
 			data.collider = e.collider
 			policy[#policy+1] = "ant.collision|collider"
-		elseif isEffekseer(e) then
+		end
+		if isEffekseer(e) then
 			data.effekseer = e.effekseer
+			data.effect_instance = e.effect_instance
 			policy[#policy+1] = "ant.effekseer|effekseer"
 		end
-
 		if isLightmapEntity(e) then
 			data.lightmap = e.lightmap
 			policy[#policy+1] = "ant.bake|bake_lightmap"
 		end
-		world:luaecs_create_entity {
+		world:create_entity {
 			policy = policy,
 			data = data
 		}

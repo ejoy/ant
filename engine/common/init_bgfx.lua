@@ -6,5 +6,16 @@ if interface then
     debug.getregistry().BGFX_GET_INTERFACE = interface
     return
 end
-local path = package.cpath:gsub("^[^;]*", "%1"):gsub("%?", "bgfx-core")
-debug.getregistry().BGFX_GET_INTERFACE = assert(package.loadlib(path, "bgfx_get_interface"))
+
+local errmsg = "module 'bgfx-core' not found:"
+for searchpath in package.cpath:gmatch "[^;]*" do
+    local path = searchpath:gsub("%?", "bgfx-core")
+    local dll = package.loadlib(path, "bgfx_get_interface")
+    if dll then
+        debug.getregistry().BGFX_GET_INTERFACE = dll
+        return
+    else
+        errmsg = errmsg .. ("\n\tno file '%s'"):format(path)
+    end
+end
+error(errmsg)

@@ -1,34 +1,37 @@
 local ecs = ...
 local world = ecs.world
-
+local w = world.w
 local bgfx = require "bgfx"
 
 local ic = ecs.interface "icompute"
 
-function ic.dispatch(vid, ci)
-	local properties = ci.properties
+function ic.dispatch(viewid, ds)
+	local properties = ds.properties
 	if properties then
 		for n, p in pairs(properties) do
 			p:set()
 		end
 	end
 
-	local s = ci.dispatch_size
-	bgfx.dispatch(vid, ci.fx.prog, s[1], s[2], s[3])
+	local s = ds.size
+	bgfx.dispatch(viewid, ds.fx.prog, s[1], s[2], s[3])
 end
 
-
 function ic.create_compute_entity(name, materialfile, size)
-    return world:create_entity {
+    w:register{ name = name}
+    world:create_entity {
         policy = {
             "ant.render|compute_policy",
             "ant.general|name",
         },
         data = {
-            name        = name or "",
+            name        = name,
             material    = materialfile,
-            dispatch_size = size,
+            dispatch    ={
+                size    = size,
+            },
             compute     = true,
+            [name]      = true,
         }
     }
 end
@@ -64,17 +67,13 @@ function ic.create_image_property(handle, stage, mip, access)
     }
 end
 
-local ct = ecs.transform "compute_transform"
-function ct.process_entity(e)
-    local rc = e._rendercache
-    rc.dispatch_size = e.dispatch_size
-end
-
---compute_v2
-local w = world.w
-local m = ecs.system "compute_system"
-function m:entity_init()
-    for v in w:select "INIT dispatch_size:in render_object:in" do
-        v.render_object = v.dispatch_size
-    end
+local cs = ecs.system "compute_system"
+function cs:entity_ready()
+	for e in w:select "material_result:in dispatch:in" do
+		local mr = e.material_result
+		local d = e.dispatch
+        -- no state for compute shader
+		d.fx		= mr.fx
+		d.properties= mr.properties
+	end
 end

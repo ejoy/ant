@@ -149,17 +149,14 @@ end
 
 local rt_sys = ecs.system "render_target_system"
 function rt_sys:entity_init()
-	for v in w:select "INIT render_target:in name:in" do
-		irq.update_rendertarget(v.render_target)
+	for e in w:select "INIT render_target:in name:in" do
+		irq.update_rendertarget(e.render_target)
 	end
-	for v in w:select "camera_changed camera_ref:out render_target:in shadow_render_queue:in main_queue?in" do
-		local vr = v.render_target.view_rect
-		v.camera_ref = v.shadow_render_queue.camera_ref
-		icamera.set_frustum_aspect(v.camera_ref, vr.w / vr.h)
-		--TODO
-		if v.main_queue then
-			world:pub{"camera_changed", "main_queue"}
-		end
+	for qe in w:select "camera_changed camera_ref:out render_target:in shadow_render_queue:in queue_name:in" do
+		local vr = qe.render_target.view_rect
+		qe.camera_ref = qe.shadow_render_queue.camera_ref
+		icamera.set_frustum_aspect(qe.camera_ref, vr.w / vr.h)
+		world:pub{"camera_changed", qe.queue_name}
 	end
 	w:clear "camera_changed"
 end

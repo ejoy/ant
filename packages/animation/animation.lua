@@ -1,21 +1,11 @@
 local ecs = ...
 local world = ecs.world
---local icoll     = world:interface "ant.collision|collider"
+local w = world.w
+
 local assetmgr 		= import_package "ant.asset"
 local iom 			= world:interface "ant.objcontroller|obj_motion"
-local ani_module 	= require "hierarchy.animation"
-local math3d 		= require "math3d"
-local ani_cache = ecs.transform "animation_transform"
-function ani_cache.process_entity(e)
-	e._animation = {}
-end
+local animodule 	= require "hierarchy.animation"
 
-local pr_t = ecs.transform "build_pose_result"
-
-function pr_t.process_entity(e)
-	local skehandle = e.skeleton._handle
-	e.pose_result = ani_module.new_pose_result(#skehandle)
-end
 
 local ani_sys = ecs.system "animation_system"
 
@@ -86,6 +76,7 @@ local function process_keyframe_event(task)
 end
 
 local iani = world:interface "ant.animation|animation"
+
 local function do_animation(poseresult, task, delta_time)
 	if task.type == 'blend' then
 		for _, t in ipairs(task) do
@@ -102,57 +93,44 @@ local function do_animation(poseresult, task, delta_time)
 	end
 end
 
-local function update_animation(e, delta_time)
-	local ske = e.skeleton
-	local pr = e.pose_result
-	pr:setup(ske._handle)
-	do_animation(pr, e._animation._current, delta_time)
-end
-
 function ani_sys:sample_animation_pose()
 	local delta_time = timer.delta()
-	for _, eid in world:each "animation" do
-		local e = world[eid]
-		update_animation(e, delta_time)
+	for e in w:select "skeleton:in pose_result:in _animation:in" do
+		local ske = e.skeleton
+		local pr = e.pose_result
+		pr:setup(ske._handle)
+		do_animation(pr, e._animation._current, delta_time)
 	end
 end
 
-local function clear_animation_cache()
-	for _, eid in world:each "pose_result" do
-		local e = world[eid]
+function ani_sys:do_refine()
+end
+
+function ani_sys:end_animation()
+	for e in w:select "pose_result:in" do
 		local pr = e.pose_result
 		pr:fetch_result()
 		pr:end_animation()
 	end
 end
 
-function ani_sys:do_refine()
-	-- for _, eid in world:each "pose_result" do
-	-- 	local e = world[eid]
-	-- 	if e.animation.fix_root_XZ then
-	-- 		e.pose_result:fix_root_XZ()
-	-- 	end
-	-- end
-end
-
-function ani_sys:end_animation()
-	clear_animation_cache()
-end
-
 function ani_sys:data_changed()
-	local delta_time = timer.delta()
-	for _, eid in world:each "animation" do
-		process_keyframe_event(world[eid]._animation._current)
+	for e in w:select "_animation:in" do
+		process_keyframe_event(e._animation._current)
 	end
 end
 
---TODO
---local m = ecs.interface "animation"
---
---function m.update(e, delta_time)
---	update_animation(e, delta_time or 0)
---	clear_animation_cache()
---end
+function ani_sys:component_init()
+	for e in w:select "INIT animation:in skeleton:update pose_result:out" do
+		local ani = e.animation
+		for k, v in pairs(ani) do
+			ani[k] = assetmgr.resource(v)
+		end
+		e.skeleton = assetmgr.resource(e.skeleton)
+		local skehandle = e.skeleton._handle
+		e.pose_result = animodule.new_pose_result(#skehandle)
+	end
+end
 
 local mathadapter = import_package "ant.math.adapter"
 local math3d_adapter = require "math3d.adapter"
@@ -160,22 +138,11 @@ local math3d_adapter = require "math3d.adapter"
 mathadapter.bind(
 	"animation",
 	function ()
-		local bp_mt = ani_module.bind_pose_mt()
+		local bp_mt = animodule.bind_pose_mt()
 		bp_mt.joint = math3d_adapter.getter(bp_mt.joint, "m", 3)
 
-		local pr_mt = ani_module.pose_result_mt()
+		local pr_mt = animodule.pose_result_mt()
 		pr_mt.joint = math3d_adapter.getter(pr_mt.joint, "m", 3)
 
-		ani_module.build_skinning_matrices = math3d_adapter.matrix(ani_module.build_skinning_matrices, 5)
+		animodule.build_skinning_matrices = math3d_adapter.matrix(animodule.build_skinning_matrices, 5)
 	end)
-
-
-local m = ecs.component "animation"
-
-function m:init()
-	local res = {}
-	for k, v in pairs(self) do
-		res[k] = assetmgr.resource(v)
-	end
-	return res
-end

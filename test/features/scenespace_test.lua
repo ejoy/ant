@@ -6,7 +6,7 @@ local sp_test_sys = ecs.system "scenespace_test_system"
 local ies = world:interface "ant.scene|ientity_state"
 
 local function material_hierarchy_test()
-    local root = world:create_entity {
+    local root = world:deprecated_create_entity {
         policy = {
             "ant.general|name",
             "ant.render|render",
@@ -17,7 +17,7 @@ local function material_hierarchy_test()
         }
     }
 
-    local ceid = world:create_entity{
+    local ceid = world:deprecated_create_entity{
         policy = {
             "ant.general|name",
             "ant.render|render",
@@ -34,7 +34,7 @@ local function material_hierarchy_test()
     }
 
     
-    local ceid2 = world:create_entity{
+    local ceid2 = world:deprecated_create_entity{
         policy = {
             "ant.general|name",
             "ant.render|render",
@@ -50,7 +50,7 @@ local function material_hierarchy_test()
         }
     }
 
-    local ceid2_1 = world:create_entity{
+    local ceid2_1 = world:deprecated_create_entity{
         policy = {
             "ant.general|name",
             "ant.render|render",
@@ -68,7 +68,7 @@ local function material_hierarchy_test()
 end
 
 local function space_test()
-    local rooteid = world:create_entity{
+    local rooteid = world:deprecated_create_entity{
         policy = {
             "ant.general|name",
             "ant.scene|transform_policy",
@@ -82,7 +82,7 @@ local function space_test()
 
     local material = "/pkg/ant.resources/materials/singlecolor.material"
 
-    local child1 = world:create_entity{
+    local child1 = world:deprecated_create_entity{
         policy = {
             "ant.scene|hierarchy_policy",
             "ant.render|render",
@@ -104,7 +104,7 @@ local function space_test()
         }
     }
 
-    local child1_1 = world:create_entity {
+    local child1_1 = world:deprecated_create_entity {
         policy = {
             "ant.render|render",
             "ant.scene|hierarchy_policy",
@@ -127,7 +127,7 @@ local function space_test()
         }
     }
 
-    local child2 = world:create_entity {
+    local child2 = world:deprecated_create_entity {
         policy = {
             "ant.general|name",
             "ant.scene|hierarchy_policy",
@@ -146,7 +146,7 @@ local function space_test()
         }
     }
 
-    local child2_1 = world:create_entity {
+    local child2_1 = world:deprecated_create_entity {
         policy = {
             "ant.render|render",
             "ant.scene|hierarchy_policy",

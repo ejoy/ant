@@ -42,7 +42,7 @@ end
 local ilight 	= ecs.interface "light"
 
 function ilight.create(light)
-	return world:create_entity {
+	return world:deprecated_create_entity {
 		policy = {
 			"ant.render|light",
 			"ant.general|name",

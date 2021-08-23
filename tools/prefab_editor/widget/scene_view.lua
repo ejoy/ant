@@ -13,9 +13,10 @@ local target_eid = nil
 local iom
 local iss
 local icons
+local icamera
 local function is_editable(eid)
-    if not world[eid].scene_entity or
-        not hierarchy:is_visible(eid) or
+    --if not world[eid].scene_entity or
+    if not hierarchy:is_visible(eid) or
         hierarchy:is_locked(eid) then
         return false
     end
@@ -25,7 +26,7 @@ end
 local menu_name = "entity context menu"
 local function node_context_menu(eid)
     if gizmo.target_eid ~= eid then return end
-    if imgui.windows.BeginPopupContextItem(eid) then
+    if imgui.windows.BeginPopupContextItem(tostring(eid)) then
         local current_lock = hierarchy:is_locked(eid)
         if imgui.widget.Selectable("MoveTop", false) then
             world:pub { "EntityState", "movetop", eid }
@@ -57,12 +58,12 @@ local function node_context_menu(eid)
 end
 
 local function get_icon_by_object_type(node)
-    local entity = world[node.eid]
+    local entity = type(node.eid) == "table" and icamera.find_camera(node.eid) or world[node.eid]
     local template = hierarchy:get_template(node.eid)
     if template and template.filename then
         return icons.ICON_WORLD3D
     else
-        if entity.camera then
+        if entity.frustum then
             return icons.ICON_CAMERA3D
         elseif entity.light_type then
             if entity.light_type == "directional" then
@@ -98,7 +99,8 @@ local function show_scene_node(node)
                 gizmo:set_target(eid)
             end
         end
-        if world[eid].camera or world[eid].light_type then
+        --if world[eid].camera 
+        if type(eid) == "table" or world[eid].light_type then
             return
         end
 
@@ -117,7 +119,7 @@ local function show_scene_node(node)
     end
     local function lock_visible(eid)
         imgui.table.NextColumn();
-        imgui.util.PushID(eid)
+        imgui.util.PushID(tostring(eid))
         local current_lock = hierarchy:is_locked(eid)
         local icon = current_lock and icons.ICON_LOCK or icons.ICON_UNLOCK
         if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
@@ -125,7 +127,7 @@ local function show_scene_node(node)
         end
         imgui.util.PopID()
         imgui.table.NextColumn();
-        imgui.util.PushID(eid)
+        imgui.util.PushID(tostring(eid))
         local current_visible = hierarchy:is_visible(eid)
         icon = current_visible and icons.ICON_VISIBLE or icons.ICON_UNVISIBLE
         if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
@@ -135,7 +137,13 @@ local function show_scene_node(node)
     end
     local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((gizmo.target_eid == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
     if not node.display_name then
-        hierarchy:update_display_name(node.eid, world[node.eid].name)
+        if type(node.eid) == "table" then
+            local w = world.w
+            w:sync("name:in", node.eid)
+            hierarchy:update_display_name(node.eid, node.eid.name)
+        else
+            hierarchy:update_display_name(node.eid, world[node.eid].name)
+        end
     end
 
     local flags = base_flags
@@ -269,6 +277,7 @@ return function(w, am)
     asset_mgr = am
     icons = require "common.icons"(asset_mgr)
     iom = world:interface "ant.objcontroller|obj_motion"
+    icamera = world:interface "ant.camera|camera"
     gizmo = require "gizmo.gizmo"(world)
     return m
 end

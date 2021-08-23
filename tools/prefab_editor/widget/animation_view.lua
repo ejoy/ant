@@ -85,6 +85,14 @@ local function anim_group_set_time(eid, t)
     end
 end
 
+local function anim_group_stop_effect(eid)
+    local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
+    if not group_eid then return end
+    for _, anim_eid in ipairs(group_eid) do
+        iani.stop_effect(anim_eid)
+    end
+end
+
 local function anim_group_play_group(eid, ...)
     local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
     if not group_eid then return end
@@ -474,7 +482,7 @@ local function show_events()
                 current_event = ke
                 if current_event.collision and current_event.collision.col_eid and current_event.collision.col_eid ~= -1 then
                     gizmo:set_target(current_event.collision.col_eid)
-                    prefab_mgr:update_current_aabb(current_event.collision.col_eid)
+                    world:pub {"UpdateAABB", current_event.collision.col_eid}
                 end
             end
             if current_event and (current_event.name == ke.name) then
@@ -646,7 +654,7 @@ local function update_collision()
             iom.set_scale(eid, {ke.collision.size[1] * factor, ke.collision.size[2] * factor, ke.collision.size[3] * factor})
             if eid == gizmo.target_eid then
                 gizmo:update()
-                prefab_mgr:update_current_aabb(eid)
+                world:pub {"UpdateAABB", eid}
             end
         end
     end
@@ -767,6 +775,9 @@ end
 
 local function set_current_clip(clip)
     if current_clip == clip then return end
+    
+    anim_group_stop_effect(current_eid)
+
     if clip then
         if not set_current_anim(clip.anim_name) then
             return

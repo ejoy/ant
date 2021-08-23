@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 local fbmgr             = require "framebuffer_mgr"
 local viewidmgr         = require "viewid_mgr"
-local isys_properties   = world:interface "ant.render|system_properties"
+local isys_properties   = world:interface "ant.render|isystem_properties"
 local ientity           = world:interface "ant.render|entity"
 local irender           = world:interface "ant.render|irender"
 local irq               = world:interface "ant.render|irenderqueue"
@@ -139,7 +139,7 @@ function ipp.add_technique(name, tech)
 end
 
 function ipp.create_pass(name, material, rt, transform, camera_ref)
-    local eid = world:create_entity {
+    local eid = world:deprecated_create_entity {
         policy = {"ant.render|simplerender"},
         data = {
             simplemesh  = ientity.quad_mesh(),

@@ -8,11 +8,24 @@ local mc     = import_package "ant.math".constant
 local iobj_motion = ecs.interface "obj_motion"
 local icamera = world:interface "ant.camera|camera"
 
+local function findSceneNode(eid)
+	for v in w:select "eid:in" do
+		if v.eid == eid then
+			w:sync("scene:in", v)
+			return v.scene
+		end
+	end
+end
+
 local function get_transform(eid)
     if type(eid) == "table" then
         local ref = eid
-        w:sync("scene_node(scene_id):in", ref)
-        return ref.scene_node
+        w:sync("scene:in", ref)
+        return ref.scene
+    end
+    local node = findSceneNode(eid)
+    if node then
+        return node
     end
     local e = world[eid]
     if e then
@@ -20,16 +33,16 @@ local function get_transform(eid)
     end
 end
 
-local function get_srt(eid)
-    return get_transform(eid).srt
+local function get_srt(camera)
+    return get_transform(camera).srt
 end
 
-local function set_changed(eid)
-    world:pub {"scene_changed", eid}
+local function set_changed(camera)
+    world:pub {"scene_changed", camera}
 end
 
-function iobj_motion.get_position(eid)
-    return math3d.index(get_srt(eid), 4)
+function iobj_motion.get_position(camera)
+    return math3d.index(get_srt(camera), 4)
 end
 
 function iobj_motion.set_position(eid, pos)
@@ -107,9 +120,8 @@ end
 
 function iobj_motion.worldmat(eid)
     if type(eid) == "table" then
-        --camera
-        local camera = icamera.find_camera(eid)
-        return camera.worldmat
+        w:sync("scene:in", eid)
+        return eid.scene._worldmat
     end
     local e = world[eid]
     if e then
@@ -119,8 +131,8 @@ function iobj_motion.worldmat(eid)
         end
         for v in w:select "eid:in" do
             if v.eid == eid then
-                w:sync("scene_node(scene_id):in", v)
-                return v.scene_node._worldmat
+                w:sync("scene:in", v)
+                return v.scene._worldmat
             end
         end
     end
@@ -292,4 +304,8 @@ end
 function iobj_motion.calc_viewmat(eid)
     local rc = get_transform(eid)
     return math3d.lookto(math3d.index(rc.srt, 4), math3d.index(rc.srt, 3), rc.updir)
+end
+
+for n, f in pairs(iobj_motion) do
+    ecs.method[n] = f
 end

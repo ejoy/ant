@@ -5,95 +5,71 @@ local w = world.w
 local math3d = require "math3d"
 
 ----iscenespace----
-local m = ecs.action "mount"
-function m.init(prefab, i, value)
-	local e = world[prefab[i]]
-	--TODO
-	if e then
-		e.parent = prefab[value]
-	end
-end
-
 local iss = ecs.interface "iscenespace"
 function iss.set_parent(eid, peid)
 	local e = world[eid]
-	e.parent = peid
-	if e.scene_entity then
-		if peid == nil or world[peid].scene_entity then
-			world:pub {"component_changed", "parent", eid}
-			return
-		end
+	local pe = world[peid]
+	if (not e or e.scene_entity) and (not pe or pe.scene_entity) then
+		e.parent = peid
+		world:pub {"old_parent_changed", eid, peid}
 	end
-	assert(false)
 end
+
+local m = ecs.action "mount"
+function m.init(prefab, i, value)
+	iss.set_parent(prefab[i], prefab[value])
+end
+
 
 ----scenespace_system----
 local s = ecs.system "scenespace_system"
 
-local evChangedParent = world:sub {"component_changed", "parent"}
+local evOldParentChanged = world:sub {"old_parent_changed"}
+local evNewParentChanged = world:sub {"new_parent_changed"}
 
-local hie_scene = require "hierarchy.scene"
-local scenequeue = hie_scene.queue()
-
-local function inherit_entity_state(e)
-	local state = e.state or 0
-	local pe = world[e.parent]
-	local pstate = pe.state
+local function inherit_render_object(r, pr)
+	if r.fx == nil then
+		r.fx = pr.fx
+	end
+	if r.state == nil then
+		r.state = pr.state
+	end
+	if r.properties == nil then
+		r.properties = pr.properties
+	end
+	local pstate = pr.entity_state
 	if pstate then
 		local MASK <const> = (1 << 32) - 1
-		e.state = ((state>>32) | state | pstate) & MASK
+		local state = r.entity_state or 0
+		r.entity_state = ((state>>32) | state | pstate) & MASK
 	end
 end
 
-local function inherit_material(e)
-	local pe = world[e.parent]
-	local p_rc = pe._rendercache
-	local rc = e._rendercache
-	if rc.fx == nil then
-		rc.fx = p_rc.fx
-	end
-	if rc.state == nil then
-		rc.state = p_rc.state
-	end
-	if rc.properties == nil then
-		rc.properties = p_rc.properties
-	end
+local current_changed = 1
+local current_sceneid = 0
+
+local function new_sceneid()
+	current_sceneid = current_sceneid + 1
+	return current_sceneid
 end
 
-local current_changed = 0
-
-local function mount_scene_node(hashmap, scene_id)
-	local node = w:object("scene_node", scene_id)
-	node.changed = current_changed
-	if node._parent then
-		local parent = hashmap[node._parent]
-		assert(parent)
-		node.parent = parent
-		node._parent = nil
-		scenequeue:mount(scene_id, parent)
+local function update_worldmat_noparent(node)
+	if node.srt == nil then
+		node._worldmat = nil
 	else
-		scenequeue:mount(scene_id, 0)
+		node._worldmat = math3d.matrix(node.srt)
 	end
 end
 
-local function update_worldmat(node)
-	if not node.parent then
-		if node.srt == nil then
-			node._worldmat = nil
-		else
-			node._worldmat = math3d.matrix(node.srt)
-		end
-		return
+local function update_worldmat(node, parent)
+	if parent.changed > node.changed then
+		node.changed = parent.changed
 	end
-	local pnode = w:object("scene_node", node.parent)
-	if pnode.changed > node.changed then
-		node.changed = pnode.changed
-	end
-	if pnode._worldmat then
+	if parent._worldmat then
 		if node.srt == nil then
-			node._worldmat = math3d.matrix(pnode._worldmat)
+			node._worldmat = math3d.matrix(parent._worldmat)
 		else
-			node._worldmat = math3d.mul(pnode._worldmat, math3d.matrix(node.srt))
+			node._worldmat = math3d.mul(parent._worldmat, math3d.matrix(node.srt))
 		end
 	else
 		if node.srt == nil then
@@ -112,83 +88,130 @@ local function update_aabb(node)
 	end
 end
 
-local function sync_scene_node()
-	w:order("scene_sorted", "scene_node", scenequeue)
-end
-
-local function findSceneId(eid)
-	for v in w:select "eid:in" do
-		if v.eid == eid then
-			w:sync("scene_id:in", v)
-			return v.scene_id
+local function findScene(hashmap, eid)
+	local scene = hashmap[eid]
+	if scene then
+		return scene
+	end
+	local e
+	if type(eid) == "table" then
+		e = eid
+	else
+		for v in w:select "eid:in" do
+			if v.eid == eid then
+				e = v
+				break
+			end
 		end
 	end
+	w:sync("scene:in", e)
+	scene = e.scene
+	hashmap[eid] = scene
+	return scene
 end
 
 local function findSceneNode(eid)
 	for v in w:select "eid:in" do
 		if v.eid == eid then
-			w:sync("scene_node(scene_id):in", v)
-			return v.scene_node
+			w:sync("scene:in", v)
+			return v.scene
 		end
 	end
 end
 
+local function isValidReference(reference)
+    return reference[1] ~= nil
+end
+
 function s:entity_init()
 	local needsync = false
-	current_changed = current_changed + 1
 
 	local hashmap = {}
-	for v in w:select "INIT scene:in scene_id:out" do
-		local scene = v.scene
-		v.scene_id = world:luaecs_create_ref {
-			scene_node = scene,
-			initializing = true,
+	for v in w:select "INIT camera:in scene:out" do
+		local camera = v.camera
+		local viewmat = math3d.lookto(camera.eyepos, camera.viewdir, camera.updir)
+		v.scene = {
+			srt = math3d.inverse(viewmat),
+			updir = camera.updir
 		}
-		if scene._self then
-			hashmap[scene._self] = v.scene_id
-		end
 	end
-	w:clear "scene"
-
-	for v in w:select "INIT scene_id:in eid:in" do
-		local e = world[v.eid]
-		if e and e.parent and not hashmap[e.parent] then
-			hashmap[e.parent] = findSceneId(e.parent)
+	for v in w:select "INIT scene:in eid?in scene_sorted?new" do
+		local scene = v.scene
+		if scene.srt then
+			scene.srt = math3d.ref(math3d.matrix(scene.srt))
 		end
-		mount_scene_node(hashmap, v.scene_id)
+		if scene.updir then
+			scene.updir = math3d.ref(math3d.vector(scene.updir))
+		end
+		scene.changed = current_changed
+
+		scene.id = new_sceneid()
+		if v.eid then
+			hashmap[v.eid] = scene
+		end
+		v.scene_sorted = true
 		needsync = true
 	end
+	for v in w:select "INIT camera:in scene:in" do
+		v.camera.srt = v.scene.srt
+	end
+	for v in w:select "INIT render_object:in scene:in" do
+		v.render_object.srt = v.scene.srt
+	end
 
-	for _, _, eid in evChangedParent:unpack() do
-		local e = world[eid]
-		local scene_id = findSceneId(eid)
-		local node = w:object("scene_node", scene_id)
-		node.changed = current_changed
-		if e.parent then
-			node.parent = findSceneId(e.parent)
-			scenequeue:mount(scene_id, node.parent)
+	for v in w:select "scene_unsorted scene:in scene_sorted?new" do
+		v.scene_sorted = true
+		v.scene.changed = current_changed
+	end
+	w:clear "scene_unsorted"
+
+	for _, eid, peid in evOldParentChanged:unpack() do
+		local scene = findScene(hashmap, eid)
+		scene.changed = current_changed
+		if peid then
+			scene.parent = findScene(hashmap, peid).id
 		else
-			scenequeue:mount(scene_id, 0)
+			scene.parent = nil
 		end
 		needsync = true
+	end
+
+	for _, e, parent in evNewParentChanged:unpack() do
+		if isValidReference(e) then
+			w:sync("scene:in", e)
+			e.scene.changed = current_changed
+			if not parent or not isValidReference(parent) then
+				e.scene.parent = nil
+			else
+				w:sync("scene:in", parent)
+				e.scene.parent = parent.scene.id
+			end
+			needsync = true
+		end
 	end
 
 	if needsync then
-		sync_scene_node()
-		for v in w:select "scene_sorted initializing scene_node:in" do
-			local node = v.scene_node
-			local eid = node._self
-			if eid then
-				local e = world[eid]
-				if e.parent then
-					inherit_entity_state(e)
-					inherit_material(e)
+		local cache = {}
+		for v in w:select "scene_sorted scene:in render_object?in INIT?in" do
+			local scene = v.scene
+			if scene.parent == nil then
+				cache[scene.id] = v.render_object or false
+			else
+				local parent = cache[scene.parent]
+				if parent ~= nil then
+					cache[scene.id] = v.render_object or false
+					if v.INIT then
+						local r = v.render_object
+						local pr = cache[scene.parent]
+						if r and pr then
+							inherit_render_object(r, pr)
+						end
+					end
+				else
+					v.scene_sorted = false -- yield
 				end
-				node._self = nil
 			end
 		end
-		w:clear "initializing"
 	end
 end
 
@@ -199,62 +222,97 @@ local evSceneChanged = world:sub {"scene_changed"}
 
 function s:update_transform()
 	for _, eid in evSceneChanged:unpack() do
-		local node
+		local scene
 		if type(eid) == "table" then
 			local ref = eid
-			w:sync("scene_node(scene_id):in", ref)
-			node = ref.scene_node
+			w:sync("scene:in", ref)
+			scene = ref.scene
 		else
-			node = findSceneNode(eid)
+			scene = findSceneNode(eid)
 		end
-		node.changed = current_changed
+		scene.changed = current_changed
 	end
-	for v in w:select "scene_sorted scene_node:in" do
-		local node = v.scene_node
-		update_worldmat(node)
-		update_aabb(node)
+
+	local cache = {}
+	for v in w:select "scene_sorted scene:in scene_changed?out" do
+		local scene = v.scene
+		if scene.parent == nil then
+			cache[scene.id] = scene
+			update_worldmat_noparent(scene)
+			update_aabb(scene)
+			if scene.changed == current_changed then
+				v.scene_changed = true
+			end
+		else
+			local parent = cache[scene.parent]
+			if parent then
+				cache[scene.id] = scene
+				update_worldmat(scene, parent)
+				update_aabb(scene)
+				if scene.changed == current_changed then
+					v.scene_changed = true
+				end
+			else
+				v.scene_sorted = false -- yield
+			end
+		end
 	end
-	for v in w:select "render_object:in scene_node(scene_id):in scene_changed?out" do
-		local r, n = v.render_object, v.scene_node
+	for v in w:select "render_object:in scene:in" do
+		local r, n = v.render_object, v.scene
 		r.aabb = n._aabb
 		r.worldmat = n._worldmat
-		if n.changed == current_changed then
-			v.scene_changed = true
-		end
 	end
-	for v in w:select "camera:in scene_node(scene_id):in scene_changed?out" do
-		local r, n = v.camera, v.scene_node
+	for v in w:select "camera:in scene:in" do
+		local r, n = v.camera, v.scene
 		r.worldmat = n._worldmat
 		r.updir = n.updir
-		if n.changed == current_changed then
-			v.scene_changed = true
+	end
+	current_changed = current_changed + 1
+end
+
+local function hasSceneRemove()
+	for _ in w:select "REMOVED scene" do
+		return true
+	end
+end
+
+function s:scene_remove()
+	w:clear "scene_changed"
+	if hasSceneRemove() then
+		local cache = {}
+		for v in w:select "scene_sorted scene:in" do
+			local scene = v.scene
+			if scene.parent == nil then
+				cache[scene.id] = scene
+			else
+				local parent = cache[scene.parent]
+				if parent then
+					cache[scene.id] = scene
+					if not scene.removed and parent.removed then
+						scene.removed = true
+						w:remove(v)
+					end
+				else
+					v.scene_sorted = false -- yield
+				end
+			end
 		end
 	end
 end
 
-function s:entity_remove()
-	w:clear "scene_changed"
+function ecs.method.init_scene(e)
+	e.scene_unsorted = true
+	w:sync("scene:in scene_unsorted?out", e)
+	local scene = e.scene
+	scene.id = new_sceneid()
+	if scene.srt then
+		scene.srt = math3d.ref(math3d.matrix(scene.srt))
+	end
+	if scene.updir then
+		scene.updir = math3d.ref(math3d.vector(scene.updir))
+	end
+end
 
-	local removed = {}
-	for v in w:select "REMOVED scene_id:in" do
-		local id = v.scene_id
-		removed[id] = true
-		w:release("scene_node", id)
-	end
-	if next(removed) then
-		for _, id in ipairs(scenequeue) do
-			if removed[id] then
-				scenequeue:mount(id)
-			else
-				local node = w:object("scene_node", id)
-				if node.parent and removed[node.parent] then
-					--TODO: remove parent in old ecs?
-					scenequeue:mount(id, 0)
-					node.parent = nil
-				end
-			end
-		end
-		scenequeue:clear()
-		sync_scene_node()
-	end
+function ecs.method.set_parent(e, parent)
+	world:pub {"new_parent_changed", e, parent}
 end

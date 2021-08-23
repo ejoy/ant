@@ -12,7 +12,7 @@ function m:entity_create()
     w:clear "create_entity"
 end
 
-function m:entity_done()
+function m:entity_ready()
     w:clear "INIT"
 end
 

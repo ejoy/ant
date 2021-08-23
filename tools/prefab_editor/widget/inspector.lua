@@ -11,6 +11,7 @@ local m = {}
 local world
 local worldedit
 local iom
+local icamera
 local anim_view
 local camera_mgr
 local light_panel
@@ -258,19 +259,20 @@ local function update_current()
     if current_eid == gizmo.target_eid then return end
     current_eid = gizmo.target_eid
     if current_eid then
-        if world[current_eid].collider then
+        local e = type(current_eid) == "table" and icamera.find_camera(current_eid) or world[current_eid]
+        if e.collider then
             current_panel = get_collider_panel()
-        elseif world[current_eid].camera then
+        elseif e.frustum then
             current_panel = get_camera_panel()
-        elseif world[current_eid].light_type then
+        elseif e.light_type then
             current_panel = get_light_panel()
-        elseif world[current_eid].slot then
+        elseif e.slot then
             current_panel = get_slot_panel()
-        elseif world[current_eid].effekseer then
+        elseif e.effekseer then
             current_panel = get_effect_panel()
-        elseif world[current_eid].skybox then
+        elseif e.skybox then
             current_panel = get_skybox_panel()
-        elseif world[current_eid].material then
+        elseif e.material then
             current_panel = get_material_panel()
         else
             current_panel = get_base_panel()

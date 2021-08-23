@@ -26,6 +26,10 @@ function event.play(tag_name, anim_name, loop, pause)
     tag(tag_name) : play(anim_name, loop, pause)
 end
 
+function event.stop(tag_name, anim_name)
+    tag(tag_name) : stop(anim_name)
+end
+
 function event.play_clip(tag_name, anim_name, loop, pause)
     tag(tag_name) : play_clip(anim_name, loop, pause)
 end
@@ -54,8 +58,8 @@ function event.step(tag_name, t)
     tag(tag_name) : step(t)
 end
 
-function event.time(tag_name, t)
-    tag(tag_name) : time(t)
+function event.time(tag_name, t, b)
+    tag(tag_name) : time(t, b)
 end
 
 function event.clip_time(tag_name, t)

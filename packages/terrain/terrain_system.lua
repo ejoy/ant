@@ -192,7 +192,7 @@ local function create_render_terrain_entity(eid)
 		local offset = (isy-1) * vertexwidth * elemsize
 		for isx=1, sw do
 			local start = offset + elemsize * (isx-1)
-			world:create_entity{
+			world:deprecated_create_entity{
 				policy = {
 					"ant.terrain|terrain_section_render",
 					"ant.render|render",

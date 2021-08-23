@@ -1,22 +1,20 @@
 ---
 action:
-    bind_camera: {which = main_queue}
+    bind_camera: main_queue
 data:
-  transform:
-    r: {2, -1, 1, 0}
-    t: {-1, 1, 2, 1}
-  frustum:
-    aspect: 1.3333333333333333
-    f: 100
-    fov: 60
-    n: 1
-    type: mat
+  camera:
+    eyepos: {-1, 1, 2, 1}
+    viewdir: {4, -2, -9, 0}
+    updir: {0, 1, 0, 0}
+    frustum:
+      aspect: 1.3333333333333333
+      f: 100
+      fov: 60
+      n: 1
+      type: mat
   name: DEFAULT_CAMERA
-  tag: camera
-  scene_entity: true
-  camera: true
+tag:
+  camera
 policy:
   ant.general|name
   ant.camera|camera
-  ant.general|tag
-script:/pkg/ant.prefab/default_script.lua

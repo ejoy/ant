@@ -11,6 +11,9 @@ local fbmgr     = renderpkg.fbmgr
 local sampler   = renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
 
+local mathpkg   = import_package "ant.math"
+local mc        = mathpkg.constant
+
 local irender   = world:interface "ant.render|irender"
 local icamera   = world:interface "ant.camera|camera"
 local iom       = world:interface "ant.objcontroller|obj_motion"
@@ -84,16 +87,16 @@ function auto_hm_sys:init()
             f = 100,
             ortho   = true,
         },
-        eyepos  = math3d.vector(0, 0, 0, 1),
-        viewdir = math3d.vector(0,-1, 0, 0),
-        updir   = math3d.vector(0, 0, 1, 0),
+        eyepos  = mc.ZERO_PT,
+        viewdir = mc.ZAXIS,
+        updir   = mc.YAXIS,
     }
 
     renderinfo:init()
 
     local eid = ientity.create_quad_entity({x=0, y=0, w=2, h=2}, "/pkg/ant.resources/materials/texquad.material", "quadtest")
     imaterial.set_property(eid, "s_tex", {stage=0, texture={handle=renderinfo:color_handle()}})
-    -- local hm_eid = world:create_entity{ 
+    -- local hm_eid = world:deprecated_create_entity{ 
     --     policy = {
     --         "ant.general|name",
     --         "ant.heightmap|auto_heightmap",

@@ -48,6 +48,11 @@ local function command(w, set, name, ...)
 					iani.play(eid, name, loop or false, manual)
 				end
 			end,
+			stop = function(eid, name)
+				if w[eid].effekseer then
+					ieff.stop(eid)
+				end
+			end,
 			play_clip = function(eid, name, loop, manual)
 				if w[eid].animation then
 					iani.play_clip(eid, name, loop or false, manual)

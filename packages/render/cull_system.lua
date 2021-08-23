@@ -12,11 +12,13 @@ end
 
 local cull_sys = ecs.system "cull_system"
 
-function cull_sys:entity_init()
-	for qe in w:select "INIT filter_names:in cull_tag:in" do
+function cull_sys:entity_ready()
+	for qe in w:select "filter_created primitive_filter:in cull_tag:in" do
 		local culltag = qe.cull_tag
-		for idx, fn in ipairs(qe.filter_names) do
-			culltag[idx] = fn .. "_cull"
+		for idx, fn in ipairs(qe.primitive_filter) do
+			local cn = fn .. "_cull"
+			w:register {name = cn}
+			culltag[idx] = cn
 		end
 	end
 end

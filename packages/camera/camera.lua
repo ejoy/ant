@@ -33,29 +33,23 @@ local defaultcamera = {
     name = "default_camera",
 }
 
-function ic.create_entity(eid, info)
+function ic.create_entity(_, info)
     info.updir = mc.YAXIS
-    local srt = math3d.ref(info.transform and math3d.matrix(info.transform) or mc.IDENTITY_MAT)
-    return world:luaecs_create_entity {
+    return world:create_entity {
         policy = {
             "ant.general|name",
             "ant.camera|camera",
-            "ant.scene|scene_object",
         },
         data = {
-            reference = true,
-            eid = eid,
             camera = {
+                eyepos = info.transform.t,
+                viewdir = math3d.todirection(math3d.quaternion(info.transform.r)),
+                updir = info.updir,
                 frustum = info.frustum,
                 clip_range = info.clip_range,
                 dof = info.dof,
-                srt = srt,
             },
             name = info.name or "DEFAULT_CAMERA",
-            scene = {
-                srt = srt,
-                updir = info.updir and math3d.ref(math3d.vector(info.updir)) or nil,
-            }
         }
     }
 end
@@ -74,29 +68,21 @@ function ic.create(info)
         end
     end
 
-    local viewmat = math3d.lookto(info.eyepos, info.viewdir, info.updir)
-    local srt = math3d.ref(math3d.matrix(math3d.inverse(viewmat)))
-    local eid = world:register_entity()
-    return world:luaecs_create_entity {
+    return world:create_entity {
         policy = {
             "ant.general|name",
             "ant.camera|camera",
-            "ant.scene|scene_object",
         },
         data = {
-            reference = true,
-            eid = eid,
             camera = {
+                eyepos  = assert(info.eyepos),
+                viewdir = assert(info.viewdir),
+                updir   = assert(info.updir),
                 frustum = frustum,
                 clip_range = info.clip_range,
-                dof = info.dof,
-                srt = srt,
+                dof     = info.dof,
             },
             name = info.name or "DEFAULT_CAMERA",
-            scene = {
-                srt = srt,
-                updir = info.updir and math3d.ref(math3d.vector(info.updir)) or nil,
-            }
         }
     }
 end
@@ -117,16 +103,6 @@ function ic.bind(eid, which_queue)
     end
 
     bind_queue(eid, which_queue)
-end
-
-function ic.controller(camera_ref, ceid)
-    local e = find_camera(camera_ref)
-    local old_ceid = e.controller_eid
-    if ceid == nil then
-        return old_ceid
-    end
-    e.controller_eid = ceid
-    world:pub{"camera_controller_changed", ceid, old_ceid}
 end
 
 ic.bind_queue = bind_queue
@@ -282,6 +258,8 @@ function bm.init(prefab, idx, value)
     
     ic.bind(eid, value.which)
 end
+
+ecs.method.bind_camera = ic.bind
 
 local dof_trans = ecs.transform "dof_transform"
 function dof_trans.process_entity(e)

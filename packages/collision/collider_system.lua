@@ -167,8 +167,8 @@ end
 local iom = world:interface "ant.objcontroller|obj_motion"
 
 function collider_sys:update_collider_transform()
-	for v in w:select "scene_changed collider:in scene_node(scene_id):in" do
-		local _, r, t = math3d.srt(v.scene_node._worldmat)
+	for v in w:select "scene_changed collider:in scene:in" do
+		local _, r, t = math3d.srt(v.scene._worldmat)
 		if v.collider._handle then
 			set_obj_transform(v.collider._handle, t, r)
 		end

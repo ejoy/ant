@@ -65,14 +65,25 @@ function BaseView:on_get_prefab()
     end
 end
 
+local function is_camera(eid)
+    return type(eid) == "table"
+end
+
 function BaseView:on_set_name(value)
     local template = hierarchy:get_template(self.eid)
     template.template.data.name = value
-    world[self.eid].name = value
+    if is_camera(self.eid) then
+        local w = world.w
+        self.eid.name = value
+        w:sync("name:out", self.eid)
+    else
+        world[self.eid].name = value
+    end
     world:pub {"EntityEvent", "name", self.eid, value}
 end
 
 function BaseView:on_get_name()
+    if is_camera(self.eid) then return self.eid.name end
     return world[self.eid].name
 end
 
@@ -81,16 +92,21 @@ function BaseView:on_set_tag(value)
     local tags = {}
     value:gsub('[^|]*', function (w) tags[#tags+1] = w end)
     template.template.data.tag = tags
-    world[self.eid].tag = tags
+    if is_camera(self.eid) then
+    else
+        world[self.eid].tag = tags
+    end
     world:pub {"EntityEvent", "tag", self.eid, tags}
 end
 
 function BaseView:on_get_tag()
-    if not world[self.eid].tag then return "" end
-    if type(world[self.eid].tag) == "table" then
-        return table.concat(world[self.eid].tag, "|")
+    local template = hierarchy:get_template(self.eid)
+    local tags = is_camera(self.eid) and template.template.data.tag-- or world[self.eid].tag
+    if not tags then return "" end
+    if type(tags) == "table" then
+        return table.concat(tags, "|")
     end
-    return world[self.eid].tag
+    return tags
 end
 
 function BaseView:on_set_position(value)

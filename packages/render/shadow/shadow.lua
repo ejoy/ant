@@ -122,13 +122,6 @@ else
 	csm_setting.split_ratios = gen_ratios(ratio_list)
 end
 
-
-for ii=1, csm_setting.split_num do
-	local fn = ("csm_queue%d_opacity"):format(ii)
-	w:register{name = fn}
-	w:register{name = fn .. "_cull"}
-end
-
 local ishadow = ecs.interface "ishadow"
 
 function ishadow.setting()

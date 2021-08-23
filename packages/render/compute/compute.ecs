@@ -1,18 +1,3 @@
-policy "compute_policy"
-    .require_transform "ant.asset|material_transform"
-    .require_transform "ant.render|compute_transform"
-    .component "material"
-    .component "compute"
-    .component "dispatch_size"
-
-transform "compute_transform"
-    .implement "compute/compute.lua"
-    .require_transform "ant.general|rendercache_transform"
-    .input "_rendercache"
-    .input "dispatch_size"
-    .output "_rendercache.compute"
-    .method "process_entity"
-
 interface "icompute"
     .implement "compute/compute.lua"
     .method "dispatch"
@@ -20,16 +5,14 @@ interface "icompute"
     .method "create_buffer_property"
     .method "create_image_property"
 
---compute_v2
 system "compute_system"
     .implement "compute/compute.lua"
-    .method "entity_init"
+    .method "entity_ready"
 
 component_v2 "compute"
-component_v2 "dispatch_size".type "lua"
-    .require_system "ant.render|compute_system"
+component_v2 "dispatch".type "lua"
 
 policy_v2 "compute_policy"
     .component_v2 "material"
     .component_v2 "compute"
-    .component_v2 "dispatch_size"
+    .component_v2 "dispatch"

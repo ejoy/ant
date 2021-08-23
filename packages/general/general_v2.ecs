@@ -2,12 +2,11 @@ component_v2 "name".type "lua"
 policy_v2 "name"
     .component_v2 "name"
 
-system "init_transform_system"
-    .implement "general_v2.lua"
-    .method "entity_init"
+component_v2 "tag".type "lua"
+policy_v2 "tag"
+    .component_v2 "tag"
 
 component_v2 "transform".type "lua"
-    .require_system "ant.general|init_transform_system"
 
 policy_v2 "transform_policy"
     .component_v2 "transform"

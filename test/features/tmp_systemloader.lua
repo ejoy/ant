@@ -50,7 +50,7 @@ local icamera = world:interface "ant.camera|camera"
 local iom = world:interface "ant.objcontroller|obj_motion"
 
 local function target_lock_test()
-    local eid = world:create_entity{
+    local eid = world:deprecated_create_entity{
         policy = {
             "ant.general|name",
             "ant.render|render",
@@ -68,7 +68,7 @@ local function target_lock_test()
         }
     }
 
-    local lock_eid = world:create_entity {
+    local lock_eid = world:deprecated_create_entity {
         policy = {
             "ant.general|name",
             "ant.render|render",
@@ -146,15 +146,13 @@ local function point_light_test()
 end
 
 local icc = world:interface "ant.test.features|icamera_controller"
-
+local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
     --point_light_test()
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
     local eid = world:instance "/pkg/ant.test.features/assets/entities/light_directional.prefab"[1]
     local eid2 = world:instance "/pkg/ant.resources.binary/meshes/box.glb|mesh.prefab"[1]
-    local s = iom.get_scale(eid2)
-    iom.set_scale(eid2, math3d.mul(s, {100, 100, 100, 0}))
-
+    world:pub{"after_init", eid2}
     --world:instance "/pkg/ant.test.features/assets/entities/font_tt.prefab"
     --world:instance "/pkg/ant.resources.binary/meshes/female/female.glb|mesh.prefab"
 
@@ -167,7 +165,7 @@ function init_loader_sys:init()
     --world:instance "/pkg/ant.resources.binary/meshes/cloud_run.glb|mesh.prefab"
     --world:instance "/pkg/ant.test.features/assets/CloudTestRun.glb|mesh.prefab"
 
-    -- local eid = world:create_entity {
+    -- local eid = world:deprecated_create_entity {
     --     policy = {
     --         "ant.general|name",
     --         "ant.render|render",
@@ -183,22 +181,7 @@ function init_loader_sys:init()
     --         mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
     --     }
     -- }
-
-    icc.create()
 end
-
-local camera_cache = {
-    icc = {
-        pos = math3d.ref(math3d.vector()),
-        dir = math3d.ref(math3d.vector()),
-        updir = math3d.ref(math3d.vector()),
-    },
-    iccqs = {
-        pos = math3d.ref(math3d.vector()),
-        dir = math3d.ref(math3d.vector()),
-        updir = math3d.ref(math3d.vector()),
-    }
-}
 
 local function main_camera_ref()
     for e in w:select "main_queue camera_ref:in" do
@@ -206,49 +189,15 @@ local function main_camera_ref()
     end
 end
 
-function init_loader_sys:entity_init()
-    for e in w:select "INIT main_queue camera_ref:in" do
-        local camera_ref = e.camera_ref
-
-        local eid = world:instance "/pkg/ant.test.features/assets/entities/cube.prefab"[1]
-        iom.set_scale(eid, 0.1)
-    
-        icc.attach(camera_ref)
-        icamera.controller(camera_ref, icc.get())
-    
-        camera_cache.icc.pos.v = {-10.5, 10, -5.5, 1}
-        camera_cache.icc.dir.v = math3d.sub(mc.ZERO_PT, camera_cache.icc.pos)
-        camera_cache.icc.updir.v = mc.YAXIS
-        icamera.lookto(camera_ref, camera_cache.icc.pos, camera_cache.icc.dir)
-    
-        iom.set_rotation(camera_ref, math3d.quaternion(0.3893,0.1568,-0.0674,0.9052))
-        -- icamera.set_dof(camera_ref, {
-        --     -- aperture_fstop      = 2.8,
-        --     -- aperture_blades     = 0,
-        --     -- aperture_rotation   = 0,
-        --     -- aperture_ratio      = 1,
-        --     -- sensor_size         = 100,
-        --     -- focus_distance      = 5,
-        --     -- focal_len           = 84,
-        --     focuseid            = world:create_entity {
-        --         policy = {
-        --             "ant.render|simplerender"
-        --         },
-        --         data = {
-        --             transform = {},
-        --             simplemesh = {},
-        --             state = "",
-        --         }
-        --     },
-        --     enable              = true,
-        -- })
-        -- local dir = {0, 0, 1, 0}
-        -- icamera.lookto(camera_ref, {0, 0, -8, 1}, dir)
-        -- local ipl = world:interface "ant.render|ipolyline"
-        -- ipl.add_strip_lines({
-        --     {0, 0, 0}, {0.5, 0, 1}, {1, 0, 0},
-        -- }, 15, {1.0, 1.0, 0.0, 1.0})
+function init_loader_sys:init_world()
+    for msg in after_init_mb:each() do
+        local eid = msg[2]
+        local s = iom.get_scale(eid)
+        iom.set_scale(eid, math3d.mul(s, {100, 100, 100, 0}))
     end
+end
+
+function init_loader_sys:entity_init()
 
 end
 
@@ -276,9 +225,9 @@ end
 
 local function interset_aabb(l, aabb, viewmat)
     local r = l.range
-    local center = math3d.transform(viewmat, l.pos, 1.0);
-    local sq_dist = sphere_closest_pt_to_aabb(math3d.tovalue(center), aabb);
-    return sq_dist <= (r * r);
+    local center = math3d.transform(viewmat, l.pos, 1.0)
+    local sq_dist = sphere_closest_pt_to_aabb(math3d.tovalue(center), aabb)
+    return sq_dist <= (r * r)
 end
 
 local kb_mb = world:sub{"keyboard"}

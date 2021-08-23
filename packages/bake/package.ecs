@@ -1,1 +1,1 @@
-import "lightmapper.ecs"
+import "bake_lightmap.ecs"

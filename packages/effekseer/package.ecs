@@ -20,6 +20,7 @@ interface "effekseer_playback"
     .method "set_time"
     .method "set_speed"
     .method "set_time_callback"
+    .method "stop"
 
 interface "filename_mgr"
     .implement "effekseer_system.lua"
@@ -36,9 +37,13 @@ policy "effekseer_policy"
 component_v2 "effekseer"
     .type "lua"
 
+component_v2 "effect_instance"
+    .type "lua"
+
 policy_v2 "effekseer"
     .require_system "effekseer_system"
     .component_v2 "effekseer"
+    .component_v2 "effect_instance"
 
 transform "instance_effect"
     .implement "effekseer_system.lua"

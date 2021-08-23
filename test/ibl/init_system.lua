@@ -26,7 +26,7 @@ function is:data_changed()
              1, -1,1,
         }}
 
-        world:luaecs_create_entity {
+        world:create_entity {
             policy = {
                 "ant.render|render",
                 "ant.general|name",
@@ -39,7 +39,7 @@ function is:data_changed()
                 scene = {
                     srt = math3d.ref(math3d.matrix()),
                 },
-                eid = world:create_entity{policy = {"ant.general|debug_TEST"}, data = {}},
+                eid = world:deprecated_create_entity{policy = {"ant.general|debug_TEST"}, data = {}},
                 render_object = {},
                 transform = {
                     t = {0, 1, 0},

@@ -21,12 +21,6 @@ local function load_material(m, c, setting)
 end
 
 local imaterial = ecs.interface "imaterial"
-function imaterial.load(m, setting)
-	local mm = type(m) == "string" and world.component "material"(m) or m
-	assert(type(mm) == "table")
-	
-	return load_material(mm, {}, setting)
-end
 
 local function set_uniform(p)
 	return bgfx.set_uniform(p.handle, p.value)
@@ -109,7 +103,7 @@ function imaterial.set_property_directly(properties, who, what)
 end
 
 function imaterial.set_property(eid, who, what)
-	if world:interface "ant.render|system_properties".get(who) then
+	if world:interface "ant.render|isystem_properties".get(who) then
 		error(("global property could not been set:%s"):format(who))
 	end
 
@@ -210,7 +204,7 @@ local function generate_properties(fx, properties)
 	end
 
 	local uniforms = fx.uniforms
-	local isp 		= world:interface "ant.render|system_properties"
+	local isp 		= world:interface "ant.render|isystem_properties"
 	local new_properties
 	properties = properties or {}
 	if uniforms and #uniforms > 0 then
@@ -218,9 +212,14 @@ local function generate_properties(fx, properties)
 		for _, u in ipairs(uniforms) do
 			local n = u.name
 			if not n:match "@data" then
-				local v = to_v(properties[n]) or isp.get(n)
-				if v == nil then
-					error(("not found property:%s"):format(n))
+				local v
+				if "s_lightmap" == n then
+					v = {stage = 8, texture={}}
+				else
+					v = to_v(properties[n]) or isp.get(n)
+					if v == nil then
+						error(("not found property:%s"):format(n))
+					end
 				end
 				new_properties[n] = {
 					value = v,
@@ -259,7 +258,7 @@ local function generate_properties(fx, properties)
 	return new_properties
 end
 
-local function to_renderobj(m, ro)
+local function build_material(m, ro)
 	ro.fx 			= m.fx
 	ro.properties 	= generate_properties(m.fx, m.properties)
 	ro.state 		= m.state
@@ -267,17 +266,29 @@ local function to_renderobj(m, ro)
 end
 
 function mt.process_entity(e)
-	to_renderobj(e._cache_prefab, e._rendercache)
+	build_material(e._cache_prefab, e._rendercache)
+end
+
+
+function imaterial.load(m, setting)
+	local mm = type(m) == "string" and world.component "material"(m) or m
+	assert(type(mm) == "table")
+	
+	local mr = {}
+	build_material(load_material(mm, {}, setting), mr)
+	return mr
 end
 
 ----material_v2
 local w = world.w
 local ms = ecs.system "material_system"
 function ms:entity_init()
-    for e in w:select "INIT material:in material_setting?in render_object:in name:in" do
+	w:clear "material_result"
+    for e in w:select "INIT material:in material_setting?in material_result:new" do
 		if type(e.material) == "string" then
 			local mm = load_material(init_material(e.material), {}, e.material_setting)
-			to_renderobj(mm, e.render_object)
+			e.material_result = {}
+			build_material(mm, e.material_result)
 		end
 	end
 end

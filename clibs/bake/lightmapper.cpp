@@ -176,10 +176,14 @@ lcontext_find_sample(lua_State *L){
     lmctx->meshPosition.triangle.baseIndex = triangleidx;
     
     for(lm_initMeshRasterizerPosition(lmctx);
-		!lm_hasConservativeTriangleRasterizerFinished(lmctx);
-		lm_moveToNextPotentialConservativeTriangleRasterizerPosition(lmctx))
+		!lm_hasConservativeTriangleRasterizerFinished(lmctx->meshPosition);
+		lm_moveToNextPotentialConservativeTriangleRasterizerPosition(lmctx->meshPosition))
 	{
-		if (lm_trySamplingConservativeTriangleRasterizerPosition(lmctx))
+		if (lm_trySamplingConservativeTriangleRasterizerPosition(
+            lmctx->meshPosition,
+            lmctx->lightmap,
+            lmctx->hemisphere,
+            lmctx->interpolationThreshold))
 			break;
     }
     
@@ -308,6 +312,13 @@ lcontext_bake(lua_State *L){
 }
 
 static int
+lcontext_pass_count(lua_State *L){
+    auto ctx = tocontext(L, 1);
+    lua_pushinteger(L, ctx->lm_ctx->meshPosition.passCount);
+    return 1;
+}
+
+static int
 lcontext_hemi_count(lua_State *L){
     auto ctx = tocontext(L, 1);
     int hemix, hemiy;
@@ -315,6 +326,140 @@ lcontext_hemi_count(lua_State *L){
     lua_pushinteger(L, hemix);
     lua_pushinteger(L, hemiy);
     return 2;
+}
+
+static int
+lcontext_fetch_samples(lua_State *L){
+    auto ctx = tocontext(L, 1);
+    auto pass = (int)luaL_checkinteger(L, 2);
+    if (pass < 1 || pass > ctx->lm_ctx->meshPosition.passCount){
+        luaL_error(L, "invalid 'pass': %d, pass count:%d", pass, ctx->lm_ctx->meshPosition.passCount);
+    }
+    lmSamplePositions(ctx->lm_ctx, pass-1);
+    lua_pushinteger(L, ctx->lm_ctx->samples.size());
+    return 1;
+}
+
+struct sample_param{
+    uint16_t x, y;
+    uint16_t hemisize, side;
+    float znear, zfar;
+    uint32_t sampleidx;
+};
+
+LUA2STRUCT(sample_param, x, y, hemisize, side, znear, zfar, sampleidx);
+
+static int
+lcontext_sample_hemisphere(lua_State *L){
+    auto ctx = tocontext(L, 1);
+    int x, y;
+    lua_struct::unpack(L, 2, x);
+    lua_struct::unpack(L, 3, y);
+    int hemisize, side;
+    lua_struct::unpack(L, 4, hemisize);
+    lua_struct::unpack(L, 5, side);
+    float znear, zfar;
+    lua_struct::unpack(L, 6, znear);
+    lua_struct::unpack(L, 7, zfar);
+    uint32_t sampleidx;
+    lua_struct::unpack(L, 8, sampleidx);
+    if (sampleidx > ctx->lm_ctx->samples.size()){
+        luaL_error(L, "invalid sample index:%d", sampleidx);
+    }
+    --sampleidx;
+    const auto& sp = ctx->lm_ctx->samples[sampleidx];
+    int vp[4];
+    float viewmat[16], projmat[16];
+    lm_sampleHemisphere(x, y, hemisize, side-1, znear, zfar, sp.sample.position, sp.sample.direction, sp.sample.up, vp, viewmat, projmat);
+
+    auto create_table = [L](auto v, int n){
+        lua_createtable(L, n, 0);
+        for (int ii=0; ii<n; ++ii){
+            lua_pushnumber(L, float(v[ii]));
+            lua_seti(L, -2, ii+1);
+        }
+    };
+    create_table(vp, 4);
+    create_table(viewmat, 16);
+    create_table(projmat, 16);
+    return 3;
+}
+
+static inline lightmap*
+tolm(lua_State *L, int index){
+    return (lightmap*)luaL_checkudata(L, index, "LIGHTMAP_MT");
+}
+
+static int
+lcontext_write2lightmap(lua_State *L){
+    auto ctx = tocontext(L, 1);
+    auto m = (struct memory*)luaL_checkudata(L, 2, "BGFX_MEMORY");
+    auto lm = tolm(L, 3);
+    auto hemix = luaL_checkinteger(L, 4);
+    auto hemiy = luaL_checkinteger(L, 5);
+    auto storage_nx = luaL_checkinteger(L, 6);
+    auto storage_ny = luaL_checkinteger(L, 7);
+
+    auto w = hemix * storage_nx;
+
+    auto hemicount = hemix * hemiy;
+    const auto &samples = ctx->lm_ctx->samples;
+    for (size_t sampleidx=0; sampleidx<samples.size(); ++sampleidx){
+        auto s = samples[sampleidx];
+        auto storage_idx = sampleidx / hemicount;
+        auto storage_x = storage_idx % storage_nx;
+        auto storage_y = storage_idx / storage_nx;
+
+        auto hemiidx = sampleidx-storage_idx*hemicount;
+        auto local_hx = hemiidx % hemix;
+        auto local_hy = hemiidx / hemiy;
+
+        auto mem_idx = (local_hy + storage_y * hemiy) * w + (local_hx + storage_x * hemix);
+
+        if (mem_idx * 16 >= m->size){
+            luaL_error(L, "invalid index, sampleidx:%d, storage:{nx=%d, ny=%d, x=%d, y=%d}, mem_idx=%d", 
+            sampleidx, storage_nx, storage_ny, storage_x, storage_y, mem_idx);
+        }
+
+        const glm::vec4 &c = *((glm::vec4 *)m->data + mem_idx);
+        const float validity = c[3];
+        float *lmdata = (float*)lm->data +  (s.pos.y * lm->width + s.pos.x) * lm->channels;
+        if (!lmdata[0] && validity > 0.9)
+        {
+            float scale = 1.0f / validity;
+            switch (lm->channels)
+            {
+            case 1:
+                lmdata[0] = lm_maxf((c[0] + c[1] + c[2]) * scale / 3.0f, FLT_MIN);
+                break;
+            case 2:
+                lmdata[0] = lm_maxf((c[0] + c[1] + c[2]) * scale / 3.0f, FLT_MIN);
+                lmdata[1] = 1.0f; // do we want to support this format?
+                break;
+            case 3:
+                lmdata[0] = lm_maxf(c[0] * scale, FLT_MIN);
+                lmdata[1] = lm_maxf(c[1] * scale, FLT_MIN);
+                lmdata[2] = lm_maxf(c[2] * scale, FLT_MIN);
+                break;
+            case 4:
+                lmdata[0] = lm_maxf(c[0] * scale, FLT_MIN);
+                lmdata[1] = lm_maxf(c[1] * scale, FLT_MIN);
+                lmdata[2] = lm_maxf(c[2] * scale, FLT_MIN);
+                lmdata[3] = 1.0f;
+                break;
+            default:
+                assert(LM_FALSE);
+                break;
+            }
+
+#ifdef LM_DEBUG_INTERPOLATION
+            // set sampled pixel to red in debug output
+            lm->debug[(s.pos.y * lm->width + s.pos.x) * 3 + 0] = 255;
+#endif
+        }
+        
+    }
+    return 0;
 }
 
 static void
@@ -330,6 +475,10 @@ register_lm_context_mt(lua_State *L){
             {"set_geometry",        lcontext_set_geometry},
             {"hemi_count",          lcontext_hemi_count},
             {"bake",                lcontext_bake},
+            {"pass_count",          lcontext_pass_count},
+            {"fetch_samples",       lcontext_fetch_samples},
+            {"sample_hemisphere",   lcontext_sample_hemisphere},
+            {"write2lightmap",      lcontext_write2lightmap},
             {"process",             lcontext_process},
             {"find_sample",         lcontext_find_sample},
             {nullptr,               nullptr},
@@ -352,11 +501,6 @@ llightmap_create_context(lua_State *L){
         ctx->interp_pass_count, ctx->interp_threshold, 
         ctx->cam2surf_dis_modifier);
     return 1;
-}
-
-static inline lightmap*
-tolm(lua_State *L, int index){
-    return (lightmap*)luaL_checkudata(L, index, "LIGHTMAP_MT");
 }
 
 static int

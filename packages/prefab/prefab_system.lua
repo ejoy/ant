@@ -1,8 +1,10 @@
 local ecs = ...
 local world = ecs.world
 local assetmgr = import_package "ant.asset"
-local prefab = require "prefab"
-prefab.init(world)
+
+if ecs.component then
+	require "prefab".init(world)
+end
 
 function world:create_template(t)
 	local prefab = {__class=t}

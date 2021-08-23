@@ -68,10 +68,7 @@ function gizmo:set_scale(inscale)
 	iom.set_scale(self.target_eid, inscale)
 end
 
-function gizmo:set_position(worldpos)
-	if not self.target_eid or hierarchy:is_locked(self.target_eid) then
-		return
-	end
+function gizmo:update_position(worldpos)
 	local newpos
 	if worldpos then
 		local parent_worldmat = iom.worldmat(world[gizmo.target_eid].parent)
@@ -81,15 +78,22 @@ function gizmo:set_position(worldpos)
 		else
 			localPos = math3d.totable(math3d.transform(math3d.inverse(parent_worldmat), math3d.vector(worldpos), 1))
 		end
-		
 		iom.set_position(self.target_eid, localPos)
 		newpos = worldpos
 	else
-		local t = iom.get_position(gizmo.target_eid)
+		local wm = iom.worldmat(gizmo.target_eid)
+		local s, r, t = math3d.srt(wm)
 		newpos = math3d.totable(t)
 	end
 	iom.set_position(self.root_eid, newpos)
 	iom.set_position(self.uniform_rot_root_eid, newpos)
+end
+
+function gizmo:set_position(worldpos)
+	if not self.target_eid or hierarchy:is_locked(self.target_eid) then
+		return
+	end
+	world:pub {"Gizmo", "UpdatePosition", worldpos}
 end
 
 function gizmo:set_rotation(inrot)
@@ -138,7 +142,7 @@ local function create_arrow_widget(axis_root, axis_str)
 		local_rotator = math3d.quaternion{math.rad(90), 0, 0}
 		cylindere_t = math3d.vector(0, 0, 0.5 * gizmo_const.AXIS_LEN)
 	end
-	local cylindereid = world:create_entity{
+	local cylindereid = world:deprecated_create_entity{
 		policy = {
 			"ant.render|render",
 			"ant.general|name",
@@ -159,7 +163,7 @@ local function create_arrow_widget(axis_root, axis_str)
 	}
 	ies.set_state(cylindereid, "auxgeom", true)
 	iss.set_parent(cylindereid, axis_root)
-	local coneeid = world:create_entity{
+	local coneeid = world:deprecated_create_entity{
 		policy = {
 			"ant.render|render",
 			"ant.general|name",
@@ -195,7 +199,8 @@ end
 
 local function update_global_axis()
 	if not global_data.viewport or not global_axis_eid then return end
-	local worldPos = utils.ndc_to_world(camera_mgr.main_camera, iom.screen_to_ndc(camera_mgr.main_camera, {global_data.viewport.x + 50, global_data.viewport.y + global_data.viewport.h - 50, 0.5}))--mouse_hit_plane({global_data.viewport.x + 50, global_data.viewport.y + global_data.viewport.h  - 50}, {dir = {0,1,0}, pos = {0,0,0}})
+	local screenpos = {global_data.viewport.x + 50, global_data.viewport.y + global_data.viewport.h - 50}
+	local worldPos = utils.ndc_to_world(camera_mgr.main_camera, iom.screen_to_ndc(camera_mgr.main_camera, {screenpos[1], screenpos[2], 0.5}))--mouse_hit_plane({global_data.viewport.x + 50, global_data.viewport.y + global_data.viewport.h  - 50}, {dir = {0,1,0}, pos = {0,0,0}})
 	if worldPos then
 		iom.set_position(global_axis_eid, math3d.totable(worldPos))
 	end
@@ -221,7 +226,7 @@ end
 
 function gizmo_sys:post_init()
 	local srt = {r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
-	local axis_root = world:create_entity{
+	local axis_root = world:deprecated_create_entity{
 		policy = {
 			"ant.general|name",
 			"ant.scene|transform_policy",
@@ -234,7 +239,7 @@ function gizmo_sys:post_init()
 		},
 	}
 	gizmo.root_eid = axis_root
-	local rot_circle_root = world:create_entity{
+	local rot_circle_root = world:deprecated_create_entity{
 		policy = {
 			"ant.general|name",
 			"ant.scene|transform_policy",
@@ -250,7 +255,7 @@ function gizmo_sys:post_init()
 	iss.set_parent(rot_circle_root, axis_root)
 	gizmo.rot_circle_root_eid = rot_circle_root
 
-	local uniform_rot_root = world:create_entity{
+	local uniform_rot_root = world:deprecated_create_entity{
 		policy = {
 			"ant.general|name",
 			"ant.scene|transform_policy",
@@ -334,7 +339,7 @@ function gizmo_sys:post_init()
 	
 	-- scale axis
 	local function create_scale_cube(srt, color, axis_name)
-		local eid = world:create_entity {
+		local eid = world:deprecated_create_entity {
 			policy = {
 				"ant.render|render",
 				"ant.general|name",
@@ -371,7 +376,7 @@ function gizmo_sys:post_init()
 	create_scale_axis(gizmo.sy, {0, gizmo_const.AXIS_LEN, 0})
 	create_scale_axis(gizmo.sz, {0, 0, gizmo_const.AXIS_LEN})
 
-	global_axis_eid = world:create_entity{
+	global_axis_eid = world:deprecated_create_entity{
 		policy = {
 			"ant.general|name",
 			"ant.scene|transform_policy",
@@ -399,7 +404,7 @@ function gizmo_sys:post_init()
 	iom.set_scale(global_axis_eid, 2.5)
 end
 local mb_main_camera_changed = world:sub{"camera_changed", "main_queue"}
-function gizmo_sys:entity_done()
+function gizmo_sys:entity_ready()
 	for _ in mb_main_camera_changed:each() do
 		update_global_axis()
 		gizmo:update_scale()
@@ -553,7 +558,6 @@ local function select_axis(x, y)
 	local end_x = utils.world_to_screen(camera_mgr.main_camera, math3d.add(gizmo_obj_pos, math3d.vector(gizmo_dir_to_world({line_len, 0, 0}))))
 	
 	local axis = (gizmo.mode == gizmo_const.SCALE) and gizmo.sx or gizmo.tx
-	print("start-end_x : ", start[1], start[2], start[3], end_x[1], end_x[2], end_x[3])
 	if utils.point_to_line_distance2D(start, end_x, hp) < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
 		return axis
 	end
@@ -980,7 +984,16 @@ local function on_mouse_move()
 	end
 end
 
+local gizmo_event = world:sub{"Gizmo"}
+
 function gizmo_sys:handle_event()
+
+	for _, what, wp in gizmo_event:unpack() do
+		if what == "UpdatePosition" then
+			gizmo:update_position(wp)
+		end
+	end
+
 	for _, vp in viewpos_event:unpack() do
 		global_data.viewport = vp
 		update_global_axis()
@@ -1041,7 +1054,10 @@ function gizmo_sys:handle_event()
 						cmd_queue:record({action = gizmo_const.ROTATE, eid = target, oldvalue = math3d.totable(last_rotate), newvalue = math3d.totable(iom.get_rotation(target))})
 					elseif gizmo.mode == gizmo_const.MOVE then
 						local pw = iom.worldmat(world[target].parent)
-						local localPos = math3d.totable(math3d.transform(math3d.inverse(pw), last_gizmo_pos, 1))
+						local localPos = last_gizmo_pos
+						if pw then
+							localPos = math3d.totable(math3d.transform(math3d.inverse(pw), last_gizmo_pos, 1))
+						end
 						cmd_queue:record({action = gizmo_const.MOVE, eid = target, oldvalue = localPos, newvalue = math3d.totable(iom.get_position(target))})
 					end
 				end

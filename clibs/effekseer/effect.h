@@ -10,7 +10,7 @@ public:
 	void play();
 	void pause(bool p);
 	void play(int32_t startTime);
-	void set_time(int32_t time);
+	void set_time(int32_t time, bool shouldExist = true);
 	bool get_loop();
 	void set_loop(bool value);
 	float get_speed();

@@ -15,7 +15,7 @@ end
 
 function EffectView:set_model(eid)
     if not BaseView.set_model(self, eid) then return false end
-    if world[eid].effect_instance then
+    if world[eid].effekseer and world[eid].effect_instance then
         --local tp = hierarchy:get_template(eid)
         self.speed:set_getter(function() return world[eid].effect_instance.speed end)
         self.speed:set_setter(function(v) self:on_set_speed(v) end)

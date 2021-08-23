@@ -15,7 +15,7 @@ end
 local gt = ecs.transform "init_transform"
 
 function gt.process_entity(e)
-	e._rendercache.srt			= math3d.ref(math3d.matrix(e.transform or {}))
+	e._rendercache.srt = math3d.ref(math3d.matrix(e.transform or {}))
 end
 
 local ibt = ecs.transform "init_bounding_transform"

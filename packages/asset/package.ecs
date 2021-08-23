@@ -2,10 +2,6 @@ component "material"
     .implement "material.lua"
     .method "init"
 
-component "skeleton"
-    .implement "skeleton.lua"
-    .method "init"
-
 component "mesh"
     .implement "mesh.lua"
     .method "init"

@@ -3,6 +3,8 @@ local system = require "system"
 local policy = require "policy"
 local event = require "event"
 local ltask = require "ltask"
+local fs = require "filesystem"
+local pm = require "packagemanager"
 
 local world = {}
 world.__index = world
@@ -151,7 +153,7 @@ function world:register_entity()
 	return eid
 end
 
-function world:create_entity(v)
+function world:deprecated_create_entity(v)
 	local args = {}
 	if v.action and v.action.mount then
 		args["_mount"] = v.action.mount
@@ -413,6 +415,64 @@ function world:interface(fullname)
 	return self._class.interface[fullname]
 end
 
+function world:dofile(filename)
+	local path = fs.path(filename)
+	local package = path:package_name()
+	local module, err = fs.loadfile(path, "bt", pm.loadenv(package))
+	if not module then
+		error(("module '%s' load failed:%s"):format(filename, err))
+	end
+	log.info(("ecs loaded %q"):format(filename))
+	return module(self._ecs[package])
+end
+
+local function memstr(v)
+	for _, b in ipairs {"B","KB","MB","GB","TB"} do
+		if v < 1024 then
+			return ("%.3f%s"):format(v, b)
+		end
+		v = v / 1024
+	end
+end
+
+function world:memory(async)
+	local m = {
+		bgfx = require "bgfx".get_memory(),
+		rp3d = require "rp3d.core".memory(),
+	}
+	if require "platform".OS:lower() == "windows" then
+		m.imgui = require "imgui".memory()
+	end
+
+	if async then
+		local SERVICE_ROOT <const> = 1
+		local services = ltask.call(SERVICE_ROOT, "label")
+		local request = ltask.request()
+		for id in pairs(services) do
+			if id ~= 0 then
+				request:add { id, proto = "system", "memory" }
+			end
+		end
+		for req, resp in request:select() do
+			if resp then
+				local name = services[req[1]]
+				local memory = resp[1]
+				m["service-"..name] = memory
+			end
+		end
+	else
+		m.lua = collectgarbage "count" * 1024
+	end
+
+	local total = 0
+	for k, v in pairs(m) do
+		m[k] = memstr(v)
+		total = total + v
+	end
+	m.total = memstr(total)
+	return m
+end
+
 local m = {}
 
 function m.new_world(config)
@@ -427,6 +487,9 @@ function m.new_world(config)
 		_memory = {},
 		_memory_stat = setmetatable({start={}, finish={}}, {__close = finish_memory_stat}),
 		_cpu_stat = setmetatable({total={}}, {__close = finish_cpu_stat}),
+		_ecs = {},
+		_loaded = {},
+		_methods = {},
 		w = config.w
 	}, world)
 

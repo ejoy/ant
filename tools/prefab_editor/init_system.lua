@@ -43,6 +43,7 @@ local function create_second_view()
         icamera.create{
             eyepos  = {0, 0, 0, 1},
             viewdir = {0, 0, 1, 0},
+            updir   = {0, 1, 0, 0},
             frustum = default_comp.frustum(vr.w / vr.h),
             name = camera_mgr.second_view,
         }, "visible", "auxgeom")

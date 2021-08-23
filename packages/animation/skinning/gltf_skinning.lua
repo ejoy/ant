@@ -1,12 +1,9 @@
 local ecs = ...
-local world = ecs.world
+local w = ecs.world.w
+
 local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
-
-local assetmgr = import_package "ant.asset"
-
 local bgfx = require "bgfx"
-
 local animodule = require "hierarchy.animation"
 
 local st_trans = ecs.transform "skinning_type_transform"
@@ -14,7 +11,7 @@ function st_trans.process_prefab(e)
 	e.skinning_type  = "GPU"
 end
 
-local mesh_skinning_transform = ecs.transform "mesh_skinning"
+local m = ecs.system "mesh_skinning"
 
 local function create_node(elem, offset, layout_stride, pointer)
 	local elemsize = declmgr.elem_size(elem)
@@ -69,7 +66,6 @@ local function create_job(pnT_buffer, wi_buffer)
 	}
 end
 
-local bgfx = require "bgfx"
 local function set_skinning_transform(rc)
 	local sm = rc.skinning_matrices
 	bgfx.set_multi_transforms(sm:pointer(), sm:count())
@@ -127,18 +123,15 @@ local function build_cpu_skinning_jobs(e, skinning)
 	build_rendermesh(e._rendercache, e.mesh)
 end
 
-function mesh_skinning_transform.process_entity(e)
-	e.skinning = {}
-	local skinning = e.skinning
-
-	local poseresult = e.pose_result
-	skinning.skinning_matrices = animodule.new_bind_pose(poseresult:count())
-
-	skinning.skin = e.meshskin
-
-	if e.skinning_type == "CPU" then
-		build_cpu_skinning_jobs(e, skinning)
-	else
-		build_transform(e._rendercache, e.skinning)
+function m:entity_init()
+	for e in w:select "INIT skinning:in render_object:in meshskin:in pose_result:in" do
+		local skinning = e.skinning
+		skinning.skinning_matrices = animodule.new_bind_pose(e.pose_result:count())
+		skinning.skin = e.meshskin
+		if e.skinning_type == "CPU" then
+			build_cpu_skinning_jobs(e, skinning)
+		else
+			build_transform(e.render_object, e.skinning)
+		end
 	end
 end

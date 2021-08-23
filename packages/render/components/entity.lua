@@ -51,7 +51,7 @@ local nameidx = 0
 local function gen_test_name() nameidx = nameidx + 1 return "entity" .. nameidx end
 
 local function create_simple_render_entity(name, material, mesh, srt, state)
-	return world:create_entity {
+	return world:deprecated_create_entity {
 		policy = {
 			"ant.render|render",
 			"ant.general|name",
@@ -196,7 +196,7 @@ function ientity.create_prim_plane_entity(srt, materialpath, name, sharedmesh, e
 		end
 	end
 
-	return world:create_entity{
+	return world:deprecated_create_entity{
 		policy = policy,
 		data = data,
 	}
@@ -231,7 +231,7 @@ function ientity.create_plane_entity(srt, materialpath, name, entity_info, enabl
 		end
 	end
 
-	return world:create_entity{
+	return world:deprecated_create_entity{
 		policy = policy,
 		data = data,
 	}
@@ -392,7 +392,7 @@ local function get_skybox_mesh()
 end
 
 function ientity.create_skybox(material)
-    return world:create_entity {
+    return world:deprecated_create_entity {
 		policy = {
 			"ant.sky|skybox",
 			"ant.render|render",
@@ -453,7 +453,7 @@ function ientity.create_procedural_sky(settings)
 			return world[eid].serialize
 		end
 	end
-    return world:create_entity {
+    return world:deprecated_create_entity {
 		policy = {
 			"ant.render|render",
 			"ant.sky|procedural_sky",
@@ -489,7 +489,7 @@ function ientity.create_procedural_sky(settings)
 end
 
 function ientity.create_gamma_test_entity()
-	world:create_entity {
+	world:deprecated_create_entity {
         policy = {
             "ant.render|simplerender",
             "ant.general|name",
@@ -557,7 +557,7 @@ function ientity.create_arrow_entity(origin, forward, scale, data)
 
 	local cone_offset = math3d.sub(cone_centerpos, arrow_center)
 
-	local arroweid = world:create_entity{
+	local arroweid = world:deprecated_create_entity{
 		policy = {
 			"ant.general|name",
 			"ant.scene|transform_policy",
@@ -573,7 +573,7 @@ function ientity.create_arrow_entity(origin, forward, scale, data)
 		},
 	}
 
-	local cylindereid = world:create_entity{
+	local cylindereid = world:deprecated_create_entity{
 		policy = {
 			"ant.render|render",
 			"ant.general|name",
@@ -597,7 +597,7 @@ function ientity.create_arrow_entity(origin, forward, scale, data)
 
 	imaterial.set_property(cylindereid, "u_color", data.cylinder_color or {1, 0, 0, 1})
 
-	local coneeid = world:create_entity{
+	local coneeid = world:deprecated_create_entity{
 		policy = {
 			"ant.render|render",
 			"ant.general|name",

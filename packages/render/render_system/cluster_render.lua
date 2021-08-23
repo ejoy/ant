@@ -4,6 +4,7 @@ local w = world.w
 
 local bgfx      = require "bgfx"
 local declmgr   = require "vertexdecl_mgr"
+local viewidmgr = require "viewid_mgr"
 local ilight    = world:interface "ant.render|light"
 local icompute  = world:interface "ant.render|icompute"
 
@@ -107,7 +108,6 @@ cluster_buffers.light_grids.handle         = bgfx.create_dynamic_index_buffer(li
 cluster_buffers.global_index_count.handle  = bgfx.create_dynamic_index_buffer(1, "drw")
 cluster_buffers.AABB.handle                = bgfx.create_dynamic_vertex_buffer(cluster_aabb_buffer_size, cluster_buffers.AABB.layout.handle, "rw")
 cluster_buffers.light_index_lists.handle   = bgfx.create_dynamic_index_buffer(1, "drw")
-local cs_entities = {}
 
 local function check_light_index_list()
     local numlights = world:count "light_type"
@@ -124,59 +124,38 @@ local function check_light_index_list()
         end
         if lil.handle ~= oldhandle then
             assert(lil.handle)
-            local ce = world[cs_entities.culleid]
-            ce._rendercache.properties.b_light_index_lists.handle = lil.handle
+            local ce = w:singleton("cluster_cull_light", "dispatch:in")
+            ce.dispatch.properties.b_light_index_lists.handle = lil.handle
 
-            local re = world:singleton_entity "cluster_render"
-            re.cluster_render.properties.b_light_index_lists.handle = lil.handle
+            local cr = w:object("cluster_render", 1)
+            cr.properties.b_light_index_lists.handle = lil.handle
         end
         return true
     end
 end
-local function main_viewid()
-    for v in w:select "main_queue render_target:in" do
-        return v.render_target.viewid
-    end
+
+local main_viewid = viewidmgr.get "main_view"
+
+local function build_cluster_aabb_struct(viewid)
+    local e = w:singleton("cluster_build_aabb", "dispatch:in")
+    icompute.dispatch(viewid, e.dispatch)
 end
 
-local function build_cluster_aabb_struct()
-    icompute.dispatch(main_viewid(), world[cs_entities.buildeid]._rendercache)
-end
-
-local cr_camera_mb
-local camera_frustum_mb
+local cr_camera_mb      = world:sub{"camera_changed", "main_queue"}
+local camera_frustum_mb = world:sub{"component_changed", "frustum"}
 local light_mb = world:sub{"component_register", "light_type"}
 
-function cfs:post_init()
-    cluster_buffers.light_info.handle = ilight.light_buffer()
+function cfs:init()
+    icompute.create_compute_entity(
+        "cluster_build_aabb", 
+        "/pkg/ant.resources/materials/cluster_build.material",
+        cluster_size)
+    icompute.create_compute_entity(
+        "cluster_cull_light",
+        "/pkg/ant.resources/materials/cluster_light_cull.material",
+        {1, 1, cluster_cull_light_size})
 
-    --build
-    local buildeid = icompute.create_compute_entity("build_cluster_aabb", "/pkg/ant.resources/materials/cluster_build.material", cluster_size)
-    local be = world[buildeid]
-    local buildproperties = be._rendercache.properties
-    buildproperties.b_cluster_AABBs    = icompute.create_buffer_property(cluster_buffers.AABB, "build")
-    buildproperties.b_light_info       = icompute.create_buffer_property(cluster_buffers.light_info, "build")
-    cs_entities.buildeid = buildeid
-
-    --cull
-    local culleid = icompute.create_compute_entity("build_cluster_aabb", "/pkg/ant.resources/materials/cluster_light_cull.material", {1, 1, cluster_cull_light_size})
-    local ce = world[culleid]
-    local cullproperties = ce._rendercache.properties
-    for _, b in ipairs{
-        {"b_cluster_AABBs",     cluster_buffers.AABB},
-        {"b_global_index_count",cluster_buffers.global_index_count},
-        {"b_light_grids",       cluster_buffers.light_grids},
-        {"b_light_index_lists", cluster_buffers.light_index_lists},
-        {"b_light_info",        cluster_buffers.light_info},
-    } do
-        local name, desc = b[1], b[2]
-        cullproperties[name] = icompute.create_buffer_property(desc, "cull")
-    end
-
-    cs_entities.culleid = culleid
-
-    --render
-    local rendereid = world:create_entity {
+    world:create_entity {
         policy = {
             "ant.render|cluster_render_entity",
             "ant.general|name",
@@ -189,21 +168,41 @@ function cfs:post_init()
             },
         }
     }
-
-    local re = world[rendereid]
-    local renderproperties = re.cluster_render.properties
-    for _, b in ipairs{
-        {"b_light_grids", cluster_buffers.light_grids},
-        {"b_light_index_lists", cluster_buffers.light_index_lists},
-        {"b_light_info", cluster_buffers.light_info},
-    } do
-        local name, desc = b[1], b[2]
-        renderproperties[name] = icompute.create_buffer_property(desc, "render")
-    end
 end
 
-local function cull_lights()
-    icompute.dispatch(main_viewid(), world[cs_entities.culleid]._rendercache)
+function cfs:init_world()
+    cluster_buffers.light_info.handle = ilight.light_buffer()
+
+    --build
+    local be = w:singleton("cluster_build_aabb", "dispatch:in")
+    local buildproperties = be.dispatch.properties
+    buildproperties.b_cluster_AABBs    = icompute.create_buffer_property(cluster_buffers.AABB, "build")
+    buildproperties.b_light_info       = icompute.create_buffer_property(cluster_buffers.light_info, "build")
+
+    --cull
+    local ce = w:singleton("cluster_cull_light", "dispatch:in")
+    local cullproperties = ce.dispatch.properties
+
+    cullproperties.b_cluster_AABBs       = icompute.create_buffer_property(cluster_buffers.AABB, "cull")
+    cullproperties.b_global_index_count  = icompute.create_buffer_property(cluster_buffers.global_index_count, "cull")
+    cullproperties.b_light_grids         = icompute.create_buffer_property(cluster_buffers.light_grids, "cull")
+    cullproperties.b_light_index_lists   = icompute.create_buffer_property(cluster_buffers.light_index_lists, "cull")
+    cullproperties.b_light_info          = icompute.create_buffer_property(cluster_buffers.light_info, "cull")
+
+    --render
+    local cr = w:object("cluster_render", 1)
+    local renderproperties = cr.properties
+
+    renderproperties.b_light_grids          = icompute.create_buffer_property(cluster_buffers.light_grids, "render")
+    renderproperties.b_light_index_lists    = icompute.create_buffer_property(cluster_buffers.light_index_lists, "render")
+    renderproperties.b_light_info           = icompute.create_buffer_property(cluster_buffers.light_info, "render")
+
+    world:pub{"camera_changed", "main_queue"}
+end
+
+local function cull_lights(viewid)
+    local e = w:singleton("cluster_cull_light", "dispatch:in")
+    icompute.dispatch(viewid, e.dispatch)
 end
 
 function cfs:render_preprocess()
@@ -215,6 +214,20 @@ function cfs:render_preprocess()
         check_light_index_list()
     end
 
-    build_cluster_aabb_struct()
-    cull_lights()
+    for _ in cr_camera_mb:each() do
+        build_cluster_aabb_struct(main_viewid)
+    end
+
+    for msg in camera_frustum_mb:each() do
+        local qe = w:singleton("main_queue", "camera_ref:in")
+        if qe.camera_ref == msg[3] then
+            build_cluster_aabb_struct(main_viewid)
+        end
+    end
+
+    cull_lights(main_viewid)
 end
+
+local ics = ecs.interface "icluster_render"
+ics.build_cluster_aabbs     = build_cluster_aabb_struct
+ics.cull_lights             = cull_lights

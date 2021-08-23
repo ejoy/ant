@@ -175,7 +175,7 @@ end
 
 local sm = ecs.system "shadow_system"
 
-local function create_csm_entity(index, viewrect, fbidx, depth_type)
+local function create_csm_entity(index, vr, fbidx, depth_type)
 	local csmname = "csm" .. index
 	local queuename = "csm_queue" .. index
 	local camera_ref = icamera.create {
@@ -190,21 +190,7 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 		}
 
 	w:register {name = queuename}
-
-	local filtertag = queuename .. "_opacity"
-	world:luaecs_create_entity{
-		policy = {
-			"ant.render|primitive_filter",
-		},
-		data = {
-			primitive_filter = {
-				filter_type = "cast_shadow",
-			},
-			[filtertag]	= true,
-		}
-	}
-
-	world:luaecs_create_entity {
+	world:create_entity {
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|cull",
@@ -220,7 +206,7 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 			render_target = {
 				viewid = viewidmgr.get(csmname),
 				view_mode = "s",
-				view_rect = viewrect,
+				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
 				clear_state = {
 					color = 0xffffffff,
 					depth = 1,
@@ -229,7 +215,10 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 				},
 				fb_idx = fbidx,
 			},
-			filter_names = {filtertag},
+			primitive_filter = {
+				filter_type = "cast_shadow",
+				"opacity",
+			},
 			cull_tag = {},
 			visible = false,
 			queue_name = queuename,
@@ -358,7 +347,7 @@ end
 
 function sm:refine_camera()
 	-- local setting = ishadow.setting()
-	-- for se in w:select "csm_queue filter_names:in"
+	-- for se in w:select "csm_queue primitive_filter:in"
 	-- 	local se = world[eid]
 	-- assert(false && "should move code new ecs")
 	-- 		local filter = se.primitive_filter.result
@@ -410,8 +399,8 @@ function sm:refine_camera()
 	-- end
 end
 
-local function which_material(eid)
-	if world[eid].skinning_type == "GPU" then
+local function which_material(skinning_type)
+	if skinning_type == "GPU" then
 		return gpu_skinning_material
 	else
 		return shadow_material
@@ -433,13 +422,13 @@ local omni_stencils = {
 local s = ecs.system "shadow_primitive_system"
 
 function s:end_filter()
-    for e in w:select "filter_result:in render_object:in eid:in filter_material:in" do
+    for e in w:select "filter_result:in render_object:in skinning_type:in filter_material:in" do
         local rc = e.render_object
-		local m = which_material(e.eid)
+		local m = which_material(e.skinning_type)
 		local fm = e.filter_material
 		local fr = e.filter_result
-		for qe in w:select "csm_queue filter_names:in" do
-			for _, fn in ipairs(qe.filter_names) do
+		for qe in w:select "csm_queue primitive_filter:in" do
+			for _, fn in ipairs(qe.primitive_filter) do
 				if fr[fn] then
 					fm[fn] = {
 						fx = m.fx,
