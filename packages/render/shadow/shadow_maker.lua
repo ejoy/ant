@@ -399,8 +399,8 @@ function sm:refine_camera()
 	-- end
 end
 
-local function which_material(eid)
-	if world[eid].skinning_type == "GPU" then
+local function which_material(skinning_type)
+	if skinning_type == "GPU" then
 		return gpu_skinning_material
 	else
 		return shadow_material
@@ -422,9 +422,9 @@ local omni_stencils = {
 local s = ecs.system "shadow_primitive_system"
 
 function s:end_filter()
-    for e in w:select "filter_result:in render_object:in eid:in filter_material:in" do
+    for e in w:select "filter_result:in render_object:in skinning_type:in filter_material:in" do
         local rc = e.render_object
-		local m = which_material(e.eid)
+		local m = which_material(e.skinning_type)
 		local fm = e.filter_material
 		local fr = e.filter_result
 		for qe in w:select "csm_queue primitive_filter:in" do
