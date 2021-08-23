@@ -7,7 +7,7 @@ data:
     t: {0, 10, 0, 1}
   color: {0.8, 0.8, 0.8, 1}
   intensity: 5
-  range: 1
+  range: 15
   light_type: point
   name: point_light
   state: 0x01

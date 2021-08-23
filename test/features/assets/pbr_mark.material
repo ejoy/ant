@@ -1,0 +1,20 @@
+fx:
+  fs: /pkg/ant.resources/shaders/pbr/fs_pbr.sc
+  setting:
+    HAS_BASECOLOR_TEXTURE: 1
+    ALPHAMODE_MASK: 1
+  vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
+properties:
+  s_basecolor:
+    stage: 0
+    texture: /pkg/ant.test.features/assets/glb/scenes1.glb|materials/../images/file2-file2.texture
+  u_basecolor_factor: {1, 1, 1, 1}
+  u_emissive_factor: {0, 0, 0, 0}
+  u_pbr_factor: {0, 0.5527864098548889, 0.5, 1}
+state:
+  ALPHA_REF: 0
+  BLEND: ALPHA
+  CULL: NONE
+  DEPTH_TEST: LESS
+  MSAA: true
+  WRITE_MASK: RGBAZ
