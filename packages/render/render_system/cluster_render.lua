@@ -111,27 +111,25 @@ cluster_buffers.light_index_lists.handle   = bgfx.create_dynamic_index_buffer(1,
 
 local function check_light_index_list()
     local numlights = world:count "light_type"
-    if numlights > 0 then
-        local lil_size = numlights * cluster_count
-        local lil = cluster_buffers.light_index_lists
-        local oldhandle = lil.handle
-        if lil_size > lil.size then
-            if lil.handle then
-                bgfx.destroy(lil.handle)
-            end
-            lil.handle = bgfx.create_dynamic_index_buffer(lil_size, "drw")
-            lil.size = lil_size
+    local lil_size = numlights * cluster_count
+    local lil = cluster_buffers.light_index_lists
+    local oldhandle = lil.handle
+    if lil_size > lil.size then
+        if lil.handle then
+            bgfx.destroy(lil.handle)
         end
-        if lil.handle ~= oldhandle then
-            assert(lil.handle)
-            local ce = w:singleton("cluster_cull_light", "dispatch:in")
-            ce.dispatch.properties.b_light_index_lists.handle = lil.handle
-
-            local cr = w:object("cluster_render", 1)
-            cr.properties.b_light_index_lists.handle = lil.handle
-        end
-        return true
+        lil.handle = bgfx.create_dynamic_index_buffer(lil_size, "drw")
+        lil.size = lil_size
     end
+    if lil.handle ~= oldhandle then
+        assert(lil.handle)
+        local ce = w:singleton("cluster_cull_light", "dispatch:in")
+        ce.dispatch.properties.b_light_index_lists.handle = lil.handle
+
+        local cr = w:object("cluster_render", 1)
+        cr.properties.b_light_index_lists.handle = lil.handle
+    end
+    return true
 end
 
 local main_viewid = viewidmgr.get "main_view"
