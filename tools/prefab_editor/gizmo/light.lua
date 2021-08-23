@@ -57,7 +57,7 @@ end
 function m.update()
     iom.set_position(m.current_gizmo.root, iom.get_position(m.current_light))
     iom.set_rotation(m.current_gizmo.root, iom.get_rotation(m.current_light))
-    --iom.set_position(m.billboard[m.current_light], iom.get_position(m.current_light))
+    world:pub{"component_changed", "light", m.current_light, "transform"}
 end
 
 function m.show(b)

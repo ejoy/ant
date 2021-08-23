@@ -346,7 +346,7 @@ end
 local function to_runtime_clip()
     local runtime_clips = {}
     for _, clip in ipairs(all_clips) do
-        if clip.range[1] >= 0 and clip.range[2] > 0 and clip.range[2] > clip.range[1] then
+        if clip.range[1] >= 0 and clip.range[2] >= clip.range[1] then
             runtime_clips[#runtime_clips + 1] = {
                 anim_name = clip.anim_name,
                 name = clip.name,
@@ -956,6 +956,7 @@ local function show_current_group()
         if imgui.widget.Selectable(label, current_group_clip and (current_clip_label == label)) then
             current_group_clip = cs
             current_clip_label = unique_prefix .. current_group_clip.name
+            set_current_clip(cs)
         end
         if current_group_clip and (current_clip_label == label) then
             if imgui.windows.BeginPopupContextItem(label) then
