@@ -70,15 +70,31 @@ local function find_index(t, item)
         end
     end
 end
+
+
+local function get_runtime_animations(eid)
+    for e in world.w:select "eid:in" do
+        if e.eid == eid then
+            world.w:sync("animation:in", e)
+            return e.animation
+        end
+    end
+end
+
+local function get_anim_group_eid(eid, name)
+    local anims = get_runtime_animations(eid)
+    return anim_group_eid[anims[name]]
+end
+
 local function anim_group_set_clips(eid, clips)
-    local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
+    local group_eid = get_anim_group_eid(eid, current_anim.name)
     if not group_eid then return end
     for _, anim_eid in ipairs(group_eid) do
         iani.set_clips(anim_eid, clips)
     end
 end
 local function anim_group_set_time(eid, t)
-    local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
+    local group_eid = get_anim_group_eid(eid, current_anim.name)
     if not group_eid then return end
     for _, anim_eid in ipairs(group_eid) do
         iani.set_time(anim_eid, t)
@@ -86,7 +102,7 @@ local function anim_group_set_time(eid, t)
 end
 
 local function anim_group_stop_effect(eid)
-    local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
+    local group_eid = get_anim_group_eid(eid, current_anim.name)
     if not group_eid then return end
     for _, anim_eid in ipairs(group_eid) do
         iani.stop_effect(anim_eid)
@@ -94,21 +110,21 @@ local function anim_group_stop_effect(eid)
 end
 
 local function anim_group_play_group(eid, ...)
-    local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
+    local group_eid = get_anim_group_eid(eid, current_anim.name)
     if not group_eid then return end
     for _, anim_eid in ipairs(group_eid) do
         iani.play_group(anim_eid, ...)
     end
 end
 local function anim_group_play_clip(eid, ...)
-    local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
+    local group_eid = get_anim_group_eid(eid, current_anim.name)
     if not group_eid then return end
     for _, anim_eid in ipairs(group_eid) do
         iani.play_clip(anim_eid, ...)
     end
 end
 local function anim_group_play(eid, ...)
-    local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
+    local group_eid = get_anim_group_eid(eid, current_anim.name)
     if not group_eid then return end
     for _, anim_eid in ipairs(group_eid) do
         iani.play(anim_eid, ...)
@@ -116,7 +132,7 @@ local function anim_group_play(eid, ...)
 end
 
 local function anim_group_set_loop(eid, ...)
-    local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
+    local group_eid = get_anim_group_eid(eid, current_anim.name)
     if not group_eid then return end
     for _, anim_eid in ipairs(group_eid) do
         iani.set_loop(anim_eid, ...)
@@ -124,13 +140,14 @@ local function anim_group_set_loop(eid, ...)
 end
 
 local function anim_group_delete(eid, anim_name)
-    local group_eid = anim_group_eid[world[eid].animation[anim_name]]
+    local group_eid = get_anim_group_eid(eid, anim_name)
     if not group_eid then return end
     for _, anim_eid in ipairs(group_eid) do
         local template = hierarchy:get_template(anim_eid)
         local animation_map = template.template.data.animation
         animation_map[anim_name] = nil
-        world[anim_eid].animation[anim_name] = nil
+        local anims = get_runtime_animations(anim_eid)
+        anims[anim_name] = nil
         if template.template.data.animation_birth == anim_name then
             template.template.data.animation_birth = next(animation_map) or ""
         end
@@ -142,7 +159,7 @@ local function anim_group_delete(eid, anim_name)
 end
 
 local function anim_group_pause(eid, p)
-    local group_eid = anim_group_eid[world[eid].animation[current_anim.name]]
+    local group_eid = get_anim_group_eid(eid, current_anim.name)
     for _, anim_eid in ipairs(group_eid) do
         iani.pause(anim_eid, p)
     end
@@ -274,10 +291,12 @@ end
 
 local function get_runtime_clips()
     if not current_eid then return end
-    if not world[current_eid].anim_clips then
-        iani.set_clips(current_eid, {})
+    for e in world.w:select "eid:in" do
+		if e.eid == current_eid then
+            world.w:sync("anim_clips:in", e)
+            return e.anim_clips
+        end
     end
-    return world[current_eid].anim_clips
 end
 
 local function get_runtime_events()
@@ -1087,7 +1106,8 @@ function m.show()
                 if imgui.widget.Button("  OK  ") then
                     if #anim_name > 0 and #anim_path > 0 then
                         local update = true
-                        if world[current_eid].animation[anim_name] then
+                        local anims = get_runtime_animations(current_eid)
+                        if anims[anim_name] then
                             local confirm = {title = "Confirm", message = "animation ".. anim_name .. " exist, replace it ?"}
                             uiutils.confirm_dialog(confirm)
                             if confirm.answer and confirm.answer == 0 then
@@ -1095,12 +1115,16 @@ function m.show()
                             end
                         end
                         if update then
-                            local group_eid = anim_group_eid[world[current_eid].animation[current_anim.name]]
+                            local group_eid = get_anim_group_eid(current_eid, current_anim.name)
                             --TODO: set for group eid
                             for _, eid in ipairs(group_eid) do
                                 local template = hierarchy:get_template(eid)
                                 template.template.data.animation[anim_name] = anim_path
-                                world[eid].animation[anim_name] = anim_path
+                                for e in world.w:select "eid:in animation:in" do
+                                    if e.eid == eid then
+                                        e.animation[anim_name] = anim_path
+                                    end
+                                end
                             end
                             --TODO:reload
                             reload = true
@@ -1246,7 +1270,6 @@ end
 local function construct_joints(eid)
     joint_list = {{ index = 0, name = "None", children = {}}}
     joints[eid] = {root = nil, joint_map = {}}
-    local ske = world[eid].skeleton._handle
     local function construct(current_joints, ske, joint_idx)
         if current_joints.joint_map[joint_idx] then
             return current_joints.joint_map[joint_idx]
@@ -1265,6 +1288,14 @@ local function construct_joints(eid)
             current_joints.root = new_joint
         end
     end
+    
+    local ske
+    for e in world.w:select "eid:in skeleton:in" do
+		if e.eid == eid then
+            ske = e.skeleton._handle
+        end
+    end
+    if not ske then return end
     for i=1, #ske do
         construct(joints[eid], ske, i)
     end
@@ -1275,7 +1306,11 @@ local function construct_joints(eid)
         end
     end
     setup_joint_list(joints[eid].root)
-    world[eid].joint_list = joint_list
+    for e in world.w:select "eid:in joint_list:out" do
+		if e.eid == eid then
+            e.joint_list = joint_list
+        end
+    end
     hierarchy:update_slot_list(world)
 end
 
@@ -1316,14 +1351,22 @@ function m.load_clips()
 end
 
 local function construct_edit_animations(eid)
+    local animation_birth
+    for e in world.w:select "eid:in animation_birth:in" do
+        if e.eid == eid then
+            animation_birth = e.animation_birth
+        end
+    end
+
     edit_anims[eid] = {
         id          = eid,
         name_list   = {},
-        birth       = world[eid].animation_birth,
+        birth       = animation_birth,
     }
     local edit_anim = edit_anims[eid]
     
-    local animations = world[eid].animation
+    local animations = get_runtime_animations(eid)
+    
     local parentNode = hierarchy:get_node(world[eid].parent)
     for key, anim in pairs(animations) do
         if not anim_clips[key] then
@@ -1340,7 +1383,7 @@ local function construct_edit_animations(eid)
         end
         
         for _, child in ipairs(parentNode.children) do
-            local handle = world[child.eid].animation
+            local handle = get_runtime_animations(child.eid)
             if handle and handle._handle == animations._handle then
                 if not find_index(anim_group_eid[anim], child.eid)  then
                     anim_group_eid[anim][#anim_group_eid[anim] + 1] = child.eid
@@ -1355,12 +1398,16 @@ local function construct_edit_animations(eid)
 end
 
 function m.bind(eid)
-    if not eid or not world[eid] or not world[eid].animation then return end
-    if current_eid ~= eid then
-        current_eid = eid
-    end
-    if not edit_anims[eid] then
-        construct_edit_animations(eid)
+    for e in world.w:select "eid:in animation:in" do
+		if e.eid == eid then
+            if current_eid ~= eid then
+                current_eid = eid
+            end
+            if not edit_anims[eid] then
+                construct_edit_animations(eid)
+            end
+            return
+        end
     end
 end
 

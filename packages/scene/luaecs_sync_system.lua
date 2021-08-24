@@ -80,6 +80,9 @@ function s:luaecs_sync()
 				data.skeleton = e.skeleton
 				data.pose_result = false
 				data._animation = {}
+				data.anim_clips = {}
+				data.keyframe_events = {}
+				data.joint_list = {}
 				data.skinning = {}
 				data.skinning_type = "GPU"
 				data.material_setting = { skinning = "GPU"}

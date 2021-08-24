@@ -211,8 +211,8 @@ function m.clear()
 end
 
 function m.on_remove_light(eid)
-    if not m.billboard[eid] then return end
-    world:remove_entity(m.billboard[eid])
+    --if not m.billboard[eid] then return end
+    --world:remove_entity(m.billboard[eid])
     m.billboard[eid] = nil
     m.current_light = nil
     m.show(false)
