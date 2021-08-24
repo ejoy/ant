@@ -1,5 +1,6 @@
 #pragma once
 #include <limits>
+#include <cstdint>
 
 const float Pi = 3.141592654f;
 const float Pi2 = 6.283185307f;

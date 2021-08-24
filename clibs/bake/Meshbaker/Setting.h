@@ -3,6 +3,18 @@
 #include <cstdint>
 #include "glm/glm.hpp"
 
+enum class SampleModes
+{
+    Random = 0,
+    Stratified = 1,
+    Hammersley = 2,
+    UniformGrid = 3,
+    CMJ = 4,
+
+    NumValues
+};
+
+
 enum class BakeModes : uint8_t
 {
     Diffuse = 0,
@@ -40,7 +52,10 @@ namespace Setting{
     extern SolveModes SolveMode;
     extern bool EnableAlbedoMaps;
     extern bool EnableSun;
+    extern float SunSize;
     extern glm::vec3 SunDirection;
+
+    extern bool EnableAreaLightShadows;
 
     glm::vec3 SunLuminance();
     glm::vec3 SunIlluminance();

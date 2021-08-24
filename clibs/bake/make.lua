@@ -12,6 +12,8 @@ lm:source_set "source_Meshbaker"{
         "Meshbaker/Graphics/Sampling.cpp",
         "Meshbaker/Graphics/SH.cpp",
         "Meshbaker/Graphics/Textures.cpp",
+        "Meshbaker/Graphics/Spectrum.cpp",
+        "Meshbaker/3rd/HosekSky/ArHosekSkyModel.cpp",
         "Meshbaker/SG.cpp",
         "Meshbaker/PathTracer.cpp",
         --"Meshbaker/Rasterizer.cpp",

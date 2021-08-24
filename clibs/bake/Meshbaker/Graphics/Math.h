@@ -1,5 +1,6 @@
 #pragma once 
 #include "glm/glm.hpp"
+#include "glm/gtx/compatibility.hpp"
 #include <random>
 
 namespace Graphics {
@@ -34,4 +35,8 @@ private:
     std::mt19937 engine;
     std::uniform_real_distribution<float> distribution;
 };
+
+inline float Saturate(float v){
+    return glm::saturate<float, glm::qualifier::defaultp>(v);
+}
 }

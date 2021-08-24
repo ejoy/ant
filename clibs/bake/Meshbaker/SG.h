@@ -12,6 +12,7 @@
 
 #include "glm/glm.hpp"
 #include "Graphics/Constants.h"
+#include "Graphics/Math.h"
 // SphericalGaussian(dir) := Amplitude * exp(Sharpness * (dot(Axis, Direction) - 1.0f))
 struct SG
 {
@@ -80,7 +81,7 @@ inline glm::vec3 SGIrradianceFitted(const SG& lightingLobe, const glm::vec3& nor
 
     float n = x0 + x1;
 
-    float y = (std::abs(x0) <= x1) ? n * n / x : glm::clamp(muDotN, 0.f, 1.f);
+    float y = (std::abs(x0) <= x1) ? n * n / x : Graphics::Saturate(muDotN);
 
     float normalizedIrradiance = scale * y + bias;
 

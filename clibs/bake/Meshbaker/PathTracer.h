@@ -11,7 +11,10 @@
 #pragma once
 
 #include "glm/glm.hpp"
+#include "Graphics/Math.h"
 #include "Graphics/Textures.h"
+#include "Setting.h"
+
 #include "3rd/Embree-2.8/include/embree2/rtcore.h"
 #include "3rd/Embree-2.8/include/embree2/rtcore_ray.h"
 #include <vector>
@@ -35,10 +38,10 @@ struct BVHData
     std::vector<glm::u32vec4> Triangles;
     std::vector<Vertex> Vertices;
     std::vector<uint16_t> MaterialIndices;
-    std::vector<TextureData<glm::u8vec4>> MaterialDiffuseMaps;
-    std::vector<TextureData<glm::u8vec4>> MaterialNormalMaps;
-    std::vector<TextureData<glm::u8vec4>> MaterialRoughnessMaps;
-    std::vector<TextureData<glm::u8vec4>> MaterialMetallicMaps;
+    std::vector<Graphics::TextureData<glm::u8vec4>> MaterialDiffuseMaps;
+    std::vector<Graphics::TextureData<glm::u8vec4>> MaterialNormalMaps;
+    std::vector<Graphics::TextureData<glm::u8vec4>> MaterialRoughnessMaps;
+    std::vector<Graphics::TextureData<glm::u8vec4>> MaterialMetallicMaps;
 
     ~BVHData()
     {
@@ -86,7 +89,7 @@ struct EmbreeRay : public RTCRay
     }
 };
 
-StaticAssert_(sizeof(EmbreeRay) == sizeof(RTCRay));
+static_assert(sizeof(EmbreeRay) == sizeof(RTCRay), "EmbreeRay not match RTCRay");
 
 enum class IntegrationTypes
 {
@@ -179,7 +182,7 @@ struct IntegrationSampleSet
 
 // Generates a full list of sample points for all integration types
 void GenerateIntegrationSamples(IntegrationSamples& samples, uint64_t sqrtNumSamples, uint64_t tileSizeX, uint64_t tileSizeY,
-                                SampleModes sampleMode, uint64_t numIntegrationTypes, Random& rng);
+                                SampleModes sampleMode, uint64_t numIntegrationTypes, Graphics::Random& rng);
 
 // Samples the spherical area light using a set of 2D sample points
 glm::vec3 SampleAreaLight(const glm::vec3& position, const glm::vec3& normal, RTCScene scene,
@@ -210,10 +213,10 @@ struct PathTracerParams
     float RayLen = 0.0f;
     const BVHData* SceneBVH = nullptr;
     const IntegrationSampleSet* SampleSet = nullptr;
-    const SkyCache* SkyCache = nullptr;
-    const TextureData<Half4>* EnvMaps = nullptr;
+    //const SkyCache* SkyCache = nullptr;
+    //const TextureData<Half4>* EnvMaps = nullptr;
 };
 
 // Returns the incoming radiance along the ray specified by "RayDir", computed using unidirectional
 // path tracing
-glm::vec3 PathTrace(const PathTracerParams& params, Random& randomGenerator, float& illuminance, bool& hitSky);
+glm::vec3 PathTrace(const PathTracerParams& params, Graphics::Random& randomGenerator, float& illuminance, bool& hitSky);

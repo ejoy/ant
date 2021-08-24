@@ -62,8 +62,8 @@ template<typename T> T BarycentricLerp(const T& v0, const T& v1, const T& v2, fl
 // Interpolates triangle vertex values using the barycentric coordinates from a BVH hit result
 template<typename T> T TriangleLerp(const EmbreeRay& ray, const BVHData& bvhData, const std::vector<T>& vertexData)
 {
-    const uint64 triangleIdx = ray.primID;
-    const Uint3& triangle = bvhData.Triangles[triangleIdx];
+    const uint64_t triangleIdx = ray.primID;
+    const auto& triangle = bvhData.Triangles[triangleIdx];
     const T& v0 = vertexData[triangle.x];
     const T& v1 = vertexData[triangle.y];
     const T& v2 = vertexData[triangle.z];
@@ -74,10 +74,10 @@ template<typename T> T TriangleLerp(const EmbreeRay& ray, const BVHData& bvhData
 // Returns the direct sun radiance for a direction on the skydome
 static glm::vec3 SampleSun(glm::vec3 sampleDir)
 {
-    glm::vec3 res = 0.0f;
+    glm::vec3 res(0.0f);
     if(Setting::EnableSun)
     {
-        float cosSunAngularRadius = std::cos(DegToRad(Setting::SunSize));
+        float cosSunAngularRadius = std::cos(glm::radians(Setting::SunSize));
         glm::vec3 sunDir = glm::normalize(Setting::SunDirection);
         float cosGamma = glm::dot(sunDir, sampleDir);
         if(cosGamma >= cosSunAngularRadius)
@@ -91,13 +91,13 @@ static glm::vec3 SampleSun(glm::vec3 sampleDir)
 static bool IsTriangleBackFacing(const EmbreeRay& ray, const BVHData& bvhData)
 {
     // Compute the triangle normal
-    const uint64 triangleIdx = ray.primID;
-    const Uint3& triangle = bvhData.Triangles[triangleIdx];
+    const uint64_t triangleIdx = ray.primID;
+    const auto& triangle = bvhData.Triangles[triangleIdx];
     const glm::vec3& v0 = bvhData.Vertices[triangle.x].Position;
     const glm::vec3& v1 = bvhData.Vertices[triangle.y].Position;
     const glm::vec3& v2 = bvhData.Vertices[triangle.z].Position;
 
-    glm::vec3 triNml = glm::normalize(glm::vec3::Cross(v2 - v0, v1 - v0));
+    glm::vec3 triNml = glm::normalize(glm::cross(v2 - v0, v1 - v0));
     return glm::dot(triNml, ray.Direction()) <= 0.0f;
 }
 
@@ -120,8 +120,8 @@ static glm::vec3 SampleSphericalAreaLight(const glm::vec3& position, const glm::
     const float radius2 = lightRadius * lightRadius;
     const float invPDF = 2.0f * Pi * radius2;
 
-    glm::vec3 result = 0.0f;
-    glm::vec3 areaLightIrradiance = 0.0f;
+    glm::vec3 result(0.0f);
+    glm::vec3 areaLightIrradiance(0.0f);
 
     float r = lightRadius;
     float x = u1;
@@ -143,14 +143,14 @@ static glm::vec3 SampleSphericalAreaLight(const glm::vec3& position, const glm::
     }
 
     float areaNDotL = std::abs(glm::dot(sampleDir, glm::normalize(samplePos - lightPos)));
-    float sDotN = Saturate(glm::dot(sampleDir, normal));
+    float sDotN = Graphics::Saturate(glm::dot(sampleDir, normal));
 
     float invRSqr = 1.0f / (sampleDirLen * sampleDirLen);
 
     float attenuation = areaNDotL * invRSqr;
     if(attenuation && visible)
     {
-        glm::vec3 sampleIrradiance = Saturate(glm::dot(normal, sampleDir)) * lightColor * attenuation;
+        glm::vec3 sampleIrradiance = Graphics::Saturate(glm::dot(normal, sampleDir)) * lightColor * attenuation;
         glm::vec3 sample = CalcLighting(normal, sampleIrradiance, sampleDir, diffuseAlbedo, position,
                                      cameraPos, roughness, includeSpecular, specAlbedo);
         result = sample * invPDF;
@@ -207,17 +207,17 @@ glm::vec3 SampleSunLight(const glm::vec3& position, const glm::vec3& normal, RTC
 }
 
 // Generates a full list of sample points for all integration types
-void GenerateIntegrationSamples(IntegrationSamples& samples, uint64 sqrtNumSamples, uint64 tileSizeX, uint64 tileSizeY,
-                                SampleModes sampleMode, uint64 numIntegrationTypes, Random& rng)
+void GenerateIntegrationSamples(IntegrationSamples& samples, uint64_t sqrtNumSamples, uint64_t tileSizeX, uint64_t tileSizeY,
+                                SampleModes sampleMode, uint64_t numIntegrationTypes, Random& rng)
 {
-    const uint64 numSamplesPerPixel = sqrtNumSamples * sqrtNumSamples;
-    const uint64 numTilePixels = tileSizeX * tileSizeY;
-    const uint64 numSamplesPerTile = numSamplesPerPixel * numTilePixels;
+    const uint64_t numSamplesPerPixel = sqrtNumSamples * sqrtNumSamples;
+    const uint64_t numTilePixels = tileSizeX * tileSizeY;
+    const uint64_t numSamplesPerTile = numSamplesPerPixel * numTilePixels;
     samples.Init(numTilePixels, numIntegrationTypes, numSamplesPerPixel);
 
-    for(uint64 pixelIdx = 0; pixelIdx < numTilePixels; ++pixelIdx)
+    for(uint64_t pixelIdx = 0; pixelIdx < numTilePixels; ++pixelIdx)
     {
-        for(uint64 typeIdx = 0; typeIdx < numIntegrationTypes; ++typeIdx)
+        for(uint64_t typeIdx = 0; typeIdx < numIntegrationTypes; ++typeIdx)
         {
             Float2* typeSamples = samples.GetSamplesForType(pixelIdx, typeIdx);
             if(sampleMode == SampleModes::Stratified)
@@ -250,7 +250,7 @@ void GenerateIntegrationSamples(IntegrationSamples& samples, uint64 sqrtNumSampl
 
 // Returns the incoming radiance along the ray specified by params.RayDir, computed using unidirectional
 // path tracing
-glm::vec3 PathTrace(const PathTracerParams& params, Random& randomGenerator, float& illuminance, bool& hitSky)
+glm::vec3 PathTrace(const PathTracerParams& params, Graphics::Random& randomGenerator, float& illuminance, bool& hitSky)
 {
     // Initialize to the view parameters, must be reset every loop iteration
     EmbreeRay ray(params.RayStart, params.RayDir, 0.0f, params.RayLen);
@@ -325,7 +325,7 @@ glm::vec3 PathTrace(const PathTracerParams& params, Random& randomGenerator, flo
             hitSurface.Bitangent = glm::normalize(hitSurface.Bitangent);
 
             // Look up the material data
-            const uint64 materialIdx = bvh.MaterialIndices[ray.primID];
+            const uint64_t materialIdx = bvh.MaterialIndices[ray.primID];
 
             glm::vec3 albedo = 1.0f;
             if(Setting::EnableAlbedoMaps && !indirectDiffuseOnly)
@@ -473,29 +473,30 @@ glm::vec3 PathTrace(const PathTracerParams& params, Random& randomGenerator, flo
         else {
             // We hit the sky, so we'll sample the sky radiance and then bail out
             hitSky = true;
+            assert(false && "need implement");
 
-            if (Setting::SkyMode == SkyModes::Procedural)
-            {
-                glm::vec3 skyRadiance = Skybox::SampleSky(*params.SkyCache, rayDir);
-                if (pathLength == 1 && params.EnableDirectSun)
-                    skyRadiance += SampleSun(rayDir);
-                radiance += skyRadiance * throughput;
-                irradiance += skyRadiance * irrThroughput;
-            }
-            else if (Setting::SkyMode == SkyModes::Simple)
-            {
-                glm::vec3 skyRadiance = Setting::SkyColor.Value() * FP16Scale;
-                if (pathLength == 1 && params.EnableDirectSun)
-                    skyRadiance += SampleSun(rayDir);
-                radiance += skyRadiance * throughput;
-                irradiance += skyRadiance * irrThroughput;
-            }
-            else if (Setting::SkyMode >= Setting::CubeMapStart)
-            {
-                glm::vec3 cubeMapRadiance = SampleCubemap(rayDir, params.EnvMaps[Setting::SkyMode - Setting::CubeMapStart]);
-                radiance += cubeMapRadiance * throughput;
-                irradiance += cubeMapRadiance * irrThroughput;
-            }
+            // if (Setting::SkyMode == SkyModes::Procedural)
+            // {
+            //     glm::vec3 skyRadiance = Skybox::SampleSky(*params.SkyCache, rayDir);
+            //     if (pathLength == 1 && params.EnableDirectSun)
+            //         skyRadiance += SampleSun(rayDir);
+            //     radiance += skyRadiance * throughput;
+            //     irradiance += skyRadiance * irrThroughput;
+            // }
+            // else if (Setting::SkyMode == SkyModes::Simple)
+            // {
+            //     glm::vec3 skyRadiance = Setting::SkyColor.Value() * FP16Scale;
+            //     if (pathLength == 1 && params.EnableDirectSun)
+            //         skyRadiance += SampleSun(rayDir);
+            //     radiance += skyRadiance * throughput;
+            //     irradiance += skyRadiance * irrThroughput;
+            // }
+            // else if (Setting::SkyMode >= Setting::CubeMapStart)
+            // {
+            //     glm::vec3 cubeMapRadiance = SampleCubemap(rayDir, params.EnvMaps[Setting::SkyMode - Setting::CubeMapStart]);
+            //     radiance += cubeMapRadiance * throughput;
+            //     irradiance += cubeMapRadiance * irrThroughput;
+            // }
         }
 
         if(continueTracing == false)

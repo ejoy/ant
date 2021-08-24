@@ -8,16 +8,17 @@
 //=================================================================================================
 
 #include "glm/glm.hpp"
+#include "Graphics/Constants.h"
 namespace Graphics
 {
 
 // Calculates the Fresnel factor using Schlick's approximation
 inline glm::vec3 Fresnel(glm::vec3 specAlbedo, glm::vec3 h, glm::vec3 l)
 {
-    glm::vec3 fresnel = specAlbedo + (glm::vec3(1.0f) - specAlbedo) * std::pow((1.0f - Saturate(glm::vec3::Dot(l, h))), 5.0f);
+    glm::vec3 fresnel = specAlbedo + (glm::vec3(1.0f) - specAlbedo) * std::pow((1.0f - Graphics::Saturate(glm::dot(l, h))), 5.0f);
 
     // Fade out spec entirely when lower than 0.1% albedo
-    fresnel *= Saturate(glm::vec3::Dot(specAlbedo, 333.0f));
+    fresnel *= Graphics::Saturate(glm::dot(specAlbedo, glm::vec3(333.0f)));
 
     return fresnel;
 }
@@ -25,10 +26,10 @@ inline glm::vec3 Fresnel(glm::vec3 specAlbedo, glm::vec3 h, glm::vec3 l)
 // Calculates the Fresnel factor using Schlick's approximation
 inline glm::vec3 Fresnel(glm::vec3 specAlbedo, glm::vec3 fresnelAlbedo, glm::vec3 h, glm::vec3 l)
 {
-    glm::vec3 fresnel = specAlbedo + (fresnelAlbedo - specAlbedo) * std::pow((1.0f - Saturate(glm::vec3::Dot(l, h))), 5.0f);
+    glm::vec3 fresnel = specAlbedo + (fresnelAlbedo - specAlbedo) * std::pow((1.0f - Graphics::Saturate(glm::dot(l, h))), 5.0f);
 
     // Fade out spec entirely when lower than 0.1% albedo
-    fresnel *= Saturate(glm::vec3::Dot(specAlbedo, 333.0f));
+    fresnel *= Graphics::Saturate(glm::dot(specAlbedo, glm::vec3(333.0f)));
 
     return fresnel;
 }
@@ -36,7 +37,7 @@ inline glm::vec3 Fresnel(glm::vec3 specAlbedo, glm::vec3 fresnelAlbedo, glm::vec
 // Helper for computing the GGX visibility term
 inline float GGX_V1(float m2, float nDotX)
 {
-    return 1.0f / (nDotX + sqrt(m2 + (1 - m2) * nDotX * nDotX));
+    return 1.0f / (nDotX + std::sqrt(m2 + (1 - m2) * nDotX * nDotX));
 }
 
 // Computes the specular term using a GGX microfacet distribution, with a matching
@@ -45,15 +46,16 @@ inline float GGX_V1(float m2, float nDotX)
 // l is the direction to the light source, and specAlbedo is the RGB specular albedo
 inline float GGX_Specular(float m, const glm::vec3& n, const glm::vec3& h, const glm::vec3& v, const glm::vec3& l)
 {
-    float nDotH = Saturate(glm::vec3::Dot(n, h));
-    float nDotL = Saturate(glm::vec3::Dot(n, l));
-    float nDotV = Saturate(glm::vec3::Dot(n, v));
+    float nDotH = Graphics::Saturate(glm::dot(n, h));
+    float nDotL = Graphics::Saturate(glm::dot(n, l));
+    float nDotV = Graphics::Saturate(glm::dot(n, v));
 
     float nDotH2 = nDotH * nDotH;
     float m2 = m * m;
 
     // Calculate the distribution term
-    float d = m2 / (Pi * Square(nDotH * nDotH * (m2 - 1) + 1));
+    float vv = nDotH * nDotH * (m2 - 1) + 1;
+    float d = m2 / (Pi * vv * vv);
 
     // Calculate the matching visibility term
     float v1i = GGX_V1(m2, nDotL);
