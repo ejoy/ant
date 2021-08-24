@@ -1,0 +1,22 @@
+## Exclusions for externals
+
+![Dd]ebug/
+![Rr]elease/
+!x64/
+!build/
+
+![Bb]in/
+![Oo]bj/
+!*.exe
+!*.dll
+!*.pdb
+![Ll]ib/
+![Ii]nclude/
+
+boost157/
+sun/source/x64/
+
+*.sdf
+*.opensdf
+*.suo
+*.vcproj.user

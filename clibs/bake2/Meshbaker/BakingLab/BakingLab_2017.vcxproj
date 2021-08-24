@@ -1,0 +1,258 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{1D9C887B-E727-438B-8977-A0E7363B1FC6}</ProjectGuid>
+    <RootNamespace>SampleTest</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectName>BakingLab</ProjectName>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\SampleFramework11\v1.02\SampleFramework11.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\SampleFramework11\v1.02\SampleFramework11.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30128.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Configuration)\$(Platform)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Configuration)\$(Platform)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IncludePath)</IncludePath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(LibraryPath)</LibraryPath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ExecutablePath>$(ExecutablePath)</ExecutablePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>Debug_;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
+      <FloatingPointModel>Fast</FloatingPointModel>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>Release_;WIN32;NDEBUG;_WINDOWS;_ITERATOR_DEBUG_LEVEL=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
+      <FloatingPointModel>Fast</FloatingPointModel>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\SampleFramework11\v1.02\App.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Assert.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\FileIO.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Graphics\Camera.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Graphics\DDSTextureLoader.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Graphics\DeviceManager.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Graphics\DeviceStates.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Graphics\DXErr.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Graphics\GraphicsTypes.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Graphics\Model.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Graphics\PostProcessorBase.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Graphics\Profiler.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Graphics\Sampling.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Graphics\SDKMesh.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Graphics\SH.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Graphics\ShaderCompilation.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Graphics\Skybox.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Graphics\Spectrum.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Graphics\SpriteFont.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Graphics\SpriteRenderer.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Graphics\Textures.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Graphics\WICTextureLoader.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\HosekSky\ArHosekSkyModel.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Input.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\MurmurHash.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\PCH.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\SampleFramework11\v1.02\Settings.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\SF11_Math.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Timer.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\TinyEXR.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\TwHelper.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Utility.cpp" />
+    <ClCompile Include="..\SampleFramework11\v1.02\Window.cpp" />
+    <ClCompile Include="MeshBaker.cpp" />
+    <ClCompile Include="MeshRenderer.cpp" />
+    <ClCompile Include="AppSettings.cpp" />
+    <ClCompile Include="BakingLab.cpp" />
+    <ClCompile Include="PathTracer.cpp" />
+    <ClCompile Include="PostProcessor.cpp" />
+    <ClCompile Include="SG.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\SampleFramework11\v1.02\App.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Assert.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Containers.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Exceptions.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\FileIO.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Graphics\BRDF.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Graphics\Camera.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Graphics\DDSTextureLoader.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Graphics\DeviceManager.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Graphics\DeviceStates.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Graphics\DXErr.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Graphics\Filtering.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Graphics\GraphicsTypes.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Graphics\Model.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Graphics\PostProcessorBase.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Graphics\Profiler.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Graphics\Sampling.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Graphics\SDKMesh.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Graphics\SH.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Graphics\ShaderCompilation.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Graphics\Skybox.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Graphics\Spectrum.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Graphics\SpriteFont.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Graphics\SpriteRenderer.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Graphics\Textures.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Graphics\WICTextureLoader.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\HosekSky\ArHosekSkyModel.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Input.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\InterfacePointers.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\MurmurHash.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\PCH.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Serialization.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Settings.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\SF11_Math.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Timer.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\TinyEXR.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\TwHelper.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Utility.h" />
+    <ClInclude Include="..\SampleFramework11\v1.02\Window.h" />
+    <ClInclude Include="AppPCH.h" />
+    <ClInclude Include="MeshBaker.h" />
+    <ClInclude Include="MeshRenderer.h" />
+    <ClInclude Include="AppSettings.h" />
+    <ClInclude Include="PathTracer.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="PostProcessor.h" />
+    <ClInclude Include="BakingLab.h" />
+    <ClInclude Include="SG.h" />
+    <ClInclude Include="SharedConstants.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="AppSettings.cs">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)\SettingsCompiler.exe %(FullPath)</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling settings and generating C++ code</Message>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)\%(Filename).deps</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)\SettingsCompiler.exe %(FullPath)</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling settings and generating C++ code</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)\%(Filename).deps</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+    </CustomBuild>
+    <CustomBuild Include="..\Externals\AntTweakBar\bin\AntTweakBar64.dll">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="..\Externals\Assimp-3.1.1\bin\assimp.dll">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="..\Externals\d3dcompiler_47.dll">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="..\Externals\Embree-2.8\lib\embree.dll">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="..\Externals\Embree-2.8\lib\tbb.dll">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="..\Externals\Embree-2.8\lib\tbbmalloc.dll">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <None Include="Icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="BakingLab.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="AreaLight.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </None>
+    <None Include="BRDF.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </None>
+    <None Include="Mesh.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </None>
+    <None Include="SG.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

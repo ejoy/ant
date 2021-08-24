@@ -1,0 +1,29 @@
+{
+    "folders":
+    [
+        {
+            "path": "/",
+            "name": "Local",
+            "file_exclude_patterns": ["*.sln", "*.vcxproj", "*.filters", "*.rc", "*.props", "*.user", "*.opensdf", "*.ico", "*.opendb"],
+            "folder_exclude_patterns": ["Debug", "Release", "bin", "obj", "Properties", "ipch", "x64", "ShaderCache"]
+        },
+        {
+            "path": "../SampleFramework11/v1.02/",
+            "name": "SampleFramework",
+            "file_exclude_patterns": ["*.sln", "*.vcxproj", "*.filters", "*.rc", "*.props", "*.user", "*.opensdf", "*.ico"],
+            "folder_exclude_patterns": ["Debug", "Release", "bin", "obj", "Properties", "ipch", "x64"]
+        },
+        {
+            "path": "../Externals/",
+            "name": "Externals",
+            "file_exclude_patterns": ["*.sln", "*.vcxproj", "*.filters", "*.rc", "*.props", "*.user", "*.opensdf", "*.ico", "*.lib", "*.dll", "*.pdb"],
+            "folder_exclude_patterns": ["Debug", "Release", "x64", "obj", "Properties", "ipch", "x64", "Lib*", "bin"]
+        }
+    ],
+    "settings":
+    {
+        "tab_size": 4,
+        "translate_tabs_to_spaces": true,
+        "trim_trailing_white_space_on_save": true
+    }
+}

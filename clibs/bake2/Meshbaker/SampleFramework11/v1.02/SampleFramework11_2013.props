@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <SampleFrameworkDir>../SampleFramework11/v1.02/</SampleFrameworkDir>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LibraryPath>$(ProjectDir)..\Externals\HosekSky\Lib 2013;$(ProjectDir)..\Externals\DirectXTex Aug 2015\Lib 2013\$(Configuration);$(ProjectDir)..\Externals\Assimp-3.1.1\lib;$(ProjectDir)..\Externals\AntTweakBar\lib;$(Configuration);$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)$(SampleFrameworkDir);$(ProjectDir)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);SampleFrameworkDir_=L"$(SampleFrameworkDir)"</PreprocessorDefinitions>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <WarningLevel>Level3</WarningLevel>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <PostBuildEvent>
+      <Message>
+      </Message>
+    </PostBuildEvent>
+    <CustomBuild>
+      <Command>copy %(FullPath) $(SolutionDir)%(Filename)%(Extension)</Command>
+    </CustomBuild>
+    <CustomBuild>
+      <Message>Copying external DLL</Message>
+    </CustomBuild>
+    <CustomBuild>
+      <Outputs>$(ProjectDir)%(Filename)%(Extension)</Outputs>
+    </CustomBuild>
+    <CustomBuild>
+      <LinkObjects>false</LinkObjects>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="SampleFrameworkDir">
+      <Value>$(SampleFrameworkDir)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+  </ItemGroup>
+</Project>

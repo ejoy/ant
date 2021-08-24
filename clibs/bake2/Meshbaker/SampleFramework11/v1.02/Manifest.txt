@@ -1,0 +1,26 @@
+[Code]
+Graphics\
+SettingsCompiler\
+|SettingsCompiler\bin\
+|SettingsCompiler\obj\
+SettingsCompilerAttributes\
+|SettingsCompilerAttributes\bin\
+|SettingsCompilerAttributes\obj\
+
+[Local]
+Shaders\
+
+[Content]
+
+Textures\Default.dds
+Textures\DefaultNormalMap.dds
+Textures\DefaultRoughness.dds
+Textures\DefaultBlack.dds
+
+[Externals]
+
+AntTweakBar\
+Assimp-3.1.1\
+DirectXTex Aug 2015\
+HosekSky\
+d3dcompiler_47.dll

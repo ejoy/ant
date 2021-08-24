@@ -1,0 +1,38 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BakingLab_2013", "BakingLab_2013.vcxproj", "{1D9C887B-E727-438B-8977-A0E7363B1FC6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A01DD775-61A4-42F1-9B2A-772E50456A68} = {A01DD775-61A4-42F1-9B2A-772E50456A68}
+		{C61F717F-FF92-4D36-930E-1F49C198CBEE} = {C61F717F-FF92-4D36-930E-1F49C198CBEE}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SettingsCompiler", "..\SampleFramework11\v1.02\SettingsCompiler\SettingsCompiler.csproj", "{A01DD775-61A4-42F1-9B2A-772E50456A68}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SettingsCompilerAttributes", "..\SampleFramework11\v1.02\SettingsCompilerAttributes\SettingsCompilerAttributes.csproj", "{C61F717F-FF92-4D36-930E-1F49C198CBEE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1D9C887B-E727-438B-8977-A0E7363B1FC6}.Debug|x64.ActiveCfg = Debug|x64
+		{1D9C887B-E727-438B-8977-A0E7363B1FC6}.Debug|x64.Build.0 = Debug|x64
+		{1D9C887B-E727-438B-8977-A0E7363B1FC6}.Release|x64.ActiveCfg = Release|x64
+		{1D9C887B-E727-438B-8977-A0E7363B1FC6}.Release|x64.Build.0 = Release|x64
+		{A01DD775-61A4-42F1-9B2A-772E50456A68}.Debug|x64.ActiveCfg = Debug|x64
+		{A01DD775-61A4-42F1-9B2A-772E50456A68}.Debug|x64.Build.0 = Debug|x64
+		{A01DD775-61A4-42F1-9B2A-772E50456A68}.Release|x64.ActiveCfg = Release|x64
+		{A01DD775-61A4-42F1-9B2A-772E50456A68}.Release|x64.Build.0 = Release|x64
+		{C61F717F-FF92-4D36-930E-1F49C198CBEE}.Debug|x64.ActiveCfg = Debug|x64
+		{C61F717F-FF92-4D36-930E-1F49C198CBEE}.Debug|x64.Build.0 = Debug|x64
+		{C61F717F-FF92-4D36-930E-1F49C198CBEE}.Release|x64.ActiveCfg = Release|x64
+		{C61F717F-FF92-4D36-930E-1F49C198CBEE}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
