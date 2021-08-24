@@ -921,7 +921,7 @@ static void BuildBVH(const Model& model, BVHData& bvhData, ID3D11Device* d3dDevi
     for(uint64 i = 0; i < model.Meshes().size(); ++i)
     {
         const Mesh& mesh = model.Meshes()[i];
-        Assert_(mesh.VertexStride() == sizeof(Vertex));
+        assert(mesh.VertexStride() == sizeof(Vertex));
         totalNumVertices += mesh.NumVertices();
         totalNumTriangles += mesh.NumIndices() / 3;
     }
@@ -988,7 +988,7 @@ static void BuildBVH(const Model& model, BVHData& bvhData, ID3D11Device* d3dDevi
     rtcCommit(bvhData.Scene);
 
     RTCError embreeError = rtcDeviceGetError(device);
-    Assert_(embreeError == RTC_NO_ERROR);
+    assert(embreeError == RTC_NO_ERROR);
     if(embreeError != RTC_NO_ERROR)
         throw Exception(L"Failed to build embree scene!");
 
@@ -1536,7 +1536,7 @@ void MeshBaker::Shutdown()
 MeshBakerStatus MeshBaker::Update(const Camera& camera, uint32 screenWidth, uint32 screenHeight,
                                   ID3D11DeviceContext* deviceContext, const Model* currentModel)
 {
-    Assert_(initialized);
+    assert(initialized);
 
     const bool32 showGroundTruth = AppSettings::ShowGroundTruth;
 
@@ -1899,7 +1899,7 @@ void MeshBaker::KillBakeThreads()
     if(bakeThreadsSuspended)
         return;
 
-    Assert_(killBakeThreads == false);
+    assert(killBakeThreads == false);
     killBakeThreads = true;
     for(uint64 i = 0; i < bakeThreads.size(); ++i)
     {
@@ -1918,7 +1918,7 @@ void MeshBaker::StartBakeThreads()
     if(bakeThreadsSuspended == false)
         return;
 
-    Assert_(killBakeThreads == false);
+    assert(killBakeThreads == false);
     if(bakeThreads.size() > 0)
         return;
 
@@ -1971,7 +1971,7 @@ void MeshBaker::KillRenderThreads()
     if(renderThreadsSuspended)
         return;
 
-    Assert_(killRenderThreads == false);
+    assert(killRenderThreads == false);
     killRenderThreads = true;
     for(uint64 i = 0; i < renderThreads.size(); ++i)
     {
@@ -1990,7 +1990,7 @@ void MeshBaker::StartRenderThreads()
     if(renderThreadsSuspended == false)
         return;
 
-    Assert_(killRenderThreads == false);
+    assert(killRenderThreads == false);
     if(renderThreads.size() > 0)
         return;
 

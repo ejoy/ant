@@ -284,6 +284,8 @@ struct Triangle
 	uint32_t baseIndex;
 	lm_vec3 p[3];
 	lm_vec3 n[3];
+	lm_vec3 t[3];
+	lm_vec3 b[3];
 	lm_vec2 uv[3];
 };
 
