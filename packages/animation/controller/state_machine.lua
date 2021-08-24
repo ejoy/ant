@@ -216,7 +216,7 @@ function iani.play_clip(eid, name, loop, manual)
 end
 
 function iani.play_group(eid, name, loop, manual)
-	for e in world.w:select "eid:in animation:in anim_clips:in" do
+	for e in world.w:select "eid:in animation:in _animation:in anim_clips:in" do
 		if e.eid == eid then
 			local real_clips
 			local group = find_clip_or_group(e.anim_clips, name, true)
@@ -237,18 +237,20 @@ function iani.play_group(eid, name, loop, manual)
 end
 
 function iani.get_duration(eid)
-	for e in world.w:select "eid:in _animation:in" do
+	for e in world.w:select "eid:in" do
 		if e.eid == eid then
+			world.w:sync("_animation:in", e)
 			return e._animation._current.animation._handle:duration()
 		end
 	end
 end
 
 function iani.get_clip_duration(eid, name)
-	for e in world.w:select "eid:in anim_clips:in" do
+	for e in world.w:select "eid:in" do
 		if e.eid == eid then
+			world.w:sync("anim_clips:in", e)
 			local clip = find_clip_or_group(e.anim_clips, name)
-			if not clip then return end
+			if not clip then return 0 end
 			return clip.range[2] - clip.range[1]
 		end
 	end
@@ -256,8 +258,9 @@ function iani.get_clip_duration(eid, name)
 end
 
 function iani.get_group_duration(eid, name)
-	for e in world.w:select "eid:in anim_clips:in" do
+	for e in world.w:select "eid:in" do
 		if e.eid == eid then
+			world.w:sync("anim_clips:in", e)
 			local group = find_clip_or_group(e.anim_clips, name, true)
 			if not group then return end
 			local d = 0.0
@@ -314,8 +317,9 @@ function iani.step(task, s_delta, absolute)
 end
 
 local function get_e(eid)
-	for e in world.w:select "eid:in _animation:in" do
+	for e in world.w:select "eid:in" do
 		if e.eid == eid then
+			world.w:sync("_animation:in", e)
 			return e
 		end
 	end
@@ -467,8 +471,9 @@ local function do_set_event(eid, anim, events)
 end
 
 function iani.get_collider(eid, anim, time)
-	for e in world.w:select "eid:in keyframe_events:in" do
+	for e in world.w:select "eid:in" do
 		if e.eid == eid then
+			world.w:sync("keyframe_events:in", e)
 			local events = e.keyframe_events[anim]
 			if not events then return end
 			local colliders
