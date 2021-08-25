@@ -18,7 +18,7 @@ struct light_info{
 
 #define LightType_Directional 0
 #define LightType_Point 1
-#define LightType_Spot 0
+#define LightType_Spot 2
 
 #define IS_DIRECTIONAL_LIGHT(_type) (_type==LightType_Directional)
 #define IS_POINT_LIGHT(_type)       (_type==LightType_Point)
@@ -33,7 +33,7 @@ float get_range_attenuation(float range, float distance)
 // https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_lights_punctual/README.md#inner-and-outer-cone-angles
 float get_spot_attenuation(vec3 pt2l, vec3 spotdir, float outer_cone, float inner_cone)
 {
-    float cosv = dot(normalize(spotdir), normalize(-pt2l));
+    float cosv = dot(normalize(spotdir), normalize(pt2l));
     return smoothstep(outer_cone, inner_cone, cosv);
 }
 
