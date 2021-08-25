@@ -19,7 +19,7 @@ local respath = fs.path(arg[2])
 if not fs.exists(respath) then
     error("invalid respaht: " .. respath:string())
 end
-local resfilename = respath:filename()
+
 if respath:equal_extension "glb" then
     --fix vscode debug bug
     respath = fs.path(respath:string() .. "|mesh.prefab")
@@ -118,5 +118,4 @@ for v in w:select "worldmat:in light:in" do
     output[#output+1] = e
 end
 
-local outfilename = fs.path(resfilename):replace_extension "txt":string()
-writefile(outputdir / outfilename, serialize.stringify(output))
+writefile(outputdir / output, serialize.stringify(output))
