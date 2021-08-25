@@ -3833,8 +3833,8 @@ luaopen_imgui(lua_State *L) {
 	luaL_Reg windows[] = {
 		{ "Begin", winBegin },
 		{ "End", winEnd },
-		{ "Begin", winBeginDisabled },
-		{ "End", winEndDisabled },
+		{ "BeginDisabled", winBeginDisabled },
+		{ "EndDisabled", winEndDisabled },
 		{ "BeginChild", winBeginChild },
 		{ "EndChild", winEndChild },
 		{ "BeginTabBar", winBeginTabBar },
