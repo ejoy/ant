@@ -112,9 +112,7 @@ end
 for v in w:select "worldmat:in light:in" do
     local e = to_srt(v.worldmat)
     e.light = v.light.name
-    for k, vv in pairs(v.light.value) do
-        e[k] = vv
-    end
+    e.lightdata = v.light.value
     output[#output+1] = e
 end
 
