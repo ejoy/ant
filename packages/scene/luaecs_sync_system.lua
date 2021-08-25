@@ -76,7 +76,10 @@ function s:luaecs_sync()
 			data.filter_material = {}
 			policy[#policy+1] = "ant.scene|render_object"
 			if hasAnimation(e) then
-				data.animation = e.animation
+				data.animation = {}
+				for k, v in pairs(e.animation) do
+					data.animation[k] = v
+				end
 				data.skeleton = e.skeleton
 				data.pose_result = false
 				data._animation = {}

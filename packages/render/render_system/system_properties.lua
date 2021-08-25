@@ -108,15 +108,13 @@ local function get_sky_entity()
 end
 
 local function main_camera_ref()
-	for v in w:select "main_queue camera_ref:in" do
-		return v.camera_ref
-	end
+	local v = w:singleton("main_queue", "camera_ref:in")
+	return v.camera_ref
 end
 
 local function main_render_target()
-	for v in w:select "main_queue render_target:in" do
-		return v.render_target
-	end
+	local v = w:singleton("main_queue", "render_target:in")
+	return v.render_target
 end
 
 local function update_cluster_render_properties(vr, near, far)

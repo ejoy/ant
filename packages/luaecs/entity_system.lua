@@ -1,5 +1,6 @@
 local ecs = ...
-local w = ecs.world.w
+local world = ecs.world
+local w = world.w
 
 local m = ecs.system "entity_system"
 
@@ -18,4 +19,5 @@ end
 
 function m:update_world()
     w:update()
+    world._frame = world._frame+ 1
 end
