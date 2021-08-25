@@ -6,6 +6,7 @@ local Backlist = {
     filewatch = true,
     imgui = true,
     subprocess = true,
+    bake = true,
 }
 
 local RuntimeModules = {}
