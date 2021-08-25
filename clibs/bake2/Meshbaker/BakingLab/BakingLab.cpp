@@ -469,7 +469,8 @@ static void GenerateEnvSpecularLookupTexture(ID3D11Device* device)
 }
 
 BakingLab::BakingLab() : App(L"Baking Lab", MAKEINTRESOURCEW(IDI_DEFAULT)),
-                         camera(16.0f / 9.0f, Pi_4 * 0.75f, NearClip, FarClip)
+                         camera(16.0f / 9.0f, Pi_4 * 0.75f, NearClip, FarClip),
+                         bakeOnly(true)
 {
     deviceManager.SetMinFeatureLevel(D3D_FEATURE_LEVEL_11_0);
 
@@ -492,6 +493,20 @@ void BakingLab::AfterReset()
     CreateRenderTargets();
 
     postProcessor.AfterReset(deviceManager.BackBufferWidth(), deviceManager.BackBufferHeight());
+}
+
+void BakingLab::MeshbakerInitialize(const Model* sceneModel)
+{
+    auto device = deviceManager.Device();
+    for(uint64 i = 0; i < AppSettings::NumCubeMaps; ++i)
+        envMaps[i] = LoadTexture(device, AppSettings::CubeMapPaths(i));
+
+    BakeInputData bakeInput;
+    bakeInput.SceneModel = sceneModel;
+    bakeInput.Device = device;
+    for(uint64 i = 0; i < AppSettings::NumCubeMaps; ++i)
+        bakeInput.EnvMaps[i] = envMaps[i];
+    meshBaker.Initialize(bakeInput);
 }
 
 void BakingLab::Initialize()
@@ -526,9 +541,6 @@ void BakingLab::Initialize()
 
     skybox.Initialize(device);
 
-    for(uint64 i = 0; i < AppSettings::NumCubeMaps; ++i)
-        envMaps[i] = LoadTexture(device, AppSettings::CubeMapPaths(i));
-
     // Load shaders
     for(uint32 msaaMode = 0; msaaMode < uint32(MSAAModes::NumValues); ++msaaMode)
     {
@@ -548,13 +560,7 @@ void BakingLab::Initialize()
     // Init the post processor
     postProcessor.Initialize(device);
 
-    BakeInputData bakeInput;
-    bakeInput.SceneModel = &currentModel;
-    bakeInput.Device = device;
-    for(uint64 i = 0; i < AppSettings::NumCubeMaps; ++i)
-        bakeInput.EnvMaps[i] = envMaps[i];
-    meshBaker.Initialize(bakeInput);
-
+    MeshbakerInitialize(&currentModel);
     // Camera setup
     AppSettings::UpdateHorizontalCoords();
 }
@@ -1144,51 +1150,23 @@ static void GenerateSHGGXProjectionTable()
 
 void BakingLab::Init()
 {
-   if(createConsole)
-    {
-        Win32Call(AllocConsole());
-        Win32Call(SetConsoleTitle(applicationName.c_str()));
-        FILE* consoleFile = nullptr;
-        freopen_s(&consoleFile, "CONOUT$", "wb", stdout);
-    }
-
-    window.SetClientArea(deviceManager.BackBufferWidth(), deviceManager.BackBufferHeight());
+    bakeOnly = true;
+    createConsole = false;
+    
     deviceManager.Initialize(window);
 
-    if(showWindow)
-        window.ShowWindow();
+    showWindow = false;
+    window.ShowWindow(showWindow);
 
     blendStates.Initialize(deviceManager.Device());
     rasterizerStates.Initialize(deviceManager.Device());
     depthStencilStates.Initialize(deviceManager.Device());
     samplerStates.Initialize(deviceManager.Device());
 
-    // Create a font + SpriteRenderer
-    font.Initialize(L"Arial", 18, SpriteFont::Regular, true, deviceManager.Device());
-    spriteRenderer.Initialize(deviceManager.Device());
-
-    Profiler::GlobalProfiler.Initialize(deviceManager.Device(), deviceManager.ImmediateContext());
-
-    window.RegisterMessageCallback(WM_SIZE, OnWindowResized, this);
-
-    // Initialize AntTweakBar
-    TwCall(TwInit(TW_DIRECT3D11, deviceManager.Device()));
-
-    // Create a tweak bar
-    tweakBar = TwNewBar("Settings");
-    std::string helpTextDefinition = MakeAnsiString(" GLOBAL help='%s' ", globalHelpText.c_str());
-    TwCall(TwDefine(helpTextDefinition.c_str()));
-    TwCall(TwDefine(" GLOBAL fontsize=3 "));
-
-    Settings.Initialize(tweakBar);
-
-    TwHelper::SetValuesWidth(Settings.TweakBar(), 120, false);
-
     AppSettings::Initialize(deviceManager.Device());
 
-    Initialize();
-
-    AfterReset();
+    AppSettings::CurrentScene.SetValue(Scenes(0));
+    MeshbakerInitialize(&sceneModels[AppSettings::CurrentScene]);
 }
 
 float BakingLab::BakeProcess()
@@ -1196,13 +1174,12 @@ float BakingLab::BakeProcess()
     timer.Update();
     Settings.Update();
 
-    CalculateFPS();
-
     AppSettings::Update();
 
-    Update(timer);
+    ID3D11DeviceContextPtr context = deviceManager.ImmediateContext();
 
-    UpdateShaders(deviceManager.Device());
+    meshbakerStatus = meshBaker.Update(unJitteredCamera, 0, 0, //colorTargetMSAA.Width, colorTargetMSAA.Height,
+                                        context, &sceneModels[AppSettings::CurrentScene]);
 
     AppSettings::UpdateCBuffer(deviceManager.ImmediateContext());
     assert(meshbakerStatus.GroundTruth == nullptr);
@@ -1217,12 +1194,4 @@ void BakingLab::Bake()
 void BakingLab::ShutDown()
 {
     ShutdownShaders();
-
-    TwCall(TwTerminate());
-
-    if(createConsole)
-    {
-        fclose(stdout);
-        FreeConsole();
-    }
 }

@@ -33,6 +33,7 @@ BakerHandle CreateBaker(const Scene* scene){
     }
 
     AppSettings::BakeDirectAreaLight.SetValue(false);
+    AppSettings::SkyMode.SetValue(SkyModes::Simple);
 
     bl->Init();
     return bl;

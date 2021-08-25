@@ -88,6 +88,7 @@ protected:
     ConstantBuffer<ResolveConstants> resolveConstants;
     ConstantBuffer<BackgroundVelocityConstants> backgroundVelocityConstants;
     MeshBakerStatus meshbakerStatus;
+    bool bakeOnly;
 
     virtual void Initialize() override;
     virtual void Render(const Timer& timer) override;
@@ -107,6 +108,7 @@ public:
     BakingLab();
 
     void Init();
+    void MeshbakerInitialize(const Model *model);
     void Bake();
     float BakeProcess();
     void ShutDown();

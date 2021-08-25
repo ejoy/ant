@@ -28,17 +28,27 @@ struct MaterialData{
     std::string metallicRoughnessTex;
 };
 
+enum BufferType {
+    LM_NONE = 0,
+    LM_Byte,
+    LM_Uint16,
+    LM_Uint32,
+    LM_Float,
+}
+
 struct ModelData {
     struct MeshData {
         struct BufferData{
             const uint8_t* data;
             uint32_t stride;
-            uint8_t type;
+            BufferType type;
         };
         BufferData positions;
         BufferData normals;
         BufferData tangents;
         BufferData bitangents;
+        BufferData texcoord0;
+        BufferData texcoord1;
         BufferData indices;
 
         uint32_t materialidx;

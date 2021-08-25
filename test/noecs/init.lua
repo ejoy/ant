@@ -1,5 +1,11 @@
 local assetmgr = import_package "ant.asset"
 
+local bake2 = require "bake2"
+
+local b = bake2.create()
+bake2.bake(b)
+b.destroy()
+
 local function create_world()
     local ecs = import_package "ant.luaecs"
     local cr = import_package "ant.compile_resource"
