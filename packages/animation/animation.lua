@@ -62,7 +62,12 @@ local function process_keyframe_event(task)
 						world:prefab_event(event.effect, "set_parent", "root", event.link_info.slot_eid)
 					end
 					world:prefab_event(event.effect, "play", "root", "", false, false)
+					if task.play_state.play then
+						world:prefab_event(event.effect, "speed", "root", task.play_state.speed or 1.0)
+					end
 				end
+			elseif event.event_type == "Move" then
+				iom.set_position(world[world[task.eid].parent].parent, event.move)
 			end
 		end
 		event_state.next_index = event_state.next_index + 1
@@ -129,6 +134,33 @@ function ani_sys:component_init()
 		e.skeleton = assetmgr.resource(e.skeleton)
 		local skehandle = e.skeleton._handle
 		e.pose_result = animodule.new_pose_result(#skehandle)
+	end
+end
+local event_set_clips = world:sub{"SetClipsEvent"}
+local event_animation = world:sub{"AnimationEvent"}
+local event_do_play = world:sub{"do_play_animation"}
+
+function ani_sys:entity_ready()
+	-- for _, eh, lp in event_do_play:unpack() do
+    --     effekseer.set_loop(eh, lp)
+    --     effekseer.play(eh)
+    -- end
+    for _, p, p0, p1 in event_set_clips:unpack() do
+		world:prefab_event(p, "set_clips", p0, p1)
+	end
+	for _, what, eid, p0, p1, p2 in event_animation:unpack() do
+		if what == "play_group" then
+			iani.play_group(eid, p0, p1, p2)
+		elseif what == "step" then
+			for e in world.w:select "eid:in" do
+				if e.eid == eid then
+					world.w:sync("_animation:in", e)
+					iani.step(e._animation._current, p0, p1)
+				end
+			end
+		elseif what == "set_time" then
+			iani.set_time(eid, p0)
+		end
 	end
 end
 
