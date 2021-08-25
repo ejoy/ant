@@ -27,28 +27,21 @@ local s = ecs.system "scenespace_system"
 local evOldParentChanged = world:sub {"old_parent_changed"}
 local evNewParentChanged = world:sub {"new_parent_changed"}
 
-local function inherit_entity_state(e)
-	local state = e.state or 0
-	local pe = world[e.parent]
-	local pstate = pe.state
+local function inherit_render_object(r, pr)
+	if r.fx == nil then
+		r.fx = pr.fx
+	end
+	if r.state == nil then
+		r.state = pr.state
+	end
+	if r.properties == nil then
+		r.properties = pr.properties
+	end
+	local pstate = pr.entity_state
 	if pstate then
 		local MASK <const> = (1 << 32) - 1
-		e.state = ((state>>32) | state | pstate) & MASK
-	end
-end
-
-local function inherit_material(e)
-	local pe = world[e.parent]
-	local p_rc = pe._rendercache
-	local rc = e._rendercache
-	if rc.fx == nil then
-		rc.fx = p_rc.fx
-	end
-	if rc.state == nil then
-		rc.state = p_rc.state
-	end
-	if rc.properties == nil then
-		rc.properties = p_rc.properties
+		local state = r.entity_state or 0
+		r.entity_state = ((state>>32) | state | pstate) & MASK
 	end
 end
 
@@ -126,26 +119,6 @@ local function findSceneNode(eid)
 	end
 end
 
-local function forEachScene(f)
-	--TODO optimization
-	local cache = {}
-	for v in w:select "scene_sorted scene:in" do
-		local scene = v.scene
-		if scene.parent == nil then
-			cache[scene.id] = scene
-			f(v, scene)
-		else
-			local parent = cache[scene.parent]
-			if parent then
-				cache[scene.id] = scene
-				f(v, scene, parent)
-			else
-				v.scene_sorted = false -- yield
-			end
-		end
-	end
-end
-
 local function isValidReference(reference)
     return reference[1] ~= nil
 end
@@ -218,16 +191,27 @@ function s:entity_init()
 	end
 
 	if needsync then
-		forEachScene(function (v, scene, parent)
-			w:sync("eid?in INIT?in", v)
-			if v.INIT and v.eid then
-				local e = world[v.eid]
-				if e.parent then
-					inherit_entity_state(e)
-					inherit_material(e)
+		local cache = {}
+		for v in w:select "scene_sorted scene:in render_object?in INIT?in" do
+			local scene = v.scene
+			if scene.parent == nil then
+				cache[scene.id] = v.render_object or false
+			else
+				local parent = cache[scene.parent]
+				if parent ~= nil then
+					cache[scene.id] = v.render_object or false
+					if v.INIT then
+						local r = v.render_object
+						local pr = cache[scene.parent]
+						if r and pr then
+							inherit_render_object(r, pr)
+						end
+					end
+				else
+					v.scene_sorted = false -- yield
 				end
 			end
-		end)
+		end
 	end
 end
 

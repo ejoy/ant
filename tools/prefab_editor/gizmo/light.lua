@@ -57,7 +57,7 @@ end
 function m.update()
     iom.set_position(m.current_gizmo.root, iom.get_position(m.current_light))
     iom.set_rotation(m.current_gizmo.root, iom.get_rotation(m.current_light))
-    --iom.set_position(m.billboard[m.current_light], iom.get_position(m.current_light))
+    world:pub{"component_changed", "light", m.current_light, "transform"}
 end
 
 function m.show(b)
@@ -211,8 +211,8 @@ function m.clear()
 end
 
 function m.on_remove_light(eid)
-    if not m.billboard[eid] then return end
-    world:remove_entity(m.billboard[eid])
+    --if not m.billboard[eid] then return end
+    --world:remove_entity(m.billboard[eid])
     m.billboard[eid] = nil
     m.current_light = nil
     m.show(false)

@@ -150,7 +150,8 @@ end
 local function update_lighting_properties(viewrect, camerapos, near, far)
 	system_properties["u_eyepos"].id = camerapos
 
-	system_properties["u_light_count"].v = {world:count "light_type", 0, 0, 0}
+	local nl = ilight.count_visible_light()
+	system_properties["u_light_count"].v = {#nl, 0, 0, 0}
 
 	local function update_ibl_tex(ibl)
 		system_properties["s_irradiance"].texture.handle= ibl.irradiance.handle

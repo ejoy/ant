@@ -1,8 +1,8 @@
 local cr = import_package "ant.compile_resource"
-local datalist = require "datalist"
+local serialize = import_package "ant.serialize"
 
 local function loader(filename, world)
-	local data = datalist.parse(cr.read_file(filename))
+	local data = serialize.parse(filename, cr.read_file(filename))
 	return world:create_template(data)
 end
 

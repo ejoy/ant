@@ -397,6 +397,9 @@ function m:handle_event()
                     ies.set_state(e, what, value)
                 end
             end
+            if world[eid].light_type then
+                world:pub{"component_changed", "light", eid, "visible", value}
+            end
         elseif what == "lock" then
             hierarchy:set_lock(eid, value)
         elseif what == "delete" then

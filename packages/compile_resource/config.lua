@@ -1,9 +1,9 @@
 local stringify = require "stringify"
 local config = {
-    glb = {},
-    texture = {},
-    png = {},
-    sc = {},
+    glb = {setting={},arguments=""},
+    texture = {setting={},arguments=""},
+    png = {setting={},arguments=""},
+    sc = {setting={},arguments=""},
 }
 
 local function set_identity(ext, identity)

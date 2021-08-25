@@ -2,6 +2,7 @@ local thread = require "thread"
 local math3d = require "math3d"
 local fs = require "filesystem"
 local lfs = require "filesystem.local"
+local builtin = require "builtin"
 
 local pack = thread.pack
 local unpack = thread.unpack
@@ -33,9 +34,13 @@ end
 return {
     save_meshbin = save_meshbin,
     save_prefab = save_prefab,
+
+    parse = require "parse",
     stringify = require "stringify",
     patch = require "patch",
 
     pack = pack,
     unpack = unpack,
+
+    path = builtin.path
 }
