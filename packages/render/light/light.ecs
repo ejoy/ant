@@ -18,6 +18,7 @@ interface "light"
 
     .method "use_cluster_shading"
     .method "light_buffer"
+    .method "count_visible_light"
 
 transform "light_transform"
     .implement "light/light.lua"

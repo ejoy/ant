@@ -332,15 +332,17 @@ local m = {}
 function m.new_world(config)
 	do
 		local cfg = config.ecs
-		cfg.pipeline = {
-			"_init", "_update", "exit"
-		}
-		cfg.import = cfg.import or {}
-		table.insert(cfg.import, "@ant.luaecs")
-		cfg.system = cfg.system or {}
-		table.insert(cfg.system, "ant.luaecs|entity_system")
-		table.insert(cfg.system, "ant.luaecs|prefab_system")
-		table.insert(cfg.system, "ant.luaecs|debug_system")
+        if cfg then
+            cfg.pipeline = {
+                "_init", "_update", "exit"
+            }
+            cfg.import = cfg.import or {}
+            table.insert(cfg.import, "@ant.luaecs")
+            cfg.system = cfg.system or {}
+            table.insert(cfg.system, "ant.luaecs|entity_system")
+            table.insert(cfg.system, "ant.luaecs|prefab_system")
+            table.insert(cfg.system, "ant.luaecs|debug_system")
+        end
 	end
     config.w = luaecs.world()
     config.update_decl = update_decl

@@ -178,5 +178,5 @@ void main()
 #ifdef HAS_EMISSIVE_TEXTURE
     color += texture2D(s_emissive, uv).rgb * u_emissive_factor.rgb;
 #endif
-    gl_FragColor = vec4(color, basecolor.a);
+    gl_FragColor = vec4(color, gl_FrontFacing ? 1.0 : 0.0);
 }

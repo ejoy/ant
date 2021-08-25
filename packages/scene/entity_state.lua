@@ -38,7 +38,7 @@ function ies.set_state(eid, name, v)
 		rc.entity_state = rc.entity_state & (~STATE_TYPE[name])
 	end
 	world:pub {"luaecs", "update_entity", eid}
-	world:pub {"component_changed", "state"}
+	world:pub {"component_changed", "state", eid}
 end
 
 function ies.can_visible(eid)

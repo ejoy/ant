@@ -150,9 +150,10 @@ local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
     --point_light_test()
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
-    local eid = world:instance "/pkg/ant.test.features/assets/entities/light_directional.prefab"[1]
-    local eid2 = world:instance "/pkg/ant.resources.binary/meshes/box.glb|mesh.prefab"[1]
-    world:pub{"after_init", eid2}
+    world:instance "/pkg/ant.test.features/assets/entities/test_scene.prefab"
+    -- world:instance "/pkg/ant.test.features/assets/entities/light_point.prefab"
+    -- local eid = world:instance "/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab"[1]
+    -- world:pub{"after_init", eid}
     --world:instance "/pkg/ant.test.features/assets/entities/font_tt.prefab"
     --world:instance "/pkg/ant.resources.binary/meshes/female/female.glb|mesh.prefab"
 
@@ -193,8 +194,16 @@ function init_loader_sys:init_world()
     for msg in after_init_mb:each() do
         local eid = msg[2]
         local s = iom.get_scale(eid)
-        iom.set_scale(eid, math3d.mul(s, {100, 100, 100, 0}))
+        iom.set_scale(eid, math3d.mul(s, {5, 5, 5, 0}))
     end
+
+    local mq = w:singleton("main_queue", "camera_ref:in")
+    local eyepos = math3d.vector(0, 10, -10)
+    local camera_ref = mq.camera_ref
+    iom.set_position(camera_ref, eyepos)
+    local dir = math3d.normalize(math3d.sub(mc.ZERO_PT, eyepos))
+    iom.set_direction(camera_ref, dir)
+    
 end
 
 function init_loader_sys:entity_init()

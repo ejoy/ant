@@ -1,0 +1,14 @@
+colorspace: sRGB
+compress:
+  android: ASTC4x4
+  ios: ASTC4x4
+  windows: BC3
+normalmap: false
+path: /pkg/ant.test.features/assets/glb/scenes1.glb|images/file3.png
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: WRAP
+  V: WRAP
+type: texture

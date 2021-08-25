@@ -112,34 +112,7 @@ function cc_sys:data_changed()
 			end
 		end
 		if keyboard_delta[1] ~= 0 or keyboard_delta[2] ~= 0 or keyboard_delta[3] ~= 0 then
-			local srt = camera_ref.scene_node.srt
-			local math3d = require "math3d"
-			print "srt========="
-			local function print_srt(srt)
-				local x, y, z, w = math3d.index(srt, 1, 2, 3, 4)
-			
-				print(math3d.tostring(x))
-				print(math3d.tostring(y))
-				print(math3d.tostring(z))
-				print(math3d.tostring(w))
-			end
-
-			print_srt(srt)
-
-			local x, y, z, w = math3d.index(srt, 1, 2, 3, 4)
-			w = math3d.muladd(x, keyboard_delta[1], w)
-			w = math3d.muladd(y, keyboard_delta[2], w)
-			w = math3d.muladd(z, keyboard_delta[3], w)
-
-			print "new pos---------------"
-			print(math3d.tostring(w))
-
-			print "srt changed ---------------"
-			srt.m = math3d.set_index(srt, 4, w)
-
-			print_srt(srt)
-
-			--iom.move(camera_ref, keyboard_delta)
+			iom.move(camera_ref, keyboard_delta)
 		end
 	end
 end

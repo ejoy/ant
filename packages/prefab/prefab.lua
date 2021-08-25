@@ -20,11 +20,27 @@ end
 
 local cmd_handle
 
+
+
 local function command(w, set, name, ...)
 	local iom = w:interface "ant.objcontroller|obj_motion"
 	local iani = w:interface "ant.animation|animation"
 	local ieff = w:interface "ant.effekseer|effekseer_playback"
 	local iss = w:interface "ant.scene|iscenespace"
+	local findAnimation = function(eid)
+		for e in w:select "eid:in" do
+			if e.eid == eid then
+				w.w:sync("animation:in", e)
+				return e.animation
+			end
+		end
+	end
+	local findAnimClips = function(eid)
+		if e.eid == eid then
+			w.w:sync("anim_clips:in", e)
+			return e.anim_clips
+		end
+	end
 	if not cmd_handle then
 		cmd_handle = {
 			get_eid = function(eid)
@@ -54,14 +70,10 @@ local function command(w, set, name, ...)
 				end
 			end,
 			play_clip = function(eid, name, loop, manual)
-				if w[eid].animation then
-					iani.play_clip(eid, name, loop or false, manual)
-				end
+				iani.play_clip(eid, name, loop or false, manual)
 			end,
 			play_group = function(eid, name, loop, manual)
-				if w[eid].animation then
-					iani.play_group(eid, name, loop or false, manual)
-				end
+				iani.play_group(eid, name, loop or false, manual)
 			end,
 			speed = function(eid, ...)
 				if w[eid].effekseer then
@@ -99,19 +111,13 @@ local function command(w, set, name, ...)
 			get_clips		= iani.get_clips,
 			get_collider    = iani.get_collider,
 			duration = function(eid, ...)
-				if w[eid].animation then
-					return iani.get_duration(eid)
-				end
+				return iani.get_duration(eid)
 			end,
 			clip_duration = function(eid, ...)
-				if w[eid].anim_clips then
-					return iani.get_clip_duration(eid, ...)
-				end
+				return iani.get_clip_duration(eid, ...)
 			end,
 			group_duration = function(eid, ...)
-				if w[eid].anim_clips then
-					return iani.get_group_duration(eid, ...)
-				end
+				return iani.get_group_duration(eid, ...)
 			end,
 			set_position 	= iom.set_position,
 			set_rotation 	= function(eid, r)

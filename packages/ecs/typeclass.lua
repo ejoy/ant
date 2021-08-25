@@ -284,8 +284,11 @@ local function init(w, config)
 		return register_pkg(w, package)
 	end})
 
-	for _, k in ipairs(config.ecs.import) do
-		import_decl(w, k)
+	config.ecs = config.ecs or {}
+	if config.ecs.import then
+		for _, k in ipairs(config.ecs.import) do
+			import_decl(w, k)
+		end
 	end
 	if config.update_decl then
 		config.update_decl(w)

@@ -1,5 +1,6 @@
 local math3d = require "math3d"
 local utility = require "editor.model.utility"
+local serialize = import_package "ant.serialize"
 
 local fs = require "filesystem.local"
 
@@ -231,8 +232,8 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports, tolo
         local data = {
             scene_entity= true,
             transform   = transform,
-            mesh        = meshfile,
-            material    = materialfile:string(),
+            mesh        = serialize.path(meshfile),
+            material    = serialize.path(materialfile:string()),
             name        = node.name or "",
             state       = DEFAULT_STATE,
         }
@@ -247,17 +248,17 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports, tolo
             if f == nil then
                 error(("mesh need skin data, but no skin file output:%d"):format(node.skin))
             end
-            data.skeleton = exports.skeleton
+            data.skeleton = serialize.path(exports.skeleton)
 
             --skinning
-            data.meshskin = f
+            data.meshskin = serialize.path(f)
             policy[#policy+1] = "ant.animation|skinning"
 
             local lst = {}
             data.animation = {}
             for name, file in pairs(exports.animations) do
                 local n = fix_invalid_name(name)
-                data.animation[n] = file
+                data.animation[n] = serialize.path(file)
                 lst[#lst+1] = n
             end
             table.sort(lst)
