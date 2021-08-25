@@ -3,44 +3,6 @@ local lm = require "luamake"
 dofile "../common.lua"
 local GlmInclude = Ant3rd .. "glm"
 
-
-lm:source_set "source_Meshbaker"{
-    includes = {
-        GlmInclude,
-    },
-    sources = {
-        "Meshbaker/Graphics/Sampling.cpp",
-        "Meshbaker/Graphics/SH.cpp",
-        "Meshbaker/Graphics/Textures.cpp",
-        "Meshbaker/Graphics/Spectrum.cpp",
-        "Meshbaker/3rd/HosekSky/ArHosekSkyModel.cpp",
-        "Meshbaker/SG.cpp",
-        "Meshbaker/PathTracer.cpp",
-        --"Meshbaker/Rasterizer.cpp",
-        "Meshbaker/Setting.cpp",
-        --"Meshbaker/MeshBaker.cpp",
-    },
-    links = {
-        "embree"
-    },
-    linkdirs = {
-        "Meshbaker/3rd/Embree-2.8/lib",
-    },
-    cxx = "c++14",
-}
-
-lm:source_set "new_baker"{
-    includes = {
-        LuaInclude,
-    },
-    sources = {
-        "baker.cpp",
-    },
-    deps = {
-        "source_Meshbaker",
-    }
-}
-
 lm:source_set "source_lightmap_radiosity" {
     includes = {
         LuaInclude,
@@ -57,6 +19,5 @@ lm:source_set "source_lightmap_radiosity" {
 lm:lua_dll "bake" {
     deps = {
         "source_lightmap_radiosity",
-        "new_baker",
     },
 }
