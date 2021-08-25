@@ -7,6 +7,7 @@ local Backlist = {
     imgui = true,
     subprocess = true,
     bake = true,
+    bake2 = true,
 }
 
 local RuntimeModules = {}
