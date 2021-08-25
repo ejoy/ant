@@ -17,7 +17,7 @@ w:register { name = "light", type = "lua"}
 
 local respath = fs.path(arg[2])
 if not fs.exists(respath) then
-    error("invalid respaht: " .. respath:string())
+    error("invalid respath: " .. respath:string())
 end
 
 if respath:equal_extension "glb" then
@@ -89,7 +89,7 @@ local function get_output_dir()
 end
 local outputdir = get_output_dir()
 if lfs.exists(outputdir) then
-    lfs.remove(outputdir)
+    lfs.remove_all(outputdir)
 end
 lfs.create_directories(outputdir)
 
@@ -118,4 +118,4 @@ for v in w:select "worldmat:in light:in" do
     output[#output+1] = e
 end
 
-writefile(outputdir / output, serialize.stringify(output))
+writefile(outputdir / "output.txt", serialize.stringify(output))
