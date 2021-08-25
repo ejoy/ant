@@ -16,6 +16,10 @@ w:register { name = "worldmat", type = "lua" }
 w:register { name = "light", type = "lua"}
 
 local respath = fs.path(arg[2])
+if not fs.exists(respath) then
+    error("invalid respaht: " .. respath:string())
+end
+local resfilename = respath:filename()
 if respath:equal_extension "glb" then
     --fix vscode debug bug
     respath = fs.path(respath:string() .. "|mesh.prefab")
@@ -74,8 +78,20 @@ local function writefile(filename, data)
 end
 
 local lfs = require "filesystem.local"
-local workdir = lfs.absolute(lfs.path(arg[0])):remove_filename() / "output"
-lfs.create_directories(workdir)
+local function get_output_dir()
+    if arg[3] then
+        local outpkgdir = fs.path(arg[3])
+        assert(fs.exists(outpkgdir), "vfs pkg path must valid")
+        return outpkgdir:localpath() / "output"
+    end
+
+    return lfs.absolute(lfs.path(arg[0])):remove_filename() / "output"
+end
+local outputdir = get_output_dir()
+if lfs.exists(outputdir) then
+    lfs.remove(outputdir)
+end
+lfs.create_directories(outputdir)
 
 local function to_srt(wm)
     local s, r, t = math3d.srt(wm)
@@ -90,7 +106,7 @@ for v in w:select "worldmat:in mesh:in" do
     local e = to_srt(v.worldmat)
     e.mesh = v.mesh.name
     output[#output+1] = e
-    writefile(workdir / v.mesh.name, v.mesh.value)
+    writefile(outputdir / v.mesh.name, v.mesh.value)
 end
 
 for v in w:select "worldmat:in light:in" do
@@ -102,4 +118,5 @@ for v in w:select "worldmat:in light:in" do
     output[#output+1] = e
 end
 
-writefile(workdir / "output.txt", serialize.stringify(output))
+local outfilename = fs.path(resfilename):replace_extension "txt":string()
+writefile(outputdir / outfilename, serialize.stringify(output))
