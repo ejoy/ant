@@ -17,35 +17,49 @@ if not fs.exists(scenepath) then
     error("invalid output scenepath, need vfs path: ", scenepath:string())
 end
 
-local scenefile = scenepath / "output.txt"
+local bakescene_path = scenepath / "output"
+
+local scenefile = bakescene_path / "output.txt"
 if not fs.exists(scenefile) then
     error(("not found scene output file:%s, it's not a valid bake path"):format(scenefile:string()))
 end
 
 local function readfile(filename)
-    local f = fs.open(filename)
+    local f = fs.open(filename, "rb")
     local c = f:read "a"
     f:close()
     return c
 end
 
 local scene = datalist.parse(readfile(scenefile))
-local meshcache = {}
+local filecache = {}
 local function read_mesh_content(meshfile)
-    local m = meshcache[meshfile]
+    local m = filecache[meshfile]
     if m == nil then
         m = serialize.unpack(readfile(meshfile))
-        meshcache[meshfile] = m
+        filecache[meshfile] = m
     end
     return m
 end
 
+local struct_scene = {}
+local models = {}
+local lights = {}
+local materials = {}
 for _, e in ipairs(scene) do
     if e.mesh then
-        local m = read_mesh_content(scenepath / e.mesh)
+        local m = read_mesh_content(bakescene_path / e.mesh)
         e.meshdata = m
+
+        models[#models+1] = {
+            worldmat = math3d.tovalue(math3d.matrix(e)),
+            positions = 
+        }
+    elseif e.light then
     end
 end
+
+
 
 local b = bake2.create(scene)
 local bakeresult = bake2.bake(b)

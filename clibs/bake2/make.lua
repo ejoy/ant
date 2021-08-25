@@ -59,6 +59,8 @@ lm:source_set "new_baker" {
     includes = {
         LuaInclude,
         GLMInclude,
+        "../lua2struct",
+        "../bgfx",
     },
     sources = {
         "./bake2.cpp",

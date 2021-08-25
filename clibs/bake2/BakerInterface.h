@@ -7,6 +7,7 @@ typedef void* BakerHandle;
 #include <vector>
 #include <string>
 #include "glm/glm.hpp"
+#include "glm/gtx/quaternion.hpp"
 
 enum LightType {
     LT_Directional,
@@ -19,7 +20,7 @@ struct Light {
     glm::vec3 color;
     glm::vec3 pos;
     float size;
-    uint8_t type;
+    LightType type;
 };
 
 struct MaterialData{
@@ -29,38 +30,36 @@ struct MaterialData{
 };
 
 enum BufferType {
-    LM_NONE = 0,
-    LM_Byte,
-    LM_Uint16,
-    LM_Uint32,
-    LM_Float,
-}
+    BT_None = 0,
+    BT_Byte,
+    BT_Uint16,
+    BT_Uint32,
+    BT_Float,
+};
 
-struct ModelData {
-    struct MeshData {
-        struct BufferData{
-            const uint8_t* data;
-            uint32_t stride;
-            BufferType type;
-        };
-        BufferData positions;
-        BufferData normals;
-        BufferData tangents;
-        BufferData bitangents;
-        BufferData texcoord0;
-        BufferData texcoord1;
-        BufferData indices;
+struct BufferData{
+    const char* data;
+    uint32_t stride;
+    BufferType type;
+};
 
-        uint32_t materialidx;
-    };
+struct MeshData {
+    glm::mat4 worldmat;
+    BufferData positions;
+    BufferData normals;
+    BufferData tangents;
+    BufferData bitangents;
+    BufferData texcoord0;
+    BufferData texcoord1;
+    BufferData indices;
 
-    std::vector<MeshData>       meshes;
-    std::vector<MaterialData>   materials;
+    uint32_t materialidx;
 };
 
 struct Scene {
-    std::vector<Light>  lights;
-    std::vector<ModelData>  models;
+    std::vector<Light>          lights;
+    std::vector<MeshData>       models;
+    std::vector<MaterialData>   materials;
 };
 
 struct BakeResult {
