@@ -24,6 +24,16 @@ local create_prefab; do
                 if v.data.transform then
                     e.srt = math3d.matrix(v.data.transform)
                 end
+                if v.data.light_type then
+                    e.light = {
+                        type = v.data.light_type,
+                        intensity = v.data.intensity,
+                        color = v.data.color,
+                        range = v.data.range,
+                        radian = v.data.radian,
+                    }
+                end
+                
             end
             prefab[#prefab+1] = e
         end

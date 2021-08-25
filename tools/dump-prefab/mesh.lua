@@ -48,14 +48,12 @@ local function load_(filename)
     for i, vb in ipairs(mesh.vb) do
         res.memory[i] = vb.memory[i]
     end
-    if mesh.ib then
-        res.memory[#res.memory+1] = mesh.ib.memory
-    end
 
     res.vb = {
-        num    = math.tointeger(mesh.vb.num),
         pos    = get_attrib_item(mesh, "p"),
         normal = get_attrib_item(mesh, "n"),
+        tangent= get_attrib_item(mesh, "T"),
+        bitangent=get_attrib_item(mesh, "b"),
         uv0    = get_attrib_item(mesh, "t20"),
         uv1    = get_attrib_item(mesh, "t21"),
     }
@@ -67,6 +65,7 @@ local function load_(filename)
             end
         end
         local t <const> = is_uint32(mesh.ib.flag) and "I" or "H"
+        res.memory[#res.memory+1] = mesh.ib.memory
         res.ib = {
             offset = 0,
             stride = t == "I" and 4 or 2,
