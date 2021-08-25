@@ -50,4 +50,4 @@ policy "light"
 
 system "light_system"
     .implement "light/light.lua"
-    .method "data_changed"
+    .method "update_lights"
