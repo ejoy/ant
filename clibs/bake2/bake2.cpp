@@ -2,7 +2,7 @@
 #include "BakerInterface.h"
 
 static int
-lcreate_baker(lua_State *L){
+lbaker_create(lua_State *L){
     Scene s;
     BakerHandle bh = CreateBaker(&s);
     lua_pushlightuserdata(L, bh);
@@ -10,7 +10,7 @@ lcreate_baker(lua_State *L){
 }
 
 static int
-lbake(lua_State *L){
+lbaker_bake(lua_State *L){
     auto bh = (BakerHandle)lua_touserdata(L, 1);
     BakeResult br;
     Bake(bh, &br);
@@ -27,9 +27,9 @@ lbake(lua_State *L){
 }
 
 static int
-ldestory_baker(lua_State *L){
+lbaker_destroy(lua_State *L){
     auto bh = (BakerHandle)lua_touserdata(L, 1);
-    DestoryBaker(bh);
+    DestroyBaker(bh);
     return 0;
 }
 
@@ -37,6 +37,9 @@ extern "C"{
 LUAMOD_API int
 luaopen_bake2(lua_State* L) {
     luaL_Reg lib[] = {
+        {"create",  lbaker_create},
+        {"bake",    lbaker_bake},
+        {"destory", lbaker_destroy},
         { nullptr, nullptr },
     };
     luaL_newlib(L, lib);

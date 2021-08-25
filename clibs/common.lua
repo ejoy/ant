@@ -42,7 +42,6 @@ else
     BgfxLinkdir = ""
 end
 
-BinDir = "./bin/" .. lm.compiler .."/" .. lm.mode .. "/"
 LuaInclude = {
     "../lua",
 }

@@ -38,12 +38,12 @@ BakerHandle CreateBaker(const Scene* scene){
     return bl;
 }
 
-void Bake(BakerHandle handle){
+void Bake(BakerHandle handle, BakeResult *result){
     auto bl = (BakingLab*)handle;
     bl->Bake();
 }
 
-void DestoryBaker(BakerHandle handle){
+void DestroyBaker(BakerHandle handle){
     auto bl = (BakingLab*)handle;
     bl->ShutDown();
 

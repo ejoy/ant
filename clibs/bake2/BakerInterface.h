@@ -65,4 +65,4 @@ struct BakeResult {
 
 extern BakerHandle CreateBaker(const Scene* scene);
 extern void Bake(BakerHandle handle, BakeResult *result);
-extern void DestoryBaker(BakerHandle handle);
+extern void DestroyBaker(BakerHandle handle);
