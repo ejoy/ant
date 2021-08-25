@@ -36,7 +36,10 @@ lm:lua_dll "imgui" {
             "win32/*.cpp",
             Ant3rd .. "imgui/backends/imgui_impl_win32.cpp",
         },
-        defines = "UNICODE",
+        defines = {
+            "UNICODE",
+            "IMGUI_ENABLE_WIN32_DEFAULT_IME_FUNCTIONS",
+        },
         links = {
             "user32",
             "shell32",

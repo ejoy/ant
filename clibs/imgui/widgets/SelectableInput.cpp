@@ -23,7 +23,7 @@ namespace ImGui {
 		{
 			ImVec2 pos_after = window->DC.CursorPos;
 			window->DC.CursorPos = pos_before;
-			ret = TempInputText(window->DC.LastItemRect, id, "##Input", buf, (int)buf_size, ImGuiInputTextFlags_None);
+			ret = TempInputText(g.LastItemData.Rect, id, "##Input", buf, (int)buf_size, ImGuiInputTextFlags_None);
 			window->DC.CursorPos = pos_after;
 		}
 		else
