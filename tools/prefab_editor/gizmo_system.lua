@@ -80,6 +80,7 @@ function gizmo:update_position(worldpos)
 		end
 		iom.set_position(self.target_eid, localPos)
 		newpos = worldpos
+		inspector.update_template_tranform(self.target_eid)
 	else
 		local wm = iom.worldmat(gizmo.target_eid)
 		local s, r, t = math3d.srt(wm)
@@ -987,7 +988,6 @@ end
 local gizmo_event = world:sub{"Gizmo"}
 
 function gizmo_sys:handle_event()
-
 	for _, what, wp in gizmo_event:unpack() do
 		if what == "UpdatePosition" then
 			gizmo:update_position(wp)

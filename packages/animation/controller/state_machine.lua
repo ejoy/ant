@@ -305,6 +305,7 @@ function iani.step(task, s_delta, absolute)
 			play_state.ratio = (clips[index][2].range[1] + excess) / task.animation._handle:duration()
 			
 			task.event_state.keyframe_events = clips[index][2].key_event
+			play_state.speed = clips[index][2].speed
 		else
 			play_state.ratio = next_time / duration
 		end
