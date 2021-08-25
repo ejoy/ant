@@ -87,6 +87,7 @@ protected:
 
     ConstantBuffer<ResolveConstants> resolveConstants;
     ConstantBuffer<BackgroundVelocityConstants> backgroundVelocityConstants;
+    MeshBakerStatus meshbakerStatus;
 
     virtual void Initialize() override;
     virtual void Render(const Timer& timer) override;
@@ -103,6 +104,12 @@ protected:
                    uint64 groundTruthSampleCount);
 
 public:
-
     BakingLab();
+
+    void Init();
+    void Bake();
+    float BakeProcess();
+    void ShutDown();
+
+    void SetGeometory();
 };

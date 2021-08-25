@@ -24,6 +24,7 @@
 #include "BakingLab.h"
 #include "MeshBaker.h"
 #include "SG.h"
+#include "TwHelper.h"
 
 #include "resource.h"
 
@@ -44,6 +45,7 @@ static const float FarClip = 100.0f;
 // Model filenames
 static const wchar* ScenePaths[] =
 {
+    L"..\\Content\\Models\\Box\\Box_Lightmap.meshdata",
     L"..\\Content\\Models\\Box\\Box_Lightmap.fbx",
     L"..\\Content\\Models\\WhiteRoom\\WhiteRoom.fbx",
     L"..\\Content\\Models\\Sponza\\Sponza_Lightmap.fbx",
@@ -679,18 +681,19 @@ void BakingLab::Update(const Timer& timer)
         deviceManager.SetVSYNCEnabled(!deviceManager.VSYNCEnabled());
 
     meshRenderer.Update(camera, jitterOffset);
-}
 
-void BakingLab::Render(const Timer& timer)
-{
     if(AppSettings::MSAAMode.Changed())
         CreateRenderTargets();
 
     ID3D11DeviceContextPtr context = deviceManager.ImmediateContext();
 
-    MeshBakerStatus status = meshBaker.Update(unJitteredCamera, colorTargetMSAA.Width, colorTargetMSAA.Height,
+    meshbakerStatus = meshBaker.Update(unJitteredCamera, colorTargetMSAA.Width, colorTargetMSAA.Height,
                                               context, &sceneModels[AppSettings::CurrentScene]);
+}
 
+void BakingLab::Render(const Timer& timer)
+{
+    ID3D11DeviceContextPtr context = deviceManager.ImmediateContext();
     if(AppSettings::ShowGroundTruth)
     {
         ID3D11RenderTargetView* rtvs[1] = { colorTargetMSAA.RTView };
@@ -699,7 +702,7 @@ void BakingLab::Render(const Timer& timer)
         SetViewport(context, colorTargetMSAA.Width, colorTargetMSAA.Height);
 
         spriteRenderer.Begin(context, SpriteRenderer::Point, SpriteRenderer::OpaqueBlend);
-        spriteRenderer.Render(status.GroundTruth, Float4x4());
+        spriteRenderer.Render(meshbakerStatus.GroundTruth, Float4x4());
         spriteRenderer.End();
 
         rtvs[0] = nullptr;
@@ -710,7 +713,7 @@ void BakingLab::Render(const Timer& timer)
     }
     else
     {
-        RenderMainPass(status);
+        RenderMainPass(meshbakerStatus);
         RenderBackgroundVelocity();
     }
 
@@ -731,7 +734,7 @@ void BakingLab::Render(const Timer& timer)
 
     SetViewport(context, deviceManager.BackBufferWidth(), deviceManager.BackBufferHeight());
 
-    RenderHUD(timer, status.GroundTruthProgress, status.BakeProgress, status.GroundTruthSampleCount);
+    RenderHUD(timer, meshbakerStatus.GroundTruthProgress, meshbakerStatus.BakeProgress, meshbakerStatus.GroundTruthSampleCount);
 
     ++frameCount;
 }
@@ -1128,13 +1131,98 @@ static void GenerateSHGGXProjectionTable()
     WriteStringAsFile(L"SH_GGX_Proj.csv", output);
 }
 
-int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
-{
-    // GenerateGaussianIrradianceTable(4.0f, L"SG_Irradiance_4.0.txt");
-    // GenerateSGInnerProductIrradianceTable(4.0f, L"SG_InnerProduct_Irradiance_4.0.txt");
-    // GenerateSGFittedIrradianceTable(4.0f, L"SG_Fitted_Irradiance_4.0.txt");
-    // GenerateSHGGXProjectionTable();
+// int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
+// {
+//     // GenerateGaussianIrradianceTable(4.0f, L"SG_Irradiance_4.0.txt");
+//     // GenerateSGInnerProductIrradianceTable(4.0f, L"SG_InnerProduct_Irradiance_4.0.txt");
+//     // GenerateSGFittedIrradianceTable(4.0f, L"SG_Fitted_Irradiance_4.0.txt");
+//     // GenerateSHGGXProjectionTable();
 
-    BakingLab app;
-    app.Run();
+//     BakingLab app;
+//     app.Run();
+// }
+
+void BakingLab::Init()
+{
+   if(createConsole)
+    {
+        Win32Call(AllocConsole());
+        Win32Call(SetConsoleTitle(applicationName.c_str()));
+        FILE* consoleFile = nullptr;
+        freopen_s(&consoleFile, "CONOUT$", "wb", stdout);
+    }
+
+    window.SetClientArea(deviceManager.BackBufferWidth(), deviceManager.BackBufferHeight());
+    deviceManager.Initialize(window);
+
+    if(showWindow)
+        window.ShowWindow();
+
+    blendStates.Initialize(deviceManager.Device());
+    rasterizerStates.Initialize(deviceManager.Device());
+    depthStencilStates.Initialize(deviceManager.Device());
+    samplerStates.Initialize(deviceManager.Device());
+
+    // Create a font + SpriteRenderer
+    font.Initialize(L"Arial", 18, SpriteFont::Regular, true, deviceManager.Device());
+    spriteRenderer.Initialize(deviceManager.Device());
+
+    Profiler::GlobalProfiler.Initialize(deviceManager.Device(), deviceManager.ImmediateContext());
+
+    window.RegisterMessageCallback(WM_SIZE, OnWindowResized, this);
+
+    // Initialize AntTweakBar
+    TwCall(TwInit(TW_DIRECT3D11, deviceManager.Device()));
+
+    // Create a tweak bar
+    tweakBar = TwNewBar("Settings");
+    std::string helpTextDefinition = MakeAnsiString(" GLOBAL help='%s' ", globalHelpText.c_str());
+    TwCall(TwDefine(helpTextDefinition.c_str()));
+    TwCall(TwDefine(" GLOBAL fontsize=3 "));
+
+    Settings.Initialize(tweakBar);
+
+    TwHelper::SetValuesWidth(Settings.TweakBar(), 120, false);
+
+    AppSettings::Initialize(deviceManager.Device());
+
+    Initialize();
+
+    AfterReset();
+}
+
+float BakingLab::BakeProcess()
+{
+    timer.Update();
+    Settings.Update();
+
+    CalculateFPS();
+
+    AppSettings::Update();
+
+    Update(timer);
+
+    UpdateShaders(deviceManager.Device());
+
+    AppSettings::UpdateCBuffer(deviceManager.ImmediateContext());
+    assert(meshbakerStatus.GroundTruth == nullptr);
+    return meshbakerStatus.BakeProgress;
+}
+
+void BakingLab::Bake()
+{
+    while (BakeProcess() >= 1.f) ;
+}
+
+void BakingLab::ShutDown()
+{
+    ShutdownShaders();
+
+    TwCall(TwTerminate());
+
+    if(createConsole)
+    {
+        fclose(stdout);
+        FreeConsole();
+    }
 }
