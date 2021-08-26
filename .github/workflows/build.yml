@@ -1,0 +1,22 @@
+name: build
+on:
+  push:
+    paths:
+      - '3rd/**'
+      - 'clibs/**'
+jobs:
+  compile:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules : recursive
+    - uses: actboy168/setup-luamake@master
+    - run: luamake 3rd_init
+    - run: luamake 3rd_make
+    - run: luamake
+    
