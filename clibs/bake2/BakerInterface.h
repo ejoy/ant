@@ -62,6 +62,12 @@ struct Scene {
     std::vector<MaterialData>   materials;
 };
 
+struct Lightmap{
+    std::vector<uint16_t>   data;
+    uint16_t size;
+    uint16_t texelsize;
+};
+
 struct BakeResult {
     Lightmap lm;
 };
