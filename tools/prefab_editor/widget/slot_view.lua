@@ -18,13 +18,13 @@ local joint_name_list = {}
 
 function SlotView:set_model(eid)
     if not joint_name_list[eid] then
-        name_list = {}
+        local name_list = {}
         local parent = world[eid].parent
         if parent then
             -- local jlist = world[parent].joint_list
             for e in world.w:select "eid:in joint_list:in" do
                 if e.eid == parent then
-                    for _, joint in ipairs(jlist) do
+                    for _, joint in ipairs(e.joint_list) do
                         name_list[joint.index] = joint.name
                     end
                 end

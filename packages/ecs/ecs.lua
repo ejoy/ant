@@ -490,6 +490,7 @@ function m.new_world(config)
 		_ecs = {},
 		_loaded = {},
 		_methods = {},
+		_frame = 0,
 		w = config.w
 	}, world)
 

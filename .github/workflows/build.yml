@@ -1,0 +1,32 @@
+name: build
+on:
+  push:
+    paths:
+      - '.github/workflows/**'
+      - '3rd/**'
+      - 'clibs/**'
+jobs:
+  compile:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+    steps:
+    - uses: actions/checkout@v2
+    - run: git submodule update --init 3rd/bgfx
+    - run: git submodule update --init 3rd/bx
+    - run: git submodule update --init 3rd/bimg
+    - run: git submodule update --init 3rd/glm
+    - run: git submodule update --init 3rd/imgui
+    - run: git submodule update --init 3rd/ios-cmake
+    - run: git submodule update --init 3rd/ltask
+    - run: git submodule update --init 3rd/luaecs
+    - run: git submodule update --init 3rd/ozz-animation
+    - run: git submodule update --init 3rd/reactphysics3d
+    - run: git submodule update --init 3rd/yoga
+    - uses: actboy168/setup-luamake@master
+    - run: luamake 3rd_init
+    - run: luamake 3rd_make
+    - run: luamake
+    

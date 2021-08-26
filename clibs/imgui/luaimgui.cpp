@@ -1959,6 +1959,19 @@ winEnd(lua_State *L) {
 }
 
 static int
+winBeginDisabled(lua_State *L) {
+	bool disabled = (bool)lua_toboolean(L, 1);
+	ImGui::BeginDisabled(disabled);
+	return 0;
+}
+
+static int
+winEndDisabled(lua_State *L) {
+	ImGui::EndDisabled();
+	return 0;
+}
+
+static int
 winBeginChild(lua_State *L) {
 	const char * id = luaL_checkstring(L, INDEX_ID);
 	float width = (float)luaL_optnumber(L, 2, 0);
@@ -3360,6 +3373,7 @@ static struct enum_pair eStyleCol[] = {
 
 static struct enum_pair eStyleVar[] = {
 	ENUM(ImGuiStyleVar,Alpha),               // float     Alpha
+	ENUM(ImGuiStyleVar,DisabledAlpha),       // float     DisabledAlpha
 	ENUM(ImGuiStyleVar,WindowPadding),       // ImVec2    WindowPadding
 	ENUM(ImGuiStyleVar,WindowRounding),      // float     WindowRounding
 	ENUM(ImGuiStyleVar,WindowBorderSize),    // float     WindowBorderSize
@@ -3819,6 +3833,8 @@ luaopen_imgui(lua_State *L) {
 	luaL_Reg windows[] = {
 		{ "Begin", winBegin },
 		{ "End", winEnd },
+		{ "BeginDisabled", winBeginDisabled },
+		{ "EndDisabled", winEndDisabled },
 		{ "BeginChild", winBeginChild },
 		{ "EndChild", winEndChild },
 		{ "BeginTabBar", winBeginTabBar },

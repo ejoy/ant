@@ -15,27 +15,35 @@ local lt = ecs.transform "light_transform"
 function lt.process_entity(e)
 	local t = e.light_type
 	local range = e.range
-	if (t == "point" or t == "spot") and range == nil then
-		error(("light:%s need define 'range' attribute"):format(lt))
-	elseif t == "spot" and (e.radian == nil or range == nil) then
-		error("spot light need define 'radian' or 'range' attributes")
-	elseif t == "directional" then
-		range = math.maxinteger
-	end
-
-	local r = e.radian
-	local inner, outter
-	if r then
-		inner, outter = math.cos(r*0.5), math.cos((e.outter_radian or r * 1.1)*0.5)
-	end
-	e._light = {
+	local l = {
 		color		= e.color or {1, 1, 1, 1},
 		intensity	= e.intensity or 2,
-		range		= range,
-		radian		= e.radian,
-		inner_cutoff= inner,
-		outter_cutoff=outter,
 	}
+
+	l.range = math.maxinteger
+	l.inner_radian, l.outter_radian = 0, 0
+	l.inner_cutoff, l.outter_cutoff = 0, 0
+
+	if t == "point" or t == "spot" then
+		if range == nil then
+			error("point/spot light need range defined!")
+		end
+		l.range = range
+		if t == "spot" then
+			local i_r, o_r = e.inner_radian, e.outter_radian
+			if i_r == nil or o_r == nil then
+				error("spot light need 'inner_radian' and 'outter_radian' defined!")
+			end
+
+			if i_r > o_r then
+				error(("invalid 'inner_radian' > 'outter_radian':%d, %d"):format(i_r, o_r))
+			end
+			l.inner_radian, l.outter_radian = i_r, o_r
+			l.inner_cutoff = math.cos(l.inner_radian * 0.5)
+			l.outter_cutoff = math.cos(l.outter_radian * 0.5)
+		end
+	end
+	e._light = l
 end
 
 -- light interface
@@ -101,19 +109,39 @@ function ilight.set_range(eid, r)
 	world:pub{"component_changed", "light", eid, "range"}
 end
 
-function ilight.radian(eid)
-	return world[eid]._light.radian
+function ilight.inner_radian(eid)
+	return world[eid]._light.inner_radian
 end
 
-function ilight.set_radian(eid, r)
+local function check_spot_light(eid)
 	local e = world[eid]
 	if e.light_type ~= "spot" then
 		error(("%s light do not have 'radian' property"):format(e.light_type))
 	end
+	return e
+end
 
-	e._light.radian = r
-	e._light.inner_cutoff = math.cos(r*0.5)
-	world:pub{"component_changed", "light", eid, "radian"}
+local spot_radian_threshold<const> = 10e-6
+function ilight.set_inner_radian(eid, r)
+	local e = check_spot_light(eid)
+
+	local l = e._light
+	l.inner_radian = math.min(l.outter_radian-spot_radian_threshold, r)
+	l.inner_cutoff = math.cos(l.inner_radian*0.5)
+	world:pub{"component_changed", "light", eid, "inner_radian"}
+end
+
+function ilight.outter_radian(eid)
+	return world[eid]._light.outter_radian
+end
+
+function ilight.set_outter_radian(eid, r)
+	local e = check_spot_light(eid)
+
+	local l = e._light
+	l.outter_radian = math.max(r, l.inner_radian+spot_radian_threshold)
+	l.outter_cutoff = math.cos(l.outter_radian*0.5)
+	world:pub{"component_changed", "light", eid, "outter_radian"}
 end
 
 function ilight.inner_cutoff(eid)
@@ -122,15 +150,6 @@ end
 
 function ilight.outter_cutoff(eid)
 	return world[eid]._light.outter_cutoff
-end
-
-function ilight.set_outter_cutoff(eid, outter_radian)
-	local l = world[eid]._light
-	if l.radian > outter_radian then
-		error("invalid outter radian")
-	end
-	l.outter_cutoff = math.cos(outter_radian*0.5)
-	world:pub{"component_changed", "light", eid, "outter_cutoff"}
 end
 
 local lighttypes = {
@@ -142,7 +161,6 @@ local lighttypes = {
 local function count_visible_light()
 	local l = {}
 	for _, leid in world:each "light_type" do
-		local le = world[leid]
 		if ies.can_visible(leid) then
 			l[#l+1] = leid
 		end
@@ -193,7 +211,7 @@ local light_comp_mb = world:sub{"component_changed", "light"}
 local light_state_mb = world:sub{"component_changed", "state"}
 local light_register_mb = world:sub{"component_register", "light_type"}
 
-function lightsys:data_changed()
+function lightsys:update_lights()
 	local changed = false
 	for v in w:select "scene_changed eid:in" do
 		local le = world[v.eid]

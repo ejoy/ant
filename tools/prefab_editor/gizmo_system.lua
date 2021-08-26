@@ -80,6 +80,7 @@ function gizmo:update_position(worldpos)
 		end
 		iom.set_position(self.target_eid, localPos)
 		newpos = worldpos
+		inspector.update_template_tranform(self.target_eid)
 	else
 		local wm = iom.worldmat(gizmo.target_eid)
 		local s, r, t = math3d.srt(wm)
@@ -685,7 +686,7 @@ local function move_light_gizmo(x, y)
 	local lightPos = iom.get_position(light_gizmo.current_light)
 	if light_gizmo_mode == 4 then
 		local curpos = mouse_hit_plane({x, y}, {dir = gizmo_dir_to_world(click_dir_spot_light), pos = math3d.totable(circle_centre)})
-		ilight.set_radian(light_gizmo.current_light, math3d.length(math3d.sub(curpos, circle_centre)))
+		ilight.set_inner_radian(light_gizmo.current_light, math3d.length(math3d.sub(curpos, circle_centre)))
 	elseif light_gizmo_mode == 5 then
 		local move_dir = math3d.sub(circle_centre, lightPos)
 		local new_offset = utils.view_to_axis_constraint(iom.ray(camera_mgr.main_camera, {x, y}), iom.get_position(camera_mgr.main_camera), gizmo_dir_to_world(move_dir), last_gizmo_pos)
@@ -883,7 +884,7 @@ local function select_light_gizmo(x, y)
 		local dir = math3d.totable(math3d.transform(iom.get_rotation(light_gizmo.current_light), math3d.vector{0, 0, 1}, 0))
 		local mat = iom.worldmat(light_gizmo.current_light)
 		local centre = math3d.transform(mat, math3d.vector{0, 0, ilight.range(light_gizmo.current_light)}, 1)
-		if hit_test_circle(dir, ilight.radian(light_gizmo.current_light), centre) then
+		if hit_test_circle(dir, ilight.inner_radian(light_gizmo.current_light), centre) then
 			click_dir_spot_light = dir
 			light_gizmo_mode = 4
 		else
@@ -987,7 +988,6 @@ end
 local gizmo_event = world:sub{"Gizmo"}
 
 function gizmo_sys:handle_event()
-
 	for _, what, wp in gizmo_event:unpack() do
 		if what == "UpdatePosition" then
 			gizmo:update_position(wp)
@@ -1093,7 +1093,7 @@ function gizmo_sys:handle_event()
 		end
 	end
 	
-	for _,pick_id,pick_ids in pickup_mb:unpack() do
+	for _,pick_id in pickup_mb:unpack() do
 		local eid = pick_id
 		if eid and world[eid] then
 			if gizmo.mode ~= gizmo_const.SELECT and not gizmo_seleted then

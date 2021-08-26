@@ -6,7 +6,7 @@ local icamera       = world:interface "ant.camera|camera"
 local entity        = world:interface "ant.render|entity"
 local iRmlUi        = world:interface "ant.rmlui|rmlui"
 local irender       = world:interface "ant.render|irender"
-
+local iani          = world:interface "ant.animation|animation"
 local default_comp  = import_package "ant.general".default
 local camera_mgr    = require "camera_manager"(world)
 local imgui         = require "imgui"
@@ -50,6 +50,8 @@ local function create_second_view()
 end
 
 function m:init()
+    iani.set_edit_mode(true)
+
     LoadImguiLayout(fs.path "":localpath() .. "/" .. "imgui.layout")
 
     entity.create_grid_entity_simple("", nil, nil, nil, {srt={r={0,0.92388,0,0.382683},}})
@@ -65,7 +67,7 @@ end
 
 function m:entity_init()
     for _ in w:select "INIT main_queue render_target:in" do
-        irq.set_view_clear_color("main_queue", 0xa0a0a0ff)
+        irq.set_view_clear_color("main_queue", 0x000000ff)--0xa0a0a0ff
         
         local main_camera = icamera.create {
             eyepos = {-200, 100, 200, 1},
