@@ -155,7 +155,7 @@ end
 
 local function update_spot_gizmo()
     local range = ilight.range(m.current_light)
-    local radian = ilight.radian(m.current_light) or 10
+    local radian = ilight.inner_radian(m.current_light) or 10
     local radius = range * math.tan(radian * 0.5)
     if #m.spot.eid == 0 then
         local root = m.spot.root
