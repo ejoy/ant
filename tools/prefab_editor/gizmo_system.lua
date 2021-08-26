@@ -1093,7 +1093,7 @@ function gizmo_sys:handle_event()
 		end
 	end
 	
-	for _,pick_id,pick_ids in pickup_mb:unpack() do
+	for _,pick_id in pickup_mb:unpack() do
 		local eid = pick_id
 		if eid and world[eid] then
 			if gizmo.mode ~= gizmo_const.SELECT and not gizmo_seleted then
