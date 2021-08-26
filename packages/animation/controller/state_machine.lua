@@ -131,6 +131,11 @@ end
 
 local iani = ecs.interface "animation"
 
+local EditMode = false
+function iani.set_edit_mode(b)
+	EditMode = b
+end
+
 function iani.set_state(e, name)
 	local sm = e.state_machine
 	if e.animation and sm and sm.nodes[name] then
@@ -279,7 +284,7 @@ end
 
 function iani.step(task, s_delta, absolute)
 	local play_state = task.play_state
-	local playspeed = play_state.speed or 1.0
+	local playspeed = EditMode and play_state.speed or 1.0
 	local adjust_delta = play_state.play and s_delta * playspeed or s_delta
 	local next_time = absolute and adjust_delta or (play_state.ratio * task.animation._handle:duration() + adjust_delta) 
 	local duration = task.animation._handle:duration()
