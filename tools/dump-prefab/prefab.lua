@@ -33,6 +33,9 @@ local create_prefab; do
                         radian = v.data.radian,
                     }
                 end
+                if v.data.material then
+                    e.material = assetmgr.resource(v.data.material)
+                end
                 
             end
             prefab[#prefab+1] = e

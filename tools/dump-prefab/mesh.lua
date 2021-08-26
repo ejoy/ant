@@ -1,15 +1,9 @@
 local cr = import_package "ant.compile_resource"
 local serialize = import_package "ant.serialize"
 local renderpkg = import_package "ant.render"
-local crypt = require "crypt"
+local sha1 = require "sha1"
 local declmgr   = renderpkg.declmgr
 
-local function byte2hex(c)
-	return ("%02x"):format(c:byte())
-end
-local function sha1(str)
-	return crypt.sha1(str):gsub(".", byte2hex)
-end
 
 local function get_type(t)
     local types <const> = {
