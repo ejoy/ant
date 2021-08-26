@@ -108,9 +108,12 @@ public:
     BakingLab();
 
     void Init();
+    const Model& GetModel(uint32 mode) const {
+        return sceneModels[mode];
+    }
     void MeshbakerInitialize(const Model *model);
-    void Bake();
-    float BakeProcess();
+    void Bake(uint32 bakeMeshIdx);
+    float BakeProcess(uint32 bakeMeshIdx);
     void ShutDown();
 
     void SetGeometory();

@@ -116,6 +116,7 @@ public:
     TextureData<Half4> envMap;
     BakeInputData input;
 
+    uint32 bakeMeshIdx = UINT32_MAX;
 private:
 
     void KillBakeThreads();

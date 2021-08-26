@@ -63,12 +63,6 @@ struct Scene {
 };
 
 struct BakeResult {
-    struct Lightmap{
-        std::vector<uint8_t> data;
-        uint16_t size;
-        uint16_t texelsize;
-    };
-
     Lightmap lm;
 };
 
