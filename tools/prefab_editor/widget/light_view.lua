@@ -82,12 +82,12 @@ function LightView:on_set_radian(value)
     local template = hierarchy:get_template(self.eid)
     local radian = math.rad(value)
     template.template.data.radian = radian
-    ilight.set_radian(self.eid, radian)
+    ilight.set_inner_radian(self.eid, radian)
     light_gizmo.update_gizmo()
 end
 
 function LightView:on_get_radian()
-    return math.deg(ilight.radian(self.eid))
+    return math.deg(ilight.inner_radian(self.eid))
 end
 
 function LightView:update()
