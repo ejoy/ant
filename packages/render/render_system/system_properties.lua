@@ -151,7 +151,7 @@ local function update_lighting_properties(viewrect, camerapos, near, far)
 		local ip = system_properties["u_ibl_param"]
 		ip.v = math3d.set_index(ip, 1, ibl.prefilter.mipmap_count)
 	end
-
+	--TODO: this setting only do when ibl is change
 	update_ibl_tex(get_ibl())
 
 	if ilight.use_cluster_shading() then

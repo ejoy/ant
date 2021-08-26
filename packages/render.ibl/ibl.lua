@@ -35,16 +35,16 @@ local prefitlerflags<const> = sampler.sampler_flag {
 
 local ibl_textures = {
     irradiance   = {
-        handle = nil, --bgfx.create_texturecube(irradiance_size, false, 1, "RGBA16F", flags),
+        handle = nil,
         size = 0,
     },
     prefilter    = {
-        handle = nil, --bgfx.create_texturecube(prefilter_size, true, 1, "RGBA16F", prefitlerflags),
+        handle = nil,
         size = 0,
         mipmap_count = 0,
     },
     LUT             = {
-        handle = nil, --bgfx.create_texture2d(LUT_size, LUT_size, false, 1, "RG16F", flags),
+        handle = nil,
         size = 0,
     }
 }
@@ -55,8 +55,8 @@ local ibl_viewid = viewidmgr.get "ibl"
 
 local need_dispatch
 
-local function create_irradiance_entity(ibl)
-    local size = ibl.irradiance.size
+local function create_irradiance_entity()
+    local size = ibl_textures.irradiance.size
     local dispatchsize = {
         size / thread_group_size, size / thread_group_size, 6
     }
@@ -64,15 +64,14 @@ local function create_irradiance_entity(ibl)
         "irradiance_builder", "/pkg/ant.resources/materials/ibl/build_irradiance.material", dispatchsize)
 end
 
-local function create_prefilter_entities(ibl)
-    local size = ibl.prefilter.size
+local function create_prefilter_entities()
+    local size = ibl_textures.prefilter.size
 
-    local mipmap_count = ibl.prefilter.mipmap_count
+    local mipmap_count = ibl_textures.prefilter.mipmap_count
     local dr = 1 / (mipmap_count-1)
     local r = 0
 
     local function create_prefilter_compute_entity(dispatchsize, prefilter)
-        w:reigster{name="prefilter_builder"}
         world:create_entity {
             policy = {
                 "ant.render|compute_policy",
@@ -108,26 +107,21 @@ local function create_prefilter_entities(ibl)
 
         r = r + dr
     end
-
-    assert(math.abs(r-1.0) >= dr)
 end
 
-local function create_LUT_entity(ibl)
-    local size = ibl.LUT.size
+local function create_LUT_entity()
+    local size = ibl_textures.LUT.size
     local dispatchsize = {
         size / thread_group_size, size / thread_group_size, 1
     }
-    local eid = icompute.create_compute_entity(
+   icompute.create_compute_entity(
         "LUT_builder", "/pkg/ant.resources/materials/ibl/build_LUT.material", dispatchsize)
 end
 
 function ibl_sys:render_preprocess()
-    if need_dispatch == nil then
-        return
-    end
 
     local source_tex = {stage = 0, texture={handle=ibl_textures.source.handle}}
-    for e in w:select "INIT irradiance_builder dispatch:in" do
+    for e in w:select "irradiance_builder dispatch:in" do
         local dis = e.dispatch
         local properties = dis.properties
         imaterial.set_property_directly(properties, "s_source", source_tex)
@@ -138,12 +132,12 @@ function ibl_sys:render_preprocess()
             ip_v.v = math3d.set_index(ip_v, 3, ibl_textures.irradiance.size)
         end
 
-        icompute.dispatch(ibl_viewid, dis)\
+        icompute.dispatch(ibl_viewid, dis)
         w:remove(e)
     end
 
     local prefilter_stage<const> = 1
-    for e in w:select "INIT prefilter_builder dispatch:in prefilter:in" do
+    for e in w:select "prefilter_builder dispatch:in prefilter:in" do
         local dis = e.dispatch
         local properties = dis.properties
         imaterial.set_property_directly(properties, "s_source", source_tex)
@@ -163,7 +157,7 @@ function ibl_sys:render_preprocess()
     end
 
     local LUT_stage<const> = 0
-    for e in w:select "INIT LUT_builder dispatch:in" do
+    for e in w:select "LUT_builder dispatch:in" do
         local dis = e.dispatch
         local properties = dis.properties
         properties.s_LUT = icompute.create_image_property(ibl_textures.LUT.handle, LUT_stage, 0, "w")
@@ -206,7 +200,7 @@ local function build_ibl_textures(ibl)
         ibl_textures.prefilter.size = ibl.prefilter.size
         check_destroy(ibl_textures.prefilter.handle)
         ibl_textures.prefilter.handle = bgfx.create_texturecube(ibl_textures.prefilter.size, true, 1, "RGBA16F", prefitlerflags)
-        ibl_textures.prefilter.mipmap_count = ibl.prefilter.mipmap_count
+        ibl_textures.prefilter.mipmap_count = math.log(ibl.prefilter.size, 2)+1
     end
 
     if ibl.LUT.size ~= ibl_textures.LUT.size then
@@ -217,10 +211,10 @@ local function build_ibl_textures(ibl)
 end
 
 
-local function create_ibl_entities(ibl)
-    create_irradiance_entity(ibl)
-    create_prefilter_entities(ibl)
-    create_LUT_entity(ibl)
+local function create_ibl_entities()
+    create_irradiance_entity()
+    create_prefilter_entities()
+    create_LUT_entity()
 end
 
 function iibl.filter_all(ibl)
