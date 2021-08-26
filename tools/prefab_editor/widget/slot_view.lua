@@ -24,7 +24,7 @@ function SlotView:set_model(eid)
             -- local jlist = world[parent].joint_list
             for e in world.w:select "eid:in joint_list:in" do
                 if e.eid == parent then
-                    for _, joint in ipairs(jlist) do
+                    for _, joint in ipairs(e.joint_list) do
                         name_list[joint.index] = joint.name
                     end
                 end

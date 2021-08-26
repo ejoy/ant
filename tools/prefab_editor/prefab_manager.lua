@@ -152,7 +152,7 @@ local function get_local_transform(tran, parent_eid)
     local worldmat = math3d.matrix(tran)
     local s, r, t = math3d.srt(math3d.mul(math3d.inverse(parent_worldmat), worldmat))
     local ts, tr, tt = math3d.totable(s), math3d.totable(r), math3d.totable(t)
-    return {s = {ts[1], ts[2], ts[2]}, r = {tr[1], tr[2], tr[2], tr[3]}, t = {tt[1], tt[2], tt[2]}}
+    return {s = {ts[1], ts[2], ts[3]}, r = {tr[1], tr[2], tr[3], tr[4]}, t = {tt[1], tt[2], tt[3]}}
 end
 
 local slot_entity_id = 1
