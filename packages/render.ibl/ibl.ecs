@@ -1,8 +1,7 @@
-transform "init_ibl_transform"
+system "ibl_system"
     .implement "ibl.lua"
-    .method "process_entity"
-    .input "ibl"
-    .output "_ibl"
+    .method "entity_init"
+    .method "init_world"
 
 interface "iibl"
     .implement "ibl.lua"

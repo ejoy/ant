@@ -12,49 +12,44 @@ local thread_group_size<const> = 8
 
 local imaterial = world:interface "ant.asset|imaterial"
 
-local init_ibl_trans = ecs.transform "init_ibl_transform"
-function init_ibl_trans.process_entity(e)
-    local ibl = e.ibl
-    local irradiance_size    = ibl.irradiance.size
-    local prefilter_size     = ibl.prefilter.size
-    local LUT_size              = ibl.LUT.size
+local ibl_sys = ecs.system "ibl_system"
 
-    local flags = sampler.sampler_flag {
-        MIN="LINEAR",
-        MAG="LINEAR",
-        U="CLAMP",
-        V="CLAMP",
-        BLIT="BLIT_COMPUTEWRITE",
-    }
+local flags<const> = sampler.sampler_flag {
+    MIN="LINEAR",
+    MAG="LINEAR",
+    U="CLAMP",
+    V="CLAMP",
+    BLIT="BLIT_COMPUTEWRITE",
+}
 
-    local prefitlerflags = sampler.sampler_flag {
-        MIN="LINEAR",
-        MAG="LINEAR",
-        MIP="LINEAR",
-        U="CLAMP",
-        V="CLAMP",
-        W="CLAMP",
-        BLIT="BLIT_COMPUTEWRITE",
-    }
+local prefitlerflags<const> = sampler.sampler_flag {
+    MIN="LINEAR",
+    MAG="LINEAR",
+    MIP="LINEAR",
+    U="CLAMP",
+    V="CLAMP",
+    W="CLAMP",
+    BLIT="BLIT_COMPUTEWRITE",
+}
 
-    e._ibl = {
-        source          = {
-            handle = nil,
-        },
-        irradiance   = {
-            handle = bgfx.create_texturecube(irradiance_size, false, 1, "RGBA16F", flags),
-            size = irradiance_size,
-        },
-        prefilter    = {
-            handle = bgfx.create_texturecube(prefilter_size, true, 1, "RGBA16F", prefitlerflags),
-            size = prefilter_size,
-            mipmap_count = math.log(prefilter_size, 2)+1,
-        },
-        LUT             = {
-            handle = bgfx.create_texture2d(LUT_size, LUT_size, false, 1, "RG16F", flags),
-            size = LUT_size,
-        }
+local ibl_textures = {
+    irradiance   = {
+        handle = nil, --bgfx.create_texturecube(irradiance_size, false, 1, "RGBA16F", flags),
+        size = 0,
+    },
+    prefilter    = {
+        handle = nil, --bgfx.create_texturecube(prefilter_size, true, 1, "RGBA16F", prefitlerflags),
+        size = 0,
+        mipmap_count = 0,
+    },
+    LUT             = {
+        handle = nil, --bgfx.create_texture2d(LUT_size, LUT_size, false, 1, "RG16F", flags),
+        size = 0,
     }
+}
+
+function ibl_sys:entity_init()
+    
 end
 
 local icompute = world:interface "ant.render|icompute"
@@ -74,8 +69,9 @@ local function create_irradiance_entity(ibl)
     local dispatchsize = {
         size / thread_group_size, size / thread_group_size, 6
     }
-    local eid = icompute.create_compute_entity(
+    icompute.create_compute_entity(
         "irradiance_builder", "/pkg/ant.resources/materials/ibl/build_irradiance.material", dispatchsize)
+
     imaterial.set_property(eid, "s_source", {stage = 0, texture={handle=ibl.source.handle}})
 
     local e = world[eid]
@@ -113,9 +109,8 @@ local function create_prefilter_entity(ibl)
             math.floor(s / thread_group_size), math.floor(s / thread_group_size), 6
         }
 
-        print("dispatchsize:", dispatchsize[1], dispatchsize[2], dispatchsize[3])
-        local eid = icompute.create_compute_entity(
-            "irradiance_builder", "/pkg/ant.resources/materials/ibl/build_prefilter.material", dispatchsize)
+        icompute.create_compute_entity(
+            "prefilter_builder", "/pkg/ant.resources/materials/ibl/build_prefilter.material", dispatchsize)
 
         imaterial.set_property(eid, "s_source", source_tex)
         local properties = world[eid]._rendercache.properties
@@ -192,11 +187,30 @@ local function create_filter_entites(ibl)
     }
 end
 
-function iibl.filter_all(eid)
-    local e = world[eid]
-    local ibl = e._ibl
+local function build_ibl_textures(ibl)
+    local function check_destroy(handle)
+        if handle then
+            bgfx.destroy(handle)
+        end
+    end
+    ibl_textures.source = ibl
+    if ibl.irradiance.size ~= ibl_textures.irradiance.size then
+        ibl_textures.irradiance.size = ibl.irradiance.size
+        check_destroy(ibl_textures.irradiance.handle)
 
-    create_filter_entites(ibl)
+        ibl_textures.handle = bgfx.create_texturecube(ibl_textures.irradiance.size, false, 1, "RGBA16F", flags)
+    end
+
+    if ibl.prefilter.size ~= ibl_textures.prefilter.size then
+        ibl_textures.prefilter.size = ibl.prefilter.size
+        if ibl_textures.handle then
+            bgfx.destory(ibl_textures.handle)
+        end
+    end
+end
+
+function iibl.filter_all(ibl)
+    build_ibl_textures(ibl)
 
     for _, fe in pairs(filter_entites) do
         fe:dispatch()
