@@ -13,7 +13,7 @@ local ishadow	= world:interface "ant.render|ishadow"
 local ilight	= world:interface "ant.render|light"
 local itimer	= world:interface "ant.timer|itimer"
 local icamera	= world:interface "ant.camera|camera"
-
+local iibl		= world:interface "ant.render.ibl|iibl"
 local isp = ecs.interface "isystem_properties"
 
 local flags = sampler.sampler_flag {
@@ -95,16 +95,9 @@ function isp.get(n)
 	return system_properties[n]
 end
 
-local function get_sky_entity()
-	local sky_eid
-	for _, eid in world:each "skybox" do
-		sky_eid = eid
-	end
-
-	for _, eid in world:each "procedural_sky" do
-		sky_eid = eid
-	end
-	return sky_eid
+local function get_ibl()
+	local ibl = iibl.get_ibl()
+	return ibl.irradiance.handle and ibl or def_ibl
 end
 
 local function main_camera_ref()
@@ -159,10 +152,7 @@ local function update_lighting_properties(viewrect, camerapos, near, far)
 		ip.v = math3d.set_index(ip, 1, ibl.prefilter.mipmap_count)
 	end
 
-	local skyeid = get_sky_entity()
-	local ibl = skyeid and world[skyeid]._ibl or def_ibl
-	ibl = ibl or def_ibl
-	update_ibl_tex(ibl)
+	update_ibl_tex(get_ibl())
 
 	if ilight.use_cluster_shading() then
 		update_cluster_render_properties(viewrect, near, far)

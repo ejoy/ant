@@ -1,7 +1,7 @@
 system "ibl_system"
     .implement "ibl.lua"
     .method "entity_init"
-    .method "init_world"
+    .method "render_preprocess"
 
 interface "iibl"
     .implement "ibl.lua"

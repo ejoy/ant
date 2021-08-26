@@ -1,5 +1,6 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 
 local bgfx = require "bgfx"
 local math3d = require "math3d"
@@ -48,21 +49,11 @@ local ibl_textures = {
     }
 }
 
-function ibl_sys:entity_init()
-    
-end
-
 local icompute = world:interface "ant.render|icompute"
-
-local iibl = ecs.interface "iibl"
 
 local ibl_viewid = viewidmgr.get "ibl"
 
-local filter_entites
-
-local function dispatch(eid)
-    icompute.dispatch(ibl_viewid, world[eid]._rendercache)
-end
+local need_dispatch
 
 local function create_irradiance_entity(ibl)
     local size = ibl.irradiance.size
@@ -71,77 +62,54 @@ local function create_irradiance_entity(ibl)
     }
     icompute.create_compute_entity(
         "irradiance_builder", "/pkg/ant.resources/materials/ibl/build_irradiance.material", dispatchsize)
-
-    imaterial.set_property(eid, "s_source", {stage = 0, texture={handle=ibl.source.handle}})
-
-    local e = world[eid]
-    local properties = e._rendercache.properties
-    properties.s_irradiance = icompute.create_image_property(ibl.irradiance.handle, 1, 0, "w")
-
-    if properties.u_build_ibl_param then
-        local ip_v = properties.u_build_ibl_param.value
-        ip_v.v = math3d.set_index(ip_v, 3, ibl.irradiance.size)
-    end
-    return {
-        eid = eid,
-        name = "irradiance",
-        dispatch = function (self)
-            dispatch(self.eid)
-        end,
-        remove = function (self)
-            world:remove_entity(self.eid)
-        end
-    }
 end
 
-local function create_prefilter_entity(ibl)
+local function create_prefilter_entities(ibl)
     local size = ibl.prefilter.size
 
     local mipmap_count = ibl.prefilter.mipmap_count
     local dr = 1 / (mipmap_count-1)
     local r = 0
-    local eids = {}
-    local source_tex = {stage = 0, texture={handle=ibl.source.handle}}
-    local prefilter_stage<const> = 1
+
+    local function create_prefilter_compute_entity(dispatchsize, prefilter)
+        w:reigster{name="prefilter_builder"}
+        world:create_entity {
+            policy = {
+                "ant.render|compute_policy",
+                "ant.render.ibl|prefilter",
+                "ant.general|name",
+            },
+            data = {
+                name        = "prefilter_builder",
+                material    = "/pkg/ant.resources/materials/ibl/build_prefilter.material",
+                dispatch    ={
+                    size    = dispatchsize,
+                },
+                prefilter = prefilter,
+                compute     = true,
+                prefilter_builder      = true,
+            }
+        }
+    end
+
+
     for i=1, mipmap_count do
         local s = size >> (i-1)
         local dispatchsize = {
             math.floor(s / thread_group_size), math.floor(s / thread_group_size), 6
         }
 
-        icompute.create_compute_entity(
-            "prefilter_builder", "/pkg/ant.resources/materials/ibl/build_prefilter.material", dispatchsize)
+        local prefilter = {
+            roughness = r,
+            sample_count = s,
+            mipidx = i-1,
+        }
+        create_prefilter_compute_entity(dispatchsize, prefilter)
 
-        imaterial.set_property(eid, "s_source", source_tex)
-        local properties = world[eid]._rendercache.properties
-
-        local ip = properties.u_build_ibl_param
-        if ip then
-            local ipv = ip.value
-            ipv.v = math3d.set_index(ipv, 3, s)
-            ipv.v = math3d.set_index(ipv, 4, r)
-        end
-        local mipidx = i-1
-        properties.s_prefilter = icompute.create_image_property(ibl.prefilter.handle, prefilter_stage, mipidx, "w")
-        eids[#eids+1] = eid
         r = r + dr
     end
 
     assert(math.abs(r-1.0) >= dr)
-    return {
-        eids = eids,
-        name = "prefilter",
-        dispatch = function (self)
-            for _, eid in ipairs(self.eids) do
-                dispatch(eid)
-            end
-        end,
-        remove = function (self)
-            for _, eid in ipairs(self.eids) do
-                world:remove_entity(eid)
-            end
-        end
-    }
 end
 
 local function create_LUT_entity(ibl)
@@ -150,41 +118,73 @@ local function create_LUT_entity(ibl)
         size / thread_group_size, size / thread_group_size, 1
     }
     local eid = icompute.create_compute_entity(
-        "irradiance_builder", "/pkg/ant.resources/materials/ibl/build_LUT.material", dispatchsize)
-
-    local LUT_stage<const> = 0
-    local properties = world[eid]._rendercache.properties
-    properties.s_LUT = icompute.create_image_property(ibl.LUT.handle, LUT_stage, 0, "w")
-    local ip = properties.u_build_ibl_param
-    if ip then
-        local ipv = ip.value
-        ipv.v = math3d.set_index(ipv, 3, size)
-    end
-
-    return {
-        eid = eid,
-        name = "LUT",
-        dispatch = function (self)
-            dispatch(self.eid)
-        end,
-        remove = function(self)
-            world:remove_entity(self.eid)
-        end
-    }
+        "LUT_builder", "/pkg/ant.resources/materials/ibl/build_LUT.material", dispatchsize)
 end
 
-local function create_filter_entites(ibl)
-    if filter_entites then
-        for _, fe in pairs(filter_entites) do
-            fe:remove()
-        end
+function ibl_sys:render_preprocess()
+    if need_dispatch == nil then
+        return
     end
 
-    filter_entites = {
-        create_irradiance_entity(ibl),
-        create_prefilter_entity(ibl),
-        create_LUT_entity(ibl),
-    }
+    local source_tex = {stage = 0, texture={handle=ibl_textures.source.handle}}
+    for e in w:select "INIT irradiance_builder dispatch:in" do
+        local dis = e.dispatch
+        local properties = dis.properties
+        imaterial.set_property_directly(properties, "s_source", source_tex)
+        properties.s_irradiance = icompute.create_image_property(ibl_textures.irradiance.handle, 1, 0, "w")
+    
+        if properties.u_build_ibl_param then
+            local ip_v = properties.u_build_ibl_param.value
+            ip_v.v = math3d.set_index(ip_v, 3, ibl_textures.irradiance.size)
+        end
+
+        icompute.dispatch(ibl_viewid, dis)\
+        w:remove(e)
+    end
+
+    local prefilter_stage<const> = 1
+    for e in w:select "INIT prefilter_builder dispatch:in prefilter:in" do
+        local dis = e.dispatch
+        local properties = dis.properties
+        imaterial.set_property_directly(properties, "s_source", source_tex)
+
+        local prefilter = e.prefilter
+        local ip = properties.u_build_ibl_param
+        if ip then
+            local ipv = ip.value
+            ipv.v = math3d.set_index(ipv, 3, prefilter.sample_count)
+            ipv.v = math3d.set_index(ipv, 4, prefilter.roughness)
+        end
+
+        properties.s_prefilter = icompute.create_image_property(ibl_textures.prefilter.handle, prefilter_stage, prefilter.mipidx, "w")
+
+        icompute.dispatch(ibl_viewid, dis)
+        w:remove(e)
+    end
+
+    local LUT_stage<const> = 0
+    for e in w:select "INIT LUT_builder dispatch:in" do
+        local dis = e.dispatch
+        local properties = dis.properties
+        properties.s_LUT = icompute.create_image_property(ibl_textures.LUT.handle, LUT_stage, 0, "w")
+        local ip = properties.u_build_ibl_param
+        if ip then
+            local ipv = ip.value
+            ipv.v = math3d.set_index(ipv, 3, ibl_textures.LUT.size)
+        end
+
+        icompute.dispatch(ibl_viewid, dis)
+
+        w:remove(e)
+    end
+
+    need_dispatch = nil
+end
+
+local iibl = ecs.interface "iibl"
+
+function iibl.get_ibl()
+    return ibl_textures
 end
 
 local function build_ibl_textures(ibl)
@@ -193,26 +193,38 @@ local function build_ibl_textures(ibl)
             bgfx.destroy(handle)
         end
     end
-    ibl_textures.source = ibl
+
+    ibl_textures.source = ibl.source
     if ibl.irradiance.size ~= ibl_textures.irradiance.size then
         ibl_textures.irradiance.size = ibl.irradiance.size
         check_destroy(ibl_textures.irradiance.handle)
 
-        ibl_textures.handle = bgfx.create_texturecube(ibl_textures.irradiance.size, false, 1, "RGBA16F", flags)
+        ibl_textures.irradiance.handle = bgfx.create_texturecube(ibl_textures.irradiance.size, false, 1, "RGBA16F", flags)
     end
 
     if ibl.prefilter.size ~= ibl_textures.prefilter.size then
         ibl_textures.prefilter.size = ibl.prefilter.size
-        if ibl_textures.handle then
-            bgfx.destory(ibl_textures.handle)
-        end
+        check_destroy(ibl_textures.prefilter.handle)
+        ibl_textures.prefilter.handle = bgfx.create_texturecube(ibl_textures.prefilter.size, true, 1, "RGBA16F", prefitlerflags)
+        ibl_textures.prefilter.mipmap_count = ibl.prefilter.mipmap_count
     end
+
+    if ibl.LUT.size ~= ibl_textures.LUT.size then
+        ibl_textures.LUT.size = ibl.LUT.size
+        check_destroy(ibl_textures.LUT.handle)
+        ibl_textures.LUT.handle = bgfx.create_texture2d(ibl_textures.LUT.size, ibl_textures.LUT.size, false, 1, "RG16F", flags)
+    end
+end
+
+
+local function create_ibl_entities(ibl)
+    create_irradiance_entity(ibl)
+    create_prefilter_entities(ibl)
+    create_LUT_entity(ibl)
 end
 
 function iibl.filter_all(ibl)
     build_ibl_textures(ibl)
-
-    for _, fe in pairs(filter_entites) do
-        fe:dispatch()
-    end
+    create_ibl_entities(ibl)
+    need_dispatch = true
 end
