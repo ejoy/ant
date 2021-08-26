@@ -41,7 +41,12 @@ BakerHandle CreateBaker(const Scene* scene){
 
 void Bake(BakerHandle handle, BakeResult *result){
     auto bl = (BakingLab*)handle;
-    bl->Bake();
+
+
+    const auto &meshes = bl->GetModel(0).Meshes();
+    for (uint32_t bakeMeshIdx=0; bakeMeshIdx<meshes.size(); ++bakeMeshIdx){
+        bl->Bake(bakeMeshIdx);
+    }
 }
 
 void DestroyBaker(BakerHandle handle){

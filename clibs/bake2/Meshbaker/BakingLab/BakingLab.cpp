@@ -45,7 +45,6 @@ static const float FarClip = 100.0f;
 // Model filenames
 static const wchar* ScenePaths[] =
 {
-    L"..\\Content\\Models\\Box\\Box_Lightmap.meshdata",
     L"..\\Content\\Models\\Box\\Box_Lightmap.fbx",
     L"..\\Content\\Models\\WhiteRoom\\WhiteRoom.fbx",
     L"..\\Content\\Models\\Sponza\\Sponza_Lightmap.fbx",
@@ -1169,7 +1168,7 @@ void BakingLab::Init()
     MeshbakerInitialize(&sceneModels[AppSettings::CurrentScene]);
 }
 
-float BakingLab::BakeProcess()
+float BakingLab::BakeProcess(uint32 bakeMeshIdx)
 {
     timer.Update();
     Settings.Update();
@@ -1177,18 +1176,17 @@ float BakingLab::BakeProcess()
     AppSettings::Update();
 
     ID3D11DeviceContextPtr context = deviceManager.ImmediateContext();
-
+    meshBaker.bakeMeshIdx = bakeMeshIdx;
     meshbakerStatus = meshBaker.Update(unJitteredCamera, 0, 0, //colorTargetMSAA.Width, colorTargetMSAA.Height,
                                         context, &sceneModels[AppSettings::CurrentScene]);
-
     AppSettings::UpdateCBuffer(deviceManager.ImmediateContext());
     assert(meshbakerStatus.GroundTruth == nullptr);
     return meshbakerStatus.BakeProgress;
 }
 
-void BakingLab::Bake()
+void BakingLab::Bake(uint32 bakeMeshIdx)
 {
-    while (BakeProcess() >= 1.f) ;
+    while (BakeProcess(bakeMeshIdx) >= 1.f) ;
 }
 
 void BakingLab::ShutDown()

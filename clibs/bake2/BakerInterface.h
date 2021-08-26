@@ -19,7 +19,7 @@ struct Light {
     glm::vec3 color;
     glm::vec3 pos;
     float size;
-    uint8_t type;
+    LightType type;
 };
 
 struct MaterialData{
@@ -34,42 +34,41 @@ enum BufferType {
     LM_Uint16,
     LM_Uint32,
     LM_Float,
-}
+};
 
-struct ModelData {
-    struct MeshData {
-        struct BufferData{
-            const uint8_t* data;
-            uint32_t stride;
-            BufferType type;
-        };
-        BufferData positions;
-        BufferData normals;
-        BufferData tangents;
-        BufferData bitangents;
-        BufferData texcoord0;
-        BufferData texcoord1;
-        BufferData indices;
+struct BufferData{
+    const uint8_t* data;
+    uint32_t stride;
+    BufferType type;
+};
 
-        uint32_t materialidx;
-    };
+struct MeshData {
+    glm::mat4 worldmat;
+    glm::mat4 normalmat;
+    BufferData positions;
+    BufferData normals;
+    BufferData tangents;
+    BufferData bitangents;
+    BufferData texcoord0;
+    BufferData texcoord1;
+    BufferData indices;
 
+    uint32_t materialidx;
+};
+
+struct Scene {
+    std::vector<Light>          lights;
     std::vector<MeshData>       meshes;
     std::vector<MaterialData>   materials;
 };
 
-struct Scene {
-    std::vector<Light>  lights;
-    std::vector<ModelData>  models;
+struct Lightmap{
+    std::vector<uint8_t> data;
+    uint16_t size;
+    uint16_t texelsize;
 };
 
 struct BakeResult {
-    struct Lightmap{
-        std::vector<uint8_t> data;
-        uint16_t size;
-        uint16_t texelsize;
-    };
-
     Lightmap lm;
 };
 

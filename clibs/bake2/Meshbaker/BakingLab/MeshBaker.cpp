@@ -1011,7 +1011,7 @@ static void BuildBVH(const Model& model, BVHData& bvhData, ID3D11Device* d3dDevi
 
 // Computes lightmap sample points and gutter texels
 static void ExtractBakePoints(const BakeInputData& bakeInput, std::vector<BakePoint>& bakePoints,
-                              std::vector<GutterTexel>& gutterTexels)
+                              std::vector<GutterTexel>& gutterTexels, uint32 bakeMeshIdx = UINT32_MAX)
 {
     const uint32 LightMapSize = AppSettings::LightMapResolution;
     const uint64 NumTexels = LightMapSize * LightMapSize;
@@ -1095,10 +1095,7 @@ static void ExtractBakePoints(const BakeInputData& bakeInput, std::vector<BakePo
 
     const Model& model = *bakeInput.SceneModel;
     const std::vector<Mesh>& meshes = model.Meshes();
-    for(uint64 meshIdx = 0; meshIdx < meshes.size(); ++meshIdx)
-    {
-        const Mesh& mesh = meshes[meshIdx];
-
+    auto drawmesh = [context, device, vs, &constantBuffer](auto mesh, uint32 vertexOffset){
         ID3D11InputLayoutPtr inputLayout;
         DXCall(device->CreateInputLayout(mesh.InputElements(), mesh.NumInputElements(),
                                          vs->ByteCode->GetBufferPointer(),
@@ -1116,8 +1113,18 @@ static void ExtractBakePoints(const BakeInputData& bakeInput, std::vector<BakePo
         constantBuffer.ApplyChanges(context);
 
         context->DrawIndexed(mesh.NumIndices(), 0, 0);
+    };
 
-        vertexOffset += mesh.NumVertices();
+    if (bakeMeshIdx != UINT32_MAX){
+        const Mesh& mesh = meshes[bakeMeshIdx];
+        drawmesh(mesh, vertexOffset);
+    } else {
+        for(uint64 meshIdx = 0; meshIdx < meshes.size(); ++meshIdx)
+        {
+            const Mesh& mesh = meshes[meshIdx];
+            drawmesh(mesh, vertexOffset);
+            vertexOffset += mesh.NumVertices();
+        }
     }
 
     // Resolve the targets
@@ -1564,12 +1571,13 @@ MeshBakerStatus MeshBaker::Update(const Camera& camera, uint32 screenWidth, uint
         const uint32 lightMapSize = AppSettings::LightMapResolution;
         const BakeModes bakeMode = AppSettings::BakeMode;
         const SolveModes solveMode = AppSettings::SolveMode;
-        if(lightMapSize != currLightMapSize || bakeMode != currBakeMode || solveMode != currSolveMode || AppSettings::WorldSpaceBake.Changed())
+        if(lightMapSize != currLightMapSize || bakeMode != currBakeMode || solveMode != currSolveMode || AppSettings::WorldSpaceBake.Changed() || bakeMeshIdx != UINT32_MAX)
         {
             KillBakeThreads();
             KillRenderThreads();
 
             ExtractBakePoints(input, bakePoints, gutterTexels);
+            bakeMeshIdx = UINT32_MAX;
             bakePointBuffer.Initialize(input.Device, sizeof(BakePoint), uint32(bakePoints.size()),
                                        false, false, false, bakePoints.data());
 
