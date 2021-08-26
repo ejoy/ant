@@ -40,6 +40,9 @@ local function query_(data, pathlst, n)
         if k == "-" then
             k = #data + 1
         else
+            if k:match "^0%d+" then
+                return
+            end
             k = tonumber(k)
             if k == nil or math.type(k) ~= "integer" or k <= 0 or k > #data + 1 then
                 return
@@ -144,12 +147,15 @@ local function spin(data, path)
     if t[k] == nil then
         return false
     end
-    local oldvalue = t[k]
-    t[k] = nil
-    if not isarray then
+    if isarray then
+        local oldvalue = table.remove(t, k)
+        return true, oldvalue
+    else
+        local oldvalue = t[k]
+        t[k] = nil
         markObject(t)
+        return true, oldvalue
     end
-    return true, oldvalue
 end
 
 local function equal_(a, b)
