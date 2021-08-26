@@ -40,7 +40,7 @@ function lt.process_entity(e)
 			end
 			l.inner_radian, l.outter_radian = i_r, o_r
 			l.inner_cutoff = math.cos(l.inner_radian * 0.5)
-			l.outter_cutoff = math.cos(l.inner_radian * 0.5)
+			l.outter_cutoff = math.cos(l.outter_radian * 0.5)
 		end
 	end
 	e._light = l

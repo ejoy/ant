@@ -31,10 +31,10 @@ float get_range_attenuation(float range, float distance)
 }
 
 // https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_lights_punctual/README.md#inner-and-outer-cone-angles
-float get_spot_attenuation(vec3 pt2l, vec3 spotdir, float outer_cone, float inner_cone)
+float get_spot_attenuation(vec3 pt2l, vec3 spotdir, float outter_cone, float inner_cone)
 {
     float cosv = dot(normalize(spotdir), normalize(pt2l));
-    return smoothstep(outer_cone, inner_cone, cosv);
+    return smoothstep(outter_cone, inner_cone, cosv);	//outter_cone is less than inner_cone
 }
 
 #endif //__SHADER_LIGHTING_SH__
