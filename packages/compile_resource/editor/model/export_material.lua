@@ -208,7 +208,7 @@ return function (output, glbdata, exports, tolocalpath)
         local tex = textures[texidx+1]
         local imgname = export_image(tex.source)
         local texture_desc = {
-            path = "./"..imgname,
+            path = serialize.path("./"..imgname),
             sampler = to_sampler(tex.sampler),
             normalmap = normalmap,
             colorspace = colorspace,

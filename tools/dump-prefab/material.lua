@@ -7,10 +7,13 @@ local bgfx = require "bgfx"
 local fs = require "filesystem"
 local lfs = require "filesystem.local"
 
-local function get_raw_file(texfile)
-    local c = cr.read_file(texfile)
-    c = serialize.parse(texfile, c)
-    return c.path
+local function get_property_texture_file(p)
+    if p then
+        local texfile = p.texture
+        local c = cr.read_file(texfile)
+        c = serialize.parse(texfile, c)
+        return cr.compile(c.path):string()
+    end
 end
 
 local function split_metallic_roughness(filename, outputdir)
@@ -63,19 +66,22 @@ local function load_(filename, outdir)
     c = serialize.parse(filename, c)
     local properties = c.properties
 
-    local metallic_roughness = get_raw_file(properties.s_metallic_roughness.texture)
-    local metallic, roughness = split_metallic_roughness(metallic_roughness, outdir)
+    local metallic_roughness = get_property_texture_file(properties.s_metallic_roughness)
+    local metallic, roughness
+    if metallic_roughness then
+        metallic, roughness = split_metallic_roughness(metallic_roughness, outdir)
+    end
     local res = {
-        diffuse = get_raw_file(properties.s_basecolor.texture),
-        normal = get_raw_file(properties.s_normal.texture),
+        diffuse = get_property_texture_file(properties.s_basecolor),
+        normal = get_property_texture_file(properties.s_normal),
         metallic = metallic,
         roughness = roughness,
     }
 
     local bin = serialize.pack(res)
     return {
-        material = "material-" .. sha1(bin),
-        value = res,
+        name = "material-" .. sha1(bin),
+        value = bin,
     }
 end
 

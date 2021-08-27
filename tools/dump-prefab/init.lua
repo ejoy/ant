@@ -1,4 +1,5 @@
 local serialize = import_package "ant.serialize"
+local cr = import_package "ant.compile_resource"
 local fs = require "filesystem"
 local math3d = require "math3d"
 local ecs = dofile "/pkg/ant.luaecs/ecs.lua"
@@ -47,7 +48,7 @@ end
 
 for v in w:select "mesh:update material:update" do
     v.mesh = mesh.load(tostring(v.mesh))
-    v.material = material.load(v.material, outputdir)
+    v.material = material.load(tostring(v.material), outputdir)
 end
 
 for v in w:select "light:update" do
