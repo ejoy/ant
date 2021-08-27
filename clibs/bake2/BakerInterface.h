@@ -24,9 +24,10 @@ struct Light {
 };
 
 struct MaterialData{
-    std::string diffuseTex;
-    std::string normalTex;
-    std::string metallicRoughnessTex;
+    std::string diffuse;
+    std::string normal;
+    std::string roughness;
+    std::string metallic;
 };
 
 enum BufferType {
@@ -46,14 +47,17 @@ struct BufferData{
 
 struct MeshData {
     glm::mat4 worldmat;
+    glm::mat4 normalmat;
     BufferData positions;
     BufferData normals;
     BufferData tangents;
     BufferData bitangents;
-    BufferData texcoord0;
-    BufferData texcoord1;
+    BufferData texcoords0;
+    BufferData texcoords1;
     BufferData indices;
 
+    uint32_t vertexCount;
+    uint32_t indexCount;
     uint32_t materialidx;
 };
 

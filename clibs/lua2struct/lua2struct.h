@@ -251,6 +251,15 @@ namespace lua_struct {
         lua_pop(L, 1);
     }
 
+    template <typename T>
+    void unpack_field_opt(lua_State* L, int idx, const char* name, T& v) {
+        symbol::guard guard(name);
+        auto t = lua_getfield(L, idx, name);
+        if (t != LUA_TNIL)
+            unpack(L, -1, v);
+        lua_pop(L, 1);
+    }
+
     ///
     /// pack
     ///

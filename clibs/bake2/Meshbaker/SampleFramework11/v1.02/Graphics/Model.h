@@ -16,7 +16,9 @@
 #include "..\\Serialization.h"
 
 struct aiMesh;
-
+// From Lua Scene
+struct MeshData;
+struct Scene;
 namespace SampleFramework11
 {
 
@@ -60,8 +62,6 @@ enum class IndexType
     Index16Bit = 0,
     Index32Bit = 1
 };
-
-struct MeshData;
 
 class Mesh
 {
@@ -153,8 +153,6 @@ protected:
     std::vector<uint8> vertices;
     std::vector<uint8> indices;
 };
-
-struct Scene;
 
 class Model
 {

@@ -78,16 +78,24 @@ for _, e in ipairs(scene) do
         local vb = meshdata.vb
         local memory = meshdata.memory
         local wm = math3d.matrix(e)
+
+        local function ib_count(ib)
+            if ib then
+                return ib.num
+            end
+        end
         models[#models+1] = {
             worldmat    = math3d.tovalue(wm),
             normalmat   = math3d.tovalue(math3d.transpose(math3d.inverse(wm))),
             positions   = create_buffer(memory, vb.pos),
             normals     = create_buffer(memory, vb.normal),
-            tangent     = create_buffer(memory, vb.tangent),
-            bitangent   = create_buffer(memory, vb.bitangent),
-            texcoord0   = create_buffer(memory, vb.uv0),
-            texcoord1   = create_buffer(memory, vb.uv1),
+            tangents    = create_buffer(memory, vb.tangent),
+            bitangents  = create_buffer(memory, vb.bitangent),
+            texcoords0  = create_buffer(memory, vb.uv0),
+            texcoords1  = create_buffer(memory, vb.uv1),
             indices     = create_buffer(memory, meshdata.ib),
+            vertexCount = vb.num,
+            indexCount  = ib_count(meshdata.ib),
             materialidx = add_material(bakescene_path / material),
         }
     elseif e.light then

@@ -40,6 +40,7 @@ namespace lua_struct {
     inline void unpack<BufferData>(lua_State* L, int idx, BufferData& v, void*) {
         luaL_checktype(L, idx, LUA_TTABLE);
         unpack_field(L, idx, "data", v.data);
+        unpack_field(L, idx, "offset", v.offset);
         unpack_field(L, idx, "stride", v.stride);
         const char* type = nullptr;
         unpack_field(L, idx, "type", type);
@@ -51,6 +52,36 @@ namespace lua_struct {
             case '\0':v.type = BT_None; break;
             default: luaL_error(L, "invalid data type:%s", type);
         }
+    }
+
+    template <>
+    inline void unpack<MeshData>(lua_State* L, int idx, MeshData& v, void*) {
+        luaL_checktype(L, idx, LUA_TTABLE);
+        unpack_field(L, idx, "worldmat", v.worldmat);
+        unpack_field(L, idx, "normalmat", v.normalmat);
+        unpack_field(L, idx, "positions", v.positions);
+        unpack_field(L, idx, "normals",   v.normals);
+        v.tangents.type = BT_None;
+        unpack_field_opt(L, idx, "tangents", v.tangents);
+        v.bitangents.type = BT_None;
+        unpack_field_opt(L, idx, "bitangents", v.bitangents);
+        unpack_field(L, idx, "texcoords0", v.texcoords0);
+        unpack_field(L, idx, "texcoords1", v.texcoords1);
+        unpack_field(L, idx, "materialidx", v.materialidx);
+        unpack_field(L, idx, "vertexCount", v.vertexCount);
+        v.indexCount = 0;
+        unpack_field_opt(L, idx, "indexCount", v.indexCount);
+        assert(v.materialidx > 0);
+        --v.materialidx;
+    }
+
+    template <>
+    inline void unpack<MaterialData>(lua_State* L, int idx, MaterialData& v, void*) {
+        luaL_checktype(L, idx, LUA_TTABLE);
+        unpack_field(L, idx, "diffuse", v.diffuse);
+        unpack_field(L, idx, "normal", v.normal);
+        unpack_field_opt(L, idx, "roughness", v.roughness);
+        unpack_field_opt(L, idx, "metallic",   v.metallic);
     }
 
     template <>
@@ -72,8 +103,6 @@ namespace lua_struct {
     }
 }
 
-LUA2STRUCT(MeshData, worldmat, positions, normals, tangents, bitangents, texcoord0, texcoord1, indices, materialidx);
-LUA2STRUCT(MaterialData, diffuseTex, normalTex, metallicRoughnessTex);
 LUA2STRUCT(Scene, models, lights, materials);
 
 static int

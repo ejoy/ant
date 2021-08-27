@@ -56,46 +56,169 @@ void DestroyBaker(BakerHandle handle){
 }
 
 #include "Meshbaker/SampleFramework11/v1.02/Graphics/Model.h"
+#include "Meshbaker/SampleFramework11/v1.02/FileIO.h"
 void Model::CreateFromScene(ID3D11Device *device, const Scene *scene, bool forceSRGB)
 {
-    
-    // Load the materials
-    const uint64 numMaterials = scene->mNumMaterials;
-    for(uint64 i = 0; i < numMaterials; ++i)
+    for(auto &m : scene->materials)
     {
         MeshMaterial material;
-        const aiMaterial& mat = *scene->mMaterials[i];
+        auto diffuse = AnsiToWString(m.diffuse.c_str());
+        auto dir = GetDirectoryFromFilePath(diffuse.c_str());
+        material.DiffuseMapName = GetFileName(diffuse.c_str());
 
-        aiString diffuseTexPath;
-        aiString normalMapPath;
-        aiString roughnessMapPath;
-        aiString metallicMapPath;
-        if(mat.GetTexture(aiTextureType_DIFFUSE, 0, &diffuseTexPath) == aiReturn_SUCCESS)
-            material.DiffuseMapName = GetFileName(AnsiToWString(diffuseTexPath.C_Str()).c_str());
+        auto normal = AnsiToWString(m.normal.c_str());
+        assert(dir == GetDirectoryFromFilePath(normal.c_str()));
+        material.NormalMapName = GetFileName(normal.c_str());
 
-        if(mat.GetTexture(aiTextureType_NORMALS, 0, &normalMapPath) == aiReturn_SUCCESS
-           || mat.GetTexture(aiTextureType_HEIGHT, 0, &normalMapPath) == aiReturn_SUCCESS)
-            material.NormalMapName = GetFileName(AnsiToWString(normalMapPath.C_Str()).c_str());
+        if (!m.roughness.empty()){
+            auto roughness = AnsiToWString(m.roughness.c_str());
+            assert(dir == GetDirectoryFromFilePath(roughness.c_str()));
+            material.RoughnessMapName = GetFileName(roughness.c_str());
+        }
 
-        if(mat.GetTexture(aiTextureType_SHININESS, 0, &roughnessMapPath) == aiReturn_SUCCESS)
-            material.RoughnessMapName = GetFileName(AnsiToWString(roughnessMapPath.C_Str()).c_str());
+        if (!m.metallic.empty()){
+            auto metallic = AnsiToWString(m.metallic.c_str());
+            assert(dir == GetDirectoryFromFilePath(metallic.c_str()));
+            material.MetallicMapName = GetFileName(metallic.c_str());
+        }
 
-        if(mat.GetTexture(aiTextureType_AMBIENT, 0, &metallicMapPath) == aiReturn_SUCCESS)
-            material.MetallicMapName = GetFileName(AnsiToWString(metallicMapPath.C_Str()).c_str());
-
-        LoadMaterialResources(material, fileDirectory, device, forceSRGB);
+        LoadMaterialResources(material, dir, device, forceSRGB);
 
         meshMaterials.push_back(material);
     }
 
     // Initialize the meshes
-    const uint64 numMeshes = scene->mNumMeshes;
-    meshes.resize(numMeshes);
-    for(uint64 i = 0; i < numMeshes; ++i)
-        meshes[i].InitFromAssimpMesh(device, *scene->mMeshes[i]);
+    meshes.resize(scene->models.size());
+    for (size_t i=0; i<meshes.size(); ++i){
+        meshes[i].InitFromSceneMesh(device, scene->models[i]);
+    }
 }
 
 void Mesh::InitFromSceneMesh(ID3D11Device *device, const MeshData& meshdata)
 {
+    numVertices = meshdata.vertexCount;
+    numIndices = meshdata.indexCount;
 
+    assert(meshdata.indexCount > 0 && meshdata.indices.type != BT_None);
+
+    indexType = meshdata.indices.type == BT_Uint16 ? IndexType::Index16Bit : IndexType::Index32Bit;
+    uint32 indexSize = meshdata.indices.type == BT_Uint16 ? 2 : 4;
+
+    // Figure out the vertex layout
+    uint32 currOffset = 0;
+    D3D11_INPUT_ELEMENT_DESC elemDesc;
+    elemDesc.InputSlot = 0;
+    elemDesc.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+    elemDesc.InstanceDataStepRate = 0;
+
+    std::vector<const BufferData*> buffers;
+
+    assert(meshdata.positions.type == BT_Float);
+
+    elemDesc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
+    elemDesc.AlignedByteOffset = currOffset;
+    elemDesc.SemanticName = "POSITION";
+    elemDesc.SemanticIndex = 0;
+    inputElements.push_back(elemDesc);
+    currOffset += 12;
+    buffers.push_back(&meshdata.positions);
+
+    assert(meshdata.normals.type == BT_Float);
+    elemDesc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
+    elemDesc.AlignedByteOffset = currOffset;
+    elemDesc.SemanticName = "NORMAL";
+    elemDesc.SemanticIndex = 0;
+    inputElements.push_back(elemDesc);
+    currOffset += 12;
+
+    buffers.push_back(&meshdata.normals);
+
+    assert(meshdata.texcoords0.type == BT_Float);
+
+    elemDesc.Format = DXGI_FORMAT_R32G32_FLOAT;
+    elemDesc.AlignedByteOffset = currOffset;
+    elemDesc.SemanticName = "TEXCOORD";
+    elemDesc.SemanticIndex = 0;
+    inputElements.push_back(elemDesc);
+    currOffset += 8;
+    buffers.push_back(&meshdata.texcoords0);
+
+    assert(meshdata.texcoords1.type == BT_Float);
+    elemDesc.Format = DXGI_FORMAT_R32G32_FLOAT;
+    elemDesc.AlignedByteOffset = currOffset;
+    elemDesc.SemanticName = "TEXCOORD";
+    elemDesc.SemanticIndex = 1;
+    inputElements.push_back(elemDesc);
+    currOffset += 8;
+    buffers.push_back(&meshdata.texcoords1);
+
+    // if(assimpMesh.HasTangentsAndBitangents())
+    // {
+    //     elemDesc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
+    //     elemDesc.AlignedByteOffset = currOffset;
+    //     elemDesc.SemanticName = "TANGENT";
+    //     elemDesc.SemanticIndex = 0;
+    //     inputElements.push_back(elemDesc);
+    //     currOffset += 12;
+    //     vertexData.push_back(assimpMesh.mTangents);
+
+    //     elemDesc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
+    //     elemDesc.AlignedByteOffset = currOffset;
+    //     elemDesc.SemanticName = "BITANGENT";
+    //     elemDesc.SemanticIndex = 0;
+    //     inputElements.push_back(elemDesc);
+    //     currOffset += 12;
+    //     vertexData.push_back(assimpMesh.mBitangents);
+    // }
+
+    // vertexStride = currOffset;
+
+    // // Copy and interleave the vertex data
+    // vertices.resize(vertexStride * numVertices, 0);
+    // for(uint64 vtxIdx = 0; vtxIdx < numVertices; ++vtxIdx)
+    // {
+    //     uint8* vtxStart = &vertices[vtxIdx * vertexStride];
+    //     for(uint64 elemIdx = 0; elemIdx < inputElements.size(); ++elemIdx)
+    //     {
+    //         uint64 offset = inputElements[elemIdx].AlignedByteOffset;
+    //         uint64 elemSize = elemIdx == inputElements.size() - 1 ? vertexStride - offset :
+    //                                                                 inputElements[elemIdx + 1].AlignedByteOffset - offset;
+    //         uint8* elemStart = vtxStart + inputElements[elemIdx].AlignedByteOffset;
+    //         memcpy(elemStart, vertexData[elemIdx] + vtxIdx, elemSize);
+
+    //         if(vertexData[elemIdx] == assimpMesh.mBitangents)
+    //             *reinterpret_cast<Float3*>(elemStart) *= -1.0f;
+    //     }
+    // }
+
+    // // Copy the index data
+    // indices.resize(indexSize * numIndices, 0);
+    // const uint64 numTriangles = assimpMesh.mNumFaces;
+    // for(uint64 triIdx = 0; triIdx < numTriangles; ++triIdx)
+    // {
+    //     void* triStart = &indices[triIdx * 3 * indexSize];
+    //     const aiFace& tri = assimpMesh.mFaces[triIdx];
+    //     if(indexType == IndexType::Index32Bit)
+    //         memcpy(triStart, tri.mIndices, sizeof(uint32) * 3);
+    //     else
+    //     {
+    //         uint16* triIndices = reinterpret_cast<uint16*>(triStart);
+    //         for(uint64 i = 0; i < 3; ++i)
+    //             triIndices[i] = uint16(tri.mIndices[i]);
+    //     }
+    // }
+
+    // CreateVertexAndIndexBuffers(device);
+
+    // const uint32 numSubsets = 1;
+    // meshParts.resize(numSubsets);
+    // for(uint32 i = 0; i < numSubsets; ++i)
+    // {
+    //     MeshPart& part = meshParts[i];
+    //     part.IndexStart = 0;
+    //     part.IndexCount = numIndices;
+    //     part.VertexStart = 0;
+    //     part.VertexCount = numVertices;
+    //     part.MaterialIdx = assimpMesh.mMaterialIndex;
+    // }
 }
