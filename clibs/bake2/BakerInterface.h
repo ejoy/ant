@@ -39,6 +39,7 @@ enum BufferType {
 
 struct BufferData{
     const char* data;
+    uint32_t offset;
     uint32_t stride;
     BufferType type;
 };

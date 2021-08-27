@@ -33,35 +33,73 @@ end
 
 local scene = datalist.parse(readfile(scenefile))
 local filecache = {}
-local function read_mesh_content(meshfile)
-    local m = filecache[meshfile]
+local function read_ref_content(filename)
+    local m = filecache[filename]
     if m == nil then
-        m = serialize.unpack(readfile(meshfile))
-        filecache[meshfile] = m
+        m = serialize.unpack(readfile(filename))
+        filecache[filename] = m
     end
     return m
 end
 
-local struct_scene = {}
 local models = {}
 local lights = {}
 local materials = {}
-for _, e in ipairs(scene) do
-    if e.mesh then
-        local m = read_mesh_content(bakescene_path / e.mesh)
-        e.meshdata = m
 
-        models[#models+1] = {
-            worldmat = math3d.tovalue(math3d.matrix(e)),
-            positions = 
+local function create_buffer(memory, desc)
+    if desc then
+        return {
+            data    = assert(memory[desc.memory]),
+            offset  = desc.offset,
+            stride  = desc.stride,
+            type    = desc.type,
         }
-    elseif e.light then
     end
 end
 
+local materialcache = {}
 
+for _, e in ipairs(scene) do
+    if e.mesh then
+        local material = assert(e.material)
+        local meshdata = read_ref_content(bakescene_path / e.mesh)
 
-local b = bake2.create(scene)
+        local function add_material(materialfile)
+            local c = materialcache[materialfile]
+            if c == nil then
+                materials[#materials+1] = read_ref_content(materialfile)
+                c = #materials
+                materialcache[materialfile] = c
+            end
+
+            return c
+        end
+        
+        local vb = meshdata.vb
+        local memory = meshdata.memory
+        local wm = math3d.matrix(e)
+        models[#models+1] = {
+            worldmat    = math3d.tovalue(wm),
+            normalmat   = math3d.tovalue(math3d.transpose(math3d.inverse(wm))),
+            positions   = create_buffer(memory, vb.pos),
+            normals     = create_buffer(memory, vb.normal),
+            tangent     = create_buffer(memory, vb.tangent),
+            bitangent   = create_buffer(memory, vb.bitangent),
+            texcoord0   = create_buffer(memory, vb.uv0),
+            texcoord1   = create_buffer(memory, vb.uv1),
+            indices     = create_buffer(memory, meshdata.ib),
+            materialidx = add_material(bakescene_path / material),
+        }
+    elseif e.light then
+        lights[#lights+1] = e.light
+    end
+end
+
+local b = bake2.create{
+    models      = models,
+    materials   = materials,
+    lights      = lights,
+}
 local bakeresult = bake2.bake(b)
 b.destroy()
 
