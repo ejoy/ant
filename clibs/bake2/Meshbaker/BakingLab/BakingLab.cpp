@@ -497,14 +497,14 @@ void BakingLab::AfterReset()
 void BakingLab::MeshbakerInitialize(const Model* sceneModel)
 {
     auto device = deviceManager.Device();
-    for(uint64 i = 0; i < AppSettings::NumCubeMaps; ++i)
-        envMaps[i] = LoadTexture(device, AppSettings::CubeMapPaths(i));
+    // for(uint64 i = 0; i < AppSettings::NumCubeMaps; ++i)
+    //     envMaps[i] = LoadTexture(device, AppSettings::CubeMapPaths(i));
 
     BakeInputData bakeInput;
     bakeInput.SceneModel = sceneModel;
     bakeInput.Device = device;
-    for(uint64 i = 0; i < AppSettings::NumCubeMaps; ++i)
-        bakeInput.EnvMaps[i] = envMaps[i];
+    // for(uint64 i = 0; i < AppSettings::NumCubeMaps; ++i)
+    //     bakeInput.EnvMaps[i] = envMaps[i];
     meshBaker.Initialize(bakeInput);
 }
 
@@ -1147,7 +1147,7 @@ static void GenerateSHGGXProjectionTable()
 //     app.Run();
 // }
 
-void BakingLab::Init()
+void BakingLab::Init(const Scene *s)
 {
     bakeOnly = true;
     createConsole = false;
@@ -1156,16 +1156,23 @@ void BakingLab::Init()
 
     showWindow = false;
     window.ShowWindow(showWindow);
+    auto device = deviceManager.Device();
+    blendStates.Initialize(device);
+    rasterizerStates.Initialize(device);
+    depthStencilStates.Initialize(device);
+    samplerStates.Initialize(device);
 
-    blendStates.Initialize(deviceManager.Device());
-    rasterizerStates.Initialize(deviceManager.Device());
-    depthStencilStates.Initialize(deviceManager.Device());
-    samplerStates.Initialize(deviceManager.Device());
+    // Initialize AntTweakBar
+    TwCall(TwInit(TW_DIRECT3D11, device));
 
-    AppSettings::Initialize(deviceManager.Device());
+    // Create a tweak bar
+    tweakBar = TwNewBar("Settings");
+    Settings.Initialize(tweakBar);
+    AppSettings::Initialize(device);
 
     AppSettings::CurrentScene.SetValue(Scenes(0));
     MeshbakerInitialize(&sceneModels[AppSettings::CurrentScene]);
+    sceneModels[0].CreateFromScene(device, s, false);
 }
 
 float BakingLab::BakeProcess(uint32 bakeMeshIdx)

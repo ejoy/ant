@@ -31,7 +31,7 @@ BakerHandle CreateBaker(const Scene* scene){
         }
         AppSettings::EnableSun.SetValue(true);
         AppSettings::SunTintColor.SetValue(Float3(l.color.x, l.color.y, l.color.z));
-        AppSettings::SunDirection.SetValue(Float3(l.dir.x, l.dir.y, l.dir.z));
+        AppSettings::SunDirection.SetValue(-Float3(l.dir.x, l.dir.y, l.dir.z));
     } else {
         AppSettings::EnableSun.SetValue(false);
         AppSettings::BakeDirectSunLight.SetValue(false);
@@ -40,14 +40,12 @@ BakerHandle CreateBaker(const Scene* scene){
     AppSettings::BakeDirectAreaLight.SetValue(false);
     AppSettings::SkyMode.SetValue(SkyModes::Simple);
 
-    bl->Init();
+    bl->Init(scene);
     return bl;
 }
 
 void Bake(BakerHandle handle, BakeResult *result){
     auto bl = (BakingLab*)handle;
-
-
     const auto &meshes = bl->GetModel(0).Meshes();
     for (uint32_t bakeMeshIdx=0; bakeMeshIdx<meshes.size(); ++bakeMeshIdx){
         bl->Bake(bakeMeshIdx);

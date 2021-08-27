@@ -27,7 +27,7 @@
 #include "MeshBaker.h"
 
 using namespace SampleFramework11;
-
+struct Scene;
 class BakingLab : public App
 {
 
@@ -107,10 +107,12 @@ protected:
 public:
     BakingLab();
 
-    void Init();
+    void Init(const Scene *s);
     const Model& GetModel(uint32 mode) const {
         return sceneModels[mode];
     }
+
+    Model& GetModel(uint32 mode){ return sceneModels[mode];}
     void MeshbakerInitialize(const Model *model);
     void Bake(uint32 bakeMeshIdx);
     float BakeProcess(uint32 bakeMeshIdx);
