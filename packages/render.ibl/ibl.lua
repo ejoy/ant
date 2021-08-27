@@ -34,6 +34,7 @@ local prefitlerflags<const> = sampler.sampler_flag {
 }
 
 local ibl_textures = {
+    source = {stage=0, texture={handle=nil}},
     irradiance   = {
         handle = nil,
         size = 0,
@@ -118,9 +119,10 @@ local function create_LUT_entity()
         "LUT_builder", "/pkg/ant.resources/materials/ibl/build_LUT.material", dispatchsize)
 end
 
-function ibl_sys:render_preprocess()
+local prefilter_stage<const> = 1
 
-    local source_tex = {stage = 0, texture={handle=ibl_textures.source.handle}}
+function ibl_sys:render_preprocess()
+    local source_tex = ibl_textures.source
     for e in w:select "irradiance_builder dispatch:in" do
         local dis = e.dispatch
         local properties = dis.properties
@@ -136,7 +138,6 @@ function ibl_sys:render_preprocess()
         w:remove(e)
     end
 
-    local prefilter_stage<const> = 1
     for e in w:select "prefilter_builder dispatch:in prefilter:in" do
         local dis = e.dispatch
         local properties = dis.properties
@@ -171,8 +172,6 @@ function ibl_sys:render_preprocess()
 
         w:remove(e)
     end
-
-    need_dispatch = nil
 end
 
 local iibl = ecs.interface "iibl"
@@ -188,7 +187,7 @@ local function build_ibl_textures(ibl)
         end
     end
 
-    ibl_textures.source = ibl.source
+    ibl_textures.source.texture.handle = ibl.source.handle
     if ibl.irradiance.size ~= ibl_textures.irradiance.size then
         ibl_textures.irradiance.size = ibl.irradiance.size
         check_destroy(ibl_textures.irradiance.handle)
@@ -219,6 +218,5 @@ end
 
 function iibl.filter_all(ibl)
     build_ibl_textures(ibl)
-    create_ibl_entities(ibl)
-    need_dispatch = true
+    create_ibl_entities()
 end
