@@ -5,11 +5,13 @@ local ecs = dofile "/pkg/ant.luaecs/ecs.lua"
 local w = ecs.world()
 local prefab = require "prefab"
 local mesh = require "mesh"
+local material = require "material"
 local light = require "light"
 
 w:register { name = "id", type = "lua" }
 w:register { name = "parent", type = "lua" }
 w:register { name = "mesh", type = "lua" }
+w:register { name = "material", type = "lua"}
 w:register { name = "srt", type = "lua" }
 w:register { name = "sorted", order = true }
 w:register { name = "worldmat", type = "lua" }
@@ -25,14 +27,27 @@ if respath:equal_extension "glb" then
     respath = fs.path(respath:string() .. "|mesh.prefab")
 end
 
+local lfs = require "filesystem.local"
+local function get_output_dir()
+    if arg[3] then
+        local outpkgdir = fs.path(arg[3])
+        assert(fs.exists(outpkgdir), "vfs pkg path must valid")
+        return outpkgdir:localpath() / "output"
+    end
+
+    return lfs.absolute(lfs.path(arg[0])):remove_filename() / "output"
+end
+local outputdir = get_output_dir()
+
 prefab.instance(w, respath:string())
 
 for v in w:select "parent:update id:in" do
     v.parent = v.parent.id
 end
 
-for v in w:select "mesh:update" do
+for v in w:select "mesh:update material:update" do
     v.mesh = mesh.load(tostring(v.mesh))
+    v.material = material.load(v.material, outputdir)
 end
 
 for v in w:select "light:update" do
@@ -77,17 +92,6 @@ local function writefile(filename, data)
     f:write(data)
 end
 
-local lfs = require "filesystem.local"
-local function get_output_dir()
-    if arg[3] then
-        local outpkgdir = fs.path(arg[3])
-        assert(fs.exists(outpkgdir), "vfs pkg path must valid")
-        return outpkgdir:localpath() / "output"
-    end
-
-    return lfs.absolute(lfs.path(arg[0])):remove_filename() / "output"
-end
-local outputdir = get_output_dir()
 if lfs.exists(outputdir) then
     lfs.remove_all(outputdir)
 end
@@ -102,11 +106,13 @@ local function to_srt(wm)
     }
 end
 local output = {}
-for v in w:select "worldmat:in mesh:in" do
+for v in w:select "worldmat:in mesh:in material:in" do
     local e = to_srt(v.worldmat)
     e.mesh = v.mesh.name
+    e.material = v.material.name
     output[#output+1] = e
     writefile(outputdir / v.mesh.name, v.mesh.value)
+    writefile(outputdir / v.material.name, v.material.value)
 end
 
 for v in w:select "worldmat:in light:in" do

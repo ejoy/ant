@@ -111,7 +111,7 @@ function auto_hm_sys:init()
 end
 
 local function default_tex_info(w, h, fmt)
-    local bits = image.getBitsPerPixel(fmt)
+    local bits = image.get_bits_pre_pixel(fmt)
     local s = (bits//8) * w * h
     return {
         width=w, height=h, format=fmt,
@@ -122,7 +122,7 @@ local function default_tex_info(w, h, fmt)
 end
 
 local function write_to_file(filename, buffers, fmt, bw, bh, width, height)
-    local numbits = image.getBitsPerPixel(fmt)
+    local numbits = image.get_bits_pre_pixel(fmt)
     local numbytes = numbits // 8
     local pm = bgfx.memory_buffer(width*height*bw*bh*numbytes)
     image.pack_memory(buffers, bw*numbytes, bh, width, height, pm)

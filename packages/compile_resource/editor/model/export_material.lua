@@ -1,3 +1,5 @@
+local serialize = import_package "ant.serialize"
+
 local fs = require "filesystem.local"
 local utility = require "editor.model.utility"
 
@@ -222,7 +224,7 @@ return function (output, glbdata, exports, tolocalpath)
             error("filename:" .. texfilename .. " already exist")
         end
         utility.save_txt_file(texfilename, texture_desc)
-        return "./../images/" .. imgname_noext .. ".texture"
+        return serialize.path("./../images/" .. imgname_noext .. ".texture")
     end
 
     local function handle_texture(tex_desc, name, normalmap, colorspace)

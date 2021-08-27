@@ -34,7 +34,7 @@ local create_prefab; do
                     }
                 end
                 if v.data.material then
-                    e.material = assetmgr.resource(v.data.material)
+                    e.material = v.data.material
                 end
                 
             end

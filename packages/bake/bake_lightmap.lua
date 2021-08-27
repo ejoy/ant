@@ -47,7 +47,7 @@ local function gen_name(bakeid, name)
 end
 
 local function default_tex_info(w, h, fmt)
-    local bits = image.getBitsPerPixel(fmt)
+    local bits = image.get_bits_pre_pixel(fmt)
     local s = (bits//8) * w * h
     return {
         width=w, height=h, format=fmt,

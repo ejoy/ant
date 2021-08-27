@@ -21,6 +21,7 @@ LUA2STRUCT(encode_dds_info, srgb);
 static int
 lparse(lua_State *L) {
     struct memory *mem = (struct memory *)luaL_checkudata(L, 1, "BGFX_MEMORY");
+    bool readcontent = lua_isnoneornil(L, 2);
     bx::Error err;
     bimg::ImageContainer imageContainer;
     if (!bimg::imageParse(imageContainer, mem->data, (uint32_t)mem->size, &err)) {
@@ -40,10 +41,11 @@ lparse(lua_State *L) {
         , imageContainer.m_format
         );
     
-    {
-        lua_struct::pack(L, info);
-        lua_pushstring(L, bimg::getName(info.format));
-        lua_setfield(L, -2, "format");
+    lua_struct::pack(L, info);
+
+    if (readcontent){
+        lua_pushlstring(L, (const char*)imageContainer.m_data, imageContainer.m_size);
+        return 2;
     }
     return 1;
 }
@@ -177,10 +179,17 @@ lencode_image(lua_State *L){
 }
 
 static int
-lgetBitsPerPixel(lua_State *L){
+lget_bits_pre_pixel(lua_State *L){
     auto fmt = bimg::getFormat(luaL_checkstring(L, 1));
     auto bits = bimg::getBitsPerPixel(fmt);
     lua_pushinteger(L, bits);
+    return 1;
+}
+
+static int
+lget_format_name(lua_State *L){
+    auto fmt = luaL_checkinteger(L, 1);
+    lua_pushstring(L, bimg::getName(bimg::TextureFormat::Enum(fmt)));
     return 1;
 }
 
@@ -188,9 +197,9 @@ extern "C" int
 luaopen_image(lua_State* L) {
     luaL_Reg lib[] = {
         { "parse", lparse },
-        { "pack_memory", lpack_memory},
         { "encode_image", lencode_image},
-        { "getBitsPerPixel", lgetBitsPerPixel},
+        { "get_bits_pre_pixel", lget_bits_pre_pixel},
+        { "get_format_name", lget_format_name},
         { NULL, NULL },
     };
     luaL_newlib(L, lib);
