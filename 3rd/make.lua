@@ -6,7 +6,6 @@ lm:import "scripts/reactphysics3d.lua"
 
 lm:phony "3rd_init" {
     deps = {
-        "bgfx_init",
         "ozz-animation_init",
         "reactphysics3d_init",
     }
@@ -22,7 +21,6 @@ lm:phony "3rd_make" {
 
 lm:phony "3rd_clean" {
     deps = {
-        "bgfx_clean",
         "ozz-animation_clean",
         "reactphysics3d_clean",
     }

@@ -20,6 +20,8 @@ if lm.os == "ios" then
     EnableEditor = false
 end
 
+lm:import "3rd/make.lua"
+
 local Backlist = {}
 local EditorModules = {}
 
@@ -35,7 +37,6 @@ for path in fs.path "clibs":list_directory() do
     end
 end
 
-lm:import "3rd/make.lua"
 lm:import "runtime/make.lua"
 
 lm:phony "runtime" {
