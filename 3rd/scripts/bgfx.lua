@@ -83,39 +83,34 @@ if EnableEditor then
         output = "$bin/texturec"..BGFX_EXE,
         deps = "bgfx_build",
     }
-    
+
     lm:copy "copy_bgfx_shaderc" {
         input = BGFX_BINS .. "shaderc"..lm.mode..BGFX_EXE,
         output = "$bin/shaderc"..BGFX_EXE,
         deps = "bgfx_build",
     }
-    
+
     lm:copy "copy_bgfx_shared_lib" {
         input = BGFX_BINS .. BGFX_SHARED_LIB,
         output = "$bin/bgfx-core"..BGFX_DLL,
         deps = "bgfx_build",
     }
-    
+
     lm:copy "copy_bgfx_shader" {
-        input = "../bgfx/src/bgfx_shader.sh",
-        output = "../../packages/resources/shaders/bgfx_shader.sh",
+        input = {
+            "../bgfx/src/bgfx_shader.sh",
+            "../bgfx/src/bgfx_compute.sh",
+            "../bgfx/examples/common/common.sh",
+            "../bgfx/examples/common/shaderlib.sh",
+        },
+        output = {
+            "../../packages/resources/shaders/bgfx_shader.sh",
+            "../../packages/resources/shaders/bgfx_compute.sh",
+            "../../packages/resources/shaders/common.sh",
+            "../../packages/resources/shaders/shaderlib.sh",
+        }
     }
-    
-    lm:copy "copy_bgfx_compute" {
-        input = "../bgfx/src/bgfx_compute.sh",
-        output = "../../packages/resources/shaders/bgfx_compute.sh",
-    }
-    
-    lm:copy "copy_bgfx_examples_common" {
-        input = "../bgfx/examples/common/common.sh",
-        output = "../../packages/resources/shaders/common.sh",
-    }
-    
-    lm:copy "copy_bgfx_examples_shaderlib" {
-        input = "../bgfx/examples/common/shaderlib.sh",
-        output = "../../packages/resources/shaders/shaderlib.sh",
-    }
-    
+
     if lm.compiler == "msvc" then
         lm:build "mt_bgfx_texturec" {
             "mt", "-nologo", "-manifest", "$in", "-outputresource:$bin/texturec.exe;#1",
@@ -135,9 +130,6 @@ if EnableEditor then
             "copy_bgfx_shaderc",
             "copy_bgfx_shared_lib",
             "copy_bgfx_shader",
-            "copy_bgfx_compute",
-            "copy_bgfx_examples_common",
-            "copy_bgfx_examples_shaderlib",
         },
         msvc = {
             deps = {
