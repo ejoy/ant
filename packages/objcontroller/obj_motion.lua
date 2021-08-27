@@ -120,23 +120,9 @@ function iobj_motion.get_rotation(eid)
 end
 
 function iobj_motion.worldmat(eid)
-    if type(eid) == "table" then
-        w:sync("scene:in", eid)
-        return eid.scene._worldmat
-    end
-    local e = world[eid]
-    if e then
-        if e.mesh then
-            --render object
-            return e._rendercache.worldmat
-        end
-        for v in w:select "eid:in" do
-            if v.eid == eid then
-                w:sync("scene:in", v)
-                return v.scene._worldmat
-            end
-        end
-    end
+    local e = find_entity(eid)
+    local scene = get_scene(e)
+    return scene._worldmat
 end
 
 function iobj_motion.lookto(eid, eyepos, viewdir, updir)
