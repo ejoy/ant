@@ -20,7 +20,6 @@ pipeline "animation"
     .stage "animation_state"
     .stage "sample_animation_pose"
     .pipeline "refine_animation_pose"
-    .stage "skin_mesh"
     .stage "end_animation"
 
 pipeline "refine_animation_pose"
