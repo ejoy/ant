@@ -28,9 +28,9 @@ echo "export MINGW=/mingw64" >> ~/.bash_profile
 echo "export PATH=\$MINGW/bin:\$PATH" >> ~/.bash_profile
 ```
 
-- 安装gcc/make/cmake
+- 安装gcc/ninja/cmake
 ``` bash
-pacman -Syu make mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja
+pacman -Syu mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja
 ```
 
 #### MACOS
