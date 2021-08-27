@@ -29,8 +29,12 @@ BakerHandle CreateBaker(const Scene* scene){
         if (l.size != 0){
             AppSettings::SunSize.SetValue(l.size);
         }
+        AppSettings::EnableSun.SetValue(true);
         AppSettings::SunTintColor.SetValue(Float3(l.color.x, l.color.y, l.color.z));
         AppSettings::SunDirection.SetValue(Float3(l.dir.x, l.dir.y, l.dir.z));
+    } else {
+        AppSettings::EnableSun.SetValue(false);
+        AppSettings::BakeDirectSunLight.SetValue(false);
     }
 
     AppSettings::BakeDirectAreaLight.SetValue(false);

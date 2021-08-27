@@ -17,8 +17,9 @@ enum LightType {
 
 struct Light {
     glm::vec3 dir;
-    glm::vec3 color;
     glm::vec3 pos;
+    glm::vec3 color;
+    float intensity;
     float size;
     LightType type;
 };

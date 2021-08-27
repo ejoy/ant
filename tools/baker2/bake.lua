@@ -79,10 +79,9 @@ for _, e in ipairs(scene) do
         local memory = meshdata.memory
         local wm = math3d.matrix(e)
 
-        local function ib_count(ib)
-            if ib then
-                return ib.num
-            end
+        local function elem_count(b)
+            local m = memory[b.memory]
+            return #m // b.stride
         end
         models[#models+1] = {
             worldmat    = math3d.tovalue(wm),
@@ -94,12 +93,20 @@ for _, e in ipairs(scene) do
             texcoords0  = create_buffer(memory, vb.uv0),
             texcoords1  = create_buffer(memory, vb.uv1),
             indices     = create_buffer(memory, meshdata.ib),
-            vertexCount = vb.num,
-            indexCount  = ib_count(meshdata.ib),
+            vertexCount = elem_count(vb.pos),
+            indexCount  = elem_count(meshdata.ib),
             materialidx = add_material(bakescene_path / material),
         }
     elseif e.light then
-        lights[#lights+1] = e.light
+        local ld = e.lightdata
+        lights[#lights+1] = {
+            dir = math3d.tovalue(math3d.inverse(math3d.transform(math3d.quaternion(e.r), math3d.vector(0.0, 0.0, 1.0), 0))),
+            pos = e.t,
+            color = ld.color,
+            size = ld.size or 0.3,
+            type = ld.type,
+            intensity = ld.intensity,
+        }
     end
 end
 

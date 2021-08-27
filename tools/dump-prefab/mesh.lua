@@ -40,7 +40,7 @@ local function load_(filename)
 
     local res = {memory = {}}
     for i, vb in ipairs(mesh.vb) do
-        res.memory[i] = vb.memory[i]
+        res.memory[i] = vb.memory[1]
     end
 
     res.vb = {
@@ -59,7 +59,7 @@ local function load_(filename)
             end
         end
         local t <const> = is_uint32(mesh.ib.flag) and "I" or "H"
-        res.memory[#res.memory+1] = mesh.ib.memory
+        res.memory[#res.memory+1] = mesh.ib.memory[1]
         res.ib = {
             offset = 0,
             stride = t == "I" and 4 or 2,

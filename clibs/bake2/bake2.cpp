@@ -91,6 +91,7 @@ namespace lua_struct {
         unpack_field(L, idx, "pos", v.pos);
         unpack_field(L, idx, "color", v.color);
         unpack_field(L, idx, "size", v.size);
+        unpack_field(L, idx, "intensity", v.intensity);
         const char* type = nullptr;
         unpack_field(L, idx, "type", type);
         if (strcmp(type, "directional") == 0){
