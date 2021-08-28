@@ -20,6 +20,17 @@ lm:source_set "ozz-animation-runtime" {
     sources = "src/animation/runtime/*.cc",
 }
 
+lm:source_set "ozz-animation-offline" {
+    rootdir = "../ozz-animation",
+    includes = {"include", "src"},
+    sources = {
+        "src/animation/offline/*.cc",
+        "!src/animation/offline/fbx/*.cc",
+        "!src/animation/offline/gltf/*.cc",
+        "!src/animation/offline/tools/*.cc",
+    }
+}
+
 lm:source_set "ozz-animation-geometry" {
     rootdir = "../ozz-animation",
     includes = "include",
@@ -38,6 +49,7 @@ lm:exe "gltf2ozz" {
         "ozz-animation-json",
         "ozz-animation-base",
         "ozz-animation-runtime",
+        "ozz-animation-offline",
     },
     includes = {
         "include",
@@ -46,8 +58,8 @@ lm:exe "gltf2ozz" {
     },
     sources = {
         "src/options/*.cc",
-        "src/animation/offline/*.cc",
-        "!src/animation/offline/fbx/*.cc",
+        "src/animation/offline/gltf/*.cc",
+        "src/animation/offline/tools/*.cc",
         "!src/animation/offline/tools/dump2ozz.cc",
     }
 }

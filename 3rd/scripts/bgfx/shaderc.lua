@@ -94,6 +94,7 @@ lm:source_set "glsl-optimizer" {
 }
 
 lm:source_set "spirv-opt" {
+    cxx = "c++17",
     rootdir = "../bgfx/3rdparty/spirv-tools",
     includes = {
         ".",

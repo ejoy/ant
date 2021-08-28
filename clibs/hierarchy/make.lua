@@ -6,6 +6,7 @@ lm:source_set "source_hierarchy" {
     deps = {
         "ozz-animation-base",
         "ozz-animation-runtime",
+        "ozz-animation-offline",
         "ozz-animation-geometry",
     },
     includes = {
