@@ -482,6 +482,13 @@ namespace AppSettings
     extern std::wstring CubeMapPaths_[NumCubeMaps];
     inline std::wstring CubeMapPaths(uint64 idx)
     {
+        const std::wstring CubeMapPaths_[NumCubeMaps] =
+        {
+            ContentDir() + L"EnvMaps\\Ennis.dds",
+            ContentDir() + L"EnvMaps\\GraceCathedral.dds",
+            ContentDir() + L"EnvMaps\\Uffizi.dds",
+        };
+
         Assert_(idx < NumCubeMaps);
         StaticAssert_(ArraySize_(CubeMapPaths_) == NumCubeMaps);
 

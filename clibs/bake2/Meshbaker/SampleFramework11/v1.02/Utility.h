@@ -106,9 +106,9 @@ void PrintString(const char* format, ...);
 std::wstring MakeString(const wchar* format, ...);
 std::string MakeAnsiString(const char* format, ...);
 
-std::wstring SampleFrameworkDir();
-std::wstring ContentDir();
-
+const std::wstring& SampleFrameworkDir();
+const std::wstring& ContentDir();
+const std::wstring& BakingLabDir();
 // Outputs a string to the debugger output and stdout
 inline void DebugPrint(const std::wstring& str)
 {

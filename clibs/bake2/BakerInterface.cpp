@@ -104,6 +104,108 @@ src_ptr(const BufferData &b, size_t idx){
     return b.data + b.offset + idx * b.stride;
 }
 
+struct VertexData{
+    Float3 pos;
+    Float3 normal;
+    Float2 texcoord0;
+    Float2 lightmapuv;
+    Float3 tangent;
+    Float3 bitangent;
+};
+
+static void GenerateTangentAndBitangents(VertexData *vertices, uint32 numVertices, const BufferData &indices, uint32 numIndices)
+{
+    // Compute the tangent frame for each vertex. The following code is based on
+    // "Computing Tangent Space Basis Vectors for an Arbitrary Mesh", by Eric Lengyel
+    // http://www.terathon.com/code/tangent.html
+
+    // Make temporary arrays for the tangent and the bitangent
+    std::vector<Float3> tangents(numVertices);
+    std::vector<Float3> bitangents(numVertices);
+
+    typedef std::function<uint32 (const BufferData &, uint32)> index_op;
+    index_op get_index16 = [](const auto& indices, uint32 idx){
+        return uint32(*((const uint16*)indices.data + idx));
+    };
+    index_op get_index32 = [](const auto& indices, uint32 idx){
+        return (*(const uint32*)indices.data + idx);
+    };
+
+    index_op get_index = indices.type == BT_Uint16 ? (get_index16) : (get_index32);
+
+    for (uint32 i = 0; i < numIndices; i += 3)
+    {
+        uint32 i1 = get_index(indices, i + 0);
+        uint32 i2 = get_index(indices, i + 1);
+        uint32 i3 = get_index(indices, i + 2);
+
+        const Float3& v1 = vertices[i1].pos;
+        const Float3& v2 = vertices[i2].pos;
+        const Float3& v3 = vertices[i3].pos;
+
+        const Float2& w1 = vertices[i1].lightmapuv;
+        const Float2& w2 = vertices[i2].lightmapuv;
+        const Float2& w3 = vertices[i3].lightmapuv;
+
+        float x1 = v2.x - v1.x;
+        float x2 = v3.x - v1.x;
+        float y1 = v2.y - v1.y;
+        float y2 = v3.y - v1.y;
+        float z1 = v2.z - v1.z;
+        float z2 = v3.z - v1.z;
+
+        float s1 = w2.x - w1.x;
+        float s2 = w3.x - w1.x;
+        float t1 = w2.y - w1.y;
+        float t2 = w3.y - w1.y;
+
+        float r = 1.0f / (s1 * t2 - s2 * t1);
+        Float3 sDir((t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r, (t2 * z1 - t1 * z2) * r);
+        Float3 tDir((s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r, (s1 * z2 - s2 * z1) * r);
+
+        vertices[i1].tangent += sDir;
+        vertices[i2].tangent += sDir;
+        vertices[i3].tangent += sDir;
+
+        vertices[i1].bitangent += tDir;
+        vertices[i2].bitangent += tDir;
+        vertices[i3].bitangent += tDir;
+    }
+
+    for (uint32 i = 0; i < numVertices; ++i)
+    {
+        Float3& n = vertices[i].normal;
+        Float3& t = tangents[i];
+
+        // Gram-Schmidt orthogonalize
+        Float3 tangent = (t - n * Float3::Dot(n, t));
+        bool zeroTangent = false;
+        if(tangent.Length() > 0.00001f)
+            Float3::Normalize(tangent);
+        else if(n.Length() > 0.00001f)
+        {
+            tangent = Float3::Perpendicular(n);
+            zeroTangent = true;
+        }
+
+        float sign = 1.0f;
+
+        if(!zeroTangent)
+        {
+            Float3 b;
+            b = Float3::Cross(n, t);
+            sign = (Float3::Dot(b, bitangents[i]) < 0.0f) ? -1.0f : 1.0f;
+        }
+
+        // Store the tangent + bitangent
+        vertices[i].tangent = Float3::Normalize(tangent);
+
+        vertices[i].bitangent = Float3::Normalize(Float3::Cross(n, tangent));
+        vertices[i].bitangent *= sign;
+    }
+}
+
+
 void Mesh::InitFromSceneMesh(ID3D11Device *device, const MeshData& meshdata)
 {
     numVertices = meshdata.vertexCount;
@@ -126,97 +228,86 @@ void Mesh::InitFromSceneMesh(ID3D11Device *device, const MeshData& meshdata)
     };
     std::vector<buffer> buffers;
 
-    auto default_copy = [=](auto dst, auto b, size_t vidx, uint32 n){
+    auto transform_pt = [](const glm::mat4 &m, const BufferData& b, size_t vidx){
         assert(b.type == BT_Float);
-        auto src = src_ptr(b, vidx);
-        memcpy(dst, src, n * sizeof(float));
-    };
-
-    auto transform_pt = [](const auto &m, auto dst, auto b, size_t vidx, uint32 n){
-        assert(b.type == BT_Float);
-        assert(n == 3);
-        glm::vec3* src = (glm::vec3*)src_ptr(b, vidx);
-        glm::vec4 v = m * glm::vec4(*src, 1.0f);
-        memcpy(dst, &v.x, sizeof(float)*3);
+        const glm::vec3* v = (const glm::vec3*)src_ptr(b, vidx);
+        const auto r = m * glm::vec4(*v, 1.0f);
+        return Float3(r.x, r.y, r.z);
     };
 
     const glm::mat3 nm = meshdata.normalmat;
-    auto transform_vec = [](const auto &m, auto dst, auto b, size_t vidx, uint32 n){
+    auto transform_vec3 = [](const glm::mat3 &m, const BufferData& b, size_t vidx){
         assert(b.type == BT_Float);
-        assert(n == 3);
-        glm::vec3 *src = (glm::vec3*)src_ptr(b, vidx);
-        auto v = m * *src;
-        memcpy(dst, &v.x, sizeof(float)*3);
+        const glm::vec3 *v = (const glm::vec3*)src_ptr(b, vidx);
+        const auto r = m * *v;
+        return Float3(r.x, r.y, r.z);
     };
 
     assert(meshdata.positions.type == BT_Float);
 
-    vertexStride = 0;
+    uint32 vertexOffset = 0;
     elemDesc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
-    elemDesc.AlignedByteOffset = vertexStride;
+    elemDesc.AlignedByteOffset = vertexOffset;
     elemDesc.SemanticName = "POSITION";
     elemDesc.SemanticIndex = 0;
     inputElements.push_back(elemDesc);
-    vertexStride += 12;
-    buffers.push_back(buffer{&meshdata.positions, std::bind(transform_pt, meshdata.worldmat, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, 3)});
+    vertexOffset += 12;
 
     assert(meshdata.normals.type == BT_Float);
     elemDesc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
-    elemDesc.AlignedByteOffset = vertexStride;
+    elemDesc.AlignedByteOffset = vertexOffset;
     elemDesc.SemanticName = "NORMAL";
     elemDesc.SemanticIndex = 0;
     inputElements.push_back(elemDesc);
-    vertexStride += 12;
+    vertexOffset += 12;
 
-    buffers.push_back(buffer{&meshdata.normals, std::bind(transform_vec, nm, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, 3)});
     assert(meshdata.texcoords0.type == BT_Float);
 
     elemDesc.Format = DXGI_FORMAT_R32G32_FLOAT;
-    elemDesc.AlignedByteOffset = vertexStride;
+    elemDesc.AlignedByteOffset = vertexOffset;
     elemDesc.SemanticName = "TEXCOORD";
     elemDesc.SemanticIndex = 0;
     inputElements.push_back(elemDesc);
-    vertexStride += 8;
-    buffers.push_back(buffer{&meshdata.texcoords0, std::bind(default_copy, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, 2)});
+    vertexOffset += 8;
 
     assert(meshdata.texcoords1.type == BT_Float);
     elemDesc.Format = DXGI_FORMAT_R32G32_FLOAT;
-    elemDesc.AlignedByteOffset = vertexStride;
+    elemDesc.AlignedByteOffset = vertexOffset;
     elemDesc.SemanticName = "TEXCOORD";
     elemDesc.SemanticIndex = 1;
     inputElements.push_back(elemDesc);
-    vertexStride += 8;
-    buffers.push_back(buffer{&meshdata.texcoords1, std::bind(default_copy, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, 2)});
+    vertexOffset += 8;
 
-    if (meshdata.tangents.type != BT_None && meshdata.bitangents.type != BT_None){
-        elemDesc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
-        elemDesc.AlignedByteOffset = vertexStride;
-        elemDesc.SemanticName = "TANGENT";
-        elemDesc.SemanticIndex = 0;
-        inputElements.push_back(elemDesc);
-        vertexStride += 12;
-        buffers.push_back(buffer{&meshdata.tangents, std::bind(transform_vec, nm, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, 3)});
+    elemDesc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
+    elemDesc.AlignedByteOffset = vertexOffset;
+    elemDesc.SemanticName = "TANGENT";
+    elemDesc.SemanticIndex = 0;
+    inputElements.push_back(elemDesc);
+    vertexOffset += 12;
 
-        elemDesc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
-        elemDesc.AlignedByteOffset = vertexStride;
-        elemDesc.SemanticName = "BITANGENT";
-        elemDesc.SemanticIndex = 0;
-        inputElements.push_back(elemDesc);
-        vertexStride += 12;
-        buffers.push_back(buffer{&meshdata.bitangents, std::bind(transform_vec, nm, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, 3)});
-    }
+    elemDesc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
+    elemDesc.AlignedByteOffset = vertexOffset;
+    elemDesc.SemanticName = "BITANGENT";
+    elemDesc.SemanticIndex = 0;
+    inputElements.push_back(elemDesc);
+    vertexOffset += 12;
 
+    vertexStride = sizeof(VertexData);
     // Copy and interleave the vertex data
-    vertices.resize(vertexStride * numVertices);
+    vertices.resize(sizeof(VertexData) * numVertices);
+    auto vd = (VertexData*)vertices.data();
+
     for(uint64 vtxIdx = 0; vtxIdx < numVertices; ++vtxIdx)
     {
-        uint8* vtxStart = &vertices[vtxIdx * vertexStride];
-        for(uint64 elemIdx = 0; elemIdx < inputElements.size(); ++elemIdx)
-        {
-            const auto &ie = inputElements[elemIdx];
+        auto &v = vd[vtxIdx];
+        v.pos = transform_pt(meshdata.worldmat, meshdata.positions, vtxIdx);
+        v.normal = transform_vec3(nm, meshdata.normals, vtxIdx);
+        v.texcoord0 = *(const Float2*)src_ptr(meshdata.texcoords0, vtxIdx);
+        v.lightmapuv = *(const Float2*)src_ptr(meshdata.texcoords1, vtxIdx);
 
-            auto buffer = buffers[elemIdx];
-            buffer.f(vtxStart + ie.AlignedByteOffset, *(buffer.b), vtxIdx);
+        if (meshdata.tangents.type != BT_None && meshdata.bitangents.type != BT_None){
+            v.tangent = transform_vec3(nm, meshdata.tangents, vtxIdx);
+            v.bitangent = transform_vec3(nm, meshdata.bitangents, vtxIdx);
         }
     }
 
@@ -226,7 +317,7 @@ void Mesh::InitFromSceneMesh(ID3D11Device *device, const MeshData& meshdata)
     memcpy(indices.data(), meshdata.indices.data, indexSizeBytes);
 
     if (meshdata.tangents.type == BT_None || meshdata.bitangents.type == BT_None)
-        GenerateTangentFrame();
+        GenerateTangentAndBitangents(vd, numVertices, meshdata.indices, numIndices);
 
     CreateVertexAndIndexBuffers(device);
 

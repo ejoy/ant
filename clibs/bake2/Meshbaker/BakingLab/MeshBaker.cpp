@@ -1009,9 +1009,31 @@ static void BuildBVH(const Model& model, BVHData& bvhData, ID3D11Device* d3dDevi
     }
 }
 
+static void drawmesh(ID3D11DeviceContextPtr context, ID3D11Device* device, VertexShaderPtr vs, ConstantBuffer<uint32> &constantBuffer, 
+    const Mesh& mesh, uint32 vertexOffset)
+{
+    ID3D11InputLayoutPtr inputLayout;
+    DXCall(device->CreateInputLayout(mesh.InputElements(), mesh.NumInputElements(),
+                                    vs->ByteCode->GetBufferPointer(),
+                                    vs->ByteCode->GetBufferSize(), &inputLayout));
+    context->IASetInputLayout(inputLayout);
+
+    ID3D11Buffer* vertexBuffers[1] = { mesh.VertexBuffer() };
+    UINT vertexStrides[1] = { mesh.VertexStride() };
+    UINT offsets[1] = { 0 };
+    context->IASetVertexBuffers(0, 1, vertexBuffers, vertexStrides, offsets);
+    context->IASetIndexBuffer(mesh.IndexBuffer(), mesh.IndexBufferFormat(), 0);
+    context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    constantBuffer.Data = vertexOffset;
+    constantBuffer.ApplyChanges(context);
+
+    context->DrawIndexed(mesh.NumIndices(), 0, 0);
+};
+
 // Computes lightmap sample points and gutter texels
 static void ExtractBakePoints(const BakeInputData& bakeInput, std::vector<BakePoint>& bakePoints,
-                              std::vector<GutterTexel>& gutterTexels, uint32 bakeMeshIdx = UINT32_MAX)
+                              std::vector<GutterTexel>& gutterTexels, uint32 bakeMeshIdx)
 {
     const uint32 LightMapSize = AppSettings::LightMapResolution;
     const uint64 NumTexels = LightMapSize * LightMapSize;
@@ -1056,8 +1078,8 @@ static void ExtractBakePoints(const BakeInputData& bakeInput, std::vector<BakePo
     for(uint64 i = 0; i < NumTargets; ++i)
         context->ClearRenderTargetView(rtViews[i], clearColor);
 
-    VertexShaderPtr vs = CompileVSFromFile(device, L"LightMapRasterization.hlsl");
-    PixelShaderPtr ps = CompilePSFromFile(device, L"LightMapRasterization.hlsl");
+    VertexShaderPtr vs = CompileVSFromFile(device, (BakingLabDir() + L"LightMapRasterization.hlsl").c_str());
+    PixelShaderPtr ps = CompilePSFromFile(device,  (BakingLabDir() + L"LightMapRasterization.hlsl").c_str());
 
     context->VSSetShader(vs, nullptr, 0);
     context->GSSetShader(nullptr, nullptr, 0);
@@ -1095,41 +1117,23 @@ static void ExtractBakePoints(const BakeInputData& bakeInput, std::vector<BakePo
 
     const Model& model = *bakeInput.SceneModel;
     const std::vector<Mesh>& meshes = model.Meshes();
-    auto drawmesh = [context, device, vs, &constantBuffer](auto mesh, uint32 vertexOffset){
-        ID3D11InputLayoutPtr inputLayout;
-        DXCall(device->CreateInputLayout(mesh.InputElements(), mesh.NumInputElements(),
-                                         vs->ByteCode->GetBufferPointer(),
-                                         vs->ByteCode->GetBufferSize(), &inputLayout));
-        context->IASetInputLayout(inputLayout);
 
-        ID3D11Buffer* vertexBuffers[1] = { mesh.VertexBuffer() };
-        UINT vertexStrides[1] = { mesh.VertexStride() };
-        UINT offsets[1] = { 0 };
-        context->IASetVertexBuffers(0, 1, vertexBuffers, vertexStrides, offsets);
-        context->IASetIndexBuffer(mesh.IndexBuffer(), mesh.IndexBufferFormat(), 0);
-        context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-        constantBuffer.Data = vertexOffset;
-        constantBuffer.ApplyChanges(context);
-
-        context->DrawIndexed(mesh.NumIndices(), 0, 0);
-    };
 
     if (bakeMeshIdx != UINT32_MAX){
         const Mesh& mesh = meshes[bakeMeshIdx];
-        drawmesh(mesh, vertexOffset);
+        drawmesh(context, device, vs, constantBuffer, mesh, vertexOffset);
     } else {
         for(uint64 meshIdx = 0; meshIdx < meshes.size(); ++meshIdx)
         {
             const Mesh& mesh = meshes[meshIdx];
-            drawmesh(mesh, vertexOffset);
+            drawmesh(context, device, vs, constantBuffer, mesh, vertexOffset);
             vertexOffset += mesh.NumVertices();
         }
     }
 
     // Resolve the targets
-    VertexShaderPtr resolveVS = CompileVSFromFile(device, L"LightMapRasterization.hlsl", "ResolveVS");
-    PixelShaderPtr resolvePS = CompilePSFromFile(device, L"LightMapRasterization.hlsl", "ResolvePS");
+    VertexShaderPtr resolveVS = CompileVSFromFile(device, (BakingLabDir() + L"LightMapRasterization.hlsl").c_str(), "ResolveVS");
+    PixelShaderPtr resolvePS = CompilePSFromFile(device,  (BakingLabDir() + L"LightMapRasterization.hlsl").c_str(), "ResolvePS");
     context->VSSetShader(resolveVS, nullptr, 0);
     context->PSSetShader(resolvePS, nullptr, 0);
 
@@ -1576,8 +1580,8 @@ MeshBakerStatus MeshBaker::Update(const Camera& camera, uint32 screenWidth, uint
             KillBakeThreads();
             KillRenderThreads();
 
-            ExtractBakePoints(input, bakePoints, gutterTexels);
-            bakeMeshIdx = UINT32_MAX;
+            ExtractBakePoints(input, bakePoints, gutterTexels, bakeMeshIdx);
+
             bakePointBuffer.Initialize(input.Device, sizeof(BakePoint), uint32(bakePoints.size()),
                                        false, false, false, bakePoints.data());
 

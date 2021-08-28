@@ -49,16 +49,23 @@ std::string MakeAnsiString(const char* format, ...)
     return std::string(buffer);
 }
 
-std::wstring SampleFrameworkDir()
+static const std::wstring s_SampleFrameworkDir = SampleFrameworkDir_;
+const std::wstring& SampleFrameworkDir()
 {
-    return std::wstring(SampleFrameworkDir_);
+    return s_SampleFrameworkDir;
 }
 
 static const std::wstring s_ContentDir = ContentDir_;
 
-std::wstring ContentDir()
+const std::wstring& ContentDir()
 {
-    return ContentDir_;
+    return s_ContentDir;
+}
+
+static const std::wstring s_BakingLabDir = BakingLabDir_;
+const std::wstring& BakingLabDir()
+{
+    return s_BakingLabDir;
 }
 
 // Converts from cartesian to barycentric coordinates
