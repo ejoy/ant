@@ -43,11 +43,11 @@ static const float FarClip = 100.0f;
 #define WriteCachedLightmap_ (Release_ && UseCachedLightmap_)
 
 // Model filenames
-static const wchar* ScenePaths[] =
+static const std::wstring ScenePaths[] =
 {
-    L"..\\Content\\Models\\Box\\Box_Lightmap.fbx",
-    L"..\\Content\\Models\\WhiteRoom\\WhiteRoom.fbx",
-    L"..\\Content\\Models\\Sponza\\Sponza_Lightmap.fbx",
+    ContentDir() + L"Models\\Box\\Box_Lightmap.fbx",
+    ContentDir() + L"Models\\WhiteRoom\\WhiteRoom.fbx",
+    ContentDir() + L"Models\\Sponza\\Sponza_Lightmap.fbx",
 };
 
 static const Float3 SceneCameraPositions[] = { Float3(0.0f, 2.5f, -15.0f), Float3(0.0f, 2.5f, 0.0f), Float3(-5.12373829f, 13.8305235f, -0.463505715f) };
@@ -372,8 +372,8 @@ static void GenerateSHSpecularLookupTextures(ID3D11Device* device)
     ID3D11Texture3DPtr texture1;
     DXCall(device->CreateTexture3D(&desc, &srData, &texture1));
 
-    SaveTextureAsDDS(texture0, L"..\\Content\\Textures\\SHSpecularA.dds");
-    SaveTextureAsDDS(texture1, L"..\\Content\\Textures\\SHSpecularB.dds");
+    SaveTextureAsDDS(texture0, (ContentDir() + L"Textures\\SHSpecularA.dds").c_str());
+    SaveTextureAsDDS(texture1, (ContentDir() + L"Textures\\SHSpecularB.dds").c_str());
 }
 
 // Bakes a lookup texture containing a scale bias that can be used for sampling a pre-filtered environment map
@@ -462,7 +462,7 @@ static void GenerateEnvSpecularLookupTexture(ID3D11Device* device)
     ID3D11Texture2DPtr texture;
     DXCall(device->CreateTexture2D(&desc, &srData, &texture));
 
-    SaveTextureAsDDS(texture, L"..\\Content\\Textures\\EnvSpecularLookup.dds");
+    SaveTextureAsDDS(texture, (ContentDir() + L"Textures\\EnvSpecularLookup.dds").c_str());
 
     WriteStringAsFile(L"EnvBRDF.csv", csvOutput);
 }
@@ -497,14 +497,14 @@ void BakingLab::AfterReset()
 void BakingLab::MeshbakerInitialize(const Model* sceneModel)
 {
     auto device = deviceManager.Device();
-    // for(uint64 i = 0; i < AppSettings::NumCubeMaps; ++i)
-    //     envMaps[i] = LoadTexture(device, AppSettings::CubeMapPaths(i));
+    for(uint64 i = 0; i < AppSettings::NumCubeMaps; ++i)
+        envMaps[i] = LoadTexture(device, AppSettings::CubeMapPaths(i).c_str());
 
     BakeInputData bakeInput;
     bakeInput.SceneModel = sceneModel;
     bakeInput.Device = device;
-    // for(uint64 i = 0; i < AppSettings::NumCubeMaps; ++i)
-    //     bakeInput.EnvMaps[i] = envMaps[i];
+    for(uint64 i = 0; i < AppSettings::NumCubeMaps; ++i)
+        bakeInput.EnvMaps[i] = envMaps[i];
     meshBaker.Initialize(bakeInput);
 }
 
@@ -527,10 +527,10 @@ void BakingLab::Initialize()
     // Load the scenes
     for(uint64 i = 0; i < uint64(Scenes::NumValues); ++i)
     {
-        if(GetFileExtension(ScenePaths[i]) == L"meshdata")
-            sceneModels[i].CreateFromMeshData(device, ScenePaths[i], true);
+        if(GetFileExtension(ScenePaths[i].c_str()) == L"meshdata")
+            sceneModels[i].CreateFromMeshData(device, ScenePaths[i].c_str(), true);
         else
-            sceneModels[i].CreateWithAssimp(device, ScenePaths[i], true);
+            sceneModels[i].CreateWithAssimp(device, ScenePaths[i].c_str(), true);
     }
 
     Model& currentModel = sceneModels[AppSettings::CurrentScene.Value()];

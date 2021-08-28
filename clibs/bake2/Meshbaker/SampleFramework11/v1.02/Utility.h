@@ -107,6 +107,7 @@ std::wstring MakeString(const wchar* format, ...);
 std::string MakeAnsiString(const char* format, ...);
 
 std::wstring SampleFrameworkDir();
+std::wstring ContentDir();
 
 // Outputs a string to the debugger output and stdout
 inline void DebugPrint(const std::wstring& str)

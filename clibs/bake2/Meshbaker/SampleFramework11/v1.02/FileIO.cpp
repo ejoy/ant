@@ -45,6 +45,9 @@ std::wstring GetDirectoryFromFilePath(const wchar* filePath_)
 
     std::wstring filePath(filePath_);
     size_t idx = filePath.rfind(L'\\');
+    if(idx == std::wstring::npos)
+        idx = filePath.rfind(L'/');
+
     if(idx != std::wstring::npos)
         return filePath.substr(0, idx + 1);
     else
@@ -58,16 +61,13 @@ std::wstring GetFileName(const wchar* filePath_)
 
     std::wstring filePath(filePath_);
     size_t idx = filePath.rfind(L'\\');
+    if (idx == std::wstring::npos)
+        idx = filePath.rfind(L'/');
+    
     if(idx != std::wstring::npos && idx < filePath.length() - 1)
         return filePath.substr(idx + 1);
-    else
-    {
-        idx = filePath.rfind(L'/');
-        if(idx != std::wstring::npos && idx < filePath.length() - 1)
-            return filePath.substr(idx + 1);
-        else
-            return filePath;
-    }
+
+    return filePath;
 }
 
 // Returns the name of the file given the path, minus the extension

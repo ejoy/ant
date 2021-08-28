@@ -973,8 +973,8 @@ void Model::GenerateBoxScene(ID3D11Device* device, const Float3& dimensions, con
     MeshMaterial material;
     material.DiffuseMapName = colorMap;
     material.NormalMapName = normalMap;
-    fileDirectory = L"..\\Content\\Textures\\";
-    LoadMaterialResources(material, L"..\\Content\\Textures\\", device, false);
+    fileDirectory = ContentDir() + L"Textures\\";
+    LoadMaterialResources(material, fileDirectory, device, false);
     meshMaterials.push_back(material);
 
     meshes.resize(1);
@@ -986,8 +986,8 @@ void Model::GenerateBoxTestScene(ID3D11Device* device)
     MeshMaterial material;
     material.DiffuseMapName = L"White.png";
     material.NormalMapName = L"Hex.png";
-    fileDirectory = L"..\\Content\\Textures\\";
-    LoadMaterialResources(material, L"..\\Content\\Textures\\", device, false);
+    fileDirectory = ContentDir() + L"Textures\\";
+    LoadMaterialResources(material, fileDirectory, device, false);
     meshMaterials.push_back(material);
 
     meshes.resize(2);
@@ -1003,8 +1003,8 @@ void Model::GeneratePlaneScene(ID3D11Device* device, const Float2& dimensions, c
     MeshMaterial material;
     material.DiffuseMapName = colorMap;
     material.NormalMapName = normalMap;
-    fileDirectory = L"..\\Content\\Textures\\";
-    LoadMaterialResources(material, L"..\\Content\\Textures\\", device, false);
+    fileDirectory = ContentDir() + L"Textures\\";
+    LoadMaterialResources(material, fileDirectory, device, false);
     meshMaterials.push_back(material);
 
     meshes.resize(1);
@@ -1016,8 +1016,8 @@ void Model::GenerateCorneaScene(ID3D11Device* device)
     MeshMaterial material;
     material.DiffuseMapName = L"Eyeball.png";
     material.NormalMapName = L"";
-    fileDirectory = L"..\\Content\\Textures\\";
-    LoadMaterialResources(material, L"..\\Content\\Textures\\", device, false);
+    fileDirectory = ContentDir() + L"Textures\\";
+    LoadMaterialResources(material, fileDirectory, device, false);
     meshMaterials.push_back(material);
 
     meshes.resize(1);
@@ -1034,7 +1034,7 @@ void Model::LoadMaterialResources(MeshMaterial& material, const wstring& directo
     {
         static ID3D11ShaderResourceViewPtr defaultDiffuse;
         if(defaultDiffuse == nullptr)
-            defaultDiffuse = LoadTexture(device, L"..\\Content\\Textures\\Default.dds");
+            defaultDiffuse = LoadTexture(device, (ContentDir() + L"Textures\\Default.dds").c_str());
         material.DiffuseMap = defaultDiffuse;
     }
 
@@ -1046,7 +1046,7 @@ void Model::LoadMaterialResources(MeshMaterial& material, const wstring& directo
     {
         static ID3D11ShaderResourceViewPtr defaultNormalMap;
         if(defaultNormalMap == nullptr)
-            defaultNormalMap = LoadTexture(device, L"..\\Content\\Textures\\DefaultNormalMap.dds");
+            defaultNormalMap = LoadTexture(device, (ContentDir() + L"Textures\\DefaultNormalMap.dds").c_str());
         material.NormalMap = defaultNormalMap;
     }
 
@@ -1058,7 +1058,7 @@ void Model::LoadMaterialResources(MeshMaterial& material, const wstring& directo
     {
         static ID3D11ShaderResourceViewPtr defaultRoughnessMap;
         if(defaultRoughnessMap == nullptr)
-            defaultRoughnessMap = LoadTexture(device, L"..\\Content\\Textures\\DefaultRoughness.dds");
+            defaultRoughnessMap = LoadTexture(device, (ContentDir() + L"Textures\\DefaultRoughness.dds").c_str());
         material.RoughnessMap = defaultRoughnessMap;
     }
 
@@ -1070,7 +1070,7 @@ void Model::LoadMaterialResources(MeshMaterial& material, const wstring& directo
     {
         static ID3D11ShaderResourceViewPtr defaultMetallicMap;
         if(defaultMetallicMap == nullptr)
-            defaultMetallicMap = LoadTexture(device, L"..\\Content\\Textures\\DefaultBlack.dds");
+            defaultMetallicMap = LoadTexture(device, (ContentDir() + L"Textures\\DefaultBlack.dds").c_str());
         material.MetallicMap = defaultMetallicMap;
     }
 }

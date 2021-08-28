@@ -195,6 +195,13 @@ static const char* ScenesLabels[3] =
 
 namespace AppSettings
 {
+    std::wstring CubeMapPaths_[NumCubeMaps] =
+    {
+        ContentDir() + L"EnvMaps\\Ennis.dds",
+        ContentDir() + L"EnvMaps\\GraceCathedral.dds",
+        ContentDir() + L"EnvMaps\\Uffizi.dds",
+    };
+
     BoolSetting EnableSun;
     BoolSetting SunAreaLightApproximation;
     BoolSetting BakeDirectSunLight;

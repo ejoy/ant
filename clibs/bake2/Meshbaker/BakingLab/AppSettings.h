@@ -479,19 +479,13 @@ namespace AppSettings
     const uint64 CubeMapStart = uint64(SkyModes::CubeMapEnnis);
     const uint64 NumCubeMaps = uint64(SkyModes::NumValues) - CubeMapStart;
 
-    inline const wchar* CubeMapPaths(uint64 idx)
+    extern std::wstring CubeMapPaths_[NumCubeMaps];
+    inline std::wstring CubeMapPaths(uint64 idx)
     {
         Assert_(idx < NumCubeMaps);
+        StaticAssert_(ArraySize_(CubeMapPaths_) == NumCubeMaps);
 
-        const wchar* Paths[] =
-        {
-            L"..\\Content\\EnvMaps\\Ennis.dds",
-            L"..\\Content\\EnvMaps\\GraceCathedral.dds",
-            L"..\\Content\\EnvMaps\\Uffizi.dds",
-        };
-        StaticAssert_(ArraySize_(Paths) == NumCubeMaps);
-
-        return Paths[idx];
+        return CubeMapPaths_[idx];
     }
 
     Float3 SunLuminance();

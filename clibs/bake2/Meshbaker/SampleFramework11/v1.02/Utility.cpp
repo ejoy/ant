@@ -54,6 +54,13 @@ std::wstring SampleFrameworkDir()
     return std::wstring(SampleFrameworkDir_);
 }
 
+static const std::wstring s_ContentDir = ContentDir_;
+
+std::wstring ContentDir()
+{
+    return ContentDir_;
+}
+
 // Converts from cartesian to barycentric coordinates
 XMFLOAT3 CartesianToBarycentric(float x, float y, const XMFLOAT2& pos1, const XMFLOAT2& pos2, const XMFLOAT2& pos3)
 {

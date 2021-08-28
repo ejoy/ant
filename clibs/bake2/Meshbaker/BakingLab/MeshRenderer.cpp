@@ -315,9 +315,9 @@ void MeshRenderer::Initialize(ID3D11Device* device, ID3D11DeviceContext* context
     evsmConstants.Initialize(device);
     reductionConstants.Initialize(device);
 
-    shSpecularLookupA = LoadTexture(device, L"..\\Content\\Textures\\SHSpecularA.dds");
-    shSpecularLookupB = LoadTexture(device, L"..\\Content\\Textures\\SHSpecularB.dds");
-    envSpecularLookup = LoadTexture(device, L"..\\Content\\Textures\\EnvSpecularLookup.dds");
+    shSpecularLookupA = LoadTexture(device, (ContentDir() + L"Textures\\SHSpecularA.dds").c_str());
+    shSpecularLookupB = LoadTexture(device, (ContentDir() + L"Textures\\SHSpecularB.dds").c_str());
+    envSpecularLookup = LoadTexture(device, (ContentDir() + L"Textures\\EnvSpecularLookup.dds").c_str());
 
     LoadShaders();
 
