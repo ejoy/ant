@@ -30,31 +30,12 @@ else
         }
     }
 
-    if lm.compiler == "msvc" then
-        lm:build "mt_bgfx_texturec" {
-            "mt", "-nologo", "-manifest", "@utf8.manifest", "-outputresource:$in;#1",
-            input = "$bin/texturec.exe",
-            deps = "texturec",
-        }
-        lm:build "mt_bgfx_shaderc" {
-            "mt", "-nologo", "-manifest", "@utf8.manifest", "-outputresource:$in;#1",
-            input = "$bin/shaderc.exe",
-            deps = "shaderc",
-        }
-    end
-
     lm:phony "bgfx_make" {
         deps = {
             "copy_bgfx_shader",
             "bgfx-core",
             "shaderc",
             "texturec",
-        },
-        msvc = {
-            deps = {
-                "mt_bgfx_texturec",
-                "mt_bgfx_shaderc",
-            }
         }
     }
 end

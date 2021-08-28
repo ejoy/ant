@@ -167,6 +167,9 @@ lm:exe "shaderc" {
         "src/vertexlayout.cpp",
         "src/shader*.cpp",
     },
+    windows = {
+        sources = "../scripts/bgfx/shaderc.rc"
+    },
     msvc = {
         defines = "_CRT_SECURE_NO_WARNINGS",
         includes = "../bx/include/compat/msvc",
