@@ -20,6 +20,8 @@ static inline uint32_t _FindDirectionalLight(const Scene *scene){
 
 BakerHandle CreateBaker(const Scene* scene){
     auto bl = new BakingLab();
+    bl->Init(scene);
+
     AppSettings::BakeMode.SetValue(BakeModes::Diffuse);
 
     auto lidx = _FindDirectionalLight(scene);
@@ -40,7 +42,6 @@ BakerHandle CreateBaker(const Scene* scene){
     AppSettings::BakeDirectAreaLight.SetValue(false);
     AppSettings::SkyMode.SetValue(SkyModes::Simple);
 
-    bl->Init(scene);
     return bl;
 }
 

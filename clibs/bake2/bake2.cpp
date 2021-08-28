@@ -59,6 +59,7 @@ namespace lua_struct {
         luaL_checktype(L, idx, LUA_TTABLE);
         unpack_field(L, idx, "worldmat", v.worldmat);
         unpack_field(L, idx, "normalmat", v.normalmat);
+
         unpack_field(L, idx, "positions", v.positions);
         unpack_field(L, idx, "normals",   v.normals);
         v.tangents.type = BT_None;
@@ -67,10 +68,15 @@ namespace lua_struct {
         unpack_field_opt(L, idx, "bitangents", v.bitangents);
         unpack_field(L, idx, "texcoords0", v.texcoords0);
         unpack_field(L, idx, "texcoords1", v.texcoords1);
-        unpack_field(L, idx, "materialidx", v.materialidx);
+
         unpack_field(L, idx, "vertexCount", v.vertexCount);
+
+        // for indices
+        unpack_field_opt(L, idx, "indices", v.indices);
         v.indexCount = 0;
         unpack_field_opt(L, idx, "indexCount", v.indexCount);
+
+        unpack_field(L, idx, "materialidx", v.materialidx);
         assert(v.materialidx > 0);
         --v.materialidx;
     }

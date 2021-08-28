@@ -25,7 +25,8 @@ lm:source_set "Meshbaker" {
         "_WINDOWS",
         "_UNICODE",
         "UNICODE",
-        [[SampleFrameworkDir_=L\"Meshbaker/SampleFramework11/v1.02/\"]],
+        [[SampleFrameworkDir_=L\"clibs/bake2/Meshbaker/SampleFramework11/v1.02/\"]],
+        [[ContentDir_=L\"clibs/bake2/Meshbaker/Content/\"]]
     },
     cxx = "c++14",
     linkdirs = {
