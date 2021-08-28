@@ -1175,7 +1175,7 @@ void BakingLab::Init(const Scene *s)
     sceneModels[0].CreateFromScene(device, s, false);
 }
 
-float BakingLab::BakeProcess(uint32 bakeMeshIdx)
+float BakingLab::BakeProcess()
 {
     timer.Update();
     Settings.Update();
@@ -1183,7 +1183,6 @@ float BakingLab::BakeProcess(uint32 bakeMeshIdx)
     AppSettings::Update();
 
     ID3D11DeviceContextPtr context = deviceManager.ImmediateContext();
-    meshBaker.bakeMeshIdx = bakeMeshIdx;
     meshbakerStatus = meshBaker.Update(unJitteredCamera, 0, 0, //colorTargetMSAA.Width, colorTargetMSAA.Height,
                                         context, &sceneModels[AppSettings::CurrentScene]);
     AppSettings::UpdateCBuffer(deviceManager.ImmediateContext());
@@ -1193,7 +1192,10 @@ float BakingLab::BakeProcess(uint32 bakeMeshIdx)
 
 void BakingLab::Bake(uint32 bakeMeshIdx)
 {
-    while (BakeProcess(bakeMeshIdx) >= 1.f) ;
+    meshBaker.bakeMeshIdx = bakeMeshIdx;
+    while (BakeProcess() < 1.f) ;
+
+    meshBaker.bakeMeshIdx = UINT32_MAX;
 }
 
 void BakingLab::ShutDown()

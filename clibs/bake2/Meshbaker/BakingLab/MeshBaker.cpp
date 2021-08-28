@@ -1581,7 +1581,7 @@ MeshBakerStatus MeshBaker::Update(const Camera& camera, uint32 screenWidth, uint
             KillRenderThreads();
 
             ExtractBakePoints(input, bakePoints, gutterTexels, bakeMeshIdx);
-
+            bakeMeshIdx = UINT32_MAX;   // must set to UINT32_MAX for not enter this branch after another update
             bakePointBuffer.Initialize(input.Device, sizeof(BakePoint), uint32(bakePoints.size()),
                                        false, false, false, bakePoints.data());
 
