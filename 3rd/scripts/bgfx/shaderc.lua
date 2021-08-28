@@ -38,7 +38,10 @@ lm:source_set "glslang" {
         "OGLCompilersDLL/*.cpp",
     },
     windows = {
-        sources = "!glslang/OSDependent/Unix/*cpp",
+        sources = "!glslang/OSDependent/Unix/*.cpp",
+    },
+    macos = {
+        sources = "!glslang/OSDependent/Windows/*.cpp",
     },
     msvc = {
         flags = {
@@ -107,6 +110,11 @@ lm:source_set "spirv-opt" {
         flags = {
             "/wd4819",
         }
+    },
+    clang = {
+        flags = {
+            "-Wno-infinite-recursion"
+        }
     }
 }
 
@@ -167,5 +175,11 @@ lm:exe "shaderc" {
     },
     mingw = {
         includes = "../bx/include/compat/mingw",
+    },
+    macos = {
+        includes = "../bx/include/compat/osx",
+        frameworks = {
+            "Cocoa"
+        }
     }
 }

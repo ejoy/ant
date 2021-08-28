@@ -28,5 +28,11 @@ lm:exe "texturec" {
     },
     mingw = {
         includes = "../bx/include/compat/mingw",
+    },
+    macos = {
+        includes = "../bx/include/compat/osx",
+        frameworks = {
+            "Cocoa"
+        }
     }
 }

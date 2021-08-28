@@ -21,6 +21,9 @@ lm:source_set "bx" {
     mingw = {
         includes = "include/compat/mingw",
     },
+    macos = {
+        includes = "include/compat/osx",
+    },
     gcc = {
         flags = "-Wno-maybe-uninitialized"
     }

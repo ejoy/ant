@@ -32,5 +32,24 @@ lm:dll "bgfx-core" {
     },
     mingw = {
         includes = "../bx/include/compat/mingw",
+    },
+    macos = {
+        includes = "../bx/include/compat/osx",
+        sources = {
+            "src/*.mm",
+            "!src/amalgamated.mm",
+        },
+        flags = {
+            "-x", "objective-c++"
+        },
+        frameworks = {
+            "Cocoa",
+            "QuartzCore",
+            "OpenGL",
+        },
+        ldflags = {
+            "-weak_framework", "Metal",
+            "-weak_framework", "MetalKit",
+        }
     }
 }

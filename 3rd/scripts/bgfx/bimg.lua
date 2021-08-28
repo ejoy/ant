@@ -23,6 +23,12 @@ lm:source_set "astc-codec" {
         flags = {
             "-Wno-class-memaccess",
         }
+    },
+    clang = {
+        flags = {
+            "-Wno-deprecated-array-compare",
+            "-Wno-unused-function"
+        }
     }
 }
 
@@ -43,6 +49,9 @@ lm:source_set "bimg" {
     },
     mingw = {
         includes = "../bx/include/compat/mingw",
+    },
+    macos = {
+        includes = "../bx/include/compat/osx",
     },
     gcc = {
         flags = {
@@ -66,6 +75,9 @@ lm:source_set "bimg_decode" {
     },
     mingw = {
         includes = "../bx/include/compat/mingw",
+    },
+    macos = {
+        includes = "../bx/include/compat/osx",
     }
 }
 
@@ -131,6 +143,9 @@ lm:source_set "bimg_encode" {
     },
     mingw = {
         includes = "../bx/include/compat/mingw",
+    },
+    macos = {
+        includes = "../bx/include/compat/osx",
     },
     gcc = {
         flags = {

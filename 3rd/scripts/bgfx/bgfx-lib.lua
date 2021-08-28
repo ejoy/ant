@@ -20,7 +20,6 @@ lm:lib "bgfx-lib" {
     },
     windows = {
         includes = "3rdparty/dxsdk/include",
-        links = { "gdi32", "psapi", "user32" }
     },
     msvc = {
         defines = {
@@ -31,5 +30,15 @@ lm:lib "bgfx-lib" {
     },
     mingw = {
         includes = "../bx/include/compat/mingw",
+    },
+    macos = {
+        includes = "../bx/include/compat/osx",
+        sources = {
+            "src/*.mm",
+            "!src/amalgamated.mm",
+        },
+        flags = {
+            "-x", "objective-c++"
+        }
     }
 }
