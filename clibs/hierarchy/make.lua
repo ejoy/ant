@@ -2,10 +2,12 @@ local lm = require "luamake"
 
 dofile "../common.lua"
 
-local LIB_SUFFIX = lm.mode == "release" and "_r" or "_d"
-local OzzDir = Ant3rd..lm.builddir.."/ozz-animation/src/"
-
 lm:source_set "source_hierarchy" {
+    deps = {
+        "ozz-animation-base",
+        "ozz-animation-runtime",
+        "ozz-animation-geometry",
+    },
     includes = {
         LuaInclude,
         Ant3rd .. "ozz-animation/include",
@@ -18,18 +20,6 @@ lm:source_set "source_hierarchy" {
         "ozzmesh.cpp",
         "scene.c",
         Ant3rd .. "ozz-animation/samples/framework/mesh.cc"
-    },
-    linkdirs = {
-        OzzDir .. "base",
-        OzzDir .. "animation/runtime",
-        OzzDir .. "animation/offline",
-        OzzDir .. "geometry/runtime",
-    },
-    links = {
-        "ozz_geometry" .. LIB_SUFFIX,
-        "ozz_animation_offline" .. LIB_SUFFIX,
-        "ozz_animation" .. LIB_SUFFIX,
-        "ozz_base" .. LIB_SUFFIX,
     },
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",
