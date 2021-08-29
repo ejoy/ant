@@ -85,7 +85,7 @@ static string GetExpandedShaderCode(const wchar* path, vector<wstring>& filePath
     return fileContents;
 }
 
-static const wstring baseCacheDir = L"ShaderCache\\";
+static const wstring baseCacheDir = std::wstring(ContentDir_) + L"ShaderCache\\";
 
 #if _DEBUG
     static const wstring cacheSubDir = L"Debug\\";
@@ -93,7 +93,7 @@ static const wstring baseCacheDir = L"ShaderCache\\";
     static const std::wstring cacheSubDir = L"Release\\";
 #endif
 
-static const wstring cacheDir = ContentDir_ + baseCacheDir + cacheSubDir;
+static const wstring cacheDir = baseCacheDir + cacheSubDir;
 
 static string MakeDefinesString(const D3D_SHADER_MACRO* defines)
 {
