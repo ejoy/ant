@@ -93,7 +93,7 @@ static const wstring baseCacheDir = L"ShaderCache\\";
     static const std::wstring cacheSubDir = L"Release\\";
 #endif
 
-static const wstring cacheDir = baseCacheDir + cacheSubDir;
+static const wstring cacheDir = ContentDir_ + baseCacheDir + cacheSubDir;
 
 static string MakeDefinesString(const D3D_SHADER_MACRO* defines)
 {
