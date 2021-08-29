@@ -147,6 +147,7 @@ private:
     bool renderThreadsSuspended = false;
 
     ID3D11Texture2DPtr bakeTexture;
+    public:
     ID3D11ShaderResourceViewPtr bakeTextureSRV;
     uint64 bakeStagingTextureIdx = 0;
     ID3D11Texture2DPtr bakeStagingTextures[NumStagingTextures];

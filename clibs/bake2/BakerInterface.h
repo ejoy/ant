@@ -69,13 +69,12 @@ struct Scene {
 };
 
 struct Lightmap{
-    std::vector<uint16_t>   data;
+    std::vector<glm::vec4>   data;
     uint16_t size;
-    uint16_t texelsize;
 };
 
 struct BakeResult {
-    Lightmap lm;
+    std::vector<Lightmap> lightmaps;
 };
 
 extern BakerHandle CreateBaker(const Scene* scene);

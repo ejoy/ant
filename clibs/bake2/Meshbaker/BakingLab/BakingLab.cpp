@@ -1202,3 +1202,9 @@ void BakingLab::ShutDown()
 {
     ShutdownShaders();
 }
+
+void BakingLab::GetBakeTextureData(TextureData<Float4>& textureData)
+{
+    auto device = deviceManager.Device();
+    GetTextureData(device, meshBaker.bakeTextureSRV, textureData);
+}

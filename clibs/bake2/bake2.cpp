@@ -126,15 +126,20 @@ lbaker_bake(lua_State *L){
     auto bh = (BakerHandle)lua_touserdata(L, 1);
     BakeResult br;
     Bake(bh, &br);
-    lua_createtable(L, 0, 0);
-    lua_pushlstring(L, (const char*)br.lm.data.data(), br.lm.data.size());
-    lua_setfield(L, -2, "data");
 
-    lua_pushinteger(L, br.lm.size);
-    lua_setfield(L, -2, "sieze");
+    lua_createtable(L, br.lightmaps.size(), 0);
+    for (size_t ii=0; ii<br.lightmaps.size(); ++ii){
+        const auto &lm = br.lightmaps[ii];
+        lua_pushlstring(L, (const char*)lm.data.data(), lm.data.size());
+        lua_seti(L, -2, ii+1);
 
-    lua_pushinteger(L, br.lm.texelsize);
-    lua_setfield(L, -2, "texelsize");
+        lua_pushinteger(L, lm.size);
+        lua_setfield(L, -2, "sieze");
+
+        lua_pushinteger(L, sizeof(glm::vec4));
+        lua_setfield(L, -2, "texelsize");
+    }
+
     return 1;
 }
 

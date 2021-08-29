@@ -51,11 +51,23 @@ BakerHandle CreateBaker(const Scene* scene){
     return bl;
 }
 
+static_assert(sizeof(glm::vec4) == sizeof(Float4), "glm::vec4 must equal Float4");
+
 void Bake(BakerHandle handle, BakeResult *result){
     auto bl = (BakingLab*)handle;
     const auto &meshes = bl->GetModel(0).Meshes();
+    result->lightmaps.resize(meshes.size());
     for (uint32_t bakeMeshIdx=0; bakeMeshIdx<meshes.size(); ++bakeMeshIdx){
         bl->Bake(bakeMeshIdx);
+        auto &lm = result->lightmaps[bakeMeshIdx];
+        
+        TextureData<Float4> t;
+        bl->GetBakeTextureData(t);
+
+        assert(t.NumSlices == 1);
+        lm.data.resize(t.Texels.size());
+
+        memcpy(lm.data.data(), t.Texels.data(), t.Texels.size());
     }
 }
 
