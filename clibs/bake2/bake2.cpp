@@ -127,17 +127,20 @@ lbaker_bake(lua_State *L){
     BakeResult br;
     Bake(bh, &br);
 
-    lua_createtable(L, br.lightmaps.size(), 0);
+    lua_createtable(L, (int)br.lightmaps.size(), 0);
     for (size_t ii=0; ii<br.lightmaps.size(); ++ii){
-        const auto &lm = br.lightmaps[ii];
-        lua_pushlstring(L, (const char*)lm.data.data(), lm.data.size());
+        lua_createtable(L, 0, 3);{
+            const auto &lm = br.lightmaps[ii];
+            lua_pushlstring(L, (const char*)lm.data.data(), lm.data.size());
+            lua_setfield(L, -2, "data");
+
+            lua_pushinteger(L, 256);
+            lua_setfield(L, -2, "size");
+
+            lua_pushinteger(L, sizeof(glm::vec4));
+            lua_setfield(L, -2, "texelsize");
+        }
         lua_seti(L, -2, ii+1);
-
-        lua_pushinteger(L, lm.size);
-        lua_setfield(L, -2, "sieze");
-
-        lua_pushinteger(L, sizeof(glm::vec4));
-        lua_setfield(L, -2, "texelsize");
     }
 
     return 1;
@@ -156,7 +159,7 @@ luaopen_bake2(lua_State* L) {
     luaL_Reg lib[] = {
         {"create",  lbaker_create},
         {"bake",    lbaker_bake},
-        {"destory", lbaker_destroy},
+        {"destroy", lbaker_destroy},
         { nullptr, nullptr },
     };
     luaL_newlib(L, lib);

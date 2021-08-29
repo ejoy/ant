@@ -3,9 +3,11 @@ local serialize = import_package "ant.serialize"
 
 local bake2 = require "bake2"
 local datalist = require "datalist"
-
+local image = require "image"
 local math3d = require "math3d"
 local fs = require "filesystem"
+local lfs = require "filesystem.local"
+local bgfx = require "bgfx"
 
 local pkgpath = fs.path(arg[1])
 if not fs.exists(pkgpath) then
@@ -116,7 +118,72 @@ local b = bake2.create{
     lights      = lights,
 }
 local bakeresult = bake2.bake(b)
-b.destroy()
+
+local texfile_content<const> = [[
+normalmap: false
+path: %s
+sRGB: true
+compress:
+    android: ASTC6x6
+    ios: ASTC6x6
+    windows: BC3
+sampler:
+    MAG: LINEAR
+    MIN: LINEAR
+    U: CLAMP
+    V: CLAMP
+]]
+
+local function default_tex_info(w, h, fmt)
+    local bits = image.get_bits_pre_pixel(fmt)
+    local s = (bits//8) * w * h
+    return {
+        width=w, height=h, format=fmt,
+        numLayers=1, numMips=1, storageSize=s,
+        bitsPerPixel=bits,
+        depth=1, cubeMap=false,
+    }
+end
+
+local function save_bake_lm_data(lm, filename)
+    local ti = default_tex_info(lm.size, lm.size, "RGBA32F")
+    local lmdata = lm.data
+    local m = bgfx.memory_buffer(lmdata)
+    local c = image.encode_image(ti, m, {type = "dds", format="RGBA8", srgb=false})
+    local f = lfs.open(fs.path(filename), "wb")
+    f:write(c)
+    f:close()
+end
+
+local function save_lightmap(e, lme)
+    local local_lmpath = lme.lightmap_path:localpath()
+    local name = gen_name(lm.bake_id, e.name)
+    local filename = lme.lightmap_path / name
+    assert(not fs.exists(filename))
+    local local_filename = local_lmpath / name
+    local ti = default_tex_info(lm.size, lm.size, "RGBA32F")
+    local lmdata = lm.data
+    local m = bgfx.memory_buffer(lmdata:data(), ti.storageSize, lmdata)
+    local c = image.encode_image(ti, m, {type = "dds", format="RGBA8", srgb=false})
+    local f = lfs.open(local_filename, "wb")
+    f:write(c)
+    f:close()
+
+    local tc = texfile_content:format(filename:string())
+    local texfile = filename:replace_extension "texture"
+    local local_texfile = local_lmpath / texfile:filename():string()
+    f = lfs.open(local_texfile, "w")
+    f:write(tc)
+    f:close()
+    
+    lme.lightmap_result[lm.bake_id] = {texture_path = texfile:string(),}
+end
+
+for idx, lm in ipairs(bakeresult) do
+    save_bake_lm_data(lm, "abc" .. idx .. ".dds")
+end
+
+bake2.destroy(b)
 
 -- local function create_world()
 --     local ecs = import_package "ant.luaecs"
