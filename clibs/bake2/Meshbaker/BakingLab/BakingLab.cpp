@@ -1171,8 +1171,8 @@ void BakingLab::Init(const Scene *s)
     AppSettings::Initialize(device);
 
     AppSettings::CurrentScene.SetValue(Scenes(0));
-    MeshbakerInitialize(&sceneModels[AppSettings::CurrentScene]);
     sceneModels[0].CreateFromScene(device, s, false);
+    MeshbakerInitialize(&sceneModels[AppSettings::CurrentScene]);
 }
 
 float BakingLab::BakeProcess()
