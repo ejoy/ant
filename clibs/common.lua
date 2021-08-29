@@ -1,25 +1,4 @@
 local lm = require "luamake"
-lm.c = "c11"
-lm.cxx = "c++20"
-lm.msvc = {
-    defines = "_CRT_SECURE_NO_WARNINGS",
-    flags = {
-        "-wd5105"
-    }
-}
-
-if lm.mode == "release" then
-    lm.msvc.ldflags = {
-        "/DEBUG:FASTLINK"
-    }
-end
-
-lm.ios = {
-    flags = {
-        "-fembed-bitcode",
-        "-fobjc-arc"
-    }
-}
 
 Ant3rd = "../../3rd/"
 BgfxInclude = {
@@ -38,5 +17,3 @@ LuaInclude = {
     "../lua",
 }
 
---TODO
-lm.visibility = "default"
