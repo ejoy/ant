@@ -27,7 +27,7 @@ lm:source_set "astc-codec" {
     clang = {
         flags = {
             "-Wno-deprecated-array-compare",
-            "-Wno-unused-function"
+            "-Wno-unused-function",
         }
     }
 }
@@ -131,6 +131,12 @@ lm:source_set "bimg_encode" {
     gcc = {
         flags = {
             "-Wno-class-memaccess",
+        }
+    },
+    clang = {
+        flags = {
+            "-Wno-tautological-compare",
+            "-Wno-unused-function",
         }
     }
 }

@@ -11,6 +11,11 @@ lm:source_set "fcpp" {
     sources = {
         "*.c",
         "!usecpp.c",
+    },
+    clang = {
+        flags = {
+            "-Wno-parentheses-equality"
+        }
     }
 }
 
@@ -52,7 +57,6 @@ lm:source_set "glslang" {
 
 lm:source_set "glsl-optimizer" {
     rootdir = "../bgfx/3rdparty/glsl-optimizer",
-    cxx = "c++14",
     includes = {
         "src",
         "include",
@@ -85,6 +89,12 @@ lm:source_set "glsl-optimizer" {
             "-Wno-parentheses",
             "-Wno-unused-function",
             "-Wno-misleading-indentation"
+        }
+    },
+    clang = {
+        flags = {
+            "-Wno-deprecated-register",
+            "-Wno-register"
         }
     }
 }
