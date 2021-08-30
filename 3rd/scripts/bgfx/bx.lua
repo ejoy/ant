@@ -14,15 +14,6 @@ lm:source_set "bx" {
         "src/**.cpp",
         "!src/amalgamated.cpp",
     },
-    msvc = {
-        includes = "include/compat/msvc",
-    },
-    mingw = {
-        includes = "include/compat/mingw",
-    },
-    macos = {
-        includes = "include/compat/osx",
-    },
     gcc = {
         flags = "-Wno-maybe-uninitialized"
     }
