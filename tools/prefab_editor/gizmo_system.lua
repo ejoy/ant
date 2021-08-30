@@ -384,7 +384,7 @@ function gizmo_sys:post_init()
 			"ant.scene|hierarchy_policy",
 		},
 		data = {
-			transform = {s = 2.5},
+			transform = {s = 1.5},
 			name = "global axis root",
 			scene_entity = true,
 		},
