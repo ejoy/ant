@@ -44,15 +44,6 @@ lm:source_set "bimg" {
         "src/image.cpp",
         "src/image_gnf.cpp",
     },
-    msvc = {
-        includes = "../bx/include/compat/msvc",
-    },
-    mingw = {
-        includes = "../bx/include/compat/mingw",
-    },
-    macos = {
-        includes = "../bx/include/compat/osx",
-    },
     gcc = {
         flags = {
             "-Wno-class-memaccess",
@@ -69,15 +60,6 @@ lm:source_set "bimg_decode" {
     },
     sources = {
         "src/image_decode.cpp",
-    },
-    msvc = {
-        includes = "../bx/include/compat/msvc",
-    },
-    mingw = {
-        includes = "../bx/include/compat/mingw",
-    },
-    macos = {
-        includes = "../bx/include/compat/osx",
     }
 }
 
@@ -134,7 +116,6 @@ lm:source_set "bimg_encode" {
         "3rdparty/astc/astc_percentile_tables.cpp",
     },
     msvc = {
-        includes = "../bx/include/compat/msvc",
         flags = {
             "/wd4244",
             "/wd4819",

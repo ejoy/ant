@@ -15,7 +15,6 @@ lm:source_set "bx" {
         "!src/amalgamated.cpp",
     },
     msvc = {
-        defines = "_CRT_SECURE_NO_WARNINGS",
         includes = "include/compat/msvc",
     },
     mingw = {

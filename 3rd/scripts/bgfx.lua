@@ -2,6 +2,26 @@ local lm = require "luamake"
 
 local EnableEditor = lm.os ~= "ios"
 
+lm.warnings = {
+    "error",
+    "on"
+}
+
+lm.cxx = "c++17"
+
+lm.msvc = {
+    defines = "_CRT_SECURE_NO_WARNINGS",
+    includes = "../bx/include/compat/msvc",
+}
+
+lm.mingw = {
+    includes = "../bx/include/compat/mingw",
+}
+
+lm.macos = {
+    includes = "../bx/include/compat/osx",
+}
+
 require "bgfx.bx"
 require "bgfx.bimg"
 require "bgfx.bgfx-lib"
