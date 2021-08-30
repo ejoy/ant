@@ -12,9 +12,11 @@ lm:source_set "fcpp" {
         "*.c",
         "!usecpp.c",
     },
-    msvc = {
-        defines = "_CRT_SECURE_NO_WARNINGS",
-    },
+    clang = {
+        flags = {
+            "-Wno-parentheses-equality"
+        }
+    }
 }
 
 lm:source_set "glslang" {
@@ -55,7 +57,6 @@ lm:source_set "glslang" {
 
 lm:source_set "glsl-optimizer" {
     rootdir = "../bgfx/3rdparty/glsl-optimizer",
-    cxx = "c++14",
     includes = {
         "src",
         "include",
@@ -76,7 +77,6 @@ lm:source_set "glsl-optimizer" {
             "__STDC__",
             "__STDC_VERSION__=199901L",
             "strdup=_strdup",
-            "_CRT_SECURE_NO_WARNINGS",
         },
         flags = {
             "/wd4819",
@@ -90,11 +90,16 @@ lm:source_set "glsl-optimizer" {
             "-Wno-unused-function",
             "-Wno-misleading-indentation"
         }
+    },
+    clang = {
+        flags = {
+            "-Wno-deprecated-register",
+            "-Wno-register"
+        }
     }
 }
 
 lm:source_set "spirv-opt" {
-    cxx = "c++17",
     rootdir = "../bgfx/3rdparty/spirv-tools",
     includes = {
         ".",
@@ -107,7 +112,6 @@ lm:source_set "spirv-opt" {
         "source/*.cpp",
     },
     msvc = {
-        defines = "_CRT_SECURE_NO_WARNINGS",
         flags = {
             "/wd4819",
         }
@@ -171,8 +175,6 @@ lm:exe "shaderc" {
         sources = "../scripts/bgfx/shaderc.rc"
     },
     msvc = {
-        defines = "_CRT_SECURE_NO_WARNINGS",
-        includes = "../bx/include/compat/msvc",
         flags = {
             "/wd4819",
         }

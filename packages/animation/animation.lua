@@ -151,6 +151,8 @@ function ani_sys:entity_ready()
 	for _, what, eid, p0, p1, p2 in event_animation:unpack() do
 		if what == "play_group" then
 			iani.play_group(eid, p0, p1, p2)
+		elseif what == "play_clip" then
+			iani.play_clip(eid, p0, p1, p2)
 		elseif what == "step" then
 			for e in world.w:select "eid:in" do
 				if e.eid == eid then

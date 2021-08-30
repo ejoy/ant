@@ -27,7 +27,7 @@ lm:source_set "astc-codec" {
     clang = {
         flags = {
             "-Wno-deprecated-array-compare",
-            "-Wno-unused-function"
+            "-Wno-unused-function",
         }
     }
 }
@@ -43,15 +43,6 @@ lm:source_set "bimg" {
     sources = {
         "src/image.cpp",
         "src/image_gnf.cpp",
-    },
-    msvc = {
-        includes = "../bx/include/compat/msvc",
-    },
-    mingw = {
-        includes = "../bx/include/compat/mingw",
-    },
-    macos = {
-        includes = "../bx/include/compat/osx",
     },
     gcc = {
         flags = {
@@ -69,15 +60,6 @@ lm:source_set "bimg_decode" {
     },
     sources = {
         "src/image_decode.cpp",
-    },
-    msvc = {
-        includes = "../bx/include/compat/msvc",
-    },
-    mingw = {
-        includes = "../bx/include/compat/mingw",
-    },
-    macos = {
-        includes = "../bx/include/compat/osx",
     }
 }
 
@@ -134,7 +116,6 @@ lm:source_set "bimg_encode" {
         "3rdparty/astc/astc_percentile_tables.cpp",
     },
     msvc = {
-        includes = "../bx/include/compat/msvc",
         flags = {
             "/wd4244",
             "/wd4819",
@@ -150,6 +131,12 @@ lm:source_set "bimg_encode" {
     gcc = {
         flags = {
             "-Wno-class-memaccess",
+        }
+    },
+    clang = {
+        flags = {
+            "-Wno-tautological-compare",
+            "-Wno-unused-function",
         }
     }
 }

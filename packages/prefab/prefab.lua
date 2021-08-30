@@ -76,7 +76,11 @@ local function command(w, set, name, ...)
 				end
 			end,
 			play_clip = function(eid, name, loop, manual)
-				iani.play_clip(eid, name, loop or false, manual)
+				if w[eid].eid then
+					iani.play_clip(eid, name, loop or false, manual)
+				else
+					w:pub {"AnimationEvent", "play_clip", eid, name, loop or false, manual}
+				end
 			end,
 			play_group = function(eid, name, loop, manual)
 				if w[eid].eid then

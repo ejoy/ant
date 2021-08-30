@@ -24,17 +24,9 @@ lm:dll "bgfx-core" {
         links = { "gdi32", "psapi", "user32" }
     },
     msvc = {
-        defines = {
-            "_CRT_SECURE_NO_WARNINGS",
-            "__STDC_FORMAT_MACROS",
-        },
-        includes = "../bx/include/compat/msvc",
-    },
-    mingw = {
-        includes = "../bx/include/compat/mingw",
+        defines = "__STDC_FORMAT_MACROS",
     },
     macos = {
-        includes = "../bx/include/compat/osx",
         sources = {
             "src/*.mm",
             "!src/amalgamated.mm",
