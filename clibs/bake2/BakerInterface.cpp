@@ -137,10 +137,6 @@ static void GenerateTangentAndBitangents(VertexData *vertices, uint32 numVertice
     // "Computing Tangent Space Basis Vectors for an Arbitrary Mesh", by Eric Lengyel
     // http://www.terathon.com/code/tangent.html
 
-    // Make temporary arrays for the tangent and the bitangent
-    std::vector<Float3> tangents(numVertices);
-    std::vector<Float3> bitangents(numVertices);
-
     typedef std::function<uint32 (const BufferData &, uint32)> index_op;
     index_op get_index16 = [](const auto& indices, uint32 idx){
         return uint32(*((const uint16*)indices.data + idx));
@@ -193,7 +189,7 @@ static void GenerateTangentAndBitangents(VertexData *vertices, uint32 numVertice
     for (uint32 i = 0; i < numVertices; ++i)
     {
         Float3& n = vertices[i].normal;
-        Float3& t = tangents[i];
+        Float3& t = vertices[i].tangent;
 
         // Gram-Schmidt orthogonalize
         Float3 tangent = (t - n * Float3::Dot(n, t));
@@ -212,7 +208,7 @@ static void GenerateTangentAndBitangents(VertexData *vertices, uint32 numVertice
         {
             Float3 b;
             b = Float3::Cross(n, t);
-            sign = (Float3::Dot(b, bitangents[i]) < 0.0f) ? -1.0f : 1.0f;
+            sign = (Float3::Dot(b, vertices[i].bitangent) < 0.0f) ? -1.0f : 1.0f;
         }
 
         // Store the tangent + bitangent
