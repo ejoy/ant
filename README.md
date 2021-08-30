@@ -10,8 +10,6 @@ Ant 游戏引擎
 #### MSVC
 - 安装Visual Studio 2019+
 
-- 下载并安装[cmake](https://cmake.org/download/)
-
 #### MINGW
 - 下载并安装[msys2](https://www.msys2.org/)
 
@@ -28,13 +26,13 @@ echo "export MINGW=/mingw64" >> ~/.bash_profile
 echo "export PATH=\$MINGW/bin:\$PATH" >> ~/.bash_profile
 ```
 
-- 安装gcc/make/cmake
+- 安装gcc/ninja
 ``` bash
-pacman -Syu make mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja
+pacman -Syu mingw-w64-x86_64-gcc mingw-w64-x86_64-ninja
 ```
 
 #### MACOS
-- 安装xcode, ninja, cmake
+- 安装xcode, ninja
 
 
 #### 关于模型的转换工具
@@ -64,14 +62,7 @@ git submodule update --init
 #### 编译3rd
 
 ``` bash
-luamake 3rd_init
-luamake 3rd_make
-```
-
-也可以单独编译一个项目
-``` bash
-luamake $(ProjectName)_init
-luamake $(ProjectName)_make
+luamake 3rd
 ```
 
 #### 编译editor

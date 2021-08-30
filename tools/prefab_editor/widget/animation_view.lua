@@ -43,7 +43,7 @@ local anim_state = {
 
 
 local event_type = {
-    "Effect", "Sound", "Collision", "Message"
+    "Effect", "Sound", "Collision", "Message", "Move"
 }
 local joint_list = {
 
@@ -70,7 +70,6 @@ local function find_index(t, item)
         end
     end
 end
-
 
 local function get_runtime_animations(eid)
     for e in world.w:select "eid:in" do
@@ -113,6 +112,7 @@ local function anim_group_play_group(eid, ...)
     local group_eid = get_anim_group_eid(eid, current_anim.name)
     if not group_eid then return end
     for _, anim_eid in ipairs(group_eid) do
+        iom.set_position(world[world[anim_eid].parent].parent, {0.0,0.0,0.0})
         iani.play_group(anim_eid, ...)
     end
 end
@@ -120,6 +120,7 @@ local function anim_group_play_clip(eid, ...)
     local group_eid = get_anim_group_eid(eid, current_anim.name)
     if not group_eid then return end
     for _, anim_eid in ipairs(group_eid) do
+	    iom.set_position(world[world[anim_eid].parent].parent, {0.0,0.0,0.0})
         iani.play_clip(anim_eid, ...)
     end
 end
@@ -127,6 +128,7 @@ local function anim_group_play(eid, ...)
     local group_eid = get_anim_group_eid(eid, current_anim.name)
     if not group_eid then return end
     for _, anim_eid in ipairs(group_eid) do
+        iom.set_position(world[world[anim_eid].parent].parent, {0.0,0.0,0.0})
         iani.play(anim_eid, ...)
     end
 end
@@ -235,6 +237,9 @@ local function from_runtime_event(runtime_event)
                     e.breakable_ui = {e.breakable}
                     e.life_time_ui = {e.life_time, speed = 0.02, min = 0, max = 100}
                 end
+            elseif e.event_type == "Move" then
+                e.move = e.move or {0.0, 0.0, 0.0}
+                e.move_ui = e.move and {e.move[1], e.move[2], e.move[3]} or {0.0, 0.0, 0.0}
             elseif e.event_type == "Collision" then
                 e.collision.tid = e.collision.tid or -1
                 e.collision.tid_ui = {e.collision.tid}
@@ -260,10 +265,12 @@ local function from_runtime_clip(runtime_clip)
             local new_clip = {
                 anim_name = clip.anim_name,
                 name = clip.name,
+                speed = clip.speed or 1.0,
                 range = {start_frame, end_frame},
                 key_event = from_runtime_event(clip.key_event),
                 name_ui = {text = clip.name},
-                range_ui = {start_frame, end_frame, speed = 1}
+                range_ui = {start_frame, end_frame, speed = 1},
+                speed_ui = {clip.speed or 1.0, speed = 0.02, min = 0.01, max = 100}
             }
             local clips = anim_clips[clip.anim_name] or {}
             clips[#clips + 1] = new_clip
@@ -322,6 +329,7 @@ local function do_to_runtime_event(evs)
             asset_path = ev.asset_path,
             breakable = ev.breakable,
             life_time = ev.life_time,
+            move = ev.move,
             msg_content = ev.msg_content,
             link_info = ev.link_info and {slot_name = ev.link_info.slot_name, slot_eid = ev.link_info.slot_eid},
             collision = (col_eid ~= -1) and {
@@ -333,11 +341,6 @@ local function do_to_runtime_event(evs)
                 enable = ev.collision.enable,
                 tid = ev.collision.tid,
             } or nil
-            -- {
-            --     name = "None",
-            --     shape_type = "None",
-            --     enable = false
-            -- }
         }
     end
     return list
@@ -370,6 +373,7 @@ local function to_runtime_clip()
                 anim_name = clip.anim_name,
                 name = clip.name,
                 range = {clip.range[1] / sample_ratio, clip.range[2] / sample_ratio},
+                speed = clip.speed or 1.0,
                 key_event = to_runtime_event(clip.key_event)
             }
         end
@@ -407,6 +411,8 @@ local function add_event(et)
         breakable_ui = (et == "Effect") and {false} or nil,
         life_time = (et == "Effect") and 2 or nil,
         life_time_ui = (et == "Effect") and { 2, speed = 0.02, min = 0, max = 100} or nil,
+        move = (et == "Move") and {0.0, 0.0, 0.0} or nil,
+        move_ui = (et == "Move") and {0.0, 0.0, 0.0} or nil,
         name_ui = {text = event_name},
         msg_content = (et == "Message") and "" or nil,
         msg_content_ui = (et == "Message") and {text = ""} or nil,
@@ -614,6 +620,12 @@ local function show_current_event()
             current_event.life_time = current_event.life_time_ui[1]
             dirty = true
         end
+    elseif current_event.event_type == "Move" then
+        imgui.widget.PropertyLabel("Move")
+        if imgui.widget.DragFloat("##Move", current_event.move_ui) then
+            current_event.move = {current_event.move_ui[1], current_event.move_ui[2], current_event.move_ui[3]}
+            dirty = true
+        end
     elseif current_event.event_type == "Message" then
         imgui.widget.PropertyLabel("Content")
         if imgui.widget.InputText("##Content", current_event.msg_content_ui) then
@@ -818,8 +830,10 @@ local function show_clips()
             anim_name = current_anim.name,
             name = key,
             range = {-1, -1},
+            speed = 1.0,
             key_event = {},
             name_ui = {text = key},
+            speed_ui = {1.0, speed = 0.02, min = 0.01, max = 100},
             range_ui = {-1, -1, speed = 1}
         }
         current_anim.clips[#current_anim.clips + 1] = new_clip
@@ -922,6 +936,13 @@ local function show_current_clip()
         current_clip.name = tostring(current_clip.name_ui.text)
         set_clips_dirty(true)
     end
+
+    imgui.widget.PropertyLabel("Speed")
+    if imgui.widget.DragFloat("##Speed", current_clip.speed_ui) then
+        current_clip.speed = current_clip.speed_ui[1]
+        set_clips_dirty(true)
+    end
+
     imgui.widget.PropertyLabel("Range")
     --local clip_index = find_index(all_clips, current_clip)
     local min_value, max_value = min_max_range_value()

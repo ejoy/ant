@@ -18,7 +18,6 @@ function ic.dispatch(viewid, ds)
 end
 
 function ic.create_compute_entity(name, materialfile, size)
-    w:register{ name = name}
     world:create_entity {
         policy = {
             "ant.render|compute_policy",
@@ -32,6 +31,7 @@ function ic.create_compute_entity(name, materialfile, size)
             },
             compute     = true,
             [name]      = true,
+            INIT        = true,
         }
     }
 end

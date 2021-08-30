@@ -36,9 +36,11 @@ local function command(w, set, name, ...)
 		end
 	end
 	local findAnimClips = function(eid)
-		if e.eid == eid then
-			w.w:sync("anim_clips:in", e)
-			return e.anim_clips
+		for e in w:select "eid:in" do
+			if e.eid == eid then
+				w.w:sync("anim_clips:in", e)
+				return e.anim_clips
+			end
 		end
 	end
 	if not cmd_handle then
@@ -61,7 +63,11 @@ local function command(w, set, name, ...)
 					ieff.play(eid, loop or false)
 					ieff.pause(eid, manual or false)
 				else
-					iani.play(eid, name, loop or false, manual)
+					if w[eid].eid then
+						iani.play(eid, name, loop or false, manual)
+					else
+						w:pub {"AnimationEvent", "play", eid, name, loop or false, manual}
+					end
 				end
 			end,
 			stop = function(eid, name)
@@ -73,7 +79,11 @@ local function command(w, set, name, ...)
 				iani.play_clip(eid, name, loop or false, manual)
 			end,
 			play_group = function(eid, name, loop, manual)
-				iani.play_group(eid, name, loop or false, manual)
+				if w[eid].eid then
+					iani.play_group(eid, name, loop or false, manual)
+				else
+					w:pub {"AnimationEvent", "play_group", eid, name, loop or false, manual}
+				end
 			end,
 			speed = function(eid, ...)
 				if w[eid].effekseer then
@@ -84,13 +94,26 @@ local function command(w, set, name, ...)
 			end,
 			get_time = iani.get_time,
 			step = function(eid, ...)
-				iani.step(w[eid]._animation._current, ...)
+				if w[eid].eid then
+					for e in w.w:select "eid:in" do
+						if e.eid == eid then
+							w.w:sync("_animation:in", e)
+							iani.step(e._animation._current, ...)
+						end
+					end
+				else
+					w:pub {"AnimationEvent", "step", eid, ...}
+				end
 			end,
 			time = function(eid, ...)
 				if w[eid].effekseer then
 					ieff.set_time(eid, ...)
 				else
-					iani.set_time(eid, ...)
+					if w[eid].eid then
+						iani.set_time(eid, ...)
+					else
+						w:pub {"AnimationEvent", "set_time", eid, ...}
+					end
 				end
 			end,
 			clip_time = function(eid, ...)
@@ -224,7 +247,8 @@ function world:prefab_instance(filename)
 		local f = assert(fs.open(path))
 		local data = f:read "a"
 		f:close()
-		self:prefab_event(p, "set_clips", "*", datalist.parse(data))
+		--self:prefab_event(p, "set_clips", "*", datalist.parse(data))
+		self:pub {"SetClipsEvent", p, "*", datalist.parse(data)}
 	end
 	return p
 end

@@ -15,7 +15,8 @@ function LightView:_init()
     subproperty["color"]        = uiproperty.Color({label = "Color", dim = 4})
     subproperty["intensity"]    = uiproperty.Float({label = "Intensity", min = 0, max = 100})
     subproperty["range"]        = uiproperty.Float({label = "Range", min = 0, max = 500})
-    subproperty["radian"]       = uiproperty.Float({label = "Radian", min = 0, max = 180})
+    subproperty["inner_radian"]       = uiproperty.Float({label = "InnerRadian", min = 0, max = 180})
+    subproperty["outter_radian"]       = uiproperty.Float({label = "OutterRadian", min = 0, max = 180})
     self.subproperty            = subproperty
     self.light_property         = uiproperty.Group({label = "Light"}, {})
     --
@@ -25,8 +26,10 @@ function LightView:_init()
     self.subproperty.intensity:set_setter(function(value) self:on_set_intensity(value) end)
     self.subproperty.range:set_getter(function() return self:on_get_range() end)
     self.subproperty.range:set_setter(function(value) self:on_set_range(value) end)
-    self.subproperty.radian:set_getter(function() return self:on_get_radian() end)
-    self.subproperty.radian:set_setter(function(value) self:on_set_radian(value) end)
+    self.subproperty.inner_radian:set_getter(function() return self:on_get_inner_radian() end)
+    self.subproperty.inner_radian:set_setter(function(value) self:on_set_inner_radian(value) end)
+    self.subproperty.outter_radian:set_getter(function() return self:on_get_outter_radian() end)
+    self.subproperty.outter_radian:set_setter(function(value) self:on_set_outter_radian(value) end)
 end
 
 function LightView:set_model(eid)
@@ -38,7 +41,8 @@ function LightView:set_model(eid)
     if world[eid].light_type ~= "directional" then
         subproperty[#subproperty + 1] = self.subproperty.range
         if world[eid].light_type == "spot" then
-            subproperty[#subproperty + 1] = self.subproperty.radian
+            subproperty[#subproperty + 1] = self.subproperty.inner_radian
+            subproperty[#subproperty + 1] = self.subproperty.outter_radian
         end
     end
     self.light_property:set_subproperty(subproperty)
@@ -78,15 +82,32 @@ function LightView:on_get_range()
     return ilight.range(self.eid)
 end
 
-function LightView:on_set_radian(value)
+function LightView:on_set_inner_radian(value)
     local template = hierarchy:get_template(self.eid)
-    template.template.data.radian = value
-    ilight.set_radian(self.eid, math.rad(value))
+    local radian = math.rad(value)
+    template.template.data.inner_radian = radian
+    ilight.set_inner_radian(self.eid, radian)
     light_gizmo.update_gizmo()
 end
 
-function LightView:on_get_radian()
-    return math.deg(ilight.radian(self.eid))
+function LightView:on_get_inner_radian()
+    return math.deg(ilight.inner_radian(self.eid))
+end
+
+function LightView:on_set_outter_radian(value)
+    local template = hierarchy:get_template(self.eid)
+    local radian = math.rad(value)
+    if radian < template.template.data.inner_radian then
+        radian = template.template.data.inner_radian
+        self.subproperty.outter_radian:update()
+    end
+    template.template.data.outter_radian = radian
+    ilight.set_outter_radian(self.eid, radian)
+    light_gizmo.update_gizmo()
+end
+
+function LightView:on_get_outter_radian()
+    return math.deg(ilight.outter_radian(self.eid))
 end
 
 function LightView:update()

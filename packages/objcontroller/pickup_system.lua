@@ -1,4 +1,3 @@
---luacheck: ignore self
 local ecs = ...
 local world = ecs.world
 local w = world.w
@@ -6,41 +5,63 @@ local w = world.w
 local mu 		= import_package "ant.math".util
 local mc 		= import_package "ant.math".constant
 local math3d	= require "math3d"
+local bgfx 		= require "bgfx"
 
 local renderpkg = import_package "ant.render"
 local fbmgr 	= renderpkg.fbmgr
 local samplerutil= renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
 
-local bgfx 		= require "bgfx"
-
 local icamera	= world:interface "ant.camera|camera"
+local irender   = world:interface "ant.render|irender"
+local imaterial = world:interface "ant.asset|imaterial"
 
---update pickup view
-local function enable_pickup(enable)
-	for e in w:select "pickup_queue pickup:in visible?out" do
-		e.visible = enable
-		e.pickup.nextstep = enable and "blit" or nil
+local pickup_materials = {}
+
+local function packeid_as_rgba(eid)
+    return {(eid & 0x000000ff) / 0xff,
+            ((eid & 0x0000ff00) >> 8) / 0xff,
+            ((eid & 0x00ff0000) >> 16) / 0xff,
+            ((eid & 0xff000000) >> 24) / 0xff}    -- rgba
+end
+
+local uid_cache = {}
+local function get_properties(eid, fx)
+	local p = uid_cache[eid]
+	if p then
+		return p
 	end
+	local v = math3d.ref(math3d.vector(packeid_as_rgba(eid)))
+	local u = fx.uniforms[1]
+	assert(u.name == "u_id")
+	p = {
+		u_id = {
+			value = v,
+			handle = u.handle,
+			type = u.type,
+			set = imaterial.property_set_func "u"
+		},
+	}
+	uid_cache[eid] = p
+	return p
 end
 
 local function update_camera(pu_camera_ref, clickpt)
-	for mq in w:select "main_queue camera_ref:in render_target:in" do	--main queue must visible
-		local ndc2D = mu.pt2D_to_NDC(clickpt, mq.render_target.view_rect)
-		local eye, at = mu.NDC_near_far_pt(ndc2D)
-	
-		local maincamera = icamera.find_camera(mq.camera_ref)
-		local vp = maincamera.viewprojmat
-		local ivp = math3d.inverse(vp)
-		eye = math3d.transformH(ivp, eye, 1)
-		at = math3d.transformH(ivp, at, 1)
-	
-		local camera = icamera.find_camera(pu_camera_ref)
-		local viewdir = math3d.normalize(math3d.sub(at, eye))
-		camera.viewmat = math3d.lookto(eye, viewdir, camera.updir)
-		camera.projmat = math3d.projmat(camera.frustum)
-		camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
-	end
+	local mq = w:singleton("main_queue", "camera_ref:in render_target:in")
+	local ndc2D = mu.pt2D_to_NDC(clickpt, mq.render_target.view_rect)
+	local eye, at = mu.NDC_near_far_pt(ndc2D)
+
+	local maincamera = icamera.find_camera(mq.camera_ref)
+	local vp = maincamera.viewprojmat
+	local ivp = math3d.inverse(vp)
+	eye = math3d.transformH(ivp, eye, 1)
+	at = math3d.transformH(ivp, at, 1)
+
+	local camera = icamera.find_camera(pu_camera_ref)
+	local viewdir = math3d.normalize(math3d.sub(at, eye))
+	camera.viewmat = math3d.lookto(eye, viewdir, camera.updir)
+	camera.projmat = math3d.projmat(camera.frustum)
+	camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 end
 
 
@@ -131,10 +152,8 @@ local fb_renderbuffer_flag = samplerutil.sampler_flag {
 	V="CLAMP"
 }
 
-local icamera = world:interface "ant.camera|camera"
-
 local function create_pick_entity()
-	local camera_ref = icamera.create{
+	local camera_ref = icamera.create {
 		viewdir = mc.ZAXIS,
 		updir = mc.YAXIS,
 		eyepos = mc.ZERO_PT,
@@ -200,86 +219,76 @@ local function create_pick_entity()
 			name 		= "pickup_queue",
 			queue_name 	= "pickup_queue",
 			pickup_queue= true,
-			INIT		= true,
 			visible		= false,
 			shadow_render_queue = {},
 		}
-
 	}
 end
 
 function pickup_sys:init()
 	create_pick_entity()
+	pickup_materials.opacity	= imaterial.load '/pkg/ant.resources/materials/pickup_opacity.material'
+	pickup_materials.translucent= imaterial.load '/pkg/ant.resources/materials/pickup_transparent.material'
 end
 
 function pickup_sys:entity_init()
 	for e in w:select "INIT pickup_queue pickup:in" do
 		local pickup = e.pickup
-		pickup.pickup_cache = {
-			last_pick = -1,
-			pick_ids = {},
-		}
+		pickup.clickpt = {}
 		blit_buffer_init(pickup.blit_buffer)
 	end
 end
 
+local function open_pickup(x, y)
+	local e = w:singleton("pickup_queue", "pickup:in")
+	e.pickup.nextstep = "blit"
+	e.pickup.clickpt[1] = x
+	e.pickup.clickpt[2] = y
+	e.visible = true
+	w:sync("visible?out", e)
+end
+
+local function close_pickup()
+	local e = w:singleton("pickup_queue", "pickup:in")
+	e.pickup.nextstep = nil
+	e.visible = false
+	w:sync("visible?out", e)
+end
+
 local leftmousepress_mb = world:sub {"mouse", "LEFT"}
-local clickpt = {920, 402}
 function pickup_sys:data_changed()
 	for _,_,state,x,y in leftmousepress_mb:unpack() do
 		if state == "DOWN" then
-			enable_pickup(true)
-			clickpt[1], clickpt[2] = x, y
+			open_pickup(x, y)
 		end
 	end
 end
 
 function pickup_sys:update_camera()
-    for e in w:select "pickup_queue visible camera_ref:in" do
-		update_camera(e.camera_ref, clickpt)
+	for e in w:select "pickup_queue visible pickup:in camera_ref:in" do
+		update_camera(e.camera_ref, e.pickup.clickpt)
+		break
 	end
 end
 
-local function blit(blit_buffer, colorbuffer)
+local function blit(blit_buffer, render_target)
+	local fb = fbmgr.get(render_target.fb_idx)
+	local colorbuffer = fbmgr.get_rb(fb[1])
 	local rb = fbmgr.get_rb(blit_buffer.rb_idx)
 	local rbhandle = rb.handle
-	
 	bgfx.blit(blit_buffer.blit_viewid, rbhandle, 0, 0, assert(colorbuffer.handle))
 	return bgfx.read_texture(rbhandle, blit_buffer.handle)
 end
 
-local function print_raw_buffer(rawbuffer)
-	local data = rawbuffer.handle
-	local elemsize = rawbuffer.elemsize
-	local step = pickup_buffer_w * elemsize
-	for i=1, pickup_buffer_w do
-		local t = {tostring(i) .. ":"}
-		for j=1, pickup_buffer_h do
-			local idx = (i-1)*step+(j-1)*elemsize
-			for ii=1, elemsize do
-				t[#t+1] = data[idx+ii]
-			end
-		end
-
-		print(table.concat(t, ' '))
-	end
-end
-
-local function select_obj(pickup_com, blit_buffer, viewrect)
-	--print_raw_buffer(blit_buffer)
+local function select_obj(blit_buffer, render_target)
+	local viewrect = render_target.view_rect
 	local selecteid = which_entity_hitted(blit_buffer.handle, viewrect, blit_buffer.elemsize)
-	if selecteid and selecteid<100 then
-		log.info("selecteid",selecteid)
-		pickup_com.pickup_cache.last_pick = selecteid
-		pickup_com.pickup_cache.pick_ids = {selecteid}
-		local name = assert(world[selecteid]).name
-		print("pick entity id : ", selecteid, ", name : ", name)
-		world:pub {"pickup",selecteid,pickup_com.pickup_cache.pick_ids}
+	if selecteid then
+		log.info("pick entity id: ", selecteid)
+		world:pub {"pickup", selecteid}
 	else
-		pickup_com.pickup_cache.last_pick = nil
-		pickup_com.pickup_cache.pick_ids = {}
-		world:pub {"pickup",nil,{}}
-		print("not found any eid")
+		log.info("not found any eid")
+		world:pub {"pickup"}
 	end
 end
 
@@ -297,14 +306,32 @@ function pickup_sys:pickup()
 		local pc = v.pickup
 		local nextstep = pc.nextstep
 		if nextstep == "blit" then
-			local fb = fbmgr.get(v.render_target.fb_idx)
-			local rb = fbmgr.get_rb(fb[1])
-			blit(pc.blit_buffer, rb)
+			blit(pc.blit_buffer, v.render_target)
 		elseif nextstep	== "select_obj" then
-			select_obj(pc, pc.blit_buffer, v.render_target.view_rect)
-			enable_pickup(false)
+			select_obj(pc.blit_buffer, v.render_target)
+			close_pickup()
 		end
-
 		check_next_step(pc)
+	end
+end
+
+function pickup_sys:end_filter()
+	for e in w:select "filter_result:in render_object:in eid:in filter_material:out" do
+		local eid = e.eid
+		local fr = e.filter_result
+		local st = e.render_object.fx.setting.surfacetype
+		local fm = e.filter_material
+		local qe = w:singleton("pickup_queue", "primitive_filter:in")
+		for _, fn in ipairs(qe.primitive_filter) do
+			if fr[fn] then
+				local m = assert(pickup_materials[st])
+				local state = e.render_object.state
+				fm[fn] = {
+					fx			= m.fx,
+					properties	= get_properties(eid, m.fx),
+					state		= irender.check_primitive_mode_state(state, m.state),
+				}
+			end
+		end
 	end
 end

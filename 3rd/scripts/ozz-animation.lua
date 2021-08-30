@@ -1,57 +1,71 @@
 local lm = require "luamake"
 
 local EnableEditor = lm.os ~= "ios"
-local OzzBuildDir = "@../$builddir/ozz-animation/"
 
-local EXE = ""
-if lm.os == "windows" then
-    EXE = ".exe"
-end
-
-lm:build "ozz-animation_init" {
-    "cmake",
-    "-DCMAKE_BUILD_TYPE="..lm.mode,
-    lm.os == "ios" and {
-        "-DCMAKE_TOOLCHAIN_FILE=../ios-cmake/ios.toolchain.cmake",
-        "-DPLATFORM=OS64",
-        "-DENABLE_BITCODE=TRUE",
-        "-DENABLE_VISIBILITY=TRUE",
-    },
-    "-Dozz_build_msvc_rt_dll=ON",
-    "-Dozz_build_samples=OFF",
-    "-Dozz_build_fbx=OFF",
-    "-Dozz_build_howtos=OFF",
-    "-Dozz_build_cpp11=ON",
-    "-Dozz_build_tests=OFF",
-    "-DEMSCRIPTEN=FALSE",
-    not EnableEditor and {
-        "-Dozz_build_tools=OFF",
-        "-Dozz_build_gltf=OFF"
-    },
-    "-G", "Ninja",
-    "-S", "@../ozz-animation",
-    "-B", OzzBuildDir,
-    pool = "console",
+lm:source_set "ozz-animation-json" {
+    rootdir = "../ozz-animation/extern/jsoncpp/dist",
+    includes = ".",
+    sources = "jsoncpp.cpp",
 }
 
-lm:build "ozz-animation_build" {
-    "ninja", "-C", OzzBuildDir,
-    pool = "console",
+lm:source_set "ozz-animation-base" {
+    rootdir = "../ozz-animation",
+    includes = "include",
+    sources = "src/base/*.cc",
 }
 
-if EnableEditor then
-    lm:copy "ozz-animation_make" {
-        input = OzzBuildDir .. "src/animation/offline/gltf/gltf2ozz"..EXE,
-        output = "$bin/gltf2ozz"..EXE,
-        deps = "ozz-animation_build",
+lm:source_set "ozz-animation-runtime" {
+    rootdir = "../ozz-animation",
+    includes = {"include", "src"},
+    sources = "src/animation/runtime/*.cc",
+}
+
+lm:source_set "ozz-animation-offline" {
+    rootdir = "../ozz-animation",
+    includes = {"include", "src"},
+    sources = {
+        "src/animation/offline/*.cc",
+        "!src/animation/offline/fbx/*.cc",
+        "!src/animation/offline/gltf/*.cc",
+        "!src/animation/offline/tools/*.cc",
     }
-else
+}
+
+lm:source_set "ozz-animation-geometry" {
+    rootdir = "../ozz-animation",
+    includes = "include",
+    sources = "src/geometry/runtime/*.cc",
+}
+
+if not EnableEditor then
     lm:phony "ozz-animation_make" {
-        deps = "ozz-animation_build"
     }
+    return
 end
 
-lm:build "ozz-animation_clean" {
-    "ninja", "-C", OzzBuildDir, "-t", "clean",
-    pool = "console",
+lm:exe "gltf2ozz" {
+    rootdir = "../ozz-animation",
+    deps = {
+        "ozz-animation-json",
+        "ozz-animation-base",
+        "ozz-animation-runtime",
+        "ozz-animation-offline",
+    },
+    includes = {
+        "include",
+        "src",
+        "extern/jsoncpp/dist"
+    },
+    sources = {
+        "src/options/*.cc",
+        "src/animation/offline/gltf/*.cc",
+        "src/animation/offline/tools/*.cc",
+        "!src/animation/offline/tools/dump2ozz.cc",
+    }
+}
+
+lm:phony "ozz-animation_make" {
+    deps = {
+        "gltf2ozz"
+    }
 }

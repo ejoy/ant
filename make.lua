@@ -20,6 +20,34 @@ if lm.os == "ios" then
     EnableEditor = false
 end
 
+
+lm.c = "c11"
+lm.cxx = "c++20"
+lm.msvc = {
+    defines = "_CRT_SECURE_NO_WARNINGS",
+    flags = {
+        "-wd5105"
+    }
+}
+
+if lm.mode == "release" then
+    lm.msvc.ldflags = {
+        "/DEBUG:FASTLINK"
+    }
+end
+
+lm.ios = {
+    flags = {
+        "-fembed-bitcode",
+        "-fobjc-arc"
+    }
+}
+
+--TODO
+lm.visibility = "default"
+
+lm:import "3rd/make.lua"
+
 local Backlist = {}
 local EditorModules = {}
 
@@ -35,7 +63,6 @@ for path in fs.path "clibs":list_directory() do
     end
 end
 
-lm:import "3rd/make.lua"
 lm:import "runtime/make.lua"
 
 lm:phony "runtime" {

@@ -1,9 +1,25 @@
-transform "init_ibl_transform"
+system "ibl_system"
     .implement "ibl.lua"
-    .method "process_entity"
-    .input "ibl"
-    .output "_ibl"
+    .method "render_preprocess"
 
 interface "iibl"
     .implement "ibl.lua"
+    .method "get_ibl"
     .method "filter_all"
+
+component_v2 "irradiance_builder"
+component_v2 "prefilter_builder"
+component_v2 "prefilter".type "lua"
+component_v2 "LUT_builder"
+
+policy_v2 "prefilter"
+    .component_v2 "prefilter"
+
+policy_v2 "ibl"
+    .require_system "ant.render.ibl|ibl_system"
+    .require_interface "ant.render.ibl|iibl"
+
+--TODO: need remove
+policy "ibl"
+.require_system "ant.render.ibl|ibl_system"
+.require_interface "ant.render.ibl|iibl"

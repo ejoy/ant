@@ -26,19 +26,20 @@ function sb_trans.process_prefab(e)
     }
 end
 
-local skybox_ibl_trans = ecs.transform "skybox_ibl_transform"
-function skybox_ibl_trans.process_entity(e)
-	local rc = e._rendercache
-	local ibl = e._ibl
-	local sb_p = rc.properties.s_skybox.value
-	ibl.source.handle = assert(sb_p.texture.handle)
-end
-
 local skybox_sys = ecs.system "skybox_system"
 local sb_mb = world:sub {"component_register", "skybox"}
 function skybox_sys.data_changed()
 	for _, _, eid in sb_mb:unpack() do
-		iibl.filter_all(eid)
+		local se = world[eid]
+		local se_ibl = se.ibl
+		local t = se._rendercache.properties.s_skybox
+		local h = t.value.texture.handle
+		iibl.filter_all{
+			source = {handle = h},
+			irradiance = se_ibl.irradiance,
+			prefilter = se_ibl.prefilter,
+			LUT= se_ibl.LUT,
+		}
 		world:pub{"ibl_updated", eid}
 	end
 end

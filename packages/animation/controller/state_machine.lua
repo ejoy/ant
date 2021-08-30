@@ -131,6 +131,11 @@ end
 
 local iani = ecs.interface "animation"
 
+local EditMode = false
+function iani.set_edit_mode(b)
+	EditMode = b
+end
+
 function iani.set_state(e, name)
 	local sm = e.state_machine
 	if e.animation and sm and sm.nodes[name] then
@@ -155,17 +160,20 @@ end
 
 local function do_play(e, anim, real_clips, isloop, manual)
 	local start_ratio = 0.0
+	local realspeed = 1.0
 	if real_clips then
 		start_ratio = real_clips[1][2].range[1] / anim._handle:duration()
+		realspeed = real_clips[1][2].speed
 	end
 	e._animation._current = {
+		eid = e.eid,
 		animation = anim,
 		event_state = {
 			next_index = 1,
 			keyframe_events = real_clips and real_clips[1][2].key_event or {}
 		},
 		clip_state = { current = {clip_index = 1, clips = real_clips}, clips = e.anim_clips or {}},
-		play_state = { ratio = start_ratio, previous_ratio = start_ratio, speed = 1.0, play = true, loop = isloop or false, manual_update = manual}
+		play_state = { ratio = start_ratio, previous_ratio = start_ratio, speed = realspeed, play = true, loop = isloop or false, manual_update = manual}
 	}
 end
 
@@ -276,7 +284,9 @@ end
 
 function iani.step(task, s_delta, absolute)
 	local play_state = task.play_state
-	local next_time = absolute and s_delta or (play_state.ratio * task.animation._handle:duration() + s_delta) * play_state.speed
+	local playspeed = EditMode and play_state.speed or 1.0
+	local adjust_delta = play_state.play and s_delta * playspeed or s_delta
+	local next_time = absolute and adjust_delta or (play_state.ratio * task.animation._handle:duration() + adjust_delta) 
 	local duration = task.animation._handle:duration()
 	local clip_state = task.clip_state.current
 	local clips = clip_state.clips
@@ -300,6 +310,7 @@ function iani.step(task, s_delta, absolute)
 			play_state.ratio = (clips[index][2].range[1] + excess) / task.animation._handle:duration()
 			
 			task.event_state.keyframe_events = clips[index][2].key_event
+			play_state.speed = clips[index][2].speed
 		else
 			play_state.ratio = next_time / duration
 		end
@@ -495,7 +506,7 @@ end
 
 local function do_set_clips(eid, clips)
 	for e in world.w:select "eid:in" do
-		if e.eid == eid then
+		if e.eid == eid and world[eid].animation then
 			world.w:sync("anim_clips:in", e)
 			for _, clip in ipairs(e.anim_clips) do 
 				if clip.key_event then

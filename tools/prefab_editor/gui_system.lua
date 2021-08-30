@@ -381,7 +381,7 @@ function m:handle_event()
             if not world[v1].slot and world[target].collider then
                 world[target].slot_name = "None"
             end
-            inspector.update_template_tranform(target)
+            --inspector.update_template_tranform(target)
         end
         if transform_dirty then
             on_update(target)

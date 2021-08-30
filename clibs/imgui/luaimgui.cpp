@@ -1959,6 +1959,19 @@ winEnd(lua_State *L) {
 }
 
 static int
+winBeginDisabled(lua_State *L) {
+	bool disabled = (bool)lua_toboolean(L, 1);
+	ImGui::BeginDisabled(disabled);
+	return 0;
+}
+
+static int
+winEndDisabled(lua_State *L) {
+	ImGui::EndDisabled();
+	return 0;
+}
+
+static int
 winBeginChild(lua_State *L) {
 	const char * id = luaL_checkstring(L, INDEX_ID);
 	float width = (float)luaL_optnumber(L, 2, 0);
@@ -2268,6 +2281,14 @@ static int
 winSetNextWindowBgAlpha(lua_State *L) {
 	float alpha = (float)luaL_checknumber(L, 1);
 	ImGui::SetNextWindowBgAlpha(alpha);
+	return 0;
+}
+
+static int
+winSetNextWindowDockID(lua_State *L) {
+	const char* str_id = luaL_checkstring(L, 1);
+	ImGuiCond c = get_cond(L, 2);
+	ImGui::SetNextWindowDockID(ImGui::GetID(str_id), c);
 	return 0;
 }
 
@@ -3360,6 +3381,7 @@ static struct enum_pair eStyleCol[] = {
 
 static struct enum_pair eStyleVar[] = {
 	ENUM(ImGuiStyleVar,Alpha),               // float     Alpha
+	ENUM(ImGuiStyleVar,DisabledAlpha),       // float     DisabledAlpha
 	ENUM(ImGuiStyleVar,WindowPadding),       // ImVec2    WindowPadding
 	ENUM(ImGuiStyleVar,WindowRounding),      // float     WindowRounding
 	ENUM(ImGuiStyleVar,WindowBorderSize),    // float     WindowBorderSize
@@ -3819,6 +3841,8 @@ luaopen_imgui(lua_State *L) {
 	luaL_Reg windows[] = {
 		{ "Begin", winBegin },
 		{ "End", winEnd },
+		{ "BeginDisabled", winBeginDisabled },
+		{ "EndDisabled", winEndDisabled },
 		{ "BeginChild", winBeginChild },
 		{ "EndChild", winEndChild },
 		{ "BeginTabBar", winBeginTabBar },
@@ -3858,6 +3882,7 @@ luaopen_imgui(lua_State *L) {
 		{ "SetNextWindowCollapsed", winSetNextWindowCollapsed },
 		{ "SetNextWindowFocus", winSetNextWindowFocus },
 		{ "SetNextWindowBgAlpha", winSetNextWindowBgAlpha },
+		{ "SetNextWindowDockID", winSetNextWindowDockID },
 		{ "GetContentRegionMax", winGetContentRegionMax },
 		{ "GetContentRegionAvail", winGetContentRegionAvail },
 		{ "GetWindowContentRegionMin", winGetWindowContentRegionMin },

@@ -69,6 +69,46 @@ end
 
 ientity.create_simple_render_entity = create_simple_render_entity
 
+-- function ientity.create_grid_mesh_entity(name, w, h, size, materialpath)
+
+-- 	local vb = {
+-- 		-0.5, 0, 0.5, 0, 1, 0,	--left top
+-- 		0.5,  0, 0.5, 0, 1, 0,	--right top
+-- 		-0.5, 0,-0.5, 0, 1, 0,	--left bottom
+-- 		-0.5, 0,-0.5, 0, 1, 0,
+-- 		0.5,  0, 0.5, 0, 1, 0,
+-- 		0.5,  0,-0.5, 0, 1, 0,	--right bottom
+-- 	}
+-- 	local ib = {
+
+-- 	}
+-- 	local total_width = w * size
+-- 	local total_height = h * size
+-- 	for i = 0, h - 1 do
+-- 		local posz = -total_height * 0.5 + i * size
+-- 		for j = 0, w - 1 do
+-- 			local posx = -total_width * 0.5 + j * size
+-- 			local grid_offset = (i * w + j) * 4 * 4
+-- 			--vb[grid_offset + 1] = 
+-- 		end
+-- 	end
+-- 	local data = {
+-- 		transform = srt or {},
+-- 		material = materialpath,
+-- 		state = ies.create_state "visible",
+-- 		name = name or "GridMesh",
+-- 		scene_entity = true,
+-- 		mesh = create_mesh({"p3|c40niu", vb}, ib)
+-- 	}
+
+-- 	return world:deprecated_create_entity{
+-- 		policy = {
+-- 			"ant.render|render",
+-- 			"ant.general|name"},
+-- 		data = data,
+-- 	}
+-- end
+
 function ientity.create_grid_entity_simple(name, w, h, unit, srt)
 	w = w or 64
 	h = h or 64
