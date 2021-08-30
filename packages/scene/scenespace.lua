@@ -110,15 +110,6 @@ local function findScene(hashmap, eid)
 	return scene
 end
 
-local function findSceneNode(eid)
-	for v in w:select "eid:in" do
-		if v.eid == eid then
-			w:sync("scene:in", v)
-			return v.scene
-		end
-	end
-end
-
 local function isValidReference(reference)
     return reference[1] ~= nil
 end
@@ -221,16 +212,19 @@ end
 local evSceneChanged = world:sub {"scene_changed"}
 
 function s:update_transform()
-	for _, eid in evSceneChanged:unpack() do
-		local scene
-		if type(eid) == "table" then
-			local ref = eid
-			w:sync("scene:in", ref)
-			scene = ref.scene
-		else
-			scene = findSceneNode(eid)
+	for _, e in evSceneChanged:unpack() do
+		if type(e) ~= "table" then
+			local function findEntity(eid)
+				for v in w:select "eid:in" do
+					if v.eid == eid then
+						return v
+					end
+				end
+			end
+			e = findEntity(e)
 		end
-		scene.changed = current_changed
+		w:sync("scene:in", e)
+		e.scene.changed = current_changed
 	end
 
 	local cache = {}

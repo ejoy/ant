@@ -3,6 +3,7 @@ local lm = require "luamake"
 dofile "../common.lua"
 
 lm:source_set "source_bgfx" {
+    deps = "bx",
     includes = {
         LuaInclude,
         BgfxInclude,
@@ -15,10 +16,6 @@ lm:source_set "source_bgfx" {
     defines = {
         lm.mode == "debug" and "BGFX_CONFIG_DEBUG",
     },
-    links = {
-        "bx"..lm.mode,
-    },
-    linkdirs = BgfxLinkdir,
     msvc = {
         flags = {
             "-wd4244",

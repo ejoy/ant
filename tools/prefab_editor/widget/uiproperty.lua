@@ -259,21 +259,25 @@ local filelist = {}
 local selected_file
 
 function TextureResource:set_file(path)
-    local t = assetmgr.resource(path, { compile = true })
-    self.runtimedata._data.handle = t.handle
     self.metadata.path = path
     self.uidata2.text = self.metadata.path
+    if string.sub(path, -4) ~= ".dds" then
+        local t = assetmgr.resource(path, { compile = true })
+        self.runtimedata._data.handle = t.handle
+    end
 end
 
 function TextureResource:show()
     ResourcePath.show(self)
     if not self.runtimedata then return end
-    if not self.runtimedata._data.handle then return end
+    --if not self.runtimedata._data.handle then return end
     if imgui.table.Begin("##TextureTable" .. self.label, 2, imgui.flags.Table {}) then
         imgui.table.SetupColumn("ImagePreview", imgui.flags.TableColumn {'WidthFixed'}, 64.0)
         imgui.table.SetupColumn("ImagePath", imgui.flags.TableColumn {'NoHide', 'WidthStretch'}, 1.0)
         imgui.table.NextColumn()
-        imgui.widget.Image(self.runtimedata._data.handle, uiconfig.PropertyImageSize, uiconfig.PropertyImageSize)
+        if self.runtimedata._data.handle then
+            imgui.widget.Image(self.runtimedata._data.handle, uiconfig.PropertyImageSize, uiconfig.PropertyImageSize)
+        end
         imgui.table.NextColumn()
         imgui.cursor.PushItemWidth(-1)
         if imgui.widget.InputText("##" .. self.metadata.path .. self.label, self.uidata2) then
@@ -285,6 +289,7 @@ function TextureResource:show()
                 local path = fs.path(payload);
                 if path:equal_extension ".png" or path:equal_extension ".dds" then
                     self:set_file(tostring(path))
+                    assetmgr.unload(self.path)
                 end
             end
             imgui.widget.EndDragDropTarget()

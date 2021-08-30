@@ -2285,6 +2285,14 @@ winSetNextWindowBgAlpha(lua_State *L) {
 }
 
 static int
+winSetNextWindowDockID(lua_State *L) {
+	const char* str_id = luaL_checkstring(L, 1);
+	ImGuiCond c = get_cond(L, 2);
+	ImGui::SetNextWindowDockID(ImGui::GetID(str_id), c);
+	return 0;
+}
+
+static int
 winGetContentRegionMax(lua_State *L) {
 	ImVec2 v = ImGui::GetContentRegionMax();
 	lua_pushnumber(L, v.x);
@@ -3874,6 +3882,7 @@ luaopen_imgui(lua_State *L) {
 		{ "SetNextWindowCollapsed", winSetNextWindowCollapsed },
 		{ "SetNextWindowFocus", winSetNextWindowFocus },
 		{ "SetNextWindowBgAlpha", winSetNextWindowBgAlpha },
+		{ "SetNextWindowDockID", winSetNextWindowDockID },
 		{ "GetContentRegionMax", winGetContentRegionMax },
 		{ "GetContentRegionAvail", winGetContentRegionAvail },
 		{ "GetWindowContentRegionMin", winGetWindowContentRegionMin },

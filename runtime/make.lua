@@ -51,15 +51,13 @@ lm:lib "runtime_modules" {
 
 lm:exe "ant" {
     deps = {
+        "bgfx-lib",
         "ant_common",
         RuntimeModules
     },
     includes = {
         "../clibs/lua",
         "common"
-    },
-    links = {
-        "bgfx"..lm.mode
     },
     windows = {
         sources = "windows/main.cpp",

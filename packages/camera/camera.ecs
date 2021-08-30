@@ -44,6 +44,7 @@ interface "camera"
     .method "set_dof"
     .method "focus_obj"
     .method "find_camera"   --TODO: need remove
+    .method "world_to_screen"
 
 pipeline "camera"
     .stage "update_mainview_camera"

@@ -8,71 +8,72 @@ local mc     = import_package "ant.math".constant
 local iobj_motion = ecs.interface "obj_motion"
 local icamera = world:interface "ant.camera|camera"
 
-local function findSceneNode(eid)
-	for v in w:select "eid:in" do
-		if v.eid == eid then
-			w:sync("scene:in", v)
-			return v.scene
-		end
-	end
-end
-
-local function get_transform(eid)
+local function find_entity(eid)
     if type(eid) == "table" then
-        local ref = eid
-        w:sync("scene:in", ref)
-        return ref.scene
+        return eid
     end
-    local node = findSceneNode(eid)
-    if node then
-        return node
+    for v in w:select "eid:in" do
+        if v.eid == eid then
+            return v
+        end
     end
-    local e = world[eid]
-    if e then
-        return e._rendercache
-    end
+    return eid
 end
 
-local function get_srt(camera)
-    return get_transform(camera).srt
+local function get_scene(e)
+    if type(e) == "table" then
+        w:sync("scene:in", e)
+        return e.scene
+    end
+    return world[e]._rendercache
 end
 
-local function set_changed(camera)
-    world:pub {"scene_changed", camera}
+local function get_srt(e)
+    return get_scene(e).srt
 end
 
-function iobj_motion.get_position(camera)
-    return math3d.index(get_srt(camera), 4)
+local function set_changed(e)
+    world:pub {"scene_changed", e}
+end
+
+function iobj_motion.get_position(eid)
+    local e = find_entity(eid)
+    return math3d.index(get_srt(e), 4)
 end
 
 function iobj_motion.set_position(eid, pos)
-    local srt = get_srt(eid)
+    local e = find_entity(eid)
+    local srt = get_srt(e)
     srt[4] = pos
-    set_changed(eid)
+    set_changed(e)
 end
 
 function iobj_motion.get_direction(eid)
-    return math3d.index(get_srt(eid), 3)
+    local e = find_entity(eid)
+    return math3d.index(get_srt(e), 3)
 end
 
 function iobj_motion.set_direction(eid, dir)
-    local rc = get_transform(eid)
+    local e = find_entity(eid)
+    local rc = get_scene(e)
     local srt = rc.srt
     if rc.updir then
         srt.id = math3d.inverse(math3d.lookto(math3d.index(srt, 4), dir, rc.updir))
     else
         srt.r = math3d.torotation(dir)
     end
-    set_changed(eid)
+    set_changed(e)
 end
 
 function iobj_motion.set_srt(eid, srt)
-    get_srt(eid).m = srt
-    set_changed(eid)
+    local e = find_entity(eid)
+    get_srt(e).m = srt
+    set_changed(e)
 end
 
 function iobj_motion.set_view(eid, pos, dir, updir)
-    local rc = get_transform(eid)
+    local e = find_entity(eid)
+    local rc = get_scene(e)
     local srt = rc.srt
     if rc.updir then
         srt.id = math3d.inverse(math3d.lookto(pos, dir, updir or rc.updir))
@@ -80,25 +81,28 @@ function iobj_motion.set_view(eid, pos, dir, updir)
         local s = math3d.matrix_scale(srt)
         srt.id = math3d.matrix{s=s, r=math3d.torotation(dir), t=pos}
     end
-    set_changed(eid)
+    set_changed(e)
 end
 
 function iobj_motion.set_scale(eid, scale)
-    local srt = get_srt(eid)
+    local e = find_entity(eid)
+    local srt = get_srt(e)
     if type(scale) == "number" then
         srt.s = {scale, scale, scale}
     else
         srt.s = scale
     end
-    set_changed(eid)
+    set_changed(e)
 end
 
 function iobj_motion.get_scale(eid)
-    return math3d.matrix_scale(get_srt(eid))
+    local e = find_entity(eid)
+    return math3d.matrix_scale(get_srt(e))
 end
 
 function iobj_motion.set_rotation(eid, rot)
-    local rc = get_transform(eid)
+    local e = find_entity(eid)
+    local rc = get_scene(e)
     local srt = rc.srt
     if rc.updir then
         local viewdir
@@ -111,35 +115,23 @@ function iobj_motion.set_rotation(eid, rot)
     else
         srt.r = rot
     end
-    set_changed(eid)
+    set_changed(e)
 end
 
 function iobj_motion.get_rotation(eid)
-    return get_srt(eid).r
+    local e = find_entity(eid)
+    return get_srt(e).r
 end
 
 function iobj_motion.worldmat(eid)
-    if type(eid) == "table" then
-        w:sync("scene:in", eid)
-        return eid.scene._worldmat
-    end
-    local e = world[eid]
-    if e then
-        if e.mesh then
-            --render object
-            return e._rendercache.worldmat
-        end
-        for v in w:select "eid:in" do
-            if v.eid == eid then
-                w:sync("scene:in", v)
-                return v.scene._worldmat
-            end
-        end
-    end
+    local e = find_entity(eid)
+    local scene = get_scene(e)
+    return scene._worldmat
 end
 
 function iobj_motion.lookto(eid, eyepos, viewdir, updir)
-    local rc = get_transform(eid)
+    local e = find_entity(eid)
+    local rc = get_scene(e)
     if updir then
         if rc.updir == nil then
             rc.updir = math3d.ref(math3d.vector(0, 1, 0, 0))
@@ -147,11 +139,12 @@ function iobj_motion.lookto(eid, eyepos, viewdir, updir)
         rc.updir.v = updir
     end
     rc.srt.id = math3d.inverse(math3d.lookto(eyepos, viewdir, updir))
-    set_changed(eid)
+    set_changed(e)
 end
 
 function iobj_motion.move_delta(eid, delta_vec)
-    local srt = get_srt(eid)
+    local e = find_entity(eid)
+    local srt = get_srt(e)
     local pos = math3d.add(math3d.index(srt, 4), delta_vec)
     iobj_motion.set_position(eid, pos)
 end
@@ -162,7 +155,8 @@ function iobj_motion.move_along_axis(eid, axis, delta)
 end
 
 function iobj_motion.move(eid, v)
-    local srt = get_srt(eid)
+    local e = find_entity(eid)
+    local srt = get_srt(e)
     local p = math3d.index(srt, 4)
     for i=1, 3 do
         p = math3d.muladd(v[i], math3d.index(srt, i), p)
@@ -171,7 +165,8 @@ function iobj_motion.move(eid, v)
 end
 
 function iobj_motion.move_forward(eid, v)
-    local srt = get_srt(eid)
+    local e = find_entity(eid)
+    local srt = get_srt(e)
     local f = math3d.normalize(math3d.index(srt, 3))
     iobj_motion.move_along_axis(eid, f, v)
 end
@@ -207,7 +202,8 @@ end
 
 function iobj_motion.rotate_forward_vector(eid, rotateX, rotateY)
     if rotateX or rotateY then
-        local rc = get_transform(eid)
+        local e = find_entity(eid)
+        local rc = get_scene(e)
         local srt = rc.srt
         local eyepos = srt[4]
         local viewdir = rotate_forword_vector(srt, rotateX, rotateY)
@@ -218,12 +214,13 @@ function iobj_motion.rotate_forward_vector(eid, rotateX, rotateY)
             local yaxis = math3d.cross(viewdir, xaxis)
             srt[1], srt[2], srt[3] = xaxis, yaxis, viewdir
         end
-        set_changed(eid)
+        set_changed(e)
     end
 end
 
 function iobj_motion.rotate_around_point2(eid, viewpt, dx, dy, distance)
-    local srt = get_transform(eid).srt
+    local e = find_entity(eid)
+    local srt = get_scene(e).srt
     local right, up = math3d.index(srt, 1), math3d.index(srt, 2)
     local pos = math3d.index(srt, 4)
 
@@ -245,20 +242,22 @@ end
 
 function iobj_motion.rotate(eid, rotateX, rotateY)
     if rotateX or rotateY then
-        local rc = get_transform(eid)
+        local e = find_entity(eid)
+        local rc = get_scene(e)
         local srt = rc.srt
         srt.id = add_rotation(srt, rotateX, rotateY)
         if rc.updir then
             local viewdir, eyepos = srt[3], srt[4]
             srt.id = math3d.inverse(math3d.lookto(eyepos, viewdir, rc.updir))
         end
-        set_changed(eid)
+        set_changed(e)
     end
 end
 
 function iobj_motion.rotate_around_point(eid, targetpt, distance, rotateX, rotateY, threshold)
     if rotateX or rotateY then
-        local rc = get_transform(eid)
+        local e = find_entity(eid)
+        local rc = get_scene(e)
         local srt = rc.srt
         local newsrt = math3d.set_index(srt, 4, targetpt)
         newsrt = add_rotation(newsrt, rotateX, rotateY, threshold)
@@ -269,7 +268,7 @@ function iobj_motion.rotate_around_point(eid, targetpt, distance, rotateX, rotat
             local viewdir, eyepos = srt[3], srt[4]
             srt.id = math3d.inverse(math3d.lookto(eyepos, viewdir, rc.updir))
         end
-        set_changed(eid)
+        set_changed(e)
     end
 end
 
@@ -302,7 +301,8 @@ function iobj_motion.screen_to_ndc(eid, pt2d, vp_size)
 end
 
 function iobj_motion.calc_viewmat(eid)
-    local rc = get_transform(eid)
+    local e = find_entity(eid)
+    local rc = get_scene(e)
     return math3d.lookto(math3d.index(rc.srt, 4), math3d.index(rc.srt, 3), rc.updir)
 end
 

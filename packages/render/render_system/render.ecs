@@ -171,6 +171,7 @@ import "render_system/forward_render.ecs"
 import "render_system/cluster_render.ecs"
 
 pipeline "render"
+    .stage "skin_mesh"
     .stage "refine_filter"
     .stage "cull"
     .stage "refine_camera"

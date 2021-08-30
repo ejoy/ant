@@ -87,7 +87,6 @@ function s:luaecs_sync()
 				data.keyframe_events = {}
 				data.joint_list = {}
 				data.skinning = {}
-				data.skinning_type = "GPU"
 				data.material_setting = { skinning = "GPU"}
 				data.meshskin = e.meshskin
 				policy[#policy+1] = "ant.animation|animation"

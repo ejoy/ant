@@ -107,7 +107,7 @@ end
 
 local ctrl_state = false
 
-function m:handle_event()
+function m:handle_camera_event()
 	--camera_mgr.select_frustum = false
 
 	for _, what, eid, value in event_camera_edit:unpack() do
