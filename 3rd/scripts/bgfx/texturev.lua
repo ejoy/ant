@@ -33,10 +33,12 @@ lm:exe "texturev" {
             "Shell32",
         }
     },
-    -- macos = {
-    --     includes = "../bx/include/compat/osx",
-    --     frameworks = {
-    --         "Cocoa"
-    --     }
-    -- }
+    macos = {
+        frameworks = {
+            "Cocoa",
+            "Metal",
+            "QuartzCore",
+            "OpenGL"
+        }
+    }
 }
