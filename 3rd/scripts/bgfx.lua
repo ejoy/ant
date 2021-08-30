@@ -22,6 +22,14 @@ lm.macos = {
     includes = "../bx/include/compat/osx",
 }
 
+lm.ios = {
+    includes = "../bx/include/compat/ios",
+    flags = {
+        "-fembed-bitcode",
+        "-fobjc-arc"
+    }
+}
+
 require "bgfx.bx"
 require "bgfx.bimg"
 require "bgfx.bgfx-lib"

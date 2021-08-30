@@ -32,5 +32,15 @@ lm:lib "bgfx-lib" {
         flags = {
             "-x", "objective-c++"
         }
+    },
+    ios = {
+        defines = {
+            "BGFX_CONFIG_RENDERER_OPENGL=0",
+            "BGFX_CONFIG_RENDERER_OPENGLES=0",
+        },
+        sources = {
+            "src/*.mm",
+            "!src/amalgamated.mm",
+        }
     }
 }
