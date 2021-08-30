@@ -59,10 +59,10 @@ git submodule update --init
 - clibs为引擎使用到的c模块所在的位置，会使用3rd中的第三方库；
 - engine/packages为纯lua的库，会使用clibs编译的c模块；
 
-#### 编译3rd
+#### 编译tools
 
 ``` bash
-luamake 3rd
+luamake tools
 ```
 
 #### 编译editor

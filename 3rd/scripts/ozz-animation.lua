@@ -38,8 +38,6 @@ lm:source_set "ozz-animation-geometry" {
 }
 
 if not EnableEditor then
-    lm:phony "ozz-animation_make" {
-    }
     return
 end
 
@@ -61,11 +59,5 @@ lm:exe "gltf2ozz" {
         "src/animation/offline/gltf/*.cc",
         "src/animation/offline/tools/*.cc",
         "!src/animation/offline/tools/dump2ozz.cc",
-    }
-}
-
-lm:phony "ozz-animation_make" {
-    deps = {
-        "gltf2ozz"
     }
 }

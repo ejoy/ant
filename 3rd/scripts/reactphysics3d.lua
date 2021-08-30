@@ -24,7 +24,3 @@ lm:source_set "reactphysics3d" {
         }
     }
 }
-
-lm:phony "reactphysics3d_make" {
-    deps = "reactphysics3d"
-}

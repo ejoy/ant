@@ -20,7 +20,6 @@ if lm.os == "ios" then
     EnableEditor = false
 end
 
-
 lm.c = "c11"
 lm.cxx = "c++20"
 lm.msvc = {
@@ -46,23 +45,9 @@ lm.ios = {
 --TODO
 lm.visibility = "default"
 
-lm:import "3rd/make.lua"
-
-local Backlist = {}
-local EditorModules = {}
-
-for path in fs.path "clibs":list_directory() do
-    if fs.exists(path / "make.lua") then
-        local name = path:stem():string()
-        if not Backlist[name] then
-            lm:import(("clibs/%s/make.lua"):format(name))
-            if EnableEditor then
-                EditorModules[#EditorModules + 1] = name
-            end
-        end
-    end
-end
-
+lm:import "3rd/scripts/bgfx.lua"
+lm:import "3rd/scripts/ozz-animation.lua"
+lm:import "3rd/scripts/reactphysics3d.lua"
 lm:import "runtime/make.lua"
 
 lm:phony "runtime" {
@@ -70,6 +55,32 @@ lm:phony "runtime" {
 }
 
 if EnableEditor then
+    local Backlist = {}
+    local EditorModules = {}
+
+    for path in fs.path "clibs":list_directory() do
+        if fs.exists(path / "make.lua") then
+            local name = path:stem():string()
+            if not Backlist[name] then
+                lm:import(("clibs/%s/make.lua"):format(name))
+                if EnableEditor then
+                    EditorModules[#EditorModules + 1] = name
+                end
+            end
+        end
+    end
+
+    EditorModules[#EditorModules + 1] = "bgfx-core"
+    EditorModules[#EditorModules + 1] = "copy_bgfx_shader"
+
+    lm:phony "tools" {
+        deps = {
+            "gltf2ozz",
+            "shaderc",
+            "texturec",
+        }
+    }
+
     lm:phony "editor" {
         deps = {
             "lua",
