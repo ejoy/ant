@@ -15,8 +15,8 @@
 			bgfx {
 				width: auto;
 				height: auto;
-				font: 100% "宋体";
-				color: #FF0000;
+				font: 120% "宋体";
+				color: #7FFF7F;
 				text-align:"left"
 			}
 		</style>

@@ -223,8 +223,10 @@ function s:update_transform()
 			end
 			e = findEntity(e)
 		end
-		w:sync("scene:in", e)
-		e.scene.changed = current_changed
+		if e then
+			w:sync("scene:in", e)
+			e.scene.changed = current_changed
+		end
 	end
 
 	local cache = {}

@@ -277,7 +277,8 @@ function m:create(what, config)
                     scene_entity = true,
                     state = ies.create_state "visible|selectable",
                     transform = get_local_transform({s = 50}, parent_eid),
-                    material = "/pkg/ant.resources/materials/singlecolor.material",
+                    --material = "/pkg/ant.resources/materials/singlecolor.material",
+                    material = "/pkg/ant.resources/materials/pbr_default_cw.material",
                     mesh = geom_mesh_file[config.type],
                     name = config.type .. geometricidx
                 }

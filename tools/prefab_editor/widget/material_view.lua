@@ -203,6 +203,13 @@ function MaterialView:set_model(eid)
         --self.samplers = {}
         local mtl_filename = tostring(world[eid].material)
         local md = {filename = mtl_filename, tdata = datalist.parse(cr.read_file(mtl_filename))}
+        md.tdata.fx.setting = md.tdata.fx.setting or {
+            lighting = "on",
+            surfacetype = "opacity",
+            shadow_cast = "on",
+            shadow_receive = "on",
+            bloom = "off"
+        }
         if type(md.tdata.state) == "string" then
             md.tdata.state = datalist.parse(raw_read_file(fs.path(md.tdata.state)))
         end
