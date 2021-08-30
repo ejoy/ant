@@ -15,8 +15,8 @@ end
 local pre_depth_material
 local pre_depth_skinning_material
 
-local function which_material(skinning_type)
-	return skinning_type == "GPU" and pre_depth_skinning_material or pre_depth_material
+local function which_material(skinning)
+	return skinning and pre_depth_skinning_material or pre_depth_material
 end
 
 
@@ -30,8 +30,8 @@ function s:init()
 end
 
 function s:end_filter()
-    for e in w:select "fitler_result:in render_object:in skinning_type:in filter_material:in" do
-        local m = assert(which_material(e.skinning_type))
+    for e in w:select "fitler_result:in render_object:in filter_material:in skinning?in" do
+        local m = assert(which_material(e.skinning))
         local fr = e.filter_result
         local state = e.render_object.state
         for qe in w:select "pre_depth_queue primitive_filter:in" do

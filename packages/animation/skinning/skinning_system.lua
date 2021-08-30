@@ -8,7 +8,7 @@ local bgfx 		= require "bgfx"
 local sm = ecs.transform "skinning_material"
 
 function sm.process_prefab(e)
-	if e.skinning_type == "GPU" then
+	if e.animation and e.skeleton then
 		e._cache_prefab.material_setting.skinning = "GPU"
 	end
 end
@@ -19,25 +19,11 @@ local skinning_sys = ecs.system "skinning_system"
 local iom = world:interface "ant.objcontroller|obj_motion"
 
 function skinning_sys:skin_mesh()
-	for e in w:select "pose_result:in skinning:in skinning_type:in" do
+	for e in w:select "pose_result:in skinning:in" do
 		local skinning = e.skinning
 		local skin = skinning.skin
 		local skinning_matrices = skinning.skinning_matrices
 		local pr = e.pose_result
-		if e.skinning_type == "CPU" then
-			animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap)
-
-			for _, job in ipairs(skinning.jobs) do
-				local handle = job.hwbuffer_handle
-				local updatedata = job.updatedata
-				for _, part in ipairs(job.parts) do
-					animodule.mesh_skinning(skinning_matrices, part.inputdesc, part.outputdesc, part.num, part.influences_count)
-				end
-	
-				bgfx.update(handle, 0, bgfx.memory_buffer(updatedata:pointer(), job.buffersize, updatedata))
-			end
-		else
-			animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap, iom.worldmat(e))
-		end
+		animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap, iom.worldmat(e))
 	end
 end

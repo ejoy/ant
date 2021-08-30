@@ -394,7 +394,7 @@ local function load_geometry_info(worldmat, mesh)
             end
         end
 
-        --error(("not found attrib name:%s"):format(name))
+        error(("not found attrib name:%s"):format(name))
     end
 
     local ib = mesh.ib
