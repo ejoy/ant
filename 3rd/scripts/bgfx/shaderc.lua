@@ -56,6 +56,7 @@ lm:source_set "glslang" {
 }
 
 lm:source_set "glsl-optimizer" {
+    cxx = "c++14",
     rootdir = "../bgfx/3rdparty/glsl-optimizer",
     includes = {
         "src",
@@ -172,7 +173,7 @@ lm:exe "shaderc" {
         "src/shader*.cpp",
     },
     windows = {
-        sources = "../scripts/bgfx/shaderc.rc"
+        sources = "../scripts/bgfx/bgfx.rc"
     },
     msvc = {
         flags = {

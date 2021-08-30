@@ -23,7 +23,7 @@ lm:exe "texturev" {
         "tools/texturev/texturev.cpp",
     },
     windows = {
-        sources = "../scripts/bgfx/texturev.rc",
+        sources = "../scripts/bgfx/bgfx.rc",
         links = {
             "DelayImp",
             "comdlg32",
