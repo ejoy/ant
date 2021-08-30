@@ -122,12 +122,6 @@ lm:source_set "bimg_encode" {
             "/wd5056",
         }
     },
-    mingw = {
-        includes = "../bx/include/compat/mingw",
-    },
-    macos = {
-        includes = "../bx/include/compat/osx",
-    },
     gcc = {
         flags = {
             "-Wno-class-memaccess",

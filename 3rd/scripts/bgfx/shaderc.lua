@@ -179,11 +179,7 @@ lm:exe "shaderc" {
             "/wd4819",
         }
     },
-    mingw = {
-        includes = "../bx/include/compat/mingw",
-    },
     macos = {
-        includes = "../bx/include/compat/osx",
         frameworks = {
             "Cocoa"
         }
