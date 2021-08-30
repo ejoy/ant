@@ -14,6 +14,7 @@ else
     require "bgfx.bgfx-dll"
     require "bgfx.shaderc"
     require "bgfx.texturec"
+    require "bgfx.texturev"
 
     lm:copy "copy_bgfx_shader" {
         input = {
@@ -36,6 +37,7 @@ else
             "bgfx-core",
             "shaderc",
             "texturec",
+            "texturev",
         }
     }
 end
