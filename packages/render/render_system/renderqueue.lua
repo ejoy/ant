@@ -130,7 +130,7 @@ function irq.set_visible(queuename, b)
 	world:pub{"component_changed", "visible", b}
 end
 
-function irq.update_rendertarget(rt)
+function irq.update_rendertarget(rt, need_touch)
 	local viewid = rt.viewid
 	local vm = rt.view_mode or ""
 	bgfx.set_view_mode(viewid, vm)
@@ -145,13 +145,18 @@ function irq.update_rendertarget(rt)
 	else
 		rt.fb_idx = fbmgr.get_fb_idx(viewid)
 	end
+
+	if need_touch then
+		bgfx.touch(viewid)
+	end
 end
 
 local rt_sys = ecs.system "render_target_system"
 function rt_sys:entity_init()
-	for e in w:select "INIT render_target:in name:in" do
-		irq.update_rendertarget(e.render_target)
+	for e in w:select "INIT render_target:in name:in need_touch?in" do
+		irq.update_rendertarget(e.render_target, e.need_touch)
 	end
+	w:clear "need_touch"
 	for qe in w:select "camera_changed camera_ref:out render_target:in shadow_render_queue:in queue_name:in" do
 		local vr = qe.render_target.view_rect
 		qe.camera_ref = qe.shadow_render_queue.camera_ref

@@ -79,6 +79,8 @@ policy_v2 "render_queue"
     .component_v2 "primitive_filter"
     .component_v2 "shadow_render_queue"
 
+component_v2 "need_touch"
+
 component_v2 "cull_tag".type "lua"
 policy_v2 "cull"
     .require_system "cull_system"
