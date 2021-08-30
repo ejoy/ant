@@ -33,13 +33,6 @@ lm:exe "texturev" {
             "Shell32",
         }
     },
-    msvc = {
-        defines = "_CRT_SECURE_NO_WARNINGS",
-        includes = "../bx/include/compat/msvc",
-    },
-    mingw = {
-        includes = "../bx/include/compat/mingw",
-    },
     -- macos = {
     --     includes = "../bx/include/compat/osx",
     --     frameworks = {
