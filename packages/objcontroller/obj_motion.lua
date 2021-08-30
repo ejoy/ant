@@ -17,11 +17,15 @@ local function find_entity(eid)
             return v
         end
     end
+    return eid
 end
 
 local function get_scene(e)
-    w:sync("scene:in", e)
-    return e.scene
+    if type(e) == "table" then
+        w:sync("scene:in", e)
+        return e.scene
+    end
+    return world[e]._rendercache
 end
 
 local function get_srt(e)

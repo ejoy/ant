@@ -213,6 +213,16 @@ local evSceneChanged = world:sub {"scene_changed"}
 
 function s:update_transform()
 	for _, e in evSceneChanged:unpack() do
+		if type(e) ~= "table" then
+			local function findEntity(eid)
+				for v in w:select "eid:in" do
+					if v.eid == eid then
+						return v
+					end
+				end
+			end
+			e = findEntity(e)
+		end
 		w:sync("scene:in", e)
 		e.scene.changed = current_changed
 	end
