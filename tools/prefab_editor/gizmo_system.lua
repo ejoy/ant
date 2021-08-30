@@ -384,7 +384,7 @@ function gizmo_sys:post_init()
 			"ant.scene|hierarchy_policy",
 		},
 		data = {
-			transform = srt,
+			transform = {s = 2.5},
 			name = "global axis root",
 			scene_entity = true,
 		},
@@ -402,7 +402,7 @@ function gizmo_sys:post_init()
 	ies.set_state(new_eid, "auxgeom", true)
 	imaterial.set_property(new_eid, "u_color", gizmo_const.COLOR_Z)
 	iss.set_parent(new_eid, global_axis_eid)
-	iom.set_scale(global_axis_eid, 2.5)
+	--iom.set_scale(global_axis_eid, 2.5)
 end
 local mb_main_camera_changed = world:sub{"camera_changed", "main_queue"}
 function gizmo_sys:entity_ready()

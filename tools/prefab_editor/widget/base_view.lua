@@ -95,14 +95,14 @@ function BaseView:on_set_tag(value)
     if is_camera(self.eid) then
     else
         world[self.eid].tag = tags
+        world:pub {"EntityEvent", "tag", self.eid, tags}
     end
-    world:pub {"EntityEvent", "tag", self.eid, tags}
 end
 
 function BaseView:on_get_tag()
     local template = hierarchy:get_template(self.eid)
-    local tags = is_camera(self.eid) and template.template.data.tag-- or world[self.eid].tag
-    if not tags then return "" end
+    if is_camera(self.eid) then return "" end
+    local tags = template.template.data.tag
     if type(tags) == "table" then
         return table.concat(tags, "|")
     end
