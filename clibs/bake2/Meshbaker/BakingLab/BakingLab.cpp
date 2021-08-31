@@ -1194,7 +1194,7 @@ void BakingLab::Bake(uint32 bakeMeshIdx)
 {
     meshBaker.bakeMeshIdx = bakeMeshIdx;
     while (BakeProcess() < 1.f) ;
-
+    meshBaker.WaitBakeThreadEnd();  //process set to 1.0, but bake thread still have some work not finish, need to wait it end
     meshBaker.bakeMeshIdx = UINT32_MAX;
 }
 
@@ -1203,8 +1203,8 @@ void BakingLab::ShutDown()
     ShutdownShaders();
 }
 
-void BakingLab::GetBakeTextureData(TextureData<Float4>& textureData)
+void BakingLab::GetBakeResult(int64 basicIdx)
 {
-    auto device = deviceManager.Device();
-    GetTextureData(device, meshBaker.bakeTextureSRV, textureData);
+    //assert(meshBaker)
+    return meshBaker.bakeResults[basicIdx];
 }

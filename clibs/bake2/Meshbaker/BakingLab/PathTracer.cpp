@@ -247,12 +247,47 @@ void GenerateIntegrationSamples(IntegrationSamples& samples, uint64 sqrtNumSampl
     }
 }
 
+#include <fstream>
+static std::ofstream* off = nullptr;
+static const char* fn = "d:/work/ant/log0.txt";
+template<typename T>
+static void Log(const T& arg) {
+    if (off == nullptr) {
+        off = new std::ofstream(fn);
+    }
+
+    *off << arg << std::endl;
+
+    off->flush();
+}
+
+template<typename T, typename ...Args>
+static void Log(const T& arg1, Args... args)
+{
+    if (off == nullptr) {
+        off = new std::ofstream(fn);
+    }
+
+    *off << arg1;
+    Log(args...);
+}
+
+
 // Returns the incoming radiance along the ray specified by params.RayDir, computed using unidirectional
 // path tracing
+
 Float3 PathTrace(const PathTracerParams& params, Random& randomGenerator, float& illuminance, bool& hitSky)
 {
     // Initialize to the view parameters, must be reset every loop iteration
     EmbreeRay ray(params.RayStart, params.RayDir, 0.0f, params.RayLen);
+    static uint64 s_count = 0;
+    auto LogVec = [](auto desc, auto v){
+        Log(desc, "[", v[0], ",", v[1], ",", v[2], "]");
+    };
+
+    Log("-----", s_count++, "-----");
+    LogVec("RayStart", params.RayStart);
+    LogVec("RayDir", params.RayDir);
     illuminance = 0.0f;
     Float3 radiance;
     Float3 irradiance;

@@ -80,7 +80,7 @@ public:
 
     MeshBakerStatus Update(const Camera& camera, uint32 screenWidth, uint32 screenHeight,
                            ID3D11DeviceContext* deviceContext, const Model* currentModel);
-
+    void WaitBakeThreadEnd();
     // Read/Write Data shared with render threads
     FixedArray<Half4> renderBuffer;
     FixedArray<float> renderWeightBuffer;

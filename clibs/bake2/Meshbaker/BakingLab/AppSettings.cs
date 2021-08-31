@@ -672,7 +672,7 @@ public class Settings
     {
         [DisplayName("Light Map Resolution")]
         [HelpText("The texture resolution of the light map")]
-        [MinValue(64)]
+        [MinValue(16)]
         [MaxValue(4096)]
         int LightMapResolution = 256;
 

@@ -513,7 +513,7 @@ namespace AppSettings
         SHSpecularMode.Initialize(tweakBar, "SHSpecularMode", "SH Settings", "SH Specular Mode", "", SHSpecularModes::Convolution, 4, SHSpecularModesLabels);
         Settings.AddSetting(&SHSpecularMode);
 
-        LightMapResolution.Initialize(tweakBar, "LightMapResolution", "Baking", "Light Map Resolution", "The texture resolution of the light map", 256, 64, 4096);
+        LightMapResolution.Initialize(tweakBar, "LightMapResolution", "Baking", "Light Map Resolution", "The texture resolution of the light map", 256, 16, 4096);
         Settings.AddSetting(&LightMapResolution);
 
         NumBakeSamples.Initialize(tweakBar, "NumBakeSamples", "Baking", "Sqrt Num Samples", "The square root of the number of sample rays to use for baking GI", 25, 1, 100);

@@ -116,32 +116,52 @@ static int
 lbaker_create(lua_State *L){
     Scene s;{
         MeshData md;
-        glm::vec3 pos[4] = {
+        glm::vec3 pos[] = {
             glm::vec3(-1.f, 0.f, 1.f),
             glm::vec3(1.f, 0.f, 1.f),
             glm::vec3(1.f, 0.f, -1.f),
             glm::vec3(-1.f, 0.f, -1.f),
+
+            glm::vec3(-1.f,  1.f, 0.f),
+            glm::vec3(1.f,  1.f, 0.f),
+            glm::vec3(1.f, -1.f, 0.f),
+            glm::vec3(-1.f, -1.f, 0.f),
         };
 
-        glm::vec3 nor[4] = {
+        glm::vec3 nor[] = {
             glm::vec3(0.f, 1.f, 0.f),
             glm::vec3(0.f, 1.f, 0.f),
             glm::vec3(0.f, 1.f, 0.f),
             glm::vec3(0.f, 1.f, 0.f),
+
+            glm::vec3(0.f, 0.f, 1.f),
+            glm::vec3(0.f, 0.f, 1.f),
+            glm::vec3(0.f, 0.f, 1.f),
+            glm::vec3(0.f, 0.f, 1.f),
         };
 
-        glm::vec2 tex0[4] = {
+        glm::vec2 tex0[] = {
             glm::vec2(0.f, 0.f),
             glm::vec2(1.f, 0.f),
             glm::vec2(1.f, 1.f),
-            glm::vec2(0.f, 0.f),
-        };
+            glm::vec2(0.f, 1.f),
 
-        glm::vec2 lm_uv[4] = {
             glm::vec2(0.f, 0.f),
             glm::vec2(1.f, 0.f),
             glm::vec2(1.f, 1.f),
+            glm::vec2(0.f, 1.f),
+        };
+
+        glm::vec2 lm_uv[] = {
             glm::vec2(0.f, 0.f),
+            glm::vec2(1.f, 0.f),
+            glm::vec2(1.f, 1.f),
+            glm::vec2(0.f, 1.f),
+
+            glm::vec2(0.f, 0.f),
+            glm::vec2(1.f, 0.f),
+            glm::vec2(1.f, 1.f),
+            glm::vec2(0.f, 1.f),
         };
 
         auto set_buffer = [](auto &b, auto data, auto type, auto stride, auto offset){
@@ -157,14 +177,17 @@ lbaker_create(lua_State *L){
 
         set_buffer(md.tangents, nullptr, BT_None, 0, 0);
         set_buffer(md.bitangents, nullptr, BT_None, 0, 0);
-        md.vertexCount = 4;
+        md.vertexCount = 8;
 
-        uint16_t indices[6] = {
+        uint16_t indices[] = {
             0, 1, 2,
             2, 3, 0,
+
+            4, 5, 6,
+            6, 7, 4,
         };
 
-        md.indexCount = 6;
+        md.indexCount = 12;
 
         set_buffer(md.indices, indices, BT_Uint16, 2, 0);
 
@@ -195,7 +218,7 @@ lbaker_bake(lua_State *L){
             lua_pushlstring(L, (const char*)lm.data.data(), lm.data.size());
             lua_setfield(L, -2, "data");
 
-            lua_pushinteger(L, 64);
+            lua_pushinteger(L, 16);
             lua_setfield(L, -2, "size");
 
             lua_pushinteger(L, sizeof(glm::vec4));

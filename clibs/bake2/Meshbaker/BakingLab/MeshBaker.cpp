@@ -1477,9 +1477,10 @@ static uint32 __stdcall RenderThread(void* data)
 
 static uint64 GetNumThreads()
 {
-    SYSTEM_INFO sysInfo;
-    GetSystemInfo(&sysInfo);
-    return std::max<uint64>(1, sysInfo.dwNumberOfProcessors - 1);
+    return 1;
+    // SYSTEM_INFO sysInfo;
+    // GetSystemInfo(&sysInfo);
+    // return std::max<uint64>(1, sysInfo.dwNumberOfProcessors - 1);
 }
 
 MeshBaker::MeshBaker()
@@ -1746,17 +1747,6 @@ MeshBakerStatus MeshBaker::Update(const Camera& camera, uint32 screenWidth, uint
         }
     }
 
-    if(showGroundTruth)
-    {
-        KillBakeThreads();
-        StartRenderThreads();
-    }
-    else
-    {
-        KillRenderThreads();
-        StartBakeThreads();
-    }
-
     // Change checks common to bake and ground truth
     if(AppSettings::AreaLightColor.Changed() || AppSettings::AreaLightSize.Changed()
         || AppSettings::AreaLightX.Changed() || AppSettings::AreaLightY.Changed()
@@ -1815,6 +1805,17 @@ MeshBakerStatus MeshBaker::Update(const Camera& camera, uint32 screenWidth, uint
         currTile = 0;
     }
 
+    if(showGroundTruth)
+    {
+        KillBakeThreads();
+        StartRenderThreads();
+    }
+    else
+    {
+        KillRenderThreads();
+        StartBakeThreads();
+    }
+
     MeshBakerStatus status;
     status.GroundTruth = renderTextureSRV;
     status.LightMap = bakeTextureSRV;
@@ -1861,6 +1862,9 @@ MeshBakerStatus MeshBaker::Update(const Camera& camera, uint32 screenWidth, uint
         const uint32 LightMapSize = AppSettings::LightMapResolution;
         const uint64 numPasses = AppSettings::NumBakeSamples * AppSettings::NumBakeSamples;
         status.BakeProgress = Saturate(currBakeBatch / (currNumBakeBatches - 1.0f));
+        if (status.BakeProgress >= 1.f) {
+            int debug = 0;
+        }
         status.GroundTruthProgress = 1.0f;
         lastTileNum = INT64_MAX;
 
@@ -1904,6 +1908,11 @@ MeshBakerStatus MeshBaker::Update(const Camera& camera, uint32 screenWidth, uint
     Sleep(0);
 
     return status;
+}
+
+void MeshBaker::WaitBakeThreadEnd() 
+{
+    KillBakeThreads();
 }
 
 void MeshBaker::KillBakeThreads()

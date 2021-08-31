@@ -118,7 +118,5 @@ public:
     float BakeProcess();
     void ShutDown();
 
-    void GetBakeTextureData(TextureData<Float4>& textureData);
-
-    void SetGeometory();
+    FixArray<Float4> GetBakeResult();
 };
