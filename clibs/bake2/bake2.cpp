@@ -114,8 +114,69 @@ LUA2STRUCT(Scene, models, lights, materials);
 
 static int
 lbaker_create(lua_State *L){
-    Scene s;
-    lua_struct::unpack(L, 1, s);
+    Scene s;{
+        MeshData md;
+        glm::vec3 pos[4] = {
+            glm::vec3(-1.f, 0.f, 1.f),
+            glm::vec3(1.f, 0.f, 1.f),
+            glm::vec3(1.f, 0.f, -1.f),
+            glm::vec3(-1.f, 0.f, -1.f),
+        };
+
+        glm::vec3 nor[4] = {
+            glm::vec3(0.f, 1.f, 0.f),
+            glm::vec3(0.f, 1.f, 0.f),
+            glm::vec3(0.f, 1.f, 0.f),
+            glm::vec3(0.f, 1.f, 0.f),
+        };
+
+        glm::vec2 tex0[4] = {
+            glm::vec2(0.f, 0.f),
+            glm::vec2(1.f, 0.f),
+            glm::vec2(1.f, 1.f),
+            glm::vec2(0.f, 0.f),
+        };
+
+        glm::vec2 lm_uv[4] = {
+            glm::vec2(0.f, 0.f),
+            glm::vec2(1.f, 0.f),
+            glm::vec2(1.f, 1.f),
+            glm::vec2(0.f, 0.f),
+        };
+
+        auto set_buffer = [](auto &b, auto data, auto type, auto stride, auto offset){
+            b.data = (const char*)data;
+            b.type = type;
+            b.stride = stride, b.offset = offset;
+        };
+        
+        set_buffer(md.positions, pos, BT_Float, 12, 0);
+        set_buffer(md.normals, nor, BT_Float, 12, 0);
+        set_buffer(md.texcoords0, tex0, BT_Float, 8, 0);
+        set_buffer(md.texcoords1, lm_uv, BT_Float, 8, 0);
+
+        set_buffer(md.tangents, nullptr, BT_None, 0, 0);
+        set_buffer(md.bitangents, nullptr, BT_None, 0, 0);
+        md.vertexCount = 4;
+
+        uint16_t indices[6] = {
+            0, 1, 2,
+            2, 3, 0,
+        };
+
+        md.indexCount = 6;
+
+        set_buffer(md.indices, indices, BT_Uint16, 2, 0);
+
+        md.worldmat = glm::mat4(1.f);
+        md.normalmat = glm::mat4(1.f);
+        
+        md.materialidx = 0;
+        s.models.push_back(md);
+        s.materials.push_back(MaterialData());
+    }
+    //lua_struct::unpack(L, 1, s);
+
     BakerHandle bh = CreateBaker(&s);
     lua_pushlightuserdata(L, bh);
     return 1;
@@ -134,7 +195,7 @@ lbaker_bake(lua_State *L){
             lua_pushlstring(L, (const char*)lm.data.data(), lm.data.size());
             lua_setfield(L, -2, "data");
 
-            lua_pushinteger(L, 256);
+            lua_pushinteger(L, 64);
             lua_setfield(L, -2, "size");
 
             lua_pushinteger(L, sizeof(glm::vec4));
