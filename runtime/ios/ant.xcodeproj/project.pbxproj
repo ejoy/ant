@@ -331,14 +331,7 @@
 				);
 				OTHER_LDFLAGS = (
 					"-lruntime_modules",
-					"-lbgfxDebug",
-					"-lbxDebug",
-					"-lbimgDebug",
-					"-lreactphysics3d",
-					"-lozz_animation_d",
-					"-lozz_animation_offline_d",
-					"-lozz_geometry_d",
-					"-lozz_base_d",
+					"-lbgfx-lib",
 					"-lstdc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ejoy.ant;
@@ -386,14 +379,7 @@
 				);
 				OTHER_LDFLAGS = (
 					"-lruntime_modules",
-					"-lbgfxRelease",
-					"-lbxRelease",
-					"-lbimgRelease",
-					"-lreactphysics3d",
-					"-lozz_animation_r",
-					"-lozz_animation_offline_r",
-					"-lozz_geometry_r",
-					"-lozz_base_r",
+					"-lbgfx-lib",
 					"-lstdc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ejoy.ant;
