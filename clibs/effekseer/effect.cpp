@@ -18,7 +18,7 @@ void effect_adapter::pause(bool p)
 	if (handle_ != -1) {
 		manager_->SetPaused(handle_, p);
 	}
-	playing = !p;
+	playing_ = !p;
 }
 
 void effect_adapter::play(int32_t startTime)
@@ -51,7 +51,7 @@ void effect_adapter::set_time(int32_t frame, bool shouldExist)
 	}
 	manager_->SetPaused(handle_, false);
 	manager_->UpdateHandleToMoveToFrame(handle_, frame);
-	manager_->SetPaused(handle_, !playing);
+	manager_->SetPaused(handle_, !playing_);
 }
 
 void effect_adapter::set_target_pos(const Effekseer::Vector3D& pos)
@@ -120,6 +120,6 @@ void effect_adapter::destroy()
 {
 	manager_->StopEffect(handle_);
 	handle_ = -1;
-	playing = false;
+	playing_ = false;
 	effect_.Reset();
 }
