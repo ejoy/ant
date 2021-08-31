@@ -62,14 +62,9 @@ void Bake(BakerHandle handle, BakeResult *result){
     for (uint32_t bakeMeshIdx=0; bakeMeshIdx<meshes.size(); ++bakeMeshIdx){
         bl->Bake(bakeMeshIdx);
         auto &lm = result->lightmaps[bakeMeshIdx];
-        
-        TextureData<Float4> t;
-        bl->GetBakeTextureData(t);
-
-        assert(t.NumSlices == 1);
-        lm.data.resize(t.Texels.size());
-
-        memcpy(lm.data.data(), t.Texels.data(), t.Texels.size());
+        const auto& r = bl->GetBakeResult(0);
+        lm.data.resize(r.Size());
+        memcpy(lm.data.data(), r.Data(), r.Size()*sizeof(Float4));
     }
 }
 

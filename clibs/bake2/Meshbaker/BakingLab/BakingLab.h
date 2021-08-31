@@ -118,5 +118,5 @@ public:
     float BakeProcess();
     void ShutDown();
 
-    FixArray<Float4> GetBakeResult();
+    const FixedArray<Float4>& GetBakeResult(uint64 basicIdx) const;
 };

@@ -1203,8 +1203,7 @@ void BakingLab::ShutDown()
     ShutdownShaders();
 }
 
-void BakingLab::GetBakeResult(int64 basicIdx)
+const FixedArray<Float4>& BakingLab::GetBakeResult(uint64 basicIdx) const
 {
-    //assert(meshBaker)
     return meshBaker.bakeResults[basicIdx];
 }
