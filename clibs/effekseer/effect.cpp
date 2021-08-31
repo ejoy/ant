@@ -120,5 +120,6 @@ void effect_adapter::destroy()
 {
 	manager_->StopEffect(handle_);
 	handle_ = -1;
+	playing = false;
 	effect_.Reset();
 }
