@@ -320,15 +320,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = (
-					../../bin/ios/debug,
-					"../../3rd/bgfx/.build/ios-arm64/bin",
-					../../3rd/build/ios/debug/reactphysics3d,
-					"../../3rd/build/ios/debug/ozz-animation/src/animation/runtime",
-					"../../3rd/build/ios/debug/ozz-animation/src/animation/offline",
-					"../../3rd/build/ios/debug/ozz-animation/src/geometry/runtime",
-					"../../3rd/build/ios/debug/ozz-animation/src/base",
-				);
+				LIBRARY_SEARCH_PATHS = ../../bin/ios/debug;
 				OTHER_LDFLAGS = (
 					"-lruntime_modules",
 					"-lbgfx-lib",
@@ -368,15 +360,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = (
-					../../bin/ios/release,
-					"../../3rd/bgfx/.build/ios-arm64/bin",
-					../../3rd/build/ios/release/reactphysics3d,
-					"../../3rd/build/ios/release/ozz-animation/src/animation/runtime",
-					"../../3rd/build/ios/release/ozz-animation/src/animation/offline",
-					"../../3rd/build/ios/release/ozz-animation/src/geometry/runtime",
-					"../../3rd/build/ios/release/ozz-animation/src/base",
-				);
+				LIBRARY_SEARCH_PATHS = ../../bin/ios/release;
 				OTHER_LDFLAGS = (
 					"-lruntime_modules",
 					"-lbgfx-lib",

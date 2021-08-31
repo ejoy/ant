@@ -53,7 +53,10 @@ lm:import "3rd/scripts/reactphysics3d.lua"
 lm:import "runtime/make.lua"
 
 lm:phony "runtime" {
-    deps = "ant"
+    deps = {
+        "ant",
+        "runtime_modules",
+    }
 }
 
 if EnableEditor then
