@@ -71,7 +71,7 @@ end
 function gizmo:update_position(worldpos)
 	local newpos
 	if worldpos then
-		local parent_worldmat = iom.worldmat(world[gizmo.target_eid].parent)
+		local parent_worldmat = world[gizmo.target_eid].parent and iom.worldmat(world[gizmo.target_eid].parent) or nil
 		local localPos
 		if not parent_worldmat then
 			localPos = worldpos
@@ -1053,7 +1053,7 @@ function gizmo_sys:handle_event()
 					elseif gizmo.mode == gizmo_const.ROTATE then
 						cmd_queue:record({action = gizmo_const.ROTATE, eid = target, oldvalue = math3d.totable(last_rotate), newvalue = math3d.totable(iom.get_rotation(target))})
 					elseif gizmo.mode == gizmo_const.MOVE then
-						local pw = iom.worldmat(world[target].parent)
+						local pw = world[target].parent and iom.worldmat(world[target].parent) or nil
 						local localPos = last_gizmo_pos
 						if pw then
 							localPos = math3d.totable(math3d.transform(math3d.inverse(pw), last_gizmo_pos, 1))
