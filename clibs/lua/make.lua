@@ -6,19 +6,6 @@ if lm.mode == "debug" and lm.target == "x64" and lm.compiler == "msvc" then
     }
 end
 
-lm:source_set "source_lua_openlibs_runtime" {
-    sources = {
-        "linit.c",
-    },
-    defines = "ANT_LIBRARIES"
-}
-
-lm:source_set "source_lua_openlibs_editor" {
-    sources = {
-        "linit.c",
-    },
-}
-
 lm:source_set "source_lua_noopenlibs" {
     sources = {
         "*.c",
@@ -44,14 +31,19 @@ lm:source_set "source_lua_noopenlibs" {
 lm:source_set "source_lua" {
     deps = {
         "source_lua_noopenlibs",
-        "source_lua_openlibs_runtime"
-    }
+    },
+    sources = {
+        "linit.c",
+    },
+    defines = "ANT_LIBRARIES"
 }
 
 lm:source_set "source_lua_editor" {
     deps = {
         "source_lua_noopenlibs",
-        "source_lua_openlibs_editor"
+    },
+    sources = {
+        "linit.c",
     }
 }
 

@@ -1,8 +1,27 @@
 local lm = require "luamake"
 
+lm:copy "copy_bgfx_shader" {
+    input = {
+        "../bgfx/src/bgfx_shader.sh",
+        "../bgfx/src/bgfx_compute.sh",
+        "../bgfx/examples/common/common.sh",
+        "../bgfx/examples/common/shaderlib.sh",
+    },
+    output = {
+        "../../packages/resources/shaders/bgfx_shader.sh",
+        "../../packages/resources/shaders/bgfx_compute.sh",
+        "../../packages/resources/shaders/common.sh",
+        "../../packages/resources/shaders/shaderlib.sh",
+    }
+}
+
 lm:dll "bgfx-core" {
     rootdir = "../bgfx/",
-    deps = {"bx", "bimg"},
+    deps = {
+        "bx",
+        "bimg",
+        "copy_bgfx_shader"
+    },
     defines = {
         "BGFX_SHARED_LIB_BUILD=1",
         "BGFX_CONFIG_MAX_VIEWS=1024",

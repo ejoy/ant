@@ -10,6 +10,8 @@ local plat = (function ()
     end
     return lm.os
 end)()
+
+lm.mode = "debug"
 lm.builddir = ("build/%s/%s"):format(plat, lm.mode)
 lm.bindir = ("bin/%s/%s"):format(plat, lm.mode)
 
@@ -71,7 +73,6 @@ if EnableEditor then
     end
 
     EditorModules[#EditorModules + 1] = "bgfx-core"
-    EditorModules[#EditorModules + 1] = "copy_bgfx_shader"
 
     lm:phony "tools" {
         deps = {
