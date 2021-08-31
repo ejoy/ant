@@ -287,6 +287,9 @@ thread_main(void *ud) {
 		if (errlog) {
 			size_t sz;
 			const char * str = lua_tolstring(L, -1, &sz);
+#if !defined(NDEBUG)
+			printf("thread error : %s", str);
+#endif
 			void * errmsg = threadseri_packstring(str, (int)sz);
 			struct simple_queue_slot slot = { errmsg };
 			push_channel(errlog, &slot);

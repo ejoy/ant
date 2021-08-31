@@ -4,7 +4,7 @@ local lfs = require "filesystem.local"
 
 local function raw_dofile(path)
 	local file <close> = assert(io.open(path, 'rb'))
-	local func = assert(load(file:read 'a', '@' .. path, ...))
+	local func = assert(load(file:read 'a', '@' .. path))
 	return func()
 end
 
