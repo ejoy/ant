@@ -297,6 +297,26 @@ function m:create(what, config)
         elseif config.type == "torus(prefab)" then
             m:add_prefab(gd.editor_package_path .. "res/torus.prefab")
         end
+    elseif what == "enable_default_light" then
+        if not self.default_light then
+            local ilight = world:interface "ant.render|light" 
+            local _, newlight = ilight.create({
+                transform = {t = {0, 5, 0}, r = {math.rad(130), 0, 0}},
+                name = "directional" .. gen_light_id(),
+                light_type = "directional",
+                color = {1, 1, 1, 1},
+                intensity = 2,
+                range = 1,
+                inner_radian = math.rad(45),
+                outter_radian = math.rad(45)
+            })
+            self.default_light = newlight
+        end
+    elseif what == "disable_default_light" then
+        if self.default_light then
+            world:remove_entity(self.default_light[1])
+            self.default_light = nil
+        end
     elseif what == "light" then
         if config.type == "directional" or config.type == "point" or config.type == "spot" then      
             local ilight = world:interface "ant.render|light" 
