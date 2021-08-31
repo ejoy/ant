@@ -2,6 +2,12 @@ local access = {}
 
 local lfs = require "filesystem.local"
 
+local function raw_dofile(path)
+	local file <close> = assert(io.open(path, 'rb'))
+	local func = assert(load(file:read 'a', '@' .. path, ...))
+	return func()
+end
+
 local function load_package(path)
     if not lfs.is_directory(path) then
         error(('`%s` is not a directory.'):format(path:string()))
@@ -10,7 +16,7 @@ local function load_package(path)
     if not lfs.exists(cfgpath) then
         error(('`%s` does not exist.'):format(cfgpath:string()))
     end
-    local config = dofile(cfgpath:string())
+    local config = raw_dofile(cfgpath:string())
     for _, field in ipairs {'name'} do
         if not config[field] then
             error(('Missing `%s` field in `%s`.'):format(field, cfgpath:string()))
