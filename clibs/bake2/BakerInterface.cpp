@@ -25,26 +25,26 @@ BakerHandle CreateBaker(const Scene* scene){
     AppSettings::BakeMode.SetValue(BakeModes::Diffuse);
 
     auto lidx = _FindDirectionalLight(scene);
-    // if (lidx != UINT32_MAX){
-    //     AppSettings::EnableDirectLighting.SetValue(true);
-    //     AppSettings::BakeDirectSunLight.SetValue(true);
-    //     const auto& l = scene->lights[lidx];
-    //     if (l.size != 0){
-    //         AppSettings::SunSize.SetValue(l.size);
-    //     }
-    //     AppSettings::EnableSun.SetValue(true);
+    if (lidx != UINT32_MAX){
+        AppSettings::EnableDirectLighting.SetValue(true);
+        AppSettings::BakeDirectSunLight.SetValue(true);
+        const auto& l = scene->lights[lidx];
+        if (l.size != 0){
+            AppSettings::SunSize.SetValue(l.size);
+        }
+        AppSettings::EnableSun.SetValue(true);
         
-    //     // AppSettings::SunTintColor.SetValue(Float3(l.color.x, l.color.y, l.color.z));
-    //     // AppSettings::SunDirection.SetValue(Float3(l.dir.x, l.dir.y, l.dir.z));
-    // } else {
-    //     AppSettings::EnableSun.SetValue(false);
-    //     AppSettings::BakeDirectSunLight.SetValue(false);
-    //     AppSettings::EnableDirectLighting.SetValue(false);
-    // }
+        // AppSettings::SunTintColor.SetValue(Float3(l.color.x, l.color.y, l.color.z));
+        // AppSettings::SunDirection.SetValue(Float3(l.dir.x, l.dir.y, l.dir.z));
+    } else {
+        AppSettings::EnableSun.SetValue(false);
+        AppSettings::BakeDirectSunLight.SetValue(false);
+        AppSettings::EnableDirectLighting.SetValue(false);
+    }
 
-    AppSettings::EnableSun.SetValue(true);
-    AppSettings::EnableDirectLighting.SetValue(true);
-    AppSettings::BakeDirectSunLight.SetValue(true);
+    // AppSettings::EnableSun.SetValue(true);
+    // AppSettings::EnableDirectLighting.SetValue(true);
+    // AppSettings::BakeDirectSunLight.SetValue(true);
     AppSettings::SkyMode.SetValue(SkyModes::Simple);
 
     AppSettings::EnableIndirectLighting.SetValue(true);
