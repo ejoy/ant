@@ -1,6 +1,6 @@
 local access = {}
 
-local lfs = require "filesystem.local"
+local lfs = require "filesystem.cpp"
 
 local function raw_dofile(path)
 	local file <close> = assert(io.open(path, 'rb'))
@@ -49,7 +49,7 @@ function access.readmount(repo)
 		mountpoint[name] = path
 		mountname[#mountname+1] = name
 	end
-	local f <close> = assert(lfs.open(repo._root / ".mount", "rb"))
+	local f <close> = assert(io.open((repo._root / ".mount"):string(), "rb"))
 	for line in f:lines() do
 		local name, path = line:match "^%s*(.-)%s+(.-)%s*$"
 		if name == nil then
@@ -128,7 +128,7 @@ function access.list_files(repo, filepath)
 		end
 	end
 	local ignorepaths = rpath / ".ignore"
-	local f = lfs.open(ignorepaths, "rb")
+	local f = io.open(ignorepaths:string(), "rb")
 	if f then
 		for name in f:lines() do
 			files[name] = nil
