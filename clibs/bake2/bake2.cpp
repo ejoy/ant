@@ -66,12 +66,19 @@ namespace lua_struct {
         unpack_field_opt(L, idx, "tangents", v.tangents);
         v.bitangents.type = BT_None;
         unpack_field_opt(L, idx, "bitangents", v.bitangents);
+
         unpack_field(L, idx, "texcoords0", v.texcoords0);
-        unpack_field(L, idx, "texcoords1", v.texcoords1);
+
+        v.texcoords1.type = BT_None;
+        unpack_field_opt(L, idx, "texcoords1", v.texcoords1);
+        if (v.texcoords1.type == BT_None){
+            v.texcoords1 = v.texcoords0;
+        }
 
         unpack_field(L, idx, "vertexCount", v.vertexCount);
 
         // for indices
+        v.indices.type = BT_None;
         unpack_field_opt(L, idx, "indices", v.indices);
         v.indexCount = 0;
         unpack_field_opt(L, idx, "indexCount", v.indexCount);
@@ -84,8 +91,8 @@ namespace lua_struct {
     template <>
     inline void unpack<MaterialData>(lua_State* L, int idx, MaterialData& v, void*) {
         luaL_checktype(L, idx, LUA_TTABLE);
-        unpack_field(L, idx, "diffuse", v.diffuse);
-        unpack_field(L, idx, "normal", v.normal);
+        unpack_field_opt(L, idx, "diffuse", v.diffuse);
+        unpack_field_opt(L, idx, "normal", v.normal);
         unpack_field_opt(L, idx, "roughness", v.roughness);
         unpack_field_opt(L, idx, "metallic",   v.metallic);
     }
