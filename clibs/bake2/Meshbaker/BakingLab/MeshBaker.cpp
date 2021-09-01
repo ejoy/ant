@@ -36,6 +36,32 @@ static const uint64 BakeGroupSizeX = 8;
 static const uint64 BakeGroupSizeY = 8;
 static const uint64 BakeGroupSize = BakeGroupSizeX * BakeGroupSizeY;
 
+#include <fstream>
+static std::ofstream* off = nullptr;
+static const char* fn = "d:/work/ant/log0.txt";
+template<typename T>
+static void Log(const T& arg) {
+    if (off == nullptr) {
+        off = new std::ofstream(fn);
+    }
+
+    *off << arg << std::endl;
+
+    off->flush();
+}
+
+template<typename T, typename ...Args>
+static void Log(const T& arg1, Args... args)
+{
+    if (off == nullptr) {
+        off = new std::ofstream(fn);
+    }
+
+    *off << arg1;
+    Log(args...);
+}
+
+
 // Info about a gutter texel
 struct GutterTexel
 {
@@ -764,8 +790,17 @@ template<typename TBaker> static bool BakeDriver(BakeThreadContext& context, TBa
 
                 baker.ProgressiveResult(texelResults, sampleIdx);
 
-                for(uint64 basisIdx = 0; basisIdx < TBaker::BasisCount; ++basisIdx)
-                    context.BakeOutput[basisIdx][texelIdx] = texelResults[basisIdx];
+                for(uint64 basisIdx = 0; basisIdx < TBaker::BasisCount; ++basisIdx){
+                    const auto &r = texelResults[basisIdx];
+                    auto LogVec = [](auto desc, auto v) {
+                        Log(desc, "[", v.x, ",", v.y, ",", v.z, "]");
+                    };
+                    Log("texelIdx:", texelIdx);
+                    LogVec("result:", r);
+
+                    context.BakeOutput[basisIdx][texelIdx] = r;
+                }
+                    
             }
         }
     }
