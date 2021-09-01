@@ -1,0 +1,29 @@
+---
+action:
+  mount: root
+data:
+  name: Scene
+  scene_entity: true
+  transform:
+    s: {-1, 1, 1}
+policy:
+  ant.general|name
+  ant.scene|hierarchy_policy
+  ant.scene|transform_policy
+---
+action:
+  mount: 1
+data:
+  material: $path ./1.glb|./materials/Material.001.material
+  mesh: $path ./1.glb|./meshes/Cube.001_P1.meshbin
+  name: Cube
+  scene_entity: true
+  state: 7
+  transform:
+    r: {0, 0, 0, 1}
+    s: {1, 1, 1}
+    t: {0, 0, 0}
+policy:
+  ant.general|name
+  ant.render|render
+  ant.scene|hierarchy_policy
