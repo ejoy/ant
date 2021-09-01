@@ -26,19 +26,6 @@ local function split(str)
     return r
 end
 
-local function split_path(pathstring)
-    local pathlst = split(pathstring)
-    local res = {}
-    for i = 1, #pathlst - 1 do
-        local path = normalize(pathlst[i])
-        local ext = path:match "[^/]%.([%w*?_%-]*)$"
-        local cfg = config.get(ext)
-        res[#res+1] = path .. "?" .. cfg.arguments
-    end
-    res[#res+1] = pathlst[#pathlst]
-    return res
-end
-
 local ResourceCompiler = {
     glb = "editor.model.convert",
     texture = "editor.texture.convert",
@@ -140,13 +127,13 @@ local function parseUrl(url)
     return path, setting, arguments
 end
 
-local function compile_url(url)
-    local path, setting, arguments = parseUrl(url)
+local function compile_file(folder, fileurl)
+    local file, setting, arguments = parseUrl(fileurl)
     local hash = sha1(arguments):sub(1,7)
-    local ext = path:match "[^/]%.([%w*?_%-]*)$"
+    local ext = file:match "[^/]%.([%w*?_%-]*)$"
     local cfg = config.get(ext)
-    local input = fs.path(path):localpath()
-    local keystring = lfs.absolute(input):string():lower()
+    local input = lfs.absolute(folder / file)
+    local keystring = input:string():lower()
     local output = cfg.binpath / get_filename(keystring) / hash
     if not lfs.exists(output) or not do_build(output) then
         do_compile(cfg, setting, input, output)
@@ -156,15 +143,46 @@ local function compile_url(url)
     return output
 end
 
+local function compile_url(url)
+    local path, setting, arguments = parseUrl(url)
+    local input = fs.path(path):localpath()
+    local file = input:filename():string()
+    local hash = sha1(arguments):sub(1,7)
+    local ext = file:match "[^/]%.([%w*?_%-]*)$"
+    local cfg = config.get(ext)
+    local keystring = input:string():lower()
+    local output = cfg.binpath / get_filename(keystring) / hash
+    if not lfs.exists(output) or not do_build(output) then
+        do_compile(cfg, setting, input, output)
+        writefile(output / ".setting", serialize(setting))
+        writefile(output / ".arguments", arguments)
+    end
+    return output
+end
+
+local function split_path(pathstring)
+    local pathlst = split(pathstring)
+    local res = {}
+    for i = 1, #pathlst - 1 do
+        local path = normalize(pathlst[i])
+        local ext = path:match "[^/]%.([%w*?_%-]*)$"
+        local cfg = config.get(ext)
+        res[#res+1] = path .. "?" .. cfg.arguments
+    end
+    res[#res+1] = pathlst[#pathlst]
+    return res
+end
+
 local function compile_dir(urllst)
     local url = urllst[1]
     if #urllst == 1 then
         return fs.path(url):localpath()
     end
-    for i = 2, #urllst do
-        url = (compile_url(url) / urllst[i]):string()
+    local folder = compile_url(url)
+    for i = 2, #urllst - 1 do
+        folder = compile_file(folder, urllst[i])
     end
-    return lfs.path(url)
+    return folder / urllst[#urllst]
 end
 
 function compile(pathstring)
