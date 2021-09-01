@@ -46,7 +46,7 @@ for v in w:select "parent:update id:in" do
     v.parent = v.parent.id
 end
 
-for v in w:select "mesh:update material:update" do
+for v in w:select "mesh:update material:update lightmap:in" do
     v.mesh = mesh.load(tostring(v.mesh))
     v.material = material.load(tostring(v.material), outputdir)
 end
@@ -107,10 +107,12 @@ local function to_srt(wm)
     }
 end
 local output = {}
-for v in w:select "worldmat:in mesh:in material:in" do
+
+for v in w:select "worldmat:in mesh:in material:in lightmap:in" do
     local e = to_srt(v.worldmat)
     e.mesh = v.mesh.name
     e.material = v.material.name
+    e.lightmap = e.lightmap
     output[#output+1] = e
     writefile(outputdir / v.mesh.name, v.mesh.value)
     writefile(outputdir / v.material.name, v.material.value)
@@ -124,3 +126,4 @@ for v in w:select "worldmat:in light:in" do
 end
 
 writefile(outputdir / "output.txt", serialize.stringify(output))
+writefile(outputdir / "lightmap_result.txt")

@@ -36,7 +36,9 @@ local create_prefab; do
                 if v.data.material then
                     e.material = assetmgr.resource(v.data.material)
                 end
-                
+                if v.data.lightmap then
+                    e.lightmap = v.data.lightmap
+                end
             end
             prefab[#prefab+1] = e
         end
