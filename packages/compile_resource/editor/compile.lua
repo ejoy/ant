@@ -1,7 +1,6 @@
 local fs = require "filesystem"
 local lfs = require "filesystem.local"
 local sha1 = require "hash".sha1
-local stringify = require "stringify"
 local serialize = import_package "ant.serialize".stringify
 local datalist = require "datalist"
 local config = require "config"
@@ -127,7 +126,7 @@ local function parseUrl(url)
     return path, setting, arguments
 end
 
-local function compile_file(folder, fileurl)
+local function compile_localfile(folder, fileurl)
     local file, setting, arguments = parseUrl(fileurl)
     local hash = sha1(arguments):sub(1,7)
     local ext = file:match "[^/]%.([%w*?_%-]*)$"
@@ -143,7 +142,7 @@ local function compile_file(folder, fileurl)
     return output
 end
 
-local function compile_url(url)
+local function compile_virtualfile(url)
     local path, setting, arguments = parseUrl(url)
     local input = fs.path(path):localpath()
     local file = input:filename():string()
@@ -175,18 +174,30 @@ end
 
 local function compile_dir(urllst)
     local url = urllst[1]
+    local folder = compile_virtualfile(url)
     if #urllst == 1 then
-        return fs.path(url):localpath()
+        return folder
     end
-    local folder = compile_url(url)
-    for i = 2, #urllst - 1 do
-        folder = compile_file(folder, urllst[i])
+    for i = 2, #urllst do
+        if urllst[i]:match "?" then
+            folder = compile_localfile(folder, urllst[i])
+        else
+            folder = folder /urllst[i]
+        end
     end
-    return folder / urllst[#urllst]
+    return folder
 end
 
 function compile(pathstring)
     return compile_dir(split_path(pathstring))
+end
+
+local function compile_url(pathstring)
+    local lst = {}
+    pathstring:gsub('[^/]*', function (w)
+        lst[#lst+1] = w
+    end)
+    return compile_dir(lst)
 end
 
 return {
