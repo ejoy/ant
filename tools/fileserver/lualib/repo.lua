@@ -60,11 +60,13 @@ local function compile_resource(repo, name, path, cache, namehashcache, hashs)
 		return false
 	end
 	for lpath in realpath:list_directory() do
-		local arguments = readfile(lpath / ".arguments")
-		local rpath = path .. "?" .. arguments
-		access.addmount(repo, rpath, lpath)
-		local hash = repo_build_dir(repo, rpath, cache, namehashcache)
-		table.insert(hashs, string.format("d %s %s", hash, name .. "?" .. arguments))
+		if lfs.exists(lpath / ".arguments") then
+			local arguments = readfile(lpath / ".arguments")
+			local rpath = path .. "?" .. arguments
+			access.addmount(repo, rpath, lpath)
+			local hash = repo_build_dir(repo, rpath, cache, namehashcache)
+			table.insert(hashs, string.format("d %s %s", hash, name .. "?" .. arguments))
+		end
 	end
 	return false
 end
