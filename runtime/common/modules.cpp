@@ -34,6 +34,7 @@ int luaopen_ltask_root(lua_State* L);
 int luaopen_ltask_exclusive(lua_State* L);
 int luaopen_vfs(lua_State* L);
 int luaopen_ecs_core(lua_State* L);
+int luaopen_fastio(lua_State* L);
 }
 
 const luaL_Reg* ant_modules() {
@@ -70,6 +71,7 @@ const luaL_Reg* ant_modules() {
         { "ltask.bootstrap", luaopen_ltask_bootstrap},
         { "ltask.exclusive", luaopen_ltask_exclusive},
         { "ecs.core", luaopen_ecs_core},
+        { "fastio", luaopen_fastio},
         { NULL, NULL },
     };
     return modules;
