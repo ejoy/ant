@@ -679,7 +679,7 @@ function m:reload()
     -- self:open_prefab(prefab)
     local filename = tostring(self.prefab)
     if filename == 'nil' then
-        self:save_prefab(tostring(gd.project_root) .. "/res/__temp__.prefab", true)
+        self:save_prefab(tostring(gd.project_root) .. "/res/__temp__.prefab")
     else
         self:open(filename)
     end
@@ -792,10 +792,10 @@ end
 
 local utils = require "common.utils"
 
-function m:save_prefab(path, temp)
+function m:save_prefab(path)
     local filename
     if not path then
-        if not self.prefab or not temp then
+        if not self.prefab or (string.find(tostring(self.prefab), "__temp__")) then
             filename = widget_utils.get_saveas_path("Prefab", ".prefab")
             if not filename then return end
         end

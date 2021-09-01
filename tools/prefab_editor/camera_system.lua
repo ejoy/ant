@@ -35,6 +35,7 @@ end
 local function camera_rotate(dx, dy)
 	iom.rotate(irq.main_camera(), dy * rotation_speed, dx * rotation_speed)
 	camera_update_eye_pos()
+	world:pub {"Camera", "rotate"}
 end
 
 local function camera_pan(dx, dy)
@@ -42,11 +43,13 @@ local function camera_pan(dx, dy)
 	local viewdir = iom.get_direction(irq.main_camera())
 	camera_target.v = math3d.add(camera_target, math3d.cross(viewdir, world_dir))
 	camera_update_eye_pos()
+	world:pub {"Camera", "pan"}
 end
 
 local function camera_zoom(dx)
 	camera_distance = camera_distance + dx * wheel_speed
 	camera_update_eye_pos()
+	world:pub {"Camera", "zoom"}
 end
 
 local function camera_reset(eyepos, target)

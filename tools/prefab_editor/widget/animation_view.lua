@@ -801,6 +801,15 @@ function m.save_clip(path)
         end
     end
     utils.write_file(clip_filename, stringify(copy_clips))
+    copy_clips.slot_list = {}
+    for k, v in pairs(hierarchy.slot_list) do
+        if v > 0 then
+            local ts = math3d.totable(iom.get_scale(v))
+            local tr = math3d.totable(iom.get_rotation(v))
+            local tp = math3d.totable(iom.get_position(v))
+            copy_clips.slot_list[#copy_clips.slot_list + 1] = {tag = k, name = world[v].name, scale = {ts[1], ts[2], ts[3]}, rotate = {tr[1], tr[2], tr[3], tr[4]}, position = {tp[1], tp[2], tp[3]}}
+        end
+    end
     utils.write_file(string.sub(clip_filename, 1, -7) .. ".lua", "return " .. utils.table_to_string(copy_clips))
 end
 
