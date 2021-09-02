@@ -174,10 +174,13 @@ end
 
 local function compile_dir(urllst)
     local url = urllst[1]
-    local folder = compile_virtualfile(url)
     if #urllst == 1 then
-        return folder
+        if url:match "?" then
+            return compile_virtualfile(url)
+        end
+        return fs.path(url):localpath()
     end
+    local folder = compile_virtualfile(url)
     for i = 2, #urllst do
         if urllst[i]:match "?" then
             folder = compile_localfile(folder, urllst[i])

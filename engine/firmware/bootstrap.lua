@@ -11,14 +11,11 @@ local config = {
 }
 
 local thread = require "thread"
-local threadid = thread.id
 
 thread.newchannel "IOreq"
-thread.newchannel ("IOresp" .. threadid)
 
 local errlog = thread.channel_produce "errlog"
 local io_req = thread.channel_produce "IOreq"
-local io_resp = thread.channel_consume ("IOresp" .. threadid)
 
 local errthread = thread.thread([[
 	-- Error Thread
@@ -40,23 +37,20 @@ local iothread = thread.thread([[
 ]])
 
 local function vfs_init()
-	io_req:push(config)
+	io_req(false, config)
 end
 
 local function fetchfirmware()
-	io_req("FETCHALL", false, 'engine/firmware')
+	io_req(false, "FETCHALL", 'engine/firmware')
 
 	-- wait finish
-	io_req("LIST", threadid, 'engine/firmware')
-	local l = io_resp()
+	local l = io_req:call("LIST", 'engine/firmware')
 	local result
 	for name, type in pairs(l) do
 		assert(type == false)
-		io_req("GET", threadid, 'engine/firmware/' .. name)
+		local r = io_req:call("GET", 'engine/firmware/' .. name)
 		if name == 'bootloader.lua' then
-			result = io_resp()
-		else
-			io_resp()
+			result = r
 		end
 	end
 	assert(result ~= nil)
@@ -64,8 +58,7 @@ local function fetchfirmware()
 end
 
 local function vfs_exit()
-	io_req("EXIT", threadid)
-	return io_resp()
+	return io_req:call("EXIT")
 end
 
 vfs_init()

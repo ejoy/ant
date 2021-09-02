@@ -7,32 +7,8 @@ local lfs = require "filesystem.local"
 local access = require "vfs.repoaccess"
 local thread = require "thread"
 
-local channel = {}
+local channel = thread.channel_consume "IOreq"
 local repo
-
-local function init_channels()
-	-- init channels
-	channel.req = thread.channel_consume "IOreq"
-
-	local channel_index = {}
-	channel.resp = setmetatable({} , channel_index)
-
-	function channel_index:__index(id)
-		assert(type(id) == "number")
-		local c = assert(thread.channel_produce("IOresp" .. id))
-		self[id] = c
-		return c
-	end
-
-	local channel_user = {}
-	channel.user = setmetatable({} , channel_user)
-
-	function channel_user:__index(name)
-		local c = assert(thread.channel_produce(name))
-		self[name] = c
-		return c
-	end
-end
 
 local function init_repo()
     local path = lfs.path(repopath)
@@ -47,7 +23,12 @@ end
 
 local function response_id(id, ...)
 	if id then
-		channel.resp[id](...)
+		if type(id) == "string" then
+			local c = thread.channel_produce(id)
+			c(...)
+		else
+			channel:ret(id, ...)
+		end
 	end
 end
 
@@ -89,7 +70,7 @@ function CMD.MOUNT(name, path)
 	access.addmount(repo, name, path)
 end
 
-local function dispatch(cmd, id, ...)
+local function dispatch(id, cmd, ...)
     local f = CMD[cmd]
     if not f then
         print("Unsupported command : ", cmd)
@@ -101,12 +82,11 @@ local function dispatch(cmd, id, ...)
 end
 
 local function work()
-	local c = channel.req
+	local c = channel
 	while true do
 		while dispatch(c:bpop()) do end
 	end
 end
 
-init_channels()
 init_repo()
 work()

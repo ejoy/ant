@@ -161,6 +161,57 @@ lpop(lua_State *L) {
 	return n+1;
 }
 
+struct rpc {
+	struct thread_event trigger;
+	void* data;
+};
+
+static struct rpc*
+create_rpc(lua_State *L) {
+	struct rpc* r = lua_newuserdatauv(L, sizeof(*r), 0);
+	if (luaL_newmetatable(L, "THREAD_RPC")) {
+		luaL_Reg l[] = {
+			{ NULL, NULL },
+		};
+		luaL_setfuncs(L, l, 0);
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -2, "__index");
+	}
+	lua_setmetatable(L, -2);
+	r->data = NULL;
+	return r;
+}
+
+static int
+lcall(lua_State *L) {
+	struct boxchannel * bc = luaL_checkudata(L, 1, "THREAD_PRODUCE");
+	struct channel *c = bc->c;
+	struct rpc *r = create_rpc(L);
+	lua_pushlightuserdata(L, r);
+	lua_rotate(L, 2, 2);
+	void * buffer = threadseri_pack(L, 2, NULL);
+
+	thread_event_create(&r->trigger);
+
+	struct simple_queue_slot slot = { buffer };
+	push_channel(c, &slot);
+
+	thread_event_wait(&r->trigger, -1);
+	thread_event_release(&r->trigger);
+
+	int n = threadseri_unpackptr(L, r->data);
+	return n;
+}
+
+static int
+lret(lua_State *L) {
+	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+	struct rpc *r = (struct rpc *)lua_touserdata(L, 2);
+	r->data = threadseri_pack(L, 2, NULL);
+	thread_event_trigger(&r->trigger);
+	return 0;
+}
+
 static int
 lpchannel(lua_State *L) {
 	const char * name = luaL_checkstring(L, 1);
@@ -173,6 +224,7 @@ lpchannel(lua_State *L) {
 	if (luaL_newmetatable(L, "THREAD_PRODUCE")) {
 		luaL_Reg l[] = {
 			{ "push", lpush },
+			{ "call", lcall },
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);
@@ -198,6 +250,7 @@ lcchannel(lua_State *L) {
 		luaL_Reg l[] = {
 			{ "pop", lpop },
 			{ "bpop", lblockedpop },
+			{ "ret", lret },
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);
