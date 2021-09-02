@@ -31,16 +31,6 @@ function bake_lm_sys:init_world()
     ibaker.init_framebuffer()
 end
 
-function bake_lm_sys:entity_init()
-    for e in w:select "INIT lightmap:in" do
-        local lm = e.lightmap
-        if lm.bake_id == nil then
-            lm.bake_id = "radiosity_" .. crypt.uuid()
-        end
-    end
-end
-
-local bake_finish_mb = world:sub{"bake_finish"}
 local function gen_name(bakeid, name)
     local n = name and name .. bakeid:sub(#bakeid-8, #bakeid) or bakeid
     return n .. ".dds"

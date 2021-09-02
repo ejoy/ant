@@ -3,7 +3,6 @@ system "bake_lightmap_system"
     .implement "bake_lightmap.lua"
     .method "init"
     .method "init_world"
-    .method "entity_init"
     .method "end_filter"
     .method "end_frame"
 
