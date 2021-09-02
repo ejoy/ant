@@ -8,30 +8,26 @@ local math3d = require "math3d"
 local iom = world:interface "ant.objcontroller|obj_motion"
 local iss = world:interface "ant.scene|iscenespace"
 local computil = world:interface "ant.render|entity"
+local bgfx      = require "bgfx"
 local utils     = require "common.utils"
 local brush_sys = ecs.system "grid_brush_system"
 local global_data = require "common.global_data"
 local brush_def = require "brush_def"
 --local default_color = {1.0, 1.0, 1.0, 0.5}
-local current_brush_color = {1, 1, 1, 0.5}
+local current_brush_color = 0x7fffffff
 local current_brush_id
 local grid = {
     brush = {}
 }
 
+local grid_vb
+local grid_ib
+local grid_eid
+
 local function color_clamp(c)
     if c < 0 then return 0 end
     if c > 255 then return 255 end
     return c
-end
-
-
-local function colorf2i(fc)
-    return color_clamp(math.floor(fc[1] * 255.0)) << 24 | color_clamp(math.floor(fc[2] * 255.0)) << 16 | color_clamp(math.floor(fc[3] * 255.0)) << 8 | color_clamp(math.floor(fc[4] * 255.0))
-end
-
-local function colori2f(ic)
-    return {((ic & 0xFF000000) >> 24) / 255.0, ((ic & 0x00FF0000) >> 16) / 255.0, ((ic & 0x0000FF00) >> 8) / 255.0, (ic & 0xFF) / 255.0 }
 end
 
 local function fromhex(str)
@@ -57,13 +53,29 @@ local function get_brush_id(color)
 end
 
 function grid:clear()
-    if self.data and #self.data > 0 then
-        for i = 1, self.row do
-            for j = 1, self.col do
-                world:remove_entity(self.data[i][j].eid)
-            end
-        end
+    if grid_eid then
+        world:remove_entity(grid_eid)
     end
+end
+
+local function set_color(row, col, color)
+    local vb_offset = ((row - 1) * grid.col + (col - 1)) * 4 * 4
+    grid_vb[vb_offset + 4] = color
+    grid_vb[vb_offset + 8] = color
+    grid_vb[vb_offset + 12] = color
+    grid_vb[vb_offset + 16] = color
+    local vb = {}
+    for i = vb_offset + 1, vb_offset + 16 do
+        vb[#vb + 1] = grid_vb[i]
+    end
+    local rc = world[grid_eid]._rendercache
+    local vbdesc = rc.vb
+    bgfx.update(vbdesc.handles[1], vb_offset / 4, bgfx.memory_buffer("fffd", vb));
+    grid.data[row][col][1] = current_brush_id
+end
+
+local function get_color(row, col)
+    return grid_vb[((row - 1) * grid.col + (col - 1)) * 4 * 4 + 4]
 end
 
 function grid:init(size, row, col)
@@ -75,29 +87,20 @@ function grid:init(size, row, col)
     self.total_height = size * row
     self.data = {}
     self.visible = true
-    local default_color = colori2f(brush_def.color[1])
+    grid_vb, grid_eid = computil.create_grid_mesh_entity("grid mesh", col, row, size, brush_def.color[1], "/pkg/ant.resources/materials/vertexcolor_translucent_nocull.material")
+    ies.set_state(grid_eid, "auxgeom", true)
     for i = 1, row do
-        local temp_row = {}
-        local posz = 0.5 * size - self.total_width * 0.5 + (i - 1) * size
+        local rowdata = {}
         for j = 1, col do
-            local posx = 0.5 * size - self.total_height * 0.5 + (j  - 1) * size
-            local tile_eid = computil.create_prim_plane_entity({t = {posx, 0, posz, 1}, s = {size * 0.95, 0, size * 0.95, 0}},
-		                "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material", "grid", true)
-	        ies.set_state(tile_eid, "auxgeom", true)
-	        imaterial.set_property(tile_eid, "u_color", default_color)
-            temp_row[#temp_row + 1] = {1, eid = tile_eid}
+            rowdata[#rowdata + 1] = {1}
         end
-        self.data[#self.data + 1] = temp_row
+        self.data[#self.data + 1] = rowdata
     end
 end
 
 function grid:show(show)
     self.visible = show
-    for _, row in ipairs(self.data) do
-        for _, tile in ipairs(row) do
-            ies.set_state(tile.eid, "visible", show)
-        end
-    end
+    ies.set_state(grid_eid, "visible", show)
 end
 
 function grid:load(path)
@@ -105,19 +108,18 @@ function grid:load(path)
     local source = dofile(path)
     --local source = require(string.gsub(filename, "/", "."))
     if not source or not source.size or not source.row or not source.col then return end
+    local color = {}
     for i = 1, source.row do
-        local posz = 0.5 * source.size - source.total_width * 0.5 + (i - 1) * source.size
+        local rowdata = {}
         for j = 1, source.col do
             local tile = source.data[i][j]
-            local posx = 0.5 * source.size - source.total_height * 0.5 + (j  - 1) * source.size
-            local eid = computil.create_prim_plane_entity({t = {posx, 0, posz, 1}, s = {source.size * 0.95, 0, source.size * 0.95, 0}},
-		                "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material", "grid", true)
-	        ies.set_state(eid, "auxgeom", true)
-	        imaterial.set_property(eid, "u_color", colori2f(self.brush[tile[1]]))
-            tile.eid = eid
+            rowdata[#rowdata + 1] = self.brush[tile[1]]
         end
+        color[#color + 1] = rowdata
     end
     self:clear()
+    grid_vb, grid_eid = computil.create_grid_mesh_entity("grid mesh", source.col, source.row, source.size, color, "/pkg/ant.resources/materials/vertexcolor_translucent_nocull.material")
+    ies.set_state(grid_eid, "auxgeom", true)
     self.size = source.size
     self.row = source.row
     self.col = source.col
@@ -143,12 +145,6 @@ function grid:save(filename)
     temp.clear = nil
     temp.load = nil
     temp.brush = nil
-    for _, row in ipairs(temp.data) do
-        for _, tile in ipairs(row) do
-            tile.eid = nil
-            --tile.color = string.format("%02X", color_clamp(math.floor(tile.color[1] * 255.0)) << 24 | color_clamp(math.floor(tile.color[2] * 255.0)) << 16 | color_clamp(math.floor(tile.color[3] * 255.0)) << 8 | color_clamp(math.floor(tile.color[4] * 255.0)))
-        end
-    end
     utils.write_file(self.filename, "return " .. utils.table_to_string(temp))
 end
 
@@ -174,9 +170,7 @@ end
 local last_row, last_col
 local function on_row_col_select(row, col)
     if not row or not col or (last_row==row and last_col==col) then return end
-    local tile = grid.data[row][col]
-    tile[1] = current_brush_id
-    imaterial.set_property(tile.eid, "u_color", current_brush_color)
+    set_color(row, col, current_brush_color)
     last_row, last_col = row, col
 end
 
@@ -208,7 +202,7 @@ function brush_sys:handle_event()
             grid:init(p1, p2, p3)
         elseif what == "brushcolor" then
             current_brush_id = p1
-            current_brush_color = colori2f(p2)--{p1, p2, p3, p4}
+            current_brush_color = p2
         elseif what == "load" then
             load_grid(p1)
         end
