@@ -35,8 +35,7 @@ lm:lib "bgfx-lib" {
     },
     ios = {
         defines = {
-            "BGFX_CONFIG_RENDERER_OPENGL=0",
-            "BGFX_CONFIG_RENDERER_OPENGLES=0",
+            "BGFX_CONFIG_RENDERER_METAL=1",
         },
         sources = {
             "src/*.mm",

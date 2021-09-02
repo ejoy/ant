@@ -26,7 +26,6 @@ lm.ios = {
     includes = "../bx/include/compat/ios",
     flags = {
         "-fembed-bitcode",
-        "-fobjc-arc"
     }
 }
 
