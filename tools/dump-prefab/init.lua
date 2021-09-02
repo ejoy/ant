@@ -32,16 +32,8 @@ if respath:equal_extension "glb" then
 end
 
 local lfs = require "filesystem.local"
-local function get_output_dir()
-    if arg[3] then
-        local outpkgdir = fs.path(arg[3])
-        assert(fs.exists(outpkgdir), "vfs pkg path must valid")
-        return outpkgdir:localpath() / "output"
-    end
+local outputdir = respath:parent_path():localpath() / "output"
 
-    return lfs.absolute(lfs.path(arg[0])):remove_filename() / "output"
-end
-local outputdir = get_output_dir()
 lightmap_id.build(respath)
 prefab.instance(w, respath:string())
 

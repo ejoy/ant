@@ -71,6 +71,7 @@ void Bake(BakerHandle handle, BakeResult *result){
         const auto& r = bl->GetBakeResult(0);
         lm.data.resize(r.Size());
         memcpy(lm.data.data(), r.Data(), r.Size()*sizeof(Float4));
+        lm.size = lmsize;
     }
 }
 

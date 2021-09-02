@@ -9,12 +9,12 @@ local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 local bgfx      = require "bgfx"
 
-local sceneprefab = fs.path(arg[1])
-if not fs.exists(sceneprefab) then
-    error("scene prefab file not exist:".. sceneprefab:string())
+local sceneprefab_file = fs.path(arg[1])
+if not fs.exists(sceneprefab_file) then
+    error("scene prefab file not exist:".. sceneprefab_file:string())
 end
 
-local scenepath = sceneprefab:parent_path()
+local scenepath = sceneprefab_file:parent_path()
 if not fs.exists(scenepath) then
     error("invalid output scenepath, need vfs path: ", scenepath:string())
 end
@@ -27,7 +27,7 @@ if not fs.exists(scenefile) then
 end
 
 local lightmap_path = bakescene_path / "lightmaps"
-fs.create_directories(lightmap_path)
+lfs.create_directories(bakescene_path:localpath() / "lightmaps")
 
 local function readfile(filename)
     local f = fs.open(filename, "rb")
@@ -157,7 +157,7 @@ local function save_lightmap(id, lm, lmr)
     local local_lmpath = lightmap_path:localpath()
     local local_filename = local_lmpath / name
     local ti = default_tex_info(lm.size, lm.size, "RGBA32F")
-    local m = bgfx.memory_buffer(lmr)
+    local m = bgfx.memory_buffer(lmr.data)
     local c = image.encode_image(ti, m, {type = "dds", format="RGBA32", srgb=false})
     local f = lfs.open(local_filename, "wb")
     f:write(c)
@@ -192,10 +192,11 @@ local function save_bake_result(br)
     }
     
     do
-        local f<close> = fs.open(sceneprefab)
+        local f<close> = fs.open(sceneprefab_file)
         local s = datalist.parse(f:read "a")
         s[#s+1] = serialize.stringify(lre)
-        local nf<close> = lfs.open(sceneprefab, "w")
+        local local_sceneprefab_file = sceneprefab_file:localpath()
+        local nf<close> = lfs.open(local_sceneprefab_file, "w")
         nf:write(serialize.stringify(s))
     end
 end

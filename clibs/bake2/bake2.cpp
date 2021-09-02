@@ -229,7 +229,7 @@ lbaker_bake(lua_State *L){
             lua_pushlstring(L, (const char*)lm.data.data(), lm.data.size());
             lua_setfield(L, -2, "data");
 
-            lua_pushinteger(L, 16);
+            lua_pushinteger(L, lm.size);
             lua_setfield(L, -2, "size");
 
             lua_pushinteger(L, sizeof(glm::vec4));

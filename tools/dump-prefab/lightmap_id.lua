@@ -10,7 +10,13 @@ local function write_file(path, c) local f<close> = lfs.open(path, "w"); f:write
 local function find_all_prefab(path, prefabs)
     assert(path:is_absolute())
     local c = read_file(path)
-    local p = datalist.parse(c)
+    local p = datalist.parse(c, function (args)
+        if args[1] == "path" then
+            local res = serialize.path(args[2])
+            return res
+        end
+        return args[2]
+    end)
     prefabs[#prefabs+1] = {
         path = path,
         value = p,
