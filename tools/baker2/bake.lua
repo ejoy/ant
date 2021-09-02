@@ -9,12 +9,12 @@ local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 local bgfx      = require "bgfx"
 
-local pkgpath = fs.path(arg[1])
-if not fs.exists(pkgpath) then
-    error("invalid output pkgpath, need vfs path:".. pkgpath:string())
+local sceneprefab = fs.path(arg[1])
+if not fs.exists(sceneprefab) then
+    error("scene prefab file not exist:".. sceneprefab:string())
 end
 
-local scenepath = fs.path(arg[2])
+local scenepath = sceneprefab:parent_path()
 if not fs.exists(scenepath) then
     error("invalid output scenepath, need vfs path: ", scenepath:string())
 end
@@ -171,11 +171,36 @@ local function save_lightmap(id, lm, lmr)
     f:close()
 end
 
-for idx, r in ipairs(bakeresult) do
-    local m = models[idx]
-    save_lightmap(m.lightmap.id, m.lightmap, r)
+local function save_bake_result(br)
+    local lightmap_results = {}
+    for idx, r in ipairs(br) do
+        local m = models[idx]
+        local id = m.lightmap.id
+        lightmap_results[id] = save_lightmap(id, m.lightmap, r)
+    end
+    
+    local lre = {
+        policy = {
+            "ant.general|name",
+            "ant.render|lightmap_result",
+        },
+        data = {
+            name = "lightmap_result",
+            lightmap_result = lightmap_results,
+            lightmapper = true,
+        }
+    }
+    
+    do
+        local f<close> = fs.open(sceneprefab)
+        local s = datalist.parse(f:read "a")
+        s[#s+1] = serialize.stringify(lre)
+        local nf<close> = lfs.open(sceneprefab, "w")
+        nf:write(serialize.stringify(s))
+    end
 end
 
+save_bake_result(bakeresult)
 bake2.destroy(b)
 
 -- local function create_world()

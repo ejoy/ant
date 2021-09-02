@@ -86,7 +86,6 @@ policy_v2 "cull"
 
 system "lightmap_system"
     .implement "render_system/lightmap_system.lua"
-    .method "init"
     .method "end_filter"
 
 component_v2 "lightmapper"

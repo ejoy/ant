@@ -6,20 +6,6 @@ local imaterial = world:interface "ant.asset|imaterial"
 local assetmgr = import_package "ant.asset"
 
 local lm_sys = ecs.system "lightmap_system"
-function lm_sys:init()
-    world:create_entity{
-        policy = {
-            "ant.render|lightmap_result",
-            "ant.general|name",
-        },
-        data = {
-            name = "lightmap_result",
-            lightmapper = true,
-            lightmap_result = {},
-            lightmap_path = "",
-        },
-    }
-end
 
 local function load_lightmap_material(mf, setting)
     local s = {USING_LIGHTMAP=1}
