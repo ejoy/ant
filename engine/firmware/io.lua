@@ -172,7 +172,7 @@ end
 
 local function logger_dispatch(t)
 	for i = 1, #logqueue do
-		t.SEND("LOG", logqueue[i])
+		t.SEND(false, "LOG", logqueue[i])
 		logqueue[i] = nil
 	end
 end
@@ -238,7 +238,7 @@ function offline.EXIT(id)
 	error "EXIT"
 end
 
-function offline.SEND(msg, ...)
+function offline.SEND(_,msg, ...)
 	if msg == "LOG" then
 		_print(...)
 	end
@@ -625,7 +625,7 @@ function online.SUBSCIBE(channel_name, message)
 	connection.subscibe[message] = channel_name
 end
 
-function online.SEND(...)
+function online.SEND(_, ...)
 	connection_send(...)
 end
 

@@ -19,7 +19,7 @@ if __ANT_RUNTIME__ then
     local thread = require "thread"
     local IO = thread.channel_produce "IOreq"
     function LOG(data)
-        IO("SEND", "LOG", data)
+        IO(false, "SEND", "LOG", data)
     end
 else
     function LOG(data)
