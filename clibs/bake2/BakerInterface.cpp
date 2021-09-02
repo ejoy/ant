@@ -30,12 +30,12 @@ BakerHandle CreateBaker(const Scene* scene){
         AppSettings::BakeDirectSunLight.SetValue(true);
         AppSettings::EnableSun.SetValue(true);
 
-        // const auto& l = scene->lights[lidx];
+        const auto& l = scene->lights[lidx];
         // if (l.size != 0){
         //     AppSettings::SunSize.SetValue(l.size);
         // }
-        // AppSettings::SunTintColor.SetValue(Float3(l.color.x, l.color.y, l.color.z));
-        // AppSettings::SunDirection.SetValue(Float3(l.dir.x, l.dir.y, l.dir.z));
+        AppSettings::SunTintColor.SetValue(Float3(l.color.x, l.color.y, l.color.z));
+        AppSettings::SunDirection.SetValue(Float3(l.dir.x, l.dir.y, l.dir.z));
     } else {
         AppSettings::EnableSun.SetValue(false);
         AppSettings::BakeDirectSunLight.SetValue(false);
@@ -62,6 +62,10 @@ void Bake(BakerHandle handle, BakeResult *result){
     const auto &meshes = bl->GetModel(0).Meshes();
     result->lightmaps.resize(meshes.size());
     for (uint32_t bakeMeshIdx=0; bakeMeshIdx<meshes.size(); ++bakeMeshIdx){
+        auto lmsize = meshes[bakeMeshIdx].GetLightmapSize();
+        if (lmsize > 0){
+            AppSettings::LightMapResolution.SetValue(lmsize);
+        }
         bl->Bake(bakeMeshIdx);
         auto &lm = result->lightmaps[bakeMeshIdx];
         const auto& r = bl->GetBakeResult(0);
@@ -342,4 +346,6 @@ void Mesh::InitFromSceneMesh(ID3D11Device *device, const MeshData& meshdata)
     mp.VertexStart = 0;
     mp.VertexCount = numVertices;
     mp.MaterialIdx = meshdata.materialidx;
+
+    lightmapSize = meshdata.lightmap.size;
 }

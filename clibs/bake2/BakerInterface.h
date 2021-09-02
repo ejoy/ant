@@ -46,9 +46,14 @@ struct BufferData{
     BufferType type;
 };
 
+struct Lightmap {
+    uint16_t size;
+};
+
 struct MeshData {
     glm::mat4 worldmat;
     glm::mat4 normalmat;
+
     BufferData positions;
     BufferData normals;
     BufferData tangents;
@@ -60,6 +65,8 @@ struct MeshData {
     uint32_t vertexCount;
     uint32_t indexCount;
     uint32_t materialidx;
+
+    Lightmap    lightmap;
 };
 
 struct Scene {
@@ -68,13 +75,13 @@ struct Scene {
     std::vector<MaterialData>   materials;
 };
 
-struct Lightmap{
+struct LightmapResult{
     std::vector<glm::vec4>   data;
     uint16_t size;
 };
 
 struct BakeResult {
-    std::vector<Lightmap> lightmaps;
+    std::vector<LightmapResult> lightmaps;
 };
 
 extern BakerHandle CreateBaker(const Scene* scene);

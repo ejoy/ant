@@ -86,6 +86,8 @@ namespace lua_struct {
         unpack_field(L, idx, "materialidx", v.materialidx);
         assert(v.materialidx > 0);
         --v.materialidx;
+
+        unpack_field(L, idx, "lightmap", v.lightmap);
     }
 
     template <>
@@ -116,6 +118,8 @@ namespace lua_struct {
         }
     }
 }
+
+LUA2STRUCT(Lightmap, size);
 
 LUA2STRUCT(Scene, models, lights, materials);
 

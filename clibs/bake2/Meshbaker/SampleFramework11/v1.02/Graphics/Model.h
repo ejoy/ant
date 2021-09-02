@@ -131,6 +131,7 @@ public:
         SerializeRawVector(serializer, indices);
     }
 
+    uint16_t GetLightmapSize() const { return lightmapSize; }
 protected:
 
     void GenerateTangentFrame();
@@ -147,6 +148,7 @@ protected:
     uint32 vertexStride = 0;
     uint32 numVertices = 0;
     uint32 numIndices = 0;
+    uint16_t lightmapSize = 0;
 
     IndexType indexType = IndexType::Index16Bit;
 
