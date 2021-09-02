@@ -23,13 +23,14 @@ int luaopen_remotedebug(lua_State* L);
 int luaopen_remotedebug_hookmgr(lua_State* L);
 int luaopen_remotedebug_stdio(lua_State* L);
 int luaopen_remotedebug_visitor(lua_State* L);
+int luaopen_rmlui(lua_State* L);
 int luaopen_rp3d_core(lua_State* L);
 int luaopen_thread(lua_State* L);
 int luaopen_window(lua_State* L);
 int luaopen_terrain(lua_State *L);
 int luaopen_font(lua_State *L);
 int luaopen_font_init(lua_State *L);
-int luaopen_font_turetype(lua_State *L);
+int luaopen_font_truetype(lua_State *L);
 int luaopen_effekseer(lua_State* L);
 int luaopen_ltask(lua_State* L);
 int luaopen_ltask_bootstrap(lua_State* L);
@@ -66,6 +67,7 @@ void ant_loadmodules(lua_State* L) {
         { "remotedebug.hookmgr", luaopen_remotedebug_hookmgr },
         { "remotedebug.stdio", luaopen_remotedebug_stdio },
         { "remotedebug.visitor", luaopen_remotedebug_visitor },
+        { "rmlui", luaopen_rmlui },
         { "rp3d.core", luaopen_rp3d_core },
         { "thread", luaopen_thread },
         { "window", luaopen_window },
