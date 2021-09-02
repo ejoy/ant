@@ -14,6 +14,8 @@ policy:
 action:
   mount: 1
 data:
+  lightmap:
+    size: 128
   material: $path ./1.glb|./materials/Material.001.material
   mesh: $path ./1.glb|./meshes/Cube.001_P1.meshbin
   name: Cube
