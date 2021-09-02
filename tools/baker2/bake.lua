@@ -169,7 +169,7 @@ local function save_bake_result(br)
     for idx, r in ipairs(br) do
         local m = models[idx]
         local id = m.lightmap.id
-        lightmap_results[id] = save_lightmap(id, m.lightmap, r)
+        lightmap_results[id] = save_lightmap(id, m.lightmap, r):string()
     end
     
     local lre = {
@@ -184,10 +184,10 @@ local function save_bake_result(br)
         }
     }
 
-    writefile(lightmap_path:localpath() / "lightmap_result.prefab", serialize.stringify(lre), "w")
+    writefile(lightmap_path:localpath() / "lightmap_result.prefab", serialize.stringify({lre}), "w")
 
     local function check_add_lightmap_result()
-        local s = readfile(sceneprefab_file)
+        local s = datalist.parse(readfile(sceneprefab_file))
         for _, p in ipairs(s) do
             if p.prefab and p.prefab:match "lightmap_result.prefab" then
                 return
@@ -198,7 +198,7 @@ local function save_bake_result(br)
             prefab = "./lightmaps/lightmap_result.prefab"
         }
 
-        writefile(sceneprefab_file, s, "w")
+        writefile(sceneprefab_file:localpath(), serialize.stringify(s), "w")
     end
 
     check_add_lightmap_result()
