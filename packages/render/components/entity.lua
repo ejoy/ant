@@ -87,12 +87,13 @@ function ientity.create_grid_mesh_entity(name, w, h, size, color, materialpath)
 	}
 	local ib = {
 	}
+	local gap = size / 20.0
 	local total_width = w * size
 	local total_height = h * size
 	for i = 0, h - 1 do
-		local posz = -total_height * 0.5 + i * size
+		local posz = -total_height * 0.5 + i * size + gap
 		for j = 0, w - 1 do
-			local posx = -total_width * 0.5 + j * size
+			local posx = -total_width * 0.5 + j * size + gap
 			local realcolor = (type(color) == "table") and color[i + 1][ j + 1] or color
 			--[[
 			v1-----v2
@@ -108,15 +109,15 @@ function ientity.create_grid_mesh_entity(name, w, h, size, color, materialpath)
 			--v1
 			vb[#vb + 1] = posx
 			vb[#vb + 1] = 0.0
-			vb[#vb + 1] = posz + size
+			vb[#vb + 1] = posz + size - gap
 			vb[#vb + 1] = realcolor
 			--v2
-			vb[#vb + 1] = posx + size
+			vb[#vb + 1] = posx + size - gap
 			vb[#vb + 1] = 0.0
-			vb[#vb + 1] = posz + size
+			vb[#vb + 1] = posz + size - gap
 			vb[#vb + 1] = realcolor
 			--v3
-			vb[#vb + 1] = posx + size
+			vb[#vb + 1] = posx + size - gap
 			vb[#vb + 1] = 0.0
 			vb[#vb + 1] = posz
 			vb[#vb + 1] = realcolor
