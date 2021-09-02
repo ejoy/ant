@@ -791,14 +791,7 @@ template<typename TBaker> static bool BakeDriver(BakeThreadContext& context, TBa
                 baker.ProgressiveResult(texelResults, sampleIdx);
 
                 for(uint64 basisIdx = 0; basisIdx < TBaker::BasisCount; ++basisIdx){
-                    const auto &r = texelResults[basisIdx];
-                    auto LogVec = [](auto desc, auto v) {
-                        Log(desc, "[", v.x, ",", v.y, ",", v.z, "]");
-                    };
-                    Log("texelIdx:", texelIdx);
-                    LogVec("result:", r);
-
-                    context.BakeOutput[basisIdx][texelIdx] = r;
+                    context.BakeOutput[basisIdx][texelIdx] = texelResults[basisIdx];
                 }
                     
             }

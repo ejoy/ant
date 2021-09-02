@@ -30,10 +30,14 @@ local lightmap_path = bakescene_path / "lightmaps"
 lfs.create_directories(bakescene_path:localpath() / "lightmaps")
 
 local function readfile(filename)
-    local f = fs.open(filename, "rb")
-    local c = f:read "a"
-    f:close()
-    return c
+    local f<close> = fs.open(filename, "rb")
+    return f:read "a"
+end
+
+local function writefile(filename, c, mode)
+    mode = mode or "w"
+    local f<close> = lfs.open(filename, mode)
+    f:write(c)
 end
 
 local scene = datalist.parse(readfile(scenefile))
@@ -152,23 +156,18 @@ end
 local function save_lightmap(id, lm, lmr)
     local name = id .. ".dds"
     local filename = lightmap_path / name
-    assert(not fs.exists(filename))
 
     local local_lmpath = lightmap_path:localpath()
     local local_filename = local_lmpath / name
     local ti = default_tex_info(lm.size, lm.size, "RGBA32F")
     local m = bgfx.memory_buffer(lmr.data)
     local c = image.encode_image(ti, m, {type = "dds", format="RGBA32", srgb=false})
-    local f = lfs.open(local_filename, "wb")
-    f:write(c)
-    f:close()
+    writefile(local_filename, c, "wb")
 
     local tc = texfile_content:format(filename:string())
     local texfile = filename:replace_extension "texture"
     local local_texfile = local_lmpath / texfile:filename():string()
-    f = lfs.open(local_texfile, "w")
-    f:write(tc)
-    f:close()
+    writefile(local_texfile, tc, "w")
 end
 
 local function save_bake_result(br)
@@ -192,12 +191,9 @@ local function save_bake_result(br)
     }
     
     do
-        local f<close> = fs.open(sceneprefab_file)
-        local s = datalist.parse(f:read "a")
+        local s = datalist.parse(readfile(sceneprefab_file))
         s[#s+1] = serialize.stringify(lre)
-        local local_sceneprefab_file = sceneprefab_file:localpath()
-        local nf<close> = lfs.open(local_sceneprefab_file, "w")
-        nf:write(serialize.stringify(s))
+        writefile(sceneprefab_file:localpath(), serialize.stringify(s), "w")
     end
 end
 
