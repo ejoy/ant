@@ -1,13 +1,15 @@
 local serialize = import_package "ant.serialize"
-local cr = import_package "ant.compile_resource"
-local fs = require "filesystem"
-local math3d = require "math3d"
+local fs        = require "filesystem"
+local math3d    = require "math3d"
+
 local ecs = dofile "/pkg/ant.luaecs/ecs.lua"
 local w = ecs.world()
-local prefab = require "prefab"
-local mesh = require "mesh"
-local material = require "material"
-local light = require "light"
+
+local prefab        = require "prefab"
+local mesh          = require "mesh"
+local material      = require "material"
+local light         = require "light"
+local lightmap_id   = require "lightmap_id"
 
 w:register { name = "id", type = "lua" }
 w:register { name = "parent", type = "lua" }
@@ -17,6 +19,7 @@ w:register { name = "srt", type = "lua" }
 w:register { name = "sorted", order = true }
 w:register { name = "worldmat", type = "lua" }
 w:register { name = "light", type = "lua"}
+w:register { name = "lightmap", type = "lua"}
 
 local respath = fs.path(arg[2])
 if not fs.exists(respath) then
@@ -39,7 +42,7 @@ local function get_output_dir()
     return lfs.absolute(lfs.path(arg[0])):remove_filename() / "output"
 end
 local outputdir = get_output_dir()
-
+lightmap_id.build(respath)
 prefab.instance(w, respath:string())
 
 for v in w:select "parent:update id:in" do
@@ -112,7 +115,7 @@ for v in w:select "worldmat:in mesh:in material:in lightmap:in" do
     local e = to_srt(v.worldmat)
     e.mesh = v.mesh.name
     e.material = v.material.name
-    e.lightmap = e.lightmap
+    e.lightmap = v.lightmap
     output[#output+1] = e
     writefile(outputdir / v.mesh.name, v.mesh.value)
     writefile(outputdir / v.material.name, v.material.value)
@@ -126,4 +129,3 @@ for v in w:select "worldmat:in light:in" do
 end
 
 writefile(outputdir / "output.txt", serialize.stringify(output))
-writefile(outputdir / "lightmap_result.txt")

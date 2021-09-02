@@ -1,13 +1,13 @@
 --local assetmgr = import_package "ant.asset"
 local serialize = import_package "ant.serialize"
 
-local bake2 = require "bake2"
-local datalist = require "datalist"
-local image = require "image"
-local math3d = require "math3d"
-local fs = require "filesystem"
-local lfs = require "filesystem.local"
-local bgfx = require "bgfx"
+local bake2     = require "bake2"
+local datalist  = require "datalist"
+local image     = require "image"
+local math3d    = require "math3d"
+local fs        = require "filesystem"
+local lfs       = require "filesystem.local"
+local bgfx      = require "bgfx"
 
 local pkgpath = fs.path(arg[1])
 if not fs.exists(pkgpath) then
@@ -25,6 +25,9 @@ local scenefile = bakescene_path / "output.txt"
 if not fs.exists(scenefile) then
     error(("not found scene output file:%s, it's not a valid bake path"):format(scenefile:string()))
 end
+
+local lightmap_path = bakescene_path / "lightmaps"
+fs.create_directories(lightmap_path)
 
 local function readfile(filename)
     local f = fs.open(filename, "rb")
@@ -97,6 +100,7 @@ for _, e in ipairs(scene) do
             indices     = create_buffer(memory, meshdata.ib),
             vertexCount = elem_count(vb.pos),
             indexCount  = elem_count(meshdata.ib),
+            lightmap    = e.lightmap,
             materialidx = add_material(bakescene_path / material),
         }
     elseif e.light then
@@ -145,26 +149,16 @@ local function default_tex_info(w, h, fmt)
     }
 end
 
-local function save_bake_lm_data(lm, filename)
-    local ti = default_tex_info(lm.size, lm.size, "RGBA32F")
-    local lmdata = lm.data
-    local m = bgfx.memory_buffer(lmdata)
-    local c = image.encode_image(ti, m, {type = "dds", format="RGBA8", srgb=false})
-    local f = lfs.open(fs.path(filename), "wb")
-    f:write(c)
-    f:close()
-end
-
-local function save_lightmap(e, lme)
-    local local_lmpath = lme.lightmap_path:localpath()
-    local name = gen_name(lm.bake_id, e.name)
-    local filename = lme.lightmap_path / name
+local function save_lightmap(id, lm, lmr)
+    local name = id .. ".dds"
+    local filename = lightmap_path / name
     assert(not fs.exists(filename))
+
+    local local_lmpath = lightmap_path:localpath()
     local local_filename = local_lmpath / name
     local ti = default_tex_info(lm.size, lm.size, "RGBA32F")
-    local lmdata = lm.data
-    local m = bgfx.memory_buffer(lmdata:data(), ti.storageSize, lmdata)
-    local c = image.encode_image(ti, m, {type = "dds", format="RGBA8", srgb=false})
+    local m = bgfx.memory_buffer(lmr)
+    local c = image.encode_image(ti, m, {type = "dds", format="RGBA32", srgb=false})
     local f = lfs.open(local_filename, "wb")
     f:write(c)
     f:close()
@@ -175,12 +169,11 @@ local function save_lightmap(e, lme)
     f = lfs.open(local_texfile, "w")
     f:write(tc)
     f:close()
-    
-    lme.lightmap_result[lm.bake_id] = {texture_path = texfile:string(),}
 end
 
-for idx, lm in ipairs(bakeresult) do
-    save_bake_lm_data(lm, "abc" .. idx .. ".dds")
+for idx, r in ipairs(bakeresult) do
+    local m = models[idx]
+    save_lightmap(m.lightmap.id, m.lightmap, r)
 end
 
 bake2.destroy(b)
