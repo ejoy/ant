@@ -1,6 +1,6 @@
 pipeline "render_process"
-    .stage "update_lights"
     .stage "update_system_properties"
+    .stage "commit_system_properties"
     .stage "render_preprocess"
     .stage "render_submit"
 

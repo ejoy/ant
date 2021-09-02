@@ -54,4 +54,4 @@ policy "light"
 
 system "light_system"
     .implement "light/light.lua"
-    .method "update_lights"
+    .method "update_system_properties"
