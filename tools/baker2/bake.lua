@@ -161,7 +161,7 @@ local function save_lightmap(id, lm, lmr)
     local texfile = filename:replace_extension "texture"
     local local_texfile = local_lmpath / texfile:filename():string()
     writefile(local_texfile, tc, "w")
-    return local_texfile
+    return texfile
 end
 
 local function save_bake_result(br)
@@ -169,7 +169,9 @@ local function save_bake_result(br)
     for idx, r in ipairs(br) do
         local m = models[idx]
         local id = m.lightmap.id
-        lightmap_results[id] = save_lightmap(id, m.lightmap, r):string()
+        lightmap_results[id] = {
+            texture_path = save_lightmap(id, m.lightmap, r):string()
+        }
     end
     
     local lre = {

@@ -109,10 +109,6 @@ function s:luaecs_sync()
 			data.effect_instance = e.effect_instance
 			policy[#policy+1] = "ant.effekseer|effekseer"
 		end
-		if isLightmapResultEntity(e) then
-			data.lightmap_result = e.lightmap_result
-			data.lightmapper = true
-		end
 		if isLightmapEntity(e) then
 			data.lightmap = e.lightmap
 			policy[#policy+1] = "ant.render|lightmap"
