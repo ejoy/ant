@@ -67,7 +67,7 @@ function CMD.REPOPATH()
 end
 
 function CMD.MOUNT(name, path)
-	access.addmount(repo, name, path)
+	access.addmount(repo, name, lfs.path(path))
 end
 
 local function dispatch(id, cmd, ...)
