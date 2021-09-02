@@ -1,4 +1,5 @@
 #include "modules.h"
+#include <lua.hpp>
 #include <bgfx/c99/bgfx.h>
 
 extern "C" {
@@ -37,7 +38,7 @@ int luaopen_ecs_core(lua_State* L);
 int luaopen_fastio(lua_State* L);
 }
 
-const luaL_Reg* ant_modules() {
+void ant_loadmodules(lua_State* L) {
     static const luaL_Reg modules[] = {
         { "bgfx", luaopen_bgfx },
         { "bgfx.util", luaopen_bgfx_util },
@@ -74,13 +75,10 @@ const luaL_Reg* ant_modules() {
         { "fastio", luaopen_fastio},
         { NULL, NULL },
     };
-    return modules;
-}
 
-void ant_openlibs(lua_State* L) {
     const luaL_Reg *lib;
     luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
-    for (lib = ant_modules(); lib->func; lib++) {
+    for (lib = modules; lib->func; lib++) {
         lua_pushcfunction(L, lib->func);
         lua_setfield(L, -2, lib->name);
     }

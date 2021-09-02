@@ -8,25 +8,22 @@
 
 /* Begin PBXBuildFile section */
 		1142733E21D5C89100018DA5 /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 1142733D21D5C89100018DA5 /* Settings.bundle */; };
-		11A2273A261C316D00B83BE3 /* runtime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 11A22733261C316D00B83BE3 /* runtime.cpp */; };
-		11A2273C261C316D00B83BE3 /* modules.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 11A22736261C316D00B83BE3 /* modules.cpp */; };
-		11A2273D261C316D00B83BE3 /* set_current_ios.mm in Sources */ = {isa = PBXBuildFile; fileRef = 11A22737261C316D00B83BE3 /* set_current_ios.mm */; };
-		11A7D5DA261C390300E73271 /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 11A7D5D9261C390300E73271 /* OpenGLES.framework */; };
-		11A7D5DD261C394A00E73271 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 11A7D5D0261C383700E73271 /* QuartzCore.framework */; };
-		11A7D5E0261C396C00E73271 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 11A7D5DF261C396C00E73271 /* Metal.framework */; };
-		11A7D5E3261C39D700E73271 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 11A7D5E2261C39D700E73271 /* UIKit.framework */; };
-		11A7D5E6261C3A0100E73271 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 11A7D5E5261C3A0100E73271 /* CoreText.framework */; };
-		11E9F6B121C0A29C00D271B7 /* ios_error.mm in Sources */ = {isa = PBXBuildFile; fileRef = 11E9F6B021C0A29C00D271B7 /* ios_error.mm */; };
-		11F4177121B6621C00486046 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 11F4177021B6621C00486046 /* main.mm */; };
+		1187AEAF26E0C6CB0037FC55 /* ant_openlibs.c in Sources */ = {isa = PBXBuildFile; fileRef = 1187AEAE26E0C6CB0037FC55 /* ant_openlibs.c */; };
+		1187AEB226E0CB910037FC55 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1187AEB126E0CB910037FC55 /* CoreText.framework */; };
+		1187AEB426E0CB9D0037FC55 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1187AEB326E0CB9D0037FC55 /* UIKit.framework */; };
+		1187AEB626E0CBB10037FC55 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1187AEB526E0CBB10037FC55 /* QuartzCore.framework */; };
+		1187AEB826E0CBB80037FC55 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1187AEB726E0CBB80037FC55 /* Metal.framework */; };
+		1187AEBA26E0CD0B0037FC55 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1187AEB926E0CD0B0037FC55 /* Foundation.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		1142733D21D5C89100018DA5 /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
-		11A22733261C316D00B83BE3 /* runtime.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = runtime.cpp; path = ../../common/runtime.cpp; sourceTree = "<group>"; };
-		11A22735261C316D00B83BE3 /* modules.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = modules.h; path = ../../common/modules.h; sourceTree = "<group>"; };
-		11A22736261C316D00B83BE3 /* modules.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = modules.cpp; path = ../../common/modules.cpp; sourceTree = "<group>"; };
-		11A22737261C316D00B83BE3 /* set_current_ios.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = set_current_ios.mm; path = ../../common/set_current_ios.mm; sourceTree = "<group>"; };
-		11A22738261C316D00B83BE3 /* runtime.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = runtime.h; path = ../../common/runtime.h; sourceTree = "<group>"; };
+		1187AEAE26E0C6CB0037FC55 /* ant_openlibs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ant_openlibs.c; path = ../../common/ant_openlibs.c; sourceTree = "<group>"; };
+		1187AEB126E0CB910037FC55 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
+		1187AEB326E0CB9D0037FC55 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		1187AEB526E0CBB10037FC55 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		1187AEB726E0CBB80037FC55 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		1187AEB926E0CD0B0037FC55 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		11A7D5C9261C371700E73271 /* ant.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ant.entitlements; sourceTree = "<group>"; };
 		11A7D5D0261C383700E73271 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk/System/Library/Frameworks/QuartzCore.framework; sourceTree = DEVELOPER_DIR; };
 		11A7D5D3261C384D00E73271 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk/System/Library/Frameworks/OpenGL.framework; sourceTree = DEVELOPER_DIR; };
@@ -34,11 +31,8 @@
 		11A7D5DF261C396C00E73271 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk/System/Library/Frameworks/Metal.framework; sourceTree = DEVELOPER_DIR; };
 		11A7D5E2261C39D700E73271 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk/System/iOSSupport/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 		11A7D5E5261C3A0100E73271 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk/System/Library/Frameworks/CoreText.framework; sourceTree = DEVELOPER_DIR; };
-		11E9F6B021C0A29C00D271B7 /* ios_error.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ios_error.mm; sourceTree = "<group>"; };
-		11E9F6B221C0A2B400D271B7 /* ios_error.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ios_error.h; sourceTree = "<group>"; };
 		11F4175E21B6620A00486046 /* ant.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ant.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		11F4176F21B6621C00486046 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		11F4177021B6621C00486046 /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -46,11 +40,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				11A7D5E6261C3A0100E73271 /* CoreText.framework in Frameworks */,
-				11A7D5E3261C39D700E73271 /* UIKit.framework in Frameworks */,
-				11A7D5E0261C396C00E73271 /* Metal.framework in Frameworks */,
-				11A7D5DD261C394A00E73271 /* QuartzCore.framework in Frameworks */,
-				11A7D5DA261C390300E73271 /* OpenGLES.framework in Frameworks */,
+				1187AEBA26E0CD0B0037FC55 /* Foundation.framework in Frameworks */,
+				1187AEB826E0CBB80037FC55 /* Metal.framework in Frameworks */,
+				1187AEB626E0CBB10037FC55 /* QuartzCore.framework in Frameworks */,
+				1187AEB426E0CB9D0037FC55 /* UIKit.framework in Frameworks */,
+				1187AEB226E0CB910037FC55 /* CoreText.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -60,7 +54,12 @@
 		11A7D5CF261C383700E73271 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1187AEB926E0CD0B0037FC55 /* Foundation.framework */,
+				1187AEB726E0CBB80037FC55 /* Metal.framework */,
+				1187AEB526E0CBB10037FC55 /* QuartzCore.framework */,
+				1187AEB326E0CB9D0037FC55 /* UIKit.framework */,
 				11A7D5E5261C3A0100E73271 /* CoreText.framework */,
+				1187AEB126E0CB910037FC55 /* CoreText.framework */,
 				11A7D5E2261C39D700E73271 /* UIKit.framework */,
 				11A7D5DF261C396C00E73271 /* Metal.framework */,
 				11A7D5D9261C390300E73271 /* OpenGLES.framework */,
@@ -90,16 +89,9 @@
 		11F4176021B6620A00486046 /* ant */ = {
 			isa = PBXGroup;
 			children = (
+				1187AEAE26E0C6CB0037FC55 /* ant_openlibs.c */,
 				11A7D5C9261C371700E73271 /* ant.entitlements */,
-				11A22736261C316D00B83BE3 /* modules.cpp */,
-				11A22735261C316D00B83BE3 /* modules.h */,
-				11A22733261C316D00B83BE3 /* runtime.cpp */,
-				11A22738261C316D00B83BE3 /* runtime.h */,
-				11A22737261C316D00B83BE3 /* set_current_ios.mm */,
-				11E9F6B221C0A2B400D271B7 /* ios_error.h */,
-				11E9F6B021C0A29C00D271B7 /* ios_error.mm */,
 				11F4176F21B6621C00486046 /* Info.plist */,
-				11F4177021B6621C00486046 /* main.mm */,
 				1142733D21D5C89100018DA5 /* Settings.bundle */,
 			);
 			path = ant;
@@ -173,11 +165,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				11A2273C261C316D00B83BE3 /* modules.cpp in Sources */,
-				11E9F6B121C0A29C00D271B7 /* ios_error.mm in Sources */,
-				11A2273D261C316D00B83BE3 /* set_current_ios.mm in Sources */,
-				11F4177121B6621C00486046 /* main.mm in Sources */,
-				11A2273A261C316D00B83BE3 /* runtime.cpp in Sources */,
+				1187AEAF26E0C6CB0037FC55 /* ant_openlibs.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -322,7 +310,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = ../../bin/ios/debug;
 				OTHER_LDFLAGS = (
-					"-lruntime_modules",
+					"-lant_runtime",
 					"-lbgfx-lib",
 					"-lstdc++",
 				);
@@ -362,7 +350,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = ../../bin/ios/release;
 				OTHER_LDFLAGS = (
-					"-lruntime_modules",
+					"-lant_runtime",
 					"-lbgfx-lib",
 					"-lstdc++",
 				);

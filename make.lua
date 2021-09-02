@@ -59,7 +59,6 @@ lm:import "runtime/make.lua"
 lm:phony "runtime" {
     deps = {
         "ant",
-        "runtime_modules",
     }
 }
 
