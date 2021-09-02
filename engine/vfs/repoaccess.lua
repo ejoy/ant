@@ -36,7 +36,7 @@ function access.addmount(repo, name, path)
 	if p == nil then
 		repo._mountpoint[name] = lfs.path(path)
 		repo._mountname[#repo._mountname+1] = name
-	elseif p:string() == path then
+	elseif p:string() == path:string() then
 	else
 		error("Duplicate mount: " ..name)
 	end
