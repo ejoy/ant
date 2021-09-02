@@ -195,7 +195,7 @@ local function save_bake_result(br)
         end
 
         s[#s+1] = {
-            prefab = "./lightmaps/lightmap_result.prefab"
+            prefab = "./output/lightmaps/lightmap_result.prefab"
         }
 
         writefile(sceneprefab_file:localpath(), serialize.stringify(s), "w")

@@ -25,6 +25,9 @@ local function findEntity(eid)
 		end
 	end
 end
+local function isLightmapResultEntity(e)
+	return e.lightmap_result ~= nil
+end
 local function isLightmapEntity(e)
 	return e.lightmap ~= nil
 end
@@ -105,6 +108,10 @@ function s:luaecs_sync()
 			data.effekseer = e.effekseer
 			data.effect_instance = e.effect_instance
 			policy[#policy+1] = "ant.effekseer|effekseer"
+		end
+		if isLightmapResultEntity(e) then
+			data.lightmap_result = e.lightmap_result
+			data.lightmapper = true
 		end
 		if isLightmapEntity(e) then
 			data.lightmap = e.lightmap

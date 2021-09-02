@@ -89,14 +89,12 @@ system "lightmap_system"
     .method "end_filter"
 
 component_v2 "lightmapper"
-component_v2 "lightmap_path".type "lua"
 component_v2 "lightmap_result".type "lua"
         .require_system "ant.render|lightmap_system"
 
 policy_v2 "lightmap_result"
     .component_v2 "lightmapper"
     .component_v2 "lightmap_result"
-    .component_v2 "lightmap_path"
 
 component_v2 "lightmap".type "lua"
     .require_system "ant.render|lightmap_system"
@@ -105,5 +103,9 @@ policy_v2 "lightmap"
     .component_v2 "lightmap"
 
 --TODO: need remove
+policy "lightmap_result"
+    .require_system "ant.render|lightmap_system"
+    .component "lightmapper"
+    .component "lightmap_result"
 policy "lightmap"
     .component "lightmap"
