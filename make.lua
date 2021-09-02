@@ -18,8 +18,12 @@ lm.bindir = ("bin/%s/%s"):format(plat, lm.mode)
 local EnableEditor = true
 if lm.os == "ios" then
     lm.arch = "arm64"
-    lm.sys = "ios14.1"
     EnableEditor = false
+    if lm.mode == "release" then
+        lm.sys = "ios13.0"
+    else
+        lm.sys = "ios14.1"
+    end
 end
 
 lm.c = "c11"
