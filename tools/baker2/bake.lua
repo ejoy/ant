@@ -120,13 +120,6 @@ for _, e in ipairs(scene) do
     end
 end
 
-local b = bake2.create{
-    models      = models,
-    materials   = materials,
-    lights      = lights,
-}
-local bakeresult = bake2.bake(b)
-
 local texfile_content<const> = [[
 normalmap: false
 path: %s
@@ -168,6 +161,7 @@ local function save_lightmap(id, lm, lmr)
     local texfile = filename:replace_extension "texture"
     local local_texfile = local_lmpath / texfile:filename():string()
     writefile(local_texfile, tc, "w")
+    return local_texfile
 end
 
 local function save_bake_result(br)
@@ -189,32 +183,31 @@ local function save_bake_result(br)
             lightmapper = true,
         }
     }
-    
-    do
-        local s = datalist.parse(readfile(sceneprefab_file))
-        s[#s+1] = serialize.stringify(lre)
-        writefile(sceneprefab_file:localpath(), serialize.stringify(s), "w")
+
+    writefile(lightmap_path:localpath() / "lightmap_result.prefab", serialize.stringify(lre), "w")
+
+    local function check_add_lightmap_result()
+        local s = readfile(sceneprefab_file)
+        for _, p in ipairs(s) do
+            if p.prefab and p.prefab:match "lightmap_result.prefab" then
+                return
+            end
+        end
+
+        s[#s+1] = {
+            prefab = "./lightmaps/lightmap_result.prefab"
+        }
+
+        writefile(sceneprefab_file, s, "w")
     end
+
+    check_add_lightmap_result()
 end
 
-save_bake_result(bakeresult)
+local b = bake2.create{
+    models      = models,
+    materials   = materials,
+    lights      = lights,
+}
+save_bake_result(bake2.bake(b))
 bake2.destroy(b)
-
--- local function create_world()
---     local ecs = import_package "ant.luaecs"
---     local cr = import_package "ant.compile_resource"
---     local world = ecs.new_world {
---         width  = 0,
---         height = 0,
---     }
---     cr.set_identity "windows_direct3d11"
---     assert(loadfile "/pkg/ant.prefab/prefab_system.lua")({world = world})
---     function world:create_entity_template(v)
---         return v
---     end
---     return world
--- end
-
--- local world = create_world()
-
--- print "ok"
