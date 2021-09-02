@@ -38,7 +38,7 @@ thread.thread (([[
 
 local function initIOThread()
     config.vfspath = vfs.realpath("engine/firmware/vfs.lua")
-	io_req:push(config)
+	io_req(false, config)
 end
 
 initIOThread()

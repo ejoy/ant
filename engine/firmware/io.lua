@@ -157,7 +157,7 @@ end
 local function response_id(id, ...)
 	if id then
 		if type(id) == "string" then
-			local c = thread.channel_consume(id)
+			local c = thread.channel_produce(id)
 			c(...)
 		else
 			channel.req:ret(id, ...)
