@@ -28,6 +28,8 @@ int luaopen_thread(lua_State* L);
 int luaopen_window(lua_State* L);
 int luaopen_terrain(lua_State *L);
 int luaopen_font(lua_State *L);
+int luaopen_font_init(lua_State *L);
+int luaopen_font_turetype(lua_State *L);
 int luaopen_effekseer(lua_State* L);
 int luaopen_ltask(lua_State* L);
 int luaopen_ltask_bootstrap(lua_State* L);
@@ -44,6 +46,8 @@ void ant_loadmodules(lua_State* L) {
         { "bgfx.util", luaopen_bgfx_util },
         { "bgfx_get_interface", (lua_CFunction)bgfx_get_interface },
         { "font", luaopen_font },
+        { "font.init", luaopen_font_init },
+        { "font.truetype", luaopen_font_truetype },
         { "crypt", luaopen_crypt },
         { "datalist", luaopen_datalist },
         { "filesystem.cpp", luaopen_filesystem_cpp },
