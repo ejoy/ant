@@ -108,7 +108,7 @@ function s:luaecs_sync()
 		end
 		if isLightmapEntity(e) then
 			data.lightmap = e.lightmap
-			policy[#policy+1] = "ant.bake|bake_lightmap"
+			policy[#policy+1] = "ant.render|lightmap"
 		end
 		world:create_entity {
 			policy = policy,
