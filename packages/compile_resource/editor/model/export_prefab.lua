@@ -85,9 +85,11 @@ end
 local function duplicate_table(m)
     local t = {}
     for k, v in pairs(m) do
-        t[k] = type(v) == "table" and
-             duplicate_table(v) or
-             v
+        if type(v) == "table" and getmetatable(v) == nil then
+            t[k] = duplicate_table(v)
+        else
+            t[k] = v
+        end
     end
     return t
 end
