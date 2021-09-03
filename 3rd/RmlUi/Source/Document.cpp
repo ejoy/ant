@@ -431,7 +431,7 @@ void Document::ProcessMouseMove(MouseButton button, int x, int y, int key_modifi
 }
 
 void Document::ProcessMouseButtonDown(MouseButton button, int x, int y, int key_modifier_state) {
-	Point mouse {x, y};
+	Point mouse {(float)x, (float)y};
 	EventDictionary parameters;
 	GenerateMouseEventParameters(parameters, mouse, button);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
@@ -446,7 +446,7 @@ void Document::ProcessMouseButtonDown(MouseButton button, int x, int y, int key_
 }
 
 void Document::ProcessMouseButtonUp(MouseButton button, int x, int y, int key_modifier_state) {
-	Point mouse {x, y};
+	Point mouse {(float)x, (float)y};
 	EventDictionary parameters;
 	GenerateMouseEventParameters(parameters, mouse, button);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
