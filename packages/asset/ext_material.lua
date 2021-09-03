@@ -1,4 +1,5 @@
 local cr        = import_package "ant.compile_resource"
+local serialize = import_package "ant.serialize"
 local datalist  = require "datalist"
 local assetmgr  = require "asset"
 local bgfx      = require "bgfx"
@@ -32,7 +33,7 @@ local function init(material)
 end
 
 local function loader(filename)
-    local m = datalist.parse(cr.read_file(filename))
+    local m = serialize.parse(filename, cr.read_file(filename))
     return init(m)
 end
 

@@ -1,4 +1,5 @@
 local convert_image = require "editor.texture.util"
+local serialize = import_package "ant.serialize"
 local datalist = require "datalist"
 local lfs = require "filesystem.local"
 local ident_util = require "identity"
@@ -20,7 +21,7 @@ local function readdatalist(filepath)
 	local f = assert(lfs.open(filepath, "r"))
 	local data = f:read "a"
 	f:close()
-	return datalist.parse(data)
+	return serialize.parse(filepath:string(), data)
 end
 
 return function (input, output, setting, localpath)
