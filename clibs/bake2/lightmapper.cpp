@@ -753,7 +753,7 @@ llightmap_set_view(lua_State *L){
 
 extern "C"{
 LUAMOD_API int
-luaopen_bake(lua_State* L) {
+luaopen_bake_radiosity(lua_State* L) {
     register_lm_context_mt(L);
     luaL_Reg lib[] = {
         { "create_lightmap_context", llightmap_create_context},
