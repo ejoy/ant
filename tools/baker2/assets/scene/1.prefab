@@ -16,7 +16,7 @@ action:
 data:
   lightmap:
     id: 6130dc3c0bcfd81c4787cd64
-    size: 128
+    size: 16
   material: $path ./1.glb|./materials/Material.001.material
   mesh: $path ./1.glb|./meshes/Cube.001_P1.meshbin
   name: Cube
