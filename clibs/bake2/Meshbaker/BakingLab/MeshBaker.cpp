@@ -36,6 +36,7 @@ static const uint64 BakeGroupSizeX = 8;
 static const uint64 BakeGroupSizeY = 8;
 static const uint64 BakeGroupSize = BakeGroupSizeX * BakeGroupSizeY;
 
+#ifdef _DEBUG
 #include <fstream>
 static std::ofstream* off = nullptr;
 static const char* fn = "d:/work/ant/log0.txt";
@@ -60,7 +61,7 @@ static void Log(const T& arg1, Args... args)
     *off << arg1;
     Log(args...);
 }
-
+#endif //_DEBUG
 
 // Info about a gutter texel
 struct GutterTexel
