@@ -213,7 +213,7 @@ font_manager_touch_unsafe(struct font_manager *F, int font, int codepoint, struc
 		return -1;
 	}
 
-	const struct stbtt_fontinfo *fi = get_ttf(F, font);
+	const struct stbtt_fontinfo *fi = get_ttf_unsafe(F, font);
 
 	float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
 	int ascent, descent, lineGap;
@@ -365,7 +365,7 @@ font_manager_update_unsafe(struct font_manager *F, int fontid, int codepoint, st
 		hash_insert(F, cp, slot);
 	}
 
-	const struct stbtt_fontinfo *fi = get_ttf(F, fontid);
+	const struct stbtt_fontinfo *fi = get_ttf_unsafe(F, fontid);
 	float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
 
 	int width, height, xoff, yoff;
