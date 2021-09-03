@@ -50,8 +50,6 @@ BakerHandle CreateBaker(const Scene* scene){
     AppSettings::EnableIndirectLighting.SetValue(true);
     AppSettings::EnableIndirectSpecular.SetValue(true);
 
-    AppSettings::LightMapResolution.SetValue(16);
-
     return bl;
 }
 

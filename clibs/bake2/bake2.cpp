@@ -226,13 +226,14 @@ lbaker_bake(lua_State *L){
     for (size_t ii=0; ii<br.lightmaps.size(); ++ii){
         lua_createtable(L, 0, 3);{
             const auto &lm = br.lightmaps[ii];
-            lua_pushlstring(L, (const char*)lm.data.data(), lm.data.size());
+            const auto texelsize = sizeof(glm::vec4);
+            lua_pushlstring(L, (const char*)lm.data.data(), lm.data.size() * texelsize);
             lua_setfield(L, -2, "data");
 
             lua_pushinteger(L, lm.size);
             lua_setfield(L, -2, "size");
 
-            lua_pushinteger(L, sizeof(glm::vec4));
+            lua_pushinteger(L, texelsize);
             lua_setfield(L, -2, "texelsize");
         }
         lua_seti(L, -2, ii+1);
