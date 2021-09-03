@@ -9,7 +9,7 @@ local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 local bgfx      = require "bgfx"
 
-local sceneprefab_file = fs.path(arg[1])
+local sceneprefab_file = fs.path(arg[2])
 if not fs.exists(sceneprefab_file) then
     error("scene prefab file not exist:".. sceneprefab_file:string())
 end
