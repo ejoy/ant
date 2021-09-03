@@ -66,6 +66,10 @@ if EnableEditor then
     local Backlist = {}
     local EditorModules = {}
 
+    if lm.os ~= "windows" then
+        Backlist["bake2"] = true
+    end
+
     for path in fs.path "clibs":list_directory() do
         if fs.exists(path / "make.lua") then
             local name = path:stem():string()

@@ -66,6 +66,7 @@ truetype_font(struct truetype_font *ttf, int fontid, lua_State *L) {
 	lua_pushcfunction(L, lget_fontdata);
 	lua_pushinteger(L, fontid+1);
 	if (lua_pcall(L, 1, 1, 0) != LUA_OK) {
+		printf("TRUETYPE_ID err: %s\n", lua_tostring(L, -1));
 		lua_pop(L, 1);
 		return default_info(ttf);
 	}
@@ -94,6 +95,7 @@ truetype_name(lua_State *L, const char *name) {
 	lua_pushcfunction(L, lget_fontid);
 	lua_pushlightuserdata(L, (void *)name);
 	if (lua_pcall(L, 1, 1, 0) != LUA_OK) {
+		printf("TRUETYPE_NAME err: %s\n", lua_tostring(L, -1));
 		lua_pop(L, 1);
 		return 0;
 	}
@@ -121,6 +123,7 @@ truetype_import(lua_State *L, const char *fontpath) {
 	lua_pushcfunction(L, import_font);
 	lua_pushlightuserdata(L, (void *)fontpath);
 	if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
+		printf("TRUETYPE_IMPORT err: %s\n", lua_tostring(L, -1));
 		lua_pop(L, 1);
 	}
 }

@@ -21,7 +21,9 @@ local function readdatalist(filepath)
 	local f = assert(lfs.open(filepath, "r"))
 	local data = f:read "a"
 	f:close()
-	return serialize.parse(filepath:string(), data)
+	return datalist.parse(data,function(args)
+		return args[2]
+	end)
 end
 
 return function (input, output, setting, localpath)

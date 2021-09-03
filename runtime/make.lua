@@ -54,7 +54,6 @@ lm:lib "ant_runtime" {
         "."
     },
     windows = {
-        sources = "../windows/main.cpp",
     },
     macos = {
         sources = "../osx/main.cpp",
@@ -70,8 +69,21 @@ lm:lib "ant_runtime" {
 
 lm:source_set "ant_links" {
     windows = {
+        includes = {
+            "../clibs/lua",
+            "common"
+        },
+        sources = "windows/main.cpp",
         links = {
             "shlwapi",
+            "user32",
+            "gdi32",
+            "shell32",
+            "ole32",
+            "oleaut32",
+            "wbemuuid",
+            "winmm",
+            "ws2_32",
         }
     },
     macos = {
@@ -108,7 +120,7 @@ lm:exe "ant" {
         "ant_runtime",
         "ant_openlibs",
         "ant_links",
-    },
+    }
 }
 
 lm:default "ant"
