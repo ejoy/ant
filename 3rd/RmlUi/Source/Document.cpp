@@ -431,14 +431,12 @@ void Document::ProcessMouseMove(MouseButton button, int x, int y, int key_modifi
 }
 
 void Document::ProcessMouseButtonDown(MouseButton button, int x, int y, int key_modifier_state) {
-	mouse_position.x = x;
-	mouse_position.y = y;
-
+	Point mouse {x, y};
 	EventDictionary parameters;
-	GenerateMouseEventParameters(parameters, mouse_position, button);
+	GenerateMouseEventParameters(parameters, mouse, button);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 
-	active = body->GetElementAtPoint(mouse_position);
+	active = body->GetElementAtPoint(mouse);
 	if (active)
 		active->DispatchEvent(EventId::Mousedown, parameters);
 
@@ -448,14 +446,12 @@ void Document::ProcessMouseButtonDown(MouseButton button, int x, int y, int key_
 }
 
 void Document::ProcessMouseButtonUp(MouseButton button, int x, int y, int key_modifier_state) {
-	mouse_position.x = x;
-	mouse_position.y = y;
-
+	Point mouse {x, y};
 	EventDictionary parameters;
-	GenerateMouseEventParameters(parameters, mouse_position, button);
+	GenerateMouseEventParameters(parameters, mouse, button);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 
-	active = body->GetElementAtPoint(mouse_position);
+	active = body->GetElementAtPoint(mouse);
 	if (active) {
 		active->DispatchEvent(EventId::Mouseup, parameters);
 	}
