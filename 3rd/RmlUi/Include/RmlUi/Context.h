@@ -32,8 +32,8 @@ public:
 	bool ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state);
 	bool ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state);
 	bool ProcessMouseMove(MouseButton button, int x, int y, int key_modifier_state);
-	bool ProcessMouseButtonDown(MouseButton button, int key_modifier_state);
-	bool ProcessMouseButtonUp(MouseButton button, int key_modifier_state);
+	bool ProcessMouseButtonDown(MouseButton button, int x, int y, int key_modifier_state);
+	bool ProcessMouseButtonUp(MouseButton button, int x, int y, int key_modifier_state);
 	bool ProcessMouseWheel(float wheel_delta, int key_modifier_state);
 
 	double GetElapsedTime();

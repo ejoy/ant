@@ -138,7 +138,9 @@ lContextProcessMouseButtonDown(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
 	Rml::MouseButton button = (Rml::MouseButton)luaL_checkinteger(L, 2);
-	ctx->ProcessMouseButtonDown(button, 0);
+	int x = (int)luaL_checkinteger(L, 3);
+	int y = (int)luaL_checkinteger(L, 4);
+	ctx->ProcessMouseButtonDown(button, x, y, 0);
 	return 0;
 }
 
@@ -147,7 +149,9 @@ lContextProcessMouseButtonUp(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
 	Rml::MouseButton button = (Rml::MouseButton)luaL_checkinteger(L, 2);
-	ctx->ProcessMouseButtonUp(button, 0);
+	int x = (int)luaL_checkinteger(L, 3);
+	int y = (int)luaL_checkinteger(L, 4);
+	ctx->ProcessMouseButtonUp(button, x, y, 0);
 	return 0;
 }
 
