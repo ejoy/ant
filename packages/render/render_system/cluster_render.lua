@@ -203,13 +203,19 @@ local function cull_lights(viewid)
     icompute.dispatch(viewid, e.dispatch)
 end
 
-function cfs:render_preprocess()
+function cfs:update_system_properties()
     if not ilight.use_cluster_shading() then
         return
     end
 
     for _ in light_mb:each() do
         check_light_index_list()
+    end
+end
+
+function cfs:render_preprocess()
+    if not ilight.use_cluster_shading() then
+        return
     end
 
     for _ in cr_camera_mb:each() do

@@ -1,7 +1,6 @@
 local fs = require "filesystem"
 local lfs = require "filesystem.local"
 local sha1 = require "hash".sha1
-local stringify = require "stringify"
 local serialize = import_package "ant.serialize".stringify
 local datalist = require "datalist"
 local config = require "config"
@@ -24,19 +23,6 @@ local function split(str)
     local r = {}
     str:gsub('[^|]*', function (w) r[#r+1] = w end)
     return r
-end
-
-local function split_path(pathstring)
-    local pathlst = split(pathstring)
-    local res = {}
-    for i = 1, #pathlst - 1 do
-        local path = normalize(pathlst[i])
-        local ext = path:match "[^/]%.([%w*?_%-]*)$"
-        local cfg = config.get(ext)
-        res[#res+1] = path .. "?" .. cfg.arguments
-    end
-    res[#res+1] = pathlst[#pathlst]
-    return res
 end
 
 local ResourceCompiler = {
@@ -140,13 +126,13 @@ local function parseUrl(url)
     return path, setting, arguments
 end
 
-local function compile_url(url)
-    local path, setting, arguments = parseUrl(url)
+local function compile_localfile(folder, fileurl)
+    local file, setting, arguments = parseUrl(fileurl)
     local hash = sha1(arguments):sub(1,7)
-    local ext = path:match "[^/]%.([%w*?_%-]*)$"
+    local ext = file:match "[^/]%.([%w*?_%-]*)$"
     local cfg = config.get(ext)
-    local input = fs.path(path):localpath()
-    local keystring = lfs.absolute(input):string():lower()
+    local input = lfs.absolute(folder / file)
+    local keystring = input:string():lower()
     local output = cfg.binpath / get_filename(keystring) / hash
     if not lfs.exists(output) or not do_build(output) then
         do_compile(cfg, setting, input, output)
@@ -156,19 +142,73 @@ local function compile_url(url)
     return output
 end
 
+local function compile_virtualfile(url)
+    local path, setting, arguments = parseUrl(url)
+    local input = fs.path(path):localpath()
+    local file = input:filename():string()
+    local hash = sha1(arguments):sub(1,7)
+    local ext = file:match "[^/]%.([%w*?_%-]*)$"
+    local cfg = config.get(ext)
+    local keystring = input:string():lower()
+    local output = cfg.binpath / get_filename(keystring) / hash
+    if not lfs.exists(output) or not do_build(output) then
+        do_compile(cfg, setting, input, output)
+        writefile(output / ".setting", serialize(setting))
+        writefile(output / ".arguments", arguments)
+    end
+    return output
+end
+
+local function split_path(pathstring)
+    local pathlst = split(pathstring)
+    local res = {}
+    for i = 1, #pathlst - 1 do
+        local path = normalize(pathlst[i])
+        local ext = path:match "[^/]%.([%w*?_%-]*)$"
+        local cfg = config.get(ext)
+        res[#res+1] = path .. "?" .. cfg.arguments
+    end
+    res[#res+1] = pathlst[#pathlst]
+    return res
+end
+
 local function compile_dir(urllst)
     local url = urllst[1]
     if #urllst == 1 then
+        if url:match "?" then
+            return compile_virtualfile(url)
+        end
         return fs.path(url):localpath()
     end
+    local folder = compile_virtualfile(url)
     for i = 2, #urllst do
-        url = (compile_url(url) / urllst[i]):string()
+        if urllst[i]:match "?" then
+            folder = compile_localfile(folder, urllst[i])
+        else
+            folder = folder /urllst[i]
+        end
     end
-    return lfs.path(url)
+    return folder
 end
 
 function compile(pathstring)
     return compile_dir(split_path(pathstring))
+end
+
+local function compile_url(pathstring)
+    local lst = {}
+    local dir = {}
+    pathstring:gsub('[^/]*', function (w)
+        dir[#dir+1] = w
+        if w:match "%?" then
+            lst[#lst+1] = table.concat(dir, "/")
+            dir = {}
+        end
+    end)
+    if #dir > 0 then
+        lst[#lst+1] = table.concat(dir, "/")
+    end
+    return compile_dir(lst)
 end
 
 return {

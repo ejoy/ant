@@ -3,7 +3,7 @@ local rmlui = require "rmlui"
 local timer = require "core.timer"
 local task = require "core.task"
 local event = require "core.event"
-local fileManager = require "core.fileManager"
+local filemanager = require "core.filemanager"
 local windowManager = require "core.windowManager"
 local initRender = require "core.initRender"
 local ltask = require "ltask"
@@ -110,7 +110,7 @@ end
 S.open = windowManager.open
 S.close = windowManager.close
 S.postMessage = windowManager.postMessage
-S.preload_dir = fileManager.preload_dir
+S.preload_dir = filemanager.preload_dir
 
 ltask.send(ServiceWindow, "subscribe", "mouse")
 

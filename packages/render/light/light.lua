@@ -211,7 +211,7 @@ local light_comp_mb = world:sub{"component_changed", "light"}
 local light_state_mb = world:sub{"component_changed", "state"}
 local light_register_mb = world:sub{"component_register", "light_type"}
 
-function lightsys:update_lights()
+function lightsys:update_system_properties()
 	local changed = false
 	for v in w:select "scene_changed eid:in" do
 		local le = world[v.eid]

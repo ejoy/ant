@@ -32,5 +32,14 @@ lm:lib "bgfx-lib" {
         flags = {
             "-x", "objective-c++"
         }
+    },
+    ios = {
+        defines = {
+            "BGFX_CONFIG_RENDERER_METAL=1",
+        },
+        sources = {
+            "src/*.mm",
+            "!src/amalgamated.mm",
+        }
     }
 }

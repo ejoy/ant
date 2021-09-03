@@ -340,7 +340,6 @@ void effekseer_ctx::draw(float delta)
 	for (int i = 0; i < iterations; i++) {
 		manager_->Update(advance);
 	}
-	manager_->Update(delta);
 	renderer_->SetTime(renderer_->GetTime() + delta);
 	renderer_->BeginRendering();
 	manager_->Draw();

@@ -10,14 +10,20 @@ local plat = (function ()
     end
     return lm.os
 end)()
+
+lm.mode = "debug"
 lm.builddir = ("build/%s/%s"):format(plat, lm.mode)
 lm.bindir = ("bin/%s/%s"):format(plat, lm.mode)
 
 local EnableEditor = true
 if lm.os == "ios" then
     lm.arch = "arm64"
-    lm.sys = "ios13.0"
     EnableEditor = false
+    if lm.mode == "release" then
+        lm.sys = "ios13.0"
+    else
+        lm.sys = "ios14.1"
+    end
 end
 
 lm.c = "c11"
@@ -51,7 +57,9 @@ lm:import "3rd/scripts/reactphysics3d.lua"
 lm:import "runtime/make.lua"
 
 lm:phony "runtime" {
-    deps = "ant"
+    deps = {
+        "ant",
+    }
 }
 
 if EnableEditor then
@@ -71,7 +79,6 @@ if EnableEditor then
     end
 
     EditorModules[#EditorModules + 1] = "bgfx-core"
-    EditorModules[#EditorModules + 1] = "copy_bgfx_shader"
 
     lm:phony "tools" {
         deps = {

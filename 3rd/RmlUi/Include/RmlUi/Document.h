@@ -114,16 +114,12 @@ private:
 
 	Context* context;
 
-	void UpdateHoverChain(const EventDictionary& parameters, const EventDictionary& drag_parameters, const Point& old_mouse_position);
+	void UpdateHoverChain(const EventDictionary& parameters, const EventDictionary& drag_parameters);
 
 	Point mouse_position = Point(0,0);
 
 	Element* hover = nullptr;
 	Element* active = nullptr;
-
-	Element* last_click_element = nullptr;
-	double last_click_time = 0;
-	Point last_click_mouse_position = Point(0, 0);
 
 	std::set<Element*> hover_chain;
 	std::vector<Element*> active_chain;

@@ -12,7 +12,7 @@ local status = {
 }
 
 local localSpace = {}
-
+local defaultLight = { false }
 function m.show()
     local icons = require "common.icons"(asset_mgr)
     local viewport = imgui.GetMainViewport()
@@ -45,6 +45,11 @@ function m.show()
         imgui.cursor.SameLine()
         if imgui.widget.Checkbox("LocalSpace", localSpace) then
             world:pub { "GizmoMode", "localspace", localSpace[1]}
+        end
+        imgui.cursor.SameLine()
+        if imgui.widget.Checkbox("DefaultLight", defaultLight) then
+            local action = defaultLight[1] and "enable_default_light" or "disable_default_light"
+            world:pub { "Create", action }
         end
         uiutils.imguiEndToolbar()
     end

@@ -11,7 +11,7 @@ end
 
 local eventfd, err = socket.connect(usbmuxd.get_address())
 if not eventfd then
-    print("Error:", err)
+    --print("Error:", err)
     return
 end
 local a, b = usbmuxd.create_listen_package()

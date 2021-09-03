@@ -22,16 +22,18 @@ namespace lua_struct {
         static inline std::array<const char*, 16> stack;
         static inline size_t stack_top = 0;
         static inline void push(const char* name) {
-            if (stack_top > stack.max_size()) {
-                return;
-            }
-            stack[stack_top++] = name;
+            // TODO: thread unsafe
+            //if (stack_top > stack.max_size()) {
+            //    return;
+            //}
+            //stack[stack_top++] = name;
         }
         static inline void pop() {
-            if (stack_top == 0) {
-                return;
-            }
-            --stack_top;
+            // TODO: thread unsafe
+            //if (stack_top == 0) {
+            //    return;
+            //}
+            //--stack_top;
         }
         struct guard {
             guard(const char* name) { push(name); }

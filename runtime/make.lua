@@ -43,30 +43,38 @@ lm:source_set "ant_common" {
     }
 }
 
-lm:lib "runtime_modules" {
+lm:lib "ant_runtime" {
+    rootdir = "common",
     deps = {
-        RuntimeModules
-    },
-}
-
-lm:exe "ant" {
-    deps = {
-        "bgfx-lib",
         "ant_common",
         RuntimeModules
     },
     includes = {
-        "../clibs/lua",
-        "common"
+        "../../clibs/lua",
+        "."
     },
     windows = {
-        sources = "windows/main.cpp",
+        sources = "../windows/main.cpp",
+    },
+    macos = {
+        sources = "../osx/main.cpp",
+    },
+    ios = {
+        includes = "../../clibs/window/ios",
+        sources = {
+            "ios/main.mm",
+            "ios/ios_error.mm",
+        },
+    }
+}
+
+lm:source_set "ant_links" {
+    windows = {
         links = {
             "shlwapi",
         }
     },
     macos = {
-        sources = "osx/main.cpp",
         frameworks = {
             "Foundation",
             "Metal",
@@ -75,28 +83,32 @@ lm:exe "ant" {
         }
     },
     ios = {
-        deps = "runtime_modules",
-        includes = "../clibs/window/ios",
-        sources = {
-            "ios/ant/main.mm",
-            "ios/ant/ios_error.mm",
-        },
         frameworks = {
+            "Foundation",
             "CoreText",
             "UIKit",
             "Metal",
             "QuartzCore",
-            "OpenGLES",
         },
         ldflags = {
             "-fembed-bitcode",
             "-fobjc-arc"
-        },
-        flags = {
-            "-fembed-bitcode",
-            "-fobjc-arc"
         }
     }
+}
+
+lm:source_set "ant_openlibs" {
+    includes = "../clibs/lua",
+    sources = "common/ant_openlibs.c",
+}
+
+lm:exe "ant" {
+    deps = {
+        "bgfx-lib",
+        "ant_runtime",
+        "ant_openlibs",
+        "ant_links",
+    },
 }
 
 lm:default "ant"

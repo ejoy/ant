@@ -406,7 +406,6 @@ bool Document::ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state) {
 
 void Document::ProcessMouseMove(MouseButton button, int x, int y, int key_modifier_state) {
 	// Check whether the mouse moved since the last event came through.
-	Point old_mouse_position = mouse_position;
 	bool mouse_moved = (x != mouse_position.x) || (y != mouse_position.y);
 	if (mouse_moved) {
 		mouse_position.x = x;
@@ -424,7 +423,7 @@ void Document::ProcessMouseMove(MouseButton button, int x, int y, int key_modifi
 
 	// Update the current hover chain. This will send all necessary 'onmouseout', 'onmouseover', 'ondragout' and
 	// 'ondragover' messages.
-	UpdateHoverChain(parameters, drag_parameters, old_mouse_position);
+	UpdateHoverChain(parameters, drag_parameters);
 
 	// Dispatch any 'onmousemove' events.
 	if (mouse_moved) {
@@ -439,52 +438,12 @@ void Document::ProcessMouseButtonDown(MouseButton button, int key_modifier_state
 	GenerateMouseEventParameters(parameters, mouse_position, button);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 
-	if (button == MouseButton::Left)
-	{
-		active = hover;
+	active = body->GetElementAtPoint(mouse_position);
+	if (active)
+		active->DispatchEvent(EventId::Mousedown, parameters);
 
-		bool propagate = true;
-
-		// Call 'onmousedown' on every item in the hover chain, and copy the hover chain to the active chain.
-		if (hover)
-			propagate = hover->DispatchEvent(EventId::Mousedown, parameters);
-
-		if (propagate)
-		{
-			// Check for a double-click on an element; if one has occured, we send the 'dblclick' event to the hover
-			// element. If not, we'll start a timer to catch the next one.
-			Point distance = mouse_position - last_click_mouse_position;
-			float mouse_distance_squared = distance.x * distance.x + distance.y * distance.y;
-			float max_mouse_distance = DOUBLE_CLICK_MAX_DIST * GetContext()->GetDensityIndependentPixelRatio();
-
-			double click_time = GetContext()->GetElapsedTime();
-
-			if (active == last_click_element &&
-				float(click_time - last_click_time) < DOUBLE_CLICK_TIME &&
-				mouse_distance_squared < max_mouse_distance * max_mouse_distance)
-			{
-				if (hover)
-					propagate = hover->DispatchEvent(EventId::Dblclick, parameters);
-
-				last_click_element = nullptr;
-				last_click_time = 0;
-			}
-			else
-			{
-				last_click_element = active;
-				last_click_time = click_time;
-			}
-		}
-
-		last_click_mouse_position = mouse_position;
-
+	if (button == MouseButton::Left) {
 		active_chain.insert(active_chain.end(), hover_chain.begin(), hover_chain.end());
-	}
-	else
-	{
-		// Not the primary mouse button, so we're not doing any special processing.
-		if (hover)
-			hover->DispatchEvent(EventId::Mousedown, parameters);
 	}
 }
 
@@ -493,33 +452,20 @@ void Document::ProcessMouseButtonUp(MouseButton button, int key_modifier_state) 
 	GenerateMouseEventParameters(parameters, mouse_position, button);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 
-	// Process primary click.
-	if (button == MouseButton::Left)
-	{
-		// The elements in the new hover chain have the 'onmouseup' event called on them.
-		if (hover)
-			hover->DispatchEvent(EventId::Mouseup, parameters);
+	active = body->GetElementAtPoint(mouse_position);
+	if (active) {
+		active->DispatchEvent(EventId::Mouseup, parameters);
+	}
 
-		// If the active element (the one that was being hovered over when the mouse button was pressed) is still being
-		// hovered over, we click it.
-		if (hover && active)
-		{
+	if (button == MouseButton::Left) {
+		if (active) {
 			active->DispatchEvent(EventId::Click, parameters);
 		}
-
-		// Unset the 'active' pseudo-class on all the elements in the active chain; because they may not necessarily
-		// have had 'onmouseup' called on them, we can't guarantee this has happened already.
 		std::for_each(active_chain.begin(), active_chain.end(), [](Element* element) {
 			element->SetPseudoClass(PseudoClass::Active, false);
 		});
 		active_chain.clear();
 		active = nullptr;
-	}
-	else
-	{
-		// Not the left mouse button, so we're not doing any special processing.
-		if (hover)
-			hover->DispatchEvent(EventId::Mouseup, parameters);
 	}
 }
 
@@ -533,7 +479,7 @@ void Document::ProcessMouseWheel(float wheel_delta, int key_modifier_state) {
 	}
 }
 
-void Document::UpdateHoverChain(const EventDictionary& parameters, const EventDictionary& drag_parameters, const Point& old_mouse_position) {
+void Document::UpdateHoverChain(const EventDictionary& parameters, const EventDictionary& drag_parameters) {
 	Point position = mouse_position;
 
 	hover = body->GetElementAtPoint(position);

@@ -1,4 +1,5 @@
 #include "modules.h"
+#include <lua.hpp>
 #include <bgfx/c99/bgfx.h>
 
 extern "C" {
@@ -22,25 +23,32 @@ int luaopen_remotedebug(lua_State* L);
 int luaopen_remotedebug_hookmgr(lua_State* L);
 int luaopen_remotedebug_stdio(lua_State* L);
 int luaopen_remotedebug_visitor(lua_State* L);
+int luaopen_rmlui(lua_State* L);
 int luaopen_rp3d_core(lua_State* L);
 int luaopen_thread(lua_State* L);
 int luaopen_window(lua_State* L);
 int luaopen_terrain(lua_State *L);
 int luaopen_font(lua_State *L);
+int luaopen_font_init(lua_State *L);
+int luaopen_font_truetype(lua_State *L);
 int luaopen_effekseer(lua_State* L);
 int luaopen_ltask(lua_State* L);
 int luaopen_ltask_bootstrap(lua_State* L);
 int luaopen_ltask_root(lua_State* L);
 int luaopen_ltask_exclusive(lua_State* L);
 int luaopen_vfs(lua_State* L);
+int luaopen_ecs_core(lua_State* L);
+int luaopen_fastio(lua_State* L);
 }
 
-const luaL_Reg* ant_modules() {
+void ant_loadmodules(lua_State* L) {
     static const luaL_Reg modules[] = {
         { "bgfx", luaopen_bgfx },
         { "bgfx.util", luaopen_bgfx_util },
         { "bgfx_get_interface", (lua_CFunction)bgfx_get_interface },
         { "font", luaopen_font },
+        { "font.init", luaopen_font_init },
+        { "font.truetype", luaopen_font_truetype },
         { "crypt", luaopen_crypt },
         { "datalist", luaopen_datalist },
         { "filesystem.cpp", luaopen_filesystem_cpp },
@@ -59,6 +67,7 @@ const luaL_Reg* ant_modules() {
         { "remotedebug.hookmgr", luaopen_remotedebug_hookmgr },
         { "remotedebug.stdio", luaopen_remotedebug_stdio },
         { "remotedebug.visitor", luaopen_remotedebug_visitor },
+        { "rmlui", luaopen_rmlui },
         { "rp3d.core", luaopen_rp3d_core },
         { "thread", luaopen_thread },
         { "window", luaopen_window },
@@ -68,15 +77,14 @@ const luaL_Reg* ant_modules() {
         { "ltask.bootstrap", luaopen_ltask_bootstrap},
         { "ltask.bootstrap", luaopen_ltask_bootstrap},
         { "ltask.exclusive", luaopen_ltask_exclusive},
+        { "ecs.core", luaopen_ecs_core},
+        { "fastio", luaopen_fastio},
         { NULL, NULL },
     };
-    return modules;
-}
 
-void ant_openlibs(lua_State* L) {
     const luaL_Reg *lib;
     luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
-    for (lib = ant_modules(); lib->func; lib++) {
+    for (lib = modules; lib->func; lib++) {
         lua_pushcfunction(L, lib->func);
         lua_setfield(L, -2, lib->name);
     }

@@ -24,7 +24,7 @@ public:
 private:
 	float					speed_{ 1.0f };
 	bool					loop_{ false };
-	bool					playing{ true };
+	bool					playing_{ true };
 	Effekseer::Vector3D		target_position_;
 	Effekseer::Manager*		manager_{ nullptr };
 	Effekseer::EffectRef	effect_{ nullptr };

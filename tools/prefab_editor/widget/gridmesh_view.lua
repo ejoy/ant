@@ -156,7 +156,7 @@ function m.set_grid(grid)
 end
 
 local function colori2f(ic)
-    return {((ic & 0xFF000000) >> 24) / 255.0, ((ic & 0x00FF0000) >> 16) / 255.0, ((ic & 0x0000FF00) >> 8) / 255.0, (ic & 0xFF) / 255.0 }
+    return {(ic & 0xFF) / 255.0, ((ic & 0x0000FF00) >> 8) / 255.0, ((ic & 0x00FF0000) >> 16) / 255.0, ((ic & 0xFF000000) >> 24) / 255.0}
 end
 
 local current_color = colori2f(brush_def.color[1])

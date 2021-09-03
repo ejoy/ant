@@ -18,6 +18,19 @@ local irender = world:interface "ant.render|irender"
 local imesh 	= world:interface "ant.asset|imesh"
 local bgfx = require "bgfx"
 
+local function create_dynamic_mesh(layout, vb, ib)
+	local declmgr = import_package "ant.render".declmgr
+	local decl = declmgr.get(layout)
+	return {
+		vb = {
+			{handle=bgfx.create_dynamic_vertex_buffer(bgfx.memory_buffer("fffd", vb), declmgr.get(layout).handle, "a")}
+		},
+		ib = {
+			handle = bgfx.create_dynamic_index_buffer(bgfx.memory_buffer("w", ib), "a")
+		}
+	}
+end
+
 local function create_mesh(vb_lst, ib)
 	local mesh = {
 		vb = {
@@ -69,45 +82,71 @@ end
 
 ientity.create_simple_render_entity = create_simple_render_entity
 
--- function ientity.create_grid_mesh_entity(name, w, h, size, materialpath)
+function ientity.create_grid_mesh_entity(name, w, h, size, color, materialpath)
+	local vb = {
+	}
+	local ib = {
+	}
+	local gap = size / 20.0
+	local total_width = w * size
+	local total_height = h * size
+	for i = 0, h - 1 do
+		local posz = -total_height * 0.5 + i * size + gap
+		for j = 0, w - 1 do
+			local posx = -total_width * 0.5 + j * size + gap
+			local realcolor = (type(color) == "table") and color[i + 1][ j + 1] or color
+			--[[
+			v1-----v2
+			|      |
+			|      |
+			v0-----v3
+			]]
+			--v0
+			vb[#vb + 1] = posx
+			vb[#vb + 1] = 0.0
+			vb[#vb + 1] = posz
+			vb[#vb + 1] = realcolor
+			--v1
+			vb[#vb + 1] = posx
+			vb[#vb + 1] = 0.0
+			vb[#vb + 1] = posz + size - gap
+			vb[#vb + 1] = realcolor
+			--v2
+			vb[#vb + 1] = posx + size - gap
+			vb[#vb + 1] = 0.0
+			vb[#vb + 1] = posz + size - gap
+			vb[#vb + 1] = realcolor
+			--v3
+			vb[#vb + 1] = posx + size - gap
+			vb[#vb + 1] = 0.0
+			vb[#vb + 1] = posz
+			vb[#vb + 1] = realcolor
+			--ib
+			local grid_idx = (i * w + j) * 4
+			ib[#ib + 1] = grid_idx + 0
+			ib[#ib + 1] = grid_idx + 1
+			ib[#ib + 1] = grid_idx + 2
+			ib[#ib + 1] = grid_idx + 0
+			ib[#ib + 1] = grid_idx + 2
+			ib[#ib + 1] = grid_idx + 3
+		end
+	end
+	local data = {
+		transform = srt or {},
+		material = materialpath,
+		state = ies.create_state "visible",
+		name = name or "GridMesh",
+		scene_entity = true,
+		mesh = create_dynamic_mesh("p3|c40niu", vb, ib) --create_mesh({"p3|c40niu", vb}, ib)
+	}
 
--- 	local vb = {
--- 		-0.5, 0, 0.5, 0, 1, 0,	--left top
--- 		0.5,  0, 0.5, 0, 1, 0,	--right top
--- 		-0.5, 0,-0.5, 0, 1, 0,	--left bottom
--- 		-0.5, 0,-0.5, 0, 1, 0,
--- 		0.5,  0, 0.5, 0, 1, 0,
--- 		0.5,  0,-0.5, 0, 1, 0,	--right bottom
--- 	}
--- 	local ib = {
-
--- 	}
--- 	local total_width = w * size
--- 	local total_height = h * size
--- 	for i = 0, h - 1 do
--- 		local posz = -total_height * 0.5 + i * size
--- 		for j = 0, w - 1 do
--- 			local posx = -total_width * 0.5 + j * size
--- 			local grid_offset = (i * w + j) * 4 * 4
--- 			--vb[grid_offset + 1] = 
--- 		end
--- 	end
--- 	local data = {
--- 		transform = srt or {},
--- 		material = materialpath,
--- 		state = ies.create_state "visible",
--- 		name = name or "GridMesh",
--- 		scene_entity = true,
--- 		mesh = create_mesh({"p3|c40niu", vb}, ib)
--- 	}
-
--- 	return world:deprecated_create_entity{
--- 		policy = {
--- 			"ant.render|render",
--- 			"ant.general|name"},
--- 		data = data,
--- 	}
--- end
+	return vb, world:deprecated_create_entity{
+		policy = {
+			"ant.render|render",
+			"ant.general|name"},
+		data = data,
+	}
+end
 
 function ientity.create_grid_entity_simple(name, w, h, unit, srt)
 	w = w or 64

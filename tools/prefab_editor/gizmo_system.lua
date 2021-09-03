@@ -25,6 +25,9 @@ local uniform_scale = false
 local gizmo_scale = 1.0
 local local_space = false
 local global_axis_eid
+local global_axis_x_eid
+local global_axis_y_eid
+local global_axis_z_eid
 local axis_plane_area
 
 local inspector = require "widget.inspector"(world)
@@ -71,7 +74,7 @@ end
 function gizmo:update_position(worldpos)
 	local newpos
 	if worldpos then
-		local parent_worldmat = iom.worldmat(world[gizmo.target_eid].parent)
+		local parent_worldmat = world[gizmo.target_eid].parent and iom.worldmat(world[gizmo.target_eid].parent) or nil
 		local localPos
 		if not parent_worldmat then
 			localPos = worldpos
@@ -199,17 +202,17 @@ local function mouse_hit_plane(screen_pos, plane_info)
 end
 
 local function update_global_axis()
-	if not global_data.viewport or not global_axis_eid then return end
-	local screenpos = {global_data.viewport.x + 50, global_data.viewport.y + global_data.viewport.h - 50}
-	local worldPos = utils.ndc_to_world(camera_mgr.main_camera, iom.screen_to_ndc(camera_mgr.main_camera, {screenpos[1], screenpos[2], 0.5}))--mouse_hit_plane({global_data.viewport.x + 50, global_data.viewport.y + global_data.viewport.h  - 50}, {dir = {0,1,0}, pos = {0,0,0}})
-	if worldPos then
-		iom.set_position(global_axis_eid, math3d.totable(worldPos))
+	if not global_data.viewport then return end
+	for v in world.w:select "eid:in" do
+		if v.eid == global_axis_x_eid or v.eid == global_axis_y_eid or v.eid == global_axis_z_eid then
+			local screenpos = {global_data.viewport.x + 50, global_data.viewport.y + global_data.viewport.h - 50}
+			local worldPos = math3d.totable(utils.ndc_to_world(camera_mgr.main_camera, iom.screen_to_ndc(camera_mgr.main_camera, {screenpos[1], screenpos[2], 0.5})))
+			world.w:sync("render_object:in scene:in", v)
+			v.scene.srt = {s = {1.5,1.5,1.5}, r = {0,0,0,1}, t = {worldPos[1], worldPos[2], worldPos[3]}}
+			v.scene._worldmat = math3d.matrix(v.scene.srt)
+			v.render_object.worldmat = v.scene._worldmat
+		end
 	end
-	--print("gizmo_scale", gizmo_scale)
-	--todo：
-	-- local adjustScale = (gizmo_scale < 4.5) and 4.5 or gizmo_scale
-	-- print("global_axis_eid scale:", adjustScale * 0.5)
-	-- iom.set_scale(global_axis_eid, adjustScale * 0.5)
 end
 
 function gizmo:update_scale()
@@ -377,32 +380,15 @@ function gizmo_sys:post_init()
 	create_scale_axis(gizmo.sy, {0, gizmo_const.AXIS_LEN, 0})
 	create_scale_axis(gizmo.sz, {0, 0, gizmo_const.AXIS_LEN})
 
-	global_axis_eid = world:deprecated_create_entity{
-		policy = {
-			"ant.general|name",
-			"ant.scene|transform_policy",
-			"ant.scene|hierarchy_policy",
-		},
-		data = {
-			transform = {s = 2.5},
-			name = "global axis root",
-			scene_entity = true,
-		},
-	}
-	ies.set_state(global_axis_eid, "auxgeom", true)
-	local new_eid = computil.create_line_entity({}, {0, 0, 0}, {0.1, 0, 0})
-	ies.set_state(new_eid, "auxgeom", true)
-	imaterial.set_property(new_eid, "u_color", gizmo_const.COLOR_X)
-	iss.set_parent(new_eid, global_axis_eid)
-	new_eid = computil.create_line_entity({}, {0, 0, 0}, {0, 0.1, 0})
-	ies.set_state(new_eid, "auxgeom", true)
-	imaterial.set_property(new_eid, "u_color", gizmo_const.COLOR_Y)
-	iss.set_parent(new_eid, global_axis_eid)
-	new_eid = computil.create_line_entity({}, {0, 0, 0}, {0, 0, 0.1})
-	ies.set_state(new_eid, "auxgeom", true)
-	imaterial.set_property(new_eid, "u_color", gizmo_const.COLOR_Z)
-	iss.set_parent(new_eid, global_axis_eid)
-	--iom.set_scale(global_axis_eid, 2.5)
+	global_axis_x_eid = computil.create_line_entity({}, {0, 0, 0}, {0.1, 0, 0})
+	ies.set_state(global_axis_x_eid, "auxgeom", true)
+	imaterial.set_property(global_axis_x_eid, "u_color", gizmo_const.COLOR_X)
+	global_axis_y_eid = computil.create_line_entity({}, {0, 0, 0}, {0, 0.1, 0})
+	ies.set_state(global_axis_y_eid, "auxgeom", true)
+	imaterial.set_property(global_axis_y_eid, "u_color", gizmo_const.COLOR_Y)
+	global_axis_z_eid = computil.create_line_entity({}, {0, 0, 0}, {0, 0, 0.1})
+	ies.set_state(global_axis_z_eid, "auxgeom", true)
+	imaterial.set_property(global_axis_z_eid, "u_color", gizmo_const.COLOR_Z)
 end
 local mb_main_camera_changed = world:sub{"camera_changed", "main_queue"}
 function gizmo_sys:entity_ready()
@@ -457,6 +443,7 @@ local keypress_mb = world:sub{"keyboard"}
 
 local pickup_mb = world:sub {"pickup"}
 
+local camera_event = world:sub{"Camera"}
 
 local function select_axis_plane(x, y)
 	if gizmo.mode ~= gizmo_const.MOVE then
@@ -993,7 +980,6 @@ function gizmo_sys:handle_event()
 			gizmo:update_position(wp)
 		end
 	end
-
 	for _, vp in viewpos_event:unpack() do
 		global_data.viewport = vp
 		update_global_axis()
@@ -1053,7 +1039,7 @@ function gizmo_sys:handle_event()
 					elseif gizmo.mode == gizmo_const.ROTATE then
 						cmd_queue:record({action = gizmo_const.ROTATE, eid = target, oldvalue = math3d.totable(last_rotate), newvalue = math3d.totable(iom.get_rotation(target))})
 					elseif gizmo.mode == gizmo_const.MOVE then
-						local pw = iom.worldmat(world[target].parent)
+						local pw = world[target].parent and iom.worldmat(world[target].parent) or nil
 						local localPos = last_gizmo_pos
 						if pw then
 							localPos = math3d.totable(math3d.transform(math3d.inverse(pw), last_gizmo_pos, 1))
@@ -1122,5 +1108,13 @@ function gizmo_sys:handle_event()
 		end
 		ctrl_state = state.CTRL
 	end
-	update_global_axis()
+	local global_axis_dirty
+	for _, what in camera_event:unpack() do
+		if what == "zoom" or what == "pan" or what == "rotate" then
+			global_axis_dirty = true
+		end
+	end
+	if global_axis_dirty then
+		update_global_axis()
+	end
 end

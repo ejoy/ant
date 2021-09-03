@@ -2,9 +2,12 @@ local ltask = require "ltask"
 local exclusive = require "ltask.exclusive"
 
 local thread = require "thread"
-local threadid = thread.id
+
+local Channel <const> = "VfsService"
+
+thread.newchannel(Channel)
 local io_req = thread.channel_produce "IOreq"
-local io_resp = thread.channel_consume ("IOresp" .. threadid)
+local io_resp = thread.channel_consume(Channel)
 
 local function npath(path)
 	return path:match "^/?(.-)/?$"
@@ -13,7 +16,7 @@ end
 local queue = {}
 
 local function request(what, ...)
-	io_req(what, threadid, ...)
+	io_req(Channel, what, ...)
 	local token = {}
 	queue[#queue+1] = token
 	return ltask.wait(token)

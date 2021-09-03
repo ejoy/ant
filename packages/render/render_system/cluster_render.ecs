@@ -6,6 +6,7 @@ system "cluster_forward_system"
     .implement "render_system/cluster_render.lua"
     .method "init"
     .method "init_world"
+    .method "update_system_properties"
     .method "render_preprocess"
 
 policy_v2 "cluster_render"

@@ -1,5 +1,9 @@
 #pragma once
 
+#if defined(__cplusplus)
 #include <lua.hpp>
-
-extern "C" void ant_openlibs(lua_State* L);
+extern "C"
+#else
+#include <lua.h>
+#endif
+void ant_loadmodules(lua_State* L);

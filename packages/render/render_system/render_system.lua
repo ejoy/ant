@@ -42,7 +42,7 @@ function render_sys:entity_ready()
 	end
 end
 
-function render_sys:update_system_properties()
+function render_sys:commit_system_properties()
 	isp.update()
 end
 

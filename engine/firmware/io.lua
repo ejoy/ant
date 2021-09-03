@@ -29,16 +29,6 @@ local function init_channels()
 	-- init channels
 	channel.req = thread.channel_consume "IOreq"
 
-	local channel_index = {}
-	channel.resp = setmetatable({} , channel_index)
-
-	function channel_index:__index(id)
-		assert(type(id) == "number")
-		local c = assert(thread.channel_produce("IOresp" .. id))
-		self[id] = c
-		return c
-	end
-
 	local channel_user = {}
 	channel.user = setmetatable({} , channel_user)
 
@@ -89,7 +79,7 @@ local function read_config(path, env)
 end
 
 local function init_config()
-	local c = channel.req()
+	local _, c = channel.req()
 	config.repopath = assert(c.repopath)
 	config.nettype = assert(c.nettype)
 	config.address = assert(c.address)
@@ -166,7 +156,12 @@ end
 -- response io request with id
 local function response_id(id, ...)
 	if id then
-		channel.resp[id](...)
+		if type(id) == "string" then
+			local c = thread.channel_produce(id)
+			c(...)
+		else
+			channel.req:ret(id, ...)
+		end
 	end
 end
 
@@ -177,7 +172,7 @@ end
 
 local function logger_dispatch(t)
 	for i = 1, #logqueue do
-		t.SEND("LOG", logqueue[i])
+		t.SEND(false, "LOG", logqueue[i])
 		logqueue[i] = nil
 	end
 end
@@ -243,7 +238,7 @@ function offline.EXIT(id)
 	error "EXIT"
 end
 
-function offline.SEND(msg, ...)
+function offline.SEND(_,msg, ...)
 	if msg == "LOG" then
 		_print(...)
 	end
@@ -256,10 +251,10 @@ do
 	offline.SUBSCIBE = noresponse_function
 end
 
-local function offline_dispatch(cmd, id, ...)
+local function offline_dispatch(id, cmd, ...)
 	local f = offline[cmd]
 	if not f then
-		print("Unsupported offline command : ", cmd, id)
+		print("Unsupported offline command : ", cmd)
 	else
 		f(id, ...)
 	end
@@ -630,7 +625,7 @@ function online.SUBSCIBE(channel_name, message)
 	connection.subscibe[message] = channel_name
 end
 
-function online.SEND(...)
+function online.SEND(_, ...)
 	connection_send(...)
 end
 
@@ -654,7 +649,7 @@ local function dispatch_net(cmd, ...)
 	f(...)
 end
 
-local function online_dispatch(ok, cmd, ...)
+local function online_dispatch(ok, id, cmd, ...)
 	if not ok then
 		-- no req
 		return false
@@ -663,7 +658,7 @@ local function online_dispatch(ok, cmd, ...)
 	if not f then
 		print("Unsupported online command : ", cmd)
 	else
-		f(...)
+		f(id, ...)
 		--local ok, err = xpcall(f, debug.traceback, ...)
 		--if not ok then
 		--	print(err)

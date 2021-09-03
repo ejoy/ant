@@ -1,10 +1,10 @@
-local fm = require "core.fileManager"
+local fm = require "core.filemanager"
 
 return function (env)
     local package = {
         config = table.concat({"/",";","?","!","-"}, "\n"),
         loaded = {},
-        path = './?.lua'
+        path = '?.lua'
     }
     local function searchpath(name, path)
         name = string.gsub(name, '%.', '/')
@@ -22,7 +22,7 @@ return function (env)
         if not path then
             return err1
         end
-        local func, err2 = loadfile(fm.realpath(path), "bt", env)
+        local func, err2 = loadfile(fm.vfspath(path), "bt", env)
         if not func then
             error(("error loading module '%s' from file '%s':\n\t%s"):format(name, path, err2))
         end

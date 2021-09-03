@@ -1,6 +1,6 @@
 local console = require "core.sandbox.console"
 local createSandbox = require "core.sandbox.create"
-local fileManager = require "core.fileManager"
+local filemanager = require "core.filemanager"
 local event = require "core.event"
 local createElement = require "core.DOM.element"
 local createEvent = require "core.DOM.event"
@@ -34,7 +34,7 @@ function m.OnDocumentDestroy(document)
 end
 function m.OnLoadInlineScript(document, content, source_path, source_line)
     local _ <close> = fs.switch_sync()
-	local path = fileManager.realpath(source_path)
+	local path = filemanager.vfspath(source_path)
 	if not path then
 		console.warn(("file '%s' does not exist."):format(source_path))
 		return
@@ -49,14 +49,14 @@ function m.OnLoadInlineScript(document, content, source_path, source_line)
 end
 function m.OnLoadExternalScript(document, source_path)
     local _ <close> = fs.switch_sync()
-	local path = fileManager.realpath(source_path)
+	local path = filemanager.vfspath(source_path)
 	if not path then
 		console.warn(("file '%s' does not exist."):format(source_path))
 		return
 	end
 	local f, err = loadfile(path, "bt", environment[document])
 	if not f then
-		console.warn(err)
+		console.warn(("file '%s' load failed: %s."):format(source_path, err))
 		return
 	end
 	invoke(f)
@@ -105,7 +105,7 @@ end
 
 function m.OnOpenFile(path)
     local _ <close> = fs.switch_sync()
-	return fileManager.realpath(path)
+	return filemanager.realpath(path)
 end
 
 return m

@@ -277,7 +277,8 @@ function m:create(what, config)
                     scene_entity = true,
                     state = ies.create_state "visible|selectable",
                     transform = get_local_transform({s = 50}, parent_eid),
-                    material = "/pkg/ant.resources/materials/singlecolor.material",
+                    --material = "/pkg/ant.resources/materials/singlecolor.material",
+                    material = "/pkg/ant.resources/materials/pbr_default.material",
                     mesh = geom_mesh_file[config.type],
                     name = config.type .. geometricidx
                 }
@@ -295,6 +296,26 @@ function m:create(what, config)
             m:add_prefab(gd.editor_package_path .. "res/sphere.prefab")
         elseif config.type == "torus(prefab)" then
             m:add_prefab(gd.editor_package_path .. "res/torus.prefab")
+        end
+    elseif what == "enable_default_light" then
+        if not self.default_light then
+            local ilight = world:interface "ant.render|light" 
+            local _, newlight = ilight.create({
+                transform = {t = {0, 5, 0}, r = {math.rad(130), 0, 0}},
+                name = "directional" .. gen_light_id(),
+                light_type = "directional",
+                color = {1, 1, 1, 1},
+                intensity = 2,
+                range = 1,
+                inner_radian = math.rad(45),
+                outter_radian = math.rad(45)
+            })
+            self.default_light = newlight
+        end
+    elseif what == "disable_default_light" then
+        if self.default_light then
+            world:remove_entity(self.default_light[1])
+            self.default_light = nil
         end
     elseif what == "light" then
         if config.type == "directional" or config.type == "point" or config.type == "spot" then      
@@ -656,7 +677,12 @@ function m:reload()
     -- local prefab = utils.deep_copy(self.prefab)
     -- prefab.__class = new_template
     -- self:open_prefab(prefab)
-    self:open(tostring(self.prefab))
+    local filename = tostring(self.prefab)
+    if filename == 'nil' then
+        self:save_prefab(tostring(gd.project_root) .. "/res/__temp__.prefab")
+    else
+        self:open(filename)
+    end
 end
 
 local nameidx = 0
@@ -768,9 +794,11 @@ local utils = require "common.utils"
 
 function m:save_prefab(path)
     local filename
-    if not self.prefab and not path then
-        filename = widget_utils.get_saveas_path("Prefab", ".prefab")
-        if not filename then return end
+    if not path then
+        if not self.prefab or (string.find(tostring(self.prefab), "__temp__")) then
+            filename = widget_utils.get_saveas_path("Prefab", ".prefab")
+            if not filename then return end
+        end
     end
     if path then
         filename = string.gsub(path, "\\", "/")

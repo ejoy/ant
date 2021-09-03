@@ -1,6 +1,12 @@
 local access = {}
 
-local lfs = require "filesystem.local"
+local lfs = require "filesystem.cpp"
+
+local function raw_dofile(path)
+	local file <close> = assert(io.open(path, 'rb'))
+	local func = assert(load(file:read 'a', '@' .. path))
+	return func()
+end
 
 local function load_package(path)
     if not lfs.is_directory(path) then
@@ -10,7 +16,7 @@ local function load_package(path)
     if not lfs.exists(cfgpath) then
         error(('`%s` does not exist.'):format(cfgpath:string()))
     end
-    local config = dofile(cfgpath:string())
+    local config = raw_dofile(cfgpath:string())
     for _, field in ipairs {'name'} do
         if not config[field] then
             error(('Missing `%s` field in `%s`.'):format(field, cfgpath:string()))
@@ -30,7 +36,7 @@ function access.addmount(repo, name, path)
 	if p == nil then
 		repo._mountpoint[name] = lfs.path(path)
 		repo._mountname[#repo._mountname+1] = name
-	elseif p:string() == path then
+	elseif p:string() == path:string() then
 	else
 		error("Duplicate mount: " ..name)
 	end
@@ -43,7 +49,7 @@ function access.readmount(repo)
 		mountpoint[name] = path
 		mountname[#mountname+1] = name
 	end
-	local f <close> = assert(lfs.open(repo._root / ".mount", "rb"))
+	local f <close> = assert(io.open((repo._root / ".mount"):string(), "rb"))
 	for line in f:lines() do
 		local name, path = line:match "^%s*(.-)%s+(.-)%s*$"
 		if name == nil then
@@ -122,7 +128,7 @@ function access.list_files(repo, filepath)
 		end
 	end
 	local ignorepaths = rpath / ".ignore"
-	local f = lfs.open(ignorepaths, "rb")
+	local f = io.open(ignorepaths:string(), "rb")
 	if f then
 		for name in f:lines() do
 			files[name] = nil

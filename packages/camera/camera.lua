@@ -124,10 +124,10 @@ local function view_proj(worldmat, updir, frustum)
     return viewmat, projmat, math3d.mul(projmat, viewmat)
 end
 
-function ic.world_to_screen(eid, world_pos)
-    local vp = ic.calc_viewproj(eid)
-	local proj_pos = math3d.totable(math3d.transformH(vp, world_pos, 1))
+function ic.world_to_screen(world_pos)
     local mq = w:singleton("main_queue", "camera_ref:in render_target:in")
+    local vp = ic.calc_viewproj(mq.camera_ref)
+	local proj_pos = math3d.totable(math3d.transformH(vp, world_pos, 1))
     local viewport = mq.render_target.view_rect
 	return {(proj_pos[1] + 1) * viewport.w * 0.5, (1 - (proj_pos[2] + 1) * 0.5) * viewport.h, 0}
 end

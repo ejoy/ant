@@ -67,7 +67,7 @@ end
 
 function m:entity_init()
     for _ in w:select "INIT main_queue render_target:in" do
-        irq.set_view_clear_color("main_queue", 0x000000ff)--0xa0a0a0ff
+        irq.set_view_clear_color("main_queue", 0x353535ff)--0xa0a0a0ff
         
         local main_camera = icamera.create {
             eyepos = {-200, 100, 200, 1},
