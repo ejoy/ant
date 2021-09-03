@@ -32,6 +32,18 @@ function m.preload_dir(dir)
     import_font(dir)
 end
 
+function m.vfspath(path)
+    for i = #directorys, 1, -1 do
+        local file = directorys[i] / path
+        if fs.exists(file) then
+            if file:equal_extension "texture" or file:equal_extension "png" then
+                return
+            end
+            return file:string()
+        end
+    end
+end
+
 function m.realpath(path)
     for i = #directorys, 1, -1 do
         local file = directorys[i] / path
