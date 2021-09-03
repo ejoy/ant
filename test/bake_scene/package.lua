@@ -1,9 +1,8 @@
 return {
-    name = "ant.tool.baker",
-    --entry = "bake",
+    name = "ant.test.bake_scene",
     ecs = {
         import = {
-            "@ant.tool.baker",
+            "@ant.test.bake_scene",
         },
         pipeline = {
             "init",
@@ -11,7 +10,7 @@ return {
             "exit",
         },
         system = {
-            "ant.tool.baker|init_system",
+            "ant.test.bake_scene|init_system",
         }
     },
 }

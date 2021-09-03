@@ -1,13 +1,13 @@
 fx:
-    vs: /pkg/ant.tool.lightmap_baker/assets/example/shaders/vs_example.sc
-    fs: /pkg/ant.tool.lightmap_baker/assets/example/shaders/fs_example.sc
+    vs: /pkg/ant.tool.baker/assets/GPU/radiosity/example/shaders/vs_example.sc
+    fs: /pkg/ant.tool.baker/assets/GPU/radiosity/example/shaders/fs_example.sc
     setting:
         lighting:off
 properties:
     s_lightmap:
         stage: 0
-        texture: /pkg/ant.tool.lightmap_baker/assets/example/materials/black.texture
-        #texture: /pkg/ant.tool.lightmap_baker/assets/textures/lm.texture
+        texture: /pkg/ant.tool.baker/GPU/radiosity/assets/example/materials/black.texture
+        #texture: /pkg/ant.tool.baker/GPU/radiosity/assets/textures/lm.texture
 
 state:
     ALPHA_REF: 0

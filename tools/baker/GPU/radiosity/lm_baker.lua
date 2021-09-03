@@ -14,7 +14,7 @@ local iom = world:interface "ant.objcontroller|obj_motion"
 
 local lm_baker = ecs.system "lightmap_baker_system"
 
-local scenepath<const>			= fs.path "/pkg/ant.tool.lightmap_baker/assets/scene"
+local scenepath<const>			= fs.path "/pkg/ant.tool.baker/GPU/radiosity/assets/scene"
 local sceneprefab<const>		= scenepath / "scene.prefab"
 
 function lm_baker:init_world()

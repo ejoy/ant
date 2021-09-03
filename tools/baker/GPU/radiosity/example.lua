@@ -364,12 +364,8 @@ local function create_test_entities()
                 hemisize = 64,
             },
             transform = {},
-            material = "/pkg/ant.tool.lightmap_baker/assets/example/materials/example.material",
-            --material = "/pkg/ant.tool.lightmap_baker/assets/face_test.material",
-            mesh = "/pkg/ant.tool.lightmap_baker/assets/example/meshes/gazebo.glb|meshes/Node-Mesh_P1.meshbin",
-            --mesh = create_example_mesh(),
-            --mesh = plane_mesh(),
-            --mesh = face_test(),
+            material = "/pkg/ant.tool.baker/GPU/radiosity/assets/example/materials/example.material",
+            mesh = "/pkg/ant.tool.baker/GPU/radiosity/assets/example/meshes/gazebo.glb|meshes/Node-Mesh_P1.meshbin",
             name = "lightmap_example",
             state = 1,
         }
@@ -383,7 +379,7 @@ local function create_test_entities()
         data = {
             scene_entity = true,
             transform = {},
-            material = "/pkg/ant.tool.lightmap_baker/assets/face_test.material",
+            material = "/pkg/ant.tool.baker/GPU/radiosity/assets/face_test.material",
             mesh = face_test(),
             name = "cube",
             state = 0,

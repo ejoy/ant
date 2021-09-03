@@ -1,11 +1,11 @@
 fx:
-  fs: /pkg/ant.tool.lightmap_baker/assets/shaders/render/fs_mesh.sc
-  vs: /pkg/ant.tool.lightmap_baker/assets/shaders/render/vs_mesh.sc
+  fs: /pkg/ant.tool.baker/GPU/radiosity/assets/shaders/render/fs_mesh.sc
+  vs: /pkg/ant.tool.baker/GPU/radiosity/assets/shaders/render/vs_mesh.sc
   setting:
     lighting: off
 properties:
   u_lightdir: {0.0, 1.0, 0.0, 0.0}
   s_basecolor:
     stage: 0
-    texture: /pkg/ant.tool.lightmap_baker/assets/textures/plane.texture
+    texture: /pkg/ant.tool.baker/GPU/radiosity/assets/textures/plane.texture
 state: /pkg/ant.resources/materials/states/default.state

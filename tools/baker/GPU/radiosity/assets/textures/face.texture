@@ -1,5 +1,5 @@
 normalmap: false
-path: /pkg/ant.tool.lightmap_baker/assets/color_text.png
+path: /pkg/ant.tool.baker/GPU/radiosity/assets/color_text.png
 sRGB: true
 compress:
   android: ASTC6x6
