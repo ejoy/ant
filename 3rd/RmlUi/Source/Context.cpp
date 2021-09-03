@@ -136,19 +136,19 @@ bool Context::ProcessMouseMove(MouseButton button, int x, int y, int key_modifie
 	return true;
 }
 
-bool Context::ProcessMouseButtonDown(MouseButton button, int key_modifier_state) {
+bool Context::ProcessMouseButtonDown(MouseButton button, int x, int y, int key_modifier_state) {
 	if (!focus) {
 		return false;
 	}
-	focus->ProcessMouseButtonDown(button, key_modifier_state);
+	focus->ProcessMouseButtonDown(button, x, y, key_modifier_state);
 	return true;
 }
 
-bool Context::ProcessMouseButtonUp(MouseButton button, int key_modifier_state) {
+bool Context::ProcessMouseButtonUp(MouseButton button, int x, int y, int key_modifier_state) {
 	if (!focus) {
 		return false;
 	}
-	focus->ProcessMouseButtonUp(button, key_modifier_state);
+	focus->ProcessMouseButtonUp(button, x, y, key_modifier_state);
 	return true;
 }
 

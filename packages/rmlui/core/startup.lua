@@ -82,9 +82,25 @@ function S.mouse(x, y, type, state)
     if state == MOUSE_STATE_MOVE then
         rmlui.ContextProcessMouseMove(context, type-1, x, y)
     elseif state == MOUSE_STATE_DOWN then
-        rmlui.ContextProcessMouseButtonDown(context, type-1)
+        rmlui.ContextProcessMouseButtonDown(context, type-1, x, y)
     elseif state == MOUSE_STATE_UP then
-        rmlui.ContextProcessMouseButtonUp(context, type-1)
+        rmlui.ContextProcessMouseButtonUp(context, type-1, x, y)
+    end
+end
+
+function S.touch(x, y, id, state)
+    if not context then
+        return
+    end
+    local TOUCH_STATE_DOWN <const> = 1
+    local TOUCH_STATE_MOVE <const> = 2
+    local TOUCH_STATE_UP <const> = 3
+    if state == TOUCH_STATE_MOVE then
+        rmlui.ContextProcessMouseMove(context, 0, x, y)
+    elseif state == TOUCH_STATE_DOWN then
+        rmlui.ContextProcessMouseButtonDown(context, 0, x, y)
+    elseif state == TOUCH_STATE_UP then
+        rmlui.ContextProcessMouseButtonUp(context, 0, x, y)
     end
 end
 
@@ -112,6 +128,6 @@ S.close = windowManager.close
 S.postMessage = windowManager.postMessage
 S.preload_dir = filemanager.preload_dir
 
-ltask.send(ServiceWindow, "subscribe", "mouse")
+ltask.send(ServiceWindow, "subscribe", "mouse", "touch")
 
 return S

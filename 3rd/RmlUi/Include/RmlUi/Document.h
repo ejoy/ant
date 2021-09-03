@@ -80,8 +80,8 @@ public:
 	bool ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state);
 	bool ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state);
 	void ProcessMouseMove(MouseButton button, int x, int y, int key_modifier_state);
-	void ProcessMouseButtonDown(MouseButton button, int key_modifier_state);
-	void ProcessMouseButtonUp(MouseButton button, int key_modifier_state);
+	void ProcessMouseButtonDown(MouseButton button, int x, int y, int key_modifier_state);
+	void ProcessMouseButtonUp(MouseButton button, int x, int y, int key_modifier_state);
 	void ProcessMouseWheel(float wheel_delta, int key_modifier_state);
 	void OnElementDetach(Element* element);
 	void SetDimensions(const Size& dimensions);

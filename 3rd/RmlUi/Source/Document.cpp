@@ -47,9 +47,6 @@
 #include <set>
 #include <fstream>
 
-static constexpr float DOUBLE_CLICK_TIME = 0.5f;     // [s]
-static constexpr float DOUBLE_CLICK_MAX_DIST = 3.f;  // [dp]
-
 namespace Rml {
 
 Document::Document(const Size& _dimensions)
@@ -433,12 +430,13 @@ void Document::ProcessMouseMove(MouseButton button, int x, int y, int key_modifi
 	}
 }
 
-void Document::ProcessMouseButtonDown(MouseButton button, int key_modifier_state) {
+void Document::ProcessMouseButtonDown(MouseButton button, int x, int y, int key_modifier_state) {
+	Point mouse {x, y};
 	EventDictionary parameters;
-	GenerateMouseEventParameters(parameters, mouse_position, button);
+	GenerateMouseEventParameters(parameters, mouse, button);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 
-	active = body->GetElementAtPoint(mouse_position);
+	active = body->GetElementAtPoint(mouse);
 	if (active)
 		active->DispatchEvent(EventId::Mousedown, parameters);
 
@@ -447,12 +445,13 @@ void Document::ProcessMouseButtonDown(MouseButton button, int key_modifier_state
 	}
 }
 
-void Document::ProcessMouseButtonUp(MouseButton button, int key_modifier_state) {
+void Document::ProcessMouseButtonUp(MouseButton button, int x, int y, int key_modifier_state) {
+	Point mouse {x, y};
 	EventDictionary parameters;
-	GenerateMouseEventParameters(parameters, mouse_position, button);
+	GenerateMouseEventParameters(parameters, mouse, button);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 
-	active = body->GetElementAtPoint(mouse_position);
+	active = body->GetElementAtPoint(mouse);
 	if (active) {
 		active->DispatchEvent(EventId::Mouseup, parameters);
 	}
