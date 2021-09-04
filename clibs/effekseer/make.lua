@@ -15,7 +15,7 @@ lm:source_set "source_effekseer" {
     },
     sources = {
         "*.cpp",
-        EffekseerDir.."/*.cpp",
+        EffekseerDir.."/**.cpp",
     },
     msvc = {
         flags = {

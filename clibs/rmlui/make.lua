@@ -10,7 +10,7 @@ lm:source_set "yoga" {
         ".",
     },
     sources = {
-        "yoga/*.cpp",
+        "yoga/**.cpp",
     }
 }
 
