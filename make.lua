@@ -54,6 +54,7 @@ lm.visibility = "default"
 lm:import "3rd/scripts/bgfx.lua"
 lm:import "3rd/scripts/ozz-animation.lua"
 lm:import "3rd/scripts/reactphysics3d.lua"
+lm:import "3rd/scripts/sdl.lua"
 lm:import "runtime/make.lua"
 
 lm:phony "runtime" {

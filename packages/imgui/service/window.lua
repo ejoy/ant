@@ -7,6 +7,7 @@ local event = {
     mouse = {},
     touch = {},
     keyboard = {},
+    update = {},
 }
 
 local S = {}
