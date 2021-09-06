@@ -13,7 +13,7 @@ local bgfx      = require "bgfx"
 local log = print
 local log_detail = log
 
-local lightmapid= require "lightmap_id"
+local lm_prefilter= require "lightmap_prefilter"
 
 local sceneprefab_file = fs.path(arg[2])
 if not fs.exists(sceneprefab_file) then
@@ -47,7 +47,7 @@ log("\tbake output:", bakescene_path)
 log("\toutput file:", scenefile)
 log("\tlightmaps result:", lightmap_path)
 
-local lmr_e, lm_cache = lightmapid.build(scenepath, lightmap_path)
+local lmr_e, lm_cache = lm_prefilter.build(scenepath, lightmap_path)
 
 local function readfile(filename)
     local f<close> = fs.open(filename, "rb")
