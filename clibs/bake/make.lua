@@ -16,7 +16,7 @@ lm:source_set "Meshbaker" {
         "./Meshbaker/SampleFramework11/v1.02/Graphics/*.cpp",
         "./Meshbaker/SampleFramework11/v1.02/HosekSky/*.cpp",
         "./Meshbaker/SampleFramework11/v1.02/*.cpp",
-        "./BakerInterface.cpp"
+        "./path_tracer/BakerInterface.cpp"
     },
     defines = {
         "Debug_",
@@ -57,7 +57,7 @@ lm:copy "copy_Meshbaker" {
     output = outputpaths,
 }
 
-lm:source_set "new_baker" {
+lm:source_set "pathtracer_baker" {
     includes = {
         LuaInclude,
         GLMInclude,
@@ -65,7 +65,7 @@ lm:source_set "new_baker" {
         "../bgfx",
     },
     sources = {
-        "./bake2.cpp",
+        "./path_tracer/bake.cpp",
     },
     deps = {
         "Meshbaker",
@@ -73,8 +73,14 @@ lm:source_set "new_baker" {
     }
 }
 
-lm:lua_dll "bake2" {
+lm:source_set "radiosity_lightmapper" {
+    sources = {
+        "radiosity/lightmapper.cpp",
+    }
+}
+
+lm:lua_dll "bake" {
     deps = {
-        "new_baker",
+        "pathtracer_baker",
     }
 }

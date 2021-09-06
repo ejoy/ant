@@ -1,7 +1,7 @@
 #include "BakerInterface.h"
 
-#include "Meshbaker/BakingLab/BakingLab.h"
-#include "Meshbaker/BakingLab/AppSettings.h"
+#include "../Meshbaker/BakingLab/BakingLab.h"
+#include "../Meshbaker/BakingLab/AppSettings.h"
 
 #include <functional>
 
@@ -80,8 +80,8 @@ void DestroyBaker(BakerHandle handle){
     delete bl;
 }
 
-#include "Meshbaker/SampleFramework11/v1.02/Graphics/Model.h"
-#include "Meshbaker/SampleFramework11/v1.02/FileIO.h"
+#include "../Meshbaker/SampleFramework11/v1.02/Graphics/Model.h"
+#include "../Meshbaker/SampleFramework11/v1.02/FileIO.h"
 void Model::CreateFromScene(ID3D11Device *device, const Scene *scene, bool forceSRGB)
 {
     for(auto &m : scene->materials)

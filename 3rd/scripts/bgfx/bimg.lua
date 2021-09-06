@@ -89,7 +89,7 @@ lm:source_set "bimg_encode" {
         "3rdparty/edtaa3/*.cpp",
         "3rdparty/etc1/*.cpp",
         "3rdparty/etc2/*.cpp",
-        "3rdparty/nvtt/*.cpp",
+        "3rdparty/nvtt/**.cpp",
         "3rdparty/pvrtc/*.cpp",
         "3rdparty/astc/astc_lib.cpp",
         "3rdparty/astc/astc_quantization.cpp",
