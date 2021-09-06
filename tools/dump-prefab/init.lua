@@ -9,7 +9,6 @@ local prefab        = require "prefab"
 local mesh          = require "mesh"
 local material      = require "material"
 local light         = require "light"
-local lightmap_id   = require "lightmap_id"
 
 w:register { name = "id",       type = "lua" }
 w:register { name = "parent",   type = "lua" }
@@ -20,6 +19,12 @@ w:register { name = "sorted",   order = true }
 w:register { name = "worldmat", type = "lua" }
 w:register { name = "light",    type = "lua"}
 w:register { name = "lightmap", type = "lua"}
+
+local function log(info, ...)
+    print(info, ...)
+end
+
+local log_detail = log
 
 local respath = fs.path(arg[2])
 if not fs.exists(respath) then
@@ -105,21 +110,36 @@ local function to_srt(wm)
 end
 local output = {}
 
+local num_models = 0
+local num_directional_light = 0
+local num_area_light = 0
+
 for v in w:select "worldmat:in mesh:in material:in lightmap:in" do
     local e = to_srt(v.worldmat)
     e.mesh = v.mesh.name
     e.material = v.material.name
     e.lightmap = v.lightmap
+
+    num_models = num_models + 1
+
     output[#output+1] = e
     writefile(outputdir / v.mesh.name, v.mesh.value)
     writefile(outputdir / v.material.name, v.material.value)
+
+    --log_detail("model:", v.mesh.value.name or "[NO NAME]", "lightmap:", e.lightmap.size, "material:", v.material.name)
 end
 
 for v in w:select "worldmat:in light:in" do
     local e = to_srt(v.worldmat)
     e.light = v.light.name
     e.lightdata = v.light.value
+    log_detail("light:", e.lightdata.name or "[NO NAME]", "type:", e.lightdata.type)
     output[#output+1] = e
 end
 
 writefile(outputdir / "output.txt", serialize.stringify(output))
+
+log("success output:", outputdir / "output.txt", "num models:", num_models, "num material:", material.count())
+log("lights:")
+log("\tdirectional light:", num_directional_light)
+log("\tarea light:", num_area_light)

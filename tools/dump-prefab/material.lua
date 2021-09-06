@@ -96,6 +96,15 @@ local function load(filename, outdir)
     return r
 end
 
+local function count()
+    local n = 0
+    for k in pairs(cache) do
+        n = n + 1
+    end
+    return n
+end
+
 return {
-    load = load
+    load = load,
+    count = count,
 }
