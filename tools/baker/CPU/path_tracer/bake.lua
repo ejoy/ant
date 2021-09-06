@@ -1,7 +1,7 @@
 --local assetmgr = import_package "ant.asset"
 local serialize = import_package "ant.serialize"
 
-local bake2     = require "bake2"
+local bake     = require "bake"
 local datalist  = require "datalist"
 local image     = require "image"
 local math3d    = require "math3d"
@@ -206,10 +206,10 @@ local function save_bake_result(br)
     check_add_lightmap_result()
 end
 
-local b = bake2.create{
+local b = bake.create{
     models      = models,
     materials   = materials,
     lights      = lights,
 }
-save_bake_result(bake2.bake(b))
-bake2.destroy(b)
+save_bake_result(bake.bake(b))
+bake.destroy(b)

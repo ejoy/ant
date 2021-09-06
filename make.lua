@@ -67,7 +67,7 @@ if EnableEditor then
     local EditorModules = {}
 
     if lm.os ~= "windows" then
-        Backlist["bake2"] = true
+        Backlist["bake"] = true
     end
 
     for path in fs.path "clibs":list_directory() do

@@ -1,4 +1,4 @@
 return {
-    name = "ant.bake2",
+    name = "ant.bake",
 	entry = "main",
 }
