@@ -10,6 +10,7 @@ lm:source_set "source_remotedebug" {
     },
     sources = {
         "*.cpp",
+        "thunk/*.cpp",
     },
     windows = {
         links = "user32"
