@@ -5,6 +5,22 @@
 #include "imgui_window.h"
 #include "imgui_platform.h"
 
+#if defined(SDL_VIDEO_DRIVER_COCOA)
+	void* setupMetalLayer(void* wnd);
+#endif
+
+void* platformGetHandle(ImGuiViewport* viewport) {
+	SDL_Window* window = (SDL_Window*)viewport->PlatformHandle;
+	SDL_SysWMinfo wmInfo;
+	SDL_VERSION(&wmInfo.version);
+	SDL_GetWindowWMInfo(window, &wmInfo);
+#if defined(SDL_VIDEO_DRIVER_WINDOWS)
+	return wmInfo.info.win.window;
+#elif defined(SDL_VIDEO_DRIVER_COCOA)
+	return setupMetalLayer(wmInfo.info.cocoa.window);
+#endif
+}
+
 void* platformCreate(lua_State* L, int w, int h) {
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
 		return nullptr;
@@ -20,11 +36,10 @@ void* platformCreate(lua_State* L, int w, int h) {
 	SDL_GetWindowWMInfo(window, &wmInfo);
 #if defined(SDL_VIDEO_DRIVER_WINDOWS)
 	ImGui_ImplSDL2_InitForD3D(window);
-	return wmInfo.info.win.window;
 #elif defined(SDL_VIDEO_DRIVER_COCOA)
 	ImGui_ImplSDL2_InitForMetal(window);
-	return wmInfo.info.cocoa.window;
 #endif
+	return platformGetHandle(ImGui::GetMainViewport());
 }
 
 void platformShutdown() {
