@@ -251,7 +251,7 @@ lbaker_destroy(lua_State *L){
 
 extern "C"{
 LUAMOD_API int
-luaopen_bake2(lua_State* L) {
+luaopen_bake(lua_State* L) {
     luaL_Reg lib[] = {
         {"create",  lbaker_create},
         {"bake",    lbaker_bake},
