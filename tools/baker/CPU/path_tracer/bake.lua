@@ -10,6 +10,9 @@ local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 local bgfx      = require "bgfx"
 
+local log = print
+local log_detail = log
+
 local lightmapid= require "lightmap_id"
 
 local sceneprefab_file = fs.path(arg[2])
@@ -36,6 +39,13 @@ local lightmap_path = bakescene_path / "lightmaps"
 if not fs.exists(lightmap_path) then
     lfs.create_directories(bakescene_path:localpath() / "lightmaps")
 end
+
+log("begin bake:")
+log("\tscene prefab file:", sceneprefab_file)
+log("\tscenepath:", scenepath)
+log("\tbake output:", bakescene_path)
+log("\toutput file:", scenefile)
+log("\tlightmaps result:", lightmap_path)
 
 local lmr_e, lm_cache = lightmapid.build(scenepath, lightmap_path)
 
@@ -133,6 +143,10 @@ for _, e in ipairs(scene) do
     end
 end
 
+log("num models:", #models)
+log("num materials:", #materials)
+log("num lights:", #lights)
+
 local texfile_content<const> = [[
 normalmap: false
 path: %s
@@ -207,10 +221,14 @@ local function save_bake_result(br)
     check_add_lightmap_result()
 end
 
+log("create bake content...")
 local b = bake.create{
     models      = models,
     materials   = materials,
     lights      = lights,
 }
+log("start bake...")
 save_bake_result(bake.bake(b))
+
+log("bake end...")
 bake.destroy(b)
