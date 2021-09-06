@@ -45,9 +45,10 @@ static int
 lDestroy(lua_State *L) {
 	if (ImGui::GetCurrentContext()) {
 		rendererDestroy();
-		platformDestroy();
+		platformShutdown();
 	}
 	ImGui::DestroyContext();
+	platformDestroy();
 	return 0;
 }
 
@@ -1108,8 +1109,6 @@ wPropertyLabel(lua_State* L) {
 	size_t sz;
 	const char* label = luaL_checklstring(L, 1, &sz);
 	ImGuiWindow* window = ImGui::GetCurrentWindow();
-	const ImVec2 lineStart = ImGui::GetCursorScreenPos();
-	const ImGuiStyle& style = ImGui::GetStyle();
 	float fullWidth = ImGui::GetContentRegionAvail().x;
 	float itemWidth = fullWidth * 0.6f;
 	ImVec2 textSize = ImGui::CalcTextSize(label);
