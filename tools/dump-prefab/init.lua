@@ -134,6 +134,11 @@ for v in w:select "worldmat:in light:in" do
     e.light = v.light.name
     e.lightdata = v.light.value
     log_detail("light:", e.lightdata.name or "[NO NAME]", "type:", e.lightdata.type)
+    if e.lightdata.type == "directional" then
+        num_directional_light = num_directional_light + 1
+    else
+        num_area_light = num_area_light + 1
+    end
     output[#output+1] = e
 end
 
@@ -142,4 +147,4 @@ writefile(outputdir / "output.txt", serialize.stringify(output))
 log("success output:", outputdir / "output.txt", "num models:", num_models, "num material:", material.count())
 log("lights:")
 log("\tdirectional light:", num_directional_light)
-log("\tarea light:", num_area_light)
+log("\tarea light:",        num_area_light)

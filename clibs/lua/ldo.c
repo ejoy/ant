@@ -333,7 +333,7 @@ void luaD_hook (lua_State *L, int event, int line,
     lua_unlock(L);
     (*hook)(L, &ar);
     lua_lock(L);
-    lua_assert(!L->allowhook);
+    //lua_assert(!L->allowhook);
     L->allowhook = 1;
     ci->top = restorestack(L, ci_top);
     L->top = restorestack(L, top);
