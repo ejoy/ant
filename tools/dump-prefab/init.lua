@@ -9,6 +9,7 @@ local prefab        = require "prefab"
 local mesh          = require "mesh"
 local material      = require "material"
 local light         = require "light"
+local lm_prefilter  = require "lightmap_prefilter"
 
 w:register { name = "id",       type = "lua" }
 w:register { name = "parent",   type = "lua" }
@@ -19,6 +20,8 @@ w:register { name = "sorted",   order = true }
 w:register { name = "worldmat", type = "lua" }
 w:register { name = "light",    type = "lua"}
 w:register { name = "lightmap", type = "lua"}
+w:register { name = "lightmapper"}
+w:register { name = "lightmap_result", type = "lua"}
 
 local function log(info, ...)
     print(info, ...)
@@ -41,6 +44,17 @@ local outputdir = respath:parent_path():localpath() / "output"
 if lfs.exists(outputdir) then
     lfs.create_directories(outputdir)
 end
+
+w:new{
+    lightmapper = true,
+    lightmap_result = lm_prefilter.prefilter(respath)
+}
+
+local lmr_path = outputdir / "lightmaps"
+if not lfs.exists(lmr_path) then
+    lfs.create_directories(lmr_path)
+end
+lm_prefilter.save(lmr_path / "lightmap_result.prefab")
 
 prefab.instance(w, respath:string())
 

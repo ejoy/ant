@@ -13,8 +13,6 @@ local bgfx      = require "bgfx"
 local log = print
 local log_detail = log
 
-local lm_prefilter= require "lightmap_prefilter"
-
 local sceneprefab_file = fs.path(arg[2])
 if not fs.exists(sceneprefab_file) then
     error("scene prefab file not exist:".. sceneprefab_file:string())
@@ -46,8 +44,6 @@ log("\tscenepath:", scenepath)
 log("\tbake output:", bakescene_path)
 log("\toutput file:", scenefile)
 log("\tlightmaps result:", lightmap_path)
-
-local lmr_e, lm_cache = lm_prefilter.build(scenepath, lightmap_path)
 
 local function readfile(filename)
     local f<close> = fs.open(filename, "rb")
@@ -124,10 +120,7 @@ for _, e in ipairs(scene) do
             indices     = create_buffer(memory, meshdata.ib),
             vertexCount = elem_count(vb.pos),
             indexCount  = elem_count(meshdata.ib),
-            lightmap    = {
-                size = e.lightmap.size,
-                id = crypt.uuid(),
-            },
+            lightmap    = e.lightmap,
             materialidx = add_material(bakescene_path / material),
         }
     elseif e.light then
@@ -192,13 +185,25 @@ local function save_lightmap(id, lm, lmr)
 end
 
 local function save_bake_result(br)
+    local lmr_path = lightmap_path / "lightmap_result.prefab"
+    local lmr_e = serialize.parse(lmr_path, serialize.read_file(lmr_path))
+    local function build_lm_id_cache(prefab, lmcache)
+        for _, e in ipairs(prefab) do
+            if e.prefab then
+            else
+                local lm = e.data.lightmap
+                lmcache[lm.id] = lm
+            end
+        end
+    end
+    local lmcache = {}; build_lm_id_cache(lmcache)
     for idx, r in ipairs(br) do
         local m = models[idx]
         local id = m.lightmap.id
-        lm_cache[id].texture_path = save_lightmap(id, m.lightmap, r):string()
+        lmcache[id].texture_path = save_lightmap(id, m.lightmap, r):string()
     end
 
-    writefile(lightmap_path:localpath() / "lightmap_result.prefab", serialize.stringify({lmr_e}), "w")
+    writefile(lmr_path:localpath(), serialize.stringify({lmr_e}), "w")
 
     local function check_add_lightmap_result()
         local s = datalist.parse(readfile(sceneprefab_file))

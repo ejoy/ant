@@ -3,12 +3,15 @@ local math3d = require "math3d"
 local maxid = 0
 
 local create_prefab; do
-    local function create_template(_, t)
+    local function create_template(info, t)
         local prefab = {}
-        for _, v in ipairs(t) do
+
+        local prefab_lm = info.prefab_lightmap
+        for idx, v in ipairs(t) do
             local e = {}
+            local r = prefab_lm[idx]
             if v.prefab then
-                e.prefab = create_prefab(v.prefab)
+                e.prefab = create_prefab(v.prefab, assert(r.prefab))
                 if v.args and v.args.root then
                     e.root = v.args.root
                 end
@@ -36,17 +39,25 @@ local create_prefab; do
                 if v.data.material then
                     e.material = assetmgr.resource(v.data.material)
                 end
-                if v.data.lightmap then
-                    e.lightmap = v.data.lightmap
+
+                if r.lightmap then
+                    local data_lm = v.data.lightmap
+                    if data_lm == nil then
+                        data_lm = r
+                    else
+                        data_lm.id = r.id
+                    end
+                    e.lightmap = data_lm
                 end
+
             end
             prefab[#prefab+1] = e
         end
         return prefab
     end
-    local callback = { create_template = create_template }
-    function create_prefab(filename)
-        return assetmgr.resource(filename, callback)
+
+    function create_prefab(filename, prefab_lightmap)
+        return assetmgr.resource(filename,  { prefab_lightmap = prefab_lightmap, create_template = create_template })
     end
 end
 
@@ -73,7 +84,8 @@ local function instance_(w, prefab, root)
 end
 
 local function instance(w, filename)
-    instance_(w, create_prefab(filename))
+    local lmr_e = w:singleton("lightmapper", "lightmap_result:in")
+    instance_(w, create_prefab(filename, lmr_e.lightmap_result))
 end
 
 return {
