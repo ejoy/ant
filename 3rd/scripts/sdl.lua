@@ -5,12 +5,18 @@ lm.defines = {
     "SDL_DYNAMIC_API=0",
     "SDL_dynapi_h_",
 }
+lm.macos = {
+    sys = "macos10.6",
+}
 
 -- timer
 lm:source_set "sdl" {
     sources = "src/timer/*.c",
     windows = {
         sources = "src/timer/windows/*.c",
+    },
+    macos = {
+        sources = "src/timer/unix/*.c",
     }
 }
 
@@ -31,6 +37,12 @@ lm:source_set "sdl" {
             "src/thread/windows/*.c",
         },
         defines = "SDL_THREAD_WINDOWS=1"
+    },
+    macos = {
+        sources = {
+            "src/thread/pthread/*.c",
+        },
+        defines = "SDL_THREAD_PTHREAD=1"
     }
 }
 
@@ -59,8 +71,11 @@ lm:source_set "sdl" {
         "SDL_VIDEO_RENDER_OGL=0",
         "SDL_VIDEO_RENDER_OGL_ES2=0",
         "SDL_VIDEO_RENDER_SW=0",
+        "SDL_VIDEO_OPENGL=0",
+        "SDL_VIDEO_OPENGL_ES2=0",
         "SDL_VIDEO_OPENGL_EGL=0",
         "SDL_VIDEO_OPENGL_WGL=0",
+        "SDL_VIDEO_OPENGL_CGL=0",
         --"SDL_VIDEO_RENDER_D3D11=0",
         --"SDL_VIDEO_VULKAN=0",
     },
@@ -70,6 +85,14 @@ lm:source_set "sdl" {
             "!src/video/windows/SDL_windowsvulkan.c",
             "!src/video/windows/SDL_windowsopengl.c",
             "!src/video/windows/SDL_windowsopengles.c",
+        }
+    },
+    macos = {
+        sources = {
+            "src/video/cocoa/*.m",
+            "!src/video/cocoa/SDL_cocoavulkan.m",
+            "!src/video/cocoa/SDL_cocoaopengl.m",
+            "!src/video/cocoa/SDL_cocoaopengles.m",
         }
     }
 }
@@ -102,6 +125,12 @@ lm:source_set "sdl" {
         sources = {
             "src/loadso/windows/*.c",
             "src/core/windows/*.c",
+        }
+    },
+    macos = {
+        sources = {
+            "src/loadso/dlopen/*.c",
+            "src/file/cocoa/*.m",
         }
     }
 }

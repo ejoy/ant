@@ -1,9 +1,25 @@
-#include <ImGui.h>
+#include <imgui.h>
 #include <SDL.h>
 #include <SDL_syswm.h>
 #include <backends/imgui_impl_sdl.h>
 #include "imgui_window.h"
 #include "imgui_platform.h"
+
+#if defined(SDL_VIDEO_DRIVER_COCOA)
+	void* setupMetalLayer(void* wnd);
+#endif
+
+void* platformGetHandle(ImGuiViewport* viewport) {
+	SDL_Window* window = (SDL_Window*)viewport->PlatformHandle;
+	SDL_SysWMinfo wmInfo;
+	SDL_VERSION(&wmInfo.version);
+	SDL_GetWindowWMInfo(window, &wmInfo);
+#if defined(SDL_VIDEO_DRIVER_WINDOWS)
+	return wmInfo.info.win.window;
+#elif defined(SDL_VIDEO_DRIVER_COCOA)
+	return setupMetalLayer(wmInfo.info.cocoa.window);
+#endif
+}
 
 void* platformCreate(lua_State* L, int w, int h) {
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
@@ -11,16 +27,27 @@ void* platformCreate(lua_State* L, int w, int h) {
 	}
 	SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
 	SDL_Window* window = SDL_CreateWindow("ImGui Host Viewport", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, window_flags);
+	if (!window) {
+		printf("Couldn't create window: %s\n", SDL_GetError());
+		return nullptr;
+	}
 	SDL_SysWMinfo wmInfo;
 	SDL_VERSION(&wmInfo.version);
 	SDL_GetWindowWMInfo(window, &wmInfo);
-	HWND hwnd = (HWND)wmInfo.info.win.window;
+#if defined(SDL_VIDEO_DRIVER_WINDOWS)
 	ImGui_ImplSDL2_InitForD3D(window);
-	return hwnd;
+#elif defined(SDL_VIDEO_DRIVER_COCOA)
+	ImGui_ImplSDL2_InitForMetal(window);
+#endif
+	return platformGetHandle(ImGui::GetMainViewport());
+}
+
+void platformShutdown() {
+	ImGui_ImplSDL2_Shutdown();
 }
 
 void platformDestroy() {
-	ImGui_ImplSDL2_Shutdown();
+	SDL_Quit();
 }
 
 bool platformNewFrame() {
