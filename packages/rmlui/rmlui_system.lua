@@ -65,7 +65,7 @@ function rmlui_sys:ui_update()
 end
 
 function rmlui_sys:exit()
-    ltask.call(ServiceRmlUi, "shutdown")
+    ltask.send(ServiceRmlUi, "shutdown")
 end
 
 local maxID = 0

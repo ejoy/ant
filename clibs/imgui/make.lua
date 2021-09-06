@@ -3,16 +3,19 @@ local lm = require "luamake"
 dofile "../common.lua"
 
 lm:lua_dll "imgui" {
+    deps = "sdl",
     includes = {
         ".",
         Ant3rd .. "imgui",
         Ant3rd .. "glm",
+        Ant3rd .. "SDL/include",
         BgfxInclude,
         "../bgfx"
     },
     sources = {
         "imgui_config.cpp",
         "imgui_renderer.cpp",
+        "imgui_platform.cpp",
         "imgui_window.cpp",
         "luaimgui_tables.cpp",
         "luaimgui.cpp",
@@ -21,6 +24,7 @@ lm:lua_dll "imgui" {
         Ant3rd .. "imgui/imgui_tables.cpp",
         Ant3rd .. "imgui/imgui_widgets.cpp",
         Ant3rd .. "imgui/imgui.cpp",
+        Ant3rd .. "imgui/backends/imgui_impl_sdl.cpp",
     },
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",
@@ -32,10 +36,6 @@ lm:lua_dll "imgui" {
         "_UNICODE",
     },
     windows = {
-        sources = {
-            "win32/*.cpp",
-            Ant3rd .. "imgui/backends/imgui_impl_win32.cpp",
-        },
         defines = {
             "UNICODE",
             "IMGUI_ENABLE_WIN32_DEFAULT_IME_FUNCTIONS",
