@@ -268,7 +268,7 @@ local function from_runtime_clip(runtime_clip)
                 speed = clip.speed or 1.0,
                 range = {start_frame, end_frame},
                 key_event = from_runtime_event(clip.key_event),
-                name_ui = {text = clip.name},
+                name_ui = {text = clip.name, flags = imgui.flags.InputText{"EnterReturnsTrue"}},
                 range_ui = {start_frame, end_frame, speed = 1},
                 speed_ui = {clip.speed or 1.0, speed = 0.02, min = 0.01, max = 100}
             }
@@ -288,10 +288,12 @@ local function from_runtime_clip(runtime_clip)
                 name = clip.name,
                 group = true,
                 clips = subclips,
-                name_ui = {text = clip.name}
+                name_ui = {text = clip.name, flags = imgui.flags.InputText{"EnterReturnsTrue"}}
             }
         end
     end
+    table.sort(all_groups, function(a, b) return string.lower(tostring(a.name)) < string.lower(tostring(b.name)) end)
+    table.sort(all_clips, function(a, b) return string.lower(tostring(a.name)) < string.lower(tostring(b.name)) end)
     clip_index = #all_clips
     group_index = #all_groups
 end
@@ -823,6 +825,7 @@ local function set_current_clip(clip)
             return
         end
         anim_state.selected_clip_index = find_index(current_anim.clips, clip)
+        clip.name_ui.text = clip.name
     end
     current_clip = clip
     anim_state.current_event_list = {}
@@ -841,18 +844,15 @@ local function show_clips()
             range = {-1, -1},
             speed = 1.0,
             key_event = {},
-            name_ui = {text = key},
+            name_ui = {text = key, flags = imgui.flags.InputText{"EnterReturnsTrue"}},
             speed_ui = {1.0, speed = 0.02, min = 0.01, max = 100},
             range_ui = {-1, -1, speed = 1}
         }
         current_anim.clips[#current_anim.clips + 1] = new_clip
-        table.sort(current_anim.clips, function(a, b)
-            return a.range[2] < b.range[1]
-        end)
+        table.sort(current_anim.clips, function(a, b) return a.range[2] < b.range[1] end)
         all_clips[#all_clips+1] = new_clip
-        table.sort(all_clips, function(a, b)
-            return a.range[2] < b.range[1]
-        end)
+        --table.sort(all_clips, function(a, b) return a.range[2] < b.range[1] end)
+        table.sort(all_clips, function(a, b) return string.lower(tostring(a.name)) < string.lower(tostring(b.name)) end)
         set_current_clip(new_clip)
         set_clips_dirty(true)
     end
@@ -906,14 +906,16 @@ local function show_groups()
         all_groups[#all_groups + 1] = {
             name = key,
             group = true,
-            name_ui = {text = key},
+            name_ui = {text = key, flags = imgui.flags.InputText{"EnterReturnsTrue"}},
             clips ={}
         }
+        table.sort(all_groups, function(a, b) return string.lower(tostring(a.name)) < string.lower(tostring(b.name)) end)
         set_clips_dirty(true)
     end
     local delete_group
     for i, gp in ipairs(all_groups) do
         if imgui.widget.Selectable(gp.name, current_group and (current_group.name == gp.name), 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
+            gp.name_ui.text = gp.name
             current_group = gp
             if imgui.util.IsMouseDoubleClicked(0) then
                 anim_group_play_group(current_eid, gp.name, 0)
@@ -936,14 +938,34 @@ local function show_groups()
     end
 end
 
+local function clip_exist(name)
+    for _, v in ipairs(all_clips) do
+        if v.name == name then
+            return true
+        end
+    end
+end
+local function group_exist(name)
+    for _, v in ipairs(all_groups) do
+        if v.name == name then
+            return true
+        end
+    end
+end
 local function show_current_clip()
     if not current_clip then return end
     imgui.widget.PropertyLabel("AnimName")
     imgui.widget.Text(current_clip.anim_name)
     imgui.widget.PropertyLabel("ClipName")
     if imgui.widget.InputText("##ClipName", current_clip.name_ui) then
-        current_clip.name = tostring(current_clip.name_ui.text)
-        set_clips_dirty(true)
+        local new_name = tostring(current_clip.name_ui.text)
+        if clip_exist(new_name) then
+            widget_utils.message_box({title = "NameError", info = "clip " .. new_name .. " existed!"})
+            current_clip.name_ui.text = current_clip.name
+        else
+            current_clip.name = new_name
+            set_clips_dirty(true)
+        end
     end
 
     imgui.widget.PropertyLabel("Speed")
@@ -982,8 +1004,14 @@ local function show_current_group()
     if not current_group then return end
     imgui.widget.PropertyLabel("Name")
     if imgui.widget.InputText("##Name", current_group.name_ui) then
-        current_group.name = tostring(current_group.name_ui.text)
-        set_clips_dirty(true)
+        local new_name = tostring(current_group.name_ui.text)
+        if group_exist(new_name) then
+            widget_utils.message_box({title = "NameError", info = "group " .. new_name .. " existed!"})
+            current_group.name_ui.text = current_group.name
+        else
+            current_group.name = new_name
+            set_clips_dirty(true)
+        end
     end
     if imgui.widget.Button("AddClip") then
         imgui.windows.OpenPopup("AddClipPop")

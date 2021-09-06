@@ -173,6 +173,7 @@ function m:create_slot()
             transform = get_local_transform({}, parent_eid),
             slot = true,
             scene_entity = true,
+            follow_joint = "None",
             follow_flag = 1,
             name = auto_name,
             tag = {auto_name},
