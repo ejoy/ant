@@ -11,14 +11,14 @@ local material      = require "material"
 local light         = require "light"
 local lightmap_id   = require "lightmap_id"
 
-w:register { name = "id", type = "lua" }
-w:register { name = "parent", type = "lua" }
-w:register { name = "mesh", type = "lua" }
+w:register { name = "id",       type = "lua" }
+w:register { name = "parent",   type = "lua" }
+w:register { name = "mesh",     type = "lua" }
 w:register { name = "material", type = "lua"}
-w:register { name = "srt", type = "lua" }
-w:register { name = "sorted", order = true }
+w:register { name = "srt",      type = "lua" }
+w:register { name = "sorted",   order = true }
 w:register { name = "worldmat", type = "lua" }
-w:register { name = "light", type = "lua"}
+w:register { name = "light",    type = "lua"}
 w:register { name = "lightmap", type = "lua"}
 
 local respath = fs.path(arg[2])
@@ -33,8 +33,10 @@ end
 
 local lfs = require "filesystem.local"
 local outputdir = respath:parent_path():localpath() / "output"
+if lfs.exists(outputdir) then
+    lfs.create_directories(outputdir)
+end
 
-lightmap_id.build(respath)
 prefab.instance(w, respath:string())
 
 for v in w:select "parent:update id:in" do

@@ -1,13 +1,16 @@
 --local assetmgr = import_package "ant.asset"
 local serialize = import_package "ant.serialize"
 
-local bake     = require "bake"
+local bake      = require "bake"
+local crypt     = require "crypt"
 local datalist  = require "datalist"
 local image     = require "image"
 local math3d    = require "math3d"
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 local bgfx      = require "bgfx"
+
+local lightmapid= require "lightmap_id"
 
 local sceneprefab_file = fs.path(arg[2])
 if not fs.exists(sceneprefab_file) then
@@ -30,7 +33,11 @@ if not fs.exists(scenefile) then
 end
 
 local lightmap_path = bakescene_path / "lightmaps"
-lfs.create_directories(bakescene_path:localpath() / "lightmaps")
+if not fs.exists(lightmap_path) then
+    lfs.create_directories(bakescene_path:localpath() / "lightmaps")
+end
+
+local lmr_e, lm_cache = lightmapid.build(scenepath, lightmap_path)
 
 local function readfile(filename)
     local f<close> = fs.open(filename, "rb")
@@ -107,7 +114,10 @@ for _, e in ipairs(scene) do
             indices     = create_buffer(memory, meshdata.ib),
             vertexCount = elem_count(vb.pos),
             indexCount  = elem_count(meshdata.ib),
-            lightmap    = e.lightmap,
+            lightmap    = {
+                size = e.lightmap.size,
+                id = crypt.uuid(),
+            },
             materialidx = add_material(bakescene_path / material),
         }
     elseif e.light then
@@ -168,28 +178,13 @@ local function save_lightmap(id, lm, lmr)
 end
 
 local function save_bake_result(br)
-    local lightmap_results = {}
     for idx, r in ipairs(br) do
         local m = models[idx]
         local id = m.lightmap.id
-        lightmap_results[id] = {
-            texture_path = save_lightmap(id, m.lightmap, r):string()
-        }
+        lm_cache[id].texture_path = save_lightmap(id, m.lightmap, r):string()
     end
-    
-    local lre = {
-        policy = {
-            "ant.general|name",
-            "ant.render|lightmap_result",
-        },
-        data = {
-            name = "lightmap_result",
-            lightmap_result = lightmap_results,
-            lightmapper = true,
-        }
-    }
 
-    writefile(lightmap_path:localpath() / "lightmap_result.prefab", serialize.stringify({lre}), "w")
+    writefile(lightmap_path:localpath() / "lightmap_result.prefab", serialize.stringify({lmr_e}), "w")
 
     local function check_add_lightmap_result()
         local s = datalist.parse(readfile(sceneprefab_file))
@@ -200,6 +195,9 @@ local function save_bake_result(br)
         end
 
         s[#s+1] = {
+            action = {
+                lightmap_result = {},
+            },
             prefab = "./output/lightmaps/lightmap_result.prefab"
         }
 

@@ -85,7 +85,7 @@ local function save_lightmap(e, lme)
     f:write(tc)
     f:close()
     
-    lme.lightmap_result[lm.bake_id] = {texture_path = texfile:string(),}
+    lme.lightmap_result[lm.id] = {texture_path = texfile:string(),}
 end
 
 local function load_bake_material(ro)
