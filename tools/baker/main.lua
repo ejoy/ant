@@ -6,7 +6,7 @@ if arg[1] then
     local lfs = require "filesystem.local"
     local vfs = require "vfs"
     local workdir = lfs.absolute(lfs.path(arg[0])):remove_filename()
-    vfs.mount("pkg/tools.dump-prefab", workdir:string())
+    vfs.mount("pkg/ant.tool.baker", workdir:string())
 end
 
 require "bootstrap"
