@@ -50,4 +50,7 @@ lm:lua_dll "imgui" {
             "uuid"
         },
     },
+    macos = {
+        sources = "platform/imgui_osx.mm",
+    }
 }
