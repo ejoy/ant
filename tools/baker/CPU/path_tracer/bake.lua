@@ -20,6 +20,9 @@ if not fs.exists(scenepath) then
 end
 
 local bakescene_path = scenepath / "output"
+if not fs.exists(bakescene_path) then
+    lfs.create_directories(scenepath:localpath() / "output")
+end
 
 local scenefile = bakescene_path / "output.txt"
 if not fs.exists(scenefile) then
