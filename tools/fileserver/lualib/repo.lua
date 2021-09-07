@@ -316,7 +316,7 @@ local function read_ref(self, hash)
 			if timestamp then
 				-- It's a file
 				local realname = self:realpath(name)
-				if lfs.is_regular_file(realname) and lfs.last_write_time(realname) == timestamp then
+				if not realname:string():match "%?" and lfs.is_regular_file(realname) and lfs.last_write_time(realname) == timestamp then
 					cache[name] = { hash = hash , timestamp = timestamp }
 					table.insert(items, line)
 				else

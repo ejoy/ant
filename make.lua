@@ -71,7 +71,7 @@ if EnableEditor then
         Backlist["bake"] = true
     end
 
-    for path in fs.path "clibs":list_directory() do
+    for path in fs.pairs(fs.path(lm.workdir) / "clibs") do
         if fs.exists(path / "make.lua") then
             local name = path:stem():string()
             if not Backlist[name] then
@@ -98,6 +98,13 @@ if EnableEditor then
             "lua",
             "luac",
             EditorModules
+        }
+    }
+    lm:phony "all" {
+        deps = {
+            "editor",
+            "tools",
+            "runtime"
         }
     }
     lm:default "editor"
