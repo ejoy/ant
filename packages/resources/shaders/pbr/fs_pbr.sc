@@ -198,6 +198,8 @@ void main()
 #ifdef CLUSTER_SHADING
 	uint cluster_idx = which_cluster(gl_FragCoord.xyz);
 
+    uint cluster_count = u_cluster_size.x * u_cluster_size.y * u_cluster_size.z;
+    cluster_idx = clamp(cluster_idx, 0, cluster_count-1);
 	light_grid g; load_light_grid(b_light_grids, cluster_idx, g);
 	uint iend = g.offset + g.count;
 	for (uint ii=g.offset; ii<iend; ++ii)
