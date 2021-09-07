@@ -2,7 +2,8 @@ local math3d = require "math3d"
 local utility = require "editor.model.utility"
 local serialize = import_package "ant.serialize"
 
-local fs = require "filesystem.local"
+local lfs = require "filesystem.local"
+local fs = require "filesystem"
 
 local invalid_chars<const> = {
     '<', '>', ':', '/', '\\', '|', '?', '*', ' ', '\t', '\r', '%[', '%]', '%(', '%)'
@@ -159,19 +160,25 @@ local function generate_material(mi, mode, mirror_transform)
     return m
 end
 
-local function read_datalist(filename)
-    local f = fs.open(filename)
-    local c = f:read "a"
-    f:close()
-    return c
+local function read_material_file(filename)
+    local function read_file(fn)
+        local f<close> = fs.open(fn)
+        return f:read "a"
+    end
+
+    local mi = serialize.parse(filename, read_file(filename))
+    if type(mi.state) == "string" then
+        mi.state = serialize.parse(filename, read_file(fs.path(mi.state)))
+    end
+    return mi
 end
 
 local default_material_info = {
-    filename = fs.path "./materials/pbr_default_cw.material",
+    filename = lfs.path "./materials/pbr_default_cw.material",
 }
 
 local function save_material(mi)
-    if not fs.exists(mi.filename) then
+    if not lfs.exists(mi.filename) then
         utility.save_txt_file(mi.filename:string(), mi.material)
     end
 end
@@ -213,9 +220,9 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports, tolo
                 error(("primitive need material, but no material files output:%s %d"):format(meshname, prim.material))
             end
         else
-            local default_material_path<const> = fs.path "/pkg/ant.resources/materials/pbr_default_cw.material"
+            local default_material_path<const> = lfs.path "/pkg/ant.resources/materials/pbr_default.material"
             if default_material_info.material == nil then
-                default_material_info.material = read_datalist(tolocalpath(default_material_path))
+                default_material_info.material = read_material_file(default_material_path)
             end
             local materialinfo = generate_material(default_material_info, mode, mirror_trans)
             if materialinfo.filename ~= default_material_path then
