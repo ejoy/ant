@@ -42,8 +42,9 @@ end
 local lfs = require "filesystem.local"
 local outputdir = respath:parent_path():localpath() / "output"
 if lfs.exists(outputdir) then
-    lfs.create_directories(outputdir)
+    lfs.remove_all(outputdir)
 end
+lfs.create_directories(outputdir)
 
 w:new{
     lightmapper = true,
@@ -119,11 +120,6 @@ local function writefile(filename, data)
     local f <close> = assert(io.open(filename:string(), "wb"))
     f:write(data)
 end
-
-if lfs.exists(outputdir) then
-    lfs.remove_all(outputdir)
-end
-lfs.create_directories(outputdir)
 
 local function to_srt(wm)
     local s, r, t = math3d.srt(wm)
