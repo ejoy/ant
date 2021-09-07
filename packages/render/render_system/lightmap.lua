@@ -5,6 +5,11 @@ local w = world.w
 local imaterial = world:interface "ant.asset|imaterial"
 local assetmgr = import_package "ant.asset"
 
+local lm_mount = ecs.action "lightmap_mount"
+function lm_mount.init(prefab, idx, value)
+    assert(false, "not implement")
+end
+
 local lm_sys = ecs.system "lightmap_system"
 
 local default_lm

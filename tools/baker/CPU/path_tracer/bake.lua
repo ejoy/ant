@@ -35,7 +35,7 @@ end
 
 local lightmap_path = bakescene_path / "lightmaps"
 if not fs.exists(lightmap_path) then
-    lfs.create_directories(bakescene_path:localpath() / "lightmaps")
+    error(("need to dump scene prefab file first:") .. sceneprefab_file:string())
 end
 
 log("begin bake:")
@@ -186,24 +186,30 @@ end
 
 local function save_bake_result(br)
     local lmr_path = lightmap_path / "lightmap_result.prefab"
-    local lmr_e = serialize.parse(lmr_path, cr.read_file(lmr_path))
+    local lmr_e = serialize.parse(lmr_path:string(), cr.read_file(lmr_path:string()))
     local function build_lm_id_cache(prefab, lmcache)
         for _, e in ipairs(prefab) do
             if e.prefab then
+                build_lm_id_cache(e.prefab, lmcache)
             else
-                local lm = e.data.lightmap
-                lmcache[lm.id] = lm
+                local lm = e.lightmap
+                if lm then
+                    lmcache[lm.id] = lm
+                end
             end
         end
     end
-    local lmcache = {}; build_lm_id_cache(lmcache)
+    local lmcache = {}; build_lm_id_cache(lmr_e.data.lightmap_result, lmcache)
     for idx, r in ipairs(br) do
         local m = models[idx]
         local id = m.lightmap.id
-        lmcache[id].texture_path = save_lightmap(id, m.lightmap, r):string()
+        local c = assert(lmcache[id])
+        c.texture_path = save_lightmap(id, m.lightmap, r):string()
+        c.id = nil
     end
 
-    writefile(lmr_path:localpath(), serialize.stringify({lmr_e}), "w")
+    lmcache = nil   --clean up
+    writefile(lmr_path:localpath(), serialize.stringify(lmr_e), "w")
 
     local function check_add_lightmap_result()
         local s = datalist.parse(readfile(sceneprefab_file))
@@ -215,7 +221,7 @@ local function save_bake_result(br)
 
         s[#s+1] = {
             action = {
-                lightmap_result = {},
+                lightmap_mount = {},
             },
             prefab = "./output/lightmaps/lightmap_result.prefab"
         }
