@@ -27,7 +27,16 @@ static effekseer_ctx* g_effekseer = nullptr;
 static std::string g_current_path = "";
 std::string get_ant_file_path(const std::string& path)
 {
-	return g_current_path + "/" + path;
+	lua_State* L = g_effekseer->lua_state;
+	auto fullpath = g_current_path + path;
+	lua_pushlstring(L, fullpath.data(), fullpath.size());
+	lua_rawgeti(L, LUA_REGISTRYINDEX, g_effekseer->path_converter_);
+	lua_insert(L, -2);
+	lua_call(L, 1, 1);
+	if (lua_type(L, -1) == LUA_TSTRING) {
+		return lua_tostring(L, -1);
+	}
+	return "";
 }
 
 void load_fx(const std::string& vspath, const std::string& fspath, bgfx_program_handle_t& prog,
@@ -179,6 +188,12 @@ ldestroy(lua_State* L) {
 static int
 lset_fxloader(lua_State* L) {
 	g_effekseer->fxloader_ = luaL_ref(L, LUA_REGISTRYINDEX);
+	return 0;
+}
+
+static int
+lset_path_converter(lua_State* L) {
+	g_effekseer->path_converter_ = luaL_ref(L, LUA_REGISTRYINDEX);
 	return 0;
 }
 
@@ -388,6 +403,7 @@ luaopen_effekseer(lua_State * L) {
 		{ "create", lcreate},
 		{ "destroy", ldestroy},
 		{ "set_fxloader", lset_fxloader},
+		{ "set_path_converter", lset_path_converter},
 		{ "play", lplay},
 		{ "pause", lpause},
 		{ "set_time", lset_time},

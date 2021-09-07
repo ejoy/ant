@@ -50,6 +50,7 @@ struct effekseer_ctx
 	Effekseer::ManagerRef	manager_;
 	EffekseerRendererBGFX::RendererRef renderer_;
 	int fxloader_ = LUA_REFNIL;
+	int path_converter_ = LUA_REFNIL;
 	std::vector<effect_adapter> effects_;
 	//
 	effekseer_ctx(lua_State* L, int idx);
