@@ -6,27 +6,49 @@ local imaterial = world:interface "ant.asset|imaterial"
 local assetmgr = import_package "ant.asset"
 
 local lm_mount = ecs.action "lightmap_mount"
-function lm_mount.init(prefab, idx, value)
-    local lmr_prefab = prefab[idx]
-    assert(#lmr_prefab == 1)
-    local lmr_e = world[lmr_prefab[1]]
-    assert(#prefab == idx)
-    local function apply_lightmap(prefab, lm_prefab, sidx, eidx)
-        for i=sidx, eidx do
-            if type(prefab[i]) == "table" then
-                apply_lightmap(prefab[i], assert(lm_prefab[i].prefab), 1, #prefab[i])
+
+local function apply_lightmap(prefab, lm_prefab, sidx, eidx)
+    for i=sidx, eidx do
+        if type(prefab[i]) == "table" then
+            apply_lightmap(prefab[i], assert(lm_prefab[i].prefab), 1, #prefab[i])
+        else
+            local eid = prefab[i]
+            local e = world[eid]
+            local lm  = lm_prefab[i].lightmap
+            if lm then
+                e.lightmap = lm
+            end
+        end
+    end
+end
+
+local function build_lightmap_cache(lmr_e)
+    local lmr = lmr_e.lightmap_result
+
+    local function build_(prefab, cache)
+        for _, e in ipairs(prefab) do
+            if e.prefab then
+                build_(e.prefab, cache)
             else
-                local eid = prefab[i]
-                local e = world[eid]
-                local lm  = lm_prefab[i].lightmap
+                local lm = e.lightmap
                 if lm then
-                    e.lightmap = lm
+                    cache[lm.id] = lm
                 end
             end
         end
     end
 
+    local c = {}
+    build_(lmr, c)
+    lmr_e.lightmap_cache = c
+end
+function lm_mount.init(prefab, idx, value)
+    local lmr_prefab = prefab[idx]
+    assert(#lmr_prefab == 1)
+    local lmr_e = world[lmr_prefab[1]]
+    assert(#prefab == idx)
     apply_lightmap(prefab, lmr_e.lightmap_result, 1, idx-1)
+    build_lightmap_cache(lmr_e)
 end
 
 local lm_sys = ecs.system "lightmap_system"
@@ -47,11 +69,11 @@ function lm_sys:entity_init()
     for msg in lm_result_mb:each() do
         local eid = msg[3]
         local lmr_e = world[eid]
-        local r = lmr_e.lightmap_result
+        local c = lmr_e.lightmap_cache
         for e in w:select "lightmap:in render_object:in filter_material:in" do
             local lm = e.lightmap
             local lmid = lm.id
-            local bi = r[lmid]
+            local bi = c[lmid]
             if bi then
                 bi.texture = assetmgr.resource(bi.texture_path)
                 for _, fm in pairs(e.filter_material) do
@@ -85,7 +107,7 @@ function lm_sys:end_filter()
             break
         end
 
-        local r = lr_e and lr_e.lightmap_result or {}
+        local r = lr_e and lr_e.lightmap_cache or {}
         local mq = w:singleton("main_queue", "primitive_filter:in")
         local fr = e.filter_result
         local material = e.material
