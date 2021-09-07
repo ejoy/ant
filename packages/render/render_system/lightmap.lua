@@ -7,7 +7,26 @@ local assetmgr = import_package "ant.asset"
 
 local lm_mount = ecs.action "lightmap_mount"
 function lm_mount.init(prefab, idx, value)
-    assert(false, "not implement")
+    local lmr_prefab = prefab[idx]
+    assert(#lmr_prefab == 1)
+    local lmr_e = world[lmr_prefab[1]]
+    assert(#prefab == idx)
+    local function apply_lightmap(prefab, lm_prefab, sidx, eidx)
+        for i=sidx, eidx do
+            if type(prefab[i]) == "table" then
+                apply_lightmap(prefab[i], assert(lm_prefab[i].prefab), 1, #prefab[i])
+            else
+                local eid = prefab[i]
+                local e = world[eid]
+                local lm  = lm_prefab[i].lightmap
+                if lm then
+                    e.lightmap = lm
+                end
+            end
+        end
+    end
+
+    apply_lightmap(prefab, lmr_e.lightmap_result, 1, idx-1)
 end
 
 local lm_sys = ecs.system "lightmap_system"
