@@ -43,7 +43,6 @@ struct effekseer_ctx
 	bgfx_vertex_layout_t*	mtl1_layout{ nullptr };
 	bgfx_vertex_layout_t*	mtl2_layout{ nullptr };
 	bgfx_vertex_layout_t*	model_layout{ nullptr };
-	lua_State*				lua_state{ nullptr };
 	//
 	Effekseer::Matrix44		view_mat_;
 	Effekseer::Matrix44		proj_mat_;

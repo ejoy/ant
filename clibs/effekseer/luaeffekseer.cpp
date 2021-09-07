@@ -25,42 +25,81 @@ extern bgfx_view_id_t g_view_id;
 
 static effekseer_ctx* g_effekseer = nullptr;
 static std::string g_current_path = "";
-std::string get_ant_file_path(const std::string& path)
+static lua_State* g_current_lua_state = nullptr;
+
+struct path_data
 {
-	lua_State* L = g_effekseer->lua_state;
-	auto fullpath = g_current_path + path;
-	lua_pushlstring(L, fullpath.data(), fullpath.size());
+	std::string origin; 
+	std::string result;
+};
+static int
+lget_ant_file_path(lua_State* L) {
+	struct path_data* pd = (struct path_data*)lua_touserdata(L, 1);
 	lua_rawgeti(L, LUA_REGISTRYINDEX, g_effekseer->path_converter_);
-	lua_insert(L, -2);
+	lua_pushlstring(L, pd->origin.data(), pd->origin.size());
 	lua_call(L, 1, 1);
 	if (lua_type(L, -1) == LUA_TSTRING) {
-		return lua_tostring(L, -1);
+		pd->result = lua_tostring(L, -1);
+	} else {
+		lua_pop(L, 1);
 	}
-	return "";
+	return 0;
+}
+
+std::string get_ant_file_path(const std::string& path)
+{
+	lua_State* L = g_current_lua_state;
+	path_data pd{ g_current_path + path, ""};
+	lua_pushcfunction(L, lget_ant_file_path);
+	lua_pushlightuserdata(L, &pd);
+	if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
+		printf("get_ant_file_path error : %s\n", lua_tostring(L, -1));
+		lua_pop(L, 1);
+	}
+	return pd.result;
+}
+
+struct fx_data
+{
+	std::string vspath;
+	std::string fspath;
+	bgfx_program_handle_t* prog;
+	std::unordered_map<std::string, bgfx_uniform_handle_t>* uniforms;
+};
+static int
+lload_fx(lua_State* L) {
+	struct fx_data* fd = (struct fx_data*)lua_touserdata(L, 1);
+	lua_rawgeti(L, LUA_REGISTRYINDEX, g_effekseer->fxloader_);
+	lua_pushlstring(L, fd->vspath.data(), fd->vspath.size());
+	lua_pushlstring(L, fd->fspath.data(), fd->fspath.size());
+	lua_call(L, 2, 1);
+	program fx;
+	if (lua_type(L, -1) == LUA_TTABLE) {
+		lua_struct::unpack(L, -1, fx);
+		fd->prog->idx = fx.prog;
+		for (auto& uniformInfo : fx.uniforms) {
+			(*(fd->uniforms))[uniformInfo.name].idx = uniformInfo.handle;
+		}
+	} else {
+		lua_pop(L, 1);
+	}
+	return 0;
 }
 
 void load_fx(const std::string& vspath, const std::string& fspath, bgfx_program_handle_t& prog,
 	std::unordered_map<std::string, bgfx_uniform_handle_t>& uniforms)
 {
-	lua_State* L = g_effekseer->lua_state;
-	std::string result;
-	lua_pushlstring(L, vspath.data(), vspath.size());
-	lua_pushlstring(L, fspath.data(), fspath.size());
-	lua_rawgeti(L, LUA_REGISTRYINDEX, g_effekseer->fxloader_);
-	lua_insert(L, -3);
-	lua_call(L, 2, 1);
-	program fx;
-	if (lua_type(L, -1) == LUA_TTABLE) {
-		lua_struct::unpack(L, -1, fx);
-		prog.idx = fx.prog;
-		for (auto& uniformInfo : fx.uniforms) {
-			uniforms[uniformInfo.name].idx = uniformInfo.handle;
-		}
+	lua_State* L = g_current_lua_state;
+	fx_data fd = { vspath, fspath, &prog, &uniforms };
+	lua_pushcfunction(L, lload_fx);
+	lua_pushlightuserdata(L, &fd);
+	if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
+		printf("load_fx error: %s\n", lua_tostring(L, -1));
+		lua_pop(L, 1);
 	}
 }
 
 effekseer_ctx::effekseer_ctx(lua_State* L, int idx)
-	: lua_state{ L }
 {
 	lua_struct::unpack(L, idx, *this);
 	EffekseerRendererBGFX::g_view_id = viewid;
@@ -159,6 +198,7 @@ leffekseer_update(lua_State* L) {
 
 static int
 lcreate(lua_State* L) {
+	g_current_lua_state = L;
 	if (lua_type(L, 1) == LUA_TSTRING && lua_type(L, 2) == LUA_TSTRING) {
 		size_t sz;
 		g_current_path = std::string(lua_tolstring(L, 2, &sz));

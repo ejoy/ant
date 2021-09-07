@@ -36,6 +36,7 @@ end
 local function COMPILE(path)
 	local ok, lpath = compile_resource(path)
 	if not ok then
+		print(table.concat(lpath, "\n"))
 		response("MISSING", path)
 		return
 	end

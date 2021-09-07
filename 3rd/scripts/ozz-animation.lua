@@ -59,5 +59,8 @@ lm:exe "gltf2ozz" {
         "src/animation/offline/gltf/*.cc",
         "src/animation/offline/tools/*.cc",
         "!src/animation/offline/tools/dump2ozz.cc",
+    },
+    windows = {
+        sources = "../scripts/utf8/utf8.rc"
     }
 }

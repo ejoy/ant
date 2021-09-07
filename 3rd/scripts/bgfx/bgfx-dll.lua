@@ -38,12 +38,17 @@ lm:dll "bgfx-core" {
         "src/*.cpp",
         "!src/amalgamated.cpp",
     },
+    msvc = {
+        defines = "__STDC_FORMAT_MACROS",
+    },
+    clang = {
+        flags = {
+            "-Wno-unused-variable"
+        }
+    },
     windows = {
         includes = "3rdparty/dxsdk/include",
         links = { "gdi32", "psapi", "user32" }
-    },
-    msvc = {
-        defines = "__STDC_FORMAT_MACROS",
     },
     macos = {
         sources = {

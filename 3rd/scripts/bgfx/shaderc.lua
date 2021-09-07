@@ -173,7 +173,7 @@ lm:exe "shaderc" {
         "src/shader*.cpp",
     },
     windows = {
-        sources = "../scripts/bgfx/bgfx.rc"
+        sources = "../scripts/utf8/utf8.rc"
     },
     msvc = {
         flags = {

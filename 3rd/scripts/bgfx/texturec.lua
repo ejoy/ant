@@ -18,7 +18,7 @@ lm:exe "texturec" {
         "tools/texturec/texturec.cpp",
     },
     windows = {
-        sources = "../scripts/bgfx/bgfx.rc",
+        sources = "../scripts/utf8/utf8.rc",
         links = {
             "psapi"
         }
