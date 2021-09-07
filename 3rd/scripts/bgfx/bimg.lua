@@ -28,6 +28,7 @@ lm:source_set "astc-codec" {
         flags = {
             "-Wno-deprecated-array-compare",
             "-Wno-unused-function",
+            "-Wno-unused-const-variable"
         }
     }
 }

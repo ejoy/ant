@@ -18,11 +18,16 @@ lm:lib "bgfx-lib" {
         "src/*.cpp",
         "!src/amalgamated.cpp",
     },
-    windows = {
-        includes = "3rdparty/dxsdk/include",
-    },
     msvc = {
         defines = "__STDC_FORMAT_MACROS",
+    },
+    clang = {
+        flags = {
+            "-Wno-unused-variable"
+        }
+    },
+    windows = {
+        includes = "3rdparty/dxsdk/include",
     },
     macos = {
         sources = {
