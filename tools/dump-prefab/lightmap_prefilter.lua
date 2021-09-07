@@ -72,7 +72,7 @@ local function save_lightmap_result(path, lme)
     if not lfs.exists(pp) then
         lfs.create_directories(pp)
     end
-    write_file(path, serialize.stringify(lme))
+    write_file(path, serialize.stringify({lme}))
 end
 
 return {

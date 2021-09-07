@@ -186,7 +186,9 @@ end
 
 local function save_bake_result(br)
     local lmr_path = lightmap_path / "lightmap_result.prefab"
-    local lmr_e = serialize.parse(lmr_path:string(), cr.read_file(lmr_path:string()))
+    local lmr_prefab = serialize.parse(lmr_path:string(), cr.read_file(lmr_path:string()))
+    assert(#lmr_prefab == 1)
+    local lmr_e = lmr_prefab[1]
     local function build_lm_id_cache(prefab, lmcache)
         for _, e in ipairs(prefab) do
             if e.prefab then
@@ -208,7 +210,7 @@ local function save_bake_result(br)
     end
 
     lmcache = nil   --clean up
-    writefile(lmr_path:localpath(), serialize.stringify(lmr_e), "w")
+    writefile(lmr_path:localpath(), serialize.stringify({lmr_e}), "w")
 
     local function check_add_lightmap_result()
         local s = datalist.parse(readfile(sceneprefab_file))
