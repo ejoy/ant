@@ -11,9 +11,12 @@ local create_prefab; do
             local e = {}
             local r = prefab_lm[idx]
             if v.prefab then
-                e.prefab = create_prefab(v.prefab, assert(r.prefab))
-                if v.args and v.args.root then
-                    e.root = v.args.root
+                --TODO: we should preprocess scene.prefab file
+                if v.prefab:match "lightmap_result.prefab" == nil then
+                    e.prefab = create_prefab(v.prefab, assert(r.prefab))
+                    if v.args and v.args.root then
+                        e.root = v.args.root
+                    end
                 end
             else
                 maxid = maxid + 1
@@ -45,7 +48,7 @@ local create_prefab; do
                     if data_lm == nil then
                         data_lm = r
                     else
-                        data_lm.id = r.id
+                        data_lm.id = r.lightmap.id
                     end
                     e.lightmap = data_lm
                 end

@@ -54,7 +54,18 @@ local lmr_path = outputdir / "lightmaps"
 if not lfs.exists(lmr_path) then
     lfs.create_directories(lmr_path)
 end
-lm_prefilter.save(lmr_path / "lightmap_result.prefab")
+local lmr_e = w:singleton("lightmapper", "lightmap_result:in")
+lm_prefilter.save(lmr_path / "lightmap_result.prefab", {
+    policy = {
+        "ant.render|lightmap_result",
+        "ant.general|name",
+    },
+    data = {
+        lightmap_result = lmr_e.lightmap_result,
+        lightmapper = true,
+        name = "lightmap_result"
+    }
+})
 
 prefab.instance(w, respath:string())
 

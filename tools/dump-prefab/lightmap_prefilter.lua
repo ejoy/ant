@@ -1,12 +1,16 @@
 local serialize     = import_package "ant.serialize"
+local cr            = import_package "ant.compile_resource"
 local crypt         = require "crypt"
 local fs            = require "filesystem"
 local lfs           = require "filesystem.local"
 
-local function write_file(path, c) local f<close> = lfs.open(path, "w"); f:write(c) end
+local function write_file(path, c)
+    local f<close> = lfs.open(path, "w")
+    f:write(c)
+end
 
 local function build_tree(respath, cache)
-    local prefab = serialize.parse(respath, serialize.read_file(respath))
+    local prefab = serialize.parse(respath, cr.read_file(respath))
     local t = {}
     for idx, e in ipairs(prefab) do
         if e.prefab then
@@ -44,7 +48,7 @@ local function build(respath, lm_path)
     local lmr_file = local_lmpath / "lightmap_result.prefab"
     write_file(lmr_file, {lmr_e})
 
-    local scene = serialize.parse(respath, serialize.read_file(respath))
+    local scene = serialize.parse(respath, cr.read_file(respath))
     scene[#scene+1] = {
         lightmap_result_mount = {},
         prefab = local_lmpath / "lightmap_result.prefab",
@@ -56,17 +60,19 @@ end
 local DEFAULT_LIGHTMAP_SIZE<const> = 128
 
 local function prefilter(respath)
-    local prefab = serialize.parse(respath, serialize.read_file(respath))
+    local prefab = serialize.parse(respath:string(), cr.read_file(respath:string()))
 
     local lm_prefab = {}
     for idx, e in ipairs(prefab) do
         if e.prefab then
-            local pp = fs.path(e.prefab)
-            if not pp:is_absolute() then
-                pp = respath:parent_path() / pp
-            end
+            if e.prefab:match "lightmap_result.prefab" == nil then
+                local pp = fs.path(e.prefab)
+                if not pp:is_absolute() then
+                    pp = respath:parent_path() / pp
+                end
 
-            lm_prefab[idx] = prefilter(pp)
+                lm_prefab[idx] = {prefab = prefilter(pp)}
+            end
         else
             local function is_render_obj(e)
                 for _, p in ipairs(e.policy) do
@@ -105,23 +111,20 @@ local function prefilter(respath)
                 lm_prefab[idx] = {}
             end
         end
-
-        return lm_prefab
     end
-
+    return lm_prefab
 end
 
-local function prefilter_(respath, lmr_path)
-    local lmr_e = prefilter(respath)
-    if lmr_path == nil then
-        local dir = respath:parent_path():localpath()
-        lmr_path = dir / "output/lightmaps/lightmap_result.prefab"
-        lfs.create_directories(lmr_path:parent_path())
+local function save_lightmap_result(path, lme)
+    local pp = path:parent_path()
+    if not lfs.exists(pp) then
+        lfs.create_directories(pp)
     end
-    write_file(lmr_path, lmr_e)
+    write_file(path, serialize.stringify(lme))
 end
 
 return {
     build = build,
     prefilter = prefilter,
+    save = save_lightmap_result,
 }

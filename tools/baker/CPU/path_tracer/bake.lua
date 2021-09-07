@@ -1,6 +1,6 @@
 --local assetmgr = import_package "ant.asset"
 local serialize = import_package "ant.serialize"
-
+local cr        = import_package "ant.compile_resource"
 local bake      = require "bake"
 local crypt     = require "crypt"
 local datalist  = require "datalist"
@@ -186,7 +186,7 @@ end
 
 local function save_bake_result(br)
     local lmr_path = lightmap_path / "lightmap_result.prefab"
-    local lmr_e = serialize.parse(lmr_path, serialize.read_file(lmr_path))
+    local lmr_e = serialize.parse(lmr_path, cr.read_file(lmr_path))
     local function build_lm_id_cache(prefab, lmcache)
         for _, e in ipairs(prefab) do
             if e.prefab then
