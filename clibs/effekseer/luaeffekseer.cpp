@@ -33,7 +33,7 @@ std::string get_ant_file_path(const std::string& path)
 	lua_pushlstring(L, fullpath.data(), fullpath.size());
 	lua_rawgeti(L, LUA_REGISTRYINDEX, g_effekseer->path_converter_);
 	lua_insert(L, -2);
-	lua_call(L, 1, 1);
+	lua_pcall(L, 1, 1);
 	if (lua_type(L, -1) == LUA_TSTRING) {
 		return lua_tostring(L, -1);
 	}
@@ -49,7 +49,7 @@ void load_fx(const std::string& vspath, const std::string& fspath, bgfx_program_
 	lua_pushlstring(L, fspath.data(), fspath.size());
 	lua_rawgeti(L, LUA_REGISTRYINDEX, g_effekseer->fxloader_);
 	lua_insert(L, -3);
-	lua_call(L, 2, 1);
+	lua_pcall(L, 2, 1);
 	program fx;
 	if (lua_type(L, -1) == LUA_TTABLE) {
 		lua_struct::unpack(L, -1, fx);
