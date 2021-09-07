@@ -225,7 +225,7 @@ function TextureResource:do_update()
     local r = {}
     self.path:gsub('[^|]*', function (w) r[#r+1] = w end)
     if #r > 1 then
-        self.metadata = serialize.parse(cr.read_file(self.path))
+        self.metadata = serialize.parse(self.path, cr.read_file(self.path))
         if self.metadata.path[1] ~= '/' then
             self.metadata.path = r[1] .. "|images/" .. fs.path(self.metadata.path):filename():string()
         end

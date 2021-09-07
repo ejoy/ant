@@ -205,7 +205,7 @@ function MaterialView:set_model(eid)
     if not mtldata_list[eid] then
         --self.samplers = {}
         local mtl_filename = tostring(world[eid].material)
-        local md = {filename = mtl_filename, tdata = serialize.parse(mtl_filename，cr.read_file(mtl_filename))}
+        local md = {filename = mtl_filename, tdata = serialize.parse(mtl_filename, cr.read_file(mtl_filename))}
         md.tdata.fx.setting = md.tdata.fx.setting or {
             lighting = "on",
             surfacetype = "opacity",
