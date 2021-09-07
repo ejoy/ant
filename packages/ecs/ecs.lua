@@ -361,6 +361,24 @@ function world:cpu_stat(what)
 	return cs
 end
 
+function world:print_cpu_stat()
+	local t = {}
+	for k, v in pairs(self._cpu_stat.total) do
+		t[#t+1] = {k, v}
+	end
+	table.sort(t, function (a, b)
+		return a[2] > b[2]
+	end)
+	local s = {
+		"",
+		"cpu stat"
+	}
+	for i, v in ipairs(t) do
+		s[#s+1] = ("\t%s - %d"):format(v[1], v[2])
+	end
+	print(table.concat(s, "\n"))
+end
+
 local function remove_entity(w, e)
 	for c, component in sortpairs(e) do
 		local tc = w._class.component[c]
