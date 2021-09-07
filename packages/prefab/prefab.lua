@@ -247,7 +247,7 @@ function world:prefab_instance(filename)
 	--load clips
 	local clips_filename = string.sub(filename, 1, -8) .. ".clips";
 	if fs.exists(fs.path(clips_filename)) then
-		local path = fs.path(clips_filename):localpath()
+		local path = fs.path(clips_filename)
 		local f = assert(fs.open(path))
 		local data = f:read "a"
 		f:close()

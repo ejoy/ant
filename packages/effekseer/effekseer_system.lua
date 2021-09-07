@@ -88,9 +88,10 @@ function effekseer_sys:init()
         return assetmgr.load_fx { fs = fspath, vs = vspath, setting = {} }
     end
     effekseer.set_fxloader(fxloader)
-
-    -- local filemgr = require "filemanager"
+    
+    local filemgr = require "filemanager"
     -- filemgr.add("/pkg/ant.resources.binary/effekseer/Base")
+    effekseer.set_path_converter(filemgr.realpath)
 end
 
 local imgr = ecs.interface "filename_mgr"

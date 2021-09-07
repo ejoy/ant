@@ -16,15 +16,16 @@ local function compile_texture(path)
 end
 
 function m.realpath(path)
-    for i = #directorys, 1, -1 do
-        local file = directorys[i] / path
-        if fs.exists(file) then
-            if file:equal_extension "texture" or file:equal_extension "png" then
-                return compile_texture(file)
-            end
-            return file:localpath():string()
-        end
-    end
+    -- for i = #directorys, 1, -1 do
+    --     local file = directorys[i] / path
+    --     if fs.exists(file) then
+    --         if file:equal_extension "texture" or file:equal_extension "png" then
+    --             return compile_texture(file)
+    --         end
+    --         return file:localpath():string()
+    --     end
+    -- end
+    return fs.path(path):localpath():string()
 end
 
 return m
