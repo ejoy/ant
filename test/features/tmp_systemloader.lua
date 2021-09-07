@@ -13,85 +13,8 @@ local mc, mu = mathpkg.constant, mathpkg.util
 local camerapkg = import_package"ant.camera"
 local split_frustum = camerapkg.split_frustum
 
-local geo = import_package "ant.geometry".geometry
-
-local function create_plane_test()
-    local planes = {
-        {
-            srt = {s ={50, 1, 50}},
-            color = {0.8, 0.8, 0.8, 1},
-            material = "/pkg/ant.resources/materials/mesh_shadow.material",
-        },
-    }
-
-    for _, p in ipairs(planes) do
-        local eid = ientity.create_plane_entity(
-            p.srt,
-            p.material,
-            "test shadow plane",
-            {
-                ["ant.collision|collider_policy"] = {
-                    collider = {
-                        box = {{
-                            origin = { 0, 0, 0, 1 },
-                            size = {50, 0.001, 50},
-                        }}
-                    },
-                },
-                ["ant.render|debug_mesh_bounding"] = {
-                    debug_mesh_bounding = true,
-                }
-            })
-        imaterial.set_property(eid, "u_basecolor_factor", p.color)
-    end
-end
-
 local icamera = world:interface "ant.camera|camera"
 local iom = world:interface "ant.objcontroller|obj_motion"
-
-local function target_lock_test()
-    local eid = world:deprecated_create_entity{
-        policy = {
-            "ant.general|name",
-            "ant.render|render",
-        },
-        data = {
-            name = "lock_target",
-            state = ies.create_state "visible",
-            transform =  {
-                s = {2, 1, 2, 0},
-                t = {16, 1, 6},
-            },
-            mesh = "/pkg/ant.resources/meshes/sphere.mesh",
-            material = "/pkg/ant.resources/materials/singlecolor.material",
-            scene_entity = true,
-        }
-    }
-
-    local lock_eid = world:deprecated_create_entity {
-        policy = {
-            "ant.general|name",
-            "ant.render|render",
-            "ant.scene|hierarchy_policy",
-            "ant.scene|lock_target_policy",
-        },
-        data = {
-            name = "lock_obj",
-            state = ies.create_state "visible",
-            transform =  {t={0, 0, -6}},
-            lock_target = {
-                type = "ignore_scale",
-                offset = {0, 0, 3},
-            },
-            mesh = "/pkg/ant.resources/meshes/cube.mesh",
-            material = "/pkg/ant.resources/materials/singlecolor.material",
-            scene_entity = true,
-        },
-        action = {
-            mount = eid,
-        }
-    }
-end
 
 local function find_entity(name, whichtype)
     for _, eid in world:each(whichtype) do
