@@ -196,13 +196,16 @@ local function raw_read_file(filename)
     f:close()
     return c
 end
+
+local serialize = import_package "ant.serialize"
+
 function MaterialView:set_model(eid)
     if not BaseView.set_model(self, eid) then return false end
 
     if not mtldata_list[eid] then
         --self.samplers = {}
         local mtl_filename = tostring(world[eid].material)
-        local md = {filename = mtl_filename, tdata = datalist.parse(cr.read_file(mtl_filename))}
+        local md = {filename = mtl_filename, tdata = serialize.parse(mtl_filename，cr.read_file(mtl_filename))}
         md.tdata.fx.setting = md.tdata.fx.setting or {
             lighting = "on",
             surfacetype = "opacity",
@@ -211,7 +214,7 @@ function MaterialView:set_model(eid)
             bloom = "off"
         }
         if type(md.tdata.state) == "string" then
-            md.tdata.state = datalist.parse(raw_read_file(fs.path(md.tdata.state)))
+            md.tdata.state = serialize.parse(fs.path(md.tdata.state), raw_read_file(fs.path(md.tdata.state)))
         end
         local mtl_path = cr.compile(mtl_filename):remove_filename()
         for k, v in pairs(md.tdata.properties) do

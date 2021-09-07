@@ -219,13 +219,13 @@ function TextureResource:_init(config, modifier)
     ResourcePath._init(self, config, modifier)
     self.extension = ".texture"
 end
-
+local serialize = import_package "ant.serialize"
 function TextureResource:do_update()
     if #self.path <= 0 then return end
     local r = {}
     self.path:gsub('[^|]*', function (w) r[#r+1] = w end)
     if #r > 1 then
-        self.metadata = datalist.parse(cr.read_file(self.path))
+        self.metadata = serialize.parse(cr.read_file(self.path))
         if self.metadata.path[1] ~= '/' then
             self.metadata.path = r[1] .. "|images/" .. fs.path(self.metadata.path):filename():string()
         end
