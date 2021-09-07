@@ -205,7 +205,6 @@ local function save_bake_result(br)
         local id = m.lightmap.id
         local c = assert(lmcache[id])
         c.texture_path = save_lightmap(id, m.lightmap, r):string()
-        c.id = nil
     end
 
     lmcache = nil   --clean up

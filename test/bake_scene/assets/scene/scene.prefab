@@ -3,4 +3,6 @@ prefab: ./light.prefab
 ---
 prefab: ./box.prefab
 ---
+action:
+  lightmap_mount: {}
 prefab: ./output/lightmaps/lightmap_result.prefab
