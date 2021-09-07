@@ -16,6 +16,7 @@ local function compile_texture(path)
 end
 
 function m.realpath(path)
+    local _ <close> = fs.switch_sync()
     -- for i = #directorys, 1, -1 do
     --     local file = directorys[i] / path
     --     if fs.exists(file) then

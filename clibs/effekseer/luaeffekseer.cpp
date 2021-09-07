@@ -25,9 +25,10 @@ extern bgfx_view_id_t g_view_id;
 
 static effekseer_ctx* g_effekseer = nullptr;
 static std::string g_current_path = "";
+static lua_State* g_current_lua_state = nullptr;
 std::string get_ant_file_path(const std::string& path)
 {
-	lua_State* L = g_effekseer->lua_state;
+	lua_State* L = g_current_lua_state;
 	auto fullpath = g_current_path + path;
 	lua_pushlstring(L, fullpath.data(), fullpath.size());
 	lua_rawgeti(L, LUA_REGISTRYINDEX, g_effekseer->path_converter_);
@@ -42,7 +43,7 @@ std::string get_ant_file_path(const std::string& path)
 void load_fx(const std::string& vspath, const std::string& fspath, bgfx_program_handle_t& prog,
 	std::unordered_map<std::string, bgfx_uniform_handle_t>& uniforms)
 {
-	lua_State* L = g_effekseer->lua_state;
+	lua_State* L = g_current_lua_state;
 	std::string result;
 	lua_pushlstring(L, vspath.data(), vspath.size());
 	lua_pushlstring(L, fspath.data(), fspath.size());
@@ -60,7 +61,6 @@ void load_fx(const std::string& vspath, const std::string& fspath, bgfx_program_
 }
 
 effekseer_ctx::effekseer_ctx(lua_State* L, int idx)
-	: lua_state{ L }
 {
 	lua_struct::unpack(L, idx, *this);
 	EffekseerRendererBGFX::g_view_id = viewid;
@@ -159,6 +159,7 @@ leffekseer_update(lua_State* L) {
 
 static int
 lcreate(lua_State* L) {
+	g_current_lua_state = L;
 	if (lua_type(L, 1) == LUA_TSTRING && lua_type(L, 2) == LUA_TSTRING) {
 		size_t sz;
 		g_current_path = std::string(lua_tolstring(L, 2, &sz));
