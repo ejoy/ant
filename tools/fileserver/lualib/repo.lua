@@ -9,6 +9,7 @@ repo.__index = repo
 local lfs = require "filesystem.local"
 local access = require "vfs.repoaccess"
 local crypt = require "crypt"
+local datalist = require "datalist"
 
 local function byte2hex(c)
 	return ("%02x"):format(c:byte())
@@ -50,6 +51,30 @@ end
 
 local repo_build_dir
 
+local function readconfig(filename)
+    return datalist.parse(readfile(filename))
+end
+
+local function do_build(output)
+    local depfile = output / ".dep"
+    if not lfs.exists(depfile) then
+        return
+    end
+	for _, dep in ipairs(readconfig(depfile)) do
+        local timestamp, filename = dep[1], lfs.path(dep[2])
+        if timestamp == 0 then
+            if lfs.exists(filename) then
+                return
+            end
+        else
+            if not lfs.exists(filename) or timestamp ~= lfs.last_write_time(filename) then
+                return
+            end
+        end
+	end
+	return true
+end
+
 local function compile_resource(repo, name, path, cache, namehashcache, hashs)
 	local ext = path:match "[^/]%.([%w*?_%-]*)$"
 	if ext ~= "sc" and ext ~= "glb"  and ext ~= "texture" then
@@ -60,7 +85,7 @@ local function compile_resource(repo, name, path, cache, namehashcache, hashs)
 		return false
 	end
 	for lpath in realpath:list_directory() do
-		if lfs.exists(lpath / ".arguments") then
+		if lfs.exists(lpath / ".arguments") and do_build(lpath) then
 			local arguments = readfile(lpath / ".arguments")
 			local rpath = path .. "?" .. arguments
 			access.addmount(repo, rpath, lpath)
