@@ -55,7 +55,7 @@ local lm_sys = ecs.system "lightmap_system"
 
 local default_lm
 function lm_sys:init()
-    default_lm = assetmgr.resource "/pkg/ant.resources/textures/default.texture"
+    default_lm = assetmgr.resource "/pkg/ant.resources/textures/black.texture"
 end
 
 local function update_lm_texture(properties, handle)
