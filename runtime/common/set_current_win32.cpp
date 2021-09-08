@@ -20,26 +20,21 @@ static void repo_setup(wchar_t* dir) {
     dir[sz] = L'\0';
 }
 
+wchar_t* appdata_path() {
+    wchar_t* path;
+    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &path))) {
+        return path;
+    }
+    fprintf(stderr, "::SHGetKnownFolderPath failed.");
+    abort();
+}
+
 int runtime_setcurrent(lua_State* L) {
-    wchar_t dir[MAX_PATH] = {0};
-    LPITEMIDLIST pidl = NULL;
-    GetModuleFileNameW(NULL, dir, MAX_PATH);
-    PathRemoveBlanksW(dir);
-    PathUnquoteSpacesW(dir);
-    PathRemoveBackslashW(dir);
-    PathRemoveFileSpecW(dir);
-    PathAppendW(dir, L".repo");
-    if (PathFileExistsW(dir)) {
-        PathRemoveFileSpecW(dir);
-    }
-    else {
-        SHGetSpecialFolderLocation(NULL, CSIDL_PERSONAL, &pidl);
-        SHGetPathFromIDListW(pidl, dir);
-        PathAppendW(dir, L"ant");
-        CreateDirectoryW(dir, NULL);
-        PathAppendW(dir, L"runtime");
-        CreateDirectoryW(dir, NULL);
-    }
+    wchar_t* dir = appdata_path();
+    PathAppendW(dir, L"ant");
+    CreateDirectoryW(dir, NULL);
+    PathAppendW(dir, L"runtime");
+    CreateDirectoryW(dir, NULL);
     SetCurrentDirectoryW(dir);
     repo_setup(dir);
     return 0;

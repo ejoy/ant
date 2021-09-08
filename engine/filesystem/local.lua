@@ -13,19 +13,22 @@ end
 function fs.dofile(filepath)
     return dofile(filepath:string())
 end
-if platform.OS == 'Windows' then
-    function fs.mydocs_path()
-        return fs.path(os.getenv 'USERPROFILE') / 'Documents'
-    end
-else
-    function fs.mydocs_path()
-        return fs.path(os.getenv 'HOME') / 'Documents'
-    end
-end
 local path_mt = debug.getmetatable(fs.path())
 if not path_mt.localpath then
     function path_mt:localpath()
         return self
+    end
+end
+
+function fs.appdata_path()
+    if platform.OS == 'Windows' then
+        return fs.path(os.getenv "LOCALAPPDATA")
+    elseif platform.OS == 'Linux' then
+        return fs.path(os.getenv "XDG_DATA_HOME" or (os.getenv "HOME" .. "/.local/share"))
+    elseif platform.OS == 'macOS' then
+        return fs.path(fs.appdata_path(), os.getenv "HOME" .. "/Library/Caches")
+    else
+        error "unimplemented"
     end
 end
 

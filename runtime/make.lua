@@ -35,7 +35,7 @@ lm:source_set "ant_common" {
         sources = "common/set_current_win32.cpp"
     },
     macos = {
-        sources = "common/set_current_osx.cpp"
+        sources = "common/set_current_osx.mm"
     },
     ios = {
         sources = "common/set_current_ios.mm"
@@ -51,8 +51,6 @@ lm:lib "ant_runtime" {
     includes = {
         "../../clibs/lua",
         "."
-    },
-    windows = {
     },
     macos = {
         sources = "../osx/main.cpp",
