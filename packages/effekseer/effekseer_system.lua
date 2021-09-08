@@ -179,26 +179,8 @@ function effekseer_sys:render_submit()
 end
 
 function effekseer_sys:follow_transform_updated()
-    -- for v in w:select "eid:in scene:in follow_joint:in follow_flag:in" do
-    --     for e in w:select "eid:in skeleton:in pose_result:in" do
-    --         if e.eid == world[v.eid].parent then
-    --             local ske = e.skeleton._handle
-    --             local joint_idx = ske:joint_index(v.follow_joint)
-    --             local adjust_mat = e.pose_result:joint(joint_idx)
-    --             local scale, rotate, pos = math3d.srt(adjust_mat)
-    --             if v.follow_flag == 1 then
-    --                 adjust_mat = math3d.matrix{s = 1, r = {0,0,0,1}, t = pos}
-    --             elseif v.follow_flag == 2 then
-    --                 adjust_mat = math3d.matrix{s = 1, r = rotate, t = pos}
-    --             end
-    --             v.scene._worldmat = adjust_mat--math3d.mul(adjust_mat, v.scene.srt)
-    --         end
-    --     end
-    -- end
-
-    for v in w:select "effect_instance:in scene:in" do
+    for v in w:select "eid:in effect_instance:in scene:in" do
         effekseer.update_transform(v.effect_instance.handle, v.scene._worldmat)
-        --effekseer.update_transform(v.effect_instance.handle, math3d.mul(v.scene.parent._worldmat, v.scene._worldmat))
     end
 
     for _, eid in event_entity_register:unpack() do

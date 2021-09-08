@@ -212,6 +212,26 @@ end
 local evSceneChanged = world:sub {"scene_changed"}
 
 function s:update_transform()
+	for v in w:select "eid:in scene:in follow_joint:in follow_flag:in" do
+        if v.follow_joint ~= "None" then
+            for e in w:select "eid:in skeleton:in pose_result:in" do
+                if e.eid == world[v.eid].parent then
+                    local ske = e.skeleton._handle
+                    local joint_idx = ske:joint_index(v.follow_joint)
+                    local adjust_mat = e.pose_result:joint(joint_idx)
+                    local scale, rotate, pos = math3d.srt(adjust_mat)
+                    if v.follow_flag == 1 then
+                        adjust_mat = math3d.matrix{s = 1, r = {0,0,0,1}, t = pos}
+                    elseif v.follow_flag == 2 then
+                        adjust_mat = math3d.matrix{s = 1, r = rotate, t = pos}
+                    end
+					v.scene.srt = math3d.ref(adjust_mat)
+                    --v.scene.srt = math3d.ref(math3d.mul(adjust_mat, v.scene.srt))
+                end
+            end
+        end
+    end
+
 	for _, e in evSceneChanged:unpack() do
 		if type(e) ~= "table" then
 			local function findEntity(eid)

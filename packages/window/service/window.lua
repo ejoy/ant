@@ -52,7 +52,7 @@ local function multi_wakeup(key, ...)
 end
 
 function S.init()
-    window.create(dispatch, 1024, 768)
+    window.create(dispatch, 1334, 750)
     ltask.fork(function()
         window.mainloop(true)
         multi_wakeup "quit"

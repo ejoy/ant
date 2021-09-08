@@ -116,12 +116,12 @@ function s:luaecs_sync()
 			data.lightmap = e.lightmap
 			policy[#policy+1] = "ant.render|lightmap"
 		end
-		--if isSlot(e) then
-		--	data.slot = e.slot
-		--	data.follow_joint = e.follow_joint
-		--	data.follow_flag = e.follow_flag
-		--	policy[#policy+1] = "ant.scene|slot_policy"
-		--end
+		if isSlot(e) then
+			data.slot = e.slot
+			data.follow_joint = e.follow_joint
+			data.follow_flag = e.follow_flag
+			policy[#policy+1] = "ant.scene|slot_policy"
+		end
 
 		world:create_entity {
 			policy = policy,

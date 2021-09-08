@@ -37,7 +37,7 @@ local camera_ui_data = {
 }
 
 local function update_ui_data(eid)
-    if not current_panel then return end
+    if not current_panel or not eid then return end
     -- update transform
     -- if current_panel.super then
     --     -- BaseView
