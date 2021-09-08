@@ -77,7 +77,7 @@ end
 
 local function compile_resource(repo, name, path, cache, namehashcache, hashs)
 	local ext = path:match "[^/]%.([%w*?_%-]*)$"
-	if ext ~= "sc" and ext ~= "glb"  and ext ~= "texture" then
+	if ext ~= "sc" and ext ~= "glb"  and ext ~= "texture" and ext ~= "png" then
 		return true
 	end
 	local realpath = repo._root / ".build" / ext / get_filename(repo, path)

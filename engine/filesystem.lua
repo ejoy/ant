@@ -190,7 +190,9 @@ end
 
 function path_mt:localpath()
     local _, s = normalize_split(self._value)
-    return lfs.path(assert(vfs.realpath(table.concat(s, "/"))))
+    local localpath = vfs.realpath(table.concat(s, "/"))
+    assert(localpath, "count find local path: "..self._value)
+    return lfs.path(localpath)
 end
 
 function path_mt:package_name()
