@@ -210,16 +210,19 @@ local function save_bake_result(br)
     end
 
     lmcache = nil   --clean up
+    log("update 'lightmap_result.prefab':", sceneprefab_file)
     writefile(lmr_path:localpath(), serialize.stringify({lmr_e}), "w")
 
     local function check_add_lightmap_result()
         local s = datalist.parse(readfile(sceneprefab_file))
         for _, p in ipairs(s) do
             if p.prefab and p.prefab:match "lightmap_result.prefab" then
+                log("scene already have 'lightmap_result.prefab'")
                 return
             end
         end
 
+        log("add 'lightmpre_result.prefab' to scene prefab file:", sceneprefab_file)
         s[#s+1] = {
             action = {
                 lightmap_mount = {},
@@ -240,7 +243,11 @@ local b = bake.create{
     lights      = lights,
 }
 log("start bake...")
-save_bake_result(bake.bake(b))
-
+local bake_results = bake.bake(b)
 log("bake end...")
+
+log("num bake results:", #bake_results)
+save_bake_result(bake_results)
+
+log("destroy...")
 bake.destroy(b)
