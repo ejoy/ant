@@ -95,7 +95,7 @@ local lightidx = 0
 local function gen_light_id() lightidx = lightidx + 1 return lightidx end
 
 local geometricidx = 0
-local function gen_light_id() geometricidx = geometricidx + 1 return geometricidx end
+local function gen_geometry_id() geometricidx = geometricidx + 1 return geometricidx end
 
 local function create_light_billboard(light_eid)
     -- local bb_eid = world:deprecated_create_entity{
@@ -206,7 +206,7 @@ function m:create_collider(config)
             --"ant.collision|collider_policy"
         },
         data = {
-            name = "collider" .. geometricidx,
+            name = "collider" .. gen_geometry_id(),
             scene_entity = true,
             transform = {s = scale},
             --collider = { [config.type] = define },
@@ -258,7 +258,9 @@ function m:create(what, config)
     elseif what == "camera" then
         local new_camera = camera_mgr.ceate_camera()
         self.new_camera[#self.new_camera + 1] = new_camera
-       
+    elseif what == "empty" then
+        local new_entity, temp = create_simple_entity("empty" .. gen_geometry_id())
+        self:add_entity(new_entity, gizmo.target_eid, temp)
     elseif what == "geometry" then
         if config.type == "cube"
             or config.type == "cone"
@@ -281,7 +283,7 @@ function m:create(what, config)
                     --material = "/pkg/ant.resources/materials/singlecolor.material",
                     material = "/pkg/ant.resources/materials/pbr_default.material",
                     mesh = geom_mesh_file[config.type],
-                    name = config.type .. geometricidx
+                    name = config.type .. gen_geometry_id()
                 }
             }
             imaterial.set_property(new_entity, "u_color", {1, 1, 1, 1})

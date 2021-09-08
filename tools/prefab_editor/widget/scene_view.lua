@@ -217,6 +217,9 @@ function m.show()
             imgui.windows.OpenPopup("CreateEntity")
         end
         if imgui.windows.BeginPopup("CreateEntity") then
+            if imgui.widget.MenuItem("EmptyNode") then
+                world:pub {"Create", "empty"}
+            end
             if imgui.widget.BeginMenu("Collider") then
                 for i, type in ipairs(collider_type) do
                     if imgui.widget.MenuItem(type) then
