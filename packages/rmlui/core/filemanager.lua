@@ -46,7 +46,7 @@ local function find_texture(path)
         --TODO resource dont support fs.exists
         local ok, res = pcall(function()
             return cr.compile(file:string() .. "|main.bin"):string()
-        end
+        end)
         if ok then
             return res
         end
