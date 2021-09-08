@@ -14,10 +14,6 @@ policy:
 action:
   mount: 1
 data:
-  lightmap:
-    hemisize: 64
-    id: 6131b79c3fdc3ac85434b158
-    size: 64
   material: $path ./box.glb|materials/white.material
   mesh: $path "./box.glb|meshes/网格.006_P1.meshbin"
   name: pCylinder1
@@ -31,7 +27,6 @@ policy:
   ant.general|name
   ant.render|render
   ant.scene|hierarchy_policy
-  ant.render|lightmap
 ---
 action:
   mount: 1
@@ -49,10 +44,6 @@ policy:
 action:
   mount: 3
 data:
-  lightmap:
-    hemisize: 64
-    id: 6131b79c3fdc3ac85434b159
-    size: 64
   material: $path ./box.glb|materials/blue.material
   mesh: $path "./box.glb|meshes/网格.002_P1.meshbin"
   name: polySurface14
@@ -65,7 +56,6 @@ data:
 policy:
   ant.general|name
   ant.render|render
-  ant.render|lightmap
   ant.scene|hierarchy_policy
 ---
 action:
@@ -128,10 +118,6 @@ policy:
 action:
   mount: 9
 data:
-  lightmap:
-    hemisize: 64
-    id: 6131b79c3fdc3ac85434b15a
-    size: 64
   material: $path ./box.glb|materials/white.material
   mesh: $path "./box.glb|meshes/网格_P1.meshbin"
   name: polySurface11
@@ -143,17 +129,12 @@ data:
     t: {0, 0, 0}
 policy:
   ant.general|name
-  ant.render|lightmap
   ant.render|render
   ant.scene|hierarchy_policy
 ---
 action:
   mount: 9
 data:
-  lightmap:
-    hemisize: 64
-    id: 6131b79c3fdc3ac85434b15b
-    size: 64
   material: $path ./box.glb|materials/white.material
   mesh: $path "./box.glb|meshes/网格.001_P1.meshbin"
   name: polySurface12
@@ -165,7 +146,6 @@ data:
     t: {2.500000238418579, -2.500000476837158, 0}
 policy:
   ant.general|name
-  ant.render|lightmap
   ant.render|render
   ant.scene|hierarchy_policy
 ---
@@ -194,10 +174,6 @@ policy:
 action:
   mount: 13
 data:
-  lightmap:
-    hemisize: 64
-    id: 6131b79c3fdc3ac85434b15c
-    size: 64
   material: $path ./box.glb|materials/white.material
   mesh: $path "./box.glb|meshes/网格.005_P1.meshbin"
   name: polySurface19
@@ -210,16 +186,11 @@ data:
 policy:
   ant.general|name
   ant.render|render
-  ant.render|lightmap
   ant.scene|hierarchy_policy
 ---
 action:
   mount: 13
 data:
-  lightmap:
-    hemisize: 64
-    id: 6131b79c3fdc3ac85434b15d
-    size: 64
   material: $path ./box.glb|materials/green.material
   mesh: $path "./box.glb|meshes/网格.004_P1.meshbin"
   name: polySurface18
@@ -232,16 +203,11 @@ data:
 policy:
   ant.general|name
   ant.render|render
-  ant.render|lightmap
   ant.scene|hierarchy_policy
 ---
 action:
   mount: 12
 data:
-  lightmap:
-    hemisize: 64
-    id: 6131b79c3fdc3ac85434b15e
-    size: 64
   material: $path ./box.glb|materials/phong2.material
   mesh: $path "./box.glb|meshes/网格.003_P1.meshbin"
   name: polySurface16
@@ -254,5 +220,4 @@ data:
 policy:
   ant.general|name
   ant.render|render
-  ant.render|lightmap
   ant.scene|hierarchy_policy
