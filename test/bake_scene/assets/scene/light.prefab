@@ -4,7 +4,7 @@ policy:
   ant.general|name
 data:
   transform:
-    r: {2.2, -1, 0}
+    r: {0.25,0.25,-0.066987298429012,0.93301266431808}
     t: {0, 10, 0, 1}
   color: {1, 1, 1, 1}
   intensity: 2
