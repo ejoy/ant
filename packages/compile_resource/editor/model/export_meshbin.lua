@@ -23,7 +23,7 @@ local function sort_pairs(t)
     end
 end
 
-local function get_desc(name, accessor)
+local function get_layout(name, accessor)
 	local shortname, channel = declmgr.parse_attri_name(name)
 	local comptype_name = gltfutil.comptype_name_mapper[accessor.componentType]
 
@@ -33,6 +33,51 @@ local function get_desc(name, accessor)
 			(accessor.normalized and "n" or "N") .. 
 			"I" .. 
 			gltfutil.decl_comptype_mapper[comptype_name]
+end
+
+local function attrib_data(desc, iv, bin)
+	local buf_offset = desc.bv_offset + iv * desc.stride + desc.acc_offset
+	return bin:sub(buf_offset+1, buf_offset+desc.elemsize)
+end
+
+local function fetch_ib_buffer2(gltfscene, gltfbin, index_accessor)
+	local bufferViews = gltfscene.bufferViews
+
+	local bvidx = index_accessor.bufferView+1
+	local bv = bufferViews[bvidx]
+	local elemsize = gltfutil.accessor_elemsize(index_accessor)
+	local class = {
+		acc_offset = index_accessor.byteOffset or 0,
+		bv_offset = bv.byteOffset or 0,
+		elemsize = elemsize,
+		stride = bv.byteStride or elemsize,
+	}
+
+	assert(elemsize == 2 or elemsize == 4)
+	local offset = class.acc_offset + class.bv_offset
+	local n = index_accessor.count
+	local size = n * elemsize
+
+	local indexbin = gltfbin:sub(offset+1, offset+size)
+	local num_triangles = n // 3
+
+	local buffer = {}
+	local fmt = elemsize == 4 and "III" or "HHH"
+	for tri=0, num_triangles-1 do
+		local buffer_offset = tri * elemsize * 3
+		local v0, v1, v2 = fmt:unpack(indexbin, buffer_offset+1)
+		local s = fmt:pack(v0, v2, v1)
+		buffer[#buffer+1] = s
+	end
+
+	indexbin = table.concat(buffer, "")
+
+	return {
+		memory = {indexbin, 1, #indexbin},
+		flag = (elemsize == 4 and 'd' or ''),
+		start 	= 0,
+		num 	= index_accessor.count,
+	}
 end
 
 local function fetch_ib_buffer(gltfscene, bindata, index_accessor)
@@ -71,11 +116,17 @@ end
 
 local function create_prim_bounding(meshscene, prim)	
 	local posacc = meshscene.accessors[assert(prim.attributes.POSITION)+1]
-	if posacc.min then
-		assert(#posacc.min == 3)
-		assert(#posacc.max == 3)
+	local minv = posacc.min
+	if minv then
+		local maxv = posacc.max
+		assert(#minv == 3)
+		assert(#maxv == 3)
+
+		--right hand to left hand
+		maxv[3] = minv[3]
+		minv[3] = maxv[3]
 		local bounding = {
-			aabb = {posacc.min, posacc.max}
+			aabb = {minv, maxv}
 		}
 		prim.bounding = bounding
 		return bounding
@@ -107,30 +158,128 @@ local function get_obj_name(obj, idx, defname)
 	return defname .. idx
 end
 
-local default_layouts = {
-	POSITION	= 1,
-	NORMAL 		= 1,
-	TANGENT 	= 1,
-	BITANGENT 	= 1,
+local default_layouts<const> = {
+	POSITION = 1,
+	NORMAL = 1,
+	TANGENT = 1,
+	BITANGENT = 1,
 
-	JOINTS_0 	= 2,
-	WEIGHTS_0 	= 2,
+	COLOR_0 = 3,
+	COLOR_1 = 3,
+	COLOR_2 = 3,
+	COLOR_3 = 3,
+	TEXCOORD_0 = 3,
+	TEXCOORD_1 = 3,
+	TEXCOORD_2 = 3,
+	TEXCOORD_3 = 3,
+	TEXCOORD_4 = 3,
+	TEXCOORD_5 = 3,
+	TEXCOORD_6 = 3,
+	TEXCOORD_7 = 3,
+	JOINTS_0 = 2,
+	WEIGHTS_0 = 2,
+}
 
-	COLOR_0		= 3,
-	COLOR_1		= 3,
-	COLOR_2		= 3,
-	COLOR_3		= 3,
-	TEXCOORD_0 	= 3,
-	TEXCOORD_1 	= 3,
-	TEXCOORD_2 	= 3,
-	TEXCOORD_3 	= 3,
-	TEXCOORD_4 	= 3,
-	TEXCOORD_5 	= 3,
-	TEXCOORD_6 	= 3,
-	TEXCOORD_7 	= 3,
+local LAYOUT_NAMES<const> = {
+	"POSITION",
+	"NORMAL",
+	"TANGENT",
+	"BITANGENT",
+	"COLOR_0",
+	"COLOR_1",
+	"COLOR_2",
+	"COLOR_3",
+	"TEXCOORD_0",
+	"TEXCOORD_1",
+	"TEXCOORD_2",
+	"TEXCOORD_3",
+	"TEXCOORD_4",
+	"TEXCOORD_5",
+	"TEXCOORD_6",
+	"TEXCOORD_7",
+	"JOINTS_0",
+	"WEIGHTS_0",
 }
 
 local jointidx_fmt<const> = "HHHH"
+
+-- change from right hand to left hand
+-- left hand define as: 
+-- 		x: -left, +right
+-- 		y: +up, -down
+--		z: +point2user, -point2screen
+-- right hand define as:
+-- 		x: -left, +right
+-- 		y: +up, -down
+--		z: -point2user, +point2screen
+local function r2l_vec(v, l)
+	local t = l:sub(6, 6)
+	if t == 'f' then
+		local x, y, z = ('fff'):unpack(v)
+		z = -z
+		return ('fff'):pack(x, y, z)
+	end
+
+	assert(("not support layout:%s, %s"):format(l, t))
+end
+
+local function r2l_quat(q, l)
+
+end
+
+local function fetch_vb_buffers2(gltfscene, gltfbin, prim)
+	assert(prim.mode == nil or prim.mode == 4)
+	local attributes = prim.attributes
+	local accessors, bufferViews, buffers = gltfscene.accessors, gltfscene.bufferViews, gltfscene.buffers
+	local layoutdesc = {}
+	local layouts = {}
+
+	for _, attribname in ipairs(LAYOUT_NAMES) do
+		local accidx = attributes[attribname]
+		if accidx then
+			local acc = accessors[accidx+1]
+			local bvidx = acc.bufferView+1
+			local bv = bufferViews[bvidx]
+			layouts[#layouts+1] = get_layout(attribname, accessors[accidx+1])
+			local elemsize = gltfutil.accessor_elemsize(acc)
+			layoutdesc[#layoutdesc+1] = {
+				acc_offset = acc.byteOffset or 0,
+			 	bv_offset = bv.byteOffset or 0,
+				elemsize = elemsize,
+			 	stride = bv.byteStride or elemsize,
+			}
+		end
+	end
+
+	local buffer = {}
+	local numv = gltfutil.num_vertices(prim, gltfscene)
+	for iv=0, numv-1 do
+		for idx, d in ipairs(layoutdesc) do
+			local l = layouts[idx]
+			local v = attrib_data(d, iv, gltfbin)
+
+			local t = l:sub(1, 1)
+			if t == 'p' or t == 'n' or t == 'T' or t == 'b' then
+				v = r2l_vec(v, l)
+			elseif t == 'i' then
+				if l:sub(6, 6) == 'u' then
+					v = jointidx_fmt:pack(v:byte(1), v:byte(2), v:byte(3), v:byte(4))
+				end
+			end
+			buffer[#buffer+1] = v
+		end
+	end
+
+	local bindata = table.concat(buffer, "")
+	return {
+		{
+			declname = table.concat(layouts, '|'),
+			memory = {bindata, 1, #bindata},
+		},
+		start = 0,
+		num = numv,
+	}
+end
 
 local function fetch_vb_buffers(gltfscene, gltfbin, prim)
 	local attributes = prim.attributes
@@ -186,7 +335,7 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim)
 			local bv_offset = bv.byteOffset or 0
 
 			local elemsize = gltfutil.accessor_elemsize(acc)
-			local d = get_desc(attribname, acc)
+			local d = get_layout(attribname, acc)
 			local va
 			va, d = get_vertex_attrib_op(d)
 			declname[#declname+1] = d
@@ -312,11 +461,11 @@ local function export_meshbin(gltfscene, bindata, exports)
 		exports.mesh[meshidx] = {}
 		for primidx, prim in ipairs(mesh.primitives) do
 			local group = {}
-			group.vb = fetch_vb_buffers(gltfscene, bindata, prim)
+			group.vb = fetch_vb_buffers2(gltfscene, bindata, prim)
 			local indices_accidx = prim.indices
 			if indices_accidx then
 				local idxacc = gltfscene.accessors[indices_accidx+1]
-				group.ib = fetch_ib_buffer(gltfscene, bindata, idxacc)
+				group.ib = fetch_ib_buffer2(gltfscene, bindata, idxacc)
 			end
 			local bb = create_prim_bounding(gltfscene, prim)
 			if bb then

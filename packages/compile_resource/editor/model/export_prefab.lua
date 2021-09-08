@@ -46,10 +46,27 @@ local function get_transform(node)
         }
     end
 
+    local t, r = node.translation, node.rotation
+    local tt, rr = t, r
+
+    if _R2L then
+        if t then
+            tt = {
+                t[1], t[2], -t[3]
+            }
+        end
+
+        if r then
+            rr = {
+                -r[1], -r[2], -r[3],
+                r[4]
+            }
+        end
+    end
     return {
         s = node.scale,
-        r = node.rotation,
-        t = node.translation,
+        r = rr,
+        t = tt,
     }
 end
 
@@ -326,7 +343,9 @@ local function find_mesh_nodes(gltfscene, scenenodes)
 
     return meshnodes
 end
-local r2l_mat = {
+local r2l_mat = _R2L and {
+    s = {1.0, 1.0, 1.0}
+} or {
     s = {-1.0, 1.0, 1.0}
 }
 
