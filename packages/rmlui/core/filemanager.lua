@@ -22,10 +22,6 @@ local function import_font(path)
     end
 end
 
-local function compile_texture(path)
-    return cr.compile(path:string() .. "|main.bin"):string()
-end
-
 function m.preload_dir(dir)
     dir = fs.path(dir)
     directorys[#directorys+1] = dir
@@ -44,13 +40,26 @@ function m.vfspath(path)
     end
 end
 
+local function find_texture(path)
+    for i = #directorys, 1, -1 do
+        local file = directorys[i] / path
+        --TODO resource dont support fs.exists
+        local ok, res = pcall(function()
+            return cr.compile(file:string() .. "|main.bin"):string()
+        end
+        if ok then
+            return res
+        end
+    end
+end
+
 function m.realpath(path)
+    if fs.path(path):equal_extension "texture" or fs.path(path):equal_extension "png" then
+        return find_texture(path)
+    end
     for i = #directorys, 1, -1 do
         local file = directorys[i] / path
         if fs.exists(file) then
-            if file:equal_extension "texture" or file:equal_extension "png" then
-                return compile_texture(file)
-            end
             return file:localpath():string()
         end
     end
