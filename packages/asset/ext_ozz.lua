@@ -3,7 +3,7 @@ local cr = import_package "ant.compile_resource"
 local loaders = {}
 
 loaders["ozz-animation"] = function (fn)
-	local animodule = require "hierarchy.animation"
+	local animodule = require "hierarchy".animation
 	local handle = animodule.new_animation(fn)
 	local scale = 1     -- TODO
 	local looptimes = 0 -- TODO
@@ -16,7 +16,7 @@ loaders["ozz-animation"] = function (fn)
 end
 
 loaders["ozz-raw_skeleton"] = function (fn)
-	local hiemodule = require "hierarchy"
+	local hiemodule = require "hierarchy".skeleton
 	local handle = hiemodule.new()
 	handle:load(fn)
 	return {
@@ -25,16 +25,8 @@ loaders["ozz-raw_skeleton"] = function (fn)
 end
 
 loaders["ozz-skeleton"] = function(fn)
-	local hiemodule = require "hierarchy"
+	local hiemodule = require "hierarchy".skeleton
 	local handle = hiemodule.build(fn)
-	return {
-		_handle = handle
-	}
-end
-
-loaders["ozz-sample-Mesh"] = function(fn)
-	local animodule = require "hierarchy.ozzmesh"
-	local handle = animodule.new(fn)
 	return {
 		_handle = handle
 	}

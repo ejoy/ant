@@ -4,7 +4,7 @@ local w = world.w
 
 local assetmgr 		= import_package "ant.asset"
 local iom 			= world:interface "ant.objcontroller|obj_motion"
-local animodule 	= require "hierarchy.animation"
+local animodule 	= require "hierarchy".animation
 
 
 local ani_sys = ecs.system "animation_system"

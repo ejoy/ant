@@ -8,9 +8,11 @@ lm:source_set "source_hierarchy" {
         "ozz-animation-runtime",
         "ozz-animation-offline",
         "ozz-animation-geometry",
+        "bx"
     },
     includes = {
         LuaInclude,
+        BgfxInclude,
         Ant3rd .. "ozz-animation/include",
         Ant3rd .. "glm",
     },
@@ -18,8 +20,6 @@ lm:source_set "source_hierarchy" {
         "hierarchy.cpp",
         "animation.cpp",
         "ik.cpp",
-        "ozzmesh.cpp",
-        "scene.c",
         Ant3rd .. "ozz-animation/samples/framework/mesh.cc"
     },
     defines = {
@@ -29,10 +29,4 @@ lm:source_set "source_hierarchy" {
 
 lm:lua_dll "hierarchy" {
     deps = "source_hierarchy",
-    msvc = {
-        ldflags = {
-            "-export:luaopen_hierarchy_scene",
-            "-export:luaopen_hierarchy_animation"
-        }
-    }
 }

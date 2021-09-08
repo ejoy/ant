@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local animodule = require "hierarchy.animation"
+local animodule = require "hierarchy".animation
 local bgfx 		= require "bgfx"
 
 local sm = ecs.transform "skinning_material"

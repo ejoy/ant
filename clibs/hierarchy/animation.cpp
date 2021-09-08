@@ -683,9 +683,7 @@ lmesh_skinning(lua_State *L){
 	return 0;
 }
 
-extern "C" {
-LUAMOD_API int
-luaopen_hierarchy_animation(lua_State *L) {
+int init_animation(lua_State *L) {
 	ozzBindpose::registerBindposeMetatable(L);
 	ozzPoseResult::registerPoseResultMetatable(L);
 	lua_newtable(L);
@@ -706,4 +704,3 @@ luaopen_hierarchy_animation(lua_State *L) {
 	return 1;
 }
 
-}

@@ -454,9 +454,21 @@ local function memstr(v)
 end
 
 function world:memory(async)
+	local function getmemory(module, getter)
+		local m = require (module)
+		return m[getter]()
+		--TODO
+		--if package.loaded[module] == nil then
+		--	return
+		--end
+		--local m = package.loaded[module]
+		--return m[getter]()
+	end
+
 	local m = {
-		bgfx = require "bgfx".get_memory(),
-		rp3d = require "rp3d.core".memory(),
+		bgfx = getmemory("bgfx", "get_memory"),
+		rp3d = getmemory("rp3d.core", "memory"),
+		animation = getmemory("hierarchy", "memory"),
 	}
 	if require "platform".OS:lower() == "windows" then
 		m.imgui = require "imgui".memory()

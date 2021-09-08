@@ -740,13 +740,9 @@ lbuilddata_metatable(lua_State *L) {
 	return 1;
 }
 
-extern "C" {
-LUAMOD_API int
-luaopen_hierarchy(lua_State *L) {	
-	luaL_checkversion(L);
+int init_skeleton(lua_State *L) {
 	register_hierarchy_node(L);
 	register_hierarchy_builddata(L);
-
 	luaL_Reg l[] = {
 		{ "new", lnewhierarchy },
 		{ "invalid", linvalidnode },
@@ -756,6 +752,67 @@ luaopen_hierarchy(lua_State *L) {
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
+	return 1;
+}
+
+int init_animation(lua_State *L);
+
+#include <bx/allocator.h>
+
+class HeapAllocator : public ozz::memory::Allocator {
+public:
+	size_t count = 0;
+
+protected:
+	struct Header {
+		void* unaligned;
+		size_t size;
+	};
+	void* Allocate(size_t _size, size_t _alignment) {
+		const size_t to_allocate = _size + sizeof(Header) + _alignment - 1;
+		char* unaligned = reinterpret_cast<char*>(malloc(to_allocate));
+		if (!unaligned) {
+			return nullptr;
+		}
+		char* aligned = ozz::Align(unaligned + sizeof(Header), _alignment);
+		assert(aligned + _size <= unaligned + to_allocate);
+		Header* header = reinterpret_cast<Header*>(aligned - sizeof(Header));
+		assert(reinterpret_cast<char*>(header) >= unaligned);
+		header->unaligned = unaligned;
+		header->size = to_allocate;
+		count += to_allocate;
+		return aligned;
+	}
+	void Deallocate(void* _block) {
+		if (_block) {
+			Header* header = reinterpret_cast<Header*>(reinterpret_cast<char*>(_block) - sizeof(Header));
+			count -= header->size;
+			free(header->unaligned);
+		}
+	}
+};
+
+HeapAllocator g_heap_allocator;
+
+static int
+lmemory(lua_State* L) {
+	lua_pushinteger(L, g_heap_allocator.count);
+	return 1;
+}
+
+extern "C" {
+LUAMOD_API int
+luaopen_hierarchy(lua_State *L) {
+	luaL_checkversion(L);
+
+	ozz::memory::SetDefaulAllocator(&g_heap_allocator);
+	lua_newtable(L);
+	init_skeleton(L);
+	lua_setfield(L, -2, "skeleton");
+	init_animation(L);
+	lua_setfield(L, -2, "animation");
+	lua_pushcfunction(L, lmemory);
+	lua_setfield(L, -2, "memory");
 	return 1;
 }
 
