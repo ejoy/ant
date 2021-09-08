@@ -120,13 +120,13 @@ for _, e in ipairs(scene) do
             indices     = create_buffer(memory, meshdata.ib),
             vertexCount = elem_count(vb.pos),
             indexCount  = elem_count(meshdata.ib),
-            lightmap    = e.lightmap,
+            lightmap    = assert(e.lightmap),
             materialidx = add_material(bakescene_path / material),
         }
     elseif e.light then
         local ld = e.lightdata
         lights[#lights+1] = {
-            dir = math3d.tovalue(math3d.inverse(math3d.transform(math3d.quaternion(e.r), math3d.vector(0.0, 0.0, 1.0), 0))),
+            dir = math3d.tovalue(math3d.todirection(math3d.quaternion(e.r))),
             pos = e.t,
             color = ld.color,
             size = ld.size or 0.3,
