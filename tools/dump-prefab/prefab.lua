@@ -43,12 +43,13 @@ local create_prefab; do
                     e.material = assetmgr.resource(v.data.material)
                 end
 
-                if r.lightmap then
+                local r_lm = r.lightmap
+                if r_lm then
                     local data_lm = v.data.lightmap
                     if data_lm == nil then
-                        data_lm = r
+                        data_lm = r_lm
                     else
-                        data_lm.id = r.lightmap.id
+                        data_lm.id = r_lm.id
                     end
                     e.lightmap = data_lm
                 end
