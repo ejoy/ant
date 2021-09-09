@@ -203,6 +203,8 @@ local LAYOUT_NAMES<const> = {
 
 local jointidx_fmt<const> = "HHHH"
 
+--_R2L = true
+
 -- change from right hand to left hand
 -- left hand define as: 
 -- 		x: -left, +right
@@ -461,11 +463,11 @@ local function export_meshbin(gltfscene, bindata, exports)
 		exports.mesh[meshidx] = {}
 		for primidx, prim in ipairs(mesh.primitives) do
 			local group = {}
-			group.vb = fetch_vb_buffers2(gltfscene, bindata, prim)
+			group.vb = fetch_vb_buffers(gltfscene, bindata, prim)
 			local indices_accidx = prim.indices
 			if indices_accidx then
 				local idxacc = gltfscene.accessors[indices_accidx+1]
-				group.ib = fetch_ib_buffer2(gltfscene, bindata, idxacc)
+				group.ib = fetch_ib_buffer(gltfscene, bindata, idxacc)
 			end
 			local bb = create_prim_bounding(gltfscene, prim)
 			if bb then
