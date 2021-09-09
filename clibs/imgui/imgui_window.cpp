@@ -1,11 +1,10 @@
 #include <stdio.h>
 #include <lua.hpp>
 #include <stdint.h>
+#include <imgui.h>
 #include "imgui_window.h"
-#ifdef _WIN32
-#include <windows.h>
-#include <WinNT.h>
-#endif //_WIN32
+
+#define WINDOW_CALLBACK "WINDOW_CALLBACK"
 
 struct window_callback {
 	lua_State *callback;
@@ -41,7 +40,19 @@ static bool event_emit(struct window_callback* context, int nresults = 0) {
 	return true;
 }
 
-void window_event_size(struct window_callback* cb, int w, int h) {
+static struct window_callback* get_callback() {
+	lua_State* L = (lua_State*)ImGui::GetIO().UserData;
+	if (lua_getfield(L, LUA_REGISTRYINDEX, WINDOW_CALLBACK) != LUA_TUSERDATA) {
+		luaL_error(L, "Can't find window_callback.");
+		return 0;
+	}
+	struct window_callback* cb = (struct window_callback*)lua_touserdata(L, -1);
+	lua_pop(L, 1);
+	return cb;
+}
+
+void window_event_size(int w, int h) {
+	struct window_callback* cb = get_callback();
 	if (!event_push(cb, ANT_WINDOW_SIZE)) {
 		return;
 	}
@@ -51,7 +62,8 @@ void window_event_size(struct window_callback* cb, int w, int h) {
 	event_emit(cb);
 }
 
-void window_event_dropfiles(struct window_callback* cb, std::vector<std::string> files) {
+void window_event_dropfiles(std::vector<std::string> files) {
+	struct window_callback* cb = get_callback();
 	if (!event_push(cb, ANT_WINDOW_DROPFILES)) {
 		return;
 	}
@@ -65,7 +77,8 @@ void window_event_dropfiles(struct window_callback* cb, std::vector<std::string>
 	event_emit(cb);
 }
 
-int window_event_viewid(struct window_callback* cb) {
+int window_event_viewid() {
+	struct window_callback* cb = get_callback();
 	if (!event_push(cb, ANT_WINDOW_VIEWID)) {
 		return -1;
 	}
@@ -108,16 +121,6 @@ ltraceback(lua_State *L) {
 		luaL_traceback(L, L, msg, 2);
 	}
 	return 1;
-}
-
-struct window_callback* window_get_callback(lua_State* L) {
-	if (lua_getfield(L, LUA_REGISTRYINDEX, WINDOW_CALLBACK) != LUA_TUSERDATA) {
-		luaL_error(L, "Can't find window_callback.");
-		return 0;
-	}
-	struct window_callback* cb = (struct window_callback*)lua_touserdata(L, -1);
-	lua_pop(L, 1);
-	return cb;
 }
 
 void window_register(lua_State *L, int idx) {

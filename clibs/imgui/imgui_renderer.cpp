@@ -129,7 +129,7 @@ void rendererDrawData(ImGuiViewport* viewport) {
 }
 
 static int rendererGetViewId() {
-	return window_event_viewid(window_get_callback((lua_State*)ImGui::GetIO().UserData));
+	return window_event_viewid();
 }
  
 static void rendererFreeViewId(int viewid) {

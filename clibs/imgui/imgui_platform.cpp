@@ -63,8 +63,7 @@ bool platformNewFrame() {
 				return false;
 			case SDL_WINDOWEVENT_SIZE_CHANGED:
 			case SDL_WINDOWEVENT_RESIZED: {
-				struct window_callback* cb = window_get_callback((lua_State*)ImGui::GetIO().UserData);
-				window_event_size(cb, event.window.data1, event.window.data2);
+				window_event_size(event.window.data1, event.window.data2);
 				break;
 			}
 			default:
