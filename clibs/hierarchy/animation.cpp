@@ -175,6 +175,16 @@ protected:
 		lua_pushlightuserdata(L, &(*bp)[0]);
 		return 1;
 	}
+
+	static int ltransform(lua_State *L){
+		auto bp = getBP(L, 1);
+		auto trans = (const ozz::math::Float4x4*)lua_touserdata(L, 2);
+		for ( auto &p : *bp){
+			p = *trans * p;
+		}
+
+		return 0;
+	}
 public:
 	static int create(lua_State* L) {
 		lua_Integer numjoints = luaL_checkinteger(L, 1);
@@ -210,10 +220,11 @@ public:
 
 	static void registerBindposeMetatable(lua_State *L){
 		luaL_Reg l[] = {
-			{"count", lcount},
-			{"joint", ljoint},
-			{"pointer",lpointer},
-			{nullptr, nullptr,}
+			{"count", 		lcount},
+			{"joint", 		ljoint},
+			{"pointer",		lpointer},
+			{"transform",	ltransform},
+			{nullptr, 		nullptr,}
 		};
 		base_type::reigister_mt(L, l);
 		lua_pop(L, 1);
