@@ -19,7 +19,7 @@ local current_brush_id
 local grid = {
     brush = {}
 }
-
+local brush_size = 1
 local grid_vb
 local grid_ib
 local grid_eid
@@ -57,21 +57,40 @@ function grid:clear()
         world:remove_entity(grid_eid)
     end
 end
+local function clamp_row(row)
+    if row > grid.row then row = grid.row end
+    if row < 1 then row = 1 end
+    return row
+end
+local function clamp_col(col)
+    if col > grid.col then col = grid.col end
+    if col < 1 then col = 1 end
+    return col
+end
 
-local function set_color(row, col, color)
-    local vb_offset = ((row - 1) * grid.col + (col - 1)) * 4 * 4
-    grid_vb[vb_offset + 4] = color
-    grid_vb[vb_offset + 8] = color
-    grid_vb[vb_offset + 12] = color
-    grid_vb[vb_offset + 16] = color
-    local vb = {}
-    for i = vb_offset + 1, vb_offset + 16 do
-        vb[#vb + 1] = grid_vb[i]
+local function set_color(irow, icol, color)
+    local rad = brush_size - 1
+    local start_row = clamp_row(irow - rad)
+    local start_col = clamp_col(icol - rad)
+    local end_row = clamp_row(irow + rad)
+    local end_col = clamp_col(icol + rad)
+    for row = start_row, end_row do
+        for col = start_col, end_col do
+            local vb_offset = ((row - 1) * grid.col + (col - 1)) * 4 * 4
+            grid_vb[vb_offset + 4] = color
+            grid_vb[vb_offset + 8] = color
+            grid_vb[vb_offset + 12] = color
+            grid_vb[vb_offset + 16] = color
+            local vb = {}
+            for i = vb_offset + 1, vb_offset + 16 do
+                vb[#vb + 1] = grid_vb[i]
+            end
+            local rc = world[grid_eid]._rendercache
+            local vbdesc = rc.vb
+            bgfx.update(vbdesc.handles[1], vb_offset / 4, bgfx.memory_buffer("fffd", vb));
+            grid.data[row][col][1] = current_brush_id
+        end
     end
-    local rc = world[grid_eid]._rendercache
-    local vbdesc = rc.vb
-    bgfx.update(vbdesc.handles[1], vb_offset / 4, bgfx.memory_buffer("fffd", vb));
-    grid.data[row][col][1] = current_brush_id
 end
 
 local function get_color(row, col)
@@ -203,6 +222,8 @@ function brush_sys:handle_event()
         elseif what == "brushcolor" then
             current_brush_id = p1
             current_brush_color = p2
+        elseif what == "brushsize" then
+            brush_size = p1
         elseif what == "load" then
             load_grid(p1)
         end

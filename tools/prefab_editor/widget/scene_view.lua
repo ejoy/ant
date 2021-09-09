@@ -53,6 +53,10 @@ local function node_context_menu(eid)
         if imgui.widget.Selectable("MoveBottom", false) then
             world:pub { "EntityState", "movebottom", eid }
         end
+        imgui.cursor.Separator()
+        if imgui.widget.Selectable("NoParent", false) then
+            world:pub { "EntityEvent", "parent", eid }
+        end
         imgui.windows.EndPopup()
     end
 end
