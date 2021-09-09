@@ -346,7 +346,7 @@ end
 local r2l_mat = _R2L and {
     s = {1.0, 1.0, 1.0}
 } or {
-    s = {-1.0, 1.0, 1.0}
+    s = {1.0, 1.0, -1.0}
 }
 
 return function(output, glbdata, exports, tolocalpath)

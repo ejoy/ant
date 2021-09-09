@@ -203,7 +203,7 @@ local LAYOUT_NAMES<const> = {
 
 local jointidx_fmt<const> = "HHHH"
 
---_R2L = true
+_R2L = false
 
 -- change from right hand to left hand
 -- left hand define as: 
@@ -255,6 +255,8 @@ local function fetch_vb_buffers2(gltfscene, gltfbin, prim)
 
 	local buffer = {}
 	local numv = gltfutil.num_vertices(prim, gltfscene)
+
+	local change_index_attrib = -1
 	for iv=0, numv-1 do
 		for idx, d in ipairs(layoutdesc) do
 			local l = layouts[idx]
@@ -262,14 +264,21 @@ local function fetch_vb_buffers2(gltfscene, gltfbin, prim)
 
 			local t = l:sub(1, 1)
 			if t == 'p' or t == 'n' or t == 'T' or t == 'b' then
-				v = r2l_vec(v, l)
+				if _R2L then
+					v = r2l_vec(v, l)
+				end
 			elseif t == 'i' then
 				if l:sub(6, 6) == 'u' then
 					v = jointidx_fmt:pack(v:byte(1), v:byte(2), v:byte(3), v:byte(4))
+					change_index_attrib = idx
 				end
 			end
 			buffer[#buffer+1] = v
 		end
+	end
+
+	if change_index_attrib ~= -1 then
+		layouts[change_index_attrib] = layouts[change_index_attrib]:sub(1, 5) .. 'i'
 	end
 
 	local bindata = table.concat(buffer, "")
@@ -463,11 +472,11 @@ local function export_meshbin(gltfscene, bindata, exports)
 		exports.mesh[meshidx] = {}
 		for primidx, prim in ipairs(mesh.primitives) do
 			local group = {}
-			group.vb = fetch_vb_buffers(gltfscene, bindata, prim)
+			group.vb = fetch_vb_buffers2(gltfscene, bindata, prim)
 			local indices_accidx = prim.indices
 			if indices_accidx then
 				local idxacc = gltfscene.accessors[indices_accidx+1]
-				group.ib = fetch_ib_buffer(gltfscene, bindata, idxacc)
+				group.ib = fetch_ib_buffer2(gltfscene, bindata, idxacc)
 			end
 			local bb = create_prim_bounding(gltfscene, prim)
 			if bb then

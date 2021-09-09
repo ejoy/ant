@@ -15,6 +15,7 @@ local APIS = {
     "set_debug",
 
     "encoder_frame",
+    "maxfps"
 }
 local S = {}
 
@@ -90,6 +91,73 @@ function S.frame()
     return bgfx.frame()
 end
 
+local maxfps = 30
+local frame_control; do
+    local MaxTimeCachedFrame <const> = 1000 --*10ms
+    local frame_first = 1
+    local frame_last  = 0
+    local frames = {}
+    local fps = 0
+    local lasttime = 0
+    local function gettime()
+        local _, t = ltask.now() --10ms
+        return t
+    end
+    local function clean(time)
+        for i = frame_first, frame_last do
+            if frames[i] < time then
+                frames[i] = nil
+                frame_first = frame_first + 1
+            end
+        end
+    end
+    local function calc_fps()
+        if frame_first == 1 then
+            if frame_last == 1 then
+                fps = 0
+            else
+                fps = frame_last / (frames[frame_last] - frames[1]) * 100
+            end
+        else
+            fps = (frame_last - frame_first + 1) / (MaxTimeCachedFrame / 100)
+        end
+    end
+    local function print_fps()
+        if maxfps then
+            print(("fps: %.03f / %d"):format(fps, maxfps))
+        else
+            print(("fps: %.03f"):format(fps))
+        end
+    end
+    function frame_control()
+        local time = gettime()
+        clean(time - MaxTimeCachedFrame)
+        frame_last = frame_last + 1
+        frames[frame_last] = time
+        calc_fps()
+        --print_fps()
+        if maxfps and fps > maxfps then
+            local waittime = math.ceil(100/maxfps - (time - lasttime))
+            if waittime > 0 then
+                --ltask.sleep(waittime)
+                exclusive.sleep(waittime*10)
+                lasttime = gettime()
+            else
+                lasttime = time
+            end
+        else
+            lasttime = time
+        end
+    end
+end
+
+function S.maxfps(v)
+    if not v or v >= 10 then
+        maxfps = v
+    end
+    return maxfps
+end
+
 ltask.fork(function()
     while true do
         ltask.sleep(0)
@@ -103,6 +171,7 @@ ltask.fork(function()
                 ltask.wait(continue_token)
                 continue_token = nil
             end
+            frame_control()
             wakeup_frame(f)
         else
             exclusive.sleep(1)
@@ -115,44 +184,5 @@ for _, name in ipairs(APIS) do
         S[name] = bgfx[name]
     end
 end
-
-do
-    local thread = require "thread"
-    thread.newchannel "Bgfx"
-    local bgfx_req = thread.channel_consume "Bgfx"
-    local function request(ok, threadid, cmd, ...)
-        if not ok then
-            return
-        end
-        local f = S[cmd]
-        if not f then
-            return
-        end
-        local bgfx_resp = thread.channel_produce ("Bgfx-" .. threadid)
-        bgfx_resp(f(...))
-        return true
-    end
-    ltask.fork(function ()
-        while true do
-            if not request(bgfx_req:pop()) then
-                ltask.sleep(10)
-            end
-        end
-    end)
-end
-
---[[
-    do
-        local thread = require "thread"
-        local threadid = thread.id
-        local bgfx_req = thread.channel_produce "Bgfx"
-        thread.newchannel ("Bgfx-" .. threadid)
-        local bgfx_resp = thread.channel_consume ("Bgfx-" .. threadid)
-        local function call_bgfx(what, ...)
-            bgfx_req(threadid, what, ...)
-            return bgfx_resp()
-        end
-    end
-]]
 
 return S

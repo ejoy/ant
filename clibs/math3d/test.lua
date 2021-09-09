@@ -244,3 +244,34 @@ do
 	print("minmax-aabb:", math3d.tostring(math3d.index(aabb, 1)), math3d.tostring(math3d.index(aabb, 2)))
 	print("aabb-append:", math3d.tostring(math3d.index(aabb2, 1)), math3d.tostring(math3d.index(aabb2, 2)))
 end
+
+local r2l_mat = math3d.matrix{s={-1.0, 1.0, 1.0}}
+local r2l_mat1 = math3d.matrix{s={1.0, 1.0, -1.0}}
+local r2l_mat2 = math3d.matrix{s={-1.0, -1.0, -1.0}}
+
+local function print_mat(mat)
+	print "origin matrix:"
+	print(math3d.tostring(mat))
+	local p = math3d.vector(1, 2, 3, 1)
+
+	print "transform point:(1, 2, 3, 1)"
+	print(math3d.tostring(math3d.transform(mat, p, 1)))
+	local s, r, t = math3d.srt(mat)
+
+	print("srt.s:", math3d.tostring(s))
+	print("srt.r:", math3d.tostring(r))
+	print("srt.t:", math3d.tostring(t))
+
+	print "transform srt.s by srt.r"
+	print(math3d.tostring(math3d.transform(r, s, 0)))
+
+	local m = math3d.matrix{s=s, r=r, t=t}
+	print "combine matrix:"
+	print(math3d.tostring(m))
+	print "transform point:(1, 2, 3, 1) by combine matrix"
+	print(math3d.tostring(math3d.transform(m, p, 1)))
+end
+print "test matrix decompose to s, r, t"
+print_mat(r2l_mat)
+print_mat(r2l_mat1)
+print_mat(r2l_mat2)
