@@ -116,9 +116,9 @@ function message.viewid()
 	return viewid
 end
 
-local function dispatch(CMD, ...)
-	local f = message[CMD]
-	if f then
+local dispatch = {}
+for n, f in pairs(message) do
+	dispatch[n] = function (...)
 		local ok, err = xpcall(f, debug_traceback, ...)
 		if ok then
 			return err

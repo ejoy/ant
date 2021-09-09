@@ -2,136 +2,139 @@
 #include <lua.hpp>
 #include <stdint.h>
 #include <imgui.h>
+#include <functional>
+
 #include "imgui_window.h"
+#include "luaref.h"
 
-#define WINDOW_CALLBACK "WINDOW_CALLBACK"
+#define WINDOW_EVENTS "WINDOW_EVENTS"
 
-struct window_callback {
-	lua_State *callback;
-	lua_State *functions;
-	int top;
+enum class ANT_WINDOW {
+	SIZE = 2,
+	DROPFILES,
+	VIEWID,
 };
 
-static bool event_push(struct window_callback* context, int id) {
-	if (!context) {
+class events {
+public:
+	typedef std::function<void(lua_State*)> call_t;
+
+	events(lua_State* L, lua_State* luastate)
+		: reference(luaref_init(L))
+		, luastate(luastate)
+	{}
+	~events() {
+		luaref_close(reference);
+	}
+	void init(lua_State* L, int idx) {
+		luaL_checktype(L, 1, LUA_TTABLE);
+		ref_function(L, idx, "size", ANT_WINDOW::SIZE);
+		ref_function(L, idx, "dropfiles", ANT_WINDOW::DROPFILES);
+		ref_function(L, idx, "viewid", ANT_WINDOW::VIEWID);
+	}
+	void call(ANT_WINDOW eid, size_t argn, size_t retn) {
+		luaref_get(reference, luastate, (int)eid);
+		lua_insert(luastate, -1 - (int)argn);
+		lua_call(luastate, (int)argn, (int)retn);
+	}
+	bool invoke(call_t f) {
+		lua_State* L = luastate;
+		if (!lua_checkstack(L, 3)) {
+			errfunc("stack overflow");
+			return false;
+		}
+		lua_pushcfunction(L, errhandler);
+		lua_pushcfunction(L, function_call);
+		lua_pushlightuserdata(L, &f);
+		int r = lua_pcall(L, 1, 0, -3);
+		if (r == LUA_OK) {
+			lua_pop(L, 1);
+			return true;
+		}
+		errfunc(lua_tostring(L, -1));
+		lua_pop(L, 2);
 		return false;
 	}
-	lua_State* from = context->functions;
-	lua_State* to = context->callback;
-	lua_pushvalue(from, 1);
-	lua_pushvalue(from, id + 1);
-	lua_xmove(from, to, 2);
-	bool ok = lua_type(to, -1) == LUA_TSTRING;
-	if (!ok) {
-		lua_pop(to, 2);
+private:
+	void ref_function(lua_State* L, int idx, const char* funcname, ANT_WINDOW eid) {
+		if (lua_getfield(L, idx, funcname) != LUA_TFUNCTION) {
+			luaL_error(L, "Missing %s", funcname);
+		}
+		if ((int)eid != luaref_ref(reference, L)) {
+			luaL_error(L, "ID %d does not match", (int)eid);
+		}
 	}
-	context->top = lua_gettop(to);
-	return ok;
-}
-
-static bool event_emit(struct window_callback* context, int nresults = 0) {
-	lua_State* L = context->callback;
-	int nargs = 1 + lua_gettop(L) - context->top;
-	if (lua_pcall(L, nargs, nresults, 1) != LUA_OK) {
-		printf("Error: %s\n", lua_tostring(L, -1));
-		lua_pop(L, 1);
-		return false;
+	static int errhandler(lua_State* L) {
+		const char* msg = lua_tostring(L, 1);
+		if (msg == NULL) {
+			if (luaL_callmeta(L, 1, "__tostring") && lua_type(L, -1) == LUA_TSTRING)
+				return 1;
+			else
+				msg = lua_pushfstring(L, "(error object is a %s value)", luaL_typename(L, 1));
+		}
+		luaL_traceback(L, L, msg, 1);
+		return 1;
 	}
-	return true;
-}
+	static void errfunc(const char* msg) {
+		lua_writestringerror("%s\n", msg);
+	}
+	static int function_call(lua_State* L) {
+		call_t& f = *(call_t*)lua_touserdata(L, 1);
+		f(L);
+		return 0;
+	}
+	luaref reference;
+	lua_State* luastate;
+};
 
-static struct window_callback* get_callback() {
+static events* get_events() {
 	lua_State* L = (lua_State*)ImGui::GetIO().UserData;
-	if (lua_getfield(L, LUA_REGISTRYINDEX, WINDOW_CALLBACK) != LUA_TUSERDATA) {
+	if (lua_getfield(L, LUA_REGISTRYINDEX, WINDOW_EVENTS) != LUA_TUSERDATA) {
 		luaL_error(L, "Can't find window_callback.");
 		return 0;
 	}
-	struct window_callback* cb = (struct window_callback*)lua_touserdata(L, -1);
+	events* e = (events*)lua_touserdata(L, -1);
 	lua_pop(L, 1);
-	return cb;
+	return e;
 }
 
 void window_event_size(int w, int h) {
-	struct window_callback* cb = get_callback();
-	if (!event_push(cb, ANT_WINDOW_SIZE)) {
-		return;
-	}
-	lua_State* L = ((struct window_callback*)cb)->callback;
-	lua_pushinteger(L, w);
-	lua_pushinteger(L, h);
-	event_emit(cb);
+	events* e = get_events();
+	e->invoke([&](lua_State* L) {
+		lua_pushinteger(L, w);
+		lua_pushinteger(L, h);
+		e->call(ANT_WINDOW::SIZE, 2, 0);
+	});
 }
 
 void window_event_dropfiles(std::vector<std::string> files) {
-	struct window_callback* cb = get_callback();
-	if (!event_push(cb, ANT_WINDOW_DROPFILES)) {
-		return;
-	}
-	lua_State* L = ((struct window_callback*)cb)->callback;
-	lua_createtable(L, (int)files.size(), 0);
-	for (size_t i = 0; i < files.size(); ++i) {
-		lua_pushinteger(L, i + 1);
-		lua_pushlstring(L, files[i].data(), files[i].size());
-		lua_settable(L, -3);
-	}
-	event_emit(cb);
+	events* e = get_events();
+	e->invoke([&](lua_State* L) {
+		lua_createtable(L, (int)files.size(), 0);
+		for (size_t i = 0; i < files.size(); ++i) {
+			lua_pushinteger(L, i + 1);
+			lua_pushlstring(L, files[i].data(), files[i].size());
+			lua_settable(L, -3);
+		}
+		e->call(ANT_WINDOW::DROPFILES, 1, 0);
+	});
 }
 
 int window_event_viewid() {
-	struct window_callback* cb = get_callback();
-	if (!event_push(cb, ANT_WINDOW_VIEWID)) {
-		return -1;
-	}
-	if (!event_emit(cb, 1)) {
-		return -1;
-	}
-	lua_State* L = ((struct window_callback*)cb)->callback;
-	int ret = (int)luaL_checkinteger(L, -1);
-	lua_pop(L, 1);
-	return ret;
-}
-
-static void
-register_function(lua_State *L, const char *name, lua_State *fL, int id) {
-	lua_pushstring(L, name);
-	lua_xmove(L, fL, 1);
-	lua_replace(fL, id + 1);
-}
-
-static void
-register_functions(lua_State *L, int index, lua_State *fL) {
-	lua_pushvalue(L, index);
-	lua_xmove(L, fL, 1);
-
-	luaL_checkstack(fL, ANT_WINDOW_COUNT+3, NULL);	// 3 for temp
-	for (int i = 0; i < ANT_WINDOW_COUNT; ++i) {
-		lua_pushnil(fL);
-	}
-	register_function(L, "size", fL, ANT_WINDOW_SIZE);
-	register_function(L, "dropfiles", fL, ANT_WINDOW_DROPFILES);
-	register_function(L, "viewid", fL, ANT_WINDOW_VIEWID);
-}
-
-static int
-ltraceback(lua_State *L) {
-	const char *msg = lua_tostring(L, 1);
-	if (msg == NULL && !lua_isnoneornil(L, 1)) {
-		lua_pushvalue(L, 1);
-	} else {
-		luaL_traceback(L, L, msg, 2);
-	}
-	return 1;
+	events* e = get_events();
+	int viewid = 0;
+	e->invoke([&](lua_State* L) {
+		e->call(ANT_WINDOW::VIEWID, 0, 1);
+		viewid = (int)luaL_checkinteger(L, -1);
+	});
+	return viewid;
 }
 
 void window_register(lua_State *L, int idx) {
-	luaL_checktype(L, idx, LUA_TFUNCTION);
-	struct window_callback * context = (struct window_callback*)lua_newuserdatauv(L, sizeof(*context), 2);
-	context->callback = lua_newthread(L);
+	events* e = (events*)lua_newuserdatauv(L, sizeof(events), 1);
+	lua_State* luastate = lua_newthread(L);
 	lua_setiuservalue(L, -2, 1);
-	context->functions = lua_newthread(L);
-	lua_setiuservalue(L, -2, 2);
-	lua_setfield(L, LUA_REGISTRYINDEX, WINDOW_CALLBACK);
-
-	lua_pushcfunction(context->callback, ltraceback);	// push traceback function
-	register_functions(L, 1, context->functions);
+	lua_setfield(L, LUA_REGISTRYINDEX, WINDOW_EVENTS);
+	new (e) events(L, luastate);
+	e->init(L, idx);
 }
