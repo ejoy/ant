@@ -57,12 +57,23 @@ function grid:clear()
         world:remove_entity(grid_eid)
     end
 end
+local function clamp_row(row)
+    if row > grid.row then row = grid.row end
+    if row < 1 then row = 1 end
+    return row
+end
+local function clamp_col(col)
+    if col > grid.col then col = grid.col end
+    if col < 1 then col = 1 end
+    return col
+end
 
 local function set_color(irow, icol, color)
-    local start_row = irow - (brush_size - 1)
-    local start_col = icol - (brush_size - 1)
-    local end_row = irow + (brush_size - 1)
-    local end_col = icol + (brush_size - 1)
+    local rad = brush_size - 1
+    local start_row = clamp_row(irow - rad)
+    local start_col = clamp_col(icol - rad)
+    local end_row = clamp_row(irow + rad)
+    local end_col = clamp_col(icol + rad)
     for row = start_row, end_row do
         for col = start_col, end_col do
             local vb_offset = ((row - 1) * grid.col + (col - 1)) * 4 * 4

@@ -241,10 +241,8 @@ function m.show()
             end
 
             local color_label = "BrushColor"
-            --imgui.widget.PropertyLabel(color_label)
             if imgui.widget.ColorEdit("##"..color_label, brush_color_ui) then
                 update_color()
-                --world:pub {"GridMesh", "brushcolor", brush_color_ui[1], brush_color_ui[2], brush_color_ui[3], brush_color_ui[4]}
             end
 
             local brush_size_label = "BrushSize"
