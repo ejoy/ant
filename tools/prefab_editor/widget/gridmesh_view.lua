@@ -161,6 +161,7 @@ end
 
 local current_color = colori2f(brush_def.color[1])
 local brush_color_ui = {current_color[1], current_color[2], current_color[3], current_color[4]}
+local brush_size_ui = {1, min = 1, max = 8, speed = 1}
 
 local function update_color()
     brush_color_ui[1] = current_color[1]
@@ -246,6 +247,12 @@ function m.show()
                 --world:pub {"GridMesh", "brushcolor", brush_color_ui[1], brush_color_ui[2], brush_color_ui[3], brush_color_ui[4]}
             end
 
+            local brush_size_label = "BrushSize"
+            imgui.widget.PropertyLabel(brush_size_label)
+            if imgui.widget.DragInt("##"..brush_size_label, brush_size_ui) then
+                world:pub {"GridMesh", "brushsize", brush_size_ui[1]}
+            end
+            
             if current_grid.data then
                 if imgui.widget.Button("Save") then
                     current_grid:save(current_grid.filename)
