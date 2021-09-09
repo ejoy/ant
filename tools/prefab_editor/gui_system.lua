@@ -375,13 +375,12 @@ function m:handle_event()
         elseif what == "parent" then
             hierarchy:set_parent(target, v1)
             local sourceWorldMat = iom.worldmat(target)
-            local targetWorldMat = iom.worldmat(v1)
+            local targetWorldMat = v1 and iom.worldmat(v1) or math3d.matrix{}
             iom.set_srt(target, math3d.mul(math3d.inverse(targetWorldMat), sourceWorldMat))
             iss.set_parent(target, v1)
-            if not world[v1].slot and world[target].collider then
+            if (not v1 or not world[v1].slot) and world[target].collider then
                 world[target].slot_name = "None"
             end
-            --inspector.update_template_tranform(target)
         end
         if transform_dirty then
             on_update(target)

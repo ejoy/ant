@@ -89,7 +89,7 @@ end
 
 function hierarchy:set_parent(eid, peid)
     local eid_node = self.all[eid]
-    local peid_node = self.all[peid]
+    local peid_node = peid and self.all[peid] or self.root
     if (not eid_node) or (not peid_node) or (eid_node.parent == peid) then return end
     local removed_node = self:del(eid)
     removed_node.parent = peid
