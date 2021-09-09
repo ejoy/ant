@@ -88,7 +88,7 @@ local function update_transform(transform)
 end
 
 local function is_mirror_transform(trans)
-    local s = math3d.matrix_scale(trans)
+    local s = math3d.srt(trans)
     s = math3d.tovalue(s)
     local n = 0
     for i=1, #s do

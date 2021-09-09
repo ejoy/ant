@@ -79,6 +79,7 @@ function iobj_motion.set_view(eid, pos, dir, updir)
         srt.id = math3d.inverse(math3d.lookto(pos, dir, updir or rc.updir))
     else
         local s = math3d.matrix_scale(srt)
+        assert(math3d.tovalue(s)[1] >= 0)   --check is mirror transform
         srt.id = math3d.matrix{s=s, r=math3d.torotation(dir), t=pos}
     end
     set_changed(e)
@@ -97,7 +98,9 @@ end
 
 function iobj_motion.get_scale(eid)
     local e = find_entity(eid)
-    return math3d.matrix_scale(get_srt(e))
+    local s = math3d.matrix_scale(get_srt(e))
+    assert(math3d.tovalue(s)[1] >= 0.0)
+    return s
 end
 
 function iobj_motion.set_rotation(eid, rot)
