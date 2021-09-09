@@ -2,6 +2,7 @@ local util = {}
 util.__index = util
 
 local math3d = require "math3d"
+local constant = require "constant"
 
 function util.limit(v, min, max)
     if v > max then return max end
@@ -112,4 +113,17 @@ function util.max(a, b)
 	return t
 end
 
+function util.srt_obj(srt)
+	local s = srt.s
+	if type(s) == "number" then
+		s = {s, s, s}
+	end
+	return {
+		s = math3d.ref(srt.s and math3d.vector(s) or constant.ONE),
+		r = math3d.ref(srt.r and math3d.quaternion(srt.r) or constant.IDENTITY_QUAT),
+		t = math3d.ref(srt.t and math3d.vector(srt.t) or constant.ZERO_PT),
+	}
+end
+
 return util
+
