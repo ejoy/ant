@@ -138,9 +138,13 @@ local frame_control; do
         --print_fps()
         if maxfps and fps > maxfps then
             local waittime = math.ceil(100/maxfps - (time - lasttime))
-            --ltask.sleep(waittime)
-            exclusive.sleep(waittime*10)
-            lasttime = gettime()
+            if waittime > 0 then
+                --ltask.sleep(waittime)
+                exclusive.sleep(waittime*10)
+                lasttime = gettime()
+            else
+                lasttime = time
+            end
         else
             lasttime = time
         end
@@ -167,8 +171,8 @@ ltask.fork(function()
                 ltask.wait(continue_token)
                 continue_token = nil
             end
-            wakeup_frame(f)
             frame_control()
+            wakeup_frame(f)
         else
             exclusive.sleep(1)
         end
