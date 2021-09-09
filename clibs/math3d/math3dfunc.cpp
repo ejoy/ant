@@ -181,6 +181,183 @@ math3d_decompose_rot(const float mat[16], float quat[4]) {
 	q = glm::quat_cast(rotMat);
 }
 
+// see: https://github.com/microsoft/DirectXMath/blob/7c30ba5932e081ca4d64ba4abb8a8986a7444ec9/Inc/DirectXMathMatrix.inl#L1111
+static bool decompose(const glm::mat4& matrix, glm::vec3& scale, glm::quat& rotation, glm::vec3& translation)
+{
+	bool result = true;
+
+	glm::vec3* scaleBase = &scale;
+	float* pfScales = (float*)scaleBase;
+	const float EPSILON = 0.0001f;
+	float det;
+
+	glm::vec3 vectorBasis[3];
+	glm::vec3** pVectorBasis = (glm::vec3**)&vectorBasis;
+
+	glm::mat4 matTemp(1.f);
+	glm::vec3 canonicalBasis[3] = {
+		glm::vec3(1.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f, 1.0f, 0.0f),
+		glm::vec3(0.0f, 0.0f, 1.0f),
+	};
+	glm::vec3* pCanonicalBasis = &canonicalBasis[0];
+
+	translation = matrix[3];
+
+	pVectorBasis[0] = (glm::vec3*)&matTemp[0];
+	pVectorBasis[1] = (glm::vec3*)&matTemp[1];
+	pVectorBasis[2] = (glm::vec3*)&matTemp[2];
+
+	*(pVectorBasis[0]) = matrix[0];//new Vector3(matrix.M11, matrix.M12, matrix.M13);
+	*(pVectorBasis[1]) = matrix[1];//new Vector3(matrix.M21, matrix.M22, matrix.M23);
+	*(pVectorBasis[2]) = matrix[2];//new Vector3(matrix.M31, matrix.M32, matrix.M33);
+
+	scale[0] = glm::length(*pVectorBasis[0]);
+	scale[1] = glm::length(*pVectorBasis[1]);
+	scale[2] = glm::length(*pVectorBasis[2]);
+
+	uint32_t a, b, c;
+	float x = pfScales[0], y = pfScales[1], z = pfScales[2];
+	if (x < y)
+	{
+		if (y < z)
+		{
+			a = 2;
+			b = 1;
+			c = 0;
+		}
+		else
+		{
+			a = 1;
+
+			if (x < z)
+			{
+				b = 2;
+				c = 0;
+			}
+			else
+			{
+				b = 0;
+				c = 2;
+			}
+		}
+	}
+	else
+	{
+		if (x < z)
+		{
+			a = 2;
+			b = 0;
+			c = 1;
+		}
+		else
+		{
+			a = 0;
+
+			if (y < z)
+			{
+				b = 2;
+				c = 1;
+			}
+			else
+			{
+				b = 1;
+				c = 2;
+			}
+		}
+	}
+
+	if (pfScales[a] < EPSILON)
+	{
+		*(pVectorBasis[a]) = pCanonicalBasis[a];
+	}
+
+	*pVectorBasis[a] = glm::normalize(*pVectorBasis[a]);
+
+	if (pfScales[b] < EPSILON)
+	{
+		uint32_t cc;
+		glm::vec3 absV = glm::abs(*pVectorBasis[a]);
+		if (absV.x < absV.y)
+		{
+			if (absV.y < absV.z)
+			{
+				cc = 0;
+			}
+			else
+			{
+				if (absV.x < absV.z)
+				{
+					cc = 0;
+				}
+				else
+				{
+					cc = 2;
+				}
+			}
+		}
+		else
+		{
+			if (absV.x < absV.z)
+			{
+				cc = 1;
+			}
+			else
+			{
+				if (absV.y < absV.z)
+				{
+					cc = 1;
+				}
+				else
+				{
+					cc = 2;
+				}
+			}
+		}
+
+		*pVectorBasis[b] = glm::cross(*pVectorBasis[a], *(pCanonicalBasis + cc));
+	}
+
+	*pVectorBasis[b] = glm::normalize(*pVectorBasis[b]);
+
+	if (pfScales[c] < EPSILON)
+	{
+		*pVectorBasis[c] = glm::cross(*pVectorBasis[a], *pVectorBasis[b]);
+	}
+
+	*pVectorBasis[c] = glm::normalize(*pVectorBasis[c]);
+
+	det = glm::determinant(matTemp);
+
+	// use Kramer's rule to check for handedness of coordinate system
+	if (det < 0.0f)
+	{
+		// switch coordinate system by negating the scale and inverting the basis vector on the x-axis
+		pfScales[a] = -pfScales[a];
+		*pVectorBasis[a] = -(*pVectorBasis[a]);
+
+		det = -det;
+	}
+
+	det -= 1.0f;
+	det *= det;
+
+	if ((EPSILON < det))
+	{
+		// Non-SRT matrix encountered
+		rotation = glm::quat(0.f, 0.f, 0.f, 0.f);
+
+		result = false;
+	}
+	else
+	{
+		// generate the quaternion from the matrix
+		rotation = glm::quat(glm::mat3(matTemp));
+	}
+
+	return result;
+}
+
 void
 math3d_decompose_matrix(struct lastack *LS, const float *mat) {
 	const glm::mat4x4 &m = *(const glm::mat4x4 *)mat;
@@ -189,20 +366,8 @@ math3d_decompose_matrix(struct lastack *LS, const float *mat) {
 	float *trans = lastack_allocvec4(LS);
 	glm::quat &q = allocquat(LS);
 	float *scale = lastack_allocvec4(LS);
+	decompose(m, *(glm::vec3*)scale, q, *(glm::vec3*)trans);
 
-	trans[0] = m[3][0];
-	trans[1] = m[3][1];
-	trans[2] = m[3][2];
-	trans[3] = 1;
-
-	glm::mat3x3 rotMat(m);
-	if (!math3d_decompose_scale(mat, scale)) {
-		int ii;
-		for (ii = 0; ii < 3; ++ii) {
-			rotMat[ii] /= scale[ii];
-		}
-	}
-	q = glm::quat_cast(rotMat);
 }
 
 float
