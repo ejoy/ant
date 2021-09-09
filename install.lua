@@ -62,7 +62,7 @@ copy_directory(input / "docs", output / "doc")
 copy_directory(input / "tools" / "prefab_editor", output / "tools" / "prefab_editor", function (path)
     return path ~= input / "tools" / "prefab_editor" / ".build"
 end)
-
+copy_directory(input / "tools" / "fileserver", output / "tools" / "fileserver")
 fs.copy_file(input / "run_editor.bat", output / "run_editor.bat", true)
 
 if PLAT == "msvc" then
