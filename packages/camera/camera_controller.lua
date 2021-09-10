@@ -8,16 +8,10 @@ local iom = world:interface "ant.objcontroller|obj_motion"
 local cc_sys = ecs.system "default_camera_controller"
 
 local kb_mb = world:sub {"keyboard"}
-local mouse_mb = world:sub {"mouse"}
+local evMouseMove = world:sub {"mouse", "LEFT"}
 
 
 local viewat<const> = math3d.ref(math3d.vector(0, 0, 0))
-
-local function main_camera_ref()
-    for v in w:select "main_queue camera_ref:in" do
-        return v.camera_ref
-    end
-end
 
 local mouse_lastx, mouse_lasty
 local toforward
@@ -35,24 +29,28 @@ function cc_sys:data_changed()
         end
     end
 
-    local dx, dy
-    for msg in mouse_mb:each() do
-        local btn, state = msg[2], msg[3]
-        local x, y = msg[4], msg[5]
-        if btn == "LEFT" and state == "MOVE" then
-            dx, dy = (x - mouse_lastx) * 0.01, (y - mouse_lasty) * 0.01
+    local newx, newy
+    for _, _, state, x, y in evMouseMove:unpack() do
+        if state == "DOWN" then
+            newx, newy = x, y
+            mouse_lastx, mouse_lasty = x, y
+        elseif state == "MOVE" then
+            newx, newy = x, y
+        elseif state == "UP" then
         end
-
-        mouse_lastx, mouse_lasty = x, y
     end
 
     if toforward then
-        local camera_ref = main_camera_ref()
-        iom.move_forward(camera_ref, toforward)
+        local mq = w:singleton("main_queue", "camera_ref:in")
+        iom.move_forward(mq.camera_ref, toforward)
     end
 
-    if dx or dy then
-        local camera_ref = main_camera_ref()
-        iom.rotate_around_point2(camera_ref, viewat, dy, dx)
+    if newx and newy then
+        local mq = w:singleton("main_queue", "camera_ref:in render_target:in")
+        local rect = mq.render_target.view_rect
+        local dx = (newx - mouse_lastx) / rect.w * 10
+        local dy = (newy - mouse_lasty) / rect.h * 10
+        mouse_lastx, mouse_lasty = newx, newy
+        iom.rotate_around_point2(mq.camera_ref, viewat, dy, dx)
     end
 end
