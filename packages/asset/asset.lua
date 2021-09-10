@@ -82,6 +82,4 @@ assetmgr.edit = resource.edit
 assetmgr.unload = resource.unload
 assetmgr.reload = resource.reload
 
-_R2L = false
-assetmgr.R2L = _R2L
 return assetmgr

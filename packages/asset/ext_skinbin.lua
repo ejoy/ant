@@ -22,9 +22,7 @@ return {
         local ibm = data.inverse_bind_matrices
 
         local ibp = animodule.new_bind_pose(ibm.num, ibm.value)
-        if _R2L then
-            ibp:transform(r2l_mat.p)
-        end
+        ibp:transform(r2l_mat.p)
         return {
             inverse_bind_pose 	= ibp,
             joint_remap 		= animodule.new_joint_remap(data.joints)

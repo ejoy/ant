@@ -259,9 +259,7 @@ local function fetch_vb_buffers2(gltfscene, gltfbin, prim)
 
 			local t = l:sub(1, 1)
 			if t == 'p' or t == 'n' or t == 'T' or t == 'b' then
-				if assetmgr.R2L then
-					v = r2l_vec(v, l)
-				end
+				v = r2l_vec(v, l)
 			elseif t == 'i' then
 				if l:sub(6, 6) == 'u' then
 					v = jointidx_fmt:pack(v:byte(1), v:byte(2), v:byte(3), v:byte(4))

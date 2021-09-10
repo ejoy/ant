@@ -27,10 +27,7 @@ function skinning_sys:skin_mesh()
 		local skinning_matrices = skinning.skinning_matrices
 		local pr = e.pose_result
 
-		local m = iom.worldmat(e)
-		if assetmgr.R2L then
-			m = math3d.mul(m, r2l_mat)
-		end
+		local m = math3d.mul(iom.worldmat(e), r2l_mat)
 		animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap, m)
 	end
 end
