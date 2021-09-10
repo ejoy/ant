@@ -244,8 +244,8 @@ end
 function iobj_motion.rotate_around_point2(eid, viewpt, dx, dy, distance)
     local e = find_entity(eid)
     local srt = get_scene(e).srt
-    local right, up = math3d.index(srt, 1), math3d.index(srt, 2)
-    local pos = math3d.index(srt, 4)
+    local srtmat = math3d.matrix(srt)
+    local right, up, pos = math3d.index(srtmat, 1, 2, 4)
 
     local nq = math3d.mul(
         math3d.quaternion{axis=right, r=dx},

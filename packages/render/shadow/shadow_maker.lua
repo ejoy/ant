@@ -93,7 +93,7 @@ local function light_matrix(center_WS, lightdir)
 end
 
 local function update_camera_matrices(rc)
-	rc.viewmat	= math3d.inverse(rc.srt)
+	rc.viewmat	= math3d.inverse(math3d.matrix(rc.srt))
 	rc.worldmat	= rc.srt
 	rc.projmat	= math3d.projmat(rc.frustum)
 	rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
