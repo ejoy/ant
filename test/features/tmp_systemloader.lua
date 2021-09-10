@@ -75,7 +75,8 @@ function init_loader_sys:init()
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
     --world:instance "/pkg/ant.test.features/assets/entities/test_scene.prefab"
     world:instance "/pkg/ant.test.features/assets/entities/skybox_test.prefab"
-    world:instance "/pkg/ant.test.features/assets/glb/cloud.glb|mesh.prefab"
+    --world:instance "/pkg/ant.test.features/assets/glb/cloud.glb|mesh.prefab"
+    world:instance "/pkg/ant.test.features/assets/glb/shadow.glb|mesh.prefab"
     -- local p = world:instance "/pkg/ant.test.features/assets/glb/Fox.glb|mesh.prefab"
     -- foxeid = p[3]
     
