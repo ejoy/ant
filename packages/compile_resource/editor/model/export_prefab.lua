@@ -1,6 +1,7 @@
 local math3d = require "math3d"
 local utility = require "editor.model.utility"
 local serialize = import_package "ant.serialize"
+local assetmgr = import_package "ant.asset"
 
 local lfs = require "filesystem.local"
 local fs = require "filesystem"
@@ -49,7 +50,7 @@ local function get_transform(node)
     local t, r = node.translation, node.rotation
     local tt, rr = t, r
 
-    if _R2L then
+    if assetmgr.R2L then
         if t then
             tt = {
                 t[1], t[2], -t[3]
@@ -78,13 +79,16 @@ local STATE_TYPE = {
 
 local DEFAULT_STATE = STATE_TYPE.visible|STATE_TYPE.cast_shadow|STATE_TYPE.selectable
 local function update_transform(transform)
-    local lm = math3d.matrix(transform)
-    local s, r, t = math3d.srt(lm)
-    return {
-        s = {math3d.index(s, 1, 2, 3)},
-        r = math3d.tovalue(r),
-        t = {math3d.index(t, 1, 2, 3)}
-    }
+    if transform.matrix then
+        local s, r, t = math3d.srt(math3d.matrix(transform.matrix))
+        return {
+            s = {math3d.index(s, 1, 2, 3)},
+            r = math3d.tovalue(r),
+            t = {math3d.index(t, 1, 2, 3)}
+        }
+    end
+
+    return transform
 end
 
 local function is_mirror_transform(trans)
@@ -343,7 +347,7 @@ local function find_mesh_nodes(gltfscene, scenenodes)
 
     return meshnodes
 end
-local r2l_mat = _R2L and {
+local r2l_mat = assetmgr.R2L and {
     s = {1.0, 1.0, 1.0}
 } or {
     s = {1.0, 1.0, -1.0}

@@ -1,6 +1,7 @@
 local gltfutil  = require "editor.model.glTF.util"
 local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
+local assetmgr	= import_package "ant.asset"
 local math3d    = require "math3d"
 local utility   = require "editor.model.utility"
 
@@ -203,8 +204,6 @@ local LAYOUT_NAMES<const> = {
 
 local jointidx_fmt<const> = "HHHH"
 
-_R2L = false
-
 -- change from right hand to left hand
 -- left hand define as: 
 -- 		x: -left, +right
@@ -223,10 +222,6 @@ local function r2l_vec(v, l)
 	end
 
 	assert(("not support layout:%s, %s"):format(l, t))
-end
-
-local function r2l_quat(q, l)
-
 end
 
 local function fetch_vb_buffers2(gltfscene, gltfbin, prim)
@@ -264,7 +259,7 @@ local function fetch_vb_buffers2(gltfscene, gltfbin, prim)
 
 			local t = l:sub(1, 1)
 			if t == 'p' or t == 'n' or t == 'T' or t == 'b' then
-				if _R2L then
+				if assetmgr.R2L then
 					v = r2l_vec(v, l)
 				end
 			elseif t == 'i' then
