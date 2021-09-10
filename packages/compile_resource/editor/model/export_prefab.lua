@@ -319,18 +319,30 @@ return function(output, glbdata, exports, tolocalpath)
     local sceneidx = gltfscene.scene or 0
     local scene = gltfscene.scenes[sceneidx+1]
 
+    local rootid = create_entity {
+        policy = {
+            "ant.general|name",
+            "ant.scene|transform_policy",
+        },
+        data = {
+            name = scene.name or "Rootscene",
+            transform = {}
+        },
+        parent = "root",
+    }
+
     local meshnodes = find_mesh_nodes(gltfscene, scene.nodes)
 
     local C = {}
     for mesh_nodeidx, meshlist in pairs(meshnodes) do
-        local parent
+        local parent = rootid
         for i=#meshlist, 2, -1 do
             local nodeidx = meshlist[i]
             local p = C[nodeidx]
             if p then
                 parent = p
             else
-                parent = create_node_entity(gltfscene, nodeidx, "root")
+                parent = create_node_entity(gltfscene, nodeidx, parent)
                 C[nodeidx] = parent
             end
         end
