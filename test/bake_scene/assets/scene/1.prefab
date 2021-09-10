@@ -14,11 +14,8 @@ policy:
 action:
   mount: 1
 data:
-  lightmap:
-    id: 6130dc3c0bcfd81c4787cd64
-    size: 16
-  material: $path ./1.glb|./materials/Material.001.material
-  mesh: $path ./1.glb|./meshes/Cube.001_P1.meshbin
+  material: $path ./1.glb|materials/Material.material
+  mesh: $path ./1.glb|meshes/Cube_P1.meshbin
   name: Cube
   scene_entity: true
   state: 7
@@ -29,5 +26,4 @@ data:
 policy:
   ant.general|name
   ant.render|render
-  ant.render|lightmap
   ant.scene|hierarchy_policy
