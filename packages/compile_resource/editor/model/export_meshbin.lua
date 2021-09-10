@@ -215,10 +215,13 @@ local jointidx_fmt<const> = "HHHH"
 --		z: -point2user, +point2screen
 local function r2l_vec(v, l)
 	local t = l:sub(6, 6)
+	local n = tonumber(l:sub(2, 2))
 	if t == 'f' then
-		local x, y, z = ('fff'):unpack(v)
-		z = -z
-		return ('fff'):pack(x, y, z)
+		local fmt = ('f'):rep(n)
+		local p = {fmt:unpack(v)}
+		p[3] = -p[3]
+		p[n+1] = nil
+		return fmt:pack(table.unpack(p))
 	end
 
 	assert(("not support layout:%s, %s"):format(l, t))
