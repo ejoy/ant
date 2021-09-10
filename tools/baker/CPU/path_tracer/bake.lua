@@ -136,6 +136,45 @@ for _, e in ipairs(scene) do
     end
 end
 
+local mm = {}
+for _, m in ipairs(models) do
+    local p = {}
+    local lp = {}
+    for iv=1, m.vertexCount do
+        local x, y, z = ("fff"):unpack(m.positions.data, m.positions.offset + (iv-1) * m.positions.stride+1)
+        local pp = {x, y, z}
+        p[#p+1] = pp
+
+        local mmm = math3d.matrix(
+            1.0, 0.0, 0.0, 0.0, 
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0,-1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0
+        )
+
+        local mmm1 = math3d.matrix(
+            -1.0, 0.0, 0.0, 0.0,
+             0.0,-1.0, 0.0, 0.0,
+             0.0, 0.0,-1.0, 0.0,
+             0.0, 0.0, 0.0, 1.0
+        )
+        local pp0 = math3d.tovalue(math3d.transform(mmm, math3d.vector(pp), 1))
+        local pp1 = math3d.tovalue(math3d.transform(mmm1, math3d.vector(pp), 1))
+        lp[#lp+1] = pp0
+        lp[#lp][4] = nil
+    end
+    mm.position = p
+    mm.lh_position = lp
+    local i = {}
+    for ii=1, m.indexCount do
+        local idx = ("H"):unpack(m.indices.data, m.indices.offset + (ii-1)*m.indices.stride+1)
+        i[#i+1] = idx
+    end
+
+    mm.indices = i
+end
+
+
 log("num models:", #models)
 log("num materials:", #materials)
 log("num lights:", #lights)
@@ -144,10 +183,7 @@ local texfile_content<const> = [[
 normalmap: false
 path: %s
 sRGB: true
-compress:
-    android: ASTC6x6
-    ios: ASTC6x6
-    windows: BC3
+format:RGBA32F
 sampler:
     MAG: LINEAR
     MIN: LINEAR
@@ -174,7 +210,7 @@ local function save_lightmap(id, lm, lmr)
     local local_filename = local_lmpath / name
     local ti = default_tex_info(lm.size, lm.size, "RGBA32F")
     local m = bgfx.memory_buffer(lmr.data)
-    local c = image.encode_image(ti, m, {type = "dds", format="RGBA32", srgb=false})
+    local c = image.encode_image(ti, m, {type = "dds", format="RGBA32F", srgb=false})
     writefile(local_filename, c, "wb")
 
     local tc = texfile_content:format(filename:string())
