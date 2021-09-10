@@ -61,7 +61,7 @@ lm:source_set "pathtracer_baker" {
     includes = {
         LuaInclude,
         GLMInclude,
-        "../lua2struct",
+        "../luabind",
         "../bgfx",
     },
     sources = {

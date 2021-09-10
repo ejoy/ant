@@ -3,6 +3,7 @@ local lm = require "luamake"
 dofile "../common.lua"
 
 lm:import "../font/make.lua"
+lm:import "../luabind/build.lua"
 
 lm:source_set "yoga" {
     rootdir = Ant3rd .. "yoga",
@@ -31,6 +32,7 @@ lm:source_set "source_rmlui" {
     deps = {
         "yoga",
         "rmlui_core",
+        "luabind",
     },
     includes = {
         LuaInclude,
@@ -40,7 +42,7 @@ lm:source_set "source_rmlui" {
         Ant3rd .. "rmlui/Include",
         Ant3rd .. "bgfx/3rdparty",
         Ant3rd .. "yoga",
-        "../lua2struct",
+        "../luabind",
     },
     sources = {
         "*.cpp",
