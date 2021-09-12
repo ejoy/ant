@@ -65,7 +65,9 @@ static int lcreate(lua_State* L, bool open_or_save) {
     }
     const char* path = [[[dialog URL] path] UTF8String];
     lua_pushboolean(L, 1);
+    lua_newtable(L);
     lua_pushstring(L, path);
+    lua_rawseti(L, -2, 1);
     return 2;
 }
 
