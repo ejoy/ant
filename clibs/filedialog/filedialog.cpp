@@ -67,7 +67,7 @@ static void dlgSetFileTypes(lua_State* L, ComPtr<IFileDialog>& dialog, int idx) 
         lua_pop(L, 1);
 
         lua_geti(L, -1, 2);
-        szSspec = towstring(L, -1);
+        szSspec = L"*."+towstring(L, -1);
         lua_pop(L, 1);
 
         COMDLG_FILTERSPEC spec = { szName.c_str(), szSspec.c_str() };
@@ -87,7 +87,7 @@ static void dlgSetFileTypes(lua_State* L, ComPtr<IFileDialog>& dialog, int idx) 
             lua_pop(L, 1);
 
             lua_geti(L, -1, 2);
-            store[2*i-1] = towstring(L, -1);
+            store[2*i-1] = L"*."+towstring(L, -1);
             spec[i-1].pszSpec = store[2*i-1].c_str();
             lua_pop(L, 1);
 
