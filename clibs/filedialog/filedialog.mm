@@ -46,7 +46,7 @@ static int lcreate(lua_State* L, bool open_or_save) {
     if (open_or_save) {
         NSOpenPanel* opendialog = [NSOpenPanel openPanel];
         [opendialog setCanChooseFiles:YES];
-        [opendialog setCanChooseDirectories:NO];
+        [opendialog setCanChooseDirectories:YES];
         [opendialog setResolvesAliases:NO];
         [opendialog setAllowsMultipleSelection:NO];
         dialog = opendialog;
