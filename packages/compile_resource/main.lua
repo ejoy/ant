@@ -4,7 +4,7 @@ local fx = require "load_fx"
 local config = require "config"
 
 local function set_identity(v)
-    config.set_setting("glb", {})
+    config.set_setting("glb", {identity=v})
     config.set_setting("sc", {identity=v})
     config.set_setting("texture", {identity=v})
     config.set_setting("png", {identity=v})
