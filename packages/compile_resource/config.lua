@@ -6,14 +6,12 @@ local config = {
     sc = {setting={},arguments=""},
 }
 
-local function set_identity(ext, identity)
+local function set_setting(ext, setting)
     local cfg = config[ext]
     if not cfg then
         error("invalid type: " .. ext)
     end
-    cfg.setting = {
-        identity = identity
-    }
+    cfg.setting = setting
     cfg.arguments = stringify(cfg.setting)
 end
 
@@ -22,6 +20,6 @@ local function get(ext)
 end
 
 return {
-    set_identity = set_identity,
+    set_setting = set_setting,
     get = get,
 }
