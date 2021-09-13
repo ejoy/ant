@@ -333,7 +333,7 @@ local function do_to_runtime_event(evs)
             life_time = ev.life_time,
             move = ev.move,
             msg_content = ev.msg_content,
-            link_info = ev.link_info and {slot_name = ev.link_info.slot_name, slot_eid = ev.link_info.slot_eid},
+            link_info = ev.link_info and {slot_name = ev.link_info.slot_name, slot_eid = ev.link_info.slot_eid and (ev.link_info.slot_eid > 0 and ev.link_info.slot_eid or nil) or nil },
             collision = (col_eid ~= -1) and {
                 col_eid = col_eid,
                 name = world[col_eid].name,

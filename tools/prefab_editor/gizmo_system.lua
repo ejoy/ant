@@ -233,7 +233,7 @@ function gizmo:update_scale()
 end
 
 function gizmo_sys:post_init()
-	local srt = {r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
+	--local srt = {r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
 	local axis_root = world:deprecated_create_entity{
 		policy = {
 			"ant.general|name",
@@ -254,7 +254,7 @@ function gizmo_sys:post_init()
 			"ant.scene|hierarchy_policy",
 		},
 		data = {
-			transform = srt,
+			transform = {},
 			name = "rot root",
 			scene_entity = true,
 		},
@@ -270,7 +270,7 @@ function gizmo_sys:post_init()
 			"ant.scene|hierarchy_policy",
 		},
 		data = {
-			transform = srt,
+			transform = {},
 			name = "rot root",
 			scene_entity = true,
 		},
