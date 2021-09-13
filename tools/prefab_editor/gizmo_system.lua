@@ -206,7 +206,8 @@ local function update_global_axis()
 	for v in world.w:select "eid:in" do
 		if v.eid == global_axis_x_eid or v.eid == global_axis_y_eid or v.eid == global_axis_z_eid then
 			local screenpos = {global_data.viewport.x + 50, global_data.viewport.y + global_data.viewport.h - 50}
-			local worldPos = math3d.totable(utils.ndc_to_world(camera_mgr.main_camera, iom.screen_to_ndc(camera_mgr.main_camera, {screenpos[1], screenpos[2], 0.5})))
+			local worldPos = utils.ndc_to_world(camera_mgr.main_camera, 
+				iom.screen_to_ndc({screenpos[1], screenpos[2], 0.5}))
 			world.w:sync("render_object:in scene:in", v)
 			local srt = v.scene.srt
 			srt.s.v = {1.5,1.5,1.5}
