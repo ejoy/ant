@@ -3,6 +3,8 @@ local world = ecs.world
 local w = world.w
 
 local math3d = require "math3d"
+local mathpkg = import_package "ant.math"
+local mu = mathpkg.util
 
 ----iscenespace----
 local iss = ecs.interface "iscenespace"
@@ -120,16 +122,20 @@ function s:entity_init()
 	local hashmap = {}
 	for v in w:select "INIT camera:in scene:out" do
 		local camera = v.camera
-		local viewmat = math3d.lookto(camera.eyepos, camera.viewdir, camera.updir)
 		v.scene = {
-			srt = math3d.inverse(viewmat),
-			updir = camera.updir
+			srt = mu.srt_obj{s=1, r=math3d.torotation(math3d.vector(camera.viewdir)), t=camera.eyepos},
+			updir = math3d.ref(math3d.vector(camera.updir)),
 		}
 	end
 	for v in w:select "INIT scene:in eid?in scene_sorted?new" do
 		local scene = v.scene
+		
 		if scene.srt then
-			scene.srt = math3d.ref(math3d.matrix(scene.srt))
+			if type(scene.srt) == "table" then
+				scene.srt = mu.srt_obj(scene.srt)
+			else
+				scene.srt = math3d.ref(scene.srt)
+			end
 		end
 		if scene.updir then
 			scene.updir = math3d.ref(math3d.vector(scene.updir))
@@ -221,11 +227,14 @@ function s:update_transform()
                     local adjust_mat = e.pose_result:joint(joint_idx)
                     local scale, rotate, pos = math3d.srt(adjust_mat)
                     if v.follow_flag == 1 then
-                        adjust_mat = math3d.matrix{s = 1, r = {0,0,0,1}, t = pos}
+                        scale, rotate, pos = 1, {0,0,0,1}, pos
                     elseif v.follow_flag == 2 then
-                        adjust_mat = math3d.matrix{s = 1, r = rotate, t = pos}
+						scale, rotate, pos = 1, rotate, pos
                     end
-					v.scene.srt = math3d.ref(adjust_mat)
+					local srt = v.scene.srt
+					srt.s.v = scale
+					srt.r.q = rotate
+					srt.t.v = pos
                     --v.scene.srt = math3d.ref(math3d.mul(adjust_mat, v.scene.srt))
                 end
             end
@@ -322,7 +331,7 @@ function ecs.method.init_scene(e)
 	local scene = e.scene
 	scene.id = new_sceneid()
 	if scene.srt then
-		scene.srt = math3d.ref(math3d.matrix(scene.srt))
+		scene.srt = mu.srt_obj(scene.srt)
 	end
 	if scene.updir then
 		scene.updir = math3d.ref(math3d.vector(scene.updir))

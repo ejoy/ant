@@ -21,6 +21,18 @@ void* platformGetHandle(ImGuiViewport* viewport) {
 #endif
 }
 
+#if defined(SDL_VIDEO_DRIVER_WINDOWS)
+static void ImGui_ImplWin32_SetImeInputPos(ImGuiViewport* viewport, ImVec2 pos) {
+    COMPOSITIONFORM cf = { CFS_FORCE_POSITION,{ (LONG)(pos.x - viewport->Pos.x), (LONG)(pos.y - viewport->Pos.y) },{ 0, 0, 0, 0 } };
+    if (HWND hwnd = (HWND)platformGetHandle(viewport))
+        if (HIMC himc = ::ImmGetContext(hwnd)) {
+            ::ImmSetCompositionWindow(himc, &cf);
+            ::ImmReleaseContext(hwnd, himc);
+        }
+}
+#endif
+
+
 void* platformCreate(lua_State* L, int w, int h) {
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
 		return nullptr;
@@ -36,6 +48,8 @@ void* platformCreate(lua_State* L, int w, int h) {
 	SDL_GetWindowWMInfo(window, &wmInfo);
 #if defined(SDL_VIDEO_DRIVER_WINDOWS)
 	ImGui_ImplSDL2_InitForD3D(window);
+    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+    platform_io.Platform_SetImeInputPos = ImGui_ImplWin32_SetImeInputPos;
 #elif defined(SDL_VIDEO_DRIVER_COCOA)
 	ImGui_ImplSDL2_InitForMetal(window);
 #endif
@@ -63,8 +77,7 @@ bool platformNewFrame() {
 				return false;
 			case SDL_WINDOWEVENT_SIZE_CHANGED:
 			case SDL_WINDOWEVENT_RESIZED: {
-				struct window_callback* cb = window_get_callback((lua_State*)ImGui::GetIO().UserData);
-				window_event_size(cb, event.window.data1, event.window.data2);
+				window_event_size(event.window.data1, event.window.data2);
 				break;
 			}
 			default:

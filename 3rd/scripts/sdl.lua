@@ -76,6 +76,7 @@ lm:source_set "sdl" {
         "SDL_VIDEO_OPENGL_EGL=0",
         "SDL_VIDEO_OPENGL_WGL=0",
         "SDL_VIDEO_OPENGL_CGL=0",
+        "SDL_DISABLE_WINDOWS_IME=0",
         --"SDL_VIDEO_RENDER_D3D11=0",
         --"SDL_VIDEO_VULKAN=0",
     },

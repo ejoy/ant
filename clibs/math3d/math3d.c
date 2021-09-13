@@ -1428,16 +1428,6 @@ lslerp(lua_State *L){
 }
 
 static int
-lmatrix_scale(lua_State *L){
-	struct lastack *LS = GETLS(L);
-	const float *m = matrix_from_index(L, LS, 1);
-	float *scale = lastack_allocvec4(LS);
-	math3d_decompose_scale(m, scale);
-	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
-	return 1;
-}
-
-static int
 lstacksize(lua_State *L) {
 	struct lastack *LS = GETLS(L);
 	lua_pushinteger(L, lastack_size(LS));
@@ -2006,7 +1996,6 @@ init_math3d_api(lua_State *L, struct boxstack *bs) {
 		{ "minmax", lminmax},
 		{ "lerp", llerp},
 		{ "slerp", lslerp},
-		{ "matrix_scale", lmatrix_scale},
 		{ "quat2euler", lquat2euler},
 		{ "dir2radian", ldir2radian},
 		{ "forward_dir",lforward_dir},

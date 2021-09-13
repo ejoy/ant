@@ -208,8 +208,11 @@ local function update_global_axis()
 			local screenpos = {global_data.viewport.x + 50, global_data.viewport.y + global_data.viewport.h - 50}
 			local worldPos = math3d.totable(utils.ndc_to_world(camera_mgr.main_camera, iom.screen_to_ndc(camera_mgr.main_camera, {screenpos[1], screenpos[2], 0.5})))
 			world.w:sync("render_object:in scene:in", v)
-			v.scene.srt = {s = {1.5,1.5,1.5}, r = {0,0,0,1}, t = {worldPos[1], worldPos[2], worldPos[3]}}
-			v.scene._worldmat = math3d.matrix(v.scene.srt)
+			local srt = v.scene.srt
+			srt.s.v = {1.5,1.5,1.5}
+			srt.r.q = {0,0,0,1}
+			srt.t.v = worldPos
+			v.scene._worldmat = math3d.matrix(srt)
 			v.render_object.worldmat = v.scene._worldmat
 		end
 	end

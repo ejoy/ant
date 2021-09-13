@@ -1,6 +1,7 @@
 local math3d = require "math3d"
 local utility = require "editor.model.utility"
 local serialize = import_package "ant.serialize"
+local assetmgr = import_package "ant.asset"
 
 local lfs = require "filesystem.local"
 local fs = require "filesystem"
@@ -47,26 +48,10 @@ local function get_transform(node)
     end
 
     local t, r = node.translation, node.rotation
-    local tt, rr = t, r
-
-    if _R2L then
-        if t then
-            tt = {
-                t[1], t[2], -t[3]
-            }
-        end
-
-        if r then
-            rr = {
-                -r[1], -r[2], -r[3],
-                r[4]
-            }
-        end
-    end
     return {
         s = node.scale,
-        r = rr,
-        t = tt,
+        r = r and {r[1], r[2], -r[3], -r[4]} or nil,     --r2l
+        t = t and {t[1], t[2], -t[3]} or nil,            --r2l
     }
 end
 
@@ -77,18 +62,9 @@ local STATE_TYPE = {
 }
 
 local DEFAULT_STATE = STATE_TYPE.visible|STATE_TYPE.cast_shadow|STATE_TYPE.selectable
-local function update_transform(transform)
-    local lm = math3d.matrix(transform)
-    local s, r, t = math3d.srt(lm)
-    return {
-        s = {math3d.index(s, 1, 2, 3)},
-        r = math3d.tovalue(r),
-        t = {math3d.index(t, 1, 2, 3)}
-    }
-end
 
 local function is_mirror_transform(trans)
-    local s = math3d.matrix_scale(trans)
+    local s = math3d.srt(trans)
     s = math3d.tovalue(s)
     local n = 0
     for i=1, #s do
@@ -124,20 +100,15 @@ local primitive_names = {
 
 local materials = {}
 
-local function generate_material(mi, mode, mirror_transform)
+local function generate_material(mi, mode)
     local sname = primitive_names[mode+1]
     if not sname then
         error(("not support primitate state, mode:%d"):format(mode))
     end
     --defualt cull is CCW
     local function what_cull()
-        local cull_rempper<const> = {
-            CW = mirror_transform and "CCW" or "CW",
-            CCW= mirror_transform and "CW" or "CCW",
-            NONE="NONE",
-        }
-        
-        return cull_rempper[mi.material.state.CULL]
+
+        return mi.material.state.CULL
     end
 
     local cullname = what_cull()
@@ -216,12 +187,9 @@ end
 
 local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports, tolocalpath)
     local node = gltfscene.nodes[nodeidx+1]
-    local transform = update_transform(get_transform(node))
-    local finaltransform = math3d.mul(parent_transform(parent), math3d.matrix(transform))
+    local transform = get_transform(node)
     local meshidx = node.mesh
     local mesh = gltfscene.meshes[meshidx+1]
-
-    local mirror_trans = is_mirror_transform(finaltransform)
 
     for primidx, prim in ipairs(mesh.primitives) do
         local meshname = mesh.name and fix_invalid_name(mesh.name) or ("mesh" .. meshidx)
@@ -230,7 +198,7 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports, tolo
         if prim.material then
             if exports.material and #exports.material > 0 then
                 local mi = assert(exports.material[prim.material+1])
-                local materialinfo = generate_material(mi, mode, mirror_trans)
+                local materialinfo = generate_material(mi, mode)
                 save_material(materialinfo)
                 materialfile = materialinfo.filename
             else
@@ -241,7 +209,7 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports, tolo
             if default_material_info.material == nil then
                 default_material_info.material = read_material_file(default_material_path)
             end
-            local materialinfo = generate_material(default_material_info, mode, mirror_trans)
+            local materialinfo = generate_material(default_material_info, mode)
             if materialinfo.filename ~= default_material_path then
                 save_material(materialinfo)
                 materialfile = materialinfo.filename
@@ -343,11 +311,6 @@ local function find_mesh_nodes(gltfscene, scenenodes)
 
     return meshnodes
 end
-local r2l_mat = _R2L and {
-    s = {1.0, 1.0, 1.0}
-} or {
-    s = {1.0, 1.0, -1.0}
-}
 
 return function(output, glbdata, exports, tolocalpath)
     prefab = {}
@@ -355,6 +318,7 @@ return function(output, glbdata, exports, tolocalpath)
     local gltfscene = glbdata.info
     local sceneidx = gltfscene.scene or 0
     local scene = gltfscene.scenes[sceneidx+1]
+
     local rootid = create_entity {
         policy = {
             "ant.general|name",
@@ -362,7 +326,7 @@ return function(output, glbdata, exports, tolocalpath)
         },
         data = {
             name = scene.name or "Rootscene",
-            transform = r2l_mat,
+            transform = {}
         },
         parent = "root",
     }

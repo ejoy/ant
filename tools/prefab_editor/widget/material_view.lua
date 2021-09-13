@@ -142,7 +142,7 @@ function MaterialView:on_save_mat()
     assetmgr.unload(path)
 end
 function MaterialView:on_saveas_mat()
-    local path = uiutils.get_saveas_path("Material", ".material")
+    local path = uiutils.get_saveas_path("Material", "material")
     if path then
         do_save(self.eid, path)
         local vpath = "/" .. tostring(access.virtualpath(global_data.repo, fs.path(path)))

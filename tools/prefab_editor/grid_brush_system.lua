@@ -151,7 +151,7 @@ end
 
 function grid:save(filename)
     if not filename then
-        local newfilename = widget_utils.get_saveas_path("Lua", ".lua")
+        local newfilename = widget_utils.get_saveas_path("Lua", "lua")
         if not newfilename then return end
         self.filename = newfilename
     end

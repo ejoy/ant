@@ -1,16 +1,21 @@
 local lm = require "luamake"
 
 dofile "../common.lua"
+lm:import "../luabind/build.lua"
 
 lm:lua_dll "imgui" {
-    deps = "sdl",
+    deps = {
+        "sdl",
+        "luabind"
+    },
     includes = {
         ".",
         Ant3rd .. "imgui",
         Ant3rd .. "glm",
         Ant3rd .. "SDL/include",
         BgfxInclude,
-        "../bgfx"
+        "../bgfx",
+        "../luabind"
     },
     sources = {
         "imgui_config.cpp",

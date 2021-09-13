@@ -73,8 +73,15 @@ local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
     --point_light_test()
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
-    world:instance "/pkg/ant.test.features/assets/entities/test_scene.prefab"
+    --world:instance "/pkg/ant.test.features/assets/entities/test_scene.prefab"
     world:instance "/pkg/ant.test.features/assets/entities/skybox_test.prefab"
+    --world:instance "/pkg/ant.test.features/assets/glb/cloud.glb|mesh.prefab"
+    world:instance "/pkg/ant.test.features/assets/glb/shadow.glb|mesh.prefab"
+    -- local p = world:instance "/pkg/ant.test.features/assets/glb/Fox.glb|mesh.prefab"
+    -- foxeid = p[3]
+    
+    --world:instance "/pkg/ant.test.features/assets/glb/shuijing.glb|mesh.prefab"
+    --world:instance "/pkg/ant.resources/meshes/SimpleSkin/SimpleSkin.glb|mesh.prefab"
     -- world:instance "/pkg/ant.test.features/assets/entities/light_point.prefab"
     -- local eid = world:instance "/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab"[1]
     -- world:pub{"after_init", eid}

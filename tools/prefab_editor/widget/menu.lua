@@ -19,7 +19,7 @@ function m.show()
                 prefab_mgr:save_prefab()
             end
             if imgui.widget.MenuItem("Save As..") then
-                local path = widget_utils.get_saveas_path("Prefab", ".prefab")
+                local path = widget_utils.get_saveas_path("Prefab", "prefab")
                 if path then
                     prefab_mgr:save_prefab(path)
                 end

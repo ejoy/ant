@@ -1,6 +1,7 @@
 local ecs = ...
 
-local math3d = require "math3d"
+local mathpkg = import_package "ant.math"
+local mu = mathpkg.util
 
 local ct = ecs.transform "cache_transform"
 function ct.process_prefab(e)
@@ -15,7 +16,7 @@ end
 local gt = ecs.transform "init_transform"
 
 function gt.process_entity(e)
-	e._rendercache.srt = math3d.ref(math3d.matrix(e.transform or {}))
+    e._rendercache.srt = mu.srt_obj(e.transform or {})
 end
 
 local ibt = ecs.transform "init_bounding_transform"

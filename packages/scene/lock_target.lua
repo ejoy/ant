@@ -41,8 +41,8 @@ function lt_sys:refine_entity_transform()
                 error(string.format("'ignore_scale' could not bind to entity without 'transform' component"))
             end
 
-            local parent_scale = math3d.srt(world[target]._rendercache.srt)
-            local inv_scalemat = math3d.matrix{s=1/parent_scale}
+            local ps = math3d.tovalue(world[target]._rendercache.srt.s)
+            local inv_scalemat = math3d.matrix{s={1.0/ps[1], 1.0/ps[2], 1.0/ps[3]}}
             rc.worldmat = math3d.mul(inv_scalemat, rc.worldmat)
         else
             error(("not support locktype:%s"):format(locktype))

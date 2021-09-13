@@ -402,7 +402,7 @@ end
 local function set_view()
     --iom.set_position(mq.camera_eid, math3d.vector(0, 0, -2))
     world[example_eid]._rendercache.eid = example_eid
-    world[example_eid]._rendercache.worldmat = world[example_eid]._rendercache.srt
+    world[example_eid]._rendercache.worldmat = math3d.matrix(world[example_eid]._rendercache.srt)
     local p, d, u = ilm.find_sample(example_eid, 0)
     p, d, u = math3d.vector(p), math3d.vector(d), math3d.vector(u)
     local znear, zfar = 0.001, 100
