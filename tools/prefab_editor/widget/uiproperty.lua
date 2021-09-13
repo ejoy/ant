@@ -308,7 +308,7 @@ function TextureResource:show()
         
         imgui.util.PushID("Save As" .. self.label)
         if imgui.widget.Button("Save As") then
-            local path = uiutils.get_saveas_path("Texture", ".texture")
+            local path = uiutils.get_saveas_path("Texture", "texture")
             if path then
                 path = tostring(lfs.relative(lfs.path(path), fs.path "":localpath()))
                 utils.write_file(path, stringify(self.metadata))
@@ -318,7 +318,7 @@ function TextureResource:show()
         imgui.cursor.SameLine()
         
         if imgui.widget.Button("Select...") then
-            local glb_filename = uiutils.get_open_file_path("Textures", ".glb")
+            local glb_filename = uiutils.get_open_file_path("Textures", "glb")
             if glb_filename then
                 glb_path = "/" .. access.virtualpath(global_data.repo, fs.path(glb_filename))
                 rc.compile(glb_path)

@@ -586,7 +586,7 @@ local function show_current_event()
         imgui.widget.Text("SoundPath : ")
     elseif current_event.event_type == "Effect" then
         if imgui.widget.Button("SelectEffect") then
-            local path = uiutils.get_open_file_path("Prefab", ".prefab")
+            local path = uiutils.get_open_file_path("Prefab", "prefab")
             if path then
                 local lfs         = require "filesystem.local"
                 local rp = lfs.relative(lfs.path(path), global_data.project_root)
@@ -1130,7 +1130,7 @@ function m.show()
                 imgui.cursor.SameLine()
                 local origin_name
                 if imgui.widget.Button("...") then
-                    local glb_filename = uiutils.get_open_file_path("Animation", ".glb")
+                    local glb_filename = uiutils.get_open_file_path("Animation", "glb")
                     if glb_filename then
                         external_anim_list = {}
                         current_external_anim = nil

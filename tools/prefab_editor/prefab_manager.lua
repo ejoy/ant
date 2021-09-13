@@ -799,7 +799,7 @@ function m:save_prefab(path)
     local filename
     if not path then
         if not self.prefab or (string.find(tostring(self.prefab), "__temp__")) then
-            filename = widget_utils.get_saveas_path("Prefab", ".prefab")
+            filename = widget_utils.get_saveas_path("Prefab", "prefab")
             if not filename then return end
         end
     end
