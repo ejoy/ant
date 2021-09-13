@@ -128,7 +128,7 @@ local function create_prim_bounding(meshscene, prim)
 			{maxv[1], maxv[2], -maxv[3]},
 		}
 		local bounding = {
-			aabb = {nminv, nmaxv}
+			aabb = {math3d.tovalue(nminv), math3d.tovalue(nmaxv)}
 		}
 		prim.bounding = bounding
 		return bounding
