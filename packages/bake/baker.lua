@@ -14,6 +14,9 @@ local declmgr   = renderpkg.declmgr
 local fbmgr     = renderpkg.fbmgr
 local viewidmgr = renderpkg.viewidmgr
 
+local mathpkg   = import_package "ant.math"
+local mu        = mathpkg.uitl
+
 local ientity   = world:interface "ant.render|entity"
 local irender   = world:interface "ant.render|irender"
 local imaterial = world:interface "ant.asset|imaterial"
@@ -139,7 +142,7 @@ local function create_downsample()
                 render_object = {},
                 render_object_update = true,
                 scene = {
-                    srt = math3d.ref(mc.IDENTITY_MAT),
+                    srt = mu.srt_obj(),
                 },
                 state = 0,  --force not include to any render queue
                 [tag] = true,
