@@ -131,11 +131,7 @@ function s:entity_init()
 		local scene = v.scene
 		
 		if scene.srt then
-			if type(scene.srt) == "table" then
-				scene.srt = mu.srt_obj(scene.srt)
-			else
-				scene.srt = math3d.ref(scene.srt)
-			end
+			scene.srt = mu.srt_obj(scene.srt)
 		end
 		if scene.updir then
 			scene.updir = math3d.ref(math3d.vector(scene.updir))
