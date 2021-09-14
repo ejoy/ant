@@ -46,8 +46,8 @@ local function fetchfirmware()
 	-- wait finish
 	local l = io_req:call("LIST", 'engine/firmware')
 	local result
-	for name, type in pairs(l) do
-		assert(type == false)
+	for name, v in pairs(l) do
+		assert(v.dir == false)
 		local r = io_req:call("GET", 'engine/firmware/' .. name)
 		if name == 'bootloader.lua' then
 			result = r

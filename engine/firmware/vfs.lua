@@ -103,7 +103,7 @@ local function fetch_file(self, hash, fullpath, parent)
 		self.cache[hash] = dir
 	end
 
-	local path, name = fullpath:match "([^/]*)/?(.*)"
+	local path, name = fullpath:match "([^/]+)/?(.*)"
 	local subpath = dir[path]
 	if subpath then
 		if name == "" then
@@ -117,15 +117,10 @@ local function fetch_file(self, hash, fullpath, parent)
 	-- invalid repo, root change
 end
 
-function vfs:list(path)
-	local hash
-	if path == "" then
-		hash = self.root
-	else
-		if not self.root then
-			return false
-		end
-		local ok, h = fetch_file(self, self.root, path, "")
+function vfs:list(path, hash)
+	hash = hash or self.root
+	if path ~= "" then
+		local ok, h = fetch_file(self, hash, path, "")
 		if not ok then
 			return false, h
 		end
@@ -182,10 +177,35 @@ end
 
 function vfs:changeroot(hash)
 	local history = update_history(self, hash)
-	local f = assert(io.open(self.path .. "root", "wb"))
-	f:write(table.concat(history, "\n"))
-	f:close()
+	do
+		local f <close> = assert(io.open(self.path .. "root", "wb"))
+		f:write(table.concat(history, "\n"))
+	end
 	self.root = hash
+	self.resource = {}
+	local path = self:hashpath(hash)..".resource"
+	do
+		local f <close> = io.open(path, "rb")
+		if f then
+			for line in f:lines() do
+				local hash, name = line:match "([%da-f]+) (.*)"
+				if hash then
+					self.resource[name] = hash
+				end
+			end
+		end
+	end
+end
+
+function vfs:get_resource(name)
+	return self.resource[name]
+end
+
+function vfs:set_resource(name, hash)
+	self.resource[name] = hash
+	local path = self:hashpath(self.root)..".resource"
+	local f <close> = io.open(path, "ab")
+	f:write(("%s %s\n"):format(hash, name))
 end
 
 function vfs:realpath(path)

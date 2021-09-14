@@ -1,5 +1,6 @@
-local fs = require "filesystem"
+local lfs = require "filesystem.local"
 local config = require "config"
+local vfs = require "vfs"
 
 local function normalize(p)
     local stack = {}
@@ -27,25 +28,19 @@ local function split_path(pathstring)
         local path = normalize(pathlst[i])
         local ext = path:match "[^/]%.([%w*?_%-]*)$"
         local cfg = config.get(ext)
-        res[#res+1] = path
-        res[#res+1] = "?"
-        res[#res+1] = cfg.arguments
-        res[#res+1] = "/"
+        res[#res+1] = path.."?"..cfg.arguments
     end
     res[#res+1] = pathlst[#pathlst]
-    return table.concat(res)
+    return res
 end
 
-local function compile_url(url)
-    return fs.path(url):localpath()
-end
-
-local function compile_dir(urllst)
-    return compile_url(table.concat(urllst, "/"))
+local function compile_dir(urls)
+    local path = assert(vfs.resource(urls))
+    return lfs.path(path)
 end
 
 local function compile(pathstring)
-    return compile_url(split_path(pathstring))
+    return compile_dir(split_path(pathstring))
 end
 
 return {
