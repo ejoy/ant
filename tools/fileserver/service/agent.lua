@@ -33,7 +33,7 @@ function message.ROOT(path)
 	response("ROOT", roothash)
 end
 
-local function COMPILE(path)
+function message.RESOURCE(path)
 	local ok, lpath = compile_resource(path)
 	if not ok then
 		print(table.concat(lpath, "\n"))
@@ -41,14 +41,10 @@ local function COMPILE(path)
 		return
 	end
 	local hash = ltask.call(ServiceVfsMgr, "BUILD", VfsSessionId, path, lpath)
-	response("COMPILE", path, hash)
+	response("RESOURCE", path, hash)
 end
 
 function message.GET(hash)
-	if hash:match "%?" then
-		COMPILE(hash)
-		return
-	end
 	local filename = ltask.call(ServiceVfsMgr, "GET", VfsSessionId, hash)
 	if filename == nil then
 		response("MISSING", hash)

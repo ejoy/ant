@@ -50,6 +50,9 @@ end
 function s:luaecs_sync()
 	for _, _, eid in evCreate:unpack() do
 		local e = world[eid]
+		if e == nil then
+			goto continue
+		end
 		if isCamera(e) then
 			assert(false)
 			goto continue
