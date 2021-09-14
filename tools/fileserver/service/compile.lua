@@ -9,6 +9,7 @@ local ltask = require "ltask"
 local S = {}
 
 function S.COMPILE(path)
+	path = path:match "^/?(.-)/?$"
     return cr.compile_url(path):string()
 end
 

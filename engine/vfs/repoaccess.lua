@@ -32,6 +32,7 @@ local function split(str)
 end
 
 function access.addmount(repo, name, path)
+	name = name:match "^/?(.-)/?$"
 	local p = repo._mountpoint[name]
 	if p == nil then
 		repo._mountpoint[name] = lfs.path(path)

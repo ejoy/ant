@@ -114,6 +114,13 @@ function util.max(a, b)
 end
 
 function util.srt_obj(srt)
+	if srt == nil then
+		return {
+			s = math3d.ref(constant.ONE),
+			r = math3d.ref(constant.IDENTITY_QUAT),
+			t = math3d.ref(constant.ZERO_PT),
+		}
+	end
 	local s = srt.s
 	if type(s) == "number" then
 		s = {s, s, s}

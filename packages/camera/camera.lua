@@ -2,10 +2,11 @@ local ecs       = ...
 local world     = ecs.world
 local w         = world.w
 
-local mc = import_package "ant.math".constant
 local math3d    = require "math3d"
-local default_comp 	= import_package "ant.general".default
-local irq = world:interface "ant.render|irenderqueue"
+
+local mc        = import_package "ant.math".constant
+local defcomp 	= import_package "ant.general".default
+local irq       = world:interface "ant.render|irenderqueue"
 
 local cmm = ecs.transform "camera_motion_transform"
 
@@ -29,7 +30,7 @@ ic.find_camera = find_camera
 local defaultcamera = {
     eyepos  = {0, 0, 0, 1},
     viewdir = {0, 0, 1, 0},
-    frustum = default_comp.frustum(),
+    frustum = defcomp.frustum(),
     name = "default_camera",
 }
 
@@ -42,12 +43,12 @@ function ic.create_entity(_, info)
         },
         data = {
             camera = {
-                eyepos = info.transform.t,
+                eyepos  = info.transform.t,
                 viewdir = math3d.todirection(math3d.quaternion(info.transform.r)),
-                updir = info.updir,
+                updir   = info.updir,
                 frustum = info.frustum,
                 clip_range = info.clip_range,
-                dof = info.dof,
+                dof     = info.dof,
             },
             name = info.name or "DEFAULT_CAMERA",
         }
@@ -58,9 +59,9 @@ function ic.create(info)
     info = info or defaultcamera
     local frustum = info.frustum
     if not frustum then
-        frustum = default_comp.frustum()
+        frustum = defcomp.frustum()
     else
-        local df = frustum.ortho and default_comp.ortho_frustum() or default_comp.frustum()
+        local df = frustum.ortho and defcomp.ortho_frustum() or defcomp.frustum()
         for k ,v in pairs(df) do
             if not frustum[k] then
                 frustum[k] = v
@@ -97,31 +98,25 @@ local function has_queue(qn)
     end
 end
 
-function ic.bind(eid, which_queue)
+function ic.bind(cameraref, which_queue)
     if not has_queue(which_queue) then
         error(("not find queue:%s"):format(which_queue))
     end
 
-    bind_queue(eid, which_queue)
+    bind_queue(cameraref, which_queue)
 end
 
 ic.bind_queue = bind_queue
 
-function ic.calc_viewmat(eid)
+function ic.calc_viewmat(cameraref)
     --TODO
     local iobj_motion = world:interface "ant.objcontroller|obj_motion"
-    return iobj_motion.calc_viewmat(eid)
+    return iobj_motion.calc_viewmat(cameraref)
 end
 
 function ic.calc_projmat(eid)
     local camera = find_camera(eid)
     return math3d.projmat(camera.frustum)
-end
-
-local function view_proj(worldmat, updir, frustum)
-    local viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), updir)
-    local projmat = math3d.projmat(frustum)
-    return viewmat, projmat, math3d.mul(projmat, viewmat)
 end
 
 function ic.world_to_screen(world_pos)
@@ -132,26 +127,28 @@ function ic.world_to_screen(world_pos)
 	return {(proj_pos[1] + 1) * viewport.w * 0.5, (1 - (proj_pos[2] + 1) * 0.5) * viewport.h, 0}
 end
 
-function ic.calc_viewproj(eid)
-    local camera = find_camera(eid)
-    local _, _, vp = view_proj(camera.srt, camera.updir, camera.frustum)
-    return vp
+function ic.calc_viewproj(cameraref)
+    local camera = find_camera(cameraref)
+    local srt = camera.srt
+    local viewmat = math3d.lookto(srt.t, math3d.todirection(srt.r), camera.updir)
+    local projmat = math3d.projmat(camera.frustum)
+    return math3d.mul(projmat, viewmat)
 end
 
-function ic.get_frustum(eid)
-    local camera = find_camera(eid)
+function ic.get_frustum(cameraref)
+    local camera = find_camera(cameraref)
     if camera then
         return camera.frustum
     end
 end
 
-function ic.set_frustum(eid, frustum)
-    local camera = find_camera(eid)
+function ic.set_frustum(cameraref, frustum)
+    local camera = find_camera(cameraref)
     camera.frustum = {}
     for k, v in pairs(frustum) do
         camera.frustum[k] = v
     end
-    world:pub {"component_changed", "frustum", eid}
+    world:pub {"component_changed", "frustum", cameraref}
 end
 
 local function frustum_changed(eid, name, value)
@@ -171,20 +168,20 @@ local function frustum_changed(eid, name, value)
     end
 end
 
-function ic.set_frustum_aspect(eid, aspect)
-    frustum_changed(eid, "aspect", aspect)
+function ic.set_frustum_aspect(cameraref, aspect)
+    frustum_changed(cameraref, "aspect", aspect)
 end
 
-function ic.set_frustum_fov(eid, fov)
-    frustum_changed(eid, "fov", fov)
+function ic.set_frustum_fov(cameraref, fov)
+    frustum_changed(cameraref, "fov", fov)
 end
 
-function ic.set_frustum_near(eid, n)
-    frustum_changed(eid, "n", n)
+function ic.set_frustum_near(cameraref, n)
+    frustum_changed(cameraref, "n", n)
 end
 
-function ic.set_frustum_far(eid, f)
-    frustum_changed(eid, "f", f)
+function ic.set_frustum_far(cameraref, f)
+    frustum_changed(cameraref, "f", f)
 end
 
 local iom = world:interface "ant.objcontroller|obj_motion"
@@ -207,9 +204,10 @@ function ic.focus_obj(camera_ref, eid)
 end
 
 function ic.set_dof_focus_obj(eid, focus_eid)
-    local dof = world[eid]._dof
-    dof.focus_eid = focus_eid
-    world:pub{"component_changed", "dof", focus_eid, "focus_entity",}
+    assert(false, "not implement new ecs camera")
+    -- local dof = world[eid]._dof
+    -- dof.focus_eid = focus_eid
+    -- world:pub{"component_changed", "dof", focus_eid, "focus_entity",}
 end
 
 local function set_dof(e, dof)
@@ -227,8 +225,9 @@ local function set_dof(e, dof)
 end
 
 function ic.set_dof(eid, dof)
-    set_dof(world[eid], dof)
-    world:pub{"component_changed", "dof", eid,}
+    assert(false, "not implement new ecs camera")
+    -- set_dof(world[eid], dof)
+    -- world:pub{"component_changed", "dof", eid,}
 end
 
 local cameraview_sys = ecs.system "camera_view_system"
@@ -240,7 +239,8 @@ local function update_camera(camera_ref)
     local camera = find_camera(camera_ref)
     if camera then
         local worldmat = camera.worldmat
-        camera.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), camera.updir)
+        local pos, dir = math3d.index(worldmat, 4, 3)
+        camera.viewmat = math3d.lookto(pos, dir, camera.updir)
         camera.projmat = math3d.projmat(camera.frustum)
         camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
     end

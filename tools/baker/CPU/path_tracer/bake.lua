@@ -144,10 +144,7 @@ local texfile_content<const> = [[
 normalmap: false
 path: %s
 sRGB: true
-compress:
-    android: ASTC6x6
-    ios: ASTC6x6
-    windows: BC3
+format:RGBA32F
 sampler:
     MAG: LINEAR
     MIN: LINEAR
@@ -174,7 +171,7 @@ local function save_lightmap(id, lm, lmr)
     local local_filename = local_lmpath / name
     local ti = default_tex_info(lm.size, lm.size, "RGBA32F")
     local m = bgfx.memory_buffer(lmr.data)
-    local c = image.encode_image(ti, m, {type = "dds", format="RGBA32", srgb=false})
+    local c = image.encode_image(ti, m, {type = "dds", format="RGBA32F", srgb=false})
     writefile(local_filename, c, "wb")
 
     local tc = texfile_content:format(filename:string())

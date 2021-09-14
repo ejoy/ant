@@ -2,14 +2,15 @@ local lm = require "luamake"
 
 dofile "../common.lua"
 
-if lm.os == "windows" then
-    lm:lua_dll "filedialog" {
+lm:lua_dll "filedialog" {
+    windows = {
         sources =  "filedialog.cpp",
         links = {
             "ole32",
             "uuid",
         }
+    },
+    macos = {
+        sources =  "filedialog.mm",
     }
-else
-    lm:phony "filedialog" {}
-end
+}

@@ -23,8 +23,12 @@ local rotation_speed <const> = 1
 
 local function view_to_world(view_pos)
 	--local camerasrt = iom.srt(irq.main_camera())
-	local camer_worldmat = iom.worldmat(irq.main_camera())
-	return math3d.transform(camer_worldmat, view_pos, 0)
+	--local camer_worldmat = iom.worldmat(irq.main_camera())
+
+	--FIX ME: iom.worldmat() could not be used in some stage
+	local srtmat = math3d.matrix(irq.main_camera().camera.srt)
+
+	return math3d.transform(srtmat, view_pos, 0)
 end
 
 local function camera_update_eye_pos(camera)

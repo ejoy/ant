@@ -4,10 +4,10 @@ local fx = require "load_fx"
 local config = require "config"
 
 local function set_identity(v)
-    config.set_identity("sc", v)
-    config.set_identity("glb", v)
-    config.set_identity("texture", v)
-    config.set_identity("png", v)
+    config.set_setting("glb", {identity=v})
+    config.set_setting("sc", {identity=v})
+    config.set_setting("texture", {identity=v})
+    config.set_setting("png", {identity=v})
 end
 
 local function read_file(filename)
@@ -19,6 +19,7 @@ end
 
 return {
     set_identity = set_identity,
+    set_setting = config.set_setting,
     read_file = read_file,
     load_fx = fx.load,
     compile = cm.compile,

@@ -1,12 +1,13 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local mc = import_package "ant.math".constant
-local math3d = require "math3d"
 
+local mathpkg 		=	import_package "ant.math"
+local mc, mu 		= mathpkg.constant, mathpkg.util
 local default_comp 	= import_package "ant.general".default
 local setting		= import_package "ant.settings".setting
 
+local math3d 		= require "math3d"
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
 local fbmgr			= require "framebuffer_mgr"
@@ -310,7 +311,7 @@ function irender.create_blit_queue(vr)
 		},
 		data = {
 			scene = {
-				srt = math3d.ref(mc.IDENTITY_MAT),
+				srt = mu.srt_obj(),
 			},
 			eid = world:deprecated_create_entity{policy = {"ant.general|debug_TEST"}, data = {}},
 			render_object = {},

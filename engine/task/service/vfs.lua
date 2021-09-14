@@ -42,16 +42,20 @@ end)
 
 local S = {}
 
-function S.GET(path)
-	return request("GET", npath(path))
+function S.GET(path, hash)
+	return request("GET", npath(path), hash)
 end
 
-function S.LIST(path)
-	return request("LIST", npath(path))
+function S.LIST(path, hash)
+	return request("LIST", npath(path), hash)
 end
 
-function S.TYPE(path)
-	return request("TYPE", npath(path))
+function S.TYPE(path, hash)
+	return request("TYPE", npath(path), hash)
+end
+
+function S.RESOURCE(paths)
+	return request("RESOURCE", paths)
 end
 
 function S.REPOPATH()

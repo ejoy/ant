@@ -180,7 +180,7 @@ protected:
 		auto bp = getBP(L, 1);
 		auto trans = (const ozz::math::Float4x4*)lua_touserdata(L, 2);
 		for ( auto &p : *bp){
-			p = *trans * p;
+			p = p * *trans;
 		}
 
 		return 0;

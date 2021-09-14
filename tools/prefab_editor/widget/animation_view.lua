@@ -333,7 +333,7 @@ local function do_to_runtime_event(evs)
             life_time = ev.life_time,
             move = ev.move,
             msg_content = ev.msg_content,
-            link_info = ev.link_info and {slot_name = ev.link_info.slot_name, slot_eid = ev.link_info.slot_eid},
+            link_info = ev.link_info and {slot_name = ev.link_info.slot_name, slot_eid = ev.link_info.slot_eid and (ev.link_info.slot_eid > 0 and ev.link_info.slot_eid or nil) or nil },
             collision = (col_eid ~= -1) and {
                 col_eid = col_eid,
                 name = world[col_eid].name,
@@ -586,7 +586,7 @@ local function show_current_event()
         imgui.widget.Text("SoundPath : ")
     elseif current_event.event_type == "Effect" then
         if imgui.widget.Button("SelectEffect") then
-            local path = uiutils.get_open_file_path("Prefab", ".prefab")
+            local path = uiutils.get_open_file_path("Prefab", "prefab")
             if path then
                 local lfs         = require "filesystem.local"
                 local rp = lfs.relative(lfs.path(path), global_data.project_root)
@@ -1130,7 +1130,7 @@ function m.show()
                 imgui.cursor.SameLine()
                 local origin_name
                 if imgui.widget.Button("...") then
-                    local glb_filename = uiutils.get_open_file_path("Animation", ".glb")
+                    local glb_filename = uiutils.get_open_file_path("Animation", "glb")
                     if glb_filename then
                         external_anim_list = {}
                         current_external_anim = nil

@@ -215,7 +215,7 @@ function m.show()
         end
         imgui.cursor.SameLine()
         if imgui.widget.Button("Load") then
-            local path = uiutils.get_open_file_path("Lua", ".lua")
+            local path = uiutils.get_open_file_path("Lua", "lua")
             if path then
                 current_grid:load(path)
             end

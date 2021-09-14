@@ -47,9 +47,6 @@ function gizmo:set_target(eid)
 	end
 	local old_target = self.target_eid
 	self.target_eid = target
-	if target then
-		self:update()
-	end
 	gizmo:show_by_state(target ~= nil)
 	world:pub {"Gizmo","ontarget", old_target, target}
 end
@@ -97,7 +94,7 @@ function gizmo:set_position(worldpos)
 	if not self.target_eid or hierarchy:is_locked(self.target_eid) then
 		return
 	end
-	world:pub {"Gizmo", "UpdatePosition", worldpos}
+	world:pub {"Gizmo", "updateposition", worldpos}
 end
 
 function gizmo:set_rotation(inrot)
@@ -206,7 +203,8 @@ local function update_global_axis()
 	for v in world.w:select "eid:in" do
 		if v.eid == global_axis_x_eid or v.eid == global_axis_y_eid or v.eid == global_axis_z_eid then
 			local screenpos = {global_data.viewport.x + 50, global_data.viewport.y + global_data.viewport.h - 50}
-			local worldPos = math3d.totable(utils.ndc_to_world(camera_mgr.main_camera, iom.screen_to_ndc(camera_mgr.main_camera, {screenpos[1], screenpos[2], 0.5})))
+			local worldPos = utils.ndc_to_world(camera_mgr.main_camera, 
+				iom.screen_to_ndc({screenpos[1], screenpos[2], 0.5}))
 			world.w:sync("render_object:in scene:in", v)
 			local srt = v.scene.srt
 			srt.s.v = {1.5,1.5,1.5}
@@ -232,7 +230,7 @@ function gizmo:update_scale()
 end
 
 function gizmo_sys:post_init()
-	local srt = {r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
+	--local srt = {r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
 	local axis_root = world:deprecated_create_entity{
 		policy = {
 			"ant.general|name",
@@ -253,7 +251,7 @@ function gizmo_sys:post_init()
 			"ant.scene|hierarchy_policy",
 		},
 		data = {
-			transform = srt,
+			transform = {},
 			name = "rot root",
 			scene_entity = true,
 		},
@@ -269,7 +267,7 @@ function gizmo_sys:post_init()
 			"ant.scene|hierarchy_policy",
 		},
 		data = {
-			transform = srt,
+			transform = {},
 			name = "rot root",
 			scene_entity = true,
 		},
@@ -618,7 +616,7 @@ local camera_zoom = world:sub {"camera", "zoom"}
 local mouse_drag = world:sub {"mousedrag"}
 local mouse_down = world:sub {"mousedown"}
 local mouse_up = world:sub {"mouseup"}
-
+local gizmo_target_event = world:sub {"Gizmo"}
 local gizmo_mode_event = world:sub {"GizmoMode"}
 
 local last_mouse_pos
@@ -979,8 +977,10 @@ local gizmo_event = world:sub{"Gizmo"}
 
 function gizmo_sys:handle_event()
 	for _, what, wp in gizmo_event:unpack() do
-		if what == "UpdatePosition" then
+		if what == "updateposition" then
 			gizmo:update_position(wp)
+		elseif what == "ontarget" then
+			gizmo:update()
 		end
 	end
 	for _, vp in viewpos_event:unpack() do

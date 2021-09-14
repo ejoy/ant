@@ -9,7 +9,6 @@ repo.__index = repo
 local lfs = require "filesystem.local"
 local access = require "vfs.repoaccess"
 local crypt = require "crypt"
-local datalist = require "datalist"
 
 local function byte2hex(c)
 	return ("%02x"):format(c:byte())
@@ -17,13 +16,6 @@ end
 
 local function sha1(str)
 	return crypt.sha1(str):gsub(".", byte2hex)
-end
-
-local function readfile(filename)
-	local f = assert(lfs.open(filename))
-	local data = f:read "a"
-	f:close()
-	return data
 end
 
 local sha1_encoder = crypt.sha1_encoder()
@@ -43,57 +35,14 @@ local function sha1_from_file(filename)
 	return sha1_encoder:final():gsub(".", byte2hex)
 end
 
-local function get_filename(repo, pathname)
-    pathname = lfs.absolute(access.realpath(repo, pathname)):string():lower()
-    local filename = pathname:match "[/]?([^/]*)$"
-    return filename.."_"..sha1(pathname)
-end
-
 local repo_build_dir
 
-local function readconfig(filename)
-    return datalist.parse(readfile(filename))
-end
-
-local function do_build(output)
-    local depfile = output / ".dep"
-    if not lfs.exists(depfile) then
-        return
-    end
-	for _, dep in ipairs(readconfig(depfile)) do
-        local timestamp, filename = dep[1], lfs.path(dep[2])
-        if timestamp == 0 then
-            if lfs.exists(filename) then
-                return
-            end
-        else
-            if not lfs.exists(filename) or timestamp ~= lfs.last_write_time(filename) then
-                return
-            end
-        end
-	end
-	return true
-end
-
-local function compile_resource(repo, name, path, cache, namehashcache, hashs)
+local function is_resource(path)
 	local ext = path:match "[^/]%.([%w*?_%-]*)$"
 	if ext ~= "sc" and ext ~= "glb"  and ext ~= "texture" and ext ~= "png" then
-		return true
-	end
-	local realpath = repo._root / ".build" / ext / get_filename(repo, path)
-	if not lfs.exists(realpath) then
 		return false
 	end
-	for lpath in realpath:list_directory() do
-		if lfs.exists(lpath / ".arguments") and do_build(lpath) then
-			local arguments = readfile(lpath / ".arguments")
-			local rpath = path .. "?" .. arguments
-			access.addmount(repo, rpath, lpath)
-			local hash = repo_build_dir(repo, rpath, cache, namehashcache)
-			table.insert(hashs, string.format("d %s %s", hash, name .. "?" .. arguments))
-		end
-	end
-	return false
+	return true
 end
 
 local function addslash(name)
@@ -162,7 +111,7 @@ function repo_build_dir(self, filepath, cache, namehashcache)
 	local hashs = {}
 	for name, type in pairs(access.list_files(self, filepath)) do
 		local fullname = filepath == '' and name or filepath .. '/' .. name	-- full name in repo
-		if compile_resource(self, name, fullname, cache, namehashcache, hashs) then
+		if not is_resource(fullname) then
 			if type == "v" or lfs.is_directory(access.realpath(self, fullname)) then
 				local hash = repo_build_dir(self, fullname, cache, namehashcache)
 				table.insert(hashs, string.format("d %s %s", hash, name))
@@ -441,12 +390,10 @@ function repo:build_dir(rpath, lpath)
 		_mountname = {},
 		_mountpoint = {},
 	}
-	access.addmount(r, rpath, lpath)
 	setmetatable(r, repo)
 	local cache = {}
 	local roothash = repo_build_dir(r, rpath, cache, r._namecache)
 	repo_write_cache(r, cache)
-	access.addmount(self, rpath, lpath)
 	return roothash
 end
 

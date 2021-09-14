@@ -1,6 +1,7 @@
 local gltfutil  = require "editor.model.glTF.util"
 local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
+local assetmgr	= import_package "ant.asset"
 local math3d    = require "math3d"
 local utility   = require "editor.model.utility"
 
@@ -122,11 +123,12 @@ local function create_prim_bounding(meshscene, prim)
 		assert(#minv == 3)
 		assert(#maxv == 3)
 
-		--right hand to left hand
-		maxv[3] = minv[3]
-		minv[3] = maxv[3]
+		local nminv, nmaxv = math3d.minmax{
+			{minv[1], minv[2], -minv[3]},
+			{maxv[1], maxv[2], -maxv[3]},
+		}
 		local bounding = {
-			aabb = {minv, maxv}
+			aabb = {math3d.tovalue(nminv), math3d.tovalue(nmaxv)}
 		}
 		prim.bounding = bounding
 		return bounding
@@ -203,8 +205,6 @@ local LAYOUT_NAMES<const> = {
 
 local jointidx_fmt<const> = "HHHH"
 
-_R2L = false
-
 -- change from right hand to left hand
 -- left hand define as: 
 -- 		x: -left, +right
@@ -216,17 +216,16 @@ _R2L = false
 --		z: -point2user, +point2screen
 local function r2l_vec(v, l)
 	local t = l:sub(6, 6)
+	local n = tonumber(l:sub(2, 2))
 	if t == 'f' then
-		local x, y, z = ('fff'):unpack(v)
-		z = -z
-		return ('fff'):pack(x, y, z)
+		local fmt = ('f'):rep(n)
+		local p = {fmt:unpack(v)}
+		p[3] = -p[3]
+		p[n+1] = nil
+		return fmt:pack(table.unpack(p))
 	end
 
 	assert(("not support layout:%s, %s"):format(l, t))
-end
-
-local function r2l_quat(q, l)
-
 end
 
 local function fetch_vb_buffers2(gltfscene, gltfbin, prim)
@@ -264,9 +263,7 @@ local function fetch_vb_buffers2(gltfscene, gltfbin, prim)
 
 			local t = l:sub(1, 1)
 			if t == 'p' or t == 'n' or t == 'T' or t == 'b' then
-				if _R2L then
-					v = r2l_vec(v, l)
-				end
+				v = r2l_vec(v, l)
 			elseif t == 'i' then
 				if l:sub(6, 6) == 'u' then
 					v = jointidx_fmt:pack(v:byte(1), v:byte(2), v:byte(3), v:byte(4))

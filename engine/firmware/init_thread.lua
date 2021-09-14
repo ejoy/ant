@@ -9,19 +9,23 @@ __ANT_RUNTIME__ = package.preload.firmware ~= nil
 
 local vfs = ...
 
-function vfs.realpath(path)
-	return io_req:call("GET", npath(path))
+function vfs.realpath(path, hash)
+	return io_req:call("GET", npath(path), hash)
 end
 
-function vfs.list(path)
-	return io_req:call("LIST", npath(path))
+function vfs.list(path, hash)
+	return io_req:call("LIST", npath(path), hash)
 end
 
-function vfs.type(path)
-	return io_req:call("TYPE", npath(path))
+function vfs.type(path, hash)
+	return io_req:call("TYPE", npath(path), hash)
 end
 
-if not __ANT_RUNTIME__ then
+if __ANT_RUNTIME__ then
+	function vfs.resource(paths)
+		return io_req:call("RESOURCE", paths)
+	end
+else
 	function vfs.repopath()
 		return io_req:call("REPOPATH")
 	end

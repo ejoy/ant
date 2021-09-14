@@ -2,4 +2,6 @@ fx:
   fs: /pkg/ant.resources/shaders/simple/quad/fs_mainview.sc
   vs: /pkg/ant.resources/shaders/simple/quad/vs_simple_texquad.sc
   setting: /pkg/ant.resources/settings/nolighting.setting
+properties:
+  u_tonemap_param: {1, 1, 0, 0}
 state: /pkg/ant.resources/materials/states/quad.state
