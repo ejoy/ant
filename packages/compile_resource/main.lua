@@ -3,6 +3,10 @@ local cm = require "compile"
 local fx = require "load_fx"
 local config = require "config"
 
+if not __ANT_RUNTIME__ then
+    require "editor.compile"
+end
+
 local function set_identity(v)
     config.set_setting("glb", {identity=v})
     config.set_setting("sc", {identity=v})
@@ -23,5 +27,4 @@ return {
     read_file = read_file,
     load_fx = fx.load,
     compile = cm.compile,
-    compile_url = cm.compile_url,
 }

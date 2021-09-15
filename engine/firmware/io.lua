@@ -230,6 +230,27 @@ function offline.GET(id, fullpath, roothash)
 	response_id(id, realpath)
 end
 
+function offline.RESOURCE(id, paths)
+	if #paths < 2 then
+		offline.GET(id, paths[1])
+		return
+	end
+	local hash = repo:get_resource(paths[1])
+	if not hash then
+		response_id(id, nil)
+		return
+	end
+	for i = 2, #paths-1 do
+		local path = table.concat(paths, "/", 1, i) --TODO
+		hash = repo:get_resource(path)
+		if not hash then
+			response_id(id, nil)
+			return
+		end
+	end
+	offline.GET(id, paths[#paths], hash)
+end
+
 function offline.EXIT(id)
 	response_id(id, nil)
 	error "EXIT"
@@ -367,6 +388,7 @@ function response.ROOT(hash)
 		return
 	end
 	print("CHANGEROOT", hash)
+	repo:updatehistory(hash)
 	repo:changeroot(hash)
 end
 
@@ -452,12 +474,6 @@ function response.SLICE(hash, offset, data)
 	else
 		print("Offset without header", hash, offset)
 	end
-end
-
-function response.COMPILE(fullpath, hash)
-	local res = repo:compilehash(fullpath, hash)
-	print("COMPILE", fullpath, hash, res)
-	hash_complete(fullpath, true)
 end
 
 function response.RESOURCE(fullpath, hash)

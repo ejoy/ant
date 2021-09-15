@@ -45,8 +45,9 @@ function vfs.new(repopath)
 		compile = {},
 		root = nil,
 	}
-	repo.root = root_hash(repo)
-	return setmetatable(repo, vfs)
+	setmetatable(repo, vfs)
+	repo:changeroot(root_hash(repo))
+	return repo
 end
 
 local function dir_object(self, hash)
@@ -168,19 +169,13 @@ local function fetch_hash(self, hash, fullpath, addhash)
 	end
 end
 
-function vfs:compilehash(path, hash)
-	if not self.root then
-		return false
-	end
-	return fetch_hash(self, self.root, path, hash)
+function vfs:updatehistory(hash)
+	local history = update_history(self, hash)
+	local f <close> = assert(io.open(self.path .. "root", "wb"))
+	f:write(table.concat(history, "\n"))
 end
 
 function vfs:changeroot(hash)
-	local history = update_history(self, hash)
-	do
-		local f <close> = assert(io.open(self.path .. "root", "wb"))
-		f:write(table.concat(history, "\n"))
-	end
 	self.root = hash
 	self.resource = {}
 	local path = self:hashpath(hash)..".resource"

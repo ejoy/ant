@@ -390,6 +390,7 @@ function repo:build_dir(rpath, lpath)
 		_mountname = {},
 		_mountpoint = {},
 	}
+	access.addmount(r, rpath, lpath)
 	setmetatable(r, repo)
 	local cache = {}
 	local roothash = repo_build_dir(r, rpath, cache, r._namecache)

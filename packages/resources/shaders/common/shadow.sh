@@ -82,7 +82,7 @@ float hardShadow(
 	return step(receiver, occluder);
 #else
 	vec4 coord = _shadowCoord;
-	coord.z = max(0.0, coord.z - _bias);
+	coord.z -= _bias;
 	return shadow2DProj(_sampler, coord);
 #endif
 }
