@@ -72,9 +72,9 @@ local function find_index(t, item)
 end
 
 local function get_runtime_animations(eid)
-    for e in world.w:select "eid:in" do
+    for e in world.w:select "eid:in animation:in" do
         if e.eid == eid then
-            world.w:sync("animation:in", e)
+            --world.w:sync("animation:in", e)
             return e.animation
         end
     end
