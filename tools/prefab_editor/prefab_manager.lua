@@ -706,7 +706,7 @@ function m:add_effect(filename)
 		},
 		data = {
             name = "root",
-            tag = "root",
+            tag = "effect",
             scene_entity = true,
             transform = {},
             effekseer = filename,
