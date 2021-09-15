@@ -1,6 +1,7 @@
 local ltask = require "ltask"
 local socket = require "socket"
 local protocol = require "protocol"
+local fs = require "filesystem.cpp"
 
 local arg = ltask.call(ltask.queryservice "arguments", "QUERY")
 local FD = ...
@@ -40,7 +41,8 @@ function message.RESOURCE(path)
 		response("MISSING", path)
 		return
 	end
-	local hash = ltask.call(ServiceVfsMgr, "BUILD", VfsSessionId, path, lpath)
+	local rpath = fs.relative(fs.path(lpath), fs.path(REPOPATH)):string()
+	local hash = ltask.call(ServiceVfsMgr, "BUILD", VfsSessionId, rpath, lpath)
 	response("RESOURCE", path, hash)
 end
 
