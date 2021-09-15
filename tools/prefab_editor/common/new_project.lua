@@ -104,7 +104,6 @@ system "init_system"
     .require_policy "ant.animation|skinning"
     .require_policy "ant.sky|procedural_sky"
     .require_policy "ant.render|simplerender"
-    .require_policy "ant.render|postprocess"
     .method "init"
     .method "post_init"
 
