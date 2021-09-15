@@ -10,6 +10,9 @@
 
 // The two functions below were based on code and explanations provided by Padraic Hennessy (@PadraicHennessy).
 // See this for more info: https://placeholderart.wordpress.com/2014/11/21/implementing-a-physically-based-camera-manual-exposure/
+
+#ifndef _EXPOSURE_SH_
+#define _EXPOSURE_SH_
 #include "common/contants.sh"
 uniform vec4 u_camera_param;
 #define u_aperture_f_number u_camera_param.x
@@ -69,3 +72,5 @@ vec3 CalcExposedColor(in vec3 color, in float avgLuminance, in float offset, out
     exposure += offset;
     return exp2(exposure) * color;
 }
+
+#endif //_EXPOSURE_SH_

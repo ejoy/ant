@@ -8,6 +8,8 @@
 //
 //=================================================================================================
 
+#ifndef _ACES_SH_
+#define _ACES_SH_
 // The code in this file was originally written by Stephen Hill (@self_shadow), who deserves all
 // credit for coming up with this fit and implementing it. Buy him a beer next time you see him. :)
 
@@ -60,3 +62,5 @@ vec3 ACESFitted(vec3 color)
 
     return color;
 }
+
+#endif //_ACES_SH_

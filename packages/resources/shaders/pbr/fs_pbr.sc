@@ -13,6 +13,11 @@ $input v_texcoord0, v_posWS, v_normal, v_tangent, v_bitangent
 #include "common/constants.sh"
 #include "pbr/pbr.sh"
 
+#ifdef USING_LIGHTMAP
+//TODO: temp fix HDR lightmap
+#include "postprocess/tonemapping.sh"
+#endif //USING_LIGHTMAP
+
 #ifdef UV_MOTION
 #include "common/uvmotion.sh"
 #endif //UV_MOTION
@@ -169,7 +174,8 @@ void main()
 
 #ifdef USING_LIGHTMAP
     vec4 irradiance = texture2D(s_lightmap, v_texcoord1);
-    gl_FragColor = basecolor * irradiance * PI * 0.5;
+    vec4 color = basecolor * irradiance * PI * 0.5;
+    gl_FragColor = vec4(ToneMap(color.rgb, 0.0, 0.0), color.a);
 #else //!USING_LIGHTMAP
     vec3 V = normalize(u_eyepos.xyz - v_posWS.xyz);
     vec3 N = get_normal(v_tangent, v_bitangent, v_normal, uv);

@@ -86,6 +86,7 @@ local system_properties = {
 
 	s_omni_shadowmap		= def_tex_prop(9),
 	s_postprocess_input		= def_tex_prop(0),
+	u_camera_param			= math3d.ref(math3d.vector(16.0, 0.008, 100.0, 0.0)),
 }
 
 function isp.get(n)
