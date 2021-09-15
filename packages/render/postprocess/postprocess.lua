@@ -18,7 +18,7 @@ end
 function pp_sys:init()
     world:create_entity{
         policy = {
-            "ant.render|postprocess",
+            "ant.render|postprocess_object",
             "ant.general|name",
         },
         data = {

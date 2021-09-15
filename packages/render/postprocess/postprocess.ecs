@@ -5,9 +5,6 @@ pipeline "postprocess"
     .stage "tonemapping"
     .stage "blit"
 
-component_v2 "postprocess"
-component_v2 "postprocess_input".type "lua"
-
 system "postprocess_system"
     .implement "postprocess/postprocess.lua"
     .require_interface "ant.render|isystem_properties"
@@ -15,11 +12,17 @@ system "postprocess_system"
     .method "pre_postprocess"
 
 policy_v2 "postprocess"
+    .require_system "ant.render|render_system"
     .require_system "ant.render|postprocess_system"
     --.require_system "ant.render|dof_system"
     --.require_system "ant.render|bloom_system"
     --.require_system "ant.render|tonemapping_system"
     .require_system "ant.render|blit_system"
+
+component_v2 "postprocess"
+component_v2 "postprocess_input".type "lua"
+    .require_system "ant.render|postprocess_system"
+policy_v2 "postprocess_object"
     .component_v2 "postprocess"
     .component_v2 "postprocess_input"
 
