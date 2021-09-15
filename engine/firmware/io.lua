@@ -1,4 +1,4 @@
-local loadfile = ...
+local loadfile, host = ...
 
 local INTERVAL = 0.01 -- socket select timeout
 
@@ -8,10 +8,13 @@ local lsocket = require "lsocket"
 local protocol = require "protocol"
 local _print
 
+local status = {}
 local config = {}
-local channel = {}
-local logqueue = {}
 local repo
+
+local channel_req
+local channel_user
+local logqueue = {}
 
 local connection = {
 	request = {},
@@ -22,17 +25,15 @@ local connection = {
 }
 
 local function init_channels()
-	-- init channels
-	channel.req = thread.channel_consume "IOreq"
+	channel_req = thread.channel_consume "IOreq"
 
-	local channel_user = {}
-	channel.user = setmetatable({} , channel_user)
-
-	function channel_user:__index(name)
+	local mt = {}
+	function mt:__index(name)
 		local c = assert(thread.channel_produce(name))
 		self[name] = c
 		return c
 	end
+	channel_user = setmetatable({} , mt)
 
 	local origin = os.time() - os.clock()
 	local function os_date(fmt)
@@ -74,8 +75,7 @@ local function read_config(path, env)
 	return env
 end
 
-local function init_config()
-	local _, c = channel.req()
+local function init_config(c)
 	config.repopath = assert(c.repopath)
 	config.nettype = assert(c.nettype)
 	config.address = assert(c.address)
@@ -88,6 +88,7 @@ end
 local function init_repo()
 	local vfs = assert(loadfile(config.vfspath, 'engine/firmware/vfs.lua'))()
 	repo = vfs.new(config.repopath)
+	status.repo = repo
 end
 
 local function connect_server(address, port)
@@ -156,7 +157,7 @@ local function response_id(id, ...)
 			local c = thread.channel_produce(id)
 			c(...)
 		else
-			channel.req:ret(id, ...)
+			channel_req:ret(id, ...)
 		end
 	end
 end
@@ -277,7 +278,7 @@ local function offline_dispatch(id, cmd, ...)
 end
 
 local function work_offline()
-	local c = channel.req
+	local c = channel_req
 	while true do
 		offline_dispatch(c())
 		logger_dispatch(offline)
@@ -356,6 +357,7 @@ local function request_start(req, args, promise)
 		connection_send(req, args)
 	end
 end
+status.request = request_start
 
 local function request_complete(args, ok, err)
 	local list = connection.request[args]
@@ -631,7 +633,7 @@ local function dispatch_net(cmd, ...)
 	if not f then
 		local channel_name = connection.subscibe[cmd]
 		if channel_name then
-			channel.user[channel_name](cmd, ...)
+			channel_user[channel_name](cmd, ...)
 		else
 			print("Unsupport net command", cmd)
 		end
@@ -668,13 +670,13 @@ local function work_online()
 	for _, req in ipairs(reqs) do
 		dispatch_net(table.unpack(req))
 	end
-	local c = channel.req
 	local result = {}
 	local reading = connection.recvq
 	local timeout = 0
 	while true do
-		while online_dispatch(c:pop(timeout)) do end
-		logger_dispatch(online)
+		if host.update(status, timeout) then
+			break
+		end
 		local ok, err = connection_dispose(0)
 		if ok then
 			while protocol.readmessage(reading, result) do
@@ -694,13 +696,30 @@ local function work_online()
 	end
 end
 
+if not host then
+	host = {}
+	function host.init()
+		init_channels()
+		local _, c = channel_req()
+		return c
+	end
+	function host.update(_, timeout)
+		while online_dispatch(channel_req:pop(timeout)) do end
+		logger_dispatch(online)
+	end
+	function host.exit()
+		print("Working offline")
+		work_offline()
+	end
+end
+
 local function main()
-	init_channels()
-	init_config()
+	init_config(host.init())
 	init_repo()
 	if config.address then
 		connection.fd = wait_server()
 		if connection.fd then
+			status.fd = connection.fd
 			work_online()
 			-- socket error or closed
 		end
@@ -712,9 +731,7 @@ local function main()
 	for _, hash in ipairs(uncomplete_req) do
 		request_complete(hash, false)
 	end
-
-	print("Working offline")
-	work_offline()
+	host.exit(status)
 end
 
 main()

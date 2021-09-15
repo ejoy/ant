@@ -428,6 +428,7 @@ function repo:fetch(path)
 			return
 		end
 	end
+	r[#r+1] = hash
 	fetchall(self, r, hash)
 	return r
 end
