@@ -76,6 +76,15 @@ function message.GET(hash)
 	f:close()
 end
 
+function message.FETCH(path)
+	local hashs = ltask.call(ServiceVfsMgr, "FETCH", VfsSessionId, path)
+	if not hashs then
+		response("MISSING", path)
+		return
+	end
+	response("FETCH", path, hashs)
+end
+
 function message.DBG(data)
 	--if not ServiceDebugProxy then
 	--	ServiceDebugProxy = ltask.spawn("debug.proxy", FD, VfsSessionId)

@@ -398,4 +398,38 @@ function repo:build_dir(rpath, lpath)
 	return roothash
 end
 
+local function split(path)
+	local r = {}
+	path:gsub("[^/]+", function(s)
+		r[#r+1] = s
+	end)
+	return r
+end
+
+local function fetchall(self, r, hash)
+	local v = self:dir(hash)
+	for _, h in pairs(v.file) do
+		r[#r+1] = h
+	end
+	for _, h in pairs(v.dir) do
+		r[#r+1] = h
+		fetchall(self, r, h)
+	end
+end
+
+function repo:fetch(path)
+	local r = {}
+	local hash = self:root()
+	for _, name in ipairs(split(path)) do
+		local v = self:dir(hash)
+		r[#r+1] = hash
+		hash = v.dir[name]
+		if not hash then
+			return
+		end
+	end
+	fetchall(self, r, hash)
+	return r
+end
+
 return repo

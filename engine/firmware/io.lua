@@ -12,10 +12,9 @@ local config = {}
 local channel = {}
 local logqueue = {}
 local repo
-local uncomplete = {}
 
 local connection = {
-	request_hash = {},	-- requesting hash
+	request = {},
 	sendq = {},
 	recvq = {},
 	fd = nil,
@@ -264,8 +263,7 @@ end
 
 do
 	local function noresponse_function() end
-	offline.FETCHALL = noresponse_function
-	offline.PREFETCH = noresponse_function
+	offline.FETCH    = noresponse_function
 	offline.SUBSCIBE = noresponse_function
 end
 
@@ -349,33 +347,47 @@ local function connection_dispose(timeout)
 	return true
 end
 
-local function request_file(id, req, hash, res, path, roothash)
-	local hash_list = connection.request_hash[hash]
-	if hash_list then
-		hash_list[#hash_list+1] = {res, id, path, roothash}
+local function request_start(req, args, promise)
+	local list = connection.request[args]
+	if list then
+		list[#list+1] = promise
 	else
-		connection.request_hash[hash] = { {res, id, path, roothash} }
-		connection_send(req, hash)
+		connection.request[args] = { promise }
+		connection_send(req, args)
 	end
 end
 
--- file server update hash file
-local function hash_complete(hash, exist)
-	local hash_list = connection.request_hash[hash]
-	if not hash_list then
+local function request_complete(args, ok, err)
+	local list = connection.request[args]
+	if not list then
 		return
 	end
-	connection.request_hash[hash] = nil
-	for _, p in ipairs(hash_list) do
-		local res, id, path, roothash = p[1], p[2], p[3], p[4]
-		if exist then
-			online[res](id, path, roothash)
-		elseif roothash then
-			response_err(id, "MISSING "..path.." "..roothash)
-		else
-			response_err(id, "MISSING "..path)
+	connection.request[args] = nil
+	if ok then
+		for _, promise in ipairs(list) do
+			promise.resolve(args)
+		end
+	else
+		for _, promise in ipairs(list) do
+			promise.reject(args, err)
 		end
 	end
+end
+
+local function request_file(id, req, hash, res, path, roothash)
+	local promise = {
+		resolve = function ()
+			online[res](id, path, roothash)
+		end,
+		reject = function ()
+			if roothash then
+				response_err(id, "MISSING "..path.." "..roothash)
+			else
+				response_err(id, "MISSING "..path)
+			end
+		end
+	}
+	request_start(req, hash, promise)
 end
 
 -- response functions from file server (connection)
@@ -392,94 +404,71 @@ function response.ROOT(hash)
 	repo:changeroot(hash)
 end
 
-local function writefile(filename, data)
-	local temp = filename .. ".download"
-	local f = io.open(temp, "wb")
-	if not f then
-		print("Can't write to", temp)
-		return
-	end
-	f:write(data)
-	f:close()
-	if not os.rename(temp, filename) then
-		os.remove(filename)
-		if not os.rename(temp, filename) then
-			print("Can't rename", filename)
-			return false
-		end
-	end
-	return true
-end
-
 -- REMARK: Main thread may reading the file while writing, if file server update file.
 -- It's rare because the file name is sha1 of file content. We don't need update the file.
 -- Client may not request the file already exist.
 function response.BLOB(hash, data)
-	local hashpath = repo:hashpath(hash)
-	if not writefile(hashpath, data) then
-		return
+	if repo:write_blob(hash, data) then
+		request_complete(hash, true)
 	end
-	hash_complete(hash, true)
 end
 
 function response.FILE(hash, size)
-	uncomplete[hash] = { size = tonumber(size), offset = 0 }
+	repo:write_file(hash, size)
 end
 
 function response.MISSING(hash)
 	print("MISSING", hash)
-	hash_complete(hash, false)
+	request_complete(hash, false)
 end
 
 function response.SLICE(hash, offset, data)
-	offset = tonumber(offset)
-	local hashpath = repo:hashpath(hash)
-	local tempname = hashpath .. ".download"
-	local f = io.open(tempname, "ab")
-	if not f then
-		print("Can't write to", tempname)
-		return
-	end
-	local pos = f:seek "end"
-	if pos ~= offset then
-		f:close()
-		f = io.open(tempname, "r+b")
-		if not f then
-			print("Can't modify", tempname)
-			return
-		end
-		f:seek("set", offset)
-	end
-	f:write(data)
-	f:close()
-	local filedesc = uncomplete[hash]
-	if filedesc then
-		local last_offset = filedesc.offset
-		if offset ~= last_offset then
-			print("Invalid offset", hash, offset, last_offset)
-		end
-		filedesc.offset = last_offset + #data
-		if filedesc.offset == filedesc.size then
-			-- complete
-			uncomplete[hash] = nil
-			if not os.rename(tempname, hashpath) then
-				-- may exist
-				os.remove(hashpath)
-				if not os.rename(tempname, hashpath) then
-					print("Can't rename", hashpath)
-				end
-			end
-			hash_complete(hash, true)
-		end
-	else
-		print("Offset without header", hash, offset)
+	if repo:write_slice(hash, offset, data) then
+		request_complete(hash, true)
 	end
 end
 
 function response.RESOURCE(fullpath, hash)
 	repo:set_resource(fullpath, hash)
 	print("RESOURCE", fullpath, hash)
-	hash_complete(fullpath, true)
+	request_complete(fullpath, true)
+end
+
+function response.FETCH(path, hashs)
+	local waiting = {}
+	local missing = {}
+	local function finish(hash)
+		waiting[hash] = nil
+		if next(waiting) == nil then
+			local res = {}
+			for h in pairs(missing) do
+				res[#res+1] = h
+			end
+			if #res == 0 then
+				request_complete(path, true)
+			else
+				table.insert(res, 1, "MISSING")
+				request_complete(path, false, table.concat(res))
+			end
+		end
+	end
+	local promise = {
+		resolve = function (hash)
+			finish(hash)
+		end,
+		reject = function (hash)
+			missing[hash] = true
+			finish(hash)
+		end
+	}
+	hashs:gsub("[^|]+", function(hash)
+		local realpath = repo:hashpath(hash)
+		local f <close> = io.open(realpath, "rb")
+		if not f then
+			waiting[hash] = true
+			request_start("GET", hash, promise)
+		end
+	end)
 end
 
 local function waiting_for_root()
@@ -527,26 +516,15 @@ function online.LIST(id, path, roothash)
 	end
 end
 
-local function fetch_all(path, roothash)
-	local dir, hash = repo:list(path, roothash)
-	if dir then
-		for name,v in pairs(dir) do
-			if v.dir then
-				fetch_all(name, v.hash)
-			else
-				print("Fetch", path .. "/" .. name)
-				online.GET(false, name, v.hash)
-			end
+function online.FETCH(id, path)
+	request_start("FETCH", path, {
+		resolve = function ()
+			response_id(id)
+		end,
+		reject = function (_, err)
+			response_err(id, err)
 		end
-	elseif hash then
-		request_file(false, "GET", hash, "FETCHALL", path, roothash)
-	else
-		print("Need Change Root", path)
-	end
-end
-
-function online.FETCHALL(_, path, roothash)
-	fetch_all(path, roothash)
+	})
 end
 
 function online.TYPE(id, fullpath, roothash)
@@ -629,10 +607,6 @@ function online.RESOURCE(id, paths)
 		end
 	end
 	online.GET(id, paths[#paths], hash)
-end
-
-function online.PREFETCH(path)
-	return online.GET(false, path)
 end
 
 function online.SUBSCIBE(channel_name, message)
@@ -732,11 +706,11 @@ local function main()
 		end
 	end
 	local uncomplete_req = {}
-	for hash in pairs(connection.request_hash) do
+	for hash in pairs(connection.request) do
 		table.insert(uncomplete_req, hash)
 	end
 	for _, hash in ipairs(uncomplete_req) do
-		hash_complete(hash, false)
+		request_complete(hash, false)
 	end
 
 	print("Working offline")

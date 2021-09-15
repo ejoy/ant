@@ -36,34 +36,11 @@ local iothread = thread.thread([[
 	assert(fw.loadfile "io.lua")(fw.loadfile)
 ]])
 
-local function vfs_init()
-	io_req(false, config)
-end
+io_req(false, config)
+io_req:call("FETCH", 'engine/firmware')
+local bootloader = io_req:call("GET", 'engine/firmware/bootloader.lua')
+io_req:call("EXIT")
 
-local function fetchfirmware()
-	io_req(false, "FETCHALL", 'engine/firmware')
-
-	-- wait finish
-	local l = io_req:call("LIST", 'engine/firmware')
-	local result
-	for name, v in pairs(l) do
-		assert(v.dir == false)
-		local r = io_req:call("GET", 'engine/firmware/' .. name)
-		if name == 'bootloader.lua' then
-			result = r
-		end
-	end
-	assert(result ~= nil)
-	return result
-end
-
-local function vfs_exit()
-	return io_req:call("EXIT")
-end
-
-vfs_init()
-local bootloader = fetchfirmware()
-vfs_exit()
 errlog:push("EXIT")
 thread.wait(iothread)
 thread.wait(errthread)
