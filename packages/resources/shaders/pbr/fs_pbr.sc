@@ -1,5 +1,5 @@
 #ifdef USING_LIGHTMAP
-$input v_texcoord0, v_texcoord1
+$input v_texcoord0, v_texcoord1, v_posWS, v_normal, v_tangent, v_bitangent
 #else   //!USING_LIGHTMAP
 $input v_texcoord0, v_posWS, v_normal, v_tangent, v_bitangent
 #endif //USING_LIGHTMAP
@@ -208,10 +208,6 @@ void main()
     return;
 #endif
 
-    // vec4 irradiance = texture2D(s_lightmap, v_texcoord1);
-    // vec4 color = basecolor * irradiance * PI * 0.5;
-    // vec4(ToneMap(color.rgb, 0.0, 0.0), color.a);
-
     vec3 V = normalize(u_eyepos.xyz - v_posWS.xyz);
     vec3 N = get_normal(v_tangent, v_bitangent, v_normal, uv);
 
@@ -235,6 +231,9 @@ void main()
     cluster_idx = clamp(cluster_idx, 0, cluster_count-1);
 	light_grid g; load_light_grid(b_light_grids, cluster_idx, g);
 	uint iend = g.offset + g.count;
+
+    //TODO: need fix
+    int directional_idx = -1;
 	for (uint ii=g.offset; ii<iend; ++ii)
 	{
 		uint ilight = b_light_index_lists[ii];
@@ -244,21 +243,39 @@ void main()
 #endif //CLUSTER_SHADING
         light_info l; load_light_info(b_lights, ilight, l);
 
-        color += get_light_radiance(l, v_posWS.xyz, N, V, NdotV, mi);
+        #ifdef USING_LIGHTMAP
+        if (IS_DIRECTIONAL_LIGHT(l.type))
+        {
+            directional_idx = ilight;
+        }
+        else
+        #endif 
+        {
+            color += get_light_radiance(l, v_posWS.xyz, N, V, NdotV, mi);
+        }
     }
 
-#ifdef HAS_EMISSIVE_TEXTURE
+#ifdef USING_LIGHTMAP
+    if (directional_idx >= 0)
+    {
+        vec4 irradiance = texture2D(s_lightmap, v_texcoord1);
+        vec3 c = basecolor.rgb * irradiance.rgb * PI * 0.5;
+        color.rgb += ToneMap(c, 0.0, 0.0);
+    }
+#else //!USING_LIGHTMAP
+    #ifdef HAS_EMISSIVE_TEXTURE
     color += texture2D(s_emissive, uv).rgb * u_emissive_factor.rgb;
-#endif
+    #endif
 
-#ifdef ENABLE_SHADOW
+    #ifdef ENABLE_SHADOW
 	color = shadow_visibility(v_distanceVS, vec4(v_posWS.xyz, 1.0), color);
-#endif //ENABLE_SHADOW
+    #endif //ENABLE_SHADOW
 
     // Calculate lighting contribution from image based lighting source (IBL)
-#ifdef ENABLE_IBL
+    #ifdef ENABLE_IBL
     color +=    get_IBL_radiance_GGX(N, V, NdotV, mi.roughness, mi.f0) +
                 get_IBL_radiance_Lambertian(N, mi.albedo);
-#endif
+    #endif //ENABLE_IBL
+#endif //USING_LIGHTMAP
     gl_FragColor = vec4(color, basecolor.a);
 }

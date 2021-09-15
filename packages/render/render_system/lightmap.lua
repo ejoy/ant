@@ -95,6 +95,7 @@ local function load_lightmap_material(mf, setting)
     s['shadow_receive'] = 'off'
     s['skinning'] = 'UNKNOWN'
     s['bloom'] = 'off'
+    s['ENABLE_IBL'] = 'off'
     return imaterial.load(mf, s)
 end
 
