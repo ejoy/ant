@@ -7,5 +7,5 @@ $input v_texcoord0
 
 void main()
 {
-    gl_FragColor = bloom_color(texture2D(s_postprocess_input, v_texcoord0));
+    gl_FragColor = bloom_color(texture2D(s_postprocess_input0, v_texcoord0));
 }

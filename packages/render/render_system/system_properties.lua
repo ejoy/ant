@@ -84,11 +84,9 @@ local system_properties = {
 	u_tetra_normal_Blue		= {math3d.ref(mc.ZERO),},
 	u_tetra_normal_Red		= {math3d.ref(mc.ZERO),},
 
-	s_omni_shadowmap	= def_tex_prop(9),
-
-	s_mainview_depth	= def_tex_prop(5),
-	s_mainview			= def_tex_prop(6),
-	s_postprocess_input	= def_tex_prop(7),
+	s_omni_shadowmap		= def_tex_prop(9),
+	s_postprocess_input		= def_tex_prop(0),
+	u_camera_param			= math3d.ref(math3d.vector(16.0, 0.008, 100.0, 0.0)),
 }
 
 function isp.get(n)
@@ -211,19 +209,6 @@ local function update_shadow_properties()
 	update_omni_shadow_properties()
 end
 
-local function update_postprocess_properties()
-	local rt = main_render_target()
-
-	local fbidx = rt.fb_idx
-	local fb = fbmgr.get(fbidx)
-
-	local mv = system_properties["s_mainview"]
-	mv.texture.handle = fbmgr.get_rb(fb[1]).handle
-
-	local mvd = system_properties["s_mainview_depth"]
-	mvd.texture.handle = fbmgr.get_rb(fb[#fb]).handle
-end
-
 local starttime = itimer.current()
 
 local function update_timer_properties()
@@ -243,5 +228,4 @@ function isp.update()
 	local mainrt = main_render_target()
 	update_lighting_properties(mainrt.view_rect, camerapos, f.n, f.f)
 	update_shadow_properties()
-	update_postprocess_properties()
 end

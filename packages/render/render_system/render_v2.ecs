@@ -59,6 +59,7 @@ component_v2 "render_target".type "lua"
 policy_v2 "render_pipeline"
     .require_policy_v2 "ant.render|forward_render"
     .require_policy_v2 "ant.render|cluster_render"
+    .require_policy_v2 "ant.render|postprocess"
 
 component_v2 "shadow_render_queue"
     .type "lua"

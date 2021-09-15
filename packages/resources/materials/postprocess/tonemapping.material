@@ -6,5 +6,8 @@ fx:
     shadow_receive: off
   vs: /pkg/ant.resources/shaders/postprocess/vs_pp_quad.sc
 properties:
-  u_tonemap_param: {1.8, 0.0, 0.0, 0.0} #u_exposure, u_tonemap_gamma
+  u_camera_param: {16.0, 0.008, 100.0, 0.0}  #ApertureFNumber, ShutterSpeed, ISO
+  s_postprocess_input0:
+    stage:0
+    texture: /pkg/ant.resources/textures/black.texture
 state: /pkg/ant.resources/materials/postprocess/postprocess.state
