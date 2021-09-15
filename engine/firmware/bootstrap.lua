@@ -11,63 +11,38 @@ local config = {
 }
 
 local thread = require "thread"
-
-thread.newchannel "IOreq"
-
-local errlog = thread.channel_produce "errlog"
-local io_req = thread.channel_produce "IOreq"
-
-local errthread = thread.thread([[
-	-- Error Thread
-	local thread = require "thread"
-	local err = thread.channel_consume "errlog"
-	while true do
-		local msg = err()
-		if msg == "EXIT" then
-			break
-		end
-		print("ERROR:" .. msg)
+local fw = require "firmware"
+local host = {}
+local bootloader
+local first = true
+local quit
+function host.init()
+	return config
+end
+function host.update(io, timeout)
+	if first then
+		first = false
+		io.request("FETCH", "engine/firmware", {
+			resolve = function ()
+				bootloader = assert(io.repo:realpath 'engine/firmware/bootloader.lua')
+				quit = true
+			end,
+			reject = function (_, errmsg)
+				error(errmsg)
+			end,
+		})
 	end
-]])
-
-local iothread = thread.thread([[
-	-- IO Thread
-	local fw = require "firmware"
-	assert(fw.loadfile "io.lua")(fw.loadfile)
-]])
-
-local function vfs_init()
-	io_req(false, config)
-end
-
-local function fetchfirmware()
-	io_req(false, "FETCHALL", 'engine/firmware')
-
-	-- wait finish
-	local l = io_req:call("LIST", 'engine/firmware')
-	local result
-	for name, v in pairs(l) do
-		assert(v.dir == false)
-		local r = io_req:call("GET", 'engine/firmware/' .. name)
-		if name == 'bootloader.lua' then
-			result = r
-		end
+	if quit then
+		return true
 	end
-	assert(result ~= nil)
-	return result
+	thread.sleep(timeout)
 end
-
-local function vfs_exit()
-	return io_req:call("EXIT")
+function host.exit(io)
+	if io.fd then
+		io.fd:close()
+	end
 end
-
-vfs_init()
-local bootloader = fetchfirmware()
-vfs_exit()
-errlog:push("EXIT")
-thread.wait(iothread)
-thread.wait(errthread)
-thread.reset()
+assert(fw.loadfile "io.lua")(fw.loadfile, host)
 
 local function loadfile(path, name)
 	local f = io.open(path)
