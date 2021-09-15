@@ -46,10 +46,7 @@ local function register_package(path)
     if not fs.exists(cfgpath) then
         error(('`%s` does not exist.'):format(cfgpath:string()))
     end
-    --TODO: editor模式统一使用vfs.dofile
-    local config = __ANT_RUNTIME__
-        and dofile(cfgpath:string())
-        or dofile(cfgpath:string())
+    local config = dofile(cfgpath:string())
     for _, field in ipairs {'name'} do
         if not config[field] then
             error(('Missing `%s` field in `%s`.'):format(field, cfgpath:string()))
@@ -80,9 +77,13 @@ local function initialize()
     end
 end
 
+local function import_ecs(name, file, ecs)
+    return loadenv(name).require_ecs(file, ecs)
+end
+
 initialize()
 import_package = import
 
 return {
-    loadenv = loadenv,
+    import_ecs = import_ecs,
 }
