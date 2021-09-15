@@ -145,6 +145,42 @@ material_info get_material_info(vec4 basecolor, vec2 uv)
     return mi;
 }
 
+vec3 get_light_radiance(light_info l, vec3 posWS, vec3 N, vec3 V, float NdotV, material_info mi)
+{
+    vec3 color = vec3_splat(0.0);
+    vec3 pt2l = l.dir;
+    float attenuation = 1.0;
+    if(!IS_DIRECTIONAL_LIGHT(l.type))
+    {
+        pt2l = l.pos - posWS;
+        attenuation = get_range_attenuation(l.range, length(pt2l));
+        if (IS_SPOT_LIGHT(l.type))
+        {
+            attenuation *= get_spot_attenuation(pt2l, l.dir, l.outter_cutoff, l.inner_cutoff);
+        }
+    }
+
+    vec3 intensity = attenuation * l.intensity * l.color.rgb;
+
+    vec3 L = normalize(pt2l);
+    vec3 H = normalize(L+V);
+    float NdotL = clamp_dot(N, L);
+    float NdotH = clamp_dot(N, H);
+    float LdotH = clamp_dot(L, H);
+    float VdotH = clamp_dot(V, H);
+
+    if (NdotL > 0.0 || NdotV > 0.0)
+    {
+        // Calculation of analytical light
+        // https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#acknowledgments AppendixB
+        color += intensity * NdotL * (
+                BRDF_lambertian(mi.f0, mi.f90, mi.albedo, VdotH) +
+                BRDF_specularGGX(mi.f0, mi.f90, mi.alpha_roughness, VdotH, NdotL, NdotV, NdotH));
+    }
+
+    return color;
+}
+
 void main()
 {
 #ifdef UV_MOTION
@@ -172,11 +208,10 @@ void main()
     return;
 #endif
 
-#ifdef USING_LIGHTMAP
-    vec4 irradiance = texture2D(s_lightmap, v_texcoord1);
-    vec4 color = basecolor * irradiance * PI * 0.5;
-    gl_FragColor = vec4(ToneMap(color.rgb, 0.0, 0.0), color.a);
-#else //!USING_LIGHTMAP
+    // vec4 irradiance = texture2D(s_lightmap, v_texcoord1);
+    // vec4 color = basecolor * irradiance * PI * 0.5;
+    // vec4(ToneMap(color.rgb, 0.0, 0.0), color.a);
+
     vec3 V = normalize(u_eyepos.xyz - v_posWS.xyz);
     vec3 N = get_normal(v_tangent, v_bitangent, v_normal, uv);
 
@@ -209,35 +244,7 @@ void main()
 #endif //CLUSTER_SHADING
         light_info l; load_light_info(b_lights, ilight, l);
 
-        vec3 pt2l = l.dir;
-        float attenuation = 1.0;
-        if(!IS_DIRECTIONAL_LIGHT(l.type))
-        {
-            pt2l = l.pos - v_posWS.xyz;
-            attenuation = get_range_attenuation(l.range, length(pt2l));
-            if (IS_SPOT_LIGHT(l.type))
-            {
-                attenuation *= get_spot_attenuation(pt2l, l.dir, l.outter_cutoff, l.inner_cutoff);
-            }
-        }
-
-        vec3 intensity = attenuation * l.intensity * l.color.rgb;
-
-        vec3 L = normalize(pt2l);
-        vec3 H = normalize(L+V);
-        float NdotL = clamp_dot(N, L);
-        float NdotH = clamp_dot(N, H);
-        float LdotH = clamp_dot(L, H);
-        float VdotH = clamp_dot(V, H);
-
-        if (NdotL > 0.0 || NdotV > 0.0)
-        {
-            // Calculation of analytical light
-            // https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#acknowledgments AppendixB
-            color += intensity * (
-                    NdotL * BRDF_lambertian(mi.f0, mi.f90, mi.albedo, VdotH) +
-                    NdotL * BRDF_specularGGX(mi.f0, mi.f90, mi.alpha_roughness, VdotH, NdotL, NdotV, NdotH));
-        }
+        color += get_light_radiance(l, v_posWS.xyz, N, V, NdotV, mi);
     }
 
 #ifdef HAS_EMISSIVE_TEXTURE
@@ -254,5 +261,4 @@ void main()
                 get_IBL_radiance_Lambertian(N, mi.albedo);
 #endif
     gl_FragColor = vec4(color, basecolor.a);
-#endif //USING_LIGHTMAP
 }
