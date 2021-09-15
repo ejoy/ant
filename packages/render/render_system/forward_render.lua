@@ -19,8 +19,6 @@ function fr_sys:init()
 		frustum = default.frustum(vr.w/vr.h),
         name = "default_camera",
 	})
-
-	irender.create_blit_queue(vr)
 	irender.create_main_queue(vr, camera)
 	--irender.create_pre_depth_queue(vr, camera)
 end

@@ -113,7 +113,11 @@ function m:entity_init()
 
 	for e in w:select "INIT simplemesh:in render_object:in" do
 		local ro, sm = e.render_object, e.simplemesh
-		ro.vb, ro.ib = sm.vb, sm.ib
+		ro.vb, ro.ib = create_rendermesh(sm)
+		if sm.procedural_mesh then
+			e.procedural_mesh = true
+			w:sync("procedural_mesh?out", e)
+		end
 	end
 end
 

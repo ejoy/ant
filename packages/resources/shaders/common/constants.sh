@@ -4,3 +4,5 @@
 #define PI_4     0.7853981635
 #define INV_PI   0.318309886
 #define INV_PI2  0.159154943
+
+#define FP16Scale 0.0009765625

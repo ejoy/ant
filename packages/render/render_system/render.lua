@@ -198,17 +198,16 @@ end
 
 local function create_main_fb(view_rect)
 	local render_buffers = {}
-	local main_display_format = settingdata.graphic.hdr.enable and "RGBA16F" or "RGBA8"
 	render_buffers[#render_buffers+1] = fbmgr.create_rb(
 		default_comp.render_buffer(
-		view_rect.w, view_rect.h, main_display_format, rb_flag)
+		view_rect.w, view_rect.h, "RGBA16F", rb_flag)
 	)
 
 	local bloom = settingdata.graphic.postprocess.bloom
 	if bloom.enable then
 		render_buffers[#render_buffers+1] = fbmgr.create_rb(
 			default_comp.render_buffer(
-			view_rect.w, view_rect.h, main_display_format, rb_flag)
+			view_rect.w, view_rect.h, "RGBA16F", rb_flag)
 		)
 	end
 
@@ -258,70 +257,6 @@ function irender.create_main_queue(vr, camera_ref)
 			watch_screen_buffer = true,
 			queue_name = "main_queue",
 			shadow_render_queue = {},
-		}
-	}
-end
-
-local blitviewid = viewidmgr.get "blit"
-function irender.create_blit_queue(vr)
-	world:create_entity {
-		policy = {
-			"ant.render|blit_queue",
-			"ant.render|render_queue",
-			"ant.render|watch_screen_buffer",
-			"ant.general|name",
-		},
-		data = {
-			camera_ref = icamera.create({
-				eyepos = mc.ZERO_PT,
-				viewdir = mc.ZAXIS,
-				updir = mc.YAXIS,
-				frustum = default_comp.frustum(vr.w / vr.h),
-				name = "blit_camera",
-			}),
-			render_target = {
-				viewid = blitviewid,
-				view_mode = "",
-				clear_state = {
-					clear = "",
-				},
-				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
-			},
-			primitive_filter = {
-				filter_type = "blit_view",
-				table.unpack(SURFACE_TYPES["blit_queue"]),
-			},
-			visible 		= true,
-			blit_queue 		= true,
-			watch_screen_buffer = true,
-			INIT 			= true,
-			name 			= "blit_queue",
-			queue_name  	= "blit_queue",
-			shadow_render_queue = {},
-		}
-	}
-
-	local ies = world:interface "ant.scene|ientity_state"
-	world:create_entity {
-		policy = {
-			"ant.general|name",
-			"ant.render|render",
-			"ant.scene|render_object",
-			"ant.scene|scene_object",
-		},
-		data = {
-			scene = {
-				srt = mu.srt_obj(),
-			},
-			eid = world:deprecated_create_entity{policy = {"ant.general|debug_TEST"}, data = {}},
-			render_object = {},
-			filter_material = {},
-			material = "/pkg/ant.resources/materials/fullscreen.material",
-			state = ies.create_state "blit_view",
-			name = "full_quad",
-			mesh = world:interface "ant.render|entity".fullquad_mesh(),
-			INIT = true,
-			render_object_update = true,
 		}
 	}
 end

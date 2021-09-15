@@ -40,14 +40,16 @@ local function update_render_queue(q, viewsize)
 		vr.w, vr.h = viewsize.w, viewsize.h
 	end
 
-	icamera.set_frustum_aspect(q.camera_ref, vr.w/vr.h)
+	if q.camera_ref then
+		icamera.set_frustum_aspect(q.camera_ref, vr.w/vr.h)
+	end
 	resize_framebuffer(vr.w, vr.h, rt.fb_idx)
 	irq.update_rendertarget(rt)
 end
 
-local function update_camera_viewrect(viewsize)
+local function update_render_target(viewsize)
 	rb_cache = {}
-	for qe in w:select "watch_screen_buffer render_target:in camera_ref:in" do
+	for qe in w:select "watch_screen_buffer render_target:in camera_ref?in" do
 		update_render_queue(qe, viewsize)
 	end
 
@@ -60,7 +62,7 @@ local function update_camera_viewrect(viewsize)
 end
 
 function vp_detect_sys:post_init()
-	update_camera_viewrect()
+	update_render_target()
 end
 
 function vp_detect_sys:data_changed()
@@ -72,6 +74,6 @@ function vp_detect_sys:data_changed()
 	end
 
 	if new_fbw then
-		update_camera_viewrect{w=new_fbw, h=new_fbh}
+		update_render_target{w=new_fbw, h=new_fbh}
 	end
 end
