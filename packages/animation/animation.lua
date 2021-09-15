@@ -49,21 +49,21 @@ local function process_keyframe_event(task)
 			elseif event.event_type == "Effect" then
 				if not event.effect and event.asset_path ~= "" then
 					event.effect = world:prefab_instance(event.asset_path)
-					local eeid = world:prefab_event(event.effect, "get_eid", "root")
+					local eeid = world:prefab_event(event.effect, "get_eid", "effect")
 					local effect = world[eeid].effect_instance
 					if effect then
 						effect.auto_play = false
 					end
-					world:prefab_event(event.effect, "set_parent", "root", event.link_info.slot_eid)
+					world:prefab_event(event.effect, "set_parent", "effect", event.link_info.slot_eid)
 				end
 				if event.effect then
-					local parent = world:prefab_event(event.effect, "get_parent", "root")
+					local parent = world:prefab_event(event.effect, "get_parent", "effect")
 					if event.link_info.slot_eid and parent ~= event.link_info.slot_eid then
-						world:prefab_event(event.effect, "set_parent", "root", event.link_info.slot_eid)
+						world:prefab_event(event.effect, "set_parent", "effect", event.link_info.slot_eid)
 					end
-					world:prefab_event(event.effect, "play", "root", "", false, false)
+					world:prefab_event(event.effect, "play", "effect", "", false, false)
 					if task.play_state.play then
-						world:prefab_event(event.effect, "speed", "root", task.play_state.speed or 1.0)
+						world:prefab_event(event.effect, "speed", "effect", task.play_state.speed or 1.0)
 					end
 				end
 			elseif event.event_type == "Move" then
