@@ -2,7 +2,7 @@ local imgui     = require "imgui"
 local utils     = require "common.utils"
 local math3d    = require "math3d"
 local uiproperty = require "widget.uiproperty"
-local hierarchy     = require "hierarchy"
+local hierarchy     = require "hierarchy_edit"
 local MaterialView = require "widget.view_class".MaterialView
 local SkyboxView  = require "widget.view_class".SkyboxView
 local world
