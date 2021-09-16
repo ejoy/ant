@@ -1,7 +1,6 @@
 local math3d = require "math3d"
 local utility = require "editor.model.utility"
 local serialize = import_package "ant.serialize"
-local assetmgr = import_package "ant.asset"
 
 local lfs = require "filesystem.local"
 local fs = require "filesystem"

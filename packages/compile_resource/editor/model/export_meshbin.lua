@@ -1,7 +1,6 @@
 local gltfutil  = require "editor.model.glTF.util"
 local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
-local assetmgr	= import_package "ant.asset"
 local math3d    = require "math3d"
 local utility   = require "editor.model.utility"
 
