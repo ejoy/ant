@@ -2,9 +2,9 @@ return {
     name = "ant.imgui",
     entry = "main",
     dependencies = {
-        "amt.asset",
-        "amt.compile_resource",
-        "amt.hwi",
-        "amt.render",
+        "ant.asset",
+        "ant.compile_resource",
+        "ant.hwi",
+        "ant.render",
     }
 }
