@@ -12,7 +12,7 @@ local quit
 local context
 local debuggerInitialized = false
 
-local ServiceWindow = ltask.queryservice "window"
+local ServiceWindow = ltask.queryservice "ant.window|window"
 
 rmlui.RmlRegisterEevent(require "core.callback")
 
@@ -25,7 +25,7 @@ local function getDelta()
 end
 
 local function Render()
-    local ServiceBgfxMain = ltask.queryservice "bgfx_main"
+    local ServiceBgfxMain = ltask.queryservice "ant.render|bgfx_main"
     ltask.call(ServiceBgfxMain, "encoder_init")
     while not quit do
         local delta = getDelta()

@@ -1,8 +1,5 @@
 local ltask = require "ltask"
-local exclusive = require "ltask.exclusive"
-local window = require "window"
-
-local SCHEDULE_SUCCESS <const> = 3
+local exclusive
 
 local S = {}
 local event = {
@@ -14,9 +11,19 @@ local event = {
     touch = {},
     keyboard = {},
     char = {},
+    update = {},
 }
 
+for CMD, e in pairs(event) do
+    S["send_"..CMD] = function (...)
+        for i = 1, #e do
+            ltask.send(e[i], CMD, ...)
+        end
+    end
+end
+
 local function dispatch(CMD,...)
+    local SCHEDULE_SUCCESS <const> = 3
     if CMD == "update" then
         repeat
             exclusive.scheduling()
@@ -51,7 +58,9 @@ local function multi_wakeup(key, ...)
 	end
 end
 
-function S.init()
+function S.create_window()
+    exclusive = require "ltask.exclusive"
+    local window = require "window"
     window.create(dispatch, 1334, 750)
     ltask.fork(function()
         window.mainloop(true)

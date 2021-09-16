@@ -1,5 +1,5 @@
 local ltask = require "ltask"
-local ServiceResource = ltask.uniqueservice "resource"
+local ServiceResource = ltask.uniqueservice "ant.render|resource"
 
 
 local cr        = import_package "ant.compile_resource"
