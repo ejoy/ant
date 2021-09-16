@@ -2,7 +2,6 @@ local sandbox = require "sandbox"
 local fs  = require "filesystem"
 local dofile = dofile
 
-local initialized = false
 local pathtoname = {}
 local registered = {}
 
@@ -56,16 +55,17 @@ local function register_package(path)
 end
 
 local function initialize()
-    if initialized then
-        for path in fs.path'/pkg':list_directory() do
-            if not registered[path:string():sub(6)] then
-                register_package(path)
+    for path in fs.path'/pkg':list_directory() do
+        register_package(path)
+    end
+    for pkgname, info in pairs(registered) do
+        local dependencies = info.config.dependencies
+        if dependencies then
+            for _, depname in ipairs(dependencies) do
+                if not registered[depname] then
+                    error(("package `%s` has undefined dependencies `%s`"):format(pkgname, depname))
+                end
             end
-        end
-    else
-        initialized = true
-        for path in fs.path'/pkg':list_directory() do
-            register_package(path)
         end
     end
 end
