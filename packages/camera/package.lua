@@ -1,4 +1,8 @@
 return {
     name = "ant.camera",
-    entry = "main"
+    entry = "main",
+    dependencies = {
+        "ant.general",
+        "ant.math",
+    }
 }

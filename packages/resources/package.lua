@@ -1,3 +1,5 @@
 return {
-	name = "ant.resources"
+	name = "ant.resources",
+    dependencies = {
+    }
 }

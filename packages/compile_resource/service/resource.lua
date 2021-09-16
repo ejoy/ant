@@ -6,6 +6,8 @@ local bgfx     = require "bgfx"
 local datalist = require "datalist"
 local fastio   = require "fastio"
 
+cr.init()
+
 local textures = {}
 
 local mem_formats <const> = {
@@ -82,10 +84,6 @@ local DefaultTexture = createTexture {
 local queue = {}
 
 local S = {}
-
-function S.set_identity(v)
-    cr.set_identity(v)
-end
 
 function S.texture_create(name)
     local res = textures[name]
