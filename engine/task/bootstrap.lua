@@ -77,6 +77,20 @@ dofile "engine/debugger.lua"
 ]]
 		end
 	end
+	initstr = initstr .. [[
+local rawsearchpath = package.searchpath
+package.searchpath = function(name, path, sep, dirsep)
+	local package, file = name:match "^([^|]*)|(.*)$"
+	if package and file then
+		path = path:gsub("%$%{([^}]*)%}", {
+			package = "/pkg/"..package,
+		})
+		name = file
+	end
+	return rawsearchpath(name, path, sep, dirsep)
+end
+]]
+
 	local servicelua = searchpath "service"
 	init_exclusive_service = initstr .. ([[dofile %q]]):format(servicelua)
 	config.init_service = initstr .. ([[

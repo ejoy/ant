@@ -212,7 +212,7 @@ local hm_mb = world:sub {"fetch_heightmap"}
 function auto_hm_sys:follow_transform_updated()
     for _ in hm_mb:each() do
         ltask.fork(function ()
-            local ServiceBgfxMain = ltask.queryservice "bgfx_main"
+            local ServiceBgfxMain = ltask.queryservice "ant.render|bgfx_main"
             ltask.call(ServiceBgfxMain, "pause")
             fetch_heightmap_data()
             ltask.call(ServiceBgfxMain, "continue")

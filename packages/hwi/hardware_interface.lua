@@ -75,7 +75,7 @@ function hw.update_identity()
 	local view_setting = math3d.homogeneous_depth and "_hd" or ""
 	view_setting = view_setting .. (math3d.origin_bottom_left and "_obl" or "")
 	local v = (os.."_"..renderer .. view_setting):lower()
-	ltask.call(ltask.uniqueservice "resource", "set_identity", v)
+	ltask.call(ltask.uniqueservice "ant.render|resource", "set_identity", v)
 	import_package "ant.compile_resource".set_identity(v)
 end
 

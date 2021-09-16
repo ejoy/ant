@@ -1,10 +1,10 @@
 local function start(packagename)
     local task = dofile "engine/task/bootstrap.lua"
     task {
-        service_path = "/pkg/ant.window/service/?.lua;/pkg/ant.render/service/?.lua;/pkg/ant.rmlui/service/?.lua",
-        bootstrap = { "boot", packagename },
+        service_path = "${package}/service/?.lua",
+        bootstrap = { "ant.window|boot", packagename },
         logger = { "logger" },
-        exclusive = { "window", "timer", "bgfx_main" },
+        exclusive = { "ant.window|window", "timer", "ant.render|bgfx_main" },
         --debuglog = "log.txt",
     }
 end

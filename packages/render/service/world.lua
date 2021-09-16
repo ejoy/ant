@@ -8,14 +8,14 @@ local ecs       = import_package "ant.luaecs"
 local rhwi      = import_package "ant.hwi"
 
 local bgfx      = require "bgfx"
-local ServiceBgfxMain = ltask.queryservice "bgfx_main"
+local ServiceBgfxMain = ltask.queryservice "ant.render|bgfx_main"
 for _, name in ipairs(ltask.call(ServiceBgfxMain, "APIS")) do
 	bgfx[name] = function (...)
 		return ltask.call(ServiceBgfxMain, name, ...)
 	end
 end
 
-local ServiceWindow = ltask.queryservice "window"
+local ServiceWindow = ltask.queryservice "ant.window|window"
 ltask.send(ServiceWindow, "subscribe", "init", "exit")
 
 local function initargs(package)
