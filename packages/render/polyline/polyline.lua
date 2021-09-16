@@ -1,8 +1,15 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
+
 local bgfx = require "bgfx"
+
+local mathpkg = import_package "ant.math"
+local mu = mathpkg.util
+
 local imaterial = world:interface "ant.asset|imaterial"
 local irender   = world:interface "ant.render|irender"
+
 local ipl = ecs.interface "ipolyline"
 
 --[[
@@ -99,9 +106,7 @@ local function create_dynbuffer(max_vertices, desc)
             local vb = {
                 start = start,
                 num = num,
-                handles = {
-                    self.handle,
-                }
+                {handle = self.handle},
             }
             if vertices then
                 self:update(vb, vertices)
@@ -111,12 +116,13 @@ local function create_dynbuffer(max_vertices, desc)
         end,
         update = function(self, vb, vertices)
             local formatdesc = layout.formatdesc
-            assert((#vertices/#formatdesc) == vb.num and self.handle == vb.handles[1])
-            bgfx.update(self.handle, vb.start, bgfx.memory_buffer(formatdesc, vertices))
+            local h = self.handle
+            assert((#vertices/#formatdesc) == vb.num and h == vb[1].handle)
+            bgfx.update(h, vb.start, bgfx.memory_buffer(formatdesc, vertices))
         end,
         free = function(self, vb)
             --TODO
-            assert(self.handle == vb.handles[1])
+            assert(self.handle == vb[1])
         end,
     }
 end
@@ -159,28 +165,31 @@ local function generate_stripline_vertices(points)
 end
 
 local function add_polylines(polymesh, line_width, color, material)
-    local eid = world:deprecated_create_entity {
+    world:create_entity {
         policy = {
             "ant.render|simplerender",
             "ant.render|polyline",
+            "ant.scene|render_object",
+            "ant.scene|scene_object",
             "ant.general|name",
         },
         data = {
-            polyline = true,
-            simplemesh = polymesh,
-            material = material,
-            state = 1,
-            name = "polyline",
+            polyline = {
+                width = line_width,
+                color = color,
+            },
+            eid = world:register_entity(),
+            scene = {srt=mu.srt_obj()},
+            simplemesh  = polymesh,
+            material    = material,
+            render_object = {},
+            render_object_update = true,
+            filter_material = {},
+            state       = 1,
+            name        = "polyline",
+            INIT        = true,
         }
     }
-
-    local  lineinfo<const> = {line_width, 0.0, 0.0, 0.0}
-    imaterial.set_property(eid, "u_color",      color)
-    imaterial.set_property(eid, "u_line_info",  lineinfo)
-
-    polylines[eid] = true
-
-    return eid
 end
 
 local defcolor<const> = {1.0, 1.0, 1.0, 1.0}
@@ -266,19 +275,19 @@ function ipl.add_linelist(pointlist, line_width, color, material)
 end
 
 local pl_sys = ecs.system "polyline_system"
-function pl_sys:data_changed()
-    for _, eid in world:each "removed" do
-        if polylines[eid] then
-            local e = world[eid]
-            if e.polyline then
-                local vb = e._rendercache.vb
-                local vbhandle = vb.handles[1]
-                if dyn_stripline_vb.handle == vbhandle then
-                    dyn_stripline_vb:free(vb)
-                elseif dyn_linelist_vb.handle == vbhandle then
-                    dyn_linelist_vb:free(vb)
-                end
-            end
-        end
+
+function pl_sys:entity_init()
+    for e in w:select "INIT polyline:in polyline_mark?out" do
+        e.polyline_mark = true
     end
+end
+
+function pl_sys:entity_ready()
+    for e in w:select "polyline_mark polyline:in material_result:in" do
+        local pl = e.polyline
+        local properties = e.material_result.properties
+        imaterial.set_property_directly(properties, "u_line_info", {pl.width, 0.0, 0.0, 0.0})
+        imaterial.set_property_directly(properties, "u_color", pl.color)
+    end
+    w:clear "polyline_mark"
 end

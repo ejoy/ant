@@ -1,12 +1,14 @@
-policy "polyline"
-    .require_policy "ant.render|simplerender"
+component_v2 "polyline_mark"
+component_v2 "polyline".type "lua"
+policy_v2 "polyline"
     .require_system "ant.render|polyline_system"
     .require_interface "ant.render|ipolyline"
-    .component "polyline"
+    .component_v2 "polyline"
 
 system "polyline_system"
     .implement "polyline/polyline.lua"
-    .method "data_changed"
+    .method "entity_init"
+    .method "entity_ready"
 
 interface "ipolyline"
     .implement "polyline/polyline.lua"
