@@ -4,7 +4,7 @@ local math3d    = require "math3d"
 local uiproperty    = require "widget.uiproperty"
 local BaseView = require "widget.view_class".BaseView
 local CameraView = require "widget.view_class".CameraView
-local hierarchy = require "hierarchy"
+local hierarchy = require "hierarchy_edit"
 local world
 local iom
 local camera_mgr

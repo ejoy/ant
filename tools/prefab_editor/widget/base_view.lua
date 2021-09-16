@@ -1,7 +1,7 @@
 local utils     = require "common.utils"
 local math3d    = require "math3d"
 local uiproperty = require "widget.uiproperty"
-local hierarchy = require "hierarchy"
+local hierarchy = require "hierarchy_edit"
 local BaseView  = require "widget.view_class".BaseView
 local world
 local iom
