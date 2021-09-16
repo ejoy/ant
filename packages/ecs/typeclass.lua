@@ -19,10 +19,6 @@ local function splitname(fullname)
     return fullname:match "^([^|]*)|(.*)$"
 end
 
-local function import_impl(w, package, file)
-	return pm.loadenv(package).require_ecs(file, w._ecs[package])
-end
-
 local function register_pkg(w, package)
 	local ecs = { world = w, method = w._set_methods }
 	local declaration = w._decl
@@ -49,7 +45,7 @@ local function register_pkg(w, package)
 				decl.source = {}
 				decl.defined = sourceinfo()
 				local callback = keys(decl.method)
-				local object = import[what](fullname)
+				local object = import[what](package, fullname)
 				setmetatable(r, {
 					__pairs = function ()
 						return pairs(object)
@@ -84,7 +80,10 @@ local function register_pkg(w, package)
 			pkg = package
 			file = fullname
 		end
-		return import_impl(w, pkg, file)
+		return pm
+			.loadenv(package)
+			.package_env(pkg)
+			.require_ecs(w._ecs[pkg], file)
 	end
 	w._ecs[package] = ecs
 	return ecs
@@ -179,13 +178,14 @@ local function create_importor(w)
 	local import = {}
     for _, objname in ipairs(OBJECT) do
 		w._class[objname] = setmetatable({}, {__index=function(_, name)
-			local res = import[objname](name)
+			--TODO
+			local res = import[objname](nil, name)
 			if res then
 				solve_object(res, w, objname, name)
 			end
 			return res
 		end})
-		import[objname] = function (name)
+		import[objname] = function (package, name)
 			local class = w._class[objname]
 			local v = rawget(class, name)
             if v then
@@ -211,7 +211,7 @@ local function create_importor(w)
 				local what, k = tuple[1], tuple[2]
 				local attrib = check_map[what]
 				if attrib then
-					import[attrib](k)
+					import[attrib](package, k)
 				end
 				if what == "unique_component" then
 					w._class.unique[k] = true
@@ -222,8 +222,11 @@ local function create_importor(w)
 			end
 			if v.implement then
 				for _, impl in ipairs(v.implement) do
-					impl = impl:gsub("^(.*)%.lua$", "%1")
-					import_impl(w, v.packname, impl)
+					local pkg = v.packname
+					local file = impl:gsub("^(.*)%.lua$", "%1")
+					pm.loadenv(package or pkg)
+						.package_env(pkg)
+						.include_ecs(w._ecs[pkg], file)
 				end
 			end
 			return res
@@ -283,7 +286,7 @@ local function init(w, config)
 	for _, objname in ipairs(OBJECT) do
 		if config.ecs[objname] then
 			for _, k in ipairs(config.ecs[objname]) do
-				import[objname](k)
+				import[objname](nil, k)
 			end
 		end
 	end

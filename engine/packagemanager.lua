@@ -23,10 +23,6 @@ local function import(name)
     return loadenv(name)._ENTRY
 end
 
-local function import_ecs(name, file, ecs)
-    return loadenv(name).require_ecs(file, ecs)
-end
-
 local function register_package(path)
     if pathtoname[path] then
         return pathtoname[path]
@@ -75,6 +71,5 @@ import_package = import
 
 return {
     import = import,
-    import_ecs = import_ecs,
     loadenv = loadenv,
 }
