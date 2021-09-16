@@ -171,6 +171,7 @@ ltask.fork(function ()
         width = init_width,
         height = init_height,
     }
+	import_package "ant.compile_resource".init()
     bgfx.encoder_init()
 	renderpkg.init_bgfx()
     bgfx.encoder_begin()

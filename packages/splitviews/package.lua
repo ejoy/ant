@@ -1,3 +1,5 @@
 return {
-    name = "ant.splitviews"
+    name = "ant.splitviews",
+    dependencies = {
+    }
 }
