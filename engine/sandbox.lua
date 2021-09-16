@@ -1,6 +1,6 @@
 local fs = require "filesystem"
 
-local function sandbox_env(root, pkgname)
+local function sandbox_env(loadenv, config, root, pkgname)
     local env = setmetatable({}, {__index=_G})
     local _LOADED = {}
     local _ECS_LOADED = {}
@@ -22,7 +22,7 @@ local function sandbox_env(root, pkgname)
         if not path then
             return err1
         end
-        local func, err2 = fs.loadfile(fs.path(path))
+        local func, err2 = loadfile(path)
         if not func then
             error(("error loading module '%s' from file '%s':\n\t%s"):format(name, path, err2))
         end
@@ -81,6 +81,20 @@ local function sandbox_env(root, pkgname)
         return r
     end
 
+    if config.dependencies then
+        local dependencies = {}
+        for _, name in ipairs(config.dependencies) do
+            dependencies[name] = true
+        end
+        dependencies[pkgname] = true
+        function env.import_package(name)
+            if not dependencies[name] then
+                error(("package `%s` has no dependencies `%s`"):format(pkgname, name))
+            end
+            return loadenv(name)._ENTRY
+        end
+    end
+
     env.package = {
         config = table.concat({"/",";","?","!","-"}, "\n"),
         loaded = _LOADED,
@@ -94,7 +108,6 @@ local function sandbox_env(root, pkgname)
         env.package.searchers[i] = searcher
     end
 	env.package.searchers[2] = searcher_lua
-	env._PACKAGENAME = pkgname
     return env
 end
 

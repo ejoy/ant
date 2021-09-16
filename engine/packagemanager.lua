@@ -5,7 +5,6 @@ local dofile = dofile
 local initialized = false
 local pathtoname = {}
 local registered = {}
-local loaded = {}
 
 local function loadenv(name)
     local info = registered[name]
@@ -13,26 +12,20 @@ local function loadenv(name)
         error(("\n\tno package '%s'"):format(name))
     end
     if not info.env then
-        info.env = sandbox.env("/pkg/"..name, name)
+        info.env = sandbox.env(loadenv, info.config, "/pkg/"..name, name)
+        if info.config.entry then
+            info.env._ENTRY = info.env.require(info.config.entry)
+        end
     end
     return info.env
 end
 
 local function import(name)
-    if loaded[name] then
-        return loaded[name]
-    end
-    local info = registered[name]
-    if not info or not info.config.entry then
-        return error(("no package '%s'"):format(name))
-    end
-    local res = loadenv(name).require(info.config.entry)
-    if res == nil then
-        loaded[name] = false
-    else
-        loaded[name] = res
-    end
-    return loaded[name]
+    return loadenv(name)._ENTRY
+end
+
+local function import_ecs(name, file, ecs)
+    return loadenv(name).require_ecs(file, ecs)
 end
 
 local function register_package(path)
@@ -75,10 +68,6 @@ local function initialize()
             register_package(path)
         end
     end
-end
-
-local function import_ecs(name, file, ecs)
-    return loadenv(name).require_ecs(file, ecs)
 end
 
 initialize()
