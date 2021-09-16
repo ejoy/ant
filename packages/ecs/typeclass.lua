@@ -20,7 +20,7 @@ local function splitname(fullname)
 end
 
 local function import_impl(w, package, file)
-	return pm.import_ecs(package, file, w._ecs[package])
+	return pm.loadenv(package).require_ecs(file, w._ecs[package])
 end
 
 local function register_pkg(w, package)

@@ -81,18 +81,18 @@ local function sandbox_env(loadenv, config, root, pkgname)
         return r
     end
 
+    local dependencies = {}
     if config.dependencies then
-        local dependencies = {}
         for _, name in ipairs(config.dependencies) do
             dependencies[name] = true
         end
-        dependencies[pkgname] = true
-        function env.import_package(name)
-            if not dependencies[name] then
-                error(("package `%s` has no dependencies `%s`"):format(pkgname, name))
-            end
-            return loadenv(name)._ENTRY
+    end
+    dependencies[pkgname] = true
+    function env.import_package(name)
+        if not dependencies[name] then
+            error(("package `%s` has no dependencies `%s`"):format(pkgname, name))
         end
+        return loadenv(name)._ENTRY
     end
 
     env.package = {

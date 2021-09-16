@@ -1,8 +1,6 @@
-local ltask = require "ltask"
-local packagename = ...
-package.path = "engine/?.lua"
-require "bootstrap"
+local initargs = ...
 
+local ltask     = require "ltask"
 local inputmgr  = import_package "ant.inputmgr"
 local ecs       = import_package "ant.luaecs"
 local rhwi      = import_package "ant.hwi"
@@ -19,16 +17,11 @@ end
 local ServiceWindow = ltask.queryservice "ant.window|window"
 ltask.send(ServiceWindow, "subscribe", "init", "exit")
 
-local function initargs(package)
-    local info = dofile("/pkg/"..package.."/package.lua")
-    return {
-        ecs = info.ecs,
-    }
-end
-
 local S = {}
 
-local config = initargs(packagename)
+local config = {
+	ecs = initargs
+}
 local world
 local encoderBegin = false
 local quit

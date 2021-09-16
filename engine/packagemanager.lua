@@ -74,5 +74,7 @@ initialize()
 import_package = import
 
 return {
+    import = import,
     import_ecs = import_ecs,
+    loadenv = loadenv,
 }
