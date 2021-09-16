@@ -195,14 +195,6 @@ function path_mt:localpath()
     return lfs.path(localpath)
 end
 
-function path_mt:package_name()
-    local root, stack = normalize_split(self._value)
-    if root ~= "/" or #stack <= 1 or stack[1] ~= "pkg" then
-        error("Invalid package path")
-    end
-    return stack[2]
-end
-
 local fs = {}
 
 fs.path = constructor

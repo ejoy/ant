@@ -1,5 +1,6 @@
 local interface = require "interface"
 local fs = require "filesystem"
+local pm = require "packagemanager"
 
 local function sourceinfo()
 	local info = debug.getinfo(3, "Sl")
@@ -16,6 +17,10 @@ end
 
 local function splitname(fullname)
     return fullname:match "^([^|]*)|(.*)$"
+end
+
+local function import_impl(w, package, file)
+	return pm.import_ecs(package, file, w._ecs[package])
 end
 
 local function register_pkg(w, package)
@@ -79,33 +84,12 @@ local function register_pkg(w, package)
 			pkg = package
 			file = fullname
 		end
-		local path = "/pkg/"..package.."/"..file:gsub("%.", "/")..".lua"
-		local loaded = w._loaded
-		local r = loaded[path]
-		if r ~= nil then
-			return r
-		end
-		r = w:dofile(path)
-		if r == nil then
-			r = true
-		end
-		loaded[path] = r
-		return r
+		return import_impl(w, pkg, file)
 	end
 	w._ecs[package] = ecs
 	return ecs
 end
 
-local function import_impl(w, package, file)
-	local loaded = w._loaded
-	local path = "/pkg/"..package.."/"..file
-	local r = loaded[path]
-	if r ~= nil then
-		return
-	end
-	loaded[path] = true
-	w:dofile(path)
-end
 
 local function solve_policy(fullname, v)
 	local _, policy_name = splitname(fullname)
@@ -238,6 +222,7 @@ local function create_importor(w)
 			end
 			if v.implement then
 				for _, impl in ipairs(v.implement) do
+					impl = impl:gsub("^(.*)%.lua$", "%1")
 					import_impl(w, v.packname, impl)
 				end
 			end

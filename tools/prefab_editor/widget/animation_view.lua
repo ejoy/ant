@@ -1,6 +1,6 @@
 local imgui     = require "imgui"
 local math3d    = require "math3d"
-local hierarchy = require "hierarchy"
+local hierarchy = require "hierarchy_edit"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local utils     = require "common.utils"
