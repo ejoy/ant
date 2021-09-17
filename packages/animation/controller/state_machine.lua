@@ -158,26 +158,29 @@ function get_play_info(eid, name)
 
 end
 
-local function do_play(e, anim, real_clips, isloop, manual)
+local function do_play(e, anim, real_clips, isloop, manual, anim_state)
 	local start_ratio = 0.0
 	local realspeed = 1.0
 	if real_clips then
 		start_ratio = real_clips[1][2].range[1] / anim._handle:duration()
 		realspeed = real_clips[1][2].speed
 	end
-	e._animation._current = {
-		eid = e.eid,
-		animation = anim,
-		event_state = {
-			next_index = 1,
-			keyframe_events = real_clips and real_clips[1][2].key_event or {}
-		},
-		clip_state = { current = {clip_index = 1, clips = real_clips}, clips = e.anim_clips or {}},
-		play_state = { ratio = start_ratio, previous_ratio = start_ratio, speed = realspeed, play = true, loop = isloop or false, manual_update = manual}
-	}
+	if not anim_state.init then
+		anim_state.init = true
+		anim_state.animation = anim
+		anim_state.event_state = { next_index = 1, keyframe_events = real_clips and real_clips[1][2].key_event or {} }
+		anim_state.clip_state = { current = {clip_index = 1, clips = real_clips}, clips = e.anim_clips or {}}
+		anim_state.play_state = { ratio = start_ratio, previous_ratio = start_ratio, speed = realspeed, play = true, loop = isloop or false, manual_update = manual}
+	end
+	e._animation._current = anim_state
+	anim_state.eid[#anim_state.eid + 1] = e.eid
 end
 
-function iani.play(eid, name, loop, manual)
+function iani.create_state()
+	return {eid = {}}
+end
+
+function iani.play(eid, anim_state, name, loop, manual)
 	for e in world.w:select "eid:in animation:in _animation:in anim_clips:in" do
 		if e.eid == eid then
 			local anim = e.animation[name]
@@ -185,7 +188,7 @@ function iani.play(eid, name, loop, manual)
 				print("animation:", name, "not exist")
 				return false
 			end
-			do_play(e, anim, nil, loop, manual)
+			do_play(e, anim, nil, loop, manual, anim_state)
 			return true
 		end
 	end
@@ -206,8 +209,8 @@ local function find_clip_or_group(clips, name, group)
 	end
 end
 
-function iani.play_clip(eid, name, loop, manual)
-	for e in world.w:select "eid:in animation:in _animation:in anim_clips:in" do
+function iani.play_clip(eid, anim_state, name, loop, manual)
+	for e in world.w:select "eid:in animation:in _animation:out anim_clips:in" do
 		if e.eid == eid then
 			local real_clips
 			local clip = find_clip_or_group(e.anim_clips, name)
@@ -218,12 +221,12 @@ function iani.play_clip(eid, name, loop, manual)
 				print("clip:", name, "not exist")
 				return false
 			end
-			do_play(e, real_clips[1][1], real_clips, loop, manual);
+			do_play(e, real_clips[1][1], real_clips, loop, manual, anim_state);
 		end
 	end
 end
 
-function iani.play_group(eid, name, loop, manual)
+function iani.play_group(eid, anim_state, name, loop, manual)
 	for e in world.w:select "eid:in animation:in _animation:in anim_clips:in" do
 		if e.eid == eid then
 			local real_clips
@@ -239,7 +242,7 @@ function iani.play_group(eid, name, loop, manual)
 				print("group:", name, "not exist")
 				return false
 			end
-			do_play(e, real_clips[1][1], real_clips, loop, manual);
+			do_play(e, real_clips[1][1], real_clips, loop, manual, anim_state);
 		end
 	end
 end
@@ -283,10 +286,13 @@ function iani.get_group_duration(eid, name)
 end
 
 function iani.step(task, s_delta, absolute)
+	if task.step_flag then return end
+	task.step_flag = true
+	
 	local play_state = task.play_state
 	local playspeed = EditMode and play_state.speed or 1.0
 	local adjust_delta = play_state.play and s_delta * playspeed or s_delta
-	local next_time = absolute and adjust_delta or (play_state.ratio * task.animation._handle:duration() + adjust_delta) 
+	local next_time = absolute and adjust_delta or (play_state.ratio * task.animation._handle:duration() + adjust_delta)
 	local duration = task.animation._handle:duration()
 	local clip_state = task.clip_state.current
 	local clips = clip_state.clips

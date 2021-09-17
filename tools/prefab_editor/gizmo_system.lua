@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 
 local math3d = require "math3d"
-
+local constant = import_package "ant.math".constant
 local iss = ecs.import.interface "ant.scene|iscenespace"
 local computil = ecs.import.interface "ant.render|entity"
 local gizmo_sys = ecs.system "gizmo_system"
@@ -136,7 +136,7 @@ local function create_arrow_widget(axis_root, axis_str)
 		cylindere_t = math3d.vector(0.5 * gizmo_const.AXIS_LEN, 0, 0)
 	elseif axis_str == "y" then
 		cone_t = math3d.vector(0, gizmo_const.AXIS_LEN, 0)
-		local_rotator = math3d.quaternion{0, 0, 0}
+		local_rotator = constant.IDENTITY_QUAT
 		cylindere_t = math3d.vector(0, 0.5 * gizmo_const.AXIS_LEN, 0)
 	elseif axis_str == "z" then
 		cone_t = math3d.vector(0, 0, gizmo_const.AXIS_LEN)
@@ -208,7 +208,7 @@ local function update_global_axis()
 			world.w:sync("render_object:in scene:in", v)
 			local srt = v.scene.srt
 			srt.s.v = {1.5,1.5,1.5}
-			srt.r.q = {0,0,0,1}
+			srt.r.q = constant.quat_identity
 			srt.t.v = worldPos
 			v.scene._worldmat = math3d.matrix(srt)
 			v.render_object.worldmat = v.scene._worldmat
@@ -743,11 +743,11 @@ local function rotate_gizmo(x, y)
 	local tangent = math3d.normalize(math3d.cross(axis_dir, gizmo_to_last_hit))
 	local proj_len = math3d.dot(tangent, math3d.sub(hitPosVec, last_hit))
 	
-	local angleBaseDir = gizmo_dir_to_world(math3d.vector(1, 0, 0))
+	local angleBaseDir = gizmo_dir_to_world(constant.XAXIS)
 	if rotate_axis == gizmo.rx then
-		angleBaseDir = gizmo_dir_to_world(math3d.vector(0, 0, -1))
+		angleBaseDir = gizmo_dir_to_world(constant.NZAXIS)
 	elseif rotate_axis == gizmo.rw then
-		angleBaseDir = math3d.normalize(math3d.cross(math3d.vector(0, 1, 0), axis_dir))
+		angleBaseDir = math3d.normalize(math3d.cross(constant.YAXIS, axis_dir))
 	end
 	
 	local deltaAngle = proj_len * 200 / gizmo_scale
@@ -869,7 +869,7 @@ local function select_light_gizmo(x, y)
 			light_gizmo_mode = 3
 		end
 	elseif world[light_gizmo.current_light].light_type == "spot" then
-		local dir = math3d.totable(math3d.transform(iom.get_rotation(light_gizmo.current_light), math3d.vector{0, 0, 1}, 0))
+		local dir = math3d.totable(math3d.transform(iom.get_rotation(light_gizmo.current_light), constant.ZAXIS, 0))
 		local mat = iom.worldmat(light_gizmo.current_light)
 		local centre = math3d.transform(mat, math3d.vector{0, 0, ilight.range(light_gizmo.current_light)}, 1)
 		if hit_test_circle(dir, ilight.inner_radian(light_gizmo.current_light), centre) then
@@ -1028,7 +1028,7 @@ function gizmo_sys:handle_event()
 					if gizmo.target_eid then
 						iom.set_rotation(gizmo.root_eid, iom.get_rotation(gizmo.target_eid))
 					end
-					iom.set_rotation(gizmo.rot_circle_root_eid, math3d.quaternion{0,0,0})
+					iom.set_rotation(gizmo.rot_circle_root_eid, constant.IDENTITY_QUAT)
 				end
 			end
 			gizmo_seleted = false

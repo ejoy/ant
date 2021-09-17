@@ -111,25 +111,28 @@ end
 local function anim_group_play_group(eid, ...)
     local group_eid = get_anim_group_eid(eid, current_anim.name)
     if not group_eid then return end
+    local anim_state = iani.create_state()
     for _, anim_eid in ipairs(group_eid) do
         iom.set_position(world[world[anim_eid].parent].parent, {0.0,0.0,0.0})
-        iani.play_group(anim_eid, ...)
+        iani.play_group(anim_eid, anim_state, ...)
     end
 end
 local function anim_group_play_clip(eid, ...)
     local group_eid = get_anim_group_eid(eid, current_anim.name)
     if not group_eid then return end
+    local anim_state = iani.create_state()
     for _, anim_eid in ipairs(group_eid) do
 	    iom.set_position(world[world[anim_eid].parent].parent, {0.0,0.0,0.0})
-        iani.play_clip(anim_eid, ...)
+        iani.play_clip(anim_eid, anim_state, ...)
     end
 end
 local function anim_group_play(eid, ...)
     local group_eid = get_anim_group_eid(eid, current_anim.name)
     if not group_eid then return end
+    local anim_state = iani.create_state()
     for _, anim_eid in ipairs(group_eid) do
         iom.set_position(world[world[anim_eid].parent].parent, {0.0,0.0,0.0})
-        iani.play(anim_eid, ...)
+        iani.play(anim_eid, anim_state, ...)
     end
 end
 
