@@ -6,7 +6,7 @@ local mc = import_package "ant.math".constant
 
 local char_height_sys = ecs.system "character_height_system"
 
-local icollider = world:interface "ant.collision|collider"
+local icollider = ecs.import.interface "ant.collision|collider"
 
 local character_motion = world:sub {"character_motion"}
 local character_spawn = world:sub {"component_register", "character"}
@@ -85,7 +85,7 @@ end
 
 local char_foot_ik_sys = ecs.system "character_foot_ik_system"
 
-local iik = world:interface "ant.animation|ik"
+local iik = ecs.import.interface "ant.animation|ik"
 
 local function ankles_raycast_ray(ankle_pos_ws, dir)
     return {
@@ -192,7 +192,7 @@ local function do_foot_ik(pose_result, ik, inv_trans, leg_raycasts)
     end
 end
 
-local iom = world:interface "ant.objcontroller|obj_motion"
+local iom = ecs.import.interface "ant.objcontroller|obj_motion"
 
 function char_foot_ik_sys:do_ik()
     for _, eid in world:each "foot_ik_raycast" do

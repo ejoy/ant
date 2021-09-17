@@ -7,10 +7,10 @@ local mu 		= mathpkg.util
 
 local viewidmgr = require "viewid_mgr"
 
-local imaterial = world:interface "ant.asset|imaterial"
-local ientity 	= world:interface "ant.render|entity"
-local irq		= world:interface "ant.render|irenderqueue"
-local irender	= world:interface "ant.render|irender"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local ientity 	= ecs.import.interface "ant.render|entity"
+local irq		= ecs.import.interface "ant.render|irenderqueue"
+local irender	= ecs.import.interface "ant.render|irender"
 
 local blit_sys 	= ecs.system "blit_system"
 

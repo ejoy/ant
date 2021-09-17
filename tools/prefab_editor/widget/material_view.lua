@@ -398,11 +398,11 @@ function MaterialView:show()
     end
 end
 
-return function(w)
+return function(ecs, w)
     world       = w
-    imaterial   = world:interface "ant.asset|imaterial"
-    ies         = world:interface "ant.scene|ientity_state"
-    prefab_mgr  = require "prefab_manager"(world)
-    require "widget.base_view"(world)
+    imaterial   = ecs.import.interface "ant.asset|imaterial"
+    ies         = ecs.import.interface "ant.scene|ientity_state"
+    prefab_mgr  = require "prefab_manager"(ecs, world)
+    require "widget.base_view"(ecs, world)
     return MaterialView
 end

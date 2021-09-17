@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-local timer = world:interface "ant.timer|itimer"
+local timer = ecs.import.interface "ant.timer|itimer"
 local fs 	= require "filesystem"
 local lfs	= require "filesystem.local"
 local datalist  = require "datalist"

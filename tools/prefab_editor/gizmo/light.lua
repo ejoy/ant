@@ -236,14 +236,14 @@ function m.init()
     end
 end
 
-return function(w)
+return function(ecs, w)
     world = w
-    imaterial = world:interface "ant.asset|imaterial"
-    computil = world:interface "ant.render|entity"
-    ilight = world:interface "ant.render|light"
-    iom = world:interface "ant.objcontroller|obj_motion"
-    iss = world:interface "ant.scene|iscenespace"
-    ies = world:interface "ant.scene|ientity_state"
+    imaterial = ecs.import.interface "ant.asset|imaterial"
+    computil = ecs.import.interface "ant.render|entity"
+    ilight = ecs.import.interface "ant.render|light"
+    iom = ecs.import.interface "ant.objcontroller|obj_motion"
+    iss = ecs.import.interface "ant.scene|iscenespace"
+    ies = ecs.import.interface "ant.scene|ientity_state"
     geo_utils   = require "editor.geometry_utils"(world)
     return m
 end

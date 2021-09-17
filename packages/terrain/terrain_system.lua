@@ -9,7 +9,7 @@ local declmgr	= renderpkg.declmgr
 local math3d	= require "math3d"
 local terrain_module = require "terrain"
 
-local ies = world:interface "ant.scene|ientity_state"
+local ies = ecs.import.interface "ant.scene|ientity_state"
 
 local t = ecs.component "terrain"
 function t:init()

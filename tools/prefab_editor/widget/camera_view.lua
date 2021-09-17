@@ -266,11 +266,11 @@ function CameraView:has_scale()
     return false
 end
 
-return function(w)
+return function(ecs, w)
     world       = w
-    icamera     = world:interface "ant.camera|camera"
-    iom         = world:interface "ant.objcontroller|obj_motion"
-    camera_mgr  = require "camera_manager"(world)
-    require "widget.base_view"(world)
+    icamera     = ecs.import.interface "ant.camera|camera"
+    iom         = ecs.import.interface "ant.objcontroller|obj_motion"
+    camera_mgr  = require "camera_manager"(ecs, world)
+    require "widget.base_view"(ecs, world)
     return CameraView
 end

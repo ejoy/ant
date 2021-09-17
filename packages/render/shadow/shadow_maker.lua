@@ -8,11 +8,11 @@ local viewidmgr = require "viewid_mgr"
 
 local mc 		= import_package "ant.math".constant
 local math3d	= require "math3d"
-local icamera	= world:interface "ant.camera|camera"
-local ishadow	= world:interface "ant.render|ishadow"
-local irender	= world:interface "ant.render|irender"
-local iom		= world:interface "ant.objcontroller|obj_motion"
-local ies		= world:interface "ant.scene|ientity_state"
+local icamera	= ecs.import.interface "ant.camera|camera"
+local ishadow	= ecs.import.interface "ant.render|ishadow"
+local irender	= ecs.import.interface "ant.render|irender"
+local iom		= ecs.import.interface "ant.objcontroller|obj_motion"
+local ies		= ecs.import.interface "ant.scene|ientity_state"
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
 
@@ -232,7 +232,7 @@ end
 
 local shadow_material
 local gpu_skinning_material
-local imaterial = world:interface "ant.asset|imaterial"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 function sm:init()
 	local fbidx = ishadow.fb_index()
 	local s, dt = ishadow.shadowmap_size(), ishadow.depth_type()

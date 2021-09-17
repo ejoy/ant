@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local iibl = world:interface "ant.render.ibl|iibl"
+local iibl = ecs.import.interface "ant.render.ibl|iibl"
 
 local geopkg = import_package "ant.geometry"
 local geo = geopkg.geometry

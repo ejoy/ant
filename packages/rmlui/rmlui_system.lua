@@ -9,8 +9,13 @@ local viewidmgr = renderpkg.viewidmgr
 local fbmgr     = renderpkg.fbmgr
 
 local font      = import_package "ant.font"
+<<<<<<< HEAD
 local irq       = world:interface "ant.render|irenderqueue"
 local icamera   = world:interface "ant.camera|camera"
+=======
+local irq       = ecs.import.interface "ant.render|irenderqueue"
+local icamera   = ecs.import.interface "ant.camera|camera"
+>>>>>>> package
 local ServiceRmlUi = ltask.spawn "ant.rmlui|rmlui"
 
 local rmlui_sys = ecs.system "rmlui_system"

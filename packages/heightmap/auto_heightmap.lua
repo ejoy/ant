@@ -14,11 +14,11 @@ local viewidmgr = renderpkg.viewidmgr
 local mathpkg   = import_package "ant.math"
 local mc        = mathpkg.constant
 
-local irender   = world:interface "ant.render|irender"
-local icamera   = world:interface "ant.camera|camera"
-local iom       = world:interface "ant.objcontroller|obj_motion"
-local imaterial = world:interface "ant.asset|imaterial"
-local ientity   = world:interface "ant.render|entity"
+local irender   = ecs.import.interface "ant.render|irender"
+local icamera   = ecs.import.interface "ant.camera|camera"
+local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local ientity   = ecs.import.interface "ant.render|entity"
 local auto_hm_sys = ecs.system "auto_heightmap_system"
 local depthmaterial
 

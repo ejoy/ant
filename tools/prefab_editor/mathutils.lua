@@ -95,8 +95,8 @@ function m.mouse_pos_in_view(x,y)
 	end
 end
 
-return function(w)
+return function(ecs, w)
 	world = w
-	icamera = world:interface "ant.camera|camera"
+	icamera = ecs.import.interface "ant.camera|camera"
 	return m
 end

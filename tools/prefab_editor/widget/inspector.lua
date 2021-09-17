@@ -296,18 +296,18 @@ function m.show()
     end
 end
 
-return function(w)
+return function(ecs, w)
     world           = w
-    iom             = world:interface "ant.objcontroller|obj_motion"
-    icamera         = world:interface "ant.camera|camera"
-    ilight          = world:interface "ant.render|light"
+    iom             = ecs.import.interface "ant.objcontroller|obj_motion"
+    icamera         = ecs.import.interface "ant.camera|camera"
+    ilight          = ecs.import.interface "ant.render|light"
     worldedit       = import_package "ant.editor".worldedit(world)
-    camera_mgr      = require "camera_manager"(world)
-    gizmo           = require "gizmo.gizmo"(world)
-    light_gizmo     = require "gizmo.light"(world)
-    light_view      = require "widget.light_view"(world)
-    anim_view       = require "widget.animation_view"(world, import_package "ant.asset")
-    camera_view     = require "widget.camera_view"(world)
-    material_view   = require "widget.material_view"(world)
+    camera_mgr      = require "camera_manager"(ecs, world)
+    gizmo           = require "gizmo.gizmo"(ecs, world)
+    light_gizmo     = require "gizmo.light"(ecs, world)
+    light_view      = require "widget.light_view"(ecs, world)
+    anim_view       = require "widget.animation_view"(ecs, world, import_package "ant.asset")
+    camera_view     = require "widget.camera_view"(ecs, world)
+    material_view   = require "widget.material_view"(ecs, world)
     return m
 end

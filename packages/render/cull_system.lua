@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 
 local math3d = require "math3d"
-local icamera = world:interface "ant.camera|camera"
+local icamera = ecs.import.interface "ant.camera|camera"
 
 local icp = ecs.interface "icull_primitive"
 

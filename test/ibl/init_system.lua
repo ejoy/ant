@@ -1,8 +1,8 @@
 local ecs = ...
 local world = ecs.world
 local math3d = require "math3d"
-local ientity = world:interface "ant.render|entity"
-local imaterial = world:interface "ant.asset|imaterial"
+local ientity = ecs.import.interface "ant.render|entity"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local is = ecs.system "init_system"
 

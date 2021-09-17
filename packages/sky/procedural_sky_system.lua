@@ -235,7 +235,7 @@ end
 local sun_luminance_fetch = fetch_value_operation(sun_luminance_XYZ)
 local sky_luminance_fetch = fetch_value_operation(sky_luminance_XYZ)
 
-local imaterial = world:interface "ant.asset|imaterial"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local function update_sky_parameters(eid)
 	local e = world[eid]
@@ -273,7 +273,7 @@ local function update_hour(skycomp, deltatime, unit)
 	skycomp.which_hour = (skycomp.which_hour + deltatime) % unit
 end
 
-local timer = world:interface "ant.timer|itimer"
+local timer = ecs.import.interface "ant.timer|itimer"
 
 local function update_sun()
 	local delta = timer.delta()

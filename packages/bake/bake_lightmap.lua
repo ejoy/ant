@@ -14,8 +14,8 @@ local crypt     = require "crypt"
 
 local assetmgr  = import_package "ant.asset"
 
-local imaterial = world:interface "ant.asset|imaterial"
-local ibaker    = world:interface "ant.bake|ibaker"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local ibaker    = ecs.import.interface "ant.bake|ibaker"
 
 local bake_lm_sys = ecs.system "bake_lightmap_system"
 local bake_fx<const> = {

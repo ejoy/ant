@@ -113,7 +113,7 @@ function m.get_aabb_vb_ib(aabb_shape, color)
 	return desc.vb, desc.ib
 end
 
-return function(w)
+return function(ecs, w)
 	world = w
 	local geopkg = import_package "ant.geometry"
 	geometry_drawer = geopkg.drawer

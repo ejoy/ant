@@ -279,12 +279,12 @@ function m.show()
     end
 end
 
-return function(w, am)
+return function(ecs, w, am)
     world = w
     asset_mgr = am
     icons = require "common.icons"(asset_mgr)
-    iom = world:interface "ant.objcontroller|obj_motion"
-    icamera = world:interface "ant.camera|camera"
-    gizmo = require "gizmo.gizmo"(world)
+    iom = ecs.import.interface "ant.objcontroller|obj_motion"
+    icamera = ecs.import.interface "ant.camera|camera"
+    gizmo = require "gizmo.gizmo"(ecs, world)
     return m
 end

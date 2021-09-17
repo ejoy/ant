@@ -6,7 +6,7 @@ local mu     = import_package "ant.math".util
 local mc     = import_package "ant.math".constant
 
 local iobj_motion = ecs.interface "obj_motion"
-local icamera = world:interface "ant.camera|camera"
+local icamera = ecs.import.interface "ant.camera|camera"
 
 local function find_entity(eid)
     if type(eid) == "table" then

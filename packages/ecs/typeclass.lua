@@ -19,6 +19,22 @@ local function splitname(fullname)
     return fullname:match "^([^|]*)|(.*)$"
 end
 
+<<<<<<< HEAD
+=======
+local OBJECT = {"system","policy","policy_v2","transform","interface","component","component_v2","pipeline","action"}
+
+local function solve_object(o, w, what, fullname)
+	local decl = w._decl[what][fullname]
+	if decl and decl.method then
+		for _, name in ipairs(decl.method) do
+			if not o[name] then
+				error(("`%s`'s `%s` method is not defined."):format(fullname, name))
+			end
+		end
+	end
+end
+
+>>>>>>> package
 local function register_pkg(w, package)
 	local ecs = { world = w, method = w._set_methods }
 	local declaration = w._decl
@@ -84,6 +100,23 @@ local function register_pkg(w, package)
 			.loadenv(package)
 			.package_env(pkg)
 			.require_ecs(w._ecs[pkg], file)
+<<<<<<< HEAD
+=======
+	end
+	ecs.import = {}
+	for _, objname in ipairs(OBJECT) do
+		ecs.import[objname] = function (name)
+			local res = rawget(w._class[objname], name)
+			if res then
+				return res
+			end
+			res = import[objname](package, name)
+			if res then
+				solve_object(res, w, objname, name)
+			end
+			return res
+		end
+>>>>>>> package
 	end
 	w._ecs[package] = ecs
 	return ecs
@@ -113,19 +146,6 @@ local check_map = {
 	pipeline = "pipeline",
 	action = "action",
 }
-
-local OBJECT = {"system","policy","policy_v2","transform","interface","component","component_v2","pipeline","action"}
-
-local function solve_object(o, w, what, fullname)
-	local decl = w._decl[what][fullname]
-	if decl and decl.method then
-		for _, name in ipairs(decl.method) do
-			if not o[name] then
-				error(("`%s`'s `%s` method is not defined."):format(fullname, name))
-			end
-		end
-	end
-end
 
 local function table_append(t, a)
 	table.move(a, 1, #a, #t+1, t)
@@ -252,9 +272,10 @@ local function init(w, config)
 	w._initializing = true
 	w._class = { unique = {} }
 	w._decl = interface.new(function(packname, filename)
-		local file = fs.path "/pkg" / packname / filename
-		log.info(("Import decl %q"):format(file:string()))
-		return assert(fs.loadfile(file))
+		--TODO
+		local file = "/pkg/"..packname.."/"..filename
+		log.info(("Import decl %q"):format(file))
+		return assert(loadfile(file))
 	end)
 	w._import = create_importor(w)
 	w._set_methods = setmetatable({}, {

@@ -10,11 +10,11 @@ local fbmgr     = require "framebuffer_mgr"
 local sampler   = require "sampler"
 
 local tm_sys    = ecs.system "tonemapping_system"
-local ientity   = world:interface "ant.render|entity"
-local irender   = world:interface "ant.render|irender"
-local irq       = world:interface "ant.render|irenderqueue"
-local icamera   = world:interface "ant.camera|camera"
-local imaterial = world:interface "ant.asset|imaterial"
+local ientity   = ecs.import.interface "ant.render|entity"
+local irender   = ecs.import.interface "ant.render|irender"
+local irq       = ecs.import.interface "ant.render|irenderqueue"
+local icamera   = ecs.import.interface "ant.camera|camera"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local tm_viewid<const> = viewidmgr.get "tonemapping"
 

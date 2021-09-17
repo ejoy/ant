@@ -103,7 +103,7 @@ function imaterial.set_property_directly(properties, who, what)
 end
 
 function imaterial.set_property(eid, who, what)
-	if world:interface "ant.render|isystem_properties".get(who) then
+	if ecs.import.interface "ant.render|isystem_properties".get(who) then
 		error(("global property could not been set:%s"):format(who))
 	end
 
@@ -204,7 +204,7 @@ local function generate_properties(fx, properties)
 	end
 
 	local uniforms = fx.uniforms
-	local isp 		= world:interface "ant.render|isystem_properties"
+	local isp 		= ecs.import.interface "ant.render|isystem_properties"
 	local new_properties
 	properties = properties or {}
 	if uniforms and #uniforms > 0 then
@@ -237,7 +237,7 @@ local function generate_properties(fx, properties)
 	local setting = fx.setting
 	if setting.lighting == "on" then
 		new_properties = new_properties or {}
-		local ilight = world:interface "ant.render|light"
+		local ilight = ecs.import.interface "ant.render|light"
 
 		local buffer_names = {"b_light_info"}
 		if ilight.use_cluster_shading() then
