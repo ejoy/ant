@@ -57,7 +57,7 @@ system "init_loader_system"
     .require_policy "ant.render|shadow_cast_policy"
     .require_policy "ant.render|debug_mesh_bounding"
     .require_policy "ant.render|light"
-    .require_policy "ant.render|polyline"
+    .require_policy_v2 "ant.render|polyline"
     
     .require_policy "ant.character|character"
     .require_policy "ant.collision|collider_policy"
