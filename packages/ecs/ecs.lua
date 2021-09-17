@@ -427,6 +427,11 @@ function world:import(fullname)
 	typeclass.import_decl(self, fullname)
 end
 
+function world:interface(fullname)
+	log.error("world:interface is deprecated")
+	return self._class.interface[fullname]
+end
+
 local function memstr(v)
 	for _, b in ipairs {"B","KB","MB","GB","TB"} do
 		if v < 1024 then

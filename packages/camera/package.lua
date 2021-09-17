@@ -4,5 +4,6 @@ return {
     dependencies = {
         "ant.general",
         "ant.math",
+        "ant.timer",
     }
 }
