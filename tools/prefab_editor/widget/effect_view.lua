@@ -1,12 +1,16 @@
+local ecs = ...
+local world = ecs.world
+local w = world.w
+ecs.require "widget.base_view"
 local imgui     = require "imgui"
 local utils     = require "common.utils"
 local math3d    = require "math3d"
 local uiproperty = require "widget.uiproperty"
 local hierarchy     = require "hierarchy_edit"
-local effekseer = require "effekseer"
+local effekseer     = require "effekseer"
 local BaseView      = require "widget.view_class".BaseView
-local EffectView  = require "widget.view_class".EffectView
-local ui_auto_play = {false}
+local EffectView    = require "widget.view_class".EffectView
+local ui_auto_play  = {false}
 local ui_loop = { true }
 function EffectView:_init()
     BaseView._init(self)
@@ -60,8 +64,4 @@ function EffectView:on_set_loop(value)
     effekseer.set_loop(instance.handle, value)
 end
 
-return function(w)
-    world   = w
-    require "widget.base_view"(world)
-    return EffectView
-end
+return EffectView

@@ -1,3 +1,9 @@
+
+local ecs = ...
+local iom 	= ecs.import.interface "ant.objcontroller|obj_motion"
+local iani 	= ecs.import.interface "ant.animation|animation"
+local ieff 	= ecs.import.interface "ant.effekseer|effekseer_playback"
+local iss 	= ecs.import.interface "ant.scene|iscenespace"
 local datalist = require "datalist"
 local fs = require "filesystem"
 local cr = import_package "ant.compile_resource"
@@ -21,10 +27,6 @@ end
 local cmd_handle
 
 local function command(w, set, name, ...)
-	local iom = w:interface "ant.objcontroller|obj_motion"
-	local iani = w:interface "ant.animation|animation"
-	local ieff = w:interface "ant.effekseer|effekseer_playback"
-	local iss = w:interface "ant.scene|iscenespace"
 	local findAnimation = function(eid)
 		for e in w:select "eid:in" do
 			if e.eid == eid then

@@ -1,3 +1,12 @@
+local ecs = ...
+local world = ecs.world
+local w = world.w
+
+local imaterial   = ecs.import.interface "ant.asset|imaterial"
+local ies         = ecs.import.interface "ant.scene|ientity_state"
+local prefab_mgr  = ecs.require "prefab_manager"
+ecs.require "widget.base_view"
+
 local imgui     = require "imgui"
 local assetmgr  = import_package "ant.asset"
 local fs        = require "filesystem"
@@ -14,9 +23,6 @@ local uiproperty    = require "widget.uiproperty"
 local BaseView      = require "widget.view_class".BaseView
 local MaterialView  = require "widget.view_class".MaterialView
 
-local world
-local imaterial
-local ies
 local mtldata_list = {
 
 }
@@ -398,11 +404,4 @@ function MaterialView:show()
     end
 end
 
-return function(ecs, w)
-    world       = w
-    imaterial   = ecs.import.interface "ant.asset|imaterial"
-    ies         = ecs.import.interface "ant.scene|ientity_state"
-    prefab_mgr  = require "prefab_manager"(ecs, world)
-    require "widget.base_view"(ecs, world)
-    return MaterialView
-end
+return MaterialView

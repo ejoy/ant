@@ -1,9 +1,11 @@
+local ecs = ...
+local world = ecs.world
+local w = world.w
+
+local iom = ecs.import.interface "ant.objcontroller|obj_motion"
+local gizmo = ecs.require "gizmo.gizmo"
 local queue = require "queue"
 local gizmo_const = require "gizmo.const"
-local gizmo
-local world
-local iom
-
 local cmd_queue = {
 	cmd_undo = queue.new(),
 	cmd_redo = queue.new()
@@ -61,9 +63,4 @@ function cmd_queue:record(cmd)
 	queue.push_last(self.cmd_undo, cmd)
 end
 
-return function(ecs, w)
-    world = w
-    iom = ecs.import.interface "ant.objcontroller|obj_motion"
-	gizmo = require "gizmo.gizmo"(ecs, world)
-    return cmd_queue
-end
+return cmd_queue

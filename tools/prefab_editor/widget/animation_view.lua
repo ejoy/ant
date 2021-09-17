@@ -1,3 +1,16 @@
+local ecs = ...
+local world = ecs.world
+local w = world.w
+
+local iani      = ecs.import.interface "ant.animation|animation"
+local ies       = ecs.import.interface "ant.scene|ientity_state"
+local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local prefab_mgr = ecs.require "prefab_manager"
+local gizmo     = ecs.require "gizmo.gizmo"
+local asset_mgr = import_package "ant.asset"
+local icons     = require "common.icons"(asset_mgr)
+local logger    = require "widget.log"
 local imgui     = require "imgui"
 local math3d    = require "math3d"
 local hierarchy = require "hierarchy_edit"
@@ -6,20 +19,11 @@ local uiutils   = require "widget.utils"
 local utils     = require "common.utils"
 local vfs       = require "vfs"
 local access    = require "vfs.repoaccess"
-local global_data = require "common.global_data"
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 local datalist  = require "datalist"
 local rc        = import_package "ant.compile_resource"
-local world
-local icons
-local iani
-local prefab_mgr
-local ies
-local gizmo
-local iom
-local inspector
-local logger
+local global_data = require "common.global_data"
 
 local m = {}
 local edit_anims = {}
@@ -1476,16 +1480,4 @@ function m.get_current_joint()
     return current_joint and current_joint.index or 0
 end
 
-return function(ecs, w, am)
-    world = w
-    icons = require "common.icons"(am)
-    iani = ecs.import.interface "ant.animation|animation"
-    ies = ecs.import.interface "ant.scene|ientity_state"
-    iom = ecs.import.interface "ant.objcontroller|obj_motion"
-    prefab_mgr = require "prefab_manager"(ecs, world)
-    prefab_mgr.set_anim_view(m)
-    gizmo = require "gizmo.gizmo"(ecs, world)
-    local asset_mgr = import_package "ant.asset"
-    logger = require "widget.log"(asset_mgr)
-    return m
-end
+return m

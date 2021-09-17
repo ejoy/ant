@@ -1,10 +1,14 @@
+local ecs = ...
+local world = ecs.world
+local w = world.w
+local ilight    = ecs.import.interface "ant.render|light"
+local light_gizmo = ecs.require "gizmo.light"
+ecs.require "widget.base_view"
+
 local utils     = require "common.utils"
 local math3d    = require "math3d"
 local uiproperty    = require "widget.uiproperty"
 local hierarchy = require "hierarchy_edit"
-local world
-local ilight
-local light_gizmo
 
 local BaseView = require "widget.view_class".BaseView
 local LightView = require "widget.view_class".LightView
@@ -128,10 +132,4 @@ function LightView:has_scale()
     return false
 end
 
-return function(ecs, w)
-    world   = w
-    ilight  = ecs.import.interface "ant.render|light"
-    light_gizmo = require "gizmo.light"(ecs, world)
-    require "widget.base_view"(ecs, world)
-    return LightView
-end
+return LightView

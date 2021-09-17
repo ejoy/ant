@@ -1,3 +1,10 @@
+local ecs = ...
+local world = ecs.world
+local w = world.w
+
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local ies = ecs.import.interface "ant.scene|ientity_state"
+
 local gizmo_const = require "gizmo.const"
 local gizmo = {
     mode = gizmo_const.SELECT,
@@ -232,9 +239,4 @@ function gizmo:reset_scale_axis_color()
 	imaterial.set_property(self.uniform_scale_eid, uname, gizmo_const.COLOR_GRAY)
 end
 
-return function(ecs, w)
-    world = w
-    imaterial = ecs.import.interface "ant.asset|imaterial"
-    ies = ecs.import.interface "ant.scene|ientity_state"
-    return gizmo
-end
+return gizmo

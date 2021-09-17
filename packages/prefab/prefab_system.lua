@@ -3,7 +3,7 @@ local world = ecs.world
 local assetmgr = import_package "ant.asset"
 
 if ecs.component then
-	require "prefab".init(world)
+	ecs.require "prefab".init(world)
 end
 
 function world:create_template(t)

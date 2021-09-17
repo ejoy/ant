@@ -1,3 +1,15 @@
+local ecs = ...
+local world = ecs.world
+local w = world.w
+
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local computil  = ecs.import.interface "ant.render|entity"
+local ilight    = ecs.import.interface "ant.render|light"
+local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
+local iss       = ecs.import.interface "ant.scene|iscenespace"
+local ies       = ecs.import.interface "ant.scene|ientity_state"
+local geo_utils = ecs.require "editor.geometry_utils"
+
 local math3d = require "math3d"
 local gizmo_const = require "gizmo.const"
 local bgfx = require "bgfx"
@@ -236,14 +248,4 @@ function m.init()
     end
 end
 
-return function(ecs, w)
-    world = w
-    imaterial = ecs.import.interface "ant.asset|imaterial"
-    computil = ecs.import.interface "ant.render|entity"
-    ilight = ecs.import.interface "ant.render|light"
-    iom = ecs.import.interface "ant.objcontroller|obj_motion"
-    iss = ecs.import.interface "ant.scene|iscenespace"
-    ies = ecs.import.interface "ant.scene|ientity_state"
-    geo_utils   = require "editor.geometry_utils"(world)
-    return m
-end
+return m

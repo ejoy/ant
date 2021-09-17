@@ -1,12 +1,15 @@
+local ecs = ...
+local world = ecs.world
+local w = world.w
+
 local imgui = require "imgui"
 local rhwi      = import_package "ant.hwi"
 local stringify = import_package "ant.serialize".stringify
 local lfs   = require "filesystem.local"
 local fs    = require "filesystem"
 local widget_utils = require "widget.utils"
+local prefab_mgr = ecs.require "prefab_manager"
 local m = {}
-local world
-local prefab_mgr
 function m.show()
     if imgui.widget.BeginMainMenuBar() then
         if imgui.widget.BeginMenu("File") then
@@ -94,8 +97,4 @@ function m.show()
     end
 end
 
-return function(w, pm)
-    world = w
-    prefab_mgr = pm
-    return m
-end
+return m

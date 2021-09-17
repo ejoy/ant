@@ -5,8 +5,8 @@ local utils     = require "common.utils"
 local cthread   = require "thread"
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
-
 local icons
+
 local m = {
     to_bottom = false
 }
@@ -362,8 +362,8 @@ end
 function m.close_log()
     logfile_handle:close()
 end
-return function(am)
-    icons = require "common.icons"(am)
+return function(asset_mgr)
+    icons = require "common.icons"(asset_mgr)
     reset_log()
     return m
 end

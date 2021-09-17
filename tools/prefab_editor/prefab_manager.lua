@@ -1,27 +1,31 @@
+local ecs = ...
+local world = ecs.world
+local w = world.w
+local worldedit     = import_package "ant.editor".worldedit(world)
+local assetmgr      = import_package "ant.asset"
+local stringify     = import_package "ant.serialize".stringify
+local iom           = ecs.import.interface "ant.objcontroller|obj_motion"
+local iss           = ecs.import.interface "ant.scene|iscenespace"
+local ies           = ecs.import.interface "ant.scene|ientity_state"
+local ilight        = ecs.import.interface "ant.render|light"
+local imaterial     = ecs.import.interface "ant.asset|imaterial"
+local camera_mgr    = ecs.require "camera_manager"
+local light_gizmo   = ecs.require "gizmo.light"
+local gizmo         = ecs.require "gizmo.gizmo"
+local geo_utils     = ecs.require "editor.geometry_utils"
+local logger        = require "widget.log"
 local math3d 		= require "math3d"
 local fs            = require "filesystem"
 local lfs           = require "filesystem.local"
 local vfs           = require "vfs"
 local hierarchy     = require "hierarchy_edit"
-local assetmgr      = import_package "ant.asset"
-local stringify     = import_package "ant.serialize".stringify
 local widget_utils  = require "widget.utils"
 local bgfx          = require "bgfx"
 local gd            = require "common.global_data"
 local utils         = require "common.utils"
 local effekseer     = require "effekseer"
 local subprocess    = require "sp_util"
-local anim_view
-local geo_utils
-local logger
-local ilight
-local light_gizmo
-local gizmo
-local camera_mgr
-local world
-local iom
-local iss
-local worldedit
+
 local m = {
     entities = {}
 }
@@ -858,17 +862,4 @@ function m.set_anim_view(aview)
     anim_view = aview
 end
 
-return function(ecs, w)
-    world       = w
-    camera_mgr  = require "camera_manager"(ecs, world)
-    iom         = ecs.import.interface "ant.objcontroller|obj_motion"
-    iss         = ecs.import.interface "ant.scene|iscenespace"
-    worldedit   = import_package "ant.editor".worldedit(world)
-    ilight      = ecs.import.interface "ant.render|light"
-    light_gizmo = require "gizmo.light"(ecs, world)
-    gizmo = require "gizmo.gizmo"(ecs, world)
-    geo_utils   = require "editor.geometry_utils"(ecs, world)
-    local asset_mgr = import_package "ant.asset"
-    logger      = require "widget.log"(asset_mgr)
-    return m
-end
+return m

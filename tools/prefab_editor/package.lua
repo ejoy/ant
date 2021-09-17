@@ -11,6 +11,7 @@ return {
         "ant.math",
         "ant.render",
         "ant.serialize",
+        "ant.camera",
     }
     --ecs = {
     --    import = {

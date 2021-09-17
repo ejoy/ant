@@ -1,3 +1,8 @@
+local ecs = ...
+local world = ecs.world
+local w = world.w
+local assetmgr  = import_package "ant.asset"
+
 local imgui     = require "imgui"
 local fw        = require "filewatch"
 local lfs       = require "filesystem.local"
@@ -6,9 +11,8 @@ local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local utils     = require "common.utils"
 local gd        = require "common.global_data"
-local world
-local assetmgr
-local icons
+local icons     = require "common.icons"(assetmgr)
+
 local m = {
     dirty = true
 }
@@ -339,9 +343,4 @@ function m.show()
     end
 end
 
-return function(ecs, w, am)
-    world = w
-    assetmgr = am
-    icons = require "common.icons"(assetmgr)
-    return m
-end
+return m
