@@ -19,8 +19,6 @@ local function splitname(fullname)
     return fullname:match "^([^|]*)|(.*)$"
 end
 
-<<<<<<< HEAD
-=======
 local OBJECT = {"system","policy","policy_v2","transform","interface","component","component_v2","pipeline","action"}
 
 local function solve_object(o, w, what, fullname)
@@ -34,7 +32,6 @@ local function solve_object(o, w, what, fullname)
 	end
 end
 
->>>>>>> package
 local function register_pkg(w, package)
 	local ecs = { world = w, method = w._set_methods }
 	local declaration = w._decl
@@ -100,8 +97,6 @@ local function register_pkg(w, package)
 			.loadenv(package)
 			.package_env(pkg)
 			.require_ecs(w._ecs[pkg], file)
-<<<<<<< HEAD
-=======
 	end
 	ecs.import = {}
 	for _, objname in ipairs(OBJECT) do
@@ -116,7 +111,6 @@ local function register_pkg(w, package)
 			end
 			return res
 		end
->>>>>>> package
 	end
 	w._ecs[package] = ecs
 	return ecs
