@@ -25,12 +25,6 @@ local function load_package(path)
     return config.name
 end
 
-local function split(str)
-    local r = {}
-    str:gsub('[^/]*', function (w) r[#r+1] = w end)
-    return r
-end
-
 function access.addmount(repo, name, path)
 	name = name:match "^/?(.-)/?$"
 	local p = repo._mountpoint[name]
@@ -43,6 +37,12 @@ function access.addmount(repo, name, path)
 	end
 end
 
+local function split(str)
+    local r = {}
+    str:gsub('[^%s]+', function (w) r[#r+1] = w end)
+    return r
+end
+
 function access.readmount(repo)
 	local mountpoint = {}
 	local mountname = {}
@@ -52,34 +52,41 @@ function access.readmount(repo)
 	end
 	local f <close> = assert(io.open((repo._root / ".mount"):string(), "rb"))
 	for line in f:lines() do
-		local name, path = line:match "^%s*(.-)%s+(.-)%s*$"
-		if name == nil then
-			if not (line:match "^%s*#" or line:match "^%s*$") then
-				error ("Invalid .mount file : " .. line)
+		local function assert_syntax(cond)
+			if not cond then
+				error("Invalid .mount file : " .. line, 2)
 			end
-
-			goto continue
 		end
-		path = path:gsub("%s*#.*$","")	-- strip comment
-		path = path:gsub("%${([^}]*)}", {
+		local tokens = split(line
+			:gsub("#.*$","")	-- strip comment
+			:gsub("%${([^}]*)}", {
 			project = repo._root:string():gsub("(.-)[/\\]?$", "%1")
-		})
-		path = lfs.absolute(lfs.path(path))
-		if name == '@pkg-one' then
-			local pkgname = load_package(path)
-			addmount('pkg/'..pkgname, path)
-		elseif name == '@pkg' then
-			for pkgpath in path:list_directory() do
-				if not pkgpath:string():match ".DS_Store" then
-					local pkgname = load_package(pkgpath)
-					addmount('pkg/'..pkgname, pkgpath)
+		}))
+		assert_syntax(#tokens >= 1)
+		local name = tokens[1]
+		if name:sub(1, 1) == "@" then
+			if name == '@pkg-one' then
+				assert_syntax(#tokens == 2)
+				local path = lfs.absolute(lfs.path(tokens[2]))
+				local pkgname = load_package(path)
+				addmount('pkg/'..pkgname, path)
+			elseif name == '@pkg' then
+				assert_syntax(#tokens == 2)
+				local path = lfs.absolute(lfs.path(tokens[2]))
+				for pkgpath in path:list_directory() do
+					if not pkgpath:string():match ".DS_Store" then
+						local pkgname = load_package(pkgpath)
+						addmount('pkg/'..pkgname, pkgpath)
+					end
 				end
+			else
+				assert_syntax(false)
 			end
 		else
+			assert_syntax(#tokens == 2)
+			local path = lfs.absolute(lfs.path(tokens[2]))
 			addmount(name, path)
 		end
-
-		::continue::
 	end
 	table.sort(mountname)
 	repo._mountname = mountname
