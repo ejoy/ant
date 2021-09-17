@@ -31,7 +31,6 @@ interface "animation"
     .method "get_collider"
     .method "stop_effect"
     .method "set_edit_mode"
-    .method "create_state"
 
 policy_v2 "animation_controller.state_machine"
     .require_system "state_machine_system"
