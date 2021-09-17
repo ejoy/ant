@@ -1,6 +1,8 @@
 return {
     name = "ant.scene",
     dependencies = {
-        "ant.math"
+        "ant.luaecs",
+        "ant.math",
+        "ant.objcontroller",
     }
 }

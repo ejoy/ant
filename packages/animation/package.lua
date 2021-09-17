@@ -2,6 +2,9 @@ return {
 	name = "ant.animation",
     dependencies = {
 		"ant.asset",
-		"ant.math.adapter"
+		"ant.general",
+		"ant.math.adapter",
+		"ant.render",
+		"ant.timer",
     }
 }

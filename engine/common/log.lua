@@ -13,11 +13,13 @@ else
 end
 
 local modes = {
+    'debug',
     'info',
     'warn',
     'error'
 }
 local color = {
+    debug = nil,
     info = nil,
     warn = "\x1b[33m",
     error = "\x1b[31m",

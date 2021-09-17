@@ -2,7 +2,7 @@ return {
     name = "ant.render",
     entry = "main",
     dependencies = {
-        "ant.timer",
+        "ant.asset",
         "ant.camera",
         "ant.font",
         "ant.general",
@@ -13,5 +13,6 @@ return {
         "ant.render.ibl",
         "ant.scene",
         "ant.settings",
+        "ant.timer",
     }
 }

@@ -423,10 +423,6 @@ function world:enable_system(name, enable)
 	end
 end
 
-function world:import(fullname)
-	typeclass.import_decl(self, fullname)
-end
-
 function world:interface(fullname)
 	log.error("world:interface is deprecated")
 	return self._class.interface[fullname]
