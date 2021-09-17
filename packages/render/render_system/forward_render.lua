@@ -4,9 +4,9 @@ local w = world.w
 
 local mathpkg	= import_package "ant.math"
 local mc		= mathpkg.constant
-local irender	= world:interface "ant.render|irender"
+local irender	= ecs.import.interface "ant.render|irender"
 local default	= import_package "ant.general".default
-local icamera	= world:interface "ant.camera|camera"
+local icamera	= ecs.import.interface "ant.camera|camera"
 
 local fr_sys = ecs.system "forward_render_system"
 

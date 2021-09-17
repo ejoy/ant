@@ -5,8 +5,8 @@ local w = world.w
 local bgfx      = require "bgfx"
 local declmgr   = require "vertexdecl_mgr"
 local viewidmgr = require "viewid_mgr"
-local ilight    = world:interface "ant.render|light"
-local icompute  = world:interface "ant.render|icompute"
+local ilight    = ecs.import.interface "ant.render|light"
+local icompute  = ecs.import.interface "ant.render|icompute"
 
 local cfs = ecs.system "cluster_forward_system"
 

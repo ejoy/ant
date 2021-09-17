@@ -61,9 +61,9 @@ function cmd_queue:record(cmd)
 	queue.push_last(self.cmd_undo, cmd)
 end
 
-return function(w)
+return function(ecs, w)
     world = w
-    iom = world:interface "ant.objcontroller|obj_motion"
-	gizmo = require "gizmo.gizmo"(world)
+    iom = ecs.import.interface "ant.objcontroller|obj_motion"
+	gizmo = require "gizmo.gizmo"(ecs, world)
     return cmd_queue
 end

@@ -1,14 +1,14 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local irq           = world:interface "ant.render|irenderqueue"
-local icamera       = world:interface "ant.camera|camera"
-local entity        = world:interface "ant.render|entity"
-local iRmlUi        = world:interface "ant.rmlui|rmlui"
-local irender       = world:interface "ant.render|irender"
-local iani          = world:interface "ant.animation|animation"
+local irq           = ecs.import.interface "ant.render|irenderqueue"
+local icamera       = ecs.import.interface "ant.camera|camera"
+local entity        = ecs.import.interface "ant.render|entity"
+local iRmlUi        = ecs.import.interface "ant.rmlui|rmlui"
+local irender       = ecs.import.interface "ant.render|irender"
+local iani          = ecs.import.interface "ant.animation|animation"
 local default_comp  = import_package "ant.general".default
-local camera_mgr    = require "camera_manager"(world)
+local camera_mgr    = require "camera_manager"(ecs, world)
 local imgui         = require "imgui"
 local lfs           = require "filesystem.local"
 local fs            = require "filesystem"
@@ -75,7 +75,7 @@ function m:entity_init()
             frustum = {n = 1, f = 1000 },
             updir = {0.0, 1.0, 0.0, 0}
         }
-        icamera.bind(main_camera, "main_queue")
+        irq.set_camera("main_queue", main_camera)
         camera_mgr.main_camera = main_camera
     end
 

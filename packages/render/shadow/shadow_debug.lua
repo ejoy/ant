@@ -4,17 +4,17 @@ local w = world.w
 
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
-local irender   = world:interface "ant.render|irender"
+local irender   = ecs.import.interface "ant.render|irender"
 local mathpkg   = import_package "ant.math"
 local mu, mc    = mathpkg.util, mathpkg.constant
 
 local math3d    = require "math3d"
 
-local ientity   = world:interface "ant.render|entity"
-local ilight	= world:interface "ant.render|light"
-local ishadow	= world:interface "ant.render|ishadow"
-local icamera	= world:interface "ant.camera|camera"
-local iom		= world:interface "ant.objcontroller|obj_motion"
+local ientity   = ecs.import.interface "ant.render|entity"
+local ilight	= ecs.import.interface "ant.render|light"
+local ishadow	= ecs.import.interface "ant.render|ishadow"
+local icamera	= ecs.import.interface "ant.camera|camera"
+local iom		= ecs.import.interface "ant.objcontroller|obj_motion"
 
 local shadowdbg_sys = ecs.system "shadow_debug_system"
 

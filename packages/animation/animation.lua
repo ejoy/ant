@@ -3,13 +3,13 @@ local world = ecs.world
 local w = world.w
 
 local assetmgr 		= import_package "ant.asset"
-local iom 			= world:interface "ant.objcontroller|obj_motion"
+local iom 			= ecs.import.interface "ant.objcontroller|obj_motion"
 local animodule 	= require "hierarchy".animation
 
 
 local ani_sys = ecs.system "animation_system"
 
-local timer = world:interface "ant.timer|itimer"
+local timer = ecs.import.interface "ant.timer|itimer"
 
 local fix_root <const> = false
 
@@ -80,7 +80,7 @@ local function process_keyframe_event(task)
 	end
 end
 
-local iani = world:interface "ant.animation|animation"
+local iani = ecs.import.interface "ant.animation|animation"
 
 local function do_animation(poseresult, task, delta_time)
 	if task.type == 'blend' then

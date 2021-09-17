@@ -3,7 +3,7 @@ local world = ecs.world
 
 local bgfx = require "bgfx"
 
-local irender   = world:interface "ant.render|irender"
+local irender   = ecs.import.interface "ant.render|irender"
 
 local function can_write_depth(state)
 	local s = bgfx.parse_state(state)

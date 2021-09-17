@@ -339,7 +339,7 @@ function m.show()
     end
 end
 
-return function(w, am)
+return function(ecs, w, am)
     world = w
     assetmgr = am
     icons = require "common.icons"(assetmgr)

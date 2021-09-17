@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local init_sys   = ecs.system "init_system"
-local iRmlUi     = world:interface "ant.rmlui|rmlui"
+local iRmlUi     = ecs.import.interface "ant.rmlui|rmlui"
 
 local OpenDebugger  = false
 local eventKeyboard = world:sub {"keyboard", "F8"}

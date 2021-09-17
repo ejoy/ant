@@ -4,7 +4,7 @@ local w = world.w
 
 local math3d = require "math3d"
 
-local imaterial = world:interface "ant.asset|imaterial"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 local bgfx = require "bgfx"
 
 local dm = ecs.action "decal_mount"

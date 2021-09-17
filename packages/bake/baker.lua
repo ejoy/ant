@@ -17,12 +17,12 @@ local viewidmgr = renderpkg.viewidmgr
 local mathpkg   = import_package "ant.math"
 local mu        = mathpkg.uitl
 
-local ientity   = world:interface "ant.render|entity"
-local irender   = world:interface "ant.render|irender"
-local imaterial = world:interface "ant.asset|imaterial"
-local icamera   = world:interface "ant.camera|camera"
-local ics       = world:interface "ant.render|icluster_render"
-local isp       = world:interface "ant.render|isystem_properties"
+local ientity   = ecs.import.interface "ant.render|entity"
+local irender   = ecs.import.interface "ant.render|irender"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local icamera   = ecs.import.interface "ant.camera|camera"
+local ics       = ecs.import.interface "ant.render|icluster_render"
+local isp       = ecs.import.interface "ant.render|isystem_properties"
 
 local mathpkg   = import_package "ant.math"
 local mc        = mathpkg.constant

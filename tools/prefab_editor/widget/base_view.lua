@@ -161,10 +161,10 @@ function BaseView:show()
     self.general_property:show()
 end
 
-return function(w)
+return function(ecs, w)
     world   = w
-    prefab_mgr = require "prefab_manager"(world)
-    iom     = world:interface "ant.objcontroller|obj_motion"
-    gizmo   = require "gizmo.gizmo"(world)
+    prefab_mgr = require "prefab_manager"(ecs, world)
+    iom     = ecs.import.interface "ant.objcontroller|obj_motion"
+    gizmo   = require "gizmo.gizmo"(ecs, world)
     return BaseView
 end

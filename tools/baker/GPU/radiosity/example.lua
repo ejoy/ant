@@ -3,11 +3,11 @@ local world = ecs.world
 local w = world.w
 local bgfx = require "bgfx"
 local example_sys = ecs.system "lightmap_example"
-local ilm = world:interface "ant.bake|ilightmap"
-local imaterial = world:interface "ant.asset|imaterial"
-local irender = world:interface "ant.render|irender"
-local iom = world:interface "ant.objcontroller|obj_motion"
-local ientity = world:interface "ant.render|entity"
+local ilm = ecs.import.interface "ant.bake|ilightmap"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local irender = ecs.import.interface "ant.render|irender"
+local iom = ecs.import.interface "ant.objcontroller|obj_motion"
+local ientity = ecs.import.interface "ant.render|entity"
 local math3d = require "math3d"
 
 local renderpkg = import_package "ant.render"
@@ -431,7 +431,7 @@ local function set_view()
     }
 
     local cameraeid = main_camera_eid()
-    local icamera = world:interface "ant.camera|camera"
+    local icamera = ecs.import.interface "ant.camera|camera"
     local viewname = viewnames[side]
     local view = views[viewname]
     local lookto = view.lookto
@@ -453,7 +453,7 @@ local defaultcamera
 local function event_handle()
     if defaultcamera == nil then
         local ceid = main_camera_eid()
-        local icamera = world:interface "ant.camera|camera"
+        local icamera = ecs.import.interface "ant.camera|camera"
 
         local f = icamera.get_frustum(ceid)
         local df = {}
@@ -478,7 +478,7 @@ local function event_handle()
 
         if key == "C" and press == 0 then
             local ceid = main_camera_eid()
-            local icamera = world:interface "ant.camera|camera"
+            local icamera = ecs.import.interface "ant.camera|camera"
             local vp = icamera.calc_viewproj(ceid)
             local points = math3d.frustum_points(vp)
             ientity.create_frustum_entity(points)
@@ -488,7 +488,7 @@ local function event_handle()
 
         if key == "R" and press == 0 then
             local ceid = main_camera_eid()
-            local icamera = world:interface "ant.camera|camera"
+            local icamera = ecs.import.interface "ant.camera|camera"
             icamera.set_frustum(ceid, defaultcamera.frustum)
             icamera.lookto(ceid, defaultcamera.eyepos, defaultcamera.viewdir, defaultcamera.updir)
         end

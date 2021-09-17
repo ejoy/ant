@@ -128,10 +128,10 @@ function LightView:has_scale()
     return false
 end
 
-return function(w)
+return function(ecs, w)
     world   = w
-    ilight  = world:interface "ant.render|light"
-    light_gizmo = require "gizmo.light"(world)
-    require "widget.base_view"(world)
+    ilight  = ecs.import.interface "ant.render|light"
+    light_gizmo = require "gizmo.light"(ecs, world)
+    require "widget.base_view"(ecs, world)
     return LightView
 end

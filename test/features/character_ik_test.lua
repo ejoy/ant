@@ -3,10 +3,10 @@ local world = ecs.world
 
 local math3d    = require "math3d"
 
-local computil = world:interface "ant.render|entity"
+local computil = ecs.import.interface "ant.render|entity"
 
 local char_ik_test_sys = ecs.system "character_ik_test_system"
-local imaterial = world:interface "ant.asset|imaterial"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local function foot_ik_test()
     --return world:instance((entitydir / "character_ik_test.prefab"):string())

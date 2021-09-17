@@ -7,8 +7,8 @@ local bgfx = require "bgfx"
 local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
 
-local imaterial = world:interface "ant.asset|imaterial"
-local irender   = world:interface "ant.render|irender"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local irender   = ecs.import.interface "ant.render|irender"
 
 local ipl = ecs.interface "ipolyline"
 

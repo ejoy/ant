@@ -1473,15 +1473,15 @@ function m.get_current_joint()
     return current_joint and current_joint.index or 0
 end
 
-return function(w, am)
+return function(ecs, w, am)
     world = w
     icons = require "common.icons"(am)
-    iani = world:interface "ant.animation|animation"
-    ies = world:interface "ant.scene|ientity_state"
-    iom = world:interface "ant.objcontroller|obj_motion"
-    prefab_mgr = require "prefab_manager"(world)
+    iani = ecs.import.interface "ant.animation|animation"
+    ies = ecs.import.interface "ant.scene|ientity_state"
+    iom = ecs.import.interface "ant.objcontroller|obj_motion"
+    prefab_mgr = require "prefab_manager"(ecs, world)
     prefab_mgr.set_anim_view(m)
-    gizmo = require "gizmo.gizmo"(world)
+    gizmo = require "gizmo.gizmo"(ecs, world)
     local asset_mgr = import_package "ant.asset"
     logger = require "widget.log"(asset_mgr)
     return m
