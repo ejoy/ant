@@ -64,14 +64,6 @@ local function sandbox_env(loadenv, config, root, pkgname)
         return r
     end
 
-    local dependencies = {}
-    if config.dependencies then
-        for _, name in ipairs(config.dependencies) do
-            dependencies[name] = true
-        end
-    end
-    dependencies[pkgname] = true
-
     local ecs_searchers = { searcher_lua }
     function env.require_ecs(ecs, name)
         assert(type(name) == "string", ("bad argument #1 to 'require' (string expected, got %s)"):format(type(name)))
@@ -113,7 +105,7 @@ local function sandbox_env(loadenv, config, root, pkgname)
 
     function env.package_env(name)
         local error = log.error
-        if not dependencies[name] then
+        if pkgname ~= name and not config.dependencies[name] then
             error(("package `%s` has no dependencies `%s`"):format(pkgname, name))
         end
         return loadenv(name)

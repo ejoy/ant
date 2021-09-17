@@ -50,19 +50,50 @@ local function register_package(path)
     return config.name
 end
 
+local function detect_circular_dependency()
+    local status = {}
+    for pkgname in pairs(registered) do
+        status[pkgname] = false
+    end
+    local function dfs(name)
+        local dependencies = registered[name].config.dependencies
+        for pkgname in pairs(dependencies) do
+            if status[pkgname] == false then
+                status[name] = pkgname
+                dfs(pkgname)
+            elseif status[pkgname] == true then
+            else
+                log.error(("There is a circular dependency between `%s` and `%s`."):format(pkgname, status[pkgname]))
+            end
+        end
+        status[name] = true
+    end
+    for pkgname in pairs(registered) do
+        if status[pkgname] == false then
+            dfs(pkgname)
+        end
+    end
+end
+
+local function detect()
+    detect_circular_dependency()
+end
+
 local function initialize()
     for path in fs.path'/pkg':list_directory() do
         register_package(path)
     end
     for pkgname, info in pairs(registered) do
-        local dependencies = info.config.dependencies
-        if dependencies then
-            for _, depname in ipairs(dependencies) do
+        local dependencies = {}
+        if info.config.dependencies then
+            for _, depname in ipairs(info.config.dependencies) do
                 if not registered[depname] then
                     error(("package `%s` has undefined dependencies `%s`"):format(pkgname, depname))
                 end
+                dependencies[depname] = true
             end
         end
+        info.config.dependencies = dependencies
     end
 end
 
@@ -77,4 +108,5 @@ return {
     import = import,
     findenv = findenv,
     loadenv = loadenv,
+    detect = detect,
 }
