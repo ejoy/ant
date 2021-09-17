@@ -266,9 +266,10 @@ local function init(w, config)
 	w._initializing = true
 	w._class = { unique = {} }
 	w._decl = interface.new(function(packname, filename)
-		local file = fs.path "/pkg" / packname / filename
-		log.info(("Import decl %q"):format(file:string()))
-		return assert(fs.loadfile(file))
+		--TODO
+		local file = "/pkg/"..packname.."/"..filename
+		log.info(("Import decl %q"):format(file))
+		return assert(loadfile(file))
 	end)
 	w._import = create_importor(w)
 	w._set_methods = setmetatable({}, {
