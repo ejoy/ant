@@ -2,14 +2,14 @@ local ecs = ...
 local world = ecs.world
 local math3d = require "math3d"
 
-local ientity = world:interface "ant.render|entity"
+local ientity = ecs.import.interface "ant.render|entity"
 local st_sys = ecs.system "shadow_test_system"
 
 local mc = import_package "ant.math".constant
-local ies = world:interface "ant.scene|ientity_state"
-local imaterial = world:interface "ant.asset|imaterial"
-local ilight = world:interface "ant.render|light"
-local iom = world:interface "ant.objcontroller|obj_motion"
+local ies = ecs.import.interface "ant.scene|ientity_state"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local ilight = ecs.import.interface "ant.render|light"
+local iom = ecs.import.interface "ant.objcontroller|obj_motion"
 
 function st_sys:init()
 	world:deprecated_create_entity {

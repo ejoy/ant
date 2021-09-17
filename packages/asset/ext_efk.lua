@@ -13,10 +13,9 @@ return {
     loader = function (filename)
         local path = fs.path(filename)
         local c = read_file(path)
-        local dir = path:remove_filename():string()
         return {
             rawdata = c,
-            filedir = dir
+            filename = path:string()
         }
     end,
     unloader = function (res)

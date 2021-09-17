@@ -12,7 +12,7 @@ local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
 local fbmgr			= require "framebuffer_mgr"
 local samplerutil	= require "sampler"
-local icamera		= world:interface "ant.camera|camera"
+local icamera		= ecs.import.interface "ant.camera|camera"
 
 local wmt = ecs.transform "world_matrix_transform"
 local function set_world_matrix(rc)

@@ -12,7 +12,7 @@ function object:on_ready()
 end
 
 function object:on_message(msg)
-    print(object, msg)
+    --print(object, msg)
 end
 
 function object:on_update()

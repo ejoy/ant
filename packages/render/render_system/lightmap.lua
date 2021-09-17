@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local imaterial = world:interface "ant.asset|imaterial"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 local assetmgr = import_package "ant.asset"
 
 local lm_mount = ecs.action "lightmap_mount"

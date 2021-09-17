@@ -8,12 +8,12 @@ local bgfx		= require "bgfx"
 
 
 local mc		= import_package "ant.math".constant
-local iom		= world:interface "ant.objcontroller|obj_motion"
-local ishadow	= world:interface "ant.render|ishadow"
-local ilight	= world:interface "ant.render|light"
-local itimer	= world:interface "ant.timer|itimer"
-local icamera	= world:interface "ant.camera|camera"
-local iibl		= world:interface "ant.render.ibl|iibl"
+local iom		= ecs.import.interface "ant.objcontroller|obj_motion"
+local ishadow	= ecs.import.interface "ant.render|ishadow"
+local ilight	= ecs.import.interface "ant.render|light"
+local itimer	= ecs.import.interface "ant.timer|itimer"
+local icamera	= ecs.import.interface "ant.camera|camera"
+local iibl		= ecs.import.interface "ant.render.ibl|iibl"
 local isp = ecs.interface "isystem_properties"
 
 local flags = sampler.sampler_flag {
@@ -194,7 +194,7 @@ local function update_csm_properties()
 end
 
 local function update_omni_shadow_properties()
-	-- local ios = world:interface "ant.render|iomni_shadow"
+	-- local ios = ecs.import.interface "ant.render|iomni_shadow"
 	-- local s = ios.setting()
 	-- system_properties["s_omni_shadowmap"].texture.handle = ios.fb_index()
 

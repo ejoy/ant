@@ -61,27 +61,24 @@ local function bgfx_init(args)
 	
 	bgfx.init(args)
 	hw.get_caps()
+	--TODO
 	math3d.set_homogeneous_depth(caps.homogeneousDepth)
 	math3d.homogeneous_depth = caps.homogeneousDepth
 	math3d.set_origin_bottom_left(caps.originBottomLeft)
 	math3d.origin_bottom_left = caps.originBottomLeft
 end
 
-function hw.update_identity()
-	local ltask = require "ltask"
+function hw.get_identity()
     local os = platform.OS
     local renderer = hw.get_caps().rendererType
 
 	local view_setting = math3d.homogeneous_depth and "_hd" or ""
 	view_setting = view_setting .. (math3d.origin_bottom_left and "_obl" or "")
-	local v = (os.."_"..renderer .. view_setting):lower()
-	ltask.call(ltask.uniqueservice "resource", "set_identity", v)
-	import_package "ant.compile_resource".set_identity(v)
+	return (os.."_"..renderer .. view_setting):lower()
 end
 
 function hw.init(args)
 	bgfx_init(args)
-	hw.update_identity()
 end
 
 function hw.dpi()

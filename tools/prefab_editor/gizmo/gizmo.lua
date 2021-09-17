@@ -232,9 +232,9 @@ function gizmo:reset_scale_axis_color()
 	imaterial.set_property(self.uniform_scale_eid, uname, gizmo_const.COLOR_GRAY)
 end
 
-return function(w)
+return function(ecs, w)
     world = w
-    imaterial = world:interface "ant.asset|imaterial"
-    ies = world:interface "ant.scene|ientity_state"
+    imaterial = ecs.import.interface "ant.asset|imaterial"
+    ies = ecs.import.interface "ant.scene|ientity_state"
     return gizmo
 end

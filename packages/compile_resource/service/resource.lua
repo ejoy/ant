@@ -1,10 +1,9 @@
-package.path = "engine/?.lua"
-require "bootstrap"
-
 local cr       = import_package "ant.compile_resource"
 local bgfx     = require "bgfx"
 local datalist = require "datalist"
 local fastio   = require "fastio"
+
+cr.init()
 
 local textures = {}
 
@@ -82,10 +81,6 @@ local DefaultTexture = createTexture {
 local queue = {}
 
 local S = {}
-
-function S.set_identity(v)
-    cr.set_identity(v)
-end
 
 function S.texture_create(name)
     local res = textures[name]

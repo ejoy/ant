@@ -1,3 +1,7 @@
 return {
-    name = "ant.character"
+    name = "ant.character",
+    dependencies = {
+        "ant.collision",
+        "ant.math",
+    }
 }

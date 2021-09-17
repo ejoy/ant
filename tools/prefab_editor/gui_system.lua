@@ -4,33 +4,33 @@ local math3d    = require "math3d"
 local imgui     = require "imgui"
 local rhwi      = import_package "ant.hwi"
 local asset_mgr = import_package "ant.asset"
-local effekseer_filename_mgr = world:interface "ant.effekseer|filename_mgr"
-local irq       = world:interface "ant.render|irenderqueue"
-local ies       = world:interface "ant.scene|ientity_state"
-local iom       = world:interface "ant.objcontroller|obj_motion"
-local iss       = world:interface "ant.scene|iscenespace"
-local icoll     = world:interface "ant.collision|collider"
-local drawer    = world:interface "ant.render|iwidget_drawer"
-local imaterial   = world:interface "ant.asset|imaterial"
+local effekseer_filename_mgr = ecs.import.interface "ant.effekseer|filename_mgr"
+local irq       = ecs.import.interface "ant.render|irenderqueue"
+local ies       = ecs.import.interface "ant.scene|ientity_state"
+local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
+local iss       = ecs.import.interface "ant.scene|iscenespace"
+local icoll     = ecs.import.interface "ant.collision|collider"
+local drawer    = ecs.import.interface "ant.render|iwidget_drawer"
+local imaterial   = ecs.import.interface "ant.asset|imaterial"
 local vfs       = require "vfs"
 local access    = require "vfs.repoaccess"
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 local hierarchy = require "hierarchy_edit"
-local resource_browser = require "widget.resource_browser"(world, asset_mgr)
-local anim_view = require "widget.animation_view"(world, asset_mgr)
-local material_view = require "widget.material_view"(world, asset_mgr)
+local resource_browser = require "widget.resource_browser"(ecs, world, asset_mgr)
+local anim_view = require "widget.animation_view"(ecs, world, asset_mgr)
+local material_view = require "widget.material_view"(ecs, world, asset_mgr)
 local log_widget = require "widget.log"(asset_mgr)
 local console_widget = require "widget.console"(asset_mgr)
-local toolbar = require "widget.toolbar"(world, asset_mgr)
-local scene_view = require "widget.scene_view"(world, asset_mgr)
-local inspector = require "widget.inspector"(world)
-local gridmesh_view = require "widget.gridmesh_view"(world)
+local toolbar = require "widget.toolbar"(ecs, world, asset_mgr)
+local scene_view = require "widget.scene_view"(ecs, world, asset_mgr)
+local inspector = require "widget.inspector"(ecs, world)
+local gridmesh_view = require "widget.gridmesh_view"(ecs, world)
 local uiconfig = require "widget.config"
-local prefab_mgr = require "prefab_manager"(world)
-local menu = require "widget.menu"(world, prefab_mgr)
-local camera_mgr = require "camera_manager"(world)
-local gizmo = require "gizmo.gizmo"(world)
+local prefab_mgr = require "prefab_manager"(ecs, world)
+local menu = require "widget.menu"(ecs, world, prefab_mgr)
+local camera_mgr = require "camera_manager"(ecs, world)
+local gizmo = require "gizmo.gizmo"(ecs, world)
 local global_data = require "common.global_data"
 local icons = require "common.icons"(asset_mgr)
 local logger = require "widget.log"(asset_mgr)
@@ -222,8 +222,8 @@ local function show_dock_space(offset_x, offset_y)
     imgui.windows.End()
     return x,y,w,h
 end
-local iRmlUi    = world:interface "ant.rmlui|rmlui"
-local irq       = world:interface "ant.render|irenderqueue"
+local iRmlUi    = ecs.import.interface "ant.rmlui|rmlui"
+local irq       = ecs.import.interface "ant.render|irenderqueue"
 local bgfx      = require "bgfx"
 local stat_window
 local dock_x, dock_y, dock_width, dock_height
@@ -272,7 +272,7 @@ function m:ui_update()
     end
 
     if not stat_window then
-        local iRmlUi = world:interface "ant.rmlui|rmlui"
+        local iRmlUi = ecs.import.interface "ant.rmlui|rmlui"
         stat_window = iRmlUi.open "bgfx_stat.rml"
     end
     local bgfxstat = bgfx.get_stats("sdcpnmtv")
@@ -294,7 +294,7 @@ local event_window_title = world:sub {"WindowTitle"}
 local event_create = world:sub {"Create"}
 local event_gizmo = world:sub {"Gizmo"}
 
-local light_gizmo = require "gizmo.light"(world)
+local light_gizmo = require "gizmo.light"(ecs, world)
 
 local function on_target(old, new)
     local old_entity = type(old) == "table" and icamera.find_camera(old) or world[old]
@@ -332,7 +332,7 @@ local function on_update(eid)
     inspector.update_template_tranform(eid)
 end
 
-local cmd_queue = require "gizmo.command_queue"(world)
+local cmd_queue = require "gizmo.command_queue"(ecs, world)
 local event_update_aabb = world:sub {"UpdateAABB"}
 function m:handle_event()
     for _, col_eid in event_update_aabb:unpack() do

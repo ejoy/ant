@@ -302,7 +302,7 @@ function m:create(what, config)
         end
     elseif what == "enable_default_light" then
         if not self.default_light then
-            local ilight = world:interface "ant.render|light" 
+            local ilight = ecs.import.interface "ant.render|light" 
             local _, newlight = ilight.create({
                 transform = {t = {0, 5, 0}, r = {math.rad(130), 0, 0}},
                 name = "directional" .. gen_light_id(),
@@ -322,7 +322,7 @@ function m:create(what, config)
         end
     elseif what == "light" then
         if config.type == "directional" or config.type == "point" or config.type == "spot" then      
-            local ilight = world:interface "ant.render|light" 
+            local ilight = ecs.import.interface "ant.render|light" 
             local _, newlight = ilight.create({
                 transform = {t = {0, 5, 0},r = {math.rad(130), 0, 0}},
                 name = config.type .. gen_light_id(),
@@ -858,16 +858,16 @@ function m.set_anim_view(aview)
     anim_view = aview
 end
 
-return function(w)
+return function(ecs, w)
     world       = w
-    camera_mgr  = require "camera_manager"(world)
-    iom         = world:interface "ant.objcontroller|obj_motion"
-    iss         = world:interface "ant.scene|iscenespace"
+    camera_mgr  = require "camera_manager"(ecs, world)
+    iom         = ecs.import.interface "ant.objcontroller|obj_motion"
+    iss         = ecs.import.interface "ant.scene|iscenespace"
     worldedit   = import_package "ant.editor".worldedit(world)
-    ilight      = world:interface "ant.render|light"
-    light_gizmo = require "gizmo.light"(world)
-    gizmo = require "gizmo.gizmo"(world)
-    geo_utils   = require "editor.geometry_utils"(world)
+    ilight      = ecs.import.interface "ant.render|light"
+    light_gizmo = require "gizmo.light"(ecs, world)
+    gizmo = require "gizmo.gizmo"(ecs, world)
+    geo_utils   = require "editor.geometry_utils"(ecs, world)
     local asset_mgr = import_package "ant.asset"
     logger      = require "widget.log"(asset_mgr)
     return m

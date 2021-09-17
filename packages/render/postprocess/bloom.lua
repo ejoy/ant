@@ -9,8 +9,8 @@ local sampler   = require "sampler"
 
 local bloom_sys = ecs.system "bloom_system"
 
-local ipp = world:interface "ant.render|postprocess"
-local imaterial = world:interface "ant.asset|imaterial"
+local ipp = ecs.import.interface "ant.render|postprocess"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local bloom_chain_count = 4
 

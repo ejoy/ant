@@ -1,95 +1,23 @@
 local interface = require "interface"
-local fs = require "filesystem"
 local pm = require "packagemanager"
-
-local function sourceinfo()
-	local info = debug.getinfo(3, "Sl")
-	return string.format("%s(%d)", info.source, info.currentline)
-end
-
-local function keys(tbl)
-	local k = {}
-	for _, v in ipairs(tbl) do
-		k[v] = true
-	end
-	return k
-end
+local create_ecs = require "ecs"
 
 local function splitname(fullname)
     return fullname:match "^([^|]*)|(.*)$"
 end
 
-local function import_impl(w, package, file)
-	return pm.import_ecs(package, file, w._ecs[package])
-end
+local OBJECT = {"system","policy","policy_v2","transform","interface","component","component_v2","pipeline","action"}
 
-local function register_pkg(w, package)
-	local ecs = { world = w, method = w._set_methods }
-	local declaration = w._decl
-	local import = w._import
-	local function register(what)
-		local class_set = {}
-		ecs[what] = function(name)
-			local fullname = name
-			if what ~= "action" and what ~= "component" then
-				fullname = package .. "|" .. name
+local function solve_object(o, w, what, fullname)
+	local decl = w._decl[what][fullname]
+	if decl and decl.method then
+		for _, name in ipairs(decl.method) do
+			if not o[name] then
+				error(("`%s`'s `%s` method is not defined."):format(fullname, name))
 			end
-			local r = class_set[fullname]
-			if r == nil then
-				log.info("Register", #what<8 and what.."  " or what, fullname)
-				r = {}
-				class_set[fullname] = r
-				local decl = declaration[what][fullname]
-				if not decl then
-					error(("%s `%s` has no declaration."):format(what, fullname))
-				end
-				if not decl.method then
-					error(("%s `%s` has no method."):format(what, fullname))
-				end
-				decl.source = {}
-				decl.defined = sourceinfo()
-				local callback = keys(decl.method)
-				local object = import[what](fullname)
-				setmetatable(r, {
-					__pairs = function ()
-						return pairs(object)
-					end,
-					__index = object,
-					__newindex = function(_, key, func)
-						if type(func) ~= "function" then
-							error("Method should be a function")
-						end
-						if callback[key] == nil then
-							error("Invalid callback function " .. key)
-						end
-						if decl.source[key] ~= nil then
-							error("Method " .. key .. " has already defined at " .. decl.source[key])
-						end
-						decl.source[key] = sourceinfo()
-						object[key] = func
-					end,
-				})
-			end
-			return r
 		end
 	end
-	register "system"
-	register "transform"
-	register "interface"
-	register "action"
-	register "component"
-	function ecs.require(fullname)
-		local pkg, file = splitname(fullname)
-		if not pkg then
-			pkg = package
-			file = fullname
-		end
-		return import_impl(w, pkg, file)
-	end
-	w._ecs[package] = ecs
-	return ecs
 end
-
 
 local function solve_policy(fullname, v)
 	local _, policy_name = splitname(fullname)
@@ -114,19 +42,6 @@ local check_map = {
 	pipeline = "pipeline",
 	action = "action",
 }
-
-local OBJECT = {"system","policy","policy_v2","transform","interface","component","component_v2","pipeline","action"}
-
-local function solve_object(o, w, what, fullname)
-	local decl = w._decl[what][fullname]
-	if decl and decl.method then
-		for _, name in ipairs(decl.method) do
-			if not o[name] then
-				error(("`%s`'s `%s` method is not defined."):format(fullname, name))
-			end
-		end
-	end
-end
 
 local function table_append(t, a)
 	table.move(a, 1, #a, #t+1, t)
@@ -179,13 +94,14 @@ local function create_importor(w)
 	local import = {}
     for _, objname in ipairs(OBJECT) do
 		w._class[objname] = setmetatable({}, {__index=function(_, name)
-			local res = import[objname](name)
+			--TODO
+			local res = import[objname](nil, name)
 			if res then
 				solve_object(res, w, objname, name)
 			end
 			return res
 		end})
-		import[objname] = function (name)
+		import[objname] = function (package, name)
 			local class = w._class[objname]
 			local v = rawget(class, name)
             if v then
@@ -204,14 +120,14 @@ local function create_importor(w)
 				end
                 error(("invalid %s name: `%s`."):format(objname, name))
             end
-			log.info("Import  ", objname, name)
+			log.debug("Import  ", objname, name)
 			local res = copy[objname](v)
 			class[name] = res
 			for _, tuple in ipairs(v.value) do
 				local what, k = tuple[1], tuple[2]
 				local attrib = check_map[what]
 				if attrib then
-					import[attrib](k)
+					import[attrib](package, k)
 				end
 				if what == "unique_component" then
 					w._class.unique[k] = true
@@ -222,8 +138,10 @@ local function create_importor(w)
 			end
 			if v.implement then
 				for _, impl in ipairs(v.implement) do
-					impl = impl:gsub("^(.*)%.lua$", "%1")
-					import_impl(w, v.packname, impl)
+					local pkg = v.packname
+					local file = impl:gsub("^(.*)%.lua$", "%1")
+					pm.findenv(package, pkg)
+						.include_ecs(w._ecs[pkg], file)
 				end
 			end
 			return res
@@ -248,10 +166,10 @@ end
 local function init(w, config)
 	w._initializing = true
 	w._class = { unique = {} }
-	w._decl = interface.new(function(packname, filename)
-		local file = fs.path "/pkg" / packname / filename
-		log.info(("Import decl %q"):format(file:string()))
-		return assert(fs.loadfile(file))
+	w._decl = interface.new(function(current, packname, filename)
+		local file = "/pkg/"..packname.."/"..filename
+		log.debug(("Import decl %q"):format(file))
+		return assert(pm.findenv(current, packname).loadfile(file))
 	end)
 	w._import = create_importor(w)
 	w._set_methods = setmetatable({}, {
@@ -266,7 +184,7 @@ local function init(w, config)
 		end,
 	})
 	setmetatable(w._ecs, {__index = function (_, package)
-		return register_pkg(w, package)
+		return create_ecs(w, package)
 	end})
 
 	config.ecs = config.ecs or {}
@@ -283,7 +201,7 @@ local function init(w, config)
 	for _, objname in ipairs(OBJECT) do
 		if config.ecs[objname] then
 			for _, k in ipairs(config.ecs[objname]) do
-				import[objname](k)
+				import[objname](nil, k)
 			end
 		end
 	end
@@ -302,5 +220,4 @@ end
 
 return {
 	init = init,
-	import_decl = import_decl,
 }

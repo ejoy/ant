@@ -111,25 +111,28 @@ end
 local function anim_group_play_group(eid, ...)
     local group_eid = get_anim_group_eid(eid, current_anim.name)
     if not group_eid then return end
+    local anim_state = iani.create_state()
     for _, anim_eid in ipairs(group_eid) do
         iom.set_position(world[world[anim_eid].parent].parent, {0.0,0.0,0.0})
-        iani.play_group(anim_eid, ...)
+        iani.play_group(anim_eid, anim_state, ...)
     end
 end
 local function anim_group_play_clip(eid, ...)
     local group_eid = get_anim_group_eid(eid, current_anim.name)
     if not group_eid then return end
+    local anim_state = iani.create_state()
     for _, anim_eid in ipairs(group_eid) do
 	    iom.set_position(world[world[anim_eid].parent].parent, {0.0,0.0,0.0})
-        iani.play_clip(anim_eid, ...)
+        iani.play_clip(anim_eid, anim_state, ...)
     end
 end
 local function anim_group_play(eid, ...)
     local group_eid = get_anim_group_eid(eid, current_anim.name)
     if not group_eid then return end
+    local anim_state = iani.create_state()
     for _, anim_eid in ipairs(group_eid) do
         iom.set_position(world[world[anim_eid].parent].parent, {0.0,0.0,0.0})
-        iani.play(anim_eid, ...)
+        iani.play(anim_eid, anim_state, ...)
     end
 end
 
@@ -1473,15 +1476,15 @@ function m.get_current_joint()
     return current_joint and current_joint.index or 0
 end
 
-return function(w, am)
+return function(ecs, w, am)
     world = w
     icons = require "common.icons"(am)
-    iani = world:interface "ant.animation|animation"
-    ies = world:interface "ant.scene|ientity_state"
-    iom = world:interface "ant.objcontroller|obj_motion"
-    prefab_mgr = require "prefab_manager"(world)
+    iani = ecs.import.interface "ant.animation|animation"
+    ies = ecs.import.interface "ant.scene|ientity_state"
+    iom = ecs.import.interface "ant.objcontroller|obj_motion"
+    prefab_mgr = require "prefab_manager"(ecs, world)
     prefab_mgr.set_anim_view(m)
-    gizmo = require "gizmo.gizmo"(world)
+    gizmo = require "gizmo.gizmo"(ecs, world)
     local asset_mgr = import_package "ant.asset"
     logger = require "widget.log"(asset_mgr)
     return m

@@ -1,4 +1,8 @@
 return {
 	name = "ant.objcontroller",
-	entry = "objcontroller"
+    dependencies = {
+        "ant.camera",
+        "ant.math",
+        "ant.render",
+    }
 }

@@ -70,7 +70,7 @@ function m.gen_init_system()
 local ecs = ...
 local world = ecs.world
 local m = ecs.system 'init_system'
-local irq = world:interface "ant.render|irenderqueue"
+local irq = ecs.import.interface "ant.render|irenderqueue"
 
 function m:init()
     print("my system init.")

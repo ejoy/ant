@@ -5,8 +5,8 @@ local w = world.w
 local declmgr	= require "vertexdecl_mgr"
 local math3d	= require "math3d"
 local bgfx		= require "bgfx"
-local iom		= world:interface "ant.objcontroller|obj_motion"
-local ies		= world:interface "ant.scene|ientity_state"
+local iom		= ecs.import.interface "ant.objcontroller|obj_motion"
+local ies		= ecs.import.interface "ant.scene|ientity_state"
 
 local setting	= import_package "ant.settings".setting
 local enable_cluster_shading = setting:data().graphic.lighting.cluster_shading ~= 0

@@ -6,7 +6,7 @@ local which_cr
 local recording = false
 local kb_mb = world:sub{"keyboard"}
 
-local icr = world:interface "ant.camera|icamera_recorder"
+local icr = ecs.import.interface "ant.camera|icamera_recorder"
 function cr_test.data_changed()
     for _, code, press, state in kb_mb:unpack() do
         if code == "RETURN" and press == 0 then 

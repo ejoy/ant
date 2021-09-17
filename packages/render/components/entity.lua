@@ -12,10 +12,10 @@ local geolib    = geopkg.geometry
 local mathpkg   = import_package "ant.math"
 local mc		= mathpkg.constant
 
-local ies = world:interface "ant.scene|ientity_state"
-local imaterial = world:interface "ant.asset|imaterial"
-local irender = world:interface "ant.render|irender"
-local imesh 	= world:interface "ant.asset|imesh"
+local ies = ecs.import.interface "ant.scene|ientity_state"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local irender = ecs.import.interface "ant.render|irender"
+local imesh 	= ecs.import.interface "ant.asset|imesh"
 local bgfx = require "bgfx"
 
 local function create_dynamic_mesh(layout, vb, ib)
@@ -158,7 +158,7 @@ function ientity.create_grid_entity_simple(name, w, h, unit, srt)
 end
 
 function ientity.create_grid_entity(name, width, height, unit, linewidth)
-	local ipl = world:interface "ant.render|ipolyline"
+	local ipl = ecs.import.interface "ant.render|ipolyline"
 	
 	local hw = width * 0.5
 	local hw_len = hw * unit

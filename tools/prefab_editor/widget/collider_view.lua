@@ -118,7 +118,7 @@ end
 
 return function(w)
     world   = w
-    iom = world:interface "ant.objcontroller|obj_motion"
+    iom = ecs.import.interface "ant.objcontroller|obj_motion"
     prefab_mgr = require "prefab_manager"(world)
     require "widget.base_view"(world)
     anim_view = require "widget.animation_view"(world, import_package "ant.asset")

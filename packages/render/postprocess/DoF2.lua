@@ -5,10 +5,10 @@ local world = ecs.world
 -- local viewidmgr = require "viewid_mgr"
 -- local fbmgr     = require "framebuffer_mgr"
 
--- local ipp       = world:interface "ant.render|postprocess"
--- local iom       = world:interface "ant.objcontroller|obj_motion"
--- local imaterial = world:interface "ant.asset|imaterial"
--- local icamera   = world:interface "ant.camera|camera"
+-- local ipp       = ecs.import.interface "ant.render|postprocess"
+-- local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
+-- local imaterial = ecs.import.interface "ant.asset|imaterial"
+-- local icamera   = ecs.import.interface "ant.camera|camera"
 
 -- local mathpkg   = import_package "ant.math"
 -- local mc        = mathpkg.constant

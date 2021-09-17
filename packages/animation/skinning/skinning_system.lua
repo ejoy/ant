@@ -18,7 +18,7 @@ end
 -- skinning system
 local skinning_sys = ecs.system "skinning_system"
 
-local iom = world:interface "ant.objcontroller|obj_motion"
+local iom = ecs.import.interface "ant.objcontroller|obj_motion"
 local r2l_mat<const> = math3d.ref(math3d.matrix{s={1.0, 1.0, -1.0}})
 function skinning_sys:skin_mesh()
 	for e in w:select "pose_result:in skinning:in" do

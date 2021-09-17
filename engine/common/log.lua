@@ -13,9 +13,16 @@ else
 end
 
 local modes = {
+    'debug',
     'info',
     'warn',
     'error'
+}
+local color = {
+    debug = nil,
+    info = nil,
+    warn = "\x1b[33m",
+    error = "\x1b[31m",
 }
 local levels = {}
 
@@ -48,7 +55,11 @@ for i, name in ipairs(modes) do
         end
         local info = debug.getinfo(m.skip or 2, 'Sl')
         m.skip = nil
-        LOG(('[%-5s](%s:%3d) %s'):format(name:upper(), info.short_src, info.currentline, packstring(...)))
+        local text = ('[%-5s](%s:%3d) %s'):format(name:upper(), info.short_src, info.currentline, packstring(...))
+        if color[name] then
+            text = color[name]..text.."\x1b[0m"
+        end
+        LOG(text)
     end
 end
 

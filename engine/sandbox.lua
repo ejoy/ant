@@ -1,9 +1,10 @@
 local fs = require "filesystem"
 
-local function sandbox_env(root, pkgname)
+local function sandbox_env(loadenv, config, root, pkgname)
     local env = setmetatable({}, {__index=_G})
     local _LOADED = {}
     local _ECS_LOADED = {}
+    local _ECS_LOADING = {}
 
     local function searchpath(name, path)
         name = string.gsub(name, '%.', '/')
@@ -22,7 +23,7 @@ local function sandbox_env(root, pkgname)
         if not path then
             return err1
         end
-        local func, err2 = fs.loadfile(fs.path(path))
+        local func, err2 = loadfile(path)
         if not func then
             error(("error loading module '%s' from file '%s':\n\t%s"):format(name, path, err2))
         end
@@ -64,21 +65,54 @@ local function sandbox_env(root, pkgname)
     end
 
     local ecs_searchers = { searcher_lua }
-    function env.require_ecs(name, ecs)
+    function env.require_ecs(ecs, name)
         assert(type(name) == "string", ("bad argument #1 to 'require' (string expected, got %s)"):format(type(name)))
         local p = _ECS_LOADED[name]
         if p ~= nil then
             return p
         end
+        if _ECS_LOADING[name] then
+            error(("Recursive load module '%s'"):format(name))
+        end
         local initfunc = require_load(name, ecs_searchers)
         debug.setupvalue(initfunc, 1, env)
-        _ECS_LOADED[name] = true
         local r = initfunc(ecs)
         if r == nil then
             r = true
         end
         _ECS_LOADED[name] = r
         return r
+    end
+    function env.include_ecs(ecs, name)
+        assert(type(name) == "string", ("bad argument #1 to 'require' (string expected, got %s)"):format(type(name)))
+        local p = _ECS_LOADED[name]
+        if p ~= nil then
+            return
+        end
+        if _ECS_LOADING[name] then
+            return
+        end
+        _ECS_LOADING[name] = true
+        local initfunc = require_load(name, ecs_searchers)
+        debug.setupvalue(initfunc, 1, env)
+        local r = initfunc(ecs)
+        if r == nil then
+            r = true
+        end
+        _ECS_LOADED[name] = r
+        _ECS_LOADING[name] = nil
+    end
+
+    function env.package_env(name)
+        local error = log.error
+        if pkgname ~= name and not config.dependencies[name] then
+            error(("package `%s` has no dependencies `%s`"):format(pkgname, name))
+        end
+        return loadenv(name)
+    end
+
+    function env.import_package(name)
+        return env.package_env(name)._ENTRY
     end
 
     env.package = {
@@ -94,7 +128,6 @@ local function sandbox_env(root, pkgname)
         env.package.searchers[i] = searcher
     end
 	env.package.searchers[2] = searcher_lua
-	env._PACKAGENAME = pkgname
     return env
 end
 

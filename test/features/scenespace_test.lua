@@ -3,7 +3,7 @@ local world = ecs.world
 
 local sp_test_sys = ecs.system "scenespace_test_system"
 
-local ies = world:interface "ant.scene|ientity_state"
+local ies = ecs.import.interface "ant.scene|ientity_state"
 
 local function material_hierarchy_test()
     local root = world:deprecated_create_entity {

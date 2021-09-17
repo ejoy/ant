@@ -77,6 +77,39 @@ dofile "engine/debugger.lua"
 ]]
 		end
 	end
+
+	if config.support_package then
+		initstr = initstr .. [[
+package.path = "engine/?.lua"
+require "bootstrap"
+
+local rawsearchpath = package.searchpath
+package.searchpath = function(name, path, sep, dirsep)
+	local package, file = name:match "^([^|]*)|(.*)$"
+	if package and file then
+		path = path:gsub("%$%{([^}]*)%}", {
+			package = "/pkg/"..package,
+		})
+		name = file
+	end
+	return rawsearchpath(name, path, sep, dirsep)
+end
+
+local pm = require "packagemanager"
+local rawloadfile = loadfile
+function loadfile(filename, mode, env)
+	if env == nil then
+		local package, file = filename:match "^/pkg/([^/]+)/(.+)$"
+		if package and file then
+			return loadfile(filename, mode or "bt", pm.loadenv(package))
+		end
+		return rawloadfile(filename, mode)
+	end
+	return rawloadfile(filename, mode, env)
+end
+]]
+	end
+
 	local servicelua = searchpath "service"
 	init_exclusive_service = initstr .. ([[dofile %q]]):format(servicelua)
 	config.init_service = initstr .. ([[

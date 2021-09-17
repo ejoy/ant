@@ -57,7 +57,7 @@ function m.show()
     imgui.windows.PopStyleVar(2)
 end
 
-return function(w, am)
+return function(ecs, w, am)
     world = w
     asset_mgr = am
     return m

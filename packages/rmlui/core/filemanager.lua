@@ -1,10 +1,9 @@
 local fs = require "filesystem"
 
 local cr = import_package "ant.compile_resource"
-local hwi = import_package "ant.hwi"
 local lfont = require "font"
 
-hwi.update_identity()
+cr.init()
 
 local m = {}
 

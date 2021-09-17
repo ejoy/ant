@@ -6,7 +6,6 @@ local math3d    = require "math3d"
 
 local mc        = import_package "ant.math".constant
 local defcomp 	= import_package "ant.general".default
-local irq       = world:interface "ant.render|irenderqueue"
 
 local cmm = ecs.transform "camera_motion_transform"
 
@@ -88,29 +87,9 @@ function ic.create(info)
     }
 end
 
-local function bind_queue(camera_ref, queuename)
-    irq.set_camera(queuename, camera_ref)
-end
-
-local function has_queue(qn)
-    for _ in w:select(qn) do
-        return true
-    end
-end
-
-function ic.bind(cameraref, which_queue)
-    if not has_queue(which_queue) then
-        error(("not find queue:%s"):format(which_queue))
-    end
-
-    bind_queue(cameraref, which_queue)
-end
-
-ic.bind_queue = bind_queue
-
 function ic.calc_viewmat(cameraref)
     --TODO
-    local iobj_motion = world:interface "ant.objcontroller|obj_motion"
+    local iobj_motion = ecs.import.interface "ant.objcontroller|obj_motion"
     return iobj_motion.calc_viewmat(cameraref)
 end
 
@@ -184,7 +163,7 @@ function ic.set_frustum_far(cameraref, f)
     frustum_changed(cameraref, "f", f)
 end
 
-local iom = world:interface "ant.objcontroller|obj_motion"
+local iom = ecs.import.interface "ant.objcontroller|obj_motion"
 function ic.lookto(eid, ...)
     iom.lookto(eid, ...)
 end
@@ -254,20 +233,6 @@ function cameraview_sys:update_mainview_camera()
         update_camera(v.camera_ref)
     end
 end
-
-local bm = ecs.action "bind_camera"
-function bm.init(prefab, idx, value)
-    local eid
-    if not value.camera_ref then
-        eid = prefab[idx]
-    else
-        eid = prefab[idx][value.camera_ref]
-    end
-    
-    ic.bind(eid, value.which)
-end
-
-ecs.method.bind_camera = ic.bind
 
 local dof_trans = ecs.transform "dof_transform"
 function dof_trans.process_entity(e)

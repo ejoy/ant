@@ -1,4 +1,6 @@
 return {
     name = "ant.font",
-    entry = "main"
+    entry = "main",
+    dependencies = {
+    }
 }

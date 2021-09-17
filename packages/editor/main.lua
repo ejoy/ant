@@ -1,3 +1,6 @@
 return {
-	worldedit = require "worldedit"
+	worldedit = require "worldedit",
+    dependencies = {
+		"ant.asset"
+    }
 }

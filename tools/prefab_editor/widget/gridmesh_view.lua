@@ -266,7 +266,7 @@ function m.show()
     end
 end
 
-return function(w)
+return function(ecs, w)
     world = w
     return m
 end

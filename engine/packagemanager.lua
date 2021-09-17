@@ -2,10 +2,8 @@ local sandbox = require "sandbox"
 local fs  = require "filesystem"
 local dofile = dofile
 
-local initialized = false
 local pathtoname = {}
 local registered = {}
-local loaded = {}
 
 local function loadenv(name)
     local info = registered[name]
@@ -13,26 +11,16 @@ local function loadenv(name)
         error(("\n\tno package '%s'"):format(name))
     end
     if not info.env then
-        info.env = sandbox.env("/pkg/"..name, name)
+        info.env = sandbox.env(loadenv, info.config, "/pkg/"..name, name)
+        if info.config.entry then
+            info.env._ENTRY = info.env.require(info.config.entry)
+        end
     end
     return info.env
 end
 
 local function import(name)
-    if loaded[name] then
-        return loaded[name]
-    end
-    local info = registered[name]
-    if not info or not info.config.entry then
-        return error(("no package '%s'"):format(name))
-    end
-    local res = loadenv(name).require(info.config.entry)
-    if res == nil then
-        loaded[name] = false
-    else
-        loaded[name] = res
-    end
-    return loaded[name]
+    return loadenv(name)._ENTRY
 end
 
 local function register_package(path)
@@ -62,28 +50,63 @@ local function register_package(path)
     return config.name
 end
 
-local function initialize()
-    if initialized then
-        for path in fs.path'/pkg':list_directory() do
-            if not registered[path:string():sub(6)] then
-                register_package(path)
+local function detect_circular_dependency()
+    local status = {}
+    for pkgname in pairs(registered) do
+        status[pkgname] = false
+    end
+    local function dfs(name)
+        local dependencies = registered[name].config.dependencies
+        for pkgname in pairs(dependencies) do
+            if status[pkgname] == false then
+                status[name] = pkgname
+                dfs(pkgname)
+            elseif status[pkgname] == true then
+            else
+                log.error(("There is a circular dependency between `%s` and `%s`."):format(pkgname, status[pkgname]))
             end
         end
-    else
-        initialized = true
-        for path in fs.path'/pkg':list_directory() do
-            register_package(path)
+        status[name] = true
+    end
+    for pkgname in pairs(registered) do
+        if status[pkgname] == false then
+            dfs(pkgname)
         end
     end
 end
 
-local function import_ecs(name, file, ecs)
-    return loadenv(name).require_ecs(file, ecs)
+local function detect()
+    detect_circular_dependency()
+end
+
+local function initialize()
+    for path in fs.path'/pkg':list_directory() do
+        register_package(path)
+    end
+    for pkgname, info in pairs(registered) do
+        local dependencies = {}
+        if info.config.dependencies then
+            for _, depname in ipairs(info.config.dependencies) do
+                if not registered[depname] then
+                    error(("package `%s` has undefined dependencies `%s`"):format(pkgname, depname))
+                end
+                dependencies[depname] = true
+            end
+        end
+        info.config.dependencies = dependencies
+    end
 end
 
 initialize()
 import_package = import
 
+local function findenv(from, to)
+    return loadenv(from or to).package_env(to)
+end
+
 return {
-    import_ecs = import_ecs,
+    import = import,
+    findenv = findenv,
+    loadenv = loadenv,
+    detect = detect,
 }

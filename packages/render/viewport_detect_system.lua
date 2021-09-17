@@ -6,8 +6,8 @@ local fbmgr 	= require "framebuffer_mgr"
 
 local vp_detect_sys = ecs.system "viewport_detect_system"
 
-local icamera	= world:interface "ant.camera|camera"
-local irq		= world:interface "ant.render|irenderqueue"
+local icamera	= ecs.import.interface "ant.camera|camera"
+local irq		= ecs.import.interface "ant.render|irenderqueue"
 local eventResize = world:sub {"resize"}
 local rb_cache = {}
 
