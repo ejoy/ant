@@ -122,12 +122,6 @@ local function sandbox_env(loadenv, config, root, pkgname)
     function env.import_package(name)
         return env.package_env(name)._ENTRY
     end
-    function env.import_ecs(ecs, name, file)
-        return env.package_env(name).require_ecs(ecs, file)
-    end
-    function env.import_ecs_2(ecs, name, file)
-        env.package_env(name).include_ecs(ecs, file)
-    end
 
     env.package = {
         config = table.concat({"/",";","?","!","-"}, "\n"),

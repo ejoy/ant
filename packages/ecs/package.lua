@@ -1,6 +1,6 @@
 return {
     name = "ant.ecs",
-    entry = "ecs",
+    entry = "world",
     dependencies = {
     }
 }

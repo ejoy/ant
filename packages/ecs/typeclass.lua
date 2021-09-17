@@ -93,9 +93,7 @@ local function register_pkg(w, package)
 			pkg = package
 			file = fullname
 		end
-		return pm
-			.loadenv(package)
-			.package_env(pkg)
+		return pm.findenv(package, pkg)
 			.require_ecs(w._ecs[pkg], file)
 	end
 	ecs.import = {}
@@ -238,8 +236,7 @@ local function create_importor(w)
 				for _, impl in ipairs(v.implement) do
 					local pkg = v.packname
 					local file = impl:gsub("^(.*)%.lua$", "%1")
-					pm.loadenv(package or pkg)
-						.package_env(pkg)
+					pm.findenv(package, pkg)
 						.include_ecs(w._ecs[pkg], file)
 				end
 			end
@@ -265,11 +262,10 @@ end
 local function init(w, config)
 	w._initializing = true
 	w._class = { unique = {} }
-	w._decl = interface.new(function(packname, filename)
-		--TODO
+	w._decl = interface.new(function(current, packname, filename)
 		local file = "/pkg/"..packname.."/"..filename
 		log.info(("Import decl %q"):format(file))
-		return assert(loadfile(file))
+		return assert(pm.findenv(current, packname).loadfile(file))
 	end)
 	w._import = create_importor(w)
 	w._set_methods = setmetatable({}, {

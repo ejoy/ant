@@ -69,7 +69,12 @@ end
 initialize()
 import_package = import
 
+local function findenv(from, to)
+    return loadenv(from or to).package_env(to)
+end
+
 return {
     import = import,
+    findenv = findenv,
     loadenv = loadenv,
 }
