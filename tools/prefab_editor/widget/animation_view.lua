@@ -112,31 +112,28 @@ local function anim_group_stop_effect(eid)
     end
 end
 
-local function anim_group_play_group(eid, ...)
+local function anim_group_play_group(eid, anim_state)
     local group_eid = get_anim_group_eid(eid, current_anim.name)
     if not group_eid then return end
-    local anim_state = {}
     for _, anim_eid in ipairs(group_eid) do
         iom.set_position(world[world[anim_eid].parent].parent, {0.0,0.0,0.0})
-        iani.play_group(anim_eid, anim_state, ...)
+        iani.play_group(anim_eid, anim_state)
     end
 end
-local function anim_group_play_clip(eid, ...)
+local function anim_group_play_clip(eid, anim_state)
     local group_eid = get_anim_group_eid(eid, current_anim.name)
     if not group_eid then return end
-    local anim_state = {}
     for _, anim_eid in ipairs(group_eid) do
 	    iom.set_position(world[world[anim_eid].parent].parent, {0.0,0.0,0.0})
-        iani.play_clip(anim_eid, anim_state, ...)
+        iani.play_clip(anim_eid, anim_state)
     end
 end
-local function anim_group_play(eid, ...)
+local function anim_group_play(eid, anim_state)
     local group_eid = get_anim_group_eid(eid, current_anim.name)
     if not group_eid then return end
-    local anim_state = {}
     for _, anim_eid in ipairs(group_eid) do
         iom.set_position(world[world[anim_eid].parent].parent, {0.0,0.0,0.0})
-        iani.play(anim_eid, anim_state, ...)
+        iani.play(anim_eid, anim_state)
     end
 end
 
@@ -205,7 +202,7 @@ local function set_current_anim(anim_name)
     current_collider = nil
     current_event = nil
     
-    anim_group_play(current_eid, anim_name, 0)
+    anim_group_play(current_eid, {name = anim_name, loop = false, manual = false})
     anim_group_set_time(current_eid, 0)
     anim_group_pause(current_eid, true)
     -- if not iani.is_playing(current_eid) then
@@ -869,7 +866,7 @@ local function show_clips()
         if imgui.widget.Selectable(cs.name, current_clip and (current_clip.name == cs.name), 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
             set_current_clip(cs)
             if imgui.util.IsMouseDoubleClicked(0) then
-                anim_group_play_clip(current_eid, cs.name, 0)
+                anim_group_play_clip(current_eid, {name = cs.name, loop = false, manual = false})
                 anim_group_set_loop(current_eid, false)
             end
         end
@@ -925,7 +922,7 @@ local function show_groups()
             gp.name_ui.text = gp.name
             current_group = gp
             if imgui.util.IsMouseDoubleClicked(0) then
-                anim_group_play_group(current_eid, gp.name, 0)
+                anim_group_play_group(current_eid, {name = gp.name, loop = false, manual = false})
                 anim_group_set_loop(current_eid, false)
             end
         end

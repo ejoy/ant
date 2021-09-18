@@ -68,35 +68,36 @@ local function command(w, set, name, ...)
 			get_parent = function(eid)
 				return w[eid].parent
 			end,
-			play = function(eid, name, loop, manual)
+			play_effect = function(eid, loop, manual)
 				if w[eid].effekseer then
 					ieff.play(eid, loop or false)
 					ieff.pause(eid, manual or false)
+				end
+			end,
+			play_anim = function(eid, anim_state)
+				if w[eid].eid then
+					iani.play(eid, anim_state)
 				else
-					if w[eid].eid then
-						iani.play(eid, name, loop or false, manual)
-					else
-						w:pub {"AnimationEvent", "play", eid, name, loop or false, manual}
-					end
+					w:pub {"AnimationEvent", "play", eid, anim_state}
+				end
+			end,
+			play_clip = function(eid, anim_state)
+				if w[eid].eid then
+					iani.play_clip(eid, anim_state)
+				else
+					w:pub {"AnimationEvent", "play_clip", eid, anim_state}
+				end
+			end,
+			play_group = function(eid, anim_state)
+				if w[eid].eid then
+					iani.play_group(eid, anim_state)
+				else
+					w:pub {"AnimationEvent", "play_group", eid, anim_state}
 				end
 			end,
 			stop = function(eid, name)
 				if w[eid].effekseer then
 					ieff.stop(eid)
-				end
-			end,
-			play_clip = function(eid, name, loop, manual)
-				if w[eid].eid then
-					iani.play_clip(eid, name, loop or false, manual)
-				else
-					w:pub {"AnimationEvent", "play_clip", eid, name, loop or false, manual}
-				end
-			end,
-			play_group = function(eid, name, loop, manual)
-				if w[eid].eid then
-					iani.play_group(eid, name, loop or false, manual)
-				else
-					w:pub {"AnimationEvent", "play_group", eid, name, loop or false, manual}
 				end
 			end,
 			speed = function(eid, ...)

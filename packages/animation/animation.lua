@@ -59,7 +59,7 @@ local function process_keyframe_event(task)
 					if event.link_info.slot_eid and parent ~= event.link_info.slot_eid then
 						world:prefab_event(event.effect, "set_parent", "effect", event.link_info.slot_eid)
 					end
-					world:prefab_event(event.effect, "play", "effect", "", false, false)
+					world:prefab_event(event.effect, "play_effect", "effect", false, false)
 					if task.play_state.play then
 						world:prefab_event(event.effect, "speed", "effect", task.play_state.speed or 1.0)
 					end
