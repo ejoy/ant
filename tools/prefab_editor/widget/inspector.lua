@@ -59,11 +59,10 @@ function m.update_template_tranform(eid)
     if not template or not template.template then return end
 
     local s, r, t = iom.get_scale(eid), iom.get_rotation(eid), iom.get_position(eid)
-    local ts, tr, tt = math3d.totable(s), math3d.totable(r), math3d.totable(t)
     template.template.data.transform = {
-        r = {tr[1], tr[2], tr[3], tr[4]},
-        s = {ts[1], ts[2], ts[3]},
-        t = {tt[1], tt[2], tt[3]}
+        r = {math3d.index(r, 1, 2, 3, 4)},
+        s = {math3d.index(s, 1, 2, 3)},
+        t = {math3d.index(t, 1, 2, 3)},
     }
 
     if world[eid].collider then
