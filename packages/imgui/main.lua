@@ -1,5 +1,5 @@
 local function start(packagename, w, h)
-    local task = dofile "engine/task/bootstrap.lua"
+    local task = dofile "/engine/task/bootstrap.lua"
     task {
         support_package = true,
         service_path = "${package}/service/?.lua",

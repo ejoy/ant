@@ -9,10 +9,6 @@ thread.newchannel(Channel)
 local io_req = thread.channel_produce "IOreq"
 local io_resp = thread.channel_consume(Channel)
 
-local function npath(path)
-	return path:match "^/?(.-)/?$"
-end
-
 local queue = {}
 
 local function request(what, ...)
@@ -43,15 +39,15 @@ end)
 local S = {}
 
 function S.GET(path, hash)
-	return request("GET", npath(path), hash)
+	return request("GET", path, hash)
 end
 
 function S.LIST(path, hash)
-	return request("LIST", npath(path), hash)
+	return request("LIST", path, hash)
 end
 
 function S.TYPE(path, hash)
-	return request("TYPE", npath(path), hash)
+	return request("TYPE", path, hash)
 end
 
 function S.RESOURCE(paths)

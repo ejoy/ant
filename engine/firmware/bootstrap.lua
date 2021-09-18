@@ -19,12 +19,12 @@ local quit
 function host.init()
 	return config
 end
-function host.update(io, timeout)
+function host.update(apis, timeout)
 	if first then
 		first = false
-		io.request("FETCH", "engine/firmware", {
+		apis.request("FETCH", "/engine/firmware", {
 			resolve = function ()
-				bootloader = assert(io.repo:realpath 'engine/firmware/bootloader.lua')
+				bootloader = assert(apis.repo:realpath '/engine/firmware/bootloader.lua')
 				quit = true
 			end,
 			reject = function (_, errmsg)
@@ -37,9 +37,9 @@ function host.update(io, timeout)
 	end
 	thread.sleep(timeout)
 end
-function host.exit(io)
-	if io.fd then
-		io.fd:close()
+function host.exit(apis)
+	if apis.fd then
+		apis.fd:close()
 	end
 end
 assert(fw.loadfile "io.lua")(fw.loadfile, host)
@@ -53,4 +53,4 @@ local function loadfile(path, name)
 	f:close()
 	return load(str, "@/" .. name)
 end
-assert(loadfile(bootloader, 'engine/firmware/bootloader.lua'))(config)
+assert(loadfile(bootloader, '/engine/firmware/bootloader.lua'))(config)

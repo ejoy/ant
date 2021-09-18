@@ -56,14 +56,14 @@ local function detect_circular_dependency()
         status[pkgname] = false
     end
     local function dfs(name)
-        local dependencies = registered[name].config.dependencies
+        local dependencies = registered[name].config.sloved_dependencies
         for pkgname in pairs(dependencies) do
             if status[pkgname] == false then
                 status[name] = pkgname
                 dfs(pkgname)
             elseif status[pkgname] == true then
             else
-                log.error(("There is a circular dependency between `%s` and `%s`."):format(pkgname, status[pkgname]))
+                log.warn(("There is a circular dependency between `%s` and `%s`."):format(pkgname, status[pkgname]))
             end
         end
         status[name] = true
@@ -76,6 +76,20 @@ local function detect_circular_dependency()
 end
 
 local function detect()
+    for pkgname, info in pairs(registered) do
+        if info.config.dependencies then
+            local dependencies = {}
+            for _, depname in ipairs(info.config.dependencies) do
+                if not registered[depname] then
+                    log.error(("package `%s` has undefined dependencies `%s`"):format(pkgname, depname))
+                end
+                if dependencies[depname] then
+                    log.error(("package `%s` repeat definition dependencies `%s`"):format(pkgname, depname))
+                end
+                dependencies[depname] = true
+            end
+        end
+    end
     detect_circular_dependency()
 end
 
@@ -83,17 +97,16 @@ local function initialize()
     for path in fs.path'/pkg':list_directory() do
         register_package(path)
     end
-    for pkgname, info in pairs(registered) do
+    for _, info in pairs(registered) do
         local dependencies = {}
         if info.config.dependencies then
             for _, depname in ipairs(info.config.dependencies) do
-                if not registered[depname] then
-                    error(("package `%s` has undefined dependencies `%s`"):format(pkgname, depname))
+                if registered[depname] then
+                    dependencies[depname] = true
                 end
-                dependencies[depname] = true
             end
         end
-        info.config.dependencies = dependencies
+        info.config.sloved_dependencies = dependencies
     end
 end
 

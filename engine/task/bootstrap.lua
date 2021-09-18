@@ -7,10 +7,6 @@ local MESSSAGE_SYSTEM <const> = 0
 local config
 local init_exclusive_service
 
-local function searchpath(name)
-	return assert(package.searchpath(name, config.service_path))
-end
-
 local function new_service(label, id)
 	local sid = boot.new_service(label, init_exclusive_service, id)
 	assert(sid == id)
@@ -51,9 +47,9 @@ end
 local function init(c)
 	config = c
 	if config.service_path then
-		config.service_path = config.service_path .. ";engine/task/service/?.lua"
+		config.service_path = config.service_path .. ";/engine/task/service/?.lua"
 	else
-		config.service_path = "engine/task/service/?.lua"
+		config.service_path = "/engine/task/service/?.lua"
 	end
 	config.lua_cpath = config.lua_cpath or package.cpath
 	table.insert(config.exclusive, "vfs")
@@ -71,7 +67,7 @@ require "vfs"
 			initstr = initstr .. [[
 local ltask = require "ltask"
 local name = ("Service:%d <%s>"):format(ltask.self(), debug.getregistry().SERVICE_LABEL or "unk")
-dofile "engine/debugger.lua"
+dofile "/engine/debugger.lua"
 	:event("setThreadName", name)
 	:event "wait"
 ]]
@@ -91,6 +87,10 @@ package.searchpath = function(name, path, sep, dirsep)
 			package = "/pkg/"..package,
 		})
 		name = file
+	else
+		path = path:gsub("%$%{([^}]*)%}", {
+			package = "/pkg/startup",
+		})
 	end
 	return rawsearchpath(name, path, sep, dirsep)
 end
@@ -110,7 +110,7 @@ end
 ]]
 	end
 
-	local servicelua = searchpath "service"
+	local servicelua = "/engine/task/service/service.lua"
 	init_exclusive_service = initstr .. ([[dofile %q]]):format(servicelua)
 	config.init_service = initstr .. ([[
 local initfunc = assert(loadfile %q)

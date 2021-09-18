@@ -42,7 +42,7 @@ function message.RESOURCE(path)
 		return
 	end
 	local rpath = fs.relative(fs.path(lpath), fs.path(REPOPATH)):string()
-	local hash = ltask.call(ServiceVfsMgr, "BUILD", VfsSessionId, rpath, lpath)
+	local hash = ltask.call(ServiceVfsMgr, "BUILD", VfsSessionId, "/"..rpath, lpath)
 	response("RESOURCE", path, hash)
 end
 

@@ -6,6 +6,7 @@ package.cpath = cpath
 local lfs = require "filesystem.local"
 local access = require "vfs.repoaccess"
 local thread = require "thread"
+require "common.log"
 
 local channel = thread.channel_consume "IOreq"
 local repo
@@ -36,13 +37,12 @@ local CMD = {}
 
 function CMD.GET(path)
 	local rp = access.realpath(repo, path)
-	if lfs.exists(rp) then
+	if rp and lfs.exists(rp) then
 		return rp:string()
 	end
 end
 
 function CMD.LIST(path)
-	path = path:match "^/?(.-)/?$" .. '/'
 	local item = {}
 	for filename in pairs(access.list_files(repo, path)) do
 		local realpath = access.realpath(repo, path .. filename)

@@ -105,7 +105,7 @@ local function sandbox_env(loadenv, config, root, pkgname)
 
     function env.package_env(name)
         local error = log.error
-        if pkgname ~= name and not config.dependencies[name] then
+        if pkgname ~= name and not config.sloved_dependencies[name] then
             error(("package `%s` has no dependencies `%s`"):format(pkgname, name))
         end
         return loadenv(name)
