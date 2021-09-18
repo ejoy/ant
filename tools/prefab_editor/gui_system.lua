@@ -77,19 +77,11 @@ local function get_package(entry_path, readmount)
     local packages = {}
     for _, name in ipairs(repo._mountname) do
         vfs.mount(name, repo._mountpoint[name]:string())
-        local key
+        local key = name
         local skip = false
-        if utils.start_with(name, "pkg/ant.") then
-            if name == "pkg/ant.resources" or name == "pkg/ant.resources.binary" then
-                key = "/"..name
-            else
+        if utils.start_with(name, "/pkg/ant.") then
+            if name ~= "/pkg/ant.resources" and name ~= "/pkg/ant.resources.binary" then
                 skip = true
-            end
-        else
-            if utils.start_with(name, "pkg/") then
-                key = "/"..name
-            else
-                key = name
             end
         end
         if not skip then

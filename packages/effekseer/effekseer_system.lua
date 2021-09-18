@@ -186,16 +186,16 @@ function effekseer_sys:follow_transform_updated()
         effekseer.update_transform(v.effect_instance.handle, v.effect_instance.playid, v.scene._worldmat)
     end
 
-    for _, eid in event_entity_register:unpack() do
-        local effect = world[eid].effekseer and world[eid].effect_instance or nil
-        if effect then
-            if effect.auto_play then
-                -- effekseer.set_loop(effect.handle, effect.loop)
-                -- effekseer.play(effect.handle)
-                world:pub {"play_effect", effect, effect.loop}
-            end
-        end
-    end
+    -- for _, eid in event_entity_register:unpack() do
+    --     local effect = world[eid].effekseer and world[eid].effect_instance or nil
+    --     if effect then
+    --         if effect.auto_play then
+    --             -- effekseer.set_loop(effect.handle, effect.loop)
+    --             -- effekseer.play(effect.handle)
+    --             world:pub {"play_effect", effect, effect.loop}
+    --         end
+    --     end
+    -- end
     
     for _, inst, lp in event_do_play:unpack() do
         inst.playid = effekseer.play(inst.handle, inst.playid)
