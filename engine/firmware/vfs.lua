@@ -109,7 +109,7 @@ local function fetch_file(self, hash, fullpath, parent)
 		self.cache[hash] = dir
 	end
 
-	local path, name = fullpath:match "([^/]+)/?(.*)"
+	local path, name = fullpath:match "/?([^/]+)/?(.*)"
 	local subpath = dir[path]
 	if subpath then
 		if name == "" then

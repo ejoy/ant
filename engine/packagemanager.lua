@@ -63,7 +63,7 @@ local function detect_circular_dependency()
                 dfs(pkgname)
             elseif status[pkgname] == true then
             else
-                log.error(("There is a circular dependency between `%s` and `%s`."):format(pkgname, status[pkgname]))
+                log.warn(("There is a circular dependency between `%s` and `%s`."):format(pkgname, status[pkgname]))
             end
         end
         status[name] = true

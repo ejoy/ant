@@ -439,8 +439,7 @@ end
 function response.FETCH(path, hashs)
 	local waiting = {}
 	local missing = {}
-	local function finish(hash)
-		waiting[hash] = nil
+	local function finish()
 		if next(waiting) == nil then
 			local res = {}
 			for h in pairs(missing) do
@@ -456,11 +455,13 @@ function response.FETCH(path, hashs)
 	end
 	local promise = {
 		resolve = function (hash)
-			finish(hash)
+			waiting[hash] = nil
+			finish()
 		end,
 		reject = function (hash)
 			missing[hash] = true
-			finish(hash)
+			waiting[hash] = nil
+			finish()
 		end
 	}
 	hashs:gsub("[^|]+", function(hash)
@@ -471,6 +472,7 @@ function response.FETCH(path, hashs)
 			request_start("GET", hash, promise)
 		end
 	end)
+	finish()
 end
 
 local function waiting_for_root()
