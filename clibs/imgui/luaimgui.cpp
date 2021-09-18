@@ -2324,13 +2324,6 @@ winGetWindowContentRegionMax(lua_State *L) {
 }
 
 static int
-winGetWindowContentRegionWidth(lua_State *L) {
-	float w = ImGui::GetWindowContentRegionWidth();
-	lua_pushnumber(L, w);
-	return 1;
-}
-
-static int
 winPushStyleColor(lua_State *L) {
 	int stylecol = (int)luaL_checkinteger(L, 1);
 
@@ -3886,7 +3879,6 @@ luaopen_imgui(lua_State *L) {
 		{ "GetContentRegionAvail", winGetContentRegionAvail },
 		{ "GetWindowContentRegionMin", winGetWindowContentRegionMin },
 		{ "GetWindowContentRegionMax", winGetWindowContentRegionMax },
-		{ "GetWindowContentRegionWidth", winGetWindowContentRegionWidth },
 		{ "PushStyleColor", winPushStyleColor },
 		{ "PopStyleColor", winPopStyleColor },
 		{ "PushStyleVar", winPushStyleVar },
