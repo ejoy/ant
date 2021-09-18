@@ -153,7 +153,7 @@ function cfs:init()
         "/pkg/ant.resources/materials/cluster_light_cull.material",
         {1, 1, cluster_cull_light_size})
 
-    world:create_entity {
+    ecs.create_entity {
         policy = {
             "ant.render|cluster_render_entity",
             "ant.general|name",

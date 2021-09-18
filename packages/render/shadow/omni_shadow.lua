@@ -215,7 +215,7 @@ function ios.create(point_eid)
                 name = "camera_" .. queuename
             }
 
-        world:create_entity{
+        ecs.create_entity {
             policy = {
                 "ant.render|omni_shadow",
                 "ant.render|render_queue",

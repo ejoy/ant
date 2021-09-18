@@ -16,7 +16,7 @@ local function local_postprocess_views(num)
 end
 
 function pp_sys:init()
-    world:create_entity{
+    ecs.create_entity {
         policy = {
             "ant.render|postprocess_object",
             "ant.general|name",

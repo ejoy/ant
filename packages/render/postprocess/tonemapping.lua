@@ -19,7 +19,7 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 local tm_viewid<const> = viewidmgr.get "tonemapping"
 
 function tm_sys:init()
-    world:create_entity{
+    ecs.create_entity {
         policy = {
             "ant.general|name",
             "ant.render|simplerender",
@@ -55,7 +55,7 @@ local rt_flags<const> = sampler.sampler_flag {
 
 function tm_sys:init_world()
     local vr = irq.view_rect "main_queue"
-    world:create_entity {
+    ecs.create_entity {
         policy = {
             "ant.render|postprocess_queue",
             "ant.render|watch_screen_buffer",

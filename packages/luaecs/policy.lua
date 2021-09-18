@@ -1,4 +1,4 @@
-local function create(w, policies)
+local function create(w, package, policies)
     local res = {
         component = {},
         component_opt = {},
@@ -11,7 +11,7 @@ local function create(w, policies)
             return
         end
         policyset[name] = true
-        local class = w._class.policy_v2[name]
+        local class = w:_import("policy_v2", package, name)
         if not class then
             error(("policy `%s` is not defined."):format(name))
         end
@@ -50,29 +50,6 @@ local function create(w, policies)
     return res
 end
 
-local function find_mainkey(w, data)
-    local function isTag(class)
-        return class.type == nil
-    end
-    local function isRef(class)
-        return class.type == "ref"
-    end
-    local mainkey
-    for c in pairs(data) do
-        local class = w._class.component_v2[c]
-        if isRef(class) then
-            if mainkey ~= nil then
-                error "ref entity can only have one ref component"
-            end
-            mainkey = c
-        elseif not isTag(class) then
-            error "component other than mainkey in ref entity must be tag"
-        end
-    end
-    return mainkey
-end
-
 return {
     create = create,
-    find_mainkey = find_mainkey,
 }

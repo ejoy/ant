@@ -126,7 +126,7 @@ function s:luaecs_sync()
 			policy[#policy+1] = "ant.scene|slot_policy"
 		end
 
-		world:create_entity {
+		ecs.create_entity {
 			policy = policy,
 			data = data
 		}

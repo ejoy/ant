@@ -34,7 +34,7 @@ end
 return function (w, package)
     local ecs = { world = w, method = w._set_methods }
     local declaration = w._decl
-    local import = w._import
+    local import = w._importor
     local function register(what)
         local class_set = {}
         ecs[what] = function(name)
@@ -98,16 +98,14 @@ return function (w, package)
     ecs.import = {}
     for _, objname in ipairs(OBJECT) do
         ecs.import[objname] = function (name)
-            local res = rawget(w._class[objname], name)
-            if res then
-                return res
-            end
-            res = import[objname](package, name)
-            if res then
-                solve_object(res, w, objname, name)
-            end
-            return res
+            return w:_import(objname, package, name)
         end
+    end
+    function ecs.create_entity(v)
+        return w:_create_entity(package, v)
+    end
+    function ecs.create_instance(v)
+        return w:_create_instance(package, v)
     end
     w._ecs[package] = ecs
     return ecs

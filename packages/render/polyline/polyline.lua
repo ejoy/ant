@@ -165,7 +165,7 @@ local function generate_stripline_vertices(points)
 end
 
 local function add_polylines(polymesh, line_width, color, material)
-    world:create_entity {
+    ecs.create_entity {
         policy = {
             "ant.render|simplerender",
             "ant.render|polyline",
