@@ -56,11 +56,15 @@ function access.readmount(repo)
 				error("Invalid .mount file : " .. line, 2)
 			end
 		end
-		local tokens = split(line
+		local text = line
 			:gsub("#.*$","")	-- strip comment
 			:gsub("%${([^}]*)}", {
 			project = repo._root:string():gsub("(.-)[/\\]?$", "%1")
-		}))
+		})
+		if text:match "^%s*$" then
+			goto continue
+		end
+		local tokens = split(text)
 		assert_syntax(#tokens >= 1)
 		local name = tokens[1]
 		if name:sub(1, 1) == "@" then
@@ -89,6 +93,7 @@ function access.readmount(repo)
 			end
 			addmount(name, path)
 		end
+		::continue::
 	end
 	table.sort(mountname)
 	repo._mountname = mountname
