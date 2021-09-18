@@ -20,17 +20,6 @@ end
 
 local OBJECT = {"system","policy","policy_v2","transform","interface","component","component_v2","pipeline","action"}
 
-local function solve_object(o, w, what, fullname)
-	local decl = w._decl[what][fullname]
-	if decl and decl.method then
-		for _, name in ipairs(decl.method) do
-			if not o[name] then
-				error(("`%s`'s `%s` method is not defined."):format(fullname, name))
-			end
-		end
-	end
-end
-
 return function (w, package)
     local ecs = { world = w, method = w._set_methods }
     local declaration = w._decl
