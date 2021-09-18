@@ -199,7 +199,8 @@ function effekseer_sys:follow_transform_updated()
     
     for _, inst, lp in event_do_play:unpack() do
         inst.playid = effekseer.play(inst.handle, inst.playid)
-        effekseer.set_loop(inst.handle, inst.playid, lp)
+        effekseer.set_speed(inst.handle, inst.playid, inst.speed)
+        --effekseer.set_loop(inst.handle, inst.playid, lp)
     end
     
     for _, inst, lp in event_play_effect:unpack() do
