@@ -65,7 +65,7 @@ lm:source_set "pathtracer_baker" {
         "../bgfx",
     },
     sources = {
-        "./path_tracer/bake.cpp",
+        "./path_tracer/lbake.cpp",
     },
     deps = {
         "Meshbaker",
