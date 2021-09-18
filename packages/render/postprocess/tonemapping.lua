@@ -37,8 +37,6 @@ function tm_sys:init()
             render_object   = {},
             filter_material = {},
             state = 0,
-            render_object_update = true,
-            INIT = true,
             tonemapping = true,
         }
     }

@@ -29,6 +29,9 @@ function render_sys:entity_init()
 		pf._DEBUG_excule_type = pf.excule_type
 		pf.excule_type = pf.excule_type and ies.create_state(pf.excule_type) or 0
 	end
+	for e in w:select "INIT render_object render_object_update?out" do
+		e.render_object_update = true
+	end
 end
 
 function render_sys:entity_ready()

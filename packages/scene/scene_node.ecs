@@ -5,7 +5,6 @@ component_v2 "eid"
 
 --RenderObject
 policy_v2 "render_object"
-    .component_v2 "render_object_update"
     .component_v2 "render_object"
     .component_v2 "filter_material"
     .component_v2 "eid"

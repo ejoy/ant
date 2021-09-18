@@ -183,11 +183,9 @@ local function add_polylines(polymesh, line_width, color, material)
             simplemesh  = polymesh,
             material    = material,
             render_object = {},
-            render_object_update = true,
             filter_material = {},
             state       = 1,
             name        = "polyline",
-            INIT        = true,
         }
     }
 end

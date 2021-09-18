@@ -140,13 +140,11 @@ local function create_downsample()
                 material = material,
                 filter_material = {},
                 render_object = {},
-                render_object_update = true,
                 scene = {
                     srt = mu.srt_obj(),
                 },
                 state = 0,  --force not include to any render queue
                 [tag] = true,
-                INIT = true,
             }
         }
     end

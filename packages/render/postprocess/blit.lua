@@ -35,8 +35,6 @@ function blit_sys:init()
 			state           = 0,
 			name            = "resolve_quad",
 			mesh            = ientity.fullquad_mesh(),
-			INIT            = true,
-			render_object_update = true,
 			blit_obj		= true,
 		}
 	}
