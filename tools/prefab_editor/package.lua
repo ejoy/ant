@@ -8,10 +8,16 @@ return {
         "ant.geometry",
         "ant.hwi",
         "ant.imgui",
+        "ant.rmlui",
         "ant.math",
         "ant.render",
         "ant.serialize",
         "ant.camera",
+        "ant.animation",
+        "ant.collision",
+        "ant.sky",
+        "ant.effekseer",
+        "ant.prefab",
     }
     --ecs = {
     --    import = {

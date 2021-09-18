@@ -13,13 +13,6 @@ local geo_utils = ecs.require "editor.geometry_utils"
 local math3d = require "math3d"
 local gizmo_const = require "gizmo.const"
 local bgfx = require "bgfx"
-local geo_utils
-local ilight
-local iss
-local computil
-local iom
-local ies
-local imaterial
 
 local m = {
     directional = {
