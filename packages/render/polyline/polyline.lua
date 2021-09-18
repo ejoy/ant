@@ -169,8 +169,6 @@ local function add_polylines(polymesh, line_width, color, material)
         policy = {
             "ant.render|simplerender",
             "ant.render|polyline",
-            "ant.scene|render_object",
-            "ant.scene|scene_object",
             "ant.general|name",
         },
         data = {

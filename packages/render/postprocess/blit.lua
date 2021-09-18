@@ -21,8 +21,6 @@ function blit_sys:init()
 		policy = {
 			"ant.general|name",
 			"ant.render|render",
-			"ant.scene|render_object",
-			"ant.scene|scene_object",
 		},
 		data = {
 			scene = {

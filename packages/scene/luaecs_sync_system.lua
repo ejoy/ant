@@ -83,7 +83,7 @@ function s:luaecs_sync()
 			data.material = e.material
 			data.mesh	= e.mesh
 			data.filter_material = {}
-			policy[#policy+1] = "ant.scene|render_object"
+			policy[#policy+1] = "ant.render|render_object"
 			if hasAnimation(e) then
 				data.animation = {}
 				for k, v in pairs(e.animation) do

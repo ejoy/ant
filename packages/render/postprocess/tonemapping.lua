@@ -13,7 +13,6 @@ local tm_sys    = ecs.system "tonemapping_system"
 local ientity   = ecs.import.interface "ant.render|entity"
 local irender   = ecs.import.interface "ant.render|irender"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
-local icamera   = ecs.import.interface "ant.camera|camera"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local tm_viewid<const> = viewidmgr.get "tonemapping"
@@ -23,8 +22,6 @@ function tm_sys:init()
         policy = {
             "ant.general|name",
             "ant.render|simplerender",
-            "ant.scene|render_object",
-            "ant.scene|scene_object",
         },
         data = {
             name = "tonemapping_render_obj",
