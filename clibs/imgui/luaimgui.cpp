@@ -3163,17 +3163,21 @@ static struct enum_pair eWindowFlags[] = {
 };
 
 static struct enum_pair eFocusedFlags[] = {
+	ENUM(ImGuiFocusedFlags, None),
 	ENUM(ImGuiFocusedFlags, ChildWindows),
 	ENUM(ImGuiFocusedFlags, RootWindow),
 	ENUM(ImGuiFocusedFlags, AnyWindow),
+	ENUM(ImGuiFocusedFlags, DockHierarchy),
 	ENUM(ImGuiFocusedFlags, RootAndChildWindows),
 	{ NULL, 0 },
 };
 
 static struct enum_pair eHoveredFlags[] = {
+	ENUM(ImGuiHoveredFlags, None),
 	ENUM(ImGuiHoveredFlags, ChildWindows),
 	ENUM(ImGuiHoveredFlags, RootWindow),
 	ENUM(ImGuiHoveredFlags, AnyWindow),
+	ENUM(ImGuiHoveredFlags, DockHierarchy),
 	ENUM(ImGuiHoveredFlags, AllowWhenBlockedByPopup),
 	ENUM(ImGuiHoveredFlags, AllowWhenBlockedByActiveItem),
 	ENUM(ImGuiHoveredFlags, AllowWhenOverlapped),
