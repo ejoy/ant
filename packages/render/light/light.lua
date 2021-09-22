@@ -18,11 +18,18 @@ function lt.process_entity(e)
 	local l = {
 		color		= e.color or {1, 1, 1, 1},
 		intensity	= e.intensity or 2,
-	}
+		make_shadow	= e.make_shadow or false,
+		motion_type = e.motion_type or "dynamic",
 
-	l.range = math.maxinteger
-	l.inner_radian, l.outter_radian = 0, 0
-	l.inner_cutoff, l.outter_cutoff = 0, 0
+		range		= math.maxinteger,
+		inner_radian= 0,
+		outter_radian = 0,
+		inner_cutoff= 0,
+		outter_cutoff = 0,
+
+		--area light
+		angular_radius= 0,
+	}
 
 	if t == "point" or t == "spot" then
 		if range == nil then
@@ -42,6 +49,8 @@ function lt.process_entity(e)
 			l.inner_cutoff = math.cos(l.inner_radian * 0.5)
 			l.outter_cutoff = math.cos(l.outter_radian * 0.5)
 		end
+	elseif t == "area" then
+        l.angular_radius = e.angular_radius or 0.27
 	end
 	e._light = l
 end
@@ -58,14 +67,19 @@ function ilight.create(light)
 		data = {
 			transform	= light.transform,
 			name		= light.name or "DEFAULT_LIGHT",
-			light_type	= assert(light.light_type),
-			color		= light.color or {1, 1, 1, 1},
-			intensity	= light.intensity or 2,
-			range		= light.range,
-			radian		= light.radian,
+			state		= light.state or "visible",
+
 			make_shadow	= light.make_shadow,
-			state		= ies.create_state "visible",
-			motion_type = light.motion_type or "dynamic",
+			motion_type = light.motion_type,
+
+			light_type	= assert(light.light_type),
+			color		= light.color,
+			intensity	= light.intensity,
+
+			range		= light.range,
+			inner_radian= light.inner_radian,
+			outter_radian = light.outter_radian,
+			angular_radius=light.angular_radius,
 		}
 	}
 end

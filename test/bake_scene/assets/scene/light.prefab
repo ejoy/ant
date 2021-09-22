@@ -7,7 +7,7 @@ data:
     r: {0.25,0.25,-0.066987298429012,0.93301266431808}
     t: {0, 10, 0, 1}
   color: {1, 1, 1, 1}
-  intensity: 2
+  intensity: 6000
   light_type: directional
   name: directional_light
-  state: 0x01
+  state: visible
