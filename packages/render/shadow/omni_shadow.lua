@@ -25,10 +25,10 @@ local shadowcommon  = require "shadow.common"
 local math3d        = require "math3d"
 
 local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
-local ilight    = ecs.import.interface "ant.render|light"
 local icamera   = ecs.import.interface "ant.camera|camera"
+local ies       = ecs.import.interface "ant.scene|ientity_state"
+local ilight    = ecs.import.interface "ant.render|light"
 local ientity   = ecs.import.interface "ant.render|entity"
-local irender   = ecs.import.interface "ant.render|irender"
 
 local function get_render_buffers(width, height)
     return fbmgr.create_rb{
@@ -184,7 +184,7 @@ local function add_stencil_entity()
 		data = {
 			material	= "/pkg/ant.resources/materials/omni_stencil.material",
 			mesh		= stencil_mesh,
-			state		= ies.create_state "visible|cast_shadow",
+			state		= "visible|cast_shadow",
 			name		= "stencil_mesh",
 			scene_entity= true,
 		}
@@ -246,9 +246,7 @@ function ios.create(point_eid)
                     "opacity",
                 },
                 queue_name = queuename,
-                cull_tag = {},
                 name = queuename,
-                INIT = true,
                 visible = false,
                 omni_queue = true,
                 shadow_render_queue = {},
