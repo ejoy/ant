@@ -159,13 +159,17 @@ function get_play_info(eid, name)
 end
 
 local function do_play(e, anim, real_clips, anim_state)
-	local start_ratio = 0.0
-	local realspeed = 1.0
-	if real_clips then
-		start_ratio = real_clips[1][2].range[1] / anim._handle:duration()
-		realspeed = real_clips[1][2].speed
-	end
 	if not anim_state.init then
+		local start_ratio = 0.0
+		local realspeed = 1.0
+		if real_clips then
+			start_ratio = real_clips[1][2].range[1] / anim._handle:duration()
+			if not anim_state.manual then
+				realspeed = real_clips[1][2].speed
+			end
+			io.stdout:write("do_play: start_ratio, realspeed ", tostring(start_ratio), " ", tostring(realspeed), "\n")
+		end
+
 		anim_state.init = true
 		anim_state.eid = {}
 		anim_state.animation = anim
@@ -287,7 +291,10 @@ function iani.step(task, s_delta, absolute)
 	task.step_flag = true
 	
 	local play_state = task.play_state
-	local playspeed = EditMode and play_state.speed or 1.0
+	local playspeed = play_state.manual_update and 1.0 or play_state.speed
+	
+	io.stdout:write("step ", tostring(s_delta), " ", tostring(playspeed), "\n")
+
 	local adjust_delta = play_state.play and s_delta * playspeed or s_delta
 	local next_time = absolute and adjust_delta or (play_state.ratio * task.animation._handle:duration() + adjust_delta)
 	local duration = task.animation._handle:duration()

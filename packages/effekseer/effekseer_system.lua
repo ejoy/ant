@@ -182,29 +182,19 @@ function effekseer_sys:render_submit()
 end
 
 function effekseer_sys:follow_transform_updated()
-    for v in w:select "eid:in effect_instance:in scene:in" do
-        effekseer.update_transform(v.effect_instance.handle, v.effect_instance.playid, v.scene._worldmat)
-    end
-
-    -- for _, eid in event_entity_register:unpack() do
-    --     local effect = world[eid].effekseer and world[eid].effect_instance or nil
-    --     if effect then
-    --         if effect.auto_play then
-    --             -- effekseer.set_loop(effect.handle, effect.loop)
-    --             -- effekseer.play(effect.handle)
-    --             world:pub {"play_effect", effect, effect.loop}
-    --         end
-    --     end
-    -- end
-    
     for _, inst, lp in event_do_play:unpack() do
         inst.playid = effekseer.play(inst.handle, inst.playid)
         effekseer.set_speed(inst.handle, inst.playid, inst.speed)
         --effekseer.set_loop(inst.handle, inst.playid, lp)
     end
-    
+
     for _, inst, lp in event_play_effect:unpack() do
         world:pub {"do_play", inst, lp}
+    end
+
+    for v in w:select "eid:in effect_instance:in scene:in" do
+        v.effect_instance.worldmat = v.scene._worldmat
+        effekseer.update_transform(v.effect_instance.handle, v.effect_instance.playid, v.scene._worldmat)
     end
 end
 

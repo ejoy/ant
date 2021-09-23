@@ -126,6 +126,7 @@ end
 function ani_sys:data_changed()
 	for e in w:select "_animation:in" do
 		e._animation._current.event_flag = false
+		e._animation._current.step_flag = false
 	end
 	for e in w:select "_animation:in" do
 		process_keyframe_event(e._animation._current)
