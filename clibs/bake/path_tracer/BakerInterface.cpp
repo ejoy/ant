@@ -8,7 +8,7 @@
 static inline uint32_t _FindDirectionalLight(const Scene *scene){
     for (uint32_t idx=0; idx<scene->lights.size(); ++idx){
         auto l = scene->lights[idx];
-        if (l.type == LT_Directional){
+        if (l.type == Light::LT_Directional){
             return idx;
         }
 
@@ -34,8 +34,8 @@ BakerHandle CreateBaker(const Scene* scene){
         // if (l.size != 0){
         //     AppSettings::SunSize.SetValue(l.size);
         // }
-        AppSettings::SunTintColor.SetValue(Float3(l.color.x, l.color.y, l.color.z));
-        AppSettings::SunDirection.SetValue(Float3(l.dir.x, l.dir.y, l.dir.z));
+        // AppSettings::SunTintColor.SetValue(Float3(l.color.x, l.color.y, l.color.z));
+        // AppSettings::SunDirection.SetValue(Float3(l.dir.x, l.dir.y, l.dir.z));
     } else {
         AppSettings::EnableSun.SetValue(false);
         AppSettings::BakeDirectSunLight.SetValue(false);
@@ -46,6 +46,7 @@ BakerHandle CreateBaker(const Scene* scene){
     // AppSettings::EnableDirectLighting.SetValue(true);
     // AppSettings::BakeDirectSunLight.SetValue(true);
     AppSettings::SkyMode.SetValue(SkyModes::Simple);
+    AppSettings::SkyColor.SetValue(Float3(4500.0000f, 4500.0000f, 4500.0000f));
 
     AppSettings::EnableIndirectLighting.SetValue(true);
     AppSettings::EnableIndirectSpecular.SetValue(true);
@@ -82,6 +83,27 @@ void DestroyBaker(BakerHandle handle){
 
 #include "../Meshbaker/SampleFramework11/v1.02/Graphics/Model.h"
 #include "../Meshbaker/SampleFramework11/v1.02/FileIO.h"
+
+//static
+void BakingLab::InitLights(const Scene *s, Lights &lights)
+{
+    lights.reserve(s->lights.size());
+    for (const auto &l : s->lights)
+    {
+        lights.emplace_back(LightData {
+            Float3(l.pos.x, l.pos.y, l.pos.z),
+            Float3(l.dir.x, l.dir.y, l.dir.z),
+            Float3(l.color.x, l.color.y, l.color.z),
+            l.intensity,
+            l.range,
+            l.inner_cutoff,
+            l.outter_cutoff,
+            l.angular_radius,
+            LightData::LightType(l.type),
+        });
+    }
+}
+
 void Model::CreateFromScene(ID3D11Device *device, const Scene *scene, bool forceSRGB)
 {
     for(auto &m : scene->materials)

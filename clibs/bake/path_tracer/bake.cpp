@@ -105,14 +105,35 @@ namespace lua_struct {
         unpack_field(L, idx, "dir", v.dir);
         unpack_field(L, idx, "pos", v.pos);
         unpack_field(L, idx, "color", v.color);
-        unpack_field(L, idx, "size", v.size);
+
         unpack_field(L, idx, "intensity", v.intensity);
+        unpack_field(L, idx, "range", v.range);
+        unpack_field(L, idx, "inner_cutoff", v.inner_cutoff);
+        unpack_field(L, idx, "outter_cutoff", v.outter_cutoff);
+        unpack_field(L, idx, "angular_radius", v.angular_radius);
+
         const char* type = nullptr;
         unpack_field(L, idx, "type", type);
         if (strcmp(type, "directional") == 0){
-            v.type = LT_Directional;
+            v.type = Light::LT_Directional;
+        } else if (strcmp(type, "point") == 0){
+            v.type = Light::LT_Point;
+            if (v.range == 0.f){
+                luaL_error(L, "invalid point light, range must not be 0.0");
+            }
+        } else if (strcmp(type, "spot") == 0){
+            v.type = Light::LT_Spot;
+            if (v.range == 0.f){
+                luaL_error(L, "invalid spot light, range must not be 0.0");
+            }
+            if (v.inner_cutoff == 0.f || v.outter_cutoff == 0.f){
+                luaL_error(L, "invalid spot light, inner_cutoff and outter_cutoff must not be 0.0");
+            }
         } else if (strcmp(type, "area") == 0){
-            v.type = LT_AreaLight;
+            v.type = Light::LT_Area;
+            if (v.angular_radius == 0.f){
+                luaL_error(L, "invalid area light, angular_radius must not be 0.0");
+            }
         } else {
             luaL_error(L, "invalid light type:%s", type);
         }

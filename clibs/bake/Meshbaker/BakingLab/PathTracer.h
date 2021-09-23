@@ -16,6 +16,7 @@
 #include <Graphics/Skybox.h>
 
 #include "AppSettings.h"
+#include "Light.h"
 
 // Forward declarations
 struct __RTCScene;
@@ -203,8 +204,10 @@ Float3 SampleSunLight(const Float3& position, const Float3& normal, RTCScene sce
 struct PathTracerParams
 {
     Float3 RayDir;
-    uint32 EnableDirectAreaLight = false;
-    uint8 EnableDirectSun = false;
+    // uint32 EnableDirectAreaLight = false;
+    // uint8 EnableDirectSun = false;
+    const LightData* SunLight = nullptr;
+    const Lights* lights = nullptr;
     uint8 EnableDiffuse = false;
     uint8 EnableSpecular = false;
     uint8 EnableBounceSpecular = false;

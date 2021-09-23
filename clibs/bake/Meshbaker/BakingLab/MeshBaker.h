@@ -22,6 +22,7 @@
 #include "PathTracer.h"
 #include "SharedConstants.h"
 #include "AppSettings.h"
+#include "Light.h"
 
 namespace SampleFramework11
 {
@@ -46,6 +47,7 @@ struct BakeInputData
     ID3D11Device* Device = nullptr;
     ID3D11ShaderResourceView* EnvMaps[AppSettings::NumCubeMaps];
     TextureData<Half4> EnvMapData[AppSettings::NumCubeMaps];
+    Lights lights;
 
     BakeInputData()
     {
@@ -110,6 +112,7 @@ public:
     SolveModes currSolveMode = SolveModes::NNLS;
     std::vector<BakePoint> bakePoints;
     std::vector<GutterTexel> gutterTexels;
+    Lights  lights;
 
     // Read-only data shared with both bake and render threads
     BVHData sceneBVH;

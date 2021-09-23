@@ -71,19 +71,22 @@ template<typename T> T TriangleLerp(const EmbreeRay& ray, const BVHData& bvhData
 }
 
 // Returns the direct sun radiance for a direction on the skydome
-static Float3 SampleSun(Float3 sampleDir)
+static Float3 SampleSun(Float3 sampleDir, const LightData *SunLight)
 {
-    Float3 res = 0.0f;
-    if(AppSettings::EnableSun)
+    //if(AppSettings::EnableSun)
+    if (SunLight)
     {
-        float cosSunAngularRadius = std::cos(DegToRad(AppSettings::SunSize));
-        Float3 sunDir = Float3::Normalize(AppSettings::SunDirection);
+        float cosSunAngularRadius = std::cos(SunLight->angular_radius);//std::cos(DegToRad(AppSettings::SunSize));
+        Float3 sunDir = SunLight->dir;//Float3::Normalize(AppSettings::SunDirection);
         float cosGamma = Float3::Dot(sunDir, sampleDir);
         if(cosGamma >= cosSunAngularRadius)
-            res = AppSettings::SunLuminance();
+        {
+            return SunLight->Luminance();
+        }
+            //res = AppSettings::SunLuminance();
     }
 
-    return res;
+    return 0.f;
 }
 
 // Checks if a hit triangle is back-facing
@@ -174,8 +177,18 @@ Float3 SampleAreaLight(const Float3& position, const Float3& normal, RTCScene sc
                                     lightPos, AppSettings::AreaLightColor.Value() * FP16Scale, irradiance, sampleDir);
 }
 
+Float3 SampleAreaLight2(const Float3& position, const Float3& normal, RTCScene scene,
+                       const Float3& diffuseAlbedo, const Float3& cameraPos,
+                       bool includeSpecular, Float3 specAlbedo, float roughness,
+                       float u1, float u2, const LightData* areaLight, Float3& irradiance, Float3& sampleDir)
+{
+    return SampleSphericalAreaLight(position, normal, scene, diffuseAlbedo, cameraPos, includeSpecular,
+                                    specAlbedo, roughness, u1, u2, AppSettings::AreaLightSize,
+                                    areaLight->pos, areaLight->Luminance(), irradiance, sampleDir);
+}
+
 // Checks to see if a ray intersects with the area light
-static float AreaLightIntersection(const Float3& rayStart, const Float3& rayDir, float tStart, float tEnd)
+static float AreaLightIntersection(const Float3& rayStart, const Float3& rayDir, float tStart, float tEnd, const Lights* lights)
 {
 
     DirectX::BoundingSphere areaLightSphere;
@@ -200,6 +213,23 @@ Float3 SampleSunLight(const Float3& position, const Float3& normal, RTCScene sce
     const float radius = std::tan(DegToRad(AppSettings::SunSize)) * sunDistance;
     Float3 sunLuminance = AppSettings::SunLuminance();
     Float3 sunPos = position + AppSettings::SunDirection.Value() * sunDistance;
+    Float3 sampleDir;
+    return SampleSphericalAreaLight(position, normal, scene, diffuseAlbedo, cameraPos, includeSpecular,
+                                    specAlbedo, roughness, u1, u2, radius, sunPos, sunLuminance, irradiance, sampleDir);
+}
+
+Float3 SampleSunLight2(const Float3& position, const Float3& normal, RTCScene scene,
+                             const Float3& diffuseAlbedo, const Float3& cameraPos,
+                             bool includeSpecular, Float3 specAlbedo, float roughness,
+                             float u1, float u2, const LightData *SunLight, Float3& irradiance)
+{
+    // Treat the sun as a spherical area light that's very far away from the surface
+    const float sunDistance = 1000.0f;
+    //const float radius = std::tan(DegToRad(AppSettings::SunSize)) * sunDistance;
+    const float radius = std::tan(SunLight->angular_radius) * sunDistance;
+    Float3 sunLuminance = SunLight->Luminance();//AppSettings::SunLuminance();
+    //Float3 sunPos = position + AppSettings::SunDirection.Value() * sunDistance;
+    Float3 sunPos = position + SunLight->pos * sunDistance;
     Float3 sampleDir;
     return SampleSphericalAreaLight(position, normal, scene, diffuseAlbedo, cameraPos, includeSpecular,
                                     specAlbedo, roughness, u1, u2, radius, sunPos, sunLuminance, irradiance, sampleDir);
@@ -293,8 +323,9 @@ Float3 PathTrace(const PathTracerParams& params, Random& randomGenerator, float&
 
         // Check for intersection with the area light for primary rays
         float lightDistance = FLT_MAX;
-        if(params.EnableDirectAreaLight && AppSettings::EnableAreaLight && pathLength == 1)
-            lightDistance = AreaLightIntersection(rayOrigin, rayDir, ray.tnear, ray.tfar);
+        //TODO
+        // if(params.EnableDirectAreaLight && AppSettings::EnableAreaLight && pathLength == 1)
+        //     lightDistance = AreaLightIntersection(rayOrigin, rayDir, ray.tnear, ray.tfar);
 
         if(lightDistance < sceneDistance)
         {
@@ -477,16 +508,16 @@ Float3 PathTrace(const PathTracerParams& params, Random& randomGenerator, float&
             if (AppSettings::SkyMode == SkyModes::Procedural)
             {
                 Float3 skyRadiance = Skybox::SampleSky(*params.SkyCache, rayDir);
-                if (pathLength == 1 && params.EnableDirectSun)
-                    skyRadiance += SampleSun(rayDir);
+                if (pathLength == 1 && params.SunLight)
+                    skyRadiance += SampleSun(rayDir, params.SunLight);
                 radiance += skyRadiance * throughput;
                 irradiance += skyRadiance * irrThroughput;
             }
             else if (AppSettings::SkyMode == SkyModes::Simple)
             {
                 Float3 skyRadiance = AppSettings::SkyColor.Value() * FP16Scale;
-                if (pathLength == 1 && params.EnableDirectSun)
-                    skyRadiance += SampleSun(rayDir);
+                if (pathLength == 1 && params.SunLight)
+                    skyRadiance += SampleSun(rayDir, params.SunLight);
                 radiance += skyRadiance * throughput;
                 irradiance += skyRadiance * irrThroughput;
             }

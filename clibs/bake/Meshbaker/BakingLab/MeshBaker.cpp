@@ -608,6 +608,17 @@ typedef SGBaker<6> SG6Baker;
 typedef SGBaker<9> SG9Baker;
 typedef SGBaker<12> SG12Baker;
 
+const LightData* FindSunLight(const Lights *lights)
+{
+    for (auto &l : *lights){
+        if (l.type == LightData::Directional){
+            return &l;
+        }
+    }
+
+    return nullptr;
+}
+
 // Data used by the baking threads
 struct BakeThreadContext
 {
@@ -616,6 +627,8 @@ struct BakeThreadContext
     const BVHData* SceneBVH = nullptr;
     const TextureData<Half4>* EnvMaps = nullptr;
     const std::vector<BakePoint>* BakePoints = nullptr;
+    const Lights *lights = nullptr;
+    const LightData *SunLight = nullptr;
     uint64 CurrNumBatches = 0;
     uint64 CurrLightMapSize = 0;
     BakeModes CurrBakeMode = BakeModes::Diffuse;
@@ -638,6 +651,8 @@ struct BakeThreadContext
         SceneBVH = &meshBaker->sceneBVH;
         EnvMaps = meshBaker->input.EnvMapData;
         BakePoints = &meshBaker->bakePoints;
+        lights = &meshBaker->lights;
+        SunLight = FindSunLight(lights);
         CurrNumBatches = meshBaker->currNumBakeBatches;
         CurrLightMapSize = meshBaker->currLightMapSize;
         CurrBakeMode = meshBaker->currBakeMode;
@@ -688,8 +703,10 @@ template<typename TBaker> static bool BakeDriver(BakeThreadContext& context, TBa
     const IntegrationSamples& integrationSamples = (*context.Samples)[groupIdx % numThreads];
 
     PathTracerParams params;
-    params.EnableDirectAreaLight = false;
-    params.EnableDirectSun = false;
+    // params.EnableDirectAreaLight = false;
+    // params.EnableDirectSun = false;
+    params.SunLight = context.SunLight;
+    params.lights = context.lights;
     params.EnableDiffuse = true;
     params.EnableSpecular = false;
     params.EnableBounceSpecular = false;
@@ -1347,6 +1364,7 @@ struct RenderThreadContext
 // a single radiance for every pixel within a tile, and blend with with the previous result.
 static bool RenderDriver(RenderThreadContext& context)
 {
+    assert(false && "can't be here");
     if(context.CurrNumTiles == 0)
         return false;
 
@@ -1441,8 +1459,8 @@ static bool RenderDriver(RenderThreadContext& context)
             params.SampleSet = &sampleSet;
             params.SkyCache = &context.SkyCache;
             params.EnvMaps = context.EnvMaps;
-            params.EnableDirectAreaLight = true;
-            params.EnableDirectSun = true;
+            // params.EnableDirectAreaLight = true;
+            // params.EnableDirectSun = true;
             params.EnableDiffuse = AppSettings::EnableDiffuse;
             params.EnableSpecular = AppSettings::EnableSpecular;
             params.EnableBounceSpecular = uint8(AppSettings::EnableRenderBounceSpecular);
@@ -1574,7 +1592,8 @@ void MeshBaker::Shutdown()
 }
 
 MeshBakerStatus MeshBaker::Update(const Camera& camera, uint32 screenWidth, uint32 screenHeight,
-                                  ID3D11DeviceContext* deviceContext, const Model* currentModel)
+                                  ID3D11DeviceContext* deviceContext, 
+                                  const Model* currentModel)
 {
     Assert_(initialized);
 

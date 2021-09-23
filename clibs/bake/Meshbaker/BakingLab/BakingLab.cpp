@@ -494,7 +494,7 @@ void BakingLab::AfterReset()
     postProcessor.AfterReset(deviceManager.BackBufferWidth(), deviceManager.BackBufferHeight());
 }
 
-void BakingLab::MeshbakerInitialize(const Model* sceneModel)
+void BakingLab::MeshbakerInitialize(const Model* sceneModel, Lights &&lights)
 {
     auto device = deviceManager.Device();
     for(uint64 i = 0; i < AppSettings::NumCubeMaps; ++i)
@@ -503,6 +503,7 @@ void BakingLab::MeshbakerInitialize(const Model* sceneModel)
     BakeInputData bakeInput;
     bakeInput.SceneModel = sceneModel;
     bakeInput.Device = device;
+    bakeInput.lights = std::move(lights);
     for(uint64 i = 0; i < AppSettings::NumCubeMaps; ++i)
         bakeInput.EnvMaps[i] = envMaps[i];
     meshBaker.Initialize(bakeInput);
@@ -559,7 +560,7 @@ void BakingLab::Initialize()
     // Init the post processor
     postProcessor.Initialize(device);
 
-    MeshbakerInitialize(&currentModel);
+    MeshbakerInitialize(&currentModel, Lights());
     // Camera setup
     AppSettings::UpdateHorizontalCoords();
 }
@@ -1172,7 +1173,10 @@ void BakingLab::Init(const Scene *s)
 
     AppSettings::CurrentScene.SetValue(Scenes(0));
     sceneModels[0].CreateFromScene(device, s, false);
-    MeshbakerInitialize(&sceneModels[AppSettings::CurrentScene]);
+    Lights lights;
+    InitLights(s, lights);
+    MeshbakerInitialize(&sceneModels[AppSettings::CurrentScene], std::move(lights));
+    PrintString("baker cube map need set");
 }
 
 float BakingLab::BakeProcess()

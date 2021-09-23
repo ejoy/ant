@@ -25,9 +25,10 @@
 #include "PostProcessor.h"
 #include "MeshRenderer.h"
 #include "MeshBaker.h"
+#include "Light.h"
 
 using namespace SampleFramework11;
-struct Scene;
+
 class BakingLab : public App
 {
 
@@ -108,12 +109,13 @@ public:
     BakingLab();
 
     void Init(const Scene *s);
+    static void InitLights(const Scene *s, Lights &lights);
     const Model& GetModel(uint32 mode) const {
         return sceneModels[mode];
     }
 
     Model& GetModel(uint32 mode){ return sceneModels[mode];}
-    void MeshbakerInitialize(const Model *model);
+    void MeshbakerInitialize(const Model *model, Lights &&lights);
     void Bake(uint32 bakeMeshIdx);
     float BakeProcess();
     void ShutDown();
