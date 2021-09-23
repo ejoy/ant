@@ -17,10 +17,8 @@
 #include <Graphics/Textures.h>
 #include <Graphics/ShaderCompilation.h>
 #include <Graphics/SH.h>
-#include <Graphics/Skybox.h>
 
 #include "PathTracer.h"
-#include "SharedConstants.h"
 #include "AppSettings.h"
 #include "Light.h"
 
@@ -67,6 +65,21 @@ struct MeshBakerStatus
     uint64 GroundTruthSampleCount = 0;
     Float3 SGDirections[AppSettings::MaxSGCount];
     float SGSharpness = 0.0f;
+};
+
+struct BakePoint
+{
+    Float3 Position;
+    Float3 Normal;
+    Float3 Tangent;
+    Float3 Bitangent;
+    Float2 Size;
+    uint32 Coverage;
+    Uint2 TexelPos;
+
+    #if _WINDOWS
+        BakePoint() : Coverage(0) {}
+    #endif
 };
 
 class MeshBaker

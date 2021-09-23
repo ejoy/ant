@@ -1,7 +1,7 @@
 colorspace: Linear
 format: RGBA8
 normalmap: false
-path: /pkg/ant.resources.binary/textures/cubemap/pisa_with_mips.ktx
+path: /pkg/ant.resources.binary/textures/kyoto_lod.dds
 sampler:
   MAG: LINEAR
   MIN: LINEAR

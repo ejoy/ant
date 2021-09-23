@@ -13,7 +13,6 @@
 #include <PCH.h>
 #include <SF11_Math.h>
 #include <Graphics/Textures.h>
-#include <Graphics/Skybox.h>
 
 #include "AppSettings.h"
 #include "Light.h"
@@ -225,7 +224,6 @@ struct PathTracerParams
     float RayLen = 0.0f;
     const BVHData* SceneBVH = nullptr;
     const IntegrationSampleSet* SampleSet = nullptr;
-    const SkyCache* SkyCache = nullptr;
     const TextureData<Half4>* EnvMaps = nullptr;
 };
 

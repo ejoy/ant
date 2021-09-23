@@ -74,17 +74,13 @@ template<typename T> T TriangleLerp(const EmbreeRay& ray, const BVHData& bvhData
 static Float3 SampleSun(Float3 sampleDir, const LightData *SunLight)
 {
     if(AppSettings::EnableSun)
-    //if (SunLight)
     {
         float cosSunAngularRadius = std::cos(DegToRad(AppSettings::SunSize));
-        //float cosSunAngularRadius = std::cos(SunLight->angular_radius);//std::cos(DegToRad(AppSettings::SunSize));
-        Float3 sunDir = Float3::Normalize(AppSettings::SunDirection);
-        //Float3 sunDir = SunLight->dir;//Float3::Normalize(AppSettings::SunDirection);
+        Float3 sunDir = SunLight->dir;
         float cosGamma = Float3::Dot(sunDir, sampleDir);
         if(cosGamma >= cosSunAngularRadius)
         {
-            return AppSettings::SunLuminance();
-            //return SunLight->Luminance();
+            return SunLight->Luminance();
         }
     }
 
@@ -203,36 +199,15 @@ static float AreaLightIntersection(const Float3& rayStart, const Float3& rayDir,
     return intersects ? intersectDist : FLT_MAX;
 }
 
-// Computes the difuse and specular contribution from the sun, given a 2D random sample point
-// representing a location on the surface of the light
-Float3 SampleSunLight(const Float3& position, const Float3& normal, RTCScene scene,
-                             const Float3& diffuseAlbedo, const Float3& cameraPos,
-                             bool includeSpecular, Float3 specAlbedo, float roughness,
-                             float u1, float u2, Float3& irradiance)
-{
-    // Treat the sun as a spherical area light that's very far away from the surface
-    const float sunDistance = 1000.0f;
-    const float radius = std::tan(DegToRad(AppSettings::SunSize)) * sunDistance;
-    Float3 sunLuminance = AppSettings::SunLuminance();
-    Float3 sunPos = position + AppSettings::SunDirection.Value() * sunDistance;
-    Float3 sampleDir;
-    return SampleSphericalAreaLight(position, normal, scene, diffuseAlbedo, cameraPos, includeSpecular,
-                                    specAlbedo, roughness, u1, u2, radius, sunPos, sunLuminance, irradiance, sampleDir);
-}
-
 Float3 SampleSunLight2(const Float3& position, const Float3& normal, RTCScene scene,
                              const Float3& diffuseAlbedo, const Float3& cameraPos,
                              bool includeSpecular, Float3 specAlbedo, float roughness,
                              float u1, float u2, const LightData *SunLight, Float3& irradiance)
 {
-    Float3 irradiance2;
-    auto vv = SampleSunLight(position, normal, scene, diffuseAlbedo, cameraPos, includeSpecular, specAlbedo, roughness, u1, u2, irradiance2);
     // Treat the sun as a spherical area light that's very far away from the surface
     const float sunDistance = 1000.0f;
-    //const float radius = std::tan(DegToRad(AppSettings::SunSize)) * sunDistance;
     const float radius = std::tan(SunLight->angular_radius) * sunDistance;
-    Float3 sunLuminance = SunLight->Luminance();//AppSettings::SunLuminance();
-    //Float3 sunPos = position + AppSettings::SunDirection.Value() * sunDistance;
+    Float3 sunLuminance = SunLight->Luminance();
     Float3 sunPos = position + SunLight->dir * sunDistance;
     Float3 sampleDir;
     auto vv2 = SampleSphericalAreaLight(position, normal, scene, diffuseAlbedo, cameraPos, includeSpecular,

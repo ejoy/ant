@@ -285,7 +285,6 @@ namespace AppSettings
     extern FloatSetting SunSize;
     extern BoolSetting NormalizeSunIntensity;
     extern SunDirectionTypesSetting SunDirType;
-    extern DirectionSetting SunDirection;
     extern FloatSetting SunAzimuth;
     extern FloatSetting SunElevation;
     extern SkyModesSetting SkyMode;
@@ -392,7 +391,6 @@ namespace AppSettings
         float SunIntensityScale;
         float SunSize;
         int32 SunDirType;
-        Float4Align Float3 SunDirection;
         float SunAzimuth;
         float SunElevation;
         bool32 EnableAreaLight;
@@ -495,9 +493,6 @@ namespace AppSettings
         return CubeMapPaths_[idx];
     }
 
-    Float3 SunLuminance();
-    Float3 SunIlluminance();
-
     inline float ISO_()
     {
         static const float ISOValues[] =
@@ -558,33 +553,10 @@ namespace AppSettings
 
     inline bool HasSunDirChanged()
     {
-        return AppSettings::SunDirType.Changed() ||
-               AppSettings::SunDirection.Changed() ||
-               AppSettings::SunAzimuth.Changed() ||
+        return AppSettings::SunAzimuth.Changed() ||
                AppSettings::SunElevation.Changed();
     }
 
-    inline void UpdateHorizontalCoords()
-    {
-        Float3 sunDir = SunDirection.Value();
-        SunElevation.SetValue(RadToDeg(asin(sunDir.y)));
-
-        float rad = atan2(sunDir.z, sunDir.x);
-        if(rad < 0.0f)
-            rad = 2.0f * Pi + rad;
-
-        float deg = RadToDeg(rad);
-        SunAzimuth.SetValue(deg);
-    }
-
-    inline void UpdateUnitVector()
-    {
-        Float3 newDir;
-        newDir.x = cos(DegToRad(SunAzimuth)) * cos(DegToRad(SunElevation));
-        newDir.y = sin(DegToRad(SunElevation));
-        newDir.z = sin(DegToRad(SunAzimuth)) * cos(DegToRad(SunElevation));
-        SunDirection.SetValue(newDir);
-    }
 
     inline uint32 NumMSAASamples(MSAAModes mode)
     {

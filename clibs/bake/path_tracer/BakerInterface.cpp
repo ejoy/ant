@@ -35,7 +35,6 @@ BakerHandle CreateBaker(const Scene* scene){
         //     AppSettings::SunSize.SetValue(l.size);
         // }
         // AppSettings::SunTintColor.SetValue(Float3(l.color.x, l.color.y, l.color.z));
-        // AppSettings::SunDirection.SetValue(Float3(l.dir.x, l.dir.y, l.dir.z));
     } else {
         AppSettings::EnableSun.SetValue(false);
         AppSettings::BakeDirectSunLight.SetValue(false);
@@ -103,6 +102,7 @@ void BakingLab::InitLights(const Scene *s, Lights &lights)
             LightData::LightType(l.type),
         });
     }
+    AppSettings::SunDirection.SetValue(lights[0].dir);
 }
 
 void Model::CreateFromScene(ID3D11Device *device, const Scene *scene, bool forceSRGB)

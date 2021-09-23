@@ -1343,7 +1343,6 @@ struct RenderThreadContext
             RandomGenerator.SeedWithRandomValue();
 
         RenderTag = newTag;
-        SkyCache.Init(AppSettings::SunDirection, AppSettings::GroundAlbedo, AppSettings::Turbidity);
         SceneBVH = &meshBaker->sceneBVH;
         EnvMaps = meshBaker->input.EnvMapData;
         OutputWidth = meshBaker->currWidth;
