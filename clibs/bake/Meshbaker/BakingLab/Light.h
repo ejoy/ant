@@ -2,8 +2,8 @@
 
 struct Scene;
 struct LightData {
-    Float3 dir;
     Float3 pos;
+    Float3 dir;
 
     Float3 color;
     float intensity;

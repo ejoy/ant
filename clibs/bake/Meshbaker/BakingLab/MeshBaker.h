@@ -112,7 +112,6 @@ public:
     SolveModes currSolveMode = SolveModes::NNLS;
     std::vector<BakePoint> bakePoints;
     std::vector<GutterTexel> gutterTexels;
-    Lights  lights;
 
     // Read-only data shared with both bake and render threads
     BVHData sceneBVH;

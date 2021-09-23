@@ -647,12 +647,14 @@ struct BakeThreadContext
             RandomGenerator.SeedWithRandomValue();
 
         BakeTag = newTag;
-        SkyCache.Init(AppSettings::SunDirection, AppSettings::GroundAlbedo, AppSettings::Turbidity);
+        lights = &meshBaker->input.lights;
+        SunLight = FindSunLight(lights);
+        SkyCache.Init(SunLight->dir, AppSettings::GroundAlbedo, AppSettings::Turbidity);
         SceneBVH = &meshBaker->sceneBVH;
         EnvMaps = meshBaker->input.EnvMapData;
         BakePoints = &meshBaker->bakePoints;
-        lights = &meshBaker->lights;
-        SunLight = FindSunLight(lights);
+        
+        
         CurrNumBatches = meshBaker->currNumBakeBatches;
         CurrLightMapSize = meshBaker->currLightMapSize;
         CurrBakeMode = meshBaker->currBakeMode;

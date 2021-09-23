@@ -10,8 +10,8 @@ typedef void* BakerHandle;
 #include "glm/gtx/quaternion.hpp"
 
 struct Light {
-    glm::vec3 dir;
     glm::vec3 pos;
+    glm::vec3 dir;
 
     glm::vec3 color;
     float intensity;

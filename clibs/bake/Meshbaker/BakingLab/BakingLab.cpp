@@ -503,7 +503,7 @@ void BakingLab::MeshbakerInitialize(const Model* sceneModel, Lights &&lights)
     BakeInputData bakeInput;
     bakeInput.SceneModel = sceneModel;
     bakeInput.Device = device;
-    bakeInput.lights = std::move(lights);
+    bakeInput.lights = lights;
     for(uint64 i = 0; i < AppSettings::NumCubeMaps; ++i)
         bakeInput.EnvMaps[i] = envMaps[i];
     meshBaker.Initialize(bakeInput);

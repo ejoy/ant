@@ -46,8 +46,8 @@ BakerHandle CreateBaker(const Scene* scene){
     // AppSettings::EnableDirectLighting.SetValue(true);
     // AppSettings::BakeDirectSunLight.SetValue(true);
     AppSettings::SkyMode.SetValue(SkyModes::Simple);
-    AppSettings::SkyColor.SetValue(Float3(4500.0000f, 4500.0000f, 4500.0000f));
-
+    //AppSettings::SkyColor.SetValue(Float3(4500.0000f, 4500.0000f, 4500.0000f));
+    AppSettings::EnableAreaLightShadows.SetValue(false);
     AppSettings::EnableIndirectLighting.SetValue(true);
     AppSettings::EnableIndirectSpecular.SetValue(true);
 
@@ -92,7 +92,8 @@ void BakingLab::InitLights(const Scene *s, Lights &lights)
     {
         lights.emplace_back(LightData {
             Float3(l.pos.x, l.pos.y, l.pos.z),
-            Float3(l.dir.x, l.dir.y, l.dir.z),
+            //Float3(l.dir.x, l.dir.y, l.dir.z),
+            Float3(-0.579100f, 0.754439f, -0.9088799f),
             Float3(l.color.x, l.color.y, l.color.z),
             l.intensity,
             l.range,

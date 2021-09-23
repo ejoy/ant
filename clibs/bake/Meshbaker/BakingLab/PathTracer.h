@@ -200,6 +200,11 @@ Float3 SampleSunLight(const Float3& position, const Float3& normal, RTCScene sce
                       bool includeSpecular, Float3 specAlbedo, float roughness,
                       float u1, float u2, Float3& irradiance);
 
+Float3 SampleSunLight2(const Float3& position, const Float3& normal, RTCScene scene,
+                             const Float3& diffuseAlbedo, const Float3& cameraPos,
+                             bool includeSpecular, Float3 specAlbedo, float roughness,
+                             float u1, float u2, const LightData *SunLight, Float3& irradiance);
+
 // Options for path tracing
 struct PathTracerParams
 {

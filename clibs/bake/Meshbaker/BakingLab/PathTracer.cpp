@@ -73,17 +73,19 @@ template<typename T> T TriangleLerp(const EmbreeRay& ray, const BVHData& bvhData
 // Returns the direct sun radiance for a direction on the skydome
 static Float3 SampleSun(Float3 sampleDir, const LightData *SunLight)
 {
-    //if(AppSettings::EnableSun)
-    if (SunLight)
+    if(AppSettings::EnableSun)
+    //if (SunLight)
     {
-        float cosSunAngularRadius = std::cos(SunLight->angular_radius);//std::cos(DegToRad(AppSettings::SunSize));
-        Float3 sunDir = SunLight->dir;//Float3::Normalize(AppSettings::SunDirection);
+        float cosSunAngularRadius = std::cos(DegToRad(AppSettings::SunSize));
+        //float cosSunAngularRadius = std::cos(SunLight->angular_radius);//std::cos(DegToRad(AppSettings::SunSize));
+        Float3 sunDir = Float3::Normalize(AppSettings::SunDirection);
+        //Float3 sunDir = SunLight->dir;//Float3::Normalize(AppSettings::SunDirection);
         float cosGamma = Float3::Dot(sunDir, sampleDir);
         if(cosGamma >= cosSunAngularRadius)
         {
-            return SunLight->Luminance();
+            return AppSettings::SunLuminance();
+            //return SunLight->Luminance();
         }
-            //res = AppSettings::SunLuminance();
     }
 
     return 0.f;
@@ -223,13 +225,15 @@ Float3 SampleSunLight2(const Float3& position, const Float3& normal, RTCScene sc
                              bool includeSpecular, Float3 specAlbedo, float roughness,
                              float u1, float u2, const LightData *SunLight, Float3& irradiance)
 {
+    Float3 irradiance2;
+    return SampleSunLight(position, normal, scene, diffuseAlbedo, cameraPos, includeSpecular, specAlbedo, roughness, u1, u2, irradiance);
     // Treat the sun as a spherical area light that's very far away from the surface
     const float sunDistance = 1000.0f;
     //const float radius = std::tan(DegToRad(AppSettings::SunSize)) * sunDistance;
     const float radius = std::tan(SunLight->angular_radius) * sunDistance;
     Float3 sunLuminance = SunLight->Luminance();//AppSettings::SunLuminance();
     //Float3 sunPos = position + AppSettings::SunDirection.Value() * sunDistance;
-    Float3 sunPos = position + SunLight->pos * sunDistance;
+    Float3 sunPos = position + SunLight->dir * sunDistance;
     Float3 sampleDir;
     return SampleSphericalAreaLight(position, normal, scene, diffuseAlbedo, cameraPos, includeSpecular,
                                     specAlbedo, roughness, u1, u2, radius, sunPos, sunLuminance, irradiance, sampleDir);
@@ -420,9 +424,9 @@ Float3 PathTrace(const PathTracerParams& params, Random& randomGenerator, float&
                     if(pathLength > 1)
                         areaLightSample = randomGenerator.RandomFloat2();
                     Float3 areaLightSampleDir;
-                    Float3 areaLightDirectLighting = SampleAreaLight(hitSurface.Position, normal, bvh.Scene, diffuseAlbedo,
+                    Float3 areaLightDirectLighting = SampleAreaLight2(hitSurface.Position, normal, bvh.Scene, diffuseAlbedo,
                                                      rayOrigin, enableSpecular, specAlbedo, roughness,
-                                                     areaLightSample.x, areaLightSample.y, directIrradiance, areaLightSampleDir);
+                                                     areaLightSample.x, areaLightSample.y, nullptr, directIrradiance, areaLightSampleDir);
                     if(!skipDirect || AppSettings::BakeDirectAreaLight)
                         directLighting += areaLightDirectLighting;
                 }
@@ -516,7 +520,7 @@ Float3 PathTrace(const PathTracerParams& params, Random& randomGenerator, float&
             else if (AppSettings::SkyMode == SkyModes::Simple)
             {
                 Float3 skyRadiance = AppSettings::SkyColor.Value() * FP16Scale;
-                if (pathLength == 1 && params.SunLight)
+                if (pathLength == 1)
                     skyRadiance += SampleSun(rayDir, params.SunLight);
                 radiance += skyRadiance * throughput;
                 irradiance += skyRadiance * irrThroughput;
