@@ -296,7 +296,7 @@ function interface:load(packname, filename)
 end
 
 local function check(tbl, r)
-	for name, content in pairs(tbl) do
+	for _, content in pairs(tbl) do
 		for what, list in pairs(content) do
 			local check = check_map[what]
 			if check and check ~= "none" then

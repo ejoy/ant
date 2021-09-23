@@ -288,8 +288,8 @@ lplay(lua_State* L) {
 	if (eidx != -1) {
 		if (auto effect = g_effekseer->get_effect(eidx); effect) {
 			int32_t start = 0;
-			if (lua_type(L, 2) == LUA_TNUMBER) {
-				start = lua_tointeger(L, 2);
+			if (lua_type(L, 3) == LUA_TNUMBER) {
+				start = lua_tointeger(L, 3);
 			}
 			pidx = effect->play(pidx, start);
 		}

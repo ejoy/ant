@@ -72,9 +72,9 @@ function font.import(filename)
 	local index = 0
 	local cache = {}
 	while true do
-		for plat_name, obj in pairs(ids) do
-			for encoding_name, encoding_id in pairs(obj.encoding) do
-				for lang_name, lang_id in pairs(obj.lang) do
+		for _, obj in pairs(ids) do
+			for _, encoding_id in pairs(obj.encoding) do
+				for _, lang_id in pairs(obj.lang) do
 					local fname, sname = ttf.namestring(data, index, obj.id, encoding_id, lang_id)
 					if fname then
 						fname = utf16toutf8(fname)
@@ -109,9 +109,8 @@ local CACHE = {}
 function font.unload(filename)
 	local c = CACHE[filename]
 	if c then
-		local removed = {}
 		CACHE[filename] = nil
-		for key, obj in pairs(CACHE) do
+		for _, obj in pairs(CACHE) do
 			if type(obj) == "table" then
 				if obj.filename == filename then
 					ttf.unload(obj.id)
@@ -165,7 +164,7 @@ function font.name(name)
 	return ttf.nametable[name]
 end
 
-local function fetch_id(idtable, id)
+local function fetch_id(_, id)
 	local key = assert(CACHE[id])
 	local obj = CACHE[key]
 	local c = CACHE[obj.filename]

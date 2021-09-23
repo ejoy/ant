@@ -1,13 +1,10 @@
-local rmlui = require "rmlui"
-
-local LT_ALWAYS <const> = 0
 local LT_ERROR <const> = 1
 local LT_ASSERT <const> = 2
 local LT_WARNING <const> = 3
 local LT_INFO <const> = 4
 local LT_DEBUG <const> = 5
 
-local function output(type, ...)
+local function output(_, ...)
 	local t = table.pack(...)
 	local s = {}
 	for i = 1, t.n do

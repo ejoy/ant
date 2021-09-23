@@ -20,9 +20,6 @@ end
 local keyframe_update_flag = {}
 
 local function process_keyframe_event(task)
-	if task.event_flag then return end
-	task.event_flag = true
-	
 	if task.play_state.manual_update or not task.play_state.play then return end
 	local event_state = task.event_state
 	local all_events = event_state.keyframe_events
@@ -59,7 +56,7 @@ local function process_keyframe_event(task)
 					if event.link_info.slot_eid and parent ~= event.link_info.slot_eid then
 						world:prefab_event(event.effect, "set_parent", "effect", event.link_info.slot_eid)
 					end
-					world:prefab_event(event.effect, "play", "effect", "", false, false)
+					world:prefab_event(event.effect, "play_effect", "effect", false, false)
 					if task.play_state.play then
 						world:prefab_event(event.effect, "speed", "effect", task.play_state.speed or 1.0)
 					end
@@ -82,7 +79,8 @@ end
 
 local iani = ecs.import.interface "ant.animation|animation"
 
-local function do_animation(poseresult, task, delta_time)
+local function do_animation(poseresult, e, delta_time)
+	local task = e._animation._current
 	if task.type == 'blend' then
 		for _, t in ipairs(task) do
 			do_animation(poseresult, t, delta_time)
@@ -90,7 +88,7 @@ local function do_animation(poseresult, task, delta_time)
 		poseresult:do_blend("blend", #task, task.weight)
 	else
 		local play_state = task.play_state
-		if not play_state.manual_update and play_state.play then 
+		if not play_state.manual_update and play_state.play and task.eid and task.eid[1] == e.eid then 
 			iani.step(task, delta_time * 0.001)
 		end
 		local ani = task.animation
@@ -100,15 +98,11 @@ end
 
 function ani_sys:sample_animation_pose()
 	local delta_time = timer.delta()
-	for e in w:select "_animation:in" do
-		e._animation._current.step_flag = false
-	end
-
-	for e in w:select "skeleton:in pose_result:in _animation:in" do
+	for e in w:select "eid:in skeleton:in pose_result:in _animation:in" do
 		local ske = e.skeleton
 		local pr = e.pose_result
 		pr:setup(ske._handle)
-		do_animation(pr, e._animation._current, delta_time)
+		do_animation(pr, e, delta_time)
 	end
 end
 
@@ -124,11 +118,10 @@ function ani_sys:end_animation()
 end
 
 function ani_sys:data_changed()
-	for e in w:select "_animation:in" do
-		e._animation._current.event_flag = false
-	end
-	for e in w:select "_animation:in" do
-		process_keyframe_event(e._animation._current)
+	for e in w:select "eid:in _animation:in" do
+		if e._animation._current.eid and e._animation._current.eid[1] == e.eid then
+			process_keyframe_event(e._animation._current)
+		end
 	end
 end
 
@@ -164,7 +157,9 @@ function ani_sys:entity_ready()
 			for e in world.w:select "eid:in" do
 				if e.eid == eid then
 					world.w:sync("_animation:in", e)
-					iani.step(e._animation._current, p0, p1)
+					if e._animation._current.eid and e._animation._current.eid[1] == eid then
+						iani.step(e._animation._current, p0, p1)
+					end
 				end
 			end
 		elseif what == "set_time" then

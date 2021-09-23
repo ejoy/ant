@@ -33,10 +33,9 @@ Effekseer::Handle effect_adapter::play(Effekseer::Handle handle, int32_t startTi
 	handle = manager_->Play(effect_, {}, startTime);
 	play_objects_.insert(std::pair<Effekseer::Handle, play_object>(handle, {}));
 	auto& play_obj = play_objects_[handle];
-	play_objects_[handle].tranform.Indentity();
+	play_obj.tranform.Indentity();
 	manager_->SetMatrix(handle, play_obj.tranform);
 	manager_->SetSpeed(handle, play_obj.speed);
-	play_obj.stop = false;
 	return handle;
 }
 

@@ -28,7 +28,7 @@ function vfs.realpath(path)
         local f = assert(io.open(realpath(path)))
         local str = f:read "a"
         f:close()
-        return assert(load(str, "@/" .. path))()
+        return assert(load(str, "@" .. path))()
     end
     rawvfs = dofile "engine/firmware/vfs.lua"
     repo = rawvfs.new(repopath)

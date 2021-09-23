@@ -2,8 +2,6 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local math3d = require "math3d"
-
 local s = ecs.system "luaecs_sync_system"
 
 local evCreate = world:sub {"component_register", "scene_entity"}
@@ -24,9 +22,6 @@ local function findEntity(eid)
 			return v
 		end
 	end
-end
-local function isLightmapResultEntity(e)
-	return e.lightmap_result ~= nil
 end
 local function isLightmapEntity(e)
 	return e.lightmap ~= nil

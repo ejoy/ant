@@ -102,7 +102,9 @@ private:
 	StyleSheetSpecification();
 	~StyleSheetSpecification();
 
+	PropertyDefinition& RegisterProperty(PropertyId id, const std::string& property_name, bool inherited);
 	PropertyDefinition& RegisterProperty(PropertyId id, const std::string& property_name, const std::string& default_value, bool inherited);
+
 	ShorthandId RegisterShorthand(ShorthandId id, const std::string& shorthand_name, const std::string& property_names, ShorthandType type);
 
 	// Registers RmlUi's default parsers.

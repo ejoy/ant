@@ -63,7 +63,7 @@ lua_pushobject(lua_State* L, void* handle) {
 template <typename T>
 T* lua_checkobject(lua_State* L, int idx) {
 	luaL_checktype(L, idx, LUA_TLIGHTUSERDATA);
-	return static_cast<T*>(lua_touserdata(L, 1));
+	return static_cast<T*>(lua_touserdata(L, idx));
 }
 
 static std::string
