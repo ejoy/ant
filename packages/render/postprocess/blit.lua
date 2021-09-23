@@ -17,12 +17,10 @@ local blit_sys 	= ecs.system "blit_system"
 local blit_viewid = viewidmgr.get "blit"
 
 function blit_sys:init()
-	world:create_entity {
+	ecs.create_entity {
 		policy = {
 			"ant.general|name",
 			"ant.render|render",
-			"ant.scene|render_object",
-			"ant.scene|scene_object",
 		},
 		data = {
 			scene = {
@@ -35,8 +33,6 @@ function blit_sys:init()
 			state           = 0,
 			name            = "resolve_quad",
 			mesh            = ientity.fullquad_mesh(),
-			INIT            = true,
-			render_object_update = true,
 			blit_obj		= true,
 		}
 	}
@@ -44,7 +40,7 @@ end
 
 function blit_sys:init_world()
 	local vr = irq.view_rect "main_queue"
-    world:create_entity {
+    ecs.create_entity {
         policy = {
             "ant.render|postprocess_queue",
             "ant.render|watch_screen_buffer",

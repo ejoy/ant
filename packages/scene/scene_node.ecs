@@ -3,21 +3,6 @@ import "@ant.luaecs"
 component_v2 "eid"
     .type "int"
 
---RenderObject
-policy_v2 "render_object"
-    .component_v2 "render_object_update"
-    .component_v2 "render_object"
-    .component_v2 "filter_material"
-    .component_v2 "eid"
-
-component_v2 "render_object_update"
-
-component_v2 "render_object"
-    .type "lua"
-
-component_v2 "filter_material"
-    .type "lua"
-
 --SceneObject
 policy_v2 "scene_object"
     .component_v2 "scene"

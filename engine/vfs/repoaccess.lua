@@ -25,14 +25,7 @@ local function load_package(path)
     return config.name
 end
 
-local function split(str)
-    local r = {}
-    str:gsub('[^/]*', function (w) r[#r+1] = w end)
-    return r
-end
-
 function access.addmount(repo, name, path)
-	name = name:match "^/?(.-)/?$"
 	local p = repo._mountpoint[name]
 	if p == nil then
 		repo._mountpoint[name] = lfs.path(path)
@@ -41,6 +34,12 @@ function access.addmount(repo, name, path)
 	else
 		error("Duplicate mount: " ..name)
 	end
+end
+
+local function split(str)
+    local r = {}
+    str:gsub('[^%s]+', function (w) r[#r+1] = w end)
+    return r
 end
 
 function access.readmount(repo)
@@ -52,34 +51,44 @@ function access.readmount(repo)
 	end
 	local f <close> = assert(io.open((repo._root / ".mount"):string(), "rb"))
 	for line in f:lines() do
-		local name, path = line:match "^%s*(.-)%s+(.-)%s*$"
-		if name == nil then
-			if not (line:match "^%s*#" or line:match "^%s*$") then
-				error ("Invalid .mount file : " .. line)
+		local function assert_syntax(cond)
+			if not cond then
+				error("Invalid .mount file : " .. line, 2)
 			end
-
-			goto continue
 		end
-		path = path:gsub("%s*#.*$","")	-- strip comment
-		path = path:gsub("%${([^}]*)}", {
+		local tokens = split(line
+			:gsub("#.*$","")	-- strip comment
+			:gsub("%${([^}]*)}", {
 			project = repo._root:string():gsub("(.-)[/\\]?$", "%1")
-		})
-		path = lfs.absolute(lfs.path(path))
-		if name == '@pkg-one' then
-			local pkgname = load_package(path)
-			addmount('pkg/'..pkgname, path)
-		elseif name == '@pkg' then
-			for pkgpath in path:list_directory() do
-				if not pkgpath:string():match ".DS_Store" then
-					local pkgname = load_package(pkgpath)
-					addmount('pkg/'..pkgname, pkgpath)
+		}))
+		assert_syntax(#tokens >= 1)
+		local name = tokens[1]
+		if name:sub(1, 1) == "@" then
+			if name == '@pkg-one' then
+				assert_syntax(#tokens == 2)
+				local path = lfs.absolute(lfs.path(tokens[2]))
+				local pkgname = load_package(path)
+				addmount('/pkg/'..pkgname, path)
+			elseif name == '@pkg' then
+				assert_syntax(#tokens == 2)
+				local path = lfs.absolute(lfs.path(tokens[2]))
+				for pkgpath in path:list_directory() do
+					if not pkgpath:string():match ".DS_Store" then
+						local pkgname = load_package(pkgpath)
+						addmount('/pkg/'..pkgname, pkgpath)
+					end
 				end
+			else
+				assert_syntax(false)
 			end
 		else
+			assert_syntax(#tokens == 2)
+			local path = lfs.absolute(lfs.path(tokens[2]))
+			if name:sub(1,1) ~= "/" then
+				name = "/"..name
+			end
 			addmount(name, path)
 		end
-
-		::continue::
 	end
 	table.sort(mountname)
 	repo._mountname = mountname
@@ -87,7 +96,13 @@ function access.readmount(repo)
 end
 
 function access.realpath(repo, pathname)
-	pathname = pathname:match "^/?(.-)/?$"
+	if pathname:sub(1,1) ~= "/" then
+		--TODO
+		if pathname:sub(1,7) ~= "engine/" then
+			log.warn(("Use relative path as absolute path: `%s`"):format(pathname))
+		end
+		pathname = "/"..pathname
+	end
 	local mountnames = repo._mountname
 	for i = #mountnames, 1, -1 do
 		local mpath = mountnames[i]
@@ -99,7 +114,7 @@ function access.realpath(repo, pathname)
 			return repo._mountpoint[mpath] / pathname:sub(n+1)
 		end
 	end
-	return repo._root / pathname
+	return repo._root / pathname:sub(2)
 end
 
 function access.virtualpath(repo, pathname)
@@ -136,18 +151,20 @@ function access.list_files(repo, filepath)
 		end
 		f:close()
 	end
-	filepath = (filepath:match "^/?(.-)/?$") .. "/"
+	if filepath:sub(-1) ~= "/" then
+		filepath = filepath.."/"
+	end
 	if filepath == '/' then
 		-- root path
 		for mountname in pairs(repo._mountpoint) do
-			local name = mountname:match "^([^/]+)/?"
+			local name = mountname:match "^/([^/]+)/?"
 			files[name] = "v"
 		end
 	else
 		local n = #filepath
 		for mountname in pairs(repo._mountpoint) do
 			if mountname:sub(1,n) == filepath then
-				local name = mountname:sub(n+1):match "^([^/]+)/?"
+				local name = mountname:sub(n):match "^/([^/]+)/?"
 				files[name] = "v"
 			end
 		end

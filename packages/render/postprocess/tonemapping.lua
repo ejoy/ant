@@ -13,18 +13,15 @@ local tm_sys    = ecs.system "tonemapping_system"
 local ientity   = ecs.import.interface "ant.render|entity"
 local irender   = ecs.import.interface "ant.render|irender"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
-local icamera   = ecs.import.interface "ant.camera|camera"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local tm_viewid<const> = viewidmgr.get "tonemapping"
 
 function tm_sys:init()
-    world:create_entity{
+    ecs.create_entity {
         policy = {
             "ant.general|name",
             "ant.render|simplerender",
-            "ant.scene|render_object",
-            "ant.scene|scene_object",
         },
         data = {
             name = "tonemapping_render_obj",
@@ -37,8 +34,6 @@ function tm_sys:init()
             render_object   = {},
             filter_material = {},
             state = 0,
-            render_object_update = true,
-            INIT = true,
             tonemapping = true,
         }
     }
@@ -55,7 +50,7 @@ local rt_flags<const> = sampler.sampler_flag {
 
 function tm_sys:init_world()
     local vr = irq.view_rect "main_queue"
-    world:create_entity {
+    ecs.create_entity {
         policy = {
             "ant.render|postprocess_queue",
             "ant.render|watch_screen_buffer",

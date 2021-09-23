@@ -171,7 +171,18 @@ local function init(w, config)
 		log.debug(("Import decl %q"):format(file))
 		return assert(pm.findenv(current, packname).loadfile(file))
 	end)
-	w._import = create_importor(w)
+	w._importor = create_importor(w)
+	function w:_import(objname, package, name)
+		local res = rawget(w._class[objname], name)
+		if res then
+			return res
+		end
+		res = w._importor[objname](package, name)
+		if res then
+			solve_object(res, w, objname, name)
+		end
+		return res
+	end
 	w._set_methods = setmetatable({}, {
 		__index = w._methods,
 		__newindex = function(_, name, f)
@@ -197,7 +208,7 @@ local function init(w, config)
 		config.update_decl(w)
 	end
 
-	local import = w._import
+	local import = w._importor
 	for _, objname in ipairs(OBJECT) do
 		if config.ecs[objname] then
 			for _, k in ipairs(config.ecs[objname]) do

@@ -190,7 +190,7 @@ local function create_csm_entity(index, vr, fbidx, depth_type)
 		}
 
 	w:register {name = queuename}
-	world:create_entity {
+	ecs.create_entity {
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|cull",

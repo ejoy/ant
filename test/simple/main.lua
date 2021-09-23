@@ -3,9 +3,6 @@ require "bootstrap"
 import_package "ant.window".start {
     import = {
         "@ant.test.simple",
-        "@ant.objcontroller",
-        "@ant.animation",
-        "@ant.effekseer",
     },
     pipeline = {
         "init",

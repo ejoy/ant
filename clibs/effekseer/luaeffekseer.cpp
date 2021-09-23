@@ -291,7 +291,7 @@ lplay(lua_State* L) {
 			if (lua_type(L, 2) == LUA_TNUMBER) {
 				start = lua_tointeger(L, 2);
 			}
-			pidx = effect->play(start);
+			pidx = effect->play(pidx, start);
 		}
 	}
 	lua_pushinteger(L, pidx);

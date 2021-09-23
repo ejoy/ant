@@ -188,9 +188,9 @@ function path_mt:remove_permissions()
     error 'Not implemented'
 end
 
+
 function path_mt:localpath()
-    local _, s = normalize_split(self._value)
-    local localpath = vfs.realpath(table.concat(s, "/"))
+    local localpath = vfs.realpath(normalize(self._value))
     assert(localpath, "count find local path: "..self._value)
     return lfs.path(localpath)
 end

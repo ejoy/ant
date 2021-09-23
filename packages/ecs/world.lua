@@ -424,7 +424,7 @@ function world:enable_system(name, enable)
 end
 
 function world:interface(fullname)
-	log.error("world:interface is deprecated")
+	log.error("world:interface is deprecated, use ecs.import.interface instead.")
 	return self._class.interface[fullname]
 end
 

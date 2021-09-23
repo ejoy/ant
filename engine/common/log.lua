@@ -45,7 +45,7 @@ local function packstring(...)
 end
 
 local m = {}
-m.level = 'info'
+m.level = __ANT_RUNTIME__ and 'debug' or 'info'
 m.skip = nil
 for i, name in ipairs(modes) do
     levels[name] = i
@@ -56,7 +56,7 @@ for i, name in ipairs(modes) do
         local info = debug.getinfo(m.skip or 2, 'Sl')
         m.skip = nil
         local text = ('[%-5s](%s:%3d) %s'):format(name:upper(), info.short_src, info.currentline, packstring(...))
-        if color[name] then
+        if not __ANT_RUNTIME__ and color[name] then
             text = color[name]..text.."\x1b[0m"
         end
         LOG(text)

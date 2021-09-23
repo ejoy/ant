@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local rhwi  = import_package "ant.hwi"
-local utils = require "mathutils"(ecs, world)
+local utils = ecs.require "mathutils"
 local imgui = require "imgui"
 local m     = ecs.system 'input_system'
 local event_mouse = world:sub {"mouse"}

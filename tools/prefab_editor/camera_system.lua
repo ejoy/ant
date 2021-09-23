@@ -4,10 +4,10 @@ local w = world.w
 
 local iom		= ecs.import.interface "ant.objcontroller|obj_motion"
 local irq		= ecs.import.interface "ant.render|irenderqueue"
-local camera_mgr= require "camera_manager"(ecs, world)
+local camera_mgr= ecs.require "camera_manager"
 local math3d	= require "math3d"
-local utils		= require "mathutils"(ecs, world)
-local inspector = require "widget.inspector"(ecs, world)
+local utils		= ecs.require "mathutils"
+local inspector = ecs.require "widget.inspector"
 
 local m			= ecs.system "camera_system"
 

@@ -11,4 +11,4 @@ data:
   light_type: directional
   name: directional_light
   make_shadow: true
-  state: 0x01
+  state: visible

@@ -110,10 +110,10 @@ function repo_build_dir(self, filepath, cache, namehashcache)
 	end
 	local hashs = {}
 	for name, type in pairs(access.list_files(self, filepath)) do
-		local fullname = filepath == '' and name or filepath .. '/' .. name	-- full name in repo
+		local fullname = filepath .. name	-- full name in repo
 		if not is_resource(fullname) then
 			if type == "v" or lfs.is_directory(access.realpath(self, fullname)) then
-				local hash = repo_build_dir(self, fullname, cache, namehashcache)
+				local hash = repo_build_dir(self, fullname .. '/', cache, namehashcache)
 				table.insert(hashs, string.format("d %s %s", hash, name))
 			else
 				local realfullname = self:realpath(fullname)
@@ -210,7 +210,7 @@ function repo:build()
 
 	local cache = {}
 	self._namecache[''] = undef
-	local roothash = repo_build_dir(self, "", cache, self._namecache)
+	local roothash = repo_build_dir(self, "/", cache, self._namecache)
 
 	repo_write_cache(self, cache)
 	repo_write_root(self, roothash)
@@ -393,7 +393,7 @@ function repo:build_dir(rpath, lpath)
 	access.addmount(r, rpath, lpath)
 	setmetatable(r, repo)
 	local cache = {}
-	local roothash = repo_build_dir(r, rpath, cache, r._namecache)
+	local roothash = repo_build_dir(r, rpath.."/", cache, r._namecache)
 	repo_write_cache(r, cache)
 	return roothash
 end

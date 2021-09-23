@@ -20,7 +20,7 @@ thread.newchannel "IOreq"
 
 local io_req = thread.channel_produce "IOreq"
 
-local firmware_io = vfs.realpath("engine/firmware/io.lua")
+local firmware_io = vfs.realpath("/engine/firmware/io.lua")
 thread.thread (([[
     -- IO thread
     local firmware_io = %q
@@ -33,16 +33,16 @@ thread.thread (([[
         f:close()
         return load(str, "@/" .. name)
     end
-    assert(loadfile(firmware_io, 'engine/firmware/io.lua'))(loadfile)
+    assert(loadfile(firmware_io, '/engine/firmware/io.lua'))(loadfile)
 ]]):format(firmware_io))
 
 local function initIOThread()
-    config.vfspath = vfs.realpath("engine/firmware/vfs.lua")
+    config.vfspath = vfs.realpath("/engine/firmware/vfs.lua")
 	io_req(false, config)
 end
 
 initIOThread()
-vfs.initfunc "engine/firmware/init_thread.lua"
+vfs.initfunc "/engine/firmware/init_thread.lua"
 
 local function dofile(path)
     local f, err = vfs.loadfile(path)
@@ -54,4 +54,4 @@ local function dofile(path)
     return f()
 end
 
-dofile "main.lua"
+dofile "/main.lua"

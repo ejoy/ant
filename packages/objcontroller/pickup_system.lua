@@ -180,7 +180,7 @@ local function create_pick_entity()
 		}
 	}
 
-	world:create_entity {
+	ecs.create_entity {
 		policy = {
 			"ant.general|name",
 			"ant.render|render_queue",

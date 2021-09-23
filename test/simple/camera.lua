@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local object = world:create_instance "res/camera.prefab"
+local object = ecs.create_instance "/res/camera.prefab"
 local camera = object.tag.camera[1]
 
 function object:on_init()

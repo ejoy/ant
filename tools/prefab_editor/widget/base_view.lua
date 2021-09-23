@@ -1,12 +1,17 @@
-local utils     = require "common.utils"
-local math3d    = require "math3d"
-local uiproperty = require "widget.uiproperty"
-local hierarchy = require "hierarchy_edit"
-local BaseView  = require "widget.view_class".BaseView
-local world
-local iom
-local gizmo
-local prefab_mgr
+local ecs = ...
+local world = ecs.world
+local w = world.w
+
+local prefab_mgr    = ecs.require "prefab_manager"
+local iom           = ecs.import.interface "ant.objcontroller|obj_motion"
+local gizmo         = ecs.require "gizmo.gizmo"
+
+local utils         = require "common.utils"
+local math3d        = require "math3d"
+local uiproperty    = require "widget.uiproperty"
+local hierarchy     = require "hierarchy_edit"
+local BaseView      = require "widget.view_class".BaseView
+
 function BaseView:_init()
     local base = {}
     base["script"]   = uiproperty.ResourcePath({label = "Script", extension = ".lua"})
@@ -161,10 +166,4 @@ function BaseView:show()
     self.general_property:show()
 end
 
-return function(ecs, w)
-    world   = w
-    prefab_mgr = require "prefab_manager"(ecs, world)
-    iom     = ecs.import.interface "ant.objcontroller|obj_motion"
-    gizmo   = require "gizmo.gizmo"(ecs, world)
-    return BaseView
-end
+return BaseView

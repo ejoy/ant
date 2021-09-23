@@ -12,7 +12,7 @@ local function createBootstrap()
         local str = f:read 'a'
         f:close()
         assert(load(str, '@/engine/firmware/init_thread.lua'))()
-        package.path = "pkg/ant.debugger/?.lua;engine/?.lua;engine/?/?.lua"
+        package.path = "/pkg/ant.debugger/?.lua;engine/?.lua;engine/?/?.lua"
         require 'common.init_thread'
         local thread = require "remotedebug.thread"
         thread.bootstrap_lua = debug.getinfo(1, "S").source

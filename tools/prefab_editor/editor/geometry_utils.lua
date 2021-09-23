@@ -1,8 +1,12 @@
+local ecs = ...
+local world     = ecs.world
 local math3d  	= require "math3d"
 local bgfx 		= require "bgfx"
-local geometry_drawer
-local geolib
-local world
+local ies 		= ecs.import.interface "ant.scene|ientity_state"
+local geopkg 	= import_package "ant.geometry"
+local geolib 	= geopkg.geometry
+local geometry_drawer = geopkg.drawer
+
 local m = {}
 
 local function create_dynamic_mesh(layout, vb, ib)
@@ -113,10 +117,4 @@ function m.get_aabb_vb_ib(aabb_shape, color)
 	return desc.vb, desc.ib
 end
 
-return function(ecs, w)
-	world = w
-	local geopkg = import_package "ant.geometry"
-	geometry_drawer = geopkg.drawer
-	geolib = geopkg.geometry
-    return m
-end
+return m

@@ -11,7 +11,6 @@ return function (repopath)
         end
     end
     function vfs.list(path)
-        path = path:match "^/?(.-)/?$" .. '/'
         local item = {}
         for filename in pairs(access.list_files(repo, path)) do
             local realpath = access.realpath(repo, path .. filename)

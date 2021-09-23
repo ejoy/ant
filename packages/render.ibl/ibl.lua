@@ -73,7 +73,7 @@ local function create_prefilter_entities()
     local r = 0
 
     local function create_prefilter_compute_entity(dispatchsize, prefilter)
-        world:create_entity {
+        ecs.create_entity {
             policy = {
                 "ant.render|compute_policy",
                 "ant.render.ibl|prefilter",

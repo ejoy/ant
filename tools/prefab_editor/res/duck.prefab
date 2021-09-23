@@ -4,8 +4,7 @@ action:
 data:
   name: Rootscene
   scene_entity: true
-  transform:
-    s: {-1, 1, 1}
+  transform: {}
 policy:
   ant.general|name
   ant.scene|hierarchy_policy
@@ -19,8 +18,8 @@ data:
   scene_entity: true
   transform:
     r: {0, 0, 0, 1}
-    s: {0.009999999776482582, 0.009999999776482582, 0.009999999776482582, 0}
-    t: {0, 0, 0, 1}
+    s: {0.009999999776482582, 0.009999999776482582, 0.009999999776482582, 1}
+    t: {0, 0, 0, 0}
 policy:
   ant.general|name
   ant.scene|hierarchy_policy
@@ -29,15 +28,12 @@ policy:
 action:
   mount: 2
 data:
-  material: /pkg/tools.prefab_editor/res/Duck.glb|materials/blinn3-fx_CW.material
+  material: /pkg/tools.prefab_editor/res/Duck.glb|materials/blinn3-fx.material
   mesh: /pkg/tools.prefab_editor/res/Duck.glb|meshes/LOD3spShape_P1.meshbin
   name: ""
   scene_entity: true
   state: 7
-  transform:
-    r: {0, 0, 0, 1}
-    s: {1, 1, 1}
-    t: {0, 0, 0}
+  transform: {}
 policy:
   ant.general|name
   ant.render|render
@@ -50,7 +46,7 @@ data:
   intensity: 2
   light_type: directional
   motion_type: dynamic
-  name: directional5
+  name: directional2
   range: 1
   state: 1
   transform:

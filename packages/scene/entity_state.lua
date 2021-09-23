@@ -13,11 +13,25 @@ local STATE_TYPE = {
 	auxgeom		= 0x00010000,
 }
 
+local function filter_mask(names)
+	local s = 0
+	for name in names:gmatch "[%w_]+" do
+		s = s | STATE_TYPE[name]
+	end
+	return s
+end
+
 local es_trans = ecs.transform "entity_state_transform"
 
 function es_trans.process_entity(e)
 	local rc = e._rendercache
-	rc.entity_state = e.state or 0
+	local s = e.state
+	if s == nil then
+		s = 0
+	elseif type(s) == "string" then
+		s = filter_mask(s)
+	end
+	rc.entity_state = s
 end
 
 local ies = ecs.interface "ientity_state"
@@ -65,10 +79,4 @@ function ies.create_state(namelist)
 	return state
 end
 
-function ies.filter_mask(namelist)
-	local s = 0
-	for name in namelist:gmatch "[%w_]+" do
-		s = s | STATE_TYPE[name]
-	end
-	return s
-end
+ies.filter_mask = filter_mask
