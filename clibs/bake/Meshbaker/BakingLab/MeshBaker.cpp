@@ -793,9 +793,9 @@ template<typename TBaker> static bool BakeDriver(BakeThreadContext& context, TBa
                     if(AppSettings::BakeDirectSunLight)
                     {
                         Float3 sunLightIrradiance;
-                        sampleResult += SampleSunLight(bakePoint.Position, bakePoint.Normal, context.SceneBVH->Scene,
+                        sampleResult += SampleSunLight2(bakePoint.Position, bakePoint.Normal, context.SceneBVH->Scene,
                             1.0f, 0.0f, false, 0.0f, 1.0f, sampleSet.Lens().x,
-                            sampleSet.Lens().y, sunLightIrradiance);
+                            sampleSet.Lens().y,  params.SunLight, sunLightIrradiance);
                     }
                 }
 
@@ -880,9 +880,9 @@ template<typename TBaker> static bool BakeDriver(BakeThreadContext& context, TBa
                 if(AppSettings::BakeDirectSunLight)
                 {
                     Float3 sunLightIrradiance;
-                    sampleResult += SampleSunLight(bakePoint.Position, bakePoint.Normal, context.SceneBVH->Scene,
+                    sampleResult += SampleSunLight2(bakePoint.Position, bakePoint.Normal, context.SceneBVH->Scene,
                         1.0f, 0.0f, false, 0.0f, 1.0f, sampleSet.Lens().x,
-                        sampleSet.Lens().y, sunLightIrradiance);
+                        sampleSet.Lens().y,  params.SunLight, sunLightIrradiance);
                 }
             }
 
@@ -1526,6 +1526,7 @@ static uint32 __stdcall RenderThread(void* data)
 
 static uint64 GetNumThreads()
 {
+    return 1;
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
     return std::max<uint64>(1, sysInfo.dwNumberOfProcessors - 1);

@@ -226,7 +226,7 @@ Float3 SampleSunLight2(const Float3& position, const Float3& normal, RTCScene sc
                              float u1, float u2, const LightData *SunLight, Float3& irradiance)
 {
     Float3 irradiance2;
-    return SampleSunLight(position, normal, scene, diffuseAlbedo, cameraPos, includeSpecular, specAlbedo, roughness, u1, u2, irradiance);
+    auto vv = SampleSunLight(position, normal, scene, diffuseAlbedo, cameraPos, includeSpecular, specAlbedo, roughness, u1, u2, irradiance2);
     // Treat the sun as a spherical area light that's very far away from the surface
     const float sunDistance = 1000.0f;
     //const float radius = std::tan(DegToRad(AppSettings::SunSize)) * sunDistance;
@@ -235,8 +235,9 @@ Float3 SampleSunLight2(const Float3& position, const Float3& normal, RTCScene sc
     //Float3 sunPos = position + AppSettings::SunDirection.Value() * sunDistance;
     Float3 sunPos = position + SunLight->dir * sunDistance;
     Float3 sampleDir;
-    return SampleSphericalAreaLight(position, normal, scene, diffuseAlbedo, cameraPos, includeSpecular,
+    auto vv2 = SampleSphericalAreaLight(position, normal, scene, diffuseAlbedo, cameraPos, includeSpecular,
                                     specAlbedo, roughness, u1, u2, radius, sunPos, sunLuminance, irradiance, sampleDir);
+    return vv2;
 }
 
 // Generates a full list of sample points for all integration types
@@ -410,9 +411,9 @@ Float3 PathTrace(const PathTracerParams& params, Random& randomGenerator, float&
                     Float2 sunSample = params.SampleSet->Sun();
                     if(pathLength > 1)
                         sunSample = randomGenerator.RandomFloat2();
-                    Float3 sunDirectLighting = SampleSunLight(hitSurface.Position, normal, bvh.Scene, diffuseAlbedo,
+                    Float3 sunDirectLighting = SampleSunLight2(hitSurface.Position, normal, bvh.Scene, diffuseAlbedo,
                                                      rayOrigin, enableSpecular, specAlbedo, roughness,
-                                                     sunSample.x, sunSample.y, directIrradiance);
+                                                     sunSample.x, sunSample.y, params.SunLight, directIrradiance);
                     if(!skipDirect || AppSettings::BakeDirectSunLight)
                         directLighting += sunDirectLighting;
                 }
