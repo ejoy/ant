@@ -113,7 +113,7 @@ namespace lua_struct {
         unpack_field(L, idx, "angular_radius", v.angular_radius);
 
         const char* type = nullptr;
-        unpack_field(L, idx, "type", type);
+        unpack_field(L, idx, "light_type", type);
         if (strcmp(type, "directional") == 0){
             v.type = Light::LT_Directional;
         } else if (strcmp(type, "point") == 0){

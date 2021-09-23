@@ -163,7 +163,7 @@ for v in w:select "worldmat:in light:in" do
         return t == "station" or t == "static"
     end
     if is_bake_light_type(e.lightdata.motion_type) then
-        light_counter[e.lightdata.type] = light_counter[e.lightdata.type] + 1
+        light_counter[e.lightdata.light_type] = light_counter[e.lightdata.light_type] + 1
 
         if e.lightdata.light_type == "directional" then
             output[#output+1] = e

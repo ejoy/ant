@@ -14,7 +14,7 @@ local function init_light(e)
         range       = math.maxinteger,
         inner_cutoff= 0,
         outter_cutoff= 0,
-        angular_radius= 0,
+        angular_radius= e.angular_radius or math.rad(0.27)
 	}
 
 	if t == "point" or t == "spot" then
@@ -34,8 +34,6 @@ local function init_light(e)
 			l.inner_cutoff = math.cos(l.inner_radian * 0.5)
 			l.outter_cutoff = math.cos(l.outter_radian * 0.5)
 		end
-    elseif t == "area" then
-        l.angular_radius = e.angular_radius or 0.27
 	end
 	return l
 end

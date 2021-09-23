@@ -28,7 +28,7 @@ function lt.process_entity(e)
 		outter_cutoff = 0,
 
 		--area light
-		angular_radius= 0,
+		angular_radius= e.angular_radius or math.rad(0.27),
 	}
 
 	if t == "point" or t == "spot" then
@@ -49,8 +49,6 @@ function lt.process_entity(e)
 			l.inner_cutoff = math.cos(l.inner_radian * 0.5)
 			l.outter_cutoff = math.cos(l.outter_radian * 0.5)
 		end
-	elseif t == "area" then
-        l.angular_radius = e.angular_radius or 0.27
 	end
 	e._light = l
 end
