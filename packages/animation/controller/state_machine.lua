@@ -167,7 +167,7 @@ local function do_play(e, anim, real_clips, anim_state)
 			if not anim_state.manual then
 				realspeed = real_clips[1][2].speed
 			end
-			io.stdout:write("do_play: start_ratio, realspeed ", tostring(start_ratio), " ", tostring(realspeed), "\n")
+			--io.stdout:write("do_play: start_ratio, realspeed ", tostring(start_ratio), " ", tostring(realspeed), "\n")
 		end
 
 		anim_state.init = true
@@ -287,14 +287,9 @@ function iani.get_group_duration(eid, name)
 end
 
 function iani.step(task, s_delta, absolute)
-	if task.step_flag then return end
-	task.step_flag = true
-	
 	local play_state = task.play_state
 	local playspeed = play_state.manual_update and 1.0 or play_state.speed
-	
-	io.stdout:write("step ", tostring(s_delta), " ", tostring(playspeed), "\n")
-
+	--io.stdout:write("step ", tostring(s_delta), " ", tostring(playspeed), "\n")
 	local adjust_delta = play_state.play and s_delta * playspeed or s_delta
 	local next_time = absolute and adjust_delta or (play_state.ratio * task.animation._handle:duration() + adjust_delta)
 	local duration = task.animation._handle:duration()
