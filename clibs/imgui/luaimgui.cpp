@@ -2324,13 +2324,6 @@ winGetWindowContentRegionMax(lua_State *L) {
 }
 
 static int
-winGetWindowContentRegionWidth(lua_State *L) {
-	float w = ImGui::GetWindowContentRegionWidth();
-	lua_pushnumber(L, w);
-	return 1;
-}
-
-static int
 winPushStyleColor(lua_State *L) {
 	int stylecol = (int)luaL_checkinteger(L, 1);
 
@@ -3170,17 +3163,21 @@ static struct enum_pair eWindowFlags[] = {
 };
 
 static struct enum_pair eFocusedFlags[] = {
+	ENUM(ImGuiFocusedFlags, None),
 	ENUM(ImGuiFocusedFlags, ChildWindows),
 	ENUM(ImGuiFocusedFlags, RootWindow),
 	ENUM(ImGuiFocusedFlags, AnyWindow),
+	ENUM(ImGuiFocusedFlags, DockHierarchy),
 	ENUM(ImGuiFocusedFlags, RootAndChildWindows),
 	{ NULL, 0 },
 };
 
 static struct enum_pair eHoveredFlags[] = {
+	ENUM(ImGuiHoveredFlags, None),
 	ENUM(ImGuiHoveredFlags, ChildWindows),
 	ENUM(ImGuiHoveredFlags, RootWindow),
 	ENUM(ImGuiHoveredFlags, AnyWindow),
+	ENUM(ImGuiHoveredFlags, DockHierarchy),
 	ENUM(ImGuiHoveredFlags, AllowWhenBlockedByPopup),
 	ENUM(ImGuiHoveredFlags, AllowWhenBlockedByActiveItem),
 	ENUM(ImGuiHoveredFlags, AllowWhenOverlapped),
@@ -3886,7 +3883,6 @@ luaopen_imgui(lua_State *L) {
 		{ "GetContentRegionAvail", winGetContentRegionAvail },
 		{ "GetWindowContentRegionMin", winGetWindowContentRegionMin },
 		{ "GetWindowContentRegionMax", winGetWindowContentRegionMax },
-		{ "GetWindowContentRegionWidth", winGetWindowContentRegionWidth },
 		{ "PushStyleColor", winPushStyleColor },
 		{ "PopStyleColor", winPopStyleColor },
 		{ "PushStyleVar", winPushStyleVar },

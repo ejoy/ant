@@ -195,7 +195,7 @@ function offline.TYPE(id, fullpath, roothash)
 		path = ""
 		name = fullpath
 	end
-	local dir, hash = repo:list(path, roothash)
+	local dir = repo:list(path, roothash)
 	if dir then
 		local v = dir[name]
 		if v then

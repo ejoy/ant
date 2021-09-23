@@ -49,41 +49,46 @@ PropertySpecification::~PropertySpecification()
 {
 }
 
-// Registers a property with a new definition.
-PropertyDefinition& PropertySpecification::RegisterProperty(const std::string& property_name, const std::string& default_value, bool inherited, PropertyId id)
-{
-	if (id == PropertyId::Invalid)
-		id = property_map->GetOrCreateId(property_name);
-	else
-		property_map->AddPair(id, property_name);
-
+PropertyDefinition& PropertySpecification::RegisterProperty(PropertyId id, const std::string& property_name, bool inherited, const std::string& default_value) {
+	assert (id != PropertyId::Invalid);
+	property_map->AddPair(id, property_name);
 	size_t index = (size_t)id;
-
-	if (index < properties.size())
-	{
-		// We don't want to owerwrite an existing entry.
-		if (properties[index])
-		{
+	if (index < properties.size()) 	{
+		if (properties[index]) {
 			Log::Message(Log::Level::Error, "While registering property '%s': The property is already registered.", property_name.c_str());
 			return *properties[index];
 		}
 	}
-	else
-	{
-		// Resize vector to hold the new index
+	else {
 		properties.resize((index*3)/2 + 1);
 	}
-
-	// Create and insert the new property
 	properties[index] = std::make_unique<PropertyDefinition>(id, default_value, inherited);
 	property_ids.Insert(id);
 	if (inherited)
 		property_ids_inherited.Insert(id);
-
 	return *properties[index];
 }
 
-// Returns a property definition.
+PropertyDefinition& PropertySpecification::RegisterProperty(PropertyId id, const std::string& property_name, bool inherited) {
+	assert (id != PropertyId::Invalid);
+	property_map->AddPair(id, property_name);
+	size_t index = (size_t)id;
+	if (index < properties.size()) {
+		if (properties[index]) {
+			Log::Message(Log::Level::Error, "While registering property '%s': The property is already registered.", property_name.c_str());
+			return *properties[index];
+		}
+	}
+	else {
+		properties.resize((index*3)/2 + 1);
+	}
+	properties[index] = std::make_unique<PropertyDefinition>(id, inherited);
+	property_ids.Insert(id);
+	if (inherited)
+		property_ids_inherited.Insert(id);
+	return *properties[index];
+}
+
 const PropertyDefinition* PropertySpecification::GetProperty(PropertyId id) const
 {
 	if (id == PropertyId::Invalid || (size_t)id >= properties.size())

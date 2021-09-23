@@ -42,6 +42,7 @@ namespace Rml {
 class RMLUICORE_API PropertyDefinition final
 {
 public:
+	PropertyDefinition(PropertyId id, bool inherited);
 	PropertyDefinition(PropertyId id, const std::string& default_value, bool inherited);
 	PropertyDefinition(const PropertyDefinition &) = delete; 
 	PropertyDefinition& operator=(const PropertyDefinition &) = delete;

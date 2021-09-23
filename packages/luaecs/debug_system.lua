@@ -1,5 +1,4 @@
 local ecs = ...
-local w = ecs.world.w
 
 local m = ecs.system "debug_system"
 

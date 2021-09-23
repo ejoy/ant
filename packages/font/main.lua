@@ -12,6 +12,7 @@ function m.init()
     else
         lfont(fontinit (([[
             package.cpath = %q
+            package.path = "/pkg/ant.font/?.lua"
             require "vfs"
             dofile "/pkg/ant.font/manager.lua"
         ]]):format(package.cpath)))

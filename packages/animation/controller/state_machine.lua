@@ -158,34 +158,38 @@ function get_play_info(eid, name)
 
 end
 
-local function do_play(e, anim, real_clips, isloop, manual, anim_state)
-	local start_ratio = 0.0
-	local realspeed = 1.0
-	if real_clips then
-		start_ratio = real_clips[1][2].range[1] / anim._handle:duration()
-		realspeed = real_clips[1][2].speed
-	end
+local function do_play(e, anim, real_clips, anim_state)
 	if not anim_state.init then
+		local start_ratio = 0.0
+		local realspeed = 1.0
+		if real_clips then
+			start_ratio = real_clips[1][2].range[1] / anim._handle:duration()
+			if not anim_state.manual then
+				realspeed = real_clips[1][2].speed
+			end
+			--io.stdout:write("do_play: start_ratio, realspeed ", tostring(start_ratio), " ", tostring(realspeed), "\n")
+		end
+
 		anim_state.init = true
 		anim_state.eid = {}
 		anim_state.animation = anim
 		anim_state.event_state = { next_index = 1, keyframe_events = real_clips and real_clips[1][2].key_event or {} }
 		anim_state.clip_state = { current = {clip_index = 1, clips = real_clips}, clips = e.anim_clips or {}}
-		anim_state.play_state = { ratio = start_ratio, previous_ratio = start_ratio, speed = realspeed, play = true, loop = isloop or false, manual_update = manual}
+		anim_state.play_state = { ratio = start_ratio, previous_ratio = start_ratio, speed = realspeed, play = true, loop = anim_state.loop, manual_update = anim_state.manual}
 	end
 	e._animation._current = anim_state
 	anim_state.eid[#anim_state.eid + 1] = e.eid
 end
 
-function iani.play(eid, anim_state, name, loop, manual)
+function iani.play(eid, anim_state)
 	for e in world.w:select "eid:in animation:in _animation:in anim_clips:in" do
 		if e.eid == eid then
-			local anim = e.animation[name]
+			local anim = e.animation[anim_state.name]
 			if not anim then
-				print("animation:", name, "not exist")
+				print("animation:", anim_state.name, "not exist")
 				return false
 			end
-			do_play(e, anim, nil, loop, manual, anim_state)
+			do_play(e, anim, nil, anim_state)
 			return true
 		end
 	end
@@ -206,28 +210,28 @@ local function find_clip_or_group(clips, name, group)
 	end
 end
 
-function iani.play_clip(eid, anim_state, name, loop, manual)
+function iani.play_clip(eid, anim_state)
 	for e in world.w:select "eid:in animation:in _animation:out anim_clips:in" do
 		if e.eid == eid then
 			local real_clips
-			local clip = find_clip_or_group(e.anim_clips, name)
+			local clip = find_clip_or_group(e.anim_clips, anim_state.name)
 			if clip then
 				real_clips = {{e.animation[clip.anim_name], clip }}
 			end
 			if not clip or not real_clips then
-				print("clip:", name, "not exist")
+				print("clip:", anim_state.name, "not exist")
 				return false
 			end
-			do_play(e, real_clips[1][1], real_clips, loop, manual, anim_state);
+			do_play(e, real_clips[1][1], real_clips, anim_state);
 		end
 	end
 end
 
-function iani.play_group(eid, anim_state, name, loop, manual)
+function iani.play_group(eid, anim_state)
 	for e in world.w:select "eid:in animation:in _animation:in anim_clips:in" do
 		if e.eid == eid then
 			local real_clips
-			local group = find_clip_or_group(e.anim_clips, name, true)
+			local group = find_clip_or_group(e.anim_clips, anim_state.name, true)
 			if group then
 				real_clips = {}
 				for _, clip_index in ipairs(group.subclips) do
@@ -236,10 +240,10 @@ function iani.play_group(eid, anim_state, name, loop, manual)
 				end
 			end
 			if not group or #real_clips < 1 then
-				print("group:", name, "not exist")
+				print("group:", anim_state.name, "not exist")
 				return false
 			end
-			do_play(e, real_clips[1][1], real_clips, loop, manual, anim_state);
+			do_play(e, real_clips[1][1], real_clips, anim_state);
 		end
 	end
 end
@@ -283,11 +287,9 @@ function iani.get_group_duration(eid, name)
 end
 
 function iani.step(task, s_delta, absolute)
-	if task.step_flag then return end
-	task.step_flag = true
-	
 	local play_state = task.play_state
-	local playspeed = EditMode and play_state.speed or 1.0
+	local playspeed = play_state.manual_update and 1.0 or play_state.speed
+	--io.stdout:write("step ", tostring(s_delta), " ", tostring(playspeed), "\n")
 	local adjust_delta = play_state.play and s_delta * playspeed or s_delta
 	local next_time = absolute and adjust_delta or (play_state.ratio * task.animation._handle:duration() + adjust_delta)
 	local duration = task.animation._handle:duration()

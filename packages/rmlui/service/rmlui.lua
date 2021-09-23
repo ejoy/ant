@@ -1,1 +1,1 @@
-return import_package "ant.rmlui"
+return require "core.startup"

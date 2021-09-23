@@ -51,10 +51,13 @@ function EffectView:show()
     if imgui.widget.Button("Play") then
         local instance = world[self.eid].effect_instance
         instance.playid = effekseer.play(instance.handle, instance.playid)
+        effekseer.set_speed(instance.handle, instance.playid, instance.speed)
     end
 end
 
 function EffectView:on_set_speed(value)
+    local template = hierarchy:get_template(self.eid)
+    template.template.data.speed = value
     local instance = world[self.eid].effect_instance
     instance.speed = value
     effekseer.set_speed(instance.handle, instance.playid, value)
