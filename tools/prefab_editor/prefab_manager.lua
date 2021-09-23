@@ -715,15 +715,15 @@ function m:add_effect(filename)
             transform = {},
             effekseer = filename,
             speed = 1.0,
-            auto_play = true,
+            auto_play = false,
             loop = true
 		},
     }
     if world[effect].effect_instance.handle == -1 then
         print("create effect faild : ", filename)
-    else
-        local inst = world[effect].effect_instance
-        inst.playid = effekseer.play(inst.handle, inst.playid)
+    -- else
+    --     local inst = world[effect].effect_instance
+    --     inst.playid = effekseer.play(inst.handle, inst.playid)
     end
     self.entities[#self.entities+1] = effect
     --world[effect].parent = gizmo.target_eid or self.root

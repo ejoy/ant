@@ -182,6 +182,15 @@ function effekseer_sys:render_submit()
 end
 
 function effekseer_sys:follow_transform_updated()
+    for _, eid in event_entity_register:unpack() do 
+        local effect = world[eid].effekseer and world[eid].effect_instance or nil
+        if effect then
+            if effect.auto_play then
+                world:pub {"play_effect", effect}
+            end
+        end
+    end
+
     for _, inst, lp in event_do_play:unpack() do
         inst.playid = effekseer.play(inst.handle, inst.playid)
         effekseer.set_speed(inst.handle, inst.playid, inst.speed)
