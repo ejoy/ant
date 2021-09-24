@@ -1,6 +1,6 @@
 #pragma once
 
-struct Scene;
+#include "../SampleFramework11/v1.02/SF11_Math.h"
 struct LightData {
     Float3 pos;
     Float3 dir;

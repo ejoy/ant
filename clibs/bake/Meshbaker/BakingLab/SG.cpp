@@ -17,12 +17,12 @@
 #include "../Externals/eigen/unsupported/Eigen/NonLinearOptimization"
 #include "../Externals/eigen/unsupported/Eigen/NumericalDiff"
 
-#include "SG.h"
 #include <FileIO.h>
-#include "AppSettings.h"
 #include <Graphics/Sampling.h>
+#include "BakeSetting.h"
+#include "SG.h"
 
-static SG defaultInitialGuess[AppSettings::MaxSGCount];
+static SG defaultInitialGuess[BakeSetting::MaxSGCount];
 static bool eigenInitialized = false;
 
 // Generate uniform spherical gaussians on the sphere or hemisphere
@@ -30,7 +30,7 @@ void GenerateUniformSGs(SG* outSGs, uint64 numSGs, SGDistribution distribution)
 {
     const uint64 N = distribution == SGDistribution::Hemispherical ? numSGs * 2 : numSGs;
 
-    Float3 means[AppSettings::MaxSGCount * 2];
+    Float3 means[BakeSetting::MaxSGCount * 2];
 
     float inc = Pi * (3.0f - std::sqrt(5.0f));
     float off = 2.0f / N;
@@ -237,7 +237,7 @@ void SGRunningAverage(const Float3& dir, const Float3& color, SG* outSGs, uint64
 {
 	float sampleWeightScale = 1.0f / (sampleIdx + 1);
 
-    float sampleLobeWeights[AppSettings::MaxSGCount] = { };
+    float sampleLobeWeights[BakeSetting::MaxSGCount] = { };
     Float3 currentEstimate;
 
     for(uint64 lobeIdx = 0; lobeIdx < numSGs; ++lobeIdx)
@@ -281,7 +281,7 @@ static void SolveRunningAverage(SGSolveParam& params, bool nonNegative)
     Assert_(params.XSamples != nullptr);
     Assert_(params.YSamples != nullptr);
 
-    float lobeWeights[AppSettings::MaxSGCount] = { };
+    float lobeWeights[BakeSetting::MaxSGCount] = { };
 
     // Project color samples onto the SGs
     for(uint32 i = 0; i < params.NumSamples; ++i)
@@ -291,17 +291,18 @@ static void SolveRunningAverage(SGSolveParam& params, bool nonNegative)
 // Solve the set of spherical gaussians based on input set of data
 void SolveSGs(SGSolveParam& params)
 {
-    Assert_(params.NumSGs <= uint64(AppSettings::MaxSGCount));
+    Assert_(params.NumSGs <= uint64(BakeSetting::MaxSGCount));
     for(uint64 i = 0; i < params.NumSGs; ++i)
         params.OutSGs[i] = defaultInitialGuess[i];
 
-    if(AppSettings::SolveMode == SolveModes::NNLS)
+    const auto sm = s_BakeSetting.SolveMode;
+    if( sm == SolveModes::NNLS)
         SolveNNLS(params);
-    else if(AppSettings::SolveMode == SolveModes::SVD)
+    else if(sm == SolveModes::SVD)
         SolveSVD(params);
-    else if(AppSettings::SolveMode == SolveModes::RunningAverage)
+    else if(sm == SolveModes::RunningAverage)
         SolveRunningAverage(params, false);
-    else if(AppSettings::SolveMode == SolveModes::RunningAverageNN)
+    else if(sm == SolveModes::RunningAverageNN)
         SolveRunningAverage(params, true);
     else
         SolveProjection(params);

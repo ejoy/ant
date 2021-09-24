@@ -14,7 +14,7 @@
 #include <SF11_Math.h>
 #include <Graphics/Textures.h>
 
-#include "AppSettings.h"
+#include "BakeSetting.h"
 #include "Light.h"
 
 // Forward declarations

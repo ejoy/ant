@@ -1,8 +1,6 @@
 #include "BakerInterface.h"
 
 #include "../Meshbaker/BakingLab/BakingLab.h"
-#include "../Meshbaker/BakingLab/AppSettings.h"
-
 #include <functional>
 
 static inline uint32_t _FindDirectionalLight(const Scene *scene){
@@ -22,33 +20,33 @@ BakerHandle CreateBaker(const Scene* scene){
     auto bl = new BakingLab();
     bl->Init(scene);
 
-    AppSettings::BakeMode.SetValue(BakeModes::Diffuse);
+    // AppSettings::BakeMode.SetValue(BakeModes::Diffuse);
 
-    auto lidx = _FindDirectionalLight(scene);
-    if (lidx != UINT32_MAX){
-        AppSettings::EnableDirectLighting.SetValue(true);
-        AppSettings::BakeDirectSunLight.SetValue(true);
-        AppSettings::EnableSun.SetValue(true);
+    // auto lidx = _FindDirectionalLight(scene);
+    // if (lidx != UINT32_MAX){
+    //     AppSettings::EnableDirectLighting.SetValue(true);
+    //     AppSettings::BakeDirectSunLight.SetValue(true);
+    //     AppSettings::EnableSun.SetValue(true);
 
-        const auto& l = scene->lights[lidx];
-        // if (l.size != 0){
-        //     AppSettings::SunSize.SetValue(l.size);
-        // }
-        // AppSettings::SunTintColor.SetValue(Float3(l.color.x, l.color.y, l.color.z));
-    } else {
-        AppSettings::EnableSun.SetValue(false);
-        AppSettings::BakeDirectSunLight.SetValue(false);
-        AppSettings::EnableDirectLighting.SetValue(false);
-    }
+    //     const auto& l = scene->lights[lidx];
+    //     // if (l.size != 0){
+    //     //     AppSettings::SunSize.SetValue(l.size);
+    //     // }
+    //     // AppSettings::SunTintColor.SetValue(Float3(l.color.x, l.color.y, l.color.z));
+    // } else {
+    //     AppSettings::EnableSun.SetValue(false);
+    //     AppSettings::BakeDirectSunLight.SetValue(false);
+    //     AppSettings::EnableDirectLighting.SetValue(false);
+    // }
 
     // AppSettings::EnableSun.SetValue(true);
     // AppSettings::EnableDirectLighting.SetValue(true);
     // AppSettings::BakeDirectSunLight.SetValue(true);
-    AppSettings::SkyMode.SetValue(SkyModes::Simple);
-    //AppSettings::SkyColor.SetValue(Float3(4500.0000f, 4500.0000f, 4500.0000f));
-    AppSettings::EnableAreaLightShadows.SetValue(true);
-    AppSettings::EnableIndirectLighting.SetValue(true);
-    AppSettings::EnableIndirectSpecular.SetValue(true);
+    // AppSettings::SkyMode.SetValue(SkyModes::Simple);
+    // //AppSettings::SkyColor.SetValue(Float3(4500.0000f, 4500.0000f, 4500.0000f));
+    // AppSettings::EnableAreaLightShadows.SetValue(true);
+    // AppSettings::EnableIndirectLighting.SetValue(true);
+    // AppSettings::EnableIndirectSpecular.SetValue(true);
 
     return bl;
 }
@@ -57,13 +55,10 @@ static_assert(sizeof(glm::vec4) == sizeof(Float4), "glm::vec4 must equal Float4"
 
 void Bake(BakerHandle handle, BakeResult *result){
     auto bl = (BakingLab*)handle;
-    const auto &meshes = bl->GetModel(0).Meshes();
+    const auto &meshes = bl->GetModel().Meshes();
     result->lightmaps.resize(meshes.size());
     for (uint32_t bakeMeshIdx=0; bakeMeshIdx<meshes.size(); ++bakeMeshIdx){
         auto lmsize = meshes[bakeMeshIdx].GetLightmapSize();
-        if (lmsize > 0){
-            AppSettings::LightMapResolution.SetValue(lmsize);
-        }
         bl->Bake(bakeMeshIdx);
         auto &lm = result->lightmaps[bakeMeshIdx];
         const auto& r = bl->GetBakeResult(0);
@@ -89,20 +84,19 @@ void BakingLab::InitLights(const Scene *s, Lights &lights)
     lights.reserve(s->lights.size());
     for (const auto &l : s->lights)
     {
-        lights.emplace_back(LightData {
-            Float3(l.pos.x, l.pos.y, l.pos.z),
-            //Float3(l.dir.x, l.dir.y, l.dir.z),
-            Float3(-0.5791499f, 0.75443f, -0.9088799f),
-            Float3(l.color.x, l.color.y, l.color.z),
-            l.intensity,
-            l.range,
-            l.inner_cutoff,
-            l.outter_cutoff,
-            l.angular_radius,
-            LightData::LightType(l.type),
-        });
+        LightData ld;
+        ld.pos = Float3(l.pos.x, l.pos.y, l.pos.z);
+        ld.dir = Float3(l.dir.x, l.dir.y, l.dir.z);
+        ld.color = Float3(l.color.x, l.color.y, l.color.z);
+        ld.intensity = l.intensity;
+        ld.range = l.range;
+        ld.inner_cutoff = l.inner_cutoff;
+        ld.outter_cutoff = l.outter_cutoff;
+        ld.angular_radius = l.angular_radius;
+        ld.type = LightData::LightType(l.type);
+
+        lights.emplace_back(ld);
     }
-    AppSettings::SunDirection.SetValue(lights[0].dir);
 }
 
 void Model::CreateFromScene(ID3D11Device *device, const Scene *scene, bool forceSRGB)

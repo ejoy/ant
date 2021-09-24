@@ -18,8 +18,6 @@
 #include <Graphics/SH.h>
 #include <Timer.h>
 #include <App.h>
-#include <Graphics/Skybox.h>
-#include <Graphics/Camera.h>
 #include <Graphics/Textures.h>
 #include <Graphics/BRDF.h>
 #include <Graphics/Sampling.h>
@@ -31,10 +29,7 @@
 // Suppress vs2013: "new behavior: elements of array 'array' will be default initialized"
 #pragma warning(disable : 4351)
 
-static const uint64 TileSize = 16;
-static const uint64 BakeGroupSizeX = 8;
-static const uint64 BakeGroupSizeY = 8;
-static const uint64 BakeGroupSize = BakeGroupSizeX * BakeGroupSizeY;
+
 
 #ifdef _DEBUG
 #include <fstream>
@@ -623,7 +618,6 @@ const LightData* FindSunLight(const Lights *lights)
 struct BakeThreadContext
 {
     uint64 BakeTag = uint64(-1);
-    SkyCache SkyCache;
     const BVHData* SceneBVH = nullptr;
     const TextureData<Half4>* EnvMaps = nullptr;
     const std::vector<BakePoint>* BakePoints = nullptr;
@@ -649,20 +643,18 @@ struct BakeThreadContext
         BakeTag = newTag;
         lights = &meshBaker->input.lights;
         SunLight = FindSunLight(lights);
-        SkyCache.Init(SunLight->dir, AppSettings::GroundAlbedo, AppSettings::Turbidity);
         SceneBVH = &meshBaker->sceneBVH;
         EnvMaps = meshBaker->input.EnvMapData;
         BakePoints = &meshBaker->bakePoints;
-        
-        
+
         CurrNumBatches = meshBaker->currNumBakeBatches;
         CurrLightMapSize = meshBaker->currLightMapSize;
         CurrBakeMode = meshBaker->currBakeMode;
         CurrSolveMode = meshBaker->currSolveMode;
         BakeOutput = bakeOutput;
         CurrBatch = currBatch;
-        CurrSampleMode = AppSettings::BakeSampleMode;
-        CurrNumSamples = AppSettings::NumBakeSamples;
+        CurrSampleMode = BakeSetting::SampleMode;
+        CurrNumSamples = BakeSetting::NumBakeSample;
         Samples = samples;
     }
 };
@@ -682,11 +674,11 @@ template<typename TBaker> static bool BakeDriver(BakeThreadContext& context, TBa
 
     // Are we baking one sample per texel and progessively integrating, or are we going to
     // fully compute the final baked texel value and flood fill the neighbors?
-    const bool progressiveintegration = AppSettings::SupportsProgressiveIntegration(context.CurrBakeMode, context.CurrSolveMode);
+    const bool progressiveintegration = s_BakeSetting.SupportsProgressiveIntegration(context.CurrBakeMode, context.CurrSolveMode);
 
     // Figure out which 8x8 group we're working on
-    const uint64 numGroupsX = (context.CurrLightMapSize + (BakeGroupSizeX - 1)) / BakeGroupSizeX;
-    const uint64 numGroupsY = (context.CurrLightMapSize + (BakeGroupSizeY - 1)) / BakeGroupSizeY;
+    const uint64 numGroupsX = (context.CurrLightMapSize + (BakeSetting::BakeGroupSizeX - 1)) / BakeSetting::BakeGroupSizeX;
+    const uint64 numGroupsY = (context.CurrLightMapSize + (BakeSetting::BakeGroupSizeY - 1)) / BakeSetting::BakeGroupSizeY;
     const uint64 numBakeGroups = numGroupsX * numGroupsY;
 
     const uint64 groupIdx = batchIdx % numBakeGroups;
@@ -698,7 +690,7 @@ template<typename TBaker> static bool BakeDriver(BakeThreadContext& context, TBa
 
     Random& random = context.RandomGenerator;
 
-    const bool addAreaLight = AppSettings::EnableAreaLight && AppSettings::BakeDirectAreaLight;
+    const bool addAreaLight = false;//AppSettings::EnableAreaLight && AppSettings::BakeDirectAreaLight;
 
     // Get the set of integration samples to use, which is tiled across threads
     const uint64 numThreads = context.Samples->size();
@@ -712,9 +704,9 @@ template<typename TBaker> static bool BakeDriver(BakeThreadContext& context, TBa
     params.EnableDiffuse = true;
     params.EnableSpecular = false;
     params.EnableBounceSpecular = false;
-    params.MaxPathLength = AppSettings::MaxBakePathLength;
-    params.RussianRouletteDepth = AppSettings::BakeRussianRouletteDepth;
-    params.RussianRouletteProbability = AppSettings::BakeRussianRouletteProbability;
+    params.MaxPathLength                = BakeSetting::MaxBakePathLength;
+    params.RussianRouletteDepth         = BakeSetting::BakeRussianRouletteDepth;
+    params.RussianRouletteProbability   = BakeSetting::BakeRussianRouletteProbability;
     params.RayLen = FLT_MAX;
     params.SceneBVH = context.SceneBVH;
     params.SkyCache = &context.SkyCache;
@@ -725,15 +717,15 @@ template<typename TBaker> static bool BakeDriver(BakeThreadContext& context, TBa
         const uint64 sampleIdx = batchIdx / numBakeGroups;
 
         // Loop over all texels in the 8x8 group, and compute 1 sample for each
-        for(uint64 groupTexelIdxX = 0; groupTexelIdxX < BakeGroupSizeX; ++groupTexelIdxX)
+        for(uint64 groupTexelIdxX = 0; groupTexelIdxX < BakeSetting::BakeGroupSizeX; ++groupTexelIdxX)
         {
-            for(uint64 groupTexelIdxY = 0; groupTexelIdxY < BakeGroupSizeY; ++groupTexelIdxY)
+            for(uint64 groupTexelIdxY = 0; groupTexelIdxY < BakeSetting::BakeGroupSizeY; ++groupTexelIdxY)
             {
-                const uint64 groupTexelIdx = groupTexelIdxY * BakeGroupSizeX + groupTexelIdxX;
+                const uint64 groupTexelIdx = groupTexelIdxY * BakeSetting::BakeGroupSizeX + groupTexelIdxX;
 
                 // Compute the absolute indices of the texel we're going to work on
-                const uint64 texelIdxX = groupIdxX * BakeGroupSizeX + groupTexelIdxX;
-                const uint64 texelIdxY = groupIdxY * BakeGroupSizeY + groupTexelIdxY;
+                const uint64 texelIdxX = groupIdxX * BakeSetting::BakeGroupSizeX + groupTexelIdxX;
+                const uint64 texelIdxY = groupIdxY * BakeSetting::BakeGroupSizeY + groupTexelIdxY;
                 const uint64 texelIdx = texelIdxY * context.CurrLightMapSize + texelIdxX;
                 if(texelIdxX >= context.CurrLightMapSize || texelIdxY >= context.CurrLightMapSize)
                     continue;
@@ -790,7 +782,8 @@ template<typename TBaker> static bool BakeDriver(BakeThreadContext& context, TBa
                     bool hitSky = false;
                     sampleResult = PathTrace(params, random, illuminance, hitSky);
 
-                    if(AppSettings::BakeDirectSunLight)
+                    const bool BakeDirectSunLight = true;
+                    if(BakeDirectSunLight)
                     {
                         Float3 sunLightIrradiance;
                         sampleResult += SampleSunLight2(bakePoint.Position, bakePoint.Normal, context.SceneBVH->Scene,
@@ -824,11 +817,11 @@ template<typename TBaker> static bool BakeDriver(BakeThreadContext& context, TBa
 
         // Figure out the texel within the group that we're working on (we do 64 passes per group, each one a different texel)
         const uint64 groupTexelIdx =  batchIdx / numBakeGroups;
-        const uint64 groupTexelIdxX = groupTexelIdx % BakeGroupSizeX;
-        const uint64 groupTexelIdxY = groupTexelIdx / BakeGroupSizeX;
+        const uint64 groupTexelIdxX = groupTexelIdx % BakeSetting::BakeGroupSizeX;
+        const uint64 groupTexelIdxY = groupTexelIdx / BakeSetting::BakeGroupSizeX;
 
-        const uint64 texelIdxX = groupIdxX * BakeGroupSizeX + groupTexelIdxX;
-        const uint64 texelIdxY = groupIdxY * BakeGroupSizeY + groupTexelIdxY;
+        const uint64 texelIdxX = groupIdxX * BakeSetting::BakeGroupSizeX + groupTexelIdxX;
+        const uint64 texelIdxY = groupIdxY * BakeSetting::BakeGroupSizeY + groupTexelIdxY;
         const uint64 texelIdx = texelIdxY * context.CurrLightMapSize + texelIdxX;
         if(texelIdxX >= context.CurrLightMapSize || texelIdxY >= context.CurrLightMapSize)
             return true;
@@ -877,7 +870,8 @@ template<typename TBaker> static bool BakeDriver(BakeThreadContext& context, TBa
                 bool hitSky = false;
                 sampleResult = PathTrace(params, random, illuminance, hitSky);
 
-                if(AppSettings::BakeDirectSunLight)
+                const bool BakeDirectSunLight = true;
+                if(BakeDirectSunLight)
                 {
                     Float3 sunLightIrradiance;
                     sampleResult += SampleSunLight2(bakePoint.Position, bakePoint.Normal, context.SceneBVH->Scene,
@@ -901,12 +895,12 @@ template<typename TBaker> static bool BakeDriver(BakeThreadContext& context, TBa
             context.BakeOutput[basisIdx][texelIdx] = texelResults[basisIdx];
 
         // Temporarily fill in the rest of the texels in the group
-        for(uint64 i = groupTexelIdx; i < BakeGroupSize; ++i)
+        for(uint64 i = groupTexelIdx; i < BakeSetting::BakeGroupSize; ++i)
         {
-            const uint64 offsetX = i % BakeGroupSizeX;
-            const uint64 offsetY = i / BakeGroupSizeX;
-            const uint64 neighborX = groupIdxX * BakeGroupSizeX + offsetX;
-            const uint64 neighborY = groupIdxY * BakeGroupSizeY + offsetY;
+            const uint64 offsetX = i % BakeSetting::BakeGroupSizeX;
+            const uint64 offsetY = i / BakeSetting::BakeGroupSizeX;
+            const uint64 neighborX = groupIdxX * BakeSetting::BakeGroupSizeX + offsetX;
+            const uint64 neighborY = groupIdxY * BakeSetting::BakeGroupSizeY + offsetY;
             if(neighborX >= context.CurrLightMapSize || neighborY >= context.CurrLightMapSize)
                 continue;
 
@@ -1311,216 +1305,6 @@ static void ExtractBakePoints(const BakeInputData& bakeInput, std::vector<BakePo
     PrintString("Finished! (%fs)", timer.DeltaSecondsF());
 }
 
-// == Ground Truth Rendering ======================================================================
-
-// Data uses by the ground truth render thread
-struct RenderThreadContext
-{
-    uint64 RenderTag = uint64(-1);
-    SkyCache SkyCache;
-    const BVHData* SceneBVH = nullptr;
-    const TextureData<Half4>* EnvMaps = nullptr;
-    uint32 OutputWidth;
-    uint32 OutputHeight;
-    Float3 CameraPos;
-    Quaternion CameraOrientation;
-    Float4x4 Proj;
-    Float4x4 ViewProjInv;
-    uint64 CurrNumTiles;
-    Random RandomGenerator;
-    SampleModes CurrSampleMode = SampleModes::Random;
-    uint64 CurrNumSamples = 0;
-    const std::vector<IntegrationSamples>* Samples;
-    FixedArray<Half4>* RenderBuffer = nullptr;
-    FixedArray<float>* RenderWeightBuffer = nullptr;
-    volatile int64* CurrTile = nullptr;
-
-    void Init(FixedArray<Half4>* renderBuffer, FixedArray<float>* renderWeightBuffer,
-              const std::vector<IntegrationSamples>* samples,
-              volatile int64* currTile, const MeshBaker* meshBaker, uint64 newTag)
-    {
-        if(RenderTag == uint64(-1))
-            RandomGenerator.SeedWithRandomValue();
-
-        RenderTag = newTag;
-        SceneBVH = &meshBaker->sceneBVH;
-        EnvMaps = meshBaker->input.EnvMapData;
-        OutputWidth = meshBaker->currWidth;
-        OutputHeight = meshBaker->currHeight;
-        CameraPos = meshBaker->currCameraPos;
-        CameraOrientation = meshBaker->currCameraOrientation;
-        Proj = meshBaker->currProj;
-        ViewProjInv = meshBaker->currViewProjInv;
-        CurrNumTiles = meshBaker->currNumTiles;
-        RenderBuffer = renderBuffer;
-        RenderWeightBuffer = renderWeightBuffer;
-        CurrTile = currTile;
-        CurrSampleMode = AppSettings::RenderSampleMode;
-        CurrNumSamples = AppSettings::NumRenderSamples;
-        Samples = samples;
-    }
-};
-
-// Runs a single iteration of the ground truth render thread. This function will compute
-// a single radiance for every pixel within a tile, and blend with with the previous result.
-static bool RenderDriver(RenderThreadContext& context)
-{
-    assert(false && "can't be here");
-    if(context.CurrNumTiles == 0)
-        return false;
-
-    const uint64 tileIdx = InterlockedIncrement64(context.CurrTile) - 1;
-    const uint64 passIdx = tileIdx / context.CurrNumTiles;
-    const uint64 passTileIdx = tileIdx % context.CurrNumTiles;
-
-    const uint64 sqrtNumSamples = context.CurrNumSamples;
-    const uint64 numSamplesPerPixel = sqrtNumSamples * sqrtNumSamples;
-    if(passIdx >= numSamplesPerPixel)
-        return false;
-
-    const uint64 numPixelsPerTile = TileSize * TileSize;
-
-    const Float4x4 viewProjInv = context.ViewProjInv;
-    const uint64 screenWidth = context.OutputWidth;
-    const uint64 screenHeight = context.OutputHeight;
-    const uint64 numTilesX = (screenWidth + (TileSize - 1)) / TileSize;
-    const uint64 numTilesY = (screenHeight + (TileSize - 1)) / TileSize;
-    const uint64 tileX = passTileIdx % numTilesX;
-    const uint64 tileY = passTileIdx / numTilesX;
-    const uint64 startX = tileX * TileSize;
-    const uint64 startY = tileY * TileSize;
-    const uint64 endX = std::min(startX + TileSize, screenWidth);
-    const uint64 endY = std::min(startY + TileSize, screenHeight);
-
-    const Float3x3 cameraRot = context.CameraOrientation.ToFloat3x3();
-    const Float3 cameraX = cameraRot.Right();
-    const Float3 cameraY = cameraRot.Up();
-
-    const float focusDistance = AppSettings::FocusDistance;
-    const float apertureSize = AppSettings::ApertureWidth;
-
-    const float numSides = float(AppSettings::NumBlades);
-    const float polyAmt = AppSettings::BokehPolygonAmount;
-
-    const uint64 passIdxX = passIdx % sqrtNumSamples;
-    const uint64 passIdxY = passIdx / sqrtNumSamples;
-
-    const bool32 enableDOF = AppSettings::EnableDOF;
-
-    const uint64 numThreads = context.Samples->size();
-    const IntegrationSamples& samples = (*context.Samples)[passTileIdx % numThreads];
-
-    const int32 pathLength = AppSettings::EnableIndirectLighting ? AppSettings::MaxRenderPathLength : 2;
-
-    uint64 tilePixelIdx = 0;
-    for(uint64 y = startY; y < endY; ++y)
-    {
-        for(uint64 x = startX; x < endX; ++x)
-        {
-            const uint64 pixelIdx = (y * screenWidth + x);
-            IntegrationSampleSet sampleSet;
-            sampleSet.Init(samples, tilePixelIdx, passIdx);
-
-            Float2 pixelSample = sampleSet.Pixel();
-
-            Float3 rayStart;
-            Float3 rayDir;
-            if(enableDOF)
-            {
-                // Pick a random point on the lens to use for sampling. Use a mapping from unit square
-                // to disc/polygon. We negate the position to make the sampling match the gather
-                // pattern used in the real-time shader.
-                Float2 lensSample = sampleSet.Lens();
-                const Float2 lensPos = SquareToConcentricDiskMapping(lensSample.x, lensSample.y, numSides, polyAmt) * apertureSize * -1.0f;
-
-                // Set up a ray going from the sensor through the lens.
-                rayStart = context.CameraPos + lensPos.x * cameraX + lensPos.y * cameraY;
-                float ncdX = (x + pixelSample.x) / (screenWidth / 2.0f) - 1.0f;
-                float ncdY = ((y + pixelSample.y) / (screenHeight / 2.0f) - 1.0f) * -1.0f;
-                float ncdZ = Float3::Transform(Float3(0.0f, 0.0f, focusDistance), context.Proj).z;
-                Float3 focusPoint = Float3::Transform(Float3(ncdX, ncdY, ncdZ), viewProjInv);
-                rayDir = Float3::Normalize(focusPoint - rayStart);
-            }
-            else
-            {
-                float ncdX = (x + pixelSample.x) / (screenWidth / 2.0f) - 1.0f;
-                float ncdY = ((y + pixelSample.y) / (screenHeight / 2.0f) - 1.0f) * -1.0f;
-                rayStart = Float3::Transform(Float3(ncdX, ncdY, 0.0f), viewProjInv);
-                Float3 rayEnd = Float3::Transform(Float3(ncdX, ncdY, 1.0f), viewProjInv);
-                rayDir = Float3::Normalize(rayEnd - rayStart);
-            }
-
-            float illuminance = 0.0f;
-            bool hitSky;
-            PathTracerParams params;
-            params.RayDir = rayDir;
-            params.RayStart = rayStart;
-            params.RayLen = FLT_MAX;
-            params.SceneBVH = context.SceneBVH;
-            params.SampleSet = &sampleSet;
-            params.SkyCache = &context.SkyCache;
-            params.EnvMaps = context.EnvMaps;
-            // params.EnableDirectAreaLight = true;
-            // params.EnableDirectSun = true;
-            params.EnableDiffuse = AppSettings::EnableDiffuse;
-            params.EnableSpecular = AppSettings::EnableSpecular;
-            params.EnableBounceSpecular = uint8(AppSettings::EnableRenderBounceSpecular);
-            params.ViewIndirectSpecular = uint8(AppSettings::ViewIndirectSpecular);
-            params.ViewIndirectDiffuse = uint8(AppSettings::ViewIndirectDiffuse);
-            params.MaxPathLength = pathLength;
-            params.RussianRouletteDepth = AppSettings::RenderRussianRouletteDepth;
-            params.RussianRouletteProbability = AppSettings::RenderRussianRouletteProbability;
-            Float3 radiance = PathTrace(params, context.RandomGenerator, illuminance, hitSky);
-
-            FixedArray<Half4>& renderBuffer = *context.RenderBuffer;
-            FixedArray<float>& renderWeightBuffer = *context.RenderWeightBuffer;
-            Float4 oldValue = renderBuffer[pixelIdx].ToFloat4();
-
-            float oldWeight = passIdx > 0 ? renderWeightBuffer[pixelIdx] : 0.0f;
-            Float4 newValue = (oldValue * oldWeight) + Float4(radiance, illuminance);
-            float newWeight = oldWeight + 1.0f;
-            renderBuffer[pixelIdx] = Float4::Clamp(newValue / newWeight, 0.0f, FP16Max);
-            renderWeightBuffer[pixelIdx] = newWeight;
-
-            ++tilePixelIdx;
-        }
-    }
-
-    return true;
-}
-
-// Data passed to the ground truth render thread
-struct RenderThreadData
-{
-    FixedArray<Half4>* RenderBuffer = nullptr;
-    FixedArray<float>* RenderWeightBuffer = nullptr;
-    const std::vector<IntegrationSamples>* Samples = nullptr;
-    volatile int64* CurrTile = nullptr;
-    const MeshBaker* Baker = nullptr;
-};
-
-// Entry point for the ground truth render thread
-static uint32 __stdcall RenderThread(void* data)
-{
-    RenderThreadData* threadData = reinterpret_cast<RenderThreadData*>(data);
-    const MeshBaker* meshBaker = threadData->Baker;
-
-    RenderThreadContext context;
-
-    while(meshBaker->killRenderThreads == false)
-    {
-        const uint64 currTag = meshBaker->renderTag;
-        if(context.RenderTag != currTag)
-            context.Init(threadData->RenderBuffer, threadData->RenderWeightBuffer, threadData->Samples,
-                         threadData->CurrTile, threadData->Baker, currTag);
-
-        if(RenderDriver(context) == false)
-            Sleep(5);
-    }
-
-    return 0;
-}
-
 // == MeshBaker ===================================================================================
 
 static uint64 GetNumThreads()
@@ -1557,9 +1341,6 @@ void MeshBaker::Initialize(const BakeInputData& inputData)
     // Build the BVHs
     BuildBVH(*input.SceneModel, sceneBVH, input.Device, rtcDevice);
 
-    renderSampleMode = AppSettings::RenderSampleMode;
-    numRenderSamples = AppSettings::NumRenderSamples;
-
     bakeSampleMode = AppSettings::BakeSampleMode;
     numBakeSamples = AppSettings::NumBakeSamples;
 
@@ -1569,9 +1350,6 @@ void MeshBaker::Initialize(const BakeInputData& inputData)
 
     for(uint64 i = 0; i < numThreads; ++i)
     {
-        GenerateIntegrationSamples(renderSamples[i], numRenderSamples, TileSize, TileSize,
-                                   renderSampleMode, NumIntegrationTypes, rng);
-
         GenerateIntegrationSamples(bakeSamples[i], numBakeSamples, BakeGroupSize, 1,
                                    bakeSampleMode, NumIntegrationTypes, rng);
     }
@@ -1598,364 +1376,29 @@ MeshBakerStatus MeshBaker::Update(const Camera& camera, uint32 screenWidth, uint
                                   const Model* currentModel)
 {
     Assert_(initialized);
-
-    const bool32 showGroundTruth = AppSettings::ShowGroundTruth;
-
-    if(currentModel != input.SceneModel)
+    if(AppSettings::BakeSampleMode != bakeSampleMode || AppSettings::NumBakeSamples != numBakeSamples)
     {
-        KillBakeThreads();
-        KillRenderThreads();
+        bakeSampleMode = AppSettings::BakeSampleMode;
+        numBakeSamples = AppSettings::NumBakeSamples;
 
-        sceneBVH = BVHData();
-        input.SceneModel = currentModel;
-        BuildBVH(*input.SceneModel, sceneBVH, input.Device, rtcDevice);
+        const uint64 numGroupsX = (lightMapSize + (BakeGroupSizeX - 1)) / BakeGroupSizeX;
+        const uint64 numGroupsY = (lightMapSize + (BakeGroupSizeY - 1)) / BakeGroupSizeY;
+        if(s_BakeSetting.SupportsProgressiveIntegration(bakeMode, solveMode))
+            currNumBakeBatches = numGroupsX * numGroupsY * AppSettings::NumBakeSamples * AppSettings::NumBakeSamples;
+        else
+            currNumBakeBatches = numGroupsX * numGroupsY * BakeGroupSize;
 
-        InterlockedIncrement64(&renderTag);
-        InterlockedIncrement64(&bakeTag);
-        currTile = 0;
-        currBakeBatch = 0;
-
-        // Make sure that we re-extract the lightmap data
-        currLightMapSize = 0;
-    }
-
-    if(showGroundTruth == false)
-    {
-        // Handle light map size change, which requires re-extraction of sample points
-        const uint32 lightMapSize = AppSettings::LightMapResolution;
-        const BakeModes bakeMode = AppSettings::BakeMode;
-        const SolveModes solveMode = AppSettings::SolveMode;
-        if(lightMapSize != currLightMapSize || bakeMode != currBakeMode || solveMode != currSolveMode || AppSettings::WorldSpaceBake.Changed() || bakeMeshIdx != UINT32_MAX)
-        {
-            KillBakeThreads();
-            KillRenderThreads();
-
-            ExtractBakePoints(input, bakePoints, gutterTexels, bakeMeshIdx);
-            bakeMeshIdx = UINT32_MAX;   // must set to UINT32_MAX for not enter this branch after another update
-            bakePointBuffer.Initialize(input.Device, sizeof(BakePoint), uint32(bakePoints.size()),
-                                       false, false, false, bakePoints.data());
-
-            const uint64 basisCount = AppSettings::BasisCount(bakeMode);
-            const uint64 numTexels = lightMapSize * lightMapSize;
-            for(uint64 i = 0; i < AppSettings::MaxBasisCount; ++i)
-                bakeResults[i].Shutdown();
-
-            for(uint64 i = 0; i < basisCount; ++i)
-                bakeResults[i].Init(numTexels);
-
-            const uint64 numGroupsX = (lightMapSize + (BakeGroupSizeX - 1)) / BakeGroupSizeX;
-            const uint64 numGroupsY = (lightMapSize + (BakeGroupSizeY - 1)) / BakeGroupSizeY;
-            if(AppSettings::SupportsProgressiveIntegration(bakeMode, solveMode))
-                currNumBakeBatches = numGroupsX * numGroupsY * AppSettings::NumBakeSamples * AppSettings::NumBakeSamples;
-            else
-                currNumBakeBatches = numGroupsX * numGroupsY * BakeGroupSize;
-
-            currLightMapSize = lightMapSize;
-            currBakeMode = bakeMode;
-            currSolveMode = solveMode;
-            InterlockedIncrement64(&bakeTag);
-            currBakeBatch = 0;
-
-            const uint64 sgCount = AppSettings::SGCount(currBakeMode);
-            SGDistribution distribution = AppSettings::WorldSpaceBake ? SGDistribution::Spherical : SGDistribution::Hemispherical;
-            if(sgCount > 0)
-                InitializeSGSolver(sgCount, distribution);
-
-            const SG* initalGuess = InitialGuess();
-            sgSharpness = initalGuess[0].Sharpness;
-            for(uint64  i = 0; i < sgCount; ++i)
-                sgDirections[i] = initalGuess[i].Axis;
-
-            D3D11_TEXTURE2D_DESC texDesc;
-            texDesc.Width = lightMapSize;
-            texDesc.Height = lightMapSize;
-            texDesc.ArraySize = uint32(basisCount);
-            texDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-            texDesc.CPUAccessFlags = 0;
-            texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-            texDesc.Usage = D3D11_USAGE_DEFAULT;
-            texDesc.SampleDesc.Count = 1;
-            texDesc.SampleDesc.Quality = 0;
-            texDesc.MipLevels = 1;
-            texDesc.MiscFlags = 0;
-
-            bakeTexture = nullptr;
-            bakeTextureSRV = nullptr;
-            DXCall(input.Device->CreateTexture2D(&texDesc, nullptr, &bakeTexture));
-
-            // Force the SRV to be a texture array view
-            D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-            ZeroMemory(&srvDesc, sizeof(srvDesc));
-            srvDesc.Format = texDesc.Format;
-            srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
-            srvDesc.Texture2DArray.MostDetailedMip = 0;
-            srvDesc.Texture2DArray.MipLevels = 1;
-            srvDesc.Texture2DArray.FirstArraySlice = 0;
-            srvDesc.Texture2DArray.ArraySize = texDesc.ArraySize;
-            DXCall(input.Device->CreateShaderResourceView(bakeTexture, &srvDesc, &bakeTextureSRV));
-
-            // Create staging textures to use for updating the bake texture
-            D3D11_TEXTURE2D_DESC stagingDesc = texDesc;
-            stagingDesc.Usage = D3D11_USAGE_STAGING;
-            stagingDesc.BindFlags = 0;
-            stagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-            stagingDesc.ArraySize = 1;
-            for(uint64 i = 0; i < NumStagingTextures; ++i)
-                DXCall(input.Device->CreateTexture2D(&stagingDesc, nullptr, &bakeStagingTextures[i]));
-        }
-
-        if(AppSettings::BakeSampleMode != bakeSampleMode || AppSettings::NumBakeSamples != numBakeSamples)
-        {
-            bakeSampleMode = AppSettings::BakeSampleMode;
-            numBakeSamples = AppSettings::NumBakeSamples;
-
-            KillBakeThreads();
-            KillRenderThreads();
-
-            for(uint64 i = 0; i < numThreads; ++i)
-                GenerateIntegrationSamples(bakeSamples[i], numBakeSamples, BakeGroupSize, 1,
-                                           bakeSampleMode, NumIntegrationTypes, rng);
-
-            const uint64 numGroupsX = (lightMapSize + (BakeGroupSizeX - 1)) / BakeGroupSizeX;
-            const uint64 numGroupsY = (lightMapSize + (BakeGroupSizeY - 1)) / BakeGroupSizeY;
-            if(AppSettings::SupportsProgressiveIntegration(bakeMode, solveMode))
-                currNumBakeBatches = numGroupsX * numGroupsY * AppSettings::NumBakeSamples * AppSettings::NumBakeSamples;
-            else
-                currNumBakeBatches = numGroupsX * numGroupsY * BakeGroupSize;
-
-            InterlockedIncrement64(&bakeTag);
-            currBakeBatch = 0;
-        }
-    }
-    else
-    {
-        // Handle screen resize, which requires resizing render buffers
-        if(screenWidth != currWidth || screenHeight != currHeight)
-        {
-            KillBakeThreads();
-            KillRenderThreads();
-
-            currWidth = screenWidth;
-            currHeight = screenHeight;
-
-            D3D11_TEXTURE2D_DESC texDesc;
-            texDesc.Width = currWidth;
-            texDesc.Height = currHeight;
-            texDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-            texDesc.ArraySize = 1;
-            texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-            texDesc.Usage = D3D11_USAGE_DEFAULT;
-            texDesc.MipLevels = 1;
-            texDesc.SampleDesc.Quality = 0;
-            texDesc.SampleDesc.Count = 1;
-            texDesc.CPUAccessFlags = 0;
-            texDesc.MiscFlags = 0;
-
-            DXCall(input.Device->CreateTexture2D(&texDesc, NULL, &renderTexture));
-            DXCall(input.Device->CreateShaderResourceView(renderTexture, NULL, &renderTextureSRV));
-
-              // Create staging textures to use for updating the render texture
-            D3D11_TEXTURE2D_DESC stagingDesc = texDesc;
-            stagingDesc.Usage = D3D11_USAGE_STAGING;
-            stagingDesc.BindFlags = 0;
-            stagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-            for(uint64 i = 0; i < NumStagingTextures; ++i)
-                DXCall(input.Device->CreateTexture2D(&stagingDesc, nullptr, &renderStagingTextures[i]));
-
-            uint64 numTilesX = (screenWidth + (TileSize - 1)) / TileSize;
-            uint64 numTilesY = (screenHeight + (TileSize - 1)) / TileSize;
-            uint64 numTiles = numTilesX * numTilesY;
-            currNumTiles = numTiles;
-
-            currViewProjInv = Float4x4::Invert(camera.ViewProjectionMatrix());
-
-            InterlockedIncrement64(&renderTag);
-            currTile = 0;
-
-            const uint64 numPixels = numTiles * TileSize * TileSize;
-            renderBuffer.Init(numPixels);
-            renderWeightBuffer.Init(numPixels);
-            renderWeightBuffer.Fill(0.0f);
-
-        }
-
-        if(AppSettings::RenderSampleMode != renderSampleMode || AppSettings::NumRenderSamples != numRenderSamples)
-        {
-            renderSampleMode = AppSettings::RenderSampleMode;
-            numRenderSamples = AppSettings::NumRenderSamples;
-
-            KillBakeThreads();
-            KillRenderThreads();
-
-            for(uint64 i = 0; i < numThreads; ++i)
-                GenerateIntegrationSamples(renderSamples[i], numRenderSamples, TileSize, TileSize,
-                                           renderSampleMode, NumIntegrationTypes, rng);
-
-            InterlockedIncrement64(&renderTag);
-            currTile = 0;
-        }
-    }
-
-    // Change checks common to bake and ground truth
-    if(AppSettings::AreaLightColor.Changed() || AppSettings::AreaLightSize.Changed()
-        || AppSettings::AreaLightX.Changed() || AppSettings::AreaLightY.Changed()
-        || AppSettings::AreaLightZ.Changed() || AppSettings::EnableAreaLight.Changed()
-        || AppSettings::SkyMode.Changed() || AppSettings::EnableSun.Changed()
-        || AppSettings::SkyColor.Changed() || AppSettings::GroundAlbedo.Changed()
-        || AppSettings::Turbidity.Changed() || AppSettings::HasSunDirChanged()
-        || AppSettings::SunTintColor.Changed() || AppSettings::SunIntensityScale.Changed()
-        || AppSettings::SunSize.Changed() || AppSettings::NormalizeSunIntensity.Changed()
-        || AppSettings::DiffuseAlbedoScale.Changed() || AppSettings::EnableAlbedoMaps.Changed()
-        || AppSettings::EnableAreaLightShadows.Changed() || AppSettings::MetallicOffset.Changed()
-        || AppSettings::BakeDirectSunLight.Changed() || AppSettings::BakeDirectAreaLight.Changed())
-    {
-        InterlockedIncrement64(&renderTag);
-        InterlockedIncrement64(&bakeTag);
-        currTile = 0;
-        currBakeBatch = 0;
-    }
-
-    // Change checks for baking only
-    if(AppSettings::BakeDirectSunLight.Changed() || AppSettings::BakeDirectAreaLight.Changed()
-        || AppSettings::BakeRussianRouletteDepth.Changed() || AppSettings::BakeRussianRouletteProbability.Changed()
-        || AppSettings::MaxBakePathLength.Changed() || AppSettings::SolveMode.Changed())
-    {
         InterlockedIncrement64(&bakeTag);
         currBakeBatch = 0;
-    }
-
-    // Change checks for ground truth render only
-    if(currCameraPos != camera.Position() || currCameraOrientation != camera.Orientation() || currProj != camera.ProjectionMatrix())
-    {
-        currCameraPos = camera.Position();
-        currCameraOrientation = camera.Orientation();
-        currProj = camera.ProjectionMatrix();
-        currViewProjInv = Float4x4::Invert(camera.ViewProjectionMatrix());
-
-        InterlockedIncrement64(&renderTag);
-        currTile = 0;
-    }
-
-    if(AppSettings::EnableNormalMaps.Changed() || AppSettings::EnableDirectLighting.Changed()
-        || AppSettings::EnableIndirectLighting.Changed() || AppSettings::RoughnessScale.Changed()
-        || AppSettings::EnableIndirectDiffuse.Changed() || AppSettings::EnableIndirectSpecular.Changed()
-        || AppSettings::NormalMapIntensity.Changed() || AppSettings::NumRenderSamples.Changed()
-        || AppSettings::RenderSampleMode.Changed() || AppSettings::FocalLength.Changed()
-        || AppSettings::FilmSize.Changed() || AppSettings::EnableDOF.Changed()
-        || AppSettings::FocalLength.Changed() || AppSettings::NumBlades.Changed()
-        || AppSettings::ApertureSize.Changed() || AppSettings::FocusDistance.Changed()
-        || AppSettings::RenderRussianRouletteDepth.Changed() || AppSettings::RenderRussianRouletteProbability.Changed()
-        || AppSettings::EnableRenderBounceSpecular.Changed() || AppSettings::MaxRenderPathLength.Changed()
-        || AppSettings::EnableDiffuse.Changed() || AppSettings::EnableSpecular.Changed()
-        || AppSettings::ViewIndirectSpecular.Changed() || AppSettings::ViewIndirectDiffuse.Changed()
-        || AppSettings::RoughnessOverride.Changed())
-    {
-        InterlockedIncrement64(&renderTag);
-        currTile = 0;
-    }
-
-    if(showGroundTruth)
-    {
-        KillBakeThreads();
-        StartRenderThreads();
-    }
-    else
-    {
-        KillRenderThreads();
-        StartBakeThreads();
     }
 
     MeshBakerStatus status;
-    status.GroundTruth = renderTextureSRV;
-    status.LightMap = bakeTextureSRV;
-    status.BakePoints = bakePointBuffer.SRView;
-    status.NumBakePoints = bakePointBuffer.NumElements;
-
-    const uint64 sgCount = AppSettings::SGCount(currBakeMode);
+    const uint64 sgCount = s_BakeSetting.SGCount();
     for(uint64 i = 0; i < sgCount; ++i)
         status.SGDirections[i] = sgDirections[i];
     status.SGSharpness = sgCount > 0 ? sgSharpness : 0.0f;
 
-    if(showGroundTruth)
-    {
-        const uint64 numPasses = AppSettings::NumRenderSamples * AppSettings::NumRenderSamples;
-        status.GroundTruthProgress = Saturate(currTile / float(numPasses * currNumTiles));
-        status.BakeProgress = 1.0f;
-        if(lastTileNum < currTile)
-            status.GroundTruthSampleCount = (currTile - lastTileNum) * (TileSize * TileSize);
-        lastTileNum = currTile;
-
-        renderStagingTextureIdx = (renderStagingTextureIdx + 1) % NumStagingTextures;
-        ID3D11Texture2D* stagingTexture = renderStagingTextures[renderStagingTextureIdx];
-
-        D3D11_MAPPED_SUBRESOURCE mapped;
-        ZeroMemory(&mapped, sizeof(mapped));
-        if(SUCCEEDED(deviceContext->Map(stagingTexture, 0, D3D11_MAP_WRITE, 0, &mapped)))
-        {
-            uint8* dst = reinterpret_cast<uint8*>(mapped.pData);
-            const Half4* src = renderBuffer.Data();
-            for(uint64 y = 0; y < screenHeight; ++y)
-            {
-                memcpy(dst, src, sizeof(Half4) * screenWidth);
-                dst += mapped.RowPitch;
-                src += screenWidth;
-            }
-
-            deviceContext->Unmap(stagingTexture, 0);
-        }
-
-        deviceContext->CopyResource(renderTexture, stagingTexture);
-    }
-    else
-    {
-        const uint32 LightMapSize = AppSettings::LightMapResolution;
-        const uint64 numPasses = AppSettings::NumBakeSamples * AppSettings::NumBakeSamples;
-        status.BakeProgress = Saturate(currBakeBatch / (currNumBakeBatches - 1.0f));
-        if (status.BakeProgress >= 1.f) {
-            int debug = 0;
-        }
-        status.GroundTruthProgress = 1.0f;
-        lastTileNum = INT64_MAX;
-
-        const uint64 basisCount = AppSettings::BasisCount(currBakeMode);
-        bakeStagingTextureIdx = (bakeStagingTextureIdx + 1) % NumStagingTextures;
-        bakeTextureUpdateIdx = (bakeTextureUpdateIdx + 1) % basisCount;
-        ID3D11Texture2D* stagingTexture = bakeStagingTextures[bakeStagingTextureIdx];
-
-        D3D11_MAPPED_SUBRESOURCE mapped;
-        ZeroMemory(&mapped, sizeof(mapped));
-        if(SUCCEEDED(deviceContext->Map(stagingTexture, 0, D3D11_MAP_WRITE, 0, &mapped)))
-        {
-            Half4* dst = reinterpret_cast<Half4*>(mapped.pData);
-            const Float4* src = bakeResults[bakeTextureUpdateIdx].Data();
-            for(uint64 y = 0; y < LightMapSize; ++y)
-            {
-                for(uint64 x = 0; x < LightMapSize; ++x)
-                    dst[x] = Half4(src[x]);
-
-                dst += mapped.RowPitch / sizeof(Half4);
-                src += LightMapSize;
-            }
-
-            const uint64 numGutterTexels = gutterTexels.size();
-            for(uint64 i = 0; i < numGutterTexels; ++i)
-            {
-                const GutterTexel& gutterTexel = gutterTexels[i];
-                const uint64 srcIdx = gutterTexel.NeighborPos.y * LightMapSize + gutterTexel.NeighborPos.x;
-                uint8* gutterDst = reinterpret_cast<uint8*>(mapped.pData) + gutterTexel.TexelPos.y * mapped.RowPitch;
-                gutterDst += gutterTexel.TexelPos.x * sizeof(Half4);
-                const Half4& gutterSrc = bakeResults[bakeTextureUpdateIdx][srcIdx];
-                *reinterpret_cast<Half4*>(gutterDst) = gutterSrc;
-            }
-
-            deviceContext->Unmap(stagingTexture, 0);
-        }
-
-        deviceContext->CopySubresourceRegion(bakeTexture, uint32(bakeTextureUpdateIdx), 0, 0, 0, stagingTexture, 0, nullptr);
-    }
-
-    Sleep(0);
-
+    status.BakeProgress = Saturate(currBakeBatch / (currNumBakeBatches - 1.0f));
     return status;
 }
 
@@ -1966,10 +1409,7 @@ void MeshBaker::WaitBakeThreadEnd()
 
 void MeshBaker::KillBakeThreads()
 {
-    if(bakeThreadsSuspended)
-        return;
-
-    Assert_(killBakeThreads == false);
+    Assert_(!killBakeThreads);
     killBakeThreads = true;
     for(uint64 i = 0; i < bakeThreads.size(); ++i)
     {
@@ -1979,41 +1419,37 @@ void MeshBaker::KillBakeThreads()
 
     bakeThreads.clear();
     bakeThreadData.clear();
-    killBakeThreads = false;
-    bakeThreadsSuspended = true;
 }
 
 void MeshBaker::StartBakeThreads()
 {
-    if(bakeThreadsSuspended == false)
-        return;
-
-    Assert_(killBakeThreads == false);
+    Assert_(killBakeThreads);
     if(bakeThreads.size() > 0)
         return;
 
     uint32 (__stdcall* threadFunction)(void*) = BakeThread<DiffuseBaker>;
-    if(currBakeMode == BakeModes::HL2)
+    auto bm = s_BakeSetting.BakeMode;
+    if( bm == BakeModes::HL2)
         threadFunction = BakeThread<HL2Baker>;
-	else if (currBakeMode == BakeModes::Directional)
+	else if (bm == BakeModes::Directional)
 		threadFunction = BakeThread<DirectionalBaker>;
-    else if(currBakeMode == BakeModes::DirectionalRGB)
+    else if(bm == BakeModes::DirectionalRGB)
         threadFunction = BakeThread<DirectionalRGBBaker>;
-    else if(currBakeMode == BakeModes::SH4)
+    else if(bm == BakeModes::SH4)
         threadFunction = BakeThread<SH4Baker>;
-    else if(currBakeMode == BakeModes::SH9)
+    else if(bm == BakeModes::SH9)
         threadFunction = BakeThread<SH9Baker>;
-    else if(currBakeMode == BakeModes::H4)
+    else if(bm == BakeModes::H4)
         threadFunction = BakeThread<H4Baker>;
-    else if(currBakeMode == BakeModes::H6)
+    else if(bm == BakeModes::H6)
         threadFunction = BakeThread<H6Baker>;
-    else if(currBakeMode == BakeModes::SG5)
+    else if(bm == BakeModes::SG5)
         threadFunction = BakeThread<SG5Baker>;
-    else if(currBakeMode == BakeModes::SG6)
+    else if(bm == BakeModes::SG6)
         threadFunction = BakeThread<SG6Baker>;
-    else if(currBakeMode == BakeModes::SG9)
+    else if(bm == BakeModes::SG9)
         threadFunction = BakeThread<SG9Baker>;
-    else if(currBakeMode == BakeModes::SG12)
+    else if(bm == BakeModes::SG12)
         threadFunction = BakeThread<SG12Baker>;
 
     bakeThreads.resize(numThreads);

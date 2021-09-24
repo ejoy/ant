@@ -278,7 +278,7 @@ Float3 PathTrace(const PathTracerParams& params, Random& randomGenerator, float&
         const bool indirectDiffuseOnly = params.ViewIndirectDiffuse && pathLength == 1;
         const bool enableSpecular = (params.EnableBounceSpecular || (pathLength == 1)) && params.EnableSpecular;
         const bool enableDiffuse = params.EnableDiffuse;
-        const bool skipDirect = AppSettings::ShowGroundTruth && (!AppSettings::EnableDirectLighting || indirectDiffuseOnly) && (pathLength == 1);
+        const bool skipDirect = !indirectDiffuseOnly && (pathLength == 1);
 
         // See if we should randomly terminate this path using Russian Roullete
         const int32 rouletteDepth = params.RussianRouletteDepth;
@@ -310,7 +310,8 @@ Float3 PathTrace(const PathTracerParams& params, Random& randomGenerator, float&
         if(lightDistance < sceneDistance)
         {
             // We hit the area light: just return the uniform radiance of the light source
-            radiance = AppSettings::AreaLightColor.Value() * throughput * FP16Scale;
+            //radiance = AppSettings::AreaLightColor.Value() * throughput * FP16Scale;
+            assert(false && "TODO");
             irradiance = 0.0f;
         }
         else if(sceneDistance < FLT_MAX)

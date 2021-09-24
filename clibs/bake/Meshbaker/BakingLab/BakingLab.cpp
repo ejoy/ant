@@ -630,16 +630,7 @@ void BakingLab::Init(const Scene *s)
 
 float BakingLab::BakeProcess()
 {
-    timer.Update();
-    Settings.Update();
-
-    AppSettings::Update();
-
-    ID3D11DeviceContextPtr context = deviceManager.ImmediateContext();
-    meshbakerStatus = meshBaker.Update(unJitteredCamera, 0, 0, //colorTargetMSAA.Width, colorTargetMSAA.Height,
-                                        context, &sceneModels[AppSettings::CurrentScene]);
-    AppSettings::UpdateCBuffer(deviceManager.ImmediateContext());
-    assert(meshbakerStatus.GroundTruth == nullptr);
+    meshbakerStatus = meshBaker.Update();
     return meshbakerStatus.BakeProgress;
 }
 

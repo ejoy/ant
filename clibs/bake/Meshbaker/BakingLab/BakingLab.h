@@ -24,15 +24,15 @@
 
 using namespace SampleFramework11;
 
+struct Scene;
+
 class BakingLab
 {
 
 protected:
-    ID3D11ShaderResourceViewPtr envMaps[AppSettings::NumCubeMaps];
-
     DeviceManager deviceManager;
     // Model
-    Model sceneModels;
+    Model sceneModel;
     MeshBaker meshBaker;
 
     MeshBakerStatus meshbakerStatus;
@@ -42,11 +42,11 @@ public:
 
     void Init(const Scene *s);
     static void InitLights(const Scene *s, Lights &lights);
-    const Model& GetModel(uint32 mode) const {
-        return sceneModels[mode];
+    const Model& GetModel() const {
+        return sceneModel;
     }
 
-    Model& GetModel(uint32 mode){ return sceneModels[mode];}
+    Model& GetModel(uint32 mode){ return sceneModel;}
     void MeshbakerInitialize(const Model *model, Lights &&lights);
     void Bake(uint32 bakeMeshIdx);
     float BakeProcess();
