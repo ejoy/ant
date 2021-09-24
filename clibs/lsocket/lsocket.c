@@ -527,10 +527,6 @@ static int lsocket_bind(lua_State *L)
 		}
 	}
 
-	int reuseaddr = 1;
-	if (setsockopt(sock->sockfd, SOL_SOCKET, SO_REUSEADDR, &reuseaddr, sizeof(reuseaddr)) < 0)
-		return lsocket_error(L, strerror(errno));
-
 	if (bind(sock->sockfd, sa, slen) < 0)
 		return lsocket_error(L, strerror(errno));
 
