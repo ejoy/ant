@@ -644,13 +644,14 @@ struct BakeThreadContext
         }
         RandomGenerator.SeedWithRandomValue();
 
-        lights = &meshBaker->input.lights;
-        SunLight = FindSunLight(lights);
-        SceneBVH = &meshBaker->sceneBVH;
-        BakePoints = &meshBaker->bakePoints;
+        CurrBatch   = currBatch;
+        lights      = &meshBaker->input.lights;
+        SunLight    = FindSunLight(lights);
+        SceneBVH    = &meshBaker->sceneBVH;
+        BakePoints  = &meshBaker->bakePoints;
         bakeBatchData = &meshBaker->bakeBatchData;
-        BakeOutput = bakeOutput;
-        Samples = samples;
+        BakeOutput  = bakeOutput;
+        Samples     = samples;
     }
 };
 
@@ -928,9 +929,8 @@ template<typename TBaker> uint32 __stdcall BakeThread(void* data)
     TBaker baker;
     context.Init(threadData->BakeOutput, threadData->Samples,
                     threadData->CurrBatch, threadData->Baker);
-    while(meshBaker->killBakeThreads == false)
+    while(meshBaker->bakeThreadsRunning)
     {
-
         if(BakeDriver<TBaker>(context, baker) == false)
             Sleep(5);
     }
@@ -1349,6 +1349,7 @@ void MeshBaker::Shutdown()
 
 void MeshBaker::SetBakeMesh(uint32 meshIdx)
 {
+    Assert_(!bakeThreadsRunning);
     ExtractBakePoints(input, bakePoints, gutterTexels, meshIdx);
     const auto& m = input.SceneModel->Meshes()[meshIdx];
     const auto lmsize = m.GetLightmapSize();
@@ -1389,8 +1390,10 @@ MeshBakerStatus MeshBaker::GetBakerStatus() const
 
 void MeshBaker::EndBake()
 {
-    Assert_(!killBakeThreads);
-    killBakeThreads = true;
+    if (!bakeThreadsRunning)
+        return ;
+
+    bakeThreadsRunning = false;
     for(uint64 i = 0; i < bakeThreads.size(); ++i)
     {
         WaitForSingleObject(bakeThreads[i], INFINITE);
@@ -1403,7 +1406,8 @@ void MeshBaker::EndBake()
 
 void MeshBaker::StartBake()
 {
-    Assert_(killBakeThreads);
+    Assert_(!bakeThreadsRunning);
+    bakeThreadsRunning = true;
     if(bakeThreads.size() > 0)
         return;
 

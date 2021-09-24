@@ -112,8 +112,8 @@ struct BakeSetting{
     static const uint64 BakeGroupSizeY = 8;
     static const uint64 BakeGroupSize = BakeGroupSizeX * BakeGroupSizeY;
     
-    uint32 MaxBakePathLength = UINT32_MAX;
-    uint32 BakeRussianRouletteDepth = 4;
+    int32 MaxBakePathLength = -1;
+    int32 BakeRussianRouletteDepth = 4;
     float BakeRussianRouletteProbability = 0.5000f;
 
     uint64 NumBakeSample = 25;   // range from[0, 100]

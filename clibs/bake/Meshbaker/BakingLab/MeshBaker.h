@@ -122,7 +122,7 @@ public:
 
     BakeBatchData bakeBatchData;
 
-    bool killBakeThreads = false;
+    bool bakeThreadsRunning = false;
     std::vector<BakePoint> bakePoints;
     std::vector<GutterTexel> gutterTexels;
 

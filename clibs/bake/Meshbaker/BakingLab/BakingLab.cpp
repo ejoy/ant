@@ -228,8 +228,10 @@ static void GenerateEnvSpecularLookupTexture(ID3D11Device* device)
 }
 
 Baker::Baker()
+    : window(NULL, L"Baker", WS_OVERLAPPEDWINDOW, WS_EX_APPWINDOW, 1, 1, nullptr, nullptr)
 {
-    deviceManager.Initialize(GetDesktopWindow());
+    deviceManager.Initialize(window);
+    window.ShowWindow(false);
     deviceManager.SetMinFeatureLevel(D3D_FEATURE_LEVEL_11_0);
 }
 

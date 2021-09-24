@@ -17,7 +17,7 @@
 #include <Graphics/Model.h>
 #include <Graphics/GraphicsTypes.h>
 #include <Graphics/DeviceManager.h>
-
+#include "../v1.02/Window.h"
 #include "MeshBaker.h"
 #include "Light.h"
 
@@ -29,6 +29,7 @@ class Baker
 {
 
 protected:
+    Window window;
     DeviceManager deviceManager;
     // Model
     Model sceneModel;
