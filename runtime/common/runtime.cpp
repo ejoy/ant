@@ -46,7 +46,8 @@ static void dostring(lua_State* L, const char* str) {
     lua_pushcfunction(L, msghandler);
     int err = lua_gettop(L);
     if (LUA_OK == luaL_loadbuffer(L, str, strlen(str), "=(BOOTSTRAP)")) {
-        if (LUA_OK == lua_pcall(L, 0, 0, err)) {
+        int n = runtime_args(L);
+        if (LUA_OK == lua_pcall(L, n, 0, err)) {
             return;
         }
     }
@@ -71,7 +72,7 @@ static int pmain(lua_State *L) {
     luaL_openlibs(L);
     createargtable(L, argc, argv);
     set_current(L);
-    dostring(L, "local fw = require 'firmware' ; assert(fw.loadfile 'bootstrap.lua')()");
+    dostring(L, "local fw = require 'firmware' ; assert(fw.loadfile 'bootstrap.lua')(...)");
     return 0;
 }
 

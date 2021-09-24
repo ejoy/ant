@@ -1,11 +1,12 @@
 #include "set_current.h"
+#include <lua.hpp>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #import <UIKit/UIKit.h>
 
-int need_cleanup() {
+static int need_cleanup() {
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
     NSString* key = @"clean_up_next_time";
     id value = [defaults objectForKey:key];
@@ -17,6 +18,13 @@ int need_cleanup() {
         return 1;
     }
     return 0;
+}
+
+static NSString* server() {
+    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+    id value = [defaults objectForKey:@"server"];
+    NSLog(@"key = server, value = %@", value);
+    return value;
 }
 
 int runtime_setcurrent(lua_State* L) {
@@ -35,4 +43,10 @@ int runtime_setcurrent(lua_State* L) {
         }
     }
     return 0;
+}
+
+int runtime_args(lua_State* L) {
+    NSString* address = server();
+    lua_pushstring(L, [address UTF8String]);
+    return 1;
 }

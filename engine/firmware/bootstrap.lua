@@ -1,15 +1,37 @@
 __ANT_RUNTIME__ = "0.0.1"
 
-local os = (require "platform".OS):lower()
 local config = {
+	rootname = arg[1],
 	repopath = "./",
 	vfspath = "vfs.lua",
-	nettype = (os ~= "ios") and "connect" or "listen",
 	socket = nil,
-	address = "127.0.0.1",
-	port = 2018,
-	rootname = arg[1],
+	nettype = nil,
+	address = nil,
+	port = nil,
 }
+
+local address = ...
+
+if address == nil then
+	config.nettype = "connect"
+	config.address = "127.0.0.1"
+	config.port = 2018
+elseif address == "USB" then
+	config.nettype = "listen"
+	config.address = "127.0.0.1"
+	config.port = 2018
+else
+	config.nettype = "connect"
+	local ip, port = address:match "^(%d+%.%d+%.%d+%.%d+):(%d+)"
+	if ip and port then
+		config.address = ip
+		config.port = tonumber(port)
+	else
+		config.address = "127.0.0.1"
+		config.port = 2018
+	end
+end
+
 
 local thread = require "thread"
 local fw = require "firmware"
