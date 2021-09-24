@@ -1,17 +1,65 @@
 local ltask = require "ltask"
 local ServiceEditor = ltask.uniqueservice "editor"
-local SERVICE_ROOT <const> = 1
 
 local S = {}
 local lables = {}
+local command = {}
+local tasks = {}
 
 local function querylabel(id)
-	local label = lables[id]
-	if not label then
-		label = ltask.call(SERVICE_ROOT, "label", id)
-		lables[id] = label
+	if not id then
+		return "unknown"
 	end
-	return label
+	if id == 0 then
+		return "system"
+	end
+	if lables[id] then
+		return lables[id]
+	end
+	return "unknown"
+end
+
+local function service(id)
+	return ("(%s:%d)"):format(querylabel(id), id)
+end
+
+function command.startup(id, label)
+	lables[id] = label
+	return service(id) .. " startup."
+end
+
+function command.quit(id)
+	tasks[#tasks+1] = function ()
+		lables[id] = nil
+	end
+	return service(id) .. " quit."
+end
+
+function command.service(_, id)
+	id = tonumber(id)
+	return service(id)
+end
+
+local function parse(id, s)
+	local name, args = s:match "^([^:]*):(.*)$"
+	if not name then
+		name = s
+		args = nil
+	end
+	local f = command[name]
+	if f then
+		return f(id, args)
+	end
+	return s
+end
+
+local function runtask()
+	if #tasks > 0 then
+		for i = 1, #tasks do
+			tasks[i]()
+		end
+		tasks = {}
+	end
 end
 
 
@@ -32,11 +80,17 @@ local function writelog()
 		for i = 1, t.n do
 			str[#str+1] = tostring(t[i])
 		end
-		local data = string.format("[%s.%02d : %-10s]\t%s\n", os.date('%Y-%m-%d %H:%M:%S', tsec), msec, querylabel(id), table.concat(str, "\t"))
+
+		local message = table.concat(str, "\t")
+		message = string.gsub(message, "%$%{([^}]*)%}", function (s)
+			return parse(id, s)
+		end)
+		local data = string.format("[%s.%02d : %-10s]%s\n", os.date("%Y-%m-%d %H:%M:%S", tsec), msec, querylabel(id), message)
 		ltask.send(ServiceEditor, "MESSAGE", "LOG", "SERVER", data)
 		io.write(data)
 		flush = true
 	end
+	runtask()
 end
 
 ltask.fork(function ()
@@ -48,6 +102,10 @@ end)
 
 function S.quit()
 	writelog()
+end
+
+function S.labels()
+	return lables
 end
 
 return S
