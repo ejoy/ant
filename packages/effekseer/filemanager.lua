@@ -26,7 +26,7 @@ function m.realpath(path)
     --         return file:localpath():string()
     --     end
     -- end
-    return fs.path(path):localpath():string()
+    return cr.compile(path .. "|main.bin"):string()
 end
 
 return m

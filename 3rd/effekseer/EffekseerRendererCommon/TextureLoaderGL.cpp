@@ -48,14 +48,32 @@ Effekseer::TextureRef TextureLoader::Load(const char16_t* path, ::Effekseer::Tex
 
 Effekseer::TextureRef TextureLoader::Load(const void* data, int32_t size, Effekseer::TextureType textureType, bool isMipMapEnabled)
 {
+	::Effekseer::Backend::TextureFormatType format;
+	if (colorSpaceType_ == ::Effekseer::ColorSpaceType::Linear && textureType == Effekseer::TextureType::Color) {
+		format = ::Effekseer::Backend::TextureFormatType::R8G8B8A8_UNORM_SRGB;
+	} else {
+		format = ::Effekseer::Backend::TextureFormatType::R8G8B8A8_UNORM;
+	}
+
+	::Effekseer::Backend::TextureParameter param;
+ 	param.Size[0] = 0;
+ 	param.Size[1] = 0;
+	param.Format = format;
+	param.GenerateMipmap = isMipMapEnabled;
+	param.InitialData.resize(size);
+	memcpy(param.InitialData.data(), data, size);
+	//param.InitialData.assign(pngTextureLoader_.GetData().begin(), pngTextureLoader_.GetData().end());
+
+	auto texture = ::Effekseer::MakeRefPtr<::Effekseer::Texture>();
+	texture->SetBackend(graphicsDevice_->CreateTexture(param));
+	return texture;
+
 	auto size_texture = size;
 	auto data_texture = (uint8_t*)data;
 
-	if (size_texture < 4)
-	{
-	}
-	else if (data_texture[1] == 'P' && data_texture[2] == 'N' && data_texture[3] == 'G')
-	{
+	if (size_texture < 4) {
+
+	} else if (data_texture[1] == 'P' && data_texture[2] == 'N' && data_texture[3] == 'G') {
 		if (pngTextureLoader_.Load(data_texture, size_texture, false))
 		{
 			// Newbackend
