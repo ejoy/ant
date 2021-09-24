@@ -24,7 +24,6 @@ function host.update(apis, timeout)
 		first = false
 		apis.request("FETCH", "/engine/firmware", {
 			resolve = function ()
-				bootloader = assert(apis.repo:realpath '/engine/firmware/bootloader.lua')
 				quit = true
 			end,
 			reject = function (_, errmsg)
@@ -41,6 +40,7 @@ function host.exit(apis)
 	if apis.fd then
 		apis.fd:close()
 	end
+	bootloader = assert(apis.repo:realpath '/engine/firmware/bootloader.lua')
 end
 assert(fw.loadfile "io.lua")(fw.loadfile, host)
 
