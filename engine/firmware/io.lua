@@ -82,6 +82,7 @@ local function init_config(c)
 	config.port = assert(c.port)
 	config.vfspath = assert(c.vfspath)
 	config.rootname = c.rootname
+	config.socket = c.socket
 	read_config(config.repopath .. "config", config)
 end
 
@@ -142,6 +143,9 @@ local function listen_server(address, port)
 end
 
 local function wait_server()
+	if config.socket then
+		return lsocket.fromstring(config.socket)
+	end
 	if config.nettype == "listen" then
 		return listen_server(config.address, config.port)
 	end

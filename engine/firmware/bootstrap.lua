@@ -5,6 +5,7 @@ local config = {
 	repopath = "./",
 	vfspath = "vfs.lua",
 	nettype = (os ~= "ios") and "connect" or "listen",
+	socket = nil,
 	address = "127.0.0.1",
 	port = 2018,
 	rootname = arg[1],
@@ -12,6 +13,7 @@ local config = {
 
 local thread = require "thread"
 local fw = require "firmware"
+local ls = require "lsocket"
 local host = {}
 local bootloader
 local first = true
@@ -38,7 +40,11 @@ function host.update(apis, timeout)
 end
 function host.exit(apis)
 	if apis.fd then
-		apis.fd:close()
+		if config.nettype == "listen" then
+			config.socket = ls.tostring(apis.fd)
+		else
+			apis.fd:close()
+		end
 	end
 	bootloader = assert(apis.repo:realpath '/engine/firmware/bootloader.lua')
 end
