@@ -62,7 +62,7 @@ void GenerateUniformSGs(SG* outSGs, uint64 numSGs, SGDistribution distribution)
         minDP = Min(minDP, Float3::Dot(h, outSGs[0].Axis));
     }
 
-    float sharpness = (std::log(0.65f) * numSGs) / (minDP - 1.0f);
+    const float sharpness = minDP != 1.f ? (std::log(0.65f) * numSGs) / (minDP - 1.0f) : FLT_MAX;
 
     for(uint32 i = 0; i < numSGs; ++i)
         outSGs[i].Sharpness = sharpness;
