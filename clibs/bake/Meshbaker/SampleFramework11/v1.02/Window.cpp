@@ -267,9 +267,6 @@ void Window::Destroy()
 
 LRESULT Window::MessageHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    if(TwEventWin(hWnd, uMsg, wParam, lParam))
-        return 0;
-
 	if(messageCallbacks.find(uMsg) != messageCallbacks.end())
 	{
         Callback callback = messageCallbacks[uMsg];

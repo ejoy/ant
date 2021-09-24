@@ -1293,7 +1293,6 @@ static void ExtractBakePoints(const BakeInputData& bakeInput, std::vector<BakePo
 
 static uint64 GetNumThreads()
 {
-    return 1;
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
     return std::max<uint64>(1, sysInfo.dwNumberOfProcessors - 1);

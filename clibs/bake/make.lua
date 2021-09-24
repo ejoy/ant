@@ -39,8 +39,6 @@ lm:source_set "Meshbaker" {
 }
 
 local inputpaths = {
-    "./Meshbaker/Externals/Assimp-3.1.1/bin/assimp.dll",
-    "./Meshbaker/Externals/AntTweakBar/bin/AntTweakBar64.dll",
     "./Meshbaker/Externals/Embree-2.8/lib/embree.dll",
     "./Meshbaker/Externals/Embree-2.8/lib/tbb.dll",
     "./Meshbaker/Externals/Embree-2.8/lib/tbbmalloc.dll",

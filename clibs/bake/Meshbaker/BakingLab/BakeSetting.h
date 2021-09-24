@@ -128,6 +128,8 @@ struct BakeSetting{
     SGDiffuseModes SGDiffuseMode;
     SGSpecularModes SGSpecularMode;
 
+    SkyModes    SkyMode = SkyModes::Simple;
+
     inline uint64 BasisCount() const
     {
         const uint32 bm = (uint32)BakeMode;

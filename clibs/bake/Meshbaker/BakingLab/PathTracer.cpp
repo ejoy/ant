@@ -168,7 +168,11 @@ Float3 SampleAreaLight2(const Float3& position, const Float3& normal, RTCScene s
 }
 
 // Checks to see if a ray intersects with the area light
-static float AreaLightIntersection(const Float3& rayStart, const Float3& rayDir,
+struct AreaLightIntersectionResult {
+    const LightData* light;
+    float distance;
+};
+static AreaLightIntersectionResult AreaLightIntersection(const Float3& rayStart, const Float3& rayDir,
     float tStart, float tEnd, const Lights* lights)
 {
     for (auto l : *lights){
@@ -179,10 +183,11 @@ static float AreaLightIntersection(const Float3& rayStart, const Float3& rayDir,
         float intersectDist = FLT_MAX;
         bool intersects = areaLightSphere.Intersects(rayStart.ToSIMD(), rayDir.ToSIMD(), intersectDist);
         intersects = intersects && (intersectDist >= tStart && intersectDist <= tEnd);
-        intersects ? intersectDist : FLT_MAX;
+        if (intersects)
+            return {&l, intersectDist};
     }
 
-    return FLT_MAX;
+    return {nullptr, FLT_MAX};
 }
 
 Float3 SampleSunLight2(const Float3& position, const Float3& normal, RTCScene scene,
@@ -297,7 +302,7 @@ Float3 PathTrace(const PathTracerParams& params, Random& randomGenerator, float&
         {
             // We hit the area light: just return the uniform radiance of the light source
             //radiance = AppSettings::AreaLightColor.Value() * throughput * FP16Scale;
-            assert(false && "TODO");
+            Assert_(false && "TODO");
             irradiance = 0.0f;
         }
         else if(sceneDistance < FLT_MAX)
@@ -478,6 +483,7 @@ Float3 PathTrace(const PathTracerParams& params, Random& randomGenerator, float&
             // We hit the sky, so we'll sample the sky radiance and then bail out
             hitSky = true;
 
+            Assert_(GetBakeSetting().SkyMode == SkyModes::Simple && "only support simple mode");
             // if (AppSettings::SkyMode == SkyModes::Procedural)
             // {
             //     Float3 skyRadiance = Skybox::SampleSky(*params.SkyCache, rayDir);
