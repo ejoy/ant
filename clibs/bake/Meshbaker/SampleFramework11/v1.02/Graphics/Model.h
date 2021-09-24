@@ -13,7 +13,6 @@
 
 #include "..\\InterfacePointers.h"
 #include "..\\SF11_Math.h"
-#include "..\\Serialization.h"
 
 struct aiMesh;
 // From Lua Scene

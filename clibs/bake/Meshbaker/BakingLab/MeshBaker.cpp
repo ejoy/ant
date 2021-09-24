@@ -12,15 +12,18 @@
 
 #include "MeshBaker.h"
 
+#include <Graphics/DeviceStates.h>
 #include <Graphics/Model.h>
-#include <Utility.h>
+
 #include <Graphics/GraphicsTypes.h>
 #include <Graphics/SH.h>
-#include <Timer.h>
-#include <App.h>
+
 #include <Graphics/Textures.h>
 #include <Graphics/BRDF.h>
 #include <Graphics/Sampling.h>
+
+#include <Utility.h>
+#include <Timer.h>
 
 #include "SG.h"
 #include "PathTracer.h"
@@ -759,9 +762,9 @@ template<typename TBaker> static bool BakeDriver(BakeThreadContext& context, TBa
                 if(addAreaLight && directAreaLightSample.x >= 0.5f)
                 {
                     Float3 areaLightIrradiance;
-                    sampleResult = SampleAreaLight(bakePoint.Position, bakePoint.Normal, context.SceneBVH->Scene,
+                    sampleResult = SampleAreaLight2(bakePoint.Position, bakePoint.Normal, context.SceneBVH->Scene,
                                                    1.0f, 0.0f, false, 0.0f, 1.0f, sampleSet.Lens().x,
-                                                   sampleSet.Lens().y, areaLightIrradiance, rayDirWS);
+                                                   sampleSet.Lens().y, nullptr, areaLightIrradiance, rayDirWS);
                     rayDirTS = Float3::Transform(rayDirWS, Float3x3::Transpose(tangentFrame));
                 }
                 else
@@ -847,9 +850,9 @@ template<typename TBaker> static bool BakeDriver(BakeThreadContext& context, TBa
             if(addAreaLight && directAreaLightSample.x >= 0.5f)
             {
                 Float3 areaLightIrradiance;
-                sampleResult += SampleAreaLight(bakePoint.Position, bakePoint.Normal, context.SceneBVH->Scene,
+                sampleResult += SampleAreaLight2(bakePoint.Position, bakePoint.Normal, context.SceneBVH->Scene,
                                                 1.0f, 0.0f, false, 0.0f, 1.0f, sampleSet.Lens().x,
-                                                sampleSet.Lens().y, areaLightIrradiance, rayDirWS);
+                                                sampleSet.Lens().y, nullptr, areaLightIrradiance, rayDirWS);
                 rayDirTS = Float3::Transform(rayDirWS, Float3x3::Transpose(tangentFrame));
             }
             else

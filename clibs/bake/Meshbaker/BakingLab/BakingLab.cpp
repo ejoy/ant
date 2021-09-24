@@ -24,7 +24,6 @@
 #include "BakingLab.h"
 #include "MeshBaker.h"
 #include "SG.h"
-#include "TwHelper.h"
 
 #include "resource.h"
 

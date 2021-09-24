@@ -12,7 +12,6 @@
 #include "..\\PCH.h"
 
 #include "..\\InterfacePointers.h"
-#include "..\\Serialization.h"
 
 namespace SampleFramework11
 {

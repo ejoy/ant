@@ -13,9 +13,9 @@
 
 #include "..\\Exceptions.h"
 #include "..\\Utility.h"
-#include "GraphicsTypes.h"
-#include "..\\Serialization.h"
 #include "..\\FileIO.h"
+
+#include "GraphicsTypes.h"
 #include "Textures.h"
 
 using std::string;

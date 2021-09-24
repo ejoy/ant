@@ -12,7 +12,6 @@
 
 #include <PCH.h>
 
-#include <App.h>
 #include <InterfacePointers.h>
 #include <Input.h>
 #include <Graphics/Model.h>

@@ -189,15 +189,10 @@ void GenerateIntegrationSamples(IntegrationSamples& samples, uint64 sqrtNumSampl
                                 SampleModes sampleMode, uint64 numIntegrationTypes, Random& rng);
 
 // Samples the spherical area light using a set of 2D sample points
-Float3 SampleAreaLight(const Float3& position, const Float3& normal, RTCScene scene,
+Float3 SampleAreaLight2(const Float3& position, const Float3& normal, RTCScene scene,
                        const Float3& diffuseAlbedo, const Float3& cameraPos,
                        bool includeSpecular, Float3 specAlbedo, float roughness,
-                       float u1, float u2, Float3& irradiance, Float3& sampleDir);
-
-Float3 SampleSunLight(const Float3& position, const Float3& normal, RTCScene scene,
-                      const Float3& diffuseAlbedo, const Float3& cameraPos,
-                      bool includeSpecular, Float3 specAlbedo, float roughness,
-                      float u1, float u2, Float3& irradiance);
+                       float u1, float u2, const LightData *SunLight, Float3& irradiance, Float3& sampleDir);
 
 Float3 SampleSunLight2(const Float3& position, const Float3& normal, RTCScene scene,
                              const Float3& diffuseAlbedo, const Float3& cameraPos,
