@@ -93,6 +93,17 @@ function m.show()
             end
             imgui.widget.EndMenu()
         end
+        if imgui.widget.BeginMenu "Action" then
+            if imgui.widget.BeginMenu "Lightmap..." then
+                if imgui.widget.MenuItem "Bake" then
+                    world:pub {"Bake Lightmap", tostring(prefab_mgr.prefab)}
+                end
+
+                if imgui.widget.MenuItem "Enable LightMap" then
+                    
+                end
+            end
+        end
         imgui.widget.EndMainMenuBar()
     end
 end
