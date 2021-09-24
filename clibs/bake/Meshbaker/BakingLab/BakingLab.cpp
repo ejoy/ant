@@ -229,7 +229,7 @@ static void GenerateEnvSpecularLookupTexture(ID3D11Device* device)
 
 BakingLab::BakingLab()
 {
-    deviceManager.Initialize(nullptr);
+    deviceManager.Initialize(GetDesktopWindow());
     deviceManager.SetMinFeatureLevel(D3D_FEATURE_LEVEL_11_0);
 }
 
