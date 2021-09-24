@@ -227,13 +227,13 @@ static void GenerateEnvSpecularLookupTexture(ID3D11Device* device)
     WriteStringAsFile(L"EnvBRDF.csv", csvOutput);
 }
 
-BakingLab::BakingLab()
+Baker::Baker()
 {
     deviceManager.Initialize(GetDesktopWindow());
     deviceManager.SetMinFeatureLevel(D3D_FEATURE_LEVEL_11_0);
 }
 
-void BakingLab::MeshbakerInitialize(const Model* sceneModel, Lights &&lights)
+void Baker::MeshbakerInitialize(const Model* sceneModel, Lights &&lights)
 {
 
 }
@@ -362,7 +362,7 @@ static void GenerateSHGGXProjectionTable()
     WriteStringAsFile(L"SH_GGX_Proj.csv", output);
 }
 
-void BakingLab::Init(const Scene *s)
+void Baker::Init(const Scene *s)
 {
     auto device = deviceManager.Device();
 
@@ -377,7 +377,7 @@ void BakingLab::Init(const Scene *s)
     PrintString("baker cube map need set");
 }
 
-void BakingLab::Bake(uint32 bakeMeshIdx)
+void Baker::Bake(uint32 bakeMeshIdx)
 {
     meshBaker.SetBakeMesh(bakeMeshIdx);
     meshBaker.StartBake();
@@ -385,12 +385,12 @@ void BakingLab::Bake(uint32 bakeMeshIdx)
     meshBaker.EndBake();  //process set to 1.0, but bake thread still have some work not finish, need to wait it end
 }
 
-void BakingLab::ShutDown()
+void Baker::ShutDown()
 {
     ShutdownShaders();
 }
 
-const FixedArray<Float4>& BakingLab::GetBakeResult(uint64 basicIdx) const
+const FixedArray<Float4>& Baker::GetBakeResult(uint64 basicIdx) const
 {
     return meshBaker.bakeResults[basicIdx];
 }

@@ -25,7 +25,7 @@ using namespace SampleFramework11;
 
 struct Scene;
 
-class BakingLab
+class Baker
 {
 
 protected:
@@ -37,7 +37,7 @@ protected:
     MeshBakerStatus meshbakerStatus;
 
 public:
-    BakingLab();
+    Baker();
 
     void Init(const Scene *s);
     static void InitLights(const Scene *s, Lights &lights);

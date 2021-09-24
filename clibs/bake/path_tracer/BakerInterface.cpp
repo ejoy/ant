@@ -17,8 +17,8 @@ static inline uint32_t _FindDirectionalLight(const Scene *scene){
 }
 
 BakerHandle CreateBaker(const Scene* scene){
-    auto bl = new BakingLab();
-    bl->Init(scene);
+    auto b = new Baker();
+    b->Init(scene);
 
     // AppSettings::BakeMode.SetValue(BakeModes::Diffuse);
 
@@ -48,20 +48,20 @@ BakerHandle CreateBaker(const Scene* scene){
     // AppSettings::EnableIndirectLighting.SetValue(true);
     // AppSettings::EnableIndirectSpecular.SetValue(true);
 
-    return bl;
+    return b;
 }
 
 static_assert(sizeof(glm::vec4) == sizeof(Float4), "glm::vec4 must equal Float4");
 
 void Bake(BakerHandle handle, BakeResult *result){
-    auto bl = (BakingLab*)handle;
-    const auto &meshes = bl->GetModel().Meshes();
+    auto b = (Baker*)handle;
+    const auto &meshes = b->GetModel().Meshes();
     result->lightmaps.resize(meshes.size());
     for (uint32_t bakeMeshIdx=0; bakeMeshIdx<meshes.size(); ++bakeMeshIdx){
         auto lmsize = meshes[bakeMeshIdx].GetLightmapSize();
-        bl->Bake(bakeMeshIdx);
+        b->Bake(bakeMeshIdx);
         auto &lm = result->lightmaps[bakeMeshIdx];
-        const auto& r = bl->GetBakeResult(0);
+        const auto& r = b->GetBakeResult(0);
         lm.data.resize(r.Size());
         memcpy(lm.data.data(), r.Data(), r.Size()*sizeof(Float4));
         lm.size = lmsize;
@@ -69,17 +69,17 @@ void Bake(BakerHandle handle, BakeResult *result){
 }
 
 void DestroyBaker(BakerHandle handle){
-    auto bl = (BakingLab*)handle;
-    bl->ShutDown();
+    auto b = (Baker*)handle;
+    b->ShutDown();
 
-    delete bl;
+    delete b;
 }
 
 #include "../Meshbaker/SampleFramework11/v1.02/Graphics/Model.h"
 #include "../Meshbaker/SampleFramework11/v1.02/FileIO.h"
 
 //static
-void BakingLab::InitLights(const Scene *s, Lights &lights)
+void Baker::InitLights(const Scene *s, Lights &lights)
 {
     lights.reserve(s->lights.size());
     for (const auto &l : s->lights)
