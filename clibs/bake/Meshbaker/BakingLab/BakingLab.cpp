@@ -31,246 +31,8 @@
 using namespace SampleFramework11;
 using std::wstring;
 
-const uint32 WindowWidth = 1280;
-const uint32 WindowHeight = 720;
-const float WindowWidthF = static_cast<float>(WindowWidth);
-const float WindowHeightF = static_cast<float>(WindowHeight);
-
 static const float NearClip = 0.01f;
 static const float FarClip = 100.0f;
-
-#define UseCachedLightmap_ (1)
-#define WriteCachedLightmap_ (Release_ && UseCachedLightmap_)
-
-// Model filenames
-static const std::wstring ScenePaths[] =
-{
-    ContentDir() + L"Models\\Box\\Box_Lightmap.fbx",
-    ContentDir() + L"Models\\WhiteRoom\\WhiteRoom.fbx",
-    ContentDir() + L"Models\\Sponza\\Sponza_Lightmap.fbx",
-};
-
-static const Float3 SceneCameraPositions[] = { Float3(0.0f, 2.5f, -15.0f), Float3(0.0f, 2.5f, 0.0f), Float3(-5.12373829f, 13.8305235f, -0.463505715f) };
-static const Float2 SceneCameraRotations[] = { Float2(0.0f, 0.0f), Float2(0.0f, Pi), Float2(0.414238036f, 1.39585948f) };
-static const float SceneAlbedoScales[] = { 0.5f, 0.5f, 1.0f };
-
-StaticAssert_(ArraySize_(ScenePaths) >= uint64(Scenes::NumValues));
-StaticAssert_(ArraySize_(SceneCameraPositions) >= uint64(Scenes::NumValues));
-StaticAssert_(ArraySize_(SceneCameraRotations) >= uint64(Scenes::NumValues));
-StaticAssert_(ArraySize_(SceneAlbedoScales) >= uint64(Scenes::NumValues));
-
-static Setting* LightSettings[] =
-{
-    &AppSettings::EnableSun,
-    &AppSettings::BakeDirectSunLight,
-    &AppSettings::SunTintColor,
-    &AppSettings::SunIntensityScale,
-    &AppSettings::SunSize,
-    &AppSettings::NormalizeSunIntensity,
-    &AppSettings::SunAzimuth,
-    &AppSettings::SunElevation,
-    &AppSettings::SkyMode,
-    &AppSettings::SkyColor,
-    &AppSettings::Turbidity,
-    &AppSettings::GroundAlbedo,
-    &AppSettings::EnableAreaLight,
-    &AppSettings::EnableAreaLightShadows,
-    &AppSettings::AreaLightColor,
-    &AppSettings::AreaLightIlluminance,
-    &AppSettings::AreaLightLuminousPower,
-    &AppSettings::AreaLightEV100,
-    &AppSettings::AreaLightIlluminanceDistance,
-    &AppSettings::AreaLightSize,
-    &AppSettings::AreaLightX,
-    &AppSettings::AreaLightY,
-    &AppSettings::AreaLightZ,
-    &AppSettings::AreaLightShadowBias,
-    &AppSettings::BakeDirectAreaLight,
-    &AppSettings::AreaLightUnits,
-};
-
-static const uint64 NumLightSettings = ArraySize_(LightSettings);
-
-struct SettingInfo
-{
-    std::string Name;
-    uint64 DataSize = 0;
-
-    template<typename TSerializer> void Serialize(TSerializer& serializer)
-    {
-        SerializeItem(serializer, Name);
-        SerializeItem(serializer, DataSize);
-    }
-};
-
-// Save lighting settings to a file
-static void LoadLightSettings(HWND parentWindow)
-{
-    wchar currDirectory[MAX_PATH] = { 0 };
-    GetCurrentDirectory(ArraySize_(currDirectory), currDirectory);
-
-    wchar filePath[MAX_PATH] = { 0 };
-
-    OPENFILENAME ofn;
-    ZeroMemory(&ofn , sizeof(ofn));
-    ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = parentWindow;
-    ofn.lpstrFile = filePath;
-    ofn.nMaxFile = ArraySize_(filePath);
-    ofn.lpstrFilter = L"All Files (*.*)\0*.*\0Light Settings (*.lts)\0*.lts\0";
-    ofn.nFilterIndex = 2;
-    ofn.lpstrFileTitle = nullptr;
-    ofn.nMaxFileTitle = 0;
-    ofn.lpstrInitialDir = nullptr;
-    ofn.lpstrTitle = L"Open Light Settings File..";
-    ofn.lpstrDefExt = L"lts";
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-    bool succeeded = false; //GetOpenFileName(&ofn) != 0;
-    SetCurrentDirectory(currDirectory);
-
-    if(succeeded)
-    {
-        try
-        {
-            FileReadSerializer serializer(filePath);
-
-            std::vector<SettingInfo> settingInfo;
-            SerializeItem(serializer, settingInfo);
-
-            uint8 dummyBuffer[1024] = { 0 };
-            for(uint64 i = 0; i < settingInfo.size(); ++i)
-            {
-                const SettingInfo& info = settingInfo[i];
-                Setting* setting = Settings.FindSetting(info.Name);
-                if(setting == nullptr || setting->SerializedValueSize() != info.DataSize)
-                {
-                    // Skip the data for this setting, it's out-of-date
-                    Assert_(info.DataSize <= sizeof(dummyBuffer));
-                    if(info.DataSize > 0)
-                        serializer.SerializeData(info.DataSize, dummyBuffer);
-                    continue;
-                }
-
-                setting->SerializeValue(serializer);
-            }
-        }
-        catch(Exception e)
-        {
-            std::wstring errorString = L"Error occured while loading light settings file: " + e.GetMessage();
-            MessageBox(parentWindow, errorString.c_str(), L"Error", MB_OK | MB_ICONERROR);
-        }
-    }
-
-    SetCurrentDirectory(currDirectory);
-}
-
-// Save lighting settings to a file
-static void SaveLightSettings(HWND parentWindow)
-{
-    wchar currDirectory[MAX_PATH] = { 0 };
-    GetCurrentDirectory(ArraySize_(currDirectory), currDirectory);
-
-    wchar filePath[MAX_PATH] = { 0 };
-
-    OPENFILENAME ofn;
-    ZeroMemory(&ofn , sizeof(ofn));
-    ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = parentWindow;
-    ofn.lpstrFile = filePath;
-    ofn.nMaxFile = ArraySize_(filePath);
-    ofn.lpstrFilter = L"All Files (*.*)\0*.*\0Light Settings (*.lts)\0*.lts\0";
-    ofn.nFilterIndex = 2;
-    ofn.lpstrFileTitle = nullptr;
-    ofn.nMaxFileTitle = 0;
-    ofn.lpstrInitialDir = nullptr;
-    ofn.lpstrTitle = L"Save Light Settings File As..";
-    ofn.lpstrDefExt = L"lts";
-    ofn.Flags = OFN_OVERWRITEPROMPT;
-    bool succeeded = false; //GetSaveFileName(&ofn) != 0;
-    SetCurrentDirectory(currDirectory);
-
-    if(succeeded)
-    {
-        try
-        {
-            std::vector<SettingInfo> settingInfo;
-            settingInfo.resize(NumLightSettings);
-            for(uint64 i = 0; i < NumLightSettings; ++i)
-            {
-                // Serialize some metadata so that we can skip out of date settings on load
-                settingInfo[i].Name = LightSettings[i]->Name();
-                settingInfo[i].DataSize = LightSettings[i]->SerializedValueSize();
-                Assert_(settingInfo[i].DataSize > 0);
-            }
-
-            FileWriteSerializer serializer(filePath);
-            SerializeItem(serializer, settingInfo);
-
-            for(uint64 i = 0; i < NumLightSettings; ++i)
-                LightSettings[i]->SerializeValue(serializer);
-        }
-        catch(Exception e)
-        {
-            std::wstring errorString = L"Error occured while saving light settings file:\n" + e.GetMessage();
-            MessageBox(parentWindow, errorString.c_str(), L"Error", MB_OK | MB_ICONERROR);
-        }
-    }
-
-    SetCurrentDirectory(currDirectory);
-}
-
-// Save a skydome texture as a DDS file
-static void SaveEXRScreenshot(HWND parentWindow, ID3D11ShaderResourceView* screenSRV)
-{
-    // Read the texture data, and apply the inverse exposure scale
-    ID3D11DevicePtr device;
-    screenSRV->GetDevice(&device);
-
-    TextureData<Float4> textureData;
-    GetTextureData(device, screenSRV, textureData);
-
-    const uint64 numTexels = textureData.Texels.size();
-    for(uint64 i = 0; i < numTexels; ++i)
-    {
-        textureData.Texels[i] *= 1.0f / FP16Scale;
-        textureData.Texels[i] = Float4::Clamp(textureData.Texels[i], 0.0f, FP16Max);
-    }
-
-    wchar currDirectory[MAX_PATH] = { 0 };
-    GetCurrentDirectory(ArraySize_(currDirectory), currDirectory);
-
-    wchar filePath[MAX_PATH] = { 0 };
-
-    OPENFILENAME ofn;
-    ZeroMemory(&ofn , sizeof(ofn));
-    ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = parentWindow;
-    ofn.lpstrFile = filePath;
-    ofn.nMaxFile = ArraySize_(filePath);
-    ofn.lpstrFilter = L"All Files (*.*)\0*.*\0EXR Files (*.exr)\0*.exr\0";
-    ofn.nFilterIndex = 2;
-    ofn.lpstrFileTitle = nullptr;
-    ofn.nMaxFileTitle = 0;
-    ofn.lpstrInitialDir = nullptr;
-    ofn.lpstrTitle = L"Save Screenshot As..";
-    ofn.lpstrDefExt = L"exr";
-    ofn.Flags = OFN_OVERWRITEPROMPT;
-    bool succeeded = false;//GetSaveFileName(&ofn) != 0;
-    SetCurrentDirectory(currDirectory);
-
-    if(succeeded)
-    {
-        try
-        {
-            SaveTextureAsEXR(textureData, filePath);
-        }
-        catch(Exception e)
-        {
-            std::wstring errorString = L"Error occured while saving screenshot as an EXR file:\n" + e.GetMessage();
-            MessageBox(parentWindow, errorString.c_str(), L"Error", MB_OK | MB_ICONERROR);
-        }
-    }
-}
 
 // Bakes lookup textures for computing environment specular from radiance encoded as spherical harmonics.
 static void GenerateSHSpecularLookupTextures(ID3D11Device* device)
@@ -474,23 +236,7 @@ BakingLab::BakingLab()
 
 void BakingLab::MeshbakerInitialize(const Model* sceneModel, Lights &&lights)
 {
-    auto device = deviceManager.Device();
-    for(uint64 i = 0; i < AppSettings::NumCubeMaps; ++i)
-        envMaps[i] = LoadTexture(device, AppSettings::CubeMapPaths(i).c_str());
 
-    BakeInputData bakeInput;
-    bakeInput.SceneModel = sceneModel;
-    bakeInput.Device = device;
-    bakeInput.lights = lights;
-    for(uint64 i = 0; i < AppSettings::NumCubeMaps; ++i)
-        bakeInput.EnvMaps[i] = envMaps[i];
-    meshBaker.Initialize(bakeInput);
-}
-
-void BakingLab::Update(const Timer& timer)
-{
-    // meshbakerStatus = meshBaker.Update(unJitteredCamera, colorTargetMSAA.Width, colorTargetMSAA.Height,
-    //                                           context, &sceneModels[AppSettings::CurrentScene]);
 }
 
 static void GenerateGaussianIrradianceTable(float sharpness, const wchar* filePath)
@@ -621,25 +367,23 @@ void BakingLab::Init(const Scene *s)
 {
     auto device = deviceManager.Device();
 
-    sceneModels.CreateFromScene(device, s, false);
-    Lights lights;
-    InitLights(s, lights);
-    MeshbakerInitialize(&sceneModels[AppSettings::CurrentScene], std::move(lights));
-    PrintString("baker cube map need set");
-}
+    sceneModel.CreateFromScene(device, s, false);
+    BakeInputData bakeInput;
+    bakeInput.SceneModel = &sceneModel;
+    bakeInput.Device = device;
 
-float BakingLab::BakeProcess()
-{
-    meshbakerStatus = meshBaker.Update();
-    return meshbakerStatus.BakeProgress;
+    InitLights(s, bakeInput.lights);
+    meshBaker.Initialize(bakeInput);
+
+    PrintString("baker cube map need set");
 }
 
 void BakingLab::Bake(uint32 bakeMeshIdx)
 {
-    meshBaker.bakeMeshIdx = bakeMeshIdx;
-    while (BakeProcess() < 1.f) ;
-    meshBaker.WaitBakeThreadEnd();  //process set to 1.0, but bake thread still have some work not finish, need to wait it end
-    meshBaker.bakeMeshIdx = UINT32_MAX;
+    meshBaker.SetBakeMesh(bakeMeshIdx);
+    meshBaker.StartBake();
+    while (meshBaker.Process() < 1.f) ;
+    meshBaker.EndBake();  //process set to 1.0, but bake thread still have some work not finish, need to wait it end
 }
 
 void BakingLab::ShutDown()

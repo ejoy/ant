@@ -31,8 +31,6 @@ namespace SampleFramework11
 
 using namespace SampleFramework11;
 
-struct RenderThreadContext;
-struct RenderThreadData;
 struct IntegrationSamples;
 struct BakeThreadData;
 struct GutterTexel;
@@ -58,7 +56,7 @@ struct MeshBakerStatus
 {
     uint64 NumBakePoints = 0;
     float BakeProgress = 0.0f;
-    Float3 SGDirections[s_BakeSetting.MaxSGCount];
+    Float3 SGDirections[BakeSetting::MaxSGCount];
     float SGSharpness = 0.0f;
 };
 
@@ -77,6 +75,27 @@ struct BakePoint
     #endif
 };
 
+struct BakeBatchData {
+    volatile int64 batchIdx = 0;
+    uint64 num = 0;
+    uint64 numGroupsX = 0;
+    uint64 numGroupsY = 0;
+    uint64 lightmapSize = 0;
+
+    void Update(uint16 lmsize) {
+        numGroupsX = (lmsize + (BakeSetting::BakeGroupSizeX - 1)) / BakeSetting::BakeGroupSizeX;
+        numGroupsY = (lmsize + (BakeSetting::BakeGroupSizeY - 1)) / BakeSetting::BakeGroupSizeY;
+
+        num = GetBakeSetting().NumBakeBatches(numGroupsX, numGroupsY);
+
+        lightmapSize = lmsize;
+    }
+
+    float Process() const {
+        return Saturate(batchIdx / (num - 1.0f));
+    }
+};
+
 class MeshBaker
 {
 
@@ -88,12 +107,20 @@ public:
     void Initialize(const BakeInputData& inputData);
     void Shutdown();
 
-    MeshBakerStatus Update();
-    void WaitBakeThreadEnd();
+    void SetBakeMesh(uint32 meshIdx);
+    float Process() const {
+        return bakeBatchData.Process();
+    }
+
+    MeshBakerStatus GetBakerStatus() const;
+    
+    void StartBake();
+    void EndBake();
 
     // Read/Write data shared with bake threads
     FixedArray<Float4> bakeResults[BakeSetting::MaxBasisCount];
-    volatile int64 currBakeBatch = 0;
+
+    BakeBatchData bakeBatchData;
 
     bool killBakeThreads = false;
     std::vector<BakePoint> bakePoints;
@@ -107,17 +134,10 @@ public:
     uint32 bakeMeshIdx = UINT32_MAX;
 private:
 
-    void KillBakeThreads();
-    void StartBakeThreads();
-
-    void KillRenderThreads();
-    void StartRenderThreads();
-
     RTCDevice rtcDevice = nullptr;
 
     Random rng;
 
-    uint64 numThreads = 0;
     std::vector<HANDLE> bakeThreads;
     std::vector<BakeThreadData> bakeThreadData;
     std::vector<IntegrationSamples> bakeSamples;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Assert_.h"
+#include "Utility.h"
 enum class SkyModes
 {
     None = 0,
@@ -115,7 +116,7 @@ struct BakeSetting{
     uint32 BakeRussianRouletteDepth = 4;
     float BakeRussianRouletteProbability = 0.5000f;
 
-    uint32 NumBakeSample = 25;   // range from[0, 100]
+    uint64 NumBakeSample = 25;   // range from[0, 100]
     BakeModes BakeMode = BakeModes::Diffuse;
     SampleModes SampleMode = SampleModes::Random;
 
@@ -127,7 +128,7 @@ struct BakeSetting{
     SGDiffuseModes SGDiffuseMode;
     SGSpecularModes SGSpecularMode;
 
-    inline uint64 BasisCount()
+    inline uint64 BasisCount() const
     {
         const uint32 bm = (uint32)BakeMode;
         Assert_(bm < uint64(BakeModes::NumValues));
@@ -137,14 +138,14 @@ struct BakeSetting{
         return BasisCounts[bm];
     }
 
-    inline uint64 SGCount()
+    inline uint64 SGCount() const
     {
         Assert_(uint64(BakeMode) < uint64(BakeModes::NumValues));
         return (uint64(BakeMode) >= uint64(BakeModes::SG5)) ?
             BasisCount() : 0;
     }
 
-    inline bool SupportsProgressiveIntegration()
+    inline bool SupportsProgressiveIntegration() const
     {
         if((BakeMode == BakeModes::Directional) || (BakeMode == BakeModes::DirectionalRGB) || 
             (SGCount() > 0 && (SolveMode == SolveModes::SVD || SolveMode == SolveModes::NNLS)))
@@ -153,11 +154,12 @@ struct BakeSetting{
             return true;
     }
 
-    inline uint32 NumBakeBatches(uint32 numGroupX, uint32 numGroupY) {
+    inline uint64 NumBakeBatches(uint64 numGroupX, uint64 numGroupY) const {
         return SupportsProgressiveIntegration() ?
             numGroupX * numGroupY * NumBakeSample * NumBakeSample : 
             numGroupX * numGroupY * BakeGroupSize;
     }
 };
 
-extern BakeSetting s_BakeSetting;
+
+const BakeSetting& GetBakeSetting();

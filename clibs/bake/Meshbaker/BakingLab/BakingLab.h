@@ -49,7 +49,7 @@ public:
     Model& GetModel(uint32 mode){ return sceneModel;}
     void MeshbakerInitialize(const Model *model, Lights &&lights);
     void Bake(uint32 bakeMeshIdx);
-    float BakeProcess();
+    float BakeProcess(uint32 bakeMeshIdx);
     void ShutDown();
 
     const FixedArray<Float4>& GetBakeResult(uint64 basicIdx) const;

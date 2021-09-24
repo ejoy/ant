@@ -22,7 +22,6 @@
 #include <Graphics/BRDF.h>
 #include <Graphics/Sampling.h>
 
-#include "AppSettings.h"
 #include "SG.h"
 #include "PathTracer.h"
 
@@ -114,7 +113,7 @@ struct DiffuseBaker
 
     void FinalResult(Float4 bakeOutput[BasisCount])
     {
-        float3 finalResult = ResultSum * CosineWeightedMonteCarloFactor(NumSamples);
+        Float3 finalResult = ResultSum * CosineWeightedMonteCarloFactor(NumSamples);
         bakeOutput[0] = Float4(Float3::Clamp(finalResult, 0.0f, FP16Max), 1.0f);
     }
 
@@ -314,6 +313,8 @@ struct HL2Baker
     }
 };
 
+static const bool WorldSpaceBake = false;
+
 // Bakes radiance projected onto L1 SH, with 12 floats per texel
 struct SH4Baker
 {
@@ -335,7 +336,7 @@ struct SH4Baker
 
     void AddSample(Float3 sampleDirTS, uint64 sampleIdx, Float3 sample, Float3 sampleDirWS, Float3 normal)
     {
-        const Float3 sampleDir = AppSettings::WorldSpaceBake ? sampleDirWS : sampleDirTS;
+        const Float3 sampleDir = WorldSpaceBake ? sampleDirWS : sampleDirTS;
         ResultSum += ProjectOntoSH4Color(sampleDir, sample);
     }
 
@@ -380,7 +381,7 @@ struct SH9Baker
 
     void AddSample(Float3 sampleDirTS, uint64 sampleIdx, Float3 sample, Float3 sampleDirWS, Float3 normal)
     {
-        const Float3 sampleDir = AppSettings::WorldSpaceBake ? sampleDirWS : sampleDirTS;
+        const Float3 sampleDir = WorldSpaceBake ? sampleDirWS : sampleDirTS;
         ResultSum += ProjectOntoSH9Color(sampleDir, sample);
     }
 
@@ -531,7 +532,8 @@ template<uint64 SGCount> struct SGBaker
         for(uint64 i = 0; i < SGCount; ++i)
             ProjectedResult[i] = initialGuess[i];
 
-        if(AppSettings::SolveMode == SolveModes::RunningAverage || AppSettings::SolveMode == SolveModes::RunningAverageNN)
+        const auto sm = GetBakeSetting().SolveMode;
+        if(sm == SolveModes::RunningAverage || sm == SolveModes::RunningAverageNN)
         {
             for(uint64 i = 0; i < SGCount; ++i)
             {
@@ -548,14 +550,15 @@ template<uint64 SGCount> struct SGBaker
 
     void AddSample(Float3 sampleDirTS, uint64 sampleIdx, Float3 sample, Float3 sampleDirWS, Float3 normal)
     {
-        const Float3 sampleDir = AppSettings::WorldSpaceBake ? sampleDirWS : sampleDirTS;
+        const Float3 sampleDir = WorldSpaceBake ? sampleDirWS : sampleDirTS;
         SampleDirs[CurrSampleIdx] = sampleDir;
         Samples[CurrSampleIdx] = sample;
         ++CurrSampleIdx;
 
-        if(AppSettings::SolveMode == SolveModes::RunningAverage)
+        auto sm = GetBakeSetting().SolveMode;
+        if(sm == SolveModes::RunningAverage)
             SGRunningAverage(sampleDir, sample, ProjectedResult, SGCount, (float)sampleIdx, RunningAverageWeights, false);
-        else if(AppSettings::SolveMode == SolveModes::RunningAverageNN)
+        else if(sm == SolveModes::RunningAverageNN)
             SGRunningAverage(sampleDir, sample, ProjectedResult, SGCount, (float)sampleIdx, RunningAverageWeights, true);
         else
             ProjectOntoSGs(sampleDir, sample, ProjectedResult, SGCount);
@@ -579,7 +582,8 @@ template<uint64 SGCount> struct SGBaker
 
     void ProgressiveResult(Float4 bakeOutput[BasisCount], uint64 passIdx)
     {
-        if(AppSettings::SolveMode == SolveModes::RunningAverage || AppSettings::SolveMode == SolveModes::RunningAverageNN)
+        auto sm = GetBakeSetting().SolveMode;
+        if(sm == SolveModes::RunningAverage || sm == SolveModes::RunningAverageNN)
         {
             for(uint64 i = 0; i < SGCount; ++i)
                 bakeOutput[i] = Float4(Float3::Clamp(ProjectedResult[i].Amplitude, -FP16Max, FP16Max), RunningAverageWeights[i]);
@@ -617,44 +621,32 @@ const LightData* FindSunLight(const Lights *lights)
 // Data used by the baking threads
 struct BakeThreadContext
 {
-    uint64 BakeTag = uint64(-1);
     const BVHData* SceneBVH = nullptr;
-    const TextureData<Half4>* EnvMaps = nullptr;
     const std::vector<BakePoint>* BakePoints = nullptr;
     const Lights *lights = nullptr;
     const LightData *SunLight = nullptr;
-    uint64 CurrNumBatches = 0;
-    uint64 CurrLightMapSize = 0;
-    BakeModes CurrBakeMode = BakeModes::Diffuse;
-    SolveModes CurrSolveMode = SolveModes::NNLS;
+
+    const BakeBatchData *bakeBatchData = nullptr;
     Random RandomGenerator;
-    SampleModes CurrSampleMode = SampleModes::Random;
-    uint64 CurrNumSamples = 0;
     const std::vector<IntegrationSamples>* Samples;
     FixedArray<Float4>* BakeOutput = nullptr;
     volatile int64* CurrBatch = nullptr;
 
     void Init(FixedArray<Float4>* bakeOutput, const std::vector<IntegrationSamples>* samples,
-              volatile int64* currBatch, const MeshBaker* meshBaker, uint64 newTag)
+              volatile int64* currBatch, const MeshBaker* meshBaker)
     {
-        if(BakeTag == uint64(-1))
-            RandomGenerator.SeedWithRandomValue();
+        if (lights || SceneBVH)
+        {
+            Assert_(false && "already init!");
+        }
+        RandomGenerator.SeedWithRandomValue();
 
-        BakeTag = newTag;
         lights = &meshBaker->input.lights;
         SunLight = FindSunLight(lights);
         SceneBVH = &meshBaker->sceneBVH;
-        EnvMaps = meshBaker->input.EnvMapData;
         BakePoints = &meshBaker->bakePoints;
-
-        CurrNumBatches = meshBaker->currNumBakeBatches;
-        CurrLightMapSize = meshBaker->currLightMapSize;
-        CurrBakeMode = meshBaker->currBakeMode;
-        CurrSolveMode = meshBaker->currSolveMode;
+        bakeBatchData = &meshBaker->bakeBatchData;
         BakeOutput = bakeOutput;
-        CurrBatch = currBatch;
-        CurrSampleMode = BakeSetting::SampleMode;
-        CurrNumSamples = BakeSetting::NumBakeSample;
         Samples = samples;
     }
 };
@@ -665,27 +657,27 @@ struct BakeThreadContext
 // its unbaked neighbors within the thread group.
 template<typename TBaker> static bool BakeDriver(BakeThreadContext& context, TBaker& baker)
 {
-    if(context.CurrNumBatches == 0)
+    if(context.bakeBatchData->num == 0)
         return false;
 
     const uint64 batchIdx = InterlockedIncrement64(context.CurrBatch) - 1;
-    if(batchIdx >= context.CurrNumBatches)
+    if(batchIdx >= context.bakeBatchData->num)
         return false;
 
     // Are we baking one sample per texel and progessively integrating, or are we going to
     // fully compute the final baked texel value and flood fill the neighbors?
-    const bool progressiveintegration = s_BakeSetting.SupportsProgressiveIntegration(context.CurrBakeMode, context.CurrSolveMode);
+    const bool progressiveintegration = GetBakeSetting().SupportsProgressiveIntegration();
 
     // Figure out which 8x8 group we're working on
-    const uint64 numGroupsX = (context.CurrLightMapSize + (BakeSetting::BakeGroupSizeX - 1)) / BakeSetting::BakeGroupSizeX;
-    const uint64 numGroupsY = (context.CurrLightMapSize + (BakeSetting::BakeGroupSizeY - 1)) / BakeSetting::BakeGroupSizeY;
+    const uint64 numGroupsX = context.bakeBatchData->numGroupsX;
+    const uint64 numGroupsY = context.bakeBatchData->numGroupsY;
     const uint64 numBakeGroups = numGroupsX * numGroupsY;
 
     const uint64 groupIdx = batchIdx % numBakeGroups;
     const uint64 groupIdxX = groupIdx % numGroupsX;
     const uint64 groupIdxY = groupIdx / numGroupsX;
 
-    const uint64 sqrtNumSamples = context.CurrNumSamples;
+    const uint64 sqrtNumSamples = GetBakeSetting().NumBakeSample;
     const uint64 numSamplesPerTexel = sqrtNumSamples * sqrtNumSamples;
 
     Random& random = context.RandomGenerator;
@@ -704,13 +696,13 @@ template<typename TBaker> static bool BakeDriver(BakeThreadContext& context, TBa
     params.EnableDiffuse = true;
     params.EnableSpecular = false;
     params.EnableBounceSpecular = false;
-    params.MaxPathLength                = BakeSetting::MaxBakePathLength;
-    params.RussianRouletteDepth         = BakeSetting::BakeRussianRouletteDepth;
-    params.RussianRouletteProbability   = BakeSetting::BakeRussianRouletteProbability;
+    params.MaxPathLength                = GetBakeSetting().MaxBakePathLength;
+    params.RussianRouletteDepth         = GetBakeSetting().BakeRussianRouletteDepth;
+    params.RussianRouletteProbability   = GetBakeSetting().BakeRussianRouletteProbability;
     params.RayLen = FLT_MAX;
     params.SceneBVH = context.SceneBVH;
-    params.SkyCache = &context.SkyCache;
-    params.EnvMaps = context.EnvMaps;
+
+    const auto lmsize = context.bakeBatchData->lightmapSize;
 
     if(progressiveintegration)
     {
@@ -726,8 +718,9 @@ template<typename TBaker> static bool BakeDriver(BakeThreadContext& context, TBa
                 // Compute the absolute indices of the texel we're going to work on
                 const uint64 texelIdxX = groupIdxX * BakeSetting::BakeGroupSizeX + groupTexelIdxX;
                 const uint64 texelIdxY = groupIdxY * BakeSetting::BakeGroupSizeY + groupTexelIdxY;
-                const uint64 texelIdx = texelIdxY * context.CurrLightMapSize + texelIdxX;
-                if(texelIdxX >= context.CurrLightMapSize || texelIdxY >= context.CurrLightMapSize)
+                
+                const uint64 texelIdx = texelIdxY * lmsize + texelIdxX;
+                if(texelIdxX >= lmsize || texelIdxY >= lmsize)
                     continue;
 
                 // Skip if the texel is empty
@@ -822,8 +815,8 @@ template<typename TBaker> static bool BakeDriver(BakeThreadContext& context, TBa
 
         const uint64 texelIdxX = groupIdxX * BakeSetting::BakeGroupSizeX + groupTexelIdxX;
         const uint64 texelIdxY = groupIdxY * BakeSetting::BakeGroupSizeY + groupTexelIdxY;
-        const uint64 texelIdx = texelIdxY * context.CurrLightMapSize + texelIdxX;
-        if(texelIdxX >= context.CurrLightMapSize || texelIdxY >= context.CurrLightMapSize)
+        const uint64 texelIdx = texelIdxY * lmsize + texelIdxX;
+        if(texelIdxX >= lmsize || texelIdxY >= lmsize)
             return true;
 
         // Skip if the texel is empty
@@ -901,10 +894,10 @@ template<typename TBaker> static bool BakeDriver(BakeThreadContext& context, TBa
             const uint64 offsetY = i / BakeSetting::BakeGroupSizeX;
             const uint64 neighborX = groupIdxX * BakeSetting::BakeGroupSizeX + offsetX;
             const uint64 neighborY = groupIdxY * BakeSetting::BakeGroupSizeY + offsetY;
-            if(neighborX >= context.CurrLightMapSize || neighborY >= context.CurrLightMapSize)
+            if(neighborX >= lmsize || neighborY >= lmsize)
                 continue;
 
-            uint64 neighborTexelIdx = neighborY * context.CurrLightMapSize + neighborX;
+            uint64 neighborTexelIdx = neighborY * lmsize + neighborX;
             for(uint64 basisIdx = 0; basisIdx < TBaker::BasisCount; ++basisIdx)
                 context.BakeOutput[basisIdx][neighborTexelIdx] = texelResults[basisIdx];
         }
@@ -930,13 +923,10 @@ template<typename TBaker> uint32 __stdcall BakeThread(void* data)
 
     BakeThreadContext context;
     TBaker baker;
-
+    context.Init(threadData->BakeOutput, threadData->Samples,
+                    threadData->CurrBatch, threadData->Baker);
     while(meshBaker->killBakeThreads == false)
     {
-        const uint64 currTag = meshBaker->bakeTag;
-        if(context.BakeTag != currTag)
-            context.Init(threadData->BakeOutput, threadData->Samples,
-                         threadData->CurrBatch, threadData->Baker, currTag);
 
         if(BakeDriver<TBaker>(context, baker) == false)
             Sleep(5);
@@ -1077,7 +1067,12 @@ static void drawmesh(ID3D11DeviceContextPtr context, ID3D11Device* device, Verte
 static void ExtractBakePoints(const BakeInputData& bakeInput, std::vector<BakePoint>& bakePoints,
                               std::vector<GutterTexel>& gutterTexels, uint32 bakeMeshIdx)
 {
-    const uint32 LightMapSize = AppSettings::LightMapResolution;
+    const Model& model = *bakeInput.SceneModel;
+    const std::vector<Mesh>& meshes = model.Meshes();
+
+    const Mesh& mesh = meshes[bakeMeshIdx];
+
+    const uint32 LightMapSize = mesh.GetLightmapSize();
     const uint64 NumTexels = LightMapSize * LightMapSize;
 
     bakePoints.clear();
@@ -1157,21 +1152,7 @@ static void ExtractBakePoints(const BakeInputData& bakeInput, std::vector<BakePo
 
     uint32 vertexOffset = 0;
 
-    const Model& model = *bakeInput.SceneModel;
-    const std::vector<Mesh>& meshes = model.Meshes();
-
-
-    if (bakeMeshIdx != UINT32_MAX){
-        const Mesh& mesh = meshes[bakeMeshIdx];
-        drawmesh(context, device, vs, constantBuffer, mesh, vertexOffset);
-    } else {
-        for(uint64 meshIdx = 0; meshIdx < meshes.size(); ++meshIdx)
-        {
-            const Mesh& mesh = meshes[meshIdx];
-            drawmesh(context, device, vs, constantBuffer, mesh, vertexOffset);
-            vertexOffset += mesh.NumVertices();
-        }
-    }
+    drawmesh(context, device, vs, constantBuffer, mesh, vertexOffset);
 
     // Resolve the targets
     VertexShaderPtr resolveVS = CompileVSFromFile(device, (BakingLabDir() + L"LightMapRasterization.hlsl").c_str(), "ResolveVS");
@@ -1327,8 +1308,8 @@ MeshBaker::~MeshBaker()
 void MeshBaker::Initialize(const BakeInputData& inputData)
 {
     input = inputData;
-    for(uint64 i = 0; i < AppSettings::NumCubeMaps; ++i)
-        GetTextureData(input.Device, input.EnvMaps[i], input.EnvMapData[i]);
+    // for(uint64 i = 0; i < AppSettings::NumCubeMaps; ++i)
+    //     GetTextureData(input.Device, input.EnvMaps[i], input.EnvMapData[i]);
 
      // Init embree
     rtcDevice = rtcNewDevice();
@@ -1341,29 +1322,21 @@ void MeshBaker::Initialize(const BakeInputData& inputData)
     // Build the BVHs
     BuildBVH(*input.SceneModel, sceneBVH, input.Device, rtcDevice);
 
-    bakeSampleMode = AppSettings::BakeSampleMode;
-    numBakeSamples = AppSettings::NumBakeSamples;
-
-    numThreads = GetNumThreads();
-    renderSamples.resize(numThreads);
+    auto numThreads = GetNumThreads();
     bakeSamples.resize(numThreads);
 
+    auto bs = GetBakeSetting();
     for(uint64 i = 0; i < numThreads; ++i)
     {
-        GenerateIntegrationSamples(bakeSamples[i], numBakeSamples, BakeGroupSize, 1,
-                                   bakeSampleMode, NumIntegrationTypes, rng);
+        GenerateIntegrationSamples(bakeSamples[i], bs.NumBakeSample, BakeSetting::BakeGroupSize, 1,
+                                   bs.SampleMode, NumIntegrationTypes, rng);
     }
 
-    initialized = true;
 }
 
 void MeshBaker::Shutdown()
 {
-    if(initialized == false)
-        return;
-
-    KillBakeThreads();
-    KillRenderThreads();
+    EndBake();
 
     // Shutdown embree
     sceneBVH = BVHData();
@@ -1371,43 +1344,47 @@ void MeshBaker::Shutdown()
     rtcDevice = nullptr;
 }
 
-MeshBakerStatus MeshBaker::Update(const Camera& camera, uint32 screenWidth, uint32 screenHeight,
-                                  ID3D11DeviceContext* deviceContext, 
-                                  const Model* currentModel)
+void MeshBaker::SetBakeMesh(uint32 meshIdx)
 {
-    Assert_(initialized);
-    if(AppSettings::BakeSampleMode != bakeSampleMode || AppSettings::NumBakeSamples != numBakeSamples)
-    {
-        bakeSampleMode = AppSettings::BakeSampleMode;
-        numBakeSamples = AppSettings::NumBakeSamples;
+    ExtractBakePoints(input, bakePoints, gutterTexels, meshIdx);
+    const auto& m = input.SceneModel->Meshes()[meshIdx];
+    const auto lmsize = m.GetLightmapSize();
+    bakeBatchData.Update(lmsize);
 
-        const uint64 numGroupsX = (lightMapSize + (BakeGroupSizeX - 1)) / BakeGroupSizeX;
-        const uint64 numGroupsY = (lightMapSize + (BakeGroupSizeY - 1)) / BakeGroupSizeY;
-        if(s_BakeSetting.SupportsProgressiveIntegration(bakeMode, solveMode))
-            currNumBakeBatches = numGroupsX * numGroupsY * AppSettings::NumBakeSamples * AppSettings::NumBakeSamples;
-        else
-            currNumBakeBatches = numGroupsX * numGroupsY * BakeGroupSize;
+    const uint64 basisCount = GetBakeSetting().BasisCount();
+    const uint64 numTexels = lmsize * lmsize;
+    for(uint64 i = 0; i < BakeSetting::MaxBasisCount; ++i)
+        bakeResults[i].Shutdown();
 
-        InterlockedIncrement64(&bakeTag);
-        currBakeBatch = 0;
-    }
+    for(uint64 i = 0; i < basisCount; ++i)
+        bakeResults[i].Init(numTexels);
 
+    const uint64 sgCount = GetBakeSetting().SGCount();
+    
+    SGDistribution distribution = WorldSpaceBake ? SGDistribution::Spherical : SGDistribution::Hemispherical;
+    if(sgCount > 0)
+        InitializeSGSolver(sgCount, distribution);
+
+    const SG* initalGuess = InitialGuess();
+    sgSharpness = initalGuess[0].Sharpness;
+    for(uint64  i = 0; i < sgCount; ++i)
+        sgDirections[i] = initalGuess[i].Axis;
+}
+
+MeshBakerStatus MeshBaker::GetBakerStatus() const
+{
     MeshBakerStatus status;
-    const uint64 sgCount = s_BakeSetting.SGCount();
+    
+    const uint64 sgCount = GetBakeSetting().SGCount();
     for(uint64 i = 0; i < sgCount; ++i)
         status.SGDirections[i] = sgDirections[i];
     status.SGSharpness = sgCount > 0 ? sgSharpness : 0.0f;
-
-    status.BakeProgress = Saturate(currBakeBatch / (currNumBakeBatches - 1.0f));
+    status.BakeProgress = bakeBatchData.Process();
+    status.NumBakePoints = bakePoints.size();
     return status;
 }
 
-void MeshBaker::WaitBakeThreadEnd() 
-{
-    KillBakeThreads();
-}
-
-void MeshBaker::KillBakeThreads()
+void MeshBaker::EndBake()
 {
     Assert_(!killBakeThreads);
     killBakeThreads = true;
@@ -1421,14 +1398,14 @@ void MeshBaker::KillBakeThreads()
     bakeThreadData.clear();
 }
 
-void MeshBaker::StartBakeThreads()
+void MeshBaker::StartBake()
 {
     Assert_(killBakeThreads);
     if(bakeThreads.size() > 0)
         return;
 
     uint32 (__stdcall* threadFunction)(void*) = BakeThread<DiffuseBaker>;
-    auto bm = s_BakeSetting.BakeMode;
+    auto bm = GetBakeSetting().BakeMode;
     if( bm == BakeModes::HL2)
         threadFunction = BakeThread<HL2Baker>;
 	else if (bm == BakeModes::Directional)
@@ -1452,6 +1429,7 @@ void MeshBaker::StartBakeThreads()
     else if(bm == BakeModes::SG12)
         threadFunction = BakeThread<SG12Baker>;
 
+    auto numThreads = GetNumThreads();
     bakeThreads.resize(numThreads);
     bakeThreadData.resize(numThreads);
     for(uint64 i = 0; i < numThreads; ++i)
@@ -1459,7 +1437,7 @@ void MeshBaker::StartBakeThreads()
         BakeThreadData* threadData = &bakeThreadData[i];
         threadData->BakeOutput = bakeResults;
         threadData->Samples = &bakeSamples;
-        threadData->CurrBatch = &currBakeBatch;
+        threadData->CurrBatch = &bakeBatchData.batchIdx;
         threadData->Baker = this;
         bakeThreads[i] = HANDLE(_beginthreadex(nullptr, 0, threadFunction, threadData, 0, nullptr));
         if(bakeThreads[i] == 0)
@@ -1468,55 +1446,4 @@ void MeshBaker::StartBakeThreads()
             throw Exception(L"Failed to create thread for light map baking");
         }
     }
-
-    bakeThreadsSuspended = false;
-}
-
-void MeshBaker::KillRenderThreads()
-{
-    if(renderThreadsSuspended)
-        return;
-
-    Assert_(killRenderThreads == false);
-    killRenderThreads = true;
-    for(uint64 i = 0; i < renderThreads.size(); ++i)
-    {
-        WaitForSingleObject(renderThreads[i], INFINITE);
-        CloseHandle(renderThreads[i]);
-    }
-
-    renderThreads.clear();
-    renderThreadData.clear();
-    killRenderThreads = false;
-    renderThreadsSuspended = true;
-}
-
-void MeshBaker::StartRenderThreads()
-{
-    if(renderThreadsSuspended == false)
-        return;
-
-    Assert_(killRenderThreads == false);
-    if(renderThreads.size() > 0)
-        return;
-
-    renderThreads.resize(numThreads);
-    renderThreadData.resize(numThreads);
-    for(uint64 i = 0; i < numThreads; ++i)
-    {
-        RenderThreadData* threadData = &renderThreadData[i];
-        threadData->RenderBuffer = &renderBuffer;
-        threadData->RenderWeightBuffer = &renderWeightBuffer;
-        threadData->Samples = &renderSamples;
-        threadData->CurrTile = &currTile;
-        threadData->Baker = this;
-        renderThreads[i] = HANDLE(_beginthreadex(nullptr, 0, RenderThread, threadData, 0, nullptr));
-        if(renderThreads[i] == 0)
-        {
-            AssertFail_("Failed to create thread for ground truth rendering");
-            throw Exception(L"Failed to create thread for ground truth rendering");
-        }
-    }
-
-    renderThreadsSuspended = false;
 }

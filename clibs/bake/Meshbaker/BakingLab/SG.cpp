@@ -295,7 +295,7 @@ void SolveSGs(SGSolveParam& params)
     for(uint64 i = 0; i < params.NumSGs; ++i)
         params.OutSGs[i] = defaultInitialGuess[i];
 
-    const auto sm = s_BakeSetting.SolveMode;
+    const auto sm = GetBakeSetting().SolveMode;
     if( sm == SolveModes::NNLS)
         SolveNNLS(params);
     else if(sm == SolveModes::SVD)
