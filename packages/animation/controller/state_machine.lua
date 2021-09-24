@@ -302,6 +302,7 @@ function iani.step(task, s_delta, absolute)
 			if index >= #clips then
 				if not play_state.loop then
 					play_state.ratio = clips[#clips][2].range[2] / duration
+					play_state.play = false
 					return
 				end
 				index = 1
@@ -324,6 +325,7 @@ function iani.step(task, s_delta, absolute)
 	if next_time > duration then
 		if not play_state.loop then
 			play_state.ratio = 1.0
+			play_state.play = false
 		else
 			play_state.ratio = (next_time - duration) / duration
 		end
