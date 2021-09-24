@@ -313,13 +313,6 @@ inline void GdiPlusCall(Gdiplus::Status status)
         throw GdiPlusException(status);
 }
 
-// Throws an AntException on failing return value
-inline void TwCall(int retVal)
-{
-    if(retVal == 0)
-        throw TwException();
-}
-
 #endif
 
 }
