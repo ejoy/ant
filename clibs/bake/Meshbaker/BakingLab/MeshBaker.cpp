@@ -1401,6 +1401,7 @@ void MeshBaker::EndBake()
 
     bakeThreads.clear();
     bakeThreadData.clear();
+    bakeBatchData.batchIdx = 0;
 }
 
 void MeshBaker::StartBake()
