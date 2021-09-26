@@ -235,6 +235,6 @@ function isp.update()
 	update_shadow_properties()
 end
 
-function isp.enable_ambient_light(enable)
+function isp.enable_ibl(enable)
 	enable_ibl = enable
 end
