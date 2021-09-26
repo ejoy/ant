@@ -39,6 +39,8 @@ local def_ibl = {
 	LUT = {handle = def_2dtex_handle},
 }
 
+local enable_ibl = true
+
 local system_properties = {
 	--lighting
 	u_eyepos				= math3d.ref(mc.ZERO_PT),
@@ -94,6 +96,9 @@ function isp.get(n)
 end
 
 local function get_ibl()
+	if enable_ibl then
+		return def_ibl
+	end
 	local ibl = iibl.get_ibl()
 	return ibl.irradiance.handle and ibl or def_ibl
 end
@@ -228,4 +233,8 @@ function isp.update()
 	local mainrt = main_render_target()
 	update_lighting_properties(mainrt.view_rect, camerapos, f.n, f.f)
 	update_shadow_properties()
+end
+
+function isp.enable_ambient_light(enable)
+	enable_ibl = enable
 end
