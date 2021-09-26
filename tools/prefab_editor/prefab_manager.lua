@@ -207,10 +207,12 @@ function m:create_collider(config)
             "ant.render|render",
             "ant.scene|hierarchy_policy",
             "ant.scene|transform_policy",
+            "ant.general|tag",
             --"ant.collision|collider_policy"
         },
         data = {
             name = "collider" .. gen_geometry_id(),
+            tag = {config.tag or "collider"},
             scene_entity = true,
             transform = {s = scale},
             --collider = { [config.type] = define },
@@ -710,7 +712,7 @@ function m:add_effect(filename)
 		},
 		data = {
             name = "root",
-            tag = "effect",
+            tag = {"effect"},
             scene_entity = true,
             transform = {},
             effekseer = filename,
