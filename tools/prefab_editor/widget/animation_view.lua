@@ -798,7 +798,7 @@ function m.save_clip(path)
                             local rc = imaterial.get_property(ev.collision.col_eid, "u_color")
                             local color = math3d.totable(rc.value)
                             ev.collision.color = {color[1],color[2],color[3],color[4]}
-                            ev.collision.tag = table.concat(world[ev.collision.col_eid].tag, "|")
+                            ev.collision.tag = world[ev.collision.col_eid].tag
                         end
                         ev.collision.col_eid = nil
                     end
@@ -1401,7 +1401,7 @@ function m.load_clips()
                                 if not hierarchy.collider_list or not hierarchy.collider_list[e.collision.name] then
                                     local eid = prefab_mgr:create("collider", {tag = e.collision.tag, type = e.collision.shape_type, define = utils.deep_copy(default_collider_define[e.collision.shape_type]), parent = prefab_mgr.root, add_to_hierarchy = true})
                                     world[eid].name = e.collision.name
-                                    world[eid].tag = {e.collision.tag}
+                                    world[eid].tag = e.collision.tag
                                     imaterial.set_property(eid, "u_color", e.collision.color or {1.0,0.5,0.5,0.8})
                                     hierarchy:update_collider_list(world)
                                 end

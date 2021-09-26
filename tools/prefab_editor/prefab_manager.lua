@@ -212,7 +212,7 @@ function m:create_collider(config)
         },
         data = {
             name = "collider" .. gen_geometry_id(),
-            tag = {config.tag or "collider"},
+            tag = config.tag or {"collider"},
             scene_entity = true,
             transform = {s = scale},
             --collider = { [config.type] = define },
