@@ -96,7 +96,7 @@ function isp.get(n)
 end
 
 local function get_ibl()
-	if enable_ibl then
+	if not enable_ibl then
 		return def_ibl
 	end
 	local ibl = iibl.get_ibl()
