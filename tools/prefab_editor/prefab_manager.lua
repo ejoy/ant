@@ -24,7 +24,7 @@ local bgfx          = require "bgfx"
 local gd            = require "common.global_data"
 local utils         = require "common.utils"
 local effekseer     = require "effekseer"
-local subprocess    = require "sp_util"
+local subprocess    = import_package "ant.compile_resource".subprocess
 
 local m = {
     entities = {}
@@ -559,8 +559,7 @@ function m:init_camera()
             camera_mgr.update_frustrum(eid)
             camera_mgr.set_second_camera(eid, false)
 
-            local tr, tt = math3d.totable(r), math3d.totable(t)
-            eid.template.data.transform = {s = {1,1,1}, r = {tr[1],tr[2],tr[3],tr[4]}, t = {tt[1],tt[2],tt[3]}}
+            eid.template.data.transform = {s = {1,1,1}, r = {math3d.index(r, 1, 2, 3, 4)}, t = {math3d.index(t, 1, 2, 3)}}
 
             local recorder, recorder_templ = icamera_recorder.start(gen_camera_recorder_name())
             camera_mgr.bind_recorder(eid, recorder)

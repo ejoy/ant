@@ -12,110 +12,44 @@
 
 #include <PCH.h>
 
-#include <App.h>
 #include <InterfacePointers.h>
 #include <Input.h>
-#include <Graphics/Camera.h>
 #include <Graphics/Model.h>
-#include <Graphics/SpriteFont.h>
-#include <Graphics/SpriteRenderer.h>
-#include <Graphics/Skybox.h>
 #include <Graphics/GraphicsTypes.h>
-
-#include "PostProcessor.h"
-#include "MeshRenderer.h"
+#include <Graphics/DeviceManager.h>
+#include "../v1.02/Window.h"
 #include "MeshBaker.h"
+#include "Light.h"
 
 using namespace SampleFramework11;
+
 struct Scene;
-class BakingLab : public App
+
+class Baker
 {
 
 protected:
-
-    FirstPersonCamera camera;
-
-    SpriteFont font;
-    SampleFramework11::SpriteRenderer spriteRenderer;
-    Skybox skybox;
-    ID3D11ShaderResourceViewPtr envMaps[AppSettings::NumCubeMaps];
-
-    PostProcessor postProcessor;
-    DepthStencilBuffer depthBuffer;
-    RenderTarget2D colorTargetMSAA;
-    RenderTarget2D colorResolveTarget;
-    RenderTarget2D prevFrameTarget;
-    RenderTarget2D velocityTargetMSAA;
-    StagingTexture2D readbackTexture;
-
+    Window window;
+    DeviceManager deviceManager;
     // Model
-    Model sceneModels[uint64(Scenes::NumValues)];
-    MeshRenderer meshRenderer;
+    Model sceneModel;
     MeshBaker meshBaker;
 
-    MouseState mouseState;
-
-    float GTSampleRateBuffer[64];
-    uint64 GTSampleRateBufferIdx = 0;
-
-    VertexShaderPtr resolveVS;
-    PixelShaderPtr resolvePS[uint64(MSAAModes::NumValues)];
-
-    VertexShaderPtr backgroundVelocityVS;
-    PixelShaderPtr backgroundVelocityPS;
-    Float4x4 prevViewProjection;
-
-    Float2 jitterOffset;
-    Float2 prevJitter;
-    uint64 frameCount = 0;
-    FirstPersonCamera unJitteredCamera;
-
-    struct ResolveConstants
-    {
-        uint32 SampleRadius;
-        bool32 EnableTemporalAA;
-        Float2 TextureSize;
-    };
-
-    struct BackgroundVelocityConstants
-    {
-        Float4x4 InvViewProjection;
-        Float4x4 PrevViewProjection;
-        Float2 RTSize;
-        Float2 JitterOffset;
-    };
-
-    ConstantBuffer<ResolveConstants> resolveConstants;
-    ConstantBuffer<BackgroundVelocityConstants> backgroundVelocityConstants;
     MeshBakerStatus meshbakerStatus;
-    bool bakeOnly;
-
-    virtual void Initialize() override;
-    virtual void Render(const Timer& timer) override;
-    virtual void Update(const Timer& timer) override;
-    virtual void BeforeReset() override;
-    virtual void AfterReset() override;
-
-    void CreateRenderTargets();
-
-    void RenderMainPass(const MeshBakerStatus& status);
-    void RenderAA();
-    void RenderBackgroundVelocity();
-    void RenderHUD(const Timer& timer, float groundTruthProgress, float bakeProgress,
-                   uint64 groundTruthSampleCount);
 
 public:
-    BakingLab();
+    Baker();
 
     void Init(const Scene *s);
-    const Model& GetModel(uint32 mode) const {
-        return sceneModels[mode];
+    static void InitLights(const Scene *s, Lights &lights);
+    const Model& GetModel() const {
+        return sceneModel;
     }
 
-    Model& GetModel(uint32 mode){ return sceneModels[mode];}
-    void MeshbakerInitialize(const Model *model);
+    Model& GetModel(uint32 mode){ return sceneModel;}
+    void MeshbakerInitialize(const Model *model, Lights &&lights);
     void Bake(uint32 bakeMeshIdx);
-    float BakeProcess();
+    float BakeProcess(uint32 bakeMeshIdx);
     void ShutDown();
 
     const FixedArray<Float4>& GetBakeResult(uint64 basicIdx) const;

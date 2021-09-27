@@ -132,8 +132,12 @@ end
 local output = {}
 
 local num_models = 0
-local num_directional_light = 0
-local num_area_light = 0
+local light_counter = {
+    directional = 0,
+    point = 0,
+    spot = 0,
+    area = 0,
+}
 
 for v in w:select "worldmat:in mesh:in material:in lightmap:in" do
     local e = to_srt(v.worldmat)
@@ -155,12 +159,17 @@ for v in w:select "worldmat:in light:in" do
     e.light = v.light.name
     e.lightdata = v.light.value
     log_detail("light:", e.lightdata.name or "[NO NAME]", "type:", e.lightdata.type)
-    if e.lightdata.type == "directional" then
-        num_directional_light = num_directional_light + 1
-        output[#output+1] = e
-    else
-        num_area_light = num_area_light + 1
-        log("ligt not bake right now:%s", e.lightdata.type)
+    local function is_bake_light_type(t)
+        return t == "station" or t == "static"
+    end
+    if is_bake_light_type(e.lightdata.motion_type) then
+        light_counter[e.lightdata.light_type] = light_counter[e.lightdata.light_type] + 1
+
+        if e.lightdata.light_type == "directional" then
+            output[#output+1] = e
+        else
+            log("ligt not bake right now:%s", e.lightdata.type)
+        end
     end
 end
 
@@ -168,5 +177,7 @@ writefile(outputdir / "output.txt", serialize.stringify(output))
 
 log("success output:", outputdir / "output.txt", "num models:", num_models, "num material:", material.count())
 log("lights:")
-log("\tdirectional light:", num_directional_light)
-log("\tarea light:",        num_area_light, ", will not bake")
+for k, v in pairs(light_counter) do
+    log("\t", k, ":", v)
+end
+

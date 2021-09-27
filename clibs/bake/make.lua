@@ -3,6 +3,8 @@ local fs = require "bee.filesystem"
 
 dofile "../common.lua"
 
+lm.defines = lm.mode ~= "release" and "_DEBUG"
+
 local GLMInclude = Ant3rd .. "glm"
 lm:source_set "Meshbaker" {
     includes = {
@@ -19,10 +21,6 @@ lm:source_set "Meshbaker" {
         "./path_tracer/BakerInterface.cpp"
     },
     defines = {
-        "Debug_",
-        "WIN32",
-        "_DEBUG",
-        "_WINDOWS",
         "_UNICODE",
         "UNICODE",
         [[SampleFrameworkDir_=L\"clibs/bake/Meshbaker/SampleFramework11/v1.02/\"]],
@@ -31,16 +29,12 @@ lm:source_set "Meshbaker" {
     },
     cxx = "c++14",
     linkdirs = {
-        "./Meshbaker/Externals/Assimp-3.1.1/lib",
-        "./Meshbaker/Externals/AntTweakBar/lib",
         "./Meshbaker/Externals/DirectXTex Aug 2015/Lib 2015 Win7/" .. lm.mode,
         "./Meshbaker/Externals/Embree-2.8/lib"
     },
 }
 
 local inputpaths = {
-    "./Meshbaker/Externals/Assimp-3.1.1/bin/assimp.dll",
-    "./Meshbaker/Externals/AntTweakBar/bin/AntTweakBar64.dll",
     "./Meshbaker/Externals/Embree-2.8/lib/embree.dll",
     "./Meshbaker/Externals/Embree-2.8/lib/tbb.dll",
     "./Meshbaker/Externals/Embree-2.8/lib/tbbmalloc.dll",

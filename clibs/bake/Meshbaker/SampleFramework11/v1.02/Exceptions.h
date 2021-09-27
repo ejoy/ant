@@ -127,20 +127,6 @@ inline std::string GetGdiPlusErrorStringAnsi(Gdiplus::Status status)
     return message;
 }
 
-inline std::wstring GetTwErrorString()
-{
-    std::string antError = TwGetLastError();
-    std::wstring errorString(antError.length(), ' ');
-    for(uint64 i = 0; i < antError.length(); ++i)
-        errorString[i] = antError[i];
-    return errorString;
-}
-
-inline std::string GetTwErrorStringAnsi()
-{
-    return TwGetLastError();
-}
-
 // Generic exception, used as base class for other types
 class Exception
 {
@@ -267,18 +253,6 @@ protected:
     Gdiplus::Status  errorCode;    // The GDI+ error code
 };
 
-// Exception thrown when an AntTweakBar function fails
-class TwException : public Exception
-{
-
-public:
-
-    TwException()
-    {
-        message = GetTwErrorString();
-    }
-};
-
 // Error-handling functions
 
 #if UseAsserts_
@@ -337,13 +311,6 @@ inline void GdiPlusCall(Gdiplus::Status status)
 {
     if(status != Gdiplus::Ok)
         throw GdiPlusException(status);
-}
-
-// Throws an AntException on failing return value
-inline void TwCall(int retVal)
-{
-    if(retVal == 0)
-        throw TwException();
 }
 
 #endif

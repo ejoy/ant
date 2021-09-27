@@ -12,7 +12,6 @@
 #include "GraphicsTypes.h"
 #include "..\\Exceptions.h"
 #include "..\\Utility.h"
-#include "..\\Serialization.h"
 #include "..\\FileIO.h"
 
 namespace SampleFramework11

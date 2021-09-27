@@ -30,4 +30,5 @@ return {
     compile = cm.compile,
     compile_path = cm.compile_path,
     compile_dir = cm.compile_dir,
+    subprocess = require "sp_util",
 }

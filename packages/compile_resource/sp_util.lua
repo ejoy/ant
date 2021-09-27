@@ -54,7 +54,7 @@ local function to_cmdline(commands)
     return table.concat(s, " ")
 end
 
-function util.spawn_process(commands)
+function util.spawn_process(commands, notwait)
     commands.stdout     = true
     commands.stderr     = "stdout"
     commands.hideWindow = true
@@ -73,6 +73,9 @@ function util.spawn_process(commands)
 	end
 	msg[#msg+1] = "----------------------------"
 
+    if notwait then
+        return true, prog, table.concat(msg, "\n")
+    end
 	local errcode = prog:wait()
 	if errcode ~= 0 then
 		msg[#msg+1] = string.format("Failed, error code:%x", errcode)
@@ -84,8 +87,12 @@ function util.spawn_process(commands)
 	return true, table.concat(msg, "\n")
 end
 
-local BINDIR = fs.current_path() / package.cpath:gsub(";.*$",""):sub(1,-6)
-local TOOLSUFFIX = platform.OS == "OSX" and "" or ".exe"
+local BINDIR<const> = fs.current_path() / package.cpath:gsub(";.*$",""):sub(1,-6)
+local TOOLSUFFIX<const> = platform.OS == "OSX" and "" or ".exe"
+
+function util.bin_dir()
+    return BINDIR
+end
 
 function util.tool_exe_path(toolname)
     local exepath = BINDIR / (toolname .. TOOLSUFFIX)

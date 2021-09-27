@@ -1,0 +1,22 @@
+name:
+  type: string
+transform:
+  type: table
+  s:
+    type: array
+    num: 3
+  r:
+    type: array
+    num: 4
+  t:
+    type: array
+    num: 3
+lightmap:
+  type: table
+  size: int
+mesh:
+  type: string
+material:
+  type: string
+state:
+  type: string

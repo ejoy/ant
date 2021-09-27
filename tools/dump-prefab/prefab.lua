@@ -32,11 +32,17 @@ local create_prefab; do
                 end
                 if v.data.light_type then
                     e.light = {
-                        type = v.data.light_type,
-                        intensity = v.data.intensity,
-                        color = v.data.color,
-                        range = v.data.range,
-                        radian = v.data.radian,
+                        make_shadow	= v.data.make_shadow,
+                        motion_type = v.data.motion_type,
+            
+                        light_type	= assert(v.data.light_type),
+                        color		= v.data.color,
+                        intensity	= v.data.intensity,
+            
+                        range		= v.data.range,
+                        inner_radian= v.data.inner_radian,
+                        outter_radian = v.data.outter_radian,
+                        angular_radius=v.data.angular_radius,
                     }
                 end
                 if v.data.material then

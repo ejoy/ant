@@ -9,18 +9,23 @@ typedef void* BakerHandle;
 #include "glm/glm.hpp"
 #include "glm/gtx/quaternion.hpp"
 
-enum LightType {
-    LT_Directional,
-    LT_PointLight,
-    LT_AreaLight,
-};
-
 struct Light {
-    glm::vec3 dir;
     glm::vec3 pos;
+    glm::vec3 dir;
+
     glm::vec3 color;
     float intensity;
-    float size;
+
+    float range;
+    float inner_cutoff;
+    float outter_cutoff;
+    float angular_radius;
+    enum LightType {
+        LT_Directional = 0,
+        LT_Point,
+        LT_Spot,
+        LT_Area,
+    };
     LightType type;
 };
 
@@ -69,10 +74,22 @@ struct MeshData {
     Lightmap    lightmap;
 };
 
+struct Sky{
+    enum SkyType{
+        SimpleColor = 0,
+        CubeMap = 1,
+    };
+    SkyType     type;
+    std::string cubemapTexture;
+    glm::vec3   skyColor;
+};
+
 struct Scene {
     std::vector<Light>          lights;
     std::vector<MeshData>       models;
     std::vector<MaterialData>   materials;
+
+    Sky sky;
 };
 
 struct LightmapResult{
