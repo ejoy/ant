@@ -10,18 +10,26 @@ local config = {
 	port = nil,
 }
 
-local address = ...
+local type, address = ...
 
-if address == nil then
-	local os = require "platform".OS:lower()
-	config.nettype = (os=="ios") and "listen" or "connect"
-	config.address = "127.0.0.1"
-	config.port = 2018
-elseif address == "USB" then
+local function is_ios()
+	return "ios" == require "platform".OS:lower()
+end
+
+if type == nil then
+	if is_ios() then
+		type = "usb"
+	else
+		type = "remote"
+		address = "127.0.0.1:2018"
+	end
+end
+
+if type == "usb" then
 	config.nettype = "listen"
 	config.address = "127.0.0.1"
 	config.port = 2018
-else
+elseif type == "remote" then
 	config.nettype = "connect"
 	local ip, port = address:match "^([^:]+):(%d+)"
 	if ip and port then
@@ -31,8 +39,8 @@ else
 		config.address = "127.0.0.1"
 		config.port = 2018
 	end
+elseif type == "offline" then
 end
-
 
 local thread = require "thread"
 local fw = require "firmware"

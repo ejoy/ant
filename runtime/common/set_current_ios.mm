@@ -35,10 +35,17 @@ static int need_cleanup() {
     return 0;
 }
 
-static NSString* server() {
+static NSString* server_type() {
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    id value = [defaults objectForKey:@"server"];
-    NSLog(@"key = server, value = %@", value);
+    id value = [defaults objectForKey:@"server_type"];
+    NSLog(@"key = server_type, value = %@", value);
+    return value;
+}
+
+static NSString* server_address() {
+    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+    id value = [defaults objectForKey:@"server_address"];
+    NSLog(@"key = server_address, value = %@", value);
     return value;
 }
 
@@ -62,10 +69,9 @@ int runtime_setcurrent(lua_State* L) {
 }
 
 int runtime_args(lua_State* L) {
-    NSString* address = server();
-    if (!address) {
-        return 0;
-    }
-    lua_pushstring(L, [address UTF8String]);
-    return 1;
+    NSString* type = server_type();
+    NSString* address = server_address();
+    lua_pushstring(L, type? [type UTF8String]: "usb");
+    lua_pushstring(L, address? [address UTF8String]: "");
+    return 2;
 }
