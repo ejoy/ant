@@ -9,7 +9,7 @@ end
 ltask.uniqueservice("arguments", ...)
 post_spawn "ios.event"
 
-local fd = socket.bind("tcp", "127.0.0.1", 2018)
+local fd = socket.bind("tcp", "0.0.0.0", 2018)
 while true do
     local newfd = socket.listen(fd)
     post_spawn("agent", newfd)

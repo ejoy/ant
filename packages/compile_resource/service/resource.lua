@@ -3,8 +3,6 @@ local bgfx     = require "bgfx"
 local datalist = require "datalist"
 local fastio   = require "fastio"
 
-cr.init()
-
 local textures = {}
 
 local mem_formats <const> = {
@@ -45,11 +43,11 @@ local function createTexture(c)
     return h
 end
 
-local function loadTexture(name)
-    local c = datalist.parse(readall_s(cr.compile(name .. "|main.cfg")))
+local function loadTexture(name, urls)
+    local c = datalist.parse(readall_s(cr.compile_dir(urls, "main.cfg")))
     c.name = name
     if not c.value then
-        c.path = cr.compile(name .. "|main.bin")
+        c.path = cr.compile_dir(urls, "main.bin")
     end
     return c
 end
@@ -82,12 +80,12 @@ local queue = {}
 
 local S = {}
 
-function S.texture_create(name)
+function S.texture_create(name, urls)
     local res = textures[name]
     if res then
         return res
     end
-    local c = loadTexture(name)
+    local c = loadTexture(name, urls)
     if false then
         queue[#queue+1] = c
         return {

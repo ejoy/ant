@@ -1,6 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
+
 local constant 	= import_package "ant.math".constant
 local iss 		= ecs.import.interface "ant.scene|iscenespace"
 local computil 	= ecs.import.interface "ant.render|entity"

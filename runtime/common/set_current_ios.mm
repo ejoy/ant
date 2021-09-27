@@ -5,6 +5,21 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #import <UIKit/UIKit.h>
+#import "ios/NetReachability.h"
+
+static void net_reachability() {
+    NetReachability *reachability = [NetReachability reachabilityWithHostName:@"www.taobao.com"];
+    NetReachWorkStatus netStatus = [reachability currentReachabilityStatus];
+    switch (netStatus) {
+    case NetReachWorkNotReachable: NSLog(@"网络不可用"); break;
+    case NetReachWorkStatusUnknown: NSLog(@"未知网络"); break;
+    case NetReachWorkStatusWWAN2G: NSLog(@"2G网络"); break;
+    case NetReachWorkStatusWWAN3G: NSLog(@"3G网络"); break;
+    case NetReachWorkStatusWWAN4G: NSLog(@"4G网络"); break;
+    case NetReachWorkStatusWiFi: NSLog(@"WiFi"); break;
+    default: break;
+    }
+}
 
 static int need_cleanup() {
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
@@ -20,14 +35,22 @@ static int need_cleanup() {
     return 0;
 }
 
-static NSString* server() {
+static NSString* server_type() {
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    id value = [defaults objectForKey:@"server"];
-    NSLog(@"key = server, value = %@", value);
+    id value = [defaults objectForKey:@"server_type"];
+    NSLog(@"key = server_type, value = %@", value);
+    return value;
+}
+
+static NSString* server_address() {
+    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+    id value = [defaults objectForKey:@"server_address"];
+    NSLog(@"key = server_address, value = %@", value);
     return value;
 }
 
 int runtime_setcurrent(lua_State* L) {
+    net_reachability();
     NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString* docDir = [paths objectAtIndex:0];
     NSFileManager* fileMgr = [NSFileManager defaultManager];
@@ -46,7 +69,9 @@ int runtime_setcurrent(lua_State* L) {
 }
 
 int runtime_args(lua_State* L) {
-    NSString* address = server();
-    lua_pushstring(L, [address UTF8String]);
-    return 1;
+    NSString* type = server_type();
+    NSString* address = server_address();
+    lua_pushstring(L, type? [type UTF8String]: "usb");
+    lua_pushstring(L, address? [address UTF8String]: "");
+    return 2;
 }

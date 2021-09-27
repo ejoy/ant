@@ -310,7 +310,7 @@ function TextureResource:show()
         if imgui.widget.Button("Save As") then
             local path = uiutils.get_saveas_path("Texture", "texture")
             if path then
-                path = tostring(lfs.relative(lfs.path(path), fs.path "":localpath()))
+                --path = tostring(lfs.relative(lfs.path(path), fs.path "":localpath()))
                 utils.write_file(path, stringify(self.metadata))
             end
         end

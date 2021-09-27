@@ -140,7 +140,7 @@ local function stream_on_write(s)
         if n == nil then
             for i, token in ipairs(s.wait_write) do
                 ltask.interrupt(token, "Write close.")
-                s.waitwait_write_read[i] = nil
+                s.wait_write[i] = nil
             end
             s.shutdown_w = true
             close_write(s)
