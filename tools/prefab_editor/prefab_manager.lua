@@ -316,6 +316,8 @@ function m:create(what, config)
                 color = {1, 1, 1, 1},
                 intensity = 2,
                 range = 1,
+                make_shadow = false,
+                motion_type = "dynamic",
                 inner_radian = math.rad(45),
                 outter_radian = math.rad(45)
             })

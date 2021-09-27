@@ -1,24 +1,27 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-
-local math3d = require "math3d"
-local constant = import_package "ant.math".constant
-local iss = ecs.import.interface "ant.scene|iscenespace"
-local computil = ecs.import.interface "ant.render|entity"
-local gizmo_sys = ecs.system "gizmo_system"
-local iom = ecs.import.interface "ant.objcontroller|obj_motion"
-local ies = ecs.import.interface "ant.scene|ientity_state"
-local gizmo_const = require "gizmo.const"
+local constant 	= import_package "ant.math".constant
+local iss 		= ecs.import.interface "ant.scene|iscenespace"
+local computil 	= ecs.import.interface "ant.render|entity"
+local iom 		= ecs.import.interface "ant.objcontroller|obj_motion"
+local ies 		= ecs.import.interface "ant.scene|ientity_state"
+local ilight 	= ecs.import.interface "ant.render|light"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
+
 local cmd_queue = ecs.require "gizmo.command_queue"
-local hierarchy = require "hierarchy_edit"
-local utils = ecs.require "mathutils"
-local worldedit = import_package "ant.editor".worldedit(world)
-local global_data = require "common.global_data"
-local camera_mgr = ecs.require "camera_manager"
+local utils 	= ecs.require "mathutils"
+local camera_mgr= ecs.require "camera_manager"
 local gizmo 	= ecs.require "gizmo.gizmo"
 local inspector = ecs.require "widget.inspector"
+
+local hierarchy = require "hierarchy_edit"
+local global_data= require "common.global_data"
+local gizmo_const= require "gizmo.const"
+
+local math3d = require "math3d"
+
+local gizmo_sys = ecs.system "gizmo_system"
 
 local move_axis
 local rotate_axis

@@ -12,7 +12,7 @@ local icamera	= ecs.import.interface "ant.camera|camera"
 local ishadow	= ecs.import.interface "ant.render|ishadow"
 local irender	= ecs.import.interface "ant.render|irender"
 local iom		= ecs.import.interface "ant.objcontroller|obj_motion"
-local ies		= ecs.import.interface "ant.scene|ientity_state"
+local ilight	= ecs.import.interface "ant.render|light"
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
 
@@ -269,8 +269,7 @@ local function set_csm_visible(enable)
 end
 
 local function find_directional_light(eid)
-	local e = world[eid]
-	if e and e.light_type == "directional" and e.make_shadow then
+	if ilight.which_type(eid) == "directional" and ilight.make_shadow(eid) then
 		if dl_eid then
 			log.warn("already has directional light for making shadow")
 		else
@@ -320,7 +319,10 @@ function sm:update_camera()
 		local changed
 
 		for v in w:select "scene_changed eid:in" do
-			if find_directional_light(v.eid) then
+			local function is_light(eid)
+				return world[eid]._light ~= nil
+			end
+			if is_light(v.eid) and find_directional_light(v.eid) then
 				changed = true
 			end
 		end

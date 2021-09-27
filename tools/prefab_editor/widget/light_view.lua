@@ -3,14 +3,17 @@ local world = ecs.world
 local w = world.w
 local ilight    = ecs.import.interface "ant.render|light"
 local light_gizmo = ecs.require "gizmo.light"
+local gizmo = ecs.require "gizmo.gizmo"
 ecs.require "widget.base_view"
 
 local utils     = require "common.utils"
 local math3d    = require "math3d"
-local uiproperty    = require "widget.uiproperty"
+local uiproperty= require "widget.uiproperty"
 local hierarchy = require "hierarchy_edit"
 
-local BaseView = require "widget.view_class".BaseView
+local imgui     = require "imgui"
+
+local BaseView  = require "widget.view_class".BaseView
 local LightView = require "widget.view_class".LightView
 
 function LightView:_init()
@@ -122,6 +125,27 @@ end
 function LightView:show()
     BaseView.show(self)
     self.light_property:show()
+
+    local leid = gizmo.target_eid
+    if leid then
+        local t = hierarchy:get_template(leid)
+        local cb_flags = {ilight.make_shadow(leid)}
+        if imgui.widget.Checkbox("make_shadow", cb_flags) then
+            ilight.set_make_shadow(leid, cb_flags[1])
+            t.template.data.make_shadow = cb_flags[1]
+        end
+        local mt = ilight.motion_type(leid)
+        if imgui.widget.BeginCombo("motion_type", {mt, flags=imgui.flags.Combo{}}) then
+            for _, n in ipairs{"dynamic", "station", "static"} do
+                if imgui.widget.Selectable(n, n == mt) then
+                    ilight.set_motion_type(gizmo.target_eid, n)
+                    t.template.data.motion_type = n
+                end
+            end
+
+            imgui.widget.EndCombo()
+        end
+    end
 end
 
 function LightView:has_rotate()
