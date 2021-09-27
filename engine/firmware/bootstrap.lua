@@ -13,7 +13,8 @@ local config = {
 local address = ...
 
 if address == nil then
-	config.nettype = "connect"
+	local os = require "platform".OS:lower()
+	config.nettype = (os=="ios") and "listen" or "connect"
 	config.address = "127.0.0.1"
 	config.port = 2018
 elseif address == "USB" then
@@ -22,7 +23,7 @@ elseif address == "USB" then
 	config.port = 2018
 else
 	config.nettype = "connect"
-	local ip, port = address:match "^(%d+%.%d+%.%d+%.%d+):(%d+)"
+	local ip, port = address:match "^([^:]+):(%d+)"
 	if ip and port then
 		config.address = ip
 		config.port = tonumber(port)

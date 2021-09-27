@@ -5,6 +5,21 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #import <UIKit/UIKit.h>
+#import "ios/NetReachability.h"
+
+static void net_reachability() {
+    NetReachability *reachability = [NetReachability reachabilityWithHostName:@"www.taobao.com"];
+    NetReachWorkStatus netStatus = [reachability currentReachabilityStatus];
+    switch (netStatus) {
+    case NetReachWorkNotReachable: NSLog(@"网络不可用"); break;
+    case NetReachWorkStatusUnknown: NSLog(@"未知网络"); break;
+    case NetReachWorkStatusWWAN2G: NSLog(@"2G网络"); break;
+    case NetReachWorkStatusWWAN3G: NSLog(@"3G网络"); break;
+    case NetReachWorkStatusWWAN4G: NSLog(@"4G网络"); break;
+    case NetReachWorkStatusWiFi: NSLog(@"WiFi"); break;
+    default: break;
+    }
+}
 
 static int need_cleanup() {
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
@@ -28,6 +43,7 @@ static NSString* server() {
 }
 
 int runtime_setcurrent(lua_State* L) {
+    net_reachability();
     NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString* docDir = [paths objectAtIndex:0];
     NSFileManager* fileMgr = [NSFileManager defaultManager];
@@ -47,6 +63,9 @@ int runtime_setcurrent(lua_State* L) {
 
 int runtime_args(lua_State* L) {
     NSString* address = server();
+    if (!address) {
+        return 0;
+    }
     lua_pushstring(L, [address UTF8String]);
     return 1;
 }
