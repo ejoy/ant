@@ -207,11 +207,10 @@ local serialize = import_package "ant.serialize"
 
 function MaterialView:set_model(eid)
     if not BaseView.set_model(self, eid) then return false end
-
-    if not mtldata_list[eid] then
-        --self.samplers = {}
+    local md = mtldata_list[eid]
+    if not md then
         local mtl_filename = tostring(world[eid].material)
-        local md = {filename = mtl_filename, tdata = serialize.parse(mtl_filename, cr.read_file(mtl_filename))}
+        md = {filename = mtl_filename, tdata = serialize.parse(mtl_filename, cr.read_file(mtl_filename))}
         md.tdata.fx.setting = md.tdata.fx.setting or {
             lighting = "on",
             surfacetype = "opacity",
@@ -234,17 +233,17 @@ function MaterialView:set_model(eid)
                 v.tdata = utils.readtable(absolute_path)
             end
         end
-        
-        local setting = md.tdata.fx.setting
-        self.ui_occluder = { string.find(md.tdata.state.WRITE_MASK, 'Z') ~= nil }
-        self.ui_occludee = { md.tdata.state.DEPTH_TEST ~= "ALWAYS" }
-        self.ui_lighting[1] = setting.lighting and setting.lighting == "on"
-        self.ui_shadow_receive[1] = setting.shadow_receive and setting.shadow_receive == "on"
-        self.ui_shadow_cast[1] = ies.can_cast(self.eid)
-        self.ui_postprocess[1] = setting.bloom and setting.bloom == "on"
-        self.ui_surfacetype.text = setting.surfacetype or "opacity"
         mtldata_list[eid] = md
     end
+    
+    local setting = md.tdata.fx.setting
+    self.ui_occluder = { string.find(md.tdata.state.WRITE_MASK, 'Z') ~= nil }
+    self.ui_occludee = { md.tdata.state.DEPTH_TEST ~= "ALWAYS" }
+    self.ui_lighting[1] = setting.lighting and setting.lighting == "on"
+    self.ui_shadow_receive[1] = setting.shadow_receive and setting.shadow_receive == "on"
+    self.ui_shadow_cast[1] = ies.can_cast(self.eid)
+    self.ui_postprocess[1] = setting.bloom and setting.bloom == "on"
+    self.ui_surfacetype.text = setting.surfacetype or "opacity"
 
     self.sampler_num = 0
     self.uniforms = {}

@@ -337,7 +337,8 @@ function m:create(what, config)
                 intensity = 2,
                 range = 1,
                 inner_radian = math.rad(45),
-                outter_radian = math.rad(45)
+                outter_radian = math.rad(45),
+                make_shadow = true
             })
             self:add_entity(newlight[1], self.root, newlight)
             create_light_billboard(newlight[1])
