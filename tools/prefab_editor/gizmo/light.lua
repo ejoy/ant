@@ -87,7 +87,7 @@ function m.highlight(b)
     end
 end
 
-local function create_gizmo_root()
+local function create_gizmo_root(initpos, introt)
     return world:deprecated_create_entity{
 		policy = {
 			"ant.general|name",
@@ -95,15 +95,15 @@ local function create_gizmo_root()
             "ant.scene|hierarchy_policy",
 		},
 		data = {
-			transform = {},
+			transform = {t = initpos or {0,0,0}, r = introt or {0,0,0,1}},
 			name = "gizmo root",
             scene_entity = true,
 		},
     }
 end
 
-local function create_directional_gizmo()
-    local root = create_gizmo_root()
+local function create_directional_gizmo(initpos, introt)
+    local root = create_gizmo_root(initpos, introt)
     local circle_eid = computil.create_circle_entity(RADIUS, SLICES, {}, "directional gizmo circle")
     ies.set_state(circle_eid, "auxgeom", true)
     imaterial.set_property(circle_eid, "u_color", gizmo_const.COLOR_GRAY)
@@ -224,7 +224,7 @@ function m.on_remove_light(eid)
 end
 
 function m.init()
-    create_directional_gizmo()
+    create_directional_gizmo(iom.get_position(m.current_light), iom.get_rotation(m.current_light))
     m.point.root = create_gizmo_root()
     update_point_gizmo()
     m.spot.root = create_gizmo_root()

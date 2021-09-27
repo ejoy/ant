@@ -330,7 +330,7 @@ function m:create(what, config)
         if config.type == "directional" or config.type == "point" or config.type == "spot" then      
             local ilight = ecs.import.interface "ant.render|light" 
             local _, newlight = ilight.create({
-                transform = {t = {0, 5, 0},r = {math.rad(130), 0, 0}},
+                transform = {t = {0, 3, 0},r = {math.rad(130), 0, 0}},
                 name = config.type .. gen_light_id(),
                 light_type = config.type,
                 color = {1, 1, 1, 1},
