@@ -28,4 +28,6 @@ return {
     read_file = read_file,
     load_fx = fx.load,
     compile = cm.compile,
+    compile_path = cm.compile_path,
+    compile_dir = cm.compile_dir,
 }

@@ -34,16 +34,30 @@ local function split_path(pathstring)
     return res
 end
 
-local function compile_dir(urls)
+local function compile_urls(urls)
     local path = assert(vfs.resource(urls))
     return lfs.path(path)
 end
 
 local function compile(pathstring)
-    return compile_dir(split_path(pathstring))
+    return compile_urls(split_path(pathstring))
+end
+
+local function compile_path(pathstring)
+    local res = split_path(pathstring.."|")
+    res[#res] = nil
+    return res
+end
+
+local function compile_dir(urls, file)
+    urls[#urls+1] = file
+    local r = compile_urls(urls)
+    urls[#urls] = nil
+    return r
 end
 
 return {
-    compile_dir = compile_dir,
     compile = compile,
+    compile_path = compile_path,
+    compile_dir = compile_dir,
 }
