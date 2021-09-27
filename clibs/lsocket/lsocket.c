@@ -1463,6 +1463,24 @@ static int lsocket_getinterfaces(lua_State *L)
 #endif
 }
 
+static int lsocket_tostring(lua_State *L) {
+	lSocket *sock = lsocket_checklSocket(L, 1);
+	lua_pushlstring(L, (const char*)sock, sizeof(lSocket));
+	sock->sockfd = -1;
+	return 1;
+}
+
+static int lsocket_fromstring(lua_State *L) {
+	size_t sz = 0;
+	const char* s = luaL_checklstring(L, 1, &sz);
+	if (sz != sizeof(lSocket)) {
+		return luaL_error(L, "invalid string length");
+	}
+	lSocket *sock = lsocket_pushlSocket(L);
+	memcpy(sock, s, sz);
+	return 1;
+}
+
 /* Function list
  */
 static const struct luaL_Reg lsocket [] ={
@@ -1471,6 +1489,8 @@ static const struct luaL_Reg lsocket [] ={
 	{"select", lsocket_select},
 	{"resolve", lsocket_resolve},
 	{"getinterfaces", lsocket_getinterfaces},
+	{"tostring", lsocket_tostring},
+	{"fromstring", lsocket_fromstring},
 	
 	{NULL, NULL}
 };

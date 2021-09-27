@@ -207,10 +207,12 @@ function m:create_collider(config)
             "ant.render|render",
             "ant.scene|hierarchy_policy",
             "ant.scene|transform_policy",
+            "ant.general|tag",
             --"ant.collision|collider_policy"
         },
         data = {
             name = "collider" .. gen_geometry_id(),
+            tag = config.tag or {"collider"},
             scene_entity = true,
             transform = {s = scale},
             --collider = { [config.type] = define },
@@ -314,6 +316,8 @@ function m:create(what, config)
                 color = {1, 1, 1, 1},
                 intensity = 2,
                 range = 1,
+                make_shadow = false,
+                motion_type = "dynamic",
                 inner_radian = math.rad(45),
                 outter_radian = math.rad(45)
             })
@@ -328,14 +332,15 @@ function m:create(what, config)
         if config.type == "directional" or config.type == "point" or config.type == "spot" then      
             local ilight = ecs.import.interface "ant.render|light" 
             local _, newlight = ilight.create({
-                transform = {t = {0, 5, 0},r = {math.rad(130), 0, 0}},
+                transform = {t = {0, 3, 0},r = {math.rad(130), 0, 0}},
                 name = config.type .. gen_light_id(),
                 light_type = config.type,
                 color = {1, 1, 1, 1},
                 intensity = 2,
                 range = 1,
                 inner_radian = math.rad(45),
-                outter_radian = math.rad(45)
+                outter_radian = math.rad(45),
+                make_shadow = true
             })
             self:add_entity(newlight[1], self.root, newlight)
             create_light_billboard(newlight[1])
@@ -710,20 +715,20 @@ function m:add_effect(filename)
 		},
 		data = {
             name = "root",
-            tag = "effect",
+            tag = {"effect"},
             scene_entity = true,
             transform = {},
             effekseer = filename,
             speed = 1.0,
-            auto_play = true,
+            auto_play = false,
             loop = true
 		},
     }
     if world[effect].effect_instance.handle == -1 then
         print("create effect faild : ", filename)
-    else
-        local inst = world[effect].effect_instance
-        inst.playid = effekseer.play(inst.handle, inst.playid)
+    -- else
+    --     local inst = world[effect].effect_instance
+    --     inst.playid = effekseer.play(inst.handle, inst.playid)
     end
     self.entities[#self.entities+1] = effect
     --world[effect].parent = gizmo.target_eid or self.root

@@ -19,6 +19,14 @@ interface "light"
     .method "color"
     .method "set_color"
 
+    .method "make_shadow"
+    .method "set_make_shadow"
+
+    .method "motion_type"
+    .method "set_motion_type"
+
+    .method "which_type"
+
     .method "use_cluster_shading"
     .method "light_buffer"
     .method "count_visible_light"

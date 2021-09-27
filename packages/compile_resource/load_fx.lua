@@ -38,7 +38,6 @@ local function initFX(fx)
             fx.setting.stage = stage
             res[stage] =  {
                 fx[stage] .. "?" .. stringify(fx.setting),
-                "main.bin",
             }
         end
     end
@@ -98,7 +97,7 @@ local function createComputeProgram(cs)
 end
 
 local function compile_shader(shader)
-    return compile.compile_dir(shader)
+    return compile.compile_dir(shader, "main.bin")
 end
 
 local function read_shader(shader)

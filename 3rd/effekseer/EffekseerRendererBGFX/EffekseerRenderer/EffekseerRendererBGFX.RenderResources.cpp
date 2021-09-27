@@ -76,27 +76,38 @@ namespace EffekseerRendererBGFX {
 
 		bool Texture::InitInternal(const Effekseer::Backend::TextureParameter& param)
 		{
-			auto format = GetBGFXTextureFormat(param.Format);
-			uint64_t textureFlags = BGFX_SAMPLER_U_MIRROR | BGFX_SAMPLER_V_MIRROR | BGFX_SAMPLER_NONE;
-			if (type_ == Effekseer::Backend::TextureType::Render)
-			{
-				textureFlags = BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP | BGFX_TEXTURE_RT;
+			if (param.Size[0] != 0 && param.Size[1] != 0) {
+				auto format = GetBGFXTextureFormat(param.Format);
+				uint64_t textureFlags = BGFX_SAMPLER_U_MIRROR | BGFX_SAMPLER_V_MIRROR | BGFX_SAMPLER_NONE;
+				if (type_ == Effekseer::Backend::TextureType::Render) {
+					textureFlags = BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP | BGFX_TEXTURE_RT;
+				}
+
+				buffer_ = BGFX(create_texture_2d)(
+					param.Size[0],
+					param.Size[1],
+					false,// param.GenerateMipmap,
+					1,
+					format,
+					textureFlags,
+					BGFX(copy)(param.InitialData.data(), param.InitialData.size())
+					);
+				size_ = param.Size;
+				format_ = param.Format;
+				hasMipmap_ = param.GenerateMipmap;
+				return true;
+			} else {
+				bgfx_texture_info_t info;
+				buffer_ = BGFX(create_texture)(BGFX(copy)(param.InitialData.data(), param.InitialData.size()), 0, 1, &info);
+				if (buffer_.idx != UINT16_MAX) {
+					size_[0] = info.width;
+					size_[1] = info.height;
+					format_ = param.Format;
+					hasMipmap_ = info.numMips > 1;
+					return true;
+				}
 			}
-
-			buffer_ = BGFX(create_texture_2d)(
-				param.Size[0],
-				param.Size[1],
-				false,// param.GenerateMipmap,
-				1,
-				format,
-				textureFlags,
-				BGFX(copy)(param.InitialData.data(), param.InitialData.size())
-				);
-			size_ = param.Size;
-			format_ = param.Format;
-			hasMipmap_ = param.GenerateMipmap;
-
-			return true;
+			return false;
 		}
 
 		bool Texture::Init(const Effekseer::Backend::TextureParameter& param)

@@ -38,7 +38,7 @@ local function create_mem_texture(c)
 end
 
 local function loader(filename)
-	local result = ltask.call(ServiceResource, "texture_create", filename)
+	local result = ltask.call(ServiceResource, "texture_create", filename, cr.compile_path(filename))
 	if result.uncomplete then
 		ltask.fork(function()
 			result.handle = ltask.call(ServiceResource, "texture_complete", filename)

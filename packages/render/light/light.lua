@@ -11,13 +11,23 @@ local ies		= ecs.import.interface "ant.scene|ientity_state"
 local setting	= import_package "ant.settings".setting
 local enable_cluster_shading = setting:data().graphic.lighting.cluster_shading ~= 0
 
+local DEFAULT_INTENSITY<const> = {
+	directional = 2,--120000,
+	point = 2, --1200,
+	spot = 2,--1200,
+	area = 2, --1200
+}
+
 local lt = ecs.transform "light_transform"
 function lt.process_entity(e)
 	local t = e.light_type
 	local range = e.range
 	local l = {
+		light_type	= t,
 		color		= e.color or {1, 1, 1, 1},
-		intensity	= e.intensity or 2,
+		intensity	= e.intensity or DEFAULT_INTENSITY[t],
+		make_shadow = e.make_shadow or false,
+		motion_type = e.motion_type or "dynamic",
 	}
 
 	l.range = math.maxinteger
@@ -65,7 +75,7 @@ function ilight.create(light)
 			radian		= light.radian,
 			make_shadow	= light.make_shadow,
 			state		= ies.create_state "visible",
-			motion_type = light.motion_type or "dynamic",
+			motion_type = light.motion_type,
 		}
 	}
 end
@@ -150,6 +160,26 @@ end
 
 function ilight.outter_cutoff(eid)
 	return world[eid]._light.outter_cutoff
+end
+
+function ilight.which_type(eid)
+	return world[eid]._light.light_type
+end
+
+function ilight.make_shadow(eid)
+	return world[eid]._light.make_shadow
+end
+
+function ilight.set_make_shadow(eid, enable)
+	world[eid]._light.make_shadow = enable
+end
+
+function ilight.motion_type(eid)
+	return world[eid]._light.motion_type
+end
+
+function ilight.set_motion_type(eid, t)
+	world[eid]._light.motion_type = t
 end
 
 local lighttypes = {

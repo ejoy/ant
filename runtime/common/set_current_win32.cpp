@@ -42,3 +42,7 @@ int runtime_setcurrent(lua_State* L) {
     repo_setup(dir);
     return 0;
 }
+
+int runtime_args(lua_State* L) {
+    return 0;
+}

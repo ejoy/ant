@@ -192,8 +192,13 @@ local function checkLog()
             msg_str = msg[2]
             local first = string.find(msg_str, "]")
             if first then
-                local rawlevel = string.sub(msg_str, first + 2, string.find(msg_str, "]", first + 1) - 1)
-                level = string.lower(rawlevel:match'^%s*(.*%S)' or '')
+                local second = string.find(msg_str, "]", first + 1)
+                if second then
+                    local rawlevel = string.sub(msg_str, first + 2, second - 1)
+                    level = string.lower(rawlevel:match'^%s*(.*%S)' or '')
+                else
+                    level = "info"
+                end
             end
         elseif type == "SERVER" then
             level = "info"

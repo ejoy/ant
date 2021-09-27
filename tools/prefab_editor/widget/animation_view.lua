@@ -45,6 +45,7 @@ local anim_state = {
     current_event_list = {}
 }
 
+local ui_loop = {false}
 
 local event_type = {
     "Effect", "Sound", "Collision", "Message", "Move"
@@ -202,9 +203,9 @@ local function set_current_anim(anim_name)
     current_collider = nil
     current_event = nil
     
-    anim_group_play(current_eid, {name = anim_name, loop = false, manual = false})
+    anim_group_play(current_eid, {name = anim_name, loop = ui_loop[1], manual = false})
     anim_group_set_time(current_eid, 0)
-    anim_group_pause(current_eid, true)
+    anim_group_pause(current_eid, not anim_state.is_playing)
     -- if not iani.is_playing(current_eid) then
     --     anim_group_pause(current_eid, false)
     -- end
@@ -866,8 +867,8 @@ local function show_clips()
         if imgui.widget.Selectable(cs.name, current_clip and (current_clip.name == cs.name), 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
             set_current_clip(cs)
             if imgui.util.IsMouseDoubleClicked(0) then
-                anim_group_play_clip(current_eid, {name = cs.name, loop = false, manual = false})
-                anim_group_set_loop(current_eid, false)
+                anim_group_play_clip(current_eid, {name = cs.name, loop = ui_loop[1], manual = false})
+                anim_group_set_loop(current_eid, ui_loop[1])
             end
         end
         if current_clip and (current_clip.name == cs.name) then
@@ -922,8 +923,8 @@ local function show_groups()
             gp.name_ui.text = gp.name
             current_group = gp
             if imgui.util.IsMouseDoubleClicked(0) then
-                anim_group_play_group(current_eid, {name = gp.name, loop = false, manual = false})
-                anim_group_set_loop(current_eid, false)
+                anim_group_play_group(current_eid, {name = gp.name, loop = ui_loop[1], manual = false})
+                anim_group_set_loop(current_eid, ui_loop[1])
             end
         end
         if current_group and (current_group.name == gp.name) then
@@ -1228,8 +1229,15 @@ function m.show()
             imgui.cursor.SameLine()
             local icon = anim_state.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
             if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
-                anim_state.is_playing = not anim_state.is_playing
-                anim_group_pause(current_eid, not anim_state.is_playing)
+                if anim_state.is_playing then
+                    anim_group_pause(current_eid, true)
+                else
+                    anim_group_play(current_eid, {name = current_anim.name, loop = ui_loop[1], manual = false})
+                end
+            end
+            imgui.cursor.SameLine()
+            if imgui.widget.Checkbox("loop", ui_loop) then
+                anim_group_set_loop(current_eid, ui_loop[1])
             end
             if all_clips then
                 imgui.cursor.SameLine()
@@ -1391,7 +1399,7 @@ function m.load_clips()
                         for _, e in ipairs(ke.event_list) do
                             if e.collision and e.collision.shape_type ~= "None" then
                                 if not hierarchy.collider_list or not hierarchy.collider_list[e.collision.name] then
-                                    local eid = prefab_mgr:create("collider", {type = e.collision.shape_type, define = utils.deep_copy(default_collider_define[e.collision.shape_type]), parent = prefab_mgr.root, add_to_hierarchy = true})
+                                    local eid = prefab_mgr:create("collider", {tag = e.collision.tag, type = e.collision.shape_type, define = utils.deep_copy(default_collider_define[e.collision.shape_type]), parent = prefab_mgr.root, add_to_hierarchy = true})
                                     world[eid].name = e.collision.name
                                     world[eid].tag = e.collision.tag
                                     imaterial.set_property(eid, "u_color", e.collision.color or {1.0,0.5,0.5,0.8})

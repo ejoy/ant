@@ -1,17 +1,50 @@
 __ANT_RUNTIME__ = "0.0.1"
 
-local os = (require "platform".OS):lower()
 local config = {
+	rootname = arg[1],
 	repopath = "./",
 	vfspath = "vfs.lua",
-	nettype = (os ~= "ios") and "connect" or "listen",
-	address = "127.0.0.1",
-	port = 2018,
-	rootname = arg[1],
+	socket = nil,
+	nettype = nil,
+	address = nil,
+	port = nil,
 }
+
+local type, address = ...
+
+local function is_ios()
+	return "ios" == require "platform".OS:lower()
+end
+
+if type == nil then
+	if is_ios() then
+		type = "usb"
+	else
+		type = "remote"
+		address = "127.0.0.1:2018"
+	end
+end
+
+if type == "usb" then
+	config.nettype = "listen"
+	config.address = "127.0.0.1"
+	config.port = 2018
+elseif type == "remote" then
+	config.nettype = "connect"
+	local ip, port = address:match "^([^:]+):(%d+)"
+	if ip and port then
+		config.address = ip
+		config.port = tonumber(port)
+	else
+		config.address = "127.0.0.1"
+		config.port = 2018
+	end
+elseif type == "offline" then
+end
 
 local thread = require "thread"
 local fw = require "firmware"
+local ls = require "lsocket"
 local host = {}
 local bootloader
 local first = true
@@ -24,7 +57,6 @@ function host.update(apis, timeout)
 		first = false
 		apis.request("FETCH", "/engine/firmware", {
 			resolve = function ()
-				bootloader = assert(apis.repo:realpath '/engine/firmware/bootloader.lua')
 				quit = true
 			end,
 			reject = function (_, errmsg)
@@ -39,8 +71,13 @@ function host.update(apis, timeout)
 end
 function host.exit(apis)
 	if apis.fd then
-		apis.fd:close()
+		if config.nettype == "listen" then
+			config.socket = ls.tostring(apis.fd)
+		else
+			apis.fd:close()
+		end
 	end
+	bootloader = assert(apis.repo:realpath '/engine/firmware/bootloader.lua')
 end
 assert(fw.loadfile "io.lua")(fw.loadfile, host)
 

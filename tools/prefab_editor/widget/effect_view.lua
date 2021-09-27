@@ -11,7 +11,6 @@ local effekseer     = require "effekseer"
 local BaseView      = require "widget.view_class".BaseView
 local EffectView    = require "widget.view_class".EffectView
 local ui_auto_play  = {false}
-local ui_loop       = {true}
 
 function EffectView:_init()
     BaseView._init(self)
@@ -32,17 +31,17 @@ end
 function EffectView:update()
     BaseView.update(self)
     self.speed:update()
-    ui_auto_play[1] = world[self.eid].effect_instance.auto_play
-    ui_loop[1] = world[self.eid].effect_instance.loop
+    local template = hierarchy:get_template(self.eid)
+    ui_auto_play[1] = template.template.data.auto_play
 end
 
 function EffectView:show()
     BaseView.show(self)
     self.speed:show()
-    -- imgui.widget.PropertyLabel("auto_play")
-    -- if imgui.widget.Checkbox("##auto_play", ui_auto_play) then
-    --     self:on_set_auto_play(ui_auto_play[1])
-    -- end
+    imgui.widget.PropertyLabel("auto_play")
+    if imgui.widget.Checkbox("##auto_play", ui_auto_play) then
+        self:on_set_auto_play(ui_auto_play[1])
+    end
     -- imgui.widget.PropertyLabel("loop")
     -- if imgui.widget.Checkbox("##loop", ui_loop) then
     --     self:on_set_loop(ui_loop[1])
@@ -64,7 +63,8 @@ function EffectView:on_set_speed(value)
 end
 
 function EffectView:on_set_auto_play(value)
-    world[self.eid].effect_instance.auto_play = value
+    local template = hierarchy:get_template(self.eid)
+    template.template.data.auto_play = value
 end
 
 function EffectView:on_set_loop(value)

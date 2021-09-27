@@ -59,7 +59,7 @@ end
 local function camera_reset(eyepos, target)
 	camera_target.v = target
 	camera_distance = math3d.length(math3d.sub(camera_target, eyepos))
-	iom.set_view(irq.main_camera(), eyepos, math3d.normalize(math3d.sub(camera_target, eyepos)))
+	iom.set_view(irq.main_camera(), eyepos, math3d.normalize(math3d.sub(camera_target, eyepos)), {0, 1, 0})
 end
 
 local mb_camera_changed = world:sub{"camera_changed", "main_queue"}
