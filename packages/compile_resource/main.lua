@@ -28,4 +28,5 @@ return {
     read_file = read_file,
     load_fx = fx.load,
     compile = cm.compile,
+    subprocess = require "sp_util",
 }

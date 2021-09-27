@@ -20,6 +20,7 @@ local toolbar           = ecs.require "widget.toolbar"
 local scene_view        = ecs.require "widget.scene_view"
 local inspector         = ecs.require "widget.inspector"
 local gridmesh_view     = ecs.require "widget.gridmesh_view"
+local prefab_view       = ecs.require "widget.prefab_view"
 local prefab_mgr        = ecs.require "prefab_manager"
 prefab_mgr.set_anim_view(anim_view)
 local menu              = ecs.require "widget.menu"
@@ -235,6 +236,7 @@ function m:ui_update()
     dock_x, dock_y, dock_width, dock_height = show_dock_space(0, uiconfig.ToolBarHeight)
     scene_view.show()
     gridmesh_view.show()
+    prefab_view.show()
     inspector.show()
     resource_browser.show()
     anim_view.show()
