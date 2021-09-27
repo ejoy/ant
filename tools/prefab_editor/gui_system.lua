@@ -12,7 +12,7 @@ local iss       = ecs.import.interface "ant.scene|iscenespace"
 local icoll     = ecs.import.interface "ant.collision|collider"
 local drawer    = ecs.import.interface "ant.render|iwidget_drawer"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-
+local isp 		= ecs.import.interface "ant.render|isystem_properties"
 local resource_browser  = ecs.require "widget.resource_browser"
 local anim_view         = ecs.require "widget.animation_view"
 local material_view     = ecs.require "widget.material_view"
@@ -392,6 +392,15 @@ function m:handle_event()
             if world[eid].light_type then
                 world:pub{"component_changed", "light", eid, "visible", value}
             end
+            for e in world.w:select "eid:in" do
+                if world[e.eid] and world[e.eid].parent == eid then
+                    if world[e.eid].ibl then
+                        isp.enable_ibl(value)
+                    end
+                    break
+                end
+            end
+            
         elseif what == "lock" then
             hierarchy:set_lock(eid, value)
         elseif what == "delete" then

@@ -13,6 +13,7 @@
 #include "EffekseerRendererBGFX.VertexBuffer.h"
 #include "EffekseerRendererBGFX.RenderResources.h"
 #include "EffekseerRendererBGFX.ModelLoader.h"
+#include "EffekseerRendererBGFX.TextureLoader.h"
 #include "../../EffekseerRendererCommon/EffekseerRenderer.Renderer_Impl.h"
 #include "../../EffekseerRendererCommon/EffekseerRenderer.RibbonRendererBase.h"
 #include "../../EffekseerRendererCommon/EffekseerRenderer.RingRendererBase.h"
@@ -49,13 +50,15 @@ namespace EffekseerRendererBGFX
 
 ::Effekseer::TextureLoaderRef CreateTextureLoader(::Effekseer::FileInterface* fileInterface, ::Effekseer::ColorSpaceType colorSpaceType)
 {
-#ifdef __EFFEKSEER_RENDERER_INTERNAL_LOADER__
 	auto gd = new Backend::GraphicsDevice(/*OpenGLDeviceType::OpenGL2*/);
+#ifdef __EFFEKSEER_RENDERER_INTERNAL_LOADER__
 	auto ret = ::Effekseer::TextureLoaderRef(new EffekseerRenderer::TextureLoader(gd, fileInterface));
 	ES_SAFE_RELEASE(gd);
 	return ret;
 #else
-	return nullptr;
+	auto ret = ::Effekseer::TextureLoaderRef(new TextureLoader(gd, fileInterface));
+	ES_SAFE_RELEASE(gd);
+	return ret;
 #endif
 }
 
@@ -67,7 +70,7 @@ namespace EffekseerRendererBGFX
 #ifdef __EFFEKSEER_RENDERER_INTERNAL_LOADER__
 	return ::Effekseer::MakeRefPtr<EffekseerRenderer::TextureLoader>(graphicsDevice.Get(), fileInterface, colorSpaceType);
 #else
-	return nullptr;
+	return ::Effekseer::MakeRefPtr<TextureLoader>(graphicsDevice.Get(), fileInterface, colorSpaceType);
 #endif
 }
 
@@ -483,7 +486,7 @@ void RendererImplemented::SetSquareMaxCount(int32_t count)
 #ifdef __EFFEKSEER_RENDERER_INTERNAL_LOADER__
 	return ::Effekseer::MakeRefPtr<EffekseerRenderer::TextureLoader>(graphicsDevice_.Get(), fileInterface);
 #else
-	return nullptr;
+	return ::Effekseer::MakeRefPtr<TextureLoader>(graphicsDevice_.Get(), fileInterface);;
 #endif
 }
 
@@ -691,8 +694,7 @@ void RendererImplemented::SetTextures(Shader* shader, Effekseer::Backend::Textur
 // 			currentTextures_[i].texture.Reset();
 // 		}
 
-		if (shader->GetTextureSlotEnable(i))
-		{
+		if (shader->GetTextureSlotEnable(i)) {
 			uint32_t flags = 0;
 			auto filter_ = activeState.TextureFilterTypes[i];
 			if (filter_ == ::Effekseer::TextureFilterType::Nearest) {
