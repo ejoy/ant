@@ -7,10 +7,6 @@ local MESSSAGE_SYSTEM <const> = 0
 local config
 local init_exclusive_service
 
-local function searchpath(name)
-	return assert(package.searchpath(name, config.service_path))
-end
-
 local function new_service(label, id)
 	local sid = boot.new_service(label, init_exclusive_service, id)
 	assert(sid == id)
@@ -51,9 +47,9 @@ end
 local function init(c)
 	config = c
 	if config.service_path then
-		config.service_path = config.service_path .. ";engine/task/service/?.lua"
+		config.service_path = config.service_path .. ";/engine/task/service/?.lua"
 	else
-		config.service_path = "engine/task/service/?.lua"
+		config.service_path = "/engine/task/service/?.lua"
 	end
 	config.lua_cpath = config.lua_cpath or package.cpath
 	table.insert(config.exclusive, "vfs")
@@ -71,13 +67,50 @@ require "vfs"
 			initstr = initstr .. [[
 local ltask = require "ltask"
 local name = ("Service:%d <%s>"):format(ltask.self(), debug.getregistry().SERVICE_LABEL or "unk")
-dofile "engine/debugger.lua"
+dofile "/engine/debugger.lua"
 	:event("setThreadName", name)
 	:event "wait"
 ]]
 		end
 	end
-	local servicelua = searchpath "service"
+
+	if config.support_package then
+		initstr = initstr .. [[
+package.path = "engine/?.lua"
+require "bootstrap"
+
+local rawsearchpath = package.searchpath
+package.searchpath = function(name, path, sep, dirsep)
+	local package, file = name:match "^([^|]*)|(.*)$"
+	if package and file then
+		path = path:gsub("%$%{([^}]*)%}", {
+			package = "/pkg/"..package,
+		})
+		name = file
+	else
+		path = path:gsub("%$%{([^}]*)%}", {
+			package = "/pkg/startup",
+		})
+	end
+	return rawsearchpath(name, path, sep, dirsep)
+end
+
+local pm = require "packagemanager"
+local rawloadfile = loadfile
+function loadfile(filename, mode, env)
+	if env == nil then
+		local package, file = filename:match "^/pkg/([^/]+)/(.+)$"
+		if package and file then
+			return loadfile(filename, mode or "bt", pm.loadenv(package))
+		end
+		return rawloadfile(filename, mode)
+	end
+	return rawloadfile(filename, mode, env)
+end
+]]
+	end
+
+	local servicelua = "/engine/task/service/service.lua"
 	init_exclusive_service = initstr .. ([[dofile %q]]):format(servicelua)
 	config.init_service = initstr .. ([[
 local initfunc = assert(loadfile %q)
@@ -90,17 +123,20 @@ local function request(...)
 	end
 	return ltask.call(ServiceVfs, ...)
 end
-vfs.sync = {realpath=vfs.realpath,list=vfs.list,type=vfs.type}
-function vfs.realpath(path)
-	return request("GET", path)
+vfs.sync = {realpath=vfs.realpath,list=vfs.list,type=vfs.type,resource=vfs.resource}
+function vfs.realpath(path, hash)
+	return request("GET", path, hash)
 end
-function vfs.list(path)
-	return request("LIST", path)
+function vfs.list(path, hash)
+	return request("LIST", path, hash)
 end
-function vfs.type(path)
-	return request("TYPE", path)
+function vfs.type(path, hash)
+	return request("TYPE", path, hash)
 end
-vfs.async = {realpath=vfs.realpath,list=vfs.list,type=vfs.type}
+function vfs.resource(paths)
+	return request("RESOURCE", paths)
+end
+vfs.async = {realpath=vfs.realpath,list=vfs.list,type=vfs.type,resource=vfs.resource}
 initfunc()]]):format(servicelua)
 end
 

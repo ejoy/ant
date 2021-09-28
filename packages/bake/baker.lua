@@ -14,12 +14,15 @@ local declmgr   = renderpkg.declmgr
 local fbmgr     = renderpkg.fbmgr
 local viewidmgr = renderpkg.viewidmgr
 
-local ientity   = world:interface "ant.render|entity"
-local irender   = world:interface "ant.render|irender"
-local imaterial = world:interface "ant.asset|imaterial"
-local icamera   = world:interface "ant.camera|camera"
-local ics       = world:interface "ant.render|icluster_render"
-local isp       = world:interface "ant.render|isystem_properties"
+local mathpkg   = import_package "ant.math"
+local mu        = mathpkg.uitl
+
+local ientity   = ecs.import.interface "ant.render|entity"
+local irender   = ecs.import.interface "ant.render|irender"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local icamera   = ecs.import.interface "ant.camera|camera"
+local ics       = ecs.import.interface "ant.render|icluster_render"
+local isp       = ecs.import.interface "ant.render|isystem_properties"
 
 local mathpkg   = import_package "ant.math"
 local mc        = mathpkg.constant
@@ -125,7 +128,7 @@ local rb_flags = sampler.sampler_flag{
 local function create_downsample()
     local function create_ds(tag, material)
         w:register {name = tag}
-        world:create_entity{
+        ecs.create_entity {
             policy = {
                 "ant.render|render",
                 "ant.general|name",
@@ -137,13 +140,11 @@ local function create_downsample()
                 material = material,
                 filter_material = {},
                 render_object = {},
-                render_object_update = true,
                 scene = {
-                    srt = math3d.ref(mc.IDENTITY_MAT),
+                    srt = mu.srt_obj(),
                 },
                 state = 0,  --force not include to any render queue
                 [tag] = true,
-                INIT = true,
             }
         }
     end
@@ -297,7 +298,7 @@ local function create_lightmap_queue()
         fbmgr.create_rb{w=bake_fbw, h=bake_fbh, layers=1, format="D24S8", flags=rb_flags},
     }
 
-    world:create_entity{
+    ecs.create_entity {
         policy = {
             "ant.render|render_queue",
             "ant.render|cull",

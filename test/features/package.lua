@@ -1,17 +1,14 @@
 return {
     name = "ant.test.features",
-    ecs = {
-        import = {
-            "@ant.test.features",
-        },
-        system = {
-            "ant.test.features|init_loader_system",
-        },
-        pipeline = {
-            "init",
-            "update",
-            "exit",
-        },
-        policy = {},
+    dependencies = {
+        "ant.animation",
+        "ant.camera",
+        "ant.character",
+        "ant.compile_resource",
+        "ant.heightmap",
+        "ant.hwi",
+        "ant.math",
+        "ant.prefab",
+        "ant.sky",
     }
 }

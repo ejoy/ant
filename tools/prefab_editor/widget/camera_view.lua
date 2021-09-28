@@ -1,13 +1,17 @@
-local imgui     = require "imgui"
-local utils     = require "common.utils"
-local math3d    = require "math3d"
+local ecs = ...
+local world = ecs.world
+local w = world.w
+ecs.require "widget.base_view"
+local icamera     = ecs.import.interface "ant.camera|camera"
+local iom         = ecs.import.interface "ant.objcontroller|obj_motion"
+local camera_mgr  = ecs.require "camera_manager"
+local imgui         = require "imgui"
+local utils         = require "common.utils"
+local math3d        = require "math3d"
 local uiproperty    = require "widget.uiproperty"
-local BaseView = require "widget.view_class".BaseView
-local CameraView = require "widget.view_class".CameraView
-local hierarchy = require "hierarchy"
-local world
-local iom
-local camera_mgr
+local BaseView      = require "widget.view_class".BaseView
+local CameraView    = require "widget.view_class".CameraView
+local hierarchy     = require "hierarchy_edit"
 
 function CameraView:_init()
     BaseView._init(self)
@@ -261,16 +265,8 @@ function CameraView:show()
     end
 end
 
-
 function CameraView:has_scale()
     return false
 end
 
-return function(w)
-    world       = w
-    icamera     = world:interface "ant.camera|camera"
-    iom         = world:interface "ant.objcontroller|obj_motion"
-    camera_mgr  = require "camera_manager"(world)
-    require "widget.base_view"(world)
-    return CameraView
-end
+return CameraView

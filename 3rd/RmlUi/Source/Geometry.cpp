@@ -1,5 +1,6 @@
 #include "../Include/RmlUi/Geometry.h"
 #include "../Include/RmlUi/Core.h"
+#include "../Include/RmlUi/RenderInterface.h"
 #include <utility>
 
 namespace Rml {
@@ -97,6 +98,12 @@ static Point PointClamp(const Point& v, const Point& mn, const Point& mx) {
 }
 
 void Geometry::AddRect(const Rect& rect, Color col) {
+	if (col.a == 0) {
+		return;
+	}
+	if (rect.size.w == 0 || rect.size.h == 0) {
+		return;
+	}
 	size_t vsz = vertices.size();
 	size_t isz = indices.size();
 	Reserve(6, 4);
@@ -106,6 +113,15 @@ void Geometry::AddRect(const Rect& rect, Color col) {
 }
 
 void Geometry::AddQuad(const Quad& quad, Color col) {
+	if (col.a == 0) {
+		return;
+	}
+	if (quad.a == quad.b && quad.c == quad.d) {
+		return;
+	}
+	if (quad.a == quad.d && quad.b == quad.c) {
+		return;
+	}
 	size_t vsz = vertices.size();
 	size_t isz = indices.size();
 	Reserve(6, 4);
@@ -115,6 +131,12 @@ void Geometry::AddQuad(const Quad& quad, Color col) {
 }
 
 void Geometry::AddRect(const Rect& rect, const Rect& uv, Color col) {
+	if (col.a == 0) {
+		return;
+	}
+	if (rect.size.w == 0 || rect.size.h == 0) {
+		return;
+	}
 	size_t vsz = vertices.size();
 	size_t isz = indices.size();
 	Reserve(6, 4);
@@ -125,6 +147,9 @@ void Geometry::AddRect(const Rect& rect, const Rect& uv, Color col) {
 }
 
 void Geometry::AddArc(const Path& outer, const Path& inner, Color col) {
+	if (col.a == 0) {
+		return;
+	}
 	size_t outer_count = outer.size();
 	size_t inner_count = inner.size();
 	size_t count = outer_count + inner_count;
@@ -177,6 +202,9 @@ void Geometry::AddArc(const Path& outer, const Path& inner, Color col) {
 }
 
 void Geometry::AddPolygon(const Path& points, Color col) {
+	if (col.a == 0) {
+		return;
+	}
 	size_t vsz = vertices.size();
 	size_t isz = indices.size();
 	size_t points_count = points.size();

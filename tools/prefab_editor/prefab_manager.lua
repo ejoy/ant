@@ -1,27 +1,31 @@
+local ecs = ...
+local world = ecs.world
+local w = world.w
+local worldedit     = import_package "ant.editor".worldedit(world)
+local assetmgr      = import_package "ant.asset"
+local stringify     = import_package "ant.serialize".stringify
+local iom           = ecs.import.interface "ant.objcontroller|obj_motion"
+local iss           = ecs.import.interface "ant.scene|iscenespace"
+local ies           = ecs.import.interface "ant.scene|ientity_state"
+local ilight        = ecs.import.interface "ant.render|light"
+local imaterial     = ecs.import.interface "ant.asset|imaterial"
+local camera_mgr    = ecs.require "camera_manager"
+local light_gizmo   = ecs.require "gizmo.light"
+local gizmo         = ecs.require "gizmo.gizmo"
+local geo_utils     = ecs.require "editor.geometry_utils"
+local logger        = require "widget.log"
 local math3d 		= require "math3d"
 local fs            = require "filesystem"
 local lfs           = require "filesystem.local"
 local vfs           = require "vfs"
-local hierarchy     = require "hierarchy"
-local assetmgr      = import_package "ant.asset"
-local stringify     = import_package "ant.serialize".stringify
+local hierarchy     = require "hierarchy_edit"
 local widget_utils  = require "widget.utils"
 local bgfx          = require "bgfx"
 local gd            = require "common.global_data"
 local utils         = require "common.utils"
 local effekseer     = require "effekseer"
 local subprocess    = require "sp_util"
-local anim_view
-local geo_utils
-local logger
-local ilight
-local light_gizmo
-local gizmo
-local camera_mgr
-local world
-local iom
-local iss
-local worldedit
+
 local m = {
     entities = {}
 }
@@ -203,10 +207,12 @@ function m:create_collider(config)
             "ant.render|render",
             "ant.scene|hierarchy_policy",
             "ant.scene|transform_policy",
+            "ant.general|tag",
             --"ant.collision|collider_policy"
         },
         data = {
             name = "collider" .. gen_geometry_id(),
+            tag = config.tag or {"collider"},
             scene_entity = true,
             transform = {s = scale},
             --collider = { [config.type] = define },
@@ -302,7 +308,7 @@ function m:create(what, config)
         end
     elseif what == "enable_default_light" then
         if not self.default_light then
-            local ilight = world:interface "ant.render|light" 
+            local ilight = ecs.import.interface "ant.render|light" 
             local _, newlight = ilight.create({
                 transform = {t = {0, 5, 0}, r = {math.rad(130), 0, 0}},
                 name = "directional" .. gen_light_id(),
@@ -310,6 +316,8 @@ function m:create(what, config)
                 color = {1, 1, 1, 1},
                 intensity = 2,
                 range = 1,
+                make_shadow = false,
+                motion_type = "dynamic",
                 inner_radian = math.rad(45),
                 outter_radian = math.rad(45)
             })
@@ -322,16 +330,17 @@ function m:create(what, config)
         end
     elseif what == "light" then
         if config.type == "directional" or config.type == "point" or config.type == "spot" then      
-            local ilight = world:interface "ant.render|light" 
+            local ilight = ecs.import.interface "ant.render|light" 
             local _, newlight = ilight.create({
-                transform = {t = {0, 5, 0},r = {math.rad(130), 0, 0}},
+                transform = {t = {0, 3, 0},r = {math.rad(130), 0, 0}},
                 name = config.type .. gen_light_id(),
                 light_type = config.type,
                 color = {1, 1, 1, 1},
                 intensity = 2,
                 range = 1,
                 inner_radian = math.rad(45),
-                outter_radian = math.rad(45)
+                outter_radian = math.rad(45),
+                make_shadow = true
             })
             self:add_entity(newlight[1], self.root, newlight)
             create_light_billboard(newlight[1])
@@ -706,21 +715,20 @@ function m:add_effect(filename)
 		},
 		data = {
             name = "root",
-            tag = "root",
+            tag = {"effect"},
             scene_entity = true,
             transform = {},
             effekseer = filename,
             speed = 1.0,
-            auto_play = true,
+            auto_play = false,
             loop = true
 		},
     }
     if world[effect].effect_instance.handle == -1 then
         print("create effect faild : ", filename)
-    else
-        local eh = world[effect].effect_instance.handle
-        effekseer.set_loop(eh, true)
-        effekseer.play(eh)
+    -- else
+    --     local inst = world[effect].effect_instance
+    --     inst.playid = effekseer.play(inst.handle, inst.playid)
     end
     self.entities[#self.entities+1] = effect
     --world[effect].parent = gizmo.target_eid or self.root
@@ -858,17 +866,4 @@ function m.set_anim_view(aview)
     anim_view = aview
 end
 
-return function(w)
-    world       = w
-    camera_mgr  = require "camera_manager"(world)
-    iom         = world:interface "ant.objcontroller|obj_motion"
-    iss         = world:interface "ant.scene|iscenespace"
-    worldedit   = import_package "ant.editor".worldedit(world)
-    ilight      = world:interface "ant.render|light"
-    light_gizmo = require "gizmo.light"(world)
-    gizmo = require "gizmo.gizmo"(world)
-    geo_utils   = require "editor.geometry_utils"(world)
-    local asset_mgr = import_package "ant.asset"
-    logger      = require "widget.log"(asset_mgr)
-    return m
-end
+return m

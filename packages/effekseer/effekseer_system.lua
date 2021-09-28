@@ -16,7 +16,7 @@ local fbmgr         = renderpkg.fbmgr
 local bgfx = require "bgfx"
 
 local math3d_adapter = require "math3d.adapter"
-effekseer.update_transform = math3d_adapter.matrix(effekseer.update_transform, 2, 1)
+effekseer.update_transform = math3d_adapter.matrix(effekseer.update_transform, 3, 1)
 
 local effekseer_sys = ecs.system "effekseer_system"
 local time_callback
@@ -25,7 +25,8 @@ local ie_t = ecs.transform "instance_effect"
 
 function ie_t.process_entity(e)
     e.effect_instance = {
-        handle 		= effekseer.create(e.effekseer.rawdata, e.effekseer.filedir),
+        handle 		= effekseer.create(e.effekseer.rawdata, e.effekseer.filename),
+        playid      = -1,
         speed 		= e.speed,
         auto_play 	= e.auto_play,
         loop 		= e.loop
@@ -104,48 +105,50 @@ end
 local iplay = ecs.interface "effekseer_playback"
 
 function iplay.play(eid, loop)
-    local eh = world[eid].effect_instance.handle
-    if effekseer.is_playing(eh) then return end
-    --effekseer.set_speed(eh, speed or 1.0)
-    local lp = loop or false
-    -- world[eid].loop = lp
-    -- effekseer.set_loop(eh, lp)
-    -- effekseer.play(eh)
-    world:pub {"play_effect", eh, lp}
+    local instance = world[eid].effect_instance
+    --if effekseer.is_playing(instance.handle, instance.playid) then return end
+    world:pub {"play_effect", instance, loop or false}
+end
+
+function iplay.destroy(eid)
+    effekseer.destroy(eid > 0 and world[eid].effect_instance.handle or eid)
 end
 
 function iplay.stop(eid)
-    local eh = world[eid].effect_instance.handle
-    effekseer.stop(eh)
+    local instance = world[eid].effect_instance
+    effekseer.stop(instance.handle, instance.playid)
 end
 
 function iplay.is_playing(eid)
-    local eh = world[eid].effect_instance.handle
-    return effekseer.is_playing(eh)
+    local instance = world[eid].effect_instance
+    return effekseer.is_playing(instance.handle, instance.playid)
 end
 
 function iplay.pause(eid, b)
-    local eh = world[eid].effect_instance.handle
-    effekseer.pause(eh, b)
+    local instance = world[eid].effect_instance
+    effekseer.pause(instance.handle, instance.playid, b)
 end
 
 function iplay.set_time(eid, second, should_exist)
-    local eh = world[eid].effect_instance.handle
+    local instance = world[eid].effect_instance
     local frame = math.floor(second * 60)
-    effekseer.set_time(eh, frame, should_exist)
+    local newid = effekseer.set_time(instance.handle, instance.playid, frame, should_exist)
+    if instance.playid ~= newid then
+        instance.playid = newid
+    end
 end
 
 function iplay.set_speed(eid, speed)
-    local eh = world[eid].effect_instance.handle
+    local instance = world[eid].effect_instance
     world[eid].speed = speed
-    effekseer.set_speed(eh, speed)
+    effekseer.set_speed(instance.handle, instance.playid, speed)
 end
 
 function iplay.set_time_callback(callback)
     time_callback = callback
 end
 
-local itimer = world:interface "ant.timer|itimer"
+local itimer = ecs.import.interface "ant.timer|itimer"
 
 local function main_camera_ref()
     for v in world.w:select "main_queue camera_ref:in" do
@@ -154,14 +157,14 @@ local function main_camera_ref()
 end
 
 function effekseer_sys:camera_usage()
-    local icamera = world:interface "ant.camera|camera"
+    local icamera = ecs.import.interface "ant.camera|camera"
     local c = icamera.find_camera(main_camera_ref())
     if c then
         effekseer.update_view_proj(math3d.value_ptr(c.viewmat), math3d.value_ptr(c.projmat))
     end
 end
 
-local iom = world:interface "ant.objcontroller|obj_motion"
+local iom = ecs.import.interface "ant.objcontroller|obj_motion"
 local event_entity_register = world:sub{"entity_register"}
 local event_play_effect = world:sub{"play_effect"}
 local event_do_play = world:sub{"do_play"}
@@ -179,28 +182,28 @@ function effekseer_sys:render_submit()
 end
 
 function effekseer_sys:follow_transform_updated()
-    for v in w:select "eid:in effect_instance:in scene:in" do
-        effekseer.update_transform(v.effect_instance.handle, v.scene._worldmat)
-    end
-
-    for _, eid in event_entity_register:unpack() do
+    for _, eid in event_entity_register:unpack() do 
         local effect = world[eid].effekseer and world[eid].effect_instance or nil
         if effect then
             if effect.auto_play then
-                -- effekseer.set_loop(effect.handle, effect.loop)
-                -- effekseer.play(effect.handle)
-                world:pub {"play_effect", effect.handle, effect.loop}
+                world:pub {"play_effect", effect}
             end
         end
     end
-    
-    for _, eh, lp in event_do_play:unpack() do
-        effekseer.set_loop(eh, lp)
-        effekseer.play(eh)
+
+    for _, inst, lp in event_do_play:unpack() do
+        inst.playid = effekseer.play(inst.handle, inst.playid)
+        effekseer.set_speed(inst.handle, inst.playid, inst.speed)
+        --effekseer.set_loop(inst.handle, inst.playid, lp)
     end
-    
-    for _, eh, lp in event_play_effect:unpack() do
-        world:pub {"do_play", eh, lp}
+
+    for _, inst, lp in event_play_effect:unpack() do
+        world:pub {"do_play", inst, lp}
+    end
+
+    for v in w:select "eid:in effect_instance:in scene:in" do
+        v.effect_instance.worldmat = v.scene._worldmat
+        effekseer.update_transform(v.effect_instance.handle, v.effect_instance.playid, v.scene._worldmat)
     end
 end
 
@@ -208,7 +211,7 @@ function effekseer_sys:end_frame()
     for _, eid in world:each "removed" do
         local e = world[eid]
         if e.effekseer and e.effect_instance then
-            effekseer.destroy(e.effect_instance.handle)
+            effekseer.stop(e.effect_instance.handle, e.effect_instance.playid)
         end
     end
 end

@@ -26,7 +26,7 @@ extern bgfx_view_id_t g_view_id;
 static effekseer_ctx* g_effekseer = nullptr;
 static std::string g_current_path = "";
 static lua_State* g_current_lua_state = nullptr;
-
+static std::unordered_map<std::string, int32_t> g_effect_cache_;
 struct path_data
 {
 	std::string origin; 
@@ -201,16 +201,18 @@ lcreate(lua_State* L) {
 	g_current_lua_state = L;
 	if (lua_type(L, 1) == LUA_TSTRING && lua_type(L, 2) == LUA_TSTRING) {
 		size_t sz;
-		g_current_path = std::string(lua_tolstring(L, 2, &sz));
-		const char* data = lua_tolstring(L, 1, &sz);
-		auto eidx = g_effekseer->create_effect(data, (int32_t)sz);
-		lua_pop(L, 2);
-		if (eidx != -1) {
-			lua_pushinteger(L, eidx);
-			return 1;
-		} else {
-			return luaL_error(L, "create effect failed.");
+		std::string filename = std::string(lua_tolstring(L, 2, &sz));
+		if (auto it = g_effect_cache_.find(filename); it == g_effect_cache_.end()) {
+			g_current_path = filename.substr(0, filename.rfind('/') + 1);
+			const char* data = lua_tolstring(L, 1, &sz);
+			auto eidx = g_effekseer->create_effect(data, (int32_t)sz);
+			if (eidx == -1) {
+				return luaL_error(L, "create effect failed.");
+			}
+			g_effect_cache_.insert(std::pair<std::string, int32_t>(filename, eidx));
 		}
+		lua_pushinteger(L, g_effect_cache_[filename]);
+		return 1;
 	}
 	return 0;
 }
@@ -219,12 +221,23 @@ static int
 ldestroy(lua_State* L) {
 	if (lua_type(L, 1) == LUA_TNUMBER) {
 		int32_t eidx = lua_tointeger(L, -1);
-		g_effekseer->destroy_effect(eidx);
-		lua_pop(L, 1);
+		if (eidx == -1) {
+			for (auto& effect : g_effekseer->effects_) {
+				effect.destroy();
+			}
+			g_effect_cache_.clear();
+		} else {
+			g_effekseer->destroy_effect(eidx);
+			for (auto it = g_effect_cache_.begin(); it != g_effect_cache_.end(); ++it) {
+				if (eidx == it->second) {
+					g_effect_cache_.erase(it);
+					break;
+				}
+			}
+		}
 	}
 	return 0;
 }
-
 static int
 lset_fxloader(lua_State* L) {
 	g_effekseer->fxloader_ = luaL_ref(L, LUA_REGISTRYINDEX);
@@ -237,19 +250,22 @@ lset_path_converter(lua_State* L) {
 	return 0;
 }
 
-static int32_t get_effect_index(lua_State* L)
+static void get_effect_from_lua(lua_State* L, int32_t& effectid, int32_t& playid)
 {
-	int32_t eidx = -1;
 	if (lua_type(L, 1) == LUA_TNUMBER) {
-		eidx = lua_tointeger(L, 1);
+		effectid = lua_tointeger(L, 1);
 	}
-	return eidx;
+	if (lua_type(L, 2) == LUA_TNUMBER) {
+		playid = lua_tointeger(L, 2);
+	}
 }
 static int
 lupdate_transform(lua_State* L) {
-	int32_t eidx = get_effect_index(L);
+	int32_t eidx = -1;
+	int32_t pidx = -1;
+	get_effect_from_lua(L, eidx, pidx);
 	if (eidx != -1) {
-		glm::mat4x4* m44 = (glm::mat4x4*)lua_touserdata(L, 2);
+		glm::mat4x4* m44 = (glm::mat4x4*)lua_touserdata(L, 3);
 		auto col0 = glm::row(*m44, 0);
 		auto col1 = glm::row(*m44, 1);
 		auto col2 = glm::row(*m44, 2);
@@ -259,38 +275,41 @@ lupdate_transform(lua_State* L) {
  		Effekseer::Matrix43 effekMat;
 		memcpy(effekMat.Value, glm::value_ptr(m43), sizeof(float) * 12);
 		auto effect = g_effekseer->get_effect(eidx);
-		effect->set_tranform(effekMat);
+		effect->set_tranform(pidx, effekMat);
 	}
 	return 0;
 }
 
 static int
 lplay(lua_State* L) {
-	int32_t eidx = get_effect_index(L);
+	int32_t eidx = -1;
+	int32_t pidx = -1;
+	get_effect_from_lua(L, eidx, pidx);
 	if (eidx != -1) {
-		auto effect = g_effekseer->get_effect(eidx);
-		if (effect) {
+		if (auto effect = g_effekseer->get_effect(eidx); effect) {
 			int32_t start = 0;
-			if (lua_type(L, 2) == LUA_TNUMBER) {
-				start = lua_tointeger(L, 2);
+			if (lua_type(L, 3) == LUA_TNUMBER) {
+				start = lua_tointeger(L, 3);
 			}
-			effect->play(start);
+			pidx = effect->play(pidx, start);
 		}
 	}
-	return 0;
+	lua_pushinteger(L, pidx);
+	return 1;
 }
 
 static int
 lpause(lua_State* L) {
-	int32_t eidx = get_effect_index(L);
+	int32_t eidx = -1;
+	int32_t pidx = -1;
+	get_effect_from_lua(L, eidx, pidx);
 	if (eidx != -1) {
-		auto effect = g_effekseer->get_effect(eidx);
-		if (effect) {
+		if (auto effect = g_effekseer->get_effect(eidx); effect) {
 			bool start = false;
-			if (lua_type(L, 2) == LUA_TBOOLEAN) {
-				start = lua_toboolean(L, 2);
+			if (lua_type(L, 3) == LUA_TBOOLEAN) {
+				start = lua_toboolean(L, 3);
 			}
-			effect->pause(start);
+			effect->pause(pidx, start);
 		}
 	}
 	return 0;
@@ -298,19 +317,22 @@ lpause(lua_State* L) {
 
 static int
 lset_time(lua_State* L) {
-	int32_t eidx = get_effect_index(L);
+	int32_t eidx = -1;
+	int32_t pidx = -1;
+	get_effect_from_lua(L, eidx, pidx);
 	if (eidx != -1) {
-		auto effect = g_effekseer->get_effect(eidx);
-		if (effect) {
+		if (auto effect = g_effekseer->get_effect(eidx); effect) {
 			int32_t frame = 0.0f;
-			if (lua_type(L, 2) == LUA_TNUMBER) {
-				frame = lua_tointeger(L, 2);
+			if (lua_type(L, 3) == LUA_TNUMBER) {
+				frame = lua_tointeger(L, 3);
 			}
 			bool should_exist = true;
-			if (!lua_isnoneornil(L, 3)) {
-				should_exist = lua_toboolean(L, 3);
+			if (!lua_isnoneornil(L, 4)) {
+				should_exist = lua_toboolean(L, 4);
 			}
-			effect->set_time(frame, should_exist);
+			pidx = effect->set_time(pidx, frame, should_exist);
+			lua_pushinteger(L, pidx);
+			return 1;
 		}
 	}
 	return 0;
@@ -318,11 +340,12 @@ lset_time(lua_State* L) {
 
 static int
 lstop(lua_State* L) {
-	int32_t eidx = get_effect_index(L);
+	int32_t eidx = -1;
+	int32_t pidx = -1;
+	get_effect_from_lua(L, eidx, pidx);
 	if (eidx != -1) {
-		auto effect = g_effekseer->get_effect(eidx);
-		if (effect) {
-			effect->stop();
+		if (auto effect = g_effekseer->get_effect(eidx); effect) {
+			effect->stop(pidx);
 		}
 	}
 	return 0;
@@ -330,12 +353,16 @@ lstop(lua_State* L) {
 
 static int
 lset_loop(lua_State* L) {
-	int32_t eidx = get_effect_index(L);
+	int32_t eidx = -1;
+	int32_t pidx = -1;
+	get_effect_from_lua(L, eidx, pidx);
 	if (eidx != -1) {
-		auto effect = g_effekseer->get_effect(eidx);
-		if (effect) {
-			luaL_checktype(L, 2, LUA_TBOOLEAN);
-			effect->set_loop(lua_toboolean(L, 2));
+		if (auto effect = g_effekseer->get_effect(eidx); effect) {
+			bool loop = false;
+			if (lua_type(L, 3) == LUA_TBOOLEAN) {
+				loop = lua_toboolean(L, 3);
+			}
+			effect->set_loop(pidx, loop);
 		}
 	}
 	return 0;
@@ -344,11 +371,12 @@ lset_loop(lua_State* L) {
 static int
 lis_playing(lua_State* L) {
 	bool isplay = false;
-	int32_t eidx = get_effect_index(L);
+	int32_t eidx = -1;
+	int32_t pidx = -1;
+	get_effect_from_lua(L, eidx, pidx);
 	if (eidx != -1) {
-		auto effect = g_effekseer->get_effect(eidx);
-		if (effect) {
-			isplay = effect->is_playing();
+		if (auto effect = g_effekseer->get_effect(eidx); effect) {
+			isplay = effect->is_playing(pidx);
 		}
 	}
 	lua_pushboolean(L, isplay);
@@ -357,14 +385,14 @@ lis_playing(lua_State* L) {
 
 static int
 lset_speed(lua_State* L) {
-	int32_t eidx = get_effect_index(L);
+	int32_t eidx = -1;
+	int32_t pidx = -1;
+	get_effect_from_lua(L, eidx, pidx);
 	if (eidx != -1) {
-		auto effect = g_effekseer->get_effect(eidx);
-		if (effect)
-		{
-			luaL_checktype(L, 2, LUA_TNUMBER);
-			float speed = lua_tonumber(L, 2);
-			effect->set_speed(speed);
+		if (auto effect = g_effekseer->get_effect(eidx); effect) {
+			luaL_checktype(L, 3, LUA_TNUMBER);
+			float speed = lua_tonumber(L, 3);
+			effect->set_speed(pidx, speed);
 		}
 	}
 	return 0;
@@ -415,8 +443,7 @@ int32_t effekseer_ctx::create_effect(const void* data, int32_t size)
 
 effect_adapter* effekseer_ctx::get_effect(int32_t eidx)
 {
-	if (eidx < effects_.size() && eidx >= 0)
-	{
+	if (eidx < effects_.size() && eidx >= 0) {
 		return &effects_[eidx];
 	}
 	return nullptr;

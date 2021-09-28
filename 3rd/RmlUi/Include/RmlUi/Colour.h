@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_COLOUR_H
 #define RMLUI_CORE_COLOUR_H
 
-#include "Header.h"
+#include "Platform.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/color_space.hpp>
 

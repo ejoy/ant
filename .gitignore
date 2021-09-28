@@ -16,6 +16,8 @@ build
 
 /bin
 
+output
+
 editor.user.setting
 editor.user.ini
 script_runner.user.lua

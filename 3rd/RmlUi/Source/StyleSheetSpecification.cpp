@@ -48,7 +48,7 @@ struct DefaultStyleSheetParsers {
 	PropertyParserNumber length = PropertyParserNumber(Property::LENGTH, Property::PX);
 	PropertyParserNumber length_percent = PropertyParserNumber(Property::LENGTH_PERCENT, Property::PX);
 	PropertyParserNumber number_length_percent = PropertyParserNumber(Property::NUMBER_LENGTH_PERCENT, Property::PX);
-	PropertyParserNumber angle = PropertyParserNumber(Property::ANGLE, Property::RAD);
+	PropertyParserNumber angle = PropertyParserNumber(Property::RAD | Property::DEG, Property::RAD);
 	PropertyParserKeyword keyword = PropertyParserKeyword();
 	PropertyParserString string = PropertyParserString();
 	PropertyParserAnimation animation = PropertyParserAnimation(PropertyParserAnimation::ANIMATION_PARSER);
@@ -72,9 +72,12 @@ StyleSheetSpecification::~StyleSheetSpecification()
 	instance = nullptr;
 }
 
-PropertyDefinition& StyleSheetSpecification::RegisterProperty(PropertyId id, const std::string& property_name, const std::string& default_value, bool inherited)
-{
-	return properties.RegisterProperty(property_name, default_value, inherited, id);
+PropertyDefinition& StyleSheetSpecification::RegisterProperty(PropertyId id, const std::string& property_name, bool inherited) {
+	return properties.RegisterProperty(id, property_name, inherited);
+}
+
+PropertyDefinition& StyleSheetSpecification::RegisterProperty(PropertyId id, const std::string& property_name, const std::string& default_value, bool inherited) {
+	return properties.RegisterProperty(id, property_name, inherited, default_value);
 }
 
 ShorthandId StyleSheetSpecification::RegisterShorthand(ShorthandId id, const std::string& shorthand_name, const std::string& property_names, ShorthandType type)
@@ -243,30 +246,6 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 
 	*/
 
-	RegisterProperty(PropertyId::MarginTop, "margin-top", "0px", false)
-		.AddParser("keyword", "auto")
-		.AddParser("length_percent");
-	RegisterProperty(PropertyId::MarginRight, "margin-right", "0px", false)
-		.AddParser("keyword", "auto")
-		.AddParser("length_percent");
-	RegisterProperty(PropertyId::MarginBottom, "margin-bottom", "0px", false)
-		.AddParser("keyword", "auto")
-		.AddParser("length_percent");
-	RegisterProperty(PropertyId::MarginLeft, "margin-left", "0px", false)
-		.AddParser("keyword", "auto")
-		.AddParser("length_percent");
-	RegisterShorthand(ShorthandId::Margin, "margin", "margin-top, margin-right, margin-bottom, margin-left", ShorthandType::Box);
-
-	RegisterProperty(PropertyId::PaddingTop, "padding-top", "0px", false)
-		.AddParser("length_percent");
-	RegisterProperty(PropertyId::PaddingRight, "padding-right", "0px", false)
-		.AddParser("length_percent");
-	RegisterProperty(PropertyId::PaddingBottom, "padding-bottom", "0px", false)
-		.AddParser("length_percent");
-	RegisterProperty(PropertyId::PaddingLeft, "padding-left", "0px", false)
-		.AddParser("length_percent");
-	RegisterShorthand(ShorthandId::Padding, "padding", "padding-top, padding-right, padding-bottom, padding-left", ShorthandType::Box);
-
 	RegisterProperty(PropertyId::BorderTopWidth, "border-top-width", "0px", false)
 		.AddParser("length");
 	RegisterProperty(PropertyId::BorderRightWidth, "border-right-width", "0px", false)
@@ -303,44 +282,12 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 		.AddParser("length_percent");
 	RegisterShorthand(ShorthandId::BorderRadius, "border-radius", "border-top-left-radius, border-top-right-radius, border-bottom-right-radius, border-bottom-left-radius", ShorthandType::Box);
 
-	RegisterProperty(PropertyId::Display, "display", "flex", false)
-		.AddParser("keyword", "flex, none");
-	RegisterProperty(PropertyId::Position, "position", "static", false)
-		.AddParser("keyword", "static, relative, absolute");
-	RegisterProperty(PropertyId::Top, "top", "0px", false)
-		.AddParser("length_percent");
-	RegisterProperty(PropertyId::Right, "right", "0px", false)
-		.AddParser("length_percent");
-	RegisterProperty(PropertyId::Bottom, "bottom", "0px", false)
-		.AddParser("length_percent");
-	RegisterProperty(PropertyId::Left, "left", "0px", false)
-		.AddParser("length_percent");
-
 	RegisterProperty(PropertyId::ZIndex, "z-index", "auto", false)
 		.AddParser("keyword", "auto")
 		.AddParser("number");
 
-	RegisterProperty(PropertyId::Width, "width", "auto", false)
-		.AddParser("keyword", "auto")
-		.AddParser("length_percent");
-	RegisterProperty(PropertyId::MinWidth, "min-width", "0px", false)
-		.AddParser("length_percent");
-	RegisterProperty(PropertyId::MaxWidth, "max-width", "-1px", false)
-		.AddParser("length_percent");
-
-	RegisterProperty(PropertyId::Height, "height", "auto", false)
-		.AddParser("keyword", "auto")
-		.AddParser("length_percent");
-	RegisterProperty(PropertyId::MinHeight, "min-height", "0px", false)
-		.AddParser("length_percent");
-	RegisterProperty(PropertyId::MaxHeight, "max-height", "-1px", false)
-		.AddParser("length_percent");
-
 	RegisterProperty(PropertyId::LineHeight, "line-height", "1.2", true)
 		.AddParser("number");
-
-	RegisterProperty(PropertyId::Overflow, "overflow", "visible", false)
-		.AddParser("keyword", "visible, hidden, scroll");
 
 	RegisterProperty(PropertyId::Color, "color", "white", true)
 		.AddParser("color");
@@ -402,33 +349,6 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 	RegisterProperty(PropertyId::Animation, "animation", "none", false)
 		.AddParser("animation");
 
-	RegisterProperty(PropertyId::AlignContent, "align-content", "flex-start", false)
-		.AddParser("keyword", "auto, flex-start, center, flex-end, stretch, baseline, space-between, space-around");
-	RegisterProperty(PropertyId::AlignItems, "align-items", "stretch", false)
-		.AddParser("keyword", "auto, flex-start, center, flex-end, stretch, baseline, space-between, space-around");
-	RegisterProperty(PropertyId::AlignSelf, "align-self", "auto", false)
-		.AddParser("keyword", "auto, flex-start, center, flex-end, stretch, baseline, space-between, space-around");
-	RegisterProperty(PropertyId::Direction, "direction", "ltr", false)
-		.AddParser("keyword", "inherit, ltr, rtl");
-	RegisterProperty(PropertyId::FlexDirection, "flex-direction", "row", false)
-		.AddParser("keyword", "column, column-reverse, row, row-reverse");
-	RegisterProperty(PropertyId::FlexWrap, "flex-wrap", "wrap", false)
-		.AddParser("keyword", "nowrap, wrap, wrap-reverse");
-	RegisterProperty(PropertyId::JustifyContent, "justify-content", "flex-start", false)
-		.AddParser("keyword", "flex-start, center, flex-end, space-between, space-around, space-evenly");
-
-	RegisterProperty(PropertyId::AspectRatio, "aspect-ratio", "0", false)
-		.AddParser("number");
-	RegisterProperty(PropertyId::Flex, "flex", "0", false)
-		.AddParser("number");
-	RegisterProperty(PropertyId::FlexBasis, "flex-basis", "auto", false)
-		.AddParser("keyword", "auto")
-		.AddParser("length_percent");
-	RegisterProperty(PropertyId::FlexGrow, "flex-grow", "0", false)
-		.AddParser("number");
-	RegisterProperty(PropertyId::FlexShrink, "flex-shrink", "1", false)
-		.AddParser("number");
-
 	RegisterProperty(PropertyId::BackgroundColor, "background-color", "transparent", false)
 		.AddParser("color");
 	RegisterProperty(PropertyId::BackgroundImage, "background-image", "none", false)
@@ -469,6 +389,90 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 	RegisterProperty(PropertyId::TextStrokeColor, "-webkit-text-stroke-color", "white", false)
 		.AddParser("color");
 	RegisterShorthand(ShorthandId::TextStroke, "-webkit-text-stroke", "-webkit-text-stroke-width, -webkit-text-stroke-color", ShorthandType::FallThrough);
+
+	// flex layout
+	RegisterProperty(PropertyId::Display, "display", false)
+		.AddParser("keyword", "flex, none");
+	RegisterProperty(PropertyId::Overflow, "overflow", false)
+		.AddParser("keyword", "visible, hidden, scroll");
+	RegisterProperty(PropertyId::Position, "position", false)
+		.AddParser("keyword", "static, relative, absolute");
+
+	RegisterProperty(PropertyId::MarginTop, "margin-top", false)
+		.AddParser("keyword", "auto")
+		.AddParser("length_percent");
+	RegisterProperty(PropertyId::MarginRight, "margin-right", false)
+		.AddParser("keyword", "auto")
+		.AddParser("length_percent");
+	RegisterProperty(PropertyId::MarginBottom, "margin-bottom", false)
+		.AddParser("keyword", "auto")
+		.AddParser("length_percent");
+	RegisterProperty(PropertyId::MarginLeft, "margin-left", false)
+		.AddParser("keyword", "auto")
+		.AddParser("length_percent");
+	RegisterShorthand(ShorthandId::Margin, "margin", "margin-top, margin-right, margin-bottom, margin-left", ShorthandType::Box);
+
+	RegisterProperty(PropertyId::PaddingTop, "padding-top", false)
+		.AddParser("length_percent");
+	RegisterProperty(PropertyId::PaddingRight, "padding-right", false)
+		.AddParser("length_percent");
+	RegisterProperty(PropertyId::PaddingBottom, "padding-bottom", false)
+		.AddParser("length_percent");
+	RegisterProperty(PropertyId::PaddingLeft, "padding-left", false)
+		.AddParser("length_percent");
+	RegisterShorthand(ShorthandId::Padding, "padding", "padding-top, padding-right, padding-bottom, padding-left", ShorthandType::Box);
+
+	RegisterProperty(PropertyId::Top, "top", false)
+		.AddParser("length_percent");
+	RegisterProperty(PropertyId::Right, "right", false)
+		.AddParser("length_percent");
+	RegisterProperty(PropertyId::Bottom, "bottom", false)
+		.AddParser("length_percent");
+	RegisterProperty(PropertyId::Left, "left", false)
+		.AddParser("length_percent");
+
+	RegisterProperty(PropertyId::Width, "width", false)
+		.AddParser("keyword", "auto")
+		.AddParser("length_percent");
+	RegisterProperty(PropertyId::MinWidth, "min-width", false)
+		.AddParser("length_percent");
+	RegisterProperty(PropertyId::MaxWidth, "max-width", false)
+		.AddParser("length_percent");
+
+	RegisterProperty(PropertyId::Height, "height", false)
+		.AddParser("keyword", "auto")
+		.AddParser("length_percent");
+	RegisterProperty(PropertyId::MinHeight, "min-height", false)
+		.AddParser("length_percent");
+	RegisterProperty(PropertyId::MaxHeight, "max-height", false)
+		.AddParser("length_percent");
+	
+	RegisterProperty(PropertyId::AlignContent, "align-content", false)
+		.AddParser("keyword", "auto, flex-start, center, flex-end, stretch, baseline, space-between, space-around");
+	RegisterProperty(PropertyId::AlignItems, "align-items", false)
+		.AddParser("keyword", "auto, flex-start, center, flex-end, stretch, baseline, space-between, space-around");
+	RegisterProperty(PropertyId::AlignSelf, "align-self", false)
+		.AddParser("keyword", "auto, flex-start, center, flex-end, stretch, baseline, space-between, space-around");
+	RegisterProperty(PropertyId::Direction, "direction", false)
+		.AddParser("keyword", "inherit, ltr, rtl");
+	RegisterProperty(PropertyId::FlexDirection, "flex-direction", false)
+		.AddParser("keyword", "column, column-reverse, row, row-reverse");
+	RegisterProperty(PropertyId::FlexWrap, "flex-wrap", false)
+		.AddParser("keyword", "nowrap, wrap, wrap-reverse");
+	RegisterProperty(PropertyId::JustifyContent, "justify-content", false)
+		.AddParser("keyword", "flex-start, center, flex-end, space-between, space-around, space-evenly");
+
+	RegisterProperty(PropertyId::AspectRatio, "aspect-ratio", false)
+		.AddParser("number");
+	RegisterProperty(PropertyId::Flex, "flex", false)
+		.AddParser("number");
+	RegisterProperty(PropertyId::FlexBasis, "flex-basis", false)
+		.AddParser("keyword", "auto")
+		.AddParser("length_percent");
+	RegisterProperty(PropertyId::FlexGrow, "flex-grow", false)
+		.AddParser("number");
+	RegisterProperty(PropertyId::FlexShrink, "flex-shrink", false)
+		.AddParser("number");
 }
 
 } // namespace Rml

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Header.h"
+#include "Platform.h"
 #include "Event.h"
 #include "ObserverPtr.h"
 #include "EventSpecification.h"

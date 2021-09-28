@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_DATAVIEWDEFAULT_H
 #define RMLUI_CORE_DATAVIEWDEFAULT_H
 
-#include "../Include/RmlUi/Header.h"
+#include "../Include/RmlUi/Platform.h"
 #include "../Include/RmlUi/Types.h"
 #include "../Include/RmlUi/Variant.h"
 #include "DataView.h"

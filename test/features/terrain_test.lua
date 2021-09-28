@@ -5,7 +5,7 @@ local math3d = require "math3d"
 
 local terrain_test_sys = ecs.system "terrain_test_system"
 
-local icollider = world:interface "ant.collision|collider"
+local icollider = ecs.import.interface "ant.collision|collider"
 
 function terrain_test_sys:init()
 	world:instance("/pkg/ant.test.features/assets/entities/terrain.prefab")

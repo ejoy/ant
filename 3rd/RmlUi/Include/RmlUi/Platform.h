@@ -29,24 +29,11 @@
 #ifndef RMLUI_CORE_PLATFORM_H
 #define RMLUI_CORE_PLATFORM_H
 
-#if defined __WIN32__ || defined _WIN32
-	#define RMLUI_PLATFORM_WIN32
-	#define RMLUI_PLATFORM_NAME "win32"
-#elif defined __APPLE_CC__
-	#define RMLUI_PLATFORM_UNIX
-	#define RMLUI_PLATFORM_MACOSX
-	#define RMLUI_PLATFORM_NAME "macosx"
-#else
-	#define RMLUI_PLATFORM_UNIX
-	#define RMLUI_PLATFORM_LINUX
-	#define RMLUI_PLATFORM_NAME "linux"
-#endif
-
 #if !defined NDEBUG && !defined RMLUI_DEBUG
 	#define RMLUI_DEBUG
 #endif
 
-#if defined(RMLUI_PLATFORM_WIN32) && !defined(__MINGW32__)
+#if defined(_WIN32) && !defined(__MINGW32__)
 	// declaration of 'identifier' hides class member
 	#pragma warning(disable : 4458)
 

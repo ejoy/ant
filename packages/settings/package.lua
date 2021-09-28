@@ -1,4 +1,6 @@
 return {
     name = "ant.settings",
-    entry = "main"
+    entry = "main",
+    dependencies = {
+    }
 }

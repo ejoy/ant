@@ -26,8 +26,6 @@ transform "camera_motion_transform"
 
 interface "camera"
     .implement "camera.lua"
-    .method "bind"
-    .method "bind_queue"
     .method "create"
     .method "create_entity"
     .method "calc_viewmat"

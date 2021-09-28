@@ -1,10 +1,13 @@
+local ecs = ...
+local world = ecs.world
+local w = world.w
+
+local assetmgr  = import_package "ant.asset"
 local imgui     = require "imgui"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 
 local m = {}
-local world
-local asset_mgr
 
 local status = {
     GizmoMode = "select",
@@ -14,7 +17,7 @@ local status = {
 local localSpace = {}
 local defaultLight = { false }
 function m.show()
-    local icons = require "common.icons"(asset_mgr)
+    local icons = require "common.icons"(assetmgr)
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2])
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.ToolBarHeight)
@@ -57,8 +60,4 @@ function m.show()
     imgui.windows.PopStyleVar(2)
 end
 
-return function(w, am)
-    world = w
-    asset_mgr = am
-    return m
-end
+return m

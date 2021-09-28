@@ -1,7 +1,6 @@
 local math3d = require "math3d"
 local utility = require "editor.model.utility"
 local serialize = import_package "ant.serialize"
-local assetmgr = import_package "ant.asset"
 
 local lfs = require "filesystem.local"
 local fs = require "filesystem"
@@ -50,7 +49,7 @@ local function get_transform(node)
     local t, r = node.translation, node.rotation
     return {
         s = node.scale,
-        r = r and {-r[1], -r[2], -r[3], r[4]} or nil,    --r2l
+        r = r and {r[1], r[2], -r[3], -r[4]} or nil,     --r2l
         t = t and {t[1], t[2], -t[3]} or nil,            --r2l
     }
 end

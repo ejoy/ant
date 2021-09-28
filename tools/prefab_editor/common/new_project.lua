@@ -70,7 +70,7 @@ function m.gen_init_system()
 local ecs = ...
 local world = ecs.world
 local m = ecs.system 'init_system'
-local irq = world:interface "ant.render|irenderqueue"
+local irq = ecs.import.interface "ant.render|irenderqueue"
 
 function m:init()
     print("my system init.")
@@ -104,7 +104,6 @@ system "init_system"
     .require_policy "ant.animation|skinning"
     .require_policy "ant.sky|procedural_sky"
     .require_policy "ant.render|simplerender"
-    .require_policy "ant.render|postprocess"
     .method "init"
     .method "post_init"
 

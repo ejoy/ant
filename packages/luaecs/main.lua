@@ -42,8 +42,8 @@ local function create_entity(w, data)
     return ref
 end
 
-function world:create_entity(v)
-    local res = policy.create(self, v.policy)
+function world:_create_entity(package, v)
+    local res = policy.create(self, package, v.policy)
     local data = v.data
     for c, def in pairs(res.component_opt) do
         if data[c] == nil then
@@ -59,9 +59,9 @@ function world:create_entity(v)
     return create_entity(self, data)
 end
 
-function world:create_ref(v)
-    local mainkey = policy.find_mainkey(self, v)
-    return self.w:ref(mainkey, v)
+function world:create_entity(v)
+    log.error("world:create_entity is deprecated, use ecs.create_entity instead.")
+    return self:_create_entity(nil, v)
 end
 
 local function create_instance(w, prefab)
@@ -77,8 +77,8 @@ local function create_instance(w, prefab)
 	return res
 end
 
-local function create_entity_template(w, detach, v)
-    local res = policy.create(w, v.policy)
+local function create_entity_template(w, package, detach, v)
+    local res = policy.create(w, package, v.policy)
     local data = v.data
     for c, def in pairs(res.component_opt) do
         if data[c] == nil then
@@ -99,16 +99,16 @@ local function create_entity_template(w, detach, v)
     }
 end
 
-local function create_template(w, detach, t)
+local function create_template(w, package, detach, t)
 	local prefab = {}
 	for _, v in ipairs(t) do
 		if v.prefab then
 			prefab[#prefab+1] = {
-                prefab = assetmgr.resource(v[1], { create_template = function (_,...) return create_template(w,detach,...) end }),
+                prefab = assetmgr.resource(v[1], { create_template = function (_,...) return create_template(w,package,detach,...) end }),
 				args = v.args,
 			}
 		else
-			prefab[#prefab+1] = create_entity_template(w, detach, v)
+			prefab[#prefab+1] = create_entity_template(w, package, detach, v)
 		end
 	end
     return prefab
@@ -122,17 +122,6 @@ local function run_action(w, entities, template)
             end
         end
     end
-    --TODO
-	--for i, v in ipairs(template) do
-	--	if v.prefab then
-	--		if v.args then
-	--			for k, v in pairs(v.args) do
-	--				entities[i][k] = entities[v]
-	--			end
-	--		end
-	--		run_action(w, entities[i], v.prefab)
-	--	end
-	--end
 end
 
 local function add_tag(dict, tag, eid)
@@ -240,10 +229,10 @@ function world:create_object(inner_proxy)
     return outer_proxy
 end
 
-function world:create_instance(filename, options)
+function world:_create_instance(package, filename, options)
     local w = self
     local detach = options and options.detach
-    local template = assetmgr.resource(filename, { create_template = function (_,...) return create_template(w, detach, ...) end })
+    local template = assetmgr.resource(filename, { create_template = function (_,...) return create_template(w, package, detach, ...) end })
     local root = create_scene_entity(w)
     local entities = create_instance(w, template)
     w:multicast(entities, "set_parent", root)
@@ -252,6 +241,11 @@ function world:create_instance(filename, options)
         root = root,
         tag = create_tags(entities, template)
     }
+end
+
+function world:create_instance(filename, options)
+    log.error("world:create_instance is deprecated, use ecs.create_instance instead.")
+    return self:_create_instance(nil, filename, options)
 end
 
 local function isValidReference(reference)

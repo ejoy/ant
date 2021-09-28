@@ -223,7 +223,7 @@ std::string StringUtilities::StripWhitespace(const std::string& string)
 	return StripWhitespace(StringView(string));
 }
 
-RMLUICORE_API std::string StringUtilities::StripWhitespace(StringView string)
+std::string StringUtilities::StripWhitespace(StringView string)
 {
 	const char* start = string.begin();
 	const char* end = string.end();

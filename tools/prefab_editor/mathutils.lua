@@ -1,8 +1,10 @@
+local ecs = ...
+local icamera = ecs.import.interface "ant.camera|camera"
+
 local math3d = require "math3d"
 local imgui = require "imgui"
 local uiconfig = require "widget.config"
 local m = {}
-local world
 function m.point_to_line_distance2D(p1, p2, p3)
 	local dx = p2[1] - p1[1];
 	local dy = p2[2] - p1[2];
@@ -56,7 +58,6 @@ function m.view_to_axis_constraint(ray, cameraPos, axis, origin)
 end
 
 
-local icamera
 local global_data = require "common.global_data"
 function m.world_to_screen(camera_ref, world_pos)
 	local vp = icamera.calc_viewproj(camera_ref)
@@ -95,8 +96,4 @@ function m.mouse_pos_in_view(x,y)
 	end
 end
 
-return function(w)
-	world = w
-	icamera = world:interface "ant.camera|camera"
-	return m
-end
+return m

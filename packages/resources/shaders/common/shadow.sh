@@ -158,7 +158,7 @@ vec3 calc_shadow_color(float visibility, vec3 scenecolor)
 vec3 shadow_visibility(float distanceVS, vec4 posWS, vec3 scenecolor)
 {
 	vec4 shadowcoord = calc_shadow_coord(distanceVS, posWS);
-	float visibility = hardShadow(s_shadowmap, shadowcoord, u_shadowmap_bias);
+	float visibility = saturate(hardShadow(s_shadowmap, shadowcoord, u_shadowmap_bias));
 	return calc_shadow_color(visibility, scenecolor);
 }
 

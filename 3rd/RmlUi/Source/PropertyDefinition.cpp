@@ -33,6 +33,12 @@
 
 namespace Rml {
 
+PropertyDefinition::PropertyDefinition(PropertyId id, bool _inherited) 
+	: id(id)
+{
+	inherited = _inherited;
+}
+
 PropertyDefinition::PropertyDefinition(PropertyId id, const std::string& _default_value, bool _inherited) 
 	: id(id), default_value(_default_value, Property::UNKNOWN)
 {
@@ -44,20 +50,15 @@ PropertyDefinition::~PropertyDefinition()
 {
 }
 
-// Registers a parser to parse values for this definition.
-PropertyDefinition& PropertyDefinition::AddParser(const std::string& parser_name, const std::string& parser_parameters)
-{
+PropertyDefinition& PropertyDefinition::AddParser(const std::string& parser_name, const std::string& parser_parameters) {
 	ParserState new_parser;
 
-	// Fetch the parser.
 	new_parser.parser = StyleSheetSpecification::GetParser(parser_name);
-	if (new_parser.parser == nullptr)
-	{
+	if (new_parser.parser == nullptr) {
 		Log::Message(Log::Level::Error, "Property was registered with invalid parser '%s'.", parser_name.c_str());
 		return *this;
 	}
 
-	// Split the parameter list, and set up the map.
 	if (!parser_parameters.empty())
 	{
 		std::vector<std::string> parameter_list;
@@ -65,12 +66,9 @@ PropertyDefinition& PropertyDefinition::AddParser(const std::string& parser_name
 		for (size_t i = 0; i < parameter_list.size(); i++)
 			new_parser.parameters[parameter_list[i]] = (int) i;
 	}
-
 	parsers.push_back(new_parser);
 
-	// If the default value has not been parsed successfully yet, run it through the new parser.
-	if (default_value.unit == Property::UNKNOWN)
-	{
+	if (default_value.definition && default_value.unit == Property::UNKNOWN) {
 		std::string unparsed_value = std::get<std::string>(default_value.value);
 		if (!new_parser.parser->ParseValue(default_value, unparsed_value, new_parser.parameters)) {
 			default_value.value = unparsed_value;
@@ -103,9 +101,10 @@ bool PropertyDefinition::IsInherited() const
 	return inherited;
 }
 
-// Returns the default for this property.
-const Property* PropertyDefinition::GetDefaultValue() const
-{
+const Property* PropertyDefinition::GetDefaultValue() const {
+	if (!default_value.definition) {
+		return nullptr;
+	}
 	return &default_value;
 }
 

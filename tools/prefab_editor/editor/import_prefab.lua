@@ -2,7 +2,6 @@ local lfs  = require "filesystem.local"
 local fs   = require "filesystem"
 local sp   = require "subprocess"
 local task = require "task"
-local assetmgr = import_package "ant.asset"
 
 local function import_fbx(input, output)
     local function luaexe()

@@ -24,11 +24,11 @@ local shadowcommon  = require "shadow.common"
 
 local math3d        = require "math3d"
 
-local iom       = world:interface "ant.objcontroller|obj_motion"
-local ilight    = world:interface "ant.render|light"
-local icamera   = world:interface "ant.camera|camera"
-local ientity   = world:interface "ant.render|entity"
-local irender   = world:interface "ant.render|irender"
+local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
+local ilight    = ecs.import.interface "ant.render|light"
+local icamera   = ecs.import.interface "ant.camera|camera"
+local ientity   = ecs.import.interface "ant.render|entity"
+local irender   = ecs.import.interface "ant.render|irender"
 
 local function get_render_buffers(width, height)
     return fbmgr.create_rb{
@@ -215,7 +215,7 @@ function ios.create(point_eid)
                 name = "camera_" .. queuename
             }
 
-        world:create_entity{
+        ecs.create_entity {
             policy = {
                 "ant.render|omni_shadow",
                 "ant.render|render_queue",

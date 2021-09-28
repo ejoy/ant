@@ -1,4 +1,11 @@
 return {
     name = "ant.rmlui",
-    entry = "core.startup",
+    dependencies = {
+        "ant.asset",
+        "ant.compile_resource",
+        "ant.font",
+        "ant.general",
+        "ant.render",
+        "ant.timer",
+    }
 }

@@ -1,5 +1,7 @@
 local vfs = {} ; vfs.__index = vfs
 
+local uncomplete = {}
+
 -- dir object example :
 -- f vfs.txt 90a5c279259fd4e105c4eb8378e9a21694e1e3c4 1533871795
 
@@ -45,8 +47,12 @@ function vfs.new(repopath)
 		compile = {},
 		root = nil,
 	}
-	repo.root = root_hash(repo)
-	return setmetatable(repo, vfs)
+	setmetatable(repo, vfs)
+	local hash = root_hash(repo)
+	if hash then
+		repo:changeroot(hash)
+	end
+	return repo
 end
 
 local function dir_object(self, hash)
@@ -103,7 +109,7 @@ local function fetch_file(self, hash, fullpath, parent)
 		self.cache[hash] = dir
 	end
 
-	local path, name = fullpath:match "([^/]*)/?(.*)"
+	local path, name = fullpath:match "/?([^/]+)/?(.*)"
 	local subpath = dir[path]
 	if subpath then
 		if name == "" then
@@ -117,15 +123,10 @@ local function fetch_file(self, hash, fullpath, parent)
 	-- invalid repo, root change
 end
 
-function vfs:list(path)
-	local hash
-	if path == "" then
-		hash = self.root
-	else
-		if not self.root then
-			return false
-		end
-		local ok, h = fetch_file(self, self.root, path, "")
+function vfs:list(path, hash)
+	hash = hash or self.root
+	if path ~= "" then
+		local ok, h = fetch_file(self, hash, path, "")
 		if not ok then
 			return false, h
 		end
@@ -173,19 +174,38 @@ local function fetch_hash(self, hash, fullpath, addhash)
 	end
 end
 
-function vfs:compilehash(path, hash)
-	if not self.root then
-		return false
-	end
-	return fetch_hash(self, self.root, path, hash)
+function vfs:updatehistory(hash)
+	local history = update_history(self, hash)
+	local f <close> = assert(io.open(self.path .. "root", "wb"))
+	f:write(table.concat(history, "\n"))
 end
 
 function vfs:changeroot(hash)
-	local history = update_history(self, hash)
-	local f = assert(io.open(self.path .. "root", "wb"))
-	f:write(table.concat(history, "\n"))
-	f:close()
 	self.root = hash
+	self.resource = {}
+	local path = self:hashpath(hash)..".resource"
+	do
+		local f <close> = io.open(path, "rb")
+		if f then
+			for line in f:lines() do
+				local hash, name = line:match "([%da-f]+) (.*)"
+				if hash then
+					self.resource[name] = hash
+				end
+			end
+		end
+	end
+end
+
+function vfs:get_resource(name)
+	return self.resource[name]
+end
+
+function vfs:set_resource(name, hash)
+	self.resource[name] = hash
+	local path = self:hashpath(self.root)..".resource"
+	local f <close> = io.open(path, "ab")
+	f:write(("%s %s\n"):format(hash, name))
 end
 
 function vfs:realpath(path)
@@ -203,6 +223,84 @@ end
 
 function vfs:hashpath(hash)
 	return self.path .. hash:sub(1,2) .. "/" .. hash
+end
+
+local function writefile(filename, data)
+	local temp = filename .. ".download"
+	local f = io.open(temp, "wb")
+	if not f then
+		print("Can't write to", temp)
+		return
+	end
+	f:write(data)
+	f:close()
+	if not os.rename(temp, filename) then
+		os.remove(filename)
+		if not os.rename(temp, filename) then
+			print("Can't rename", filename)
+			return false
+		end
+	end
+	return true
+end
+
+-- REMARK: Main thread may reading the file while writing, if file server update file.
+-- It's rare because the file name is sha1 of file content. We don't need update the file.
+-- Client may not request the file already exist.
+function vfs:write_blob(hash, data)
+	local hashpath = self:hashpath(hash)
+	if writefile(hashpath, data) then
+		return true
+	end
+end
+
+function vfs:write_file(hash, size)
+	uncomplete[hash] = { size = tonumber(size), offset = 0 }
+end
+
+function vfs:write_slice(hash, offset, data)
+	offset = tonumber(offset)
+	local hashpath = self:hashpath(hash)
+	local tempname = hashpath .. ".download"
+	local f = io.open(tempname, "ab")
+	if not f then
+		print("Can't write to", tempname)
+		return
+	end
+	local pos = f:seek "end"
+	if pos ~= offset then
+		f:close()
+		f = io.open(tempname, "r+b")
+		if not f then
+			print("Can't modify", tempname)
+			return
+		end
+		f:seek("set", offset)
+	end
+	f:write(data)
+	f:close()
+	local filedesc = uncomplete[hash]
+	if filedesc then
+		local last_offset = filedesc.offset
+		if offset ~= last_offset then
+			print("Invalid offset", hash, offset, last_offset)
+		end
+		filedesc.offset = last_offset + #data
+		if filedesc.offset == filedesc.size then
+			-- complete
+			uncomplete[hash] = nil
+			if not os.rename(tempname, hashpath) then
+				-- may exist
+				os.remove(hashpath)
+				if not os.rename(tempname, hashpath) then
+					print("Can't rename", hashpath)
+				end
+			end
+			return true
+		end
+	else
+		print("Offset without header", hash, offset)
+	end
 end
 
 return vfs

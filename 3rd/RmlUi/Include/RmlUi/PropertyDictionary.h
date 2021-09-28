@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_PROPERTYDICTIONARY_H
 #define RMLUI_CORE_PROPERTYDICTIONARY_H
 
-#include "Header.h"
+#include "Platform.h"
 #include "Property.h"
 
 namespace Rml {
@@ -40,7 +40,7 @@ namespace Rml {
 	@author Peter Curry
  */
 
-class RMLUICORE_API PropertyDictionary
+class PropertyDictionary
 {
 public:
 	PropertyDictionary();

@@ -7,20 +7,6 @@
 #include "EffekseerRendererBGFX.VertexBuffer.h"
 #include <string>
 
-//#include "ShaderHeader/ad_model_distortion_ps.h"
-//#include "ShaderHeader/ad_model_distortion_vs.h"
-//#include "ShaderHeader/ad_model_lit_ps.h"
-//#include "ShaderHeader/ad_model_lit_vs.h"
-//#include "ShaderHeader/ad_model_unlit_ps.h"
-//#include "ShaderHeader/ad_model_unlit_vs.h"
-//
-//#include "ShaderHeader/model_distortion_ps.h"
-//#include "ShaderHeader/model_distortion_vs.h"
-//#include "ShaderHeader/model_lit_ps.h"
-//#include "ShaderHeader/model_lit_vs.h"
-//#include "ShaderHeader/model_unlit_ps.h"
-//#include "ShaderHeader/model_unlit_vs.h"
-
 namespace EffekseerRendererBGFX
 {
 

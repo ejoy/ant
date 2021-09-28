@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_STREAMMEMORY_H
 #define RMLUI_CORE_STREAMMEMORY_H
 
-#include "Header.h"
+#include "Platform.h"
 #include "Stream.h"
 
 namespace Rml {
@@ -39,7 +39,7 @@ namespace Rml {
 	@author Lloyd Weehuizen
  */
 
-class RMLUICORE_API StreamMemory : public Stream
+class StreamMemory : public Stream
 {
 public:
 	/// Empty memory stream with default size buffer

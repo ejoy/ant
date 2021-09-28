@@ -2,12 +2,12 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local iom		= world:interface "ant.objcontroller|obj_motion"
-local irq		= world:interface "ant.render|irenderqueue"
-local camera_mgr= require "camera_manager"(world)
+local iom		= ecs.import.interface "ant.objcontroller|obj_motion"
+local irq		= ecs.import.interface "ant.render|irenderqueue"
+local camera_mgr= ecs.require "camera_manager"
 local math3d	= require "math3d"
-local utils		= require "mathutils"(world)
-local inspector = require "widget.inspector"(world)
+local utils		= ecs.require "mathutils"
+local inspector = ecs.require "widget.inspector"
 
 local m			= ecs.system "camera_system"
 
@@ -59,7 +59,7 @@ end
 local function camera_reset(eyepos, target)
 	camera_target.v = target
 	camera_distance = math3d.length(math3d.sub(camera_target, eyepos))
-	iom.set_view(irq.main_camera(), eyepos, math3d.normalize(math3d.sub(camera_target, eyepos)))
+	iom.set_view(irq.main_camera(), eyepos, math3d.normalize(math3d.sub(camera_target, eyepos)), {0, 1, 0})
 end
 
 local mb_camera_changed = world:sub{"camera_changed", "main_queue"}
@@ -74,7 +74,7 @@ local PAN_LEFT = false
 local PAN_RIGHT = false
 local ZOOM_FORWARD = false
 local ZOOM_BACK = false
-local icamera = world:interface "ant.camera|camera"
+local icamera = ecs.import.interface "ant.camera|camera"
 local function update_second_view_camera()
     if not camera_mgr.second_camera then return end
     -- local rc = world[camera_mgr.second_camera]._rendercache

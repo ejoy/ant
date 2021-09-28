@@ -106,6 +106,9 @@ local function findScene(hashmap, eid)
 			end
 		end
 	end
+	if e == nil then
+		return
+	end
 	w:sync("scene:in", e)
 	scene = e.scene
 	hashmap[eid] = scene
@@ -131,11 +134,7 @@ function s:entity_init()
 		local scene = v.scene
 		
 		if scene.srt then
-			if type(scene.srt) == "table" then
-				scene.srt = mu.srt_obj(scene.srt)
-			else
-				scene.srt = math3d.ref(scene.srt)
-			end
+			scene.srt = mu.srt_obj(scene.srt)
 		end
 		if scene.updir then
 			scene.updir = math3d.ref(math3d.vector(scene.updir))
@@ -164,13 +163,16 @@ function s:entity_init()
 
 	for _, eid, peid in evOldParentChanged:unpack() do
 		local scene = findScene(hashmap, eid)
-		scene.changed = current_changed
-		if peid then
-			scene.parent = findScene(hashmap, peid).id
-		else
-			scene.parent = nil
+		if scene then
+			scene.changed = current_changed
+			if peid then
+				local parent = findScene(hashmap, peid)
+				scene.parent = parent and parent.id or nil
+			else
+				scene.parent = nil
+			end
+			needsync = true
 		end
-		needsync = true
 	end
 
 	for _, e, parent in evNewParentChanged:unpack() do
@@ -305,16 +307,19 @@ function s:scene_remove()
 	w:clear "scene_changed"
 	if hasSceneRemove() then
 		local cache = {}
-		for v in w:select "scene_sorted scene:in" do
+		for v in w:select "scene_sorted scene:in REMOVED?in" do
 			local scene = v.scene
 			if scene.parent == nil then
+				scene.REMOVED = v.REMOVED
 				cache[scene.id] = scene
 			else
 				local parent = cache[scene.parent]
 				if parent then
 					cache[scene.id] = scene
-					if not scene.removed and parent.removed then
-						scene.removed = true
+					if v.REMOVED then
+						scene.REMOVED = true
+					elseif parent.REMOVED then
+						scene.REMOVED = true
 						w:remove(v)
 					end
 				else

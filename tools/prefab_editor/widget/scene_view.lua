@@ -1,19 +1,23 @@
+local ecs = ...
+local world = ecs.world
+local w = world.w
+
+local iom = ecs.import.interface "ant.objcontroller|obj_motion"
+local icamera = ecs.import.interface "ant.camera|camera"
+local assetmgr  = import_package "ant.asset"
+local icons = require "common.icons"(assetmgr)
+local gizmo = ecs.require "gizmo.gizmo"
+
 local imgui     = require "imgui"
 local math3d    = require "math3d"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
-local hierarchy = require "hierarchy"
+local hierarchy = require "hierarchy_edit"
 
-local gizmo
 local m = {}
-local world
-local asset_mgr
+
 local source_eid = nil
 local target_eid = nil
-local iom
-local iss
-local icons
-local icamera
 local function is_editable(eid)
     --if not world[eid].scene_entity or
     if not hierarchy:is_visible(eid) or
@@ -279,12 +283,4 @@ function m.show()
     end
 end
 
-return function(w, am)
-    world = w
-    asset_mgr = am
-    icons = require "common.icons"(asset_mgr)
-    iom = world:interface "ant.objcontroller|obj_motion"
-    icamera = world:interface "ant.camera|camera"
-    gizmo = require "gizmo.gizmo"(world)
-    return m
-end
+return m

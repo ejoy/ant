@@ -162,6 +162,14 @@ function S.GET(sid, hash)
 	end
 end
 
+function S.FETCH(sid, path)
+	local repo = assert(SESSION[sid], "Need ROOT.")
+	local hashs = repo:fetch(path)
+	if hashs then
+		return table.concat(hashs, "|")
+	end
+end
+
 function S.BUILD(sid, path, lpath)
 	local repo = assert(SESSION[sid], "Need ROOT.")
 	return repo:build_dir(path, lpath)

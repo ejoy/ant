@@ -2,12 +2,14 @@ local ecs = ...
 local world = ecs.world
 
 local init_sys   = ecs.system "init_system"
-local iRmlUi     = world:interface "ant.rmlui|rmlui"
+local iRmlUi     = ecs.import.interface "ant.rmlui|rmlui"
+local bgfx     = require "bgfx"
 
 local OpenDebugger  = false
 local eventKeyboard = world:sub {"keyboard", "F8"}
 
 function init_sys:post_init()
+    bgfx.maxfps(60)
 	iRmlUi.preload_dir "/pkg/ant.test.rmlui/ui"
     local window = iRmlUi.open "start.rml"
     window.postMessage("hello")

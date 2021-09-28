@@ -4,40 +4,41 @@ local math3d    = require "math3d"
 local imgui     = require "imgui"
 local rhwi      = import_package "ant.hwi"
 local asset_mgr = import_package "ant.asset"
-local effekseer_filename_mgr = world:interface "ant.effekseer|filename_mgr"
-local irq       = world:interface "ant.render|irenderqueue"
-local ies       = world:interface "ant.scene|ientity_state"
-local iom       = world:interface "ant.objcontroller|obj_motion"
-local iss       = world:interface "ant.scene|iscenespace"
-local icoll     = world:interface "ant.collision|collider"
-local drawer    = world:interface "ant.render|iwidget_drawer"
-local imaterial   = world:interface "ant.asset|imaterial"
+local effekseer_filename_mgr = ecs.import.interface "ant.effekseer|filename_mgr"
+local irq       = ecs.import.interface "ant.render|irenderqueue"
+local ies       = ecs.import.interface "ant.scene|ientity_state"
+local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
+local iss       = ecs.import.interface "ant.scene|iscenespace"
+local icoll     = ecs.import.interface "ant.collision|collider"
+local drawer    = ecs.import.interface "ant.render|iwidget_drawer"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local isp 		= ecs.import.interface "ant.render|isystem_properties"
+local resource_browser  = ecs.require "widget.resource_browser"
+local anim_view         = ecs.require "widget.animation_view"
+local material_view     = ecs.require "widget.material_view"
+local toolbar           = ecs.require "widget.toolbar"
+local scene_view        = ecs.require "widget.scene_view"
+local inspector         = ecs.require "widget.inspector"
+local gridmesh_view     = ecs.require "widget.gridmesh_view"
+local prefab_mgr        = ecs.require "prefab_manager"
+prefab_mgr.set_anim_view(anim_view)
+local menu              = ecs.require "widget.menu"
+local camera_mgr        = ecs.require "camera_manager"
+local gizmo             = ecs.require "gizmo.gizmo"
+local uiconfig          = require "widget.config"
 local vfs       = require "vfs"
 local access    = require "vfs.repoaccess"
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
-local hierarchy = require "hierarchy"
-local resource_browser = require "widget.resource_browser"(world, asset_mgr)
-local anim_view = require "widget.animation_view"(world, asset_mgr)
-local material_view = require "widget.material_view"(world, asset_mgr)
-local log_widget = require "widget.log"(asset_mgr)
-local console_widget = require "widget.console"(asset_mgr)
-local toolbar = require "widget.toolbar"(world, asset_mgr)
-local scene_view = require "widget.scene_view"(world, asset_mgr)
-local inspector = require "widget.inspector"(world)
-local gridmesh_view = require "widget.gridmesh_view"(world)
-local uiconfig = require "widget.config"
-local prefab_mgr = require "prefab_manager"(world)
-local menu = require "widget.menu"(world, prefab_mgr)
-local camera_mgr = require "camera_manager"(world)
-local gizmo = require "gizmo.gizmo"(world)
+local hierarchy = require "hierarchy_edit"
 local global_data = require "common.global_data"
-local icons = require "common.icons"(asset_mgr)
-local logger = require "widget.log"(asset_mgr)
 local gizmo_const = require "gizmo.const"
 local new_project = require "common.new_project"
 local widget_utils = require "widget.utils"
 local utils = require "common.utils"
+local icons = require "common.icons"(asset_mgr)
+local log_widget = require "widget.log"(asset_mgr)
+local console_widget = require "widget.console"(asset_mgr)
 local m = ecs.system 'gui_system'
 local drag_file = nil
 
@@ -76,19 +77,11 @@ local function get_package(entry_path, readmount)
     local packages = {}
     for _, name in ipairs(repo._mountname) do
         vfs.mount(name, repo._mountpoint[name]:string())
-        local key
+        local key = name
         local skip = false
-        if utils.start_with(name, "pkg/ant.") then
-            if name == "pkg/ant.resources" or name == "pkg/ant.resources.binary" then
-                key = "/"..name
-            else
+        if utils.start_with(name, "/pkg/ant.") then
+            if name ~= "/pkg/ant.resources" and name ~= "/pkg/ant.resources.binary" then
                 skip = true
-            end
-        else
-            if utils.start_with(name, "pkg/") then
-                key = "/"..name
-            else
-                key = name
             end
         end
         if not skip then
@@ -118,7 +111,7 @@ local function choose_project()
                     break
                 end
                 if not_empty then
-                    logger.error({tag = "Editor", message = "folder not empty!"})
+                    log_widget.error({tag = "Editor", message = "folder not empty!"})
                 else
                     global_data.project_root = lpath
                     on_new_project(path)
@@ -164,7 +157,7 @@ local function choose_project()
                         print("Can not add effekseer resource seacher path.")
                     end
                 else
-                    logger.error({tag = "Editor", message = "no project exist!"})
+                    log_widget.error({tag = "Editor", message = "no project exist!"})
                 end
             end
         end
@@ -222,8 +215,8 @@ local function show_dock_space(offset_x, offset_y)
     imgui.windows.End()
     return x,y,w,h
 end
-local iRmlUi    = world:interface "ant.rmlui|rmlui"
-local irq       = world:interface "ant.render|irenderqueue"
+local iRmlUi    = ecs.import.interface "ant.rmlui|rmlui"
+local irq       = ecs.import.interface "ant.render|irenderqueue"
 local bgfx      = require "bgfx"
 local stat_window
 local dock_x, dock_y, dock_width, dock_height
@@ -272,7 +265,7 @@ function m:ui_update()
     end
 
     if not stat_window then
-        local iRmlUi = world:interface "ant.rmlui|rmlui"
+        local iRmlUi = ecs.import.interface "ant.rmlui|rmlui"
         stat_window = iRmlUi.open "bgfx_stat.rml"
     end
     local bgfxstat = bgfx.get_stats("sdcpnmtv")
@@ -294,7 +287,7 @@ local event_window_title = world:sub {"WindowTitle"}
 local event_create = world:sub {"Create"}
 local event_gizmo = world:sub {"Gizmo"}
 
-local light_gizmo = require "gizmo.light"(world)
+local light_gizmo = ecs.require "gizmo.light"
 
 local function on_target(old, new)
     local old_entity = type(old) == "table" and icamera.find_camera(old) or world[old]
@@ -332,7 +325,7 @@ local function on_update(eid)
     inspector.update_template_tranform(eid)
 end
 
-local cmd_queue = require "gizmo.command_queue"(world)
+local cmd_queue = ecs.require "gizmo.command_queue"
 local event_update_aabb = world:sub {"UpdateAABB"}
 function m:handle_event()
     for _, col_eid in event_update_aabb:unpack() do
@@ -399,6 +392,15 @@ function m:handle_event()
             if world[eid].light_type then
                 world:pub{"component_changed", "light", eid, "visible", value}
             end
+            for e in world.w:select "eid:in" do
+                if world[e.eid] and world[e.eid].parent == eid then
+                    if world[e.eid].ibl then
+                        isp.enable_ibl(value)
+                    end
+                    break
+                end
+            end
+            
         elseif what == "lock" then
             hierarchy:set_lock(eid, value)
         elseif what == "delete" then
@@ -474,7 +476,7 @@ function m:handle_event()
 end
 
 local DEFAULT_COLOR <const> = 0xffffff00
-local geo_utils = require "editor.geometry_utils"(world)
+local geo_utils = ecs.require "editor.geometry_utils"
 local anim_entity
 local anim_transform = math3d.ref()
 local current_skeleton

@@ -14,8 +14,8 @@ local crypt     = require "crypt"
 
 local assetmgr  = import_package "ant.asset"
 
-local imaterial = world:interface "ant.asset|imaterial"
-local ibaker    = world:interface "ant.bake|ibaker"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local ibaker    = ecs.import.interface "ant.bake|ibaker"
 
 local bake_lm_sys = ecs.system "bake_lightmap_system"
 local bake_fx<const> = {
@@ -204,7 +204,7 @@ function bake_lm_sys:end_frame()
     for msg in bake_mb:each() do
         local id = msg[2]
         ltask.fork(function ()
-            local ServiceBgfxMain = ltask.queryservice "bgfx_main"
+            local ServiceBgfxMain = ltask.queryservice "ant.render|bgfx_main"
             ltask.call(ServiceBgfxMain, "pause")
             bgfx.encoder_begin()
             _bake(id)

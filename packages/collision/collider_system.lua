@@ -51,7 +51,7 @@ end
 
 local tcb = ecs.transform "terrain_collider_transform"
 
-local iterrain = world:interface "ant.terrain|terrain"
+local iterrain = ecs.import.interface "ant.terrain|terrain"
 
 function tcb.process_entity(e)
 	local terraincomp = e.terrain
@@ -164,7 +164,7 @@ function collider_sys:data_changed()
 	end
 end
 
-local iom = world:interface "ant.objcontroller|obj_motion"
+local iom = ecs.import.interface "ant.objcontroller|obj_motion"
 
 function collider_sys:update_collider_transform()
 	for v in w:select "scene_changed collider:in scene:in" do

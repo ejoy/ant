@@ -4,26 +4,8 @@ local sha1 = require "hash".sha1
 local serialize = import_package "ant.serialize".stringify
 local datalist = require "datalist"
 local config = require "config"
-local compile
-
-local function normalize(p)
-    local stack = {}
-    p:gsub('[^/]*', function (w)
-        if #w == 0 and #stack ~= 0 then
-        elseif w == '..' and #stack ~= 0 and stack[#stack] ~= '..' then
-            stack[#stack] = nil
-        elseif w ~= '.' then
-            stack[#stack + 1] = w
-        end
-    end)
-    return table.concat(stack, "/")
-end
-
-local function split(str)
-    local r = {}
-    str:gsub('[^|]*', function (w) r[#r+1] = w end)
-    return r
-end
+local vfs = require "vfs"
+local compile = require "compile".compile
 
 local ResourceCompiler = {
     glb = "editor.model.convert",
@@ -32,7 +14,6 @@ local ResourceCompiler = {
     sc = "editor.fx.convert",
 }
 
-local vfs = require "vfs"
 for ext, compiler in pairs(ResourceCompiler) do
     local cfg = config.get(ext)
     cfg.binpath = lfs.path(vfs.repopath()) / ".build" / ext
@@ -159,21 +140,9 @@ local function compile_virtualfile(url)
     return output
 end
 
-local function split_path(pathstring)
-    local pathlst = split(pathstring)
-    local res = {}
-    for i = 1, #pathlst - 1 do
-        local path = normalize(pathlst[i])
-        local ext = path:match "[^/]%.([%w*?_%-]*)$"
-        local cfg = config.get(ext)
-        res[#res+1] = path .. "?" .. cfg.arguments
-    end
-    res[#res+1] = pathlst[#pathlst]
-    return res
-end
-
-local function compile_dir(urllst)
+function vfs.resource(urllst)
     local url = urllst[1]
+    url = '/'..url
     if #urllst == 1 then
         if url:match "?" then
             return compile_virtualfile(url)
@@ -191,28 +160,4 @@ local function compile_dir(urllst)
     return folder
 end
 
-function compile(pathstring)
-    return compile_dir(split_path(pathstring))
-end
-
-local function compile_url(pathstring)
-    local lst = {}
-    local dir = {}
-    pathstring:gsub('[^/]*', function (w)
-        dir[#dir+1] = w
-        if w:match "%?" then
-            lst[#lst+1] = table.concat(dir, "/")
-            dir = {}
-        end
-    end)
-    if #dir > 0 then
-        lst[#lst+1] = table.concat(dir, "/")
-    end
-    return compile_dir(lst)
-end
-
-return {
-    compile_url = compile_url,
-    compile_dir = compile_dir,
-    compile = compile,
-}
+vfs.sync.resource = vfs.resource

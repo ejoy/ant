@@ -1,13 +1,17 @@
-local imgui     = require "imgui"
-local utils     = require "common.utils"
-local math3d    = require "math3d"
-local uiproperty = require "widget.uiproperty"
-local hierarchy     = require "hierarchy"
-local effekseer = require "effekseer"
+local ecs = ...
+local world = ecs.world
+local w = world.w
+ecs.require "widget.base_view"
+local imgui         = require "imgui"
+local utils         = require "common.utils"
+local math3d        = require "math3d"
+local uiproperty    = require "widget.uiproperty"
+local hierarchy     = require "hierarchy_edit"
+local effekseer     = require "effekseer"
 local BaseView      = require "widget.view_class".BaseView
-local EffectView  = require "widget.view_class".EffectView
-local ui_auto_play = {false}
-local ui_loop = { true }
+local EffectView    = require "widget.view_class".EffectView
+local ui_auto_play  = {false}
+
 function EffectView:_init()
     BaseView._init(self)
     self.speed = uiproperty.Float({label = "Speed", min = 0.01, max = 10.0, speed = 0.01}, {})
@@ -27,8 +31,8 @@ end
 function EffectView:update()
     BaseView.update(self)
     self.speed:update()
-    ui_auto_play[1] = world[self.eid].effect_instance.auto_play
-    ui_loop[1] = world[self.eid].effect_instance.loop
+    local template = hierarchy:get_template(self.eid)
+    ui_auto_play[1] = template.template.data.auto_play
 end
 
 function EffectView:show()
@@ -38,30 +42,35 @@ function EffectView:show()
     if imgui.widget.Checkbox("##auto_play", ui_auto_play) then
         self:on_set_auto_play(ui_auto_play[1])
     end
-    imgui.widget.PropertyLabel("loop")
-    if imgui.widget.Checkbox("##loop", ui_loop) then
-        self:on_set_loop(ui_loop[1])
+    -- imgui.widget.PropertyLabel("loop")
+    -- if imgui.widget.Checkbox("##loop", ui_loop) then
+    --     self:on_set_loop(ui_loop[1])
+    -- end
+    imgui.widget.PropertyLabel("Play")
+    if imgui.widget.Button("Play") then
+        local instance = world[self.eid].effect_instance
+        instance.playid = effekseer.play(instance.handle, instance.playid)
+        effekseer.set_speed(instance.handle, instance.playid, instance.speed)
     end
 end
 
 function EffectView:on_set_speed(value)
+    local template = hierarchy:get_template(self.eid)
+    template.template.data.speed = value
     local instance = world[self.eid].effect_instance
     instance.speed = value
-    effekseer.set_speed(instance.handle, value)
+    effekseer.set_speed(instance.handle, instance.playid, value)
 end
 
 function EffectView:on_set_auto_play(value)
-    world[self.eid].effect_instance.auto_play = value
+    local template = hierarchy:get_template(self.eid)
+    template.template.data.auto_play = value
 end
 
 function EffectView:on_set_loop(value)
     local instance = world[self.eid].effect_instance
     instance.loop = value
-    effekseer.set_loop(instance.handle, value)
+    effekseer.set_loop(instance.handle, instance.playid, value)
 end
 
-return function(w)
-    world   = w
-    require "widget.base_view"(world)
-    return EffectView
-end
+return EffectView

@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_STRINGUTILITIES_H
 #define RMLUI_CORE_STRINGUTILITIES_H
 
-#include "Header.h"
+#include "Platform.h"
 #include "Types.h"
 
 namespace Rml {
@@ -42,10 +42,10 @@ namespace Rml {
 class StringView;
 
 /// Construct a string using sprintf-style syntax.
-RMLUICORE_API std::string CreateString(size_t max_size, const char* format, ...) RMLUI_ATTRIBUTE_FORMAT_PRINTF(2,3);
+std::string CreateString(size_t max_size, const char* format, ...) RMLUI_ATTRIBUTE_FORMAT_PRINTF(2,3);
 
 /// Format to a string using sprintf-style syntax.
-RMLUICORE_API int FormatString(std::string& string, size_t max_size, const char* format, ...) RMLUI_ATTRIBUTE_FORMAT_PRINTF(3,4);
+int FormatString(std::string& string, size_t max_size, const char* format, ...) RMLUI_ATTRIBUTE_FORMAT_PRINTF(3,4);
 
 template <typename  T>
 T FromString(const std::string& str, T def = T{});
@@ -59,7 +59,7 @@ namespace StringUtilities
 	/// @param[out] string_list Resulting list of values.
 	/// @param[in] string std::string to expand.
 	/// @param[in] delimiter Delimiter found between entries in the string list.
-	RMLUICORE_API void ExpandString(std::vector<std::string>& string_list, const std::string& string, const char delimiter = ',');
+	void ExpandString(std::vector<std::string>& string_list, const std::string& string, const char delimiter = ',');
 	/// Expands character-delimited list of values with custom quote characters.
 	/// @param[out] string_list Resulting list of values.
 	/// @param[in] string std::string to expand.
@@ -67,15 +67,15 @@ namespace StringUtilities
 	/// @param[in] quote_character Begin quote
 	/// @param[in] unquote_character End quote
 	/// @param[in] ignore_repeated_delimiters If true, repeated values of the delimiter will not add additional entries to the list.
-	RMLUICORE_API void ExpandString(std::vector<std::string>& string_list, const std::string& string, const char delimiter, char quote_character, char unquote_character, bool ignore_repeated_delimiters = false);
+	void ExpandString(std::vector<std::string>& string_list, const std::string& string, const char delimiter, char quote_character, char unquote_character, bool ignore_repeated_delimiters = false);
 
 	/// Converts upper-case characters in string to lower-case.
-	RMLUICORE_API std::string ToLower(const std::string& string);
+	std::string ToLower(const std::string& string);
 
 	// Replaces all occurences of 'search' in 'subject' with 'replace'.
-	RMLUICORE_API std::string Replace(std::string subject, const std::string& search, const std::string& replace);
+	std::string Replace(std::string subject, const std::string& search, const std::string& replace);
 	// Replaces all occurences of 'search' in 'subject' with 'replace'.
-	RMLUICORE_API std::string Replace(std::string subject, char search, char replace);
+	std::string Replace(std::string subject, char search, char replace);
 
 	/// Checks if a given value is a whitespace character.
 	inline bool IsWhitespace(const char x)
@@ -84,13 +84,13 @@ namespace StringUtilities
 	}
 
 	/// Strip whitespace characters from the beginning and end of a string.
-	RMLUICORE_API std::string StripWhitespace(const std::string& string);
+	std::string StripWhitespace(const std::string& string);
 
 	/// Strip whitespace characters from the beginning and end of a string.
-	RMLUICORE_API std::string StripWhitespace(StringView string);
+	std::string StripWhitespace(StringView string);
 
 	// Decode the first code point in a zero-terminated UTF-8 string.
-	RMLUICORE_API Character ToCharacter(const char* p);
+	Character ToCharacter(const char* p);
 
 
 	// Seek forward in a UTF-8 string, skipping continuation bytes.
@@ -115,7 +115,7 @@ namespace StringUtilities
 	The string view is agnostic to the underlying encoding, any operation will strictly operate on bytes.
 */
 
-class RMLUICORE_API StringView {
+class StringView {
 public:
 	StringView();
 	StringView(const char* p_begin, const char* p_end);
@@ -142,7 +142,7 @@ private:
 };
 
 
-class RMLUICORE_API StringIteratorU8 {
+class StringIteratorU8 {
 public:
 	StringIteratorU8(const char* p_begin, const char* p, const char* p_end);
 	StringIteratorU8(const std::string& string);

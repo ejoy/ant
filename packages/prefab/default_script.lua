@@ -22,20 +22,24 @@ function event.autoplay(tag_name, anim_name)
     tag(tag_name) : autoplay(anim_name)
 end
 
-function event.play(tag_name, anim_name, loop, pause)
-    tag(tag_name) : play(anim_name, loop, pause)
+function event.play_effect(tag_name, loop, pause)
+    tag(tag_name) : play_effect(loop, pause)
+end
+
+function event.play_anim(tag_name, anim_state)
+    tag(tag_name) : play_anim(anim_state)
 end
 
 function event.stop(tag_name, anim_name)
     tag(tag_name) : stop(anim_name)
 end
 
-function event.play_clip(tag_name, anim_name, loop, pause)
-    tag(tag_name) : play_clip(anim_name, loop, pause)
+function event.play_clip(tag_name, anim_state)
+    tag(tag_name) : play_clip(anim_state)
 end
 
-function event.play_group(tag_name, anim_name, loop, pause)
-    tag(tag_name) : play_group(anim_name, loop, pause)
+function event.play_group(tag_name, anim_state)
+    tag(tag_name) : play_group(anim_state)
 end
 
 function event.duration(tag_name, anim_name)

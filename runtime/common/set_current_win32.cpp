@@ -30,12 +30,19 @@ wchar_t* appdata_path() {
 }
 
 int runtime_setcurrent(lua_State* L) {
-    wchar_t* dir = appdata_path();
+    wchar_t dir[MAX_PATH];
+    wchar_t* path = appdata_path();
+    wcsncpy(dir, path, MAX_PATH);
+    CoTaskMemFree(path);
     PathAppendW(dir, L"ant");
     CreateDirectoryW(dir, NULL);
     PathAppendW(dir, L"runtime");
     CreateDirectoryW(dir, NULL);
     SetCurrentDirectoryW(dir);
     repo_setup(dir);
+    return 0;
+}
+
+int runtime_args(lua_State* L) {
     return 0;
 }

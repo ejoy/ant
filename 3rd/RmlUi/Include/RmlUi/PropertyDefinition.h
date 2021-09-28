@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_PROPERTYDEFINITION_H
 #define RMLUI_CORE_PROPERTYDEFINITION_H
 
-#include "Header.h"
+#include "Platform.h"
 #include "Property.h"
 #include "PropertyParser.h"
 
@@ -39,9 +39,10 @@ namespace Rml {
 	@author Peter Curry
  */
 
-class RMLUICORE_API PropertyDefinition final
+class PropertyDefinition final
 {
 public:
+	PropertyDefinition(PropertyId id, bool inherited);
 	PropertyDefinition(PropertyId id, const std::string& default_value, bool inherited);
 	PropertyDefinition(const PropertyDefinition &) = delete; 
 	PropertyDefinition& operator=(const PropertyDefinition &) = delete;

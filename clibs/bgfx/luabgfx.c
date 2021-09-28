@@ -2952,10 +2952,11 @@ ENCODER_API(lsetVertexBuffer) {
 				vb.handle = luaL_optinteger(L, lua_base, BGFX_HANDLE_VERTEX_BUFFER | UINT16_MAX);
 				vb.tb = NULL;
 			}
-			start = luaL_optinteger(L, lua_base + 1, 0);
-			numv = luaL_optinteger(L, lua_base + 2, UINT32_MAX);
-			layout = lua_isnoneornil(L, lua_base + 3) ? NULL : (struct vertex_layout *)lua_touserdata(L, lua_base + 3);
 		}
+
+		start = luaL_optinteger(L, lua_base + 1, 0);
+		numv = luaL_optinteger(L, lua_base + 2, UINT32_MAX);
+		layout = lua_isnoneornil(L, lua_base + 3) ? NULL : (struct vertex_layout *)lua_touserdata(L, lua_base + 3);
 	}
 
 	do {

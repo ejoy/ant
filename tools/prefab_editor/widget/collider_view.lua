@@ -1,14 +1,18 @@
+local ecs = ...
+local world = ecs.world
+local w = world.w
+ecs.require "widget.base_view"
+local iom           = ecs.import.interface "ant.objcontroller|obj_motion"
+local imaterial     = ecs.import.interface "ant.asset|imaterial"
+local prefab_mgr    = ecs.require "prefab_manager"
+local anim_view     = ecs.require "widget.animation_view"
 local imgui     = require "imgui"
 local utils     = require "common.utils"
 local math3d    = require "math3d"
 local uiproperty = require "widget.uiproperty"
-local hierarchy     = require "hierarchy"
+local hierarchy     = require "hierarchy_edit"
 local BaseView      = require "widget.view_class".BaseView
 local ColliderView  = require "widget.view_class".ColliderView
-local world
-local iom
-local prefab_mgr
-local anim_view
 local collider_type = {"sphere", "box", "capsule"}
 
 function ColliderView:_init()
@@ -116,11 +120,4 @@ function ColliderView:show()
     self.color:show()
 end
 
-return function(w)
-    world   = w
-    iom = world:interface "ant.objcontroller|obj_motion"
-    prefab_mgr = require "prefab_manager"(world)
-    require "widget.base_view"(world)
-    anim_view = require "widget.animation_view"(world, import_package "ant.asset")
-    return ColliderView
-end
+return ColliderView

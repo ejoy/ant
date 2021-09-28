@@ -108,10 +108,11 @@ function m.get_saveas_path(filetype, extension)
     }
     local ok, path = filedialog.save(dialog_info)
     if ok then
-        path = string.gsub(path, "\\", "/") .. extension
-        local pos = string.find(path, "%"..extension)
-        if #path > pos + #extension - 1 then
-            path = string.sub(path, 1, pos + #extension - 1)
+        local ext = "."..extension
+        path = string.gsub(path, "\\", "/") .. ext
+        local pos = string.find(path, "%"..ext)
+        if #path > pos + #ext - 1 then
+            path = string.sub(path, 1, pos + #ext - 1)
         end
         return path
     end
@@ -125,10 +126,11 @@ function m.get_open_file_path(filetype, extension)
     }
     local ok, path = filedialog.open(dialog_info)
     if ok then
-        path = string.gsub(path[1], "\\", "/") .. extension
-        local pos = string.find(path, "%"..extension)
-        if #path > pos + #extension - 1 then
-            path = string.sub(path, 1, pos + #extension - 1)
+        local ext = "."..extension
+        path = string.gsub(path[1], "\\", "/") .. ext
+        local pos = string.find(path, "%"..ext)
+        if #path > pos + #ext - 1 then
+            path = string.sub(path, 1, pos + #ext - 1)
         end
         return path
     end

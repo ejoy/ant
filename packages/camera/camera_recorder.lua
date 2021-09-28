@@ -5,9 +5,9 @@ local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
 
 local math3d = require "math3d"
-local timer = world:interface "ant.timer|itimer"
-local icamera = world:interface "ant.camera|camera"
-local iom = world:interface "ant.objcontroller|obj_motion"
+local timer = ecs.import.interface "ant.timer|itimer"
+local icamera = ecs.import.interface "ant.camera|camera"
+local iom = ecs.import.interface "ant.objcontroller|obj_motion"
 
 
 local cq_trans = ecs.transform "camera_recorder_transform"

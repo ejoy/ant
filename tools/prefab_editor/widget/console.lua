@@ -105,7 +105,7 @@ function m.show()
     end
 end
 
-return function(am)
-    log_widget = require "widget.log"(am)
+return function(asset_mgr)
+    log_widget = require "widget.log"(asset_mgr)
     return m
 end

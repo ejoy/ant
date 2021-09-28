@@ -1,11 +1,13 @@
+local ecs = ...
+local world = ecs.world
+local w = world.w
 local imgui     = require "imgui"
 local math3d    = require "math3d"
-local hierarchy = require "hierarchy"
+local hierarchy = require "hierarchy_edit"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local uiproperty = require "widget.uiproperty"
 local brush_def = require "brush_def"
-local world
 local prefab_mgr
 local m = {}
 local interp_type = {"linear", "const"}
@@ -266,7 +268,4 @@ function m.show()
     end
 end
 
-return function(w)
-    world = w
-    return m
-end
+return m

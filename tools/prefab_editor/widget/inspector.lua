@@ -1,19 +1,23 @@
+local ecs = ...
+local world = ecs.world
+local w = world.w
+
+local iom           = ecs.import.interface "ant.objcontroller|obj_motion"
+local icamera       = ecs.import.interface "ant.camera|camera"
+local ilight        = ecs.import.interface "ant.render|light"
+local camera_mgr    = ecs.require "camera_manager"
+local gizmo         = ecs.require "gizmo.gizmo"
+local light_gizmo   = ecs.require "gizmo.light"
+local anim_view     = ecs.require "widget.animation_view"
+
 local imgui     = require "imgui"
 local math3d    = require "math3d"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
-local hierarchy = require "hierarchy"
-local uiproperty    = require "widget.uiproperty"
-local light_gizmo
-local gizmo
+local hierarchy = require "hierarchy_edit"
+local uiproperty = require "widget.uiproperty"
 
 local m = {}
-local world
-local worldedit
-local iom
-local icamera
-local anim_view
-local camera_mgr
 local light_panel
 local camera_panel
 local material_panel
@@ -202,55 +206,55 @@ end
 
 local function get_camera_panel()
     if not camera_panel then
-        camera_panel = require "widget.camera_view"(world)()
+        camera_panel = ecs.require "widget.camera_view"()
     end
     return camera_panel
 end
 
 local function get_light_panel()
     if not light_panel then
-        light_panel = require "widget.light_view"(world)()
+        light_panel = ecs.require "widget.light_view"()
     end
     return light_panel
 end
 
 local function get_material_panel()
     if not material_panel then
-        material_panel = require "widget.material_view"(world)()
+        material_panel = ecs.require "widget.material_view"()
     end
     return material_panel
 end
 
 local function get_base_panel()
     if not base_panel then
-        base_panel = require "widget.base_view"(world)()
+        base_panel = ecs.require "widget.base_view"()
     end
     return base_panel
 end
 
 local function get_slot_panel()
     if not slot_panel then
-        slot_panel = require "widget.slot_view"(world)()
+        slot_panel = ecs.require "widget.slot_view"()
     end
     return slot_panel
 end
 
 local function get_collider_panel()
     if not collider_panel then
-        collider_panel = require "widget.collider_view"(world)()
+        collider_panel = ecs.require "widget.collider_view"()
     end
     return collider_panel
 end
 local function get_effect_panel()
     if not effect_panel then
-        effect_panel = require "widget.effect_view"(world)()
+        effect_panel = ecs.require "widget.effect_view"()
     end
     return effect_panel
 end
 
 local function get_skybox_panel()
     if not skybox_panel then
-        skybox_panel = require "widget.skybox_view"(world)()
+        skybox_panel = ecs.require "widget.skybox_view"()
     end
     return skybox_panel
 end
@@ -296,18 +300,4 @@ function m.show()
     end
 end
 
-return function(w)
-    world           = w
-    iom             = world:interface "ant.objcontroller|obj_motion"
-    icamera         = world:interface "ant.camera|camera"
-    ilight          = world:interface "ant.render|light"
-    worldedit       = import_package "ant.editor".worldedit(world)
-    camera_mgr      = require "camera_manager"(world)
-    gizmo           = require "gizmo.gizmo"(world)
-    light_gizmo     = require "gizmo.light"(world)
-    light_view      = require "widget.light_view"(world)
-    anim_view       = require "widget.animation_view"(world, import_package "ant.asset")
-    camera_view     = require "widget.camera_view"(world)
-    material_view   = require "widget.material_view"(world)
-    return m
-end
+return m

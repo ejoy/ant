@@ -91,21 +91,17 @@ void Model::CreateFromScene(ID3D11Device *device, const Scene *scene, bool force
         auto dir = GetDirectoryFromFilePath(diffuse.c_str());
         material.DiffuseMapName = GetFileName(diffuse.c_str());
 
-        auto normal = AnsiToWString(m.normal.c_str());
-        assert(dir == GetDirectoryFromFilePath(normal.c_str()));
-        material.NormalMapName = GetFileName(normal.c_str());
+        auto get_name = [&dir](const auto& fn, auto &n){
+            if (!fn.empty()){
+                auto nn = AnsiToWString(fn.c_str());
+                assert(dir == GetDirectoryFromFilePath(nn.c_str()));
+                n = GetFileName(nn.c_str());
+            }
+        };
 
-        if (!m.roughness.empty()){
-            auto roughness = AnsiToWString(m.roughness.c_str());
-            assert(dir == GetDirectoryFromFilePath(roughness.c_str()));
-            material.RoughnessMapName = GetFileName(roughness.c_str());
-        }
-
-        if (!m.metallic.empty()){
-            auto metallic = AnsiToWString(m.metallic.c_str());
-            assert(dir == GetDirectoryFromFilePath(metallic.c_str()));
-            material.MetallicMapName = GetFileName(metallic.c_str());
-        }
+        get_name(m.normal, material.NormalMapName);
+        get_name(m.roughness, material.RoughnessMapName);
+        get_name(m.metallic, material.MetallicMapName);
 
         LoadMaterialResources(material, dir, device, forceSRGB);
 

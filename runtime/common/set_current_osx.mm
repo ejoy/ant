@@ -35,3 +35,7 @@ int runtime_setcurrent(lua_State* L) {
     chdir("./ant/runtime/");
     return 0;
 }
+
+int runtime_args(lua_State* L) {
+    return 0;
+}

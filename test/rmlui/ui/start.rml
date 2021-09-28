@@ -6,14 +6,13 @@
                 margin-left: 60%;
                 margin-right: 10%;
                 margin-top: 10%;
-                margin-bottom: 50%;
+                margin-bottom: 20%;
             }
             button {
                 margin: 10px;
                 padding: 0 20px;
                 text-align: center;
                 text-decoration: none;
-                border-radius: 15px;
                 border-radius: 10px;
                 border: 1px black;
                 opacity: 0.5;

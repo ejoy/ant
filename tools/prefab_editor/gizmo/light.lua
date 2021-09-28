@@ -1,13 +1,18 @@
+local ecs = ...
+local world = ecs.world
+local w = world.w
+
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local computil  = ecs.import.interface "ant.render|entity"
+local ilight    = ecs.import.interface "ant.render|light"
+local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
+local iss       = ecs.import.interface "ant.scene|iscenespace"
+local ies       = ecs.import.interface "ant.scene|ientity_state"
+local geo_utils = ecs.require "editor.geometry_utils"
+
 local math3d = require "math3d"
 local gizmo_const = require "gizmo.const"
 local bgfx = require "bgfx"
-local geo_utils
-local ilight
-local iss
-local computil
-local iom
-local ies
-local imaterial
 
 local m = {
     directional = {
@@ -82,7 +87,7 @@ function m.highlight(b)
     end
 end
 
-local function create_gizmo_root()
+local function create_gizmo_root(initpos, introt)
     return world:deprecated_create_entity{
 		policy = {
 			"ant.general|name",
@@ -90,15 +95,15 @@ local function create_gizmo_root()
             "ant.scene|hierarchy_policy",
 		},
 		data = {
-			transform = {},
+			transform = {t = initpos or {0,0,0}, r = introt or {0,0,0,1}},
 			name = "gizmo root",
             scene_entity = true,
 		},
     }
 end
 
-local function create_directional_gizmo()
-    local root = create_gizmo_root()
+local function create_directional_gizmo(initpos, introt)
+    local root = create_gizmo_root(initpos, introt)
     local circle_eid = computil.create_circle_entity(RADIUS, SLICES, {}, "directional gizmo circle")
     ies.set_state(circle_eid, "auxgeom", true)
     imaterial.set_property(circle_eid, "u_color", gizmo_const.COLOR_GRAY)
@@ -219,7 +224,7 @@ function m.on_remove_light(eid)
 end
 
 function m.init()
-    create_directional_gizmo()
+    create_directional_gizmo(iom.get_position(m.current_light), iom.get_rotation(m.current_light))
     m.point.root = create_gizmo_root()
     update_point_gizmo()
     m.spot.root = create_gizmo_root()
@@ -236,14 +241,4 @@ function m.init()
     end
 end
 
-return function(w)
-    world = w
-    imaterial = world:interface "ant.asset|imaterial"
-    computil = world:interface "ant.render|entity"
-    ilight = world:interface "ant.render|light"
-    iom = world:interface "ant.objcontroller|obj_motion"
-    iss = world:interface "ant.scene|iscenespace"
-    ies = world:interface "ant.scene|ientity_state"
-    geo_utils   = require "editor.geometry_utils"(world)
-    return m
-end
+return m

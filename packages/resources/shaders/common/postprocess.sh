@@ -2,10 +2,8 @@
 #define __SHADER_POSTPROCESS_SH__
 
 #include <shaderlib.sh>
-
-SAMPLER2D(s_mainview_depth,     5);
-SAMPLER2D(s_mainview,           6);
-SAMPLER2D(s_postprocess_input,  7);
+SAMPLER2D(s_postprocess_input0,  0);
+SAMPLER2D(s_postprocess_input1,  1);
 
 uniform vec4 u_bright_threshold;
 uniform vec4 u_tonemap_param;

@@ -8,7 +8,6 @@ local STATE_TYPE = {
 	selectable	= 0x00000004,
 
 	--
-	blit_view	= 0x00000008,
 	lightmap	= 0x00000010,
 	--
 	auxgeom		= 0x00010000,

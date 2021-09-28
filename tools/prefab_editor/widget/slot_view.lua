@@ -1,12 +1,15 @@
+local ecs = ...
+local world = ecs.world
+local w = world.w
+ecs.require "widget.base_view"
+
 local imgui     = require "imgui"
 local utils     = require "common.utils"
 local math3d    = require "math3d"
 local uiproperty = require "widget.uiproperty"
-local hierarchy = require "hierarchy"
+local hierarchy = require "hierarchy_edit"
 local BaseView = require "widget.view_class".BaseView
 local SlotView = require "widget.view_class".SlotView
-local world
-local iom
 
 function SlotView:_init()
     BaseView._init(self)
@@ -90,8 +93,4 @@ function SlotView:show()
     self.follow_flag:show()
 end
 
-return function(w)
-    world   = w
-    require "widget.base_view"(world)
-    return SlotView
-end
+return SlotView

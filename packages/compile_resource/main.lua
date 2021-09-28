@@ -2,12 +2,10 @@ local lfs = require "filesystem.local"
 local cm = require "compile"
 local fx = require "load_fx"
 local config = require "config"
+local ltask = require "ltask"
 
-local function set_identity(v)
-    config.set_identity("sc", v)
-    config.set_identity("glb", v)
-    config.set_identity("texture", v)
-    config.set_identity("png", v)
+if not __ANT_RUNTIME__ then
+    require "editor.compile"
 end
 
 local function read_file(filename)
@@ -17,10 +15,19 @@ local function read_file(filename)
     return c
 end
 
+local function init()
+    local v = import_package "ant.hwi".get_identity()
+    config.set_setting("glb", {identity=v})
+    config.set_setting("sc", {identity=v})
+    config.set_setting("texture", {identity=v})
+    config.set_setting("png", {identity=v})
+end
+
 return {
-    set_identity = set_identity,
+    init = init,
     read_file = read_file,
     load_fx = fx.load,
     compile = cm.compile,
-    compile_url = cm.compile_url,
+    compile_path = cm.compile_path,
+    compile_dir = cm.compile_dir,
 }

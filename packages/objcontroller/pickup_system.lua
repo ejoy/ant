@@ -12,9 +12,9 @@ local fbmgr 	= renderpkg.fbmgr
 local samplerutil= renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
 
-local icamera	= world:interface "ant.camera|camera"
-local irender   = world:interface "ant.render|irender"
-local imaterial = world:interface "ant.asset|imaterial"
+local icamera	= ecs.import.interface "ant.camera|camera"
+local irender   = ecs.import.interface "ant.render|irender"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local pickup_materials = {}
 
@@ -180,7 +180,7 @@ local function create_pick_entity()
 		}
 	}
 
-	world:create_entity {
+	ecs.create_entity {
 		policy = {
 			"ant.general|name",
 			"ant.render|render_queue",

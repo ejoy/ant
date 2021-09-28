@@ -4,10 +4,10 @@ local w = world.w
 
 local bgfx = require "bgfx"
 
-local isp		= world:interface "ant.render|isystem_properties"
-local irender	= world:interface "ant.render|irender"
-local ies		= world:interface "ant.scene|ientity_state"
-local icamera	= world:interface "ant.camera|camera"
+local isp		= ecs.import.interface "ant.render|isystem_properties"
+local irender	= ecs.import.interface "ant.render|irender"
+local ies		= ecs.import.interface "ant.scene|ientity_state"
+local icamera	= ecs.import.interface "ant.camera|camera"
 local render_sys = ecs.system "render_system"
 
 function render_sys:entity_init()
@@ -28,6 +28,9 @@ function render_sys:entity_init()
 		pf.filter_type = ies.create_state(pf.filter_type)
 		pf._DEBUG_excule_type = pf.excule_type
 		pf.excule_type = pf.excule_type and ies.create_state(pf.excule_type) or 0
+	end
+	for e in w:select "INIT render_object render_object_update?out" do
+		e.render_object_update = true
 	end
 end
 

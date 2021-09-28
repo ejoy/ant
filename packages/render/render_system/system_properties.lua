@@ -8,12 +8,12 @@ local bgfx		= require "bgfx"
 
 
 local mc		= import_package "ant.math".constant
-local iom		= world:interface "ant.objcontroller|obj_motion"
-local ishadow	= world:interface "ant.render|ishadow"
-local ilight	= world:interface "ant.render|light"
-local itimer	= world:interface "ant.timer|itimer"
-local icamera	= world:interface "ant.camera|camera"
-local iibl		= world:interface "ant.render.ibl|iibl"
+local iom		= ecs.import.interface "ant.objcontroller|obj_motion"
+local ishadow	= ecs.import.interface "ant.render|ishadow"
+local ilight	= ecs.import.interface "ant.render|light"
+local itimer	= ecs.import.interface "ant.timer|itimer"
+local icamera	= ecs.import.interface "ant.camera|camera"
+local iibl		= ecs.import.interface "ant.render.ibl|iibl"
 local isp = ecs.interface "isystem_properties"
 
 local flags = sampler.sampler_flag {
@@ -38,6 +38,8 @@ local def_ibl = {
 	prefilter = {handle = def_cubetex_handle, mipmap_count = 0},
 	LUT = {handle = def_2dtex_handle},
 }
+
+local enable_ibl = true
 
 local system_properties = {
 	--lighting
@@ -84,11 +86,9 @@ local system_properties = {
 	u_tetra_normal_Blue		= {math3d.ref(mc.ZERO),},
 	u_tetra_normal_Red		= {math3d.ref(mc.ZERO),},
 
-	s_omni_shadowmap	= def_tex_prop(9),
-
-	s_mainview_depth	= def_tex_prop(5),
-	s_mainview			= def_tex_prop(6),
-	s_postprocess_input	= def_tex_prop(7),
+	s_omni_shadowmap		= def_tex_prop(9),
+	s_postprocess_input		= def_tex_prop(0),
+	u_camera_param			= math3d.ref(math3d.vector(16.0, 0.008, 100.0, 0.0)),
 }
 
 function isp.get(n)
@@ -96,6 +96,9 @@ function isp.get(n)
 end
 
 local function get_ibl()
+	if not enable_ibl then
+		return def_ibl
+	end
 	local ibl = iibl.get_ibl()
 	return ibl.irradiance.handle and ibl or def_ibl
 end
@@ -196,7 +199,7 @@ local function update_csm_properties()
 end
 
 local function update_omni_shadow_properties()
-	-- local ios = world:interface "ant.render|iomni_shadow"
+	-- local ios = ecs.import.interface "ant.render|iomni_shadow"
 	-- local s = ios.setting()
 	-- system_properties["s_omni_shadowmap"].texture.handle = ios.fb_index()
 
@@ -209,19 +212,6 @@ end
 local function update_shadow_properties()
 	update_csm_properties()
 	update_omni_shadow_properties()
-end
-
-local function update_postprocess_properties()
-	local rt = main_render_target()
-
-	local fbidx = rt.fb_idx
-	local fb = fbmgr.get(fbidx)
-
-	local mv = system_properties["s_mainview"]
-	mv.texture.handle = fbmgr.get_rb(fb[1]).handle
-
-	local mvd = system_properties["s_mainview_depth"]
-	mvd.texture.handle = fbmgr.get_rb(fb[#fb]).handle
 end
 
 local starttime = itimer.current()
@@ -243,5 +233,8 @@ function isp.update()
 	local mainrt = main_render_target()
 	update_lighting_properties(mainrt.view_rect, camerapos, f.n, f.f)
 	update_shadow_properties()
-	update_postprocess_properties()
+end
+
+function isp.enable_ibl(enable)
+	enable_ibl = enable
 end

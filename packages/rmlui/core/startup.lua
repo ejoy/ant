@@ -12,7 +12,7 @@ local quit
 local context
 local debuggerInitialized = false
 
-local ServiceWindow = ltask.queryservice "window"
+local ServiceWindow = ltask.queryservice "ant.window|window"
 
 rmlui.RmlRegisterEevent(require "core.callback")
 
@@ -25,7 +25,7 @@ local function getDelta()
 end
 
 local function Render()
-    local ServiceBgfxMain = ltask.queryservice "bgfx_main"
+    local ServiceBgfxMain = ltask.queryservice "ant.render|bgfx_main"
     ltask.call(ServiceBgfxMain, "encoder_init")
     while not quit do
         local delta = getDelta()
@@ -72,10 +72,10 @@ function S.mouse(x, y, type, state)
     if not context then
         return
     end
-    local MOUSE_TYPE_NONE <const> = 0
-    local MOUSE_TYPE_LEFT <const> = 1
-    local MOUSE_TYPE_RIGHT <const> = 2
-    local MOUSE_TYPE_MIDDLE <const> = 3
+    --local MOUSE_TYPE_NONE <const> = 0
+    --local MOUSE_TYPE_LEFT <const> = 1
+    --local MOUSE_TYPE_RIGHT <const> = 2
+    --local MOUSE_TYPE_MIDDLE <const> = 3
     local MOUSE_STATE_DOWN <const> = 1
     local MOUSE_STATE_MOVE <const> = 2
     local MOUSE_STATE_UP <const> = 3
@@ -88,7 +88,7 @@ function S.mouse(x, y, type, state)
     end
 end
 
-function S.touch(x, y, id, state)
+function S.touch(x, y, _, state)
     if not context then
         return
     end

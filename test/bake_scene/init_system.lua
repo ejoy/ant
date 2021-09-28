@@ -4,18 +4,17 @@ local w = world.w
 
 local math3d    = require "math3d"
 
-local ientity   = world:interface "ant.render|entity"
-local iom       = world:interface "ant.objcontroller|obj_motion"
+local ientity   = ecs.import.interface "ant.render|entity"
+local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
 local is = ecs.system "init_system"
 
 function is:init()
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
     --world:instance "/pkg/ant.test.bake_scene/assets/scene/1.glb|mesh.prefab"
     -- world:instance "/pkg/ant.test.bake_scene/assets/scene/box.prefab"
-    world:instance "/pkg/ant.test.bake_scene/assets/scene/light.prefab"
-    world:instance "/pkg/ant.test.bake_scene/assets/scene/box.glb|mesh.prefab"
-    --world:instance "/pkg/ant.test.bake_scene/assets/scene/box.prefab"
-    --world:instance "/pkg/ant.test.bake_scene/assets/scene/scene.prefab"
+    -- world:instance "/pkg/ant.test.bake_scene/assets/scene/light.prefab"
+    -- world:instance "/pkg/ant.test.bake_scene/assets/scene/box.prefab"
+    world:instance "/pkg/ant.test.bake_scene/assets/scene/scene.prefab"
 end
 
 function is:init_world()

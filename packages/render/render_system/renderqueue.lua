@@ -4,7 +4,7 @@ local w = world.w
 
 local bgfx = require "bgfx"
 local fbmgr = require "framebuffer_mgr"
-local icamera = world:interface "ant.camera|camera"
+local icamera = ecs.import.interface "ant.camera|camera"
 local irq = ecs.interface "irenderqueue"
 
 local function get_rt(queuename)
@@ -118,10 +118,34 @@ function irq.set_frame_buffer(queuename, fbidx)
 	rt.fb_idx = fbidx
 end
 
+local function has_queue(qn)
+    for _ in w:select(qn) do
+        return true
+    end
+end
+
 function irq.set_camera(queuename, camera_ref)
+    if not has_queue(queuename) then
+        error(("not find queue:%s"):format(queuename))
+    end
 	local qe = {camera_changed = true}
 	w:singleton(queuename, "camera_changed?out shadow_render_queue:in", qe)
 	qe.shadow_render_queue.camera_ref = camera_ref
+end
+
+local bm = ecs.action "bind_camera"
+function bm.init(prefab, idx, value)
+    local eid
+    if not value.camera_ref then
+        eid = prefab[idx]
+    else
+        eid = prefab[idx][value.camera_ref]
+    end
+    irq.set_camera(value.which, eid)
+end
+
+function ecs.method.bind_camera(camera_ref, queuename)
+    irq.set_camera(queuename, camera_ref)
 end
 
 function irq.set_visible(queuename, b)

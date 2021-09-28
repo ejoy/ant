@@ -201,12 +201,12 @@ end
 
 local load_interface do
 	local genenv
-	load_interface = function (self, packname, filename, result)
+	load_interface = function (self, current, packname, filename, result)
 		if self.loaded[packname.."/"..filename] then
 			return result
 		end
 		self.loaded[packname.."/"..filename] = true
-		local f = self.loader(packname, filename)
+		local f = self.loader(current, packname, filename)
 		assert(debug.getupvalue(f,1) == "_ENV")
 		debug.setupvalue(f,1,genenv(self, packname, result))
 		f()
@@ -225,7 +225,7 @@ local load_interface do
 					fname = "package.ecs"
 				end
 			end
-			load_interface(self, pname, fname, result)
+			load_interface(self, packname, pname, fname, result)
 		end
 		for _, attr in ipairs(type_list) do
 			api[attr] = function (name)
@@ -288,14 +288,15 @@ local function merge_result(self, result)
 end
 
 function interface:load(packname, filename)
-	local results = load_interface(self, packname, filename, {})
+	--TODO
+	local results = load_interface(self, nil, packname, filename, {})
 	local r = merge_all_results(results)
 	merge_result(self, r)
 	return r
 end
 
 local function check(tbl, r)
-	for name, content in pairs(tbl) do
+	for _, content in pairs(tbl) do
 		for what, list in pairs(content) do
 			local check = check_map[what]
 			if check and check ~= "none" then

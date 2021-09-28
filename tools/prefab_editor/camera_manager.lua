@@ -1,12 +1,17 @@
+local ecs = ...
+local world = ecs.world
+local w = world.w
+
+local iom         = ecs.import.interface "ant.objcontroller|obj_motion"
+local icamera     = ecs.import.interface "ant.camera|camera"
+local imaterial   = ecs.import.interface "ant.asset|imaterial"
+local ies         = ecs.import.interface "ant.scene|ientity_state"
+local irq         = ecs.import.interface "ant.render|irenderqueue"
+local geo_utils   = ecs.require "editor.geometry_utils"
+local icamera_recorder = ecs.import.interface "ant.camera|icamera_recorder"
+
 local math3d  = require "math3d"
 local bgfx = require "bgfx"
-local world
-local iom
-local icamera
-local imaterial
-local ies
-local geo_utils
-local irq
 
 local m = {
     FRUSTUM_LEFT    = 1,
@@ -29,7 +34,7 @@ function m.set_second_camera(eid, show)
 	-- rc.viewmat = icamera.calc_viewmat(eid)
     -- rc.projmat = icamera.calc_projmat(eid)
     -- rc.viewprojmat = icamera.calc_viewproj(eid)
-    icamera.bind_queue(eid, m.second_view)
+    irq.set_camera(m.second_view, eid)
     m.second_camera = eid
     m.show_frustum(eid, show)
 end
@@ -208,7 +213,7 @@ function m.bind_recorder(eid, recorder)
 end
 
 function m.bind_main_camera()
-    icamera.bind(m.main_camera, "main_queue")
+    irq.set_camera("main_queue", m.main_camera)
 end
 
 function m.set_frame(cam_eid, idx)
@@ -283,14 +288,4 @@ function m.clear()
     m.camera_list = {}
 end
 
-return function(w)
-    world       = w
-    iom         = world:interface "ant.objcontroller|obj_motion"
-    icamera     = world:interface "ant.camera|camera"
-    imaterial   = world:interface "ant.asset|imaterial"
-    ies         = world:interface "ant.scene|ientity_state"
-    icamera_recorder = world:interface "ant.camera|icamera_recorder"
-    irq         = world:interface "ant.render|irenderqueue"
-    geo_utils   = require "editor.geometry_utils"(world)
-    return m
-end
+return m

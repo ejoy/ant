@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_PROPERTYSPECIFICATION_H
 #define RMLUI_CORE_PROPERTYSPECIFICATION_H
 
-#include "Header.h"
+#include "Platform.h"
 #include "Types.h"
 #include "PropertyIdSet.h"
 #include "ID.h"
@@ -65,7 +65,7 @@ enum class ShorthandType
 	@author Peter Curry
  */
 
-class RMLUICORE_API PropertySpecification
+class PropertySpecification
 {
 public:
 	PropertySpecification();
@@ -77,7 +77,8 @@ public:
 	/// @param[in] inherited True if this property is inherited from parent to child, false otherwise.
 	/// @param[in] id If 'Invalid' then automatically assigns a new id, otherwise assigns the given id.
 	/// @return The new property definition, ready to have parsers attached.
-	PropertyDefinition& RegisterProperty(const std::string& property_name, const std::string& default_value, bool inherited, PropertyId id = PropertyId::Invalid);
+	PropertyDefinition& RegisterProperty(PropertyId id, const std::string& property_name, bool inherited);
+	PropertyDefinition& RegisterProperty(PropertyId id, const std::string& property_name, bool inherited, const std::string& default_value);
 	/// Returns a property definition.
 	/// @param[in] id The id of the desired property.
 	/// @return The appropriate property definition if it could be found, nullptr otherwise.

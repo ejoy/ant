@@ -5,8 +5,8 @@ local w = world.w
 local bgfx      = require "bgfx"
 local declmgr   = require "vertexdecl_mgr"
 local viewidmgr = require "viewid_mgr"
-local ilight    = world:interface "ant.render|light"
-local icompute  = world:interface "ant.render|icompute"
+local ilight    = ecs.import.interface "ant.render|light"
+local icompute  = ecs.import.interface "ant.render|icompute"
 
 local cfs = ecs.system "cluster_forward_system"
 
@@ -153,7 +153,7 @@ function cfs:init()
         "/pkg/ant.resources/materials/cluster_light_cull.material",
         {1, 1, cluster_cull_light_size})
 
-    world:create_entity {
+    ecs.create_entity {
         policy = {
             "ant.render|cluster_render_entity",
             "ant.general|name",

@@ -1,4 +1,7 @@
 return {
     name = "ant.editor",
-    entry = "main"
+    entry = "main",
+    dependencies = {
+        "ant.asset",
+    }
 }

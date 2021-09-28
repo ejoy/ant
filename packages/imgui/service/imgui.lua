@@ -1,11 +1,8 @@
 local packagename, w, h = ...
 
-package.path = "engine/?.lua"
-require "bootstrap"
-
 local ltask     = require "ltask"
 local bgfx      = require "bgfx"
-local ServiceBgfxMain = ltask.queryservice "bgfx_main"
+local ServiceBgfxMain = ltask.queryservice "ant.render|bgfx_main"
 for _, name in ipairs(ltask.call(ServiceBgfxMain, "APIS")) do
 	bgfx[name] = function (...)
 		return ltask.call(ServiceBgfxMain, name, ...)
@@ -128,14 +125,14 @@ for n, f in pairs(message) do
 	end
 end
 
-local ltask = require "ltask"
-local ServiceWindow = ltask.uniqueservice "window"
-local callback = import_package(packagename)
+local ServiceWindow = ltask.uniqueservice "ant.window|window"
+local pm = require "packagemanager"
+local callback = pm.import(packagename)
 for _, name in ipairs {"init","update","exit","size","mouse_wheel","mouse","keyboard"} do
     local f = callback[name]
     cb[name] = function (...)
 		if f then f(...) end
-		ltask.send(ServiceWindow, name, ...)
+		ltask.send(ServiceWindow, "send_"..name, ...)
 	end
 end
 
@@ -171,6 +168,7 @@ ltask.fork(function ()
         width = init_width,
         height = init_height,
     }
+	import_package "ant.compile_resource".init()
     bgfx.encoder_init()
 	renderpkg.init_bgfx()
     bgfx.encoder_begin()
@@ -228,6 +226,12 @@ local S = {}
 
 function S.wait()
     multi_wait "quit"
+end
+
+--TODO
+function S.mouse()
+end
+function S.touch()
 end
 
 return S

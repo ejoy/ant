@@ -2,8 +2,6 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local math3d = require "math3d"
-
 local s = ecs.system "luaecs_sync_system"
 
 local evCreate = world:sub {"component_register", "scene_entity"}
@@ -24,9 +22,6 @@ local function findEntity(eid)
 			return v
 		end
 	end
-end
-local function isLightmapResultEntity(e)
-	return e.lightmap_result ~= nil
 end
 local function isLightmapEntity(e)
 	return e.lightmap ~= nil
@@ -50,6 +45,9 @@ end
 function s:luaecs_sync()
 	for _, _, eid in evCreate:unpack() do
 		local e = world[eid]
+		if e == nil then
+			goto continue
+		end
 		if isCamera(e) then
 			assert(false)
 			goto continue
@@ -80,7 +78,7 @@ function s:luaecs_sync()
 			data.material = e.material
 			data.mesh	= e.mesh
 			data.filter_material = {}
-			policy[#policy+1] = "ant.scene|render_object"
+			policy[#policy+1] = "ant.render|render_object"
 			if hasAnimation(e) then
 				data.animation = {}
 				for k, v in pairs(e.animation) do
@@ -123,7 +121,7 @@ function s:luaecs_sync()
 			policy[#policy+1] = "ant.scene|slot_policy"
 		end
 
-		world:create_entity {
+		ecs.create_entity {
 			policy = policy,
 			data = data
 		}

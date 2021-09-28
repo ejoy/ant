@@ -67,7 +67,7 @@ if EnableEditor then
     local Backlist = {}
     local EditorModules = {}
 
-    if lm.compiler ~= "msvc" then
+    if lm.compiler ~= "msvc" or lm.mode == "release" then
         Backlist["bake"] = true
     end
 

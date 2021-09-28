@@ -14,11 +14,11 @@ local viewidmgr = renderpkg.viewidmgr
 local mathpkg   = import_package "ant.math"
 local mc        = mathpkg.constant
 
-local irender   = world:interface "ant.render|irender"
-local icamera   = world:interface "ant.camera|camera"
-local iom       = world:interface "ant.objcontroller|obj_motion"
-local imaterial = world:interface "ant.asset|imaterial"
-local ientity   = world:interface "ant.render|entity"
+local irender   = ecs.import.interface "ant.render|irender"
+local icamera   = ecs.import.interface "ant.camera|camera"
+local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local ientity   = ecs.import.interface "ant.render|entity"
 local auto_hm_sys = ecs.system "auto_heightmap_system"
 local depthmaterial
 
@@ -96,18 +96,6 @@ function auto_hm_sys:init()
 
     local eid = ientity.create_quad_entity({x=0, y=0, w=2, h=2}, "/pkg/ant.resources/materials/texquad.material", "quadtest")
     imaterial.set_property(eid, "s_tex", {stage=0, texture={handle=renderinfo:color_handle()}})
-    -- local hm_eid = world:deprecated_create_entity{ 
-    --     policy = {
-    --         "ant.general|name",
-    --         "ant.heightmap|auto_heightmap",
-    --     },
-    --     data = {
-    --         auto_heightmap = {
-    --             heightmap_file = "/pkg/ant.heightmap/heightmaps/tmp.heightmap",
-    --         },
-    --         name = "auto_heightmap_entity",
-    --     }
-    -- }
 end
 
 local function default_tex_info(w, h, fmt)
@@ -212,7 +200,7 @@ local hm_mb = world:sub {"fetch_heightmap"}
 function auto_hm_sys:follow_transform_updated()
     for _ in hm_mb:each() do
         ltask.fork(function ()
-            local ServiceBgfxMain = ltask.queryservice "bgfx_main"
+            local ServiceBgfxMain = ltask.queryservice "ant.render|bgfx_main"
             ltask.call(ServiceBgfxMain, "pause")
             fetch_heightmap_data()
             ltask.call(ServiceBgfxMain, "continue")

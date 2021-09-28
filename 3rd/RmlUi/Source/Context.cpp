@@ -67,8 +67,8 @@ void Context::Update(double delta) {
 		focus->UpdateDataModel(true);
 		focus->Update();
 		focus->Render();
-		ReleaseUnloadedDocuments();
 	}
+	ReleaseUnloadedDocuments();
 }
 
 // Load a document into the context.
@@ -92,6 +92,9 @@ void Context::UnloadDocument(Document* document) {
 	for (size_t i = 0; i < unloaded_documents.size(); ++i) {
 		if (unloaded_documents[i] == document)
 			return;
+	}
+	if (focus == document) {
+		focus = nullptr;
 	}
 	document->body->DispatchEvent(EventId::Unload, EventDictionary());
 	PluginRegistry::NotifyDocumentDestroy(document);
@@ -165,9 +168,9 @@ void Context::ReleaseUnloadedDocuments() {
 		return;
 	}
 
-	std::vector<Document*> documents = std::move(unloaded_documents);
+	std::vector<Document*> docs = std::move(unloaded_documents);
 	unloaded_documents.clear();
-	for (auto document : documents) {
+	for (auto document : docs) {
 		document->body->RemoveAllEvents();
 		auto pos = std::find(std::begin(documents), std::end(documents), document);
 		std::rotate(pos, pos + 1, std::end(documents));

@@ -6,7 +6,7 @@ local mu     = import_package "ant.math".util
 local mc     = import_package "ant.math".constant
 
 local iobj_motion = ecs.interface "obj_motion"
-local icamera = world:interface "ant.camera|camera"
+local icamera = ecs.import.interface "ant.camera|camera"
 
 local function find_entity(eid)
     if type(eid) == "table" then
@@ -324,7 +324,7 @@ function iobj_motion.ray(eid, pt2d, vp_size)
     }
 end
 
-function iobj_motion.screen_to_ndc(eid, pt2d, vp_size)
+function iobj_motion.screen_to_ndc(pt2d, vp_size)
     vp_size = vp_size or main_queue_viewport_size()
     local ndc = mu.pt2D_to_NDC(pt2d, vp_size)
     return {ndc[1], ndc[2], pt2d[3]}

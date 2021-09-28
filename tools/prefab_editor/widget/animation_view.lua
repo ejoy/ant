@@ -1,25 +1,29 @@
+local ecs = ...
+local world = ecs.world
+local w = world.w
+
+local iani      = ecs.import.interface "ant.animation|animation"
+local ies       = ecs.import.interface "ant.scene|ientity_state"
+local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local prefab_mgr = ecs.require "prefab_manager"
+local gizmo     = ecs.require "gizmo.gizmo"
+local asset_mgr = import_package "ant.asset"
+local icons     = require "common.icons"(asset_mgr)
+local logger    = require "widget.log"
 local imgui     = require "imgui"
 local math3d    = require "math3d"
-local hierarchy = require "hierarchy"
+local hierarchy = require "hierarchy_edit"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local utils     = require "common.utils"
 local vfs       = require "vfs"
 local access    = require "vfs.repoaccess"
-local global_data = require "common.global_data"
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 local datalist  = require "datalist"
 local rc        = import_package "ant.compile_resource"
-local world
-local icons
-local iani
-local prefab_mgr
-local ies
-local gizmo
-local iom
-local inspector
-local logger
+local global_data = require "common.global_data"
 
 local m = {}
 local edit_anims = {}
@@ -41,6 +45,7 @@ local anim_state = {
     current_event_list = {}
 }
 
+local ui_loop = {false}
 
 local event_type = {
     "Effect", "Sound", "Collision", "Message", "Move"
@@ -72,9 +77,9 @@ local function find_index(t, item)
 end
 
 local function get_runtime_animations(eid)
-    for e in world.w:select "eid:in" do
+    for e in world.w:select "eid:in animation:in" do
         if e.eid == eid then
-            world.w:sync("animation:in", e)
+            --world.w:sync("animation:in", e)
             return e.animation
         end
     end
@@ -108,28 +113,28 @@ local function anim_group_stop_effect(eid)
     end
 end
 
-local function anim_group_play_group(eid, ...)
+local function anim_group_play_group(eid, anim_state)
     local group_eid = get_anim_group_eid(eid, current_anim.name)
     if not group_eid then return end
     for _, anim_eid in ipairs(group_eid) do
         iom.set_position(world[world[anim_eid].parent].parent, {0.0,0.0,0.0})
-        iani.play_group(anim_eid, ...)
+        iani.play_group(anim_eid, anim_state)
     end
 end
-local function anim_group_play_clip(eid, ...)
+local function anim_group_play_clip(eid, anim_state)
     local group_eid = get_anim_group_eid(eid, current_anim.name)
     if not group_eid then return end
     for _, anim_eid in ipairs(group_eid) do
 	    iom.set_position(world[world[anim_eid].parent].parent, {0.0,0.0,0.0})
-        iani.play_clip(anim_eid, ...)
+        iani.play_clip(anim_eid, anim_state)
     end
 end
-local function anim_group_play(eid, ...)
+local function anim_group_play(eid, anim_state)
     local group_eid = get_anim_group_eid(eid, current_anim.name)
     if not group_eid then return end
     for _, anim_eid in ipairs(group_eid) do
         iom.set_position(world[world[anim_eid].parent].parent, {0.0,0.0,0.0})
-        iani.play(anim_eid, ...)
+        iani.play(anim_eid, anim_state)
     end
 end
 
@@ -198,9 +203,9 @@ local function set_current_anim(anim_name)
     current_collider = nil
     current_event = nil
     
-    anim_group_play(current_eid, anim_name, 0)
+    anim_group_play(current_eid, {name = anim_name, loop = ui_loop[1], manual = false})
     anim_group_set_time(current_eid, 0)
-    anim_group_pause(current_eid, true)
+    anim_group_pause(current_eid, not anim_state.is_playing)
     -- if not iani.is_playing(current_eid) then
     --     anim_group_pause(current_eid, false)
     -- end
@@ -333,7 +338,7 @@ local function do_to_runtime_event(evs)
             life_time = ev.life_time,
             move = ev.move,
             msg_content = ev.msg_content,
-            link_info = ev.link_info and {slot_name = ev.link_info.slot_name, slot_eid = ev.link_info.slot_eid},
+            link_info = ev.link_info and {slot_name = ev.link_info.slot_name, slot_eid = ev.link_info.slot_eid and (ev.link_info.slot_eid > 0 and ev.link_info.slot_eid or nil) or nil },
             collision = (col_eid ~= -1) and {
                 col_eid = col_eid,
                 name = world[col_eid].name,
@@ -862,8 +867,8 @@ local function show_clips()
         if imgui.widget.Selectable(cs.name, current_clip and (current_clip.name == cs.name), 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
             set_current_clip(cs)
             if imgui.util.IsMouseDoubleClicked(0) then
-                anim_group_play_clip(current_eid, cs.name, 0)
-                anim_group_set_loop(current_eid, false)
+                anim_group_play_clip(current_eid, {name = cs.name, loop = ui_loop[1], manual = false})
+                anim_group_set_loop(current_eid, ui_loop[1])
             end
         end
         if current_clip and (current_clip.name == cs.name) then
@@ -918,8 +923,8 @@ local function show_groups()
             gp.name_ui.text = gp.name
             current_group = gp
             if imgui.util.IsMouseDoubleClicked(0) then
-                anim_group_play_group(current_eid, gp.name, 0)
-                anim_group_set_loop(current_eid, false)
+                anim_group_play_group(current_eid, {name = gp.name, loop = ui_loop[1], manual = false})
+                anim_group_set_loop(current_eid, ui_loop[1])
             end
         end
         if current_group and (current_group.name == gp.name) then
@@ -1224,8 +1229,15 @@ function m.show()
             imgui.cursor.SameLine()
             local icon = anim_state.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
             if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
-                anim_state.is_playing = not anim_state.is_playing
-                anim_group_pause(current_eid, not anim_state.is_playing)
+                if anim_state.is_playing then
+                    anim_group_pause(current_eid, true)
+                else
+                    anim_group_play(current_eid, {name = current_anim.name, loop = ui_loop[1], manual = false})
+                end
+            end
+            imgui.cursor.SameLine()
+            if imgui.widget.Checkbox("loop", ui_loop) then
+                anim_group_set_loop(current_eid, ui_loop[1])
             end
             if all_clips then
                 imgui.cursor.SameLine()
@@ -1387,7 +1399,7 @@ function m.load_clips()
                         for _, e in ipairs(ke.event_list) do
                             if e.collision and e.collision.shape_type ~= "None" then
                                 if not hierarchy.collider_list or not hierarchy.collider_list[e.collision.name] then
-                                    local eid = prefab_mgr:create("collider", {type = e.collision.shape_type, define = utils.deep_copy(default_collider_define[e.collision.shape_type]), parent = prefab_mgr.root, add_to_hierarchy = true})
+                                    local eid = prefab_mgr:create("collider", {tag = e.collision.tag, type = e.collision.shape_type, define = utils.deep_copy(default_collider_define[e.collision.shape_type]), parent = prefab_mgr.root, add_to_hierarchy = true})
                                     world[eid].name = e.collision.name
                                     world[eid].tag = e.collision.tag
                                     imaterial.set_property(eid, "u_color", e.collision.color or {1.0,0.5,0.5,0.8})
@@ -1473,16 +1485,4 @@ function m.get_current_joint()
     return current_joint and current_joint.index or 0
 end
 
-return function(w, am)
-    world = w
-    icons = require "common.icons"(am)
-    iani = world:interface "ant.animation|animation"
-    ies = world:interface "ant.scene|ientity_state"
-    iom = world:interface "ant.objcontroller|obj_motion"
-    prefab_mgr = require "prefab_manager"(world)
-    prefab_mgr.set_anim_view(m)
-    gizmo = require "gizmo.gizmo"(world)
-    local asset_mgr = import_package "ant.asset"
-    logger = require "widget.log"(asset_mgr)
-    return m
-end
+return m

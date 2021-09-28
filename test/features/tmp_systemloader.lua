@@ -3,18 +3,18 @@ local world = ecs.world
 local w = world.w
 local math3d = require "math3d"
 
-local ientity = world:interface "ant.render|entity"
-local ies = world:interface "ant.scene|ientity_state"
+local ientity = ecs.import.interface "ant.render|entity"
+local ies = ecs.import.interface "ant.scene|ientity_state"
 local init_loader_sys = ecs.system 'init_loader_system'
-local imaterial = world:interface "ant.asset|imaterial"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 local mathpkg = import_package"ant.math"
 local mc, mu = mathpkg.constant, mathpkg.util
 
 local camerapkg = import_package"ant.camera"
 local split_frustum = camerapkg.split_frustum
 
-local icamera = world:interface "ant.camera|camera"
-local iom = world:interface "ant.objcontroller|obj_motion"
+local icamera = ecs.import.interface "ant.camera|camera"
+local iom = ecs.import.interface "ant.objcontroller|obj_motion"
 
 local function find_entity(name, whichtype)
     for _, eid in world:each(whichtype) do
@@ -68,15 +68,15 @@ local function point_light_test()
     -- end
 end
 
-local icc = world:interface "ant.test.features|icamera_controller"
+local icc = ecs.import.interface "ant.test.features|icamera_controller"
 local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
     --point_light_test()
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
     --world:instance "/pkg/ant.test.features/assets/entities/test_scene.prefab"
     world:instance "/pkg/ant.test.features/assets/entities/skybox_test.prefab"
-    --world:instance "/pkg/ant.test.features/assets/glb/cloud.glb|mesh.prefab"
-    world:instance "/pkg/ant.test.features/assets/glb/shadow.glb|mesh.prefab"
+    world:instance "/pkg/ant.test.features/assets/glb/cloud.glb|mesh.prefab"
+    --world:instance "/pkg/ant.test.features/assets/glb/shadow.glb|mesh.prefab"
     -- local p = world:instance "/pkg/ant.test.features/assets/glb/Fox.glb|mesh.prefab"
     -- foxeid = p[3]
     
@@ -201,7 +201,7 @@ function init_loader_sys:data_changed()
         end
 
         local function enlarge_light(delta)
-            local ilight = world:interface "ant.render|light"
+            local ilight = ecs.import.interface "ant.render|light"
             local lighteid = light_entity()
             local range = ilight.range(lighteid)
             ilight.set_range(lighteid, range+delta)
@@ -219,7 +219,7 @@ function init_loader_sys:data_changed()
         if key == "SPACE" and press == 0 then
             local lighteid = light_entity()
             local le = world[lighteid]
-            local ilight = world:interface "ant.render|light"
+            local ilight = ecs.import.interface "ant.render|light"
             local l = {
                 range = ilight.range(lighteid),
                 pos = iom.get_position(lighteid),

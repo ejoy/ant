@@ -16,10 +16,10 @@ local layout_desc       = declmgr.correct_layout "p20nii|t20nii|c40niu"
 local fontquad_layout   = declmgr.get(layout_desc)
 local declformat        = declmgr.vertex_desc_str(layout_desc)
 
-local imaterial = world:interface "ant.asset|imaterial"
-local irender = world:interface "ant.render|irender"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local irender = ecs.import.interface "ant.render|irender"
 
-local irq = world:interface "ant.render|irenderqueue"
+local irq = ecs.import.interface "ant.render|irenderqueue"
 local function calc_screen_pos(pos3d, queuename)
     queuename = queuename or "main_queue"
 

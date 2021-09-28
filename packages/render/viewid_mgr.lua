@@ -17,9 +17,14 @@ local bindings = {
 	ibl			= 9,
 	depth		= 29,
 	main_view 	= 30,
-	pickup 		= 31,
-	pickup_blit = 32,
-	
+
+	--start postprocess
+	tonemapping = 50,
+	--end postprocess
+
+	pickup 		= 51,
+	pickup_blit = 52,
+
 	effect_view = max_viewid - max_uieditor - 4,
 	uiruntime	= max_viewid - max_uieditor - 3,
 	blit		= max_viewid - max_uieditor - 2,
@@ -61,7 +66,7 @@ local function alloc_viewids(num, basename, afterviewid)
 	return vids
 end
 
-alloc_viewids(30, "postprocess", 100)
+--alloc_viewids(30, "postprocess", 100)
 
 viewid_pool.alloc_viewids = alloc_viewids
 

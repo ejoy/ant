@@ -1,3 +1,5 @@
+local ecs = ...
+
 local icon_path = {
     ["ICON_FILE"]           = "res/icon/File.png",
     ["ICON_FOLD"]           = "res/icon/Folder.png",

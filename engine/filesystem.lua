@@ -188,19 +188,11 @@ function path_mt:remove_permissions()
     error 'Not implemented'
 end
 
+
 function path_mt:localpath()
-    local _, s = normalize_split(self._value)
-    local localpath = vfs.realpath(table.concat(s, "/"))
+    local localpath = vfs.realpath(normalize(self._value))
     assert(localpath, "count find local path: "..self._value)
     return lfs.path(localpath)
-end
-
-function path_mt:package_name()
-    local root, stack = normalize_split(self._value)
-    if root ~= "/" or #stack <= 1 or stack[1] ~= "pkg" then
-        error("Invalid package path")
-    end
-    return stack[2]
 end
 
 local fs = {}

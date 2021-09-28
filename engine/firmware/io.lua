@@ -1,4 +1,4 @@
-local loadfile = ...
+local loadfile, host = ...
 
 local INTERVAL = 0.01 -- socket select timeout
 
@@ -8,17 +8,16 @@ local lsocket = require "lsocket"
 local protocol = require "protocol"
 local _print
 
+local status = {}
 local config = {}
-local channel = {}
+local repo
+
+local channel_req
+local channel_user
 local logqueue = {}
-local repo = {
-	repo = nil,
-	uncomplete = {},
-}
 
 local connection = {
-	request_path = {},	-- requesting path
-	request_hash = {},	-- requesting hash
+	request = {},
 	sendq = {},
 	recvq = {},
 	fd = nil,
@@ -26,17 +25,15 @@ local connection = {
 }
 
 local function init_channels()
-	-- init channels
-	channel.req = thread.channel_consume "IOreq"
+	channel_req = thread.channel_consume "IOreq"
 
-	local channel_user = {}
-	channel.user = setmetatable({} , channel_user)
-
-	function channel_user:__index(name)
+	local mt = {}
+	function mt:__index(name)
 		local c = assert(thread.channel_produce(name))
 		self[name] = c
 		return c
 	end
+	channel_user = setmetatable({} , mt)
 
 	local origin = os.time() - os.clock()
 	local function os_date(fmt)
@@ -78,20 +75,21 @@ local function read_config(path, env)
 	return env
 end
 
-local function init_config()
-	local _, c = channel.req()
+local function init_config(c)
 	config.repopath = assert(c.repopath)
-	config.nettype = assert(c.nettype)
-	config.address = assert(c.address)
-	config.port = assert(c.port)
 	config.vfspath = assert(c.vfspath)
+	config.nettype = c.nettype
+	config.address = c.address
+	config.port = c.port
 	config.rootname = c.rootname
+	config.socket = c.socket
 	read_config(config.repopath .. "config", config)
 end
 
 local function init_repo()
 	local vfs = assert(loadfile(config.vfspath, 'engine/firmware/vfs.lua'))()
-	repo.repo = vfs.new(config.repopath)
+	repo = vfs.new(config.repopath)
+	status.repo = repo
 end
 
 local function connect_server(address, port)
@@ -145,6 +143,12 @@ local function listen_server(address, port)
 end
 
 local function wait_server()
+	if config.socket then
+		return lsocket.fromstring(config.socket)
+	end
+	if config.nettype == nil then
+		return
+	end
 	if config.nettype == "listen" then
 		return listen_server(config.address, config.port)
 	end
@@ -160,7 +164,7 @@ local function response_id(id, ...)
 			local c = thread.channel_produce(id)
 			c(...)
 		else
-			channel.req:ret(id, ...)
+			channel_req:ret(id, ...)
 		end
 	end
 end
@@ -179,20 +183,16 @@ end
 
 local offline = {}
 
-function offline.LIST(id, path)
-	local dir = repo.repo:list(path)
+function offline.LIST(id, path, roothash)
+	local dir = repo:list(path, roothash)
 	if dir then
-		local result = {}
-		for k,v in pairs(dir) do
-			result[k] = v.dir
-		end
-		response_id(id, result)
+		response_id(id, dir)
 	else
 		response_id(id, nil)
 	end
 end
 
-function offline.TYPE(id, fullpath)
+function offline.TYPE(id, fullpath, roothash)
 	local path, name = fullpath:match "(.*)/(.-)$"
 	if path == nil then
 		if fullpath == "" then
@@ -202,7 +202,7 @@ function offline.TYPE(id, fullpath)
 		path = ""
 		name = fullpath
 	end
-	local dir, hash = repo.repo:list(path)
+	local dir = repo:list(path, roothash)
 	if dir then
 		local v = dir[name]
 		if v then
@@ -213,24 +213,49 @@ function offline.TYPE(id, fullpath)
 	response_id(id, nil)
 end
 
-function offline.GET(id, fullpath)
+function offline.GET(id, fullpath, roothash)
 	local path, name = fullpath:match "(.*)/(.-)$"
 	if path == nil then
 		path = ""
 		name = fullpath
 	end
-	local dir = repo.repo:list(path)
+	local dir = repo:list(path, roothash)
 	if not dir then
 		response_id(id, nil)
 		return
 	end
 	local v = dir[name]
-	if not v or v.dir then
+	if not v then
 		response_id(id, nil)
 		return
 	end
-	local realpath = repo.repo:hashpath(v.hash)
-	response_id(id, realpath, v.hash)
+	if v.dir then
+		response_id(id, false, v.hash)
+		return
+	end
+	local realpath = repo:hashpath(v.hash)
+	response_id(id, realpath)
+end
+
+function offline.RESOURCE(id, paths)
+	if #paths < 2 then
+		offline.GET(id, paths[1])
+		return
+	end
+	local hash = repo:get_resource(paths[1])
+	if not hash then
+		response_id(id, nil)
+		return
+	end
+	for i = 2, #paths-1 do
+		local path = table.concat(paths, "/", 1, i) --TODO
+		hash = repo:get_resource(path)
+		if not hash then
+			response_id(id, nil)
+			return
+		end
+	end
+	offline.GET(id, paths[#paths], hash)
 end
 
 function offline.EXIT(id)
@@ -246,8 +271,7 @@ end
 
 do
 	local function noresponse_function() end
-	offline.FETCHALL = noresponse_function
-	offline.PREFETCH = noresponse_function
+	offline.FETCH    = noresponse_function
 	offline.SUBSCIBE = noresponse_function
 end
 
@@ -261,7 +285,7 @@ local function offline_dispatch(id, cmd, ...)
 end
 
 local function work_offline()
-	local c = channel.req
+	local c = channel_req
 	while true do
 		offline_dispatch(c())
 		logger_dispatch(offline)
@@ -331,51 +355,48 @@ local function connection_dispose(timeout)
 	return true
 end
 
-local function request_file(id, req, hash, res, path)
-	local hash_list = connection.request_hash[hash]
-	if hash_list then
-		hash_list[path] = true
+local function request_start(req, args, promise)
+	local list = connection.request[args]
+	if list then
+		list[#list+1] = promise
 	else
-		connection.request_hash[hash] = { [path] = true }
-		connection_send(req, hash)
+		connection.request[args] = { promise }
+		connection_send(req, args)
 	end
-	local path_res = connection.request_path[path]
-	if not path_res then
-		path_res = {}
-		connection.request_path[path] = path_res
-	end
-	-- one request per id
-	if id and path_res[id] then
-		print("More than one request from id", id)
-	end
-
-	path_res[id] = res
 end
+status.request = request_start
 
--- file server update hash file
-local function hash_complete(hash, exist)
-	local hash_list = connection.request_hash[hash]
-	if not hash_list then
+local function request_complete(args, ok, err)
+	local list = connection.request[args]
+	if not list then
 		return
 	end
-	connection.request_hash[hash] = nil
-	for path in pairs(hash_list) do
-		local path_res = connection.request_path[path]
-		if not path_res then
-			print("No request:", path)
-			return
+	connection.request[args] = nil
+	if ok then
+		for _, promise in ipairs(list) do
+			promise.resolve(args)
 		end
-		connection.request_path[path] = nil
-		if exist then
-			for id, req in pairs(path_res) do
-				online[req](id, path)	-- request/response path
-			end
-		else
-			for id in pairs(path_res) do
+	else
+		for _, promise in ipairs(list) do
+			promise.reject(args, err)
+		end
+	end
+end
+
+local function request_file(id, req, hash, res, path, roothash)
+	local promise = {
+		resolve = function ()
+			online[res](id, path, roothash)
+		end,
+		reject = function ()
+			if roothash then
+				response_err(id, "MISSING "..path.." "..roothash)
+			else
 				response_err(id, "MISSING "..path)
 			end
 		end
-	end
+	}
+	request_start(req, hash, promise)
 end
 
 -- response functions from file server (connection)
@@ -388,97 +409,77 @@ function response.ROOT(hash)
 		return
 	end
 	print("CHANGEROOT", hash)
-	repo.repo:changeroot(hash)
-end
-
-local function writefile(filename, data)
-	local temp = filename .. ".download"
-	local f = io.open(temp, "wb")
-	if not f then
-		print("Can't write to", temp)
-		return
-	end
-	f:write(data)
-	f:close()
-	if not os.rename(temp, filename) then
-		os.remove(filename)
-		if not os.rename(temp, filename) then
-			print("Can't rename", filename)
-			return false
-		end
-	end
-	return true
+	repo:updatehistory(hash)
+	repo:changeroot(hash)
 end
 
 -- REMARK: Main thread may reading the file while writing, if file server update file.
 -- It's rare because the file name is sha1 of file content. We don't need update the file.
 -- Client may not request the file already exist.
 function response.BLOB(hash, data)
-	local hashpath = repo.repo:hashpath(hash)
-	if not writefile(hashpath, data) then
-		return
+	if repo:write_blob(hash, data) then
+		request_complete(hash, true)
 	end
-	hash_complete(hash, true)
 end
 
 function response.FILE(hash, size)
-	repo.uncomplete[hash] = { size = tonumber(size), offset = 0 }
+	repo:write_file(hash, size)
 end
 
 function response.MISSING(hash)
 	print("MISSING", hash)
-	hash_complete(hash, false)
+	request_complete(hash, false)
 end
 
 function response.SLICE(hash, offset, data)
-	offset = tonumber(offset)
-	local hashpath = repo.repo:hashpath(hash)
-	local tempname = hashpath .. ".download"
-	local f = io.open(tempname, "ab")
-	if not f then
-		print("Can't write to", tempname)
-		return
-	end
-	local pos = f:seek "end"
-	if pos ~= offset then
-		f:close()
-		f = io.open(tempname, "r+b")
-		if not f then
-			print("Can't modify", tempname)
-			return
-		end
-		f:seek("set", offset)
-	end
-	f:write(data)
-	f:close()
-	local filedesc = repo.uncomplete[hash]
-	if filedesc then
-		local last_offset = filedesc.offset
-		if offset ~= last_offset then
-			print("Invalid offset", hash, offset, last_offset)
-		end
-		filedesc.offset = last_offset + #data
-		if filedesc.offset == filedesc.size then
-			-- complete
-			repo.uncomplete[hash] = nil
-			if not os.rename(tempname, hashpath) then
-				-- may exist
-				os.remove(hashpath)
-				if not os.rename(tempname, hashpath) then
-					print("Can't rename", hashpath)
-				end
-			end
-			hash_complete(hash, true)
-		end
-	else
-		print("Offset without header", hash, offset)
+	if repo:write_slice(hash, offset, data) then
+		request_complete(hash, true)
 	end
 end
 
-function response.COMPILE(fullpath, hash)
-	local res = repo.repo:compilehash(fullpath, hash)
-	print("COMPILE", fullpath, hash, res)
-	hash_complete(fullpath, true)
+function response.RESOURCE(fullpath, hash)
+	repo:set_resource(fullpath, hash)
+	print("RESOURCE", fullpath, hash)
+	request_complete(fullpath, true)
+end
+
+function response.FETCH(path, hashs)
+	local waiting = {}
+	local missing = {}
+	local function finish()
+		if next(waiting) == nil then
+			local res = {}
+			for h in pairs(missing) do
+				res[#res+1] = h
+			end
+			if #res == 0 then
+				request_complete(path, true)
+			else
+				table.insert(res, 1, "MISSING")
+				request_complete(path, false, table.concat(res))
+			end
+		end
+	end
+	local promise = {
+		resolve = function (hash)
+			waiting[hash] = nil
+			finish()
+		end,
+		reject = function (hash)
+			missing[hash] = true
+			waiting[hash] = nil
+			finish()
+		end
+	}
+	hashs:gsub("[^|]+", function(hash)
+		local realpath = repo:hashpath(hash)
+		local f <close> = io.open(realpath, "rb")
+		if not f then
+			waiting[hash] = true
+			request_start("GET", hash, promise)
+		end
+	end)
+	finish()
 end
 
 local function waiting_for_root()
@@ -514,46 +515,30 @@ end
 
 ---------- online dispatch
 
-function online.LIST(id, path)
-	local dir, hash = repo.repo:list(path)
+function online.LIST(id, path, roothash)
+	local dir, hash = repo:list(path, roothash)
 	if dir then
-		local result = {}
-		for k,v in pairs(dir) do
-			result[k] = v.dir
-		end
-		response_id(id, result)
+		response_id(id, dir)
 	elseif hash then
-		request_file(id, "GET", hash, "LIST", path)
+		request_file(id, "GET", hash, "LIST", path, roothash)
 	else
-		print("Need Change Root", path)
+		print("Need Change Root", roothash, path)
 		response_id(id, nil)
 	end
 end
 
-local function fetch_all(path)
-	local dir, hash = repo.repo:list(path)
-	if dir then
-		for name,v in pairs(dir) do
-			local subpath = path .. "/" .. name
-			if v.dir then
-				fetch_all(subpath)
-			else
-				print("Fetch", subpath)
-				online.GET(false, subpath)
-			end
+function online.FETCH(id, path)
+	request_start("FETCH", path, {
+		resolve = function ()
+			response_id(id)
+		end,
+		reject = function (_, err)
+			response_err(id, err)
 		end
-	elseif hash then
-		request_file(false, "GET", hash, "FETCHALL", path)
-	else
-		print("Need Change Root", path)
-	end
+	})
 end
 
-function online.FETCHALL(_, path)
-	fetch_all(path)
-end
-
-function online.TYPE(id, fullpath)
+function online.TYPE(id, fullpath, roothash)
 	local path, name = fullpath:match "(.*)/(.-)$"
 	if path == nil then
 		if fullpath == "" then
@@ -563,7 +548,7 @@ function online.TYPE(id, fullpath)
 		path = ""
 		name = fullpath
 	end
-	local dir, hash = repo.repo:list(path)
+	local dir, hash = repo:list(path, roothash)
 	if dir then
 		local v = dir[name]
 		if not v then
@@ -573,49 +558,66 @@ function online.TYPE(id, fullpath)
 		end
 		return
 	elseif hash then
-		request_file(id, "GET", hash, "TYPE", fullpath)
+		request_file(id, "GET", hash, "TYPE", fullpath, roothash)
 	else
 		response_id(id, nil)
 	end
 end
 
-function online.GET(id, fullpath)
+function online.GET(id, fullpath, roothash)
 	local path, name = fullpath:match "(.*)/(.-)$"
 	if path == nil then
 		path = ""
 		name = fullpath
 	end
-	local dir, hash = repo.repo:list(path)
+	local dir, hash = repo:list(path, roothash)
 	if not dir then
 		if hash then
-			request_file(id, "GET", hash, "GET", fullpath)
+			request_file(id, "GET", hash, "GET", fullpath, roothash)
 			return
 		end
-		response_err(id, "Not exist " .. path)
+		response_err(id, "Not exist<1> " .. path .. (roothash and (" "..roothash) or ""))
 		return
 	end
 
 	local v = dir[name]
 	if not v then
-		response_err(id, "Not exist " .. fullpath)
+		response_err(id, "Not exist<2> " .. fullpath .. (roothash and (" "..roothash) or ""))
 		return
 	end
 	if v.dir then
-		response_err(id, "Not file " .. fullpath)
+		response_id(id, false, v.hash)
 		return
 	end
-	local realpath = repo.repo:hashpath(v.hash)
+	local realpath = repo:hashpath(v.hash)
 	local f = io.open(realpath,"rb")
 	if not f then
-		request_file(id, "GET", v.hash, "GET", fullpath)
+		request_file(id, "GET", v.hash, "GET", fullpath, roothash)
 	else
 		f:close()
-		response_id(id, realpath, v.hash)
+		response_id(id, realpath)
 	end
 end
 
-function online.PREFETCH(path)
-	return online.GET(false, path)
+function online.RESOURCE(id, paths)
+	if #paths < 2 then
+		online.GET(id, paths[1])
+		return
+	end
+	local hash = repo:get_resource(paths[1])
+	if not hash then
+		request_file(id, "RESOURCE", paths[1], "RESOURCE", paths)
+		return
+	end
+	for i = 2, #paths-1 do
+		local path = table.concat(paths, "/", 1, i) --TODO
+		hash = repo:get_resource(path)
+		if not hash then
+			request_file(id, "RESOURCE", path, "RESOURCE", paths)
+			return
+		end
+	end
+	online.GET(id, paths[#paths], hash)
 end
 
 function online.SUBSCIBE(channel_name, message)
@@ -640,7 +642,7 @@ local function dispatch_net(cmd, ...)
 	if not f then
 		local channel_name = connection.subscibe[cmd]
 		if channel_name then
-			channel.user[channel_name](cmd, ...)
+			channel_user[channel_name](cmd, ...)
 		else
 			print("Unsupport net command", cmd)
 		end
@@ -677,13 +679,13 @@ local function work_online()
 	for _, req in ipairs(reqs) do
 		dispatch_net(table.unpack(req))
 	end
-	local c = channel.req
 	local result = {}
 	local reading = connection.recvq
 	local timeout = 0
 	while true do
-		while online_dispatch(c:pop(timeout)) do end
-		logger_dispatch(online)
+		if host.update(status, timeout) then
+			break
+		end
 		local ok, err = connection_dispose(0)
 		if ok then
 			while protocol.readmessage(reading, result) do
@@ -703,27 +705,42 @@ local function work_online()
 	end
 end
 
+if not host then
+	host = {}
+	function host.init()
+		init_channels()
+		local _, c = channel_req()
+		return c
+	end
+	function host.update(_, timeout)
+		while online_dispatch(channel_req:pop(timeout)) do end
+		logger_dispatch(online)
+	end
+	function host.exit()
+		print("Working offline")
+		work_offline()
+	end
+end
+
 local function main()
-	init_channels()
-	init_config()
+	init_config(host.init())
 	init_repo()
 	if config.address then
 		connection.fd = wait_server()
 		if connection.fd then
+			status.fd = connection.fd
 			work_online()
 			-- socket error or closed
 		end
 	end
-	local uncomplete = {}
-	for hash in pairs(connection.request_hash) do
-		table.insert(uncomplete, hash)
+	local uncomplete_req = {}
+	for hash in pairs(connection.request) do
+		table.insert(uncomplete_req, hash)
 	end
-	for _, hash in ipairs(uncomplete) do
-		hash_complete(hash, false)
+	for _, hash in ipairs(uncomplete_req) do
+		request_complete(hash, false)
 	end
-
-	print("Working offline")
-	work_offline()
+	host.exit(status)
 end
 
 main()

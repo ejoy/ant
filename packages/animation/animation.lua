@@ -3,19 +3,21 @@ local world = ecs.world
 local w = world.w
 
 local assetmgr 		= import_package "ant.asset"
-local iom 			= world:interface "ant.objcontroller|obj_motion"
+local iom 			= ecs.import.interface "ant.objcontroller|obj_motion"
 local animodule 	= require "hierarchy".animation
 
 
 local ani_sys = ecs.system "animation_system"
 
-local timer = world:interface "ant.timer|itimer"
+local timer = ecs.import.interface "ant.timer|itimer"
 
 local fix_root <const> = false
 
 local function get_current_anim_time(task)
 	return task.play_state.ratio * task.animation._handle:duration()
 end
+
+local keyframe_update_flag = {}
 
 local function process_keyframe_event(task)
 	if task.play_state.manual_update or not task.play_state.play then return end
@@ -34,13 +36,6 @@ local function process_keyframe_event(task)
 			if event.event_type == "Collision" then
 				local collision = event.collision
 				if collision and collision.col_eid and collision.col_eid ~= -1 then
-					-- if collision.joint_index == 0 then
-					-- 	local origin_s, _, _ = math3d.srt(iom.worldmat(collision.col_eid))
-					-- 	iom.set_srt(collision.eid, math3d.matrix{ s = origin_s, r = event.collision.offset.rotate, t = event.collision.offset.position })
-					-- else
-					-- 	local final_mat = math3d.mul(math3d.matrix{t = event.collision.position, r = event.collision.offset.rotate, s = {1,1,1}}, iom.worldmat(col.eid))
-					-- 	iom.set_srt(collision.eid, final_mat)
-					-- end
 					local eid = collision.col_eid
             		iom.set_position(eid, collision.position)
             		local factor = (collision.shape_type == "sphere") and 100 or 200
@@ -49,25 +44,27 @@ local function process_keyframe_event(task)
 			elseif event.event_type == "Effect" then
 				if not event.effect and event.asset_path ~= "" then
 					event.effect = world:prefab_instance(event.asset_path)
-					local eeid = world:prefab_event(event.effect, "get_eid", "root")
-					local effect = world[eeid].effect_instance
+					local eeid = world:prefab_event(event.effect, "get_eid", "effect")
+					local effect = eeid and world[eeid].effect_instance or nil
 					if effect then
 						effect.auto_play = false
 					end
-					world:prefab_event(event.effect, "set_parent", "root", event.link_info.slot_eid)
+					world:prefab_event(event.effect, "set_parent", "effect", event.link_info.slot_eid)
 				end
 				if event.effect then
-					local parent = world:prefab_event(event.effect, "get_parent", "root")
+					local parent = world:prefab_event(event.effect, "get_parent", "effect")
 					if event.link_info.slot_eid and parent ~= event.link_info.slot_eid then
-						world:prefab_event(event.effect, "set_parent", "root", event.link_info.slot_eid)
+						world:prefab_event(event.effect, "set_parent", "effect", event.link_info.slot_eid)
 					end
-					world:prefab_event(event.effect, "play", "root", "", false, false)
+					world:prefab_event(event.effect, "play_effect", "effect", false, false)
 					if task.play_state.play then
-						world:prefab_event(event.effect, "speed", "root", task.play_state.speed or 1.0)
+						world:prefab_event(event.effect, "speed", "effect", task.play_state.speed or 1.0)
 					end
 				end
 			elseif event.event_type == "Move" then
-				iom.set_position(world[world[task.eid].parent].parent, event.move)
+				for _, eid in ipairs(task.eid) do
+					iom.set_position(world[world[eid].parent].parent, event.move)
+				end
 			end
 		end
 		event_state.next_index = event_state.next_index + 1
@@ -80,9 +77,10 @@ local function process_keyframe_event(task)
 	end
 end
 
-local iani = world:interface "ant.animation|animation"
+local iani = ecs.import.interface "ant.animation|animation"
 
-local function do_animation(poseresult, task, delta_time)
+local function do_animation(poseresult, e, delta_time)
+	local task = e._animation._current
 	if task.type == 'blend' then
 		for _, t in ipairs(task) do
 			do_animation(poseresult, t, delta_time)
@@ -90,7 +88,7 @@ local function do_animation(poseresult, task, delta_time)
 		poseresult:do_blend("blend", #task, task.weight)
 	else
 		local play_state = task.play_state
-		if not play_state.manual_update and play_state.play then 
+		if not play_state.manual_update and play_state.play and task.eid and task.eid[1] == e.eid then 
 			iani.step(task, delta_time * 0.001)
 		end
 		local ani = task.animation
@@ -100,11 +98,11 @@ end
 
 function ani_sys:sample_animation_pose()
 	local delta_time = timer.delta()
-	for e in w:select "skeleton:in pose_result:in _animation:in" do
+	for e in w:select "eid:in skeleton:in pose_result:in _animation:in" do
 		local ske = e.skeleton
 		local pr = e.pose_result
 		pr:setup(ske._handle)
-		do_animation(pr, e._animation._current, delta_time)
+		do_animation(pr, e, delta_time)
 	end
 end
 
@@ -120,8 +118,10 @@ function ani_sys:end_animation()
 end
 
 function ani_sys:data_changed()
-	for e in w:select "_animation:in" do
-		process_keyframe_event(e._animation._current)
+	for e in w:select "eid:in _animation:in" do
+		if e._animation._current.eid and e._animation._current.eid[1] == e.eid then
+			process_keyframe_event(e._animation._current)
+		end
 	end
 end
 
@@ -157,7 +157,9 @@ function ani_sys:entity_ready()
 			for e in world.w:select "eid:in" do
 				if e.eid == eid then
 					world.w:sync("_animation:in", e)
-					iani.step(e._animation._current, p0, p1)
+					if e._animation._current.eid and e._animation._current.eid[1] == eid then
+						iani.step(e._animation._current, p0, p1)
+					end
 				end
 			end
 		elseif what == "set_time" then

@@ -4,9 +4,9 @@ local w = world.w
 
 local mathpkg	= import_package "ant.math"
 local mc		= mathpkg.constant
-local irender	= world:interface "ant.render|irender"
+local irender	= ecs.import.interface "ant.render|irender"
 local default	= import_package "ant.general".default
-local icamera	= world:interface "ant.camera|camera"
+local icamera	= ecs.import.interface "ant.camera|camera"
 
 local fr_sys = ecs.system "forward_render_system"
 
@@ -19,9 +19,8 @@ function fr_sys:init()
 		frustum = default.frustum(vr.w/vr.h),
         name = "default_camera",
 	})
-
-	irender.create_blit_queue(vr)
-	irender.create_main_queue(vr, camera)
+	local fbsize = vr
+	irender.create_main_queue(vr, fbsize, camera)
 	--irender.create_pre_depth_queue(vr, camera)
 end
 

@@ -1,7 +1,6 @@
 local gltfutil  = require "editor.model.glTF.util"
 local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
-local assetmgr	= import_package "ant.asset"
 local math3d    = require "math3d"
 local utility   = require "editor.model.utility"
 
@@ -123,11 +122,12 @@ local function create_prim_bounding(meshscene, prim)
 		assert(#minv == 3)
 		assert(#maxv == 3)
 
-		--right hand to left hand
-		maxv[3] = minv[3]
-		minv[3] = maxv[3]
+		local nminv, nmaxv = math3d.minmax{
+			{minv[1], minv[2], -minv[3]},
+			{maxv[1], maxv[2], -maxv[3]},
+		}
 		local bounding = {
-			aabb = {minv, maxv}
+			aabb = {math3d.tovalue(nminv), math3d.tovalue(nmaxv)}
 		}
 		prim.bounding = bounding
 		return bounding

@@ -11,7 +11,7 @@ local viewidmgr = renderpkg.viewidmgr
 
 local thread_group_size<const> = 8
 
-local imaterial = world:interface "ant.asset|imaterial"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local ibl_sys = ecs.system "ibl_system"
 
@@ -50,7 +50,7 @@ local ibl_textures = {
     }
 }
 
-local icompute = world:interface "ant.render|icompute"
+local icompute = ecs.import.interface "ant.render|icompute"
 
 local ibl_viewid = viewidmgr.get "ibl"
 
@@ -73,7 +73,7 @@ local function create_prefilter_entities()
     local r = 0
 
     local function create_prefilter_compute_entity(dispatchsize, prefilter)
-        world:create_entity {
+        ecs.create_entity {
             policy = {
                 "ant.render|compute_policy",
                 "ant.render.ibl|prefilter",

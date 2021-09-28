@@ -12,10 +12,10 @@ local geolib    = geopkg.geometry
 local mathpkg   = import_package "ant.math"
 local mc		= mathpkg.constant
 
-local ies = world:interface "ant.scene|ientity_state"
-local imaterial = world:interface "ant.asset|imaterial"
-local irender = world:interface "ant.render|irender"
-local imesh 	= world:interface "ant.asset|imesh"
+local ies = ecs.import.interface "ant.scene|ientity_state"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local irender = ecs.import.interface "ant.render|irender"
+local imesh 	= ecs.import.interface "ant.asset|imesh"
 local bgfx = require "bgfx"
 
 local function create_dynamic_mesh(layout, vb, ib)
@@ -132,7 +132,7 @@ function ientity.create_grid_mesh_entity(name, w, h, size, color, materialpath)
 		end
 	end
 	local data = {
-		transform = srt or {},
+		transform = {},
 		material = materialpath,
 		state = ies.create_state "visible",
 		name = name or "GridMesh",
@@ -158,7 +158,7 @@ function ientity.create_grid_entity_simple(name, w, h, unit, srt)
 end
 
 function ientity.create_grid_entity(name, width, height, unit, linewidth)
-	local ipl = world:interface "ant.render|ipolyline"
+	local ipl = ecs.import.interface "ant.render|ipolyline"
 	
 	local hw = width * 0.5
 	local hw_len = hw * unit
@@ -190,15 +190,11 @@ function ientity.create_grid_entity(name, width, height, unit, linewidth)
 		end
 	end
 
-	local eid = ipl.add_linelist(pl, linewidth, {0.8, 0.8, 0.8, 1.0})
-	world[eid].name = name
+	ipl.add_linelist(pl, linewidth, {0.8, 0.8, 0.8, 1.0})
 
 	local centerwidth<const> = linewidth * 2.0
-	local xeid = ipl.add_linelist({{-hw_len, 0, 0}, {hw_len, 0, 0},}, centerwidth, {1.0, 0.0, 0.0, 1.0})
-	local zeid = ipl.add_linelist({{0, 0, -hh_len}, {0, 0, hh_len},}, centerwidth, {0.0, 0.0, 1.0, 1.0})
-
-	world[xeid].name = name .. ":centerx"
-	world[zeid].name = name .. ":centerz"
+	ipl.add_linelist({{-hw_len, 0, 0}, {hw_len, 0, 0},}, centerwidth, {1.0, 0.0, 0.0, 1.0})
+	ipl.add_linelist({{0, 0, -hh_len}, {0, 0, hh_len},}, centerwidth, {0.0, 0.0, 1.0, 1.0})
 end
 
 

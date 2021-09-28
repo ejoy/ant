@@ -4,8 +4,8 @@ local world = ecs.world
 local geometry_drawer = import_package "ant.geometry".drawer
 local setting		= import_package "ant.settings".setting
 
-local ies = world:interface "ant.scene|ientity_state"
-local iom = world:interface "ant.objcontroller|obj_motion"
+local ies = ecs.import.interface "ant.scene|ientity_state"
+local iom = ecs.import.interface "ant.objcontroller|obj_motion"
 
 local bgfx = require "bgfx"
 local math3d = require "math3d"
@@ -171,7 +171,7 @@ end
 
 local physic_bounding_sys = ecs.system "physic_bounding_system"
 
-local iwd = world:interface "ant.render|iwidget_drawer"
+local iwd = ecs.import.interface "ant.render|iwidget_drawer"
 
 function physic_bounding_sys:widget()
 	-- for _, eid in world:each "collider" do

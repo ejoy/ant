@@ -1,6 +1,7 @@
 local ltask = require "ltask"
 local socket = require "socket"
 local protocol = require "protocol"
+local fs = require "filesystem.cpp"
 
 local arg = ltask.call(ltask.queryservice "arguments", "QUERY")
 local FD = ...
@@ -27,28 +28,30 @@ end
 function message.ROOT(path)
 	REPOPATH = assert(REPOPATH or path, "Need repo name")
 	print("ROOT", REPOPATH)
-	ServiceLogRuntime = ltask.spawn("log.runtime", REPOPATH)
+	if VfsSessionId then
+		ltask.send(ServiceVfsMgr, "CLOSE", VfsSessionId)
+		VfsSessionId = nil
+	else
+		ServiceLogRuntime = ltask.spawn("log.runtime", REPOPATH)
+	end
 	local sid, roothash = ltask.call(ServiceVfsMgr, "ROOT", REPOPATH)
 	VfsSessionId = sid
 	response("ROOT", roothash)
 end
 
-local function COMPILE(path)
+function message.RESOURCE(path)
 	local ok, lpath = compile_resource(path)
 	if not ok then
 		print(table.concat(lpath, "\n"))
 		response("MISSING", path)
 		return
 	end
-	local hash = ltask.call(ServiceVfsMgr, "BUILD", VfsSessionId, path, lpath)
-	response("COMPILE", path, hash)
+	local rpath = fs.relative(fs.path(lpath), fs.path(REPOPATH)):string()
+	local hash = ltask.call(ServiceVfsMgr, "BUILD", VfsSessionId, "/"..rpath, lpath)
+	response("RESOURCE", path, hash)
 end
 
 function message.GET(hash)
-	if hash:match "%?" then
-		COMPILE(hash)
-		return
-	end
 	local filename = ltask.call(ServiceVfsMgr, "GET", VfsSessionId, hash)
 	if filename == nil then
 		response("MISSING", hash)
@@ -76,6 +79,15 @@ function message.GET(hash)
 		end
 	end
 	f:close()
+end
+
+function message.FETCH(path)
+	local hashs = ltask.call(ServiceVfsMgr, "FETCH", VfsSessionId, path)
+	if not hashs then
+		response("MISSING", path)
+		return
+	end
+	response("FETCH", path, hashs)
 end
 
 function message.DBG(data)

@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_TRANSFORM_H
 #define RMLUI_CORE_TRANSFORM_H
 
-#include "Header.h"
+#include "Platform.h"
 #include "Types.h"
 #include "Property.h"
 #include <variant>

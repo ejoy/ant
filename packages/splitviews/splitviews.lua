@@ -3,10 +3,10 @@ local world = ecs.world
 local w = world.w
 local math3d    = require "math3d"
 
-local icamera   = world:interface "ant.camera|camera"
-local irender   = world:interface "ant.render|irender"
-local iom       = world:interface "ant.objcontroller|obj_motion"
-local irq       = world:interface "ant.render|irenderqueue"
+local icamera   = ecs.import.interface "ant.camera|camera"
+local irender   = ecs.import.interface "ant.render|irender"
+local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
+local irq       = ecs.import.interface "ant.render|irenderqueue"
 
 local svs = ecs.system "splitviews_system"
 

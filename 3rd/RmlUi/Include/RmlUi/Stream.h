@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_STREAM_H
 #define RMLUI_CORE_STREAM_H
 
-#include "Header.h"
+#include "Platform.h"
 #include "Traits.h"
 #include "Types.h"
 
@@ -42,7 +42,7 @@ class StreamListener;
 	@author Lloyd Weehuizen
  */
 
-class RMLUICORE_API Stream : public NonCopyMoveable
+class Stream : public NonCopyMoveable
 {
 public:
 	// Stream modes.

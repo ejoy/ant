@@ -12,6 +12,7 @@ ltask.fork(function ()
             socket.close(newfd)
         else
             FD = newfd
+            print("Editor connected")
         end
     end
 end)

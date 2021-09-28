@@ -1,3 +1,9 @@
+
+local ecs = ...
+local iom 	= ecs.import.interface "ant.objcontroller|obj_motion"
+local iani 	= ecs.import.interface "ant.animation|animation"
+local ieff 	= ecs.import.interface "ant.effekseer|effekseer_playback"
+local iss 	= ecs.import.interface "ant.scene|iscenespace"
 local datalist = require "datalist"
 local fs = require "filesystem"
 local cr = import_package "ant.compile_resource"
@@ -20,13 +26,7 @@ end
 
 local cmd_handle
 
-
-
 local function command(w, set, name, ...)
-	local iom = w:interface "ant.objcontroller|obj_motion"
-	local iani = w:interface "ant.animation|animation"
-	local ieff = w:interface "ant.effekseer|effekseer_playback"
-	local iss = w:interface "ant.scene|iscenespace"
 	local findAnimation = function(eid)
 		for e in w:select "eid:in" do
 			if e.eid == eid then
@@ -41,6 +41,16 @@ local function command(w, set, name, ...)
 				w.w:sync("anim_clips:in", e)
 				return e.anim_clips
 			end
+		end
+	end
+	local do_remove_all
+	do_remove_all = function(eid)
+		if type(eid) == "table" then
+			for _, e in ipairs(eid) do
+				do_remove_all(e)
+			end
+		else
+			w:remove_entity(eid)
 		end
 	end
 	if not cmd_handle then
@@ -58,35 +68,36 @@ local function command(w, set, name, ...)
 			get_parent = function(eid)
 				return w[eid].parent
 			end,
-			play = function(eid, name, loop, manual)
+			play_effect = function(eid, loop, manual)
 				if w[eid].effekseer then
 					ieff.play(eid, loop or false)
 					ieff.pause(eid, manual or false)
+				end
+			end,
+			play_anim = function(eid, anim_state)
+				if w[eid].eid then
+					iani.play(eid, anim_state)
 				else
-					if w[eid].eid then
-						iani.play(eid, name, loop or false, manual)
-					else
-						w:pub {"AnimationEvent", "play", eid, name, loop or false, manual}
-					end
+					w:pub {"AnimationEvent", "play", eid, anim_state}
+				end
+			end,
+			play_clip = function(eid, anim_state)
+				if w[eid].eid then
+					iani.play_clip(eid, anim_state)
+				else
+					w:pub {"AnimationEvent", "play_clip", eid, anim_state}
+				end
+			end,
+			play_group = function(eid, anim_state)
+				if w[eid].eid then
+					iani.play_group(eid, anim_state)
+				else
+					w:pub {"AnimationEvent", "play_group", eid, anim_state}
 				end
 			end,
 			stop = function(eid, name)
 				if w[eid].effekseer then
 					ieff.stop(eid)
-				end
-			end,
-			play_clip = function(eid, name, loop, manual)
-				if w[eid].eid then
-					iani.play_clip(eid, name, loop or false, manual)
-				else
-					w:pub {"AnimationEvent", "play_clip", eid, name, loop or false, manual}
-				end
-			end,
-			play_group = function(eid, name, loop, manual)
-				if w[eid].eid then
-					iani.play_group(eid, name, loop or false, manual)
-				else
-					w:pub {"AnimationEvent", "play_group", eid, name, loop or false, manual}
 				end
 			end,
 			speed = function(eid, ...)
@@ -158,9 +169,7 @@ local function command(w, set, name, ...)
 				return { math.deg(rad[1]), math.deg(rad[2]), math.deg(rad[3]) }
 			end,
 			get_scale 		= iom.get_scale,
-			remove_all		= function(eid)
-				w:remove_entity(eid)
-			end
+			remove_all		= do_remove_all
 		}
 	end
 	local ret
@@ -212,8 +221,8 @@ local function createTagDictionary(w, prefab)
 					addTag(dict, tag, eid)
 				end
 			end
-			table.insert(dict['*'], eid)
 		end
+		table.insert(dict['*'], eid)
 	end
 	local proxy = {}
 	for k, v in pairs(dict) do

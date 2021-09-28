@@ -21,6 +21,7 @@ interface "effekseer_playback"
     .method "set_speed"
     .method "set_time_callback"
     .method "stop"
+    .method "destroy"
 
 interface "filename_mgr"
     .implement "effekseer_system.lua"

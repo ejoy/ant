@@ -57,7 +57,9 @@ function S.CREATE(repopath)
     end
     repo[i] = true
     writefile(LOGDIR / (".timestamp-%d"):format(i), os_date('%Y_%m_%d_%H_%M_%S_{ms}'))
-    return i, (LOGDIR / ("runtime-%d.log"):format(i)):string()
+    local res = LOGDIR / ("runtime-%d.log"):format(i)
+    writefile(res, "")
+    return i, res:string()
 end
 
 function S.CLOSE(repopath, index)

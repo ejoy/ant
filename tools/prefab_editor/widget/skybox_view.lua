@@ -1,12 +1,16 @@
+local ecs = ...
+local world = ecs.world
+local w = world.w
+
+ecs.require "widget.material_view"
+local prefab_mgr = ecs.require "prefab_manager"
 local imgui     = require "imgui"
 local utils     = require "common.utils"
 local math3d    = require "math3d"
 local uiproperty = require "widget.uiproperty"
-local hierarchy     = require "hierarchy"
+local hierarchy     = require "hierarchy_edit"
 local MaterialView = require "widget.view_class".MaterialView
 local SkyboxView  = require "widget.view_class".SkyboxView
-local world
-local prefab_mgr
 local size_str = {"16","32","64","128","256","512","1024"}
 local prefilter_size_str = {"256","512","1024"}
 function SkyboxView:_init()
@@ -58,9 +62,4 @@ function SkyboxView:show()
     self.LUT:show()
 end
 
-return function(w)
-    world   = w
-    prefab_mgr = require "prefab_manager"(world)
-    require "widget.material_view"(world)
-    return SkyboxView
-end
+return SkyboxView

@@ -28,7 +28,7 @@
 #ifndef RMLUI_CORE_FONTENGINEINTERFACE_H
 #define RMLUI_CORE_FONTENGINEINTERFACE_H
 
-#include "Header.h"
+#include "Platform.h"
 #include "Types.h"
 #include "ComputedValues.h"
 #include "Geometry.h"
@@ -51,7 +51,7 @@ struct Line {
 };
 typedef std::vector<Line> LineList;
 
-class RMLUICORE_API FontEngineInterface
+class FontEngineInterface
 {
 public:
 	FontEngineInterface();
