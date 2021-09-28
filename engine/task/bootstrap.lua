@@ -136,7 +136,7 @@ end
 function vfs.resource(paths)
 	return request("RESOURCE", paths)
 end
-vfs.async = {realpath=vfs.realpath,list=vfs.list,type=vfs.type}
+vfs.async = {realpath=vfs.realpath,list=vfs.list,type=vfs.type,resource=vfs.resource}
 initfunc()]]):format(servicelua)
 end
 

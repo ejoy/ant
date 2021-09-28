@@ -54,6 +54,10 @@ function S.RESOURCE(paths)
 	return request("RESOURCE", paths)
 end
 
+function S.FETCH(path)
+	return request("FETCH", path)
+end
+
 function S.REPOPATH()
 	return request("REPOPATH")
 end
