@@ -28,10 +28,11 @@ end
 function message.ROOT(path)
 	REPOPATH = assert(REPOPATH or path, "Need repo name")
 	print("ROOT", REPOPATH)
-	ServiceLogRuntime = ltask.spawn("log.runtime", REPOPATH)
 	if VfsSessionId then
 		ltask.send(ServiceVfsMgr, "CLOSE", VfsSessionId)
 		VfsSessionId = nil
+	else
+		ServiceLogRuntime = ltask.spawn("log.runtime", REPOPATH)
 	end
 	local sid, roothash = ltask.call(ServiceVfsMgr, "ROOT", REPOPATH)
 	VfsSessionId = sid
