@@ -320,7 +320,7 @@ function sm:update_camera()
 
 		for v in w:select "scene_changed eid:in" do
 			local function is_light(eid)
-				return world[eid]._light ~= nil
+				return world[eid] and world[eid]._light ~= nil
 			end
 			if is_light(v.eid) and find_directional_light(v.eid) then
 				changed = true
