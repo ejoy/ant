@@ -100,6 +100,9 @@ void Geometry::AddRect(const Rect& rect, Color col) {
 	if (col.a == 0) {
 		return;
 	}
+	if (rect.size.w == 0 || rect.size.h == 0) {
+		return;
+	}
 	size_t vsz = vertices.size();
 	size_t isz = indices.size();
 	Reserve(6, 4);
