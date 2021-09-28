@@ -70,6 +70,8 @@ std::string Property::ToString() const {
 	case Property::MM:		return std::to_string(std::get<float>(value)) + "mm";
 	case Property::PT:		return std::to_string(std::get<float>(value)) + "pt";
 	case Property::PC:		return std::to_string(std::get<float>(value)) + "pc";
+	case Property::VW:		return std::to_string(std::get<float>(value)) + "vw";
+	case Property::VH:		return std::to_string(std::get<float>(value)) + "vh";
 	default:
 		return "<unknown, " + std::to_string(unit) + ">";
 	}
@@ -221,6 +223,8 @@ std::string ToString<FloatValue>(const FloatValue& v) {
 		case Property::MM:		value += "mm"; break;
 		case Property::PT:		value += "pt"; break;
 		case Property::PC:		value += "pc"; break;
+		case Property::VW:		value += "vw"; break;
+		case Property::VH:		value += "vh"; break;
 		default:					break;
 	}
 	return value;

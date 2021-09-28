@@ -48,7 +48,7 @@ struct DefaultStyleSheetParsers {
 	PropertyParserNumber length = PropertyParserNumber(Property::LENGTH, Property::PX);
 	PropertyParserNumber length_percent = PropertyParserNumber(Property::LENGTH_PERCENT, Property::PX);
 	PropertyParserNumber number_length_percent = PropertyParserNumber(Property::NUMBER_LENGTH_PERCENT, Property::PX);
-	PropertyParserNumber angle = PropertyParserNumber(Property::ANGLE, Property::RAD);
+	PropertyParserNumber angle = PropertyParserNumber(Property::RAD | Property::DEG, Property::RAD);
 	PropertyParserKeyword keyword = PropertyParserKeyword();
 	PropertyParserString string = PropertyParserString();
 	PropertyParserAnimation animation = PropertyParserAnimation(PropertyParserAnimation::ANIMATION_PARSER);

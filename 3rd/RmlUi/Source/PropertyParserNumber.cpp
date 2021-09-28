@@ -48,6 +48,8 @@ static const std::unordered_map<std::string, Property::Unit> g_property_unit_str
 	{"pc", Property::PC},
 	{"deg", Property::DEG},
 	{"rad", Property::RAD},
+	{"vw", Property::VW},
+	{"vh", Property::VH},
 };
 
 PropertyParserNumber::PropertyParserNumber(int units, Property::Unit zero_unit)

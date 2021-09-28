@@ -174,7 +174,7 @@ ElementAnimation::ElementAnimation(PropertyId property_id, ElementAnimationOrigi
 
 bool ElementAnimation::InternalAddKey(float time, const Property& out_prop, Element& element, Tween tween)
 {
-	if (!(out_prop.unit & (Property::NUMBER_LENGTH_PERCENT | Property::ANGLE | Property::COLOUR | Property::TRANSFORM | Property::KEYWORD))) {
+	if (out_prop.unit == Property::ANIMATION || out_prop.unit == Property::TRANSITION || out_prop.unit == Property::STRING) {
 		Log::Message(Log::Level::Warning, "Property '%s' is not a valid target for interpolation.", out_prop.ToString().c_str());
 		return false;
 	}

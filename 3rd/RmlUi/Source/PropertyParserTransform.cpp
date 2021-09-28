@@ -33,9 +33,9 @@
 namespace Rml {
 
 PropertyParserTransform::PropertyParserTransform()
-	: number(Property::NUMBER),
-	  length(Property::LENGTH_PERCENT, Property::PX),
-	  angle(Property::ANGLE, Property::RAD)
+	: number(Property::NUMBER)
+	, length(Property::LENGTH_PERCENT, Property::PX)
+	, angle(Property::RAD | Property::DEG, Property::RAD)
 {
 }
 
