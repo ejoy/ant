@@ -85,6 +85,7 @@ public:
 	void ProcessMouseWheel(float wheel_delta, int key_modifier_state);
 	void OnElementDetach(Element* element);
 	void SetDimensions(const Size& dimensions);
+	const Size& GetDimensions();
 
 	void Update();
 	void Render();

@@ -66,9 +66,17 @@ float ComputeProperty(FloatValue fv, Element* e) {
 	case Property::DEG:
 		return Math::DegreesToRadians(fv.value);
 	case Property::VW:
-		return fv.value * e->GetOwnerDocument()->body->GetMetrics().frame.size.w;
+		return fv.value * e->GetOwnerDocument()->GetDimensions().w * 0.01f;
 	case Property::VH:
-		return fv.value * e->GetOwnerDocument()->body->GetMetrics().frame.size.h;
+		return fv.value * e->GetOwnerDocument()->GetDimensions().h * 0.01f;
+	case Property::VMIN: {
+		auto const& size = e->GetOwnerDocument()->GetDimensions();
+		return fv.value * std::min(size.w, size.h) * 0.01f;
+	}
+	case Property::VMAX: {
+		auto const& size = e->GetOwnerDocument()->GetDimensions();
+		return fv.value * std::max(size.w, size.h) * 0.01f;
+	}
 	case Property::INCH: // inch
 		return fv.value * PixelsPerInch;
 	case Property::CM: // centimeter
@@ -413,8 +421,9 @@ void ElementStyle::DirtyPropertiesWithUnitRecursive(Property::Unit unit)
 		auto name_property_pair = *it;
 		PropertyId id = name_property_pair.first;
 		const Property& property = name_property_pair.second;
-		if (property.unit == unit)
+		if (property.unit & unit) {
 			DirtyProperty(id);
+		}
 	}
 
 	// Now dirty all of our descendant's properties that use the unit.

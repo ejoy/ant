@@ -79,6 +79,8 @@ public:
 		REM = 1 << 11,              // number suffixed by 'rem'; fetch as < float >
 		VW = 1 << 20,
 		VH = 1 << 21,
+		VMIN = 1 << 22,
+		VMAX = 1 << 23,
 
 		// Values based on pixels-per-inch.
 		INCH = 1 << 12,             // number suffixed by 'in'; fetch as < float >
@@ -91,7 +93,8 @@ public:
 		TRANSITION = 1 << 18,       // transition; fetch as < TransitionList >
 		ANIMATION = 1 << 19,        // animation; fetch as < AnimationList >
 
-		LENGTH = PX | DP | INCH | CM | MM | PT | PC | EM | REM,
+		VIEW_LENGTH = VW | VH | VMIN | VMAX,
+		LENGTH = PX | DP | INCH | CM | MM | PT | PC | EM | REM | VIEW_LENGTH,
 		LENGTH_PERCENT = LENGTH | PERCENT,
 		NUMBER_LENGTH_PERCENT = NUMBER | LENGTH | PERCENT,
 	};
