@@ -158,6 +158,23 @@ function m.init_log_receiver()
     end
 end
 
+local function getlevel(msg_str)
+    local level = "info"
+    local first = string.find(msg_str, "]")
+    if first then
+        msg_str = string.gsub(msg_str, "\x1b%[33m", "")
+        msg_str = string.gsub(msg_str, "\x1b%[31m", "")
+        msg_str = string.gsub(msg_str, "\x1b%[0m", "")
+        local second = string.find(msg_str, "]", first + 1)
+        if second then
+            local rawlevel = string.sub(msg_str, first + 2, second - 1)
+            msg_str = string.gsub(msg_str, "%["..rawlevel.."%]", "")
+            level = string.lower(rawlevel:match'^%s*(.*%S)' or '')
+        end
+    end
+    return level, msg_str
+end
+
 local function checkLog()
     local error, info = err_receiver:pop()
     if error then
@@ -189,21 +206,10 @@ local function checkLog()
             end
         elseif type == "RUNTIME" then
             msg_tag = "Runtime"
-            msg_str = msg[2]
-            local first = string.find(msg_str, "]")
-            if first then
-                local second = string.find(msg_str, "]", first + 1)
-                if second then
-                    local rawlevel = string.sub(msg_str, first + 2, second - 1)
-                    level = string.lower(rawlevel:match'^%s*(.*%S)' or '')
-                else
-                    level = "info"
-                end
-            end
+            level, msg_str = getlevel(msg[2])
         elseif type == "SERVER" then
-            level = "info"
             msg_tag = "Server"
-            msg_str = msg[2]
+            level, msg_str = getlevel(msg[2])
             for i = 5, #msg do
                 if i > 5 then
                     msg_str = msg_str .. "    "
