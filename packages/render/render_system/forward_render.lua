@@ -19,7 +19,8 @@ function fr_sys:init()
 		frustum = default.frustum(vr.w/vr.h),
         name = "default_camera",
 	})
-	irender.create_main_queue(vr, camera)
+	local fbsize = {w=world.args.fbw, h=world.args.fbh}
+	irender.create_main_queue(vr, fbsize, camera)
 	--irender.create_pre_depth_queue(vr, camera)
 end
 

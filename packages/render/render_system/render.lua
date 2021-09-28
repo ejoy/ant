@@ -196,25 +196,25 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 	}
 end
 
-local function create_main_fb(view_rect)
+local function create_main_fb(fbsize)
 	local render_buffers = {}
 	render_buffers[#render_buffers+1] = fbmgr.create_rb(
 		default_comp.render_buffer(
-		view_rect.w, view_rect.h, "RGBA16F", rb_flag)
+			fbsize.w, fbsize.h, "RGBA16F", rb_flag)
 	)
 
 	local bloom = settingdata.graphic.postprocess.bloom
 	if bloom.enable then
 		render_buffers[#render_buffers+1] = fbmgr.create_rb(
 			default_comp.render_buffer(
-			view_rect.w, view_rect.h, "RGBA16F", rb_flag)
+				fbsize.w, fbsize.h, "RGBA16F", rb_flag)
 		)
 	end
 
 	local function get_depth_buffer()
 		return fbmgr.create_rb(
 			default_comp.render_buffer(
-			view_rect.w, view_rect.h, "D24S8", rb_flag)
+				fbsize.w, fbsize.h, "D24S8", rb_flag)
 		)
 		-- local pd = world:singleton_entity "pre_depth_queue"
 
@@ -226,8 +226,8 @@ local function create_main_fb(view_rect)
 	return fbmgr.create(render_buffers)
 end
 
-function irender.create_main_queue(vr, camera_ref)
-	local fbidx = create_main_fb(vr)
+function irender.create_main_queue(vr, fbsize, camera_ref)
+	local fbidx = create_main_fb(fbsize)
 	ecs.create_entity {
 		policy = {
 			"ant.render|render_queue",

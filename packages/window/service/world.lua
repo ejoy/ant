@@ -5,6 +5,7 @@ local inputmgr  = import_package "ant.inputmgr"
 local ecs       = import_package "ant.luaecs"
 local rhwi      = import_package "ant.hwi"
 local cr        = import_package "ant.compile_resource"
+local platform  = require "platform"
 
 local bgfx      = require "bgfx"
 local ServiceBgfxMain = ltask.queryservice "ant.render|bgfx_main"
@@ -45,12 +46,23 @@ local function Render()
 	end
 end
 
+local function check_to_lower_fb_size(w, h)
+	if platform.os == "iOS" then
+		if w > 750 then
+			return w//2, h//2
+		end
+	end
+
+	return w, h
+end
+
 function S.init(nwh, context, width, height)
+	local fbw, fbh = check_to_lower_fb_size(width, height)
 	rhwi.init {
 		nwh = nwh,
 		context = context,
-		width = width,
-		height = height,
+		width = fbw,
+		height = fbh,
 	}
 	cr.init()
 	bgfx.set_debug "T"
@@ -61,6 +73,8 @@ function S.init(nwh, context, width, height)
 	encoderBegin = true
 	config.width  = width
 	config.height = height
+	config.fbw = fbw
+	config.fbh = fbh
 	world = ecs.new_world(config)
 	local ev = inputmgr.create(world)
 	S.mouse_wheel = ev.mouse_wheel
