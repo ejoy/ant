@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_VERTEX_H
 #define RMLUI_CORE_VERTEX_H
 
-#include "Header.h"
+#include "Platform.h"
 #include "Types.h"
 
 namespace Rml {

@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_CORE_H
 #define RMLUI_CORE_CORE_H
 
-#include "Header.h"
+#include "Platform.h"
 #include "Types.h"
 #include "Event.h"
 #include "ComputedValues.h"
@@ -43,16 +43,16 @@ class FontEngineInterface;
 class RenderInterface;
 class SystemInterface;
 
-RMLUICORE_API bool Initialise();
-RMLUICORE_API void Shutdown();
-RMLUICORE_API std::string GetVersion();
-RMLUICORE_API void SetRenderInterface(RenderInterface* render_interface);
-RMLUICORE_API RenderInterface* GetRenderInterface();
-RMLUICORE_API void SetFileInterface(FileInterface* file_interface);
-RMLUICORE_API FileInterface* GetFileInterface();
-RMLUICORE_API void SetFontEngineInterface(FontEngineInterface* font_interface);
-RMLUICORE_API FontEngineInterface* GetFontEngineInterface();
-RMLUICORE_API void RegisterPlugin(Plugin* plugin);
+bool Initialise();
+void Shutdown();
+std::string GetVersion();
+void SetRenderInterface(RenderInterface* render_interface);
+RenderInterface* GetRenderInterface();
+void SetFileInterface(FileInterface* file_interface);
+FileInterface* GetFileInterface();
+void SetFontEngineInterface(FontEngineInterface* font_interface);
+FontEngineInterface* GetFontEngineInterface();
+void RegisterPlugin(Plugin* plugin);
 
 }
 

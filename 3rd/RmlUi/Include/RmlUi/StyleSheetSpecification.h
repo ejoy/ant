@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_STYLESHEETSPECIFICATION_H
 #define RMLUI_CORE_STYLESHEETSPECIFICATION_H
 
-#include "Header.h"
+#include "Platform.h"
 #include "PropertySpecification.h"
 #include "Types.h"
 
@@ -42,7 +42,7 @@ struct DefaultStyleSheetParsers;
 	@author Peter Curry
  */
 
-class RMLUICORE_API StyleSheetSpecification
+class StyleSheetSpecification
 {
 public:
 	/// Starts up the specification structure and registers default properties and type parsers.

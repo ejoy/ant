@@ -29,11 +29,11 @@
 #define RMLUI_CORE_TWEEN_H
 
 #include "Types.h"
-#include "Header.h"
+#include "Platform.h"
 
 namespace Rml {
 
-class RMLUICORE_API Tween {
+class Tween {
 public:
 	enum Type { None, Back, Bounce, Circular, Cubic, Elastic, Exponential, Linear, Quadratic, Quartic, Quintic, Sine, Callback, Count };
 	enum Direction { In = 1, Out = 2, InOut = 3 };

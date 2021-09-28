@@ -56,7 +56,7 @@ using KeyframesMap = std::unordered_map<std::string, Keyframes>;
 	@author Lloyd Weehuizen
  */
 
-class RMLUICORE_API StyleSheet : public NonCopyMoveable
+class StyleSheet : public NonCopyMoveable
 {
 public:
 	typedef std::vector< StyleSheetNode* > NodeList;

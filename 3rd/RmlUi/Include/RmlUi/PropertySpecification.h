@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_PROPERTYSPECIFICATION_H
 #define RMLUI_CORE_PROPERTYSPECIFICATION_H
 
-#include "Header.h"
+#include "Platform.h"
 #include "Types.h"
 #include "PropertyIdSet.h"
 #include "ID.h"
@@ -65,7 +65,7 @@ enum class ShorthandType
 	@author Peter Curry
  */
 
-class RMLUICORE_API PropertySpecification
+class PropertySpecification
 {
 public:
 	PropertySpecification();

@@ -30,7 +30,7 @@
 #define RMLUI_CORE_RENDERINTERFACE_H
 
 #include "Traits.h"
-#include "Header.h"
+#include "Platform.h"
 #include "Texture.h"
 #include "Vertex.h"
 #include "Types.h"

@@ -37,7 +37,7 @@ namespace Rml {
 class Element;
 class ElementText;
 
-class RMLUICORE_API Layout {
+class Layout {
 public:
 	struct Metrics {
 		Rect frame;

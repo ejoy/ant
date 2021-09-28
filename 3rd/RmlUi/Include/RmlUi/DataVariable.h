@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_DATAVARIABLE_H
 #define RMLUI_CORE_DATAVARIABLE_H
 
-#include "Header.h"
+#include "Platform.h"
 #include "Types.h"
 #include "Traits.h"
 #include "Variant.h"
@@ -45,7 +45,7 @@ namespace Rml {
 *   Together they can be used to get and set variables between the user side and data model side.
 */
 
-class RMLUICORE_API DataVariable {
+class DataVariable {
 public:
 	DataVariable() {}
 	DataVariable(VariableDefinition* definition, void* ptr) : definition(definition), ptr(ptr) {}
@@ -69,7 +69,7 @@ private:
 *   Generally, Scalar types can set and get values, while Array and Struct types can retrieve children based on data addresses.
 */
 
-class RMLUICORE_API VariableDefinition {
+class VariableDefinition {
 public:
 	virtual ~VariableDefinition() = default;
 
@@ -83,7 +83,7 @@ protected:
 	VariableDefinition() {}
 };
 
-RMLUICORE_API DataVariable MakeLiteralIntVariable(int value);
+DataVariable MakeLiteralIntVariable(int value);
 
 
 } // namespace Rml

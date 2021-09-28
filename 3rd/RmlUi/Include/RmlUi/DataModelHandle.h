@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_DATAMODELHANDLE_H
 #define RMLUI_CORE_DATAMODELHANDLE_H
 
-#include "Header.h"
+#include "Platform.h"
 #include "Types.h"
 #include "Traits.h"
 #include "DataTypes.h"

@@ -31,12 +31,12 @@
 
 #include <utility>
 #include <type_traits>
-#include "Header.h"
+#include "Platform.h"
 #include "Debug.h"
 
 namespace Rml {
 
-struct RMLUICORE_API ObserverPtrBlock {
+struct ObserverPtrBlock {
 	int num_observers;
 	void* pointed_to_object;
 };
@@ -72,7 +72,7 @@ class EnableObserverPtr;
  */
 
 template<typename T>
-class RMLUICORE_API ObserverPtr {
+class ObserverPtr {
 public:
 	ObserverPtr() noexcept : block(nullptr) {}
 	ObserverPtr(std::nullptr_t) noexcept : block(nullptr) {}
@@ -142,7 +142,7 @@ private:
 
 
 template<typename T>
-class RMLUICORE_API EnableObserverPtr {
+class EnableObserverPtr {
 public:
 
 	ObserverPtr<T> GetObserverPtr() {

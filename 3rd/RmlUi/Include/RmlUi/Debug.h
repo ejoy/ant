@@ -29,34 +29,11 @@
 #ifndef RMLUI_CORE_DEBUG_H
 #define RMLUI_CORE_DEBUG_H
 
-#include "Header.h"
+#include "Platform.h"
 
-// Define for breakpointing.
-#if defined (RMLUI_PLATFORM_WIN32)
-	#if defined (__MINGW32__)
-		#define RMLUI_BREAK {asm("int $0x03");}
-	#elif defined (_MSC_VER)
-		#define RMLUI_BREAK {__debugbreak();}
-	#else
-		#define RMLUI_BREAK
-	#endif
-#elif defined (RMLUI_PLATFORM_LINUX)
-	#if defined __GNUC__
-		#define RMLUI_BREAK {__builtin_trap();}
-	#else
-		#define RMLUI_BREAK
-	#endif
-#elif defined (RMLUI_PLATFORM_MACOSX)
-	#define RMLUI_BREAK {__builtin_trap();} // namespace Rml
-#endif
-
-
-
-// Define the LT_ASSERT and RMLUI_VERIFY macros.
 #if !defined RMLUI_DEBUG
 #define RMLUI_ASSERT(x)
 #define RMLUI_ASSERTMSG(x, m)
-#define RMLUI_VERIFY(x) x
 #else
 namespace Rml {
 
@@ -65,16 +42,14 @@ void Assert(const char* message, const char* file, int line);
 if (!(x)) \
 { \
 	::Rml::Assert("RMLUI_ASSERT("#x")", __FILE__, __LINE__ ); \
-	RMLUI_BREAK; \
+	abort(); \
 }
 #define RMLUI_ASSERTMSG(x, m)	\
 if (!(x)) \
 { \
 	::Rml::Assert(m, __FILE__, __LINE__ ); \
-	RMLUI_BREAK; \
+	abort(); \
 }
-
-#define RMLUI_VERIFY(x) RMLUI_ASSERT(x)
 
 } // namespace Rml
 #endif
