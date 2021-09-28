@@ -32,19 +32,11 @@
 #include "Traits.h"
 #include "Platform.h"
 #include "Texture.h"
-#include "Vertex.h"
+#include "Geometry.h"
 #include "Types.h"
 #include <glm/glm.hpp>
 
 namespace Rml {
-
-enum class SamplerFlag {
-	Repeat,
-	RepeatX,
-	RepeatY,
-	NoRepeat,
-	Unset,
-};
 
 class RenderInterface : public NonCopyMoveable {
 public:

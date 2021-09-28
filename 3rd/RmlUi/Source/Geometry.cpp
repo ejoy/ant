@@ -1,5 +1,6 @@
 #include "../Include/RmlUi/Geometry.h"
 #include "../Include/RmlUi/Core.h"
+#include "../Include/RmlUi/RenderInterface.h"
 #include <utility>
 
 namespace Rml {
