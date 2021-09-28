@@ -47,8 +47,8 @@ local function Render()
 end
 
 local function check_to_lower_fb_size(w, h)
-	if true then --platform.os == "iOS" then
-		if true then --w > 750 then
+	if platform.os == "iOS" then
+		if w > 750 then
 			return w//2, h//2
 		end
 	end
@@ -71,10 +71,8 @@ function S.init(nwh, context, width, height)
 	bgfx.encoder_begin()
 	ltask.call(ServiceBgfxMain, "encoder_init")
 	encoderBegin = true
-	config.width  = width
-	config.height = height
-	config.fbw = fbw
-	config.fbh = fbh
+	config.width  = fbw
+	config.height = fbh
 	world = ecs.new_world(config)
 	local ev = inputmgr.create(world)
 	S.mouse_wheel = ev.mouse_wheel
