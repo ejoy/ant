@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_ELEMENTTEXT_H
 #define RMLUI_CORE_ELEMENTTEXT_H
 
-#include "Header.h"
+#include "Platform.h"
 #include "Element.h"
 #include "Geometry.h"
 #include "FontEngineInterface.h"
@@ -37,7 +37,7 @@
 
 namespace Rml {
 
-class RMLUICORE_API ElementText final : public Element {
+class ElementText final : public Element {
 public:
 	ElementText(Document* owner, const std::string& text);
 	virtual ~ElementText();

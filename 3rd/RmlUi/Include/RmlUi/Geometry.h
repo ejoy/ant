@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Header.h"
+#include "Platform.h"
 #include "Vertex.h"
 #include "RenderInterface.h"
 #include <stdint.h>

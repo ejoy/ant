@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Header.h"
+#include "Platform.h"
 #include "Types.h"
 #include "Traits.h"
 #include "Input.h"

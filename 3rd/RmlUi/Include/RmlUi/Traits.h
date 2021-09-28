@@ -29,12 +29,12 @@
 #ifndef RMLUI_CORE_TRAITS_H
 #define RMLUI_CORE_TRAITS_H
 
-#include "Header.h"
+#include "Platform.h"
 #include <type_traits>
 
 namespace Rml {
 
-class RMLUICORE_API NonCopyMoveable {
+class NonCopyMoveable {
 public:
 	NonCopyMoveable() {}
 	~NonCopyMoveable() {}
@@ -47,14 +47,14 @@ public:
 
 class ReleaserBase;
 
-class RMLUICORE_API Releasable : public NonCopyMoveable {
+class Releasable : public NonCopyMoveable {
 protected:
 	virtual ~Releasable() = default;
 	virtual void Release() = 0;
 	friend class Rml::ReleaserBase;
 };
 
-class RMLUICORE_API ReleaserBase {
+class ReleaserBase {
 protected:
 	void Release(Releasable* target) const {
 		target->Release();
@@ -62,7 +62,7 @@ protected:
 };
 
 template<typename T>
-class RMLUICORE_API Releaser : public ReleaserBase {
+class Releaser : public ReleaserBase {
 public:
 	void operator()(T* target) const {
 		static_assert(std::is_base_of<Releasable, T>::value, "Rml::Releaser can only operate with classes derived from ::Rml::Releasable.");

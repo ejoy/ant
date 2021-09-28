@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_FILEINTERFACE_H
 #define RMLUI_CORE_FILEINTERFACE_H
 
-#include "Header.h"
+#include "Platform.h"
 #include "Types.h"
 #include "Traits.h"
 
@@ -45,7 +45,7 @@ namespace Rml {
 	@author Peter Curry
  */
 
-class RMLUICORE_API FileInterface : public NonCopyMoveable
+class FileInterface : public NonCopyMoveable
 {
 public:
 	FileInterface();

@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_ELEMENT_H
 #define RMLUI_CORE_ELEMENT_H
 
-#include "Header.h"
+#include "Platform.h"
 #include "Layout.h"
 #include "ComputedValues.h"
 #include "Event.h"
@@ -61,7 +61,7 @@ struct StackingOrderedChild;
 	@author Peter Curry
  */
 
-class RMLUICORE_API Element : public Node, public EnableObserverPtr<Element>
+class Element : public Node, public EnableObserverPtr<Element>
 {
 public:
 	Element(Document* owner, const std::string& tag);

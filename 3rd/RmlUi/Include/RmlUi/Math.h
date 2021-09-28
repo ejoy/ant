@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_MATH_H
 #define RMLUI_CORE_MATH_H
 
-#include "Header.h"
+#include "Platform.h"
 
 namespace Rml {
 
@@ -37,7 +37,7 @@ namespace Rml {
 namespace Math {
 
 // The constant PI.
-extern RMLUICORE_API const float RMLUI_PI;
+extern const float RMLUI_PI;
 
 template < typename Type >
 Type Max(Type a, Type b)
@@ -72,40 +72,40 @@ Type Clamp(Type value, Type min, Type max)
 /// Calculates the cosine of an angle.
 /// @param[in] angle The angle to calculate the cosine of, in radians.
 /// @return The cosine of the angle.
-RMLUICORE_API float Cos(float angle);
+float Cos(float angle);
 /// Calculates the sine of an angle.
 /// @param[in] angle The angle to calculate the sine of, in radians.
 /// @return The sine of the angle.
-RMLUICORE_API float Sin(float angle);
+float Sin(float angle);
 /// Evaluates the natural exponential function on a value.
 /// @param[in] value The value
 /// @return e^(value)
-RMLUICORE_API float Exp(float value);
+float Exp(float value);
 
 /// Converts an angle from degrees to radians.
 /// @param[in] The angle, in degrees.
 /// @return The angle converted to radians.
-RMLUICORE_API float DegreesToRadians(float angle);
+float DegreesToRadians(float angle);
 
 /// Calculates the square root of a value.
 /// @param[in] value The value to calculate the square root of. This must be above zero.
 /// @return The square root of the value.
-RMLUICORE_API float SquareRoot(float value);
+float SquareRoot(float value);
 
 /// Rounds a floating-point value to the nearest integer.
 /// @param[in] value The value to round.
 /// @return The rounded integer.
-RMLUICORE_API int RoundToInteger(float value);
+int RoundToInteger(float value);
 
 /// Efficiently truncates a floating-point value into an integer.
 /// @param[in] value The value to truncate.
 /// @return The truncated value as a signed integer.
-RMLUICORE_API int RealToInteger(float value);
+int RealToInteger(float value);
 
 /// Converts from the ASCII-representation of a hexadecimal digit to decimal.
 /// @param[in] hex_digit The hexadecimal digit to convert to decimal.
 /// @return The digit in decimal.
-RMLUICORE_API int HexToDecimal(char hex_digit);
+int HexToDecimal(char hex_digit);
 
 
 }

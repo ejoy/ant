@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_PROPERTYPARSER_H
 #define RMLUI_CORE_PROPERTYPARSER_H
 
-#include "Header.h"
+#include "Platform.h"
 #include "Property.h"
 
 namespace Rml {
@@ -42,7 +42,7 @@ using ParameterMap = std::unordered_map< std::string, int >;
 	@author Peter Curry
  */
 
-class RMLUICORE_API PropertyParser
+class PropertyParser
 {
 public:
 	virtual ~PropertyParser() {}

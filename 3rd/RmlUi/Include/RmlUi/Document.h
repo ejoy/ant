@@ -42,7 +42,7 @@ class StyleSheet;
 class DataModel;
 class DataModelConstructor;
 
-class RMLUICORE_API Document {
+class Document {
 public:
 	Document(const Size& dimensions);
 	virtual ~Document();

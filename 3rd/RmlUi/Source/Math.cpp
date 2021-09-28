@@ -39,37 +39,37 @@ namespace Math {
 const float RMLUI_PI = 3.141592653f;
 
 // Calculates the cosine of an angle.
-RMLUICORE_API float Cos(float angle)
+float Cos(float angle)
 {
 	return cosf(angle);
 }
 
 // Calculates the sine of an angle.
-RMLUICORE_API float Sin(float angle)
+float Sin(float angle)
 {
 	return sinf(angle);
 }
 
 // Evaluates the natural exponential function on a value.
-RMLUICORE_API float Exp(float value)
+float Exp(float value)
 {
 	return expf(value);
 }
 
 // Converts an angle from degrees to radians.
-RMLUICORE_API float DegreesToRadians(float angle)
+float DegreesToRadians(float angle)
 {
 	return angle * (RMLUI_PI / 180.0f);
 }
 
 // Calculates the square root of a value.
-RMLUICORE_API float SquareRoot(float value)
+float SquareRoot(float value)
 {
 	return sqrtf(value);
 }
 
 // Rounds a floating-point value to the nearest integer.
-RMLUICORE_API int RoundToInteger(float value)
+int RoundToInteger(float value)
 {
 	if (value > 0.0f)
 		return RealToInteger(value + 0.5f);
@@ -78,13 +78,13 @@ RMLUICORE_API int RoundToInteger(float value)
 }
 
 // Efficiently truncates a floating-point value into an integer.
-RMLUICORE_API int RealToInteger(float value)
+int RealToInteger(float value)
 {
 	return int(value);
 }
 
 // Converts from a hexadecimal digit to decimal.
-RMLUICORE_API int HexToDecimal(char hex_digit)
+int HexToDecimal(char hex_digit)
 {
 	if (hex_digit >= '0' && hex_digit <= '9')
 		return hex_digit - '0';
