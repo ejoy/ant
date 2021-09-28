@@ -47,8 +47,8 @@ local function Render()
 end
 
 local function check_to_lower_fb_size(w, h)
-	if platform.os == "iOS" then
-		if w > 750 then
+	if true then --platform.os == "iOS" then
+		if true then --w > 750 then
 			return w//2, h//2
 		end
 	end

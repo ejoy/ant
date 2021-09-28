@@ -159,3 +159,5 @@ function vfs.resource(urllst)
     end
     return folder
 end
+
+vfs.sync.resource = vfs.resource
