@@ -1,11 +1,26 @@
 #pragma once
 
 #include "Platform.h"
-#include "Vertex.h"
-#include "RenderInterface.h"
+#include "Types.h"
 #include <stdint.h>
 
 namespace Rml {
+
+enum class SamplerFlag {
+	Repeat,
+	RepeatX,
+	RepeatY,
+	NoRepeat,
+	Unset,
+};
+
+struct Vertex {
+	Point pos;
+	Color col;
+	Point uv;
+};
+
+using Index = uint32_t;
 
 struct Texture;
 
