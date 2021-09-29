@@ -462,19 +462,6 @@ lRenderFrame(lua_State* L){
     return 0;
 }
 
-static int
-lUpdateViewrect(lua_State *L){
-    if (g_wrapper){
-        Rect &r = g_wrapper->context.viewrect;
-        r.x = (int)luaL_checknumber(L, 1);
-        r.y = (int)luaL_checknumber(L, 2);
-        r.w = (int)luaL_checknumber(L, 3);
-        r.h = (int)luaL_checknumber(L, 4);
-        g_wrapper->interface.m_renderer.UpdateViewRect();
-    }
-    return 0;
-}
-
 }
 
 int lDataModelCreate(lua_State* L);
@@ -532,7 +519,6 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementSetProperty", lElementSetProperty },
 		{ "RenderBegin", lRenderBegin },
 		{ "RenderFrame", lRenderFrame },
-		{ "UpdateViewrect", lUpdateViewrect},
 		{ "RmlInitialise", lRmlInitialise },
 		{ "RmlShutdown", lRmlShutdown },
 		{ "RmlCreateContext", lRmlCreateContext },

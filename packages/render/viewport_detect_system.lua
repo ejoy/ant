@@ -49,7 +49,8 @@ end
 
 local function update_render_target(viewsize)
 	rb_cache = {}
-	for qe in w:select "watch_screen_buffer render_target:in camera_ref?in" do
+	w:clear "render_target_changed"
+	for qe in w:select "watch_screen_buffer render_target:in camera_ref?in render_target_changed?out" do
 		update_render_queue(qe, viewsize)
 	end
 

@@ -98,3 +98,6 @@ component_v2 "cull_tag".type "lua"
 policy_v2 "cull"
     .require_system "cull_system"
     .component_v2 "cull_tag"
+
+policy_v2 "render_target"
+    .component_v2 "render_target"

@@ -27,7 +27,7 @@ policy_v2 "postprocess_object"
     .component_v2 "postprocess_input"
 
 policy_v2 "postprocess_queue"
-    .component_v2 "render_target"
+    .require_policy_v2 "render_target"
 
 component_v2 "tonemapping"
 system "tonemapping_system"

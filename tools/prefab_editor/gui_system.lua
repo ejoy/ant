@@ -493,8 +493,6 @@ function m:end_frame()
         local viewport = {x = dock_x - mvp.WorkPos[1], y = dock_y - mvp.WorkPos[2] + uiconfig.MenuHeight, w = dock_width, h = dock_height}
         irq.set_view_rect("main_queue", viewport)
 
-        iRmlUi.update_viewrect(viewport.x, viewport.y, viewport.w, viewport.h)
-
         local secondViewport = {x = viewport.x + (dock_width - second_view_width), y = viewport.y + (dock_height - second_vew_height), w = second_view_width, h = second_vew_height}
         irq.set_view_rect(camera_mgr.second_view, secondViewport)
         world:pub {"ViewportDirty", viewport}

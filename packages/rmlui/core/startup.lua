@@ -53,7 +53,7 @@ function S.initialize(t)
     ServiceWorld = t.service_world
     require "font" (t.font_mgr)
     initRender(t)
-    local c = rmlui.RmlCreateContext(t.viewrect.w, t.viewrect.h)
+    local c = rmlui.RmlCreateContext(1, 1)
     updateContext(c)
     ltask.fork(Render)
 end
@@ -116,8 +116,7 @@ function S.debugger(open)
     end
 end
 
-function S.update_viewrect(x, y, w, h)
-    rmlui.UpdateViewrect(x, y, w, h)
+function S.update_context_size(w, h)
     if context then
         rmlui.ContextUpdateSize(context, w, h)
     end
