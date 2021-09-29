@@ -49,7 +49,7 @@ StreamFile::~StreamFile()
 /// Attempts to open the stream pointing at a given URL.
 bool StreamFile::Open(const std::string& path)
 {
-	SetStreamDetails(path, Stream::MODE_READ);
+	SetStreamDetails(path);
 
 	if (file_handle)
 		Close();
@@ -90,44 +90,12 @@ size_t StreamFile::Tell() const
 	return GetFileInterface()->Tell(file_handle);
 }
 
-// Sets the stream position (in bytes).
-bool StreamFile::Seek(long offset, int origin) const
-{
-	return GetFileInterface()->Seek(file_handle, offset, origin);
-}
-
 // Read from the stream.
 size_t StreamFile::Read(void* buffer, size_t bytes) const
 {
 	return GetFileInterface()->Read(buffer, bytes, file_handle);
 }
 
-// Write to the stream at the current position.
-size_t StreamFile::Write(const void* RMLUI_UNUSED_PARAMETER(buffer), size_t RMLUI_UNUSED_PARAMETER(bytes))
-{
-	RMLUI_UNUSED(buffer);
-	RMLUI_UNUSED(bytes);
-	return 0;
-}
-
-// Truncate the stream to the specified length.
-size_t StreamFile::Truncate(size_t RMLUI_UNUSED_PARAMETER(bytes))
-{
-	RMLUI_UNUSED(bytes);
-	return 0;
-}
-
-// Returns true if the stream is ready for reading, false otherwise.
-bool StreamFile::IsReadReady()
-{
-	return Tell() < Length();
-}
-
-// Returns true if the stream is ready for writing, false otherwise.
-bool StreamFile::IsWriteReady()
-{
-	return false;
-}
 // Determines the length of the stream.
 void StreamFile::GetLength()
 {

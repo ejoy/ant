@@ -133,7 +133,7 @@ local frame_control; do
                 printtext = ("FPS: %.03f"):format(fps)
             end
         end
-        bgfx.dbg_text_print(0, 0, 0x02, printtext)
+        bgfx.dbg_text_print(8, 0, 0x02, printtext)
     end
     function frame_control()
         local time = gettime()
