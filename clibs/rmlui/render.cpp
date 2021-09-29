@@ -221,7 +221,8 @@ bool Renderer::LoadTexture(Rml::TextureHandle& handle, Rml::Size& dimensions, co
 	ifile->Close(fh);
 
 	bgfx_texture_info_t info;
-	const bgfx_texture_handle_t th = BGFX(create_texture)(mem, 0, 1, &info);
+	const uint64_t flags = BGFX_TEXTURE_SRGB;
+	const bgfx_texture_handle_t th = BGFX(create_texture)(mem, flags, 1, &info);
 	if (th.idx != UINT16_MAX){
 		dimensions.w = info.width;
 		dimensions.h = info.height;
