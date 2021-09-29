@@ -51,6 +51,12 @@ local function check_load_framebuffer_size(w, h)
 	local fbw, fbh = setting:get "graphic/framebuffer/w", setting:get "graphic/framebuffer/h"
 	if fbw and fbh then
 		return fbw, fbh
+	else
+		local ratio = setting:get "graphic/framebuffer/ratio"
+		if ratio then
+			return math.floor(w * ratio + 0.5),
+			math.floor(h * ratio + 0.5)
+		end
 	end
 	return w, h
 end

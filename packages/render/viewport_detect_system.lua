@@ -50,7 +50,7 @@ local function update_render_queue(q, viewsize)
 end
 
 local function disable_resize()
-	return setting:get "graphic/framebuffer/w" ~= nil
+	return setting:get "graphic/framebuffer/w" ~= nil or setting:get "graphic/framebuffer/ratio" ~= nil
 end
 
 local function update_render_target(viewsize)
