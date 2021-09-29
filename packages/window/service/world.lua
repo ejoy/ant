@@ -63,6 +63,7 @@ end
 
 function S.init(nwh, context, width, height)
 	local fbw, fbh = check_load_framebuffer_size(width, height)
+	log.info("framebuffer size:", fbw, fbh)
 	rhwi.init {
 		nwh = nwh,
 		context = context,
