@@ -62,40 +62,12 @@ public:
 	/// Get Stream position ( in bytes )
 	size_t Tell() const override;
 
-	/// Set Stream position ( in bytes )
-	bool Seek(long offset, int origin) const override;
-
 	/// Read from the stream
 	using Stream::Read;
 	size_t Read(void* buffer, size_t bytes) const override;
 
-	/// Peek into the stream
-	size_t Peek(void *buffer, size_t bytes) const override;
-
-	/// Write to the stream
-	using Stream::Write;
-	size_t Write(const void* buffer, size_t bytes) override;
-
-	/// Truncate the stream to the specified length
-	size_t Truncate(size_t bytes) override;
-
-	/// Push onto the front of the stream
-	size_t PushFront(const void* buffer, size_t bytes) override;
-
-	/// Pop from the front of the stream
-	size_t PopFront(size_t bytes) override;
-
-	/// Raw access to the stream
-	const uint8_t* RawStream() const;
-
 	/// Erase a section of the stream
 	void Erase(size_t offset, size_t bytes);
-
-	/// Does the stream have data available for reading
-	bool IsReadReady() override;
-
-	/// Is the stream able to accept data now
-	bool IsWriteReady() override;
 
 	/// Sets this streams source URL, useful data that is stored
 	/// in memory streams that originated from files
