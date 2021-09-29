@@ -161,3 +161,4 @@ function vfs.resource(urllst)
 end
 
 vfs.sync.resource = vfs.resource
+vfs.async.resource = vfs.resource
