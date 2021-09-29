@@ -5,6 +5,7 @@ local inputmgr  = import_package "ant.inputmgr"
 local ecs       = import_package "ant.luaecs"
 local rhwi      = import_package "ant.hwi"
 local cr        = import_package "ant.compile_resource"
+local setting	= import_package "ant.settings".setting
 local platform  = require "platform"
 
 local bgfx      = require "bgfx"
@@ -46,18 +47,16 @@ local function Render()
 	end
 end
 
-local function check_to_lower_fb_size(w, h)
-	if platform.os == "iOS" then
-		if w > 750 then
-			return w//2, h//2
-		end
+local function check_load_framebuffer_size(w, h)
+	local fbw, fbh = setting:get "graphic/framebuffer/w", setting:get "graphic/framebuffer/h"
+	if fbw and fbh then
+		return fbw, fbh
 	end
-
 	return w, h
 end
 
 function S.init(nwh, context, width, height)
-	local fbw, fbh = check_to_lower_fb_size(width, height)
+	local fbw, fbh = check_load_framebuffer_size(width, height)
 	rhwi.init {
 		nwh = nwh,
 		context = context,
