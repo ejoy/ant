@@ -61,8 +61,6 @@ float ComputeProperty(FloatValue fv, Element* e) {
 		return fv.value * e->GetFontSize();
 	case Property::REM:
 		return fv.value * e->GetOwnerDocument()->body->GetFontSize();
-	case Property::DP:
-		return fv.value * e->GetContext()->GetDensityIndependentPixelRatio();
 	case Property::DEG:
 		return Math::DegreesToRadians(fv.value);
 	case Property::VW:
