@@ -130,10 +130,10 @@ void Element::OnRender() {
 		stacking_context[i]->OnRender();
 	}
 	SetRednerStatus();
-	if (geometry_border) {
+	if (geometry_border && *geometry_border) {
 		geometry_border->Render();
 	}
-	if (geometry_image) {
+	if (geometry_image && *geometry_image) {
 		geometry_image->Render();
 	}
 	for (; i < stacking_context.size(); ++i) {

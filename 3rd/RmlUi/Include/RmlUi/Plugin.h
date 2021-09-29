@@ -29,14 +29,14 @@
 #ifndef RMLUI_CORE_PLUGIN_H
 #define RMLUI_CORE_PLUGIN_H
 
-#include "Header.h"
+#include "Platform.h"
 #include "Types.h"
 
 namespace Rml {
 
 class Document;
 
-class RMLUICORE_API Plugin {
+class Plugin {
 public:
 	virtual ~Plugin();
 	virtual void OnInitialise();

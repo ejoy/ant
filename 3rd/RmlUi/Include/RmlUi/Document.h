@@ -42,7 +42,7 @@ class StyleSheet;
 class DataModel;
 class DataModelConstructor;
 
-class RMLUICORE_API Document {
+class Document {
 public:
 	Document(const Size& dimensions);
 	virtual ~Document();
@@ -85,6 +85,7 @@ public:
 	void ProcessMouseWheel(float wheel_delta, int key_modifier_state);
 	void OnElementDetach(Element* element);
 	void SetDimensions(const Size& dimensions);
+	const Size& GetDimensions();
 
 	void Update();
 	void Render();

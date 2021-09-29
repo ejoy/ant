@@ -568,8 +568,13 @@ void Document::SetDimensions(const Size& _dimensions) {
 	if (dimensions != _dimensions) {
 		dirty_dimensions = true;
 		dimensions = _dimensions;
+		body->GetStyle()->DirtyPropertiesWithUnitRecursive(Property::VIEW_LENGTH);
 		body->DispatchEvent(EventId::Resize, EventDictionary());
 	}
+}
+
+const Size& Document::GetDimensions() {
+	return dimensions;
 }
 
 void Document::Update() {

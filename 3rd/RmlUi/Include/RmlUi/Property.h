@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_PROPERTY_H
 #define RMLUI_CORE_PROPERTY_H
 
-#include "Header.h"
+#include "Platform.h"
 #include "Colour.h"
 #include "Types.h"
 #include "Animation.h"
@@ -62,9 +62,7 @@ public:
 	enum Unit
 	{
 		UNKNOWN = 1 << 0,
-
 		KEYWORD = 1 << 1,           // generic keyword; fetch as < int >
-
 		STRING = 1 << 2,            // generic string; fetch as < std::string >
 
 		// Absolute values.
@@ -74,13 +72,15 @@ public:
 		RAD = 1 << 6,               // number suffixed by 'rad'; fetch as < float >
 		COLOUR = 1 << 7,            // colour; fetch as < Color >
 		DP = 1 << 8,                // density-independent pixel; number suffixed by 'dp'; fetch as < float >
-		ABSOLUTE_UNIT = NUMBER | PX | DP | DEG | RAD | COLOUR,
 
 		// Relative values.
 		EM = 1 << 9,                // number suffixed by 'em'; fetch as < float >
 		PERCENT = 1 << 10,          // number suffixed by '%'; fetch as < float >
 		REM = 1 << 11,              // number suffixed by 'rem'; fetch as < float >
-		RELATIVE_UNIT = EM | REM | PERCENT,
+		VW = 1 << 20,
+		VH = 1 << 21,
+		VMIN = 1 << 22,
+		VMAX = 1 << 23,
 
 		// Values based on pixels-per-inch.
 		INCH = 1 << 12,             // number suffixed by 'in'; fetch as < float >
@@ -88,17 +88,15 @@ public:
 		MM = 1 << 14,               // number suffixed by 'mm'; fetch as < float >
 		PT = 1 << 15,               // number suffixed by 'pt'; fetch as < float >
 		PC = 1 << 16,               // number suffixed by 'pc'; fetch as < float >
-		PPI_UNIT = INCH | CM | MM | PT | PC,
 
 		TRANSFORM = 1 << 17,        // transform; fetch as < TransformPtr >, may be empty
 		TRANSITION = 1 << 18,       // transition; fetch as < TransitionList >
 		ANIMATION = 1 << 19,        // animation; fetch as < AnimationList >
 
-		LENGTH = PX | DP | PPI_UNIT | EM | REM,
+		VIEW_LENGTH = VW | VH | VMIN | VMAX,
+		LENGTH = PX | DP | INCH | CM | MM | PT | PC | EM | REM | VIEW_LENGTH,
 		LENGTH_PERCENT = LENGTH | PERCENT,
 		NUMBER_LENGTH_PERCENT = NUMBER | LENGTH | PERCENT,
-		ABSOLUTE_LENGTH = PX | DP | PPI_UNIT,
-		ANGLE = DEG | RAD
 	};
 
 	Property();

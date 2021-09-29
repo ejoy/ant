@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_EVENT_H
 #define RMLUI_CORE_EVENT_H
 
-#include "Header.h"
+#include "Platform.h"
 #include "Types.h"
 #include "ID.h"
 
@@ -68,7 +68,7 @@ inline T Get(const EventDictionary& dictionary, const std::string& key, const T&
 	@author Lloyd Weehuizen
  */
 
-class RMLUICORE_API Event
+class Event
 {
 public:
 	/// Constructor

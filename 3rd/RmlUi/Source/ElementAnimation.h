@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_ELEMENTANIMATION_H
 #define RMLUI_CORE_ELEMENTANIMATION_H
 
-#include "../Include/RmlUi/Header.h"
+#include "../Include/RmlUi/Platform.h"
 #include "../Include/RmlUi/Property.h"
 #include "../Include/RmlUi/Tween.h"
 #include "../Include/RmlUi/ID.h"

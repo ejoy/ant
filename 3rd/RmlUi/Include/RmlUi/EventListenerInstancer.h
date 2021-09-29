@@ -31,7 +31,7 @@
 
 #include "Traits.h"
 #include "Types.h"
-#include "Header.h"
+#include "Platform.h"
 #include "Element.h"
 
 namespace Rml {

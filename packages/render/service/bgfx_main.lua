@@ -99,6 +99,8 @@ local frame_control; do
     local frames = {}
     local fps = 0
     local lasttime = 0
+    local printtime = 0
+    local printtext = ""
     local function gettime()
         local _, t = ltask.now() --10ms
         return t
@@ -123,11 +125,15 @@ local frame_control; do
         end
     end
     local function print_fps()
-        if maxfps then
-            print(("fps: %.03f / %d"):format(fps, maxfps))
-        else
-            print(("fps: %.03f"):format(fps))
+        if lasttime - printtime >= 100 then
+            printtime = lasttime
+            if maxfps then
+                printtext = ("FPS: %.03f / %d"):format(fps, maxfps)
+            else
+                printtext = ("FPS: %.03f"):format(fps)
+            end
         end
+        bgfx.dbg_text_print(0, 0, 0x02, printtext)
     end
     function frame_control()
         local time = gettime()
@@ -135,7 +141,7 @@ local frame_control; do
         frame_last = frame_last + 1
         frames[frame_last] = time
         calc_fps()
-        --print_fps()
+        print_fps()
         if maxfps and fps > maxfps then
             local waittime = math.ceil(100/maxfps - (time - lasttime))
             if waittime > 0 then

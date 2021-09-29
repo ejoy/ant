@@ -97,7 +97,6 @@ struct RmlContext {
     texture_desc          default_tex;
     texture_desc          font_tex;
     uint16_t              viewid;
-    Rect                  viewrect;
     bgfx_vertex_layout_t* layout;
     RmlContext(lua_State *L, int idx);
 };

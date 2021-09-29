@@ -14,7 +14,6 @@ error "need matrix type as column major"
 Renderer::Renderer(const RmlContext* context)
     : mcontext(context)
     , mEncoder(nullptr){
-    UpdateViewRect();
     BGFX(set_view_mode)(mcontext->viewid, BGFX_VIEW_MODE_SEQUENTIAL);
 }
 
@@ -27,12 +26,6 @@ FE(Rml::TextureHandle th){
 static bool
 is_font_tex(SDFFontEffect *fe) { 
     return fe ? (fe->GetType() & FE_FontTex) != 0 : false;
-}
-
-void Renderer::UpdateViewRect(){
-    const auto &vr = mcontext->viewrect;
-    BGFX(set_view_scissor)(mcontext->viewid, vr.x, vr.y, vr.w, vr.h);
-    BGFX(set_view_rect)(mcontext->viewid, uint16_t(vr.x), uint16_t(vr.y), uint16_t(vr.w), uint16_t(vr.h));
 }
 
 static uint32_t getTextureFlags(Rml::SamplerFlag flags) {

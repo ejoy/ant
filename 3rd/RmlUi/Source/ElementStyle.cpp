@@ -65,27 +65,31 @@ float ComputeProperty(FloatValue fv, Element* e) {
 		return fv.value * e->GetContext()->GetDensityIndependentPixelRatio();
 	case Property::DEG:
 		return Math::DegreesToRadians(fv.value);
+	case Property::VW:
+		return fv.value * e->GetOwnerDocument()->GetDimensions().w * 0.01f;
+	case Property::VH:
+		return fv.value * e->GetOwnerDocument()->GetDimensions().h * 0.01f;
+	case Property::VMIN: {
+		auto const& size = e->GetOwnerDocument()->GetDimensions();
+		return fv.value * std::min(size.w, size.h) * 0.01f;
+	}
+	case Property::VMAX: {
+		auto const& size = e->GetOwnerDocument()->GetDimensions();
+		return fv.value * std::max(size.w, size.h) * 0.01f;
+	}
+	case Property::INCH: // inch
+		return fv.value * PixelsPerInch;
+	case Property::CM: // centimeter
+		return fv.value * PixelsPerInch * (1.0f / 2.54f);
+	case Property::MM: // millimeter
+		return fv.value * PixelsPerInch * (1.0f / 25.4f);
+	case Property::PT: // point
+		return fv.value * PixelsPerInch * (1.0f / 72.0f);
+	case Property::PC: // pica
+		return fv.value * PixelsPerInch * (1.0f / 6.0f);
 	default:
-		break;
+		return 0.0f;
 	}
-	if (fv.unit & Property::PPI_UNIT) {
-		float inch = fv.value * PixelsPerInch;
-		switch (fv.unit) {
-		case Property::INCH: // inch
-			return inch;
-		case Property::CM: // centimeter
-			return inch * (1.0f / 2.54f);
-		case Property::MM: // millimeter
-			return inch * (1.0f / 25.4f);
-		case Property::PT: // point
-			return inch * (1.0f / 72.0f);
-		case Property::PC: // pica
-			return inch * (1.0f / 6.0f);
-		default:
-			break;
-		}
-	}
-	return 0.0f;
 }
 
 float ComputePropertyW(FloatValue fv, Element* e) {
@@ -417,8 +421,9 @@ void ElementStyle::DirtyPropertiesWithUnitRecursive(Property::Unit unit)
 		auto name_property_pair = *it;
 		PropertyId id = name_property_pair.first;
 		const Property& property = name_property_pair.second;
-		if (property.unit == unit)
+		if (property.unit & unit) {
 			DirtyProperty(id);
+		}
 	}
 
 	// Now dirty all of our descendant's properties that use the unit.

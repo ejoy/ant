@@ -62,6 +62,9 @@ function CMD.TYPE(path)
 	end
 end
 
+function CMD.FETCH(path)
+end
+
 function CMD.REPOPATH()
 	return repopath
 end

@@ -46,7 +46,7 @@ class PropertyIdSetIterator;
 	Supports union and intersection operations between two sets, as well as iteration through the IDs that are inserted.
 */
 
-class RMLUICORE_API PropertyIdSet {
+class PropertyIdSet {
 private:
 	static constexpr size_t N = size_t(PropertyId::NumDefinedIds);
 	std::bitset<N> defined_ids;
@@ -114,7 +114,7 @@ public:
 
 
 
-class RMLUICORE_API PropertyIdSetIterator
+class PropertyIdSetIterator
 {
 public:
 	PropertyIdSetIterator() = default;

@@ -70,6 +70,10 @@ std::string Property::ToString() const {
 	case Property::MM:		return std::to_string(std::get<float>(value)) + "mm";
 	case Property::PT:		return std::to_string(std::get<float>(value)) + "pt";
 	case Property::PC:		return std::to_string(std::get<float>(value)) + "pc";
+	case Property::VW:		return std::to_string(std::get<float>(value)) + "vw";
+	case Property::VH:		return std::to_string(std::get<float>(value)) + "vh";
+	case Property::VMIN:		return std::to_string(std::get<float>(value)) + "vmin";
+	case Property::VMAX:		return std::to_string(std::get<float>(value)) + "vmax";
 	default:
 		return "<unknown, " + std::to_string(unit) + ">";
 	}
@@ -90,6 +94,10 @@ float Property::GetFloat() const {
 	case Property::MM:
 	case Property::PT:
 	case Property::PC:
+	case Property::VW:
+	case Property::VH:
+	case Property::VMIN:
+	case Property::VMAX:
 		return std::get<float>(value);
 	default:
 		return UndefinedFloat;
@@ -221,7 +229,11 @@ std::string ToString<FloatValue>(const FloatValue& v) {
 		case Property::MM:		value += "mm"; break;
 		case Property::PT:		value += "pt"; break;
 		case Property::PC:		value += "pc"; break;
-		default:					break;
+		case Property::VW:		value += "vw"; break;
+		case Property::VH:		value += "vh"; break;
+		case Property::VMIN:	value += "vmin"; break;
+		case Property::VMAX:	value += "vmax"; break;
+		default:				break;
 	}
 	return value;
 }

@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_FACTORY_H
 #define RMLUI_CORE_FACTORY_H
 
-#include "Header.h"
+#include "Platform.h"
 #include "Stream.h"
 
 namespace Rml {
@@ -56,7 +56,7 @@ enum class EventId : uint16_t;
 	@author Lloyd Weehuizen
  */
 
-class RMLUICORE_API Factory
+class Factory
 {
 public:
 	/// Initialise the element factory

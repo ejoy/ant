@@ -103,12 +103,14 @@ function irq.set_view_clear(queuename, what, color, depth, stencil)
 end
 
 function irq.set_view_rect(queuename, rect)
-	local qe = w:singleton(queuename, "render_target:in camera_ref:in")
+	local qe = w:singleton(queuename, "render_target:in camera_ref?in")
 	local rt = qe.render_target
 	local vr = rt.view_rect
 	vr.x, vr.y = rect.x, rect.y
 	vr.w, vr.h = rect.w, rect.h
-	icamera.set_frustum_aspect(qe.camera_ref, vr.w/vr.h)
+	if qe.camera_ref then
+		icamera.set_frustum_aspect(qe.camera_ref, vr.w/vr.h)
+	end
 	bgfx.set_view_rect(rt.viewid, vr.x, vr.y, vr.w, vr.h)
 	world:pub{"component_changed", "view_rect", queuename}
 end

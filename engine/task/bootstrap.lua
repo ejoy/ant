@@ -111,7 +111,12 @@ end
 	end
 
 	local servicelua = "/engine/task/service/service.lua"
-	init_exclusive_service = initstr .. ([[dofile %q]]):format(servicelua)
+	init_exclusive_service = initstr .. ([[
+local vfs = require "vfs"
+vfs.sync = {realpath=vfs.realpath,list=vfs.list,type=vfs.type,resource=vfs.resource}
+vfs.async = {realpath=vfs.realpath,list=vfs.list,type=vfs.type,resource=vfs.resource}
+dofile %q
+]]):format(servicelua)
 	config.init_service = initstr .. ([[
 local initfunc = assert(loadfile %q)
 local ltask = require "ltask"
@@ -136,7 +141,7 @@ end
 function vfs.resource(paths)
 	return request("RESOURCE", paths)
 end
-vfs.async = {realpath=vfs.realpath,list=vfs.list,type=vfs.type}
+vfs.async = {realpath=vfs.realpath,list=vfs.list,type=vfs.type,resource=vfs.resource}
 initfunc()]]):format(servicelua)
 end
 
