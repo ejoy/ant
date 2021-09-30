@@ -96,11 +96,17 @@ function light_view:show()
             if light.angular_radius then
                 ilight.set_angular_radius(eid, math.rad(light.angular_radius))
             end
+            
         end
+
+        
     end
     local update_values = {}
     comp_ui.build("Entity", build_component_tree(world[eid]), comp_defines.desc, update_values)
-    update_component(update_values)
+    if update_values.Entity then
+        update_component(update_values.Entity)
+        light_gizmo.update_gizmo()
+    end
 end
 
 return light_view
