@@ -1447,6 +1447,18 @@ lset_origin_bottom_left(lua_State *L){
 }
 
 static int
+lget_homogeneous_depth(lua_State *L){
+	lua_pushboolean(L, g_default_homogeneous_depth);
+	return 1;
+}
+
+static int
+lget_origin_bottom_left(lua_State *L){
+	lua_pushboolean(L, g_origin_bottom_left);
+	return 1;
+}
+
+static int
 lpack(lua_State *L) {
 	size_t sz;
 	const char * format = luaL_checklstring(L, 1, &sz);
@@ -2002,6 +2014,8 @@ init_math3d_api(lua_State *L, struct boxstack *bs) {
 		{ "stacksize", lstacksize},
 		{ "set_homogeneous_depth", lset_homogeneous_depth},
 		{ "set_origin_bottom_left", lset_origin_bottom_left},
+		{ "get_homogeneous_depth", lget_homogeneous_depth},
+		{ "get_origin_bottom_left", lget_origin_bottom_left},
 		{ "pack", lpack },
 		{ "isvalid", lisvalid},
 		{ "isequal", lisequal},

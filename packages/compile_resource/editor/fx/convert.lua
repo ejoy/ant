@@ -2,7 +2,6 @@ local lfs = require "filesystem.local"
 local fs = require "filesystem"
 local toolset = require "editor.fx.toolset"
 local SHARER_INC = lfs.absolute(fs.path "/pkg/ant.resources/shaders":localpath())
-local identity_util = require "identity"
 local setting = import_package "ant.settings".setting
 
 local function DEF_FUNC() end
@@ -44,7 +43,6 @@ local SETTING_MAPPING = {
 local enable_cs = setting:data().graphic.lighting.cluster_shading ~= 0
 
 local function default_macros(setting)
-    local IDENTITY_items = identity_util.parse(setting.identity)
     local m = {
         "ENABLE_SRGB_TEXTURE",
         "ENABLE_SRGB_FB",
@@ -52,8 +50,8 @@ local function default_macros(setting)
     }
 
     if enable_cs then
-        m[#m+1] = "HOMOGENEOUS_DEPTH=" .. (IDENTITY_items.homogeneous_depth and "1" or "0")
-        m[#m+1] = "ORIGIN_BOTTOM_LEFT=" .. (IDENTITY_items.origin_bottomleft and "1" or "0")
+        m[#m+1] = "HOMOGENEOUS_DEPTH=" .. (setting.hd and "1" or "0")
+        m[#m+1] = "ORIGIN_BOTTOM_LEFT=" .. (setting.obl and "1" or "0")
         m[#m+1] = "CLUSTER_SHADING"
     end
     return m
@@ -87,16 +85,15 @@ local function compile_debug_shader(platform, renderer)
 end
 
 return function (input, output, setting)
-    local IDENTITY_items = identity_util.parse(setting.identity)
     local ok, err, deps = toolset.compile {
-        platform = IDENTITY_items.platform,
-        renderer = IDENTITY_items.renderer,
+        platform = setting.os,
+        renderer = setting.renderer,
         input = input,
         output = output / "main.bin",
         includes = {SHARER_INC},
         stage = setting.stage,
         macros = get_macros(setting),
-        debug = compile_debug_shader(IDENTITY_items.platform, IDENTITY_items.renderer),
+        debug = compile_debug_shader(setting.os, setting.renderer),
     }
     if not ok then
         return false, ("compile failed: " .. input:string() .. "\n\n" .. err)

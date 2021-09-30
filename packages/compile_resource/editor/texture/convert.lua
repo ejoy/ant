@@ -1,17 +1,15 @@
 local convert_image = require "editor.texture.util"
-local serialize = import_package "ant.serialize"
 local datalist = require "datalist"
 local lfs = require "filesystem.local"
-local ident_util = require "identity"
 
-local function which_format(plat, param)
+local function which_format(os, param)
 	local compress = param.compress
 	if compress then
 		-- TODO: some bug on texturec tool, format is not 4X4 and texture size is not multipe of 4/5/6/8, the tool will crash
-		if plat == "ios" or plat == "osx" then
+		if os == "ios" or os == "osx" then
 			return "ASTC4X4"
 		end
-		return compress[plat]
+		return compress[os]
 	end
 
 	return param.format
@@ -30,10 +28,9 @@ return function (input, output, setting, localpath)
 	local param = readdatalist(input)
 	local dependfiles = {input}
 	if param.path then
-		local id = ident_util.parse(setting.identity)
 		param.setting = setting
 		param.local_texpath = localpath(assert(param.path))
-		param.format = assert(which_format(id.platform, param))
+		param.format = assert(which_format(setting.os, param))
 
 		dependfiles[#dependfiles+1] = param.path
 	else

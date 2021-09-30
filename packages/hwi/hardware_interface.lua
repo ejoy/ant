@@ -68,13 +68,8 @@ local function bgfx_init(args)
 	math3d.origin_bottom_left = caps.originBottomLeft
 end
 
-function hw.get_identity()
-    local os = platform.OS
-    local renderer = hw.get_caps().rendererType
-
-	local view_setting = math3d.homogeneous_depth and "_hd" or ""
-	view_setting = view_setting .. (math3d.origin_bottom_left and "_obl" or "")
-	return (os.."_"..renderer .. view_setting):lower()
+function hw.get_renderer()
+    return hw.get_caps().rendererType
 end
 
 function hw.init(args)
