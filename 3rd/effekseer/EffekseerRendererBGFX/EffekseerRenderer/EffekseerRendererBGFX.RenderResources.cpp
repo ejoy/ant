@@ -98,11 +98,11 @@ namespace EffekseerRendererBGFX {
 				return true;
 			} else {
 				bgfx_texture_info_t info;
-				buffer_ = BGFX(create_texture)(BGFX(copy)(param.InitialData.data(), param.InitialData.size()), 0, 1, &info);
+				buffer_ = BGFX(create_texture)(BGFX(copy)(param.InitialData.data(), param.InitialData.size()), BGFX_TEXTURE_SRGB, 0, &info);
 				if (buffer_.idx != UINT16_MAX) {
 					size_[0] = info.width;
 					size_[1] = info.height;
-					format_ = param.Format;
+					format_ = ::Effekseer::Backend::TextureFormatType::R8G8B8A8_UNORM_SRGB;// param.Format;
 					hasMipmap_ = info.numMips > 1;
 					return true;
 				}

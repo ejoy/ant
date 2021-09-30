@@ -4,7 +4,7 @@ local w = world.w
 
 local constant 	= import_package "ant.math".constant
 local iss 		= ecs.import.interface "ant.scene|iscenespace"
-local computil 	= ecs.import.interface "ant.render|entity"
+local ientity 	= ecs.import.interface "ant.render|entity"
 local iom 		= ecs.import.interface "ant.objcontroller|obj_motion"
 local ies 		= ecs.import.interface "ant.scene|ientity_state"
 local ilight 	= ecs.import.interface "ant.render|light"
@@ -282,7 +282,7 @@ function gizmo_sys:post_init()
 	create_arrow_widget(axis_root, "x")
 	create_arrow_widget(axis_root, "y")
 	create_arrow_widget(axis_root, "z")
-	local plane_xy_eid = computil.create_prim_plane_entity(
+	local plane_xy_eid = ientity.create_prim_plane_entity(
 		{t = {gizmo_const.MOVE_PLANE_OFFSET, gizmo_const.MOVE_PLANE_OFFSET, 0, 1}, s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0}, r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})},
 		"/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 		"plane_xy")
@@ -291,7 +291,7 @@ function gizmo_sys:post_init()
 	iss.set_parent(plane_xy_eid, axis_root)
 	gizmo.txy.eid = {plane_xy_eid, plane_xy_eid}
 
-	local plane_yz_eid = computil.create_prim_plane_entity(
+	local plane_yz_eid = ientity.create_prim_plane_entity(
 		{t = {0, gizmo_const.MOVE_PLANE_OFFSET, gizmo_const.MOVE_PLANE_OFFSET, 1}, s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0}, r = math3d.tovalue(math3d.quaternion{0, 0, math.rad(90)})},
 		"/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 		"plane_yz")
@@ -300,7 +300,7 @@ function gizmo_sys:post_init()
 	iss.set_parent(plane_yz_eid, axis_root)
 	gizmo.tyz.eid = {plane_yz_eid, plane_yz_eid}
 
-	local plane_zx_eid = computil.create_prim_plane_entity(
+	local plane_zx_eid = ientity.create_prim_plane_entity(
 		{t = {gizmo_const.MOVE_PLANE_OFFSET, 0, gizmo_const.MOVE_PLANE_OFFSET, 1}, s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0}},
 		"/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 		"plane_zx")
@@ -311,12 +311,12 @@ function gizmo_sys:post_init()
 	gizmo:reset_move_axis_color()
 
 	-- roate axis
-	local uniform_rot_eid = computil.create_circle_entity(gizmo_const.UNIFORM_ROT_AXIS_LEN, gizmo_const.ROTATE_SLICES, {}, "rotate_gizmo_uniform")
+	local uniform_rot_eid = ientity.create_circle_entity(gizmo_const.UNIFORM_ROT_AXIS_LEN, gizmo_const.ROTATE_SLICES, {}, "rotate_gizmo_uniform")
 	ies.set_state(uniform_rot_eid, "auxgeom", true)
 	imaterial.set_property(uniform_rot_eid, "u_color", gizmo_const.COLOR_GRAY)
 	iss.set_parent(uniform_rot_eid, uniform_rot_root)
 	local function create_rotate_fan(radius, circle_trans)
-		local mesh_eid = computil.create_circle_mesh_entity(radius, gizmo_const.ROTATE_SLICES, circle_trans, "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material", "rotate_mesh_gizmo_uniform")
+		local mesh_eid = ientity.create_circle_mesh_entity(radius, gizmo_const.ROTATE_SLICES, circle_trans, "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material", "rotate_mesh_gizmo_uniform")
 		imaterial.set_property(mesh_eid, "u_color", {0, 0, 1, 0.5})
 		ies.set_state(mesh_eid, "visible", false)
 		iss.set_parent(mesh_eid, axis_root)
@@ -331,11 +331,11 @@ function gizmo_sys:post_init()
 	gizmo.rw.eid = {uniform_rot_eid, uniform_rot_eid, rot_ccw_mesh_eid, rot_cw_mesh_eid}
 
 	local function create_rotate_axis(axis, line_end, circle_trans)
-		local line_eid = computil.create_line_entity({}, {0, 0, 0}, line_end)
+		local line_eid = ientity.create_line_entity({}, {0, 0, 0}, line_end)
 		ies.set_state(line_eid, "auxgeom", true)
 		imaterial.set_property(line_eid, "u_color", axis.color)
 		iss.set_parent(line_eid, rot_circle_root)
-		local rot_eid = computil.create_circle_entity(gizmo_const.AXIS_LEN, gizmo_const.ROTATE_SLICES, circle_trans, "rotate gizmo circle")
+		local rot_eid = ientity.create_circle_entity(gizmo_const.AXIS_LEN, gizmo_const.ROTATE_SLICES, circle_trans, "rotate gizmo circle")
 		ies.set_state(rot_eid, "auxgeom", true)
 		imaterial.set_property(rot_eid, "u_color", axis.color)
 		iss.set_parent(rot_eid, rot_circle_root)
@@ -377,7 +377,7 @@ function gizmo_sys:post_init()
 	local function create_scale_axis(axis, axis_end)
 		local cube_eid = create_scale_cube({t = axis_end, s = gizmo_const.AXIS_CUBE_SCALE}, axis.color, "scale axis")
 		iss.set_parent(cube_eid, axis_root)
-		local line_eid = computil.create_line_entity({}, {0, 0, 0}, axis_end)
+		local line_eid = ientity.create_line_entity({}, {0, 0, 0}, axis_end)
 		imaterial.set_property(line_eid, "u_color", axis.color)
 		iss.set_parent(line_eid, axis_root)
 		axis.eid = {cube_eid, line_eid}
@@ -386,13 +386,13 @@ function gizmo_sys:post_init()
 	create_scale_axis(gizmo.sy, {0, gizmo_const.AXIS_LEN, 0})
 	create_scale_axis(gizmo.sz, {0, 0, gizmo_const.AXIS_LEN})
 
-	global_axis_x_eid = computil.create_line_entity({}, {0, 0, 0}, {0.1, 0, 0})
+	global_axis_x_eid = ientity.create_line_entity({}, {0, 0, 0}, {0.1, 0, 0})
 	ies.set_state(global_axis_x_eid, "auxgeom", true)
 	imaterial.set_property(global_axis_x_eid, "u_color", gizmo_const.COLOR_X)
-	global_axis_y_eid = computil.create_line_entity({}, {0, 0, 0}, {0, 0.1, 0})
+	global_axis_y_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0.1, 0})
 	ies.set_state(global_axis_y_eid, "auxgeom", true)
 	imaterial.set_property(global_axis_y_eid, "u_color", gizmo_const.COLOR_Y)
-	global_axis_z_eid = computil.create_line_entity({}, {0, 0, 0}, {0, 0, 0.1})
+	global_axis_z_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0, 0.1})
 	ies.set_state(global_axis_z_eid, "auxgeom", true)
 	imaterial.set_property(global_axis_z_eid, "u_color", gizmo_const.COLOR_Z)
 end
