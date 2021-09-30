@@ -1,6 +1,7 @@
 local lfs = require "filesystem.local"
 local fs = require "filesystem"
 local toolset = require "editor.fx.toolset"
+local fxsetting = require "editor.fx.setting"
 local SHARER_INC = lfs.absolute(fs.path "/pkg/ant.resources/shaders":localpath())
 local setting = import_package "ant.settings".setting
 
@@ -40,7 +41,7 @@ local SETTING_MAPPING = {
     shadow_cast = DEF_FUNC,
 }
 
-local enable_cs = setting:data().graphic.lighting.cluster_shading ~= 0
+local enable_cs = setting:get 'graphic/lighting/cluster_shading' ~= 0
 
 local function default_macros(setting)
     local m = {
@@ -57,9 +58,9 @@ local function default_macros(setting)
     return m
 end
 
-local function get_macros(setting)
+local function get_macros(s)
+    local setting = fxsetting.adddef(s)
     local macros = default_macros(setting)
-
     for k, v in pairs(setting) do
         local f = SETTING_MAPPING[k]
         if f == nil then
@@ -85,13 +86,14 @@ local function compile_debug_shader(platform, renderer)
 end
 
 return function (input, output, setting)
+    local stage = input:string():match("/([cfv]s)_[^/]*%.sc$")
     local ok, err, deps = toolset.compile {
         platform = setting.os,
         renderer = setting.renderer,
         input = input,
         output = output / "main.bin",
         includes = {SHARER_INC},
-        stage = setting.stage,
+        stage = stage,
         macros = get_macros(setting),
         debug = compile_debug_shader(setting.os, setting.renderer),
     }
