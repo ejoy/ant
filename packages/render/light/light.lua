@@ -192,6 +192,14 @@ function ilight.set_motion_type(eid, t)
 	world[eid]._light.motion_type = t
 end
 
+function ilight.angular_radius(eid)
+	return world[eid]._light.angular_radius
+end
+
+function ilight.set_angular_radius(eid, ar)
+	world[eid]._light.angular_radius = ar
+end
+
 local lighttypes = {
 	directional = 0,
 	point = 1,

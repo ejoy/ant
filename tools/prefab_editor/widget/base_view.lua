@@ -43,11 +43,9 @@ function BaseView:set_model(eid)
     if self.eid == eid then return false end
     self.eid = eid
     if not self.eid then return false end
-    self.is_prefab = false
+
     local template = hierarchy:get_template(eid)
-    if template and template.filename then
-        self.is_prefab = true
-    end
+    self.is_prefab = template and template.filename
     local property = {}
     property[#property + 1] = self.base.name
     property[#property + 1] = self.base.tag
@@ -78,7 +76,6 @@ function BaseView:on_set_name(value)
     local template = hierarchy:get_template(self.eid)
     template.template.data.name = value
     if is_camera(self.eid) then
-        local w = world.w
         self.eid.name = value
         w:sync("name:out", self.eid)
     else
@@ -115,7 +112,7 @@ function BaseView:on_get_tag()
 end
 
 function BaseView:on_set_position(value)
-    world:pub {"EntityEvent", "move", self.eid, math3d.totable(iom.get_position(self.eid)), value}
+    world:pub {"EntityEvent", "move", self.eid, math3d.tovalue(iom.get_position(self.eid)), value}
 end
 
 function BaseView:on_get_position()
@@ -123,21 +120,21 @@ function BaseView:on_get_position()
 end
 
 function BaseView:on_set_rotate(value)
-    world:pub {"EntityEvent", "rotate", self.eid, math3d.totable(iom.get_rotation(self.eid)), value}
+    world:pub {"EntityEvent", "rotate", self.eid, math3d.tovalue(math3d.quat2euler(iom.get_rotation(self.eid))), value}
 end
 
 function BaseView:on_get_rotate()
     local r = iom.get_rotation(self.eid)
-    local rad = math3d.totable(math3d.quat2euler(r))
+    local rad = math3d.tovalue(math3d.quat2euler(r))
     return { math.deg(rad[1]), math.deg(rad[2]), math.deg(rad[3]) }
 end
 
 function BaseView:on_set_scale(value)
-    world:pub {"EntityEvent", "scale", self.eid, math3d.totable(iom.get_scale(self.eid)), value}
+    world:pub {"EntityEvent", "scale", self.eid, math3d.tovalue(iom.get_scale(self.eid)), value}
 end
 
 function BaseView:on_get_scale()
-    return math3d.totable(iom.get_scale(self.eid))
+    return math3d.tovalue(iom.get_scale(self.eid))
 end
 
 function BaseView:has_rotate()

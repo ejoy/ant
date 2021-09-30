@@ -91,6 +91,33 @@ local function update(viewid)
         end
         imgui.windows.End()
     end
+
+    if imgui.windows.Begin ("test1", imgui.flags.Window {'AlwaysAutoResize'}) then
+        local cb = {true}
+        imgui.widget.Checkbox("abc1", cb)
+
+        imgui.widget.InputFloat("bb", {1.0})
+        do  --checkbox test
+            if test_cb == nil then
+                test_cb = {false}
+            end
+    
+            if test_cb[1] then
+                imgui.widget.Text "abababa"
+            else
+                imgui.widget.TextDisabled "abababa"
+            end
+             imgui.cursor.SameLine() imgui.widget.Checkbox("enable", test_cb)
+        end
+
+        imgui.windows.BeginDisabled(true)
+        local t = {text = "i m input text"}
+        if imgui.widget.InputText("abc5", t) then
+            print(tostring(t.text))
+        end
+        imgui.windows.EndDisabled()
+        imgui.windows.End()
+    end
 end
 
 return {

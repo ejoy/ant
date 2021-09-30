@@ -27,6 +27,9 @@ interface "light"
 
     .method "which_type"
 
+    .method "angular_radius"
+    .method "set_angular_radius"
+
     .method "use_cluster_shading"
     .method "light_buffer"
     .method "count_visible_light"
@@ -39,7 +42,9 @@ transform "light_transform"
     .input "color"
     .input "intensity"
     .input "range"
-    .input "radian"
+    .input "inner_radian"
+    .input "outter_radian"
+    .input "angluar_radius"
     .output "_light"
     .method "process_entity"
 

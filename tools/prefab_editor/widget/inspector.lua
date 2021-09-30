@@ -212,7 +212,7 @@ end
 
 local function get_light_panel()
     if not light_panel then
-        light_panel = ecs.require "widget.light_view"()
+        light_panel = ecs.require "widget.light_view"
     end
     return light_panel
 end
@@ -280,7 +280,9 @@ local function update_current()
         else
             current_panel = get_base_panel()
         end
-        current_panel:set_model(current_eid)
+        if current_panel.set_model then
+            current_panel:set_model(current_eid)
+        end
     else
         current_panel = nil
     end

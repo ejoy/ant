@@ -12,7 +12,7 @@ local utils     = require "common.utils"
 local rc        = import_package "ant.compile_resource"
 local class     = utils.class 
 
-local PropertyBase = class("PropertyBase")
+local PropertyBase = class "PropertyBase"
 
 function PropertyBase:_init(config, modifier)
     self.label = config.label
@@ -85,6 +85,11 @@ function Float:_init(config, modifier)
     self.imgui_func = imgui.widget.DragFloat
 end
 
+local Bool = class("Bool", PropertyBase)
+function Bool:_init(config, modifier)
+    PropertyBase._init(self, config, modifier)
+end
+
 local Color = class("Color", PropertyBase)
 
 function Color:_init(config, modifier)
@@ -92,7 +97,7 @@ function Color:_init(config, modifier)
     self.imgui_func = imgui.widget.ColorEdit
 end
 
-local Combo = class("Combo")
+local Combo = class "Combo"
 
 function Combo:_init(config, modifier)
     self.label          = config.label
@@ -366,7 +371,7 @@ function Button:show()
     imgui.util.PopID()
 end
 
-local Group = class("Group")
+local Group = class "Group"
 
 function Group:_init(config, subproperty)
     self.label        = config.label
@@ -397,6 +402,7 @@ return {
     Combo           = Combo,
     Int             = Int,
     Float           = Float,
+    Bool            = Bool,
     Color           = Color,
     EditText        = EditText,
     ResourcePath    = ResourcePath,

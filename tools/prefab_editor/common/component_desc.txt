@@ -1,22 +1,37 @@
 name:
   type: string
 transform:
-  type: table
   s:
-    type: array
-    num: 3
+    type: vec3
   r:
-    type: array
-    num: 4
+    type: vec4
   t:
-    type: array
-    num: 3
+    type: vec3
 lightmap:
-  type: table
-  size: int
+  size:
+    type: int
 mesh:
   type: string
 material:
   type: string
 state:
   type: string
+light:
+  range:
+    type: float
+  light_type:
+    type: string
+  color:
+    type: color
+  intensity:
+    type: float
+  make_shadow:
+    type: bool
+  motion_type:
+    type: string
+  inner_cutoff:
+    type: float
+  outter_cutoff:
+    type: float
+  angular_radius:
+    type: float
