@@ -19,7 +19,9 @@ end
 function m:entity_init()
 	for e in w:select "INIT skinning:in render_object:in meshskin:in pose_result:in" do
 		local skinning = e.skinning
-		skinning.skinning_matrices = animodule.new_bind_pose(e.pose_result:count())
+		local skin = e.meshskin
+		local count = skin.joint_remap and skin.joint_remap:count() or e.pose_result:count()
+		skinning.skinning_matrices = animodule.new_bind_pose(count)
 		skinning.skin = e.meshskin
 		build_transform(e.render_object, skinning)
 	end
