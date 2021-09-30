@@ -1,4 +1,4 @@
-local math3d = require "math3d"
+local bgfx = require "bgfx"
 local platform = require "platform"
 local stringify = require "stringify"
 
@@ -32,14 +32,15 @@ local texture_extensions = {
 
 local function init()
     local os = platform.OS:lower()
-    local renderer = import_package "ant.hwi".get_renderer():lower()
+    local caps = bgfx.get_caps()
+    local renderer = caps.rendererType:lower()
     local texture = assert(texture_extensions[renderer])
     set_setting("glb", {})
     set_setting("sc", {
         os = os,
         renderer = renderer,
-        hd = math3d.get_homogeneous_depth() and true or nil,
-        obl = math3d.get_origin_bottom_left() and true or nil,
+        hd = caps.homogeneousDepth and true or nil,
+        obl = caps.originBottomLeft and true or nil,
     })
     set_setting("texture", {os=os, ext=texture})
     set_setting("png", {os=os, ext=texture})

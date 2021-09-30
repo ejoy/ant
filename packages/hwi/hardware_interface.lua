@@ -61,15 +61,8 @@ local function bgfx_init(args)
 	
 	bgfx.init(args)
 	hw.get_caps()
-	--TODO
 	math3d.set_homogeneous_depth(caps.homogeneousDepth)
-	math3d.homogeneous_depth = caps.homogeneousDepth
 	math3d.set_origin_bottom_left(caps.originBottomLeft)
-	math3d.origin_bottom_left = caps.originBottomLeft
-end
-
-function hw.get_renderer()
-    return hw.get_caps().rendererType
 end
 
 function hw.init(args)
