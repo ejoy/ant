@@ -250,11 +250,6 @@ function m:add_entity(new_entity, parent, temp, no_hierarchy)
     end
 end
 
-local function camera_init()
-
-    
-end
-
 function m:create(what, config)
     if not self.root then
         self:reset_prefab()

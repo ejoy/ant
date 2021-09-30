@@ -88,8 +88,16 @@ local function do_animation(poseresult, e, delta_time)
 		poseresult:do_blend("blend", #task, task.weight)
 	else
 		local play_state = task.play_state
-		if not play_state.manual_update and play_state.play and task.eid and task.eid[1] == e.eid then 
-			iani.step(task, delta_time * 0.001)
+		if not play_state.manual_update and play_state.play then
+			-- TODO : refactor animation birth system
+			if task.init then
+				-- many eid shared same state, step state only once.
+				if task.eid and task.eid[1] == e.eid then 
+					iani.step(task, delta_time * 0.001)
+				end
+			else
+				iani.step(task, delta_time * 0.001)
+			end
 		end
 		local ani = task.animation
 		poseresult:do_sample(ani._sampling_context, ani._handle, play_state.ratio, task.weight)
