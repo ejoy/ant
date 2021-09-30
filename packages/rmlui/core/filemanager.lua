@@ -42,12 +42,8 @@ end
 local function find_texture(path)
     for i = #directorys, 1, -1 do
         local file = directorys[i] / path
-        --TODO resource dont support fs.exists
-        local ok, res = pcall(function()
+        if fs.exists(file) then
             return cr.compile(file:string() .. "|main.bin"):string()
-        end)
-        if ok then
-            return res
         end
     end
 end

@@ -61,7 +61,7 @@ local function dir_object(self, hash)
 	if df then
 		local dir = {}
 		for line in df:lines() do
-			local type, hash, name = line:match "([fd]) ([%da-f]+) (.*)"
+			local type, hash, name = line:match "([dfr]) (%S*) (.*)"
 			if type then
 				dir[name] = {
 					dir = type == 'd',
