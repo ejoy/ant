@@ -71,16 +71,7 @@ public:
 	static StyleSheetNodeListRaw ConstructNodes(StyleSheetNode& root_node, const std::string& selectors);
 
 private:
-	// Stream we're parsing from.
 	Stream* stream;
-	// Parser memory buffer.
-	std::string parse_buffer;
-	// How far we've read through the buffer.
-	size_t parse_buffer_pos;
-
-	// The name of the file we're parsing.
-	std::string stream_file_name;
-	// Current line number we're parsing.
 	size_t line_number;
 
 	// Parses properties from the parse buffer.
@@ -109,9 +100,6 @@ private:
 	// If it's found, buffer is filled with the character
 	// @param buffer The buffer that receives the character, if read.
 	bool ReadCharacter(char& buffer);
-
-	// Fill the internal parse buffer
-	bool FillBuffer();
 };
 
 } // namespace Rml

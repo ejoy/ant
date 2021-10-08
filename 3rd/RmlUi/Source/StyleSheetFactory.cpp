@@ -29,8 +29,8 @@
 #include "StyleSheetFactory.h"
 #include "../Include/RmlUi/StyleSheet.h"
 #include "../Include/RmlUi/StringUtilities.h"
+#include "../Include/RmlUi/Stream.h"
 #include "StyleSheetNode.h"
-#include "StreamFile.h"
 #include "StyleSheetNodeSelectorNthChild.h"
 #include "StyleSheetNodeSelectorNthLastChild.h"
 #include "StyleSheetNodeSelectorNthOfType.h"
@@ -203,8 +203,8 @@ std::shared_ptr<StyleSheet> StyleSheetFactory::LoadStyleSheet(const std::string&
 
 	// Open stream, construct new sheet and pass the stream into the sheet
 	// TODO: Make this support ASYNC
-	auto stream = std::make_unique<StreamFile>();
-	if (stream->Open(sheet))
+	auto stream = std::make_unique<Stream>(sheet);
+	if (stream)
 	{
 		new_style_sheet = std::make_shared<StyleSheet>();
 		if (!new_style_sheet->LoadStyleSheet(stream.get()))

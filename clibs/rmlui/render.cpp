@@ -212,9 +212,7 @@ bool Renderer::LoadTexture(Rml::TextureHandle& handle, Rml::Size& dimensions, co
 	if (!fh)
 		return false;
 	
-	ifile->Seek(fh, 0, SEEK_END);
-	const size_t bufsize = ifile->Tell(fh);
-	ifile->Seek(fh, 0, SEEK_SET);
+	const size_t bufsize = ifile->Length(fh);
 	
     const bgfx_memory_t *mem = BGFX(alloc)((uint32_t)bufsize);
 	ifile->Read(mem->data, bufsize, fh);
