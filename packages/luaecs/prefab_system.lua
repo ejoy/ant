@@ -12,17 +12,17 @@ local function isValidReference(reference)
 end
 
 function m:entity_init()
-    for v in w:select "prefab_init:in" do
-        v.prefab_init()
+    for v in w:select "on_init:in" do
+        v:on_init()
     end
-    w:clear "prefab_init"
+    w:clear "on_init"
 end
 
 function m:entity_ready()
-    for v in w:select "prefab_ready:in" do
-        v.prefab_ready()
+    for v in w:select "on_ready:in" do
+        v:on_ready()
     end
-    w:clear "prefab_ready"
+    w:clear "on_ready"
 end
 
 function m:data_changed()
@@ -30,8 +30,8 @@ function m:data_changed()
         local f = msg[2]
         f(table.unpack(msg, 3))
     end
-    for v in w:select "prefab_update:in" do
-        v.prefab_update()
+    for v in w:select "on_update:in" do
+        v:on_update()
     end
 end
 

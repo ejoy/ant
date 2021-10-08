@@ -52,10 +52,7 @@ function widget_drawer_sys:init()
 			"ant.general|name",
 		},
 		data = {
-			eid = 0,
 			scene = {srt = {}},
-			render_object = {},
-			filter_material = {},
 			mesh = create_dynamic_buffer(wd.declname, wd.vertices_num, wd.indices_num),
 			material = "/pkg/ant.resources/materials/line.material",
 			state = ies.create_state "visible",
