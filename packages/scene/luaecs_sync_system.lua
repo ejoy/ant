@@ -74,7 +74,6 @@ function s:luaecs_sync()
 
 		if isRenderObject(e) then
 			data.render_object = rc
-			data.render_object_update = true
 			data.material = e.material
 			data.mesh	= e.mesh
 			data.filter_material = {}

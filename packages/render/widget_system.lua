@@ -1,5 +1,6 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 
 local geometry_drawer = import_package "ant.geometry".drawer
 local setting		= import_package "ant.settings".setting
@@ -32,12 +33,6 @@ local function create_dynamic_buffer(layout, num_vertices, num_indices)
 	}
 end
 
-local wd_trans = ecs.transform "widget_drawer_transform"
-function wd_trans.process_prefab(e)
-	local wd = e.widget_drawer
-	e.mesh = create_dynamic_buffer(wd.declname, wd.vertices_num, wd.indices_num)
-end
-
 local dmb_trans = ecs.transform "debug_mesh_bounding_transform"
 function dmb_trans.process_entity(e)
 	local rc = e._rendercache
@@ -45,31 +40,35 @@ function dmb_trans.process_entity(e)
 end
 
 function widget_drawer_sys:init()
-	world:deprecated_create_entity {
+	local wd = {
+		vertices_num = 1024,
+		indices_num = 2048,
+		declname = "p3|c40niu",
+	}
+	ecs.create_entity {
 		policy = {
 			"ant.render|render",
 			"ant.render|bounding_draw",
 			"ant.general|name",
 		},
 		data = {
-			transform = {},
+			eid = 0,
+			scene = {srt = {}},
+			render_object = {},
+			filter_material = {},
+			mesh = create_dynamic_buffer(wd.declname, wd.vertices_num, wd.indices_num),
 			material = "/pkg/ant.resources/materials/line.material",
 			state = ies.create_state "visible",
-			scene_entity = true,
-			widget_drawer = {
-				vertices_num = 1024,
-				indices_num = 2048,
-				declname = "p3|c40niu",
-			},
+			widget_drawer = wd,
 			name = "bounding_draw"
 		}
 	}
 end
 
 function widget_drawer_sys:end_frame()
-	local dmesh = world:singleton_entity "widget_drawer"
-	if dmesh then
-		local rc = dmesh._rendercache
+	local e = w:singleton("widget_drawer", "render_object:in")
+	if e then
+		local rc = e.render_object
 		local vbdesc, ibdesc = rc.vb, rc.ib
 		vbdesc.start, vbdesc.num = 0, 0
 		ibdesc.start, ibdesc.num = 0, 0
@@ -93,8 +92,8 @@ local function append_buffers(vbfmt, vb, ibfmt, ib)
 	if numvertices == 0 then
 		return
 	end
-	local dmesh = world:singleton_entity "widget_drawer"
-	local rc = dmesh._rendercache
+	local e = w:singleton("widget_drawer", "render_object:in")
+	local rc = e.render_object
 	local vbdesc, ibdesc = rc.vb, rc.ib
 
 	local vertex_offset = vbdesc.num
