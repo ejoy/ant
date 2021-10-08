@@ -37,29 +37,17 @@
 #include "../Include/RmlUi/Types.h"
 #include "../Include/RmlUi/Texture.h"
 #include "../Include/RmlUi/Log.h"
-#include "FileInterfaceDefault.h"
 #include "PluginRegistry.h"
 #include "StyleSheetFactory.h"
 #include "StyleSheetParser.h"
 
 namespace Rml {
 
-// RmlUi's renderer interface.
 static RenderInterface* render_interface = nullptr;
-// RmlUi's file I/O interface.
 static FileInterface* file_interface = nullptr;
-// RmlUi's font engine interface.
 static FontEngineInterface* font_interface = nullptr;
 
-// Default interfaces should be created and destroyed on Initialise and Shutdown, respectively.
-static std::unique_ptr<FileInterface> default_file_interface;
-static std::unique_ptr<FontEngineInterface> default_font_interface;
-
 static bool initialised = false;
-
-#ifndef RMLUI_VERSION
-	#define RMLUI_VERSION "custom"
-#endif
 
 bool Initialise() {
 	RMLUI_ASSERTMSG(!initialised, "Rml::Initialise() called, but RmlUi is already initialised!");
@@ -86,75 +74,46 @@ bool Initialise() {
 void Shutdown() {
 	RMLUI_ASSERTMSG(initialised, "Rml::Shutdown() called, but RmlUi is not initialised!");
 
-	// Notify all plugins we're being shutdown.
 	PluginRegistry::NotifyShutdown();
-
 	Factory::Shutdown();
 	StyleSheetFactory::Shutdown();
 	StyleSheetSpecification::Shutdown();
-
-	font_interface = nullptr;
-	default_font_interface.reset();
-
 	Texture::Shutdown();
 
-	initialised = false;
-
+	font_interface = nullptr;
 	render_interface = nullptr;
 	file_interface = nullptr;
-
-	default_file_interface.reset();
+	initialised = false;
 }
 
-// Returns the version of this RmlUi library.
-std::string GetVersion()
-{
-	return RMLUI_VERSION;
-}
-
-// Sets the interface through which all rendering requests are made.
-void SetRenderInterface(RenderInterface* _render_interface)
-{
+void SetRenderInterface(RenderInterface* _render_interface) {
 	render_interface = _render_interface;
 }
 
-// Returns RmlUi's render interface.
-RenderInterface* GetRenderInterface()
-{
+RenderInterface* GetRenderInterface() {
 	return render_interface;
 }
 
-// Sets the interface through which all file I/O requests are made.
-void SetFileInterface(FileInterface* _file_interface)
-{
+void SetFileInterface(FileInterface* _file_interface) {
 	file_interface = _file_interface;
 }
 
-// Returns RmlUi's file interface.
-FileInterface* GetFileInterface()
-{
+FileInterface* GetFileInterface() {
 	return file_interface;
 }
 
-// Sets the interface through which all font requests are made.
-void SetFontEngineInterface(FontEngineInterface* _font_interface)
-{
+void SetFontEngineInterface(FontEngineInterface* _font_interface) {
 	font_interface = _font_interface;
 }
-	
-// Returns RmlUi's file interface.
-FontEngineInterface* GetFontEngineInterface()
-{
+
+FontEngineInterface* GetFontEngineInterface() {
 	return font_interface;
 }
 
-// Registers a generic rmlui plugin
-void RegisterPlugin(Plugin* plugin)
-{
+void RegisterPlugin(Plugin* plugin) {
 	if (initialised)
 		plugin->OnInitialise();
-
 	PluginRegistry::RegisterPlugin(plugin);
 }
 
-} // namespace Rml
+}

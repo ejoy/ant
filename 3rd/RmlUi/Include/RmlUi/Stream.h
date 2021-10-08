@@ -35,8 +35,6 @@
 
 namespace Rml {
 
-class StreamListener;
-
 /**
 	Abstract class for a media-independent byte stream.
 	@author Lloyd Weehuizen
@@ -47,30 +45,15 @@ class Stream : public NonCopyMoveable
 public:
 	Stream();
 	virtual ~Stream();
-
-	/// Closes the stream.
 	virtual void Close();
-
-	/// Obtain the source url of this stream (if available)
 	const std::string& GetSourceURL() const;
-
-	/// Are we at the end of the stream
 	virtual bool IsEOS() const;
-
-	/// Returns the size of this stream (in bytes).
 	virtual size_t Length() const = 0;
-
-	/// Returns the position of the stream pointer (in bytes).
 	virtual size_t Tell() const = 0;
-
-	/// Read from the stream.
 	virtual size_t Read(void* buffer, size_t bytes) const = 0;
-	/// Read from the stream and append to the string buffer
 	virtual size_t Read(std::string& buffer, size_t bytes) const;
 
-
 protected:
-	/// Sets the mode on the stream; should be called by a stream when it is opened.
 	void SetStreamDetails(const std::string& url);
 
 private:

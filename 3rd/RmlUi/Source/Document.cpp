@@ -39,7 +39,6 @@
 #include "../Include/RmlUi/Log.h"
 #include "ElementStyle.h"
 #include "EventDispatcher.h"
-#include "StreamFile.h"
 #include "StyleSheetFactory.h"
 #include "DataModel.h"
 #include "PluginRegistry.h"

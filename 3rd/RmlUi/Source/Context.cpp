@@ -5,12 +5,9 @@
 #include "../Include/RmlUi/ElementUtilities.h"
 #include "../Include/RmlUi/Factory.h"
 #include "../Include/RmlUi/RenderInterface.h"
-#include "../Include/RmlUi/StreamMemory.h"
-#include "../Include/RmlUi/StreamMemory.h"
 #include "DataModel.h"
 #include "EventDispatcher.h"
 #include "PluginRegistry.h"
-#include "StreamFile.h"
 #include <algorithm>
 #include <iterator>
 

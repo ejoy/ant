@@ -32,7 +32,6 @@
 #include "Platform.h"
 #include "Types.h"
 #include "Event.h"
-#include "ComputedValues.h"
 
 namespace Rml {
 
@@ -41,11 +40,9 @@ class Context;
 class FileInterface;
 class FontEngineInterface;
 class RenderInterface;
-class SystemInterface;
 
 bool Initialise();
 void Shutdown();
-std::string GetVersion();
 void SetRenderInterface(RenderInterface* render_interface);
 RenderInterface* GetRenderInterface();
 void SetFileInterface(FileInterface* file_interface);
