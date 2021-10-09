@@ -49,11 +49,7 @@ public:
 };
 
 inline Color ColorInterpolate(const Color& c0, const Color& c1, float alpha) {
-	auto s0 = glm::convertLinearToSRGB(glm::vec4(c0) / 255.f);
-	auto s1 = glm::convertLinearToSRGB(glm::vec4(c1) / 255.f);
-	auto s  = glm::mix(s0, s1, alpha);
-	auto c  = glm::convertSRGBToLinear(s);
-	return glm::u8vec4(c * 255.f);
+	return glm::mix(c0, c1, alpha);
 }
 
 inline void ColorApplyOpacity(Color& c, float opacity) {
