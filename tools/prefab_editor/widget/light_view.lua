@@ -59,7 +59,7 @@ function light_view:show()
                 iom.set_scale(eid, trans.s)
             end
             if trans.r then
-                iom.set_rotation(eid, math3d.quaternion(trans.r))
+                iom.set_rotation(eid, math3d.quaternion(mu.to_radian(trans.r)))
             end
             if trans.t then
                 iom.set_position(eid, trans.t)
@@ -98,8 +98,6 @@ function light_view:show()
             end
             
         end
-
-        
     end
     local update_values = {}
     comp_ui.build("Entity", build_component_tree(world[eid]), comp_defines.desc, update_values)
