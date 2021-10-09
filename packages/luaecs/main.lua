@@ -66,15 +66,18 @@ end
 
 local function create_instance(w, prefab)
 	local res = {}
+    local entities = {}
     local _ = prefab[1]
 	for k, v in pairs(prefab) do
 		if v.prefab then
 			res[k] = create_instance(w, v.prefab)
 		else
-			res[k] = create_entity(w, v.template)
+            local e = create_entity(w, v.template)
+			res[k] = e
+            entities[#entities+1] = e
 		end
 	end
-	return res
+	return res, entities
 end
 
 local function create_entity_template(w, package, detach, v)
@@ -234,12 +237,12 @@ function world:_create_instance(package, filename, options)
     local detach = options and options.detach
     local template = assetmgr.resource(filename, { create_template = function (_,...) return create_template(w, package, detach, ...) end })
     local root = create_scene_entity(w)
-    local entities = create_instance(w, template)
+    local prefab, entities = create_instance(w, template)
     w:multicast(entities, "set_parent", root)
-    run_action(w, entities, template)
+    run_action(w, prefab, template)
     return {
         root = root,
-        tag = create_tags(entities, template)
+        tag = create_tags(prefab, template)
     }
 end
 
