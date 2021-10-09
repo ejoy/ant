@@ -104,7 +104,7 @@ local function create_template(w, package, detach, t)
 	for _, v in ipairs(t) do
 		if v.prefab then
 			prefab[#prefab+1] = {
-                prefab = assetmgr.resource(v[1], { create_template = function (_,...) return create_template(w,package,detach,...) end }),
+                prefab = assetmgr.resource(v.prefab, { create_template = function (_,...) return create_template(w,package,detach,...) end }),
 				args = v.args,
 			}
 		else
