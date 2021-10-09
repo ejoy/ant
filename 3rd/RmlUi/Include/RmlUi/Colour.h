@@ -49,7 +49,12 @@ public:
 };
 
 inline Color ColorInterpolate(const Color& c0, const Color& c1, float alpha) {
-	return glm::mix(c0, c1, alpha);
+	return Color(
+		glm::u8((1.0f - alpha) * c0.r + alpha * c1.r),
+		glm::u8((1.0f - alpha) * c0.g + alpha * c1.g),
+		glm::u8((1.0f - alpha) * c0.b + alpha * c1.b),
+		glm::u8((1.0f - alpha) * c0.a + alpha * c1.a)
+	);
 }
 
 inline void ColorApplyOpacity(Color& c, float opacity) {
