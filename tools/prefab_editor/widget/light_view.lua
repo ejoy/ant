@@ -13,8 +13,12 @@ local hierarchy = require "hierarchy_edit"
 
 local imgui     = require "imgui"
 
-local BaseView  = require "widget.view_class".BaseView
-local LightView = require "widget.view_class".LightView
+local view_class = require "widget.view_class"
+local BaseView, LightView  = view_class.BaseView, view_class.LightView
+
+local MOTION_TYPE_options<const> = {
+    "dynamic", "station", "static"
+}
 
 function LightView:_init()
     BaseView._init(self)
@@ -39,6 +43,26 @@ function LightView:_init()
             getter = function() return self:on_get_outter_radian() end,
             setter = function(value) self:on_set_outter_radian(value) end,
         }),
+        light_type  = uiproperty.EditText({label = "LightType", readonly=true}, {
+            getter = function () return ilight.which_type(self.eid) end,
+            --no setter
+        }),
+        make_shadow = uiproperty.Bool({label = "MakeShadow"},{
+            getter = function () return ilight.make_shadow(self.eid) end,
+            setter = function (value) ilight.set_make_shadow(self.eid, value) end,
+        }),
+        bake        = uiproperty.Bool({label = "Bake", disable=true}, {
+            getter = function () return false end,
+            setter = function (value) end,
+        }),
+        motion_type = uiproperty.Combo({label = "motion_type", options=MOTION_TYPE_options}, {
+            getter = function () return ilight.motion_type(self.eid) end,
+            setter = function (value) ilight.set_motion_type(self.eid, value) end,
+        }),
+        angular_radius= uiproperty.Float({label="AngularRadius", disable=true,}, {
+            getter = function() return math.deg(ilight.angular_radius(self.eid)) end,
+            setter = function(value) ilight.set_angular_radius(self.eid, math.rad(value)) end,
+        }),
     }
 
     self.light_property= uiproperty.Group({label = "Light"}, {})
@@ -50,6 +74,11 @@ function LightView:set_model(eid)
     local subproperty = {}
     subproperty[#subproperty + 1] = self.subproperty.color
     subproperty[#subproperty + 1] = self.subproperty.intensity
+    subproperty[#subproperty + 1] = self.subproperty.motion_type
+    subproperty[#subproperty + 1] = self.subproperty.make_shadow
+    subproperty[#subproperty + 1] = self.subproperty.bake
+    subproperty[#subproperty + 1] = self.subproperty.angular_radius
+    
     if world[eid].light_type ~= "directional" then
         subproperty[#subproperty + 1] = self.subproperty.range
         if world[eid].light_type == "spot" then
@@ -130,32 +159,6 @@ end
 function LightView:show()
     BaseView.show(self)
     self.light_property:show()
-
-    local leid = gizmo.target_eid
-    if leid then
-        local t = hierarchy:get_template(leid)
-        local cb_flags = {ilight.make_shadow(leid)}
-
-        imgui.widget.LabelText("abc", "efg")
-        imgui.cursor.Indent();
-        imgui.widget.PropertyLabel("make_shadow");
-        if imgui.widget.Checkbox("##make_shadow", cb_flags) then
-            ilight.set_make_shadow(leid, cb_flags[1])
-            t.template.data.make_shadow = cb_flags[1]
-        end
-        local mt = ilight.motion_type(leid)
-        if imgui.widget.BeginCombo("motion_type", {mt, flags=imgui.flags.Combo{}}) then
-            for _, n in ipairs{"dynamic", "station", "static"} do
-                if imgui.widget.Selectable(n, n == mt) then
-                    ilight.set_motion_type(gizmo.target_eid, n)
-                    t.template.data.motion_type = n
-                end
-            end
-
-            imgui.widget.EndCombo()
-        end
-        imgui.cursor.Unindent();
-    end
 end
 
 function LightView:has_rotate()

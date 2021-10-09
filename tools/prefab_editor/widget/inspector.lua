@@ -212,7 +212,7 @@ end
 
 local function get_light_panel()
     if not light_panel then
-        light_panel = ecs.require "widget.light_view"
+        light_panel = ecs.require "widget.light_view"()
     end
     return light_panel
 end

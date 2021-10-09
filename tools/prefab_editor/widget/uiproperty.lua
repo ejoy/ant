@@ -16,17 +16,21 @@ local PropertyBase = class "PropertyBase"
 
 function PropertyBase:_init(config, modifier)
     self.label = config.label
+    self.readonly = config.readonly
+    self.disable = config.disable
+
     self.modifier = modifier or {}
     self.dim = config.dim or 1
-    if self.dim == 1 then
-        self.uidata = {0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
-    elseif self.dim == 2 then
-        self.uidata = {0, 0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
-    elseif self.dim == 3 then
-        self.uidata = {0, 0, 0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
-    elseif self.dim == 4 then
-        self.uidata = {0, 0, 0, 0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
-    end
+    self.uidata = {speed = config.speed, min = config.min, max = config.max, flags = config.flags}
+    -- if self.dim == 1 then
+    --     self.uidata = {0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
+    -- elseif self.dim == 2 then
+    --     self.uidata = {0, 0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
+    -- elseif self.dim == 3 then
+    --     self.uidata = {0, 0, 0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
+    -- elseif self.dim == 4 then
+    --     self.uidata = {0, 0, 0, 0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
+    -- end
 end
 
 function PropertyBase:set_userdata(userdata)
@@ -61,12 +65,8 @@ function PropertyBase:show()
     if self.imgui_func("##" .. self.label, self.uidata) then
         if self.dim == 1 then
             self.modifier.setter(self.uidata[1])
-        elseif self.dim == 2 then
-            self.modifier.setter({self.uidata[1], self.uidata[2]})
-        elseif self.dim == 3 then
-            self.modifier.setter({self.uidata[1], self.uidata[2], self.uidata[3]})
-        elseif self.dim == 4 then
-            self.modifier.setter({self.uidata[1], self.uidata[2], self.uidata[3], self.uidata[4]})
+        else
+            self.modifier.setter(self.uidata)
         end
     end
 end
@@ -88,6 +88,7 @@ end
 local Bool = class("Bool", PropertyBase)
 function Bool:_init(config, modifier)
     PropertyBase._init(self, config, modifier)
+    self.imgui_func = imgui.widget.Checkbox
 end
 
 local Color = class("Color", PropertyBase)
@@ -142,7 +143,6 @@ local EditText = class("EditText", PropertyBase)
 
 function EditText:_init(config, modifier)
     PropertyBase._init(self, config, modifier)
-    self.readonly = config.readonly
     self.uidata = {text = ""}
     self.imgui_func = imgui.widget.InputText
 end
@@ -392,7 +392,9 @@ end
 function Group:show()
     if imgui.widget.TreeNode(self.label, imgui.flags.TreeNode { "DefaultOpen" }) then
         for _, pro in ipairs(self.subproperty) do
+            imgui.windows.BeginDisabled(pro.disable)
             pro:show() 
+            imgui.windows.EndDisabled()
         end
         imgui.widget.TreePop()
     end
