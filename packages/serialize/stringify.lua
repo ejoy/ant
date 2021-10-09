@@ -96,9 +96,7 @@ local function stringify_array_map(n, t)
     for _, tt in ipairs(t) do
         out[#out+1] = indent(n).."---"
         for k, v in sortpairs(tt) do
-            if k:sub(1,1) ~= "_" then
-                stringify_value(n, k..":", v)
-            end
+            stringify_value(n, k..":", v)
         end
     end
 end
@@ -143,9 +141,7 @@ local function stringify_map(n, prefix, t)
     out[#out+1] = indent(n)..prefix
     n = n + 1
     for k, v in sortpairs(t) do
-        if k:sub(1,1) ~= "_" then
-            stringify_value(n, k..":", v)
-        end
+        stringify_value(n, k..":", v)
     end
 end
 
@@ -192,9 +188,7 @@ function stringify_(n, data)
         stringify_array_map(n, data)
     else
         for k, v in sortpairs(data) do
-            if k:sub(1,1) ~= "_" then
-                stringify_value(n, k..":", v)
-            end
+            stringify_value(n, k..":", v)
         end
     end
 end

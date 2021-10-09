@@ -3,6 +3,7 @@ local w = ecs.world.w
 
 local bgfx = require "bgfx"
 local animodule = require "hierarchy".animation
+local assetmgr 		= import_package "ant.asset"
 
 local m = ecs.system "mesh_skinning"
 
@@ -19,10 +20,10 @@ end
 function m:entity_init()
 	for e in w:select "INIT skinning:in render_object:in meshskin:in pose_result:in" do
 		local skinning = e.skinning
-		local skin = e.meshskin
+		local skin = assetmgr.resource(e.meshskin)
 		local count = skin.joint_remap and skin.joint_remap:count() or e.pose_result:count()
 		skinning.skinning_matrices = animodule.new_bind_pose(count)
-		skinning.skin = e.meshskin
+		skinning.skin = skin
 		build_transform(e.render_object, skinning)
 	end
 end
