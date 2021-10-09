@@ -1,20 +1,5 @@
-component_v2 "scene_entity"
-policy_v2 "hierarchy_policy"
-    .require_system "scenespace_system"
-    .require_system "luaecs_sync_system"
-    .component_v2 "scene_entity"
-
 component_v2 "state".type "lua"
     .require_system "ant.scene|entity_state_system"
-
-component_v2 "lock_target".type "lua"
-    .require_system "ant.scene|scenespace_system"
-
-policy_v2 "lock_traget_policy"
-    .require_policy_v2 "hierarchy_policy"
-    .require_system "ant.scene|scenespace_system"
-    .component_v2 "lock_target"
-    .component_v2 "transform"
 
 system "entity_state_system"
     .implement "entity_state_v2.lua"
