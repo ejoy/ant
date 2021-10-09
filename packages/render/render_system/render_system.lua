@@ -10,6 +10,14 @@ local ies		= ecs.import.interface "ant.scene|ientity_state"
 local icamera	= ecs.import.interface "ant.camera|camera"
 local render_sys = ecs.system "render_system"
 
+function render_sys:component_init()
+	for e in w:select "INIT render_object:update filter_material:out render_object_update?out" do
+		e.render_object = e.render_object or {}
+		e.filter_material = {}
+		e.render_object_update = true
+	end
+end
+
 function render_sys:entity_init()
 	w:clear "filter_created"
 	for qe in w:select "INIT primitive_filter:in queue_name:in filter_created?out" do
@@ -28,9 +36,6 @@ function render_sys:entity_init()
 		pf.filter_type = ies.create_state(pf.filter_type)
 		pf._DEBUG_excule_type = pf.excule_type
 		pf.excule_type = pf.excule_type and ies.create_state(pf.excule_type) or 0
-	end
-	for e in w:select "INIT render_object render_object_update?out" do
-		e.render_object_update = true
 	end
 end
 

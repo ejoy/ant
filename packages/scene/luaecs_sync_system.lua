@@ -73,11 +73,9 @@ function s:luaecs_sync()
 		end
 
 		if isRenderObject(e) then
-			data.render_object = rc
-			data.render_object_update = true
-			data.material = e.material
-			data.mesh	= e.mesh
-			data.filter_material = {}
+			data.render_object	= rc
+			data.material		= e.material
+			data.mesh			= e.mesh
 			policy[#policy+1] = "ant.render|render_object"
 			if hasAnimation(e) then
 				data.animation = {}

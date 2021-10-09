@@ -8,6 +8,8 @@ local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
 
 local font      = import_package "ant.font"
+local setting   = import_package "ant.settings".setting
+local screen_ratio=setting:get "graphic/framebuffer/ratio" or 1.0
 local ServiceRmlUi = ltask.spawn "ant.rmlui|rmlui"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 local rmlui_sys = ecs.system "rmlui_system"
@@ -67,12 +69,12 @@ local vr_change_mb = world:sub{"component_changed", "view_rect", "main_queue"}
 function rmlui_sys:entity_init()
     for q in w:select "INIT rmlui_obj render_target:in" do
         local vr = q.render_target.view_rect
-        ltask.send(ServiceRmlUi, "update_context_size", vr.w, vr.h)
+        ltask.send(ServiceRmlUi, "update_context_size", vr.w, vr.h, screen_ratio)
     end
 
     for q in w:select "rmlui_obj render_target_changed render_target:in" do
         local vr = q.render_target.view_rect
-        ltask.send(ServiceRmlUi, "update_context_size", vr.w, vr.h)
+        ltask.send(ServiceRmlUi, "update_context_size", vr.w, vr.h, screen_ratio)
     end
 
     for _ in vr_change_mb:each() do

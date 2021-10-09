@@ -18,9 +18,6 @@ public:
 	void SetDimensions(const Size& dimensions);
 	const Size& GetDimensions() const;
 
-	void SetDensityIndependentPixelRatio(float density_independent_pixel_ratio);
-	float GetDensityIndependentPixelRatio() const;
-
 	void Update(double delta);
 
 	Document* LoadDocument(const std::string& document_path);
@@ -40,7 +37,6 @@ public:
 
 private:
 	Size dimensions;
-	float density_independent_pixel_ratio;
 	std::vector<Document*> unloaded_documents;
 	std::vector<Document*> documents;
 	Document* focus = nullptr;

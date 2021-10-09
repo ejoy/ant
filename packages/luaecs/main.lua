@@ -185,17 +185,17 @@ function world:create_object(inner_proxy)
         prefab = inner_proxy,
     }
     if on_init then
-        function proxy_entity.prefab_init()
+        function proxy_entity.on_init()
             on_init(inner_proxy)
         end
     end
     if on_ready then
-        function proxy_entity.prefab_ready()
+        function proxy_entity.on_ready()
             on_ready(inner_proxy)
         end
     end
     if on_update then
-        function proxy_entity.prefab_update()
+        function proxy_entity.on_update()
             on_update(inner_proxy)
         end
     end

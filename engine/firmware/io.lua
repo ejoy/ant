@@ -205,10 +205,16 @@ function offline.TYPE(id, fullpath, roothash)
 	local dir = repo:list(path, roothash)
 	if dir then
 		local v = dir[name]
-		if v then
-			response_id(id, v.dir and "dir" or "file")
-			return
+		if not v then
+			response_id(id, nil)
+		elseif v.dir then
+			response_id(id, "dir")
+		elseif v.hash == "invaild" then
+			response_id(id, "resource")
+		else
+			response_id(id, "file")
 		end
+		return
 	end
 	response_id(id, nil)
 end
@@ -553,8 +559,12 @@ function online.TYPE(id, fullpath, roothash)
 		local v = dir[name]
 		if not v then
 			response_id(id, nil)
+		elseif v.dir then
+			response_id(id, "dir")
+		elseif v.hash == "invaild" then
+			response_id(id, "resource")
 		else
-			response_id(id, v.dir and "dir" or "file")
+			response_id(id, "file")
 		end
 		return
 	elseif hash then

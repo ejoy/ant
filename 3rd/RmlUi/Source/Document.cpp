@@ -321,11 +321,6 @@ void Document::UpdateDataModel(bool clear_dirty_variables) {
 	}
 }
 
-void Document::DirtyDpProperties()
-{
-	body->GetStyle()->DirtyPropertiesWithUnitRecursive(Property::DP);
-}
-
 using ElementSet = std::set<Element*>;
 
 using ElementObserverList = std::vector< ObserverPtr<Element> >;

@@ -55,7 +55,7 @@ for i, name in ipairs(modes) do
         end
         local info = debug.getinfo(m.skip or 2, 'Sl')
         m.skip = nil
-        local text = ('[%-5s](%s:%3d) %s'):format(name:upper(), info.short_src, info.currentline, packstring(...))
+        local text = ('[%-5s](%s:%d) %s'):format(name:upper(), info.short_src, info.currentline, packstring(...))
         if not __ANT_RUNTIME__ and color[name] then
             text = color[name]..text.."\x1b[0m"
         end

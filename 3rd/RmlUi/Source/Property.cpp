@@ -61,7 +61,6 @@ std::string Property::ToString() const {
 	case Property::PX:		return std::to_string(std::get<float>(value)) + "px";
 	case Property::DEG:		return std::to_string(std::get<float>(value)) + "deg";
 	case Property::RAD:		return std::to_string(std::get<float>(value)) + "rad";
-	case Property::DP:		return std::to_string(std::get<float>(value)) + "dp";
 	case Property::EM:		return std::to_string(std::get<float>(value)) + "em";
 	case Property::REM:		return std::to_string(std::get<float>(value)) + "rem";
 	case Property::PERCENT:	return std::to_string(std::get<float>(value)) + "%";
@@ -85,7 +84,6 @@ float Property::GetFloat() const {
 	case Property::PX:
 	case Property::DEG:
 	case Property::RAD:
-	case Property::DP:
 	case Property::EM:
 	case Property::REM:
 	case Property::PERCENT:
@@ -220,7 +218,6 @@ std::string ToString<FloatValue>(const FloatValue& v) {
 		case Property::PX:		value += "px"; break;
 		case Property::DEG:		value += "deg"; break;
 		case Property::RAD:		value += "rad"; break;
-		case Property::DP:		value += "dp"; break;
 		case Property::EM:		value += "em"; break;
 		case Property::REM:		value += "rem"; break;
 		case Property::PERCENT:	value += "%"; break;

@@ -1,24 +1,12 @@
 local bgfx = require "bgfx"
-local datalist = require "datalist"
-local fs = require "filesystem"
 local lfs = require "filesystem.local"
 local stringify = require "stringify"
 local compile = require "compile"
 local config = require "config"
+local fxsetting = require "editor.fx.setting"
 
-local setting   = import_package "ant.settings".setting
 local CACHE = {}
 
-local function read_default_setting_from_file()
-    local f = fs.open (fs.path "/pkg/ant.resources/settings/default.setting")
-    local c = f:read "a"
-    f:close()
-    return c
-end
-
-local defaultSetting       = datalist.parse(read_default_setting_from_file())
-defaultSetting.depth_type  = setting:get 'graphic/shadow/type'
-defaultSetting.bloom       = setting:get 'graphic/postprocess/bloom/enable' and "on" or "off"
 
 local function merge(a, b)
     for k, v in pairs(b) do
@@ -31,11 +19,13 @@ end
 
 local function initFX(fx)
     local res = {}
-    merge(fx.setting, defaultSetting)
     merge(fx.setting, config.get "sc".setting)
+    res = fxsetting.deldef(res)
     local function updateStage(stage)
         if fx[stage] then
-            fx.setting.stage = stage
+            if not fx[stage]:match("/"..stage.."_[^/]*%.sc$") then
+                error "invalid shader file path."
+            end
             res[stage] =  {
                 fx[stage] .. "?" .. stringify(fx.setting),
             }
@@ -44,7 +34,6 @@ local function initFX(fx)
     updateStage "cs"
     updateStage "fs"
     updateStage "vs"
-    fx.setting.stage = nil
     res.setting = fx.setting
     return res
 end
@@ -137,7 +126,7 @@ local function load(fx)
     if res then
         return res
     end
-    res = {setting=fx.setting}
+    res = {setting=fxsetting.adddef(fx.setting)}
     res.prog, res.uniforms = createProgram(fx)
     CACHE[schash] = res
     return res

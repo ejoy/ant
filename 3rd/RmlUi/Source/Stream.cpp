@@ -39,7 +39,6 @@ const size_t READ_BLOCK_SIZE = 1024;
 
 Stream::Stream()
 {
-	stream_mode = 0;
 }
 
 Stream::~Stream()
@@ -49,13 +48,6 @@ Stream::~Stream()
 
 void Stream::Close()
 {
-	stream_mode = 0;
-}
-
-// Returns the mode the stream was opened in.
-int Stream::GetStreamMode() const
-{
-	return stream_mode;
 }
 
 // Returns the source url (if available)
@@ -69,30 +61,6 @@ bool Stream::IsEOS() const
 	return Tell() >= Length();
 }
 
-size_t Stream::Peek(void* buffer, size_t bytes) const
-{
-	size_t pos = Tell();
-	size_t read = Read( buffer, bytes );
-	Seek( (long)pos, SEEK_SET );
-	return read;
-}
-
-// Read from one stream into another
-size_t Stream::Read(Stream* stream, size_t bytes) const
-{
-	uint8_t buffer[ READ_BLOCK_SIZE ];
-	size_t total_bytes_read = 0;
-	while (total_bytes_read < bytes)
-	{
-		size_t bytes_read = this->Read(buffer, Math::Min(READ_BLOCK_SIZE, bytes - total_bytes_read));
-		if (bytes_read < 1)
-			return total_bytes_read;
-		stream->Write(buffer, bytes_read);
-		total_bytes_read += bytes_read;
-	}
-	return total_bytes_read;
-}
-
 // Read from one stream into another
 size_t Stream::Read(std::string& string, size_t bytes) const
 {
@@ -104,62 +72,10 @@ size_t Stream::Read(std::string& string, size_t bytes) const
 	return read;
 }
 
-/// Write to this stream from another stream
-size_t Stream::Write(const Stream* stream, size_t bytes)
-{
-	return stream->Read(this, bytes);
-}
-
-size_t Stream::Write(const char* string)
-{
-	return Write(string, strlen(string));
-}
-
-size_t Stream::Write(const std::string& string)
-{
-	return Write(string.c_str(), string.size());
-}
-
-// Push onto the front of the stream
-size_t Stream::PushFront(const void* RMLUI_UNUSED_PARAMETER(buffer), size_t RMLUI_UNUSED_PARAMETER(bytes))
-{
-	RMLUI_UNUSED(buffer);
-	RMLUI_UNUSED(bytes);
-
-	Log::Message(Log::Level::Error, "No generic way to PushFront to a stream.");
-	return false;
-}
-
-// Push onto the back of the stream
-size_t Stream::PushBack(const void* buffer, size_t bytes)
-{	
-	size_t pos = Tell();
-	Seek(0, SEEK_END);
-	size_t wrote = Write(buffer, bytes);
-	Seek((long)pos, SEEK_SET);
-	return wrote;
-}
-
-// Push onto the front of the stream
-size_t Stream::PopFront(size_t RMLUI_UNUSED_PARAMETER(bytes))
-{
-	RMLUI_UNUSED(bytes);
-
-	Log::Message(Log::Level::Error, "No generic way to PopFront from a stream.");
-	return 0;
-}
-
-// Push onto the back of the stream
-size_t Stream::PopBack(size_t bytes)
-{
-	return Truncate(Length() - bytes);
-}
-
 // Sets the mode on the stream; should be called by a stream when it is opened.
-void Stream::SetStreamDetails(const std::string& _url, int _stream_mode)
+void Stream::SetStreamDetails(const std::string& _url)
 {
 	url = _url;
-	stream_mode = _stream_mode;
 }
 
 } // namespace Rml

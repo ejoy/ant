@@ -13,7 +13,7 @@ function m:entity_init()
 				keyframe_events = e.keyframe_events and e.keyframe_events[name] or {}
 			},
 			clip_state = { current = {clip_index = 1}, clips = e.anim_clips and e.anim_clips[name] or {}},
-			play_state = { ratio = 0.0, previous_ratio = 0.0, speed = 1.0, play = true, loop = true}
+			play_state = { ratio = 0.0, previous_ratio = 0.0, speed = 1.0, play = true, loop = true, manual_update = false }
 		}
 	end
 end

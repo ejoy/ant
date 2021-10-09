@@ -103,10 +103,6 @@ private:
 	DataModels data_models;
 
 private:
-
-	/// Updates all sizes defined by the 'lp' unit.
-	void DirtyDpProperties();
-
 	// The original path this document came from
 	std::string source_url;
 
