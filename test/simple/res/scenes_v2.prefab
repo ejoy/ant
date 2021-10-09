@@ -1,0 +1,8 @@
+#---
+#prefab: ./procedural_sky.prefab
+---
+prefab: ./plane.prefab
+---
+prefab: ./light_directional.prefab
+#---
+#prefab: ./Fox.glb|mesh.prefab
