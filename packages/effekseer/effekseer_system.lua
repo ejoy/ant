@@ -21,18 +21,6 @@ effekseer.update_transform = math3d_adapter.matrix(effekseer.update_transform, 3
 local effekseer_sys = ecs.system "effekseer_system"
 local time_callback
 
-local ie_t = ecs.transform "instance_effect"
-
-function ie_t.process_entity(e)
-    e.effect_instance = {
-        handle 		= effekseer.create(e.effekseer.rawdata, e.effekseer.filename),
-        playid      = -1,
-        speed 		= e.speed,
-        auto_play 	= e.auto_play,
-        loop 		= e.loop
-    }
-end
-
 local shader_type = {
     "unlit", "lit", "distortion", "ad_unlit", "ad_lit", "ad_distortion", "mtl"
 }
@@ -93,6 +81,21 @@ function effekseer_sys:init()
     local filemgr = require "filemanager"
     -- filemgr.add("/pkg/ant.resources.binary/effekseer/Base")
     effekseer.set_path_converter(filemgr.realpath)
+end
+
+function effekseer_sys:entity_init()
+    for e in w:select "INIT effekseer:in effect_instance:out" do
+        if type(e.effekseer) == "string" then
+            local eff_asset = assetmgr.resource(e.effekseer)
+            e.effect_instance = {
+                handle 		= effekseer.create(eff_asset.rawdata, eff_asset.filename),
+                playid      = -1,
+                speed 		= e.speed or 1.0,
+                auto_play 	= e.auto_play or false,
+                loop 		= e.loop or false
+            }
+        end
+    end
 end
 
 local imgr = ecs.interface "filename_mgr"

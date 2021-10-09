@@ -164,19 +164,17 @@ function m:create_slot()
     --if not gizmo.target_eid then return end
     local auto_name = "empty" .. slot_entity_id
     local parent_eid = gizmo.target_eid or self.root
-    local new_entity, temp = world:deprecated_create_entity {
-        --action = { mount = 0 },
+    local new_entity, temp = ecs.create_entity {
         policy = {
             "ant.general|name",
             "ant.general|tag",
             "ant.scene|slot_policy",
-            "ant.scene|transform_policy",
             "ant.scene|hierarchy_policy",
         },
         data = {
-            transform = get_local_transform({}, parent_eid),
+            reference = true,
+            scene = {srt = get_local_transform({}, parent_eid)},
             slot = true,
-            scene_entity = true,
             follow_joint = "None",
             follow_flag = 1,
             name = auto_name,
@@ -199,54 +197,57 @@ function m:create_collider(config)
         scale = {size[1] * 200, size[2] * 200, size[3] * 200}
     elseif config.type == "capsule" then
     end
-    
-    local new_entity, temp = world:deprecated_create_entity {
-        --action = { mount = 0 },
+    local template = {
         policy = {
             "ant.general|name",
             "ant.render|render",
             "ant.scene|hierarchy_policy",
-            "ant.scene|transform_policy",
             "ant.general|tag",
-            --"ant.collision|collider_policy"
         },
         data = {
+            eid = 0,
+            reference = true,
             name = "collider" .. gen_geometry_id(),
             tag = config.tag or {"collider"},
-            scene_entity = true,
-            transform = {s = scale},
-            --collider = { [config.type] = define },
-            color = {1, 0.5, 0.5, 0.5},
+            scene = {srt = {s = scale}, parent = self.root},
+            --color = {1, 0.5, 0.5, 0.5},
             state = ies.create_state "visible|selectable",
             material = "/pkg/ant.resources/materials/singlecolor_translucent.material",
-            mesh = (config.type == "box") and geom_mesh_file["cube"] or geom_mesh_file[config.type]
+            mesh = (config.type == "box") and geom_mesh_file["cube"] or geom_mesh_file[config.type],
+            render_object = {},
+            filter_material = {},
+            -- on_init = function (e)
+            -- end,
+            -- on_ready = function (e)
+            -- end
         }
     }
-    world[new_entity].collider = { [config.type] = define }
-    imaterial.set_property(new_entity, "u_color", {1, 0.5, 0.5, 0.8})
-    return new_entity, temp
+    local new_entity = ecs.create_entity(template)
+    -- world[new_entity].collider = { [config.type] = define }
+    -- imaterial.set_property(new_entity, "u_color", {1, 0.5, 0.5, 0.8})
+    return new_entity, {__class = {template}}
 end
 
 local function create_simple_entity(name)
-    return world:deprecated_create_entity{
+    local template = {
 		policy = {
             "ant.general|name",
             "ant.scene|hierarchy_policy",
-            "ant.scene|transform_policy"
 		},
 		data = {
+            reference = true,
             name = name,
-            scene_entity = true,
-            transform = {}
+            scene = {srt = {}}
 		},
     }
+    return ecs.create_entity(template), {__class = {template}}
 end
 
 function m:add_entity(new_entity, parent, temp, no_hierarchy)
     self.entities[#self.entities+1] = new_entity
-    iss.set_parent(new_entity, parent or self.root)
+    ecs.method.set_parent(new_entity, parent or self.root)
     if not no_hierarchy then
-        hierarchy:add(new_entity, {template = temp.__class[1]}, world[new_entity].parent)
+        hierarchy:add(new_entity, {template = temp.__class[1]}, parent)--world[new_entity].parent)
     end
 end
 
@@ -269,26 +270,28 @@ function m:create(what, config)
             or config.type == "sphere"
             or config.type == "torus" then
             local parent_eid = config.parent or gizmo.target_eid
-            local new_entity, temp = world:deprecated_create_entity {
-                --action = { mount = 0 },
+            local template = {
                 policy = {
                     "ant.render|render",
                     "ant.general|name",
                     "ant.scene|hierarchy_policy",
                 },
                 data = {
-                    color = {1, 1, 1, 1},
-                    scene_entity = true,
+                    eid = 0,
+                    reference = true,
+                    scene = {srt = get_local_transform({s = 50}, parent_eid)},
                     state = ies.create_state "visible|selectable",
-                    transform = get_local_transform({s = 50}, parent_eid),
-                    --material = "/pkg/ant.resources/materials/singlecolor.material",
                     material = "/pkg/ant.resources/materials/pbr_default.material",
                     mesh = geom_mesh_file[config.type],
+                    render_object = {},
+                    filter_material = {},
                     name = config.type .. gen_geometry_id()
                 }
             }
-            imaterial.set_property(new_entity, "u_color", {1, 1, 1, 1})
-            self:add_entity(new_entity, parent_eid, temp)
+            local new_entity = ecs.create_entity(template)
+
+            --imaterial.set_property(new_entity, "u_color", {1, 1, 1, 1})
+            self:add_entity(new_entity, parent_eid, {__class = {template}})
             return new_entity
         elseif config.type == "cube(prefab)" then
             m:add_prefab(gd.editor_package_path .. "res/cube.prefab")
@@ -566,13 +569,12 @@ function m:init_camera()
                     "ant.camera|camera"
                 },
                 data = {
-                    camera      = true,
-                    scene_entity = true,
-                    frustum     = eid.template.data.camera.frustum,
-                    name        = eid.template.data.name,
-                    transform   = {s = {1,1,1}, r = tr, t = tt},
-                    updir       = {0, 1, 0},
-                    tag         = {"camera"}
+                    camera  = true,
+                    frustum = eid.template.data.camera.frustum,
+                    name    = eid.template.data.name,
+                    scene   = {srt = {s = {1,1,1}, r = tr, t = tt}},
+                    updir   = {0, 1, 0},
+                    tag     = {"camera"}
                 }
             }}, self.root)
             node.camera = true
@@ -642,7 +644,8 @@ function m:open_prefab(prefab)
                         world[new_entity].slot_name = world[world[entity].parent].name
                     end
                     --world[new_entity].parent = world[entity].parent or self.root
-                    iss.set_parent(new_entity, world[entity].parent or self.root)
+                    ecs.method.set_parent(new_entity, world[entity].parent or self.root)
+                    
                     hierarchy:add(new_entity, {template = temp.__class[1]}, world[new_entity].parent)
                     add_entity[#add_entity + 1] = new_entity
                     remove_entity[#remove_entity+1] = entity
@@ -698,36 +701,37 @@ function m:add_effect(filename)
     if not self.root then
         self:reset_prefab()
     end
-    
-    local effect, temp = world:deprecated_create_entity{
+    local tpl = {
 		policy = {
             "ant.general|name",
             "ant.scene|hierarchy_policy",
-            "ant.scene|transform_policy",
-            "ant.effekseer|effekseer_policy",
+            "ant.effekseer|effekseer",
             "ant.general|tag"
 		},
 		data = {
+            reference = true,
             name = "root",
             tag = {"effect"},
-            scene_entity = true,
-            transform = {},
+            scene = {srt = {}},
             effekseer = filename,
-            speed = 1.0,
-            auto_play = false,
-            loop = true
+            effect_instance = {},
+            -- speed = 1.0,
+            -- auto_play = false,
+            -- loop = true
 		},
     }
-    if world[effect].effect_instance.handle == -1 then
-        print("create effect faild : ", filename)
-    -- else
-    --     local inst = world[effect].effect_instance
-    --     inst.playid = effekseer.play(inst.handle, inst.playid)
-    end
+    local effect = ecs.create_entity(tpl)
+    -- if world[effect].effect_instance.handle == -1 then
+    --     print("create effect faild : ", filename)
+    -- -- else
+    -- --     local inst = world[effect].effect_instance
+    -- --     inst.playid = effekseer.play(inst.handle, inst.playid)
+    -- end
     self.entities[#self.entities+1] = effect
+    local parent = gizmo.target_eid or self.root
     --world[effect].parent = gizmo.target_eid or self.root
-    iss.set_parent(effect, gizmo.target_eid or self.root)
-    hierarchy:add(effect, {template = temp.__class[1]}, world[effect].parent)
+    ecs.method.set_parent(effect, parent)
+    hierarchy:add(effect, {template = tpl}, parent)
 end
 
 function m:add_prefab(filename)
@@ -742,8 +746,8 @@ function m:add_prefab(filename)
     local mount_root, temp = create_simple_entity(gen_prefab_name())
     self.entities[#self.entities+1] = mount_root
     local entities = world:instance(prefab_filename)
-    iss.set_parent(entities[1], mount_root)
-    iss.set_parent(mount_root, gizmo.target_eid or self.root)
+    ecs.method.set_parent(entities[1], mount_root)
+    ecs.method.set_parent(mount_root, gizmo.target_eid or self.root)
     set_select_adapter(entities, mount_root)
     hierarchy:add(mount_root, {filename = prefab_filename, template = temp.__class[1], children = entities}, world[mount_root].parent)
 end

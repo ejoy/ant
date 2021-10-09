@@ -63,7 +63,7 @@ end
 local arg
 local repopath
 local function luaexe()
-    return "./bin/msvc/debug/lua.exe"
+    return "./bin/msvc/release/lua.exe"
 end
 
 local function spawnFileServer()

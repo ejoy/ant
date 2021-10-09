@@ -66,30 +66,40 @@ local function node_context_menu(eid)
 end
 
 local function get_icon_by_object_type(node)
-    local entity = type(node.eid) == "table" and icamera.find_camera(node.eid) or world[node.eid]
     local template = hierarchy:get_template(node.eid)
     if template and template.filename then
         return icons.ICON_WORLD3D
     else
-        if entity.frustum then
+        local e = node.eid
+        w:sync("camera?in", e)
+        if e.camera then
             return icons.ICON_CAMERA3D
-        elseif entity.light_type then
-            if entity.light_type == "directional" then
-                return icons.ICON_DIRECTIONALLIGHT
-            elseif entity.light_type == "point" then
-                return icons.ICON_POINTLIGHT
-            elseif entity.light_type == "spot" then
-                return icons.ICON_SPOTLIGHT
-            end
-        elseif entity.mesh then
-            if entity.collider then
+        end
+        -- w:sync("light_type?in", e)
+        -- if e.light_type then
+        --     if e.light_type == "directional" then
+        --         return icons.ICON_DIRECTIONALLIGHT
+        --     elseif e.light_type == "point" then
+        --         return icons.ICON_POINTLIGHT
+        --     elseif e.light_type == "spot" then
+        --         return icons.ICON_SPOTLIGHT
+        --     end
+        -- end
+        w:sync("mesh?in", e)
+        if e.mesh then
+            w:sync("collider?in", e)
+            if e.collider then
                 return icons.ICON_COLLISIONSHAPE3D
             else
                 return icons.ICON_MESH
             end
-        elseif entity.slot then
+        end
+        w:sync("slot?in", e)
+        if e.slot then
             return icons.ICON_SLOT
-        elseif entity.effekseer then
+        end
+        w:sync("effekseer?in", e)
+        if e.effekseer then
             return icons.ICON_PARTICLES3D
         else
             return icons.ICON_OBJECT
