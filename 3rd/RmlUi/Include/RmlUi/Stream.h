@@ -6,11 +6,26 @@
 
 namespace Rml {
 
-class Stream : public NonCopyMoveable {
+class Stream {
 public:
+	struct View {
+		const uint8_t* buf;
+		size_t         len;
+		bool           owner;
+		View();
+		View(const uint8_t* buf, size_t len, bool owner);
+		View(View&& o);
+		~View();
+		View(const View&) = delete;
+		View& operator=(const View&) = delete;
+		View& operator=(View&&) = delete;
+
+		operator bool() const;
+		uint8_t operator[] (size_t i) const;
+		size_t size() const;
+	};
 	Stream(const std::string& filename);
 	Stream(const std::string& name, const uint8_t* data, size_t sz);
-	~Stream();
 
 	const std::string& GetSourceURL() const;
 	uint8_t Peek() const;
@@ -21,10 +36,8 @@ public:
 
 private:
 	std::string    url;
-	const uint8_t* buf;
-	size_t         len;
+	View           view;
 	size_t         pos;
-	bool           owner;
 };
 
 }
