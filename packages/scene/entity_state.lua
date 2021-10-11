@@ -1,5 +1,6 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 
 local STATE_TYPE = {
 	---
@@ -36,12 +37,20 @@ end
 
 local ies = ecs.interface "ientity_state"
 
+local function get_rc(eid)
+	if type(eid) == "table" then
+		w:sync("render_object:in", eid)
+		return eid.render_object
+	end
+	return world[eid]._rendercache
+end
+
 function ies.has_state(eid, name)
-	return ((world[eid]._rendercache.entity_state) & STATE_TYPE[name]) ~= 0
+	return ((get_rc(eid).entity_state) & STATE_TYPE[name]) ~= 0
 end
 
 function ies.set_state(eid, name, v)
-	local rc = world[eid]._rendercache
+	local rc = get_rc(eid)
 	if not rc or not rc.entity_state then
 		return
 	end
