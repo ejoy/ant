@@ -389,9 +389,10 @@ function Button:show()
     imgui.util.PopID()
 end
 
-local Group = class "Group"
+local Group = class("Group", PropertyBase)
 
 function Group:_init(config, subproperty)
+    PropertyBase._init(self, config, nil)
     self.label        = config.label
     self.subproperty = subproperty
 end

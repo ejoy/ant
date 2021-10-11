@@ -475,7 +475,9 @@ function MaterialView:_init()
     BaseView._init(self)
     
     self.mat_file       = uiproperty.ResourcePath({label = "File", extension = ".material"},{
-        getter = function() return self.mat_file:get_path() end,
+        getter = function()
+            return tostring(world[self.eid].material)
+        end,
         setter = function (value)
             prefab_mgr:update_material(self.eid, value)
             self:set_model(nil)
@@ -562,13 +564,7 @@ end
 function MaterialView:show()
     if self.eid then
         BaseView.show(self)
-        self.mat_file:show()
-        self.fx:show()
-        self.properties:show()
-        self.state:show()
-        self.save:show()
-        self.saveas:show()
-        --self.stencil:show()
+        self.material:show()
     end
 
 end
