@@ -398,7 +398,9 @@ end
 
 function Group:update()
     for _, pro in ipairs(self.subproperty) do
-        pro:update() 
+        if pro.update then
+            pro:update()
+        end
     end
 end
 

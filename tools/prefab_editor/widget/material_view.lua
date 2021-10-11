@@ -32,11 +32,31 @@ local datalist  = require "datalist"
 local math3d    = require "math3d"
 local bgfx      = require "bgfx"
 
-local default_setting = datalist.parse(fs.open "/pkg/ant.resources/settings/default.setting":read "a")
+local file_cache = {}
+
+local function read_datalist_file(p)
+    local c = file_cache[p]
+    if c == nil then
+        c = datalist.parse(fs.open(fs.path(p)):read "a")
+        file_cache[p] = c
+    end
+    return c
+end
+
+local default_setting = read_datalist_file "/pkg/ant.resources/settings/default.setting"
 
 local function material_template(eid)
     local prefab = hierarchy:get_template(eid)
-    return prefab.template.data.material
+    local mf = prefab.template.data.material
+    return read_datalist_file(mf)
+end
+
+local function state_template(eid)
+    local t = material_template(eid)
+    if type(t.state) == "string" then
+        return read_datalist_file(t.state)
+    end
+    return t.state
 end
 
 local function reload(eid, mtl)
@@ -69,22 +89,23 @@ local function build_fx_ui(mv)
 
     local function setting_filed(which)
         local s = material_template(mv.eid).fx.setting
+        s = s or default_setting
         return s[which] or default_setting[which]
     end
 
     return uiproperty.Group({label="FX"}, {
-        vs = shader_file_ui "vs",
-        fs = shader_file_ui "fs",
-        cs = shader_file_ui "cs",
-        setting         = uiproperty.Group({label="Setting"},{
-            lighting = uiproperty.Bool({label="Lighting"}, {
+        shader_file_ui "vs",
+        shader_file_ui "fs",
+        shader_file_ui "cs",
+        uiproperty.Group({label="Setting"},{
+            uiproperty.Bool({label="Lighting"}, {
                 getter = function() return setting_filed "lighting" == "on" end,
                 setter = function (value)
                     local s = material_template(mv.eid).fx.setting
                     s.lighting = value and "on" or "off"
                 end
             }),
-            layer    = uiproperty.Combo({label = "Layer", options = irender.layer_names()},{
+            uiproperty.Combo({label = "Layer", options = irender.layer_names()},{
                 getter = function() return setting_filed "surfacetype" end,
                 setter = function(value)
                     local s = material_template(mv.eid).fx.setting
@@ -92,7 +113,7 @@ local function build_fx_ui(mv)
                     mv.need_reload = true
                 end,
             }),
-            shadow_cast = uiproperty.Bool({label = "ShadowCast"}, {
+            uiproperty.Bool({label = "ShadowCast"}, {
                 getter = function() return ies.has_state(mv.eid, "cast_shadow") end,
                 setter = function(value)
                     local prefab = hierarchy:get_template(mv.eid)
@@ -109,7 +130,7 @@ local function build_fx_ui(mv)
                     mv.need_reload = true
                 end,
             }),
-            shadow_receive = uiproperty.Bool({label = "ShadowReceive"}, {
+            uiproperty.Bool({label = "ShadowReceive"}, {
                 getter = function () return setting_filed "shadow_receive" == "on" end,
                 setter = function(value)
                     local s = material_template(mv.eid).fx.setting
@@ -117,7 +138,7 @@ local function build_fx_ui(mv)
                     mv.need_reload = true
                 end,
             }),
-            depth_type = uiproperty.Combo({label = "DepthType", options = DEPTH_TYPE_options}, {
+            uiproperty.Combo({label = "DepthType", options = DEPTH_TYPE_options}, {
                 getter = function () return setting_filed "depth_type" end,
                 setter = function(value)
                     local s = material_template(mv.eid).fx.setting
@@ -214,7 +235,7 @@ local function build_properties_ui(mv)
     else
         if t.properties then
             for n, p in pairs(t.properties) do
-                properties[n] = create_property_ui(p)
+                properties[#properties+1] = create_property_ui(n, p, mv)
             end
         end
     end
@@ -304,34 +325,34 @@ local CULL_options<const> = {
     "NONE",
 }
 
-local function create_simple_state_ui(t, en, ln, mv)
-    return uiproperty[t]({lable=ln},{
+local function create_simple_state_ui(t, l, en, mv, def_value)
+    return uiproperty[t](l, {
         getter = function ()
-            local mt = material_template(mv.eid)
-            return mt.state[en]
+            local s = state_template(mv.eid)
+            return s[en] or def_value
         end,
         setter = function (value)
-            local mt = material_template(mv.eid)
-            mt.state[en] = value
+            local s = state_template(mv.eid)
+            s[en] = value
             mv.need_reload = true
         end,
     })
 end
 
 local function create_write_mask_ui(en, mv)
-    uiproperty.Bool({label=en}, {
+    return uiproperty.Bool({label=en}, {
         getter = function ()
-            local t = material_template(mv.eid)
-            return t.state.WRITE_MASK:match(en)
+            local s = state_template(mv.eid)
+            return s.WRITE_MASK:match(en)
         end,
         setter = function (value)
-            local t = material_template(mv.eid)
+            local s = state_template(mv.eid)
             if value then
-                if not t.state.WRITE_MASK:match(en) then
-                    t.state.WRITE_MASK = en .. t.state.WRITE_MASK
+                if not s.WRITE_MASK:match(en) then
+                    s.WRITE_MASK = en .. s.WRITE_MASK
                 end
             else
-                t.state.WRITE_MASK = t.state.WRITE_MASK:gsub(en, "")
+                s.WRITE_MASK = s.WRITE_MASK:gsub(en, "")
             end
             mv.need_reload = true
         end
@@ -339,31 +360,24 @@ local function create_write_mask_ui(en, mv)
 end
 
 local function build_state_ui(mv)
-    return uiproperty.Group{{label="State", options = PT_options},{
-        PT = uiproperty.Combo({label = "Pritmive Type", }, {
+    return uiproperty.Group({label="State"},{
+        uiproperty.Combo({label = "Pritmive Type", options=PT_options }, {
             getter = function ()
-                local t = material_template(mv.eid)
-                if t.state.PT == nil then
-                    return "Triangles"
-                end
-
-                return t.state.PT
+                local s = state_template(mv.eid)
+                return s.PT == nil and "Triangles" or s.PT
             end,
             setter = function(value)
-                local t = material_template(mv.eid)
-                if value == "Triangles" then
-                    t.state.PT = nil
-                end
-                t.state.PT = value
+                local s = state_template(mv.eid)
+                s.PT = value ~= "Triangles" and value or nil
                 mv.need_reload = true
             end
         }),
 
-        BLEND = uiproperty.Group({label="Blend Setting",}, {
-            TYPE = create_simple_state_ui("Combo", {label="Type", options=BLEND_options}, "BLEND", mv),
-            ENABLE = create_simple_state_ui("Bool", {label="Enable"}, "BLEND_ENABLE", mv),
-            EQUATION = create_simple_state_ui("Combo", {label="Equation", options=BLEND_EQUATION_options}, "BLEND_EQUATION", mv),
-            FUNC = uiproperty.Group({label="Function"}, {
+        uiproperty.Group({label="Blend Setting",}, {
+            TYPE    = create_simple_state_ui("Combo",{label="Type", options=BLEND_options}, "BLEND", mv),
+            ENABLE  = create_simple_state_ui("Bool", {label="Enable"}, "BLEND_ENABLE", mv),
+            EQUATION= create_simple_state_ui("Combo",{label="Equation", options=BLEND_EQUATION_options}, "BLEND_EQUATION", mv),
+            FUNC    = uiproperty.Group({label="Function"}, {
                 USE_ALPHA_OP = uiproperty.Bool({label="Use Separate Alpha"},{
                     getter = function ()
                         return mv.blend_use_alpha
@@ -439,26 +453,27 @@ local function build_state_ui(mv)
                 }),
             })
         }),
-        ALPHA_REF   = create_simple_state_ui("Float", {label ="Alpha Reference"}, "ALPHA_REF", mv),
-        POINT_SIZE  = create_simple_state_ui("Float", {label = "Point Size"}, "POINT_SIZE", mv),
-        MSAA        = create_simple_state_ui("Bool", {label="MSAA"}, "MSAA", mv),
-        LINEAA      = create_simple_state_ui("Bool", {label="LINE AA"}, "LINEAA", mv),
-        CONSERVATIVE_RASTER = create_simple_state_ui("Bool", "CONSERVATIVE_RASTER", mv),
-        FRONT_CCW   = create_simple_state_ui("Bool", "FRONT_CCW", mv),
-        WRITE_MASK = uiproperty.Group({label="Write Mask"},{
+        create_simple_state_ui("Float",{label ="Alpha Reference"}, "ALPHA_REF", mv, 0.0),
+        create_simple_state_ui("Float",{label = "Point Size"}, "POINT_SIZE", mv, 0.0),
+        create_simple_state_ui("Bool", {label="MSAA"}, "MSAA", mv),
+        create_simple_state_ui("Bool", {label="LINE AA"}, "LINEAA", mv),
+        create_simple_state_ui("Bool", {label="CONSERVATIVE_RASTER"}, "CONSERVATIVE_RASTER", mv),
+        create_simple_state_ui("Bool", {label="Front Face as CCW"}, "FRONT_CCW", mv),
+        uiproperty.Group({label="Write Mask"},{
             R = create_write_mask_ui("R", mv),
             G = create_write_mask_ui("G", mv),
             B = create_write_mask_ui("B", mv),
             A = create_write_mask_ui("A", mv),
             Z = create_write_mask_ui("Z", mv),
         }),
-        DEPTH_TEST = create_simple_state_ui("Combo", {label="Depth Test", options=DEPTH_TEST_options}, "DEPTH_TEST", mv),
-        CULL = create_simple_state_ui("Combo", {label="Cull Type", options=CULL_options}, "CULL", mv),
-    }}
+        create_simple_state_ui("Combo", {label="Depth Test", options=DEPTH_TEST_options}, "DEPTH_TEST", mv),
+        create_simple_state_ui("Combo", {label="Cull Type", options=CULL_options}, "CULL", mv),
+    })
 end
 
 function MaterialView:_init()
     BaseView._init(self)
+    
     self.mat_file       = uiproperty.ResourcePath({label = "File", extension = ".material"},{
         getter = function() return self.mat_file:get_path() end,
         setter = function (value)
@@ -476,6 +491,13 @@ function MaterialView:_init()
     self.saveas     = uiproperty.Button({label="Save As ..."}, {
         click = function ()
         end
+    })
+    self.material = uiproperty.Group({label="Material"},{
+        self.mat_file,
+        self.fx,
+        self.state,
+        self.save,
+        self.saveas,
     })
 end
 -- local global_data = require "common.global_data"
@@ -508,15 +530,21 @@ function MaterialView:set_model(eid)
     self.mat_file.disable = is_readonly_resource(tostring(e.material))
     self.properties = build_properties_ui(self)
 
+    self.material:set_subproperty{
+        self.mat_file,
+        self.fx,
+        self.properties,
+        self.state,
+        self.save, self.saveas
+    }
+
+    self:update()
     return true
 end
 
 function MaterialView:update()
     if self.eid then
-        self.fx:update()
-        self.properties:update()
-        self.state:update()
-        --self.stencil:show()
+        self.material:update()
 
         if self.need_reload then
             local p = self.mat_file:get_path()
@@ -528,9 +556,12 @@ end
 function MaterialView:show()
     if self.eid then
         BaseView.show(self)
+        self.mat_file:show()
         self.fx:show()
         self.properties:show()
         self.state:show()
+        self.save:show()
+        self.saveas:show()
         --self.stencil:show()
     end
 
