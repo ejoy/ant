@@ -7,7 +7,6 @@ system "procedural_sky_system"
     .implement "procedural_sky_system.lua"
     .method "data_changed"
     .method "entity_init"
-    .method "entity_ready"
 
 policy_v2 "procedural_sky"
     .require_policy_v2 "ant.render.ibl|ibl"
