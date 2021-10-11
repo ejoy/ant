@@ -1,5 +1,6 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 
 --[[
 	this code from bgfx example-36, references:
@@ -117,7 +118,6 @@ local ABCDE_t = {
 
 -- Controls sun position according to time, month, and observer's latitude.
 -- this data get from: https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
-local ps = ecs.component "procedural_sky"
 
 local function compute_PerezCoeff(turbidity, values)
 	assert(#ABCDE == #ABCDE_t)
@@ -168,14 +168,6 @@ local function calc_sun_direction(skycomp)
 	
 	local rot1 = math3d.quaternion{axis=uxd, r=-altitude}
 	return math3d.transform(rot1, dir, 0)
-end
-
-function ps:init()
-	self._ecliptic_obliquity = math.rad(23.44)	--the earth's ecliptic obliquity is 23.44
-	self._northdir 	= math3d.ref(math3d.vector(1, 0, 0, 0))
-	self._updir  	= math3d.ref(math3d.vector(0, 1, 0, 0))
-	self._sundir 	= math3d.ref(calc_sun_direction(self))
-	return self
 end
 
 local ps_sys = ecs.system "procedural_sky_system"
@@ -237,36 +229,29 @@ local sky_luminance_fetch = fetch_value_operation(sky_luminance_XYZ)
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 
-local function update_sky_parameters(eid)
-	local e = world[eid]
+local function update_sky_parameters(e)
 	local skycomp = e.procedural_sky
 	local hour = skycomp.which_hour
-	imaterial.set_property(eid, "u_sunDirection", skycomp._sundir)
+	imaterial.set_property(e, "u_sunDirection", skycomp._sundir)
 	
-	imaterial.set_property(eid, "u_sunLuminance", xyz2rgb(sun_luminance_fetch(hour)))
-	imaterial.set_property(eid, "u_skyLuminanceXYZ", sky_luminance_fetch(hour))
+	imaterial.set_property(e, "u_sunLuminance", xyz2rgb(sun_luminance_fetch(hour)))
+	imaterial.set_property(e, "u_skyLuminanceXYZ", sky_luminance_fetch(hour))
 	shader_parameters[4] = hour
-	imaterial.set_property(eid, "u_parameters", shader_parameters)
+	imaterial.set_property(e, "u_parameters", shader_parameters)
 
 	local values = {}
 	compute_PerezCoeff(skycomp.turbidity, values)
-	imaterial.set_property(eid, "u_perezCoeff", values)
+	imaterial.set_property(e, "u_perezCoeff", values)
 end
 
-local function sync_directional_light(eid)
-	local skyentity = world[eid]
-	local skycomp = skyentity.procedural_sky
+local function sync_directional_light(e)
+	local skycomp = e.procedural_sky
 	local sunlight_eid = skycomp.attached_sun_light
 	if sunlight_eid then
 		local dlight = world[sunlight_eid]
 		dlight.direction.v = math3d.torotation(skycomp._sundir)
 	end
 end
-
-local updatesky_mb = {
-	world:sub{"component_register", "procedural_sky"},
-	world:sub{"component_changed", "procedural_sky"}
-}
 
 local function update_hour(skycomp, deltatime, unit)
 	unit = unit or 24
@@ -285,13 +270,28 @@ local function update_sun()
 	end
 end
 
-function ps_sys:data_changed()
-	for _, mb in ipairs(updatesky_mb) do
-		for _, _, eid in mb:unpack() do
-			update_sky_parameters(eid)
-			sync_directional_light(eid)
-		end
-	end
+local function init_procedural_sky(e)
+	local skycomp = e.procedural_sky
+	skycomp._ecliptic_obliquity = math.rad(23.44)	--the earth's ecliptic obliquity is 23.44
+	skycomp._northdir 	= math3d.ref(math3d.vector(1, 0, 0, 0))
+	skycomp._updir  	= math3d.ref(math3d.vector(0, 1, 0, 0))
+	skycomp._sundir 	= math3d.ref(calc_sun_direction(skycomp))
+end
 
+function ps_sys:entity_init()
+	for e in w:select "INIT procedural_sky:in procedural_sky_changed?out" do
+		init_procedural_sky(e)
+		e.procedural_sky_changed = true
+	end
+end
+
+function ps_sys:entity_ready()
+	for e in w:select "procedural_sky_changed procedural_sky:in" do
+		update_sky_parameters(e)
+		sync_directional_light(e)
+	end
+end
+
+function ps_sys:data_changed()
 	--update_sun()
 end

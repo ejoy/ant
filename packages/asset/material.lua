@@ -1,5 +1,6 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 
 local math3d		= require "math3d"
 local bgfx			= require "bgfx"
@@ -102,22 +103,29 @@ function imaterial.set_property_directly(properties, who, what)
 	end
 end
 
+local function get_rc(eid)
+	if type(eid) == "table" then
+		w:sync("render_object:in", eid)
+		return eid.render_object
+	end
+	return world[eid]._rendercache
+end
+
 function imaterial.set_property(eid, who, what)
 	if ecs.import.interface "ant.render|isystem_properties".get(who) then
 		error(("global property could not been set:%s"):format(who))
 	end
-
-	local rc = world[eid]._rendercache
+	local rc = get_rc(eid)
 	imaterial.set_property_directly(rc.properties, who, what)
 end
 
 function imaterial.get_property(eid, who)
-	local rc = world[eid]._rendercache
+	local rc = get_rc(eid)
 	return rc.properties and rc.properties[who] or nil
 end
 
 function imaterial.has_property(eid, who)
-	local rc = world[eid]._rendercache
+	local rc = get_rc(eid)
 	return rc.properties and rc.properties[who] ~= nil
 end
 
