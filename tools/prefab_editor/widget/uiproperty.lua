@@ -15,9 +15,10 @@ local class     = utils.class
 local PropertyBase = class "PropertyBase"
 
 function PropertyBase:_init(config, modifier)
-    self.label = config.label
-    self.readonly = config.readonly
-    self.disable = config.disable
+    self.label      = config.label
+    self.readonly   = config.readonly
+    self.disable    = config.disable
+    self.visible    = config.visible or true
 
     self.modifier = modifier or {}
     self.dim = config.dim or 1
@@ -47,6 +48,23 @@ end
 
 function PropertyBase:set_setter(setter)
     self.modifier.setter = setter
+end
+
+function PropertyBase:is_enable()
+    return not self.disable
+end
+
+function PropertyBase:set_enable(v)
+    self.disable = not v
+end
+
+
+function PropertyBase:is_visible()
+    return self.visible
+end
+
+function PropertyBase:set_visible(v)
+    self.visible = v
 end
 
 function PropertyBase:update()
@@ -351,7 +369,7 @@ function TextureResource:show()
 end
 
 
-local Button = class("Button")
+local Button = class "Button"
 local button_id = 0
 function Button:_init(config, modifier)
     button_id = button_id + 1
@@ -393,7 +411,9 @@ function Group:show()
     if imgui.widget.TreeNode(self.label, imgui.flags.TreeNode { "DefaultOpen" }) then
         for _, pro in ipairs(self.subproperty) do
             imgui.windows.BeginDisabled(pro.disable)
-            pro:show() 
+            if pro.visible then
+                pro:show()
+            end
             imgui.windows.EndDisabled()
         end
         imgui.widget.TreePop()
