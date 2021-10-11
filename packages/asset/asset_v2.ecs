@@ -1,6 +1,6 @@
 system "material_system"
     .implement "material.lua"
-    .method "entity_init"
+    .method "component_init"
 
 system "mesh_system"
     .implement "mesh.lua"

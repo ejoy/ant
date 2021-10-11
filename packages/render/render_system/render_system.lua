@@ -37,10 +37,8 @@ function render_sys:entity_init()
 		pf._DEBUG_excule_type = pf.excule_type
 		pf.excule_type = pf.excule_type and ies.create_state(pf.excule_type) or 0
 	end
-end
 
-function render_sys:entity_ready()
-	for e in w:select "material_result:in render_object:in" do
+	for e in w:select "INIT material_result:in render_object:in" do
 		local ro = e.render_object
 		local mr = e.material_result
 		ro.fx			= mr.fx

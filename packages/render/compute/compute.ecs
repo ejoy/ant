@@ -7,7 +7,7 @@ interface "icompute"
 
 system "compute_system"
     .implement "compute/compute.lua"
-    .method "entity_ready"
+    .method "entity_init"
 
 component_v2 "compute"
 component_v2 "dispatch".type "lua"

@@ -290,7 +290,7 @@ end
 ----material_v2
 local w = world.w
 local ms = ecs.system "material_system"
-function ms:entity_init()
+function ms:component_init()
 	w:clear "material_result"
     for e in w:select "INIT material:in material_setting?in material_result:new" do
 		if type(e.material) == "string" then
