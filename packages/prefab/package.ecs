@@ -1,2 +1,4 @@
+import "@ant.effekseer"
+
 system "prefab_system"
     .implement "prefab_system.lua"

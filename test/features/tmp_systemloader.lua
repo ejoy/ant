@@ -45,25 +45,25 @@ local function point_light_test()
         {  3, 2,-3},
     }
 
-    local  lighteid = world:instance "/pkg/ant.test.features/assets/entities/light_point.prefab"[1]
+    local  lighteid = ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_point.prefab"[1]
     iom.set_position(lighteid, {0, 1, 0, 1})
 
     -- for _, p in ipairs(pl_pos) do
-    --     local  lighteid = world:instance "/pkg/ant.test.features/assets/entities/light_point.prefab"[1]
+    --     local  lighteid = ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_point.prefab"[1]
     --     iom.set_position(lighteid, p)
     -- end
 
-    -- local cubeeid = world:instance "/pkg/ant.test.features/assets/entities/pbr_cube.prefab"[1]
+    -- local cubeeid = ecs.create_instance  "/pkg/ant.test.features/assets/entities/pbr_cube.prefab"[1]
     -- iom.set_position(cubeeid, {0, 0, 0, 1})
 
-    local eid = world:instance "/pkg/ant.test.features/assets/entities/light_directional.prefab"[1]
+    local eid = ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"[1]
 
     -- for _, r in ipairs{
     --     math3d.quaternion{2.4, 0, 0},
     --     math3d.quaternion{-2.4, 0, 0},
     --     math3d.quaternion{0, 1, 0},
     -- } do
-    --     local eid = world:instance "/pkg/ant.test.features/assets/entities/light_directional.prefab"[1]
+    --     local eid = ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"[1]
     --     iom.set_rotation(eid, r)
     -- end
 end
@@ -73,29 +73,29 @@ local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
     --point_light_test()
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
-    --world:instance "/pkg/ant.test.features/assets/entities/test_scene.prefab"
-    world:instance "/pkg/ant.test.features/assets/entities/skybox_test.prefab"
-    world:instance "/pkg/ant.test.features/assets/glb/cloud.glb|mesh.prefab"
-    --world:instance "/pkg/ant.test.features/assets/glb/shadow.glb|mesh.prefab"
-    -- local p = world:instance "/pkg/ant.test.features/assets/glb/Fox.glb|mesh.prefab"
+    --ecs.create_instance  "/pkg/ant.test.features/assets/entities/test_scene.prefab"
+    ecs.create_instance  "/pkg/ant.test.features/assets/entities/skybox_test.prefab"
+    ecs.create_instance  "/pkg/ant.test.features/assets/glb/cloud.glb|mesh.prefab"
+    --ecs.create_instance  "/pkg/ant.test.features/assets/glb/shadow.glb|mesh.prefab"
+    -- local p = ecs.create_instance  "/pkg/ant.test.features/assets/glb/Fox.glb|mesh.prefab"
     -- foxeid = p[3]
     
-    --world:instance "/pkg/ant.test.features/assets/glb/shuijing.glb|mesh.prefab"
-    --world:instance "/pkg/ant.resources/meshes/SimpleSkin/SimpleSkin.glb|mesh.prefab"
-    -- world:instance "/pkg/ant.test.features/assets/entities/light_point.prefab"
-    -- local eid = world:instance "/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab"[1]
+    --ecs.create_instance  "/pkg/ant.test.features/assets/glb/shuijing.glb|mesh.prefab"
+    --ecs.create_instance  "/pkg/ant.resources/meshes/SimpleSkin/SimpleSkin.glb|mesh.prefab"
+    -- ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_point.prefab"
+    -- local eid = ecs.create_instance  "/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab"[1]
     -- world:pub{"after_init", eid}
-    --world:instance "/pkg/ant.test.features/assets/entities/font_tt.prefab"
-    --world:instance "/pkg/ant.resources.binary/meshes/female/female.glb|mesh.prefab"
+    --ecs.create_instance  "/pkg/ant.test.features/assets/entities/font_tt.prefab"
+    --ecs.create_instance  "/pkg/ant.resources.binary/meshes/female/female.glb|mesh.prefab"
 
     --ientity.create_procedural_sky()
     --target_lock_test()
 
     --ientity.create_skybox()
-    --world:instance "/pkg/ant.test.features/assets/glb/Duck.glb|mesh.prefab"
+    --ecs.create_instance  "/pkg/ant.test.features/assets/glb/Duck.glb|mesh.prefab"
 
-    --world:instance "/pkg/ant.resources.binary/meshes/cloud_run.glb|mesh.prefab"
-    --world:instance "/pkg/ant.test.features/assets/CloudTestRun.glb|mesh.prefab"
+    --ecs.create_instance  "/pkg/ant.resources.binary/meshes/cloud_run.glb|mesh.prefab"
+    --ecs.create_instance  "/pkg/ant.test.features/assets/CloudTestRun.glb|mesh.prefab"
 
     -- local eid = world:deprecated_create_entity {
     --     policy = {
