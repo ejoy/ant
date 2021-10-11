@@ -21,7 +21,7 @@ function world:create_template(t)
 	return prefab
 end
 
-function ecs.create_instance(filename, args)
+function world:instance(filename, args)
 	local prefab = assetmgr.resource(filename, self)
 	return self:instance_prefab(prefab, args)
 end
