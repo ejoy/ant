@@ -19,6 +19,7 @@ function PropertyBase:_init(config, modifier)
     self.readonly   = config.readonly
     self.disable    = config.disable
     self.visible    = config.visible or true
+    self.id         = config.id
 
     self.modifier = modifier or {}
     self.dim = config.dim or 1
