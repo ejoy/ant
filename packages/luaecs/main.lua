@@ -123,7 +123,7 @@ local function run_action(w, entities, template)
             run_action(w, entities[i], entity.prefab)
         elseif entity.action then
             for name, target in sortpairs(entity.action) do
-                if target:match "#(%d*)" then
+                if target:match "@(%d*)" then
                     target = entities[tonumber(target:sub(2))]
                 end
                 w:call(entities[i], name, target)

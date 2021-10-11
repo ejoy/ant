@@ -1,29 +1,28 @@
 ---
 policy:
     ant.render|render
-    ant.scene|hierarchy_policy
+    ant.scene|scene_object
     ant.general|name
 data:
-    transform: 
+    scene:
+      srt:
         s: {100, 100, 100, 0}
         t: {0, 3, 0, 1}
     material: /pkg/ant.resources/materials/singlecolor.material
     mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
     state: 0x00000005
-    scene_entity: true
     name: slot_cube
-
 ---
 policy:
     ant.render|render
     ant.render|show_name
     ant.render|fontrender
-    ant.general|name
 data:
-    transform: {}
+    mesh: false
     material: /pkg/ant.resources/materials/font/font.material
     state: 1
-    scene_entity:true
+    scene:
+      srt: {}
     font:
         name: 黑体
         size: 42
@@ -33,34 +32,32 @@ data:
         description: 测试测试
         color: 0xff00ff00
 action:
-    show_name: 1
-
+    show_name: @1
 ---
 policy:
     ant.render|render
-    ant.scene|hierarchy_policy
+    ant.scene|scene_object
     ant.general|name
 data:
-    transform: 
+    scene:
+      srt:
         s: {100, 100, 100, 0}
         t: {0, 3, 5, 1}
     material: /pkg/ant.resources/materials/singlecolor.material
     mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
     state: 0x00000005
-    scene_entity: true
     name: slot_cube
-
 ---
 policy:
     ant.render|render
     ant.render|show_name
     ant.render|fontrender
-    ant.general|name
 data:
-    transform: {}
+    mesh: false
     material: /pkg/ant.resources/materials/font/font.material
     state: 1
-    scene_entity:true
+    scene:
+      srt: {}
     font:
         name: 黑体
         size: 42
@@ -70,4 +67,4 @@ data:
         description: 测试测试2
         color: 0xffffff00
 action:
-    show_name: 3
+    show_name: @3
