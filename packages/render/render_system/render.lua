@@ -50,6 +50,11 @@ local SURFACE_TYPES <const> = {
 }
 
 local irender		= ecs.interface "irender"
+
+function irender.layer_names()
+	return LAYER_NAMES
+end
+
 function irender.check_primitive_mode_state(state, template_state)
 	local s = bgfx.parse_state(state)
 	local ts = bgfx.parse_state(template_state)

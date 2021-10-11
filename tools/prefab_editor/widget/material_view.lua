@@ -4,403 +4,536 @@ local w = world.w
 
 local imaterial   = ecs.import.interface "ant.asset|imaterial"
 local ies         = ecs.import.interface "ant.scene|ientity_state"
+local irender     = ecs.import.interface "ant.render|irender"
+
 local prefab_mgr  = ecs.require "prefab_manager"
 ecs.require "widget.base_view"
 
-local imgui     = require "imgui"
 local assetmgr  = import_package "ant.asset"
+local cr        = import_package "ant.compile_resource"
+local serialize = import_package "ant.serialize"
+
+local stringify = import_package "ant.serialize".stringify
+local utils     = require "common.utils"
+local uiutils   = require "widget.utils"
+local hierarchy = require "hierarchy_edit"
+
+local uiproperty= require "widget.uiproperty"
+local view_class= require "widget.view_class"
+
+local BaseView, MaterialView = view_class.BaseView, view_class.MaterialView
+
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 local vfs       = require "vfs"
 local access    = require "vfs.repoaccess"
-local cr        = import_package "ant.compile_resource"
+local imgui     = require "imgui"
 local datalist  = require "datalist"
-local stringify = import_package "ant.serialize".stringify
-local utils         = require "common.utils"
-local uiutils       = require "widget.utils"
-local math3d        = require "math3d"
-local uiproperty    = require "widget.uiproperty"
-local BaseView      = require "widget.view_class".BaseView
-local MaterialView  = require "widget.view_class".MaterialView
+local math3d    = require "math3d"
+local bgfx      = require "bgfx"
 
-local mtldata_list = {
+local default_setting = datalist.parse(fs.open "/pkg/ant.resources/settings/default.setting":read "a")
 
+local function material_template(eid)
+    local prefab = hierarchy:get_template(eid)
+    return prefab.template.data.material
+end
+
+local function reload(eid, mtl)
+    local prefab = hierarchy:get_template(eid)
+    prefab.template.data.material = mtl
+    prefab_mgr:save_prefab()
+    prefab_mgr:reload()
+end
+
+local ON_OFF_options<const> = {
+    "on", "off"
 }
 
-local surfacetype = {
-    "foreground",
-    "opacity",
-    "background",
-    "translucent",
-    "decal",
-    "ui"
+local DEPTH_TYPE_options<const> = {
+    "inv_z", "linear"
 }
+
+local function build_fx_ui(mv)
+    local function shader_file_ui(st)
+        return uiproperty.ResourcePath({label = "VS", extension = ".sc", readonly = true}, {
+            getter = function()
+                return material_template(mv.eid).fx[st]
+            end,
+            setter = function(value)
+                material_template(mv.eid).fx[st] = value
+                mv.need_reload = true
+            end,
+        })
+    end
+
+    local function setting_filed(which)
+        local s = material_template(mv.eid).fx.setting
+        return s[which] or default_setting[which]
+    end
+
+    return uiproperty.Group({label="FX"}, {
+        vs = shader_file_ui "vs",
+        fs = shader_file_ui "fs",
+        cs = shader_file_ui "cs",
+        setting         = uiproperty.Group({label="Setting"},{
+            lighting = uiproperty.Bool({label="Lighting"}, {
+                getter = function() return setting_filed "lighting" == "on" end,
+                setter = function (value)
+                    local s = material_template(mv.eid).fx.setting
+                    s.lighting = value and "on" or "off"
+                end
+            }),
+            layer    = uiproperty.Combo({label = "Layer", options = irender.layer_names()},{
+                getter = function() return setting_filed "surfacetype" end,
+                setter = function(value)
+                    local s = material_template(mv.eid).fx.setting
+                    s.surfacetype = value
+                    mv.need_reload = true
+                end,
+            }),
+            shadow_cast = uiproperty.Bool({label = "ShadowCast"}, {
+                getter = function() return ies.has_state(mv.eid, "cast_shadow") end,
+                setter = function(value)
+                    local prefab = hierarchy:get_template(mv.eid)
+                    local state = prefab.data.state
+                    --TODO: need remove not string entity state
+                    if type(state) == "string" then
+                        if not state:match "cast_shadow" then
+                            prefab.data.state = state .. "|cast_shadow"
+                        end
+                    else
+                        local m = ies.filter_mask(mv.eid)
+                        prefab.data.state = value and (state|m) or (state&(~m))
+                    end
+                    mv.need_reload = true
+                end,
+            }),
+            shadow_receive = uiproperty.Bool({label = "ShadowReceive"}, {
+                getter = function () return setting_filed "shadow_receive" == "on" end,
+                setter = function(value)
+                    local s = material_template(mv.eid).fx.setting
+                    s.shadow_receive = value and "on" or "off"
+                    mv.need_reload = true
+                end,
+            }),
+            depth_type = uiproperty.Combo({label = "DepthType", options = DEPTH_TYPE_options}, {
+                getter = function () return setting_filed "depth_type" end,
+                setter = function(value)
+                    local s = material_template(mv.eid).fx.setting
+                    s.depth_type = value
+                    mv.need_reload = true
+                end,
+            })
+        })
+    })
+
+end
+
+--TODO: hard code here, just check pbr material for show pbr ui
+--should add info in material file to let the ui system know how to show
+local function is_pbr_material(t)
+    local fx = t.fx
+    return fx.vs:match "vs_pbr" and fx.fs:match "fs_pbr"
+end
+
+local function which_property_type(p)
+    if p.texture then
+        return "texture"
+    end
+
+    local n = #p
+    if n > 0 then
+        local et = type(p[1])
+        if et == "number" then
+            return n == 4 and "v4" or "m4"
+        end
+
+        return "v4_array"
+    end
+end
+
+local function create_property_ui(n, p, mv)
+    local tt = which_property_type(p)
+    if tt == "texture" then
+        -- should add ui to extent texutre
+        return uiproperty.EditText({label = n}, {
+            getter = function ()
+                local t = material_template(mv.eid)
+                return t.properties[n].texture
+            end,
+            setter = function (value)
+                local t = material_template(mv.eid)
+                t.properties[n].texture = value
+                mv.need_reload = true
+            end,
+        })
+    elseif tt == "v4" or tt == "m4" then
+        return uiproperty.Float({label=n}, {
+            getter = function()
+                local t = material_template(mv.eid)
+                return t.properties[n]
+            end,
+            setter = function(value)
+                local t = material_template(mv.eid)
+                local pp = t.properties[n]
+                for i=1, #value do
+                    pp[i] = value[i]
+                end
+                mv.need_reload = true
+            end
+        })
+    elseif tt == "v4_array" then
+        local pp = {}
+        for i=1, #p do
+            pp[i] = uiproperty.Float({label=tostring(i)}, {
+                getter = function ()
+                    local t = material_template(mv.eid)
+                    return t.properties[n][i]
+                end,
+                setter = function (value)
+                    local t = material_template(mv.eid)
+                    local ppp = t.properties[n][i]
+                    for ii=1, #value do
+                        ppp[ii] = value[ii]
+                    end
+                    mv.need_reload = true
+                end
+            })
+        end
+        return uiproperty.Group({label=n}, pp)
+    else
+        error(("property:%s, not support uniform type:%s"):format(n, tt))
+    end
+end
+
+local function build_properties_ui(mv)
+    local t = material_template(assert(mv.eid))
+    local properties = {}
+    if false then--is_pbr_material(t) then
+    else
+        if t.properties then
+            for n, p in pairs(t.properties) do
+                properties[n] = create_property_ui(p)
+            end
+        end
+    end
+    return uiproperty.Group({label="Properties",}, properties)
+end
+
+local PT_options<const> = {
+    "Points",
+    "Lines",
+    "LineStrip",
+    "Triangles",
+    "TriangleStrip",
+}
+
+local BLEND_options<const> = {
+    "ADD",
+    "ALPHA",
+    "DARKEN",
+    "LIGHTEN",
+    "MULTIPLY",
+    "NORMAL",
+    "SCREEN",
+    "LINEAR_BURN",
+}
+
+local BLEND_FUNC_options<const> = {
+    "ZERO",
+    "ONE",
+    "SRC_COLOR",
+    "INV_SRC_COLOR",
+    "SRC_ALPHA",
+    "INV_SRC_ALPHA",
+    "DST_ALPHA",
+    "INV_DST_ALPHA",
+    "DST_COLOR",
+    "INV_DST_COLOR",
+    "SRC_ALPHA_SAT",
+    "FACTOR",
+    "INV_FACTOR",
+}
+
+local BLEND_FUNC_mapper = {}
+local BLEND_FUNC_remapper = {}
+for idx, v in ipairs{
+    '0',
+    '1',
+    's',
+    'S',
+    'a',
+    'A',
+    'b',
+    'B',
+    'd',
+    'D',
+    't',
+    'f',
+    'F',
+} do
+    local k = BLEND_FUNC_options[idx]
+    BLEND_FUNC_mapper[v] = k
+    BLEND_FUNC_remapper[k] = v
+end
+
+local BLEND_EQUATION_options<const> = {
+    "ADD",
+    "SUB",
+    "REV",
+    "MIN",
+    "MAX",
+}
+
+local DEPTH_TEST_options<const> = {
+    "NEVER",
+    "ALWAYS",
+    "LEQUAL",
+    "EQUAL",
+    "GEQUAL",
+    "GREATER",
+    "NOTEQUAL",
+    "LESS",
+    "NONE",
+}
+
+local CULL_options<const> = {
+    "CCW",
+    "CW",
+    "NONE",
+}
+
+local function create_simple_state_ui(t, en, ln, mv)
+    return uiproperty[t]({lable=ln},{
+        getter = function ()
+            local mt = material_template(mv.eid)
+            return mt.state[en]
+        end,
+        setter = function (value)
+            local mt = material_template(mv.eid)
+            mt.state[en] = value
+            mv.need_reload = true
+        end,
+    })
+end
+
+local function create_write_mask_ui(en, mv)
+    uiproperty.Bool({label=en}, {
+        getter = function ()
+            local t = material_template(mv.eid)
+            return t.state.WRITE_MASK:match(en)
+        end,
+        setter = function (value)
+            local t = material_template(mv.eid)
+            if value then
+                if not t.state.WRITE_MASK:match(en) then
+                    t.state.WRITE_MASK = en .. t.state.WRITE_MASK
+                end
+            else
+                t.state.WRITE_MASK = t.state.WRITE_MASK:gsub(en, "")
+            end
+            mv.need_reload = true
+        end
+    })
+end
+
+local function build_state_ui(mv)
+    return uiproperty.Group{{label="State", options = PT_options},{
+        PT = uiproperty.Combo({label = "Pritmive Type", }, {
+            getter = function ()
+                local t = material_template(mv.eid)
+                if t.state.PT == nil then
+                    return "Triangles"
+                end
+
+                return t.state.PT
+            end,
+            setter = function(value)
+                local t = material_template(mv.eid)
+                if value == "Triangles" then
+                    t.state.PT = nil
+                end
+                t.state.PT = value
+                mv.need_reload = true
+            end
+        }),
+
+        BLEND = uiproperty.Group({label="Blend Setting",}, {
+            TYPE = create_simple_state_ui("Combo", {label="Type", options=BLEND_options}, "BLEND", mv),
+            ENABLE = create_simple_state_ui("Bool", {label="Enable"}, "BLEND_ENABLE", mv),
+            EQUATION = create_simple_state_ui("Combo", {label="Equation", options=BLEND_EQUATION_options}, "BLEND_EQUATION", mv),
+            FUNC = uiproperty.Group({label="Function"}, {
+                USE_ALPHA_OP = uiproperty.Bool({label="Use Separate Alpha"},{
+                    getter = function ()
+                        return mv.blend_use_alpha
+                    end,
+                    setter = function (value)
+                        mv.blend_use_alpha = value
+                    end,
+                }),
+                SRC_RGB = uiproperty.Combo({label="RGB Source", options=BLEND_FUNC_options}, {
+                    getter = function ()
+                        local t = material_template(mv.eid)
+                        local f = t.state.BLEND_FUNC
+                        local k = f:sub(1, 1)
+                        return BLEND_FUNC_mapper[k]
+                    end,
+                    setter = function (value)
+                        local t = material_template(mv.eid)
+                        local f = t.state.BLEND_FUNC
+                        local d = f:sub(2, 2)
+                        t.state.BLEND_FUNC = BLEND_FUNC_remapper[value] .. d
+                        mv.need_reload = true
+                    end,
+                }),
+                DST_RGB = uiproperty.Combo({label="RGB Destination", options=BLEND_FUNC_options},{
+                    getter = function ()
+                        local t = material_template(mv.eid)
+                        local f = t.state.BLEND_FUNC
+                        local k = f:sub(2, 2)
+                        return BLEND_FUNC_mapper[k]
+                    end,
+                    setter = function (value)
+                        local t = material_template(mv.eid)
+                        local f = t.state.BLEND_FUNC
+                        local s = f:sub(1, 1)
+                        t.state.BLEND_FUNC = s .. BLEND_FUNC_remapper[value]
+                        mv.need_reload = true
+                    end,
+                }),
+                SRC_ALPHA = uiproperty.Combo({label="Alpha Source", options=BLEND_FUNC_options, disable=true}, {
+                    getter = function ()
+                        local t = material_template(mv.eid)
+                        local f = t.state.BLEND_FUNC
+                        local k = f:sub(3, 3)
+                        return BLEND_FUNC_mapper[k]
+                    end,
+                    setter = function (value)
+                        local t = material_template(mv.eid)
+                        local f = t.state.BLEND_FUNC
+                        local d = f:sub(4, 4)
+                        t.state.BLEND_FUNC = BLEND_FUNC_remapper[value] .. d
+                        mv.need_reload = true
+                    end,
+                }),
+                DST_ALPHA = uiproperty.Combo({label="Alpha Destination", options=BLEND_FUNC_options, disable=true},{
+                    getter = function ()
+                        local t = material_template(mv.eid)
+                        local f = t.state.BLEND_FUNC
+                        if #f ~= 4 then
+                            return "NONE"
+                        end
+                        local k = f:sub(3, 3)
+                        return BLEND_FUNC_mapper[k]
+                    end,
+                    setter = function (value)
+                        local t = material_template(mv.eid)
+                        local f = t.state.BLEND_FUNC
+                        if #f == 4 then
+                            local s = f:sub(4, 4)
+                            t.state.BLEND_FUNC = s .. BLEND_FUNC_remapper[value]
+                            mv.need_reload = true
+                        end
+                    end,
+                }),
+            })
+        }),
+        ALPHA_REF   = create_simple_state_ui("Float", {label ="Alpha Reference"}, "ALPHA_REF", mv),
+        POINT_SIZE  = create_simple_state_ui("Float", {label = "Point Size"}, "POINT_SIZE", mv),
+        MSAA        = create_simple_state_ui("Bool", {label="MSAA"}, "MSAA", mv),
+        LINEAA      = create_simple_state_ui("Bool", {label="LINE AA"}, "LINEAA", mv),
+        CONSERVATIVE_RASTER = create_simple_state_ui("Bool", "CONSERVATIVE_RASTER", mv),
+        FRONT_CCW   = create_simple_state_ui("Bool", "FRONT_CCW", mv),
+        WRITE_MASK = uiproperty.Group({label="Write Mask"},{
+            R = create_write_mask_ui("R", mv),
+            G = create_write_mask_ui("G", mv),
+            B = create_write_mask_ui("B", mv),
+            A = create_write_mask_ui("A", mv),
+            Z = create_write_mask_ui("Z", mv),
+        }),
+        DEPTH_TEST = create_simple_state_ui("Combo", {label="Depth Test", options=DEPTH_TEST_options}, "DEPTH_TEST", mv),
+        CULL = create_simple_state_ui("Combo", {label="Cull Type", options=CULL_options}, "CULL", mv),
+    }}
+end
 
 function MaterialView:_init()
     BaseView._init(self)
-    self.mat_file       = uiproperty.ResourcePath({label = "File", extension = ".material"})
-    self.vs_file        = uiproperty.ResourcePath({label = "VS", extension = ".sc", readonly = true})
-    self.fs_file        = uiproperty.ResourcePath({label = "FS", extension = ".sc", readonly = true})
-    self.save_mat       = uiproperty.Button({label = "Save"})
-    self.save_as_mat    = uiproperty.Button({label = "SaveAs"})
-    self.surfacetype    = uiproperty.Combo({label = "surfacetype", options = surfacetype},{})
-    self.samplers       = {}
-    self.uniforms       = {}
-    self.float_uniforms = {}
-    self.color_uniforms = {}
-    self.sampler_num    = 0
-    self.float_uniform_num  = 0
-    self.color_uniform_num  = 0
-    --
-    self.mat_file:set_getter(function() return self:on_get_mat() end)
-    self.mat_file:set_setter(function(value) self:on_set_mat(value) end)
-    self.vs_file:set_getter(function() return self:on_get_vs() end)
-    self.vs_file:set_setter(function(value) self:on_set_vs(value) end)
-    self.fs_file:set_getter(function() return self:on_get_fs() end)
-    self.fs_file:set_setter(function(value) self:on_set_fs(value) end)
-    self.save_mat:set_click(function() self:on_save_mat() end)
-    self.save_as_mat:set_click(function() self:on_saveas_mat() end)
-    self.surfacetype:set_setter(function(value) self:on_set_surfacetype(value) end)      
-    self.surfacetype:set_getter(function() return self:on_get_surfacetype() end)
-    --
-    self.ui_occluder = {true}
-    self.ui_occludee = {true}
-    self.ui_surfacetype = {text = "opacity"}
-    self.ui_lighting = {true}
-    self.ui_shadow_receive = {false}
-    self.ui_shadow_cast = {false}
-    self.ui_postprocess = {false}
-end
-local global_data = require "common.global_data"
-function MaterialView:on_set_mat(value)
-    -- local origin_path = fs.path(value)
-    -- local relative_path = tostring(origin_path)
-    -- if origin_path:is_absolute() then
-    --     relative_path = tostring(fs.relative(fs.path(value), gd.project_root))
-    -- end
-    prefab_mgr:update_material(self.eid, value)
-    self:set_model(nil)
-end
-function MaterialView:on_get_mat()
-    return tostring(world[self.eid].material)
-end
-function MaterialView:on_set_vs(value)
-    mtldata_list[self.eid].tdata.fx.vs = value
-end
-function MaterialView:on_get_vs()
-    return mtldata_list[self.eid].tdata.fx.vs
-end
-function MaterialView:on_set_fs(value)
-    mtldata_list[self.eid].tdata.fx.fs = value
-end
-function MaterialView:on_get_fs()
-    return mtldata_list[self.eid].tdata.fx.fs
-end
-function MaterialView:on_set_surfacetype(value)
-    mtldata_list[self.eid].tdata.fx.setting.surfacetype = value
-end
-function MaterialView:on_get_surfacetype()
-    return mtldata_list[self.eid].tdata.fx.setting.surfacetype or "opacity"
-end
+    self.mat_file       = uiproperty.ResourcePath({label = "File", extension = ".material"},{
+        getter = function() return self.mat_file:get_path() end,
+        setter = function (value)
+            prefab_mgr:update_material(self.eid, value)
+            self:set_model(nil)
+        end,
+    })
 
-local function convert_path(path, current_path)
-    if fs.path(path):is_absolute() then return path end
-    local pretty = tostring(lfs.path(path))
-    if string.sub(path, 1, 2) == "./" then
-        pretty = string.sub(path, 3)
-    end
-    return current_path .. pretty
-end
-
-local do_save = function(eid, path)
-    local mtl_path = tostring(fs.path(mtldata_list[eid].filename):remove_filename())
-    local tempt = {}
-    local tdata = mtldata_list[eid].tdata
-    local properties = tdata.properties
-    for k, v in pairs(properties) do
-        if v.tdata then
-            tempt[k] = v.tdata
-            if v.texture then
-                v.texture = convert_path(v.texture, mtl_path)
-            end
-            v.tdata = nil
+    self.fx         = build_fx_ui(self)
+    self.state      = build_state_ui(self)
+    self.save       = uiproperty.Button({label="Save"}, {
+        click = function ()
+        end,
+    })
+    self.saveas     = uiproperty.Button({label="Save As ..."}, {
+        click = function ()
         end
-    end
-    utils.write_file(path, stringify(tdata))
-    for k, v in pairs(properties) do
-        if tempt[k] then
-            v.tdata = tempt[k]
-        end
-    end
+    })
 end
+-- local global_data = require "common.global_data"
+-- function MaterialView:on_saveas_mat()
+--     local path = uiutils.get_saveas_path("Material", "material")
+--     if path then
+--         do_save(self.eid, path)
+--         local vpath = "/" .. tostring(access.virtualpath(global_data.repo, fs.path(path)))
+--         if vpath == self.mat_file:get_path() then
+--             assetmgr.unload(vpath)
+--         end
+--     end
+-- end
 
-function MaterialView:clear()
-    if not self.eid then return end
-    mtldata_list[self.eid] = nil
-end
+-- function MaterialView:on_set_mat(value)
+--     prefab_mgr:update_material(self.eid, value)
+--     self:set_model(nil)
+-- end
 
-function MaterialView:on_save_mat()
-    local path = self.mat_file:get_path()
-    if path:find("|", 1, true) then
-        return
-    end
-    do_save(self.eid, path)
-    assetmgr.unload(path)
+local function is_readonly_resource(p)
+    return p:match "|"
 end
-function MaterialView:on_saveas_mat()
-    local path = uiutils.get_saveas_path("Material", "material")
-    if path then
-        do_save(self.eid, path)
-        local vpath = "/" .. tostring(access.virtualpath(global_data.repo, fs.path(path)))
-        if vpath == self.mat_file:get_path() then
-            assetmgr.unload(vpath)
-        end
-    end
-end
-
-local function is_sampler(str)
-    return string.find(str,"s") == 1 and string.find(str,"_") == 2 
-end
-
-local function is_uniform(str)
-    return string.find(str,"u") == 1 and string.find(str,"_") == 2
-end
-
-function MaterialView:get_sampler_property()
-    self.sampler_num = self.sampler_num + 1
-    if self.sampler_num > #self.samplers then
-        self.samplers[#self.samplers + 1] = uiproperty.TextureResource({label = ""}, {})
-    end
-    return self.samplers[self.sampler_num]
-end
-
-function MaterialView:get_float_uniform_property()
-    self.float_uniform_num = self.float_uniform_num + 1
-    if self.float_uniform_num > #self.float_uniforms then
-        self.float_uniforms[#self.float_uniforms + 1] = uiproperty.Float({label = "", dim = 4, speed = 0.01, min = 0, max = 1}, {})
-    end
-    return self.float_uniforms[self.float_uniform_num]
-end
-
-function MaterialView:get_color_uniform_property()
-    self.color_uniform_num = self.color_uniform_num + 1
-    if self.color_uniform_num > #self.color_uniforms then
-        self.color_uniforms[#self.color_uniforms + 1] = uiproperty.Color({label = "", dim = 4}, {})
-    end
-    return self.color_uniforms[self.color_uniform_num]
-end
-
-local texture_used_idx = {
-    ["s_basecolor"] = 1,
-    ["s_normal"]    = 2,
-    ["s_emissive"]  = 3,
-    ["s_metallic_roughness"] = 4,
-}
-local function raw_read_file(filename)
-    local f = assert(fs.open(filename, "rb"))
-    local c = f:read "a"
-    f:close()
-    return c
-end
-
-local serialize = import_package "ant.serialize"
 
 function MaterialView:set_model(eid)
-    if not BaseView.set_model(self, eid) then return false end
-    local md = mtldata_list[eid]
-    if not md then
-        local mtl_filename = tostring(world[eid].material)
-        md = {filename = mtl_filename, tdata = serialize.parse(mtl_filename, cr.read_file(mtl_filename))}
-        md.tdata.fx.setting = md.tdata.fx.setting or {
-            lighting = "on",
-            surfacetype = "opacity",
-            shadow_cast = "on",
-            shadow_receive = "on",
-            bloom = "off"
-        }
-        if type(md.tdata.state) == "string" then
-            md.tdata.state = serialize.parse(fs.path(md.tdata.state), raw_read_file(fs.path(md.tdata.state)))
-        end
-        local mtl_path = cr.compile(mtl_filename):remove_filename()
-        for k, v in pairs(md.tdata.properties) do
-            if is_sampler(k) then
-                local absolute_path
-                if fs.path(v.texture):is_absolute() then
-                    absolute_path = tostring(cr.compile(v.texture))
-                else
-                    absolute_path = tostring(mtl_path) .. v.texture 
-                end
-                v.tdata = utils.readtable(absolute_path)
-            end
-        end
-        mtldata_list[eid] = md
+    if not BaseView.set_model(self, eid) then 
+        return false
     end
-    
-    local setting = md.tdata.fx.setting
-    self.ui_occluder = { string.find(md.tdata.state.WRITE_MASK, 'Z') ~= nil }
-    self.ui_occludee = { md.tdata.state.DEPTH_TEST ~= "ALWAYS" }
-    self.ui_lighting[1] = setting.lighting and setting.lighting == "on"
-    self.ui_shadow_receive[1] = setting.shadow_receive and setting.shadow_receive == "on"
-    self.ui_shadow_cast[1] = ies.can_cast(self.eid)
-    self.ui_postprocess[1] = setting.bloom and setting.bloom == "on"
-    self.ui_surfacetype.text = setting.surfacetype or "opacity"
+    --update ui state
+    local e = world[eid]
+    self.mat_file.disable = is_readonly_resource(tostring(e.material))
+    self.properties = build_properties_ui(self)
 
-    self.sampler_num = 0
-    self.uniforms = {}
-    self.float_uniform_num = 0
-    self.color_uniform_num = 0
-    for k, v in pairs(mtldata_list[eid].tdata.properties) do
-        if is_sampler(k) then
-            local pro = self:get_sampler_property()
-            pro:set_label(k)
-            pro:set_getter(
-                function()
-                    local prop = imaterial.get_property(eid, k)
-                    return prop and tostring(prop.value.texture) or ""
-                end
-            )
-            pro:set_setter(
-                function(value)
-                    local runtime_tex = assetmgr.resource(value)
-                    local tdata = mtldata_list[eid].tdata
-                    local used_flags = tdata.properties.u_texture_flags
-                    if used_flags then
-                        used_flags[texture_used_idx[k]] = 1
-                        imaterial.set_property(eid, "u_texture_flags", used_flags)
-                    end
-                    local prop = imaterial.get_property(eid, k)
-                    local mtl_filename = tostring(world[eid].material)
-                    tdata.properties[k].texture = value
-                    imaterial.set_property(eid, k, {stage = prop.value.stage, texture = {handle = runtime_tex._data.handle}})
-                end
-            )
-        elseif is_uniform(k) then
-            local pro
-            if k == "u_color" then
-                pro = self:get_color_uniform_property()
-            else
-                pro = self:get_float_uniform_property()
-            end
-            pro:set_label(k)
-            pro:set_getter(
-                function()
-                    local prop = imaterial.get_property(eid, k)
-                    return prop and math3d.totable(prop.value) or {0, 0, 0, 0}
-                end
-            )
-            pro:set_setter(
-                function(v)
-                    local tdata = mtldata_list[eid].tdata
-                    tdata.properties[k] = v
-                    imaterial.set_property(eid, k, v)
-                end
-            )
-            self.uniforms[#self.uniforms + 1] = pro
-        end
-    end
-    table.sort(self.samplers, function(a, b) return a.label < b.label end)
-    MaterialView.update(self)
     return true
 end
 
 function MaterialView:update()
-    if not self.eid then return end
-    BaseView.update(self)
-    self.mat_file:update()
-    self.vs_file:update()
-    self.fs_file:update()
-    self.surfacetype:update()
-    for i = 1, self.sampler_num do
-        self.samplers[i]:update()
-    end
-    for i = 1, #self.uniforms do
-        self.uniforms[i]:update()
-    end
-    if string.find(self.mat_file:get_path(), "|") then
-        self.readonly = true
-    else
-        self.readonly = false
+    if self.eid then
+        self.fx:update()
+        self.properties:update()
+        self.state:update()
+        --self.stencil:show()
+
+        if self.need_reload then
+            local p = self.mat_file:get_path()
+            reload(self.eid, p)
+        end
     end
 end
 
-
 function MaterialView:show()
-    if not self.eid then return end
-    BaseView.show(self)
-    
-    local dirty
-    if imgui.widget.TreeNode("Material", imgui.flags.TreeNode { "DefaultOpen" }) then
-        local state = mtldata_list[self.eid].tdata.state
-        local setting = mtldata_list[self.eid].tdata.fx.setting
-        self.mat_file:show()
-        if not self.readonly then
-            self.save_mat:show()
-            imgui.cursor.SameLine()
-        end
-        self.save_as_mat:show()
-        self.surfacetype:show()
-        imgui.widget.PropertyLabel("occluder")
-        if imgui.widget.Checkbox("##occluder", self.ui_occluder) then
-            if self.ui_occluder[1] then
-                state.WRITE_MASK = "RGBAZ"
-            else
-                state.WRITE_MASK = "RGBA"
-            end
-            dirty = true
-        end
-        imgui.widget.PropertyLabel("occludee")
-        if imgui.widget.Checkbox("##occludee", self.ui_occludee) then
-            if self.ui_occludee[1] then
-                state.DEPTH_TEST = "LESS"
-            else
-                state.DEPTH_TEST = "ALWAYS"
-            end
-            dirty = true
-        end
-        imgui.widget.PropertyLabel("lighting")
-        if imgui.widget.Checkbox("##lighting", self.ui_lighting) then
-            if self.ui_lighting[1] then
-                setting.lighting = "on"
-            else
-                setting.lighting = "off"
-            end
-            dirty = true
-        end
-        imgui.widget.PropertyLabel("shadow_receive")
-        if imgui.widget.Checkbox("##shadow_receive", self.ui_shadow_receive) then
-            if self.ui_shadow_receive[1] then
-                setting.shadow_receive = "on"
-            else
-                setting.shadow_receive = "off"
-            end
-            dirty = true
-        end
-        imgui.widget.PropertyLabel("shadow_cast")
-        if imgui.widget.Checkbox("##shadow_cast", self.ui_shadow_cast) then
-            ies.set_state(self.eid, "cast_shadow", self.ui_shadow_cast[1])
-        end
-        imgui.widget.PropertyLabel("postprocess")
-        if imgui.widget.Checkbox("##postprocess", self.ui_postprocess) then
-            if self.ui_postprocess[1] then
-                setting.bloom = "on"
-            else
-                setting.bloom = "off"
-            end
-            dirty = true
-        end
-        for i = 1, self.sampler_num do
-            self.samplers[i]:show()
-        end
-        for i = 1, #self.uniforms do
-            self.uniforms[i]:show()
-        end
-        imgui.widget.TreePop()
+    if self.eid then
+        BaseView.show(self)
+        self.fx:show()
+        self.properties:show()
+        self.state:show()
+        --self.stencil:show()
     end
-    
-    if dirty then
-        self:on_save_mat()
-        prefab_mgr:reload()
-    end
+
 end
 
 return MaterialView

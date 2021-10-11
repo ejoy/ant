@@ -788,13 +788,6 @@ function m:recreate_entity(eid)
     -- return new_eid
 end
 
-function m:update_material(eid, mtl)
-    local prefab = hierarchy:get_template(eid)
-    prefab.template.data.material = mtl
-    self:save_prefab()
-    self:reload()
-end
-
 local utils = require "common.utils"
 
 function m:save_prefab(path)
