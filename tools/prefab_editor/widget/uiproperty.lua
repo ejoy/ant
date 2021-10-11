@@ -409,6 +409,22 @@ function Group:set_subproperty(subproperty)
     self:update()
 end
 
+function Group:find_property(id)
+    for _, p in ipairs(self.subproperty) do
+        if p.id == id then
+            return p
+        end
+    end
+end
+
+function Group:find_property_by_label(l)
+    for _, p in ipairs(self.subproperty) do
+        if p.label == l then
+            return p
+        end
+    end
+end
+
 function Group:show()
     if imgui.widget.TreeNode(self.label, imgui.flags.TreeNode { "DefaultOpen" }) then
         for _, pro in ipairs(self.subproperty) do

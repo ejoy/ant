@@ -76,7 +76,7 @@ local DEPTH_TYPE_options<const> = {
 
 local function build_fx_ui(mv)
     local function shader_file_ui(st)
-        return uiproperty.ResourcePath({label = "VS", extension = ".sc", readonly = true}, {
+        return uiproperty.ResourcePath({label=st, extension = ".sc", readonly = true}, {
             getter = function()
                 return material_template(mv.eid).fx[st]
             end,
@@ -529,6 +529,12 @@ function MaterialView:set_model(eid)
     local e = world[eid]
     self.mat_file.disable = is_readonly_resource(tostring(e.material))
     self.properties = build_properties_ui(self)
+
+    local t = material_template(eid)
+    if t.fx.cs == nil then
+        local cs = self.fx:find_property_by_label "cs"
+        cs.visible = false
+    end
 
     self.material:set_subproperty{
         self.mat_file,
