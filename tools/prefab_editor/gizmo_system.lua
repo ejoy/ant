@@ -148,44 +148,44 @@ local function create_arrow_widget(axis_root, axis_str)
 		local_rotator = math3d.quaternion{math.rad(90), 0, 0}
 		cylindere_t = math3d.vector(0, 0, 0.5 * gizmo_const.AXIS_LEN)
 	end
-	local cylindereid = world:deprecated_create_entity{
+	local cylindereid = ecs.create_entity{
 		policy = {
 			"ant.render|render",
 			"ant.general|name",
-			"ant.scene|hierarchy_policy",
+			"ant.scene|scene_object",
 		},
 		data = {
-			scene_entity = true,
-			state = ies.create_state "visible",
-			transform = {
-				s = math3d.ref(math3d.vector(0.2, 10, 0.2)),
-				r = local_rotator,
-				t = cylindere_t,
+			reference = true,
+			state = ies.create_state "visible|auxgeom",
+			scene = {
+				srt = {
+					s = math3d.ref(math3d.vector(0.2, 10, 0.2)),
+					r = local_rotator,
+					t = cylindere_t
+				}
 			},
 			material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			name = "arrow.cylinder" .. axis_str
 		}
 	}
-	ies.set_state(cylindereid, "auxgeom", true)
-	iss.set_parent(cylindereid, axis_root)
-	local coneeid = world:deprecated_create_entity{
+	ecs.method.set_parent(cylindereid, axis_root)
+	local coneeid = ecs.create_entity{
 		policy = {
 			"ant.render|render",
 			"ant.general|name",
-			"ant.scene|hierarchy_policy",
+			"ant.scene|scene_object",
 		},
 		data = {
-			scene_entity = true,
-			state = ies.create_state "visible",
-			transform = {s = {1, 1.5, 1, 0}, r = local_rotator, t = cone_t},
+			reference = true,
+			state = ies.create_state "visible|auxgeom",
+			scene = {srt = {s = {1, 1.5, 1, 0}, r = local_rotator, t = cone_t}},
 			material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone" .. axis_str
 		}
 	}
-	ies.set_state(coneeid, "auxgeom", true)
-	iss.set_parent(coneeid, axis_root)
+	ecs.method.set_parent(coneeid, axis_root)
 	if axis_str == "x" then
 		gizmo.tx.eid = {cylindereid, coneeid}
 	elseif axis_str == "y" then
@@ -236,45 +236,42 @@ end
 
 function gizmo_sys:post_init()
 	--local srt = {r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
-	local axis_root = world:deprecated_create_entity{
+	local axis_root = ecs.create_entity{
 		policy = {
 			"ant.general|name",
-			"ant.scene|transform_policy",
-			"ant.scene|hierarchy_policy",
+			"ant.scene|scene_object",
 		},
 		data = {
-			transform = {},
+			reference = true,
 			name = "axis root",
-			scene_entity = true,
+			scene = {srt = {}},
 		},
 	}
 	gizmo.root_eid = axis_root
-	local rot_circle_root = world:deprecated_create_entity{
+	local rot_circle_root = ecs.create_entity{
 		policy = {
 			"ant.general|name",
-			"ant.scene|transform_policy",
-			"ant.scene|hierarchy_policy",
+			"ant.scene|scene_object",
 		},
 		data = {
-			transform = {},
+			reference = true,
 			name = "rot root",
-			scene_entity = true,
+			scene = {srt = {}},
 		},
 	}
 
-	iss.set_parent(rot_circle_root, axis_root)
+	ecs.method.set_parent(rot_circle_root, axis_root)
 	gizmo.rot_circle_root_eid = rot_circle_root
 
-	local uniform_rot_root = world:deprecated_create_entity{
+	local uniform_rot_root = ecs.create_entity{
 		policy = {
 			"ant.general|name",
-			"ant.scene|transform_policy",
-			"ant.scene|hierarchy_policy",
+			"ant.scene|scene_object",
 		},
 		data = {
-			transform = {},
+			reference = true,
 			name = "rot root",
-			scene_entity = true,
+			scene = {srt = {}},
 		},
 	}
 	gizmo.uniform_rot_root_eid = uniform_rot_root
@@ -285,60 +282,63 @@ function gizmo_sys:post_init()
 	local plane_xy_eid = ientity.create_prim_plane_entity(
 		{t = {gizmo_const.MOVE_PLANE_OFFSET, gizmo_const.MOVE_PLANE_OFFSET, 0, 1}, s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0}, r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})},
 		"/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
+		gizmo.txy.color,
 		"plane_xy")
-	ies.set_state(plane_xy_eid, "auxgeom", true)
-	imaterial.set_property(plane_xy_eid, "u_color", gizmo.txy.color)
-	iss.set_parent(plane_xy_eid, axis_root)
+	--ies.set_state(plane_xy_eid, "auxgeom", true)
+	--imaterial.set_property(plane_xy_eid, "u_color", gizmo.txy.color)
+	ecs.method.set_parent(plane_xy_eid, axis_root)
 	gizmo.txy.eid = {plane_xy_eid, plane_xy_eid}
 
 	local plane_yz_eid = ientity.create_prim_plane_entity(
 		{t = {0, gizmo_const.MOVE_PLANE_OFFSET, gizmo_const.MOVE_PLANE_OFFSET, 1}, s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0}, r = math3d.tovalue(math3d.quaternion{0, 0, math.rad(90)})},
 		"/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
+		gizmo.tyz.color,
 		"plane_yz")
-	ies.set_state(plane_yz_eid, "auxgeom", true)
-	imaterial.set_property(plane_yz_eid, "u_color", gizmo.tyz.color)
-	iss.set_parent(plane_yz_eid, axis_root)
+	--ies.set_state(plane_yz_eid, "auxgeom", true)
+	--imaterial.set_property(plane_yz_eid, "u_color", gizmo.tyz.color)
+	ecs.method.set_parent(plane_yz_eid, axis_root)
 	gizmo.tyz.eid = {plane_yz_eid, plane_yz_eid}
 
 	local plane_zx_eid = ientity.create_prim_plane_entity(
 		{t = {gizmo_const.MOVE_PLANE_OFFSET, 0, gizmo_const.MOVE_PLANE_OFFSET, 1}, s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0}},
 		"/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
+		gizmo.tzx.color,
 		"plane_zx")
-	ies.set_state(plane_zx_eid, "auxgeom", true)
-	imaterial.set_property(plane_zx_eid, "u_color", gizmo.tzx.color)
-	iss.set_parent(plane_zx_eid, axis_root)
+	--ies.set_state(plane_zx_eid, "auxgeom", true)
+	--imaterial.set_property(plane_zx_eid, "u_color", gizmo.tzx.color)
+	ecs.method.set_parent(plane_zx_eid, axis_root)
 	gizmo.tzx.eid = {plane_zx_eid, plane_zx_eid}
 	gizmo:reset_move_axis_color()
 
 	-- roate axis
-	local uniform_rot_eid = ientity.create_circle_entity(gizmo_const.UNIFORM_ROT_AXIS_LEN, gizmo_const.ROTATE_SLICES, {}, "rotate_gizmo_uniform")
-	ies.set_state(uniform_rot_eid, "auxgeom", true)
-	imaterial.set_property(uniform_rot_eid, "u_color", gizmo_const.COLOR_GRAY)
-	iss.set_parent(uniform_rot_eid, uniform_rot_root)
+	local uniform_rot_eid = ientity.create_circle_entity(gizmo_const.UNIFORM_ROT_AXIS_LEN, gizmo_const.ROTATE_SLICES, {}, "rotate_gizmo_uniform", gizmo_const.COLOR_GRAY)
+	--ies.set_state(uniform_rot_eid, "auxgeom", true)
+	--imaterial.set_property(uniform_rot_eid, "u_color", gizmo_const.COLOR_GRAY)
+	ecs.method.set_parent(uniform_rot_eid, uniform_rot_root)
 	local function create_rotate_fan(radius, circle_trans)
-		local mesh_eid = ientity.create_circle_mesh_entity(radius, gizmo_const.ROTATE_SLICES, circle_trans, "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material", "rotate_mesh_gizmo_uniform")
-		imaterial.set_property(mesh_eid, "u_color", {0, 0, 1, 0.5})
-		ies.set_state(mesh_eid, "visible", false)
-		iss.set_parent(mesh_eid, axis_root)
+		local mesh_eid = ientity.create_circle_mesh_entity(radius, gizmo_const.ROTATE_SLICES, circle_trans, "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material", "rotate_mesh_gizmo_uniform", {0, 0, 1, 0.5})
+		--imaterial.set_property(mesh_eid, "u_color", {0, 0, 1, 0.5})
+		--ies.set_state(mesh_eid, "visible", false)
+		ecs.method.set_parent(mesh_eid, axis_root)
 		return mesh_eid
 	end
 	-- counterclockwise mesh
 	local rot_ccw_mesh_eid = create_rotate_fan(gizmo_const.UNIFORM_ROT_AXIS_LEN, {})
-	iss.set_parent(rot_ccw_mesh_eid, uniform_rot_root)
+	ecs.method.set_parent(rot_ccw_mesh_eid, uniform_rot_root)
 	-- clockwise mesh
 	local rot_cw_mesh_eid = create_rotate_fan(gizmo_const.UNIFORM_ROT_AXIS_LEN, {})
-	iss.set_parent(rot_cw_mesh_eid, uniform_rot_root)
+	ecs.method.set_parent(rot_cw_mesh_eid, uniform_rot_root)
 	gizmo.rw.eid = {uniform_rot_eid, uniform_rot_eid, rot_ccw_mesh_eid, rot_cw_mesh_eid}
 
 	local function create_rotate_axis(axis, line_end, circle_trans)
-		local line_eid = ientity.create_line_entity({}, {0, 0, 0}, line_end)
-		ies.set_state(line_eid, "auxgeom", true)
-		imaterial.set_property(line_eid, "u_color", axis.color)
-		iss.set_parent(line_eid, rot_circle_root)
-		local rot_eid = ientity.create_circle_entity(gizmo_const.AXIS_LEN, gizmo_const.ROTATE_SLICES, circle_trans, "rotate gizmo circle")
-		ies.set_state(rot_eid, "auxgeom", true)
-		imaterial.set_property(rot_eid, "u_color", axis.color)
-		iss.set_parent(rot_eid, rot_circle_root)
+		local line_eid = ientity.create_line_entity({}, {0, 0, 0}, line_end, "", axis.color)
+		--ies.set_state(line_eid, "auxgeom", true)
+		--imaterial.set_property(line_eid, "u_color", axis.color)
+		ecs.method.set_parent(line_eid, rot_circle_root)
+		local rot_eid = ientity.create_circle_entity(gizmo_const.AXIS_LEN, gizmo_const.ROTATE_SLICES, circle_trans, "rotate gizmo circle", axis.color)
+		--ies.set_state(rot_eid, "auxgeom", true)
+		--imaterial.set_property(rot_eid, "u_color", axis.color)
+		ecs.method.set_parent(rot_eid, rot_circle_root)
 		local rot_ccw_mesh_eid = create_rotate_fan(gizmo_const.AXIS_LEN, circle_trans)
 		local rot_cw_mesh_eid = create_rotate_fan(gizmo_const.AXIS_LEN, circle_trans)
 		axis.eid = {rot_eid, line_eid, rot_ccw_mesh_eid, rot_cw_mesh_eid}
@@ -349,52 +349,51 @@ function gizmo_sys:post_init()
 	
 	-- scale axis
 	local function create_scale_cube(srt, color, axis_name)
-		local eid = world:deprecated_create_entity {
+		local eid = ecs.create_entity {
 			policy = {
 				"ant.render|render",
 				"ant.general|name",
-				"ant.scene|hierarchy_policy",
+				"ant.scene|scene_object",
 			},
 			data = {
-				scene_entity = true,
-				state = ies.create_state "visible|selectable",
-				transform = srt,
+				reference = true,
+				state = ies.create_state "visible|selectable|auxgeom",
+				scene = {srt = srt},
 				material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
-				name = "scale_cube" .. axis_name
+				name = "scale_cube" .. axis_name,
+				on_ready = function (e)
+					imaterial.set_property(e, "u_color", color)
+				end
 			}
 		}
-		ies.set_state(eid, "auxgeom", true)
-
-		imaterial.set_property(eid, "u_color", color)
 		return eid
 	end
 	-- scale axis cube
 	local cube_eid = create_scale_cube({s = gizmo_const.AXIS_CUBE_SCALE}, gizmo_const.COLOR_GRAY, "uniform scale")
-	ies.set_state(cube_eid, "auxgeom", true)
-	iss.set_parent(cube_eid, axis_root)
+	ecs.method.set_parent(cube_eid, axis_root)
 	gizmo.uniform_scale_eid = cube_eid
 	local function create_scale_axis(axis, axis_end)
 		local cube_eid = create_scale_cube({t = axis_end, s = gizmo_const.AXIS_CUBE_SCALE}, axis.color, "scale axis")
-		iss.set_parent(cube_eid, axis_root)
-		local line_eid = ientity.create_line_entity({}, {0, 0, 0}, axis_end)
-		imaterial.set_property(line_eid, "u_color", axis.color)
-		iss.set_parent(line_eid, axis_root)
+		ecs.method.set_parent(cube_eid, axis_root)
+		local line_eid = ientity.create_line_entity({}, {0, 0, 0}, axis_end, "", axis.color)
+		--imaterial.set_property(line_eid, "u_color", axis.color)
+		ecs.method.set_parent(line_eid, axis_root)
 		axis.eid = {cube_eid, line_eid}
 	end
 	create_scale_axis(gizmo.sx, {gizmo_const.AXIS_LEN, 0, 0})
 	create_scale_axis(gizmo.sy, {0, gizmo_const.AXIS_LEN, 0})
 	create_scale_axis(gizmo.sz, {0, 0, gizmo_const.AXIS_LEN})
 
-	global_axis_x_eid = ientity.create_line_entity({}, {0, 0, 0}, {0.1, 0, 0})
-	ies.set_state(global_axis_x_eid, "auxgeom", true)
-	imaterial.set_property(global_axis_x_eid, "u_color", gizmo_const.COLOR_X)
-	global_axis_y_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0.1, 0})
-	ies.set_state(global_axis_y_eid, "auxgeom", true)
-	imaterial.set_property(global_axis_y_eid, "u_color", gizmo_const.COLOR_Y)
-	global_axis_z_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0, 0.1})
-	ies.set_state(global_axis_z_eid, "auxgeom", true)
-	imaterial.set_property(global_axis_z_eid, "u_color", gizmo_const.COLOR_Z)
+	global_axis_x_eid = ientity.create_line_entity({}, {0, 0, 0}, {0.1, 0, 0}, "", gizmo_const.COLOR_X)
+	--ies.set_state(global_axis_x_eid, "auxgeom", true)
+	--imaterial.set_property(global_axis_x_eid, "u_color", gizmo_const.COLOR_X)
+	global_axis_y_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0.1, 0}, "", gizmo_const.COLOR_Y)
+	--ies.set_state(global_axis_y_eid, "auxgeom", true)
+	--imaterial.set_property(global_axis_y_eid, "u_color", gizmo_const.COLOR_Y)
+	global_axis_z_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0, 0.1}, "", gizmo_const.COLOR_Z)
+	--ies.set_state(global_axis_z_eid, "auxgeom", true)
+	--imaterial.set_property(global_axis_z_eid, "u_color", gizmo_const.COLOR_Z)
 end
 local mb_main_camera_changed = world:sub{"camera_changed", "main_queue"}
 function gizmo_sys:entity_ready()

@@ -9,11 +9,6 @@ system "scenespace_system"
     .method "update_transform"
     .method "scene_remove"
 
-policy "slot_policy"
-    .component "slot"
-    .component "follow_joint"
-    .component "follow_flag"
-
 policy "hierarchy_policy"
     .require_system "scenespace_system"
     .require_system "luaecs_sync_system"

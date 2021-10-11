@@ -168,8 +168,8 @@ function m:create_slot()
         policy = {
             "ant.general|name",
             "ant.general|tag",
-            "ant.scene|slot_policy",
-            "ant.scene|hierarchy_policy",
+            "ant.scene|slot",
+            "ant.scene|scene_object",
         },
         data = {
             reference = true,
@@ -201,7 +201,7 @@ function m:create_collider(config)
         policy = {
             "ant.general|name",
             "ant.render|render",
-            "ant.scene|hierarchy_policy",
+            "ant.scene|scene_object",
             "ant.general|tag",
         },
         data = {
@@ -232,7 +232,7 @@ local function create_simple_entity(name)
     local template = {
 		policy = {
             "ant.general|name",
-            "ant.scene|hierarchy_policy",
+            "ant.scene|scene_object",
 		},
 		data = {
             reference = true,
@@ -274,7 +274,7 @@ function m:create(what, config)
                 policy = {
                     "ant.render|render",
                     "ant.general|name",
-                    "ant.scene|hierarchy_policy",
+                    "ant.scene|scene_object",
                 },
                 data = {
                     eid = 0,
@@ -704,7 +704,7 @@ function m:add_effect(filename)
     local tpl = {
 		policy = {
             "ant.general|name",
-            "ant.scene|hierarchy_policy",
+            "ant.scene|scene_object",
             "ant.effekseer|effekseer",
             "ant.general|tag"
 		},

@@ -63,19 +63,22 @@ ientity.create_mesh = create_mesh
 local nameidx = 0
 local function gen_test_name() nameidx = nameidx + 1 return "entity" .. nameidx end
 
-local function create_simple_render_entity(name, material, mesh, srt, state)
-	return world:deprecated_create_entity {
+local function create_simple_render_entity(name, material, mesh, srt, color)
+	return ecs.create_entity {
 		policy = {
 			"ant.render|render",
 			"ant.general|name",
 		},
 		data = {
-			transform	= srt or {},
+			reference = true,
+			scene = {srt = srt or {}},
 			material	= material,
 			mesh		= mesh,
-			state		= state or ies.create_state "visible",
+			state		= ies.create_state "visible",
 			name		= name or gen_test_name(),
-			scene_entity= true,
+			on_ready = function(e)
+				imaterial.set_property(e, "u_color", color or {1,1,1,1})
+			end
 		}
 	}
 end
@@ -132,15 +135,15 @@ function ientity.create_grid_mesh_entity(name, w, h, size, color, materialpath)
 		end
 	end
 	local data = {
-		transform = {},
+		reference = true,
+		scene = {srt = {}},
 		material = materialpath,
 		state = ies.create_state "visible",
 		name = name or "GridMesh",
-		scene_entity = true,
 		mesh = create_dynamic_mesh("p3|c40niu", vb, ib) --create_mesh({"p3|c40niu", vb}, ib)
 	}
 
-	return vb, world:deprecated_create_entity{
+	return vb, ecs.create_entity{
 		policy = {
 			"ant.render|render",
 			"ant.general|name"},
@@ -243,18 +246,21 @@ local function get_prim_plane_mesh(sharedmesh)
 	return mesh
 end
 
-function ientity.create_prim_plane_entity(srt, materialpath, name, sharedmesh, entity_info)
+function ientity.create_prim_plane_entity(srt, materialpath, color, name, sharedmesh, entity_info)
 	local policy = {
 		sharedmesh and "ant.render|simplerender" or "ant.render|render",
 		"ant.general|name",
 	}
 
 	local data = {
-		transform = srt or {},
+		reference = true,
+		scene = { srt = srt or {}},
 		material = materialpath,
 		state = ies.create_state "visible",
 		name = name or "Plane",
-		scene_entity = true,
+		on_ready = function (e)
+			imaterial.set_property(e, "u_color", color)
+		end
 	}
 	if sharedmesh then
 		data.simplemesh = get_prim_plane_mesh(sharedmesh)
@@ -271,7 +277,7 @@ function ientity.create_prim_plane_entity(srt, materialpath, name, sharedmesh, e
 		end
 	end
 
-	return world:deprecated_create_entity{
+	return ecs.create_entity{
 		policy = policy,
 		data = data,
 	}
@@ -289,11 +295,11 @@ function ientity.create_plane_entity(srt, materialpath, name, entity_info, enabl
 	end
 
 	local data = {
-		transform = srt or {},
+		reference = true,
+		scene = {srt = srt or {}},
 		material = materialpath,
 		state = ies.create_state(whichstate),
 		name = name or "Plane",
-		scene_entity = true,
 		mesh = get_plane_mesh(),
 	}
 
@@ -306,7 +312,7 @@ function ientity.create_plane_entity(srt, materialpath, name, entity_info, enabl
 		end
 	end
 
-	return world:deprecated_create_entity{
+	return ecs.create_entity{
 		policy = policy,
 		data = data,
 	}
@@ -382,7 +388,7 @@ function ientity.create_frustum_entity(frustum_points, name, color)
 		table.move(p, 1, 3, #vb+1, vb)
 	end
 	local mesh = create_mesh({"p3", vb}, frustum_ib)
-	local eid = create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh)
+	local eid = create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, {}, color)
 	imaterial.set_property(eid, "u_color", color)
 	return eid
 end
@@ -402,7 +408,7 @@ function ientity.create_axis_entity(srt, name, color)
 		0, 0, 1, color or 0xffff0000,
 	}
 	local mesh = create_mesh({"p3|c40niu", axis_vb}, axis_ib)
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt)
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt, color)
 end
 
 function ientity.create_line_entity(srt, p0, p1, name, color)
@@ -411,11 +417,11 @@ function ientity.create_line_entity(srt, p0, p1, name, color)
 		p1[1], p1[2], p1[3], color or 0xffffffff,
 	}
 	local mesh = create_mesh({"p3|c40niu", vb}, {0, 1})
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt)
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt, color)
 	
 end
 
-function ientity.create_circle_entity(radius, slices, srt, name)
+function ientity.create_circle_entity(radius, slices, srt, name, color)
 	local circle_vb, circle_ib = geolib.circle(radius, slices)
 	local gvb = {}
 	--color = color or 0xffffffff
@@ -426,10 +432,10 @@ function ientity.create_circle_entity(radius, slices, srt, name)
 		gvb[#gvb+1] = 0xffffffff
 	end
 	local mesh = create_mesh({"p3|c40niu", gvb}, circle_ib)
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt)
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt, color)
 end
 
-function ientity.create_circle_mesh_entity(radius, slices, srt, mtl, name)
+function ientity.create_circle_mesh_entity(radius, slices, srt, mtl, name, color)
 	local circle_vb, _ = geolib.circle(radius, slices)
 	local gvb = {0,0,0,0,0,1}
 	local ib = {}
@@ -452,7 +458,7 @@ function ientity.create_circle_mesh_entity(radius, slices, srt, mtl, name)
 		idx = idx + 1
 	end
 	local mesh = create_mesh({"p3|n3", gvb}, ib)
-	return create_simple_render_entity(name, mtl, mesh, srt)
+	return create_simple_render_entity(name, mtl, mesh, srt, color)
 end
 
 local skybox_mesh
@@ -467,14 +473,15 @@ local function get_skybox_mesh()
 end
 
 function ientity.create_skybox(material)
-    return world:deprecated_create_entity {
+    return ecs.reate_entity {
 		policy = {
 			"ant.sky|skybox",
 			"ant.render|render",
 			"ant.general|name",
 		},
 		data = {
-			transform = {},
+			reference = true,
+			scene = {srt = {}},
 			material = material or "/pkg/ant.resources/materials/sky/skybox.material",
 			state = ies.create_state "visible",
 			ibl = {
@@ -482,7 +489,6 @@ function ientity.create_skybox(material)
 				prefilter = {size=256},
 				LUT = {size=256},
 			},
-			scene_entity = true,
 			name = "sky_box",
 			skybox = {},
 			mesh = get_skybox_mesh(),
@@ -528,14 +534,15 @@ function ientity.create_procedural_sky(settings)
 			return world[eid].serialize
 		end
 	end
-    return world:deprecated_create_entity {
+    return ecs.create_entity {
 		policy = {
 			"ant.render|render",
 			"ant.sky|procedural_sky",
 			"ant.general|name",
 		},
 		data = {
-			transform = {},
+			reference = true,
+			scene = {srt = {}},
 			material = "/pkg/ant.resources/materials/sky/procedural/procedural_sky.material",
 			procedural_sky = {
 				--attached_sun_light = attached_light(settings.attached_sun_light),
@@ -557,14 +564,13 @@ function ientity.create_procedural_sky(settings)
 			},
 			state = ies.create_state "visible",
 			mesh = create_sky_mesh(32, 32),
-			scene_entity = true,
 			name = "procedural sky",
 		}
 	}
 end
 
 function ientity.create_gamma_test_entity()
-	world:deprecated_create_entity {
+	ecs.create_entity {
         policy = {
             "ant.render|simplerender",
             "ant.general|name",
@@ -590,8 +596,7 @@ function ientity.create_gamma_test_entity()
                     }
                 }
             },
-            transform = {},
-            scene_entity = true,
+            scene = {srt = {}},
             state = 1,
         }
     }
@@ -632,38 +637,42 @@ function ientity.create_arrow_entity(origin, forward, scale, data)
 
 	local cone_offset = math3d.sub(cone_centerpos, arrow_center)
 
-	local arroweid = world:deprecated_create_entity{
+	local arroweid = ecs.create_entity{
 		policy = {
 			"ant.general|name",
-			"ant.scene|transform_policy",
+			"ant.scene|scene_object",
 		},
 		data = {
-			transform = {
-				s = scale,
-				r = math3d.quaternion(mc.YAXIS, forward),
-				t = math3d.sub(origin, cylinder_bottom_pos),	-- move cylinder bottom to zero origin, and move to origin: -cylinder_bottom_pos+origin
-			},
-			scene_entity = true,
+			reference = true,
 			name = "directional light arrow",
+			scene = {
+				srt = {
+					s = scale,
+					r = math3d.quaternion(mc.YAXIS, forward),
+					t = math3d.sub(origin, cylinder_bottom_pos),	-- move cylinder bottom to zero origin, and move to origin: -cylinder_bottom_pos+origin
+				}
+			},
 		},
 	}
 
-	local cylindereid = world:deprecated_create_entity{
+	local cylindereid = ecs.create_entity{
 		policy = {
-			"ant.render|render",
 			"ant.general|name",
-			"ant.scene|hierarchy_policy",
+			"ant.render|render",
+			"ant.scene|scene_object",
 		},
 		data = {
-			scene_entity = true,
+			name = "arrow.cylinder",
+			reference = true,
 			state = ies.create_state "visible",
-			transform =  {
-				s = math3d.ref(math3d.mul(100, math3d.vector(cylinder_radius, cylinder_scaleY, cylinder_radius))),
-				t = math3d.ref(cylinder_offset),
+			scene = {
+				srt = {
+					s = math3d.ref(math3d.mul(100, math3d.vector(cylinder_radius, cylinder_scaleY, cylinder_radius))),
+					t = math3d.ref(cylinder_offset),
+				}
 			},
 			material = "/pkg/ant.resources/materials/simpletri.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
-			name = "arrow.cylinder",
 		},
 		action = {
             mount = arroweid,
@@ -672,19 +681,20 @@ function ientity.create_arrow_entity(origin, forward, scale, data)
 
 	imaterial.set_property(cylindereid, "u_color", data.cylinder_color or {1, 0, 0, 1})
 
-	local coneeid = world:deprecated_create_entity{
+	local coneeid = ecs.create_entity{
 		policy = {
-			"ant.render|render",
 			"ant.general|name",
-			"ant.scene|hierarchy_policy",
+			"ant.render|render",
+			"ant.scene|scene_object",
 		},
 		data = {
-			scene_entity = true,
+			name = "arrow.cone",
+			reference = true,
 			state = ies.create_state "visible",
-			transform =  {s=100, t=cone_offset},
+			scene = {srt =  {s=100, t=cone_offset}},
 			material = "/pkg/ant.resources/materials/simpletri.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
-			name = "arrow.cone"
+			
 		},
 		action = {
             mount = arroweid,

@@ -88,16 +88,15 @@ function m.highlight(b)
 end
 
 local function create_gizmo_root(initpos, introt)
-    return world:deprecated_create_entity{
+    return ecs.create_entity{
 		policy = {
 			"ant.general|name",
-			"ant.scene|transform_policy",
-            "ant.scene|hierarchy_policy",
+            "ant.scene|scene_object",
 		},
 		data = {
-			transform = {t = initpos or {0,0,0}, r = introt or {0,0,0,1}},
+            reference = true,
 			name = "gizmo root",
-            scene_entity = true,
+            scene = {srt = {t = initpos or {0,0,0}, r = introt or {0,0,0,1}}},
 		},
     }
 end

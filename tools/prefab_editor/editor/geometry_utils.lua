@@ -23,18 +23,19 @@ local function create_dynamic_mesh(layout, vb, ib)
 end
 
 local function create_simple_render_entity(srt, material, name, mesh, state)
-	return world:deprecated_create_entity {
+	return ecs.create_entity {
 		policy = {
 			"ant.render|render",
 			"ant.general|name",
+			"ant.scene|scene_object"
 		},
 		data = {
-			transform	= srt or {},
+			reference	= true,
+			scene 		= {srt = srt or {}},
 			material	= material,
 			mesh		= mesh,
 			state		= state or ies.create_state "visible",
 			name		= name,-- or gen_test_name(),
-			scene_entity= true,
 		}
 	}
 end

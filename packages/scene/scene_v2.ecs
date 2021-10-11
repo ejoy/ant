@@ -18,7 +18,7 @@ component_v2 "follow_joint"
 component_v2 "follow_flag"
     .type "lua"
     
-policy_v2 "slot_policy"
+policy_v2 "slot"
     .component_v2 "slot"
     .component_v2 "follow_joint"
     .component_v2 "follow_flag"
