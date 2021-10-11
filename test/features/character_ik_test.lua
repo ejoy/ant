@@ -9,7 +9,7 @@ local char_ik_test_sys = ecs.system "character_ik_test_system"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local function foot_ik_test()
-    --return world:instance((entitydir / "character_ik_test.prefab"):string())
+    --return ecs.create_instance((entitydir / "character_ik_test.prefab"):string())
 end
 
 local function create_plane_test()

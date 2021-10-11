@@ -10,11 +10,11 @@ local is = ecs.system "init_system"
 
 function is:init()
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
-    --world:instance "/pkg/ant.test.bake_scene/assets/scene/1.glb|mesh.prefab"
-    -- world:instance "/pkg/ant.test.bake_scene/assets/scene/box.prefab"
-    -- world:instance "/pkg/ant.test.bake_scene/assets/scene/light.prefab"
-    -- world:instance "/pkg/ant.test.bake_scene/assets/scene/box.prefab"
-    world:instance "/pkg/ant.test.bake_scene/assets/scene/scene.prefab"
+    --ecs.create_instance "/pkg/ant.test.bake_scene/assets/scene/1.glb|mesh.prefab"
+    -- ecs.create_instance "/pkg/ant.test.bake_scene/assets/scene/box.prefab"
+    -- ecs.create_instance "/pkg/ant.test.bake_scene/assets/scene/light.prefab"
+    -- ecs.create_instance "/pkg/ant.test.bake_scene/assets/scene/box.prefab"
+    ecs.create_instance "/pkg/ant.test.bake_scene/assets/scene/scene.prefab"
 end
 
 function is:init_world()

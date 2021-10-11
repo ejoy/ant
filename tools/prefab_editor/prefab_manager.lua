@@ -349,7 +349,7 @@ function m:create(what, config)
         hierarchy:update_collider_list(world)
         return new_entity
     elseif what == "particle" then
-        local entities = world:instance(gd.editor_package_path .. "res/particle.prefab")
+        local entities = ecs.create_instance(gd.editor_package_path .. "res/particle.prefab")
         self:add_entity(entities[1], gizmo.target_eid, entities)
     end
 end
@@ -745,7 +745,7 @@ function m:add_prefab(filename)
     end
     local mount_root, temp = create_simple_entity(gen_prefab_name())
     self.entities[#self.entities+1] = mount_root
-    local entities = world:instance(prefab_filename)
+    local entities = ecs.create_instance(prefab_filename)
     ecs.method.set_parent(entities[1], mount_root)
     ecs.method.set_parent(mount_root, gizmo.target_eid or self.root)
     set_select_adapter(entities, mount_root)

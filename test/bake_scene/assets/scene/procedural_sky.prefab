@@ -1,23 +1,16 @@
 ---
 data:
   material: /pkg/ant.resources/materials/sky/procedural/procedural_sky.material
-  mesh: ./procedural_sky.meshbin
+  mesh: $path ./procedural_sky.meshbin
   name: "procedural sky"
   procedural_sky:
     latitude: 0.8726646259971648
     month: June
     turbidity: 2.15
     which_hour: 12
-  ibl:
-      irradiance:
-        size: 64
-      prefilter:
-        size: 256
-      LUT:
-        size: 256
-  scene_entity: true
   state: 1
-  transform:
+  scene:
+    srt:
       r: {0, 0, 0, 1}
       s: {1, 1, 1, 0}
       t: {0, 0, 0, 1}

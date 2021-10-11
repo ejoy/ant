@@ -3,14 +3,16 @@ policy:
   ant.render|light
   ant.general|name
 data:
-  transform:
-    #r: {0.25,0.25,-0.066987298429012,0.93301266431808}
-    r: {-1.6727625506974e-08,0.9238795042038,-0.38268345594406,-4.0384055211007e-08}
-    t: {0, 10, 0, 1}
-  color: {1, 1, 1, 1}
-  intensity: 1200000
-  light_type: directional
-  angular_radius: 0.0047123889803847  #math.rad(0.27), sun light angular_radius
-  motion_type: static
+  scene:
+    srt:
+      #r: {0.25,0.25,-0.066987298429012,0.93301266431808}
+      r: {-1.6727625506974e-08,0.9238795042038,-0.38268345594406,-4.0384055211007e-08}
+      t: {0, 10, 0, 1}
+  light:
+    color: {1, 1, 1, 1}
+    intensity: 1200000
+    light_type: directional
+    angular_radius: 0.0047123889803847  #math.rad(0.27), sun light angular_radius
+    motion_type: static
   name: directional_light
-  state: visible
+  visible: true

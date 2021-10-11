@@ -78,7 +78,7 @@ end
 
 function m:post_init()
     irq.set_view_clear_color(world:singleton_entity_id "main_queue", 0)
-    --world:instance "res/scenes.prefab"
+    --ecs.create_instance "res/scenes.prefab"
 end
 ]]
     utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\init_system.lua")), system_code)

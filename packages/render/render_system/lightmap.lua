@@ -101,12 +101,7 @@ end
 
 function lm_sys:end_filter()
     for e in w:select "filter_result:in lightmap:in render_object:in filter_material:in material:in" do
-        --local lr_e = w:singleton("lightmapper", "lightmap_result:in")
-        local lr_e
-        for _, eid in world:each "lightmap_result" do
-            lr_e = world[eid]
-            break
-        end
+        local lr_e = w:singleton("lightmapper", "lightmap_result:in")
 
         local r = lr_e and lr_e.lightmap_cache or {}
         local mq = w:singleton("main_queue", "primitive_filter:in")

@@ -42,7 +42,7 @@ function st_sys:init()
 			scene_entity = true,
 		}
 	}
-	world:instance("/pkg/ant.resources.binary/meshes/RiggedFigure.glb|mesh.prefab", {import={root=rooteid}})
+	ecs.create_instance("/pkg/ant.resources.binary/meshes/RiggedFigure.glb|mesh.prefab", {import={root=rooteid}})
 
     local eid = ientity.create_plane_entity(
 		{t = {0, 0, 0, 1}, s = {50, 1, 50, 0}},

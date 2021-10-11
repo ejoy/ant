@@ -1,7 +1,7 @@
 ---
 prefab: ./light.prefab
 ---
-prefab: ./box.prefab
+prefab: ./box.glb|mesh.prefab
 ---
 action:
   lightmap_mount: {}
