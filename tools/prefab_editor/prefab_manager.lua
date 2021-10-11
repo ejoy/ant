@@ -559,7 +559,7 @@ function m:init_camera()
 
             eid.template.data.transform = {s = {1,1,1}, r = {math3d.index(r, 1, 2, 3, 4)}, t = {math3d.index(t, 1, 2, 3)}}
 
-            local recorder, recorder_templ = icamera_recorder.start(gen_camera_recorder_name())
+            local recorder = icamera_recorder.start(gen_camera_recorder_name())
             camera_mgr.bind_recorder(eid, recorder)
             camera_mgr.add_recorder_frame(eid)
             local node = hierarchy:add(eid, {template = {
