@@ -32,28 +32,27 @@ local aabb_color_i <const> = 0x6060ffff
 local aabb_color <const> = {1.0, 0.38, 0.38, 1.0}
 local highlight_aabb_eid
 function m:update_current_aabb(eid)
-    if type(eid) == "table" then return end
+    if not eid then return end
 
     if not highlight_aabb_eid then
-        highlight_aabb_eid = geo_utils.create_dynamic_aabb({}, "highlight_aabb")
-        imaterial.set_property(highlight_aabb_eid, "u_color", aabb_color)
-        ies.set_state(highlight_aabb_eid, "auxgeom", true)
+        highlight_aabb_eid = geo_utils.create_dynamic_aabb({}, "highlight_aabb", aabb_color, true)
     end
-    ies.set_state(highlight_aabb_eid, "visible", false)
-    if not eid or world[eid].camera or world[eid].light_type then
+    w:sync("camera?in", eid)
+    w:sync("light?in", eid)
+    if eid.camera or eid.light then
         return
     end
     local aabb = nil
-    local e = world[eid]
+    w:sync("mesh?in", eid)
+    local e = eid
     if e.mesh and e.mesh.bounding then
         local w = iom.worldmat(eid)
         aabb = math3d.aabb_transform(w, e.mesh.bounding.aabb)
     else
         local adaptee = hierarchy:get_select_adaptee(eid)
-        for _, eid in ipairs(adaptee) do
-            local e = world[eid]
+        for _, e in ipairs(adaptee) do
             if e.mesh and e.mesh.bounding then
-                local newaabb = math3d.aabb_transform(iom.worldmat(eid), e.mesh.bounding.aabb)
+                local newaabb = math3d.aabb_transform(iom.worldmat(e), e.mesh.bounding.aabb)
                 aabb = aabb and math3d.aabb_merge(aabb, newaabb) or newaabb
             end
         end
@@ -72,10 +71,9 @@ end
 
 function m:normalize_aabb()
     local aabb
-    for _, eid in ipairs(self.entities) do
-        local e = world[eid]
+    for _, e in ipairs(self.entities) do
         if e.mesh and e.mesh.bounding then
-            local newaabb = math3d.aabb_transform(iom.worldmat(eid), e.mesh.bounding.aabb)
+            local newaabb = math3d.aabb_transform(iom.worldmat(e), e.mesh.bounding.aabb)
             aabb = aabb and math3d.aabb_merge(aabb, newaabb) or newaabb
         end
     end

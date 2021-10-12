@@ -54,7 +54,8 @@ function EffectView:show()
     -- end
     imgui.widget.PropertyLabel("Play")
     if imgui.widget.Button("Play") then
-        local instance = world[self.eid].effect_instance
+        w:sync("effect_instance:in", self.eid)
+        local instance = self.eid.effect_instance
         instance.playid = effekseer.play(instance.handle, instance.playid)
         effekseer.set_speed(instance.handle, instance.playid, instance.speed)
     end

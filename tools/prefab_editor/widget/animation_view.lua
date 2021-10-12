@@ -531,10 +531,14 @@ local function show_events()
 end
 
 local function do_record(collision, eid)
+    w:sync("collider?in", eid)
+    if not eid.collider then
+        return
+    end
     local tp = math3d.totable(iom.get_position(eid))
     collision.position = {tp[1], tp[2], tp[3]}
     local scale = math3d.totable(iom.get_scale(eid))
-    local factor = world[eid].collider.sphere and 100 or 200
+    local factor = eid.collider.sphere and 100 or 200
     collision.size = {scale[1] / factor, scale[2] / factor, scale[3] / factor}
 end
 
@@ -566,7 +570,8 @@ local function show_current_event()
                         if eid == -1 then
                             collision.shape_type = "None"
                         else
-                            collision.shape_type = world[eid].collider.sphere and "sphere" or "box"
+                            w:sync("collider:in", eid)
+                            collision.shape_type = eid.collider.sphere and "sphere" or "box"
                             do_record(collision, eid)
                         end
                         dirty = true
@@ -688,7 +693,8 @@ local function update_collision()
         if ke.collision and ke.collision.col_eid and ke.collision.col_eid ~= -1 then
             local eid = ke.collision.col_eid
             iom.set_position(eid, ke.collision.position)
-            local factor = world[eid].collider.sphere and 100 or 200
+            w:sync("collider?in", eid)
+            local factor = eid.collider.sphere and 100 or 200
             iom.set_scale(eid, {ke.collision.size[1] * factor, ke.collision.size[2] * factor, ke.collision.size[3] * factor})
             if eid == gizmo.target_eid then
                 gizmo:update()
@@ -1400,8 +1406,10 @@ function m.load_clips()
                             if e.collision and e.collision.shape_type ~= "None" then
                                 if not hierarchy.collider_list or not hierarchy.collider_list[e.collision.name] then
                                     local eid = prefab_mgr:create("collider", {tag = e.collision.tag, type = e.collision.shape_type, define = utils.deep_copy(default_collider_define[e.collision.shape_type]), parent = prefab_mgr.root, add_to_hierarchy = true})
-                                    world[eid].name = e.collision.name
-                                    world[eid].tag = e.collision.tag
+                                    eid.name = e.collision.name
+                                    eid.tag = e.collision.tag
+                                    w:sync("name:out", eid)
+                                    w:sync("tag:out", eid)
                                     imaterial.set_property(eid, "u_color", e.collision.color or {1.0,0.5,0.5,0.8})
                                     hierarchy:update_collider_list(world)
                                 end
@@ -1436,8 +1444,8 @@ local function construct_edit_animations(eid)
     local edit_anim = edit_anims[eid]
     
     local animations = get_runtime_animations(eid)
-    
-    local parentNode = hierarchy:get_node(world[eid].parent)
+    w:sync("scene:in", eid)
+    local parentNode = hierarchy:get_node(eid.scene.parent)
     for key, anim in pairs(animations) do
         if not anim_clips[key] then
             anim_clips[key] = {}

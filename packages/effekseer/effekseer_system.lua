@@ -107,33 +107,38 @@ end
 
 local iplay = ecs.interface "effekseer_playback"
 
+local function get_effect_instance(eid)
+    w:sync("effect_instance?in", eid)
+    return eid.effect_instance
+end
 function iplay.play(eid, loop)
-    local instance = world[eid].effect_instance
+    local instance = get_effect_instance(eid)
     --if effekseer.is_playing(instance.handle, instance.playid) then return end
     world:pub {"play_effect", instance, loop or false}
 end
 
 function iplay.destroy(eid)
-    effekseer.destroy(eid > 0 and world[eid].effect_instance.handle or eid)
+    local instance = get_effect_instance(eid)
+    effekseer.destroy(eid > 0 and instance.handle or eid)
 end
 
 function iplay.stop(eid)
-    local instance = world[eid].effect_instance
+    local instance = get_effect_instance(eid)
     effekseer.stop(instance.handle, instance.playid)
 end
 
 function iplay.is_playing(eid)
-    local instance = world[eid].effect_instance
+    local instance = get_effect_instance(eid)
     return effekseer.is_playing(instance.handle, instance.playid)
 end
 
 function iplay.pause(eid, b)
-    local instance = world[eid].effect_instance
+    local instance = get_effect_instance(eid)
     effekseer.pause(instance.handle, instance.playid, b)
 end
 
 function iplay.set_time(eid, second, should_exist)
-    local instance = world[eid].effect_instance
+    local instance = get_effect_instance(eid)
     local frame = math.floor(second * 60)
     local newid = effekseer.set_time(instance.handle, instance.playid, frame, should_exist)
     if instance.playid ~= newid then
@@ -142,8 +147,8 @@ function iplay.set_time(eid, second, should_exist)
 end
 
 function iplay.set_speed(eid, speed)
-    local instance = world[eid].effect_instance
-    world[eid].speed = speed
+    local instance = get_effect_instance(eid)
+    instance.speed = speed
     effekseer.set_speed(instance.handle, instance.playid, speed)
 end
 
@@ -185,11 +190,13 @@ function effekseer_sys:render_submit()
 end
 
 function effekseer_sys:follow_transform_updated()
-    for _, eid in event_entity_register:unpack() do 
-        local effect = world[eid].effekseer and world[eid].effect_instance or nil
-        if effect then
-            if effect.auto_play then
-                world:pub {"play_effect", effect}
+    for _, eid in event_entity_register:unpack() do
+        for e in w:select "effekseer:in effect_instance:in" do
+            --local effect = world[eid].effekseer and world[eid].effect_instance or nil
+            if e.effect_instance then
+                if e.effect_instance.auto_play then
+                    world:pub {"play_effect", e.effect_instance}
+                end
             end
         end
     end

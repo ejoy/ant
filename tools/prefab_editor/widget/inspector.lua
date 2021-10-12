@@ -64,8 +64,8 @@ function m.update_template_tranform(eid)
         s = {math3d.index(s, 1, 2, 3)},
         t = {math3d.index(t, 1, 2, 3)},
     }
-
-    if world[eid].collider then
+    w:sync("collider?in", eid)
+    if eid.collider then
         anim_view.record_collision(eid)
     end
 end
@@ -281,8 +281,8 @@ local function update_current()
             end
         end
         if not current_panel then
-            w:sync("light_type?in", e)
-            if e.light_type then
+            w:sync("light?in", e)
+            if e.light then
                 current_panel = get_light_panel()
             end
         end
@@ -298,12 +298,12 @@ local function update_current()
                 current_panel = get_skybox_panel()
             end
         end
-        if not current_panel then
-            w:sync("material?in", e)
-            if e.material then
-                current_panel = get_material_panel()
-            end
-        end
+        -- if not current_panel then
+        --     w:sync("material?in", e)
+        --     if e.material then
+        --         current_panel = get_material_panel()
+        --     end
+        -- end
         if not current_panel then
             current_panel = get_base_panel()
         end

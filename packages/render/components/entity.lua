@@ -412,9 +412,10 @@ function ientity.create_axis_entity(srt, name, color)
 end
 
 function ientity.create_line_entity(srt, p0, p1, name, color)
+	local ic = color and ((math.floor(color[1] * 255) & 0xFF) | ((math.floor(color[2] * 255) & 0xFF) << 8)| ((math.floor(color[3] * 255) & 0xFF) << 16)| ((math.floor(color[4] * 255) & 0xFF) << 24)) or 0xffffffff
 	local vb = {
-		p0[1], p0[2], p0[3], color or 0xffffffff,
-		p1[1], p1[2], p1[3], color or 0xffffffff,
+		p0[1], p0[2], p0[3], ic,
+		p1[1], p1[2], p1[3], ic,
 	}
 	local mesh = create_mesh({"p3|c40niu", vb}, {0, 1})
 	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt, color)

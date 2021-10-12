@@ -75,13 +75,13 @@ local function get_icon_by_object_type(node)
         if e.camera then
             return icons.ICON_CAMERA3D
         end
-        w:sync("light_type?in", e)
-        if e.light_type then
-            if e.light_type == "directional" then
+        w:sync("light?in", e)
+        if e.light then
+            if e.light.light_type == "directional" then
                 return icons.ICON_DIRECTIONALLIGHT
-            elseif e.light_type == "point" then
+            elseif e.light.light_type == "point" then
                 return icons.ICON_POINTLIGHT
-            elseif e.light_type == "spot" then
+            elseif e.light.light_type == "spot" then
                 return icons.ICON_SPOTLIGHT
             end
         end
