@@ -113,7 +113,6 @@ lprepare_text(lua_State *L) {
 		str = utf8_decode(str, &codepoint, 1);
 		if (str) {
 			int x,y;
-			printf("%d\n", codepoint);
 			prepare_char(F, texid, fontid, codepoint, &x, &y);
 			advance_x += x;
 			if (y > advance_y) {
