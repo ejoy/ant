@@ -169,20 +169,6 @@ end
 
 m.init = init_material
 
-local mpt = ecs.transform "material_prefab_transform"
-
-function mpt.process_prefab(e)
-	local c = e._cache_prefab
-	load_material(e.material, c, c.material_setting)
-end
-
-local mst = ecs.transform "material_setting_transform"
-function mst.process_prefab(e)
-	e._cache_prefab.material_setting = {}
-end
-
-local mt = ecs.transform "material_transform"
-
 local function to_v(t)
 	if t == nil then
 		return
@@ -272,11 +258,6 @@ local function build_material(m, ro)
 	ro.state 		= m.state
 	ro.stencil		= m.stencil
 end
-
-function mt.process_entity(e)
-	build_material(e._cache_prefab, e._rendercache)
-end
-
 
 function imaterial.load(m, setting)
 	local mm = type(m) == "string" and world.component "material"(m) or m

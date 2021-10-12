@@ -3,11 +3,6 @@ local ecs = ...
 local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
 
-local ct = ecs.transform "cache_transform"
-function ct.process_prefab(e)
-	e._cache_prefab = {}
-end
-
 local rct = ecs.transform "rendercache_transform"
 function rct.process_entity(e)
     e._rendercache = {}
@@ -17,11 +12,6 @@ local gt = ecs.transform "init_transform"
 
 function gt.process_entity(e)
     e._rendercache.srt = mu.srt_obj(e.transform or {})
-end
-
-local ibt = ecs.transform "init_bounding_transform"
-function ibt.process_entity(e)
-    e._bounding = {}
 end
 
 local m = ecs.action "name"

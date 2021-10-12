@@ -21,16 +21,6 @@ function m:delete()
 	end
 end
 
-local mbt = ecs.transform "mesh_bounding_transform"
-function mbt.process_entity(e)
-	local m = e.mesh
-	if m.bounding and m.bounding.aabb then
-		e._bounding.aabb = m.bounding.aabb
-	end
-end
-
-local mpt = ecs.transform "mesh_prefab_transform"
-
 local function create_rendermesh(mesh)
 	if mesh then
 		local handles = {}
@@ -54,33 +44,6 @@ local function create_rendermesh(mesh)
 		return vb, ib
 	end
 end
-
-function mpt.process_prefab(e)
-	local mesh = e.mesh
-	local c = e._cache_prefab
-	if mesh then
-		c.vb, c.ib = create_rendermesh(mesh)
-	end
-end
-
-local mt = ecs.transform "mesh_transform"
-
-function mt.process_entity(e)
-	local rc = e._rendercache
-	local c = e._cache_prefab
-
-	rc.vb = c.vb
-	rc.ib = c.ib
-end
-
-local smt = ecs.transform "simple_mesh_transform"
-function smt.process_entity(e)
-	local s = e.simplemesh
-	local rc = e._rendercache
-	rc.vb = s.vb
-	rc.ib = s.ib
-end
-
 
 local imesh = ecs.interface "imesh"
 function imesh.create_vb(vb)

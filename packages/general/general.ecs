@@ -4,11 +4,6 @@ policy "name"
 policy "tag"
     .component "tag"
 
-transform "cache_transform"
-    .implement "general.lua"
-    .output "_cache_prefab"
-    .method "process_prefab"
-
 transform "rendercache_transform"
     .implement "general.lua"
     .output "_rendercache"
@@ -20,11 +15,6 @@ transform "init_transform"
     .input "transform"
     .input "_rendercache"
     .output "_rendercache.transform"
-    .method "process_entity"
-
-transform "init_bounding_transform"
-    .implement "general.lua"
-    .output "_bounding"
     .method "process_entity"
 
 action "name"

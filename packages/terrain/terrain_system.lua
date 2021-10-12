@@ -198,7 +198,6 @@ local function create_render_terrain_entity(eid)
 					"ant.render|render",
 					"ant.scene|hierarchy_policy",
 					"ant.general|name",
-					"ant.general|init_bounding_transform",
 					"ant.render|debug_mesh_bounding",
 				},
 				data = {
