@@ -16,7 +16,6 @@ policy:
   ant.render|render
   ant.general|name
   ant.scene|hierarchy_policy
-script: /pkg/ant.prefab/default_script.lua
 ---
 action:
   mount: root

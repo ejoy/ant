@@ -17,7 +17,6 @@ return {
         "ant.collision",
         "ant.sky",
         "ant.effekseer",
-        "ant.prefab",
     }
     --ecs = {
     --    import = {
