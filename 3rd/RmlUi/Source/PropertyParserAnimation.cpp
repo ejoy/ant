@@ -29,7 +29,6 @@
 
 #include "PropertyParserAnimation.h"
 #include "PropertyShorthandDefinition.h"
-#include "../Include/RmlUi/Math.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/PropertyIdSet.h"
 #include "../Include/RmlUi/StringUtilities.h"
@@ -196,7 +195,7 @@ static bool ParseAnimation(Property & property, const std::vector<std::string>& 
 						// No 's' unit means num_iterations was found
 						if (!num_iterations_found)
 						{
-							animation.num_iterations = Math::RoundToInteger(number);
+							animation.num_iterations = (int)(number + 0.5f);
 							num_iterations_found = true;
 						}
 						else
