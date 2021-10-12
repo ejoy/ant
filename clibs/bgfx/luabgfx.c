@@ -2898,7 +2898,7 @@ next_vb_handle(lua_State *L, int stream, struct vertexbuffer *vb) {
 		break;
 	case LUA_TUSERDATA:
 		vb->handle = 0;
-		vb->tb = luaL_checkudata(L, 1, "BGFX_TB");
+		vb->tb = luaL_checkudata(L, -1, "BGFX_TB");
 		break;
 	default:
 		luaL_error(L, "Invalid vertex buffer");
@@ -2961,7 +2961,7 @@ ENCODER_API(lsetVertexBuffer) {
 
 	do {
 		if (vb.tb) {
-			BGFX(set_transient_vertex_buffer)(stream, &vb.tb->tvb, start, numv);
+			BGFX_ENCODER(set_transient_vertex_buffer, encoder, stream, &vb.tb->tvb, start, numv);
 		} else {
 			int idtype = vb.handle >> 16;
 			int idx = vb.handle & 0xffff;
@@ -3016,7 +3016,7 @@ ENCODER_API(lsetIndexBuffer) {
 			BGFX_ENCODER(set_dynamic_index_buffer, encoder, handle, start, end);
 		}
 	} else {
-		BGFX(set_transient_index_buffer)(&tb->tib, start, end);
+		BGFX_ENCODER(set_transient_index_buffer, encoder, &tb->tib, start, end);
 	}
 
 	return 0;

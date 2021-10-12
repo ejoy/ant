@@ -7,7 +7,7 @@ local setting		= import_package "ant.settings".setting
 
 local ies = ecs.import.interface "ant.scene|ientity_state"
 local iom = ecs.import.interface "ant.objcontroller|obj_motion"
-
+local imesh=ecs.import.interface "ant.asset|imesh"
 local bgfx = require "bgfx"
 local math3d = require "math3d"
 
@@ -47,13 +47,13 @@ function widget_drawer_sys:init()
 	}
 	ecs.create_entity {
 		policy = {
-			"ant.render|render",
+			"ant.render|simplerender",
 			"ant.render|bounding_draw",
 			"ant.general|name",
 		},
 		data = {
 			scene = {srt = {}},
-			mesh = create_dynamic_buffer(wd.declname, wd.vertices_num, wd.indices_num),
+			simplemesh = imesh.init_mesh(create_dynamic_buffer(wd.declname, wd.vertices_num, wd.indices_num)),
 			material = "/pkg/ant.resources/materials/line.material",
 			state = ies.create_state "visible",
 			widget_drawer = wd,

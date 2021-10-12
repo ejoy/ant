@@ -5,14 +5,14 @@ system "font_system"
     .method "component_init"
     .method "camera_usage"
 
-policy_v2 "fontrender"
+policy_v2 "font"
     .require_policy_v2 "ant.scene|scene_object"
-    .require_policy_v2 "ant.render|render"
+    .require_policy_v2 "ant.render|simplerender"
     .component_v2 "font"
 
 policy_v2 "show_name"
     .require_system "ant.render|font_system"
-    .require_policy_v2 "ant.render|fontrender"
+    .require_policy_v2 "ant.render|font"
     .component_v2 "show_config"
 
 component_v2 "font"

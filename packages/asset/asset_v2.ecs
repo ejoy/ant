@@ -4,7 +4,6 @@ system "material_system"
 
 system "mesh_system"
     .implement "mesh.lua"
-    .method "component_init"
     .method "entity_init"
     .method "end_frame"
 

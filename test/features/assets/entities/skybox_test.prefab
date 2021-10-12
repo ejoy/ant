@@ -1,7 +1,7 @@
 ---
 policy:
     ant.sky|skybox
-    ant.render|render
+    ant.render|simplerender
     ant.general|name
 data:
     name: skybox_test
@@ -16,5 +16,5 @@ data:
         LUT:
             size: 256
     material: /pkg/ant.resources/materials/sky/skybox.material
-    mesh: false
+    simplemesh: false
     skybox: {}

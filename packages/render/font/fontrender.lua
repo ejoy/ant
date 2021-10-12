@@ -8,6 +8,8 @@ local declmgr   = require "vertexdecl_mgr"
 local font      = import_package "ant.font"
 local lfont     = require "font"
 
+local imesh     = ecs.import.interface "ant.asset|imesh"
+
 font.init()
 
 local fonttex_handle    = font.texture()
@@ -84,7 +86,8 @@ end
 local function load_text(e)
     local font = e.font
     local sc = e.show_config
-    local screenpos = calc_screen_pos(calc_3d_anchor_pos(e, sc))
+    local pos = calc_3d_anchor_pos(e, sc)
+    local screenpos = pos and calc_screen_pos(pos) or {0.0, 0.0, 0.0}
 
     local textw, texth, num = lfont.prepare_text(fonttex_handle, sc.description, font.size, font.id)
     local x, y = text_start_pos(textw, texth, screenpos)
@@ -104,13 +107,11 @@ end
 local ev = world:sub {"show_name"}
 
 function fontsys:component_init()
-    for e in w:select "INIT font:in mesh:out" do
-        if e.font.file then
-            lfont.import(e.font.file:string())
-        end
+    for e in w:select "INIT font:in simplemesh:out" do
+        lfont.import(e.font.file)
         e.font.id = lfont.name(e.font.name)
 
-        e.mesh = world.component "mesh" {
+        e.simplemesh = imesh.init_mesh({
             vb = {
                 start = 0,
                 num = 0,
@@ -121,7 +122,7 @@ function fontsys:component_init()
                 num = 0,
                 handle = irender.quad_ib()
             }
-        }
+        }, true)
     end
     for e in w:select "INIT show_config:in" do
         if e.show_config.location_offset then

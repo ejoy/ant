@@ -113,6 +113,7 @@ lprepare_text(lua_State *L) {
 		str = utf8_decode(str, &codepoint, 1);
 		if (str) {
 			int x,y;
+			printf("%d\n", codepoint);
 			prepare_char(F, texid, fontid, codepoint, &x, &y);
 			advance_x += x;
 			if (y > advance_y) {
@@ -280,7 +281,11 @@ static int
 lname(lua_State *L) {
 	struct font_manager *F = getF(L);
 	const char* family = luaL_checkstring(L, 1);
-	font_manager_addfont_with_family(F, family);
+	const int fontid = font_manager_addfont_with_family(F, family);
+	if (fontid > 0){
+		lua_pushinteger(L, fontid);
+		return 1;
+	}
 	return 0;
 }
 
@@ -311,6 +316,7 @@ luaopen_font(lua_State *L) {
 	luaL_checkversion(L);
 	lua_newtable(L);
 	lua_newtable(L);
+	init_interface(L);
 	lua_pushcfunction(L, initfont);
 	lua_setfield(L, -2, "__call");
 	lua_setmetatable(L, -2);

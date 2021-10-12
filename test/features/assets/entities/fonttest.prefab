@@ -14,17 +14,18 @@ data:
     name: slot_cube
 ---
 policy:
-    ant.render|render
+    ant.render|simplerender
     ant.render|show_name
-    ant.render|fontrender
+    ant.render|font
 data:
-    mesh: false
+    simplemesh: false
     material: /pkg/ant.resources/materials/font/font.material
     state: 1
     scene:
       srt: {}
     font:
-        name: 黑体
+        file: /pkg/ant.resources.binary/ui/test/assets/font/simsun.ttc
+        name: 宋体
         size: 42
     show_config:
         location_type: aabb_bottom
@@ -49,17 +50,18 @@ data:
     name: slot_cube
 ---
 policy:
-    ant.render|render
+    ant.render|simplerender
     ant.render|show_name
-    ant.render|fontrender
+    ant.render|font
 data:
-    mesh: false
+    simplemesh: false
     material: /pkg/ant.resources/materials/font/font.material
     state: 1
     scene:
       srt: {}
     font:
-        name: 黑体
+        file: /pkg/ant.resources.binary/ui/test/assets/font/simsun.ttc
+        name: 宋体
         size: 42
     show_config:
         location_type: aabb_top

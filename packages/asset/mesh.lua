@@ -44,23 +44,19 @@ function imesh.init_mesh(mesh, owned_mesh_buffer)
 end
 
 local ms = ecs.system "mesh_system"
-function ms:component_init()
-	w:clear "mesh_result"
-	for e in w:select "INIT mesh:in mesh_result:new" do
-		e.mesh_result = assetmgr.resource(e.mesh)
-	end
-
-	for e in w:select "INIT simplemesh:in mesh_result:new owned_mesh_buffer?out" do
-		local sm = e.simplemesh
-		e.mesh_result = sm
-		e.owned_mesh_buffer = sm.owned_mesh_buffer
-	end
-end
 
 function ms:entity_init()
-    for e in w:select "INIT mesh_result:in render_object:in" do
-		local ro, mr = e.render_object, e.mesh_result
-		ro.vb, ro.ib = create_rendermesh(mr)
+	for e in w:select "INIT mesh:update render_object:in" do
+		e.mesh = assetmgr.resource(e.mesh)
+		local ro = e.render_object
+		ro.vb, ro.ib = create_rendermesh(e.mesh)
+	end
+
+	for e in w:select "INIT simplemesh:in render_object:in owned_mesh_buffer?out" do
+		local sm = e.simplemesh
+		local ro = e.render_object
+		ro.vb, ro.ib = create_rendermesh(sm)
+		e.owned_mesh_buffer = sm.owned_mesh_buffer
 	end
 end
 

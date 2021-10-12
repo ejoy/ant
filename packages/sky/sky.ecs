@@ -22,7 +22,7 @@ policy "procedural_sky_follow_sun"
     .component "procedural_sky"
 
 policy_v2 "skybox"
-    .require_policy_v2 "ant.render|render"
+    .require_policy_v2 "ant.render|simplerender"
     .require_policy_v2 "ant.render.ibl|ibl"
     .require_system "skybox_system"
     .component_v2 "skybox"
