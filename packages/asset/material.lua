@@ -158,16 +158,12 @@ function imaterial.property_set_func(t)
 	return set_funcs[t]
 end
 
-local m = ecs.component "material"
-
 local function init_material(mm)
 	if type(mm) == "string" then
 		return assetmgr.resource(mm)
 	end
 	return ext_material.init(mm)
 end
-
-m.init = init_material
 
 local function to_v(t)
 	if t == nil then
@@ -259,17 +255,14 @@ local function build_material(m, ro)
 	ro.stencil		= m.stencil
 end
 
-function imaterial.load(m, setting)
-	local mm = type(m) == "string" and world.component "material"(m) or m
-	assert(type(mm) == "table")
-	
+function imaterial.load(mp, setting)
+	local mm = assetmgr.resource(mp)
+
 	local mr = {}
 	build_material(load_material(mm, {}, setting), mr)
 	return mr
 end
 
-----material_v2
-local w = world.w
 local ms = ecs.system "material_system"
 function ms:component_init()
 	w:clear "material_result"

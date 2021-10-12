@@ -1,16 +1,3 @@
-component "material"
-    .implement "material.lua"
-    .method "init"
-
-component "mesh"
-    .implement "mesh.lua"
-    .method "init"
-    .method "delete"
-
-component "meshskin"
-    .implement "meshskin.lua"
-    .method "init"
-
 component "effekseer"
     .implement "effekseer_impl.lua"
     .method "init"
@@ -29,6 +16,6 @@ interface "imesh"
     .implement "mesh.lua"
     .method "create_vb"
     .method "create_ib"
-    .method "create_rendermesh"
+    .method "init_mesh"
 
 import "asset_v2.ecs"

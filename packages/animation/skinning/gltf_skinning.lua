@@ -18,9 +18,9 @@ local function build_transform(rc, skinning)
 end
 
 function m:entity_init()
-	for e in w:select "INIT skinning:in render_object:in meshskin:in pose_result:in" do
+	for e in w:select "INIT skinning:in render_object:in meshskin_result:in pose_result:in" do
 		local skinning = e.skinning
-		local skin = assetmgr.resource(e.meshskin)
+		local skin = e.meshskin_result
 		local count = skin.joint_remap and skin.joint_remap:count() or e.pose_result:count()
 		skinning.skinning_matrices = animodule.new_bind_pose(count)
 		skinning.skin = skin

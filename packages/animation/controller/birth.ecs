@@ -1,8 +1,3 @@
-policy "animation_controller.birth"
-    .require_system "animation_birth"
-    .component "_animation"
-    .component "animation_birth"
-
 policy_v2 "animation_controller.birth"
     .require_system "animation_birth"
     .component_v2 "animation"
