@@ -16,7 +16,6 @@ system "shadow_system"
 
 policy "shadow_cast_policy"
     .require_system "shadow_system"
-    .require_transform "ant.scene|entity_state_transform"
     .component "state"
 
 system "shadow_primitive_system"

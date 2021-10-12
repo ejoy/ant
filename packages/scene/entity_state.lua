@@ -22,19 +22,6 @@ local function filter_mask(names)
 	return s
 end
 
-local es_trans = ecs.transform "entity_state_transform"
-
-function es_trans.process_entity(e)
-	local rc = e._rendercache
-	local s = e.state
-	if s == nil then
-		s = 0
-	elseif type(s) == "string" then
-		s = filter_mask(s)
-	end
-	rc.entity_state = s
-end
-
 local ies = ecs.interface "ientity_state"
 
 local function get_rc(eid)

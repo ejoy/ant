@@ -5,7 +5,6 @@ local worldedit     = import_package "ant.editor".worldedit(world)
 local assetmgr      = import_package "ant.asset"
 local stringify     = import_package "ant.serialize".stringify
 local iom           = ecs.import.interface "ant.objcontroller|obj_motion"
-local iss           = ecs.import.interface "ant.scene|iscenespace"
 local ies           = ecs.import.interface "ant.scene|ientity_state"
 local ilight        = ecs.import.interface "ant.render|light"
 local imaterial     = ecs.import.interface "ant.asset|imaterial"

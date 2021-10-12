@@ -62,14 +62,9 @@ local function update_lm_texture(properties, handle)
     imaterial.set_property_directly(properties, "s_lightmap", {stage=8, texture={handle=handle}})
 end
 
---TODO: need remove
-local lm_result_mb = world:sub{"component_register", "lightmap_result"}
-
 function lm_sys:entity_init()
-    for msg in lm_result_mb:each() do
-        local eid = msg[3]
-        local lmr_e = world[eid]
-        local c = lmr_e.lightmap_cache
+    for lmr_e in w:select "INIT lightmap_result:in" do
+        local c = lmr_e.lightmap_result.cache
         for e in w:select "lightmap:in render_object:in filter_material:in" do
             local lm = e.lightmap
             local lmid = lm.id
