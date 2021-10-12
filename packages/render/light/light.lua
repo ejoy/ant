@@ -38,12 +38,13 @@ end
 local ilight = ecs.interface "light"
 
 function ilight.create(light)
-	return ecs.create_entity {
+	local template = {
 		policy = {
 			"ant.render|light",
 			"ant.general|name",
 		},
 		data = {
+			reference 	= true,
 			name		= light.name or "DEFAULT_LIGHT",
 			scene = {
 				srt = light.transform
@@ -62,6 +63,7 @@ function ilight.create(light)
 			visible = true,
 		}
 	}
+	return ecs.create_entity(template), template
 end
 
 function ilight.data(e)
@@ -256,14 +258,13 @@ function lightsys:entity_init()
 			if l.range == nil then
 				error("spot light need range defined!")
 			end
-			local i_r, o_r = e.inner_radian, e.outter_radian
+			local i_r, o_r = l.inner_radian, l.outter_radian
 			if i_r == nil or o_r == nil then
 				error("spot light need 'inner_radian' and 'outter_radian' defined!")
 			end
 			if i_r > o_r then
 				error(("invalid 'inner_radian' > 'outter_radian':%d, %d"):format(i_r, o_r))
 			end
-			l.inner_radian, l.outter_radian = i_r, o_r
 			l.inner_cutoff = math.cos(l.inner_radian * 0.5)
 			l.outter_cutoff = math.cos(l.outter_radian * 0.5)
 		else

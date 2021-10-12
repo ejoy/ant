@@ -1,6 +1,8 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
+local cr            = import_package "ant.compile_resource"
+local serialize     = import_package "ant.serialize"
 local worldedit     = import_package "ant.editor".worldedit(world)
 local assetmgr      = import_package "ant.asset"
 local stringify     = import_package "ant.serialize".stringify
@@ -244,7 +246,7 @@ function m:add_entity(new_entity, parent, temp, no_hierarchy)
     self.entities[#self.entities+1] = new_entity
     ecs.method.set_parent(new_entity, parent or self.root)
     if not no_hierarchy then
-        hierarchy:add(new_entity, {template = temp.__class[1]}, parent)--world[new_entity].parent)
+        hierarchy:add(new_entity, {template = temp}, parent)--world[new_entity].parent)
     end
 end
 
@@ -288,7 +290,7 @@ function m:create(what, config)
             local new_entity = ecs.create_entity(template)
 
             --imaterial.set_property(new_entity, "u_color", {1, 1, 1, 1})
-            self:add_entity(new_entity, parent_eid, {__class = {template}})
+            self:add_entity(new_entity, parent_eid, template)
             return new_entity
         elseif config.type == "cube(prefab)" then
             m:add_prefab(gd.editor_package_path .. "res/cube.prefab")
@@ -326,7 +328,7 @@ function m:create(what, config)
     elseif what == "light" then
         if config.type == "directional" or config.type == "point" or config.type == "spot" then      
             local ilight = ecs.import.interface "ant.render|light" 
-            local _, newlight = ilight.create({
+            local newlight, tpl = ilight.create({
                 transform = {t = {0, 3, 0},r = {math.rad(130), 0, 0}},
                 name = config.type .. gen_light_id(),
                 light_type = config.type,
@@ -337,8 +339,9 @@ function m:create(what, config)
                 outter_radian = math.rad(45),
                 make_shadow = true
             })
-            self:add_entity(newlight[1], self.root, newlight)
-            create_light_billboard(newlight[1])
+            self:add_entity(newlight, self.root, tpl)
+            light_gizmo.init()
+            --create_light_billboard(newlight)
         end
     elseif what == "collider" then
         local new_entity, temp = self:create_collider(config)
@@ -467,37 +470,56 @@ end
 
 function m:open(filename)
     world:pub {"PreOpenPrefab", filename}
-    local prefab = get_prefab(filename)
-    local path_list = split(filename)
-    local glb_filename
-    if #path_list > 1 then
-        glb_filename = path_list[1]
-        for _, t in ipairs(prefab.__class) do
-            if t.prefab then
-                t.prefab = convert_path(t.prefab, glb_filename)
-            else
-                if t.data.material then
-                    t.data.material = convert_path(t.data.material, glb_filename)
-                end
-                if t.data.mesh then
-                    t.data.mesh = convert_path(t.data.mesh, glb_filename)
-                end
-                if t.data.meshskin then
-                    t.data.meshskin = convert_path(t.data.meshskin, glb_filename)
-                end
-                if t.data.skeleton then
-                    t.data.skeleton = convert_path(t.data.skeleton, glb_filename)
-                end
-                if t.data.animation then
-                    local animation = t.data.animation
-                    for k, v in pairs(t.data.animation) do
-                        animation[k] = convert_path(v, glb_filename)
-                    end
-                end
-            end
-        end
+    -- local prefab = get_prefab(filename)
+    -- local path_list = split(filename)
+    -- local glb_filename
+    -- if #path_list > 1 then
+    --     glb_filename = path_list[1]
+    --     for _, t in ipairs(prefab.__class) do
+    --         if t.prefab then
+    --             t.prefab = convert_path(t.prefab, glb_filename)
+    --         else
+    --             if t.data.material then
+    --                 t.data.material = convert_path(t.data.material, glb_filename)
+    --             end
+    --             if t.data.mesh then
+    --                 t.data.mesh = convert_path(t.data.mesh, glb_filename)
+    --             end
+    --             if t.data.meshskin then
+    --                 t.data.meshskin = convert_path(t.data.meshskin, glb_filename)
+    --             end
+    --             if t.data.skeleton then
+    --                 t.data.skeleton = convert_path(t.data.skeleton, glb_filename)
+    --             end
+    --             if t.data.animation then
+    --                 local animation = t.data.animation
+    --                 for k, v in pairs(t.data.animation) do
+    --                     animation[k] = convert_path(v, glb_filename)
+    --                 end
+    --             end
+    --         end
+    --     end
+    -- end
+    -- self:open_prefab(prefab)
+    local prefab_proto = serialize.parse(filename, cr.read_file(filename))
+    local prefab = ecs.create_instance(filename)
+    function prefab:on_init()
     end
-    self:open_prefab(prefab)
+    
+    function prefab:on_ready()
+        --world:call(camera, "get_position")
+        
+        print("on_ready")
+    end
+    
+    function prefab:on_message(msg)
+        --print(object, msg)
+    end
+    
+    function prefab:on_update()
+        --print "update"
+    end
+    self.prefab_instance = world:create_object(prefab)
     world:pub {"WindowTitle", filename}
 end
 

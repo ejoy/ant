@@ -866,9 +866,11 @@ local function select_light_gizmo(x, y)
 	
 	click_dir_point_light = nil
 	click_dir_spot_light = nil
-	
+	if not light_gizmo.current_light.light then
+		w:sync("light:in", light_gizmo.current_light)
+	end
 	local radius = ilight.range(light_gizmo.current_light)
-	if world[light_gizmo.current_light].light_type == "point" then
+	if light_gizmo.current_light.light.light_type == "point" then
 		if hit_test_circle({1, 0, 0}, radius) then
 			click_dir_point_light = {1, 0, 0}
 			light_gizmo_mode = 1
@@ -879,7 +881,7 @@ local function select_light_gizmo(x, y)
 			click_dir_point_light = {0, 0, 1}
 			light_gizmo_mode = 3
 		end
-	elseif world[light_gizmo.current_light].light_type == "spot" then
+	elseif light_gizmo.current_light.light.light_type == "spot" then
 		local dir = math3d.totable(math3d.transform(iom.get_rotation(light_gizmo.current_light), constant.ZAXIS, 0))
 		local mat = iom.worldmat(light_gizmo.current_light)
 		local centre = math3d.transform(mat, math3d.vector{0, 0, ilight.range(light_gizmo.current_light)}, 1)
@@ -1100,7 +1102,7 @@ function gizmo_sys:handle_event()
 	
 	for _,pick_id in pickup_mb:unpack() do
 		local eid = pick_id
-		if eid and world[eid] then
+		if eid then
 			if gizmo.mode ~= gizmo_const.SELECT and not gizmo_seleted then
 				gizmo:set_target(eid)
 			end

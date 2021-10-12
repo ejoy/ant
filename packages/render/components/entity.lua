@@ -66,7 +66,7 @@ ientity.create_mesh = create_mesh
 local nameidx = 0
 local function gen_test_name() nameidx = nameidx + 1 return "entity" .. nameidx end
 
-local function create_simple_render_entity(name, material, mesh, srt, color)
+local function create_simple_render_entity(name, material, mesh, srt, color, hide)
 	return ecs.create_entity {
 		policy = {
 			"ant.render|simplerender",
@@ -81,6 +81,11 @@ local function create_simple_render_entity(name, material, mesh, srt, color)
 			name		= name or gen_test_name(),
 			on_ready = function(e)
 				imaterial.set_property(e, "u_color", color or {1,1,1,1})
+				local visible = true
+				if hide then
+					visible = false
+				end
+				ies.set_state(e, "visible", visible)
 			end
 		}
 	}
@@ -368,18 +373,18 @@ function ientity.create_axis_entity(srt, name, color)
 	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt, color)
 end
 
-function ientity.create_line_entity(srt, p0, p1, name, color)
+function ientity.create_line_entity(srt, p0, p1, name, color, hide)
 	local ic = color and ((math.floor(color[1] * 255) & 0xFF) | ((math.floor(color[2] * 255) & 0xFF) << 8)| ((math.floor(color[3] * 255) & 0xFF) << 16)| ((math.floor(color[4] * 255) & 0xFF) << 24)) or 0xffffffff
 	local vb = {
 		p0[1], p0[2], p0[3], ic,
 		p1[1], p1[2], p1[3], ic,
 	}
 	local mesh = create_mesh({"p3|c40niu", vb}, {0, 1})
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt, color)
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt, color, hide)
 	
 end
 
-function ientity.create_circle_entity(radius, slices, srt, name, color)
+function ientity.create_circle_entity(radius, slices, srt, name, color, hide)
 	local circle_vb, circle_ib = geolib.circle(radius, slices)
 	local gvb = {}
 	--color = color or 0xffffffff
@@ -390,7 +395,7 @@ function ientity.create_circle_entity(radius, slices, srt, name, color)
 		gvb[#gvb+1] = 0xffffffff
 	end
 	local mesh = create_mesh({"p3|c40niu", gvb}, circle_ib)
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt, color)
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt, color, hide)
 end
 
 function ientity.create_circle_mesh_entity(radius, slices, srt, mtl, name, color)
