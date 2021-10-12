@@ -80,13 +80,13 @@ function m.create_dynamic_frustum(frustum_points, name, color)
     return do_create_entity(vb, ib, {}, name, color)
 end
 
-function m.create_dynamic_line(srt, p0, p1, name, color)
+function m.create_dynamic_line(srt, p0, p1, name, color, hide)
 	local vb = {
-		p0[1], p0[2], p0[3], color or 0xffffffff,
-		p1[1], p1[2], p1[3], color or 0xffffffff,
+		p0[1], p0[2], p0[3], 0xffffffff,
+		p1[1], p1[2], p1[3], 0xffffffff,
 	}
 	local ib = {0, 1}
-    return do_create_entity(vb, ib, srt, name, color)
+    return do_create_entity(vb, ib, srt, name, color, hide)
 end
 
 function m.create_dynamic_lines(srt, vb, ib, name, color)
@@ -106,9 +106,9 @@ function m.get_circle_vb_ib(radius, slices, color)
 	return gvb, circle_ib
 end
 
-function m.create_dynamic_circle(radius, slices, srt, name, color)
+function m.create_dynamic_circle(radius, slices, srt, name, color, hide)
 	local vb, ib = m.get_circle_vb_ib(radius, slices)
-	return do_create_entity(vb, ib, srt, name, color)
+	return do_create_entity(vb, ib, srt, name, color, hide)
 end
 
 function m.create_dynamic_aabb(srt, name, color, hide)

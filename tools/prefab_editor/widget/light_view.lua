@@ -50,9 +50,12 @@ function LightView:set_model(eid)
     local subproperty = {}
     subproperty[#subproperty + 1] = self.subproperty.color
     subproperty[#subproperty + 1] = self.subproperty.intensity
-    if world[eid].light_type ~= "directional" then
+    if not eid.light then
+        w:sync("light:in", eid)
+    end
+    if eid.light.light_type ~= "directional" then
         subproperty[#subproperty + 1] = self.subproperty.range
-        if world[eid].light_type == "spot" then
+        if eid.light.light_type == "spot" then
             subproperty[#subproperty + 1] = self.subproperty.inner_radian
             subproperty[#subproperty + 1] = self.subproperty.outter_radian
         end
@@ -159,7 +162,10 @@ function LightView:show()
 end
 
 function LightView:has_rotate()
-    return world[self.eid].light_type ~= "point"
+    if not self.eid.light then
+        w:sync("light:in", self.eid)
+    end
+    return self.eid.light.light_type ~= "point"
 end
 
 function LightView:has_scale()
