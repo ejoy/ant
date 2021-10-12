@@ -74,13 +74,21 @@ function render_sys:update_filter()
 
 			local pf = qe.primitive_filter
 			if has_filter_tag(tag, pf) then
-				local synctag = tag .. "?out"
+				w:sync(tag .. "?in", e)
 				local add = ((state & pf.filter_type) ~= 0) and ((state & pf.excule_type) == 0)
-				e[tag] = add
 				if add then
-					filter_result[tag] = true
+					if not e[tag] then
+						filter_result[tag] = add
+						e[tag] = add
+						w:sync(tag .. "?out", e)
+					end
+				else
+					if e[tag] then
+						filter_result[tag] = add
+						e[tag] = add
+						w:sync(tag .. "?out", e)
+					end
 				end
-				w:sync(synctag, e)
 			end
 		end
 		e.filter_result = filter_result
