@@ -1,19 +1,5 @@
 local ecs = ...
 
-local mathpkg = import_package "ant.math"
-local mu = mathpkg.util
-
-local rct = ecs.transform "rendercache_transform"
-function rct.process_entity(e)
-    e._rendercache = {}
-end
-
-local gt = ecs.transform "init_transform"
-
-function gt.process_entity(e)
-    e._rendercache.srt = mu.srt_obj(e.transform or {})
-end
-
 local m = ecs.action "name"
 function m.init(prefab, i, value)
     prefab[value] = prefab[i]

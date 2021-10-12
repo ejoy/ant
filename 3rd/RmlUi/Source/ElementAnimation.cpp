@@ -28,7 +28,6 @@
 
 #include "ElementAnimation.h"
 #include "ElementStyle.h"
-#include "../Include/RmlUi/Math.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
@@ -244,7 +243,7 @@ float ElementAnimation::GetInterpolationFactorAndKeys(int* out_key) const
 		if (t1 - t0 > eps)
 			alpha = (t - t0) / (t1 - t0);
 
-		alpha = Math::Clamp(alpha, 0.0f, 1.0f);
+		alpha = std::clamp(alpha, 0.0f, 1.0f);
 	}
 
 	alpha = keys[key1].tween(alpha);
@@ -259,7 +258,7 @@ Property ElementAnimation::UpdateAndGetProperty(double world_time, Element& elem
 	if (keys.size() < 2 || animation_complete || dt <= 0.0f)
 		return Property{};
 
-	dt = Math::Min(dt, 0.1f);
+	dt = std::min(dt, 0.1f);
 
 	last_update_world_time = world_time;
 	time_since_iteration_start += dt;

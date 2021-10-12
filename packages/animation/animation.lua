@@ -63,7 +63,10 @@ local function process_keyframe_event(task)
 				end
 			elseif event.event_type == "Move" then
 				for _, eid in ipairs(task.eid) do
-					iom.set_position(world[world[eid].parent].parent, event.move)
+					w:sync("scene:in", eid)
+					local pn = eid.scene.parent
+					w:sync("scene:in", pn)
+					iom.set_position(pn.scene.parent, event.move)
 				end
 			end
 		end

@@ -33,7 +33,6 @@
 #include "../Include/RmlUi/ElementUtilities.h"
 #include "../Include/RmlUi/FontEngineInterface.h"
 #include "../Include/RmlUi/Log.h"
-#include "../Include/RmlUi/Math.h"
 #include "../Include/RmlUi/Property.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/PropertyDictionary.h"
@@ -46,7 +45,7 @@
 #include "ElementDefinition.h"
 #include "PropertiesIterator.h"
 #include <algorithm>
-
+#include <numbers>
 
 namespace Rml {
 	
@@ -62,7 +61,7 @@ float ComputeProperty(FloatValue fv, Element* e) {
 	case Property::REM:
 		return fv.value * e->GetOwnerDocument()->body->GetFontSize();
 	case Property::DEG:
-		return Math::DegreesToRadians(fv.value);
+		return fv.value * (std::numbers::pi_v<float> / 180.0f);
 	case Property::VW:
 		return fv.value * e->GetOwnerDocument()->GetDimensions().w * 0.01f;
 	case Property::VH:

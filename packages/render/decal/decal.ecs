@@ -6,8 +6,6 @@ action "decal_mount"
 
 transform "decal_transform"
     .implement "decal/decal.lua"
-    .require_transform "ant.general|init_transform"
-    .require_transform "ant.render|world_matrix_transform"
     .input "decal"
     .input "transform"
     .input "material"

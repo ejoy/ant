@@ -17,12 +17,6 @@ function iss.set_parent(eid, peid)
 	end
 end
 
-local m = ecs.action "mount"
-function m.init(prefab, i, value)
-	iss.set_parent(prefab[i], prefab[value])
-end
-
-
 ----scenespace_system----
 local s = ecs.system "scenespace_system"
 

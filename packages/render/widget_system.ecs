@@ -37,7 +37,6 @@ component_v2 "widget_drawer"
 
 transform "debug_mesh_bounding_transform"
     .implement "widget_system.lua"
-    .require_transform "ant.general|rendercache_transform"
     .input "debug_mesh_bounding"
     .input "_rendercache"
     .output "_rendercahce.debug_mesh_bounding"

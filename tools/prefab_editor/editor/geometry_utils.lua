@@ -3,6 +3,7 @@ local world     = ecs.world
 local math3d  	= require "math3d"
 local bgfx 		= require "bgfx"
 local ies 		= ecs.import.interface "ant.scene|ientity_state"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 local geopkg 	= import_package "ant.geometry"
 local geolib 	= geopkg.geometry
 local geometry_drawer = geopkg.drawer
@@ -22,12 +23,11 @@ local function create_dynamic_mesh(layout, vb, ib)
 	}
 end
 
-local function create_simple_render_entity(srt, material, name, mesh, state)
+local function create_simple_render_entity(srt, material, name, mesh, color, visible, state)
 	return ecs.create_entity {
 		policy = {
 			"ant.render|render",
 			"ant.general|name",
-			"ant.scene|scene_object"
 		},
 		data = {
 			reference	= true,
@@ -36,6 +36,10 @@ local function create_simple_render_entity(srt, material, name, mesh, state)
 			mesh		= mesh,
 			state		= state or ies.create_state "visible",
 			name		= name,-- or gen_test_name(),
+			on_ready	= function (e)
+				imaterial.set_property(e, "u_color", color)
+				ies.set_state(e, "visible", visible and visible or false)
+			end
 		}
 	}
 end
@@ -50,9 +54,13 @@ function m.get_frustum_vb(points, color)
     return vb
 end
 
-local function do_create_entity(vb, ib, srt, name)
+local function do_create_entity(vb, ib, srt, name, color, hide)
 	local mesh = create_dynamic_mesh("p3|c40niu", vb, ib)
-	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line_color.material", name, mesh)
+	local visible = true
+	if hide then
+		visible = false
+	end
+	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line_color.material", name, mesh, color, visible)
 end
 
 function m.create_dynamic_frustum(frustum_points, name, color)
@@ -69,7 +77,7 @@ function m.create_dynamic_frustum(frustum_points, name, color)
         -- right
         2, 6, 3, 7,
     }
-    return do_create_entity(vb, ib, {}, name)
+    return do_create_entity(vb, ib, {}, name, color)
 end
 
 function m.create_dynamic_line(srt, p0, p1, name, color)
@@ -78,11 +86,11 @@ function m.create_dynamic_line(srt, p0, p1, name, color)
 		p1[1], p1[2], p1[3], color or 0xffffffff,
 	}
 	local ib = {0, 1}
-    return do_create_entity(vb, ib, srt, name)
+    return do_create_entity(vb, ib, srt, name, color)
 end
 
 function m.create_dynamic_lines(srt, vb, ib, name, color)
-    return do_create_entity(vb, ib, srt, name)
+    return do_create_entity(vb, ib, srt, name, color)
 end
 
 function m.get_circle_vb_ib(radius, slices, color)
@@ -98,18 +106,18 @@ function m.get_circle_vb_ib(radius, slices, color)
 	return gvb, circle_ib
 end
 
-function m.create_dynamic_circle(radius, slices, srt, name)
+function m.create_dynamic_circle(radius, slices, srt, name, color)
 	local vb, ib = m.get_circle_vb_ib(radius, slices)
-	return do_create_entity(vb, ib, srt, name)
+	return do_create_entity(vb, ib, srt, name, color)
 end
 
-function m.create_dynamic_aabb(srt, name)
+function m.create_dynamic_aabb(srt, name, color, hide)
 	local desc={vb={}, ib={}}
 	local aabb_shape = {min={0,0,0}, max={1,1,1}}
 	--local t = math3d.matrix{}
 	geometry_drawer.draw_aabb_box(aabb_shape, 0xffffffff, nil, desc)
 	local mesh = create_dynamic_mesh("p3|c40niu", desc.vb, desc.ib)
-	return do_create_entity(desc.vb, desc.ib, srt, name)
+	return do_create_entity(desc.vb, desc.ib, srt, name, color, hide)
 end
 
 function m.get_aabb_vb_ib(aabb_shape, color)

@@ -27,7 +27,6 @@
  */
 
 #include "PropertyParserColour.h"
-#include "../Include/RmlUi/Math.h"
 #include "../Include/RmlUi/StringUtilities.h"
 #include <string.h>
 
@@ -190,6 +189,16 @@ PropertyParserColour::~PropertyParserColour()
 {
 }
 
+static int HexToDecimal(char hex_digit) {
+	if (hex_digit >= '0' && hex_digit <= '9')
+		return hex_digit - '0';
+	else if (hex_digit >= 'a' && hex_digit <= 'f')
+		return 10 + (hex_digit - 'a');
+	else if (hex_digit >= 'A' && hex_digit <= 'F')
+		return 10 + (hex_digit - 'A');
+	return -1;
+}
+
 // Called to parse a RCSS colour declaration.
 bool PropertyParserColour::ParseValue(Property& property, const std::string& value, const ParameterMap& RMLUI_UNUSED_PARAMETER(parameters)) const
 {
@@ -234,8 +243,8 @@ bool PropertyParserColour::ParseValue(Property& property, const std::string& val
 		// Parse each of the colour elements.
 		for (int i = 0; i < 4; i++)
 		{
-			int tens = Math::HexToDecimal(hex_values[i][0]);
-			int ones = Math::HexToDecimal(hex_values[i][1]);
+			int tens = HexToDecimal(hex_values[i][0]);
+			int ones = HexToDecimal(hex_values[i][1]);
 			if (tens == -1 ||
 				ones == -1)
 				return false;
@@ -277,12 +286,12 @@ bool PropertyParserColour::ParseValue(Property& property, const std::string& val
 
 			// We're parsing a percentage value.
 			if (values[i].size() > 0 && values[i][values[i].size() - 1] == '%')
-				component = Math::RealToInteger((float) (atof(values[i].substr(0, values[i].size() - 1).c_str()) / 100.0f) * 255.0f);
+				component = (int)((float) (atof(values[i].substr(0, values[i].size() - 1).c_str()) / 100.0f) * 255.0f);
 			// We're parsing a 0 -> 255 integer value.
 			else
 				component = atoi(values[i].c_str());
 
-			colour[i] = (uint8_t) (Math::Clamp(component, 0, 255));
+			colour[i] = (uint8_t) (std::clamp(component, 0, 255));
 		}
 	}
 	else

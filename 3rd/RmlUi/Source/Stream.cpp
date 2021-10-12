@@ -1,5 +1,4 @@
 #include "../Include/RmlUi/Stream.h"
-#include "../Include/RmlUi/Math.h"
 #include "../Include/RmlUi/Debug.h"
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/Core.h"
