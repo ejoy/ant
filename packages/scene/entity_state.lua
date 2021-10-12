@@ -59,8 +59,10 @@ function ies.set_state(eid, name, v)
 	else
 		rc.entity_state = rc.entity_state & (~STATE_TYPE[name])
 	end
-	world:pub {"luaecs", "update_entity", eid}
-	world:pub {"component_changed", "state", eid}
+	if type(eid) == "table" then
+		eid.render_object_update = true
+		w:sync("render_object_update?out", eid)
+	end
 end
 
 function ies.can_visible(eid)

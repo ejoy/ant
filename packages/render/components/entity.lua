@@ -529,11 +529,6 @@ end
 
 function ientity.create_procedural_sky(settings)
 	settings = settings or {}
-	local function attached_light(eid)
-		if eid then
-			return world[eid].serialize
-		end
-	end
     return ecs.create_entity {
 		policy = {
 			"ant.render|render",
