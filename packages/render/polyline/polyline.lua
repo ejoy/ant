@@ -176,7 +176,6 @@ local function add_polylines(polymesh, line_width, color, material)
                 width = line_width,
                 color = color,
             },
-            eid = world:register_entity(),
             scene = {srt=mu.srt_obj()},
             simplemesh  = polymesh,
             material    = material,

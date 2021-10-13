@@ -27,7 +27,6 @@ function blit_sys:init()
 			scene = {
 				srt = mu.srt_obj(),
 			},
-			eid             = world:register_entity(),
 			render_object   = {},
 			filter_material = {},
 			material        = "/pkg/ant.resources/materials/fullscreen.material",

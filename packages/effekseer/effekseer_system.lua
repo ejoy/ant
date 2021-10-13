@@ -217,12 +217,9 @@ function effekseer_sys:follow_transform_updated()
     end
 end
 
-function effekseer_sys:end_frame()
-    for _, eid in world:each "removed" do
-        local e = world[eid]
-        if e.effekseer and e.effect_instance then
-            effekseer.stop(e.effect_instance.handle, e.effect_instance.playid)
-        end
+function effekseer_sys:entity_remove()
+    for e in w:select "REMOVED effekseer:in effect_instance:in" do
+        effekseer.stop(e.effect_instance.handle, e.effect_instance.playid)
     end
 end
 

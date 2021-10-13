@@ -206,10 +206,6 @@ local function create_main_fb(fbsize)
 			default_comp.render_buffer(
 				fbsize.w, fbsize.h, "D24S8", rb_flag)
 		)
-		-- local pd = world:singleton_entity "pre_depth_queue"
-
-		-- local pd_fb = fbmgr.get(pd.render_target.fb_idx)
-		-- return pd_fb[#pd_fb]
 	end
 
 	render_buffers[#render_buffers+1] = get_depth_buffer()

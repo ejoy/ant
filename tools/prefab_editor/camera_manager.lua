@@ -180,7 +180,6 @@ function m.ceate_camera()
         },
         data = {
             reference = true,
-            eid = world:register_entity(),
             camera = {
                 frustum = info.frustum,
                 clip_range = info.clip_range,
