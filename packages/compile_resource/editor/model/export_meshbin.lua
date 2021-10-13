@@ -40,7 +40,7 @@ local function attrib_data(desc, iv, bin)
 	return bin:sub(buf_offset+1, buf_offset+desc.elemsize)
 end
 
-local function fetch_ib_buffer2(gltfscene, gltfbin, index_accessor)
+local function fetch_ib_buffer(gltfscene, gltfbin, index_accessor)
 	local bufferViews = gltfscene.bufferViews
 
 	local bvidx = index_accessor.bufferView+1
@@ -74,40 +74,6 @@ local function fetch_ib_buffer2(gltfscene, gltfbin, index_accessor)
 
 	return {
 		memory = {indexbin, 1, #indexbin},
-		flag = (elemsize == 4 and 'd' or ''),
-		start 	= 0,
-		num 	= index_accessor.count,
-	}
-end
-
-local function fetch_ib_buffer(gltfscene, bindata, index_accessor)
-	local bv = gltfscene.bufferViews[index_accessor.bufferView + 1]
-	local elemsize = gltfutil.accessor_elemsize(index_accessor)
-
-	local accoffset = index_accessor.byteOffset or 0
-	local bvoffset = bv.byteOffset or 0
-	local offset = accoffset + bvoffset + 1
-	assert((bv.byteStride or elemsize) == elemsize)
-	local value
-	if elemsize == 1 then
-		local buffers = {}
-		local begidx = offset
-		for i=1, index_accessor.count do
-			local endidx = begidx+elemsize-1
-			local v = bindata:sub(begidx, endidx)
-			begidx = endidx + 1
-			local idx = string.unpack("<B", v)
-			buffers[#buffers+1] = string.pack("H", idx)
-		end
-		value = table.concat(buffers, "")
-	elseif elemsize == 2 or elemsize == 4 then
-		local numbytes = elemsize * index_accessor.count
-		value = bindata:sub(offset, offset + numbytes -1)
-	else
-		error(("invalid index buffer elemenet size: %d"):format(elemsize))
-	end
-	return {
-		memory = {value, 1, #value},
 		flag = (elemsize == 4 and 'd' or ''),
 		start 	= 0,
 		num 	= index_accessor.count,
@@ -227,7 +193,7 @@ local function r2l_vec(v, l)
 	assert(("not support layout:%s, %s"):format(l, t))
 end
 
-local function fetch_vb_buffers2(gltfscene, gltfbin, prim)
+local function fetch_vb_buffers(gltfscene, gltfbin, prim)
 	assert(prim.mode == nil or prim.mode == 4)
 	local attributes = prim.attributes
 	local accessors, bufferViews, buffers = gltfscene.accessors, gltfscene.bufferViews, gltfscene.buffers
@@ -286,96 +252,6 @@ local function fetch_vb_buffers2(gltfscene, gltfbin, prim)
 		start = 0,
 		num = numv,
 	}
-end
-
-local function fetch_vb_buffers(gltfscene, gltfbin, prim)
-	local attributes = prim.attributes
-	local attribclasses = {}
-	for attribname, accidx in pairs(attributes) do
-		local which_layout = default_layouts[attribname]
-		if which_layout == nil then
-			error(("invalid attrib name:%s"):format(attribname))
-		end
-		local attriclass = attribclasses[which_layout]
-		if attriclass == nil then
-			attriclass = {}
-			attribclasses[which_layout] = attriclass
-		end
-
-		attriclass[#attriclass+1] = {attribname, accidx}
-	end
-
-	local accessors = gltfscene.accessors
-	local bufferviews = gltfscene.bufferViews
-	local attribuffers = {}
-	local numv = accessors[attributes.POSITION+1].count
-	local bufferidx = 1
-	local function vertex_attrib(class, iv)
-		local acc_offset, bv_offset, elemsize, stride = class[1], class[2], class[3], class[4]
-		local elemoffset = bv_offset + iv * stride + acc_offset + 1
-		return gltfbin:sub(elemoffset, elemoffset + elemsize - 1)
-	end
-
-	local function joint_vertex_attrib(class, iv)
-		local joint_va = vertex_attrib(class, iv)
-		assert(#joint_va == 4)
-		return jointidx_fmt:pack(joint_va:byte(1), joint_va:byte(2), joint_va:byte(3), joint_va:byte(4))
-	end
-
-	local function get_vertex_attrib_op(declname)
-		if declname:sub(1, 1) == "i" and declname:sub(6, 6) == "u" then
-			assert(declname:sub(2, 2) == '4')
-			return joint_vertex_attrib, declname:sub(1, 5) .. "i"
-		end
-		return vertex_attrib, declname
-	end
-
-	for _, attribclass in sort_pairs(attribclasses) do
-		local declname = {}
-		local cacheclass = {}
-		for _, info in ipairs(attribclass) do
-			local attribname, accidx = info[1], info[2]
-			local acc = accessors[accidx+1]
-			local bv = bufferviews[acc.bufferView+1]
-
-			local acc_offset = acc.byteOffset or 0
-			local bv_offset = bv.byteOffset or 0
-
-			local elemsize = gltfutil.accessor_elemsize(acc)
-			local d = get_layout(attribname, acc)
-			local va
-			va, d = get_vertex_attrib_op(d)
-			declname[#declname+1] = d
-			cacheclass[#cacheclass+1] = {acc_offset, bv_offset, elemsize, bv.byteStride or elemsize, vertex_attrib = va}
-		end
-
-		local buffer = {}
-		for ii=0, numv-1 do
-			for jj=1, #cacheclass do
-				local c = cacheclass[jj]
-				buffer[#buffer+1] = c:vertex_attrib(ii)
-
-				-- local buf = gltfbin:sub(elemoffset, elemoffset + elemsize - 1)
-				-- local size = elemsize / 4
-				-- local formats = {[1] = "f", [2] = "ff", [3] = "fff", [4] = "ffff"}
-
-				-- local t = table.pack(string.unpack(formats[size], buf))
-				-- print(table.concat(t, " "))
-				-- buffer[#buffer+1] = buf
-			end
-		end
-
-		local bindata = table.concat(buffer, "")
-		attribuffers[bufferidx] = {
-			declname = table.concat(declname, "|"),
-			memory = {bindata, 1, #bindata},
-		}
-		bufferidx = bufferidx+1
-	end
-
-	attribuffers.start 	= 0
-	attribuffers.num 	= gltfutil.num_vertices(prim, gltfscene)
-	return attribuffers
 end
 
 local function find_skin_root_idx(scene, skin)
@@ -468,11 +344,11 @@ local function export_meshbin(gltfscene, bindata, exports)
 		exports.mesh[meshidx] = {}
 		for primidx, prim in ipairs(mesh.primitives) do
 			local group = {}
-			group.vb = fetch_vb_buffers2(gltfscene, bindata, prim)
+			group.vb = fetch_vb_buffers(gltfscene, bindata, prim)
 			local indices_accidx = prim.indices
 			if indices_accidx then
 				local idxacc = gltfscene.accessors[indices_accidx+1]
-				group.ib = fetch_ib_buffer2(gltfscene, bindata, idxacc)
+				group.ib = fetch_ib_buffer(gltfscene, bindata, idxacc)
 			end
 			local bb = create_prim_bounding(gltfscene, prim)
 			if bb then
