@@ -124,8 +124,8 @@ function s:entity_init()
 			updir = math3d.ref(math3d.vector(camera.updir)),
 		}
 	end
-	for v in w:select "INIT mesh_result:in scene:in" do
-		local mesh = v.mesh_result
+	for v in w:select "INIT mesh:in scene:in" do
+		local mesh = v.mesh
 		if mesh.bounding then
 			v.scene.aabb = mesh.bounding.aabb
 		end

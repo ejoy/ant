@@ -45,9 +45,14 @@ end
 
 local ms = ecs.system "mesh_system"
 
-function ms:entity_init()
-	for e in w:select "INIT mesh:update render_object:in" do
+function ms:component_init()
+	for e in w:select "INIT mesh:update" do
 		e.mesh = assetmgr.resource(e.mesh)
+	end
+end
+
+function ms:entity_init()
+	for e in w:select "INIT mesh:in render_object:in" do
 		local ro = e.render_object
 		ro.vb, ro.ib = create_rendermesh(e.mesh)
 	end
