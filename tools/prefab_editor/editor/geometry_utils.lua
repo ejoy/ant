@@ -2,6 +2,7 @@ local ecs = ...
 local world     = ecs.world
 local math3d  	= require "math3d"
 local bgfx 		= require "bgfx"
+local ientity 	= ecs.import.interface "ant.render|entity"
 local ies 		= ecs.import.interface "ant.scene|ientity_state"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local geopkg 	= import_package "ant.geometry"
@@ -23,27 +24,6 @@ local function create_dynamic_mesh(layout, vb, ib)
 	}
 end
 
-local function create_simple_render_entity(srt, material, name, mesh, color, visible, state)
-	return ecs.create_entity {
-		policy = {
-			"ant.render|render",
-			"ant.general|name",
-		},
-		data = {
-			reference	= true,
-			scene 		= {srt = srt or {}},
-			material	= material,
-			mesh		= mesh,
-			state		= state or ies.create_state "visible",
-			name		= name,-- or gen_test_name(),
-			on_ready	= function (e)
-				imaterial.set_property(e, "u_color", color)
-				ies.set_state(e, "visible", visible and visible or false)
-			end
-		}
-	}
-end
-
 function m.get_frustum_vb(points, color)
     local vb = {}
     for i=1, #points do
@@ -56,11 +36,7 @@ end
 
 local function do_create_entity(vb, ib, srt, name, color, hide)
 	local mesh = create_dynamic_mesh("p3|c40niu", vb, ib)
-	local visible = true
-	if hide then
-		visible = false
-	end
-	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line_color.material", name, mesh, color, visible)
+	return ientity.create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt, color, hide)
 end
 
 function m.create_dynamic_frustum(frustum_points, name, color)

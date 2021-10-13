@@ -23,6 +23,7 @@ local function find(t, eid)
     return nil
 end
 function hierarchy:add(ineid, tp, inpeid)
+    if self.all[ineid] then return end
     local node = { eid = ineid, parent = inpeid, template = utils.deep_copy(tp), children = {}, locked = {false}, visible = {true} }
     if inpeid then
         local parent = self.all[inpeid]

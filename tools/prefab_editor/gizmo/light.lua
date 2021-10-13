@@ -109,10 +109,7 @@ end
 local function create_directional_gizmo(initpos, introt)
     local root = create_gizmo_root(initpos, introt)
     local circle_eid = computil.create_circle_entity(RADIUS, SLICES, {}, "directional gizmo circle", gizmo_const.COLOR_GRAY, true)
-    --ies.set_state(circle_eid, "auxgeom", true)
-    --imaterial.set_property(circle_eid, "u_color", gizmo_const.COLOR_GRAY)
     ecs.method.set_parent(circle_eid, root)
-    --ies.set_state(circle_eid, "visible", false)
     local alleid = {}
     alleid[#alleid + 1] = circle_eid
     local radian_step = 2 * math.pi / SLICES
@@ -120,20 +117,11 @@ local function create_directional_gizmo(initpos, introt)
         local radian = radian_step * s
         local x, y = math.cos(radian) * RADIUS, math.sin(radian) * RADIUS
         local line_eid = computil.create_line_entity({}, {x, y, 0}, {x, y, LENGTH}, "", gizmo_const.COLOR_GRAY, true)
-        --ies.set_state(line_eid, "auxgeom", true)
-        --imaterial.set_property(line_eid, "u_color", gizmo_const.COLOR_GRAY)
         ecs.method.set_parent(line_eid, root)
         alleid[#alleid + 1] = line_eid
-        --ies.set_state(line_eid, "visible", false)
     end
     m.directional.root = root
     m.directional.eid = alleid
-end
-
-local function init_entity(eid, root)
-    -- imaterial.set_property(eid, "u_color", gizmo_const.COLOR_GRAY)
-    -- ies.set_state(eid, "auxgeom", true)
-    ecs.method.set_parent(eid, root)
 end
 
 local function update_circle_vb(eid, radian)
@@ -150,11 +138,11 @@ local function update_point_gizmo()
     
     if #m.point.eid == 0 then
         local c0 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {}, "light gizmo circle", gizmo_const.COLOR_GRAY, true)
-        init_entity(c0, root)
+        ecs.method.set_parent(c0, root)
         local c1 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {r = math3d.tovalue(math3d.quaternion{0, math.rad(90), 0})}, "light gizmo circle", gizmo_const.COLOR_GRAY, true)
-        init_entity(c1, root)
+        ecs.method.set_parent(c1, root)
         local c2 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})}, "light gizmo circle", gizmo_const.COLOR_GRAY, true)
-        init_entity(c2, root)
+        ecs.method.set_parent(c2, root)
         m.point.eid = {c0, c1, c2}
     else
         update_circle_vb(m.point.eid[1], radius)
@@ -174,31 +162,26 @@ local function update_spot_gizmo()
     if #m.spot.eid == 0 then
         local root = m.spot.root
         local c0 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {t = {0, 0, range}}, "light gizmo circle", gizmo_const.COLOR_GRAY, true)
-        init_entity(c0, root)
+        ecs.method.set_parent(c0, root)
         local line0 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {0, radius, range}, "line", gizmo_const.COLOR_GRAY, true)
-        init_entity(line0, root)
+        ecs.method.set_parent(line0, root)
         local line1 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {radius, 0, range}, "line", gizmo_const.COLOR_GRAY, true)
-        init_entity(line1, root)
+        ecs.method.set_parent(line1, root)
         local line2 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {0, -radius, range}, "line", gizmo_const.COLOR_GRAY, true)
-        init_entity(line2, root)
+        ecs.method.set_parent(line2, root)
         local line3 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {-radius, 0, range}, "line", gizmo_const.COLOR_GRAY, true)
-        init_entity(line3, root)
+        ecs.method.set_parent(line3, root)
         local line4 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {0, 0, range}, "line", gizmo_const.COLOR_GRAY, true)
-        init_entity(line4, root)
+        ecs.method.set_parent(line4, root)
         m.spot.eid = {line0, line1, line2, line3, line4, c0}
     else
         update_circle_vb(m.spot.eid[6], radius)
         iom.set_position(m.spot.eid[6], {0, 0, range})
 
         local function update_vb(eid, tp2)
-            local vb = {
-                0, 0, 0, 0xffffffff,
-                tp2[1], tp2[2], tp2[3], 0xffffffff,
-            }
             w:sync("render_object:in", eid)
-            local rc = eid.render_object
-            local vbdesc = rc.vb
-            bgfx.update(vbdesc.handles[1], 0, bgfx.memory_buffer("fffd", vb));
+            local vbdesc = eid.render_object.vb
+            bgfx.update(vbdesc.handles[1], 0, bgfx.memory_buffer("fffd", {0, 0, 0, 0xffffffff, tp2[1], tp2[2], tp2[3], 0xffffffff}));
         end
         update_vb(m.spot.eid[1], {0, radius, range})
         update_vb(m.spot.eid[2], {radius, 0, range})
@@ -241,16 +224,6 @@ function m.init()
     update_point_gizmo()
     m.spot.root = create_gizmo_root()
     update_spot_gizmo()
-
-    -- for i, eid in ipairs(m.directional.eid) do
-    --     ies.set_state(eid, "visible", false)
-    -- end
-    -- for i, eid in ipairs(m.point.eid) do
-    --     ies.set_state(eid, "visible", false)
-    -- end
-    -- for i, eid in ipairs(m.spot.eid) do
-    --     ies.set_state(eid, "visible", false)
-    -- end
     inited = true
 end
 

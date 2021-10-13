@@ -152,7 +152,7 @@ function ientity.create_grid_mesh_entity(name, w, h, size, color, materialpath)
 			reference	= true,
 			scene 		= {srt = {}},
 			material 	= materialpath,
-			state 		= "visible",
+			state 		= ies.create_state "visible",
 			name 		= name or "GridMesh",
 			simplemesh	= imesh.init_mesh(create_dynamic_mesh("p3|c40niu", vb, ib), true), --create_mesh({"p3|c40niu", vb}, ib)
 		},
@@ -238,7 +238,7 @@ function ientity.create_prim_plane_entity(srt, materialpath, color, name)
 			reference 	= true,
 			scene 		= { srt = srt or {}},
 			material 	= materialpath,
-			state 		= "visible",
+			state 		= ies.create_state "visible",
 			name 		= name or "Plane",
 			simplemesh 	= imesh.init_mesh(create_mesh({"p3|n3", plane_vb}, nil, math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))), true),
 			on_ready = function (e)
