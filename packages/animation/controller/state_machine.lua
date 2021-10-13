@@ -119,14 +119,14 @@ local state_machine_sys = ecs.system "state_machine_system"
 
 function state_machine_sys:animation_state()
 	local delta = timer.delta()
-	for _, eid in world:each "state_machine" do
-		local e = world[eid]
-		if e.state_machine.transmit_merge then
-			if e.state_machine.transmit_merge(delta) then
-				e.state_machine.transmit_merge = nil
-			end
-		end
-	end
+	--for _, eid in world:each "state_machine" do
+	--	local e = world[eid]
+	--	if e.state_machine.transmit_merge then
+	--		if e.state_machine.transmit_merge(delta) then
+	--			e.state_machine.transmit_merge = nil
+	--		end
+	--	end
+	--end
 end
 
 local iani = ecs.interface "animation"

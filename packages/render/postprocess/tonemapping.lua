@@ -30,7 +30,6 @@ function tm_sys:init()
             scene = {
                 srt = mu.srt_obj(),
             },
-            eid = world:register_entity(),
             render_object   = {},
             filter_material = {},
             state = 0,
