@@ -30,7 +30,7 @@
 #include "../Include/RmlUi/Context.h"
 #include "../Include/RmlUi/ElementText.h"
 #include "../Include/RmlUi/Factory.h"
-#include "../Include/RmlUi/StreamMemory.h"
+#include "../Include/RmlUi/Stream.h"
 #include "../Include/RmlUi/StyleSheet.h"
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/DataModelHandle.h"
@@ -39,7 +39,6 @@
 #include "../Include/RmlUi/Log.h"
 #include "ElementStyle.h"
 #include "EventDispatcher.h"
-#include "StreamFile.h"
 #include "StyleSheetFactory.h"
 #include "DataModel.h"
 #include "PluginRegistry.h"
@@ -175,8 +174,7 @@ public:
 	}
 	void LoadInlineStyle(const std::string& content, const std::string& source_path, int line) {
 		std::unique_ptr<StyleSheet> inline_sheet = std::make_unique<StyleSheet>();
-		auto stream = std::make_unique<StreamMemory>((const uint8_t*)content.data(), content.size());
-		stream->SetSourceURL(source_path);
+		auto stream = std::make_unique<Stream>(source_path, (const uint8_t*)content.data(), content.size());
 		if (inline_sheet->LoadStyleSheet(stream.get(), line)) {
 			if (m_style_sheet) {
 				std::shared_ptr<StyleSheet> combined_sheet = m_style_sheet->CombineStyleSheet(*inline_sheet);

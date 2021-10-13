@@ -188,6 +188,13 @@ FontEngine::FindOrAddFontResource(Rml::TextEffectsHandle font_effects_handle){
     return itfound->second;
 }
 
+// why 32768, which want to use vs_uifont.sc shader to render font
+// and vs_uifont.sc also use in runtime font render.
+// the runtime font renderer store vertex position in int16
+// when it pass to shader, it convert from int16, range from: [-32768, 32768], to [-1.0, 1.0]
+// why store in uint16 ? because bgfx not support ....
+#define MAGIC_FACTOR    32768.f
+
 int FontEngine::GenerateString(
     Rml::FontFaceHandle handle,
     Rml::TextEffectsHandle text_effects_handle,
@@ -210,7 +217,6 @@ int FontEngine::GenerateString(
 
     const Rml::Point fonttexel(1.f / mcontext->font_tex.width, 1.f / mcontext->font_tex.height);
 
-#define FIX_POINT 8
     int x = int(position.x + 0.5f), y = int(position.y + 0.5f);
     for (auto it_char = Rml::StringIteratorU8(string); it_char; ++it_char)
     {
@@ -224,7 +230,8 @@ int FontEngine::GenerateString(
         const int y0 = y + g.offset_y;
         const int16_t u0 = g.u;
         const int16_t v0 = g.v;
-        const float scale = FIX_POINT / 65536.f;
+
+        const float scale = FONT_POSTION_FIX_POINT / 32768.f;
         geometry.AddRect(
             { x0 * scale, y0 * scale, g.w * scale, g.h * scale },
             { u0 * fonttexel.x, v0 * fonttexel.y ,og.w * fonttexel.x , og.h * fonttexel.y },

@@ -7,5 +7,6 @@ return {
         "ant.inputmgr",
         "ant.luaecs",
         "ant.render",
+        "ant.settings",
     }
 }

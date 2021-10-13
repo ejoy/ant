@@ -3,7 +3,7 @@ local math3d = require "math3d"
 local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
 
-local HOMOGENEOUS_DEPTH, ORIGIN_BOTTOM_LEFT = math3d.homogeneous_depth, math3d.origin_bottom_left
+local HOMOGENEOUS_DEPTH, ORIGIN_BOTTOM_LEFT = math3d.get_homogeneous_depth(), math3d.get_origin_bottom_left()
 
 local function line_zplane_intersection(A, B, zDistance)
     local pn = math3d.vector(0.0, 0.0, 1.0)

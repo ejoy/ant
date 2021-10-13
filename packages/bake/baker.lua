@@ -135,7 +135,6 @@ local function create_downsample()
             },
             data = {
                 name = "tag",
-                eid = world:deprecated_create_entity{policy = {"ant.general|debug_TEST"}, data = {}},
                 mesh = ientity.create_mesh{"p1", {0, 0, 0, 0}},
                 material = material,
                 scene = {

@@ -50,9 +50,10 @@ void File::Close(Rml::FileHandle file) {
 size_t File::Read(void* buffer, size_t size, Rml::FileHandle file) {
     return fread(buffer, 1, size, (FILE*)file);
 }
-bool File::Seek(Rml::FileHandle file, long offset, int origin) {
-    return fseek((FILE*)file, offset, origin) == 0;
-}
-size_t File::Tell(Rml::FileHandle file) {
-    return ftell((FILE*)file);
+size_t File::Length(Rml::FileHandle file) {
+    auto current_position = ftell((FILE*)file);
+    fseek((FILE*)file, 0, SEEK_END);
+    auto length = ftell((FILE*)file);
+    fseek((FILE*)file, current_position, SEEK_SET);
+    return length;
 }

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "render.h"
+#define BGFX_INTERFACE_IMPORT
 #include "../bgfx/bgfx_interface.h"
 
 #include <RmlUi/Core.h>
@@ -212,9 +213,7 @@ bool Renderer::LoadTexture(Rml::TextureHandle& handle, Rml::Size& dimensions, co
 	if (!fh)
 		return false;
 	
-	ifile->Seek(fh, 0, SEEK_END);
-	const size_t bufsize = ifile->Tell(fh);
-	ifile->Seek(fh, 0, SEEK_SET);
+	const size_t bufsize = ifile->Length(fh);
 	
     const bgfx_memory_t *mem = BGFX(alloc)((uint32_t)bufsize);
 	ifile->Read(mem->data, bufsize, fh);

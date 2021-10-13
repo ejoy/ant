@@ -7,16 +7,6 @@ local math3d    = require "math3d"
 local mc        = import_package "ant.math".constant
 local defcomp 	= import_package "ant.general".default
 
-local cmm = ecs.transform "camera_motion_transform"
-
-function cmm.process_entity(e)
-    local rc = e._rendercache
-    local f = {}
-    for k, v in pairs(e.frustum) do f[k] = v end
-    rc.frustum = f
-    rc.updir = math3d.ref(e.updir and math3d.vector(e.updir) or mc.YAXIS)
-end
-
 local ic = ecs.interface "camera"
 
 local function find_camera(camera_ref)
@@ -182,33 +172,6 @@ function ic.focus_obj(camera_ref, eid)
     end
 end
 
-function ic.set_dof_focus_obj(eid, focus_eid)
-    assert(false, "not implement new ecs camera")
-    -- local dof = world[eid]._dof
-    -- dof.focus_eid = focus_eid
-    -- world:pub{"component_changed", "dof", focus_eid, "focus_entity",}
-end
-
-local function set_dof(e, dof)
-    e._dof = {
-        aperture_fstop      = dof.aperture_fstop,
-        aperture_blades     = dof.aperture_blades,
-        aperture_rotation   = dof.aperture_rotation,
-        aperture_ratio      = dof.aperture_ratio,
-        sensor_size         = dof.sensor_size,
-        focus_distance      = dof.focus_distance,
-        focal_len           = dof.focal_len,
-        focuseid            = dof.focuseid,
-        enable              = dof.enable,
-    }
-end
-
-function ic.set_dof(eid, dof)
-    assert(false, "not implement new ecs camera")
-    -- set_dof(world[eid], dof)
-    -- world:pub{"component_changed", "dof", eid,}
-end
-
 local cameraview_sys = ecs.system "camera_view_system"
 
 local function update_camera(camera_ref)
@@ -232,17 +195,4 @@ function cameraview_sys:update_mainview_camera()
     for v in w:select "blit_queue camera_ref:in" do
         update_camera(v.camera_ref)
     end
-end
-
-local dof_trans = ecs.transform "dof_transform"
-function dof_trans.process_entity(e)
-    local dof = e.dof
-    set_dof(e, dof)
-end
-
-local dof_focus = ecs.action "dof_focus_obj"
-function dof_focus:init(prefab, idx, value)
-    local eid = prefab[idx]
-    local focuseid = prefab[value]
-    ic.focus_obj(eid, focuseid)
 end

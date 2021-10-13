@@ -6,7 +6,6 @@ local ecs       = import_package "ant.luaecs"
 local rhwi      = import_package "ant.hwi"
 local cr        = import_package "ant.compile_resource"
 local setting	= import_package "ant.settings".setting
-local platform  = require "platform"
 
 local bgfx      = require "bgfx"
 local ServiceBgfxMain = ltask.queryservice "ant.render|bgfx_main"

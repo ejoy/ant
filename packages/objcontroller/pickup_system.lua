@@ -25,25 +25,24 @@ local function packeid_as_rgba(eid)
             ((eid & 0xff000000) >> 24) / 0xff}    -- rgba
 end
 
-local uid_cache = {}
-local function get_properties(eid, fx)
-	local p = uid_cache[eid]
-	if p then
-		return p
-	end
-	local v = math3d.ref(math3d.vector(packeid_as_rgba(eid)))
+local max_pickupid = 0
+local function genid()
+	max_pickupid = max_pickupid + 1
+	return max_pickupid
+end
+
+local function get_properties(id, fx)
+	local v = math3d.ref(math3d.vector(packeid_as_rgba(id)))
 	local u = fx.uniforms[1]
 	assert(u.name == "u_id")
-	p = {
+	return {
 		u_id = {
 			value = v,
 			handle = u.handle,
 			type = u.type,
 			set = imaterial.property_set_func "u"
-		},
+		}
 	}
-	uid_cache[eid] = p
-	return p
 end
 
 local function update_camera(pu_camera_ref, clickpt)
@@ -76,25 +75,25 @@ local function which_entity_hitted(blitdata, viewrect, elemsize)
 	assert(elemsize == 4)
 	local step = w * 4
 
-	local function found_eid(pt)
+	local function found_id(pt)
 		local x, y = pt[1], pt[2]
 		if  0 < x and x <= w and
 			0 < y and y <= h then
 
 			local offset = (pt[1]-1)*step+(pt[2]-1)*elemsize
-			local feid = blitdata[offset+1]|
+			local id = blitdata[offset+1]|
 						blitdata[offset+2] << 8|
 						blitdata[offset+3] << 16|
 						blitdata[offset+4] << 24
-			if feid ~= 0 and world[feid] then
-				return feid
+			if id ~= 0 then
+				return id
 			end
 		end
 	end
 
-	local feid = found_eid(center)
-	if feid then
-		return feid
+	local id = found_id(center)
+	if id then
+		return id
 	end
 
 	local radius = 1
@@ -107,10 +106,10 @@ local function which_entity_hitted(blitdata, viewrect, elemsize)
 			local dir = directions[i]
 
 			local range = radius * 2 + 1
-			for j=1, range-1 do	
-				feid = found_eid(pt)
-				if feid then
-					return feid
+			for j=1, range-1 do
+				id = found_id(pt)
+				if id then
+					return id
 				end
 
 				pt[1] = pt[1] + dir[1]
@@ -280,16 +279,27 @@ local function blit(blit_buffer, render_target)
 	return bgfx.read_texture(rbhandle, blit_buffer.handle)
 end
 
+local function find_pickup_entity(id)
+	for e in w:select "render_object:in" do
+		if e.render_object.pickupid == id then
+			return e
+		end
+	end
+end
+
 local function select_obj(blit_buffer, render_target)
 	local viewrect = render_target.view_rect
 	local selecteid = which_entity_hitted(blit_buffer.handle, viewrect, blit_buffer.elemsize)
 	if selecteid then
-		log.info("pick entity id: ", selecteid)
-		world:pub {"pickup", selecteid}
-	else
-		log.info("not found any eid")
-		world:pub {"pickup"}
+		local e = find_pickup_entity(selecteid)
+		if e then
+			log.info("pick entity id: ", selecteid)
+			world:pub {"pickup", e}
+			return
+		end
 	end
+	log.info("not found any eid")
+	world:pub {"pickup"}
 end
 
 local state_list = {
@@ -316,21 +326,24 @@ function pickup_sys:pickup()
 end
 
 function pickup_sys:end_filter()
-	for e in w:select "filter_result:in render_object:in eid:in filter_material:out" do
-		local eid = e.eid
+	for e in w:select "filter_result:in render_object:in filter_material:out" do
 		local fr = e.filter_result
 		local st = e.render_object.fx.setting.surfacetype
 		local fm = e.filter_material
 		local qe = w:singleton("pickup_queue", "primitive_filter:in")
 		for _, fn in ipairs(qe.primitive_filter) do
-			if fr[fn] then
+			if fr[fn] == true then
 				local m = assert(pickup_materials[st])
 				local state = e.render_object.state
+				local id = genid()
+				e.render_object.pickupid = id
 				fm[fn] = {
 					fx			= m.fx,
-					properties	= get_properties(eid, m.fx),
+					properties	= get_properties(id, m.fx),
 					state		= irender.check_primitive_mode_state(state, m.state),
 				}
+			elseif fr[fn] == false then
+				fm[fn] = nil
 			end
 		end
 	end

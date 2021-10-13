@@ -8,10 +8,6 @@ local function create_world()
         height = 0,
     }
     cr.set_identity "windows_direct3d11"
-    assert(loadfile "/pkg/ant.prefab/prefab_system.lua")({world = world})
-    function world:create_entity_template(v)
-        return v
-    end
     return world
 end
 

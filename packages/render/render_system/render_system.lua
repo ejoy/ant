@@ -37,10 +37,8 @@ function render_sys:entity_init()
 		pf._DEBUG_excule_type = pf.excule_type
 		pf.excule_type = pf.excule_type and ies.create_state(pf.excule_type) or 0
 	end
-end
 
-function render_sys:entity_ready()
-	for e in w:select "material_result:in render_object:in" do
+	for e in w:select "INIT material_result:in render_object:in" do
 		local ro = e.render_object
 		local mr = e.material_result
 		ro.fx			= mr.fx
@@ -76,13 +74,21 @@ function render_sys:update_filter()
 
 			local pf = qe.primitive_filter
 			if has_filter_tag(tag, pf) then
-				local synctag = tag .. "?out"
+				w:sync(tag .. "?in", e)
 				local add = ((state & pf.filter_type) ~= 0) and ((state & pf.excule_type) == 0)
-				e[tag] = add
 				if add then
-					filter_result[tag] = true
+					if not e[tag] then
+						filter_result[tag] = add
+						e[tag] = add
+						w:sync(tag .. "?out", e)
+					end
+				else
+					if e[tag] then
+						filter_result[tag] = add
+						e[tag] = add
+						w:sync(tag .. "?out", e)
+					end
 				end
-				w:sync(synctag, e)
 			end
 		end
 		e.filter_result = filter_result

@@ -21,18 +21,6 @@ effekseer.update_transform = math3d_adapter.matrix(effekseer.update_transform, 3
 local effekseer_sys = ecs.system "effekseer_system"
 local time_callback
 
-local ie_t = ecs.transform "instance_effect"
-
-function ie_t.process_entity(e)
-    e.effect_instance = {
-        handle 		= effekseer.create(e.effekseer.rawdata, e.effekseer.filename),
-        playid      = -1,
-        speed 		= e.speed,
-        auto_play 	= e.auto_play,
-        loop 		= e.loop
-    }
-end
-
 local shader_type = {
     "unlit", "lit", "distortion", "ad_unlit", "ad_lit", "ad_distortion", "mtl"
 }
@@ -95,6 +83,21 @@ function effekseer_sys:init()
     effekseer.set_path_converter(filemgr.realpath)
 end
 
+function effekseer_sys:entity_init()
+    for e in w:select "INIT effekseer:in effect_instance:out" do
+        if type(e.effekseer) == "string" then
+            local eff_asset = assetmgr.resource(e.effekseer)
+            e.effect_instance = {
+                handle 		= effekseer.create(eff_asset.rawdata, eff_asset.filename),
+                playid      = -1,
+                speed 		= e.speed or 1.0,
+                auto_play 	= e.auto_play or false,
+                loop 		= e.loop or false
+            }
+        end
+    end
+end
+
 local imgr = ecs.interface "filename_mgr"
 
 function imgr.add_path(path)
@@ -104,33 +107,38 @@ end
 
 local iplay = ecs.interface "effekseer_playback"
 
+local function get_effect_instance(eid)
+    w:sync("effect_instance?in", eid)
+    return eid.effect_instance
+end
 function iplay.play(eid, loop)
-    local instance = world[eid].effect_instance
+    local instance = get_effect_instance(eid)
     --if effekseer.is_playing(instance.handle, instance.playid) then return end
     world:pub {"play_effect", instance, loop or false}
 end
 
 function iplay.destroy(eid)
-    effekseer.destroy(eid > 0 and world[eid].effect_instance.handle or eid)
+    local instance = get_effect_instance(eid)
+    effekseer.destroy(eid > 0 and instance.handle or eid)
 end
 
 function iplay.stop(eid)
-    local instance = world[eid].effect_instance
+    local instance = get_effect_instance(eid)
     effekseer.stop(instance.handle, instance.playid)
 end
 
 function iplay.is_playing(eid)
-    local instance = world[eid].effect_instance
+    local instance = get_effect_instance(eid)
     return effekseer.is_playing(instance.handle, instance.playid)
 end
 
 function iplay.pause(eid, b)
-    local instance = world[eid].effect_instance
+    local instance = get_effect_instance(eid)
     effekseer.pause(instance.handle, instance.playid, b)
 end
 
 function iplay.set_time(eid, second, should_exist)
-    local instance = world[eid].effect_instance
+    local instance = get_effect_instance(eid)
     local frame = math.floor(second * 60)
     local newid = effekseer.set_time(instance.handle, instance.playid, frame, should_exist)
     if instance.playid ~= newid then
@@ -139,8 +147,8 @@ function iplay.set_time(eid, second, should_exist)
 end
 
 function iplay.set_speed(eid, speed)
-    local instance = world[eid].effect_instance
-    world[eid].speed = speed
+    local instance = get_effect_instance(eid)
+    instance.speed = speed
     effekseer.set_speed(instance.handle, instance.playid, speed)
 end
 
@@ -182,11 +190,13 @@ function effekseer_sys:render_submit()
 end
 
 function effekseer_sys:follow_transform_updated()
-    for _, eid in event_entity_register:unpack() do 
-        local effect = world[eid].effekseer and world[eid].effect_instance or nil
-        if effect then
-            if effect.auto_play then
-                world:pub {"play_effect", effect}
+    for _, eid in event_entity_register:unpack() do
+        for e in w:select "effekseer:in effect_instance:in" do
+            --local effect = world[eid].effekseer and world[eid].effect_instance or nil
+            if e.effect_instance then
+                if e.effect_instance.auto_play then
+                    world:pub {"play_effect", e.effect_instance}
+                end
             end
         end
     end
@@ -207,12 +217,9 @@ function effekseer_sys:follow_transform_updated()
     end
 end
 
-function effekseer_sys:end_frame()
-    for _, eid in world:each "removed" do
-        local e = world[eid]
-        if e.effekseer and e.effect_instance then
-            effekseer.stop(e.effect_instance.handle, e.effect_instance.playid)
-        end
+function effekseer_sys:entity_remove()
+    for e in w:select "REMOVED effekseer:in effect_instance:in" do
+        effekseer.stop(e.effect_instance.handle, e.effect_instance.playid)
     end
 end
 

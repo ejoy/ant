@@ -64,8 +64,8 @@ function m.update_template_tranform(eid)
         s = {math3d.index(s, 1, 2, 3)},
         t = {math3d.index(t, 1, 2, 3)},
     }
-
-    if world[eid].collider then
+    w:sync("collider?in", eid)
+    if eid.collider then
         anim_view.record_collision(eid)
     end
 end
@@ -262,22 +262,49 @@ local function update_current()
     if current_eid == gizmo.target_eid then return end
     current_eid = gizmo.target_eid
     if current_eid then
-        local e = type(current_eid) == "table" and icamera.find_camera(current_eid) or world[current_eid]
+        local e = current_eid
+        current_panel = nil
+        w:sync("collider?in", e)
         if e.collider then
             current_panel = get_collider_panel()
-        elseif e.frustum then
-            current_panel = get_camera_panel()
-        elseif e.light_type then
-            current_panel = get_light_panel()
-        elseif e.slot then
-            current_panel = get_slot_panel()
-        elseif e.effekseer then
-            current_panel = get_effect_panel()
-        elseif e.skybox then
-            current_panel = get_skybox_panel()
-        elseif e.material then
-            current_panel = get_material_panel()
-        else
+        end
+        if not current_panel then
+            w:sync("camera?in", e)
+            if e.camera then
+                current_panel = get_camera_panel()
+            end
+        end
+        if not current_panel then
+            w:sync("effekseer?in", e)
+            if e.effekseer then
+                current_panel = get_effect_panel()
+            end
+        end
+        if not current_panel then
+            w:sync("light?in", e)
+            if e.light then
+                current_panel = get_light_panel()
+            end
+        end
+        if not current_panel then
+            w:sync("slot?in", e)
+            if e.slot then
+                current_panel = get_slot_panel()
+            end
+        end
+        if not current_panel then
+            w:sync("skybox?in", e)
+            if e.skybox then
+                current_panel = get_skybox_panel()
+            end
+        end
+        -- if not current_panel then
+        --     w:sync("material?in", e)
+        --     if e.material then
+        --         current_panel = get_material_panel()
+        --     end
+        -- end
+        if not current_panel then
             current_panel = get_base_panel()
         end
         if current_panel.set_model then

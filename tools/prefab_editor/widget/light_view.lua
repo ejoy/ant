@@ -68,20 +68,24 @@ function LightView:_init()
     self.light_property= uiproperty.Group({label = "Light"}, {})
 end
 
-function LightView:set_model(eid)
-    if not BaseView.set_model(self, eid) then return false end
+function LightView:set_model(e)
+    if not BaseView.set_model(self, e) then return false end
 
     local subproperty = {}
     subproperty[#subproperty + 1] = self.subproperty.color
     subproperty[#subproperty + 1] = self.subproperty.intensity
+
     subproperty[#subproperty + 1] = self.subproperty.motion_type
     subproperty[#subproperty + 1] = self.subproperty.make_shadow
     subproperty[#subproperty + 1] = self.subproperty.bake
     subproperty[#subproperty + 1] = self.subproperty.angular_radius
-    
-    if world[eid].light_type ~= "directional" then
+
+    if not e.light then
+        w:sync("light:in", e)
+    end
+    if e.light.light_type ~= "directional" then
         subproperty[#subproperty + 1] = self.subproperty.range
-        if world[eid].light_type == "spot" then
+        if e.light.light_type == "spot" then
             subproperty[#subproperty + 1] = self.subproperty.inner_radian
             subproperty[#subproperty + 1] = self.subproperty.outter_radian
         end
@@ -162,7 +166,10 @@ function LightView:show()
 end
 
 function LightView:has_rotate()
-    return world[self.eid].light_type ~= "point"
+    if not self.eid.light then
+        w:sync("light:in", self.eid)
+    end
+    return self.eid.light.light_type ~= "point"
 end
 
 function LightView:has_scale()

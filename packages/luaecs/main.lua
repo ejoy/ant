@@ -64,17 +64,51 @@ function world:create_entity(v)
     return self:_create_entity(nil, v)
 end
 
+local function table_append(t, a)
+	table.move(a, 1, #a, #t+1, t)
+end
+local table_insert = table.insert
+
 local function create_instance(w, prefab)
-	local res = {}
-    local _ = prefab[1]
-	for k, v in pairs(prefab) do
-		if v.prefab then
-			res[k] = create_instance(w, v.prefab)
-		else
-			res[k] = create_entity(w, v.template)
-		end
-	end
-	return res
+    local entities = {}
+    local mounts = {}
+    local noparent = {}
+    for i = 1, #prefab do
+        local v = prefab[i]
+        local np
+        if v.prefab then
+            entities[i], np = create_instance(w, v.prefab)
+        else
+            local e = create_entity(w, v.template)
+            entities[i], np = e, e
+        end
+        if v.mount then
+            assert(
+                math.type(v.mount) == "integer"
+                and v.mount >= 1
+                and v.mount <= #prefab
+                and not prefab[v.mount].prefab
+            )
+            mounts[i] = np
+        else
+            if v.prefab then
+                table_append(noparent, np)
+            else
+                table_insert(noparent, np)
+            end
+        end
+    end
+    for i = 1, #prefab do
+        local v = prefab[i]
+        if v.mount then
+            if v.prefab then
+                w:multicast(mounts[i], "set_parent", entities[v.mount])
+            else
+                w:call(mounts[i], "set_parent", entities[v.mount])
+            end
+        end
+    end
+    return entities, noparent
 end
 
 local function create_entity_template(w, package, detach, v)
@@ -94,6 +128,7 @@ local function create_entity_template(w, package, detach, v)
     data.reference = detach == nil
     return {
         action = v.action,
+        mount = v.mount,
         template = data,
         tag = v.tag,
     }
@@ -104,7 +139,7 @@ local function create_template(w, package, detach, t)
 	for _, v in ipairs(t) do
 		if v.prefab then
 			prefab[#prefab+1] = {
-                prefab = assetmgr.resource(v[1], { create_template = function (_,...) return create_template(w,package,detach,...) end }),
+                prefab = assetmgr.resource(v.prefab, { create_template = function (_,...) return create_template(w,package,detach,...) end }),
 				args = v.args,
 			}
 		else
@@ -116,8 +151,13 @@ end
 
 local function run_action(w, entities, template)
     for i, entity in ipairs(template) do
-        if entity.action then
+        if entity.prefab then
+            run_action(w, entities[i], entity.prefab)
+        elseif entity.action then
             for name, target in sortpairs(entity.action) do
+                if target:match "@(%d*)" then
+                    target = entities[tonumber(target:sub(2))]
+                end
                 w:call(entities[i], name, target)
             end
         end
@@ -234,12 +274,12 @@ function world:_create_instance(package, filename, options)
     local detach = options and options.detach
     local template = assetmgr.resource(filename, { create_template = function (_,...) return create_template(w, package, detach, ...) end })
     local root = create_scene_entity(w)
-    local entities = create_instance(w, template)
-    w:multicast(entities, "set_parent", root)
-    run_action(w, entities, template)
+    local prefab, noparent = create_instance(w, template)
+    w:multicast(noparent, "set_parent", root)
+    run_action(w, prefab, template)
     return {
         root = root,
-        tag = create_tags(entities, template)
+        tag = create_tags(prefab, template)
     }
 end
 

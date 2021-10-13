@@ -29,12 +29,11 @@
 #include "StyleSheetParser.h"
 #include "StyleSheetFactory.h"
 #include "StyleSheetNode.h"
-#include "../Include/RmlUi/Math.h"
 #include "../Include/RmlUi/Factory.h"
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/PropertySpecification.h"
-#include "../Include/RmlUi/StreamMemory.h"
+#include "../Include/RmlUi/Stream.h"
 #include "../Include/RmlUi/StyleSheet.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/StringUtilities.h"
@@ -73,7 +72,6 @@ StyleSheetParser::StyleSheetParser()
 {
 	line_number = 0;
 	stream = nullptr;
-	parse_buffer_pos = 0;
 }
 
 StyleSheetParser::~StyleSheetParser()
@@ -134,7 +132,7 @@ bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const std
 {
 	if (!IsValidIdentifier(identifier))
 	{
-		Log::Message(Log::Level::Warning, "Invalid keyframes identifier '%s' at %s:%d", identifier.c_str(), stream_file_name.c_str(), line_number);
+		Log::Message(Log::Level::Warning, "Invalid keyframes identifier '%s' at %s:%d", identifier.c_str(), stream->GetSourceURL().c_str(), line_number);
 		return false;
 	}
 	if (properties.GetNumProperties() == 0)
@@ -162,7 +160,7 @@ bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const std
 
 	if (rule_values.empty())
 	{
-		Log::Message(Log::Level::Warning, "Invalid keyframes rule(s) '%s' at %s:%d", rules.c_str(), stream_file_name.c_str(), line_number);
+		Log::Message(Log::Level::Warning, "Invalid keyframes rule(s) '%s' at %s:%d", rules.c_str(), stream->GetSourceURL().c_str(), line_number);
 		return false;
 	}
 
@@ -181,7 +179,6 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 	int rule_count = 0;
 	line_number = begin_line_number;
 	stream = _stream;
-	stream_file_name = stream->GetSourceURL();
 
 	enum class State { Global, AtRuleIdentifier, KeyframeBlock, Invalid };
 	State state = State::Global;
@@ -190,7 +187,7 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 	std::string at_rule_name;
 
 	// Look for more styles while data is available
-	while (FillBuffer())
+	do
 	{
 		std::string pre_token_str;
 		
@@ -225,7 +222,7 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 				}
 				else
 				{
-					Log::Message(Log::Level::Warning, "Invalid character '%c' found while parsing stylesheet at %s:%d. Trying to proceed.", token, stream_file_name.c_str(), line_number);
+					Log::Message(Log::Level::Warning, "Invalid character '%c' found while parsing stylesheet at %s:%d. Trying to proceed.", token, stream->GetSourceURL().c_str(), line_number);
 				}
 			}
 			break;
@@ -245,13 +242,13 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 						// Invalid identifier, should ignore
 						at_rule_name.clear();
 						state = State::Global;
-						Log::Message(Log::Level::Warning, "Invalid at-rule identifier '%s' found in stylesheet at %s:%d", at_rule_identifier.c_str(), stream_file_name.c_str(), line_number);
+						Log::Message(Log::Level::Warning, "Invalid at-rule identifier '%s' found in stylesheet at %s:%d", at_rule_identifier.c_str(), stream->GetSourceURL().c_str(), line_number);
 					}
 
 				}
 				else
 				{
-					Log::Message(Log::Level::Warning, "Invalid character '%c' found while parsing at-rule identifier in stylesheet at %s:%d", token, stream_file_name.c_str(), line_number);
+					Log::Message(Log::Level::Warning, "Invalid character '%c' found while parsing at-rule identifier in stylesheet at %s:%d", token, stream->GetSourceURL().c_str(), line_number);
 					state = State::Invalid;
 				}
 			}
@@ -276,7 +273,7 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 				}
 				else
 				{
-					Log::Message(Log::Level::Warning, "Invalid character '%c' found while parsing keyframe block in stylesheet at %s:%d", token, stream_file_name.c_str(), line_number);
+					Log::Message(Log::Level::Warning, "Invalid character '%c' found while parsing keyframe block in stylesheet at %s:%d", token, stream->GetSourceURL().c_str(), line_number);
 					state = State::Invalid;
 				}
 			}
@@ -293,7 +290,8 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 
 		if (state == State::Invalid)
 			break;
-	}	
+	}
+	while(false);
 
 	PostprocessKeyframes(keyframes);
 
@@ -303,7 +301,7 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 bool StyleSheetParser::ParseProperties(PropertyDictionary& parsed_properties, const std::string& properties)
 {
 	RMLUI_ASSERT(!stream);
-	StreamMemory stream_owner((const uint8_t*)properties.c_str(), properties.size());
+	Stream stream_owner("<unknown>", (const uint8_t*)properties.c_str(), properties.size());
 	stream = &stream_owner;
 	PropertySpecificationParser parser(parsed_properties, StyleSheetSpecification::GetPropertySpecification());
 	bool success = ReadProperties(parser);
@@ -343,7 +341,7 @@ bool StyleSheetParser::ReadProperties(AbstractPropertyParser& property_parser)
 	char previous_character = 0;
 	while (ReadCharacter(character))
 	{
-		parse_buffer_pos++;
+		stream->Next();
 
 		switch (state)
 		{
@@ -354,7 +352,7 @@ bool StyleSheetParser::ReadProperties(AbstractPropertyParser& property_parser)
 					name = StringUtilities::StripWhitespace(name);
 					if (!name.empty())
 					{
-						Log::Message(Log::Level::Warning, "Found name with no value while parsing property declaration '%s' at %s:%d", name.c_str(), stream_file_name.c_str(), line_number);
+						Log::Message(Log::Level::Warning, "Found name with no value while parsing property declaration '%s' at %s:%d", name.c_str(), stream->GetSourceURL().c_str(), line_number);
 						name.clear();
 					}
 				}
@@ -362,7 +360,7 @@ bool StyleSheetParser::ReadProperties(AbstractPropertyParser& property_parser)
 				{
 					name = StringUtilities::StripWhitespace(name);
 					if (!name.empty())
-						Log::Message(Log::Level::Warning, "End of rule encountered while parsing property declaration '%s' at %s:%d", name.c_str(), stream_file_name.c_str(), line_number);
+						Log::Message(Log::Level::Warning, "End of rule encountered while parsing property declaration '%s' at %s:%d", name.c_str(), stream->GetSourceURL().c_str(), line_number);
 					return true;
 				}
 				else if (character == ':')
@@ -382,7 +380,7 @@ bool StyleSheetParser::ReadProperties(AbstractPropertyParser& property_parser)
 					value = StringUtilities::StripWhitespace(value);
 
 					if (!property_parser.Parse(name, value))
-						Log::Message(Log::Level::Warning, "Syntax error parsing property declaration '%s: %s;' in %s: %d.", name.c_str(), value.c_str(), stream_file_name.c_str(), line_number);
+						Log::Message(Log::Level::Warning, "Syntax error parsing property declaration '%s: %s;' in %s: %d.", name.c_str(), value.c_str(), stream->GetSourceURL().c_str(), line_number);
 
 					name.clear();
 					value.clear();
@@ -420,11 +418,11 @@ bool StyleSheetParser::ReadProperties(AbstractPropertyParser& property_parser)
 		value = StringUtilities::StripWhitespace(value);
 
 		if (!property_parser.Parse(name, value))
-			Log::Message(Log::Level::Warning, "Syntax error parsing property declaration '%s: %s;' in %s: %d.", name.c_str(), value.c_str(), stream_file_name.c_str(), line_number);
+			Log::Message(Log::Level::Warning, "Syntax error parsing property declaration '%s: %s;' in %s: %d.", name.c_str(), value.c_str(), stream->GetSourceURL().c_str(), line_number);
 	}
 	else if (!name.empty() || !value.empty())
 	{
-		Log::Message(Log::Level::Warning, "Invalid property declaration '%s':'%s' at %s:%d", name.c_str(), value.c_str(), stream_file_name.c_str(), line_number);
+		Log::Message(Log::Level::Warning, "Invalid property declaration '%s':'%s' at %s:%d", name.c_str(), value.c_str(), stream->GetSourceURL().c_str(), line_number);
 	}
 	
 	return true;
@@ -540,13 +538,13 @@ char StyleSheetParser::FindToken(std::string& buffer, const char* tokens, bool r
 		if (strchr(tokens, character) != nullptr)
 		{
 			if (remove_token)
-				parse_buffer_pos++;
+				stream->Next();
 			return character;
 		}
 		else
 		{
 			buffer += character;
-			parse_buffer_pos++;
+			stream->Next();
 		}
 	}
 
@@ -562,51 +560,43 @@ bool StyleSheetParser::ReadCharacter(char& buffer)
 	// stream or we find the requested token
 	do
 	{
-		while (parse_buffer_pos < parse_buffer.size())
+		while (!stream->End())
 		{
-			if (parse_buffer[parse_buffer_pos] == '\n')
+			if (stream->Peek() == '\n')
 				line_number++;
 			else if (comment)
 			{
 				// Check for closing comment
-				if (parse_buffer[parse_buffer_pos] == '*')
+				if (stream->Peek() == '*')
 				{
-					parse_buffer_pos++;
-					if (parse_buffer_pos >= parse_buffer.size())
+					stream->Next();
+					if (stream->End())
 					{
-						if (!FillBuffer())
-							return false;
+						return false;
 					}
 
-					if (parse_buffer[parse_buffer_pos] == '/')
+					if (stream->Peek() == '/')
 						comment = false;
 				}
 			}
 			else
 			{
 				// Check for an opening comment
-				if (parse_buffer[parse_buffer_pos] == '/')
+				if (stream->Peek() == '/')
 				{
-					parse_buffer_pos++;
-					if (parse_buffer_pos >= parse_buffer.size())
+					stream->Next();
+					if (stream->End())
 					{
-						if (!FillBuffer())
-						{
-							buffer = '/';
-							parse_buffer = "/";
-							return true;
-						}
+						buffer = '/';
+						return true;
 					}
 					
-					if (parse_buffer[parse_buffer_pos] == '*')
+					if (stream->Peek() == '*')
 						comment = true;
 					else
 					{
 						buffer = '/';
-						if (parse_buffer_pos == 0)
-							parse_buffer.insert(parse_buffer_pos, 1, '/');
-						else
-							parse_buffer_pos--;
+						stream->Undo();
 						return true;
 					}
 				}
@@ -614,33 +604,17 @@ bool StyleSheetParser::ReadCharacter(char& buffer)
 				if (!comment)
 				{
 					// If we find a character, return it
-					buffer = parse_buffer[parse_buffer_pos];
+					buffer = stream->Peek();
 					return true;
 				}
 			}
 
-			parse_buffer_pos++;
+			stream->Next();
 		}
 	}
-	while (FillBuffer());
+	while (false);
 
 	return false;
-}
-
-// Fills the internal buffer with more content
-bool StyleSheetParser::FillBuffer()
-{
-	// If theres no data to process, abort
-	if (stream->IsEOS())
-		return false;
-
-	// Read in some data (4092 instead of 4096 to avoid the buffer growing when we have to add back
-	// a character after a failed comment parse.)
-	parse_buffer.clear();
-	bool read = stream->Read(parse_buffer, 4092) > 0;
-	parse_buffer_pos = 0;
-
-	return read;
 }
 
 } // namespace Rml

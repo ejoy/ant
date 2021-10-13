@@ -1,6 +1,6 @@
-local ecs = ...
+local ecs 	= ...
 local world = ecs.world
-local w = world.w
+local w 	= world.w
 
 local mathpkg 	= import_package "ant.math"
 local mu 		= mathpkg.util
@@ -11,6 +11,7 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 local ientity 	= ecs.import.interface "ant.render|entity"
 local irq		= ecs.import.interface "ant.render|irenderqueue"
 local irender	= ecs.import.interface "ant.render|irender"
+local imesh		= ecs.import.interface "ant.asset|imesh"
 
 local blit_sys 	= ecs.system "blit_system"
 
@@ -20,19 +21,16 @@ function blit_sys:init()
 	ecs.create_entity {
 		policy = {
 			"ant.general|name",
-			"ant.render|render",
+			"ant.render|simplerender",
 		},
 		data = {
 			scene = {
 				srt = mu.srt_obj(),
 			},
-			eid             = world:register_entity(),
-			render_object   = {},
-			filter_material = {},
 			material        = "/pkg/ant.resources/materials/fullscreen.material",
 			state           = 0,
 			name            = "resolve_quad",
-			mesh            = ientity.fullquad_mesh(),
+			simplemesh      = imesh.init_mesh(ientity.fullquad_mesh(), true),
 			blit_obj		= true,
 		}
 	}

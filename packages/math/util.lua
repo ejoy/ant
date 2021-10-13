@@ -66,7 +66,7 @@ function util.pt2D_to_NDC(pt2d, rt)
 	local x, y = rt.x or 0, rt.y or 0
 	local vp_pt2d = {pt2d[1]-x, pt2d[2]-y}
     local screen_y = vp_pt2d[2] / rt.h
-	if not math3d.origin_bottom_left then
+	if not math3d.get_origin_bottom_left() then
         screen_y = 1 - screen_y
     end
 
@@ -78,7 +78,7 @@ end
 
 function util.NDC_near_pt(ndc2d)
 	return {
-		ndc2d[1], ndc2d[2], math3d.homogeneous_depth and -1 or 0
+		ndc2d[1], ndc2d[2], (math3d.get_homogeneous_depth() and -1 or 0)
 	}
 end
 

@@ -158,7 +158,7 @@ lprepare_text(lua_State *L) {
 // 	return 1;
 // }
 
-#define FIXPOINT 8
+#define FIXPOINT FONT_POSTION_FIX_POINT
 
 static inline void
 fill_text_quad(struct font_manager *F, struct quad_text * qt, int16_t x0, int16_t y0, uint32_t color, int size, struct font_glyph *g) {
@@ -280,7 +280,11 @@ static int
 lname(lua_State *L) {
 	struct font_manager *F = getF(L);
 	const char* family = luaL_checkstring(L, 1);
-	font_manager_addfont_with_family(F, family);
+	const int fontid = font_manager_addfont_with_family(F, family);
+	if (fontid > 0){
+		lua_pushinteger(L, fontid);
+		return 1;
+	}
 	return 0;
 }
 
@@ -311,6 +315,7 @@ luaopen_font(lua_State *L) {
 	luaL_checkversion(L);
 	lua_newtable(L);
 	lua_newtable(L);
+	init_interface(L);
 	lua_pushcfunction(L, initfont);
 	lua_setfield(L, -2, "__call");
 	lua_setmetatable(L, -2);

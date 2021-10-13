@@ -1,5 +1,6 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 
 local math3d		= require "math3d"
 local bgfx			= require "bgfx"
@@ -102,22 +103,26 @@ function imaterial.set_property_directly(properties, who, what)
 	end
 end
 
-function imaterial.set_property(eid, who, what)
+local function get_rc(e)
+	w:sync("render_object:in", e)
+	return e.render_object
+end
+
+function imaterial.set_property(e, who, what)
 	if ecs.import.interface "ant.render|isystem_properties".get(who) then
 		error(("global property could not been set:%s"):format(who))
 	end
-
-	local rc = world[eid]._rendercache
+	local rc = get_rc(e)
 	imaterial.set_property_directly(rc.properties, who, what)
 end
 
-function imaterial.get_property(eid, who)
-	local rc = world[eid]._rendercache
+function imaterial.get_property(e, who)
+	local rc = get_rc(e)
 	return rc.properties and rc.properties[who] or nil
 end
 
-function imaterial.has_property(eid, who)
-	local rc = world[eid]._rendercache
+function imaterial.has_property(e, who)
+	local rc = get_rc(e)
 	return rc.properties and rc.properties[who] ~= nil
 end
 
@@ -150,30 +155,12 @@ function imaterial.property_set_func(t)
 	return set_funcs[t]
 end
 
-local m = ecs.component "material"
-
 local function init_material(mm)
 	if type(mm) == "string" then
 		return assetmgr.resource(mm)
 	end
 	return ext_material.init(mm)
 end
-
-m.init = init_material
-
-local mpt = ecs.transform "material_prefab_transform"
-
-function mpt.process_prefab(e)
-	local c = e._cache_prefab
-	load_material(e.material, c, c.material_setting)
-end
-
-local mst = ecs.transform "material_setting_transform"
-function mst.process_prefab(e)
-	e._cache_prefab.material_setting = {}
-end
-
-local mt = ecs.transform "material_transform"
 
 local function to_v(t)
 	if t == nil then
@@ -265,24 +252,16 @@ local function build_material(m, ro)
 	ro.stencil		= m.stencil
 end
 
-function mt.process_entity(e)
-	build_material(e._cache_prefab, e._rendercache)
-end
+function imaterial.load(mp, setting)
+	local mm = assetmgr.resource(mp)
 
-
-function imaterial.load(m, setting)
-	local mm = type(m) == "string" and world.component "material"(m) or m
-	assert(type(mm) == "table")
-	
 	local mr = {}
 	build_material(load_material(mm, {}, setting), mr)
 	return mr
 end
 
-----material_v2
-local w = world.w
 local ms = ecs.system "material_system"
-function ms:entity_init()
+function ms:component_init()
 	w:clear "material_result"
     for e in w:select "INIT material:in material_setting?in material_result:new" do
 		if type(e.material) == "string" then

@@ -160,7 +160,9 @@ public:
 
 	static bindpose* getBP(lua_State *L, int index){
 		#ifdef _DEBUG
-			assert(luaL_testudata(L, index, "ozzBindpose") || luaL_testudata(L, index, "ozzPoseResult"));
+			if (!luaL_testudata(L, index, "ozzBindpose") && !luaL_testudata(L, index, "ozzPoseResult")) {
+				luaL_argexpected(L, false, index, "ozzBindpose");
+			}
 		#endif
 		return (bindpose*)lua_touserdata(L, index);
 	}

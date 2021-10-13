@@ -36,7 +36,6 @@
 namespace Rml {
 
 class Context;
-class Stream;
 class ElementText;
 class StyleSheet;
 class DataModel;

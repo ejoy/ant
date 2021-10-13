@@ -7,7 +7,7 @@ local setting		= import_package "ant.settings".setting
 
 local ies = ecs.import.interface "ant.scene|ientity_state"
 local iom = ecs.import.interface "ant.objcontroller|obj_motion"
-
+local imesh=ecs.import.interface "ant.asset|imesh"
 local bgfx = require "bgfx"
 local math3d = require "math3d"
 
@@ -23,7 +23,9 @@ local function create_dynamic_buffer(layout, num_vertices, num_indices)
 		vb = {
 			start = 0,
 			num = 0,
-			{handle=bgfx.create_dynamic_vertex_buffer(vb_size, declmgr.get(layout).handle, "a")}
+			{
+				handle=bgfx.create_dynamic_vertex_buffer(vb_size, declmgr.get(layout).handle, "a")
+			}
 		},
 		ib = {
 			start = 0,
@@ -31,12 +33,6 @@ local function create_dynamic_buffer(layout, num_vertices, num_indices)
 			handle = bgfx.create_dynamic_index_buffer(ib_size, "a")
 		}
 	}
-end
-
-local dmb_trans = ecs.transform "debug_mesh_bounding_transform"
-function dmb_trans.process_entity(e)
-	local rc = e._rendercache
-	rc.debug_mesh_bounding = e.debug_mesh_bounding
 end
 
 function widget_drawer_sys:init()
@@ -47,15 +43,15 @@ function widget_drawer_sys:init()
 	}
 	ecs.create_entity {
 		policy = {
-			"ant.render|render",
+			"ant.render|simplerender",
 			"ant.render|bounding_draw",
 			"ant.general|name",
 		},
 		data = {
 			scene = {srt = {}},
-			mesh = create_dynamic_buffer(wd.declname, wd.vertices_num, wd.indices_num),
+			simplemesh = imesh.init_mesh(create_dynamic_buffer(wd.declname, wd.vertices_num, wd.indices_num)),
 			material = "/pkg/ant.resources/materials/line.material",
-			state = ies.create_state "visible",
+			state = "visible",
 			widget_drawer = wd,
 			name = "bounding_draw"
 		}
@@ -198,16 +194,12 @@ function rmb_sys:widget()
 	local sd  = setting:data()
 	if sd.debug and sd.debug.show_bounding then
 		local desc={vb={}, ib={}}
-		for _, eid in world:each "debug_mesh_bounding" do
-			local e = world[eid]
-			local rc = e._rendercache
-			if rc.debug_mesh_bounding and e._bounding and e._bounding.aabb then
-				if rc and rc.vb and ies.can_visible(eid) then
-					local aabb = rc.aabb
-					local v = math3d.tovalue(aabb)
-					local aabb_shape = {min=v, max={v[5], v[6], v[7]}}
-					geometry_drawer.draw_aabb_box(aabb_shape, DEFAULT_COLOR, nil, desc)
-				end
+		for e in w:select "debug_mesh_bounding render_object:in" do
+			local aabb = e.render_object.aabb
+			if ies.can_visible(e) and e.debug_mesh_bounding and aabb then
+				local minv, maxv = math3d.index(aabb, 1, 2)
+				local aabb_shape = {min=math3d.tovalue(minv), max=math3d.tovalue(maxv)}
+				geometry_drawer.draw_aabb_box(aabb_shape, DEFAULT_COLOR, nil, desc)
 			end
 		end
 	

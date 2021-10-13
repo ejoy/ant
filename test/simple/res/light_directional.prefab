@@ -1,14 +1,15 @@
 ---
 policy:
   ant.render|light
-  ant.general|name
 data:
-  transform:
-    r: {0.5, 0.0, 0.0, 0.8660253}
-    t: {0, 10, 0, 1}
-  color: {1, 1, 1, 1}
-  intensity: 2
-  light_type: directional
-  name: directional_light
-  make_shadow: true
-  state: visible
+  scene:
+    srt:
+      r: {0.5, 0.0, 0.0, 0.8660253}
+      t: {0, 10, 0, 1}
+  light:
+    color: {1, 1, 1, 1}
+    intensity: 2
+    light_type: directional
+    name: directional_light
+    make_shadow: true
+  visible: true

@@ -8,6 +8,8 @@ local declmgr   = require "vertexdecl_mgr"
 local font      = import_package "ant.font"
 local lfont     = require "font"
 
+local imesh     = ecs.import.interface "ant.asset|imesh"
+
 font.init()
 
 local fonttex_handle    = font.texture()
@@ -18,22 +20,25 @@ local declformat        = declmgr.vertex_desc_str(layout_desc)
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local irender = ecs.import.interface "ant.render|irender"
+local icamera	= ecs.import.interface "ant.camera|camera"
 
 local irq = ecs.import.interface "ant.render|irenderqueue"
+local mask<const>, offset<const> = math3d.ref(math3d.vector(0.5, 0.5, 1, 1)), math3d.ref(math3d.vector(0.5, 0.5, 0, 0))
+
 local function calc_screen_pos(pos3d, queuename)
     queuename = queuename or "main_queue"
 
-    local q = w:singleton(queuename, "render_target:in")
-    local vp = world[q.camera_eid]._rendercache.viewprojmat
+    local q = w:singleton(queuename, "camera_ref:in")
+	local camera = icamera.find_camera(q.camera_ref)
+    local vp = camera.viewprojmat
     local posNDC = math3d.transformH(vp, pos3d)
 
-    local mask<const>, offset<const> = {0.5, 0.5, 1, 1}, {0.5, 0.5, 0, 0}
     local posClamp = math3d.muladd(posNDC, mask, offset)
     local vr = irq.view_rect(queuename)
 
     local posScreen = math3d.tovalue(math3d.mul(math3d.vector(vr.w, vr.h, 1, 1), posClamp))
 
-    if not math3d.origin_bottom_left then
+    if not math3d.get_origin_bottom_left() then
         posScreen[2] = vr.h - posScreen[2]
     end
 
@@ -44,50 +49,14 @@ local function text_start_pos(textw, texth, screenpos)
     return screenpos[1] - textw * 0.5, screenpos[2] - texth * 0.5
 end
 
-local fontcomp = ecs.component "font"
-function fontcomp:init()
-    lfont.import(self.file:string())
-    self.id = lfont.name(self.family)
-    return self
-end
-
-local sc_comp = ecs.component "show_config"
-function sc_comp:init()
-    if self.location_offset then
-        self.location_offset = math3d.ref(math3d.vector(self.location_offset))
-    end
-    
-    if self.location then
-        self.location = math3d.ref(math3d.vector(self.location))
-    end
-
-    return self
-end
-
-local fontmesh = ecs.transform "font_mesh"
-function fontmesh.process_prefab(e)
-    e.mesh = world.component "mesh" {
-        vb = {
-            start = 0,
-            num = 0,
-            bgfx.transient_buffer(declformat),
-        },
-        ib = {
-            start = 0,
-            num = 0,
-            handle = irender.quad_ib()
-        }
-    }
-end
-
 local fontsys = ecs.system "font_system"
 
-local mask<const> = {0, 1, 0, 0}
+local vertical_mask<const> = math3d.ref(math3d.vector(0, 1, 0, 0))
 local function calc_aabb_pos(e, offset, offsetop)
-    local attacheid = e._rendercache.attach_eid
-    local attach_e = world[attacheid]
+    local attach_e = e.render_object.attach_eid
     if attach_e then
-        local aabb = attach_e._rendercache.aabb
+        w:sync("render_object:in", attach_e)
+        local aabb = attach_e.render_object.aabb
         if aabb then
             local center, extent = math3d.aabb_center_extents(aabb)
             local pos = offsetop(center, extent)
@@ -102,11 +71,11 @@ end
 local function calc_3d_anchor_pos(e, cfg)
     if cfg.location_type == "aabb_top" then
         return calc_aabb_pos(e, cfg.location_offset, function (center, extent)
-            return math3d.muladd(mask, extent, center)
+            return math3d.muladd(vertical_mask, extent, center)
         end)
     elseif cfg.location_type == "aabb_bottom" then
         return calc_aabb_pos(e, cfg.location_offset, function (center, extent)
-                return math3d.muladd(mask, math3d.inverse(extent), center)
+                return math3d.muladd(vertical_mask, math3d.inverse(extent), center)
             end)
     elseif cfg.location then
         return cfg.location
@@ -115,15 +84,15 @@ local function calc_3d_anchor_pos(e, cfg)
     end
 end
 
-local function load_text(eid)
-    local e = world[eid]
+local function load_text(e)
     local font = e.font
     local sc = e.show_config
-    local screenpos = calc_screen_pos(calc_3d_anchor_pos(e, sc))
+    local pos = calc_3d_anchor_pos(e, sc)
+    local screenpos = pos and calc_screen_pos(pos) or {0.0, 0.0, 0.0}
 
     local textw, texth, num = lfont.prepare_text(fonttex_handle, sc.description, font.size, font.id)
     local x, y = text_start_pos(textw, texth, screenpos)
-    local rc = e._rendercache
+    local rc = e.render_object
     local vb, ib = rc.vb, rc.ib
     vb.start, vb.num = 0, num*4
     local vbhandle = vb.handles[1]
@@ -136,18 +105,48 @@ local function load_text(eid)
     lfont.load_text_quad(vbdata, sc.description, x, y, font.size, sc.color, font.id)
 end
 
+local ev = world:sub {"show_name"}
+
+function fontsys:component_init()
+    for e in w:select "INIT font:in simplemesh:out" do
+        lfont.import(e.font.file)
+        e.font.id = lfont.name(e.font.name)
+
+        e.simplemesh = imesh.init_mesh({
+            vb = {
+                start = 0,
+                num = 0,
+                bgfx.transient_buffer(declformat),
+            },
+            ib = {
+                start = 0,
+                num = 0,
+                handle = irender.quad_ib()
+            }
+        }, true)
+    end
+    for e in w:select "INIT show_config:in" do
+        if e.show_config.location_offset then
+            e.show_config.location_offset = math3d.ref(math3d.vector(e.show_config.location_offset))
+        end
+        if e.show_config.location then
+            e.show_config.location = math3d.ref(math3d.vector(e.show_config.location))
+        end
+    end
+end
+
 function fontsys:camera_usage()
-    for _, eid in world:each "show_config" do
-        load_text(eid)
+    for _, e, attach in ev:unpack() do
+        w:sync("render_object:in", e)
+        e.render_object.attach_eid = attach
+        imaterial.set_property(e, "s_tex", fonttex)
+    end
+    for e in w:select "font:in show_config:in render_object:in" do
+        load_text(e)
     end
     lfont.submit()
 end
 
-local sn_a = ecs.action "show_name"
-function sn_a.init(prefab, idx, value)
-    local eid = prefab[idx]
-    local e = world[eid]
-    e._rendercache.attach_eid = prefab[value]
-
-    imaterial.set_property(eid, "s_tex", fonttex)
+function ecs.method.show_name(e, attach)
+    world:pub {"show_name", e, attach}
 end

@@ -40,47 +40,47 @@ local function capsule_shape(shape)
 	return rp3d_world:new_shape("capsule", shape.radius, shape.height)
 end
 
-local function terrain_shape(self)
-	self.up_axis 		= self.up_axis or "Y"
-	self.min_height 	= self.min_height or 0
-	self.max_height 	= self.max_height or 0
-	self.height_scaling = self.height_scaling or 1
-	self.scaling 		= self.scaling or 1
-	return self
-end
+-- local function terrain_shape(self)
+-- 	self.up_axis 		= self.up_axis or "Y"
+-- 	self.min_height 	= self.min_height or 0
+-- 	self.max_height 	= self.max_height or 0
+-- 	self.height_scaling = self.height_scaling or 1
+-- 	self.scaling 		= self.scaling or 1
+-- 	return self
+-- end
 
-local tcb = ecs.transform "terrain_collider_transform"
+--local tcb = ecs.transform "terrain_collider_transform"
 
-local iterrain = ecs.import.interface "ant.terrain|terrain"
+-- local iterrain = ecs.import.interface "ant.terrain|terrain"
 
-function tcb.process_entity(e)
-	local terraincomp = e.terrain
-	local tc = e.collider
+-- function tcb.process_entity(e)
+-- 	local terraincomp = e.terrain
+-- 	local tc = e.collider
 
-	local shape = tc.terrain[1]
+-- 	local shape = tc.terrain[1]
 
-	if shape.min_height == nil or  shape.max_height == nil then
-		 local min, max = iterrain.calc_min_max_height(terraincomp)
-		 shape.min_height = shape.min_height or min
-		 shape.max_height = shape.max_height or max
-	end
+-- 	if shape.min_height == nil or  shape.max_height == nil then
+-- 		 local min, max = iterrain.calc_min_max_height(terraincomp)
+-- 		 shape.min_height = shape.min_height or min
+-- 		 shape.max_height = shape.max_height or max
+-- 	end
 
-	local scaling = shape.scaling
-	local terrain_grid_unit = terraincomp.grid_unit
-	local terrain_scaling = math3d.vector(terrain_grid_unit, 1, terrain_grid_unit, 0)
-	scaling = scaling and math3d.mul(scaling, terrain_scaling) or terrain_scaling
+-- 	local scaling = shape.scaling
+-- 	local terrain_grid_unit = terraincomp.grid_unit
+-- 	local terrain_scaling = math3d.vector(terrain_grid_unit, 1, terrain_grid_unit, 0)
+-- 	scaling = scaling and math3d.mul(scaling, terrain_scaling) or terrain_scaling
 
-	local heightfield = terraincomp.heightfield
-	local hf_width, hf_height = heightfield[1], heightfield[2]
-	local hf_data = heightfield[3]
-	shape._handle = rp3d_world:new_shape("heightfield", hf_width, hf_height, shape.min_height, shape.max_height, hf_data, shape.height_scaling, scaling)
+-- 	local heightfield = terraincomp.heightfield
+-- 	local hf_width, hf_height = heightfield[1], heightfield[2]
+-- 	local hf_data = heightfield[3]
+-- 	shape._handle = rp3d_world:new_shape("heightfield", hf_width, hf_height, shape.min_height, shape.max_height, hf_data, shape.height_scaling, scaling)
 
-	rp3d_world:add_shape(tc._handle, shape._handle, 0, shape.origin)
-	local aabbmin, aabbmax = rp3d_world:get_aabb(tc.handle)
-	terraincomp.bounding = {
-		aabb = math3d.ref(math3d.aabb(aabbmin, aabbmax))
-	}
-end
+-- 	rp3d_world:add_shape(tc._handle, shape._handle, 0, shape.origin)
+-- 	local aabbmin, aabbmax = rp3d_world:get_aabb(tc.handle)
+-- 	terraincomp.bounding = {
+-- 		aabb = math3d.ref(math3d.aabb(aabbmin, aabbmax))
+-- 	}
+-- end
 
 local collcomp = ecs.component "collider"
 
@@ -106,18 +106,6 @@ function collcomp:delete()
 		rp3d_world:body_destroy(self._handle)
 	end
 end
-
---local s = ecs.system "collider_component_system"
---
---function s:component_delete()
---	for _, eid in world:select "removed collider" do
---		local e = world[eid]
---		local c = e.collider
---		if c._handle then
---			w:body_destroy(c._handle)
---		end
---	end
---end
 
 local icoll = ecs.interface "collider"
 

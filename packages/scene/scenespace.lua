@@ -17,12 +17,6 @@ function iss.set_parent(eid, peid)
 	end
 end
 
-local m = ecs.action "mount"
-function m.init(prefab, i, value)
-	iss.set_parent(prefab[i], prefab[value])
-end
-
-
 ----scenespace_system----
 local s = ecs.system "scenespace_system"
 
@@ -90,28 +84,17 @@ local function update_aabb(node)
 	end
 end
 
-local function findScene(hashmap, eid)
-	local scene = hashmap[eid]
+local function findScene(hashmap, e)
+	local scene = hashmap[e]
 	if scene then
 		return scene
-	end
-	local e
-	if type(eid) == "table" then
-		e = eid
-	else
-		for v in w:select "eid:in" do
-			if v.eid == eid then
-				e = v
-				break
-			end
-		end
 	end
 	if e == nil then
 		return
 	end
 	w:sync("scene:in", e)
 	scene = e.scene
-	hashmap[eid] = scene
+	hashmap[e] = scene
 	return scene
 end
 
@@ -129,6 +112,12 @@ function s:entity_init()
 			srt = mu.srt_obj{s=1, r=math3d.torotation(math3d.vector(camera.viewdir)), t=camera.eyepos},
 			updir = math3d.ref(math3d.vector(camera.updir)),
 		}
+	end
+	for v in w:select "INIT mesh:in scene:in" do
+		local mesh = v.mesh
+		if mesh.bounding then
+			v.scene.aabb = mesh.bounding.aabb
+		end
 	end
 	for v in w:select "INIT scene:in eid?in scene_sorted?new" do
 		local scene = v.scene
@@ -244,16 +233,6 @@ function s:update_transform()
     end
 
 	for _, e in evSceneChanged:unpack() do
-		if type(e) ~= "table" then
-			local function findEntity(eid)
-				for v in w:select "eid:in" do
-					if v.eid == eid then
-						return v
-					end
-				end
-			end
-			e = findEntity(e)
-		end
 		if e then
 			w:sync("scene:in", e)
 			e.scene.changed = current_changed

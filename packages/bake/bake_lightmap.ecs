@@ -13,9 +13,6 @@ policy_v2 "bake_lightmap"
     .require_system "ant.bake|bake_lightmap_system"
     .require_policy_v2 "ant.render|lightmap"
 
-policy "bake_lightmap"
-    .require_policy "ant.render|lightmap"
-
 interface "ilightmap"
     .implement "bake_lightmap.lua"
     .method "bake_entity"

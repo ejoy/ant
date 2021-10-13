@@ -2,28 +2,26 @@ local ecs = ...
 local world = ecs.world
 local math3d = require "math3d"
 
-local ientity = ecs.import.interface "ant.render|entity"
-local st_sys = ecs.system "shadow_test_system"
-
-local mc = import_package "ant.math".constant
-local ies = ecs.import.interface "ant.scene|ientity_state"
+local ientity 	= ecs.import.interface "ant.render|entity"
+local imesh		= ecs.import.interface "ant.asset|imesh"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local ilight = ecs.import.interface "ant.render|light"
-local iom = ecs.import.interface "ant.objcontroller|obj_motion"
 
+local st_sys	= ecs.system "shadow_test_system"
 function st_sys:init()
-	world:deprecated_create_entity {
+	ecs.create_entity {
 		policy = {
 			"ant.render|render",
+			"ant.scene|scene_object",
 			"ant.render|shadow_cast_policy",
 			"ant.general|name",
 		},
 		data = {
-			state = ies.create_state "visible|selectable|cast_shadow",
-			scene_entity = true,
-			transform =  {
-				s=100,
-				t={0, 2, 0, 0}
+			state = "visible|selectable|cast_shadow",
+			scene =  {
+				srt = {
+					s=100,
+					t={0, 2, 0, 0}
+				}
 			},
 			material = "/pkg/ant.resources/materials/singlecolor.material",
 			mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
@@ -31,25 +29,42 @@ function st_sys:init()
 		}
 	}
 
-	local rooteid = world:deprecated_create_entity {
+	ecs.create_entity {
 		policy = {
-			"ant.scene|transform_policy",
+			"ant.scene|scene_object",
 			"ant.general|name",
 		},
 		data = {
-			transform =  {t = {0, 0, 3, 1}},
+			scene =  {
+				srt = {
+					t = {0, 0, 3, 1}
+			}},
 			name = "mesh_root",
-			scene_entity = true,
 		}
 	}
-	world:instance("/pkg/ant.resources.binary/meshes/RiggedFigure.glb|mesh.prefab", {import={root=rooteid}})
+	ecs.create_instance("/pkg/ant.resources.binary/meshes/RiggedFigure.glb|mesh.prefab")
 
-    local eid = ientity.create_plane_entity(
-		{t = {0, 0, 0, 1}, s = {50, 1, 50, 0}},
-		"/pkg/ant.resources/materials/mesh_shadow.material",
-		"test_shadow_plane", nil, true)
-
-	imaterial.set_property(eid, "u_basecolor_factor", {0.8, 0.8, 0.8, 1})
+	ecs.create_entity{
+		policy = {
+			"ant.render|simplerender",
+			"ant.general|name",
+		},
+		data = {
+			scene 		= {
+                srt = {
+                    t = {0, 0, 0, 1}, s = {50, 1, 50, 0}
+                }
+            },
+			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
+			state 		= "visible",
+			name 		= "test_shadow_plane",
+			simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
+            debug_mesh_bounding = true,
+			on_ready = function (e)
+				imaterial.set_property(e, "u_basecolor_factor", {0.8, 0.8, 0.8, 1})
+			end,
+		}
+    }
 end
 
 function st_sys:post_init()

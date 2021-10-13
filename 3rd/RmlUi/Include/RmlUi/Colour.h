@@ -49,11 +49,12 @@ public:
 };
 
 inline Color ColorInterpolate(const Color& c0, const Color& c1, float alpha) {
-	auto s0 = glm::convertLinearToSRGB(glm::vec4(c0) / 255.f);
-	auto s1 = glm::convertLinearToSRGB(glm::vec4(c1) / 255.f);
-	auto s  = glm::mix(s0, s1, alpha);
-	auto c  = glm::convertSRGBToLinear(s);
-	return glm::u8vec4(c * 255.f);
+	return Color(
+		glm::u8((1.0f - alpha) * c0.r + alpha * c1.r),
+		glm::u8((1.0f - alpha) * c0.g + alpha * c1.g),
+		glm::u8((1.0f - alpha) * c0.b + alpha * c1.b),
+		glm::u8((1.0f - alpha) * c0.a + alpha * c1.a)
+	);
 }
 
 inline void ColorApplyOpacity(Color& c, float opacity) {

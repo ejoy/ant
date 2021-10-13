@@ -11,7 +11,6 @@ local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
 local iss       = ecs.import.interface "ant.scene|iscenespace"
 local icoll     = ecs.import.interface "ant.collision|collider"
 local drawer    = ecs.import.interface "ant.render|iwidget_drawer"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
 local isp 		= ecs.import.interface "ant.render|isystem_properties"
 local resource_browser  = ecs.require "widget.resource_browser"
 local anim_view         = ecs.require "widget.animation_view"
@@ -37,7 +36,6 @@ local gizmo_const = require "gizmo.const"
 local new_project = require "common.new_project"
 local widget_utils = require "widget.utils"
 local utils = require "common.utils"
-local icons = require "common.icons"(asset_mgr)
 local log_widget = require "widget.log"(asset_mgr)
 local console_widget = require "widget.console"(asset_mgr)
 local m = ecs.system 'gui_system'
@@ -168,7 +166,6 @@ local function choose_project()
             global_data.project_root = lfs.path(string.sub(res_root_str, 1, #res_root_str - 1))
             global_data.packages = get_package(global_data.project_root, true)
             imgui.windows.CloseCurrentPopup();
-            show_mount_dialog = true
         end
         if global_data.project_root then
             local fw = require "filewatch"
@@ -292,22 +289,24 @@ local event_gizmo = world:sub {"Gizmo"}
 local light_gizmo = ecs.require "gizmo.light"
 
 local function on_target(old, new)
-    local old_entity = type(old) == "table" and icamera.find_camera(old) or world[old]
+    local old_entity = old--type(old) == "table" and icamera.find_camera(old) or world[old]
     if old and old_entity then
-        if old_entity.frustum then
+        world.w:sync("camera?in", old_entity)
+        world.w:sync("light?in", old_entity)
+        if old_entity.camera then
             camera_mgr.show_frustum(old, false)
-        elseif old_entity.light_type then
+        elseif old_entity.light then
             light_gizmo.bind(nil)
         end
     end
     if new then
-        local new_entity = type(new) == "table" and icamera.find_camera(new) or world[new]
-        if new_entity.frustum then
+        local new_entity = new--type(new) == "table" and icamera.find_camera(new) or world[new]
+        world.w:sync("camera?in", new_entity)
+        world.w:sync("light?in", new_entity)
+        if new_entity.camera then
             camera_mgr.set_second_camera(new, true)
-        elseif new_entity.light_type then
+        elseif new_entity.light then
             light_gizmo.bind(new)
-        -- elseif new_entity.emitter then
-        --     particle_emitter.set_emitter(new)
         end
     end
     --prefab_mgr:update_current_aabb(new)
@@ -318,10 +317,12 @@ end
 local function on_update(eid)
     if not eid then return end
     prefab_mgr:update_current_aabb(eid)
-    local e = type(eid) == "table" and icamera.find_camera(eid) or world[eid]
-    if e.frustum then
+    local e = eid--type(eid) == "table" and icamera.find_camera(eid) or world[eid]
+    world.w:sync("camera?in", e)
+    world.w:sync("light?in", e)
+    if e.camera then
         camera_mgr.update_frustrum(eid)
-    elseif e.light_type then
+    elseif e.light then
         light_gizmo.update()
     end
     inspector.update_template_tranform(eid)
@@ -359,11 +360,13 @@ function m:handle_event()
             transform_dirty = false
             if what == "name" then 
                 hierarchy:update_display_name(target, v1)
-                if world[target].collider then
+                world.w:sync("collider?in", target)
+                if target.collider then
                     hierarchy:update_collider_list(world)
                 end
             else
-                if world[target].slot then
+                world.w:sync("slot?in", target)
+                if target.slot then
                     hierarchy:update_slot_list(world)
                 end
             end
@@ -372,9 +375,18 @@ function m:handle_event()
             local sourceWorldMat = iom.worldmat(target)
             local targetWorldMat = v1 and iom.worldmat(v1) or math3d.matrix{}
             iom.set_srt(target, math3d.mul(math3d.inverse(targetWorldMat), sourceWorldMat))
-            iss.set_parent(target, v1)
-            if (not v1 or not world[v1].slot) and world[target].collider then
-                world[target].slot_name = "None"
+            ecs.method.set_parent(target, v1)
+            local isslot
+            if v1 then
+                world.w:sync("slot?in", v1)
+                isslot = v1.slot
+            end
+            if (not v1 or isslot) then
+                for e in world.w:select "scene:in slot_name:out" do
+                    if e.scene == target.scene then
+                        e.slot_name = "None"
+                    end
+                end
             end
         end
         if transform_dirty then
@@ -391,14 +403,13 @@ function m:handle_event()
                     ies.set_state(e, what, value)
                 end
             end
-            if world[eid].light_type then
+            world.w:sync("light?in", eid)
+            if eid.light then
                 world:pub{"component_changed", "light", eid, "visible", value}
             end
-            for e in world.w:select "eid:in" do
-                if world[e.eid] and world[e.eid].parent == eid then
-                    if world[e.eid].ibl then
-                        isp.enable_ibl(value)
-                    end
+            for e in world.w:select "scene:in ibl:in" do
+                if e.scene.parent == eid then
+                    isp.enable_ibl(value)
                     break
                 end
             end
@@ -406,7 +417,8 @@ function m:handle_event()
         elseif what == "lock" then
             hierarchy:set_lock(eid, value)
         elseif what == "delete" then
-            if world[gizmo.target_eid].collider then
+            world.w:sync("collider?in", gizmo.target_eid)
+            if gizmo.target_eid.collider then
                 anim_view.on_remove_entity(gizmo.target_eid)
             end
             prefab_mgr:remove_entity(eid)
@@ -458,7 +470,8 @@ function m:handle_event()
 
     for _, key, press, state in event_keyboard:unpack() do
         if key == "DELETE" and press == 1 then
-            if world[gizmo.target_eid].collider then
+            world.w:sync("collider?in", gizmo.target_eid)
+            if gizmo.target_eid.collider then
                 anim_view.on_remove_entity(gizmo.target_eid)
             end
             prefab_mgr:remove_entity(gizmo.target_eid)

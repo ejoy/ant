@@ -71,8 +71,8 @@ return function (w, package)
         end
     end
     register "system"
-    register "transform"
     register "interface"
+    register "transform"
     register "action"
     register "component"
     function ecs.require(fullname)

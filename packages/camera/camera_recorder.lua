@@ -1,5 +1,6 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 
 local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
@@ -9,41 +10,29 @@ local timer = ecs.import.interface "ant.timer|itimer"
 local icamera = ecs.import.interface "ant.camera|camera"
 local iom = ecs.import.interface "ant.objcontroller|obj_motion"
 
-
-local cq_trans = ecs.transform "camera_recorder_transform"
-function cq_trans.process_entity(e)
-    e._playing = {
-        cursor = 0,
-        camera_ref = nil,
-    }
-    for i, v in ipairs(e.frames) do
-        local tp = v.position
-        local tr = v.rotation
-        v.position = math3d.ref(math3d.vector(tp[1], tp[2], tp[3]))
-        v.rotation = math3d.ref(math3d.quaternion(tr[1], tr[2], tr[3], tr[4]))
-    end
-end
-
 local cr = ecs.interface "icamera_recorder"
 function cr.start(name)
-    return world:deprecated_create_entity{
+    return ecs.create_entity{
         policy = {
             "ant.camera|camera_recorder",
             "ant.general|name",
         },
         data = {
-            frames = {},
+            reference = true,
+            caeram_recorder = {
+                frames = {},
+            },
             name = name or "camera_queue"
         }
     }
 end
 
-function cr.add(recordereid, camera_ref, idx)
-    local e = world[recordereid]
-    idx = idx or #e.frames+1
+function cr.add(e, camera_ref, idx)
+    local frames = e.camera_recorder.frames
+    idx = idx or #frames+1
 
     local frustum = icamera.get_frustum(camera_ref)
-    table.insert(e.frames, idx, {
+    table.insert(frames, idx, {
         position = math3d.ref(iom.get_position(camera_ref)),
         rotation = math3d.ref(iom.get_rotation(camera_ref)),
         nearclip = frustum.n,
@@ -65,20 +54,37 @@ function cr.clear(recordereid)
     world[recordereid].frames = {}
 end
 
-function cr.stop(recordereid)
+function cr.stop(e)
     --TODO
 end
 
-function cr.play(recordereid, camera_ref)
-    local q = world[recordereid]
-    local p = q._playing
+function cr.play(e, camera_ref)
+    w:sync("camera_recorder:out", e)
+    local r = e.camera_recorder
+    local p = r.playing
     p.camera_ref = camera_ref
     p.cursor = 0
-    world:pub{"camera_recorder", "play", recordereid}
+    world:pub{"camera_recorder", "play", e}
 end
 
 local cq_sys = ecs.system "camera_recorder_system"
 local cr_play_mb = world:sub {"camera_recorder", "play"}
+
+function cq_sys:component_init()
+    for e in w:select "INIT camera_recorder:in" do
+        e.camera_recorder.playing = {
+            cursor = 0,
+            camera_ref = nil,
+        }
+        
+        for i, v in ipairs(e.camera_recorder.frames) do
+            local tp = v.position
+            local tr = v.rotation
+            v.position = math3d.ref(math3d.vector(tp[1], tp[2], tp[3]))
+            v.rotation = math3d.ref(math3d.quaternion(tr[1], tr[2], tr[3], tr[4]))
+        end
+    end
+end
 
 local playing_cr
 local function play_camera_recorder()
@@ -87,11 +93,11 @@ local function play_camera_recorder()
     end
 
     local delta_time = timer.delta()
-    local r = world[playing_cr]
-
+    w:sync("camera_recorder:out", playing_cr)
+    local r = playing_cr.camera_recorder
     local frames = r.frames
     if #frames >= 2 then
-        local p = r._playing
+        local p = r.playing
         local camera_ref = p.camera_ref
 
         local function which_frames(cursor)
@@ -136,8 +142,8 @@ local function play_camera_recorder()
 end
 
 function cq_sys.data_changed()
-    for _, _, creid in cr_play_mb:unpack() do
-        playing_cr = creid
+    for _, _, c in cr_play_mb:unpack() do
+        playing_cr = c
     end
 
     play_camera_recorder()

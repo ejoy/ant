@@ -19,11 +19,17 @@ end
 
 function EffectView:set_model(eid)
     if not BaseView.set_model(self, eid) then return false end
-    if world[eid].effekseer and world[eid].effect_instance then
-        --local tp = hierarchy:get_template(eid)
-        self.speed:set_getter(function() return world[eid].effect_instance.speed end)
-        self.speed:set_setter(function(v) self:on_set_speed(v) end)
+    for e in w:select "scene:in effekseer:in effect_instance:in" do
+        if e.scene == eid.scene then
+            self.speed:set_getter(function() return e.effect_instance.speed end)
+            self.speed:set_setter(function(v) self:on_set_speed(v) end)
+        end
     end
+    -- if world[eid].effekseer and world[eid].effect_instance then
+    --     --local tp = hierarchy:get_template(eid)
+    --     self.speed:set_getter(function() return world[eid].effect_instance.speed end)
+    --     self.speed:set_setter(function(v) self:on_set_speed(v) end)
+    -- end
     self:update()
     return true
 end
@@ -48,7 +54,8 @@ function EffectView:show()
     -- end
     imgui.widget.PropertyLabel("Play")
     if imgui.widget.Button("Play") then
-        local instance = world[self.eid].effect_instance
+        w:sync("effect_instance:in", self.eid)
+        local instance = self.eid.effect_instance
         instance.playid = effekseer.play(instance.handle, instance.playid)
         effekseer.set_speed(instance.handle, instance.playid, instance.speed)
     end

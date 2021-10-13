@@ -110,7 +110,7 @@ cluster_buffers.AABB.handle                = bgfx.create_dynamic_vertex_buffer(c
 cluster_buffers.light_index_lists.handle   = bgfx.create_dynamic_index_buffer(1, "drw")
 
 local function check_light_index_list()
-    local numlights = world:count "light_type"
+    local numlights = ilight.count_visible_light()
     local lil_size = numlights * cluster_count
     local lil = cluster_buffers.light_index_lists
     local oldhandle = lil.handle

@@ -30,7 +30,8 @@
 #define RMLUI_CORE_FACTORY_H
 
 #include "Platform.h"
-#include "Stream.h"
+#include "Types.h"
+#include <string>
 
 namespace Rml {
 

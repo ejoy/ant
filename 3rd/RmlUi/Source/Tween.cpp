@@ -27,8 +27,8 @@
  */
 
 #include "../Include/RmlUi/Tween.h"
-#include "../Include/RmlUi/Math.h"
 #include <utility>
+#include <numbers>
 
 namespace Rml {
 
@@ -59,7 +59,7 @@ static float bounce(float t)
 
 static float circular(float t)
 {
-	return 1.f - Math::SquareRoot(1.f - t * t);
+	return 1.f - sqrtf(1.f - t * t);
 }
 
 static float cubic(float t)
@@ -71,14 +71,14 @@ static float elastic(float t)
 {
 	if (t == 0) return t;
 	if (t == 1) return t;
-	return -Math::Exp(7.24f * (t - 1.f)) * Math::Sin((t - 1.1f) * 2.f * Math::RMLUI_PI / 0.4f);
+	return -expf(7.24f * (t - 1.f)) * sinf((t - 1.1f) * 2.f * std::numbers::pi_v<float> / 0.4f);
 }
 
 static float exponential(float t)
 {
 	if (t == 0) return t;
 	if (t == 1) return t;
-	return Math::Exp(7.24f * (t - 1.f));
+	return expf(7.24f * (t - 1.f));
 }
 
 static float linear(float t)
@@ -103,7 +103,7 @@ static float quintic(float t)
 
 static float sine(float t)
 {
-	return 1.f - Math::Cos(t * Math::RMLUI_PI * 0.5f);
+	return 1.f - cosf(t * std::numbers::pi_v<float> * 0.5f);
 }
 
 } // namespace TweenFunctions
