@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "render.h"
+#define BGFX_INTERFACE_IMPORT
 #include "../bgfx/bgfx_interface.h"
 
 #include <RmlUi/Core.h>
