@@ -33,12 +33,6 @@ local function create_dynamic_buffer(layout, num_vertices, num_indices)
 	}
 end
 
-local dmb_trans = ecs.transform "debug_mesh_bounding_transform"
-function dmb_trans.process_entity(e)
-	local rc = e._rendercache
-	rc.debug_mesh_bounding = e.debug_mesh_bounding
-end
-
 function widget_drawer_sys:init()
 	local wd = {
 		vertices_num = 1024,
@@ -198,11 +192,10 @@ function rmb_sys:widget()
 	local sd  = setting:data()
 	if sd.debug and sd.debug.show_bounding then
 		local desc={vb={}, ib={}}
-		for _, eid in world:each "debug_mesh_bounding" do
-			local e = world[eid]
-			local rc = e._rendercache
-			if rc.debug_mesh_bounding and e._bounding and e._bounding.aabb then
-				if rc and rc.vb and ies.can_visible(eid) then
+		for e in w:select "debug_mesh_bounding render_object:in" do
+			local rc = e.render_object
+			if rc.aabb then
+				if rc and rc.vb and ies.can_visible(e) then
 					local aabb = rc.aabb
 					local v = math3d.tovalue(aabb)
 					local aabb_shape = {min=v, max={v[5], v[6], v[7]}}
