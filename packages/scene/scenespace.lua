@@ -84,28 +84,17 @@ local function update_aabb(node)
 	end
 end
 
-local function findScene(hashmap, eid)
-	local scene = hashmap[eid]
+local function findScene(hashmap, e)
+	local scene = hashmap[e]
 	if scene then
 		return scene
-	end
-	local e
-	if type(eid) == "table" then
-		e = eid
-	else
-		for v in w:select "eid:in" do
-			if v.eid == eid then
-				e = v
-				break
-			end
-		end
 	end
 	if e == nil then
 		return
 	end
 	w:sync("scene:in", e)
 	scene = e.scene
-	hashmap[eid] = scene
+	hashmap[e] = scene
 	return scene
 end
 
@@ -244,16 +233,6 @@ function s:update_transform()
     end
 
 	for _, e in evSceneChanged:unpack() do
-		if type(e) ~= "table" then
-			local function findEntity(eid)
-				for v in w:select "eid:in" do
-					if v.eid == eid then
-						return v
-					end
-				end
-			end
-			e = findEntity(e)
-		end
 		if e then
 			w:sync("scene:in", e)
 			e.scene.changed = current_changed

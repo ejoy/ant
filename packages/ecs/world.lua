@@ -107,11 +107,6 @@ function world:enable_system(name, enable)
 	end
 end
 
-function world:interface(fullname)
-	log.error("world:interface is deprecated, use ecs.import.interface instead.")
-	return self._class.interface[fullname]
-end
-
 local function memstr(v)
 	for _, b in ipairs {"B","KB","MB","GB","TB"} do
 		if v < 1024 then
@@ -187,16 +182,6 @@ function m.new_world(config)
 	}, world)
 
 	event.init(world)
-
-	w.component = function(name)
-		return function (args)
-			local tc = w._class.component[name]
-			if tc and tc.init then
-				return tc.init(args)
-			end
-			error(("component `%s` has no init function."):format(name))
-		end
-	end
 
 	-- load systems and components from modules
 	typeclass.init(w, config)

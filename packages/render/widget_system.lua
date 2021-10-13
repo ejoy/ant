@@ -35,9 +35,6 @@ local function create_dynamic_buffer(layout, num_vertices, num_indices)
 	}
 end
 
-
-
-
 function widget_drawer_sys:init()
 	local wd = {
 		vertices_num = 1024,

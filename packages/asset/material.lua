@@ -103,29 +103,26 @@ function imaterial.set_property_directly(properties, who, what)
 	end
 end
 
-local function get_rc(eid)
-	if type(eid) == "table" then
-		w:sync("render_object:in", eid)
-		return eid.render_object
-	end
-	return world[eid]._rendercache
+local function get_rc(e)
+	w:sync("render_object:in", e)
+	return e.render_object
 end
 
-function imaterial.set_property(eid, who, what)
+function imaterial.set_property(e, who, what)
 	if ecs.import.interface "ant.render|isystem_properties".get(who) then
 		error(("global property could not been set:%s"):format(who))
 	end
-	local rc = get_rc(eid)
+	local rc = get_rc(e)
 	imaterial.set_property_directly(rc.properties, who, what)
 end
 
-function imaterial.get_property(eid, who)
-	local rc = get_rc(eid)
+function imaterial.get_property(e, who)
+	local rc = get_rc(e)
 	return rc.properties and rc.properties[who] or nil
 end
 
-function imaterial.has_property(eid, who)
-	local rc = get_rc(eid)
+function imaterial.has_property(e, who)
+	local rc = get_rc(e)
 	return rc.properties and rc.properties[who] ~= nil
 end
 

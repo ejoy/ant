@@ -24,14 +24,14 @@ local prefab = {}
 local function create_entity(t)
     if t.parent then
         t.policy[#t.policy+1] = "ant.scene|scene_object"
-        t.action = {set_parent = "@"..t.parent}
+        t.mount = t.parent
         t.data.scene = t.data.scene or {}
     end
     table.sort(t.policy)
     prefab[#prefab+1] = {
         policy = t.policy,
         data = t.data,
-        action = t.action,
+        mount = t.mount,
     }
     return #prefab
 end
