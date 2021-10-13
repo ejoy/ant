@@ -189,8 +189,8 @@ function init_loader_sys:data_changed()
         end
 
         local function light_entity()
-            for _, eid in world:each "light_type" do
-                return eid
+            for e in w:select "light" do
+                return e
             end
         end
         local function move_light(delta)
