@@ -7,16 +7,6 @@ local math3d    = require "math3d"
 local mc        = import_package "ant.math".constant
 local defcomp 	= import_package "ant.general".default
 
-local cmm = ecs.transform "camera_motion_transform"
-
-function cmm.process_entity(e)
-    local rc = e._rendercache
-    local f = {}
-    for k, v in pairs(e.frustum) do f[k] = v end
-    rc.frustum = f
-    rc.updir = math3d.ref(e.updir and math3d.vector(e.updir) or mc.YAXIS)
-end
-
 local ic = ecs.interface "camera"
 
 local function find_camera(camera_ref)
