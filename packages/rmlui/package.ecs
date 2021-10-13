@@ -4,8 +4,6 @@ import "@ant.timer"
 
 system "rmlui_system"
     .implement "rmlui_system.lua"
-    .require_policy "ant.general|name"
-    .require_policy "ant.render|render"
     .require_system "ant.render|font_system"
     .require_interface "ant.render|irenderqueue"
     .require_interface "ant.timer|itimer"

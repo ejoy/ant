@@ -1,26 +1,6 @@
-policy "camera"
-    .require_policy "ant.scene|hierarchy_policy"
-    .require_transform "ant.camera|camera_motion_transform"
-    .component "transform"
-    .component "frustum"
-    .component "lock_target"
-    .component "updir"
-    .component "dof"
-    .component "clip_range"
-    .component "scene_entity"
-    .component "camera"
-
 system "camera_view_system"
     .implement "camera.lua"
     .method "update_mainview_camera"
-
-transform "camera_motion_transform"
-    .implement "camera.lua"
-    .input "transform"
-    .input "frustum"
-    .input "_rendercache"
-    .output "_rendercache.camera"
-    .method "process_entity"
 
 interface "camera"
     .implement "camera.lua"
@@ -36,32 +16,14 @@ interface "camera"
     .method "set_frustum_near"
     .method "set_frustum_far"
     .method "lookto"
-    .method "set_dof_focus_obj"
-    .method "set_dof"
     .method "focus_obj"
     .method "find_camera"   --TODO: need remove
     .method "world_to_screen"
-
-pipeline "camera"
-    .stage "update_mainview_camera"
-    .stage "update_camera"
-    .stage "camera_usage"
 
 
 action "bind_camera"
     .implement "camera.lua"
     .method "init"
-
-policy "camera_recorder"
-    .require_system "camera_recorder_system"
-    .require_interface "icamera_recorder"
-    .require_transform "ant.camera|camera_recorder_transform"
-    .component "frames"
-
-transform "camera_recorder_transform"
-    .implement "camera_recorder.lua"
-    .output "_playing"
-    .method "process_entity"
 
 interface "icamera_recorder"
     .implement "camera_recorder.lua"
@@ -74,31 +36,26 @@ interface "icamera_recorder"
 
 system "camera_recorder_system"
     .implement "camera_recorder.lua"
-    .require_policy "ant.camera|camera"
-    .require_policy "ant.camera|camera_recorder"
+    .method "component_init"
     .method "data_changed"
 
-policy "dof"
-    .require_policy "ant.camera|camera"
-    .require_interface "ant.camera|camera"
-    .require_transform "ant.camera|dof_transform"
-    .component "dof"
+component_v2 "camera_recorder".type "lua"
+policy_v2 "camera_recorder"
+    .require_system "ant.camera|camera_recorder_system"
+    .component_v2 "camera_recorder"
 
-transform "dof_transform"
-    .implement "camera.lua"
-    .method "process_entity"
 
-action "dof_focus_obj"
-    .implement "camera.lua"
-    .method "init"
-
---camera_v2
 policy_v2 "camera"
+    .require_system "ant.camera|camera_view_system"
     .component_v2 "camera"
     .component_opt "scene"
     .component_opt "reference"
 
 component_v2 "reference"
 
-component_v2 "camera"
-    .type "lua"
+component_v2 "camera".type "lua"
+
+pipeline "camera"
+    .stage "update_mainview_camera"
+    .stage "update_camera"
+    .stage "camera_usage"

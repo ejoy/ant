@@ -209,7 +209,7 @@ function ientity.create_grid_entity(name, width, height, unit, linewidth)
 end
 
 
-local function get_plane_mesh()
+function ientity.plane_mesh()
 	local vb = {
 		-0.5, 0, 0.5, 0, 1, 0, 0, 1,	--left top
 		0.5,  0, 0.5, 0, 1, 0, 1, 1,	--right top
@@ -245,41 +245,6 @@ function ientity.create_prim_plane_entity(srt, materialpath, color, name)
 				imaterial.set_property(e, "u_color", color)
 			end
 		},
-	}
-end
-
-function ientity.create_plane_entity(srt, materialpath, name, entity_info, enable_shadow)
-	local policy = {
-		"ant.render|simplerender",
-		"ant.general|name",
-	}
-
-	local whichstate = "visible|selectable"
-	if enable_shadow then
-		whichstate = whichstate .. "|cast_shadow"
-	end
-
-	local data = {
-		reference	= true,
-		scene		= {srt = srt or {}},
-		material	= materialpath,
-		state		= whichstate,
-		name		= name or "Plane",
-		simplemesh	= imesh.init_mesh(get_plane_mesh(), true),
-	}
-
-	if entity_info then
-		for policy_name, dd in pairs(entity_info) do
-			policy[#policy+1] = policy_name
-			for k, d in pairs(dd) do
-				data[k] = d
-			end
-		end
-	end
-
-	return ecs.create_entity{
-		policy = policy,
-		data = data,
 	}
 end
 

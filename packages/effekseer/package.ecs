@@ -3,7 +3,6 @@ import "@ant.render"
 
 system "effekseer_system"
     .implement "effekseer_system.lua"
-    .require_policy "ant.render|render"
     .require_interface "ant.render|irenderqueue"
     .method "init"
     .method "entity_init"

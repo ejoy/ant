@@ -7,27 +7,9 @@ local math3d = require "math3d"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local bgfx = require "bgfx"
 
-local dm = ecs.action "decal_mount"
-function dm.init(prefab, idx, value)
-    local eid = prefab[idx]
-    local e = world[eid]
-    local rc = e._rendercache
-    rc.decaled_eid = prefab[value]
-    local de_rc = world[rc.decaled_eid]._rendercache
-    rc.vb = de_rc.vb
-    rc.ib = de_rc.ib
-
-    rc.set_transform = function (self)
-        bgfx.set_transform(de_rc.worldmat)
-    end
-end
-
-local dt = ecs.transform "decal_transform"
-local function update_decal(e)
-    local _rc = e._rendercache
-    local decal = e.decal
+local function update_decal(decal)
     local hw, hh = decal.w * 0.5, decal.h * 0.5
-    _rc.frustum = {
+    decal.frustum = {
         l = -hw, r = hw,
         b = -hh, t = hh,
         n = 0, f = 1,
@@ -35,38 +17,36 @@ local function update_decal(e)
     }
 end
 
-function dt.process_entity(e)
-    update_decal(e)
-end
-
 local ds = ecs.system "decal_system"
 
-local decal_register_mb = world:sub{"component_register", "decal"}
-local decal_entity_remove_mb = world:sub{"entity_remove", "decal"}
+local decl_mount_mb = world:sub{"decal_mount"}
+function ecs.method.decal_mount(e, attach)
+    world:pub{"decal_mount", e, attach}
+end
 
-local decal_changed_mb = {}
+function ds:entity_init()
+    for msg in decl_mount_mb:each() do
+        local e, attach = msg[2], msg[3]
+        
+        w:sync("render_object:out", attach)
+        local attach_ro = attach.render_object
+
+        w:sync("render_object:out", e)
+        local ro = e.render_object
+
+        ro.vb = attach_ro.vb
+        ro.ib = attach_ro.ib
+
+        ro.set_transform = function ()
+            bgfx.set_transform(attach_ro.worldmat)
+        end
+    end
+end
+
 function ds:data_changed()
-    for _, _, eid in decal_register_mb:unpack() do
-        decal_changed_mb[eid] = world:sub{"component_changed", "decal", eid}
+	for e in w:select "scene_changed decal:in" do
+        update_decal(e.decal)
     end
-
-    for _, _, eid in decal_entity_remove_mb:unpack() do
-        decal_changed_mb[eid] = nil
-    end
-
-    for eid, mb in pairs(decal_changed_mb) do
-        for _, _, eid in mb:unpack() do
-            update_decal(world[eid])
-        end
-    end
-
-	for v in w:select "scene_changed eid:in" do
-        local e = world[v.eid]
-        if e.decal then
-            update_decal(e)
-        end
-	end
-
 end
 
 -- rotate Z Axis -> Y Axis
@@ -79,16 +59,14 @@ local rotateYZ_MAT = math3d.ref(
     )
 
 function ds:follow_transform_updated()
-    for _, eid in world:each "decal" do
-        local de = world[eid]
-        local rc = de._rendercache
-
-        local mm = math3d.mul(rotateYZ_MAT, rc.worldmat)
+    for e in w:select "decal:in render_object:in" do
+        local ro = e.render_object
+        local d = e.decal
+        local mm = math3d.mul(rotateYZ_MAT, ro.worldmat)
 
         local viewmat = math3d.inverse(mm)
-        local projmat = math3d.projmat(rc.frustum)
+        local projmat = math3d.projmat(d.frustum)
         local viewprojmat = math3d.mul(projmat, viewmat)
-
-        imaterial.set_property(eid, "u_decal_mat", math3d.mul(viewprojmat, rc.worldmat))
+        imaterial.set_property_directly(ro.properties, "u_decal_mat", math3d.mul(viewprojmat, ro.worldmat))
     end
 end

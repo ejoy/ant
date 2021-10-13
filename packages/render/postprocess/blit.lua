@@ -27,8 +27,6 @@ function blit_sys:init()
 			scene = {
 				srt = mu.srt_obj(),
 			},
-			render_object   = {},
-			filter_material = {},
 			material        = "/pkg/ant.resources/materials/fullscreen.material",
 			state           = 0,
 			name            = "resolve_quad",

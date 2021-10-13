@@ -9,13 +9,6 @@ system "scenespace_system"
     .method "update_transform"
     .method "scene_remove"
 
-policy "hierarchy_policy"
-    .require_system "scenespace_system"
-    .component "scene_entity"
-
-policy "transform_policy"
-    .component "transform"
-
 interface "ientity_state"
     .implement "entity_state.lua"
     .method "has_state"

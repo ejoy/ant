@@ -1,32 +1,28 @@
 ---
 policy:
     ant.render|render
-    ant.scene|hierarchy_policy
     ant.general|name
 data:
-    transform: 
-        s: {100, 100, 100, 0}
-    bind_slot: "mixamorig:Head"
+    scene: 
+        srt:
+            s: 100
     material: /pkg/ant.resources/materials/singlecolor.material
     mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
-    state: 0x00000005
+    state: visible
     scene_entity: true
-    name: slot_cube
-action:
-    mount: rooteid
+    name: cube
 ---
 policy:
-    ant.render|render
     ant.render|decal
-    ant.scene|hierarchy_policy
+    ant.scene|scene_object
     ant.general|name
 data:
     name: decal_test
-    transform:
-        t: {0, 0, 1, 1}
+    scene:
+        srt:
+            t: {0, 0, 1, 1}
     material: /pkg/ant.resources/materials/decal_test.material
-    state: 5
-    scene_entity: true
+    state: visible|selectable
     decal:
         w: 2.5
         h: 2.5
