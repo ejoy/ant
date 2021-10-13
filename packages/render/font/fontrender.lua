@@ -23,6 +23,8 @@ local irender = ecs.import.interface "ant.render|irender"
 local icamera	= ecs.import.interface "ant.camera|camera"
 
 local irq = ecs.import.interface "ant.render|irenderqueue"
+local mask<const>, offset<const> = math3d.ref(math3d.vector(0.5, 0.5, 1, 1)), math3d.ref(math3d.vector(0.5, 0.5, 0, 0))
+
 local function calc_screen_pos(pos3d, queuename)
     queuename = queuename or "main_queue"
 
@@ -31,13 +33,12 @@ local function calc_screen_pos(pos3d, queuename)
     local vp = camera.viewprojmat
     local posNDC = math3d.transformH(vp, pos3d)
 
-    local mask<const>, offset<const> = {0.5, 0.5, 1, 1}, {0.5, 0.5, 0, 0}
     local posClamp = math3d.muladd(posNDC, mask, offset)
     local vr = irq.view_rect(queuename)
 
     local posScreen = math3d.tovalue(math3d.mul(math3d.vector(vr.w, vr.h, 1, 1), posClamp))
 
-    if not math3d.origin_bottom_left then
+    if not math3d.get_origin_bottom_left() then
         posScreen[2] = vr.h - posScreen[2]
     end
 
@@ -50,7 +51,7 @@ end
 
 local fontsys = ecs.system "font_system"
 
-local mask<const> = {0, 1, 0, 0}
+local vertical_mask<const> = math3d.ref(math3d.vector(0, 1, 0, 0))
 local function calc_aabb_pos(e, offset, offsetop)
     local attach_e = e.render_object.attach_eid
     if attach_e then
@@ -70,11 +71,11 @@ end
 local function calc_3d_anchor_pos(e, cfg)
     if cfg.location_type == "aabb_top" then
         return calc_aabb_pos(e, cfg.location_offset, function (center, extent)
-            return math3d.muladd(mask, extent, center)
+            return math3d.muladd(vertical_mask, extent, center)
         end)
     elseif cfg.location_type == "aabb_bottom" then
         return calc_aabb_pos(e, cfg.location_offset, function (center, extent)
-                return math3d.muladd(mask, math3d.inverse(extent), center)
+                return math3d.muladd(vertical_mask, math3d.inverse(extent), center)
             end)
     elseif cfg.location then
         return cfg.location

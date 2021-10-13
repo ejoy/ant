@@ -90,7 +90,7 @@ end
 local def_sm_size<const> = 512
 local half_def_sm_size<const> = def_sm_size * 0.5
 
-local flipv = math3d.origin_bottom_left and -1.0 or 1.0
+local flipv = math3d.get_origin_bottom_left() and -1.0 or 1.0
 
 local TetrahedronFaces = {
     Green = {
