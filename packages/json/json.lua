@@ -3,7 +3,6 @@ local next = next
 local error = error
 local tonumber = tonumber
 local tostring = tostring
-local utf8_char = utf8.char
 local table_concat = table.concat
 local table_sort = table.sort
 local string_char = string.char
@@ -13,16 +12,63 @@ local string_match = string.match
 local string_gsub = string.gsub
 local string_sub = string.sub
 local string_format = string.format
-local math_type = math.type
 local setmetatable = setmetatable
 local getmetatable = getmetatable
 local huge = math.huge
 local tiny = -huge
 
-local json = {}
-json.object = {}
+local utf8_char
+local math_type
 
+if _VERSION == "Lua 5.1" or _VERSION == "Lua 5.2" then
+    local math_floor = math.floor
+    function utf8_char(c)
+        if c <= 0x7f then
+            return string_char(c)
+        elseif c <= 0x7ff then
+            return string_char(math_floor(c / 64) + 192, c % 64 + 128)
+        elseif c <= 0xffff then
+            return string_char(
+                math_floor(c / 4096) + 224,
+                math_floor(c % 4096 / 64) + 128,
+                c % 64 + 128
+            )
+        elseif c <= 0x10ffff then
+            return string_char(
+                math_floor(c / 262144) + 240,
+                math_floor(c % 262144 / 4096) + 128,
+                math_floor(c % 4096 / 64) + 128,
+                c % 64 + 128
+            )
+        end
+        error(string.format("invalid UTF-8 code '%x'", c))
+    end
+    function math_type(v)
+        if v >= -2147483648 and v <= 2147483647 and math_floor(v) == v then
+            return "integer"
+        end
+        return "float"
+    end
+else
+    utf8_char = utf8.char
+    math_type = math.type
+end
+
+local json = {}
 json.supportSparseArray = true
+
+local objectMt = {}
+
+function json.createEmptyObject()
+    return setmetatable({}, objectMt)
+end
+
+function json.isObject(t)
+    if t[1] ~= nil then
+        return false
+    end
+    return next(t) ~= nil or getmetatable(t) == objectMt
+end
 
 -- json.encode --
 local statusVisited
@@ -65,7 +111,7 @@ encode_map["nil"] = function ()
 end
 
 local function encode_string(v)
-    return string_gsub(v, '[\0-\31\\"]', encode_escape_map)
+    return string_gsub(v, '[%z\1-\31\\"]', encode_escape_map)
 end
 
 function encode_map.string(v)
@@ -110,7 +156,7 @@ end
 function encode_map.table(t)
     local first_val = next(t)
     if first_val == nil then
-        if getmetatable(t) == json.object then
+        if getmetatable(t) == objectMt then
             return "{}"
         else
             return "[]"
@@ -143,26 +189,38 @@ function encode_map.table(t)
         end
         statusVisited[t] = nil
         return "}"
-    else
-        local count = 0
+    elseif json.supportSparseArray then
         local max = 0
         for k in next, t do
             if math_type(k) ~= "integer" or k <= 0 then
                 error("invalid table: mixed or invalid key types")
             end
-            count = count + 1
             if max < k then
                 max = k
             end
-        end
-        if not json.supportSparseArray and count ~= max then
-            error("sparse array are not supported")
         end
         statusBuilder[#statusBuilder+1] = "["
         encode(t[1])
         for i = 2, max do
             statusBuilder[#statusBuilder+1] = ","
             encode(t[i])
+        end
+        statusVisited[t] = nil
+        return "]"
+    else
+        if t[1] == nil then
+            error("invalid table: mixed or invalid key types")
+        end
+        statusBuilder[#statusBuilder+1] = "["
+        encode(t[1])
+        local count = 2
+        while t[count] ~= nil do
+            statusBuilder[#statusBuilder+1] = ","
+            encode(t[count])
+            count = count + 1
+        end
+        if next(t, count-1) ~= nil then
+            error("invalid table: mixed or invalid key types")
         end
         statusVisited[t] = nil
         return "]"
@@ -216,7 +274,7 @@ local function find_line()
 end
 
 local function decode_error(msg)
-    error(string_format("ERROR: %s at line %d col %d", msg, find_line()))
+    error(string_format("ERROR: %s at line %d col %d", msg, find_line()), 2)
 end
 
 local function get_word()
@@ -261,7 +319,7 @@ local function decode_string()
     local has_escape = false
     local i = statusPos + 1
     while true do
-        i = string_find(statusBuf, '["\\\0-\31]', i)
+        i = string_find(statusBuf, '[%z\1-\31\\"]', i)
         if not i then
             decode_error "expected closing quote for string"
         end
@@ -372,10 +430,10 @@ end
 
 local function decode_array()
     statusPos = statusPos + 1
-    local res = {}
     if consume_byte "^[ \t\r\n]*%]" then
-        return res
+        return {}
     end
+    local res = {}
     statusTop = statusTop + 1
     statusAry[statusTop] = true
     statusRef[statusTop] = res
@@ -384,10 +442,10 @@ end
 
 local function decode_object()
     statusPos = statusPos + 1
-    local res = {}
     if consume_byte "^[ \t\r\n]*}" then
-        return setmetatable(res, json.object)
+        return json.createEmptyObject()
     end
+    local res = {}
     statusTop = statusTop + 1
     statusAry[statusTop] = false
     statusRef[statusTop] = res
@@ -475,7 +533,11 @@ function json.decode(str)
     return res
 end
 
--- Generate a lightuserdata
-json.null = debug.upvalueid(decode, 1)
+if debug and debug.upvalueid then
+    -- Generate a lightuserdata
+    json.null = debug.upvalueid(decode, 1)
+else
+    json.null = function() end
+end
 
 return json
