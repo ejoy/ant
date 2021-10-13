@@ -64,7 +64,8 @@ function m:update_current_aabb(eid)
         local v = math3d.tovalue(aabb)
         local aabb_shape = {min={v[1],v[2],v[3]}, max={v[5],v[6],v[7]}}
         local vb, ib = geo_utils.get_aabb_vb_ib(aabb_shape, aabb_color_i)
-        local rc = world[highlight_aabb_eid]._rendercache
+        w:sync("render_object?in", highlight_aabb_eid)
+        local rc = highlight_aabb_eid.render_object
         local vbdesc, ibdesc = rc.vb, rc.ib
         bgfx.update(vbdesc.handles[1], 0, bgfx.memory_buffer("fffd", vb))
         ies.set_state(highlight_aabb_eid, "visible", true)
@@ -468,6 +469,43 @@ local function convert_path(path, glb_filename)
     return new_path
 end
 
+
+
+
+
+function m:on_prefab_ready(prefab)
+    self:reset_prefab()
+    
+    local entitys = prefab.tag["*"]
+    local function find_e(entitys, id)
+        for _, e in ipairs(entitys) do
+            if e.scene.id == id then
+                return e
+            end
+        end
+    end
+
+    local node_map = {}
+    for i, e in ipairs(entitys) do
+        node_map[e] = {template = self.prefab_template[i], parent = find_e(entitys, e.scene.parent)}
+    end
+
+    local function add_to_hierarchy(e)
+        local node = node_map[e]
+        if node.parent and not hierarchy:get_node(node.parent) then
+            add_to_hierarchy(node.parent)
+        end
+        hierarchy:add(e, {template = node.template}, node.parent or self.root)
+    end
+
+    for _, e in ipairs(entitys) do
+        add_to_hierarchy(e)
+    end
+
+    self.prefab = prefab
+    self.entitys = entitys
+end
+
 function m:open(filename)
     world:pub {"PreOpenPrefab", filename}
     -- local prefab = get_prefab(filename)
@@ -501,7 +539,7 @@ function m:open(filename)
     --     end
     -- end
     -- self:open_prefab(prefab)
-    local prefab_proto = serialize.parse(filename, cr.read_file(filename))
+    self.prefab_template = serialize.parse(filename, cr.read_file(filename))
     local prefab = ecs.create_instance(filename)
     function prefab:on_init()
     end
@@ -509,7 +547,7 @@ function m:open(filename)
     function prefab:on_ready()
         --world:call(camera, "get_position")
         
-        print("on_ready")
+        m:on_prefab_ready(self)
     end
     
     function prefab:on_message(msg)
@@ -614,86 +652,86 @@ end
 function m:open_prefab(prefab)
     self:reset_prefab()
     self.prefab = prefab
-    local entities = worldedit:prefab_instance(prefab)
-    self.entities = entities
-    local template_class = prefab.__class
-    for _, c in ipairs(template_class) do
-        if c.script then
-            self.prefab_script = c.script
-            break
-        end
-    end
-    local remove_entity = {}
-    local add_entity = {}
-    local last_camera
-    for i, entity in ipairs(entities) do
-        if type(entity) == "table" then
-            if entity.root then
-                local templ = hierarchy:get_template(entity.root)
-                templ.filename = template_class[i].prefab
-                set_select_adapter(entity, entity.root)
-                templ.children = entity
-                remove_entity[#remove_entity+1] = entity
-            elseif #entity == 0 then
-                -- camera
-                hierarchy:add(entity, {template = template_class[i]}, self.root)
-                self.post_init_camera[#self.post_init_camera + 1] = entity
-            end
-        else
-            local keyframes = template_class[i].data.frames
-            if keyframes and last_camera then
-                local templ = hierarchy:get_template(last_camera)
-                templ.keyframe = template_class[i]
-                camera_mgr.bind_recorder(last_camera, entity)
-                remove_entity[#remove_entity+1] = entity
-            else
-                if world[entity].collider then
-                    local collider = world[entity].collider
-                    local config = {}
-                    if collider.sphere then
-                        config.type = "sphere"
-                        config.define = collider.sphere
-                    elseif collider.box then
-                        config.type = "box"
-                        config.define = collider.box
-                    end
-                    local new_entity, temp = self:create_collider(config)
+    -- local entities = worldedit:prefab_instance(prefab)
+    -- self.entities = entities
+    -- local template_class = prefab.__class
+    -- for _, c in ipairs(template_class) do
+    --     if c.script then
+    --         self.prefab_script = c.script
+    --         break
+    --     end
+    -- end
+    -- local remove_entity = {}
+    -- local add_entity = {}
+    -- local last_camera
+    -- for i, entity in ipairs(entities) do
+    --     if type(entity) == "table" then
+    --         if entity.root then
+    --             local templ = hierarchy:get_template(entity.root)
+    --             templ.filename = template_class[i].prefab
+    --             set_select_adapter(entity, entity.root)
+    --             templ.children = entity
+    --             remove_entity[#remove_entity+1] = entity
+    --         elseif #entity == 0 then
+    --             -- camera
+    --             hierarchy:add(entity, {template = template_class[i]}, self.root)
+    --             self.post_init_camera[#self.post_init_camera + 1] = entity
+    --         end
+    --     else
+    --         local keyframes = template_class[i].data.frames
+    --         if keyframes and last_camera then
+    --             local templ = hierarchy:get_template(last_camera)
+    --             templ.keyframe = template_class[i]
+    --             camera_mgr.bind_recorder(last_camera, entity)
+    --             remove_entity[#remove_entity+1] = entity
+    --         else
+    --             if world[entity].collider then
+    --                 local collider = world[entity].collider
+    --                 local config = {}
+    --                 if collider.sphere then
+    --                     config.type = "sphere"
+    --                     config.define = collider.sphere
+    --                 elseif collider.box then
+    --                     config.type = "box"
+    --                     config.define = collider.box
+    --                 end
+    --                 local new_entity, temp = self:create_collider(config)
                     
-                    if world[entity].parent and world[world[entity].parent].slot then
-                        world[new_entity].slot_name = world[world[entity].parent].name
-                    end
-                    --world[new_entity].parent = world[entity].parent or self.root
-                    ecs.method.set_parent(new_entity, world[entity].parent or self.root)
+    --                 if world[entity].parent and world[world[entity].parent].slot then
+    --                     world[new_entity].slot_name = world[world[entity].parent].name
+    --                 end
+    --                 --world[new_entity].parent = world[entity].parent or self.root
+    --                 ecs.method.set_parent(new_entity, world[entity].parent or self.root)
                     
-                    hierarchy:add(new_entity, {template = temp.__class[1]}, world[new_entity].parent)
-                    add_entity[#add_entity + 1] = new_entity
-                    remove_entity[#remove_entity+1] = entity
-                else
-                    if world[entity].mesh then
-                        ies.set_state(entity, "selectable", true)
-                    end
-                    hierarchy:add(entity, {template = template_class[i]}, world[entity].parent or self.root)
-                end
-            end
-            if world[entity].camera then
-                camera_mgr.update_frustrum(entity)
-                camera_mgr.show_frustum(entity, false)
-                last_camera = entity
-            elseif world[entity].light_type then
-                create_light_billboard(entity)
-                light_gizmo.bind(entity)
-                light_gizmo.show(false)
-            elseif world[entity].collider then
-                world:remove_entity(entity)
-            end
-        end
-    end
-    for _, e in ipairs(remove_entity) do
-        self:internal_remove(e)
-    end
-    for _, e in ipairs(add_entity) do
-        self.entities[#self.entities + 1] = e
-    end
+    --                 hierarchy:add(new_entity, {template = temp.__class[1]}, world[new_entity].parent)
+    --                 add_entity[#add_entity + 1] = new_entity
+    --                 remove_entity[#remove_entity+1] = entity
+    --             else
+    --                 if world[entity].mesh then
+    --                     ies.set_state(entity, "selectable", true)
+    --                 end
+    --                 hierarchy:add(entity, {template = template_class[i]}, world[entity].parent or self.root)
+    --             end
+    --         end
+    --         if world[entity].camera then
+    --             camera_mgr.update_frustrum(entity)
+    --             camera_mgr.show_frustum(entity, false)
+    --             last_camera = entity
+    --         elseif world[entity].light_type then
+    --             create_light_billboard(entity)
+    --             light_gizmo.bind(entity)
+    --             light_gizmo.show(false)
+    --         elseif world[entity].collider then
+    --             world:remove_entity(entity)
+    --         end
+    --     end
+    -- end
+    -- for _, e in ipairs(remove_entity) do
+    --     self:internal_remove(e)
+    -- end
+    -- for _, e in ipairs(add_entity) do
+    --     self.entities[#self.entities + 1] = e
+    -- end
 
     anim_view.load_clips()
     camera_mgr.bind_main_camera()
