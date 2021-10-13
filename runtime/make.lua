@@ -11,7 +11,7 @@ local Backlist = {
 
 local RuntimeModules = {}
 
-for path in (fs.path(lm.workdir) / "../clibs"):list_directory() do
+for path in fs.pairs(fs.path(lm.workdir) / "../clibs") do
     if fs.exists(path / "make.lua") then
         local name = path:stem():string()
         if not Backlist[name] then
