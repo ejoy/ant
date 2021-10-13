@@ -4,9 +4,7 @@
 #include <stb/stb_truetype.h>
 #include <stdint.h>
 #include "fontmutex.h"
-
-#define FONT_MANAGER_TEXSIZE 2048
-#define FONT_MANAGER_GLYPHSIZE 48
+#include "font_define.h"
 
 #define FONT_MANAGER_SLOTLINE (FONT_MANAGER_TEXSIZE/FONT_MANAGER_GLYPHSIZE)
 #define FONT_MANAGER_SLOTS (FONT_MANAGER_SLOTLINE*FONT_MANAGER_SLOTLINE)

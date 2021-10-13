@@ -65,7 +65,7 @@ data:
         size: 42
     show_config:
         location_type: aabb_top
-        location_offset: {0, -0.85, 0, 0}
+        location_offset: {0, 0.15, 0, 0}
         description: 测试测试2
         color: 0xffffff00
 action:

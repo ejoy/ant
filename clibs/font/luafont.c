@@ -158,7 +158,7 @@ lprepare_text(lua_State *L) {
 // 	return 1;
 // }
 
-#define FIXPOINT 8
+#define FIXPOINT FONT_POSTION_FIX_POINT
 
 static inline void
 fill_text_quad(struct font_manager *F, struct quad_text * qt, int16_t x0, int16_t y0, uint32_t color, int size, struct font_glyph *g) {
