@@ -47,6 +47,7 @@ system "camera_system"
     .require_interface "ant.objcontroller|obj_motion"
     .method "component_init"
     .method "entity_ready"
+    .method "update_camera"
     .method "handle_camera_event"
 
 system "input_system"

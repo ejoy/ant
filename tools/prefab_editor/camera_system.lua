@@ -270,3 +270,16 @@ function camera_sys:component_init()
 	-- 	end
 	-- end
 end
+
+function camera_sys:update_camera()
+	if not camera_mgr.second_camera then return end
+	w:sync("camera:in", camera_mgr.second_camera)
+	local camera = camera_mgr.second_camera.camera
+	if camera then
+		local worldmat = camera.worldmat
+		local pos, dir = math3d.index(worldmat, 4, 3)
+		camera.viewmat = math3d.lookto(pos, dir, camera.updir)
+		camera.projmat = math3d.projmat(camera.frustum)
+		camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
+	end
+end
