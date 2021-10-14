@@ -413,11 +413,10 @@ function m:on_prefab_ready(prefab)
     local node_map = {}
     for i, e in ipairs(entitys) do
         node_map[e] = {template = self.prefab_template[i], parent = find_e(entitys, e.scene.parent)}
-        -- w:sync("camera:in", e)
-        -- if e.camera then
-        --     camera_mgr.update_frustrum(e)
-        --     camera_mgr.show_frustum(false)
-        -- end
+        w:sync("camera:in", e)
+        if e.camera then
+            camera_mgr.on_camera_ready(e)
+        end
     end
 
     local function add_to_hierarchy(e)

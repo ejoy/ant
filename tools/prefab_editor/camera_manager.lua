@@ -30,7 +30,7 @@ local default_far_clip  = 100
 local default_fov       = 30
         
 function camera_mgr.get_editor_data(e)
-    if #e == 0 then return end
+    if not e or #e == 0 then return end
     w:sync("camera:in", e)
     if not e.camera._editor then
         e.camera._editor = {}
@@ -39,6 +39,9 @@ function camera_mgr.get_editor_data(e)
 end
 
 function camera_mgr.set_second_camera(eid, show)
+    if not eid then
+        return
+    end
     -- local rc = world[eid]._rendercache
 	-- rc.viewmat = icamera.calc_viewmat(eid)
     -- rc.projmat = icamera.calc_projmat(eid)
@@ -167,16 +170,14 @@ local function gen_camera_recorder_name() recorderidx = recorderidx + 1 return "
 function camera_mgr.on_camera_ready(e)
     camera_mgr.update_frustrum(e)
     camera_mgr.show_frustum(e, false)
-    --camera_mgr.set_second_camera(e, false)
     camera_mgr.bind_recorder(e, icamera_recorder.start(gen_camera_recorder_name()))
-    --camera_mgr.add_recorder_frame(e)
 end
 
 function camera_mgr.create_camera()
     local main_frustum = icamera.get_frustum(camera_mgr.main_camera)
     local info = {
-        eyepos = iom.get_position(camera_mgr.main_camera),---{2, 2, -2, 1},
-        viewdir = iom.get_direction(camera_mgr.main_camera),--{-2, -1, 2, 0},
+        eyepos = iom.get_position(camera_mgr.main_camera),
+        viewdir = iom.get_direction(camera_mgr.main_camera),
         frustum = {n = default_near_clip, f = default_far_clip, aspect = main_frustum.aspect, fov = main_frustum.fov },
         updir = {0, 1, 0},
         name = gen_camera_name()
@@ -212,13 +213,6 @@ function camera_mgr.create_camera()
     local cam = ecs.create_entity(runtime_tpl)
     camera_mgr.camera_list[cam] = { camera_ref = cam, target = -1, dist_to_target = 5 }
     return cam, template
-
-    -- world[new_camera].camera = true
-    -- iom.set_position(new_camera, iom.get_position(camera_mgr.main_camera))
-    -- iom.set_rotation(new_camera, iom.get_rotation(camera_mgr.main_camera))
-    -- camera_mgr.update_frustrum(new_camera)
-    -- camera_mgr.set_second_camera(new_camera, false)
-    -- return new_camera--, camera_template.__class[1]
 end
 
 function camera_mgr.bind_recorder(eid, recorder)

@@ -51,7 +51,9 @@ function m:init()
     entity.create_grid_entity_simple("", nil, nil, nil, {srt={r={0,0.92388,0,0.382683},}})
     imgui.SetWindowTitle("PrefabEditor")
     gd.editor_package_path = "/pkg/tools.prefab_editor/"
+end
 
+function m:init_world()
     create_second_view()
 end
 
@@ -71,21 +73,6 @@ function m:entity_init()
         }
         irq.set_camera("main_queue", main_camera)
         camera_mgr.main_camera = main_camera
-    end
-
-    for _ in w:select "INIT second_view" do
-        local second_camera = icamera.create {
-            eyepos = {2, 2, -2, 1},
-            viewdir = {-2, -1, 2, 0},
-            frustum = {n = 1, f = 100 },
-            updir = {0.0, 1.0, 0.0, 0}
-        }
-        -- local rc = icamera.find_camera(second_camera)
-        -- rc.viewmat = icamera.calc_viewmat(second_camera)
-        -- rc.projmat = icamera.calc_projmat(second_camera)
-        -- rc.viewprojmat = icamera.calc_viewproj(second_camera)
-        camera_mgr.second_view_camera = second_camera
-        camera_mgr.set_second_camera(second_camera, false)
     end
 
     for _, e, camera_ref in bind_billboard_camera_mb:unpack() do
