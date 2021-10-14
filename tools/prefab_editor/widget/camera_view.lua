@@ -13,6 +13,7 @@ local BaseView      = require "widget.view_class".BaseView
 local CameraView    = require "widget.view_class".CameraView
 local hierarchy     = require "hierarchy_edit"
 
+
 function CameraView:_init()
     BaseView._init(self)
     local property = {}

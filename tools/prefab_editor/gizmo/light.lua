@@ -32,12 +32,6 @@ local SLICES = 10
 local LENGTH = 1
 local DEFAULT_POSITION = {0, 0, 0}
 local DEFAULT_ROTATE = {2.4, 0, 0}
-function m.highlight(hl)
-    local color = hl and HIGHLIGHT_COLOR or NORMAL_COLOR
-    for i, v in ipairs(m.eid) do
-        imaterial.set_property(v, "u_color", color)
-    end
-end
 
 function m.bind(eid)
     m.show(false)

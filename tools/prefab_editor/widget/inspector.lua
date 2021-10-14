@@ -307,7 +307,9 @@ local function update_current()
         if not current_panel then
             current_panel = get_base_panel()
         end
-        current_panel:set_model(current_eid)
+        if current_panel.set_model then
+            current_panel:set_model(current_eid)
+        end
     else
         current_panel = nil
     end

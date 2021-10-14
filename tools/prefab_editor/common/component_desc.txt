@@ -1,22 +1,52 @@
 name:
   type: string
 transform:
-  type: table
   s:
-    type: array
-    num: 3
+    type: vec3
+    widget: DragFloat
   r:
-    type: array
-    num: 4
+    type: vec3
+    widget: DragFloat
   t:
-    type: array
-    num: 3
+    type: vec3
+    widget: DragFloat
 lightmap:
-  type: table
-  size: int
+  size:
+    type: int
+    min: 16
+    max: 512
 mesh:
   type: string
 material:
   type: string
 state:
   type: string
+  list: {visible, cast_shadow, selectable}
+  widget: combo
+light:
+  range:
+    type: float
+    widget: DragFloat
+  light_type:
+    type: string
+    readonly: true
+  color:
+    type: color
+  intensity:
+    type: float
+    widget: DragFloat
+  make_shadow:
+    type: bool
+  motion_type:
+    type: string
+    list: {dynamic, station, static}
+    widget: combo
+  inner_cutoff:
+    type: float
+    widget: DragFloat
+  outter_cutoff:
+    type: float
+    widget: DragFloat
+  angular_radius:
+    type: float
+    widget: DragFloat

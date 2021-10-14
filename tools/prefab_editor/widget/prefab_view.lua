@@ -5,40 +5,11 @@ local w = world.w
 local datalist  = require "datalist"
 local fs        = require "filesystem"
 local imgui     = require "imgui"
+local compdefines=require "widget.component_defines"
 
-local uiproperty= ecs.require "widget.uiproperty"
 local gizmo     = ecs.require "gizmo.gizmo"
 local hierarchy = ecs.require "hierarchy_edit"
 local uiutils   = ecs.require "widget.utils"
-
-local component_desc = datalist.parse(fs.open(fs.path "/pkg/tools.prefab_editor/common/component_desc.txt"):read "a")
-local component_names = {}
-for k in pairs(component_desc) do
-    component_names[#component_names+1] = k
-end
-table.sort(component_names)
-
-local function sort_pairs(t)
-    local s = {}
-    for k in pairs(t) do
-        s[#s+1] = k
-    end
-
-    table.sort(s)
-
-    local n = 1
-    return function ()
-        local k = s[n]
-        if k == nil then
-            return
-        end
-        n = n + 1
-        return k, t[k]
-    end
-end
-
-
-
 
 local prefab_view = {}
 
@@ -63,7 +34,7 @@ local function build_ui(compname, compdesc, compvalue)
     elseif d == "float" then
     elseif d == "table" then
         if imgui.widget.TreeNode(compname, imgui.flags.TreeNode{"DefaultOpen"}) then
-        for k, v in sort_pairs(compvalue) do
+        for k, v in compdefines.sort_pairs(compvalue) do
                 build_ui(k, d[k], v)
             end
         end
@@ -85,7 +56,7 @@ function prefab_view:show()
 
     for _ in uiutils.imgui_windows("Prefab", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
         if imgui.widget.CollapsingHeader("Prefab Data", imgui.flags.TreeNode{"DefaultOpen"}) then
-            for _, n in ipairs(component_names) do
+            for _, n in ipairs(compdefines.names) do
                 local v = t[n]
                 if v then
 
