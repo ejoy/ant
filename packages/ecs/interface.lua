@@ -94,7 +94,6 @@ local check_map = {
 	require_policy_v2 = "policy_v2",
 	component_v2 = "component_v2",
 	component_opt = "component_v2",
-	unique_component = "none",
 	pipeline = "none",
 	stage = "none",
 }
