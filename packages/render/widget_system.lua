@@ -124,40 +124,40 @@ function iwd.draw_lines(shape, srt, color)
 	append_buffers("fffd", desc.vb, "w", desc.ib)
 end
 
-function iwd.draw_box(shape, srt)
+function iwd.draw_box(shape, srt, color)
 	local desc={vb={}, ib={}}
-	geometry_drawer.draw_box(shape.size, DEFAULT_COLOR, apply_srt(shape, srt), desc)
+	geometry_drawer.draw_box(shape.size, color or DEFAULT_COLOR, apply_srt(shape, srt), desc)
 	append_buffers("fffd", desc.vb, "w", desc.ib)
 end
 
-function iwd.draw_capsule(shape, srt)
+function iwd.draw_capsule(shape, srt, color)
 	local desc={vb={}, ib={}}
 	geometry_drawer.draw_capsule({
 		tessellation = 2,
 		height = shape.height,
 		radius = shape.radius,
-	}, DEFAULT_COLOR, apply_srt(shape, srt), desc)
+	}, color or DEFAULT_COLOR, apply_srt(shape, srt), desc)
 	append_buffers("fffd", desc.vb, "w", desc.ib)
 end
 
-function iwd.draw_sphere(shape, srt)
+function iwd.draw_sphere(shape, srt, color)
 	local desc={vb={}, ib={}}
 	geometry_drawer.draw_sphere({
 		tessellation = 2,
 		radius = shape.radius,
-	}, DEFAULT_COLOR, apply_srt(shape, srt), desc)
+	}, color or DEFAULT_COLOR, apply_srt(shape, srt), desc)
 	append_buffers("fffd", desc.vb, "w", desc.ib)
 end
 
-function iwd.draw_aabb_box(shape, srt)
+function iwd.draw_aabb_box(shape, srt, color)
 	local desc={vb={}, ib={}}
-	geometry_drawer.draw_aabb_box(shape, DEFAULT_COLOR, apply_srt(shape, srt), desc)
+	geometry_drawer.draw_aabb_box(shape, color or DEFAULT_COLOR, apply_srt(shape, srt), desc)
 	append_buffers("fffd", desc.vb, "w", desc.ib)
 end
 
-function iwd.draw_skeleton(ske, ani, srt)
+function iwd.draw_skeleton(ske, ani, srt, color)
 	local desc={vb={}, ib={}}
-	geometry_drawer.draw_skeleton(ske, ani, DEFAULT_COLOR, srt, desc)
+	geometry_drawer.draw_skeleton(ske, ani, color or DEFAULT_COLOR, srt, desc)
 	append_buffers("fffd", desc.vb, "w", desc.ib)
 end
 

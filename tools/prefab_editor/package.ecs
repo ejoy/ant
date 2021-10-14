@@ -34,10 +34,6 @@ system "init_system"
     .method "post_init"
     .method "entity_init"
 
-action "bind_billboard_camera"
-    .implement "init_system.lua"
-    .method "init"
-
 system "gizmo_system"
     .implement "gizmo_system.lua"
     .method "init"
@@ -58,9 +54,9 @@ system "input_system"
 
 system "gui_system"
     .implement "gui_system.lua"
+    .method "data_changed"
     .method "handle_event"
     .method "ui_update"
-    .method "widget"
     .method "end_frame"
 
 system "grid_brush_system"

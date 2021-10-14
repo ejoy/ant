@@ -1,5 +1,6 @@
 local ecs = ...
 local world     = ecs.world
+local w         = world.w
 local math3d    = require "math3d"
 local imgui     = require "imgui"
 local rhwi      = import_package "ant.hwi"
@@ -12,6 +13,7 @@ local iss       = ecs.import.interface "ant.scene|iscenespace"
 local icoll     = ecs.import.interface "ant.collision|collider"
 local drawer    = ecs.import.interface "ant.render|iwidget_drawer"
 local isp 		= ecs.import.interface "ant.render|isystem_properties"
+local iwd       = ecs.import.interface "ant.render|iwidget_drawer"
 local resource_browser  = ecs.require "widget.resource_browser"
 local anim_view         = ecs.require "widget.animation_view"
 local material_view     = ecs.require "widget.material_view"
@@ -288,6 +290,29 @@ local event_gizmo = world:sub {"Gizmo"}
 
 local light_gizmo = ecs.require "gizmo.light"
 
+local aabb_color_i <const> = 0x6060ffff
+local aabb_color <const> = {1.0, 0.38, 0.38, 1.0}
+local highlight_aabb = {
+    visible = false,
+    min = nil,
+    max = nil,
+}
+local function update_heightlight_aabb(e)
+    if e then
+        w:sync("render_object?in", e)
+        local ro = e.render_object
+        if ro and ro.aabb then
+            local minv, maxv = math3d.index(ro.aabb, 1, 2)
+            highlight_aabb.min = math3d.tovalue(minv)
+            highlight_aabb.max = math3d.tovalue(maxv)
+        end
+        highlight_aabb.visible = true
+    else
+        highlight_aabb.visible = false
+    end
+
+end
+
 local function on_target(old, new)
     local old_entity = old--type(old) == "table" and icamera.find_camera(old) or world[old]
     if old and old_entity then
@@ -309,30 +334,28 @@ local function on_target(old, new)
             light_gizmo.bind(new)
         end
     end
-    --prefab_mgr:update_current_aabb(new)
     world:pub {"UpdateAABB", new}
     anim_view.bind(new)
 end
 
-local function on_update(eid)
-    if not eid then return end
-    prefab_mgr:update_current_aabb(eid)
-    local e = eid--type(eid) == "table" and icamera.find_camera(eid) or world[eid]
+local function on_update(e)
+    if not e then return end
+    update_heightlight_aabb(e)
     world.w:sync("camera?in", e)
     world.w:sync("light?in", e)
     if e.camera then
-        camera_mgr.update_frustrum(eid)
+        camera_mgr.update_frustrum(e)
     elseif e.light then
         light_gizmo.update()
     end
-    inspector.update_template_tranform(eid)
+    inspector.update_template_tranform(e)
 end
 
 local cmd_queue = ecs.require "gizmo.command_queue"
 local event_update_aabb = world:sub {"UpdateAABB"}
 function m:handle_event()
-    for _, col_eid in event_update_aabb:unpack() do
-        prefab_mgr:update_current_aabb(col_eid)
+    for _, e in event_update_aabb:unpack() do
+        update_heightlight_aabb(e)
     end
     for _, action, value1, value2 in event_gizmo:unpack() do
         if action == "update" or action == "ontarget" then
@@ -422,7 +445,6 @@ function m:handle_event()
                 anim_view.on_remove_entity(gizmo.target_eid)
             end
             prefab_mgr:remove_entity(eid)
-            prefab_mgr:update_current_aabb()
             gizmo:set_target(nil)
         elseif what == "movetop" then
             hierarchy:move_top(eid)
@@ -475,7 +497,6 @@ function m:handle_event()
                 anim_view.on_remove_entity(gizmo.target_eid)
             end
             prefab_mgr:remove_entity(gizmo.target_eid)
-            prefab_mgr:update_current_aabb()
             gizmo:set_target(nil)
         elseif state.CTRL and key == "S" and press == 1 then
             prefab_mgr:save_prefab()
@@ -489,13 +510,6 @@ function m:handle_event()
         prefab_mgr:create(what, type)
     end
 end
-
-local DEFAULT_COLOR <const> = 0xffffff00
-local geo_utils = ecs.require "editor.geometry_utils"
-local anim_entity
-local anim_transform = math3d.ref()
-local current_skeleton
-local skeleton_eid
 
 function m:end_frame()
     local dirty = false
@@ -516,33 +530,8 @@ function m:end_frame()
     prefab_mgr:init_camera()
 end
 
-function m:widget()
-    -- if skeleton_eid then
-    --     ies.set_state(skeleton_eid, "visible", false)
-    -- end
-    -- local eid = gizmo.target_eid
-    -- if not eid then return end
-    -- local e = world[eid]
-    -- if not e.skeleton then return end
-    -- if current_skeleton ~= e.skeleton then
-    --     current_skeleton = e.skeleton
-    --     if skeleton_eid then
-    --         world:remove_entity(skeleton_eid)
-    --     end
-    --     local desc={vb={}, ib={}}
-    --     geometry_drawer.draw_skeleton(e.skeleton._handle, e.pose_result, DEFAULT_COLOR, iom.worldmat(eid), desc)
-    --     skeleton_eid = geo_utils.create_dynamic_lines(e.transform, desc.vb, desc.ib, "skeleton", DEFAULT_COLOR)
-    --     ies.set_state(skeleton_eid, "auxgeom", true)
-    --     anim_transform.m = iom.worldmat(eid)
-    --     anim_entity = e
-    -- end
-    -- if skeleton_eid then
-    --     ies.set_state(skeleton_eid, "visible", true)
-    --     local desc={vb={}, ib={}}
-    --     geometry_drawer.draw_skeleton(anim_entity.skeleton._handle, anim_entity.pose_result, DEFAULT_COLOR, anim_transform, desc, anim_view.get_current_joint())
-    --     local rc = world[skeleton_eid]._rendercache
-    --     local vbdesc, ibdesc = rc.vb, rc.ib
-    --     bgfx.update(vbdesc.handles[1], 0, bgfx.memory_buffer("fffd", desc.vb))
-    --     bgfx.update(ibdesc.handle, 0, bgfx.memory_buffer("w", desc.ib))
-    -- end
+function m:data_changed()
+    if highlight_aabb.visible then
+        iwd.draw_aabb_box(highlight_aabb, nil, aabb_color_i)
+    end
 end

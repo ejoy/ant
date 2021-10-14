@@ -30,67 +30,6 @@ local subprocess    = import_package "ant.compile_resource".subprocess
 local m = {
     entities = {}
 }
-local aabb_color_i <const> = 0x6060ffff
-local aabb_color <const> = {1.0, 0.38, 0.38, 1.0}
-local highlight_aabb_eid
-function m:update_current_aabb(eid)
-    if not eid then return end
-
-    if not highlight_aabb_eid then
-        highlight_aabb_eid = geo_utils.create_dynamic_aabb({}, "highlight_aabb", aabb_color, true)
-    end
-    w:sync("camera?in", eid)
-    w:sync("light?in", eid)
-    if eid.camera or eid.light then
-        return
-    end
-    local aabb = nil
-    w:sync("mesh?in", eid)
-    local e = eid
-    if e.mesh and e.mesh.bounding then
-        local w = iom.worldmat(eid)
-        aabb = math3d.aabb_transform(w, e.mesh.bounding.aabb)
-    else
-        local adaptee = hierarchy:get_select_adaptee(eid)
-        for _, e in ipairs(adaptee) do
-            if e.mesh and e.mesh.bounding then
-                local newaabb = math3d.aabb_transform(iom.worldmat(e), e.mesh.bounding.aabb)
-                aabb = aabb and math3d.aabb_merge(aabb, newaabb) or newaabb
-            end
-        end
-    end
-
-    if aabb then
-        local v = math3d.tovalue(aabb)
-        local aabb_shape = {min={v[1],v[2],v[3]}, max={v[5],v[6],v[7]}}
-        local vb, ib = geo_utils.get_aabb_vb_ib(aabb_shape, aabb_color_i)
-        w:sync("render_object?in", highlight_aabb_eid)
-        local rc = highlight_aabb_eid.render_object
-        local vbdesc, ibdesc = rc.vb, rc.ib
-        bgfx.update(vbdesc.handles[1], 0, bgfx.memory_buffer("fffd", vb))
-        ies.set_state(highlight_aabb_eid, "visible", true)
-    end
-end
-
-function m:normalize_aabb()
-    local aabb
-    for _, e in ipairs(self.entities) do
-        if e.mesh and e.mesh.bounding then
-            local newaabb = math3d.aabb_transform(iom.worldmat(e), e.mesh.bounding.aabb)
-            aabb = aabb and math3d.aabb_merge(aabb, newaabb) or newaabb
-        end
-    end
-
-    if not aabb then return end
-
-    local aabb_mat = math3d.tovalue(aabb)
-    local min_x, min_y, min_z = aabb_mat[1], aabb_mat[2], aabb_mat[3]
-    local max_x, max_y, max_z = aabb_mat[5], aabb_mat[6], aabb_mat[7]
-    local s = 1/math.max(max_x - min_x, max_y - min_y, max_z - min_z)
-    local t = {-(max_x+min_x)/2,-min_y,-(max_z+min_z)/2}
-    local transform = math3d.mul(math3d.matrix{ s = s }, { t = t })
-    iom.set_srt(self.root, math3d.mul(transform, iom.srt(self.root)))
-end
 
 local recorderidx = 0
 local function gen_camera_recorder_name() recorderidx = recorderidx + 1 return "recorder" .. recorderidx end

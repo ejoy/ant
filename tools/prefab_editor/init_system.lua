@@ -13,16 +13,10 @@ local imgui         = require "imgui"
 local lfs           = require "filesystem.local"
 local fs            = require "filesystem"
 local gd            = require "common.global_data"
-local bb_a = ecs.action "bind_billboard_camera"
-function bb_a.init(prefab, idx, value)
-    local eid = prefab[idx]
-    local camera_ref = prefab[value]
-    if camera_ref == nil then
-        for e in w:select "main_queue camera_ref:in" do
-            camera_ref = e.camera_ref
-        end
-    end
-    world[eid]._rendercache.camera_ref = camera_ref
+
+local bind_billboard_camera_mb = world:sub{"bind_billboard_camera"}
+function ecs.method.bind_billboard_camera(e, camera_ref)
+    world:pub{"bind_billboard_camera", e, camera_ref}
 end
 
 local m = ecs.system 'init_system'
@@ -92,5 +86,15 @@ function m:entity_init()
         -- rc.viewprojmat = icamera.calc_viewproj(second_camera)
         camera_mgr.second_view_camera = second_camera
         camera_mgr.set_second_camera(second_camera, false)
+    end
+
+    for _, e, camera_ref in bind_billboard_camera_mb:unpack() do
+        if camera_ref == nil then
+            for e in w:select "main_queue camera_ref:in" do
+                camera_ref = e.camera_ref
+            end
+        end
+        w:sync("render_object?in", e)
+        e.render_object.camera_ref = camera_ref
     end
 end
