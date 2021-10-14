@@ -260,19 +260,11 @@ function camera_sys:handle_camera_event()
 
 end
 
-function camera_sys:component_init()
-	-- if not camera_mgr.main_camera then return end
-	-- for e in w:select "INIT camera:in" do
-	-- 	w:sync("scene:in", e)
-	-- 	w:sync("scene:in", camera_mgr.main_camera)
-	-- 	if e.scene ~= camera_mgr.main_camera.scene then
-	-- 		e.template.data.scene.srt = {s = {1,1,1}, r = {math3d.index(r, 1, 2, 3, 4)}, t = {math3d.index(t, 1, 2, 3)}}
-	-- 	end
-	-- end
-end
-
 function camera_sys:update_camera()
-	if not camera_mgr.second_camera then return end
+	if not camera_mgr.second_camera then
+		return
+	end
+
 	w:sync("camera:in", camera_mgr.second_camera)
 	local camera = camera_mgr.second_camera.camera
 	if camera then

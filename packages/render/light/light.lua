@@ -179,12 +179,14 @@ function ilight.set_motion_type(e, t)
 	e.light.motion_type = t
 end
 
-function ilight.angular_radius(eid)
-	return world[eid]._light.angular_radius
+function ilight.angular_radius(e)
+	w:sync("light:in", e)
+	return e.light.angular_radius
 end
 
-function ilight.set_angular_radius(eid, ar)
-	world[eid]._light.angular_radius = ar
+function ilight.set_angular_radius(e, ar)
+	w:sync("light:in", e)
+	e.light.angular_radius = ar
 end
 
 local lighttypes = {

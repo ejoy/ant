@@ -151,8 +151,6 @@ function m:create_collider(config)
             mesh = (config.type == "box") and geom_mesh_file["cube"] or geom_mesh_file[config.type],
             render_object = {},
             filter_material = {},
-            -- on_init = function (e)
-            -- end,
             on_ready = function (e)
                 e.collider = { [config.type] = define }
                 imaterial.set_property(e, "u_color", {1, 0.5, 0.5, 0.8})
@@ -476,11 +474,7 @@ function m:open(filename)
     function prefab:on_init()
     end
     
-    function prefab:on_ready()
-        --world:call(camera, "get_position")
-        
-        m:on_prefab_ready(self)
-    end
+    prefab.on_ready = m.on_prefab_ready
     
     function prefab:on_message(msg)
         --print(object, msg)
