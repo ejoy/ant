@@ -41,10 +41,6 @@ local check_map = {
 	pipeline = "pipeline",
 }
 
-local function table_append(t, a)
-	table.move(a, 1, #a, #t+1, t)
-end
-
 local copy = {}
 function copy.policy_v2(v)
 	return {
@@ -65,8 +61,6 @@ function copy.component_v2(v)
 end
 function copy.system() return {} end
 function copy.interface() return {} end
-function copy.component() return {} end
-function copy.action() return {} end
 
 local function create_importor(w)
 	local declaration = w._decl
@@ -108,9 +102,6 @@ local function create_importor(w)
 				if attrib then
 					import[attrib](package, k)
 				end
-				if what == "unique_component" then
-					w._class.unique[k] = true
-				end
 			end
 			if objname == "policy" then
 				solve_policy(name, res)
@@ -144,7 +135,7 @@ end
 
 local function init(w, config)
 	w._initializing = true
-	w._class = { unique = {} }
+	w._class = {}
 	w._decl = interface.new(function(current, packname, filename)
 		local file = "/pkg/"..packname.."/"..filename
 		log.debug(("Import decl %q"):format(file))
