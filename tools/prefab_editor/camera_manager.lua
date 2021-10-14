@@ -44,6 +44,7 @@ function camera_mgr.set_second_camera(eid, show)
     -- rc.projmat = icamera.calc_projmat(eid)
     -- rc.viewprojmat = icamera.calc_viewproj(eid)
     irq.set_camera(camera_mgr.second_view, eid)
+    irq.set_visible(camera_mgr.second_view, true)
     camera_mgr.second_camera = eid
     camera_mgr.show_frustum(eid, show)
 end
@@ -124,7 +125,8 @@ function camera_mgr.show_frustum(eid, visible)
     --     return
     -- end
     local editor_data = camera_mgr.get_editor_data(eid)
-    irq.set_visible(camera_mgr.second_view, visible)
+    --irq.set_visible(camera_mgr.second_view, visible)
+    irq.set_visible(camera_mgr.second_view, true)
     if editor_data and editor_data.frustum_eid and #editor_data.frustum_eid > 0 then
         local state = "visible"
         ies.set_state(editor_data.frustum_eid, state, visible)

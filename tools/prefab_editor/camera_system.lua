@@ -245,7 +245,7 @@ function camera_sys:handle_camera_event()
 	end
 
 	for _, what, x, y, dx, dy in mouse_drag:unpack() do
-		if what == "LEFT" and select_area ~= 0 then
+		if what == "LEFT" and select_area ~= 0 and hit_plane then
 			local curpos = utils.ray_hit_plane(iom.ray(camera_mgr.main_camera, {x, y}), hit_plane)
 			local proj_len = math3d.dot(current_dir, math3d.sub(curpos, centre_pos))
 			local aspect = 1.0

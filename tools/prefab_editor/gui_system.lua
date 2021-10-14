@@ -528,7 +528,7 @@ function m:end_frame()
 end
 
 function m:data_changed()
-    if highlight_aabb.visible then
+    if highlight_aabb.visible and highlight_aabb.min and highlight_aabb.max then
         iwd.draw_aabb_box(highlight_aabb, nil, aabb_color_i)
     end
 end
