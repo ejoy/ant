@@ -176,17 +176,12 @@ end
 local cameraview_sys = ecs.system "camera_view_system"
 
 local function update_camera(camera_ref)
-    if camera_ref == nil then    --TODO: need remove
-        return
-    end
     local camera = find_camera(camera_ref)
-    if camera then
-        local worldmat = camera.worldmat
-        local pos, dir = math3d.index(worldmat, 4, 3)
-        camera.viewmat = math3d.lookto(pos, dir, camera.updir)
-        camera.projmat = math3d.projmat(camera.frustum)
-        camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
-    end
+    local worldmat = camera.worldmat
+    local pos, dir = math3d.index(worldmat, 4, 3)
+    camera.viewmat = math3d.lookto(pos, dir, camera.updir)
+    camera.projmat = math3d.projmat(camera.frustum)
+    camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 end
 
 function cameraview_sys:update_mainview_camera()
