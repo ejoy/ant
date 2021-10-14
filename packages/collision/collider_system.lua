@@ -82,31 +82,6 @@ end
 -- 	}
 -- end
 
-local collcomp = ecs.component "collider"
-
-function collcomp:init()
-	self._handle = rp3d_world:body_create(mc.ZERO_PT, mc.IDENTITY_QUAT)
-	local function add_shape(shape, constructor)
-		if not shape then
-			return
-		end
-		for _, sh in ipairs(shape) do
-			rp3d_world:add_shape(self._handle, constructor(sh), math3d.vector(sh.origin))
-		end
-	end
-	add_shape(self.sphere,  sphere_shape)
-	add_shape(self.box,     box_shape)
-	add_shape(self.capsule, capsule_shape)
-	--add_shape(self.terrain)
-	return self
-end
-
-function collcomp:delete()
-	if self._handle then
-		rp3d_world:body_destroy(self._handle)
-	end
-end
-
 local icoll = ecs.interface "collider"
 
 local function set_obj_transform(obj, t, r)
@@ -142,6 +117,7 @@ end
 local collider_sys = ecs.system "collider_system"
 
 local new_coll_mb = world:sub{"component_register", "collider"}
+
 function collider_sys:data_changed()
 	for _, _, eid in new_coll_mb:unpack() do
 		local e = world[eid]
@@ -152,8 +128,6 @@ function collider_sys:data_changed()
 	end
 end
 
-local iom = ecs.import.interface "ant.objcontroller|obj_motion"
-
 function collider_sys:update_collider_transform()
 	for v in w:select "scene_changed collider:in scene:in" do
 		local _, r, t = math3d.srt(v.scene._worldmat)
@@ -161,4 +135,30 @@ function collider_sys:update_collider_transform()
 			set_obj_transform(v.collider._handle, t, r)
 		end
     end
+end
+
+function collider_sys:entity_init()
+	for e in w:select "INIT collider:in" do
+		local collider = e.collider
+		collider._handle = rp3d_world:body_create(mc.ZERO_PT, mc.IDENTITY_QUAT)
+		local function add_shape(shape, constructor)
+			if shape then
+				for _, sh in ipairs(shape) do
+					rp3d_world:add_shape(collider._handle, constructor(sh), math3d.vector(sh.origin))
+				end
+			end
+		end
+		add_shape(collider.sphere,  sphere_shape)
+		add_shape(collider.box,     box_shape)
+		add_shape(collider.capsule, capsule_shape)
+	end
+end
+
+function collider_sys:entity_remove()
+	for e in w:select "REMOVED collider:in" do
+		local collider = e.collider
+		if collider._handle then
+			rp3d_world:body_destroy(collider._handle)
+		end
+	end
 end

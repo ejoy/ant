@@ -1,9 +1,5 @@
 import "@ant.asset"
 
-action "decal_mount"
-    .implement "decal/decal.lua"
-    .method "init"
-
 component_v2 "decal".type "lua"
 policy_v2 "decal"
     .require_policy_v2 "ant.render|render_object"

@@ -6,7 +6,7 @@ local function splitname(fullname)
     return fullname:match "^([^|]*)|(.*)$"
 end
 
-local OBJECT = {"system","policy","policy_v2","transform","interface","component","component_v2","pipeline","action"}
+local OBJECT = {"system","policy_v2","interface","component_v2","pipeline"}
 
 local function solve_object(o, w, what, fullname)
 	local decl = w._decl[what][fullname]
@@ -34,13 +34,11 @@ end
 local check_map = {
 	require_system = "system",
 	require_interface = "interface",
-	require_policy = "policy",
 	require_policy_v2 = "policy_v2",
 	require_transform = "transform",
 	component_v2 = "component_v2",
 	component_opt = "component_v2",
 	pipeline = "pipeline",
-	action = "action",
 }
 
 local function table_append(t, a)
@@ -48,30 +46,11 @@ local function table_append(t, a)
 end
 
 local copy = {}
-function copy.policy(v)
-	local t = {}
-	table_append(t, v.component)
-	table_append(t, v.unique_component)
-	return {
-		policy = v.require_policy,
-		transform = v.require_transform,
-		component = t,
-		action = v.action,
-	}
-end
 function copy.policy_v2(v)
 	return {
 		policy_v2 = v.require_policy_v2,
 		component_v2 = v.component_v2,
 		component_opt = v.component_opt,
-	}
-end
-function copy.transform(v)
-	return {
-		policy = v.require_policy,
-		transform = v.require_transform,
-		input = v.input,
-		output = v.output,
 	}
 end
 function copy.pipeline(v)

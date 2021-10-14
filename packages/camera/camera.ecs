@@ -20,11 +20,6 @@ interface "camera"
     .method "find_camera"   --TODO: need remove
     .method "world_to_screen"
 
-
-action "bind_camera"
-    .implement "camera.lua"
-    .method "init"
-
 interface "icamera_recorder"
     .implement "camera_recorder.lua"
     .method "start"

@@ -44,11 +44,6 @@ system "pre_depth_primitive_system"
     .method     "init"
     .method     "end_filter"
 
-component "render_target"
-    .implement "render_system/render_system.lua"
-    .method "init"
-    .method "delete"
-
 interface "irender"
     .implement "render_system/render.lua"
     .method "draw"

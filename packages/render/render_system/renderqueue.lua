@@ -135,17 +135,6 @@ function irq.set_camera(queuename, camera_ref)
 	qe.shadow_render_queue.camera_ref = camera_ref
 end
 
-local bm = ecs.action "bind_camera"
-function bm.init(prefab, idx, value)
-    local eid
-    if not value.camera_ref then
-        eid = prefab[idx]
-    else
-        eid = prefab[idx][value.camera_ref]
-    end
-    irq.set_camera(value.which, eid)
-end
-
 function ecs.method.bind_camera(camera_ref, queuename)
     irq.set_camera(queuename, camera_ref)
 end

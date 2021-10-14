@@ -17,10 +17,6 @@ component_v2 "procedural_sky"
     .type "lua"
 component_v2 "procedural_sky_changed"
 
-policy "procedural_sky_follow_sun"
-    .require_system "procedural_sky_system"
-    .component "procedural_sky"
-
 policy_v2 "skybox"
     .require_policy_v2 "ant.render|simplerender"
     .require_policy_v2 "ant.render.ibl|ibl"
