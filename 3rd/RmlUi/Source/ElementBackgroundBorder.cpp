@@ -38,7 +38,7 @@ static const auto PI = acosf(-1);
 
 void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path& paddingEdge) {
 	geometry.Release();
-	const ComputedValues& computed = element->GetComputedValues();
+	const Style::ComputedValues& computed = element->GetComputedValues();
 	EdgeInsets<Color> border_color = computed.border_color;
 	Color background_color = computed.background_color;
 	float opacity = element->GetOpacity();

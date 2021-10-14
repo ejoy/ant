@@ -47,7 +47,6 @@
 #include "DataModel.h"
 #include "ElementAnimation.h"
 #include "ElementBackgroundBorder.h"
-#include "ElementDefinition.h"
 #include "ElementStyle.h"
 #include "EventDispatcher.h"
 #include "ElementBackgroundImage.h"
@@ -167,11 +166,6 @@ const std::shared_ptr<StyleSheet>& Element::GetStyleSheet() const
 		return document->GetStyleSheet();
 	static std::shared_ptr<StyleSheet> null_style_sheet;
 	return null_style_sheet;
-}
-
-const ElementDefinition* Element::GetDefinition()
-{
-	return meta->style.GetDefinition();
 }
 
 std::string Element::GetAddress(bool include_pseudo_classes, bool include_parents) const

@@ -123,11 +123,6 @@ ElementStyle::ElementStyle(Element* _element)
 	definition_dirty = true;
 }
 
-const ElementDefinition* ElementStyle::GetDefinition() const
-{
-	return definition.get();
-}
-
 const Property* ElementStyle::GetLocalProperty(PropertyId id) const {
 	const Property* property = inline_properties.GetProperty(id);
 	if (property)
