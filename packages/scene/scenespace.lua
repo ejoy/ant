@@ -9,8 +9,7 @@ local mu = mathpkg.util
 ----scenespace_system----
 local s = ecs.system "scenespace_system"
 
-local evOldParentChanged = world:sub {"old_parent_changed"}
-local evNewParentChanged = world:sub {"new_parent_changed"}
+local evParentChanged = world:sub {"parent_changed"}
 
 local function inherit_render_object(r, pr)
 	if r.fx == nil then
@@ -73,20 +72,6 @@ local function update_aabb(node)
 	end
 end
 
-local function findScene(hashmap, e)
-	local scene = hashmap[e]
-	if scene then
-		return scene
-	end
-	if e == nil then
-		return
-	end
-	w:sync("scene:in", e)
-	scene = e.scene
-	hashmap[e] = scene
-	return scene
-end
-
 local function isValidReference(reference)
     return reference[1] ~= nil
 end
@@ -94,7 +79,6 @@ end
 function s:entity_init()
 	local needsync = false
 
-	local hashmap = {}
 	for v in w:select "INIT camera:in scene:out" do
 		local camera = v.camera
 		v.scene = {
@@ -108,7 +92,7 @@ function s:entity_init()
 			v.scene.aabb = mesh.bounding.aabb
 		end
 	end
-	for v in w:select "INIT scene:in eid?in scene_sorted?new" do
+	for v in w:select "INIT scene:in scene_sorted?new" do
 		local scene = v.scene
 		
 		if scene.srt then
@@ -120,9 +104,6 @@ function s:entity_init()
 		scene.changed = current_changed
 
 		scene.id = new_sceneid()
-		if v.eid then
-			hashmap[v.eid] = scene
-		end
 		v.scene_sorted = true
 		needsync = true
 	end
@@ -139,21 +120,7 @@ function s:entity_init()
 	end
 	w:clear "scene_unsorted"
 
-	for _, eid, peid in evOldParentChanged:unpack() do
-		local scene = findScene(hashmap, eid)
-		if scene then
-			scene.changed = current_changed
-			if peid then
-				local parent = findScene(hashmap, peid)
-				scene.parent = parent and parent.id or nil
-			else
-				scene.parent = nil
-			end
-			needsync = true
-		end
-	end
-
-	for _, e, parent in evNewParentChanged:unpack() do
+	for _, e, parent in evParentChanged:unpack() do
 		if isValidReference(e) then
 			w:sync("scene:in", e)
 			e.scene.changed = current_changed
@@ -312,5 +279,5 @@ function ecs.method.init_scene(e)
 end
 
 function ecs.method.set_parent(e, parent)
-	world:pub {"new_parent_changed", e, parent}
+	world:pub {"parent_changed", e, parent}
 end
