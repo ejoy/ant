@@ -41,7 +41,9 @@ end
 
 function BaseView:set_model(eid)
     if self.eid == eid then return false end
+    --TODO: need remove 'eid', there is no more eid
     self.eid = eid
+    self.entity = eid
     if not self.eid then return false end
 
     local template = hierarchy:get_template(eid)

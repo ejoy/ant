@@ -298,12 +298,12 @@ local function update_current()
                 current_panel = get_skybox_panel()
             end
         end
-        -- if not current_panel then
-        --     w:sync("material?in", e)
-        --     if e.material then
-        --         current_panel = get_material_panel()
-        --     end
-        -- end
+        if not current_panel then
+            w:sync("material?in", e)
+            if e.material then
+                current_panel = get_material_panel()
+            end
+        end
         if not current_panel then
             current_panel = get_base_panel()
         end

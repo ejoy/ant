@@ -427,14 +427,36 @@ function Group:find_property_by_label(l)
     end
 end
 
+function Group:begin_disable(disable)
+    if self.already_disable == nil then
+        if disable then
+            self.already_disable = 0
+            imgui.windows.BeginDisabled(true)
+        end
+    else
+        self.already_disable = self.already_disable + 1
+    end
+end
+
+function Group:end_disable()
+    local d = self.already_disable
+    if d then
+        d = d - 1
+        if d == 0 then
+            self.already_disable = nil
+            imgui.windows.EndDisabled()
+        end
+    end
+end
+
 function Group:show()
     if imgui.widget.TreeNode(self.label, imgui.flags.TreeNode { "DefaultOpen" }) then
         for _, pro in ipairs(self.subproperty) do
-            imgui.windows.BeginDisabled(pro.disable)
+            self:begin_disable(pro.disable)
             if pro.visible then
                 pro:show()
             end
-            imgui.windows.EndDisabled()
+            self:end_disable()
         end
         imgui.widget.TreePop()
     end

@@ -111,9 +111,14 @@ local function update(viewid)
         end
 
         imgui.windows.BeginDisabled(true)
-        local t = {text = "i m input text"}
-        if imgui.widget.InputText("abc5", t) then
-            print(tostring(t.text))
+        if imgui.widget.TreeNode("Test", imgui.flags.TreeNode{"DefaultOpen"}) then
+            imgui.windows.BeginDisabled(true)
+            local t = {text = "i m input text"}
+            if imgui.widget.InputText("abc5", t) then
+                print(tostring(t.text))
+            end
+            imgui.windows.EndDisabled()
+            imgui.widget.TreePop()
         end
         imgui.windows.EndDisabled()
         imgui.windows.End()
