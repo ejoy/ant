@@ -19,7 +19,7 @@ function cr.start(name)
         },
         data = {
             reference = true,
-            caeram_recorder = {
+            camera_recorder = {
                 frames = {},
             },
             name = name or "camera_queue"

@@ -54,7 +54,7 @@ end
 
 function grid:clear()
     if grid_eid then
-        world:remove_entity(grid_eid)
+        world.w:remove(grid_eid)
     end
 end
 local function clamp_row(row)

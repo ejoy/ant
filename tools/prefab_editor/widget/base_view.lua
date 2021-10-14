@@ -25,7 +25,6 @@ function BaseView:_init()
     self.base        = base
     self.general_property = uiproperty.Group({label = "General"}, base)
     --
-    self.base.script:set_getter(function() return prefab_mgr.prefab_script end)
     self.base.prefab:set_getter(function() return self:on_get_prefab() end)
     self.base.name:set_setter(function(value) self:on_set_name(value) end)      
     self.base.name:set_getter(function() return self:on_get_name() end)
@@ -149,7 +148,7 @@ end
 
 function BaseView:update()
     if not self.eid then return end
-    self.base.script:update()
+    --self.base.script:update()
     if self.is_prefab then
         self.base.prefab:update()
     end
@@ -158,7 +157,7 @@ end
 
 function BaseView:show()
     if not self.eid then return end
-    self.base.script:show()
+    --self.base.script:show()
     if self.is_prefab then
         self.base.prefab:show()
     end

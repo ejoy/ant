@@ -192,7 +192,6 @@ end
 function effekseer_sys:follow_transform_updated()
     for _, eid in event_entity_register:unpack() do
         for e in w:select "effekseer:in effect_instance:in" do
-            --local effect = world[eid].effekseer and world[eid].effect_instance or nil
             if e.effect_instance then
                 if e.effect_instance.auto_play then
                     world:pub {"play_effect", e.effect_instance}
@@ -204,14 +203,13 @@ function effekseer_sys:follow_transform_updated()
     for _, inst, lp in event_do_play:unpack() do
         inst.playid = effekseer.play(inst.handle, inst.playid)
         effekseer.set_speed(inst.handle, inst.playid, inst.speed)
-        --effekseer.set_loop(inst.handle, inst.playid, lp)
     end
 
     for _, inst, lp in event_play_effect:unpack() do
         world:pub {"do_play", inst, lp}
     end
 
-    for v in w:select "eid:in effect_instance:in scene:in" do
+    for v in w:select "effect_instance:in scene:in" do
         v.effect_instance.worldmat = v.scene._worldmat
         effekseer.update_transform(v.effect_instance.handle, v.effect_instance.playid, v.scene._worldmat)
     end

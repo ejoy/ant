@@ -9,8 +9,8 @@ local math3d	= require "math3d"
 local utils		= ecs.require "mathutils"
 local inspector = ecs.require "widget.inspector"
 
-local m			= ecs.system "camera_system"
-
+local camera_sys	= ecs.system "camera_system"
+local global_data 	= require "common.global_data"
 local event_camera_control = world:sub {"camera"}
 local camera_init_eye_pos <const> = {5, 5, 5, 1}
 local camera_init_target <const> = {0, 0,  0, 1}
@@ -64,7 +64,7 @@ end
 
 local mb_camera_changed = world:sub{"camera_changed", "main_queue"}
 
-function m:entity_ready()
+function camera_sys:entity_ready()
 	for _ in mb_camera_changed:each() do
 		camera_reset(camera_init_eye_pos, camera_init_target)
 	end
@@ -98,23 +98,25 @@ local centre_pos = math3d.ref()
 local function selectBoundary(hp)
 	if not hp[1] or not hp[2] then return 0 end
 	last_mouse_pos = hp
-	local boundary = camera_mgr.camera_list[camera_mgr.second_camera].far_boundary
+	local boundary = camera_mgr.get_editor_data(camera_mgr.second_camera).far_boundary
+	if not boundary then return end
 	for i, v in ipairs(boundary) do
 		local sp1 = utils.world_to_screen(camera_mgr.main_camera, v[1])
 		local sp2 = utils.world_to_screen(camera_mgr.main_camera, v[2])
-		if utils.point_to_line_distance2D(sp1, sp2, hp) < 5.0 then
+		local vp_hp = {hp[1] - global_data.viewport.x, hp[2] - global_data.viewport.y}
+		local dist = utils.point_to_line_distance2D(sp1, sp2, hp)
+		if dist < 5.0 then
 			camera_mgr.highlight_frustum(camera_mgr.second_camera, i, true)
 			return i
 		else
 			camera_mgr.highlight_frustum(camera_mgr.second_camera, i, false)
 		end
 	end
-	return 0
 end
 
 local ctrl_state = false
 
-function m:handle_camera_event()
+function camera_sys:handle_camera_event()
 	--camera_mgr.select_frustum = false
 
 	for _, what, eid, value in event_camera_edit:unpack() do
@@ -179,7 +181,7 @@ function m:handle_camera_event()
 	
 	for _, what, x, y in mouse_move:unpack() do
 		if what == "UNKNOWN" then
-			if camera_mgr.camera_list[camera_mgr.second_camera] then
+			if camera_mgr.second_camera then
 				--local x, y = utils.mouse_pos_in_view(x, y)
 				select_area = selectBoundary({x, y})
 			end
@@ -189,9 +191,9 @@ function m:handle_camera_event()
 	for _, what, x, y in mouse_down:unpack() do
 		if what == "LEFT" then
 			--local x, y = utils.mouse_pos_in_view(x, y)
-			if camera_mgr.camera_list[camera_mgr.second_camera] then
+			if camera_mgr.second_camera then
 				select_area = selectBoundary({x, y})
-				if select_area ~= 0 then
+				if select_area then
 					local boundary = camera_mgr.camera_list[camera_mgr.second_camera].far_boundary
 					local lb_point = boundary[1][1]
 					local lt_point = boundary[2][1]
@@ -218,8 +220,8 @@ function m:handle_camera_event()
 
 	for _, what, x, y in mouse_up:unpack() do
 		if what == "LEFT" then
-			if camera_mgr.camera_list[camera_mgr.second_camera] then
-				local boundary = camera_mgr.camera_list[camera_mgr.second_camera].far_boundary
+			local boundary = camera_mgr.get_editor_data(camera_mgr.second_camera).far_boundary
+			if boundary then
 				for i, v in ipairs(boundary) do
 					camera_mgr.highlight_frustum(camera_mgr.second_camera, i, false)
 				end
@@ -256,4 +258,15 @@ function m:handle_camera_event()
 		end
 	end
 
+end
+
+function camera_sys:component_init()
+	-- if not camera_mgr.main_camera then return end
+	-- for e in w:select "INIT camera:in" do
+	-- 	w:sync("scene:in", e)
+	-- 	w:sync("scene:in", camera_mgr.main_camera)
+	-- 	if e.scene ~= camera_mgr.main_camera.scene then
+	-- 		e.template.data.scene.srt = {s = {1,1,1}, r = {math3d.index(r, 1, 2, 3, 4)}, t = {math3d.index(t, 1, 2, 3)}}
+	-- 	end
+	-- end
 end

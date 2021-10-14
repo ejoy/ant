@@ -59,7 +59,7 @@ function m.update_template_tranform(eid)
     if not template or not template.template then return end
 
     local s, r, t = iom.get_scale(eid), iom.get_rotation(eid), iom.get_position(eid)
-    template.template.data.transform = {
+    template.template.data.scene.srt = {
         r = {math3d.index(r, 1, 2, 3, 4)},
         s = {math3d.index(s, 1, 2, 3)},
         t = {math3d.index(t, 1, 2, 3)},

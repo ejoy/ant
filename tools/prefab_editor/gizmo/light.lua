@@ -195,7 +195,7 @@ end
 
 function m.clear()
     for k,v in pairs(m.billboard) do
-        world:remove_entity(v)
+        w:remove(v)
     end
     m.billboard = {}
     m.current_light = nil

@@ -29,7 +29,7 @@ function m.get_frustum_vb(points, color)
     for i=1, #points do
         local p = math3d.totable(points[i])
         table.move(p, 1, 3, #vb+1, vb)
-        vb[#vb+1] = color or 0xffffffff
+        vb[#vb+1] = 0xffffffff
     end
     return vb
 end
@@ -39,7 +39,7 @@ local function do_create_entity(vb, ib, srt, name, color, hide)
 	return ientity.create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt, color, hide)
 end
 
-function m.create_dynamic_frustum(frustum_points, name, color)
+function m.create_dynamic_frustum(frustum_points, name, color, hide)
     local vb = m.get_frustum_vb(frustum_points, color)
     local ib = {
         -- front
@@ -53,7 +53,7 @@ function m.create_dynamic_frustum(frustum_points, name, color)
         -- right
         2, 6, 3, 7,
     }
-    return do_create_entity(vb, ib, {}, name, color)
+    return do_create_entity(vb, ib, {}, name, color, hide)
 end
 
 function m.create_dynamic_line(srt, p0, p1, name, color, hide)
@@ -72,12 +72,11 @@ end
 function m.get_circle_vb_ib(radius, slices, color)
 	local circle_vb, circle_ib = geolib.circle(radius, slices)
 	local gvb = {}
-	--color = color or 0xffffffff
 	for i = 1, #circle_vb, 3 do
 		gvb[#gvb+1] = circle_vb[i]
 		gvb[#gvb+1] = circle_vb[i + 1]
 		gvb[#gvb+1] = circle_vb[i + 2]
-		gvb[#gvb+1] = color or 0xffffffff
+		gvb[#gvb+1] = 0xffffffff
 	end
 	return gvb, circle_ib
 end
@@ -90,7 +89,6 @@ end
 function m.create_dynamic_aabb(srt, name, color, hide)
 	local desc={vb={}, ib={}}
 	local aabb_shape = {min={0,0,0}, max={1,1,1}}
-	--local t = math3d.matrix{}
 	geometry_drawer.draw_aabb_box(aabb_shape, 0xffffffff, nil, desc)
 	local mesh = create_dynamic_mesh("p3|c40niu", desc.vb, desc.ib)
 	return do_create_entity(desc.vb, desc.ib, srt, name, color, hide)

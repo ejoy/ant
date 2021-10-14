@@ -64,7 +64,10 @@ end
 function EffectView:on_set_speed(value)
     local template = hierarchy:get_template(self.eid)
     template.template.data.speed = value
-    local instance = world[self.eid].effect_instance
+    if not self.eid.effect_instance then
+        w:sync("effect_instance:in", self.eid)
+    end
+    local instance = self.eid.effect_instance
     instance.speed = value
     effekseer.set_speed(instance.handle, instance.playid, value)
 end
@@ -75,7 +78,10 @@ function EffectView:on_set_auto_play(value)
 end
 
 function EffectView:on_set_loop(value)
-    local instance = world[self.eid].effect_instance
+    if not self.eid.effect_instance then
+        w:sync("effect_instance:in", self.eid)
+    end
+    local instance = self.eid.effect_instance
     instance.loop = value
     effekseer.set_loop(instance.handle, instance.playid, value)
 end

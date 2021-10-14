@@ -65,6 +65,7 @@ function ic.create(info)
         },
         data = {
             camera = {
+                reference = true,
                 eyepos  = assert(info.eyepos),
                 viewdir = assert(info.viewdir),
                 updir   = assert(info.updir),

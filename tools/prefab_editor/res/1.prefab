@@ -1,53 +1,25 @@
 ---
-action:
-  mount: root
 data:
-  color: {1, 1, 1, 1}
-  material: /pkg/ant.resources/materials/pbr_default.material
-  mesh: /pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin
-  name: cube1
-  scene_entity: true
-  state: 5
-  transform:
-    r: {0, 0, 0, 1}
-    s: {1000, 1, 1000}
-    t: {0, 0, 0}
+  camera:
+    eyepos: {2, 2, -2, 1}
+    frustum:
+      aspect: 1.6135922330097088
+      f: 100
+      fov: 60
+      n: 0.1
+    updir: {0, 1, 0}
+    viewdir: {-2, -1, 2, 0}
+  name: camera1
+  reference: true
+  scene:
+    srt:
+      r: {-0.1159168928861618, 0.8804762363433838, -0.2798481285572052, -0.3647052049636841}
+      s: {1, 1, 1}
+      t: {5, 5, 5}
+  tag:
+    camera
 policy:
-  ant.render|render
   ant.general|name
-  ant.scene|hierarchy_policy
----
-action:
-  mount: root
-data:
-  color: {1, 1, 1, 1}
-  intensity: 2
-  light_type: directional
-  make_shadow: true
-  name: directional1
-  range: 1
-  state: 1
-  transform:
-    r: {2.2689280275926285, 0, 0}
-    t: {0, 5, 0}
-policy:
-  ant.render|light
-  ant.general|name
----
-action:
-  mount: root
-data:
-  color: {1, 1, 1, 1}
-  material: /pkg/ant.resources/materials/pbr_default.material
-  mesh: /pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin
-  name: cylinder2
-  scene_entity: true
-  state: 5
-  transform:
-    r: {0, 0, 0, 1}
-    s: {50, 50, 50}
-    t: {0, 1.3341927528381348, 0}
-policy:
-  ant.render|render
-  ant.general|name
-  ant.scene|hierarchy_policy
+  ant.general|tag
+  ant.camera|camera
+  ant.scene|scene_object

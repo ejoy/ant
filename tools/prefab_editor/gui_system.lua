@@ -525,8 +525,6 @@ function m:end_frame()
         irq.set_view_rect(camera_mgr.second_view, secondViewport)
         world:pub {"ViewportDirty", viewport}
     end
-
-    prefab_mgr:init_camera()
 end
 
 function m:data_changed()
