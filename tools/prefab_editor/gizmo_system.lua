@@ -3,7 +3,6 @@ local world = ecs.world
 local w = world.w
 
 local constant 	= import_package "ant.math".constant
-local iss 		= ecs.import.interface "ant.scene|iscenespace"
 local ientity 	= ecs.import.interface "ant.render|entity"
 local iom 		= ecs.import.interface "ant.objcontroller|obj_motion"
 local ies 		= ecs.import.interface "ant.scene|ientity_state"

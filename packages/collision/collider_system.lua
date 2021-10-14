@@ -108,25 +108,7 @@ function icoll.raycast(ray)
 	return rp3d_world:raycast(ray[1], ray[2], ray.mask)
 end
 
-local collider_entity_mapper = {}
-
-function icoll.which_entity(id)
-	return collider_entity_mapper[id]
-end
-
 local collider_sys = ecs.system "collider_system"
-
-local new_coll_mb = world:sub{"component_register", "collider"}
-
-function collider_sys:data_changed()
-	for _, _, eid in new_coll_mb:unpack() do
-		local e = world[eid]
-		if e then
-			local obj = e.collider._handle
-			collider_entity_mapper[obj] = eid
-		end
-	end
-end
 
 function collider_sys:update_collider_transform()
 	for v in w:select "scene_changed collider:in scene:in" do

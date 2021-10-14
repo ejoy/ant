@@ -6,17 +6,6 @@ local math3d = require "math3d"
 local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
 
-----iscenespace----
-local iss = ecs.interface "iscenespace"
-function iss.set_parent(eid, peid)
-	local e = world[eid]
-	local pe = world[peid]
-	if (not e or e.scene_entity) and (not pe or pe.scene_entity) then
-		e.parent = peid
-		world:pub {"old_parent_changed", eid, peid}
-	end
-end
-
 ----scenespace_system----
 local s = ecs.system "scenespace_system"
 

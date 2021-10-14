@@ -207,7 +207,7 @@ local load_interface do
 end
 
 local function merge_all_results(results)
-	local r = { transform = {}, implement = {} }
+	local r = { implement = {} }
 	for _, what in ipairs(type_list) do
 		r[what] = {}
 	end

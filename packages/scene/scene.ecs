@@ -20,10 +20,6 @@ interface "ientity_state"
     .method "set_state"
     .method "filter_mask"
 
-interface "iscenespace"
-    .implement "scenespace.lua"
-    .method "set_parent"
-
 pipeline "scene"
     .stage "update_hierarchy"
     .stage "begin_filter"
