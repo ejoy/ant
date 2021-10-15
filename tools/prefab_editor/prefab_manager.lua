@@ -161,7 +161,7 @@ function m:create_collider(config)
     return ecs.create_entity(tpl), template
 end
 
-local function create_simple_entity(name)
+local function create_simple_entity(name, srt)
     local template = {
 		policy = {
             "ant.general|name",
@@ -170,7 +170,7 @@ local function create_simple_entity(name)
 		data = {
             reference = true,
             name = name,
-            scene = {srt = {}}
+            scene = {srt = srt or {}}
 		},
     }
     return ecs.create_entity(utils.deep_copy(template)), template
@@ -290,12 +290,12 @@ function m:internal_remove(toremove)
 end
 
 local function set_select_adapter(entity_set, mount_root)
-    for _, eid in ipairs(entity_set) do
-        if type(eid) == "table" then
-            set_select_adapter(eid, mount_root)
-        else
-            hierarchy:add_select_adapter(eid, mount_root)
-        end
+    for _, e in ipairs(entity_set) do
+        -- if type(eid) == "table" then
+        --     set_select_adapter(eid, mount_root)
+        -- else
+            hierarchy:add_select_adapter(e, mount_root)
+        --end
     end
 end
 
@@ -640,13 +640,24 @@ function m:add_prefab(filename)
     if not self.root then
         self:reset_prefab()
     end
-    local mount_root, temp = create_simple_entity(gen_prefab_name())
-    self.entities[#self.entities+1] = mount_root
-    local entities = ecs.create_instance(prefab_filename)
-    ecs.method.set_parent(entities[1], mount_root)
-    ecs.method.set_parent(mount_root, gizmo.target_eid or self.root)
-    set_select_adapter(entities, mount_root)
-    hierarchy:add(mount_root, {filename = prefab_filename, template = temp.__class[1], children = entities}, world[mount_root].parent)
+    
+    local parent = gizmo.target_eid or self.root
+    local parentWorldMat = parent and iom.worldmat(parent) or math3d.matrix{}
+    local s, r, t = math3d.srt(math3d.mul(math3d.inverse(parentWorldMat), math3d.matrix{}))
+    
+    local v_root = create_simple_entity(gen_prefab_name(), {
+        r = {math3d.index(r, 1, 2, 3, 4)},
+        s = {math3d.index(s, 1, 2, 3)},
+        t = {math3d.index(t, 1, 2, 3)},
+    })
+    ecs.method.set_parent(v_root, parent)
+
+    self.entities[#self.entities+1] = v_root
+    local instance = ecs.create_instance(prefab_filename)
+
+    ecs.method.set_parent(instance.root, v_root)
+    set_select_adapter(instance.tag["*"], v_root)
+    hierarchy:add(v_root, {filename = prefab_filename, children = instance.tag["*"]}, parent)
 end
 
 function m:recreate_entity(eid)
