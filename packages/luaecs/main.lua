@@ -136,7 +136,10 @@ local function create_entity_template(w, package, detach, v)
 end
 
 local function create_template(w, package, detach, filename)
-    local t = serialize.parse(filename, cr.read_file(filename))
+    local t = filename
+    if type(filename) ~= "table" then
+        t = serialize.parse(filename, cr.read_file(filename))
+    end
 	local prefab = {}
 	for _, v in ipairs(t) do
 		if v.prefab then
