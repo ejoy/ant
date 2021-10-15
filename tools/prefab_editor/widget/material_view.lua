@@ -574,11 +574,23 @@ function MaterialView:_init()
         self.mat_file,
         self.fx,
         self.state,
+        uiproperty.SameLineContainer({}, {
+            self.save, self.saveas,
+        })
     })
 end
 
+local default_files<const> = {
+    ['/pkg/ant.resources/materials/pbr_default.material']       = true,
+    ['/pkg/ant.resources/materials/pbr_default_cw.material']    = true,
+    ['/pkg/ant.resources/materials/states/default.state']       = true,
+    ['/pkg/ant.resources/materials/states/default_cw.state']    = true,
+    ['/pkg/ant.resources/materials/states/translucent.state']   = true,
+    ['/pkg/ant.resources/materials/states/translucent_cw.state']= true,
+}
+
 local function is_readonly_resource(p)
-    return p:match "|"
+    return p:match "mesh.prefab|" or default_files[p]
 end
 
 function MaterialView:enable_blend_setting_ui(e)
@@ -596,25 +608,26 @@ function MaterialView:set_model(e)
     if not BaseView.set_model(self, e) then 
         return false
     end
-    --update ui state
-    self.mat_file.disable = false
-    self.properties = build_properties_ui(self)
 
+    self.mat_file.disable = false
     local t = material_template(e)
     if t.fx.cs == nil then
         local cs = self.fx:find_property_by_label "cs"
         cs.visible = false
     end
 
-    self:enable_blend_setting_ui(e)
-
-    self.material:set_subproperty{
-        self.mat_file,
-        self.fx,
-        self.properties,
-        self.state,
-    }
-
+    do
+        local idx
+        for i, p in ipairs(self.material.subproperty) do
+            if self.fx == p then
+                idx = i+1
+                break
+            end
+        end
+        self.properties = build_properties_ui(self)
+        table.insert(self.material.subproperty, idx, self.properties)
+    end
+    self.save.disable = is_readonly_resource(e.material)
     self:update()
     return true
 end
@@ -622,14 +635,8 @@ end
 function MaterialView:update()
     local e = self.entity
     if e then
-        self.save.disable = is_readonly_resource(e.material)
+        self:enable_blend_setting_ui(e)
         self.material:update()
-        self.save:update()
-        self.saveas:update()
-        if self.need_reload then
-            local p = self.mat_file:get_path()
-            reload(e, p)
-        end
     end
 end
 
@@ -637,7 +644,9 @@ function MaterialView:show()
     if self.entity then
         BaseView.show(self)
         self.material:show()
-        self.save:show(); imgui.cursor.SameLine(); self.saveas:show()
+        if self.need_reload then
+            reload(self.entity, self.mat_file:get_path())
+        end
     end
 
 end

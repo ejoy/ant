@@ -379,17 +379,14 @@ function Button:show()
     end
 end
 
-local Group = class("Group", PropertyBase)
+local Container = class("Container", PropertyBase)
 
-function Group:_init(config, subproperty)
-    PropertyBase._init(self, config, nil)
-    if self.uidata.flags == nil then
-        self.uidata.flags = imgui.flags.TreeNode { "DefaultOpen" }
-    end
+function Container:_init(config, subproperty, modifier)
+    PropertyBase._init(self, config, modifier)
     self.subproperty = subproperty
 end
 
-function Group:update()
+function Container:update()
     for _, pro in ipairs(self.subproperty) do
         if pro.update then
             pro:update()
@@ -397,12 +394,12 @@ function Group:update()
     end
 end
 
-function Group:set_subproperty(subproperty)
+function Container:set_subproperty(subproperty)
     self.subproperty = subproperty
     self:update()
 end
 
-function Group:find_property(id)
+function Container:find_property(id)
     for _, p in ipairs(self.subproperty) do
         if p.id == id then
             return p
@@ -410,7 +407,7 @@ function Group:find_property(id)
     end
 end
 
-function Group:find_property_by_label(l)
+function Container:find_property_by_label(l)
     for _, p in ipairs(self.subproperty) do
         if p.label == l then
             return p
@@ -418,20 +415,53 @@ function Group:find_property_by_label(l)
     end
 end
 
+function Container:_show_child(c)
+    if c.visible then
+        imgui.windows.BeginDisabled(c.disable)
+        c:show()
+        imgui.windows.EndDisabled()
+    end
+end
+
+-- 'Group' should call Tree
+local Group = class("Group", Container)
+
+function Group:_init(config, subproperty, modifier)
+    Container._init(self, config, subproperty, modifier)
+    if self.uidata.flags == nil then
+        self.uidata.flags = imgui.flags.TreeNode { "DefaultOpen" }
+    end
+end
+
 function Group:show()
     if imgui.widget.TreeNode(self.label, self.uidata.flags) then
-        for _, pro in ipairs(self.subproperty) do
-            if pro.visible then
-                imgui.windows.BeginDisabled(pro.disable)
-                pro:show()
-                imgui.windows.EndDisabled()
-            end
+        for _, c in ipairs(self.subproperty) do
+            self:_show_child(c)
         end
         imgui.widget.TreePop()
     end
 end
 
+local SameLineContainer = class("SameLineContainer", Container)
+
+function SameLineContainer:_init(config, subproperty)
+    Container._init(self, config)
+    self.subproperty = subproperty
+end
+
+function SameLineContainer:show()
+    local p = self.subproperty
+    for i=1, #p-1 do
+        local c = p[i]
+        self:_show_child(c)
+        imgui.cursor.SameLine()
+    end
+    self:_show_child(p[#p])
+end
+
+
 return {
+    Button          = Button,
     Combo           = Combo,
     Int             = Int,
     Float           = Float,
@@ -441,5 +471,5 @@ return {
     ResourcePath    = ResourcePath,
     TextureResource = TextureResource,
     Group           = Group,
-    Button          = Button
+    SameLineContainer=SameLineContainer,
 }
