@@ -66,14 +66,16 @@ function hierarchy:del(eid)
     if not eid_node then return end
 
     local pt
-    if eid_node.parent then
+    if eid_node.parent and self.all[eid_node.parent]then
         pt = self.all[eid_node.parent].children
     else
         pt = self.root.children
     end
-    local idx = find(pt, eid)
-    if idx then
-        table.remove(pt, idx)
+    if pt then
+        local idx = find(pt, eid)
+        if idx then
+            table.remove(pt, idx)
+        end
     end
     self.all[eid] = nil
     return eid_node
@@ -207,7 +209,8 @@ end
 function hierarchy:update_slot_list(world)
     local slot_list = {["None"] = -1}
     for _, value in pairs(self.all) do
-        if world[value.eid].slot then
+        world.w:sync("slot?in", value.eid)
+        if value.eid.slot then
             local tagname = value.template.template.data.tag
             local slot_name = #tagname > 0 and value.template.template.data.tag[1] or ""
             slot_list[slot_name] = value.eid
@@ -219,7 +222,8 @@ end
 function hierarchy:update_collider_list(world)
     local collider_list = {["None"] = -1}
     for _, value in pairs(self.all) do
-        if world[value.eid].collider then
+        world.w:sync("collider?in", value.eid)
+        if value.eid.collider then
             collider_list[world[value.eid].name] = value.eid
         end
     end

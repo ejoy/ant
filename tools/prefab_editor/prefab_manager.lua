@@ -150,14 +150,15 @@ function m:create_collider(config)
             material = "/pkg/ant.resources/materials/singlecolor_translucent.material",
             mesh = (config.type == "box") and geom_mesh_file["cube"] or geom_mesh_file[config.type],
             render_object = {},
-            filter_material = {},
-            on_ready = function (e)
-                e.collider = { [config.type] = define }
-                imaterial.set_property(e, "u_color", {1, 0.5, 0.5, 0.8})
-            end
+            filter_material = {}
         }
     }
-    return ecs.create_entity(utils.deep_copy(template)), template
+    local tpl = utils.deep_copy(template)
+    tpl.data.on_ready = function (e)
+        e.collider = { [config.type] = define }
+        imaterial.set_property(e, "u_color", {1, 0.5, 0.5, 0.8})
+    end
+    return ecs.create_entity(tpl), template
 end
 
 local function create_simple_entity(name)
@@ -237,7 +238,7 @@ function m:create(what, config)
         end
     elseif what == "enable_default_light" then
         if not self.default_light then
-            local _, newlight = ilight.create({
+            local newlight, _ = ilight.create({
                 transform = {t = {0, 5, 0}, r = {math.rad(130), 0, 0}},
                 name = "directional" .. gen_light_id(),
                 light_type = "directional",
@@ -253,7 +254,7 @@ function m:create(what, config)
         end
     elseif what == "disable_default_light" then
         if self.default_light then
-            w:remove(self.default_light[1])
+            w:remove(self.default_light)
             self.default_light = nil
         end
     elseif what == "light" then
@@ -284,13 +285,8 @@ function m:create(what, config)
     end
 end
 
-function m:internal_remove(eid)
-    for idx, e in ipairs(self.entities) do
-        if e == eid then
-            table.remove(self.entities, idx)
-            return
-        end
-    end
+function m:internal_remove(toremove)
+    
 end
 
 local function set_select_adapter(entity_set, mount_root)
@@ -304,11 +300,11 @@ local function set_select_adapter(entity_set, mount_root)
 end
 
 local function remove_entitys(entities)
-    for _, eid in ipairs(entities) do
-        if type(eid) == "table" then
-            remove_entitys(eid)
+    for _, e in ipairs(entities) do
+        if type(e) == "table" then
+            remove_entitys(e)
         else
-            w:remove(eid)
+            w:remove(e)
         end
     end
 end
@@ -413,9 +409,15 @@ function m:on_prefab_ready(prefab)
     local node_map = {}
     for i, e in ipairs(entitys) do
         node_map[e] = {template = self.prefab_template[i], parent = find_e(entitys, e.scene.parent)}
-        w:sync("camera:in", e)
+        w:sync("camera?in", e)
         if e.camera then
             camera_mgr.on_camera_ready(e)
+        end
+        w:sync("light?in", e)
+        if e.light then
+            create_light_billboard(e)
+            light_gizmo.bind(e)
+            light_gizmo.show(false)
         end
     end
 
@@ -432,48 +434,19 @@ function m:on_prefab_ready(prefab)
     end
 
     self.prefab = prefab
-    self.entitys = entitys
+    self.entities = entitys
 end
 
 function m:open(filename)
     world:pub {"PreOpenPrefab", filename}
-    -- local prefab = get_prefab(filename)
-    -- local path_list = split(filename)
-    -- local glb_filename
-    -- if #path_list > 1 then
-    --     glb_filename = path_list[1]
-    --     for _, t in ipairs(prefab.__class) do
-    --         if t.prefab then
-    --             t.prefab = convert_path(t.prefab, glb_filename)
-    --         else
-    --             if t.data.material then
-    --                 t.data.material = convert_path(t.data.material, glb_filename)
-    --             end
-    --             if t.data.mesh then
-    --                 t.data.mesh = convert_path(t.data.mesh, glb_filename)
-    --             end
-    --             if t.data.meshskin then
-    --                 t.data.meshskin = convert_path(t.data.meshskin, glb_filename)
-    --             end
-    --             if t.data.skeleton then
-    --                 t.data.skeleton = convert_path(t.data.skeleton, glb_filename)
-    --             end
-    --             if t.data.animation then
-    --                 local animation = t.data.animation
-    --                 for k, v in pairs(t.data.animation) do
-    --                     animation[k] = convert_path(v, glb_filename)
-    --                 end
-    --             end
-    --         end
-    --     end
-    -- end
-    -- self:open_prefab(prefab)
     self.prefab_template = serialize.parse(filename, cr.read_file(filename))
     local prefab = ecs.create_instance(filename)
     function prefab:on_init()
     end
     
-    prefab.on_ready = m.on_prefab_ready
+    prefab.on_ready = function(instance)
+        self:on_prefab_ready(instance)
+    end
     
     function prefab:on_message(msg)
         --print(object, msg)
@@ -486,33 +459,33 @@ function m:open(filename)
     world:pub {"WindowTitle", filename}
 end
 
-local function do_remove_entity(eid)
-    if world[eid].light_type then
-        light_gizmo.on_remove_light(eid)
+local function on_remove_entity(e)
+    w:sync("light?in", e)
+    if e.light then
+        light_gizmo.on_remove_light(e)
     end
-    if world[eid].skeleton_eid then
-        w:remove(world[eid].skeleton_eid)
+    w:sync("camera?in", e)
+    if e.camera then
+        camera_mgr.remove_camera(e)
     end
-    local teml = hierarchy:get_template(eid)
+    -- if world[eid].skeleton_eid then
+    --     w:remove(world[eid].skeleton_eid)
+    -- end
+    local teml = hierarchy:get_template(e)
     if teml and teml.children then
         remove_entitys(teml.children)
         -- for _, e in ipairs(teml.children) do
         --     world:remove_entity(e)
         -- end
     end
+    hierarchy:del(e)
 end
 
 function m:reset_prefab()
     camera_mgr.clear()
-    for _, eid in ipairs(self.entities) do
-        if type(eid) == "table" then
-            --camera
-            camera_mgr.remove_camera(eid)
-            world.w:remove(eid)
-        else
-            do_remove_entity(eid)
-            w:remove(eid)
-        end
+    for _, e in ipairs(self.entities) do
+        on_remove_entity(e)
+        w:remove(e)
     end
     light_gizmo.clear()
     hierarchy:clear()
@@ -640,21 +613,22 @@ function m:add_effect(filename)
             tag = {"effect"},
             scene = {srt = {}},
             effekseer = filename,
-            effect_instance = {},
-            on_ready = function (e)
-                if not e.effect_instance then
-                    w:sync("effect_instance:in", e)
-                end
-                local inst = e.effect_instance
-                if inst.handle == -1 then
-                    w:sync("effekseer:in", e)
-                    print("create effect faild : ", tostring(effekseer))
-                end
-                inst.playid = effekseer.play(inst.handle, inst.playid)
-            end
+            effect_instance = {}
 		},
     }
-    self:add_entity(ecs.create_entity(utils.deep_copy(template)), gizmo.target_eid, template)
+    local tpl = utils.deep_copy(template)
+    tpl.data.on_ready = function (e)
+        if not e.effect_instance then
+            w:sync("effect_instance:in", e)
+        end
+        local inst = e.effect_instance
+        if inst.handle == -1 then
+            w:sync("effekseer:in", e)
+            print("create effect faild : ", tostring(effekseer))
+        end
+        inst.playid = effekseer.play(inst.handle, inst.playid)
+    end
+    self:add_entity(ecs.create_entity(tpl), gizmo.target_eid, template)
 end
 
 function m:add_prefab(filename)
@@ -760,14 +734,24 @@ function m:save_prefab(path)
     world:pub {"ResourceBrowser", "dirty"}
 end
 
-function m:remove_entity(eid)
-    if not eid then return end
-    do_remove_entity(eid)
-    w:remove(eid)
-    hierarchy:del(eid)
+function m:remove_entity(e)
+    if not e then
+        return
+    end
+    on_remove_entity(e)
+    w:remove(e)
+    local index
+    for idx, entity in ipairs(self.entities) do
+        if entity == e then
+            index = idx
+            break
+        end
+    end
+    if index then
+        table.remove(self.entities, index)
+    end
     hierarchy:update_slot_list(world)
     hierarchy:update_collider_list(world)
-    self:internal_remove(eid)
     gizmo.target_eid = nil
 end
 

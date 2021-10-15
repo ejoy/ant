@@ -18,7 +18,6 @@ local camera_mgr = {
     FRUSTUM_TOP     = 2,
     FRUSTUM_RIGHT   = 3,
     FRUSTUM_BOTTOM  = 4,
-    camera_list     = {},
     second_view     = "second_view",
 }
 
@@ -33,21 +32,14 @@ function camera_mgr.get_editor_data(e)
     if not e or #e == 0 then return end
     w:sync("camera:in", e)
     if not e.camera._editor then
-        e.camera._editor = {}
+        e.camera._editor = {target = -1, dist_to_target = 5}
     end
     return e.camera._editor
 end
 
 function camera_mgr.set_second_camera(eid, show)
-    if not eid then
-        return
-    end
-    -- local rc = world[eid]._rendercache
-	-- rc.viewmat = icamera.calc_viewmat(eid)
-    -- rc.projmat = icamera.calc_projmat(eid)
-    -- rc.viewprojmat = icamera.calc_viewproj(eid)
+    if not eid then return end
     irq.set_camera(camera_mgr.second_view, eid)
-    irq.set_visible(camera_mgr.second_view, true)
     camera_mgr.second_camera = eid
     camera_mgr.show_frustum(eid, show)
 end
@@ -128,8 +120,7 @@ function camera_mgr.show_frustum(eid, visible)
     --     return
     -- end
     local editor_data = camera_mgr.get_editor_data(eid)
-    --irq.set_visible(camera_mgr.second_view, visible)
-    irq.set_visible(camera_mgr.second_view, true)
+    irq.set_visible(camera_mgr.second_view, visible)
     if editor_data and editor_data.frustum_eid and #editor_data.frustum_eid > 0 then
         local state = "visible"
         ies.set_state(editor_data.frustum_eid, state, visible)
@@ -211,7 +202,6 @@ function camera_mgr.create_camera()
     local runtime_tpl = utils.deep_copy(template)
     runtime_tpl.data.on_ready = camera_mgr.on_camera_ready
     local cam = ecs.create_entity(runtime_tpl)
-    camera_mgr.camera_list[cam] = { camera_ref = cam, target = -1, dist_to_target = 5 }
     return cam, template
 end
 
@@ -225,8 +215,8 @@ function camera_mgr.bind_main_camera()
 end
 
 function camera_mgr.set_frame(cam_eid, idx)
-    local pos = world[camera_mgr.camera_list[cam_eid].recorder].frames[idx].position
-    local rot = world[camera_mgr.camera_list[cam_eid].recorder].frames[idx].rotation
+    local pos = camera_mgr.get_editor_data(cam_eid).recorder.frames[idx].position
+    local rot = camera_mgr.get_editor_data(cam_eid).recorder.frames[idx].rotation
     iom.set_position(cam_eid, pos)
     iom.set_rotation(cam_eid, rot)
     camera_mgr.update_frustrum(cam_eid)
@@ -282,17 +272,24 @@ local function do_remove_camera(cam)
 end
 
 function camera_mgr.remove_camera(eid)
-    camera_mgr.set_second_camera(camera_mgr.second_view_camera, false)
+    if camera_mgr.second_camera == eid then
+        camera_mgr.second_camera = nil
+    end
+    irq.set_visible(camera_mgr.second_view, false)
     local cam = camera_mgr.get_editor_data(eid)
     do_remove_camera(cam)
 end
 
 function camera_mgr.clear()
-    camera_mgr.set_second_camera(camera_mgr.second_view_camera, false)
-    for k, v in pairs(camera_mgr.camera_list) do
-        do_remove_camera(v)
+    if camera_mgr.second_camera then
+        camera_mgr.second_camera = nil
     end
-    camera_mgr.camera_list = {}
+    irq.set_visible(camera_mgr.second_view, false)
+    for e in w:select "camera:in" do
+        if e.camera._editor then
+            do_remove_camera(e)
+        end
+    end
 end
 
 return camera_mgr

@@ -77,7 +77,7 @@ local function create_simple_render_entity(name, material, mesh, srt, color, hid
 			scene 		= {srt = srt or {}},
 			material	= material,
 			simplemesh	= imesh.init_mesh(mesh, true),
-			state		= ies.create_state "visible",
+			state		= ies.create_state "visible|auxgeom",
 			name		= name or gen_test_name(),
 			on_ready = function(e)
 				imaterial.set_property(e, "u_color", color or {1,1,1,1})
@@ -86,6 +86,7 @@ local function create_simple_render_entity(name, material, mesh, srt, color, hid
 					visible = false
 				end
 				ies.set_state(e, "visible", visible)
+				ies.set_state(e, "auxgeom", true)
 			end
 		}
 	}
