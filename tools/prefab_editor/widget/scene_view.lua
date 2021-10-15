@@ -16,8 +16,8 @@ local hierarchy = require "hierarchy_edit"
 
 local m = {}
 
-local source_eid = nil
-local target_eid = nil
+local source_e = nil
+local target_e = nil
 local function is_editable(eid)
     --if not world[eid].scene_entity or
     if not hierarchy:is_visible(eid) or
@@ -111,26 +111,23 @@ local function show_scene_node(node)
     imgui.table.NextRow();
     imgui.table.NextColumn();
     local function select_or_move(nd)
-        local eid = nd.eid
+        local e = nd.eid
         if imgui.util.IsItemClicked() then
-            if is_editable(eid) then
-                gizmo:set_target(eid)
+            if is_editable(e) then
+                gizmo:set_target(e)
             end
-        end
-        --if world[eid].camera 
-        if type(eid) == "table" or world[eid].light_type then
-            return
         end
 
         if imgui.widget.BeginDragDropSource() then
-            imgui.widget.SetDragDropPayload("DragNode", eid)
+            source_e = e
+            imgui.widget.SetDragDropPayload("DragNode", tostring(e))
             imgui.widget.EndDragDropSource()
         end
         if imgui.widget.BeginDragDropTarget() then
             local payload = imgui.widget.AcceptDragDropPayload("DragNode")
             if payload then
-                source_eid = tonumber(payload)
-                target_eid = eid
+                --source_e = tonumber(payload)
+                target_e = e
             end
             imgui.widget.EndDragDropTarget()
         end
@@ -155,13 +152,8 @@ local function show_scene_node(node)
     end
     local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((gizmo.target_eid == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
     if not node.display_name then
-        if type(node.eid) == "table" then
-            local w = world.w
-            w:sync("name:in", node.eid)
-            hierarchy:update_display_name(node.eid, node.eid.name)
-        else
-            hierarchy:update_display_name(node.eid, world[node.eid].name)
-        end
+        w:sync("name:in", node.eid)
+        hierarchy:update_display_name(node.eid, node.eid.name)
     end
 
     local flags = base_flags
@@ -281,11 +273,10 @@ function m.show()
             imgui.table.SetupColumn("Visible", imgui.flags.TableColumn {'WidthFixed'}, 24.0)
             imgui.table.HeadersRow()
             for i, child in ipairs(hierarchy.root.children) do
-                source_eid = nil
-                target_eid = nil
+                target_e = nil
                 show_scene_node(child)
-                if source_eid and target_eid then
-                    world:pub {"EntityEvent", "parent", source_eid, target_eid}
+                if source_e and target_e then
+                    world:pub {"EntityEvent", "parent", source_e, target_e}
                 end
             end
             imgui.table.End() 

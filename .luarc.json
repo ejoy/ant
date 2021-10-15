@@ -1,0 +1,15 @@
+{
+    "$schema": "https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json",
+    "Lua.runtime.plugin": "misc/lsp-plugin.lua",
+    "Lua.runtime.special": {
+        "import_package": "require"
+    },
+    "Lua.diagnostics.disable": [
+        "different-requires"
+    ],
+    "Lua.workspace.ignoreDir": [
+        "packages/animation/controller/state_machine.lua",
+        "packages/editor/",
+        "tools/prefab_editor/"
+    ]
+}

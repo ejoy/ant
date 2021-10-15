@@ -75,12 +75,21 @@ end
 function gizmo:update_position(worldpos)
 	local newpos
 	if worldpos then
-		local parent
+		local pid
 		if not gizmo.target_eid.scene then
 			w:sync("scene:in", gizmo.target_eid)
-			parent = gizmo.target_eid.scene.parent
 		end
-		local parent_worldmat = parent and iom.worldmat(parent) or nil
+		pid = gizmo.target_eid.scene.parent
+		local parent_e
+		if pid then
+			for e in w:select "scene:in" do
+				if e.scene.id == pid then
+					parent_e = e
+					break
+				end
+			end
+		end
+		local parent_worldmat = parent_e and iom.worldmat(parent_e) or nil
 		local localPos
 		if not parent_worldmat then
 			localPos = worldpos

@@ -52,6 +52,8 @@ local function sortItems(a, b)
     return a.ID < b.ID
 end
 
+local test_cb
+
 local function update(viewid)
     bgfx.set_view_clear(viewid, "CD", 0x303030ff, 1, 0)
 
@@ -101,7 +103,6 @@ local function update(viewid)
             if test_cb == nil then
                 test_cb = {false}
             end
-    
             if test_cb[1] then
                 imgui.widget.Text "abababa"
             else

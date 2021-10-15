@@ -1,7 +1,8 @@
 local luaecs = require "ecs"
 local policy = require "policy"
 local ecs = import_package "ant.ecs"
-local assetmgr = import_package "ant.asset"
+local cr = import_package "ant.compile_resource"
+local serialize = import_package "ant.serialize"
 
 local world = {}
 
@@ -134,12 +135,13 @@ local function create_entity_template(w, package, detach, v)
     }
 end
 
-local function create_template(w, package, detach, t)
+local function create_template(w, package, detach, filename)
+    local t = serialize.parse(filename, cr.read_file(filename))
 	local prefab = {}
 	for _, v in ipairs(t) do
 		if v.prefab then
 			prefab[#prefab+1] = {
-                prefab = assetmgr.resource(v.prefab, { create_template = function (_,...) return create_template(w,package,detach,...) end }),
+                prefab = create_template(w, package, detach, v.prefab),
 				args = v.args,
 			}
 		else
@@ -272,7 +274,7 @@ end
 function world:_create_instance(package, filename, options)
     local w = self
     local detach = options and options.detach
-    local template = assetmgr.resource(filename, { create_template = function (_,...) return create_template(w, package, detach, ...) end })
+    local template = create_template(w, package, detach, filename)
     local root = create_scene_entity(w)
     local prefab, noparent = create_instance(w, template)
     w:multicast(noparent, "set_parent", root)
