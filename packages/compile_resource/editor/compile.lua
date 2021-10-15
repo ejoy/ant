@@ -142,7 +142,6 @@ end
 
 function vfs.resource(urllst)
     local url = urllst[1]
-    url = '/'..url
     if #urllst == 1 then
         if url:match "?" then
             return compile_virtualfile(url)
