@@ -20,6 +20,7 @@ local hierarchy = require "hierarchy_edit"
 
 local uiproperty= require "widget.uiproperty"
 local view_class= require "widget.view_class"
+local global_data=require "common.global_data"
 
 local BaseView, MaterialView = view_class.BaseView, view_class.MaterialView
 
@@ -103,7 +104,7 @@ local function build_fx_ui(mv)
         s[n] = v
     end
 
-    return uiproperty.Group({label="FX"}, {
+    return uiproperty.Group({label="FX", flags = 0}, {
         shader_file_ui "vs",
         shader_file_ui "fs",
         shader_file_ui "cs",
@@ -255,7 +256,7 @@ local function build_properties_ui(mv)
             end
         end
     end
-    return uiproperty.Group({label="Properties",}, properties)
+    return uiproperty.Group({label="Properties", flags = 0}, properties)
 end
 
 local PT_options<const> = {
@@ -376,7 +377,7 @@ local function create_write_mask_ui(en, mv)
 end
 
 local function build_state_ui(mv)
-    return uiproperty.Group({label="State"},{
+    return uiproperty.Group({label="State", flags = 0},{
         uiproperty.Combo({label = "Pritmive Type", options=PT_options, id="PT"}, {
             getter = function ()
                 local s = state_template(mv.entity)
@@ -513,6 +514,27 @@ local function build_state_ui(mv)
     })
 end
 
+local function save_material(e, path)
+    local t = material_template(e)
+    local p = t.properties
+    if p then
+        local pp = {}
+        local function is_tex(v)
+            return v.texture
+        end
+        for k, v in pairs(p) do
+            pp[k] = v
+            if is_tex(v) then
+                pp[k].texture = serialize.path(v.texture)
+            end
+        end
+        t.properties = pp
+    end
+
+    local f<close> = lfs.open(path, "w")
+    f:write(serialize.stringify(t))
+end
+
 function MaterialView:_init()
     BaseView._init(self)
     
@@ -532,36 +554,28 @@ function MaterialView:_init()
     self.state      = build_state_ui(self)
     self.save       = uiproperty.Button({label="Save"}, {
         click = function ()
+            local path = self.mat_file:get_path()
+            save_material(self.entity, lfs.path(path))
         end,
     })
     self.saveas     = uiproperty.Button({label="Save As ..."}, {
         click = function ()
+            local path = uiutils.get_saveas_path("Material", "material")
+            if path then
+                save_material(self.entity, lfs.path(path))
+                local vpath = "/" .. tostring(access.virtualpath(global_data.repo, fs.path(path)))
+                if vpath == self.mat_file:get_path() then
+                    assetmgr.unload(vpath)
+                end
+            end
         end
     })
     self.material = uiproperty.Group({label="Material"},{
         self.mat_file,
         self.fx,
         self.state,
-        self.save,
-        self.saveas,
     })
 end
--- local global_data = require "common.global_data"
--- function MaterialView:on_saveas_mat()
---     local path = uiutils.get_saveas_path("Material", "material")
---     if path then
---         do_save(self.eid, path)
---         local vpath = "/" .. tostring(access.virtualpath(global_data.repo, fs.path(path)))
---         if vpath == self.mat_file:get_path() then
---             assetmgr.unload(vpath)
---         end
---     end
--- end
-
--- function MaterialView:on_set_mat(value)
---     prefab_mgr:update_material(self.eid, value)
---     self:set_model(nil)
--- end
 
 local function is_readonly_resource(p)
     return p:match "|"
@@ -583,7 +597,7 @@ function MaterialView:set_model(e)
         return false
     end
     --update ui state
-    self.mat_file.disable = is_readonly_resource(tostring(e.material))
+    self.mat_file.disable = false
     self.properties = build_properties_ui(self)
 
     local t = material_template(e)
@@ -599,7 +613,6 @@ function MaterialView:set_model(e)
         self.fx,
         self.properties,
         self.state,
-        self.save, self.saveas
     }
 
     self:update()
@@ -609,8 +622,10 @@ end
 function MaterialView:update()
     local e = self.entity
     if e then
+        self.save.disable = is_readonly_resource(e.material)
         self.material:update()
-
+        self.save:update()
+        self.saveas:update()
         if self.need_reload then
             local p = self.mat_file:get_path()
             reload(e, p)
@@ -622,6 +637,7 @@ function MaterialView:show()
     if self.entity then
         BaseView.show(self)
         self.material:show()
+        self.save:show(); imgui.cursor.SameLine(); self.saveas:show()
     end
 
 end

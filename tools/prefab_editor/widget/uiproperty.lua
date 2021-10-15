@@ -368,11 +368,15 @@ function Button:set_click(click)
 end
 
 function Button:show()
-    imgui.util.PushID("ui_button_id" .. self.button_id)
-    if imgui.widget.Button(self.label, self.uidata.width, self.uidata.height) then
-        self.modifier.click()
+    if self.visible then
+        imgui.util.PushID("ui_button_id" .. self.button_id)
+        imgui.windows.BeginDisabled(self.disable)
+        if imgui.widget.Button(self.label, self.uidata.width, self.uidata.height) then
+            self.modifier.click()
+        end
+        imgui.windows.EndDisabled()
+        imgui.util.PopID()
     end
-    imgui.util.PopID()
 end
 
 local Group = class("Group", PropertyBase)
