@@ -24,15 +24,6 @@ function PropertyBase:_init(config, modifier)
     self.modifier = modifier or {}
     self.dim = config.dim or 1
     self.uidata = {speed = config.speed, min = config.min, max = config.max, flags = config.flags}
-    -- if self.dim == 1 then
-    --     self.uidata = {0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
-    -- elseif self.dim == 2 then
-    --     self.uidata = {0, 0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
-    -- elseif self.dim == 3 then
-    --     self.uidata = {0, 0, 0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
-    -- elseif self.dim == 4 then
-    --     self.uidata = {0, 0, 0, 0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
-    -- end
 end
 
 function PropertyBase:set_userdata(userdata)
@@ -117,39 +108,15 @@ function Color:_init(config, modifier)
     self.imgui_func = imgui.widget.ColorEdit
 end
 
-local Combo = class "Combo"
-
-function Combo:_init(config, modifier)
-    self.label          = config.label
-    self.options        = config.options
-    self.current_option = config.options[1]
-    self.modifier       = modifier
-end
-
-function Combo:set_getter(getter)
-    self.modifier.getter = getter
-end
-
-function Combo:set_setter(setter)
-    self.modifier.setter = setter
-end
-
-function Combo:update()
-    self.current_option = self.modifier.getter()
-end
-
-function Combo:set_options(options)
-    self.options = options
-    self.current_option = options[1]
-end
+local Combo = class("Combo", PropertyBase)
 
 function Combo:show()
     imgui.widget.PropertyLabel(self.label)
     imgui.util.PushID(tostring(self))
-    if imgui.widget.BeginCombo("##"..self.label, {self.current_option, flags = imgui.flags.Combo {}}) then
-        for _, option in ipairs(self.options) do
-            if imgui.widget.Selectable(option, self.current_option == option) then
-                self.current_option = option
+    local current_option = self.modifier.getter()
+    if imgui.widget.BeginCombo("##"..self.label, {current_option, flags = imgui.flags.Combo {}}) then
+        for _, option in ipairs(self.uidata) do
+            if imgui.widget.Selectable(option, current_option == option) then
                 self.modifier.setter(option)
             end
         end
@@ -163,17 +130,14 @@ local EditText = class("EditText", PropertyBase)
 function EditText:_init(config, modifier)
     PropertyBase._init(self, config, modifier)
     self.uidata = {text = ""}
-    self.imgui_func = imgui.widget.InputText
-end
 
-function EditText:show()
-    imgui.widget.PropertyLabel(self.label)
-    if self.readonly then
-        imgui.widget.Text(tostring(self.uidata.text))
-    else
-        if self.imgui_func("##" .. self.label, self.uidata) then
-            self.modifier.setter(tostring(self.uidata.text))
+    self.imgui_func = function(label, uidata)
+        if self.readonly then
+            imgui.widget.Text(uidata.text)
+            return
         end
+        
+        return imgui.widget.InputText(label, uidata)
     end
 end
 
@@ -427,36 +391,14 @@ function Group:find_property_by_label(l)
     end
 end
 
-function Group:begin_disable(disable)
-    if self.already_disable == nil then
-        if disable then
-            self.already_disable = 0
-            imgui.windows.BeginDisabled(true)
-        end
-    else
-        self.already_disable = self.already_disable + 1
-    end
-end
-
-function Group:end_disable()
-    local d = self.already_disable
-    if d then
-        d = d - 1
-        if d == 0 then
-            self.already_disable = nil
-            imgui.windows.EndDisabled()
-        end
-    end
-end
-
 function Group:show()
     if imgui.widget.TreeNode(self.label, imgui.flags.TreeNode { "DefaultOpen" }) then
         for _, pro in ipairs(self.subproperty) do
-            self:begin_disable(pro.disable)
             if pro.visible then
+                imgui.windows.BeginDisabled(pro.disable)
                 pro:show()
+                imgui.windows.EndDisabled()
             end
-            self:end_disable()
         end
         imgui.widget.TreePop()
     end

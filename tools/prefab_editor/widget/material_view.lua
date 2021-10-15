@@ -374,8 +374,19 @@ local function build_state_ui(mv)
         }),
 
         uiproperty.Group({label="Blend Setting", id="blend_setting"}, {
+            uiproperty.Bool({label="Enable", id="enable"}, {
+                getter = function()
+                    local s = state_template(mv.entity)
+                    return s.BLEND_ENABLE
+                end,
+                setter = function (value)
+                    local s = state_template(mv.entity)
+                    s.BLEND_ENABLE = value ~= nil
+                    mv:enable_blend_setting_ui()
+                    mv.need_reload = true
+                end,
+            }),
             create_simple_state_ui("Combo",{label="Type", options=BLEND_options, id="type"}, "BLEND", mv, BLEND_options[1]),
-            create_simple_state_ui("Bool", {label="Enable", id="enable"}, "BLEND_ENABLE", mv),
             create_simple_state_ui("Combo",{label="Equation", id="equation",options=BLEND_EQUATION_options}, "BLEND_EQUATION", mv, BLEND_EQUATION_options[1]),
             uiproperty.Group({label="Function", id="function"}, {
                 uiproperty.Bool({label="Use Separate Alpha"},{
@@ -475,11 +486,11 @@ local function build_state_ui(mv)
         create_simple_state_ui("Bool", {label="CONSERVATIVE_RASTER"}, "CONSERVATIVE_RASTER", mv),
         create_simple_state_ui("Bool", {label="Front Face as CCW"}, "FRONT_CCW", mv),
         uiproperty.Group({label="Write Mask"},{
-            R = create_write_mask_ui("R", mv),
-            G = create_write_mask_ui("G", mv),
-            B = create_write_mask_ui("B", mv),
-            A = create_write_mask_ui("A", mv),
-            Z = create_write_mask_ui("Z", mv),
+            create_write_mask_ui("R", mv),
+            create_write_mask_ui("G", mv),
+            create_write_mask_ui("B", mv),
+            create_write_mask_ui("A", mv),
+            create_write_mask_ui("Z", mv),
         }),
         create_simple_state_ui("Combo", {label="Depth Test", options=DEPTH_TEST_options}, "DEPTH_TEST", mv),
         create_simple_state_ui("Combo", {label="Cull Type", options=CULL_options}, "CULL", mv),
@@ -540,6 +551,17 @@ local function is_readonly_resource(p)
     return p:match "|"
 end
 
+function MaterialView:enable_blend_setting_ui(e)
+    local s = state_template(e)
+    if s then
+        local bs = self.state:find_property "blend_setting"
+        for _, p in ipairs(bs.subproperty) do
+            p.disable = not s.BLEND_ENABLE
+        end
+        bs:find_property "enable".disable = false
+    end
+end
+
 function MaterialView:set_model(e)
     if not BaseView.set_model(self, e) then 
         return false
@@ -554,14 +576,7 @@ function MaterialView:set_model(e)
         cs.visible = false
     end
 
-    local s = state_template(e)
-    if s then
-        local bs = self.state:find_property "blend_setting"
-        for _, p in ipairs(bs.subproperty) do
-            p.disable = not s.BLEND_ENABLE
-        end
-        bs:find_property "enable".disable = false
-    end
+    self:enable_blend_setting_ui(e)
 
     self.material:set_subproperty{
         self.mat_file,
