@@ -395,8 +395,6 @@ local function convert_path(path, glb_filename)
 end
 
 function m:on_prefab_ready(prefab)
-    self:reset_prefab()
-    
     local entitys = prefab.tag["*"]
     local function find_e(entitys, id)
         for _, e in ipairs(entitys) do
@@ -433,13 +431,15 @@ function m:on_prefab_ready(prefab)
         add_to_hierarchy(e)
     end
 
-    self.prefab = prefab
     self.entities = entitys
 end
 
 function m:open(filename)
+    self:reset_prefab()
     world:pub {"PreOpenPrefab", filename}
+    self.prefab_filename = filename
     self.prefab_template = serialize.parse(filename, cr.read_file(filename))
+
     local prefab = ecs.create_instance(filename)
     function prefab:on_init()
     end
@@ -457,6 +457,8 @@ function m:open(filename)
     end
     self.prefab_instance = world:create_object(prefab)
     world:pub {"WindowTitle", filename}
+    anim_view.load_clips()
+    camera_mgr.bind_main_camera()
 end
 
 local function on_remove_entity(e)
@@ -495,88 +497,9 @@ function m:reset_prefab()
     world:pub {"WindowTitle", ""}
     world:pub {"ResetEditor", ""}
     hierarchy:set_root(self.root)
-end
-
-function m:open_prefab(prefab)
-    self:reset_prefab()
-    self.prefab = prefab
-    -- local entities = worldedit:prefab_instance(prefab)
-    -- self.entities = entities
-    -- local template_class = prefab.__class
-    -- local remove_entity = {}
-    -- local add_entity = {}
-    -- local last_camera
-    -- for i, entity in ipairs(entities) do
-    --     if type(entity) == "table" then
-    --         if entity.root then
-    --             local templ = hierarchy:get_template(entity.root)
-    --             templ.filename = template_class[i].prefab
-    --             set_select_adapter(entity, entity.root)
-    --             templ.children = entity
-    --             remove_entity[#remove_entity+1] = entity
-    --         elseif #entity == 0 then
-    --             -- camera
-    --             hierarchy:add(entity, {template = template_class[i]}, self.root)
-    --             self.post_init_camera[#self.post_init_camera + 1] = entity
-    --         end
-    --     else
-    --         local keyframes = template_class[i].data.frames
-    --         if keyframes and last_camera then
-    --             local templ = hierarchy:get_template(last_camera)
-    --             templ.keyframe = template_class[i]
-    --             camera_mgr.bind_recorder(last_camera, entity)
-    --             remove_entity[#remove_entity+1] = entity
-    --         else
-    --             if world[entity].collider then
-    --                 local collider = world[entity].collider
-    --                 local config = {}
-    --                 if collider.sphere then
-    --                     config.type = "sphere"
-    --                     config.define = collider.sphere
-    --                 elseif collider.box then
-    --                     config.type = "box"
-    --                     config.define = collider.box
-    --                 end
-    --                 local new_entity, temp = self:create_collider(config)
-                    
-    --                 if world[entity].parent and world[world[entity].parent].slot then
-    --                     world[new_entity].slot_name = world[world[entity].parent].name
-    --                 end
-    --                 --world[new_entity].parent = world[entity].parent or self.root
-    --                 ecs.method.set_parent(new_entity, world[entity].parent or self.root)
-                    
-    --                 hierarchy:add(new_entity, {template = temp.__class[1]}, world[new_entity].parent)
-    --                 add_entity[#add_entity + 1] = new_entity
-    --                 remove_entity[#remove_entity+1] = entity
-    --             else
-    --                 if world[entity].mesh then
-    --                     ies.set_state(entity, "selectable", true)
-    --                 end
-    --                 hierarchy:add(entity, {template = template_class[i]}, world[entity].parent or self.root)
-    --             end
-    --         end
-    --         if world[entity].camera then
-    --             camera_mgr.update_frustrum(entity)
-    --             camera_mgr.show_frustum(entity, false)
-    --             last_camera = entity
-    --         elseif world[entity].light_type then
-    --             create_light_billboard(entity)
-    --             light_gizmo.bind(entity)
-    --             light_gizmo.show(false)
-    --         elseif world[entity].collider then
-    --             world:remove_entity(entity)
-    --         end
-    --     end
-    -- end
-    -- for _, e in ipairs(remove_entity) do
-    --     self:internal_remove(e)
-    -- end
-    -- for _, e in ipairs(add_entity) do
-    --     self.entities[#self.entities + 1] = e
-    -- end
-
-    anim_view.load_clips()
-    camera_mgr.bind_main_camera()
+    self.prefab_filename = nil
+    self.prefab_template = nil
+    self.prefab_instance = nil
 end
 
 function m:reload()
@@ -585,7 +508,7 @@ function m:reload()
     -- local prefab = utils.deep_copy(self.prefab)
     -- prefab.__class = new_template
     -- self:open_prefab(prefab)
-    local filename = tostring(self.prefab)
+    local filename = self.prefab_filename
     if filename == 'nil' then
         self:save_prefab(tostring(gd.project_root) .. "/res/__temp__.prefab")
     else
@@ -705,7 +628,7 @@ local utils = require "common.utils"
 function m:save_prefab(path)
     local filename
     if not path then
-        if not self.prefab or (string.find(tostring(self.prefab), "__temp__")) then
+        if not self.prefab_filename or (string.find(self.prefab_filename, "__temp__")) then
             filename = widget_utils.get_saveas_path("Prefab", "prefab")
             if not filename then return end
         end
@@ -717,7 +640,7 @@ function m:save_prefab(path)
             filename = string.sub(filename, 1, pos + 6)
         end
     end
-    local prefab_filename = self.prefab and tostring(self.prefab) or ""
+    local prefab_filename = self.prefab_filename or ""
     filename = filename or prefab_filename
     local saveas = (lfs.path(filename) ~= lfs.path(prefab_filename))
 
@@ -767,7 +690,7 @@ function m:remove_entity(e)
 end
 
 function m:get_current_filename()
-    return tostring(self.prefab)
+    return self.prefab_filename
 end
 
 function m.set_anim_view(aview)
