@@ -117,13 +117,13 @@ function CameraView:on_set_target(value)
     camera_mgr.set_target(self.eid, value)
 end
 function CameraView:on_get_target()
-    return camera_mgr.camera_list[self.eid].target
+    return camera_mgr.get_editor_data(self.eid).target
 end
 function CameraView:on_set_dist(value)
     camera_mgr.set_dist_to_target(self.eid, value)
 end
 function CameraView:on_get_dist()
-    return camera_mgr.camera_list[self.eid].dist_to_target
+    return camera_mgr.get_editor_data(self.eid).dist_to_target
 end
 
 function CameraView:on_set_fov(value)

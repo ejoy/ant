@@ -194,7 +194,7 @@ function camera_sys:handle_camera_event()
 			if camera_mgr.second_camera then
 				select_area = selectBoundary({x, y})
 				if select_area then
-					local boundary = camera_mgr.camera_list[camera_mgr.second_camera].far_boundary
+					local boundary = camera_mgr.get_editor_data(camera_mgr.second_camera).far_boundary
 					local lb_point = boundary[1][1]
 					local lt_point = boundary[2][1]
 					local rt_point = boundary[3][1]
@@ -219,7 +219,7 @@ function camera_sys:handle_camera_event()
 	end
 
 	for _, what, x, y in mouse_up:unpack() do
-		if what == "LEFT" then
+		if what == "LEFT" and camera_mgr.second_camera then
 			local boundary = camera_mgr.get_editor_data(camera_mgr.second_camera).far_boundary
 			if boundary then
 				for i, v in ipairs(boundary) do

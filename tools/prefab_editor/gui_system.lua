@@ -458,7 +458,7 @@ function m:handle_event()
     
     for _, filename in event_preopen_prefab:unpack() do
         anim_view:clear()
-        material_view:clear()
+        --material_view:clear()
     end
     for _, filename in event_open_prefab:unpack() do
         prefab_mgr:open(filename)
