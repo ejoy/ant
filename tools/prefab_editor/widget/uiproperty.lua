@@ -22,7 +22,6 @@ function PropertyBase:_init(config, modifier)
     self.id         = config.id
 
     self.modifier = modifier or {}
-    self.dim = config.dim or 1
     self.uidata = {speed = config.speed, min = config.min, max = config.max, flags = config.flags}
 end
 
@@ -59,10 +58,14 @@ function PropertyBase:set_visible(v)
     self.visible = v
 end
 
+function PropertyBase:get_id()
+    return self.id
+end
+
 function PropertyBase:update()
     local value = self.modifier.getter()
     if type(value) == "table" then
-        for i = 1, self.dim do
+        for i = 1, #value do
             self.uidata[i] = value[i]
         end
     else
@@ -73,10 +76,11 @@ end
 function PropertyBase:show()
     imgui.widget.PropertyLabel(self.label)
     if self.imgui_func("##" .. self.label, self.uidata) then
-        if self.dim == 1 then
-            self.modifier.setter(self.uidata[1])
+        local d = self.uidata
+        if #d == 1 then
+            self.modifier.setter(d[1])
         else
-            self.modifier.setter(self.uidata)
+            self.modifier.setter(d)
         end
     end
 end
@@ -334,12 +338,17 @@ function TextureResource:show()
 end
 
 
-local Button = class "Button"
+local Button = class("Button", PropertyBase)
 local button_id = 0
-function Button:_init(config, modifier)
+function Button:_init(config, modifier, width, height)
+    PropertyBase._init(self, config, modifier)
     button_id = button_id + 1
-    self.label      = config.label
-    self.modifier   = modifier or {}
+    self.button_id = button_id
+    local d = self.uidata
+    d.width, d.height = width, height
+end
+
+function Button:update()
 end
 
 function Button:set_click(click)
@@ -347,8 +356,8 @@ function Button:set_click(click)
 end
 
 function Button:show()
-    imgui.util.PushID("ui_button_id" .. button_id)
-    if imgui.widget.Button(self.label) then
+    imgui.util.PushID("ui_button_id" .. self.button_id)
+    if imgui.widget.Button(self.label, self.uidata.width, self.uidata.height) then
         self.modifier.click()
     end
     imgui.util.PopID()
@@ -358,7 +367,9 @@ local Group = class("Group", PropertyBase)
 
 function Group:_init(config, subproperty)
     PropertyBase._init(self, config, nil)
-    self.label        = config.label
+    if self.uidata.flags == nil then
+        self.uidata.flags = imgui.flags.TreeNode { "DefaultOpen" }
+    end
     self.subproperty = subproperty
 end
 
@@ -392,7 +403,7 @@ function Group:find_property_by_label(l)
 end
 
 function Group:show()
-    if imgui.widget.TreeNode(self.label, imgui.flags.TreeNode { "DefaultOpen" }) then
+    if imgui.widget.TreeNode(self.label, self.uidata.flags) then
         for _, pro in ipairs(self.subproperty) do
             if pro.visible then
                 imgui.windows.BeginDisabled(pro.disable)
