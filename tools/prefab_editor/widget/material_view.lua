@@ -60,17 +60,6 @@ local function state_template(e)
     return t.state
 end
 
-local function reload(e, mtl)
-    local prefab = hierarchy:get_template(e)
-    prefab.template.data.material = mtl
-    prefab_mgr:save_prefab()
-    prefab_mgr:reload()
-end
-
-local ON_OFF_options<const> = {
-    "on", "off"
-}
-
 local DEPTH_TYPE_options<const> = {
     "inv_z", "linear"
 }
@@ -531,8 +520,20 @@ local function save_material(e, path)
         t.properties = pp
     end
 
-    local f<close> = lfs.open(path, "w")
+    local lpp = path:parent_path():localpath()
+    if not lfs.exists(lpp) then
+        lfs.create_directories(lpp)
+    end
+    local f<close> = lfs.open(lpp / path:filename():string(), "w")
     f:write(serialize.stringify(t))
+end
+
+local function reload(e, mtl)
+    local prefab = hierarchy:get_template(e)
+    save_material(e, fs.path(mtl))
+    prefab.template.data.material = mtl
+    prefab_mgr:save_prefab()
+    prefab_mgr:reload()
 end
 
 function MaterialView:_init()
@@ -555,21 +556,22 @@ function MaterialView:_init()
     self.save       = uiproperty.Button({label="Save"}, {
         click = function ()
             local path = self.mat_file:get_path()
-            save_material(self.entity, lfs.path(path))
+            reload(self.entity, path)
         end,
     })
     self.saveas     = uiproperty.Button({label="Save As ..."}, {
         click = function ()
             local path = uiutils.get_saveas_path("Material", "material")
             if path then
-                save_material(self.entity, lfs.path(path))
-                local vpath = "/" .. tostring(access.virtualpath(global_data.repo, fs.path(path)))
+                local vpath = access.virtualpath(global_data.repo, fs.path(path))
+                reload(self.entity, vpath)
                 if vpath == self.mat_file:get_path() then
                     assetmgr.unload(vpath)
                 end
             end
         end
     })
+
     self.material = uiproperty.Group({label="Material"},{
         self.mat_file,
         self.fx,
@@ -628,6 +630,7 @@ function MaterialView:set_model(e)
         table.insert(self.material.subproperty, idx, self.properties)
     end
     self.save.disable = is_readonly_resource(e.material)
+    self.material.disable = prefab_mgr:get_current_filename() == nil
     self:update()
     return true
 end
@@ -644,9 +647,6 @@ function MaterialView:show()
     if self.entity then
         BaseView.show(self)
         self.material:show()
-        if self.need_reload then
-            reload(self.entity, self.mat_file:get_path())
-        end
     end
 
 end
