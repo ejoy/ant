@@ -434,12 +434,14 @@ function Group:_init(config, subproperty, modifier)
 end
 
 function Group:show()
+    imgui.windows.BeginDisabled(self.disable)
     if imgui.widget.TreeNode(self.label, self.uidata.flags) then
         for _, c in ipairs(self.subproperty) do
             self:_show_child(c)
         end
         imgui.widget.TreePop()
     end
+    imgui.windows.EndDisabled()
 end
 
 local SameLineContainer = class("SameLineContainer", Container)
