@@ -6,7 +6,7 @@ local function splitname(fullname)
     return fullname:match "^([^|]*)|(.*)$"
 end
 
-local OBJECT = {"system","policy_v2","interface","component_v2","pipeline"}
+local OBJECT = {"system","policy_v2","interface","component_v2"}
 
 local function solve_object(o, w, what, fullname)
 	local decl = w._decl[what][fullname]
@@ -38,7 +38,6 @@ local check_map = {
 	require_transform = "transform",
 	component_v2 = "component_v2",
 	component_opt = "component_v2",
-	pipeline = "pipeline",
 }
 
 local copy = {}
@@ -47,11 +46,6 @@ function copy.policy_v2(v)
 		policy_v2 = v.require_policy_v2,
 		component_v2 = v.component_v2,
 		component_opt = v.component_opt,
-	}
-end
-function copy.pipeline(v)
-	return {
-		value = v.value
 	}
 end
 function copy.component_v2(v)
@@ -66,17 +60,10 @@ local function create_importor(w)
 	local declaration = w._decl
 	local import = {}
     for _, objname in ipairs(OBJECT) do
-		w._class[objname] = setmetatable({}, {__index=function(_, name)
-			--TODO
-			local res = import[objname](nil, name)
-			if res then
-				solve_object(res, w, objname, name)
-			end
-			return res
-		end})
+		local class = {}
+		w._class[objname] = class
 		import[objname] = function (package, name)
-			local class = w._class[objname]
-			local v = rawget(class, name)
+			local v = class[name]
             if v then
                 return v
 			end
@@ -85,12 +72,6 @@ local function create_importor(w)
 			end
             local v = declaration[objname][name]
 			if not v then
-				if objname == "pipeline" then
-					return
-				end
-				if objname == "component" then
-					return
-				end
                 error(("invalid %s name: `%s`."):format(objname, name))
             end
 			log.debug("Import  ", objname, name)
@@ -103,7 +84,7 @@ local function create_importor(w)
 					import[attrib](package, k)
 				end
 			end
-			if objname == "policy" then
+			if objname == "policy_v2" then
 				solve_policy(name, res)
 			end
 			if v.implement then
@@ -143,7 +124,7 @@ local function init(w, config)
 	end)
 	w._importor = create_importor(w)
 	function w:_import(objname, package, name)
-		local res = rawget(w._class[objname], name)
+		local res = w._class[objname][name]
 		if res then
 			return res
 		end
@@ -186,9 +167,6 @@ local function init(w, config)
 			end
 		end
 	end
-    --for _, objname in ipairs(OBJECT) do
-	--	setmetatable(w._class[objname], nil)
-	--end
 	w._initializing = false
 
     for _, objname in ipairs(OBJECT) do

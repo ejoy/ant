@@ -62,7 +62,7 @@ function system.solve(w)
 	end
 	setmetatable(res, nil)
 
-	for _, pl in pairs(w._class.pipeline) do
+	for _, pl in pairs(w._decl.pipeline) do
 		if pl.value then
 			for _, v in ipairs(pl.value) do
 				if v[1] == "stage" then
@@ -80,7 +80,7 @@ end
 
 function system.lists(w, what)
 	local res = {}
-	solve_depend(res, w._systems, w._class.pipeline, what)
+	solve_depend(res, w._systems, w._decl.pipeline, what)
 	return res
 end
 
