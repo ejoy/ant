@@ -238,9 +238,10 @@ return function (output, glbdata, exports, tolocalpath)
     end
 
     local function get_state(translucent)
+        --glb defalut cull state is CW, use default_cw.state or translucent_cw.state
         local name = translucent and 
-            "/pkg/ant.resources/materials/states/translucent.state" or 
-            "/pkg/ant.resources/materials/states/default.state"
+            "/pkg/ant.resources/materials/states/translucent_cw.state" or 
+            "/pkg/ant.resources/materials/states/default_cw.state"
         return read_datalist(tolocalpath(name))
     end
 

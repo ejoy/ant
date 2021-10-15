@@ -97,12 +97,6 @@ local primitive_names = {
     false, --TRIANGLE_FAN not support
 }
 
-local CULL_mappers<const> = {
-    CCW = "CW",
-    CW = "CCW",
-    NONE = "NONE",
-}
-
 local materials = {}
 
 local function generate_material(mi, mode)
@@ -112,8 +106,7 @@ local function generate_material(mi, mode)
     end
     --defualt cull is CCW
     local function what_cull()
-        local cn = mi.material.state.CULL
-        return cn and CULL_mappers[cn] or "CCW"
+        return mi.material.state.CULL
     end
 
     local cullname = what_cull()
