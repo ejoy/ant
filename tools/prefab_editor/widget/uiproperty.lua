@@ -113,13 +113,25 @@ function Color:_init(config, modifier)
 end
 
 local Combo = class("Combo", PropertyBase)
+function Combo:_init(config, modifier)
+    PropertyBase._init(self, config, modifier)
+    self.options = config.options
+end
+
+function Combo:set_options(options)
+    local d = self.uidata
+    for i=1, #options do
+        d[i] = options[i]
+    end
+    d[#options+1] = nil
+end
 
 function Combo:show()
     imgui.widget.PropertyLabel(self.label)
     imgui.util.PushID(tostring(self))
     local current_option = self.modifier.getter()
     if imgui.widget.BeginCombo("##"..self.label, {current_option, flags = imgui.flags.Combo {}}) then
-        for _, option in ipairs(self.uidata) do
+        for _, option in ipairs(self.options) do
             if imgui.widget.Selectable(option, current_option == option) then
                 self.modifier.setter(option)
             end

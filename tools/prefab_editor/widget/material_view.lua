@@ -93,6 +93,16 @@ local function build_fx_ui(mv)
         return s[which] or default_setting[which]
     end
 
+    local function check_set_setting(n, v)
+        local fx = material_template(mv.entity).fx
+        local s = fx.setting
+        if s == nil then
+            s = {}
+            fx.setting = s
+        end
+        s[n] = v
+    end
+
     return uiproperty.Group({label="FX"}, {
         shader_file_ui "vs",
         shader_file_ui "fs",
@@ -101,31 +111,39 @@ local function build_fx_ui(mv)
             uiproperty.Bool({label="Lighting"}, {
                 getter = function() return setting_filed "lighting" == "on" end,
                 setter = function (value)
-                    local s = material_template(mv.entity).fx.setting
-                    s.lighting = value and "on" or "off"
+                    check_set_setting("lighting", value and "on" or "off")
+                    mv.need_reload = true
                 end
             }),
             uiproperty.Combo({label = "Layer", options = irender.layer_names()},{
                 getter = function() return setting_filed "surfacetype" end,
                 setter = function(value)
-                    local s = material_template(mv.entity).fx.setting
-                    s.surfacetype = value
+                    check_set_setting("surfacetype", value)
                     mv.need_reload = true
                 end,
             }),
             uiproperty.Bool({label = "ShadowCast"}, {
-                getter = function() return ies.has_state(mv.entity, "cast_shadow") end,
+                getter = function()
+                    local prefab = hierarchy:get_template(mv.entity)
+                    local data = prefab.template.data
+                    local s = data.state
+                    if type(s) == "string" then
+                        return s:match "cast_shadow" ~= nil
+                    end
+                    return (s & ies.create_state "cast_shadow") ~= nil
+                end,
                 setter = function(value)
                     local prefab = hierarchy:get_template(mv.entity)
-                    local state = prefab.data.state
+                    local data = prefab.template.data
+                    local state = data.state
                     --TODO: need remove not string entity state
                     if type(state) == "string" then
                         if not state:match "cast_shadow" then
-                            prefab.data.state = state .. "|cast_shadow"
+                            data.state = state .. "|cast_shadow"
                         end
                     else
                         local m = ies.filter_mask(mv.entity)
-                        prefab.data.state = value and (state|m) or (state&(~m))
+                        data.state = value and (state|m) or (state&(~m))
                     end
                     mv.need_reload = true
                 end,
@@ -133,16 +151,14 @@ local function build_fx_ui(mv)
             uiproperty.Bool({label = "ShadowReceive"}, {
                 getter = function () return setting_filed "shadow_receive" == "on" end,
                 setter = function(value)
-                    local s = material_template(mv.entity).fx.setting
-                    s.shadow_receive = value and "on" or "off"
+                    check_set_setting("shadow_receive", value and "on" or "off")
                     mv.need_reload = true
                 end,
             }),
             uiproperty.Combo({label = "DepthType", options = DEPTH_TYPE_options}, {
                 getter = function () return setting_filed "depth_type" end,
                 setter = function(value)
-                    local s = material_template(mv.entity).fx.setting
-                    s.depth_type = value
+                    check_set_setting("depth_type", value)
                     mv.need_reload = true
                 end,
             })
@@ -382,7 +398,7 @@ local function build_state_ui(mv)
                 setter = function (value)
                     local s = state_template(mv.entity)
                     s.BLEND_ENABLE = value ~= nil
-                    mv:enable_blend_setting_ui()
+                    mv:enable_blend_setting_ui(mv.entity)
                     mv.need_reload = true
                 end,
             }),
