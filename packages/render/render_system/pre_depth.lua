@@ -1,16 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
-local bgfx = require "bgfx"
-
 local irender   = ecs.import.interface "ant.render|irender"
-
-local function can_write_depth(state)
-	local s = bgfx.parse_state(state)
-	local wm = s.WRITE_MASK
-	return wm == nil or wm:match "Z"
-end
-
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local pre_depth_material
 local pre_depth_skinning_material

@@ -63,6 +63,7 @@ for i, name in ipairs(modes) do
     end
 end
 
+---@diagnostic disable-next-line: lowercase-global
 log = m
 print = log.info
 
