@@ -500,6 +500,7 @@ function m:reset_prefab()
     self.prefab_filename = nil
     self.prefab_template = nil
     self.prefab_instance = nil
+    gizmo.target_eid = nil
 end
 
 function m:reload()
