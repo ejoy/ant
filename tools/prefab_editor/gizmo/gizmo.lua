@@ -134,8 +134,9 @@ function gizmo:click_axis_or_plane(axis)
 	end
 end
 
-function gizmo:hide_rotate_fan(rotAxis)
+function gizmo:hide_rotate_fan()
 	local state = "visible"
+	if not self.rx.eid then return end
 	ies.set_state(self.rx.eid[3], state, false)
 	ies.set_state(self.rx.eid[4], state, false)
 	ies.set_state(self.ry.eid[3], state, false)
@@ -148,6 +149,7 @@ end
 
 function gizmo:show_move(show)
 	local state = "visible"
+	if not self.tx.eid then return end
 	ies.set_state(self.tx.eid[1], state, show)
 	ies.set_state(self.tx.eid[2], state, show)
 	ies.set_state(self.ty.eid[1], state, show)
@@ -155,6 +157,7 @@ function gizmo:show_move(show)
 	ies.set_state(self.tz.eid[1], state, show)
 	ies.set_state(self.tz.eid[2], state, show)
 	--
+	if not self.txy.eid then return end
 	ies.set_state(self.txy.eid[1], state, show)
 	ies.set_state(self.tyz.eid[1], state, show)
 	ies.set_state(self.tzx.eid[1], state, show)
@@ -162,6 +165,7 @@ end
 
 function gizmo:show_rotate(show)
 	local state = "visible"
+	if not self.rx.eid then return end
 	ies.set_state(self.rx.eid[1], state, show)
 	ies.set_state(self.rx.eid[2], state, show)
 	ies.set_state(self.ry.eid[1], state, show)
@@ -173,6 +177,7 @@ end
 
 function gizmo:show_scale(show)
 	local state = "visible"
+	if not self.sx.eid then return end
 	ies.set_state(self.sx.eid[1], state, show)
 	ies.set_state(self.sx.eid[2], state, show)
 	ies.set_state(self.sy.eid[1], state, show)

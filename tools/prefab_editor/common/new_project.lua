@@ -78,7 +78,7 @@ end
 
 function m:post_init()
     irq.set_view_clear_color(world:singleton_entity_id "main_queue", 0)
-    --world:instance "res/scenes.prefab"
+    --ecs.create_instance "res/scenes.prefab"
 end
 ]]
     utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\init_system.lua")), system_code)
@@ -96,14 +96,12 @@ import "@ant.asset"
 
 system "init_system"
     .implement "init_system.lua"
-    .require_policy "ant.general|name"
-    .require_policy "ant.render|render"
-    .require_policy "ant.render|light"
-    .require_policy "ant.render|shadow_cast_policy"
-    .require_policy "ant.animation|animation"
-    .require_policy "ant.animation|skinning"
-    .require_policy "ant.sky|procedural_sky"
-    .require_policy "ant.render|simplerender"
+    .require_policy_v2 "ant.render|light"
+    .require_policy_v2 "ant.animation|animation"
+    .require_policy_v2 "ant.animation|skinning"
+    .require_policy_v2 "ant.sky|procedural_sky"
+    .require_policy_v2 "ant.render|simplerender"
+    .require_policy_v2 "ant.render|render"
     .method "init"
     .method "post_init"
 

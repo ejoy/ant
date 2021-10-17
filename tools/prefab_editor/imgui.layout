@@ -10,14 +10,14 @@ Collapsed=0
 DockId=0x00000001,0
 
 [Window][Inspector]
-Pos=1113,64
-Size=287,554
+Pos=1138,64
+Size=262,515
 Collapsed=0
 DockId=0x00000004,0
 
 [Window][ResourceBrowser]
-Pos=0,620
-Size=1400,280
+Pos=0,581
+Size=1400,319
 Collapsed=0
 DockId=0x00000009,2
 
@@ -33,13 +33,13 @@ Collapsed=0
 
 [Window][Hierarchy]
 Pos=0,64
-Size=331,554
+Size=303,515
 Collapsed=0
 DockId=0x00000007,0
 
 [Window][Log]
-Pos=0,620
-Size=1400,280
+Pos=0,581
+Size=1400,319
 Collapsed=0
 DockId=0x00000009,0
 
@@ -50,13 +50,13 @@ Collapsed=0
 DockId=0x00000009,2
 
 [Window][Choose project]
-Pos=785,399
+Pos=787,399
 Size=341,86
 Collapsed=0
 
 [Window][Console]
-Pos=0,620
-Size=1400,280
+Pos=0,581
+Size=1400,319
 Collapsed=0
 DockId=0x00000009,1
 
@@ -73,10 +73,16 @@ Collapsed=0
 DockId=0x00000009,2
 
 [Window][GridMesh]
-Pos=1113,64
-Size=287,554
+Pos=1138,64
+Size=262,515
 Collapsed=0
 DockId=0x00000004,1
+
+[Window][Prefab]
+Pos=1138,64
+Size=262,515
+Collapsed=0
+DockId=0x00000004,2
 
 [Table][0x965D8EB5,3]
 Column 0  Weight=1.0000
@@ -84,13 +90,13 @@ Column 1  Weight=1.0000
 Column 2  Weight=1.0000
 
 [Docking][Data]
-DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=8,95 Size=1400,836 Split=Y
+DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=260,154 Size=1400,836 Split=Y
   DockNode        ID=0x00000005 Parent=0x3BC79352 SizeRef=1280,632 Split=X
     DockNode      ID=0x00000003 Parent=0x00000005 SizeRef=1016,658 Split=X
       DockNode    ID=0x00000007 Parent=0x00000003 SizeRef=303,658 Selected=0x788BAA0D
       DockNode    ID=0x00000008 Parent=0x00000003 SizeRef=711,658 Split=X
         DockNode  ID=0x00000001 Parent=0x00000008 SizeRef=225,658 Selected=0x18B8C0DE
         DockNode  ID=0x00000002 Parent=0x00000008 SizeRef=740,658 CentralNode=1
-    DockNode      ID=0x00000004 Parent=0x00000005 SizeRef=262,658 Selected=0x1EDD10F4
+    DockNode      ID=0x00000004 Parent=0x00000005 SizeRef=262,658 Selected=0xF8CC62E9
   DockNode        ID=0x00000009 Parent=0x3BC79352 SizeRef=1280,319 Selected=0xACA40541
 

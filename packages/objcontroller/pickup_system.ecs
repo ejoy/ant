@@ -16,7 +16,11 @@ pipeline "select"
     .stage "after_pickup"
 
 component_v2 "pickup_queue"
-component_v2 "pickup".type "lua"
+component_v2 "pickup"
+    .type "lua"
+component_v2 "pickupid"
+    .type "int"
+    
 policy_v2 "pickup"
     .require_system "pickup_system"
     .component_v2 "pickup"

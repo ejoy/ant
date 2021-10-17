@@ -1,22 +1,16 @@
 import "@ant.collision"
-import "@ant.terrain"
 
 system "collider_system"
     .implement "collider_system.lua"
-    .method "data_changed"
     .method "update_collider_transform"
+    .method "entity_init"
+    .method "entity_remove"
 
 interface "collider"
     .implement "collider_system.lua"
     .require_system "collider_system"
     .method "raycast"
     .method "test"
-    .method "which_entity"
-
-policy "collider_policy"
-    .require_system "ant.collision|collider_system"
-    .component "transform"
-    .component "collider"
 
 component_v2 "collider"
     .type "lua"
@@ -24,23 +18,6 @@ component_v2 "collider"
 policy_v2 "collider"
     .require_system "ant.collision|collider_system"
     .component_v2 "collider"
-
-policy "terrain_collider_policy"
-    .require_transform "terrain_collider_transform"
-    .component "collider"
-    .component "terrain"
-
-transform "terrain_collider_transform"
-    .implement "collider_system.lua"
-    .require_interface "ant.terrain|terrain"
-    .input "terrain"
-    .output "collider"
-    .method "process_entity"
-
-component "collider"
-    .implement "collider_system.lua"
-    .method "delete"
-    .method "init"
 
 pipeline "collider"
     .stage "update_collider_transform"

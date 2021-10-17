@@ -5,12 +5,9 @@
 #include "../Include/RmlUi/ElementUtilities.h"
 #include "../Include/RmlUi/Factory.h"
 #include "../Include/RmlUi/RenderInterface.h"
-#include "../Include/RmlUi/StreamMemory.h"
-#include "../Include/RmlUi/StreamMemory.h"
 #include "DataModel.h"
 #include "EventDispatcher.h"
 #include "PluginRegistry.h"
-#include "StreamFile.h"
 #include <algorithm>
 #include <iterator>
 
@@ -18,7 +15,6 @@ namespace Rml {
 
 Context::Context(const Size& dimensions_)
 : dimensions(dimensions_)
-, density_independent_pixel_ratio(1.0f)
 { }
 
 Context::~Context() {
@@ -46,19 +42,6 @@ void Context::SetDimensions(const Size& _dimensions) {
 
 const Size& Context::GetDimensions() const {
 	return dimensions;
-}
-
-void Context::SetDensityIndependentPixelRatio(float _density_independent_pixel_ratio) {
-	if (density_independent_pixel_ratio != _density_independent_pixel_ratio) {
-		density_independent_pixel_ratio = _density_independent_pixel_ratio;
-		if (focus) {
-			focus->DirtyDpProperties();
-		}
-	}
-}
-
-float Context::GetDensityIndependentPixelRatio() const {
-	return density_independent_pixel_ratio;
 }
 
 void Context::Update(double delta) {

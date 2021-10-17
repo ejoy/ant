@@ -12,21 +12,17 @@ local utils     = require "common.utils"
 local rc        = import_package "ant.compile_resource"
 local class     = utils.class 
 
-local PropertyBase = class("PropertyBase")
+local PropertyBase = class "PropertyBase"
 
 function PropertyBase:_init(config, modifier)
-    self.label = config.label
+    self.label      = config.label
+    self.readonly   = config.readonly
+    self.disable    = config.disable
+    self.visible    = config.visible or true
+    self.id         = config.id
+
     self.modifier = modifier or {}
-    self.dim = config.dim or 1
-    if self.dim == 1 then
-        self.uidata = {0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
-    elseif self.dim == 2 then
-        self.uidata = {0, 0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
-    elseif self.dim == 3 then
-        self.uidata = {0, 0, 0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
-    elseif self.dim == 4 then
-        self.uidata = {0, 0, 0, 0, speed = config.speed, min = config.min, max = config.max, flags = config.flags}
-    end
+    self.uidata = {speed = config.speed, min = config.min, max = config.max, flags = config.flags}
 end
 
 function PropertyBase:set_userdata(userdata)
@@ -45,10 +41,31 @@ function PropertyBase:set_setter(setter)
     self.modifier.setter = setter
 end
 
+function PropertyBase:is_enable()
+    return not self.disable
+end
+
+function PropertyBase:set_enable(v)
+    self.disable = not v
+end
+
+
+function PropertyBase:is_visible()
+    return self.visible
+end
+
+function PropertyBase:set_visible(v)
+    self.visible = v
+end
+
+function PropertyBase:get_id()
+    return self.id
+end
+
 function PropertyBase:update()
     local value = self.modifier.getter()
     if type(value) == "table" then
-        for i = 1, self.dim do
+        for i = 1, #value do
             self.uidata[i] = value[i]
         end
     else
@@ -59,14 +76,11 @@ end
 function PropertyBase:show()
     imgui.widget.PropertyLabel(self.label)
     if self.imgui_func("##" .. self.label, self.uidata) then
-        if self.dim == 1 then
-            self.modifier.setter(self.uidata[1])
-        elseif self.dim == 2 then
-            self.modifier.setter({self.uidata[1], self.uidata[2]})
-        elseif self.dim == 3 then
-            self.modifier.setter({self.uidata[1], self.uidata[2], self.uidata[3]})
-        elseif self.dim == 4 then
-            self.modifier.setter({self.uidata[1], self.uidata[2], self.uidata[3], self.uidata[4]})
+        local d = self.uidata
+        if #d == 1 then
+            self.modifier.setter(d[1])
+        else
+            self.modifier.setter(d)
         end
     end
 end
@@ -85,6 +99,12 @@ function Float:_init(config, modifier)
     self.imgui_func = imgui.widget.DragFloat
 end
 
+local Bool = class("Bool", PropertyBase)
+function Bool:_init(config, modifier)
+    PropertyBase._init(self, config, modifier)
+    self.imgui_func = imgui.widget.Checkbox
+end
+
 local Color = class("Color", PropertyBase)
 
 function Color:_init(config, modifier)
@@ -92,39 +112,27 @@ function Color:_init(config, modifier)
     self.imgui_func = imgui.widget.ColorEdit
 end
 
-local Combo = class("Combo")
-
+local Combo = class("Combo", PropertyBase)
 function Combo:_init(config, modifier)
-    self.label          = config.label
-    self.options        = config.options
-    self.current_option = config.options[1]
-    self.modifier       = modifier
-end
-
-function Combo:set_getter(getter)
-    self.modifier.getter = getter
-end
-
-function Combo:set_setter(setter)
-    self.modifier.setter = setter
-end
-
-function Combo:update()
-    self.current_option = self.modifier.getter()
+    PropertyBase._init(self, config, modifier)
+    self.options = config.options
 end
 
 function Combo:set_options(options)
-    self.options = options
-    self.current_option = options[1]
+    local d = self.uidata
+    for i=1, #options do
+        d[i] = options[i]
+    end
+    d[#options+1] = nil
 end
 
 function Combo:show()
     imgui.widget.PropertyLabel(self.label)
     imgui.util.PushID(tostring(self))
-    if imgui.widget.BeginCombo("##"..self.label, {self.current_option, flags = imgui.flags.Combo {}}) then
+    local current_option = self.modifier.getter()
+    if imgui.widget.BeginCombo("##"..self.label, {current_option, flags = imgui.flags.Combo {}}) then
         for _, option in ipairs(self.options) do
-            if imgui.widget.Selectable(option, self.current_option == option) then
-                self.current_option = option
+            if imgui.widget.Selectable(option, current_option == option) then
                 self.modifier.setter(option)
             end
         end
@@ -137,19 +145,15 @@ local EditText = class("EditText", PropertyBase)
 
 function EditText:_init(config, modifier)
     PropertyBase._init(self, config, modifier)
-    self.readonly = config.readonly
     self.uidata = {text = ""}
-    self.imgui_func = imgui.widget.InputText
-end
 
-function EditText:show()
-    imgui.widget.PropertyLabel(self.label)
-    if self.readonly then
-        imgui.widget.Text(tostring(self.uidata.text))
-    else
-        if self.imgui_func("##" .. self.label, self.uidata) then
-            self.modifier.setter(tostring(self.uidata.text))
+    self.imgui_func = function(label, uidata)
+        if self.readonly then
+            imgui.widget.Text(uidata.text)
+            return
         end
+        
+        return imgui.widget.InputText(label, uidata)
     end
 end
 
@@ -346,12 +350,17 @@ function TextureResource:show()
 end
 
 
-local Button = class("Button")
+local Button = class("Button", PropertyBase)
 local button_id = 0
-function Button:_init(config, modifier)
+function Button:_init(config, modifier, width, height)
+    PropertyBase._init(self, config, modifier)
     button_id = button_id + 1
-    self.label      = config.label
-    self.modifier   = modifier or {}
+    self.button_id = button_id
+    local d = self.uidata
+    d.width, d.height = width, height
+end
+
+function Button:update()
 end
 
 function Button:set_click(click)
@@ -359,48 +368,110 @@ function Button:set_click(click)
 end
 
 function Button:show()
-    imgui.util.PushID("ui_button_id" .. button_id)
-    if imgui.widget.Button(self.label) then
-        self.modifier.click()
+    if self.visible then
+        imgui.util.PushID("ui_button_id" .. self.button_id)
+        imgui.windows.BeginDisabled(self.disable)
+        if imgui.widget.Button(self.label, self.uidata.width, self.uidata.height) then
+            self.modifier.click()
+        end
+        imgui.windows.EndDisabled()
+        imgui.util.PopID()
     end
-    imgui.util.PopID()
 end
 
-local Group = class("Group")
+local Container = class("Container", PropertyBase)
 
-function Group:_init(config, subproperty)
-    self.label        = config.label
+function Container:_init(config, subproperty, modifier)
+    PropertyBase._init(self, config, modifier)
     self.subproperty = subproperty
 end
 
-function Group:update()
+function Container:update()
     for _, pro in ipairs(self.subproperty) do
-        pro:update() 
+        if pro.update then
+            pro:update()
+        end
     end
 end
 
-function Group:set_subproperty(subproperty)
+function Container:set_subproperty(subproperty)
     self.subproperty = subproperty
     self:update()
 end
 
-function Group:show()
-    if imgui.widget.TreeNode(self.label, imgui.flags.TreeNode { "DefaultOpen" }) then
-        for _, pro in ipairs(self.subproperty) do
-            pro:show() 
+function Container:find_property(id)
+    for _, p in ipairs(self.subproperty) do
+        if p.id == id then
+            return p
         end
-        imgui.widget.TreePop()
     end
 end
 
+function Container:find_property_by_label(l)
+    for _, p in ipairs(self.subproperty) do
+        if p.label == l then
+            return p
+        end
+    end
+end
+
+function Container:_show_child(c)
+    if c.visible then
+        imgui.windows.BeginDisabled(c.disable)
+        c:show()
+        imgui.windows.EndDisabled()
+    end
+end
+
+-- 'Group' should call Tree
+local Group = class("Group", Container)
+
+function Group:_init(config, subproperty, modifier)
+    Container._init(self, config, subproperty, modifier)
+    if self.uidata.flags == nil then
+        self.uidata.flags = imgui.flags.TreeNode { "DefaultOpen" }
+    end
+end
+
+function Group:show()
+    imgui.windows.BeginDisabled(self.disable)
+    if imgui.widget.TreeNode(self.label, self.uidata.flags) then
+        for _, c in ipairs(self.subproperty) do
+            self:_show_child(c)
+        end
+        imgui.widget.TreePop()
+    end
+    imgui.windows.EndDisabled()
+end
+
+local SameLineContainer = class("SameLineContainer", Container)
+
+function SameLineContainer:_init(config, subproperty)
+    Container._init(self, config)
+    self.subproperty = subproperty
+end
+
+function SameLineContainer:show()
+    local p = self.subproperty
+    for i=1, #p-1 do
+        local c = p[i]
+        self:_show_child(c)
+        imgui.cursor.SameLine()
+    end
+    self:_show_child(p[#p])
+end
+
+
 return {
+    Button          = Button,
     Combo           = Combo,
     Int             = Int,
     Float           = Float,
+    Bool            = Bool,
     Color           = Color,
     EditText        = EditText,
     ResourcePath    = ResourcePath,
     TextureResource = TextureResource,
     Group           = Group,
-    Button          = Button
+    SameLineContainer=SameLineContainer,
 }

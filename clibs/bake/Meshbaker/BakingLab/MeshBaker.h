@@ -17,11 +17,10 @@
 #include <Graphics/Textures.h>
 #include <Graphics/ShaderCompilation.h>
 #include <Graphics/SH.h>
-#include <Graphics/Skybox.h>
 
 #include "PathTracer.h"
-#include "SharedConstants.h"
-#include "AppSettings.h"
+#include "BakeSetting.h"
+#include "Light.h"
 
 namespace SampleFramework11
 {
@@ -32,8 +31,6 @@ namespace SampleFramework11
 
 using namespace SampleFramework11;
 
-struct RenderThreadContext;
-struct RenderThreadData;
 struct IntegrationSamples;
 struct BakeThreadData;
 struct GutterTexel;
@@ -44,27 +41,59 @@ struct BakeInputData
 {
     const Model* SceneModel = nullptr;
     ID3D11Device* Device = nullptr;
-    ID3D11ShaderResourceView* EnvMaps[AppSettings::NumCubeMaps];
-    TextureData<Half4> EnvMapData[AppSettings::NumCubeMaps];
+    // ID3D11ShaderResourceView* EnvMaps[AppSettings::NumCubeMaps];
+    // TextureData<Half4> EnvMapData[AppSettings::NumCubeMaps];
+    Lights lights;
 
     BakeInputData()
     {
-        for(uint64 i = 0; i < ArraySize_(EnvMaps); ++i)
-            EnvMaps[i] = nullptr;
+        // for(uint64 i = 0; i < ArraySize_(EnvMaps); ++i)
+        //     EnvMaps[i] = nullptr;
     }
 };
 
 struct MeshBakerStatus
 {
-    ID3D11ShaderResourceView* GroundTruth = nullptr;
-    ID3D11ShaderResourceView* LightMap = nullptr;
-    ID3D11ShaderResourceView* BakePoints = nullptr;
     uint64 NumBakePoints = 0;
-    float GroundTruthProgress = 0.0f;
     float BakeProgress = 0.0f;
-    uint64 GroundTruthSampleCount = 0;
-    Float3 SGDirections[AppSettings::MaxSGCount];
+    Float3 SGDirections[BakeSetting::MaxSGCount];
     float SGSharpness = 0.0f;
+};
+
+struct BakePoint
+{
+    Float3 Position;
+    Float3 Normal;
+    Float3 Tangent;
+    Float3 Bitangent;
+    Float2 Size;
+    uint32 Coverage;
+    Uint2 TexelPos;
+
+    #if _WINDOWS
+        BakePoint() : Coverage(0) {}
+    #endif
+};
+
+struct BakeBatchData {
+    volatile int64 batchIdx = 0;
+    uint64 num = 0;
+    uint64 numGroupsX = 0;
+    uint64 numGroupsY = 0;
+    uint64 lightmapSize = 0;
+
+    void Update(uint16 lmsize) {
+        numGroupsX = (lmsize + (BakeSetting::BakeGroupSizeX - 1)) / BakeSetting::BakeGroupSizeX;
+        numGroupsY = (lmsize + (BakeSetting::BakeGroupSizeY - 1)) / BakeSetting::BakeGroupSizeY;
+
+        num = GetBakeSetting().NumBakeBatches(numGroupsX, numGroupsY);
+
+        lightmapSize = lmsize;
+    }
+
+    float Process() const {
+        return Saturate(batchIdx / (num - 1.0f));
+    }
 };
 
 class MeshBaker
@@ -78,36 +107,22 @@ public:
     void Initialize(const BakeInputData& inputData);
     void Shutdown();
 
-    MeshBakerStatus Update(const Camera& camera, uint32 screenWidth, uint32 screenHeight,
-                           ID3D11DeviceContext* deviceContext, const Model* currentModel);
-    void WaitBakeThreadEnd();
-    // Read/Write Data shared with render threads
-    FixedArray<Half4> renderBuffer;
-    FixedArray<float> renderWeightBuffer;
-    volatile int64 currTile = 0;
+    void SetBakeMesh(uint32 meshIdx);
+    float Process() const {
+        return bakeBatchData.Process();
+    }
 
-    // Read-only data shared with render threads
-    volatile int64 renderTag = 0;
-    uint32 currWidth = 0;
-    uint32 currHeight = 0;
-    Float3 currCameraPos;
-    Quaternion currCameraOrientation;
-    Float4x4 currProj;
-    Float4x4 currViewProjInv;
-    bool killRenderThreads = false;
-    uint64 currNumTiles = 0;
+    MeshBakerStatus GetBakerStatus() const;
+    
+    void StartBake();
+    void EndBake();
 
     // Read/Write data shared with bake threads
-    FixedArray<Float4> bakeResults[AppSettings::MaxBasisCount];
-    volatile int64 currBakeBatch = 0;
+    FixedArray<Float4> bakeResults[BakeSetting::MaxBasisCount];
 
-    // Read-only data shared with bake threads
-    volatile int64 bakeTag = 0;
-    bool killBakeThreads = false;
-    uint64 currNumBakeBatches = 0;
-    uint64 currLightMapSize = 0;
-    BakeModes currBakeMode = BakeModes::Diffuse;
-    SolveModes currSolveMode = SolveModes::NNLS;
+    BakeBatchData bakeBatchData;
+
+    bool bakeThreadsRunning = false;
     std::vector<BakePoint> bakePoints;
     std::vector<GutterTexel> gutterTexels;
 
@@ -119,50 +134,15 @@ public:
     uint32 bakeMeshIdx = UINT32_MAX;
 private:
 
-    void KillBakeThreads();
-    void StartBakeThreads();
-
-    void KillRenderThreads();
-    void StartRenderThreads();
-
-    bool initialized = false;
-
     RTCDevice rtcDevice = nullptr;
 
     Random rng;
 
-    static const uint64 NumStagingTextures = 2;
-
-    ID3D11Texture2DPtr renderTexture;
-    ID3D11ShaderResourceViewPtr renderTextureSRV;
-    ID3D11Texture2DPtr renderStagingTextures[NumStagingTextures];
-    uint64 renderStagingTextureIdx = 0;
-
-    std::vector<HANDLE> renderThreads;
-    std::vector<RenderThreadData> renderThreadData;
-    std::vector<IntegrationSamples> renderSamples;
-    SampleModes renderSampleMode = SampleModes::Random;
-    uint64 numRenderSamples = 0;
-
-    bool renderThreadsSuspended = false;
-
-    ID3D11Texture2DPtr bakeTexture;
-    public:
-    ID3D11ShaderResourceViewPtr bakeTextureSRV;
-    uint64 bakeStagingTextureIdx = 0;
-    ID3D11Texture2DPtr bakeStagingTextures[NumStagingTextures];
-    uint64 bakeTextureUpdateIdx = 0;
-
-    uint64 numThreads = 0;
     std::vector<HANDLE> bakeThreads;
     std::vector<BakeThreadData> bakeThreadData;
     std::vector<IntegrationSamples> bakeSamples;
-    SampleModes bakeSampleMode = SampleModes::Random;
-    uint64 numBakeSamples = 0;
-    StructuredBuffer bakePointBuffer;
-    bool bakeThreadsSuspended = false;
 
-    Float3 sgDirections[AppSettings::MaxSGCount];
+    Float3 sgDirections[BakeSetting::MaxSGCount];
     float sgSharpness = 0.0f;
 
     int64 lastTileNum = INT64_MAX;

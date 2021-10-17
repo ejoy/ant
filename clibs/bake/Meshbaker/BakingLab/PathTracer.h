@@ -13,9 +13,9 @@
 #include <PCH.h>
 #include <SF11_Math.h>
 #include <Graphics/Textures.h>
-#include <Graphics/Skybox.h>
 
-#include "AppSettings.h"
+#include "BakeSetting.h"
+#include "Light.h"
 
 // Forward declarations
 struct __RTCScene;
@@ -189,22 +189,24 @@ void GenerateIntegrationSamples(IntegrationSamples& samples, uint64 sqrtNumSampl
                                 SampleModes sampleMode, uint64 numIntegrationTypes, Random& rng);
 
 // Samples the spherical area light using a set of 2D sample points
-Float3 SampleAreaLight(const Float3& position, const Float3& normal, RTCScene scene,
+Float3 SampleAreaLight2(const Float3& position, const Float3& normal, RTCScene scene,
                        const Float3& diffuseAlbedo, const Float3& cameraPos,
                        bool includeSpecular, Float3 specAlbedo, float roughness,
-                       float u1, float u2, Float3& irradiance, Float3& sampleDir);
+                       float u1, float u2, const LightData *SunLight, Float3& irradiance, Float3& sampleDir);
 
-Float3 SampleSunLight(const Float3& position, const Float3& normal, RTCScene scene,
-                      const Float3& diffuseAlbedo, const Float3& cameraPos,
-                      bool includeSpecular, Float3 specAlbedo, float roughness,
-                      float u1, float u2, Float3& irradiance);
+Float3 SampleSunLight2(const Float3& position, const Float3& normal, RTCScene scene,
+                             const Float3& diffuseAlbedo, const Float3& cameraPos,
+                             bool includeSpecular, Float3 specAlbedo, float roughness,
+                             float u1, float u2, const LightData *SunLight, Float3& irradiance);
 
 // Options for path tracing
 struct PathTracerParams
 {
     Float3 RayDir;
-    uint32 EnableDirectAreaLight = false;
-    uint8 EnableDirectSun = false;
+    // uint32 EnableDirectAreaLight = false;
+    // uint8 EnableDirectSun = false;
+    const LightData* SunLight = nullptr;
+    const Lights* lights = nullptr;
     uint8 EnableDiffuse = false;
     uint8 EnableSpecular = false;
     uint8 EnableBounceSpecular = false;
@@ -217,7 +219,6 @@ struct PathTracerParams
     float RayLen = 0.0f;
     const BVHData* SceneBVH = nullptr;
     const IntegrationSampleSet* SampleSet = nullptr;
-    const SkyCache* SkyCache = nullptr;
     const TextureData<Half4>* EnvMaps = nullptr;
 };
 

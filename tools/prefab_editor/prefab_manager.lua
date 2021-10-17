@@ -1,14 +1,16 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
+local cr            = import_package "ant.compile_resource"
+local serialize     = import_package "ant.serialize"
 local worldedit     = import_package "ant.editor".worldedit(world)
 local assetmgr      = import_package "ant.asset"
 local stringify     = import_package "ant.serialize".stringify
 local iom           = ecs.import.interface "ant.objcontroller|obj_motion"
-local iss           = ecs.import.interface "ant.scene|iscenespace"
 local ies           = ecs.import.interface "ant.scene|ientity_state"
 local ilight        = ecs.import.interface "ant.render|light"
 local imaterial     = ecs.import.interface "ant.asset|imaterial"
+local icamera_recorder = ecs.import.interface "ant.camera|icamera_recorder"
 local camera_mgr    = ecs.require "camera_manager"
 local light_gizmo   = ecs.require "gizmo.light"
 local gizmo         = ecs.require "gizmo.gizmo"
@@ -24,76 +26,11 @@ local bgfx          = require "bgfx"
 local gd            = require "common.global_data"
 local utils         = require "common.utils"
 local effekseer     = require "effekseer"
-local subprocess    = require "sp_util"
+local subprocess    = import_package "ant.compile_resource".subprocess
 
 local m = {
     entities = {}
 }
-local aabb_color_i <const> = 0x6060ffff
-local aabb_color <const> = {1.0, 0.38, 0.38, 1.0}
-local highlight_aabb_eid
-function m:update_current_aabb(eid)
-    if type(eid) == "table" then return end
-
-    if not highlight_aabb_eid then
-        highlight_aabb_eid = geo_utils.create_dynamic_aabb({}, "highlight_aabb")
-        imaterial.set_property(highlight_aabb_eid, "u_color", aabb_color)
-        ies.set_state(highlight_aabb_eid, "auxgeom", true)
-    end
-    ies.set_state(highlight_aabb_eid, "visible", false)
-    if not eid or world[eid].camera or world[eid].light_type then
-        return
-    end
-    local aabb = nil
-    local e = world[eid]
-    if e.mesh and e.mesh.bounding then
-        local w = iom.worldmat(eid)
-        aabb = math3d.aabb_transform(w, e.mesh.bounding.aabb)
-    else
-        local adaptee = hierarchy:get_select_adaptee(eid)
-        for _, eid in ipairs(adaptee) do
-            local e = world[eid]
-            if e.mesh and e.mesh.bounding then
-                local newaabb = math3d.aabb_transform(iom.worldmat(eid), e.mesh.bounding.aabb)
-                aabb = aabb and math3d.aabb_merge(aabb, newaabb) or newaabb
-            end
-        end
-    end
-
-    if aabb then
-        local v = math3d.tovalue(aabb)
-        local aabb_shape = {min={v[1],v[2],v[3]}, max={v[5],v[6],v[7]}}
-        local vb, ib = geo_utils.get_aabb_vb_ib(aabb_shape, aabb_color_i)
-        local rc = world[highlight_aabb_eid]._rendercache
-        local vbdesc, ibdesc = rc.vb, rc.ib
-        bgfx.update(vbdesc.handles[1], 0, bgfx.memory_buffer("fffd", vb))
-        ies.set_state(highlight_aabb_eid, "visible", true)
-    end
-end
-
-function m:normalize_aabb()
-    local aabb
-    for _, eid in ipairs(self.entities) do
-        local e = world[eid]
-        if e.mesh and e.mesh.bounding then
-            local newaabb = math3d.aabb_transform(iom.worldmat(eid), e.mesh.bounding.aabb)
-            aabb = aabb and math3d.aabb_merge(aabb, newaabb) or newaabb
-        end
-    end
-
-    if not aabb then return end
-
-    local aabb_mat = math3d.tovalue(aabb)
-    local min_x, min_y, min_z = aabb_mat[1], aabb_mat[2], aabb_mat[3]
-    local max_x, max_y, max_z = aabb_mat[5], aabb_mat[6], aabb_mat[7]
-    local s = 1/math.max(max_x - min_x, max_y - min_y, max_z - min_z)
-    local t = {-(max_x+min_x)/2,-min_y,-(max_z+min_z)/2}
-    local transform = math3d.mul(math3d.matrix{ s = s }, { t = t })
-    iom.set_srt(self.root, math3d.mul(transform, iom.srt(self.root)))
-end
-
-local recorderidx = 0
-local function gen_camera_recorder_name() recorderidx = recorderidx + 1 return "recorder" .. recorderidx end
 
 local lightidx = 0
 local function gen_light_id() lightidx = lightidx + 1 return lightidx end
@@ -164,27 +101,26 @@ function m:create_slot()
     --if not gizmo.target_eid then return end
     local auto_name = "empty" .. slot_entity_id
     local parent_eid = gizmo.target_eid or self.root
-    local new_entity, temp = world:deprecated_create_entity {
-        --action = { mount = 0 },
+    local template = {
         policy = {
             "ant.general|name",
             "ant.general|tag",
-            "ant.scene|slot_policy",
-            "ant.scene|transform_policy",
-            "ant.scene|hierarchy_policy",
+            "ant.scene|slot",
+            "ant.scene|scene_object",
         },
         data = {
-            transform = get_local_transform({}, parent_eid),
+            reference = true,
+            scene = {srt = get_local_transform({}, parent_eid)},
             slot = true,
-            scene_entity = true,
             follow_joint = "None",
             follow_flag = 1,
             name = auto_name,
             tag = {auto_name},
         }
     }
+    local new_entity = ecs.create_entity(utils.deep_copy(template))
     slot_entity_id = slot_entity_id + 1
-    self:add_entity(new_entity, parent_eid, temp)
+    self:add_entity(new_entity, parent_eid, template)
     hierarchy:update_slot_list(world)
 end
 
@@ -199,60 +135,53 @@ function m:create_collider(config)
         scale = {size[1] * 200, size[2] * 200, size[3] * 200}
     elseif config.type == "capsule" then
     end
-    
-    local new_entity, temp = world:deprecated_create_entity {
-        --action = { mount = 0 },
+    local template = {
         policy = {
             "ant.general|name",
             "ant.render|render",
-            "ant.scene|hierarchy_policy",
-            "ant.scene|transform_policy",
             "ant.general|tag",
-            --"ant.collision|collider_policy"
         },
         data = {
+            reference = true,
             name = "collider" .. gen_geometry_id(),
             tag = config.tag or {"collider"},
-            scene_entity = true,
-            transform = {s = scale},
-            --collider = { [config.type] = define },
-            color = {1, 0.5, 0.5, 0.5},
+            scene = {srt = {s = scale}, parent = self.root},
             state = ies.create_state "visible|selectable",
             material = "/pkg/ant.resources/materials/singlecolor_translucent.material",
-            mesh = (config.type == "box") and geom_mesh_file["cube"] or geom_mesh_file[config.type]
+            mesh = (config.type == "box") and geom_mesh_file["cube"] or geom_mesh_file[config.type],
+            render_object = {},
+            filter_material = {}
         }
     }
-    world[new_entity].collider = { [config.type] = define }
-    imaterial.set_property(new_entity, "u_color", {1, 0.5, 0.5, 0.8})
-    return new_entity, temp
+    local tpl = utils.deep_copy(template)
+    tpl.data.on_ready = function (e)
+        e.collider = { [config.type] = define }
+        imaterial.set_property(e, "u_color", {1, 0.5, 0.5, 0.8})
+    end
+    return ecs.create_entity(tpl), template
 end
 
-local function create_simple_entity(name)
-    return world:deprecated_create_entity{
+local function create_simple_entity(name, srt)
+    local template = {
 		policy = {
             "ant.general|name",
-            "ant.scene|hierarchy_policy",
-            "ant.scene|transform_policy"
+            "ant.scene|scene_object",
 		},
 		data = {
+            reference = true,
             name = name,
-            scene_entity = true,
-            transform = {}
+            scene = {srt = srt or {}}
 		},
     }
+    return ecs.create_entity(utils.deep_copy(template)), template
 end
 
 function m:add_entity(new_entity, parent, temp, no_hierarchy)
     self.entities[#self.entities+1] = new_entity
-    iss.set_parent(new_entity, parent or self.root)
+    ecs.method.set_parent(new_entity, parent or self.root)
     if not no_hierarchy then
-        hierarchy:add(new_entity, {template = temp.__class[1]}, world[new_entity].parent)
+        hierarchy:add(new_entity, {template = temp}, parent)--world[new_entity].parent)
     end
-end
-
-local function camera_init()
-
-    
 end
 
 function m:create(what, config)
@@ -262,8 +191,9 @@ function m:create(what, config)
     if what == "slot" then
         self:create_slot()
     elseif what == "camera" then
-        local new_camera = camera_mgr.ceate_camera()
-        self.new_camera[#self.new_camera + 1] = new_camera
+        local new_camera, template = camera_mgr.create_camera()
+        hierarchy:add(new_camera, {template = template}, self.root)
+        self.entities[#self.entities+1] = new_camera
     elseif what == "empty" then
         local new_entity, temp = create_simple_entity("empty" .. gen_geometry_id())
         self:add_entity(new_entity, gizmo.target_eid, temp)
@@ -274,26 +204,26 @@ function m:create(what, config)
             or config.type == "sphere"
             or config.type == "torus" then
             local parent_eid = config.parent or gizmo.target_eid
-            local new_entity, temp = world:deprecated_create_entity {
-                --action = { mount = 0 },
+            local template = {
                 policy = {
                     "ant.render|render",
                     "ant.general|name",
-                    "ant.scene|hierarchy_policy",
                 },
                 data = {
-                    color = {1, 1, 1, 1},
-                    scene_entity = true,
+                    reference = true,
+                    scene = {srt = get_local_transform({s = 50}, parent_eid)},
                     state = ies.create_state "visible|selectable",
-                    transform = get_local_transform({s = 50}, parent_eid),
-                    --material = "/pkg/ant.resources/materials/singlecolor.material",
                     material = "/pkg/ant.resources/materials/pbr_default.material",
                     mesh = geom_mesh_file[config.type],
+                    render_object = {},
+                    filter_material = {},
                     name = config.type .. gen_geometry_id()
                 }
             }
-            imaterial.set_property(new_entity, "u_color", {1, 1, 1, 1})
-            self:add_entity(new_entity, parent_eid, temp)
+            local new_entity = ecs.create_entity(utils.deep_copy(template))
+
+            --imaterial.set_property(new_entity, "u_color", {1, 1, 1, 1})
+            self:add_entity(new_entity, parent_eid, template)
             return new_entity
         elseif config.type == "cube(prefab)" then
             m:add_prefab(gd.editor_package_path .. "res/cube.prefab")
@@ -308,8 +238,7 @@ function m:create(what, config)
         end
     elseif what == "enable_default_light" then
         if not self.default_light then
-            local ilight = ecs.import.interface "ant.render|light" 
-            local _, newlight = ilight.create({
+            local newlight, _ = ilight.create({
                 transform = {t = {0, 5, 0}, r = {math.rad(130), 0, 0}},
                 name = "directional" .. gen_light_id(),
                 light_type = "directional",
@@ -325,13 +254,12 @@ function m:create(what, config)
         end
     elseif what == "disable_default_light" then
         if self.default_light then
-            world:remove_entity(self.default_light[1])
+            w:remove(self.default_light)
             self.default_light = nil
         end
     elseif what == "light" then
         if config.type == "directional" or config.type == "point" or config.type == "spot" then      
-            local ilight = ecs.import.interface "ant.render|light" 
-            local _, newlight = ilight.create({
+            local newlight, tpl = ilight.create({
                 transform = {t = {0, 3, 0},r = {math.rad(130), 0, 0}},
                 name = config.type .. gen_light_id(),
                 light_type = config.type,
@@ -342,8 +270,9 @@ function m:create(what, config)
                 outter_radian = math.rad(45),
                 make_shadow = true
             })
-            self:add_entity(newlight[1], self.root, newlight)
-            create_light_billboard(newlight[1])
+            self:add_entity(newlight, self.root, tpl)
+            light_gizmo.init()
+            --create_light_billboard(newlight)
         end
     elseif what == "collider" then
         local new_entity, temp = self:create_collider(config)
@@ -351,36 +280,31 @@ function m:create(what, config)
         hierarchy:update_collider_list(world)
         return new_entity
     elseif what == "particle" then
-        local entities = world:instance(gd.editor_package_path .. "res/particle.prefab")
+        local entities = ecs.create_instance(gd.editor_package_path .. "res/particle.prefab")
         self:add_entity(entities[1], gizmo.target_eid, entities)
     end
 end
 
-function m:internal_remove(eid)
-    for idx, e in ipairs(self.entities) do
-        if e == eid then
-            table.remove(self.entities, idx)
-            return
-        end
-    end
+function m:internal_remove(toremove)
+    
 end
 
 local function set_select_adapter(entity_set, mount_root)
-    for _, eid in ipairs(entity_set) do
-        if type(eid) == "table" then
-            set_select_adapter(eid, mount_root)
-        else
-            hierarchy:add_select_adapter(eid, mount_root)
-        end
+    for _, e in ipairs(entity_set) do
+        -- if type(eid) == "table" then
+        --     set_select_adapter(eid, mount_root)
+        -- else
+            hierarchy:add_select_adapter(e, mount_root)
+        --end
     end
 end
 
 local function remove_entitys(entities)
-    for _, eid in ipairs(entities) do
-        if type(eid) == "table" then
-            remove_entitys(eid)
+    for _, e in ipairs(entities) do
+        if type(e) == "table" then
+            remove_entitys(e)
         else
-            world:remove_entity(eid)
+            w:remove(e)
         end
     end
 end
@@ -470,217 +394,113 @@ local function convert_path(path, glb_filename)
     return new_path
 end
 
-function m:open(filename)
-    world:pub {"PreOpenPrefab", filename}
-    local prefab = get_prefab(filename)
-    local path_list = split(filename)
-    local glb_filename
-    if #path_list > 1 then
-        glb_filename = path_list[1]
-        for _, t in ipairs(prefab.__class) do
-            if t.prefab then
-                t.prefab = convert_path(t.prefab, glb_filename)
-            else
-                if t.data.material then
-                    t.data.material = convert_path(t.data.material, glb_filename)
-                end
-                if t.data.mesh then
-                    t.data.mesh = convert_path(t.data.mesh, glb_filename)
-                end
-                if t.data.meshskin then
-                    t.data.meshskin = convert_path(t.data.meshskin, glb_filename)
-                end
-                if t.data.skeleton then
-                    t.data.skeleton = convert_path(t.data.skeleton, glb_filename)
-                end
-                if t.data.animation then
-                    local animation = t.data.animation
-                    for k, v in pairs(t.data.animation) do
-                        animation[k] = convert_path(v, glb_filename)
-                    end
-                end
+function m:on_prefab_ready(prefab)
+    local entitys = prefab.tag["*"]
+    local function find_e(entitys, id)
+        for _, e in ipairs(entitys) do
+            if e.scene.id == id then
+                return e
             end
         end
     end
-    self:open_prefab(prefab)
-    world:pub {"WindowTitle", filename}
+
+    local node_map = {}
+    for i, e in ipairs(entitys) do
+        node_map[e] = {template = self.prefab_template[i], parent = find_e(entitys, e.scene.parent)}
+        w:sync("camera?in", e)
+        if e.camera then
+            camera_mgr.on_camera_ready(e)
+        end
+        w:sync("light?in", e)
+        if e.light then
+            create_light_billboard(e)
+            light_gizmo.bind(e)
+            light_gizmo.show(false)
+        end
+    end
+
+    local function add_to_hierarchy(e)
+        local node = node_map[e]
+        if node.parent and not hierarchy:get_node(node.parent) then
+            add_to_hierarchy(node.parent)
+        end
+        hierarchy:add(e, {template = node.template}, node.parent or self.root)
+    end
+
+    for _, e in ipairs(entitys) do
+        add_to_hierarchy(e)
+    end
+
+    self.entities = entitys
 end
 
-local function do_remove_entity(eid)
-    if world[eid].light_type then
-        light_gizmo.on_remove_light(eid)
+function m:open(filename)
+    self:reset_prefab()
+    world:pub {"PreOpenPrefab", filename}
+    self.prefab_filename = filename
+    self.prefab_template = serialize.parse(filename, cr.read_file(filename))
+
+    local prefab = ecs.create_instance(filename)
+    function prefab:on_init()
     end
-    if world[eid].skeleton_eid then
-        world:remove_entity(world[eid].skeleton_eid)
+    
+    prefab.on_ready = function(instance)
+        self:on_prefab_ready(instance)
     end
-    local teml = hierarchy:get_template(eid)
+    
+    function prefab:on_message(msg)
+        --print(object, msg)
+    end
+    
+    function prefab:on_update()
+        --print "update"
+    end
+    self.prefab_instance = world:create_object(prefab)
+    world:pub {"WindowTitle", filename}
+    anim_view.load_clips()
+    camera_mgr.bind_main_camera()
+end
+
+local function on_remove_entity(e)
+    w:sync("light?in", e)
+    if e.light then
+        light_gizmo.on_remove_light(e)
+    end
+    w:sync("camera?in", e)
+    if e.camera then
+        camera_mgr.remove_camera(e)
+    end
+    -- if world[eid].skeleton_eid then
+    --     w:remove(world[eid].skeleton_eid)
+    -- end
+    local teml = hierarchy:get_template(e)
     if teml and teml.children then
         remove_entitys(teml.children)
         -- for _, e in ipairs(teml.children) do
         --     world:remove_entity(e)
         -- end
     end
+    hierarchy:del(e)
 end
 
 function m:reset_prefab()
     camera_mgr.clear()
-    for _, eid in ipairs(self.entities) do
-        if type(eid) == "table" then
-            --camera
-            camera_mgr.remove_camera(eid)
-            world.w:remove(eid)
-        else
-            do_remove_entity(eid)
-            world:remove_entity(eid)
-        end
+    for _, e in ipairs(self.entities) do
+        on_remove_entity(e)
+        w:remove(e)
     end
     light_gizmo.clear()
     hierarchy:clear()
     anim_view.clear()
     self.root = create_simple_entity("scene root")
-    self.prefab_script = ""
     self.entities = {}
     world:pub {"WindowTitle", ""}
     world:pub {"ResetEditor", ""}
     hierarchy:set_root(self.root)
-
-    self.post_init_camera = {}
-    self.new_camera = {}
-end
-
-function m:init_camera()
-    if self.new_camera and #self.new_camera >= 1 then
-        for _, eid in ipairs(self.new_camera) do
-            if #eid == 0 then return end
-            local t = iom.get_position(camera_mgr.main_camera)
-            local r = iom.get_rotation(camera_mgr.main_camera)
-            iom.set_position(eid, t)
-            iom.set_rotation(eid, r)
-            camera_mgr.update_frustrum(eid)
-            camera_mgr.set_second_camera(eid, false)
-
-            local tr, tt = math3d.totable(r), math3d.totable(t)
-            eid.template.data.transform = {s = {1,1,1}, r = {tr[1],tr[2],tr[3],tr[4]}, t = {tt[1],tt[2],tt[3]}}
-
-            local recorder, recorder_templ = icamera_recorder.start(gen_camera_recorder_name())
-            camera_mgr.bind_recorder(eid, recorder)
-            camera_mgr.add_recorder_frame(eid)
-            local node = hierarchy:add(eid, {template = {
-                policy = {
-                    "ant.general|name",
-                    "ant.general|tag",
-                    "ant.camera|camera"
-                },
-                data = {
-                    camera      = true,
-                    scene_entity = true,
-                    frustum     = eid.template.data.camera.frustum,
-                    name        = eid.template.data.name,
-                    transform   = {s = {1,1,1}, r = tr, t = tt},
-                    updir       = {0, 1, 0},
-                    tag         = {"camera"}
-                }
-            }}, self.root)
-            node.camera = true
-            self.entities[#self.entities+1] = eid
-        end
-        self.new_camera = {}
-    end
-    if self.post_init_camera and #self.post_init_camera >= 1 then
-        for _, eid in ipairs(self.post_init_camera) do
-            if #eid == 0 then return end 
-            camera_mgr.update_frustrum(eid)
-            camera_mgr.show_frustum(eid, false)
-        end
-        self.post_init_camera = {}
-    end
-end
-
-function m:open_prefab(prefab)
-    self:reset_prefab()
-    self.prefab = prefab
-    local entities = worldedit:prefab_instance(prefab)
-    self.entities = entities
-    local template_class = prefab.__class
-    for _, c in ipairs(template_class) do
-        if c.script then
-            self.prefab_script = c.script
-            break
-        end
-    end
-    local remove_entity = {}
-    local add_entity = {}
-    local last_camera
-    for i, entity in ipairs(entities) do
-        if type(entity) == "table" then
-            if entity.root then
-                local templ = hierarchy:get_template(entity.root)
-                templ.filename = template_class[i].prefab
-                set_select_adapter(entity, entity.root)
-                templ.children = entity
-                remove_entity[#remove_entity+1] = entity
-            elseif #entity == 0 then
-                -- camera
-                hierarchy:add(entity, {template = template_class[i]}, self.root)
-                self.post_init_camera[#self.post_init_camera + 1] = entity
-            end
-        else
-            local keyframes = template_class[i].data.frames
-            if keyframes and last_camera then
-                local templ = hierarchy:get_template(last_camera)
-                templ.keyframe = template_class[i]
-                camera_mgr.bind_recorder(last_camera, entity)
-                remove_entity[#remove_entity+1] = entity
-            else
-                if world[entity].collider then
-                    local collider = world[entity].collider
-                    local config = {}
-                    if collider.sphere then
-                        config.type = "sphere"
-                        config.define = collider.sphere
-                    elseif collider.box then
-                        config.type = "box"
-                        config.define = collider.box
-                    end
-                    local new_entity, temp = self:create_collider(config)
-                    
-                    if world[entity].parent and world[world[entity].parent].slot then
-                        world[new_entity].slot_name = world[world[entity].parent].name
-                    end
-                    --world[new_entity].parent = world[entity].parent or self.root
-                    iss.set_parent(new_entity, world[entity].parent or self.root)
-                    hierarchy:add(new_entity, {template = temp.__class[1]}, world[new_entity].parent)
-                    add_entity[#add_entity + 1] = new_entity
-                    remove_entity[#remove_entity+1] = entity
-                else
-                    if world[entity].mesh then
-                        ies.set_state(entity, "selectable", true)
-                    end
-                    hierarchy:add(entity, {template = template_class[i]}, world[entity].parent or self.root)
-                end
-            end
-            if world[entity].camera then
-                camera_mgr.update_frustrum(entity)
-                camera_mgr.show_frustum(entity, false)
-                last_camera = entity
-            elseif world[entity].light_type then
-                create_light_billboard(entity)
-                light_gizmo.bind(entity)
-                light_gizmo.show(false)
-            elseif world[entity].collider then
-                world:remove_entity(entity)
-            end
-        end
-    end
-    for _, e in ipairs(remove_entity) do
-        self:internal_remove(e)
-    end
-    for _, e in ipairs(add_entity) do
-        self.entities[#self.entities + 1] = e
-    end
-
-    anim_view.load_clips()
-    camera_mgr.bind_main_camera()
+    self.prefab_filename = nil
+    self.prefab_template = nil
+    self.prefab_instance = nil
+    gizmo.target_eid = nil
 end
 
 function m:reload()
@@ -689,7 +509,7 @@ function m:reload()
     -- local prefab = utils.deep_copy(self.prefab)
     -- prefab.__class = new_template
     -- self:open_prefab(prefab)
-    local filename = tostring(self.prefab)
+    local filename = self.prefab_filename
     if filename == 'nil' then
         self:save_prefab(tostring(gd.project_root) .. "/res/__temp__.prefab")
     else
@@ -704,36 +524,35 @@ function m:add_effect(filename)
     if not self.root then
         self:reset_prefab()
     end
-    
-    local effect, temp = world:deprecated_create_entity{
+    local template = {
 		policy = {
             "ant.general|name",
-            "ant.scene|hierarchy_policy",
-            "ant.scene|transform_policy",
-            "ant.effekseer|effekseer_policy",
+            "ant.scene|scene_object",
+            "ant.effekseer|effekseer",
             "ant.general|tag"
 		},
 		data = {
+            reference = true,
             name = "root",
             tag = {"effect"},
-            scene_entity = true,
-            transform = {},
+            scene = {srt = {}},
             effekseer = filename,
-            speed = 1.0,
-            auto_play = false,
-            loop = true
+            effect_instance = {}
 		},
     }
-    if world[effect].effect_instance.handle == -1 then
-        print("create effect faild : ", filename)
-    -- else
-    --     local inst = world[effect].effect_instance
-    --     inst.playid = effekseer.play(inst.handle, inst.playid)
+    local tpl = utils.deep_copy(template)
+    tpl.data.on_ready = function (e)
+        if not e.effect_instance then
+            w:sync("effect_instance:in", e)
+        end
+        local inst = e.effect_instance
+        if inst.handle == -1 then
+            w:sync("effekseer:in", e)
+            print("create effect faild : ", tostring(effekseer))
+        end
+        inst.playid = effekseer.play(inst.handle, inst.playid)
     end
-    self.entities[#self.entities+1] = effect
-    --world[effect].parent = gizmo.target_eid or self.root
-    iss.set_parent(effect, gizmo.target_eid or self.root)
-    hierarchy:add(effect, {template = temp.__class[1]}, world[effect].parent)
+    self:add_entity(ecs.create_entity(tpl), gizmo.target_eid, template)
 end
 
 function m:add_prefab(filename)
@@ -745,13 +564,24 @@ function m:add_prefab(filename)
     if not self.root then
         self:reset_prefab()
     end
-    local mount_root, temp = create_simple_entity(gen_prefab_name())
-    self.entities[#self.entities+1] = mount_root
-    local entities = world:instance(prefab_filename)
-    iss.set_parent(entities[1], mount_root)
-    iss.set_parent(mount_root, gizmo.target_eid or self.root)
-    set_select_adapter(entities, mount_root)
-    hierarchy:add(mount_root, {filename = prefab_filename, template = temp.__class[1], children = entities}, world[mount_root].parent)
+    
+    local parent = gizmo.target_eid or self.root
+    local parentWorldMat = parent and iom.worldmat(parent) or math3d.matrix{}
+    local s, r, t = math3d.srt(math3d.mul(math3d.inverse(parentWorldMat), math3d.matrix{}))
+    
+    local v_root = create_simple_entity(gen_prefab_name(), {
+        r = {math3d.index(r, 1, 2, 3, 4)},
+        s = {math3d.index(s, 1, 2, 3)},
+        t = {math3d.index(t, 1, 2, 3)},
+    })
+    ecs.method.set_parent(v_root, parent)
+
+    self.entities[#self.entities+1] = v_root
+    local instance = ecs.create_instance(prefab_filename)
+
+    ecs.method.set_parent(instance.root, v_root)
+    set_select_adapter(instance.tag["*"], v_root)
+    hierarchy:add(v_root, {filename = prefab_filename, children = instance.tag["*"]}, parent)
 end
 
 function m:recreate_entity(eid)
@@ -794,19 +624,12 @@ function m:recreate_entity(eid)
     -- return new_eid
 end
 
-function m:update_material(eid, mtl)
-    local prefab = hierarchy:get_template(eid)
-    prefab.template.data.material = mtl
-    self:save_prefab()
-    self:reload()
-end
-
 local utils = require "common.utils"
 
 function m:save_prefab(path)
     local filename
     if not path then
-        if not self.prefab or (string.find(tostring(self.prefab), "__temp__")) then
+        if not self.prefab_filename or (string.find(self.prefab_filename, "__temp__")) then
             filename = widget_utils.get_saveas_path("Prefab", "prefab")
             if not filename then return end
         end
@@ -818,12 +641,11 @@ function m:save_prefab(path)
             filename = string.sub(filename, 1, pos + 6)
         end
     end
-    local prefab_filename = self.prefab and tostring(self.prefab) or ""
+    local prefab_filename = self.prefab_filename or ""
     filename = filename or prefab_filename
     local saveas = (lfs.path(filename) ~= lfs.path(prefab_filename))
 
     local new_template = hierarchy:update_prefab_template(world)
-    new_template[1].script = (#self.prefab_script > 0) and self.prefab_script or "/pkg/ant.prefab/default_script.lua"
     
     if not saveas then
         local path_list = split(prefab_filename)
@@ -847,19 +669,29 @@ function m:save_prefab(path)
     world:pub {"ResourceBrowser", "dirty"}
 end
 
-function m:remove_entity(eid)
-    if not eid then return end
-    do_remove_entity(eid)
-    world:remove_entity(eid)
-    hierarchy:del(eid)
+function m:remove_entity(e)
+    if not e then
+        return
+    end
+    on_remove_entity(e)
+    w:remove(e)
+    local index
+    for idx, entity in ipairs(self.entities) do
+        if entity == e then
+            index = idx
+            break
+        end
+    end
+    if index then
+        table.remove(self.entities, index)
+    end
     hierarchy:update_slot_list(world)
     hierarchy:update_collider_list(world)
-    self:internal_remove(eid)
     gizmo.target_eid = nil
 end
 
 function m:get_current_filename()
-    return tostring(self.prefab)
+    return self.prefab_filename
 end
 
 function m.set_anim_view(aview)

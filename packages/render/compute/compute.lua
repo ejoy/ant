@@ -68,8 +68,8 @@ function ic.create_image_property(handle, stage, mip, access)
 end
 
 local cs = ecs.system "compute_system"
-function cs:entity_ready()
-	for e in w:select "material_result:in dispatch:in" do
+function cs:entity_init()
+	for e in w:select "INIT material_result:in dispatch:in" do
 		local mr = e.material_result
 		local d = e.dispatch
         -- no state for compute shader

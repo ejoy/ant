@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local iom           = ecs.import.interface "ant.objcontroller|obj_motion"
-local iss           = ecs.import.interface "ant.scene|iscenespace"
+local ies		    = ecs.import.interface "ant.scene|ientity_state"
 local computil      = ecs.import.interface "ant.render|entity"
 local mathutils     = ecs.require "mathutils"
 local camera_mgr    = ecs.require "camera_manager"
@@ -54,7 +54,7 @@ end
 
 function grid:clear()
     if grid_eid then
-        world:remove_entity(grid_eid)
+        world.w:remove(grid_eid)
     end
 end
 local function clamp_row(row)
@@ -224,8 +224,6 @@ function brush_sys:handle_event()
             current_brush_color = p2
         elseif what == "brushsize" then
             brush_size = p1
-        elseif what == "load" then
-            load_grid(p1)
         end
     end
 

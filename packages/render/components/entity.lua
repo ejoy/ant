@@ -12,18 +12,17 @@ local geolib    = geopkg.geometry
 local mathpkg   = import_package "ant.math"
 local mc		= mathpkg.constant
 
-local ies = ecs.import.interface "ant.scene|ientity_state"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
-local irender = ecs.import.interface "ant.render|irender"
+local ies		= ecs.import.interface "ant.scene|ientity_state"
+local imaterial	= ecs.import.interface "ant.asset|imaterial"
+local irender	= ecs.import.interface "ant.render|irender"
 local imesh 	= ecs.import.interface "ant.asset|imesh"
-local bgfx = require "bgfx"
+local bgfx 		= require "bgfx"
 
 local function create_dynamic_mesh(layout, vb, ib)
-	local declmgr = import_package "ant.render".declmgr
 	local decl = declmgr.get(layout)
 	return {
 		vb = {
-			{handle=bgfx.create_dynamic_vertex_buffer(bgfx.memory_buffer("fffd", vb), declmgr.get(layout).handle, "a")}
+			{handle=bgfx.create_dynamic_vertex_buffer(bgfx.memory_buffer("fffd", vb), decl.handle, "a")}
 		},
 		ib = {
 			handle = bgfx.create_dynamic_index_buffer(bgfx.memory_buffer("d", ib), "ad")
@@ -31,12 +30,16 @@ local function create_dynamic_mesh(layout, vb, ib)
 	}
 end
 
-local function create_mesh(vb_lst, ib)
+local function create_mesh(vb_lst, ib, aabb)
 	local mesh = {
 		vb = {
 			start = 0,
-		}
+		},
 	}
+
+	if aabb then
+		mesh.bounding = {aabb=aabb}
+	end
 	local num = 0
 	for i = 1, #vb_lst, 2 do
 		local layout, vb = vb_lst[i], vb_lst[i+1]
@@ -55,7 +58,7 @@ local function create_mesh(vb_lst, ib)
 			memory = {"w", ib},
 		}
 	end
-	return world.component "mesh"(mesh)
+	return mesh
 end
 
 ientity.create_mesh = create_mesh
@@ -63,19 +66,28 @@ ientity.create_mesh = create_mesh
 local nameidx = 0
 local function gen_test_name() nameidx = nameidx + 1 return "entity" .. nameidx end
 
-local function create_simple_render_entity(name, material, mesh, srt, state)
-	return world:deprecated_create_entity {
+local function create_simple_render_entity(name, material, mesh, srt, color, hide)
+	return ecs.create_entity {
 		policy = {
-			"ant.render|render",
+			"ant.render|simplerender",
 			"ant.general|name",
 		},
 		data = {
-			transform	= srt or {},
+			reference 	= true,
+			scene 		= {srt = srt or {}},
 			material	= material,
-			mesh		= mesh,
-			state		= state or ies.create_state "visible",
+			simplemesh	= imesh.init_mesh(mesh, true),
+			state		= ies.create_state "visible|auxgeom",
 			name		= name or gen_test_name(),
-			scene_entity= true,
+			on_ready = function(e)
+				imaterial.set_property(e, "u_color", color or {1,1,1,1})
+				local visible = true
+				if hide then
+					visible = false
+				end
+				ies.set_state(e, "visible", visible)
+				ies.set_state(e, "auxgeom", true)
+			end
 		}
 	}
 end
@@ -131,20 +143,20 @@ function ientity.create_grid_mesh_entity(name, w, h, size, color, materialpath)
 			ib[#ib + 1] = grid_idx + 3
 		end
 	end
-	local data = {
-		transform = {},
-		material = materialpath,
-		state = ies.create_state "visible",
-		name = name or "GridMesh",
-		scene_entity = true,
-		mesh = create_dynamic_mesh("p3|c40niu", vb, ib) --create_mesh({"p3|c40niu", vb}, ib)
-	}
 
-	return vb, world:deprecated_create_entity{
+	return vb, ecs.create_entity{
 		policy = {
-			"ant.render|render",
-			"ant.general|name"},
-		data = data,
+			"ant.render|simplerender",
+			"ant.general|name"
+		},
+		data = {
+			reference	= true,
+			scene 		= {srt = {}},
+			material 	= materialpath,
+			state 		= ies.create_state "visible",
+			name 		= name or "GridMesh",
+			simplemesh	= imesh.init_mesh(create_dynamic_mesh("p3|c40niu", vb, ib), true), --create_mesh({"p3|c40niu", vb}, ib)
+		},
 	}
 end
 
@@ -198,117 +210,42 @@ function ientity.create_grid_entity(name, width, height, unit, linewidth)
 end
 
 
-local function get_plane_mesh()
+function ientity.plane_mesh()
 	local vb = {
 		-0.5, 0, 0.5, 0, 1, 0, 0, 1,	--left top
 		0.5,  0, 0.5, 0, 1, 0, 1, 1,	--right top
 		-0.5, 0,-0.5, 0, 1, 0, 0, 0,	--left bottom
 		0.5,  0,-0.5, 0, 1, 0, 1, 0,	--right bottom
 	}
-	local plane_mesh = create_mesh({"p3|n3|t2", vb})
-	plane_mesh.bounding = {
-		aabb = math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))
-	}
-	return plane_mesh
+	return create_mesh({"p3|n3|t2", vb}, nil, math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5})))
 end
 
-local prim_plane_mesh
+local plane_vb<const> = {
+	-0.5, 0, 0.5, 0, 1, 0,	--left top
+	0.5,  0, 0.5, 0, 1, 0,	--right top
+	-0.5, 0,-0.5, 0, 1, 0,	--left bottom
+	-0.5, 0,-0.5, 0, 1, 0,
+	0.5,  0, 0.5, 0, 1, 0,
+	0.5,  0,-0.5, 0, 1, 0,	--right bottom
+}
 
-local function get_prim_plane_mesh(sharedmesh)
-	local vb = {
-		-0.5, 0, 0.5, 0, 1, 0,	--left top
-		0.5,  0, 0.5, 0, 1, 0,	--right top
-		-0.5, 0,-0.5, 0, 1, 0,	--left bottom
-		-0.5, 0,-0.5, 0, 1, 0,
-		0.5,  0, 0.5, 0, 1, 0,
-		0.5,  0,-0.5, 0, 1, 0,	--right bottom
-	}
-	if sharedmesh then
-		if not prim_plane_mesh then
-			local tempmesh = create_mesh({"p3|n3", vb})
-			tempmesh.bounding = {
-				aabb = math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))
-			}
-			local internal_vb, internal_ib = imesh.create_rendermesh(tempmesh)
-			prim_plane_mesh = {vb = internal_vb, ib = internal_ib}
-		end
-
-		return prim_plane_mesh
-	end
-
-	local mesh = create_mesh({"p3|n3", vb})
-	mesh.bounding = {
-		aabb = math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))
-	}
-	return mesh
-end
-
-function ientity.create_prim_plane_entity(srt, materialpath, name, sharedmesh, entity_info)
-	local policy = {
-		sharedmesh and "ant.render|simplerender" or "ant.render|render",
-		"ant.general|name",
-	}
-
-	local data = {
-		transform = srt or {},
-		material = materialpath,
-		state = ies.create_state "visible",
-		name = name or "Plane",
-		scene_entity = true,
-	}
-	if sharedmesh then
-		data.simplemesh = get_prim_plane_mesh(sharedmesh)
-	else
-		data.mesh = get_prim_plane_mesh()
-	end
-
-	if entity_info then
-		for policy_name, dd in pairs(entity_info) do
-			policy[#policy+1] = policy_name
-			for k, d in pairs(dd) do
-				data[k] = d
+function ientity.create_prim_plane_entity(srt, materialpath, color, name)
+	return ecs.create_entity{
+		policy = {
+			"ant.render|simplerender",
+			"ant.general|name",
+		},
+		data = {
+			reference 	= true,
+			scene 		= { srt = srt or {}},
+			material 	= materialpath,
+			state 		= ies.create_state "visible",
+			name 		= name or "Plane",
+			simplemesh 	= imesh.init_mesh(create_mesh({"p3|n3", plane_vb}, nil, math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))), true),
+			on_ready = function (e)
+				imaterial.set_property(e, "u_color", color)
 			end
-		end
-	end
-
-	return world:deprecated_create_entity{
-		policy = policy,
-		data = data,
-	}
-end
-
-function ientity.create_plane_entity(srt, materialpath, name, entity_info, enable_shadow)
-	local policy = {
-		"ant.render|render",
-		"ant.general|name",
-	}
-
-	local whichstate = "visible|selectable"
-	if enable_shadow then
-		whichstate = whichstate .. "|cast_shadow"
-	end
-
-	local data = {
-		transform = srt or {},
-		material = materialpath,
-		state = ies.create_state(whichstate),
-		name = name or "Plane",
-		scene_entity = true,
-		mesh = get_plane_mesh(),
-	}
-
-	if entity_info then
-		for policy_name, dd in pairs(entity_info) do
-			policy[#policy+1] = policy_name
-			for k, d in pairs(dd) do
-				data[k] = d
-			end
-		end
-	end
-
-	return world:deprecated_create_entity{
-		policy = policy,
-		data = data,
+		},
 	}
 end
 
@@ -355,8 +292,7 @@ function ientity.quad_mesh(rect)
 end
 
 function ientity.create_quad_entity(rect, material, name)
-	local mesh = quad_mesh(rect)
-	return create_simple_render_entity(name, material, mesh)
+	return create_simple_render_entity(name, material, quad_mesh(rect))
 end
 
 local frustum_ib = {
@@ -382,9 +318,7 @@ function ientity.create_frustum_entity(frustum_points, name, color)
 		table.move(p, 1, 3, #vb+1, vb)
 	end
 	local mesh = create_mesh({"p3", vb}, frustum_ib)
-	local eid = create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh)
-	imaterial.set_property(eid, "u_color", color)
-	return eid
+	create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, {}, color)
 end
 
 local axis_ib = {
@@ -402,20 +336,21 @@ function ientity.create_axis_entity(srt, name, color)
 		0, 0, 1, color or 0xffff0000,
 	}
 	local mesh = create_mesh({"p3|c40niu", axis_vb}, axis_ib)
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt)
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt, color)
 end
 
-function ientity.create_line_entity(srt, p0, p1, name, color)
+function ientity.create_line_entity(srt, p0, p1, name, color, hide)
+	local ic = color and ((math.floor(color[1] * 255) & 0xFF) | ((math.floor(color[2] * 255) & 0xFF) << 8)| ((math.floor(color[3] * 255) & 0xFF) << 16)| ((math.floor(color[4] * 255) & 0xFF) << 24)) or 0xffffffff
 	local vb = {
-		p0[1], p0[2], p0[3], color or 0xffffffff,
-		p1[1], p1[2], p1[3], color or 0xffffffff,
+		p0[1], p0[2], p0[3], ic,
+		p1[1], p1[2], p1[3], ic,
 	}
 	local mesh = create_mesh({"p3|c40niu", vb}, {0, 1})
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt)
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt, color, hide)
 	
 end
 
-function ientity.create_circle_entity(radius, slices, srt, name)
+function ientity.create_circle_entity(radius, slices, srt, name, color, hide)
 	local circle_vb, circle_ib = geolib.circle(radius, slices)
 	local gvb = {}
 	--color = color or 0xffffffff
@@ -426,10 +361,10 @@ function ientity.create_circle_entity(radius, slices, srt, name)
 		gvb[#gvb+1] = 0xffffffff
 	end
 	local mesh = create_mesh({"p3|c40niu", gvb}, circle_ib)
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt)
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt, color, hide)
 end
 
-function ientity.create_circle_mesh_entity(radius, slices, srt, mtl, name)
+function ientity.create_circle_mesh_entity(radius, slices, srt, mtl, name, color)
 	local circle_vb, _ = geolib.circle(radius, slices)
 	local gvb = {0,0,0,0,0,1}
 	local ib = {}
@@ -452,7 +387,7 @@ function ientity.create_circle_mesh_entity(radius, slices, srt, mtl, name)
 		idx = idx + 1
 	end
 	local mesh = create_mesh({"p3|n3", gvb}, ib)
-	return create_simple_render_entity(name, mtl, mesh, srt)
+	return create_simple_render_entity(name, mtl, mesh, srt, color)
 end
 
 local skybox_mesh
@@ -467,14 +402,15 @@ local function get_skybox_mesh()
 end
 
 function ientity.create_skybox(material)
-    return world:deprecated_create_entity {
+    return ecs.reate_entity {
 		policy = {
 			"ant.sky|skybox",
-			"ant.render|render",
+			"ant.render|simplerender",
 			"ant.general|name",
 		},
 		data = {
-			transform = {},
+			reference = true,
+			scene = {srt = {}},
 			material = material or "/pkg/ant.resources/materials/sky/skybox.material",
 			state = ies.create_state "visible",
 			ibl = {
@@ -482,10 +418,9 @@ function ientity.create_skybox(material)
 				prefilter = {size=256},
 				LUT = {size=256},
 			},
-			scene_entity = true,
 			name = "sky_box",
 			skybox = {},
-			mesh = get_skybox_mesh(),
+			simplemesh = imesh.init_mesh(get_skybox_mesh(), true),
 		}
 	}
 end
@@ -523,19 +458,15 @@ end
 
 function ientity.create_procedural_sky(settings)
 	settings = settings or {}
-	local function attached_light(eid)
-		if eid then
-			return world[eid].serialize
-		end
-	end
-    return world:deprecated_create_entity {
+    return ecs.create_entity {
 		policy = {
-			"ant.render|render",
+			"ant.render|simplerender",
 			"ant.sky|procedural_sky",
 			"ant.general|name",
 		},
 		data = {
-			transform = {},
+			reference = true,
+			scene = {srt = {}},
 			material = "/pkg/ant.resources/materials/sky/procedural/procedural_sky.material",
 			procedural_sky = {
 				--attached_sun_light = attached_light(settings.attached_sun_light),
@@ -556,22 +487,21 @@ function ientity.create_procedural_sky(settings)
 				}
 			},
 			state = ies.create_state "visible",
-			mesh = create_sky_mesh(32, 32),
-			scene_entity = true,
+			simplemesh = imesh.init_mesh(create_sky_mesh(32, 32), true),
 			name = "procedural sky",
 		}
 	}
 end
 
 function ientity.create_gamma_test_entity()
-	world:deprecated_create_entity {
+	ecs.create_entity {
         policy = {
             "ant.render|simplerender",
             "ant.general|name",
         },
         data = {
             material = "/pkg/ant.resources/materials/gamma_test.material",
-            simplemesh = {
+            simplemesh = imesh.init_mesh({
                 ib = {
                     start = 0,
                     num = 6,
@@ -589,9 +519,8 @@ function ientity.create_gamma_test_entity()
                         }), declmgr.get "p2|t2".handle)
                     }
                 }
-            },
-            transform = {},
-            scene_entity = true,
+            }, true),
+            scene = {srt = {}},
             state = 1,
         }
     }
@@ -632,64 +561,72 @@ function ientity.create_arrow_entity(origin, forward, scale, data)
 
 	local cone_offset = math3d.sub(cone_centerpos, arrow_center)
 
-	local arroweid = world:deprecated_create_entity{
+	local arroweid = ecs.create_entity{
 		policy = {
 			"ant.general|name",
-			"ant.scene|transform_policy",
+			"ant.scene|scene_object",
 		},
 		data = {
-			transform = {
-				s = scale,
-				r = math3d.quaternion(mc.YAXIS, forward),
-				t = math3d.sub(origin, cylinder_bottom_pos),	-- move cylinder bottom to zero origin, and move to origin: -cylinder_bottom_pos+origin
-			},
-			scene_entity = true,
+			reference = true,
 			name = "directional light arrow",
+			scene = {
+				srt = {
+					s = scale,
+					r = math3d.quaternion(mc.YAXIS, forward),
+					t = math3d.sub(origin, cylinder_bottom_pos),	-- move cylinder bottom to zero origin, and move to origin: -cylinder_bottom_pos+origin
+				}
+			},
 		},
 	}
 
-	local cylindereid = world:deprecated_create_entity{
+	ecs.create_entity{
 		policy = {
-			"ant.render|render",
 			"ant.general|name",
-			"ant.scene|hierarchy_policy",
+			"ant.render|render",
+			"ant.scene|scene_object",
 		},
 		data = {
-			scene_entity = true,
+			name = "arrow.cylinder",
+			reference = true,
 			state = ies.create_state "visible",
-			transform =  {
-				s = math3d.ref(math3d.mul(100, math3d.vector(cylinder_radius, cylinder_scaleY, cylinder_radius))),
-				t = math3d.ref(cylinder_offset),
+			scene = {
+				srt = {
+					s = math3d.ref(math3d.mul(100, math3d.vector(cylinder_radius, cylinder_scaleY, cylinder_radius))),
+					t = math3d.ref(cylinder_offset),
+				}
 			},
 			material = "/pkg/ant.resources/materials/simpletri.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
-			name = "arrow.cylinder",
+			on_ready = function (e)
+				imaterial.set_property(e, "u_color", data.cylinder_color or {1, 0, 0, 1})
+			end
 		},
 		action = {
             mount = arroweid,
         }
 	}
 
-	imaterial.set_property(cylindereid, "u_color", data.cylinder_color or {1, 0, 0, 1})
-
-	local coneeid = world:deprecated_create_entity{
+	ecs.create_entity{
 		policy = {
-			"ant.render|render",
 			"ant.general|name",
-			"ant.scene|hierarchy_policy",
+			"ant.render|render",
+			"ant.scene|scene_object",
 		},
 		data = {
-			scene_entity = true,
+			name = "arrow.cone",
+			reference = true,
 			state = ies.create_state "visible",
-			transform =  {s=100, t=cone_offset},
+			scene = {srt =  {s=100, t=cone_offset}},
 			material = "/pkg/ant.resources/materials/simpletri.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
-			name = "arrow.cone"
+			on_ready = function (e)
+				imaterial.set_property(e, "u_color", data.cone_color or {1, 0, 0, 1})
+			end
 		},
 		action = {
             mount = arroweid,
 		}
 	}
 
-	imaterial.set_property(coneeid, "u_color", data.cone_color or {1, 0, 0, 1})
+	
 end

@@ -16,8 +16,8 @@ local hierarchy = require "hierarchy_edit"
 
 local m = {}
 
-local source_eid = nil
-local target_eid = nil
+local source_e = nil
+local target_e = nil
 local function is_editable(eid)
     --if not world[eid].scene_entity or
     if not hierarchy:is_visible(eid) or
@@ -66,30 +66,40 @@ local function node_context_menu(eid)
 end
 
 local function get_icon_by_object_type(node)
-    local entity = type(node.eid) == "table" and icamera.find_camera(node.eid) or world[node.eid]
     local template = hierarchy:get_template(node.eid)
     if template and template.filename then
         return icons.ICON_WORLD3D
     else
-        if entity.frustum then
+        local e = node.eid
+        w:sync("camera?in", e)
+        if e.camera then
             return icons.ICON_CAMERA3D
-        elseif entity.light_type then
-            if entity.light_type == "directional" then
+        end
+        w:sync("light?in", e)
+        if e.light then
+            if e.light.light_type == "directional" then
                 return icons.ICON_DIRECTIONALLIGHT
-            elseif entity.light_type == "point" then
+            elseif e.light.light_type == "point" then
                 return icons.ICON_POINTLIGHT
-            elseif entity.light_type == "spot" then
+            elseif e.light.light_type == "spot" then
                 return icons.ICON_SPOTLIGHT
             end
-        elseif entity.mesh then
-            if entity.collider then
+        end
+        w:sync("mesh?in", e)
+        if e.mesh then
+            w:sync("collider?in", e)
+            if e.collider then
                 return icons.ICON_COLLISIONSHAPE3D
             else
                 return icons.ICON_MESH
             end
-        elseif entity.slot then
+        end
+        w:sync("slot?in", e)
+        if e.slot then
             return icons.ICON_SLOT
-        elseif entity.effekseer then
+        end
+        w:sync("effekseer?in", e)
+        if e.effekseer then
             return icons.ICON_PARTICLES3D
         else
             return icons.ICON_OBJECT
@@ -101,26 +111,23 @@ local function show_scene_node(node)
     imgui.table.NextRow();
     imgui.table.NextColumn();
     local function select_or_move(nd)
-        local eid = nd.eid
+        local e = nd.eid
         if imgui.util.IsItemClicked() then
-            if is_editable(eid) then
-                gizmo:set_target(eid)
+            if is_editable(e) then
+                gizmo:set_target(e)
             end
-        end
-        --if world[eid].camera 
-        if type(eid) == "table" or world[eid].light_type then
-            return
         end
 
         if imgui.widget.BeginDragDropSource() then
-            imgui.widget.SetDragDropPayload("DragNode", eid)
+            source_e = e
+            imgui.widget.SetDragDropPayload("DragNode", tostring(e))
             imgui.widget.EndDragDropSource()
         end
         if imgui.widget.BeginDragDropTarget() then
             local payload = imgui.widget.AcceptDragDropPayload("DragNode")
             if payload then
-                source_eid = tonumber(payload)
-                target_eid = eid
+                --source_e = tonumber(payload)
+                target_e = e
             end
             imgui.widget.EndDragDropTarget()
         end
@@ -145,13 +152,8 @@ local function show_scene_node(node)
     end
     local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((gizmo.target_eid == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
     if not node.display_name then
-        if type(node.eid) == "table" then
-            local w = world.w
-            w:sync("name:in", node.eid)
-            hierarchy:update_display_name(node.eid, node.eid.name)
-        else
-            hierarchy:update_display_name(node.eid, world[node.eid].name)
-        end
+        w:sync("name:in", node.eid)
+        hierarchy:update_display_name(node.eid, node.eid.name)
     end
 
     local flags = base_flags
@@ -271,11 +273,10 @@ function m.show()
             imgui.table.SetupColumn("Visible", imgui.flags.TableColumn {'WidthFixed'}, 24.0)
             imgui.table.HeadersRow()
             for i, child in ipairs(hierarchy.root.children) do
-                source_eid = nil
-                target_eid = nil
+                target_e = nil
                 show_scene_node(child)
-                if source_eid and target_eid then
-                    world:pub {"EntityEvent", "parent", source_eid, target_eid}
+                if source_e and target_e then
+                    world:pub {"EntityEvent", "parent", source_e, target_e}
                 end
             end
             imgui.table.End() 

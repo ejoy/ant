@@ -32,7 +32,7 @@ do
         return info.name, info.entry
     end
     for _, folder in ipairs(searchFolder) do
-        for path in (workspaceFolder / folder):list_directory() do
+        for path in fs.pairs(workspaceFolder / folder) do
             if fs.is_directory(path) then
                 local ok, name, entry = pcall(searchPackage, path)
                 if ok and name and entry then

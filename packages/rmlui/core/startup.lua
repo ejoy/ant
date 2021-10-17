@@ -10,6 +10,7 @@ local ltask = require "ltask"
 
 local quit
 local context
+local screen_ratio = 1.0
 local debuggerInitialized = false
 
 local ServiceWindow = ltask.queryservice "ant.window|window"
@@ -53,7 +54,7 @@ function S.initialize(t)
     ServiceWorld = t.service_world
     require "font" (t.font_mgr)
     initRender(t)
-    local c = rmlui.RmlCreateContext(t.viewrect.w, t.viewrect.h)
+    local c = rmlui.RmlCreateContext(1, 1)
     updateContext(c)
     ltask.fork(Render)
 end
@@ -68,10 +69,15 @@ function S.shutdown()
     ltask.quit()
 end
 
+local function round(x)
+    return math.floor(x*screen_ratio+0.5)
+end
+
 function S.mouse(x, y, type, state)
     if not context then
         return
     end
+    x, y = round(x), round(y)
     --local MOUSE_TYPE_NONE <const> = 0
     --local MOUSE_TYPE_LEFT <const> = 1
     --local MOUSE_TYPE_RIGHT <const> = 2
@@ -92,6 +98,7 @@ function S.touch(x, y, _, state)
     if not context then
         return
     end
+    x, y = round(x), round(y)
     local TOUCH_STATE_DOWN <const> = 1
     local TOUCH_STATE_MOVE <const> = 2
     local TOUCH_STATE_UP <const> = 3
@@ -116,8 +123,8 @@ function S.debugger(open)
     end
 end
 
-function S.update_viewrect(x, y, w, h)
-    rmlui.UpdateViewrect(x, y, w, h)
+function S.update_context_size(w, h, ratio)
+    screen_ratio = ratio
     if context then
         rmlui.ContextUpdateSize(context, w, h)
     end

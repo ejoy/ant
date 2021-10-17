@@ -63,7 +63,7 @@ end
 local arg
 local repopath
 local function luaexe()
-    return "./bin/msvc/debug/lua.exe"
+    return "./bin/msvc/release/lua.exe"
 end
 
 local function spawnFileServer()
@@ -88,7 +88,12 @@ end
 local function connectFileServer()
     local fd = assert(socket.connect("tcp", "127.0.0.1", 2019))
     local _, wr = socket.select(nil, {fd})
-    assert(wr and wr[1] == fd and fd:status())
+    if wr and wr[1] == fd and fd:status() then
+        return fd
+    end
+end
+
+local function handleNetworkEvent(fd)
     local reading_queue = {}
     local output = {}
     while true do
@@ -120,8 +125,16 @@ local function connectFileServer()
 end
 
 function m.run()
-    spawnFileServer()
-    connectFileServer()
+    local fd = connectFileServer()
+    if not fd then
+        spawnFileServer()
+        fd = connectFileServer()
+        print("connect editor file server")
+    else
+        print("connect external file server")
+    end
+    
+    handleNetworkEvent(fd)
 
     --srv.init_server {
     --    lua = luaexe(),

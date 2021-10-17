@@ -30,7 +30,6 @@
 #include "DataExpression.h"
 #include "DataModel.h"
 #include "ElementStyle.h"
-#include "../Include/RmlUi/Math.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/ElementText.h"
 #include "../Include/RmlUi/Factory.h"
@@ -475,7 +474,7 @@ bool DataViewFor::Update(DataModel& model)
 	const int num_elements = (int)elements.size();
 	Element* element = GetElement();
 
-	for (int i = 0; i < Math::Max(size, num_elements); i++)
+	for (int i = 0; i < std::max(size, num_elements); i++)
 	{
 		if (i >= num_elements)
 		{

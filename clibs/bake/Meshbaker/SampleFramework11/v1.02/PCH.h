@@ -133,14 +133,6 @@ using namespace DirectX::PackedVector;
 #include <cstdarg>
 #include <random>
 
-// AntTweakBar
-#include "..\\..\\Externals\\AntTweakBar\\include\\AntTweakBar.h"
-
-// Assimp
-#include "..\\..\\Externals\\Assimp-3.1.1\\include\\Importer.hpp"
-#include "..\\..\\Externals\\Assimp-3.1.1\\include\\scene.h"
-#include "..\\..\\Externals\\Assimp-3.1.1\\include\\postprocess.h"
-
 // Static Lib Imports
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "D3D9.lib")
@@ -151,11 +143,6 @@ using namespace DirectX::PackedVector;
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "gdiplus.lib")
 
-// Assimp
-#pragma comment(lib, "assimp.lib")
-
-// AntTweakBar
-#pragma comment(lib, "AntTweakBar64.lib")
 
 // DirectXTex
 #pragma comment(lib, "DirectXTex.lib")

@@ -71,7 +71,6 @@ public:
 		DEG = 1 << 5,               // number suffixed by 'deg'; fetch as < float >
 		RAD = 1 << 6,               // number suffixed by 'rad'; fetch as < float >
 		COLOUR = 1 << 7,            // colour; fetch as < Color >
-		DP = 1 << 8,                // density-independent pixel; number suffixed by 'dp'; fetch as < float >
 
 		// Relative values.
 		EM = 1 << 9,                // number suffixed by 'em'; fetch as < float >
@@ -94,7 +93,7 @@ public:
 		ANIMATION = 1 << 19,        // animation; fetch as < AnimationList >
 
 		VIEW_LENGTH = VW | VH | VMIN | VMAX,
-		LENGTH = PX | DP | INCH | CM | MM | PT | PC | EM | REM | VIEW_LENGTH,
+		LENGTH = PX | INCH | CM | MM | PT | PC | EM | REM | VIEW_LENGTH,
 		LENGTH_PERCENT = LENGTH | PERCENT,
 		NUMBER_LENGTH_PERCENT = NUMBER | LENGTH | PERCENT,
 	};

@@ -18,168 +18,175 @@ local DEFAULT_INTENSITY<const> = {
 	area = 2, --1200
 }
 
-local lt = ecs.transform "light_transform"
-function lt.process_entity(e)
-	local t = e.light_type
-	local range = e.range
-	local l = {
-		light_type	= t,
-		color		= e.color or {1, 1, 1, 1},
-		intensity	= e.intensity or DEFAULT_INTENSITY[t],
-		make_shadow = e.make_shadow or false,
-		motion_type = e.motion_type or "dynamic",
-	}
+local changed = false
 
-	l.range = math.maxinteger
-	l.inner_radian, l.outter_radian = 0, 0
-	l.inner_cutoff, l.outter_cutoff = 0, 0
-
-	if t == "point" or t == "spot" then
-		if range == nil then
-			error("point/spot light need range defined!")
-		end
-		l.range = range
-		if t == "spot" then
-			local i_r, o_r = e.inner_radian, e.outter_radian
-			if i_r == nil or o_r == nil then
-				error("spot light need 'inner_radian' and 'outter_radian' defined!")
-			end
-
-			if i_r > o_r then
-				error(("invalid 'inner_radian' > 'outter_radian':%d, %d"):format(i_r, o_r))
-			end
-			l.inner_radian, l.outter_radian = i_r, o_r
-			l.inner_cutoff = math.cos(l.inner_radian * 0.5)
-			l.outter_cutoff = math.cos(l.outter_radian * 0.5)
-		end
-	end
-	e._light = l
+local function setChanged()
+	changed = true
 end
 
--- light interface
-local ilight 	= ecs.interface "light"
+local function isChanged()
+	if changed then
+		changed = false
+		return true
+	end
+	for _ in w:select "scene_changed light" do
+		return true
+	end
+	--TODO state
+end
+
+local ilight = ecs.interface "light"
 
 function ilight.create(light)
-	return world:deprecated_create_entity {
+	local template = {
 		policy = {
 			"ant.render|light",
 			"ant.general|name",
 		},
 		data = {
-			transform	= light.transform,
+			reference 	= true,
 			name		= light.name or "DEFAULT_LIGHT",
-			light_type	= assert(light.light_type),
-			color		= light.color or {1, 1, 1, 1},
-			intensity	= light.intensity or 2,
-			range		= light.range,
-			radian		= light.radian,
-			make_shadow	= light.make_shadow,
-			state		= ies.create_state "visible",
-			motion_type = light.motion_type,
+			scene = {
+				srt = light.transform
+			},
+			light = {
+				make_shadow	= light.make_shadow,
+				motion_type = light.motion_type,
+				light_type	= assert(light.light_type),
+				color		= light.color,
+				intensity	= light.intensity,
+				range		= light.range,
+				inner_radian= light.inner_radian,
+				outter_radian= light.outter_radian,
+				angular_radius=light.angular_radius,
+			},
+			visible = true,
 		}
 	}
+	return ecs.create_entity(template), template
 end
 
-function ilight.data(eid)
-	return world[eid]._light
+function ilight.data(e)
+	w:sync("light:in", e)
+	return e.light
 end
 
-function ilight.color(eid)
-	return world[eid]._light.color
+function ilight.color(e)
+	w:sync("light:in", e)
+	return e.light.color
 end
 
-function ilight.set_color(eid, color)
-	local l = world[eid]._light
+function ilight.set_color(e, color)
+	w:sync("light:in", e)
+	local l = e.light
 	local c = l.color
 	for i=1, 4 do c[i] = color[i] end
-
-	world:pub{"component_changed", "light", eid, "color"}
+	setChanged()
 end
 
-function ilight.intensity(eid)
-	return world[eid]._light.intensity
+function ilight.intensity(e)
+	w:sync("light:in", e)
+	return e.light.intensity
 end
 
-function ilight.set_intensity(eid, i)
-	world[eid]._light.intensity = i
-	world:pub{"component_changed", "light", eid, "intensity"}
+function ilight.set_intensity(e, i)
+	w:sync("light:in", e)
+	e.light.intensity = i
+	setChanged()
 end
 
-function ilight.range(eid)
-	return world[eid]._light.range
+function ilight.range(e)
+	w:sync("light:in", e)
+	return e.light.range
 end
 
-function ilight.set_range(eid, r)
-	local e = world[eid]
-	if e.light_type == "directional" then
+function ilight.set_range(e, r)
+	w:sync("light:in", e)
+	if e.light.light_type == "directional" then
 		error("directional light do not have 'range' property")
 	end
-
-	e._light.range = r
-	world:pub{"component_changed", "light", eid, "range"}
+	e.light.range = r
+	setChanged()
 end
 
-function ilight.inner_radian(eid)
-	return world[eid]._light.inner_radian
+function ilight.inner_radian(e)
+	w:sync("light:in", e)
+	return e.light.inner_radian
 end
 
-local function check_spot_light(eid)
-	local e = world[eid]
-	if e.light_type ~= "spot" then
-		error(("%s light do not have 'radian' property"):format(e.light_type))
+local function check_spot_light(e)
+	if e.light.light_type ~= "spot" then
+		error(("%s light do not have 'radian' property"):format(e.light.light_type))
 	end
-	return e
 end
 
 local spot_radian_threshold<const> = 10e-6
-function ilight.set_inner_radian(eid, r)
-	local e = check_spot_light(eid)
-
-	local l = e._light
+function ilight.set_inner_radian(e, r)
+	w:sync("light:in", e)
+	check_spot_light(e)
+	local l = e.light
 	l.inner_radian = math.min(l.outter_radian-spot_radian_threshold, r)
 	l.inner_cutoff = math.cos(l.inner_radian*0.5)
-	world:pub{"component_changed", "light", eid, "inner_radian"}
+	setChanged()
 end
 
-function ilight.outter_radian(eid)
-	return world[eid]._light.outter_radian
+function ilight.outter_radian(e)
+	w:sync("light:in", e)
+	return e.light.outter_radian
 end
 
-function ilight.set_outter_radian(eid, r)
-	local e = check_spot_light(eid)
-
-	local l = e._light
+function ilight.set_outter_radian(e, r)
+	w:sync("light:in", e)
+	check_spot_light(e)
+	local l = e.light
 	l.outter_radian = math.max(r, l.inner_radian+spot_radian_threshold)
 	l.outter_cutoff = math.cos(l.outter_radian*0.5)
-	world:pub{"component_changed", "light", eid, "outter_radian"}
+	setChanged()
 end
 
-function ilight.inner_cutoff(eid)
-	return world[eid]._light.inner_cutoff
+function ilight.inner_cutoff(e)
+	w:sync("light:in", e)
+	return e.light.inner_cutoff
 end
 
-function ilight.outter_cutoff(eid)
-	return world[eid]._light.outter_cutoff
+function ilight.outter_cutoff(e)
+	w:sync("light:in", e)
+	return e.light.outter_cutoff
 end
 
-function ilight.which_type(eid)
-	return world[eid]._light.light_type
+function ilight.which_type(e)
+	w:sync("light:in", e)
+	return e.light.light_type
 end
 
-function ilight.make_shadow(eid)
-	return world[eid]._light.make_shadow
+function ilight.make_shadow(e)
+	w:sync("light:in", e)
+	return e.light.make_shadow
 end
 
-function ilight.set_make_shadow(eid, enable)
-	world[eid]._light.make_shadow = enable
+function ilight.set_make_shadow(e, enable)
+	w:sync("light:in", e)
+	e.light.make_shadow = enable
 end
 
-function ilight.motion_type(eid)
-	return world[eid]._light.motion_type
+function ilight.motion_type(e)
+	w:sync("light:in", e)
+	return e.light.motion_type
 end
 
-function ilight.set_motion_type(eid, t)
-	world[eid]._light.motion_type = t
+function ilight.set_motion_type(e, t)
+	w:sync("light:in", e)
+	e.light.motion_type = t
+end
+
+function ilight.angular_radius(e)
+	w:sync("light:in", e)
+	return e.light.angular_radius
+end
+
+function ilight.set_angular_radius(e, ar)
+	w:sync("light:in", e)
+	e.light.angular_radius = ar
 end
 
 local lighttypes = {
@@ -189,32 +196,33 @@ local lighttypes = {
 }
 
 local function count_visible_light()
-	local l = {}
-	for _, leid in world:each "light_type" do
-		if ies.can_visible(leid) then
-			l[#l+1] = leid
-		end
+	local n = 0
+	for _ in w:select "light visible" do
+		n = n + 1
 	end
-	return l
+	return n
 end
 
 ilight.count_visible_light = count_visible_light
 
 local function create_light_buffers()
 	local lights = {}
-	for _, leid in ipairs(count_visible_light()) do
-		local le = world[leid]
-		local p	= math3d.tovalue(iom.get_position(leid))
-		local d	= math3d.tovalue(math3d.inverse(iom.get_direction(leid)))
-		local c = ilight.color(leid)
-		local t	= le.light_type
+	for e in w:select "light:in visible" do
+		local p	= math3d.tovalue(iom.get_position(e))
+		local d	= math3d.tovalue(math3d.inverse(iom.get_direction(e)))
+		local c = e.light.color
+		local t	= e.light.light_type
 		local enable<const> = 1
 		lights[#lights+1] = ('f'):rep(16):pack(
-			p[1], p[2], p[3], ilight.range(leid) or math.maxinteger,
+			p[1], p[2], p[3],
+			e.light.range or math.maxinteger,
 			d[1], d[2], d[3], enable,
 			c[1], c[2], c[3], c[4],
-			lighttypes[t], ilight.intensity(leid),
-			ilight.inner_cutoff(leid) or 0,	ilight.outter_cutoff(leid) or 0)
+			lighttypes[t],
+			e.light.intensity,
+			e.light.inner_cutoff or 0,
+			e.light.outter_cutoff or 0
+		)
 	end
     return lights
 end
@@ -237,56 +245,57 @@ function ilight.light_buffer()
 end
 
 local lightsys = ecs.system "light_system"
-local light_comp_mb = world:sub{"component_changed", "light"}
-local light_state_mb = world:sub{"component_changed", "state"}
-local light_register_mb = world:sub{"component_register", "light_type"}
+
+function lightsys:entity_init()
+	for e in w:select "INIT light:in" do
+		setChanged()
+		local l = e.light
+		local t = l.light_type
+		l.color			= l.color or {1, 1, 1, 1}
+		l.intensity		= l.intensity or 2
+		l.make_shadow	= l.make_shadow or false
+		l.motion_type	= l.motion_type or "dynamic"
+		l.angular_radius= l.angular_radius or math.rad(0.27)
+		if t == "point" then
+			if l.range == nil then
+				error("point light need range defined!")
+			end
+			l.inner_radian = 0
+			l.outter_radian = 0
+			l.inner_cutoff = 0
+			l.outter_cutoff = 0
+		elseif t == "spot" then
+			if l.range == nil then
+				error("spot light need range defined!")
+			end
+			local i_r, o_r = l.inner_radian, l.outter_radian
+			if i_r == nil or o_r == nil then
+				error("spot light need 'inner_radian' and 'outter_radian' defined!")
+			end
+			if i_r > o_r then
+				error(("invalid 'inner_radian' > 'outter_radian':%d, %d"):format(i_r, o_r))
+			end
+			l.inner_cutoff = math.cos(l.inner_radian * 0.5)
+			l.outter_cutoff = math.cos(l.outter_radian * 0.5)
+		else
+			l.range = math.maxinteger
+			l.inner_radian = 0
+			l.outter_radian = 0
+			l.inner_cutoff = 0
+			l.outter_cutoff = 0
+		end
+	end
+end
+
+function lightsys:entity_remove()
+	for _ in w:select "REMOVED light" do
+		setChanged()
+		return
+	end
+end
 
 function lightsys:update_system_properties()
-	local changed = false
-	for v in w:select "scene_changed eid:in" do
-		local le = world[v.eid]
-		if le and le.light_type then
-			changed = true
-			break
-		end
-	end
-
-	if not changed then
-		for _ in light_comp_mb:each() do
-			changed = true
-			break
-		end
-	end
-
-	if not changed then
-		for msg in light_state_mb:each() do
-			local eid = msg[3]
-			local le = world[eid]
-			if le and le.light_type then
-				changed = true
-			end
-			break
-		end
-	end
-
-	if not changed then
-		for _ in light_register_mb:each() do
-			changed = true
-			break
-		end
-	end
-
-	if not changed then
-		for _, eid in world:each "removed" do
-			local e = world[eid]
-			if e.light_type then
-				changed = true
-				break
-			end
-		end
-	end
-
-	if changed then
+	if isChanged() then
 		update_light_buffers()
 	end
 end

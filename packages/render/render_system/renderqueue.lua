@@ -103,12 +103,14 @@ function irq.set_view_clear(queuename, what, color, depth, stencil)
 end
 
 function irq.set_view_rect(queuename, rect)
-	local qe = w:singleton(queuename, "render_target:in camera_ref:in")
+	local qe = w:singleton(queuename, "render_target:in camera_ref?in")
 	local rt = qe.render_target
 	local vr = rt.view_rect
 	vr.x, vr.y = rect.x, rect.y
 	vr.w, vr.h = rect.w, rect.h
-	icamera.set_frustum_aspect(qe.camera_ref, vr.w/vr.h)
+	if qe.camera_ref then
+		icamera.set_frustum_aspect(qe.camera_ref, vr.w/vr.h)
+	end
 	bgfx.set_view_rect(rt.viewid, vr.x, vr.y, vr.w, vr.h)
 	world:pub{"component_changed", "view_rect", queuename}
 end
@@ -131,17 +133,6 @@ function irq.set_camera(queuename, camera_ref)
 	local qe = {camera_changed = true}
 	w:singleton(queuename, "camera_changed?out shadow_render_queue:in", qe)
 	qe.shadow_render_queue.camera_ref = camera_ref
-end
-
-local bm = ecs.action "bind_camera"
-function bm.init(prefab, idx, value)
-    local eid
-    if not value.camera_ref then
-        eid = prefab[idx]
-    else
-        eid = prefab[idx][value.camera_ref]
-    end
-    irq.set_camera(value.which, eid)
 end
 
 function ecs.method.bind_camera(camera_ref, queuename)

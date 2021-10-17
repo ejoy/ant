@@ -33,7 +33,6 @@
 #include "../Include/RmlUi/ElementText.h"
 #include "../Include/RmlUi/ElementUtilities.h"
 #include "../Include/RmlUi/EventListenerInstancer.h"
-#include "../Include/RmlUi/StreamMemory.h"
 #include "../Include/RmlUi/StyleSheet.h"
 #include "../Include/RmlUi/StringUtilities.h"
 #include "../Include/RmlUi/Log.h"
@@ -41,7 +40,6 @@
 #include "DataViewDefault.h"
 #include "PluginRegistry.h"
 #include "PropertyParserColour.h"
-#include "StreamFile.h"
 #include "StyleSheetFactory.h"
 
 #include <algorithm>

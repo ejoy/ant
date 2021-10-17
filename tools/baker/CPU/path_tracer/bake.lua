@@ -126,12 +126,16 @@ for _, e in ipairs(scene) do
     elseif e.light then
         local ld = e.lightdata
         lights[#lights+1] = {
-            dir = math3d.tovalue(math3d.todirection(math3d.quaternion(e.r))),
-            pos = e.t,
-            color = ld.color,
-            size = ld.size or 0.3,
-            type = ld.type,
-            intensity = ld.intensity,
+            light_type  = ld.light_type,
+            dir         = math3d.tovalue(math3d.inverse(math3d.todirection(math3d.quaternion(e.r)))),
+            pos         = e.t,
+            color       = ld.color,
+            intensity   = ld.intensity,
+
+            range       = ld.range,
+            inner_cutoff= ld.inner_cutoff,
+            outter_cutoff= ld.outter_cutoff,
+            angular_radius= ld.angular_radius,
         }
     end
 end

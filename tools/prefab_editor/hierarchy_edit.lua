@@ -23,6 +23,7 @@ local function find(t, eid)
     return nil
 end
 function hierarchy:add(ineid, tp, inpeid)
+    if self.all[ineid] then return end
     local node = { eid = ineid, parent = inpeid, template = utils.deep_copy(tp), children = {}, locked = {false}, visible = {true} }
     if inpeid then
         local parent = self.all[inpeid]
@@ -65,14 +66,16 @@ function hierarchy:del(eid)
     if not eid_node then return end
 
     local pt
-    if eid_node.parent then
+    if eid_node.parent and self.all[eid_node.parent]then
         pt = self.all[eid_node.parent].children
     else
         pt = self.root.children
     end
-    local idx = find(pt, eid)
-    if idx then
-        table.remove(pt, idx)
+    if pt then
+        local idx = find(pt, eid)
+        if idx then
+            table.remove(pt, idx)
+        end
     end
     self.all[eid] = nil
     return eid_node
@@ -131,17 +134,14 @@ function hierarchy:update_prefab_template(world)
         end
         table.insert(pt, templ)
 
-        local pidx = (#pt < 1) and "root" or #pt
+        local pidx = #pt > 0 and #pt or nil
         local prefab_filename = self.all[eid].template.filename
         if prefab_filename then
-            table.insert(pt, {args = {root = #pt}, prefab = prefab_filename})
+            table.insert(pt, {mount = pidx, prefab = prefab_filename})
         end
         for _, child in ipairs(self.all[eid].children) do
             if self.all[child.eid].template.template then
-                if not self.all[child.eid].template.template.action then
-                    self.all[child.eid].template.template.action = {}
-                end
-                self.all[child.eid].template.template.action.mount = pidx
+                self.all[child.eid].template.template.mount = pidx
             end
             construct_entity(child.eid, pt)
         end
@@ -209,7 +209,8 @@ end
 function hierarchy:update_slot_list(world)
     local slot_list = {["None"] = -1}
     for _, value in pairs(self.all) do
-        if world[value.eid].slot then
+        world.w:sync("slot?in", value.eid)
+        if value.eid.slot then
             local tagname = value.template.template.data.tag
             local slot_name = #tagname > 0 and value.template.template.data.tag[1] or ""
             slot_list[slot_name] = value.eid
@@ -221,7 +222,8 @@ end
 function hierarchy:update_collider_list(world)
     local collider_list = {["None"] = -1}
     for _, value in pairs(self.all) do
-        if world[value.eid].collider then
+        world.w:sync("collider?in", value.eid)
+        if value.eid.collider then
             collider_list[world[value.eid].name] = value.eid
         end
     end

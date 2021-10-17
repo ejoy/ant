@@ -2,19 +2,14 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local mathpkg 		=	import_package "ant.math"
-local mc, mu 		= mathpkg.constant, mathpkg.util
 local default_comp 	= import_package "ant.general".default
 local setting		= import_package "ant.settings".setting
 
-local math3d 		= require "math3d"
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
 local fbmgr			= require "framebuffer_mgr"
 local samplerutil	= require "sampler"
-local icamera		= ecs.import.interface "ant.camera|camera"
 
-local wmt = ecs.transform "world_matrix_transform"
 local function set_world_matrix(rc)
 	bgfx.set_transform(rc.worldmat)
 end
@@ -22,11 +17,6 @@ end
 local function set_skinning_transform(rc)
 	local sm = rc.skinning_matrices
 	bgfx.set_multi_transforms(sm:pointer(), sm:count())
-end
-
-function wmt.process_entity(e)
-	local rc = e._rendercache
-	rc.set_transform = set_world_matrix
 end
 
 local world_trans_sys = ecs.system "world_transform_system"
@@ -50,6 +40,11 @@ local SURFACE_TYPES <const> = {
 }
 
 local irender		= ecs.interface "irender"
+
+function irender.layer_names()
+	return LAYER_NAMES
+end
+
 function irender.check_primitive_mode_state(state, template_state)
 	local s = bgfx.parse_state(state)
 	local ts = bgfx.parse_state(template_state)
@@ -216,10 +211,6 @@ local function create_main_fb(fbsize)
 			default_comp.render_buffer(
 				fbsize.w, fbsize.h, "D24S8", rb_flag)
 		)
-		-- local pd = world:singleton_entity "pre_depth_queue"
-
-		-- local pd_fb = fbmgr.get(pd.render_target.fb_idx)
-		-- return pd_fb[#pd_fb]
 	end
 
 	render_buffers[#render_buffers+1] = get_depth_buffer()

@@ -11,11 +11,6 @@ system "animation_system"
     .method "sample_animation_pose"
     .method "entity_ready"
 
-policy "animation"
-    .require_system "animation_system"
-    .component "skeleton"
-    .component "animation"
-
 pipeline "animation"
     .stage "animation_state"
     .stage "sample_animation_pose"

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "render.h"
+#define BGFX_INTERFACE_IMPORT
 #include "../bgfx/bgfx_interface.h"
 
 #include <RmlUi/Core.h>
@@ -14,7 +15,6 @@ error "need matrix type as column major"
 Renderer::Renderer(const RmlContext* context)
     : mcontext(context)
     , mEncoder(nullptr){
-    UpdateViewRect();
     BGFX(set_view_mode)(mcontext->viewid, BGFX_VIEW_MODE_SEQUENTIAL);
 }
 
@@ -27,12 +27,6 @@ FE(Rml::TextureHandle th){
 static bool
 is_font_tex(SDFFontEffect *fe) { 
     return fe ? (fe->GetType() & FE_FontTex) != 0 : false;
-}
-
-void Renderer::UpdateViewRect(){
-    const auto &vr = mcontext->viewrect;
-    BGFX(set_view_scissor)(mcontext->viewid, vr.x, vr.y, vr.w, vr.h);
-    BGFX(set_view_rect)(mcontext->viewid, uint16_t(vr.x), uint16_t(vr.y), uint16_t(vr.w), uint16_t(vr.h));
 }
 
 static uint32_t getTextureFlags(Rml::SamplerFlag flags) {
@@ -219,16 +213,15 @@ bool Renderer::LoadTexture(Rml::TextureHandle& handle, Rml::Size& dimensions, co
 	if (!fh)
 		return false;
 	
-	ifile->Seek(fh, 0, SEEK_END);
-	const size_t bufsize = ifile->Tell(fh);
-	ifile->Seek(fh, 0, SEEK_SET);
+	const size_t bufsize = ifile->Length(fh);
 	
     const bgfx_memory_t *mem = BGFX(alloc)((uint32_t)bufsize);
 	ifile->Read(mem->data, bufsize, fh);
 	ifile->Close(fh);
 
 	bgfx_texture_info_t info;
-	const bgfx_texture_handle_t th = BGFX(create_texture)(mem, 0, 1, &info);
+    const uint64_t flags = BGFX_TEXTURE_SRGB;
+	const bgfx_texture_handle_t th = BGFX(create_texture)(mem, flags, 1, &info);
 	if (th.idx != UINT16_MAX){
 		dimensions.w = info.width;
 		dimensions.h = info.height;

@@ -13,7 +13,6 @@
 
 #include "..\\InterfacePointers.h"
 #include "..\\SF11_Math.h"
-#include "..\\Serialization.h"
 
 struct aiMesh;
 // From Lua Scene
@@ -159,35 +158,7 @@ protected:
 class Model
 {
 public:
-
-    // Loading from file formats
-    void CreateFromSDKMeshFile(ID3D11Device* device, const wchar* fileName,
-                                const wchar* normalMapSuffix = NULL,
-                                bool generateTangentFrame = false,
-                                bool overrideNormalMaps = false,
-                                bool forceSRGB = false);
-
-    void CreateWithAssimp(ID3D11Device* device, const wchar* fileName, bool forceSRGB = false);
-
-    void CreateFromMeshData(ID3D11Device* device, const wchar* fileName, bool forceSRGB = false);
-
     void CreateFromScene(ID3D11Device *device, const Scene *scene, bool forceSRGB);
-
-    // Procedural generation
-    void GenerateBoxScene(ID3D11Device* device,
-                          const Float3& dimensions = Float3(1.0f, 1.0f, 1.0f),
-                          const Float3& position = Float3(),
-                          const Quaternion& orientation = Quaternion(),
-                          const wchar* colorMap = L"",
-                          const wchar* normalMap = L"");
-    void GenerateBoxTestScene(ID3D11Device* device);
-    void GeneratePlaneScene(ID3D11Device* device,
-                            const Float2& dimensions = Float2(1.0f, 1.0f),
-                            const Float3& position = Float3(),
-                            const Quaternion& orientation = Quaternion(),
-                            const wchar* colorMap = L"",
-                            const wchar* normalMap = L"");
-    void GenerateCorneaScene(ID3D11Device* device);
 
     // Accessors
     std::vector<MeshMaterial>& Materials() { return meshMaterials; };
@@ -195,24 +166,6 @@ public:
 
     std::vector<Mesh>& Meshes() { return meshes; }
     const std::vector<Mesh>& Meshes() const { return meshes; }
-
-    // Serialization
-    template<typename TSerializer>
-    void Serialize(TSerializer& serializer, ID3D11Device* device, bool forceSRGB = false)
-    {
-        SerializeItem(serializer, meshes);
-        SerializeItem(serializer, meshMaterials);
-        SerializeItem(serializer, fileDirectory);
-
-        if(TSerializer::IsReadSerializer())
-        {
-            for(uint64 i = 0; i  < meshes.size(); ++i)
-                meshes[i].CreateVertexAndIndexBuffers(device);
-
-            for(uint64 i = 0; i < meshMaterials.size(); ++i)
-                LoadMaterialResources(meshMaterials[i], fileDirectory, device, forceSRGB);
-        }
-    }
 
 protected:
 

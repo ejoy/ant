@@ -5,7 +5,7 @@ local inputmgr  = import_package "ant.inputmgr"
 local ecs       = import_package "ant.luaecs"
 local rhwi      = import_package "ant.hwi"
 local cr        = import_package "ant.compile_resource"
-local platform  = require "platform"
+local setting	= import_package "ant.settings".setting
 
 local bgfx      = require "bgfx"
 local ServiceBgfxMain = ltask.queryservice "ant.render|bgfx_main"
@@ -46,18 +46,23 @@ local function Render()
 	end
 end
 
-local function check_to_lower_fb_size(w, h)
-	if platform.os == "iOS" then
-		if w > 750 then
-			return w//2, h//2
+local function check_load_framebuffer_size(w, h)
+	local fbw, fbh = setting:get "graphic/framebuffer/w", setting:get "graphic/framebuffer/h"
+	if fbw and fbh then
+		return fbw, fbh
+	else
+		local ratio = setting:get "graphic/framebuffer/ratio"
+		if ratio then
+			return math.floor(w * ratio + 0.5),
+			math.floor(h * ratio + 0.5)
 		end
 	end
-
 	return w, h
 end
 
 function S.init(nwh, context, width, height)
-	local fbw, fbh = check_to_lower_fb_size(width, height)
+	local fbw, fbh = check_load_framebuffer_size(width, height)
+	log.info("framebuffer size:", fbw, fbh)
 	rhwi.init {
 		nwh = nwh,
 		context = context,

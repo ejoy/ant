@@ -6,28 +6,10 @@ local math3d = require "math3d"
 local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
 
-----iscenespace----
-local iss = ecs.interface "iscenespace"
-function iss.set_parent(eid, peid)
-	local e = world[eid]
-	local pe = world[peid]
-	if (not e or e.scene_entity) and (not pe or pe.scene_entity) then
-		e.parent = peid
-		world:pub {"old_parent_changed", eid, peid}
-	end
-end
-
-local m = ecs.action "mount"
-function m.init(prefab, i, value)
-	iss.set_parent(prefab[i], prefab[value])
-end
-
-
 ----scenespace_system----
 local s = ecs.system "scenespace_system"
 
-local evOldParentChanged = world:sub {"old_parent_changed"}
-local evNewParentChanged = world:sub {"new_parent_changed"}
+local evParentChanged = world:sub {"parent_changed"}
 
 local function inherit_render_object(r, pr)
 	if r.fx == nil then
@@ -90,31 +72,6 @@ local function update_aabb(node)
 	end
 end
 
-local function findScene(hashmap, eid)
-	local scene = hashmap[eid]
-	if scene then
-		return scene
-	end
-	local e
-	if type(eid) == "table" then
-		e = eid
-	else
-		for v in w:select "eid:in" do
-			if v.eid == eid then
-				e = v
-				break
-			end
-		end
-	end
-	if e == nil then
-		return
-	end
-	w:sync("scene:in", e)
-	scene = e.scene
-	hashmap[eid] = scene
-	return scene
-end
-
 local function isValidReference(reference)
     return reference[1] ~= nil
 end
@@ -122,7 +79,6 @@ end
 function s:entity_init()
 	local needsync = false
 
-	local hashmap = {}
 	for v in w:select "INIT camera:in scene:out" do
 		local camera = v.camera
 		v.scene = {
@@ -130,7 +86,13 @@ function s:entity_init()
 			updir = math3d.ref(math3d.vector(camera.updir)),
 		}
 	end
-	for v in w:select "INIT scene:in eid?in scene_sorted?new" do
+	for v in w:select "INIT mesh:in scene:in" do
+		local mesh = v.mesh
+		if mesh.bounding then
+			v.scene.aabb = mesh.bounding.aabb
+		end
+	end
+	for v in w:select "INIT scene:in scene_sorted?new" do
 		local scene = v.scene
 		
 		if scene.srt then
@@ -142,9 +104,6 @@ function s:entity_init()
 		scene.changed = current_changed
 
 		scene.id = new_sceneid()
-		if v.eid then
-			hashmap[v.eid] = scene
-		end
 		v.scene_sorted = true
 		needsync = true
 	end
@@ -161,21 +120,7 @@ function s:entity_init()
 	end
 	w:clear "scene_unsorted"
 
-	for _, eid, peid in evOldParentChanged:unpack() do
-		local scene = findScene(hashmap, eid)
-		if scene then
-			scene.changed = current_changed
-			if peid then
-				local parent = findScene(hashmap, peid)
-				scene.parent = parent and parent.id or nil
-			else
-				scene.parent = nil
-			end
-			needsync = true
-		end
-	end
-
-	for _, e, parent in evNewParentChanged:unpack() do
+	for _, e, parent in evParentChanged:unpack() do
 		if isValidReference(e) then
 			w:sync("scene:in", e)
 			e.scene.changed = current_changed
@@ -244,16 +189,6 @@ function s:update_transform()
     end
 
 	for _, e in evSceneChanged:unpack() do
-		if type(e) ~= "table" then
-			local function findEntity(eid)
-				for v in w:select "eid:in" do
-					if v.eid == eid then
-						return v
-					end
-				end
-			end
-			e = findEntity(e)
-		end
 		if e then
 			w:sync("scene:in", e)
 			e.scene.changed = current_changed
@@ -344,5 +279,5 @@ function ecs.method.init_scene(e)
 end
 
 function ecs.method.set_parent(e, parent)
-	world:pub {"new_parent_changed", e, parent}
+	world:pub {"parent_changed", e, parent}
 end

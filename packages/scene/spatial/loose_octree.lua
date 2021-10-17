@@ -293,7 +293,7 @@ function octree:print_scene()
 	end
 end
 
-function test()
+local function test()
 	local objects = {
 		{name="obj0", aabb=taabb.new(point3d(0, 0, 0), point3d(5, 5, 5))},
 		{name="obj1", aabb=taabb.new(point3d(1, 1, 1), point3d(3, 3, 3))},

@@ -18,8 +18,7 @@ policy_v2 "prefilter"
 policy_v2 "ibl"
     .require_system "ant.render.ibl|ibl_system"
     .require_interface "ant.render.ibl|iibl"
+    .component_v2 "ibl"
 
---TODO: need remove
-policy "ibl"
-.require_system "ant.render.ibl|ibl_system"
-.require_interface "ant.render.ibl|iibl"
+component_v2 "ibl"
+    .type "lua"

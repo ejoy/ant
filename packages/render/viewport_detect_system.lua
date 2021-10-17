@@ -4,6 +4,8 @@ local w = world.w
 
 local fbmgr 	= require "framebuffer_mgr"
 
+local setting	= import_package "ant.settings".setting
+
 local vp_detect_sys = ecs.system "viewport_detect_system"
 
 local icamera	= ecs.import.interface "ant.camera|camera"
@@ -47,9 +49,17 @@ local function update_render_queue(q, viewsize)
 	irq.update_rendertarget(rt)
 end
 
+local function disable_resize()
+	return setting:get "graphic/framebuffer/w" ~= nil or setting:get "graphic/framebuffer/ratio" ~= nil
+end
+
 local function update_render_target(viewsize)
+	if disable_resize() then
+		return
+	end
 	rb_cache = {}
-	for qe in w:select "watch_screen_buffer render_target:in camera_ref?in" do
+	w:clear "render_target_changed"
+	for qe in w:select "watch_screen_buffer render_target:in camera_ref?in render_target_changed?out" do
 		update_render_queue(qe, viewsize)
 	end
 

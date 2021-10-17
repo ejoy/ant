@@ -3,7 +3,6 @@ local stringify = import_package "ant.serialize".stringify
 
 local lfs = require "filesystem.local"
 local subprocess = require "sp_util"
-local identity_util = require "identity"
 local bgfx = require "bgfx"
 local image = require "image"
 
@@ -81,14 +80,6 @@ local function fill_default_sampler(sampler)
 	return sampler
 end
 
-local extensions = {
-	direct3d11 	= "dds",
-	direct3d12 	= "dds",
-	metal 		= "ktx",
-	vulkan 		= "ktx",
-	opengl 		= "ktx",
-}
-
 local function readall(filename)
 	local f = assert(lfs.open(filename, "rb"))
 	local data = f:read "a"
@@ -106,9 +97,7 @@ return function (output, param)
     end
 	local imgpath = param.local_texpath
 	if imgpath then
-		local id = identity_util.parse(param.setting.identity)
-		local ext = assert(extensions[id.renderer])
-		local binfile = output / ("main."..ext)
+		local binfile = output / ("main."..param.setting.ext)
 		local commands = {
 			TEXTUREC
 		}

@@ -1,12 +1,13 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 
 local geometry_drawer = import_package "ant.geometry".drawer
 local setting		= import_package "ant.settings".setting
 
 local ies = ecs.import.interface "ant.scene|ientity_state"
 local iom = ecs.import.interface "ant.objcontroller|obj_motion"
-
+local imesh=ecs.import.interface "ant.asset|imesh"
 local bgfx = require "bgfx"
 local math3d = require "math3d"
 
@@ -22,7 +23,9 @@ local function create_dynamic_buffer(layout, num_vertices, num_indices)
 		vb = {
 			start = 0,
 			num = 0,
-			{handle=bgfx.create_dynamic_vertex_buffer(vb_size, declmgr.get(layout).handle, "a")}
+			{
+				handle=bgfx.create_dynamic_vertex_buffer(vb_size, declmgr.get(layout).handle, "a")
+			}
 		},
 		ib = {
 			start = 0,
@@ -32,44 +35,33 @@ local function create_dynamic_buffer(layout, num_vertices, num_indices)
 	}
 end
 
-local wd_trans = ecs.transform "widget_drawer_transform"
-function wd_trans.process_prefab(e)
-	local wd = e.widget_drawer
-	e.mesh = create_dynamic_buffer(wd.declname, wd.vertices_num, wd.indices_num)
-end
-
-local dmb_trans = ecs.transform "debug_mesh_bounding_transform"
-function dmb_trans.process_entity(e)
-	local rc = e._rendercache
-	rc.debug_mesh_bounding = e.debug_mesh_bounding
-end
-
 function widget_drawer_sys:init()
-	world:deprecated_create_entity {
+	local wd = {
+		vertices_num = 1024,
+		indices_num = 2048,
+		declname = "p3|c40niu",
+	}
+	ecs.create_entity {
 		policy = {
-			"ant.render|render",
+			"ant.render|simplerender",
 			"ant.render|bounding_draw",
 			"ant.general|name",
 		},
 		data = {
-			transform = {},
+			scene = {srt = {}},
+			simplemesh = imesh.init_mesh(create_dynamic_buffer(wd.declname, wd.vertices_num, wd.indices_num)),
 			material = "/pkg/ant.resources/materials/line.material",
-			state = ies.create_state "visible",
-			scene_entity = true,
-			widget_drawer = {
-				vertices_num = 1024,
-				indices_num = 2048,
-				declname = "p3|c40niu",
-			},
+			state = "visible",
+			widget_drawer = wd,
 			name = "bounding_draw"
 		}
 	}
 end
 
 function widget_drawer_sys:end_frame()
-	local dmesh = world:singleton_entity "widget_drawer"
-	if dmesh then
-		local rc = dmesh._rendercache
+	local e = w:singleton("widget_drawer", "render_object:in")
+	if e then
+		local rc = e.render_object
 		local vbdesc, ibdesc = rc.vb, rc.ib
 		vbdesc.start, vbdesc.num = 0, 0
 		ibdesc.start, ibdesc.num = 0, 0
@@ -93,8 +85,8 @@ local function append_buffers(vbfmt, vb, ibfmt, ib)
 	if numvertices == 0 then
 		return
 	end
-	local dmesh = world:singleton_entity "widget_drawer"
-	local rc = dmesh._rendercache
+	local e = w:singleton("widget_drawer", "render_object:in")
+	local rc = e.render_object
 	local vbdesc, ibdesc = rc.vb, rc.ib
 
 	local vertex_offset = vbdesc.num
@@ -132,40 +124,40 @@ function iwd.draw_lines(shape, srt, color)
 	append_buffers("fffd", desc.vb, "w", desc.ib)
 end
 
-function iwd.draw_box(shape, srt)
+function iwd.draw_box(shape, srt, color)
 	local desc={vb={}, ib={}}
-	geometry_drawer.draw_box(shape.size, DEFAULT_COLOR, apply_srt(shape, srt), desc)
+	geometry_drawer.draw_box(shape.size, color or DEFAULT_COLOR, apply_srt(shape, srt), desc)
 	append_buffers("fffd", desc.vb, "w", desc.ib)
 end
 
-function iwd.draw_capsule(shape, srt)
+function iwd.draw_capsule(shape, srt, color)
 	local desc={vb={}, ib={}}
 	geometry_drawer.draw_capsule({
 		tessellation = 2,
 		height = shape.height,
 		radius = shape.radius,
-	}, DEFAULT_COLOR, apply_srt(shape, srt), desc)
+	}, color or DEFAULT_COLOR, apply_srt(shape, srt), desc)
 	append_buffers("fffd", desc.vb, "w", desc.ib)
 end
 
-function iwd.draw_sphere(shape, srt)
+function iwd.draw_sphere(shape, srt, color)
 	local desc={vb={}, ib={}}
 	geometry_drawer.draw_sphere({
 		tessellation = 2,
 		radius = shape.radius,
-	}, DEFAULT_COLOR, apply_srt(shape, srt), desc)
+	}, color or DEFAULT_COLOR, apply_srt(shape, srt), desc)
 	append_buffers("fffd", desc.vb, "w", desc.ib)
 end
 
-function iwd.draw_aabb_box(shape, srt)
+function iwd.draw_aabb_box(shape, srt, color)
 	local desc={vb={}, ib={}}
-	geometry_drawer.draw_aabb_box(shape, DEFAULT_COLOR, apply_srt(shape, srt), desc)
+	geometry_drawer.draw_aabb_box(shape, color or DEFAULT_COLOR, apply_srt(shape, srt), desc)
 	append_buffers("fffd", desc.vb, "w", desc.ib)
 end
 
-function iwd.draw_skeleton(ske, ani, srt)
+function iwd.draw_skeleton(ske, ani, srt, color)
 	local desc={vb={}, ib={}}
-	geometry_drawer.draw_skeleton(ske, ani, DEFAULT_COLOR, srt, desc)
+	geometry_drawer.draw_skeleton(ske, ani, color or DEFAULT_COLOR, srt, desc)
 	append_buffers("fffd", desc.vb, "w", desc.ib)
 end
 
@@ -202,16 +194,12 @@ function rmb_sys:widget()
 	local sd  = setting:data()
 	if sd.debug and sd.debug.show_bounding then
 		local desc={vb={}, ib={}}
-		for _, eid in world:each "debug_mesh_bounding" do
-			local e = world[eid]
-			local rc = e._rendercache
-			if rc.debug_mesh_bounding and e._bounding and e._bounding.aabb then
-				if rc and rc.vb and ies.can_visible(eid) then
-					local aabb = rc.aabb
-					local v = math3d.tovalue(aabb)
-					local aabb_shape = {min=v, max={v[5], v[6], v[7]}}
-					geometry_drawer.draw_aabb_box(aabb_shape, DEFAULT_COLOR, nil, desc)
-				end
+		for e in w:select "debug_mesh_bounding render_object:in" do
+			local aabb = e.render_object.aabb
+			if ies.can_visible(e) and e.debug_mesh_bounding and aabb then
+				local minv, maxv = math3d.index(aabb, 1, 2)
+				local aabb_shape = {min=math3d.tovalue(minv), max=math3d.tovalue(maxv)}
+				geometry_drawer.draw_aabb_box(aabb_shape, DEFAULT_COLOR, nil, desc)
 			end
 		end
 	

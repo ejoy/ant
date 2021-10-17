@@ -111,6 +111,7 @@ local function initialize()
 end
 
 initialize()
+---@diagnostic disable-next-line: lowercase-global
 import_package = import
 
 local function findenv(from, to)

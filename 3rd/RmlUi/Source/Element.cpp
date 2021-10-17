@@ -39,7 +39,7 @@
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/Transform.h"
 #include "../Include/RmlUi/RenderInterface.h"
-#include "../Include/RmlUi/StreamMemory.h"
+#include "../Include/RmlUi/Stream.h"
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/StringUtilities.h"
 #include "../Include/RmlUi/EventSpecification.h"
@@ -47,7 +47,6 @@
 #include "DataModel.h"
 #include "ElementAnimation.h"
 #include "ElementBackgroundBorder.h"
-#include "ElementDefinition.h"
 #include "ElementStyle.h"
 #include "EventDispatcher.h"
 #include "ElementBackgroundImage.h"
@@ -167,11 +166,6 @@ const std::shared_ptr<StyleSheet>& Element::GetStyleSheet() const
 		return document->GetStyleSheet();
 	static std::shared_ptr<StyleSheet> null_style_sheet;
 	return null_style_sheet;
-}
-
-const ElementDefinition* Element::GetDefinition()
-{
-	return meta->style.GetDefinition();
 }
 
 std::string Element::GetAddress(bool include_pseudo_classes, bool include_parents) const
@@ -442,24 +436,6 @@ int Element::GetNumChildren() const {
 }
 
 void Element::SetInnerRML(const std::string& rml) {
-	//while ((int) children.size() > 0)
-	//	RemoveChild(children.front().get());
-	//if (rml.empty()) {
-	//	return;
-	//}
-	//
-	//if (std::all_of(rml.begin(), rml.end(), &StringUtilities::IsWhitespace))
-	//	return;
-	//auto stream = std::make_unique<StreamMemory>(rml.size() + 32);
-	//Context* context = parent->GetContext();
-	//std::string open_tag = "<" + tag + ">";
-	//std::string close_tag = "</" + tag + ">";
-	//stream->Write(open_tag.c_str(), open_tag.size());
-	//stream->Write(rml);
-	//stream->Write(close_tag.c_str(), close_tag.size());
-	//stream->Seek(0, SEEK_SET);
-	//XMLParser parser(parent);
-	//parser.Parse(stream.get());
 }
 
 Element* Element::AppendChild(ElementPtr child) {

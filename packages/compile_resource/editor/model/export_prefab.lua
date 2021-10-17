@@ -23,15 +23,15 @@ local prefab = {}
 
 local function create_entity(t)
     if t.parent then
-        t.policy[#t.policy+1] = "ant.scene|hierarchy_policy"
-        t.action = {mount = t.parent}
-        t.data["scene_entity"] = true
+        t.policy[#t.policy+1] = "ant.scene|scene_object"
+        t.mount = t.parent
+        t.data.scene = t.data.scene or {}
     end
     table.sort(t.policy)
     prefab[#prefab+1] = {
         policy = t.policy,
         data = t.data,
-        action = t.action,
+        mount = t.mount,
     }
     return #prefab
 end
@@ -106,7 +106,6 @@ local function generate_material(mi, mode)
     end
     --defualt cull is CCW
     local function what_cull()
-
         return mi.material.state.CULL
     end
 
@@ -170,20 +169,6 @@ local function save_material(mi)
     end
 end
 
-local function parent_transform(parent)
-    local t = prefab[parent]
-    if t == nil then
-        return nil
-    end
-    local trans = t.data.transform
-    local m = math3d.matrix(trans or {})
-    if t.action.mount then
-        local pm = parent_transform(t.action.mount)
-        return pm and math3d.mul(pm, m) or m
-    end
-    return m
-end
-
 local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports, tolocalpath)
     local node = gltfscene.nodes[nodeidx+1]
     local transform = get_transform(node)
@@ -223,8 +208,7 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports, tolo
         end
 
         local data = {
-            scene_entity= true,
-            transform   = transform,
+            scene       = {srt=transform or {}},
             mesh        = serialize.path(meshfile),
             material    = serialize.path(materialfile:string()),
             name        = node.name or "",
@@ -256,6 +240,15 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports, tolo
             end
             table.sort(lst)
             data.animation_birth = lst[1]
+            
+			data.pose_result = false
+			data._animation = {}
+			data.anim_clips = {}
+			data.keyframe_events = {}
+			data.joint_list = {}
+			data.skinning = {}
+			data.material_setting = { skinning = "GPU"}
+
             policy[#policy+1] = "ant.animation|animation"
             policy[#policy+1] = "ant.animation|animation_controller.birth"
         end
@@ -275,12 +268,11 @@ local function create_node_entity(gltfscene, nodeidx, parent)
     return create_entity {
         policy = {
             "ant.general|name",
-            "ant.scene|transform_policy"
+            "ant.scene|scene_object"
         },
         data = {
             name = nname,
-            scene_entity = true,
-            transform = transform,
+            scene = {srt=transform or {}},
         },
         parent = parent,
     }
@@ -321,13 +313,13 @@ return function(output, glbdata, exports, tolocalpath)
     local rootid = create_entity {
         policy = {
             "ant.general|name",
-            "ant.scene|transform_policy",
+            "ant.scene|scene_object",
         },
         data = {
             name = scene.name or "Rootscene",
-            transform = {}
+            scene = {srt={}}
         },
-        parent = "root",
+        --parent = "root",
     }
 
     local meshnodes = find_mesh_nodes(gltfscene, scene.nodes)

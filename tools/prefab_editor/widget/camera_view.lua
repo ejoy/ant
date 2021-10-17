@@ -13,6 +13,7 @@ local BaseView      = require "widget.view_class".BaseView
 local CameraView    = require "widget.view_class".CameraView
 local hierarchy     = require "hierarchy_edit"
 
+
 function CameraView:_init()
     BaseView._init(self)
     local property = {}
@@ -55,11 +56,11 @@ function CameraView:set_model(eid)
     self.frames = camera_mgr.get_recorder_frames(eid)
     if not BaseView.set_model(self, eid) then return false end
     local template = hierarchy:get_template(self.eid)
-    if template.template.action and template.template.action.bind_camera and template.template.action.bind_camera.which == "main_queue" then
-        self.main_camera_ui[1] = true
-    else
+    -- if template.template.action and template.template.action.bind_camera and template.template.action.bind_camera.which == "main_queue" then
+    --     self.main_camera_ui[1] = true
+    -- else
         self.main_camera_ui[1] = false
-    end
+    -- end
     self.current_frame = 1
     for i, v in ipairs(self.frames) do
         self.duration[i] = {self.frames[i].duration}
@@ -116,13 +117,13 @@ function CameraView:on_set_target(value)
     camera_mgr.set_target(self.eid, value)
 end
 function CameraView:on_get_target()
-    return camera_mgr.camera_list[self.eid].target
+    return camera_mgr.get_editor_data(self.eid).target
 end
 function CameraView:on_set_dist(value)
     camera_mgr.set_dist_to_target(self.eid, value)
 end
 function CameraView:on_get_dist()
-    return camera_mgr.camera_list[self.eid].dist_to_target
+    return camera_mgr.get_editor_data(self.eid).dist_to_target
 end
 
 function CameraView:on_set_fov(value)
@@ -130,7 +131,7 @@ function CameraView:on_set_fov(value)
         self.frames[self.current_frame].fov = value
     end
     local template = hierarchy:get_template(self.eid)
-    template.template.data.frustum.fov = value
+    template.template.data.camera.frustum.fov = value
     icamera.set_frustum_fov(self.eid, value)
     camera_mgr.update_frustrum(self.eid)
 end
@@ -147,7 +148,7 @@ function CameraView:on_set_near(value)
         self.frames[self.current_frame].n = value
     end
     local template = hierarchy:get_template(self.eid)
-    template.template.data.frustum.n = value
+    template.template.data.camera.frustum.n = value
     icamera.set_frustum_near(self.eid, value)
     camera_mgr.update_frustrum(self.eid)
 end
@@ -164,7 +165,7 @@ function CameraView:on_set_far(value)
         self.frames[self.current_frame].f = value
     end
     local template = hierarchy:get_template(self.eid)
-    template.template.data.frustum.f = value
+    template.template.data.camera.frustum.f = value
     icamera.set_frustum_far(self.eid, value)
     camera_mgr.update_frustrum(self.eid)
 end

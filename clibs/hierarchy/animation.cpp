@@ -123,6 +123,22 @@ struct ozzJointRemap : public luaClass<ozzJointRemap> {
 		}
 		return 1;
 	}
+
+	static int
+	lcount(lua_State *L){
+		auto jm = (ozzJointRemap*)luaL_checkudata(L, 1, base_type::kLuaName);
+		lua_pushinteger(L, jm->joints.size());
+		return 1;
+	}
+
+	static void registerMetatable(lua_State *L){
+		luaL_Reg l[] = {
+			{"count", 		lcount},
+			{nullptr, 		nullptr,}
+		};
+		base_type::reigister_mt(L, l);
+		lua_pop(L, 1);
+	}
 };
 REGISTER_LUA_CLASS(ozzJointRemap)
 
@@ -144,7 +160,9 @@ public:
 
 	static bindpose* getBP(lua_State *L, int index){
 		#ifdef _DEBUG
-			assert(luaL_testudata(L, index, "ozzBindpose") || luaL_testudata(L, index, "ozzPoseResult"));
+			if (!luaL_testudata(L, index, "ozzBindpose") && !luaL_testudata(L, index, "ozzPoseResult")) {
+				luaL_argexpected(L, false, index, "ozzBindpose");
+			}
 		#endif
 		return (bindpose*)lua_touserdata(L, index);
 	}
@@ -218,7 +236,7 @@ public:
 		return 1;
 	}
 
-	static void registerBindposeMetatable(lua_State *L){
+	static void registerMetatable(lua_State *L){
 		luaL_Reg l[] = {
 			{"count", 		lcount},
 			{"joint", 		ljoint},
@@ -358,12 +376,18 @@ public:
 	ozzPoseResult(size_t numjoints)
 		: ozzBindposeT<ozzPoseResult>(numjoints)
 		, m_ske(nullptr)
-	{}
+	{
+		auto ss = base_type::kLuaName;
+		int debug = 0;
+	}
 
 	ozzPoseResult(size_t numjoints, const float *data)
 		: ozzBindposeT<ozzPoseResult>(numjoints, data)
 		, m_ske(nullptr)
-	{}
+	{
+		auto ss = base_type::kLuaName;
+		int debug = 0;
+	}
 private:
 	void _push_pose(bindpose_soa const& pose, float weight) {
 		m_results.emplace_back(pose);
@@ -495,7 +519,7 @@ private:
 #undef MEM_FUNC
 
 public:
-	static int registerPoseResultMetatable(lua_State* L) {
+	static int registerMetatable(lua_State* L) {
 		luaL_Reg l[] = {
 			{ "setup",		  	lsetup},
 			{ "do_sample",	  	ldo_sample},
@@ -695,8 +719,9 @@ lmesh_skinning(lua_State *L){
 }
 
 int init_animation(lua_State *L) {
-	ozzBindpose::registerBindposeMetatable(L);
-	ozzPoseResult::registerPoseResultMetatable(L);
+	ozzJointRemap::registerMetatable(L);
+	ozzBindpose::registerMetatable(L);
+	ozzPoseResult::registerMetatable(L);
 	lua_newtable(L);
 	luaL_Reg l[] = {
 		{ "mesh_skinning",				lmesh_skinning},

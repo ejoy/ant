@@ -46,7 +46,6 @@ namespace Rml {
 class Context;
 class DataModel;
 class EventListener;
-class ElementDefinition;
 class Document;
 class ElementStyle;
 class PropertyDictionary;
@@ -89,10 +88,6 @@ public:
 	/// Returns the active style sheet for this element. This may be nullptr.
 	/// @return The element's style sheet.
 	virtual const std::shared_ptr<StyleSheet>& GetStyleSheet() const;
-
-	/// Returns the element's definition.
-	/// @return The element's definition.
-	const ElementDefinition* GetDefinition();
 
 	/// Fills a string with the full address of this element.
 	/// @param[in] include_pseudo_classes True if the address is to include the pseudo-classes of the leaf element.
@@ -282,7 +277,7 @@ public:
 	virtual void ProcessDefaultAction(Event& event);
 
 	/// Return the computed values of the element's properties. These values are updated as appropriate on every Context::Update.
-	const ComputedValues& GetComputedValues() const;
+	const Style::ComputedValues& GetComputedValues() const;
 
 	void UpdateLayout();
 	void SetParent(Element* parent);

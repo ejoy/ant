@@ -8,8 +8,8 @@ local is = ecs.system "init_system"
 
 local iblmb = world:sub {"ibl_updated"}
 function is:init()
-    world:instance "/pkg/ant.test.ibl/assets/skybox.prefab"
-    world:instance "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab"
+    ecs.create_instance "/pkg/ant.test.ibl/assets/skybox.prefab"
+    ecs.create_instance "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab"
 end
 
 function is:data_changed()

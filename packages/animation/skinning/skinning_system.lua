@@ -5,16 +5,6 @@ local w = world.w
 local animodule = require "hierarchy".animation
 local math3d 	= require "math3d"
 
-local assetmgr 	= import_package "ant.asset"
-
-local sm = ecs.transform "skinning_material"
-
-function sm.process_prefab(e)
-	if e.animation and e.skeleton then
-		e._cache_prefab.material_setting.skinning = "GPU"
-	end
-end
-
 -- skinning system
 local skinning_sys = ecs.system "skinning_system"
 

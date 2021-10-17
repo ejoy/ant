@@ -8,7 +8,6 @@ return {
         "ant.heightmap",
         "ant.hwi",
         "ant.math",
-        "ant.prefab",
         "ant.sky",
     }
 }

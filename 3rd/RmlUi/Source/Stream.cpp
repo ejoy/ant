@@ -1,165 +1,97 @@
-/*
- * This source file is part of RmlUi, the HTML/CSS Interface Middleware
- *
- * For the latest information, see http://github.com/mikke89/RmlUi
- *
- * Copyright (c) 2008-2010 CodePoint Ltd, Shift Technology Ltd
- * Copyright (c) 2019 The RmlUi Team, and contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
-
 #include "../Include/RmlUi/Stream.h"
-#include "../Include/RmlUi/Math.h"
 #include "../Include/RmlUi/Debug.h"
 #include "../Include/RmlUi/Log.h"
+#include "../Include/RmlUi/Core.h"
+#include "../Include/RmlUi/FileInterface.h"
 #include <stdio.h>
 #include <string.h>
 
 namespace Rml {
 
-const size_t READ_BLOCK_SIZE = 1024;
+Stream::View::View()
+: buf(nullptr)
+, len(0)
+, owner(false)
+{ }
 
-Stream::Stream()
+Stream::View::View(const uint8_t* buf, size_t len, bool owner)
+: buf(buf)
+, len(len)
+, owner(owner)
+{ }
+
+Stream::View::View(Stream::View&& o)
+: buf(o.buf)
+, len(o.len)
+, owner(o.owner)
 {
-	stream_mode = 0;
+	o.owner = false;
 }
 
-Stream::~Stream()
-{
-	Close();
+Stream::View::~View() {
+	if (owner)
+		free((void*)buf);
 }
 
-void Stream::Close()
-{
-	stream_mode = 0;
+Stream::View::operator bool() const {
+	return !!buf;
 }
 
-// Returns the mode the stream was opened in.
-int Stream::GetStreamMode() const
-{
-	return stream_mode;
+uint8_t Stream::View::operator[] (size_t i) const {
+	return buf[i];
 }
 
-// Returns the source url (if available)
-const std::string& Stream::GetSourceURL() const
-{
+size_t Stream::View::size() const {
+	return len;
+}
+
+static Stream::View ReadAll(const std::string& filename) {
+	FileHandle handle = GetFileInterface()->Open(filename);
+	if (!handle) {
+		Log::Message(Log::Level::Warning, "Unable to open file %s.", filename.c_str());
+		return {};
+	}
+	size_t len = GetFileInterface()->Length(handle);
+	void* buf = malloc(len);
+	len = GetFileInterface()->Read(buf, len, handle);
+	GetFileInterface()->Close(handle);
+	return {(const uint8_t*)buf, len, true};
+}
+
+Stream::Stream(const std::string& filename)
+: url(filename)
+, view(ReadAll(filename))
+, pos(0)
+{}
+
+Stream::Stream(const std::string& name, const uint8_t* data, size_t sz)
+: url(name)
+, view {data, sz, false}
+, pos(0)
+{}
+
+const std::string& Stream::GetSourceURL() const {
 	return url;
 }
 
-bool Stream::IsEOS() const
-{
-	return Tell() >= Length();
+uint8_t Stream::Peek() const {
+	return view[pos];
 }
 
-size_t Stream::Peek(void* buffer, size_t bytes) const
-{
-	size_t pos = Tell();
-	size_t read = Read( buffer, bytes );
-	Seek( (long)pos, SEEK_SET );
-	return read;
+bool Stream::End() const {
+	return pos >= view.size();
 }
 
-// Read from one stream into another
-size_t Stream::Read(Stream* stream, size_t bytes) const
-{
-	uint8_t buffer[ READ_BLOCK_SIZE ];
-	size_t total_bytes_read = 0;
-	while (total_bytes_read < bytes)
-	{
-		size_t bytes_read = this->Read(buffer, Math::Min(READ_BLOCK_SIZE, bytes - total_bytes_read));
-		if (bytes_read < 1)
-			return total_bytes_read;
-		stream->Write(buffer, bytes_read);
-		total_bytes_read += bytes_read;
-	}
-	return total_bytes_read;
+void Stream::Next() {
+	pos++;
 }
 
-// Read from one stream into another
-size_t Stream::Read(std::string& string, size_t bytes) const
-{
-	size_t string_size = string.size();
-	string.resize(string_size + bytes + 1);
-	size_t read = Read(&string[string_size], bytes);
-	string[string_size + read] = '\0';
-	string.resize(string_size + read);
-	return read;
+void Stream::Undo() {
+	pos--;
 }
 
-/// Write to this stream from another stream
-size_t Stream::Write(const Stream* stream, size_t bytes)
-{
-	return stream->Read(this, bytes);
+Stream::operator bool() const {
+	return !!view;
 }
 
-size_t Stream::Write(const char* string)
-{
-	return Write(string, strlen(string));
 }
-
-size_t Stream::Write(const std::string& string)
-{
-	return Write(string.c_str(), string.size());
-}
-
-// Push onto the front of the stream
-size_t Stream::PushFront(const void* RMLUI_UNUSED_PARAMETER(buffer), size_t RMLUI_UNUSED_PARAMETER(bytes))
-{
-	RMLUI_UNUSED(buffer);
-	RMLUI_UNUSED(bytes);
-
-	Log::Message(Log::Level::Error, "No generic way to PushFront to a stream.");
-	return false;
-}
-
-// Push onto the back of the stream
-size_t Stream::PushBack(const void* buffer, size_t bytes)
-{	
-	size_t pos = Tell();
-	Seek(0, SEEK_END);
-	size_t wrote = Write(buffer, bytes);
-	Seek((long)pos, SEEK_SET);
-	return wrote;
-}
-
-// Push onto the front of the stream
-size_t Stream::PopFront(size_t RMLUI_UNUSED_PARAMETER(bytes))
-{
-	RMLUI_UNUSED(bytes);
-
-	Log::Message(Log::Level::Error, "No generic way to PopFront from a stream.");
-	return 0;
-}
-
-// Push onto the back of the stream
-size_t Stream::PopBack(size_t bytes)
-{
-	return Truncate(Length() - bytes);
-}
-
-// Sets the mode on the stream; should be called by a stream when it is opened.
-void Stream::SetStreamDetails(const std::string& _url, int _stream_mode)
-{
-	url = _url;
-	stream_mode = _stream_mode;
-}
-
-} // namespace Rml
