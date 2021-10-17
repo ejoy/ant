@@ -234,10 +234,193 @@ local function create_property_ui(n, p, mv)
     end
 end
 
+local deftex<const> = "/pkg/ant.resources/textures/black.texture"
+local default_properties<const> = {
+    s_basecolor = {
+        texture = "/pkg/ant.resources/textures/pbr/default/basecolor.texture",
+        factor = {1, 1, 1, 1},
+    },
+    s_metallic_roughness = {
+        texture = "/pkg/ant.resources/textures/pbr/default/metallic_roughness.texture",
+        factor = {1, 0, 0, 0},
+    },
+    s_normal = {
+        texture = "/pkg/ant.resources/textures/pbr/default/normal.texture",
+    },
+    s_emissive = {
+        texture = "/pkg/ant.resources/textures/pbr/default/emissive.texture",
+        factor = {0, 0, 0, 0},
+    },
+    s_occlusion = {
+        texture = "/pkg/ant.resources/textures/pbr/default/occlusion.texture",
+    }
+}
+
+local LIT_options<const> = {
+    "lit",
+    "unlit",
+}
+
 local function build_properties_ui(mv)
     local t = material_template(assert(mv.entity))
     local properties = {}
-    if false then--is_pbr_material(t) then
+    if is_pbr_material(t) then
+        local dp = t.properties
+        local function get_texture(n)
+            local p = dp[n] or default_properties[n]
+            return p.texture
+        end
+
+        local function get_factor(n)
+            local p = dp[n] or default_properties[n]
+            return p.factor
+        end
+
+        local function set_property(n, elem, v)
+            if t.properties == nil then
+                t.properties = {}
+            end
+            
+            local p = t.properties[n]
+            if p == nil then
+                p = {}
+                t.properties[n] = p
+            end
+
+            p[elem] = v
+        end
+
+        properties[#properties+1] = uiproperty.Combo({label="lit mode", options=LIT_options}, {
+            getter = function ()
+                return t.fx.settings.MATERIAL_UNLIT and "unlit" or "lit"
+            end,
+            setter = function (value)
+                t.fx.settings.MATERIAL_UNLIT = value == "unlit" and 1 or nil
+            end
+        })
+        
+        properties[#properties+1] = uiproperty.Group({label="metallic_roughness"}, {
+            uiproperty.EditText({label="Texture"}, {
+                getter = function ()
+                    return get_texture "s_metallic_roughness"
+                end,
+                setter = function (value)
+                    set_property("s_metallic_roughness", "texture", value)
+                end,
+            }),
+            uiproperty.Group({label="Factor"}, {
+                uiproperty.Float({label="metallic"}, {
+                    getter = function ()
+                        local pbrfactor = t.u_pbr_factor
+                        return pbrfactor and pbrfactor[2] or 0.0
+                    end,
+                    setter = function (value)
+                        local pbrfactor = t.u_pbr_factor
+                        if pbrfactor == nil then
+                            pbrfactor = {}
+                            t.u_pbr_factor = pbrfactor
+                        end
+                        pbrfactor[1] = value
+                    end
+                }),
+                uiproperty.Float({label="roughness"}, {
+                    getter = function ()
+                        local pbrfactor = t.u_pbr_factor
+                        return pbrfactor and pbrfactor[1] or 0.0
+                    end,
+                    setter = function (value)
+                        local pbrfactor = t.u_pbr_factor
+                        if pbrfactor == nil then
+                            pbrfactor = {}
+                            t.u_pbr_factor = pbrfactor
+                        end
+                        pbrfactor[2] = value
+                    end,
+                })
+            })
+        })
+
+        properties[#properties+1] = uiproperty.Group({label="normal"}, {
+            uiproperty.EditText({label="Texture"}, {
+                getter = function ()
+                    return get_texture "s_normal"
+                end,
+                setter = function (value)
+                    set_property("s_normal", "texture", value)
+                end,
+            }),
+        })
+
+        properties[#properties+1] = uiproperty.Group({label="normal"}, {
+            uiproperty.EditText({label="Texture"}, {
+                getter = function ()
+                    return get_texture "s_normal"
+                end,
+                setter = function (value)
+                    set_property("s_normal", "texture", value)
+                end,
+            }),
+        })
+
+        properties[#properties+1] = uiproperty.Group({label="normal"}, {
+            uiproperty.EditText({label="Texture"}, {
+                getter = function ()
+                    return get_texture "s_emi"
+                end,
+                setter = function (value)
+                    set_property("s_emissive", "texture", value)
+                end,
+            }),
+            uiproperty.Float({label="Factor"}, {
+                getter = function ()
+                    return get_factor "s_emissive"
+                end,
+                setter = function (value)
+                    set_property("s_emissive", "factor", value)
+                end
+            })
+        })
+
+        properties[#properties+1] = uiproperty.Group({label=""}, {
+            uiproperty.Bool({label ="enable"},{
+                getter = function ()
+                    return t.fx.settings.ALPHAMODE_MASK ~= nil
+                end,
+                setter = function (value)
+                    t.fx.settings.ALPHAMODE_MASK = value and 1 or nil
+                end
+            }),
+            uiproperty.Float({label="cutoff value"}, {
+                getter = function ()
+                    local pbrfactor = t.u_pbr_factor
+                    return pbrfactor and pbrfactor[3] or 0.0
+                end,
+                setter = function (value)
+                    local pbrfactor = t.u_pbr_factor
+                    if pbrfactor == nil then
+                        pbrfactor = {}
+                        t.u_pbr_factor = pbrfactor
+                    end
+                    pbrfactor[3] = value
+                end
+            })
+        })
+        
+
+        properties[#properties+1] = uiproperty.Float({label="occlusion strength"},{
+            getter = function ()
+                local pbrfactor = t.u_pbr_factor
+                return pbrfactor and pbrfactor[4] or 0.0
+            end,
+            setter = function (value)
+                local pbrfactor = t.u_pbr_factor
+                if pbrfactor == nil then
+                    pbrfactor = {}
+                    t.u_pbr_factor = pbrfactor
+                end
+                pbrfactor[4] = value
+            end
+        })
     else
         if t.properties then
             for n, p in pairs(t.properties) do
