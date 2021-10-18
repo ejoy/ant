@@ -11,7 +11,7 @@ local STATE_TYPE = {
 	--
 	lightmap	= 0x00000010,
 	--
-	auxgeom		= 0x00010000,
+	auxgeom		= 0x00008000,
 }
 
 local function filter_mask(names)

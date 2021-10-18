@@ -34,8 +34,8 @@ function render_sys:entity_init()
 
 		pf._DEBUG_filter_type = pf.filter_type
 		pf.filter_type = ies.create_state(pf.filter_type)
-		pf._DEBUG_excule_type = pf.excule_type
-		pf.excule_type = pf.excule_type and ies.create_state(pf.excule_type) or 0
+		pf._DEBUG_excule_type = pf.exclude_type
+		pf.exclude_type = pf.exclude_type and ies.create_state(pf.exclude_type) or 0
 	end
 
 	for e in w:select "INIT material_result:in render_object:in" do
@@ -75,7 +75,7 @@ function render_sys:update_filter()
 			local pf = qe.primitive_filter
 			if has_filter_tag(tag, pf) then
 				w:sync(tag .. "?in", e)
-				local add = ((state & pf.filter_type) ~= 0) and ((state & pf.excule_type) == 0)
+				local add = ((state & pf.filter_type) ~= 0) and ((state & pf.exclude_type) == 0)
 				if add then
 					if not e[tag] then
 						filter_result[tag] = add
