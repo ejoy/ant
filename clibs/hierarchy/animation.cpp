@@ -126,7 +126,7 @@ struct ozzJointRemap : public luaClass<ozzJointRemap> {
 
 	static int
 	lcount(lua_State *L){
-		auto jm = (ozzJointRemap*)luaL_checkudata(L, 1, base_type::kLuaName);
+		auto jm = (ozzJointRemap*)luaL_checkudata(L, 1, "ozzJointRemap");
 		lua_pushinteger(L, jm->joints.size());
 		return 1;
 	}
@@ -377,16 +377,12 @@ public:
 		: ozzBindposeT<ozzPoseResult>(numjoints)
 		, m_ske(nullptr)
 	{
-		auto ss = base_type::kLuaName;
-		int debug = 0;
 	}
 
 	ozzPoseResult(size_t numjoints, const float *data)
 		: ozzBindposeT<ozzPoseResult>(numjoints, data)
 		, m_ske(nullptr)
 	{
-		auto ss = base_type::kLuaName;
-		int debug = 0;
 	}
 private:
 	void _push_pose(bindpose_soa const& pose, float weight) {
