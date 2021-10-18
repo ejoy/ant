@@ -315,7 +315,7 @@ function repo:index()
 	self._namecache = namecache
 	for i = 0, 0xff do
 		local refpath = repopath / string.format("%02x", i)
-		for name in refpath:list_directory() do
+		for name in lfs.pairs(refpath) do
 			if name:extension():string() == ".ref" then
 				read_ref(self, name:stem():string())
 			end

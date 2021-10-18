@@ -106,7 +106,7 @@ local function choose_project()
             if path then
                 local lpath = lfs.path(path)
                 local not_empty
-                for path in lpath:list_directory() do
+                for path in fs.pairs(lpath) do
                     not_empty = true
                     break
                 end

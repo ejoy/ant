@@ -10,7 +10,7 @@ local m = {}
 local directorys  = {}
 
 local function import_font(path)
-    for p in path:list_directory() do
+    for p in fs.pairs(path) do
         if fs.is_directory(p) then
             import_font(p)
         elseif fs.is_regular_file(p) then

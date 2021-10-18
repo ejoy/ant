@@ -5,6 +5,7 @@
 #if defined(_WIN32)
 
 #include <Windows.h>
+#include <shlobj.h>
 
 // http://blogs.msdn.com/oldnewthing/archive/2004/10/25/247180.aspx
 extern "C" IMAGE_DOS_HEADER __ImageBase;
@@ -39,6 +40,16 @@ namespace ant::path_helper {
     fs::path dll_path() {
         return dll_path(reinterpret_cast<void*>(&__ImageBase));
     }
+
+    fs::path appdata_path() {
+        wchar_t* path;
+        if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &path))) {
+            fs::path res(path);
+            CoTaskMemFree(path);
+            return res;
+        }
+        throw std::runtime_error("::SHGetKnownFolderPath failed.");
+    }
 }
 
 #else
@@ -70,24 +81,34 @@ namespace ant::path_helper {
 namespace ant::path_helper {
     fs::path exe_path() {
         char buffer[0x100];
-        ssize_t path_len = ::readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
+        ssize_t path_len = ::readlink("/proc/self/exe", buffer, sizeof(buffer)-1);
         if (path_len < 0) {
             throw make_syserror("readlink");
         }
-        if (path_len < (ssize_t)sizeof(buffer) - 1) {
+        if (path_len < (ssize_t)sizeof(buffer)-1) {
             return fs::path(buffer, buffer + path_len);
         }
         for (size_t buf_len = 0x200; buf_len <= 0x10000; buf_len <<= 1) {
             dynarray<char> buf(buf_len);
-            ssize_t path_len = ::readlink("/proc/self/exe", buf.data(), buf_len - 1);
+            ssize_t path_len = ::readlink("/proc/self/exe", buf.data(), buf_len-1);
             if (path_len == 0) {
                 throw make_syserror("readlink");
             }
-            if (path_len < (ssize_t)sizeof(buffer) - 1) {
+            if (path_len < (ssize_t)sizeof(buffer)-1) {
                 return fs::path(buf.data(), buf.data() + path_len);
             }
         }
         throw std::runtime_error("readlink return too long.");
+    }
+
+    fs::path appdata_path() {
+        if (const char* env = getenv("XDG_DATA_HOME")) {
+            return fs::path(env);
+        }
+        if (const char* env = getenv("HOME")) {
+            return fs::path(env) / ".local" / "share";
+        }
+        throw std::runtime_error("neither XDG_DATA_HOME nor HOME environment is set");
     }
 }
 

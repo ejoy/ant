@@ -56,7 +56,7 @@ local function construct_resource_tree(fspath)
     local tree = {files = {}, dirs = {}}
     if fspath then
         local sorted_path = {}
-        for item in fspath:list_directory() do
+        for item in fs.pairs(fspath) do
             sorted_path[#sorted_path+1] = item
         end
         table.sort(sorted_path, function(a, b) return string.lower(tostring(a)) < string.lower(tostring(b)) end)

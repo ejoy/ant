@@ -35,7 +35,7 @@ return function (input, output, exports)
     end
 
     exports.animations = {}
-    for path in folder:list_directory() do
+    for path in fs.pairs(folder) do
         if path:equal_extension ".ozz" then
             local filename = path:filename():string()
             if filename ~= "skeleton.ozz" then

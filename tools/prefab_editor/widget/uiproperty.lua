@@ -333,7 +333,7 @@ function TextureResource:show()
         imgui.cursor.SameLine()
         if image_path then
             if imgui.windows.BeginPopup("select_image") then
-                for path in image_path:list_directory() do
+                for path in fs.pairs(image_path) do
                     if path:equal_extension ".png" or path:equal_extension ".dds" then
                         local filename = path:filename():string()
                         if imgui.widget.Selectable(filename, false) then

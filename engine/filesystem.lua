@@ -160,22 +160,6 @@ function path_mt:is_relative()
     return self._value:sub(1,1) ~= '/'
 end
 
-function path_mt:list_directory()
-    local list = vfs.list(self._value)
-    if not list then
-        return function ()
-        end
-    end
-    local name
-    return function()
-        name = next(list, name)
-        if not name then
-            return
-        end
-        return self / name
-    end
-end
-
 function path_mt:permissions()
     error 'Not implemented'
 end
@@ -257,6 +241,22 @@ function fs.relative(path, base)
         s[#s+1] = e
     end
     return constructor(table.concat(s, "/"))
+end
+
+function fs.pairs(path)
+    local list = vfs.list(path._value)
+    if not list then
+        return function ()
+        end
+    end
+    local name
+    return function()
+        name = next(list, name)
+        if not name then
+            return
+        end
+        return path / name
+    end
 end
 
 function fs.create_directory()
