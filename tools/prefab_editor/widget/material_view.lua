@@ -2,6 +2,15 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
+
+--[[
+    TODO:
+    It's a WRONG place for material editing.
+
+    We need a **Material Editor** to edit material, not show material file content in entity property tab
+]]
+
+
 local imaterial   = ecs.import.interface "ant.asset|imaterial"
 local ies         = ecs.import.interface "ant.scene|ientity_state"
 local irender     = ecs.import.interface "ant.render|irender"
