@@ -30,15 +30,6 @@ lm:source_set "ant_common" {
     sources = {
         "common/modules.cpp",
         "common/runtime.cpp",
-    },
-    windows = {
-        sources = "common/set_current_win32.cpp"
-    },
-    macos = {
-        sources = "common/set_current_osx.mm"
-    },
-    ios = {
-        sources = "common/set_current_ios.mm"
     }
 }
 
