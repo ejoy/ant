@@ -290,87 +290,124 @@ local function build_properties_ui(mv)
             p[elem] = v
         end
 
+        local function fx_setting(field, value)
+            if t.fx.settings then
+                if value then
+                    t.fx.settings[field] = value
+                else
+                    return t.fx.settings[field]
+                end
+            end
+        end
+
+        local function property_texture(field, value)
+            if t.properties then
+                local p = t.properties[field]
+                if p then
+                    if value then
+                        p.texture = value
+                    else
+                        return p.texture
+                    end
+                end
+            end
+        end
+
         properties[#properties+1] = uiproperty.Combo({label="lit mode", options=LIT_options}, {
             getter = function ()
-                return t.fx.settings.MATERIAL_UNLIT and "unlit" or "lit"
+                return fx_setting "MATERIAL_UNLIT" and "unlit" or "lit"
             end,
             setter = function (value)
-                t.fx.settings.MATERIAL_UNLIT = value == "unlit" and 1 or nil
+                fx_setting("MATERIAL_UNLIT", value == "unlit" and 1 or nil)
             end
         })
-        
-        properties[#properties+1] = uiproperty.Group({label="metallic_roughness"}, {
-            uiproperty.EditText({label="Texture"}, {
-                getter = function ()
-                    return get_texture "s_metallic_roughness"
-                end,
-                setter = function (value)
-                    set_property("s_metallic_roughness", "texture", value)
-                end,
-            }),
-            uiproperty.Group({label="Factor"}, {
-                uiproperty.Float({label="metallic"}, {
+
+        --TODO: need a texture&enable ui control
+        local function add_textre_ui(field, parentui, ...)
+            local tt = {
+                uiproperty.Bool({label="Enable"}, {
                     getter = function ()
-                        local pbrfactor = t.u_pbr_factor
-                        return pbrfactor and pbrfactor[2] or 0.0
+                        return property_texture(field) ~= nil
                     end,
                     setter = function (value)
-                        local pbrfactor = t.u_pbr_factor
-                        if pbrfactor == nil then
-                            pbrfactor = {}
-                            t.u_pbr_factor = pbrfactor
-                        end
-                        pbrfactor[1] = value
+                        local mr = mv.properties:find_property_by_label(parentui)
+                        local uitex = mr.subproperty[2]
+                        uitex.disable = value
                     end
                 }),
-                uiproperty.Float({label="roughness"}, {
+                uiproperty.EditText({label="Texture"},{
                     getter = function ()
-                        local pbrfactor = t.u_pbr_factor
-                        return pbrfactor and pbrfactor[1] or 0.0
+                        return property_texture(field)
                     end,
                     setter = function (value)
-                        local pbrfactor = t.u_pbr_factor
-                        if pbrfactor == nil then
-                            pbrfactor = {}
-                            t.u_pbr_factor = pbrfactor
-                        end
-                        pbrfactor[2] = value
-                    end,
+                        set_property(field, "texture", value)
+                    end
                 })
-            })
-        })
+            }
 
-        properties[#properties+1] = uiproperty.Group({label="normal"}, {
-            uiproperty.EditText({label="Texture"}, {
-                getter = function ()
-                    return get_texture "s_normal"
-                end,
-                setter = function (value)
-                    set_property("s_normal", "texture", value)
-                end,
-            }),
-        })
+            for i=1, select('#', ...) do
+                local a = select(i, ...)
+                tt[#tt+1] = a
+            end
+            return tt
+        end
 
-        properties[#properties+1] = uiproperty.Group({label="normal"}, {
-            uiproperty.EditText({label="Texture"}, {
-                getter = function ()
-                    return get_texture "s_normal"
-                end,
-                setter = function (value)
-                    set_property("s_normal", "texture", value)
-                end,
-            }),
-        })
+        properties[#properties+1] = uiproperty.Group({label="basecolor"},
+            add_textre_ui("s_basecolor", "basecolor", 
+                uiproperty.Float({label="Factor"}, {
+                    getter = function ()
+                        return get_factor "s_basecolor"
+                    end,
+                    setter = function (value)
+                        set_property("s_basecolor", "factor", value)
+                    end
+                })
+            )
+        )
 
-        properties[#properties+1] = uiproperty.Group({label="normal"}, {
-            uiproperty.EditText({label="Texture"}, {
-                getter = function ()
-                    return get_texture "s_emi"
-                end,
-                setter = function (value)
-                    set_property("s_emissive", "texture", value)
-                end,
-            }),
+        properties[#properties+1] = uiproperty.Group({label="metallic_roughness"}, 
+            add_textre_ui("s_metallic_roughness", "metallic_roughness",
+                uiproperty.Group({label="Factor"}, {
+                    uiproperty.Float({label="metallic"}, {
+                        getter = function ()
+                            local pbrfactor = t.u_pbr_factor
+                            return pbrfactor and pbrfactor[2] or 0.0
+                        end,
+                        setter = function (value)
+                            local pbrfactor = t.u_pbr_factor
+                            if pbrfactor == nil then
+                                pbrfactor = {}
+                                t.u_pbr_factor = pbrfactor
+                            end
+                            pbrfactor[1] = value
+                        end
+                    }),
+                    uiproperty.Float({label="roughness"}, {
+                        getter = function ()
+                            local pbrfactor = t.u_pbr_factor
+                            return pbrfactor and pbrfactor[1] or 0.0
+                        end,
+                        setter = function (value)
+                            local pbrfactor = t.u_pbr_factor
+                            if pbrfactor == nil then
+                                pbrfactor = {}
+                                t.u_pbr_factor = pbrfactor
+                            end
+                            pbrfactor[2] = value
+                        end,
+                    })
+                })
+            )
+        )
+
+        properties[#properties+1] = uiproperty.Group({label="normal"},
+            add_textre_ui("s_normal", "normal"))
+
+        properties[#properties+1] = uiproperty.Group({label="occlusion"},
+            add_textre_ui("s_occlusion", "occlusion"))
+
+        properties[#properties+1] = uiproperty.Group({label="emissive"},
+            add_textre_ui("s_emissive", "emissive",
             uiproperty.Float({label="Factor"}, {
                 getter = function ()
                     return get_factor "s_emissive"
@@ -379,15 +416,15 @@ local function build_properties_ui(mv)
                     set_property("s_emissive", "factor", value)
                 end
             })
-        })
+        ))
 
-        properties[#properties+1] = uiproperty.Group({label=""}, {
+        properties[#properties+1] = uiproperty.Group({label="Alpha Cutoff"}, {
             uiproperty.Bool({label ="enable"},{
                 getter = function ()
-                    return t.fx.settings.ALPHAMODE_MASK ~= nil
+                    return fx_setting "ALPHAMODE_MASK" ~= nil
                 end,
                 setter = function (value)
-                    t.fx.settings.ALPHAMODE_MASK = value and 1 or nil
+                    fx_setting("ALPHAMODE_MASK", value and 1 or nil)
                 end
             }),
             uiproperty.Float({label="cutoff value"}, {
@@ -814,14 +851,47 @@ function MaterialView:set_model(e)
     end
     self.save.disable = is_readonly_resource(e.material)
     self.material.disable = prefab_mgr:get_current_filename() == nil
+    self:enable_blend_setting_ui(e)
+    self:enable_properties_ui(e)
+
     self:update()
     return true
+end
+
+function MaterialView:enable_properties_ui(e)
+    local t = material_template(e)
+    if is_pbr_material(t) then
+        local p_ui = assert(self.material:find_property_by_label "Properties")
+        local unlit_mode<const> = t.fx.settings and t.fx.settings.MATERIAL_UNLIT ~= nil or false
+        
+        local function disable_property(n, disable)
+            local p = p_ui:find_property_by_label(n)
+            p.disable = disable
+        end
+
+        disable_property("normal",            unlit_mode)
+        disable_property("metallic_roughness", unlit_mode)
+        disable_property("occlusion",         unlit_mode)
+
+        local function disable_texture(n)
+            local p = p_ui:find_property_by_label(n)
+            local enable_ui = p.subproperty[1]
+            local text_ui = p.subproperty[2]
+            text_ui.disable = not enable_ui.modifier.getter()
+        end
+        
+        disable_texture "basecolor"
+        disable_texture "normal"
+        disable_texture "metallic_roughness"
+        disable_texture "emissive"
+        disable_texture "occlusion"
+
+    end
 end
 
 function MaterialView:update()
     local e = self.entity
     if e then
-        self:enable_blend_setting_ui(e)
         self.material:update()
     end
 end
