@@ -1,7 +1,28 @@
 __ANT_RUNTIME__ = "0.0.1"
 
+local needcleanup, type, address = ...
+
+local function is_ios()
+	return "ios" == require "platform".OS:lower()
+end
+
+do
+	local fs = require "filesystem.cpp"
+	local appdata = fs.appdata_path()
+	local root = is_ios() and appdata / "ant" / "runtime" or "appdata"
+	local repo = root / ".repo"
+	if needcleanup then
+		fs.remove_all(repo)
+	end
+	fs.create_directories(repo)
+	for i = 0, 255 do
+		fs.create_directory(root / ("%02x"):format(i))
+	end
+	fs.current_path(root)
+end
+
 local config = {
-	rootname = arg[1],
+	rootname = nil,
 	repopath = "./",
 	vfspath = "vfs.lua",
 	socket = nil,
@@ -9,12 +30,6 @@ local config = {
 	address = nil,
 	port = nil,
 }
-
-local type, address = ...
-
-local function is_ios()
-	return "ios" == require "platform".OS:lower()
-end
 
 if type == nil then
 	if is_ios() then

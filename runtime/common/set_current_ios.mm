@@ -49,29 +49,12 @@ static NSString* server_address() {
     return value;
 }
 
-int runtime_setcurrent(lua_State* L) {
-    net_reachability();
-    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSString* docDir = [paths objectAtIndex:0];
-    NSFileManager* fileMgr = [NSFileManager defaultManager];
-    [fileMgr changeCurrentDirectoryPath:docDir];
-    if (need_cleanup()) {
-        [fileMgr removeItemAtPath:@".repo/" error:nil];
-    }
-    [fileMgr createDirectoryAtPath:@".repo/" withIntermediateDirectories:YES attributes:nil error:nil];
-    for (int i = 0; i < 16; ++i) {
-        for (int j = 0; j < 16; ++j) {
-            NSString* dir = [NSString stringWithFormat:@".repo/%x%x", i, j];
-            [fileMgr createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:nil];
-        }
-    }
-    return 0;
-}
-
 int runtime_args(lua_State* L) {
+    net_reachability();
     NSString* type = server_type();
     NSString* address = server_address();
+    lua_pushboolean(L, need_cleanup()):
     lua_pushstring(L, type? [type UTF8String]: "usb");
     lua_pushstring(L, address? [address UTF8String]: "");
-    return 2;
+    return 3;
 }
