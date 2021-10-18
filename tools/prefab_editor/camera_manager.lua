@@ -214,26 +214,34 @@ function camera_mgr.bind_main_camera()
     irq.set_camera("main_queue", camera_mgr.main_camera)
 end
 
+local function get_camera_recorder(cam_eid)
+    local recorder = camera_mgr.get_editor_data(cam_eid).recorder
+    if not recorder.camera_recorder then
+        w:sync("camera_recorder:in", recorder)
+    end
+    return recorder.camera_recorder
+end
+
 function camera_mgr.set_frame(cam_eid, idx)
-    local pos = camera_mgr.get_editor_data(cam_eid).recorder.frames[idx].position
-    local rot = camera_mgr.get_editor_data(cam_eid).recorder.frames[idx].rotation
+    local recorder = get_camera_recorder(cam_eid)
+    local pos = recorder.frames[idx].position
+    local rot = recorder.frames[idx].rotation
     iom.set_position(cam_eid, pos)
     iom.set_rotation(cam_eid, rot)
     camera_mgr.update_frustrum(cam_eid)
 end
 
 function camera_mgr.add_recorder_frame(eid, idx)
-    local recorder = camera_mgr.get_editor_data(eid).recorder
-    if not recorder then return end
-    icamera_recorder.add(recorder, camera_mgr.main_camera, idx)
-    local idx = #world[recorder].frames
-    world[recorder].frames[idx].nearclip = default_near_clip
-    world[recorder].frames[idx].farclip = default_far_clip
+    local recorder = get_camera_recorder(eid)
+    if #recorder.frames == 0 then
+        icamera_recorder.add(camera_mgr.get_editor_data(eid).recorder, eid, 1)
+    end
+    icamera_recorder.add(camera_mgr.get_editor_data(eid).recorder, camera_mgr.main_camera, idx)
+    local idx = #recorder.frames
     camera_mgr.set_frame(eid, idx)
 end
 
 function camera_mgr.delete_recorder_frame(eid, idx)
-    if not camera_mgr.get_editor_data(eid).recorder then return end
     icamera_recorder.remove(camera_mgr.get_editor_data(eid).recorder, idx)
     local frames = camera_mgr.get_recorder_frames(eid)
     if idx > #frames then
@@ -243,20 +251,16 @@ function camera_mgr.delete_recorder_frame(eid, idx)
 end
 
 function camera_mgr.clear_recorder_frame(eid, idx)
-    if not camera_mgr.get_editor_data(eid).recorder then return end
     icamera_recorder.clear(camera_mgr.get_editor_data(eid).recorder)
 end
 
 function camera_mgr.play_recorder(eid)
-    if not camera_mgr.get_editor_data(eid).recorder then return end
     icamera_recorder.play(camera_mgr.get_editor_data(eid).recorder, eid)
 end
 
 function camera_mgr.get_recorder_frames(eid)
-    return {}
-    -- local recorder_eid = camera_mgr.get_editor_data(eid).recorder
-    -- if not recorder_eid then return {} end
-    -- return world[recorder_eid].frames
+    local recorder = get_camera_recorder(eid)
+    return recorder.frames
 end
 
 local function do_remove_camera(cam)

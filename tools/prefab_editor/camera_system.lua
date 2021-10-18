@@ -173,12 +173,10 @@ function camera_sys:handle_camera_event()
 
 	if global_data.mouse_move and camera_mgr.second_camera and not camera_mgr.select_frustum then
 		if select_area then
-			print("hide selected")
 			camera_mgr.highlight_frustum(camera_mgr.second_camera, select_area, false)
 		end
 		select_area = selectBoundary({global_data.mouse_pos_x, global_data.mouse_pos_y})
 		if select_area then
-			print("show selected")
 			camera_mgr.highlight_frustum(camera_mgr.second_camera, select_area, true)
 		end
 	end
