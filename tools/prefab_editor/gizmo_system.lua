@@ -956,40 +956,19 @@ end
 
 local keypress_mb = world:sub{"keyboard"}
 local viewpos_event = world:sub{"ViewportDirty"}
-local mouse_pos_x
-local mouse_pos_y
 local imgui = require "imgui"
-
 local ctrl_state = false
 
 local function on_mouse_move()
-	if gizmo_seleted then return end
-	local viewport = imgui.GetMainViewport()
-	local io = imgui.IO
-	local is_mouse_move = false
-	local wx = io.MousePos[1] - viewport.MainPos[1]
-	local wy = io.MousePos[2] - viewport.MainPos[2]
-	if mouse_pos_x ~= wx then
-		mouse_pos_x = wx
-		is_mouse_move = true
-	end
-	if mouse_pos_y ~= wy then
-		mouse_pos_y = wy
-		is_mouse_move = true
-	end
-	if is_mouse_move and gizmo.mode ~= gizmo_const.SELECT then
-		local vx, vy = mouse_pos_x, mouse_pos_y--utils.mouse_pos_in_view(mouse_pos_x, mouse_pos_y)
-		if vx and vy then
-			--world:pub {"mousemove", "UNKNOWN", vx, vy}
-			if select_light_gizmo(vx, vy) == 0 then
-				if gizmo.mode == gizmo_const.MOVE or gizmo.mode == gizmo_const.SCALE then
-					local axis = select_axis(vx, vy)
-					gizmo:highlight_axis_or_plane(axis)
-				elseif gizmo.mode == gizmo_const.ROTATE then
-					gizmo:hide_rotate_fan()
-					select_rotate_axis(vx, vy)
-				end
-			end
+	if not global_data.mouse_move or gizmo_seleted or gizmo.mode == gizmo_const.SELECT then return end
+	local mx, my = global_data.mouse_pos_x, global_data.mouse_pos_y
+	if select_light_gizmo(mx, my) == 0 then
+		if gizmo.mode == gizmo_const.MOVE or gizmo.mode == gizmo_const.SCALE then
+			local axis = select_axis(mx, my)
+			gizmo:highlight_axis_or_plane(axis)
+		elseif gizmo.mode == gizmo_const.ROTATE then
+			gizmo:hide_rotate_fan()
+			select_rotate_axis(mx, my)
 		end
 	end
 end
@@ -1116,7 +1095,7 @@ function gizmo_sys:handle_event()
 			end
 		else
 			if not gizmo_seleted and not camera_mgr.select_frustum then
-				local vx, vy = utils.mouse_pos_in_view(mouse_pos_x, mouse_pos_y)
+				local vx, vy = utils.mouse_pos_in_view(global_data.mouse_pos_x, global_data.mouse_pos_y)
 				if vx and vy then
 					gizmo:set_target(nil)
 				end

@@ -510,6 +510,18 @@ function m:handle_event()
     end
 end
 
+function m:start_frame()
+    local viewport = imgui.GetMainViewport()
+    local io = imgui.IO
+    local current_mx = io.MousePos[1] - viewport.MainPos[1]
+    local current_my = io.MousePos[2] - viewport.MainPos[2]
+    if global_data.mouse_pos_x ~= current_mx or global_data.mouse_pos_y ~= current_my then
+        global_data.mouse_pos_x = current_mx
+        global_data.mouse_pos_y = current_my
+        global_data.mouse_move = true
+    end
+end
+
 function m:end_frame()
     local dirty = false
     if last_x ~= dock_x then last_x = dock_x dirty = true end
@@ -525,6 +537,7 @@ function m:end_frame()
         irq.set_view_rect(camera_mgr.second_view, secondViewport)
         world:pub {"ViewportDirty", viewport}
     end
+    global_data.mouse_move = false
 end
 
 function m:data_changed()
