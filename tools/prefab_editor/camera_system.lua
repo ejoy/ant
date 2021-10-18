@@ -89,22 +89,21 @@ local mouse_drag = world:sub {"mousedrag"}
 local mouse_move = world:sub {"mousemove"}
 local mouse_down = world:sub {"mousedown"}
 local mouse_up = world:sub {"mouseup"}
-local select_area = 0
+local select_area
 local last_mouse_pos
 local hit_plane
 local dist_to_plane
 local current_dir = math3d.ref()
 local centre_pos = math3d.ref()
 local function selectBoundary(hp)
-	if not hp[1] or not hp[2] then return 0 end
+	if not hp[1] or not hp[2] then return end
 	last_mouse_pos = hp
 	local boundary = camera_mgr.get_editor_data(camera_mgr.second_camera).far_boundary
 	if not boundary then return end
 	for i, v in ipairs(boundary) do
 		local sp1 = utils.world_to_screen(camera_mgr.main_camera, v[1])
 		local sp2 = utils.world_to_screen(camera_mgr.main_camera, v[2])
-		local vp_hp = {hp[1] - global_data.viewport.x, hp[2] - global_data.viewport.y}
-		local dist = utils.point_to_line_distance2D(sp1, sp2, hp)
+		local dist = utils.point_to_line_distance2D(sp1, sp2, {hp[1] - global_data.viewport.x, hp[2] - global_data.viewport.y})
 		if dist < 5.0 then
 			camera_mgr.highlight_frustum(camera_mgr.second_camera, i, true)
 			return i
@@ -136,7 +135,7 @@ function camera_sys:handle_camera_event()
 	
 	update_second_view_camera()
 
-	camera_mgr.select_frustum = (select_area ~= 0)
+	camera_mgr.select_frustum = select_area
 	
 	for _, key, press, state in keypress_mb:unpack() do
 		if not state.CTRL and not state.SHIFT then
@@ -227,7 +226,7 @@ function camera_sys:handle_camera_event()
 				end
 			end
 		end
-		select_area = 0
+		select_area = nil
 	end
 	
 	for _,what,x,y in event_camera_control:unpack() do
@@ -245,7 +244,7 @@ function camera_sys:handle_camera_event()
 	end
 
 	for _, what, x, y, dx, dy in mouse_drag:unpack() do
-		if what == "LEFT" and select_area ~= 0 and hit_plane then
+		if what == "LEFT" and select_area and hit_plane then
 			local curpos = utils.ray_hit_plane(iom.ray(camera_mgr.main_camera, {x, y}), hit_plane)
 			local proj_len = math3d.dot(current_dir, math3d.sub(curpos, centre_pos))
 			local aspect = 1.0
