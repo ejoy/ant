@@ -39,6 +39,8 @@ lm:source_set "source_platform" {
             "platform_ios.mm",
             "osx/font_info.mm",
             "osx/task_info.mm",
+            "ios/setting.mm",
+            "ios/NetReachability.m",
         }
     }
 }

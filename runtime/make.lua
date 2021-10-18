@@ -58,7 +58,6 @@ lm:lib "ant_runtime" {
     ios = {
         includes = "../../clibs/window/ios",
         sources = {
-            "ios/NetReachability.m",
             "ios/main.mm",
             "ios/ios_error.mm",
         },

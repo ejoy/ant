@@ -9,6 +9,7 @@ int ldpi(lua_State* L);
 int lfont(lua_State* L);
 int linfo(lua_State* L);
 #if BX_PLATFORM_IOS
+int lsetting(lua_State* L);
 int lmachine(lua_State* L);
 bool isiOSAppOnMac();
 #endif
@@ -26,6 +27,7 @@ int luaopen_platform(lua_State* L) {
         { "font", lfont },
         { "dpi", ldpi },
 #if BX_PLATFORM_IOS
+        { "setting", lsetting },
         { "machine", lmachine },
 #endif
         { NULL, NULL },

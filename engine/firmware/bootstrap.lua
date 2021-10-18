@@ -1,9 +1,21 @@
 __ANT_RUNTIME__ = "0.0.1"
 
-local needcleanup, type, address = ...
+local platform = require "platform"
 
 local function is_ios()
-	return "ios" == require "platform".OS:lower()
+	return "ios" == platform.OS:lower()
+end
+
+local needcleanup, type, address
+
+if is_ios() then
+	local clean_up_next_time = platform.setting("clean_up_next_time")
+	if clean_up_next_time ~= "0" then
+		platform.setting("clean_up_next_time", "0")
+		needcleanup = true
+	end
+	type = platform.setting "server_type"
+	address = platform.setting "server_address"
 end
 
 do
