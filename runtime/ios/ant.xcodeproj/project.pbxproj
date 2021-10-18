@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1107693A271D4D730011009C /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 11076939271D4D730011009C /* CoreTelephony.framework */; };
+		1107693C271D4DA20011009C /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1107693B271D4DA10011009C /* SystemConfiguration.framework */; };
 		1142733E21D5C89100018DA5 /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 1142733D21D5C89100018DA5 /* Settings.bundle */; };
 		1187AEAF26E0C6CB0037FC55 /* ant_openlibs.c in Sources */ = {isa = PBXBuildFile; fileRef = 1187AEAE26E0C6CB0037FC55 /* ant_openlibs.c */; };
 		1187AEB226E0CB910037FC55 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1187AEB126E0CB910037FC55 /* CoreText.framework */; };
@@ -17,6 +19,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		11076939271D4D730011009C /* CoreTelephony.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreTelephony.framework; path = System/Library/Frameworks/CoreTelephony.framework; sourceTree = SDKROOT; };
+		1107693B271D4DA10011009C /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		1142733D21D5C89100018DA5 /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
 		1187AEAE26E0C6CB0037FC55 /* ant_openlibs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ant_openlibs.c; path = ../../common/ant_openlibs.c; sourceTree = "<group>"; };
 		1187AEB126E0CB910037FC55 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
@@ -41,9 +45,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				1187AEBA26E0CD0B0037FC55 /* Foundation.framework in Frameworks */,
+				1107693C271D4DA20011009C /* SystemConfiguration.framework in Frameworks */,
 				1187AEB826E0CBB80037FC55 /* Metal.framework in Frameworks */,
 				1187AEB626E0CBB10037FC55 /* QuartzCore.framework in Frameworks */,
 				1187AEB426E0CB9D0037FC55 /* UIKit.framework in Frameworks */,
+				1107693A271D4D730011009C /* CoreTelephony.framework in Frameworks */,
 				1187AEB226E0CB910037FC55 /* CoreText.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -54,6 +60,8 @@
 		11A7D5CF261C383700E73271 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1107693B271D4DA10011009C /* SystemConfiguration.framework */,
+				11076939271D4D730011009C /* CoreTelephony.framework */,
 				1187AEB926E0CD0B0037FC55 /* Foundation.framework */,
 				1187AEB726E0CBB80037FC55 /* Metal.framework */,
 				1187AEB526E0CBB10037FC55 /* QuartzCore.framework */,
