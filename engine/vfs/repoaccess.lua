@@ -76,7 +76,7 @@ function access.readmount(repo)
 			elseif name == '@pkg' then
 				assert_syntax(#tokens == 2)
 				local path = lfs.absolute(lfs.path(tokens[2]))
-				for pkgpath in path:list_directory() do
+				for pkgpath in lfs.pairs(path) do
 					if not pkgpath:string():match ".DS_Store" then
 						local pkgname = load_package(pkgpath)
 						addmount('/pkg/'..pkgname, pkgpath)
@@ -141,7 +141,7 @@ function access.list_files(repo, filepath)
 	local rpath = access.realpath(repo, filepath)
 	local files = {}
 	if lfs.exists(rpath) then
-		for name in rpath:list_directory() do
+		for name in lfs.pairs(rpath) do
 			local filename = name:filename():string()
 			if filename:sub(1,1) ~= '.' then	-- ignore .xxx file
 				files[filename] = "l"

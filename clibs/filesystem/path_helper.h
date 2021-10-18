@@ -6,5 +6,6 @@ namespace ant::path_helper {
     fs::path dll_path(void* module_handle);
     fs::path exe_path();
     fs::path dll_path();
+    fs::path appdata_path();
     bool equal(fs::path const& lhs, fs::path const& rhs);
 }

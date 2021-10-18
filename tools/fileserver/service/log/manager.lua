@@ -47,7 +47,7 @@ function S.CREATE(repopath)
         i = i + 1
     end
     fs.create_directories(LOGDIR)
-    for LOGFILE in LOGDIR:list_directory() do
+    for LOGFILE in fs.pairs(LOGDIR) do
         if fs.is_regular_file(LOGFILE) and LOGFILE:equal_extension ".log" then
             local index = getlogindex(LOGFILE:filename():string())
             if index and not repo[index] then

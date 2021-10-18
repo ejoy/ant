@@ -15,6 +15,10 @@ lm:source_set "source_filesystem" {
             "unicode.cpp",
             "windows_category.cpp",
         },
+        links = {
+            "ole32",
+            "shell32",
+        }
     }
 }
 
