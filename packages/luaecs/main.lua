@@ -222,7 +222,7 @@ function world:create_object(inner_proxy)
     local on_ready = inner_proxy.on_ready
     local on_update = inner_proxy.on_update
     local on_message = inner_proxy.on_message
-    if not on_init and not on_update and not on_message then
+    if not (on_init or on_ready or on_update or on_message) then
         return
     end
     local proxy_entity = {
