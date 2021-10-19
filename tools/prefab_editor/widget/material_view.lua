@@ -760,7 +760,11 @@ local function save_material(e, path)
         for k, v in pairs(p) do
             pp[k] = v
             if is_tex(v) then
-                pp[k].texture = serialize.path(v.texture)
+                if fs.path(v.texture):is_relative() then
+                    pp[k].texture = serialize.path(v.texture)
+                else
+                    pp[k].texture = v.texture
+                end
             end
         end
         t.properties = pp
