@@ -1090,7 +1090,7 @@ function gizmo_sys:handle_event()
 		local eid = pick_id
 		if eid then
 			if gizmo.mode ~= gizmo_const.SELECT and not gizmo_seleted then
-				gizmo:set_target(prefab_mgr:find_e(eid))
+				gizmo:set_target(prefab_mgr:find_entity(eid))
 			end
 		else
 			if not gizmo_seleted and not camera_mgr.select_frustum then

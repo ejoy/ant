@@ -901,6 +901,7 @@ end
 function MaterialView:update()
     local e = self.entity
     if e then
+        BaseView.update(self)
         self.material:update()
     end
 end

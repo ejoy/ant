@@ -184,7 +184,7 @@ function m:add_entity(new_entity, parent, temp, no_hierarchy)
     end
 end
 
-function m:find_e(e)
+function m:find_entity(e)
     if not e.scene then
         w:sync("scene:in", e)
     end
@@ -234,11 +234,7 @@ function m:create(what, config)
                     name = config.type .. gen_geometry_id()
                 }
             }
-            local tpl = utils.deep_copy(template)
-            tpl.data.on_ready = function (e)
-                w:sync("scene:in", e)
-            end
-            local new_entity = ecs.create_entity(tpl)
+            local new_entity = ecs.create_entity(utils.deep_copy(template))
 
             --imaterial.set_property(new_entity, "u_color", {1, 1, 1, 1})
             self:add_entity(new_entity, parent_eid, template)
