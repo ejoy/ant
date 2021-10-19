@@ -193,6 +193,9 @@ function CameraView:on_add_frame()
     camera_mgr.add_recorder_frame(self.eid, new_idx)
     self.current_frame = new_idx
     local frames = camera_mgr.get_recorder_frames(self.eid)
+    if not self.duration[1] then
+        self.duration[1] = {frames[1].duration}
+    end
     self.duration[new_idx] = {frames[new_idx].duration}
     self:update()
 end
@@ -228,39 +231,39 @@ function CameraView:show()
         for _, pro in ipairs(self.camera_property) do
             pro:show() 
         end
-        --imgui.cursor.Separator()
-        -- self.addframe:show()
-        -- if #self.frames > 1 then
-        --     imgui.cursor.SameLine()
-        --     self.deleteframe:show()
-        --     imgui.cursor.SameLine()
-        --     self.play:show()
-        -- end
+        imgui.cursor.Separator()
+        self.addframe:show()
+        if #self.frames > 1 then
+            imgui.cursor.SameLine()
+            self.deleteframe:show()
+            imgui.cursor.SameLine()
+            self.play:show()
+        end
         
-        -- if #self.frames > 0 then
-        --     imgui.cursor.Separator()
-        --     if imgui.table.Begin("CameraViewtable", 2, imgui.flags.Table {'Resizable', 'ScrollY'}) then
-        --         imgui.table.SetupColumn("FrameIndex", imgui.flags.TableColumn {'NoSort', 'WidthFixed', 'NoResize'}, -1, 0)
-        --         imgui.table.SetupColumn("Duration", imgui.flags.TableColumn {'NoSort', 'WidthStretch'}, -1, 1)
-        --         imgui.table.HeadersRow()
-        --         for i, v in ipairs(self.frames) do
-        --             --imgui.table.NextRow()
-        --             imgui.table.NextColumn()
-        --             --imgui.table.SetColumnIndex(0)
-        --             if imgui.widget.Selectable(i, self.current_frame == i) then
-        --                 self.current_frame = i
-        --                 camera_mgr.set_frame(self.eid, i)
-        --                 self:update()
-        --             end
-        --             imgui.table.NextColumn()
-        --             --imgui.table.SetColumnIndex(1)
-        --             if imgui.widget.DragFloat("##"..i, self.duration[i]) then
-        --                 self.frames[i].duration = self.duration[i][1]
-        --             end
-        --         end
-        --         imgui.table.End()
-        --     end
-        -- end
+        if #self.frames > 0 then
+            imgui.cursor.Separator()
+            if imgui.table.Begin("CameraViewtable", 2, imgui.flags.Table {'Resizable', 'ScrollY'}) then
+                imgui.table.SetupColumn("FrameIndex", imgui.flags.TableColumn {'NoSort', 'WidthFixed', 'NoResize'}, -1, 0)
+                imgui.table.SetupColumn("Duration", imgui.flags.TableColumn {'NoSort', 'WidthStretch'}, -1, 1)
+                imgui.table.HeadersRow()
+                for i, v in ipairs(self.frames) do
+                    --imgui.table.NextRow()
+                    imgui.table.NextColumn()
+                    --imgui.table.SetColumnIndex(0)
+                    if imgui.widget.Selectable(i, self.current_frame == i) then
+                        self.current_frame = i
+                        camera_mgr.set_frame(self.eid, i)
+                        self:update()
+                    end
+                    imgui.table.NextColumn()
+                    --imgui.table.SetColumnIndex(1)
+                    if imgui.widget.DragFloat("##"..i, self.duration[i]) then
+                        self.frames[i].duration = self.duration[i][1]
+                    end
+                end
+                imgui.table.End()
+            end
+        end
         
         imgui.widget.TreePop()
     end

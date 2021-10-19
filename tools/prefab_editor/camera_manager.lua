@@ -167,15 +167,16 @@ end
 function camera_mgr.create_camera()
     local main_frustum = icamera.get_frustum(camera_mgr.main_camera)
     local info = {
-        eyepos = iom.get_position(camera_mgr.main_camera),
-        viewdir = iom.get_direction(camera_mgr.main_camera),
+        eyepos = {math3d.index(iom.get_position(camera_mgr.main_camera), 1, 2, 3)},
+        viewdir = {math3d.index(iom.get_direction(camera_mgr.main_camera), 1, 2, 3)},
         frustum = {n = default_near_clip, f = default_far_clip, aspect = main_frustum.aspect, fov = main_frustum.fov },
         updir = {0, 1, 0},
         name = gen_camera_name()
     }
 
     local viewmat = math3d.lookto(info.eyepos, info.viewdir, info.updir)
-    local srt = math3d.ref(math3d.matrix(math3d.inverse(viewmat)))
+    --local srt = math3d.ref(math3d.matrix(math3d.inverse(viewmat)))
+    local s, r, t = math3d.srt(math3d.matrix(math3d.inverse(viewmat)))
     local template = {
         policy = {
             "ant.general|name",
@@ -194,7 +195,11 @@ function camera_mgr.create_camera()
             },
             name = info.name or "DEFAULT_CAMERA",
             scene = {
-                srt = srt
+                srt = {
+                    r = {math3d.index(r, 1, 2, 3, 4)},
+                    s = {math3d.index(s, 1, 2, 3)},
+                    t = {math3d.index(t, 1, 2, 3)},
+                }
             },
             tag = {"camera"},
         }
@@ -214,26 +219,34 @@ function camera_mgr.bind_main_camera()
     irq.set_camera("main_queue", camera_mgr.main_camera)
 end
 
+local function get_camera_recorder(cam_eid)
+    local recorder = camera_mgr.get_editor_data(cam_eid).recorder
+    if not recorder.camera_recorder then
+        w:sync("camera_recorder:in", recorder)
+    end
+    return recorder.camera_recorder
+end
+
 function camera_mgr.set_frame(cam_eid, idx)
-    local pos = camera_mgr.get_editor_data(cam_eid).recorder.frames[idx].position
-    local rot = camera_mgr.get_editor_data(cam_eid).recorder.frames[idx].rotation
+    local recorder = get_camera_recorder(cam_eid)
+    local pos = recorder.frames[idx].position
+    local rot = recorder.frames[idx].rotation
     iom.set_position(cam_eid, pos)
     iom.set_rotation(cam_eid, rot)
     camera_mgr.update_frustrum(cam_eid)
 end
 
 function camera_mgr.add_recorder_frame(eid, idx)
-    local recorder = camera_mgr.get_editor_data(eid).recorder
-    if not recorder then return end
-    icamera_recorder.add(recorder, camera_mgr.main_camera, idx)
-    local idx = #world[recorder].frames
-    world[recorder].frames[idx].nearclip = default_near_clip
-    world[recorder].frames[idx].farclip = default_far_clip
+    local recorder = get_camera_recorder(eid)
+    if #recorder.frames == 0 then
+        icamera_recorder.add(camera_mgr.get_editor_data(eid).recorder, eid, 1)
+    end
+    icamera_recorder.add(camera_mgr.get_editor_data(eid).recorder, camera_mgr.main_camera, idx)
+    local idx = #recorder.frames
     camera_mgr.set_frame(eid, idx)
 end
 
 function camera_mgr.delete_recorder_frame(eid, idx)
-    if not camera_mgr.get_editor_data(eid).recorder then return end
     icamera_recorder.remove(camera_mgr.get_editor_data(eid).recorder, idx)
     local frames = camera_mgr.get_recorder_frames(eid)
     if idx > #frames then
@@ -243,20 +256,16 @@ function camera_mgr.delete_recorder_frame(eid, idx)
 end
 
 function camera_mgr.clear_recorder_frame(eid, idx)
-    if not camera_mgr.get_editor_data(eid).recorder then return end
     icamera_recorder.clear(camera_mgr.get_editor_data(eid).recorder)
 end
 
 function camera_mgr.play_recorder(eid)
-    if not camera_mgr.get_editor_data(eid).recorder then return end
     icamera_recorder.play(camera_mgr.get_editor_data(eid).recorder, eid)
 end
 
 function camera_mgr.get_recorder_frames(eid)
-    return {}
-    -- local recorder_eid = camera_mgr.get_editor_data(eid).recorder
-    -- if not recorder_eid then return {} end
-    -- return world[recorder_eid].frames
+    local recorder = get_camera_recorder(eid)
+    return recorder.frames
 end
 
 local function do_remove_camera(cam)
@@ -264,11 +273,14 @@ local function do_remove_camera(cam)
     if cam.recorder then
         w:remove(cam.recorder)
     end
-    w:remove(cam.frustum_eid)
-    w:remove(cam.far_boundary[1].line_eid)
-    w:remove(cam.far_boundary[2].line_eid)
-    w:remove(cam.far_boundary[3].line_eid)
-    w:remove(cam.far_boundary[4].line_eid)
+    local editor_data = camera_mgr.get_editor_data(cam)
+    if editor_data and editor_data.frustum_eid then
+        w:remove(editor_data.frustum_eid)
+        w:remove(editor_data.far_boundary[1].line_eid)
+        w:remove(editor_data.far_boundary[2].line_eid)
+        w:remove(editor_data.far_boundary[3].line_eid)
+        w:remove(editor_data.far_boundary[4].line_eid)
+    end
 end
 
 function camera_mgr.remove_camera(eid)

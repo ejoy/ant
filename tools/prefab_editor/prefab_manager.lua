@@ -184,6 +184,20 @@ function m:add_entity(new_entity, parent, temp, no_hierarchy)
     end
 end
 
+function m:find_entity(e)
+    if not e.scene then
+        w:sync("scene:in", e)
+    end
+    for _, entity in ipairs(self.entities) do
+        if not entity.scene then
+            w:sync("scene:in", entity)
+        end
+        if entity.scene.id == e.scene.id then
+            return entity
+        end
+    end
+end
+
 function m:create(what, config)
     if not self.root then
         self:reset_prefab()

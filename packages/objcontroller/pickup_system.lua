@@ -25,6 +25,7 @@ local function packeid_as_rgba(eid)
             ((eid & 0xff000000) >> 24) / 0xff}    -- rgba
 end
 
+local pickup_refs = {}
 local max_pickupid = 0
 local function genid()
 	max_pickupid = max_pickupid + 1
@@ -279,19 +280,11 @@ local function blit(blit_buffer, render_target)
 	return bgfx.read_texture(rbhandle, blit_buffer.handle)
 end
 
-local function find_pickup_entity(id)
-	for e in w:select "render_object:in" do
-		if e.render_object.pickupid == id then
-			return e
-		end
-	end
-end
-
 local function select_obj(blit_buffer, render_target)
 	local viewrect = render_target.view_rect
 	local selecteid = which_entity_hitted(blit_buffer.handle, viewrect, blit_buffer.elemsize)
 	if selecteid then
-		local e = find_pickup_entity(selecteid)
+		local e = pickup_refs[selecteid]
 		if e then
 			log.info("pick entity id: ", selecteid)
 			world:pub {"pickup", e}
@@ -326,7 +319,7 @@ function pickup_sys:pickup()
 end
 
 function pickup_sys:end_filter()
-	for e in w:select "filter_result:in render_object:in filter_material:out" do
+	for e in w:select "filter_result:in render_object:in filter_material:out reference:in" do
 		local fr = e.filter_result
 		local st = e.render_object.fx.setting.surfacetype
 		local fm = e.filter_material
@@ -336,7 +329,8 @@ function pickup_sys:end_filter()
 				local m = assert(pickup_materials[st])
 				local state = e.render_object.state
 				local id = genid()
-				e.render_object.pickupid = id
+				pickup_refs[id] = e.reference
+				pickup_refs[e.reference] = id
 				fm[fn] = {
 					fx			= m.fx,
 					properties	= get_properties(id, m.fx),
@@ -344,6 +338,9 @@ function pickup_sys:end_filter()
 				}
 			elseif fr[fn] == false then
 				fm[fn] = nil
+				local id = pickup_refs[e.reference]
+				pickup_refs[e.reference] = nil
+				pickup_refs[id] = nil
 			end
 		end
 	end

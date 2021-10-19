@@ -4,7 +4,6 @@
 #include "EffekseerRendererBGFX.Base.h"
 #include "EffekseerRendererBGFX.Renderer.h"
 #include "GraphicsDevice.h"
-#define BGFX_INTERFACE_IMPORT
 #include "../../../clibs/bgfx/bgfx_interface.h"
 
 

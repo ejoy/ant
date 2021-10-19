@@ -105,10 +105,7 @@ local function selectBoundary(hp)
 		local sp2 = utils.world_to_screen(camera_mgr.main_camera, v[2])
 		local dist = utils.point_to_line_distance2D(sp1, sp2, {hp[1] - global_data.viewport.x, hp[2] - global_data.viewport.y})
 		if dist < 5.0 then
-			camera_mgr.highlight_frustum(camera_mgr.second_camera, i, true)
 			return i
-		else
-			camera_mgr.highlight_frustum(camera_mgr.second_camera, i, false)
 		end
 	end
 end
@@ -116,8 +113,6 @@ end
 local ctrl_state = false
 
 function camera_sys:handle_camera_event()
-	--camera_mgr.select_frustum = false
-
 	for _, what, eid, value in event_camera_edit:unpack() do
 		if what == "target" then
 			camera_mgr.set_target(eid, value)
@@ -135,8 +130,6 @@ function camera_sys:handle_camera_event()
 	
 	update_second_view_camera()
 
-	camera_mgr.select_frustum = select_area
-	
 	for _, key, press, state in keypress_mb:unpack() do
 		if not state.CTRL and not state.SHIFT then
 			if key == "W" then
@@ -177,22 +170,25 @@ function camera_sys:handle_camera_event()
 	elseif ZOOM_BACK then
 		camera_zoom(0.2)
 	end
-	
-	for _, what, x, y in mouse_move:unpack() do
-		if what == "UNKNOWN" then
-			if camera_mgr.second_camera then
-				--local x, y = utils.mouse_pos_in_view(x, y)
-				select_area = selectBoundary({x, y})
-			end
+
+	if global_data.mouse_move and camera_mgr.second_camera and not camera_mgr.select_frustum then
+		if select_area then
+			camera_mgr.highlight_frustum(camera_mgr.second_camera, select_area, false)
+		end
+		select_area = selectBoundary({global_data.mouse_pos_x, global_data.mouse_pos_y})
+		if select_area then
+			camera_mgr.highlight_frustum(camera_mgr.second_camera, select_area, true)
 		end
 	end
-	
+
 	for _, what, x, y in mouse_down:unpack() do
 		if what == "LEFT" then
 			--local x, y = utils.mouse_pos_in_view(x, y)
 			if camera_mgr.second_camera then
 				select_area = selectBoundary({x, y})
 				if select_area then
+					camera_mgr.select_frustum = true
+					camera_mgr.highlight_frustum(camera_mgr.second_camera, select_area, true)
 					local boundary = camera_mgr.get_editor_data(camera_mgr.second_camera).far_boundary
 					local lb_point = boundary[1][1]
 					local lt_point = boundary[2][1]
@@ -219,14 +215,12 @@ function camera_sys:handle_camera_event()
 
 	for _, what, x, y in mouse_up:unpack() do
 		if what == "LEFT" and camera_mgr.second_camera then
-			local boundary = camera_mgr.get_editor_data(camera_mgr.second_camera).far_boundary
-			if boundary then
-				for i, v in ipairs(boundary) do
-					camera_mgr.highlight_frustum(camera_mgr.second_camera, i, false)
-				end
+			if select_area then
+				camera_mgr.highlight_frustum(camera_mgr.second_camera, select_area, false)
+				select_area = nil
 			end
+			camera_mgr.select_frustum = false
 		end
-		select_area = nil
 	end
 	
 	for _,what,x,y in event_camera_control:unpack() do

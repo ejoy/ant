@@ -1,5 +1,4 @@
 #include "runtime.h"
-#include "set_current.h"
 #include <string.h>
 
 #if defined(_WIN32)
@@ -46,8 +45,7 @@ static void dostring(lua_State* L, const char* str) {
     lua_pushcfunction(L, msghandler);
     int err = lua_gettop(L);
     if (LUA_OK == luaL_loadbuffer(L, str, strlen(str), "=(BOOTSTRAP)")) {
-        int n = runtime_args(L);
-        if (LUA_OK == lua_pcall(L, n, 0, err)) {
+        if (LUA_OK == lua_pcall(L, 0, 0, err)) {
             return;
         }
     }
@@ -66,12 +64,10 @@ static void createargtable(lua_State *L, int argc, RT_COMMAND argv) {
 static int pmain(lua_State *L) {
     int argc = (int)lua_tointeger(L, 1);
     RT_COMMAND argv = (RT_COMMAND)lua_touserdata(L, 2);
-    lua_CFunction set_current = lua_tocfunction(L, 3);
     luaL_checkversion(L);
     lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
     luaL_openlibs(L);
     createargtable(L, argc, argv);
-    set_current(L);
     dostring(L, "local fw = require 'firmware' ; assert(fw.loadfile 'bootstrap.lua')(...)");
     return 0;
 }
@@ -85,8 +81,7 @@ void runtime_main(int argc, RT_COMMAND argv, void(*errfunc)(const char*)) {
     lua_pushcfunction(L, &pmain);
     lua_pushinteger(L, argc);
     lua_pushlightuserdata(L, argv);
-    lua_pushcfunction(L, runtime_setcurrent);
-    if (LUA_OK != lua_pcall(L, 3, 0, 0)) {
+    if (LUA_OK != lua_pcall(L, 2, 0, 0)) {
         errfunc(lua_tostring(L, -1));
     }
     lua_close(L);

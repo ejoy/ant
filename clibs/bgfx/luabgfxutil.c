@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <math.h>
 
-#define BGFX_INTERFACE_IMPORT
 #include "bgfx_interface.h"
 
 static inline float

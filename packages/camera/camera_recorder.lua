@@ -28,6 +28,7 @@ function cr.start(name)
 end
 
 function cr.add(e, camera_ref, idx)
+    w:sync("camera_recorder:in", e)
     local frames = e.camera_recorder.frames
     idx = idx or #frames+1
 
@@ -44,14 +45,15 @@ function cr.add(e, camera_ref, idx)
     })
 end
 
-function cr.remove(recordereid, idx)
-    local e = world[recordereid]
-    idx = idx or #e.frames
-    table.remove(e.frames, idx)
+function cr.remove(e, idx)
+    w:sync("camera_recorder:in", e)
+    idx = idx or #e.camera_recorder.frames
+    table.remove(e.camera_recorder.frames, idx)
 end
 
-function cr.clear(recordereid)
-    world[recordereid].frames = {}
+function cr.clear(e)
+    w:sync("camera_recorder:in", e)
+    e.camera_recorder.frames = {}
 end
 
 function cr.stop(e)

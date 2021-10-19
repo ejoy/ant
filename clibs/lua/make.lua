@@ -14,6 +14,9 @@ lm:source_set "source_lua_noopenlibs" {
         "!luac.c",
         "!utf8_lua.c",
     },
+    windows = {
+        defines = "LUA_BUILD_AS_DLL",
+    },
     macos = {
         visibility = "default",
         defines = "LUA_USE_MACOSX",

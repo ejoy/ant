@@ -19,6 +19,16 @@ lm:source_set "source_filesystem" {
             "ole32",
             "shell32",
         }
+    },
+    macos = {
+        sources = {
+            "path_helper.mm",
+        }
+    },
+    ios = {
+        sources = {
+            "path_helper.mm",
+        }
     }
 }
 

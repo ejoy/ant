@@ -22,7 +22,7 @@ function vfs.realpath(path)
     local repo = rawvfs.new(repopath)
     local function realpath(path)
         local r = repo:realpath(path)
-        return r
+        return assert(r, "Not exists "..path)
     end
     local function dofile(path)
         local f = assert(io.open(realpath(path)))
