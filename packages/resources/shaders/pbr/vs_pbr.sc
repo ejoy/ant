@@ -10,6 +10,17 @@ $output v_texcoord0, v_posWS, v_normal, v_tangent, v_bitangent
 #include <bgfx_shader.sh>
 #include "common/transform.sh"
 
+uniform vec4 u_camera_info;
+#define u_near u_camera_info.x
+#define u_far u_camera_info.y
+
+vec4 do_cylinder_transform(vec4 posWS)
+{
+	vec4 posVS = mul(u_view, posWS);
+	posVS.y = sqrt(u_far*u_far-posVS.z*posVS.z) - u_far;
+	return mul(u_proj, posVS);
+}
+
 void main()
 {
 #ifdef USING_LIGHTMAP
@@ -19,7 +30,11 @@ void main()
 #endif //USING_LIGHTMAP
 
 	vec4 posWS = mul(wm, vec4(a_position, 1.0));
+#ifdef CYLINDER_TRANSFORM
+	gl_Position = do_cylinder_transform(posWS);
+#else //!CYLINDER_TRANSFORM
 	gl_Position   = mul(u_viewProj, posWS);
+#endif //CYLINDER_TRANSFORM
 #if !defined(USING_LIGHTMAP) &&	defined(ENABLE_SHADOW)
 	v_posWS = posWS;
 	v_posWS.w = mul(u_view, v_posWS).z;

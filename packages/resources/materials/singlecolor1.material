@@ -3,7 +3,13 @@ fx:
   vs: /pkg/ant.resources/shaders/mesh/vs_colormesh.sc
   setting:
     SINGLE_COLOR:1
-    #CYLINDER_TRANSFORM: 1
+    CYLINDER_TRANSFORM:1
 properties:
   u_color: {1, 1, 1, 1}
-state: /pkg/ant.resources/materials/states/default.state
+state:
+  ALPHA_REF: 0
+  CULL: CCW
+  DEPTH_TEST: LESS
+  MSAA: true
+  PT: TRISTRIP
+  WRITE_MASK: RGBAZ

@@ -44,17 +44,18 @@ local enable_ibl = true
 local system_properties = {
 	--lighting
 	u_eyepos				= math3d.ref(mc.ZERO_PT),
-	u_cluster_size			= math3d.ref(mc.ZERO_PT),
-	u_cluster_shading_param	= math3d.ref(mc.ZERO_PT),
-	u_cluster_shading_param2= math3d.ref(mc.ZERO_PT),
-	u_light_count			= math3d.ref(mc.ZERO_PT),
+	u_camera_info			= math3d.ref(mc.ZERO),
+	u_cluster_size			= math3d.ref(mc.ZERO),
+	u_cluster_shading_param	= math3d.ref(mc.ZERO),
+	u_cluster_shading_param2= math3d.ref(mc.ZERO),
+	u_light_count			= math3d.ref(mc.ZERO),
 	b_light_grids			= def_buffer_prop(-1),
 	b_light_index_lists		= def_buffer_prop(-1),
 	b_light_info			= def_buffer_prop(-1),
-	u_time					= math3d.ref(mc.ZERO_PT),
+	u_time					= math3d.ref(mc.ZERO),
 
 	--IBL
-	u_ibl_param				= math3d.ref(mc.ZERO_PT),
+	u_ibl_param				= math3d.ref(mc.ZERO),
 	s_irradiance			= def_tex_prop(5, def_cubetex_handle),
 	s_prefilter				= def_tex_prop(6, def_cubetex_handle),
 	s_LUT					= def_tex_prop(7, def_2dtex_handle),
@@ -143,7 +144,7 @@ end
 
 local function update_lighting_properties(viewrect, camerapos, near, far)
 	system_properties["u_eyepos"].id = camerapos
-
+	system_properties["u_camera_info"].v = {near, far, 0, 0}
 	local nl = ilight.count_visible_light()
 	system_properties["u_light_count"].v = {nl, 0, 0, 0}
 

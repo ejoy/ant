@@ -7,6 +7,8 @@ local ientity = ecs.import.interface "ant.render|entity"
 local ies = ecs.import.interface "ant.scene|ientity_state"
 local init_loader_sys = ecs.system 'init_loader_system'
 local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imesh = ecs.import.interface "ant.asset|imesh"
+
 local mathpkg = import_package"ant.math"
 local mc, mu = mathpkg.constant, mathpkg.util
 
@@ -72,10 +74,43 @@ local icc = ecs.import.interface "ant.test.features|icamera_controller"
 local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
     --point_light_test()
-    ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
+    --ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
+    --ientity.create_grid_entity_simple "grid"
+
+    ecs.create_entity{
+		policy = {
+			"ant.render|simplerender",
+			"ant.general|name",
+		},
+		data = {
+			scene 		= {
+                srt = {
+                    s = {50, 1, 50, 0}
+                }
+            },
+			material 	= "/pkg/ant.resources/materials/singlecolor1.material",
+			state 		= "visible",
+			name 		= "test_shadow_plane",
+			simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
+			on_ready = function (e)
+				imaterial.set_property(e, "u_basecolor_factor", {0.5, 0.5, 0.5, 1})
+			end,
+		}
+    }
+
+
+    local p = ecs.create_instance "/pkg/ant.test.features/assets/entities/cube.prefab"
+    function p:on_ready()
+        local e = self.tag.cube[1]
+        w:sync("render_object:in", e)
+        imaterial.set_property_directly(e.render_object.properties, "u_color", {0.8, 0, 0.8, 1.0})
+    end
+
+    world:create_object(p)
+    --print(p)
     --ecs.create_instance  "/pkg/ant.test.features/assets/entities/test_scene.prefab"
-    ecs.create_instance  "/pkg/ant.test.features/assets/entities/skybox_test.prefab"
-    ecs.create_instance  "/pkg/ant.test.features/assets/glb/cloud.glb|mesh.prefab"
+    --ecs.create_instance  "/pkg/ant.test.features/assets/entities/skybox_test.prefab"
+    --ecs.create_instance  "/pkg/ant.test.features/assets/glb/cloud.glb|mesh.prefab"
     --ecs.create_instance  "/pkg/ant.test.features/assets/glb/shadow.glb|mesh.prefab"
     -- local p = ecs.create_instance  "/pkg/ant.test.features/assets/glb/Fox.glb|mesh.prefab"
     -- foxeid = p[3]
@@ -129,7 +164,7 @@ function init_loader_sys:init_world()
     end
 
     local mq = w:singleton("main_queue", "camera_ref:in")
-    local eyepos = math3d.vector(0, 10, -10)
+    local eyepos = math3d.vector(0, 0, -8)
     local camera_ref = mq.camera_ref
     iom.set_position(camera_ref, eyepos)
     local dir = math3d.normalize(math3d.sub(mc.ZERO_PT, eyepos))
