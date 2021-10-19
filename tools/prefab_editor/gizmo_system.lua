@@ -956,9 +956,8 @@ end
 
 local keypress_mb = world:sub{"keyboard"}
 local viewpos_event = world:sub{"ViewportDirty"}
-local imgui = require "imgui"
 local ctrl_state = false
-
+local prefab_mgr  = ecs.require "prefab_manager"
 local function on_mouse_move()
 	if not global_data.mouse_move or gizmo_seleted or gizmo.mode == gizmo_const.SELECT then return end
 	local mx, my = global_data.mouse_pos_x, global_data.mouse_pos_y
@@ -1091,7 +1090,7 @@ function gizmo_sys:handle_event()
 		local eid = pick_id
 		if eid then
 			if gizmo.mode ~= gizmo_const.SELECT and not gizmo_seleted then
-				gizmo:set_target(eid)
+				gizmo:set_target(prefab_mgr:find_e(eid))
 			end
 		else
 			if not gizmo_seleted and not camera_mgr.select_frustum then

@@ -288,7 +288,7 @@ local function find_pickup_entity(id)
 end
 
 local function getReference(e)
-	w:sync("reference?in")
+	w:sync("reference?in", e)
 	return e.reference
 end
 

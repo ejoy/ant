@@ -184,6 +184,20 @@ function m:add_entity(new_entity, parent, temp, no_hierarchy)
     end
 end
 
+function m:find_e(e)
+    if not e.scene then
+        w:sync("scene:in", e)
+    end
+    for _, entity in ipairs(self.entities) do
+        if not entity.scene then
+            w:sync("scene:in", entity)
+        end
+        if entity.scene.id == e.scene.id then
+            return entity
+        end
+    end
+end
+
 function m:create(what, config)
     if not self.root then
         self:reset_prefab()
@@ -220,7 +234,11 @@ function m:create(what, config)
                     name = config.type .. gen_geometry_id()
                 }
             }
-            local new_entity = ecs.create_entity(utils.deep_copy(template))
+            local tpl = utils.deep_copy(template)
+            tpl.data.on_ready = function (e)
+                w:sync("scene:in", e)
+            end
+            local new_entity = ecs.create_entity(tpl)
 
             --imaterial.set_property(new_entity, "u_color", {1, 1, 1, 1})
             self:add_entity(new_entity, parent_eid, template)
