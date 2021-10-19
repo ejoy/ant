@@ -167,15 +167,16 @@ end
 function camera_mgr.create_camera()
     local main_frustum = icamera.get_frustum(camera_mgr.main_camera)
     local info = {
-        eyepos = iom.get_position(camera_mgr.main_camera),
-        viewdir = iom.get_direction(camera_mgr.main_camera),
+        eyepos = {math3d.index(iom.get_position(camera_mgr.main_camera), 1, 2, 3)},
+        viewdir = {math3d.index(iom.get_direction(camera_mgr.main_camera), 1, 2, 3)},
         frustum = {n = default_near_clip, f = default_far_clip, aspect = main_frustum.aspect, fov = main_frustum.fov },
         updir = {0, 1, 0},
         name = gen_camera_name()
     }
 
     local viewmat = math3d.lookto(info.eyepos, info.viewdir, info.updir)
-    local srt = math3d.ref(math3d.matrix(math3d.inverse(viewmat)))
+    --local srt = math3d.ref(math3d.matrix(math3d.inverse(viewmat)))
+    local s, r, t = math3d.srt(math3d.matrix(math3d.inverse(viewmat)))
     local template = {
         policy = {
             "ant.general|name",
@@ -194,7 +195,11 @@ function camera_mgr.create_camera()
             },
             name = info.name or "DEFAULT_CAMERA",
             scene = {
-                srt = srt
+                srt = {
+                    r = {math3d.index(r, 1, 2, 3, 4)},
+                    s = {math3d.index(s, 1, 2, 3)},
+                    t = {math3d.index(t, 1, 2, 3)},
+                }
             },
             tag = {"camera"},
         }
@@ -268,11 +273,14 @@ local function do_remove_camera(cam)
     if cam.recorder then
         w:remove(cam.recorder)
     end
-    w:remove(cam.frustum_eid)
-    w:remove(cam.far_boundary[1].line_eid)
-    w:remove(cam.far_boundary[2].line_eid)
-    w:remove(cam.far_boundary[3].line_eid)
-    w:remove(cam.far_boundary[4].line_eid)
+    local editor_data = camera_mgr.get_editor_data(cam)
+    if editor_data and editor_data.frustum_eid then
+        w:remove(editor_data.frustum_eid)
+        w:remove(editor_data.far_boundary[1].line_eid)
+        w:remove(editor_data.far_boundary[2].line_eid)
+        w:remove(editor_data.far_boundary[3].line_eid)
+        w:remove(editor_data.far_boundary[4].line_eid)
+    end
 end
 
 function camera_mgr.remove_camera(eid)
