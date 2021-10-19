@@ -34,7 +34,7 @@ static int lloadfile(lua_State* L) {
 		return 2;
 	}
 	auto file = it->second;
-	if (LUA_OK != luaL_loadbuffer(L, file.data, file.size, file.data)) {
+	if (LUA_OK != luaL_loadbuffer(L, file.data, file.size, ("@engine/firmware/"+std::string(filename)).c_str()/*file.data*/)) {
 		lua_pushnil(L);
 		lua_insert(L, -2);
 		return 2;

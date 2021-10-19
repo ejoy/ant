@@ -21,7 +21,7 @@ end
 do
 	local fs = require "filesystem.cpp"
 	local appdata = fs.appdata_path()
-	local root = is_ios() and appdata / "ant" / "runtime" or "appdata"
+	local root = is_ios() and appdata / "ant" / "runtime" or appdata
 	local repo = root / ".repo"
 	if needcleanup then
 		fs.remove_all(repo)
