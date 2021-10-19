@@ -287,6 +287,11 @@ local function find_pickup_entity(id)
 	end
 end
 
+local function getReference(e)
+	w:sync("reference?in")
+	return e.reference
+end
+
 local function select_obj(blit_buffer, render_target)
 	local viewrect = render_target.view_rect
 	local selecteid = which_entity_hitted(blit_buffer.handle, viewrect, blit_buffer.elemsize)
@@ -294,7 +299,10 @@ local function select_obj(blit_buffer, render_target)
 		local e = find_pickup_entity(selecteid)
 		if e then
 			log.info("pick entity id: ", selecteid)
-			world:pub {"pickup", e}
+			e = getReference(e)
+			if e then
+				world:pub {"pickup", e}
+			end
 			return
 		end
 	end
