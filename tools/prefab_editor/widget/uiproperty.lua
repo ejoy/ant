@@ -161,6 +161,13 @@ function EditText:update()
     self.uidata.text = self.modifier.getter()
 end
 
+function EditText:show()
+    imgui.widget.PropertyLabel(self.label)
+    if self.imgui_func("##" .. self.label, self.uidata) then
+        self.modifier.setter(tostring(self.uidata.text))
+    end
+end
+
 local ResourcePath      = class("ResourcePath", EditText)
 local utils             = require "common.utils"
 

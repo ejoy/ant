@@ -669,7 +669,7 @@ function m:save_prefab(path)
         end
         if glb_filename then
             local msg = "cann't save glb file, please save as prefab"
-            logger.error({tag = "Editor", message = msg})
+            log.error({tag = "Editor", message = msg})
             widget_utils.message_box({title = "SaveError", info = msg})
         else
             utils.write_file(filename, stringify(new_template))

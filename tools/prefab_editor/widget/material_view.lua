@@ -47,7 +47,7 @@ local file_cache = {}
 local function read_datalist_file(p)
     local c = file_cache[p]
     if c == nil then
-        c = datalist.parse(fs.open(cr.compile(p)):read "a")
+        c = serialize.parse(p, cr.read_file(p))
         file_cache[p] = c
     end
     return c
@@ -245,23 +245,28 @@ end
 
 local deftex<const> = "/pkg/ant.resources/textures/black.texture"
 local default_properties<const> = {
-    s_basecolor = {
+    basecolor = {
         texture = "/pkg/ant.resources/textures/pbr/default/basecolor.texture",
+        stage = 0,
         factor = {1, 1, 1, 1},
     },
-    s_metallic_roughness = {
+    metallic_roughness = {
         texture = "/pkg/ant.resources/textures/pbr/default/metallic_roughness.texture",
+        stage = 1,
         factor = {1, 0, 0, 0},
     },
-    s_normal = {
+    normal = {
         texture = "/pkg/ant.resources/textures/pbr/default/normal.texture",
+        stage = 2,
     },
-    s_emissive = {
+    emissive = {
         texture = "/pkg/ant.resources/textures/pbr/default/emissive.texture",
+        stage = 3,
         factor = {0, 0, 0, 0},
     },
-    s_occlusion = {
+    occlusion = {
         texture = "/pkg/ant.resources/textures/pbr/default/occlusion.texture",
+        stage = 4,
     }
 }
 
@@ -275,28 +280,40 @@ local function build_properties_ui(mv)
     local properties = {}
     if is_pbr_material(t) then
         local dp = t.properties
-        local function get_texture(n)
-            local p = dp[n] or default_properties[n]
-            return p.texture
-        end
 
-        local function get_factor(n)
-            local p = dp[n] or default_properties[n]
-            return p.factor
-        end
-
-        local function set_property(n, elem, v)
-            if t.properties == nil then
-                t.properties = {}
+        local function get_properties()
+            if dp == nil then
+                dp = {}
+                t.properties = dp
             end
             
-            local p = t.properties[n]
-            if p == nil then
-                p = {}
-                t.properties[n] = p
-            end
+            return dp
+        end
 
-            p[elem] = v
+        local factor_names<const> = {
+            basecolor = "u_basecolor_factor",
+            emissive = "u_basecolor_factor",
+        }
+        local function get_factor(n)
+            local fn = factor_names[n]
+            return dp[fn] or default_properties[n].factor
+        end
+
+        local function set_factor(n, f)
+            local fn = factor_names[n]
+            local p = get_properties()
+            p[fn] = f
+        end
+
+        local function set_texture(n, value)
+            local p = get_properties()
+            local sn = "s_" .. n
+            if p[sn] == nil then
+                p[sn] = {
+                    stage = default_properties[n].stage
+                }
+            end
+            p[sn].texture = value
         end
 
         local function fx_setting(field, value)
@@ -349,7 +366,7 @@ local function build_properties_ui(mv)
                         return property_texture(field)
                     end,
                     setter = function (value)
-                        set_property(field, "texture", value)
+                        set_texture(field, value)
                     end
                 })
             }
@@ -365,10 +382,10 @@ local function build_properties_ui(mv)
             add_textre_ui("s_basecolor", "basecolor", 
                 uiproperty.Float({label="Factor"}, {
                     getter = function ()
-                        return get_factor "s_basecolor"
+                        return get_factor "basecolor"
                     end,
                     setter = function (value)
-                        set_property("s_basecolor", "factor", value)
+                        set_factor("basecolor", value)
                     end
                 })
             )
@@ -419,10 +436,10 @@ local function build_properties_ui(mv)
             add_textre_ui("s_emissive", "emissive",
             uiproperty.Float({label="Factor"}, {
                 getter = function ()
-                    return get_factor "s_emissive"
+                    return get_factor "emissive"
                 end,
                 setter = function (value)
-                    set_property("s_emissive", "factor", value)
+                    set_factor("emissive", value)
                 end
             })
         ))
