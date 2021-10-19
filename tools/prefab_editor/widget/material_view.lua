@@ -47,7 +47,7 @@ local file_cache = {}
 local function read_datalist_file(p)
     local c = file_cache[p]
     if c == nil then
-        c = datalist.parse(fs.open(fs.path(p)):read "a")
+        c = datalist.parse(fs.open(cr.compile(p)):read "a")
         file_cache[p] = c
     end
     return c
