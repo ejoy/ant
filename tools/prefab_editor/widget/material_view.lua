@@ -47,7 +47,7 @@ local file_cache = {}
 local function read_datalist_file(p)
     local c = file_cache[p]
     if c == nil then
-        c = datalist.parse(fs.open(fs.path(p)):read "a")
+        c = datalist.parse(fs.open(cr.compile(p)):read "a")
         file_cache[p] = c
     end
     return c
@@ -821,7 +821,7 @@ local default_files<const> = {
 }
 
 local function is_readonly_resource(p)
-    return p:match "mesh.prefab|" or default_files[p]
+    return p:match ".glb|" or default_files[p]
 end
 
 function MaterialView:enable_blend_setting_ui(e)
