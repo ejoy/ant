@@ -1,13 +1,24 @@
 local lm = require "luamake"
 local fs = require "bee.filesystem"
 
-local Backlist = {
-    filedialog = true,
-    filewatch = true,
-    imgui = true,
-    subprocess = true,
-    bake = true,
-}
+local supportVfs = false
+
+local Backlist = {}
+
+if supportVfs then
+    Backlist = {
+        filedialog = true,
+        filewatch = true,
+        imgui = true,
+        subprocess = true,
+        bake = true,
+    }
+else
+    Backlist = {
+        firmware = true,
+        bake = true,
+    }
+end
 
 local RuntimeModules = {}
 
@@ -21,15 +32,22 @@ for path in fs.pairs(fs.path(lm.workdir) / "../clibs") do
     end
 end
 
+lm:copy "copy_mainlua" {
+    input = "common/main.lua",
+    output = "../"..lm.bindir,
+}
+
 lm:source_set "ant_common" {
     includes = {
         "../clibs/lua",
         "../3rd/bgfx/include",
         "../3rd/bx/include",
     },
+    defines = supportVfs and "ANT_ENABLE_VFS",
     sources = {
         "common/modules.cpp",
         "common/runtime.cpp",
+        "common/progdir.cpp",
     }
 }
 
@@ -72,6 +90,8 @@ lm:source_set "ant_links" {
             "wbemuuid",
             "winmm",
             "ws2_32",
+            "imm32",
+            "advapi32",
         }
     },
     macos = {
@@ -104,13 +124,14 @@ lm:source_set "ant_openlibs" {
     sources = "common/ant_openlibs.c",
 }
 
-lm:exe "ant" {
+lm:exe "lua" {
     deps = {
         "bgfx-lib",
         "ant_runtime",
         "ant_openlibs",
         "ant_links",
+        "copy_mainlua"
     }
 }
 
-lm:default "ant"
+lm:default "lua"

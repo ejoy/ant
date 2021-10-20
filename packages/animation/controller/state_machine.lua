@@ -1,5 +1,6 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 local timer = ecs.import.interface "ant.timer|itimer"
 local fs 	= require "filesystem"
 local lfs	= require "filesystem.local"
@@ -154,10 +155,6 @@ function iani.set_state(e, name)
 	end
 end
 
-function get_play_info(eid, name)
-
-end
-
 local function do_play(e, anim, real_clips, anim_state)
 	if not anim_state.init then
 		local start_ratio = 0.0
@@ -178,22 +175,18 @@ local function do_play(e, anim, real_clips, anim_state)
 		anim_state.play_state = { ratio = start_ratio, previous_ratio = start_ratio, speed = realspeed, play = true, loop = anim_state.loop, manual_update = anim_state.manual}
 	end
 	e._animation._current = anim_state
-	anim_state.eid[#anim_state.eid + 1] = e.eid
+	anim_state.eid[#anim_state.eid + 1] = e
 end
 
-function iani.play(eid, anim_state)
-	for e in world.w:select "eid:in animation:in _animation:in anim_clips:in" do
-		if e.eid == eid then
-			local anim = e.animation[anim_state.name]
-			if not anim then
-				print("animation:", anim_state.name, "not exist")
-				return false
-			end
-			do_play(e, anim, nil, anim_state)
-			return true
-		end
+function iani.play(e, anim_state)
+	w:sync("animation:in _animation:in anim_clips:in", e)
+	local anim = e.animation[anim_state.name]
+	if not anim then
+		print("animation:", anim_state.name, "not exist")
+		return false
 	end
-	return false
+	do_play(e, anim, nil, anim_state)
+	return true
 end
 
 local function find_clip_or_group(clips, name, group)
@@ -210,80 +203,60 @@ local function find_clip_or_group(clips, name, group)
 	end
 end
 
-function iani.play_clip(eid, anim_state)
-	for e in world.w:select "eid:in animation:in _animation:out anim_clips:in" do
-		if e.eid == eid then
-			local real_clips
-			local clip = find_clip_or_group(e.anim_clips, anim_state.name)
-			if clip then
-				real_clips = {{e.animation[clip.anim_name], clip }}
-			end
-			if not clip or not real_clips then
-				print("clip:", anim_state.name, "not exist")
-				return false
-			end
-			do_play(e, real_clips[1][1], real_clips, anim_state);
-		end
+function iani.play_clip(e, anim_state)
+	w:sync("animation:in _animation:out anim_clips:in", e)
+	local real_clips
+	local clip = find_clip_or_group(e.anim_clips, anim_state.name)
+	if clip then
+		real_clips = {{e.animation[clip.anim_name], clip }}
 	end
+	if not clip or not real_clips then
+		print("clip:", anim_state.name, "not exist")
+		return false
+	end
+	do_play(e, real_clips[1][1], real_clips, anim_state);
 end
 
-function iani.play_group(eid, anim_state)
-	for e in world.w:select "eid:in animation:in _animation:in anim_clips:in" do
-		if e.eid == eid then
-			local real_clips
-			local group = find_clip_or_group(e.anim_clips, anim_state.name, true)
-			if group then
-				real_clips = {}
-				for _, clip_index in ipairs(group.subclips) do
-					local anim_name = e.anim_clips[clip_index].anim_name
-					real_clips[#real_clips + 1] = {e.animation[anim_name], e.anim_clips[clip_index]}
-				end
-			end
-			if not group or #real_clips < 1 then
-				print("group:", anim_state.name, "not exist")
-				return false
-			end
-			do_play(e, real_clips[1][1], real_clips, anim_state);
+function iani.play_group(e, anim_state)
+	w:sync("animation:in _animation:in anim_clips:in", e)
+	local real_clips
+	local group = find_clip_or_group(e.anim_clips, anim_state.name, true)
+	if group then
+		real_clips = {}
+		for _, clip_index in ipairs(group.subclips) do
+			local anim_name = e.anim_clips[clip_index].anim_name
+			real_clips[#real_clips + 1] = {e.animation[anim_name], e.anim_clips[clip_index]}
 		end
 	end
+	if not group or #real_clips < 1 then
+		print("group:", anim_state.name, "not exist")
+		return false
+	end
+	do_play(e, real_clips[1][1], real_clips, anim_state);
 end
 
-function iani.get_duration(eid)
-	for e in world.w:select "eid:in" do
-		if e.eid == eid then
-			world.w:sync("_animation:in", e)
-			return e._animation._current.animation._handle:duration()
-		end
-	end
+function iani.get_duration(e)
+	w:sync("_animation:in", e)
+	return e._animation._current.animation._handle:duration()
 end
 
-function iani.get_clip_duration(eid, name)
-	for e in world.w:select "eid:in" do
-		if e.eid == eid then
-			world.w:sync("anim_clips:in", e)
-			local clip = find_clip_or_group(e.anim_clips, name)
-			if not clip then return 0 end
-			return clip.range[2] - clip.range[1]
-		end
-	end
-	return 0
+function iani.get_clip_duration(e, name)
+	w:sync("anim_clips:in", e)
+	local clip = find_clip_or_group(e.anim_clips, name)
+	if not clip then return 0 end
+	return clip.range[2] - clip.range[1]
 end
 
-function iani.get_group_duration(eid, name)
-	for e in world.w:select "eid:in" do
-		if e.eid == eid then
-			world.w:sync("anim_clips:in", e)
-			local group = find_clip_or_group(e.anim_clips, name, true)
-			if not group then return end
-			local d = 0.0
-			for _, index in ipairs(group.subclips) do
-				local range = e.anim_clips[index].range
-				d = d + range[2] - range[1]
-			end
-			return d
-		end		
+function iani.get_group_duration(e, name)
+	w:sync("anim_clips:in", e)
+	local group = find_clip_or_group(e.anim_clips, name, true)
+	if not group then return end
+	local d = 0.0
+	for _, index in ipairs(group.subclips) do
+		local range = e.anim_clips[index].range
+		d = d + range[2] - range[1]
 	end
-	return 0
+	return d
 end
 
 function iani.step(task, s_delta, absolute)
@@ -334,57 +307,53 @@ function iani.step(task, s_delta, absolute)
 	end
 end
 
-local function get_e(eid)
-	for e in world.w:select "eid:in" do
-		if e.eid == eid then
-			world.w:sync("_animation:in", e)
-			return e
-		end
+local function get_e(e)
+	if not e._animation then
+		w:sync("_animation:in", e)
 	end
+	return e
 end
 
-function iani.set_time(eid, second)
-	local e = get_e(eid)
-	if e then
-		iani.step(e._animation._current, second, true)
-		-- effect
-		local current_time = iani.get_time(eid);
-		local all_events = e._animation._current.event_state.keyframe_events
-		if all_events then
-			for _, events in ipairs(all_events) do
-				for _, ev in ipairs(events.event_list) do
-					if ev.event_type == "Effect" then
-						if ev.effect then
-							world:prefab_event(ev.effect, "time", "effect", current_time - events.time, false)
-						end
-					end
-				end
-			end
-		end
-	end
-end
-
-function iani.stop_effect(eid)
-	local e = get_e(eid)
-	if e then
-		local all_events = e._animation._current.event_state.keyframe_events
-		if all_events then
-			for _, events in ipairs(all_events) do
-				for _, ev in ipairs(events.event_list) do
-					if ev.event_type == "Effect" then
-						if ev.effect then
-							world:prefab_event(ev.effect, "stop", "effect")
-						end
-					end
-				end
-			end
-		end
-	end
-end
-
-function iani.set_clip_time(eid, second)
-	local e = get_e(eid)
+function iani.set_time(e, second)
 	if not e then return end
+	local e = get_e(e)
+	iani.step(e._animation._current, second, true)
+	-- effect
+	local current_time = iani.get_time(e);
+	local all_events = e._animation._current.event_state.keyframe_events
+	if all_events then
+		for _, events in ipairs(all_events) do
+			for _, ev in ipairs(events.event_list) do
+				if ev.event_type == "Effect" then
+					if ev.effect then
+						world:prefab_event(ev.effect, "time", "effect", current_time - events.time, false)
+					end
+				end
+			end
+		end
+	end
+end
+
+function iani.stop_effect(e)
+	if not e then return end
+	local e = get_e(e)
+	local all_events = e._animation._current.event_state.keyframe_events
+	if all_events then
+		for _, events in ipairs(all_events) do
+			for _, ev in ipairs(events.event_list) do
+				if ev.event_type == "Effect" then
+					if ev.effect then
+						world:prefab_event(ev.effect, "stop", "effect")
+					end
+				end
+			end
+		end
+	end
+end
+
+function iani.set_clip_time(e, second)
+	if not e then return end
+	local e = get_e(e)
 	local range = e._animation._current.clip_state.current.clips[1][2].range
 	local duration = range[2] - range[1]
 	if second > duration then
@@ -398,9 +367,9 @@ function iani.set_clip_time(eid, second)
 	task.play_state.ratio = (second + clips[index][2].range[1]) / task.animation._handle:duration()
 end
 
-function iani.set_group_time(eid, second)
-	local e = get_e(eid)
+function iani.set_group_time(e, second)
 	if not e then return end
+	local e = get_e(e)
 	local task = e._animation._current
 	local clips = task.clip_state.current.clips
 	local duration = 0.0
@@ -441,117 +410,90 @@ function iani.set_group_time(eid, second)
 	end
 end
 
-function iani.get_time(eid)
-	local e = get_e(eid)
-	if e then
-		return e._animation._current.play_state.ratio * e._animation._current.animation._handle:duration()
-	end
-	return 0
+function iani.get_time(e)
+	if not e then return 0 end
+	local e = get_e(e)
+	return e._animation._current.play_state.ratio * e._animation._current.animation._handle:duration()
 end
 
-function iani.set_speed(eid, speed)
-	local e = get_e(eid)
-	if e then
-		e._animation._current.play_state.speed = speed
-	end
+function iani.set_speed(e, speed)
+	if not e then return end
+	local e = get_e(e)
+	e._animation._current.play_state.speed = speed
 end
 
-function iani.set_loop(eid, loop)
-	local e = get_e(eid)
-	if e then
-		e._animation._current.play_state.loop = loop
-	end
+function iani.set_loop(e, loop)
+	if not e then return end
+	local e = get_e(e)
+	e._animation._current.play_state.loop = loop
 end
 
-function iani.pause(eid, pause)
-	local e = get_e(eid)
-	if e then
-		e._animation._current.play_state.play = not pause
-	end
+function iani.pause(e, pause)
+	if not e then return end
+	local e = get_e(e)
+	e._animation._current.play_state.play = not pause
 end
 
-function iani.is_playing(eid)
-	local e = get_e(eid)
-	if e then
-		return e._animation._current.play_state.play
-	end
+function iani.is_playing(e)
+	if not e then return end
+	local e = get_e(e)
+	return e._animation._current.play_state.play
 end
 
-local function do_set_event(eid, anim, events)
-	for e in world.w:select "eid:in animation:in _animation:in keyframe_events:in" do
-		if e.eid == eid then
-			e.keyframe_events[anim] = events
-			if e._animation._current.animation == e.animation[anim] then
-				e._animation._current.event_state.keyframe_events = e.keyframe_events[anim]
-			end
-		end
-	end
-end
-
-function iani.get_collider(eid, anim, time)
-	for e in world.w:select "eid:in" do
-		if e.eid == eid then
-			world.w:sync("keyframe_events:in", e)
-			local events = e.keyframe_events[anim]
-			if not events then return end
-			local colliders
-			for _, event in ipairs(events.event) do
-				if math.abs(time - event.time) < 0.0001 then
-					colliders = {}
-					for _, ev in ipairs(event.event_list) do
-						if ev.event_type == "Collision" then
-							colliders[#colliders + 1] = ev.collision
-						end
-					end
-					break
+function iani.get_collider(e, anim, time)
+	w:sync("keyframe_events:in", e)
+	local events = e.keyframe_events[anim]
+	if not events then return end
+	local colliders
+	for _, event in ipairs(events.event) do
+		if math.abs(time - event.time) < 0.0001 then
+			colliders = {}
+			for _, ev in ipairs(event.event_list) do
+				if ev.event_type == "Collision" then
+					colliders[#colliders + 1] = ev.collision
 				end
 			end
-			return colliders
+			break
 		end
 	end
+	return colliders
 end
 
-local function do_set_clips(eid, clips)
-	for e in world.w:select "eid:in" do
-		if e.eid == eid and world[eid].animation then
-			world.w:sync("anim_clips:in", e)
-			for _, clip in ipairs(e.anim_clips) do 
-				if clip.key_event then
-					for _, ke in ipairs(clip.key_event) do
-						if ke.event_list then
-							for _, ev in ipairs(ke.event_list) do
-								if ev.event_type == "Effect" and ev.effect then
-									world:prefab_event(ev.effect, "remove", "*")
-									ev.effect = nil
-								end
-							end
+local function do_set_clips(e, clips)
+	world.w:sync("anim_clips:in", e)
+	for _, clip in ipairs(e.anim_clips) do 
+		if clip.key_event then
+			for _, ke in ipairs(clip.key_event) do
+				if ke.event_list then
+					for _, ev in ipairs(ke.event_list) do
+						if ev.event_type == "Effect" and ev.effect then
+							world:prefab_event(ev.effect, "remove", "*")
+							ev.effect = nil
 						end
 					end
 				end
 			end
-			e.anim_clips = clips
-			world.w:sync("anim_clips:out", e)
-			return
 		end
 	end
+	e.anim_clips = clips
+	world.w:sync("anim_clips:out", e)
 end
 
-function iani.set_clips(eid, clips)
+function iani.set_clips(e, clips)
 	if type(clips) == "table" then
-		do_set_clips(eid, clips)
+		do_set_clips(e, clips)
 	elseif type(clips) == "string" then
 		local path = fs.path(clips):localpath()
 		local f = assert(lfs.open(path))
 		local data = f:read "a"
 		f:close()
-		do_set_clips(eid, datalist.parse(data))
+		do_set_clips(e, datalist.parse(data))
 	end
 end
 
-function iani.get_clips(eid)
-	for e in world.w:select "eid:in anim_clips:in" do
-		if e.eid == eid then return e.anim_clips end
-	end
+function iani.get_clips(e)
+	w:sync("anim_clips:in", e)
+	return e.anim_clips
 end
 
 function iani.set_value(e, name, key, value)

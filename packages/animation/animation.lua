@@ -95,7 +95,7 @@ local function do_animation(poseresult, e, delta_time)
 			-- TODO : refactor animation birth system
 			if task.init then
 				-- many eid shared same state, step state only once.
-				if task.eid and task.eid[1] == e.eid then 
+				if task.eid and task.eid[1].scene.id == e.scene.id then 
 					iani.step(task, delta_time * 0.001)
 				end
 			else
@@ -109,7 +109,7 @@ end
 
 function ani_sys:sample_animation_pose()
 	local delta_time = timer.delta()
-	for e in w:select "eid:in skeleton:in pose_result:in _animation:in" do
+	for e in w:select "scene:in skeleton:in pose_result:in _animation:in" do
 		local ske = e.skeleton
 		local pr = e.pose_result
 		pr:setup(ske._handle)
@@ -159,22 +159,22 @@ function ani_sys:entity_ready()
     for _, p, p0, p1 in event_set_clips:unpack() do
 		world:prefab_event(p, "set_clips", p0, p1)
 	end
-	for _, what, eid, p0, p1, p2 in event_animation:unpack() do
+	for _, what, e, p0, p1, p2 in event_animation:unpack() do
 		if what == "play_group" then
-			iani.play_group(eid, p0, p1, p2)
+			iani.play_group(e, p0, p1, p2)
 		elseif what == "play_clip" then
-			iani.play_clip(eid, p0, p1, p2)
+			iani.play_clip(e, p0, p1, p2)
 		elseif what == "step" then
-			for e in world.w:select "eid:in" do
-				if e.eid == eid then
+			-- for e in world.w:select "eid:in" do
+			-- 	if e.eid == eid then
 					world.w:sync("_animation:in", e)
-					if e._animation._current.eid and e._animation._current.eid[1] == eid then
+					--if e._animation._current.eid and e._animation._current.eid[1] == eid then
 						iani.step(e._animation._current, p0, p1)
-					end
-				end
-			end
+					--end
+			-- 	end
+			-- end
 		elseif what == "set_time" then
-			iani.set_time(eid, p0)
+			iani.set_time(e, p0)
 		end
 	end
 end

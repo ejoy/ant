@@ -1,6 +1,6 @@
 local lfs  = require "filesystem.local"
 local fs   = require "filesystem"
-local sp   = require "subprocess"
+local sp   = require "bee.subprocess"
 local task = require "task"
 
 local function import_fbx(input, output)

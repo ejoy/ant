@@ -30,30 +30,6 @@ function m.show()
             imgui.widget.EndMenu()
         end
         if imgui.widget.BeginMenu("Edit") then
-            if imgui.widget.BeginMenu("Create") then
-                if imgui.widget.MenuItem("EmptyNode") then
-                    world:pub {"Create", "empty"}
-                end
-                if imgui.widget.MenuItem("Cube") then
-                    world:pub {"Create", "cube"}
-                end
-                if imgui.widget.MenuItem("Cone") then
-                    world:pub {"Create", "cone"}
-                end
-                if imgui.widget.MenuItem("Cylinder") then
-                    world:pub {"Create", "cylinder"}
-                end
-                if imgui.widget.MenuItem("Sphere") then
-                    world:pub {"Create", "sphere"}
-                end
-                if imgui.widget.MenuItem("Torus") then
-                    world:pub {"Create", "torus"}
-                end
-                if imgui.widget.MenuItem("Camera") then
-                    world:pub {"Create", "camera"}
-                end
-                imgui.widget.EndMenu()
-            end
             imgui.cursor.Separator()
             if imgui.widget.MenuItem("Undo", "CTRL+Z") then
             end

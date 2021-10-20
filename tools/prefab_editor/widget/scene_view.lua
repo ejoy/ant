@@ -27,39 +27,38 @@ local function is_editable(eid)
     return true
 end
 
-local menu_name = "entity context menu"
 local function node_context_menu(eid)
     if gizmo.target_eid ~= eid then return end
     if imgui.windows.BeginPopupContextItem(tostring(eid)) then
         local current_lock = hierarchy:is_locked(eid)
         if imgui.widget.Selectable("MoveTop", false) then
-            world:pub { "EntityState", "movetop", eid }
+            world:pub { "HierarchyEvent", "movetop", eid }
         end
         if imgui.widget.Selectable("MoveUp", false) then
-            world:pub { "EntityState", "moveup", eid }
+            world:pub { "HierarchyEvent", "moveup", eid }
         end
         imgui.cursor.Separator()
         if imgui.widget.Selectable(current_lock and "Unlock" or "lock", false) then
-            world:pub { "EntityState", "lock", eid, not current_lock }
+            world:pub { "HierarchyEvent", "lock", eid, not current_lock }
         end
         local current_visible = hierarchy:is_visible(eid)
         if imgui.widget.Selectable(current_visible and "Hide" or "Show", false) then
-            world:pub { "EntityState", "visible", eid, not current_visible }
+            world:pub { "HierarchyEvent", "visible", eid, not current_visible }
         end
         imgui.cursor.Separator()
         if imgui.widget.Selectable("Delete", false) then
-            world:pub { "EntityState", "delete", eid }
+            world:pub { "HierarchyEvent", "delete", eid }
         end
         imgui.cursor.Separator()
         if imgui.widget.Selectable("MoveDown", false) then
-            world:pub { "EntityState", "movedown", eid }
+            world:pub { "HierarchyEvent", "movedown", eid }
         end
         if imgui.widget.Selectable("MoveBottom", false) then
-            world:pub { "EntityState", "movebottom", eid }
+            world:pub { "HierarchyEvent", "movebottom", eid }
         end
         imgui.cursor.Separator()
         if imgui.widget.Selectable("NoParent", false) then
-            world:pub { "EntityEvent", "parent", eid }
+            world:pub { "HierarchyEvent", "parent", eid }
         end
         imgui.windows.EndPopup()
     end
@@ -138,7 +137,7 @@ local function show_scene_node(node)
         local current_lock = hierarchy:is_locked(eid)
         local icon = current_lock and icons.ICON_LOCK or icons.ICON_UNLOCK
         if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
-            world:pub { "EntityState", "lock", eid, not current_lock }
+            world:pub { "HierarchyEvent", "lock", eid, not current_lock }
         end
         imgui.util.PopID()
         imgui.table.NextColumn();
@@ -146,7 +145,7 @@ local function show_scene_node(node)
         local current_visible = hierarchy:is_visible(eid)
         icon = current_visible and icons.ICON_VISIBLE or icons.ICON_UNVISIBLE
         if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
-            world:pub { "EntityState", "visible", eid, not current_visible }
+            world:pub { "HierarchyEvent", "visible", eid, not current_visible }
         end
         imgui.util.PopID()
     end

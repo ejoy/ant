@@ -27,7 +27,7 @@ local global_data = require "common.global_data"
 
 local m = {}
 local edit_anims = {}
-local current_eid
+local current_e
 local imgui_message
 local current_anim
 local sample_ratio = 50.0
@@ -76,13 +76,9 @@ local function find_index(t, item)
     end
 end
 
-local function get_runtime_animations(eid)
-    for e in world.w:select "eid:in animation:in" do
-        if e.eid == eid then
-            --world.w:sync("animation:in", e)
-            return e.animation
-        end
-    end
+local function get_runtime_animations(e)
+    w:sync("animation:in", e)
+    return e.animation
 end
 
 local function get_anim_group_eid(eid, name)
@@ -129,12 +125,12 @@ local function anim_group_play_clip(eid, anim_state)
         iani.play_clip(anim_eid, anim_state)
     end
 end
-local function anim_group_play(eid, anim_state)
-    local group_eid = get_anim_group_eid(eid, current_anim.name)
-    if not group_eid then return end
-    for _, anim_eid in ipairs(group_eid) do
-        iom.set_position(world[world[anim_eid].parent].parent, {0.0,0.0,0.0})
-        iani.play(anim_eid, anim_state)
+local function anim_group_play(e, anim_state)
+    local group_e = get_anim_group_eid(e, current_anim.name)
+    if not group_e then return end
+    for _, anim_e in ipairs(group_e) do
+        iom.set_position(hierarchy:get_node(hierarchy:get_node(anim_e).parent).parent, {0.0,0.0,0.0})
+        iani.play(anim_e, anim_state)
     end
 end
 
@@ -175,7 +171,7 @@ end
 local widget_utils  = require "widget.utils"
 
 local function set_current_anim(anim_name)
-    if not edit_anims[current_eid][anim_name] then
+    if not edit_anims[current_e][anim_name] then
         local msg = anim_name .. " not exist."
         logger.error({tag = "Editor", message = msg})
         widget_utils.message_box({title = "AnimationError", info = msg})
@@ -189,7 +185,7 @@ local function set_current_anim(anim_name)
             end
         end
     end
-    current_anim = edit_anims[current_eid][anim_name]
+    current_anim = edit_anims[current_e][anim_name]
     if current_anim.collider then
         for _, col in ipairs(current_anim.collider) do
             if col.collider then
@@ -203,11 +199,11 @@ local function set_current_anim(anim_name)
     current_collider = nil
     current_event = nil
     
-    anim_group_play(current_eid, {name = anim_name, loop = ui_loop[1], manual = false})
-    anim_group_set_time(current_eid, 0)
-    anim_group_pause(current_eid, not anim_state.is_playing)
-    -- if not iani.is_playing(current_eid) then
-    --     anim_group_pause(current_eid, false)
+    anim_group_play(current_e, {name = anim_name, loop = ui_loop[1], manual = false})
+    anim_group_set_time(current_e, 0)
+    anim_group_pause(current_e, not anim_state.is_playing)
+    -- if not iani.is_playing(current_e) then
+    --     anim_group_pause(current_e, false)
     -- end
     return true
 end
@@ -304,9 +300,9 @@ local function from_runtime_clip(runtime_clip)
 end
 
 local function get_runtime_clips()
-    if not current_eid then return end
+    if not current_e then return end
     for e in world.w:select "eid:in" do
-		if e.eid == current_eid then
+		if e.eid == current_e then
             world.w:sync("anim_clips:in", e)
             return e.anim_clips
         end
@@ -389,8 +385,8 @@ local function to_runtime_clip()
         runtime_clips[#runtime_clips + 1] = to_runtime_group(all_clips, group)
     end
     if #runtime_clips < 1  then return end
-    if current_eid then
-        anim_group_set_clips(current_eid, runtime_clips)
+    if current_e then
+        anim_group_set_clips(current_e, runtime_clips)
     end
 end
 
@@ -829,7 +825,7 @@ end
 local function set_current_clip(clip)
     if current_clip == clip then return end
     
-    anim_group_stop_effect(current_eid)
+    anim_group_stop_effect(current_e)
 
     if clip then
         if not set_current_anim(clip.anim_name) then
@@ -873,8 +869,8 @@ local function show_clips()
         if imgui.widget.Selectable(cs.name, current_clip and (current_clip.name == cs.name), 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
             set_current_clip(cs)
             if imgui.util.IsMouseDoubleClicked(0) then
-                anim_group_play_clip(current_eid, {name = cs.name, loop = ui_loop[1], manual = false})
-                anim_group_set_loop(current_eid, ui_loop[1])
+                anim_group_play_clip(current_e, {name = cs.name, loop = ui_loop[1], manual = false})
+                anim_group_set_loop(current_e, ui_loop[1])
             end
         end
         if current_clip and (current_clip.name == cs.name) then
@@ -929,8 +925,8 @@ local function show_groups()
             gp.name_ui.text = gp.name
             current_group = gp
             if imgui.util.IsMouseDoubleClicked(0) then
-                anim_group_play_group(current_eid, {name = gp.name, loop = ui_loop[1], manual = false})
-                anim_group_set_loop(current_eid, ui_loop[1])
+                anim_group_play_group(current_e, {name = gp.name, loop = ui_loop[1], manual = false})
+                anim_group_set_loop(current_e, ui_loop[1])
             end
         end
         if current_group and (current_group.name == gp.name) then
@@ -1083,7 +1079,7 @@ local function show_joints(root)
 end
 
 function m.clear()
-    current_eid = nil
+    current_e = nil
     current_anim = nil
     all_clips = {}
     all_groups = {}
@@ -1110,18 +1106,18 @@ local function clear_add_animation_cache()
 end
 
 function m.show()
-    if not current_eid or not world[current_eid] then return end
+    if not current_e then return end
     local reload = false
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
     for _ in uiutils.imgui_windows("Animation", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
     --if imgui.windows.Begin ("Animation", imgui.flags.Window {'AlwaysAutoResize'}) then
-        if edit_anims[current_eid] then
+        if edit_anims[current_e] then
             if current_anim then
-                anim_state.is_playing = iani.is_playing(current_eid)
+                anim_state.is_playing = iani.is_playing(current_e)
                 if anim_state.is_playing then
-                    anim_state.current_frame = math.floor(iani.get_time(current_eid) * sample_ratio)
+                    anim_state.current_frame = math.floor(iani.get_time(current_e) * sample_ratio)
                 end
             end
             imgui.cursor.SameLine()
@@ -1175,7 +1171,7 @@ function m.show()
                 if imgui.widget.Button("  OK  ") then
                     if #anim_name > 0 and #anim_path > 0 then
                         local update = true
-                        local anims = get_runtime_animations(current_eid)
+                        local anims = get_runtime_animations(current_e)
                         if anims[anim_name] then
                             local confirm = {title = "Confirm", message = "animation ".. anim_name .. " exist, replace it ?"}
                             uiutils.confirm_dialog(confirm)
@@ -1184,7 +1180,7 @@ function m.show()
                             end
                         end
                         if update then
-                            local group_eid = get_anim_group_eid(current_eid, current_anim.name)
+                            local group_eid = get_anim_group_eid(current_e, current_anim.name)
                             --TODO: set for group eid
                             for _, eid in ipairs(group_eid) do
                                 local template = hierarchy:get_template(eid)
@@ -1212,8 +1208,8 @@ function m.show()
 
             imgui.cursor.SameLine()
             if imgui.widget.Button("Remove") then
-                anim_group_delete(current_eid, current_anim.name)
-                local nextanim = edit_anims[current_eid].name_list[1]
+                anim_group_delete(current_e, current_anim.name)
+                local nextanim = edit_anims[current_e].name_list[1]
                 if nextanim then
                     set_current_anim(nextanim)
                     set_current_clip(nil)
@@ -1223,7 +1219,7 @@ function m.show()
             imgui.cursor.SameLine()
             imgui.cursor.PushItemWidth(150)
             if imgui.widget.BeginCombo("##AnimationList", {current_anim.name, flags = imgui.flags.Combo {}}) then
-                for _, name in ipairs(edit_anims[current_eid].name_list) do
+                for _, name in ipairs(edit_anims[current_e].name_list) do
                     if imgui.widget.Selectable(name, current_anim.name == name) then
                         set_current_anim(name)
                         set_current_clip(nil)
@@ -1236,14 +1232,14 @@ function m.show()
             local icon = anim_state.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
             if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
                 if anim_state.is_playing then
-                    anim_group_pause(current_eid, true)
+                    anim_group_pause(current_e, true)
                 else
-                    anim_group_play(current_eid, {name = current_anim.name, loop = ui_loop[1], manual = false})
+                    anim_group_play(current_e, {name = current_anim.name, loop = ui_loop[1], manual = false})
                 end
             end
             imgui.cursor.SameLine()
             if imgui.widget.Checkbox("loop", ui_loop) then
-                anim_group_set_loop(current_eid, ui_loop[1])
+                anim_group_set_loop(current_e, ui_loop[1])
             end
             if all_clips then
                 imgui.cursor.SameLine()
@@ -1252,10 +1248,10 @@ function m.show()
                 end
             end
             imgui.cursor.SameLine()
-            local current_time = iani.get_time(current_eid)
+            local current_time = iani.get_time(current_e)
             imgui.widget.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d Time: %.2f/%.2f(s)", anim_state.selected_frame, anim_state.selected_frame / sample_ratio, math.floor(current_time * sample_ratio), current_time, anim_state.duration))
             imgui_message = {}
-            imgui.widget.Sequencer(edit_anims[current_eid], anim_state, imgui_message)
+            imgui.widget.Sequencer(edit_anims[current_e], anim_state, imgui_message)
             -- clear dirty flag
             anim_state.clip_range_dirty = 0
             set_event_dirty(0)
@@ -1265,9 +1261,9 @@ function m.show()
             local move_delta
             for k, v in pairs(imgui_message) do
                 if k == "pause" then
-                    anim_group_pause(current_eid, true)
+                    anim_group_pause(current_e, true)
                     anim_state.current_frame = v
-                    anim_group_set_time(current_eid, v / sample_ratio)
+                    anim_group_set_time(current_e, v / sample_ratio)
                 elseif k == "selected_frame" then
                     new_frame_idx = v
                 elseif k == "move_type" then
@@ -1294,7 +1290,7 @@ function m.show()
                 imgui.table.NextColumn()
                 local child_width, child_height = imgui.windows.GetContentRegionAvail()
                 imgui.windows.BeginChild("##show_joints", child_width, child_height, false)
-                show_joints(joints[current_eid].root)
+                show_joints(joints[current_e].root)
                 imgui.windows.EndChild()
 
                 imgui.table.NextColumn()
@@ -1343,9 +1339,9 @@ function m.show()
     end
 end
 
-local function construct_joints(eid)
+local function construct_joints(e)
     joint_list = {{ index = 0, name = "None", children = {}}}
-    joints[eid] = {root = nil, joint_map = {}}
+    joints[e] = {root = nil, joint_map = {}}
     local function construct(current_joints, ske, joint_idx)
         if current_joints.joint_map[joint_idx] then
             return current_joints.joint_map[joint_idx]
@@ -1365,15 +1361,11 @@ local function construct_joints(eid)
         end
     end
     
-    local ske
-    for e in world.w:select "eid:in skeleton:in" do
-		if e.eid == eid then
-            ske = e.skeleton._handle
-        end
-    end
+    w:sync("skeleton:in", e)
+    local ske = e.skeleton._handle
     if not ske then return end
     for i=1, #ske do
-        construct(joints[eid], ske, i)
+        construct(joints[e], ske, i)
     end
     local function setup_joint_list(joint)
         joint_list[#joint_list + 1] = joint
@@ -1381,12 +1373,9 @@ local function construct_joints(eid)
             setup_joint_list(child_joint)
         end
     end
-    setup_joint_list(joints[eid].root)
-    for e in world.w:select "eid:in joint_list:out" do
-		if e.eid == eid then
-            e.joint_list = joint_list
-        end
-    end
+    setup_joint_list(joints[e].root)
+    w:sync("joint_list:out", e)
+    e.joint_list = joint_list
     hierarchy:update_slot_list(world)
 end
 
@@ -1428,24 +1417,19 @@ function m.load_clips()
     to_runtime_clip()
 end
 
-local function construct_edit_animations(eid)
-    local animation_birth
-    for e in world.w:select "eid:in animation_birth:in" do
-        if e.eid == eid then
-            animation_birth = e.animation_birth
-        end
+local function construct_edit_animations(e)
+    w:sync("animation_birth:in", e)
+    if not e.scene then
+        w:sync("scene:in", e)
     end
-
-    edit_anims[eid] = {
-        id          = eid,
+    edit_anims[e] = {
+        id          = e.scene.id,
         name_list   = {},
-        birth       = animation_birth,
+        birth       = e.animation_birth,
     }
-    local edit_anim = edit_anims[eid]
-    
-    local animations = get_runtime_animations(eid)
-    w:sync("scene:in", eid)
-    local parentNode = hierarchy:get_node(eid.scene.parent)
+    local edit_anim = edit_anims[e]
+    local animations = get_runtime_animations(e)
+    local parentNode = hierarchy:get_node(hierarchy:get_node(e).parent)
     for key, anim in pairs(animations) do
         if not anim_clips[key] then
             anim_clips[key] = {}
@@ -1472,20 +1456,23 @@ local function construct_edit_animations(eid)
     table.sort(edit_anim.name_list)
     set_current_anim(edit_anim.birth)
     m.load_clips()
-    construct_joints(eid)
+    construct_joints(e)
 end
 
-function m.bind(eid)
-    for e in world.w:select "eid:in animation:in" do
-		if e.eid == eid then
-            if current_eid ~= eid then
-                current_eid = eid
-            end
-            if not edit_anims[eid] then
-                construct_edit_animations(eid)
-            end
-            return
-        end
+function m.bind(e)
+    if not e then
+        --current_e = e
+        return
+    end
+    w:sync("animation?in", e)
+    if not e.animation then
+        return
+    end
+    if current_e ~= e then
+        current_e = e
+    end
+    if not edit_anims[e] then
+        construct_edit_animations(e)
     end
 end
 

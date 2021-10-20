@@ -1,6 +1,6 @@
 local access = {}
 
-local lfs = require "filesystem.cpp"
+local lfs = require "bee.filesystem"
 
 local function raw_dofile(path)
 	local file <close> = assert(io.open(path, 'rb'))

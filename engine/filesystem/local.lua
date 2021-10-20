@@ -1,4 +1,4 @@
-local fs = require 'filesystem.cpp'
+local fs = require "bee.filesystem"
 local platform = require 'platform'
 
 function fs.open(filepath, ...)

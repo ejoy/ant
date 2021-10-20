@@ -11,7 +11,7 @@ if package.cpath:match(path_sep) then
 	end)()
 end
 
-local fs = require "filesystem.cpp"
+local fs = require "bee.filesystem"
 local bytecode = dofile "tools/install/bytecode.lua"
 local argument = dofile "packages/argument/main.lua"
 
@@ -83,7 +83,7 @@ end
 if check_need_submit(...) then
     print "submit ant_release ..."
 
-    local subprocess = require "subprocess"
+    local subprocess = require "bee.subprocess"
 
     local cwd<const> = "../ant_release"
     local function spawn(cmd)

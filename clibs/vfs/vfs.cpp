@@ -11,9 +11,9 @@ static const std::string_view initscript = R"(
 local initfunc, initargs = ...
 local vfs = {}
 local io_open = io.open
-local runtime = package.preload.firmware ~= nil
+local supportFirmware = package.preload.firmware ~= nil
 function vfs.realpath(path)
-    if not runtime then
+    if not supportFirmware then
         return path
     end
     local fw = require "firmware"
@@ -108,7 +108,7 @@ if initfunc then
 end
 )";
 
-#define LoadScript(L, script) if (luaL_loadbuffer(L, script.data(), script.size(), script.data()) != LUA_OK) { return lua_error(L); }
+#define LoadScript(L, script) if (luaL_loadbuffer(L, script.data(), script.size(), "=(vfs)") != LUA_OK) { return lua_error(L); }
 
 static int setinitfunc(lua_State* L) {
     size_t sz_initfunc = 0;

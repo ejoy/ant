@@ -3,12 +3,11 @@
 #include <bgfx/c99/bgfx.h>
 
 extern "C" {
+int luaopen_bee_filesystem(lua_State* L);
 int luaopen_bgfx(lua_State* L);
 int luaopen_bgfx_util(lua_State* L);
 int luaopen_crypt(lua_State* L);
 int luaopen_datalist(lua_State* L);
-int luaopen_filesystem_cpp(lua_State* L);
-int luaopen_firmware(lua_State* L);
 int luaopen_hierarchy(lua_State* L);
 int luaopen_lsocket(lua_State* L);
 int luaopen_math3d(lua_State* L);
@@ -36,10 +35,20 @@ int luaopen_ltask_exclusive(lua_State* L);
 int luaopen_vfs(lua_State* L);
 int luaopen_ecs_core(lua_State* L);
 int luaopen_fastio(lua_State* L);
+#if defined(ANT_ENABLE_VFS)
+int luaopen_firmware(lua_State* L);
+#else
+int luaopen_bee_filewatch(lua_State* L);
+int luaopen_bee_subprocess(lua_State* L);
+int luaopen_filedialog(lua_State* L);
+int luaopen_imgui(lua_State* L);
+int luaopen_image(lua_State* L);
+#endif
 }
 
 void ant_loadmodules(lua_State* L) {
     static const luaL_Reg modules[] = {
+        { "bee.filesystem", luaopen_bee_filesystem },
         { "bgfx", luaopen_bgfx },
         { "bgfx.util", luaopen_bgfx_util },
         { "bgfx_get_interface", (lua_CFunction)bgfx_get_interface },
@@ -48,8 +57,6 @@ void ant_loadmodules(lua_State* L) {
         { "font.truetype", luaopen_font_truetype },
         { "crypt", luaopen_crypt },
         { "datalist", luaopen_datalist },
-        { "filesystem.cpp", luaopen_filesystem_cpp },
-        { "firmware", luaopen_firmware },
         { "hierarchy", luaopen_hierarchy },
         { "lsocket", luaopen_lsocket },
         { "math3d", luaopen_math3d },
@@ -73,6 +80,15 @@ void ant_loadmodules(lua_State* L) {
         { "ltask.exclusive", luaopen_ltask_exclusive},
         { "ecs.core", luaopen_ecs_core},
         { "fastio", luaopen_fastio},
+#if defined(ANT_ENABLE_VFS)
+        { "firmware", luaopen_firmware },
+#else
+        { "bee.filewatch", luaopen_bee_filewatch },
+        { "bee.subprocess", luaopen_bee_subprocess },
+        { "filedialog", luaopen_filedialog },
+        { "imgui", luaopen_imgui },
+        { "image", luaopen_image },
+#endif
         { NULL, NULL },
     };
 
