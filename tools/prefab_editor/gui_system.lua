@@ -274,7 +274,7 @@ function m:ui_update()
     end
 end
 
-local entity_state_event = world:sub {"EntityState"}
+local hierarchy_event = world:sub {"HierarchyEvent"}
 local drop_files_event = world:sub {"OnDropFiles"}
 local entity_event = world:sub {"EntityEvent"}
 local event_keyboard = world:sub{"keyboard"}
@@ -415,7 +415,7 @@ function m:handle_event()
             on_update(target)
         end
     end
-    for _, what, eid, value in entity_state_event:unpack() do
+    for _, what, eid, value in hierarchy_event:unpack() do
         if what == "visible" then
             hierarchy:set_visible(eid, value)
             ies.set_state(eid, what, value)
@@ -435,7 +435,6 @@ function m:handle_event()
                     break
                 end
             end
-            
         elseif what == "lock" then
             hierarchy:set_lock(eid, value)
         elseif what == "delete" then
@@ -444,7 +443,7 @@ function m:handle_event()
                 anim_view.on_remove_entity(gizmo.target_eid)
             end
             prefab_mgr:remove_entity(eid)
-            gizmo:set_target(nil)
+            update_heightlight_aabb()
         elseif what == "movetop" then
             hierarchy:move_top(eid)
         elseif what == "moveup" then
@@ -458,7 +457,6 @@ function m:handle_event()
     
     for _, filename in event_preopen_prefab:unpack() do
         anim_view:clear()
-        --material_view:clear()
     end
     for _, filename in event_open_prefab:unpack() do
         prefab_mgr:open(filename)
@@ -491,12 +489,7 @@ function m:handle_event()
 
     for _, key, press, state in event_keyboard:unpack() do
         if key == "DELETE" and press == 1 then
-            world.w:sync("collider?in", gizmo.target_eid)
-            if gizmo.target_eid.collider then
-                anim_view.on_remove_entity(gizmo.target_eid)
-            end
-            prefab_mgr:remove_entity(gizmo.target_eid)
-            gizmo:set_target(nil)
+            world:pub { "HierarchyEvent", "delete", gizmo.target_eid }
         elseif state.CTRL and key == "S" and press == 1 then
             prefab_mgr:save_prefab()
         elseif state.CTRL and key == "R" and press == 1 then

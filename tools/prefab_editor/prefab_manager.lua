@@ -701,7 +701,7 @@ function m:remove_entity(e)
     end
     hierarchy:update_slot_list(world)
     hierarchy:update_collider_list(world)
-    gizmo.target_eid = nil
+    gizmo:set_target(nil)
 end
 
 function m:get_current_filename()

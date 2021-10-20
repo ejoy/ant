@@ -1,6 +1,6 @@
 local util = {}
 local subprocess = require "bee.subprocess"
-local fs = require "filesystem.local"
+local fs = require "bee.filesystem"
 local platform = require "platform"
 
 local function quote_arg(s)
@@ -87,7 +87,7 @@ function util.spawn_process(commands, notwait)
 	return true, table.concat(msg, "\n")
 end
 
-local BINDIR<const> = fs.current_path() / package.cpath:gsub(";.*$",""):sub(1,-6)
+local BINDIR<const> = fs.exe_path():parent_path()
 local TOOLSUFFIX<const> = platform.OS == "OSX" and "" or ".exe"
 
 function util.bin_dir()
