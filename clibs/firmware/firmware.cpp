@@ -1,6 +1,7 @@
 #include <lua.hpp>
 #include <string_view>
 #include <map>
+#include <string>
 
 #include "FirmwareBootstrap.h"
 #include "FirmwareIo.h"
