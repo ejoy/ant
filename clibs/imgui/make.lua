@@ -12,7 +12,7 @@ local defines = {
     lm.os == "windows" and "IMGUI_ENABLE_WIN32_DEFAULT_IME_FUNCTIONS"
 }
 
-lm:source_set "imgui" {
+lm:source_set "source_imgui" {
     includes = {
         ".",
         Ant3rd .. "imgui",
@@ -28,7 +28,7 @@ lm:source_set "imgui" {
     defines = defines,
 }
 
-lm:source_set "imgui" {
+lm:source_set "source_imgui" {
     includes = {
         ".",
         Ant3rd .. "imgui",
@@ -39,7 +39,7 @@ lm:source_set "imgui" {
     defines = defines,
 }
 
-lm:lua_dll "imgui" {
+lm:source_set "source_imgui" {
     deps = {
         "sdl",
         "luabind"
@@ -50,6 +50,7 @@ lm:lua_dll "imgui" {
         Ant3rd .. "glm",
         Ant3rd .. "SDL/include",
         BgfxInclude,
+        LuaInclude,
         "../bgfx",
         "../luabind"
     },
@@ -79,4 +80,8 @@ lm:lua_dll "imgui" {
     macos = {
         sources = "platform/imgui_osx.mm",
     }
+}
+
+lm:lua_dll "imgui" {
+    deps = "source_imgui"
 }

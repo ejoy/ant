@@ -41,11 +41,14 @@ static int msghandler(lua_State *L) {
     return 1;
 }
 
+void pushprogdir(lua_State *L);
+
 static void dostring(lua_State* L, const char* str) {
     lua_pushcfunction(L, msghandler);
     int err = lua_gettop(L);
     if (LUA_OK == luaL_loadbuffer(L, str, strlen(str), "=(BOOTSTRAP)")) {
-        if (LUA_OK == lua_pcall(L, 0, 0, err)) {
+        pushprogdir(L);
+        if (LUA_OK == lua_pcall(L, 1, 0, err)) {
             return;
         }
     }
@@ -68,7 +71,19 @@ static int pmain(lua_State *L) {
     lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
     luaL_openlibs(L);
     createargtable(L, argc, argv);
-    dostring(L, "local fw = require 'firmware' ; assert(fw.loadfile 'bootstrap.lua')(...)");
+    dostring(L, R"=(
+local supportFirmware = package.preload.firmware ~= nil
+if supportFirmware then
+    local fw = require 'firmware'
+    assert(fw.loadfile 'bootstrap.lua')(...)
+else
+    local root = ...
+    local f = assert(io.open(root.."main.lua"))
+    local data = f:read "a"
+    f:close()
+    assert(load(data, "=(main.lua)"))()
+end
+)=");
     return 0;
 }
 

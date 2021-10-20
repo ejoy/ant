@@ -6,19 +6,6 @@ lm.rootdir = Ant3rd.."bee.lua"
 
 lm:source_set "source_bee" {
     includes = {
-        "3rd/lua",
-        "3rd/lua-seri",
-    },
-    sources = {
-        "3rd/lua-seri/*.c",
-    },
-    linux = {
-        flags = "-fPIC"
-    }
-}
-
-lm:source_set "source_bee" {
-    includes = {
         "bee/nonstd",
         "."
     },
@@ -113,5 +100,15 @@ lm:source_set "source_bee" {
 
 lm:lua_dll "bee" {
     deps = "source_bee",
-    export_luaopen = "off"
+    export_luaopen = "off",
+    includes = {
+        "3rd/lua",
+        "3rd/lua-seri",
+    },
+    sources = {
+        "3rd/lua-seri/*.c",
+    },
+    linux = {
+        flags = "-fPIC"
+    }
 }

@@ -3,10 +3,24 @@ local cpath, repopath = ...
 package.path = "engine/?.lua"
 package.cpath = cpath
 
-local lfs = require "filesystem.local"
-local access = require "vfs.repoaccess"
+local function loadfile(path)
+	local f = io.open(path)
+	if not f then
+		return nil, path..':No such file or directory.'
+	end
+	local str = f:read 'a'
+	f:close()
+	return load(str, "@" .. path)
+end
+
+local function dofile(path)
+	return assert(loadfile(path))()
+end
+
+local lfs = require "bee.filesystem"
+local access = dofile "engine/vfs/repoaccess.lua"
 local thread = require "thread"
-require "common.log"
+dofile "engine/common/log.lua"
 
 local channel = thread.channel_consume "IOreq"
 local repo

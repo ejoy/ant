@@ -59,32 +59,11 @@ lm:import "runtime/make.lua"
 
 lm:phony "runtime" {
     deps = {
-        "ant",
+        "lua",
     }
 }
 
 if EnableEditor then
-    local Backlist = {}
-    local EditorModules = {}
-
-    if lm.compiler ~= "msvc" then
-        Backlist["bake"] = true
-    end
-
-    for path in fs.pairs(fs.path(lm.workdir) / "clibs") do
-        if fs.exists(path / "make.lua") then
-            local name = path:stem():string()
-            if not Backlist[name] then
-                lm:import(("clibs/%s/make.lua"):format(name))
-                if EnableEditor then
-                    EditorModules[#EditorModules + 1] = name
-                end
-            end
-        end
-    end
-
-    EditorModules[#EditorModules + 1] = "bgfx-core"
-
     lm:phony "tools" {
         deps = {
             "gltf2ozz",
@@ -92,22 +71,13 @@ if EnableEditor then
             "texturec",
         }
     }
-
-    lm:phony "editor" {
-        deps = {
-            "lua",
-            "luac",
-            EditorModules
-        }
-    }
     lm:phony "all" {
         deps = {
-            "editor",
+            "runtime",
             "tools",
-            "runtime"
         }
     }
-    lm:default "editor"
+    lm:default "runtime"
 else
     lm:default "runtime"
 end

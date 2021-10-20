@@ -50,6 +50,7 @@ lm:source_set "source_lua_editor" {
     }
 }
 
+--[[
 if lm.os == "windows" then
     lm:dll "lua54" {
         sources = {
@@ -75,7 +76,7 @@ else
         }
     }
 end
-
+]]
 
 lm:exe "luac" {
     deps = "source_lua_editor",
