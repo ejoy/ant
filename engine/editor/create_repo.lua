@@ -1,4 +1,4 @@
-local lfs = require "filesystem.cpp"
+local lfs = require "bee.filesystem"
 local access = dofile "engine/vfs/repoaccess.lua"
 local vfs = require "vfs"
 

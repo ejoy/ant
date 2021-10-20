@@ -34,3 +34,6 @@
 [submodule "3rd/SDL"]
 	path = 3rd/SDL
 	url = https://github.com/libsdl-org/SDL
+[submodule "3rd/bee.lua"]
+	path = 3rd/bee.lua
+	url = https://github.com/actboy168/bee.lua

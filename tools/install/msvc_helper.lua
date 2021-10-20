@@ -1,5 +1,5 @@
-local sp = require 'subprocess'
-local fs = require 'filesystem.cpp'
+local sp = require "bee.subprocess"
+local fs = require "bee.filesystem"
 
 local function Is64BitWindows()
     -- https://docs.microsoft.com/en-us/archive/blogs/david.wang/howto-detect-process-bitness

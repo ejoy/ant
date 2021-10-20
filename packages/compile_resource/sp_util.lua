@@ -1,5 +1,5 @@
 local util = {}
-local subprocess = require "subprocess"
+local subprocess = require "bee.subprocess"
 local fs = require "filesystem.local"
 local platform = require "platform"
 

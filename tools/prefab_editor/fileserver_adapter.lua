@@ -1,4 +1,4 @@
-local subprocess = require "subprocess"
+local subprocess = require "bee.subprocess"
 local socket = require "lsocket"
 local protocol = require "protocol"
 local lfs = require "filesystem.local"

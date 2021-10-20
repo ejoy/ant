@@ -1,5 +1,4 @@
 local protocol = import_package "ant.debugger".protocol
-local fs = require "filesystem.cpp"
 local statSend = {}
 local statRecv = {}
 

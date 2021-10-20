@@ -1,7 +1,7 @@
 require "init_package"
 local ltask = require "ltask"
-local fs = require "filesystem.cpp"
-local fw = require "filewatch"
+local fs = require "bee.filesystem"
+local fw = require "bee.filewatch"
 local repo_new = require "repo".new
 
 local CACHE = {}

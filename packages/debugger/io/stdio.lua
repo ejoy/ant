@@ -1,4 +1,4 @@
-local subprocess = require 'subprocess'
+local subprocess = require "bee.subprocess"
 local STDIN = io.stdin
 local STDOUT = io.stdout
 local peek = subprocess.peek

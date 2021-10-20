@@ -2,6 +2,7 @@ local ecs = ...
 local world = ecs.world
 local m = ecs.system 'init_system'
 local irq = ecs.import.interface "ant.render|irenderqueue"
+local fs = require "bee.filesystem"
 
 function m:init_world()
     irq.set_view_clear_color("main_queue", 0xff0000ff)

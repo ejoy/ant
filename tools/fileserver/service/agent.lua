@@ -1,7 +1,7 @@
 local ltask = require "ltask"
 local socket = require "socket"
 local protocol = require "protocol"
-local fs = require "filesystem.cpp"
+local fs = require "bee.filesystem"
 
 local arg = ltask.call(ltask.queryservice "arguments", "QUERY")
 local FD = ...

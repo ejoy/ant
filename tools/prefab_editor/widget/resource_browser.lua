@@ -4,7 +4,7 @@ local w = world.w
 local assetmgr  = import_package "ant.asset"
 
 local imgui     = require "imgui"
-local fw        = require "filewatch"
+local fw        = require "bee.filewatch"
 local lfs       = require "filesystem.local"
 local fs        = require "filesystem"
 local uiconfig  = require "widget.config"

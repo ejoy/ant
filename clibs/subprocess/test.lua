@@ -8,7 +8,7 @@ local function luaexe()
     return arg[i + 1]
 end
 
-local subprocess = require 'subprocess'
+local subprocess = require "bee.subprocess"
 
 local p, stdin, stdout = subprocess.spawn {
     luaexe(),
