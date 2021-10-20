@@ -332,6 +332,68 @@ local function export_skinbin(gltfscene, bindata, exports)
 	end
 end
 
+-- local function check_front_face(vb, ib)
+-- 	local function read_memory(m, fmt, offset)
+-- 		offset = offset or 1
+-- 		local d, o = m[1], m[2]
+-- 		return fmt:unpack(d, offset)
+-- 	end
+
+	
+-- 	local i1, i2, i3
+-- 	if ib then
+-- 		local fmt = ib.flag == '' and "HHH" or "III"
+-- 		i1, i2, i3 = read_memory(ib.memory, fmt)
+-- 	else
+-- 		i1, i2, i3 = 1, 2, 3
+-- 	end
+
+-- 	assert(#vb == 1 and vb[1].declname:match "p")
+-- 	local b = vb[1]
+	
+
+-- 	local stride_offset = 0
+-- 	local fmt
+-- 	do
+-- 		for d in b.declname:gmatch "[^|]" do
+-- 			if d:sub(1, 1) == 'p' then
+-- 				local t = d:sub(6, 6)
+-- 				local m<const> = {
+-- 					['f'] = 'f',
+-- 					['u'] = 'B',
+-- 					['i'] = 'h',
+-- 				}
+-- 				local n = math.floor(tonumber(d:sub(2, 2)))
+-- 				fmt = m[t]:rep(n)
+-- 				break
+-- 			end
+
+-- 			stride_offset = stride_offset + declmgr.elem_size(d)
+-- 		end
+-- 	end
+
+-- 	local stride = declmgr.layout_stride(b.declname)
+-- 	if fmt == nil then
+-- 		error "invalid vertex buffer"
+-- 	end
+
+-- 	local function vertex_offset(idx)
+-- 		return idx * stride + stride_offset
+-- 	end
+-- 	local v1 = {read_memory(b.memory, fmt, vertex_offset(i1))}
+-- 	local v2 = {read_memory(b.memory, fmt, vertex_offset(i2))}
+-- 	local v3 = {read_memory(b.memory, fmt, vertex_offset(i3))}
+
+-- 	--left hand check
+-- 	v1[3] = 0.0
+-- 	v2[3] = 0.0
+-- 	v3[3] = 0.0
+-- 	local e1 = math3d.sub(v2, v1)
+-- 	local e2 = math3d.sub(v3, v1)
+-- 	math3d.cross(e1, e2)
+
+-- end
+
 local function export_meshbin(gltfscene, bindata, exports)
 	exports.mesh = {}
 	local meshes = gltfscene.meshes
@@ -358,7 +420,9 @@ local function export_meshbin(gltfscene, bindata, exports)
 			local primname = "P" .. primidx
 			local resname = "./meshes/"..meshname .. "_" .. primname .. ".meshbin"
 			utility.save_bin_file(resname, group)
-			exports.mesh[meshidx][primidx] = resname
+			local m = exports.mesh[meshidx]
+			m[primidx] = resname
+			--m.FrontFace = check_front_face(group.vb, group.ib)
 		end
 	end
 end
