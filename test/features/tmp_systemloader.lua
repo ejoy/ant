@@ -77,26 +77,26 @@ function init_loader_sys:init()
     --ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
     --ientity.create_grid_entity_simple "grid"
 
-    ecs.create_entity{
-		policy = {
-			"ant.render|simplerender",
-			"ant.general|name",
-		},
-		data = {
-			scene 		= {
-                srt = {
-                    s = {50, 1, 50, 0}
-                }
-            },
-			material 	= "/pkg/ant.resources/materials/singlecolor1.material",
-			state 		= "visible",
-			name 		= "test_shadow_plane",
-			simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
-			on_ready = function (e)
-				imaterial.set_property(e, "u_basecolor_factor", {0.5, 0.5, 0.5, 1})
-			end,
-		}
-    }
+    -- ecs.create_entity{
+	-- 	policy = {
+	-- 		"ant.render|simplerender",
+	-- 		"ant.general|name",
+	-- 	},
+	-- 	data = {
+	-- 		scene 		= {
+    --             srt = {
+    --                 s = {50, 1, 50, 0}
+    --             }
+    --         },
+	-- 		material 	= "/pkg/ant.resources/materials/singlecolor1.material",
+	-- 		state 		= "visible",
+	-- 		name 		= "test_shadow_plane",
+	-- 		simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
+	-- 		on_ready = function (e)
+	-- 			imaterial.set_property(e, "u_basecolor_factor", {0.5, 0.5, 0.5, 1})
+	-- 		end,
+	-- 	}
+    -- }
 
 
     local p = ecs.create_instance "/pkg/ant.test.features/assets/entities/cube.prefab"

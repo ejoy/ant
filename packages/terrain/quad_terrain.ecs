@@ -2,7 +2,12 @@ system "quad_terrain_system"
     .implement "quad_terrain.lua"
     .method "entity_init"
 
+component_v2 "quad_terrain".type "lua"
+    .require_system "ant.terrain|quad_terrain_system"
+
+component_v2 "quad_terrain_drawer"
+
 policy_v2 "quad_terrain"
-    .require_system "quad_terrain_system"
+    .require_system "ant.terrain|quad_terrain_system"
     .component_v2 "quad_terrain"
     .component_v2 "material"

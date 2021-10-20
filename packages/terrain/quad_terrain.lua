@@ -27,9 +27,10 @@ local function is_power_of_2(n)
 	end
 end
 
-local vertex_layout = declmgr.layout "p3|t20"
+local layout_name<const> = declmgr.correct_layout "p3|c40niu|t20"
+local vertex_layout = declmgr.get(layout_name)
 
-local function add_cube(vb, offset, unit)
+local function add_cube(vb, offset, color, unit)
     local x, y, z = offset[1], offset[2], offset[3]
     local nx, nz = x+unit, z+unit
     --TODO: how the uv work??
@@ -75,14 +76,14 @@ local function cube_setction_ib(sectionsize)
     return ib
 end
 
-local function add_quad(vb, offset, unit)
+local function add_quad(vb, offset, color, unit)
     local x, y, z = offset[1], 0.0, offset[2]
     local nx, nz = x+unit, z+unit
     local v = {
-        x, y,    z, 0.0, 0.0,
-        x, y,   nz, 0.0, 1.0,
-       nx, y,   nz, 1.0, 1.0,
-       nx, y,    z, 1.0, 0.0,
+        x, y,    z, color, 0.0, 0.0,
+        x, y,   nz, color, 0.0, 1.0,
+       nx, y,   nz, color, 1.0, 1.0,
+       nx, y,    z, color, 1.0, 0.0,
     }
 
     table.move(v, 1, #v, #vb+1, vb)
@@ -112,11 +113,15 @@ end
 
 local function build_section_mesh(sectionsize, sectionidx, unit, cheightfields)
     local vb = {}
-    for iw=1, sectionsize do
-        for ih=1, sectionsize do
+    for ih=1, sectionsize do
+        for iw=1, sectionsize do
             local field = cheightfields:get_field(sectionidx, iw, ih)
             if field.type == "grass" or field.type == "dust" then
-                add_quad(vb, {iw, ih}, unit)
+                local colors<const> = {
+                    grass = 0xff00ff00,
+                    dust = 0xffffff00,
+                }
+                add_quad(vb, {iw, ih}, colors[field.type], unit)
             end
         end
     end
@@ -128,8 +133,11 @@ local function build_section_mesh(sectionsize, sectionidx, unit, cheightfields)
             start = 0,
             num = num_vertices,
             {
-                "fffff",
-                vb,
+                declname = layout_name,
+                memory = {
+                    "fffdff",
+                    vb,
+                }
             }
         },
         ib = {
@@ -146,9 +154,9 @@ end
 
 local cterrain_fields = {}
 
-function cterrain_fields.new(height_fields, sectionsize, width, height)
+function cterrain_fields.new(terrain_fields, sectionsize, width, height)
     return setmetatable({
-        height_fields   = height_fields,
+        terrain_fields  = terrain_fields,
         section_size    = sectionsize,
         width           = width,
         height          = height,
@@ -159,10 +167,10 @@ function cterrain_fields:get_field(sidx, iw, ih)
     local ish = (sidx-1) // self.section_size
     local isw = (sidx-1) % self.section_size
 
-    local offset = (ish+ih-1) * self.section_size * self.width + 
+    local offset = (ish * self.section_size+ih-1) * self.width +
                     isw * self.section_size + iw
 
-    return self.height_fields[offset]
+    return self.terrain_fields[offset]
 end
 
 --[[
@@ -173,14 +181,16 @@ end
 ]]
 
 function quad_ts:entity_init()
-    for e in w:select "INIT terrain_field:in" do
-        e.terrain_field = read_terrain_field(e.terrain_field)
-    end
+    for e in w:select "INIT quad_terrain:in material:in" do
+        local qt = e.quad_terrain
 
-    for e in w:select "INIT cube_terrain:in" do
-        local ct = e.quad_terrain
-        local width, height = ct.width, ct.height
-        if width * height ~= #e.height_fields then
+        if qt.terrain_fields == nil then
+            error "need define terrain_field, it should be file or table"
+        end
+        qt.terrain_fields = read_terrain_field(qt.terrain_fields)
+
+        local width, height = qt.width, qt.height
+        if width * height ~= #qt.terrain_fields then
             error(("height_fields data is not equal 'width' and 'height':%d, %d"):format(width, height))
         end
 
@@ -188,7 +198,7 @@ function quad_ts:entity_init()
             error(("one of the 'width' or 'heigth' is not power of 2"):format(width, height))
         end
 
-        local ss = ct.section_size
+        local ss = qt.section_size
         if not is_power_of_2(ss) then
             error(("'section_size':%d, is not power of 2"):format(ss))
         end
@@ -197,34 +207,33 @@ function quad_ts:entity_init()
             error(("invalid 'section_size':%d, larger than 'width' or 'height' or it is 0: %d, %d"):format(ss, width, height))
         end
 
-        ct.section_width, ct.section_height = width // ss, height // ss
-        ct.num_section = ct.section_width * ct.section_height
+        qt.section_width, qt.section_height = width // ss, height // ss
+        qt.num_section = qt.section_width * qt.section_height
 
-        local unit = ct.unit
+        local unit = qt.unit
         local material = e.material
 
-        local ctf = cterrain_fields.new(e.height_fields, ss, width, height)
+        local ctf = cterrain_fields.new(qt.terrain_fields, ss, width, height)
 
-        for ih=1, ct.section_height do
-            for iw=1, ct.section_width do
-                local sectionidx = (ih-1) * ct.section_width+iw
+        for ih=1, qt.section_height do
+            for iw=1, qt.section_width do
+                local sectionidx = (ih-1) * qt.section_width+iw
                 
                 ecs.create_entity{
                     policy = {
                         "ant.scene|scene_object",
-                        "ant.terrain|simplerender",
+                        "ant.render|simplerender",
                         "ant.general|name",
                     },
                     data = {
                         scene = {
-                            srt = {
-                                t = {}
-                            }
+                            srt = {}
                         },
                         simplemesh  = imesh.init_mesh(build_section_mesh(ss, sectionidx, unit, ctf)),
                         material    = material,
                         state       = "visible|selectable",
                         name        = "section" .. sectionidx,
+                        quad_terrain_drawer = true,
                     }
                 }
             end

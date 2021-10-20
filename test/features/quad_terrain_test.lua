@@ -33,9 +33,13 @@ function quad_terrain_test_sys:init()
         data = {
             name = "quad_terrain_test",
             quad_terrain = {
-                terrain_field = terrain_fields,
-                material = "/pkg/ant.test.features/assets/quad_terrain.material"
-            }
+                terrain_fields = terrain_fields,
+                width = 16,
+                height = 16,
+                section_size = 4,
+                unit = 1,
+            },
+            material = "/pkg/ant.test.features/assets/quad_terrain.material"
         }
     }
 end

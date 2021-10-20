@@ -1,6 +1,7 @@
--- import "@ant.render"
--- import "@ant.terrain"
--- import "@ant.asset"
+import "@ant.render"
+import "@ant.asset"
+
+import "quad_terrain.ecs"
 
 -- interface "terrain"
 --     .implement "terrain_system.lua"
