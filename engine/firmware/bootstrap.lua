@@ -71,7 +71,7 @@ end
 
 local thread = require "bee.thread"
 local fw = require "firmware"
-local ls = require "lsocket"
+local socket = require "bee.socket"
 local host = {}
 local bootloader
 local first = true
@@ -99,7 +99,7 @@ end
 function host.exit(apis)
 	if apis.fd then
 		if config.nettype == "listen" then
-			config.socket = ls.tostring(apis.fd)
+			config.socket = socket.dump(apis.fd)
 		else
 			apis.fd:close()
 		end

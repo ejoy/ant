@@ -1,6 +1,5 @@
 local ltask = require "ltask"
-local exclusive = require "ltask.exclusive"
-local socket = require "lsocket"
+local socket = require "bee.socket"
 
 local kMaxReadBufSize <const> = 4 * 1024
 
@@ -163,8 +162,10 @@ end
 
 local S = {}
 
-function S.bind(...)
-    local fd = assert(socket.bind(...))
+function S.bind(protocol, ...)
+    local fd = assert(socket(protocol))
+    assert(fd:bind(...))
+    assert(fd:listen())
     status[fd] = {
         fd = fd,
         shutdown_r = false,
@@ -173,8 +174,9 @@ function S.bind(...)
     return create_handle(fd)
 end
 
-function S.connect(...)
-    local fd = assert(socket.connect(...))
+function S.connect(protocol, ...)
+    local fd = assert(socket(protocol))
+    assert(fd:connect(...) ~= nil)
     local s = {
         fd = fd,
         wait_write = {},

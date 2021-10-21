@@ -4,7 +4,7 @@ local INTERVAL = 0.01 -- socket select timeout
 
 -- C libs only
 local thread = require "bee.thread"
-local lsocket = require "lsocket"
+local socket = require "bee.socket"
 local protocol = require "protocol"
 local _print
 
@@ -94,16 +94,25 @@ end
 
 local function connect_server(address, port)
 	print("Connecting", address, port)
-	local fd, err = lsocket.connect(address, port)
+	local fd, err = socket "tcp"
 	if not fd then
+		print("socket:", err)
+		return
+	end
+	local ok
+	ok, err = fd:connect(address, port)
+	if ok == nil then
+		fd:close()
 		print("connect:", err)
 		return
 	end
-	local rd,wt = lsocket.select(nil, {fd})
-	if not rd then
-		print("select:", wt)	-- select error
-		fd:close()
-		return
+	if ok == false then
+		local rd,wt = socket.select(nil, {fd})
+		if not rd then
+			print("select:", wt)	-- select error
+			fd:close()
+			return
+		end
 	end
 	local ok, err = fd:status()
 	if not ok then
@@ -117,12 +126,23 @@ end
 
 local function listen_server(address, port)
 	print("Listening", address, port)
-	local fd, err = lsocket.bind(address, port)
+	local fd, err = socket "tcp"
 	if not fd then
+		print("socket:", err)
+		return
+	end
+	local ok
+	ok, err = fd:bind(address, port)
+	if not ok then
 		print("bind:", err)
 		return
 	end
-	local rd,wt = lsocket.select({fd}, 1)
+	ok, err = fd:listen()
+	if not ok then
+		print("listen:", err)
+		return
+	end
+	local rd,wt = socket.select({fd}, 1)
 	if rd == false then
 		print("select:", 'timeout')
 		fd:close()
@@ -144,7 +164,7 @@ end
 
 local function wait_server()
 	if config.socket then
-		return lsocket.fromstring(config.socket)
+		return socket.undump(config.socket)
 	end
 	if config.nettype == nil then
 		return
@@ -313,9 +333,9 @@ local function connection_dispose(timeout)
 	local fd = connection.fd
 	local rd, wt
 	if #sending > 0  then
-		rd, wt = lsocket.select(rdset, wtset, timeout)
+		rd, wt = socket.select(rdset, wtset, timeout)
 	else
-		rd, wt = lsocket.select(rdset, timeout)
+		rd, wt = socket.select(rdset, timeout)
 	end
 	if not rd then
 		if rd == false then

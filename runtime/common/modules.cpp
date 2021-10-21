@@ -5,13 +5,13 @@
 extern "C" {
 int luaopen_bee_filesystem(lua_State* L);
 int luaopen_bee_serialization(lua_State* L);
+int luaopen_bee_socket(lua_State* L);
 int luaopen_bee_thread(lua_State* L);
 int luaopen_bgfx(lua_State* L);
 int luaopen_bgfx_util(lua_State* L);
 int luaopen_crypt(lua_State* L);
 int luaopen_datalist(lua_State* L);
 int luaopen_hierarchy(lua_State* L);
-int luaopen_lsocket(lua_State* L);
 int luaopen_math3d(lua_State* L);
 int luaopen_math3d_adapter(lua_State* L);
 int luaopen_platform(lua_State* L);
@@ -50,6 +50,7 @@ int luaopen_image(lua_State* L);
 void ant_loadmodules(lua_State* L) {
     static const luaL_Reg modules[] = {
         { "bee.filesystem", luaopen_bee_filesystem },
+        { "bee.socket", luaopen_bee_socket },
         { "bee.serialization", luaopen_bee_serialization },
         { "bee.thread", luaopen_bee_thread },
         { "bgfx", luaopen_bgfx },
@@ -61,7 +62,6 @@ void ant_loadmodules(lua_State* L) {
         { "crypt", luaopen_crypt },
         { "datalist", luaopen_datalist },
         { "hierarchy", luaopen_hierarchy },
-        { "lsocket", luaopen_lsocket },
         { "math3d", luaopen_math3d },
         { "math3d.adapter", luaopen_math3d_adapter },
         { "platform", luaopen_platform },
