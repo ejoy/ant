@@ -9,5 +9,7 @@ return {
         "ant.hwi",
         "ant.math",
         "ant.sky",
+        "ant.terrain",
+        "ant.splitviews",
     }
 }
