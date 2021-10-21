@@ -2,7 +2,7 @@ local subprocess = require "bee.subprocess"
 local socket = require "lsocket"
 local protocol = require "protocol"
 local lfs = require "filesystem.local"
-local cthread = require "thread"
+local cthread = require "bee.thread"
 local sender
 
 local m = {}
@@ -156,7 +156,7 @@ function m.run()
 end
 
 return function()
-    arg, repopath = cthread.channel_consume "fileserver_channel"()
-    sender = cthread.channel_produce "log_channel"
+    arg, repopath = (cthread.channel "fileserver_channel"):bpop()
+    sender = cthread.channel "log_channel"
     return m
 end

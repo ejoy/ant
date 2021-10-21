@@ -69,7 +69,7 @@ elseif type == "remote" then
 elseif type == "offline" then
 end
 
-local thread = require "thread"
+local thread = require "bee.thread"
 local fw = require "firmware"
 local ls = require "lsocket"
 local host = {}

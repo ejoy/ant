@@ -2,14 +2,14 @@ local imgui     = require "imgui"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local utils     = require "common.utils"
-local cthread   = require "thread"
+local cthread   = require "bee.thread"
 local log_widget
 local m = {}
 local log_item_height = 22
 local console_sender
 function m.init_console_sender()
     if not console_sender then
-        console_sender = cthread.channel_produce "console_channel"
+        console_sender = cthread.channel "console_channel"
     end
 end
 

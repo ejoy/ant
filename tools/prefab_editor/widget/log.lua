@@ -2,7 +2,7 @@ local imgui     = require "imgui"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local utils     = require "common.utils"
-local cthread   = require "thread"
+local cthread   = require "bee.thread"
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 local icons
@@ -154,7 +154,7 @@ end
 local log_receiver
 function m.init_log_receiver()
     if not log_receiver then
-        log_receiver = cthread.channel_consume "log_channel"
+        log_receiver = cthread.channel "log_channel"
     end
 end
 
@@ -358,7 +358,7 @@ end
 
 function m.show()
     if not err_receiver then
-        err_receiver = cthread.channel_consume "errlog"
+        err_receiver = cthread.channel "errlog"
     end
     checkLog()
     local viewport = imgui.GetMainViewport()

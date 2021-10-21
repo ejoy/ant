@@ -19,10 +19,10 @@ end
 
 local lfs = require "bee.filesystem"
 local access = dofile "engine/vfs/repoaccess.lua"
-local thread = require "thread"
+local thread = require "bee.thread"
 dofile "engine/common/log.lua"
 
-local channel = thread.channel_consume "IOreq"
+local channel = thread.channel "IOreq"
 local repo
 
 local function init_repo()
@@ -39,8 +39,8 @@ end
 local function response_id(id, ...)
 	if id then
 		if type(id) == "string" then
-			local c = thread.channel_produce(id)
-			c(...)
+			local c = thread.channel(id)
+			c:push(...)
 		else
 			channel:ret(id, ...)
 		end

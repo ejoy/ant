@@ -1,14 +1,14 @@
 local config = ...
 
 local vfs = require "vfs"
-local thread = require "thread"
-local errlog = thread.channel_produce "errlog"
+local thread = require "bee.thread"
+local errlog = thread.channel "errlog"
 local errthread = thread.thread([[
 	-- Error Thread
-	local thread = require "thread"
-	local err = thread.channel_consume "errlog"
+	local thread = require "bee.thread"
+	local err = thread.channel "errlog"
 	while true do
-		local msg = err()
+		local msg = err:bpop()
 		if msg == "EXIT" then
 			break
 		end
@@ -18,7 +18,7 @@ local errthread = thread.thread([[
 
 thread.newchannel "IOreq"
 
-local io_req = thread.channel_produce "IOreq"
+local io_req = thread.channel "IOreq"
 
 local firmware_io = vfs.realpath("/engine/firmware/io.lua")
 thread.thread (([[
@@ -38,7 +38,7 @@ thread.thread (([[
 
 local function initIOThread()
     config.vfspath = vfs.realpath("/engine/firmware/vfs.lua")
-	io_req(false, config)
+	io_req:push(false, config)
 end
 
 initIOThread()

@@ -128,11 +128,11 @@ local function choose_project()
                     global_data.project_root = lpath
                     global_data.packages = get_package(lfs.absolute(global_data.project_root), true)
                     --file server
-                    local cthread = require "thread"
+                    local cthread = require "bee.thread"
                     cthread.newchannel "log_channel"
                     cthread.newchannel "fileserver_channel"
                     cthread.newchannel "console_channel"
-                    local produce = cthread.channel_produce "fileserver_channel"
+                    local produce = cthread.channel "fileserver_channel"
                     produce:push(arg, path)
                     local lthread = require "editor.thread"
                     fileserver_thread = lthread.create [[

@@ -1,7 +1,7 @@
 return function (_, _)
-    local thread = require "thread"
-    local io_req  = thread.channel_produce "IOreq"
-    local dbg_net = thread.channel_consume "DdgNet"
+    local thread = require "bee.thread"
+    local io_req  = thread.channel "IOreq"
+    local dbg_net = thread.channel "DdgNet"
     local m = {}
     local fsend
     local fclose
@@ -19,7 +19,7 @@ return function (_, _)
         return true
     end
     function m.send(data)
-        io_req("SEND", "DBG", data)
+        io_req:push("SEND", "DBG", data)
     end
     function m.close()
         fclose()

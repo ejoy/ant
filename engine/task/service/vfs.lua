@@ -1,18 +1,18 @@
 local ltask = require "ltask"
 local exclusive = require "ltask.exclusive"
 
-local thread = require "thread"
+local thread = require "bee.thread"
 
 local Channel <const> = "VfsService"
 
 thread.newchannel(Channel)
-local io_req = thread.channel_produce "IOreq"
-local io_resp = thread.channel_consume(Channel)
+local io_req = thread.channel "IOreq"
+local io_resp = thread.channel(Channel)
 
 local queue = {}
 
 local function request(what, ...)
-	io_req(Channel, what, ...)
+	io_req:push(Channel, what, ...)
 	local token = {}
 	queue[#queue+1] = token
 	return ltask.wait(token)
@@ -21,7 +21,7 @@ end
 local function dispatch_response()
 	local token = table.remove(queue, 1)
 	if token then
-		ltask.wakeup(token, io_resp())
+		ltask.wakeup(token, io_resp:bpop())
 		return true
 	end
 	return false

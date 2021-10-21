@@ -7,7 +7,6 @@ lm:source_set "source_bgfx" {
     includes = {
         LuaInclude,
         BgfxInclude,
-        "../thread",
     },
     sources = {
         "*.c",

@@ -64,10 +64,10 @@ end
 local LOG
 
 if __ANT_RUNTIME__ then
-    local thread = require "thread"
-    local IO = thread.channel_produce "IOreq"
+    local thread = require "bee.thread"
+    local IO = thread.channel "IOreq"
     function LOG(data)
-        IO(false, "SEND", "LOG", data)
+        IO:push(false, "SEND", "LOG", data)
     end
 else
     function LOG(data)

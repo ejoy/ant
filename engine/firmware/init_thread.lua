@@ -1,5 +1,5 @@
-local thread = require "thread"
-local io_req = thread.channel_produce "IOreq"
+local thread = require "bee.thread"
+local io_req = thread.channel "IOreq"
 
 __ANT_RUNTIME__ = package.preload.firmware ~= nil
 

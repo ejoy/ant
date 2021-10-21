@@ -3,7 +3,7 @@ local loadfile, host = ...
 local INTERVAL = 0.01 -- socket select timeout
 
 -- C libs only
-local thread = require "thread"
+local thread = require "bee.thread"
 local lsocket = require "lsocket"
 local protocol = require "protocol"
 local _print
@@ -25,11 +25,11 @@ local connection = {
 }
 
 local function init_channels()
-	channel_req = thread.channel_consume "IOreq"
+	channel_req = thread.channel "IOreq"
 
 	local mt = {}
 	function mt:__index(name)
-		local c = assert(thread.channel_produce(name))
+		local c = assert(thread.channel(name))
 		self[name] = c
 		return c
 	end
@@ -161,8 +161,8 @@ end
 local function response_id(id, ...)
 	if id then
 		if type(id) == "string" then
-			local c = thread.channel_produce(id)
-			c(...)
+			local c = thread.channel(id)
+			c:push(...)
 		else
 			channel_req:ret(id, ...)
 		end
@@ -293,7 +293,7 @@ end
 local function work_offline()
 	local c = channel_req
 	while true do
-		offline_dispatch(c())
+		offline_dispatch(c:bpop())
 		logger_dispatch(offline)
 	end
 end
@@ -652,7 +652,7 @@ local function dispatch_net(cmd, ...)
 	if not f then
 		local channel_name = connection.subscibe[cmd]
 		if channel_name then
-			channel_user[channel_name](cmd, ...)
+			channel_user[channel_name]:push(cmd, ...)
 		else
 			print("Unsupport net command", cmd)
 		end
