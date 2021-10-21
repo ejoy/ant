@@ -338,8 +338,8 @@ local function on_target(old, new)
 end
 
 local function on_update(e)
-    if not e then return end
     update_heightlight_aabb(e)
+    if not e then return end
     world.w:sync("camera?in", e)
     world.w:sync("light?in", e)
     if e.camera then
