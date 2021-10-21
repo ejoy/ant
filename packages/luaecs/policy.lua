@@ -11,7 +11,7 @@ local function create(w, package, policies)
             return
         end
         policyset[name] = true
-        local class = w:_import("policy_v2", package, name)
+        local class = w:_import("policy", package, name)
         if not class then
             error(("policy `%s` is not defined."):format(name))
         end
@@ -21,10 +21,10 @@ local function create(w, package, policies)
             end
             unionset[class.union] = name
         end
-        for _, v in ipairs(class.policy_v2) do
+        for _, v in ipairs(class.policy) do
             import_policy(v)
         end
-        for _, v in ipairs(class.component_v2) do
+        for _, v in ipairs(class.component) do
             if not componentset[v] then
                 componentset[v] = true
                 res.component[#res.component+1] = v
@@ -32,7 +32,7 @@ local function create(w, package, policies)
         end
         for _, v in ipairs(class.component_opt) do
             if res.component_opt[v] == nil then
-                local component_class = w._decl.component_v2
+                local component_class = w._decl.component
                 local component_type =  component_class[v].type[1]
                 if component_type == nil then
                     res.component_opt[v] = true

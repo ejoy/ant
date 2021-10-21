@@ -1,9 +1,9 @@
-component_v2 "polyline_mark"
-component_v2 "polyline".type "lua"
-policy_v2 "polyline"
+component "polyline_mark"
+component "polyline".type "lua"
+policy "polyline"
     .require_system "ant.render|polyline_system"
     .require_interface "ant.render|ipolyline"
-    .component_v2 "polyline"
+    .component "polyline"
 
 system "polyline_system"
     .implement "polyline/polyline.lua"

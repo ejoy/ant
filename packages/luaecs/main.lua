@@ -339,7 +339,7 @@ end
 local function update_decl(self)
     local w = self.w
     local decl = self._decl
-    local component = decl.component_v2
+    local component = decl.component
     for name, info in pairs(component) do
         if name == "reference" then
             goto continue

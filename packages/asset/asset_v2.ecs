@@ -8,30 +8,30 @@ system "mesh_system"
     .method "entity_init"
     .method "end_frame"
 
-component_v2 "mesh_result".type "lua"
+component "mesh_result".type "lua"
     .require_system "ant.asset|mesh_system"
 
-component_v2 "material_result".type "lua"
+component "material_result".type "lua"
     .require_system "ant.asset|material_system"
-component_v2 "material_setting".type "lua"
-component_v2 "material".type "lua"
+component "material_setting".type "lua"
+component "material".type "lua"
     .require_system "ant.asset|material_system"
 
-component_v2 "mesh".type "lua"
+component "mesh".type "lua"
     .require_system "ant.asset|mesh_system"
 
-component_v2 "simplemesh".type "lua"
+component "simplemesh".type "lua"
     .require_system "ant.asset|mesh_system"
-component_v2 "procedural_mesh"
-component_v2 "owned_mesh_buffer"
+component "procedural_mesh"
+component "owned_mesh_buffer"
 
 
 system "meshskin_system"
     .implement "meshskin.lua"
     .method "component_init"
 
-component_v2 "meshskin".type "lua"
+component "meshskin".type "lua"
     .require_system "ant.asset|meshskin_system"
 
-component_v2 "meshskin_result".type "lua"
+component "meshskin_result".type "lua"
     .require_system "ant.asset|meshskin_system"

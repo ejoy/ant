@@ -32,6 +32,6 @@ interface "animation"
     .method "stop_effect"
     .method "set_edit_mode"
 
-policy_v2 "animation_controller.state_machine"
+policy "animation_controller.state_machine"
     .require_system "state_machine_system"
-    .component_v2 "animation"
+    .component "animation"
