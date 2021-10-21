@@ -40,6 +40,15 @@ local function attrib_data(desc, iv, bin)
 	return bin:sub(buf_offset+1, buf_offset+desc.elemsize)
 end
 
+local function to_ib(indexbin, flag, count)
+	return {
+		memory 	= {indexbin, 1, #indexbin},
+		flag 	= flag,
+		start 	= 0,
+		num 	= count,
+	}
+end
+
 local function fetch_ib_buffer(gltfscene, gltfbin, index_accessor)
 	local bufferViews = gltfscene.bufferViews
 
@@ -72,12 +81,17 @@ local function fetch_ib_buffer(gltfscene, gltfbin, index_accessor)
 
 	indexbin = table.concat(buffer, "")
 
-	return {
-		memory = {indexbin, 1, #indexbin},
-		flag = (elemsize == 4 and 'd' or ''),
-		start 	= 0,
-		num 	= index_accessor.count,
-	}
+	return to_ib(indexbin, elemsize == 4 and 'd' or '', index_accessor.count)
+end
+
+local function gen_ib(num_vertex)
+	local faceindices = {}
+	local fmt = num_vertex > 65535 and "III" or "HHH"
+	for f=0, num_vertex-1, 3 do
+		faceindices[#faceindices+1] = fmt:pack(f, f+2, f+1)
+	end
+	local ibbin = table.concat(faceindices, '')
+	return to_ib(ibbin, fmt == "III" and 'd' or '', num_vertex)
 end
 
 local function create_prim_bounding(meshscene, prim)	
@@ -394,6 +408,7 @@ end
 
 -- end
 
+
 local function export_meshbin(gltfscene, bindata, exports)
 	exports.mesh = {}
 	local meshes = gltfscene.meshes
@@ -408,10 +423,10 @@ local function export_meshbin(gltfscene, bindata, exports)
 			local group = {}
 			group.vb = fetch_vb_buffers(gltfscene, bindata, prim)
 			local indices_accidx = prim.indices
-			if indices_accidx then
-				local idxacc = gltfscene.accessors[indices_accidx+1]
-				group.ib = fetch_ib_buffer(gltfscene, bindata, idxacc)
-			end
+			group.ib = indices_accidx and
+				fetch_ib_buffer(gltfscene, bindata, gltfscene.accessors[indices_accidx+1]) or
+				gen_ib(group.vb.num)
+
 			local bb = create_prim_bounding(gltfscene, prim)
 			if bb then
 				group.bounding = bb
