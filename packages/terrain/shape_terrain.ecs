@@ -1,0 +1,13 @@
+system "shape_terrain_system"
+    .implement "shape_terrain.lua"
+    .method "entity_init"
+
+component_v2 "shape_terrain".type "lua"
+    .require_system "ant.terrain|shape_terrain_system"
+
+component_v2 "shape_terrain_drawer"
+
+policy_v2 "shape_terrain"
+    .require_system "ant.terrain|shape_terrain_system"
+    .component_v2 "shape_terrain"
+    .component_v2 "material"

@@ -10,7 +10,7 @@ local datalist  = require "datalist"
 
 local imesh     = ecs.import.interface "ant.asset|imesh"
 
-local quad_ts = ecs.system "quad_terrain_system"
+local quad_ts = ecs.system "shape_terrain_system"
 
 local function read_terrain_field(tf)
     if type(tf) == "string" then
@@ -199,16 +199,16 @@ function cterrain_fields:get_offset(sidx)
 end
 
 function quad_ts:entity_init()
-    for e in w:select "INIT quad_terrain:in material:in" do
-        local qt = e.quad_terrain
+    for e in w:select "INIT shape_terrain:in material:in" do
+        local st = e.shape_terrain
 
-        if qt.terrain_fields == nil then
+        if st.terrain_fields == nil then
             error "need define terrain_field, it should be file or table"
         end
-        qt.terrain_fields = read_terrain_field(qt.terrain_fields)
+        st.terrain_fields = read_terrain_field(st.terrain_fields)
 
-        local width, height = qt.width, qt.height
-        if width * height ~= #qt.terrain_fields then
+        local width, height = st.width, st.height
+        if width * height ~= #st.terrain_fields then
             error(("height_fields data is not equal 'width' and 'height':%d, %d"):format(width, height))
         end
 
@@ -216,7 +216,7 @@ function quad_ts:entity_init()
             error(("one of the 'width' or 'heigth' is not power of 2"):format(width, height))
         end
 
-        local ss = qt.section_size
+        local ss = st.section_size
         if not is_power_of_2(ss) then
             error(("'section_size':%d, is not power of 2"):format(ss))
         end
@@ -225,17 +225,17 @@ function quad_ts:entity_init()
             error(("invalid 'section_size':%d, larger than 'width' or 'height' or it is 0: %d, %d"):format(ss, width, height))
         end
 
-        qt.section_width, qt.section_height = width // ss, height // ss
-        qt.num_section = qt.section_width * qt.section_height
+        st.section_width, st.section_height = width // ss, height // ss
+        st.num_section = st.section_width * st.section_height
 
-        local unit = qt.unit
+        local unit = st.unit
         local material = e.material
 
-        local ctf = cterrain_fields.new(qt.terrain_fields, ss, width, height)
+        local ctf = cterrain_fields.new(st.terrain_fields, ss, width, height)
 
-        for ih=1, qt.section_height do
-            for iw=1, qt.section_width do
-                local sectionidx = (ih-1) * qt.section_width+iw
+        for ih=1, st.section_height do
+            for iw=1, st.section_width do
+                local sectionidx = (ih-1) * st.section_width+iw
                 
                 ecs.create_entity{
                     policy = {
@@ -251,7 +251,7 @@ function quad_ts:entity_init()
                         material    = material,
                         state       = "visible|selectable",
                         name        = "section" .. sectionidx,
-                        quad_terrain_drawer = true,
+                        shape_terrain_drawer = true,
                     }
                 }
 
@@ -269,7 +269,7 @@ function quad_ts:entity_init()
                         simplemesh  = imesh.init_mesh(build_section_edge_mesh(ss, sectionidx, unit, ctf)),
                         state       = "visible|selectable",
                         name        = "section_edge" .. sectionidx,
-                        quad_terrain_edge_drawer = true,
+                        shape_terrain_edge_drawer = true,
                     }
                 }
             end

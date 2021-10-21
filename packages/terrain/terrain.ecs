@@ -1,7 +1,7 @@
 import "@ant.render"
 import "@ant.asset"
 
-import "quad_terrain.ecs"
+import "shape_terrain.ecs"
 
 -- interface "terrain"
 --     .implement "terrain_system.lua"

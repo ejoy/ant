@@ -3,7 +3,7 @@ local world = ecs.world
 local w     = world.w
 
 
-local quad_terrain_test_sys = ecs.system "quad_terrain_test_system"
+local shape_terrain_test_sys = ecs.system "shape_terrain_test_system"
 
 local function generate_terrain_fields(w, h)
     local quad_types<const> = {
@@ -23,23 +23,23 @@ local function generate_terrain_fields(w, h)
     return fields
 end
 
-function quad_terrain_test_sys:init()
+function shape_terrain_test_sys:init()
     local terrain_fields = generate_terrain_fields(16, 16)
     ecs.create_entity{
         policy = {
-            "ant.terrain|quad_terrain",
+            "ant.terrain|shape_terrain",
             "ant.general|name",
         },
         data = {
-            name = "quad_terrain_test",
-            quad_terrain = {
+            name = "shape_terrain_test",
+            shape_terrain = {
                 terrain_fields = terrain_fields,
                 width = 16,
                 height = 16,
                 section_size = 4,
                 unit = 1,
             },
-            material = "/pkg/ant.test.features/assets/quad_terrain.material"
+            material = "/pkg/ant.test.features/assets/shape_terrain.material"
         }
     }
 end
