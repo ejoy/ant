@@ -69,9 +69,9 @@ end
 function usbmuxd.get_address()
 	if package.config:sub(1,1) == "\\" then
 		-- Windows
-		return "127.0.0.1", USBMUXD_SOCKET_PORT
+		return "tcp", "127.0.0.1", USBMUXD_SOCKET_PORT
 	else
-		return USBMUXD_SOCKET_FILE
+		return "unix", USBMUXD_SOCKET_FILE
 	end
 end
 

@@ -7,7 +7,7 @@ local fs    = require "filesystem"
 local blm_editor = ecs.system "editor_bake_lightmap_system"
 
 local blm_mb = world:sub{"BakeLightmap"}
-local subprocess = import_package "ant.compile_resource".subprocess
+local subprocess = import_package "ant.subprocess"
 local LUA = subprocess.tool_exe_path "lua"
 
 local prefabmgr = require "prefab_manager"

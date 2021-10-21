@@ -22,7 +22,10 @@ function vfs.realpath(path)
     local repo = rawvfs.new(repopath)
     local function realpath(path)
         local r = repo:realpath(path)
-        return assert(r, "Not exists "..path)
+        if not r then
+            error("Not exists "..path)
+        end
+        return r
     end
     local function dofile(path)
         local f = assert(io.open(realpath(path)))
@@ -54,7 +57,7 @@ function vfs.loadfile(path, ...)
     end
     local str = f:read 'a'
     f:close()
-    if runtime then
+    if supportFirmware then
         return load(str, '@' .. path, ...)
     else
         return load(str, '@' .. realpath, ...)

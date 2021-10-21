@@ -21,7 +21,7 @@ end
 do
 	local fs = require "bee.filesystem"
 	local appdata = fs.appdata_path()
-	local root = is_ios() and appdata / "ant" / "runtime" or appdata
+	local root = is_ios() and appdata or appdata / "ant" / "runtime"
 	local repo = root / ".repo"
 	if needcleanup then
 		fs.remove_all(repo)

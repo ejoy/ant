@@ -335,7 +335,7 @@ local function connection_dispose(timeout)
 	if #sending > 0  then
 		rd, wt = socket.select(rdset, wtset, timeout)
 	else
-		rd, wt = socket.select(rdset, timeout)
+		rd, wt = socket.select(rdset, nil, timeout)
 	end
 	if not rd then
 		if rd == false then
@@ -739,7 +739,7 @@ if not host then
 	host = {}
 	function host.init()
 		init_channels()
-		local _, c = channel_req()
+		local _, c = channel_req:bpop()
 		return c
 	end
 	function host.update(_, timeout)
