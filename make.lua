@@ -57,12 +57,6 @@ lm:import "3rd/scripts/reactphysics3d.lua"
 lm:import "3rd/scripts/sdl.lua"
 lm:import "runtime/make.lua"
 
-lm:phony "runtime" {
-    deps = {
-        "lua",
-    }
-}
-
 if EnableEditor then
     lm:phony "tools" {
         deps = {
@@ -73,11 +67,12 @@ if EnableEditor then
     }
     lm:phony "all" {
         deps = {
+            "editor",
             "runtime",
             "tools",
         }
     }
-    lm:default "runtime"
+    lm:default "editor"
 else
     lm:default "runtime"
 end
