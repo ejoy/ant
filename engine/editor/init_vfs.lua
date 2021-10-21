@@ -1,4 +1,4 @@
-local thread = require "thread"
+local thread = require "bee.thread"
 if thread.id ~= 0 then
     return
 end

@@ -15,7 +15,7 @@ local viewidmgr   = renderpkg.viewidmgr
 local assetmgr    = import_package "ant.asset"
 local rhwi        = import_package "ant.hwi"
 local platform    = require "platform"
-local thread      = require "thread"
+local exclusive   = require "ltask.exclusive"
 local font        = imgui.font
 local Font        = platform.font
 local cb          = {}
@@ -209,7 +209,7 @@ ltask.fork(function ()
         imgui.Render()
         bgfx.encoder_end()
         rhwi.frame()
-        thread.sleep(0.01)
+        exclusive.sleep(1)
         bgfx.encoder_begin()
         ltask.sleep(0)
     end

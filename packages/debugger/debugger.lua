@@ -21,11 +21,11 @@ local function createBootstrap()
 end
 
 local function start(wait)
-    local thread = require 'thread'
+    local thread = require "bee.thread"
     thread.newchannel "DdgNet"
-    local io_req = thread.channel_produce "IOreq"
-    io_req("SUBSCIBE", "DdgNet", "DBG")
-    io_req("SEND", "DBG", "")
+    local io_req = thread.channel "IOreq"
+    io_req:push("SUBSCIBE", "DdgNet", "DBG")
+    io_req:push("SEND", "DBG", "")
 
     local bootstrap_lua = createBootstrap()
     local rdebug = require 'remotedebug'

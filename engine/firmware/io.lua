@@ -3,8 +3,8 @@ local loadfile, host = ...
 local INTERVAL = 0.01 -- socket select timeout
 
 -- C libs only
-local thread = require "thread"
-local lsocket = require "lsocket"
+local thread = require "bee.thread"
+local socket = require "bee.socket"
 local protocol = require "protocol"
 local _print
 
@@ -25,11 +25,11 @@ local connection = {
 }
 
 local function init_channels()
-	channel_req = thread.channel_consume "IOreq"
+	channel_req = thread.channel "IOreq"
 
 	local mt = {}
 	function mt:__index(name)
-		local c = assert(thread.channel_produce(name))
+		local c = assert(thread.channel(name))
 		self[name] = c
 		return c
 	end
@@ -94,16 +94,25 @@ end
 
 local function connect_server(address, port)
 	print("Connecting", address, port)
-	local fd, err = lsocket.connect(address, port)
+	local fd, err = socket "tcp"
 	if not fd then
+		print("socket:", err)
+		return
+	end
+	local ok
+	ok, err = fd:connect(address, port)
+	if ok == nil then
+		fd:close()
 		print("connect:", err)
 		return
 	end
-	local rd,wt = lsocket.select(nil, {fd})
-	if not rd then
-		print("select:", wt)	-- select error
-		fd:close()
-		return
+	if ok == false then
+		local rd,wt = socket.select(nil, {fd})
+		if not rd then
+			print("select:", wt)	-- select error
+			fd:close()
+			return
+		end
 	end
 	local ok, err = fd:status()
 	if not ok then
@@ -117,12 +126,23 @@ end
 
 local function listen_server(address, port)
 	print("Listening", address, port)
-	local fd, err = lsocket.bind(address, port)
+	local fd, err = socket "tcp"
 	if not fd then
+		print("socket:", err)
+		return
+	end
+	local ok
+	ok, err = fd:bind(address, port)
+	if not ok then
 		print("bind:", err)
 		return
 	end
-	local rd,wt = lsocket.select({fd}, 1)
+	ok, err = fd:listen()
+	if not ok then
+		print("listen:", err)
+		return
+	end
+	local rd,wt = socket.select({fd}, 1)
 	if rd == false then
 		print("select:", 'timeout')
 		fd:close()
@@ -144,7 +164,7 @@ end
 
 local function wait_server()
 	if config.socket then
-		return lsocket.fromstring(config.socket)
+		return socket.undump(config.socket)
 	end
 	if config.nettype == nil then
 		return
@@ -161,8 +181,8 @@ end
 local function response_id(id, ...)
 	if id then
 		if type(id) == "string" then
-			local c = thread.channel_produce(id)
-			c(...)
+			local c = thread.channel(id)
+			c:push(...)
 		else
 			channel_req:ret(id, ...)
 		end
@@ -293,7 +313,7 @@ end
 local function work_offline()
 	local c = channel_req
 	while true do
-		offline_dispatch(c())
+		offline_dispatch(c:bpop())
 		logger_dispatch(offline)
 	end
 end
@@ -313,9 +333,9 @@ local function connection_dispose(timeout)
 	local fd = connection.fd
 	local rd, wt
 	if #sending > 0  then
-		rd, wt = lsocket.select(rdset, wtset, timeout)
+		rd, wt = socket.select(rdset, wtset, timeout)
 	else
-		rd, wt = lsocket.select(rdset, timeout)
+		rd, wt = socket.select(rdset, timeout)
 	end
 	if not rd then
 		if rd == false then
@@ -652,7 +672,7 @@ local function dispatch_net(cmd, ...)
 	if not f then
 		local channel_name = connection.subscibe[cmd]
 		if channel_name then
-			channel_user[channel_name](cmd, ...)
+			channel_user[channel_name]:push(cmd, ...)
 		else
 			print("Unsupport net command", cmd)
 		end

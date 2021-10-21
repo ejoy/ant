@@ -1,8 +1,8 @@
 local subprocess = require "bee.subprocess"
-local socket = require "lsocket"
+local socket = require "bee.socket"
 local protocol = require "protocol"
 local lfs = require "filesystem.local"
-local cthread = require "thread"
+local cthread = require "bee.thread"
 local sender
 
 local m = {}
@@ -86,7 +86,8 @@ function message.LOG(type, data)
 end
 
 local function connectFileServer()
-    local fd = assert(socket.connect("tcp", "127.0.0.1", 2019))
+    local fd = assert(socket "tcp")
+    assert(fd:connect("127.0.0.1", 2019) ~= nil)
     local _, wr = socket.select(nil, {fd})
     if wr and wr[1] == fd and fd:status() then
         return fd
@@ -156,7 +157,7 @@ function m.run()
 end
 
 return function()
-    arg, repopath = cthread.channel_consume "fileserver_channel"()
-    sender = cthread.channel_produce "log_channel"
+    arg, repopath = (cthread.channel "fileserver_channel"):bpop()
+    sender = cthread.channel "log_channel"
     return m
 end

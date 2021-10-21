@@ -1,12 +1,12 @@
 local ecs = ...
 local world = ecs.world
 
-local thread = require "thread"
+local thread = require "bee.thread"
 thread.newchannel "EditorMessage"
 
-local channel_req = thread.channel_produce "IOreq"
-local channel_msg = thread.channel_consume "EditorMessage"
-channel_req("SUBSCIBE", "EditorMessage", "MSG")
+local channel_req = thread.channel "IOreq"
+local channel_msg = thread.channel "EditorMessage"
+channel_req:push("SUBSCIBE", "EditorMessage", "MSG")
 
 local eventEditorRes = world:sub {"editor-res"}
 
@@ -31,6 +31,6 @@ function m:data_changed()
     while dispatch_req(channel_msg:pop()) do
     end
     for e in eventEditorRes:each() do
-        channel_req("SEND", "MSG", unpack_res(table.unpack(e)))
+        channel_req:push("SEND", "MSG", unpack_res(table.unpack(e)))
     end
 end

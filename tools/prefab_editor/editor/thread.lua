@@ -1,4 +1,4 @@
-local thread = require "thread"
+local thread = require "bee.thread"
 
 local function bootstrap(name, code)
 	if code == nil then

@@ -1,11 +1,10 @@
-local thread = require "thread"
-local math3d = require "math3d"
+local serialization = require "bee.serialization"
 local fs = require "filesystem"
 local lfs = require "filesystem.local"
 local builtin = require "builtin"
 
-local pack = thread.pack
-local unpack = thread.unpack
+local pack = serialization.pack
+local unpack = serialization.unpack
 
 local function write_file(filename, data)
     local f = lfs.open(fs.path(filename):localpath(), "wb")
