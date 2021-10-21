@@ -74,6 +74,9 @@ local function set_color(irow, icol, color)
     local start_col = clamp_col(icol - rad)
     local end_row = clamp_row(irow + rad)
     local end_col = clamp_col(icol + rad)
+    if not grid_eid.render_object then
+        world.w:sync("render_object:in", grid_eid)
+    end
     for row = start_row, end_row do
         for col = start_col, end_col do
             local vb_offset = ((row - 1) * grid.col + (col - 1)) * 4 * 4
@@ -85,8 +88,8 @@ local function set_color(irow, icol, color)
             for i = vb_offset + 1, vb_offset + 16 do
                 vb[#vb + 1] = grid_vb[i]
             end
-            local rc = world[grid_eid]._rendercache
-            local vbdesc = rc.vb
+
+            local vbdesc = grid_eid.render_object.vb
             bgfx.update(vbdesc.handles[1], vb_offset / 4, bgfx.memory_buffer("fffd", vb));
             grid.data[row][col][1] = current_brush_id
         end
@@ -107,7 +110,6 @@ function grid:init(size, row, col)
     self.data = {}
     self.visible = true
     grid_vb, grid_eid = computil.create_grid_mesh_entity("grid mesh", col, row, size, brush_def.color[1], "/pkg/ant.resources/materials/vertexcolor_translucent_nocull.material")
-    ies.set_state(grid_eid, "auxgeom", true)
     for i = 1, row do
         local rowdata = {}
         for j = 1, col do
@@ -118,6 +120,7 @@ function grid:init(size, row, col)
 end
 
 function grid:show(show)
+    if not grid_eid then return end
     self.visible = show
     ies.set_state(grid_eid, "visible", show)
 end
@@ -138,7 +141,6 @@ function grid:load(path)
     end
     self:clear()
     grid_vb, grid_eid = computil.create_grid_mesh_entity("grid mesh", source.col, source.row, source.size, color, "/pkg/ant.resources/materials/vertexcolor_translucent_nocull.material")
-    ies.set_state(grid_eid, "auxgeom", true)
     self.size = source.size
     self.row = source.row
     self.col = source.col
