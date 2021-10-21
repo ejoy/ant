@@ -4,7 +4,7 @@ local inputmgr = import_package "ant.inputmgr"
 local function create_world(config)
     local rect_w, rect_h = config.width, config.height
     local world = ecs.new_world (config)
-    local ev = inputmgr.create(world)
+    local ev = inputmgr.create(world, "sdl")
     local m = {}
     function m.init()
         world:pub {"resize", rect_w, rect_h}

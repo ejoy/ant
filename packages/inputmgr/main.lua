@@ -1,8 +1,8 @@
-local keymap      = require "keymap"
 local mouse_what  = { 'LEFT', 'RIGHT', 'MIDDLE' }
 local mouse_state = { 'DOWN', 'MOVE', 'UP' }
 
-local function create(world)
+local function create(world, type)
+    local keymap = require(type.."_keymap")
     local ev = {}
     function ev.mouse_wheel(x, y, delta)
         world:pub {"mouse_wheel", delta, x, y}

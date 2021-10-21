@@ -79,7 +79,7 @@ function S.init(nwh, context, width, height)
 	config.width  = fbw
 	config.height = fbh
 	world = ecs.new_world(config)
-	local ev = inputmgr.create(world)
+	local ev = inputmgr.create(world, "win32")
 	S.mouse_wheel = ev.mouse_wheel
 	S.mouse = ev.mouse
 	S.touch = ev.touch
