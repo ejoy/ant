@@ -460,7 +460,6 @@ __declspec(dllexport)
 #endif
 int
 luaopen_effekseer(lua_State * L) {
-	init_interface(L);
 	luaL_Reg l[] = {
 		{ "init",     leffekseer_init },
 		{ "shutdown", leffekseer_shutdown },

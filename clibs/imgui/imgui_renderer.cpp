@@ -236,7 +236,6 @@ void rendererDestroy() {
 }
 
 void rendererInit(lua_State* L) {
-	init_interface(L);
 	BGFX(vertex_layout_begin)(&g_layout, BGFX_RENDERER_TYPE_NOOP);
 	BGFX(vertex_layout_add)(&g_layout, BGFX_ATTRIB_POSITION, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
 	BGFX(vertex_layout_add)(&g_layout, BGFX_ATTRIB_TEXCOORD0, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);

@@ -6,5 +6,4 @@ if not __ANT_RUNTIME__ then
 end
 
 require "common.log"
-require "common.init_bgfx"
 require "packagemanager"

@@ -10,7 +10,7 @@ lm:source_set "source_bgfx" {
     },
     sources = {
         "*.c",
-        "bgfx_alloc.cpp"
+        "*.cpp"
     },
     defines = {
         lm.mode == "debug" and "BGFX_CONFIG_DEBUG",

@@ -55,7 +55,6 @@ void ant_loadmodules(lua_State* L) {
         { "bee.thread", luaopen_bee_thread },
         { "bgfx", luaopen_bgfx },
         { "bgfx.util", luaopen_bgfx_util },
-        { "bgfx_get_interface", (lua_CFunction)bgfx_get_interface },
         { "font", luaopen_font },
         { "font.init", luaopen_font_init },
         { "font.truetype", luaopen_font_truetype },
