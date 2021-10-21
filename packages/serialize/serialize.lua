@@ -3,7 +3,7 @@ local fs = require "filesystem"
 local lfs = require "filesystem.local"
 local builtin = require "builtin"
 
-local pack = serialization.pack
+local pack = serialization.packstring
 local unpack = serialization.unpack
 
 local function write_file(filename, data)
