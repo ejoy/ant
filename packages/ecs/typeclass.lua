@@ -6,7 +6,7 @@ local function splitname(fullname)
     return fullname:match "^([^|]*)|(.*)$"
 end
 
-local OBJECT = {"system","policy_v2","interface","component_v2"}
+local OBJECT = {"system","policy","interface","component"}
 
 local function solve_object(o, w, what, fullname)
 	local decl = w._decl[what][fullname]
@@ -34,21 +34,21 @@ end
 local check_map = {
 	require_system = "system",
 	require_interface = "interface",
-	require_policy_v2 = "policy_v2",
+	require_policy = "policy",
 	require_transform = "transform",
-	component_v2 = "component_v2",
-	component_opt = "component_v2",
+	component = "component",
+	component_opt = "component",
 }
 
 local copy = {}
-function copy.policy_v2(v)
+function copy.policy(v)
 	return {
-		policy_v2 = v.require_policy_v2,
-		component_v2 = v.component_v2,
+		policy = v.require_policy,
+		component = v.component,
 		component_opt = v.component_opt,
 	}
 end
-function copy.component_v2(v)
+function copy.component(v)
 	return {
 		type = v.type[1]
 	}
@@ -84,7 +84,7 @@ local function create_importor(w)
 					import[attrib](package, k)
 				end
 			end
-			if objname == "policy_v2" then
+			if objname == "policy" then
 				solve_policy(name, res)
 			end
 			if v.implement then

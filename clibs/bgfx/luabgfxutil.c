@@ -58,7 +58,6 @@ lencodeNormalRgba8(lua_State *L) {
 LUAMOD_API int
 luaopen_bgfx_util(lua_State *L) {
 	luaL_checkversion(L);
-	init_interface(L);
 	luaL_Reg l[] = {
 		{ "encodeNormalRgba8", lencodeNormalRgba8 },
 		{ NULL, NULL },

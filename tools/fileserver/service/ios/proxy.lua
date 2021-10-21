@@ -41,7 +41,7 @@ end
 local function updateProxy()
     while STATUS == "Attached" do
         local cfd = connectIOS()
-        local sfd = socket.connect('127.0.0.1', 2018)
+        local sfd = socket.connect('tcp', '127.0.0.1', 2018)
         SERVER_FD, CLIENT_FD = sfd, cfd
         for _ in ltask.request
             { ltask.self(), "__Proxy", sfd, cfd }

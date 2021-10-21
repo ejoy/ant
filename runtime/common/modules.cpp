@@ -36,7 +36,7 @@ int luaopen_ltask_exclusive(lua_State* L);
 int luaopen_vfs(lua_State* L);
 int luaopen_ecs_core(lua_State* L);
 int luaopen_fastio(lua_State* L);
-#if defined(ANT_ENABLE_VFS)
+#if defined(ANT_RUNTIME)
 int luaopen_firmware(lua_State* L);
 #else
 int luaopen_bee_filewatch(lua_State* L);
@@ -55,7 +55,6 @@ void ant_loadmodules(lua_State* L) {
         { "bee.thread", luaopen_bee_thread },
         { "bgfx", luaopen_bgfx },
         { "bgfx.util", luaopen_bgfx_util },
-        { "bgfx_get_interface", (lua_CFunction)bgfx_get_interface },
         { "font", luaopen_font },
         { "font.init", luaopen_font_init },
         { "font.truetype", luaopen_font_truetype },
@@ -82,7 +81,7 @@ void ant_loadmodules(lua_State* L) {
         { "ltask.exclusive", luaopen_ltask_exclusive},
         { "ecs.core", luaopen_ecs_core},
         { "fastio", luaopen_fastio},
-#if defined(ANT_ENABLE_VFS)
+#if defined(ANT_RUNTIME)
         { "firmware", luaopen_firmware },
 #else
         { "bee.filewatch", luaopen_bee_filewatch },

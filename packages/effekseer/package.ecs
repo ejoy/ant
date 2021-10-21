@@ -27,13 +27,13 @@ interface "filename_mgr"
     .implement "effekseer_system.lua"
     .method "add_path"
 
-component_v2 "effekseer"
+component "effekseer"
     .type "lua"
 
-component_v2 "effect_instance"
+component "effect_instance"
     .type "lua"
 
-policy_v2 "effekseer"
+policy "effekseer"
     .require_system "effekseer_system"
-    .component_v2 "effekseer"
-    .component_v2 "effect_instance"
+    .component "effekseer"
+    .component "effect_instance"

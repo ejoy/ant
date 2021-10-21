@@ -55,28 +55,28 @@ local attribute = {
 		"implement",
 		"require_system",
 		"require_interface",
-		"require_policy_v2",
+		"require_policy",
 		"method",
 	},
 	interface = {
 		"implement",
 		"require_system",
 		"require_interface",
-		"require_policy_v2",
+		"require_policy",
 		"method",
 	},
 	pipeline = {
 		"pipeline",
 		"stage",
 	},
-	policy_v2 = {
+	policy = {
 		"require_system",
 		"require_interface",
-		"require_policy_v2",
-		"component_v2",
+		"require_policy",
+		"component",
 		"component_opt",
 	},
-	component_v2 = {
+	component = {
 		"require_system",
 		"type",
 	},
@@ -85,15 +85,15 @@ local attribute = {
 local no_packspace = {
 	pipeline = true,
 	none = true,
-	component_v2 = true,
+	component = true,
 }
 
 local check_map = {
 	require_system = "system",
 	require_interface = "interface",
-	require_policy_v2 = "policy_v2",
-	component_v2 = "component_v2",
-	component_opt = "component_v2",
+	require_policy = "policy",
+	component = "component",
+	component_opt = "component",
 	pipeline = "none",
 	stage = "none",
 }

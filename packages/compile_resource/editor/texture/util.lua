@@ -2,7 +2,7 @@ local samplerutil = import_package "ant.render".sampler
 local stringify = import_package "ant.serialize".stringify
 
 local lfs = require "filesystem.local"
-local subprocess = require "sp_util"
+local subprocess = import_package "ant.subprocess"
 local bgfx = require "bgfx"
 local image = require "image"
 

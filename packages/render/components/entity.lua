@@ -153,9 +153,12 @@ function ientity.create_grid_mesh_entity(name, w, h, size, color, materialpath)
 			reference	= true,
 			scene 		= {srt = {}},
 			material 	= materialpath,
-			state 		= ies.create_state "visible",
+			state 		= ies.create_state "visible|auxgeom",
 			name 		= name or "GridMesh",
 			simplemesh	= imesh.init_mesh(create_dynamic_mesh("p3|c40niu", vb, ib), true), --create_mesh({"p3|c40niu", vb}, ib)
+			on_ready = function(e)
+				ies.set_state(e, "auxgeom", true)
+			end
 		},
 	}
 end

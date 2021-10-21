@@ -242,10 +242,7 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports, tolo
             data.animation_birth = lst[1]
             
 			data.pose_result = false
-			data._animation = {}
-			data.anim_clips = {}
-			data.keyframe_events = {}
-			data.joint_list = {}
+			data._animation = {anim_clips = {}, keyframe_events = {}, joint_list = {}}
 			data.skinning = {}
 			data.material_setting = { skinning = "GPU"}
 

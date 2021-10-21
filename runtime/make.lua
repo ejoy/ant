@@ -1,33 +1,35 @@
 local lm = require "luamake"
 local fs = require "bee.filesystem"
 
-local supportVfs = false
+local runtime = false
 
-local Backlist = {}
+local RuntimeBacklist = {
+    filedialog = true,
+    filewatch = true,
+    imgui = true,
+    subprocess = true,
+    bake = true,
+}
 
-if supportVfs then
-    Backlist = {
-        filedialog = true,
-        filewatch = true,
-        imgui = true,
-        subprocess = true,
-        bake = true,
-    }
-else
-    Backlist = {
-        firmware = true,
-        bake = true,
-    }
-end
+local EditorBacklist = {
+    firmware = true,
+    bake = true,
+}
 
 local RuntimeModules = {}
+local EditorModules = {}
 
 for path in fs.pairs(fs.path(lm.workdir) / "../clibs") do
     if fs.exists(path / "make.lua") then
         local name = path:stem():string()
-        if not Backlist[name] then
+        if not RuntimeBacklist[name] or not EditorBacklist[name] then
             lm:import(("../clibs/%s/make.lua"):format(name))
+        end
+        if not RuntimeBacklist[name] then
             RuntimeModules[#RuntimeModules + 1] = "source_" .. name
+        end
+        if not EditorBacklist[name] then
+            EditorModules[#EditorModules + 1] = "source_" .. name
         end
     end
 end
@@ -43,23 +45,9 @@ lm:source_set "ant_common" {
         "../3rd/bgfx/include",
         "../3rd/bx/include",
     },
-    defines = supportVfs and "ANT_ENABLE_VFS",
     sources = {
-        "common/modules.cpp",
         "common/runtime.cpp",
         "common/progdir.cpp",
-    }
-}
-
-lm:lib "ant_runtime" {
-    rootdir = "common",
-    deps = {
-        "ant_common",
-        RuntimeModules
-    },
-    includes = {
-        "../../clibs/lua",
-        "."
     },
     macos = {
         sources = "../osx/main.cpp",
@@ -69,8 +57,35 @@ lm:lib "ant_runtime" {
         sources = {
             "ios/main.mm",
             "ios/ios_error.mm",
-        },
+        }
     }
+}
+
+lm:lib "ant_runtime" {
+    deps = {
+        "ant_common",
+        RuntimeModules,
+    },
+    includes = {
+        "../clibs/lua",
+        "../3rd/bgfx/include",
+        "../3rd/bx/include",
+    },
+    defines = "ANT_RUNTIME",
+    sources = "common/modules.cpp",
+}
+
+lm:lib "ant_editor" {
+    deps = {
+        "ant_common",
+        EditorModules,
+    },
+    includes = {
+        "../clibs/lua",
+        "../3rd/bgfx/include",
+        "../3rd/bx/include",
+    },
+    sources = "common/modules.cpp",
 }
 
 lm:source_set "ant_links" {
@@ -130,6 +145,16 @@ lm:source_set "ant_openlibs" {
 lm:exe "lua" {
     deps = {
         "bgfx-lib",
+        "ant_editor",
+        "ant_openlibs",
+        "ant_links",
+        "copy_mainlua"
+    }
+}
+
+lm:exe "ant" {
+    deps = {
+        "bgfx-lib",
         "ant_runtime",
         "ant_openlibs",
         "ant_links",
@@ -137,4 +162,10 @@ lm:exe "lua" {
     }
 }
 
-lm:default "lua"
+lm:phony "editor" {
+    deps = "lua"
+}
+
+lm:phony "runtime" {
+    deps = "ant"
+}

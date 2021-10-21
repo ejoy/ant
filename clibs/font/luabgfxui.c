@@ -528,7 +528,6 @@ lsubmit_text(lua_State *L) {
 LUAMOD_API int
 luaopen_bgfx_ui(lua_State *L) {
 	luaL_checkversion(L);
-	init_interface(L);
 
 	luaL_Reg l[] = {
 		{ "fonttexture_size", NULL },

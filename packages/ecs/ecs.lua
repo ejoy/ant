@@ -18,7 +18,7 @@ local function splitname(fullname)
     return fullname:match "^([^|]*)|(.*)$"
 end
 
-local OBJECT = {"system","policy_v2","interface","component_v2"}
+local OBJECT = {"system","policy","interface","component"}
 
 return function (w, package)
     local ecs = { world = w, method = w._set_methods }

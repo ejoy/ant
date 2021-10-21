@@ -315,7 +315,6 @@ luaopen_font(lua_State *L) {
 	luaL_checkversion(L);
 	lua_newtable(L);
 	lua_newtable(L);
-	init_interface(L);
 	lua_pushcfunction(L, initfont);
 	lua_setfield(L, -2, "__call");
 	lua_setmetatable(L, -2);

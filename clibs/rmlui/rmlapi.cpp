@@ -482,7 +482,6 @@ __declspec(dllexport)
 int
 luaopen_rmlui(lua_State* L) {
 	luaL_checkversion(L);
-    init_interface(L);
 	g_plugin = new lua_plugin;
 	luaL_Reg l[] = {
 		{ "ContextLoadDocument", lContextLoadDocument },

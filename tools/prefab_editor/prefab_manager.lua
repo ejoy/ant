@@ -26,7 +26,7 @@ local bgfx          = require "bgfx"
 local gd            = require "common.global_data"
 local utils         = require "common.utils"
 local effekseer     = require "effekseer"
-local subprocess    = import_package "ant.compile_resource".subprocess
+local subprocess    = import_package "ant.subprocess"
 
 local m = {
     entities = {}

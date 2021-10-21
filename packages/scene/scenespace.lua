@@ -165,10 +165,10 @@ end
 local evSceneChanged = world:sub {"scene_changed"}
 
 function s:update_transform()
-	for v in w:select "eid:in scene:in follow_joint:in follow_flag:in" do
+	for v in w:select "scene:in follow_joint:in follow_flag:in" do
         if v.follow_joint ~= "None" then
-            for e in w:select "eid:in skeleton:in pose_result:in" do
-                if e.eid == world[v.eid].parent then
+            for e in w:select "skeleton:in pose_result:in" do
+                if e.scene.id == v.scene.parent then
                     local ske = e.skeleton._handle
                     local joint_idx = ske:joint_index(v.follow_joint)
                     local adjust_mat = e.pose_result:joint(joint_idx)

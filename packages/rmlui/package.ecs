@@ -20,4 +20,4 @@ interface "rmlui"
     .method "debugger"
     .method "open"
 
-component_v2 "rmlui_obj"
+component "rmlui_obj"

@@ -17,7 +17,7 @@ import_package "ant.window".start {
         "ant.animation|animation",
         "ant.effekseer|effekseer_playback",
     },
-    policy_v2 = {
+    policy = {
         "ant.general|name",
         "ant.scene|scene_object",
         "ant.render|render",

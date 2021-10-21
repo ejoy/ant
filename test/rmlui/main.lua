@@ -12,7 +12,7 @@ import_package "ant.window".start {
     system = {
         "ant.test.rmlui|init_system",
     },
-    policy_v2 = {
+    policy = {
         "ant.general|name",
         "ant.scene|scene_object",
         "ant.render|render",

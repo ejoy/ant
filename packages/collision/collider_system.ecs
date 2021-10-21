@@ -12,12 +12,12 @@ interface "collider"
     .method "raycast"
     .method "test"
 
-component_v2 "collider"
+component "collider"
     .type "lua"
 
-policy_v2 "collider"
+policy "collider"
     .require_system "ant.collision|collider_system"
-    .component_v2 "collider"
+    .component "collider"
 
 pipeline "collider"
     .stage "update_collider_transform"

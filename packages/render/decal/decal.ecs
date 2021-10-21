@@ -1,12 +1,12 @@
 import "@ant.asset"
 
-component_v2 "decal".type "lua"
-policy_v2 "decal"
-    .require_policy_v2 "ant.render|render_object"
+component "decal".type "lua"
+policy "decal"
+    .require_policy "ant.render|render_object"
     .require_system "ant.render|decal_system"
-    .component_v2 "state"
-    .component_v2 "material"
-    .component_v2 "decal"
+    .component "state"
+    .component "material"
+    .component "decal"
 
 system "decal_system"
     .implement "decal/decal.lua"

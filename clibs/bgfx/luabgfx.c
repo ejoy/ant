@@ -5113,7 +5113,6 @@ linitEncoder(lua_State *L) {
 LUAMOD_API int
 luaopen_bgfx(lua_State *L) {
 	luaL_checkversion(L);
-	init_interface(L);
 
 	int tfn = sizeof(c_texture_formats) / sizeof(c_texture_formats[0]);
 	lua_createtable(L, 0, tfn);

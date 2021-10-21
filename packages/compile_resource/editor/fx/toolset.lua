@@ -1,5 +1,5 @@
 local lfs = require "filesystem.local"
-local subprocess = require "sp_util"
+local subprocess = import_package "ant.subprocess"
 local SHADERC = subprocess.tool_exe_path "shaderc"
 local toolset = {}
 

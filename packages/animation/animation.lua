@@ -165,14 +165,8 @@ function ani_sys:entity_ready()
 		elseif what == "play_clip" then
 			iani.play_clip(e, p0, p1, p2)
 		elseif what == "step" then
-			-- for e in world.w:select "eid:in" do
-			-- 	if e.eid == eid then
-					world.w:sync("_animation:in", e)
-					--if e._animation._current.eid and e._animation._current.eid[1] == eid then
-						iani.step(e._animation._current, p0, p1)
-					--end
-			-- 	end
-			-- end
+			world.w:sync("_animation:in", e)
+			iani.step(e._animation._current, p0, p1)
 		elseif what == "set_time" then
 			iani.set_time(e, p0)
 		end

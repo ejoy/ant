@@ -1,16 +1,16 @@
 import "@ant.luaecs"
 
-component_v2 "eid"
+component "eid"
     .type "int"
 
 --SceneObject
-policy_v2 "scene_object"
-    .component_v2 "scene"
+policy "scene_object"
+    .component "scene"
 
-component_v2 "scene"
+component "scene"
     .type "lua"
 
-component_v2 "scene_changed"
-component_v2 "scene_unsorted"
-component_v2 "scene_sorted"
+component "scene_changed"
+component "scene_unsorted"
+component "scene_sorted"
     .type "order"

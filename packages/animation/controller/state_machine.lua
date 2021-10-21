@@ -57,7 +57,7 @@ local function play_animation(e, name, duration)
 					next_index = 1,
 					keyframe_events = current_pose.event_state
 				},
-				clip_state = { current = {clip_index = 1}, clips = e.anim_clips and e.anim_clips[name] or {}},
+				clip_state = { current = {clip_index = 1}, clips = e._animation.anim_clips and e._animation.anim_clips[name] or {}},
 				weight = 1,
 				init_weight = 1,
 				ratio = current_pose.ratio,
@@ -66,9 +66,9 @@ local function play_animation(e, name, duration)
 				animation = e.animation[name],
 				event_state = {
 					next_index = 1,
-					keyframe_events = e.keyframe_events and e.keyframe_events[name] or {}
+					keyframe_events = e._animation.keyframe_events and e._animation.keyframe_events[name] or {}
 				},
-				clip_state = { current = {clip_index = 1}, clips = e.anim_clips and e.anim_clips[name] or {}},
+				clip_state = { current = {clip_index = 1}, clips = e._animation.anim_clips and e._animation.anim_clips[name] or {}},
 				weight = 0,
 				init_weight = 0,
 				play_state = { ratio = 0.0, previous_ratio = 0.0, speed = 1.0, play = true, loop = true}
@@ -79,9 +79,9 @@ local function play_animation(e, name, duration)
 			animation = e.animation[name],
 			event_state = {
 				next_index = 1,
-				keyframe_events = e.keyframe_events and e.keyframe_events[name] or {}
+				keyframe_events = e._animation.keyframe_events and e._animation.keyframe_events[name] or {}
 			},
-			clip_state = { current = {clip_index = 1}, clips = e.anim_clips and e.anim_clips[name] or {}},
+			clip_state = { current = {clip_index = 1}, clips = e._animation.anim_clips and e._animation.anim_clips[name] or {}},
 			play_state = { ratio = 0.0, previous_ratio = 0.0, speed = 1.0, play = true, loop = true}
 		}
 		return
@@ -171,7 +171,7 @@ local function do_play(e, anim, real_clips, anim_state)
 		anim_state.eid = {}
 		anim_state.animation = anim
 		anim_state.event_state = { next_index = 1, keyframe_events = real_clips and real_clips[1][2].key_event or {} }
-		anim_state.clip_state = { current = {clip_index = 1, clips = real_clips}, clips = e.anim_clips or {}}
+		anim_state.clip_state = { current = {clip_index = 1, clips = real_clips}, clips = e._animation.anim_clips or {}}
 		anim_state.play_state = { ratio = start_ratio, previous_ratio = start_ratio, speed = realspeed, play = true, loop = anim_state.loop, manual_update = anim_state.manual}
 	end
 	e._animation._current = anim_state
@@ -179,7 +179,7 @@ local function do_play(e, anim, real_clips, anim_state)
 end
 
 function iani.play(e, anim_state)
-	w:sync("animation:in _animation:in anim_clips:in", e)
+	w:sync("animation:in _animation:in", e)
 	local anim = e.animation[anim_state.name]
 	if not anim then
 		print("animation:", anim_state.name, "not exist")
@@ -204,9 +204,9 @@ local function find_clip_or_group(clips, name, group)
 end
 
 function iani.play_clip(e, anim_state)
-	w:sync("animation:in _animation:out anim_clips:in", e)
+	w:sync("animation:in _animation:out", e)
 	local real_clips
-	local clip = find_clip_or_group(e.anim_clips, anim_state.name)
+	local clip = find_clip_or_group(e._animation.anim_clips, anim_state.name)
 	if clip then
 		real_clips = {{e.animation[clip.anim_name], clip }}
 	end
@@ -218,14 +218,14 @@ function iani.play_clip(e, anim_state)
 end
 
 function iani.play_group(e, anim_state)
-	w:sync("animation:in _animation:in anim_clips:in", e)
+	w:sync("animation:in _animation:in", e)
 	local real_clips
-	local group = find_clip_or_group(e.anim_clips, anim_state.name, true)
+	local group = find_clip_or_group(e._animation.anim_clips, anim_state.name, true)
 	if group then
 		real_clips = {}
 		for _, clip_index in ipairs(group.subclips) do
-			local anim_name = e.anim_clips[clip_index].anim_name
-			real_clips[#real_clips + 1] = {e.animation[anim_name], e.anim_clips[clip_index]}
+			local anim_name = e._animation.anim_clips[clip_index].anim_name
+			real_clips[#real_clips + 1] = {e.animation[anim_name], e._animation.anim_clips[clip_index]}
 		end
 	end
 	if not group or #real_clips < 1 then
@@ -241,19 +241,17 @@ function iani.get_duration(e)
 end
 
 function iani.get_clip_duration(e, name)
-	w:sync("anim_clips:in", e)
-	local clip = find_clip_or_group(e.anim_clips, name)
+	local clip = find_clip_or_group(e._animation.anim_clips, name)
 	if not clip then return 0 end
 	return clip.range[2] - clip.range[1]
 end
 
 function iani.get_group_duration(e, name)
-	w:sync("anim_clips:in", e)
-	local group = find_clip_or_group(e.anim_clips, name, true)
+	local group = find_clip_or_group(e._animation.anim_clips, name, true)
 	if not group then return end
 	local d = 0.0
 	for _, index in ipairs(group.subclips) do
-		local range = e.anim_clips[index].range
+		local range = e._animation.anim_clips[index].range
 		d = d + range[2] - range[1]
 	end
 	return d
@@ -441,8 +439,7 @@ function iani.is_playing(e)
 end
 
 function iani.get_collider(e, anim, time)
-	w:sync("keyframe_events:in", e)
-	local events = e.keyframe_events[anim]
+	local events = e._animation.keyframe_events[anim]
 	if not events then return end
 	local colliders
 	for _, event in ipairs(events.event) do
@@ -460,8 +457,10 @@ function iani.get_collider(e, anim, time)
 end
 
 local function do_set_clips(e, clips)
-	world.w:sync("anim_clips:in", e)
-	for _, clip in ipairs(e.anim_clips) do 
+	if not e._animation then
+		world.w:sync("_animation:in", e)
+	end
+	for _, clip in ipairs(e._animation.anim_clips) do 
 		if clip.key_event then
 			for _, ke in ipairs(clip.key_event) do
 				if ke.event_list then
@@ -475,8 +474,7 @@ local function do_set_clips(e, clips)
 			end
 		end
 	end
-	e.anim_clips = clips
-	world.w:sync("anim_clips:out", e)
+	e._animation.anim_clips = clips
 end
 
 function iani.set_clips(e, clips)
@@ -492,8 +490,7 @@ function iani.set_clips(e, clips)
 end
 
 function iani.get_clips(e)
-	w:sync("anim_clips:in", e)
-	return e.anim_clips
+	return e._animation.anim_clips
 end
 
 function iani.set_value(e, name, key, value)
