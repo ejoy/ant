@@ -93,11 +93,11 @@ local function anim_group_set_clips(eid, clips)
         iani.set_clips(anim_eid, clips)
     end
 end
-local function anim_group_set_time(eid, t)
-    local group_eid = get_anim_group_eid(eid, current_anim.name)
-    if not group_eid then return end
-    for _, anim_eid in ipairs(group_eid) do
-        iani.set_time(anim_eid, t)
+local function anim_group_set_time(e, t)
+    local group_e = get_anim_group_eid(e, current_anim.name)
+    if not group_e then return end
+    for _, anim_e in ipairs(group_e) do
+        iani.set_time(anim_e, t)
     end
 end
 
@@ -109,28 +109,12 @@ local function anim_group_stop_effect(eid)
     end
 end
 
-local function anim_group_play_group(eid, anim_state)
-    local group_eid = get_anim_group_eid(eid, current_anim.name)
-    if not group_eid then return end
-    for _, anim_eid in ipairs(group_eid) do
-        iom.set_position(world[world[anim_eid].parent].parent, {0.0,0.0,0.0})
-        iani.play_group(anim_eid, anim_state)
-    end
-end
-local function anim_group_play_clip(eid, anim_state)
-    local group_eid = get_anim_group_eid(eid, current_anim.name)
-    if not group_eid then return end
-    for _, anim_eid in ipairs(group_eid) do
-	    iom.set_position(world[world[anim_eid].parent].parent, {0.0,0.0,0.0})
-        iani.play_clip(anim_eid, anim_state)
-    end
-end
-local function anim_group_play(e, anim_state)
+local function anim_play(e, anim_state, play)
     local group_e = get_anim_group_eid(e, current_anim.name)
     if not group_e then return end
     for _, anim_e in ipairs(group_e) do
         iom.set_position(hierarchy:get_node(hierarchy:get_node(anim_e).parent).parent, {0.0,0.0,0.0})
-        iani.play(anim_e, anim_state)
+        play(anim_e, anim_state)
     end
 end
 
@@ -199,7 +183,7 @@ local function set_current_anim(anim_name)
     current_collider = nil
     current_event = nil
     
-    anim_group_play(current_e, {name = anim_name, loop = ui_loop[1], manual = false})
+    anim_play(current_e, {name = anim_name, loop = ui_loop[1], manual = false}, iani.play)
     anim_group_set_time(current_e, 0)
     anim_group_pause(current_e, not anim_state.is_playing)
     -- if not iani.is_playing(current_e) then
@@ -869,7 +853,7 @@ local function show_clips()
         if imgui.widget.Selectable(cs.name, current_clip and (current_clip.name == cs.name), 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
             set_current_clip(cs)
             if imgui.util.IsMouseDoubleClicked(0) then
-                anim_group_play_clip(current_e, {name = cs.name, loop = ui_loop[1], manual = false})
+                anim_play(current_e, {name = cs.name, loop = ui_loop[1], manual = false}, iani.play_clip)
                 anim_group_set_loop(current_e, ui_loop[1])
             end
         end
@@ -925,7 +909,7 @@ local function show_groups()
             gp.name_ui.text = gp.name
             current_group = gp
             if imgui.util.IsMouseDoubleClicked(0) then
-                anim_group_play_group(current_e, {name = gp.name, loop = ui_loop[1], manual = false})
+                anim_play(current_e, {name = gp.name, loop = ui_loop[1], manual = false}, iani.play_group)
                 anim_group_set_loop(current_e, ui_loop[1])
             end
         end
@@ -1234,7 +1218,7 @@ function m.show()
                 if anim_state.is_playing then
                     anim_group_pause(current_e, true)
                 else
-                    anim_group_play(current_e, {name = current_anim.name, loop = ui_loop[1], manual = false})
+                    anim_play(current_e, {name = current_anim.name, loop = ui_loop[1], manual = false}, iani.play)
                 end
             end
             imgui.cursor.SameLine()
@@ -1374,8 +1358,7 @@ local function construct_joints(e)
         end
     end
     setup_joint_list(joints[e].root)
-    w:sync("joint_list:out", e)
-    e.joint_list = joint_list
+    e._animation.joint_list = joint_list
     hierarchy:update_slot_list(world)
 end
 
