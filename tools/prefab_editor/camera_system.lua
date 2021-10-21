@@ -238,16 +238,22 @@ function camera_sys:handle_camera_event()
 	end
 
 	for _, what, x, y, dx, dy in mouse_drag:unpack() do
-		if what == "LEFT" and select_area and hit_plane then
-			local curpos = utils.ray_hit_plane(iom.ray(camera_mgr.main_camera, {x, y}), hit_plane)
-			local proj_len = math3d.dot(current_dir, math3d.sub(curpos, centre_pos))
-			local aspect = 1.0
-			if select_area == camera_mgr.FRUSTUM_LEFT or select_area == camera_mgr.FRUSTUM_RIGHT then
-				aspect = icamera.get_frustum(camera_mgr.second_camera).aspect
+		if what == "LEFT" then
+			if select_area and hit_plane then
+				local curpos = utils.ray_hit_plane(iom.ray(camera_mgr.main_camera, {x, y}), hit_plane)
+				local proj_len = math3d.dot(current_dir, math3d.sub(curpos, centre_pos))
+				local aspect = 1.0
+				if select_area == camera_mgr.FRUSTUM_LEFT or select_area == camera_mgr.FRUSTUM_RIGHT then
+					aspect = icamera.get_frustum(camera_mgr.second_camera).aspect
+				end
+				local half_fov = math.atan(proj_len / dist_to_plane / aspect )
+				camera_mgr.set_frustum_fov(camera_mgr.second_camera, 2 * math.deg(half_fov))
+				inspector.update_ui(true)
 			end
-			local half_fov = math.atan(proj_len / dist_to_plane / aspect )
-			camera_mgr.set_frustum_fov(camera_mgr.second_camera, 2 * math.deg(half_fov))
-			inspector.update_ui(true)
+		elseif what == "MIDDLE" then
+			camera_pan(dx, dy)
+		elseif what == "RIGHT" then
+			camera_rotate(dx, dy)
 		end
 	end
 

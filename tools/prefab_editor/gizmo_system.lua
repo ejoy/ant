@@ -28,11 +28,9 @@ local rotate_axis
 local uniform_scale = false
 local gizmo_scale = 1.0
 local local_space = false
-local global_axis_eid
 local global_axis_x_eid
 local global_axis_y_eid
 local global_axis_z_eid
-local axis_plane_area
 
 
 function gizmo:update()
@@ -956,7 +954,6 @@ end
 
 local keypress_mb = world:sub{"keyboard"}
 local viewpos_event = world:sub{"ViewportDirty"}
-local ctrl_state = false
 local prefab_mgr  = ecs.require "prefab_manager"
 local function on_mouse_move()
 	if not global_data.mouse_move or gizmo_seleted or gizmo.mode == gizmo_const.SELECT then return end
@@ -1074,13 +1071,8 @@ function gizmo_sys:handle_event()
 				end
 			elseif gizmo.mode == gizmo_const.ROTATE and rotate_axis then
 				rotate_gizmo(x, y)
-			else
-				if not ctrl_state then
-					world:pub { "camera", "pan", dx, dy }
-				end
 			end
 		elseif what == "RIGHT" then
-			world:pub { "camera", "rotate", dx, dy }
 			gizmo:update_scale()
 			gizmo:updata_uniform_scale()
 		end
@@ -1113,7 +1105,6 @@ function gizmo_sys:handle_event()
 				end
 			end
 		end
-		ctrl_state = state.CTRL
 	end
 	local global_axis_dirty
 	for _, what in camera_event:unpack() do
