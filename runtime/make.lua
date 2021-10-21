@@ -92,6 +92,7 @@ lm:source_set "ant_links" {
             "ws2_32",
             "imm32",
             "advapi32",
+            "version",
         }
     },
     macos = {
