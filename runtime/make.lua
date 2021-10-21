@@ -96,6 +96,8 @@ lm:source_set "ant_links" {
     },
     macos = {
         frameworks = {
+            "Carbon",
+            "IOKit",
             "Foundation",
             "Metal",
             "QuartzCore",
