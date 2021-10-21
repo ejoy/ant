@@ -12,10 +12,10 @@ local setting	= import_package "ant.settings".setting
 local enable_cluster_shading = setting:data().graphic.lighting.cluster_shading ~= 0
 
 local DEFAULT_INTENSITY<const> = {
-	directional = 2,--120000,
-	point = 2, --1200,
-	spot = 2,--1200,
-	area = 2, --1200
+	directional = 120000,
+	point = 1200,
+	spot = 1200,
+	area = 1200,
 }
 
 local changed = false

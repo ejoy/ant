@@ -161,6 +161,10 @@ local function build_section_mesh(sectionsize, sectionidx, unit, cterrainfileds)
     }
 end
 
+local function build_section_edge_mesh(sectionsize, sectionidx, unit, cterrainfileds)
+    
+end
+
 local cterrain_fields = {}
 
 function cterrain_fields.new(terrain_fields, sectionsize, width, height)
@@ -172,6 +176,12 @@ function cterrain_fields.new(terrain_fields, sectionsize, width, height)
     }, {__index=cterrain_fields})
 end
 
+--[[
+    field:
+        type: [none, grass, dust]
+        height: 0.0
+        edge: {left, right, top, bottom}
+]]
 function cterrain_fields:get_field(sidx, iw, ih)
     local ish = (sidx-1) // self.section_size
     local isw = (sidx-1) % self.section_size
@@ -187,13 +197,6 @@ function cterrain_fields:get_offset(sidx)
     local isw = (sidx-1) % self.section_size
     return isw * self.section_size, ish * self.section_size
 end
-
---[[
-    field:
-        type: [none, grass, dust]
-        
-
-]]
 
 function quad_ts:entity_init()
     for e in w:select "INIT quad_terrain:in material:in" do
@@ -249,6 +252,24 @@ function quad_ts:entity_init()
                         state       = "visible|selectable",
                         name        = "section" .. sectionidx,
                         quad_terrain_drawer = true,
+                    }
+                }
+
+                ecs.create_entity {
+                    policy = {
+                        "ant.scene|scene_object",
+                        "ant.render|simplerender",
+                        "ant.general|name",
+                    },
+                    data = {
+                        scene = {
+                            srt = {}
+                        },
+                        material    = material,
+                        simplemesh  = imesh.init_mesh(build_section_edge_mesh(ss, sectionidx, unit, ctf)),
+                        state       = "visible|selectable",
+                        name        = "section_edge" .. sectionidx,
+                        quad_terrain_edge_drawer = true,
                     }
                 }
             end
