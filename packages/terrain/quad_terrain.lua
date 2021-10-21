@@ -91,9 +91,16 @@ end
 
 local quad_ibs = {}
 local default_quad_ib<const> = {
-    1, 2, 3,
-    3, 4, 1,
+    0, 1, 2,
+    2, 3, 0,
 }
+
+local function add_quad_ib(ib, offset)
+    for i=1, #default_quad_ib do
+        ib[#ib+1] = default_quad_ib[i] + offset
+    end
+end
+
 local function quad_setction_ib(sectionsize)
     local ib = quad_ibs[sectionsize]
     if ib == nil then
@@ -111,31 +118,33 @@ local function quad_setction_ib(sectionsize)
 end
 
 
-local function build_section_mesh(sectionsize, sectionidx, unit, cheightfields)
-    local vb = {}
+local function build_section_mesh(sectionsize, sectionidx, unit, cterrainfileds)
+    local vb, ib = {}, {}
+    local memfmt<const> = "fffdff"
     for ih=1, sectionsize do
         for iw=1, sectionsize do
-            local field = cheightfields:get_field(sectionidx, iw, ih)
+            local field = cterrainfileds:get_field(sectionidx, iw, ih)
             if field.type == "grass" or field.type == "dust" then
                 local colors<const> = {
-                    grass = 0xff00ff00,
-                    dust = 0xffffff00,
+                    grass   = 0xff00ff00,
+                    dust    = 0xff00ffff,
                 }
-                add_quad(vb, {iw, ih}, colors[field.type], unit)
+                local iboffset = #vb // #memfmt
+                local x, z = cterrainfileds:get_offset(sectionidx)
+                add_quad(vb, {iw+x, ih+z}, colors[field.type], unit)
+                add_quad_ib(ib, iboffset)
             end
         end
     end
-    local ib = quad_setction_ib(sectionsize)
-    local numelem = sectionsize * sectionsize
-    local num_vertices = numelem * 4    --8 vertices
+
     return {
         vb = {
             start = 0,
-            num = num_vertices,
+            num = #vb // #memfmt,
             {
                 declname = layout_name,
                 memory = {
-                    "fffdff",
+                    memfmt,
                     vb,
                 }
             }
@@ -143,7 +152,7 @@ local function build_section_mesh(sectionsize, sectionidx, unit, cheightfields)
         ib = {
             flag = 'd',
             start = 0,
-            num = numelem * 6, -- #default_cube_ib
+            num = #ib,
             memory = {
                 "d",
                 ib,
@@ -171,6 +180,12 @@ function cterrain_fields:get_field(sidx, iw, ih)
                     isw * self.section_size + iw
 
     return self.terrain_fields[offset]
+end
+
+function cterrain_fields:get_offset(sidx)
+    local ish = (sidx-1) // self.section_size
+    local isw = (sidx-1) % self.section_size
+    return isw * self.section_size, ish * self.section_size
 end
 
 --[[
