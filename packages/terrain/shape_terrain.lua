@@ -30,23 +30,25 @@ end
 local layout_name<const> = declmgr.correct_layout "p3|c40niu|t20"
 local memfmt<const> = declmgr.vertex_desc_str(layout_name)
 
-local function add_cube(vb, offset, color, unit)
-    local x, y, z = offset[1], offset[2], offset[3]
-    local nx, nz = x+unit, z+unit
+local function add_cube(vb, origin, extent, color)
+    -- local x, y, z = offset[1], offset[2], offset[3]
+    -- local nx, nz = x+unit, z+unit
+    local ox, oy, oz = origin[1], origin[2], origin[3]
+    local nx, ny, nz = ox+extent[1], oy+extent[2], oz+extent[3]
     --TODO: how the uv work??
     --we need 24 vertices for a cube, and no ib buffer
     --compress this data:
     --  x, y, z for int16
     --  uv for int16/int8?
     local v = {
-         x, 0.0,  z, color, 1.0, 0.0,
-         x, 0.0, nz, color, 1.0, 1.0,
-        nx, 0.0, nz, color, 0.0, 1.0,
-        nx, 0.0,  z, color, 0.0, 0.0,
-         x, y,    z, color, 0.0, 0.0,
-         x, y,   nz, color, 0.0, 1.0,
-        nx, y,   nz, color, 1.0, 1.0,
-        nx, y,    z, color, 1.0, 0.0,
+        ox, oy, oz, color, 1.0, 0.0,
+        ox, oy, nz, color, 1.0, 1.0,
+        nx, oy, nz, color, 0.0, 1.0,
+        nx, oy, oz, color, 0.0, 0.0,
+        ox, ny, oz, color, 0.0, 0.0,
+        ox, ny, nz, color, 0.0, 1.0,
+        nx, ny, nz, color, 1.0, 1.0,
+        nx, ny, oz, color, 1.0, 0.0,
     }
 
     table.move(v, 1, #v, #vb+1, vb)
@@ -113,26 +115,7 @@ local function add_quad_ib(ib, offset)
     end
 end
 
-
-local function build_section_mesh(sectionsize, sectionidx, unit, cterrainfileds)
-    local vb, ib = {}, {}
-    for ih=1, sectionsize do
-        for iw=1, sectionsize do
-            local field = cterrainfileds:get_field(sectionidx, iw, ih)
-            if field.type == "grass" or field.type == "dust" then
-                local colors<const> = {
-                    grass   = 0xff00ff00,
-                    dust    = 0xff00ffff,
-                }
-                local iboffset = #vb // #memfmt
-                local x, z = cterrainfileds:get_offset(sectionidx)
-                local h = field.height or 0
-                add_cube(vb, {iw+x, h, ih+z}, colors[field.type], unit)
-                add_cube_ib(ib, iboffset)
-            end
-        end
-    end
-
+local function to_mesh_buffer(vb, ib)
     return {
         vb = {
             start = 0,
@@ -157,19 +140,59 @@ local function build_section_mesh(sectionsize, sectionidx, unit, cterrainfileds)
     }
 end
 
+local function build_section_mesh(sectionsize, sectionidx, unit, cterrainfileds)
+    local vb, ib = {}, {}
+    for ih=1, sectionsize do
+        for iw=1, sectionsize do
+            local field = cterrainfileds:get_field(sectionidx, iw, ih)
+            if field.type == "grass" or field.type == "dust" then
+                local colors<const> = {
+                    grass   = 0xff00ff00,
+                    dust    = 0xff00ffff,
+                }
+                local iboffset = #vb // #memfmt
+                local x, z = cterrainfileds:get_offset(sectionidx)
+                local h = field.height or 0
+                local origin = {(iw-1+x)*unit, 0.0, (ih-1+z)*unit}
+                local extent = {unit, h*unit, unit}
+                add_cube(vb, origin, extent, colors[field.type])
+                add_cube_ib(ib, iboffset)
+            end
+        end
+    end
+
+    if #vb > 0 then
+        return to_mesh_buffer(vb, ib)
+    end
+end
+
 local function build_section_edge_mesh(sectionsize, sectionidx, unit, cterrainfileds)
+    local vb, ib = {}, {}
     
+    for ih=1, sectionsize do
+        for iw=1, sectionsize do
+            local field = cterrainfileds:get_field(sectionidx, iw, ih)
+            local color = cterrainfileds.edge_color or 0xffe5e5e5
+            local edges = field.edges
+            if edges then
+                for k, edge in pairs(edges) do
+                    local iboffset = #vb // #memfmt
+                    add_cube(vb, edge.origin, edge.extent, color)
+                    add_cube_ib(ib, iboffset)
+                end
+            end
+        end
+    end
+
+    if #vb > 0 then
+        return to_mesh_buffer(vb, ib)
+    end
 end
 
 local cterrain_fields = {}
 
-function cterrain_fields.new(terrain_fields, sectionsize, width, height)
-    return setmetatable({
-        terrain_fields  = terrain_fields,
-        section_size    = sectionsize,
-        width           = width,
-        height          = height,
-    }, {__index=cterrain_fields})
+function cterrain_fields.new(st)
+    return setmetatable(st, {__index=cterrain_fields})
 end
 
 --[[
@@ -192,6 +215,97 @@ function cterrain_fields:get_offset(sidx)
     local ish = (sidx-1) // self.section_size
     local isw = (sidx-1) % self.section_size
     return isw * self.section_size, ish * self.section_size
+end
+
+function cterrain_fields:build_edges()
+    local tf = self.terrain_fields
+    local w, h = self.width, self.height
+    local unit = self.unit
+    local thickness = self.edge_thickness * unit
+    
+    for ih=1, h do
+        for iw=1, w do
+            local idx = (ih-1)*w+iw
+            local f = tf[idx]
+            local hh = f.height * 1.05 * unit
+            if f.type ~= "none" then
+                local function is_empty_elem(iiw, iih)
+                    if iiw == 0 or iih == 0 or iiw == w+1 or iih == h+1 then
+                        return true
+                    end
+
+                    local iidx = (iih-1)*w+iiw
+                    return assert(tf[iidx]).type == "none"
+                end
+                local edges = {}
+                if is_empty_elem(iw-1, ih) then
+                    local len = unit + 2 * thickness
+                    local origin = {(iw-1)*unit-thickness, 0.0, (ih-1)*unit-thickness}
+                    if not is_empty_elem(iw-1, ih+1) then
+                        len = len - thickness
+                    end
+                    if not is_empty_elem(iw-1, ih-1) then
+                        len = len - thickness
+                        origin[3] = origin[3] + thickness
+                    end
+                    edges.left = {
+                        origin = origin,
+                        extent = {thickness, hh, len},
+                    }
+                end
+
+                if is_empty_elem(iw+1, ih) then
+                    local len = unit+2*thickness
+                    local origin = {iw*unit, 0.0, (ih-1)*unit-thickness}
+                    if not is_empty_elem(iw+1, ih+1) then
+                        len = len - thickness
+                    end
+                    if not is_empty_elem(iw+1, ih-1) then
+                        len = len - thickness
+                        origin[3] = origin[3] + thickness 
+                    end
+                    edges.right = {
+                        origin = origin,
+                        extent = {thickness, hh, len}
+                    }
+                end
+
+                --top
+                if is_empty_elem(iw, ih+1) then
+                    local len = unit+2*thickness
+                    local origin = {(iw-1)*unit-thickness, 0.0, ih*unit}
+                    if not is_empty_elem(iw-1, ih+1) then
+                        len = len - thickness
+                        origin[1] = origin[1] + thickness 
+                    end
+                    if not is_empty_elem(iw+1, ih+1) then
+                        len = len - thickness
+                    end
+                    edges.top = {
+                        origin = origin,
+                        extent = {len, hh, thickness}
+                    }
+                end
+                if is_empty_elem(iw, ih-1) then
+                    local len = unit+2*thickness
+                    local origin = {(iw-1)*unit-thickness, 0.0, (ih-1)*unit-thickness}
+                    if not is_empty_elem(iw-1, ih-1) then
+                        len = len - thickness
+                        origin[1] = origin[1] + thickness 
+                    end
+                    if not is_empty_elem(iw+1, ih-1) then
+                        len = len - thickness
+                    end
+                    edges.bottom = {
+                        origin = origin,
+                        extent = {len, hh, thickness}
+                    }
+                end
+
+                f.edges = edges
+            end
+        end
+    end
 end
 
 function quad_ts:entity_init()
@@ -225,49 +339,58 @@ function quad_ts:entity_init()
         st.num_section = st.section_width * st.section_height
 
         local unit = st.unit
+        st.edge_thickness = unit * 0.15
+
         local material = e.material
 
-        local ctf = cterrain_fields.new(st.terrain_fields, ss, width, height)
+        local ctf = cterrain_fields.new(st)
+        ctf:build_edges()
 
         for ih=1, st.section_height do
             for iw=1, st.section_width do
                 local sectionidx = (ih-1) * st.section_width+iw
                 
-                ecs.create_entity{
-                    policy = {
-                        "ant.scene|scene_object",
-                        "ant.render|simplerender",
-                        "ant.general|name",
-                    },
-                    data = {
-                        scene = {
-                            srt = {}
+                local terrain_mesh = build_section_mesh(ss, sectionidx, unit, ctf)
+                if terrain_mesh then
+                    ecs.create_entity{
+                        policy = {
+                            "ant.scene|scene_object",
+                            "ant.render|simplerender",
+                            "ant.general|name",
                         },
-                        simplemesh  = imesh.init_mesh(build_section_mesh(ss, sectionidx, unit, ctf)),
-                        material    = material,
-                        state       = "visible|selectable",
-                        name        = "section" .. sectionidx,
-                        shape_terrain_drawer = true,
+                        data = {
+                            scene = {
+                                srt = {}
+                            },
+                            simplemesh  = imesh.init_mesh(terrain_mesh),
+                            material    = material,
+                            state       = "visible|selectable",
+                            name        = "section" .. sectionidx,
+                            shape_terrain_drawer = true,
+                        }
                     }
-                }
+                end
 
-                -- ecs.create_entity {
-                --     policy = {
-                --         "ant.scene|scene_object",
-                --         "ant.render|simplerender",
-                --         "ant.general|name",
-                --     },
-                --     data = {
-                --         scene = {
-                --             srt = {}
-                --         },
-                --         material    = material,
-                --         simplemesh  = imesh.init_mesh(build_section_edge_mesh(ss, sectionidx, unit, ctf)),
-                --         state       = "visible|selectable",
-                --         name        = "section_edge" .. sectionidx,
-                --         shape_terrain_edge_drawer = true,
-                --     }
-                -- }
+                local edge_meshes = build_section_edge_mesh(ss, sectionidx, unit, ctf)
+                if edge_meshes then
+                    ecs.create_entity {
+                        policy = {
+                            "ant.scene|scene_object",
+                            "ant.render|simplerender",
+                            "ant.general|name",
+                        },
+                        data = {
+                            scene = {
+                                srt = {}
+                            },
+                            material    = material,
+                            simplemesh  = imesh.init_mesh(edge_meshes),
+                            state       = "visible|selectable",
+                            name        = "section_edge" .. sectionidx,
+                            shape_terrain_edge_drawer = true,
+                        }
+                    }
+                end
             end
         end
     end

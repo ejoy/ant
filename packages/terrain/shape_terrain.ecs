@@ -6,6 +6,7 @@ component "shape_terrain".type "lua"
     .require_system "ant.terrain|shape_terrain_system"
 
 component "shape_terrain_drawer"
+component "shape_terrain_edge_drawer"
 
 policy "shape_terrain"
     .require_system "ant.terrain|shape_terrain_system"
