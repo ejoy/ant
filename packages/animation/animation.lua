@@ -129,11 +129,11 @@ function ani_sys:end_animation()
 end
 
 function ani_sys:data_changed()
-	for e in w:select "eid:in _animation:in" do
-		if e._animation._current.eid and e._animation._current.eid[1] == e.eid then
-			process_keyframe_event(e._animation._current)
-		end
-	end
+	--for e in w:select "eid:in _animation:in" do
+	--	if e._animation._current.eid and e._animation._current.eid[1] == e.eid then
+	--		process_keyframe_event(e._animation._current)
+	--	end
+	--end
 end
 
 function ani_sys:component_init()

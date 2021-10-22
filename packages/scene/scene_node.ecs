@@ -1,8 +1,5 @@
 import "@ant.luaecs"
 
-component "eid"
-    .type "int"
-
 --SceneObject
 policy "scene_object"
     .component "scene"
