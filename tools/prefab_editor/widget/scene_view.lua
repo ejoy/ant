@@ -131,21 +131,21 @@ local function show_scene_node(node)
             imgui.widget.EndDragDropTarget()
         end
     end
-    local function lock_visible(eid)
+    local function lock_visible(e)
         imgui.table.NextColumn();
-        imgui.util.PushID(tostring(eid))
-        local current_lock = hierarchy:is_locked(eid)
+        imgui.util.PushID(tostring(e))
+        local current_lock = hierarchy:is_locked(e)
         local icon = current_lock and icons.ICON_LOCK or icons.ICON_UNLOCK
         if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
-            world:pub { "HierarchyEvent", "lock", eid, not current_lock }
+            world:pub { "HierarchyEvent", "lock", e, not current_lock }
         end
         imgui.util.PopID()
         imgui.table.NextColumn();
-        imgui.util.PushID(tostring(eid))
-        local current_visible = hierarchy:is_visible(eid)
+        imgui.util.PushID(tostring(e))
+        local current_visible = hierarchy:is_visible(e)
         icon = current_visible and icons.ICON_VISIBLE or icons.ICON_UNVISIBLE
         if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
-            world:pub { "HierarchyEvent", "visible", eid, not current_visible }
+            world:pub { "HierarchyEvent", "visible", e, not current_visible }
         end
         imgui.util.PopID()
     end
@@ -258,9 +258,6 @@ function m.show()
             end
             if imgui.widget.MenuItem("Slot") then
                 world:pub { "Create", "slot"}
-            end
-            if imgui.widget.MenuItem("Particle") then
-                world:pub { "Create", "particle"}
             end
             imgui.windows.EndPopup()
         end
