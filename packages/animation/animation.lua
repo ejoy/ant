@@ -17,8 +17,6 @@ local function get_current_anim_time(task)
 	return task.play_state.ratio * task.animation._handle:duration()
 end
 
-local keyframe_update_flag = {}
-
 local function process_keyframe_event(task)
 	if task.play_state.manual_update or not task.play_state.play then return end
 	local event_state = task.event_state
@@ -129,8 +127,8 @@ function ani_sys:end_animation()
 end
 
 function ani_sys:data_changed()
-	for e in w:select "eid:in _animation:in" do
-		if e._animation._current.eid and e._animation._current.eid[1] == e.eid then
+	for e in w:select "_animation:in" do
+		if e._animation._current.eid and e._animation._current.eid[1] == e.scene.eid then
 			process_keyframe_event(e._animation._current)
 		end
 	end
@@ -149,13 +147,8 @@ function ani_sys:component_init()
 end
 local event_set_clips = world:sub{"SetClipsEvent"}
 local event_animation = world:sub{"AnimationEvent"}
-local event_do_play = world:sub{"do_play_animation"}
 
 function ani_sys:entity_ready()
-	-- for _, eh, lp in event_do_play:unpack() do
-    --     effekseer.set_loop(eh, lp)
-    --     effekseer.play(eh)
-    -- end
     for _, p, p0, p1 in event_set_clips:unpack() do
 		world:prefab_event(p, "set_clips", p0, p1)
 	end

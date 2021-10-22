@@ -32,7 +32,7 @@ system "world_transform_system"
 policy "render_object"
     .component_opt "render_object"
     .component_opt "filter_material"
-    .component_opt "eid"
+
 component "render_object_update"
 component "render_object"
     .type "lua"

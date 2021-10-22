@@ -285,12 +285,8 @@ end
 
 local function get_runtime_clips()
     if not current_e then return end
-    for e in world.w:select "eid:in" do
-		if e.eid == current_e then
-            world.w:sync("anim_clips:in", e)
-            return e.anim_clips
-        end
-    end
+    w:sync("_animation:in", current_e)
+    return current_e._animation.anim_clips
 end
 
 local function get_runtime_events()
@@ -1169,11 +1165,8 @@ function m.show()
                             for _, eid in ipairs(group_eid) do
                                 local template = hierarchy:get_template(eid)
                                 template.template.data.animation[anim_name] = anim_path
-                                for e in world.w:select "eid:in animation:in" do
-                                    if e.eid == eid then
-                                        e.animation[anim_name] = anim_path
-                                    end
-                                end
+                                w:sync("animation:in", eid)
+                                eid.animation[anim_name] = anim_path
                             end
                             --TODO:reload
                             reload = true

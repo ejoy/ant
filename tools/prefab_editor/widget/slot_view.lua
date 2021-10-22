@@ -22,12 +22,12 @@ local joint_name_list = {}
 function SlotView:set_model(eid)
     if not joint_name_list[eid] then
         local name_list = {}
-        local parent = world[eid].parent
+        local parent = eid.scene.parent
         if parent then
             -- local jlist = world[parent].joint_list
-            for e in world.w:select "eid:in joint_list:in" do
-                if e.eid == parent then
-                    for _, joint in ipairs(e.joint_list) do
+            for e in w:select "scene:in _animation:in" do
+                if e.scene.id == parent then
+                    for _, joint in ipairs(e._animation.joint_list) do
                         name_list[joint.index] = joint.name
                     end
                 end
@@ -51,9 +51,9 @@ function SlotView:set_model(eid)
         local tp = hierarchy:get_template(self.eid)
         local joint_name = (name ~= "None") and name or nil
         tp.template.data.follow_joint = joint_name
-        for v in world.w:select "eid:in scene:in follow_joint:out" do
-            if v.eid == eid then
-                v.follow_joint = joint_name
+        for v in w:select "scene:in _animation:in" do
+            if v.scene.id == eid.scene.id then
+                v._animation.follow_joint = joint_name
             end
         end
         --world[eid].follow_joint = joint_name
@@ -66,9 +66,9 @@ function SlotView:set_model(eid)
     self.follow_flag:set_setter(function(flag)
         local tp = hierarchy:get_template(self.eid)
         tp.template.data.follow_flag = flag
-        for v in world.w:select "eid:in scene:in follow_flag:out" do
-            if v.eid == eid then
-                v.follow_flag = flag
+        for v in w:select "scene:in _animation:in" do
+            if v.scene.id == eid.scene.id then
+                v._animation.follow_flag = flag
             end
         end
         --world[eid].follow_flag = flag
