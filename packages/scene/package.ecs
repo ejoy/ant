@@ -1,4 +1,2 @@
 import "scene.ecs"
 import "scene_node.ecs"
-
-import "scene_v2.ecs"

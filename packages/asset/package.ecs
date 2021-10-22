@@ -13,4 +13,40 @@ interface "imesh"
     .method "create_ib"
     .method "init_mesh"
 
-import "asset_v2.ecs"
+    system "material_system"
+    .implement "material.lua"
+    .method "component_init"
+
+system "mesh_system"
+    .implement "mesh.lua"
+    .method "component_init"
+    .method "entity_init"
+    .method "end_frame"
+
+component "mesh_result".type "lua"
+    .require_system "ant.asset|mesh_system"
+
+component "material_result".type "lua"
+    .require_system "ant.asset|material_system"
+component "material_setting".type "lua"
+component "material".type "lua"
+    .require_system "ant.asset|material_system"
+
+component "mesh".type "lua"
+    .require_system "ant.asset|mesh_system"
+
+component "simplemesh".type "lua"
+    .require_system "ant.asset|mesh_system"
+component "procedural_mesh"
+component "owned_mesh_buffer"
+
+
+system "meshskin_system"
+    .implement "meshskin.lua"
+    .method "component_init"
+
+component "meshskin".type "lua"
+    .require_system "ant.asset|meshskin_system"
+
+component "meshskin_result".type "lua"
+    .require_system "ant.asset|meshskin_system"

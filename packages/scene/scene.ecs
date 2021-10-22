@@ -20,6 +20,31 @@ interface "ientity_state"
     .method "set_state"
     .method "filter_mask"
 
+    component "state".type "lua"
+    .require_system "ant.scene|entity_state_system"
+
+system "entity_state_system"
+    .implement "entity_state.lua"
+    .method "entity_init"
+
+component "widget_entity"
+
+component "initializing"
+
+component "slot"
+    .type "lua"
+
+component "follow_joint"
+    .type "lua"
+
+component "follow_flag"
+    .type "lua"
+    
+policy "slot"
+    .component "slot"
+    .component "follow_joint"
+    .component "follow_flag"
+
 pipeline "scene"
     .stage "update_hierarchy"
     .stage "begin_filter"

@@ -1,1 +1,12 @@
-import "general_v2.ecs"
+component "name".type "lua"
+policy "name"
+    .component "name"
+
+component "tag".type "lua"
+policy "tag"
+    .component "tag"
+
+component "transform".type "lua"
+
+policy "transform_policy"
+    .component "transform"
