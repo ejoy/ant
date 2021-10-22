@@ -18,7 +18,6 @@ mount: 1
 policy:
   ant.general|name
   ant.scene|scene_object
-  ant.scene|scene_object
 ---
 data:
   material: /pkg/ant.resources.binary/meshes/base/torus.glb|materials/lambert1.material

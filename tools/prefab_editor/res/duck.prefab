@@ -18,7 +18,6 @@ mount: 1
 policy:
   ant.general|name
   ant.scene|scene_object
-  ant.scene|scene_object
 ---
 data:
   material: /pkg/tools.prefab_editor/res/Duck.glb|materials/blinn3-fx.material

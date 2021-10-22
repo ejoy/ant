@@ -3,12 +3,13 @@ data:
   material: /pkg/ant.resources/materials/mesh_shadow.material
   mesh: /pkg/tools.prefab_editor/res/plane.meshbin
   name: "testplane"
-  scene_entity: true
   state: 7
-  transform:
+  scene:
+    srt:
       r: {0, 0, 0, 1}
       s: {5, 1, 5, 0}
       t: {0, 0, 0, 1}
 policy:
   ant.general|name
   ant.render|render
+  ant.scene|scene_object
