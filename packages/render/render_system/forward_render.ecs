@@ -9,7 +9,6 @@ system "forward_render_system"
     .method "init"
     .method "data_changed"
 
---forward_render_v2
 policy "forward_render"
     .require_policy     "ant.render|render_queue"
     .require_system     "forward_render_system"
