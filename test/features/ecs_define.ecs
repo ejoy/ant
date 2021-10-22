@@ -63,7 +63,7 @@ system "init_loader_system"
     .require_policy "ant.render|render_queue"
     .require_policy "ant.objcontroller|pickup"
     .require_policy "ant.render|postprocess"
-    .require_policy "ant.terrain|quad_terrain"
+    .require_policy "ant.terrain|shape_terrain"
 
     .require_interface "ant.camera|camera"
     .require_interface "ant.objcontroller|obj_motion"

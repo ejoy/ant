@@ -28,52 +28,65 @@ local function is_power_of_2(n)
 end
 
 local layout_name<const> = declmgr.correct_layout "p3|c40niu|t20"
-local vertex_layout = declmgr.get(layout_name)
+local memfmt<const> = declmgr.vertex_desc_str(layout_name)
 
 local function add_cube(vb, offset, color, unit)
     local x, y, z = offset[1], offset[2], offset[3]
     local nx, nz = x+unit, z+unit
     --TODO: how the uv work??
+    --we need 24 vertices for a cube, and no ib buffer
+    --compress this data:
+    --  x, y, z for int16
+    --  uv for int16/int8?
     local v = {
-         x, 0.0,  z, 1.0, 0.0,
-         x, 0.0, nz, 1.0, 1.0,
-        nx, 0.0, nz, 0.0, 1.0,
-        nx, 0.0,  z, 0.0, 0.0,
-         x, y,    z, 0.0, 0.0,
-         x, y,   nz, 0.0, 1.0,
-        nx, y,   nz, 1.0, 1.0,
-        nx, y,    z, 1.0, 0.0,
+         x, 0.0,  z, color, 1.0, 0.0,
+         x, 0.0, nz, color, 1.0, 1.0,
+        nx, 0.0, nz, color, 0.0, 1.0,
+        nx, 0.0,  z, color, 0.0, 0.0,
+         x, y,    z, color, 0.0, 0.0,
+         x, y,   nz, color, 0.0, 1.0,
+        nx, y,   nz, color, 1.0, 1.0,
+        nx, y,    z, color, 1.0, 0.0,
     }
 
-    table.move(vb, 1, #vb+1, v)
+    table.move(v, 1, #v, #vb+1, vb)
 end
 
+--[[
+     5-------6
+    /       /|
+   /       / |
+  4-------7  2
+  |       |  /
+  |       | /
+  0-------3
+]]
+
 local default_cube_ib<const> = {
+    --bottom
     3, 2, 1,
     1, 0, 3,
+    --top
     4, 5, 6,
     6, 7, 4,
+    --left
+    1, 5, 4,
+    4, 0, 1,
+    --right
+    3, 7, 6,
+    6, 2, 3,
+    --front
+    0, 4, 7,
+    7, 3, 0,
+    --back
+    2, 6, 5,
+    5, 1, 2,
 }
 
-local cube_ibs = {}
-
-local function cube_setction_ib(sectionsize)
-    local ib = cube_ibs[sectionsize]
-    if ib == nil then
-        local numelem = sectionsize*sectionsize
-        local num_vertices<const> = 8
-        ib = {}
-        table.move(ib, 1, #ib+1, default_cube_ib)
-        for i=2, numelem do
-            for j=1, #default_cube_ib do
-                ib[#ib+1] = default_cube_ib[j]+num_vertices
-            end
-        end
-
-        cube_ibs[sectionsize] = ib
+local function add_cube_ib(ib, offset)
+    for i=1, #default_cube_ib do
+        ib[#ib+1] = default_cube_ib[i] + offset
     end
-
-    return ib
 end
 
 local function add_quad(vb, offset, color, unit)
@@ -89,7 +102,6 @@ local function add_quad(vb, offset, color, unit)
     table.move(v, 1, #v, #vb+1, vb)
 end
 
-local quad_ibs = {}
 local default_quad_ib<const> = {
     0, 1, 2,
     2, 3, 0,
@@ -101,26 +113,9 @@ local function add_quad_ib(ib, offset)
     end
 end
 
-local function quad_setction_ib(sectionsize)
-    local ib = quad_ibs[sectionsize]
-    if ib == nil then
-        ib = {}
-        table.move(default_quad_ib, 1, #default_cube_ib, 1, ib)
-        for i=2, sectionsize*sectionsize do
-            for j=1, #default_quad_ib do
-                ib[#ib+1] = default_quad_ib[j] + 4  --4 for quad vertex number
-            end
-        end
-
-        quad_ibs[sectionsize] = ib
-    end
-    return ib
-end
-
 
 local function build_section_mesh(sectionsize, sectionidx, unit, cterrainfileds)
     local vb, ib = {}, {}
-    local memfmt<const> = "fffdff"
     for ih=1, sectionsize do
         for iw=1, sectionsize do
             local field = cterrainfileds:get_field(sectionidx, iw, ih)
@@ -131,8 +126,9 @@ local function build_section_mesh(sectionsize, sectionidx, unit, cterrainfileds)
                 }
                 local iboffset = #vb // #memfmt
                 local x, z = cterrainfileds:get_offset(sectionidx)
-                add_quad(vb, {iw+x, ih+z}, colors[field.type], unit)
-                add_quad_ib(ib, iboffset)
+                local h = field.height or 0
+                add_cube(vb, {iw+x, h, ih+z}, colors[field.type], unit)
+                add_cube_ib(ib, iboffset)
             end
         end
     end
@@ -255,23 +251,23 @@ function quad_ts:entity_init()
                     }
                 }
 
-                ecs.create_entity {
-                    policy = {
-                        "ant.scene|scene_object",
-                        "ant.render|simplerender",
-                        "ant.general|name",
-                    },
-                    data = {
-                        scene = {
-                            srt = {}
-                        },
-                        material    = material,
-                        simplemesh  = imesh.init_mesh(build_section_edge_mesh(ss, sectionidx, unit, ctf)),
-                        state       = "visible|selectable",
-                        name        = "section_edge" .. sectionidx,
-                        shape_terrain_edge_drawer = true,
-                    }
-                }
+                -- ecs.create_entity {
+                --     policy = {
+                --         "ant.scene|scene_object",
+                --         "ant.render|simplerender",
+                --         "ant.general|name",
+                --     },
+                --     data = {
+                --         scene = {
+                --             srt = {}
+                --         },
+                --         material    = material,
+                --         simplemesh  = imesh.init_mesh(build_section_edge_mesh(ss, sectionidx, unit, ctf)),
+                --         state       = "visible|selectable",
+                --         name        = "section_edge" .. sectionidx,
+                --         shape_terrain_edge_drawer = true,
+                --     }
+                -- }
             end
         end
     end

@@ -14,8 +14,10 @@ local function generate_terrain_fields(w, h)
     for ih=1, h do
         for iw=1, w do
             local which = math.random(1, 3)
+            local height = math.random() * 0.12
             fields[#fields+1] = {
-                type = quad_types[which]
+                type    = quad_types[which],
+                height  = height,
             }
         end
     end
