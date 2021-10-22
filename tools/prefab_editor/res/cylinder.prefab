@@ -1,42 +1,37 @@
 ---
-action:
-  mount: root
 data:
   name: "Root Scene"
-  scene_entity: true
-  transform: {}
+  scene:
+    srt: {}
 policy:
   ant.general|name
-  ant.scene|hierarchy_policy
-  ant.scene|transform_policy
+  ant.scene|scene_object
 ---
-action:
-  mount: 1
 data:
   name: RootNode
-  scene_entity: true
-  transform:
-    r: {0, 0, 0, -1}
-    s: {1, 1, 1}
-    t: {0, 0, 0}
+  scene:
+    srt:
+      r: {0, 0, 0, -1}
+      s: {1, 1, 1}
+      t: {0, 0, 0}
+mount: 1
 policy:
   ant.general|name
-  ant.scene|hierarchy_policy
-  ant.scene|transform_policy
+  ant.scene|scene_object
+  ant.scene|scene_object
 ---
-action:
-  mount: 2
 data:
   material: /pkg/ant.resources.binary/meshes/base/cylinder.glb|materials/lambert1.material
   mesh: /pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin
   name: pCylinder1
-  scene_entity: true
+  scene:
+    srt:
+      r: {0, 0, 0, -1}
+      s: {100, 100, 100}
+      t: {0, 0, 0}
   state: 7
-  transform:
-    r: {0, 0, 0, -1}
-    s: {100, 100, 100}
-    t: {0, 0, 0}
+mount: 2
 policy:
   ant.general|name
   ant.render|render
-  ant.scene|hierarchy_policy
+  ant.scene|scene_object

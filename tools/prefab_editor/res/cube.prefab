@@ -1,6 +1,4 @@
 ---
-action:
-  set_parent: "@root"
 data:
   name: "Root Scene"
   scene:
@@ -8,10 +6,7 @@ data:
 policy:
   ant.general|name
   ant.scene|scene_object
-script: /pkg/ant.prefab/default_script.lua
 ---
-action:
-  set_parent: "@1"
 data:
   name: RootNode
   scene:
@@ -19,13 +14,12 @@ data:
       r: {0, 0, 0, -1}
       s: {1, 1, 1}
       t: {0, 0, 0}
+mount: 1
 policy:
   ant.general|name
   ant.scene|scene_object
   ant.scene|scene_object
 ---
-action:
-  set_parent: "@2"
 data:
   material: /pkg/ant.resources.binary/meshes/base/cube.glb|materials/lambert1.material
   mesh: /pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin
@@ -36,6 +30,7 @@ data:
       s: {100, 100, 100}
       t: {0, 0, 0}
   state: 7
+mount: 2
 policy:
   ant.general|name
   ant.render|render
