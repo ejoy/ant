@@ -299,8 +299,8 @@ function sm:data_changed()
 		end
 	end
 
-	for v in w:select "scene_changed main_queue eid:in" do
-		world:pub{"component_changed", "viewcamera", v.eid}
+	for v in w:select "scene_changed main_queue" do
+		world:pub{"component_changed", "viewcamera", v}
 	end
 
 	for msg in viewcamera_frustum_mb:each() do
