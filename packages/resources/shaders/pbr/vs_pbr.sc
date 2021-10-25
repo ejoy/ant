@@ -1,15 +1,11 @@
-#include "common/inputs.sh"
-#ifdef USING_LIGHTMAP
-$input a_position, a_normal, a_tangent, a_texcoord0, a_texcoord1
-$output v_texcoord0, v_texcoord1, v_posWS, v_normal, v_tangent, v_bitangent
-#else //!USING_LIGHTMAP
-DEF_SKINNING_INPUTS3(a_normal, a_tangent, a_texcoord0)
-$output v_texcoord0, v_posWS, v_normal, v_tangent, v_bitangent
-#endif //USING_LIGHTMAP
+#include "pbr/inputs.sh"
+$input 	a_position a_normal a_tangent a_texcoord0 INPUT_TEXCOORD1 INPUT_COLOR0
+$output v_posWS v_normal v_tangent v_bitangent v_texcoord0 OUTPUT_TEXCOORD1 OUTPUT_COLOR0
 
 #include <bgfx_shader.sh>
 #include "common/transform.sh"
 
+//TODO: u_cluster_param1 has same uniform
 uniform vec4 u_camera_info;
 #define u_near u_camera_info.x
 #define u_far u_camera_info.y
@@ -44,6 +40,10 @@ void main()
 #ifdef USING_LIGHTMAP
 	v_texcoord1 = a_texcoord1;
 #endif //USING_LIGHTMAP
+
+#ifdef WITH_COLOR_ATTRIB
+	v_color0 = a_color0;
+#endif //WITH_COLOR_ATTRIB
 	//TODO: normal and tangent should use inverse transpose matrix
 	v_normal	= normalize(mul(wm, vec4(a_normal, 0.0)).xyz);
 	v_tangent	= normalize(mul(wm, vec4(a_tangent, 0.0)).xyz);

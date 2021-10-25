@@ -1,7 +1,12 @@
 fx:
-  fs: /pkg/ant.resources/shaders/mesh/fs_colormesh.sc
-  vs: /pkg/ant.resources/shaders/mesh/vs_colormesh.sc
-  #setting:
-    #SINGLE_COLOR:1
-    #CYLINDER_TRANSFORM: 1
+  fs: /pkg/ant.resources/shaders/pbr/fs_pbr.sc
+  vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
+  setting:
+    CYLINDER_TRANSFORM: 1
+    MATERIAL_UNLIT: 1
+    WITH_COLOR_ATTRIB: 1
+properties:
+  u_pbr_factor:       {1, 1, 0, 0}  #metallic, roughness, alpha_cutoff, occlusion strength
+  u_emissive_factor:  {0, 0, 0, 0}
+  u_basecolor_factor: {1, 1, 1, 1}
 state: /pkg/ant.resources/materials/states/default.state

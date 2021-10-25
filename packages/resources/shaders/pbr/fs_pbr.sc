@@ -1,8 +1,7 @@
-#ifdef USING_LIGHTMAP
-$input v_texcoord0, v_texcoord1, v_posWS, v_normal, v_tangent, v_bitangent
-#else   //!USING_LIGHTMAP
-$input v_texcoord0, v_posWS, v_normal, v_tangent, v_bitangent
-#endif //USING_LIGHTMAP
+#include "pbr/inputs.sh"
+
+$input v_posWS v_normal v_tangent v_bitangent v_texcoord0 OUTPUT_TEXCOORD1 OUTPUT_COLOR0
+
 #include <bgfx_shader.sh>
 #include <bgfx_compute.sh>
 #include <shaderlib.sh>
@@ -66,13 +65,13 @@ struct material_info
     float metallic;
 };
 
-vec4 get_basecolor(vec2 texcoord)
+vec4 get_basecolor(vec2 texcoord, vec4 basecolor)
 {
-    #ifdef HAS_BASECOLOR_TEXTURE
-        return u_basecolor_factor * texture2D(s_basecolor, texcoord);
-    #else //!HAS_BASECOLOR_TEXTURE
-        return u_basecolor_factor;
-    #endif//HAS_BASECOLOR_TEXTURE
+    basecolor *= u_basecolor_factor;
+#ifdef HAS_BASECOLOR_TEXTURE
+    basecolor *= texture2D(s_basecolor, texcoord);
+#endif//HAS_BASECOLOR_TEXTURE
+    return basecolor;
 }
 
 vec3 get_normal(vec3 tangent, vec3 bitangent, vec3 normal, vec2 texcoord)
@@ -183,25 +182,30 @@ vec3 get_light_radiance(light_info l, vec3 posWS, vec3 N, vec3 V, float NdotV, m
 
 void main()
 {
+    vec2 uv =
 #ifdef UV_MOTION
-	vec2 uv = uv_motion(v_texcoord0);
+	uv_motion(v_texcoord0);
 #else //!UV_MOTION
-	vec2 uv = v_texcoord0;
+	v_texcoord0;
 #endif //UV_MOTION
-    vec4 basecolor = get_basecolor(uv);
+
+    vec4 basecolor = get_basecolor(uv, 
+#ifdef WITH_COLOR_ATTRIB
+    v_color0);
+#else //!WITH_COLOR_ATTRIB
+     vec4_splat(1.0));
+#endif //WITH_COLOR_ATTRIB
 
 #ifdef ALPHAMODE_OPAQUE
     basecolor.a = u_alpha_mask_cutoff;
-#endif
+#endif //ALPHAMODE_OPAQUE
 
 #ifdef ALPHAMODE_MASK
     // Late discard to avoid samplig artifacts. See https://github.com/KhronosGroup/glTF-Sample-Viewer/issues/267
     if(basecolor.a < u_alpha_mask_cutoff)
-    {
         discard;
-    }
     basecolor.a = 1.0;
-#endif
+#endif //ALPHAMODE_MASK
 
 #ifdef MATERIAL_UNLIT
     gl_FragColor = basecolor;
@@ -263,19 +267,19 @@ void main()
         color.rgb += ToneMap(c, 0.0, 0.0);
     }
 #else //!USING_LIGHTMAP
-    #ifdef HAS_EMISSIVE_TEXTURE
+#ifdef HAS_EMISSIVE_TEXTURE
     color += texture2D(s_emissive, uv).rgb * u_emissive_factor.rgb;
-    #endif
+#endif
 
     #ifdef ENABLE_SHADOW
 	color = shadow_visibility(v_distanceVS, vec4(v_posWS.xyz, 1.0), color);
     #endif //ENABLE_SHADOW
 
     // Calculate lighting contribution from image based lighting source (IBL)
-    #ifdef ENABLE_IBL
+#ifdef ENABLE_IBL
     color +=    get_IBL_radiance_GGX(N, V, NdotV, mi.roughness, mi.f0) +
                 get_IBL_radiance_Lambertian(N, mi.albedo);
-    #endif //ENABLE_IBL
+#endif //ENABLE_IBL
 #endif //USING_LIGHTMAP
     gl_FragColor = vec4(color, basecolor.a);
 }

@@ -1,6 +1,5 @@
 #include "common/inputs.sh"
-DEF_SKINNING_INPUTS0()
-
+$input a_position INPUT_INDICES INPUT_WEIGHT
 $output v_position
 
 #include <bgfx_shader.sh>
