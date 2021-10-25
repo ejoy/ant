@@ -309,7 +309,7 @@ function cterrain_fields:build_edges()
 end
 
 function quad_ts:entity_init()
-    for e in w:select "INIT shape_terrain:in material:in" do
+    for e in w:select "INIT shape_terrain:in material:in reference:in" do
         local st = e.shape_terrain
 
         if st.terrain_fields == nil then
@@ -352,7 +352,7 @@ function quad_ts:entity_init()
                 
                 local terrain_mesh = build_section_mesh(ss, sectionidx, unit, ctf)
                 if terrain_mesh then
-                    ecs.create_entity{
+                    local ce = ecs.create_entity{
                         policy = {
                             "ant.scene|scene_object",
                             "ant.render|simplerender",
@@ -362,6 +362,7 @@ function quad_ts:entity_init()
                             scene = {
                                 srt = {}
                             },
+                            reference   = true,
                             simplemesh  = imesh.init_mesh(terrain_mesh),
                             material    = material,
                             state       = "visible|selectable",
@@ -369,11 +370,13 @@ function quad_ts:entity_init()
                             shape_terrain_drawer = true,
                         }
                     }
+
+                    ecs.method.set_parent(ce, e.reference)
                 end
 
                 local edge_meshes = build_section_edge_mesh(ss, sectionidx, unit, ctf)
                 if edge_meshes then
-                    ecs.create_entity {
+                    local ce = ecs.create_entity {
                         policy = {
                             "ant.scene|scene_object",
                             "ant.render|simplerender",
@@ -383,6 +386,7 @@ function quad_ts:entity_init()
                             scene = {
                                 srt = {}
                             },
+                            reference   = true,
                             material    = material,
                             simplemesh  = imesh.init_mesh(edge_meshes),
                             state       = "visible|selectable",
@@ -390,6 +394,7 @@ function quad_ts:entity_init()
                             shape_terrain_edge_drawer = true,
                         }
                     }
+                    ecs.method.set_parent(ce, e.reference)
                 end
             end
         end

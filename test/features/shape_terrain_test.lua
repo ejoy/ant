@@ -10,66 +10,74 @@ local function generate_terrain_fields(w, h)
         "none", "grass", "dust"
     }
 
-    -- local fields = {}
-    -- for ih=1, h do
-    --     for iw=1, w do
-    --         local which = math.random(1, 3)
-    --         local height = math.random() * 0.12
-    --         fields[#fields+1] = {
-    --             type    = quad_types[which],
-    --             height  = height,
-    --         }
-    --     end
-    -- end
-
-    -- return fields
-    local function build(stream)
-        local fields = {}
-        for _, t in ipairs(stream) do
+    local fields = {}
+    for ih=1, h do
+        for iw=1, w do
+            local which = math.random(1, 3)
+            local height = math.random() * 0.05
             fields[#fields+1] = {
-                type = quad_types[t],
-                height = math.random() * 0.12,
+                type    = quad_types[which],
+                height  = height,
             }
         end
-        return fields
     end
-    return build{
-        2, 1, 2, 2, 2, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1,
-        1, 1, 2, 2, 2, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+    return fields
+--     local function build(stream)
+--         local fields = {}
+--         for _, t in ipairs(stream) do
+--             fields[#fields+1] = {
+--                 type = quad_types[t],
+--                 height = math.random() * 0.12,
+--             }
+--         end
+--         return fields
+--     end
+--     return build{
+--         2, 1, 2, 2, 2, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1,
+--         1, 1, 2, 2, 2, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1,
+--         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+--         3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
---
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-    }
+--         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+--         2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2,
+--         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+--         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+
+--         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+--         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+--         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+--         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+-- --
+--         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+--         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+--         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+--         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+--     }
 end
 
 function shape_terrain_test_sys:init()
-    local terrain_fields = generate_terrain_fields(16, 16)
+    local ww, hh = 256, 256
+    local terrain_fields = generate_terrain_fields(ww, hh)
     ecs.create_entity{
         policy = {
+            "ant.scene|scene_object",
             "ant.terrain|shape_terrain",
             "ant.general|name",
         },
         data = {
             name = "shape_terrain_test",
+            reference   = true,
+            scene = {
+                srt = {
+                    t = {-64.0, 0.0, -64.0},
+                }
+            },
             shape_terrain = {
                 terrain_fields = terrain_fields,
-                width = 16,
-                height = 16,
-                section_size = 4,
+                width = ww,
+                height = hh,
+                section_size = 64,
                 unit = 1,
             },
             material = "/pkg/ant.test.features/assets/shape_terrain.material"

@@ -2,8 +2,8 @@ fx:
   fs: /pkg/ant.resources/shaders/pbr/fs_pbr.sc
   vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
   setting:
-    CYLINDER_TRANSFORM: 1
-    MATERIAL_UNLIT: 1
+    #CYLINDER_TRANSFORM: 1
+    #MATERIAL_UNLIT: 1
     WITH_COLOR_ATTRIB: 1
 properties:
   u_pbr_factor:       {1, 1, 0, 0}  #metallic, roughness, alpha_cutoff, occlusion strength

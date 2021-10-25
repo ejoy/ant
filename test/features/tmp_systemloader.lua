@@ -98,6 +98,7 @@ function init_loader_sys:init()
 	-- 	}
     -- }
 
+    ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
 
     local p = ecs.create_instance "/pkg/ant.test.features/assets/entities/cube.prefab"
     function p:on_ready()
