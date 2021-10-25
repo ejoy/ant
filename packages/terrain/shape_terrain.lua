@@ -202,8 +202,8 @@ end
         edge: {left, right, top, bottom}
 ]]
 function cterrain_fields:get_field(sidx, iw, ih)
-    local ish = (sidx-1) // self.section_size
-    local isw = (sidx-1) % self.section_size
+    local ish = (sidx-1) // self.section_width
+    local isw = (sidx-1) % self.section_width
 
     local offset = (ish * self.section_size+ih-1) * self.width +
                     isw * self.section_size + iw
@@ -212,8 +212,8 @@ function cterrain_fields:get_field(sidx, iw, ih)
 end
 
 function cterrain_fields:get_offset(sidx)
-    local ish = (sidx-1) // self.section_size
-    local isw = (sidx-1) % self.section_size
+    local ish = (sidx-1) // self.section_width
+    local isw = (sidx-1) % self.section_width
     return isw * self.section_size, ish * self.section_size
 end
 

@@ -70,14 +70,14 @@ function shape_terrain_test_sys:init()
             reference   = true,
             scene = {
                 srt = {
-                    t = {-64.0, 0.0, -64.0},
+                    t = {-ww//2, 0.0, -hh//2},
                 }
             },
             shape_terrain = {
                 terrain_fields = terrain_fields,
                 width = ww,
                 height = hh,
-                section_size = 64,
+                section_size = ww//4,
                 unit = 1,
             },
             material = "/pkg/ant.test.features/assets/shape_terrain.material"
