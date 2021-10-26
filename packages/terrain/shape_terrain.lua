@@ -181,10 +181,10 @@ end
 
 local function build_section_edge_mesh(sectionsize, sectionidx, unit, cterrainfileds)
     local vb = {}
+    local color = cterrainfileds.edge.color
     for ih=1, sectionsize do
         for iw=1, sectionsize do
             local field = cterrainfileds:get_field(sectionidx, iw, ih)
-            local color = cterrainfileds.edge_color or 0xffe5e5e5
             local edges = field.edges
             if edges then
                 for k, edge in pairs(edges) do
@@ -209,11 +209,7 @@ end
     field:
         type: [none, grass, dust]
         height: 0.0
-        edge = {
-            color:
-            thickness:
-            types: {left, right, top, bottom}
-        }
+        edges: {left, right, top, bottom}
 ]]
 function cterrain_fields:get_field(sidx, iw, ih)
     local ish = (sidx-1) // self.section_width
@@ -235,7 +231,7 @@ function cterrain_fields:build_edges()
     local tf = self.terrain_fields
     local w, h = self.width, self.height
     local unit = self.unit
-    local thickness = self.edge_thickness * unit
+    local thickness = self.edge.thickness
     
     for ih=1, h do
         for iw=1, w do
@@ -353,8 +349,6 @@ function quad_ts:entity_init()
         st.num_section = st.section_width * st.section_height
 
         local unit = st.unit
-        st.edge_thickness = unit * 0.15
-
         local material = e.material
 
         local ctf = cterrain_fields.new(st)

@@ -79,6 +79,10 @@ function shape_terrain_test_sys:init()
                 height = hh,
                 section_size = ww//4,
                 unit = 1,
+                edge = {
+                    color = 0xffe5e5e5,
+                    thickness = 0.08,
+                }
             },
             material = "/pkg/ant.test.features/assets/shape_terrain.material"
         }
