@@ -28,7 +28,7 @@ local function is_power_of_2(n)
 	end
 end
 
-local layout_name<const>    = declmgr.correct_layout "p4|n3|T3|c40niu|t20"
+local layout_name<const>    = declmgr.correct_layout "p3|n3|T3|c40niu|t20"
 local layout                = declmgr.get(layout_name)
 local memfmt<const>         = declmgr.vertex_desc_str(layout_name)
 
@@ -173,12 +173,11 @@ do
     for i=1, #default_cube_ib do
         cubeib[i] = default_cube_ib[i]
     end
-    local fmt<const> = ('I'):rep(36)
-    local offset<const> = 24
+    local fmt<const> = ('I'):rep(#cubeib)
+    local offset<const> = 24    --24 = 4 * 6, 4 vertices pre face and 6 faces
 
-    local s = #fmt
-    local m = bgfx.memory_buffer(s*256*256*4)
-    local ib = {}
+    local s = #fmt * 4  -- 4 for sizeof(uint32)
+    local m = bgfx.memory_buffer(s*256*256)
     for i=1, 256*256 do
         local mo = s*(i-1)+1
         m[mo] = fmt:pack(table.unpack(cubeib))
@@ -452,7 +451,7 @@ function quad_ts:entity_init()
                                 srt = {}
                             },
                             reference   = true,
-                            simplemesh  = imesh.init_mesh(terrain_mesh),
+                            simplemesh  = terrain_mesh,
                             material    = material,
                             state       = "visible|selectable",
                             name        = "section" .. sectionidx,
@@ -477,7 +476,7 @@ function quad_ts:entity_init()
                             },
                             reference   = true,
                             material    = material,
-                            simplemesh  = imesh.init_mesh(edge_meshes),
+                            simplemesh  = edge_meshes,
                             state       = "visible|selectable",
                             name        = "section_edge" .. sectionidx,
                             shape_terrain_edge_drawer = true,
