@@ -1,18 +1,16 @@
-#ifndef SINGLE_COLOR
-$input v_color0
-#endif
-
-#ifdef SINGLE_COLOR
+#ifdef WITH_COLOR_ATTRIB
+$input OUTPUT_COLOR0
+#else //!WITH_COLOR_ATTRIB
 uniform vec4 u_color;
-#endif
+#endif //WITH_COLOR_ATTRIB
 
 #include <bgfx_shader.sh>
 
 void main()
 {
-#ifdef SINGLE_COLOR
-    gl_FragColor = u_color;
-#else
+#ifdef WITH_COLOR_ATTRIB
     gl_FragColor = v_color0;
+#else
+    gl_FragColor = u_color;
 #endif
 }

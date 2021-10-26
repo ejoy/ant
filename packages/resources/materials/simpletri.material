@@ -1,8 +1,6 @@
 fx:
   fs: /pkg/ant.resources/shaders/mesh/fs_colormesh
   vs: /pkg/ant.resources/shaders/mesh/fs_colormesh
-  setting:
-    SINGLE_COLOR: 1
 properties:
   u_color: {0.8, 0.8, 0.8, 1}
 state:

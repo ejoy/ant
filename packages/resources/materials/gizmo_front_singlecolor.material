@@ -2,7 +2,6 @@ fx:
   fs: /pkg/ant.resources/shaders/mesh/fs_colormesh
   setting:
     surfacetype: translucent
-    SINGLE_COLOR:1
   vs: /pkg/ant.resources/shaders/gizmo/vs_front_singlecolor.sc
 properties:
   u_color: {1, 1, 1, 1}

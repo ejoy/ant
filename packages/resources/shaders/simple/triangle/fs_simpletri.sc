@@ -1,18 +1,20 @@
-#ifndef SINGLE_COLOR
-$input v_color0
-#endif
+#include "common/inputs.sh"
+#include "common/inputs.sh"
+#ifdef WITH_COLOR_ATTRIB
+$input OUTPUT_COLOR0
+#else //!WITH_COLOR_ATTRIB
+uniform vec4 u_color;
+#endif //WITH_COLOR_ATTRIB
 
 #include <bgfx_shader.sh>
 
-#ifdef SINGLE_COLOR
-uniform vec4 u_color;
-#endif
+
 
 void main()
 {
-#ifdef SINGLE_COLOR
-	gl_FragColor = u_color;
-#else
+#ifdef WITH_COLOR_ATTRIB
 	gl_FragColor = v_color0;
-#endif
+#else //!WITH_COLOR_ATTRIB
+	gl_FragColor = u_color;
+#endif //WITH_COLOR_ATTRIB
 }

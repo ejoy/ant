@@ -1,6 +1,6 @@
 #include "pbr/inputs.sh"
 
-$input v_posWS v_normal v_tangent v_bitangent v_texcoord0 OUTPUT_TEXCOORD1 OUTPUT_COLOR0
+$input v_posWS v_normal v_tangent v_bitangent v_texcoord0 OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0
 
 #include <bgfx_shader.sh>
 #include <bgfx_compute.sh>

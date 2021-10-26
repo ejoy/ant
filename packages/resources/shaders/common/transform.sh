@@ -2,6 +2,7 @@
 #define __SHADER_TRANSFORMS_SH__
 
 #include <shaderlib.sh>
+#include "common/constants.sh"
 
 uniform vec4 u_clip_planes[4];
 
@@ -175,5 +176,25 @@ void check_clip_rotated_rect(vec2 pixel)
 	}
 }
 #endif //ENABLE_CLIP_RECT
+
+uniform vec4 	u_camera_info;
+#define u_near 	u_camera_info.x
+#define u_far 	u_camera_info.y
+
+vec4 do_cylinder_transform(vec4 posWS)
+{
+	vec4 posVS = mul(u_view, posWS);
+    float radian = (posVS.z / u_far) * PI * 0.1;
+    float c = cos(radian), s = sin(radian);
+
+    mat4 ct = mtxFromCols4(
+        vec4(1.0, 0.0, 0.0, 0.0),
+        vec4(0.0, c,   s,   0.0),
+        vec4(0.0, -s,   c,   0.0),
+        vec4(0.0, 0.0, 0.0, 1.0));
+
+    vec4 posCT = mul(ct, posVS);
+	return mul(u_proj, posCT);
+}
 
 #endif //__SHADER_TRANSFORMS_SH__

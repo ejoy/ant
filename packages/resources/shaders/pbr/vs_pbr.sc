@@ -1,6 +1,6 @@
 #include "pbr/inputs.sh"
-$input 	a_position a_normal a_tangent a_texcoord0 INPUT_TEXCOORD1 INPUT_COLOR0
-$output v_posWS v_normal v_tangent v_bitangent v_texcoord0 OUTPUT_TEXCOORD1 OUTPUT_COLOR0
+$input 	a_position a_normal a_tangent a_texcoord0 INPUT_LIGHTMAP_TEXCOORD INPUT_COLOR0
+$output v_posWS v_normal v_tangent v_bitangent v_texcoord0 OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0
 
 #include <bgfx_shader.sh>
 #include "common/transform.sh"

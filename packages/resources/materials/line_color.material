@@ -3,7 +3,6 @@ fx:
   vs: /pkg/ant.resources/shaders/mesh/vs_colormesh.sc
   setting:
     surfacetype: translucent
-    SINGLE_COLOR:1
     lighting:off
 properties:
   u_color: {0, 0, 0, 1}
