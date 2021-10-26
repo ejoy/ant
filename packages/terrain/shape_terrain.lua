@@ -7,6 +7,7 @@ local declmgr   = renderpkg.declmgr
 
 local fs        = require "filesystem"
 local datalist  = require "datalist"
+local bgfx      = require "bgfx"
 
 local imesh     = ecs.import.interface "ant.asset|imesh"
 
@@ -27,31 +28,116 @@ local function is_power_of_2(n)
 	end
 end
 
-local layout_name<const> = declmgr.correct_layout "p3|c40niu|t20"
-local memfmt<const> = declmgr.vertex_desc_str(layout_name)
+local layout_name<const>    = declmgr.correct_layout "p4|n3|T3|c40niu|t20"
+local layout                = declmgr.get(layout_name)
+local memfmt<const>         = declmgr.vertex_desc_str(layout_name)
 
 local function add_cube(vb, origin, extent, color)
-    -- local x, y, z = offset[1], offset[2], offset[3]
-    -- local nx, nz = x+unit, z+unit
     local ox, oy, oz = origin[1], origin[2], origin[3]
     local nx, ny, nz = ox+extent[1], oy+extent[2], oz+extent[3]
-    --TODO: how the uv work??
-    --we need 24 vertices for a cube, and no ib buffer
-    --compress this data:
+    
+    --TODO: compress this data:
     --  x, y, z for int16
     --  uv for int16/int8?
+    --  remove normal/tangent, calculate normal and tangent by gl_VertexID, but we need the ib back
+    --    or use int8 for normal/tangent, or some kind of value to point out which face the vertex belong to
+    --  write color to texture and fetch from vs
+    -- local v = {
+    --     ox, oy, oz, color, 1.0, 0.0,
+    --     ox, oy, nz, color, 1.0, 1.0,
+    --     nx, oy, nz, color, 0.0, 1.0,
+    --     nx, oy, oz, color, 0.0, 0.0,
+    --     ox, ny, oz, color, 0.0, 0.0,
+    --     ox, ny, nz, color, 0.0, 1.0,
+    --     nx, ny, nz, color, 1.0, 1.0,
+    --     nx, ny, oz, color, 1.0, 0.0,
+    -- }
+
+    -- 6 face, 4 vertices pre face, bottom face can omitted?
     local v = {
-        ox, oy, oz, color, 1.0, 0.0,
-        ox, oy, nz, color, 1.0, 1.0,
-        nx, oy, nz, color, 0.0, 1.0,
-        nx, oy, oz, color, 0.0, 0.0,
-        ox, ny, oz, color, 0.0, 0.0,
-        ox, ny, nz, color, 0.0, 1.0,
-        nx, ny, nz, color, 1.0, 1.0,
-        nx, ny, oz, color, 1.0, 0.0,
+        --bottom
+        ox, oy, nz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, 0.0, 0.0, --3
+        nx, oy, nz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, 0.0, 1.0, --2
+        nx, oy, oz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, 1.0, 1.0, --1
+        ox, oy, oz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, 1.0, 0.0, --0
+
+        --top
+        ox, ny, oz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, 0.0, 0.0, --4
+        ox, ny, nz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, 0.0, 1.0, --5
+        nx, ny, nz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, 1.0, 1.0, --6
+        nx, ny, oz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, 1.0, 0.0, --7
+
+        --left
+        nx, oy, oz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 0.0, 0.0, --1
+        ox, ny, nz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 0.0, 1.0, --5
+        ox, ny, oz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 1.0, 1.0, --4
+        ox, oy, oz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 1.0, 0.0, --0
+
+        --right
+        ox, oy, nz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 0.0, 0.0, --3
+        nx, ny, oz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 0.0, 1.0, --7
+        nx, ny, nz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 1.0, 1.0, --6
+        nx, oy, nz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 1.0, 0.0, --2
+
+        --front
+        ox, oy, oz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, 0.0, 0.0, --0
+        ox, ny, oz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, 0.0, 1.0, --4
+        nx, ny, oz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, 1.0, 1.0, --7
+        ox, oy, nz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, 1.0, 0.0, --3
+
+        --back
+        nx, oy, nz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, 0.0, 0.0, --2
+        nx, ny, nz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, 0.0, 1.0, --6
+        ox, ny, nz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, 1.0, 1.0, --5
+        nx, oy, oz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, 1.0, 0.0, --1
     }
 
+    assert(#memfmt * 6 * 4 == #v)
     table.move(v, 1, #v, #vb+1, vb)
+end
+
+local packfmt<const> = "fffffffffIff"
+local function add_cube2(vb, origin, extent, color)
+    local ox, oy, oz = table.unpack(origin)
+    local nx, ny, nz = ox+extent[1], oy+extent[2], oz+extent[3]
+    local v = {
+        packfmt:pack(ox, oy, nz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, 0.0, 0.0), --3
+        packfmt:pack(nx, oy, nz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, 0.0, 1.0), --2
+        packfmt:pack(nx, oy, oz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, 1.0, 1.0), --1
+        packfmt:pack(ox, oy, oz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, 1.0, 0.0), --0
+
+        --top
+        packfmt:pack(ox, ny, oz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, 0.0, 0.0), --4
+        packfmt:pack(ox, ny, nz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, 0.0, 1.0), --5
+        packfmt:pack(nx, ny, nz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, 1.0, 1.0), --6
+        packfmt:pack(nx, ny, oz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, 1.0, 0.0), --7
+
+        --left
+        packfmt:pack(nx, oy, oz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 0.0, 0.0), --1
+        packfmt:pack(ox, ny, nz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 0.0, 1.0), --5
+        packfmt:pack(ox, ny, oz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 1.0, 1.0), --4
+        packfmt:pack(ox, oy, oz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 1.0, 0.0), --0
+
+        --right
+        packfmt:pack(ox, oy, nz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 0.0, 0.0), --3
+        packfmt:pack(nx, ny, oz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 0.0, 1.0), --7
+        packfmt:pack(nx, ny, nz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 1.0, 1.0), --6
+        packfmt:pack(nx, oy, nz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 1.0, 0.0), --2
+
+        --front
+        packfmt:pack(ox, oy, oz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, 0.0, 0.0), --0
+        packfmt:pack(ox, ny, oz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, 0.0, 1.0), --4
+        packfmt:pack(nx, ny, oz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, 1.0, 1.0), --7
+        packfmt:pack(ox, oy, nz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, 1.0, 0.0), --3
+
+        --back
+        packfmt:pack(nx, oy, nz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, 0.0, 0.0), --2
+        packfmt:pack(nx, ny, nz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, 0.0, 1.0), --6
+        packfmt:pack(ox, ny, nz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, 1.0, 1.0), --5
+        packfmt:pack(nx, oy, oz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, 1.0, 0.0), --1
+    }
+
+    vb[#vb+1] = table.concat(v, "")
 end
 
 --[[
@@ -64,26 +150,45 @@ end
   0-------3
 ]]
 
-local default_cube_ib<const> = {
-    --bottom
-    3, 2, 1,
-    1, 0, 3,
-    --top
-    4, 5, 6,
-    6, 7, 4,
-    --left
-    1, 5, 4,
-    4, 0, 1,
-    --right
-    3, 7, 6,
-    6, 2, 3,
-    --front
-    0, 4, 7,
-    7, 3, 0,
-    --back
-    2, 6, 5,
-    5, 1, 2,
+local default_quad_ib<const> = {
+    0, 1, 2,
+    2, 3, 0,
 }
+
+local function add_quad_ib(ib, offset)
+    for i=1, #default_quad_ib do
+        ib[#ib+1] = default_quad_ib[i] + offset
+    end
+end
+
+local default_cube_ib = {}
+for i=0, 5 do
+    add_quad_ib(default_cube_ib, 4*i)
+end
+
+--build ib
+local cubeib_handle
+do
+    local cubeib = {}
+    for i=1, #default_cube_ib do
+        cubeib[i] = default_cube_ib[i]
+    end
+    local fmt<const> = ('I'):rep(36)
+    local offset<const> = 24
+
+    local s = #fmt
+    local m = bgfx.memory_buffer(s*256*256*4)
+    local ib = {}
+    for i=1, 256*256 do
+        local mo = s*(i-1)+1
+        m[mo] = fmt:pack(table.unpack(cubeib))
+        --offset, 6 * 4 = 24
+        for ii=1, #cubeib do
+            cubeib[ii]  = cubeib[ii] + offset
+        end
+    end
+    cubeib_handle = bgfx.create_index_buffer(m, "d")
+end
 
 local function add_cube_ib(ib, offset)
     for i=1, #default_cube_ib do
@@ -104,44 +209,28 @@ local function add_quad(vb, offset, color, unit)
     table.move(v, 1, #v, #vb+1, vb)
 end
 
-local default_quad_ib<const> = {
-    0, 1, 2,
-    2, 3, 0,
-}
-
-local function add_quad_ib(ib, offset)
-    for i=1, #default_quad_ib do
-        ib[#ib+1] = default_quad_ib[i] + offset
-    end
-end
-
-local function to_mesh_buffer(vb, ib)
+local function to_mesh_buffer(vb)
+    local vbbin = table.concat(vb, "")
+    local numv = #vbbin // #memfmt
+    local numi = (numv // 4) * 6
     return {
         vb = {
             start = 0,
-            num = #vb // #memfmt,
+            num = numv,
             {
-                declname = layout_name,
-                memory = {
-                    memfmt,
-                    vb,
-                }
+                handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(vbbin), layout.handle),
             }
         },
         ib = {
-            flag = 'd',
             start = 0,
-            num = #ib,
-            memory = {
-                "d",
-                ib,
-            }
+            num = numi,
+            handle = cubeib_handle,
         }
     }
 end
 
 local function build_section_mesh(sectionsize, sectionidx, unit, cterrainfileds)
-    local vb, ib = {}, {}
+    local vb = {}
     for ih=1, sectionsize do
         for iw=1, sectionsize do
             local field = cterrainfileds:get_field(sectionidx, iw, ih)
@@ -155,20 +244,18 @@ local function build_section_mesh(sectionsize, sectionidx, unit, cterrainfileds)
                 local h = field.height or 0
                 local origin = {(iw-1+x)*unit, 0.0, (ih-1+z)*unit}
                 local extent = {unit, h*unit, unit}
-                add_cube(vb, origin, extent, colors[field.type])
-                add_cube_ib(ib, iboffset)
+                add_cube2(vb, origin, extent, colors[field.type])
             end
         end
     end
 
     if #vb > 0 then
-        return to_mesh_buffer(vb, ib)
+        return to_mesh_buffer(vb)
     end
 end
 
 local function build_section_edge_mesh(sectionsize, sectionidx, unit, cterrainfileds)
-    local vb, ib = {}, {}
-    
+    local vb = {}
     for ih=1, sectionsize do
         for iw=1, sectionsize do
             local field = cterrainfileds:get_field(sectionidx, iw, ih)
@@ -176,16 +263,14 @@ local function build_section_edge_mesh(sectionsize, sectionidx, unit, cterrainfi
             local edges = field.edges
             if edges then
                 for k, edge in pairs(edges) do
-                    local iboffset = #vb // #memfmt
-                    add_cube(vb, edge.origin, edge.extent, color)
-                    add_cube_ib(ib, iboffset)
+                    add_cube2(vb, edge.origin, edge.extent, color)
                 end
             end
         end
     end
 
     if #vb > 0 then
-        return to_mesh_buffer(vb, ib)
+        return to_mesh_buffer(vb)
     end
 end
 
@@ -199,7 +284,11 @@ end
     field:
         type: [none, grass, dust]
         height: 0.0
-        edge: {left, right, top, bottom}
+        edge = {
+            color:
+            thickness:
+            types: {left, right, top, bottom}
+        }
 ]]
 function cterrain_fields:get_field(sidx, iw, ih)
     local ish = (sidx-1) // self.section_width
