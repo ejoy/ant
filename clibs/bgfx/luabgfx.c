@@ -139,12 +139,28 @@ memory_write(lua_State *L) {
 		return luaL_error(L, "Can't write to constant memory object");
 	}
 	int index = luaL_checkinteger(L, 2)-1;
-	if (index < 0 || index >= mem->size) {
-		return luaL_error(L, "out of range %d/[1-%d]", index+1, mem->size / sizeof(uint32_t));
+	if (index < 0) {
+		return luaL_error(L, "Invalid index %d", index+1);
 	}
-	uint32_t v = luaL_checkinteger(L, 3);
 	uint8_t * data = (uint8_t *)mem->data;
-	data[index] = v;
+	switch (lua_type(L, 3)) {
+	case LUA_TNUMBER :
+		if (index >= mem->size) {
+			return luaL_error(L, "Out of range %d/%d", index+1, (unsigned)mem->size);
+		}
+		data[index] = luaL_checkinteger(L, 3);
+		break;
+	case LUA_TSTRING: {
+		size_t sz;
+		const char * buf = lua_tolstring(L, 3, &sz);
+		if (index + sz > mem->size) {
+			return luaL_error(L, "Out of range (%d+%d)/%d", index+1, (unsigned)sz, (unsigned)mem->size);
+		}
+		memcpy(data+index, buf, sz);
+		break; }
+	default:
+		luaL_error(L, "Type error : %s (Need integer or string)", lua_typename(L, lua_type(L, 3)));
+	}
 	return 0;
 }
 
