@@ -1,21 +1,9 @@
-#include "pbr/inputs.sh"
+#include "common/inputs.sh"
 $input 	a_position a_normal a_tangent a_texcoord0 INPUT_LIGHTMAP_TEXCOORD INPUT_COLOR0
 $output v_posWS v_normal v_tangent v_bitangent v_texcoord0 OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0
 
 #include <bgfx_shader.sh>
 #include "common/transform.sh"
-
-//TODO: u_cluster_param1 has same uniform
-uniform vec4 u_camera_info;
-#define u_near u_camera_info.x
-#define u_far u_camera_info.y
-
-vec4 do_cylinder_transform(vec4 posWS)
-{
-	vec4 posVS = mul(u_view, posWS);
-	posVS.y = sqrt(u_far*u_far-posVS.z*posVS.z) - u_far;
-	return mul(u_proj, posVS);
-}
 
 void main()
 {

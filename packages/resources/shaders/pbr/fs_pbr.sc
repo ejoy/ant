@@ -1,4 +1,4 @@
-#include "pbr/inputs.sh"
+#include "common/inputs.sh"
 
 $input v_posWS v_normal v_tangent v_bitangent v_texcoord0 OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0
 

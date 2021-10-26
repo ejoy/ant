@@ -1,3 +1,4 @@
+#include "common/inputs.sh"
 #ifdef WITH_COLOR_ATTRIB
 $input OUTPUT_COLOR0
 #else //!WITH_COLOR_ATTRIB
