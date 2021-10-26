@@ -105,13 +105,16 @@ end
 --build ib
 local cubeib_handle
 local MAX_CUBES<const> = 256*256
+local NUM_QUAD_VERTICES<const> = 4
+local NUM_CUBE_FACES<const> = 6
+local NUM_CUBE_VERTICES = NUM_QUAD_VERTICES * NUM_CUBE_FACES
 do
     local cubeib = {}
     for i=1, #default_cube_ib do
         cubeib[i] = default_cube_ib[i]
     end
     local fmt<const> = ('I'):rep(#cubeib)
-    local offset<const> = 24    --24 = 4 * 6, 4 vertices pre face and 6 faces
+    local offset<const> = NUM_CUBE_VERTICES    --24 = 4 * 6, 4 vertices pre face and 6 faces
 
     local s = #fmt * 4  -- 4 for sizeof(uint32)
     -- here, section size maybe same as terrain size, max size is 256*256
@@ -119,7 +122,6 @@ do
     for i=1, MAX_CUBES do
         local mo = s*(i-1)+1
         m[mo] = fmt:pack(table.unpack(cubeib))
-        --offset, 6 * 4 = 24
         for ii=1, #cubeib do
             cubeib[ii]  = cubeib[ii] + offset
         end
@@ -127,25 +129,12 @@ do
     cubeib_handle = bgfx.create_index_buffer(m, "d")
 end
 
-local function add_quad(vb, offset, color, unit)
-    local x, y, z = offset[1], 0.0, offset[2]
-    local nx, nz = x+unit, z+unit
-    local v = {
-        x, y,    z, color, 0.0, 0.0,
-        x, y,   nz, color, 0.0, 1.0,
-       nx, y,   nz, color, 1.0, 1.0,
-       nx, y,    z, color, 1.0, 0.0,
-    }
-
-    table.move(v, 1, #v, #vb+1, vb)
-end
-
 local function to_mesh_buffer(vb)
     local vbbin = table.concat(vb, "")
     local numv = #vbbin // #memfmt
-    local numi = (numv // 4) * 6
+    local numi = (numv // NUM_QUAD_VERTICES) * 6 --6 for one quad 2 triangles and 1 triangle for 3 indices
 
-    local numcube = numv // 24
+    local numcube = numv // NUM_CUBE_VERTICES
     if numcube > MAX_CUBES then
         error(("index buffer for max cube is: %d, need: %d, try to make 'section_size' lower!"):format(MAX_CUBES, numcube))
     end
