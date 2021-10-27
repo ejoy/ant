@@ -165,7 +165,7 @@ local DEFAULT_colors<const> = {
 local DEFAULT_color<const> = 0xffffffff
 
 -- 2x3 tiles for all texture
-local NUM_UV_ROW<const>, NUM_UV_COL<const> = 2, 3
+local NUM_UV_ROW<const>, NUM_UV_COL<const> = 2, 4
 local UV_TILES = {}
 do
     local row_step<const>, col_step<const> = 1.0/NUM_UV_ROW, 1.0/NUM_UV_COL
@@ -207,12 +207,13 @@ end
 
 local DEFAULT_SHAPE_SECOND_UV<const> = UV_TILES[4]  -- 3 for dust first uv
 
-local function gen_shape_second_uv(height)
+local function gen_shape_second_uv(height, unit)
     local uv = {
         table.unpack(DEFAULT_SHAPE_SECOND_UV)
     }
-    local uvh = uv[4] - uv[2]
-    uv[2] = uvh-height
+
+    local h = height / unit
+    uv[2] = uv[4] - h
     return uv
 end
 
@@ -228,7 +229,7 @@ local function build_section_mesh(sectionsize, sectionidx, unit, cterrainfileds)
                 local origin = {(iw-1+x)*unit, 0.0, (ih-1+z)*unit}
                 local extent = {unit, h*unit, unit}
                 local uv0 = find_shape_uv(field.type, h, minh, maxh)
-                add_cube(vb, origin, extent, DEFAULT_color, uv0, gen_shape_second_uv(h))
+                add_cube(vb, origin, extent, DEFAULT_color, uv0, gen_shape_second_uv(h, unit))
             end
         end
     end
@@ -452,7 +453,7 @@ function quad_ts:entity_init()
                     ecs.method.set_parent(ce, e.reference)
                 end
 
-                local edge_meshes = build_section_edge_mesh(ss, sectionidx, unit, ctf)
+                local edge_meshes = nil--build_section_edge_mesh(ss, sectionidx, unit, ctf)
                 if edge_meshes then
                     local ce = ecs.create_entity {
                         policy = {
