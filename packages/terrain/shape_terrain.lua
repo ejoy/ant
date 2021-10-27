@@ -453,7 +453,7 @@ function quad_ts:entity_init()
                     ecs.method.set_parent(ce, e.reference)
                 end
 
-                local edge_meshes = nil--build_section_edge_mesh(ss, sectionidx, unit, ctf)
+                local edge_meshes = build_section_edge_mesh(ss, sectionidx, unit, ctf)
                 if edge_meshes then
                     local ce = ecs.create_entity {
                         policy = {
