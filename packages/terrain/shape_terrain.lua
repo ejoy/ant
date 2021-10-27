@@ -203,7 +203,7 @@ local function find_shape_uv(st, height, minheight, maxheight)
         error(("invalid height:%f, [%f, %f]"):format(height, minheight, maxheight))
     end
 
-    local idx = row*NUM_UV_COL+col
+    local idx = row*NUM_UV_COL+col+1
     return assert(UV_TILES[idx])
 end
 
@@ -236,13 +236,16 @@ local DEFAULT_EDGE_UV<const> = {0.0, 0.0, 1.0, 1.0}
 local function build_section_edge_mesh(sectionsize, sectionidx, unit, cterrainfileds)
     local vb = {}
     local color = cterrainfileds.edge.color
+    local h = cterrainfileds.maxheight
     for ih=1, sectionsize do
         for iw=1, sectionsize do
             local field = cterrainfileds:get_field(sectionidx, iw, ih)
             local edges = field.edges
             if edges then
                 for k, edge in pairs(edges) do
-                    add_cube(vb, edge.origin, edge.extent, color, DEFAULT_EDGE_UV, DEFAULT_EDGE_UV)
+                    local e = edge.extent
+                    local extent = {e[1], h, e[2]}
+                    add_cube(vb, edge.origin, extent, color, DEFAULT_EDGE_UV, DEFAULT_EDGE_UV)
                 end
             end
         end
@@ -294,7 +297,7 @@ function cterrain_fields:init()
             local f = tf[idx]
             local hh = f.height * 1.05 * unit
             minheight = math.min(f.height, minheight)
-            maxheight = math.min(f.height, maxheight)
+            maxheight = math.max(f.height, maxheight)
             if f.type ~= "none" then
                 local function is_empty_elem(iiw, iih)
                     if iiw == 0 or iih == 0 or iiw == w+1 or iih == h+1 then
