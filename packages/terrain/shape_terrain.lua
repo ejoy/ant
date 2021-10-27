@@ -54,10 +54,10 @@ local function add_cube(vb, origin, extent, color, uv0, uv1)
         packfmt:pack(ox, oy, oz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, u01, v00), --0
 
         --top
-        packfmt:pack(ox, ny, oz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, u10, v10), --4
-        packfmt:pack(ox, ny, nz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, u10, v11), --5
-        packfmt:pack(nx, ny, nz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, u11, v11), --6
-        packfmt:pack(nx, ny, oz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, u11, v10), --7
+        packfmt:pack(ox, ny, oz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, u00, v00), --4
+        packfmt:pack(ox, ny, nz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, u00, v01), --5
+        packfmt:pack(nx, ny, nz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, u01, v01), --6
+        packfmt:pack(nx, ny, oz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, u01, v00), --7
 
         --left
         packfmt:pack(ox, oy, nz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u10, v10), --1
