@@ -33,44 +33,47 @@ local layout                = declmgr.get(layout_name)
 local memfmt<const>         = declmgr.vertex_desc_str(layout_name)
 
 local packfmt<const> = "fffffffffIff"
-local function add_cube(vb, origin, extent, color)
+local function add_cube(vb, origin, extent, color, uv0, uv1)
     local ox, oy, oz = table.unpack(origin)
     local nx, ny, nz = ox+extent[1], oy+extent[2], oz+extent[3]
+    local u00, v00, u01, v01 = table.unpack(uv0)
+    local u10, v10, u11, v11 = table.unpack(uv1)
     local v = {
-        packfmt:pack(ox, oy, nz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, 0.0, 0.0), --3
-        packfmt:pack(nx, oy, nz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, 0.0, 1.0), --2
-        packfmt:pack(nx, oy, oz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, 1.0, 1.0), --1
-        packfmt:pack(ox, oy, oz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, 1.0, 0.0), --0
+        --bottom
+        packfmt:pack(ox, oy, nz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, u00, v00), --3
+        packfmt:pack(nx, oy, nz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, u00, v01), --2
+        packfmt:pack(nx, oy, oz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, u01, v01), --1
+        packfmt:pack(ox, oy, oz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, u01, v00), --0
 
         --top
-        packfmt:pack(ox, ny, oz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, 0.0, 0.0), --4
-        packfmt:pack(ox, ny, nz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, 0.0, 1.0), --5
-        packfmt:pack(nx, ny, nz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, 1.0, 1.0), --6
-        packfmt:pack(nx, ny, oz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, 1.0, 0.0), --7
+        packfmt:pack(ox, ny, oz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, u10, v10), --4
+        packfmt:pack(ox, ny, nz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, u10, v11), --5
+        packfmt:pack(nx, ny, nz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, u11, v11), --6
+        packfmt:pack(nx, ny, oz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, u11, v10), --7
 
         --left
-        packfmt:pack(nx, oy, oz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 0.0, 0.0), --1
-        packfmt:pack(ox, ny, nz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 0.0, 1.0), --5
-        packfmt:pack(ox, ny, oz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 1.0, 1.0), --4
-        packfmt:pack(ox, oy, oz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 1.0, 0.0), --0
+        packfmt:pack(nx, oy, oz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u10, v10), --1
+        packfmt:pack(ox, ny, nz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u10, v11), --5
+        packfmt:pack(ox, ny, oz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u11, v11), --4
+        packfmt:pack(ox, oy, oz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u11, v10), --0
 
         --right
-        packfmt:pack(ox, oy, nz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 0.0, 0.0), --3
-        packfmt:pack(nx, ny, oz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 0.0, 1.0), --7
-        packfmt:pack(nx, ny, nz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 1.0, 1.0), --6
-        packfmt:pack(nx, oy, nz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, 1.0, 0.0), --2
+        packfmt:pack(ox, oy, nz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u10, v10), --3
+        packfmt:pack(nx, ny, oz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u10, v11), --7
+        packfmt:pack(nx, ny, nz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u11, v11), --6
+        packfmt:pack(nx, oy, nz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u11, v10), --2
 
         --front
-        packfmt:pack(ox, oy, oz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, 0.0, 0.0), --0
-        packfmt:pack(ox, ny, oz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, 0.0, 1.0), --4
-        packfmt:pack(nx, ny, oz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, 1.0, 1.0), --7
-        packfmt:pack(ox, oy, nz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, 1.0, 0.0), --3
+        packfmt:pack(ox, oy, oz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, u10, v10), --0
+        packfmt:pack(ox, ny, oz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, u10, v11), --4
+        packfmt:pack(nx, ny, oz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, u11, v11), --7
+        packfmt:pack(ox, oy, nz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, u11, v10), --3
 
         --back
-        packfmt:pack(nx, oy, nz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, 0.0, 0.0), --2
-        packfmt:pack(nx, ny, nz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, 0.0, 1.0), --6
-        packfmt:pack(ox, ny, nz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, 1.0, 1.0), --5
-        packfmt:pack(nx, oy, oz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, 1.0, 0.0), --1
+        packfmt:pack(nx, oy, nz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, u10, v10), --2
+        packfmt:pack(nx, ny, nz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, u10, v11), --6
+        packfmt:pack(ox, ny, nz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, u11, v11), --5
+        packfmt:pack(nx, oy, oz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, u11, v10), --1
     }
 
     vb[#vb+1] = table.concat(v, "")
@@ -155,21 +158,70 @@ local function to_mesh_buffer(vb)
     }
 end
 
+local DEFAULT_colors<const> = {
+    grass   = 0xffffffff,
+    dust    = 0xffffffff,
+    edge    = 0xffffffff,
+}
+
+local DEFAULT_color<const> = 0xffffffff
+
+-- 2x3 tiles for all texture
+local NUM_UV_ROW<const>, NUM_UV_COL<const> = 2, 3
+local UV_TILES = {}
+do
+    local row_step<const>, col_step<const> = 1.0/NUM_UV_ROW, 1.0/NUM_UV_COL
+    for ir=1, NUM_UV_ROW do
+        local v0, v1 = (ir-1)*row_step, ir*row_step
+        for ic=1, NUM_UV_COL do
+            local u0, u1 = (ic-1)*col_step, ic*col_step
+            UV_TILES[#UV_TILES+1] = {u0, v0, u1, v1}
+        end
+    end
+end
+
+local function find_shape_uv(st, height, minheight, maxheight)
+    local row
+    if st == "grass" then
+        row = 0
+    elseif st == "dust" then
+        row = 1
+    else
+        error("invalid shape type: " .. st)
+    end
+
+    local col = 0
+    local d = maxheight-minheight
+    for h=minheight, maxheight, d do
+        if h<=height and height<h+d then
+            break
+        end
+        col = col + 1
+    end
+    
+    if col >= NUM_UV_COL then
+        error(("invalid height:%f, [%f, %f]"):format(height, minheight, maxheight))
+    end
+
+    local idx = row*NUM_UV_COL+col
+    return assert(UV_TILES[idx])
+end
+
+local DEFAULT_SHAPE_SECOND_UV<const> = UV_TILES[3]  -- 3 for dust first uv
+
 local function build_section_mesh(sectionsize, sectionidx, unit, cterrainfileds)
     local vb = {}
+    local minh, maxh = cterrainfileds.minheight, cterrainfileds.maxheight
     for ih=1, sectionsize do
         for iw=1, sectionsize do
             local field = cterrainfileds:get_field(sectionidx, iw, ih)
             if field.type == "grass" or field.type == "dust" then
-                local colors<const> = {
-                    grass   = 0xff00ff00,
-                    dust    = 0xff00ffff,
-                }
                 local x, z = cterrainfileds:get_offset(sectionidx)
-                local h = field.height or 0
+                local h = assert(field.height)
                 local origin = {(iw-1+x)*unit, 0.0, (ih-1+z)*unit}
                 local extent = {unit, h*unit, unit}
-                add_cube(vb, origin, extent, colors[field.type])
+                local uv0 = find_shape_uv(field.type, h, minh, maxh)
+                add_cube(vb, origin, extent, DEFAULT_color, uv0, DEFAULT_SHAPE_SECOND_UV)
             end
         end
     end
@@ -178,6 +230,8 @@ local function build_section_mesh(sectionsize, sectionidx, unit, cterrainfileds)
         return to_mesh_buffer(vb)
     end
 end
+
+local DEFAULT_EDGE_UV<const> = {0.0, 0.0, 1.0, 1.0}
 
 local function build_section_edge_mesh(sectionsize, sectionidx, unit, cterrainfileds)
     local vb = {}
@@ -188,7 +242,7 @@ local function build_section_edge_mesh(sectionsize, sectionidx, unit, cterrainfi
             local edges = field.edges
             if edges then
                 for k, edge in pairs(edges) do
-                    add_cube(vb, edge.origin, edge.extent, color)
+                    add_cube(vb, edge.origin, edge.extent, color, DEFAULT_EDGE_UV, DEFAULT_EDGE_UV)
                 end
             end
         end
@@ -227,17 +281,20 @@ function cterrain_fields:get_offset(sidx)
     return isw * self.section_size, ish * self.section_size
 end
 
-function cterrain_fields:build_edges()
+function cterrain_fields:init()
     local tf = self.terrain_fields
     local w, h = self.width, self.height
     local unit = self.unit
     local thickness = self.edge.thickness
-    
+    local minheight, maxheight = math.maxinteger, -math.maxinteger
+
     for ih=1, h do
         for iw=1, w do
             local idx = (ih-1)*w+iw
             local f = tf[idx]
             local hh = f.height * 1.05 * unit
+            minheight = math.min(f.height, minheight)
+            maxheight = math.min(f.height, maxheight)
             if f.type ~= "none" then
                 local function is_empty_elem(iiw, iih)
                     if iiw == 0 or iih == 0 or iiw == w+1 or iih == h+1 then
@@ -316,10 +373,12 @@ function cterrain_fields:build_edges()
             end
         end
     end
+
+    self.minheight, self.maxheight = minheight, maxheight
 end
 
 function quad_ts:entity_init()
-    for e in w:select "INIT shape_terrain:in material:in reference:in" do
+    for e in w:select "INIT shape_terrain:in materials:in reference:in" do
         local st = e.shape_terrain
 
         if st.terrain_fields == nil then
@@ -349,10 +408,11 @@ function quad_ts:entity_init()
         st.num_section = st.section_width * st.section_height
 
         local unit = st.unit
-        local material = e.material
+        local materials = e.materials
+        local shapematerial, edgematerial = materials.shape, materials.edge
 
         local ctf = cterrain_fields.new(st)
-        ctf:build_edges()
+        ctf:init()
 
         for ih=1, st.section_height do
             for iw=1, st.section_width do
@@ -372,7 +432,7 @@ function quad_ts:entity_init()
                             },
                             reference   = true,
                             simplemesh  = terrain_mesh,
-                            material    = material,
+                            material    = shapematerial,
                             state       = "visible|selectable",
                             name        = "section" .. sectionidx,
                             shape_terrain_drawer = true,
@@ -395,7 +455,7 @@ function quad_ts:entity_init()
                                 srt = {}
                             },
                             reference   = true,
-                            material    = material,
+                            material    = edgematerial,
                             simplemesh  = edge_meshes,
                             state       = "visible|selectable",
                             name        = "section_edge" .. sectionidx,

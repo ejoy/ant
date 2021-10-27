@@ -7,8 +7,9 @@ component "shape_terrain".type "lua"
 
 component "shape_terrain_drawer"
 component "shape_terrain_edge_drawer"
+component "materials".type "lua"
 
 policy "shape_terrain"
     .require_system "ant.terrain|shape_terrain_system"
     .component "shape_terrain"
-    .component "material"
+    .component "materials"

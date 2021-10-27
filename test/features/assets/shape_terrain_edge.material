@@ -5,15 +5,7 @@ fx:
     CYLINDER_TRANSFORM: 1
     #MATERIAL_UNLIT: 1
     WITH_COLOR_ATTRIB: 1
-    HAS_BASECOLOR_TEXTURE: 1
-    HAS_NORMAL_TEXTURE: 1
 properties:
-  s_basecolor:
-    stage: 0
-    texture: /pkg/ant.test.features/assets/shape_basecolor.texture
-  s_normal:
-    stage: 2
-    texture: /pkg/ant.test.features/assets/shape_normal.texture
   u_pbr_factor:       {1, 1, 0, 0}  #metallic, roughness, alpha_cutoff, occlusion strength
   u_emissive_factor:  {0, 0, 0, 0}
   u_basecolor_factor: {1, 1, 1, 1}

@@ -84,7 +84,10 @@ function shape_terrain_test_sys:init()
                     thickness = 0.08,
                 }
             },
-            material = "/pkg/ant.test.features/assets/shape_terrain.material"
+            materials = {
+                shape = "/pkg/ant.test.features/assets/shape_terrain.material",
+                edge = "/pkg/ant.test.features/assets/shape_terrain_edge.material",
+            }
         }
     }
 end
