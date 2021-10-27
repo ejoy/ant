@@ -30,54 +30,6 @@ end
 
 local layout_name<const>    = declmgr.correct_layout "p3|n3|T3|c40niu|t20"
 local layout                = declmgr.get(layout_name)
-local memfmt<const>         = declmgr.vertex_desc_str(layout_name)
-
-local packfmt<const> = "fffffffffIff"
-local function add_cube(vb, origin, extent, color, uv0, uv1)
-    local ox, oy, oz = table.unpack(origin)
-    local nx, ny, nz = ox+extent[1], oy+extent[2], oz+extent[3]
-    local u00, v00, u01, v01 = table.unpack(uv0)
-    local u10, v10, u11, v11 = table.unpack(uv1)
-    local v = {
-        --bottom
-        packfmt:pack(ox, oy, nz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, u00, v00), --3
-        packfmt:pack(nx, oy, nz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, u00, v01), --2
-        packfmt:pack(nx, oy, oz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, u01, v01), --1
-        packfmt:pack(ox, oy, oz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, u01, v00), --0
-
-        --top
-        packfmt:pack(ox, ny, oz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, u10, v10), --4
-        packfmt:pack(ox, ny, nz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, u10, v11), --5
-        packfmt:pack(nx, ny, nz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, u11, v11), --6
-        packfmt:pack(nx, ny, oz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, u11, v10), --7
-
-        --left
-        packfmt:pack(nx, oy, oz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u10, v10), --1
-        packfmt:pack(ox, ny, nz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u10, v11), --5
-        packfmt:pack(ox, ny, oz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u11, v11), --4
-        packfmt:pack(ox, oy, oz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u11, v10), --0
-
-        --right
-        packfmt:pack(ox, oy, nz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u10, v10), --3
-        packfmt:pack(nx, ny, oz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u10, v11), --7
-        packfmt:pack(nx, ny, nz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u11, v11), --6
-        packfmt:pack(nx, oy, nz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u11, v10), --2
-
-        --front
-        packfmt:pack(ox, oy, oz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, u10, v10), --0
-        packfmt:pack(ox, ny, oz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, u10, v11), --4
-        packfmt:pack(nx, ny, oz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, u11, v11), --7
-        packfmt:pack(ox, oy, nz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, u11, v10), --3
-
-        --back
-        packfmt:pack(nx, oy, nz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, u10, v10), --2
-        packfmt:pack(nx, ny, nz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, u10, v11), --6
-        packfmt:pack(ox, ny, nz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, u11, v11), --5
-        packfmt:pack(nx, oy, oz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, u11, v10), --1
-    }
-
-    vb[#vb+1] = table.concat(v, "")
-end
 
 --[[
      5-------6
@@ -88,6 +40,52 @@ end
   |       | /
   0-------3
 ]]
+local packfmt<const> = "fffffffffIff"
+local function add_cube(vb, origin, extent, color, uv0, uv1)
+    local ox, oy, oz = table.unpack(origin)
+    local nx, ny, nz = ox+extent[1], oy+extent[2], oz+extent[3]
+    local u00, v00, u01, v01 = table.unpack(uv0)
+    local u10, v10, u11, v11 = table.unpack(uv1)
+    local v = {
+        --bottom
+        packfmt:pack(nx, oy, oz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, u00, v00), --3
+        packfmt:pack(nx, oy, nz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, u00, v01), --2
+        packfmt:pack(ox, oy, nz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, u01, v01), --1
+        packfmt:pack(ox, oy, oz,  0.0, -1.0,  0.0,  1.0,  0.0,  0.0, color, u01, v00), --0
+
+        --top
+        packfmt:pack(ox, ny, oz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, u10, v10), --4
+        packfmt:pack(ox, ny, nz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, u10, v11), --5
+        packfmt:pack(nx, ny, nz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, u11, v11), --6
+        packfmt:pack(nx, ny, oz,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0, color, u11, v10), --7
+
+        --left
+        packfmt:pack(ox, oy, nz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u10, v10), --1
+        packfmt:pack(ox, ny, nz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u10, v11), --5
+        packfmt:pack(ox, ny, oz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u11, v11), --4
+        packfmt:pack(ox, oy, oz, -1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u11, v10), --0
+
+        --right
+        packfmt:pack(nx, oy, oz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u10, v10), --3
+        packfmt:pack(nx, ny, oz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u10, v11), --7
+        packfmt:pack(nx, ny, nz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u11, v11), --6
+        packfmt:pack(nx, oy, nz,  1.0,  0.0,  0.0,  0.0,  1.0,  0.0, color, u11, v10), --2
+
+        --front
+        packfmt:pack(ox, oy, oz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, u10, v10), --0
+        packfmt:pack(ox, ny, oz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, u10, v11), --4
+        packfmt:pack(nx, ny, oz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, u11, v11), --7
+        packfmt:pack(nx, oy, oz,  0.0,  0.0, -1.0,  0.0,  1.0,  0.0, color, u11, v10), --3
+
+        --back
+        packfmt:pack(nx, oy, nz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, u10, v10), --2
+        packfmt:pack(nx, ny, nz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, u10, v11), --6
+        packfmt:pack(ox, ny, nz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, u11, v11), --5
+        packfmt:pack(ox, oy, nz,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0, color, u11, v10), --1
+    }
+
+    vb[#vb+1] = table.concat(v, "")
+end
 
 local default_quad_ib<const> = {
     0, 1, 2,
@@ -134,7 +132,7 @@ end
 
 local function to_mesh_buffer(vb)
     local vbbin = table.concat(vb, "")
-    local numv = #vbbin // #memfmt
+    local numv = #vbbin // layout.stride
     local numi = (numv // NUM_QUAD_VERTICES) * 6 --6 for one quad 2 triangles and 1 triangle for 3 indices
 
     local numcube = numv // NUM_CUBE_VERTICES
@@ -191,9 +189,9 @@ local function find_shape_uv(st, height, minheight, maxheight)
     end
 
     local col = 0
-    local d = maxheight-minheight
-    for h=minheight, maxheight, d do
-        if h<=height and height<h+d then
+    local s = (maxheight-minheight)/NUM_UV_COL
+    for h=minheight, maxheight, s do
+        if h<=height and height<h+s then
             break
         end
         col = col + 1
