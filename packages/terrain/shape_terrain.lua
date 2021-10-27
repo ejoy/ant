@@ -205,7 +205,16 @@ local function find_shape_uv(st, height, minheight, maxheight)
     return assert(UV_TILES[idx])
 end
 
-local DEFAULT_SHAPE_SECOND_UV<const> = UV_TILES[3]  -- 3 for dust first uv
+local DEFAULT_SHAPE_SECOND_UV<const> = UV_TILES[4]  -- 3 for dust first uv
+
+local function gen_shape_second_uv(height)
+    local uv = {
+        table.unpack(DEFAULT_SHAPE_SECOND_UV)
+    }
+    local uvh = uv[4] - uv[2]
+    uv[2] = uvh-height
+    return uv
+end
 
 local function build_section_mesh(sectionsize, sectionidx, unit, cterrainfileds)
     local vb = {}
@@ -219,7 +228,7 @@ local function build_section_mesh(sectionsize, sectionidx, unit, cterrainfileds)
                 local origin = {(iw-1+x)*unit, 0.0, (ih-1+z)*unit}
                 local extent = {unit, h*unit, unit}
                 local uv0 = find_shape_uv(field.type, h, minh, maxh)
-                add_cube(vb, origin, extent, DEFAULT_color, uv0, DEFAULT_SHAPE_SECOND_UV)
+                add_cube(vb, origin, extent, DEFAULT_color, uv0, gen_shape_second_uv(h))
             end
         end
     end
