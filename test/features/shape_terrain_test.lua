@@ -14,7 +14,7 @@ local function generate_terrain_fields(w, h)
     for ih=1, h do
         for iw=1, w do
             local which = math.random(1, 3)
-            local height = math.random() * 0.05
+            local height = math.random() * 2
             fields[#fields+1] = {
                 type    = quad_types[which],
                 height  = height,
@@ -23,16 +23,20 @@ local function generate_terrain_fields(w, h)
     end
 
     return fields
---     local function build(stream)
---         local fields = {}
---         for _, t in ipairs(stream) do
---             fields[#fields+1] = {
---                 type = quad_types[t],
---                 height = math.random() * 0.12,
---             }
---         end
---         return fields
---     end
+    -- local function build(stream)
+    --     local fields = {}
+    --     for _, t in ipairs(stream) do
+    --         fields[#fields+1] = {
+    --             type = quad_types[t],
+    --             height = math.random() * 0.12,
+    --         }
+    --     end
+    --     return fields
+    -- end
+    -- return build {
+    --     3, 1,
+    --     1, 1
+    -- }
 --     return build{
 --         2, 1, 2, 2, 2, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1,
 --         1, 1, 2, 2, 2, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1,
@@ -57,7 +61,7 @@ local function generate_terrain_fields(w, h)
 end
 
 function shape_terrain_test_sys:init()
-    local ww, hh = 256, 256
+    local ww, hh = 16, 16
     local terrain_fields = generate_terrain_fields(ww, hh)
     ecs.create_entity{
         policy = {
@@ -77,7 +81,7 @@ function shape_terrain_test_sys:init()
                 terrain_fields = terrain_fields,
                 width = ww,
                 height = hh,
-                section_size = ww//4,
+                section_size = math.max(1, ww > 4 and ww//4 or ww//2),
                 unit = 1,
                 edge = {
                     color = 0xffe5e5e5,
