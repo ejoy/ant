@@ -191,7 +191,7 @@ local function find_shape_uv(st, height, minheight, maxheight)
     local col = 0
     local s = (maxheight-minheight)/NUM_UV_COL
     for h=minheight, maxheight, s do
-        if h<=height and height<h+s then
+        if h<=height and height<=(h+s+10e-8) then
             break
         end
         col = col + 1
@@ -242,7 +242,7 @@ local function build_section_edge_mesh(sectionsize, sectionidx, unit, cterrainfi
             if edges then
                 for k, edge in pairs(edges) do
                     local e = edge.extent
-                    local extent = {e[1], h, e[2]}
+                    local extent = {e[1], h, e[3]}
                     add_cube(vb, edge.origin, extent, color, DEFAULT_EDGE_UV, DEFAULT_EDGE_UV)
                 end
             end
@@ -286,7 +286,7 @@ function cterrain_fields:init()
     local tf = self.terrain_fields
     local w, h = self.width, self.height
     local unit = self.unit
-    local thickness = self.edge.thickness
+    local thickness = self.edge.thickness * unit
     local minheight, maxheight = math.maxinteger, -math.maxinteger
 
     for ih=1, h do
@@ -294,8 +294,8 @@ function cterrain_fields:init()
             local idx = (ih-1)*w+iw
             local f = tf[idx]
             local hh = f.height * 1.05 * unit
-            minheight = math.min(f.height, minheight)
-            maxheight = math.max(f.height, maxheight)
+            minheight = math.min(f.height*unit, minheight)
+            maxheight = math.max(f.height*unit, maxheight)
             if f.type ~= "none" then
                 local function is_empty_elem(iiw, iih)
                     if iiw == 0 or iih == 0 or iiw == w+1 or iih == h+1 then
