@@ -189,14 +189,16 @@ local function find_shape_uv(st, height, minheight, maxheight)
     end
 
     local col = 0
-    local s = (maxheight-minheight)/NUM_UV_COL
-    for h=minheight, maxheight, s do
-        if h<=height and height<=(h+s+10e-8) then
-            break
+    if maxheight > minheight then
+        local s = (maxheight-minheight)/NUM_UV_COL
+        for h=minheight, maxheight, s do
+            if h<=height and height<=(h+s+10e-8) then
+                break
+            end
+            col = col + 1
         end
-        col = col + 1
     end
-    
+
     if col >= NUM_UV_COL then
         error(("invalid height:%f, [%f, %f]"):format(height, minheight, maxheight))
     end
