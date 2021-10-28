@@ -12,11 +12,6 @@ $input v_posWS v_normal v_tangent v_bitangent v_texcoord0 OUTPUT_LIGHTMAP_TEXCOO
 #include "common/constants.sh"
 #include "pbr/pbr.sh"
 
-#ifdef USING_LIGHTMAP
-//TODO: temp fix HDR lightmap
-#include "postprocess/tonemapping.sh"
-#endif //USING_LIGHTMAP
-
 #ifdef UV_MOTION
 #include "common/uvmotion.sh"
 #endif //UV_MOTION
@@ -264,7 +259,7 @@ void main()
     {
         vec4 irradiance = texture2D(s_lightmap, v_texcoord1);
         vec3 c = basecolor.rgb * irradiance.rgb * PI * 0.5;
-        color.rgb += ToneMap(c, 0.0, 0.0);
+        color.rgb += c;
     }
 #else //!USING_LIGHTMAP
 #ifdef HAS_EMISSIVE_TEXTURE

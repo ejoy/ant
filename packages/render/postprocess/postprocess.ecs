@@ -16,7 +16,7 @@ policy "postprocess"
     .require_system "ant.render|postprocess_system"
     --.require_system "ant.render|dof_system"
     --.require_system "ant.render|bloom_system"
-    --.require_system "ant.render|tonemapping_system"
+    .require_system "ant.render|tonemapping_system"
     .require_system "ant.render|blit_system"
 
 component "postprocess"
