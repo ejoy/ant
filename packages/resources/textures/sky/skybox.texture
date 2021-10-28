@@ -1,5 +1,5 @@
 colorspace: Linear
-format: RGBA8
+format: RGBA16F
 normalmap: false
 path: /pkg/ant.resources.binary/textures/kyoto_lod.dds
 sampler:
