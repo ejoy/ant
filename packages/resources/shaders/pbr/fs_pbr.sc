@@ -1,6 +1,6 @@
 #include "common/inputs.sh"
 
-$input v_posWS v_normal v_tangent v_bitangent v_texcoord0 OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0
+$input v_posWS v_normal v_texcoord0 OUTPUT_TANGENT OUTPUT_BITANGENT OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0
 
 #include <bgfx_shader.sh>
 #include <bgfx_compute.sh>
@@ -69,15 +69,20 @@ vec4 get_basecolor(vec2 texcoord, vec4 basecolor)
     return basecolor;
 }
 
+vec3 get_normal_by_tbn(mat3 tbn, vec3 normal, vec2 texcoord)
+{
+#ifdef HAS_NORMAL_TEXTURE
+	vec3 normalTS = fetch_bc5_normal(s_normal, texcoord);
+	return instMul(normalTS, tbn);
+#else //!HAS_NORMAL_TEXTURE
+    return normal;
+#endif //HAS_NORMAL_TEXTURE
+}
+
 vec3 get_normal(vec3 tangent, vec3 bitangent, vec3 normal, vec2 texcoord)
 {
-    #ifdef HAS_NORMAL_TEXTURE
-		mat3 tbn = mtxFromCols(tangent, bitangent, normal);
-		vec3 normalTS = fetch_bc5_normal(s_normal, texcoord);
-		return instMul(normalTS, tbn);
-    #else //!HAS_NORMAL_TEXTURE
-        return normal;
-	#endif //HAS_NORMAL_TEXTURE
+    mat3 tbn = mtxFromCols(tangent, bitangent, normal);
+    return get_normal_by_tbn(tbn, normal, texcoord);
 }
 
 
@@ -208,7 +213,12 @@ void main()
 #endif
 
     vec3 V = normalize(u_eyepos.xyz - v_posWS.xyz);
+
+#ifdef CALC_TBN
+    vec3 N = get_normal_by_tbn(tbn_from_world_pos(v_normal, v_posWS.xyz, uv), v_normal, uv);
+#else //!CALC_TBN
     vec3 N = get_normal(v_tangent, v_bitangent, v_normal, uv);
+#endif //CALC_TBN
 
     material_info mi = get_material_info(basecolor, uv);
 

@@ -177,6 +177,22 @@ void check_clip_rotated_rect(vec2 pixel)
 }
 #endif //ENABLE_CLIP_RECT
 
+#if BGFX_SHADER_TYPE_FRAGMENT
+mat3 tbn_from_world_pos(vec3 normal, vec3 posWS, vec2 texcoord)
+{
+    vec3 Q1  = dFdx(posWS);
+    vec3 Q2  = dFdy(posWS);
+    vec2 st1 = dFdx(texcoord);
+    vec2 st2 = dFdy(texcoord);
+
+    vec3 N  = normalize(normal);
+    vec3 T  = normalize(Q1*st2.y - Q2*st1.y);
+    vec3 B  = -normalize(cross(N, T));
+
+	return to_tbn(T, B, N);
+}
+#endif //BGFX_SHADER_TYPE_FRAGMENT
+
 uniform vec4 	u_camera_info;
 #define u_near 	u_camera_info.x
 #define u_far 	u_camera_info.y
