@@ -6,7 +6,7 @@ fx:
     #MATERIAL_UNLIT: 1
     WITH_COLOR_ATTRIB: 1
 properties:
-  u_pbr_factor:       {1, 1, 0, 0}  #metallic, roughness, alpha_cutoff, occlusion strength
+  u_pbr_factor:       {0.1, 0.85, 0, 0}  #metallic, roughness, alpha_cutoff, occlusion strength
   u_emissive_factor:  {0, 0, 0, 0}
   u_basecolor_factor: {1, 1, 1, 1}
 state: /pkg/ant.resources/materials/states/default.state
