@@ -97,7 +97,7 @@ function init_loader_sys:init()
 	-- 		end,
 	-- 	}
     -- }
-
+    ientity.create_procedural_sky()
     ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
 
     local p = ecs.create_instance "/pkg/ant.test.features/assets/entities/cube.prefab"
