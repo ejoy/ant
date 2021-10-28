@@ -172,7 +172,7 @@ end
 
 local ps_sys = ecs.system "procedural_sky_system"
 
-local shader_parameters = {0.02, 3.0, 0.1, 0}
+local shader_parameters = {0.02, 3.0, 8, 0}
 
 local function fetch_value_operation(t)
 	local tt = {}
