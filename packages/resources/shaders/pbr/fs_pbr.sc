@@ -5,6 +5,7 @@ $input v_posWS v_normal v_texcoord0 OUTPUT_TANGENT OUTPUT_BITANGENT OUTPUT_LIGHT
 #include <bgfx_shader.sh>
 #include <bgfx_compute.sh>
 #include <shaderlib.sh>
+#include "common/camera.sh"
 #include "common/lighting.sh"
 #include "common/transform.sh"
 #include "common/utils.sh"

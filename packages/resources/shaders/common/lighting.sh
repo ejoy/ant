@@ -2,7 +2,6 @@
 #define __SHADER_LIGHTING_SH__
 
 uniform vec4 u_light_count;
-uniform vec4 u_eyepos;
 
 struct light_info{
 	vec3	pos;

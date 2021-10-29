@@ -3,6 +3,7 @@
 
 #include <shaderlib.sh>
 #include "common/constants.sh"
+#include "common/camera.sh"
 
 uniform vec4 u_clip_planes[4];
 
@@ -192,10 +193,6 @@ mat3 tbn_from_world_pos(vec3 normal, vec3 posWS, vec2 texcoord)
 	return to_tbn(T, B, N);
 }
 #endif //BGFX_SHADER_TYPE_FRAGMENT
-
-uniform vec4 	u_camera_info;
-#define u_near 	u_camera_info.x
-#define u_far 	u_camera_info.y
 
 vec4 do_cylinder_transform(vec4 posWS)
 {

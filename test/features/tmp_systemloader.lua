@@ -97,17 +97,18 @@ function init_loader_sys:init()
 	-- 		end,
 	-- 	}
     -- }
-    ientity.create_procedural_sky()
+    --ientity.create_procedural_sky()
+    ecs.create_instance "/pkg/ant.test.features/assets/entities/skybox_test.prefab"
     ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
 
-    local p = ecs.create_instance "/pkg/ant.test.features/assets/entities/cube.prefab"
-    function p:on_ready()
-        local e = self.tag.cube[1]
-        w:sync("render_object:in", e)
-        imaterial.set_property_directly(e.render_object.properties, "u_color", {0.8, 0, 0.8, 1.0})
-    end
+    -- local p = ecs.create_instance "/pkg/ant.test.features/assets/entities/cube.prefab"
+    -- function p:on_ready()
+    --     local e = self.tag.cube[1]
+    --     w:sync("render_object:in", e)
+    --     imaterial.set_property_directly(e.render_object.properties, "u_color", {0.8, 0, 0.8, 1.0})
+    -- end
 
-    world:create_object(p)
+    --world:create_object(p)
     --print(p)
     --ecs.create_instance  "/pkg/ant.test.features/assets/entities/test_scene.prefab"
     --ecs.create_instance  "/pkg/ant.test.features/assets/entities/skybox_test.prefab"

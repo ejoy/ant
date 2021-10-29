@@ -1,7 +1,7 @@
 colorspace: Linear
 format: RGBA16F
 normalmap: false
-path: /pkg/ant.resources.binary/textures/kyoto_lod.dds
+path: /pkg/ant.resources.binary/textures/cubemap/uffizi.ktx
 sampler:
   MAG: LINEAR
   MIN: LINEAR

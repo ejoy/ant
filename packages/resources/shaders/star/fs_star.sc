@@ -2,12 +2,12 @@ $input v_posWS, v_normalWS, v_pos, v_texcoord0
 
 #include "common.sh"
 #include "common/transform.sh"
+#include "common/camera.sh"
 
 SAMPLER2D(s_LavaDiffuse, 0);
 SAMPLER2D(s_StoneDiffuse, 1);
 SAMPLERCUBE(s_LavaNoise, 2);
 
-uniform vec4 u_eyepos;
 uniform vec4 u_lava_hot_stone_color;
 uniform vec4 u_lava_cold_stone_color;
 uniform vec4 u_lava_bright_color;

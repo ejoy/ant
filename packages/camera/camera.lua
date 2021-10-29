@@ -16,33 +16,33 @@ end
 
 ic.find_camera = find_camera
 
-local defaultcamera = {
+-- local FStops<const> = {
+--     "f/1.8", "f/2.0", "f/2.2", "f/2.5", "f/2.8", "f/3.2", "f/3.5", "f/4.0",
+--     "f/4.5", "f/5.0", "f/5.6", "f/6.3", "f/7.1", "f/8.0", "f/9.0", "f/10.0",
+--     "f/11.0", "f/13.0", "f/14.0", "f/16.0", "f/18.0", "f/20.0", "f/22.0",
+-- }
+
+local defaultcamera<const> = {
+    name = "default_camera",
     eyepos  = {0, 0, 0, 1},
     viewdir = {0, 0, 1, 0},
     frustum = defcomp.frustum(),
-    name = "default_camera",
+    dof     = {},
+    exposure= {
+        type            = "Auto",  --Auto, Manaual, SBS, SOS, only support Auto and Manual right now
+        ManualExposure  = -16.0,
+        ApertureSize    = 16.0, --mean f/16.0
+        ISO             = 100.0,
+        ShutterSpeed    = 1.0/60.0,
+        AutoExposureKey = 0.115,
+        AdaptaionRate   = 0.5,
+        --DOF
+        FilmSize        = 35.0, --unit is: mm
+        FocalLength     = 35.0, --unit is: mm, dof
+        FocusDistance   = 10.0, --unit is: m
+        NumBlades       = 5,
+    },
 }
-
-function ic.create_entity(_, info)
-    info.updir = mc.YAXIS
-    return ecs.create_entity {
-        policy = {
-            "ant.general|name",
-            "ant.camera|camera",
-        },
-        data = {
-            camera = {
-                eyepos  = info.transform.t,
-                viewdir = math3d.todirection(math3d.quaternion(info.transform.r)),
-                updir   = info.updir,
-                frustum = info.frustum,
-                clip_range = info.clip_range,
-                dof     = info.dof,
-            },
-            name = info.name or "DEFAULT_CAMERA",
-        }
-    }
-end
 
 function ic.create(info)
     info = info or defaultcamera
@@ -72,6 +72,9 @@ function ic.create(info)
                 frustum = frustum,
                 clip_range = info.clip_range,
                 dof     = info.dof,
+                -- exposure = {
+                --     type = 
+                -- },
             },
             name = info.name or "DEFAULT_CAMERA",
         }

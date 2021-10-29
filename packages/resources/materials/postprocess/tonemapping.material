@@ -4,10 +4,20 @@ fx:
     lighting: off
     shadow_cast: off
     shadow_receive: off
+    EXPOSURE_TYPE: 4  #1 for Auto, 2 for SBS, 3 for SOS, 4 for Manual
   vs: /pkg/ant.resources/shaders/postprocess/vs_pp_quad.sc
 properties:
-  u_camera_param: {16.0, 0.008, 100.0, 0.0}  #ApertureFNumber, ShutterSpeed, ISO
+  #EXPOSURE_TYPE:
+  # SBS/SOS: ApertureFNumber, ShutterSpeed, ISO, MidGay
+  # Manual: Manual Exposure value
+  # Auto: Exposure Key value, and need s_avg_luminance properties
+  #u_exposure_param: {16.0, 0.008, 100.0, 0.18}
+  u_exposure_param: {-14.5, 0.0, 0.0, 0.0}
   s_postprocess_input0:
-    stage:0
+    stage: 0
+    texture: /pkg/ant.resources/textures/black.texture
+  #only valid for EXPOSURE_TYPE == 1
+  s_avg_luminance:
+    stage: 1
     texture: /pkg/ant.resources/textures/black.texture
 state: /pkg/ant.resources/materials/postprocess/postprocess.state

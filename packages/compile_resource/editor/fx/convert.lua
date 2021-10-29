@@ -35,6 +35,10 @@ local SETTING_MAPPING = {
             return "BLOOM_ENABLE"
         end
     end,
+    os = function ()
+    end,
+    renderer = function()
+    end,
     fix_line_width = "FIX_WIDTH",
     subsurface = DEF_FUNC,
     surfacetype = DEF_FUNC,
@@ -64,11 +68,14 @@ local function get_macros(s)
     for k, v in pairs(setting) do
         local f = SETTING_MAPPING[k]
         if f == nil then
-            macros[#macros+1] = k
+            macros[#macros+1] = k .. '=' .. v
         else
             local t = type(f)
             if t == "function" then
-                macros[#macros+1] = f(v)
+                local tt = f(v)
+                if tt then
+                    macros[#macros+1] = tt
+                end
             elseif t == "string" then
                 macros[#macros+1] = f
             else

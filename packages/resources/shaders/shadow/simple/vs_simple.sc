@@ -3,6 +3,7 @@ $output v_normal, v_viewdir, v_shadowcoord
 
 #include "common.sh"
 #include "common/shadow.sh"
+#include "common/camera.sh"
 
 void main()
 {

@@ -1,5 +1,6 @@
 #include "bgfx_compute.sh"
 #include "lighting.sh"
+#include "camera.sh"
 
 #ifndef ORIGIN_BOTTOM_LEFT
 #define ORIGIN_BOTTOM_LEFT 0
@@ -39,18 +40,11 @@ BUFFER_RO(b_lights,				vec4,	12);
 #endif //defined(CLUSTER_BUILD_AABB) || defined(CLUSTER_LIGHT_CULL)
 
 
-
 uniform vec4 u_cluster_size;
 uniform vec4 u_cluster_shading_param;
-#define u_screen_width  u_cluster_shading_param.x
-#define u_screen_height u_cluster_shading_param.y
-#define u_nearZ         u_cluster_shading_param.z
-#define u_farZ          u_cluster_shading_param.w
-#define u_screen_size	u_cluster_shading_param.xy
-uniform vec4 u_cluster_shading_param2;
-#define u_slice_scale	u_cluster_shading_param2.x
-#define u_slice_bias	u_cluster_shading_param2.y
-#define u_tile_unit		u_cluster_shading_param2.zw
+#define u_slice_scale	u_cluster_shading_param.x
+#define u_slice_bias	u_cluster_shading_param.y
+#define u_tile_unit		u_cluster_shading_param.zw
 
 /**
 about the depth slice:
@@ -76,12 +70,12 @@ where inverse function is:
 float linear_depth(float nolinear_depth){
 #if HOMOGENEOUS_DEPTH
 	float z_n = 2.0 * nolinear_depth - 1.0;
-	float A = (u_farZ + u_nearZ) / (u_farZ - u_nearZ);
-	float B = -2.0 * u_farZ * u_nearZ/(u_farZ - u_nearZ);
+	float A = (u_far + u_near) / (u_far - u_near);
+	float B = -2.0 * u_far * u_near/(u_far - u_near);
 #else //!HOMOGENEOUS_DEPTH
 	float z_n = nolinear_depth;
-	float A = u_farZ / (u_farZ - u_nearZ);
-	float B = -(u_farZ * u_nearZ) / (u_farZ - u_nearZ);
+	float A = u_far / (u_far - u_near);
+	float B = -(u_far * u_near) / (u_far - u_near);
 #endif //HOMOGENEOUS_DEPTH
 	float z_e = B / (z_n - A);
     return z_e;
@@ -98,7 +92,7 @@ uint which_cluster(vec3 fragcoord){
 }
 
 float which_z(uint depth_slice, uint num_slice){
-	return u_nearZ*pow(u_farZ/u_nearZ, depth_slice/float(num_slice));
+	return u_near*pow(u_far/u_near, depth_slice/float(num_slice));
 }
 
 #define load_light_info(_BUF, _INDEX, _LIGHT){\

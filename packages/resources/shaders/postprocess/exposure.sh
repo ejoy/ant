@@ -14,48 +14,57 @@
 #ifndef _EXPOSURE_SH_
 #define _EXPOSURE_SH_
 #include "common/contants.sh"
-uniform vec4 u_camera_param;
-#define u_aperture_f_number u_camera_param.x
-#define u_shutter_speed     u_camera_param.y
-#define u_ISO               u_camera_param.z
+#include "common/camera.sh"
 
+#define AUTO_EXPOSURE   1
+#define SBS_EXPOSURE    2
+#define SOS_EXPOSURE    3
+#define MANUAL_EXPOSURE 4
+
+#ifndef EXPOSURE_TYPE
+#   define EXPOSURE_TYPE    MANUAL_EXPOSURE
+#endif  //!EXPOSURE_TYPE
+
+#if (EXPOSURE_TYPE == AUTO_EXPOSURE)
+#   define u_auto_exposure_key u_exposure_param.x
+#elif ((EXPOSURE_TYPE == SBS_EXPOSURE) || (EXPOSURE_TYPE == SOS_EXPOSURE))
+#   define u_aperture_f_number u_exposure_param.x
+#   define u_shutter_speed     u_exposure_param.y
+#   define u_ISO               u_exposure_param.z
+#else
+#   define u_manual_exposure   u_exposure_param.x
+#endif //EXPOSURE_TYPE
+
+#if EXPOSURE_TYPE == SBS_EXPOSURE
 float SaturationBasedExposure()
 {
     float maxLuminance = (7800.0f / 65.0f) * (u_aperture_f_number * u_aperture_f_number) / (u_ISO * u_shutter_speed);
     return log2(1.0f / maxLuminance);
 }
+#endif //EXPOSURE_TYPE == SBS_EXPOSURE
 
+#if EXPOSURE_TYPE == SOS_EXPOSURE
 float StandardOutputBasedExposure(float middleGrey = 0.18f)
 {
     float lAvg = (1000.0f / 65.0f) * (u_aperture_f_number * u_aperture_f_number) / (u_ISO * u_shutter_speed);
     return log2(middleGrey / lAvg);
 }
+#endif //EXPOSURE_TYPE == SOS_EXPOSURE
 
 float Log2Exposure(in float avgLuminance)
 {
     float exposure = 0.0f;
-
-    // if(ExposureMode == ExposureModes_Automatic)
-    // {
-    //     avgLuminance = max(avgLuminance, 0.00001f);
-    //     float linearExposure = (KeyValue / avgLuminance);
-    //     exposure = log2(max(linearExposure, 0.00001f));
-    // }
-    // else if(ExposureMode == ExposureModes_Manual_SBS)
-    // {
-        exposure = SaturationBasedExposure();
-        exposure -= log2(FP16Scale);
-    // }
-    // else if(ExposureMode == ExposureModes_Manual_SOS)
-    // {
-    //     exposure = StandardOutputBasedExposure();
-    //     exposure -= log2(FP16Scale);
-    // }
-    // else
-    // {
-    //     exposure = ManualExposure;
-    //     exposure -= log2(FP16Scale);
-    // }
+#if (EXPOSURE_TYPE == AUTO_EXPOSURE)
+    avgLuminance = max(avgLuminance, 0.00001f);
+    float linearExposure = (u_auto_exposure_key / avgLuminance);
+    exposure = log2(max(linearExposure, 0.00001f));
+#elif (EXPOSURE_TYPE == SBS_EXPOSURE)
+    exposure = SaturationBasedExposure() - log2(FP16Scale);
+#elif (EXPOSURE_TYPE == SOS_EXPOSURE)
+    exposure = StandardOutputBasedExposure() - log2(FP16Scale);
+#elif (EXPOSURE_TYPE == MANUAL_EXPOSURE)
+    exposure = u_manual_exposure - log2(FP16Scale);
+#endif //EXPOSURE_TYPE
 
     return exposure;
 }

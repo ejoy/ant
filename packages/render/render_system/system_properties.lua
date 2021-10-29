@@ -42,12 +42,13 @@ local def_ibl = {
 local enable_ibl = true
 
 local system_properties = {
-	--lighting
+	--camera
 	u_eyepos				= math3d.ref(mc.ZERO_PT),
-	u_camera_info			= math3d.ref(mc.ZERO),
+	u_exposure_param		= math3d.ref(math3d.vector(16.0, 0.008, 100.0, 0.0)),	--
+	u_camera_param			= math3d.ref(mc.ZERO),
+	--lighting
 	u_cluster_size			= math3d.ref(mc.ZERO),
 	u_cluster_shading_param	= math3d.ref(mc.ZERO),
-	u_cluster_shading_param2= math3d.ref(mc.ZERO),
 	u_light_count			= math3d.ref(mc.ZERO),
 	b_light_grids			= def_buffer_prop(-1),
 	b_light_index_lists		= def_buffer_prop(-1),
@@ -89,7 +90,6 @@ local system_properties = {
 
 	s_omni_shadowmap		= def_tex_prop(9),
 	s_postprocess_input		= def_tex_prop(0),
-	u_camera_param			= math3d.ref(math3d.vector(16.0, 0.008, 100.0, 0.0)),
 }
 
 function isp.get(n)
@@ -118,12 +118,11 @@ local function update_cluster_render_properties(vr, near, far)
 	local cr = w:object("cluster_render", 1)
 	local cluster_size = cr.cluster_size
 	system_properties["u_cluster_size"].v	= cluster_size
-	system_properties["u_cluster_shading_param"].v	= {vr.w, vr.h, near, far}
 	local num_depth_slices = cluster_size[3]
 	local log_farnear = math.log(far/near, 2)
 	local log_near = math.log(near, 2)
 
-	system_properties["u_cluster_shading_param2"].v	= {
+	system_properties["u_cluster_shading_param"].v	= {
 		num_depth_slices / log_farnear, -num_depth_slices * log_near / log_farnear,
 		vr.w / cluster_size[1], vr.h/cluster_size[2],
 	}
@@ -144,7 +143,7 @@ end
 
 local function update_lighting_properties(viewrect, camerapos, near, far)
 	system_properties["u_eyepos"].id = camerapos
-	system_properties["u_camera_info"].v = {near, far, 0, 0}
+	system_properties["u_camera_param"].v = {near, far, 0, 0}
 	local nl = ilight.count_visible_light()
 	system_properties["u_light_count"].v = {nl, 0, 0, 0}
 
