@@ -16,7 +16,7 @@ animation:
     GPU:
       enable: true
 graphic:
-  pre_z: true
+  disable_pre_z: true
   lighting:
     cluster_shading: 1
   render:

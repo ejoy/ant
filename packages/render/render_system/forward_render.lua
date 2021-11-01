@@ -26,7 +26,7 @@ function fr_sys:init()
         name = "default_camera",
 	})
 
-	if graphic_setting.pre_z then
+	if not graphic_setting.disable_pre_z then
 		irender.create_pre_depth_queue(vr, camera)
 	end
 	irender.create_main_queue(vr, camera)

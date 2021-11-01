@@ -210,7 +210,7 @@ local function create_main_fb(fbsize)
 	end
 
 	local function get_depth_buffer()
-		if graphic_setting.pre_z then
+		if not graphic_setting.disable_pre_z then
 			local depth_viewid = viewidmgr.get "depth"
 			local depthfb = fbmgr.get_byviewid(depth_viewid)
 			return depthfb[2]
