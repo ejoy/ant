@@ -10,34 +10,34 @@ local function generate_terrain_fields(w, h)
         "none", "grass", "dust"
     }
 
-    -- local fields = {}
-    -- for ih=1, h do
-    --     for iw=1, w do
-    --         local which = math.random(1, 3)
-    --         local height = math.random() * 0.05
-    --         fields[#fields+1] = {
-    --             type    = quad_types[which],
-    --             height  = height,
-    --         }
-    --     end
-    -- end
-
-    -- return fields
-    local function build(stream)
-        local fields = {}
-        for _, t in ipairs(stream) do
+    local fields = {}
+    for ih=1, h do
+        for iw=1, w do
+            local which = math.random(1, 3)
+            local height = math.random() * 0.05
             fields[#fields+1] = {
-                type = quad_types[t],
-                --height = math.random() * 0.12,
-                height = 1.0
+                type    = quad_types[which],
+                height  = height,
             }
         end
-        return fields
     end
-    return build {
-        3, 2,
-        2, 2,
-    }
+
+    return fields
+    -- local function build(stream)
+    --     local fields = {}
+    --     for _, t in ipairs(stream) do
+    --         fields[#fields+1] = {
+    --             type = quad_types[t],
+    --             --height = math.random() * 0.12,
+    --             height = 1.0
+    --         }
+    --     end
+    --     return fields
+    -- end
+    -- return build {
+    --     3, 2,
+    --     2, 2,
+    -- }
 --     return build{
 --         2, 1, 2, 2, 2, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1,
 --         1, 1, 2, 2, 2, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1,
@@ -62,7 +62,7 @@ local function generate_terrain_fields(w, h)
 end
 
 function shape_terrain_test_sys:init()
-    local ww, hh = 2, 2
+    local ww, hh = 256, 256--2, 2
     local terrain_fields = generate_terrain_fields(ww, hh)
     ecs.create_entity{
         policy = {
@@ -75,7 +75,7 @@ function shape_terrain_test_sys:init()
             reference   = true,
             scene = {
                 srt = {
-                    --t = {-ww//2, 0.0, -hh//2},
+                    t = {-ww//2, 0.0, -hh//2},
                 }
             },
             shape_terrain = {
