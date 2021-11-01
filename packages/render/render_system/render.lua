@@ -139,7 +139,8 @@ local rb_flag = samplerutil.sampler_flag {
 	V="CLAMP",
 }
 
-function irender.create_pre_depth_queue(vr, fbsize, camera_ref)
+function irender.create_pre_depth_queue(vr, camera_ref)
+	local depth_viewid = viewidmgr.get "depth"
 	local fbidx = fbmgr.create{
 		fbmgr.create_rb{
 			format = "R32F",
@@ -155,6 +156,8 @@ function irender.create_pre_depth_queue(vr, fbsize, camera_ref)
 		}
 	}
 
+	fbmgr.bind(depth_viewid, fbidx)
+
 	ecs.create_entity {
 		policy = {
 			"ant.render|render_queue",
@@ -166,7 +169,7 @@ function irender.create_pre_depth_queue(vr, fbsize, camera_ref)
 		data = {
 			camera_ref = camera_ref,
 			render_target = {
-				viewid = viewidmgr.get "depth",
+				viewid = depth_viewid,
 				clear_state = {
 					clear = "CD",
 					color = 0,

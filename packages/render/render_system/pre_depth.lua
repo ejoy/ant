@@ -22,7 +22,7 @@ function s:init()
 end
 
 function s:end_filter()
-    for e in w:select "fitler_result:in render_object:in filter_material:in skinning?in" do
+    for e in w:select "filter_result:in render_object:in filter_material:in skinning?in" do
         local m = assert(which_material(e.skinning))
         local fr = e.filter_result
         local state = e.render_object.state

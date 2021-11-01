@@ -10,5 +10,6 @@ system "forward_render_system"
     .method "data_changed"
 
 policy "forward_render"
-    .require_policy     "ant.render|render_queue"
-    .require_system     "forward_render_system"
+    .require_policy  "ant.render|render_queue"
+    .require_system  "ant.render|forward_render_system"
+    .require_system  "ant.render|pre_depth_primitive_system"

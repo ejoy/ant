@@ -10,7 +10,7 @@ policy "blit_queue"
 
 component "pre_depth_queue"
 policy "pre_depth_queue"
-    .require_system  "pre_depth_primitive_system"
+    .require_system  "ant.render|pre_depth_primitive_system"
     .component   "pre_depth_queue"
 
 component "main_queue"
