@@ -7,8 +7,9 @@ data:
     name: skybox_test
     state: 1
     scene:
-      srt: {}
+        srt: {}
     ibl:
+        intensity: 5
         irradiance:
             size: 128
         prefilter:
@@ -17,4 +18,5 @@ data:
             size: 256
     material: /pkg/ant.resources/materials/sky/skybox.material
     simplemesh: false
-    skybox: {}
+    skybox:
+        intensity: 20.0

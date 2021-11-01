@@ -1,17 +1,19 @@
-local ecs = ...
+local ecs 	= ...
 local world = ecs.world
-local w = world.w
+local w 	= world.w
 
-local iibl = ecs.import.interface "ant.render.ibl|iibl"
-local imesh= ecs.import.interface "ant.asset|imesh"
+local iibl 		= ecs.import.interface "ant.render.ibl|iibl"
+local imesh		= ecs.import.interface "ant.asset|imesh"
 
-local geopkg = import_package "ant.geometry"
-local geo = geopkg.geometry
+local geopkg 	= import_package "ant.geometry"
+local geo 		= geopkg.geometry
+
+local math3d	= require "math3d"
 
 local skybox_sys = ecs.system "skybox_system"
 
 function skybox_sys:component_init()
-	for e in w:select "INIT skybox simplemesh:out skybox_changed?out" do
+	for e in w:select "INIT skybox:in simplemesh:out skybox_changed?out" do
 		local vb, ib = geo.box(1, true, false)
 		e.simplemesh = imesh.init_mesh({
 			vb = {
@@ -38,12 +40,22 @@ function skybox_sys:entity_ready()
 		local t = e.render_object.properties.s_skybox
 		local h = t.value.texture.handle
 		iibl.filter_all{
-			source = {handle = h},
-			irradiance = se_ibl.irradiance,
-			prefilter = se_ibl.prefilter,
-			LUT= se_ibl.LUT,
+			source 		= {handle = h},
+			irradiance 	= se_ibl.irradiance,
+			prefilter 	= se_ibl.prefilter,
+			LUT			= se_ibl.LUT,
+			intensity	= se_ibl.intensity,
 		}
 		world:pub{"ibl_updated", e}
 	end
 	w:clear "skybox_changed"
+end
+
+function skybox_sys:data_changed()
+	for e in w:select "skybox:in render_object:in" do
+		local sb = e.skybox
+		local ro = e.render_object
+		local p = assert(ro.properties.u_skybox_param.value)
+		p.v = math3d.set_index(p, 1, sb.intensity)
+	end
 end

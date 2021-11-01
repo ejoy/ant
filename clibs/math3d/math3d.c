@@ -811,19 +811,34 @@ set_index_object(lua_State *L, struct lastack *LS, int64_t id){
 	}
 	--idx;
 
+	const int n = lua_gettop(L);
+	if (n < 3){
+		luaL_error(L, "Invalid set_index argument number:%d, at least 3.", n);
+	}
+
+	const int valuenum = n - 2;
+
+	if (idx + valuenum > 4){
+		luaL_error(L, "Invalid argument number, start index is:%d, argument number:%d, start index + argument number should less than 4!", idx, valuenum);
+	}
+
 	switch (type)
 	{
 	case LINEAR_TYPE_MAT:{
-		const float* nv = vector_from_index(L, LS, 3);
 		float vv[16]; memcpy(vv, v, sizeof(vv));
-		memcpy(vv + idx * 4, nv, sizeof(float) * 4);
+		for (int ii=0; ii<valuenum; ++ii){
+			const float* nv = vector_from_index(L, LS, ii+3);
+			memcpy(vv+(idx+ii)*4, nv, sizeof(float)*4);
+		}
 		lastack_pushmatrix(LS, vv);
 	}
 		break;
 	case LINEAR_TYPE_VEC4:
 	case LINEAR_TYPE_QUAT:{
 		float vv[4]; memcpy(vv, v, sizeof(vv));
-		vv[idx] = (float)luaL_checknumber(L, 3);
+		for (int ii=0; ii<valuenum; ++ii){
+			vv[idx+ii] = (float)luaL_checknumber(L, ii+3);
+		}
 		lastack_pushvec4(LS, vv);
 	}
 		break;

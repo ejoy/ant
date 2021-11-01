@@ -4,6 +4,8 @@ local w = world.w
 
 local default_comp 	= import_package "ant.general".default
 local setting		= import_package "ant.settings".setting
+local settingdata 	= setting:data()
+local graphic_setting=settingdata.graphic
 
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
@@ -31,9 +33,9 @@ function world_trans_sys:entity_init()
 	end
 end
 
-local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent", "decal", "ui"}
+local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent", "decal", "ldr", "ui"}
 
-local SURFACE_TYPES <const> = {
+local QUEUE_TYPES <const> = {
     main_queue = LAYER_NAMES,
     blit_queue = {"opacity",},
     pre_depth_queue = {"opacity"},
@@ -86,15 +88,14 @@ function irender.get_main_view_rendertexture()
 	return fbmgr.get_rb(fb[1]).handle
 end
 
-local settingdata = setting:data()
 local default_clear_state<const> = {
-	color = settingdata.graphic.render.clear_color or 0x000000ff,
+	color = graphic_setting.render.clear_color or 0x000000ff,
 	depth = 1.0,
 	clear = "CD",
 }
 
 function irender.create_view_queue(view_rect, view_queuename, camera_ref, filtertype, exclude, surfacetypes, visible)
-	surfacetypes = surfacetypes or SURFACE_TYPES["main_queue"]
+	surfacetypes = surfacetypes or QUEUE_TYPES["main_queue"]
 	filtertype = filtertype or "visible"
 	w:register{name = view_queuename}
 
@@ -138,7 +139,7 @@ local rb_flag = samplerutil.sampler_flag {
 	V="CLAMP",
 }
 
-function irender.create_pre_depth_queue(vr, camera_ref)
+function irender.create_pre_depth_queue(vr, fbsize, camera_ref)
 	local fbidx = fbmgr.create{
 		fbmgr.create_rb{
 			format = "R32F",
@@ -177,7 +178,7 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 			},
 			primitive_filter = {
 				filter_type = "visible",
-				table.unpack(SURFACE_TYPES["pre_depth_queue"]),
+				table.unpack(QUEUE_TYPES["pre_depth_queue"]),
 			},
 			cull_tag 		= {},
 			queue_name 		= "pre_depth_queue",
@@ -198,8 +199,7 @@ local function create_main_fb(fbsize)
 			fbsize.w, fbsize.h, "RGBA16F", rb_flag)
 	)
 
-	local bloom = settingdata.graphic.postprocess.bloom
-	if bloom.enable then
+	if graphic_setting.postprocess.bloom.enable then
 		render_buffers[#render_buffers+1] = fbmgr.create_rb(
 			default_comp.render_buffer(
 				fbsize.w, fbsize.h, "RGBA16F", rb_flag)
@@ -207,6 +207,11 @@ local function create_main_fb(fbsize)
 	end
 
 	local function get_depth_buffer()
+		if graphic_setting.pre_z then
+			local depth_viewid = viewidmgr.get "depth"
+			local depthfb = fbmgr.get_byviewid(depth_viewid)
+			return depthfb[2]
+		end
 		return fbmgr.create_rb(
 			default_comp.render_buffer(
 				fbsize.w, fbsize.h, "D24S8", rb_flag)
@@ -217,8 +222,8 @@ local function create_main_fb(fbsize)
 	return fbmgr.create(render_buffers)
 end
 
-function irender.create_main_queue(vr, fbsize, camera_ref)
-	local fbidx = create_main_fb(fbsize)
+function irender.create_main_queue(vr, camera_ref)
+	local fbidx = create_main_fb(vr)
 	ecs.create_entity {
 		policy = {
 			"ant.render|render_queue",
@@ -239,7 +244,7 @@ function irender.create_main_queue(vr, fbsize, camera_ref)
 			},
 			primitive_filter = {
 				filter_type = "visible",
-				table.unpack(SURFACE_TYPES["main_queue"]),
+				table.unpack(QUEUE_TYPES["main_queue"]),
 			},
 			cull_tag = {},
 			visible = true,

@@ -143,7 +143,8 @@ end
 
 local function update_lighting_properties(viewrect, camerapos, near, far)
 	system_properties["u_eyepos"].id = camerapos
-	system_properties["u_camera_param"].v = {near, far, 0, 0}
+	local cp = system_properties["u_camera_param"]
+	cp.v = math3d.set_index(cp, 1, near, far)
 	local nl = ilight.count_visible_light()
 	system_properties["u_light_count"].v = {nl, 0, 0, 0}
 
@@ -152,7 +153,7 @@ local function update_lighting_properties(viewrect, camerapos, near, far)
 		system_properties["s_prefilter"].texture.handle	= ibl.prefilter.handle
 		system_properties["s_LUT"].texture.handle		= ibl.LUT.handle
 		local ip = system_properties["u_ibl_param"]
-		ip.v = math3d.set_index(ip, 1, ibl.prefilter.mipmap_count)
+		ip.v = math3d.set_index(ip, 1, ibl.prefilter.mipmap_count, ibl.intensity)
 	end
 	--TODO: this setting only do when ibl is change
 	update_ibl_tex(get_ibl())
@@ -218,7 +219,7 @@ local starttime = itimer.current()
 
 local function update_timer_properties()
 	local t = system_properties["u_time"]
-	t.v = {itimer.current()-starttime, itimer.delta(), 0, 0}
+	t.v = math3d.set_index(t, 1, itimer.current()-starttime, itimer.delta())
 end
 
 function isp.properties()

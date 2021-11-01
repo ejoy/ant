@@ -26,15 +26,14 @@ function s:end_filter()
         local m = assert(which_material(e.skinning))
         local fr = e.filter_result
         local state = e.render_object.state
-        for qe in w:select "pre_depth_queue primitive_filter:in" do
-            for _, fn in ipairs(qe.primitive_filter) do
-                if fr[fn] then
-                    e.filter_material[fn] = {
-                        fx          = m.fx,
-                        properties  = m.properties,
-                        state       = irender.check_primitive_mode_state(state, m.state),
-                    }
-                end
+        local qe = w:singleton("pre_depth_queue", "primitive_filter:in")
+        for _, fn in ipairs(qe.primitive_filter) do
+            if fr[fn] then
+                e.filter_material[fn] = {
+                    fx          = m.fx,
+                    properties  = m.properties,
+                    state       = irender.check_primitive_mode_state(state, m.state),
+                }
             end
         end
     end

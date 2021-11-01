@@ -1,6 +1,8 @@
 #include "common/inputs.sh"
 $input a_position INPUT_INDICES INPUT_WEIGHT
+#ifdef DEPTH_LINEAR
 $output v_position
+#endif //DEPTH_LINEAR
 
 #include <bgfx_shader.sh>
 #include "common/transform.sh"

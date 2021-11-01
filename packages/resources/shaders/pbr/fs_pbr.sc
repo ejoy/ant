@@ -47,7 +47,8 @@ uniform vec4 u_pbr_factor;
 #define u_occlusion_strength u_pbr_factor.w
 
 uniform vec4 u_ibl_param;
-#define u_ibl_prefilter_mipmap_count u_ibl_param.x
+#define u_ibl_prefilter_mipmap_count    u_ibl_param.x
+#define u_ibl_indirect_intensity        u_ibl_param.y
 
 struct material_info
 {
@@ -283,8 +284,10 @@ void main()
 
     // Calculate lighting contribution from image based lighting source (IBL)
 #ifdef ENABLE_IBL
-    color +=    get_IBL_radiance_GGX(N, V, NdotV, mi.roughness, mi.f0) +
-                get_IBL_radiance_Lambertian(N, mi.albedo);
+    vec3 indirect_color =   get_IBL_radiance_GGX(N, V, NdotV, mi.roughness, mi.f0) +
+                            get_IBL_radiance_Lambertian(N, mi.albedo);
+    indirect_color *= u_ibl_indirect_intensity;
+    color += indirect_color;
 #endif //ENABLE_IBL
 #endif //USING_LIGHTMAP
     gl_FragColor = vec4(color, basecolor.a);

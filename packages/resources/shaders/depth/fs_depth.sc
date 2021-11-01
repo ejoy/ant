@@ -1,9 +1,8 @@
-$input v_position
-#include "common.sh"
 #ifdef DEPTH_LINEAR
+$input v_position
 uniform vec4 u_depth_scale_offset;
-#endif 
-
+#endif //DEPTH_LINEAR
+#include "common.sh"
 void main()
 {
 # ifdef DEPTH_LINEAR

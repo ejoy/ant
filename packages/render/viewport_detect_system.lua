@@ -5,6 +5,7 @@ local w = world.w
 local fbmgr 	= require "framebuffer_mgr"
 
 local setting	= import_package "ant.settings".setting
+local graphic_setting = setting:data().graphic
 
 local vp_detect_sys = ecs.system "viewport_detect_system"
 
@@ -25,7 +26,7 @@ local function resize_framebuffer(w, h, fbidx)
 				changed = fbmgr.resize_rb(w, h, rbidx) or changed
 				rb_cache[rbidx] = changed
 			else
-				changed = c
+				changed = true
 			end
 		end
 		

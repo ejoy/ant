@@ -147,8 +147,7 @@ function ibl_sys:render_preprocess()
         local ip = properties.u_build_ibl_param
         if ip then
             local ipv = ip.value
-            ipv.v = math3d.set_index(ipv, 3, prefilter.sample_count)
-            ipv.v = math3d.set_index(ipv, 4, prefilter.roughness)
+            ipv.v = math3d.set_index(ipv, 3, prefilter.sample_count, prefilter.roughness)
         end
 
         properties.s_prefilter = icompute.create_image_property(ibl_textures.prefilter.handle, prefilter_stage, prefilter.mipidx, "w")
@@ -186,6 +185,8 @@ local function build_ibl_textures(ibl)
             bgfx.destroy(handle)
         end
     end
+
+    ibl_textures.intensity = ibl.intensity
 
     ibl_textures.source.texture.handle = ibl.source.handle
     if ibl.irradiance.size ~= ibl_textures.irradiance.size then
