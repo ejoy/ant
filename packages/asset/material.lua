@@ -264,10 +264,8 @@ local ms = ecs.system "material_system"
 function ms:component_init()
 	w:clear "material_result"
     for e in w:select "INIT material:in material_setting?in material_result:new" do
-		if type(e.material) == "string" then
-			local mm = load_material(init_material(e.material), {}, e.material_setting)
-			e.material_result = {}
-			build_material(mm, e.material_result)
-		end
+		local mm = load_material(init_material(e.material), {}, e.material_setting)
+		e.material_result = {}
+		build_material(mm, e.material_result)
 	end
 end
