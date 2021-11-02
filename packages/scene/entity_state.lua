@@ -11,6 +11,8 @@ local STATE_TYPE = {
 	--
 	lightmap	= 0x00000010,
 	--
+	ldr			= 0x00000020,
+	--
 	auxgeom		= 0x00008000,
 }
 

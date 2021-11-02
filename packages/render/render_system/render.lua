@@ -33,7 +33,7 @@ function world_trans_sys:entity_init()
 	end
 end
 
-local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent", "decal", "ldr", "ui"}
+local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent", "decal", "ui"}
 
 local QUEUE_TYPES <const> = {
     main_queue = LAYER_NAMES,
