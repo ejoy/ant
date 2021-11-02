@@ -75,6 +75,7 @@ function tm_sys:init_world()
             },
             watch_screen_buffer = true,
             name = "tonemapping_rt_obj",
+            tonemapping_queue = true,
         }
     }
 end

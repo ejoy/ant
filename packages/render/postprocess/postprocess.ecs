@@ -30,6 +30,7 @@ policy "postprocess_queue"
     .require_policy "render_target"
 
 component "tonemapping"
+component "tonemapping_queue"
 system "tonemapping_system"
     .implement "postprocess/tonemapping.lua"
     .method "init"

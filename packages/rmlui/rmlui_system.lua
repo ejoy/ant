@@ -38,9 +38,7 @@ function rmlui_sys:init()
 end
 
 function rmlui_sys:init_world()
-    local mq = w:singleton("main_queue", "render_target:in")
-    local rt = mq.render_target
-    local vr = rt.view_rect
+    -- need create in 'init_world' for 'entity_init' to get 'tonemapping_queue'
     ecs.create_entity{
         policy = {
             "ant.general|name",
@@ -50,13 +48,12 @@ function rmlui_sys:init_world()
         data = {
             rmlui_obj = true,
             render_target = {
-                view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
+                view_rect = {x=0, y=0, w=1, h=1},
                 viewid = ui_viewid,
                 view_mode = "s",
                 clear_state = {
                     clear = "",
                 },
-                fb_idx = rt.fb_idx,
             },
             watch_screen_buffer = true,
             name = "rmlui_obj",
@@ -68,7 +65,13 @@ local vr_change_mb = world:sub{"component_changed", "view_rect", "main_queue"}
 
 function rmlui_sys:entity_init()
     for q in w:select "INIT rmlui_obj render_target:in" do
-        local vr = q.render_target.view_rect
+        local tm_q = assert(w:singleton("tonemapping_queue", "render_target:in"))
+        local tm_rt = tm_q.render_target
+        local vr = tm_rt.view_rect
+        local rt = q.render_target
+        rt.view_rect = vr
+        rt.fb_idx = tm_rt.fb_idx
+        irq.update_rendertarget(rt)
         ltask.send(ServiceRmlUi, "update_context_size", vr.w, vr.h, screen_ratio)
     end
 
