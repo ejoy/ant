@@ -50,7 +50,7 @@ end
 print "copy data to ant_release/* ..."
 
 copy_directory(BIN, output / "bin", function (path)
-   return path:equal_extension '.dll' or path:equal_extension'.exe'
+   return path:equal_extension '.dll' or path:equal_extension'.exe' or path:equal_extension'.lua'
 end)
 copy_directory(input / "engine", output / "engine", function (path)
     return path:filename():string() ~= ".gitignore"
