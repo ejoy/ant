@@ -37,6 +37,7 @@ local def_ibl = {
 	irradiance = {handle = def_cubetex_handle},
 	prefilter = {handle = def_cubetex_handle, mipmap_count = 0},
 	LUT = {handle = def_2dtex_handle},
+	intensity = 0
 }
 
 local enable_ibl = true

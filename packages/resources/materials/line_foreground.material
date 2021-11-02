@@ -3,7 +3,7 @@ fx:
   vs: /pkg/ant.resources/shaders/mesh/vs_colormesh.sc
   setting:
     surfacetype: foreground
-    #CYLINDER_TRANSFORM: 1
+    WITH_COLOR_ATTRIB: 1
 state:
   ALPHA_REF: 1
   CULL: CCW
