@@ -2,13 +2,49 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-
+local ist = ecs.import.interface "ant.terrain|ishape_terrain"
 local shape_terrain_test_sys = ecs.system "shape_terrain_test_system"
 
-local function generate_terrain_fields(w, h)
-    local quad_types<const> = {
-        "none", "grass", "dust"
+
+local function build_roads(ww, hh, fields)
+    if ww < 8 or hh < 8 then
+        error "need at least w>=8 and h>=8 to test road"
+    end
+
+    --from w: [0, 8], h:[0, 8]
+    local road_test = {
+         "G",  "G",  "G",  "G",  "G",  "G",  "G",  "G",
+         "G", "O2", "I0", "I0", "C2",  "D",  "D",  "D",
+         "G",  "G",  "G",  "G", "I1",  "D",  "D",  "D",
+         "G",  "G", "O2", "I0", "X0", "I0", "I0", "O0",
+         "G",  "G",  "G",  "G", "I1",  "D",  "D",  "D",
+         "G",  "G", "C3", "I0", "X0", "I0", "O0",  "D",
+         "G",  "G", "C0", "I0", "C1",  "D",  "D",  "D",
+         "G",  "G",  "G",  "G",  "G",  "G",  "G",  "G",
     }
+
+    local mapper = {
+        N = "none",
+        G = "grass",
+        D = "dust",
+    }
+
+    for iih=1, 8 do
+        for iiw=1, 8 do
+            local idx = (iih-1)*ww+iiw
+            local idx1 = (iih-1)*8+iiw
+            local rt = road_test[idx1]
+            local t = mapper[rt]
+            if t == nil then
+                t = "road_" .. rt
+            end
+            fields[idx].type = t
+        end
+    end
+end
+
+local function generate_terrain_fields(w, h)
+    local shapetypes = ist.shape_types()
 
     local fields = {}
     for ih=1, h do
@@ -16,7 +52,7 @@ local function generate_terrain_fields(w, h)
             local which = math.random(1, 3)
             local height = math.random() * 0.05
             fields[#fields+1] = {
-                type    = quad_types[which],
+                type    = shapetypes[which],
                 height  = height,
             }
         end
@@ -27,7 +63,7 @@ local function generate_terrain_fields(w, h)
     --     local fields = {}
     --     for _, t in ipairs(stream) do
     --         fields[#fields+1] = {
-    --             type = quad_types[t],
+    --             type = shape_types[t],
     --             --height = math.random() * 0.12,
     --             height = 1.0
     --         }
@@ -62,8 +98,9 @@ local function generate_terrain_fields(w, h)
 end
 
 function shape_terrain_test_sys:init()
-    local ww, hh = 256, 256--2, 2
+    local ww, hh = 16, 16--256, 256--2, 2
     local terrain_fields = generate_terrain_fields(ww, hh)
+    build_roads(ww, hh, terrain_fields)
     ecs.create_entity{
         policy = {
             "ant.scene|scene_object",
@@ -87,7 +124,7 @@ function shape_terrain_test_sys:init()
                 edge = {
                     color = 0xffe5e5e5,
                     thickness = 0.08,
-                }
+                },
             },
             materials = {
                 shape = "/pkg/ant.test.features/assets/shape_terrain.material",

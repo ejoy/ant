@@ -9,9 +9,18 @@ local fs        = require "filesystem"
 local datalist  = require "datalist"
 local bgfx      = require "bgfx"
 
-local imesh     = ecs.import.interface "ant.asset|imesh"
+local shape_types<const> = {
+    "none", "grass", "dust",
+    -- roads
+    "road_I0", "road_I1",   -- - |
+    "road_T0", "road_T1", "road_T2", "road_T3", -- T
+    "road_X0",
+    "road_C0", "road_C1", "road_C2", "road_C3", -- C
+    "road_O0", "road_O1", "road_O2", "road_O3", -- ==> ~ <== ^
+}
 
-local quad_ts = ecs.system "shape_terrain_system"
+
+local shape_ts = ecs.system "shape_terrain_system"
 
 local function read_terrain_field(tf)
     if type(tf) == "string" then
@@ -390,7 +399,7 @@ function cterrain_fields:init()
     self.minheight, self.maxheight = minheight, maxheight
 end
 
-function quad_ts:entity_init()
+function shape_ts:entity_init()
     for e in w:select "INIT shape_terrain:in materials:in reference:in" do
         local st = e.shape_terrain
 
@@ -480,4 +489,11 @@ function quad_ts:entity_init()
             end
         end
     end
+end
+
+
+--shape terrain interface
+local ishape_terrain = ecs.interface "ishape_terrain"
+function ishape_terrain.shape_types()
+    return shape_types
 end

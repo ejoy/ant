@@ -54,10 +54,14 @@ function iobj_motion.set_direction(e, dir)
     set_changed(e)
 end
 
-function iobj_motion.set_srt(e, srt)
-    local s, r, t = math3d.srt(srt)
+function iobj_motion.set_srt(e, s, r, t)
     set_srt(get_srt(e), s, r, t)
     set_changed(e)
+end
+
+function iobj_motion.set_srt_matrix(e, srt)
+    local s, r, t = math3d.srt(srt)
+    iobj_motion.set_srt(e, s, r, t)
 end
 
 function iobj_motion.set_view(e, pos, dir, updir)

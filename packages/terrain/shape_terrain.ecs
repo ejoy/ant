@@ -9,7 +9,17 @@ component "shape_terrain_drawer"
 component "shape_terrain_edge_drawer"
 component "materials".type "lua"
 
+interface "ishape_terrain"
+    .implement "shape_terrain.lua"
+    .method "shape_types"
+
+system "terrain_road_system"
+    .implement "terrain_road_system.lua"
+    .method "init"
+    .method "entity_init"
+
 policy "shape_terrain"
     .require_system "ant.terrain|shape_terrain_system"
+    .require_system "ant.terrain|terrain_road_system"
     .component "shape_terrain"
     .component "materials"

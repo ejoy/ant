@@ -5,6 +5,8 @@ local math3d    = require "math3d"
 local imgui     = require "imgui"
 local rhwi      = import_package "ant.hwi"
 local asset_mgr = import_package "ant.asset"
+local mathpkg   = import_package "ant.math"
+local mc        = mathpkg.constant
 local effekseer_filename_mgr = ecs.import.interface "ant.effekseer|filename_mgr"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 local ies       = ecs.import.interface "ant.scene|ientity_state"
@@ -395,8 +397,8 @@ function m:handle_event()
         elseif what == "parent" then
             hierarchy:set_parent(target, v1)
             local sourceWorldMat = iom.worldmat(target)
-            local targetWorldMat = v1 and iom.worldmat(v1) or math3d.matrix{}
-            iom.set_srt(target, math3d.mul(math3d.inverse(targetWorldMat), sourceWorldMat))
+            local targetWorldMat = v1 and iom.worldmat(v1) or mc.IDENTITY_MAT
+            iom.set_srt_matrix(target, math3d.mul(math3d.inverse(targetWorldMat), sourceWorldMat))
             ecs.method.set_parent(target, v1)
             local isslot
             if v1 then

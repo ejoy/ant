@@ -14,6 +14,7 @@ interface "obj_motion"
     .method "set_scale"
 
     .method "set_srt"
+    .method "set_srt_matrix"
     .method "worldmat"
     .method "set_view"
 

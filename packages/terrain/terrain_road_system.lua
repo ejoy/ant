@@ -1,0 +1,95 @@
+local ecs   = ...
+local world = ecs.world
+local w     = world.w
+
+local ist   = ecs.import.interface "ant.terrain|ishape_terrain"
+local iom   = ecs.import.interface "ant.objcontroller|obj_motion"
+
+local mathpkg=import_package "ant.math"
+local mc    = mathpkg.constant
+local math3d= require "math3d"
+local terrain_road_sys = ecs.system "terrain_road_system"
+
+local road_resources = {
+    I = {
+        filename = "/pkg/ant.resources.binary/terrain/roads/I_road.glb|mesh.prefab",
+    },
+    C = {
+        filename = "/pkg/ant.resources.binary/terrain/roads/C_road.glb|mesh.prefab",
+    },
+    X = {
+        filename = "/pkg/ant.resources.binary/terrain/roads/X_road.glb|mesh.prefab",
+    },
+    O = {
+        filename = "/pkg/ant.resources.binary/terrain/roads/O_road.glb|mesh.prefab",
+    },
+    T = {
+        filename = "/pkg/ant.resources.binary/terrain/roads/T_road.glb|mesh.prefab",
+    }
+}
+
+
+function terrain_road_sys:init()
+
+end
+
+local rotators<const> = {
+    math3d.ref(math3d.quaternion{axis=mc.YAXIS, r=math.rad(90)}),
+    math3d.ref(math3d.quaternion{axis=mc.YAXIS, r=math.rad(180)}),
+    math3d.ref(math3d.quaternion{axis=mc.YAXIS, r=math.rad(270)}),
+}
+
+local function create_road_entity(srt)
+    return ecs.create_entity{
+        policy = {
+            "ant.terrain|terrain_road",
+            "ant.scene|scene_object",
+            "ant.general|name",
+        },
+        data = {
+            scene = {
+                srt = assert(srt),
+            },
+            name = "road_entity",
+            terrain_roads = {},
+            reference = true,
+        }
+    }
+end
+
+local function instance(filename, srt, parent)
+    local p = ecs.create_instance(filename)
+    function p.on_ready(prefab)
+        local e = prefab.root
+        local s, r, t = srt.s, srt.r, srt.t
+        if type(s) == "number" then
+            s = {s, s, s}
+        end
+        iom.set_srt(e, s, r, t)
+        ecs.method.set_parent(e, parent)
+    end
+    return world:create_object(p)
+end
+
+function terrain_road_sys:entity_init()
+    for e in w:select "INIT shape_terrain:in reference:in" do
+        local st = e.shape_terrain
+        local ww, hh = st.width, st.height
+        local terrainfileds = st.terrain_fields
+        local unit = st.unit
+
+        for iih=1, hh do
+            for iiw=1, ww do
+                local idx = (iih-1)*ww+iiw
+                local field = terrainfileds[idx]
+                local roadtype = field.type:match "road_([ICXOT][0-3])"
+                if roadtype then
+                    local t = {(iiw-1+0.5)*unit, 0.0, (iih-1+0.5)*unit} --0.5 for x/z offset from mesh center
+                    local rm = rotators[roadtype:byte(2, 2)-('0'):byte()]
+                    local resfile = assert(road_resources[roadtype:sub(1, 1)]).filename
+                    instance(resfile, {t=t, s=0.1, r=rm}, e.reference)
+                end
+            end
+        end
+    end
+end
