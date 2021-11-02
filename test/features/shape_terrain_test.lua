@@ -13,20 +13,14 @@ local function build_roads(ww, hh, fields)
 
     --from w: [0, 8], h:[0, 8]
     local road_test = {
-         "G",  "G",  "G",  "G",  "G",  "G",  "G",  "G",
-         "G", "O2", "I0", "I0", "C2",  "D",  "D",  "D",
-         "G",  "G",  "G",  "G", "I1",  "D",  "D",  "D",
-         "G",  "G", "O2", "I0", "X0", "I0", "I0", "O0",
-         "G",  "G",  "G",  "G", "I1",  "D",  "D",  "D",
-         "G",  "G", "C3", "I0", "X0", "I0", "O0",  "D",
-         "G",  "G", "C0", "I0", "C1",  "D",  "D",  "D",
-         "G",  "G",  "G",  "G",  "G",  "G",  "G",  "G",
-    }
-
-    local mapper = {
-        N = "none",
-        G = "grass",
-        D = "dust",
+         " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
+         " ", "O2", "I0", "I0", "C2",  " ",  " ",  " ",
+         " ",  " ",  " ",  " ", "I1",  " ",  " ",  " ",
+         " ",  " ", "O2", "I0", "X0", "I0", "I0", "O0",
+         " ",  " ",  " ",  " ", "I1",  " ",  " ",  " ",
+         " ",  " ", "C3", "I0", "X0", "I0", "O0",  " ",
+         " ",  " ", "C0", "I0", "C1",  " ",  " ",  " ",
+         " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
     }
 
     for iih=1, 8 do
@@ -34,11 +28,11 @@ local function build_roads(ww, hh, fields)
             local idx = (iih-1)*ww+iiw
             local idx1 = (iih-1)*8+iiw
             local rt = road_test[idx1]
-            local t = mapper[rt]
-            if t == nil then
-                t = "road_" .. rt
+
+            fields[idx].type ="grass"
+            if rt ~= " " then
+                fields[idx].roadtype = rt
             end
-            fields[idx].type = t
         end
     end
 end

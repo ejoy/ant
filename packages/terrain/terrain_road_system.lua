@@ -82,11 +82,11 @@ function terrain_road_sys:entity_init()
             for iiw=1, ww do
                 local idx = (iih-1)*ww+iiw
                 local field = terrainfileds[idx]
-                local roadtype = field.type:match "road_([ICXOT][0-3])"
-                if roadtype then
+                local rt = field.roadtype
+                if rt then
                     local t = {(iiw-1+0.5)*unit, 0.0, (iih-1+0.5)*unit} --0.5 for x/z offset from mesh center
-                    local rm = rotators[roadtype:byte(2, 2)-('0'):byte()]
-                    local resfile = assert(road_resources[roadtype:sub(1, 1)]).filename
+                    local rm = rotators[rt:byte(2, 2)-('0'):byte()]
+                    local resfile = assert(road_resources[rt:sub(1, 1)]).filename
                     instance(resfile, {t=t, s=0.1, r=rm}, e.reference)
                 end
             end
