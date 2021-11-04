@@ -6,7 +6,7 @@ $output v_PosP, v_UV1, v_VColor
 //uniform mat4 u_camera;
 uniform mat4 u_cameraProj;
 uniform vec4 u_UVInversed;
-uniform vec4 u_flipbookParameter;
+uniform vec4 u_vsFlipbookParameter;
 void main()
 {
 //	vec3 wpos = mul(vec4(a_position, 1.0), u_model[0]).xyz;

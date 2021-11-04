@@ -292,7 +292,6 @@ local event_gizmo = world:sub {"Gizmo"}
 local light_gizmo = ecs.require "gizmo.light"
 
 local aabb_color_i <const> = 0x6060ffff
-local aabb_color <const> = {1.0, 0.38, 0.38, 1.0}
 local highlight_aabb = {
     visible = false,
     min = nil,
@@ -306,12 +305,11 @@ local function update_heightlight_aabb(e)
             local minv, maxv = math3d.index(ro.aabb, 1, 2)
             highlight_aabb.min = math3d.tovalue(minv)
             highlight_aabb.max = math3d.tovalue(maxv)
+            highlight_aabb.visible = true
+            return
         end
-        highlight_aabb.visible = true
-    else
-        highlight_aabb.visible = false
     end
-
+    highlight_aabb.visible = false
 end
 
 local function on_target(old, new)
@@ -462,9 +460,11 @@ function m:handle_event()
     end
     for _, filename in event_open_prefab:unpack() do
         prefab_mgr:open(filename)
+        update_heightlight_aabb()
     end
     for _, filename in event_open_fbx:unpack() do
         prefab_mgr:open_fbx(filename)
+        update_heightlight_aabb()
     end
     for _, filename in event_add_prefab:unpack() do
         if string.sub(filename, -4) == ".efk" then

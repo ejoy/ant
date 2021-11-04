@@ -6,7 +6,7 @@ $output v_vspos, v_texcoord0, v_binormal, v_tangent, v_ppos, v_color0
 //uniform mat4 u_camera;
 uniform mat4 u_cameraProj;
 uniform vec4 u_UVInversed;
-uniform vec4 u_flipbookParameter;
+uniform vec4 u_vsFlipbookParameter;
 
 void main()
 {

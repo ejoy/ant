@@ -7,9 +7,9 @@ uniform mat4 u_cameraProj;
 uniform mat4 u_Model;
 uniform vec4 u_fUV;
 uniform vec4 u_fModelColor;
-uniform vec4 fLightDirection;
-uniform vec4 fLightColor;
-uniform vec4 fLightAmbient;
+uniform vec4 u_vsLightDirection;
+uniform vec4 u_vsLightColor;
+uniform vec4 u_vsLightAmbient;
 uniform vec4 u_UVInversed;
 void main()
 {

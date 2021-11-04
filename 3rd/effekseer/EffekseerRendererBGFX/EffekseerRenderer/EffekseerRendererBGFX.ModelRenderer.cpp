@@ -40,10 +40,10 @@ void ModelRenderer::InitRenderer()
 	};
 
 // 	shader_ad_lit_->SetVertexConstantBufferSize(sizeof(::EffekseerRenderer::ModelRendererAdvancedVertexConstantBuffer<N>));
-// 	shader_ad_unlit_->SetVertexConstantBufferSize(sizeof(::EffekseerRenderer::ModelRendererAdvancedVertexConstantBuffer<N>));
+ 	shader_ad_unlit_->SetVertexConstantBufferSize(sizeof(::EffekseerRenderer::ModelRendererAdvancedVertexConstantBuffer<N>));
 // 	shader_ad_distortion_->SetVertexConstantBufferSize(sizeof(::EffekseerRenderer::ModelRendererAdvancedVertexConstantBuffer<N>));
 // 	shader_ad_lit_->SetPixelConstantBufferSize(sizeof(::EffekseerRenderer::PixelConstantBuffer));
-// 	shader_ad_unlit_->SetPixelConstantBufferSize(sizeof(::EffekseerRenderer::PixelConstantBuffer));
+ 	shader_ad_unlit_->SetPixelConstantBufferSize(sizeof(::EffekseerRenderer::PixelConstantBuffer));
 // 	shader_ad_distortion_->SetPixelConstantBufferSize(sizeof(::EffekseerRenderer::PixelConstantBufferDistortion));
 
 //	shader_lit_->SetVertexConstantBufferSize(sizeof(::EffekseerRenderer::ModelRendererVertexConstantBuffer<N>));
@@ -62,13 +62,13 @@ void ModelRenderer::InitRenderer()
 // 	shader_lit_->SetTextureSlot(2, shader_lit_->GetUniformId("s_sampler_depthTex"));
 // 	shader_ad_lit_->SetTextureSlot(7, shader_ad_lit_->GetUniformId("s_sampler_depthTex"));
 
-	for (auto& shader : {/*shader_ad_unlit_, */shader_unlit_})
+	for (auto& shader : {shader_ad_unlit_, shader_unlit_})
 	{
 		shader->SetTextureSlot(0, shader->GetUniformId("s_sampler_colorTex"));
 	}
-//	applyPSAdvancedRendererParameterTexture(shader_ad_unlit_, 1);
+	applyPSAdvancedRendererParameterTexture(shader_ad_unlit_, 1);
 	shader_unlit_->SetTextureSlot(1, shader_unlit_->GetUniformId("s_sampler_depthTex"));
-//	shader_ad_unlit_->SetTextureSlot(6, shader_ad_unlit_->GetUniformId("s_sampler_depthTex"));
+	shader_ad_unlit_->SetTextureSlot(6, shader_ad_unlit_->GetUniformId("s_sampler_depthTex"));
 
 // 	for (auto& shader : {shader_ad_distortion_, shader_distortion_})
 // 	{
@@ -86,7 +86,7 @@ void ModelRenderer::InitRenderer()
 	shaders[3] = shader_unlit_;
 
 	for (int32_t i = 0; i < 4; i++) {
-		if (i < 3) continue;
+		if (i == 0 || i == 2) continue;
 
 		auto isAd = i < 2;
 
@@ -112,7 +112,7 @@ void ModelRenderer::InitRenderer()
 			vsOffset += sizeof(float[4]) * N;
 			shaders[i]->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, shaders[i]->GetUniformId("u_fBlendUVDistortionUV"), vsOffset, N);
 			vsOffset += sizeof(float[4]) * N;
-			shaders[i]->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, shaders[i]->GetUniformId("u_fFlipbookParameter"), vsOffset);
+			shaders[i]->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, shaders[i]->GetUniformId("u_vsFlipbookParameter"), vsOffset);
 			vsOffset += sizeof(float[4]) * 1;
 			shaders[i]->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, shaders[i]->GetUniformId("u_fFlipbookIndexAndNextRate"), vsOffset, N);
 			vsOffset += sizeof(float[4]) * N;
@@ -121,11 +121,11 @@ void ModelRenderer::InitRenderer()
 		}
 		shaders[i]->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, shaders[i]->GetUniformId("u_fModelColor"), vsOffset, N);
 		vsOffset += sizeof(float[4]) * N;
-		shaders[i]->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, shaders[i]->GetUniformId("u_fLightDirection"), vsOffset);
+		shaders[i]->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, shaders[i]->GetUniformId("u_vsLightDirection"), vsOffset);
 		vsOffset += sizeof(float[4]) * 1;
-		shaders[i]->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, shaders[i]->GetUniformId("u_fLightColor"), vsOffset);
+		shaders[i]->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, shaders[i]->GetUniformId("u_vsLightColor"), vsOffset);
 		vsOffset += sizeof(float[4]) * 1;
-		shaders[i]->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, shaders[i]->GetUniformId("u_fLightAmbient"), vsOffset);
+		shaders[i]->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, shaders[i]->GetUniformId("u_vsLightAmbient"), vsOffset);
 		vsOffset += sizeof(float[4]) * 1;
 		shaders[i]->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, shaders[i]->GetUniformId("u_UVInversed"), vsOffset);
 		vsOffset += sizeof(float[4]) * 1;

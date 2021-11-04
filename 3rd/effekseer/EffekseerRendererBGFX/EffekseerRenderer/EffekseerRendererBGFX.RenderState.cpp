@@ -65,44 +65,33 @@ void RenderState::Update(bool forced)
 		{
 			if (m_next.CullingType == Effekseer::CullingType::Front)
 			{
-//				glEnable(GL_CULL_FACE);
-//				glCullFace(GL_FRONT);
-				state |= BGFX_STATE_CULL_CCW;
+				state |= BGFX_STATE_CULL_CW;
 			}
 			else if (m_next.CullingType == Effekseer::CullingType::Back)
 			{
-//				glEnable(GL_CULL_FACE);
-//				glCullFace(GL_BACK);
 				state |= BGFX_STATE_CULL_CCW;
 			}
 			else if (m_next.CullingType == Effekseer::CullingType::Double)
 			{
-//				glDisable(GL_CULL_FACE);
-//				glCullFace(GL_FRONT_AND_BACK);
+				//state |= BGFX_STATE_CULL_CW;
 			}
 		}
 		else
 		{
 			if (m_next.CullingType == Effekseer::CullingType::Front)
 			{
-//				glEnable(GL_CULL_FACE);
-//				glCullFace(GL_BACK);
-				state |= BGFX_STATE_CULL_CW;
+				state |= BGFX_STATE_CULL_CCW;
 			}
 			else if (m_next.CullingType == Effekseer::CullingType::Back)
 			{
-//				glEnable(GL_CULL_FACE);
-//				glCullFace(GL_FRONT);
 				state |= BGFX_STATE_CULL_CW;
 			}
 			else if (m_next.CullingType == Effekseer::CullingType::Double)
 			{
-//				glDisable(GL_CULL_FACE);
-//				glCullFace(GL_FRONT_AND_BACK);
+				//state |= BGFX_STATE_CULL_CCW;
 			}
 		}
 	}
-
 	if (m_active.AlphaBlend != m_next.AlphaBlend || forced)
 	{
 		{
