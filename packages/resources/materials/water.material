@@ -1,0 +1,14 @@
+fx:
+  vs: /pkg/ant.resources/shaders/water/vs_water.sc
+  fs: /pkg/ant.resources/shaders/water/fs_water.sc
+properties:
+  u_water_param: {0.5, 0.04, 0.0, 0.0}  #[water_speed, uv_shift_strength, NOT_USED, NOT_USED]
+  u_water_param2: {0.25, 0.25, 0.05, 0.04} #xy for uv scale, zw for direction
+  u_water_surface: {0.5, 0.075, 2.0, -0.75} #[foam_level, refraction, beers_law, depth_offset]
+  u_color_deep: {}
+  u_color_shallow: {}
+  u_caustic_projector: {1.0, 0.0, 0.0, 0.0,    0.0, 1.0, 0.0, 0.0,    0.0, 0.0, 1.0, 0.0,    0.0, 0.0, 0.0, 1.0}
+  u_directional_light_dir: {0.0, 0.0, 1.0, 100.0}
+  u_direciontal_light_color: {1.0, 1.0, 1.0, 1.0}
+
+state: /pkg/ant.resources/materials/states/default.state
