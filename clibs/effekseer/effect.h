@@ -15,6 +15,7 @@ public:
 	void set_loop(Effekseer::Handle handle, bool value);
 	float get_speed(Effekseer::Handle handle);
 	void set_speed(Effekseer::Handle handle, float speed);
+	void set_visible(Effekseer::Handle handle, bool value);
 	bool is_playing(Effekseer::Handle handle);
 	void stop(Effekseer::Handle handle);
 	void stop_root(Effekseer::Handle handle);

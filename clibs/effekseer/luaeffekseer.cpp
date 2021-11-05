@@ -398,6 +398,23 @@ lset_speed(lua_State* L) {
 	return 0;
 }
 
+static int
+lset_visible(lua_State* L) {
+	int32_t eidx = -1;
+	int32_t pidx = -1;
+	get_effect_from_lua(L, eidx, pidx);
+	if (eidx != -1) {
+		if (auto effect = g_effekseer->get_effect(eidx); effect) {
+			bool visible = true;
+			if (lua_type(L, 3) == LUA_TBOOLEAN) {
+				visible = lua_toboolean(L, 3);
+			}
+			effect->set_visible(pidx, visible);
+		}
+	}
+	return 0;
+}
+
 void effekseer_ctx::update()
 {
 	for (auto& eff : effects_) {
@@ -474,6 +491,7 @@ luaopen_effekseer(lua_State * L) {
 		{ "pause", lpause},
 		{ "set_time", lset_time},
 		{ "stop", lstop},
+		{ "set_visible", lset_visible},
 		{ "set_speed", lset_speed},
 		{ "set_loop", lset_loop},
 		{ "is_playing", lis_playing},
