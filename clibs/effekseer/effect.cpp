@@ -96,6 +96,13 @@ void effect_adapter::set_speed(Effekseer::Handle handle, float speed)
 	}
 }
 
+void effect_adapter::set_visible(Effekseer::Handle handle, bool value)
+{
+	if (auto it = play_objects_.find(handle); it != play_objects_.end()) {
+		manager_->SetShown(handle, value);
+	}
+}
+
 bool effect_adapter::is_playing(Effekseer::Handle handle)
 {
 	return manager_->Exists(handle);

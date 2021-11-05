@@ -25,7 +25,7 @@ local function copy_directory(from, to, filter)
                 if argument["bytecode"] and fromfile:equal_extension ".lua" then
                     bytecode(fromfile, to / fromfile:filename())
                 else
-                    fs.copy_file(fromfile, to / fromfile:filename(), true)
+                    fs.copy_file(fromfile, to / fromfile:filename(), fs.copy_options.overwrite_existing)
                 end
             end
         end
@@ -50,7 +50,7 @@ end
 print "copy data to ant_release/* ..."
 
 copy_directory(BIN, output / "bin", function (path)
-   return path:equal_extension '.dll' or path:equal_extension'.exe'
+   return path:equal_extension '.dll' or path:equal_extension'.exe' or path:equal_extension'.lua'
 end)
 copy_directory(input / "engine", output / "engine", function (path)
     return path:filename():string() ~= ".gitignore"
@@ -63,11 +63,11 @@ copy_directory(input / "tools" / "prefab_editor", output / "tools" / "prefab_edi
     return path ~= input / "tools" / "prefab_editor" / ".build"
 end)
 copy_directory(input / "tools" / "fileserver", output / "tools" / "fileserver")
-fs.copy_file(input / "run_editor.bat", output / "run_editor.bat", true)
+fs.copy_file(input / "run_editor.bat", output / "run_editor.bat", fs.copy_options.overwrite_existing)
 
 if PLAT == "msvc" then
     print "copy msvc depend dll"
-    local msvc = require "tools.install.msvc_helper"
+    local msvc = dofile "tools/install/msvc_helper.lua"
     msvc.copy_vcrt("x64", output / "bin")
 end
 

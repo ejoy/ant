@@ -30,27 +30,38 @@ function effekseer_sys:init()
     local sprite_shader_defines = {}
     local model_shader_defines = {}
     for _, type in ipairs(shader_type) do
-        sprite_shader_defines[type] = {
+        local fs_path = path .. "fs_model_unlit.sc"
+        local vs_path = path .. "vs_sprite_unlit.sc"
+        if type == "ad_unlit" then
+            fs_path = path .. "fs_ad_model_unlit.sc"
+            vs_path = path .. "vs_ad_sprite_unlit.sc"
+        end
+        sprite_shader_defines[#sprite_shader_defines + 1] = {
             -- fs = path .. "fs_model_" .. type .. ".sc",
             -- vs = path .. "vs_sprite_" .. type .. ".sc",
-            fs = path .. "fs_model_unlit.sc",
-            vs = path .. "vs_sprite_unlit.sc",
+            fs = fs_path,
+            vs = vs_path,
             setting = {}
         }
     end
     for _, type in ipairs(shader_type) do
-        model_shader_defines[type] = {
+        local fs_path = path .. "fs_model_unlit.sc"
+        local vs_path = path .. "vs_model_unlit.sc"
+        if type == "ad_unlit" then
+            fs_path = path .. "fs_ad_model_unlit.sc"
+            vs_path = path .. "vs_ad_model_unlit.sc"
+        end
+        model_shader_defines[#model_shader_defines + 1] = {
             -- fs = path .. "fs_model_" .. type .. ".sc",
             -- vs = path .. "vs_model_" .. type .. ".sc",
-            fs = path .. "fs_model_unlit.sc",
-            vs = path .. "vs_model_unlit.sc",
+            fs = fs_path,
+            vs = vs_path,
             setting = {}
         }
     end
-
     local function create_shaders(def)
         local programs = {}
-        for k, v in pairs(def) do
+        for _, v in ipairs(def) do
             programs[#programs + 1] = assetmgr.load_fx(v)
         end
         return programs
@@ -177,12 +188,12 @@ local event_entity_register = world:sub{"entity_register"}
 local event_play_effect = world:sub{"play_effect"}
 local event_do_play = world:sub{"do_play"}
 function effekseer_sys:render_submit()
-    for qe in w:select "main_queue render_target:in" do
-        local rt = qe.render_target
-        local fbidx = rt.fb_idx
+    for tm_q in w:select "tonemapping_queue render_target:in" do
+        --local tm_q = assert(w:singleton("tonemapping_queue", "render_target:in"))
         local effect_view = viewidmgr.get "effect_view"
-        fbmgr.bind(effect_view, fbidx)
-        local vr = rt.view_rect
+        local tm_rt = tm_q.render_target
+        fbmgr.bind(effect_view, tm_rt.fb_idx)
+        local vr = tm_rt.view_rect
         bgfx.set_view_rect(effect_view, vr.x, vr.y, vr.w, vr.h)
         local dt = time_callback and time_callback() or itimer.delta() * 0.001
         effekseer.update(dt)

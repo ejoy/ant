@@ -229,11 +229,11 @@ bool RendererImplemented::Initialize()
 
 	auto shader_unlit = shaders_[static_cast<size_t>(EffekseerRenderer::RendererShaderType::Unlit)];
 	auto shader_ad_unlit = shaders_[static_cast<size_t>(EffekseerRenderer::RendererShaderType::AdvancedUnlit)];
-	for (auto& shader : { /*shader_ad_unlit, */shader_unlit }) {
+	for (auto& shader : { shader_ad_unlit, shader_unlit }) {
 		shader->SetVertexConstantBufferSize(sizeof(EffekseerRenderer::StandardRendererVertexBuffer));
 		shader->SetPixelConstantBufferSize(sizeof(EffekseerRenderer::PixelConstantBuffer));
 		
-		shader->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, shader->GetUniformId("u_flipbookParameter"), sizeof(Effekseer::Matrix44) * 2 + sizeof(float) * 4);
+		shader->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, shader->GetUniformId("u_vsFlipbookParameter"), sizeof(Effekseer::Matrix44) * 2 + sizeof(float) * 4);
 		shader->AddVertexConstantLayout(CONSTANT_TYPE_MATRIX44, shader->GetUniformId("u_camera"), 0);
 		shader->AddVertexConstantLayout(CONSTANT_TYPE_MATRIX44, shader->GetUniformId("u_cameraProj"), sizeof(Effekseer::Matrix44));
 		shader->AddVertexConstantLayout(CONSTANT_TYPE_VECTOR4, shader->GetUniformId("u_UVInversed"), sizeof(Effekseer::Matrix44) * 2);
@@ -794,6 +794,9 @@ void AssignPixelConstantBuffer(Shader* shader)
 	shader->AddPixelConstantLayout(CONSTANT_TYPE_VECTOR4, shader->GetUniformId("reconstructionParam1"), psOffset);
 	psOffset += sizeof(float[4]) * 1;
 	shader->AddPixelConstantLayout(CONSTANT_TYPE_VECTOR4, shader->GetUniformId("reconstructionParam2"), psOffset);
+	psOffset += sizeof(float[4]) * 1;
+
+	shader->AddPixelConstantLayout(CONSTANT_TYPE_VECTOR4, shader->GetUniformId("mUVInversedBack"), psOffset);
 	psOffset += sizeof(float[4]) * 1;
 }
 

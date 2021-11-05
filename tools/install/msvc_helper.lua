@@ -198,7 +198,7 @@ local function copy_vcrt(arch, target, mode)
     for dll in fs.pairs(vcrtpath(arch, mode)) do
         local filename = dll:filename()
         if filename ~= ignore then
-            fs.copy_file(dll, target / filename, true)
+            fs.copy_file(dll, target / filename, fs.copy_options.overwrite_existing)
         end
     end
 end
@@ -211,13 +211,13 @@ local function copy_ucrt(arch, target, mode)
         for dll in fs.pairs(redist) do
             local filename = dll:filename()
             if filename ~= ignore then
-                fs.copy_file(dll, target / filename, true)
+                fs.copy_file(dll, target / filename, fs.copy_options.overwrite_existing)
             end
         end
-        fs.copy_file(bin / "ucrtbased.dll", target / "ucrtbased.dll", true)
+        fs.copy_file(bin / "ucrtbased.dll", target / "ucrtbased.dll", fs.copy_options.overwrite_existing)
     else
         for dll in fs.pairs(ucrtpath(arch, mode)) do
-            fs.copy_file(dll, target / dll:filename(), true)
+            fs.copy_file(dll, target / dll:filename(), fs.copy_options.overwrite_existing)
         end
     end
 end

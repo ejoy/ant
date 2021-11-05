@@ -33,7 +33,7 @@ local function on_drop_files(files)
             lfs.create_directories(dst_path)
             lfs.copy(path, dst_path, true)
         else
-            lfs.copy_file(path, dst_path, true)
+            lfs.copy_file(path, dst_path, fs.copy_options.overwrite_existing)
         end
     end
 end

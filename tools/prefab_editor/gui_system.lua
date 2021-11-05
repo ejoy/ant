@@ -292,7 +292,6 @@ local event_gizmo = world:sub {"Gizmo"}
 local light_gizmo = ecs.require "gizmo.light"
 
 local aabb_color_i <const> = 0x6060ffff
-local aabb_color <const> = {1.0, 0.38, 0.38, 1.0}
 local highlight_aabb = {
     visible = false,
     min = nil,
@@ -306,19 +305,18 @@ local function update_heightlight_aabb(e)
             local minv, maxv = math3d.index(ro.aabb, 1, 2)
             highlight_aabb.min = math3d.tovalue(minv)
             highlight_aabb.max = math3d.tovalue(maxv)
+            highlight_aabb.visible = true
+            return
         end
-        highlight_aabb.visible = true
-    else
-        highlight_aabb.visible = false
     end
-
+    highlight_aabb.visible = false
 end
 
 local function on_target(old, new)
     local old_entity = old--type(old) == "table" and icamera.find_camera(old) or world[old]
     if old and old_entity then
-        world.w:sync("camera?in", old_entity)
-        world.w:sync("light?in", old_entity)
+        w:sync("camera?in", old_entity)
+        w:sync("light?in", old_entity)
         if old_entity.camera then
             camera_mgr.show_frustum(old, false)
         elseif old_entity.light then
@@ -327,8 +325,8 @@ local function on_target(old, new)
     end
     if new then
         local new_entity = new--type(new) == "table" and icamera.find_camera(new) or world[new]
-        world.w:sync("camera?in", new_entity)
-        world.w:sync("light?in", new_entity)
+        w:sync("camera?in", new_entity)
+        w:sync("light?in", new_entity)
         if new_entity.camera then
             camera_mgr.set_second_camera(new, true)
         elseif new_entity.light then
@@ -342,8 +340,8 @@ end
 local function on_update(e)
     update_heightlight_aabb(e)
     if not e then return end
-    world.w:sync("camera?in", e)
-    world.w:sync("light?in", e)
+    w:sync("camera?in", e)
+    w:sync("light?in", e)
     if e.camera then
         camera_mgr.update_frustrum(e)
     elseif e.light then
@@ -384,12 +382,12 @@ function m:handle_event()
             transform_dirty = false
             if what == "name" then 
                 hierarchy:update_display_name(target, v1)
-                world.w:sync("collider?in", target)
+                w:sync("collider?in", target)
                 if target.collider then
                     hierarchy:update_collider_list(world)
                 end
             else
-                world.w:sync("slot?in", target)
+                w:sync("slot?in", target)
                 if target.slot then
                     hierarchy:update_slot_list(world)
                 end
@@ -402,11 +400,11 @@ function m:handle_event()
             ecs.method.set_parent(target, v1)
             local isslot
             if v1 then
-                world.w:sync("slot?in", v1)
+                w:sync("slot?in", v1)
                 isslot = v1.slot
             end
             if (not v1 or isslot) then
-                for e in world.w:select "scene:in slot_name:out" do
+                for e in w:select "scene:in slot_name:out" do
                     if e.scene == target.scene then
                         e.slot_name = "None"
                     end
@@ -417,43 +415,49 @@ function m:handle_event()
             on_update(target)
         end
     end
-    for _, what, eid, value in hierarchy_event:unpack() do
+    for _, what, e, value in hierarchy_event:unpack() do
         if what == "visible" then
-            hierarchy:set_visible(eid, value)
-            ies.set_state(eid, what, value)
-            local template = hierarchy:get_template(eid)
-            if template and template.children then
-                for _, e in ipairs(template.children) do
-                    ies.set_state(e, what, value)
+            hierarchy:set_visible(e, value)
+            w:sync("effect_instance?in", e)
+            if e.effect_instance then
+                local effekseer     = require "effekseer"
+                effekseer.set_visible(e.effect_instance.handle, e.effect_instance.playid, value)
+            else
+                ies.set_state(e, what, value)
+                local template = hierarchy:get_template(e)
+                if template and template.children then
+                    for _, e in ipairs(template.children) do
+                        ies.set_state(e, what, value)
+                    end
                 end
             end
-            world.w:sync("light?in", eid)
-            if eid.light then
-                world:pub{"component_changed", "light", eid, "visible", value}
+            w:sync("light?in", e)
+            if e.light then
+                world:pub{"component_changed", "light", e, "visible", value}
             end
-            for e in world.w:select "scene:in ibl:in" do
-                if e.scene.parent == eid then
+            for ie in w:select "scene:in ibl:in" do
+                if ie.scene.parent == e then
                     isp.enable_ibl(value)
                     break
                 end
             end
         elseif what == "lock" then
-            hierarchy:set_lock(eid, value)
+            hierarchy:set_lock(e, value)
         elseif what == "delete" then
-            world.w:sync("collider?in", gizmo.target_eid)
+            w:sync("collider?in", gizmo.target_eid)
             if gizmo.target_eid.collider then
                 anim_view.on_remove_entity(gizmo.target_eid)
             end
-            prefab_mgr:remove_entity(eid)
+            prefab_mgr:remove_entity(e)
             update_heightlight_aabb()
         elseif what == "movetop" then
-            hierarchy:move_top(eid)
+            hierarchy:move_top(e)
         elseif what == "moveup" then
-            hierarchy:move_up(eid)
+            hierarchy:move_up(e)
         elseif what == "movedown" then
-            hierarchy:move_down(eid)
+            hierarchy:move_down(e)
         elseif what == "movebottom" then
-            hierarchy:move_bottom(eid)
+            hierarchy:move_bottom(e)
         end
     end
     
@@ -462,9 +466,11 @@ function m:handle_event()
     end
     for _, filename in event_open_prefab:unpack() do
         prefab_mgr:open(filename)
+        update_heightlight_aabb()
     end
     for _, filename in event_open_fbx:unpack() do
         prefab_mgr:open_fbx(filename)
+        update_heightlight_aabb()
     end
     for _, filename in event_add_prefab:unpack() do
         if string.sub(filename, -4) == ".efk" then
