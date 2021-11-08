@@ -1,6 +1,7 @@
 #include "bgfx_shader.sh"
 #include "bgfx_compute.sh"
 #include "common/cluster_shading.sh"
+#include "common/camera.sh"
 
 vec3 line_zplane_intersection(vec3 A, vec3 B, float zDistance){
     vec3 plane_normal = vec3(0.0, 0.0, 1.0);
