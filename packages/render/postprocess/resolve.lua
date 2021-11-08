@@ -3,8 +3,7 @@ local world = ecs.world
 local w     = world.w
 
 local fbmgr     = require "framebuffer_mgr"
-local declmgr   = require "declmgr"
-local viewidmgr = require "viewidmgr"
+local viewidmgr = require "viewid_mgr"
 local samplerutil=require "sampler"
 
 local bgfx      = require "bgfx"
@@ -61,7 +60,7 @@ function resolve_msaa_sys:init_world()
             name = "resolver",
             render_target = {
                 viewid = resolve_viewid,
-                view_rect = {vr.x, vr.y, vr.w, vr.h},
+                view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
                 view_mode = "",
                 clear_state = { clear = ""},
                 fb_idx = create_fb(fbmgr.get(mq.render_target.fb_idx))
@@ -76,7 +75,7 @@ end
 
 function resolve_msaa_sys:resolve()
     local pp = w:singleton("postprocess", "postprocess_input:in")
-    local resolver = w:singleton("resoler", "render_target:in")
+    local resolver = w:singleton("resolver", "render_target:in")
     local ppi = pp.postprocess_input
     local rt = resolver.render_target
     local fb = fbmgr.get(rt.fb_idx)

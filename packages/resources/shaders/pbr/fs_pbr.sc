@@ -93,11 +93,6 @@ void get_metallic_roughness(out float metallic, out float roughness, vec2 uv)
     metallic   = clamp(metallic, 0.0, 1.0);
 }
 
-float clamp_dot(vec3 x, vec3 y)
-{
-    return clamp(dot(x, y), 0.0, 1.0);
-}
-
 vec3 get_IBL_radiance_Lambertian(vec3 n, vec3 diffuseColor)
 {
     return textureCube(s_irradiance, n).rgb * diffuseColor;
@@ -126,7 +121,7 @@ material_info get_material_info(vec4 basecolor, vec2 uv)
     vec3 f0_ior = vec3_splat(MIN_ROUGHNESS);
     mi.albedo = mix(basecolor.rgb * (1.0 - f0_ior),  vec3_splat(0.0), mi.metallic);
 
-    calc_reflectance(fo_ior, basecolor, mi);
+    calc_reflectance(f0_ior, basecolor, mi);
     return mi;
 }
 

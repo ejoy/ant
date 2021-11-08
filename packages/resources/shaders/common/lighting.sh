@@ -1,27 +1,8 @@
 #ifndef __SHADER_LIGHTING_SH__
 #define __SHADER_LIGHTING_SH__
 
-uniform vec4 u_light_count;
-
-struct light_info{
-	vec3	pos;
-	float	range;
-	vec3	dir;
-	float	enable;
-	vec4	color;
-	float	type;
-	float	intensity;
-	float	inner_cutoff;
-	float	outter_cutoff;
-};
-
-#define LightType_Directional 0
-#define LightType_Point 1
-#define LightType_Spot 2
-
-#define IS_DIRECTIONAL_LIGHT(_type) (_type==LightType_Directional)
-#define IS_POINT_LIGHT(_type)       (_type==LightType_Point)
-#define IS_SPOT_LIGHT(_type)        (_type==LightType_Spot)
+#include "common/lightdata.sh"
+#include "pbr/pbr.sh"
 
 struct material_info
 {
@@ -49,8 +30,6 @@ float get_spot_attenuation(vec3 pt2l, vec3 spotdir, float outter_cone, float inn
     return smoothstep(outter_cone, inner_cone, cosv);	//outter_cone is less than inner_cone
 }
 
-#include "pbr.sh"
-
 void calc_reflectance(vec3 f0_ior, vec4 basecolor, inout material_info mi)
 {
     mi.f0 = mix(f0_ior, basecolor.rgb, mi.metallic);
@@ -59,6 +38,11 @@ void calc_reflectance(vec3 f0_ior, vec4 basecolor, inout material_info mi)
 
     // Anything less than 2% is physically impossible and is instead considered to be shadowing. Compare to "Real-Time-Rendering" 4th editon on page 325.
     mi.f90 = vec3_splat(clamp(reflectance * 50.0, 0.0, 1.0));
+}
+
+float clamp_dot(vec3 x, vec3 y)
+{
+    return clamp(dot(x, y), 0.0, 1.0);
 }
 
 vec3 get_light_radiance(light_info l, vec3 posWS, vec3 N, vec3 V, float NdotV, material_info mi)

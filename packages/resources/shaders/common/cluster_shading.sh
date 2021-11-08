@@ -1,6 +1,6 @@
 #include "bgfx_compute.sh"
-#include "lighting.sh"
-#include "camera.sh"
+#include "common/lightdata.sh"
+#include "common/camera.sh"
 
 #ifndef ORIGIN_BOTTOM_LEFT
 #define ORIGIN_BOTTOM_LEFT 0
