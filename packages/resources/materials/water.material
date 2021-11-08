@@ -12,18 +12,18 @@ properties:
   u_direciontal_light_color: {1.0, 1.0, 1.0, 1.0}
   s_dudv:
     stage: 0
-    texture: /pkg/ant.resources/
+    texture: /pkg/ant.resources/textures/water/dudv.texture
   s_normalmapA:
     stage: 1
-    texture: ""
+    texture: /pkg/ant.resources/textures/water/normalA.texture
   s_normalmapB:
     stage: 2
-    texture: ""
+    texture: /pkg/ant.resources/textures/water/normalB.texture
   s_foam:
     stage: 3
-    texture: ""
+    texture: /pkg/ant.resources/textures/water/foam.texture
   s_caustic:
     stage: 4
-    texture: ""
+    texture: /pkg/ant.resources/textures/water/caustic.texture
 
 state: /pkg/ant.resources/materials/states/default.state
