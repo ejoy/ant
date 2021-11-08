@@ -1,0 +1,7 @@
+system "water_system"
+    .implement "water_system.lua"
+    .method "component_init"
+    .method "entity_init"
+    .method "data_changed"
+
+component "water".type "lua"

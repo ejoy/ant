@@ -2,6 +2,7 @@ import "@ant.render"
 import "@ant.asset"
 
 import "shape_terrain.ecs"
+import "water.ecs"
 
 -- interface "terrain"
 --     .implement "terrain_system.lua"

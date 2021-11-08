@@ -19,6 +19,7 @@ local bindings = {
 	main_view 	= 30,
 
 	--start postprocess
+	resolve		= 49,
 	tonemapping = 50,
 	--end postprocess
 

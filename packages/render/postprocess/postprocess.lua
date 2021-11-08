@@ -25,5 +25,8 @@ function pp_sys:pre_postprocess()
     --TODO: check screen buffer changed
     local pp = w:singleton("postprocess", "postprocess_input:in")
     local mq = w:singleton("main_queue", "render_target:in")
-    pp.postprocess_input[1].handle = fbmgr.get_rb(fbmgr.get(mq.render_target.fb_idx)[1]).handle
+    local fb = fbmgr.get(mq.render_target.fb_idx)
+    for i=1, #fb do
+        pp.postprocess_input[i].handle = fbmgr.get_rb(fb[i]).handle
+    end
 end

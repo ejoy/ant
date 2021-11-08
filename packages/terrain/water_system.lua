@@ -5,7 +5,12 @@ local w     = world.w
 local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
 
+local ilight    = ecs.import.interface "ant.render|light"
+local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+
 local bgfx      = require "bgfx"
+local math3d    = require "math3d"
 
 local layout    = declmgr.get "p3"
 
@@ -76,4 +81,33 @@ end
 
 function water_sys:entity_init()
     
+end
+
+local directionlight_info = {
+    dir = {0, 0, 0, 0},
+    color = {0, 0, 0, 0},
+}
+
+function water_sys:data_changed()
+    local found
+    for e in w:select "light:in" do
+        local l = e.light
+        if l.type == "directional" then
+            local d = iom.get_direction(e)
+            local dir = directionlight_info.dir
+            dir[1], dir[2], dir[3] = math3d.index(d, 1, 2, 3)
+            dir[4] = ilight.intensity(e)
+            directionlight_info.color = ilight.color(e)
+            found = true
+            break
+        end
+    end
+
+    if found then
+        local dir, color = directionlight_info.dir, directionlight_info.color
+        for e in w:select "water:in render_object:in" do
+            imaterial.set_property_directly(e, "u_directional_light_dir", dir)
+            imaterial.set_property_directly(e, "u_direciontal_light_color", color)
+        end
+    end
 end

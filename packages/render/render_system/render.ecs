@@ -162,6 +162,7 @@ interface "irender"
     .method "quad_ib"
     .method "quad_ib_num"
     .method "check_primitive_mode_state"
+    .method "is_msaa_buffer"
 
 interface "irenderqueue"
     .implement "render_system/renderqueue.lua"

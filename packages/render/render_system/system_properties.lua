@@ -90,7 +90,6 @@ local system_properties = {
 	u_tetra_normal_Red		= {math3d.ref(mc.ZERO),},
 
 	s_omni_shadowmap		= def_tex_prop(9),
-	s_postprocess_input		= def_tex_prop(0),
 }
 
 function isp.get(n)

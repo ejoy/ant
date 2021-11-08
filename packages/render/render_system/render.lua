@@ -278,6 +278,11 @@ function irender.screen_capture(force_read)
 	end
 end
 
+function irender.is_msaa_buffer(rbidx)
+	local rb = fbmgr.get_rb(rbidx)
+	return rb.flags:match "r[248x]" ~= nil
+end
+
 function irender.read_render_buffer_content(format, rb_idx, force_read, size)
 	local rb = fbmgr.get_rb(rb_idx)
 	local w, h

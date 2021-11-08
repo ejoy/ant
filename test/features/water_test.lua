@@ -15,7 +15,8 @@ function water_test_sys:init()
                 grid_width = 1,
                 grid_height = 1,
             },
-            materal = "",
+            simplemesh = true,
+            materal = "/pkg/ant.resources/materials/water.material",
             state = "visible",
             scene = {
                 srt = {},
