@@ -36,14 +36,14 @@ uniform vec4 u_direciontal_light_color;
 void main()
 {
 	// Calculation of the UV with the UV motion sampler
-	vec2 uv_offset 					 = u_uv_direction * u_current_time;
-	vec2 uv_sampler_uv 				 = v_texcoord0.xy * u_uv_scale + uv_offset;
-	vec2 uv_sampler_uv_offset 		 = u_uv_shifting_strength * texture2D(s_dudv, uv_sampler_uv).rg * 2.0 - 1.0;
-	vec2 uv 							 = v_texcoord0.xy + uv_sampler_uv_offset;
+	vec2 uv_offset 					= u_uv_direction * u_current_time;
+	vec2 uv_sampler_uv 				= v_texcoord0.xy * u_uv_scale + uv_offset;
+	vec2 uv_sampler_uv_offset 		= u_uv_shifting_strength * texture2D(s_dudv, uv_sampler_uv).rg * 2.0 - 1.0;
+	vec2 uv 						= v_texcoord0.xy + uv_sampler_uv_offset;
 	
 	
 	vec3 N = mix(texture2D(s_normalmapA, uv - uv_offset*2.0).rgb,   // 75 % s_normalmapA
-                texture2D(s_normalmapB, uv + uv_offset).rgb,    // 25 % s_normalmapB
+                texture2D(s_normalmapB, uv + uv_offset).rgb,    	// 25 % s_normalmapB
                 0.25);
 	N = N*2.0 - 1.0;
 	// Refraction UV:
@@ -51,10 +51,11 @@ void main()
 	N = normalize(mul(tbn, N));
 
     float vertex_height = v_posWS.w;
-	vec2 ref_uv = gl_FragCoord.xy + (N.xy * u_refraction) / vertex_height;
+	vec2 screen_uv = gl_FragCoord.xy * u_viewTexel.xy;
+	vec2 ref_uv = screen_uv + (N.xy * u_refraction) / vertex_height;
 
 	float depth   = texture2D(s_scene_depth, ref_uv).r * 2.0 - 1.0;
-	depth = linear_depth(depth_raw);
+	depth = linear_depth(depth);
 
     float vertexZ_WS = v_posWS.z;
 
@@ -64,19 +65,19 @@ void main()
 
 	// TODO:s_scene texture should have mipmap, it something like ibl 's_prefilter' map
     //      need to calculate pre frame?? or just directly use s_prefilter map??
-	vec3 	screen_color 	= texture2DLod(s_scene, ref_uv, depth_blend_pow * 2.5).rgb;
+	vec3 screen_color 	= texture2DLod(s_scene, ref_uv, depth_blend_pow * 2.5).rgb;
 	
-	vec3 	dye_color 		= mix(u_color_shallow.rgb, u_color_deep.rgb, depth_blend_pow);
-	vec3	color 			= mix(screen_color*dye_color, dye_color*0.25, depth_blend_pow*0.5);
+	vec3 dye_color 		= mix(u_color_shallow.rgb, u_color_deep.rgb, depth_blend_pow);
+	vec3 color 			= mix(screen_color*dye_color, dye_color*0.25, depth_blend_pow*0.5);
 	
 	// Caustic screen projection
-	vec4 	caustic_screenPos = vec4(ref_uv*2.0-1.0, depth_raw, 1.0);
-    mat4 inv_mvp = mul(u_invViewProj, transpose(u_model[0]));
-	vec4 	caustic_localPos 			 = inv_mvp * caustic_screenPos;
-			caustic_localPos			 = vec4(caustic_localPos.xyz/caustic_localPos.w, 1.0);
-	
-	vec2 	caustic_uv 					 = caustic_localPos.xz / vec2_splat(1024.0) + 0.5;
-	vec4	caustic_color				 = texture2DArray(s_caustic, vec3(caustic_uv*300.0, mod(u_current_time*14.0, 16.0)));
+	vec4 caustic_screenPos = vec4(ref_uv*2.0-1.0, depth_raw, 1.0);
+    mat4 inv_mvp = mul(transpose(u_model[0]), u_invViewProj);
+	vec4 caustic_localPos = inv_mvp * caustic_screenPos;
+	caustic_localPos = caustic_localPos/caustic_localPos.w;
+
+	vec2 caustic_uv 	= caustic_localPos.xz / vec2_splat(1024.0) + 0.5;
+	vec4 caustic_color	= texture2DArray(s_caustic, vec3(caustic_uv*300.0, mod(u_current_time*14.0, 16.0)));
 
 	color *= 1.0 + pow(caustic_color.r, 1.50) * (1.0-depth_blend) * 6.0;
 
@@ -88,7 +89,7 @@ void main()
         color = mix(color, vec3(1.0), foam_mix);
     }
 	
-    //That is simple pbr lighting here, only consider directional lighting pass from CPU side
+    //This is a simple pbr lighting here, only consider directional lighting pass from CPU side
     material_info mi;
     mi.roughness = 0.2;
     mi.alpha_roughness = mi.roughness * mi.roughness;
