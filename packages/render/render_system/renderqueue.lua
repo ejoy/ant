@@ -42,9 +42,9 @@ function irq.main_camera()
 	return irq.camera "main_queue"
 end
 
-local function view_clear(viewid, cs)
+local function view_clear(viewid, cs, queuename)
 	bgfx.set_view_clear(viewid, cs.clear, cs.color, cs.depth, cs.stencil)
-	world:pub{"component_changed", "target_clear"}
+	world:pub{"clear_state_changed", queuename}
 end
 
 function irq.set_view_clear_state(queuename, state)
@@ -99,7 +99,7 @@ function irq.set_view_clear(queuename, what, color, depth, stencil)
 	cs.clear = what
 	local viewid = rt.viewid
 	set_view_clear(viewid, cs)
-	world:pub{"component_changed", "clear_state", queuename}
+	world:pub{"clear_state_changed", queuename}
 end
 
 function irq.set_view_rect(queuename, rect)
@@ -112,12 +112,13 @@ function irq.set_view_rect(queuename, rect)
 		icamera.set_frustum_aspect(qe.camera_ref, vr.w/vr.h)
 	end
 	bgfx.set_view_rect(rt.viewid, vr.x, vr.y, vr.w, vr.h)
-	world:pub{"component_changed", "view_rect", queuename}
+	world:pub{"view_rect_changed", queuename}
 end
 
 function irq.set_frame_buffer(queuename, fbidx)
 	local rt = get_rt(queuename)
 	rt.fb_idx = fbidx
+	world:pub{"framebuffer_changed", queuename}
 end
 
 local function has_queue(qn)
@@ -142,7 +143,7 @@ end
 function irq.set_visible(queuename, b)
 	local qe = {visible = b}
 	w:singleton(queuename, "visible?out", qe)
-	world:pub{"component_changed", "visible", b}
+	world:pub{"queue_visible_changed", queuename, b}
 end
 
 function irq.update_rendertarget(rt, need_touch)

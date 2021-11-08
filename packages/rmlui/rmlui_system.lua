@@ -61,7 +61,7 @@ function rmlui_sys:init_world()
     }
 end
 
-local vr_change_mb = world:sub{"component_changed", "view_rect", "main_queue"}
+local vr_change_mb = world:sub{"view_rect_changed", "main_queue"}
 
 function rmlui_sys:entity_init()
     for q in w:select "INIT rmlui_obj render_target:in" do
