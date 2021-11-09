@@ -37,38 +37,55 @@ uniform vec4 u_direciontal_light_color;
 void main()
 {
 	// Calculation of the UV with the UV motion sampler
-	vec2 uv_offset 					= u_uv_direction * u_current_time;
-	vec2 uv_sampler_uv 				= v_texcoord0.xy * u_uv_scale + uv_offset;
-	vec2 uv_sampler_uv_offset 		= u_uv_shifting_strength * texture2D(s_dudv, uv_sampler_uv).rg * 2.0 - 1.0;
-	vec2 uv 						= v_texcoord0.xy + uv_sampler_uv_offset;
+	vec2 uv_offset 			= u_uv_direction * u_current_time * 0.001;
+	vec2 uv_sampler_uv 		= v_texcoord0.xy * u_uv_scale + uv_offset;
+	vec2 uv_sampler_uv_offset = u_uv_shifting_strength * texture2D(s_dudv, uv_sampler_uv).rg * 2.0 - 1.0;
+	vec2 uv 				= v_texcoord0.xy + uv_sampler_uv_offset;
 	
 	vec3 N = mix(	fetch_bc5_normal(s_normalmapA, uv - uv_offset*2.0).xyz,   // 75 % s_normalmapA
 					fetch_bc5_normal(s_normalmapB, uv + uv_offset).xyz,       // 25 % s_normalmapB
 					0.25);
-	// Refraction UV:
     mat3 tbn = mtxFromCols(v_tangent, v_bitangent, v_normal);
 	N = normalize(instMul(N, tbn));
+
+#ifdef VIEW_WATER_NORMAL
+	gl_FragColor = vec4(N*7, 1.0);
+	return;
+#endif //VIEW_WATER_NORMAL
 
     float vertex_height = v_posWS.w;
 	vec2 screen_uv = gl_FragCoord.xy * u_viewTexel.xy;
 	vec2 ref_uv = screen_uv + (N.xy * u_refraction) / vertex_height;
 
-	float depth_raw   = texture2D(s_scene_depth, ref_uv).r * 2.0 - 1.0;
+	float depth_raw = texture2D(s_scene_depth, ref_uv).r * 2.0 - 1.0;
 	float depth = linear_depth(depth_raw);
 
     float vertexZ_WS = v_posWS.z;
 
-	float 	depth_blend 	= exp((depth+vertexZ_WS + u_depth_offset) * -u_beers_law);
-			depth_blend 	= clamp(1.0-depth_blend, 0.0, 1.0);
-	float	depth_blend_pow	= clamp(pow(depth_blend, 2.5), 0.0, 1.0);
+	float depth_blend = exp((depth+vertexZ_WS + u_depth_offset) * -u_beers_law);
+	depth_blend = clamp(1.0-depth_blend, 0.0, 1.0);
+	float depth_blend_pow = clamp(pow(depth_blend, 2.5), 0.0, 1.0);
 
+	vec3 dye_color= mix(u_color_shallow.rgb, u_color_deep.rgb, depth_blend_pow);
+#ifdef VIEW_WATER_COLOR
+	gl_FragColor = vec4(dye_color * 7, 1.0);
+	return ;
+#endif //VIEW_WATER_COLOR
+
+#ifdef WITHOUT_SCENE_COLOR
+	vec3 color = dye_color;
+#else //!WITHOUT_SCENE_COLOR
 	// TODO:s_scene texture should have mipmap, it something like ibl 's_prefilter' map
     //      need to calculate pre frame?? or just directly use s_prefilter map??
-	vec3 screen_color 	= texture2DLod(s_scene, ref_uv, depth_blend_pow * 2.5).rgb;
-	
-	vec3 dye_color 		= mix(u_color_shallow.rgb, u_color_deep.rgb, depth_blend_pow);
-	vec3 color 			= mix(screen_color*dye_color, dye_color*0.25, depth_blend_pow*0.5);
-	
+	vec3 screen_color 	= texture2D(s_scene, ref_uv).rgb;//texture2DLod(s_scene, ref_uv, depth_blend_pow * 2.5).rgb;
+
+#ifdef VIEW_WATER_SCENE_COLOR
+	gl_FragColor = vec4(screen_color, 1.0);
+	return ;
+#endif //VIEW_WATER_SCENE_COLOR
+
+	vec3 color = mix(screen_color*dye_color, dye_color*0.25, depth_blend_pow*0.5);
+#endif //WITHOUT_SCENE_COLOR
 	// Caustic screen projection
 #ifdef WATER_CAUSTIC
 	vec4 caustic_screenPos = vec4(ref_uv*2.0-1.0, depth_raw, 1.0);
@@ -90,6 +107,11 @@ void main()
         color = mix(color, vec3_splat(1.0), foam_mix);
     }
 #endif //WATER_FOAM
+
+#ifdef VIEW_WATER_WITHOUT_LIGHTING
+	gl_FragColor = vec4(color, 1.0);
+	return ;
+#endif //VIEW_WATER_WITHOUT_LIGHTING
 
     //This is a simple pbr lighting here, only consider directional lighting pass from CPU side
     material_info mi;
