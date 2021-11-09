@@ -33,15 +33,17 @@ void main()
 	float time   = u_current_time * u_wave_speed;
 	vec4 vertex  = mul(u_model[0], vec4(a_position, 1.0));
 
-    v_tangent 	 = vec3(0.0, 0.0, 0.0);
-    v_bitangent  = vec3(0.0, 0.0, 0.0);
+    vec3 tangent = vec3_splat(0.0);
+    vec3 bitangent = vec3_splat(0.0);
 
-    vertex += wave(u_wave_a, vertex.xz, time, v_tangent, v_bitangent);
-    vertex += wave(u_wave_b, vertex.xz, time, v_tangent, v_bitangent);
-    vertex += wave(u_wave_c, vertex.xz, time, v_tangent, v_bitangent);
+    vertex += wave(u_wave_a, vertex.xz, time, tangent, bitangent);
+    vertex += wave(u_wave_b, vertex.xz, time, tangent, bitangent);
+    vertex += wave(u_wave_c, vertex.xz, time, tangent, bitangent);
 
+	v_tangent = normalize(tangent);
+	v_bitangent = normalize(bitangent);
     gl_Position  = mul(u_modelViewProj, vertex);
-    v_normal     = normalize(cross(v_tangent, v_bitangent));
+    v_normal     = normalize(cross(tangent, bitangent));
     v_posWS      = vec4(vertex.xyz, gl_Position.z);
     v_texcoord0  = vertex.xz * u_uv_scale;
 }
