@@ -5,6 +5,7 @@ $input v_texcoord0 v_posWS v_normal v_tangent v_bitangent
 #include "water.sh"
 #include "common/camera.sh"
 #include "common/lighting.sh"
+#include "common/common.sh"
 
 // Surface settings:
 SAMPLER2D(s_dudv,           0); // UV motion sampler for shifting the normalmap
@@ -54,12 +55,12 @@ void main()
 	vec2 screen_uv = gl_FragCoord.xy * u_viewTexel.xy;
 	vec2 ref_uv = screen_uv + (N.xy * u_refraction) / vertex_height;
 
-	float depth   = texture2D(s_scene_depth, ref_uv).r * 2.0 - 1.0;
-	depth = linear_depth(depth);
+	float depth_raw   = texture2D(s_scene_depth, ref_uv).r * 2.0 - 1.0;
+	float depth = linear_depth(depth_raw);
 
     float vertexZ_WS = v_posWS.z;
 
-	float 	depth_blend 	= exp((depth+vertexZ_WS + depth_offset) * -beers_law);
+	float 	depth_blend 	= exp((depth+vertexZ_WS + u_depth_offset) * -u_beers_law);
 			depth_blend 	= clamp(1.0-depth_blend, 0.0, 1.0);
 	float	depth_blend_pow	= clamp(pow(depth_blend, 2.5), 0.0, 1.0);
 
@@ -73,7 +74,7 @@ void main()
 	// Caustic screen projection
 	vec4 caustic_screenPos = vec4(ref_uv*2.0-1.0, depth_raw, 1.0);
     mat4 inv_mvp = mul(transpose(u_model[0]), u_invViewProj);
-	vec4 caustic_localPos = inv_mvp * caustic_screenPos;
+	vec4 caustic_localPos = mul(inv_mvp, caustic_screenPos);
 	caustic_localPos = caustic_localPos/caustic_localPos.w;
 
 	vec2 caustic_uv 	= caustic_localPos.xz / vec2_splat(1024.0) + 0.5;
@@ -86,7 +87,7 @@ void main()
     {
         float foam_noise = clamp(pow(texture2D(s_foam, (uv*4.0) - uv_offset).r, 10.0)*40.0, 0.0, 0.2);
         float foam_mix = clamp(pow((1.0-(depth + vertexZ_WS) + foam_noise), 8.0) * foam_noise * 0.4, 0.0, 1.0);
-        color = mix(color, vec3(1.0), foam_mix);
+        color = mix(color, vec3_splat(1.0), foam_mix);
     }
 	
     //This is a simple pbr lighting here, only consider directional lighting pass from CPU side
@@ -97,12 +98,16 @@ void main()
     
     calc_reflectance(vec3_splat(MIN_ROUGHNESS), color, mi);
     light_info l;
+	l.pos = vec3(0.0, 0.0, 0.0);
+	l.enable = 1.0;
+	l.range = l.inner_cutoff = l.outter_cutoff = 0.0;
     l.type      = 0; //0 for directional
     l.color     = u_direciontal_light_color;
     l.dir       = u_directional_light_dir.xyz;
     l.intensity = u_directional_light_intensity;
 
-    vec3 V = u_eyepos - v_posWS.xyz;
+
+    vec3 V = u_eyepos.xyz - v_posWS.xyz;
     gl_FragColor = vec4(get_light_radiance(l, v_posWS.xyz, N, V, dot(N, V), mi), 1.0);
 	// Set all values:
 	// ALBEDO = color;

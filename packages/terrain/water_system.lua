@@ -4,6 +4,7 @@ local w     = world.w
 
 local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
+local fbmgr     = renderpkg.fbmgr
 
 local ilight    = ecs.import.interface "ant.render|light"
 local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
@@ -31,37 +32,39 @@ local function create_indices_buffer(gw, gh)
     for ih=1, gh do
         for iw=1, gw do
             local idx = (ih-1)*gw+iw-1
-            local nl = (ih-1)*vn_w+(iw-1)
+            local nl = ih*vn_w+(iw-1)
             local v0, v1, v2, v3 = iw-1, nl, nl+1, iw
-            m[idx*s] = fmt:pack(v0, v1, v2, v2, v3, v0)
+            m[idx*s+1] = fmt:pack(v0, v1, v2, v2, v3, v0)
         end
     end
 
     return {
         start = 0,
         num = gw * gh * 6,
-        bgfx.create_index_buffer(m, "d")
+        handle = bgfx.create_index_buffer(m, "d")
     }
 end
 
 local function gen_water_grid_mesh(gw, gh, unit, height)
     local h = height or 0.0
     h = h * unit
-    local s = gw*gh*layout.stride
+    local vw, vh = gw+1, gh+1
+    local stride = layout.stride
+    local s = vw*vh*stride
     local m = bgfx.memory_buffer(s)
 
     --vertex number == (gw+1)*(gh+1)
     for ih=0, gh do
         for iw=0, gw do
-            local idx = ih*gw+iw
-            local midx= idx*s
-            m[midx] = layoutfmt:pack(iw, h, ih)
+            local vi = ih*vw+iw
+            local midx= vi*stride+1
+            m[midx]   = layoutfmt:pack(iw, h, ih)
         end
     end
     return {
         vb = {
             start = 0,
-            num = (gw+1)*(gh+1),
+            num = vw * vh,
             {
                 handle = bgfx.create_vertex_buffer(m, layout.handle),
             }
@@ -71,7 +74,7 @@ local function gen_water_grid_mesh(gw, gh, unit, height)
 end
 
 function water_sys:component_init()
-    for e in w:select "INIT water:int simplemesh:out" do
+    for e in w:select "INIT water:in simplemesh:out" do
         local water = e.water
         local gw, gh = water.grid_width, water.grid_height
         local unit = water.unit
@@ -86,6 +89,16 @@ end
 local directionlight_info = {
     dir = {0, 0, 0, 0},
     color = {0, 0, 0, 0},
+}
+
+local scene_tex = {
+    stage = 5,
+    texture = {handle=nil}
+}
+
+local scene_depth_tex = {
+    stage = 6,
+    texture = {handle=nil}
 }
 
 function water_sys:data_changed()
@@ -105,9 +118,15 @@ function water_sys:data_changed()
 
     if found then
         local dir, color = directionlight_info.dir, directionlight_info.color
+        local resolver = w:singleton("resolver", "render_target:in")
+        local resolver_fb = fbmgr.get(resolver.render_target.fb_idx)
+        scene_tex.handle, scene_depth_tex.handle = fbmgr.get_rb(resolver_fb[1]).handle, fbmgr.get_rb(resolver_fb[#resolver_fb]).handle
         for e in w:select "water:in render_object:in" do
-            imaterial.set_property_directly(e, "u_directional_light_dir", dir)
-            imaterial.set_property_directly(e, "u_direciontal_light_color", color)
+            local ro = e.render_object
+            imaterial.set_property(e, "u_directional_light_dir", dir)
+            imaterial.set_property(e, "u_direciontal_light_color", color)
+            imaterial.set_property(e, "s_scane", scene_tex)
+            imaterial.set_property(e, "s_scene_depth", scene_depth_tex)
         end
     end
 end

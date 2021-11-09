@@ -14,14 +14,16 @@ function water_test_sys:init()
             water = {
                 grid_width = 1,
                 grid_height = 1,
+                unit = 1,
             },
             simplemesh = true,
-            materal = "/pkg/ant.resources/materials/water.material",
+            material = "/pkg/ant.resources/materials/water.material",
             state = "visible",
             scene = {
                 srt = {},
             },
             reference = true,
+            name = "water_test",
         }
     }
 end

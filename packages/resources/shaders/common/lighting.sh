@@ -30,9 +30,11 @@ float get_spot_attenuation(vec3 pt2l, vec3 spotdir, float outter_cone, float inn
     return smoothstep(outter_cone, inner_cone, cosv);	//outter_cone is less than inner_cone
 }
 
-void calc_reflectance(vec3 f0_ior, vec4 basecolor, inout material_info mi)
+void calc_reflectance(vec3 f0_ior, vec3 basecolor, inout material_info mi)
 {
-    mi.f0 = mix(f0_ior, basecolor.rgb, mi.metallic);
+    mi.f0 = mix(f0_ior, basecolor, mi.metallic);
+
+    mi.albedo = mix(basecolor * (1.0-f0_ior),  vec3_splat(0.0), mi.metallic);
     // Compute reflectance.
     float reflectance = max(mi.f0.r, max(mi.f0.g, mi.f0.b));
 

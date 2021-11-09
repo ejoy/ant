@@ -5,3 +5,7 @@ system "water_system"
     .method "data_changed"
 
 component "water".type "lua"
+
+policy "water"
+    .require_system "ant.terrain|water_system"
+    .component "water"

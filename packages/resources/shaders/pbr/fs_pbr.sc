@@ -109,7 +109,7 @@ vec3 get_IBL_radiance_GGX(vec3 N, vec3 V, float NdotV, float roughness, vec3 spe
     return specular_light * (specular_color * lut.x + lut.y);
 }
 
-material_info get_material_info(vec4 basecolor, vec2 uv)
+material_info get_material_info(vec3 basecolor, vec2 uv)
 {
     material_info mi;
     get_metallic_roughness(mi.metallic, mi.roughness, uv);
@@ -119,8 +119,6 @@ material_info get_material_info(vec4 basecolor, vec2 uv)
 
     // Achromatic f0 based on IOR.
     vec3 f0_ior = vec3_splat(MIN_ROUGHNESS);
-    mi.albedo = mix(basecolor.rgb * (1.0 - f0_ior),  vec3_splat(0.0), mi.metallic);
-
     calc_reflectance(f0_ior, basecolor, mi);
     return mi;
 }
@@ -165,7 +163,7 @@ void main()
     vec3 N = get_normal(v_tangent, v_bitangent, v_normal, uv);
 #endif //CALC_TBN
 
-    material_info mi = get_material_info(basecolor, uv);
+    material_info mi = get_material_info(basecolor.rgb, uv);
 
     // LIGHTING
     vec3 color = vec3_splat(0.0);
