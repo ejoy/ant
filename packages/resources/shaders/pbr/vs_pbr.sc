@@ -7,11 +7,7 @@ $output v_posWS v_normal v_texcoord0 OUTPUT_TANGENT OUTPUT_BITANGENT OUTPUT_LIGH
 
 void main()
 {
-#ifdef USING_LIGHTMAP
-	mat4 wm = u_model[0];
-#else //!USING_LIGHTMAP
 	mat4 wm = get_world_matrix();
-#endif //USING_LIGHTMAP
 
 	vec4 posWS = mul(wm, vec4(a_position, 1.0));
 #ifdef CYLINDER_TRANSFORM
