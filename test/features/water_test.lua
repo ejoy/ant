@@ -20,7 +20,7 @@ function water_test_sys:init()
             material = "/pkg/ant.resources/materials/water.material",
             state = "visible",
             scene = {
-                srt = {},
+                srt = {s=10, t={-5, 0.0, -5}},
             },
             reference = true,
             name = "water_test",

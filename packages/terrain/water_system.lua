@@ -105,7 +105,7 @@ function water_sys:data_changed()
     local found
     for e in w:select "light:in" do
         local l = e.light
-        if l.type == "directional" then
+        if l.light_type == "directional" then
             local d = iom.get_direction(e)
             local dir = directionlight_info.dir
             dir[1], dir[2], dir[3] = math3d.index(d, 1, 2, 3)
@@ -120,12 +120,12 @@ function water_sys:data_changed()
         local dir, color = directionlight_info.dir, directionlight_info.color
         local resolver = w:singleton("resolver", "render_target:in")
         local resolver_fb = fbmgr.get(resolver.render_target.fb_idx)
-        scene_tex.handle, scene_depth_tex.handle = fbmgr.get_rb(resolver_fb[1]).handle, fbmgr.get_rb(resolver_fb[#resolver_fb]).handle
+        scene_tex.texture.handle = fbmgr.get_rb(resolver_fb[1]).handle
+        scene_depth_tex.texture.handle = fbmgr.get_rb(resolver_fb[#resolver_fb]).handle
         for e in w:select "water:in render_object:in" do
-            local ro = e.render_object
             imaterial.set_property(e, "u_directional_light_dir", dir)
             imaterial.set_property(e, "u_direciontal_light_color", color)
-            imaterial.set_property(e, "s_scane", scene_tex)
+            imaterial.set_property(e, "s_scene", scene_tex)
             imaterial.set_property(e, "s_scene_depth", scene_depth_tex)
         end
     end

@@ -6,6 +6,7 @@ $input v_texcoord0 v_posWS v_normal v_tangent v_bitangent
 #include "common/camera.sh"
 #include "common/lighting.sh"
 #include "common/common.sh"
+#include "common/transform.sh"
 
 // Surface settings:
 SAMPLER2D(s_dudv,           0); // UV motion sampler for shifting the normalmap
@@ -27,13 +28,12 @@ uniform vec4 u_water_surface = vec4(0.5, 0.075, 2.0, -0.75);
 uniform vec4 u_color_deep;			// Color for deep places in the water, medium to dark blue
 uniform vec4 u_color_shallow;		// Color for lower places in the water, bright blue - green
 
-uniform mat4 u_caustic_projector;   // Projector matrix, mostly the matric of the sun / directlight
+uniform mat4 u_caustic_projector;	// Projector matrix, mostly the matric of the sun / directlight
 
 uniform vec4 u_directional_light_dir;
 #define u_directional_light_intensity u_directional_light_dir.w
 uniform vec4 u_direciontal_light_color;
 
-// Fragment shader:
 void main()
 {
 	// Calculation of the UV with the UV motion sampler
@@ -42,14 +42,12 @@ void main()
 	vec2 uv_sampler_uv_offset 		= u_uv_shifting_strength * texture2D(s_dudv, uv_sampler_uv).rg * 2.0 - 1.0;
 	vec2 uv 						= v_texcoord0.xy + uv_sampler_uv_offset;
 	
-	
-	vec3 N = mix(texture2D(s_normalmapA, uv - uv_offset*2.0).rgb,   // 75 % s_normalmapA
-                texture2D(s_normalmapB, uv + uv_offset).rgb,    	// 25 % s_normalmapB
-                0.25);
-	N = N*2.0 - 1.0;
+	vec3 N = mix(	fetch_bc5_normal(s_normalmapA, uv - uv_offset*2.0).xyz,   // 75 % s_normalmapA
+					fetch_bc5_normal(s_normalmapB, uv + uv_offset).xyz,       // 25 % s_normalmapB
+					0.25);
 	// Refraction UV:
     mat3 tbn = mtxFromCols(v_tangent, v_bitangent, v_normal);
-	N = normalize(mul(tbn, N));
+	N = normalize(instMul(N, tbn));
 
     float vertex_height = v_posWS.w;
 	vec2 screen_uv = gl_FragCoord.xy * u_viewTexel.xy;
