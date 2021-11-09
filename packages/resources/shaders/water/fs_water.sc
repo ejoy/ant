@@ -70,6 +70,7 @@ void main()
 	vec3 color 			= mix(screen_color*dye_color, dye_color*0.25, depth_blend_pow*0.5);
 	
 	// Caustic screen projection
+#ifdef WATER_CAUSTIC
 	vec4 caustic_screenPos = vec4(ref_uv*2.0-1.0, depth_raw, 1.0);
     mat4 inv_mvp = mul(transpose(u_model[0]), u_invViewProj);
 	vec4 caustic_localPos = mul(inv_mvp, caustic_screenPos);
@@ -79,15 +80,17 @@ void main()
 	vec4 caustic_color	= texture2DArray(s_caustic, vec3(caustic_uv*300.0, mod(u_current_time*14.0, 16.0)));
 
 	color *= 1.0 + pow(caustic_color.r, 1.50) * (1.0-depth_blend) * 6.0;
-
-	// Foam:
+#endif //WATER_CAUSTIC
+	
+#ifdef WATER_FOAM
     if(depth + vertexZ_WS < u_foam_level && depth > vertex_height-0.1)
     {
         float foam_noise = clamp(pow(texture2D(s_foam, (uv*4.0) - uv_offset).r, 10.0)*40.0, 0.0, 0.2);
         float foam_mix = clamp(pow((1.0-(depth + vertexZ_WS) + foam_noise), 8.0) * foam_noise * 0.4, 0.0, 1.0);
         color = mix(color, vec3_splat(1.0), foam_mix);
     }
-	
+#endif //WATER_FOAM
+
     //This is a simple pbr lighting here, only consider directional lighting pass from CPU side
     material_info mi;
     mi.roughness = 0.2;
