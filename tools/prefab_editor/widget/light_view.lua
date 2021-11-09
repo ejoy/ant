@@ -27,7 +27,7 @@ function LightView:_init()
             getter = function() return self:on_get_color() end,
             setter = function(...) self:on_set_color(...) end,
         }),
-        intensity    = uiproperty.Float({label = "Intensity", min = 0, max = 100}, {
+        intensity    = uiproperty.Float({label = "Intensity", min = 0, max = 500}, {
             getter = function() return self:on_get_intensity() end,
             setter = function(value) self:on_set_intensity(value) end,
         }),
