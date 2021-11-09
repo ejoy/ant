@@ -1,5 +1,5 @@
 #include "common/inputs.sh"
-$input 	a_position a_normal a_texcoord0 INPUT_TANGENT INPUT_LIGHTMAP_TEXCOORD INPUT_COLOR0
+$input 	a_position a_normal a_texcoord0 INPUT_TANGENT INPUT_LIGHTMAP_TEXCOORD INPUT_COLOR0 INPUT_INDICES INPUT_WEIGHT
 $output v_posWS v_normal v_texcoord0 OUTPUT_TANGENT OUTPUT_BITANGENT OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0
 
 #include <bgfx_shader.sh>
