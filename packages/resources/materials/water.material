@@ -42,4 +42,8 @@ properties:
     stage: 6
     texture: /pkg/ant.resources/textures/black.texture
 
-state: /pkg/ant.resources/materials/states/default.state
+state:
+  CULL: CCW
+  DEPTH_TEST: LESS
+  MSAA: true
+  WRITE_MASK: RGBA
