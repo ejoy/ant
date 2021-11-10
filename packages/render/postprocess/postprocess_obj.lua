@@ -5,6 +5,7 @@ local w     = world.w
 local viewidmgr = require "viewid_mgr"
 
 local ppobj_viewid = viewidmgr.get "postprocess_obj"
+local ies = ecs.import.interface "ant.scene|ientity_state"
 
 local pp_obj_sys = ecs.system "postprocess_obj_system"
 
@@ -38,20 +39,26 @@ function pp_obj_sys:init_world()
             data = {
                 camera_ref      = mq.camera_ref,
                 render_target   = rt,
-                reference       = true,
+                primitive_filter = {
+                    filter_type = "postprocess_obj",
+                    "opacity",
+                    "translucent",
+                },
+                cull_tag    = {},
+                name = "postprocess_obj_queue",
+                postprocess_obj_queue = true,
+                queue_name = "postprocess_obj_queue",
+                visible = true,
+                shadow_render_queue = {},
             },
-            primitive_filter = {
-                filter_type = "postprocess_obj",
-                "opacity",
-                "translucent",
-            },
-            cull_tag    = {},
-            name = "postprocess_obj_queue",
-            postprocess_obj_queue = true,
-            queue_name = "postprocess_obj_queue",
-            visible = false,
-            shadow_render_queue = {},
         }
+    end
+
+    for e in w:select "render_object:in" do
+        if ies.has_state(e, "postprocess_obj") then
+            e.render_object_update = true
+            w:sync("render_object_update:out", e)
+        end
     end
 
 end

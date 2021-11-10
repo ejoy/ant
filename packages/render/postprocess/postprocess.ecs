@@ -17,6 +17,7 @@ policy "postprocess"
     --.require_system "ant.render|dof_system"
     --.require_system "ant.render|bloom_system"
     .require_system "ant.render|resolve_msaa_system"
+    .require_system "ant.render|postprocess_obj_system"
     .require_system "ant.render|tonemapping_system"
     .require_system "ant.render|blit_system"
 
@@ -30,6 +31,10 @@ policy "postprocess_object"
 policy "postprocess_queue"
     .require_policy "render_target"
 
+component "postprocess_obj_queue"
+system "postprocess_obj_system"
+    .implement "postprocess/postprocess_obj.lua"
+    .method "init_world"
 
 component "resolver"
 
