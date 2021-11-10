@@ -275,29 +275,16 @@ local function create_node_entity(gltfscene, nodeidx, parent)
     }
 end
 
-local function find_mesh_nodes(gltfscene, scenenodes)
-    local meshnodes = {}
+local function find_mesh_nodes(gltfscene, scenenodes, meshnodes, parent_nodeidx)
     for _, nodeidx in ipairs(scenenodes) do
         local node = gltfscene.nodes[nodeidx+1]
         if node.children then
-            local c_meshnodes = find_mesh_nodes(gltfscene, node.children)
-            for ni, l in pairs(c_meshnodes) do
-                l[#l+1] = nodeidx
-                assert(meshnodes[ni] == nil)
-                meshnodes[ni] = l
-            end
+            find_mesh_nodes(gltfscene, node.children, meshnodes, nodeidx)
         end
         if node.mesh then
-            assert(node.children == nil)
-            local meshlist = {}
-            assert(meshnodes[nodeidx] == nil)
-            meshnodes[nodeidx] = meshlist
-
-            meshlist[#meshlist+1] = nodeidx
+            meshnodes[nodeidx] = {nodeidx, parent_nodeidx}
         end
     end
-
-    return meshnodes
 end
 
 return function(output, glbdata, exports, tolocalpath)
@@ -319,7 +306,8 @@ return function(output, glbdata, exports, tolocalpath)
         --parent = "root",
     }
 
-    local meshnodes = find_mesh_nodes(gltfscene, scene.nodes)
+    local meshnodes = {}
+    find_mesh_nodes(gltfscene, scene.nodes, meshnodes)
 
     local C = {}
     for mesh_nodeidx, meshlist in pairs(meshnodes) do
@@ -334,12 +322,7 @@ return function(output, glbdata, exports, tolocalpath)
                 C[nodeidx] = parent
             end
         end
-
-        local nodeidx = meshlist[1]
-        assert(C[nodeidx] == nil)
-        C[nodeidx] = parent
-        assert(nodeidx == mesh_nodeidx)
-        create_mesh_node_entity(gltfscene, nodeidx, parent, exports, tolocalpath)
+        create_mesh_node_entity(gltfscene, mesh_nodeidx, parent, exports, tolocalpath)
     end
     utility.save_txt_file("./mesh.prefab", prefab)
 end
