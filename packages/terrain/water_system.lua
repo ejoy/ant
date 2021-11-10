@@ -118,8 +118,8 @@ function water_sys:data_changed()
 
     if found then
         local dir, color = directionlight_info.dir, directionlight_info.color
-        local resolver = w:singleton("resolver", "render_target:in")
-        local resolver_fb = fbmgr.get(resolver.render_target.fb_idx)
+        local mq = w:singleton("main_queue", "render_target:in")
+        local resolver_fb = fbmgr.get(mq.render_target.fb_idx)
         scene_tex.texture.handle = fbmgr.get_rb(resolver_fb[1]).handle
         scene_depth_tex.texture.handle = fbmgr.get_rb(resolver_fb[#resolver_fb]).handle
         for e in w:select "water:in render_object:in" do

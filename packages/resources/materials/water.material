@@ -1,11 +1,11 @@
 fx:
   vs: /pkg/ant.resources/shaders/water/vs_water.sc
   fs: /pkg/ant.resources/shaders/water/fs_water.sc
-  setting:
+  #setting:
     #VIEW_WATER_NORMAL: 1
     # VIEW_WATER_COLOR: 1
     # VIEW_WATER_SCENE_COLOR: 1
-    WITHOUT_SCENE_COLOR: 1
+    #WITHOUT_SCENE_COLOR: 1
 properties:
   #wave define: xy = Direction, z = Steepness, w = Length
   u_wave_a: {1.0, 1.0, 0.35, 3.0}
