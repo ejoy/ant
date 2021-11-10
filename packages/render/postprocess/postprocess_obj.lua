@@ -1,0 +1,57 @@
+local ecs   = ...
+local world = ecs.world
+local w     = world.w
+
+local viewidmgr = require "viewid_mgr"
+
+local ppobj_viewid = viewidmgr.get "postprocess_obj"
+
+local pp_obj_sys = ecs.system "postprocess_obj_system"
+
+local function deep_copy(src, dst)
+    for k, v in pairs(src) do
+        local t = type(v)
+        if t == "table" then
+            dst[k] = {}
+            deep_copy(v, dst[k])
+        else
+            assert(t ~= "function")
+            dst[k] = v
+        end
+    end
+end
+
+local copy_rendertarget = deep_copy
+
+function pp_obj_sys:init_world()
+    for mq in w:select "main_queue camera_ref:in render_target:in" do
+        local mq_rt = mq.render_target
+        local rt = {}
+        copy_rendertarget(mq_rt, rt)
+        rt.view_id = ppobj_viewid
+        ecs.create_entity{
+            policy = {
+                "ant.general|name",
+                "ant.render|render_queue",
+                "ant.render|cull",
+            },
+            data = {
+                camera_ref      = mq.camera_ref,
+                render_target   = rt,
+                reference       = true,
+            },
+            primitive_filter = {
+                filter_type = "postprocess_obj",
+                "opacity",
+                "translucent",
+            },
+            cull_tag    = {},
+            name = "postprocess_obj_queue",
+            postprocess_obj_queue = true,
+            queue_name = "postprocess_obj_queue",
+            visible = false,
+            shadow_render_queue = {},
+        }
+    end
+
+end

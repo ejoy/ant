@@ -1,0 +1,18 @@
+---
+policy:
+  ant.render|simplerender
+  ant.terrain|water
+  ant.general|name
+data:
+  water:
+    grid_width: 1
+    grid_height: 1
+    unit: 1
+  simplemesh: true
+  material: /pkg/ant.resources/materials/water.material
+  state: postprocess_obj
+  scene:
+    srt:
+      s: 10
+      t: {-5, 0.0, -5}
+  name: water_test

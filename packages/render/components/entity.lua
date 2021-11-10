@@ -288,7 +288,7 @@ ientity.fullquad_mesh = fullquad_mesh
 
 function ientity.quad_mesh(rect)
 	if rect == nil then
-		return fullquad_meshres
+		return fullquad_mesh()
 	end
 
 	return quad_mesh(rect)

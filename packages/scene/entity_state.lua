@@ -2,6 +2,12 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
+--TODO: entity state will determine where render entity should pushed in which render queue.
+--		but right now, 'visible' state not only determine entity should push in main render queue
+--      but also mark an entity visible or not. so 'visible' state should call 'mainview'
+--      denote that it will push in mainview queue, and add another var to denote whether this
+--      entity visible or not.
+
 local STATE_TYPE = {
 	---
 	visible 	= 0x00000001,
@@ -11,7 +17,8 @@ local STATE_TYPE = {
 	--
 	lightmap	= 0x00000010,
 	--
-	ldr			= 0x00000020,
+	postprocess_obj = 0x00000020,
+	ldr			= 0x00000040,
 	--
 	auxgeom		= 0x00008000,
 }

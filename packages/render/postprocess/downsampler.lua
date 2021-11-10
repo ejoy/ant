@@ -9,6 +9,7 @@ local bgfx      = require "bgfx"
 local irender   = ecs.import.interface "ant.render|irender"
 local imesh     = ecs.import.interface "ant.asset|imesh"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
+local ientity   = ecs.import.interface "ant.render|entity"
 local ds_sys    = ecs.system "downsample_system"
 
 function ds_sys:init()
@@ -20,7 +21,7 @@ function ds_sys:init()
         data = {
             downsample_drawer = true,
             scene 		= {srt={}},
-            simplemesh  = imesh.init_mesh(),
+            simplemesh  = imesh.init_mesh(ientity.fullquad_mesh()),
             material    = "/pkg/ant.resources/materials/downsample.material",
             state       = "visible",
             name        = "downsample",
