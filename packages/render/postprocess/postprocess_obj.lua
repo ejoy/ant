@@ -29,7 +29,7 @@ function pp_obj_sys:init_world()
         local mq_rt = mq.render_target
         local rt = {}
         copy_rendertarget(mq_rt, rt)
-        rt.view_id = ppobj_viewid
+        rt.viewid = ppobj_viewid
         ecs.create_entity{
             policy = {
                 "ant.general|name",

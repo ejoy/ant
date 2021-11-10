@@ -79,10 +79,10 @@ void main()
     //      need to calculate pre frame?? or just directly use s_prefilter map??
 	vec3 screen_color 	= texture2D(s_scene, ref_uv).rgb;//texture2DLod(s_scene, ref_uv, depth_blend_pow * 2.5).rgb;
 
-#ifdef VIEW_WATER_SCENE_COLOR
+#	ifdef VIEW_WATER_SCENE_COLOR
 	gl_FragColor = vec4(screen_color, 1.0);
 	return ;
-#endif //VIEW_WATER_SCENE_COLOR
+#	endif //VIEW_WATER_SCENE_COLOR
 
 	vec3 color = mix(screen_color*dye_color, dye_color*0.25, depth_blend_pow*0.5);
 #endif //WITHOUT_SCENE_COLOR

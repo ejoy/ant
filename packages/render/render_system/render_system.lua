@@ -109,16 +109,13 @@ end
 
 function render_sys:render_submit()
 	for qe in w:select "visible camera_ref:in render_target:in primitive_filter:in cull_tag?in" do
-		--TODO: should keep camera always vaild
-        local camera = icamera.find_camera(qe.camera_ref)
-		if camera then
-			local rt = qe.render_target
-			local viewid = rt.viewid
+		local camera = icamera.find_camera(qe.camera_ref)
+		local rt = qe.render_target
+		local viewid = rt.viewid
 
-			bgfx.touch(viewid)
-			bgfx.set_view_transform(viewid, camera.viewmat, camera.projmat)
-			submit_render_objects(viewid, qe.primitive_filter, qe.cull_tag)
-		end
+		bgfx.touch(viewid)
+		bgfx.set_view_transform(viewid, camera.viewmat, camera.projmat)
+		submit_render_objects(viewid, qe.primitive_filter, qe.cull_tag)
     end
 end
 
