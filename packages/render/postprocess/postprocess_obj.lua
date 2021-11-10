@@ -34,6 +34,7 @@ function pp_obj_sys:init_world()
             policy = {
                 "ant.general|name",
                 "ant.render|render_queue",
+                "ant.render|watch_screen_buffer",
                 "ant.render|cull",
             },
             data = {
@@ -48,6 +49,7 @@ function pp_obj_sys:init_world()
                 name = "postprocess_obj_queue",
                 postprocess_obj_queue = true,
                 queue_name = "postprocess_obj_queue",
+                watch_screen_buffer = true,
                 visible = true,
                 shadow_render_queue = {},
             },
