@@ -114,7 +114,7 @@ function shape_terrain_test_sys:init()
                 width = ww,
                 height = hh,
                 section_size = math.max(1, ww > 4 and ww//4 or ww//2),
-                unit = 1,
+                unit = 2,
                 edge = {
                     color = 0xffe5e5e5,
                     thickness = 0.08,

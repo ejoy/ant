@@ -87,7 +87,7 @@ function terrain_road_sys:entity_init()
                     local t = {(iiw-1+0.5)*unit, 0.0, (iih-1+0.5)*unit} --0.5 for x/z offset from mesh center
                     local rm = rotators[rt:byte(2, 2)-('0'):byte()]
                     local resfile = assert(road_resources[rt:sub(1, 1)]).filename
-                    instance(resfile, {t=t, s=0.1, r=rm}, e.reference)
+                    instance(resfile, {t=t, s={0.1*unit, 0.1, unit*0.1}, r=rm}, e.reference)
                 end
             end
         end

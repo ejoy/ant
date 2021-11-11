@@ -236,9 +236,9 @@ local function build_section_mesh(sectionsize, sectionidx, unit, cterrainfileds)
             local field = cterrainfileds:get_field(sectionidx, iw, ih)
             if field.type == "grass" or field.type == "dust" then
                 local x, z = cterrainfileds:get_offset(sectionidx)
-                local h = assert(field.height)
+                local h = assert(field.height) * unit
                 local origin = {(iw-1+x)*unit, 0.0, (ih-1+z)*unit}
-                local extent = {unit, h*unit, unit}
+                local extent = {unit, h, unit}
                 local uv0 = find_shape_uv(field.type, h, minh, maxh)
                 add_cube(vb, origin, extent, DEFAULT_color, uv0, gen_shape_second_uv(h, unit))
             end
