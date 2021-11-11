@@ -100,9 +100,10 @@ local function selectBoundary(hp)
 	last_mouse_pos = hp
 	local boundary = camera_mgr.get_editor_data(camera_mgr.second_camera).far_boundary
 	if not boundary then return end
+	local mc = irq.main_camera()
 	for i, v in ipairs(boundary) do
-		local sp1 = utils.world_to_screen(camera_mgr.main_camera, v[1])
-		local sp2 = utils.world_to_screen(camera_mgr.main_camera, v[2])
+		local sp2 = utils.world_to_screen(mc, v[2])
+		local sp1 = utils.world_to_screen(mc, v[1])
 		local dist = utils.point_to_line_distance2D(sp1, sp2, {hp[1] - global_data.viewport.x, hp[2] - global_data.viewport.y})
 		if dist < 5.0 then
 			return i
@@ -240,7 +241,7 @@ function camera_sys:handle_camera_event()
 	for _, what, x, y, dx, dy in mouse_drag:unpack() do
 		if what == "LEFT" then
 			if select_area and hit_plane then
-				local curpos = utils.ray_hit_plane(iom.ray(camera_mgr.main_camera, {x, y}), hit_plane)
+				local curpos = utils.ray_hit_plane(iom.ray(irq.main_camera(), {x, y}), hit_plane)
 				local proj_len = math3d.dot(current_dir, math3d.sub(curpos, centre_pos))
 				local aspect = 1.0
 				if select_area == camera_mgr.FRUSTUM_LEFT or select_area == camera_mgr.FRUSTUM_RIGHT then

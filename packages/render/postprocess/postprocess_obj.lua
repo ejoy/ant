@@ -6,6 +6,7 @@ local viewidmgr = require "viewid_mgr"
 
 local ppobj_viewid = viewidmgr.get "postprocess_obj"
 local ies = ecs.import.interface "ant.scene|ientity_state"
+local irq = ecs.import.interface "ant.render|irenderqueue"
 
 local pp_obj_sys = ecs.system "postprocess_obj_system"
 
@@ -64,4 +65,13 @@ function pp_obj_sys:init_world()
         end
     end
 
+end
+
+local mb_camera_changed = world:sub{"camera_changed", "main_queue"}
+
+function pp_obj_sys:data_changed()
+    for _ in mb_camera_changed:each() do
+        local mq = w:singleton("main_queue", "camera_ref:in")
+        irq.set_camera("postprocess_obj_queue", mq.camera_ref)
+    end
 end

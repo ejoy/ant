@@ -173,6 +173,9 @@ function rt_sys:entity_init()
 		irq.update_rendertarget(e.render_target, e.need_touch)
 	end
 	w:clear "need_touch"
+end
+
+function rt_sys:entity_ready()
 	for qe in w:select "camera_changed camera_ref:out render_target:in shadow_render_queue:in queue_name:in" do
 		local vr = qe.render_target.view_rect
 		qe.camera_ref = qe.shadow_render_queue.camera_ref

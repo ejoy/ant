@@ -33,7 +33,7 @@ system "init_system"
     .method "init"
     .method "init_world"
     .method "post_init"
-    .method "entity_init"
+    .method "data_changed"
 
 system "gizmo_system"
     .implement "gizmo_system.lua"

@@ -35,6 +35,7 @@ component "postprocess_obj_queue"
 system "postprocess_obj_system"
     .implement "postprocess/postprocess_obj.lua"
     .method "init_world"
+    .method "data_changed"
 
 component "resolver"
 

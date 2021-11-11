@@ -472,7 +472,6 @@ function m:open(filename)
     self.prefab_instance = world:create_object(prefab)
     world:pub {"WindowTitle", filename}
     anim_view.load_clips()
-    camera_mgr.bind_main_camera()
 end
 
 local function on_remove_entity(e)

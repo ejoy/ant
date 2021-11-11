@@ -69,6 +69,7 @@ policy "watch_screen_buffer"
 system "render_target_system"
     .implement "render_system/renderqueue.lua"
     .method "entity_init"
+    .method "entity_ready"
     .method "entity_remove"
 
 component "render_target".type "lua"

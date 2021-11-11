@@ -87,8 +87,8 @@ function ic.calc_viewmat(cameraref)
     return iobj_motion.calc_viewmat(cameraref)
 end
 
-function ic.calc_projmat(eid)
-    local camera = find_camera(eid)
+function ic.calc_projmat(cameraref)
+    local camera = find_camera(cameraref)
     return math3d.projmat(camera.frustum)
 end
 
@@ -121,11 +121,11 @@ function ic.set_frustum(cameraref, frustum)
     for k, v in pairs(frustum) do
         camera.frustum[k] = v
     end
-    world:pub {"component_changed", "frustum", cameraref}
+    world:pub {"camera_frustum_changed", cameraref}
 end
 
-local function frustum_changed(eid, name, value)
-    local camera = find_camera(eid)
+local function frustum_changed(cameraref, name, value)
+    local camera = find_camera(cameraref)
     if camera == nil then
         return
     end
@@ -135,7 +135,7 @@ local function frustum_changed(eid, name, value)
     end
     if f.aspect then
         f[name] = value
-        world:pub {"component_changed", "frustum", eid}
+        world:pub {"camera_frustum_changed", cameraref}
     else
         error("Not implement")
     end
@@ -158,13 +158,13 @@ function ic.set_frustum_far(cameraref, f)
 end
 
 local iom = ecs.import.interface "ant.objcontroller|obj_motion"
-function ic.lookto(eid, ...)
-    iom.lookto(eid, ...)
+function ic.lookto(cameraref, ...)
+    iom.lookto(cameraref, ...)
 end
 
-function ic.focus_obj(camera_ref, eid)
-    local fe = world[eid]
-    local aabb = fe._rendercache.aabb
+function ic.focus_obj(camera_ref, e)
+    w:sync("render_object:in", e)
+    local aabb = e.render_object.aabb
     if aabb then
         local aabb_min, aabb_max= math3d.index(aabb, 1), math3d.index(aabb, 2)
         local center = math3d.mul(0.5, math3d.add(aabb_min, aabb_max))

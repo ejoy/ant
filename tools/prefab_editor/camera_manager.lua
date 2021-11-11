@@ -165,10 +165,11 @@ function camera_mgr.on_camera_ready(e)
 end
 
 function camera_mgr.create_camera()
-    local main_frustum = icamera.get_frustum(camera_mgr.main_camera)
+    local mc = irq.main_camera()
+    local main_frustum = icamera.get_frustum(mc)
     local info = {
-        eyepos = {math3d.index(iom.get_position(camera_mgr.main_camera), 1, 2, 3)},
-        viewdir = {math3d.index(iom.get_direction(camera_mgr.main_camera), 1, 2, 3)},
+        eyepos = {math3d.index(iom.get_position(mc), 1, 2, 3)},
+        viewdir = {math3d.index(iom.get_direction(mc), 1, 2, 3)},
         frustum = {n = default_near_clip, f = default_far_clip, aspect = main_frustum.aspect, fov = main_frustum.fov },
         updir = {0, 1, 0},
         name = gen_camera_name()
@@ -215,10 +216,6 @@ function camera_mgr.bind_recorder(eid, recorder)
     editor_data.recorder = recorder
 end
 
-function camera_mgr.bind_main_camera()
-    irq.set_camera("main_queue", camera_mgr.main_camera)
-end
-
 local function get_camera_recorder(cam_eid)
     local recorder = camera_mgr.get_editor_data(cam_eid).recorder
     if not recorder.camera_recorder then
@@ -241,7 +238,7 @@ function camera_mgr.add_recorder_frame(eid, idx)
     if #recorder.frames == 0 then
         icamera_recorder.add(camera_mgr.get_editor_data(eid).recorder, eid, 1)
     end
-    icamera_recorder.add(camera_mgr.get_editor_data(eid).recorder, camera_mgr.main_camera, idx)
+    icamera_recorder.add(camera_mgr.get_editor_data(eid).recorder, irq.main_camera(), idx)
     local idx = #recorder.frames
     camera_mgr.set_frame(eid, idx)
 end

@@ -7,6 +7,7 @@ local entity        = ecs.import.interface "ant.render|entity"
 local iRmlUi        = ecs.import.interface "ant.rmlui|rmlui"
 local irender       = ecs.import.interface "ant.render|irender"
 local iani          = ecs.import.interface "ant.animation|animation"
+local iom           = ecs.import.interface "ant.objcontroller|obj_motion"
 local default_comp  = import_package "ant.general".default
 local camera_mgr    = ecs.require "camera_manager"
 local imgui         = require "imgui"
@@ -53,7 +54,18 @@ function m:init()
     gd.editor_package_path = "/pkg/tools.prefab_editor/"
 end
 
+local function init_camera()
+    local mq = w:singleton("main_queue", "camera_ref:in")
+    iom.set_position(mq.camera_ref, {-200, 100, 200, 1})
+    iom.set_direction(mq.camera_ref, {2, -1, -2, 0})
+    local f = icamera.get_frustum(mq.camera_ref)
+    f.n, f.f = 1, 1000
+    icamera.set_frustum(mq.camera_ref, f)
+end
+
 function m:init_world()
+    irq.set_view_clear_color("main_queue", 0x353535ff)--0xa0a0a0ff
+    init_camera()
     create_second_view()
 end
 
@@ -61,27 +73,9 @@ function m:post_init()
     iRmlUi.preload_dir "/pkg/tools.prefab_editor/res/ui"
 end
 
-function m:entity_init()
-    for _ in w:select "INIT main_queue render_target:in" do
-        irq.set_view_clear_color("main_queue", 0x353535ff)--0xa0a0a0ff
-        
-        local main_camera = icamera.create {
-            eyepos = {-200, 100, 200, 1},
-            viewdir = {2, -1, -2, 0},
-            frustum = {n = 1, f = 1000 },
-            updir = {0.0, 1.0, 0.0, 0}
-        }
-        irq.set_camera("main_queue", main_camera)
-        camera_mgr.main_camera = main_camera
-    end
-
+function m:data_changed()
     for _, e, camera_ref in bind_billboard_camera_mb:unpack() do
-        if camera_ref == nil then
-            for e in w:select "main_queue camera_ref:in" do
-                camera_ref = e.camera_ref
-            end
-        end
         w:sync("render_object?in", e)
-        e.render_object.camera_ref = camera_ref
+        e.render_object.camera_ref = camera_ref or w:singleton("main_queue", "camera_ref:in").camera_ref
     end
 end
