@@ -91,11 +91,13 @@ local function generate_terrain_fields(w, h)
 --     }
 end
 
+local shape_terrain_test
+
 function shape_terrain_test_sys:init()
     local ww, hh = 16, 16--256, 256--2, 2
     local terrain_fields = generate_terrain_fields(ww, hh)
     build_roads(ww, hh, terrain_fields)
-    ecs.create_entity{
+    shape_terrain_test = ecs.create_entity{
         policy = {
             "ant.scene|scene_object",
             "ant.terrain|shape_terrain",
@@ -126,4 +128,24 @@ function shape_terrain_test_sys:init()
             }
         }
     }
+end
+
+local itr = ecs.import.interface "ant.terrain|iterrain_road"
+
+local kb_mb = world:sub{"keyboard"}
+
+local rotation = 0
+
+function shape_terrain_test_sys:data_changed()
+    assert(shape_terrain_test)
+    for msg in kb_mb:each() do
+        local key, press = msg[2], msg[3]
+        if key == "SPACE" and press == 0 then
+            if rotation == 4 then
+                rotation = 0
+            end
+            itr.set_road(shape_terrain_test, "C" .. rotation, 1, 2)
+            rotation = rotation + 1
+        end
+    end
 end
