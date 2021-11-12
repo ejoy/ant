@@ -73,7 +73,8 @@ local function instance(rt, parent, iiw, iih, unit)
         iom.set_srt(e, s, r, t)
         ecs.method.set_parent(e, parent)
     end
-    return world:create_object(p)
+    world:create_object(p)
+    return p
 end
 
 function terrain_road_sys:entity_init()
@@ -100,7 +101,7 @@ local itr = ecs.interface "iterrain_road"
 
 local function remove_prefab(p)
     if p then
-        for e in p.tag["*"] do
+        for _, e in ipairs(p.tag["*"]) do
             w:remove(e)
         end
     end
