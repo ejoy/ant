@@ -18,18 +18,21 @@ uniform vec4    u_exposure_param;
 // z_n = A*z_e+B/-z_e ==> z_e = -B / (z_n + A)
 // left hand coordinate, where:
 // z_n = A*z_e+B/z_e ==> z_e = B / (z_n - A)
-float linear_depth(float nolinear_depth){
-#if HOMOGENEOUS_DEPTH
-	float z_n = 2.0 * nolinear_depth - 1.0;
-	float A = (u_far + u_near) / (u_far - u_near);
-	float B = -2.0 * u_far * u_near/(u_far - u_near);
-#else //!HOMOGENEOUS_DEPTH
+
+// we are *LEFT* hand coordinate, and depth from [0, 1]
+float linear_depth(float nolinear_depth)
+{
+	//#ifdef HOMOGENEOUS_DEPTH
+	// float A = (u_far + u_near) / (u_far - u_near);
+	// float B = -2.0 * u_far * u_near/(u_far - u_near);
+	//#else
+	// float A = u_far / (u_far - u_near);
+	// float B = -(u_far * u_near) / (u_far - u_near);
+	//#endif
 	float z_n = nolinear_depth;
-	float A = u_far / (u_far - u_near);
-	float B = -(u_far * u_near) / (u_far - u_near);
-#endif //HOMOGENEOUS_DEPTH
-	float z_e = B / (z_n - A);
-    return z_e;
+	float A = u_proj[2][2];
+	float B = u_proj[3][2];
+	return B / (z_n - A);
 }
 
 #endif //_CAMERA_SH_
