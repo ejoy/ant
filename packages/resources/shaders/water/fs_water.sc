@@ -53,16 +53,24 @@ void main()
 	return;
 #endif //VIEW_WATER_NORMAL
 
-    float vertex_height = v_posWS.w;
+	// vertex_depthCS is clip space
+	// gl_FragCoord.z is the depth value in window space, because depth range from [0, 1]
+	// so, in homogeneous, ndc.z = win.z*2.0 - 1.0, or ndc.z = win.z(in OpenGL, ndc.z from [-1, 1], in DX/Mental, ndc.z from [0, 1])
+	// gl_FragCoord.w is 1/w, where w is clip space w
+	// so clip space z is: ndc.z * wc ==> (gl_FragCoord.z*2.0-1.0)/gl_FragCoord.w
+    float vertex_depthCS = gl_FragCoord.z / gl_FragCoord.w;
+	vertex_depthCS = v_texcoord0.z;
+
 	vec2 screen_uv = gl_FragCoord.xy * u_viewTexel.xy;
-	vec2 ref_uv = screen_uv + (N.xy * u_refraction) / vertex_height;
+	vec2 ref_uv = screen_uv + (N.xy * u_refraction) / vertex_depthCS;
 
-	float depth_raw = texture2D(s_scene_depth, ref_uv).r * 2.0 - 1.0;
-	float depth = linear_depth(depth_raw);
+	float depth_raw = texture2D(s_scene_depth, ref_uv).r;	//depth from:[0, 1] ==> [-1, 1]
+	float depthVS = linear_depth(depth_raw);				//depth in vs
 
-    float vertexZ_WS = v_posWS.z;
+    float vertexZ_VS = v_posWS.w;
+	float depth_diff = depthVS-vertexZ_VS;
 
-	float depth_blend = exp((depth+vertexZ_WS + u_depth_offset) * -u_beers_law);
+	float depth_blend = exp((depth_diff + u_depth_offset) * -u_beers_law);
 	depth_blend = clamp(1.0-depth_blend, 0.0, 1.0);
 	float depth_blend_pow = clamp(pow(depth_blend, 2.5), 0.0, 1.0);
 
@@ -100,10 +108,11 @@ void main()
 #endif //WATER_CAUSTIC
 	
 #ifdef WATER_FOAM
-    if(depth + vertexZ_WS < u_foam_level && depth > vertex_height-0.1)
+	// ??? do not understand why need to check depthVS larger than (vertex_depthCS-0.1)
+    if(depth_diff < u_foam_level && depthVS>(vertex_depthCS-0.1))
     {
-        float foam_noise = clamp(pow(texture2D(s_foam, (uv*4.0) - uv_offset).r, 10.0)*40.0, 0.0, 0.2);
-        float foam_mix = clamp(pow((1.0-(depth + vertexZ_WS) + foam_noise), 8.0) * foam_noise * 0.4, 0.0, 1.0);
+        float foam_noise 	= clamp(pow(texture2D(s_foam, (uv*4.0) - uv_offset).r, 10.0)*40.0, 0.0, 0.2);
+        float foam_mix 		= clamp(pow((1.0-depth_diff + foam_noise), 8.0) * foam_noise * 0.4, 0.0, 1.0);
         color = mix(color, vec3_splat(1.0), foam_mix);
     }
 #endif //WATER_FOAM

@@ -31,19 +31,22 @@ vec4 wave(vec4 parameter, vec2 position, float time, inout vec3 tangent, inout v
 void main()
 {
 	float time   = u_current_time * u_wave_speed;
-	vec4 vertex  = mul(u_model[0], vec4(a_position, 1.0));
-
+	vec4 vertex  = vec4(a_position, 1.0);
+	vec4 vertexWS= mul(u_model[0], vertex);
     vec3 tangent = vec3_splat(0.0);
     vec3 bitangent = vec3_splat(0.0);
 
-    vertex += wave(u_wave_a, vertex.xz, time, tangent, bitangent);
-    vertex += wave(u_wave_b, vertex.xz, time, tangent, bitangent);
-    vertex += wave(u_wave_c, vertex.xz, time, tangent, bitangent);
+    vertex += wave(u_wave_a, vertexWS.xz, time, tangent, bitangent);
+    vertex += wave(u_wave_b, vertexWS.xz, time, tangent, bitangent);
+    vertex += wave(u_wave_c, vertexWS.xz, time, tangent, bitangent);
 
 	v_tangent = normalize(tangent);
 	v_bitangent = normalize(bitangent);
-    gl_Position  = mul(u_modelViewProj, vertex);
+
+	vec4 vertexVS= mul(u_view, vertexWS);
+    gl_Position  = mul(u_proj, vertexVS);
     v_normal     = normalize(cross(tangent, bitangent));
-    v_posWS      = vec4(vertex.xyz, gl_Position.z);
-    v_texcoord0  = vertex.xz * u_uv_scale;
+	
+    v_posWS      = vec4(vertexWS.xyz, vertexVS.z);
+    v_texcoord0  = vec3(vertexWS.xz * u_uv_scale, gl_Position.z);
 }
