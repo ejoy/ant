@@ -22,7 +22,7 @@ uniform vec4    u_exposure_param;
 // we are *LEFT* hand coordinate, and depth from [0, 1]
 float linear_depth(float nolinear_depth)
 {
-	//#ifdef HOMOGENEOUS_DEPTH
+	//#if HOMOGENEOUS_DEPTH
 	// float A = (u_far + u_near) / (u_far - u_near);
 	// float B = -2.0 * u_far * u_near/(u_far - u_near);
 	//#else
@@ -31,7 +31,7 @@ float linear_depth(float nolinear_depth)
 	//#endif
 	float z_n = nolinear_depth;
 	float A = u_proj[2][2];
-	float B = u_proj[3][2];
+	float B = u_proj[2][3];
 	return B / (z_n - A);
 }
 
