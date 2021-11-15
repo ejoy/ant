@@ -112,7 +112,7 @@ void main()
 #endif //WATER_CAUSTIC
 	
 #ifdef WATER_FOAM
-	// ??? do not understand why need to check depthVS larger than (vertex_depthCS-0.1)
+	// ?? depthVS>(vertex_depthCS-0.1) not understand this check
     if(depth_diff < u_foam_level && depthVS>(vertex_depthCS-0.1))
     {
         float foam_noise 	= clamp(pow(texture2D(s_foam, (uv*4.0) - uv_offset).r, 10.0)*40.0, 0.0, 0.2);
