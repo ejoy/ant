@@ -1,6 +1,6 @@
 vec3 a_position :POSITION;
 
-vec3 v_texcoord0:TEXCOORD0;
+vec2 v_texcoord0:TEXCOORD0;
 vec4 v_posWS    :TEXCOORD1;
 vec3 v_normal   :TEXCOORD2;
 vec3 v_tangent  :TEXCOORD3;

@@ -48,5 +48,5 @@ void main()
     v_normal     = normalize(cross(tangent, bitangent));
 	
     v_posWS      = vec4(vertexWS.xyz, vertexVS.z);
-    v_texcoord0  = vec3(vertexWS.xz * u_uv_scale, gl_Position.z);
+    v_texcoord0  = vertexWS.xz * u_uv_scale;
 }

@@ -38,10 +38,11 @@ void main()
 {
 	// Calculation of the UV with the UV motion sampler
 	vec2 uv_offset 			= u_uv_direction * u_current_time * 0.001;
-	vec2 uv_sampler_uv 		= v_texcoord0.xy * u_uv_scale + uv_offset;
+	vec2 uv_sampler_uv 		= v_texcoord0 * u_uv_scale + uv_offset;
 	vec2 uv_sampler_uv_offset = u_uv_shifting_strength * texture2D(s_dudv, uv_sampler_uv).rg * 2.0 - 1.0;
-	vec2 uv 				= v_texcoord0.xy + uv_sampler_uv_offset;
+	vec2 uv 				= v_texcoord0 + uv_sampler_uv_offset;
 	
+	//TODO: we should try to merge this two normal map offline
 	vec3 N = mix(	fetch_bc5_normal(s_normalmapA, uv - uv_offset*2.0).xyz,   // 75 % s_normalmapA
 					fetch_bc5_normal(s_normalmapB, uv + uv_offset).xyz,       // 25 % s_normalmapB
 					0.25);
@@ -55,22 +56,25 @@ void main()
 
 	// vertex_depthCS is clip space
 	// gl_FragCoord.z is the depth value in window space, because depth range from [0, 1]
-	// so, in homogeneous, ndc.z = win.z*2.0 - 1.0, or ndc.z = win.z(in OpenGL, ndc.z from [-1, 1], in DX/Mental, ndc.z from [0, 1])
-	// gl_FragCoord.w is 1/w, where w is clip space w
-	// so clip space z is: ndc.z * wc ==> (gl_FragCoord.z*2.0-1.0)/gl_FragCoord.w
-    float vertex_depthCS = gl_FragCoord.z / gl_FragCoord.w;
-	vertex_depthCS = v_texcoord0.z;
+	// and, we set the depth range from [0, 1], so, ndc.z = win.z
+	// gl_FragCoord.w is clip space wc
+	// so clip space z is: ndc.z * wc ==> vertex_depthCS = gl_FragCoord.z * gl_FragCoord.w
+	// !!NOTICE!!
+	// I found that glsl document say that gl_FragCoord.w is equal to 1/wc
+	// but, after bgfx compile glsl to hlsl, this 'gl_FragCoord.w' is equal to wc
+	// NEED MORE TEST for this 'gl_FragCoord.w' value in other platform
+    float vertex_depthCS = gl_FragCoord.z * gl_FragCoord.w;
 
 	vec2 screen_uv = gl_FragCoord.xy * u_viewTexel.xy;
 	vec2 ref_uv = screen_uv + (N.xy * u_refraction) / vertex_depthCS;
 
-	float depth_raw = texture2D(s_scene_depth, ref_uv).r;	//depth from:[0, 1] ==> [-1, 1]
-	float depthVS = linear_depth(depth_raw);				//depth in vs
+	float depth_raw = texture2D(s_scene_depth, ref_uv).r;
+	float depthVS = linear_depth(depth_raw);//depth in vs
 
     float vertexZ_VS = v_posWS.w;
 	float depth_diff = depthVS-vertexZ_VS;
 
-	float depth_blend = exp((depth_diff + u_depth_offset) * -u_beers_law);
+	float depth_blend = exp((depth_diff + u_depth_offset) * u_beers_law);
 	depth_blend = clamp(1.0-depth_blend, 0.0, 1.0);
 	float depth_blend_pow = clamp(pow(depth_blend, 2.5), 0.0, 1.0);
 
@@ -85,7 +89,7 @@ void main()
 #else //!WITHOUT_SCENE_COLOR
 	// TODO:s_scene texture should have mipmap, it something like ibl 's_prefilter' map
     //      need to calculate pre frame?? or just directly use s_prefilter map??
-	vec3 screen_color 	= texture2D(s_scene, ref_uv).rgb;//texture2DLod(s_scene, ref_uv, depth_blend_pow * 2.5).rgb;
+	vec3 screen_color = texture2D(s_scene, ref_uv).rgb;//texture2DLod(s_scene, ref_uv, depth_blend_pow * 2.5).rgb;
 
 #	ifdef VIEW_WATER_SCENE_COLOR
 	gl_FragColor = vec4(screen_color, 1.0);
@@ -141,11 +145,4 @@ void main()
 
     vec3 V = u_eyepos.xyz - v_posWS.xyz;
     gl_FragColor = vec4(get_light_radiance(l, v_posWS.xyz, N, V, dot(N, V), mi), 1.0);
-	// Set all values:
-	// ALBEDO = color;
-	// METALLIC = 0.1;
-	// ROUGHNESS = 0.2;
-	// SPECULAR = 0.2 + depth_blend_pow * 0.4;
-	// NORMALMAP = normalmap;
-	// NORMALMAP_DEPTH = 1.25;
 }
