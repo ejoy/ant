@@ -140,7 +140,7 @@ void main()
     l.type      = 0; //0 for directional
     l.color     = u_direciontal_light_color;
     l.dir       = u_directional_light_dir.xyz;
-    l.intensity = u_directional_light_intensity;
+    l.intensity = u_direciontal_light_color.a;
 
 
     vec3 V = u_eyepos.xyz - v_posWS.xyz;

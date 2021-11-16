@@ -105,6 +105,8 @@ function water_sys:data_changed()
     for e in w:select "directional_light light:in" do
         local d = iom.get_direction(e)
         local color = ilight.color(e)
+        local intensity = ilight.intensity(e)
+        color[4] = intensity
         local mq = w:singleton("main_queue", "render_target:in")
         local resolver_fb = fbmgr.get(mq.render_target.fb_idx)
         scene_tex.texture.handle = fbmgr.get_rb(resolver_fb[1]).handle
