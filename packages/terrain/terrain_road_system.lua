@@ -2,12 +2,15 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
+
 local ist   = ecs.import.interface "ant.terrain|ishape_terrain"
 local iom   = ecs.import.interface "ant.objcontroller|obj_motion"
 
 local mathpkg=import_package "ant.math"
 local mc    = mathpkg.constant
 local math3d= require "math3d"
+local fs    = require "filesystem"
+
 local terrain_road_sys = ecs.system "terrain_road_system"
 
 local resource_scale<const> = 0.1
@@ -122,4 +125,17 @@ function itr.set_road(te, roadtype, iiw, iih)
     field.roadtype = roadtype
     w:sync("reference:in", te)
     field.road = instance(roadtype, te.reference, iiw, iih, st.unit)
+end
+
+function itr.set_road_resource(roadtype, prefabres)
+    local rr = road_resources[roadtype:sub(1, 1)]
+    if rr == nil then
+        error(("invalid roadtype:%s"):format(roadtype))
+    end
+
+    if not fs.exists(fs.path(prefabres)) then
+        error(("invalid prefab resource file:%s, prefab file is not exist"):format(prefabres))
+    end
+
+    rr.filename = prefabres
 end

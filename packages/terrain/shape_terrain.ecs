@@ -16,6 +16,7 @@ interface "ishape_terrain"
 interface "iterrain_road"
     .implement "terrain_road_system.lua"
     .method "set_road"
+    .method "set_road_resource"
 
 system "terrain_road_system"
     .implement "terrain_road_system.lua"
