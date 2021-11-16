@@ -159,8 +159,8 @@ local function calc_shadow_camera(camera, frustum, lightdir, shadowmap_size, sta
 	calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, camera_rc)
 end
 
-local function update_shadow_camera(dl_eid, camera)
-	local lightdir = iom.get_direction(dl_eid)
+local function update_shadow_camera(dl, camera)
+	local lightdir = iom.get_direction(dl)
 	local setting = ishadow.setting()
 	local viewfrustum = camera.frustum
 	local csmfrustums = ishadow.calc_split_frustums(viewfrustum)
@@ -225,7 +225,6 @@ local function create_csm_entity(index, vr, fbidx, depth_type)
 			csm_queue = true,
 			name = "csm" .. index,
 			need_touch = true,
-			shadow_render_queue = {},
 		},
 	}
 end
@@ -246,21 +245,14 @@ function sm:init()
 	end
 end
 
-local viewcamera_changed_mb
-local viewcamera_frustum_mb
-
-function sm:entity_init()
-	for e in w:select "INIT main_queue camera_ref:in" do
-		local camera_ref = e.camera_ref
-		viewcamera_frustum_mb = world:sub{"component_changed", "frusutm", camera_ref}
-		viewcamera_changed_mb = world:sub{"component_changed", "viewcamera", camera_ref}
-		world:pub{"component_changed", "viewcamera", camera_ref}	--init shadowmap
-	end
+local shadow_camera_rebuild = false
+local mq_camera_mb = world:sub{"main_queue", "camera_changed"}
+local camera_scene_mb
+local camera_frusutm_mb
+local function update_camera_changed_mailbox(camera_ref)
+	camera_scene_mb = world:sub{"scene_changed", camera_ref}
+	camera_frusutm_mb = world:sub{"camera_changed", "frustum", camera_ref}
 end
-
-local dl_eid
-local create_light_mb = world:sub{"component_register", "make_shadow"}
-local remove_light
 
 local function set_csm_visible(enable)
 	for v in w:select "csm_queue visible?out" do
@@ -268,84 +260,66 @@ local function set_csm_visible(enable)
 	end
 end
 
-local function find_directional_light(eid)
-	if ilight.which_type(eid) == "directional" and ilight.make_shadow(eid) then
-		if dl_eid then
-			log.warn("already has directional light for making shadow")
-		else
-			dl_eid = eid
-		end
+function sm:entity_init()
+	for e in w:select "INIT main_queue camera_ref:in" do
+		update_camera_changed_mailbox(e.camera_ref)
+		shadow_camera_rebuild = true
+	end
 
-		return dl_eid
+	for msg in mq_camera_mb:each() do
+		local cameraref = msg[3]
+		update_camera_changed_mailbox(cameraref)
+		shadow_camera_rebuild = true
+	end
+
+	for e in w:select "INIT make_shadow directional_light light:in" do
+		local csm_dl = w:singleton("csm_directional_light", "light:in")
+		if csm_dl == nil then
+			e.csm_directional_light = true
+			w:sync("csm_directional_light?out", e)
+			set_csm_visible(true)
+
+			shadow_camera_rebuild = true
+		else
+			error("already have 'make_shadow' directional light")
+		end
+	end
+end
+
+function sm:entity_remove()
+	for _ in w:select "REMOVED csm_directional_light" do
+		set_csm_visible(false)
 	end
 end
 
 function sm:data_changed()
-	for msg in create_light_mb:each() do
-		local eid = msg[3]
-		if find_directional_light(eid) then
-			remove_light = eid
-			set_csm_visible(true)
+	local dl = w:singleton("csm_directional_light", "light:in")
+	if dl then
+		for _ in camera_scene_mb:each() do
+			shadow_camera_rebuild = true
 		end
-	end
 
-	if remove_light then
-		for _, eid in world:each "removed" do
-			if remove_light == eid then
-				assert(eid == dl_eid)
-				dl_eid = nil
-				set_csm_visible(false)
-			end
+		for _ in camera_frusutm_mb:each() do
+			shadow_camera_rebuild = true
 		end
-	end
-
-	for v in w:select "scene_changed main_queue" do
-		world:pub{"component_changed", "viewcamera", v}
-	end
-
-	for msg in viewcamera_frustum_mb:each() do
-		world:pub{"component_changed", "viewcamera", msg[3]}
-	end
-end
-
-local function find_main_camera()
-	for v in w:select "main_queue camera_ref:in" do
-		return icamera.find_camera(v.camera_ref)
 	end
 end
 
 function sm:update_camera()
-	if dl_eid then
-		local changed
-
-		for v in w:select "scene_changed eid:in" do
-			local function is_light(eid)
-				return world[eid] and world[eid]._light ~= nil
-			end
-			if is_light(v.eid) and find_directional_light(v.eid) then
-				changed = true
-			end
-		end
-
-		for _ in viewcamera_changed_mb:each() do
-			changed = true
-		end
-	
-		if changed then
-			local maincamrea = find_main_camera()
-			if maincamrea then
-				update_shadow_camera(dl_eid, maincamrea)
-			end
+	local dl = w:singleton("csm_directional_light", "light:in")
+	if dl then
+		if shadow_camera_rebuild then
+			local mq = w:singleton("main_queue", "camera_ref:in")
+			w:sync("camera:in", mq.camera_ref)
+			update_shadow_camera(dl, mq.camera_ref.camera)
+			shadow_camera_rebuild = false
 		else
 			for qe in w:select "csm_queue camera_ref:in" do
-				local camera = icamera.find_camera(qe.camera_ref)
-				if camera then
-					update_camera_matrices(camera)
-				end
+				w:sync("camera:in", qe.camera_ref)
+				update_camera_matrices(qe.camera_ref.camera)
 			end
 		end
 	end
-
 end
 
 function sm:refine_camera()

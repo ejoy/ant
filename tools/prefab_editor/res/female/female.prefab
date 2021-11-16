@@ -77,17 +77,17 @@ policy:
 action:
   mount: root
 data:
-  color: {1, 1, 1, 1}
-  intensity: 2
-  light_type: directional
   name: directional1
-  radian: 0.7853981633974483
-  range: 0
-  state: 1
-  transform:
-    r: {0.03485451266169548, 0.8202439546585083, -0.34508469700813293, -0.45486438274383545}
-    s: {1, 1, 1}
-    t: {0, 0, 0}
+  light:
+    color: {1, 1, 1, 1}
+    intensity: 2
+    type: directional
+    radian: 0.7853981633974483
+    range: 0
+  visible:true
+  scene:
+    srt:
+      r: {0.03485451266169548, 0.8202439546585083, -0.34508469700813293, -0.45486438274383545}
 policy:
   ant.render|light
   ant.general|name

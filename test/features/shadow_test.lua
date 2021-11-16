@@ -12,7 +12,6 @@ function st_sys:init()
 		policy = {
 			"ant.render|render",
 			"ant.scene|scene_object",
-			"ant.render|shadow_cast_policy",
 			"ant.general|name",
 		},
 		data = {

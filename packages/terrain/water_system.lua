@@ -102,31 +102,19 @@ local scene_depth_tex = {
 }
 
 function water_sys:data_changed()
-    local found
-    for e in w:select "light:in" do
-        local l = e.light
-        if l.light_type == "directional" then
-            local d = iom.get_direction(e)
-            local dir = directionlight_info.dir
-            dir[1], dir[2], dir[3] = math3d.index(d, 1, 2, 3)
-            dir[4] = ilight.intensity(e)
-            directionlight_info.color = ilight.color(e)
-            found = true
-            break
-        end
-    end
-
-    if found then
-        local dir, color = directionlight_info.dir, directionlight_info.color
+    for e in w:select "directional_light light:in" do
+        local d = iom.get_direction(e)
+        local color = ilight.color(e)
         local mq = w:singleton("main_queue", "render_target:in")
         local resolver_fb = fbmgr.get(mq.render_target.fb_idx)
         scene_tex.texture.handle = fbmgr.get_rb(resolver_fb[1]).handle
         scene_depth_tex.texture.handle = fbmgr.get_rb(resolver_fb[#resolver_fb]).handle
-        for e in w:select "water:in render_object:in" do
-            imaterial.set_property(e, "u_directional_light_dir", dir)
-            imaterial.set_property(e, "u_direciontal_light_color", color)
-            imaterial.set_property(e, "s_scene", scene_tex)
-            imaterial.set_property(e, "s_scene_depth", scene_depth_tex)
+        for we in w:select "water:in render_object:in" do
+            imaterial.set_property(we, "u_directional_light_dir", d)
+            imaterial.set_property(we, "u_direciontal_light_color", color)
+            imaterial.set_property(we, "s_scene", scene_tex)
+            imaterial.set_property(we, "s_scene_depth", scene_depth_tex)
         end
+        break
     end
 end

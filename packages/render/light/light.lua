@@ -49,10 +49,10 @@ function ilight.create(light)
 			scene = {
 				srt = light.transform
 			},
+			make_shadow	= light.make_shadow,
 			light = {
-				make_shadow	= light.make_shadow,
+				type		= light.type,
 				motion_type = light.motion_type,
-				light_type	= assert(light.light_type),
 				color		= light.color,
 				intensity	= light.intensity,
 				range		= light.range,
@@ -102,7 +102,7 @@ end
 
 function ilight.set_range(e, r)
 	w:sync("light:in", e)
-	if e.light.light_type == "directional" then
+	if e.light.type == "directional" then
 		error("directional light do not have 'range' property")
 	end
 	e.light.range = r
@@ -115,8 +115,8 @@ function ilight.inner_radian(e)
 end
 
 local function check_spot_light(e)
-	if e.light.light_type ~= "spot" then
-		error(("%s light do not have 'radian' property"):format(e.light.light_type))
+	if e.light.type ~= "spot" then
+		error(("%s light do not have 'radian' property"):format(e.light.type))
 	end
 end
 
@@ -156,17 +156,17 @@ end
 
 function ilight.which_type(e)
 	w:sync("light:in", e)
-	return e.light.light_type
+	return e.light.type
 end
 
 function ilight.make_shadow(e)
-	w:sync("light:in", e)
-	return e.light.make_shadow
+	w:sync("make_shadow:in", e)
+	return e.make_shadow
 end
 
 function ilight.set_make_shadow(e, enable)
-	w:sync("light:in", e)
-	e.light.make_shadow = enable
+	e.make_shadow = enable
+	w:sync("make_shadow:out", e)
 end
 
 function ilight.motion_type(e)
@@ -211,7 +211,7 @@ local function create_light_buffers()
 		local p	= math3d.tovalue(iom.get_position(e))
 		local d	= math3d.tovalue(math3d.inverse(iom.get_direction(e)))
 		local c = e.light.color
-		local t	= e.light.light_type
+		local t	= e.light.type
 		local enable<const> = 1
 		lights[#lights+1] = ('f'):rep(16):pack(
 			p[1], p[2], p[3],
@@ -246,14 +246,22 @@ end
 
 local lightsys = ecs.system "light_system"
 
+function lightsys:component_init()
+	for e in w:select "INIT light:in" do
+		local t = e.light.type
+		local tag = t .."_light"
+		e[tag] = true
+		w:sync(tag .. "?out", e)
+	end
+end
+
 function lightsys:entity_init()
 	for e in w:select "INIT light:in" do
 		setChanged()
-		local l = e.light
-		local t = l.light_type
+		local l 		= e.light
+		local t 		= l.type
 		l.color			= l.color or {1, 1, 1, 1}
 		l.intensity		= l.intensity or 2
-		l.make_shadow	= l.make_shadow or false
 		l.motion_type	= l.motion_type or "dynamic"
 		l.angular_radius= l.angular_radius or math.rad(0.27)
 		if t == "point" then

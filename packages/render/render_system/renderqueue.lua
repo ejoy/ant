@@ -121,19 +121,20 @@ function irq.set_frame_buffer(queuename, fbidx)
 	world:pub{"framebuffer_changed", queuename}
 end
 
-local function has_queue(qn)
-    for _ in w:select(qn) do
-        return true
-    end
-end
-
 function irq.set_camera(queuename, camera_ref)
-    if not has_queue(queuename) then
-        error(("not find queue:%s"):format(queuename))
-    end
-	local qe = {camera_changed = true}
-	w:singleton(queuename, "camera_changed?out shadow_render_queue:in", qe)
-	qe.shadow_render_queue.camera_ref = camera_ref
+	local changed
+	for q in w:select(queuename .. " camera_ref:out render_target:in") do
+		q.camera_ref = camera_ref
+		local rt = q.render_target
+		local vr = rt.view_rect
+		icamera.set_frustum_aspect(camera_ref, vr.w / vr.h)
+		changed = true
+		world:pub{queuename, "camera_changed", camera_ref}
+	end
+
+	if not changed then
+		error(("invalid queuename %s, not found"):format(queuename))
+	end
 end
 
 function ecs.method.bind_camera(camera_ref, queuename)
@@ -176,13 +177,6 @@ function rt_sys:entity_init()
 end
 
 function rt_sys:entity_ready()
-	for qe in w:select "camera_changed camera_ref:out render_target:in shadow_render_queue:in queue_name:in" do
-		local vr = qe.render_target.view_rect
-		qe.camera_ref = qe.shadow_render_queue.camera_ref
-		icamera.set_frustum_aspect(qe.camera_ref, vr.w / vr.h)
-		world:pub{"camera_changed", qe.queue_name}
-	end
-	w:clear "camera_changed"
 end
 
 function rt_sys:entity_remove()

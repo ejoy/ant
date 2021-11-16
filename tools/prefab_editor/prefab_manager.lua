@@ -58,13 +58,13 @@ local function create_light_billboard(light_eid)
     --     }
     -- }
     -- local icons = require "common.icons"(assetmgr)
-    -- local light_type = world[light_eid].light_type
+    -- local type = world[light_eid].type
     -- local light_icons = {
     --     spot = "ICON_SPOTLIGHT",
     --     point = "ICON_POINTLIGHT",
     --     directional = "ICON_DIRECTIONALLIGHT",
     -- }
-    -- local tex = icons[light_icons[light_type]].handle
+    -- local tex = icons[light_icons[type]].handle
     -- imaterial.set_property(bb_eid, "s_basecolor", {stage = 0, texture = {handle = tex}})
     -- iom.set_scale(bb_eid, 0.2)
     -- ies.set_state(bb_eid, "auxgeom", true)
@@ -252,18 +252,18 @@ function m:create(what, config)
         end
     elseif what == "enable_default_light" then
         if not self.default_light then
-            local newlight, _ = ilight.create({
+            local newlight, _ = ilight.create{
                 transform = {t = {0, 5, 0}, r = {math.rad(130), 0, 0}},
                 name = "directional" .. gen_light_id(),
-                light_type = "directional",
+                type = "directional",
                 color = {1, 1, 1, 1},
+                make_shadow = false,
                 intensity = 200,
                 range = 1,
-                make_shadow = false,
                 motion_type = "dynamic",
                 inner_radian = math.rad(45),
                 outter_radian = math.rad(45)
-            })
+            }
             self.default_light = newlight
         end
     elseif what == "disable_default_light" then
@@ -276,14 +276,13 @@ function m:create(what, config)
             local newlight, tpl = ilight.create({
                 transform = {t = {0, 3, 0},r = {math.rad(130), 0, 0}},
                 name = config.type .. gen_light_id(),
-                light_type = config.type,
+                type = config.type,
                 color = {1, 1, 1, 1},
                 intensity = 200,
                 range = 1,
                 inner_radian = math.rad(45),
                 outter_radian = math.rad(45),
-                make_shadow = true
-            })
+            }, true)
             self:add_entity(newlight, self.root, tpl)
             light_gizmo.init()
             --create_light_billboard(newlight)

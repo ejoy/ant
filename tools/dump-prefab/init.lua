@@ -79,8 +79,9 @@ for v in w:select "mesh:update material:update lightmap:in" do
     v.material = material.load(tostring(v.material), outputdir)
 end
 
-for v in w:select "light:update" do
-    v.light = light.load(v.light)
+for v in w:select "light:update make_shadow?in" do
+    v.light = light.load(v.light, v.make_shadow)
+    v.light.make_shadow = v.make_shadow
 end
 
 local function update_worldmat(v, parent_worldmat)
@@ -163,9 +164,9 @@ for v in w:select "worldmat:in light:in" do
         return t == "station" or t == "static"
     end
     if is_bake_light_type(e.lightdata.motion_type) then
-        light_counter[e.lightdata.light_type] = light_counter[e.lightdata.light_type] + 1
+        light_counter[e.lightdata.type] = light_counter[e.lightdata.type] + 1
 
-        if e.lightdata.light_type == "directional" then
+        if e.lightdata.type == "directional" then
             output[#output+1] = e
         else
             log("ligt not bake right now:%s", e.lightdata.type)

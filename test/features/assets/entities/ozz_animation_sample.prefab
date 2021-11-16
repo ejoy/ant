@@ -6,7 +6,6 @@ policy:
     ant.animation|animation_controller.birth
     ant.animation|ozz_skinning
     ant.general|name
-    ant.render|shadow_cast_policy
     ant.character|character
     ant.render|debug_mesh_bounding
 data:

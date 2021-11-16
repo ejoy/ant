@@ -3,14 +3,16 @@ policy:
   ant.render|light
   ant.general|name
 data:
-  transform:
-    t: {0, 10, 0, 1}
-  color: {0.8, 0.8, 0.8, 1}
-  intensity: 5
-  range: 15
-  light_type: point
+  scene:
+    srt:
+      t: {0, 10, 0, 1}
+  light:
+    color: {0.8, 0.8, 0.8, 1}
+    intensity: 5
+    range: 15
+    type: point
   name: point_light
-  state: 0x01
+  visible: true
 ---
 policy:
     ant.render|render

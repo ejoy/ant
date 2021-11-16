@@ -126,7 +126,6 @@ function irender.create_view_queue(view_rect, view_queuename, camera_ref, filter
 			cull_tag			= {},
 			visible 			= visible or false,
 			watch_screen_buffer	= true,
-			shadow_render_queue = {},
 		}
 	}
 end
@@ -190,7 +189,6 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 			pre_depth_queue = true,
 			watch_screen_buffer = true,
 			INIT			= true,
-			shadow_render_queue = {},
 		}
 	}
 end
@@ -255,7 +253,6 @@ function irender.create_main_queue(vr, camera_ref)
 			main_queue = true,
 			watch_screen_buffer = true,
 			queue_name = "main_queue",
-			shadow_render_queue = {},
 		}
 	}
 end

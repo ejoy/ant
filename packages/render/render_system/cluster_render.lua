@@ -139,9 +139,8 @@ local function build_cluster_aabb_struct(viewid)
     icompute.dispatch(viewid, e.dispatch)
 end
 
-local cr_camera_mb      = world:sub{"camera_changed", "main_queue"}
-local camera_frustum_mb = world:sub{"component_changed", "frustum"}
-local light_mb = world:sub{"component_register", "light_type"}
+local cr_camera_mb      = world:sub{"main_queue", "camera_changed"}
+local camera_frustum_mb
 
 function cfs:init()
     icompute.create_compute_entity(
@@ -169,6 +168,9 @@ function cfs:init()
 end
 
 function cfs:init_world()
+    local mq = w:singleton("main_queue", "camera_ref:in")
+    camera_frustum_mb = world:sub{"camera_changed", "frustum", mq.camera_ref}
+
     cluster_buffers.light_info.handle = ilight.light_buffer()
 
     --build
@@ -194,8 +196,6 @@ function cfs:init_world()
     renderproperties.b_light_grids          = icompute.create_buffer_property(cluster_buffers.light_grids, "render")
     renderproperties.b_light_index_lists    = icompute.create_buffer_property(cluster_buffers.light_index_lists, "render")
     renderproperties.b_light_info           = icompute.create_buffer_property(cluster_buffers.light_info, "render")
-
-    world:pub{"camera_changed", "main_queue"}
 end
 
 local function cull_lights(viewid)
@@ -203,30 +203,51 @@ local function cull_lights(viewid)
     icompute.dispatch(viewid, e.dispatch)
 end
 
-function cfs:update_system_properties()
+local rebuild_light_index_list
+
+function cfs:entity_init()
     if not ilight.use_cluster_shading() then
         return
     end
 
-    for _ in light_mb:each() do
+    for _ in w:select "INIT light:in" do
+        rebuild_light_index_list = true
+    end
+end
+
+function cfs:entity_remove()
+    if not ilight.use_cluster_shading() then
+        return
+    end
+
+    for _ in w:select "REMOVED light:in" do
+        rebuild_light_index_list = true
+    end
+end
+
+function cfs:data_changed()
+    if not ilight.use_cluster_shading() then
+        return
+    end
+
+    for msg in cr_camera_mb:each() do
+        build_cluster_aabb_struct(main_viewid)
+        camera_frustum_mb = world:sub{"camera_changed", "frustum", msg[3]}
+    end
+
+    for _ in camera_frustum_mb:each() do
+        build_cluster_aabb_struct(main_viewid)
+    end
+
+    if rebuild_light_index_list then
         check_light_index_list()
+        rebuild_light_index_list = false
     end
 end
 
 function cfs:render_preprocess()
     if not ilight.use_cluster_shading() then
         return
-    end
-
-    for _ in cr_camera_mb:each() do
-        build_cluster_aabb_struct(main_viewid)
-    end
-
-    for msg in camera_frustum_mb:each() do
-        local qe = w:singleton("main_queue", "camera_ref:in")
-        if qe.camera_ref == msg[3] then
-            build_cluster_aabb_struct(main_viewid)
-        end
     end
 
     cull_lights(main_viewid)

@@ -886,7 +886,7 @@ local function select_light_gizmo(x, y)
 		w:sync("light:in", light_gizmo.current_light)
 	end
 	local radius = ilight.range(light_gizmo.current_light)
-	if light_gizmo.current_light.light.light_type == "point" then
+	if light_gizmo.current_light.light.type == "point" then
 		if hit_test_circle({1, 0, 0}, radius) then
 			click_dir_point_light = {1, 0, 0}
 			light_gizmo_mode = 1
@@ -897,7 +897,7 @@ local function select_light_gizmo(x, y)
 			click_dir_point_light = {0, 0, 1}
 			light_gizmo_mode = 3
 		end
-	elseif light_gizmo.current_light.light.light_type == "spot" then
+	elseif light_gizmo.current_light.light.type == "spot" then
 		local dir = math3d.totable(math3d.transform(iom.get_rotation(light_gizmo.current_light), constant.ZAXIS, 0))
 		local mat = iom.worldmat(light_gizmo.current_light)
 		local centre = math3d.transform(mat, math3d.vector{0, 0, ilight.range(light_gizmo.current_light)}, 1)

@@ -76,11 +76,11 @@ local function get_icon_by_object_type(node)
         end
         w:sync("light?in", e)
         if e.light then
-            if e.light.light_type == "directional" then
+            if e.light.type == "directional" then
                 return icons.ICON_DIRECTIONALLIGHT
-            elseif e.light.light_type == "point" then
+            elseif e.light.type == "point" then
                 return icons.ICON_POINTLIGHT
-            elseif e.light.light_type == "spot" then
+            elseif e.light.type == "spot" then
                 return icons.ICON_SPOTLIGHT
             end
         end
@@ -192,7 +192,7 @@ local function show_scene_node(node)
     -- end
 end
 
-local light_type = {
+local light_types = {
     "directional",
     "point",
     "spot"
@@ -246,7 +246,7 @@ function m.show()
                 imgui.widget.EndMenu()
             end
             if imgui.widget.BeginMenu("Light") then
-                for i, type in ipairs(light_type) do
+                for i, type in ipairs(light_types) do
                     if imgui.widget.MenuItem(type) then
                         world:pub { "Create", "light", {type = type}}
                     end

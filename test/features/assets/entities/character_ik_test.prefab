@@ -6,7 +6,6 @@ policy:
     ant.animation|ozzmesh
     ant.animation|ik
     ant.animation|ozz_skinning
-    ant.render|shadow_cast_policy
     ant.general|name
     ant.character|character
     ant.character|foot_ik_raycast

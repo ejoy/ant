@@ -126,7 +126,7 @@ for _, e in ipairs(scene) do
     elseif e.light then
         local ld = e.lightdata
         lights[#lights+1] = {
-            light_type  = ld.light_type,
+            type        = ld.type,
             dir         = math3d.tovalue(math3d.inverse(math3d.todirection(math3d.quaternion(e.r)))),
             pos         = e.t,
             color       = ld.color,

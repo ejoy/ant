@@ -324,7 +324,6 @@ local function create_lightmap_queue()
             INIT = true,
             queue_name = "bake_lightmap_queue",
             cull_tag = {},
-            shadow_render_queue = {},
         }
     }
 end

@@ -53,7 +53,6 @@ function pp_obj_sys:init_world()
                 queue_name = "postprocess_obj_queue",
                 watch_screen_buffer = true,
                 visible = true,
-                shadow_render_queue = {},
             },
         }
     end

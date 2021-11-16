@@ -41,7 +41,7 @@ function m.bind(eid)
     if not eid.light then
         w:sync("light:in", eid)
     end
-    local lt = eid.light.light_type
+    local lt = eid.light.type
     m.current_gizmo = m[lt]
     if m.current_gizmo then
         m.update_gizmo()

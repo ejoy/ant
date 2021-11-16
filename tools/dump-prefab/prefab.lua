@@ -30,20 +30,10 @@ local create_prefab; do
                 if v.data.transform then
                     e.srt = math3d.matrix(v.data.transform)
                 end
-                if v.data.light_type then
-                    e.light = {
-                        make_shadow	= v.data.make_shadow,
-                        motion_type = v.data.motion_type,
-            
-                        light_type	= assert(v.data.light_type),
-                        color		= v.data.color,
-                        intensity	= v.data.intensity,
-            
-                        range		= v.data.range,
-                        inner_radian= v.data.inner_radian,
-                        outter_radian = v.data.outter_radian,
-                        angular_radius=v.data.angular_radius,
-                    }
+                local light = v.data.light
+                if light then
+                    e.make_shadow   = v.data.make_shadow
+                    e.light         = light
                 end
                 if v.data.material then
                     e.material = assetmgr.resource(v.data.material)

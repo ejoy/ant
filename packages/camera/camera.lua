@@ -82,9 +82,10 @@ function ic.create(info)
 end
 
 function ic.calc_viewmat(cameraref)
-    --TODO
-    local iobj_motion = ecs.import.interface "ant.objcontroller|obj_motion"
-    return iobj_motion.calc_viewmat(cameraref)
+    w:sync("scene:in", cameraref)
+    local scene = cameraref.scene
+    local srt = scene.srt
+    return math3d.lookto(srt.t, math3d.todirection(srt.r), scene.updir)
 end
 
 function ic.calc_projmat(cameraref)
@@ -115,13 +116,17 @@ function ic.get_frustum(cameraref)
     end
 end
 
+local function set_camera_changed(subcomp, cameraref)
+    world:pub {"camera_changed", subcomp, cameraref}
+end
+
 function ic.set_frustum(cameraref, frustum)
     local camera = find_camera(cameraref)
     camera.frustum = {}
     for k, v in pairs(frustum) do
         camera.frustum[k] = v
     end
-    world:pub {"camera_frustum_changed", cameraref}
+    set_camera_changed("frusutm", cameraref)
 end
 
 local function frustum_changed(cameraref, name, value)
@@ -135,7 +140,7 @@ local function frustum_changed(cameraref, name, value)
     end
     if f.aspect then
         f[name] = value
-        world:pub {"camera_frustum_changed", cameraref}
+        set_camera_changed("frustum", cameraref)
     else
         error("Not implement")
     end

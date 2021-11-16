@@ -1,20 +1,18 @@
 local serialize = import_package "ant.serialize"
 local sha1 = require "sha1"
 
-local function init_light(e)
-    local t = e.light_type
-	local range = e.range
+local function init_light(light)
+    local t = light.type
+	local range = light.range
 	local l = {
-        light_type  = t,
-		color		= e.color or {1, 1, 1, 1},
-
-		intensity	= e.intensity or 2,
-		make_shadow	= e.make_shadow or false,
-		motion_type = e.motion_type or "dynamic",
+        type  = t,
+		color		= light.color or {1, 1, 1, 1},
+		intensity	= light.intensity or 2,
+		motion_type = light.motion_type or "dynamic",
         range       = math.maxinteger,
         inner_cutoff= 0,
         outter_cutoff= 0,
-        angular_radius= e.angular_radius or math.rad(0.27)
+        angular_radius= light.angular_radius or math.rad(0.27)
 	}
 
 	if t == "point" or t == "spot" then
@@ -23,7 +21,7 @@ local function init_light(e)
 		end
 		l.range = range
 		if t == "spot" then
-			local i_r, o_r = e.inner_radian, e.outter_radian
+			local i_r, o_r = light.inner_radian, light.outter_radian
 			if i_r == nil or o_r == nil then
 				error("spot light need 'inner_radian' and 'outter_radian' defined!")
 			end

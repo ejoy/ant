@@ -31,7 +31,6 @@ function ic.create_compute_entity(name, materialfile, size)
             },
             compute     = true,
             [name]      = true,
-            INIT        = true,
         }
     }
 end

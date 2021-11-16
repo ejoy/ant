@@ -23,11 +23,13 @@ state:
   type: string
   list: {visible, cast_shadow, selectable}
   widget: combo
+make_shadow:
+  type: bool
 light:
   range:
     type: float
     widget: DragFloat
-  light_type:
+  type:
     type: string
     readonly: true
   color:
@@ -35,8 +37,6 @@ light:
   intensity:
     type: float
     widget: DragFloat
-  make_shadow:
-    type: bool
   motion_type:
     type: string
     list: {dynamic, station, static}

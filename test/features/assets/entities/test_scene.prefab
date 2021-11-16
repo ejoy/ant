@@ -2628,18 +2628,20 @@ policy:
 action:
   mount: root
 data:
-  color: {1, 1, 1, 1}
-  intensity: 81
-  light_type: point
-  motion_type: dynamic
-  name: point1
-  radian: 0.7853981633974483
-  range: 20
-  state: 1
-  transform:
-    r: {0.9063078165054321, 0, 0, 0.4226182699203491}
-    s: {1, 1, 1}
-    t: {1.3214950561523438, 1.5521810054779053, -7.766500473022461}
+  name: point1  
+  light:
+    color: {1, 1, 1, 1}
+    intensity: 81
+    type: point
+    motion_type: dynamic
+    inner_radian: 0.7853981633974483
+    range: 20
+  visible:true
+  scene:
+    srt:
+      r: {0.9063078165054321, 0, 0, 0.4226182699203491}
+      s: {1, 1, 1}
+      t: {1.3214950561523438, 1.5521810054779053, -7.766500473022461}
 policy:
   ant.render|light
   ant.general|name

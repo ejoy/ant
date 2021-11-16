@@ -80,9 +80,6 @@ policy "render_pipeline"
     .require_policy "ant.render|cluster_render"
     .require_policy "ant.render|postprocess"
 
-component "shadow_render_queue"
-    .type "lua"
-
 component "filter_result".type "lua"
 component "filter_created"
 component "visible"
@@ -97,7 +94,6 @@ policy "render_queue"
     .component "queue_name"
     .component "camera_ref"
     .component "primitive_filter"
-    .component "shadow_render_queue"
 
 component "need_touch"
 

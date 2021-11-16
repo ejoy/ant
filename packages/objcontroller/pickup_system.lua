@@ -220,7 +220,6 @@ local function create_pick_entity()
 			queue_name 	= "pickup_queue",
 			pickup_queue= true,
 			visible		= false,
-			shadow_render_queue = {},
 		}
 	}
 end

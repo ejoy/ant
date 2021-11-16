@@ -300,11 +300,6 @@ function iobj_motion.screen_to_ndc(pt2d, vp_size)
     return {ndc[1], ndc[2], pt2d[3]}
 end
 
-function iobj_motion.calc_viewmat(e)
-    local rc = get_scene(e)
-    return math3d.lookto(rc.srt.t, math3d.todirection(rc.srt.r), rc.updir)
-end
-
 for n, f in pairs(iobj_motion) do
     ecs.method[n] = f
 end
