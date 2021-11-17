@@ -66,7 +66,7 @@ function pp_obj_sys:init_world()
 
 end
 
-local mb_camera_changed = world:sub{"camera_changed", "main_queue"}
+local mb_camera_changed = world:sub{"main_queue", "camera_changed"}
 
 function pp_obj_sys:data_changed()
     for _ in mb_camera_changed:each() do

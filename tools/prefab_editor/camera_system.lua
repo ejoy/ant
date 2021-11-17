@@ -62,7 +62,7 @@ local function camera_reset(eyepos, target)
 	iom.set_view(irq.main_camera(), eyepos, math3d.normalize(math3d.sub(camera_target, eyepos)), {0, 1, 0})
 end
 
-local mb_camera_changed = world:sub{"camera_changed", "main_queue"}
+local mb_camera_changed = world:sub{"main_queue", "camera_changed"}
 
 function camera_sys:entity_ready()
 	for _ in mb_camera_changed:each() do
