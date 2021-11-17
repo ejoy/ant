@@ -405,7 +405,7 @@ function gizmo_sys:post_init()
 	global_axis_y_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0.1, 0}, "", gizmo_const.COLOR_Y)
 	global_axis_z_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0, 0.1}, "", gizmo_const.COLOR_Z)
 end
-local mb_main_camera_changed = world:sub{"camera_changed", "main_queue"}
+local mb_main_camera_changed = world:sub{"main_queue", "camera_changed"}
 function gizmo_sys:entity_ready()
 	for _ in mb_main_camera_changed:each() do
 		update_global_axis()

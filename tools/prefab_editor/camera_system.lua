@@ -64,6 +64,10 @@ end
 
 local mb_camera_changed = world:sub{"main_queue", "camera_changed"}
 
+function camera_sys:init_world()
+	camera_reset(camera_init_eye_pos, camera_init_target)
+end
+
 function camera_sys:entity_ready()
 	for _ in mb_camera_changed:each() do
 		camera_reset(camera_init_eye_pos, camera_init_target)
