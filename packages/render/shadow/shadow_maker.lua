@@ -277,7 +277,7 @@ function sm:entity_init()
 		if csm_dl == nil then
 			e.csm_directional_light = true
 			w:sync("csm_directional_light?out", e)
-			--set_csm_visible(true)
+			set_csm_visible(true)
 
 			shadow_camera_rebuild = true
 		else

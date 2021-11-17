@@ -41,7 +41,7 @@ function st_sys:init()
 			name = "mesh_root",
 		}
 	}
-	ecs.create_instance("/pkg/ant.resources.binary/meshes/RiggedFigure.glb|mesh.prefab")
+	ecs.create_instance "/pkg/ant.resources.binary/meshes/RiggedFigure.glb|mesh.prefab"
 
 	ecs.create_entity{
 		policy = {

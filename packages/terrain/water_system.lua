@@ -108,9 +108,9 @@ function water_sys:data_changed()
         local intensity = ilight.intensity(e)
         color[4] = intensity
         local mq = w:singleton("main_queue", "render_target:in")
-        local resolver_fb = fbmgr.get(mq.render_target.fb_idx)
-        scene_tex.texture.handle = fbmgr.get_rb(resolver_fb[1]).handle
-        scene_depth_tex.texture.handle = fbmgr.get_rb(resolver_fb[#resolver_fb]).handle
+        local mq_fb = fbmgr.get(mq.render_target.fb_idx)
+        scene_tex.texture.handle = fbmgr.get_rb(mq_fb[1]).handle
+        scene_depth_tex.texture.handle = fbmgr.get_rb(mq_fb[#mq_fb]).handle
         for we in w:select "water:in render_object:in" do
             imaterial.set_property(we, "u_directional_light_dir", d)
             imaterial.set_property(we, "u_direciontal_light_color", color)
