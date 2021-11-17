@@ -315,7 +315,7 @@ function m.show()
                         imgui.widget.Text("image:" .. texture_detail[current_file].path)
                     end
                     -- imgui.deprecated.Columns(2, "PreviewColumns", true)
-                    imgui.widget.Text(preview.texinfo.width .. "x" .. preview.texinfo.height .. " ".. preview.texinfo.format)
+                    imgui.widget.Text(preview.texinfo.width .. "x" .. preview.texinfo.height .. " ".. preview.texinfo.bitsPerPixel)
                     local width, height = preview.texinfo.width, preview.texinfo.height
                     if width > 180 then
                         width = 180
