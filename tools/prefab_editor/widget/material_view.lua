@@ -145,7 +145,7 @@ local function build_fx_ui(mv)
                         end
                     else
                         local ss = {}
-                        for n in state:gmatch "%w+" do
+                        for n in state:gmatch "[%w_]+" do
                             if n ~= "cast_shadow" then
                                 ss[#ss+1] = n
                             end

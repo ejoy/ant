@@ -85,7 +85,7 @@ ies.filter_mask = filter_mask
 function ies.state_names(statemask)
 	local n = {}
 	for k, v in pairs(STATE_TYPE) do
-		if v & statemask then
+		if (v & statemask) ~= 0 then
 			n[#n+1] = k
 		end
 	end
