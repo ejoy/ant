@@ -136,14 +136,23 @@ local function build_fx_ui(mv)
                     local data = prefab.template.data
                     local state = data.state
                     --TODO: need remove not string entity state
-                    if type(state) == "string" then
+                    if type(state) ~= "string" then
+                        state = ies.state_names(state)
+                    end
+                    if value then
                         if not state:match "cast_shadow" then
                             data.state = state .. "|cast_shadow"
                         end
                     else
-                        local m = ies.filter_mask(mv.entity)
-                        data.state = value and (state|m) or (state&(~m))
+                        local ss = {}
+                        for n in state:gmatch "%w+" do
+                            if n ~= "cast_shadow" then
+                                ss[#ss+1] = n
+                            end
+                        end
+                        data.state = table.concat(ss, '|')
                     end
+
                     mv.need_reload = true
                 end,
             }),

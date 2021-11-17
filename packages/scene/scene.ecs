@@ -19,6 +19,7 @@ interface "ientity_state"
     .method "create_state"
     .method "set_state"
     .method "filter_mask"
+    .method "state_names"
 
     component "state".type "lua"
     .require_system "ant.scene|entity_state_system"

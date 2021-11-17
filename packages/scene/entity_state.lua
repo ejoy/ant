@@ -82,7 +82,16 @@ function ies.create_state(namelist)
 end
 
 ies.filter_mask = filter_mask
+function ies.state_names(statemask)
+	local n = {}
+	for k, v in pairs(STATE_TYPE) do
+		if v & statemask then
+			n[#n+1] = k
+		end
+	end
 
+	return table.concat(n, '|')
+end
 local m = ecs.system "entity_state_system"
 function m:entity_init()
     for e in w:select "INIT state:in render_object:in" do
