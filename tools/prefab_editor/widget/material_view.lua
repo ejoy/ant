@@ -491,7 +491,7 @@ local function build_properties_ui(mv)
             end
         end
     end
-    return uiproperty.Group({label="Properties", flags = 0}, properties)
+    return properties
 end
 
 local PT_options<const> = {
@@ -876,8 +876,13 @@ function MaterialView:set_model(e)
                 break
             end
         end
-        self.properties = build_properties_ui(self)
-        table.insert(self.material.subproperty, idx, self.properties)
+        local ui_pp = build_properties_ui(self)
+        if self.properties == nil then
+            self.properties = uiproperty.Group({label="Properties", flags = 0}, ui_pp)
+            table.insert(self.material.subproperty, idx, self.properties)
+        else
+            self.properties:set_subproperty(ui_pp)
+        end
     end
     self.save.disable = is_readonly_resource(e.material)
     self.material.disable = prefab_mgr:get_current_filename() == nil
