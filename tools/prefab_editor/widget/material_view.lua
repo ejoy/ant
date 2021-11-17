@@ -301,7 +301,7 @@ local function build_properties_ui(mv)
 
         local factor_names<const> = {
             basecolor = "u_basecolor_factor",
-            emissive = "u_basecolor_factor",
+            emissive = "u_emissive_factor",
         }
         local function get_factor(n)
             local fn = factor_names[n]
@@ -367,7 +367,7 @@ local function build_properties_ui(mv)
                     setter = function (value)
                         local mr = mv.properties:find_property_by_label(parentui)
                         local uitex = mr.subproperty[2]
-                        uitex.disable = value
+                        uitex.disable = not value
                     end
                 }),
                 uiproperty.EditText({label="Texture"},{
