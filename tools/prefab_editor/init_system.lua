@@ -1,6 +1,10 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
+
+local mathpkg       = import_package "ant.math"
+local mc            = mathpkg.constant
+
 local irq           = ecs.import.interface "ant.render|irenderqueue"
 local icamera       = ecs.import.interface "ant.camera|camera"
 local entity        = ecs.import.interface "ant.render|entity"
@@ -14,6 +18,8 @@ local imgui         = require "imgui"
 local lfs           = require "filesystem.local"
 local fs            = require "filesystem"
 local gd            = require "common.global_data"
+
+local math3d        = require "math3d"
 
 local bind_billboard_camera_mb = world:sub{"bind_billboard_camera"}
 function ecs.method.bind_billboard_camera(e, camera_ref)
@@ -56,8 +62,10 @@ end
 
 local function init_camera()
     local mq = w:singleton("main_queue", "camera_ref:in")
-    iom.set_position(mq.camera_ref, {-200, 100, 200, 1})
-    iom.set_direction(mq.camera_ref, {2, -1, -2, 0})
+    --FIX ME: camera_system has define 'camera_target' and 'camera_position', we should make them sync
+    local eye, at = math3d.vector(5, 5, 5, 1), mc.ZERO_PT
+    iom.set_position(mq.camera_ref, {5, 5, 5, 1})
+    iom.set_direction(mq.camera_ref, math3d.normalize(math3d.sub(at, eye)))
     local f = icamera.get_frustum(mq.camera_ref)
     f.n, f.f = 1, 1000
     icamera.set_frustum(mq.camera_ref, f)
