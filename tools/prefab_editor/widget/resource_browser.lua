@@ -74,10 +74,37 @@ local function construct_resource_tree(fspath)
     return tree
 end
 
-function m.update_resource_tree()
+local engine_package_resources = {
+    "/engine",
+    "/pkg/ant.resources",
+    "/pkg/ant.resources.binary",
+}
+
+local hiden_engine_resource = true
+
+function m.update_resource_tree(hiden_engine_res)
     if not m.dirty or not gd.project_root then return end
     resource_tree = {files = {}, dirs = {}}
-    for _, item in ipairs(gd.packages) do
+    local packages
+    if hiden_engine_res then
+        packages = {}
+        for _, p in ipairs(gd.packages) do
+            local isengine
+            for _, ep in ipairs(engine_package_resources) do
+                if p.name == ep then
+                    isengine = true
+                    break
+                end
+            end
+
+            if not isengine then
+                packages[#packages+1] = p
+            end
+        end
+    else
+        packages = gd.packages
+    end
+    for _, item in ipairs(packages) do
         local path = fs.path(item.name)
         resource_tree.dirs[#resource_tree.dirs + 1] = {path, construct_resource_tree(path)}
     end
@@ -143,7 +170,7 @@ function m.show()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
-    m.update_resource_tree()
+    m.update_resource_tree(hiden_engine_resource)
 
     local function do_show_browser(folder)
         for k, v in pairs(folder.dirs) do
@@ -190,9 +217,13 @@ function m.show()
                     end
                 end
             end
-            if i < #split_dirs then
-                imgui.cursor.SameLine()
-            end
+            imgui.cursor.SameLine() --last SameLine for 'HideEngineResource' button
+        end
+        local cb = {hiden_engine_resource}
+        if imgui.widget.Checkbox("HideEngineResource", cb) then
+            hiden_engine_resource = cb[1]
+            m.dirty = true
+            m.update_resource_tree(hiden_engine_resource)
         end
         imgui.windows.PopStyleVar(1)
         imgui.cursor.Separator()
