@@ -12,27 +12,34 @@ local vp_detect_sys = ecs.system "viewport_detect_system"
 local icamera	= ecs.import.interface "ant.camera|camera"
 local irq		= ecs.import.interface "ant.render|irenderqueue"
 local eventResize = world:sub {"resize"}
-local rb_cache = {}
+local fb_cache, rb_cache
+local function clear_cache()
+	fb_cache, rb_cache = {}, {}
+end
 
 local function resize_framebuffer(w, h, fbidx)
-	if fbidx then
-		local fb = fbmgr.get(fbidx)
-		local changed = false
-		local rbs = {}
-		for _, rbidx in ipairs(fb)do
-			rbs[#rbs+1] = rbidx
-			local c = rb_cache[rbidx]
-			if c == nil then
-				changed = fbmgr.resize_rb(w, h, rbidx) or changed
-				rb_cache[rbidx] = changed
-			else
-				changed = true
-			end
+	if fbidx == nil or fb_cache[fbidx] == nil then
+		return 
+	end
+
+	local fb = fbmgr.get(fbidx)
+	fb_cache[fbidx] = fb
+
+	local changed = false
+	local rbs = {}
+	for _, rbidx in ipairs(fb)do
+		rbs[#rbs+1] = rbidx
+		local c = rb_cache[rbidx]
+		if c == nil then
+			changed = fbmgr.resize_rb(w, h, rbidx) or changed
+			rb_cache[rbidx] = changed
+		else
+			changed = true
 		end
-		
-		if changed then
-			fbmgr.recreate(fbidx, {render_buffers = rbs, manager_buffer = fb.manager_buffer})
-		end
+	end
+	
+	if changed then
+		fbmgr.recreate(fbidx, {render_buffers = rbs, manager_buffer = fb.manager_buffer})
 	end
 end
 
@@ -58,7 +65,7 @@ local function update_render_target(viewsize)
 	if disable_resize() then
 		return
 	end
-	rb_cache = {}
+	clear_cache()
 	w:clear "render_target_changed"
 	for qe in w:select "watch_screen_buffer render_target:in camera_ref?in render_target_changed?out" do
 		update_render_queue(qe, viewsize)

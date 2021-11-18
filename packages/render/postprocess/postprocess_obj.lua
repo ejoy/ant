@@ -60,7 +60,7 @@ function pp_obj_sys:init_world()
     for e in w:select "render_object:in" do
         if ies.has_state(e, "postprocess_obj") then
             e.render_object_update = true
-            w:sync("render_object_update:out", e)
+            w:sync("render_object_update?out", e)
         end
     end
 
