@@ -14,5 +14,6 @@ return {
         "ant.scene",
         "ant.settings",
         "ant.timer",
+        "ant.objcontroller",
     }
 }
