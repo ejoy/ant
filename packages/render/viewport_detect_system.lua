@@ -18,7 +18,7 @@ local function clear_cache()
 end
 
 local function resize_framebuffer(w, h, fbidx)
-	if fbidx == nil or fb_cache[fbidx] == nil then
+	if fbidx == nil or fb_cache[fbidx] then
 		return 
 	end
 
