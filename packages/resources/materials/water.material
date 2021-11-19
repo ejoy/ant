@@ -1,8 +1,8 @@
 fx:
   vs: /pkg/ant.resources/shaders/water/vs_water.sc
   fs: /pkg/ant.resources/shaders/water/fs_water.sc
-  #setting:
-    #VIEW_WATER_NORMAL: 1
+  setting:
+    WATER_FOAM: 1
     # VIEW_WATER_COLOR: 1
     # VIEW_WATER_SCENE_COLOR: 1
     #WITHOUT_SCENE_COLOR: 1
