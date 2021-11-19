@@ -1,6 +1,9 @@
 pipeline "postprocess"
     .stage "pre_postprocess"
-    .stage "resolve"        --MSAA buffer to simple buffer
+    -- if too many resolve jobs need to do, resolve should be a pipeline
+    .stage "resolve"                --MSAA buffer to simple buffer
+    .stage "render_postprocess_obj"
+    .stage "dof"
     .stage "bloom"
     .stage "tonemapping"
     .stage "blit"
@@ -14,10 +17,10 @@ system "postprocess_system"
 policy "postprocess"
     .require_system "ant.render|render_system"
     .require_system "ant.render|postprocess_system"
+    .require_system "ant.render|resolve_msaa_system"
+    .require_system "ant.render|postprocess_obj_system"
     --.require_system "ant.render|dof_system"
     --.require_system "ant.render|bloom_system"
-    --.require_system "ant.render|resolve_msaa_system"
-    .require_system "ant.render|postprocess_obj_system"
     .require_system "ant.render|tonemapping_system"
     .require_system "ant.render|blit_system"
 

@@ -86,11 +86,6 @@ function water_sys:entity_init()
     
 end
 
-local directionlight_info = {
-    dir = {0, 0, 0, 0},
-    color = {0, 0, 0, 0},
-}
-
 local scene_tex = {
     stage = 5,
     texture = {handle=nil}
@@ -107,15 +102,15 @@ function water_sys:data_changed()
         local color = ilight.color(e)
         local intensity = ilight.intensity(e)
         color[4] = intensity
-        local mq = w:singleton("main_queue", "render_target:in")
-        local mq_fb = fbmgr.get(mq.render_target.fb_idx)
-        scene_tex.texture.handle = fbmgr.get_rb(mq_fb[1]).handle
-        scene_depth_tex.texture.handle = fbmgr.get_rb(mq_fb[#mq_fb]).handle
+        local rq = w:singleton("resolver", "render_target:in")
+        local rq_fb = fbmgr.get(rq.render_target.fb_idx)
+        scene_tex.texture.handle = fbmgr.get_rb(rq_fb[1]).handle
+        scene_depth_tex.texture.handle = fbmgr.get_rb(rq_fb[#rq_fb]).handle
         for we in w:select "water:in render_object:in" do
-            imaterial.set_property(we, "u_directional_light_dir", d)
+            imaterial.set_property(we, "u_directional_light_dir",   d)
             imaterial.set_property(we, "u_direciontal_light_color", color)
-            imaterial.set_property(we, "s_scene", scene_tex)
-            imaterial.set_property(we, "s_scene_depth", scene_depth_tex)
+            imaterial.set_property(we, "s_scene",                   scene_tex)
+            imaterial.set_property(we, "s_scene_depth",             scene_depth_tex)
         end
         break
     end

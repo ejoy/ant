@@ -84,20 +84,11 @@ void main()
 	return ;
 #endif //VIEW_WATER_COLOR
 
-#ifdef WITHOUT_SCENE_COLOR
-	vec3 color = dye_color;
-#else //!WITHOUT_SCENE_COLOR
 	// TODO:s_scene texture should have mipmap, it something like ibl 's_prefilter' map
     //      need to calculate pre frame?? or just directly use s_prefilter map??
 	vec3 screen_color = texture2D(s_scene, ref_uv).rgb;//texture2DLod(s_scene, ref_uv, depth_blend_pow * 2.5).rgb;
-
-#	ifdef VIEW_WATER_SCENE_COLOR
-	gl_FragColor = vec4(screen_color, 1.0);
-	return ;
-#	endif //VIEW_WATER_SCENE_COLOR
-
 	vec3 color = mix(screen_color*dye_color, dye_color*0.25, depth_blend_pow*0.5);
-#endif //WITHOUT_SCENE_COLOR
+
 	// Caustic screen projection
 #ifdef WATER_CAUSTIC
 	vec4 caustic_screenPos = vec4(ref_uv*2.0-1.0, depth_raw, 1.0);
@@ -113,7 +104,8 @@ void main()
 	
 #ifdef WATER_FOAM
 	// ?? depthVS>(vertex_depthCS-0.1) not understand this check
-    if(depth_diff < u_foam_level && depthVS>(vertex_depthCS-0.1))
+    //if(depth_diff < u_foam_level && depthVS>(vertex_depthCS-0.1))
+	if(depth_diff < u_foam_level && depthVS>vertexZ_VS)
     {
         float foam_noise 	= clamp(pow(texture2D(s_foam, (uv*4.0) - uv_offset).r, 10.0)*40.0, 0.0, 0.2);
         float foam_mix 		= clamp(pow((1.0-depth_diff + foam_noise), 8.0) * foam_noise * 0.4, 0.0, 1.0);

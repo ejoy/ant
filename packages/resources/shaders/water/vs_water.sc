@@ -30,7 +30,7 @@ vec4 wave(vec4 parameter, vec2 position, float time, inout vec3 tangent, inout v
 
 void main()
 {
-	float time   = u_current_time * u_wave_speed;
+	float time   = u_wave_speed * u_current_time * 0.001;
 	vec4 vertex  = vec4(a_position, 1.0);
 	vec4 vertexWS= mul(u_model[0], vertex);
     vec3 tangent = vec3_splat(0.0);

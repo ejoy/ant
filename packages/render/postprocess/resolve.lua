@@ -62,7 +62,7 @@ function resolve_msaa_sys:init_world()
                 viewid = resolve_viewid,
                 view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
                 view_mode = "",
-                clear_state = { clear = ""},
+                clear_state = {clear = ""},
                 fb_idx = create_fb(fbmgr.get(mq.render_target.fb_idx))
             },
             watch_screen_buffer = true,
@@ -71,6 +71,24 @@ function resolve_msaa_sys:init_world()
     }
 
     --TODO: we just blit this buffer to resolve msaa, if we need sample this buffer to generate other info, like velocity buffer(for motion blur)
+
+    local imesh = ecs.import.interface"ant.asset|imesh"
+    local ientity = ecs.import.interface "ant.render|entity"
+    w:register {name="copy_scene"}
+    ecs.create_entity{
+        policy = {
+            "ant.render|simplerender",
+            "ant.general|name",
+        },
+        data = {
+            simplemesh = imesh.init_mesh(ientity.quad_mesh{x=-1,y=-1, w=2, h=2}),
+            material = "/pkg/ant.resources/materials/texquad.material",
+            scene = {srt={}},
+            state = "",
+            name = "copy_scene",
+            copy_scene = true
+        }
+    }
 end
 
 function resolve_msaa_sys:resolve()
@@ -78,12 +96,10 @@ function resolve_msaa_sys:resolve()
     local resolver = w:singleton("resolver", "render_target:in")
     local ppi = pp.postprocess_input
     local rt = resolver.render_target
-    local fb = fbmgr.get(rt.fb_idx)
 
-    for i=1, #ppi do
-        local v_in = ppi[i].handle
-        local v_out = fbmgr.get_rb(fb[i]).handle
-        bgfx.blit(rt.viewid, v_out, 0, 0, v_in)
-        ppi[i].handle = v_out
-    end
+    local tq = w:singleton("copy_scene", "render_object:in")
+    local ro = tq.render_object
+    local imaterial = ecs.import.interface "ant.asset|imaterial"
+    imaterial.set_property_directly(ro.properties, "s_tex", {stage=0, texture={handle=ppi[1].handle}})
+    irender.draw(rt.viewid, ro)
 end

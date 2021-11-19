@@ -3,6 +3,7 @@ import "@ant.scene"
 import "@ant.camera"
 import "@ant.asset"
 import "@ant.render.ibl"
+import "@ant.objcontroller"
 
 component "blit_queue"
 policy "blit_queue"
