@@ -19,7 +19,8 @@ local bindings = {
 	main_view 	= 30,
 
 	--start postprocess
-	resolve		= 48,
+	resolve		= 40,
+	copy_scene	= 41,
 	postprocess_obj= 49,
 	tonemapping = 50,
 	--end postprocess

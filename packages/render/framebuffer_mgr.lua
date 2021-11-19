@@ -135,8 +135,9 @@ function mgr.create_rb(rb)
 	return idx
 end
 
-function mgr.get_rb(rb_idx)
-	return renderbuffers[rb_idx]
+function mgr.get_rb(fbidx, rbidx)
+	rbidx = rbidx and mgr.get(fbidx)[rbidx] or fbidx
+	return renderbuffers[rbidx]
 end
 
 function mgr.resize_rb(w, h, rbidx)
