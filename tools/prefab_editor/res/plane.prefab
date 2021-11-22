@@ -3,12 +3,10 @@ data:
   material: /pkg/ant.resources/materials/mesh_shadow.material
   mesh: /pkg/tools.prefab_editor/res/plane.meshbin
   name: "testplane"
-  state: 7
+  filter_state: main_view|selectable|cast_shadow
   scene:
     srt:
-      r: {0, 0, 0, 1}
       s: {5, 1, 5, 0}
-      t: {0, 0, 0, 1}
 policy:
   ant.general|name
   ant.render|render

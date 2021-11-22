@@ -367,7 +367,7 @@ local function create_test_entities()
             material = "/pkg/ant.tool.baker/GPU/radiosity/assets/example/materials/example.material",
             mesh = "/pkg/ant.tool.baker/GPU/radiosity/assets/example/meshes/gazebo.glb|meshes/Node-Mesh_P1.meshbin",
             name = "lightmap_example",
-            state = 1,
+            filter_state = "main_view",
         }
     }
 
@@ -382,7 +382,7 @@ local function create_test_entities()
             material = "/pkg/ant.tool.baker/GPU/radiosity/assets/face_test.material",
             mesh = face_test(),
             name = "cube",
-            state = 0,
+            filter_state = "",
         }
     }
 end

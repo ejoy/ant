@@ -8,7 +8,7 @@ data:
     month: June
     turbidity: 2.15
     which_hour: 12
-  state: 1
+  filter_state: main_view
   scene:
     srt:
       r: {0, 0, 0, 1}

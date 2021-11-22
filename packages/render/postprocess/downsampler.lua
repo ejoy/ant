@@ -23,7 +23,7 @@ function ds_sys:init()
             scene 		= {srt={}},
             simplemesh  = imesh.init_mesh(ientity.fullquad_mesh()),
             material    = "/pkg/ant.resources/materials/downsample.material",
-            state       = "visible",
+            filter_state= "main_view",
             name        = "downsample",
         }
     }

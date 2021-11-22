@@ -6,7 +6,7 @@ local bgfx = require "bgfx"
 
 local isp		= ecs.import.interface "ant.render|isystem_properties"
 local irender	= ecs.import.interface "ant.render|irender"
-local ies		= ecs.import.interface "ant.scene|ientity_state"
+local ies		= ecs.import.interface "ant.scene|ifilter_state"
 local icamera	= ecs.import.interface "ant.camera|camera"
 local render_sys = ecs.system "render_system"
 
@@ -33,9 +33,9 @@ function render_sys:entity_init()
 		w:sync("filter_created?out", qe)
 
 		pf._DEBUG_filter_type = pf.filter_type
-		pf.filter_type = ies.create_state(pf.filter_type)
+		pf.filter_type = ies.filter_mask(pf.filter_type)
 		pf._DEBUG_excule_type = pf.exclude_type
-		pf.exclude_type = pf.exclude_type and ies.create_state(pf.exclude_type) or 0
+		pf.exclude_type = pf.exclude_type and ies.filter_mask(pf.exclude_type) or 0
 	end
 
 	for e in w:select "INIT material_result:in render_object:in" do
@@ -64,7 +64,7 @@ function render_sys:update_filter()
 	w:clear "filter_result"
     for e in w:select "render_object_update render_object:in filter_result:new" do
         local ro = e.render_object
-        local state = ro.entity_state
+        local filterstate = ro.filter_state
 		local st = ro.fx.setting.surfacetype
 
 		local filter_result = {}
@@ -75,7 +75,7 @@ function render_sys:update_filter()
 			local pf = qe.primitive_filter
 			if has_filter_tag(tag, pf) then
 				w:sync(tag .. "?in", e)
-				local add = ((state & pf.filter_type) ~= 0) and ((state & pf.exclude_type) == 0)
+				local add = ((filterstate & pf.filter_type) ~= 0) and ((filterstate & pf.exclude_type) == 0)
 				if add then
 					if not e[tag] then
 						filter_result[tag] = add

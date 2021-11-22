@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 
 local iani      = ecs.import.interface "ant.animation|animation"
-local ies       = ecs.import.interface "ant.scene|ientity_state"
+local ies       = ecs.import.interface "ant.scene|ifilter_state"
 local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local prefab_mgr = ecs.require "prefab_manager"

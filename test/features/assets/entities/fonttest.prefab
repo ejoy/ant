@@ -6,11 +6,11 @@ policy:
 data:
     scene:
       srt:
-        s: {100, 100, 100, 0}
+        s: 100
         t: {0, 3, 0, 1}
     material: /pkg/ant.resources/materials/singlecolor.material
     mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
-    state: 0x00000005
+    filter_state: main_view|selectable
     name: slot_cube
 ---
 policy:
@@ -20,7 +20,7 @@ policy:
 data:
     simplemesh: false
     material: /pkg/ant.resources/materials/font/font.material
-    state: 1
+    filter_state: main_view|selectable
     scene:
       srt: {}
     font:
@@ -42,11 +42,11 @@ policy:
 data:
     scene:
       srt:
-        s: {100, 100, 100, 0}
+        s: 100
         t: {0, 3, 5, 1}
     material: /pkg/ant.resources/materials/singlecolor.material
     mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
-    state: 0x00000005
+    filter_state: main_view|selectable
     name: slot_cube
 ---
 policy:
@@ -56,7 +56,7 @@ policy:
 data:
     simplemesh: false
     material: /pkg/ant.resources/materials/font/font.material
-    state: 1
+    filter_state: main_view
     scene:
       srt: {}
     font:

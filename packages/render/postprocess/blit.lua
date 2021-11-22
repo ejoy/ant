@@ -28,7 +28,7 @@ function blit_sys:init()
 				srt = mu.srt_obj(),
 			},
 			material        = "/pkg/ant.resources/materials/fullscreen.material",
-			state           = 0,
+			filter_state    = "",
 			name            = "resolve_quad",
 			simplemesh      = imesh.init_mesh(ientity.fullquad_mesh(), true),
 			blit_obj		= true,

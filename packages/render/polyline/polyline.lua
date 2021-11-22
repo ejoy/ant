@@ -179,7 +179,7 @@ local function add_polylines(polymesh, line_width, color, material)
             scene = {srt=mu.srt_obj()},
             simplemesh  = polymesh,
             material    = material,
-            state       = 1,
+            filter_state= "main_view",
             name        = "polyline",
         }
     }

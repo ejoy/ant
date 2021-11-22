@@ -78,5 +78,5 @@ data:
             height : 1
             axis : "Y"
     name: foot_ik_test
-    state: 0x00000005
+    filter_state: main_view|cast_shadow
     scene_entity: true

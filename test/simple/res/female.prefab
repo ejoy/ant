@@ -1,6 +1,4 @@
 ---
-action:
-  mount: root
 data:
   name: "Root Scene"
   scene_entity: true
@@ -12,7 +10,7 @@ policy:
   ant.scene|transform_policy
 ---
 action:
-  mount: 1
+  mount: @1
 data:
   name: RootNode
   scene_entity: true
@@ -26,7 +24,7 @@ policy:
   ant.scene|transform_policy
 ---
 action:
-  mount: 2
+  mount: @2
 data:
   animation:
     idle: /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
@@ -40,14 +38,11 @@ data:
   mesh: /pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Surface_P1.meshbin
   meshskin: /pkg/ant.resources.binary/meshes/female/female.glb|meshes/skin2.skinbin
   name: Beta_Surface.1
-  scene_entity: true
   skeleton: /pkg/ant.resources.binary/meshes/female/female.glb|animations/skeleton.ozz
-  state: 7
+  filter_state: main_view|selectable|cast_shadow
   tag: body
-  transform:
-    r: {0, 0, 0, 1}
-    s: {1, 1, 1}
-    t: {0, 0, 0}
+  scene:
+    srt: {}
 policy:
   ant.animation|animation
   ant.animation|animation_controller.birth
@@ -58,21 +53,21 @@ policy:
   ant.general|tag
 ---
 action:
-  mount: 3
+  mount: @3
 data:
   follow_flag: 1
   follow_joint: "mixamorig:LeftHand"
   name: slot1
   slot: true
-  scene_entity: true
-  transform: {}
+  scene:
+    srt: {}
 policy:
   ant.general|name
   ant.scene|slot_policy
-  ant.scene|transform_policy
+  ant.scene|scene_object
 ---
 action:
-  mount: 4
+  mount: @4
 data:
   collider:
     sphere:
@@ -80,34 +75,30 @@ data:
       origin: {0, 0, 0, 1}
       radius: 0.1
   name: collider0
-  scene_entity: true
-  transform:
-    s: 10
+  scene:
+    srt:
+      s: 10
 policy:
   ant.general|name
-  ant.scene|hierarchy_policy
-  ant.scene|transform_policy
+  ant.scene|scene_object
   ant.collision|collider_policy
 ---
 action:
-  mount: 3
+  mount: @3
 data:
   follow_flag: 1
   follow_joint: "mixamorig:RightHand"
   name: slot2
   slot: true
   scene_entity: true
-  transform:
-    r: {0, 0, 0, 1}
-    s: {1, 1, 1}
-    t: {2.384185791015625e-07, 0, 0}
+  scene:
+    srt:
+      t: {2.384185791015625e-07, 0, 0}
 policy:
   ant.general|name
   ant.scene|slot_policy
-  ant.scene|transform_policy
+  ant.scene|scene_object
 ---
-action:
-  mount: root
 data:
   name: directional1
   light:

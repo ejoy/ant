@@ -15,7 +15,7 @@ function st_sys:init()
 			"ant.general|name",
 		},
 		data = {
-			state = "visible|selectable|cast_shadow",
+			filter_state = "visible|selectable|cast_shadow",
 			scene =  {
 				srt = {
 					s=100,
@@ -55,7 +55,7 @@ function st_sys:init()
                 }
             },
 			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
-			state 		= "visible",
+			filter_state= "main_view",
 			name 		= "test_shadow_plane",
 			simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
             debug_mesh_bounding = true,

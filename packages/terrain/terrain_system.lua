@@ -9,7 +9,7 @@
 -- local math3d	= require "math3d"
 -- local terrain_module = require "terrain"
 
--- local ies = ecs.import.interface "ant.scene|ientity_state"
+-- local ies = ecs.import.interface "ant.scene|ifilter_state"
 
 -- local t = ecs.component "terrain"
 -- function t:init()
@@ -203,7 +203,7 @@
 -- 				data = {
 -- 					name = "section" .. isx .. isy,
 -- 					transform = {},
--- 					state = ies.create_state "visible|cast_shadow",
+-- 					filter_state = "main_view|cast_shadow",
 -- 					scene_entity=true,
 -- 					section_draw = {
 -- 						vb_start = start,

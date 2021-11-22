@@ -9,13 +9,13 @@ policy:
     ant.character|character
     ant.render|debug_mesh_bounding
 data:
-    transform: 
-        t: {-5, 0, 5, 1}
+    scene: 
+        srt:
+            t: {-5, 0, 5, 1}
     material: /pkg/ant.resources/materials/skin_model_sample.material
     animation:
         walk: /pkg/ant.resources.binary/meshes/ozz/animation1.ozz
     animation_birth: walk
-    scene_entity: true
     skeleton: /pkg/ant.resources.binary/meshes/ozz/human_skeleton.ozz
     mesh: /pkg/ant.resources.binary/meshes/ozz/mesh.ozz
     name: ozz_animation_sample
@@ -26,7 +26,7 @@ data:
             radius: 0.5
             height: 1
             axis: "Y"
-    state: 0x00000005
+    filter_state: main_view|selectable
     character:
         movespeed: 1.0
     debug_mesh_bounding: true

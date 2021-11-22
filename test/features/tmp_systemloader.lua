@@ -4,7 +4,7 @@ local w = world.w
 local math3d = require "math3d"
 
 local ientity = ecs.import.interface "ant.render|entity"
-local ies = ecs.import.interface "ant.scene|ientity_state"
+local ies = ecs.import.interface "ant.scene|ifilter_state"
 local init_loader_sys = ecs.system 'init_loader_system'
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local imesh = ecs.import.interface "ant.asset|imesh"
@@ -89,7 +89,7 @@ function init_loader_sys:init()
     --             }
     --         },
 	-- 		material 	= "/pkg/ant.resources/materials/singlecolor1.material",
-	-- 		state 		= "visible",
+	-- 		filter_state= "main_view",
 	-- 		name 		= "test_shadow_plane",
 	-- 		simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
 	-- 		on_ready = function (e)
@@ -143,9 +143,8 @@ function init_loader_sys:init()
     --     data = {
     --         name = "collider",
     --         scene_entity = true,
-    --         transform = {s=100},
-    --         --color = {1.0, 0.5, 0.5, 0.5},
-    --         state = ies.create_state "visible|selectable",
+    --         sceme = {srt={s=100}},
+    --         filterstate = "main_view|selectable",
     --         material = "/pkg/ant.resources/materials/singlecolor.material",
     --         mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
     --     }

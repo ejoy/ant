@@ -11,7 +11,7 @@ data:
     billboard:
         lock: camera    #x/y/z
     material: /pkg/ant.resources/materials/billboard/simple.material
-    state: 1
+    filter_state: main_view
     scene_entity: true
 action:
     billboard_mount: root

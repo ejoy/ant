@@ -11,10 +11,8 @@ data:
   name: node0
   scene:
     srt:
-      r: {0, 0, 0, 1}
       s: {0.009999999776482582, 0.009999999776482582, 0.009999999776482582, 0}
-      t: {0, 0, 0, 0}
-mount: 1
+mount: @1
 policy:
   ant.general|name
   ant.scene|scene_object
@@ -25,8 +23,8 @@ data:
   name: ""
   scene:
     srt: {}
-  state: 7
-mount: 2
+  filter_state: main_view|selectable|cast_shadow
+mount: @2
 policy:
   ant.general|name
   ant.render|render

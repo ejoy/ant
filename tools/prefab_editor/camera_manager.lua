@@ -5,7 +5,7 @@ local w = world.w
 local iom         = ecs.import.interface "ant.objcontroller|obj_motion"
 local icamera     = ecs.import.interface "ant.camera|camera"
 local imaterial   = ecs.import.interface "ant.asset|imaterial"
-local ies         = ecs.import.interface "ant.scene|ientity_state"
+local ies         = ecs.import.interface "ant.scene|ifilter_state"
 local irq         = ecs.import.interface "ant.render|irenderqueue"
 local geo_utils   = ecs.require "editor.geometry_utils"
 local icamera_recorder = ecs.import.interface "ant.camera|icamera_recorder"
@@ -122,7 +122,7 @@ function camera_mgr.show_frustum(eid, visible)
     local editor_data = camera_mgr.get_editor_data(eid)
     irq.set_visible(camera_mgr.second_view, visible)
     if editor_data and editor_data.frustum_eid and #editor_data.frustum_eid > 0 then
-        local state = "visible"
+        local state = "main_view"
         ies.set_state(editor_data.frustum_eid, state, visible)
         local boundary = editor_data.far_boundary
         ies.set_state(boundary[1].line_eid, state, visible)

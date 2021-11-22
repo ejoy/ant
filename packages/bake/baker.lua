@@ -140,7 +140,7 @@ local function create_downsample()
                 scene = {
                     srt = mu.srt_obj(),
                 },
-                state = 0,  --force not include to any render queue
+                filter_state = "",  --force not include to any render queue
                 [tag] = true,
             }
         }

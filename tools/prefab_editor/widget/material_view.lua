@@ -12,7 +12,7 @@ local w = world.w
 
 
 local imaterial   = ecs.import.interface "ant.asset|imaterial"
-local ies         = ecs.import.interface "ant.scene|ientity_state"
+local ies         = ecs.import.interface "ant.scene|ifilter_state"
 local irender     = ecs.import.interface "ant.render|irender"
 
 local prefab_mgr  = ecs.require "prefab_manager"
@@ -129,28 +129,24 @@ local function build_fx_ui(mv)
                     if type(s) == "string" then
                         return s:match "cast_shadow" ~= nil
                     end
-                    return (s & ies.create_state "cast_shadow") ~= nil
+                    return (s & ies.filter_mask "cast_shadow") ~= nil
                 end,
                 setter = function(value)
                     local prefab = hierarchy:get_template(mv.entity)
                     local data = prefab.template.data
-                    local state = data.state
-                    --TODO: need remove not string entity state
-                    if type(state) ~= "string" then
-                        state = ies.state_names(state)
-                    end
+                    local fstate = data.filter_state
                     if value then
-                        if not state:match "cast_shadow" then
-                            data.state = state .. "|cast_shadow"
+                        if not fstate:match "cast_shadow" then
+                            data.filter_state = fstate .. "|cast_shadow"
                         end
                     else
                         local ss = {}
-                        for n in state:gmatch "[%w_]+" do
+                        for n in fstate:gmatch "[%w_]+" do
                             if n ~= "cast_shadow" then
                                 ss[#ss+1] = n
                             end
                         end
-                        data.state = table.concat(ss, '|')
+                        data.filter_state = table.concat(ss, '|')
                     end
 
                     mv.need_reload = true

@@ -96,7 +96,7 @@ local default_clear_state<const> = {
 
 function irender.create_view_queue(view_rect, view_queuename, camera_ref, filtertype, exclude, surfacetypes, visible)
 	surfacetypes = surfacetypes or QUEUE_TYPES["main_queue"]
-	filtertype = filtertype or "visible"
+	filtertype = filtertype or "main_view"
 	w:register{name = view_queuename}
 
 	local fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
@@ -179,7 +179,7 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 				fb_idx = fbidx,
 			},
 			primitive_filter = {
-				filter_type = "visible",
+				filter_type = "main_view",
 				table.unpack(QUEUE_TYPES["pre_depth_queue"]),
 			},
 			cull_tag 		= {},
@@ -248,7 +248,7 @@ function irender.create_main_queue(vr, camera_ref)
 				fb_idx = fbidx,
 			},
 			primitive_filter = {
-				filter_type = "visible",
+				filter_type = "main_view",
 				table.unpack(QUEUE_TYPES["main_queue"]),
 			},
 			cull_tag = {},

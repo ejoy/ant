@@ -7,7 +7,7 @@ local worldedit     = import_package "ant.editor".worldedit(world)
 local assetmgr      = import_package "ant.asset"
 local stringify     = import_package "ant.serialize".stringify
 local iom           = ecs.import.interface "ant.objcontroller|obj_motion"
-local ies           = ecs.import.interface "ant.scene|ientity_state"
+local ies           = ecs.import.interface "ant.scene|ifilter_state"
 local ilight        = ecs.import.interface "ant.render|light"
 local imaterial     = ecs.import.interface "ant.asset|imaterial"
 local icamera_recorder = ecs.import.interface "ant.camera|icamera_recorder"
@@ -49,7 +49,7 @@ local function create_light_billboard(light_eid)
     --         name = "billboard_light",
     --         transform = {},
     --         billboard = {lock = "camera"},
-    --         state = 1,
+    --         filter_state = "main_view",
     --         scene_entity = true,
     --         material = gd.editor_package_path .. "res/materials/billboard.material"
     --     },
@@ -146,7 +146,7 @@ function m:create_collider(config)
             name = "collider" .. gen_geometry_id(),
             tag = config.tag or {"collider"},
             scene = {srt = {s = scale}, parent = self.root},
-            state = ies.create_state "visible|selectable",
+            filter_state = "main_view|selectable",
             material = "/pkg/ant.resources/materials/singlecolor_translucent.material",
             mesh = (config.type == "box") and geom_mesh_file["cube"] or geom_mesh_file[config.type],
             render_object = {},
@@ -226,7 +226,7 @@ function m:create(what, config)
                 data = {
                     reference = true,
                     scene = {srt = get_local_transform({s = 50}, parent_eid)},
-                    state = ies.create_state "visible|selectable",
+                    filter_state = "main_view|selectable",
                     material = "/pkg/ant.resources/materials/pbr_default.material",
                     mesh = geom_mesh_file[config.type],
                     render_object = {},

@@ -1,18 +1,16 @@
 ---
 policy:
     ant.render|render
-    ant.scene|hierarchy_policy
     ant.general|name
 data:
-    transform: 
-        s: {100, 100, 100, 0}
-        t: {0, 3, 0, 1}
+    scene:
+        srt:
+            s: 100
+            t: {0, 3, 0, 1}
     material: /pkg/ant.resources/materials/singlecolor.material
     mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
-    state: 0x00000005
-    scene_entity: true
+    filter_state: main_view|cast_shadow
     name: slot_cube
-
 ---
 policy:
     ant.render|render
@@ -20,10 +18,9 @@ policy:
     ant.render|fontrender
     ant.general|name
 data:
-    transform: {}
+    scene: {srt={}}
     material: /pkg/ant.resources/materials/font/font.material
-    state: 1
-    scene_entity:true
+    filter_state: main_view
     font:
         file: /pkg/ant.resources.binary/fonts/stxingka.ttf
         family: 华文行楷

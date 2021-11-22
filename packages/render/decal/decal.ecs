@@ -4,7 +4,7 @@ component "decal".type "lua"
 policy "decal"
     .require_policy "ant.render|render_object"
     .require_system "ant.render|decal_system"
-    .component "state"
+    .component "filter_state"
     .component "material"
     .component "decal"
 

@@ -32,7 +32,8 @@ function tm_sys:init()
             },
             render_object   = {},
             filter_material = {},
-            state = 0,
+            filter_state = "",
+            visible = true,
             tonemapping = true,
         }
     }

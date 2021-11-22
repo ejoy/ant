@@ -6,8 +6,9 @@ policy:
 data:
     name: skybox_test
     scene_entity: true
-    state: 1
-    transform: {}
+    filter_state: main_view
+    scene:
+        srt: {}
     ibl:
         irradiance:
             size: 64

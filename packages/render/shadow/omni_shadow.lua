@@ -26,7 +26,7 @@ local math3d        = require "math3d"
 
 local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
 local icamera   = ecs.import.interface "ant.camera|camera"
-local ies       = ecs.import.interface "ant.scene|ientity_state"
+local ies       = ecs.import.interface "ant.scene|ifilter_state"
 local ilight    = ecs.import.interface "ant.render|light"
 local ientity   = ecs.import.interface "ant.render|entity"
 
@@ -184,7 +184,7 @@ local function add_stencil_entity()
 		data = {
 			material	= "/pkg/ant.resources/materials/omni_stencil.material",
 			mesh		= stencil_mesh,
-			state		= "visible|cast_shadow",
+			filter_state= "main_view|cast_shadow",
 			name		= "stencil_mesh",
 			scene_entity= true,
 		}

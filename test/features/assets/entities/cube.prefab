@@ -11,6 +11,6 @@ data:
             t: {0, 0, 0, 1}
     material: /pkg/ant.resources/materials/singlecolor.material
     mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
-    state: visible
+    filter_state: main_view
     name: cube
 tag: cube

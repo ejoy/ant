@@ -3,16 +3,15 @@ policy:
     ant.render|render
     ant.general|name
 data:
-    transform: 
-        s: {100, 100, 100, 0}
-        t: {0, 0, 8, 1}
+    scene:
+        srt:
+            s: 100
+            t: {0, 0, 8, 1}
     material: /pkg/ant.resources/materials/pbr_default.material
     mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
-    state: 0x00000005
+    filter_state: main_view|selectable
     scene_entity: true
     name: pbr_cube
-action:
-    mount: rooteid
 ---
 policy:
     ant.render|render
@@ -21,10 +20,9 @@ policy:
 data:
     mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
     material: /pkg/ant.resources/materials/outline/scale.material
-    state: 0x00000001
-    scene_entity: true
+    filter_state: main_view
     outline:
         width: 0.01
     name: pbr_cube_outline
 action:
-    mount: 1
+    mount: @1

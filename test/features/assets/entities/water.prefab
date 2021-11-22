@@ -10,7 +10,7 @@ data:
     unit: 1
   simplemesh: true
   material: /pkg/ant.resources/materials/water.material
-  state: postprocess_obj
+  filter_state: postprocess_obj
   scene:
     srt:
       s: 10

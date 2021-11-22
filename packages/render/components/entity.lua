@@ -12,7 +12,7 @@ local geolib    = geopkg.geometry
 local mathpkg   = import_package "ant.math"
 local mc		= mathpkg.constant
 
-local ies		= ecs.import.interface "ant.scene|ientity_state"
+local ifs		= ecs.import.interface "ant.scene|ifilter_state"
 local imaterial	= ecs.import.interface "ant.asset|imaterial"
 local irender	= ecs.import.interface "ant.render|irender"
 local imesh 	= ecs.import.interface "ant.asset|imesh"
@@ -77,16 +77,12 @@ local function create_simple_render_entity(name, material, mesh, srt, color, hid
 			scene 		= {srt = srt or {}},
 			material	= material,
 			simplemesh	= imesh.init_mesh(mesh, true),
-			state		= ies.create_state "visible|auxgeom",
+			filter_state= "main_view|auxgeom",
 			name		= name or gen_test_name(),
 			on_ready = function(e)
 				imaterial.set_property(e, "u_color", color or {1,1,1,1})
-				local visible = true
-				if hide then
-					visible = false
-				end
-				ies.set_state(e, "visible", visible)
-				ies.set_state(e, "auxgeom", true)
+				ifs.set_state(e, "main_view", not hide)
+				ifs.set_state(e, "auxgeom", true)
 			end
 		}
 	}
@@ -153,11 +149,11 @@ function ientity.create_grid_mesh_entity(name, w, h, size, color, materialpath)
 			reference	= true,
 			scene 		= {srt = {}},
 			material 	= materialpath,
-			state 		= ies.create_state "visible|auxgeom",
+			filter_state= "main_view|auxgeom",
 			name 		= name or "GridMesh",
 			simplemesh	= imesh.init_mesh(create_dynamic_mesh("p3|c40niu", vb, ib), true), --create_mesh({"p3|c40niu", vb}, ib)
 			on_ready = function(e)
-				ies.set_state(e, "auxgeom", true)
+				ifs.set_state(e, "auxgeom", true)
 			end
 		},
 	}
@@ -242,7 +238,7 @@ function ientity.create_prim_plane_entity(srt, materialpath, color, name)
 			reference 	= true,
 			scene 		= { srt = srt or {}},
 			material 	= materialpath,
-			state 		= ies.create_state "visible",
+			filter_state= "main_view",
 			name 		= name or "Plane",
 			simplemesh 	= imesh.init_mesh(create_mesh({"p3|n3", plane_vb}, nil, math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))), true),
 			on_ready = function (e)
@@ -415,7 +411,7 @@ function ientity.create_skybox(material)
 			reference = true,
 			scene = {srt = {}},
 			material = material or "/pkg/ant.resources/materials/sky/skybox.material",
-			state = ies.create_state "visible",
+			filter_state = "main_view",
 			ibl = {
 				irradiance = {size=64},
 				prefilter = {size=256},
@@ -489,7 +485,7 @@ function ientity.create_procedural_sky(settings)
 					size = 256,
 				}
 			},
-			state = ies.create_state "visible",
+			filter_state = "main_view",
 			simplemesh = imesh.init_mesh(create_sky_mesh(32, 32), true),
 			name = "procedural sky",
 		}
@@ -524,7 +520,7 @@ function ientity.create_gamma_test_entity()
                 }
             }, true),
             scene = {srt = {}},
-            state = 1,
+            filter_state = "main_view",
         }
     }
 end
@@ -591,7 +587,7 @@ function ientity.create_arrow_entity(origin, forward, scale, data)
 		data = {
 			name = "arrow.cylinder",
 			reference = true,
-			state = ies.create_state "visible",
+			filter_state = "main_view",
 			scene = {
 				srt = {
 					s = math3d.ref(math3d.mul(100, math3d.vector(cylinder_radius, cylinder_scaleY, cylinder_radius))),
@@ -618,7 +614,7 @@ function ientity.create_arrow_entity(origin, forward, scale, data)
 		data = {
 			name = "arrow.cone",
 			reference = true,
-			state = ies.create_state "visible",
+			filter_state = "main_view",
 			scene = {srt =  {s=100, t=cone_offset}},
 			material = "/pkg/ant.resources/materials/simpletri.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',

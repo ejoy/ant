@@ -5,7 +5,7 @@ local w = world.w
 local geometry_drawer = import_package "ant.geometry".drawer
 local setting		= import_package "ant.settings".setting
 
-local ies = ecs.import.interface "ant.scene|ientity_state"
+local ies = ecs.import.interface "ant.scene|ifilter_state"
 local iom = ecs.import.interface "ant.objcontroller|obj_motion"
 local imesh=ecs.import.interface "ant.asset|imesh"
 local bgfx = require "bgfx"
@@ -51,7 +51,7 @@ function widget_drawer_sys:init()
 			scene = {srt = {}},
 			simplemesh = imesh.init_mesh(create_dynamic_buffer(wd.declname, wd.vertices_num, wd.indices_num)),
 			material = "/pkg/ant.resources/materials/line.material",
-			state = "visible",
+			filter_state = "main_view",
 			widget_drawer = wd,
 			name = "bounding_draw"
 		}

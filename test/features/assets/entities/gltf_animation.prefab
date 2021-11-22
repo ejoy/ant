@@ -15,7 +15,7 @@ data:
     animation:
         idle: /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
     animation_birth: idle
-    state = 7
+    filter_state = main_view|cast_shadow|selectable
     scene_entity: true
     name: gltf_animation_sample
     character:
@@ -28,8 +28,9 @@ policy:
     ant.animation|animation_controller.birth
     ant.general|name
 data:
-    transform: 
-        t: {-5, 0, 0, 1}
+    scene: 
+        srt:
+            t: {-5, 0, 0, 1}
     mesh: "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Surface_P1.meshbin"
     meshskin: "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/skin2.skinbin"
     material: /pkg/ant.resources/materials/gpu_skin.material
@@ -37,8 +38,7 @@ data:
     animation:
         idle: /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
     animation_birth: idle
-    state: 7
-    scene_entity: true
+    filter_state: main_view|selectable|cast_shadow
     name: gltf_animation_sample
     character:
         movespeed: 1.0

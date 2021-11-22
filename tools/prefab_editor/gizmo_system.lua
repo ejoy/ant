@@ -5,7 +5,7 @@ local w = world.w
 local constant 	= import_package "ant.math".constant
 local ientity 	= ecs.import.interface "ant.render|entity"
 local iom 		= ecs.import.interface "ant.objcontroller|obj_motion"
-local ies 		= ecs.import.interface "ant.scene|ientity_state"
+local ies 		= ecs.import.interface "ant.scene|ifilter_state"
 local ilight 	= ecs.import.interface "ant.render|light"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local irq		= ecs.import.interface "ant.render|irenderqueue"
@@ -172,10 +172,10 @@ local function create_arrow_widget(axis_root, axis_str)
 		},
 		data = {
 			reference = true,
-			state = ies.create_state "visible",
+			filter_state = "main_view",
 			scene = {
 				srt = {
-					s = math3d.ref(math3d.vector(0.2, 10, 0.2)),
+					s = {0.2, 10, 0.2},
 					r = local_rotator,
 					t = cylindere_t
 				}
@@ -196,7 +196,7 @@ local function create_arrow_widget(axis_root, axis_str)
 		},
 		data = {
 			reference = true,
-			state = ies.create_state "visible",
+			filter_state = "main_view",
 			scene = {srt = {s = {1, 1.5, 1, 0}, r = local_rotator, t = cone_t}},
 			material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
@@ -373,7 +373,7 @@ function gizmo_sys:post_init()
 			},
 			data = {
 				reference = true,
-				state = ies.create_state "visible|selectable",
+				filter_state = "main_view|selectable",
 				scene = {srt = srt},
 				material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",

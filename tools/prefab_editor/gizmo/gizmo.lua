@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local ies = ecs.import.interface "ant.scene|ientity_state"
+local ies = ecs.import.interface "ant.scene|ifilter_state"
 
 local gizmo_const = require "gizmo.const"
 local gizmo = {
@@ -90,7 +90,7 @@ function gizmo:click_axis(axis)
 			gray_axis(self.rz)
 		end
 	else
-		local state = "visible"
+		local state = "main_view"
 		ies.set_state(self.tyz.eid[1], state, false)
 		ies.set_state(self.txy.eid[1], state, false)
 		ies.set_state(self.tzx.eid[1], state, false)
@@ -108,7 +108,7 @@ function gizmo:click_axis(axis)
 end
 
 function gizmo:click_plane(axis)
-	local state = "visible"
+	local state = "main_view"
 	if axis == self.tyz then
 		gray_axis(self.tx)
 		ies.set_state(self.txy.eid[1], state, false)
@@ -135,7 +135,7 @@ function gizmo:click_axis_or_plane(axis)
 end
 
 function gizmo:hide_rotate_fan()
-	local state = "visible"
+	local state = "main_view"
 	if not self.rx.eid then return end
 	ies.set_state(self.rx.eid[3], state, false)
 	ies.set_state(self.rx.eid[4], state, false)
@@ -148,7 +148,7 @@ function gizmo:hide_rotate_fan()
 end
 
 function gizmo:show_move(show)
-	local state = "visible"
+	local state = "main_view"
 	if not self.tx.eid then return end
 	ies.set_state(self.tx.eid[1], state, show)
 	ies.set_state(self.tx.eid[2], state, show)
@@ -164,7 +164,7 @@ function gizmo:show_move(show)
 end
 
 function gizmo:show_rotate(show)
-	local state = "visible"
+	local state = "main_view"
 	if not self.rx.eid then return end
 	ies.set_state(self.rx.eid[1], state, show)
 	ies.set_state(self.rx.eid[2], state, show)
@@ -176,7 +176,7 @@ function gizmo:show_rotate(show)
 end
 
 function gizmo:show_scale(show)
-	local state = "visible"
+	local state = "main_view"
 	if not self.sx.eid then return end
 	ies.set_state(self.sx.eid[1], state, show)
 	ies.set_state(self.sx.eid[2], state, show)

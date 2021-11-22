@@ -5,7 +5,7 @@ policy:
     ant.general|name
 data:
     name: skybox_test
-    state: 1
+    filter_state: main_view
     scene:
         srt: {}
     ibl:

@@ -455,7 +455,7 @@ function shape_ts:entity_init()
                             reference   = true,
                             simplemesh  = terrain_mesh,
                             material    = shapematerial,
-                            state       = "visible|selectable",
+                            filter_state= "main_view|selectable",
                             name        = "section" .. sectionidx,
                             shape_terrain_drawer = true,
                         }
@@ -479,7 +479,7 @@ function shape_ts:entity_init()
                             reference   = true,
                             material    = edgematerial,
                             simplemesh  = edge_meshes,
-                            state       = "visible|selectable",
+                            filter_state= "main_view|selectable",
                             name        = "section_edge" .. sectionidx,
                             shape_terrain_edge_drawer = true,
                         }

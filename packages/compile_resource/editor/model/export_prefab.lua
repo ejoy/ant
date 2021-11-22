@@ -54,13 +54,7 @@ local function get_transform(node)
     }
 end
 
-local STATE_TYPE = {
-    visible     = 0x00000001,
-    cast_shadow = 0x00000002,
-    selectable  = 0x00000004,
-}
-
-local DEFAULT_STATE = STATE_TYPE.visible|STATE_TYPE.cast_shadow|STATE_TYPE.selectable
+local DEFAULT_STATE = "main_view|selectable|cast_shadow"
 
 local function is_mirror_transform(trans)
     local s = math3d.srt(trans)
@@ -212,7 +206,7 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports, tolo
             mesh        = serialize.path(meshfile),
             material    = serialize.path(materialfile:string()),
             name        = node.name or "",
-            state       = DEFAULT_STATE,
+            filter_state= DEFAULT_STATE,
         }
 
         local policy = {

@@ -6,7 +6,7 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 local computil  = ecs.import.interface "ant.render|entity"
 local ilight    = ecs.import.interface "ant.render|light"
 local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
-local ies       = ecs.import.interface "ant.scene|ientity_state"
+local ies       = ecs.import.interface "ant.scene|ifilter_state"
 local geo_utils = ecs.require "editor.geometry_utils"
 
 local math3d = require "math3d"

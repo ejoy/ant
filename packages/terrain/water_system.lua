@@ -134,11 +134,11 @@ function water_sys:init_world()
             "ant.general|name",
         },
         data = {
-            simplemesh = imesh.init_mesh(ientity.fullquad_mesh()),
-            material = "/pkg/ant.resources/materials/texquad.material",
-            scene = {srt={}},
-            state = "",
-            name = "copy_scene_drawer",
+            simplemesh  = imesh.init_mesh(ientity.fullquad_mesh()),
+            material    = "/pkg/ant.resources/materials/texquad.material",
+            scene       = {srt={}},
+            filter_state= "",
+            name        = "copy_scene_drawer",
             copy_scene_drawer = true
         }
     }

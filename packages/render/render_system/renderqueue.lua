@@ -137,8 +137,9 @@ function irq.set_camera(queuename, camera_ref)
 	end
 end
 
+local bc_mb = world:sub{"bind_camera"}
 function ecs.method.bind_camera(camera_ref, queuename)
-    irq.set_camera(queuename, camera_ref)
+	world:pub{"bind_camera", queuename, camera_ref}
 end
 
 function irq.set_visible(queuename, b)
@@ -170,6 +171,11 @@ end
 
 local rt_sys = ecs.system "render_target_system"
 function rt_sys:entity_init()
+	for msg in bc_mb:each() do
+		local qn, c = msg[2], msg[3]
+		irq.set_camera(qn, c)
+	end
+
 	for e in w:select "INIT render_target:in name:in need_touch?in" do
 		irq.update_rendertarget(e.render_target, e.need_touch)
 	end

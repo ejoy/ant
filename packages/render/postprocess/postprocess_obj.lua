@@ -5,7 +5,7 @@ local w     = world.w
 local viewidmgr = require "viewid_mgr"
 
 local ppobj_viewid = viewidmgr.get "postprocess_obj"
-local ies = ecs.import.interface "ant.scene|ientity_state"
+local ies = ecs.import.interface "ant.scene|ifilter_state"
 local irq = ecs.import.interface "ant.render|irenderqueue"
 
 local pp_obj_sys = ecs.system "postprocess_obj_system"

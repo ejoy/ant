@@ -84,7 +84,7 @@ local w     = world.w
 --             simplemesh = imesh.init_mesh(ientity.quad_mesh{x=-1,y=-1, w=2, h=2}),
 --             material = "/pkg/ant.resources/materials/texquad.material",
 --             scene = {srt={}},
---             state = "",
+--             filter_state = "",
 --             name = "copy_scene",
 --             copy_scene = true
 --         }

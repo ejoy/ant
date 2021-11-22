@@ -28,7 +28,7 @@ local function create_plane_test()
                 }
             },
 			material 	= "/pkg/ant.resources/materials/test/singlecolor_tri_strip.material",
-			state 		= "visible",
+			filter_state= "main_view",
 			name 		= "test shadow plane",
 			simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
             collider = {

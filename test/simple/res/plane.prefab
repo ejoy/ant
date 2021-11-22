@@ -2,13 +2,11 @@
 data:
   material: /pkg/ant.resources/materials/mesh_shadow.material
   mesh: $path ./plane.meshbin
-  name: "test shadow plane"
-  state: 7
+  name: "test_shadow_plane"
+  filter_state: main_view|cast_shadow|selectable
   scene:
     srt:
-      r: {0, 0, 0, 1}
       s: {5, 1, 5, 0}
-      t: {0, 0, 0, 1}
 policy:
   ant.general|name
   ant.render|render

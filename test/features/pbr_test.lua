@@ -6,7 +6,7 @@ local fs = require "filesystem"
 local pbr_test_sys = ecs.system "pbr_test_system"
 
 local feature_path = fs.path "/pkg/ant.test.features"
-local ies = ecs.import.interface "ant.scene|ientity_state"
+local ies = ecs.import.interface "ant.scene|ifilter_state"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local function create_pbr_entity(name, srt, material,
@@ -21,7 +21,7 @@ local function create_pbr_entity(name, srt, material,
             name        = name,
             transform   = srt,
             material    = material,
-            state       = ies.create_state "visible|selectable",
+            filter_state= "main_view|selectable",
             mesh        = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin",
             scene_entity = true,
         },

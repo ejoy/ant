@@ -6,5 +6,6 @@ return {
         "ant.render",
         "ant.serialize",
         "ant.settings",
+        "ant.subprocess",
     }
 }

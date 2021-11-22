@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local iom           = ecs.import.interface "ant.objcontroller|obj_motion"
-local ies		    = ecs.import.interface "ant.scene|ientity_state"
+local ies		    = ecs.import.interface "ant.scene|ifilter_state"
 local computil      = ecs.import.interface "ant.render|entity"
 local irq           = ecs.import.interface "ant.render|irenderqueue"
 local mathutils     = ecs.require "mathutils"
