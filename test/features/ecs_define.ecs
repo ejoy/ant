@@ -69,7 +69,7 @@ system "init_loader_system"
     .require_interface "ant.camera|icamera"
     .require_interface "ant.objcontroller|iobj_motion"
     .require_interface "ant.render|iwidget_drawer"
-    .require_interface "ant.render|light"
+    .require_interface "ant.render|ilight"
 
     .method "init"
     .method "init_world"

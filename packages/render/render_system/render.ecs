@@ -184,7 +184,7 @@ interface "irenderqueue"
     .method "set_visible"
     .method "update_rendertarget"
 
-interface "entity"
+interface "ientity"
     .implement "components/entity.lua"
     .method "create_mesh"
     .method "create_grid_entity_simple"

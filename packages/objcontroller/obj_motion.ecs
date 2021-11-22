@@ -1,4 +1,4 @@
-interface "obj_motion"
+interface "iobj_motion"
     .implement "obj_motion.lua"
     .method "set_position"
     .method "get_position"

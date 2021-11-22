@@ -61,7 +61,7 @@ function ic.create(info)
     return ecs.create_entity {
         policy = {
             "ant.general|name",
-            "ant.camera|icamera",
+            "ant.camera|camera",
         },
         data = {
             camera = {
