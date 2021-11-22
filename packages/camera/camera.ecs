@@ -2,7 +2,7 @@ system "camera_view_system"
     .implement "camera.lua"
     .method "update_mainview_camera"
 
-interface "camera"
+interface "icamera"
     .implement "camera.lua"
     .method "create"
     .method "calc_viewmat"

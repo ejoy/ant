@@ -17,10 +17,10 @@ local viewidmgr = renderpkg.viewidmgr
 local mathpkg   = import_package "ant.math"
 local mu        = mathpkg.uitl
 
-local ientity   = ecs.import.interface "ant.render|entity"
+local ientity   = ecs.import.interface "ant.render|ientity"
 local irender   = ecs.import.interface "ant.render|irender"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local icamera   = ecs.import.interface "ant.camera|camera"
+local icamera   = ecs.import.interface "ant.camera|icamera"
 local ics       = ecs.import.interface "ant.render|icluster_render"
 local isp       = ecs.import.interface "ant.render|isystem_properties"
 

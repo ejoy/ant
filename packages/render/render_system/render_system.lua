@@ -7,7 +7,7 @@ local bgfx = require "bgfx"
 local isp		= ecs.import.interface "ant.render|isystem_properties"
 local irender	= ecs.import.interface "ant.render|irender"
 local ies		= ecs.import.interface "ant.scene|ifilter_state"
-local icamera	= ecs.import.interface "ant.camera|camera"
+local icamera	= ecs.import.interface "ant.camera|icamera"
 local render_sys = ecs.system "render_system"
 
 function render_sys:component_init()

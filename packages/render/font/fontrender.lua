@@ -20,7 +20,7 @@ local declformat        = declmgr.vertex_desc_str(layout_desc)
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local irender = ecs.import.interface "ant.render|irender"
-local icamera	= ecs.import.interface "ant.camera|camera"
+local icamera	= ecs.import.interface "ant.camera|icamera"
 
 local irq = ecs.import.interface "ant.render|irenderqueue"
 local mask<const>, offset<const> = math3d.ref(math3d.vector(0.5, 0.5, 1, 1)), math3d.ref(math3d.vector(0.5, 0.5, 0, 0))

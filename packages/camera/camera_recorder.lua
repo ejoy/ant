@@ -7,8 +7,8 @@ local mu = mathpkg.util
 
 local math3d = require "math3d"
 local timer = ecs.import.interface "ant.timer|itimer"
-local icamera = ecs.import.interface "ant.camera|camera"
-local iom = ecs.import.interface "ant.objcontroller|obj_motion"
+local icamera = ecs.import.interface "ant.camera|icamera"
+local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 
 local cr = ecs.interface "icamera_recorder"
 function cr.start(name)

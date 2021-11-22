@@ -2,8 +2,8 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 ecs.require "widget.base_view"
-local icamera     = ecs.import.interface "ant.camera|camera"
-local iom         = ecs.import.interface "ant.objcontroller|obj_motion"
+local icamera     = ecs.import.interface "ant.camera|icamera"
+local iom         = ecs.import.interface "ant.objcontroller|iobj_motion"
 local camera_mgr  = ecs.require "camera_manager"
 local imgui         = require "imgui"
 local utils         = require "common.utils"

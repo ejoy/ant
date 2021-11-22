@@ -1,5 +1,5 @@
 local ecs = ...
-local icamera = ecs.import.interface "ant.camera|camera"
+local icamera = ecs.import.interface "ant.camera|icamera"
 
 local math3d = require "math3d"
 local imgui = require "imgui"

@@ -8,11 +8,11 @@ local viewidmgr = require "viewid_mgr"
 
 local mc 		= import_package "ant.math".constant
 local math3d	= require "math3d"
-local icamera	= ecs.import.interface "ant.camera|camera"
+local icamera	= ecs.import.interface "ant.camera|icamera"
 local ishadow	= ecs.import.interface "ant.render|ishadow"
 local irender	= ecs.import.interface "ant.render|irender"
-local iom		= ecs.import.interface "ant.objcontroller|obj_motion"
-local ilight	= ecs.import.interface "ant.render|light"
+local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
+local ilight	= ecs.import.interface "ant.render|ilight"
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
 

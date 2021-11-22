@@ -6,7 +6,7 @@ local geometry_drawer = import_package "ant.geometry".drawer
 local setting		= import_package "ant.settings".setting
 
 local ies = ecs.import.interface "ant.scene|ifilter_state"
-local iom = ecs.import.interface "ant.objcontroller|obj_motion"
+local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 local imesh=ecs.import.interface "ant.asset|imesh"
 local bgfx = require "bgfx"
 local math3d = require "math3d"

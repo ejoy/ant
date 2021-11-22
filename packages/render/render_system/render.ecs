@@ -165,7 +165,7 @@ interface "irender"
 
 interface "irenderqueue"
     .implement "render_system/renderqueue.lua"
-    .require_interface "ant.camera|camera"
+    .require_interface "ant.camera|icamera"
     .method "viewid"
     .method "clear_state"
     .method "view_rect"

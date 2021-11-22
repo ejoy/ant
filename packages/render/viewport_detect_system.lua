@@ -9,7 +9,7 @@ local graphic_setting = setting:data().graphic
 
 local vp_detect_sys = ecs.system "viewport_detect_system"
 
-local icamera	= ecs.import.interface "ant.camera|camera"
+local icamera	= ecs.import.interface "ant.camera|icamera"
 local irq		= ecs.import.interface "ant.render|irenderqueue"
 local eventResize = world:sub {"resize"}
 local fb_cache, rb_cache

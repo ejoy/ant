@@ -15,10 +15,10 @@ local mathpkg   = import_package "ant.math"
 local mc        = mathpkg.constant
 
 local irender   = ecs.import.interface "ant.render|irender"
-local icamera   = ecs.import.interface "ant.camera|camera"
-local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
+local icamera   = ecs.import.interface "ant.camera|icamera"
+local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local ientity   = ecs.import.interface "ant.render|entity"
+local ientity   = ecs.import.interface "ant.render|ientity"
 local auto_hm_sys = ecs.system "auto_heightmap_system"
 local depthmaterial
 

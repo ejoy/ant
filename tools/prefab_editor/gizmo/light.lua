@@ -3,9 +3,9 @@ local world = ecs.world
 local w = world.w
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local computil  = ecs.import.interface "ant.render|entity"
-local ilight    = ecs.import.interface "ant.render|light"
-local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
+local computil  = ecs.import.interface "ant.render|ientity"
+local ilight    = ecs.import.interface "ant.render|ilight"
+local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local ies       = ecs.import.interface "ant.scene|ifilter_state"
 local geo_utils = ecs.require "editor.geometry_utils"
 

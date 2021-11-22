@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 ecs.require "widget.base_view"
-local iom           = ecs.import.interface "ant.objcontroller|obj_motion"
+local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local imaterial     = ecs.import.interface "ant.asset|imaterial"
 local prefab_mgr    = ecs.require "prefab_manager"
 local anim_view     = ecs.require "widget.animation_view"

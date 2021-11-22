@@ -13,7 +13,7 @@ local screen_ratio=setting:get "graphic/framebuffer/ratio" or 1.0
 local ServiceRmlUi = ltask.spawn "ant.rmlui|rmlui"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 local rmlui_sys = ecs.system "rmlui_system"
-local iRmlUi = ecs.interface "rmlui"
+local iRmlUi = ecs.interface "irmlui"
 
 local ui_viewid<const> = viewidmgr.get "uiruntime"
 

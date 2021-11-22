@@ -3,9 +3,9 @@ local world = ecs.world
 local w = world.w
 local math3d    = require "math3d"
 
-local icamera   = ecs.import.interface "ant.camera|camera"
+local icamera   = ecs.import.interface "ant.camera|icamera"
 local irender   = ecs.import.interface "ant.render|irender"
-local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
+local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 
 local svs = ecs.system "splitviews_system"

@@ -73,7 +73,7 @@ local w     = world.w
 --     --TODO: we just blit this buffer to resolve msaa, if we need sample this buffer to generate other info, like velocity buffer(for motion blur)
 
 --     local imesh = ecs.import.interface"ant.asset|imesh"
---     local ientity = ecs.import.interface "ant.render|entity"
+--     local ientity = ecs.import.interface "ant.render|ientity"
 --     w:register {name="copy_scene"}
 --     ecs.create_entity{
 --         policy = {

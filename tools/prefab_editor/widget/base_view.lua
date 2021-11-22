@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 
 local prefab_mgr    = ecs.require "prefab_manager"
-local iom           = ecs.import.interface "ant.objcontroller|obj_motion"
+local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local gizmo         = ecs.require "gizmo.gizmo"
 
 local utils         = require "common.utils"

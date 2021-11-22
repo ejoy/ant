@@ -6,7 +6,7 @@ system "state_machine_system"
     .require_interface "ant.timer|itimer"
     .method "animation_state"
 
-interface "animation"
+interface "ianimation"
     .implement "controller/state_machine.lua"
     .require_interface "ant.timer|itimer"
     .method "play"

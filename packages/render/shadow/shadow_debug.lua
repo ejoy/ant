@@ -10,11 +10,11 @@ local mu, mc    = mathpkg.util, mathpkg.constant
 
 local math3d    = require "math3d"
 
-local ientity   = ecs.import.interface "ant.render|entity"
-local ilight	= ecs.import.interface "ant.render|light"
+local ientity   = ecs.import.interface "ant.render|ientity"
+local ilight	= ecs.import.interface "ant.render|ilight"
 local ishadow	= ecs.import.interface "ant.render|ishadow"
-local icamera	= ecs.import.interface "ant.camera|camera"
-local iom		= ecs.import.interface "ant.objcontroller|obj_motion"
+local icamera	= ecs.import.interface "ant.camera|icamera"
+local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
 
 local shadowdbg_sys = ecs.system "shadow_debug_system"
 

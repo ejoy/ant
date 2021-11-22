@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local ilight    = ecs.import.interface "ant.render|light"
+local ilight    = ecs.import.interface "ant.render|ilight"
 local light_gizmo = ecs.require "gizmo.light"
 local gizmo = ecs.require "gizmo.gizmo"
 ecs.require "widget.base_view"

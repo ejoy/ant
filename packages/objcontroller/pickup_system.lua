@@ -12,7 +12,7 @@ local fbmgr 	= renderpkg.fbmgr
 local samplerutil= renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
 
-local icamera	= ecs.import.interface "ant.camera|camera"
+local icamera	= ecs.import.interface "ant.camera|icamera"
 local irender   = ecs.import.interface "ant.render|irender"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 

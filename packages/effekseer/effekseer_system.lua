@@ -176,14 +176,14 @@ local function main_camera_ref()
 end
 
 function effekseer_sys:camera_usage()
-    local icamera = ecs.import.interface "ant.camera|camera"
+    local icamera = ecs.import.interface "ant.camera|icamera"
     local c = icamera.find_camera(main_camera_ref())
     if c then
         effekseer.update_view_proj(math3d.value_ptr(c.viewmat), math3d.value_ptr(c.projmat))
     end
 end
 
-local iom = ecs.import.interface "ant.objcontroller|obj_motion"
+local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 local event_entity_register = world:sub{"entity_register"}
 local event_play_effect = world:sub{"play_effect"}
 local event_do_play = world:sub{"do_play"}

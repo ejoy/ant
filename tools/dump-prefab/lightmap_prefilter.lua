@@ -36,7 +36,7 @@ local function prefilter(respath)
 
             local function is_animation_obj(e)
                 for _, p in ipairs(e.policy) do
-                    return p:match "ant.animation|animation" ~= nil
+                    return p:match "ant.animation|ianimation" ~= nil
                 end
             end
 

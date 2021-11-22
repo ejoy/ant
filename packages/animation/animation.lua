@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 
 local assetmgr 		= import_package "ant.asset"
-local iom 			= ecs.import.interface "ant.objcontroller|obj_motion"
+local iom 			= ecs.import.interface "ant.objcontroller|iobj_motion"
 local animodule 	= require "hierarchy".animation
 
 
@@ -78,7 +78,7 @@ local function process_keyframe_event(task)
 	end
 end
 
-local iani = ecs.import.interface "ant.animation|animation"
+local iani = ecs.import.interface "ant.animation|ianimation"
 
 local function do_animation(poseresult, e, delta_time)
 	local task = e._animation._current

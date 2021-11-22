@@ -1,7 +1,7 @@
 local ecs = ...
 local math3d    = require "math3d"
 
-local ientity = ecs.import.interface "ant.render|entity"
+local ientity = ecs.import.interface "ant.render|ientity"
 local imesh = ecs.import.interface "ant.asset|imesh"
 
 local char_ik_test_sys = ecs.system "character_ik_test_system"

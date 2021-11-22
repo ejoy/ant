@@ -8,11 +8,11 @@ local fbmgr     = renderpkg.fbmgr
 local viewidmgr = renderpkg.viewidmgr
 local samplerutil=renderpkg.sampler
 
-local ilight    = ecs.import.interface "ant.render|light"
-local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
+local ilight    = ecs.import.interface "ant.render|ilight"
+local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local imesh     = ecs.import.interface "ant.asset|imesh"
-local ientity   = ecs.import.interface "ant.render|entity"
+local ientity   = ecs.import.interface "ant.render|ientity"
 local irender   = ecs.import.interface "ant.render|irender"
 
 local bgfx      = require "bgfx"

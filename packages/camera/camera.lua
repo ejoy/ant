@@ -7,7 +7,7 @@ local math3d    = require "math3d"
 local mc        = import_package "ant.math".constant
 local defcomp 	= import_package "ant.general".default
 
-local ic = ecs.interface "camera"
+local ic = ecs.interface "icamera"
 
 local function find_camera(camera_ref)
     w:sync("camera:in", camera_ref)
@@ -61,7 +61,7 @@ function ic.create(info)
     return ecs.create_entity {
         policy = {
             "ant.general|name",
-            "ant.camera|camera",
+            "ant.camera|icamera",
         },
         data = {
             camera = {
@@ -162,7 +162,7 @@ function ic.set_frustum_far(cameraref, f)
     frustum_changed(cameraref, "f", f)
 end
 
-local iom = ecs.import.interface "ant.objcontroller|obj_motion"
+local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 function ic.lookto(cameraref, ...)
     iom.lookto(cameraref, ...)
 end

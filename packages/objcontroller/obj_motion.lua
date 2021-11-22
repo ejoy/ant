@@ -5,8 +5,8 @@ local math3d = require "math3d"
 local mu     = import_package "ant.math".util
 local mc     = import_package "ant.math".constant
 
-local iobj_motion = ecs.interface "obj_motion"
-local icamera = ecs.import.interface "ant.camera|camera"
+local iobj_motion = ecs.interface "iobj_motion"
+local icamera = ecs.import.interface "ant.camera|icamera"
 
 local function get_scene(e)
     w:sync("scene:in", e)

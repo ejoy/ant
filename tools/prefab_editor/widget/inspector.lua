@@ -2,9 +2,9 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local iom           = ecs.import.interface "ant.objcontroller|obj_motion"
-local icamera       = ecs.import.interface "ant.camera|camera"
-local ilight        = ecs.import.interface "ant.render|light"
+local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
+local icamera       = ecs.import.interface "ant.camera|icamera"
+local ilight        = ecs.import.interface "ant.render|ilight"
 local camera_mgr    = ecs.require "camera_manager"
 local gizmo         = ecs.require "gizmo.gizmo"
 local light_gizmo   = ecs.require "gizmo.light"

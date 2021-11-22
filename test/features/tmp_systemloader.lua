@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 local math3d = require "math3d"
 
-local ientity = ecs.import.interface "ant.render|entity"
+local ientity = ecs.import.interface "ant.render|ientity"
 local ies = ecs.import.interface "ant.scene|ifilter_state"
 local init_loader_sys = ecs.system 'init_loader_system'
 local imaterial = ecs.import.interface "ant.asset|imaterial"
@@ -15,8 +15,8 @@ local mc, mu = mathpkg.constant, mathpkg.util
 local camerapkg = import_package"ant.camera"
 local split_frustum = camerapkg.split_frustum
 
-local icamera = ecs.import.interface "ant.camera|camera"
-local iom = ecs.import.interface "ant.objcontroller|obj_motion"
+local icamera = ecs.import.interface "ant.camera|icamera"
+local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 
 local function find_entity(name, whichtype)
     for _, eid in world:each(whichtype) do

@@ -2,8 +2,8 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local iom = ecs.import.interface "ant.objcontroller|obj_motion"
-local icamera = ecs.import.interface "ant.camera|camera"
+local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
+local icamera = ecs.import.interface "ant.camera|icamera"
 local assetmgr  = import_package "ant.asset"
 local icons = require "common.icons"(assetmgr)
 local gizmo = ecs.require "gizmo.gizmo"

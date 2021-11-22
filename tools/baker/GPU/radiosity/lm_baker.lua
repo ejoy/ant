@@ -10,7 +10,7 @@ local math3d = require "math3d"
 local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
 
-local iom = ecs.import.interface "ant.objcontroller|obj_motion"
+local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 
 local lm_baker = ecs.system "lightmap_baker_system"
 

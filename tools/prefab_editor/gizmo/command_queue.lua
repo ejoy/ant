@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local iom = ecs.import.interface "ant.objcontroller|obj_motion"
+local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 local gizmo = ecs.require "gizmo.gizmo"
 local queue = require "queue"
 local gizmo_const = require "gizmo.const"

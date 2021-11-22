@@ -4,7 +4,7 @@ local w = world.w
 
 local rhwi      = import_package "ant.hwi"
 
-local icamera = ecs.import.interface "ant.camera|camera"
+local icamera = ecs.import.interface "ant.camera|icamera"
 
 local icc = ecs.interface "icamera_controller"
 
@@ -19,7 +19,7 @@ end
 
 local cc_sys = ecs.system "camera_controller_system"
 
-local iom = ecs.import.interface "ant.objcontroller|obj_motion"
+local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 local mouse_events = {
 	world:sub {"mouse", "LEFT"},
 	world:sub {"mouse", "RIGHT"}

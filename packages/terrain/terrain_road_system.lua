@@ -4,7 +4,7 @@ local w     = world.w
 
 
 local ist   = ecs.import.interface "ant.terrain|ishape_terrain"
-local iom   = ecs.import.interface "ant.objcontroller|obj_motion"
+local iom   = ecs.import.interface "ant.objcontroller|iobj_motion"
 
 local mathpkg=import_package "ant.math"
 local mc    = mathpkg.constant

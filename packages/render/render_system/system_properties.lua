@@ -8,11 +8,11 @@ local bgfx		= require "bgfx"
 
 
 local mc		= import_package "ant.math".constant
-local iom		= ecs.import.interface "ant.objcontroller|obj_motion"
+local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
 local ishadow	= ecs.import.interface "ant.render|ishadow"
-local ilight	= ecs.import.interface "ant.render|light"
+local ilight	= ecs.import.interface "ant.render|ilight"
 local itimer	= ecs.import.interface "ant.timer|itimer"
-local icamera	= ecs.import.interface "ant.camera|camera"
+local icamera	= ecs.import.interface "ant.camera|icamera"
 local iibl		= ecs.import.interface "ant.render.ibl|iibl"
 local isp = ecs.interface "isystem_properties"
 

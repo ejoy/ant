@@ -4,7 +4,7 @@ local w = world.w
 
 local bgfx = require "bgfx"
 local fbmgr = require "framebuffer_mgr"
-local icamera = ecs.import.interface "ant.camera|camera"
+local icamera = ecs.import.interface "ant.camera|icamera"
 local irq = ecs.interface "irenderqueue"
 
 local function get_rt(queuename)

@@ -5,7 +5,7 @@ local w = world.w
 local declmgr	= require "vertexdecl_mgr"
 local math3d	= require "math3d"
 local bgfx		= require "bgfx"
-local iom		= ecs.import.interface "ant.objcontroller|obj_motion"
+local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
 local ies		= ecs.import.interface "ant.scene|ifilter_state"
 
 local setting	= import_package "ant.settings".setting
@@ -35,7 +35,7 @@ local function isChanged()
 	--TODO state
 end
 
-local ilight = ecs.interface "light"
+local ilight = ecs.interface "ilight"
 
 function ilight.create(light)
 	local template = {

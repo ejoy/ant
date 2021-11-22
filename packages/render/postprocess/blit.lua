@@ -8,7 +8,7 @@ local mu 		= mathpkg.util
 local viewidmgr = require "viewid_mgr"
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local ientity 	= ecs.import.interface "ant.render|entity"
+local ientity 	= ecs.import.interface "ant.render|ientity"
 local irq		= ecs.import.interface "ant.render|irenderqueue"
 local irender	= ecs.import.interface "ant.render|irender"
 local imesh		= ecs.import.interface "ant.asset|imesh"

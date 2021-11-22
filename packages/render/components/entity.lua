@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local ientity 	= ecs.interface "entity"
+local ientity 	= ecs.interface "ientity"
 local declmgr   = require "vertexdecl_mgr"
 local math3d    = require "math3d"
 local hwi		= import_package "ant.hwi"

@@ -10,8 +10,8 @@ local mc        = mathpkg.constant
 local effekseer_filename_mgr = ecs.import.interface "ant.effekseer|filename_mgr"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 local ies       = ecs.import.interface "ant.scene|ifilter_state"
-local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
-local icoll     = ecs.import.interface "ant.collision|collider"
+local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
+local icoll     = ecs.import.interface "ant.collision|icollider"
 local drawer    = ecs.import.interface "ant.render|iwidget_drawer"
 local isp 		= ecs.import.interface "ant.render|isystem_properties"
 local iwd       = ecs.import.interface "ant.render|iwidget_drawer"
@@ -216,7 +216,7 @@ local function show_dock_space(offset_x, offset_y)
     imgui.windows.End()
     return x,y,w,h
 end
-local iRmlUi    = ecs.import.interface "ant.rmlui|rmlui"
+local iRmlUi    = ecs.import.interface "ant.rmlui|irmlui"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 local bgfx      = require "bgfx"
 local stat_window
@@ -267,7 +267,7 @@ function m:ui_update()
     end
 
     if not stat_window then
-        local iRmlUi = ecs.import.interface "ant.rmlui|rmlui"
+        local iRmlUi = ecs.import.interface "ant.rmlui|irmlui"
         stat_window = iRmlUi.open "bgfx_stat.rml"
     end
     local bgfxstat = bgfx.get_stats("sdcpnmtv")

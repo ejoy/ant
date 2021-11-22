@@ -3,10 +3,10 @@ local world = ecs.world
 local w = world.w
 
 local constant 	= import_package "ant.math".constant
-local ientity 	= ecs.import.interface "ant.render|entity"
-local iom 		= ecs.import.interface "ant.objcontroller|obj_motion"
+local ientity 	= ecs.import.interface "ant.render|ientity"
+local iom 		= ecs.import.interface "ant.objcontroller|iobj_motion"
 local ies 		= ecs.import.interface "ant.scene|ifilter_state"
-local ilight 	= ecs.import.interface "ant.render|light"
+local ilight 	= ecs.import.interface "ant.render|ilight"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local irq		= ecs.import.interface "ant.render|irenderqueue"
 

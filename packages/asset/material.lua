@@ -224,7 +224,7 @@ local function generate_properties(fx, properties)
 	local setting = fx.setting
 	if setting.lighting == "on" then
 		new_properties = new_properties or {}
-		local ilight = ecs.import.interface "ant.render|light"
+		local ilight = ecs.import.interface "ant.render|ilight"
 
 		local buffer_names = {"b_light_info"}
 		if ilight.use_cluster_shading() then

@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 local math3d = require "math3d"
 
-local iom = ecs.import.interface "ant.objcontroller|obj_motion"
+local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 
 local cc_sys = ecs.system "default_camera_controller"
 

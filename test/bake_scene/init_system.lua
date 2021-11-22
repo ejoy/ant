@@ -4,8 +4,8 @@ local w = world.w
 
 local math3d    = require "math3d"
 
-local ientity   = ecs.import.interface "ant.render|entity"
-local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
+local ientity   = ecs.import.interface "ant.render|ientity"
+local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local is = ecs.system "init_system"
 
 function is:init()

@@ -130,7 +130,7 @@ function state_machine_sys:animation_state()
 	--end
 end
 
-local iani = ecs.interface "animation"
+local iani = ecs.interface "ianimation"
 
 local EditMode = false
 function iani.set_edit_mode(b)

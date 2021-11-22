@@ -11,7 +11,7 @@ local graphic_setting=settingdata.graphic
 
 
 local default	= import_package "ant.general".default
-local icamera	= ecs.import.interface "ant.camera|camera"
+local icamera	= ecs.import.interface "ant.camera|icamera"
 local irender	= ecs.import.interface "ant.render|irender"
 
 local fr_sys = ecs.system "forward_render_system"

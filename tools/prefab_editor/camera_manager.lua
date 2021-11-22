@@ -2,8 +2,8 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local iom         = ecs.import.interface "ant.objcontroller|obj_motion"
-local icamera     = ecs.import.interface "ant.camera|camera"
+local iom         = ecs.import.interface "ant.objcontroller|iobj_motion"
+local icamera     = ecs.import.interface "ant.camera|icamera"
 local imaterial   = ecs.import.interface "ant.asset|imaterial"
 local ies         = ecs.import.interface "ant.scene|ifilter_state"
 local irq         = ecs.import.interface "ant.render|irenderqueue"

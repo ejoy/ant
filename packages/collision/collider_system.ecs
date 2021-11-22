@@ -6,7 +6,7 @@ system "collider_system"
     .method "entity_init"
     .method "entity_remove"
 
-interface "collider"
+interface "icollider"
     .implement "collider_system.lua"
     .require_system "collider_system"
     .method "raycast"

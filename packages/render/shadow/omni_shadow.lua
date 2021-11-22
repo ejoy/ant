@@ -24,11 +24,11 @@ local shadowcommon  = require "shadow.common"
 
 local math3d        = require "math3d"
 
-local iom       = ecs.import.interface "ant.objcontroller|obj_motion"
-local icamera   = ecs.import.interface "ant.camera|camera"
+local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
+local icamera   = ecs.import.interface "ant.camera|icamera"
 local ies       = ecs.import.interface "ant.scene|ifilter_state"
-local ilight    = ecs.import.interface "ant.render|light"
-local ientity   = ecs.import.interface "ant.render|entity"
+local ilight    = ecs.import.interface "ant.render|ilight"
+local ientity   = ecs.import.interface "ant.render|ientity"
 
 local function get_render_buffers(width, height)
     return fbmgr.create_rb{

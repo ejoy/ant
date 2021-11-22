@@ -1,4 +1,4 @@
-interface "light"
+interface "ilight"
     .implement "light/light.lua"
     .method "create"
     .method "data"

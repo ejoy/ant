@@ -10,7 +10,7 @@ local fbmgr     = require "framebuffer_mgr"
 local sampler   = require "sampler"
 
 local tm_sys    = ecs.system "tonemapping_system"
-local ientity   = ecs.import.interface "ant.render|entity"
+local ientity   = ecs.import.interface "ant.render|ientity"
 local irender   = ecs.import.interface "ant.render|irender"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 local imaterial = ecs.import.interface "ant.asset|imaterial"

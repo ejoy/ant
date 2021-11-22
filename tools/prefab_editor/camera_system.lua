@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local iom		= ecs.import.interface "ant.objcontroller|obj_motion"
+local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
 local irq		= ecs.import.interface "ant.render|irenderqueue"
 local camera_mgr= ecs.require "camera_manager"
 local math3d	= require "math3d"
@@ -78,7 +78,7 @@ local PAN_LEFT = false
 local PAN_RIGHT = false
 local ZOOM_FORWARD = false
 local ZOOM_BACK = false
-local icamera = ecs.import.interface "ant.camera|camera"
+local icamera = ecs.import.interface "ant.camera|icamera"
 local function update_second_view_camera()
     if not camera_mgr.second_camera then return end
     -- local rc = world[camera_mgr.second_camera]._rendercache
