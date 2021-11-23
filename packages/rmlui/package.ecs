@@ -14,7 +14,7 @@ system "rmlui_system"
     .method "exit"
 
 
-interface "rmlui"
+interface "irmlui"
     .implement "rmlui_system.lua"
     .method "preload_dir"
     .method "debugger"
