@@ -219,7 +219,8 @@ local starttime = itimer.current()
 
 local function update_timer_properties()
 	local t = system_properties["u_time"]
-	t.v = math3d.set_index(t, 1, itimer.current()-starttime, itimer.delta())
+	local timepassed = itimer.current()-starttime
+	t.v = math3d.set_index(t, 1, timepassed*0.001, itimer.delta()*0.001)
 end
 
 function isp.properties()

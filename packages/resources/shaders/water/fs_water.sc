@@ -37,7 +37,7 @@ uniform vec4 u_direciontal_light_color;
 void main()
 {
 	// Calculation of the UV with the UV motion sampler
-	vec2 uv_offset 			= u_uv_direction * u_current_time * 0.001;
+	vec2 uv_offset 			= u_uv_direction * u_current_time;
 	vec2 uv_sampler_uv 		= v_texcoord0 * u_uv_scale + uv_offset;
 	vec2 uv_sampler_uv_offset = u_uv_shifting_strength * texture2D(s_dudv, uv_sampler_uv).rg * 2.0 - 1.0;
 	vec2 uv 				= v_texcoord0 + uv_sampler_uv_offset;

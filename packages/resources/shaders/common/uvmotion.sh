@@ -6,7 +6,7 @@ uniform vec4 u_uvmotion_speed;
 
 vec2 uv_motion(vec2 uv)
 {
-    float second = u_current_time / 1000.0;
+    float second = u_current_time;
     return uv + u_uvmotion_speed.xy * second;
 }
 
