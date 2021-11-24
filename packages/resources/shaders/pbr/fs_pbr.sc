@@ -151,6 +151,9 @@ void main()
 #endif //ALPHAMODE_MASK
 
 #ifdef MATERIAL_UNLIT
+#ifdef HAS_EMISSIVE_TEXTURE
+    basecolor.rgb += texture2D(s_emissive, uv).rgb * u_emissive_factor.rgb;
+#endif
     gl_FragColor = basecolor;
     return;
 #endif
