@@ -266,6 +266,12 @@ function world:create_object(inner_proxy)
     function inner_proxy:detach()
         w:pub {"object_detach", prefab}
     end
+    function outer_proxy:remove()
+        w:pub {"object_remove", prefab}
+    end
+    function inner_proxy:remove()
+        w:pub {"object_remove", prefab}
+    end
 
     local proxy = {}
     local proxy_mt = { __index = proxy, __newindex = proxy }

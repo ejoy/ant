@@ -6,6 +6,10 @@ local m = ecs.system "prefab_system"
 
 local evObjectMessage = world:sub {"object_message"}
 local evObjectDetach  = world:sub {"object_detach"}
+local evObjectRemove  = world:sub {"object_remove"}
+
+local evPrefabDetach  = world:sub {"prefab_system", "detach"}
+local evPrefabRemove  = world:sub {"prefab_system", "remove"}
 
 local function isValidReference(reference)
     return reference[1] ~= nil
@@ -23,6 +27,12 @@ function m:entity_ready()
         v:on_ready()
     end
     w:clear "on_ready"
+    for _, prefab in evObjectDetach:unpack() do
+        world:pub{"prefab_system", "detach", prefab}
+    end
+    for _, prefab in evObjectRemove:unpack() do
+        world:pub{"prefab_system", "remove", prefab}
+    end
 end
 
 function m:data_changed()
@@ -36,10 +46,21 @@ function m:data_changed()
 end
 
 function m:entity_remove()
-    for _, prefab in evObjectDetach:unpack() do
+    for _, _, prefab in evPrefabDetach:unpack() do
         if isValidReference(prefab) then
             w:sync("prefab:in", prefab)
             world:detach_instance(prefab.prefab)
+            w:remove(prefab)
+        end
+    end
+    for _, _, prefab in evPrefabRemove:unpack() do
+        if isValidReference(prefab) then
+            w:sync("prefab:in", prefab)
+            local instance = prefab.prefab
+            w:remove(instance.root)
+            for _, entity in ipairs(instance.tag["*"]) do
+                w:remove(entity)
+            end
             w:remove(prefab)
         end
     end

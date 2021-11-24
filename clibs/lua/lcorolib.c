@@ -16,6 +16,8 @@
 
 #include "lauxlib.h"
 #include "lualib.h"
+#include "lstate.h"
+#include "ldo.h"
 
 
 static lua_State *getco (lua_State *L) {
@@ -76,7 +78,9 @@ static int luaB_auxwrap (lua_State *L) {
   if (l_unlikely(r < 0)) {  /* error? */
     int stat = lua_status(co);
     if (stat != LUA_OK && stat != LUA_YIELD) {  /* error in the coroutine? */
+      luai_threadcall(co, L);
       stat = lua_resetthread(co);  /* close its tbc variables */
+      luai_threadret(L, co);
       lua_assert(stat != LUA_OK);
       lua_xmove(co, L, 1);  /* copy error message */
     }
@@ -172,7 +176,9 @@ static int luaB_close (lua_State *L) {
   int status = auxstatus(L, co);
   switch (status) {
     case COS_DEAD: case COS_YIELD: {
+      luai_threadcall(co, L);
       status = lua_resetthread(co);
+      luai_threadret(L, co);
       if (status == LUA_OK) {
         lua_pushboolean(L, 1);
         return 1;
