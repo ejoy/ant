@@ -22,15 +22,21 @@
 #   define OUTPUT_COLOR0
 #endif //WITH_COLOR_ATTRIB
 
-#ifdef CALC_TBN
-#   define INPUT_TANGENT
-#   define OUTPUT_TANGENT
-#   define OUTPUT_BITANGENT
-#else //!CALC_TBN
+#ifndef WITH_TANGENT_ATTRIB
+#if !(defined(CALC_TBN) || defined(WITHOUT_TANGENT_ATTRIB))
+#define WITH_TANGENT_ATTRIB 1
+#endif 
+#endif //!WITH_TANGENT_ATTRIB
+
+#ifdef WITH_TANGENT_ATTRIB
 #   define INPUT_TANGENT    a_tangent
 #   define OUTPUT_TANGENT   v_tangent
 #   define OUTPUT_BITANGENT v_bitangent
-#endif//CALC_TBN
+#else //!WITH_TANGENT_ATTRIB
+#   define INPUT_TANGENT
+#   define OUTPUT_TANGENT
+#   define OUTPUT_BITANGENT
+#endif//WITH_TANGENT_ATTRIB
 
 #if defined(USING_LIGHTMAP)
 #   define INPUT_LIGHTMAP_TEXCOORD      a_texcoord1

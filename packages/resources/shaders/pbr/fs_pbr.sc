@@ -160,10 +160,10 @@ void main()
 
     vec3 V = normalize(u_eyepos.xyz - v_posWS.xyz);
 
-#ifdef CALC_TBN
-    vec3 N = get_normal_by_tbn(tbn_from_world_pos(v_normal, v_posWS.xyz, uv), v_normal, uv);
-#else //!CALC_TBN
+#ifdef WITH_TANGENT_ATTRIB
     vec3 N = get_normal(v_tangent, v_bitangent, v_normal, uv);
+#else //!CALC_TBN
+    vec3 N = get_normal_by_tbn(tbn_from_world_pos(v_normal, v_posWS.xyz, uv), v_normal, uv);
 #endif //CALC_TBN
 
     material_info mi = get_material_info(basecolor.rgb, uv);

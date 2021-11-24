@@ -30,7 +30,7 @@ void main()
 #endif //WITH_COLOR_ATTRIB
 	//TODO: normal and tangent should use inverse transpose matrix
 	v_normal	= normalize(mul(wm, vec4(a_normal, 0.0)).xyz);
-#ifndef CALC_TBN
+#ifdef WITH_TANGENT_ATTRIB
 	v_tangent	= normalize(mul(wm, vec4(a_tangent, 0.0)).xyz);
 	v_bitangent	= cross(v_normal, v_tangent);	//left hand
 #endif //CALC_TBN
