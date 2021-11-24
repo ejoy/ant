@@ -353,7 +353,7 @@ local function create_quad_ib(num_quad)
     return bgfx.create_index_buffer(bgfx.memory_buffer("w", b))
 end
 
-local quad_ib_num<const> = 512
+local quad_ib_num<const> = 2048
 local ibhandle = create_quad_ib(quad_ib_num)
 function irender.quad_ib()
 	return ibhandle

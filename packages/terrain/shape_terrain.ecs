@@ -30,3 +30,22 @@ policy "shape_terrain"
     .require_interface "ant.terrain|iterrain_road"
     .component "shape_terrain"
     .component "materials"
+
+-- quad_strip
+component "quad_strip".type "lua"
+policy "quad_strip"
+    .component "quad_strip"
+
+system "quad_strip_system"
+    .implement "quad_strip.lua"
+    .component "component_init"
+
+policy "quad_strip"
+    .require_system "ant.terrain|quad_strip_system"
+    .component "quad_strip"
+    .component "simplemesh"
+
+--indicator
+system "indicator_system"
+    .implement "indicator.lua"
+    .method "data_changed"

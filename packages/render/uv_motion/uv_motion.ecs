@@ -1,0 +1,6 @@
+component "uv_motion".type "lua"
+policy "uv_motion"
+    .component "uv_motion"
+interface "iuv_motion"
+    .implement "uv_motion/uv_motion.lua"
+    .method "set_speed"

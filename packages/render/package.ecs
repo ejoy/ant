@@ -8,5 +8,5 @@ import "postprocess/postprocess.ecs"
 import "shadow/shadow.ecs"
 import "decal/decal.ecs"
 import "polyline/polyline.ecs"
-
+import "uv_motion/uv_motion.ecs"
 import "render_system/lightmap.ecs"

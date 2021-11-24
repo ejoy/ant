@@ -5,23 +5,30 @@ local w     = world.w
 local ist = ecs.import.interface "ant.terrain|ishape_terrain"
 local shape_terrain_test_sys = ecs.system "shape_terrain_test_system"
 
+--from w: [0, 8], h:[0, 8]
+local road_test = {
+    -- " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
+    -- " ", "O2", "I0", "I0", "C2",  " ",  " ",  " ",
+    -- " ",  " ",  " ",  " ", "I1",  " ",  " ",  " ",
+    -- " ",  " ", "O2", "I0", "X0", "I0", "I0", "O0",
+    -- " ",  " ",  " ",  " ", "I1",  " ",  " ",  " ",
+    -- " ",  " ", "C3", "I0", "X0", "I0", "O0",  " ",
+    -- " ",  " ", "C0", "I0", "C1",  " ",  " ",  " ",
+    -- " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
+    " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
+    " ", "O2", "I0", "I0", "O0",  " ",  " ",  " ",
+    " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
+    " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
+    " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
+    " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
+    " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
+    " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
+}
 
 local function build_roads(ww, hh, fields)
     if ww < 8 or hh < 8 then
         error "need at least w>=8 and h>=8 to test road"
     end
-
-    --from w: [0, 8], h:[0, 8]
-    local road_test = {
-         " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
-         " ", "O2", "I0", "I0", "C2",  " ",  " ",  " ",
-         " ",  " ",  " ",  " ", "I1",  " ",  " ",  " ",
-         " ",  " ", "O2", "I0", "X0", "I0", "I0", "O0",
-         " ",  " ",  " ",  " ", "I1",  " ",  " ",  " ",
-         " ",  " ", "C3", "I0", "X0", "I0", "O0",  " ",
-         " ",  " ", "C0", "I0", "C1",  " ",  " ",  " ",
-         " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
-    }
 
     for iih=1, 8 do
         for iiw=1, 8 do
@@ -91,6 +98,120 @@ local function generate_terrain_fields(w, h)
 --     }
 end
 
+local function build_indicator_points()
+    local points = {}
+
+    local anchors = {}
+    local ww, hh = 8, 8
+    assert(#road_test == ww*hh)
+    for iih=1, 8 do
+        for iiw=1, 8 do
+            local idx = (iih-1)*ww+iiw
+            local r = road_test[idx]
+            if r == ' ' then
+                goto continue
+            end
+
+            local anchor = {iiw-0.5, 0.0, iih-0.5}
+
+            local dx, dz = 0.25, 0.25
+            local t, st = r:sub(1, 1), r:sub(2, 2)
+            
+            if t == "O" then
+                --horizontal
+                if st == '1' or st == '3' then
+                    anchors[idx] ={
+                        {anchor[1]-dx, anchor[2], anchor[3]},
+                        {anchor[1]+dx, anchor[2], anchor[3]},
+                    }
+                else
+                    anchors[idx] = {
+                        {anchor[1], anchor[2], anchor[3]-dz},
+                        {anchor[1], anchor[2], anchor[3]+dz},
+                    }
+
+                end
+            elseif t == "I" then
+                if st == "0" then
+                    anchors[idx] = {
+                        {anchor[1]-dx, anchor[2], anchor[3]},
+                        {anchor[1]+dx, anchor[2], anchor[3]},
+                    }
+                else
+                    anchors[idx] = {
+                        {anchor[1], anchor[2], anchor[3]-dz},
+                        {anchor[1], anchor[2], anchor[3]+dz},
+                    }
+                end
+            elseif t == "C" then
+                if st == "0" or st == "3" then
+                    anchors[idx] = {
+                        {anchor[1]-dx, anchor[2], anchor[3]-dz},
+                        {anchor[1]+dx, anchor[2], anchor[3]+dz},
+                    }
+                else
+                    anchors[idx] = {
+                        {anchor[1]+dx, anchor[2], anchor[3]-dz},
+                        {anchor[1]-dx, anchor[2], anchor[3]+dz},
+                    }
+                end
+            elseif t == "X" then
+                anchors[idx] = {
+                    {anchor[1]-dx, anchor[2], anchor[3]-dz},
+                    {anchor[1]+dx, anchor[2], anchor[3]+dz},
+                    {anchor[1]+dx, anchor[2], anchor[3]-dz},
+                    {anchor[1]-dx, anchor[2], anchor[3]+dz},
+                }
+            end
+
+            ::continue::
+        end
+    end
+
+    --[[
+    sub point index:
+        O1/O3: 0 for left, 1 for right
+        O0/O2: 0 for bottom, 1 for top
+
+        I0: 0 for bottom, 1 for top
+        I1: 0 for left, 1 for right
+
+        C0/C3: 0 for leftbottom, 1 for righttop
+        C1/C2: 0 for lefttop, 1 for rightbottom
+
+        X: 0 for leftbottom, 1 for righttop, 2 for rightbottom, 3 for lefttop
+    ]]
+
+    --[[
+        --->x
+        |
+        |
+        z
+        (0, 0) for origin point
+        " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
+        " ", "O2", "I0", "I0", "O0",  " ",  " ",  " ",
+        " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
+        " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
+        " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
+        " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
+        " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
+        " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
+    ]]
+
+    local directions = {
+        10, 0, 11, 0, 12, 0, 13, 0,
+        13, 1, 12, 1, 11, 1, 10, 1,
+    }
+
+    for i=1, #directions, 2 do
+        local aidx, pidx = directions[i], directions[i+1]
+        local anchor = anchors[aidx]
+        points[#points+1] = anchor[pidx]
+    end
+
+    return points
+end
+
 local shape_terrain_test
 
 function shape_terrain_test_sys:init()
@@ -125,6 +246,35 @@ function shape_terrain_test_sys:init()
             materials = {
                 shape = "/pkg/ant.test.features/assets/shape_terrain.material",
                 edge = "/pkg/ant.test.features/assets/shape_terrain_edge.material",
+            }
+        }
+    }
+
+    --indicator test
+
+    local unit = 1
+    ecs.create_entity {
+        policy = {
+            "ant.render|simplerender",
+            "ant.render|uv_motion",
+            "ant.terrain|quad_strip", --in terrain package?
+            "ant.general|name",
+        },
+        data = {
+            quad_strip = {
+                points = build_indicator_points(),
+                normal = {0, 1, 0},
+                width = unit*0.15,
+            },
+            uv_motion = {
+                direction = "forward",
+                speed     = 0.025*unit,
+            },
+            simplemesh = true,
+            material = "/",
+            filter_state = "main_view",
+            scene = {
+                srt = {}
             }
         }
     }
