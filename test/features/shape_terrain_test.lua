@@ -265,17 +265,19 @@ function shape_terrain_test_sys:init()
                 points = build_indicator_points(),
                 normal = {0, 1, 0},
                 width = unit*0.15,
+                color = 0xffffffff,
             },
             uv_motion = {
                 direction = "forward",
                 speed     = 0.025*unit,
             },
             simplemesh = true,
-            material = "/",
+            material = "/pkg/ant.test.features/assets/indicator.material",
             filter_state = "main_view",
             scene = {
                 srt = {}
-            }
+            },
+            name = "indicator_test",
         }
     }
 end

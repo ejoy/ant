@@ -120,6 +120,7 @@ system "font_test_system"
 system "shape_terrain_test_system"
     .implement "shape_terrain_test.lua"
     .require_policy "ant.terrain|shape_terrain"
+    .require_policy "ant.terrain|quad_strip"
     .method "init"
     .method "data_changed"
 

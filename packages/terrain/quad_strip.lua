@@ -21,17 +21,18 @@ local function add_quad(p0, p1, normal, ww, offset, clr, vertices)
     local d = math3d.sub(p1, p0)
     local x = math3d.normalize(math3d.cross(normal, d))
     local pp = {
-        math3d.muladd(x,  ww, p0), 0.0, 0.0,
-        math3d.muladd(x,  ww, p1), 0.0, 1.0,
-        math3d.muladd(x, -ww, p1), 1.0, 1.0,
-        math3d.muladd(x, -ww, p0), 1.0, 0.0,
+        math3d.muladd(x, -ww, p0), 0.0, 0.0,
+        math3d.muladd(x, -ww, p1), 0.0, 1.0,
+        math3d.muladd(x,  ww, p1), 1.0, 1.0,
+        math3d.muladd(x,  ww, p0), 1.0, 0.0,
     }
 
-    for i=1, #pp do
-        local p = pp[i]
-        vertices[offset] = vertexfmt:pack(
-                    math3d.index(p[1], 1, 2, 3),
-                    clr, p[2], p[3])
+    for i=1, #pp, 3 do
+        local p, u, v = pp[i], pp[i+1], pp[i+2]
+        local px, py, pz = math3d.index(p, 1, 2, 3)
+        vertices[offset] = ('fffIff'):pack(
+                    px, py, pz,
+                    clr, u, v)
         offset = offset + stride
     end
 
@@ -41,34 +42,6 @@ end
 
 local qs_sys        = ecs.system "quad_strip_system"
 function qs_sys:component_init()
-    -- for te in w:select "INIT shape_terrain:in reference:in" do
-    --     local points = {}
-
-    --     ecs.create_entity {
-    --         policy = {
-    --             "ant.render|simplerender",
-    --             "ant.render|uv_motion",
-    --             "ant.terrain|quad_strip", --in terrain package?
-    --             "ant.general|name",
-    --         },
-    --         data = {
-    --             quad_strip = {
-    --                 points = points,
-    --             },
-    --             uv_motion = {
-    --                 direction = "forward",
-    --                 speed     = 0.1*st.unit,
-    --             },
-    --             simplemesh = true,
-    --             material = "/",
-    --             filter_state = "main_view",
-    --             scene = {
-    --                 srt = {}
-    --             }
-    --         }
-    --     }
-    -- end
-
     for ie in w:select "INIT quad_strip:in simplemesh:out" do
         local qs = ie.quad_strip
         local points = qs.points
@@ -78,8 +51,8 @@ function qs_sys:component_init()
 
         local numquad = #points-1
         local numv = numquad * 4
-        local vertices = bgfx.memory(numv*stride)
-        local offset = 0
+        local vertices = bgfx.memory_buffer(numv*stride)
+        local offset = 1
         local clr = qs.color
         for i=1, numquad do
             local p0 = points[i]
@@ -94,9 +67,9 @@ function qs_sys:component_init()
         ie.simplemesh = imesh.init_mesh{
             vb = {
                 start = 0,
-                num = #vertices // 6,
+                num = numv,
                 {
-                    handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(vertices), layout.handle),
+                    handle = bgfx.create_vertex_buffer(vertices, layout.handle),
                 }
             },
             ib = {
