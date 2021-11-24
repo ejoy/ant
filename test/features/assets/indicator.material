@@ -4,23 +4,27 @@ fx:
   setting:
     MATERIAL_UNLIT: 1
     UV_MOTION: 1
+    WITHOUT_TANGENT_ATTRIB: 1
+    WITH_COLOR_ATTRIB: 1
     HAS_BASECOLOR_TEXTURE: 1
+    surfacetype: background
+    lighting: off
     #HAS_EMISSIVE_TEXTURE: 1
 properties:
   s_basecolor:
     stage: 0
-    #texture: /pkg/ant.test.features/assets/textures/indicator/arrow_basecolor.texture
-    texture: /pkg/ant.resources/textures/white.texture
+    texture: /pkg/ant.test.features/assets/textures/indicator/arrow_basecolor.texture
   # s_emissive:
   #   stage: 3
   #   texture: /pkg/ant.test.features/assets//textures/indicator/arrow_emissive.texture
   u_pbr_factor: {1, 1, 0, 0}  #metallic, roughness, alpha_cutoff, occlusion strength
   u_emissive_factor: {1.1, 1.1, 2.5, 0}
-  u_basecolor_factor: {1, 1, 1, 1}
+  u_basecolor_factor: {10, 10, 10, 1}
   u_uvmotion_speed: {1.0, 1.0, 0.0, 0.0}
 state:
   ALPHA_REF: 0
   CULL: CCW
-  DEPTH_TEST: LESS
+  DEPTH_TEST: ALWAYS
+  BLEND: ALPHA
   MSAA: true
   WRITE_MASK: RGBA

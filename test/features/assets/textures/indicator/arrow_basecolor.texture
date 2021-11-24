@@ -4,7 +4,7 @@ compress:
   ios: ASTC6x6
   windows: BC1
 normalmap: false
-path: /pkg/ant.resources.binary/textures/indicator/arraow_basecolor.png
+path: /pkg/ant.resources.binary/textures/indicator/arrow_basecolor.png
 sampler:
   MAG: LINEAR
   MIN: LINEAR

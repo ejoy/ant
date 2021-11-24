@@ -98,7 +98,7 @@ local function generate_terrain_fields(w, h)
 --     }
 end
 
-local function build_indicator_points()
+local function build_indicator_points(height)
     local points = {}
 
     local anchors = {}
@@ -112,7 +112,7 @@ local function build_indicator_points()
                 goto continue
             end
 
-            local anchor = {iiw-0.5, 0.0, iih-0.5}
+            local anchor = {iiw-0.5, height, iih-0.5}
 
             local dx, dz = 0.25, 0.25
             local t, st = r:sub(1, 1), r:sub(2, 2)
@@ -253,6 +253,7 @@ function shape_terrain_test_sys:init()
     --indicator test
 
     local unit = 1
+    local height = 1
     ecs.create_entity {
         policy = {
             "ant.render|simplerender",
@@ -262,7 +263,7 @@ function shape_terrain_test_sys:init()
         },
         data = {
             quad_strip = {
-                points = build_indicator_points(),
+                points = build_indicator_points(height),
                 normal = {0, 1, 0},
                 width = unit*0.15,
                 color = 0xffffffff,
