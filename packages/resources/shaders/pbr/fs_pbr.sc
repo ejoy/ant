@@ -1,6 +1,12 @@
 #include "common/inputs.sh"
 
-$input v_posWS v_normal v_texcoord0 OUTPUT_TANGENT OUTPUT_BITANGENT OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0
+#ifdef MATERIAL_UNLIT
+#define OUTPUT_NORMAL
+#else
+#define OUTPUT_NORMAL v_normal
+#endif 
+
+$input v_posWS v_texcoord0 OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGENT OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0
 
 #include <bgfx_shader.sh>
 #include <bgfx_compute.sh>
@@ -155,9 +161,7 @@ void main()
     basecolor.rgb += texture2D(s_emissive, uv).rgb * u_emissive_factor.rgb;
 #endif
     gl_FragColor = basecolor;
-    return;
-#endif
-
+#else //!MATERIAL_UNLIT
     vec3 V = normalize(u_eyepos.xyz - v_posWS.xyz);
 
 #ifdef WITH_TANGENT_ATTRIB
@@ -235,4 +239,7 @@ void main()
 #endif //ENABLE_IBL
 #endif //USING_LIGHTMAP
     gl_FragColor = vec4(color, basecolor.a);
+#endif //MATERIAL_UNLIT
+
+
 }

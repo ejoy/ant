@@ -1,6 +1,14 @@
 #include "common/inputs.sh"
-$input 	a_position a_normal a_texcoord0 INPUT_TANGENT INPUT_LIGHTMAP_TEXCOORD INPUT_COLOR0 INPUT_INDICES INPUT_WEIGHT
-$output v_posWS v_normal v_texcoord0 OUTPUT_TANGENT OUTPUT_BITANGENT OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0
+#ifdef MATERIAL_UNLIT
+#define INPUT_NORMAL
+#define OUTPUT_NORMAL
+#else
+#define INPUT_NORMAL a_normal
+#define OUTPUT_NORMAL v_normal
+#endif 
+
+$input 	a_position a_texcoord0 INPUT_NORMAL  INPUT_TANGENT INPUT_LIGHTMAP_TEXCOORD INPUT_COLOR0 INPUT_INDICES INPUT_WEIGHT
+$output v_posWS v_texcoord0 OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGENT OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0
 
 #include <bgfx_shader.sh>
 #include "common/transform.sh"
@@ -28,8 +36,12 @@ void main()
 #ifdef WITH_COLOR_ATTRIB
 	v_color0 = a_color0;
 #endif //WITH_COLOR_ATTRIB
+
+#ifndef MATERIAL_UNLIT
 	//TODO: normal and tangent should use inverse transpose matrix
 	v_normal	= normalize(mul(wm, vec4(a_normal, 0.0)).xyz);
+#endif //MATERIAL_UNLIT
+
 #ifdef WITH_TANGENT_ATTRIB
 	v_tangent	= normalize(mul(wm, vec4(a_tangent, 0.0)).xyz);
 	v_bitangent	= cross(v_normal, v_tangent);	//left hand
