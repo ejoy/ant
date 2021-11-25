@@ -220,11 +220,7 @@ local function create_main_fb(fbsize)
 	end
 
 	render_buffers[#render_buffers+1] = get_depth_buffer()
-	local fb = fbmgr.create(render_buffers)
-
-	print("main queue fb 1:", 0xffff&fbmgr.get_rb(1).handle)
-	print("main queue fb 2:", 0xffff&fbmgr.get_rb(2).handle)
-	return fb
+	return fbmgr.create(render_buffers)
 end
 
 function irender.create_main_queue(vr, camera_ref)
