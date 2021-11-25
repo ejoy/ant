@@ -256,7 +256,8 @@ function shape_terrain_test_sys:init()
     local height = 1
     ecs.create_entity {
         policy = {
-            "ant.render|simplerender",
+            "ant.scene|scene_object",
+            "ant.asset|material",
             "ant.render|uv_motion",
             "ant.terrain|quad_strip", --in terrain package?
             "ant.general|name",
@@ -266,18 +267,16 @@ function shape_terrain_test_sys:init()
                 points = build_indicator_points(height),
                 normal = {0, 1, 0},
                 width = unit*0.15,
-                color = 0xffffffff,
+                color = {3.0, 3.0, 6.0, 1.0},
             },
             uv_motion = {
-                direction = "forward",
                 speed     = 0.025*unit,
             },
-            simplemesh = true,
             material = "/pkg/ant.test.features/assets/indicator.material",
-            filter_state = "main_view",
             scene = {
                 srt = {}
             },
+            reference = true,
             name = "indicator_test",
         }
     }

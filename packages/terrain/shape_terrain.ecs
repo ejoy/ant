@@ -36,11 +36,11 @@ component "quad_strip".type "lua"
 system "quad_strip_system"
     .implement "quad_strip.lua"
     .method "component_init"
+    .method "entity_init"
 
 policy "quad_strip"
     .require_system "ant.terrain|quad_strip_system"
     .component "quad_strip"
-    .component "simplemesh"
 
 --indicator
 system "indicator_system"

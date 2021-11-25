@@ -1,16 +1,13 @@
 $input a_position, a_texcoord0, a_texcoord1, a_texcoord2, a_texcoord3
-$output v_color, v_texcoord0
+$output v_texcoord0
 
 #include <bgfx_shader.sh>
 #include "polyline/polyline.sh"
+#include "common/uvmotion.sh"
 
 #define a_prevpos	a_texcoord2
 #define a_nextpos	a_texcoord3
 
-bool is_2d_point_equal(vec2 p0, vec2 p1){
-	return p0.x == p1.x && p0.y == p1.y;
-}
-	
 void main() {
 	float aspect = u_viewRect.z / u_viewRect.w;
 
@@ -33,7 +30,6 @@ void main() {
 
 	gl_Position = posCS;
 
-	v_color		= u_color;
-	v_uv		= a_texcoord0;
+    v_uv		= uv_motion(a_texcoord0);
 	v_counters	= a_counters;
 }

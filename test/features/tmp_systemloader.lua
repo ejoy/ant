@@ -74,7 +74,7 @@ local icc = ecs.import.interface "ant.test.features|icamera_controller"
 local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
     --point_light_test()
-    --ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
+    ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
     --ientity.create_grid_entity_simple "grid"
 
     -- ecs.create_entity{

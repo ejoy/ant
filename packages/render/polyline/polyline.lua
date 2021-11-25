@@ -188,7 +188,8 @@ local function add_polylines(polymesh, line_width, color, material)
 end
 
 local defcolor<const> = {1.0, 1.0, 1.0, 1.0}
-function ipl.add_strip_lines(points, line_width, color, material)
+
+function ipl.create_linestrip_mesh(points, line_width, color)
     local numpoint = #points
     if numpoint < 2 then
         error(("strip line need at least 2 point:%d"):format(numpoint))
@@ -202,11 +203,15 @@ function ipl.add_strip_lines(points, line_width, color, material)
 
     local numvertex = dyn_stripline_vb:vertices_num(vertices)
 
-    local polymesh = {
+    return {
         ib = strip_ib:alloc(numlines),
         vb = dyn_stripline_vb:alloc(numvertex, vertices),
     }
+end
 
+
+function ipl.add_strip_lines(points, line_width, color, material)
+    local polymesh = ipl.create_linestrip_mesh(points, line_width, color)
     return add_polylines(polymesh, line_width, color, material or "/pkg/ant.resources/materials/polyline.material")
 end
 
@@ -243,7 +248,7 @@ local function generate_linelist_vertices(points)
     return vertices
 end
 
-function ipl.add_linelist(pointlist, line_width, color, material)
+function ipl.create_linelist_mesh(pointlist, line_width, color)
     local numpoint = #pointlist
     if numpoint == 0 or numpoint % 2 ~= 0 then
         error(("privoided point for line's number must multiple of 2: %d"):format(numpoint))
@@ -257,7 +262,7 @@ function ipl.add_linelist(pointlist, line_width, color, material)
 
     local numlines = numpoint / 2
 
-    local polymesh = {
+    return {
         ib = {
             start = 0,
             num = numlines * 2 * 3,
@@ -265,6 +270,9 @@ function ipl.add_linelist(pointlist, line_width, color, material)
         },
         vb = dyn_linelist_vb:alloc(numvertex, vertices),
     }
+end
 
+function ipl.add_linelist(pointlist, line_width, color, material)
+    local polymesh = ipl.create_linelist_mesh(pointlist, line_width, color)
     return add_polylines(polymesh, line_width, color, material or "/pkg/ant.resources/materials/polylinelist.material")
 end

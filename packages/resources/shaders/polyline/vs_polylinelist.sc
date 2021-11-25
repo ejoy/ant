@@ -1,8 +1,9 @@
 $input a_position, a_texcoord0, a_texcoord1, a_texcoord2
-$output v_color, v_texcoord0
+$output v_texcoord0
 
 #include <bgfx_shader.sh>
 #include "polyline/polyline.sh"
+#include "common/uvmotion.sh"
 
 #define a_linedir   a_texcoord2
 
@@ -18,7 +19,6 @@ void main() {
 	posCS.xy += offset * a_side;
 	gl_Position = posCS;
 
-    v_color			= u_color;
-	v_uv			= a_texcoord0;
+	v_uv			= uv_motion(a_texcoord0);
     v_counters		= a_counters;
 }
