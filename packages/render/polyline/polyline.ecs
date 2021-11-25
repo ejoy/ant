@@ -1,14 +1,8 @@
 component "polyline_mark"
 component "polyline".type "lua"
 policy "polyline"
-    .require_system "ant.render|polyline_system"
     .require_interface "ant.render|ipolyline"
     .component "polyline"
-
-system "polyline_system"
-    .implement "polyline/polyline.lua"
-    .method "entity_init"
-    .method "entity_ready"
 
 interface "ipolyline"
     .implement "polyline/polyline.lua"

@@ -4,13 +4,10 @@ local w = world.w
 
 local bgfx = require "bgfx"
 
-local mathpkg = import_package "ant.math"
-local mu = mathpkg.util
-
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local irender   = ecs.import.interface "ant.render|irender"
 
-local ipl = ecs.interface "ipolyline"
+local ipl       = ecs.interface "ipolyline"
 
 --[[
     vertex input desc:{
@@ -130,7 +127,6 @@ end
 local dyn_stripline_vb = create_dynbuffer(1024, "p3|t20|t31|t32|t33")
 local dyn_linelist_vb = create_dynbuffer(1024, "p3|t20|t31|t32")
 
-local polylines = {}
 local function generate_stripline_vertices(points)
     local vertex_elem_num<const> = #dyn_stripline_vb.layout.formatdesc
     local elem_offset = 0
@@ -176,12 +172,18 @@ local function add_polylines(polymesh, line_width, color, material)
                 width = line_width,
                 color = color,
             },
-            scene = {srt=mu.srt_obj()},
+            scene = {srt={}},
             simplemesh  = polymesh,
             material    = material,
             filter_state= "main_view",
             name        = "polyline",
-        }
+            on_ready = function (e)
+                w:sync("polyline:in", e)
+                local pl = e.polyline
+                imaterial.set_property(e, "u_line_info", {pl.width, 0.0, 0.0, 0.0})
+                imaterial.set_property(e, "u_color", pl.color)
+            end
+        },
     }
 end
 
@@ -265,22 +267,4 @@ function ipl.add_linelist(pointlist, line_width, color, material)
     }
 
     return add_polylines(polymesh, line_width, color, material or "/pkg/ant.resources/materials/polylinelist.material")
-end
-
-local pl_sys = ecs.system "polyline_system"
-
-function pl_sys:entity_init()
-    for e in w:select "INIT polyline:in polyline_mark?out" do
-        e.polyline_mark = true
-    end
-end
-
-function pl_sys:entity_ready()
-    for e in w:select "polyline_mark polyline:in material_result:in" do
-        local pl = e.polyline
-        local properties = e.material_result.properties
-        imaterial.set_property_directly(properties, "u_line_info", {pl.width, 0.0, 0.0, 0.0})
-        imaterial.set_property_directly(properties, "u_color", pl.color)
-    end
-    w:clear "polyline_mark"
 end
