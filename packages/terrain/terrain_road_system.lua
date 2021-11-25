@@ -75,6 +75,7 @@ local function instance(rt, parent, iiw, iih, unit)
         local e = prefab.root
         iom.set_srt(e, s, r, t)
         ecs.method.set_parent(e, parent)
+        world:pub {"terrain_road", "on_ready", prefab}
     end
     world:create_object(p)
     return p
