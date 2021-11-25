@@ -7,23 +7,16 @@ $output v_color, v_texcoord0
 #define a_linedir   a_texcoord2
 
 void main() {
-	float aspect 			= u_viewRect.z / u_viewRect.w;
-	float pixelWidthRatio	= 1. / (u_viewRect.z * u_proj[0][0]);
+	float aspect = u_viewRect.z / u_viewRect.w;
 
-	vec4 finalPosition      = mul(u_modelViewProj, vec4(a_position, 1.0));
-	vec4 dir                = mul(u_modelViewProj, vec4(a_linedir, 0.0));
+	vec4 posCS = mul(u_modelViewProj, vec4(a_position, 1.0));
+	vec4 dirCS = mul(u_modelViewProj, vec4(a_linedir, 0.0));
 
-#ifdef FIX_WIDTH
-	float pixelWidth 		= 0.01;
-#else
-	float pixelWidth 		= finalPosition.w * pixelWidthRatio;
-#endif
-	float w                 = 1.8 * pixelWidth * u_line_width * a_width;
+	float w = calc_line_width(posCS.w, a_width);
+	vec2 offset = calc_offset(dirCS.xy, aspect, w);
 
-	vec2 offset = calc_offset(dir.xy, aspect, w);
-
-	finalPosition.xy += offset * a_side;
-	gl_Position = finalPosition;
+	posCS.xy += offset * a_side;
+	gl_Position = posCS;
 
     v_color			= u_color;
 	v_uv			= a_texcoord0;

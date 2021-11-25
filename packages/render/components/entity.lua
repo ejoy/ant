@@ -201,11 +201,12 @@ function ientity.create_grid_entity(name, width, height, unit, linewidth)
 		end
 	end
 
-	ipl.add_linelist(pl, linewidth, {0.8, 0.8, 0.8, 1.0})
+	local c<const> = 4.0
+	ipl.add_linelist(pl, linewidth, {c, c, c, 1.0})
 
 	local centerwidth<const> = linewidth * 2.0
-	ipl.add_linelist({{-hw_len, 0, 0}, {hw_len, 0, 0},}, centerwidth, {1.0, 0.0, 0.0, 1.0})
-	ipl.add_linelist({{0, 0, -hh_len}, {0, 0, hh_len},}, centerwidth, {0.0, 0.0, 1.0, 1.0})
+	ipl.add_linelist({{-hw_len, 0, 0}, {hw_len, 0, 0},}, centerwidth, {c, 0.0, 0.0, 1.0})
+	ipl.add_linelist({{0, 0, -hh_len}, {0, 0, hh_len},}, centerwidth, {0.0, 0.0, c, 1.0})
 end
 
 
