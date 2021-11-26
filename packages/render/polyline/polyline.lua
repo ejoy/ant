@@ -127,7 +127,7 @@ end
 local dyn_stripline_vb = create_dynbuffer(1024, "p3|t20|t31|t32|t33")
 local dyn_linelist_vb = create_dynbuffer(1024, "p3|t20|t31|t32")
 
-local function generate_stripline_vertices(points)
+local function generate_stripline_vertices(points, loop)
     local numpoint = #points
     local numv = numpoint * 2
     local stride = dyn_stripline_vb.layout.stride
@@ -135,11 +135,6 @@ local function generate_stripline_vertices(points)
     local fmt<const> = ('f'):rep(14)
     local vertices = bgfx.memory_buffer(numv * stride)
     local function fill_vertex(p, prev_p, next_p, u, v, side, width, counter)
-        -- vertices[elem_offset+1],  vertices[elem_offset+2], vertices[elem_offset+3]   = p[1], p[2], p[3]
-        -- vertices[elem_offset+4],  vertices[elem_offset+5]                            = u, v
-        -- vertices[elem_offset+6],  vertices[elem_offset+7], vertices[elem_offset+8]   = side, width, counter
-        -- vertices[elem_offset+9],  vertices[elem_offset+10],vertices[elem_offset+11]  = prev_p[1], prev_p[2], prev_p[3]
-        -- vertices[elem_offset+12], vertices[elem_offset+13],vertices[elem_offset+14]  = next_p[1], next_p[2], next_p[3]
         vertices[elem_offset] = fmt:pack(
             p[1], p[2], p[3],
             u, v,
@@ -150,13 +145,31 @@ local function generate_stripline_vertices(points)
         elem_offset = elem_offset + stride
     end
 
-    local delta<const> = 1 / (numpoint-1)
+    local delta<const> = 1/(numpoint-1)
     local counter = 0
     for idx=1, numpoint do
         local p = points[idx]
-        local prev_p = idx == 1         and p                or points[idx-1]
-        local next_p = idx == numpoint  and points[numpoint] or points[idx+1]
+        local prev_p
+        if idx == 1 then
+            if loop then
+                prev_p = points[numpoint-1]
+            else
+                prev_p = points[1]
+            end
+        else
+            prev_p = points[idx-1]
+        end
 
+        local next_p
+        if idx == numpoint then
+            if loop then
+                next_p = points[2]
+            else
+                next_p = points[numpoint]
+            end
+        else
+            next_p = points[idx+1]
+        end
         local tex_u<const> = counter
         fill_vertex(p, prev_p, next_p, tex_u, 0, 1, 1, counter)
         fill_vertex(p, prev_p, next_p, tex_u, 1, -1, 1, counter)
@@ -196,17 +209,20 @@ end
 
 local defcolor<const> = {1.0, 1.0, 1.0, 1.0}
 
-function ipl.create_linestrip_mesh(points, line_width, color)
-    local numpoint = #points
-    if numpoint < 2 then
-        error(("strip line need at least 2 point:%d"):format(numpoint))
+function ipl.create_linestrip_mesh(points, line_width, color, loop)
+    if #points < 2 then
+        error(("strip line need at least 2 point:%d"):format(#points))
     end
     color = color or defcolor
     line_width = line_width or 1
 
-    local vertices = generate_stripline_vertices(points)
-    local numlines = numpoint-1
-    local numvertex = numpoint*2
+    if loop then
+        points[#points+1] = points[1]
+    end
+
+    local vertices = generate_stripline_vertices(points, loop)
+    local numlines = #points-1
+    local numvertex = #points*2
 
     return {
         ib = strip_ib:alloc(numlines),
@@ -215,8 +231,8 @@ function ipl.create_linestrip_mesh(points, line_width, color)
 end
 
 
-function ipl.add_strip_lines(points, line_width, color, material)
-    local polymesh = ipl.create_linestrip_mesh(points, line_width, color)
+function ipl.add_strip_lines(points, line_width, color, material, loop)
+    local polymesh = ipl.create_linestrip_mesh(points, line_width, color, loop)
     return add_polylines(polymesh, line_width, color, material or "/pkg/ant.resources/materials/polyline.material")
 end
 

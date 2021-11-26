@@ -88,7 +88,7 @@ function qs_sys:entity_init()
         local qs = e.quad_strip
         local uvm = e.uv_motion
         local speed = uvm.speed
-        local quadstrip_mesh = iql.create_linestrip_mesh(qs.points, qs.width, qs.color)
+        local quadstrip_mesh = iql.create_linestrip_mesh(qs.points, qs.width, qs.color, qs.loop)
         local le = ecs.create_entity{
             policy = {
                 "ant.render|simplerender",

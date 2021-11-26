@@ -107,7 +107,7 @@ local function build_indicator_points1(height)
         {2.0, height, 2.0},
         {1.0, height, 2.0},
         {0.0, height, 2.0},
-        {0.0, height, 0.0}
+        {0.0, height, 1.0},
     }
 end
 
@@ -281,6 +281,7 @@ function shape_terrain_test_sys:init()
                 normal = {0, 1, 0},
                 width = 0.05,
                 color = {3.0, 3.0, 6.0, 1.0},
+                loop = true,
             },
             uv_motion = {
                 speed     = 0.025*unit,
