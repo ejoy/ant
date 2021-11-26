@@ -284,7 +284,13 @@ function shape_terrain_test_sys:init()
                 loop = true,
             },
             uv_motion = {
-                speed     = 0.025*unit,
+                speed     = {
+                    0,--0.025*unit,
+                    0,--0.025*unit,
+                },
+                tile = {
+                    0.25, 0.25
+                }
             },
             material = "/pkg/ant.test.features/assets/indicator.material",
             scene = {

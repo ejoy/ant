@@ -4,7 +4,7 @@ fx:
   setting:
     UV_MOTION: 1
     USE_WORLD_SPACE: 1
-    #ENABLE_POLYLINE_TEXTURE: 1
+    ENABLE_POLYLINE_TEXTURE: 1
     FIX_WIDTH: 1
     surfacetype: background
     lighting: off
@@ -17,7 +17,7 @@ properties:
   #   stage: 1
   #   texture: /pkg/ant.test.features/assets//textures/indicator/arrow_emissive.texture
   u_emissive_factor: {1.1, 1.1, 2.5, 0}
-  u_uvmotion_speed: {1.0, 1.0, 0.0, 0.0}
+  u_uvmotion: {0.0, 0.0, 1.0, 1.0}
   u_line_info: {1.0, 0.0, 0.0, 0.0}
   u_color: {1.0, 1.0, 1.0, 1.0}
   u_tex_param: {1.0, 1.0, 0.0, 0.0}

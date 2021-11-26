@@ -17,12 +17,11 @@ void main() {
     vec4 c  = u_color;
 
 #ifdef ENABLE_POLYLINE_TEXTURE
-    vec2 uv = v_uv * u_repeat;
-    c *= texture2D(s_tex, uv);
+    c *= texture2D(s_tex, v_uv);
 #endif //POLYLINE_TEXTURE
 
 #ifdef ENABLE_POLYLINE_EMISSIVE_TEXTURE
-    c += texture2D(s_emissive, uv) * u_emissive_factor;
+    c += texture2D(s_emissive, v_uv) * u_emissive_factor;
 #endif //ENABLE_POLYLINE_EMISSIVE_TEXTURE
 
 #ifdef ENABLE_POLYLINE_DASH

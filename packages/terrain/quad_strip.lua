@@ -88,6 +88,7 @@ function qs_sys:entity_init()
         local qs = e.quad_strip
         local uvm = e.uv_motion
         local speed = uvm.speed
+        local tile = uvm.tile
         local quadstrip_mesh = iql.create_linestrip_mesh(qs.points, qs.width, qs.color, qs.loop)
         local le = ecs.create_entity{
             policy = {
@@ -104,7 +105,7 @@ function qs_sys:entity_init()
                 on_ready = function (le)
                     imaterial.set_property(le, "u_line_info", {qs.width, 0.0, 0.0, 0.0})
                     imaterial.set_property(le, "u_color", qs.color)
-                    imaterial.set_property(le, "u_uvmotion_speed", {speed, speed, 0.0, 0.0})
+                    imaterial.set_property(le, "u_uvmotion", {speed[1], speed[2], tile[1], tile[2]})
                 end,
             }
         }

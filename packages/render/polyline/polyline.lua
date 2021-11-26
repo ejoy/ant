@@ -146,30 +146,26 @@ local function generate_stripline_vertices(points, loop)
     end
 
     local delta<const> = 1/(numpoint-1)
+
+    local function prev_point(idx)
+        if idx == 1 then
+            return loop and points[numpoint-1] or points[1]
+        end
+        return points[idx-1]
+    end
+
+    local function next_point(idx)
+        if idx == numpoint then
+            return loop and points[2] or points[numpoint]
+        end
+        return points[idx+1]
+    end
     local counter = 0
     for idx=1, numpoint do
         local p = points[idx]
-        local prev_p
-        if idx == 1 then
-            if loop then
-                prev_p = points[numpoint-1]
-            else
-                prev_p = points[1]
-            end
-        else
-            prev_p = points[idx-1]
-        end
+        local prev_p = prev_point(idx)
+        local next_p = next_point(idx)
 
-        local next_p
-        if idx == numpoint then
-            if loop then
-                next_p = points[2]
-            else
-                next_p = points[numpoint]
-            end
-        else
-            next_p = points[idx+1]
-        end
         local tex_u<const> = counter
         fill_vertex(p, prev_p, next_p, tex_u, 0, 1, 1, counter)
         fill_vertex(p, prev_p, next_p, tex_u, 1, -1, 1, counter)

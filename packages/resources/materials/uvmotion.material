@@ -22,7 +22,7 @@ properties:
   u_emissive_factor: {0, 0, 0, 0}
   u_texture_flags: {1, 0, 0, 0}
   u_metallic_roughness_factor: {0, 0.4000000059604645, 0, 0}
-  u_uvmotion_speed: {0, -0.1, 0, 0}
+  u_uvmotion: {0, -0.1, 1.0, 1.0} # xy for speed, zw for uv tile, uv = uv*u_uvmotion.zw + u_uvmotion.xy*time
 state:
   ALPHA_REF: 0
   CULL: CCW
