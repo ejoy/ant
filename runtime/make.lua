@@ -95,6 +95,10 @@ lm:source_set "ant_links" {
             "common"
         },
         sources = "windows/main.cpp",
+        linkdirs ={
+            "../3rd/fmod/windows/core/lib/x64",
+            "../3rd/fmod/windows/studio/lib/x64",
+        },
         links = {
             "shlwapi",
             "user32",
@@ -108,6 +112,8 @@ lm:source_set "ant_links" {
             "imm32",
             "advapi32",
             "version",
+            "fmodL_vc",
+            "fmodstudioL_vc"
         }
     },
     macos = {

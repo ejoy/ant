@@ -1,0 +1,22 @@
+import "@ant.asset"
+
+system "audio_system"
+    .implement "audio_system.lua"
+    .method "init"
+    .method "data_changed"
+    .method "exit"
+
+interface "audio_interface"
+    .implement "audio_system.lua"
+    .method "play"
+    .method "stop"
+    .method "destroy"
+    .method "load_bank"
+    .method "create"
+
+component "sound_event"
+    .type "lua"
+
+policy "audio"
+    .require_system "audio_system"
+    .component "sound_event"

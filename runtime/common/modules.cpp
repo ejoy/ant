@@ -29,6 +29,7 @@ int luaopen_font(lua_State *L);
 int luaopen_font_init(lua_State *L);
 int luaopen_font_truetype(lua_State *L);
 int luaopen_effekseer(lua_State* L);
+int luaopen_audio(lua_State* L);
 int luaopen_ltask(lua_State* L);
 int luaopen_ltask_bootstrap(lua_State* L);
 int luaopen_ltask_root(lua_State* L);
@@ -75,6 +76,7 @@ void ant_loadmodules(lua_State* L) {
         { "window", luaopen_window },
         { "terrain", luaopen_terrain},
         { "effekseer", luaopen_effekseer},
+        { "audio", luaopen_audio},
         { "ltask", luaopen_ltask},
         { "ltask.bootstrap", luaopen_ltask_bootstrap},
         { "ltask.bootstrap", luaopen_ltask_bootstrap},
