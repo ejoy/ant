@@ -77,8 +77,12 @@ local function instance(rt, parent, iiw, iih, unit)
         ecs.method.set_parent(e, parent)
         world:pub {"terrain_road", "on_ready", prefab}
     end
-    world:create_object(p)
-    return p
+    function p.on_message(prefab, cmd)
+        if cmd == "remove" then
+            prefab:remove()
+        end
+    end
+    return world:create_object(p)
 end
 
 function terrain_road_sys:entity_init()
@@ -103,14 +107,6 @@ end
 
 local itr = ecs.interface "iterrain_road"
 
-local function remove_prefab(p)
-    if p then
-        for _, e in ipairs(p.tag["*"]) do
-            w:remove(e)
-        end
-    end
-end
-
 function itr.set_road(te, roadtype, iiw, iih)
     w:sync("shape_terrain:in", te)
     local st = te.shape_terrain
@@ -122,7 +118,9 @@ function itr.set_road(te, roadtype, iiw, iih)
     local idx = (iih-1)*ww+iiw
     local terrain_fields = st.terrain_fields
     local field = terrain_fields[idx]
-    remove_prefab(field.road)
+    if field.road then
+        field.road:send("remove")
+    end
     field.roadtype = roadtype
     w:sync("reference:in", te)
     field.road = instance(roadtype, te.reference, iiw, iih, st.unit)
