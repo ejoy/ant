@@ -26,21 +26,22 @@ local declmgr           = require "vertexdecl_mgr"
 
 local function create_strip_index_buffer(max_lines)
     local function create_ib_buffer(max_lines)
-        local indices = {}
+        local stride = 6 * 2
+        local indices = bgfx.memory_buffer(max_lines * stride)
         local offset = 0
+        
         for i=1, max_lines do
-            indices[#indices+1] = offset + 0
-            indices[#indices+1] = offset + 1
-            indices[#indices+1] = offset + 2
-    
-            indices[#indices+1] = offset + 1
-            indices[#indices+1] = offset + 3
-            indices[#indices+1] = offset + 2
-    
+            indices[stride*(i-1)+1] = ("HHHHHH"):pack(
+                    offset + 0,
+                    offset + 2,
+                    offset + 3,
+                    offset + 3,
+                    offset + 1,
+                    offset + 0)
             offset = offset + 2
         end
     
-        return bgfx.create_index_buffer(bgfx.memory_buffer("w", indices))
+        return bgfx.create_index_buffer(indices)
     end
 
     return {

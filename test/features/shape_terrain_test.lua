@@ -98,6 +98,19 @@ local function generate_terrain_fields(w, h)
 --     }
 end
 
+local function build_indicator_points1(height)
+    return {
+        {0.0, height, 0.0},
+        {1.0, height, 0.0},
+        {2.0, height, 0.0},
+        {2.0, height, 1.0},
+        {2.0, height, 2.0},
+        {1.0, height, 2.0},
+        {0.0, height, 2.0},
+        {0.0, height, 0.0}
+    }
+end
+
 local function build_indicator_points(height)
     local points = {}
 
@@ -264,9 +277,9 @@ function shape_terrain_test_sys:init()
         },
         data = {
             quad_strip = {
-                points = build_indicator_points(height),
+                points = build_indicator_points1(height),
                 normal = {0, 1, 0},
-                width = unit*0.15,
+                width = 10,
                 color = {3.0, 3.0, 6.0, 1.0},
             },
             uv_motion = {

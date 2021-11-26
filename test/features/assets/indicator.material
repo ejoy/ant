@@ -3,7 +3,8 @@ fx:
   fs: /pkg/ant.resources/shaders/polyline/fs_polyline.sc
   setting:
     UV_MOTION: 1
-    ENABLE_POLYLINE_TEXTURE: 1
+    #ENABLE_POLYLINE_TEXTURE: 1
+    FIX_WIDTH: 1
     surfacetype: background
     lighting: off
     #HAS_EMISSIVE_TEXTURE: 1
