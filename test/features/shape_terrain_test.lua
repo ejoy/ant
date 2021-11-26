@@ -279,7 +279,7 @@ function shape_terrain_test_sys:init()
             quad_strip = {
                 points = build_indicator_points1(height),
                 normal = {0, 1, 0},
-                width = 10,
+                width = 0.05,
                 color = {3.0, 3.0, 6.0, 1.0},
             },
             uv_motion = {
