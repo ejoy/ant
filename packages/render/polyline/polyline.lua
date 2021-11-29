@@ -127,7 +127,7 @@ end
 local dyn_stripline_vb = create_dynbuffer(1024, "p3|t20|t31|t32|t33")
 local dyn_linelist_vb = create_dynbuffer(1024, "p3|t20|t31|t32")
 
-local function generate_stripline_vertices(points, loop)
+local function generate_stripline_vertices(points, uv_rotation, loop)
     local numpoint = #points
     local numv = numpoint * 2
     local stride = dyn_stripline_vb.layout.stride
@@ -161,14 +161,35 @@ local function generate_stripline_vertices(points, loop)
         return points[idx+1]
     end
     local counter = 0
+    local m
+    if uv_rotation then
+        local c, s = math.cos(uv_rotation), math.sin(uv_rotation)
+        m = {
+            {c, s,},
+            {-s, c,},
+        }
+    end
+
+    local function rotate_uv(m, uv)
+        local function dot(v0, v1)
+            return v0[1]*v1[1] + v0[2]*v1[2]
+        end
+        local u, v = dot(m[1], uv), dot(m[2], uv)
+        uv[1], uv[2] = u, v
+    end
     for idx=1, numpoint do
         local p = points[idx]
         local prev_p = prev_point(idx)
         local next_p = next_point(idx)
 
-        local tex_u<const> = counter
-        fill_vertex(p, prev_p, next_p, tex_u, 0, 1, 1, counter)
-        fill_vertex(p, prev_p, next_p, tex_u, 1, -1, 1, counter)
+        local tex_v<const> = counter
+        local uv0, uv1 = {0, tex_v}, {1, tex_v}
+        if m then
+            rotate_uv(m, uv0)
+            rotate_uv(m, uv1)
+        end
+        fill_vertex(p, prev_p, next_p, uv0[1], uv0[2],  1, 1, counter)
+        fill_vertex(p, prev_p, next_p, uv1[1], uv1[2], -1, 1, counter)
 
         counter = counter + delta
     end
@@ -205,7 +226,7 @@ end
 
 local defcolor<const> = {1.0, 1.0, 1.0, 1.0}
 
-function ipl.create_linestrip_mesh(points, line_width, color, loop)
+function ipl.create_linestrip_mesh(points, line_width, color, uv_rotation, loop)
     if #points < 2 then
         error(("strip line need at least 2 point:%d"):format(#points))
     end
@@ -216,7 +237,7 @@ function ipl.create_linestrip_mesh(points, line_width, color, loop)
         points[#points+1] = points[1]
     end
 
-    local vertices = generate_stripline_vertices(points, loop)
+    local vertices = generate_stripline_vertices(points, uv_rotation, loop)
     local numlines = #points-1
     local numvertex = #points*2
 

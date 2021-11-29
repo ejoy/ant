@@ -103,11 +103,11 @@ local function build_indicator_points1(height)
         {0.0, height, 0.0},
         {1.0, height, 0.0},
         {2.0, height, 0.0},
-        {2.0, height, 1.0},
-        {2.0, height, 2.0},
-        {1.0, height, 2.0},
-        {0.0, height, 2.0},
-        {0.0, height, 1.0},
+        -- {2.0, height, 1.0},
+        -- {2.0, height, 2.0},
+        -- {1.0, height, 2.0},
+        -- {0.0, height, 2.0},
+        -- {0.0, height, 1.0},
     }
 end
 
@@ -279,18 +279,19 @@ function shape_terrain_test_sys:init()
             quad_strip = {
                 points = build_indicator_points1(height),
                 normal = {0, 1, 0},
-                width = 0.05,
+                width = 0.5,
                 color = {3.0, 3.0, 6.0, 1.0},
-                loop = true,
+                --loop = true,
             },
             uv_motion = {
-                speed     = {
+                speed = {
                     0,--0.025*unit,
                     0,--0.025*unit,
                 },
                 tile = {
-                    0.25, 0.25
-                }
+                    3, 1
+                },
+                rotation = -math.pi*0.5,
             },
             material = "/pkg/ant.test.features/assets/indicator.material",
             scene = {
