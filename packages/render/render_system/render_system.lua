@@ -129,15 +129,19 @@ local function check_set_depth_state_as_equal(state)
 	return bgfx.make_state(ss)
 end
 
+local filter_surface_types<const> = {
+	"main_queue_foreground", "main_queue_opacity"
+}
+
 function s:end_filter()
 	if irender.use_pre_depth() then
-		for e in w:select "filter_result:in render_object:in filter_material:in" do
+		for e in w:select "filter_result:in render_object:in filter_material:in name?in" do
 			local fr = e.filter_result
 			local ro = e.render_object
 			local state = ro.state
 			local fx, properties = ro.fx, ro.properties
-			local mq = w:singleton("main_queue", "primitive_filter:in")
-			for _, fn in ipairs(mq.primitive_filter) do
+			for i=1, #filter_surface_types do
+				local fn = filter_surface_types[i]
 				if fr[fn] then
 					e.filter_material[fn] = {
 						fx          = fx,
