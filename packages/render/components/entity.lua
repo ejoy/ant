@@ -229,7 +229,7 @@ local plane_vb<const> = {
 	0.5,  0,-0.5, 0, 1, 0,	--right bottom
 }
 
-function ientity.create_prim_plane_entity(srt, materialpath, color, name)
+function ientity.create_prim_plane_entity(srt, materialpath, color, name, hide)
 	return ecs.create_entity{
 		policy = {
 			"ant.render|simplerender",
@@ -243,6 +243,7 @@ function ientity.create_prim_plane_entity(srt, materialpath, color, name)
 			name 		= name or "Plane",
 			simplemesh 	= imesh.init_mesh(create_mesh({"p3|n3", plane_vb}, nil, math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))), true),
 			on_ready = function (e)
+				ifs.set_state(e, "main_view", not hide)
 				imaterial.set_property(e, "u_color", color)
 			end
 		},
@@ -364,7 +365,7 @@ function ientity.create_circle_entity(radius, slices, srt, name, color, hide)
 	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt, color, hide)
 end
 
-function ientity.create_circle_mesh_entity(radius, slices, srt, mtl, name, color)
+function ientity.create_circle_mesh_entity(radius, slices, srt, mtl, name, color, hide)
 	local circle_vb, _ = geolib.circle(radius, slices)
 	local gvb = {0,0,0,0,0,1}
 	local ib = {}
@@ -387,7 +388,7 @@ function ientity.create_circle_mesh_entity(radius, slices, srt, mtl, name, color
 		idx = idx + 1
 	end
 	local mesh = create_mesh({"p3|n3", gvb}, ib)
-	return create_simple_render_entity(name, mtl, mesh, srt, color)
+	return create_simple_render_entity(name, mtl, mesh, srt, color, hide)
 end
 
 local skybox_mesh

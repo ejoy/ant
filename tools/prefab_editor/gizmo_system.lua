@@ -5,7 +5,7 @@ local w = world.w
 local constant 	= import_package "ant.math".constant
 local ientity 	= ecs.import.interface "ant.render|ientity"
 local iom 		= ecs.import.interface "ant.objcontroller|iobj_motion"
-local ies 		= ecs.import.interface "ant.scene|ifilter_state"
+local ifs 		= ecs.import.interface "ant.scene|ifilter_state"
 local ilight 	= ecs.import.interface "ant.render|ilight"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local irq		= ecs.import.interface "ant.render|irenderqueue"
@@ -172,7 +172,7 @@ local function create_arrow_widget(axis_root, axis_str)
 		},
 		data = {
 			reference = true,
-			filter_state = "ldr",
+			filter_state = "main_view",
 			scene = {
 				srt = {
 					s = {0.2, 10, 0.2},
@@ -184,6 +184,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			name = "arrow.cylinder" .. axis_str,
 			on_ready = function (e)
+				ifs.set_state(e, "main_view", false)
 				imaterial.set_property(e, "u_color", color)
 			end
 		}
@@ -196,12 +197,13 @@ local function create_arrow_widget(axis_root, axis_str)
 		},
 		data = {
 			reference = true,
-			filter_state = "ldr",
+			filter_state = "main_view",
 			scene = {srt = {s = {1, 1.5, 1, 0}, r = local_rotator, t = cone_t}},
 			material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone" .. axis_str,
 			on_ready = function (e)
+				ifs.set_state(e, "main_view", false)
 				imaterial.set_property(e, "u_color", color)
 			end
 		}
@@ -313,7 +315,7 @@ function gizmo_sys:post_init()
 		{t = {gizmo_const.MOVE_PLANE_OFFSET, gizmo_const.MOVE_PLANE_OFFSET, 0, 1}, s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0}, r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})},
 		"/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 		gizmo.txy.color,
-		"plane_xy")
+		"plane_xy", true)
 	ecs.method.set_parent(plane_xy_eid, axis_root)
 	gizmo.txy.eid = {plane_xy_eid, plane_xy_eid}
 
@@ -321,7 +323,7 @@ function gizmo_sys:post_init()
 		{t = {0, gizmo_const.MOVE_PLANE_OFFSET, gizmo_const.MOVE_PLANE_OFFSET, 1}, s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0}, r = math3d.tovalue(math3d.quaternion{0, 0, math.rad(90)})},
 		"/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 		gizmo.tyz.color,
-		"plane_yz")
+		"plane_yz", true)
 	ecs.method.set_parent(plane_yz_eid, axis_root)
 	gizmo.tyz.eid = {plane_yz_eid, plane_yz_eid}
 
@@ -329,16 +331,16 @@ function gizmo_sys:post_init()
 		{t = {gizmo_const.MOVE_PLANE_OFFSET, 0, gizmo_const.MOVE_PLANE_OFFSET, 1}, s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0}},
 		"/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 		gizmo.tzx.color,
-		"plane_zx")
+		"plane_zx", true)
 	ecs.method.set_parent(plane_zx_eid, axis_root)
 	gizmo.tzx.eid = {plane_zx_eid, plane_zx_eid}
 	gizmo:reset_move_axis_color()
 
 	-- roate axis
-	local uniform_rot_eid = ientity.create_circle_entity(gizmo_const.UNIFORM_ROT_AXIS_LEN, gizmo_const.ROTATE_SLICES, {}, "rotate_gizmo_uniform", gizmo_const.COLOR_GRAY)
+	local uniform_rot_eid = ientity.create_circle_entity(gizmo_const.UNIFORM_ROT_AXIS_LEN, gizmo_const.ROTATE_SLICES, {}, "rotate_gizmo_uniform", gizmo_const.COLOR_GRAY, true)
 	ecs.method.set_parent(uniform_rot_eid, uniform_rot_root)
 	local function create_rotate_fan(radius, circle_trans)
-		local mesh_eid = ientity.create_circle_mesh_entity(radius, gizmo_const.ROTATE_SLICES, circle_trans, "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material", "rotate_mesh_gizmo_uniform", {0, 0, 1, 0.5})
+		local mesh_eid = ientity.create_circle_mesh_entity(radius, gizmo_const.ROTATE_SLICES, circle_trans, "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material", "rotate_mesh_gizmo_uniform", {0, 0, 1, 0.5}, true)
 		ecs.method.set_parent(mesh_eid, axis_root)
 		return mesh_eid
 	end
@@ -351,9 +353,9 @@ function gizmo_sys:post_init()
 	gizmo.rw.eid = {uniform_rot_eid, uniform_rot_eid, rot_ccw_mesh_eid, rot_cw_mesh_eid}
 
 	local function create_rotate_axis(axis, line_end, circle_trans)
-		local line_eid = ientity.create_line_entity({}, {0, 0, 0}, line_end, "", axis.color)
+		local line_eid = ientity.create_line_entity({}, {0, 0, 0}, line_end, "", axis.color, true)
 		ecs.method.set_parent(line_eid, rot_circle_root)
-		local rot_eid = ientity.create_circle_entity(gizmo_const.AXIS_LEN, gizmo_const.ROTATE_SLICES, circle_trans, "rotate gizmo circle", axis.color)
+		local rot_eid = ientity.create_circle_entity(gizmo_const.AXIS_LEN, gizmo_const.ROTATE_SLICES, circle_trans, "rotate gizmo circle", axis.color, true)
 		ecs.method.set_parent(rot_eid, rot_circle_root)
 		local rot_ccw_mesh_eid = create_rotate_fan(gizmo_const.AXIS_LEN, circle_trans)
 		local rot_cw_mesh_eid = create_rotate_fan(gizmo_const.AXIS_LEN, circle_trans)
@@ -373,12 +375,13 @@ function gizmo_sys:post_init()
 			},
 			data = {
 				reference = true,
-				filter_state = "ldr|selectable",
+				filter_state = "main_view|selectable",
 				scene = {srt = srt},
 				material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
 				name = "scale_cube" .. axis_name,
 				on_ready = function (e)
+					ifs.set_state(e, "main_view", false)
 					imaterial.set_property(e, "u_color", color)
 				end
 			}
@@ -393,7 +396,7 @@ function gizmo_sys:post_init()
 	local function create_scale_axis(axis, axis_end)
 		local cube_eid = create_scale_cube({t = axis_end, s = gizmo_const.AXIS_CUBE_SCALE}, axis.color, "scale axis")
 		ecs.method.set_parent(cube_eid, axis_root)
-		local line_eid = ientity.create_line_entity({}, {0, 0, 0}, axis_end, "", axis.color)
+		local line_eid = ientity.create_line_entity({}, {0, 0, 0}, axis_end, "", axis.color, true)
 		ecs.method.set_parent(line_eid, axis_root)
 		axis.eid = {cube_eid, line_eid}
 	end
@@ -753,8 +756,8 @@ local function show_rotate_fan(rotAxis, startAngle, deltaAngle)
 	rotAxis.eid[3].render_object.ib.start = start
 	rotAxis.eid[3].render_object.ib.num = num
 
-	ies.set_state(rotAxis.eid[3], "ldr", rotAxis.eid[3].render_object.ib.num > 0)
-	ies.set_state(rotAxis.eid[4], "ldr", rotAxis.eid[4].render_object.ib.num > 0)
+	ifs.set_state(rotAxis.eid[3], "main_view", rotAxis.eid[3].render_object.ib.num > 0)
+	ifs.set_state(rotAxis.eid[4], "main_view", rotAxis.eid[4].render_object.ib.num > 0)
 end
 
 local function rotate_gizmo(x, y)
