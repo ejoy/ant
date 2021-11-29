@@ -151,13 +151,7 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 	local depth_viewid = viewidmgr.get "depth"
 	local fbidx = fbmgr.create{
 		fbmgr.create_rb{
-			format = "R32F",
-			w = vr.w, h=vr.h,
-			layers = 1,
-			flags = rb_flag,
-		},
-		fbmgr.create_rb{
-			format = "D24S8",
+			format = "D32F",
 			w = vr.w, h=vr.h,
 			layers = 1,
 			flags = rb_flag,
@@ -219,7 +213,7 @@ local function create_main_fb(fbsize)
 		if not graphic_setting.disable_pre_z then
 			local depth_viewid = viewidmgr.get "depth"
 			local depthfb = fbmgr.get_byviewid(depth_viewid)
-			return depthfb[2]
+			return depthfb[#depthfb]
 		end
 		return fbmgr.create_rb(
 			default_comp.render_buffer(
