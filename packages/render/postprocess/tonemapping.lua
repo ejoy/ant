@@ -16,9 +16,9 @@ local irq       = ecs.import.interface "ant.render|irenderqueue"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local tm_viewid<const> = viewidmgr.get "tonemapping"
-
+local tm_e
 function tm_sys:init()
-    ecs.create_entity {
+    tm_e = ecs.create_entity {
         policy = {
             "ant.general|name",
             "ant.render|simplerender",
@@ -27,14 +27,11 @@ function tm_sys:init()
             name = "tonemapping_render_obj",
             simplemesh = ientity.quad_mesh(),
             material = "/pkg/ant.resources/materials/postprocess/tonemapping.material",
-            scene = {
-                srt = mu.srt_obj(),
-            },
+            scene = {srt = {},},
             render_object   = {},
-            filter_material = {},
             filter_state = "",
             visible = true,
-            tonemapping = true,
+            reference = true
         }
     }
 end
@@ -87,8 +84,8 @@ local pp_input0 = {
 }
 
 function tm_sys:tonemapping()
-    local tm = w:singleton("tonemapping", "render_object:in")
-    local ro = tm.render_object
+    w:sync("render_object:in", tm_e)
+    local ro = tm_e.render_object
 
     local pp = w:singleton("postprocess", "postprocess_input:in")
     local ppi = pp.postprocess_input
