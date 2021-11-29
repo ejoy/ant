@@ -123,7 +123,7 @@ end
 function grid:show(show)
     if not grid_eid then return end
     self.visible = show
-    ies.set_state(grid_eid, "visible", show)
+    ies.set_state(grid_eid, "main_view", show)
 end
 
 function grid:load(path)

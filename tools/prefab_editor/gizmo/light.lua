@@ -64,7 +64,7 @@ end
 function m.show(b)
     if m.current_gizmo then
         for i, eid in ipairs(m.current_gizmo.eid) do
-            ies.set_state(eid, "visible", b)
+            ies.set_state(eid, "main_view", b)
         end
     end
 end
