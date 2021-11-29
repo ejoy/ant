@@ -172,7 +172,7 @@ local function create_arrow_widget(axis_root, axis_str)
 		},
 		data = {
 			reference = true,
-			filter_state = "main_view",
+			filter_state = "ldr",
 			scene = {
 				srt = {
 					s = {0.2, 10, 0.2},
@@ -196,7 +196,7 @@ local function create_arrow_widget(axis_root, axis_str)
 		},
 		data = {
 			reference = true,
-			filter_state = "main_view",
+			filter_state = "ldr",
 			scene = {srt = {s = {1, 1.5, 1, 0}, r = local_rotator, t = cone_t}},
 			material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
@@ -373,7 +373,7 @@ function gizmo_sys:post_init()
 			},
 			data = {
 				reference = true,
-				filter_state = "main_view|selectable",
+				filter_state = "ldr|selectable",
 				scene = {srt = srt},
 				material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
@@ -753,8 +753,8 @@ local function show_rotate_fan(rotAxis, startAngle, deltaAngle)
 	rotAxis.eid[3].render_object.ib.start = start
 	rotAxis.eid[3].render_object.ib.num = num
 
-	ies.set_state(rotAxis.eid[3], "visible", rotAxis.eid[3].render_object.ib.num > 0)
-	ies.set_state(rotAxis.eid[4], "visible", rotAxis.eid[4].render_object.ib.num > 0)
+	ies.set_state(rotAxis.eid[3], "ldr", rotAxis.eid[3].render_object.ib.num > 0)
+	ies.set_state(rotAxis.eid[4], "ldr", rotAxis.eid[4].render_object.ib.num > 0)
 end
 
 local function rotate_gizmo(x, y)

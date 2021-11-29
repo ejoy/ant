@@ -90,7 +90,7 @@ function gizmo:click_axis(axis)
 			gray_axis(self.rz)
 		end
 	else
-		local state = "main_view"
+		local state = "ldr"
 		ies.set_state(self.tyz.eid[1], state, false)
 		ies.set_state(self.txy.eid[1], state, false)
 		ies.set_state(self.tzx.eid[1], state, false)
@@ -108,7 +108,7 @@ function gizmo:click_axis(axis)
 end
 
 function gizmo:click_plane(axis)
-	local state = "main_view"
+	local state = "ldr"
 	if axis == self.tyz then
 		gray_axis(self.tx)
 		ies.set_state(self.txy.eid[1], state, false)
@@ -135,7 +135,7 @@ function gizmo:click_axis_or_plane(axis)
 end
 
 function gizmo:hide_rotate_fan()
-	local state = "main_view"
+	local state = "ldr"
 	if not self.rx.eid then return end
 	ies.set_state(self.rx.eid[3], state, false)
 	ies.set_state(self.rx.eid[4], state, false)
@@ -148,7 +148,7 @@ function gizmo:hide_rotate_fan()
 end
 
 function gizmo:show_move(show)
-	local state = "main_view"
+	local state = "ldr"
 	if not self.tx.eid then return end
 	ies.set_state(self.tx.eid[1], state, show)
 	ies.set_state(self.tx.eid[2], state, show)
@@ -164,7 +164,7 @@ function gizmo:show_move(show)
 end
 
 function gizmo:show_rotate(show)
-	local state = "main_view"
+	local state = "ldr"
 	if not self.rx.eid then return end
 	ies.set_state(self.rx.eid[1], state, show)
 	ies.set_state(self.rx.eid[2], state, show)
@@ -176,7 +176,7 @@ function gizmo:show_rotate(show)
 end
 
 function gizmo:show_scale(show)
-	local state = "main_view"
+	local state = "ldr"
 	if not self.sx.eid then return end
 	ies.set_state(self.sx.eid[1], state, show)
 	ies.set_state(self.sx.eid[2], state, show)
@@ -214,9 +214,9 @@ function gizmo:reset_move_axis_color()
 	imaterial.set_property(self.tz.eid[1], uname, self.tz.color)
 	imaterial.set_property(self.tz.eid[2], uname, self.tz.color)
 	--plane
-	ies.set_state(self.txy.eid[1], "visible", self.target_eid ~= nil)
-	ies.set_state(self.tyz.eid[1], "visible", self.target_eid ~= nil)
-	ies.set_state(self.tzx.eid[1], "visible", self.target_eid ~= nil)
+	ies.set_state(self.txy.eid[1], "ldr", self.target_eid ~= nil)
+	ies.set_state(self.tyz.eid[1], "ldr", self.target_eid ~= nil)
+	ies.set_state(self.tzx.eid[1], "ldr", self.target_eid ~= nil)
 	imaterial.set_property(self.txy.eid[1], uname, self.txy.color)
 	imaterial.set_property(self.tyz.eid[1], uname, self.tyz.color)
 	imaterial.set_property(self.tzx.eid[1], uname, self.tzx.color)

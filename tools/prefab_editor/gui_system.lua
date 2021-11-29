@@ -313,13 +313,12 @@ local function update_heightlight_aabb(e)
 end
 
 local function on_target(old, new)
-    local old_entity = old--type(old) == "table" and icamera.find_camera(old) or world[old]
-    if old and old_entity then
-        w:sync("camera?in", old_entity)
-        w:sync("light?in", old_entity)
-        if old_entity.camera then
+    if old and old.scene and not old.scene.REMOVED then
+        w:sync("camera?in", old)
+        w:sync("light?in", old)
+        if old.camera then
             camera_mgr.show_frustum(old, false)
-        elseif old_entity.light then
+        elseif old.light then
             light_gizmo.bind(nil)
         end
     end
