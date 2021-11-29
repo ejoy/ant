@@ -5,5 +5,4 @@ fx:
 state:
   ALPHA_REF: 0
   CULL: CCW
-  DEPTH_TEST: LESS
-  WRITE_MASK: RGBAZ
+  WRITE_MASK: Z

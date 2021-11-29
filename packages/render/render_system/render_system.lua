@@ -120,6 +120,33 @@ function render_sys:render_submit()
 end
 
 local s = ecs.system "end_filter_system"
+
+local function check_set_depth_state_as_equal(state)
+	local ss = bgfx.parse_state(state)
+	ss.DEPTH_TEST = "EQUAL"
+	local wm = ss.WRITE_MASK
+	ss.WRITE_MASK = wm and wm:gsub("Z", "") or "RGBA"
+	return bgfx.make_state(ss)
+end
+
 function s:end_filter()
+	if irender.use_pre_depth() then
+		for e in w:select "filter_result:in render_object:in filter_material:in" do
+			local fr = e.filter_result
+			local ro = e.render_object
+			local state = ro.state
+			local fx, properties = ro.fx, ro.properties
+			local mq = w:singleton("main_queue", "primitive_filter:in")
+			for _, fn in ipairs(mq.primitive_filter) do
+				if fr[fn] then
+					e.filter_material[fn] = {
+						fx          = fx,
+						properties  = properties,
+						state       = check_set_depth_state_as_equal(state),
+					}
+				end
+			end
+		end
+	end
 	w:clear "render_object_update"
 end

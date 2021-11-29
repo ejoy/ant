@@ -43,6 +43,10 @@ local QUEUE_TYPES <const> = {
 
 local irender		= ecs.interface "irender"
 
+function irender.use_pre_depth()
+	return not graphic_setting.disable_pre_z
+end
+
 function irender.layer_names()
 	return LAYER_NAMES
 end
@@ -88,11 +92,16 @@ function irender.get_main_view_rendertexture()
 	return fbmgr.get_rb(fb[1]).handle
 end
 
-local default_clear_state<const> = {
+local default_clear_state = {
 	color = graphic_setting.render.clear_color or 0x000000ff,
 	depth = 1.0,
 	clear = "CD",
 }
+
+if not graphic_setting.disable_pre_z then
+	default_clear_state.depth = nil
+	default_clear_state.clear = "C"
+end
 
 function irender.create_view_queue(view_rect, view_queuename, camera_ref, filtertype, exclude, surfacetypes, visible)
 	surfacetypes = surfacetypes or QUEUE_TYPES["main_queue"]
@@ -170,8 +179,7 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 			render_target = {
 				viewid = depth_viewid,
 				clear_state = {
-					clear = "CD",
-					color = 0,
+					clear = "D",
 					depth = 1,
 				},
 				view_mode = "s",
