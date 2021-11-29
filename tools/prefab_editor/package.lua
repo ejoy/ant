@@ -17,6 +17,7 @@ return {
         "ant.collision",
         "ant.sky",
         "ant.effekseer",
+        "ant.audio",
     }
     --ecs = {
     --    import = {

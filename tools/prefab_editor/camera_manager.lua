@@ -281,10 +281,11 @@ local function do_remove_camera(cam)
 end
 
 function camera_mgr.remove_camera(eid)
+    camera_mgr.show_frustum(eid, false)
     if camera_mgr.second_camera == eid then
         camera_mgr.second_camera = nil
     end
-    irq.set_visible(camera_mgr.second_view, false)
+    -- irq.set_visible(camera_mgr.second_view, false)
     local cam = camera_mgr.get_editor_data(eid)
     do_remove_camera(cam)
 end
