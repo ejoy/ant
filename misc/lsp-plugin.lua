@@ -106,7 +106,6 @@ do
     local ecs_env = build_ecs_env()
 
     local function load_ecs_file(f)
-        print("ecs file:", f)
         local content, err = loadfile(f:string(), "t", ecs_env)
         if content == nil then
             error(("read file faild:%s, error:%s"):format(f:string(), err))
