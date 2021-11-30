@@ -99,7 +99,7 @@ function irq.set_view_clear(queuename, what, color, depth, stencil)
 	cs.clear = what
 	local viewid = rt.viewid
 	set_view_clear(viewid, cs)
-	world:pub{"clear_state_changed", queuename}
+	world:pub{"clear_state_changed", queuename, cs}
 end
 
 function irq.set_view_rect(queuename, rect)
@@ -112,13 +112,13 @@ function irq.set_view_rect(queuename, rect)
 		icamera.set_frustum_aspect(qe.camera_ref, vr.w/vr.h)
 	end
 	bgfx.set_view_rect(rt.viewid, vr.x, vr.y, vr.w, vr.h)
-	world:pub{"view_rect_changed", queuename}
+	world:pub{"view_rect_changed", queuename, rect}
 end
 
 function irq.set_frame_buffer(queuename, fbidx)
 	local rt = get_rt(queuename)
 	rt.fb_idx = fbidx
-	world:pub{"framebuffer_changed", queuename}
+	world:pub{"framebuffer_changed", queuename, fbidx}
 end
 
 function irq.set_camera(queuename, camera_ref)
