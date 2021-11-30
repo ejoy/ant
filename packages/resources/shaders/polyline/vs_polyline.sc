@@ -86,6 +86,6 @@ void main() {
 	calc_line_vertex_in_screen_space(a_position, a_prevpos, a_nextpos, a_width, a_side);
 #endif //USE_WORLD_SPACE
 
-    v_uv		= uv_motion(a_texcoord0);
+    v_uv		= a_texcoord0;//uv_motion(a_texcoord0);
 	v_counters	= a_counters;
 }

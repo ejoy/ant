@@ -4,7 +4,7 @@ $input v_texcoord0
 
 #include <bgfx_shader.sh>
 #include "polyline/polyline.sh"
-
+#include "common/uvmotion.sh"
 #ifdef ENABLE_POLYLINE_TEXTURE
 SAMPLER2D(s_tex, 0);
 #endif //ENABLE_POLYLINE_TEXTURE
@@ -16,12 +16,13 @@ uniform vec4 u_emissive_factor;
 void main() {
     vec4 c  = u_color;
 
+    vec2 uv = uv_motion(v_uv);
 #ifdef ENABLE_POLYLINE_TEXTURE
-    c *= texture2D(s_tex, v_uv);
+    c *= texture2D(s_tex, uv);
 #endif //POLYLINE_TEXTURE
 
 #ifdef ENABLE_POLYLINE_EMISSIVE_TEXTURE
-    c += texture2D(s_emissive, v_uv) * u_emissive_factor;
+    c += texture2D(s_emissive, uv) * u_emissive_factor;
 #endif //ENABLE_POLYLINE_EMISSIVE_TEXTURE
 
 #ifdef ENABLE_POLYLINE_DASH
@@ -29,9 +30,6 @@ void main() {
     float dash = mod(v_counters, u_dash_round);
     c.a *= step(dash, u_dash_ratio);
 #endif //ENABLE_POLYLINE_DASH
-
-    if(c.a <= u_alphaRef)
-        discard;
 
     gl_FragColor = c;
 }
