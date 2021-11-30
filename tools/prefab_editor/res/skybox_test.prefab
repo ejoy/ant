@@ -1,0 +1,22 @@
+---
+policy:
+    ant.sky|skybox
+    ant.render|simplerender
+    ant.general|name
+data:
+    name: skybox_test
+    filter_state: main_view
+    scene:
+        srt: {}
+    ibl:
+        intensity: 3.5
+        irradiance:
+            size: 128
+        prefilter:
+            size: 128
+        LUT:
+            size: 256
+    material: /pkg/ant.resources/materials/sky/skybox2.material
+    simplemesh: false
+    skybox:
+        intensity: 20.0
