@@ -11,6 +11,7 @@ local ies           = ecs.import.interface "ant.scene|ifilter_state"
 local ilight        = ecs.import.interface "ant.render|ilight"
 local imaterial     = ecs.import.interface "ant.asset|imaterial"
 local icamera_recorder = ecs.import.interface "ant.camera|icamera_recorder"
+local isp 		= ecs.import.interface "ant.render|isystem_properties"
 local camera_mgr    = ecs.require "camera_manager"
 local light_gizmo   = ecs.require "gizmo.light"
 local gizmo         = ecs.require "gizmo.gizmo"
@@ -265,11 +266,22 @@ function m:create(what, config)
                 outter_radian = math.rad(45)
             }
             self.default_light = newlight
+            if not self.skybox then
+                self.skybox = ecs.create_instance("res/skybox_test.prefab")
+            end
         end
     elseif what == "disable_default_light" then
         if self.default_light then
             w:remove(self.default_light)
             self.default_light = nil
+        end
+        if self.skybox then
+            w:remove(self.skybox.root)
+            local all_entitys = self.skybox.tag["*"]
+            for _, e in ipairs(all_entitys) do
+                w:remove(e)
+            end
+            self.skybox = nil
         end
     elseif what == "light" then
         if config.type == "directional" or config.type == "point" or config.type == "spot" then      

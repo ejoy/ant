@@ -422,7 +422,7 @@ function m:handle_event()
                 local effekseer     = require "effekseer"
                 effekseer.set_visible(e.effect_instance.handle, e.effect_instance.playid, value)
             else
-                ies.set_state(e, what, value)
+                ies.set_state(e, "main_view", value)
                 local template = hierarchy:get_template(e)
                 if template and template.children then
                     for _, e in ipairs(template.children) do
