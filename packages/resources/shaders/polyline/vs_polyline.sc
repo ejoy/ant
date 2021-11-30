@@ -36,7 +36,7 @@ vec4 calc_line_vertex_in_screen_space(vec3 pos, vec3 prev_pos, vec3 next_pos, fl
 	vec2 prevP_2D	= fix(prevPosCS,aspect);
 	vec2 nextP_2D	= fix(nextPosCS,aspect);
 
-	float w = calc_line_width(posCS.w, segmentwidth);
+	float w = calc_line_width(posCS.w, segmentwidth) * 0.5;
 
 	vec2 dirCS;
 	if (is_vec2_equal(currentP_2D, prevP_2D)){
@@ -58,7 +58,7 @@ vec4 calc_line_vertex_in_screen_space(vec3 pos, vec3 prev_pos, vec3 next_pos, fl
 
 vec4 calc_line_vertex_in_world_space(vec3 pos, vec3 prev_pos, vec3 next_pos, float segmentwidth, float side)
 {
-	float w = segmentwidth * u_line_width;
+	float w = segmentwidth * u_line_width * 0.5;
 	vec3 normal = vec3(0.0, 1.0, 0.0);
 	vec3 dir;
 	if (is_vec3_equal(pos, prev_pos)){
