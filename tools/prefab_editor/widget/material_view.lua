@@ -125,16 +125,12 @@ local function build_fx_ui(mv)
                 getter = function()
                     local prefab = hierarchy:get_template(mv.entity)
                     local data = prefab.template.data
-                    local s = data.state
-                    if type(s) == "string" then
-                        return s:match "cast_shadow" ~= nil
-                    end
-                    return (s & ies.filter_mask "cast_shadow") ~= nil
+                    return data.filter_state:match "cast_shadow" ~= nil
                 end,
                 setter = function(value)
                     local prefab = hierarchy:get_template(mv.entity)
                     local data = prefab.template.data
-                    local fstate = data.filter_state
+                local fstate = data.filter_state
                     if value then
                         if not fstate:match "cast_shadow" then
                             data.filter_state = fstate .. "|cast_shadow"
