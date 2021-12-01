@@ -198,7 +198,11 @@ function ipl.create_linestrip_mesh(points, line_width, color, uv_rotation, loop)
     tvb:alloc(numv, stripline_desc.layout.handle)
     tvb:updateV(vertices)
     return {
-        ib = strip_ib:alloc(numlines),
+        ib = {
+            start = 0,
+            num = numlines * 2 * 3,
+            handle = strip_ib.handle,
+        },
         vb = {
             start = 0,
             num = numv,
