@@ -38,14 +38,18 @@ function audio_sys:init()
 
     --test
     -- local bankname = "res/sounds/Master.bank"
-    -- local ret = ia.load_bank(bankname)
-    -- if not ret then
+    -- local bank0 = ia.load_bank(bankname)
+    -- if not bank0 then
     --     print("LoadBank Faied. :", bankname)
     -- end
     -- local bankname = "res/sounds/Master.strings.bank"
-    -- ret = ia.load_bank(bankname)
-    -- if not ret then
+    -- local bank1 = ia.load_bank(bankname)
+    -- if not bank1 then
     --     print("LoadBank Faied. :", bankname)
+    -- end
+    -- local event_list = audio.get_event_list(bank0)
+    -- for _, value in ipairs(event_list) do
+    --     print(audio.get_event_name(value))
     -- end
     -- sound_attack_ = ia.create("event:/Scene/attack")
     -- sound_click_ = ia.create("event:/UI/click")

@@ -55,7 +55,6 @@ function m:init()
 
     LoadImguiLayout(fs.path "":localpath() .. "/" .. "imgui.layout")
 
-    entity.create_grid_entity_simple("", nil, nil, nil, {srt={r={0,0.92388,0,0.382683},}})
     imgui.SetWindowTitle("PrefabEditor")
     gd.editor_package_path = "/pkg/tools.prefab_editor/"
 end

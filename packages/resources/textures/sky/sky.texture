@@ -1,0 +1,12 @@
+colorspace: Linear
+format: RGBA16F
+normalmap: false
+path: /pkg/ant.resources.binary/textures/cubemap/sky.dds
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: CLAMP
+  V: CLAMP
+  W: CLAMP
+type: texture
