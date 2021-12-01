@@ -47,13 +47,20 @@ function audio_sys:init()
     -- if not bank1 then
     --     print("LoadBank Faied. :", bankname)
     -- end
+
+    -- local bank_list = audio.get_bank_list()
+    -- for _, v in ipairs(bank_list) do
+    --     print(audio.get_bank_name(v))
+    -- end
+
     -- local event_list = audio.get_event_list(bank0)
-    -- for _, value in ipairs(event_list) do
-    --     print(audio.get_event_name(value))
+    -- for _, v in ipairs(event_list) do
+    --     print(audio.get_event_name(v))
     -- end
     -- sound_attack_ = ia.create("event:/Scene/attack")
     -- sound_click_ = ia.create("event:/UI/click")
     -- ia.play(sound_attack_)
+    -- ia.destroy(sound_click_)
 end
 
 function audio_sys:data_changed()

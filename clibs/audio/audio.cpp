@@ -165,6 +165,20 @@ laudio_event_count(lua_State* L) {
 }
 
 static int
+laudio_bank_name(lua_State* L) {
+	FMOD::Studio::Bank* ed = nullptr;
+	if (lua_type(L, 1) == LUA_TLIGHTUSERDATA) {
+		ed = (FMOD::Studio::Bank*)lua_topointer(L, 1);
+		char temp[256];
+		int retrieved;
+		ed->getPath(temp, 256, &retrieved);
+		lua_pushlstring(L, temp, retrieved);
+		return 1;
+	}
+	return 0;
+}
+
+static int
 laudio_event_name(lua_State* L) {
 	FMOD::Studio::EventDescription* ed = nullptr;
 	if (lua_type(L, 1) == LUA_TLIGHTUSERDATA) {
@@ -268,6 +282,7 @@ luaopen_audio(lua_State * L) {
 		{ "shutdown", laudio_shutdown },
 		{ "load_bank", laudio_load_bank },
 		{ "unload_bank", laudio_unload_bank },
+		{ "get_bank_name", laudio_bank_name},
 		{ "get_event_list", laudio_event_list },
 		{ "get_event_count", laudio_event_count },
 		{ "get_event_name", laudio_event_name},
