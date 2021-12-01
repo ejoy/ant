@@ -35,7 +35,6 @@ policy "shape_terrain"
 component "quad_strip".type "lua"
 system "quad_strip_system"
     .implement "quad_strip.lua"
-    .method "component_init"
     .method "entity_init"
 
 policy "quad_strip"

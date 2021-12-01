@@ -227,6 +227,46 @@ end
 
 local shape_terrain_test
 
+local indicator
+local function create_indicator()
+    local unit = 1
+    local height = 1
+    return ecs.create_entity {
+        policy = {
+            "ant.scene|scene_object",
+            "ant.asset|material",
+            "ant.render|uv_motion",
+            "ant.terrain|quad_strip", --in terrain package?
+            "ant.general|name",
+        },
+        data = {
+            quad_strip = {
+                points = build_indicator_points1(height),
+                normal = {0, 1, 0},
+                width = 0.5,
+                color = {3.0, 3.0, 6.0, 1.0},
+                --loop = true,
+            },
+            uv_motion = {
+                speed = {
+                    0,--0.025*unit,
+                    0,--0.025*unit,
+                },
+                tile = {
+                    3, 1
+                },
+                rotation = -math.pi*0.5,
+            },
+            material = "/pkg/ant.test.features/assets/indicator.material",
+            scene = {
+                srt = {}
+            },
+            reference = true,
+            name = "indicator_test",
+        }
+    }
+end
+
 function shape_terrain_test_sys:init()
     local ww, hh = 16, 16--256, 256--2, 2
     local terrain_fields = generate_terrain_fields(ww, hh)
@@ -265,42 +305,7 @@ function shape_terrain_test_sys:init()
 
     --indicator test
 
-    local unit = 1
-    local height = 1
-    ecs.create_entity {
-        policy = {
-            "ant.scene|scene_object",
-            "ant.asset|material",
-            "ant.render|uv_motion",
-            "ant.terrain|quad_strip", --in terrain package?
-            "ant.general|name",
-        },
-        data = {
-            quad_strip = {
-                points = build_indicator_points1(height),
-                normal = {0, 1, 0},
-                width = 0.5,
-                color = {3.0, 3.0, 6.0, 1.0},
-                --loop = true,
-            },
-            uv_motion = {
-                speed = {
-                    0,--0.025*unit,
-                    0,--0.025*unit,
-                },
-                tile = {
-                    3, 1
-                },
-                rotation = -math.pi*0.5,
-            },
-            material = "/pkg/ant.test.features/assets/indicator.material",
-            scene = {
-                srt = {}
-            },
-            reference = true,
-            name = "indicator_test",
-        }
-    }
+    indicator = create_indicator()
 end
 
 local itr = ecs.import.interface "ant.terrain|iterrain_road"
@@ -319,6 +324,12 @@ function shape_terrain_test_sys:data_changed()
             end
             itr.set_road(shape_terrain_test, "C" .. rotation, 1, 2)
             rotation = rotation + 1
+        elseif key == "H" and press == 0 then
+            if indicator then
+                w:remove(indicator)
+            end
+
+            indicator = create_indicator()
         end
     end
 end
