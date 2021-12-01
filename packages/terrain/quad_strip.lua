@@ -57,7 +57,7 @@ function qs_sys:entity_init()
                 "ant.general|name",
             },
             data = {
-                simplemesh = imesh.init_mesh(quadstrip_mesh),
+                simplemesh = quadstrip_mesh,
                 material = e.material,
                 filter_state = "main_view",
                 scene = {srt={}},

@@ -5,7 +5,6 @@ local w = world.w
 local bgfx = require "bgfx"
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local imesh     = ecs.import.interface "ant.asset|imesh"
 local irender   = ecs.import.interface "ant.render|irender"
 local declmgr   = require "vertexdecl_mgr"
 
@@ -194,9 +193,6 @@ function ipl.create_linestrip_mesh(points, line_width, color, uv_rotation, loop)
     local numlines = #points-1
     local numv = #points*2
 
-    local tvb = bgfx.transient_buffer(stripline_desc.desc_str)
-    tvb:alloc(numv, stripline_desc.layout.handle)
-    tvb:updateV(vertices)
     return {
         ib = {
             start = 0,
@@ -206,7 +202,9 @@ function ipl.create_linestrip_mesh(points, line_width, color, uv_rotation, loop)
         vb = {
             start = 0,
             num = numv,
-            tvb,
+            {
+                handle = bgfx.create_vertex_buffer(vertices, stripline_desc.layout.handle),
+            }
         }
     }
 end
@@ -214,7 +212,7 @@ end
 
 function ipl.add_strip_lines(points, line_width, color, material, loop)
     local polymesh = ipl.create_linestrip_mesh(points, line_width, color, loop)
-    return add_polylines(imesh.init_mesh(polymesh), line_width, color, material or "/pkg/ant.resources/materials/polyline.material")
+    return add_polylines(polymesh, line_width, color, material or "/pkg/ant.resources/materials/polyline.material")
 end
 
 local function generate_linelist_vertices(points)
@@ -268,9 +266,6 @@ function ipl.create_linelist_mesh(pointlist, line_width, color)
     local vertices = generate_linelist_vertices(pointlist)
     local numlines = numpoint / 2
     local numv = numlines * 4
-    local tvb = bgfx.transient_buffer(linelist_desc.desc_str)
-    tvb:alloc(numv, linelist_desc.layout.handle)
-    tvb:updateV(vertices)
     return {
         ib = {
             start = 0,
@@ -280,12 +275,14 @@ function ipl.create_linelist_mesh(pointlist, line_width, color)
         vb = {
             start = 0,
             num = numv,
-            tvb,
+            {
+                handle = bgfx.create_vertex_buffer(vertices, linelist_desc.layout.handle)
+            }
         }
     }
 end
 
 function ipl.add_linelist(pointlist, line_width, color, material)
     local polymesh = ipl.create_linelist_mesh(pointlist, line_width, color)
-    return add_polylines(imesh.init_mesh(polymesh), line_width, color, material or "/pkg/ant.resources/materials/polylinelist.material")
+    return add_polylines(polymesh, line_width, color, material or "/pkg/ant.resources/materials/polylinelist.material")
 end
