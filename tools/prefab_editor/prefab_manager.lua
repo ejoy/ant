@@ -198,7 +198,20 @@ function m:find_entity(e)
         end
     end
 end
-
+local function create_default_light(lt)
+    return ilight.create{
+        transform = {t = {0, 3, 0}, r = {math.rad(130), 0, 0}},
+        name = lt .. gen_light_id(),
+        type = lt,
+        color = {1, 1, 1, 1},
+        make_shadow = false,
+        intensity = 200,
+        range = 1,
+        motion_type = "dynamic",
+        inner_radian = math.rad(45),
+        outter_radian = math.rad(45)
+    }
+end
 function m:create(what, config)
     if not self.root then
         self:reset_prefab()
@@ -253,18 +266,7 @@ function m:create(what, config)
         end
     elseif what == "enable_default_light" then
         if not self.default_light then
-            local newlight, _ = ilight.create{
-                transform = {t = {0, 5, 0}, r = {math.rad(130), 0, 0}},
-                name = "directional" .. gen_light_id(),
-                type = "directional",
-                color = {1, 1, 1, 1},
-                make_shadow = false,
-                intensity = 200,
-                range = 1,
-                motion_type = "dynamic",
-                inner_radian = math.rad(45),
-                outter_radian = math.rad(45)
-            }
+            local newlight, _ = create_default_light("directional")
             self.default_light = newlight
             if not self.skybox then
                 self.skybox = ecs.create_instance("res/skybox_test.prefab")
@@ -285,16 +287,7 @@ function m:create(what, config)
         end
     elseif what == "light" then
         if config.type == "directional" or config.type == "point" or config.type == "spot" then      
-            local newlight, tpl = ilight.create({
-                transform = {t = {0, 3, 0},r = {math.rad(130), 0, 0}},
-                name = config.type .. gen_light_id(),
-                type = config.type,
-                color = {1, 1, 1, 1},
-                intensity = 200,
-                range = 1,
-                inner_radian = math.rad(45),
-                outter_radian = math.rad(45),
-            }, true)
+            local newlight, tpl = create_default_light(config.type)
             self:add_entity(newlight, self.root, tpl)
             light_gizmo.init()
             --create_light_billboard(newlight)
