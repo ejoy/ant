@@ -62,6 +62,10 @@ local system_properties = {
 	s_prefilter				= def_tex_prop(6, def_cubetex_handle),
 	s_LUT					= def_tex_prop(7, def_2dtex_handle),
 
+	--curve world
+	u_curveworld_param		= math3d.ref(mc.ZERO),
+	u_curveworld_dir		= math3d.ref(mc.ZERO),
+
 	-- shadow
 	--   csm
 	u_csm_matrix 		= {
