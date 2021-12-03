@@ -185,8 +185,26 @@ end
 function rt_sys:entity_ready()
 end
 
+local function check_need_remove_fbidx(fbidx)
+	local ref = 0
+	for e in w:select "render_target:in" do
+		if e.render_target.fb_idx == fbidx then
+			ref = ref + 1
+			if ref > 1 then
+				return 
+			end
+		end
+	end
+	return true
+end
+
 function rt_sys:entity_remove()
 	for v in w:select "REMOVED render_target:in" do
+		local fbidx = v.render_target.fb_idx
+		local ref = 0
+		if check_need_remove_fbidx(fbidx) then
+			fbmgr.destroy(fbidx)
+		end
 		fbmgr.unbind(v.render_target.viewid)
 	end
 end
