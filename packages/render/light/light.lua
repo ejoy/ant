@@ -160,13 +160,13 @@ function ilight.which_type(e)
 end
 
 function ilight.make_shadow(e)
-	w:sync("make_shadow:in", e)
+	w:sync("make_shadow?in", e)
 	return e.make_shadow
 end
 
 function ilight.set_make_shadow(e, enable)
 	e.make_shadow = enable
-	w:sync("make_shadow:out", e)
+	w:sync("make_shadow?out", e)
 end
 
 function ilight.motion_type(e)

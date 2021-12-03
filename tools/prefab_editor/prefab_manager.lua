@@ -292,6 +292,7 @@ function m:create(what, config)
                 color = {1, 1, 1, 1},
                 intensity = 200,
                 range = 1,
+                make_shadow = false,
                 inner_radian = math.rad(45),
                 outter_radian = math.rad(45),
             }, true)
