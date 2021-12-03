@@ -96,8 +96,44 @@ function mgr.create(fb)
 	return fb_idx
 end
 
-function mgr.recreate(fbidx, fb)
+
+local function find_rb_have_multi_ref(rbidx)
+	local found = 0
+	for fbidx, fb in pairs(framebuffers) do
+		for i=1, #fb do
+			if fb[i] == rbidx then
+				found = found + 1
+				if found > 1 then
+					return true
+				end
+			end
+		end
+	end
+end
+
+local function destroy_rb(rbidx, mark_rbidx)
+	if not find_rb_have_multi_ref(rbidx) then
+		local rb = mgr.get_rb(rbidx)
+		bgfx.destroy(rb.handle)
+		if mark_rbidx then
+			renderbuffers[rbidx] = nil
+		end
+	end
+end
+
+function mgr.destroy(fbidx)
+	local oldfb = framebuffers[fbidx]
+	for i=1, #oldfb do
+		destroy_rb(oldfb[i], true)
+	end
+	bgfx.destroy(oldfb.handle)
+	framebuffers[fbidx] = nil
+end
+
+function mgr.recreate(fbidx, fb, remove_rb)
 	assert(fb.wndhandle == nil)
+	local oldfb = framebuffers[fbidx]
+	bgfx.destroy(oldfb.handle)
 	framebuffers[fbidx] = create_fb_handle(fb.render_buffers, fb.manager_buffer)
 end
 
@@ -142,6 +178,7 @@ end
 
 function mgr.resize_rb(w, h, rbidx)
 	local rb = mgr.get_rb(rbidx)
+	destroy_rb(rbidx)
 	if rb.w ~= w or rb.h ~= h then
 		rb.w, rb.h = w, h
 		rb.handle = create_rb_handle(rb)
