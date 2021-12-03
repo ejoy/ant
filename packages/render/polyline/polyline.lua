@@ -6,6 +6,7 @@ local bgfx = require "bgfx"
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local irender   = ecs.import.interface "ant.render|irender"
+local declmgr   = require "vertexdecl_mgr"
 
 local ipl       = ecs.interface "ipolyline"
 
@@ -22,7 +23,7 @@ local ipl       = ecs.interface "ipolyline"
     vec3  v_texcoord0;  //xy for uv, w for counter
 ]]
 
-local declmgr           = require "vertexdecl_mgr"
+
 
 local function create_strip_index_buffer(max_lines)
     local function create_ib_buffer(max_lines)
@@ -68,69 +69,20 @@ local function create_strip_index_buffer(max_lines)
 end
 
 local strip_ib = create_strip_index_buffer(3072)
-
-local function create_dynbuffer(max_vertices, desc)
-    local function create_layout(desc)
-        desc = declmgr.correct_layout(desc)
-        local decl = declmgr.get(desc)
-        local formatdesc = declmgr.vertex_desc_str(desc)
-    
-        return {
-            desc    = desc,
-            handle  = decl.handle,
-            stride  = decl.stride,
-            formatdesc = formatdesc
-        }
-    end
-
-    local  layout = create_layout(desc)
+local function create_vb_desc(fmt)
+    local ffmt<const>  = declmgr.correct_layout(fmt)
     return {
-        max_vertices    = max_vertices,
-        offset          = 0,
-        layout          = layout,
-        handle          = bgfx.create_dynamic_vertex_buffer(max_vertices, layout.handle, "a"),
-        vertices_num    = function (self, vertex_table)
-            return #vertex_table / #self.layout.formatdesc
-        end,
-        alloc = function (self, num, vertices)
-            local stride = layout.stride
-            local start = self.offset / stride
-            self.offset = self.offset + num * stride
-
-            if self.offset > self.max_vertices * self.layout.stride then
-                error(("not enough dynamic buffer:%d, %d"):format(self.offset, self.max_vertices * self.layout.stride))
-            end
-    
-            local vb = {
-                start = start,
-                num = num,
-                {handle = self.handle},
-            }
-            if vertices then
-                self:update(vb, vertices)
-            end
-    
-            return vb
-        end,
-        update = function(self, vb, vertices)
-            local h = self.handle
-            assert(h == vb[1].handle)
-            bgfx.update(h, vb.start, vertices)
-        end,
-        free = function(self, vb)
-            --TODO
-            assert(self.handle == vb[1])
-        end,
+        layout = declmgr.get(ffmt),
+        desc_str = declmgr.vertex_desc_str(ffmt),
     }
 end
-
-local dyn_stripline_vb = create_dynbuffer(1024, "p3|t20|t31|t32|t33")
-local dyn_linelist_vb = create_dynbuffer(1024, "p3|t20|t31|t32")
+local stripline_desc = create_vb_desc "p3|t20|t31|t32|t33"
+local linelist_desc = create_vb_desc "p3|t20|t31|t32"
 
 local function generate_stripline_vertices(points, uv_rotation, loop)
     local numpoint = #points
     local numv = numpoint * 2
-    local stride = dyn_stripline_vb.layout.stride
+    local stride = stripline_desc.layout.stride
     local elem_offset = 1
     local fmt<const> = ('f'):rep(14)
     local vertices = bgfx.memory_buffer(numv * stride)
@@ -239,11 +191,21 @@ function ipl.create_linestrip_mesh(points, line_width, color, uv_rotation, loop)
 
     local vertices = generate_stripline_vertices(points, uv_rotation, loop)
     local numlines = #points-1
-    local numvertex = #points*2
+    local numv = #points*2
 
     return {
-        ib = strip_ib:alloc(numlines),
-        vb = dyn_stripline_vb:alloc(numvertex, vertices),
+        ib = {
+            start = 0,
+            num = numlines * 2 * 3,
+            handle = strip_ib.handle,
+        },
+        vb = {
+            start = 0,
+            num = numv,
+            {
+                handle = bgfx.create_vertex_buffer(vertices, stripline_desc.layout.handle),
+            }
+        }
     }
 end
 
@@ -257,7 +219,7 @@ local function generate_linelist_vertices(points)
     local numpoint = #points
     local numv = (numpoint / 2) * 4
     local elem_offset = 1
-    local stride = dyn_linelist_vb.layout.stride
+    local stride = linelist_desc.layout.stride
     local vertices = bgfx.memory_buffer(stride*numv)
     local fmt<const> = ('f'):rep(11)
     local function fill_vertex(p, d, u, v, side, width, counter)
@@ -303,14 +265,20 @@ function ipl.create_linelist_mesh(pointlist, line_width, color)
 
     local vertices = generate_linelist_vertices(pointlist)
     local numlines = numpoint / 2
-    local numvertex = numlines * 4
+    local numv = numlines * 4
     return {
         ib = {
             start = 0,
             num = numlines * 2 * 3,
             handle = irender.quad_ib(),
         },
-        vb = dyn_linelist_vb:alloc(numvertex, vertices),
+        vb = {
+            start = 0,
+            num = numv,
+            {
+                handle = bgfx.create_vertex_buffer(vertices, linelist_desc.layout.handle)
+            }
+        }
     }
 end
 

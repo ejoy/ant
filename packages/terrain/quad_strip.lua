@@ -43,45 +43,6 @@ end
 
 
 local qs_sys        = ecs.system "quad_strip_system"
-function qs_sys:component_init()
-    -- for ie in w:select "INIT quad_strip:in simplemesh:out" do
-    --     local qs = ie.quad_strip
-    --     local points = qs.points
-    --     local width = qs.width
-    --     local hw = width*0.5
-    --     local normal = qs.normal or mc.YAXIS
-
-    --     local numquad = #points-1
-    --     local numv = numquad * 4
-    --     local vertices = bgfx.memory_buffer(numv*stride)
-    --     local offset = 1
-    --     local clr = qs.color
-    --     for i=1, numquad do
-    --         local p0 = points[i]
-    --         local p1 = points[i+1]
-    --         offset = add_quad(p0, p1, normal, hw, offset, clr, vertices)
-    --     end
-
-    --     local numi = numquad*6
-
-    --     assert(irender.quad_ib_num() > numi)
-
-    --     ie.simplemesh = imesh.init_mesh{
-    --         vb = {
-    --             start = 0,
-    --             num = numv,
-    --             {
-    --                 handle = bgfx.create_vertex_buffer(vertices, layout.handle),
-    --             }
-    --         },
-    --         ib = {
-    --             start = 0,
-    --             num = numi,
-    --             handle = irender.quad_ib(),
-    --         }
-    --     }
-    -- end
-end
 
 function qs_sys:entity_init()
     for e in w:select "INIT quad_strip:in uv_motion:in material:in reference:in" do
@@ -96,7 +57,7 @@ function qs_sys:entity_init()
                 "ant.general|name",
             },
             data = {
-                simplemesh = imesh.init_mesh(quadstrip_mesh),
+                simplemesh = quadstrip_mesh,
                 material = e.material,
                 filter_state = "main_view",
                 scene = {srt={}},

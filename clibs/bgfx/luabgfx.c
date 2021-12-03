@@ -3302,6 +3302,36 @@ lapplyVB(lua_State *L) {
 }
 
 static int
+lupdateTVB(lua_State *L){
+	struct transient_buffer *v = luaL_checkudata(L, 1, "BGFX_TB");
+	const bgfx_memory_t *mem = getMemory(L, 2);
+	const int startV = luaL_optinteger(L, 3, 0);
+	const int startByte = startV * v->tvb.stride;
+	if ((v->tvb.size - startByte) < mem->size){
+		return luaL_error(L, "transient buffer too small:%d, start vertex:%d, memory size:%d", v->cap_v, startV, mem->size);
+	}
+
+	memcpy(v->tvb.data+startByte, mem->data, mem->size);
+	return 0;
+}
+
+static int
+lupdateTIB(lua_State *L){
+	struct transient_buffer *v = luaL_checkudata(L, 1, "BGFX_TB");
+	const bgfx_memory_t *mem = getMemory(L, 2);
+	const int startI = luaL_optinteger(L, 3, 0);
+	const int stride = v->tib.isIndex16 ? 2 : 4;
+	const int startByte = startI * stride;
+	if ((v->tib.size - startByte) < mem->size){
+		return luaL_error(L, "transient buffer too small:%d, start vertex:%d, memory size:%d", v->cap_v, startI, mem->size);
+	}
+
+	memcpy(v->tib.data+startByte, mem->data, mem->size);
+
+	return 0;
+}
+
+static int
 lnewTransientBuffer(lua_State *L) {
 	size_t sz;
 	const char * format = luaL_checklstring(L, 1, &sz);
@@ -5164,6 +5194,8 @@ luaopen_bgfx(lua_State *L) {
 		{ "packV", lpackTVB },
 		{ "packI", lpackTIB },
 		{ "apply", lapplyVB },
+		{ "updateV",lupdateTVB},
+		{ "updateI",lupdateTIB},
 		{ "__call", lpackTVB },
 		{ "__index", NULL },
 		{ NULL, NULL },
