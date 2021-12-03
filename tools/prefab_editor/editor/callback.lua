@@ -1,15 +1,19 @@
 local imgui         = require "imgui"
-local task          = require "task"
-local event         = require "event"
-local worlds        = require "worlds"
+local task          = require "editor.task"
+local event         = require "editor.event"
+local worlds        = require "editor.worlds"
 local cb = {}
 
-function cb.init(width, height)
-    require "editor_impl"
+function cb.init(width, height, cfg)
+    worlds.create "prefab_editor" {
+        fbw=width, fbh=height,
+        viewport = {x=0, y=0, w=1, h=1},
+        ecs = cfg.ecs,
+    }
     event("init", width, height)
 end
 
-function cb.update(delta)
+function cb.update(viewid, delta)
     for _, w in ipairs(worlds) do
         w.update()
     end

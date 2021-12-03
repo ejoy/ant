@@ -1,6 +1,7 @@
-local ecs = ...
+local ecs       = ...
 local world     = ecs.world
 local w         = world.w
+
 local math3d    = require "math3d"
 local imgui     = require "imgui"
 local rhwi      = import_package "ant.hwi"
@@ -15,6 +16,7 @@ local icoll     = ecs.import.interface "ant.collision|icollider"
 local drawer    = ecs.import.interface "ant.render|iwidget_drawer"
 local isp 		= ecs.import.interface "ant.render|isystem_properties"
 local iwd       = ecs.import.interface "ant.render|iwidget_drawer"
+
 local resource_browser  = ecs.require "widget.resource_browser"
 local anim_view         = ecs.require "widget.animation_view"
 local material_view     = ecs.require "widget.material_view"
@@ -23,29 +25,36 @@ local scene_view        = ecs.require "widget.scene_view"
 local inspector         = ecs.require "widget.inspector"
 local gridmesh_view     = ecs.require "widget.gridmesh_view"
 local prefab_view       = ecs.require "widget.prefab_view"
+local menu              = ecs.require "widget.menu"
+local gizmo             = ecs.require "gizmo.gizmo"
+local camera_mgr        = ecs.require "camera_manager"
+
+local uiconfig          = require "widget.config"
+local widget_utils      = require "widget.utils"
+local log_widget        = require "widget.log"(asset_mgr)
+local console_widget    = require "widget.console"(asset_mgr)
+local hierarchy         = require "hierarchy_edit"
+
+local global_data       = require "common.global_data"
+local new_project       = require "common.new_project"
+local utils             = require "common.utils"
+local gizmo_const       = require "gizmo.const"
+
 local prefab_mgr        = ecs.require "prefab_manager"
 prefab_mgr.set_anim_view(anim_view)
-local menu              = ecs.require "widget.menu"
-local camera_mgr        = ecs.require "camera_manager"
-local gizmo             = ecs.require "gizmo.gizmo"
-local uiconfig          = require "widget.config"
-local vfs       = require "vfs"
-local access    = require "vfs.repoaccess"
-local fs        = require "filesystem"
-local lfs       = require "filesystem.local"
-local hierarchy = require "hierarchy_edit"
-local global_data = require "common.global_data"
-local gizmo_const = require "gizmo.const"
-local new_project = require "common.new_project"
-local widget_utils = require "widget.utils"
-local utils = require "common.utils"
-local log_widget = require "widget.log"(asset_mgr)
-local console_widget = require "widget.console"(asset_mgr)
+
+
+local vfs               = require "vfs"
+local access            = require "vfs.repoaccess"
+local fs                = require "filesystem"
+local lfs               = require "filesystem.local"
+local bgfx              = require "bgfx"
+
 local m = ecs.system 'gui_system'
 local drag_file = nil
 
 local second_view_width = 384
-local second_vew_height = 216
+local second_view_height = 216
 
 local function on_new_project(path)
     new_project.set_path(path)
@@ -93,6 +102,8 @@ local function get_package(entry_path, readmount)
     global_data.repo = repo
     return packages
 end
+
+local fileserver_thread
 
 local function choose_project()
     if global_data.project_root then return end
@@ -181,17 +192,36 @@ local function choose_project()
     end
 end
 
-local fileserver_thread
+local main_vp = {}
+local last_main_vp = {}
+local function is_pt_in_rect(x, y, rt)
+    return  rt.x < x and x < (rt.x+rt.w) and
+            rt.y < y and x < (rt.y+rt.h)
+end
 
-local function show_dock_space(offset_x, offset_y)
-    local viewport = imgui.GetMainViewport()
-    imgui.windows.SetNextWindowPos(viewport.WorkPos[1] + offset_x, viewport.WorkPos[2] + offset_y)
-    imgui.windows.SetNextWindowSize(viewport.WorkSize[1] - offset_x, viewport.WorkSize[2] - offset_y)
-    imgui.windows.SetNextWindowViewport(viewport.ID)
+local function check_update_vp()
+    if  main_vp.x ~= last_main_vp.x or
+        main_vp.y ~= last_main_vp.y or
+        main_vp.w ~= last_main_vp.w or
+        main_vp.h ~= last_main_vp.h then
+        last_main_vp.x, last_main_vp.y, last_main_vp.w, last_main_vp.h = 
+        main_vp.x, main_vp.y, main_vp.w, main_vp.h
+        return true
+    end
+end
+
+local function show_dock_space()
+    local imgui_vp = imgui.GetMainViewport()
+    local offset = {0, uiconfig.ToolBarHeight}
+    local wp, ws = imgui_vp.WorkPos, imgui_vp.WorkSize
+
+    imgui.windows.SetNextWindowPos(wp[1] + offset[1], wp[2] + offset[2])
+    imgui.windows.SetNextWindowSize(ws[1] - offset[1], ws[2] - offset[2])
+    imgui.windows.SetNextWindowViewport(imgui_vp.ID)
 	imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0.0);
 	imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowBorderSize, 0.0);
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowPadding, 0.0, 0.0);
-    local wndflags = imgui.flags.Window {
+    if imgui.windows.Begin("MainView", imgui.flags.Window {
         "NoDocking",
         "NoTitleBar",
         "NoCollapse",
@@ -200,31 +230,23 @@ local function show_dock_space(offset_x, offset_y)
         "NoBringToFrontOnFocus",
         "NoNavFocus",
         "NoBackground",
-    }
-    local dockflags = imgui.flags.DockNode {
-        "NoDockingInCentralNode",
-        "PassthruCentralNode",
-    }
-    if not imgui.windows.Begin("DockSpace Demo", wndflags) then
-        imgui.windows.PopStyleVar(3)
-        imgui.windows.End()
-        return
+    }) then
+        imgui.dock.Space("MainViewSpace", imgui.flags.DockNode {
+            "NoDockingInCentralNode",
+            "PassthruCentralNode",
+        })
+        main_vp.x, main_vp.y, main_vp.w, main_vp.h = imgui.dock.BuilderGetCentralRect "MainViewSpace"
     end
-    imgui.dock.Space("MyDockSpace", dockflags)
-    local x,y,w,h = imgui.dock.BuilderGetCentralRect("MyDockSpace")
     imgui.windows.PopStyleVar(3)
     imgui.windows.End()
-    return x,y,w,h
 end
-local iRmlUi    = ecs.import.interface "ant.rmlui|irmlui"
-local irq       = ecs.import.interface "ant.render|irenderqueue"
-local bgfx      = require "bgfx"
+
 local stat_window
-local dock_x, dock_y, dock_width, dock_height
-local last_x = -1
-local last_y = -1
-local last_width = -1
-local last_height = -1
+function m:init_world()
+    local iRmlUi = ecs.import.interface "ant.rmlui|irmlui"
+    stat_window = iRmlUi.open "bgfx_stat.rml"
+end
+
 function m:ui_update()
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.2, 0.2, 0.2, 1)
@@ -233,7 +255,7 @@ function m:ui_update()
     widget_utils.show_message_box()
     menu.show()
     toolbar.show()
-    dock_x, dock_y, dock_width, dock_height = show_dock_space(0, uiconfig.ToolBarHeight)
+    show_dock_space()
     scene_view.show()
     gridmesh_view.show()
     prefab_view.show()
@@ -248,7 +270,7 @@ function m:ui_update()
     --drag file to view
     if imgui.util.IsMouseDragging(0) then
         local x, y = imgui.util.GetMousePos()
-        if (x > last_x and x < (last_x + last_width) and y > last_y and y < (last_y + last_height)) then
+        if is_pt_in_rect(x, y, last_main_vp) then
             if not drag_file then
                 local dropdata = imgui.widget.GetDragDropPayload()
                 if dropdata and (string.sub(dropdata, -7) == ".prefab"
@@ -266,28 +288,23 @@ function m:ui_update()
         end
     end
 
-    if not stat_window then
-        local iRmlUi = ecs.import.interface "ant.rmlui|irmlui"
-        stat_window = iRmlUi.open "bgfx_stat.rml"
-    end
-    local bgfxstat = bgfx.get_stats("sdcpnmtv")
-    if bgfxstat then
-        stat_window.postMessage(string.format("DrawCall: %d\nTriangle: %d\nTexture: %d\ncpu(ms): %f\ngpu(ms): %f\nfps: %d", bgfxstat.numDraw, bgfxstat.numTriList, bgfxstat.numTextures, bgfxstat.cpu, bgfxstat.gpu, bgfxstat.fps))
-    end
+    local bgfxstat = bgfx.get_stats "sdcpnmtv"
+    stat_window.postMessage(string.format("DrawCall: %d\nTriangle: %d\nTexture: %d\ncpu(ms): %f\ngpu(ms): %f\nfps: %d", 
+                            bgfxstat.numDraw, bgfxstat.numTriList, bgfxstat.numTextures, bgfxstat.cpu, bgfxstat.gpu, bgfxstat.fps))
 end
 
-local hierarchy_event = world:sub {"HierarchyEvent"}
-local drop_files_event = world:sub {"OnDropFiles"}
-local entity_event = world:sub {"EntityEvent"}
-local event_keyboard = world:sub{"keyboard"}
-local event_open_prefab = world:sub {"OpenPrefab"}
-local event_preopen_prefab = world:sub {"PreOpenPrefab"}
-local event_open_fbx = world:sub {"OpenFBX"}
-local event_add_prefab = world:sub {"AddPrefabOrEffect"}
-local event_resource_browser = world:sub {"ResourceBrowser"}
-local event_window_title = world:sub {"WindowTitle"}
-local event_create = world:sub {"Create"}
-local event_gizmo = world:sub {"Gizmo"}
+local hierarchy_event       = world:sub {"HierarchyEvent"}
+local drop_files_event      = world:sub {"OnDropFiles"}
+local entity_event          = world:sub {"EntityEvent"}
+local event_keyboard        = world:sub {"keyboard"}
+local event_open_prefab     = world:sub {"OpenPrefab"}
+local event_preopen_prefab  = world:sub {"PreOpenPrefab"}
+local event_open_fbx        = world:sub {"OpenFBX"}
+local event_add_prefab      = world:sub {"AddPrefabOrEffect"}
+local event_resource_browser= world:sub {"ResourceBrowser"}
+local event_window_title    = world:sub {"WindowTitle"}
+local event_create          = world:sub {"Create"}
+local event_gizmo           = world:sub {"Gizmo"}
 
 local light_gizmo = ecs.require "gizmo.light"
 
@@ -523,17 +540,21 @@ function m:start_frame()
 end
 
 function m:end_frame()
-    local dirty = false
-    if last_x ~= dock_x then last_x = dock_x dirty = true end
-    if last_y ~= dock_y then last_y = dock_y dirty = true  end
-    if last_width ~= dock_width then last_width = dock_width dirty = true  end
-    if last_height ~= dock_height then last_height = dock_height dirty = true  end
-    if dirty then
+    if check_update_vp() then
         local mvp = imgui.GetMainViewport()
-        local viewport = {x = dock_x - mvp.WorkPos[1], y = dock_y - mvp.WorkPos[2] + uiconfig.MenuHeight, w = dock_width, h = dock_height}
-        irq.set_view_rect("main_queue", viewport)
+        local viewport = {
+            x = main_vp.x - mvp.WorkPos[1],
+            y = main_vp.y - mvp.WorkPos[2] + uiconfig.MenuHeight,
+            w = main_vp.w, h = main_vp.h
+        }
+        irq.set_view_rect("tonemapping_queue", viewport)
+        world:pub{"view_resize", main_vp.w, main_vp.h}
 
-        local secondViewport = {x = viewport.x + (dock_width - second_view_width), y = viewport.y + (dock_height - second_vew_height), w = second_view_width, h = second_vew_height}
+        local secondViewport = {
+            x = viewport.x + (viewport.w - second_view_width),
+            y = viewport.y + (viewport.h - second_view_height),
+            w = second_view_width, h = second_view_height
+        }
         irq.set_view_rect(camera_mgr.second_view, secondViewport)
         world:pub {"ViewportDirty", viewport}
     end

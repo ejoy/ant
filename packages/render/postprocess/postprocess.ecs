@@ -19,7 +19,7 @@ policy "postprocess"
     --.require_system "ant.render|dof_system"
     --.require_system "ant.render|bloom_system"
     .require_system "ant.render|tonemapping_system"
-    .require_system "ant.render|blit_system"
+    --.require_system "ant.render|blit_system"
 
 component "postprocess"
 component "postprocess_input".type "lua"
@@ -30,6 +30,7 @@ policy "postprocess_object"
 
 policy "postprocess_queue"
     .require_policy "render_target"
+    .component "queue_name"
 
 component "postprocess_obj_queue"
 system "postprocess_obj_system"

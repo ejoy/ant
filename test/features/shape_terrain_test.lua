@@ -285,8 +285,9 @@ function shape_terrain_test_sys:init()
             },
             uv_motion = {
                 speed = {
-                    0,--0.025*unit,
-                    0,--0.025*unit,
+                    unit*5,
+                    0,
+                    --0.25*unit,
                 },
                 tile = {
                     3, 1

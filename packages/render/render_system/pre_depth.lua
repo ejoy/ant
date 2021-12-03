@@ -2,8 +2,8 @@ local ecs = ...
 local world = ecs.world
 
 local irender   = ecs.import.interface "ant.render|irender"
+local irq       = ecs.import.interface "ant.render|irenderqueue"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-
 local bgfx      = require "bgfx"
 
 local pre_depth_material
@@ -31,6 +31,20 @@ local function check_set_pre_depth_state(state)
     local ss = bgfx.parse_state(state)
     ss.WRITE_MASK = "Z"
     return bgfx.make_state(ss)
+end
+
+local vr_mb = world:sub{"view_rect_changed", "main_queue"}
+function s:data_changed()
+    for msg in vr_mb:each() do
+        local vr = msg[3]
+        local dq = w:singleton("pre_depth_queue", "render_target:in")
+        local dqvr = dq.render_target.view_rect
+        --have been changed in viewport detect
+        assert(vr.w == dqvr.w and vr.h == dqvr.h)
+        if vr.x ~= dqvr.x or vr.y ~= dqvr.y then
+            irq.set_view_rect("pre_depth_queue", vr)
+        end
+    end
 end
 
 function s:end_filter()

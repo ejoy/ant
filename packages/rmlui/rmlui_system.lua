@@ -61,7 +61,8 @@ function rmlui_sys:init_world()
     }
 end
 
-local vr_change_mb = world:sub{"view_rect_changed", "main_queue"}
+local vr_changed_mb = world:sub{"view_rect_changed", "main_queue"}
+local rt_changed_mb = world:sub{"render_target_resize", "rmlui_obj"}
 
 function rmlui_sys:entity_init()
     for q in w:select "INIT rmlui_obj render_target:in" do
@@ -75,12 +76,12 @@ function rmlui_sys:entity_init()
         ltask.send(ServiceRmlUi, "update_context_size", vr.w, vr.h, screen_ratio)
     end
 
-    for q in w:select "rmlui_obj render_target_changed render_target:in" do
-        local vr = q.render_target.view_rect
-        ltask.send(ServiceRmlUi, "update_context_size", vr.w, vr.h, screen_ratio)
+    for msg in rt_changed_mb:each() do
+        local s = msg[3]
+        ltask.send(ServiceRmlUi, "update_context_size", s.w, s.h, screen_ratio)
     end
 
-    for _ in vr_change_mb:each() do
+    for _ in vr_changed_mb:each() do
         irq.set_view_rect("rmlui_obj", irq.view_rect"main_queue")
     end
 end

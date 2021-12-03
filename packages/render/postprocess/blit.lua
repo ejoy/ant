@@ -2,9 +2,6 @@ local ecs 	= ...
 local world = ecs.world
 local w 	= world.w
 
-local mathpkg 	= import_package "ant.math"
-local mu 		= mathpkg.util
-
 local viewidmgr = require "viewid_mgr"
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
@@ -24,9 +21,7 @@ function blit_sys:init()
 			"ant.render|simplerender",
 		},
 		data = {
-			scene = {
-				srt = mu.srt_obj(),
-			},
+			scene           = {srt = {}},
 			material        = "/pkg/ant.resources/materials/fullscreen.material",
 			filter_state    = "",
 			name            = "resolve_quad",

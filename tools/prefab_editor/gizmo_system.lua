@@ -227,7 +227,7 @@ local function mouse_hit_plane(screen_pos, plane_info)
 end
 
 local function update_global_axis()
-	if not global_data.viewport then return end
+	if not global_data.viewport_NEEDREMOVE then return end
 	if not global_axis_x_eid.scene then
 		world.w:sync("scene:in", global_axis_x_eid)
 		world.w:sync("scene:in", global_axis_y_eid)
@@ -237,7 +237,7 @@ local function update_global_axis()
 	local mc = irq.main_camera()
 	for v in world.w:select "scene:in" do
 		if v.scene == global_axis_x_eid.scene or v.scene == global_axis_y_eid.scene or v.scene == global_axis_z_eid.scene then
-			local screenpos = {global_data.viewport.x + 50, global_data.viewport.y + global_data.viewport.h - 50}
+			local screenpos = {global_data.viewport_NEEDREMOVE.x + 50, global_data.viewport_NEEDREMOVE.y + global_data.viewport_NEEDREMOVE.h - 50}
 			local worldPos = utils.ndc_to_world(mc,
 				iom.screen_to_ndc({screenpos[1], screenpos[2], 0.5}))
 			world.w:sync("render_object:in", v)
@@ -547,7 +547,7 @@ local function select_axis(x, y)
 	local start = utils.world_to_screen(mc, gizmo_obj_pos)
 	uniform_scale = false
 	-- uniform scale
-	local hp = {x - global_data.viewport.x, y - global_data.viewport.y, 0}
+	local hp = {x - global_data.viewport_NEEDREMOVE.x, y - global_data.viewport_NEEDREMOVE.y, 0}
 	if gizmo.mode == gizmo_const.SCALE then
 		local radius = math3d.length(math3d.sub(hp, start))
 		if radius < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
@@ -996,7 +996,7 @@ function gizmo_sys:handle_event()
 		end
 	end
 	for _, vp in viewpos_event:unpack() do
-		global_data.viewport = vp
+		global_data.viewport_NEEDREMOVE = vp
 		update_global_axis()
 	end
 

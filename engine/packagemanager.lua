@@ -118,9 +118,18 @@ local function findenv(from, to)
     return loadenv(from or to).package_env(to)
 end
 
+local function loadcfg(name)
+    local info = registered[name]
+    if not info then
+        error(("\n\tno package '%s'"):format(name))
+    end
+    return info.config
+end
+
 return {
     import = import,
     findenv = findenv,
     loadenv = loadenv,
     detect = detect,
+    loadcfg = loadcfg,
 }

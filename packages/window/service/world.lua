@@ -60,6 +60,12 @@ local function check_load_framebuffer_size(w, h)
 	return w, h
 end
 
+local function calc_viewport(fbw, fbh)
+	return {
+		x=0, y=0, w=fbw, h=fbh
+	}
+end
+
 function S.init(nwh, context, width, height)
 	local fbw, fbh = check_load_framebuffer_size(width, height)
 	log.info("framebuffer size:", fbw, fbh)
@@ -76,18 +82,21 @@ function S.init(nwh, context, width, height)
 	bgfx.encoder_begin()
 	ltask.call(ServiceBgfxMain, "encoder_init")
 	encoderBegin = true
-	config.width  = fbw
-	config.height = fbh
+	config.fbw, config.fbh = fbw, fbh
+	config.viewport = calc_viewport(fbw, fbh)
 	world = ecs.new_world(config)
 	local ev = inputmgr.create(world, "win32")
 	S.mouse_wheel = ev.mouse_wheel
 	S.mouse = ev.mouse
 	S.touch = ev.touch
 	S.keyboard = ev.keyboard
-	S.size = ev.size
+	S.size = function (w, h)
+		ev.size(w, h)
+		world:pub{"view_resize", w, h}
+	end
 	ltask.send(ServiceWindow, "subscribe", "mouse_wheel", "mouse", "touch", "keyboard","size")
 
-	world:pub {"resize", width, height}
+	world:pub {"viewsize", width, height}
 	world:pipeline_init()
 
 	ltask.fork(Render)

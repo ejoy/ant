@@ -10,29 +10,29 @@ local function DEF_FUNC() end
 local SETTING_MAPPING = {
     lighting = function (v)
         if v == "on" then
-            return "ENABLE_LIGHTING"
+            return "ENABLE_LIGHTING=1"
         end
     end,
     shadow_receive = function (v)
         if v == "on" then
-            return "ENABLE_SHADOW"
+            return "ENABLE_SHADOW=1"
         end
     end,
     skinning = function (v)
         if v == "GPU" then
-            return "GPU_SKINNING"
+            return "GPU_SKINNING=1"
         end
     end,
     depth_type = function (v)
         if v == "linear" then
-            return "DEPTH_LINEAR"
+            return "DEPTH_LINEAR=1"
         elseif v == "pack_depth" then
-            return "PACK_RGBA8"
+            return "PACK_RGBA8=1"
         end
     end,
     bloom = function (v)
         if v == "on" then
-            return "BLOOM_ENABLE"
+            return "BLOOM_ENABLE=1"
         end
     end,
     os = function ()
@@ -49,15 +49,19 @@ local enable_cs = setting:get 'graphic/lighting/cluster_shading' ~= 0
 
 local function default_macros(setting)
     local m = {
-        "ENABLE_SRGB_TEXTURE",
-        "ENABLE_SRGB_FB",
-        "ENABLE_IBL"
+        "ENABLE_SRGB_TEXTURE=1",
+        "ENABLE_SRGB_FB=1",
+        "ENABLE_IBL=1",
     }
+
+    if setting.curve_world then
+        m[#m+1] = "ENABLE_CURVE_WORLD=1"
+    end
 
     if enable_cs then
         m[#m+1] = "HOMOGENEOUS_DEPTH=" .. (setting.hd and "1" or "0")
         m[#m+1] = "ORIGIN_BOTTOM_LEFT=" .. (setting.obl and "1" or "0")
-        m[#m+1] = "CLUSTER_SHADING"
+        m[#m+1] = "CLUSTER_SHADING=1"
     end
     return m
 end

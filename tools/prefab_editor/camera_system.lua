@@ -108,7 +108,7 @@ local function selectBoundary(hp)
 	for i, v in ipairs(boundary) do
 		local sp2 = utils.world_to_screen(mc, v[2])
 		local sp1 = utils.world_to_screen(mc, v[1])
-		local dist = utils.point_to_line_distance2D(sp1, sp2, {hp[1] - global_data.viewport.x, hp[2] - global_data.viewport.y})
+		local dist = utils.point_to_line_distance2D(sp1, sp2, {hp[1] - global_data.viewport_NEEDREMOVE.x, hp[2] - global_data.viewport_NEEDREMOVE.y})
 		if dist < 5.0 then
 			return i
 		end

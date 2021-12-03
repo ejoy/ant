@@ -17,7 +17,7 @@ local irender	= ecs.import.interface "ant.render|irender"
 local fr_sys = ecs.system "forward_render_system"
 
 function fr_sys:init()
-	local vr = {x=0, y=0, w=world.args.width,h=world.args.height}
+	local vr = world.args.viewport
 	local camera = icamera.create({
 		eyepos  = mc.ZERO_PT,
 		viewdir = mc.ZAXIS,
@@ -37,11 +37,13 @@ local function update_pre_depth_queue()
 		for me in w:select "main_queue render_target:in camera_ref:in" do
 			de.camera_ref = me.camera_ref
 			local vr = me.render_target.view_rect
-			de.render_target.view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h}
+			local dvr = de.render_target.view_rect
+			dvr.x, dvr.y, dvr.w, dvr.h = vr.x, vr.y, vr.w, vr.h
 		end
 	end
 end
 
 function fr_sys:data_changed()
+	--TODO: need sub a event
 	update_pre_depth_queue()
 end

@@ -1,13 +1,16 @@
 local ecs      = import_package "ant.luaecs"
 local inputmgr = import_package "ant.inputmgr"
+local wu       = require "widget.utils"
+local imgui    = require "imgui"
 
 local function create_world(config)
-    local rect_w, rect_h = config.width, config.height
+    local fbw, fbh = config.fbw, config.fbh
+    config.viewport = {x=0, y=0, w=1, h=1}
     local world = ecs.new_world (config)
     local ev = inputmgr.create(world, "sdl")
     local m = {}
     function m.init()
-        world:pub {"resize", rect_w, rect_h}
+        world:pub {"resize", fbw, fbh}
         world:pipeline_init()
     end
     function m.update()
@@ -29,8 +32,10 @@ local worlds = {}
 
 function worlds.create(name)
     return function (config)
+        config.name = name
         local w, world = create_world(config)
         worlds[#worlds+1] = w
+        w.init()
         return w, world
     end
 end

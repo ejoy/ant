@@ -62,7 +62,7 @@ local global_data = require "common.global_data"
 function m.world_to_screen(camera_ref, world_pos)
 	local vp = icamera.calc_viewproj(camera_ref)
 	local proj_pos = math3d.totable(math3d.transformH(vp, world_pos, 1))
-	return {(proj_pos[1] + 1) * global_data.viewport.w * 0.5, (1 - (proj_pos[2] + 1) * 0.5) * global_data.viewport.h, 0}
+	return {(proj_pos[1] + 1) * global_data.viewport_NEEDREMOVE.w * 0.5, (1 - (proj_pos[2] + 1) * 0.5) * global_data.viewport_NEEDREMOVE.h, 0}
 end
 
 local mu = import_package "ant.math".util
@@ -74,22 +74,22 @@ function m.ndc_to_world(camera_ref, ndc)
 end
 
 function m.mouse_pos_in_view(x,y)
-	if global_data.viewport then
+	if global_data.viewport_NEEDREMOVE then
 		local mvp = imgui.GetMainViewport()
     	--local wx, wy = x - mvp.WorkPos[1], y - mvp.WorkPos[2] + uiconfig.MenuHeight
-        local viewx, viewy = x - global_data.viewport.x, y - global_data.viewport.y
+        local viewx, viewy = x - global_data.viewport_NEEDREMOVE.x, y - global_data.viewport_NEEDREMOVE.y
 		if viewx < 0 then
 			viewx = 0
 		end
-		if viewx > global_data.viewport.w then
-			viewx = global_data.viewport.w
+		if viewx > global_data.viewport_NEEDREMOVE.w then
+			viewx = global_data.viewport_NEEDREMOVE.w
 		end
 
 		if viewy < 0 then
 			viewy = 0
 		end
-		if viewy > global_data.viewport.h then
-			viewy = global_data.viewport.h
+		if viewy > global_data.viewport_NEEDREMOVE.h then
+			viewy = global_data.viewport_NEEDREMOVE.h
 		end
 
 		return viewx, viewy

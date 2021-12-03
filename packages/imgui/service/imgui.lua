@@ -159,6 +159,7 @@ local function multi_wakeup(key, ...)
 	end
 end
 
+local config = pm.loadcfg(packagename)
 ltask.fork(function ()
     init_width, init_height = w, h
 
@@ -173,9 +174,7 @@ ltask.fork(function ()
 	renderpkg.init_bgfx()
     bgfx.encoder_begin()
     ltask.call(ServiceBgfxMain, "encoder_init")
-    cb.init(init_width, init_height)
 
-    initialized = true
     local imgui_font = assetmgr.load_fx {
         fs = "/pkg/ant.imgui/shader/fs_imgui_font.sc",
         vs = "/pkg/ant.imgui/shader/vs_imgui_font.sc",
@@ -202,6 +201,8 @@ ltask.fork(function ()
     else -- iOS
         font.Create { { Font "Heiti SC" , 18, glyphRanges { 0x0020, 0xFFFF }} }
     end
+	cb.init(init_width, init_height, config)
+    initialized = true
     while imgui.NewFrame() do
         updateIO()
 		update_size()

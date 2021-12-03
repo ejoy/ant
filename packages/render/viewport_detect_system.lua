@@ -5,13 +5,12 @@ local w = world.w
 local fbmgr 	= require "framebuffer_mgr"
 
 local setting	= import_package "ant.settings".setting
-local graphic_setting = setting:data().graphic
 
 local vp_detect_sys = ecs.system "viewport_detect_system"
 
 local icamera	= ecs.import.interface "ant.camera|icamera"
 local irq		= ecs.import.interface "ant.render|irenderqueue"
-local eventResize = world:sub {"resize"}
+local view_resize_mb = world:sub {"view_resize"}
 local fb_cache, rb_cache
 local function clear_cache()
 	fb_cache, rb_cache = {}, {}
@@ -66,8 +65,7 @@ local function update_render_target(viewsize)
 		return
 	end
 	clear_cache()
-	w:clear "render_target_changed"
-	for qe in w:select "watch_screen_buffer render_target:in camera_ref?in render_target_changed?out" do
+	for qe in w:select "watch_screen_buffer render_target:in camera_ref?in" do
 		update_render_queue(qe, viewsize)
 	end
 
@@ -85,7 +83,7 @@ end
 
 function vp_detect_sys:data_changed()
 	local new_fbw, new_fbh
-	for _, w, h in eventResize:unpack() do
+	for _, w, h in view_resize_mb:unpack() do
 		if w ~= 0 and h ~= 0 then
 			new_fbw, new_fbh = w, h
 		end

@@ -3646,6 +3646,12 @@ lNewFrame(lua_State* L) {
 }
 
 static int
+lEndFrame(lua_State* L){
+	ImGui::EndFrame();
+	return 0;
+}
+
+static int
 lRender(lua_State* L) {
 	ioClean(L);
 	ImGui::Render();
@@ -3715,6 +3721,7 @@ luaopen_imgui(lua_State *L) {
 		{ "Create", lCreate },
 		{ "Destroy", lDestroy },
 		{ "NewFrame", lNewFrame },
+		{ "EndFrame", lEndFrame},
 		{ "Render", lRender },
 		{ "SetWindowTitle", lSetWindowTitle },
 		{ "SetFontProgram", rendererSetFontProgram },
