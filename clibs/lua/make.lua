@@ -84,3 +84,10 @@ lm:exe "luac" {
         "luac.c",
     }
 }
+
+lm:exe "lua1" {
+    deps = "source_lua_editor",
+    sources = {
+        "lua.c",
+    },
+}
