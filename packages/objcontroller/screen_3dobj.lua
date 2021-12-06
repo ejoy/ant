@@ -16,17 +16,33 @@ local screen_3dobj_sys = ecs.system "screen_3dobj_system"
 
 local mc_mb = world:sub{"main_queue", "camera_changed"}
 local vr_mb = world:sub{"view_rect_changed", "main_queue"}
-
+local camera_mb
 local dirty
 
 function screen_3dobj_sys:entity_init()
-    -- for e in w:select "INIT screen_3dobj:in render_object:in" do
-    --     dirty = true
-    -- end
+    for e in w:select "INIT screen_3dobj:in render_object:in" do
+        dirty = true
+    end
+end
+
+function screen_3dobj_sys:init_world()
+    camera_mb = world:sub{"scene_changed", irq.main_camera()}
 end
 
 function screen_3dobj_sys:data_changed()
+    for _ in camera_mb:each() do
+        dirty = true
+    end
 
+    for msg in mc_mb:each() do
+        local c = msg[3]
+        world:sub{"scene_changed", c}
+        dirty = true
+    end
+
+    for _ in vr_mb:each() do
+        dirty = true
+    end
 end
 
 local function calc_screen_pos(screen_3dobj, vr)
@@ -42,15 +58,7 @@ local function calc_screen_pos(screen_3dobj, vr)
 end
 
 function screen_3dobj_sys:camera_usage()
-    -- for _ in mc_mb:each() do
-    --     dirty = true
-    -- end
-
-    -- for _ in vr_mb:each() do
-    --     dirty = true
-    -- end
-
-    -- if dirty then
+    if dirty then
         for e in w:select "screen_3dobj:in render_object:in" do
             local mcamera = irq.main_camera()
             w:sync("camera:in", mcamera)
@@ -71,6 +79,6 @@ function screen_3dobj_sys:camera_usage()
             e.render_object.worldmat = scene._worldmat
         end
 
-        --dirty = nil
-    --end
+        dirty = nil
+    end
 end

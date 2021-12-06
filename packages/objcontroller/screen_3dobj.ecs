@@ -1,6 +1,7 @@
 system "screen_3dobj_system"
     .implement "screen_3dobj.lua"
     .method "entity_init"
+    .method "init_world"
     .method "data_changed"
     .method "camera_usage"
 
