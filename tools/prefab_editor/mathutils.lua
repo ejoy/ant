@@ -1,28 +1,6 @@
-local ecs = ...
-local icamera = ecs.import.interface "ant.camera|icamera"
-
 local math3d = require "math3d"
 local imgui = require "imgui"
-local uiconfig = require "widget.config"
 local m = {}
-function m.point_to_line_distance2D(p1, p2, p3)
-	local dx = p2[1] - p1[1];
-	local dy = p2[2] - p1[2];
-	if (dx + dy == 0) then
-		return math.sqrt((p3[1] - p1[1]) * (p3[1] - p1[1]) + (p3[2] - p1[2]) * (p3[2] - p1[2]));
-	end
-	local u = ((p3[1] - p1[1]) * dx + (p3[2] - p1[2]) * dy) / (dx * dx + dy * dy);
-	if u < 0 then
-		return math.sqrt((p3[1] - p1[1]) * (p3[1] - p1[1]) + (p3[2] - p1[2]) * (p3[2] - p1[2]));
-	elseif u > 1 then
-		return math.sqrt((p3[1] - p2[1]) * (p3[1] - p2[1]) + (p3[2] - p2[2]) * (p3[2] - p2[2]));
-	else
-		local x = p1[1] + u * dx;
-		local y = p1[2] + u * dy;
-		return math.sqrt((p3[1] - x) * (p3[1] - x) + (p3[2] - y) * (p3[2] - y));
-	end
-end
-
 function m.ray_hit_plane(ray, plane_info)
 	local plane = {n = plane_info.dir, d = -math3d.dot(math3d.vector(plane_info.dir), math3d.vector(plane_info.pos))}
 
@@ -59,20 +37,6 @@ end
 
 
 local global_data = require "common.global_data"
-function m.world_to_screen(camera_ref, world_pos)
-	local vp = icamera.calc_viewproj(camera_ref)
-	local proj_pos = math3d.totable(math3d.transformH(vp, world_pos, 1))
-	return {(proj_pos[1] + 1) * global_data.viewport_NEEDREMOVE.w * 0.5, (1 - (proj_pos[2] + 1) * 0.5) * global_data.viewport_NEEDREMOVE.h, 0}
-end
-
-local mu = import_package "ant.math".util
-
-function m.ndc_to_world(camera_ref, ndc)
-	local viewproj = icamera.calc_viewproj(camera_ref)
-    local invviewproj = math3d.inverse(viewproj)
-	return math3d.transformH(invviewproj, ndc, 1)
-end
-
 function m.mouse_pos_in_view(x,y)
 	if global_data.viewport_NEEDREMOVE then
 		local mvp = imgui.GetMainViewport()

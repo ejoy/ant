@@ -3,8 +3,9 @@ local world     = ecs.world
 local w         = world.w
 
 local math3d    = require "math3d"
+local mathpkg   = import_package "ant.math"
+local mu        = mathpkg.util
 
-local mc        = import_package "ant.math".constant
 local defcomp 	= import_package "ant.general".default
 
 local ic = ecs.interface "icamera"
@@ -96,9 +97,7 @@ end
 function ic.world_to_screen(world_pos)
     local mq = w:singleton("main_queue", "camera_ref:in render_target:in")
     local vp = ic.calc_viewproj(mq.camera_ref)
-	local proj_pos = math3d.totable(math3d.transformH(vp, world_pos, 1))
-    local viewport = mq.render_target.view_rect
-	return {(proj_pos[1] + 1) * viewport.w * 0.5, (1 - (proj_pos[2] + 1) * 0.5) * viewport.h, 0}
+    return mu.world_to_screen(vp, world_pos, mq.render_target.view_rect)
 end
 
 function ic.calc_viewproj(cameraref)

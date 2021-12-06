@@ -88,6 +88,42 @@ function util.NDC_near_far_pt(ndc2d)
 	}
 end
 
+function util.world_to_screen(vpmat, vr, posWS)
+	--local vp = icamera.calc_viewproj(camera_ref)
+	local posNDC = math3d.transformH(vpmat, posWS, 1)
+	local screenNDC = math3d.muladd(posNDC, 0.5, 0.5)
+	local sy = math3d.index(screenNDC, 2)
+	if not math3d.get_origin_bottom_left() then
+		screenNDC = math3d.set_index(screenNDC, 2, 1.0 - sy)
+	end
+	return math3d.mul(screenNDC, math3d.vector(vr.w, vr.h, 1.0))
+end
+
+function util.ndc_to_world(vpmat, ndc)
+    local invviewproj = math3d.inverse(vpmat)
+	return math3d.transformH(invviewproj, ndc, 1)
+end
+
+function util.pt_line_distance(p1, p2, p)
+	local d = math3d.normalize(math3d.sub(p2, p1))
+	local x = math3d.cross(constant.YAXIS, d)
+	if util.iszero(math3d.dot(x, x)) then
+		x = math3d.cross(constant.XAXIS, d)
+	end
+	local n = math3d.cross(d, x)
+	
+	return math3d.dot(p1, n) - math3d.dot(p, n)
+end
+
+--p1, p2 must be 0.0
+function util.pt2d_line_distance(p1, p2, p)
+	local d = math3d.normalize(math3d.sub(p2, p1))
+    local x, y, z = math3d.index(d, 1, 2, 3)
+	assert(z == 0, "we assume pt2d is 3d vector where z component is 0.0")
+    local n = math3d.vector(y, -x, 0.0)
+    return math3d.dot(p1, n) - math3d.dot(p, n)
+end
+
 function util.to_radian(angles) return list_op(angles, math.rad) end
 function util.to_angle(radians) return list_op(radians, math.deg) end
 

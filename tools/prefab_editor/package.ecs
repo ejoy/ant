@@ -66,6 +66,12 @@ system "gui_system"
     .method "ui_update"
     .method "end_frame"
 
+interface "igui"
+    .implement "gui_system.lua"
+    .require_interface "ant.render|irenderqueue"
+    .method "scene_viewport"
+    .method "cvt2scenept"
+
 system "grid_brush_system"
     .implement "grid_brush_system.lua"
     .method "init"

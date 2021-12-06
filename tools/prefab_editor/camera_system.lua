@@ -6,6 +6,8 @@ local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
 local irq		= ecs.import.interface "ant.render|irenderqueue"
 local camera_mgr= ecs.require "camera_manager"
 local math3d	= require "math3d"
+local mathpkg	= import_package "ant.math"
+local mu		= mathpkg.util
 local utils		= ecs.require "mathutils"
 local inspector = ecs.require "widget.inspector"
 
@@ -104,11 +106,15 @@ local function selectBoundary(hp)
 	last_mouse_pos = hp
 	local boundary = camera_mgr.get_editor_data(camera_mgr.second_camera).far_boundary
 	if not boundary then return end
+
 	local mc = irq.main_camera()
+	local vpmat = icamera.calc_viewproj(mc)
+	local mqvr = irq.view_rect "main_queue"
 	for i, v in ipairs(boundary) do
-		local sp2 = utils.world_to_screen(mc, v[2])
-		local sp1 = utils.world_to_screen(mc, v[1])
-		local dist = utils.point_to_line_distance2D(sp1, sp2, {hp[1] - global_data.viewport_NEEDREMOVE.x, hp[2] - global_data.viewport_NEEDREMOVE.y})
+		local sp1 = mu.world_to_screen(vpmat, mqvr, v[1])
+		local sp2 = mu.world_to_screen(vpmat, mqvr, v[2])
+		local dist = mu.pt2d_line_distance(sp1, sp2, math3d.vector(hp[1], hp[2], 0.0))
+		--local dist = utils.point_to_line_distance2D(sp1, sp2, {hp[1] - global_data.viewport_NEEDREMOVE.x, hp[2] - global_data.viewport_NEEDREMOVE.y})
 		if dist < 5.0 then
 			return i
 		end

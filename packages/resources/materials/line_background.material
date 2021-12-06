@@ -1,0 +1,12 @@
+fx:
+  fs: /pkg/ant.resources/shaders/mesh/fs_colormesh.sc
+  vs: /pkg/ant.resources/shaders/mesh/vs_colormesh.sc
+  setting:
+    surfacetype: background
+    lighting: off
+    WITH_COLOR_ATTRIB: 1
+state:
+  LINEAA: true
+  MSAA: true
+  PT: LINES
+  WRITE_MASK: RGB

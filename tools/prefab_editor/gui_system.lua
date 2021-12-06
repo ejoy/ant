@@ -566,3 +566,13 @@ function m:data_changed()
         iwd.draw_aabb_box(highlight_aabb, nil, aabb_color_i)
     end
 end
+
+local igui = ecs.interface "igui"
+function igui.scene_viewport()
+    return irq.view_rect "tonemapping_queue"
+end
+
+function igui.cvt2scenept(x, y)
+    local vr = igui.scene_viewport()
+    return x-vr.x, y-vr.y
+end

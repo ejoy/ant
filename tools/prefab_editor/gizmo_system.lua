@@ -2,13 +2,20 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local constant 	= import_package "ant.math".constant
-local ientity 	= ecs.import.interface "ant.render|ientity"
+local mathpkg	= import_package "ant.math"
+local mc, mu	= mathpkg.constant, mathpkg.util
+
+local icamera	= ecs.import.interface "ant.camera|icamera"
 local iom 		= ecs.import.interface "ant.objcontroller|iobj_motion"
 local ifs 		= ecs.import.interface "ant.scene|ifilter_state"
+local ientity 	= ecs.import.interface "ant.render|ientity"
 local ilight 	= ecs.import.interface "ant.render|ilight"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
 local irq		= ecs.import.interface "ant.render|irenderqueue"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imesh		= ecs.import.interface "ant.asset|imesh"
+
+local igui		= ecs.import.interface "tools.prefab_editor|igui"
+
 
 local cmd_queue = ecs.require "gizmo.command_queue"
 local utils 	= ecs.require "mathutils"
@@ -29,9 +36,6 @@ local rotate_axis
 local uniform_scale = false
 local gizmo_scale = 1.0
 local local_space = false
-local global_axis_x_eid
-local global_axis_y_eid
-local global_axis_z_eid
 
 
 function gizmo:update()
@@ -156,7 +160,7 @@ local function create_arrow_widget(axis_root, axis_str)
 		color = gizmo_const.COLOR_X
 	elseif axis_str == "y" then
 		cone_t = math3d.vector(0, gizmo_const.AXIS_LEN, 0)
-		local_rotator = constant.IDENTITY_QUAT
+		local_rotator = mc.IDENTITY_QUAT
 		cylindere_t = math3d.vector(0, 0.5 * gizmo_const.AXIS_LEN, 0)
 		color = gizmo_const.COLOR_Y
 	elseif axis_str == "z" then
@@ -226,29 +230,57 @@ local function mouse_hit_plane(screen_pos, plane_info)
 	return utils.ray_hit_plane(iom.ray(irq.main_camera(), screen_pos), plane_info)
 end
 
+local global_axes
+
+local vr_changed_mb = world:sub{"view_rect_changed", "main_queue"}
+local function create_global_axes(srt)
+	return ecs.create_entity{
+		policy = {
+			"ant.render|simplerender",
+			"ant.general|name",
+		},
+		data = {
+			simplemesh = imesh.init_mesh{
+				vb = {
+					start = 0,
+					num = 6,
+					{
+						declname = "p3|c4",
+						memory = {
+							"fffffff", 
+							--x-axis
+							0.0, 0.0, 0.0, 7.0, 0.0, 0.0, 1.0,
+							0.1, 0.0, 0.0, 7.0, 0.0, 0.0, 1.0,
+							--y-axis
+							0.0, 0.0, 0.0, 0.0, 7.0, 0.0, 1.0,
+							0.0, 0.1, 0.0, 0.0, 7.0, 0.0, 1.0,
+							--z-axis
+							0.0, 0.0, 0.0, 0.0, 0.0, 7.0, 1.0,
+							0.0, 0.1, 0.0, 0.0, 0.0, 7.0, 1.0,
+						}
+					}
+				},
+			},
+			material = "/pkg/ant.resources/materials/line_background.material",
+			scene = {srt=srt},
+			filter_state = "main_view",
+			name = "global_axes_gizmo",
+			reference = true,
+		}
+	}
+end
+
 local function update_global_axis()
-	if not global_data.viewport_NEEDREMOVE then return end
-	if not global_axis_x_eid.scene then
-		world.w:sync("scene:in", global_axis_x_eid)
-		world.w:sync("scene:in", global_axis_y_eid)
-		world.w:sync("scene:in", global_axis_z_eid)	
+	for msg in vr_changed_mb:each() do
+		local vr = msg[3]
+		local vpmat = icamera.calc_viewproj(irq.main_camera())
+		local offset_x<const>, offset_y<const> = 50, 50
+		local posSS_x<const>, posSS_y<const> = math.min(vr.x + offset_x, vr.w), math.max(0, vr.y + vr.h - offset_y)
+		local posWS = mu.ndc_to_world(vpmat, vr,
+			iom.screen_to_ndc({posSS_x, posSS_y, 0.5}, vr))
+		iom.set_position(global_axes, posWS)
 	end
 
-	local mc = irq.main_camera()
-	for v in world.w:select "scene:in" do
-		if v.scene == global_axis_x_eid.scene or v.scene == global_axis_y_eid.scene or v.scene == global_axis_z_eid.scene then
-			local screenpos = {global_data.viewport_NEEDREMOVE.x + 50, global_data.viewport_NEEDREMOVE.y + global_data.viewport_NEEDREMOVE.h - 50}
-			local worldPos = utils.ndc_to_world(mc,
-				iom.screen_to_ndc({screenpos[1], screenpos[2], 0.5}))
-			world.w:sync("render_object:in", v)
-			local srt = v.scene.srt
-			srt.s.v = {1.5,1.5,1.5}
-			srt.r.q = constant.quat_identity
-			srt.t.v = worldPos
-			v.scene._worldmat = math3d.matrix(srt)
-			v.render_object.worldmat = v.scene._worldmat
-		end
-	end
 end
 
 function gizmo:update_scale()
@@ -404,9 +436,10 @@ function gizmo_sys:post_init()
 	create_scale_axis(gizmo.sy, {0, gizmo_const.AXIS_LEN, 0})
 	create_scale_axis(gizmo.sz, {0, 0, gizmo_const.AXIS_LEN})
 
-	global_axis_x_eid = ientity.create_line_entity({}, {0, 0, 0}, {0.1, 0, 0}, "", gizmo_const.COLOR_X)
-	global_axis_y_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0.1, 0}, "", gizmo_const.COLOR_Y)
-	global_axis_z_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0, 0.1}, "", gizmo_const.COLOR_Z)
+	global_axes = create_global_axes{}
+	-- global_axis_x_eid = ientity.create_line_entity({}, {0, 0, 0}, {0.1, 0, 0}, "", gizmo_const.COLOR_X)
+	-- global_axis_y_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0.1, 0}, "", gizmo_const.COLOR_Y)
+	-- global_axis_z_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0, 0.1}, "", gizmo_const.COLOR_Z)
 	
     ientity.create_grid_entity_simple("", nil, nil, nil, {srt={r={0,0.92388,0,0.382683},}})
 end
@@ -543,13 +576,18 @@ local function select_axis(x, y)
 	if axisPlane then
 		return axisPlane
 	end
+
+	local vx, vy = igui.cvt2scenept(x, y)
 	
-	local mc = irq.main_camera()
+	--FIXME: we should get viewproj matrix in after_transform stage
+	local vpmat = icamera.calc_viewproj(irq.main_camera())
+	local mqvr = irq.view_rect "main_queue"
+
 	local gizmo_obj_pos = iom.get_position(gizmo.root_eid)
-	local start = utils.world_to_screen(mc, gizmo_obj_pos)
+	local start = mu.world_to_screen(mc, mqvr, gizmo_obj_pos)
 	uniform_scale = false
 	-- uniform scale
-	local hp = {x - global_data.viewport_NEEDREMOVE.x, y - global_data.viewport_NEEDREMOVE.y, 0}
+	local hp = math3d.vector(vx, vy, 0)
 	if gizmo.mode == gizmo_const.SCALE then
 		local radius = math3d.length(math3d.sub(hp, start))
 		if radius < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
@@ -566,22 +604,23 @@ local function select_axis(x, y)
 	end
 	-- by axis
 	local line_len = gizmo_const.AXIS_LEN * gizmo_scale
-	local end_x = utils.world_to_screen(mc, math3d.add(gizmo_obj_pos, math3d.vector(gizmo_dir_to_world({line_len, 0, 0}))))
+
+	local end_x = mu.world_to_screen(vpmat, mqvr, math3d.add(gizmo_obj_pos, math3d.vector(gizmo_dir_to_world({line_len, 0, 0}))))
 	
 	local axis = (gizmo.mode == gizmo_const.SCALE) and gizmo.sx or gizmo.tx
-	if utils.point_to_line_distance2D(start, end_x, hp) < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
+	if mu.pt2d_line_distance(start, end_x, hp) < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
 		return axis
 	end
 
-	local end_y = utils.world_to_screen(mc, math3d.add(gizmo_obj_pos, math3d.vector(gizmo_dir_to_world({0, line_len, 0}))))
+	local end_y = mu.world_to_screen(vpmat, mqvr, math3d.add(gizmo_obj_pos, math3d.vector(gizmo_dir_to_world({0, line_len, 0}))))
 	axis = (gizmo.mode == gizmo_const.SCALE) and gizmo.sy or gizmo.ty
-	if utils.point_to_line_distance2D(start, end_y, hp) < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
+	if mu.pt2d_line_distance(start, end_y, hp) < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
 		return axis
 	end
 
-	local end_z = utils.world_to_screen(mc, math3d.add(gizmo_obj_pos, math3d.vector(gizmo_dir_to_world({0, 0, line_len}))))
+	local end_z = mu.world_to_screen(vpmat, mqvr, math3d.add(gizmo_obj_pos, math3d.vector(gizmo_dir_to_world({0, 0, line_len}))))
 	axis = (gizmo.mode == gizmo_const.SCALE) and gizmo.sz or gizmo.tz
-	if utils.point_to_line_distance2D(start, end_z, hp) < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
+	if mu.pt2d_line_distance(start, end_z, hp) < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
 		return axis
 	end
 	return nil
@@ -774,11 +813,11 @@ local function rotate_gizmo(x, y)
 	local tangent = math3d.normalize(math3d.cross(axis_dir, gizmo_to_last_hit))
 	local proj_len = math3d.dot(tangent, math3d.sub(hitPosVec, last_hit))
 	
-	local angleBaseDir = gizmo_dir_to_world(constant.XAXIS)
+	local angleBaseDir = gizmo_dir_to_world(mc.XAXIS)
 	if rotate_axis == gizmo.rx then
-		angleBaseDir = gizmo_dir_to_world(constant.NZAXIS)
+		angleBaseDir = gizmo_dir_to_world(mc.NZAXIS)
 	elseif rotate_axis == gizmo.rw then
-		angleBaseDir = math3d.normalize(math3d.cross(constant.YAXIS, axis_dir))
+		angleBaseDir = math3d.normalize(math3d.cross(mc.YAXIS, axis_dir))
 	end
 	
 	local deltaAngle = proj_len * 200 / gizmo_scale
@@ -875,14 +914,9 @@ local function select_light_gizmo(x, y)
 			return
 		end
 		local dist = math3d.length(math3d.sub(gizmoPos, hitPosVec))
-		local abs_dist = math.abs(dist - radius)
-		if math.abs(dist - radius) < gizmo_const.ROTATE_HIT_RADIUS * 3 then
-			light_gizmo.highlight(true)
-			return true
-		else
-			light_gizmo.highlight(false)
-			return false
-		end
+		local highlight = math.abs(dist - radius) < gizmo_const.ROTATE_HIT_RADIUS * 3
+		light_gizmo.highlight(highlight)
+		return highlight
 	end
 	
 	click_dir_point_light = nil
@@ -903,17 +937,20 @@ local function select_light_gizmo(x, y)
 			light_gizmo_mode = 3
 		end
 	elseif light_gizmo.current_light.light.type == "spot" then
-		local dir = math3d.totable(math3d.transform(iom.get_rotation(light_gizmo.current_light), constant.ZAXIS, 0))
+		local dir = math3d.totable(math3d.transform(iom.get_rotation(light_gizmo.current_light), mc.ZAXIS, 0))
 		local mat = iom.worldmat(light_gizmo.current_light)
 		local centre = math3d.transform(mat, math3d.vector{0, 0, ilight.range(light_gizmo.current_light)}, 1)
 		if hit_test_circle(dir, ilight.inner_radian(light_gizmo.current_light), centre) then
 			click_dir_spot_light = dir
 			light_gizmo_mode = 4
 		else
-			local mc = irq.main_camera()
-			local sp1 = utils.world_to_screen(mc, iom.get_position(light_gizmo.current_light))
-			local sp2 = utils.world_to_screen(mc, centre)
-			if utils.point_to_line_distance2D(sp1, sp2, {x, y}) < 5.0 then
+			local vpmat = icamera.calc_viewproj(irq.main_camera())
+			local mqvr = irq.view_rect "main_queue"
+			local sp1 = mu.world_to_screen(vpmat, mqvr, iom.get_position(light_gizmo.current_light))
+			local sp2 = mu.world_to_screen(vpmat, mqvr, centre)
+			local sx, sy = igui.cvt2scenept(x, y)
+
+			if mu.pt2d_line_distance(sp1, sp2, math3d.vector(sx, sy, 0.0)) < 5.0 then
 				light_gizmo_mode = 5
 				light_gizmo.highlight(true)
 			else
@@ -1041,7 +1078,7 @@ function gizmo_sys:handle_event()
 					if gizmo.target_eid then
 						iom.set_rotation(gizmo.root_eid, iom.get_rotation(gizmo.target_eid))
 					end
-					iom.set_rotation(gizmo.rot_circle_root_eid, constant.IDENTITY_QUAT)
+					iom.set_rotation(gizmo.rot_circle_root_eid, mc.IDENTITY_QUAT)
 				end
 			end
 			gizmo_seleted = false
