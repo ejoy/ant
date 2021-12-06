@@ -46,6 +46,9 @@ local function update_render_queue(q, viewsize)
 	local rt = q.render_target
 	local vr = rt.view_rect
 	if viewsize then
+		if vr.w == viewsize.w and vr.h == viewsize.h then
+			return
+		end
 		vr.w, vr.h = viewsize.w, viewsize.h
 	end
 

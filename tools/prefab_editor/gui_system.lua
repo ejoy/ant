@@ -556,7 +556,6 @@ function m:end_frame()
             w = second_view_width, h = second_view_height
         }
         irq.set_view_rect(camera_mgr.second_view, secondViewport)
-        world:pub {"ViewportDirty", viewport}
     end
     global_data.mouse_move = false
 end

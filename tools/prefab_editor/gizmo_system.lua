@@ -962,7 +962,6 @@ function gizmo:select_gizmo(x, y)
 end
 
 local keypress_mb = world:sub{"keyboard"}
-local viewpos_event = world:sub{"ViewportDirty"}
 local prefab_mgr  = ecs.require "prefab_manager"
 local function on_mouse_move()
 	if not global_data.mouse_move or gizmo_seleted or gizmo.mode == gizmo_const.SELECT then return end
