@@ -1090,7 +1090,7 @@ function gizmo_sys:handle_event()
 			end
 		else
 			if not gizmo_seleted and not camera_mgr.select_frustum then
-				local vx, vy = utils.mouse_pos_in_view(global_data.mouse_pos_x, global_data.mouse_pos_y)
+				local vx, vy = igui.cvt2scenept(global_data.mouse_pos_x, global_data.mouse_pos_y)
 				if vx and vy then
 					gizmo:set_target(nil)
 				end

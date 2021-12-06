@@ -13,7 +13,7 @@ local last_wx, last_wy
 
 function m:data_changed()
     for _,what,state,x,y in event_mouse:unpack() do
-        local vx, vy = x,y--utils.mouse_pos_in_view(x, y)
+        local vx, vy = x,y
         if vx and vy then
             if state == "DOWN" then
                 last_vx, last_vy = vx, vy
@@ -32,7 +32,7 @@ function m:data_changed()
         end
     end
     for _, delta, x, y in event_mouse_wheel:unpack() do
-        local vx, vy = x,y--utils.mouse_pos_in_view(x, y)
+        local vx, vy = x,y
         if vx and vy then
             world:pub { "camera", "zoom", -delta }
         end

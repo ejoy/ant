@@ -114,7 +114,6 @@ local function selectBoundary(hp)
 		local sp1 = mu.world_to_screen(vpmat, mqvr, v[1])
 		local sp2 = mu.world_to_screen(vpmat, mqvr, v[2])
 		local dist = mu.pt2d_line_distance(sp1, sp2, math3d.vector(hp[1], hp[2], 0.0))
-		--local dist = utils.point_to_line_distance2D(sp1, sp2, {hp[1] - global_data.viewport_NEEDREMOVE.x, hp[2] - global_data.viewport_NEEDREMOVE.y})
 		if dist < 5.0 then
 			return i
 		end
@@ -194,7 +193,6 @@ function camera_sys:handle_camera_event()
 
 	for _, what, x, y in mouse_down:unpack() do
 		if what == "LEFT" then
-			--local x, y = utils.mouse_pos_in_view(x, y)
 			if camera_mgr.second_camera then
 				select_area = selectBoundary({x, y})
 				if select_area then
