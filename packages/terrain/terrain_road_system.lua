@@ -24,12 +24,15 @@ local road_resources = {
     X = {
         filename = "/pkg/ant.resources.binary/terrain/roads/X_road.glb|mesh.prefab",
     },
-    O = {
+    U = {
         filename = "/pkg/ant.resources.binary/terrain/roads/O_road.glb|mesh.prefab",
     },
     T = {
         filename = "/pkg/ant.resources.binary/terrain/roads/T_road.glb|mesh.prefab",
-    }
+    },
+    O = {
+        filename = "/pkg/ant.resources.binary/terrain/roads/O_road.glb|mesh.prefab",
+    },
 }
 
 
