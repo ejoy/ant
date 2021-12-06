@@ -34,30 +34,4 @@ function m.view_to_axis_constraint(ray, cameraPos, axis, origin)
 	local factor = (math3d.dot(perpPlane, cameraToOrigin) / math3d.dot(perpPlane, axisVec))
 	return math3d.mul(factor, axisVec)
 end
-
-
-local global_data = require "common.global_data"
-function m.mouse_pos_in_view(x,y)
-	if global_data.viewport_NEEDREMOVE then
-		local mvp = imgui.GetMainViewport()
-    	--local wx, wy = x - mvp.WorkPos[1], y - mvp.WorkPos[2] + uiconfig.MenuHeight
-        local viewx, viewy = x - global_data.viewport_NEEDREMOVE.x, y - global_data.viewport_NEEDREMOVE.y
-		if viewx < 0 then
-			viewx = 0
-		end
-		if viewx > global_data.viewport_NEEDREMOVE.w then
-			viewx = global_data.viewport_NEEDREMOVE.w
-		end
-
-		if viewy < 0 then
-			viewy = 0
-		end
-		if viewy > global_data.viewport_NEEDREMOVE.h then
-			viewy = global_data.viewport_NEEDREMOVE.h
-		end
-
-		return viewx, viewy
-	end
-end
-
 return m

@@ -11,11 +11,10 @@ function st_sys:init()
 	ecs.create_entity {
 		policy = {
 			"ant.render|render",
-			"ant.scene|scene_object",
 			"ant.general|name",
 		},
 		data = {
-			filter_state = "visible|selectable|cast_shadow",
+			filter_state = "main_view|selectable|cast_shadow",
 			scene =  {
 				srt = {
 					s=100,

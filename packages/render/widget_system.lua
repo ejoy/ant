@@ -196,7 +196,7 @@ function rmb_sys:widget()
 		local desc={vb={}, ib={}}
 		for e in w:select "debug_mesh_bounding render_object:in" do
 			local aabb = e.render_object.aabb
-			if ies.can_visible(e) and e.debug_mesh_bounding and aabb then
+			if ies.has_state(e, "main_view") and e.debug_mesh_bounding and aabb then
 				local minv, maxv = math3d.index(aabb, 1, 2)
 				local aabb_shape = {min=math3d.tovalue(minv), max=math3d.tovalue(maxv)}
 				geometry_drawer.draw_aabb_box(aabb_shape, DEFAULT_COLOR, nil, desc)
