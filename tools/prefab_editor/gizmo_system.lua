@@ -248,15 +248,17 @@ local function create_global_axes(srt)
 						declname = "p3|c4",
 						memory = {
 							"fffffff", 
-							--x-axis
-							0.0, 0.0, 0.0, 7.0, 0.0, 0.0, 1.0,
-							0.1, 0.0, 0.0, 7.0, 0.0, 0.0, 1.0,
-							--y-axis
-							0.0, 0.0, 0.0, 0.0, 7.0, 0.0, 1.0,
-							0.0, 0.1, 0.0, 0.0, 7.0, 0.0, 1.0,
-							--z-axis
-							0.0, 0.0, 0.0, 0.0, 0.0, 7.0, 1.0,
-							0.0, 0.1, 0.0, 0.0, 0.0, 7.0, 1.0,
+							{
+								--x-axis
+								0.0, 0.0, 0.0, 7.0, 0.0, 0.0, 1.0,
+								0.1, 0.0, 0.0, 7.0, 0.0, 0.0, 1.0,
+								--y-axis
+								0.0, 0.0, 0.0, 0.0, 7.0, 0.0, 1.0,
+								0.0, 0.1, 0.0, 0.0, 7.0, 0.0, 1.0,
+								--z-axis
+								0.0, 0.0, 0.0, 0.0, 0.0, 7.0, 1.0,
+								0.0, 0.1, 0.0, 0.0, 0.0, 7.0, 1.0,
+							}
 						}
 					}
 				},
@@ -1034,9 +1036,12 @@ function gizmo_sys:handle_event()
 			gizmo:update()
 		end
 	end
+
+	update_global_axis()
+
 	for _, vp in viewpos_event:unpack() do
 		global_data.viewport_NEEDREMOVE = vp
-		update_global_axis()
+		
 	end
 
 	for _ in camera_zoom:unpack() do
