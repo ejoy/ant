@@ -454,7 +454,7 @@ function gizmo_sys:post_init()
 	-- global_axis_y_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0.1, 0}, "", gizmo_const.COLOR_Y)
 	-- global_axis_z_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0, 0.1}, "", gizmo_const.COLOR_Z)
 	
-    ientity.create_grid_entity_simple("", nil, nil, nil, {srt={r={0,0.92388,0,0.382683},}})
+    ientity.create_grid_entity("", 64, 64, 1, 1)
 end
 local mb_main_camera_changed = world:sub{"main_queue", "camera_changed"}
 local vr_mb = world:sub{"view_rect_changed", "main_queue"}
