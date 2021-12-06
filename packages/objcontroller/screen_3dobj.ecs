@@ -1,0 +1,11 @@
+system "screen_3dobj_system"
+    .implement "screen_3dobj.lua"
+    .method "entity_init"
+    .method "data_changed"
+    .method "camera_usage"
+
+
+component "screen_3dobj".type "lua"
+policy "screen_3dobj"
+    .require_system "ant.objcontroller|screen_3dobj_system"
+    .component "screen_3dobj"

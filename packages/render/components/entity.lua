@@ -324,7 +324,7 @@ function ientity.create_frustum_entity(frustum_points, name, color)
 	create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, {}, color)
 end
 
-function ientity.create_axis_entity(srt, name, color, material, ref)
+local function axis_mesh(color)
 	local r = color or mc.COLOR(mc.RED, 10)
 	local g = color or mc.COLOR(mc.GREEN, 10)
 	local b = color or mc.COLOR(mc.BLUE, 10)
@@ -336,8 +336,32 @@ function ientity.create_axis_entity(srt, name, color, material, ref)
 		0, 0, 0, b[1], b[2], b[3], b[4],
 		0, 0, 1, b[1], b[2], b[3], b[4],
 	}
-	local mesh = create_mesh{"p3|c4", axis_vb}
+	return create_mesh{"p3|c4", axis_vb}
+end
+
+function ientity.create_axis_entity(srt, name, color, material)
+	local mesh = axis_mesh(color)
 	return create_simple_render_entity(name, material or "/pkg/ant.resources/materials/line_background.material", mesh, srt, color)
+end
+
+function ientity.create_screen_axis_entity(srt, screen_3dobj, name, color, material)
+	local mesh = axis_mesh(color)
+	return ecs.create_entity{
+		policy = {
+			"ant.render|simplerender",
+			"ant.objcontroller|screen_3dobj",
+			"ant.general|name",
+		},
+		data = {
+			reference 	= true,
+			screen_3dobj = screen_3dobj,
+			scene 		= {srt = srt or {}},
+			material	= material or "/pkg/ant.resources/materials/line_background.material",
+			simplemesh	= imesh.init_mesh(mesh, true),
+			filter_state= "main_view|auxgeom",
+			name		= name,
+		}
+	}
 end
 
 function ientity.create_line_entity(srt, p0, p1, name, color, hide)

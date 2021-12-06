@@ -230,35 +230,9 @@ local function mouse_hit_plane(screen_pos, plane_info)
 	return utils.ray_hit_plane(iom.ray(irq.main_camera(), screen_pos), plane_info)
 end
 
-local global_axes
-local global_axes_dirty
-
 local function create_global_axes(srt)
-	global_axes_dirty = true
-	return ientity.create_axis_entity(srt, "global_axes", nil, nil, true)
-end
-
-local function update_global_axis()
-	local mcamera = irq.main_camera()
-	w:sync("camera:in", mcamera)
-	local vp = mcamera.camera.viewprojmat
-	local vr = irq.view_rect "main_queue"
-	
-	local offset_x<const>, offset_y<const> = 50, 50
-	local posSS_x<const>, posSS_y<const> = math.min(vr.x + offset_x, vr.w), math.max(0, vr.y + vr.h - offset_y)
-	
-	local posNDC = iom.screen_to_ndc({posSS_x, posSS_y, 0.5}, vr)
-
-	local posWS = mu.ndc_to_world(vp, posNDC)
-	w:sync("scene:in", global_axes)
-	local scene = global_axes.scene
-	assert(scene.parent == nil, "global_axes should not have any parent")
-	local srt = scene.srt
-	srt.t.v = posWS
-	scene._worldmat = math3d.matrix(srt)
-	w:sync("render_object:in", global_axes)
-	global_axes.render_object.worldmat = scene._worldmat
-	
+	local off = 0.1
+	ientity.create_screen_axis_entity(srt, {type = "percent", screen_pos = {off, 1-off}}, "global_axes")
 end
 
 function gizmo:update_scale()
@@ -414,7 +388,6 @@ function gizmo_sys:post_init()
 	create_scale_axis(gizmo.sy, {0, gizmo_const.AXIS_LEN, 0})
 	create_scale_axis(gizmo.sz, {0, 0, gizmo_const.AXIS_LEN})
 
-	global_axes = create_global_axes{s=0.1}
 	-- global_axis_x_eid = ientity.create_line_entity({}, {0, 0, 0}, {0.1, 0, 0}, "", gizmo_const.COLOR_X)
 	-- global_axis_y_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0.1, 0}, "", gizmo_const.COLOR_Y)
 	-- global_axis_z_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0, 0.1}, "", gizmo_const.COLOR_Z)
@@ -422,17 +395,15 @@ function gizmo_sys:post_init()
     ientity.create_grid_entity("", 64, 64, 1, 1)
 end
 local mb_main_camera_changed = world:sub{"main_queue", "camera_changed"}
-local vr_mb = world:sub{"view_rect_changed", "main_queue"}
+
+function gizmo_sys:init_world()
+	create_global_axes{s=0.1}
+end
 function gizmo_sys:entity_ready()
 	for _ in mb_main_camera_changed:each() do
-		global_axes_dirty = true
 		gizmo:update_scale()
 		gizmo:show_by_state(false)
 		gizmo:hide_rotate_fan()
-	end
-
-	for _ in vr_mb:each() do
-		global_axes_dirty = true
 	end
 end
 
@@ -1139,16 +1110,5 @@ function gizmo_sys:handle_event()
 				end
 			end
 		end
-	end
-	
-	for _, what in camera_event:unpack() do
-		if what == "zoom" or what == "pan" or what == "rotate" then
-			global_axes_dirty = true
-		end
-	end
-
-	if global_axes_dirty then
-		update_global_axis()
-		global_axes_dirty = nil
 	end
 end
