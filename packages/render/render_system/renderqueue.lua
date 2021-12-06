@@ -97,9 +97,12 @@ function irq.set_view_clear(queuename, what, color, depth, stencil)
 	cs.stencil = stencil
 
 	cs.clear = what
-	local viewid = rt.viewid
-	set_view_clear(viewid, cs)
-	world:pub{"clear_state_changed", queuename, cs}
+	view_clear(rt.viewid, cs, queuename)
+end
+
+local function set_view_rect(viewid, vr, queuename)
+	bgfx.set_view_rect(viewid, vr.x, vr.y, vr.w, vr.h)
+	world:pub{"view_rect_changed", queuename, vr}
 end
 
 function irq.set_view_rect(queuename, rect)
@@ -111,8 +114,7 @@ function irq.set_view_rect(queuename, rect)
 	if qe.camera_ref then
 		icamera.set_frustum_aspect(qe.camera_ref, vr.w/vr.h)
 	end
-	bgfx.set_view_rect(rt.viewid, vr.x, vr.y, vr.w, vr.h)
-	world:pub{"view_rect_changed", queuename, rect}
+	set_view_rect(rt.viewid, vr, queuename)
 end
 
 function irq.set_frame_buffer(queuename, fbidx)
@@ -148,14 +150,13 @@ function irq.set_visible(queuename, b)
 	world:pub{"queue_visible_changed", queuename, b}
 end
 
-function irq.update_rendertarget(rt, need_touch)
+function irq.update_rendertarget(queuename, rt, need_touch)
 	local viewid = rt.viewid
 	local vm = rt.view_mode or ""
 	bgfx.set_view_mode(viewid, vm)
-	local vr = rt.view_rect
-	bgfx.set_view_rect(viewid, vr.x, vr.y, vr.w, vr.h)
+	set_view_rect(viewid, rt.view_rect, queuename)
 	local cs = rt.clear_state
-	set_view_clear(viewid, cs)
+	view_clear(viewid, cs, queuename)
 	
 	local fb_idx = rt.fb_idx
 	if fb_idx then
@@ -176,8 +177,8 @@ function rt_sys:entity_init()
 		irq.set_camera(qn, c)
 	end
 
-	for e in w:select "INIT render_target:in name:in need_touch?in" do
-		irq.update_rendertarget(e.render_target, e.need_touch)
+	for e in w:select "INIT render_target:in queue_name:in need_touch?in" do
+		irq.update_rendertarget(e.queue_name, e.render_target, e.need_touch)
 	end
 	w:clear "need_touch"
 end

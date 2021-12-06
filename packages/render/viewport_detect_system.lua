@@ -53,7 +53,7 @@ local function update_render_queue(q, viewsize)
 		icamera.set_frustum_aspect(q.camera_ref, vr.w/vr.h)
 	end
 	resize_framebuffer(vr.w, vr.h, rt.fb_idx)
-	irq.update_rendertarget(rt)
+	irq.update_rendertarget(q.queue_name, rt)
 end
 
 local function disable_resize()
@@ -65,7 +65,7 @@ local function update_render_target(viewsize)
 		return
 	end
 	clear_cache()
-	for qe in w:select "watch_screen_buffer render_target:in camera_ref?in" do
+	for qe in w:select "watch_screen_buffer render_target:in queue_name:in camera_ref?in" do
 		update_render_queue(qe, viewsize)
 	end
 

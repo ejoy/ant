@@ -61,8 +61,7 @@ function rmlui_sys:init_world()
     }
 end
 
-local vr_changed_mb = world:sub{"view_rect_changed", "main_queue"}
-local rt_changed_mb = world:sub{"render_target_resize", "rmlui_obj"}
+local vr_changed_mb = world:sub{"view_rect_changed", "tonemapping_queue"}
 
 function rmlui_sys:entity_init()
     for q in w:select "INIT rmlui_obj render_target:in" do
@@ -72,17 +71,17 @@ function rmlui_sys:entity_init()
         local rt = q.render_target
         rt.view_rect = vr
         rt.fb_idx = tm_rt.fb_idx
-        irq.update_rendertarget(rt)
+        irq.update_rendertarget("rmlui_obj", rt)
         ltask.send(ServiceRmlUi, "update_context_size", vr.w, vr.h, screen_ratio)
     end
 
-    for msg in rt_changed_mb:each() do
-        local s = msg[3]
-        ltask.send(ServiceRmlUi, "update_context_size", s.w, s.h, screen_ratio)
-    end
-
     for _ in vr_changed_mb:each() do
-        irq.set_view_rect("rmlui_obj", irq.view_rect"main_queue")
+        local rml = w:singleton("rmlui_obj", "render_target:in")
+        if rml then
+            local vr = irq.view_rect "tonemapping_queue"
+            irq.set_view_rect("rmlui_obj", vr)
+            ltask.send(ServiceRmlUi, "update_context_size", vr.w, vr.h, screen_ratio)
+        end
     end
 end
 
