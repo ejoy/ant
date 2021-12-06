@@ -61,12 +61,14 @@ local function create_debug_entity()
 	for se in w:select "csm_queue csm:in camera_ref:in name:in" do
 		local idx = se.csm.index
 		local ce = icamera.find_camera(se.camera_ref)
-		local rc = ce._rendercache
-		local frustum_points = math3d.frustum_points(rc.viewprojmat)
+		w:sync("camera:in", ce)
+		local c = ce.camera
+		w:sync("scene:in", ce)
+		local frustum_points = math3d.frustum_points(c.viewprojmat)
 		local color = frustum_colors[idx]
 
 		debug_entities[#debug_entities+1] = ientity.create_frustum_entity(frustum_points, "frusutm:" .. se.name, color)
-		debug_entities[#debug_entities+1] = ientity.create_axis_entity(math3d.tovalue(rc.worldmat), "csm_axis:" .. idx, color)
+		debug_entities[#debug_entities+1] = ientity.create_axis_entity(ce._worldmat, "csm_axis:" .. idx, color)
 	end
 end
 

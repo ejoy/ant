@@ -80,7 +80,9 @@ local function create_simple_render_entity(name, material, mesh, srt, color, hid
 			filter_state= "main_view|auxgeom",
 			name		= name or gen_test_name(),
 			on_ready = function(e)
-				imaterial.set_property(e, "u_color", color or {1,1,1,1})
+				if imaterial.has_property(e, "u_color") then
+					imaterial.set_property(e, "u_color", color or {1,1,1,1})
+				end
 				ifs.set_state(e, "main_view", not hide)
 				ifs.set_state(e, "auxgeom", true)
 			end
@@ -322,22 +324,20 @@ function ientity.create_frustum_entity(frustum_points, name, color)
 	create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, {}, color)
 end
 
-local axis_ib = {
-	0, 1,
-	2, 3,
-	4, 5,
-}
-function ientity.create_axis_entity(srt, name, color)
+function ientity.create_axis_entity(srt, name, color, material, ref)
+	local r = color or mc.COLOR(mc.RED, 10)
+	local g = color or mc.COLOR(mc.GREEN, 10)
+	local b = color or mc.COLOR(mc.BLUE, 10)
 	local axis_vb = {
-		0, 0, 0, color or 0xff0000ff,
-		1, 0, 0, color or 0xff0000ff,
-		0, 0, 0, color or 0xff00ff00,
-		0, 1, 0, color or 0xff00ff00,
-		0, 0, 0, color or 0xffff0000,
-		0, 0, 1, color or 0xffff0000,
+		0, 0, 0, r[1], r[2], r[3], r[4],
+		1, 0, 0, r[1], r[2], r[3], r[4],
+		0, 0, 0, g[1], g[2], g[3], g[4],
+		0, 1, 0, g[1], g[2], g[3], g[4],
+		0, 0, 0, b[1], b[2], b[3], b[4],
+		0, 0, 1, b[1], b[2], b[3], b[4],
 	}
-	local mesh = create_mesh({"p3|c40niu", axis_vb}, axis_ib)
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt, color)
+	local mesh = create_mesh{"p3|c4", axis_vb}
+	return create_simple_render_entity(name, material or "/pkg/ant.resources/materials/line_background.material", mesh, srt, color)
 end
 
 function ientity.create_line_entity(srt, p0, p1, name, color, hide)

@@ -235,42 +235,7 @@ local global_axes_dirty
 
 local function create_global_axes(srt)
 	global_axes_dirty = true
-	return ecs.create_entity{
-		policy = {
-			"ant.render|simplerender",
-			"ant.general|name",
-		},
-		data = {
-			simplemesh = imesh.init_mesh{
-				vb = {
-					start = 0,
-					num = 6,
-					{
-						declname = "p3|c4",
-						memory = {
-							"fffffff", 
-							{
-								--x-axis
-								0.0, 0.0, 0.0, 7.0, 0.0, 0.0, 1.0,
-								0.1, 0.0, 0.0, 7.0, 0.0, 0.0, 1.0,
-								--y-axis
-								0.0, 0.0, 0.0, 0.0, 7.0, 0.0, 1.0,
-								0.0, 0.1, 0.0, 0.0, 7.0, 0.0, 1.0,
-								--z-axis
-								0.0, 0.0, 0.0, 0.0, 0.0, 7.0, 1.0,
-								0.0, 0.0, 0.1, 0.0, 0.0, 7.0, 1.0,
-							}
-						}
-					}
-				},
-			},
-			material = "/pkg/ant.resources/materials/line_background.material",
-			scene = {srt={}},
-			filter_state = "main_view",
-			name = "global_axes_gizmo",
-			reference = true,
-		}
-	}
+	return ientity.create_axis_entity(srt, "global_axes", nil, nil, true)
 end
 
 local function update_global_axis()
@@ -449,7 +414,7 @@ function gizmo_sys:post_init()
 	create_scale_axis(gizmo.sy, {0, gizmo_const.AXIS_LEN, 0})
 	create_scale_axis(gizmo.sz, {0, 0, gizmo_const.AXIS_LEN})
 
-	global_axes = create_global_axes()
+	global_axes = create_global_axes{s=0.1}
 	-- global_axis_x_eid = ientity.create_line_entity({}, {0, 0, 0}, {0.1, 0, 0}, "", gizmo_const.COLOR_X)
 	-- global_axis_y_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0.1, 0}, "", gizmo_const.COLOR_Y)
 	-- global_axis_z_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0, 0.1}, "", gizmo_const.COLOR_Z)
