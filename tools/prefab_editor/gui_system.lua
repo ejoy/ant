@@ -196,7 +196,7 @@ local main_vp = {}
 local last_main_vp = {}
 local function is_pt_in_rect(x, y, rt)
     return  rt.x < x and x < (rt.x+rt.w) and
-            rt.y < y and x < (rt.y+rt.h)
+            rt.y < y and y < (rt.y+rt.h)
 end
 
 local function check_update_vp()

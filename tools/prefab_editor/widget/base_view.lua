@@ -95,17 +95,12 @@ function BaseView:on_set_tag(value)
     local tags = {}
     value:gsub('[^|]*', function (w) tags[#tags+1] = w end)
     template.template.data.tag = tags
-    if is_camera(self.e) then
-    else
-        self.e.tag = tags
-        w:sync("tag:out", self.e)
-        world:pub {"EntityEvent", "tag", self.e, tags}
-    end
+    world:pub {"EntityEvent", "tag", self.e, tags}
 end
 
 function BaseView:on_get_tag()
     local template = hierarchy:get_template(self.e)
-    if is_camera(self.e) then return "" end
+    if not template or not template.template then return "" end
     local tags = template.template.data.tag
     if type(tags) == "table" then
         return table.concat(tags, "|")

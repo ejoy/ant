@@ -119,7 +119,7 @@ end
 function util.pt2d_line_distance(p1, p2, p)
 	local d = math3d.normalize(math3d.sub(p2, p1))
     local x, y, z = math3d.index(d, 1, 2, 3)
-	assert(z == 0, "we assume pt2d is 3d vector where z component is 0.0")
+	--assert(z == 0, "we assume pt2d is 3d vector where z component is 0.0")
     local n = math3d.vector(y, -x, 0.0)
     return math3d.dot(p1, n) - math3d.dot(p, n)
 end
