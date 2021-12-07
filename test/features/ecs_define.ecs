@@ -96,7 +96,8 @@ system "scenespace_test_system"
 system "shadow_test_system"
     .implement "shadow_test.lua"
     .method "init"
-    .method "post_init"
+    .method "entity_init"
+    
 
 system "terrain_test_system"
     .implement "terrain_test.lua"

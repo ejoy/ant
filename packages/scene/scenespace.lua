@@ -124,11 +124,15 @@ function s:entity_init()
 		if isValidReference(e) then
 			w:sync("scene:in", e)
 			e.scene.changed = current_changed
-			if not parent or not isValidReference(parent) then
-				e.scene.parent = nil
+			if type(parent) == "number" then
+				e.scene.parent = parent
 			else
-				w:sync("scene:in", parent)
-				e.scene.parent = parent.scene.id
+				if not parent or not isValidReference(parent) then
+					e.scene.parent = nil
+				else
+					w:sync("scene:in", parent)
+					e.scene.parent = parent.scene.id
+				end
 			end
 			needsync = true
 		end

@@ -1,4 +1,6 @@
 fx:
   fs: /pkg/ant.resources/shaders/mesh/fs_colormesh.sc
   vs: /pkg/ant.resources/shaders/mesh/vs_colormesh.sc
+properties:
+  u_color: {10, 10, 10, 1}
 state: /pkg/ant.resources/materials/states/default.state
