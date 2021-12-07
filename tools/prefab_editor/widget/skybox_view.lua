@@ -31,17 +31,17 @@ end
 
 function SkyboxView:set_model(eid)
     if not MaterialView.set_model(self, eid) then return false end
-    self.irradiance:set_getter(function() return tostring(world[self.eid].ibl.irradiance.size) end)
+    self.irradiance:set_getter(function() return tostring(world[self.e].ibl.irradiance.size) end)
     self.irradiance:set_setter(function(value)
-        set_ibl_value(self.eid, "irradiance", value)
+        set_ibl_value(self.e, "irradiance", value)
     end)
-    self.prefilter:set_getter(function() return tostring(world[self.eid].ibl.prefilter.size) end)
+    self.prefilter:set_getter(function() return tostring(world[self.e].ibl.prefilter.size) end)
     self.prefilter:set_setter(function(value)
-        set_ibl_value(self.eid, "prefilter", value)
+        set_ibl_value(self.e, "prefilter", value)
     end)
-    self.LUT:set_getter(function() return tostring(world[self.eid].ibl.LUT.size) end)
+    self.LUT:set_getter(function() return tostring(world[self.e].ibl.LUT.size) end)
     self.LUT:set_setter(function(value)
-        set_ibl_value(self.eid, "LUT", value)
+        set_ibl_value(self.e, "LUT", value)
     end)
     self:update()
     return true
@@ -55,7 +55,7 @@ function SkyboxView:update()
 end
 
 function SkyboxView:show()
-    if not world[self.eid] then return end
+    if not world[self.e] then return end
     MaterialView.show(self)
     self.irradiance:show()
     self.prefilter:show()

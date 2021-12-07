@@ -34,10 +34,10 @@ function ColliderView:set_model(eid)
             return scale[1] / 100
         end)
         self.radius:set_setter(function(r)
-            iom.set_scale(self.eid, r * 100)
-            --prefab_mgr:update_current_aabb(self.eid)
-            world:pub {"UpdateAABB", self.eid}
-            anim_view.record_collision(self.eid)
+            iom.set_scale(self.e, r * 100)
+            --prefab_mgr:update_current_aabb(self.e)
+            world:pub {"UpdateAABB", self.e}
+            anim_view.record_collision(self.e)
         end)
         
     elseif collider.capsule then
@@ -51,10 +51,10 @@ function ColliderView:set_model(eid)
             return {scale[1] / 200, scale[2] / 200, scale[3] / 200}
         end)
         self.half_size:set_setter(function(sz)
-            iom.set_scale(self.eid, {sz[1] * 200, sz[2] * 200, sz[3] * 200})
-            --prefab_mgr:update_current_aabb(self.eid)
-            world:pub {"UpdateAABB", self.eid}
-            anim_view.record_collision(self.eid)
+            iom.set_scale(self.e, {sz[1] * 200, sz[2] * 200, sz[3] * 200})
+            --prefab_mgr:update_current_aabb(self.e)
+            world:pub {"UpdateAABB", self.e}
+            anim_view.record_collision(self.e)
         end)
     end
     
@@ -69,49 +69,49 @@ function ColliderView:has_scale()
 end
 
 function ColliderView:on_set_color(...)
-    imaterial.set_property(self.eid, "u_color", ...)
+    imaterial.set_property(self.e, "u_color", ...)
 end
 
 function ColliderView:on_get_color()
-    local rc = imaterial.get_property(self.eid, "u_color")
+    local rc = imaterial.get_property(self.e, "u_color")
     local color = math3d.totable(rc.value)
     return {color[1], color[2], color[3], color[4]}
 end
 
 function ColliderView:update()
     BaseView.update(self)
-    if world[self.eid].collider.sphere then
+    if world[self.e].collider.sphere then
         self.radius:update()
-    elseif world[self.eid].collider.capsule then
+    elseif world[self.e].collider.capsule then
         self.radius:update()
         self.height:update()
-    elseif world[self.eid].collider.box then
+    elseif world[self.e].collider.box then
         self.half_size:update()
     end
     self.color:update()
 end
 
 function ColliderView:show()
-    if not world[self.eid] then return end
+    if not world[self.e] then return end
     
     BaseView.show(self)
-    if world[self.eid].collider.sphere then
+    if world[self.e].collider.sphere then
         self.radius:show()
-    elseif world[self.eid].collider.capsule then
+    elseif world[self.e].collider.capsule then
         self.radius:show()
         self.height:show()
-    elseif world[self.eid].collider.box then
+    elseif world[self.e].collider.box then
         self.half_size:show()
     end
     local slot_list = hierarchy.slot_list
-    local e = world[self.eid]
+    local e = world[self.e]
     if slot_list then
         imgui.widget.PropertyLabel("LinkSlot")
         if imgui.widget.BeginCombo("##LinkSlot", {e.slot_name or "None", flags = imgui.flags.Combo {}}) then
             for name, eid in pairs(slot_list) do
                 if imgui.widget.Selectable(name, e.slot_name and e.slot_name == name) then
                     e.slot_name = name
-                    world:pub {"EntityEvent", "parent", self.eid, eid}
+                    world:pub {"EntityEvent", "parent", self.e, eid}
                 end
             end
             imgui.widget.EndCombo()

@@ -37,7 +37,7 @@ end
 function EffectView:update()
     BaseView.update(self)
     self.speed:update()
-    local template = hierarchy:get_template(self.eid)
+    local template = hierarchy:get_template(self.e)
     ui_auto_play[1] = template.template.data.auto_play
 end
 
@@ -54,34 +54,34 @@ function EffectView:show()
     -- end
     imgui.widget.PropertyLabel("Play")
     if imgui.widget.Button("Play") then
-        w:sync("effect_instance:in", self.eid)
-        local instance = self.eid.effect_instance
+        w:sync("effect_instance:in", self.e)
+        local instance = self.e.effect_instance
         instance.playid = effekseer.play(instance.handle, instance.playid)
         effekseer.set_speed(instance.handle, instance.playid, instance.speed)
     end
 end
 
 function EffectView:on_set_speed(value)
-    local template = hierarchy:get_template(self.eid)
+    local template = hierarchy:get_template(self.e)
     template.template.data.speed = value
-    if not self.eid.effect_instance then
-        w:sync("effect_instance:in", self.eid)
+    if not self.e.effect_instance then
+        w:sync("effect_instance:in", self.e)
     end
-    local instance = self.eid.effect_instance
+    local instance = self.e.effect_instance
     instance.speed = value
     effekseer.set_speed(instance.handle, instance.playid, value)
 end
 
 function EffectView:on_set_auto_play(value)
-    local template = hierarchy:get_template(self.eid)
+    local template = hierarchy:get_template(self.e)
     template.template.data.auto_play = value
 end
 
 function EffectView:on_set_loop(value)
-    if not self.eid.effect_instance then
-        w:sync("effect_instance:in", self.eid)
+    if not self.e.effect_instance then
+        w:sync("effect_instance:in", self.e)
     end
-    local instance = self.eid.effect_instance
+    local instance = self.e.effect_instance
     instance.loop = value
     effekseer.set_loop(instance.handle, instance.playid, value)
 end
