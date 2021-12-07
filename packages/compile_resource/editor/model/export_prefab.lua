@@ -9,14 +9,11 @@ local invalid_chars<const> = {
     '<', '>', ':', '/', '\\', '|', '?', '*', ' ', '\t', '\r', '%[', '%]', '%(', '%)'
 }
 
+local pattern_fmt<const> = ("[%s]"):format(table.concat(invalid_chars, ""))
 local replace_char<const> = '_'
 
 local function fix_invalid_name(name)
-    for _, ic in ipairs(invalid_chars) do
-        name = name:gsub(ic, replace_char)
-    end
-
-    return name
+    return name:gsub(pattern_fmt, replace_char)
 end
 
 local prefab = {}
