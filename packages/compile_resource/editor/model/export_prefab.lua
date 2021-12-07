@@ -39,10 +39,13 @@ end
 local function get_transform(node)
     if node.matrix then
         local s, r, t = math3d.srt(math3d.matrix(node.matrix))
+        local rr = math3d.tovalue(r)
+        rr[3], rr[4] = -rr[3], -rr[4]
+        local ttx, tty, ttz = math3d.index(t, 1, 2, 3)
         return {
             s = {math3d.index(s, 1, 2, 3)},
-            r = math3d.tovalue(r),
-            t = {math3d.index(t, 1, 2, 3)},
+            r = rr,
+            t = {ttx, tty, -ttz},
         }
     end
 

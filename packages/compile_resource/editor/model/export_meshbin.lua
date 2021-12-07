@@ -4,25 +4,6 @@ local declmgr   = renderpkg.declmgr
 local math3d    = require "math3d"
 local utility   = require "editor.model.utility"
 
-local function sort_pairs(t)
-    local s = {}
-    for k in pairs(t) do
-        s[#s+1] = k
-    end
-
-    table.sort(s)
-
-    local n = 1
-    return function ()
-        local k = s[n]
-        if k == nil then
-            return
-        end
-        n = n + 1
-        return k, t[k]
-    end
-end
-
 local function get_layout(name, accessor)
 	local shortname, channel = declmgr.parse_attri_name(name)
 	local comptype_name = gltfutil.comptype_name_mapper[accessor.componentType]
