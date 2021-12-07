@@ -65,6 +65,7 @@ system "init_loader_system"
     .require_policy "ant.objcontroller|pickup"
     .require_policy "ant.render|postprocess"
     .require_policy "ant.terrain|shape_terrain"
+    .require_policy "ant.objcontroller|screen_3dobj"
 
     .require_interface "ant.camera|icamera"
     .require_interface "ant.objcontroller|iobj_motion"
