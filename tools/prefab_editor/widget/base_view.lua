@@ -39,11 +39,11 @@ function BaseView:_init()
 end
 
 function BaseView:set_model(eid)
-    if self.eid == eid then return false end
+    if self.e == eid then return false end
     --TODO: need remove 'eid', there is no more eid
-    self.eid = eid
+    self.e = eid
     self.entity = eid
-    if not self.eid then return false end
+    if not self.e then return false end
 
     local template = hierarchy:get_template(eid)
     self.is_prefab = template and template.filename
@@ -63,48 +63,44 @@ function BaseView:set_model(eid)
 end
 
 function BaseView:on_get_prefab()
-    local template = hierarchy:get_template(self.eid)
+    local template = hierarchy:get_template(self.e)
     if template and template.filename then
         return template.filename
     end
 end
 
-local function is_camera(eid)
-    return type(eid) == "table"
+local function is_camera(e)
+    w:sync("camera?in", e)
+    return e.camera ~= nil
 end
 
 function BaseView:on_set_name(value)
-    local template = hierarchy:get_template(self.eid)
+    local template = hierarchy:get_template(self.e)
     template.template.data.name = value
-    if is_camera(self.eid) then
-        self.eid.name = value
-        w:sync("name:out", self.eid)
-    else
-        world[self.eid].name = value
-    end
-    world:pub {"EntityEvent", "name", self.eid, value}
+    self.e.name = value
+    w:sync("name:out", self.e)
+    world:pub {"EntityEvent", "name", self.e, value}
 end
 
 function BaseView:on_get_name()
-    if is_camera(self.eid) then return self.eid.name end
-    return world[self.eid].name
+    w:sync("name?in", self.e)
+    if type(self.e.name) == "number" then
+        return tostring(self.e.name)
+    end
+    return self.e.name or ""
 end
 
 function BaseView:on_set_tag(value)
-    local template = hierarchy:get_template(self.eid)
+    local template = hierarchy:get_template(self.e)
     local tags = {}
     value:gsub('[^|]*', function (w) tags[#tags+1] = w end)
     template.template.data.tag = tags
-    if is_camera(self.eid) then
-    else
-        world[self.eid].tag = tags
-        world:pub {"EntityEvent", "tag", self.eid, tags}
-    end
+    world:pub {"EntityEvent", "tag", self.e, tags}
 end
 
 function BaseView:on_get_tag()
-    local template = hierarchy:get_template(self.eid)
-    if is_camera(self.eid) then return "" end
+    local template = hierarchy:get_template(self.e)
+    if not template or not template.template then return "" end
     local tags = template.template.data.tag
     if type(tags) == "table" then
         return table.concat(tags, "|")
@@ -113,29 +109,29 @@ function BaseView:on_get_tag()
 end
 
 function BaseView:on_set_position(value)
-    world:pub {"EntityEvent", "move", self.eid, math3d.tovalue(iom.get_position(self.eid)), value}
+    world:pub {"EntityEvent", "move", self.e, math3d.tovalue(iom.get_position(self.e)), value}
 end
 
 function BaseView:on_get_position()
-    return math3d.totable(iom.get_position(self.eid))
+    return math3d.totable(iom.get_position(self.e))
 end
 
 function BaseView:on_set_rotate(value)
-    world:pub {"EntityEvent", "rotate", self.eid, math3d.tovalue(math3d.quat2euler(iom.get_rotation(self.eid))), value}
+    world:pub {"EntityEvent", "rotate", self.e, math3d.tovalue(math3d.quat2euler(iom.get_rotation(self.e))), value}
 end
 
 function BaseView:on_get_rotate()
-    local r = iom.get_rotation(self.eid)
+    local r = iom.get_rotation(self.e)
     local rad = math3d.tovalue(math3d.quat2euler(r))
     return { math.deg(rad[1]), math.deg(rad[2]), math.deg(rad[3]) }
 end
 
 function BaseView:on_set_scale(value)
-    world:pub {"EntityEvent", "scale", self.eid, math3d.tovalue(iom.get_scale(self.eid)), value}
+    world:pub {"EntityEvent", "scale", self.e, math3d.tovalue(iom.get_scale(self.e)), value}
 end
 
 function BaseView:on_get_scale()
-    return math3d.tovalue(iom.get_scale(self.eid))
+    return math3d.tovalue(iom.get_scale(self.e))
 end
 
 function BaseView:has_rotate()
@@ -147,7 +143,7 @@ function BaseView:has_scale()
 end
 
 function BaseView:update()
-    if not self.eid then return end
+    if not self.e then return end
     --self.base.script:update()
     if self.is_prefab then
         self.base.prefab:update()
@@ -156,7 +152,7 @@ function BaseView:update()
 end
 
 function BaseView:show()
-    if not self.eid then return end
+    if not self.e then return end
     --self.base.script:show()
     if self.is_prefab then
         self.base.prefab:show()

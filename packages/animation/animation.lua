@@ -127,8 +127,8 @@ function ani_sys:end_animation()
 end
 
 function ani_sys:data_changed()
-	for e in w:select "_animation:in" do
-		if e._animation._current.eid and e._animation._current.eid[1] == e.scene.eid then
+	for e in w:select "_animation:in scene:in" do
+		if e._animation._current.eid and e._animation._current.eid[1].scene.id == e.scene.id then
 			process_keyframe_event(e._animation._current)
 		end
 	end

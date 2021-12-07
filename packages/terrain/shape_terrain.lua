@@ -458,7 +458,11 @@ function shape_ts:entity_init()
                             filter_state= "main_view|selectable",
                             name        = "section" .. sectionidx,
                             shape_terrain_drawer = true,
-                        }
+                            on_ready = function(entity)
+                                w:sync("reference:in", entity)
+                                world:pub {"shape_terrain", "on_ready", entity.reference, e.reference}
+                            end,
+                        },
                     }
 
                     ecs.method.set_parent(ce, e.reference)
@@ -482,7 +486,11 @@ function shape_ts:entity_init()
                             filter_state= "main_view|selectable",
                             name        = "section_edge" .. sectionidx,
                             shape_terrain_edge_drawer = true,
-                        }
+                            on_ready = function(entity)
+                                w:sync("reference:in", entity)
+                                world:pub {"shape_terrain", "on_ready", entity.reference, e.reference}
+                            end,
+                        },
                     }
                     ecs.method.set_parent(ce, e.reference)
                 end

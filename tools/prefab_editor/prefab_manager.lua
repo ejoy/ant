@@ -582,8 +582,16 @@ function m:add_prefab(filename)
         self:reset_prefab()
     end
     
-    local parent = gizmo.target_eid or self.root
-    local parentWorldMat = parent and iom.worldmat(parent) or math3d.matrix{}
+    local parentWorldMat
+    local parent
+    if gizmo.target_eid then
+        parent = gizmo.target_eid
+        parentWorldMat = iom.worldmat(parent)
+    else
+        parent = self.root
+        parentWorldMat = math3d.matrix{}
+    end
+
     local s, r, t = math3d.srt(math3d.mul(math3d.inverse(parentWorldMat), math3d.matrix{}))
     
     local v_root = create_simple_entity(gen_prefab_name(), {

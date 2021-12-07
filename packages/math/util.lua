@@ -91,7 +91,7 @@ end
 function util.world_to_screen(vpmat, vr, posWS)
 	--local vp = icamera.calc_viewproj(camera_ref)
 	local posNDC = math3d.transformH(vpmat, posWS, 1)
-	local screenNDC = math3d.muladd(posNDC, 0.5, 0.5)
+	local screenNDC = math3d.muladd(posNDC, 0.5, math3d.vector(0.5, 0.5, 0.0))
 	local sy = math3d.index(screenNDC, 2)
 	if not math3d.get_origin_bottom_left() then
 		screenNDC = math3d.set_index(screenNDC, 2, 1.0 - sy)
@@ -119,7 +119,7 @@ end
 function util.pt2d_line_distance(p1, p2, p)
 	local d = math3d.normalize(math3d.sub(p2, p1))
     local x, y, z = math3d.index(d, 1, 2, 3)
-	assert(z == 0, "we assume pt2d is 3d vector where z component is 0.0")
+	--assert(z == 0, "we assume pt2d is 3d vector where z component is 0.0")
     local n = math3d.vector(y, -x, 0.0)
     return math3d.dot(p1, n) - math3d.dot(p, n)
 end
