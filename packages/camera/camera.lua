@@ -97,7 +97,7 @@ end
 function ic.world_to_screen(world_pos)
     local mq = w:singleton("main_queue", "camera_ref:in render_target:in")
     local vp = ic.calc_viewproj(mq.camera_ref)
-    return mu.world_to_screen(vp, world_pos, mq.render_target.view_rect)
+    return mu.world_to_screen(vp, mq.render_target.view_rect, world_pos)
 end
 
 function ic.calc_viewproj(cameraref)
