@@ -77,7 +77,7 @@ local function find_index(t, item)
 end
 
 local function get_runtime_animations(e)
-    w:sync("animation:in", e)
+    w:sync("animation?in", e)
     return e.animation
 end
 
