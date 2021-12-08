@@ -168,5 +168,9 @@ function util.srt_obj(srt)
 	}
 end
 
+function util.pt2d_in_rect(x, y, rt)
+	return rt.x <= x and rt.y <= y and x <=(rt.x+rt.w) and y <=(rt.y+rt.h)
+end
+
 return util
 

@@ -517,9 +517,16 @@ local function select_axis_plane(x, y)
 end
 
 local function select_axis(x, y)
-	if not gizmo.target_eid or not x or not y then
+	if not gizmo.target_eid then
 		return
 	end
+	assert(x and y)
+	local vx, vy = igui.cvt2scenept(x, y)
+	local mqvr = irq.view_rect "main_queue"
+	if not mu.pt2d_in_rect(vx, vy, mqvr) then
+		return
+	end
+
 	if gizmo.mode == gizmo_const.SCALE then
 		gizmo:reset_scale_axis_color()
 	elseif gizmo.mode == gizmo_const.MOVE then
@@ -530,12 +537,9 @@ local function select_axis(x, y)
 	if axisPlane then
 		return axisPlane
 	end
-
-	local vx, vy = igui.cvt2scenept(x, y)
 	local mcref = irq.main_camera()
 	w:sync("camera:in", mcref)
 	local vpmat = mcref.camera.viewprojmat
-	local mqvr = irq.view_rect "main_queue"
 
 	local gizmo_obj_pos = iom.get_position(gizmo.root_eid)
 	local start = mu.world_to_screen(mc, mqvr, gizmo_obj_pos)
@@ -553,31 +557,27 @@ local function select_axis(x, y)
 			imaterial.set_property(gizmo.sy.eid[2], "u_color", gizmo_const.HIGHTLIGHT_COLOR)
 			imaterial.set_property(gizmo.sz.eid[1], "u_color", gizmo_const.HIGHTLIGHT_COLOR)
 			imaterial.set_property(gizmo.sz.eid[2], "u_color", gizmo_const.HIGHTLIGHT_COLOR)
-			return nil
 		end
+
+		return 
 	end
 	-- by axis
 	local line_len = gizmo_const.AXIS_LEN * gizmo_scale
 
-	local end_x = mu.world_to_screen(vpmat, mqvr, math3d.add(gizmo_obj_pos, math3d.vector(gizmo_dir_to_world({line_len, 0, 0}))))
-	
-	local axis = (gizmo.mode == gizmo_const.SCALE) and gizmo.sx or gizmo.tx
-	if mu.pt2d_line_distance(start, end_x, hp) < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
-		return axis
-	end
+	local axes = {
+		tx = {line_len, 0, 0},
+		ty = {0, line_len, 0},
+		tz = {0, 0, line_len},
+	}
 
-	local end_y = mu.world_to_screen(vpmat, mqvr, math3d.add(gizmo_obj_pos, math3d.vector(gizmo_dir_to_world({0, line_len, 0}))))
-	axis = (gizmo.mode == gizmo_const.SCALE) and gizmo.sy or gizmo.ty
-	if mu.pt2d_line_distance(start, end_y, hp) < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
-		return axis
+	for k, delta_dir in pairs(axes) do
+		local end_ptWS = math3d.add(gizmo_obj_pos, math3d.vector(gizmo_dir_to_world(delta_dir)))
+		local end_pt = mu.world_to_screen(vpmat, mqvr, end_ptWS)
+		local radius = mu.pt2d_line_distance(start, end_pt, hp)
+		if math.abs(radius) < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
+			return gizmo[k]
+		end
 	end
-
-	local end_z = mu.world_to_screen(vpmat, mqvr, math3d.add(gizmo_obj_pos, math3d.vector(gizmo_dir_to_world({0, 0, line_len}))))
-	axis = (gizmo.mode == gizmo_const.SCALE) and gizmo.sz or gizmo.tz
-	if mu.pt2d_line_distance(start, end_z, hp) < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
-		return axis
-	end
-	return nil
 end
 
 local function select_rotate_axis(x, y)
