@@ -532,9 +532,9 @@ local function select_axis(x, y)
 	end
 
 	local vx, vy = igui.cvt2scenept(x, y)
-	
-	--FIXME: we should get viewproj matrix in after_transform stage
-	local vpmat = icamera.calc_viewproj(irq.main_camera())
+	local mcref = irq.main_camera()
+	w:sync("camera:in", mcref)
+	local vpmat = mcref.camera.viewprojmat
 	local mqvr = irq.view_rect "main_queue"
 
 	local gizmo_obj_pos = iom.get_position(gizmo.root_eid)
