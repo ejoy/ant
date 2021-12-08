@@ -37,19 +37,6 @@ local function LoadImguiLayout(filename)
     end
 end
 
-local function create_second_view()
-    local vr = {x = 0, y = 0, w = 1280, h = 720}
-    irender.create_view_queue(
-        vr, camera_mgr.second_view,
-        icamera.create{
-            eyepos  = {0, 0, 0, 1},
-            viewdir = {0, 0, 1, 0},
-            updir   = {0, 1, 0, 0},
-            frustum = default_comp.frustum(vr.w / vr.h),
-            name = camera_mgr.second_view,
-        }, "main_view", "auxgeom")
-end
-
 function m:init()
     iani.set_edit_mode(true)
 
@@ -73,7 +60,6 @@ end
 function m:init_world()
     irq.set_view_clear_color("main_queue", 0x353535ff)--0xa0a0a0ff
     init_camera()
-    create_second_view()
 end
 
 function m:post_init()
