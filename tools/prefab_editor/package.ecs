@@ -54,6 +54,7 @@ system "camera_system"
     .method "entity_ready"
     .method "update_camera"
     .method "handle_camera_event"
+    .method "handle_event"
 
 system "input_system"
     .implement "input_system.lua"

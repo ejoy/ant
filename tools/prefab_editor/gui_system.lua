@@ -491,10 +491,11 @@ function m:handle_event()
             on_update(target)
         end
     end
-    for _, what, nd, value in hierarchy_event:unpack() do
-        local e = nd.eid
+    for _, what, target, value in hierarchy_event:unpack() do
+        local e = target
         if what == "visible" then
-            hierarchy:set_visible(nd, value, true)
+            e = target.eid
+            hierarchy:set_visible(target, value, true)
             w:sync("effect_instance?in", e)
             w:sync("light?in", e)
             if e.effect_instance then
@@ -503,7 +504,7 @@ function m:handle_event()
             elseif e.light then
                 world:pub{"component_changed", "light", e, "visible", value}
             else
-                update_visible(nd, value)
+                update_visible(target, value)
             end
             for ie in w:select "scene:in ibl:in" do
                 if ie.scene.parent == e then

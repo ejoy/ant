@@ -28,9 +28,12 @@ local function view_to_world(view_pos)
 	--local camer_worldmat = iom.worldmat(irq.main_camera())
 
 	--FIX ME: iom.worldmat() could not be used in some stage
-	local srtmat = math3d.matrix(irq.main_camera().camera.srt)
-
-	return math3d.transform(srtmat, view_pos, 0)
+	--local srtmat = math3d.matrix(irq.main_camera().camera.srt)
+	local camera_ref = irq.main_camera()
+	w:sync("camera:in scene:in", camera_ref)
+	local camera = camera_ref.camera
+    local worldmat = camera_ref.scene._worldmat
+	return math3d.transform(worldmat, view_pos, 0)
 end
 
 local function camera_update_eye_pos(camera)
@@ -45,7 +48,7 @@ local function camera_rotate(dx, dy)
 end
 
 local function camera_pan(dx, dy)
-	local world_dir = view_to_world({dy * pan_speed, dx * pan_speed, 0})
+	local world_dir = view_to_world({dy * pan_speed, dx * pan_speed, 0.0})
 	local viewdir = iom.get_direction(irq.main_camera())
 	camera_target.v = math3d.add(camera_target, math3d.cross(viewdir, world_dir))
 	camera_update_eye_pos()
@@ -240,8 +243,8 @@ function camera_sys:handle_camera_event()
 		if not camera_mgr.select_frustum then
 			if what == "rotate" then
 				camera_rotate(x, y)
-			elseif what == "pan" and not ctrl_state then
-				camera_pan(x, y)
+			-- elseif what == "pan" and not ctrl_state then
+			-- 	camera_pan(x, y)
 			elseif what == "zoom" then
 				camera_zoom(x)
 			elseif what == "reset" then
@@ -250,6 +253,27 @@ function camera_sys:handle_camera_event()
 		end
 	end
 
+	-- for _, what, x, y, dx, dy in mouse_drag:unpack() do
+	-- 	if what == "LEFT" then
+	-- 		if select_area and hit_plane then
+	-- 			local curpos = utils.ray_hit_plane(iom.ray(irq.main_camera(), {x, y}), hit_plane)
+	-- 			local proj_len = math3d.dot(current_dir, math3d.sub(curpos, centre_pos))
+	-- 			local aspect = 1.0
+	-- 			if select_area == camera_mgr.FRUSTUM_LEFT or select_area == camera_mgr.FRUSTUM_RIGHT then
+	-- 				aspect = icamera.get_frustum(camera_mgr.second_camera).aspect
+	-- 			end
+	-- 			local half_fov = math.atan(proj_len / dist_to_plane / aspect )
+	-- 			camera_mgr.set_frustum_fov(camera_mgr.second_camera, 2 * math.deg(half_fov))
+	-- 			inspector.update_ui(true)
+	-- 		end
+	-- 	elseif what == "MIDDLE" then
+	-- 		camera_pan(dx, dy)
+	-- 	elseif what == "RIGHT" then
+	-- 		camera_rotate(dx, dy)
+	-- 	end
+	-- end
+end
+function camera_sys:handle_event()
 	for _, what, x, y, dx, dy in mouse_drag:unpack() do
 		if what == "LEFT" then
 			if select_area and hit_plane then
@@ -269,9 +293,7 @@ function camera_sys:handle_camera_event()
 			camera_rotate(dx, dy)
 		end
 	end
-
 end
-
 function camera_sys:update_camera()
 	if not camera_mgr.second_camera then
 		return
