@@ -51,7 +51,6 @@ function tm_sys:init_world()
     ecs.create_entity {
         policy = {
             "ant.render|postprocess_queue",
-            "ant.render|watch_screen_buffer",
             "ant.general|name",
         },
         data = {
@@ -64,7 +63,6 @@ function tm_sys:init_world()
                 },
             },
             queue_name = "tonemapping_queue",
-            watch_screen_buffer = true,
             name = "tonemapping_rt_obj",
             tonemapping_queue = true,
         }
