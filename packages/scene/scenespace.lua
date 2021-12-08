@@ -78,14 +78,7 @@ end
 
 function s:entity_init()
 	local needsync = false
-
-	for v in w:select "INIT camera:in scene:out" do
-		local camera = v.camera
-		v.scene = {
-			srt = mu.srt_obj{s=1, r=math3d.torotation(math3d.vector(camera.viewdir)), t=camera.eyepos},
-			updir = math3d.ref(math3d.vector(camera.updir)),
-		}
-	end
+	--TODO: bounding as component?
 	for v in w:select "INIT mesh:in scene:in" do
 		local mesh = v.mesh
 		if mesh.bounding then
@@ -106,12 +99,6 @@ function s:entity_init()
 		scene.id = new_sceneid()
 		v.scene_sorted = true
 		needsync = true
-	end
-	for v in w:select "INIT camera:in scene:in" do
-		v.camera.srt = v.scene.srt
-	end
-	for v in w:select "INIT render_object:in scene:in" do
-		v.render_object.srt = v.scene.srt
 	end
 
 	for v in w:select "scene_unsorted scene:in scene_sorted?new" do
@@ -227,11 +214,6 @@ function s:update_transform()
 		local r, n = v.render_object, v.scene
 		r.aabb = n._aabb
 		r.worldmat = n._worldmat
-	end
-	for v in w:select "camera:in scene:in" do
-		local r, n = v.camera, v.scene
-		r.worldmat = n._worldmat
-		r.updir = n.updir
 	end
 	current_changed = current_changed + 1
 end

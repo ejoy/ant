@@ -2,10 +2,12 @@
 action:
     bind_camera: main_queue
 data:
-  camera:
-    eyepos: {-1, 1, 2, 1}
-    viewdir: {4, -2, -9, 0}
+  scene:
+    srt:
+      r: {0.8, 0, 0}  #3 parameter is euler angle
+      t: {-1, 1, 2, 1}
     updir: {0, 1, 0, 0}
+  camera:
     frustum:
       aspect: 1.3333333333333333
       f: 100

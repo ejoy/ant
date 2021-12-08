@@ -215,9 +215,13 @@ function svs:update_camera()
     for k, v in pairs(orthoview) do
         local qn = v.name
         local qe = w:singleton(qn, "camera_ref:in")
-        local camera = icamera.find_camera(qe.camera_ref)
-        local worldmat = camera.worldmat
-        camera.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), camera.updir)
+        local cref = qe.camera_ref
+        w:sync("camera:in scene:in", cref)
+        local camera = cref.camera
+        local scene = cref.scene
+        local worldmat = scene._worldmat
+        local d, p = math3d.index(worldmat, 3, 4)
+        camera.viewmat = math3d.lookto(p, d, scene.updir)
         camera.projmat = math3d.projmat(camera.frustum)
         camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
     end

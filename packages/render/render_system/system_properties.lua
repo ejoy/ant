@@ -182,18 +182,13 @@ local function update_csm_properties()
 
 		local idx = csm.index
 		local split_distanceVS = csm.split_distance_VS
-		if split_distanceVS then
-			split_distances[idx] = split_distanceVS
-			local camera = icamera.find_camera(v.camera_ref)
-			csm_matrixs[csm.index].id = math3d.mul(ishadow.crop_matrix(idx), camera.viewprojmat)
-		end
+		split_distances[idx] = split_distanceVS
+		local camera = icamera.find_camera(v.camera_ref)
+		csm_matrixs[idx].id = math3d.mul(ishadow.crop_matrix(idx), camera.viewprojmat)
 	end
 
 	system_properties["u_csm_split_distances"].v = split_distances
-
-	local fb = fbmgr.get(ishadow.fb_index())
-	local sm = system_properties["s_shadowmap"]
-	sm.texture.handle = fbmgr.get_rb(fb[1]).handle
+	system_properties["s_shadowmap"].texture.handle = fbmgr.get_rb(ishadow.fb_index(), 1).handle
 
 	if ishadow.depth_type() == "linear" then
 		system_properties["u_depth_scale_offset"].id = ishadow.shadow_depth_scale_offset()

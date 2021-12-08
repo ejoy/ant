@@ -19,7 +19,7 @@ function st_sys:init()
 			scene =  {
 				srt = {
 					s=100,
-					t={0, 12, 0, 0}
+					t={3, 1, 0, 0}
 				}
 			},
 			material = "/pkg/ant.resources/materials/singlecolor.material",
@@ -42,7 +42,7 @@ function st_sys:init()
 			name = "mesh_root",
 		}
 	}
-	local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/female/female.glb|mesh.prefab"
+	local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/RiggedFigure.glb|mesh.prefab"
 
 	world:create_object(p)
 

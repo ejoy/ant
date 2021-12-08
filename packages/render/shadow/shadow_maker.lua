@@ -92,83 +92,85 @@ local function light_matrix(center_WS, lightdir)
 	return math3d.set_columns(mc.IDENTITY_MAT, xaxis, yaxis, lightdir, center_WS)
 end
 
-local function update_camera_matrices(rc)
-	rc.viewmat	= math3d.inverse(math3d.matrix(rc.srt))
-	rc.worldmat	= rc.srt
-	rc.projmat	= math3d.projmat(rc.frustum)
-	rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
+local function update_camera_matrices(camera, lightmat)
+	camera.viewmat	= math3d.inverse(lightmat)	--just transpose?
+	camera.projmat	= math3d.projmat(camera.frustum)
+	camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 end
 
-local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, camera_rc)
+local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, se)
 	local center_WS = math3d.points_center(corners_WS)
 	local min_extent, max_extent
 
-	camera_rc.srt.id = light_matrix(center_WS, lightdir)
+	w:sync("scene:in camera:in", se)
+	local srt = se.scene.srt
+	srt.r.q = math3d.torotation(lightdir)
+	srt.t.v = center_WS
+	local lightmat = math3d.matrix(srt)
+	se.scene._worldmat = lightmat
 
+	local camera = se.camera
 	if stabilize then
 		local radius = math3d.points_radius(corners_WS, center_WS)
 		--radius = math.ceil(radius * 16.0) / 16.0	-- round to 16
 		min_extent, max_extent = {-radius, -radius, -radius}, {radius, radius, radius}
 		keep_shadowmap_move_one_texel(min_extent, max_extent, shadowmap_size)
 	else
-		local minv, maxv = math3d.minmax(corners_WS, camera_rc.viewmat)
+		local minv, maxv = math3d.minmax(corners_WS, camera.viewmat)
 		min_extent, max_extent = math3d.tovalue(minv), math3d.tovalue(maxv)
 	end
 
-	camera_rc.frustum = {
-		ortho=true,
-		l = min_extent[1], r = max_extent[1],
-		b = min_extent[2], t = max_extent[2],
-		n = min_extent[3], f = max_extent[3],
-	}
+	local f = camera.frustum
+	f.l, f.b, f.n = min_extent[1], min_extent[2], min_extent[3]
+	f.r, f.t, f.f = max_extent[1], max_extent[2], max_extent[3]
+	update_camera_matrices(camera, lightmat)
 
-	update_camera_matrices(camera_rc)
+	do
+		-- local ident_projmat = math3d.projmat{
+		-- 	ortho=true,
+		-- 	l=-1, r=1, b=-1, t=1, n=-100, f=100,
+		-- }
 
+		-- local minv, maxv = math3d.minmax(corners_WS, camera_rc.viewmat)
+		-- local minv_proj, maxv_proj = math3d.transformH(ident_projmat, minv, 1), math3d.transformH(ident_projmat, maxv, 1)
+		-- -- scale = 2 / (maxv_proj-minv_proj)
+		-- local scale = math3d.mul(2, math3d.reciprocal(math3d.sub(maxv_proj, minv_proj)))
+		-- -- offset = 0.5 * (minv_proj+maxv_proj) * scale
+		-- local offset = math3d.mul(scale, math3d.mul(0.5, math3d.add(minv_proj, maxv_proj)))
+		-- local scalex, scaley = math3d.index(scale, 1, 2)
+		-- local offsetx, offsety = math3d.index(offset, 1, 2)
+		-- local lightproj = math3d.mul(math3d.matrix(
+		-- scalex, 0.0, 	0.0, 0.0,
+		-- 0.0,	scaley,	0.0, 0.0,
+		-- 0.0,	0.0,	1.0, 0.0,
+		-- offsetx,offsety,0.0, 1.0
+		-- ), ident_projmat)
 
-	-- do
-	-- 	local ident_projmat = math3d.projmat{
-	-- 		ortho=true,
-	-- 		l=-1, r=1, b=-1, t=1, n=-100, f=100,
-	-- 	}
+		-- camera_rc.projmat = lightproj
+		-- camera_rc.viewprojmat = math3d.mul(camera_rc.projmat, camera_rc.viewmat)
 
-	-- 	local minv, maxv = math3d.minmax(corners_WS, camera_rc.viewmat)
-	-- 	local minv_proj, maxv_proj = math3d.transformH(ident_projmat, minv, 1), math3d.transformH(ident_projmat, maxv, 1)
-	-- 	-- scale = 2 / (maxv_proj-minv_proj)
-	-- 	local scale = math3d.mul(2, math3d.reciprocal(math3d.sub(maxv_proj, minv_proj)))
-	-- 	-- offset = 0.5 * (minv_proj+maxv_proj) * scale
-	-- 	local offset = math3d.mul(scale, math3d.mul(0.5, math3d.add(minv_proj, maxv_proj)))
-	-- 	local scalex, scaley = math3d.index(scale, 1, 2)
-	-- 	local offsetx, offsety = math3d.index(offset, 1, 2)
-	-- 	local lightproj = math3d.mul(math3d.matrix(
-	-- 	scalex, 0.0, 	0.0, 0.0,
-	-- 	0.0,	scaley,	0.0, 0.0,
-	-- 	0.0,	0.0,	1.0, 0.0,
-	-- 	offsetx,offsety,0.0, 1.0
-	-- 	), ident_projmat)
+		local p = math3d.vector(1.86087, 0.00, 0.49537, 1.00)
 
-	-- 	camera_rc.projmat = lightproj
-	-- 	camera_rc.viewprojmat = math3d.mul(camera_rc.projmat, camera_rc.viewmat)
-	-- end
+	end
 end
 
-local function calc_shadow_camera(camera, frustum, lightdir, shadowmap_size, stabilize, sc_eid)
-	local vp = math3d.mul(math3d.projmat(frustum), camera.viewmat)
+local function calc_shadow_camera(maincamera, frustum, lightdir, shadowmap_size, stabilize, shadowcamera)
+	local vp = math3d.mul(math3d.projmat(frustum), maincamera.viewmat)
 
 	local corners_WS = math3d.frustum_points(vp)
-	local camera_rc = icamera.find_camera(sc_eid)
-	calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, camera_rc)
+	calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, shadowcamera)
 end
 
-local function update_shadow_camera(dl, camera)
+local function update_shadow_camera(dl, maincamera)
 	local lightdir = iom.get_direction(dl)
 	local setting = ishadow.setting()
-	local viewfrustum = camera.frustum
+	local viewfrustum = maincamera.frustum
 	local csmfrustums = ishadow.calc_split_frustums(viewfrustum)
 
 	for qe in w:select "csm_queue camera_ref:in csm:in" do
 		local csm = qe.csm
 		local cf = csmfrustums[csm.index]
-		calc_shadow_camera(camera, cf, lightdir, setting.shadowmap_size, setting.stabilize, qe.camera_ref)
+		calc_shadow_camera(maincamera, cf, lightdir, setting.shadowmap_size, setting.stabilize, qe.camera_ref)
 		csm.split_distance_VS = cf.f - viewfrustum.n
 	end
 end
@@ -277,7 +279,7 @@ function sm:entity_init()
 		if csm_dl == nil then
 			e.csm_directional_light = true
 			w:sync("csm_directional_light?out", e)
-			--set_csm_visible(true)
+			set_csm_visible(true)
 
 			shadow_camera_rebuild = true
 		else
@@ -315,8 +317,9 @@ function sm:update_camera()
 			shadow_camera_rebuild = false
 		else
 			for qe in w:select "csm_queue camera_ref:in" do
-				w:sync("camera:in", qe.camera_ref)
-				update_camera_matrices(qe.camera_ref.camera)
+				local cref = qe.camera_ref
+				w:sync("camera:in scene:in", cref)
+				update_camera_matrices(cref.camera, cref.scene._worldmat)
 			end
 		end
 	end

@@ -153,21 +153,15 @@ function init_loader_sys:init()
     -- }
 end
 
-local function main_camera_ref()
-    for e in w:select "main_queue camera_ref:in" do
-        return e.camera_ref
-    end
-end
-
 function init_loader_sys:init_world()
     for msg in after_init_mb:each() do
-        local eid = msg[2]
-        local s = iom.get_scale(eid)
-        iom.set_scale(eid, math3d.mul(s, {5, 5, 5, 0}))
+        local e = msg[2]
+        local s = iom.get_scale(e)
+        iom.set_scale(e, math3d.mul(s, {5, 5, 5, 0}))
     end
 
     local mq = w:singleton("main_queue", "camera_ref:in")
-    local eyepos = math3d.vector(0, 8, -8)
+    local eyepos = math3d.vector(8, 8, 0)
     local camera_ref = mq.camera_ref
     iom.set_position(camera_ref, eyepos)
     local dir = math3d.normalize(math3d.sub(mc.ZERO_PT, eyepos))

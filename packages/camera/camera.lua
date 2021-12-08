@@ -65,11 +65,15 @@ function ic.create(info)
             "ant.camera|camera",
         },
         data = {
+            scene = {
+                srt = {
+                    r = math3d.torotation(math3d.vector(assert(info.viewdir))),
+                    t = assert(info.eyepos),
+                },
+                updir = assert(info.updir),
+            },
+            reference = true,
             camera = {
-                reference = true,
-                eyepos  = assert(info.eyepos),
-                viewdir = assert(info.viewdir),
-                updir   = assert(info.updir),
                 frustum = frustum,
                 clip_range = info.clip_range,
                 dof     = info.dof,
@@ -183,8 +187,9 @@ end
 local cameraview_sys = ecs.system "camera_view_system"
 
 local function update_camera(camera_ref)
-    local camera = find_camera(camera_ref)
-    local worldmat = camera.worldmat
+    w:sync("camera:in scene:in", camera_ref)
+    local camera = camera_ref.camera
+    local worldmat = camera_ref.scene._worldmat
     local pos, dir = math3d.index(worldmat, 4, 3)
     camera.viewmat = math3d.lookto(pos, dir, camera.updir)
     camera.projmat = math3d.projmat(camera.frustum)
