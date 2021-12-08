@@ -20,7 +20,7 @@ function PropertyBase:_init(config, modifier)
     self.disable    = config.disable
     self.visible    = config.visible or true
     self.id         = config.id
-
+    self.dim        = config.dim or 1
     self.modifier = modifier or {}
     self.uidata = {speed = config.speed, min = config.min, max = config.max, flags = config.flags}
 end
@@ -65,7 +65,7 @@ end
 function PropertyBase:update()
     local value = self.modifier.getter()
     if type(value) == "table" then
-        for i = 1, #value do
+        for i = 1, self.dim do
             self.uidata[i] = value[i]
         end
     else
@@ -77,7 +77,7 @@ function PropertyBase:show()
     imgui.widget.PropertyLabel(self.label)
     if self.imgui_func("##" .. self.label, self.uidata) then
         local d = self.uidata
-        if #d == 1 then
+        if self.dim == 1 then
             self.modifier.setter(d[1])
         else
             self.modifier.setter(d)
