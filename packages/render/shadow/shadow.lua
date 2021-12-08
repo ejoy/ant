@@ -6,6 +6,10 @@ local setting	= import_package "ant.settings".setting
 local hwi 		= import_package "ant.hwi"
 local math3d	= require "math3d"
 
+local viewidmgr = require "viewid_mgr"
+
+local bgfx		= require "bgfx"
+
 local fbmgr		= require "framebuffer_mgr"
 local samplerutil = require "sampler"
 local shadowcommon=require "shadow.common"
@@ -87,8 +91,19 @@ local csm_setting = {
 	split_weight	= shadowcfg.split_weight or 0.7,
 	split_frustums	= {nil, nil, nil, nil},
 	fb_index		= fbmgr.create(get_render_buffers(shadowcfg.size * shadowcfg.split_num, shadowcfg.size, shadowcfg.type)),
-	
 }
+
+--init shadowmap
+do
+	local csm_fb_viewid = viewidmgr.get "csm_fb"
+	local vrw, vrh = csm_setting.shadowmap_size * csm_setting.split_num, csm_setting.shadowmap_size
+	bgfx.set_view_rect(csm_fb_viewid, 0, 0, vrw, vrh)
+	local s = shadowcfg.type == "linear" and "CD" or "D"
+	bgfx.set_view_clear(csm_fb_viewid, s, 0, 1.0, 0)
+	local fb = fbmgr.get(csm_setting.fb_index)
+	bgfx.set_view_frame_buffer(csm_fb_viewid, fb.handle)
+	bgfx.touch(csm_fb_viewid)
+end
 
 local function gen_ratios(distances)
 	local pre_dis = 0

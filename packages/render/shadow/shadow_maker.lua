@@ -148,9 +148,6 @@ local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_s
 
 		-- camera_rc.projmat = lightproj
 		-- camera_rc.viewprojmat = math3d.mul(camera_rc.projmat, camera_rc.viewmat)
-
-		local p = math3d.vector(1.86087, 0.00, 0.49537, 1.00)
-
 	end
 end
 
@@ -226,7 +223,6 @@ local function create_csm_entity(index, vr, fbidx, depth_type)
 			queue_name = queuename,
 			csm_queue = true,
 			name = "csm" .. index,
-			need_touch = true,
 		},
 	}
 end
