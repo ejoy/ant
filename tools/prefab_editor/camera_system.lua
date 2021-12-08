@@ -83,10 +83,14 @@ local ZOOM_BACK = false
 local icamera = ecs.import.interface "ant.camera|icamera"
 local function update_second_view_camera()
     if not camera_mgr.second_camera then return end
-    -- local rc = world[camera_mgr.second_camera]._rendercache
-	-- rc.viewmat = icamera.calc_viewmat(camera_mgr.second_camera)
-    -- rc.projmat = icamera.calc_projmat(camera_mgr.second_camera)--math3d.projmat(world[camera_mgr.second_camera]._rendercache.frustum)--
-	-- rc.viewprojmat = icamera.calc_viewproj(camera_mgr.second_camera)
+	local cref = camera_mgr.second_camera
+	w:sync("camera:in scene:in", cref)
+	local c, s = cref.camera, cref.scene
+	local c_wm = s._worldmat
+	local d, p = math3d.index(c_wm, 3, 4)
+	c.viewmat = math3d.lookto(p, d, s.updir)
+	c.projmat = math3d.projmat(c.frustum)
+	c.viewprojmat = math3d.mul(c.projmat, c.viewmat)
 end
 
 local keypress_mb = world:sub{"keyboard"}

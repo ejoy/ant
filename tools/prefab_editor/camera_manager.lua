@@ -37,11 +37,10 @@ function camera_mgr.get_editor_data(e)
     return e.camera._editor
 end
 
-function camera_mgr.set_second_camera(eid, show)
-    if not eid then return end
-    irq.set_camera(camera_mgr.second_view, eid)
-    camera_mgr.second_camera = eid
-    camera_mgr.show_frustum(eid, show)
+function camera_mgr.set_second_camera(cameraref, show)
+    irq.set_camera("second_view", cameraref)
+    camera_mgr.second_camera = cameraref
+    camera_mgr.show_frustum(cameraref, show)
 end
 
 function camera_mgr.reset_frustum_color(eid)
@@ -115,12 +114,9 @@ function camera_mgr.update_frustrum(cam_eid)
     editor_data.far_boundary = boundary
 end
 
-function camera_mgr.show_frustum(eid, visible)
-    -- if camera_mgr.second_camera ~= eid then
-    --     return
-    -- end
-    local editor_data = camera_mgr.get_editor_data(eid)
-    irq.set_visible(camera_mgr.second_view, visible)
+function camera_mgr.show_frustum(cameraref, visible)
+    local editor_data = camera_mgr.get_editor_data(cameraref)
+    irq.set_visible("second_view", visible)
     if editor_data and editor_data.frustum_eid and #editor_data.frustum_eid > 0 then
         local state = "main_view"
         ies.set_state(editor_data.frustum_eid, state, visible)
@@ -280,13 +276,13 @@ local function do_remove_camera(cam)
     end
 end
 
-function camera_mgr.remove_camera(eid)
-    camera_mgr.show_frustum(eid, false)
-    if camera_mgr.second_camera == eid then
+function camera_mgr.remove_camera(cameraref)
+    camera_mgr.show_frustum(cameraref, false)
+    
+    if camera_mgr.second_camera == cameraref then
         camera_mgr.second_camera = nil
     end
-    -- irq.set_visible(camera_mgr.second_view, false)
-    local cam = camera_mgr.get_editor_data(eid)
+    local cam = camera_mgr.get_editor_data(cameraref)
     do_remove_camera(cam)
 end
 
@@ -294,7 +290,7 @@ function camera_mgr.clear()
     if camera_mgr.second_camera then
         camera_mgr.second_camera = nil
     end
-    irq.set_visible(camera_mgr.second_view, false)
+    irq.set_visible("second_view", false)
     for e in w:select "camera:in" do
         if e.camera._editor then
             do_remove_camera(e)
