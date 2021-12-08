@@ -131,7 +131,8 @@ local function show_scene_node(node)
             imgui.widget.EndDragDropTarget()
         end
     end
-    local function lock_visible(e)
+    local function lock_visible(nd)
+        local e = nd.eid
         imgui.table.NextColumn();
         imgui.util.PushID(tostring(e))
         local current_lock = hierarchy:is_locked(e)
@@ -145,7 +146,7 @@ local function show_scene_node(node)
         local current_visible = hierarchy:is_visible(e)
         icon = current_visible and icons.ICON_VISIBLE or icons.ICON_UNVISIBLE
         if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
-            world:pub { "HierarchyEvent", "visible", e, not current_visible }
+            world:pub { "HierarchyEvent", "visible", nd, not current_visible }
         end
         imgui.util.PopID()
     end
@@ -175,7 +176,7 @@ local function show_scene_node(node)
     node_context_menu(node.eid)
     select_or_move(node)
 
-    lock_visible(node.eid)
+    lock_visible(node)
     if open and has_child then
         for _, child in ipairs(node.children) do
             show_scene_node(child)

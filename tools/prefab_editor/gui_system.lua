@@ -368,6 +368,13 @@ end
 
 local cmd_queue = ecs.require "gizmo.command_queue"
 local event_update_aabb = world:sub {"UpdateAABB"}
+
+local function update_visible(node, visible)
+    ies.set_state(node.eid, "main_view", visible)
+    for _, n in ipairs(node.children) do
+        update_visible(n, visible)
+    end
+end
 function m:handle_event()
     for _, e in event_update_aabb:unpack() do
         update_heightlight_aabb(e)
@@ -431,25 +438,19 @@ function m:handle_event()
             on_update(target)
         end
     end
-    for _, what, e, value in hierarchy_event:unpack() do
+    for _, what, nd, value in hierarchy_event:unpack() do
         if what == "visible" then
-            hierarchy:set_visible(e, value)
+            local e = nd.eid
+            hierarchy:set_visible(nd, value, true)
             w:sync("effect_instance?in", e)
+            w:sync("light?in", e)
             if e.effect_instance then
                 local effekseer     = require "effekseer"
                 effekseer.set_visible(e.effect_instance.handle, e.effect_instance.playid, value)
-            else
-                ies.set_state(e, "main_view", value)
-                local template = hierarchy:get_template(e)
-                if template and template.children then
-                    for _, e in ipairs(template.children) do
-                        ies.set_state(e, what, value)
-                    end
-                end
-            end
-            w:sync("light?in", e)
-            if e.light then
+            elseif e.light then
                 world:pub{"component_changed", "light", e, "visible", value}
+            else
+                update_visible(nd, value)
             end
             for ie in w:select "scene:in ibl:in" do
                 if ie.scene.parent == e then

@@ -171,8 +171,19 @@ function hierarchy:set_lock(eid, b)
     self.all[eid].locked[1] = b
 end
 
-function hierarchy:set_visible(eid, b)
-    self.all[eid].visible[1] = b
+local function set_visible_all(nd, b)
+    nd.visible[1] = b
+    for _, c in ipairs(nd.children) do
+        set_visible_all(c, b)
+    end
+end
+
+function hierarchy:set_visible(nd, b, recursion)
+    if recursion then
+        set_visible_all(nd, b)
+    else
+        nd.visible[1] = b
+    end
 end
 
 function hierarchy:get_template(eid)
