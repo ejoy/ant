@@ -119,10 +119,14 @@ function m:create_slot()
             tag = {auto_name},
         }
     }
-    local new_entity = ecs.create_entity(utils.deep_copy(template))
+
+    local tpl = utils.deep_copy(template)
+    tpl.data.on_ready = function (e)
+        hierarchy:update_slot_list(world)
+    end
+    local new_entity = ecs.create_entity(tpl)
     slot_entity_id = slot_entity_id + 1
     self:add_entity(new_entity, parent_eid, template)
-    hierarchy:update_slot_list(world)
 end
 
 function m:create_collider(config)
@@ -464,6 +468,7 @@ function m:open(filename)
     
     prefab.on_ready = function(instance)
         self:on_prefab_ready(instance)
+        anim_view.load_clips()
     end
     
     function prefab:on_message(msg)
@@ -475,7 +480,6 @@ function m:open(filename)
     end
     self.prefab_instance = world:create_object(prefab)
     world:pub {"WindowTitle", filename}
-    anim_view.load_clips()
 end
 
 local function on_remove_entity(e)
@@ -581,7 +585,7 @@ function m:add_prefab(filename)
     if not self.root then
         self:reset_prefab()
     end
-    
+
     local parentWorldMat
     local parent
     if gizmo.target_eid then

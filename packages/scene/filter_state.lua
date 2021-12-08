@@ -30,7 +30,7 @@ local ifs = ecs.interface "ifilter_state"
 ifs.filter_mask = filter_mask
 
 local function get_ro(e)
-	w:sync("render_object:in", e)
+	w:sync("render_object?in", e)
 	return e.render_object
 end
 

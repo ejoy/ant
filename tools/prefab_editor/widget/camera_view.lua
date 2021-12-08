@@ -55,7 +55,7 @@ end
 function CameraView:set_model(eid)
     self.frames = camera_mgr.get_recorder_frames(eid)
     if not BaseView.set_model(self, eid) then return false end
-    local template = hierarchy:get_template(self.eid)
+    local template = hierarchy:get_template(self.e)
     -- if template.template.action and template.template.action.bind_camera and template.template.action.bind_camera.which == "main_queue" then
     --     self.main_camera_ui[1] = true
     -- else
@@ -74,14 +74,14 @@ function CameraView:on_set_position(...)
     if #self.frames > 0 then
         self.frames[self.current_frame].position = math3d.ref(math3d.vector(...))
     end
-    camera_mgr.update_frustrum(self.eid)
+    camera_mgr.update_frustrum(self.e)
 end
 
 function CameraView:on_get_position()
     if #self.frames > 0 then
         return math3d.totable(self.frames[self.current_frame].position)
     else 
-        return math3d.totable(iom.get_position(self.eid))
+        return math3d.totable(iom.get_position(self.e))
     end
 end
 
@@ -90,7 +90,7 @@ function CameraView:on_set_rotate(...)
     if #self.frames > 0 then
         self.frames[self.current_frame].rotation = math3d.ref(math3d.quaternion(...))
     end
-    camera_mgr.update_frustrum(self.eid)
+    camera_mgr.update_frustrum(self.e)
 end
 
 function CameraView:on_get_rotate()
@@ -99,7 +99,7 @@ function CameraView:on_get_rotate()
         rad = math3d.totable(math3d.quat2euler(self.frames[self.current_frame].rotation))
         return { math.deg(rad[1]), math.deg(rad[2]), math.deg(rad[3]) }
     else
-        local r = iom.get_rotation(self.eid)
+        local r = iom.get_rotation(self.e)
         rad = math3d.totable(math3d.quat2euler(r))
     end
     return { math.deg(rad[1]), math.deg(rad[2]), math.deg(rad[3]) }
@@ -114,32 +114,32 @@ function CameraView:on_get_scale()
 end
 
 function CameraView:on_set_target(value)
-    camera_mgr.set_target(self.eid, value)
+    camera_mgr.set_target(self.e, value)
 end
 function CameraView:on_get_target()
-    return camera_mgr.get_editor_data(self.eid).target
+    return camera_mgr.get_editor_data(self.e).target
 end
 function CameraView:on_set_dist(value)
-    camera_mgr.set_dist_to_target(self.eid, value)
+    camera_mgr.set_dist_to_target(self.e, value)
 end
 function CameraView:on_get_dist()
-    return camera_mgr.get_editor_data(self.eid).dist_to_target
+    return camera_mgr.get_editor_data(self.e).dist_to_target
 end
 
 function CameraView:on_set_fov(value)
     if #self.frames > 0 then
         self.frames[self.current_frame].fov = value
     end
-    local template = hierarchy:get_template(self.eid)
+    local template = hierarchy:get_template(self.e)
     template.template.data.camera.frustum.fov = value
-    icamera.set_frustum_fov(self.eid, value)
-    camera_mgr.update_frustrum(self.eid)
+    icamera.set_frustum_fov(self.e, value)
+    camera_mgr.update_frustrum(self.e)
 end
 function CameraView:on_get_fov()
     if #self.frames > 0 then
         return self.frames[self.current_frame].fov
     else
-        local e = icamera.find_camera(self.eid)
+        local e = icamera.find_camera(self.e)
         return e.frustum.fov
     end
 end
@@ -147,16 +147,16 @@ function CameraView:on_set_near(value)
     if #self.frames > 0 then
         self.frames[self.current_frame].n = value
     end
-    local template = hierarchy:get_template(self.eid)
+    local template = hierarchy:get_template(self.e)
     template.template.data.camera.frustum.n = value
-    icamera.set_frustum_near(self.eid, value)
-    camera_mgr.update_frustrum(self.eid)
+    icamera.set_frustum_near(self.e, value)
+    camera_mgr.update_frustrum(self.e)
 end
 function CameraView:on_get_near()
     if #self.frames > 0 then
         return self.frames[self.current_frame].n or 1
     else
-        local e = icamera.find_camera(self.eid)
+        local e = icamera.find_camera(self.e)
         return e.frustum.n or 1
     end
 end
@@ -164,16 +164,16 @@ function CameraView:on_set_far(value)
     if #self.frames > 0 then
         self.frames[self.current_frame].f = value
     end
-    local template = hierarchy:get_template(self.eid)
+    local template = hierarchy:get_template(self.e)
     template.template.data.camera.frustum.f = value
-    icamera.set_frustum_far(self.eid, value)
-    camera_mgr.update_frustrum(self.eid)
+    icamera.set_frustum_far(self.e, value)
+    camera_mgr.update_frustrum(self.e)
 end
 function CameraView:on_get_far()
     if #self.frames > 0 then
         return self.frames[self.current_frame].f or 100
     else
-        local e = icamera.find_camera(self.eid)
+        local e = icamera.find_camera(self.e)
         return e.frustum.f
     end
 end
@@ -185,14 +185,14 @@ function CameraView:update()
 end
 
 function CameraView:on_play()
-    camera_mgr.play_recorder(self.eid)
+    camera_mgr.play_recorder(self.e)
 end
 
 function CameraView:on_add_frame()
     local new_idx = self.current_frame + 1
-    camera_mgr.add_recorder_frame(self.eid, new_idx)
+    camera_mgr.add_recorder_frame(self.e, new_idx)
     self.current_frame = new_idx
-    local frames = camera_mgr.get_recorder_frames(self.eid)
+    local frames = camera_mgr.get_recorder_frames(self.e)
     if not self.duration[1] then
         self.duration[1] = {frames[1].duration}
     end
@@ -201,9 +201,9 @@ function CameraView:on_add_frame()
 end
 
 function CameraView:on_delete_frame()
-    camera_mgr.delete_recorder_frame(self.eid, self.current_frame)
+    camera_mgr.delete_recorder_frame(self.e, self.current_frame)
     table.remove(self.duration, self.current_frame)
-    local frames = camera_mgr.get_recorder_frames(self.eid)
+    local frames = camera_mgr.get_recorder_frames(self.e)
     if self.current_frame > #frames then
         self.current_frame = #frames
         self:update()
@@ -215,7 +215,7 @@ function CameraView:show()
     if imgui.widget.TreeNode("Camera", imgui.flags.TreeNode { "DefaultOpen" }) then
         imgui.widget.PropertyLabel("MainCamera")
         if imgui.widget.Checkbox("##MainCamera", self.main_camera_ui) then
-            local template = hierarchy:get_template(self.eid)
+            local template = hierarchy:get_template(self.e)
             if self.main_camera_ui[1] then
                 if not template.template.action then
                     template.template.action = {}
@@ -252,7 +252,7 @@ function CameraView:show()
                     --imgui.table.SetColumnIndex(0)
                     if imgui.widget.Selectable(i, self.current_frame == i) then
                         self.current_frame = i
-                        camera_mgr.set_frame(self.eid, i)
+                        camera_mgr.set_frame(self.e, i)
                         self:update()
                     end
                     imgui.table.NextColumn()

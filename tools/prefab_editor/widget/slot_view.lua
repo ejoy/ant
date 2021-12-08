@@ -44,11 +44,11 @@ function SlotView:set_model(eid)
     if not BaseView.set_model(self, eid) then return false end
     self.follow_joint:set_options(joint_name_list[eid])
     self.follow_joint:set_getter(function()
-        local tp = hierarchy:get_template(self.eid)
+        local tp = hierarchy:get_template(self.e)
         return tp.template.data.follow_joint or "None"
     end)
     self.follow_joint:set_setter(function(name)
-        local tp = hierarchy:get_template(self.eid)
+        local tp = hierarchy:get_template(self.e)
         local joint_name = (name ~= "None") and name or nil
         tp.template.data.follow_joint = joint_name
         for v in w:select "scene:in _animation:in" do
@@ -60,11 +60,11 @@ function SlotView:set_model(eid)
     end)
     self.follow_flag:set_getter(function()
         --return world[eid].follow_flag
-        local tp = hierarchy:get_template(self.eid)
+        local tp = hierarchy:get_template(self.e)
         return tp.template.data.follow_flag
     end)
     self.follow_flag:set_setter(function(flag)
-        local tp = hierarchy:get_template(self.eid)
+        local tp = hierarchy:get_template(self.e)
         tp.template.data.follow_flag = flag
         for v in w:select "scene:in _animation:in" do
             if v.scene.id == eid.scene.id then
