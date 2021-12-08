@@ -223,7 +223,7 @@ function hierarchy:update_slot_list(world)
         world.w:sync("slot?in", value.eid)
         if value.eid.slot then
             local tagname = value.template.template.data.tag
-            local slot_name = #tagname > 0 and value.template.template.data.tag[1] or ""
+            local slot_name = #tagname > 0 and tagname[1] or ""
             slot_list[slot_name] = value.eid
         end
     end

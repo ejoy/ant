@@ -426,7 +426,7 @@ function m:handle_event()
                 w:sync("slot?in", v1)
                 isslot = v1.slot
             end
-            if (not v1 or isslot) then
+            if isslot then
                 for e in w:select "scene:in slot_name:out" do
                     if e.scene == target.scene then
                         e.slot_name = "None"
@@ -439,8 +439,8 @@ function m:handle_event()
         end
     end
     for _, what, nd, value in hierarchy_event:unpack() do
+        local e = nd.eid
         if what == "visible" then
-            local e = nd.eid
             hierarchy:set_visible(nd, value, true)
             w:sync("effect_instance?in", e)
             w:sync("light?in", e)

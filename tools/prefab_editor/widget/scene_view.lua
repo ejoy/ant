@@ -58,7 +58,7 @@ local function node_context_menu(eid)
         end
         imgui.cursor.Separator()
         if imgui.widget.Selectable("NoParent", false) then
-            world:pub { "HierarchyEvent", "parent", eid }
+            world:pub { "EntityEvent", "parent", eid }
         end
         imgui.windows.EndPopup()
     end
