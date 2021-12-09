@@ -16,13 +16,8 @@ $output v_posWS v_texcoord0 OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGENT OUTPUT
 void main()
 {
 	mat4 wm = get_world_matrix();
-
-	vec4 posWS = mul(wm, vec4(a_position, 1.0));
-#ifdef CYLINDER_TRANSFORM
-	gl_Position = do_cylinder_transform(posWS);
-#else //!CYLINDER_TRANSFORM
-	gl_Position   = mul(u_viewProj, posWS);
-#endif //CYLINDER_TRANSFORM
+	vec4 posWS = transformWS(wm, vec4(a_position, 1.0));
+	gl_Position = mul(u_viewProj, posWS);
 #if !defined(USING_LIGHTMAP) &&	defined(ENABLE_SHADOW)
 	v_posWS = posWS;
 	v_posWS.w = mul(u_view, v_posWS).z;

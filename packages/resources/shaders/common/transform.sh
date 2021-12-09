@@ -5,7 +5,9 @@
 #include "common/constants.sh"
 #include "common/camera.sh"
 
-uniform vec4 u_clip_planes[4];
+#ifdef ENABLE_CURVE_WORLD
+#include "common/curve_world.sh"
+#endif //ENABLE_CURVE_WORLD
 
 mat3 to_tbn(vec3 t, vec3 b, vec3 n)
 {
@@ -17,25 +19,14 @@ mat3 to_tbn(vec3 t, vec3 b, vec3 n)
 #endif
 }
 
-vec4 transform_skin_position(vec4 pos, ivec4 indices, vec4 weights)
-{
-	vec4 worldpos = vec4(0.0, 0.0, 0.0, 0.0);
-	for (int ii = 0; ii < 4; ++ii)
-	{
-		float weight = weights[ii];
-		vec4 p = mul(u_model[int(indices[ii])], pos);
-		worldpos += p * weight;
-	}
-	worldpos.w = 1.0;
-	return worldpos;
-}
-
 mat4 calc_bone_transform(ivec4 indices, vec4 weights)
 {
-	mat4 wolrdMat = mat4(0, 0, 0, 0, 
-	0, 0, 0, 0, 
-	0, 0, 0, 0, 
-	0, 0, 0, 0);
+	mat4 wolrdMat = mat4(
+		0, 0, 0, 0, 
+		0, 0, 0, 0, 
+		0, 0, 0, 0, 
+		0, 0, 0, 0
+	);
 	for (int ii = 0; ii < 4; ++ii)
 	{
 		int id = int(indices[ii]);
@@ -53,6 +44,15 @@ mat4 calc_bone_transform(ivec4 indices, vec4 weights)
 #define get_world_matrix()	u_model[0]
 #endif
 
+vec4 transformWS(mat4 wm, vec4 pos)
+{
+	vec4 posWS = mul(wm, pos);
+#ifdef ENABLE_CURVE_WORLD
+	posWS.xyz = curve_world_offset(posWS.xyz);
+#endif //ENABLE_CURVE_WORLD
+	return posWS;
+}
+
 mat3 calc_tbn_lh_ex(vec3 n, vec3 t, float b_sign, mat4 worldMat)
 {
 	vec3 normal = normalize(mul(worldMat, vec4(n, 0.0)).xyz);
@@ -68,35 +68,6 @@ mat3 calc_tbn_lh(vec3 n, vec3 t, mat4 worldMat)
 	return calc_tbn_lh_ex(n, t, 1.0, worldMat);
 }
 
-// mat3 calc_tbn_rh(vec3 n, vec3 t, mat4 worldMat)
-// {
-// 	vec3 normal = normalize(mul(worldMat, vec4(n, 1)).xyz);
-// 	vec3 tangent = normalize(mul(worldMat, vec4(t, 1)).xyz);
-// 	vec3 bitangent = cross(tangent, normal);
-
-//  	return transpose(
-// 			mat3(
-// 			tangent,
-// 			bitangent,
-// 			normal)
-// 		);
-// }
-
-
-// mat3 calc_tbn_with_nt_ex(vec3 n, vec3 t, mat4 worldMat))
-// {
-// 	vec3 normal = normalize(mul(worldMat, vec4(n, 1)).xyz);
-// 	vec3 tangent = normalize(mul(worldMat, vec4(t, 1)).xyz);
-// 	vec3 bitangent = cross(normal, tangent);
-
-//  	return transpose(
-// 			mat3(
-// 			tangent,
-// 			bitangent,
-// 			normal)
-// 		);
-// }
-
 mat3 calc_tbn(vec3 n, vec3 t, vec3 b, mat4 worldMat)
 {
 	vec3 normal = normalize(mul(worldMat, vec4(n, 0.0)).xyz);
@@ -104,22 +75,6 @@ mat3 calc_tbn(vec3 n, vec3 t, vec3 b, mat4 worldMat)
 	vec3 bitangent = normalize(mul(worldMat, vec4(b, 0.0)).xyz);
  	return to_tbn(tangent, bitangent, normal);
 }
-
-// #if BGFX_SHADER_TYPE_FRAGMENT
-// mat3 tbn_from_world_pos(vec3 normal, vec3 posWS, vec2 texcoord)
-// {
-//     vec3 Q1  = dFdx(posWS);
-//     vec3 Q2  = dFdy(posWS);
-//     vec2 st1 = dFdx(texcoord);
-//     vec2 st2 = dFdy(texcoord);
-
-//     vec3 N  = normalize(normal);
-//     vec3 T  = normalize(Q1*st2.y - Q2*st1.y);
-//     vec3 B  = -normalize(cross(N, T));
-
-// 	return to_tbn(T, B, N);
-// }
-// #endif //BGFX_SHADER_TYPE_FRAGMENT
 
 vec3 remap_normal(vec2 normalTSXY)
 {
@@ -193,21 +148,4 @@ mat3 tbn_from_world_pos(vec3 normal, vec3 posWS, vec2 texcoord)
 	return to_tbn(T, B, N);
 }
 #endif //BGFX_SHADER_TYPE_FRAGMENT
-
-vec4 do_cylinder_transform(vec4 posWS)
-{
-	vec4 posVS = mul(u_view, posWS);
-    float radian = (posVS.z / u_far) * PI * 0.1;
-    float c = cos(radian), s = sin(radian);
-
-    mat4 ct = mtxFromCols4(
-        vec4(1.0, 0.0, 0.0, 0.0),
-        vec4(0.0, c,   s,   0.0),
-        vec4(0.0, -s,   c,   0.0),
-        vec4(0.0, 0.0, 0.0, 1.0));
-
-    vec4 posCT = mul(ct, posVS);
-	return mul(u_proj, posCT);
-}
-
 #endif //__SHADER_TRANSFORMS_SH__

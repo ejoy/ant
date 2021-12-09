@@ -22,10 +22,11 @@ vec4 wave(vec4 parameter, vec2 position, float time, inout vec3 tangent, inout v
 	float f  = k * (dot(d, position) - c * time);
 	float a  = wave_steepness / k;
 	
-	tangent	+= normalize(vec3(1.0-d.x * d.x * (wave_steepness * sin(f)), d.x * (wave_steepness * cos(f)), -d.x * d.y * (wave_steepness * sin(f))));
-	binormal+= normalize(vec3(-d.x * d.y * (wave_steepness * sin(f)), d.y * (wave_steepness * cos(f)), 1.0-d.y * d.y * (wave_steepness * sin(f))));
+	float s = sin(f), c = cos(f);
+	tangent	+= normalize(vec3(1.0-d.x * d.x * (wave_steepness * s), d.x * (wave_steepness * c), -d.x * d.y * (wave_steepness * s)));
+	binormal+= normalize(vec3(-d.x * d.y * (wave_steepness * s), 	d.y * (wave_steepness * c), 1.0-d.y * d.y * (wave_steepness * s)));
 
-	return vec4(d.x * (a * cos(f)), a * sin(f) * 0.25, d.y * (a * cos(f)), 0.0);
+	return vec4(d.x * (a * c), a * s * 0.25, d.y * (a * c), 0.0);
 }
 
 void main()
@@ -40,10 +41,14 @@ void main()
     vertex += wave(u_wave_b, vertexWS.xz, time, tangent, bitangent);
     vertex += wave(u_wave_c, vertexWS.xz, time, tangent, bitangent);
 
+#ifdef ENABLE_CURVE_WORLD
+	vertex = curve_world_offset(vertex);
+#endif //ENABLE_CURVE_WORLD
+
 	v_tangent = normalize(tangent);
 	v_bitangent = normalize(bitangent);
 
-	vec4 vertexVS= mul(u_view, vertexWS);
+	vec4 vertexVS= mul(u_view, vertex);
     gl_Position  = mul(u_proj, vertexVS);
     v_normal     = normalize(cross(tangent, bitangent));
 	
