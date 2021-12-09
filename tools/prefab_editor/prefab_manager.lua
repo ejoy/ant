@@ -587,12 +587,7 @@ function m:add_prefab(filename)
     end
 
     local parent = gizmo.target_eid or self.root
-    local s, r, t = math3d.srt(math3d.matrix{})
-    local v_root = create_simple_entity(gen_prefab_name(), {
-        r = {math3d.index(r, 1, 2, 3, 4)},
-        s = {math3d.index(s, 1, 2, 3)},
-        t = {math3d.index(t, 1, 2, 3)},
-    })
+    local v_root = create_simple_entity(gen_prefab_name())
     ecs.method.set_parent(v_root, parent)
 
     self.entities[#self.entities+1] = v_root
