@@ -581,15 +581,23 @@ local function select_axis(x, y)
 end
 
 local function select_rotate_axis(x, y)
-	if not gizmo.target_eid or not x or not y then
+	if not gizmo.target_eid then
 		return
 	end
+
+	assert(x and y)
+	local vx, vy = igui.cvt2scenept(x, y)
+	local mqvr = irq.view_rect "main_queue"
+	if not mu.pt2d_in_rect(vx, vy, mqvr) then
+		return
+	end
+
 	gizmo:reset_rotate_axis_color()
 
 	local function hit_test_rotate_axis(axis)
 		local gizmoPos = iom.get_position(gizmo.root_eid)
 		local axisDir = (axis ~= gizmo.rw) and gizmo_dir_to_world(axis.dir) or axis.dir
-		local hitPosVec = mouse_hit_plane({x, y}, {dir = axisDir, pos = math3d.totable(gizmoPos)})
+		local hitPosVec = mouse_hit_plane({vx, vy}, {dir = axisDir, pos = math3d.totable(gizmoPos)})
 		if not hitPosVec then
 			return
 		end
