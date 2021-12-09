@@ -557,17 +557,16 @@ local function select_axis(x, y)
 			imaterial.set_property(gizmo.sy.eid[2], "u_color", gizmo_const.HIGHTLIGHT_COLOR)
 			imaterial.set_property(gizmo.sz.eid[1], "u_color", gizmo_const.HIGHTLIGHT_COLOR)
 			imaterial.set_property(gizmo.sz.eid[2], "u_color", gizmo_const.HIGHTLIGHT_COLOR)
+			return
 		end
-
-		return 
 	end
 	-- by axis
 	local line_len = gizmo_const.AXIS_LEN * gizmo_scale
 
 	local axes = {
-		tx = {line_len, 0, 0},
-		ty = {0, line_len, 0},
-		tz = {0, 0, line_len},
+		x = {line_len, 0, 0},
+		y = {0, line_len, 0},
+		z = {0, 0, line_len},
 	}
 
 	for k, delta_dir in pairs(axes) do
@@ -575,7 +574,8 @@ local function select_axis(x, y)
 		local end_pt = mu.world_to_screen(vpmat, mqvr, end_ptWS)
 		local dis, intersectpt = mu.pt2d_line_intersect(start, end_pt, hp)
 		if math.abs(dis) < gizmo_const.MOVE_HIT_RADIUS_PIXEL and mu.pt2d_in_line(start, end_pt, intersectpt) then
-			return gizmo[k]
+			local tn = gizmo.mode == gizmo_const.SCALE and "s" or "t"
+			return gizmo[tn .. k]
 		end
 	end
 end
