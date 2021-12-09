@@ -533,7 +533,7 @@ local function select_axis(x, y)
 		gizmo:reset_move_axis_color()
 	end
 	-- by plane
-	local axisPlane = select_axis_plane(x, y)
+	local axisPlane = select_axis_plane(vx, vy)
 	if axisPlane then
 		return axisPlane
 	end
