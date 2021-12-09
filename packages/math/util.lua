@@ -115,13 +115,29 @@ function util.pt_line_distance(p1, p2, p)
 	return math3d.dot(p1, n) - math3d.dot(p, n)
 end
 
---p1, p2 must be 0.0
-function util.pt2d_line_distance(p1, p2, p)
+local function pt2d_line(p1, p2, p)
 	local d = math3d.normalize(math3d.sub(p2, p1))
     local x, y, z = math3d.index(d, 1, 2, 3)
 	--assert(z == 0, "we assume pt2d is 3d vector where z component is 0.0")
     local n = math3d.vector(y, -x, 0.0)
-    return math3d.dot(p1, n) - math3d.dot(p, n)
+    return math3d.dot(p1, n) - math3d.dot(p, n), n
+end
+
+--p1, p2 must be 0.0
+function util.pt2d_line_distance(p1, p2, p)
+	return pt2d_line(p1, p2, p)
+end
+
+function util.pt2d_line_intersect(p1, p2, p)
+	local d, n = pt2d_line(p1, p2, p)
+	return d, math3d.muladd(d, n, p)
+end
+
+function util.pt2d_in_line(p1, p2, p)
+	local pp1 = math3d.sub(p1, p)
+	local pp2 = math3d.sub(p2, p)
+	local r = math3d.dot(pp1, pp2)
+	return r <= 0
 end
 
 function util.to_radian(angles) return list_op(angles, math.rad) end

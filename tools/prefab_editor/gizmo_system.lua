@@ -573,8 +573,8 @@ local function select_axis(x, y)
 	for k, delta_dir in pairs(axes) do
 		local end_ptWS = math3d.add(gizmo_obj_pos, math3d.vector(gizmo_dir_to_world(delta_dir)))
 		local end_pt = mu.world_to_screen(vpmat, mqvr, end_ptWS)
-		local radius = mu.pt2d_line_distance(start, end_pt, hp)
-		if math.abs(radius) < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
+		local dis, intersectpt = mu.pt2d_line_intersect(start, end_pt, hp)
+		if math.abs(dis) < gizmo_const.MOVE_HIT_RADIUS_PIXEL and mu.pt2d_in_line(start, end_pt, intersectpt) then
 			return gizmo[k]
 		end
 	end
