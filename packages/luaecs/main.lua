@@ -142,14 +142,27 @@ local function create_template(w, package, detach, filename)
     end
 	local prefab = {}
 	for _, v in ipairs(t) do
-		if v.prefab then
-			prefab[#prefab+1] = {
+        if not __EDITOR__ and v.editor then
+            if v.prefab then
+                v = {
+                    prefab = "/pkg/ant.luaecs/dummy.prefab"
+                }
+            else
+                --TODO
+                v = {
+                    policy = {},
+                    data = {},
+                }
+            end
+        end
+        if v.prefab then
+            prefab[#prefab+1] = {
                 prefab = create_template(w, package, detach, v.prefab),
-				args = v.args,
-			}
-		else
-			prefab[#prefab+1] = create_entity_template(w, package, detach, v)
-		end
+                args = v.args,
+            }
+        else
+            prefab[#prefab+1] = create_entity_template(w, package, detach, v)
+        end
 	end
     return prefab
 end
