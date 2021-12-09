@@ -46,6 +46,7 @@ local SETTING_MAPPING = {
 }
 
 local enable_cs = setting:get 'graphic/lighting/cluster_shading' ~= 0
+local enable_curve_world = setting:get "graphic/curve_world"
 
 local function default_macros(setting)
     local m = {
@@ -54,8 +55,8 @@ local function default_macros(setting)
         "ENABLE_IBL=1",
     }
 
-    if setting.curve_world then
-        m[#m+1] = "ENABLE_CURVE_WORLD=1"
+    if enable_curve_world and setting.ENABLE_CURVE_WORLD then
+        m[#m+1] = setting.ENABLE_CURVE_WORLD
     end
 
     if enable_cs then

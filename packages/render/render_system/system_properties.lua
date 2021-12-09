@@ -6,6 +6,7 @@ local sampler = require "sampler"
 local math3d	= require "math3d"
 local bgfx		= require "bgfx"
 
+local setting	= import_package "ant.settings".setting
 
 local mc		= import_package "ant.math".constant
 local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
@@ -14,6 +15,7 @@ local ilight	= ecs.import.interface "ant.render|ilight"
 local itimer	= ecs.import.interface "ant.timer|itimer"
 local icamera	= ecs.import.interface "ant.camera|icamera"
 local iibl		= ecs.import.interface "ant.render.ibl|iibl"
+
 local isp = ecs.interface "isystem_properties"
 
 local flags = sampler.sampler_flag {
@@ -63,8 +65,15 @@ local system_properties = {
 	s_LUT					= def_tex_prop(7, def_2dtex_handle),
 
 	--curve world
-	u_curveworld_param		= math3d.ref(mc.ZERO),
-	u_curveworld_dir		= math3d.ref(mc.ZERO),
+	--[[
+		u_curveworld_param = (flat, base, exp, amp)
+		dirWS = mul(u_invView, dirVS)
+		dis = length(u_eyepos-posWS);
+		offsetWS = (amp*((dis-flat)/base)^exp) * dirWS
+		posWS = posWS + offsetWS
+	]]
+	u_curveworld_param		= math3d.ref(mc.ZERO),	-- flat distance, base distance, exp, amplification
+	u_curveworld_dir		= math3d.ref(mc.ZAXIS),	-- dir in view space
 
 	-- shadow
 	--   csm
@@ -95,6 +104,18 @@ local system_properties = {
 
 	s_omni_shadowmap		= def_tex_prop(9),
 }
+
+-- update curve world info from setting
+do
+	local cw = setting:get "graphic/curve_world"
+	if cw then
+		local cw_param = system_properties.u_curveworld_param
+		local cw_dir = system_properties.u_curveworld_dir
+		cw_param.v = math3d.vector(cw.flat_distance, cw.base_distance, cw.exp, cw.amplification)
+		cw_dir.v = math3d.vector(cw.dirVS)
+	end
+end
+
 
 function isp.get(n)
 	return system_properties[n]

@@ -61,10 +61,10 @@ function mt:get(path)
         local t = get_internal(l, sp, 1)
         if t then
             local k = sp[#sp]
-            if type(t[k]) == 'table' then
-                return
+            local r = t[k]
+            if r then
+                return r
             end
-            return t[k]
         end
     end
 end

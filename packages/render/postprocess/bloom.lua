@@ -1,7 +1,8 @@
-local ecs = ...
+local ecs   = ...
 local world = ecs.world
+local w     = world.w
 
-local setting		= import_package "ant.settings".setting
+local setting	= import_package "ant.settings".setting
 
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
@@ -9,7 +10,6 @@ local sampler   = require "sampler"
 
 local bloom_sys = ecs.system "bloom_system"
 
-local ipp = ecs.import.interface "ant.render|postprocess"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local bloom_chain_count = 4
