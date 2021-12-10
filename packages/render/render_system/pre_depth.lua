@@ -23,8 +23,8 @@ function s:init()
     end
 
     local pre_depth_material_file<const> 	= "/pkg/ant.resources/materials/predepth.material"
-    pre_depth_material 			= imaterial.load(pre_depth_material_file, {depth_type="linear"})
-    pre_depth_skinning_material = imaterial.load(pre_depth_material_file, {depth_type="linear", skinning="GPU"})
+    pre_depth_material 			= imaterial.load(pre_depth_material_file, {depth_type="inv_z"})
+    pre_depth_skinning_material = imaterial.load(pre_depth_material_file, {depth_type="inv_z", skinning="GPU"})
 end
 
 local function check_set_pre_depth_state(state)

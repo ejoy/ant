@@ -55,9 +55,13 @@ local function default_macros(setting)
         "ENABLE_IBL=1",
     }
 
-    if enable_curve_world and setting.ENABLE_CURVE_WORLD then
-        m[#m+1] = setting.ENABLE_CURVE_WORLD
+    if enable_curve_world then
+        m[#m+1] = "ENABLE_CURVE_WORLD=1"
     end
+
+    -- if enable_curve_world and setting.ENABLE_CURVE_WORLD then
+    --     m[#m+1] = "ENABLE_CURVE_WORLD=" .. setting.ENABLE_CURVE_WORLD
+    -- end
 
     if enable_cs then
         m[#m+1] = "HOMOGENEOUS_DEPTH=" .. (setting.hd and "1" or "0")
