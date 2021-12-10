@@ -111,7 +111,7 @@ function m:create_slot()
         },
         data = {
             reference = true,
-            scene = {srt = get_local_transform({}, parent_eid)},
+            scene = {srt = {}},
             slot = true,
             follow_joint = "None",
             follow_flag = 1,
@@ -243,7 +243,7 @@ function m:create(what, config)
                 },
                 data = {
                     reference = true,
-                    scene = {srt = get_local_transform({s = 50}, parent_eid)},
+                    scene = {srt = {s = 50}},
                     filter_state = "main_view|selectable",
                     material = "/pkg/ant.resources/materials/pbr_default.material",
                     mesh = geom_mesh_file[config.type],
@@ -323,11 +323,7 @@ end
 
 local function remove_entitys(entities)
     for _, e in ipairs(entities) do
-        if type(e) == "table" then
-            remove_entitys(e)
-        else
-            w:remove(e)
-        end
+        w:remove(e)
     end
 end
 
@@ -416,6 +412,9 @@ local function convert_path(path, glb_filename)
     return new_path
 end
 
+local nameidx = 0
+local function gen_prefab_name() nameidx = nameidx + 1 return "prefab" .. nameidx end
+
 function m:on_prefab_ready(prefab)
     local entitys = prefab.tag["*"]
     local function find_e(entitys, id)
@@ -426,9 +425,44 @@ function m:on_prefab_ready(prefab)
         end
     end
 
+    local function sub_tree(e, idx)
+        local sub_tree = {}
+        local sub_tree_set = {}
+        sub_tree_set[e.scene.id] = true
+        for i = idx, #entitys do
+            local scene = entitys[i].scene
+            if sub_tree_set[scene.parent] then
+                sub_tree_set[scene.id] = true
+                sub_tree[#sub_tree + 1] = entitys[i]
+            else
+                break
+            end
+        end
+        return sub_tree
+    end
+
     local node_map = {}
-    for i, e in ipairs(entitys) do
-        node_map[e] = {template = self.prefab_template[i], parent = find_e(entitys, e.scene.parent)}
+
+    local j = 1
+    for i = 1, #self.prefab_template do
+        local pt = self.prefab_template[i]
+        local e = entitys[j]
+        local parent = find_e(entitys, e.scene.parent)
+        if pt.prefab then
+            local prefab_name = pt.name or gen_prefab_name()
+            local sub_root = create_simple_entity(prefab_name)
+            ecs.method.set_parent(sub_root, parent)
+            self.entities[#self.entities + 1] = sub_root
+
+            local children = sub_tree(parent, j)
+            j = j + #children
+            node_map[sub_root] = {template = {filename = pt.prefab, children = children, name = prefab_name, editor = pt.editor or false}, parent = parent}
+        else
+            self.entities[#self.entities + 1] = e
+            node_map[e] = {template = self.prefab_template[i], parent = parent}
+            j = j + 1
+        end
+
         w:sync("camera?in", e)
         if e.camera then
             camera_mgr.on_camera_ready(e)
@@ -446,14 +480,19 @@ function m:on_prefab_ready(prefab)
         if node.parent and not hierarchy:get_node(node.parent) then
             add_to_hierarchy(node.parent)
         end
-        hierarchy:add(e, {template = node.template}, node.parent or self.root)
+        local children = node.template.children
+        local tp = node.template
+        if children then
+            set_select_adapter(children, e)
+        else
+            tp = {template = node.template}
+        end
+        hierarchy:add(e, tp, node.parent or self.root)
     end
 
-    for _, e in ipairs(entitys) do
+    for _, e in ipairs(self.entities) do
         add_to_hierarchy(e)
     end
-
-    self.entities = entitys
 end
 
 function m:open(filename)
@@ -538,9 +577,6 @@ function m:reload()
     end
 end
 
-local nameidx = 0
-local function gen_prefab_name() nameidx = nameidx + 1 return "prefab" .. nameidx end
-
 function m:add_effect(filename)
     if not self.root then
         self:reset_prefab()
@@ -587,7 +623,8 @@ function m:add_prefab(filename)
     end
 
     local parent = gizmo.target_eid or self.root
-    local v_root = create_simple_entity(gen_prefab_name())
+    local prefab_name = gen_prefab_name()
+    local v_root = create_simple_entity(prefab_name)
     ecs.method.set_parent(v_root, parent)
 
     self.entities[#self.entities+1] = v_root
@@ -595,7 +632,7 @@ function m:add_prefab(filename)
 
     ecs.method.set_parent(instance.root, v_root)
     set_select_adapter(instance.tag["*"], v_root)
-    hierarchy:add(v_root, {filename = prefab_filename, children = instance.tag["*"]}, parent)
+    hierarchy:add(v_root, {filename = prefab_filename, name = prefab_name, children = instance.tag["*"], editor = false}, parent)
 end
 
 function m:recreate_entity(eid)

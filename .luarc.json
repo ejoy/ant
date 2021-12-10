@@ -9,6 +9,9 @@
     "diagnostics": {
         "disable": [
             "different-requires"
+        ],
+        "globals": [
+            "__EDITOR__"
         ]
     },
     "workspace": {

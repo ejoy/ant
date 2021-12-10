@@ -422,10 +422,23 @@ end
 local cmd_queue = ecs.require "gizmo.command_queue"
 local event_update_aabb = world:sub {"UpdateAABB"}
 
+
+
+function hierarchy:set_adaptee_visible(nd, b, recursion)
+    local adaptee = self:get_select_adaptee(nd.eid)
+    for _, e in ipairs(adaptee) do
+        hierarchy:set_visible(self:get_node(e), b, recursion)
+    end
+end
+
 local function update_visible(node, visible)
     ies.set_state(node.eid, "main_view", visible)
     for _, n in ipairs(node.children) do
         update_visible(n, visible)
+    end
+    local adaptee = hierarchy:get_select_adaptee(node.eid)
+    for _, e in ipairs(adaptee) do
+        ies.set_state(e, "main_view", visible)
     end
 end
 function m:handle_event()
