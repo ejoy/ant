@@ -11,5 +11,7 @@ return {
         "ant.sky",
         "ant.terrain",
         "ant.splitviews",
+        "ant.render",
+        "ant.objcontroller",
     }
 }
