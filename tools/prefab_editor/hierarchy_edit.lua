@@ -137,7 +137,7 @@ function hierarchy:update_prefab_template(world)
         local pidx = #pt > 0 and #pt or nil
         local prefab_filename = self.all[eid].template.filename
         if prefab_filename then
-            table.insert(pt, {mount = pidx, prefab = prefab_filename})
+            table.insert(pt, {mount = pidx, name = self.all[eid].template.name, editor = self.all[eid].template.editor, prefab = prefab_filename})
         end
         for _, child in ipairs(self.all[eid].children) do
             if self.all[child.eid].template.template then

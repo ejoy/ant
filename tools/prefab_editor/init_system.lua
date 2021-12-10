@@ -38,6 +38,7 @@ local function LoadImguiLayout(filename)
 end
 
 function m:init()
+    world.__EDITOR__ = true
     iani.set_edit_mode(true)
 
     LoadImguiLayout(fs.path "":localpath() .. "/" .. "imgui.layout")

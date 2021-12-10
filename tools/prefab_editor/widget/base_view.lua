@@ -16,6 +16,7 @@ function BaseView:_init()
     local base = {}
     base["script"]   = uiproperty.ResourcePath({label = "Script", extension = ".lua"})
     base["prefab"]   = uiproperty.EditText({label = "Prefabe", readonly = true})
+    base["preview"]  = uiproperty.Bool({label = "OnlyPreview"})
     base["name"]     = uiproperty.EditText({label = "Name"})
     base["tag"]      = uiproperty.EditText({label = "Tag"})
     base["position"] = uiproperty.Float({label = "Position", dim = 3, speed = 0.1})
@@ -26,6 +27,8 @@ function BaseView:_init()
     self.general_property = uiproperty.Group({label = "General"}, base)
     --
     self.base.prefab:set_getter(function() return self:on_get_prefab() end)
+    self.base.preview:set_setter(function(value) self:on_set_preview(value) end)      
+    self.base.preview:set_getter(function() return self:on_get_preview() end)
     self.base.name:set_setter(function(value) self:on_set_name(value) end)      
     self.base.name:set_getter(function() return self:on_get_name() end)
     self.base.tag:set_setter(function(value) self:on_set_tag(value) end)      
@@ -67,6 +70,16 @@ function BaseView:on_get_prefab()
     if template and template.filename then
         return template.filename
     end
+end
+
+function BaseView:on_set_preview(value)
+    local template = hierarchy:get_template(self.e)
+    template.editor = value
+end
+
+function BaseView:on_get_preview()
+    local template = hierarchy:get_template(self.e)
+    return template.editor
 end
 
 local function is_camera(e)
@@ -123,7 +136,7 @@ end
 function BaseView:on_get_rotate()
     local r = iom.get_rotation(self.e)
     local rad = math3d.tovalue(math3d.quat2euler(r))
-    return { math.deg(rad[1]), math.deg(rad[2]), math.deg(rad[3]) }
+    return { utils.deg(rad[1]), utils.deg(rad[2]), utils.deg(rad[3]) }
 end
 
 function BaseView:on_set_scale(value)
@@ -147,6 +160,7 @@ function BaseView:update()
     --self.base.script:update()
     if self.is_prefab then
         self.base.prefab:update()
+        self.base.preview:update()
     end
     self.general_property:update()
 end
@@ -156,6 +170,7 @@ function BaseView:show()
     --self.base.script:show()
     if self.is_prefab then
         self.base.prefab:show()
+        self.base.preview:show()
     end
     self.general_property:show()
 end
