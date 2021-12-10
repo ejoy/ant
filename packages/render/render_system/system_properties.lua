@@ -14,7 +14,7 @@ local ishadow	= ecs.import.interface "ant.render|ishadow"
 local ilight	= ecs.import.interface "ant.render|ilight"
 local itimer	= ecs.import.interface "ant.timer|itimer"
 local icamera	= ecs.import.interface "ant.camera|icamera"
-local iibl		= ecs.import.interface "ant.render.ibl|iibl"
+local iibl		= ecs.import.interface "ant.render|iibl"
 
 local isp = ecs.interface "isystem_properties"
 

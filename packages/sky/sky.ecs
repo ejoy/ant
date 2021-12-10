@@ -1,7 +1,6 @@
 import "@ant.timer"
 import "@ant.general"
 import "@ant.render"
-import "@ant.render.ibl"
 
 system "procedural_sky_system"
     .implement "procedural_sky_system.lua"
@@ -9,7 +8,6 @@ system "procedural_sky_system"
     .method "entity_init"
 
 policy "procedural_sky"
-    --.require_policy "ant.render.ibl|ibl"
     .require_system "procedural_sky_system"
     .component "procedural_sky"
 
@@ -19,7 +17,7 @@ component "procedural_sky_changed"
 
 policy "skybox"
     .require_policy "ant.render|simplerender"
-    .require_policy "ant.render.ibl|ibl"
+    .require_policy "ant.render|ibl"
     .require_system "skybox_system"
     .component "skybox"
 

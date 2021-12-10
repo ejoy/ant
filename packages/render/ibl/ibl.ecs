@@ -1,9 +1,9 @@
 system "ibl_system"
-    .implement "ibl.lua"
+    .implement "ibl/ibl.lua"
     .method "render_preprocess"
 
 interface "iibl"
-    .implement "ibl.lua"
+    .implement "ibl/ibl.lua"
     .method "get_ibl"
     .method "filter_all"
 
@@ -16,8 +16,8 @@ policy "prefilter"
     .component "prefilter"
 
 policy "ibl"
-    .require_system "ant.render.ibl|ibl_system"
-    .require_interface "ant.render.ibl|iibl"
+    .require_system "ant.render|ibl_system"
+    .require_interface "ant.render|iibl"
     .component "ibl"
 
 component "ibl"

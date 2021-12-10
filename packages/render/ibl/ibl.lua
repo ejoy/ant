@@ -76,7 +76,7 @@ local function create_prefilter_entities()
         ecs.create_entity {
             policy = {
                 "ant.render|compute_policy",
-                "ant.render.ibl|prefilter",
+                "ant.render|prefilter",
                 "ant.general|name",
             },
             data = {

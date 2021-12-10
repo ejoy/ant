@@ -10,7 +10,6 @@ return {
         "ant.hwi",
         "ant.math",
         "ant.math.adapter",
-        "ant.render.ibl",
         "ant.scene",
         "ant.settings",
         "ant.timer",
