@@ -462,7 +462,7 @@ function m:handle_event()
             gizmo:set_position(v2)
             cmd_queue:record {action = gizmo_const.MOVE, eid = target, oldvalue = v1, newvalue = v2}
         elseif what == "rotate" then
-            gizmo:set_rotation(math3d.quaternion{utils.rad(v2[1]), utils.rad(v2[2]), utils.rad(v2[3])})
+            gizmo:set_rotation(math3d.quaternion{math.rad(v2[1]), math.rad(v2[2]), math.rad(v2[3])})
             cmd_queue:record {action = gizmo_const.ROTATE, eid = target, oldvalue = v1, newvalue = v2}
         elseif what == "scale" then
             gizmo:set_scale(v2)

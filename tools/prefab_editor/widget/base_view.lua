@@ -136,7 +136,7 @@ end
 function BaseView:on_get_rotate()
     local r = iom.get_rotation(self.e)
     local rad = math3d.tovalue(math3d.quat2euler(r))
-    return { utils.deg(rad[1]), utils.deg(rad[2]), utils.deg(rad[3]) }
+    return { math.deg(rad[1]), math.deg(rad[2]), math.deg(rad[3]) }
 end
 
 function BaseView:on_set_scale(value)
