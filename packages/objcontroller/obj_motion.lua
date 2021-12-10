@@ -6,7 +6,6 @@ local mu     = import_package "ant.math".util
 local mc     = import_package "ant.math".constant
 
 local iobj_motion = ecs.interface "iobj_motion"
-local icamera = ecs.import.interface "ant.camera|icamera"
 
 local function get_scene(e)
     w:sync("scene:in", e)
@@ -277,13 +276,12 @@ local function main_queue_viewport_size()
     return e.render_target.view_rect
 end
 
-function iobj_motion.ray(e, pt2d, vp_size)
+function iobj_motion.ray(vpmat, pt2d, vp_size)
     vp_size = vp_size or main_queue_viewport_size()
 
     local ndc_near, ndc_far = mu.NDC_near_far_pt(mu.pt2D_to_NDC(pt2d, vp_size))
 
-    local viewproj = icamera.calc_viewproj(e)
-    local invviewproj = math3d.inverse(viewproj)
+    local invviewproj = math3d.inverse(vpmat)
     local pt_near_WS = math3d.transformH(invviewproj, ndc_near, 1)
     local pt_far_WS = math3d.transformH(invviewproj, ndc_far, 1)
 

@@ -256,7 +256,8 @@ function camera_sys:handle_camera_event()
 	-- for _, what, x, y, dx, dy in mouse_drag:unpack() do
 	-- 	if what == "LEFT" then
 	-- 		if select_area and hit_plane then
-	-- 			local curpos = utils.ray_hit_plane(iom.ray(irq.main_camera(), {x, y}), hit_plane)
+	--			local c = icamera.find_camera(irq.main_camera())
+	-- 			local curpos = utils.ray_hit_plane(iom.ray(c.viewprojmat, {x, y}), hit_plane)
 	-- 			local proj_len = math3d.dot(current_dir, math3d.sub(curpos, centre_pos))
 	-- 			local aspect = 1.0
 	-- 			if select_area == camera_mgr.FRUSTUM_LEFT or select_area == camera_mgr.FRUSTUM_RIGHT then
@@ -277,7 +278,8 @@ function camera_sys:handle_event()
 	for _, what, x, y, dx, dy in mouse_drag:unpack() do
 		if what == "LEFT" then
 			if select_area and hit_plane then
-				local curpos = utils.ray_hit_plane(iom.ray(irq.main_camera(), {x, y}), hit_plane)
+				local c = icamera.find_camera(irq.main_camera())
+				local curpos = utils.ray_hit_plane(iom.ray(c.viewprojmat, {x, y}), hit_plane)
 				local proj_len = math3d.dot(current_dir, math3d.sub(curpos, centre_pos))
 				local aspect = 1.0
 				if select_area == camera_mgr.FRUSTUM_LEFT or select_area == camera_mgr.FRUSTUM_RIGHT then

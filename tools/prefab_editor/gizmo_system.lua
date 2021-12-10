@@ -227,7 +227,8 @@ function gizmo_sys:init()
 end
 
 local function mouse_hit_plane(screen_pos, plane_info)
-	return utils.ray_hit_plane(iom.ray(irq.main_camera(), screen_pos), plane_info)
+	local c = icamera.find_camera(irq.main_camera())
+	return utils.ray_hit_plane(iom.ray(c.viewprojmat, screen_pos), plane_info)
 end
 
 local function create_global_axes(srt)
@@ -666,8 +667,8 @@ local function move_gizmo(x, y)
 			deltaPos = {last_gizmo_pos[1] + deltapos[1], last_gizmo_pos[2] + deltapos[2], last_gizmo_pos[3] + deltapos[3]}
 		end
 	else
-		local mc = irq.main_camera()
-		local newOffset = utils.view_to_axis_constraint(iom.ray(mc, {x, y}), iom.get_position(mc), gizmo_dir_to_world(move_axis.dir), last_gizmo_pos)
+		local c = icamera.find_camera(irq.main_camera())
+		local newOffset = utils.view_to_axis_constraint(iom.ray(c.viewprojmat, {x, y}), iom.get_position(mc), gizmo_dir_to_world(move_axis.dir), last_gizmo_pos)
 		local deltaOffset = math3d.totable(math3d.sub(newOffset, init_offset))
 		deltaPos = {last_gizmo_pos[1] + deltaOffset[1], last_gizmo_pos[2] + deltaOffset[2], last_gizmo_pos[3] + deltaOffset[3]}
 	end
@@ -702,8 +703,8 @@ local function move_light_gizmo(x, y)
 		ilight.set_inner_radian(light_gizmo.current_light, math3d.length(math3d.sub(curpos, circle_centre)))
 	elseif light_gizmo_mode == 5 then
 		local move_dir = math3d.sub(circle_centre, lightPos)
-		local mc = irq.main_camera()
-		local new_offset = utils.view_to_axis_constraint(iom.ray(mc, {x, y}), iom.get_position(mc), gizmo_dir_to_world(move_dir), last_gizmo_pos)
+		local c = icamera.find_camera(irq.main_camera())
+		local new_offset = utils.view_to_axis_constraint(iom.ray(c.viewprojmat, {x, y}), iom.get_position(mc), gizmo_dir_to_world(move_dir), last_gizmo_pos)
 		local offset = math3d.length(math3d.sub(new_offset, init_offset))
 		if math3d.length(math3d.sub(new_offset, lightPos)) < math3d.length(math3d.sub(init_offset, lightPos)) then
 			offset = -offset
@@ -834,8 +835,8 @@ local function scale_gizmo(x, y)
 		newScale = {last_gizmo_scale[1] * scaleFactor, last_gizmo_scale[2] * scaleFactor, last_gizmo_scale[3] * scaleFactor}
 	else
 		newScale = {last_gizmo_scale[1], last_gizmo_scale[2], last_gizmo_scale[3]}
-		local mc = irq.main_camera()
-		local newOffset = utils.view_to_axis_constraint(iom.ray(mc, {x, y}), iom.get_position(mc), gizmo_dir_to_world(move_axis.dir), last_gizmo_pos)
+		local c = icamera.find_camera(irq.main_camera())
+		local newOffset = utils.view_to_axis_constraint(iom.ray(c.viewprojmat, {x, y}), iom.get_position(mc), gizmo_dir_to_world(move_axis.dir), last_gizmo_pos)
 		local deltaOffset = math3d.totable(math3d.sub(newOffset, init_offset))
 		local scaleFactor = (1.0 + 3.0 * math3d.length(deltaOffset))
 		if move_axis.dir == gizmo_const.DIR_X then
@@ -935,8 +936,8 @@ function gizmo:select_gizmo(x, y)
 				local mat = iom.worldmat(light_gizmo.current_light)
 				local circle_centre = math3d.transform(mat, math3d.vector{0, 0, ilight.range(light_gizmo.current_light)}, 1)
 				local move_dir = math3d.sub(circle_centre, iom.get_position(light_gizmo.current_light))
-				local mc = irq.main_camera()
-				init_offset.v = utils.view_to_axis_constraint(iom.ray(mc, {x, y}), iom.get_position(mc), gizmo_dir_to_world(move_dir), last_gizmo_pos)
+				local c = icamera.find_camera(irq.main_camera())
+				init_offset.v = utils.view_to_axis_constraint(iom.ray(c.viewprojmat, {x, y}), iom.get_position(mc), gizmo_dir_to_world(move_dir), last_gizmo_pos)
 			end
 			return true
 		end
@@ -949,8 +950,8 @@ function gizmo:select_gizmo(x, y)
 			last_gizmo_scale = math3d.totable(iom.get_scale(gizmo.target_eid))
 			if move_axis then
 				last_gizmo_pos = math3d.totable(iom.get_position(gizmo.root_eid))
-				local mc = irq.main_camera()
-				init_offset.v = utils.view_to_axis_constraint(iom.ray(mc, {x, y}), iom.get_position(mc), gizmo_dir_to_world(move_axis.dir), last_gizmo_pos)
+				local c = icamera.find_camera(irq.main_camera())
+				init_offset.v = utils.view_to_axis_constraint(iom.ray(c.viewprojmat, {x, y}), iom.get_position(mc), gizmo_dir_to_world(move_axis.dir), last_gizmo_pos)
 			end
 			return true
 		end

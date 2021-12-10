@@ -12,7 +12,6 @@ local fbmgr 	= renderpkg.fbmgr
 local samplerutil= renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
 
-local icamera	= ecs.import.interface "ant.camera|icamera"
 local irender   = ecs.import.interface "ant.render|irender"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 
@@ -46,18 +45,23 @@ local function get_properties(id, fx)
 	}
 end
 
+local function find_camera(cref)
+	w:sync("camera:in", cref)
+	return cref.camera
+end
+
 local function update_camera(pu_camera_ref, clickpt)
 	local mq = w:singleton("main_queue", "camera_ref:in render_target:in")
 	local ndc2D = mu.pt2D_to_NDC(clickpt, mq.render_target.view_rect)
 	local eye, at = mu.NDC_near_far_pt(ndc2D)
 
-	local maincamera = icamera.find_camera(mq.camera_ref)
+	local maincamera = find_camera(mq.camera_ref)
 	local vp = maincamera.viewprojmat
 	local ivp = math3d.inverse(vp)
 	eye = math3d.transformH(ivp, eye, 1)
 	at = math3d.transformH(ivp, at, 1)
 
-	local camera = icamera.find_camera(pu_camera_ref)
+	local camera = find_camera(pu_camera_ref)
 	local viewdir = math3d.normalize(math3d.sub(at, eye))
 	camera.viewmat = math3d.lookto(eye, viewdir, camera.updir)
 	camera.projmat = math3d.projmat(camera.frustum)
@@ -153,14 +157,20 @@ local fb_renderbuffer_flag = samplerutil.sampler_flag {
 }
 
 local function create_pick_entity()
-	local camera_ref = icamera.create {
-		viewdir = mc.ZAXIS,
-		updir = mc.YAXIS,
-		eyepos = mc.ZERO_PT,
-		frustum = {
-			type="mat", n=0.1, f=100, fov=0.5, aspect=pickup_buffer_w / pickup_buffer_h
+	local camera_ref = ecs.create_entity{
+		policy = {
+			"ant.camera|camera",
+			"ant.general|name"
 		},
-		name = "camera.pickup",
+		data = {
+			scene = {srt={}},
+			camera = {
+				frustum = {
+					type="mat", n=0.1, f=100, fov=0.5, aspect=pickup_buffer_w / pickup_buffer_h
+				},
+			},
+			name = "camera.pickup",
+		}
 	}
 
 	local fbidx = fbmgr.create {

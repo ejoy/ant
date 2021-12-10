@@ -4,6 +4,7 @@ local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local ies		    = ecs.import.interface "ant.scene|ifilter_state"
 local computil      = ecs.import.interface "ant.render|ientity"
 local irq           = ecs.import.interface "ant.render|irenderqueue"
+local icamera       = ecs.import.interface "ant.camera|icamera"
 local mathutils     = ecs.require "mathutils"
 local camera_mgr    = ecs.require "camera_manager"
 local gridmesh_view = ecs.require "widget.gridmesh_view"
@@ -175,8 +176,8 @@ function brush_sys:init(size, row, col)
 end
 
 local function get_row_col(sx, sy)
-    local mc = irq.main_camera()
-    local rawpos = mathutils.ray_hit_plane(iom.ray(mc, {sx, sy}), {dir = {0,1,0}, pos = {0,0,0}})
+    local c = icamera.find_camera(irq.main_camera())
+    local rawpos = mathutils.ray_hit_plane(iom.ray(c.viewprojmat, {sx, sy}), {dir = {0,1,0}, pos = {0,0,0}})
     if not rawpos then
         return
     end
