@@ -71,6 +71,7 @@ function m.update_template_tranform(eid)
 end
 
 function m.update_ui(ut)
+    if not gizmo.target_eid then return end
     local eid = gizmo.target_eid
     if ut then
         m.update_template_tranform(eid)

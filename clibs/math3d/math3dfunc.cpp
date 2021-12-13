@@ -605,9 +605,40 @@ math3d_quat_slerp(struct lastack *LS, const float v0[4], const float v1[4], floa
 	*(glm::quat*)r = glm::slerp(QUAT(v0), QUAT(v1), ratio);
 }
 
+// x: pitch(-90, 90), y: yaw(-180, 180), z: roll(-180, 180),
+static glm::vec3 limit_euler_angles(const glm::quat& q) {
+	static const float MY_PI = 3.14159265358979323846264338327950288f;
+	float x_ = q.x;
+	float y_ = q.y;
+	float z_ = q.z;
+	float w_ = q.w;
+	// Derivation from http://www.geometrictools.com/Documentation/EulerAngles.pdf
+	// Order of rotations: Z first, then X, then Y
+	float check = 2.0f * (-y_ * z_ + w_ * x_);
+	if (check < -0.995f) {
+		return {
+			-0.5f * MY_PI,
+			0.0f,
+			-atan2f(2.0f * (x_ * z_ - w_ * y_), 1.0f - 2.0f * (y_ * y_ + z_ * z_))
+		};
+	} else if (check > 0.995f) {
+		return {
+			0.5f * MY_PI,
+			0.0f,
+			atan2f(2.0f * (x_ * z_ - w_ * y_), 1.0f - 2.0f * (y_ * y_ + z_ * z_))
+		};
+	} else {
+		return {
+			asinf(check),
+			atan2f(2.0f * (x_ * z_ + w_ * y_), 1.0f - 2.0f * (x_ * x_ + y_ * y_)),
+			atan2f(2.0f * (x_ * y_ + w_ * z_), 1.0f - 2.0f * (x_ * x_ + z_ * z_))
+		};
+	}
+}
+
 void 
-math3d_quat_to_euler(struct lastack *LS, const float q[4], float euler[4]){
-	*(glm::vec3*)euler = glm::eulerAngles(QUAT(q));
+math3d_quat_to_euler(struct lastack *LS, const float q[4], float euler[4]) {
+	*(glm::vec3*)euler = limit_euler_angles(QUAT(q)); // glm::eulerAngles(QUAT(q)); // 
 }
 
 void
