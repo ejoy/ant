@@ -6,6 +6,7 @@ $input a_position INPUT_INDICES INPUT_WEIGHT
 
 void main()
 {
-	vec4 posWS = transformWS(get_world_matrix(), vec4(a_position, 1.0));
+	mat4 wm = get_world_matrix();
+	vec4 posWS = transformWS(wm, vec4(a_position, 1.0));
 	gl_Position   = mul(u_viewProj, posWS);
 }

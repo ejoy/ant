@@ -23,7 +23,7 @@ uniform vec4 u_curveworld_dir;
 vec3 curve_world_offset(vec3 posWS)
 {
     float dis = length(u_eyepos.xyz-posWS);
-    vec3 dir = u_curveworld_dir.xyz;//mul(u_invView, vec4(u_curveworld_dir.xyz, 0.0)).xyz;
+    vec3 dir = mul(u_invView, vec4(u_curveworld_dir.xyz, 0.0)).xyz;
     vec3 offset = u_curveworld_amplification*pow((dis-u_curveworld_flat_distance)/u_curveworld_base_distance, u_curveworld_exp)*dir;
     return posWS + offset;
 }

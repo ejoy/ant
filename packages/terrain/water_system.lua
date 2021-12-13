@@ -122,6 +122,7 @@ function water_sys:init_world()
                 clear_state = {clear = ""},
                 fb_idx = create_fb(mqrt.fb_idx),
             },
+            queue_name = "copy_scene",
             watch_screen_buffer = true,
             copy_scene_queue = true,
         }
