@@ -132,7 +132,7 @@ end
 function BaseView:on_set_rotate(value)
     local euler = self.e.oldeuler
     world:pub {"EntityEvent", "rotate", self.e, { math.rad(euler[1]), math.rad(euler[2]), math.rad(euler[3]) }, value}
-    self.e.oldeuler = value
+    --self.e.oldeuler = value
     --world:pub {"EntityEvent", "rotate", self.e, math3d.tovalue(math3d.quat2euler(iom.get_rotation(self.e))), value}
 end
 
