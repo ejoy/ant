@@ -4,5 +4,6 @@ return {
         "ant.asset",
         "ant.math",
         "ant.render",
+        "ant.objcontroller",
     }
 }

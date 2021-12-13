@@ -268,7 +268,7 @@ local function create_indicator()
 end
 
 function shape_terrain_test_sys:init()
-    local ww, hh = 16, 16--256, 256--2, 2
+    local ww, hh = 256, 256--2, 2
     local terrain_fields = generate_terrain_fields(ww, hh)
     build_roads(ww, hh, terrain_fields)
     shape_terrain_test = ecs.create_entity{
