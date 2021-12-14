@@ -76,7 +76,10 @@ function vfs.searchpath(name, path)
     for c in string.gmatch(path, '[^;]+') do
         local filename = string.gsub(c, '%?', name)
         if vfs.realpath(filename) then
-            return filename
+            local f <close> = io_open(filename, "r")
+            if f then
+                return filename
+            end
         end
         err = err .. ("\n\tno file '%s'"):format(filename)
     end

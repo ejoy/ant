@@ -97,8 +97,10 @@ local function update_second_view_camera()
 end
 
 local keypress_mb = world:sub{"keyboard"}
+local keypress_mb_for_pan = world:sub{"keyboard"}
 local event_camera_edit = world:sub{"CameraEdit"}
 local mouse_drag = world:sub {"mousedrag"}
+local mouse_drag_for_pan = world:sub {"mousedrag"}
 local mouse_move = world:sub {"mousemove"}
 local mouse_down = world:sub {"mousedown"}
 local mouse_up = world:sub {"mouseup"}
@@ -161,28 +163,17 @@ function camera_sys:handle_camera_event()
 				elseif press == 0 then
 					ZOOM_BACK = false
 				end
-			elseif key == "A" then
-				if press == 1 then
-					PAN_LEFT = true
-				elseif press == 0 then
-					PAN_LEFT = false
-				end
-			elseif key == "D" then
-				if press == 1 then
-					PAN_RIGHT = true
-				elseif press == 0 then
-					PAN_RIGHT = false
-				end
 			end
 		end
 		ctrl_state = state.CTRL
 	end
 
-	if PAN_LEFT then
-		camera_pan(0.2, 0)
-	elseif PAN_RIGHT then
-		camera_pan(-0.2, 0)
-	elseif ZOOM_FORWARD then
+	-- if PAN_LEFT then
+	-- 	camera_pan(0.2, 0)
+	-- elseif PAN_RIGHT then
+	-- 	camera_pan(-0.2, 0)
+	-- else
+	if ZOOM_FORWARD then
 		camera_zoom(-0.2)
 	elseif ZOOM_BACK then
 		camera_zoom(0.2)
@@ -253,28 +244,6 @@ function camera_sys:handle_camera_event()
 		end
 	end
 
-	-- for _, what, x, y, dx, dy in mouse_drag:unpack() do
-	-- 	if what == "LEFT" then
-	-- 		if select_area and hit_plane then
-	--			local c = icamera.find_camera(irq.main_camera())
-	-- 			local curpos = utils.ray_hit_plane(iom.ray(c.viewprojmat, {x, y}), hit_plane)
-	-- 			local proj_len = math3d.dot(current_dir, math3d.sub(curpos, centre_pos))
-	-- 			local aspect = 1.0
-	-- 			if select_area == camera_mgr.FRUSTUM_LEFT or select_area == camera_mgr.FRUSTUM_RIGHT then
-	-- 				aspect = icamera.get_frustum(camera_mgr.second_camera).aspect
-	-- 			end
-	-- 			local half_fov = math.atan(proj_len / dist_to_plane / aspect )
-	-- 			camera_mgr.set_frustum_fov(camera_mgr.second_camera, 2 * math.deg(half_fov))
-	-- 			inspector.update_ui(true)
-	-- 		end
-	-- 	elseif what == "MIDDLE" then
-	-- 		camera_pan(dx, dy)
-	-- 	elseif what == "RIGHT" then
-	-- 		camera_rotate(dx, dy)
-	-- 	end
-	-- end
-end
-function camera_sys:handle_event()
 	for _, what, x, y, dx, dy in mouse_drag:unpack() do
 		if what == "LEFT" then
 			if select_area and hit_plane then
@@ -289,10 +258,40 @@ function camera_sys:handle_event()
 				camera_mgr.set_frustum_fov(camera_mgr.second_camera, 2 * math.deg(half_fov))
 				inspector.update_ui(true)
 			end
-		elseif what == "MIDDLE" then
-			camera_pan(dx, dy)
+		-- elseif what == "MIDDLE" then
+		-- 	camera_pan(dx, dy)
 		elseif what == "RIGHT" then
 			camera_rotate(dx, dy)
+		end
+	end
+end
+function camera_sys:handle_event()
+	for _, key, press, state in keypress_mb_for_pan:unpack() do
+		if not state.CTRL and not state.SHIFT then
+			if key == "A" then
+				if press == 1 then
+					PAN_LEFT = true
+				elseif press == 0 then
+					PAN_LEFT = false
+				end
+			elseif key == "D" then
+				if press == 1 then
+					PAN_RIGHT = true
+				elseif press == 0 then
+					PAN_RIGHT = false
+				end
+			end
+		end
+		ctrl_state = state.CTRL
+	end
+	if PAN_LEFT then
+		camera_pan(0.2, 0)
+	elseif PAN_RIGHT then
+		camera_pan(-0.2, 0)
+	end
+	for _, what, x, y, dx, dy in mouse_drag_for_pan:unpack() do
+		if what == "MIDDLE" then
+			camera_pan(dx, dy)
 		end
 	end
 end

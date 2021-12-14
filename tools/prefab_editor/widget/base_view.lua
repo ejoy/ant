@@ -130,13 +130,31 @@ function BaseView:on_get_position()
 end
 
 function BaseView:on_set_rotate(value)
-    world:pub {"EntityEvent", "rotate", self.e, math3d.tovalue(math3d.quat2euler(iom.get_rotation(self.e))), value}
+    local euler = self.e.oldeuler
+    world:pub {"EntityEvent", "rotate", self.e, { math.rad(euler[1]), math.rad(euler[2]), math.rad(euler[3]) }, value}
+    --self.e.oldeuler = value
+    --world:pub {"EntityEvent", "rotate", self.e, math3d.tovalue(math3d.quat2euler(iom.get_rotation(self.e))), value}
 end
 
 function BaseView:on_get_rotate()
     local r = iom.get_rotation(self.e)
     local rad = math3d.tovalue(math3d.quat2euler(r))
-    return { math.deg(rad[1]), math.deg(rad[2]), math.deg(rad[3]) }
+    local raweuler = { math.deg(rad[1]), math.deg(rad[2]), math.deg(rad[3]) }
+    -- if self.e.oldeuler then
+    --     local oldeuler = self.e.oldeuler
+    --     local adjusteuler = { math.deg(rad[1]), math.deg(rad[2]), math.deg(rad[3]) }
+    --     if oldeuler[2] > 90.0 then
+    --         raweuler[1] = raweuler[1] - 180.0
+    --         raweuler[2] = raweuler[2] - 180.0
+    --         raweuler[2] = -1.0 * raweuler[2]
+    --         raweuler[3] = raweuler[3] + 180.0
+    --         if oldeuler[1] > 0.0 then
+    --             raweuler[1] = raweuler[1] + 360.0
+    --         end
+    --     end
+    -- end
+    self.e.oldeuler = raweuler
+    return self.e.oldeuler
 end
 
 function BaseView:on_set_scale(value)
