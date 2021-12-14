@@ -436,6 +436,14 @@ int Element::GetNumChildren() const {
 }
 
 void Element::SetInnerRML(const std::string& rml) {
+// 	RMLUI_ZoneScopedC(0x6495ED);
+// 
+// 	// Remove all DOM children.
+// 	while ((int)children.size() > num_non_dom_children)
+// 		RemoveChild(children.front().get());
+
+	if (!rml.empty())
+		Factory::InstanceElementText(this, rml);
 }
 
 Element* Element::AppendChild(ElementPtr child) {

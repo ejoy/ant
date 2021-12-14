@@ -112,7 +112,6 @@ void HtmlParser::Parse(std::string_view stream, HtmlHandler* handler) {
 	std::string accum;
 	bool open = false;
 	m_handler->OnDocumentBegin();
-
 	while (!IsEOF()) {
 		char c = GetChar();
 
@@ -156,15 +155,20 @@ void HtmlParser::Parse(std::string_view stream, HtmlHandler* handler) {
 			default:
 				state = st_element;
 				EnterOpenElement(c);
-				assert(!m_stack_items.empty());
+				//assert(!m_stack_items.empty());
 				open = true;
-				if (m_stack_items.top() == "script") {
-					state = st_script;
-					m_handler->OnScriptBegin(GetLine());
-				}
-				else if (m_stack_items.top() == "style") {
-					state = st_style;
-					m_handler->OnStyleBegin(GetLine());
+				if (!handler->IsEmbed()) {
+					if (m_stack_items.top() == "script") {
+						state = st_script;
+						m_handler->OnScriptBegin(GetLine());
+					}
+					else if (m_stack_items.top() == "style") {
+						state = st_style;
+						m_handler->OnStyleBegin(GetLine());
+					}
+					else {
+						state = st_ready;
+					}
 				}
 				else {
 					state = st_ready;
@@ -401,6 +405,14 @@ void HtmlParser::EnterOpenElement(char c) {
 					break;
 				case '>':
 					m_handler->OnElementClose();
+					if (auto it = std::find(listAttrNames.begin(), listAttrNames.end(), std::string("data-for")); it != listAttrNames.end()) {
+						if (!m_inner_xml_data) {
+							m_inner_xml_data = true;
+							m_inner_xml_data_begin = m_pos;
+							m_inner_xml_tag = accum;
+							m_handler->OnInnerXML(true);
+						}
+					}
 					return;
 				default:
 					HtmlAttribute attr;
@@ -443,11 +455,11 @@ void HtmlParser::EnterOpenElement(char c) {
 void HtmlParser::EnterClosingElement() {
 	if (m_stack_items.size() == 0)
 		ThrowException(HtmlError::SPE_MATCH);
-
+	size_t tag_begin = m_pos - 1;
 	typedef enum { st_begin, st_name, st_end } TEState;
 	std::string accum;
 	TEState state = st_begin;
-
+	std::string inner_xml_data;
 	try {
 		while (true) {
 			char c = GetChar();
@@ -465,7 +477,12 @@ void HtmlParser::EnterClosingElement() {
 				case '>':
 					if (m_stack_items.top() != accum)
 						ThrowException(HtmlError::SPE_MATCH);
-					m_handler->OnElementEnd(accum.c_str());
+					if (m_inner_xml_data && m_stack_items.top() == m_inner_xml_tag) {
+						inner_xml_data = std::string(&m_buf[m_inner_xml_data_begin], tag_begin - m_inner_xml_data_begin - 1);
+						m_inner_xml_data = false;
+						m_handler->OnInnerXML(false);
+					}
+					m_handler->OnElementEnd(accum.c_str(), inner_xml_data);
 					m_stack_items.pop();
 					return;
 					break;
