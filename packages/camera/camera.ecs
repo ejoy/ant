@@ -19,6 +19,16 @@ interface "icamera"
     .method "find_camera"   --TODO: need remove
     .method "world_to_screen"
 
+component "exposure".type "lua"
+interface "iexposure"
+    .implement "exposure.lua"
+    .method "exposure"
+    .method "exposure_from_ev100"
+    .method "luminance"
+    .method "luminance_from_ev100"
+    .method "illuminance"
+    .method "illuminance_from_ev100"
+
 interface "icamera_recorder"
     .implement "camera_recorder.lua"
     .method "start"

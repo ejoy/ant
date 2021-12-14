@@ -28,21 +28,6 @@ local defaultcamera<const> = {
     eyepos  = {0, 0, 0, 1},
     viewdir = {0, 0, 1, 0},
     frustum = defcomp.frustum(),
-    dof     = {},
-    exposure= {
-        type            = "Auto",  --Auto, Manaual, SBS, SOS, only support Auto and Manual right now
-        ManualExposure  = -16.0,
-        ApertureSize    = 16.0, --mean f/16.0
-        ISO             = 100.0,
-        ShutterSpeed    = 1.0/60.0,
-        AutoExposureKey = 0.115,
-        AdaptaionRate   = 0.5,
-        --DOF
-        FilmSize        = 35.0, --unit is: mm
-        FocalLength     = 35.0, --unit is: mm, dof
-        FocusDistance   = 10.0, --unit is: m
-        NumBlades       = 5,
-    },
 }
 
 function ic.create(info)
