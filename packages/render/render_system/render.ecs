@@ -4,10 +4,6 @@ import "@ant.camera"
 import "@ant.asset"
 import "@ant.objcontroller"
 
-component "blit_queue"
-policy "blit_queue"
-    .component "blit_queue"
-
 component "pre_depth_queue"
 policy "pre_depth_queue"
     .require_system  "ant.render|pre_depth_primitive_system"

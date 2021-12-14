@@ -187,7 +187,4 @@ function cameraview_sys:update_mainview_camera()
     for v in w:select "main_queue camera_ref:in" do
         update_camera(v.camera_ref)
     end
-    for v in w:select "blit_queue camera_ref:in" do
-        update_camera(v.camera_ref)
-    end
 end

@@ -37,7 +37,6 @@ local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent"
 
 local QUEUE_TYPES <const> = {
     main_queue = LAYER_NAMES,
-    blit_queue = {"opacity",},
     pre_depth_queue = {"opacity"},
 }
 
