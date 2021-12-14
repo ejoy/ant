@@ -7,5 +7,7 @@ return {
         "ant.general",
         "ant.render",
         "ant.timer",
+        "ant.settings",
+        "ant.camera",
     }
 }
