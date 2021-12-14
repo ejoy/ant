@@ -72,8 +72,8 @@ data:
   light:
     color: {1, 1, 1, 1}
     intensity: 2
+    intensity_unit: lux
     type: directional
-    radian: 0.7853981633974483
     range: 0
   visible:true
   scene:

@@ -21,8 +21,10 @@ data:
   light:
     color: {0.8, 0.8, 0.8, 1}
     intensity: 5
+    intensity_unit: candela
     range: 15
     type: point
+  point_light: true
   name: point_light
   visible: true
 action:

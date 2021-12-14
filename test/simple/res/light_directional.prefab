@@ -9,7 +9,9 @@ data:
   light:
     color: {1, 1, 1, 1}
     intensity: 2
+    intensity_unit: lux
     type: directional
+  directional_light: true
   name: directional_light
   make_shadow: true
   visible: true

@@ -6,7 +6,6 @@ local declmgr	= require "vertexdecl_mgr"
 local math3d	= require "math3d"
 local bgfx		= require "bgfx"
 local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
-local ies		= ecs.import.interface "ant.scene|ifilter_state"
 
 local setting	= import_package "ant.settings".setting
 local enable_cluster_shading = setting:data().graphic.lighting.cluster_shading ~= 0
@@ -37,6 +36,11 @@ end
 
 local ilight = ecs.interface "ilight"
 
+local function check_intensity_unit(unit)
+	assert(unit == "lux" or unit == "candela")
+	return unit
+end
+
 function ilight.create(light)
 	local template = {
 		policy = {
@@ -51,10 +55,11 @@ function ilight.create(light)
 			},
 			make_shadow	= light.make_shadow,
 			light = {
-				type		= light.type,
-				motion_type = light.motion_type,
-				color		= light.color,
-				intensity	= light.intensity,
+				type		= assert(light.type),
+				motion_type = assert(light.motion_type),
+				color		= assert(light.color),
+				intensity	= assert(light.intensity),
+				intensity_unit=check_intensity_unit(light.intensity_unit),
 				range		= light.range,
 				inner_radian= light.inner_radian,
 				outter_radian= light.outter_radian,
@@ -89,10 +94,35 @@ function ilight.intensity(e)
 	return e.light.intensity
 end
 
-function ilight.set_intensity(e, i)
+--[[
+	the reference of light intensity and unit:
+	https://google.github.io/filament/Filament.html#lighting/units
+]]
+function ilight.set_intensity(e, i, unit)
 	w:sync("light:in", e)
-	e.light.intensity = i
+	local l = e.light
+	if unit then
+		l.intensity_unit = check_intensity_unit(unit)
+	else
+		unit = assert(l.intensity_unit)
+	end
+
+	local t = l.type
+	if t == "directional" then
+		l.intensity = i
+		assert(unit == "lux", "directional light's intensity unit must only be 'lux'")
+	elseif t == "point" then
+		l.intensity = unit == "candela" and i / (math.pi*0.25) or i
+	elseif t == "spot" then
+		local r = assert(l.outter_radian)
+		l.intensity = unit == "candela" and i / (2.0*math.pi*(1.0-math.cos(r*0.5))) or i
+	end
 	setChanged()
+end
+
+function ilight.intensity_unit(e)
+	w:sync("light:in", e)
+	return e.light.intensity_unit
 end
 
 function ilight.range(e)
@@ -259,10 +289,8 @@ function lightsys:entity_init()
 	for e in w:select "INIT light:in" do
 		setChanged()
 		local l 		= e.light
-		local t 		= l.type
-		l.color			= l.color or {1, 1, 1, 1}
-		l.intensity		= l.intensity or 2
-		l.motion_type	= l.motion_type or "dynamic"
+		local t 		= assert(l.type)
+		assert(l.color or l.intensity or l.intensity_unit or l.motion_type, "light's 'color' or 'intensity' or 'intensity_unit' must not be nil")
 		l.angular_radius= l.angular_radius or math.rad(0.27)
 		if t == "point" then
 			if l.range == nil then

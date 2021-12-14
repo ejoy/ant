@@ -13,5 +13,6 @@ data:
   light:
     color: {1, 1, 1, 1}
     intensity: 50
+    intensity_unit: lux
     type: directional
   make_shadow: true

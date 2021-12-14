@@ -101,13 +101,12 @@ policy:
 ---
 data:
   name: directional1
+  directional_light: true
   light:
     color: {1, 1, 1, 1}
-    intensity: 2
+    intensity: 10
+    intensity_unit: lux
     type: directional
-  
-    inner_radian: 0.7853981633974483
-    range: 10
   visible:true
   scene:
     srt:
