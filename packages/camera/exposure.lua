@@ -12,6 +12,12 @@ local w     = world.w
 
 local ie = ecs.interface "iexposure"
 
+-- local FStops<const> = {
+--     "f/1.8", "f/2.0", "f/2.2", "f/2.5", "f/2.8", "f/3.2", "f/3.5", "f/4.0",
+--     "f/4.5", "f/5.0", "f/5.6", "f/6.3", "f/7.1", "f/8.0", "f/9.0", "f/10.0",
+--     "f/11.0", "f/13.0", "f/14.0", "f/16.0", "f/18.0", "f/20.0", "f/22.0",
+-- }
+
 local default_exposure<const> = {
     type            = "Auto",  --Auto, Manaual, SBS, SOS, only support Auto and Manual right now
     manual_ev       = -16.0,

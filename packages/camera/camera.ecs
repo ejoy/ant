@@ -20,6 +20,7 @@ interface "icamera"
     .method "world_to_screen"
 
 component "exposure".type "lua"
+
 interface "iexposure"
     .implement "exposure.lua"
     .method "exposure"
@@ -28,6 +29,10 @@ interface "iexposure"
     .method "luminance_from_ev100"
     .method "illuminance"
     .method "illuminance_from_ev100"
+
+policy "exposure"
+    .require_interface "ant.camera|iexposure"
+    .component "exposure"
 
 interface "icamera_recorder"
     .implement "camera_recorder.lua"

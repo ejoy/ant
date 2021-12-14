@@ -17,12 +17,6 @@ end
 
 ic.find_camera = find_camera
 
--- local FStops<const> = {
---     "f/1.8", "f/2.0", "f/2.2", "f/2.5", "f/2.8", "f/3.2", "f/3.5", "f/4.0",
---     "f/4.5", "f/5.0", "f/5.6", "f/6.3", "f/7.1", "f/8.0", "f/9.0", "f/10.0",
---     "f/11.0", "f/13.0", "f/14.0", "f/16.0", "f/18.0", "f/20.0", "f/22.0",
--- }
-
 local defaultcamera<const> = {
     name = "default_camera",
     eyepos  = {0, 0, 0, 1},
@@ -44,11 +38,18 @@ function ic.create(info)
         end
     end
 
+    local policy = {
+        "ant.general|name",
+        "ant.camera|camera",
+    }
+
+    local exposure = info.exposure
+    if exposure then
+        policy[#policy+1] = "ant.camera|exposure"
+    end
+
     return ecs.create_entity {
-        policy = {
-            "ant.general|name",
-            "ant.camera|camera",
-        },
+        policy = policy,
         data = {
             scene = {
                 srt = {
@@ -58,6 +59,7 @@ function ic.create(info)
                 updir = assert(info.updir),
             },
             reference = true,
+            exposure = exposure,
             camera = {
                 frustum = frustum,
                 clip_range = info.clip_range,
