@@ -628,11 +628,14 @@ function m:add_prefab(filename)
     ecs.method.set_parent(v_root, parent)
 
     self.entities[#self.entities+1] = v_root
-    local instance = ecs.create_instance(prefab_filename)
+    local prefab = ecs.create_instance(prefab_filename)
+    prefab.on_ready = function(inst)
+        ecs.method.set_parent(inst.root, v_root)
+        set_select_adapter(inst.tag["*"], v_root)
+        hierarchy:add(v_root, {filename = prefab_filename, name = prefab_name, children = inst.tag["*"], editor = false}, parent)
+    end
 
-    ecs.method.set_parent(instance.root, v_root)
-    set_select_adapter(instance.tag["*"], v_root)
-    hierarchy:add(v_root, {filename = prefab_filename, name = prefab_name, children = instance.tag["*"], editor = false}, parent)
+    world:create_object(prefab)
 end
 
 function m:recreate_entity(eid)
