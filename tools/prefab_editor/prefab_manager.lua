@@ -455,9 +455,11 @@ function m:on_prefab_ready(prefab)
             self.entities[#self.entities + 1] = sub_root
 
             local children = sub_tree(parent, j)
-            -- for _, c in ipairs(children) do
-            --     ecs.method.set_parent(c, sub_root)
-            -- end
+            for _, child in ipairs(children) do
+                if child.scene.parent == parent.scene.id then
+                    ecs.method.set_parent(child, sub_root)
+                end
+            end
             j = j + #children
             node_map[sub_root] = {template = {filename = pt.prefab, children = children, name = prefab_name, editor = pt.editor or false}, parent = parent}
         else
@@ -629,13 +631,18 @@ function m:add_prefab(filename)
     local parent = gizmo.target_eid or self.root
     local prefab = ecs.create_instance(prefab_filename)
     prefab.on_ready = function(inst)
-        --ecs.method.set_parent(inst.root, v_root)
         local prefab_name = gen_prefab_name()
         local v_root = create_simple_entity(prefab_name)
         ecs.method.set_parent(v_root, parent)
         self.entities[#self.entities+1] = v_root
-        set_select_adapter(inst.tag["*"], v_root)
-        hierarchy:add(v_root, {filename = prefab_filename, name = prefab_name, children = inst.tag["*"], editor = false}, parent)
+        local children = inst.tag["*"]
+        for _, child in ipairs(children) do
+            if child.scene.parent == inst.root.scene.id then
+                ecs.method.set_parent(child, v_root)
+            end
+        end
+        set_select_adapter(children, v_root)
+        hierarchy:add(v_root, {filename = prefab_filename, name = prefab_name, children = children, editor = false}, parent)
     end
     function prefab:on_message(msg)
         --print(object, msg)
