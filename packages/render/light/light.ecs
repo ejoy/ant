@@ -1,6 +1,8 @@
 interface "ilight"
     .implement "light/light.lua"
     .method "create"
+    .method "default_intensity"
+    .method "default_intensity_unit"
     .method "data"
     .method "range"
     .method "set_range"

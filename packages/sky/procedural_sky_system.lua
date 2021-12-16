@@ -119,13 +119,15 @@ local ABCDE_t = {
 -- Controls sun position according to time, month, and observer's latitude.
 -- this data get from: https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
 
-local function compute_PerezCoeff(turbidity, values)
+local function compute_PerezCoeff(turbidity)
 	assert(#ABCDE == #ABCDE_t)
+	local r = {}
 	local n = #ABCDE
 	for i=1, n do
 		local v0, v1 = ABCDE_t[i], ABCDE[i]
-		values[i] = math3d.muladd(v0, turbidity, v1)
+		r[i] = math3d.muladd(v0, turbidity, v1)
 	end
+	return r
 end
 
 local function fetch_month_index_op()
@@ -141,18 +143,18 @@ end
 
 local which_month_index = fetch_month_index_op()
 
-local function calc_sun_orbit_delta(whichmonth, _ecliptic_obliquity)
+local function calc_sun_orbit_delta(whichmonth, ecliptic_obliquity)
 	local month = which_month_index(whichmonth) - 1
 	local day = 30 * month + 15
 	local lambda = math.rad(280.46 + 0.9856474 * day);
-	return math.asin(math.sin(_ecliptic_obliquity) * math.sin(lambda))
+	return math.asin(math.sin(ecliptic_obliquity) * math.sin(lambda))
 end
 
 local function calc_sun_direction(skycomp)
 	-- should move to C
 	local latitude = skycomp.latitude
 	local whichhour = skycomp.which_hour - 12	-- this algorithm take hour from [-12, 12]
-	local delta = calc_sun_orbit_delta(skycomp.month, skycomp._ecliptic_obliquity)
+	local delta = calc_sun_orbit_delta(skycomp.month, skycomp.ecliptic_obliquity)
 
 	local hh = whichhour * math.pi / 12
 	local azimuth = math.atan(
@@ -162,17 +164,15 @@ local function calc_sun_direction(skycomp)
 	local altitude = math.asin(math.sin(latitude) * math.sin(delta) + 
 								math.cos(latitude) * math.cos(delta) * math.cos(hh))
 
-	local rot0 = math3d.quaternion{axis=skycomp._updir, r=-azimuth}
-	local dir  = math3d.transform(rot0, skycomp._northdir, 0)
-	local uxd  = math3d.cross(skycomp._updir, dir)
+	local rot0 = math3d.quaternion{axis=skycomp.updir, r=-azimuth}
+	local dir  = math3d.transform(rot0, skycomp.northdir, 0)
+	local uxd  = math3d.cross(skycomp.updir, dir)
 	
 	local rot1 = math3d.quaternion{axis=uxd, r=-altitude}
-	return math3d.transform(rot1, dir, 0)
+	return math3d.normalize(math3d.transform(rot1, dir, 0))
 end
 
 local ps_sys = ecs.system "procedural_sky_system"
-
-local shader_parameters = {0.02, 3.0, 8, 0}
 
 local function fetch_value_operation(t)
 	local tt = {}
@@ -229,18 +229,18 @@ local sky_luminance_fetch = fetch_value_operation(sky_luminance_XYZ)
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 
+local shader_parameters = math3d.ref(math3d.vector(0.02, 3.0, 8, 0))
 local function update_sky_parameters(e)
 	local skycomp = e.procedural_sky
 	local hour = skycomp.which_hour
-	imaterial.set_property(e, "u_sunDirection", skycomp._sundir)
+	imaterial.set_property(e, "u_sunDirection", skycomp.sundir)
 	
 	imaterial.set_property(e, "u_sunLuminance", xyz2rgb(sun_luminance_fetch(hour)))
 	imaterial.set_property(e, "u_skyLuminanceXYZ", sky_luminance_fetch(hour))
-	shader_parameters[4] = hour
+	shader_parameters.v = math3d.set_index(shader_parameters, 1, skycomp.sun_size, skycomp.sun_bloom, skycomp.intensity, hour)
 	imaterial.set_property(e, "u_parameters", shader_parameters)
 
-	local values = {}
-	compute_PerezCoeff(skycomp.turbidity, values)
+	local values = compute_PerezCoeff(skycomp.turbidity)
 	imaterial.set_property(e, "u_perezCoeff", values)
 end
 
@@ -249,7 +249,7 @@ local function sync_directional_light(e)
 	local sunlight_eid = skycomp.attached_sun_light
 	if sunlight_eid then
 		local dlight = world[sunlight_eid]
-		dlight.direction.v = math3d.torotation(skycomp._sundir)
+		dlight.direction.v = math3d.torotation(skycomp.sundir)
 	end
 end
 
@@ -265,16 +265,19 @@ local function update_sun()
 	for e in w:select "procedural_sky:in" do
 		local skycomp = e.procedural_sky
 		update_hour(skycomp, delta)
-		skycomp._sundir.v = calc_sun_direction(skycomp)
+		skycomp.sundir.v = calc_sun_direction(skycomp)
 	end
 end
 
 local function init_procedural_sky(e)
 	local skycomp = e.procedural_sky
-	skycomp._ecliptic_obliquity = math.rad(23.44)	--the earth's ecliptic obliquity is 23.44
-	skycomp._northdir 	= math3d.ref(math3d.vector(1, 0, 0, 0))
-	skycomp._updir  	= math3d.ref(math3d.vector(0, 1, 0, 0))
-	skycomp._sundir 	= math3d.ref(calc_sun_direction(skycomp))
+	skycomp.ecliptic_obliquity = math.rad(23.44)	--the earth's ecliptic obliquity is 23.44
+	skycomp.northdir = math3d.ref(math3d.vector(1, 0, 0, 0))
+	skycomp.updir  	= math3d.ref(math3d.vector(0, 1, 0, 0))
+	skycomp.sundir 	= math3d.ref(calc_sun_direction(skycomp))
+	skycomp.intensity = 12000
+	skycomp.sun_size = 0.02
+	skycomp.sun_bloom = 3.0
 end
 
 function ps_sys:entity_init()

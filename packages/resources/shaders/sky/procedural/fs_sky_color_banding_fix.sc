@@ -4,16 +4,7 @@ $input v_skyColor, v_screenPos, v_viewDir
 * Copyright 2017 Stanislav Pidhorskyi. All rights reserved.
 * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
 */
-
-
-uniform vec4 	u_parameters; // x - sun size, y - sun bloom, z - exposition, w - time
-#define u_sunSize		u_parameters.x
-#define u_sunBloom		u_parameters.y
-#define u_exposition	u_parameters.z
-#define u_dayTime		u_parameters.w
-uniform vec4 	u_sunDirection;
-uniform vec4 	u_sunLuminance;
-
+#include "procedural_sky.sh"
 #include "common.sh"
 
 // https://www.shadertoy.com/view/4ssXRX
@@ -35,14 +26,14 @@ float n4rand_ss(in vec2 n)
 
 void main()
 {
-	float size2 = u_sunSize * u_sunSize;
+	float size2 	= u_sunSize * u_sunSize;
 
-	vec3 lightDir = normalize(u_sunDirection.xyz);
-	float distance = 2.0 * (1.0 - dot(normalize(v_viewDir), lightDir));
-	float sun = exp(-distance/ u_sunBloom / size2) + step(distance, size2);
-	float sun2 = min(sun * sun, 1.0);
-	vec3 color = v_skyColor + sun2;
-	float r = n4rand_ss(v_screenPos);
-	color += vec3_splat(r)/40.0;
-	gl_FragColor = vec4(color, 1.0);
+	vec3 lightDir 	= u_sunDirection.xyz;
+	float dis 		= 2.0 * (1.0 - dot(normalize(v_viewDir), lightDir));
+	float sun 		= exp((-dis/u_sunBloom)/size2) + step(dis, size2);
+	float sun2 		= min(sun * sun, 1.0);
+	vec3 color 		= v_skyColor + sun2;
+	float r 		= n4rand_ss(v_screenPos);
+	color 			+= vec3_splat(r)/40.0;
+	gl_FragColor 	= vec4(color, 1.0);
 }

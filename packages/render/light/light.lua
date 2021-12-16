@@ -10,11 +10,27 @@ local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
 local setting	= import_package "ant.settings".setting
 local enable_cluster_shading = setting:data().graphic.lighting.cluster_shading ~= 0
 
-local DEFAULT_INTENSITY<const> = {
-	directional = 120000,
-	point = 1200,
-	spot = 1200,
-	area = 1200,
+local DEFAULT_LIGHT<const> = {
+	directional = {
+		intensity = 120000,
+		unit = "lux",
+	},
+	point = {
+		intensity = 12000,
+		unit = "candela",
+	},
+	spot = {
+		intensity = 12000,
+		unit = "candela",
+	},
+	area = {
+		intensity = 12000,
+		unit = "candela"
+	}
+}
+
+local DEFAULT_INTENSITY_UNIT<const> = {
+
 }
 
 local changed = false
@@ -41,6 +57,14 @@ local function check_intensity_unit(unit)
 	return unit
 end
 
+function ilight.default_intensity(t)
+	return DEFAULT_LIGHT[t].intensity
+end
+
+function ilight.default_intensity_unit(t)
+	return DEFAULT_LIGHT[t].unit
+end
+
 function ilight.create(light)
 	local template = {
 		policy = {
@@ -51,7 +75,7 @@ function ilight.create(light)
 			reference 	= true,
 			name		= light.name or "DEFAULT_LIGHT",
 			scene = {
-				srt = light.transform
+				srt = light.srt
 			},
 			make_shadow	= light.make_shadow,
 			light = {

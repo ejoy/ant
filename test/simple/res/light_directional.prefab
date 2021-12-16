@@ -8,7 +8,7 @@ data:
       t: {0, 10, 0, 1}
   light:
     color: {1, 1, 1, 1}
-    intensity: 2
+    intensity: 120000
     intensity_unit: lux
     type: directional
   directional_light: true

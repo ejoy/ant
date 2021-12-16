@@ -20,7 +20,7 @@ data:
       t: {0, 10, 0, 1}
   light:
     color: {0.8, 0.8, 0.8, 1}
-    intensity: 5
+    intensity: 12000
     intensity_unit: candela
     range: 15
     type: point

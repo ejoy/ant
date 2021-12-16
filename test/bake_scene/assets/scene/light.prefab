@@ -11,7 +11,7 @@ data:
   directional_light: true
   light:
     color: {1, 1, 1, 1}
-    intensity: 1200000
+    intensity: 120000
     intensity_unit: lux
     angular_radius: 0.0047123889803847  #math.rad(0.27), sun light angular_radius
     motion_type: static

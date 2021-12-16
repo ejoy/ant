@@ -204,16 +204,17 @@ function m:find_entity(e)
 end
 local function create_default_light(lt)
     return ilight.create{
-        transform = {t = {0, 3, 0}, r = {math.rad(130), 0, 0}},
-        name = lt .. gen_light_id(),
-        type = lt,
-        color = {1, 1, 1, 1},
-        make_shadow = false,
-        intensity = 200,
-        range = 1,
-        motion_type = "dynamic",
-        inner_radian = math.rad(45),
-        outter_radian = math.rad(45)
+        srt = {t = {0, 3, 0}, r = {math.rad(130), 0, 0}},
+        name            = lt .. gen_light_id(),
+        type            = lt,
+        color           = {1, 1, 1, 1},
+        make_shadow     = false,
+        intensity       = ilight.default_intensity(lt),
+        intensity_unit  = ilight.default_intensity_unit(lt),
+        range           = 1,
+        motion_type     = "dynamic",
+        inner_radian    = math.rad(45),
+        outter_radian   = math.rad(45)
     }
 end
 function m:create(what, config)

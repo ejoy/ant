@@ -3,11 +3,7 @@
 $input a_position
 $output v_skyColor, v_screenPos, v_viewDir
 
-uniform vec4 u_sunDirection;
-uniform vec4 u_skyLuminanceXYZ;
-uniform vec4 u_parameters; // x - sun size, y - sun bloom, z - exposition
-uniform vec4 u_perezCoeff[5];
-
+#include "procedural_sky.sh"
 #include "common.sh"
 
 vec3 Perez(vec3 A,vec3 B,vec3 C,vec3 D, vec3 E,float costeta, float cosgamma)
@@ -35,7 +31,7 @@ void main()
 
 	gl_Position = vec4(a_position.xy, 1.0, 1.0);
 
-	vec3 lightDir = normalize(u_sunDirection.xyz);
+	vec3 lightDir = u_sunDirection.xyz;
 	vec3 skyDir = vec3(0.0, 1.0, 0.0);
 
 	// Perez coefficients.
@@ -62,5 +58,5 @@ void main()
 
 	vec3 skyColorXYZ = vec3(Yp.x * Yp.z / Yp.y,Yp.z, (1.0 - Yp.x- Yp.y)*Yp.z/Yp.y);
 
-	v_skyColor = convertXYZ2RGB(skyColorXYZ * u_parameters.z);
+	v_skyColor = convertXYZ2RGB(skyColorXYZ * u_intensity);
 }

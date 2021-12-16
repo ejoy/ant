@@ -104,7 +104,7 @@ data:
   directional_light: true
   light:
     color: {1, 1, 1, 1}
-    intensity: 10
+    intensity: 120000
     intensity_unit: lux
     type: directional
   visible:true

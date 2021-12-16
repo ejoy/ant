@@ -9,7 +9,7 @@ data:
     scene:
         srt: {}
     ibl:
-        intensity: 3.5
+        intensity: 12000
         irradiance:
             size: 128
         prefilter:
@@ -19,4 +19,4 @@ data:
     material: /pkg/ant.resources/materials/sky/skybox.material
     simplemesh: false
     skybox:
-        intensity: 20.0
+        intensity: 25000
