@@ -65,7 +65,8 @@ public:
 	void Hide();
 	/// Close the document.
 	void Close();
-
+	bool IsShow() const { return show_; }
+	bool ClickTest(const Point& point) const;
 	/// Creates the named element.
 	/// @param[in] name The tag name of the element.
 	ElementPtr CreateElement(const std::string& name);
@@ -121,7 +122,7 @@ private:
 	std::vector<Element*> active_chain;
 	Size dimensions;
 	bool dirty_dimensions = false;
-
+	bool show_ = true;
 	friend class Rml::Context;
 	friend class Rml::Factory;
 

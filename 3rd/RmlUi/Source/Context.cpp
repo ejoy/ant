@@ -34,8 +34,8 @@ Context::~Context() {
 void Context::SetDimensions(const Size& _dimensions) {
 	if (dimensions != _dimensions) {
 		dimensions = _dimensions;
-		if (focus) {
-			focus->SetDimensions(dimensions);
+		for (auto doc : documents) {
+			doc->SetDimensions(dimensions);
 		}
 	}
 }
@@ -46,10 +46,12 @@ const Size& Context::GetDimensions() const {
 
 void Context::Update(double delta) {
 	m_elapsedtime += delta;
-	if (focus) {
-		focus->UpdateDataModel(true);
-		focus->Update();
-		focus->Render();
+	for (auto doc : documents) {
+		if (doc->IsShow()) {
+			doc->UpdateDataModel(true);
+			doc->Update();
+			doc->Render();
+		}
 	}
 	ReleaseUnloadedDocuments();
 }
@@ -89,7 +91,7 @@ void Context::SetFocus(Document* document) {
 	if (focus) {
 		Document* doc = focus;
 		focus = document;
-		doc->Hide();
+		//doc->Hide();
 	}
 	else {
 		focus = document;
@@ -125,6 +127,14 @@ bool Context::ProcessMouseMove(MouseButton button, int x, int y, int key_modifie
 bool Context::ProcessMouseButtonDown(MouseButton button, int x, int y, int key_modifier_state) {
 	if (!focus) {
 		return false;
+	}
+	auto it = documents.rbegin();
+	while (it != documents.rend()) {
+		if ((*it)->IsShow() && (*it)->ClickTest({ (float)x, (float)y })) {
+			SetFocus((*it));
+			break;
+		}
+		++it;
 	}
 	focus->ProcessMouseButtonDown(button, x, y, key_modifier_state);
 	return true;

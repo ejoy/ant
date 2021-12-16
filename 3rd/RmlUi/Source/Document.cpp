@@ -284,11 +284,13 @@ const std::shared_ptr<StyleSheet>& Document::GetStyleSheet() const
 }
 
 void Document::Show() {
+	show_ = true;
 	GetContext()->SetFocus(this);
 	body->DispatchEvent(EventId::Show, EventDictionary());
 }
 
 void Document::Hide() {
+	show_ = false;
 	body->DispatchEvent(EventId::Hide, EventDictionary());
 	if (GetContext()->GetFocus() == this) {
 		GetContext()->SetFocus(nullptr);
@@ -300,6 +302,12 @@ void Document::Close()
 {
 	if (context != nullptr)
 		context->UnloadDocument(this);
+}
+
+bool Document::ClickTest(const Point& point) const
+{
+	return body->GetElementAtPoint(point) != nullptr;
+	//return body->IsPointWithinElement(point);
 }
 
 ElementPtr Document::CreateElement(const std::string& name)
