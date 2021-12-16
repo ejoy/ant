@@ -48,15 +48,19 @@ function ic.create(info)
         policy[#policy+1] = "ant.camera|exposure"
     end
 
+    local viewdir = info.viewdir or defaultcamera.viewdir
+    local eyepos = info.eyepos or defaultcamera.eyepos
+    local updir = info.updir or defaultcamera.updir
+
     return ecs.create_entity {
         policy = policy,
         data = {
             scene = {
                 srt = {
-                    r = math3d.torotation(math3d.vector(assert(info.viewdir))),
-                    t = assert(info.eyepos),
+                    r = math3d.torotation(math3d.vector(viewdir)),
+                    t = eyepos,
                 },
-                updir = assert(info.updir),
+                updir = updir,
             },
             reference = true,
             exposure = exposure,

@@ -12,7 +12,7 @@ data:
   visible: true
   light:
     color: {1, 1, 1, 1}
-    intensity: 50
+    intensity: 120000
     intensity_unit: lux
     type: directional
   make_shadow: true

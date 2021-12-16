@@ -23,12 +23,28 @@ component "exposure".type "lua"
 
 interface "iexposure"
     .implement "exposure.lua"
+    .method "ev100"
     .method "exposure"
     .method "exposure_from_ev100"
+    .method "ev100_from_luminance"
+    .method "ev100_from_illuminance"
+
     .method "luminance"
     .method "luminance_from_ev100"
     .method "illuminance"
     .method "illuminance_from_ev100"
+    
+    .method "type"
+    .method "set_type"
+
+    .method "aperture"
+    .method "set_aperture"
+
+    .method "shutter_speed"
+    .method "set_shutter_speed"
+
+    .method "ISO"
+    .method "set_ISO"
 
 policy "exposure"
     .require_interface "ant.camera|iexposure"

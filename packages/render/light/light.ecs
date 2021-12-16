@@ -12,7 +12,6 @@ interface "ilight"
     .method "outter_cutoff"
     .method "intensity"
     .method "set_intensity"
-    .method "set_intensity_candela"
     .method "intensity_unit"
 
     .method "color"

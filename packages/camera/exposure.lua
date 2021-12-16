@@ -19,8 +19,7 @@ local ie = ecs.interface "iexposure"
 -- }
 
 local default_exposure<const> = {
-    type            = "Auto",  --Auto, Manaual, SBS, SOS, only support Auto and Manual right now
-    manual_ev       = -16.0,
+    type            = "manual",  --can only be 'auto'/'manual'
     aperture        = 16.0, --mean f/16.0
     ISO             = 100.0,
     shutter_speed   = 1.0/60.0,
@@ -220,3 +219,13 @@ function ie.illuminance_from_ev100(ev100)
     return 2.5*(2.0^ev100)
 end
 
+for _, n in ipairs{"type", "aperture", "shutter_speed", "ISO"} do
+    ie[n] = function (cref)
+        return exposure(cref)[n]
+    end
+
+    ie["set_" .. n] = function (cref, v)
+        exposure(cref)[n] = v
+        world:pub{"exposure_changed", cref}
+    end
+end

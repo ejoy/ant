@@ -6,10 +6,15 @@
 #include "exposure.sh"
 #include "aces.sh"
 
-vec3 ToneMap(in vec3 color, float avgLuminance, float threshold)
+vec3 tonemapping(in vec3 color, float avg_luminance, float offset)
 {
-    float exposure = 0.0;
-    color = CalcExposedColor(color, avgLuminance, threshold, exposure);
+    float exposure = 
+#if EXPOSURE_TYPE == AUTO_EXPOSURE 
+    calc_auto_exposure(avg_luminance, offset);
+#else
+    u_exposure_value;
+#endif
+    color = exposure * color;
     return ACESFitted(color) * 1.8;
 }
 

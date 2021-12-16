@@ -19,11 +19,14 @@ local fr_sys = ecs.system "forward_render_system"
 function fr_sys:init()
 	local vr = world.args.viewport
 	local camera = icamera.create({
-		eyepos  = mc.ZERO_PT,
-		viewdir = mc.ZAXIS,
-		updir	= mc.YAXIS,
+		name = "default_camera",
 		frustum = default.frustum(vr.w/vr.h),
-        name = "default_camera",
+		exposure = {
+			type 			= "manual",
+			aperture 		= 16.0,
+			shutter_speed 	= 0.008,
+			ISO 			= 100,
+		}
 	})
 
 	if not graphic_setting.disable_pre_z then
