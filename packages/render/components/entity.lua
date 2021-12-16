@@ -203,7 +203,7 @@ function ientity.create_grid_entity(name, width, height, unit, linewidth)
 		end
 	end
 
-	local c<const> = 15.0
+	local c<const> = 12000.0
 	ipl.add_linelist(pl, linewidth, {c, c, c, 1.0})
 
 	local centerwidth<const> = linewidth * 2.0
