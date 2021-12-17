@@ -157,18 +157,20 @@ local function create_arrow_widget(axis_root, axis_str)
 		cone_t = math3d.vector(gizmo_const.AXIS_LEN, 0, 0)
 		local_rotator = math3d.quaternion{0, 0, math.rad(-90)}
 		cylindere_t = math3d.vector(0.5 * gizmo_const.AXIS_LEN, 0, 0)
-		color = gizmo_const.COLOR_X
+		color = gizmo_const.COLOR.X
 	elseif axis_str == "y" then
 		cone_t = math3d.vector(0, gizmo_const.AXIS_LEN, 0)
 		local_rotator = mc.IDENTITY_QUAT
 		cylindere_t = math3d.vector(0, 0.5 * gizmo_const.AXIS_LEN, 0)
-		color = gizmo_const.COLOR_Y
+		color = gizmo_const.COLOR.Y
 	elseif axis_str == "z" then
 		cone_t = math3d.vector(0, 0, gizmo_const.AXIS_LEN)
 		local_rotator = math3d.quaternion{math.rad(90), 0, 0}
 		cylindere_t = math3d.vector(0, 0, 0.5 * gizmo_const.AXIS_LEN)
-		color = gizmo_const.COLOR_Z
+		color = gizmo_const.COLOR.Z
 	end
+	local colorintensity = 12000
+
 	local cylindereid = ecs.create_entity{
 		policy = {
 			"ant.general|name",
@@ -322,7 +324,7 @@ function gizmo_sys:post_init()
 	gizmo:reset_move_axis_color()
 
 	-- roate axis
-	local uniform_rot_eid = ientity.create_circle_entity(gizmo_const.UNIFORM_ROT_AXIS_LEN, gizmo_const.ROTATE_SLICES, {}, "rotate_gizmo_uniform", gizmo_const.COLOR_GRAY, true)
+	local uniform_rot_eid = ientity.create_circle_entity(gizmo_const.UNIFORM_ROT_AXIS_LEN, gizmo_const.ROTATE_SLICES, {}, "rotate_gizmo_uniform", gizmo_const.COLOR.GRAY, true)
 	ecs.method.set_parent(uniform_rot_eid, uniform_rot_root)
 	local function create_rotate_fan(radius, circle_trans)
 		local mesh_eid = ientity.create_circle_mesh_entity(radius, gizmo_const.ROTATE_SLICES, circle_trans, "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material", "rotate_mesh_gizmo_uniform", {0, 0, 1, 0.5}, true)
@@ -375,7 +377,7 @@ function gizmo_sys:post_init()
 	end
 
 	-- scale axis cube
-	local cube_eid = create_scale_cube({s = gizmo_const.AXIS_CUBE_SCALE}, gizmo_const.COLOR_GRAY, "uniform scale")
+	local cube_eid = create_scale_cube({s = gizmo_const.AXIS_CUBE_SCALE}, gizmo_const.COLOR.GRAY, "uniform scale")
 	ecs.method.set_parent(cube_eid, axis_root)
 	gizmo.uniform_scale_eid = cube_eid
 	local function create_scale_axis(axis, axis_end)
@@ -389,9 +391,9 @@ function gizmo_sys:post_init()
 	create_scale_axis(gizmo.sy, {0, gizmo_const.AXIS_LEN, 0})
 	create_scale_axis(gizmo.sz, {0, 0, gizmo_const.AXIS_LEN})
 
-	-- global_axis_x_eid = ientity.create_line_entity({}, {0, 0, 0}, {0.1, 0, 0}, "", gizmo_const.COLOR_X)
-	-- global_axis_y_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0.1, 0}, "", gizmo_const.COLOR_Y)
-	-- global_axis_z_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0, 0.1}, "", gizmo_const.COLOR_Z)
+	-- global_axis_x_eid = ientity.create_line_entity({}, {0, 0, 0}, {0.1, 0, 0}, "", gizmo_const.COLOR.X)
+	-- global_axis_y_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0.1, 0}, "", gizmo_const.COLOR.Y)
+	-- global_axis_z_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0, 0.1}, "", gizmo_const.COLOR.Z)
 	
     ientity.create_grid_entity("", 64, 64, 1, 1)
 end
@@ -551,13 +553,13 @@ local function select_axis(x, y)
 		local radius = math3d.length(math3d.sub(hp, start))
 		if radius < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
 			uniform_scale = true
-			imaterial.set_property(gizmo.uniform_scale_eid, "u_color", gizmo_const.HIGHTLIGHT_COLOR)
-			imaterial.set_property(gizmo.sx.eid[1], "u_color", gizmo_const.HIGHTLIGHT_COLOR)
-			imaterial.set_property(gizmo.sx.eid[2], "u_color", gizmo_const.HIGHTLIGHT_COLOR)
-			imaterial.set_property(gizmo.sy.eid[1], "u_color", gizmo_const.HIGHTLIGHT_COLOR)
-			imaterial.set_property(gizmo.sy.eid[2], "u_color", gizmo_const.HIGHTLIGHT_COLOR)
-			imaterial.set_property(gizmo.sz.eid[1], "u_color", gizmo_const.HIGHTLIGHT_COLOR)
-			imaterial.set_property(gizmo.sz.eid[2], "u_color", gizmo_const.HIGHTLIGHT_COLOR)
+			imaterial.set_property(gizmo.uniform_scale_eid, "u_color", gizmo_const.COLOR.HIGHLIGHT)
+			imaterial.set_property(gizmo.sx.eid[1], "u_color", gizmo_const.COLOR.HIGHLIGHT)
+			imaterial.set_property(gizmo.sx.eid[2], "u_color", gizmo_const.COLOR.HIGHLIGHT)
+			imaterial.set_property(gizmo.sy.eid[1], "u_color", gizmo_const.COLOR.HIGHLIGHT)
+			imaterial.set_property(gizmo.sy.eid[2], "u_color", gizmo_const.COLOR.HIGHLIGHT)
+			imaterial.set_property(gizmo.sz.eid[1], "u_color", gizmo_const.COLOR.HIGHLIGHT)
+			imaterial.set_property(gizmo.sz.eid[2], "u_color", gizmo_const.COLOR.HIGHLIGHT)
 			return
 		end
 	end
@@ -605,8 +607,8 @@ local function select_rotate_axis(x, y)
 		local dist = math3d.length(math3d.sub(gizmoPos, hitPosVec))
 		local adjust_axis_len = (axis == gizmo.rw) and gizmo_const.UNIFORM_ROT_AXIS_LEN or gizmo_const.AXIS_LEN
 		if math.abs(dist - gizmo_scale * adjust_axis_len) < gizmo_const.ROTATE_HIT_RADIUS * gizmo_scale then
-			imaterial.set_property(axis.eid[1], "u_color", gizmo_const.HIGHTLIGHT_COLOR)
-			imaterial.set_property(axis.eid[2], "u_color", gizmo_const.HIGHTLIGHT_COLOR)
+			imaterial.set_property(axis.eid[1], "u_color", gizmo_const.COLOR.HIGHLIGHT)
+			imaterial.set_property(axis.eid[2], "u_color", gizmo_const.COLOR.HIGHLIGHT)
 			return hitPosVec
 		else
 			imaterial.set_property(axis.eid[1], "u_color", axis.color)

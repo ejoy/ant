@@ -1,21 +1,26 @@
+local mathpkg = import_package "ant.math"
+local mc = mathpkg.constant
+
 local m = {
     SELECT                  = 0,
     MOVE                    = 1,
     ROTATE                  = 2,
     SCALE                   = 3,
-    DIR_X                   = {1, 0, 0},
-    DIR_Y                   = {0, 1, 0},
-    DIR_Z                   = {0, 0, 1},
-    COLOR_X                 = {7, 0, 0, 1},
-    COLOR_Y                 = {0, 7, 0, 1},
-    COLOR_Z                 = {0, 0, 7, 1},
-    COLOR_X_ALPHA           = {7, 0, 0, 0.5},
-    COLOR_Y_ALPHA           = {0, 7, 0, 0.5},
-    COLOR_Z_ALPHA           = {0, 0, 7, 0.5},
-    COLOR_GRAY              = {3.5, 3.5, 3.5, 1},
-    COLOR_GRAY_ALPHA        = {3.5, 3.5, 3.5, 0.5},
-    HIGHTLIGHT_COLOR        = {7, 7, 0, 1},
-    HIGHTLIGHT_COLOR_ALPHA  = {7, 7, 0, 0.5},
+    DIR_X                   = mc.T_XAXIS,
+    DIR_Y                   = mc.T_YAXIS,
+    DIR_Z                   = mc.T_ZAXIS,
+    COLOR                   = {
+        X                 = {1, 0, 0, 1},
+        Y                 = {0, 1, 0, 1},
+        Z                 = {0, 0, 1, 1},
+        X_ALPHA           = {1, 0, 0, 0.5},
+        Y_ALPHA           = {0, 1, 0, 0.5},
+        Z_ALPHA           = {0, 0, 1, 0.5},
+        GRAY              = {1, 1, 1, 1},
+        GRAY_ALPHA        = {1, 1, 1, 0.5},
+        HIGHLIGHT         = {1, 1, 0, 1},
+        HIGHLIGHT_ALPHA   = {1, 1, 0, 0.5},
+    },
     RIGHT_TOP               = 0,
     RIGHT_BOTTOM            = 1,
     LEFT_BOTTOM             = 2,
@@ -30,4 +35,11 @@ local m = {
     ROTATE_HIT_RADIUS       = 0.02,
     MOVE_HIT_RADIUS_PIXEL   = 10
 }
+
+local intensity<const> = 12000
+for k, c in pairs(m.COLOR) do
+    for i=1, 3 do
+        c[i] = c[i] * intensity
+    end
+end
 return m

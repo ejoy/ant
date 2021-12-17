@@ -74,11 +74,11 @@ function m.highlight(b)
 
     if b then
         for _, eid in ipairs(m.current_gizmo.eid) do
-            imaterial.set_property(eid, "u_color", gizmo_const.HIGHTLIGHT_COLOR)
+            imaterial.set_property(eid, "u_color", gizmo_const.COLOR.HIGHLIGHT)
         end
     else
         for _, eid in ipairs(m.current_gizmo.eid) do
-            imaterial.set_property(eid, "u_color", gizmo_const.COLOR_GRAY)
+            imaterial.set_property(eid, "u_color", gizmo_const.COLOR.GRAY)
         end
     end
 end
@@ -102,7 +102,7 @@ end
 
 local function create_directional_gizmo(initpos, introt)
     local root = create_gizmo_root(initpos, introt)
-    local circle_eid = computil.create_circle_entity(RADIUS, SLICES, {}, "directional gizmo circle", gizmo_const.COLOR_GRAY, true)
+    local circle_eid = computil.create_circle_entity(RADIUS, SLICES, {}, "directional gizmo circle", gizmo_const.COLOR.GRAY, true)
     ecs.method.set_parent(circle_eid, root)
     local alleid = {}
     alleid[#alleid + 1] = circle_eid
@@ -110,7 +110,7 @@ local function create_directional_gizmo(initpos, introt)
     for s=0, SLICES-1 do
         local radian = radian_step * s
         local x, y = math.cos(radian) * RADIUS, math.sin(radian) * RADIUS
-        local line_eid = computil.create_line_entity({}, {x, y, 0}, {x, y, LENGTH}, "", gizmo_const.COLOR_GRAY, true)
+        local line_eid = computil.create_line_entity({}, {x, y, 0}, {x, y, LENGTH}, "", gizmo_const.COLOR.GRAY, true)
         ecs.method.set_parent(line_eid, root)
         alleid[#alleid + 1] = line_eid
     end
@@ -131,11 +131,11 @@ local function update_point_gizmo()
     local radius = m.current_light and ilight.range(m.current_light) or 1.0
     
     if #m.point.eid == 0 then
-        local c0 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {}, "light gizmo circle", gizmo_const.COLOR_GRAY, true)
+        local c0 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {}, "light gizmo circle", gizmo_const.COLOR.GRAY, true)
         ecs.method.set_parent(c0, root)
-        local c1 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {r = math3d.tovalue(math3d.quaternion{0, math.rad(90), 0})}, "light gizmo circle", gizmo_const.COLOR_GRAY, true)
+        local c1 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {r = math3d.tovalue(math3d.quaternion{0, math.rad(90), 0})}, "light gizmo circle", gizmo_const.COLOR.GRAY, true)
         ecs.method.set_parent(c1, root)
-        local c2 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})}, "light gizmo circle", gizmo_const.COLOR_GRAY, true)
+        local c2 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})}, "light gizmo circle", gizmo_const.COLOR.GRAY, true)
         ecs.method.set_parent(c2, root)
         m.point.eid = {c0, c1, c2}
     else
@@ -155,17 +155,17 @@ local function update_spot_gizmo()
     local radius = range * math.tan(radian * 0.5)
     if #m.spot.eid == 0 then
         local root = m.spot.root
-        local c0 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {t = {0, 0, range}}, "light gizmo circle", gizmo_const.COLOR_GRAY, true)
+        local c0 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {t = {0, 0, range}}, "light gizmo circle", gizmo_const.COLOR.GRAY, true)
         ecs.method.set_parent(c0, root)
-        local line0 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {0, radius, range}, "line", gizmo_const.COLOR_GRAY, true)
+        local line0 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {0, radius, range}, "line", gizmo_const.COLOR.GRAY, true)
         ecs.method.set_parent(line0, root)
-        local line1 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {radius, 0, range}, "line", gizmo_const.COLOR_GRAY, true)
+        local line1 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {radius, 0, range}, "line", gizmo_const.COLOR.GRAY, true)
         ecs.method.set_parent(line1, root)
-        local line2 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {0, -radius, range}, "line", gizmo_const.COLOR_GRAY, true)
+        local line2 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {0, -radius, range}, "line", gizmo_const.COLOR.GRAY, true)
         ecs.method.set_parent(line2, root)
-        local line3 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {-radius, 0, range}, "line", gizmo_const.COLOR_GRAY, true)
+        local line3 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {-radius, 0, range}, "line", gizmo_const.COLOR.GRAY, true)
         ecs.method.set_parent(line3, root)
-        local line4 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {0, 0, range}, "line", gizmo_const.COLOR_GRAY, true)
+        local line4 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {0, 0, range}, "line", gizmo_const.COLOR.GRAY, true)
         ecs.method.set_parent(line4, root)
         m.spot.eid = {line0, line1, line2, line3, line4, c0}
     else

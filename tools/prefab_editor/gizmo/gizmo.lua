@@ -9,35 +9,35 @@ local gizmo_const = require "gizmo.const"
 local gizmo = {
     mode = gizmo_const.SELECT,
 	--move
-	tx = {dir = gizmo_const.DIR_X, color = gizmo_const.COLOR_X},
-	ty = {dir = gizmo_const.DIR_Y, color = gizmo_const.COLOR_Y},
-	tz = {dir = gizmo_const.DIR_Z, color = gizmo_const.COLOR_Z},
-	txy = {dir = gizmo_const.DIR_Z, color = gizmo_const.COLOR_Z_ALPHA, area = right_top},
-	tyz = {dir = gizmo_const.DIR_X, color = gizmo_const.COLOR_X_ALPHA, area = right_top},
-	tzx = {dir = gizmo_const.DIR_Y, color = gizmo_const.COLOR_Y_ALPHA, area = right_top},
+	tx = {dir = gizmo_const.DIR_X, color = gizmo_const.COLOR.X},
+	ty = {dir = gizmo_const.DIR_Y, color = gizmo_const.COLOR.Y},
+	tz = {dir = gizmo_const.DIR_Z, color = gizmo_const.COLOR.Z},
+	txy = {dir = gizmo_const.DIR_Z, color = gizmo_const.COLOR.Z_ALPHA, area = right_top},
+	tyz = {dir = gizmo_const.DIR_X, color = gizmo_const.COLOR.X_ALPHA, area = right_top},
+	tzx = {dir = gizmo_const.DIR_Y, color = gizmo_const.COLOR.Y_ALPHA, area = right_top},
 	--rotate
-	rx = {dir = gizmo_const.DIR_X, color = gizmo_const.COLOR_X},
-	ry = {dir = gizmo_const.DIR_Y, color = gizmo_const.COLOR_Y},
-	rz = {dir = gizmo_const.DIR_Z, color = gizmo_const.COLOR_Z},
-	rw = {dir = gizmo_const.DIR_Z, color = gizmo_const.COLOR_GRAY},
+	rx = {dir = gizmo_const.DIR_X, color = gizmo_const.COLOR.X},
+	ry = {dir = gizmo_const.DIR_Y, color = gizmo_const.COLOR.Y},
+	rz = {dir = gizmo_const.DIR_Z, color = gizmo_const.COLOR.Z},
+	rw = {dir = gizmo_const.DIR_Z, color = gizmo_const.COLOR.GRAY},
 	--scale
-	sx = {dir = gizmo_const.DIR_X, color = gizmo_const.COLOR_X},
-	sy = {dir = gizmo_const.DIR_Y, color = gizmo_const.COLOR_Y},
-	sz = {dir = gizmo_const.DIR_Z, color = gizmo_const.COLOR_Z},
+	sx = {dir = gizmo_const.DIR_X, color = gizmo_const.COLOR.X},
+	sy = {dir = gizmo_const.DIR_Y, color = gizmo_const.COLOR.Y},
+	sz = {dir = gizmo_const.DIR_Z, color = gizmo_const.COLOR.Z},
 }
 
 local function highlight_axis(axis)
-	imaterial.set_property(axis.eid[1], "u_color", gizmo_const.HIGHTLIGHT_COLOR)
-	imaterial.set_property(axis.eid[2], "u_color", gizmo_const.HIGHTLIGHT_COLOR)
+	imaterial.set_property(axis.eid[1], "u_color", gizmo_const.COLOR.HIGHLIGHT)
+	imaterial.set_property(axis.eid[2], "u_color", gizmo_const.COLOR.HIGHLIGHT)
 end
 
 local function gray_axis(axis)
-	imaterial.set_property(axis.eid[1], "u_color", gizmo_const.COLOR_GRAY_ALPHA)
-	imaterial.set_property(axis.eid[2], "u_color", gizmo_const.COLOR_GRAY_ALPHA)
+	imaterial.set_property(axis.eid[1], "u_color", gizmo_const.COLOR.GRAY_ALPHA)
+	imaterial.set_property(axis.eid[2], "u_color", gizmo_const.COLOR.GRAY_ALPHA)
 end
 
 function gizmo:highlight_axis_plane(axis_plane)
-	imaterial.set_property(axis_plane.eid[1], "u_color", gizmo_const.HIGHTLIGHT_COLOR_ALPHA)
+	imaterial.set_property(axis_plane.eid[1], "u_color", gizmo_const.COLOR.HIGHLIGHT_ALPHA)
 	if axis_plane == self.tyz then
 		highlight_axis(self.ty)
 		highlight_axis(self.tz)
@@ -241,7 +241,7 @@ function gizmo:reset_scale_axis_color()
 	imaterial.set_property(self.sy.eid[2], uname, self.sy.color)
 	imaterial.set_property(self.sz.eid[1], uname, self.sz.color)
 	imaterial.set_property(self.sz.eid[2], uname, self.sz.color)
-	imaterial.set_property(self.uniform_scale_eid, uname, gizmo_const.COLOR_GRAY)
+	imaterial.set_property(self.uniform_scale_eid, uname, gizmo_const.COLOR.GRAY)
 end
 
 return gizmo
