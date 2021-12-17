@@ -198,12 +198,22 @@ function iobj_motion.rotate_forward_vector(e, rotateX, rotateY)
         local scene = get_scene(e)
         local srt = scene.srt
         local srtmat = math3d.matrix(srt)
-        local viewdir = rotate_forword_vector(srtmat, rotateX, rotateY)
+        local viewdir = math3d.normalize(rotate_forword_vector(srtmat, rotateX, rotateY))
+        
         if scene.updir then
             srtmat = math3d.inverse(math3d.lookto(srt.t, viewdir, scene.updir))
         else
-            local xaxis = math3d.isequal(viewdir, mc.ZAXIS) and mc.XAXIS or math3d.cross(viewdir, mc.ZAXIS)
-            local yaxis = math3d.cross(viewdir, xaxis)
+            local xaxis, yaxis
+            if math3d.isequal(mc.YAXIS, viewdir) then
+                xaxis = mc.XAXIS
+                yaxis = mc.NZAXIS
+            elseif math3d.isequal(mc.NYAXIS, viewdir) then
+                xaxis = mc.XAXIS
+                yaxis = mc.ZAXIS
+            else
+                xaxis = math3d.normalize(math3d.cross(mc.YAXIS, viewdir))
+                yaxis = math3d.cross(viewdir, xaxis)
+            end
             srtmat = math3d.set_columns(mc.IDENTITY_MAT, xaxis, yaxis, viewdir, srt.t)
         end
 

@@ -4,7 +4,7 @@ local w         = world.w
 
 local math3d    = require "math3d"
 local mathpkg   = import_package "ant.math"
-local mu        = mathpkg.util
+local mu, mc    = mathpkg.util, mathpkg.constant
 
 local defcomp 	= import_package "ant.general".default
 
@@ -19,8 +19,9 @@ ic.find_camera = find_camera
 
 local defaultcamera<const> = {
     name = "default_camera",
-    eyepos  = {0, 0, 0, 1},
-    viewdir = {0, 0, 1, 0},
+    eyepos  = mc.ZERO_PT,
+    viewdir = mc.ZAXIS,
+    updir   = mc.YAXIS,
     frustum = defcomp.frustum(),
 }
 

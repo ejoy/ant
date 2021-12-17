@@ -72,10 +72,9 @@ function cc_sys:init_world()
 end
 
 function cc_sys:data_changed()
-	local camera_ref = icc.camera()
-
-	if can_rotate(camera_ref) then
-		for _, e in ipairs(mouse_events) do
+	for _, e in ipairs(mouse_events) do
+		local camera_ref = icc.camera()
+		if can_rotate(camera_ref) then
 			for _,_,state,x,y in e:unpack() do
 				if state == "MOVE" and mouse_lastx then
 					local ux = (x - mouse_lastx) / dpi_x * kMouseSpeed
@@ -87,15 +86,17 @@ function cc_sys:data_changed()
 		end
 	end
 
-	if can_orthoview_scale(camera_ref) then
-		for _, delta in mw_mb:unpack() do
+	for _, delta in mw_mb:unpack() do
+		local camera_ref = icc.camera()
+		if can_orthoview_scale(camera_ref) then
 			scale_orthoview(camera_ref, delta)
 		end
 	end
 
-	if can_move(camera_ref) then
+	for _,code,press in eventKeyboard:unpack() do
+		local camera_ref = icc.camera()
 		local keyboard_delta = {0 , 0, 0}
-		for _,code,press in eventKeyboard:unpack() do
+		if can_move(camera_ref) then
 			local delta = (press>0) and kKeyboardSpeed or 0
 			if code == "A" then
 				keyboard_delta[1] = keyboard_delta[1] - delta
