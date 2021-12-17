@@ -248,8 +248,6 @@ function m:create(what, config)
                     filter_state = "main_view|selectable",
                     material = "/pkg/ant.resources/materials/pbr_default.material",
                     mesh = geom_mesh_file[config.type],
-                    render_object = {},
-                    filter_material = {},
                     name = config.type .. gen_geometry_id()
                 }
             }
@@ -427,19 +425,18 @@ function m:on_prefab_ready(prefab)
     end
 
     local function sub_tree(e, idx)
-        local sub_tree = {}
-        local sub_tree_set = {}
-        sub_tree_set[e.scene.id] = true
+        local st = {}
+        local st_set = {}
+        st_set[e.scene.id] = true
         for i = idx, #entitys do
             local scene = entitys[i].scene
-            if sub_tree_set[scene.parent] then
-                sub_tree_set[scene.id] = true
-                sub_tree[#sub_tree + 1] = entitys[i]
-            else
+            if st_set[scene.parent] == nil then
                 break
             end
+            st_set[scene.id] = true
+            st[#st + 1] = entitys[i]
         end
-        return sub_tree
+        return st
     end
 
     local node_map = {}

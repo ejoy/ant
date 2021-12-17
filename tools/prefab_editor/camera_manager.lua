@@ -162,18 +162,10 @@ end
 
 function camera_mgr.create_camera()
     local mc = irq.main_camera()
-    local main_frustum = icamera.get_frustum(mc)
-    local info = {
-        eyepos = {math3d.index(iom.get_position(mc), 1, 2, 3)},
-        viewdir = {math3d.index(iom.get_direction(mc), 1, 2, 3)},
-        frustum = {n = default_near_clip, f = default_far_clip, aspect = main_frustum.aspect, fov = main_frustum.fov },
-        updir = {0, 1, 0},
-        name = gen_camera_name()
-    }
+    w:sync("camera:in scene:in", mc)
 
-    local viewmat = math3d.lookto(info.eyepos, info.viewdir, info.updir)
-    --local srt = math3d.ref(math3d.matrix(math3d.inverse(viewmat)))
-    local s, r, t = math3d.srt(math3d.matrix(math3d.inverse(viewmat)))
+    local main_frustum = mc.camera.frustum
+    local srt = mc.camera.scene.srt
     local template = {
         policy = {
             "ant.general|name",
@@ -183,28 +175,28 @@ function camera_mgr.create_camera()
         data = {
             reference = true,
             camera = {
-                frustum = info.frustum,
-                clip_range = info.clip_range,
-                dof = info.dof,
-                eyepos = info.eyepos,
-                viewdir = info.viewdir,
-                updir = info.updir,
+                frustum = {
+                    n = default_near_clip,
+                    f = default_far_clip,
+                    aspect = main_frustum.aspect,
+                    fov = main_frustum.fov
+                },
             },
-            name = info.name or "DEFAULT_CAMERA",
+            name = gen_camera_name(),
             scene = {
                 srt = {
-                    r = {math3d.index(r, 1, 2, 3, 4)},
-                    s = {math3d.index(s, 1, 2, 3)},
-                    t = {math3d.index(t, 1, 2, 3)},
-                }
+                    r = math3d.tovalue(srt.r),
+                    t = {math3d.index(srt.t, 1, 2, 3)},
+                },
+                updir   = {0, 1, 0, 0},
             },
             tag = {"camera"},
         }
     }
-    local runtime_tpl = utils.deep_copy(template)
-    runtime_tpl.data.on_ready = camera_mgr.on_camera_ready
-    local cam = ecs.create_entity(runtime_tpl)
-    return cam, template
+    local cameraref = ecs.create_entity(utils.deep_copy(template))
+    cameraref.on_ready = camera_mgr.on_camera_ready
+    world:create_object(cameraref)
+    return cameraref, template
 end
 
 function camera_mgr.bind_recorder(eid, recorder)
