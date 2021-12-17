@@ -408,17 +408,31 @@ static void GenerateMouseEventParameters(EventDictionary& parameters, const Poin
 }
 
 bool Document::ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state) {
+	if (!focus)
+		return false;
 	EventDictionary parameters;
 	GenerateKeyEventParameters(parameters, key);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
-	return body->DispatchEvent(EventId::Keydown, parameters);
+	return focus->DispatchEvent(EventId::Keydown, parameters);
 }
 
 bool Document::ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state) {
+	if (!focus)
+		return false;
 	EventDictionary parameters;
 	GenerateKeyEventParameters(parameters, key);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
-	return body->DispatchEvent(EventId::Keyup, parameters);
+	return focus->DispatchEvent(EventId::Keyup, parameters);
+}
+
+bool Document::ProcessChar(int character)
+{
+	if (!focus)
+		return false;
+
+	EventDictionary parameters;
+	parameters["text"] = character;
+	return focus->DispatchEvent(EventId::Textinput, parameters);
 }
 
 void Document::ProcessMouseMove(MouseButton button, int x, int y, int key_modifier_state) {
@@ -463,6 +477,7 @@ void Document::ProcessMouseButtonDown(MouseButton button, int x, int y, int key_
 	if (button == MouseButton::Left) {
 		active_chain.insert(active_chain.end(), hover_chain.begin(), hover_chain.end());
 	}
+	focus = active;
 }
 
 void Document::ProcessMouseButtonUp(MouseButton button, int x, int y, int key_modifier_state) {

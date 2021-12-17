@@ -111,11 +111,18 @@ function S.touch(x, y, _, state)
     end
 end
 
-function S.keyboard(char, press, state)
+function S.keyboard(key, press, state)
     if not context then
         return
     end
-    rmlui.ContextProcessKey(context, char, press)
+    rmlui.ContextProcessKey(context, key, press)
+end
+
+function S.char(char)
+    if not context then
+        return
+    end
+    rmlui.ContextProcessChar(context, char)
 end
 
 function S.debugger(open)
@@ -142,6 +149,6 @@ S.close = windowManager.close
 S.postMessage = windowManager.postMessage
 S.preload_dir = filemanager.preload_dir
 
-ltask.send(ServiceWindow, "subscribe", "mouse", "touch", "keyboard")
+ltask.send(ServiceWindow, "subscribe", "mouse", "touch", "keyboard", "char")
 
 return S

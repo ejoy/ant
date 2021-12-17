@@ -28,6 +28,7 @@ public:
 
 	bool ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state);
 	bool ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state);
+	bool ProcessChar(int character);
 	bool ProcessMouseMove(MouseButton button, int x, int y, int key_modifier_state);
 	bool ProcessMouseButtonDown(MouseButton button, int x, int y, int key_modifier_state);
 	bool ProcessMouseButtonUp(MouseButton button, int x, int y, int key_modifier_state);

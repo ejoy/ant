@@ -5,6 +5,7 @@
 #include "../Include/RmlUi/ElementUtilities.h"
 #include "../Include/RmlUi/Factory.h"
 #include "../Include/RmlUi/RenderInterface.h"
+#include "../Include/RmlUi/StringUtilities.h"
 #include "DataModel.h"
 #include "EventDispatcher.h"
 #include "PluginRegistry.h"
@@ -114,6 +115,14 @@ bool Context::ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state) {
 		return false;
 	}
 	return focus->ProcessKeyUp(key, key_modifier_state);
+}
+
+bool Context::ProcessChar(int character)
+{
+	if (!focus) {
+		return false;
+	}
+	return focus->ProcessChar(character);
 }
 
 bool Context::ProcessMouseMove(MouseButton button, int x, int y, int key_modifier_state) {

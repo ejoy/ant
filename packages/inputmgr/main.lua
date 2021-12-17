@@ -21,6 +21,9 @@ local function create(world, type)
             SYS		= (state & 0x08) ~= 0,
         }}
     end
+    function ev.char(char)
+        world:pub {"char", char}
+    end
     function ev.size(w, h)
         world:pub {"resize", w, h}
     end
