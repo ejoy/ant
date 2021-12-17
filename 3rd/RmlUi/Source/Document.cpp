@@ -80,11 +80,13 @@ class DocumentHtmlHandler: public HtmlHandler {
 	Element*              m_parent = nullptr;
 	Element*              m_current = nullptr;
 	size_t                m_line = 0;
+	bool				  m_inner_xml = false;
 
 public:
 	DocumentHtmlHandler(Document& doc)
 		: m_doc(doc)
 	{}
+	void OnInnerXML(bool inner) override { m_inner_xml = inner; }
 	void OnDocumentBegin() override {}
 	void OnDocumentEnd() override {
 		if (m_style_sheet) {
@@ -92,6 +94,9 @@ public:
 		}
 	}
 	void OnElementBegin(const char* szName) override {
+		if (m_inner_xml) {
+			return;
+		}
 		m_attributes.clear();
 
 		if (!m_current && szName == "body"sv) {
@@ -106,14 +111,22 @@ public:
 		m_current = new Element(&m_doc, szName);
 	}
 	void OnElementClose() override {
+		if (m_inner_xml) {
+			return;
+		}
 		if (m_parent && m_current) {
 			m_parent->AppendChild(ElementPtr(m_current));
 		}
 	}
-	void OnElementEnd(const  char* szName) override {
-		if (!m_current) {
+	void OnElementEnd(const  char* szName, const std::string& inner_xml_data) override {
+		if (!m_current || m_inner_xml) {
 			return;
 		}
+
+		if (!inner_xml_data.empty()) {
+			ElementUtilities::ApplyStructuralDataViews(m_current, inner_xml_data);
+		}
+
 		if (m_stack.empty()) {
 			m_current = nullptr;
 		}
@@ -136,10 +149,13 @@ public:
 			}
 		}
 		else {
-			OnElementEnd(szName);
+			OnElementEnd(szName, {});
 		}
 	}
 	void OnAttribute(const char* szName, const char* szValue) override {
+		if (m_inner_xml) {
+			return;
+		}
 		if (m_current) {
 			m_current->SetAttribute(szName, szValue);
 		}
@@ -149,6 +165,9 @@ public:
 	}
 	void OnTextBegin() override {}
 	void OnTextEnd(const char* szValue) override {
+		if (m_inner_xml) {
+			return;
+		}
 		if (m_current) {
 			if (isDataViewElement(m_current) && ElementUtilities::ApplyStructuralDataViews(m_current, szValue)) {
 				return;
@@ -265,11 +284,13 @@ const std::shared_ptr<StyleSheet>& Document::GetStyleSheet() const
 }
 
 void Document::Show() {
+	show_ = true;
 	GetContext()->SetFocus(this);
 	body->DispatchEvent(EventId::Show, EventDictionary());
 }
 
 void Document::Hide() {
+	show_ = false;
 	body->DispatchEvent(EventId::Hide, EventDictionary());
 	if (GetContext()->GetFocus() == this) {
 		GetContext()->SetFocus(nullptr);
@@ -281,6 +302,12 @@ void Document::Close()
 {
 	if (context != nullptr)
 		context->UnloadDocument(this);
+}
+
+bool Document::ClickTest(const Point& point) const
+{
+	return body->GetElementAtPoint(point) != nullptr;
+	//return body->IsPointWithinElement(point);
 }
 
 ElementPtr Document::CreateElement(const std::string& name)

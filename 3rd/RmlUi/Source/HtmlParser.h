@@ -9,7 +9,7 @@ public:
     virtual void OnDocumentEnd() {}
     virtual void OnElementBegin(const char* szName) {}
     virtual void OnElementClose() {}
-    virtual void OnElementEnd(const  char* szName) {}
+    virtual void OnElementEnd(const  char* szName, const std::string& inner_xml_data = {}) {}
     virtual void OnCloseSingleElement(const  char* szName) {}
     virtual void OnAttribute(const char* szName, const char* szValue) {}
     virtual void OnTextBegin() {}
@@ -19,6 +19,8 @@ public:
     virtual void OnScriptEnd(const char* szValue) {}
     virtual void OnStyleBegin(unsigned int line) {}
     virtual void OnStyleEnd(const char* szValue) {}
+    virtual void OnInnerXML(bool inner) {}
+    virtual bool IsEmbed() { return false; }
 };
 
 enum class HtmlError {
@@ -78,7 +80,9 @@ private:
     HtmlHandler* m_handler = nullptr;
     std::string_view m_buf;
     size_t           m_pos;
-
+    bool             m_inner_xml_data = false;
+    size_t           m_inner_xml_data_begin;
+    std::string      m_inner_xml_tag;
     void UndoChar();
     char GetChar();
     void SkipWhiteSpace();

@@ -123,6 +123,35 @@ lContextUnloadDocument(lua_State* L) {
 }
 
 static int
+lContextProcessKey(lua_State* L) {
+	luabind::setthread(L);
+	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
+	
+	Rml::Input::KeyIdentifier key;
+	char ch = (char)luaL_checkinteger(L, 2);
+	if (ch >= 'A' && ch <= 'Z') {
+		key = Rml::Input::KeyIdentifier(Rml::Input::KI_A + ch - 'A');
+	}
+	else if (ch >= '1' && ch <= '9') {
+		key = Rml::Input::KeyIdentifier(Rml::Input::KI_1 + ch - '1');
+	}
+	else if (ch == '0') {
+		key = Rml::Input::KI_0;
+	}
+	int press = (int)luaL_checkinteger(L, 3);
+	if (press) {
+		ctx->ProcessKeyDown(key, 0);
+	}
+	else {
+		ctx->ProcessKeyUp(key, 0);
+	}
+	return 0;
+}
+
+// bool ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state);
+// bool ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state);
+
+static int
 lContextProcessMouseMove(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
@@ -486,6 +515,7 @@ luaopen_rmlui(lua_State* L) {
 	luaL_Reg l[] = {
 		{ "ContextLoadDocument", lContextLoadDocument },
 		{ "ContextUnloadDocument", lContextUnloadDocument },
+		{ "ContextProcessKey", lContextProcessKey },
 		{ "ContextProcessMouseMove", lContextProcessMouseMove },
 		{ "ContextProcessMouseButtonDown", lContextProcessMouseButtonDown },
 		{ "ContextProcessMouseButtonUp", lContextProcessMouseButtonUp },

@@ -453,6 +453,11 @@ function m:on_prefab_ready(prefab)
             self.entities[#self.entities + 1] = sub_root
 
             local children = sub_tree(parent, j)
+            for _, child in ipairs(children) do
+                if child.scene.parent == parent.scene.id then
+                    ecs.method.set_parent(child, sub_root)
+                end
+            end
             j = j + #children
             node_map[sub_root] = {template = {filename = pt.prefab, children = children, name = prefab_name, editor = pt.editor or false}, parent = parent}
         else
@@ -533,6 +538,7 @@ local function on_remove_entity(e)
     -- end
     local teml = hierarchy:get_template(e)
     if teml and teml.children then
+        hierarchy:clear_adapter(e)
         remove_entitys(teml.children)
         -- for _, e in ipairs(teml.children) do
         --     world:remove_entity(e)
@@ -621,16 +627,29 @@ function m:add_prefab(filename)
     end
 
     local parent = gizmo.target_eid or self.root
-    local prefab_name = gen_prefab_name()
-    local v_root = create_simple_entity(prefab_name)
-    ecs.method.set_parent(v_root, parent)
-
-    self.entities[#self.entities+1] = v_root
-    local instance = ecs.create_instance(prefab_filename)
-
-    ecs.method.set_parent(instance.root, v_root)
-    set_select_adapter(instance.tag["*"], v_root)
-    hierarchy:add(v_root, {filename = prefab_filename, name = prefab_name, children = instance.tag["*"], editor = false}, parent)
+    local prefab = ecs.create_instance(prefab_filename)
+    prefab.on_ready = function(inst)
+        local prefab_name = gen_prefab_name()
+        local v_root = create_simple_entity(prefab_name)
+        ecs.method.set_parent(v_root, parent)
+        self.entities[#self.entities+1] = v_root
+        local children = inst.tag["*"]
+        for _, child in ipairs(children) do
+            if child.scene.parent == inst.root.scene.id then
+                ecs.method.set_parent(child, v_root)
+            end
+        end
+        set_select_adapter(children, v_root)
+        hierarchy:add(v_root, {filename = prefab_filename, name = prefab_name, children = children, editor = false}, parent)
+    end
+    function prefab:on_message(msg)
+        --print(object, msg)
+    end
+    
+    function prefab:on_update()
+        --print "update"
+    end
+    world:create_object(prefab)
 end
 
 function m:recreate_entity(eid)

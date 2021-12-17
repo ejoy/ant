@@ -30,6 +30,8 @@
 #include "../Include/RmlUi/Context.h"
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/Document.h"
+#include "../Include/RmlUi/Stream.h"
+#include "../Include/RmlUi/StyleSheet.h"
 #include "../Include/RmlUi/ElementText.h"
 #include "../Include/RmlUi/ElementUtilities.h"
 #include "../Include/RmlUi/EventListenerInstancer.h"
@@ -41,6 +43,7 @@
 #include "PluginRegistry.h"
 #include "PropertyParserColour.h"
 #include "StyleSheetFactory.h"
+#include "HtmlParser.h"
 
 #include <algorithm>
 
@@ -134,6 +137,121 @@ void Factory::Shutdown()
 
 	default_instancers.reset();
 }
+// TODO: remove this function, duplicate code in Document.cpp
+static bool isDataViewElement(Element* e) {
+	for (const std::string& name : Factory::GetStructuralDataViewAttributeNames()) {
+		if (e->GetTagName() == name) {
+			return true;
+		}
+	}
+	return false;
+}
+
+class EmbedHtmlHandler : public HtmlHandler {
+	Document*				m_doc{ nullptr };
+	ElementAttributes		m_attributes;
+	std::shared_ptr<StyleSheet> m_style_sheet;
+	std::stack<Element*>	m_stack;
+	Element*				m_parent{ nullptr };
+	Element*				m_current{ nullptr };
+	size_t					m_line{ 0 };
+public:
+	EmbedHtmlHandler(Element* current)
+		: m_current{ current }
+	{
+		m_doc = m_current->GetOwnerDocument();
+	}
+	bool IsEmbed() override { return true; }
+	void OnDocumentEnd() override {
+		if (m_style_sheet) {
+			m_doc->SetStyleSheet(std::move(m_style_sheet));
+		}
+	}
+	void OnElementBegin(const char* szName) override {
+		m_attributes.clear();
+		if (!m_current) {
+			return;
+		}
+		m_stack.push(m_current);
+		m_parent = m_current;
+		m_current = new Element(m_doc, szName);
+	}
+	void OnElementClose() override {
+		if (m_parent && m_current) {
+			m_parent->AppendChild(ElementPtr(m_current));
+		}
+	}
+	void OnElementEnd(const  char* szName, const std::string& inner_xml_data) override {
+		if (!m_current) {
+			return;
+		}
+		if (m_stack.empty()) {
+			m_current = nullptr;
+		}
+		else {
+			m_current = m_stack.top();
+			m_stack.pop();
+		}
+	}
+	void OnCloseSingleElement(const  char* szName) override {
+		OnElementEnd(szName, {});
+	}
+	void OnAttribute(const char* szName, const char* szValue) override {
+		if (m_current) {
+			m_current->SetAttribute(szName, szValue);
+		}
+		else {
+			m_attributes.emplace(szName, szValue);
+		}
+	}
+	void OnTextEnd(const char* szValue) override {
+		if (m_current) {
+			if (isDataViewElement(m_current) && ElementUtilities::ApplyStructuralDataViews(m_current, szValue)) {
+				return;
+			}
+			Factory::InstanceElementText(m_current, szValue);
+		}
+	}
+	
+	void OnStyleBegin(unsigned int line) override {
+		m_line = line;
+	}
+	void LoadInlineStyle(const std::string& content, const std::string& source_path, int line) {
+		std::unique_ptr<StyleSheet> inline_sheet = std::make_unique<StyleSheet>();
+		auto stream = std::make_unique<Stream>(source_path, (const uint8_t*)content.data(), content.size());
+		if (inline_sheet->LoadStyleSheet(stream.get(), line)) {
+			if (m_style_sheet) {
+				std::shared_ptr<StyleSheet> combined_sheet = m_style_sheet->CombineStyleSheet(*inline_sheet);
+				m_style_sheet = combined_sheet;
+			}
+			else
+				m_style_sheet = std::move(inline_sheet);
+		}
+		stream.reset();
+	}
+	void LoadExternalStyle(const std::string& source_path) {
+		std::shared_ptr<StyleSheet> sub_sheet = StyleSheetFactory::GetStyleSheet(source_path);
+		if (sub_sheet) {
+			if (m_style_sheet) {
+				std::shared_ptr<StyleSheet> combined_sheet = m_style_sheet->CombineStyleSheet(*sub_sheet);
+				m_style_sheet = std::move(combined_sheet);
+			}
+			else
+				m_style_sheet = sub_sheet;
+		}
+		else
+			Log::Message(Log::Level::Error, "Failed to load style sheet %s.", source_path.c_str());
+	}
+	void OnStyleEnd(const char* szValue) override {
+		auto it = m_attributes.find("path");
+		if (it == m_attributes.end()) {
+			LoadInlineStyle(szValue, m_doc->GetSourceURL(), m_line);
+		}
+		else {
+			LoadExternalStyle(it->second);
+		}
+	}
+};
 
 // Instances a single text element containing a string.
 bool Factory::InstanceElementText(Element* parent, const std::string& str)
@@ -143,7 +261,10 @@ bool Factory::InstanceElementText(Element* parent, const std::string& str)
 	if (std::all_of(str.begin(), str.end(), &StringUtilities::IsWhitespace))
 		return true;
 
+	// See if we need to parse it as RML, and whether the text contains data expressions (curly brackets).
+	bool parse_as_rml = false;
 	bool has_data_expression = false;
+
 	bool inside_brackets = false;
 	char previous = 0;
 	for (const char c : str) {
@@ -156,20 +277,39 @@ bool Factory::InstanceElementText(Element* parent, const std::string& str)
 		else if (c == '{' && previous == '{') {
 				inside_brackets = true;
 		}
+		else if (c == '<') {
+			parse_as_rml = true;
+			break;
+		}
 		previous = c;
 	}
 
-	TextPtr text(new ElementText(parent->GetOwnerDocument(), str));
-	if (!text) {
-		Log::Message(Log::Level::Error, "Failed to instance text element '%s', instancer returned nullptr.", str.c_str());
-		return false;
+	if (parse_as_rml) {
+// 		Context* context = parent->GetContext();
+// 		std::string tag = context ? context->GetDocumentsBaseTag() : "body";
+
+// 		std::string tag = "body";
+// 		std::string data = "<body>\n";
+// 		data += str;
+// 		std::string close_tag = "\n</body>";
+		HtmlParser parser;
+		EmbedHtmlHandler handler(parent);
+		parser.Parse(str, &handler);
 	}
-	if (has_data_expression) {
-		ElementAttributes attributes;
-		attributes.emplace("data-text", std::string());
-		text->SetAttributes(attributes);
+	else {
+		TextPtr text(new ElementText(parent->GetOwnerDocument(), str));
+		if (!text) {
+			Log::Message(Log::Level::Error, "Failed to instance text element '%s', instancer returned nullptr.", str.c_str());
+			return false;
+		}
+		if (has_data_expression) {
+			ElementAttributes attributes;
+			attributes.emplace("data-text", std::string());
+			text->SetAttributes(attributes);
+		}
+		parent->AppendChild(std::move(text));
 	}
-	parent->AppendChild(std::move(text));
+	
 	return true;
 }
 

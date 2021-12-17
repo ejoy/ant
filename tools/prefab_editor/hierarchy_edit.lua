@@ -190,6 +190,13 @@ function hierarchy:get_template(eid)
     return self.all[eid] and self.all[eid].template or nil
 end
 
+function hierarchy:clear_adapter(e)
+    for _, child in ipairs(self.all[e].children) do
+        self.select_adaptee[child] = nil
+    end
+    self.select_adaptee[e] = nil
+end
+
 function hierarchy:add_select_adapter(eid, target)
     self.select_adapter[eid] = target
     
