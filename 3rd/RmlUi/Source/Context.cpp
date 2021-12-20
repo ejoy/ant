@@ -79,9 +79,8 @@ void Context::UnloadDocument(Document* document) {
 		if (unloaded_documents[i] == document)
 			return;
 	}
-	
 	if (focus == document) {
-		focus = documents.empty() ? nullptr : documents.back();
+		focus = nullptr;
 	}
 
 	document->body->DispatchEvent(EventId::Unload, EventDictionary());
