@@ -79,9 +79,11 @@ void Context::UnloadDocument(Document* document) {
 		if (unloaded_documents[i] == document)
 			return;
 	}
+	
 	if (focus == document) {
-		focus = nullptr;
+		focus = documents.empty() ? nullptr : documents.back();
 	}
+
 	document->body->DispatchEvent(EventId::Unload, EventDictionary());
 	PluginRegistry::NotifyDocumentDestroy(document);
 	unloaded_documents.push_back(document);
@@ -134,9 +136,6 @@ bool Context::ProcessMouseMove(MouseButton button, int x, int y, int key_modifie
 }
 
 bool Context::ProcessMouseButtonDown(MouseButton button, int x, int y, int key_modifier_state) {
-	if (!focus) {
-		return false;
-	}
 	auto it = documents.rbegin();
 	while (it != documents.rend()) {
 		if ((*it)->IsShow() && (*it)->ClickTest({ (float)x, (float)y })) {
@@ -144,6 +143,9 @@ bool Context::ProcessMouseButtonDown(MouseButton button, int x, int y, int key_m
 			break;
 		}
 		++it;
+	}
+	if (!focus) {
+		return false;
 	}
 	focus->ProcessMouseButtonDown(button, x, y, key_modifier_state);
 	return true;
