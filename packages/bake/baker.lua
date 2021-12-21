@@ -31,13 +31,9 @@ local bake_fbw, bake_fbh, fb_hemi_unit_size = bake.framebuffer_size()
 local fb_hemi_half_size<const> = fb_hemi_unit_size/2
 
 local downsample_viewid_count<const> = 10 --max 1024x1024->2^10
-local lightmap_downsample_viewids = viewidmgr.alloc_viewids(downsample_viewid_count, "lightmap_ds")
-local lightmap_viewid<const> = lightmap_downsample_viewids[1]
---check is successive
-for sampleidx, viewid in ipairs(lightmap_downsample_viewids) do
-    assert(viewid == lightmap_viewid+sampleidx-1)
-end
-local lightmap_storage_viewid<const> = viewidmgr.generate "lightmap_storage"
+local lightmap_viewid<const> = viewidmgr.get "lightmap_ds"
+viewidmgr.check_range("lightmap_ds", downsample_viewid_count)
+local lightmap_storage_viewid<const> = viewidmgr.get "lightmap_storage"
 
 local function default_weight()
     return 1.0

@@ -1,47 +1,59 @@
 local viewid_pool = {}; viewid_pool.__index = viewid_pool
 
-local max_viewid<const>				 = 256
-local shadow_csm_start_viewid<const> = 2
-local shadow_omni_start_viewid<const> = shadow_csm_start_viewid+4
-local max_uieditor<const>			 = 32
+local bgfx = require "bgfx"
 
+local max_viewid<const>					= 256
+local bloom_chain_count<const>			= 4
+local lightmap_ds_count<const>			= 10
+local current_viewid = 1
+local function alloc_id(count)
+	count = count or 1
+	local c = current_viewid
+	current_viewid = c + count
+	return c
+end
+
+-- if we expect viewid is in order, we should mark here, and *NOT* use generate method to alloc viewid
 local bindings = {
-	csm_fb		= shadow_csm_start_viewid - 1,
-	csm1 		= shadow_csm_start_viewid + 0,
-	csm2 		= shadow_csm_start_viewid + 1,
-	csm3 		= shadow_csm_start_viewid + 2,
-	csm4 		= shadow_csm_start_viewid + 3,
-	omni_Green	= shadow_omni_start_viewid + 0,
-	omni_Yellow = shadow_omni_start_viewid + 1,
-	omni_Blue	= shadow_omni_start_viewid + 2,
-	omni_Red	= shadow_omni_start_viewid + 3,
-	ibl			= 10,
-	depth		= 29,
-	main_view 	= 30,
+	csm_fb		= alloc_id(),
+	csm1 		= alloc_id(),
+	csm2 		= alloc_id(),
+	csm3 		= alloc_id(),
+	csm4 		= alloc_id(),
+	omni_Green	= alloc_id(),
+	omni_Yellow = alloc_id(),
+	omni_Blue	= alloc_id(),
+	omni_Red	= alloc_id(),
+	ibl			= alloc_id(),
+	depth		= alloc_id(),
+	main_view 	= alloc_id(),
 
 	--start postprocess
-	resolve		= 40,
-	copy_scene	= 41,
-	postprocess_obj= 49,
-	tonemapping = 50,
+	resolve		= alloc_id(),
+	copy_scene	= alloc_id(),
+	postprocess_obj= alloc_id(),
+	bloom_ds	= alloc_id(bloom_chain_count),
+	bloom_us	= alloc_id(bloom_chain_count),
+	tonemapping = alloc_id(),
 	--end postprocess
 
-	pickup 		= 51,
-	pickup_blit = 52,
+	lightmap_ds	= alloc_id(lightmap_ds_count),
+	lightmap_storage=alloc_id(),
+	pickup 		= alloc_id(),
+	pickup_blit = alloc_id(),
 
-	effect_view = max_viewid - max_uieditor - 4,
-	uiruntime	= max_viewid - max_uieditor - 3,
-	blit		= max_viewid - max_uieditor - 2,
-
-	uieditor	= max_viewid - max_uieditor - 1,
+	effect_view = alloc_id(),
+	uiruntime	= alloc_id(),
+	uieditor	= alloc_id(),
 }
 
 local pool = {}
-for _, v in pairs(bindings) do
+for n, v in pairs(bindings) do
 	if pool[v] then
 		error(("duplicate viewid defined:%d"):format(v))
 	end
 	pool[v] = true
+	bgfx.set_view_name(v, n)
 end
 
 local function find_valid_viewid(afterviewid)
@@ -52,27 +64,15 @@ local function find_valid_viewid(afterviewid)
 	return vid < max_viewid and vid or nil
 end
 
-local function alloc_viewids(num, basename, afterviewid)
-	local vids = {}
-	local vid = afterviewid or bindings.main_view
-	for i=1, num do
-		vid = find_valid_viewid(vid)
-		if vid then
-			local n			= basename .. i
-			bindings[n]		= vid
-			pool[vid]		= true
-			vids[#vids+1]	= vid
-		else
-			error("not enough viewid")
+function viewid_pool.check_range(name, range)
+	local viewid = bindings[name]
+	for ii=0, range-1 do
+		local id = viewid+ii
+		if pool[id] then
+			error(("viewid:%s, range:%d, is not continuous"):format(name, range))
 		end
 	end
-
-	return vids
 end
-
---alloc_viewids(30, "postprocess", 100)
-
-viewid_pool.alloc_viewids = alloc_viewids
 
 function viewid_pool.generate(name, afterviewid)
 	afterviewid = afterviewid or viewid_pool.get "main_view"

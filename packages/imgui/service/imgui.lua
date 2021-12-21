@@ -107,12 +107,6 @@ local function updateIO()
 	end
 end
 
-function message.viewid()
-	local viewid = viewidmgr.generate("imgui", viewidmgr.get "uieditor")
-	viewids[#viewids+1] = viewid
-	return viewid
-end
-
 local dispatch = {}
 for n, f in pairs(message) do
 	dispatch[n] = function (...)
