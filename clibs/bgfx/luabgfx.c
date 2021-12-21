@@ -3956,17 +3956,70 @@ create_fb_mrt(lua_State *L) {
 	if (n == 0) {
 		luaL_error(L, "At lease one frame buffer");
 	}
+
+	if (n > 8){
+		luaL_error(L, "Too many attachment");
+	}
 	int destroy = lua_toboolean(L, 2);
-	bgfx_texture_handle_t handles[V(n)];
+	bgfx_attachment_t attachments[8];
 	int i;
 	for (i=0;i<n;i++) {
-		if (lua_geti(L, 1, i+1) != LUA_TNUMBER) {
-			luaL_error(L, "Invalid texture handle id");
+		if (lua_geti(L, 1, i+1) == LUA_TNUMBER) {
+			attachments[i].handle.idx = BGFX_LUAHANDLE_ID(TEXTURE, lua_tointeger(L, -1));
+			lua_pop(L, 1);
+
+			attachments[i].access = BGFX_ACCESS_WRITE;
+			attachments[i].mip = 0;
+			attachments[i].layer = 0;
+			attachments[i].numLayers = 1;
+			attachments[i].resolve = BGFX_RESOLVE_AUTO_GEN_MIPS;
+		} else {
+			lua_pop(L, 1);
+			if (lua_getfield(L, 1, "handle") != LUA_TNUMBER){
+				luaL_error(L, "Invalid handle!");
+			}
+			attachments[i].handle.idx =  BGFX_LUAHANDLE_ID(TEXTURE, lua_tointeger(L, -1));
+			lua_pop(L, 1);
+
+			if (lua_getfield(L, 1, "access") == LUA_TSTRING){
+				const char* a = lua_tostring(L, -1);
+				if (strcmp(a, "write") == 0){
+					attachments[i].access = BGFX_ACCESS_WRITE;
+				}else if (strcmp(a, "read") == 0){
+					attachments[i].access = BGFX_ACCESS_READ;
+				}else if (strcmp(a, "readwrite") == 0){
+					attachments[i].access = BGFX_ACCESS_READWRITE;
+				}else{
+					luaL_error(L, "Invalid access flags:%s, must be: read, write, readwrite or nil", a);
+				}
+			} else {
+				attachments[i].access = BGFX_ACCESS_WRITE;
+			}
+			lua_pop(L, 1);
+
+			if (lua_getfield(L, 1, "flags") == LUA_TSTRING){
+				const char* r = lua_tostring(L, -1);
+				if (strcmp(r, "g") == 0){
+					attachments[i].resolve = BGFX_RESOLVE_AUTO_GEN_MIPS;
+				} else if (strcmp(r, "") == 0){
+					attachments[i].resolve = BGFX_RESOLVE_NONE;
+				} else {
+					luaL_error(L, "Invalid resolve flags:%s, 'g' for auto generate mipmap in resolve", r);
+				}
+			} else{
+				attachments[i].resolve = BGFX_RESOLVE_AUTO_GEN_MIPS;
+			}
+			lua_pop(L, 1);
+
+			attachments[i].mip = lua_getfield(L, 1, "mip") == LUA_TNUMBER ? (uint16_t)lua_tointeger(L, -1) : 0;
+			lua_pop(L, 1);
+			attachments[i].layer = lua_getfield(L, 1, "layer") == LUA_TNUMBER ? (uint16_t)lua_tointeger(L, -1) : 0;
+			lua_pop(L, 1);
+			attachments[i].numLayers = lua_getfield(L, 1, "numlayer") == LUA_TNUMBER ? (uint16_t)lua_tointeger(L, -1) : 1;
+			lua_pop(L, 1);
 		}
-		handles[i].idx = BGFX_LUAHANDLE_ID(TEXTURE, lua_tointeger(L, -1));
-		lua_pop(L, 1);
 	}
-	return BGFX(create_frame_buffer_from_handles)(n, handles, destroy);
+	return BGFX(create_frame_buffer_from_attachment)(n, attachments, destroy);
 }
 
 static bgfx_frame_buffer_handle_t
