@@ -32,8 +32,14 @@ local function copy_directory(from, to, filter)
     end
 end
 
+local output = ...
+if not output then
+    print("usage: install.lua [output directory]")
+    return
+end
+output = fs.path(output)
+
 local input = fs.path "./"
-local output = fs.path "../ant_release"
 local BIN = fs.exe_path():parent_path()
 local PLAT = BIN:parent_path():filename():string()
 
@@ -85,7 +91,7 @@ if check_need_submit(...) then
 
     local subprocess = require "bee.subprocess"
 
-    local cwd<const> = "../ant_release"
+    local cwd<const> = output
     local function spawn(cmd)
         print("spawn process:", cmd .. table.concat(cmd, " "))
         cmd.stdout = true
