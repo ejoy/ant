@@ -1,0 +1,86 @@
+$input v_texcoord0
+
+#include <bgfx_shader.sh>
+#include "common/postprocess.sh"
+#include "bloom.sh"
+
+void threshold(inout vec3 c) {
+    // threshold everything below 1.0
+    c = max(vec3(0.0), c - u_bloom_threshold);
+    // crush everything above 1
+    float f = max3(c);
+    c *= 1.0 / (1.0 + f * u_bloom_inv_highlight);
+}
+
+vec3 box4x4(vec3 s0, vec3 s1, vec3 s2, vec3 s3) {
+    return (s0 + s1 + s2 + s3) * 0.25;
+}
+
+vec3 box4x4Reinhard(vec3 s0, vec3 s1, vec3 s2, vec3 s3) {
+    float w0 = 1.0 / (1.0 + max3(s0));
+    float w1 = 1.0 / (1.0 + max3(s1));
+    float w2 = 1.0 / (1.0 + max3(s2));
+    float w3 = 1.0 / (1.0 + max3(s3));
+    return (s0 * w0 + s1 * w1 + s2 * w2 + s3 * w3) * (1.0 / (w0 + w1 + w2 + w3));
+}
+
+void main() {
+    float lod = u_bloom_level;
+    vec2 uv = v_texcoord0.xy;
+    vec4 d = vec4(u_bloom_source_size, -u_bloom_source_size) * 0.5;
+
+    vec3 c = textureLod(s_postprocess_input0, uv, lod).rgb;
+
+    vec3 lt = textureLod(s_postprocess_input0, uv + d.zw, lod).rgb;
+    vec3 rt = textureLod(s_postprocess_input0, uv + d.xw, lod).rgb;
+    vec3 rb = textureLod(s_postprocess_input0, uv + d.xy, lod).rgb;
+    vec3 lb = textureLod(s_postprocess_input0, uv + d.zy, lod).rgb;
+
+    vec3 lt2 = textureLodOffset(s_postprocess_input0, uv, lod, ivec2(-1, -1)).rgb;
+    vec3 rt2 = textureLodOffset(s_postprocess_input0, uv, lod, ivec2( 1, -1)).rgb;
+    vec3 rb2 = textureLodOffset(s_postprocess_input0, uv, lod, ivec2( 1,  1)).rgb;
+    vec3 lb2 = textureLodOffset(s_postprocess_input0, uv, lod, ivec2(-1,  1)).rgb;
+
+    vec3 l = textureLodOffset(s_postprocess_input0, uv, lod, ivec2(-1,  0)).rgb;
+    vec3 t = textureLodOffset(s_postprocess_input0, uv, lod, ivec2( 0, -1)).rgb;
+    vec3 r = textureLodOffset(s_postprocess_input0, uv, lod, ivec2( 1,  0)).rgb;
+    vec3 b = textureLodOffset(s_postprocess_input0, uv, lod, ivec2( 0,  1)).rgb;
+
+    // five h4x4 boxes
+    vec3 c0, c1;
+
+    if (u_bloom_level <= 0.5) {
+        if (u_bloom_threshold > 0.0) {
+            // Threshold the first level blur
+            threshold(c);
+            threshold(lt);
+            threshold(rt);
+            threshold(rb);
+            threshold(lb);
+            threshold(lt2);
+            threshold(rt2);
+            threshold(rb2);
+            threshold(lb2);
+            threshold(l);
+            threshold(t);
+            threshold(r);
+            threshold(b);
+        }
+        // Also apply fireflies (flickering) filtering
+        c0  = box4x4Reinhard(lt, rt, rb, lb);
+        c1  = box4x4Reinhard(c, l, t, lt2);
+        c1 += box4x4Reinhard(c, r, t, rt2);
+        c1 += box4x4Reinhard(c, r, b, rb2);
+        c1 += box4x4Reinhard(c, l, b, lb2);
+    } else {
+        // common case
+        c0  = box4x4(lt, rt, rb, lb);
+        c1  = box4x4(c, l, t, lt2);
+        c1 += box4x4(c, r, t, rt2);
+        c1 += box4x4(c, r, b, rb2);
+        c1 += box4x4(c, l, b, lb2);
+    }
+
+    // weighted average of the five boxes
+    gl_FragColor = vec4(c0 * 0.5 + c1 * 0.125, 1.0);
+}
