@@ -49,50 +49,38 @@ local function copy_arg(arg)
 	return t
 end
 
-local function create_fb_handle(rbs, manager_buffer)
-	local myfb = {
-		manager_buffer = manager_buffer,
-	}
-	local rbhandles = {}
-	for idx, rbidx in ipairs(rbs) do
-		myfb[idx] = rbidx
-		rbhandles[#rbhandles+1] = renderbuffers[rbidx].handle
+local function create_fb(attachments)
+	for i=1, #attachments do
+		local att = attachments[i]
+		att[i].handle = mgr.get_rb(att.rbidx)
 	end
-	
-	assert(#rbhandles > 0)
-	myfb.handle = bgfx.create_frame_buffer(rbhandles, manager_buffer)
-	return myfb
+	return bgfx.create_frame_buffer(attachments)
 end
 
-function mgr.create(fb)
-	local myfb
-	if fb.wndhandle then
-		myfb = copy_arg(fb)
-		myfb.handle = bgfx.create_frame_buffer(fb.wndhandle.handle, fb.w, fb.h, fb.color_format, fb.depth_format)
-	else
-		local function check_render_buffers(rbs)
-			if #rbs == 0 then
-				error("need at least 1 render buffer to create framebuffer")
-			end
-			local i
-			for idx, rbidx in ipairs(rbs) do
-				local rb = mgr.get_rb(rbidx)
-				if rb.format[1] == "D" then
-					i = idx
-					break
-				end
-			end
-
-			if i ~= nil and i ~= #rbs then
-				error(("depth buffer should put on the last render buffer:%d"):format(i))
+function mgr.create(...)
+	local function check_render_buffers(attachments)
+		if #attachments == 0 then
+			error("need at least 1 render buffer to create framebuffer")
+		end
+		local i
+		for idx, attachment in ipairs(attachments) do
+			local rb = mgr.get_rb(attachment.rbidx)
+			if rb.format[1] == "D" then
+				i = idx
+				break
 			end
 		end
-		check_render_buffers(fb)
-		myfb = create_fb_handle(fb, fb.manager_buffer)
+
+		if i ~= nil and i ~= #attachments then
+			error(("depth buffer should put on the last render buffer:%d"):format(i))
+		end
 	end
+	local attachments = {...}
+	check_render_buffers(attachments)
+	attachments.handle = create_fb(attachments)
 
 	local fb_idx = generate_fb_idx()
-	framebuffers[fb_idx] = myfb
+	framebuffers[fb_idx] = attachments
 	return fb_idx
 end
 
@@ -130,11 +118,11 @@ function mgr.destroy(fbidx)
 	framebuffers[fbidx] = nil
 end
 
-function mgr.recreate(fbidx, fb, remove_rb)
-	assert(fb.wndhandle == nil)
+function mgr.recreate(fbidx, attachments)
 	local oldfb = framebuffers[fbidx]
+	--we assume that only framebuffer handle need recreate, render buffer should handle before call it
 	bgfx.destroy(oldfb.handle)
-	framebuffers[fbidx] = create_fb_handle(fb.render_buffers, fb.manager_buffer)
+	framebuffers[fbidx] = create_fb(attachments)
 end
 
 function mgr.copy(fbidx)
@@ -148,10 +136,6 @@ function mgr.copy(fbidx)
 	fb.manager_buffer = template_fb.manager_buffer
 
     return mgr.create(fb)
-end
-
-function mgr.is_wnd_frame_buffer(fb_idx)
-	return framebuffers[fb_idx].wndhandle ~= nil
 end
 
 local generate_rb_idx = unique_idx_generator()

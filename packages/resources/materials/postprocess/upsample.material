@@ -1,7 +1,6 @@
 fx:
-  fs: /pkg/ant.resources/shaders/postprocess/fs_upsample.sc
+  fs: /pkg/ant.resources/shaders/postprocess/bloom/fs_upsample.sc
   vs: /pkg/ant.resources/shaders/postprocess/vs_pp_quad.sc
 properties:
-  u_sample_param:{0, 0, 0, 0}
-  u_intensity: {1.2, 0, 0, 0}
+  u_bloom_param: {0, 0, 0, 0} #which chain level, inverse highlight value, threshold
 state: /pkg/ant.resources/materials/postprocess/postprocess.state

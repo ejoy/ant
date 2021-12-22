@@ -27,7 +27,7 @@ vec3 box4x4Reinhard(vec3 s0, vec3 s1, vec3 s2, vec3 s3) {
 void main() {
     float lod = u_bloom_level;
     vec2 uv = v_texcoord0.xy;
-    vec4 d = vec4(u_bloom_source_size, -u_bloom_source_size) * 0.5;
+    vec4 d = vec4(u_viewTexel.xy, -u_viewTexel.xy) * 0.5;
 
     vec3 c = textureLod(s_postprocess_input0, uv, lod).rgb;
 

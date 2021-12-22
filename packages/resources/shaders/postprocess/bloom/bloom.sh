@@ -6,6 +6,4 @@ uniform vec4 u_bloom_param2;
 #define u_bloom_inv_highlight   u_bloom_param.y
 #define u_bloom_threshold       u_bloom_param.z
 
-#define u_bloom_source_size     u_bloom_param2.xy
-
 #endif //_BLOOM_SH_

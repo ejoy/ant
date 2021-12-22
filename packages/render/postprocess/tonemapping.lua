@@ -3,7 +3,6 @@ local world = ecs.world
 local w     = world.w
 
 local viewidmgr = require "viewid_mgr"
-local sampler   = require "sampler"
 
 local tm_sys    = ecs.system "tonemapping_system"
 local ientity   = ecs.import.interface "ant.render|ientity"

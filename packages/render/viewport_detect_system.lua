@@ -26,8 +26,9 @@ local function resize_framebuffer(w, h, fbidx)
 
 	local changed = false
 	local rbs = {}
-	for _, rbidx in ipairs(fb)do
-		rbs[#rbs+1] = rbidx
+	for _, attachment in ipairs(fb)do
+		local rbidx = attachment.rbidx
+		rbs[#rbs+1] = attachment
 		local c = rb_cache[rbidx]
 		if c == nil then
 			changed = fbmgr.resize_rb(w, h, rbidx) or changed
@@ -38,7 +39,7 @@ local function resize_framebuffer(w, h, fbidx)
 	end
 	
 	if changed then
-		fbmgr.recreate(fbidx, {render_buffers = rbs, manager_buffer = fb.manager_buffer})
+		fbmgr.recreate(fbidx, fb)
 	end
 end
 
