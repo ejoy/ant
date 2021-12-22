@@ -5,5 +5,5 @@ $input v_texcoord0
 
 void main()
 {
-    gl_FragColor   = texture2D(s_postprocess_input0, v_texcoord0);
+    gl_FragColor   = texture2D(s_scene_color, v_texcoord0);
 }

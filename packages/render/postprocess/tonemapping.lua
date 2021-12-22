@@ -85,7 +85,7 @@ function tm_sys:init_world()
     exposure_mb = world:sub{"exposure_changed", mcref}
 end
 
-local pp_input0 = {
+local ppi_scene_color = {
     stage = 0,
     texture={handle=nil},
 }
@@ -103,8 +103,8 @@ local function update_properties()
     -- render target here, is one of the virtual resource
     local pp = w:singleton("postprocess", "postprocess_input:in")
     local ppi = pp.postprocess_input
-    pp_input0.texture.handle = assert(ppi[1].handle)
-    imaterial.set_property_directly(tm_material.properties, "s_postprocess_input0", pp_input0)
+    ppi_scene_color.texture.handle = assert(ppi.scene_color_handle)
+    imaterial.set_property_directly(tm_material.properties, "s_scene_color", ppi_scene_color)
 end
 
 function tm_sys:tonemapping()

@@ -7,11 +7,14 @@ fx:
     shadow_receive: off
 properties:
   u_exposure_param: {0.0, 0.0, 0.0, 0.0}
-  s_postprocess_input0:
+  s_scene_color:
     stage: 0
     texture: /pkg/ant.resources/textures/black.texture
   #only valid for EXPOSURE_TYPE is auto
-  s_postprocess_input1:
+  s_avg_luminance:
     stage: 1
+    texture: /pkg/ant.resources/textures/black.texture
+  s_bloom_color:
+    stage: 2
     texture: /pkg/ant.resources/textures/black.texture
 state: /pkg/ant.resources/materials/postprocess/postprocess.state

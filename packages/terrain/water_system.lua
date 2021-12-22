@@ -167,7 +167,6 @@ local scene_depth_tex = {
 }
 
 local function queue_rb_handle(qn, rbidx)
-    rbidx = rbidx or 1
     local q = w:singleton(qn, "render_target:in")
     return fbmgr.get_rb(q.render_target.fb_idx, rbidx).handle
 end

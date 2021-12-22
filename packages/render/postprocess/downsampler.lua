@@ -66,7 +66,7 @@ function ids.downsample(targets)
         local target = targets[i]
         local viewid = target.viewid
         input0.texture.handle = target.handle
-        imaterial.set_property_directly(ro.properties, "s_postprocess_input0", input0)
+        imaterial.set_property_directly(ro.properties, "s_scene_color", input0)
         irender.draw(viewid, ro)
     end
 

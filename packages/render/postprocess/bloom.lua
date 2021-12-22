@@ -2,7 +2,7 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local setting	= import_package "ant.settings".setting
+local math3d    = require "math3d"
 
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
@@ -120,19 +120,6 @@ local function create_fb_pyramids(rbidx)
     return fbs
 end
 
-local function init_drawer(drawer, handle)
-    w:sync("render_object:in", drawer)
-    local ro = drawer.render_object
-    local ppi0 = ro.properties["s_postprocess_input0"]
-    ppi0.set = imaterial.property_set_func "i"
-    local v = ppi0.value
-    v.texture = nil
-    v.stage = 0
-    v.handle = handle
-    v.access = "r"
-    v.mip = 0
-end
-
 local function recreate_chain_sample_queue(mqvr)
     local chain_vr = mqvr
     local rbidx = create_bloom_rb(mqvr)
@@ -154,9 +141,8 @@ local function recreate_chain_sample_queue(mqvr)
         us_viewid = us_viewid+1
     end
 
-    local rbhandle = fbmgr.get_rb(rbidx).handle
-    init_drawer(ds_drawer, rbhandle)
-    init_drawer(us_drawer, rbhandle)
+    local pp = w:singleton("postprocess", "postprocess_input:in")
+    pp.postprocess_input.bloom_color_handle = fbmgr.get_rb(rbidx).handle
 end
 
 local function remove_sample_queues()
@@ -203,9 +189,11 @@ local function do_bloom_sample(start_viewid, drawer, ppi_handle, tagname, next_m
     local ro = drawer.render_object
 
     for viewid=start_viewid, bloom_chain_count do
-        local ppi0 = ro.properties["s_postprocess_input0"].value
-        ppi0.handle = ppi_handle
-        ppi0.mip = next_mip()
+        local sc = ro.properties["s_scene_color"].value
+        sc.handle = ppi_handle
+
+        local bloom_param = ro.properties["u_bloom_param"]
+        bloom_param.v = math3d.set_index(bloom_param, 1, next_mip())
         irender.draw(viewid, ro)
 
         local qtag = tagname..(viewid-start_viewid+1)
@@ -218,7 +206,7 @@ function bloom_sys:bloom()
     local mip = 0
 
     local pp = w:singleton("postprocess", "postprocess_input:in")
-    local ppi_handle = pp.postprocess_input[1].handle
+    local ppi_handle = pp.postprocess_input.scene_color_handle
     do_bloom_sample(bloom_ds_viewid, ds_drawer, ppi_handle, "bloom_downsample", function () 
         mip = mip+1
         return mip

@@ -13,9 +13,7 @@ function pp_sys:init()
         },
         data = {
             postprocess = true,
-            postprocess_input = {
-                {}, --at least one input, first init from pre_postprocess
-            },
+            postprocess_input = {},
             name = "postprocess_obj",
         }
     }
@@ -27,10 +25,7 @@ function pp_sys:pre_postprocess()
     local ppi = pp.postprocess_input
     local mq = w:singleton("main_queue", "render_target:in")
     local fb = fbmgr.get(mq.render_target.fb_idx)
-    for i=1, #fb do
-        if ppi[i] == nil then
-            ppi[i] = {}
-        end
-        ppi[i].handle = fbmgr.get_rb(fb[i].rbidx).handle
-    end
+
+    ppi.scene_color_handle = fbmgr.get_rb(fb[1].rbidx).handle
+    ppi.scene_depth_handle = fbmgr.get_rb(fb[#fb].rbidx).handle
 end

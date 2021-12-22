@@ -3,7 +3,9 @@ $input v_texcoord0
 #include <bgfx_shader.sh>
 #include "tonemapping.sh"
 
-#define s_avg_luminance s_postprocess_input1
+SAMPLER2D(s_avg_luminance,  1);
+SAMPLER2D(s_bloom_color,    2);
+
 
 void main()
 {
@@ -12,6 +14,6 @@ void main()
     avg_luminance = texelFetch(s_avg_luminance, ivec2(0, 0), 0);   //s_avg_luminance is 1x1 texture
 #endif //EXPOSURE_TYPE == AUTO_EXPOSURE
 
-    vec4 color = texture2D(s_postprocess_input0, v_texcoord0);
+    vec4 color = texture2D(s_scene_color, v_texcoord0);
     gl_FragColor = vec4(tonemapping(color.rgb, avg_luminance, 0), color.a);
 }

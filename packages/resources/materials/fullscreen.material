@@ -3,7 +3,7 @@ fx:
   vs: /pkg/ant.resources/shaders/simple/quad/vs_simple_texquad.sc
   setting: /pkg/ant.resources/settings/nolighting.setting
 properties:
-  s_postprocess_input0:
+  s_scene_color:
     stage: 0
     texture: /pkg/ant.resources/textures/black.texture
 state: /pkg/ant.resources/materials/states/quad.state
