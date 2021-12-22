@@ -90,10 +90,11 @@ local csm_setting = {
 	cross_delta		= shadowcfg.cross_delta or 0.005,
 	split_weight	= shadowcfg.split_weight or 0.7,
 	split_frustums	= {nil, nil, nil, nil},
-	fb_index		= fbmgr.create(get_render_buffers(shadowcfg.size * shadowcfg.split_num, shadowcfg.size, shadowcfg.type)),
+	fb_index		= fbmgr.create(table.unpack(get_render_buffers(shadowcfg.size * shadowcfg.split_num, shadowcfg.size, shadowcfg.type))),
 }
 
 --init shadowmap
+--TODO: need call clean every frame
 do
 	local csm_fb_viewid = viewidmgr.get "csm_fb"
 	local vrw, vrh = csm_setting.shadowmap_size * csm_setting.split_num, csm_setting.shadowmap_size

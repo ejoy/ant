@@ -189,7 +189,7 @@ local function check_shadow_matrix()
 		if ishadow.depth_type() == "linear" then
 			local size = ishadow.shadowmap_size()
 			local fb = fbmgr.get(se.render_target.fb_idx)
-			local memory_handle, width, height, pitch = irender.read_render_buffer_content({w=size,h=size}, "RGBA8", fb[1], true)
+			local memory_handle, width, height, pitch = irender.read_render_buffer_content({w=size,h=size}, "RGBA8", fb[1].rbidx, true)
 
 			local depth = pt[3]
 			local x, y = pt[1], pt[2]

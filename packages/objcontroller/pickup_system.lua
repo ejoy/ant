@@ -173,22 +173,21 @@ local function create_pick_entity()
 		}
 	}
 
-	local fbidx = fbmgr.create {
-		fbmgr.create_rb {
+	local fbidx = fbmgr.create(
+		{rbidx=fbmgr.create_rb {
 			w = pickup_buffer_w,
 			h = pickup_buffer_h,
 			layers = 1,
 			format = "RGBA8",
 			flags = fb_renderbuffer_flag,
-		},
-		fbmgr.create_rb {
+		}},
+		{rbidx=fbmgr.create_rb {
 			w = pickup_buffer_w,
 			h = pickup_buffer_h,
 			layers = 1,
 			format = "D24S8",
 			flags = fb_renderbuffer_flag,
-		}
-	}
+		}})
 
 	ecs.create_entity {
 		policy = {
@@ -281,11 +280,9 @@ function pickup_sys:update_camera()
 end
 
 local function blit(blit_buffer, render_target)
-	local fb = fbmgr.get(render_target.fb_idx)
-	local colorbuffer = fbmgr.get_rb(fb[1])
 	local rb = fbmgr.get_rb(blit_buffer.rb_idx)
 	local rbhandle = rb.handle
-	bgfx.blit(blit_buffer.blit_viewid, rbhandle, 0, 0, assert(colorbuffer.handle))
+	bgfx.blit(blit_buffer.blit_viewid, rbhandle, 0, 0, assert(fbmgr.get_rb(render_target.fb_idx, 1).handle))
 	return bgfx.read_texture(rbhandle, blit_buffer.handle)
 end
 

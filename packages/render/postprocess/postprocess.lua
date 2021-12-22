@@ -31,6 +31,6 @@ function pp_sys:pre_postprocess()
         if ppi[i] == nil then
             ppi[i] = {}
         end
-        ppi[i].handle = fbmgr.get_rb(fb[i]).handle
+        ppi[i].handle = fbmgr.get_rb(fb[i].rbidx).handle
     end
 end

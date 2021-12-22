@@ -229,8 +229,7 @@ end
 
 function downsampler:update(fbs)
     local function gen_rb_tex(fbidx)
-        local handle = fbmgr.get_rb(fbmgr.get(fbidx)[1]).handle
-        return {stage=0, texture={handle = handle}}
+        return {stage=0, texture={handle = fbmgr.get_rb(fbidx, 1).handle}}
     end
 
     self.render_textures = {
@@ -286,10 +285,9 @@ local function create_lightmap_queue()
         name = "lightmap camera"
     }
 
-    local fbidx = fbmgr.create{
-        fbmgr.create_rb{w=bake_fbw, h=bake_fbh, layers=1, format="RGBA32F", flags=rb_flags},
-        fbmgr.create_rb{w=bake_fbw, h=bake_fbh, layers=1, format="D24S8", flags=rb_flags},
-    }
+    local fbidx = fbmgr.create(
+        {rbidx=fbmgr.create_rb{w=bake_fbw, h=bake_fbh, layers=1, format="RGBA32F", flags=rb_flags}},
+        {rbidx=fbmgr.create_rb{w=bake_fbw, h=bake_fbh, layers=1, format="D24S8", flags=rb_flags}})
 
     ecs.create_entity {
         policy = {
@@ -447,7 +445,7 @@ end
 
 local storage = {
     blit_fbidx = fbmgr.create{
-        fbmgr.create_rb{w=fb_hemi_half_size, h=fb_hemi_half_size, layers=1, format="RGBA32F", flags=rb_flags}
+        rbidx = fbmgr.create_rb{w=fb_hemi_half_size, h=fb_hemi_half_size, layers=1, format="RGBA32F", flags=rb_flags}
     },
 }
 

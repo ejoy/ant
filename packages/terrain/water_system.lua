@@ -81,11 +81,9 @@ end
 local copy_scene_viewid = viewidmgr.get "copy_scene"
 
 local function create_fb(mq_fbidx)
-    local mqfb = fbmgr.get(mq_fbidx)
-    local clrrb = fbmgr.get_rb(mqfb[1])
-
+    local clrrb = fbmgr.get_rb(mq_fbidx, 1)
     return fbmgr.create{
-        fbmgr.create_rb{
+        rbidx=fbmgr.create_rb{
             w = clrrb.w, h = clrrb.h,
             layers = clrrb.layers, 
             format = clrrb.format,

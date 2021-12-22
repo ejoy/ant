@@ -156,7 +156,7 @@ function mgr.create_rb(rb)
 end
 
 function mgr.get_rb(fbidx, rbidx)
-	rbidx = rbidx and mgr.get(fbidx)[rbidx] or fbidx
+	rbidx = rbidx and mgr.get(fbidx)[rbidx].rbidx or fbidx
 	return renderbuffers[rbidx]
 end
 

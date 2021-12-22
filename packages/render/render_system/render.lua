@@ -87,8 +87,7 @@ end
 
 function irender.get_main_view_rendertexture()
 	local mq = w:singleton("main_queue", "render_target:in")
-	local fb = fbmgr.get(mq.render_target.fb_idx)
-	return fbmgr.get_rb(fb[1]).handle
+	return fbmgr.get_rb(mq.render_target.fb_idx, 1).handle
 end
 
 local default_clear_state = {
@@ -149,7 +148,7 @@ local rb_flag = samplerutil.sampler_flag {
 function irender.create_pre_depth_queue(vr, camera_ref)
 	local depth_viewid = viewidmgr.get "depth"
 	local fbidx = fbmgr.create{
-		fbmgr.create_rb{
+		rbidx=fbmgr.create_rb{
 			format = "D32F",
 			w = vr.w, h=vr.h,
 			layers = 1,
@@ -196,17 +195,11 @@ end
 
 local function create_main_fb(fbsize)
 	local render_buffers = {}
-	render_buffers[#render_buffers+1] = fbmgr.create_rb(
+	render_buffers[#render_buffers+1] = {
+		rbidx=fbmgr.create_rb(
 		default_comp.render_buffer(
 			fbsize.w, fbsize.h, "RGBA16F", rb_flag)
-	)
-
-	if graphic_setting.postprocess.bloom.enable then
-		render_buffers[#render_buffers+1] = fbmgr.create_rb(
-			default_comp.render_buffer(
-				fbsize.w, fbsize.h, "RGBA16F", rb_flag)
-		)
-	end
+	)}
 
 	local function get_depth_buffer()
 		if not graphic_setting.disable_pre_z then
@@ -214,10 +207,10 @@ local function create_main_fb(fbsize)
 			local depthfb = fbmgr.get_byviewid(depth_viewid)
 			return depthfb[#depthfb]
 		end
-		return fbmgr.create_rb(
+		return {rbidx=fbmgr.create_rb(
 			default_comp.render_buffer(
 				fbsize.w, fbsize.h, "D24S8", rb_flag)
-		)
+		)}
 	end
 
 	render_buffers[#render_buffers+1] = get_depth_buffer()
@@ -268,10 +261,10 @@ end
 function irender.screen_capture(force_read)
 	for e in w:select "main_queue render_target:in" do
 		local fbidx = e.render_target.fb_idx
-		local fb = fbmgr.get(fbidx)
+		
 		local s = setting:data()
 		local format = s.graphic.hdr.enable and s.graphic.hdr.format or "RGBA8"
-		local handle, width, height, pitch = irender.read_render_buffer_content(format, fb[1], force_read)
+		local handle, width, height, pitch = irender.read_render_buffer_content(format, fbmgr.get(fbidx)[1].rbidx, force_read)
 		return width, height, pitch, tostring(handle)
 	end
 end

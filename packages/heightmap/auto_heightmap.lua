@@ -45,10 +45,9 @@ local renderinfo = {
     
     init = function (ri)
         ri.auto_hm_viewid = viewidmgr.generate "auto_heightmap"
-        ri.fbidx = fbmgr.create{
-            fbmgr.create_rb{w=rbsize, h=rbsize, layers=1, flags = ri.flags, format="R32F"},
-            fbmgr.create_rb{w=rbsize, h=rbsize, layers=1, flags = ri.flags, format="D24S8"},
-        }
+        ri.fbidx = fbmgr.create(
+            {rbidx=fbmgr.create_rb{w=rbsize, h=rbsize, layers=1, flags = ri.flags, format="R32F"}},
+            {rbidx=fbmgr.create_rb{w=rbsize, h=rbsize, layers=1, flags = ri.flags, format="D24S8"}})
         bgfx.set_view_clear(ri.auto_hm_viewid, "CD", 0, 1, 0)
         bgfx.set_view_rect(ri.auto_hm_viewid, 0, 0, rbsize, rbsize)
         bgfx.set_view_frame_buffer(ri.auto_hm_viewid, fbmgr.get(ri.fbidx).handle)
@@ -57,7 +56,7 @@ local renderinfo = {
         ri.blitrb = fbmgr.create_rb{w=rbsize, h=rbsize, layers=1, flags=ri.blitflags, format="R32F"}
     end,
     color_handle = function (ri)
-        return fbmgr.get_rb(fbmgr.get(ri.fbidx)[1]).handle
+        return fbmgr.get_rb(ri.fbidx, 1).handle
     end,
     read_buffer = function (ri)
         local src_handle = ri:color_handle()

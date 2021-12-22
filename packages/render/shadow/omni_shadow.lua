@@ -143,7 +143,7 @@ local TetrahedronFaces = {
     }
 };
 
-local fb_index<const> = fbmgr.create({get_render_buffers(def_sm_size, def_sm_size)})
+local fb_index<const> = fbmgr.create{rbidx=get_render_buffers(def_sm_size, def_sm_size)}
 
 local fovx_adjust<const>, fovy_adjust<const> = 0.0, 0.0
 local fovx<const> = 143.98570868 + 7.8 + fovx_adjust
