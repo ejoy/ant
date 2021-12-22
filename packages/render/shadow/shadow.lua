@@ -34,26 +34,28 @@ local function get_render_buffers(width, height, depth_type)
 		}
 
 		return {
-			fbmgr.create_rb{
-				format = "RGBA8",
-				w=width,
-				h=height,
-				layers=1,
-				flags=flags,
+			rbidx=fbmgr.create_rb{
+					format = "RGBA8",
+					w=width,
+					h=height,
+					layers=1,
+					flags=flags,
+				},
 			},
-			fbmgr.create_rb {
-				format = "D24S8",
-				w=width,
-				h=height,
-				layers=1,
-				flags=flags,
-			},
-		}
+			{
+				rbidx = fbmgr.create_rb {
+					format = "D24S8",
+					w=width,
+					h=height,
+					layers=1,
+					flags=flags,
+				},
+			}
 
 	end
 
 	return {
-		fbmgr.create_rb{
+		rbidx=fbmgr.create_rb{
 			format = "D32F",
 			w=width,
 			h=height,
@@ -90,7 +92,7 @@ local csm_setting = {
 	cross_delta		= shadowcfg.cross_delta or 0.005,
 	split_weight	= shadowcfg.split_weight or 0.7,
 	split_frustums	= {nil, nil, nil, nil},
-	fb_index		= fbmgr.create(table.unpack(get_render_buffers(shadowcfg.size * shadowcfg.split_num, shadowcfg.size, shadowcfg.type))),
+	fb_index		= fbmgr.create(get_render_buffers(shadowcfg.size * shadowcfg.split_num, shadowcfg.size, shadowcfg.type)),
 }
 
 --init shadowmap

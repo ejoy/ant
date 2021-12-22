@@ -3974,20 +3974,19 @@ create_fb_mrt(lua_State *L) {
 			attachments[i].numLayers = 1;
 			attachments[i].resolve = BGFX_RESOLVE_AUTO_GEN_MIPS;
 		} else {
-			lua_pop(L, 1);
-			if (lua_getfield(L, 1, "handle") != LUA_TNUMBER){
+			if (lua_getfield(L, -1, "handle") != LUA_TNUMBER){
 				luaL_error(L, "Invalid handle!");
 			}
 			attachments[i].handle.idx =  BGFX_LUAHANDLE_ID(TEXTURE, lua_tointeger(L, -1));
 			lua_pop(L, 1);
 
-			if (lua_getfield(L, 1, "access") == LUA_TSTRING){
+			if (lua_getfield(L, -1, "access") == LUA_TSTRING){
 				const char* a = lua_tostring(L, -1);
-				if (strcmp(a, "write") == 0){
+				if (strcmp(a, "w") == 0){
 					attachments[i].access = BGFX_ACCESS_WRITE;
-				}else if (strcmp(a, "read") == 0){
+				}else if (strcmp(a, "r") == 0){
 					attachments[i].access = BGFX_ACCESS_READ;
-				}else if (strcmp(a, "readwrite") == 0){
+				}else if (strcmp(a, "rw") == 0){
 					attachments[i].access = BGFX_ACCESS_READWRITE;
 				}else{
 					luaL_error(L, "Invalid access flags:%s, must be: read, write, readwrite or nil", a);
@@ -3997,7 +3996,7 @@ create_fb_mrt(lua_State *L) {
 			}
 			lua_pop(L, 1);
 
-			if (lua_getfield(L, 1, "flags") == LUA_TSTRING){
+			if (lua_getfield(L, -1, "flags") == LUA_TSTRING){
 				const char* r = lua_tostring(L, -1);
 				if (strcmp(r, "g") == 0){
 					attachments[i].resolve = BGFX_RESOLVE_AUTO_GEN_MIPS;
@@ -4011,13 +4010,14 @@ create_fb_mrt(lua_State *L) {
 			}
 			lua_pop(L, 1);
 
-			attachments[i].mip = lua_getfield(L, 1, "mip") == LUA_TNUMBER ? (uint16_t)lua_tointeger(L, -1) : 0;
+			attachments[i].mip = lua_getfield(L, -1, "mip") == LUA_TNUMBER ? (uint16_t)lua_tointeger(L, -1) : 0;
 			lua_pop(L, 1);
-			attachments[i].layer = lua_getfield(L, 1, "layer") == LUA_TNUMBER ? (uint16_t)lua_tointeger(L, -1) : 0;
+			attachments[i].layer = lua_getfield(L, -1, "layer") == LUA_TNUMBER ? (uint16_t)lua_tointeger(L, -1) : 0;
 			lua_pop(L, 1);
-			attachments[i].numLayers = lua_getfield(L, 1, "numlayer") == LUA_TNUMBER ? (uint16_t)lua_tointeger(L, -1) : 1;
+			attachments[i].numLayers = lua_getfield(L, -1, "numlayer") == LUA_TNUMBER ? (uint16_t)lua_tointeger(L, -1) : 1;
 			lua_pop(L, 1);
 		}
+		lua_pop(L, 1);
 	}
 	return BGFX(create_frame_buffer_from_attachment)(n, attachments, destroy);
 }

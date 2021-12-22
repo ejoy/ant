@@ -9,6 +9,7 @@ local fbmgr     = require "framebuffer_mgr"
 local sampler   = require "sampler"
 
 local imesh     = ecs.import.interface "ant.asset|imesh"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 local ientity   = ecs.import.interface "ant.render|ientity"
 local irender   = ecs.import.interface "ant.render|irender"
 
@@ -18,6 +19,11 @@ viewidmgr.check_range("bloom_ds", bloom_chain_count)
 
 local bloom_us_viewid<const> = viewidmgr.get "bloom_us"
 viewidmgr.check_range("bloom_us", bloom_chain_count)
+
+for i=1, bloom_chain_count do
+    w:register{name="bloom_downsample"..i}
+    w:register{name="bloom_upsample"..i}
+end
 
 -- we write bloom downsample&upsample result to rt mipmap level
 local mq_rt_mb = world:sub{"view_rect_changed", "main_queue"}
@@ -62,7 +68,6 @@ local function upscale_bloom_vr(vr)
 end
 
 local function create_queue(viewid, vr, fbidx, queuename)
-    w:register{name=queuename}
     ecs.create_entity{
         policy = {
             "ant.render|postprocess_queue",
@@ -106,30 +111,40 @@ end
 
 local function create_fb_pyramids(rbidx)
     local fbs = {}
-    for i=1, bloom_chain_count do
+    for i=0, bloom_chain_count do
         fbs[#fbs+1] = fbmgr.create{
             rbidx = rbidx,
-            mip=i,
+            mip=0,
         }
     end
     return fbs
 end
 
+local function init_drawer(drawer, handle)
+    w:sync("render_object:in", drawer)
+    local ro = drawer.render_object
+    local ppi0 = ro.properties["s_postprocess_input0"]
+    ppi0.set = imaterial.property_set_func "i"
+    local v = ppi0.value
+    v.texture = nil
+    v.stage = 0
+    v.handle = handle
+    v.access = "r"
+    v.mip = 0
+end
+
 local function recreate_chain_sample_queue(mqvr)
-    local chain_vr = downscale_bloom_vr(mqvr)
-    local rb = create_bloom_rb(chain_vr)
-
-    local fbpyramids = create_fb_pyramids(rb)
-
+    local chain_vr = mqvr
+    local rbidx = create_bloom_rb(mqvr)
+    local fbpyramids = create_fb_pyramids(rbidx)
+    assert(#fbpyramids == bloom_chain_count+1)
     --downsample
     local ds_viewid = bloom_ds_viewid
     for i=1, bloom_chain_count do
-        create_queue(chain_vr, ds_viewid, fbpyramids[i], "bloom_downsample"..i)
         chain_vr = downscale_bloom_vr(chain_vr)
-        ds_viewid = ds_viewid+i
+        create_queue(ds_viewid, chain_vr, fbpyramids[i+1], "bloom_downsample"..i)
+        ds_viewid = ds_viewid+1
     end
-
-    chain_vr = upscale_bloom_vr(chain_vr)
 
     --upsample
     local us_viewid = bloom_us_viewid
@@ -138,10 +153,19 @@ local function recreate_chain_sample_queue(mqvr)
         create_queue(us_viewid, chain_vr, fbpyramids[bloom_chain_count-i+1], "bloom_upsample"..i)
         us_viewid = us_viewid+1
     end
+
+    local rbhandle = fbmgr.get_rb(rbidx).handle
+    init_drawer(ds_drawer, rbhandle)
+    init_drawer(us_drawer, rbhandle)
 end
 
 local function remove_sample_queues()
-    for e in w:select "bloom_queue" do
+    local removed_fb_idx
+    for e in w:select "bloom_queue render_target:in" do
+        if removed_fb_idx == nil then
+            fbmgr.destroy(e.render_target.fb_idx)
+            removed_fb_idx = true
+        end
         w:remove(e)
     end
 end
@@ -152,23 +176,58 @@ function bloom_sys:init_world()
     recreate_chain_sample_queue(mqvr)
 end
 
+local function check_need_recreate(vr)
+    local q = w:singleton("bloom_upsample" .. bloom_chain_count, "render_target:in")
+    local qvr = q.render_target.view_rect
+    return qvr.w ~= vr.w or qvr.h ~= vr.h
+end
+
 function bloom_sys:data_changed()
     for msg in mq_rt_mb:each() do
-        remove_sample_queues()
-        recreate_chain_sample_queue(msg[3])
+        local vr = msg[3]
+        if check_need_recreate(vr) then
+            remove_sample_queues()
+            recreate_chain_sample_queue(vr)
+        end
+    end
+end
+
+local function get_rt_handle(qn)
+    local q = w:singleton(qn, "render_target:in")
+    local rt = q.render_target
+    return fbmgr.get_rb(rt.fb_idx, 1).handle
+end
+
+local function do_bloom_sample(start_viewid, drawer, ppi_handle, tagname, next_mip)
+    w:sync("render_object:in", drawer)
+    local ro = drawer.render_object
+
+    for viewid=start_viewid, bloom_chain_count do
+        local ppi0 = ro.properties["s_postprocess_input0"].value
+        ppi0.handle = ppi_handle
+        ppi0.mip = next_mip()
+        irender.draw(viewid, ro)
+
+        local qtag = tagname..(viewid-start_viewid+1)
+        ppi_handle = get_rt_handle(qtag)
     end
 end
 
 function bloom_sys:bloom()
     --we just sample result to bloom buffer, and map bloom buffer from tonemapping stage
-    local function draw(sample_viewid, drawer)
-        w:sync("render_object:in", drawer)
-        local ro = ds_drawer.render_object
-        for viewid=sample_viewid, bloom_chain_count do
-            irender.draw(viewid, ro)
-        end
-    end
+    local mip = 0
 
-    draw(bloom_ds_viewid, ds_drawer)
-    draw(bloom_us_viewid, us_drawer)
+    local pp = w:singleton("postprocess", "postprocess_input:in")
+    local ppi_handle = pp.postprocess_input[1].handle
+    do_bloom_sample(bloom_ds_viewid, ds_drawer, ppi_handle, "bloom_downsample", function () 
+        mip = mip+1
+        return mip
+    end)
+
+    do_bloom_sample(bloom_us_viewid, us_drawer, ppi_handle, "bloom_upsample", function ()
+        mip = mip - 1
+        return mip
+    end)
+
+    assert(mip == 0, "upsample result should write to top mipmap")
 end

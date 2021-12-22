@@ -4,9 +4,13 @@ $input v_texcoord0
 #include "common/postprocess.sh"
 #include "bloom.sh"
 
+float max3(vec3 v){
+    return max(v[0], max(v[1], v[2]));
+}
+
 void threshold(inout vec3 c) {
     // threshold everything below 1.0
-    c = max(vec3(0.0), c - u_bloom_threshold);
+    c = max(vec3_splat(0.0), c - u_bloom_threshold);
     // crush everything above 1
     float f = max3(c);
     c *= 1.0 / (1.0 + f * u_bloom_inv_highlight);
@@ -29,22 +33,22 @@ void main() {
     vec2 uv = v_texcoord0.xy;
     vec4 d = vec4(u_viewTexel.xy, -u_viewTexel.xy) * 0.5;
 
-    vec3 c = textureLod(s_postprocess_input0, uv, lod).rgb;
+    vec3 c = texture2DLod(s_postprocess_input0, uv, lod).rgb;
 
-    vec3 lt = textureLod(s_postprocess_input0, uv + d.zw, lod).rgb;
-    vec3 rt = textureLod(s_postprocess_input0, uv + d.xw, lod).rgb;
-    vec3 rb = textureLod(s_postprocess_input0, uv + d.xy, lod).rgb;
-    vec3 lb = textureLod(s_postprocess_input0, uv + d.zy, lod).rgb;
+    vec3 lt = texture2DLod(s_postprocess_input0, uv + d.zw, lod).rgb;
+    vec3 rt = texture2DLod(s_postprocess_input0, uv + d.xw, lod).rgb;
+    vec3 rb = texture2DLod(s_postprocess_input0, uv + d.xy, lod).rgb;
+    vec3 lb = texture2DLod(s_postprocess_input0, uv + d.zy, lod).rgb;
 
-    vec3 lt2 = textureLodOffset(s_postprocess_input0, uv, lod, ivec2(-1, -1)).rgb;
-    vec3 rt2 = textureLodOffset(s_postprocess_input0, uv, lod, ivec2( 1, -1)).rgb;
-    vec3 rb2 = textureLodOffset(s_postprocess_input0, uv, lod, ivec2( 1,  1)).rgb;
-    vec3 lb2 = textureLodOffset(s_postprocess_input0, uv, lod, ivec2(-1,  1)).rgb;
+    vec3 lt2 = texture2DLodOffset(s_postprocess_input0, uv, lod, ivec2(-1, -1)).rgb;
+    vec3 rt2 = texture2DLodOffset(s_postprocess_input0, uv, lod, ivec2( 1, -1)).rgb;
+    vec3 rb2 = texture2DLodOffset(s_postprocess_input0, uv, lod, ivec2( 1,  1)).rgb;
+    vec3 lb2 = texture2DLodOffset(s_postprocess_input0, uv, lod, ivec2(-1,  1)).rgb;
 
-    vec3 l = textureLodOffset(s_postprocess_input0, uv, lod, ivec2(-1,  0)).rgb;
-    vec3 t = textureLodOffset(s_postprocess_input0, uv, lod, ivec2( 0, -1)).rgb;
-    vec3 r = textureLodOffset(s_postprocess_input0, uv, lod, ivec2( 1,  0)).rgb;
-    vec3 b = textureLodOffset(s_postprocess_input0, uv, lod, ivec2( 0,  1)).rgb;
+    vec3 l = texture2DLodOffset(s_postprocess_input0, uv, lod, ivec2(-1,  0)).rgb;
+    vec3 t = texture2DLodOffset(s_postprocess_input0, uv, lod, ivec2( 0, -1)).rgb;
+    vec3 r = texture2DLodOffset(s_postprocess_input0, uv, lod, ivec2( 1,  0)).rgb;
+    vec3 b = texture2DLodOffset(s_postprocess_input0, uv, lod, ivec2( 0,  1)).rgb;
 
     // five h4x4 boxes
     vec3 c0, c1;

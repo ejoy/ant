@@ -52,7 +52,7 @@ end
 local function create_fb(attachments)
 	for i=1, #attachments do
 		local att = attachments[i]
-		att[i].handle = mgr.get_rb(att.rbidx)
+		att.handle = mgr.get_rb(att.rbidx).handle
 	end
 	return bgfx.create_frame_buffer(attachments)
 end
@@ -89,7 +89,7 @@ local function find_rb_have_multi_ref(rbidx)
 	local found = 0
 	for fbidx, fb in pairs(framebuffers) do
 		for i=1, #fb do
-			if fb[i] == rbidx then
+			if fb[i].rbidx == rbidx then
 				found = found + 1
 				if found > 1 then
 					return true
@@ -112,7 +112,7 @@ end
 function mgr.destroy(fbidx)
 	local oldfb = framebuffers[fbidx]
 	for i=1, #oldfb do
-		destroy_rb(oldfb[i], true)
+		destroy_rb(oldfb[i].rbidx, true)
 	end
 	bgfx.destroy(oldfb.handle)
 	framebuffers[fbidx] = nil

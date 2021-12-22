@@ -1,7 +1,5 @@
 local viewid_pool = {}; viewid_pool.__index = viewid_pool
 
-local bgfx = require "bgfx"
-
 local max_viewid<const>					= 256
 local bloom_chain_count<const>			= 4
 local lightmap_ds_count<const>			= 10
@@ -53,7 +51,6 @@ for n, v in pairs(bindings) do
 		error(("duplicate viewid defined:%d"):format(v))
 	end
 	pool[v] = true
-	bgfx.set_view_name(v, n)
 end
 
 local function find_valid_viewid(afterviewid)
@@ -65,10 +62,8 @@ local function find_valid_viewid(afterviewid)
 end
 
 function viewid_pool.check_range(name, range)
-	local viewid = bindings[name]
-	for ii=0, range-1 do
-		local id = viewid+ii
-		if pool[id] then
+	for id=assert(bindings[name]), range do
+		if pool[id] == nil then
 			error(("viewid:%s, range:%d, is not continuous"):format(name, range))
 		end
 	end

@@ -194,13 +194,6 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 end
 
 local function create_main_fb(fbsize)
-	local render_buffers = {}
-	render_buffers[#render_buffers+1] = {
-		rbidx=fbmgr.create_rb(
-		default_comp.render_buffer(
-			fbsize.w, fbsize.h, "RGBA16F", rb_flag)
-	)}
-
 	local function get_depth_buffer()
 		if not graphic_setting.disable_pre_z then
 			local depth_viewid = viewidmgr.get "depth"
@@ -212,9 +205,11 @@ local function create_main_fb(fbsize)
 				fbsize.w, fbsize.h, "D24S8", rb_flag)
 		)}
 	end
-
-	render_buffers[#render_buffers+1] = get_depth_buffer()
-	return fbmgr.create(render_buffers)
+	return fbmgr.create({
+		rbidx=fbmgr.create_rb(
+		default_comp.render_buffer(
+			fbsize.w, fbsize.h, "RGBA16F", rb_flag)
+	)}, get_depth_buffer())
 end
 
 function irender.create_main_queue(vr, camera_ref)

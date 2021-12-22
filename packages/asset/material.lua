@@ -41,6 +41,11 @@ local function set_buffer(p)
 	return bgfx.set_buffer(v.stage, v.handle, v.access)
 end
 
+local function set_image(p)
+    local v = p.value
+    bgfx.set_image(v.stage, v.handle, v.mip, v.access)
+end
+
 local function update_uniform(p, dst)
 	local src = p.value
 	if type(dst) == "table" then
@@ -144,6 +149,7 @@ local set_funcs<const> = {
 	b = set_buffer,
 	array = set_uniform_array,
 	u = set_uniform,
+	i = set_image,
 }
 
 local function which_set_func(u)
