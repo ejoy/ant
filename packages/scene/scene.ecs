@@ -36,10 +36,14 @@ component "follow_joint"
 component "follow_flag"
     .type "lua"
     
+component "follow_offset"
+    .type "lua"
+
 policy "slot"
     .component "slot"
     .component "follow_joint"
     .component "follow_flag"
+    .component "follow_offset"
 
 pipeline "scene"
     .stage "update_hierarchy"

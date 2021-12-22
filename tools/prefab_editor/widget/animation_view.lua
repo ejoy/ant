@@ -756,50 +756,56 @@ end
 function m.save_clip(path)
     to_runtime_clip()
     local clips = get_runtime_clips()
-    if not clips then return end
+    if not clips or #clips < 1 then return end
     
-    local clip_filename = path
-    if not clip_filename then
-        clip_filename = get_clips_filename()
-    end
+    -- local clip_filename = path
+    -- if not clip_filename then
+    --     clip_filename = get_clips_filename()
+    -- end
     
-    local copy_clips = utils.deep_copy(clips)
-    for _, clip in ipairs(copy_clips) do
-        if clip.key_event then
-            for _, key_ev in ipairs(clip.key_event) do
-                for _, ev in ipairs(key_ev.event_list) do
-                    if ev.effect then
-                        world:prefab_event(ev.effect, "remove", "*")
-                        ev.effect = nil
-                    end
-                    if ev.link_info and ev.link_info.slot_eid then
-                        ev.link_info.slot_eid = nil
-                    end
-                    if ev.collision and ev.collision.col_eid then
-                        if ev.collision.col_eid ~= -1 then
-                            local rc = imaterial.get_property(ev.collision.col_eid, "u_color")
-                            local color = math3d.totable(rc.value)
-                            ev.collision.color = {color[1],color[2],color[3],color[4]}
-                            ev.collision.tag = world[ev.collision.col_eid].tag
-                        end
-                        ev.collision.col_eid = nil
-                    end
+    -- local copy_clips = utils.deep_copy(clips)
+    -- for _, clip in ipairs(copy_clips) do
+    --     if clip.key_event then
+    --         for _, key_ev in ipairs(clip.key_event) do
+    --             for _, ev in ipairs(key_ev.event_list) do
+    --                 if ev.effect then
+    --                     world:prefab_event(ev.effect, "remove", "*")
+    --                     ev.effect = nil
+    --                 end
+    --                 if ev.link_info and ev.link_info.slot_eid then
+    --                     ev.link_info.slot_eid = nil
+    --                 end
+    --                 if ev.collision and ev.collision.col_eid then
+    --                     if ev.collision.col_eid ~= -1 then
+    --                         local rc = imaterial.get_property(ev.collision.col_eid, "u_color")
+    --                         local color = math3d.totable(rc.value)
+    --                         ev.collision.color = {color[1],color[2],color[3],color[4]}
+    --                         ev.collision.tag = world[ev.collision.col_eid].tag
+    --                     end
+    --                     ev.collision.col_eid = nil
+    --                 end
 
-                end
-            end
-        end
-    end
-    utils.write_file(clip_filename, stringify(copy_clips))
-    copy_clips.slot_list = {}
-    for k, v in pairs(hierarchy.slot_list) do
-        if v > 0 then
-            local ts = math3d.totable(iom.get_scale(v))
-            local tr = math3d.totable(iom.get_rotation(v))
-            local tp = math3d.totable(iom.get_position(v))
-            copy_clips.slot_list[#copy_clips.slot_list + 1] = {tag = k, name = world[v].name, scale = {ts[1], ts[2], ts[3]}, rotate = {tr[1], tr[2], tr[3], tr[4]}, position = {tp[1], tp[2], tp[3]}}
-        end
-    end
-    utils.write_file(string.sub(clip_filename, 1, -7) .. ".lua", "return " .. utils.table_to_string(copy_clips))
+    --             end
+    --         end
+    --     end
+    -- end
+    -- utils.write_file(clip_filename, stringify(copy_clips))
+    -- copy_clips.slot_list = {}
+    -- for k, v in pairs(hierarchy.slot_list) do
+    --     if type(v) == "table" then
+    --         local ts = math3d.totable(iom.get_scale(v))
+    --         local tr = math3d.totable(iom.get_rotation(v))
+    --         local tp = math3d.totable(iom.get_position(v))
+    --         w:sync("follow_joint?in", v)
+    --         if v.follow_joint and v.follow_joint ~= "None" then
+    --             ts = {1,1,1}
+    --             tr = {0,0,0,1}
+    --             tp = {0,0,0}
+    --         end
+    --         copy_clips.slot_list[#copy_clips.slot_list + 1] = {tag = k, name = v.name, scale = {ts[1], ts[2], ts[3]}, rotate = {tr[1], tr[2], tr[3], tr[4]}, position = {tp[1], tp[2], tp[3]}}
+    --     end
+    -- end
+    -- utils.write_file(string.sub(clip_filename, 1, -7) .. ".lua", "return " .. utils.table_to_string(copy_clips))
 end
 
 local function set_current_clip(clip)
@@ -1226,7 +1232,7 @@ function m.show()
             end
             imgui.cursor.SameLine()
             local current_time = iani.get_time(current_e)
-            imgui.widget.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d Time: %.2f/%.2f(s)", anim_state.selected_frame, anim_state.selected_frame / sample_ratio, math.floor(current_time * sample_ratio), current_time, anim_state.duration))
+            imgui.widget.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d/%d Time: %.2f/%.2f(s)", anim_state.selected_frame, anim_state.selected_frame / sample_ratio, math.floor(current_time * sample_ratio), math.floor(anim_state.duration * sample_ratio), current_time, anim_state.duration))
             imgui_message = {}
             imgui.widget.Sequencer(edit_anims[current_e], anim_state, imgui_message)
             -- clear dirty flag

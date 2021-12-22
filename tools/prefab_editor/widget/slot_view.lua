@@ -51,12 +51,8 @@ function SlotView:set_model(eid)
         local tp = hierarchy:get_template(self.e)
         local joint_name = (name ~= "None") and name or nil
         tp.template.data.follow_joint = joint_name
-        for v in w:select "scene:in _animation:in" do
-            if v.scene.id == eid.scene.id then
-                v._animation.follow_joint = joint_name
-            end
-        end
-        --world[eid].follow_joint = joint_name
+        self.e.follow_joint = joint_name
+        w:sync("follow_joint:out", self.e)
     end)
     self.follow_flag:set_getter(function()
         --return world[eid].follow_flag
@@ -66,12 +62,8 @@ function SlotView:set_model(eid)
     self.follow_flag:set_setter(function(flag)
         local tp = hierarchy:get_template(self.e)
         tp.template.data.follow_flag = flag
-        for v in w:select "scene:in _animation:in" do
-            if v.scene.id == eid.scene.id then
-                v._animation.follow_flag = flag
-            end
-        end
-        --world[eid].follow_flag = flag
+        self.e.follow_flag = flag
+        w:sync("follow_flag:out", self.e)
     end)
     self:update()
     return true

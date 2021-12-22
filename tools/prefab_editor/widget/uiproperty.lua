@@ -124,6 +124,7 @@ function Combo:set_options(options)
         d[i] = options[i]
     end
     d[#options+1] = nil
+    self.options = options
 end
 
 function Combo:show()

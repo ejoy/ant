@@ -173,6 +173,8 @@ local function do_play(e, anim, real_clips, anim_state)
 		anim_state.event_state = { next_index = 1, keyframe_events = real_clips and real_clips[1][2].key_event or {} }
 		anim_state.clip_state = { current = {clip_index = 1, clips = real_clips}, clips = e._animation.anim_clips or {}}
 		anim_state.play_state = { ratio = start_ratio, previous_ratio = start_ratio, speed = realspeed, play = true, loop = anim_state.loop, manual_update = anim_state.manual}
+		
+		--w:pub{"animation", anim_state.name, "play"}
 	end
 	e._animation._current = anim_state
 	anim_state.eid[#anim_state.eid + 1] = e
@@ -297,6 +299,7 @@ function iani.step(task, s_delta, absolute)
 		if not play_state.loop then
 			play_state.ratio = 1.0
 			play_state.play = false
+			--w:pub{"animation", play_state.name, "stop"}
 		else
 			play_state.ratio = (next_time - duration) / duration
 		end
