@@ -22,6 +22,7 @@ extern "C" {
 #include <glm/ext/vector_relational.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/ext/vector_common.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 
 static const glm::vec4 XAXIS(1, 0, 0, 0);
 static const glm::vec4 YAXIS(0, 1, 0, 0);
@@ -366,8 +367,10 @@ math3d_decompose_matrix(struct lastack *LS, const float *mat) {
 	float *trans = lastack_allocvec4(LS);
 	glm::quat &q = allocquat(LS);
 	float *scale = lastack_allocvec4(LS);
-	decompose(m, *(glm::vec3*)scale, q, *(glm::vec3*)trans);
-
+	//decompose(m, *(glm::vec3*)scale, q, *(glm::vec3*)trans);
+	glm::vec3 skew;
+	glm::vec4 perspective;
+	glm::decompose(m, *(glm::vec3*)scale, q,*(glm::vec3*)trans, skew, perspective);
 }
 
 float

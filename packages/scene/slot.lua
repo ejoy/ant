@@ -24,19 +24,7 @@ function sys:update_slot()
                         s, r, t = mc.ONE, math3d.index(adjust_mat, 3, 4)
                         r = math3d.torotation(r)
                     else
-                        -- s, r, t = math3d.srt(e.pose_result:joint(joint_idx))
-                        -- r, t = math3d.tovalue(r), math3d.tovalue(t)
-
-                        -- --why we need this to change
-                        -- r[3] = -r[3]
-                        -- r[4] = -r[4]
-
-                        -- t[3] = -t[3]
-
-                        -- local adjust_mat = math3d.matrix{s=s, r=r, t=t}
-                        -- adjust_mat = math3d.mul(adjust_mat, offset_mat)
-
-                        -- s, r, t = math3d.srt(adjust_mat)
+                        s, r, t = math3d.srt(adjust_mat)
                     end
                     iom.set_srt(v, s, r, t)
                 end
