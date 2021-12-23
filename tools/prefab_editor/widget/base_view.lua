@@ -123,27 +123,35 @@ end
 
 function BaseView:on_set_position(value)
     local template = hierarchy:get_template(self.e)
-    world:pub {"EntityEvent", "move", self.e, template.template.data.scene.srt.t or {0,0,0}, value}
-    --world:pub {"EntityEvent", "move", self.e, math3d.tovalue(iom.get_position(self.e)), value}
+    if template.template then
+        world:pub {"EntityEvent", "move", self.e, template.template.data.scene.srt.t or {0,0,0}, value}
+    else
+        world:pub {"EntityEvent", "move", self.e, math3d.tovalue(iom.get_position(self.e)), value}
+    end
 end
 
 function BaseView:on_get_position()
     local template = hierarchy:get_template(self.e)
-    return template.template.data.scene.srt.t or {0,0,0}
-    --return math3d.totable(iom.get_position(self.e))
+    if template.template then
+        return template.template.data.scene.srt.t or {0,0,0}
+    else
+        return math3d.totable(iom.get_position(self.e))
+    end
 end
 
 function BaseView:on_set_rotate(value)
     local euler = self.e.oldeuler
     world:pub {"EntityEvent", "rotate", self.e, { math.rad(euler[1]), math.rad(euler[2]), math.rad(euler[3]) }, value}
-    --self.e.oldeuler = value
-    --world:pub {"EntityEvent", "rotate", self.e, math3d.tovalue(math3d.quat2euler(iom.get_rotation(self.e))), value}
 end
 
 function BaseView:on_get_rotate()
     local template = hierarchy:get_template(self.e)
-    --return template.template.data.scene.srt.r
-    local r = math3d.quaternion(template.template.data.scene.srt.r or {0,0,0,1})--iom.get_rotation(self.e)
+    local r
+    if template.template then
+        r = template.template.data.scene.srt.r or {0,0,0,1}
+    else
+        r = iom.get_rotation(self.e)
+    end
     local rad = math3d.tovalue(math3d.quat2euler(r))
     local raweuler = { math.deg(rad[1]), math.deg(rad[2]), math.deg(rad[3]) }
     self.e.oldeuler = raweuler
@@ -152,20 +160,25 @@ end
 
 function BaseView:on_set_scale(value)
     local template = hierarchy:get_template(self.e)
-    world:pub {"EntityEvent", "scale", self.e, template.template.data.scene.srt.s or {1,1,1}, value}
-    --world:pub {"EntityEvent", "scale", self.e, math3d.tovalue(iom.get_scale(self.e)), value}
+    if template.template then
+        world:pub {"EntityEvent", "scale", self.e, template.template.data.scene.srt.s or {1,1,1}, value}
+    else
+        world:pub {"EntityEvent", "scale", self.e, math3d.tovalue(iom.get_scale(self.e)), value}
+    end
 end
 
 function BaseView:on_get_scale()
     local template = hierarchy:get_template(self.e)
-    local s = template.template.data.scene.srt.s
-    if s then
-        return type(s) == "table" and s or {s, s, s}
+    if template.template then
+        local s = template.template.data.scene.srt.s
+        if s then
+            return type(s) == "table" and s or {s, s, s}
+        else
+            return {1,1,1}
+        end
     else
-        return {1,1,1}
+        return math3d.tovalue(iom.get_scale(self.e))
     end
-    return template.template.data.scene.srt.s or {1,1,1}
-    --return math3d.tovalue(iom.get_scale(self.e))
 end
 
 function BaseView:has_rotate()
