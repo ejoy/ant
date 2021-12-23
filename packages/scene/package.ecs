@@ -1,2 +1,3 @@
 import "scene.ecs"
 import "scene_node.ecs"
+import "slot.ecs"

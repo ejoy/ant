@@ -4,6 +4,7 @@ import "@ant.general"
 system "scenespace_system"
     .implement "scenespace.lua"
     .require_interface "ant.objcontroller|iobj_motion"
+    .require_system "ant.scene|slot_system"
     .method "entity_init"
     .method "update_hierarchy"
     .method "update_transform"
@@ -27,29 +28,12 @@ component "widget_entity"
 
 component "initializing"
 
-component "slot"
-    .type "lua"
-
-component "follow_joint"
-    .type "lua"
-
-component "follow_flag"
-    .type "lua"
-    
-component "follow_offset"
-    .type "lua"
-
-policy "slot"
-    .component "slot"
-    .component "follow_joint"
-    .component "follow_flag"
-    .component "follow_offset"
-
 pipeline "scene"
     .stage "update_hierarchy"
     .stage "begin_filter"
     .stage "update_filter"
     .stage "end_filter"
+    .stage "update_slot"
     .stage "refine_entity_transform"
     .stage "update_transform"
     .stage "follow_transform_updated"

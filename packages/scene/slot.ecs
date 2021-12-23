@@ -1,0 +1,21 @@
+system "slot_system"
+    .implement "slot.lua"
+    .method "update_slot"
+
+component "slot"
+    .type "lua"
+
+component "follow_joint"
+    .type "lua"
+
+component "follow_flag"
+    .type "lua"
+    
+component "follow_offset"
+    .type "lua"
+
+policy "slot"
+    .component "slot"
+    .component "follow_joint"
+    .component "follow_flag"
+    .component "follow_offset"
