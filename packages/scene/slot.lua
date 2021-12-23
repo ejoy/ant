@@ -2,6 +2,8 @@ local ecs = ...
 local w = ecs.world.w
 local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 local math3d = require "math3d"
+local mathpkg = import_package "ant.math"
+local mc = mathpkg.constant
 
 local r2l_mat<const> = math3d.ref(math3d.matrix{s={1.0, 1.0, -1.0}})
 local sys = ecs.system "slot_system"
@@ -13,19 +15,30 @@ function sys:update_slot()
                     local ske = e.skeleton._handle
                     local joint_idx = ske:joint_index(v.follow_joint)
                     local adjust_mat = math3d.mul(r2l_mat, e.pose_result:joint(joint_idx))
-					local offset_mat = math3d.matrix {
-						s = math3d.vector(v.follow_offset.s or {1, 1, 1}),
-						r = math3d.quaternion(v.follow_offset.r or {0, 0, 0, 1}),
-						t = math3d.vector(v.follow_offset.t or {0, 0, 0})
-					}
-					adjust_mat = math3d.mul(adjust_mat, offset_mat)
-                    local scale, rotate, pos = math3d.srt(adjust_mat)
+                    local offset_mat = math3d.matrix(v.follow_offset)
+                    adjust_mat = math3d.mul(adjust_mat, offset_mat)
+                    local s, r, t
 					if v.follow_flag == 1 then
-                        scale, rotate, pos = {1, 1, 1}, {0, 0, 0, 1}, {math3d.index(pos, 1, 2, 3)}
+                        s, r, t = mc.ONE, mc.IDENTITY_QUAT, math3d.index(adjust_mat, 4)
                     elseif v.follow_flag == 2 then
-						scale, rotate, pos = {1, 1, 1}, {math3d.index(rotate, 1, 2, 3, 4)}, {math3d.index(pos, 1, 2, 3)}
+                        s, r, t = mc.ONE, math3d.index(adjust_mat, 3, 4)
+                        r = math3d.torotation(r)
+                    else
+                        -- s, r, t = math3d.srt(e.pose_result:joint(joint_idx))
+                        -- r, t = math3d.tovalue(r), math3d.tovalue(t)
+
+                        -- --why we need this to change
+                        -- r[3] = -r[3]
+                        -- r[4] = -r[4]
+
+                        -- t[3] = -t[3]
+
+                        -- local adjust_mat = math3d.matrix{s=s, r=r, t=t}
+                        -- adjust_mat = math3d.mul(adjust_mat, offset_mat)
+
+                        -- s, r, t = math3d.srt(adjust_mat)
                     end
-                    iom.set_srt(v, scale, rotate, pos)
+                    iom.set_srt(v, s, r, t)
                 end
             end
         end
