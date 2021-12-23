@@ -71,6 +71,7 @@ local function create_queue(viewid, vr, fbidx, queuename)
     ecs.create_entity{
         policy = {
             "ant.render|postprocess_queue",
+            "ant.render|watch_screen_buffer",
             "ant.general|name",
         },
         data = {
@@ -85,6 +86,7 @@ local function create_queue(viewid, vr, fbidx, queuename)
             queue_name = queuename,
             reference = true,
             name = queuename,
+            watch_screen_buffer = true,
             bloom_queue = true,
         }
     }
@@ -120,7 +122,7 @@ local function create_fb_pyramids(rbidx)
     return fbs
 end
 
-local function recreate_chain_sample_queue(mqvr)
+local function create_chain_sample_queue(mqvr)
     local chain_vr = mqvr
     local rbidx = create_bloom_rb(mqvr)
     local fbpyramids = create_fb_pyramids(rbidx)
@@ -142,62 +144,32 @@ local function recreate_chain_sample_queue(mqvr)
     end
 
     local pp = w:singleton("postprocess", "postprocess_input:in")
-    pp.postprocess_input.bloom_color_handle = fbmgr.get_rb(rbidx).handle
-end
+    local bloom_color_handle = fbmgr.get_rb(rbidx).handle
+    pp.postprocess_input.bloom_color_handle = bloom_color_handle
 
-local function remove_sample_queues()
-    local removed_fb_idx
-    for e in w:select "bloom_queue render_target:in" do
-        if removed_fb_idx == nil then
-            fbmgr.destroy(e.render_target.fb_idx)
-            removed_fb_idx = true
-        end
-        w:remove(e)
-    end
+    imaterial.set_property(ds_drawer, "s_scene_color",{stage=0, texture={handle=bloom_color_handle}})
+    imaterial.set_property(us_drawer, "s_scene_color",{stage=0, texture={handle=bloom_color_handle}})
 end
 
 function bloom_sys:init_world()
     local mq = w:singleton("main_queue", "render_target:in")
     local mqvr = mq.render_target.view_rect
-    recreate_chain_sample_queue(mqvr)
+    create_chain_sample_queue(mqvr)
 end
 
-local function check_need_recreate(vr)
-    local q = w:singleton("bloom_upsample" .. bloom_chain_count, "render_target:in")
-    local qvr = q.render_target.view_rect
-    return qvr.w ~= vr.w or qvr.h ~= vr.h
-end
-
-function bloom_sys:data_changed()
-    for msg in mq_rt_mb:each() do
-        local vr = msg[3]
-        if check_need_recreate(vr) then
-            remove_sample_queues()
-            recreate_chain_sample_queue(vr)
-        end
-    end
-end
-
-local function get_rt_handle(qn)
-    local q = w:singleton(qn, "render_target:in")
-    local rt = q.render_target
-    return fbmgr.get_rb(rt.fb_idx, 1).handle
-end
-
-local function do_bloom_sample(start_viewid, drawer, ppi_handle, tagname, next_mip)
+local function do_bloom_sample(viewid, drawer, ppi_handle, tagname, next_mip)
     w:sync("render_object:in", drawer)
     local ro = drawer.render_object
 
-    for viewid=start_viewid, bloom_chain_count do
+    for i=1, bloom_chain_count do
         local sc = ro.properties["s_scene_color"].value
         sc.handle = ppi_handle
 
-        local bloom_param = ro.properties["u_bloom_param"]
+        local bloom_param = ro.properties["u_bloom_param"].value
         bloom_param.v = math3d.set_index(bloom_param, 1, next_mip())
         irender.draw(viewid, ro)
-
-        local qtag = tagname..(viewid-start_viewid+1)
-        ppi_handle = get_rt_handle(qtag)
+        ppi_handle = fbmgr.get_rb(fbmgr.get_byviewid(viewid)[1].rbidx).handle
+        viewid = viewid + 1
     end
 end
 
