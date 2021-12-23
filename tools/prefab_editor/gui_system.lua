@@ -492,13 +492,13 @@ function m:handle_event()
                 w:sync("slot?in", v1)
                 isslot = v1.slot
             end
-            if isslot then
-                for e in w:select "scene:in slot_name:out" do
-                    if e.scene == target.scene then
-                        e.slot_name = "None"
-                    end
-                end
-            end
+            -- if isslot then
+            --     for e in w:select "scene:in slot_name:out" do
+            --         if e.scene == target.scene then
+            --             e.slot_name = "None"
+            --         end
+            --     end
+            -- end
         end
         if transform_dirty then
             on_update(target)

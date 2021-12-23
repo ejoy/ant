@@ -125,6 +125,7 @@ function BaseView:on_set_position(value)
     local template = hierarchy:get_template(self.e)
     if template.template then
         world:pub {"EntityEvent", "move", self.e, template.template.data.scene.srt.t or {0,0,0}, value}
+        template.template.data.scene.srt.t = value
     else
         world:pub {"EntityEvent", "move", self.e, math3d.tovalue(iom.get_position(self.e)), value}
     end
@@ -140,8 +141,13 @@ function BaseView:on_get_position()
 end
 
 function BaseView:on_set_rotate(value)
+    local template = hierarchy:get_template(self.e)
     local euler = self.e.oldeuler
     world:pub {"EntityEvent", "rotate", self.e, { math.rad(euler[1]), math.rad(euler[2]), math.rad(euler[3]) }, value}
+    if template.template then
+        local q = math3d.tovalue(math3d.quaternion{math.rad(value[1]), math.rad(value[2]), math.rad(value[3])})
+        template.template.data.scene.srt.r = { math3d.index(q, 1, 2, 3, 4) }
+    end
 end
 
 function BaseView:on_get_rotate()
@@ -162,6 +168,7 @@ function BaseView:on_set_scale(value)
     local template = hierarchy:get_template(self.e)
     if template.template then
         world:pub {"EntityEvent", "scale", self.e, template.template.data.scene.srt.s or {1,1,1}, value}
+        template.template.data.scene.srt.s = value
     else
         world:pub {"EntityEvent", "scale", self.e, math3d.tovalue(iom.get_scale(self.e)), value}
     end
