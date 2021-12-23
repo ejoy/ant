@@ -116,7 +116,8 @@ local function create_fb_pyramids(rbidx)
     for i=0, bloom_chain_count do
         fbs[#fbs+1] = fbmgr.create{
             rbidx = rbidx,
-            mip=0,
+            mip=i,
+            resolve="",
         }
     end
     return fbs
@@ -157,20 +158,23 @@ function bloom_sys:init_world()
     create_chain_sample_queue(mqvr)
 end
 
-local function do_bloom_sample(viewid, drawer, ppi_handle, tagname, next_mip)
+local function do_bloom_sample(viewid, drawer, ppi_handle, next_mip)
     w:sync("render_object:in", drawer)
     local ro = drawer.render_object
 
+    local rbhandle = fbmgr.get_rb(fbmgr.get_byviewid(viewid)[1].rbidx).handle
     for i=1, bloom_chain_count do
         local sc = ro.properties["s_scene_color"].value
-        sc.handle = ppi_handle
+        sc.texture.handle = ppi_handle
 
         local bloom_param = ro.properties["u_bloom_param"].value
         bloom_param.v = math3d.set_index(bloom_param, 1, next_mip())
         irender.draw(viewid, ro)
-        ppi_handle = fbmgr.get_rb(fbmgr.get_byviewid(viewid)[1].rbidx).handle
+        ppi_handle = rbhandle
         viewid = viewid + 1
     end
+
+    return ppi_handle
 end
 
 function bloom_sys:bloom()
@@ -179,13 +183,14 @@ function bloom_sys:bloom()
 
     local pp = w:singleton("postprocess", "postprocess_input:in")
     local ppi_handle = pp.postprocess_input.scene_color_handle
-    do_bloom_sample(bloom_ds_viewid, ds_drawer, ppi_handle, "bloom_downsample", function () 
-        mip = mip+1
-        return mip
+    ppi_handle = do_bloom_sample(bloom_ds_viewid, ds_drawer, ppi_handle, function () 
+        local m = mip
+        mip = m+1
+        return m
     end)
 
-    do_bloom_sample(bloom_us_viewid, us_drawer, ppi_handle, "bloom_upsample", function ()
-        mip = mip - 1
+    do_bloom_sample(bloom_us_viewid, us_drawer, ppi_handle, function ()
+        mip = mip-1
         return mip
     end)
 
