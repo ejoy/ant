@@ -61,6 +61,10 @@ local function find_valid_viewid(afterviewid)
 	return vid < max_viewid and vid or nil
 end
 
+function viewid_pool.all_bindings()
+	return bindings
+end
+
 function viewid_pool.check_range(name, range)
 	for id=assert(bindings[name]), range do
 		if pool[id] == nil then

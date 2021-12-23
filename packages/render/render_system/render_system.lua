@@ -10,6 +10,14 @@ local ies		= ecs.import.interface "ant.scene|ifilter_state"
 local icamera	= ecs.import.interface "ant.camera|icamera"
 local render_sys = ecs.system "render_system"
 
+local viewidmgr = require "viewid_mgr"
+
+function render_sys:init()
+	for n, viewid in pairs(viewidmgr.all_bindings()) do
+		bgfx.set_view_name(viewid, n)
+	end
+end
+
 function render_sys:component_init()
 	for e in w:select "INIT render_object:update filter_material:out render_object_update?out" do
 		e.render_object = e.render_object or {}
