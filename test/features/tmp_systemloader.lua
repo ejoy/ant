@@ -18,14 +18,6 @@ local split_frustum = camerapkg.split_frustum
 local icamera = ecs.import.interface "ant.camera|icamera"
 local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 
-local function find_entity(name, whichtype)
-    for _, eid in world:each(whichtype) do
-        if world[eid].name:match(name) then
-            return eid
-        end
-    end
-end
-
 local function point_light_test()
     local pl_pos = {
         {  1, 0, 1},
@@ -47,27 +39,22 @@ local function point_light_test()
         {  3, 2,-3},
     }
 
-    local  lighteid = ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_point.prefab"[1]
-    iom.set_position(lighteid, {0, 1, 0, 1})
+    for _, p in ipairs(pl_pos) do
+        local  pl = ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_point.prefab"[1]
+        pl.on_ready = function()
+            iom.set_position(pl.root, p)
+        end
+        world:create_object(pl)
+    end
 
-    -- for _, p in ipairs(pl_pos) do
-    --     local  lighteid = ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_point.prefab"[1]
-    --     iom.set_position(lighteid, p)
-    -- end
+    local ce = ecs.create_instance  "/pkg/ant.test.features/assets/entities/pbr_cube.prefab"[1]
+    ce.on_ready = function ()
+        iom.set_position(ce.root, {0, 0, 0, 1})
+    end
+    world:create_object(ce)
+    
 
-    -- local cubeeid = ecs.create_instance  "/pkg/ant.test.features/assets/entities/pbr_cube.prefab"[1]
-    -- iom.set_position(cubeeid, {0, 0, 0, 1})
-
-    local eid = ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"[1]
-
-    -- for _, r in ipairs{
-    --     math3d.quaternion{2.4, 0, 0},
-    --     math3d.quaternion{-2.4, 0, 0},
-    --     math3d.quaternion{0, 1, 0},
-    -- } do
-    --     local eid = ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"[1]
-    --     iom.set_rotation(eid, r)
-    -- end
+    ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
 end
 
 local icc = ecs.import.interface "ant.test.features|icamera_controller"
@@ -77,6 +64,8 @@ function init_loader_sys:init()
     local off = 0.1
 	ientity.create_screen_axis_entity({s=0.1}, {type = "percent", screen_pos = {off, 1-off}}, "global_axes")
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
+
+    world:create_instance "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab"
     --ientity.create_grid_entity_simple "grid"
 
     -- ecs.create_entity{
