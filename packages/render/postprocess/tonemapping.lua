@@ -111,8 +111,8 @@ local function update_properties()
     ppi_scene_color.texture.handle = assert(ppi.scene_color_handle)
     imaterial.set_property_directly(tm_material.properties, "s_scene_color", ppi_scene_color)
 
-    if tm_material.properties["s_bloom_color"] then
-        ppi_bloom_color.texture.handle = assert(ppi.bloom_color_handle)
+    if tm_material.properties["s_bloom_color"] and ppi.bloom_color_handle then
+        ppi_bloom_color.texture.handle = ppi.bloom_color_handle
         imaterial.set_property_directly(tm_material.properties, "s_bloom_color", ppi_bloom_color)
     end
 end

@@ -122,7 +122,8 @@ function mgr.recreate(fbidx, attachments)
 	local oldfb = framebuffers[fbidx]
 	--we assume that only framebuffer handle need recreate, render buffer should handle before call it
 	bgfx.destroy(oldfb.handle)
-	framebuffers[fbidx] = create_fb(attachments)
+	attachments.handle = create_fb(attachments)
+	framebuffers[fbidx] = attachments
 end
 
 function mgr.copy(fbidx)

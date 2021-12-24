@@ -60,6 +60,19 @@ function message.size(width,height)
 	init_height = height
 end
 
+local imgui_max_viewid_count<const> = 16
+local uieditor_viewid<const> = viewidmgr.get "uieditor"
+viewidmgr.check_range("uieditor", imgui_max_viewid_count)
+
+function message.viewid()
+	local viewid = uieditor_viewid+#viewids
+	if viewid >= uieditor_viewid + imgui_max_viewid_count then
+		error(("imgui viewid range exceeded, max count:%d"):format(imgui_max_viewid_count))
+	end
+	viewids[#viewids+1] = viewid
+	return viewid
+end
+
 local function update_size()
 	if not size_dirty then return end
 	cb.size(init_width, init_height)

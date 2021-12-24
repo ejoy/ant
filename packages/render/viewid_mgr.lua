@@ -2,6 +2,7 @@ local viewid_pool = {}; viewid_pool.__index = viewid_pool
 
 local max_viewid<const>					= 256
 local bloom_chain_count<const>			= 4
+local imgui_count<const>				= 16
 local lightmap_ds_count<const>			= 10
 local current_viewid = 1
 local function alloc_id(count)
@@ -42,7 +43,7 @@ local bindings = {
 
 	effect_view = alloc_id(),
 	uiruntime	= alloc_id(),
-	uieditor	= alloc_id(),
+	uieditor	= alloc_id(imgui_count),
 }
 
 local pool = {}

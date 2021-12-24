@@ -64,11 +64,16 @@ local function upscale_bloom_vr(vr)
     }
 end
 
+local function remove_all_bloom_queue()
+    for e in w:select "bloom_queue" do
+        w:remove(e)
+    end
+end
+
 local function create_queue(viewid, vr, fbidx, queuename)
     ecs.create_entity{
         policy = {
             "ant.render|postprocess_queue",
-            "ant.render|watch_screen_buffer",
             "ant.general|name",
         },
         data = {
@@ -83,7 +88,6 @@ local function create_queue(viewid, vr, fbidx, queuename)
             queue_name = queuename,
             reference = true,
             name = queuename,
-            watch_screen_buffer = true,
             bloom_queue = true,
         }
     }
@@ -120,8 +124,19 @@ local function create_fb_pyramids(rbidx)
     return fbs
 end
 
+local function check_size_valid(mqvr)
+    local s = math.max(mqvr.w, mqvr.h)
+    local c = math.log(s, 2)
+    return c >= bloom_chain_count
+end
+
 local function create_chain_sample_queue(mqvr)
+    if not check_size_valid(mqvr) then
+        log.warn(("main queue buffer, w:%d, h:%d, in not valid for bloom, need chain: %d"):format(mqvr.w, mqvr.h, bloom_chain_count))
+        return
+    end
     local chain_vr = mqvr
+
     local rbidx = create_bloom_rb(mqvr)
     local fbpyramids = create_fb_pyramids(rbidx)
     assert(#fbpyramids == bloom_chain_count+1)
@@ -150,6 +165,38 @@ function bloom_sys:init_world()
     local mq = w:singleton("main_queue", "render_target:in")
     local mqvr = mq.render_target.view_rect
     create_chain_sample_queue(mqvr)
+end
+
+local mqvr_mb = world:sub{"viewrect_changed", "main_queue"}
+function bloom_sys:data_changed()
+    for msg in mqvr_mb:each() do
+        local mqvr = msg[3]
+        local q = w:singleton("bloom_upsample"..bloom_chain_count, "render_target:in")
+        if q then
+            local vr = q.render_target.view_rect
+            if mqvr.w ~= vr.w or mqvr.h ~= vr.h then
+                remove_all_bloom_queue()
+            end
+        else
+            create_chain_sample_queue(mqvr)
+        end
+    end
+end
+
+function bloom_sys:entity_remove()
+    local fbidx
+    for e in w:select "REMOVED bloom_queue render_target:in" do
+        if fbidx == nil then
+            fbmgr.destroy(fbidx)
+            fbidx = e.render_target.fb_idx
+        end
+    end
+
+    if fbidx then
+        fbidx = nil
+        local mq = w:singleton("main_queue", "render_target:in")
+        create_chain_sample_queue(mq.render_target.view_rect)
+    end
 end
 
 local scenecolor_property = {
@@ -182,6 +229,10 @@ local function do_bloom_sample(viewid, drawer, ppi_handle, next_mip)
 end
 
 function bloom_sys:bloom()
+    if w:singleton("bloom_queue", "render_target:in") == nil then
+        return
+    end
+
     --we just sample result to bloom buffer, and map bloom buffer from tonemapping stage
     local mip = 0
 

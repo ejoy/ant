@@ -68,6 +68,8 @@ system "bloom_system"
     .implement "postprocess/bloom.lua"
     .method "init"
     .method "init_world"
+    .method "data_changed"
+    .method "entity_remove"
     .method "bloom"
 
 -- system "dof_system"
