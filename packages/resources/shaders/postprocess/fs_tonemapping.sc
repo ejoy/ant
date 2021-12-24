@@ -16,6 +16,8 @@ void main()
 
     vec4 color = texture2D(s_scene_color, v_texcoord0);
     vec3 bloomcolor = texture2D(s_bloom_color, v_texcoord0).rgb;
-    color.rgb += bloomcolor;
+    //TODO: something wrong here for calculate bloom, just scale bloom color
+    float TMP_FIX_bloom_intensity = 8.5;
+    color.rgb += bloomcolor*TMP_FIX_bloom_intensity;
     gl_FragColor = vec4(tonemapping(color.rgb, avg_luminance, 0), color.a);
 }
