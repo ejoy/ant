@@ -177,12 +177,6 @@ void main()
 
     float NdotV = clamp_dot(N, V);
 
-#ifdef HAS_OCCLUSION_TEXTURE
-    float ao = texture2D(s_occlusion,  uv).r;
-    color  += mix(f_diffuse, f_diffuse * ao, u_occlusion_strength) + 
-            = mix(f_specular, f_specular * ao, u_occlusion_strength);
-#endif
-
 #ifdef CLUSTER_SHADING
 	uint cluster_idx = which_cluster(gl_FragCoord.xyz);
 
@@ -222,6 +216,7 @@ void main()
         color.rgb += c;
     }
 #else //!USING_LIGHTMAP
+
 #ifdef HAS_EMISSIVE_TEXTURE
     color += texture2D(s_emissive, uv).rgb * u_emissive_factor.rgb;
 #endif
@@ -237,6 +232,12 @@ void main()
     indirect_color *= u_ibl_indirect_intensity;
     color += indirect_color;
 #endif //ENABLE_IBL
+
+#ifdef HAS_OCCLUSION_TEXTURE
+    float ao = texture2D(s_occlusion,  uv).r;
+    color  += lerp(color, color * ao, u_occlusion_strength);
+#endif //HAS_OCCLUSION_TEXTURE
+
 #endif //USING_LIGHTMAP
     gl_FragColor = vec4(color, basecolor.a);
 #endif //MATERIAL_UNLIT
