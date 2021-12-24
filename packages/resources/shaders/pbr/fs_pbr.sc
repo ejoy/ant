@@ -156,10 +156,11 @@ void main()
     basecolor.a = 1.0;
 #endif //ALPHAMODE_MASK
 
-#ifdef MATERIAL_UNLIT
 #ifdef HAS_EMISSIVE_TEXTURE
     basecolor.rgb += texture2D(s_emissive, uv).rgb * u_emissive_factor.rgb;
 #endif
+
+#ifdef MATERIAL_UNLIT
     gl_FragColor = basecolor;
 #else //!MATERIAL_UNLIT
     vec3 V = normalize(u_eyepos.xyz - v_posWS.xyz);
@@ -216,10 +217,6 @@ void main()
         color.rgb += c;
     }
 #else //!USING_LIGHTMAP
-
-#ifdef HAS_EMISSIVE_TEXTURE
-    color += texture2D(s_emissive, uv).rgb * u_emissive_factor.rgb;
-#endif
 
     #ifdef ENABLE_SHADOW
 	color = shadow_visibility(v_distanceVS, vec4(v_posWS.xyz, 1.0), color);
