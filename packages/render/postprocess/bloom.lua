@@ -194,8 +194,9 @@ function bloom_sys:bloom()
     end)
 
     do_bloom_sample(bloom_us_viewid, us_drawer, ppi_handle, function ()
-        mip = mip-1
-        return mip
+        local m = mip
+        mip = m-1
+        return m
     end)
 
     assert(mip == 0, "upsample result should write to top mipmap")
