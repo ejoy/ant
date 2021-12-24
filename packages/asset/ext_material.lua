@@ -24,6 +24,10 @@ local function init(material)
                 assert(v.stage ~= nil)
                 v.texture = assetmgr.resource(v.texture)
             end
+            if v.image then
+                assert(v.stage ~= nil)
+                v.image = assetmgr.resource(v.image)
+            end
         end
     end
     return material

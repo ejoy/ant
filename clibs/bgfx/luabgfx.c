@@ -3996,7 +3996,7 @@ create_fb_mrt(lua_State *L) {
 			}
 			lua_pop(L, 1);
 
-			if (lua_getfield(L, -1, "flags") == LUA_TSTRING){
+			if (lua_getfield(L, -1, "resolve") == LUA_TSTRING){
 				const char* r = lua_tostring(L, -1);
 				if (strcmp(r, "g") == 0){
 					attachments[i].resolve = BGFX_RESOLVE_AUTO_GEN_MIPS;

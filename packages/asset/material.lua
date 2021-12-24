@@ -43,7 +43,7 @@ end
 
 local function set_image(p)
     local v = p.value
-    bgfx.set_image(v.stage, v.handle, v.mip, v.access)
+    bgfx.set_image(v.stage, v.image.handle, v.mip, v.access)
 end
 
 local function update_uniform(p, dst)
@@ -79,7 +79,9 @@ function imaterial.set_property_directly(properties, who, what)
 		log.warn(("entity do not have property:%s"):format(who))
 		return
 	end
-	if p.type == "s" then
+
+	local t = p.type
+	if t == "s" or t == "i" then
 		if type(what) ~= "table" then
 			error(("texture property must resource data:%s"):format(who))
 		end
@@ -88,7 +90,6 @@ function imaterial.set_property_directly(properties, who, what)
 			p.ref = nil
 		end
 		p.value = what
-		p.set = set_texture
 	else
 		--must be uniform: vector or matrix
 		if p.ref then
@@ -135,7 +136,7 @@ local function which_type(u)
 	local t = type(u)
 	if t == "table" then
 		if u.access then
-			return "b"
+			return u.image and "i" or "b"
 		end
 		return u.stage and "s" or "array"
 	end
@@ -145,11 +146,11 @@ local function which_type(u)
 end
 
 local set_funcs<const> = {
-	s = set_texture,
-	b = set_buffer,
-	array = set_uniform_array,
-	u = set_uniform,
-	i = set_image,
+	s		= set_texture,
+	i		= set_image,
+	b		= set_buffer,
+	array	= set_uniform_array,
+	u		= set_uniform,
 }
 
 local function which_set_func(u)
@@ -214,12 +215,13 @@ local function generate_properties(fx, properties)
 						error(("not found property:%s"):format(n))
 					end
 				end
+
 				new_properties[n] = {
-					value = v,
-					handle = u.handle,
-					type = u.type,
-					set = which_set_func(v),
-					ref = true,
+					value	= v,
+					handle	= u.handle,
+					type	= which_type(v),
+					set		= which_set_func(v),
+					ref		= true,
 				}
 			end
 		end

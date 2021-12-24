@@ -25,9 +25,6 @@ for i=1, bloom_chain_count do
     w:register{name="bloom_upsample"..i}
 end
 
--- we write bloom downsample&upsample result to rt mipmap level
-local mq_rt_mb = world:sub{"view_rect_changed", "main_queue"}
-
 local bloom_sys = ecs.system "bloom_system"
 
 local ds_drawer, us_drawer
@@ -147,9 +144,6 @@ local function create_chain_sample_queue(mqvr)
     local pp = w:singleton("postprocess", "postprocess_input:in")
     local bloom_color_handle = fbmgr.get_rb(rbidx).handle
     pp.postprocess_input.bloom_color_handle = bloom_color_handle
-
-    imaterial.set_property(ds_drawer, "s_scene_color",{stage=0, texture={handle=bloom_color_handle}})
-    imaterial.set_property(us_drawer, "s_scene_color",{stage=0, texture={handle=bloom_color_handle}})
 end
 
 function bloom_sys:init_world()
@@ -158,17 +152,27 @@ function bloom_sys:init_world()
     create_chain_sample_queue(mqvr)
 end
 
+local scenecolor_property = {
+    stage = 0,
+    mip = 0,
+    access = "r",
+    image = {handle=nil}
+}
+
 local function do_bloom_sample(viewid, drawer, ppi_handle, next_mip)
     w:sync("render_object:in", drawer)
     local ro = drawer.render_object
 
     local rbhandle = fbmgr.get_rb(fbmgr.get_byviewid(viewid)[1].rbidx).handle
     for i=1, bloom_chain_count do
-        local sc = ro.properties["s_scene_color"].value
-        sc.texture.handle = ppi_handle
+        local mip = next_mip()
+        scenecolor_property.image.handle = ppi_handle
+        scenecolor_property.mip = mip
+
+        imaterial.set_property_directly(ro.properties, "s_scene_color", scenecolor_property)
 
         local bloom_param = ro.properties["u_bloom_param"].value
-        bloom_param.v = math3d.set_index(bloom_param, 1, next_mip())
+        bloom_param.v = math3d.set_index(bloom_param, 1, mip)
         irender.draw(viewid, ro)
         ppi_handle = rbhandle
         viewid = viewid + 1
