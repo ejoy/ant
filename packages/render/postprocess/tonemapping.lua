@@ -90,6 +90,11 @@ local ppi_scene_color = {
     texture={handle=nil},
 }
 
+local ppi_bloom_color = {
+    stage = 2,
+    texture={handle=nil}
+}
+
 local function update_properties()
     for msg in cc_mb:each() do
         exposure_mb = world:sub{"exposure_changed", msg[3]}
@@ -105,6 +110,11 @@ local function update_properties()
     local ppi = pp.postprocess_input
     ppi_scene_color.texture.handle = assert(ppi.scene_color_handle)
     imaterial.set_property_directly(tm_material.properties, "s_scene_color", ppi_scene_color)
+
+    if tm_material.properties["s_bloom_color"] then
+        ppi_bloom_color.texture.handle = assert(ppi.bloom_color_handle)
+        imaterial.set_property_directly(tm_material.properties, "s_bloom_color", ppi_bloom_color)
+    end
 end
 
 function tm_sys:tonemapping()
