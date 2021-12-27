@@ -114,6 +114,15 @@ lContextLoadDocument(lua_State* L) {
 }
 
 static int
+lContextOnLoadDocument(lua_State* L) {
+	luabind::setthread(L);
+	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 2);
+	doc->body->DispatchEvent(Rml::EventId::Load, Rml::EventDictionary());
+	return 0;
+}
+
+static int
 lContextUnloadDocument(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
@@ -522,6 +531,7 @@ luaopen_rmlui(lua_State* L) {
 	g_plugin = new lua_plugin;
 	luaL_Reg l[] = {
 		{ "ContextLoadDocument", lContextLoadDocument },
+		{ "ContextOnLoadDocument", lContextOnLoadDocument },
 		{ "ContextUnloadDocument", lContextUnloadDocument },
 		{ "ContextProcessKey", lContextProcessKey },
 		{ "ContextProcessChar", lContextProcessChar },

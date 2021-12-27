@@ -67,7 +67,8 @@ Document* Context::LoadDocument(const std::string& document_path) {
 		return nullptr;
 	}
 	documents.push_back(document.get());
-	document->body->DispatchEvent(EventId::Load, EventDictionary());
+	// trigger load event in lua later
+	//document->body->DispatchEvent(EventId::Load, EventDictionary());
 	document->UpdateDataModel(false);
 	document->Update();
 	return document.release();
