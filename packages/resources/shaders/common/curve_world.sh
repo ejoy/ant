@@ -8,8 +8,9 @@
 #define CURVE_WORLD_TYPE_VIEW_SPHERE    1
 #define CURVE_WORLD_TYPE_CYLINDER       2
 
-#if ENABLE_CURVE_WORLD == CURVE_WORLD_TYPE_VIEW_SPHERE
 uniform vec4 u_curveworld_param;
+
+#if ENABLE_CURVE_WORLD == CURVE_WORLD_TYPE_VIEW_SPHERE
 #define u_curveworld_flat_distance  u_curveworld_param.x
 #define u_curveworld_base_distance  u_curveworld_param.y
 #define u_curveworld_exp            u_curveworld_param.z
@@ -17,7 +18,8 @@ uniform vec4 u_curveworld_param;
 #endif //ENABLE_CURVE_WORLD == CURVE_WORLD_TYPE_VIEW_SPHERE
 
 #if ENABLE_CURVE_WORLD == CURVE_WORLD_TYPE_CYLINDER
-#define u_curveworld_cylinder_curve_rate u_curveworld_param.x
+#define u_curveworld_cylinder_flat_distance  u_curveworld_param.x
+#define u_curveworld_cylinder_curve_rate     u_curveworld_param.y
 #endif //ENABLE_CURVE_WORLD == CURVE_WORLD_TYPE_CYLINDER
 
 uniform vec4 u_curveworld_dir;
@@ -34,18 +36,22 @@ vec3 curve_world_offset(vec3 posWS)
 #if ENABLE_CURVE_WORLD == CURVE_WORLD_TYPE_CYLINDER
     
     vec4 posVS = mul(u_view, vec4(posWS, 1.0));
-    float radian = (posVS.z / u_far) * PI * u_curveworld_cylinder_curve_rate;
-    float c = cos(radian), s = sin(radian);
+    float dis = posVS.z-u_curveworld_cylinder_flat_distance;
+    if (dis > 0.0){
+        float radian = (dis / u_far) * PI * u_curveworld_cylinder_curve_rate;
+        float c = cos(radian), s = sin(radian);
 
-    //TODO: rotation matrix create as rotate with x-axis in viewspace
-    mat4 ct = mtxFromCols4(
-        vec4(1.0, 0.0, 0.0, 0.0),
-        vec4(0.0, c,   s,   0.0),
-        vec4(0.0, -s,   c,   0.0),
-        vec4(0.0, 0.0, 0.0, 1.0));
-    vec4 offsetVS = mul(ct, u_curveworld_dir);
-    vec3 offset = mul(u_invView, offsetVS);
-    return posWS+offset;
+        //TODO: rotation matrix create as rotate with x-axis in viewspace
+        mat4 ct = mtxFromCols4(
+            vec4(1.0, 0.0, 0.0, 0.0),
+            vec4(0.0, c,   s,   0.0),
+            vec4(0.0, -s,   c,   0.0),
+            vec4(0.0, 0.0, 0.0, 1.0));
+        vec4 offsetVS = mul(ct, u_curveworld_dir);
+        vec3 offset = mul(u_invView, offsetVS);
+        return posWS+offset;
+    }
+    return posWS;
 #endif //CURVE_WORLD_CYLINDER
 
 #if ENABLE_CURVE_WORLD == CURVE_WORLD_TYPE_VIEW_SPHERE

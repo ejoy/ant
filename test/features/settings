@@ -17,10 +17,9 @@ animation:
       enable: true
 graphic:
   curve_world:
+    type: "cylinder"
     flat_distance:  0
-    base_distance:  30
-    exp: 3.5
-    amplification: 1.0
+    curve_rate: 0.03
     dirVS: {0.0, 0.0, 1.0, 0.0}
   lighting:
     cluster_shading: 1

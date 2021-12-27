@@ -110,8 +110,12 @@ do
 	local cw = setting:get "graphic/curve_world"
 	if cw then
 		local cw_param = system_properties.u_curveworld_param
+		if cw.type == "cylinder" then
+			cw_param.v = math3d.vector(cw.flat_distance, cw.curve_rate, 0.0, 0.0)
+		elseif cw.type =="view_sphere" then
+			cw_param.v = math3d.vector(cw.flat_distance, cw.base_distance, cw.exp, cw.amplification)
+		end
 		local cw_dir = system_properties.u_curveworld_dir
-		cw_param.v = math3d.vector(cw.flat_distance, cw.base_distance, cw.exp, cw.amplification)
 		cw_dir.v = math3d.vector(cw.dirVS)
 	end
 end
