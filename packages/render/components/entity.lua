@@ -325,9 +325,9 @@ function ientity.create_frustum_entity(frustum_points, name, color)
 end
 
 local function axis_mesh(color)
-	local r = color or mc.COLOR(mc.RED, 10)
-	local g = color or mc.COLOR(mc.GREEN, 10)
-	local b = color or mc.COLOR(mc.BLUE, 10)
+	local r = color or mc.COLOR(mc.RED, 	12000)
+	local g = color or mc.COLOR(mc.GREEN, 	12000)
+	local b = color or mc.COLOR(mc.BLUE, 	12000)
 	local axis_vb = {
 		0, 0, 0, r[1], r[2], r[3], r[4],
 		1, 0, 0, r[1], r[2], r[3], r[4],
