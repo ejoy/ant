@@ -61,8 +61,6 @@ local icc = ecs.import.interface "ant.test.features|icamera_controller"
 local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
     --point_light_test()
-    local off = 0.1
-	ientity.create_screen_axis_entity({s=0.1}, {type = "percent", screen_pos = {off, 1-off}}, "global_axes")
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
 
     ecs.create_instance "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab"
@@ -91,6 +89,9 @@ function init_loader_sys:init()
     --ientity.create_procedural_sky()
     ecs.create_instance "/pkg/ant.test.features/assets/entities/skybox_test.prefab"
     ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
+
+    local off = 0.1
+	ientity.create_screen_axis_entity({s=0.1}, {type = "percent", screen_pos = {off, 1-off}}, "global_axes")
 
     -- local p = ecs.create_instance "/pkg/ant.test.features/assets/entities/cube.prefab"
     -- function p:on_ready()
