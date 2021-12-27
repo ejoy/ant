@@ -17,6 +17,10 @@ function m.open(url)
     end
 end
 
+function m.onload(document)
+    rmlui.ContextOnLoadDocument(context, document)
+end
+
 function m.close(document)
     rmlui.ContextUnloadDocument(context, document)
 end

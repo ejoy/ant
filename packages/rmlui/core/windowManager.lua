@@ -11,6 +11,7 @@ function m.open(name, url)
     if doc then
         windows[name] = createWindow(doc, "extern")
         event("OnDocumentExternName", doc, name)
+        contextManager.onload(doc)
     end
 end
 
