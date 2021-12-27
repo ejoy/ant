@@ -8,11 +8,12 @@ local viewidmgr = require "viewid_mgr"
 
 local mc 		= import_package "ant.math".constant
 local math3d	= require "math3d"
+local bgfx		= require "bgfx"
 local icamera	= ecs.import.interface "ant.camera|icamera"
 local ishadow	= ecs.import.interface "ant.render|ishadow"
 local irender	= ecs.import.interface "ant.render|irender"
 local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
-local ilight	= ecs.import.interface "ant.render|ilight"
+local fbmgr		= require "framebuffer_mgr"
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
 
@@ -174,7 +175,32 @@ end
 
 local sm = ecs.system "shadow_system"
 
-local function create_csm_entity(index, vr, fbidx, depth_type)
+local function create_clear_shadowmap_queue(fbidx, depth_type)
+	local rb = fbmgr.get_rb(fbidx, 1)
+	local ww, hh = rb.w, rb.h
+	ecs.create_entity{
+		policy = {
+			"ant.render|postprocess_queue",
+			"ant.general|name",
+		},
+		data = {
+			render_target = {
+				clear_state = {
+					color = 0xffffffff,
+					depth = 1,
+					clear = depth_type == "linear" and "CD" or "D",
+				},
+				fb_idx = fbidx,
+				viewid = viewidmgr.get "csm_fb",
+				view_rect = {x=0, y=0, w=ww, h=hh},
+			},
+			queue_name = "clear_sm",
+			name = "clear_sm",
+		}
+	}
+end
+
+local function create_csm_entity(index, vr, fbidx)
 	local csmname = "csm" .. index
 	local queuename = "csm_queue" .. index
 	local camera_ref = icamera.create {
@@ -207,10 +233,7 @@ local function create_csm_entity(index, vr, fbidx, depth_type)
 				view_mode = "s",
 				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
 				clear_state = {
-					color = 0xffffffff,
-					depth = 1,
-					stencil = 0,
-					clear = depth_type == "linear" and "CD" or "D",
+					clear = "",
 				},
 				fb_idx = fbidx,
 			},
@@ -233,13 +256,13 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 function sm:init()
 	local fbidx = ishadow.fb_index()
 	local s, dt = ishadow.shadowmap_size(), ishadow.depth_type()
-
+	create_clear_shadowmap_queue(fbidx, dt)
 	local originmatrial = "/pkg/ant.resources/materials/depth.material"
 	shadow_material = imaterial.load(originmatrial, {depth_type=dt})
 	gpu_skinning_material = imaterial.load(originmatrial, {depth_type=dt, skinning="GPU"})
 	for ii=1, ishadow.split_num() do
 		local vr = {x=(ii-1)*s, y=0, w=s, h=s}
-		create_csm_entity(ii, vr, fbidx, dt)
+		create_csm_entity(ii, vr, fbidx)
 	end
 end
 
@@ -373,6 +396,11 @@ function sm:refine_camera()
 	-- 			calc_shadow_camera_from_corners(aabb_corners_WS, lightdir, setting.shadowmap_size, setting.stabilize, camera_rc)
 	-- 		end
 	-- end
+end
+
+function sm:render_submit()
+	local viewid = viewidmgr.get "csm_fb"
+	bgfx.touch(viewid)
 end
 
 local function which_material(skinning)

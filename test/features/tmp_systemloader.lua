@@ -65,7 +65,7 @@ function init_loader_sys:init()
 	ientity.create_screen_axis_entity({s=0.1}, {type = "percent", screen_pos = {off, 1-off}}, "global_axes")
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
 
-    world:create_instance "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab"
+    ecs.create_instance "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab"
     --ientity.create_grid_entity_simple "grid"
 
     -- ecs.create_entity{

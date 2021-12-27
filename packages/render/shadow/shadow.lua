@@ -95,19 +95,6 @@ local csm_setting = {
 	fb_index		= fbmgr.create(get_render_buffers(shadowcfg.size * shadowcfg.split_num, shadowcfg.size, shadowcfg.type)),
 }
 
---init shadowmap
---TODO: need call clean every frame
-do
-	local csm_fb_viewid = viewidmgr.get "csm_fb"
-	local vrw, vrh = csm_setting.shadowmap_size * csm_setting.split_num, csm_setting.shadowmap_size
-	bgfx.set_view_rect(csm_fb_viewid, 0, 0, vrw, vrh)
-	local s = shadowcfg.type == "linear" and "CD" or "D"
-	bgfx.set_view_clear(csm_fb_viewid, s, 0, 1.0, 0)
-	local fb = fbmgr.get(csm_setting.fb_index)
-	bgfx.set_view_frame_buffer(csm_fb_viewid, fb.handle)
-	bgfx.touch(csm_fb_viewid)
-end
-
 local function gen_ratios(distances)
 	local pre_dis = 0
 	local ratios = {}
