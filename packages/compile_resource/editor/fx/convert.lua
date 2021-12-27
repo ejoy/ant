@@ -56,7 +56,7 @@ local function default_macros(setting)
     }
 
     if enable_curve_world then
-        m[#m+1] = "ENABLE_CURVE_WORLD=1"
+        m[#m+1] = "ENABLE_CURVE_WORLD=2"
     end
 
     -- if enable_curve_world and setting.ENABLE_CURVE_WORLD then
