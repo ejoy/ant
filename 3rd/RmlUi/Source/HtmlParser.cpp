@@ -409,7 +409,7 @@ void HtmlParser::EnterOpenElement(char c) {
 						if (!m_inner_xml_data) {
 							m_inner_xml_data = true;
 							m_inner_xml_data_begin = m_pos;
-							m_inner_xml_tag = accum;
+							m_inner_xml_stack_index = m_stack_items.size();
 							m_handler->OnInnerXML(true);
 						}
 					}
@@ -477,7 +477,7 @@ void HtmlParser::EnterClosingElement() {
 				case '>':
 					if (m_stack_items.top() != accum)
 						ThrowException(HtmlError::SPE_MATCH);
-					if (m_inner_xml_data && m_stack_items.top() == m_inner_xml_tag) {
+					if (m_inner_xml_data && m_stack_items.size() == m_inner_xml_stack_index) {
 						inner_xml_data = std::string(&m_buf[m_inner_xml_data_begin], tag_begin - m_inner_xml_data_begin - 1);
 						m_inner_xml_data = false;
 						m_handler->OnInnerXML(false);
