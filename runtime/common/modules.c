@@ -75,7 +75,9 @@ void ant_loadmodules(lua_State* L) {
         { "window", luaopen_window },
         { "terrain", luaopen_terrain},
         { "effekseer", luaopen_effekseer},
+#if !defined(__MINGW32__)
         { "audio", luaopen_audio},
+#endif
         { "ltask", luaopen_ltask},
         { "ltask.bootstrap", luaopen_ltask_bootstrap},
         { "ltask.bootstrap", luaopen_ltask_bootstrap},
