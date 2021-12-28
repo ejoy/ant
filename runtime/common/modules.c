@@ -1,8 +1,8 @@
 #include "modules.h"
-#include <lua.hpp>
+#include <lua.h>
+#include <lauxlib.h>
 #include <bgfx/c99/bgfx.h>
 
-extern "C" {
 int luaopen_bee_filesystem(lua_State* L);
 int luaopen_bee_serialization(lua_State* L);
 int luaopen_bee_socket(lua_State* L);
@@ -46,7 +46,6 @@ int luaopen_filedialog(lua_State* L);
 int luaopen_imgui(lua_State* L);
 int luaopen_image(lua_State* L);
 #endif
-}
 
 void ant_loadmodules(lua_State* L) {
     static const luaL_Reg modules[] = {
