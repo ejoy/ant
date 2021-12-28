@@ -14,7 +14,7 @@ local RuntimeBacklist = {
 local EditorBacklist = {
     firmware = true,
     bake = true,
-    audio = lm.plat == "mingw"
+    audio = (lm.os == "windows" and lm.compiler == "gcc")
 }
 
 local RuntimeModules = {}
