@@ -37,7 +37,7 @@ vec3 curve_world_offset(vec3 posWS)
     
     vec4 posVS = mul(u_view, vec4(posWS, 1.0));
     float dis = posVS.z-u_curveworld_cylinder_flat_distance;
-    if (dis > 0.0){
+    if (dis > 0){
         float radian = (dis / u_far) * PI * u_curveworld_cylinder_curve_rate;
         float c = cos(radian), s = sin(radian);
 
@@ -47,11 +47,16 @@ vec3 curve_world_offset(vec3 posWS)
             vec4(0.0, c,   s,   0.0),
             vec4(0.0, -s,   c,   0.0),
             vec4(0.0, 0.0, 0.0, 1.0));
-        vec4 offsetVS = mul(ct, u_curveworld_dir);
-        vec3 offset = mul(u_invView, offsetVS);
-        return posWS+offset;
+
+        posVS = mul(ct, posVS);
+        return mul(u_invView, posVS).xyz;
+        //add offset in posWS will cause pre-depth pass with color pass failed
+        // vec4 offsetVS = mul(ct, u_curveworld_dir*dis);
+        // vec3 offset = mul(u_invView, offsetVS);
+        // return posWS+offset;
     }
     return posWS;
+
 #endif //CURVE_WORLD_CYLINDER
 
 #if ENABLE_CURVE_WORLD == CURVE_WORLD_TYPE_VIEW_SPHERE

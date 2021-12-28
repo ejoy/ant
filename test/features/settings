@@ -18,8 +18,8 @@ animation:
 graphic:
   curve_world:
     type: "cylinder"
-    flat_distance:  0
-    curve_rate: 0.03
+    flat_distance:  2
+    curve_rate: 0.1
     dirVS: {0.0, 0.0, 1.0, 0.0}
   lighting:
     cluster_shading: 1
