@@ -14,6 +14,7 @@ local RuntimeBacklist = {
 local EditorBacklist = {
     firmware = true,
     bake = true,
+    audio = lm.plat ~= "mingw"
 }
 
 local RuntimeModules = {}
@@ -49,6 +50,13 @@ lm:source_set "ant_common" {
         "common/runtime.cpp",
         "common/progdir.cpp",
     },
+    windows = {
+        includes = {
+            "../clibs/lua",
+            "common"
+        },
+        sources = "windows/main.cpp",
+    },
     macos = {
         sources = "../osx/main.cpp",
     },
@@ -61,40 +69,13 @@ lm:source_set "ant_common" {
     }
 }
 
-lm:lib "ant_runtime" {
-    deps = {
-        "ant_common",
-        RuntimeModules,
-    },
-    includes = {
-        "../clibs/lua",
-        "../3rd/bgfx/include",
-        "../3rd/bx/include",
-    },
-    defines = "ANT_RUNTIME",
-    sources = "common/modules.cpp",
-}
-
-lm:lib "ant_editor" {
-    deps = {
-        "ant_common",
-        EditorModules,
-    },
-    includes = {
-        "../clibs/lua",
-        "../3rd/bgfx/include",
-        "../3rd/bx/include",
-    },
-    sources = "common/modules.cpp",
+lm:source_set "ant_openlibs" {
+    includes = "../clibs/lua",
+    sources = "common/ant_openlibs.c",
 }
 
 lm:source_set "ant_links" {
     windows = {
-        includes = {
-            "../clibs/lua",
-            "common"
-        },
-        sources = "windows/main.cpp",
         linkdirs ={
             "../3rd/fmod/windows/core/lib/x64",
             "../3rd/fmod/windows/studio/lib/x64",
@@ -143,16 +124,39 @@ lm:source_set "ant_links" {
     }
 }
 
-lm:source_set "ant_openlibs" {
-    includes = "../clibs/lua",
-    sources = "common/ant_openlibs.c",
+lm:source_set "ant_runtime" {
+    deps = {
+        "ant_common",
+        "ant_openlibs",
+        RuntimeModules,
+    },
+    includes = {
+        "../clibs/lua",
+        "../3rd/bgfx/include",
+        "../3rd/bx/include",
+    },
+    defines = "ANT_RUNTIME",
+    sources = "common/modules.c",
+}
+
+lm:source_set "ant_editor" {
+    deps = {
+        "ant_common",
+        "ant_openlibs",
+        EditorModules,
+    },
+    includes = {
+        "../clibs/lua",
+        "../3rd/bgfx/include",
+        "../3rd/bx/include",
+    },
+    sources = "common/modules.c",
 }
 
 lm:exe "lua" {
     deps = {
-        "bgfx-lib",
         "ant_editor",
-        "ant_openlibs",
+        "bgfx-lib",
         "ant_links",
         "copy_mainlua"
     }
@@ -160,9 +164,8 @@ lm:exe "lua" {
 
 lm:exe "ant" {
     deps = {
-        "bgfx-lib",
         "ant_runtime",
-        "ant_openlibs",
+        "bgfx-lib",
         "ant_links",
         "copy_mainlua"
     }
