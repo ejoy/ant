@@ -14,7 +14,7 @@ local RuntimeBacklist = {
 local EditorBacklist = {
     firmware = true,
     bake = true,
-    audio = lm.plat ~= "mingw"
+    audio = lm.plat == "mingw"
 }
 
 local RuntimeModules = {}
@@ -76,10 +76,6 @@ lm:source_set "ant_openlibs" {
 
 lm:source_set "ant_links" {
     windows = {
-        linkdirs ={
-            "../3rd/fmod/windows/core/lib/x64",
-            "../3rd/fmod/windows/studio/lib/x64",
-        },
         links = {
             "shlwapi",
             "user32",
@@ -93,8 +89,6 @@ lm:source_set "ant_links" {
             "imm32",
             "advapi32",
             "version",
-            "fmodL_vc",
-            "fmodstudioL_vc"
         }
     },
     macos = {

@@ -33,15 +33,29 @@ lm:source_set "source_audio" {
             fmodDir.."/windows/core/inc",
             fmodDir.."/windows/studio/inc",
         },
-        -- linkdirs ={
-        --     fmodDir.."/windows/core/lib/x64",
-        --     fmodDir.."/windows/studio/lib/x64",
-        -- },
-		-- links = {
-        --     "fmodL_vc",
-        --     "fmodstudioL_vc"
-        -- }
+        linkdirs ={
+            fmodDir.."/windows/core/lib/x64",
+            fmodDir.."/windows/studio/lib/x64",
+        },
+        links = {
+            "fmodL_vc",
+            "fmodstudioL_vc"
+        },
 	},
+    mingw = {
+        includes = {
+            fmodDir.."/windows/core/inc",
+            fmodDir.."/windows/studio/inc",
+        },
+        linkdirs ={
+            fmodDir.."/windows/core/lib/x64",
+            fmodDir.."/windows/studio/lib/x64",
+        },
+        -- links = {
+        --     "fmodL",
+        --     "fmodstudioL"
+        -- },
+    },
     deps = {
         "copy_fmod",
     }

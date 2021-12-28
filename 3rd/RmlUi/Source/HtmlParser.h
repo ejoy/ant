@@ -82,7 +82,7 @@ private:
     size_t           m_pos;
     bool             m_inner_xml_data = false;
     size_t           m_inner_xml_data_begin;
-    std::string      m_inner_xml_tag;
+    size_t           m_inner_xml_stack_index;
     void UndoChar();
     char GetChar();
     void SkipWhiteSpace();
