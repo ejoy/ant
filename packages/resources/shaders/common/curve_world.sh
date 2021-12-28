@@ -48,12 +48,11 @@ vec3 curve_world_offset(vec3 posWS)
             vec4(0.0, -s,   c,   0.0),
             vec4(0.0, 0.0, 0.0, 1.0));
 
-        posVS = mul(ct, posVS);
+        // NOTE: we should add offset in VS and transform to WS, or it will faild depth test when compare to pre-depth pass's depth
+        vec4 offsetVS = mul(ct, vec4(u_curveworld_dir.xyz*dis, 0.0));
+        posVS.xyz += offsetVS.xyz;
         return mul(u_invView, posVS).xyz;
-        //add offset in posWS will cause pre-depth pass with color pass failed
-        // vec4 offsetVS = mul(ct, u_curveworld_dir*dis);
-        // vec3 offset = mul(u_invView, offsetVS);
-        // return posWS+offset;
+        //return posWS+offset;
     }
     return posWS;
 
