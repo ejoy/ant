@@ -146,7 +146,7 @@ void HtmlParser::Parse(std::string_view stream, HtmlHandler* handler) {
 			case '/':
 				state = st_close;
 				EnterClosingElement();
-				if (m_stack_items.empty()) {
+				if (m_stack_items.empty() && !handler->IsEmbed()) {
 					state = st_finish;
 					break;
 				}
