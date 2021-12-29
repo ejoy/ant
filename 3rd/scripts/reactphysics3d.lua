@@ -16,11 +16,16 @@ lm:source_set "reactphysics3d" {
             "/wd4715",
         }
     },
+	mingw = {
+		flags = {
+			"-Wno-class-memaccess",
+		}
+	},
     clang = {
         flags = {
             "-Wno-defaulted-function-deleted",
             "-Wno-unused-private-field",
-            "-Wno-mismatched-tags"
+            "-Wno-mismatched-tags",
         }
     }
 }
