@@ -5,7 +5,7 @@ local w = world.w
 local widget_utils = require "widget.utils"
 local prefab_mgr = ecs.require "prefab_manager"
 
-local projsetting = ecs.require "widget.project_setting"
+local projsetting = require "widget.project_setting"
 
 local rhwi      = import_package "ant.hwi"
 local stringify = import_package "ant.serialize".stringify

@@ -34,6 +34,7 @@ graphic:
   postprocess:
     bloom:
       enable: false
+      type: cylinder
       inv_highlight: 0.00001
       threshold: 12000
   shadow:

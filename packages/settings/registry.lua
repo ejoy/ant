@@ -82,6 +82,10 @@ function mt:set(path, value)
     return true
 end
 
+function mt:setting_path()
+    return self._path
+end
+
 function mt:enum_key(path)
     local sort = {}
     local mark = {}
@@ -240,11 +244,9 @@ end
 
 local m = {}
 
-function m.create(path, mode)
+function m.create(path)
     local self = setmetatable({}, mt)
-    if mode ~= 'r' then
-        self._path = path
-    end
+    self._path = path
     local data = datalist.parse(load(path))
     if not data then
         return

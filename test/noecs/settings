@@ -28,9 +28,10 @@ graphic:
     format: RGBA16F
   postprocess:
     bloom:
-      enable: true
-      format: RGBA16F
-      sample_times: 4
+      enable: false
+      type: cylinder
+      inv_highlight: 0.00001
+      threshold: 12000
   shadow:
     enable: true
     size: 1024

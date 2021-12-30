@@ -1,11 +1,8 @@
-local ecs   = ...
-local world = ecs.world
-local w     = world.w
-
-local fs            = require "filesystem"
+local lfs           = require "filesystem.local"
 local imgui         = require "imgui"
 local global_data   = require "common.global_data"
 local setting       = import_package "ant.settings"
+local serialize     = import_package "ant.serialize"
 
 local ps = {
     id      = "ProjectSetting"
@@ -19,6 +16,7 @@ local PropertyLabel = imgui.widget.PropertyLabel
 local Checkbox      = imgui.widget.Checkbox
 local BeginCombo    = imgui.widget.BeginCombo
 local EndCombo      = imgui.widget.EndCombo
+local Button        = imgui.widget.Button
 local BeginDisabled = imgui.windows.BeginDisabled
 local EndDisabled   = imgui.windows.EndDisabled
 local BeginTabBar   = imgui.windows.BeginTabBar
@@ -46,7 +44,7 @@ end
 local function CheckProperty(name, value, enable, p, set_p)
     local _, result = Checkbox("##"..name, enable)
     SameLine()
-    BeginDisabled(result)
+    BeginDisabled(not result)
     
     if p(name, value) then
         set_p(value)
@@ -65,10 +63,10 @@ local function toRGBColor(dwColor)
 end
 
 local function toDWColor(rgbcolor)
-    local r = rgbcolor[1] * 255
-    local g = rgbcolor[2] * 255
-    local b = rgbcolor[3] * 255
-    local a = rgbcolor[4] * 255
+    local r = math.floor(rgbcolor[1] * 255)
+    local g = math.floor(rgbcolor[2] * 255)
+    local b = math.floor(rgbcolor[3] * 255)
+    local a = math.floor(rgbcolor[4] * 255)
 
     return r|g<<8|b<<16|a<<24
 end
@@ -137,13 +135,13 @@ local function setting_ui(sc)
                 if change then
                     sc:set("graphic/postprocess/bloom/enable", enable)
                 end
-                BeginDisabled(enable)
-                local v = {b.inv_highlight}
+                BeginDisabled(not enable)
+                local v = {b.inv_highlight or 0.0}
                 if PropertyFloat("Inverse HighLight", v) then
                     sc:set("graphic/postprocess/bloom/inv_highlight", v[1])
                 end
 
-                v[1] = b.threshold
+                v[1] = b.threshold or 0.0
                 if PropertyFloat("Lumnimance Thresthod", v) then
                     sc:set("graphic/postprocess/bloom/threshold", v[1])
                 end
@@ -161,7 +159,7 @@ local function setting_ui(sc)
             if change then
                 sc:set("graphic/curve_world/enable", enable)
             end
-            BeginDisabled(enable)
+            BeginDisabled(not enable)
             if BeginCombo("Type", {cw.type, flags = imgui.flags.Combo{} }) then
                 for _, n in ipairs(default_curve_world.type_options) do
                     if imgui.widget.Selectable(n, cw.type == n) then
@@ -194,6 +192,15 @@ local function setting_ui(sc)
         end
 
         TreePop()
+    end
+
+    if Button "Save" then
+        local p = sc:setting_path()
+        local c = serialize.stringify(sc._data)
+        
+        local f = lfs.open(p:localpath())
+        f:write(c)
+        f:close()
     end
 end
 

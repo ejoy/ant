@@ -19,7 +19,7 @@ graphic:
   lighting:
     cluster_shading: 1
   render:
-    clear_color: 0x000000ff
+    clear_color: 0xff000000
     clear_depth: 1
     clear_stencil: 0
     clear: CDS
@@ -29,8 +29,9 @@ graphic:
   postprocess:
     bloom:
       enable: false
-      format: RGBA16F
-      sample_times: 4
+      type: cylinder
+      inv_highlight: 0.00001
+      threshold: 12000
   shadow:
     enable: true
     size: 1024
