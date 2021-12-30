@@ -64,7 +64,7 @@ vec3 curve_world_offset(vec3 posWS)
     vec3 offset = u_curveworld_amplification*pow((dis-u_curveworld_flat_distance)/u_curveworld_base_distance, u_curveworld_exp)*dir;
     return posWS + offset;
 #endif //CURVE_WORLD_VIEW_SPHERE
-    
+    return posWS;
 }
 
 // vec4 do_cylinder_transform(vec4 posWS)

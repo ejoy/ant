@@ -87,7 +87,16 @@ function util.spawn_process(commands, notwait)
 	return true, table.concat(msg, "\n")
 end
 
-local BINDIR<const> = fs.exe_path():parent_path()
+
+local function find_bindir()
+    local antdir = os.getenv "antdir"
+    if antdir then
+        return fs.path(antdir) / "bin/msvc/debug"
+    end
+
+    return fs.exe_path():parent_path()
+end
+local BINDIR<const> = find_bindir()--fs.exe_path():parent_path()
 local TOOLSUFFIX<const> = platform.OS == "OSX" and "" or ".exe"
 
 function util.bin_dir()

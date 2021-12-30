@@ -47,6 +47,10 @@ local SETTING_MAPPING = {
 
 local enable_cs = setting:get 'graphic/lighting/cluster_shading' ~= 0
 local curve_world_type = setting:get "graphic/curve_world/type"
+local curve_world_type_macros<const> = {
+    view_sphere = 1,
+    cylinder = 2,
+}
 
 local function default_macros(setting)
     local m = {
@@ -56,7 +60,7 @@ local function default_macros(setting)
     }
 
     if curve_world_type then
-        m[#m+1] = "ENABLE_CURVE_WORLD=" .. curve_world_type
+        m[#m+1] = "ENABLE_CURVE_WORLD=" .. curve_world_type_macros[curve_world_type]
     end
 
     if enable_cs then
