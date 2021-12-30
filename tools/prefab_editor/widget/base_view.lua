@@ -145,8 +145,7 @@ function BaseView:on_set_rotate(value)
     local euler = self.e.oldeuler
     world:pub {"EntityEvent", "rotate", self.e, { math.rad(euler[1]), math.rad(euler[2]), math.rad(euler[3]) }, value}
     if template.template then
-        local q = math3d.tovalue(math3d.quaternion{math.rad(value[1]), math.rad(value[2]), math.rad(value[3])})
-        template.template.data.scene.srt.r = { math3d.index(q, 1, 2, 3, 4) }
+        template.template.data.scene.srt.r = math3d.tovalue(math3d.quaternion{math.rad(value[1]), math.rad(value[2]), math.rad(value[3])})
     end
 end
 

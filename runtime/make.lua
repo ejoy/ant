@@ -121,7 +121,6 @@ lm:source_set "ant_links" {
 lm:source_set "ant_runtime" {
     deps = {
         "ant_common",
-        "ant_openlibs",
         RuntimeModules,
     },
     includes = {
@@ -136,7 +135,6 @@ lm:source_set "ant_runtime" {
 lm:source_set "ant_editor" {
     deps = {
         "ant_common",
-        "ant_openlibs",
         EditorModules,
     },
     includes = {
@@ -150,6 +148,7 @@ lm:source_set "ant_editor" {
 lm:exe "lua" {
     deps = {
         "ant_editor",
+        "ant_openlibs",
         "bgfx-lib",
         "ant_links",
         "copy_mainlua"
@@ -159,6 +158,7 @@ lm:exe "lua" {
 lm:exe "ant" {
     deps = {
         "ant_runtime",
+        "ant_openlibs",
         "bgfx-lib",
         "ant_links",
         "copy_mainlua"
