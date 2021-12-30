@@ -439,6 +439,17 @@ lElementSetProperty(lua_State* L) {
 }
 
 static int
+lElementSetPropertyImmediate(lua_State* L) {
+	luabind::setthread(L);
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	std::string name = lua_checkstdstring(L, 2);
+	std::string value = lua_checkstdstring(L, 3);
+	bool ok = e->SetPropertyImmediate(name, value);
+	lua_pushboolean(L, ok);
+	return 1;
+}
+
+static int
 lRmlInitialise(lua_State* L) {
 	luabind::setthread(L);
     if (g_wrapper) {
@@ -565,6 +576,7 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementRemoveProperty", lElementRemoveProperty },
 		{ "ElementSetAttribute", lElementSetAttribute },
 		{ "ElementSetProperty", lElementSetProperty },
+		{ "ElementSetPropertyImmediate", lElementSetPropertyImmediate},
 		{ "RenderBegin", lRenderBegin },
 		{ "RenderFrame", lRenderFrame },
 		{ "RmlInitialise", lRmlInitialise },
