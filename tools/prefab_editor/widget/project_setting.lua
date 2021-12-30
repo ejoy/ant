@@ -154,11 +154,17 @@ local function setting_ui(sc)
         --curve world
         
         if TreeNode("Curve World", default_tr_flags)then
-            local cw = graphic.curve_world or default_curve_world
-            local change, enable = Checkbox("Enable", cw.enable)
+            local cw = graphic.curve_world
+            local change, enable = Checkbox("Enable", cw and cw.enable or false)
             if change then
+                if cw == nil then
+                    sc:set("graphic/curve_world", default_curve_world)
+                    cw = default_curve_world
+                end
                 sc:set("graphic/curve_world/enable", enable)
             end
+            cw = cw or default_curve_world
+
             BeginDisabled(not enable)
             if BeginCombo("Type", {cw.type, flags = imgui.flags.Combo{} }) then
                 for _, n in ipairs(default_curve_world.type_options) do
@@ -169,21 +175,23 @@ local function setting_ui(sc)
                 EndCombo()
             end
 
-            if cw.type == "cylinder" then
+            local t = cw.type
+            if t == "cylinder" then
                 local v = {cw.flat_distance}
                 if PropertyFloat("Flat Distance", v) then
-                    cw.flat_distance = v[1]
+                    sc:set("graphic/curve_world/flat_distance", v[1])
                 end
                 v[1] = cw.curve_rate
                 if PropertyFloat("Curve Rate", v) then
-                    cw.curve_rate = v[1]
+                    sc:set("graphic/curve_world/curve_rate", v[1])
                 end
             else
                 assert(cw.type == "view_sphere")
                 --log.info("curve world type 'view_sphere' is not used")
             end
 
-            local dirVS = {}; for i=1, #cw.dirVS do dirVS[i] = cw.dirVS[i] end
+            local origin_disVS = cw.dirVS or default_curve_world.dirVS
+            local dirVS = {}; for i=1, #origin_disVS do dirVS[i] = origin_disVS[i] end
             if PropertyFloat("Direction", dirVS) then
                 sc:set("graphic/curve_world/dirVS", dirVS)
             end
@@ -198,7 +206,7 @@ local function setting_ui(sc)
         local p = sc:setting_path()
         local c = serialize.stringify(sc._data)
         
-        local f = lfs.open(p:localpath())
+        local f = lfs.open(p:localpath(), "w")
         f:write(c)
         f:close()
     end
