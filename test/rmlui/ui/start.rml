@@ -39,7 +39,8 @@
                 console.log(event.target.id)
                 window.open("script.rml")
             end
-            function start.load()
+            function start.load(event)
+                event.target.style.width = "100px"
             end
             function start.setting()
                 start.show = not start.show
