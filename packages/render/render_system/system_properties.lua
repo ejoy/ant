@@ -107,7 +107,7 @@ local system_properties = {
 
 -- update curve world info from setting
 do
-	local cw = setting:get "graphic/curve_world"
+	local cw = setting:data().graphic.curve_world
 	if cw then
 		local cw_param = system_properties.u_curveworld_param
 		if cw.type == "cylinder" then

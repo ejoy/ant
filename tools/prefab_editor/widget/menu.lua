@@ -5,6 +5,8 @@ local w = world.w
 local widget_utils = require "widget.utils"
 local prefab_mgr = ecs.require "prefab_manager"
 
+local projsetting = ecs.require "widget.project_setting"
+
 local rhwi      = import_package "ant.hwi"
 local stringify = import_package "ant.serialize".stringify
 
@@ -42,18 +44,8 @@ local function show_select_blender_dialog()
     end
 end
 
-local function show_project_setting(pid)
-    
-    if imgui.windows.OpenPopup ("test1", imgui.flags.Window {'AlwaysAutoResize'}) then
-        local cb = {true}
-        imgui.widget.Checkbox("abc1", cb)
-
-        imgui.widget.InputFloat("bb", {1.0})
-        imgui.windows.EndPopup()
-    end
-end
-
 function m.show()
+    local click_project_setting
     if imgui.widget.BeginMainMenuBar() then
         if imgui.widget.BeginMenu "File" then
             if imgui.widget.MenuItem("New", "Ctrl+N") then
@@ -89,8 +81,7 @@ function m.show()
             show_select_blender_dialog()
             imgui.cursor.Separator()
             if imgui.widget.MenuItem "ProjectSetting" then
-
-                show_project_setting("ProjectSetting")
+                click_project_setting = true
             end
             imgui.widget.EndMenu()
         end
@@ -106,6 +97,8 @@ function m.show()
         
         imgui.widget.EndMainMenuBar()
     end
+
+    projsetting.show(click_project_setting)
 end
 
 return m

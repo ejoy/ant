@@ -1,4 +1,5 @@
 local fs = require 'filesystem'
+local datalist = require 'datalist'
 
 local mt = {}
 mt.__index = mt
@@ -62,9 +63,10 @@ function mt:get(path)
         if t then
             local k = sp[#sp]
             local r = t[k]
-            if r then
-                return r
+            if type(r) == 'table' then
+                return
             end
+            return r
         end
     end
 end
@@ -243,7 +245,6 @@ function m.create(path, mode)
     if mode ~= 'r' then
         self._path = path
     end
-    local datalist = require 'datalist'
     local data = datalist.parse(load(path))
     if not data then
         return

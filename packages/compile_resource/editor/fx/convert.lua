@@ -46,7 +46,7 @@ local SETTING_MAPPING = {
 }
 
 local enable_cs = setting:get 'graphic/lighting/cluster_shading' ~= 0
-local enable_curve_world = setting:get "graphic/curve_world"
+local curve_world_type = setting:get "graphic/curve_world/type"
 
 local function default_macros(setting)
     local m = {
@@ -55,13 +55,9 @@ local function default_macros(setting)
         "ENABLE_IBL=1",
     }
 
-    if enable_curve_world then
-        m[#m+1] = "ENABLE_CURVE_WORLD=2"
+    if curve_world_type then
+        m[#m+1] = "ENABLE_CURVE_WORLD=" .. curve_world_type
     end
-
-    -- if enable_curve_world and setting.ENABLE_CURVE_WORLD then
-    --     m[#m+1] = "ENABLE_CURVE_WORLD=" .. setting.ENABLE_CURVE_WORLD
-    -- end
 
     if enable_cs then
         m[#m+1] = "HOMOGENEOUS_DEPTH=" .. (setting.hd and "1" or "0")
