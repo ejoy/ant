@@ -4,6 +4,7 @@ return function (e)
 	if e.target then
 		local createElement = require "core.DOM.element"
 		e.target = createElement(e.target)
+		e.current = createElement(e.current)
 		if e.type == "message" then
 			local createWindow = require "core.DOM.window"
 			local document = e.target.ownerDocument._handle

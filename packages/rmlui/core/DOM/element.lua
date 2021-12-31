@@ -99,6 +99,11 @@ end
 
 local property_mt = {}
 function property_mt:__index(name)
+    if name == "setPropertyImmediate" then
+        return function(self, name, value)
+            rmlui.ElementSetPropertyImmediate(self._handle, name, value)
+        end
+    end
     local getter = property_getter[name]
     if getter then
         return getter(self)

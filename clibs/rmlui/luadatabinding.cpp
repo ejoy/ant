@@ -103,6 +103,9 @@ lua_pushevent(lua_State* L, const Rml::Event& event) {
 	Rml::Element* target = event.GetTargetElement();
 	target? lua_pushlightuserdata(L, target): lua_pushnil(L);
 	lua_setfield(L, -2, "target");
+	Rml::Element* current = event.GetCurrentElement();
+	current ? lua_pushlightuserdata(L, current) : lua_pushnil(L);
+	lua_setfield(L, -2, "current");
 }
 
 class LuaScalarDef;
