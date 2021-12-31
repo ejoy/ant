@@ -29,7 +29,6 @@ end
 function list_meta:on_mousedown(event)
     self.drag.mouse_pos = ((self.direction == 0) and event.x or event.y)
     self.drag.anchor = self.pos
-    console.log("on_mousedown: ", self.drag.mouse_pos)
 end
 
 function list_meta:on_mouseup(event)
@@ -60,7 +59,6 @@ function list_meta:on_drag(event)
         else
             event.current:setPropertyImmediate("top", tostring(math.floor(self.pos)) .. 'px')
         end
-        --console.log("self.pos: ", event.y, self.drag.mouse_pos, self.pos)
     end
 end
 
