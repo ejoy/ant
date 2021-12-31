@@ -861,7 +861,7 @@ private:
 			if (AnyString(L, R))
 				R = Variant(VariantHelper::Get<std::string>(L) == VariantHelper::Get<std::string>(R));
 			else
-				R = Variant(VariantHelper::Get<float>(L) == VariantHelper::Get<float>(R));
+				R = Variant(VariantHelper::ConvertGet<float>(L) == VariantHelper::ConvertGet<float>(R));
 		}
 		break;
 		case Instruction::NotEqual:

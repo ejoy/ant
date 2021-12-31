@@ -38,39 +38,30 @@
         </style>
         <script type="text/x-lua" >
             console.log("before createModel")
-            -- window size : 1336 750
             local start = window.createModel "start" {
                 item_page = {
                     {
-                        show = true,
                         {id=100, icon0="correct.png", icon1="correct.png"},
                         {id=101, icon0="correct.png", icon1="correct.png"},
                         {id=102, icon0="correct.png", icon1="correct.png"},
                     },
                     {
-                        show = false,
                         {id=103, icon0="correct.png", icon1="correct.png"},
                         {id=104, icon0="correct.png", icon1="correct.png"},
                         {id=105, icon0="correct.png", icon1="correct.png"},
                     },
                     {
-                        show = false,
                         {id=106, icon0="correct.png", icon1="correct.png"},
                         {id=107, icon0="correct.png", icon1="correct.png"},
                         {id=108, icon0="correct.png", icon1="correct.png"},
                     },
                     {
-                        show = false,
                         {id=109, icon0="correct.png", icon1="correct.png"},
                         {id=110, icon0="correct.png", icon1="correct.png"},
                         {id=111, icon0="correct.png", icon1="correct.png"},
                     }
                 },
-                page_width = 667,
-                page_count = 4,
-                current_page = 1,
-                page_view_pos = 0,
-                page_drag = {mouse_pos = 0, anchor = 0, delta = 0},
+                current_page = 0,
                 item_list = {
                     {id=100, icon0="correct.png", icon1="correct.png"},
                     {id=101, icon0="correct.png", icon1="correct.png"},
@@ -90,89 +81,39 @@
                     {id=115, icon0="correct.png", icon1="correct.png"},
                     {id=116, icon0="correct.png", icon1="correct.png"},
                 },
-                item_height = 50,
-                list_view_pos = 0,
-                list_drag = {mouse_pos = 0, anchor = 0, delta = 0},
             }
+            local listclass = require "list"
+            local pageclass = require "page"
+            -- window size : 1336 750
+            local list_proxy = listclass.create(1, {667, 750}, #start.item_list, {750, 50})
+            local page_proxy = pageclass.create({667, 750}, #start.item_page)
             
-            function start.clickReturn()
-                
+            function start.pagemousedown(event)
+                page_proxy:on_mousedown(event)
             end
             
-            function start.mousedown(event)
-                start.page_drag.mouse_pos = event.x
-                start.page_drag.anchor = start.page_view_pos
+            function start.pagedrag(event)
+                page_proxy:on_drag(event)
             end
-            
-            function start.mouseup(event)
-                local page_change = false
-                if start.page_drag.delta < -100 then
-                    start.item_page[start.current_page].show = false
-                    start.current_page = start.current_page + 1
-                    if start.current_page > start.page_count then
-                        start.current_page = start.page_count
-                    end
-                    start.item_page[start.current_page].show = true
-                    page_change = true
-                elseif start.page_drag.delta > 100 then
-                    start.item_page[start.current_page].show = false
-                    start.current_page = start.current_page - 1
-                    if start.current_page < 1 then
-                        start.current_page = 1
-                    end
-                    start.item_page[start.current_page].show = true
-                    page_change = true
-                end
-                start.page_view_pos = (1 - start.current_page) * start.page_width
-                event.current.style.left = tostring(start.page_view_pos) .. 'px'
-                --local left_percent = tostring(start.page_view_pos/start.page_width*100) .. '%'
-                --event.current.style.left = left_percent
+
+            function start.pagemouseup(event)
+                local page_change = page_proxy:on_mouseup(event)
                 if page_change then
                     start("item_page")
                 end
-                console.log("mouseup start.page_view_pos:", start.page_view_pos, left_percent)
+                start.current_page = page_proxy:get_current_page() - 1
             end
 
-            function start.ondrag(event)
-                if event.button then
-                    start.page_drag.delta = event.x - start.page_drag.mouse_pos
-                    start.page_view_pos = start.page_drag.anchor + start.page_drag.delta
-                    event.current:setPropertyImmediate("left", tostring(math.floor(start.page_view_pos)) .. 'px')
-                    --local left_percent = tostring(start.page_view_pos/start.page_width*100) .. '%'
-                    --event.current:setPropertyImmediate("left", left_percent)
-                    console.log("ondrag start.page_view_pos:", start.page_view_pos, left_percent)
-                end
+            function start.listmousedown(event)
+                list_proxy:on_mousedown(event)
             end
 
-            function start.mousedown2(event)
-                start.list_drag.mouse_pos = event.y
-                start.list_drag.anchor = start.list_view_pos
+            function start.listdrag(event)
+                list_proxy:on_drag(event)
             end
 
-            function start.mouseup2(event)
-                local mintop = 750 - #start.item_list * start.item_height
-                local adjust = false
-                if start.list_view_pos > 0 then
-                    start.list_view_pos = 0
-                    adjust = true
-                    
-                elseif start.list_view_pos < mintop then
-                    start.list_view_pos = mintop
-                    adjust = true
-                end
-                if adjust then
-                    event.current.style.top = tostring(start.list_view_pos) .. 'px'
-                end
-            end
-
-            function start.ondrag2(event)
-                if event.button then
-                    start.list_drag.delta = event.y - start.list_drag.mouse_pos
-                    start.list_view_pos = start.list_drag.anchor + start.list_drag.delta
-                    console.log("ondrag start.list_view_pos:", start.list_view_pos)
-                    event.current:setPropertyImmediate("top", tostring(math.floor(start.list_view_pos)) .. 'px')
-                    --event.current:setPropertyImmediate("top", tostring(math.floor(start.list_view_pos/start.page_width*100)) .. '%')
-                end
+            function start.listmouseup(event)
+                list_proxy:on_mouseup(event)
             end
 
             window.addEventListener('message', function(event)
@@ -187,7 +128,7 @@
         <div class="panel" data-model="start">
             <div class="column" style="overflow: scroll; justify-content: flex-start; align-items: flex-start; width:50%; height: 100%;">
                 <div style="width:100%; height:720px;">
-                    <div style="transition: left 0.5s linear-out; width:100%; height:100%; flex-direction: row; justify-content: flex-start;" data-event-mousedown="mousedown()" data-event-mouseup="mouseup()" data-event-mousemove="ondrag()">
+                    <div style="transition: left 0.5s linear-out; width:100%; height:100%; flex-direction: row; justify-content: flex-start;" data-event-mousedown="pagemousedown()" data-event-mouseup="pagemouseup()" data-event-mousemove="pagedrag()">
                         <div class="item-container" style="width:100%; height:100%;" data-for="item_page">
                             <div class="item-display">
                                 <div class="item-bg" data-style-background-image="it[0].icon0"/>
@@ -206,11 +147,11 @@
                 </div>
                 <div style='flex-direction: row; justify-content: center; width:100%; height:30px;'>
                     <div data-for="item_page">
-                        <div style="width:20px; height:20px; background-size:cover;" data-style-background-image="it.show ? 'common/page1.png' : 'common/page0.png'"/>
+                        <div style="width:20px; height:20px; background-size:cover;" data-style-background-image="it_index == current_page ? 'common/page1.png' : 'common/page0.png'"/>
                     </div>
                 </div>
             </div>
-            <div class="column" style="transition: top 0.5s linear-out; justify-content: flex-start; width:50%; height: 100%;" data-event-mousedown="mousedown2()" data-event-mouseup="mouseup2()" data-event-mousemove="ondrag2()">
+            <div class="column" style="transition: top 0.5s linear-out; justify-content: flex-start; width:50%; height: 100%;" data-event-mousedown="listmousedown()" data-event-mouseup="listmouseup()" data-event-mousemove="listdrag()">
                 <div class="item-display" style="width:100%; height: 50px;" data-for="item_list">
                     <div class="item-bg" data-style-background-image="it.icon0"/>
                     <div>{{it.id}}</div>
