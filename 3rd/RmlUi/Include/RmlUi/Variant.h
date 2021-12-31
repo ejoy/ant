@@ -30,6 +30,19 @@ namespace VariantHelper {
 		return def;
 	}
 
+	template <typename T>
+	T ConvertGet(const Variant& variant) {
+		return std::visit(
+			[] (auto const& val) {
+				if constexpr (std::is_convertible_v<decltype(val), T>)
+					return T(val);
+				else {
+					return T{};
+				}
+			},
+			variant);
+	}
+
 	template <typename V>
 	struct CopyVisitor {
 		template <typename T>
