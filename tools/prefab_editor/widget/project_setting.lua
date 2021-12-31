@@ -77,6 +77,8 @@ local default_curve_world<const> = {
     dirVS = {0, 0, 1},
     flat_distance = 0,
     curve_rate = 0.05,
+    distance = 500,
+    max_rage = math.pi*0.6,
     type_options = {"cylinder", "view_sphere"}
 }
 
@@ -185,6 +187,16 @@ local function setting_ui(sc)
                 if PropertyFloat("Curve Rate", v) then
                     sc:set("graphic/curve_world/curve_rate", v[1])
                 end
+
+                v[1] = cw.distance
+                if PropertyFloat("Curve distance", v) then
+                    sc:set("graphic/curve_world/distance", v[1])
+                end
+
+                v[1] = cw.max_range
+                if PropertyFloat("Max Range", v) then
+                    sc:set("graphic/curve_world/max_range", v[1])
+                end
             else
                 assert(cw.type == "view_sphere")
                 --log.info("curve world type 'view_sphere' is not used")
@@ -204,11 +216,8 @@ local function setting_ui(sc)
 
     if Button "Save" then
         local p = sc:setting_path()
-        local c = serialize.stringify(sc._data)
-        
-        local f = lfs.open(p:localpath(), "w")
-        f:write(c)
-        f:close()
+        local f<close> = lfs.open(p, "w")
+        f:write(serialize.stringify(sc._data))
     end
 end
 
@@ -228,11 +237,11 @@ function ps.show(open_popup)
                 EndTabItem()
             end
 
-            local proj_root = global_data.proj_root
+            local proj_root = global_data.project_root
             if proj_root then
                 if BeginTabItem "Project" then
                     if projpath ~= proj_root or projsetting == nil then
-                        projsetting = setting.create(proj_root)
+                        projsetting = setting.create(proj_root / "settings")
                     end
                     
                     setting_ui(projsetting)
