@@ -195,9 +195,9 @@ local function setting_ui(sc)
                     sc:set("graphic/curve_world/distance", v[1])
                 end
 
-                v[1] = cw.max_range
+                v[1] = math.deg(cw.max_range)
                 if PropertyFloat("Max Range", v) then
-                    sc:set("graphic/curve_world/max_range", v[1])
+                    sc:set("graphic/curve_world/max_range", math.rad(v[1]))
                 end
             else
                 assert(cw.type == "view_sphere")
