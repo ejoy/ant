@@ -1,1 +1,5 @@
 BlenderPath: "D:/Program Files/Blender Foundation/Blender 2.93"
+lastproj:
+  auto_import: true
+  name: ant.test.features
+  proj_path: "D:/work/ant/test/features"

@@ -38,6 +38,7 @@ local widget_utils      = require "widget.utils"
 local log_widget        = require "widget.log"(asset_mgr)
 local console_widget    = require "widget.console"(asset_mgr)
 local hierarchy         = require "hierarchy_edit"
+local editor_setting    = require "editor_setting"
 
 local global_data       = require "common.global_data"
 local new_project       = require "common.new_project"
@@ -131,70 +132,100 @@ local function start_fileserver(path)
     ]]
 end
 
+local function find_package_name(proj_path)
+    for _, package in ipairs(global_data.packages) do
+        if package.path == proj_path then
+            return package.name
+        end
+    end
+end
+
+local function open_proj(path)
+    local lpath = lfs.path(path)
+    if lfs.exists(lpath / ".mount") then
+        global_data.project_root = lpath
+        global_data.packages = get_package(lfs.absolute(global_data.project_root), true)
+        --file server
+        start_fileserver(path)
+        log_widget.init_log_receiver()
+        console_widget.init_console_sender()
+        local topname = find_package_name(lpath)
+
+        if topname then
+            global_data.package_path = topname .. "/"
+            effekseer_filename_mgr.add_path(global_data.package_path .. "res")
+            return topname
+        else
+            print("Can not add effekseer resource seacher path.")
+        end
+    else
+        log_widget.error({tag = "Editor", message = "no project exist!"})
+    end
+end
+
 local function choose_project()
     if global_data.project_root then return end
     local title = "Choose project"
     if not imgui.windows.IsPopupOpen(title) then
         imgui.windows.OpenPopup(title)
     end
+
+    local setting = editor_setting.setting
+    local lastproj = setting.lastproj
+    if lastproj and lastproj.auto_import then
+        open_proj(assert(lastproj.proj_path))
+        return
+    end
+
     local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize", "NoClosed"})
     if change then
         imgui.widget.Text("Create new or open existing project.")
-        if imgui.widget.Button("Create project") then
+        if imgui.widget.Button "Create" then
             local path = choose_project_dir()
             if path then
                 local lpath = lfs.path(path)
-                local not_empty
-                for path in fs.pairs(lpath) do
-                    not_empty = true
-                    break
-                end
-                if not_empty then
+                local n = fs.pairs(lpath)
+                if not n() then
                     log_widget.error({tag = "Editor", message = "folder not empty!"})
                 else
                     global_data.project_root = lpath
                     on_new_project(path)
                     global_data.packages = get_package(lfs.absolute(global_data.project_root), true)
+
+                    editor_setting.update_lastproj("", path, false)
                 end
             end
         end
         imgui.cursor.SameLine()
-        if imgui.widget.Button("Open project") then
+        if imgui.widget.Button "Open" then
             local path = choose_project_dir()
             if path then
-                local lpath = lfs.path(path)
-                if lfs.exists(lpath / ".mount") then
-                    global_data.project_root = lpath
-                    global_data.packages = get_package(lfs.absolute(global_data.project_root), true)
-                    --file server
-                    start_fileserver(path)
-                    log_widget.init_log_receiver()
-                    console_widget.init_console_sender()
-                    local topname
-                    for _, package in ipairs(global_data.packages) do
-                        if package.path == global_data.project_root then
-                            topname = package.name
-                            break
-                        end
-                    end
-                    if topname then
-                        global_data.package_path = topname .. "/"
-                        effekseer_filename_mgr.add_path(global_data.package_path .. "res")
-                    else
-                        print("Can not add effekseer resource seacher path.")
-                    end
-                else
-                    log_widget.error({tag = "Editor", message = "no project exist!"})
-                end
+                local projname = open_proj(path)
+                editor_setting.update_lastproj(projname:gsub("/pkg/", ""), path, false)
+                editor_setting.save()
             end
         end
         imgui.cursor.SameLine()
-        if imgui.widget.Button("Quit") then
+        if imgui.widget.Button "Quit" then
             local res_root_str = tostring(fs.path "":localpath())
             global_data.project_root = lfs.path(string.sub(res_root_str, 1, #res_root_str - 1))
             global_data.packages = get_package(global_data.project_root, true)
             imgui.windows.CloseCurrentPopup();
         end
+
+        imgui.windows.BeginDisabled(not lastproj)
+        local last_name = "Last:" .. (lastproj and lastproj.name or "...")
+        if imgui.widget.Button(last_name) then
+            open_proj(lastproj.proj_path)
+        end
+        imgui.cursor.SameLine()
+        local c, r = imgui.widget.Checkbox("Auto open last project", lastproj and lastproj.auto_import or false)
+        if c then
+            assert(lastproj)
+            lastproj.auto_import = r
+            editor_setting.save()
+        end
+        imgui.windows.EndDisabled()
         if global_data.project_root then
             local fw = require "bee.filewatch"
             fw.add(global_data.project_root:string())

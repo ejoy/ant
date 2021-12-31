@@ -10,6 +10,8 @@ local projsetting = require "widget.project_setting"
 local rhwi      = import_package "ant.hwi"
 local stringify = import_package "ant.serialize".stringify
 
+local editor_setting = require "editor_setting"
+
 local imgui     = require "imgui"
 local datalist  = require "datalist"
 local lfs       = require "filesystem.local"
@@ -18,15 +20,8 @@ local fs        = require "filesystem"
 local m = {}
 
 local function show_select_blender_dialog()
-    local settings_path = fs.path "editor.settings":localpath()
-    local f = assert(lfs.open(settings_path))
-    local data = f:read "a"
-    f:close()
-    
-    -- local utils = require "common.utils"
-    -- utils.write_file(tostring(settings_path), stringify({BlenderPath = "D:/blender-2.92.0"}))
-    local settings = datalist.parse(data)
-    if imgui.widget.MenuItem("BlenderPath:"..settings.BlenderPath) then
+    local blenderpath = editor_setting.setting.blender_path or ""
+    if imgui.widget.MenuItem("BlenderPath:".. blenderpath) then
         local filedialog = require 'filedialog'
         local dialog_info = {
             Owner = rhwi.native_window(),
@@ -36,9 +31,8 @@ local function show_select_blender_dialog()
         if ok and choosepath[1] then
             local path = choosepath[1]
             if lfs.exists(lfs.path(path .. "\\blender.exe")) then
-                settings.BlenderPath = path:gsub("\\", "/")
-                local utils = require "common.utils"
-                utils.write_file(tostring(settings_path), stringify(settings))
+                editor_setting.setting.blender_path = path:gsub("\\", "/")
+                editor_setting.save()
             end
         end
     end

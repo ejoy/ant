@@ -16,6 +16,7 @@ local camera_mgr    = ecs.require "camera_manager"
 local light_gizmo   = ecs.require "gizmo.light"
 local gizmo         = ecs.require "gizmo.gizmo"
 local geo_utils     = ecs.require "editor.geometry_utils"
+local editor_setting = require "editor_setting"
 local logger        = require "widget.log"
 local math3d 		= require "math3d"
 local fs            = require "filesystem"
@@ -335,15 +336,15 @@ end
 local FBXTOGLB
 function m:open_fbx(filename)
     if not FBXTOGLB then
-        local f = assert(lfs.open(fs.path("editor.settings"):localpath()))
-        local data = f:read "a"
-        f:close()
-        local datalist = require "datalist"
-        local settings = datalist.parse(data)
-        if lfs.exists(lfs.path(settings.BlenderPath .. "/blender.exe")) then
-            FBXTOGLB = subprocess.tool_exe_path(settings.BlenderPath .. "/blender")
-        else
-            print("Can not find blender.")
+        local blenderpath = editor_setting.setting.blender_path
+        if blenderpath then
+            if lfs.exists(lfs.path(blenderpath .. "/blender.exe")) then
+                FBXTOGLB = subprocess.tool_exe_path(blenderpath .. "/blender")
+            end
+        end
+
+        if not FBXTOGLB then
+            log.warn "Can not find blender."
             return
         end
     end
