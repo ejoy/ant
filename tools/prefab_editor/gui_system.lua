@@ -84,6 +84,21 @@ local function choose_project_dir()
     end
 end
 
+local NOT_skip_packages = {
+    "ant.resources",
+    "ant.resources.binary",
+    "ant.test.feature",
+}
+
+local function skip_package(pkgpath)
+    for _, n in ipairs(NOT_skip_packages) do
+        if pkgpath:match(n) then
+            return false
+        end
+    end
+    return true
+end
+
 local function get_package(entry_path, readmount)
     local repo = {_root = entry_path}
     if readmount then
@@ -92,22 +107,29 @@ local function get_package(entry_path, readmount)
     local packages = {}
     for _, name in ipairs(repo._mountname) do
         vfs.mount(name, repo._mountpoint[name]:string())
-        local key = name
-        local skip = false
-        if utils.start_with(name, "/pkg/ant.") then
-            if name ~= "/pkg/ant.resources" and name ~= "/pkg/ant.resources.binary" then
-                skip = true
-            end
-        end
-        if not skip then
-            packages[#packages + 1] = {name = key, path = repo._mountpoint[name]}
+        if not skip_package(name) then
+            packages[#packages + 1] = {name = name, path = repo._mountpoint[name]}
         end
     end
     global_data.repo = repo
     return packages
 end
 
-local fileserver_thread
+local function start_fileserver(path)
+    local cthread = require "bee.thread"
+    cthread.newchannel "log_channel"
+    cthread.newchannel "fileserver_channel"
+    cthread.newchannel "console_channel"
+    local produce = cthread.channel "fileserver_channel"
+    produce:push(arg, path)
+    local lthread = require "editor.thread"
+    return lthread.create [[
+        package.path = "engine/?.lua"
+        require "bootstrap"
+        local fileserver = dofile "/pkg/tools.prefab_editor/fileserver_adapter.lua"()
+        fileserver.run()
+    ]]
+end
 
 local function choose_project()
     if global_data.project_root then return end
@@ -145,19 +167,7 @@ local function choose_project()
                     global_data.project_root = lpath
                     global_data.packages = get_package(lfs.absolute(global_data.project_root), true)
                     --file server
-                    local cthread = require "bee.thread"
-                    cthread.newchannel "log_channel"
-                    cthread.newchannel "fileserver_channel"
-                    cthread.newchannel "console_channel"
-                    local produce = cthread.channel "fileserver_channel"
-                    produce:push(arg, path)
-                    local lthread = require "editor.thread"
-                    fileserver_thread = lthread.create [[
-                        package.path = "engine/?.lua"
-                        require "bootstrap"
-                        local fileserver = dofile "/pkg/tools.prefab_editor/fileserver_adapter.lua"()
-                        fileserver.run()
-                    ]]
+                    start_fileserver(path)
                     log_widget.init_log_receiver()
                     console_widget.init_console_sender()
                     local topname
