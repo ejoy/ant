@@ -165,16 +165,16 @@ end
 
 local function choose_project()
     if global_data.project_root then return end
-    local title = "Choose project"
-    if not imgui.windows.IsPopupOpen(title) then
-        imgui.windows.OpenPopup(title)
-    end
-
     local setting = editor_setting.setting
     local lastproj = setting.lastproj
     if lastproj and lastproj.auto_import then
         open_proj(assert(lastproj.proj_path))
         return
+    end
+
+    local title = "Choose project"
+    if not imgui.windows.IsPopupOpen(title) then
+        imgui.windows.OpenPopup(title)
     end
 
     local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize", "NoClosed"})

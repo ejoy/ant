@@ -4,7 +4,7 @@ local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 local datalist  = require "datalist"
 
-local settingpath<const> = fs.path "editor.settings"
+local settingpath<const> = fs.path "/pkg/tools.prefab_editor/editor.settings"
 local function read()
     local f<close> = fs.open(settingpath)
     if f then
@@ -16,7 +16,14 @@ end
 local editor_setting = read()
 
 local function save()
-    local f<close> = lfs.open(settingpath:localpath(), "w")
+    local lpath
+    if not fs.exists(settingpath) then
+        local p = settingpath:parent_path()
+        lpath = p:localpath() / settingpath:filename():string()
+    else
+        lpath = settingpath:localpath()
+    end
+    local f<close> = lfs.open(lpath, "w")
     local c = serialize.stringify(editor_setting)
     f:write(c)
 end
