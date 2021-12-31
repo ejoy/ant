@@ -9,6 +9,8 @@ local ps = {
 }
 
 local default_tr_flags = imgui.flags.TreeNode{}
+local default_win_flags= imgui.flags.Window{}
+local default_tab_flags= imgui.flags.TabBar{"Reorderable", "AutoSelectNewTabs"}
 
 local TreeNode      = imgui.widget.TreeNode
 local TreePop       = imgui.widget.TreePop
@@ -230,8 +232,8 @@ function ps.show(open_popup)
         imgui.windows.SetNextWindowSize(800, 600)
     end
 
-    if BeginPopupModal(ps.id, imgui.flags.Window{}) then
-        if BeginTabBar("PS_Bar", imgui.flags.TabBar{"Reorderable", "AutoSelectNewTabs"}) then
+    if BeginPopupModal(ps.id, default_win_flags) then
+        if BeginTabBar("PS_Bar", default_tab_flags) then
             if BeginTabItem "Editor" then
                 setting_ui(setting.setting)
                 EndTabItem()
