@@ -1,0 +1,4 @@
+interface "icurve_world"
+    .implement "curve_world/curve_world.lua"
+    .method "enable"
+    .method "param"

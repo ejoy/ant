@@ -6,8 +6,6 @@ local sampler = require "sampler"
 local math3d	= require "math3d"
 local bgfx		= require "bgfx"
 
-local setting	= import_package "ant.settings".setting
-
 local mc		= import_package "ant.math".constant
 local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
 local ishadow	= ecs.import.interface "ant.render|ishadow"
@@ -15,6 +13,7 @@ local ilight	= ecs.import.interface "ant.render|ilight"
 local itimer	= ecs.import.interface "ant.timer|itimer"
 local icamera	= ecs.import.interface "ant.camera|icamera"
 local iibl		= ecs.import.interface "ant.render|iibl"
+local icw		= ecs.import.interface "ant.render|icurve_world"
 
 local isp = ecs.interface "isystem_properties"
 
@@ -106,8 +105,7 @@ local system_properties = {
 }
 
 -- update curve world info from setting
-do
-	local cw = setting:data().graphic.curve_world
+local function update_curve_param(cw)
 	if cw then
 		local cw_param = system_properties.u_curveworld_param
 		if cw.type == "cylinder" then
@@ -119,7 +117,6 @@ do
 		cw_dir.v = math3d.vector(cw.dirVS)
 	end
 end
-
 
 function isp.get(n)
 	return system_properties[n]
@@ -259,6 +256,8 @@ function isp.update()
 	local mainrt = main_render_target()
 	update_lighting_properties(mainrt.view_rect, camerapos, f.n, f.f)
 	update_shadow_properties()
+
+	update_curve_param(icw.param())
 end
 
 function isp.enable_ibl(enable)

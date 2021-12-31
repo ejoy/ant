@@ -228,3 +228,4 @@ pipeline "render"
     .pipeline "postprocess"
 
 import "ibl/ibl.ecs"
+import "curve_world/curve_world.ecs"

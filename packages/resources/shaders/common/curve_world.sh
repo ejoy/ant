@@ -29,25 +29,27 @@ uniform vec4 u_curveworld_dir;
 vec3 curve_world_offset(vec3 posWS)
 {
 #if ENABLE_CURVE_WORLD == CURVE_WORLD_TYPE_CYLINDER
-    
-    vec4 posVS = mul(u_view, vec4(posWS, 1.0));
-    float dis = posVS.z-u_curveworld_cylinder_flat_distance;
-    if (dis > 0){
-        float radian = clamp((dis / u_curveworld_cylinder_distance) * PI * u_curveworld_cylinder_curve_rate, 0.0, u_curveworld_cylinder_max_range);
-        float c = cos(radian), s = sin(radian);
+    if (u_curveworld_cylinder_max_range > 0.0)
+    {
+        vec4 posVS = mul(u_view, vec4(posWS, 1.0));
+        float dis = posVS.z-u_curveworld_cylinder_flat_distance;
+        if (dis > 0){
+            float radian = clamp((dis / u_curveworld_cylinder_distance) * PI * u_curveworld_cylinder_curve_rate, 0.0, u_curveworld_cylinder_max_range);
+            float c = cos(radian), s = sin(radian);
 
-        //TODO: rotation matrix create as rotate with x-axis in viewspace
-        mat4 ct = mtxFromCols4(
-            vec4(1.0, 0.0, 0.0, 0.0),
-            vec4(0.0, c,   s,   0.0),
-            vec4(0.0, -s,   c,   0.0),
-            vec4(0.0, 0.0, 0.0, 1.0));
+            //TODO: rotation matrix create as rotate with x-axis in viewspace
+            mat4 ct = mtxFromCols4(
+                vec4(1.0, 0.0, 0.0, 0.0),
+                vec4(0.0, c,   s,   0.0),
+                vec4(0.0, -s,   c,   0.0),
+                vec4(0.0, 0.0, 0.0, 1.0));
 
-        // NOTE: we should add offset in VS and transform to WS, or it will faild depth test when compare to pre-depth pass's depth
-        vec4 offsetVS = mul(ct, vec4(u_curveworld_dir.xyz*dis, 0.0));
-        posVS.xyz += offsetVS.xyz;
-        return mul(u_invView, posVS).xyz;
-        //return posWS+offset;
+            // NOTE: we should add offset in VS and transform to WS, or it will faild depth test when compare to pre-depth pass's depth
+            vec4 offsetVS = mul(ct, vec4(u_curveworld_dir.xyz*dis, 0.0));
+            posVS.xyz += offsetVS.xyz;
+            return mul(u_invView, posVS).xyz;
+            //return posWS+offset;
+        }
     }
     return posWS;
 

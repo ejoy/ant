@@ -159,6 +159,13 @@ function init_loader_sys:init_world()
     
 end
 
-function init_loader_sys:entity_init()
+local kb_mb = world:sub{"keyboard"}
 
+function init_loader_sys:entity_init()
+    for _, key, press in kb_mb:unpack() do
+        if key == "SPACE" and press == 0 then
+            local icw = ecs.import.interface "ant.render|icurve_world"
+            icw.enable(not icw.param().enable)
+        end
+    end
 end
