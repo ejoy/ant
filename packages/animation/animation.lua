@@ -179,4 +179,12 @@ mathadapter.bind(
 		pr_mt.joint = math3d_adapter.getter(pr_mt.joint, "m", 3)
 
 		animodule.build_skinning_matrices = math3d_adapter.matrix(animodule.build_skinning_matrices, 5)
+
+		for _, v in ipairs({{"vector_float3_mt", "v"}, {"vector_quaternion_mt", "q"}}) do
+            local mt_name = v[1]
+            local math3d_adapter_fmt = v[2]
+            local mt = animodule[mt_name]()
+            mt.insert = math3d_adapter.format(mt.insert, math3d_adapter_fmt, 2)
+            mt.at = math3d_adapter.getter(mt.at, math3d_adapter_fmt, 3)
+        end
 	end)

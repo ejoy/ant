@@ -2,6 +2,8 @@
 #include <ozz/base/maths/simd_math.h>
 #include <ozz/base/maths/soa_transform.h>
 #include <ozz/base/containers/vector.h>
+#include <ozz/base/maths/vec_float.h>
+#include <ozz/base/maths/quaternion.h>
 #include <ozz/animation/runtime/blending_job.h>
 #include <string>
 

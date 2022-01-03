@@ -3,6 +3,8 @@
 
 #include "hierarchy.h"
 //#include "meshbase/meshbase.h"
+#include <ozz/animation/offline/raw_animation.h>
+#include <ozz/animation/offline/animation_builder.h>
 
 #include <ozz/animation/runtime/animation.h>
 #include <ozz/animation/runtime/sampling_job.h>
@@ -80,7 +82,11 @@ private:
 	}
 public:
 	static T* get(lua_State* L, int idx) {
+#ifdef _DEBUG
+		return (T*)luaL_checkudata(L, idx, kLuaName);
+#else
 		return (T*)luaL_testudata(L, idx, kLuaName);
+#endif
 	}
 
 	static int getMT(lua_State *L){
@@ -312,10 +318,101 @@ struct ozzSamplingContext : public luaClass<ozzSamplingContext> {
 };
 REGISTER_LUA_CLASS(ozzSamplingContext)
 
+template <typename T>
+struct ozzVectorBindingT : public ozz::vector<T>, luaClass<ozz::vector<T>> {
+public:
+	typedef luaClass<ozz::vector<T>> base_type;
+	ozzVectorBindingT(size_t size)
+		: ozz::vector<T>(size)
+	{}
+
+	static ozz::vector<T>* getPointer(lua_State* L, int index) {
+#ifdef _DEBUG
+		return (ozz::vector<T>*)luaL_checkudata(L, index, base_type::kLuaName);
+#else
+		return (ozz::vector<T>*)lua_touserdata(L, index);
+#endif
+	}
+
+	static ozz::vector<T>* instance(lua_State* L) {
+		return base_type::constructor(L, 0);
+	}
+protected:
+	//
+	static int lsize(lua_State* L) {
+		auto p = getPointer(L, 1);
+		lua_pushinteger(L, p->size());
+		return 1;
+	}
+
+	// pointer userdata
+	// pos [1, size]
+	// output matrix
+	static int lat(lua_State* L) {
+		auto p = getPointer(L, 1);
+		const auto pos = (size_t)luaL_checkinteger(L, 2) - 1;
+		if (pos >= p->size()) {
+			return luaL_error(L, "invalid pos: %d", pos);
+		}
+
+		auto* r = (float*)lua_touserdata(L, 3);
+		memcpy(r, &p->at(pos), sizeof(T));
+		return 0;
+	}
+
+	static int linsert(lua_State* L) {
+		auto p = getPointer(L, 1);
+
+		T f;
+		auto* r = lua_touserdata(L, 2);
+		memcpy(&f, r, sizeof(T));
+
+		p->emplace_back(f);
+		return 0;
+	}
+
+	static int lclear(lua_State* L) {
+		auto p = getPointer(L, 1);
+		p->clear();
+		return 0;
+	}
+
+public:
+	static int create(lua_State* L) {
+		lua_Integer size = (size_t)luaL_optinteger(L, 1, 0);
+		base_type::constructor(L, (size_t)size);
+		return 1;
+	}
+
+	static void registerMetatable(lua_State* L) {
+		luaL_Reg l[] = {
+			{"size", 		 lsize},
+			{"at", 			 lat},
+			{"insert",		 linsert},
+			{"clear",		 lclear},
+			{nullptr, 		 nullptr,}
+		};
+		base_type::reigister_mt(L, l);
+		lua_pop(L, 1);
+	}
+};
+
+#define REGISTER_OZZ_VECTOR_LUA_CLASS(T, C) \
+	struct alignas(8) C : public ozzVectorBindingT<T> { \
+		C(size_t size) :ozzVectorBindingT<T>(size) {} \
+	}; \
+	template<> const char luaClass<ozz::vector<T>>::kLuaName[] = #C
+
+REGISTER_OZZ_VECTOR_LUA_CLASS(ozz::math::Float3, ozzVectorFloat3);
+REGISTER_OZZ_VECTOR_LUA_CLASS(ozz::math::Quaternion, ozzVectorQuaternion);
+
 struct ozzAnimation : public luaClass<ozzAnimation> {
 	ozz::animation::Animation* v;
 	ozzAnimation()
 		: v(ozz::New<ozz::animation::Animation>()) {
+	}
+	ozzAnimation(ozz::animation::Animation* p)
+		: v(p) {
 	}
 	~ozzAnimation() {
 		ozz::Delete(v);
@@ -363,8 +460,90 @@ struct ozzAnimation : public luaClass<ozzAnimation> {
 		archive >> *(self->v);
 		return 1;
 	}
+
+	static int instance(lua_State *L, ozz::animation::Animation *animation) {
+		ozzAnimation* self = base_type::constructor(L, animation);
+		luaL_Reg l[] = {
+			{"duration", lduration},
+			{"num_tracks", lnum_tracks},
+			{"name", lname},
+			{"size", lsize},
+			{nullptr, nullptr},
+		};
+		base_type::set_method(L, l);
+		return 1;
+	}
 };
 REGISTER_LUA_CLASS(ozzAnimation)
+
+struct ozzRawAnimation : public luaClass<ozzRawAnimation> {
+	ozz::animation::offline::RawAnimation* v;
+	ozzRawAnimation()
+		: v(ozz::New<ozz::animation::offline::RawAnimation>()) {
+	}
+	~ozzRawAnimation() {
+		ozz::Delete(v);
+	}
+
+	static int lpush_key(lua_State *L) {
+		ozz::animation::offline::RawAnimation* pv = base_type::get(L, 1)->v;
+		auto vecFloat3TranslationKey = ozzVectorFloat3::getPointer(L, 2);
+		auto vecQuaternionRotationKey = ozzVectorQuaternion::getPointer(L, 3);
+		float duration = (float)luaL_checknumber(L, 4);
+
+		pv->duration = duration;
+		pv->tracks.resize(1);
+	    ozz::animation::offline::RawAnimation::JointTrack& track = pv->tracks[0];
+
+		size_t size = 0;
+
+		size = vecFloat3TranslationKey->size();
+		for(int i = 0; i < size; i++) {
+			ozz::animation::offline::RawAnimation::TranslationKey PreTranslationKeys;
+			PreTranslationKeys.time = (float)duration / size * i;
+			PreTranslationKeys.value = vecFloat3TranslationKey->at(i);
+			track.translations.push_back(PreTranslationKeys);
+		}
+
+		size = vecQuaternionRotationKey->size();
+		for(int i = 0; i < size; i++) {
+			ozz::animation::offline::RawAnimation::RotationKey PreRotationKey;
+			PreRotationKey.time = (float)duration / size * i;
+			PreRotationKey.value = vecQuaternionRotationKey->at(i);
+			track.rotations.push_back(PreRotationKey);
+		}
+
+		return 0;
+	}
+
+	static int lbuild(lua_State *L) {
+		ozz::animation::offline::RawAnimation* pv = base_type::get(L, 1)->v;
+		ozz::animation::offline::AnimationBuilder builder;
+		ozz::animation::Animation *animation = builder(*pv).release();
+		if (!animation) {
+			luaL_error(L, "Failed to build animation");
+			return 0;
+		}
+
+		return ozzAnimation::instance(L, animation);
+	}
+
+	static int create(lua_State *L) {
+		base_type::constructor(L);
+		return 1;
+	}
+
+	static void registerMetatable(lua_State* L) {
+		luaL_Reg l[] = {
+			{"push_key",	 lpush_key},
+			{"build", 		 lbuild},
+			{nullptr, 		 nullptr,}
+		};
+		base_type::reigister_mt(L, l);
+		lua_pop(L, 1);
+	}
+};
+REGISTER_LUA_CLASS(ozzRawAnimation)
 
 struct alignas(8) ozzPoseResult : public ozzBindposeT<ozzPoseResult> {
 public:
@@ -718,11 +897,16 @@ int init_animation(lua_State *L) {
 	ozzJointRemap::registerMetatable(L);
 	ozzBindpose::registerMetatable(L);
 	ozzPoseResult::registerMetatable(L);
+	ozzVectorFloat3::registerMetatable(L);
+	ozzVectorQuaternion::registerMetatable(L);
+	ozzRawAnimation::registerMetatable(L);
+
 	lua_newtable(L);
 	luaL_Reg l[] = {
 		{ "mesh_skinning",				lmesh_skinning},
 		{ "build_skinning_matrices",	lbuild_skinning_matrices},
 		{ "new_animation",				ozzAnimation::create},
+		{ "new_raw_animation", 			ozzRawAnimation::create},
 		{ "new_bind_pose",				ozzBindpose::create},
 		{ "new_sampling_context",		ozzSamplingContext::create},
 		{ "bind_pose_mt",				ozzBindpose::getMT},
@@ -730,6 +914,10 @@ int init_animation(lua_State *L) {
 		{ "pose_result_mt",				ozzPoseResult::getMT},
 		{ "new_aligned_memory",			ozzAllocator::create},
 		{ "new_joint_remap",			ozzJointRemap::create},
+		{ "new_vector_float3",			ozzVectorFloat3::create},
+		{ "vector_float3_mt",			ozzVectorFloat3::getMT},
+		{ "new_vector_quaternion",		ozzVectorQuaternion::create},
+		{ "vector_quaternion_mt",		ozzVectorQuaternion::getMT},	
 		{ NULL, NULL },
 	};
 	luaL_setfuncs(L,l,0);
