@@ -284,16 +284,14 @@ function camera_sys:handle_event()
 	end
 end
 function camera_sys:update_camera()
-	if not camera_mgr.second_camera then
-		return
-	end
+	local sc = camera_mgr.second_camera
+	if sc then
+		w:sync("camera:in scene:in", sc)
+		local camera, scene = sc.camera, sc.scene
 
-	w:sync("camera:in", camera_mgr.second_camera)
-	local camera = camera_mgr.second_camera.camera
-	if camera then
-		local worldmat = camera.worldmat
+		local worldmat = scene._worldmat
 		local pos, dir = math3d.index(worldmat, 4, 3)
-		camera.viewmat = math3d.lookto(pos, dir, camera.updir)
+		camera.viewmat = math3d.lookto(pos, dir, scene.updir)
 		camera.projmat = math3d.projmat(camera.frustum)
 		camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 	end
