@@ -216,6 +216,8 @@ local function choose_project()
             imgui.windows.CloseCurrentPopup();
         end
 
+        imgui.cursor.Separator();
+
         imgui.windows.BeginDisabled(not lastproj)
         local last_name = "Last:" .. (lastproj and lastproj.name or "...")
         if imgui.widget.Button(last_name) then
