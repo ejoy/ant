@@ -166,7 +166,7 @@ local function create_pick_entity()
 			scene = {srt={}},
 			camera = {
 				frustum = {
-					type="mat", n=0.1, f=100, fov=0.5, aspect=pickup_buffer_w / pickup_buffer_h
+					type="mat", n=0.1, f=1000, fov=0.5, aspect=pickup_buffer_w / pickup_buffer_h
 				},
 			},
 			name = "camera.pickup",
