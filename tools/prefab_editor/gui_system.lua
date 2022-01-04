@@ -108,7 +108,7 @@ local function get_package(entry_path, readmount)
     local packages = {}
     for _, name in ipairs(repo._mountname) do
         vfs.mount(name, repo._mountpoint[name]:string())
-        if not skip_package(name) then
+        if not (name:match "/pkg/ant%." and skip_package(name)) then
             packages[#packages + 1] = {name = name, path = repo._mountpoint[name]}
         end
     end
@@ -201,6 +201,9 @@ local function choose_project()
             local path = choose_project_dir()
             if path then
                 local projname = open_proj(path)
+                if projname == nil then
+                    projname = lfs.path(path):filename():string() .. "(folder)"
+                end
                 editor_setting.update_lastproj(projname:gsub("/pkg/", ""), path, false)
                 editor_setting.save()
             end
