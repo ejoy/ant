@@ -492,7 +492,7 @@ void Document::ProcessMouseButtonUp(MouseButton button, int x, int y, int key_mo
 	}
 
 	if (button == MouseButton::Left) {
-		if (active) {
+		if (active && focus == active) {
 			active->DispatchEvent(EventId::Click, parameters);
 		}
 		std::for_each(active_chain.begin(), active_chain.end(), [](Element* element) {
