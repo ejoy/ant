@@ -165,7 +165,7 @@ function camera_mgr.create_camera()
     w:sync("camera:in scene:in", mc)
 
     local main_frustum = mc.camera.frustum
-    local srt = mc.camera.scene.srt
+    local srt = mc.scene.srt
     local template = {
         policy = {
             "ant.general|name",
@@ -193,10 +193,9 @@ function camera_mgr.create_camera()
             tag = {"camera"},
         }
     }
-    local cameraref = ecs.create_entity(utils.deep_copy(template))
-    cameraref.on_ready = camera_mgr.on_camera_ready
-    world:create_object(cameraref)
-    return cameraref, template
+    local t = utils.deep_copy(template)
+    t.data.on_ready = camera_mgr.on_camera_ready
+    return ecs.create_entity(t), template
 end
 
 function camera_mgr.bind_recorder(eid, recorder)
