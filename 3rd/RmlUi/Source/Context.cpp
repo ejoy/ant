@@ -131,8 +131,7 @@ bool Context::ProcessMouseMove(MouseButton button, int x, int y, int key_modifie
 	if (!focus) {
 		return false;
 	}
-	focus->ProcessMouseMove(button, x, y, key_modifier_state);
-	return true;
+	return focus->ProcessMouseMove(button, x, y, key_modifier_state);
 }
 
 bool Context::ProcessMouseButtonDown(MouseButton button, int x, int y, int key_modifier_state) {
@@ -147,16 +146,14 @@ bool Context::ProcessMouseButtonDown(MouseButton button, int x, int y, int key_m
 	if (!focus) {
 		return false;
 	}
-	focus->ProcessMouseButtonDown(button, x, y, key_modifier_state);
-	return true;
+	return focus->ProcessMouseButtonDown(button, x, y, key_modifier_state);
 }
 
 bool Context::ProcessMouseButtonUp(MouseButton button, int x, int y, int key_modifier_state) {
 	if (!focus) {
 		return false;
 	}
-	focus->ProcessMouseButtonUp(button, x, y, key_modifier_state);
-	return true;
+	return focus->ProcessMouseButtonUp(button, x, y, key_modifier_state);
 }
 
 bool Context::ProcessMouseWheel(float wheel_delta, int key_modifier_state) {

@@ -85,13 +85,15 @@ function S.mouse(x, y, type, state)
     local MOUSE_STATE_DOWN <const> = 1
     local MOUSE_STATE_MOVE <const> = 2
     local MOUSE_STATE_UP <const> = 3
+    local headled = false
     if state == MOUSE_STATE_MOVE then
-        rmlui.ContextProcessMouseMove(context, type-1, x, y)
+        headled = rmlui.ContextProcessMouseMove(context, type-1, x, y)
     elseif state == MOUSE_STATE_DOWN then
-        rmlui.ContextProcessMouseButtonDown(context, type-1, x, y)
+        headled = rmlui.ContextProcessMouseButtonDown(context, type-1, x, y)
     elseif state == MOUSE_STATE_UP then
-        rmlui.ContextProcessMouseButtonUp(context, type-1, x, y)
+        headled = rmlui.ContextProcessMouseButtonUp(context, type-1, x, y)
     end
+    return headled
 end
 
 function S.touch(x, y, _, state)
@@ -102,13 +104,16 @@ function S.touch(x, y, _, state)
     local TOUCH_STATE_DOWN <const> = 1
     local TOUCH_STATE_MOVE <const> = 2
     local TOUCH_STATE_UP <const> = 3
+    local headled = false
     if state == TOUCH_STATE_MOVE then
-        rmlui.ContextProcessMouseMove(context, 0, x, y)
+        headled = rmlui.ContextProcessMouseMove(context, 0, x, y)
     elseif state == TOUCH_STATE_DOWN then
-        rmlui.ContextProcessMouseButtonDown(context, 0, x, y)
+        headled = rmlui.ContextProcessMouseButtonDown(context, 0, x, y)
     elseif state == TOUCH_STATE_UP then
-        rmlui.ContextProcessMouseButtonUp(context, 0, x, y)
+        headled = rmlui.ContextProcessMouseButtonUp(context, 0, x, y)
     end
+    -- stop handle
+    return headled
 end
 
 function S.keyboard(key, press, state)
@@ -116,6 +121,8 @@ function S.keyboard(key, press, state)
         return
     end
     rmlui.ContextProcessKey(context, key, press)
+    -- stop handle
+    return true
 end
 
 function S.char(char)
@@ -123,6 +130,8 @@ function S.char(char)
         return
     end
     rmlui.ContextProcessChar(context, char)
+    -- stop handle
+    return true
 end
 
 function S.debugger(open)
@@ -149,6 +158,6 @@ S.close = windowManager.close
 S.postMessage = windowManager.postMessage
 S.preload_dir = filemanager.preload_dir
 
-ltask.send(ServiceWindow, "subscribe", "mouse", "touch", "keyboard", "char")
+ltask.send(ServiceWindow, "subscribe", "priority=1", "mouse", "touch", "keyboard", "char")
 
 return S

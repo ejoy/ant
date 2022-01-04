@@ -435,7 +435,7 @@ bool Document::ProcessChar(int character)
 	return focus->DispatchEvent(EventId::Textinput, parameters);
 }
 
-void Document::ProcessMouseMove(MouseButton button, int x, int y, int key_modifier_state) {
+bool Document::ProcessMouseMove(MouseButton button, int x, int y, int key_modifier_state) {
 	// Check whether the mouse moved since the last event came through.
 	bool mouse_moved = (x != mouse_position.x) || (y != mouse_position.y);
 	if (mouse_moved) {
@@ -456,39 +456,52 @@ void Document::ProcessMouseMove(MouseButton button, int x, int y, int key_modifi
 	// 'ondragover' messages.
 	UpdateHoverChain(parameters, drag_parameters);
 
+	bool handle = false;
 	// Dispatch any 'onmousemove' events.
 	if (mouse_moved) {
 		if (hover) {
 			hover->DispatchEvent(EventId::Mousemove, parameters);
+			if (hover != body.get()) {
+				handle = true;
+			}
 		}
 	}
+	return handle;
 }
 
-void Document::ProcessMouseButtonDown(MouseButton button, int x, int y, int key_modifier_state) {
+bool Document::ProcessMouseButtonDown(MouseButton button, int x, int y, int key_modifier_state) {
 	Point mouse {(float)x, (float)y};
 	EventDictionary parameters;
 	GenerateMouseEventParameters(parameters, mouse, button);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
-
+	bool handle = false;
 	active = body->GetElementAtPoint(mouse);
-	if (active)
+	if (active) {
 		active->DispatchEvent(EventId::Mousedown, parameters);
+		if (active != body.get()) {
+			handle = true;
+		}
+	}
 
 	if (button == MouseButton::Left) {
 		active_chain.insert(active_chain.end(), hover_chain.begin(), hover_chain.end());
 	}
 	focus = active;
+	return handle;
 }
 
-void Document::ProcessMouseButtonUp(MouseButton button, int x, int y, int key_modifier_state) {
+bool Document::ProcessMouseButtonUp(MouseButton button, int x, int y, int key_modifier_state) {
 	Point mouse {(float)x, (float)y};
 	EventDictionary parameters;
 	GenerateMouseEventParameters(parameters, mouse, button);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
-
+	bool handle = false;
 	active = body->GetElementAtPoint(mouse);
 	if (active) {
 		active->DispatchEvent(EventId::Mouseup, parameters);
+		if (active != body.get()) {
+			handle = true;
+		}
 	}
 
 	if (button == MouseButton::Left) {
@@ -501,6 +514,7 @@ void Document::ProcessMouseButtonUp(MouseButton button, int x, int y, int key_mo
 		active_chain.clear();
 		active = nullptr;
 	}
+	return handle;
 }
 
 void Document::ProcessMouseWheel(float wheel_delta, int key_modifier_state) {

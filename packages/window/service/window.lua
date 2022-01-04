@@ -14,8 +14,46 @@ local event = {
     update = {},
 }
 
+local priority_event = {
+    init = {},
+    exit = {},
+    size = {},
+    mouse_wheel = {},
+    mouse = {},
+    touch = {},
+    keyboard = {},
+    char = {},
+    update = {},
+}
+
 for CMD, e in pairs(event) do
     S["send_"..CMD] = function (...)
+        for i = 1, #e do
+            ltask.send(e[i], CMD, ...)
+        end
+    end
+end
+
+for CMD, e in pairs(event) do
+    S["send_"..CMD] = function (...)
+        for i = 1, #e do
+            ltask.send(e[i], CMD, ...)
+        end
+    end
+end
+
+S["priority_handle"] = function (CMD, ...)
+    local headled = false
+    local pe = priority_event[CMD]
+    for i = 1, #pe do
+        headled = ltask.call(pe[i], CMD, ...)
+        print("priority_handle", CMD, headled)
+        if headled then
+            break
+        end
+    end
+    if not headled then
+        local e = event[CMD]
         for i = 1, #e do
             ltask.send(e[i], CMD, ...)
         end
@@ -29,10 +67,7 @@ local function dispatch(CMD,...)
             exclusive.scheduling()
         until ltask.schedule_message() ~= SCHEDULE_SUCCESS
     else
-        local e = event[CMD]
-        for i = 1, #e do
-            ltask.send(e[i], CMD, ...)
-        end
+        ltask.send(ltask.self(), "priority_handle", CMD, ...)
     end
 end
 
@@ -74,39 +109,67 @@ end
 
 function S.subscribe(...)
     local s = ltask.current_session()
-    for _, name in ipairs {...} do
-        local e = event[name]
+    local param = {...}
+    local priority
+    if #param > 0 then
+        param[1]:gsub("priority=(%w+)", function(match) priority = tonumber(match) end)
+    end
+    for _, name in ipairs(param) do
+        local e = priority and priority_event[name] or event[name]
         if e then
-            e[#e+1] = s.from
+            if not priority then
+                e[#e+1] = s.from
+            else
+                table.insert(e, priority, s.from)
+            end
         end
     end
 end
 
-function S.unsubscribe(...)
+local function do_unsubscribe(events, ...)
+    local remove = false
     local s = ltask.current_session()
     for _, name in ipairs {...} do
-        local e = event[name]
+        local e = events[name]
         if e then
             for i, addr in ipairs(e) do
                 if addr == s.from then
                     table.remove(e, i)
+                    remove = true
                     break
                 end
+            end
+        end
+    end
+    return remove
+end
+
+function S.unsubscribe(...)
+    if do_unsubscribe(priority_event, ...) then
+        return
+    end
+    do_unsubscribe(event, ...)
+end
+
+local function do_unsubscribe_all(events)
+    local remove = false
+    local s = ltask.current_session()
+    for _, e in pairs(events) do
+        for i, addr in ipairs(e) do
+            if addr == s.from then
+                table.remove(e, i)
+                remove = true
+                break
             end
         end
     end
 end
 
 function S.unsubscribe_all()
-    local s = ltask.current_session()
-    for _, e in pairs(event) do
-        for i, addr in ipairs(e) do
-            if addr == s.from then
-                table.remove(e, i)
-                break
-            end
-        end
+    if do_unsubscribe_all(priority_event) then
+        return
     end
+    do_unsubscribe_all(event)
 end
 
 return S
