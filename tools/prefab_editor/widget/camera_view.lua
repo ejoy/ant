@@ -4,7 +4,7 @@ local w = world.w
 ecs.require "widget.base_view"
 local icamera     = ecs.import.interface "ant.camera|icamera"
 local iom         = ecs.import.interface "ant.objcontroller|iobj_motion"
-local camera_mgr  = ecs.require "camera_manager"
+local camera_mgr  = ecs.require "camera.camera_manager"
 local imgui         = require "imgui"
 local utils         = require "common.utils"
 local math3d        = require "math3d"

@@ -4,7 +4,7 @@ local w = world.w
 
 local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
 local irq		= ecs.import.interface "ant.render|irenderqueue"
-local camera_mgr= ecs.require "camera_manager"
+local camera_mgr= ecs.require "camera.camera_manager"
 local math3d	= require "math3d"
 local mathpkg	= import_package "ant.math"
 local mu		= mathpkg.util

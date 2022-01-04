@@ -47,7 +47,7 @@ system "gizmo_system"
     .method "handle_event"
 
 system "camera_system"
-    .implement "camera_system.lua"
+    .implement "camera/camera_system.lua"
     .require_interface "ant.camera|icamera"
     .require_interface "ant.objcontroller|iobj_motion"
     .method "init_world"

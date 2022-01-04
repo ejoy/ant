@@ -19,7 +19,7 @@ local igui		= ecs.import.interface "tools.prefab_editor|igui"
 
 local cmd_queue = ecs.require "gizmo.command_queue"
 local utils 	= ecs.require "mathutils"
-local camera_mgr= ecs.require "camera_manager"
+local camera_mgr= ecs.require "camera.camera_manager"
 local gizmo 	= ecs.require "gizmo.gizmo"
 local inspector = ecs.require "widget.inspector"
 

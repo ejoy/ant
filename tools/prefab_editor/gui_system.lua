@@ -31,7 +31,7 @@ local gridmesh_view     = ecs.require "widget.gridmesh_view"
 local prefab_view       = ecs.require "widget.prefab_view"
 local menu              = ecs.require "widget.menu"
 local gizmo             = ecs.require "gizmo.gizmo"
-local camera_mgr        = ecs.require "camera_manager"
+local camera_mgr        = ecs.require "camera.camera_manager"
 
 local uiconfig          = require "widget.config"
 local widget_utils      = require "widget.utils"
