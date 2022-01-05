@@ -49,7 +49,7 @@ system "gizmo_system"
 
 system "input_system"
     .implement "input_system.lua"
-    .method "data_changed"
+    .method "input_filter"
 
 system "gui_system"
     .implement "gui_system.lua"

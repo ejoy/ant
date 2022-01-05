@@ -11,7 +11,7 @@ local last_mouse
 local last_vx, last_vy
 local last_wx, last_wy
 
-function m:intpu_filter()
+function m:input_filter()
     for _,what,state,x,y in event_mouse:unpack() do
         local vx, vy = x,y
         if vx and vy then

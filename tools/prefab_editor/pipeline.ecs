@@ -34,7 +34,7 @@ pipeline "scene_changed"
     .stage "data_changed"
 
 pipeline "input"
-    .stage "intpu_filter"
+    .stage "input_filter"
 
 pipeline "ui"
     .stage "ui_start"
