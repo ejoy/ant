@@ -5,6 +5,7 @@ local w     = world.w
 local uiproperty    = require "widget.uiproperty"
 local hierarchy     = require "hierarchy_edit"
 local math3d        = require "math3d"
+local imgui         = require "imgui"
 
 local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local icamera       = ecs.import.interface "ant.camera|icamera"
@@ -17,7 +18,7 @@ local function camera_template(e)
 end
 
 local function create_transform_property(cv)
-    return uiproperty.Group({label="Transform", flags = 0}, {
+    return uiproperty.Group({label="Transform", flags = imgui.flags.TreeNode{"DefaultOpen"} }, {
         uiproperty.Float({label="Scale", speed=0.01, dim=3, disable=true}, {
             getter = function ()
                 return math3d.tovalue(iom.get_scale(cv.e))
@@ -205,24 +206,35 @@ local function create_frustum_property(cv)
     })
 end
 
+local function create_exposure_property(cv)
+    return uiproperty.Group({label="Exposure", flags=0},{
+
+    })
+end
+
 function cameraview:init()
     self.transform = create_transform_property(self)
     self.frustum = create_frustum_property(self)
+
+    self.exposure = create_exposure_property(self)
 end
 
 function cameraview:update()
     self.transform:update()
     self.frustum:update()
+    self.exposure:update()
 end
 
 
 function cameraview:set_model(e)
     self.e = e
+    self:update()
 end
 
 function cameraview:show()
     self.transform:show()
     self.frustum:show()
+    self.exposure:show()
 end
 
 return cameraview
