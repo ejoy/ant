@@ -74,13 +74,15 @@ function PropertyBase:update()
 end
 
 function PropertyBase:show()
-    imgui.widget.PropertyLabel(self.label)
-    if self.imgui_func("##" .. self.label, self.uidata) then
-        local d = self.uidata
-        if self.dim == 1 then
-            self.modifier.setter(d[1])
-        else
-            self.modifier.setter(d)
+    if self:is_visible() then
+        imgui.widget.PropertyLabel(self.label)
+        if self.imgui_func("##" .. self.label, self.uidata) then
+            local d = self.uidata
+            if self.dim == 1 then
+                self.modifier.setter(d[1])
+            else
+                self.modifier.setter(d)
+            end
         end
     end
 end
@@ -128,18 +130,20 @@ function Combo:set_options(options)
 end
 
 function Combo:show()
-    imgui.widget.PropertyLabel(self.label)
-    imgui.util.PushID(tostring(self))
-    local current_option = self.modifier.getter()
-    if imgui.widget.BeginCombo("##"..self.label, {current_option, flags = imgui.flags.Combo {}}) then
-        for _, option in ipairs(self.options) do
-            if imgui.widget.Selectable(option, current_option == option) then
-                self.modifier.setter(option)
+    if self:is_visible() then
+        imgui.widget.PropertyLabel(self.label)
+        imgui.util.PushID(tostring(self))
+        local current_option = self.modifier.getter()
+        if imgui.widget.BeginCombo("##"..self.label, {current_option, flags = imgui.flags.Combo {}}) then
+            for _, option in ipairs(self.options) do
+                if imgui.widget.Selectable(option, current_option == option) then
+                    self.modifier.setter(option)
+                end
             end
+            imgui.widget.EndCombo()
         end
-        imgui.widget.EndCombo()
+        imgui.util.PopID()
     end
-    imgui.util.PopID()
 end
 
 local EditText = class("EditText", PropertyBase)
@@ -163,9 +167,11 @@ function EditText:update()
 end
 
 function EditText:show()
-    imgui.widget.PropertyLabel(self.label)
-    if self.imgui_func("##" .. self.label, self.uidata) then
-        self.modifier.setter(tostring(self.uidata.text))
+    if self:is_visible() then
+        imgui.widget.PropertyLabel(self.label)
+        if self.imgui_func("##" .. self.label, self.uidata) then
+            self.modifier.setter(tostring(self.uidata.text))
+        end
     end
 end
 
@@ -196,6 +202,9 @@ function ResourcePath:get_extension()
 end
 
 function ResourcePath:show()
+    if not self:is_visible() then
+        return
+    end
     -- imgui.widget.Text(self.label)
     -- imgui.cursor.SameLine(uiconfig.PropertyIndent)
     imgui.widget.PropertyLabel(self.label)
@@ -280,6 +289,9 @@ function TextureResource:set_file(path)
 end
 
 function TextureResource:show()
+    if not self:is_visible() then
+        return 
+    end
     ResourcePath.show(self)
     if not self.runtimedata then return end
     --if not self.runtimedata._data.handle then return end
@@ -376,7 +388,7 @@ function Button:set_click(click)
 end
 
 function Button:show()
-    if self.visible then
+    if self:is_visible() then
         imgui.util.PushID("ui_button_id" .. self.button_id)
         imgui.windows.BeginDisabled(self.disable)
         if imgui.widget.Button(self.label, self.uidata.width, self.uidata.height) then
@@ -424,7 +436,7 @@ function Container:find_property_by_label(l)
 end
 
 function Container:_show_child(c)
-    if c.visible then
+    if c:is_visible() then
         imgui.windows.BeginDisabled(c.disable)
         c:show()
         imgui.windows.EndDisabled()
@@ -460,13 +472,15 @@ function SameLineContainer:_init(config, subproperty)
 end
 
 function SameLineContainer:show()
-    local p = self.subproperty
-    for i=1, #p-1 do
-        local c = p[i]
-        self:_show_child(c)
-        imgui.cursor.SameLine()
+    if self:is_visible() then
+        local p = self.subproperty
+        for i=1, #p-1 do
+            local c = p[i]
+            self:_show_child(c)
+            imgui.cursor.SameLine()
+        end
+        self:_show_child(p[#p])
     end
-    self:_show_child(p[#p])
 end
 
 

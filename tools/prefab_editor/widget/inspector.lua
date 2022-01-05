@@ -92,7 +92,8 @@ end
 
 local function get_camera_panel()
     if not camera_panel then
-        camera_panel = ecs.require "widget.camera_view"()
+        camera_panel = ecs.require "widget.camera_view"
+        camera_panel:init()
     end
     return camera_panel
 end

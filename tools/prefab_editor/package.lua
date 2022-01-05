@@ -20,6 +20,8 @@ return {
         "ant.audio",
         "ant.inputmgr",
         "ant.luaecs",
+        "ant.subprocess",
+        "ant.settings",
     },
     entry = "editor.callback",
     ecs = {

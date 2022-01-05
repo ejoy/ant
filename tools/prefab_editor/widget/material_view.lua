@@ -10,9 +10,6 @@ local w = world.w
     We need a **Material Editor** to edit material, not show material file content in entity property tab
 ]]
 
-
-local imaterial   = ecs.import.interface "ant.asset|imaterial"
-local ies         = ecs.import.interface "ant.scene|ifilter_state"
 local irender     = ecs.import.interface "ant.render|irender"
 
 local prefab_mgr  = ecs.require "prefab_manager"
@@ -22,8 +19,6 @@ local assetmgr  = import_package "ant.asset"
 local cr        = import_package "ant.compile_resource"
 local serialize = import_package "ant.serialize"
 
-local stringify = import_package "ant.serialize".stringify
-local utils     = require "common.utils"
 local uiutils   = require "widget.utils"
 local hierarchy = require "hierarchy_edit"
 
@@ -35,12 +30,7 @@ local BaseView, MaterialView = view_class.BaseView, view_class.MaterialView
 
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
-local vfs       = require "vfs"
 local access    = require "vfs.repoaccess"
-local imgui     = require "imgui"
-local datalist  = require "datalist"
-local math3d    = require "math3d"
-local bgfx      = require "bgfx"
 
 local file_cache = {}
 
