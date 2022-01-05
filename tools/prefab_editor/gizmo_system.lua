@@ -451,11 +451,7 @@ function gizmo:update_axis_plane()
 	self.tyz.area = (tp[3] > 0) and ((tp[2] > 0) and gizmo_const.RIGHT_TOP or gizmo_const.RIGHT_BOTTOM) or (((tp[2] > 0) and gizmo_const.LEFT_TOP or gizmo_const.LEFT_BOTTOM))
 end
 
-local keypress_mb = world:sub{"keyboard"}
-
 local pickup_mb = world:sub {"pickup"}
-
-local camera_event = world:sub{"Camera"}
 
 local function select_axis_plane(x, y)
 	if gizmo.mode ~= gizmo_const.MOVE then

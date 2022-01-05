@@ -321,7 +321,7 @@ function ientity.create_frustum_entity(frustum_points, name, color)
 		table.move(p, 1, 3, #vb+1, vb)
 	end
 	local mesh = create_mesh({"p3", vb}, frustum_ib)
-	create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, {}, color)
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, {}, color)
 end
 
 local function axis_mesh(color)

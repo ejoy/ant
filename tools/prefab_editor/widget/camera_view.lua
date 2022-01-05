@@ -17,26 +17,6 @@ local hierarchy     = require "hierarchy_edit"
 function CameraView:_init()
     BaseView._init(self)
     local property = {}
-    property[#property + 1] = uiproperty.Int({label = "Target"}, {
-        getter = function() return self:on_get_target() end,
-        setter = function(value) self:on_set_target(value) end
-    })
-    property[#property + 1] = uiproperty.Float({label = "Dist"}, {
-        getter = function() return self:on_get_dist() end,
-        setter = function(value) self:on_set_dist(value) end
-    })
-    property[#property + 1] = uiproperty.Float({label = "Fov"}, {
-        getter = function() return self:on_get_fov() end,
-        setter = function(value) self:on_set_fov(value) end
-    })
-    property[#property + 1] = uiproperty.Float({label = "Near"}, {
-        getter = function() return self:on_get_near() end,
-        setter = function(value) self:on_set_near(value) end
-    })
-    property[#property + 1] = uiproperty.Float({label = "Far"}, {
-        getter = function() return self:on_get_far() end,
-        setter = function(value) self:on_set_far(value) end
-    })
     self.camera_property    = property
     self.addframe           = uiproperty.Button({label = "AddFrame"}, {
         click = function() self:on_add_frame() end
@@ -113,15 +93,6 @@ function CameraView:on_get_scale()
     return {1, 1, 1}
 end
 
-function CameraView:on_set_target(value)
-    camera_mgr.set_target(self.e, value)
-end
-function CameraView:on_get_target()
-    return camera_mgr.get_editor_data(self.e).target
-end
-function CameraView:on_set_dist(value)
-    camera_mgr.set_dist_to_target(self.e, value)
-end
 function CameraView:on_get_dist()
     return camera_mgr.get_editor_data(self.e).dist_to_target
 end
@@ -189,6 +160,9 @@ function CameraView:on_play()
 end
 
 function CameraView:on_add_frame()
+    --FIXME: recorder must be serialized, so we need to build the relationship of recorder entity and camera entity
+    --       or recorder as camera component's attribute
+    assert(false, "need rewrite")
     local new_idx = self.current_frame + 1
     camera_mgr.add_recorder_frame(self.e, new_idx)
     self.current_frame = new_idx

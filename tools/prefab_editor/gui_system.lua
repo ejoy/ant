@@ -7,7 +7,7 @@ local imgui     = require "imgui"
 local rhwi      = import_package "ant.hwi"
 local asset_mgr = import_package "ant.asset"
 local mathpkg   = import_package "ant.math"
-local defaultcomp= import_package "ant.general".default
+
 local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
 local mc        = mathpkg.constant
@@ -57,9 +57,6 @@ local bgfx              = require "bgfx"
 
 local m = ecs.system 'gui_system'
 local drag_file = nil
-
-local second_view_width = 384
-local second_view_height = 216
 
 local function on_new_project(path)
     new_project.set_path(path)
@@ -291,59 +288,10 @@ local function show_dock_space()
     imgui.windows.End()
 end
 
-
-local function calc_second_view_viewport(vr)
-    return {
-        x = vr.x + math.max(0, vr.w - second_view_width),
-        y = vr.y + math.max(0, vr.h - second_view_height),
-        w = second_view_width, h = second_view_height
-    }
-end
-
-local function create_second_view_queue()
-    local mq = w:singleton("main_queue", "render_target:in")
-    local mqrt = mq.render_target
-    local vr = calc_second_view_viewport(mqrt.view_rect)
-    w:register{name="second_view"}
-    ecs.create_entity{
-        policy = {
-            "ant.render|render_queue",
-            "ant.general|name",
-        },
-        data = {
-            camera_ref = icamera.create{
-                eyepos  = mc.ZERO_PT,
-                viewdir = mc.ZAXIS,
-                updir   = mc.YAXIS,
-                frustum = defaultcomp.frustum(vr.w / vr.h),
-                name    = "second_view_camera",
-            },
-            render_target = {
-                view_rect = vr,
-                viewid = viewidmgr.generate "second_view",
-                view_mode = mqrt.view_mode,
-                clear_state = mqrt.clear_state,
-                fb_idx = mqrt.fb_idx,
-            },
-            primitive_filter = {
-                filter_type = "main_view",
-                exclude_type = "auxgeom",
-                "foreground", "opacity", "background", "translucent",
-            },
-            queue_name = "second_view",
-            second_view = true,
-            name = "second_view",
-            visible = true,
-        }
-    }
-end
-
 local stat_window
 function m:init_world()
     local iRmlUi = ecs.import.interface "ant.rmlui|irmlui"
     stat_window = iRmlUi.open "bgfx_stat.rml"
-
-    create_second_view_queue()
 end
 
 function m:ui_update()
@@ -440,12 +388,11 @@ local function on_target(old, new)
         end
     end
     if new then
-        local new_entity = new--type(new) == "table" and icamera.find_camera(new) or world[new]
-        w:sync("camera?in", new_entity)
-        w:sync("light?in", new_entity)
-        if new_entity.camera then
+        w:sync("camera?in", new)
+        w:sync("light?in", new)
+        if new.camera then
             camera_mgr.set_second_camera(new, true)
-        elseif new_entity.light then
+        elseif new.light then
             light_gizmo.bind(new)
         end
     end
@@ -668,17 +615,9 @@ function m:end_frame()
     global_data.mouse_move = false
 end
 
-local mq_vr_mb = world:sub{"view_rect_changed", "main_queue"}
-
 function m:data_changed()
     if highlight_aabb.visible and highlight_aabb.min and highlight_aabb.max then
         iwd.draw_aabb_box(highlight_aabb, nil, aabb_color_i)
-    end
-
-    for msg in mq_vr_mb:each() do
-        local vr = msg[3]
-        local sv_vr = calc_second_view_viewport(vr)
-        irq.set_view_rect("second_view", sv_vr)
     end
 end
 

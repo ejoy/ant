@@ -4,34 +4,22 @@ local w = world.w
 
 local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
 local irq		= ecs.import.interface "ant.render|irenderqueue"
-local camera_mgr= ecs.require "camera.camera_manager"
 local math3d	= require "math3d"
 local mathpkg	= import_package "ant.math"
-local mu		= mathpkg.util
-local utils		= ecs.require "mathutils"
-local inspector = ecs.require "widget.inspector"
+local mc		= mathpkg.constant
 
-local camera_sys	= ecs.system "camera_system"
-local global_data 	= require "common.global_data"
 local event_camera_control = world:sub {"camera"}
-local camera_init_eye_pos <const> = {5, 5, 5, 1}
-local camera_init_target <const> = {0, 0,  0, 1}
-local camera_target = math3d.ref(math3d.vector(0, 0, 0, 1))
+local camera_init_eye_pos <const> = math3d.ref(math3d.vector(5, 5, 5, 1))
+local camera_init_target <const> = math3d.ref(mc.ZERO_PT)
+local camera_target				= math3d.ref(mc.ZERO_PT)
 local camera_distance
-local zoom_speed <const> = 1
-local wheel_speed <const> = 0.5
-local pan_speed <const> = 0.5
-local rotation_speed <const> = 1
+local wheel_speed <const>		= 0.5
+local pan_speed <const>			= 0.5
+local rotation_speed <const>	= 1
 
 local function view_to_world(view_pos)
-	--local camerasrt = iom.srt(irq.main_camera())
-	--local camer_worldmat = iom.worldmat(irq.main_camera())
-
-	--FIX ME: iom.worldmat() could not be used in some stage
-	--local srtmat = math3d.matrix(irq.main_camera().camera.srt)
 	local camera_ref = irq.main_camera()
 	w:sync("camera:in scene:in", camera_ref)
-	local camera = camera_ref.camera
     local worldmat = camera_ref.scene._worldmat
 	return math3d.transform(worldmat, view_pos, 0)
 end
@@ -69,6 +57,7 @@ end
 
 local mb_camera_changed = world:sub{"main_queue", "camera_changed"}
 
+local camera_sys	= ecs.system "camera_system"
 function camera_sys:init_world()
 	camera_reset(camera_init_eye_pos, camera_init_target)
 end
@@ -79,220 +68,48 @@ function camera_sys:entity_ready()
 	end
 end
 
-local PAN_LEFT = false
-local PAN_RIGHT = false
-local ZOOM_FORWARD = false
-local ZOOM_BACK = false
-local icamera = ecs.import.interface "ant.camera|icamera"
+local keypress_mb		= world:sub {"keyboard"}
+local mouse_drag		= world:sub {"mousedrag"}
 
-local keypress_mb = world:sub{"keyboard"}
-local keypress_mb_for_pan = world:sub{"keyboard"}
-local event_camera_edit = world:sub{"CameraEdit"}
-local mouse_drag = world:sub {"mousedrag"}
-local mouse_drag_for_pan = world:sub {"mousedrag"}
-local mouse_move = world:sub {"mousemove"}
-local mouse_down = world:sub {"mousedown"}
-local mouse_up = world:sub {"mouseup"}
-local select_area
-local last_mouse_pos
-local hit_plane
-local dist_to_plane
-local current_dir = math3d.ref()
-local centre_pos = math3d.ref()
-local function selectBoundary(hp)
-	if not hp[1] or not hp[2] then return end
-	last_mouse_pos = hp
-	local boundary = camera_mgr.get_editor_data(camera_mgr.second_camera).far_boundary
-	if not boundary then return end
-
-	local mc = irq.main_camera()
-	local vpmat = icamera.calc_viewproj(mc)
-	local mqvr = irq.view_rect "main_queue"
-	for i, v in ipairs(boundary) do
-		local sp1 = mu.world_to_screen(vpmat, mqvr, v[1])
-		local sp2 = mu.world_to_screen(vpmat, mqvr, v[2])
-		local dist = mu.pt2d_line_distance(sp1, sp2, math3d.vector(hp[1], hp[2], 0.0))
-		if dist < 5.0 then
-			return i
+local PAN, ZOOM
+function camera_sys:camera_usage()
+	for _,what,x,y in event_camera_control:unpack() do
+		if what == "rotate" then
+			camera_rotate(x, y)
+		elseif what == "zoom" then
+			camera_zoom(x)
+		elseif what == "reset" then
+			camera_reset(camera_init_eye_pos, camera_init_target)
 		end
 	end
-end
-
-local ctrl_state = false
-
-function camera_sys:handle_camera_event()
-	for _, what, eid, value in event_camera_edit:unpack() do
-		if what == "target" then
-			camera_mgr.set_target(eid, value)
-			inspector.update_ui()
-		elseif what == "dist" then
-			camera_mgr.set_dist_to_target(eid, value)
-		elseif what == "fov" then
-			icamera.set_frustum_fov(eid, value)
-		elseif what == "near" then
-			icamera.set_frustum_near(eid, value)
-		elseif what == "far" then
-			icamera.set_frustum_far(eid, value)
-		end
-	end
-	
 
 	for _, key, press, state in keypress_mb:unpack() do
 		if not state.CTRL and not state.SHIFT then
 			if key == "W" then
-				if press == 1 then
-					ZOOM_FORWARD = true
-				elseif press == 0 then
-					ZOOM_FORWARD = false
-				end
+				ZOOM = press == 1 and 0.2 or nil
 			elseif key == "S" then
-				if press == 1 then
-					ZOOM_BACK = true
-				elseif press == 0 then
-					ZOOM_BACK = false
-				end
-			end
-		end
-		ctrl_state = state.CTRL
-	end
-
-	-- if PAN_LEFT then
-	-- 	camera_pan(0.2, 0)
-	-- elseif PAN_RIGHT then
-	-- 	camera_pan(-0.2, 0)
-	-- else
-	if ZOOM_FORWARD then
-		camera_zoom(-0.2)
-	elseif ZOOM_BACK then
-		camera_zoom(0.2)
-	end
-
-	if global_data.mouse_move and camera_mgr.second_camera and not camera_mgr.select_frustum then
-		if select_area then
-			camera_mgr.highlight_frustum(camera_mgr.second_camera, select_area, false)
-		end
-		select_area = selectBoundary({global_data.mouse_pos_x, global_data.mouse_pos_y})
-		if select_area then
-			camera_mgr.highlight_frustum(camera_mgr.second_camera, select_area, true)
-		end
-	end
-
-	for _, what, x, y in mouse_down:unpack() do
-		if what == "LEFT" then
-			if camera_mgr.second_camera then
-				select_area = selectBoundary({x, y})
-				if select_area then
-					camera_mgr.select_frustum = true
-					camera_mgr.highlight_frustum(camera_mgr.second_camera, select_area, true)
-					local boundary = camera_mgr.get_editor_data(camera_mgr.second_camera).far_boundary
-					local lb_point = boundary[1][1]
-					local lt_point = boundary[2][1]
-					local rt_point = boundary[3][1]
-					local rb_point = boundary[4][1]
-					centre_pos.v = math3d.vector(0.5 * (lb_point[1] + rt_point[1]), 0.5 * (lb_point[2] + rt_point[2]), 0.5 * (lb_point[3] + rt_point[3]))
-					hit_plane = {dir = math3d.totable(iom.get_direction(camera_mgr.second_camera)), pos = math3d.totable(centre_pos)}
-					dist_to_plane = math3d.length(math3d.sub(centre_pos, iom.get_position(camera_mgr.second_camera)))
-					local mid_pos
-					if select_area == camera_mgr.FRUSTUM_LEFT then
-						mid_pos = math3d.vector(0.5 * (lb_point[1] + lt_point[1]), 0.5 * (lb_point[2] + lt_point[2]), 0.5 * (lb_point[3] + lt_point[3]))
-					elseif select_area == camera_mgr.FRUSTUM_TOP then
-						mid_pos = math3d.vector(0.5 * (rt_point[1] + lt_point[1]), 0.5 * (rt_point[2] + lt_point[2]), 0.5 * (rt_point[3] + lt_point[3]))
-					elseif select_area == camera_mgr.FRUSTUM_RIGHT then
-						mid_pos = math3d.vector(0.5 * (rt_point[1] + rb_point[1]), 0.5 * (rt_point[2] + rb_point[2]), 0.5 * (rt_point[3] + rb_point[3]))
-					elseif select_area == camera_mgr.FRUSTUM_BOTTOM then
-						mid_pos = math3d.vector(0.5 * (lb_point[1] + rb_point[1]), 0.5 * (lb_point[2] + rb_point[2]), 0.5 * (lb_point[3] + rb_point[3]))
-					end
-					current_dir.v = math3d.normalize(math3d.sub(mid_pos, centre_pos))
-				end
+				ZOOM = press == 1 and -0.2 or nil
+			elseif key == "A" then
+				PAN = press == 1 and 0.2 or nil
+			elseif key == "D" then
+				PAN = press == 1 and -0.2 or nil
 			end
 		end
 	end
 
-	for _, what, x, y in mouse_up:unpack() do
-		if what == "LEFT" and camera_mgr.second_camera then
-			if select_area then
-				camera_mgr.highlight_frustum(camera_mgr.second_camera, select_area, false)
-				select_area = nil
-			end
-			camera_mgr.select_frustum = false
-		end
+	if ZOOM then
+		camera_zoom(ZOOM)
 	end
-	
-	for _,what,x,y in event_camera_control:unpack() do
-		if not camera_mgr.select_frustum then
-			if what == "rotate" then
-				camera_rotate(x, y)
-			-- elseif what == "pan" and not ctrl_state then
-			-- 	camera_pan(x, y)
-			elseif what == "zoom" then
-				camera_zoom(x)
-			elseif what == "reset" then
-				camera_reset(camera_init_eye_pos, camera_init_target)
-			end
-		end
+
+	if PAN then
+		camera_pan(PAN, 0)
 	end
 
 	for _, what, x, y, dx, dy in mouse_drag:unpack() do
-		if what == "LEFT" then
-			if select_area and hit_plane then
-				local c = icamera.find_camera(irq.main_camera())
-				local curpos = utils.ray_hit_plane(iom.ray(c.viewprojmat, {x, y}), hit_plane)
-				local proj_len = math3d.dot(current_dir, math3d.sub(curpos, centre_pos))
-				local aspect = 1.0
-				if select_area == camera_mgr.FRUSTUM_LEFT or select_area == camera_mgr.FRUSTUM_RIGHT then
-					aspect = icamera.get_frustum(camera_mgr.second_camera).aspect
-				end
-				local half_fov = math.atan(proj_len / dist_to_plane / aspect )
-				camera_mgr.set_frustum_fov(camera_mgr.second_camera, 2 * math.deg(half_fov))
-				inspector.update_ui(true)
-			end
-		-- elseif what == "MIDDLE" then
-		-- 	camera_pan(dx, dy)
-		elseif what == "RIGHT" then
+		if what == "RIGHT" then
 			camera_rotate(dx, dy)
-		end
-	end
-end
-function camera_sys:handle_event()
-	for _, key, press, state in keypress_mb_for_pan:unpack() do
-		if not state.CTRL and not state.SHIFT then
-			if key == "A" then
-				if press == 1 then
-					PAN_LEFT = true
-				elseif press == 0 then
-					PAN_LEFT = false
-				end
-			elseif key == "D" then
-				if press == 1 then
-					PAN_RIGHT = true
-				elseif press == 0 then
-					PAN_RIGHT = false
-				end
-			end
-		end
-		ctrl_state = state.CTRL
-	end
-	if PAN_LEFT then
-		camera_pan(0.2, 0)
-	elseif PAN_RIGHT then
-		camera_pan(-0.2, 0)
-	end
-	for _, what, x, y, dx, dy in mouse_drag_for_pan:unpack() do
-		if what == "MIDDLE" then
+		elseif what == "MIDDLE" then
 			camera_pan(dx, dy)
 		end
-	end
-end
-function camera_sys:update_camera()
-	local sc = camera_mgr.second_camera
-	if sc then
-		w:sync("camera:in scene:in", sc)
-		local camera, scene = sc.camera, sc.scene
-
-		local worldmat = scene._worldmat
-		local pos, dir = math3d.index(worldmat, 4, 3)
-		camera.viewmat = math3d.lookto(pos, dir, scene.updir)
-		camera.projmat = math3d.projmat(camera.frustum)
-		camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 	end
 end

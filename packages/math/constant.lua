@@ -18,6 +18,7 @@ constant.BLUE   = {0, 0, 1, 1}
 constant.BLACK  = {0, 0, 0, 1}
 constant.WHITE  = {1, 1, 1, 1}
 constant.YELLOW = {1, 1, 0, 1}
+constant.YELLOW_HALF = {0.5, 0.5, 0, 1}
 constant.GRAY_HALF = {0.5, 0.5, 0.5, 1}
 constant.GRAY   = {0.8, 0.8, 0.8, 1}
 

@@ -468,10 +468,6 @@ function m:on_prefab_ready(prefab)
             j = j + 1
         end
 
-        w:sync("camera?in", e)
-        if e.camera then
-            camera_mgr.on_camera_ready(e)
-        end
         w:sync("light?in", e)
         if e.light then
             create_light_billboard(e)
@@ -530,10 +526,6 @@ local function on_remove_entity(e)
     w:sync("light?in", e)
     if e.light then
         light_gizmo.on_remove_light(e)
-    end
-    w:sync("camera?in", e)
-    if e.camera then
-        camera_mgr.remove_camera(e)
     end
     -- if world[eid].skeleton_eid then
     --     w:remove(world[eid].skeleton_eid)

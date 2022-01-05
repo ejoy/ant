@@ -47,7 +47,7 @@ mat4 calc_bone_transform(ivec4 indices, vec4 weights)
 vec4 transformWS(mat4 wm, vec4 pos)
 {
 	vec4 posWS = mul(wm, pos);
-#ifdef ENABLE_CURVE_WORLD
+#if !defined(NO_CURVE_WORLD) && defined(ENABLE_CURVE_WORLD)
 	posWS.xyz = curve_world_offset(posWS.xyz);
 #endif //ENABLE_CURVE_WORLD
 	return posWS;

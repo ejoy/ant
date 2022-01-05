@@ -1,0 +1,42 @@
+
+pipeline "init"
+    .stage "init"
+    .stage "post_init"
+
+pipeline "exit"
+    .stage "exit"
+
+pipeline "update"
+    .stage "timer"
+    .stage "start_frame"
+    .pipeline "input"
+    .pipeline "scene_changed"
+    .pipeline "scene_render"
+    .pipeline "select"
+    .pipeline "ui_render"
+    .stage "end_frame"
+    .stage "final"
+
+pipeline "scene_render"
+    .stage "widget"
+    .stage "draw_geo"
+    .pipeline "sky"
+    .pipeline "animation"
+    .stage "handle_camera_event"
+    .pipeline "scene"
+    .pipeline "camera"
+    .stage "handle_event"
+    .pipeline "collider"
+    .pipeline "render"
+
+pipeline "scene_changed"
+    .pipeline "ui"
+    .stage "data_changed"
+
+pipeline "input"
+    .stage "intpu_filter"
+
+pipeline "ui"
+    .stage "ui_start"
+    .stage "ui_update"
+    .stage "ui_end"

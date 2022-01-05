@@ -1,0 +1,24 @@
+system "camera_system"
+    .implement "camera/camera_system.lua"
+    .require_interface "ant.camera|icamera"
+    .require_interface "ant.objcontroller|iobj_motion"
+    .method "init_world"
+    .method "entity_ready"
+    .method "camera_usage"
+    
+
+
+system "second_camera_system"
+    .implement "camera/camera_system.lua"
+    .method "init_world"
+    .method "entity_init"
+    .method "data_changed"
+    .method "update_camera"
+    .method "camera_usage"
+
+component "second_view_frustum"
+component "second_view_triangle"
+
+
+policy "second_view"
+    .require_system "second_camera_system"
