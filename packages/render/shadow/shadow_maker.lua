@@ -272,7 +272,7 @@ local camera_scene_mb
 local camera_frusutm_mb
 local function update_camera_changed_mailbox(camera_ref)
 	camera_scene_mb = world:sub{"scene_changed", camera_ref}
-	camera_frusutm_mb = world:sub{"camera_changed", "frustum", camera_ref}
+	camera_frusutm_mb = world:sub{"camera_changed", camera_ref}
 end
 
 local function set_csm_visible(enable)

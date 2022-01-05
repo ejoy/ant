@@ -169,7 +169,7 @@ end
 
 function cfs:init_world()
     local mq = w:singleton("main_queue", "camera_ref:in")
-    camera_frustum_mb = world:sub{"camera_changed", "frustum", mq.camera_ref}
+    camera_frustum_mb = world:sub{"camera_changed", mq.camera_ref}
 
     cluster_buffers.light_info.handle = ilight.light_buffer()
 
@@ -232,7 +232,7 @@ function cfs:data_changed()
 
     for msg in cr_camera_mb:each() do
         build_cluster_aabb_struct(main_viewid)
-        camera_frustum_mb = world:sub{"camera_changed", "frustum", msg[3]}
+        camera_frustum_mb = world:sub{"camera_changed", msg[3]}
     end
 
     for _ in camera_frustum_mb:each() do

@@ -114,7 +114,7 @@ function ic.get_frustum(cameraref)
 end
 
 local function set_camera_changed(subcomp, cameraref)
-    world:pub {"camera_changed", subcomp, cameraref}
+    world:pub {"camera_changed", cameraref, subcomp}
 end
 
 function ic.set_frustum(cameraref, frustum)
