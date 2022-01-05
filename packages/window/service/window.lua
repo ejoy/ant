@@ -47,7 +47,7 @@ S["priority_handle"] = function (CMD, ...)
     local pe = priority_event[CMD]
     for i = 1, #pe do
         headled = ltask.call(pe[i], CMD, ...)
-        print("priority_handle", CMD, headled)
+        --print("priority_handle", CMD, headled)
         if headled then
             break
         end

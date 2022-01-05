@@ -1313,6 +1313,9 @@ void Element::UpdateLayout() {
 }
 
 Element* Element::GetElementAtPoint(Point point, const Element* ignore_element) {
+	if (!IsVisible()) {
+		return nullptr;
+	}
 	UpdateStackingContext();
 	for (int i = (int)stacking_context.size() - 1; i >= 0; --i) {
 		if (ignore_element != nullptr) {
@@ -1330,7 +1333,25 @@ Element* Element::GetElementAtPoint(Point point, const Element* ignore_element) 
 			return child_element;
 		}
 	}
-
+	// ignore alpha element
+	if (GetTagName() != "#text") {
+		auto style = GetStyle();
+		auto image_pro = style->GetProperty(PropertyId::BackgroundImage);
+		auto color_pro = style->GetProperty(PropertyId::BackgroundColor);
+		if ((!color_pro || color_pro->GetColor().a == 0) && (!image_pro || image_pro->GetString().empty())) {
+			bool skip = true;
+			for (const auto& [key, value] : attributes) {
+				if (key == "data-style-background-image" || key == "data-style-background-color" || key.substr(0, 10) == "data-event") {
+					skip = false;
+					break;
+				}
+			}
+			if (skip) {
+				return nullptr;
+			}
+		}
+	}
+	
 	if (IsPointWithinElement(point)) {
 		return this;
 	}
