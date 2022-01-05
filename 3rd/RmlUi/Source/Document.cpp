@@ -459,7 +459,7 @@ bool Document::ProcessMouseMove(MouseButton button, int x, int y, int key_modifi
 	bool handle = false;
 	// Dispatch any 'onmousemove' events.
 	if (mouse_moved) {
-		if (hover && hover->IsVisible()) {
+		if (hover) {
 			hover->DispatchEvent(EventId::Mousemove, parameters);
 			if (hover != body.get()) {
 				handle = true;
@@ -476,7 +476,7 @@ bool Document::ProcessMouseButtonDown(MouseButton button, int x, int y, int key_
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 	bool handle = false;
 	active = body->GetElementAtPoint(mouse);
-	if (active && active->IsVisible()) {
+	if (active) {
 		active->DispatchEvent(EventId::Mousedown, parameters);
 		if (active != body.get()) {
 			handle = true;
@@ -497,7 +497,7 @@ bool Document::ProcessMouseButtonUp(MouseButton button, int x, int y, int key_mo
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 	bool handle = false;
 	active = body->GetElementAtPoint(mouse);
-	if (active && active->IsVisible()) {
+	if (active) {
 		active->DispatchEvent(EventId::Mouseup, parameters);
 		if (active != body.get()) {
 			handle = true;

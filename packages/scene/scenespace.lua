@@ -73,6 +73,7 @@ local function update_aabb(node)
 end
 
 local function isValidReference(reference)
+    assert(reference[2] == 1, "Not a reference")
     return reference[1] ~= nil
 end
 

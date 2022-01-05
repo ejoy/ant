@@ -122,7 +122,7 @@ function S.keyboard(key, press, state)
     end
     rmlui.ContextProcessKey(context, key, press)
     -- stop handle
-    return true
+    return false
 end
 
 function S.char(char)
