@@ -18,7 +18,7 @@ local icamera   = ecs.import.interface "ant.camera|icamera"
 local imesh     = ecs.import.interface "ant.asset|imesh"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 
-local second_camera_sys = ecs.system "second_camera_system"
+local second_camera_sys = ecs.system "second_view_camera_system"
 
 local second_view_width = 384
 local second_view_height = 216
@@ -35,7 +35,6 @@ function second_camera_sys:init_world()
     local mq = w:singleton("main_queue", "render_target:in")
     local mqrt = mq.render_target
     local vr = calc_second_view_viewport(mqrt.view_rect)
-    w:register{name="second_view"}
     ecs.create_entity{
         policy = {
             "ant.render|render_queue",
@@ -139,9 +138,9 @@ local function scale_frustum_points(frustum_points, len)
         frustum_points[4],
 
         math3d.muladd(dirs[1], len, frustum_points[1]),
-        math3d.muladd(dirs[2], len, frustum_points[1]),
-        math3d.muladd(dirs[3], len, frustum_points[1]),
-        math3d.muladd(dirs[4], len, frustum_points[1]),
+        math3d.muladd(dirs[2], len, frustum_points[2]),
+        math3d.muladd(dirs[3], len, frustum_points[3]),
+        math3d.muladd(dirs[4], len, frustum_points[4]),
     }
 end
 
@@ -172,15 +171,18 @@ local function create_frustum_entity(cref)
             reference = true,
             scene = {srt={}},
             name = "second_view_frustum_root",
+            second_view_frustum = true,
             on_ready = function (e)
-                ecs.methods.set_parent(e, cref)
-            end
+                w:sync("reference:in", e)
+                ecs.method.set_parent(e.reference, cref)
+            end,
         }
     }
 
     local color = mc.COLOR(mc.YELLOW_HALF, ilight.default_intensity "point")
     local function onready(e)
-        ecs.methods.set_parent(e, frustum_root)
+        w:sync("reference:in", e)
+        ecs.method.set_parent(e.reference, frustum_root)
         imaterial.set_property(e, "u_color", color)
     end
 
@@ -190,6 +192,7 @@ local function create_frustum_entity(cref)
             "ant.general|name",
         },
         data = {
+            reference = true,
             on_ready = onready,
             simplemesh = imesh.init_mesh({
                 vb = {
@@ -208,16 +211,16 @@ local function create_frustum_entity(cref)
             }, true),
             material = "/pkg/ant.resources/materials/line_color.material",
             scene = {srt={}},
-            state = "main_view|auxgeom",
+            filter_state = "main_view|auxgeom",
             name = "second_view_frustum",
             second_view_frustum = true,
         }
     }
 
     local tri_bottomcenter = math3d.mul(0.5, math3d.add(frustum_points[6], frustum_points[8]))
-    local tri_edge_len<const> = 0.5
+    local tri_edge_len<const> = math3d.length(frustum_points[6], frustum_points[8]) * 0.25
     local tri_edge_len_half<const> = tri_edge_len * 0.5
-    local tri_edge_hight<const> = tri_edge_len * 2 / 3.0
+    local tri_edge_height<const> = tri_edge_len * 2 / 3.0
 
     ecs.create_entity {
         policy = {
@@ -225,6 +228,7 @@ local function create_frustum_entity(cref)
             "ant.general|name",
         },
         data = {
+            reference = true,
             simplemesh = imesh.init_mesh({
                 vb = {
                     start = 0,
@@ -233,35 +237,40 @@ local function create_frustum_entity(cref)
                         declname = "p3",
                         memory = {"fff", {
                             -tri_edge_len_half, 0.0, 0.0,
-                            0.0, tri_edge_hight, 0.0,
+                            0.0, tri_edge_height, 0.0,
                             tri_edge_len_half, 0.0, 0.0,
                         }}
                     }
                 }
             }, true),
             material = "/pkg/ant.resources/materials/singlecolor.material",
-            state = "main_view|auxgeom",
+            filter_state = "main_view|auxgeom",
             scene = {srt={
                 t = tri_bottomcenter,
             }},
             name = "second_view_triangle",
             on_ready = onready,
-            second_view_triangle = true,
+            second_view_frustum = true,
         }
     }
 end
 
+local function remove_frustum_entity()
+    for e in w:select "second_view_frustum" do
+        w:remove(e)
+    end
+end
+
+local need_create_frustum_entity
+
 local function show_frustum(visible)
     if visible then
-        assert(w:singleton("second_view_frustum", "render_object:in"))
-        for sc_q in w:select "second_view visible camera_ref:in" do
-            create_frustum_entity(sc_q.camera_ref)
+        for _ in w:select "second_view visible camera_ref:in" do
+            remove_frustum_entity()
+            need_create_frustum_entity = true
         end
     else
-        local e = w:singleton("second_view_frustum", "render_object:in")
-        if e then
-            w:remove(e)
-        end
+        remove_frustum_entity()
     end
 end
 
@@ -273,5 +282,14 @@ function sc_frustum_sys:camera_usage()
 
     for _ in cc_mb:each() do
         show_frustum(true)
+    end
+end
+
+function sc_frustum_sys:entity_remove()
+    if need_create_frustum_entity then
+        for sc_q in w:select "second_view visible camera_ref:in" do
+            create_frustum_entity(sc_q.camera_ref)
+        end
+        need_create_frustum_entity = nil
     end
 end

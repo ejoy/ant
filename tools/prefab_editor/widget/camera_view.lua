@@ -33,7 +33,8 @@ function CameraView:_init()
 end
 
 function CameraView:set_model(eid)
-    self.frames = camera_mgr.get_recorder_frames(eid)
+    --FIXME
+    self.frames = {} --camera_mgr.get_recorder_frames(eid)
     if not BaseView.set_model(self, eid) then return false end
     local template = hierarchy:get_template(self.e)
     -- if template.template.action and template.template.action.bind_camera and template.template.action.bind_camera.which == "main_queue" then

@@ -1,6 +1,6 @@
-local ecs = ...
+local ecs	= ...
 local world = ecs.world
-
+local w		= world.w
 local ientity 	= ecs.interface "ientity"
 local declmgr   = require "vertexdecl_mgr"
 local math3d    = require "math3d"
@@ -747,7 +747,8 @@ function ientity.create_arrow_entity(origin, forward, scale, data)
 			material = "/pkg/ant.resources/materials/simpletri.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			on_ready = function (e)
-				ecs.method.set_parent(e, arrowe)
+				w:sync("reference:in", e)
+				ecs.method.set_parent(e.reference, arrowe)
 				imaterial.set_property(e, "u_color", data.cylinder_color or {1, 0, 0, 1})
 			end
 		},
@@ -767,7 +768,8 @@ function ientity.create_arrow_entity(origin, forward, scale, data)
 			material = "/pkg/ant.resources/materials/simpletri.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			on_ready = function (e)
-				ecs.method.set_parent(e, arrowe)
+				w:sync("reference:in", e)
+				ecs.method.set_parent(e.reference, arrowe)
 				imaterial.set_property(e, "u_color", data.cone_color or {1, 0, 0, 1})
 			end
 		},

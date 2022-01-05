@@ -8,17 +8,22 @@ system "camera_system"
     
 
 
-system "second_camera_system"
-    .implement "camera/camera_system.lua"
+system "second_view_camera_system"
+    .implement "camera/second_view.lua"
     .method "init_world"
     .method "entity_init"
     .method "data_changed"
     .method "update_camera"
-    .method "camera_usage"
 
+system "second_view_frustum_system"
+    .implement "camera/second_view.lua"
+    .method "camera_usage"
+    .method "entity_remove"
+
+component "second_view"
 component "second_view_frustum"
-component "second_view_triangle"
 
 
 policy "second_view"
-    .require_system "second_camera_system"
+    .require_system "tools.prefab_editor|second_view_camera_system"
+    .require_system "tools.prefab_editor|second_view_frustum_system"
