@@ -686,8 +686,6 @@ function m:recreate_entity(eid)
     -- return new_eid
 end
 
-local utils = require "common.utils"
-
 function m:save_prefab(path)
     local filename
     if not path then

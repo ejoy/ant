@@ -3,9 +3,13 @@ local world = ecs.world
 local w     = world.w
 
 local uiproperty    = require "widget.uiproperty"
+local uiutils       = require "widget.utils"
 local hierarchy     = require "hierarchy_edit"
 local math3d        = require "math3d"
 local imgui         = require "imgui"
+local lfs           = require "filesystem.local"
+
+local serialize     = import_package "ant.serialize"
 
 local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local icamera       = ecs.import.interface "ant.camera|icamera"
@@ -335,17 +339,54 @@ local function create_exposure_property(cv)
 
 end
 
+local function create_serialize_ui(cv)
+    local function save_prefab(path, p)
+        local c = serialize.stringify{p}
+        local f<close> = lfs.open(lfs.path(path), "w")
+        f:write(c)
+    end
+    local save = uiproperty.Button({label="Save"},{
+        click = function ()
+            local p = hierarchy:get_template(cv.e)
+            save_prefab(p.filename, p.template)
+        end
+    })
+    function save:is_disable()
+        local p = hierarchy:get_template(cv.e)
+        if p.filename == nil then
+            return true
+        end
+        return self.disable
+    end
+
+    return uiproperty.SameLineContainer({},{
+        save,
+        uiproperty.Button({label="Save As"},{
+            click = function ()
+                local path = uiutils.get_saveas_path("Prefab", "prefab")
+                local p = hierarchy:get_template(cv.e)
+                save_prefab(path, p.template)
+                p.filename = path
+
+            end
+        }),
+    })
+end
+
 function cameraview:init()
     self.transform = create_transform_property(self)
     self.frustum = create_frustum_property(self)
 
     self.exposure = create_exposure_property(self)
+
+    self.serialize = create_serialize_ui(self)
 end
 
 function cameraview:update()
     self.transform:update()
     self.frustum:update()
     self.exposure:update()
+    self.serialize:update()
 end
 
 
@@ -358,6 +399,7 @@ function cameraview:show()
     self.transform:show()
     self.frustum:show()
     self.exposure:show()
+    self.serialize:show()
 end
 
 return cameraview
