@@ -41,14 +41,13 @@ function PropertyBase:set_setter(setter)
     self.modifier.setter = setter
 end
 
-function PropertyBase:is_enable()
-    return not self.disable
+function PropertyBase:is_disable()
+    return self.disable
 end
 
-function PropertyBase:set_enable(v)
-    self.disable = not v
+function PropertyBase:set_disable(v)
+    self.disable = v
 end
-
 
 function PropertyBase:is_visible()
     return self.visible
@@ -75,7 +74,9 @@ end
 
 function PropertyBase:show()
     if self:is_visible() then
-        imgui.widget.PropertyLabel(self.label)
+        if self.label ~= "" then
+            imgui.widget.PropertyLabel(self.label)
+        end
         if self.imgui_func("##" .. self.label, self.uidata) then
             local d = self.uidata
             if self.dim == 1 then
@@ -134,7 +135,7 @@ function Combo:show()
         imgui.widget.PropertyLabel(self.label)
         imgui.util.PushID(tostring(self))
         local current_option = self.modifier.getter()
-        if imgui.widget.BeginCombo("##"..self.label, {current_option, flags = imgui.flags.Combo {}}) then
+        if imgui.widget.BeginCombo("##"..self.label, {current_option, flags = self.uidata.flags}) then
             for _, option in ipairs(self.options) do
                 if imgui.widget.Selectable(option, current_option == option) then
                     self.modifier.setter(option)
@@ -176,7 +177,6 @@ function EditText:show()
 end
 
 local ResourcePath      = class("ResourcePath", EditText)
-local utils             = require "common.utils"
 
 function ResourcePath:_init(config, modifier)
     EditText._init(self, config, modifier)
@@ -390,7 +390,7 @@ end
 function Button:show()
     if self:is_visible() then
         imgui.util.PushID("ui_button_id" .. self.button_id)
-        imgui.windows.BeginDisabled(self.disable)
+        imgui.windows.BeginDisabled(self:is_disable())
         if imgui.widget.Button(self.label, self.uidata.width, self.uidata.height) then
             self.modifier.click()
         end
@@ -437,7 +437,7 @@ end
 
 function Container:_show_child(c)
     if c:is_visible() then
-        imgui.windows.BeginDisabled(c.disable)
+        imgui.windows.BeginDisabled(c:is_disable())
         c:show()
         imgui.windows.EndDisabled()
     end
@@ -454,7 +454,7 @@ function Group:_init(config, subproperty, modifier)
 end
 
 function Group:show()
-    imgui.windows.BeginDisabled(self.disable)
+    imgui.windows.BeginDisabled(self:is_disable())
     if imgui.widget.TreeNode(self.label, self.uidata.flags) then
         for _, c in ipairs(self.subproperty) do
             self:_show_child(c)
