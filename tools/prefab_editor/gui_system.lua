@@ -379,20 +379,19 @@ end
 
 local function on_target(old, new)
     if old and old.scene and not old.scene.REMOVED then
-        w:sync("camera?in", old)
         w:sync("light?in", old)
-        if old.camera then
-            camera_mgr.show_frustum(old, false)
-        elseif old.light then
+        if old.light then
             light_gizmo.bind(nil)
         end
     end
     if new then
         w:sync("camera?in", new)
-        w:sync("light?in", new)
         if new.camera then
             camera_mgr.set_second_camera(new, true)
-        elseif new.light then
+        end
+
+        w:sync("light?in", new)
+        if new.light then
             light_gizmo.bind(new)
         end
     end
