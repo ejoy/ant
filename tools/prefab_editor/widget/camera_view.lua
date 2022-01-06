@@ -120,7 +120,7 @@ local function create_frustum_property(cv)
         camera_template(e).camera.frustum[n] = value
     end
 
-    local left = uiproperty.Float({label="Left", speed=0.01}, {
+    local left = uiproperty.Float({label="Left", speed=0.1}, {
         getter = function ()
             local f = icamera.get_frustum(cv.e)
             return f.l
@@ -134,7 +134,7 @@ local function create_frustum_property(cv)
         return f.l and self.visible or false
     end
 
-    local right = uiproperty.Float({label="Right", speed=0.01}, {
+    local right = uiproperty.Float({label="Right", speed=0.1}, {
         getter = function ()
             local f = icamera.get_frustum(cv.e)
             return f.r
@@ -149,7 +149,7 @@ local function create_frustum_property(cv)
         return f.r and self.visible or false
     end
 
-    local top = uiproperty.Float({label="Top", speed=0.01}, {
+    local top = uiproperty.Float({label="Top", speed=0.1}, {
         getter = function ()
             return icamera.get_frustum(cv.e).t
         end,
@@ -162,7 +162,7 @@ local function create_frustum_property(cv)
         return icamera.get_frustum(cv.e).t and self.visible or false
     end
 
-    local bottom = uiproperty.Float({label="Bottom", speed=0.01}, {
+    local bottom = uiproperty.Float({label="Bottom", speed=0.1}, {
         getter = function ()
             return icamera.get_frustum(cv.e).b
         end,
@@ -187,7 +187,7 @@ local function create_frustum_property(cv)
         }),
         fov, aspect,
         left, right, top, bottom,
-        uiproperty.Float({label="Near", speed=0.01, min=0.01}, {
+        uiproperty.Float({label="Near", speed=0.1, min=0.01}, {
             getter = function ()
                 local f = icamera.get_frustum(cv.e)
                 return f.n
@@ -195,17 +195,17 @@ local function create_frustum_property(cv)
             setter = function (value)
                 icamera.set_frustum_near(cv.e, value)
                 local ct = camera_template(cv.e)
-                ct.frustum.n = value
+                ct.camera.frustum.n = value
             end
         }),
-        uiproperty.Float({label="Far", speed=0.01, min=0.01}, {
+        uiproperty.Float({label="Far", speed=0.1, min=0.01}, {
             getter = function ()
                 local f = icamera.get_frustum(cv.e)
                 return f.f
             end,
             setter = function (value)
                 icamera.set_frustum_far(cv.e, value)
-                camera_template(cv.e).frustum.f = value
+                camera_template(cv.e).camera.frustum.f = value
             end
         })
     })
