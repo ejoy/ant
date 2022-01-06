@@ -31,23 +31,26 @@ local function calc_second_view_viewport(vr)
     }
 end
 
+local DEFAULT_camera
+
 function second_camera_sys:init_world()
     local mq = w:singleton("main_queue", "render_target:in")
     local mqrt = mq.render_target
     local vr = calc_second_view_viewport(mqrt.view_rect)
+    DEFAULT_camera = icamera.create{
+        eyepos  = mc.ZERO_PT,
+        viewdir = mc.ZAXIS,
+        updir   = mc.YAXIS,
+        frustum = defaultcomp.frustum(vr.w / vr.h),
+        name    = "second_view_camera",
+    }
     ecs.create_entity{
         policy = {
             "ant.render|render_queue",
             "ant.general|name",
         },
         data = {
-            camera_ref = icamera.create{
-                eyepos  = mc.ZERO_PT,
-                viewdir = mc.ZAXIS,
-                updir   = mc.YAXIS,
-                frustum = defaultcomp.frustum(vr.w / vr.h),
-                name    = "second_view_camera",
-            },
+            camera_ref = DEFAULT_camera,
             render_target = {
                 view_rect = vr,
                 viewid = viewidmgr.generate "second_view",
@@ -103,6 +106,15 @@ function second_camera_sys:update_camera()
 		camera.viewmat = math3d.lookto(pos, dir, scene.updir)
 		camera.projmat = math3d.projmat(camera.frustum)
 		camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
+    end
+end
+
+function second_camera_sys:entity_remove()
+    for e in w:select "REMOVED camera:in reference:in" do
+        local sc = w:singleton("second_view", "camera_ref:in")
+        if e.reference == sc.camera_ref then
+            irq.set_camera("second_view", DEFAULT_camera)
+        end
     end
 end
 

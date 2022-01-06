@@ -14,6 +14,7 @@ system "second_view_camera_system"
     .method "entity_init"
     .method "data_changed"
     .method "update_camera"
+    .method "entity_remove"
 
 system "second_view_frustum_system"
     .implement "camera/second_view.lua"
