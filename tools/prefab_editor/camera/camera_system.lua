@@ -72,7 +72,7 @@ local keypress_mb		= world:sub {"keyboard"}
 local mouse_drag		= world:sub {"mousedrag"}
 
 local PAN, ZOOM
-function camera_sys:camera_usage()
+function camera_sys:data_changed()
 	for _,what,x,y in event_camera_control:unpack() do
 		if what == "rotate" then
 			camera_rotate(x, y)

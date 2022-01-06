@@ -4,7 +4,7 @@ system "camera_system"
     .require_interface "ant.objcontroller|iobj_motion"
     .method "init_world"
     .method "entity_ready"
-    .method "camera_usage"
+    .method "data_changed"
     
 
 
