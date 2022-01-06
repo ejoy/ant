@@ -110,7 +110,6 @@ function s:entity_init()
 
 	for _, e, parent in evParentChanged:unpack() do
 		if isValidReference(e) then
-			w:sync("name:in", e)
 			w:sync("scene:in", e)
 			e.scene.changed = current_changed
 			if type(parent) == "number" then
