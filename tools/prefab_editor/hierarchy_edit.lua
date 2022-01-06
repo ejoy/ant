@@ -186,8 +186,8 @@ function hierarchy:set_visible(nd, b, recursion)
     end
 end
 
-function hierarchy:get_template(eid)
-    return self.all[eid] and self.all[eid].template or nil
+function hierarchy:get_template(e)
+    return self.all[e] and self.all[e].template or nil
 end
 
 function hierarchy:clear_adapter(e)
@@ -197,31 +197,31 @@ function hierarchy:clear_adapter(e)
     self.select_adaptee[e] = nil
 end
 
-function hierarchy:add_select_adapter(eid, target)
-    self.select_adapter[eid] = target
+function hierarchy:add_select_adapter(e, target)
+    self.select_adapter[e] = target
     
     if not self.select_adaptee[target] then
         self.select_adaptee[target] = {}
     end
     local count = #self.select_adaptee[target]
-    self.select_adaptee[target][count + 1] = eid
+    self.select_adaptee[target][count + 1] = e
 end
 
-function hierarchy:get_select_adapter(eid)
-    return self.select_adapter[eid] or eid
+function hierarchy:get_select_adapter(e)
+    return self.select_adapter[e] or e
 end
 
-function hierarchy:get_select_adaptee(eid)
-    return self.select_adaptee[eid] or {}
+function hierarchy:get_select_adaptee(e)
+    return self.select_adaptee[e] or {}
 end
 
-function hierarchy:update_display_name(eid, name)
-    if not self.all[eid] then return end
-    self.all[eid].display_name = (name or "")
+function hierarchy:update_display_name(e, name)
+    if not self.all[e] then return end
+    self.all[e].display_name = (name or "")
 end
 
-function hierarchy:get_node(eid)
-    return self.all[eid]
+function hierarchy:get_node(e)
+    return self.all[e]
 end
 
 function hierarchy:update_slot_list(world)
@@ -248,39 +248,39 @@ function hierarchy:update_collider_list(world)
     self.collider_list = collider_list
 end
 
-local function find_table(eid)
-    local p = hierarchy.all[eid].parent
+local function find_table(e)
+    local p = hierarchy.all[e].parent
     local t = hierarchy.all[p].children
     for i, e in ipairs(t) do
-        if e.eid == eid then
+        if e.eid == e then
             return i, t
         end
     end
     return -1, t
 end
 
-function hierarchy:move_top(eid)
-    local i, t = find_table(eid)
+function hierarchy:move_top(e)
+    local i, t = find_table(e)
     if i < 2 then return end
     table.remove(t, i) 
-    table.insert(t, 1, self.all[eid])
+    table.insert(t, 1, self.all[e])
 end
-function hierarchy:move_up(eid)
-    local i, t = find_table(eid)
+function hierarchy:move_up(e)
+    local i, t = find_table(e)
     if i < 2 then return end
     table.remove(t, i) 
-    table.insert(t, i - 1 , self.all[eid])
+    table.insert(t, i - 1 , self.all[e])
 end
-function hierarchy:move_down(eid)
-    local i, t = find_table(eid)
+function hierarchy:move_down(e)
+    local i, t = find_table(e)
     if i == #t then return end
     table.remove(t, i) 
-    table.insert(t, i + 1 , self.all[eid])
+    table.insert(t, i + 1 , self.all[e])
 end
-function hierarchy:move_bottom(eid)
-    local i, t = find_table(eid)
+function hierarchy:move_bottom(e)
+    local i, t = find_table(e)
     if i == #t then return end
     table.remove(t, i)
-    table.insert(t, self.all[eid])
+    table.insert(t, self.all[e])
 end
 return hierarchy
