@@ -231,14 +231,14 @@ function m.show()
             if imgui.widget.MenuItem("EmptyNode") then
                 world:pub {"Create", "empty"}
             end
-            if imgui.widget.BeginMenu("Collider") then
-                for i, type in ipairs(collider_type) do
-                    if imgui.widget.MenuItem(type) then
-                        world:pub { "Create", "collider", {type = type, add_to_hierarchy = true}}
-                    end
-                end
-                imgui.widget.EndMenu()
-            end
+            -- if imgui.widget.BeginMenu("Collider") then
+            --     for i, type in ipairs(collider_type) do
+            --         if imgui.widget.MenuItem(type) then
+            --             world:pub { "Create", "collider", {type = type, add_to_hierarchy = true}}
+            --         end
+            --     end
+            --     imgui.widget.EndMenu()
+            -- end
             if imgui.widget.BeginMenu("Geometry") then
                 for i, type in ipairs(geom_type) do
                     if imgui.widget.MenuItem(type) then
