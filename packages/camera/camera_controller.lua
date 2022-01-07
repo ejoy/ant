@@ -21,6 +21,7 @@ local move_speed_delta_change_mb = world:sub{"camera_controller", "move_speed_de
 
 local mouse_lastx, mouse_lasty
 local move_x, move_y, move_z
+local mouse_btn
 local mouse_state
 local move_speed_delta = 0.01
 local move_speed = 0.1
@@ -64,7 +65,7 @@ function cc_sys:data_changed()
     end
 
     for _, key, press, status in kb_mb:unpack() do
-        if mouse_state == "RIGHT" then
+        if mouse_btn == "RIGHT" then
             local pressed = press == 1 or press == 2
             if key == "A" then
                 move_x = pressed and -move_speed or nil
@@ -95,7 +96,8 @@ function cc_sys:data_changed()
     local newx, newy
     local motiontype
     for _, btn, state, x, y in mouse_mb:unpack() do
-        mouse_state = btn
+        mouse_state = state
+        mouse_btn = btn
         if state == "DOWN" then
             newx, newy = x, y
             mouse_lastx, mouse_lasty = x, y
@@ -150,6 +152,7 @@ function cc_sys:data_changed()
                 dy = dy * 0.1
                 iom.move_up(mq.camera_ref, dy)
             end
+            mouse_lastx, mouse_lasty = newx, newy
         end
     end
 
