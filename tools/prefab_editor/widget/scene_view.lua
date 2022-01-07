@@ -30,7 +30,7 @@ end
 local function is_delete_disable()
     local mq = w:singleton("main_queue", "camera_ref:in")
     local sv = w:singleton("second_view", "camera_ref:in")
-    return mq.camera_ref == mq.camera_ref
+    return mq.camera_ref == sv.camera_ref
 end
 
 local function node_context_menu(eid)
