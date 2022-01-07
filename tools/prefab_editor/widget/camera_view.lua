@@ -11,6 +11,8 @@ local lfs           = require "filesystem.local"
 
 local serialize     = import_package "ant.serialize"
 
+local gizmo         = ecs.require "gizmo.gizmo"
+
 local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local icamera       = ecs.import.interface "ant.camera|icamera"
 local irq           = ecs.import.interface "ant.render|irenderqueue"
@@ -389,13 +391,13 @@ function cameraview:update()
     self.serialize:update()
 end
 
-
 function cameraview:set_model(e)
     self.e = e
     self:update()
 end
 
 function cameraview:show()
+    self:update()
     self.transform:show()
     self.frustum:show()
     self.exposure:show()

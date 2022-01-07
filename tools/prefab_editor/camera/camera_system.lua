@@ -109,7 +109,7 @@ function camera_sys:data_changed()
 		if what == "RIGHT" then
 			camera_rotate(dx, dy)
 		elseif what == "MIDDLE" then
-			camera_pan(dx, dy)
+			--camera_pan(dx, dy)
 		end
 	end
 end

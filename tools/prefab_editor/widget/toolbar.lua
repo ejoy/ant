@@ -1,11 +1,14 @@
-local ecs = ...
+local ecs   = ...
 local world = ecs.world
-local w = world.w
+local w     = world.w
 
 local assetmgr  = import_package "ant.asset"
 local imgui     = require "imgui"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
+local gizmo     = ecs.require "gizmo.gizmo"
+
+local irq       = ecs.import.interface "ant.render|irenderqueue"
 
 local m = {}
 
@@ -13,6 +16,16 @@ local status = {
     GizmoMode = "select",
     GizmoSpace = "worldspace"
 }
+
+local function is_select_camera()
+    local e = gizmo.target_eid
+    if e then
+        w:sync("camera?in", e)
+        return e.camera ~= nil
+    end
+end
+
+local LAST_main_camera
 
 local localSpace = {}
 local defaultLight = { false }
@@ -53,6 +66,26 @@ function m.show()
         if imgui.widget.Checkbox("DefaultLight", defaultLight) then
             local action = defaultLight[1] and "enable_default_light" or "disable_default_light"
             world:pub { "Create", action }
+        end
+
+        if is_select_camera() then
+            imgui.cursor.SameLine()
+            local sv_camera = irq.camera "second_view"
+            local mq_camera = irq.camera "main_queue"
+            if LAST_main_camera == nil then
+                LAST_main_camera = mq_camera
+            end
+            local as_mc = {sv_camera == mq_camera}
+            if imgui.widget.Checkbox("As Main Camera", as_mc) then
+                if as_mc[1] then
+                    irq.set_camera("main_queue", sv_camera)
+                    irq.set_visible("second_view", false)
+                else
+                    irq.set_camera("main_queue", LAST_main_camera)
+                    LAST_main_camera = nil
+                    irq.set_visible("second_view", true)
+                end
+            end
         end
         uiutils.imguiEndToolbar()
     end
