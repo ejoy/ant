@@ -159,7 +159,7 @@ function cc_sys:data_changed()
             local dx, dy = dxdy(newx, newy, mq.render_target.view_rect)
             if dx ~= 0 then
                 dx = dx * 0.1
-                iom.move_right(mq.camera_ref, dx)
+                iom.move_right(mq.camera_ref, -dx)
             end
 
             if dy ~= 0 then
