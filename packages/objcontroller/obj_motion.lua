@@ -158,9 +158,21 @@ function iobj_motion.move(e, v)
     iobj_motion.set_position(e, p)
 end
 
+function iobj_motion.move_right(e, v)
+    local srt = get_srt(e)
+    local right = math3d.transform(srt.r, mc.XAXIS, 0)
+    iobj_motion.move_along_axis(e, right, v)
+end
+
+function iobj_motion.move_up(e, v)
+    local srt = get_srt(e)
+    local up = math3d.transform(srt.r, mc.YAXIS, 0)
+    iobj_motion.move_along_axis(e, up, v)
+end
+
 function iobj_motion.move_forward(e, v)
     local srt = get_srt(e)
-    local f = math3d.normalize(math3d.todirection(srt.r))
+    local f = math3d.todirection(srt.r)
     iobj_motion.move_along_axis(e, f, v)
 end
 

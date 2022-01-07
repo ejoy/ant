@@ -23,6 +23,8 @@ interface "iobj_motion"
     .method "move"
     .method "move_along_axis"
     .method "move_delta"
+    .method "move_right"
+    .method "move_up"
     .method "move_forward"
 
     .method "rotate_forward_vector"
