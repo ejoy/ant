@@ -74,7 +74,7 @@ end
 local cc_mb
 
 function second_camera_sys:entity_init()
-    for q in w:select "second_view camera_ref:in" do
+    for q in w:select "INIT second_view camera_ref:in" do
         local cref = q.camera_ref
         cc_mb = world:sub{"camera_changed", cref}
     end
