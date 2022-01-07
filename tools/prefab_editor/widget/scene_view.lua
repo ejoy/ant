@@ -27,6 +27,12 @@ local function is_editable(eid)
     return true
 end
 
+local function is_delete_disable()
+    local mq = w:singleton("main_queue", "camera_ref:in")
+    local sv = w:singleton("second_view", "camera_ref:in")
+    return mq.camera_ref == mq.camera_ref
+end
+
 local function node_context_menu(eid)
     if gizmo.target_eid ~= eid then return end
     if imgui.windows.BeginPopupContextItem(tostring(eid)) then
@@ -46,9 +52,11 @@ local function node_context_menu(eid)
             world:pub { "HierarchyEvent", "visible", eid, not current_visible }
         end
         imgui.cursor.Separator()
+        imgui.windows.BeginDisabled(is_delete_disable())
         if imgui.widget.Selectable("Delete", false) then
             world:pub { "HierarchyEvent", "delete", eid }
         end
+        imgui.windows.EndDisabled()
         imgui.cursor.Separator()
         if imgui.widget.Selectable("MoveDown", false) then
             world:pub { "HierarchyEvent", "movedown", eid }
