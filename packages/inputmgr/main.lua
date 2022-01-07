@@ -16,8 +16,8 @@ local function create(world, type)
     function ev.keyboard(key, press, state)
         world:pub {"keyboard", keymap[key], press, {
             CTRL	= (state & 0x01) ~= 0,
-            ALT		= (state & 0x02) ~= 0,
-            SHIFT	= (state & 0x04) ~= 0,
+            SHIFT	= (state & 0x02) ~= 0,
+            ALT		= (state & 0x04) ~= 0,
             SYS		= (state & 0x08) ~= 0,
         }}
     end

@@ -49,15 +49,15 @@ struct ant_window_touch {
 
 typedef enum {
 	KB_CTRL,
-	KB_ALT,
 	KB_SHIFT,
+	KB_ALT,
 	KB_SYS,
 	KB_CAPSLOCK,
 }KEYBOARD_STATE;
 
 struct ant_window_keyboard {
 	int key;
-	uint8_t state; // ctrl, alt, shift, in low 3 bits; left or right, in low 4 bit
+	uint8_t state; // ctrl, shift, alt in low 3 bits
 	uint8_t press; // 0: up ; 1: down
 };
 

@@ -29,10 +29,10 @@ static uint8_t get_keystate(LPARAM lParam) {
 	return 0
 		| ((GetKeyState(VK_CONTROL) < 0)
 			? (uint8_t)(1 << KB_CTRL) : 0)
-		| ((GetKeyState(VK_MENU) < 0)
-			? (uint8_t)(1 << KB_ALT) : 0)
 		| ((GetKeyState(VK_SHIFT) < 0)
 			? (uint8_t)(1 << KB_SHIFT) : 0)
+		| ((GetKeyState(VK_MENU) < 0)
+			? (uint8_t)(1 << KB_ALT) : 0)
 		| (((GetKeyState(VK_LWIN) < 0) || (GetKeyState(VK_RWIN) < 0)) 
 			? (uint8_t)(1 << KB_SYS) : 0)
 		| ((lParam & (0x1 << 24))
