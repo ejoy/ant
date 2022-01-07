@@ -47,6 +47,12 @@ local function check_update_control()
 
 end
 
+local function dxdy(x, y, rect)
+    local dx = (x - mouse_lastx) / rect.w * 10
+    local dy = (y - mouse_lasty) / rect.h * 10
+    return dx, dy
+end
+
 function cc_sys:data_changed()
     check_update_control()
 
@@ -89,7 +95,6 @@ function cc_sys:data_changed()
             mouse_lastx, mouse_lasty = x, y
         elseif state == "MOVE" then
             newx, newy = x, y
-        elseif state == "UP" then
         end
 
         if btn == "LEFT" then
@@ -99,17 +104,6 @@ function cc_sys:data_changed()
         elseif btn == "MIDDLE" then
             motiontype = "move_pan"
         end
-    end
-
-    local function dxdy(x, y, rect)
-        local dx = (x - mouse_lastx) / rect.w * 10
-        local dy = (y - mouse_lasty) / rect.h * 10
-        return dx, dy
-    end
-
-    if motiontype == "move_pan" then
-        local mq = w:singleton("main_queue", "camera_ref:in")
-        move_x, move_y = dxdy(newx, newy, mq.render_target.view_rect)
     end
 
     if move_x then
@@ -138,6 +132,18 @@ function cc_sys:data_changed()
             local dx, dy = dxdy(newx, newy, mq.render_target.view_rect)
             mouse_lastx, mouse_lasty = newx, newy
             iom.rotate_forward_vector(mq.camera_ref, dy, dx)
+        elseif motiontype == "move_pan" then
+            local mq = w:singleton("main_queue", "camera_ref:in render_target:in")
+            local dx, dy = dxdy(newx, newy, mq.render_target.view_rect)
+            if dx ~= 0 then
+                dx = dx * 0.1
+                iom.move_right(mq.camera_ref, dx)
+            end
+
+            if dy ~= 0 then
+                dy = dy * 0.1
+                iom.move_up(mq.camera_ref, dy)
+            end
         end
     end
 
