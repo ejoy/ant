@@ -7,8 +7,9 @@ local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 
 local cc_sys = ecs.system "default_camera_controller"
 
-local kb_mb = world:sub {"keyboard"}
-local mouse_mb = world:sub {"mouse"}
+local kb_mb             = world:sub {"keyboard"}
+local mouse_mb          = world:sub {"mouse"}
+local mouse_wheel_mb    = world:sub {"mouse_wheel"}
 
 local viewat = math3d.ref(math3d.vector(0, 0, 0))
 
@@ -56,8 +57,13 @@ end
 function cc_sys:data_changed()
     check_update_control()
 
+    for _, delta in mouse_wheel_mb:unpack() do
+        local mq = w:singleton("main_queue", "camera_ref:in")
+        local d = delta > 0 and move_speed or -move_speed
+        iom.move_forward(mq.camera_ref, d)
+    end
+
     for _, key, press, status in kb_mb:unpack() do
-        print("key:", key, "press:", press, "status:", status.SHIFT, status.CTRL, status.ALT)
         if mouse_state == "RIGHT" then
             local pressed = press == 1 or press == 2
             if key == "A" then
