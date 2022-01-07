@@ -13,11 +13,13 @@ local mouse_wheel_mb    = world:sub {"mouse_wheel"}
 
 local viewat = math3d.ref(math3d.vector(0, 0, 0))
 
-local viewat_change_mb = world:sub{"camera_controller", "viewat"}
-local move_speed_change_mb = world:sub{"camera_controller", "move_speed"}
-local inc_move_speed_mb = world:sub{"camera_controller", "inc_move_speed"}
-local dec_move_speed_mb = world:sub{"camera_controller", "dec_move_speed"}
+local viewat_change_mb      = world:sub{"camera_controller", "viewat"}
+local move_speed_change_mb  = world:sub{"camera_controller", "move_speed"}
+local inc_move_speed_mb     = world:sub{"camera_controller", "inc_move_speed"}
+local dec_move_speed_mb     = world:sub{"camera_controller", "dec_move_speed"}
 local move_speed_delta_change_mb = world:sub{"camera_controller", "move_speed_delta"}
+
+local stop_camera_mb        = world:sub{"camera_controller", "stop"}
 
 local mouse_lastx, mouse_lasty
 local move_x, move_y, move_z
@@ -55,7 +57,19 @@ local function dxdy(x, y, rect)
     return dx, dy
 end
 
+local stop_camera = false
+local function check_stop_camera()
+    for _, _, stop in stop_camera_mb:unpack() do
+        stop_camera = stop
+    end
+    return stop_camera
+end
+
 function cc_sys:data_changed()
+    if check_stop_camera() then
+        return
+    end
+
     check_update_control()
 
     for _, delta in mouse_wheel_mb:unpack() do

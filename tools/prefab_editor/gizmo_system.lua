@@ -1005,19 +1005,25 @@ function gizmo_sys:handle_event()
 	end
 
 	for _, what, value in gizmo_mode_event:unpack() do
+		local stop = false
 		if what == "select" then
 			gizmo:on_mode(gizmo_const.SELECT)
 		elseif what == "rotate" then
+			stop = true
 			gizmo:on_mode(gizmo_const.ROTATE)
 		elseif what == "move" then
+			stop = true
 			gizmo:on_mode(gizmo_const.MOVE)
 		elseif what == "scale" then
+			stop = true
 			gizmo:on_mode(gizmo_const.SCALE)
 		elseif what == "localspace" then
 			local_space = value
 			gizmo:update_axis_plane()
 			gizmo:set_rotation()
 		end
+
+		world:pub{"camera_controller", "stop", stop}
 	end
 
 	for _, what, x, y in mouse_down:unpack() do
