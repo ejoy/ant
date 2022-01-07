@@ -191,8 +191,11 @@ function hierarchy:get_template(e)
 end
 
 function hierarchy:clear_adapter(e)
-    for _, child in ipairs(self.all[e].children) do
-        self.select_adaptee[child] = nil
+    local ac = self.all[e].template.children
+    if ac then
+        for _, child in ipairs(ac) do
+            self.select_adapter[child] = nil
+        end
     end
     self.select_adaptee[e] = nil
 end

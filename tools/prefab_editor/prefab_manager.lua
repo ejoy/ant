@@ -527,16 +527,9 @@ local function on_remove_entity(e)
     if e.light then
         light_gizmo.on_remove_light(e)
     end
-    -- if world[eid].skeleton_eid then
-    --     w:remove(world[eid].skeleton_eid)
-    -- end
     local teml = hierarchy:get_template(e)
     if teml and teml.children then
         hierarchy:clear_adapter(e)
-        remove_entitys(teml.children)
-        -- for _, e in ipairs(teml.children) do
-        --     world:remove_entity(e)
-        -- end
     end
     hierarchy:del(e)
 end
