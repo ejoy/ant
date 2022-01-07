@@ -49,7 +49,6 @@ end
 
 local function init_camera()
     local mq = w:singleton("main_queue", "camera_ref:in")
-    --FIX ME: camera_system has define 'camera_target' and 'camera_position', we should make them sync
     local eye, at = math3d.vector(5, 5, 5, 1), mc.ZERO_PT
     iom.set_position(mq.camera_ref, {5, 5, 5, 1})
     iom.set_direction(mq.camera_ref, math3d.normalize(math3d.sub(at, eye)))

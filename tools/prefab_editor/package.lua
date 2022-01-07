@@ -22,6 +22,7 @@ return {
         "ant.luaecs",
         "ant.subprocess",
         "ant.settings",
+        "ant.objcontroller",
     },
     entry = "editor.callback",
     ecs = {
@@ -37,10 +38,10 @@ return {
             "tools.prefab_editor|init_system",
             "tools.prefab_editor|gizmo_system",
             "tools.prefab_editor|input_system",
-            "tools.prefab_editor|camera_system",
+            "tools.prefab_editor|grid_brush_system",
             "tools.prefab_editor|gui_system",
             "ant.objcontroller|pickup_system",
-            "tools.prefab_editor|grid_brush_system"
+            "ant.camera|default_camera_controller",
         }
     }
 }
