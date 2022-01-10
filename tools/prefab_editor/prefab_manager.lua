@@ -246,7 +246,7 @@ function m:create(what, config)
                 },
                 data = {
                     reference = true,
-                    scene = {srt = {s = 50}},
+                    scene = {srt = {}},
                     filter_state = "main_view|selectable",
                     material = "/pkg/ant.resources/materials/pbr_default.material",
                     mesh = geom_mesh_file[config.type],
@@ -314,11 +314,7 @@ end
 
 local function set_select_adapter(entity_set, mount_root)
     for _, e in ipairs(entity_set) do
-        -- if type(eid) == "table" then
-        --     set_select_adapter(eid, mount_root)
-        -- else
-            hierarchy:add_select_adapter(e, mount_root)
-        --end
+        hierarchy:add_select_adapter(e, mount_root)
     end
 end
 
@@ -511,13 +507,8 @@ function m:open(filename)
         anim_view.load_clips()
     end
     
-    function prefab:on_message(msg)
-        --print(object, msg)
-    end
-    
-    function prefab:on_update()
-        --print "update"
-    end
+    function prefab:on_message(msg) end
+    function prefab:on_update() end
     self.prefab_instance = world:create_object(prefab)
     world:pub {"WindowTitle", filename}
 end
@@ -555,11 +546,6 @@ function m:reset_prefab()
 end
 
 function m:reload()
-    -- local new_template = hierarchy:update_prefab_template()
-    -- new_template[1].script = (#self.prefab_script > 0) and self.prefab_script or "/pkg/ant.prefab/default_script.lua"
-    -- local prefab = utils.deep_copy(self.prefab)
-    -- prefab.__class = new_template
-    -- self:open_prefab(prefab)
     local filename = self.prefab_filename
     if filename == 'nil' then
         self:save_prefab(tostring(gd.project_root) .. "/res/__temp__.prefab")
@@ -629,13 +615,8 @@ function m:add_prefab(filename)
         set_select_adapter(children, v_root)
         hierarchy:add(v_root, {filename = prefab_filename, name = prefab_name, children = children, editor = false}, parent)
     end
-    function prefab:on_message(msg)
-        --print(object, msg)
-    end
-    
-    function prefab:on_update()
-        --print "update"
-    end
+    function prefab:on_message(msg) end
+    function prefab:on_update() end
     world:create_object(prefab)
 end
 
@@ -643,9 +624,6 @@ function m:recreate_entity(eid)
     local prefab = hierarchy:get_template(eid)
     world:rebuild_entity(eid, prefab.template)
     
-    -- local copy_prefab = utils.deep_copy(prefab)
-    -- local new_eid = world:deprecated_create_entity(copy_prefab.template)
-    -- iom.set_srt(new_eid, iom.srt(eid))
     local scale = 1
     local col = world[eid].collider
     if col then
@@ -658,23 +636,6 @@ function m:recreate_entity(eid)
         end
         imaterial.set_property(eid, "u_color", {1, 0.5, 0.5, 0.5})
     end
-    -- iom.set_scale(new_eid, scale)
-    -- local new_node = hierarchy:replace(eid, new_eid)
-    -- world[new_eid].parent = new_node.parent
-    -- for _, v in ipairs(new_node.children) do
-    --     world[v.eid].parent = new_eid
-    -- end
-    -- local idx
-    -- for i, e in ipairs(self.entities) do
-    --     if e == eid then
-    --         idx = i
-    --         break
-    --     end
-    -- end
-    -- self.entities[idx] = new_eid
-    -- world:remove_entity(eid)
-    -- local gizmo = require "gizmo.gizmo"(world)
-    -- gizmo:set_target(new_eid)
     world:pub {"EntityRecreate", eid}
     -- return new_eid
 end
