@@ -257,7 +257,7 @@ local function create_indicator()
                 },
                 rotation = -math.pi*0.5,
             },
-            material = "/pkg/ant.test.features/assets/indicator.material",
+            material = "/pkg/ant.resources/materials/indicator.material",
             scene = {
                 srt = {}
             },
@@ -297,8 +297,8 @@ function shape_terrain_test_sys:init()
                 },
             },
             materials = {
-                shape = "/pkg/ant.test.features/assets/shape_terrain.material",
-                edge = "/pkg/ant.test.features/assets/shape_terrain_edge.material",
+                shape = "/pkg/ant.resources/materials/shape_terrain.material",
+                edge = "/pkg/ant.resources/materials/shape_terrain_edge.material",
             }
         }
     }

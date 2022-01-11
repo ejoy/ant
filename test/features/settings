@@ -17,7 +17,7 @@ animation:
       enable: true
 graphic:
   curve_world:
-    enable: true
+    enable: false
     type: "cylinder"
     flat_distance: 0
     curve_rate: 0.1
@@ -37,7 +37,6 @@ graphic:
   postprocess:
     bloom:
       enable: false
-      type: cylinder
       inv_highlight: 0.00001
       threshold: 12000
   shadow:

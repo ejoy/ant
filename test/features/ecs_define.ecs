@@ -10,7 +10,6 @@ import "@ant.scene"
 import "@ant.splitviews"
 import "@ant.asset"
 import "@ant.heightmap"
-import "@ant.terrain"
 
 component "camera_controller".type "lua"
 policy "camera_controller"

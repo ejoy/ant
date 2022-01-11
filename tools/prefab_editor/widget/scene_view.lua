@@ -269,6 +269,13 @@ function m.show()
             if imgui.widget.MenuItem("Slot") then
                 world:pub { "Create", "slot"}
             end
+            imgui.cursor.Separator()
+            if imgui.widget.BeginMenu "Terrain" then
+                if imgui.widget.MenuItem "shape" then
+                    world:pub {"Create", "terrain", {type="shape"}}
+                end
+                imgui.widget.EndMenu()
+            end
             imgui.windows.EndPopup()
         end
         imgui.cursor.Separator()

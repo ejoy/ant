@@ -23,6 +23,7 @@ return {
         "ant.subprocess",
         "ant.settings",
         "ant.objcontroller",
+        "ant.terrain",
     },
     entry = "editor.callback",
     ecs = {
