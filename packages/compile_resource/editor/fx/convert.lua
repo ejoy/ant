@@ -30,11 +30,6 @@ local SETTING_MAPPING = {
             return "PACK_RGBA8=1"
         end
     end,
-    bloom = function (v)
-        if v == "on" then
-            return "BLOOM_ENABLE=1"
-        end
-    end,
     os = function ()
     end,
     renderer = function()
@@ -46,6 +41,7 @@ local SETTING_MAPPING = {
 }
 
 local enable_cs = setting:get 'graphic/lighting/cluster_shading' ~= 0
+local enable_bloom = setting:get "graphic/bloom/enable"
 
 local curve_world = setting:data().graphic.curve_world
 
@@ -59,13 +55,20 @@ local function default_macros(setting)
         "ENABLE_SRGB_TEXTURE=1",
         "ENABLE_SRGB_FB=1",
         "ENABLE_IBL=1",
-        curve_world.enable and "ENABLE_CURVE_WORLD=" .. curve_world_type_macros[curve_world.type] or nil
     }
+
+    if curve_world.enable then
+        m[#m+1] = "ENABLE_CURVE_WORLD=" .. curve_world_type_macros[curve_world.type]
+    end
 
     if enable_cs then
         m[#m+1] = "HOMOGENEOUS_DEPTH=" .. (setting.hd and "1" or "0")
         m[#m+1] = "ORIGIN_BOTTOM_LEFT=" .. (setting.obl and "1" or "0")
         m[#m+1] = "CLUSTER_SHADING=1"
+    end
+
+    if enable_bloom then
+        m[#m+1] = "BLOOM_ENABLE=1"
     end
     return m
 end

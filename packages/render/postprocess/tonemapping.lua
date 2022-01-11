@@ -12,8 +12,6 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 local imesh     = ecs.import.interface "ant.asset|imesh"
 local iexposure = ecs.import.interface "ant.camera|iexposure"
 
-local math3d    = require "math3d"
-
 local tm_viewid<const> = viewidmgr.get "tonemapping"
 local tm_materialfile<const> = "/pkg/ant.resources/materials/postprocess/tonemapping.material"
 local tm_auto_material, tm_manual_material

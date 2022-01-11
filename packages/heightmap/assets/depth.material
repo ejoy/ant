@@ -9,7 +9,6 @@ fx:
     subsurface: off
     skinning: UNKNOWN
     depth_type: linear
-    bloom: off
 state:
   ALPHA_REF: 0
   CULL: CW

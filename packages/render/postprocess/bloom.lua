@@ -13,6 +13,9 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 local ientity   = ecs.import.interface "ant.render|ientity"
 local irender   = ecs.import.interface "ant.render|irender"
 
+local setting   = import_package "ant.settings".setting
+local enable_bloom = setting:get "graphic/bloom/enable"
+
 local bloom_chain_count<const> = 4
 local bloom_ds_viewid<const> = viewidmgr.get "bloom_ds"
 viewidmgr.check_range("bloom_ds", bloom_chain_count)
@@ -162,6 +165,9 @@ local function create_chain_sample_queue(mqvr)
 end
 
 function bloom_sys:init_world()
+    if not enable_bloom then
+        return 
+    end
     local mq = w:singleton("main_queue", "render_target:in")
     local mqvr = mq.render_target.view_rect
     create_chain_sample_queue(mqvr)
@@ -169,6 +175,10 @@ end
 
 local mqvr_mb = world:sub{"viewrect_changed", "main_queue"}
 function bloom_sys:data_changed()
+    if not enable_bloom then
+        return 
+    end
+
     for msg in mqvr_mb:each() do
         local mqvr = msg[3]
         local q = w:singleton("bloom_upsample"..bloom_chain_count, "render_target:in")
@@ -184,6 +194,10 @@ function bloom_sys:data_changed()
 end
 
 function bloom_sys:entity_remove()
+    if not enable_bloom then
+        return 
+    end
+
     local fbidx
     for e in w:select "REMOVED bloom_queue render_target:in" do
         if fbidx == nil then
@@ -229,7 +243,7 @@ local function do_bloom_sample(viewid, drawer, ppi_handle, next_mip)
 end
 
 function bloom_sys:bloom()
-    if w:singleton("bloom_queue", "render_target:in") == nil then
+    if not enable_bloom or w:singleton("bloom_queue", "render_target:in") == nil then
         return
     end
 

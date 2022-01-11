@@ -15,7 +15,9 @@ void main()
 #endif //EXPOSURE_TYPE == AUTO_EXPOSURE
 
     vec4 color = texture2D(s_scene_color, v_texcoord0);
+#ifdef BLOOM_ENABLE
     vec3 bloomcolor = texture2D(s_bloom_color, v_texcoord0).rgb;
     color.rgb += bloomcolor;
+#endif //BLOOM_ENABLE
     gl_FragColor = vec4(tonemapping(color.rgb, avg_luminance, 0), color.a);
 }
