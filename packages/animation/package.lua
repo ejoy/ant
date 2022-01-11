@@ -1,5 +1,6 @@
 return {
 	name = "ant.animation",
+	entry = "main",
     dependencies = {
 		"ant.asset",
 		"ant.general",

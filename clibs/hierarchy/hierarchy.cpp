@@ -179,7 +179,7 @@ lbuilddata_jointindex(lua_State *L) {
 static ozz::math::Float4x4
 joint_matrix(const ozz::animation::Skeleton *ske, int jointidx) {
 	auto poses = ske->joint_rest_poses();
-	assert(0 <= jointidx && jointidx < (int)poses.size());
+	assert(0 <= jointidx && jointidx < ske->num_joints());
 	
 	auto pose = poses[jointidx / 4];
 	auto subidx = jointidx % 4;

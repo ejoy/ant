@@ -116,7 +116,7 @@ local function load_world_trans(ske, idx, worldpos)
 			if fsrt then
 				return fsrt, true
 			end
-			return ske:joint_matrix(ii), false
+			return ske:joint(ii), false
 		end
 
 		local num_indices = #indices
