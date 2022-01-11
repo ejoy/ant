@@ -257,7 +257,7 @@ local function create_indicator()
                 },
                 rotation = -math.pi*0.5,
             },
-            material = "/pkg/ant.resources/materials/indicator.material",
+            material = "/pkg/ant.test.features/assets/indicator.material",
             scene = {
                 srt = {}
             },
