@@ -3301,6 +3301,118 @@ static struct enum_pair eTableColumnFlags[] = {
 	{ NULL, 0 },
 };
 
+
+static struct enum_pair eKey[] = {
+	ENUM(ImGuiKey, None),
+	ENUM(ImGuiKey, Tab),
+	ENUM(ImGuiKey, LeftArrow),
+	ENUM(ImGuiKey, RightArrow),
+	ENUM(ImGuiKey, UpArrow),
+	ENUM(ImGuiKey, DownArrow),
+	ENUM(ImGuiKey, PageUp),
+	ENUM(ImGuiKey, PageDown),
+	ENUM(ImGuiKey, Home),
+	ENUM(ImGuiKey, End),
+	ENUM(ImGuiKey, Insert),
+	ENUM(ImGuiKey, Delete),
+	ENUM(ImGuiKey, Backspace),
+	ENUM(ImGuiKey, Space),
+	ENUM(ImGuiKey, Enter),
+	ENUM(ImGuiKey, Escape),
+	ENUM(ImGuiKey, Apostrophe),    // '
+	ENUM(ImGuiKey, Comma),         // ,
+	ENUM(ImGuiKey, Minus),         // -
+	ENUM(ImGuiKey, Period),        // .
+	ENUM(ImGuiKey, Slash),         // /
+	ENUM(ImGuiKey, Semicolon),     // ;
+	ENUM(ImGuiKey, Equal),         // =
+	ENUM(ImGuiKey, LeftBracket),   // [
+	ENUM(ImGuiKey, Backslash),     // \ (this text inhibit multiline comment caused by backlash)
+	ENUM(ImGuiKey, RightBracket),  // ]
+	ENUM(ImGuiKey, GraveAccent),   // `
+	ENUM(ImGuiKey, CapsLock),
+	ENUM(ImGuiKey, ScrollLock),
+	ENUM(ImGuiKey, NumLock),
+	ENUM(ImGuiKey, PrintScreen),
+	ENUM(ImGuiKey, Pause),
+	ENUM(ImGuiKey, Keypad0),
+	ENUM(ImGuiKey, Keypad1),
+	ENUM(ImGuiKey, Keypad2),
+	ENUM(ImGuiKey, Keypad3),
+	ENUM(ImGuiKey, Keypad4),
+	ENUM(ImGuiKey, Keypad5),
+	ENUM(ImGuiKey, Keypad6),
+	ENUM(ImGuiKey, Keypad7),
+	ENUM(ImGuiKey, Keypad8),
+	ENUM(ImGuiKey, Keypad9),
+	ENUM(ImGuiKey, KeypadDecimal),
+	ENUM(ImGuiKey, KeypadDivide),
+	ENUM(ImGuiKey, KeypadMultiply),
+	ENUM(ImGuiKey, KeypadSubtract),
+	ENUM(ImGuiKey, KeypadAdd),
+	ENUM(ImGuiKey, KeypadEnter),
+	ENUM(ImGuiKey, KeypadEqual),
+	ENUM(ImGuiKey, LeftShift),
+	ENUM(ImGuiKey, LeftControl),
+	ENUM(ImGuiKey, LeftAlt),
+	ENUM(ImGuiKey, LeftSuper),
+	ENUM(ImGuiKey, RightShift),
+	ENUM(ImGuiKey, RightControl),
+	ENUM(ImGuiKey, RightAlt),
+	ENUM(ImGuiKey, RightSuper),
+	ENUM(ImGuiKey, Menu),
+	ENUM(ImGuiKey, 0),
+	ENUM(ImGuiKey, 1),
+	ENUM(ImGuiKey, 2),
+	ENUM(ImGuiKey, 3),
+	ENUM(ImGuiKey, 4),
+	ENUM(ImGuiKey, 5),
+	ENUM(ImGuiKey, 6),
+	ENUM(ImGuiKey, 7),
+	ENUM(ImGuiKey, 8),
+	ENUM(ImGuiKey, 9),
+	ENUM(ImGuiKey, A),
+	ENUM(ImGuiKey, B),
+	ENUM(ImGuiKey, C),
+	ENUM(ImGuiKey, D),
+	ENUM(ImGuiKey, E),
+	ENUM(ImGuiKey, F),
+	ENUM(ImGuiKey, G),
+	ENUM(ImGuiKey, H),
+	ENUM(ImGuiKey, I),
+	ENUM(ImGuiKey, J),
+	ENUM(ImGuiKey, K),
+	ENUM(ImGuiKey, L),
+	ENUM(ImGuiKey, M),
+	ENUM(ImGuiKey, N),
+	ENUM(ImGuiKey, O),
+	ENUM(ImGuiKey, P),
+	ENUM(ImGuiKey, Q),
+	ENUM(ImGuiKey, R),
+	ENUM(ImGuiKey, S),
+	ENUM(ImGuiKey, T),
+	ENUM(ImGuiKey, U),
+	ENUM(ImGuiKey, V),
+	ENUM(ImGuiKey, W),
+	ENUM(ImGuiKey, X),
+	ENUM(ImGuiKey, Y),
+	ENUM(ImGuiKey, Z),
+	ENUM(ImGuiKey, F1),
+	ENUM(ImGuiKey, F2),
+	ENUM(ImGuiKey, F3),
+	ENUM(ImGuiKey, F4),
+	ENUM(ImGuiKey, F5),
+	ENUM(ImGuiKey, F6),
+	ENUM(ImGuiKey, F7),
+	ENUM(ImGuiKey, F8),
+	ENUM(ImGuiKey, F9),
+	ENUM(ImGuiKey, F10),
+	ENUM(ImGuiKey, F11),
+	ENUM(ImGuiKey, F12),
+	ENUM(ImGuiKey, COUNT),
+	{ NULL, 0 },
+};
+
 #ifdef _MSC_VER
 #pragma endregion IMP_FLAG
 #endif
@@ -3541,27 +3653,27 @@ static void ioKeyMods(lua_State* L) {
 
 static void ioKeysPressed(lua_State* L) {
 	lua_getfield(L, LUA_REGISTRYINDEX, "_ImGui_KeysPressed");
-	for (int i = 1; i < 255; ++i) {
-		if (ImGui::IsKeyPressed(i, false)) {
+	for (int i = 0; i < ImGuiKey_KeysData_SIZE; ++i) {
+		if (ImGui::IsKeyPressed(i + ImGuiKey_KeysData_OFFSET, false)) {
 			lua_pushboolean(L, 1);
 		}
 		else {
 			lua_pushnil(L);
 		}
-		lua_seti(L, -2, i);
+		lua_seti(L, -2, i + 1);
 	}
 }
 
 static void ioKeysReleased(lua_State* L) {
 	lua_getfield(L, LUA_REGISTRYINDEX, "_ImGui_KeysReleased");
-	for (int i = 1; i < 255; ++i) {
-		if (ImGui::IsKeyReleased(i)) {
+	for (int i = 0; i < ImGuiKey_KeysData_SIZE; ++i) {
+		if (ImGui::IsKeyReleased(i + ImGuiKey_KeysData_OFFSET)) {
 			lua_pushboolean(L, 1);
 		}
 		else {
 			lua_pushnil(L);
 		}
-		lua_seti(L, -2, i);
+		lua_seti(L, -2, i + 1);
 	}
 }
 
@@ -3611,9 +3723,9 @@ ioCreate(lua_State* L) {
 	lua_setfield(L, LUA_REGISTRYINDEX, "_ImGui_MouseReleased");
 	lua_newtable(L);
 	lua_setfield(L, LUA_REGISTRYINDEX, "_ImGui_MousePos");
-	lua_newtable(L);
+	lua_createtable(L, ImGuiKey_KeysData_SIZE, 0);
 	lua_setfield(L, LUA_REGISTRYINDEX, "_ImGui_KeysPressed");
-	lua_newtable(L);
+	lua_createtable(L, ImGuiKey_KeysData_SIZE, 0);
 	lua_setfield(L, LUA_REGISTRYINDEX, "_ImGui_KeysReleased");
 	return 1;
 }
@@ -3993,6 +4105,7 @@ luaopen_imgui(lua_State *L) {
 	enum_gen(L, "MouseCursor", eMouseCursor);
 	enum_gen(L, "TableBgTarget", eTableBgTarget);
 	enum_gen(L, "SortDirection", eSortDirection);
+	enum_gen(L, "Key", eKey);
 	lua_setfield(L, -2, "enum");
 
 	return 1;
