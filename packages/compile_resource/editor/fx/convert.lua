@@ -41,7 +41,7 @@ local SETTING_MAPPING = {
 }
 
 local enable_cs = setting:get 'graphic/lighting/cluster_shading' ~= 0
-local enable_bloom = setting:get "graphic/bloom/enable"
+local enable_bloom = setting:get "graphic/postprocess/bloom/enable"
 
 local curve_world = setting:data().graphic.curve_world
 

@@ -14,7 +14,7 @@ local ientity   = ecs.import.interface "ant.render|ientity"
 local irender   = ecs.import.interface "ant.render|irender"
 
 local setting   = import_package "ant.settings".setting
-local enable_bloom = setting:get "graphic/bloom/enable"
+local enable_bloom = setting:get "graphic/postprocess/bloom/enable"
 
 local bloom_chain_count<const> = 4
 local bloom_ds_viewid<const> = viewidmgr.get "bloom_ds"
