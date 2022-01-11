@@ -90,26 +90,6 @@ function init_loader_sys:init()
     ecs.create_instance "/pkg/ant.test.features/assets/entities/skybox_test.prefab"
     ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
 
-    -- local e = ecs.create_entity {
-    --     policy = {
-    --         "ant.render|render",
-    --         "ant.general|name",
-    --     },
-    --     data = {
-    --         name = "fluild_uv_motion",
-    --         scene = { srt = {s=10}},
-    --         filter_state = "main_view|selectable|cast_shadow",
-    --         mesh = "/pkg/ant.resources.binary/meshes/pipe_fluid.glb|meshes/Plane_P1.meshbin",
-    --         material = "/pkg/ant.resources/materials/fluild.material",
-    --         reference = true,
-
-    --         on_ready = function(e)
-    --             local imaterial = ecs.import.interface "ant.asset|imaterial"
-    --             imaterial.set_property(e, "u_uvmotion", {0, 0.1, 1.0, 1.0})
-    --         end,
-    --     }
-    -- }
-
     local off = 0.1
 	ientity.create_screen_axis_entity({s=0.1}, {type = "percent", screen_pos = {off, 1-off}}, "global_axes")
 
