@@ -181,7 +181,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			filter_state = "main_view",
 			scene = {
 				srt = {
-					s = {0.2, 10, 0.2},
+					s = {0.004, 0.1, 0.004},
 					r = local_rotator,
 					t = cylindere_t
 				}
@@ -204,7 +204,7 @@ local function create_arrow_widget(axis_root, axis_str)
 		data = {
 			reference = true,
 			filter_state = "main_view",
-			scene = {srt = {s = {1, 1.5, 1, 0}, r = local_rotator, t = cone_t}},
+			scene = {srt = {s = {0.02, 0.03, 0.02, 0}, r = local_rotator, t = cone_t}},
 			material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone" .. axis_str,

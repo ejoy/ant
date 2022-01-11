@@ -7,7 +7,7 @@ local function create_world(config)
     local fbw, fbh = config.fbw, config.fbh
     config.viewport = {x=0, y=0, w=1, h=1}
     local world = ecs.new_world (config)
-    local ev = inputmgr.create(world, "sdl")
+    local ev = inputmgr.create(world, "imgui")
     local m = {}
     function m.init()
         world:pub {"resize", fbw, fbh}
