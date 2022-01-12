@@ -251,30 +251,33 @@ end
 
 local function find_skin_root_idx(scene, skin)
 	local joints = skin.joints
-	if joints == nil then
-		error(string.format("invalid mesh, skin node must have joints"))
-	end
-
-	if skin.skeleton then
-		return skin.skeleton;
+	if joints == nil or #joints == 0 then
+		return
 	end
 
 	local parents = {}
-	for _, nodeidx in ipairs(joints) do
-		local c = scene.nodes[nodeidx+1].children
-		if c then
-			for _,  cnodeidx in ipairs(c) do
-				parents[cnodeidx] = nodeidx
+	for nidx, node in ipairs(scene.nodes) do
+		if node.children then
+			for _, cnidx in ipairs(node.children) do
+				parents[cnidx] = nidx-1
 			end
 		end
 	end
 
-	local root = skin.joints[1];
-	while (parents[root]) do
-		root = parents[root]
+	if skin.skeleton then
+		return skin.skeleton
 	end
 
-	return root;
+	local root = joints[1]
+	while true do
+		local p = parents[root]
+		if p == nil then
+			break
+		end
+
+		root = p
+	end
+	return root
 end
 
 local cache_tree = {}
@@ -283,12 +286,12 @@ local function redirect_skin_joints(gltfscene, skin)
 	local joints = skin.joints
 	local skeleton_nodeidx = find_skin_root_idx(gltfscene, skin)
 
-	if skeleton_nodeidx > 0 then
+	if skeleton_nodeidx then
 		local mapper = cache_tree[skeleton_nodeidx]
 		if mapper == nil then
 			mapper = {}
 			local node_index = 0
-			-- follow with ozz-animation:SkeleteBuilder, IterateJointsDF
+			-- follow with ozz-animation:SkeletonBuilder, IterateJointsDF
 			local function iterate_hierarchy_DF(nodes)
 				for _, nidx in ipairs(nodes) do
 					mapper[nidx] = node_index
