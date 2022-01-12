@@ -90,20 +90,23 @@ function init_loader_sys:init()
     ecs.create_instance "/pkg/ant.test.features/assets/entities/skybox_test.prefab"
     ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
     local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/goods_station.glb|mesh.prefab"
-    p.on_ready = function (e)
-        for _, ee in ipairs(e.tag['*']) do
-            ies.set_state(ee, "main_view", false)
-        end
-    end
-    p.on_update = function(e)
-        for _, ee in ipairs(e.tag['*']) do
-            w:sync("skeleton?in", ee)
-            if ee.skeleton then
-                local iwd = ecs.import.interface "ant.render|iwidget_drawer"
-                iwd.draw_skeleton(ee.skeleton._handle, nil, math3d.matrix(), 0xff00ffff)
-            end
-        end
-    end
+    -- p.on_ready = function (e)
+    --     for _, ee in ipairs(e.tag['*']) do
+    --         ies.set_state(ee, "main_view", false)
+    --         ies.set_state(ee, "cast_shadow", false)
+    --     end
+    -- end
+    -- p.on_update = function(e)
+    --     for _, ee in ipairs(e.tag['*']) do
+    --         w:sync("skeleton?in", ee)
+    --         if ee.skeleton then
+    --             --w:sync("pose_result:in", ee)
+    --             local iwd = ecs.import.interface "ant.render|iwidget_drawer"
+    --             iwd.draw_skeleton(ee.skeleton._handle, ee.pose_result, math3d.matrix{s={1.0, 1.0, -1.0}}, 0xff00ffff)
+    --             break
+    --         end
+    --     end
+    -- end
     world:create_object(p)
 
     local off = 0.1
