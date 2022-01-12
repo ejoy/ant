@@ -39,28 +39,29 @@
         <script type="text/x-lua" >
             console.log("before createModel")
             local start = window.createModel "start" {
-                item_page = {
-                    {
-                        {id=100, icon0="correct.png", icon1="correct.png"},
-                        {id=101, icon0="correct.png", icon1="correct.png"},
-                        {id=102, icon0="correct.png", icon1="correct.png"},
-                    },
-                    {
-                        {id=103, icon0="correct.png", icon1="correct.png"},
-                        {id=104, icon0="correct.png", icon1="correct.png"},
-                        {id=105, icon0="correct.png", icon1="correct.png"},
-                    },
-                    {
-                        {id=106, icon0="correct.png", icon1="correct.png"},
-                        {id=107, icon0="correct.png", icon1="correct.png"},
-                        {id=108, icon0="correct.png", icon1="correct.png"},
-                    },
-                    {
-                        {id=109, icon0="correct.png", icon1="correct.png"},
-                        {id=110, icon0="correct.png", icon1="correct.png"},
-                        {id=111, icon0="correct.png", icon1="correct.png"},
-                    }
+                items = {
+                    {id=100, icon0="correct.png", icon1="correct.png"},
+                    {id=101, icon0="correct.png", icon1="correct.png"},
+                    {id=102, icon0="correct.png", icon1="correct.png"},
+                    {id=103, icon0="correct.png", icon1="correct.png"},
+                    {id=104, icon0="correct.png", icon1="correct.png"},
+                    {id=105, icon0="correct.png", icon1="correct.png"},
+                    {id=106, icon0="correct.png", icon1="correct.png"},
+                    {id=107, icon0="correct.png", icon1="correct.png"},
+                    {id=108, icon0="correct.png", icon1="correct.png"},
+                    {id=109, icon0="correct.png", icon1="correct.png"},
+                    {id=110, icon0="correct.png", icon1="correct.png"},
+                    {id=111, icon0="correct.png", icon1="correct.png"},
+                    {id=112, icon0="correct.png", icon1="correct.png"},
+                    {id=113, icon0="correct.png", icon1="correct.png"},
+                    {id=114, icon0="correct.png", icon1="correct.png"},
+                    {id=115, icon0="correct.png", icon1="correct.png"},
+                    {id=116, icon0="correct.png", icon1="correct.png"},
                 },
+                item_size = 250,
+                item_size_str = '250px',
+                view_items = {},
+                virtual_pages = {},
                 current_page = 0,
                 item_list = {
                     {id=100, icon0="correct.png", icon1="correct.png"},
@@ -86,20 +87,23 @@
             local pageclass = require "page"
             -- window size : 1336 750
             local list_proxy = listclass.create(1, {667, 750}, #start.item_list, {750, 50})
-            local page_proxy = pageclass.create({667, 750}, #start.item_page)
-            
+            local page_proxy = pageclass.create({667, 750}, start)
+            --start("virtual_pages")
             function start.pagemousedown(event)
+                console.log("pagemousedown")
                 page_proxy:on_mousedown(event)
             end
             
             function start.pagedrag(event)
+                --console.log("pagedrag")
                 page_proxy:on_drag(event)
             end
 
             function start.pagemouseup(event)
+                console.log("pagemouseup")
                 local page_change = page_proxy:on_mouseup(event)
                 if page_change then
-                    start("item_page")
+                    start("view_items")
                 end
                 start.current_page = page_proxy:get_current_page() - 1
             end
@@ -126,27 +130,17 @@
     </head>
     <body>
         <div class="panel" data-model="start">
-            <div class="column" style="overflow: scroll; justify-content: flex-start; align-items: flex-start; width:50%; height: 100%;">
+            <div class="column" style="justify-content: flex-start; align-items: flex-start; width:50%; height: 100%;">
                 <div style="width:100%; height:720px;">
-                    <div style="transition: left 0.5s linear-out; width:100%; height:100%; flex-direction: row; justify-content: flex-start;" data-event-mousedown="pagemousedown()" data-event-mouseup="pagemouseup()" data-event-mousemove="pagedrag()">
-                        <div class="item-container" style="width:100%; height:100%;" data-for="item_page">
-                            <div class="item-display">
-                                <div class="item-bg" data-style-background-image="it[0].icon0"/>
-                                <div>{{it[0].id}}</div>
-                            </div>
-                            <div class="item-display">
-                                <div class="item-bg" data-style-background-image="it[1].icon0"/>
-                                <div>{{it[1].id}}</div>
-                            </div>
-                            <div class="item-display">
-                                <div class="item-bg" data-style-background-image="it[2].icon0"/>
-                                <div>{{it[2].id}}</div>
-                            </div>
+                    <div style="transition: left 0.5s linear-out; width:100%; height:100%;" data-event-mousedown="pagemousedown()" data-event-mouseup="pagemouseup()" data-event-mousemove="pagedrag()">
+                        <div style="position: absolute; background-color: rgba(255, 120, 120, 255);" data-style-width="item_size_str" data-style-height="item_size_str" data-style-left="it.left" data-style-top="it.top" data-for="view_items">
+                            <div class="item-bg" data-style-background-image="it.data.icon0"/>
+                            <div>{{it.data.id}}</div>
                         </div>
                     </div>
                 </div>
                 <div style='flex-direction: row; justify-content: center; width:100%; height:30px;'>
-                    <div data-for="item_page">
+                    <div data-for="virtual_pages">
                         <div style="width:20px; height:20px; background-size:cover;" data-style-background-image="it_index == current_page ? 'common/page1.png' : 'common/page0.png'"/>
                     </div>
                 </div>
