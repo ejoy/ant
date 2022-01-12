@@ -51,21 +51,21 @@ local ibl_textures = {
 }
 
 local icompute = ecs.import.interface "ant.render|icompute"
-
 local ibl_viewid = viewidmgr.get "ibl"
 
-local need_dispatch
-
-local function create_irradiance_entity()
+local function create_irradiance_entity(ibl)
     local size = ibl_textures.irradiance.size
     local dispatchsize = {
         size / thread_group_size, size / thread_group_size, 6
     }
+
+    local setting = ibl.source.cubemap and {CUBEMAP_SOURCE=1} or nil
+
     icompute.create_compute_entity(
-        "irradiance_builder", "/pkg/ant.resources/materials/ibl/build_irradiance.material", dispatchsize)
+        "irradiance_builder", "/pkg/ant.resources/materials/ibl/build_irradiance.material", dispatchsize, setting)
 end
 
-local function create_prefilter_entities()
+local function create_prefilter_entities(ibl)
     local size = ibl_textures.prefilter.size
 
     local mipmap_count = ibl_textures.prefilter.mipmap_count
@@ -82,6 +82,7 @@ local function create_prefilter_entities()
             data = {
                 name        = "prefilter_builder",
                 material    = "/pkg/ant.resources/materials/ibl/build_prefilter.material",
+                material_setting = ibl.source.cubemap and {CUBEMAP_SOURCE=1} or nil,
                 dispatch    ={
                     size    = dispatchsize,
                 },
@@ -188,6 +189,7 @@ local function build_ibl_textures(ibl)
 
     ibl_textures.intensity = ibl.intensity
 
+    --TODO: make irradiance as 2D map and use RGB8E format to store
     ibl_textures.source.texture.handle = ibl.source.handle
     if ibl.irradiance.size ~= ibl_textures.irradiance.size then
         ibl_textures.irradiance.size = ibl.irradiance.size
@@ -211,13 +213,13 @@ local function build_ibl_textures(ibl)
 end
 
 
-local function create_ibl_entities()
-    create_irradiance_entity()
-    create_prefilter_entities()
+local function create_ibl_entities(ibl)
+    create_irradiance_entity(ibl)
+    create_prefilter_entities(ibl)
     create_LUT_entity()
 end
 
 function iibl.filter_all(ibl)
     build_ibl_textures(ibl)
-    create_ibl_entities()
+    create_ibl_entities(ibl)
 end

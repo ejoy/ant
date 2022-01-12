@@ -1,6 +1,7 @@
 colorspace: Linear
-format: RGBA16F
+format: RGBA32F
 normalmap: false
+mipmap: 0
 path: /pkg/ant.resources.binary/textures/equirectangularmap/kiara_4_mid-morning_4k.exr
 sampler:
   MAG: LINEAR

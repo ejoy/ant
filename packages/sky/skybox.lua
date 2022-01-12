@@ -37,10 +37,12 @@ end
 function skybox_sys:entity_ready()
 	for e in w:select "skybox_changed ibl:in render_object:in" do
 		local se_ibl = e.ibl
-		local t = e.render_object.properties.s_skybox
+		local ro = e.render_object
+		local t = ro.properties.s_skybox
+		local s = ro.fx.setting
 		local h = t.value.texture.handle
 		iibl.filter_all{
-			source 		= {handle = h},
+			source 		= {handle = h, cubemap=s.CUBEMAP~=nil},
 			irradiance 	= se_ibl.irradiance,
 			prefilter 	= se_ibl.prefilter,
 			LUT			= se_ibl.LUT,

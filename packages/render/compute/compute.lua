@@ -17,7 +17,7 @@ function ic.dispatch(viewid, ds)
 	bgfx.dispatch(viewid, ds.fx.prog, s[1], s[2], s[3])
 end
 
-function ic.create_compute_entity(name, materialfile, size)
+function ic.create_compute_entity(name, materialfile, size, material_setting)
     ecs.create_entity {
         policy = {
             "ant.render|compute_policy",
@@ -26,6 +26,7 @@ function ic.create_compute_entity(name, materialfile, size)
         data = {
             name        = name,
             material    = materialfile,
+            material_setting = material_setting,
             dispatch    ={
                 size    = size,
             },

@@ -1,24 +1,13 @@
 $input v_posWS
 
 #include <bgfx_shader.sh>
+#include "sky/common.sh"
 
 #ifdef CUBEMAP_SKY
 SAMPLERCUBE(s_skybox, 0);
 #else //!CUBEMAP_SKY
 SAMPLER2D(s_skybox, 0);
 #endif //CUBEMAP_SKY
-
-#ifndef CUBEMAP_SKY
-
-vec2 sampleEquirectangularMap(vec3 v)
-{
-    vec2 uv = vec2(atan2(v.z, v.x), asin(v.y));
-    const vec2 invAtan = vec2(0.1591, -0.3183);
-    uv *= invAtan;
-    uv += 0.5;
-    return uv;
-}
-#endif //!CUBEMAP_SKY
 
 uniform vec4 u_skybox_param;
 #define u_skybox_intensity u_skybox_param.x

@@ -40,7 +40,7 @@ local function gen_commands(commands, param, input, output)
 	end
 
 	local mipmap = param.mipmap
-	if mipmap then
+	if mipmap ~= nil then
 		add_option(commands, "-m")
 		if mipmap ~= 0 then
 			add_option(commands, "--mipskip", tostring(mipmap))
