@@ -4,7 +4,6 @@ fx:
     setting:
         surfacetype: background
         lighting: off
-        CUBEMAP_SKY: 1
 properties:
     s_skybox:
         stage: 0
