@@ -841,7 +841,7 @@ private:
 		case Instruction::Add:
 		{
 			if (AnyString(L, R))
-				R = Variant(VariantHelper::Get<std::string>(L) + VariantHelper::Get<std::string>(R));
+				R = Variant(VariantHelper::ToString(L) + VariantHelper::ToString(R));
 			else
 				R = Variant(VariantHelper::Get<float>(L) + VariantHelper::Get<float>(R));
 		}

@@ -87,24 +87,24 @@ function page_meta:on_mousedown(event)
 end
 
 function page_meta:on_mouseup(event)
-    local page_change = false
+    local old_value = self.current_page
     if self.drag.delta < -100 then
         self.current_page = self.current_page + 1
         if self.current_page > #self.virtual_pages then
             self.current_page = #self.virtual_pages
         end
-        page_change = true
     elseif self.drag.delta > 100 then
         self.current_page = self.current_page - 1
         if self.current_page < 1 then
             self.current_page = 1
         end
-        page_change = true
     end
-    self:update_view_pages()
+    if old_value ~= self.current_page then
+        self:update_view_pages()
+    end
     self.pos = (1 - self.current_page) * self.contain_size[1]
     event.current.style.left = tostring(self.pos) .. 'px'
-    return page_change
+    return old_value ~= self.current_page
 end
 
 function page_meta:on_drag(event)
@@ -112,6 +112,8 @@ function page_meta:on_drag(event)
         self.drag.delta = event.x - self.drag.mouse_pos
         self.pos = self.drag.anchor + self.drag.delta
         event.current:setPropertyImmediate("left", tostring(math.floor(self.pos)) .. 'px')
+    else
+        self.drag.delta = 0
     end
 end
 
