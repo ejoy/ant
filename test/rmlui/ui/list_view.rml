@@ -57,9 +57,17 @@
                     {id=114, icon0="correct.png", icon1="correct.png"},
                     {id=115, icon0="correct.png", icon1="correct.png"},
                     {id=116, icon0="correct.png", icon1="correct.png"},
+                    {id=117, icon0="correct.png", icon1="correct.png"},
+                    {id=118, icon0="correct.png", icon1="correct.png"},
+                    {id=119, icon0="correct.png", icon1="correct.png"},
+                    {id=120, icon0="correct.png", icon1="correct.png"},
+                    {id=121, icon0="correct.png", icon1="correct.png"},
+                    {id=122, icon0="correct.png", icon1="correct.png"},
+                    {id=123, icon0="correct.png", icon1="correct.png"},
+                    {id=124, icon0="correct.png", icon1="correct.png"},
                 },
-                item_size = 250,
-                item_size_str = '250px',
+                item_size = 200,
+                item_size_str = '200px',
                 view_items = {},
                 virtual_pages = {},
                 current_page = 0,
@@ -87,7 +95,7 @@
             local pageclass = require "page"
             -- window size : 1336 750
             local list_proxy = listclass.create(1, {667, 750}, #start.item_list, {750, 50})
-            local page_proxy = pageclass.create({667, 750}, start)
+            local page_proxy = pageclass.create({667, 720}, start)
             --start("virtual_pages")
             function start.pagemousedown(event)
                 console.log("pagemousedown")
@@ -133,7 +141,7 @@
             <div class="column" style="justify-content: flex-start; align-items: flex-start; width:50%; height: 100%;">
                 <div style="width:100%; height:720px;">
                     <div style="transition: left 0.5s linear-out; width:100%; height:100%;" data-event-mousedown="pagemousedown()" data-event-mouseup="pagemouseup()" data-event-mousemove="pagedrag()">
-                        <div style="position: absolute; background-color: rgba(255, 120, 120, 255);" data-style-width="item_size_str" data-style-height="item_size_str" data-style-left="it.left" data-style-top="it.top" data-for="view_items">
+                        <div style="z-index: -1; position: absolute; background-color: rgba(255, 120, 120, 255);" data-style-width="item_size_str" data-style-height="item_size_str" data-style-left="it.left" data-style-top="it.top" data-for="view_items">
                             <div class="item-bg" data-style-background-image="it.data.icon0"/>
                             <div>{{it.data.id}}</div>
                         </div>
@@ -145,7 +153,7 @@
                     </div>
                 </div>
             </div>
-            <div class="column" style="transition: top 0.5s linear-out; justify-content: flex-start; width:50%; height: 100%;" data-event-mousedown="listmousedown()" data-event-mouseup="listmouseup()" data-event-mousemove="listdrag()">
+            <div class="column" style="transition: top 0.5s linear-out; justify-content: flex-start; width:50%; height: 100%; background-color: rgba(100, 100, 100, 255);" data-event-mousedown="listmousedown()" data-event-mouseup="listmouseup()" data-event-mousemove="listdrag()">
                 <div class="item-display" style="width:100%; height: 50px;" data-for="item_list">
                     <div class="item-bg" data-style-background-image="it.icon0"/>
                     <div>{{it.id}}</div>
