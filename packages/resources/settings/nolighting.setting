@@ -5,4 +5,3 @@ shadow_receive: off
 subsurface: off
 skinning: UNKNOWN
 depth_type: inv_z
-bloom: off
