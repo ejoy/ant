@@ -14,7 +14,7 @@ local RuntimeBacklist = {
 local EditorBacklist = {
     firmware = true,
     bake = true,
-    audio = (lm.os == "windows" and lm.compiler == "gcc")
+    audio = (lm.os == "windows" and lm.compiler == "gcc") or (lm.os ~= "windows")
 }
 
 local RuntimeModules = {}
@@ -45,20 +45,17 @@ lm:source_set "ant_common" {
         "../clibs/lua",
         "../3rd/bgfx/include",
         "../3rd/bx/include",
+        "common"
     },
     sources = {
         "common/runtime.cpp",
         "common/progdir.cpp",
     },
     windows = {
-        includes = {
-            "../clibs/lua",
-            "common"
-        },
         sources = "windows/main.cpp",
     },
     macos = {
-        sources = "../osx/main.cpp",
+        sources = "osx/main.cpp",
     },
     ios = {
         includes = "../../clibs/window/ios",
