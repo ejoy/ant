@@ -1,0 +1,15 @@
+system "canvas_system"
+    .implement "canvas.lua"
+    .method "init"
+
+interface "icanvas"
+    .implement "canvas.lua"
+    .method "add_items"
+    .method "add_text"
+
+component "canvas".type "lua"
+
+policy "canvas"
+    .require_system "ant.terrain|canvas_system"
+    .require_interface "ant.terrain|icanvas"
+    .component "canvas"

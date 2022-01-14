@@ -2,7 +2,9 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local ist = ecs.import.interface "ant.terrain|ishape_terrain"
+local ist       = ecs.import.interface "ant.terrain|ishape_terrain"
+local icanvas   = ecs.import.interface "ant.terrain|icanvas"
+
 local shape_terrain_test_sys = ecs.system "shape_terrain_test_system"
 
 --from w: [0, 8], h:[0, 8]
@@ -267,6 +269,12 @@ local function create_indicator()
     }
 end
 
+local canvas
+
+local function create_canvas()
+    return icanvas.create_canvas({t={0.0, 1.0, 0.0}}, "canvas")
+end
+
 function shape_terrain_test_sys:init()
     local ww, hh = 32, 32 --256, 256--2, 2
     local terrain_fields = generate_terrain_fields(ww, hh)
@@ -306,6 +314,7 @@ function shape_terrain_test_sys:init()
     --indicator test
 
     indicator = create_indicator()
+    canvas = create_canvas()
 end
 
 local itr = ecs.import.interface "ant.terrain|iterrain_road"

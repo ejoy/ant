@@ -45,3 +45,5 @@ policy "quad_strip"
 system "indicator_system"
     .implement "indicator.lua"
     .method "data_changed"
+
+import "canvas.ecs"
