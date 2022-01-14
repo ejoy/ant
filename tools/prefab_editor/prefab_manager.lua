@@ -585,9 +585,12 @@ end
 function m:reset_prefab()
     camera_mgr.clear()
     for _, e in ipairs(self.entities) do
-        on_remove_entity(e)
-        w:remove(e)
+        if not e.scene.REMOVED then
+            on_remove_entity(e)
+            w:remove(e)
+        end
     end
+    if self.root then w:remove(self.root) end
     light_gizmo.clear()
     hierarchy:clear()
     anim_view.clear()
