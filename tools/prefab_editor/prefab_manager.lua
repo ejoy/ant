@@ -664,6 +664,16 @@ function m:add_prefab(filename)
         ecs.method.set_parent(v_root, parent)
         self.entities[#self.entities+1] = v_root
         local children = inst.tag["*"]
+        if #children == 1 then
+            local child = children[1]
+            w:sync("camera?in", child)
+            if child.camera then
+                ecs.method.set_parent(child, parent)
+                local temp = serialize.parse(prefab_filename, cr.read_file(prefab_filename))
+                hierarchy:add(child, {template = temp[1], editor = true, temporary = true}, parent)
+                return
+            end
+        end
         for _, child in ipairs(children) do
             if child.scene.parent == inst.root.scene.id then
                 ecs.method.set_parent(child, v_root)

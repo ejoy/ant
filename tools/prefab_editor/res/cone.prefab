@@ -1,6 +1,6 @@
 ---
 data:
-  name: "Root Scene"
+  name: Scene
   scene:
     srt: {}
 policy:
@@ -8,28 +8,13 @@ policy:
   ant.scene|scene_object
 ---
 data:
-  name: RootNode
-  scene:
-    srt:
-      r: {0, 0, 0, -1}
-      s: {1, 1, 1}
-      t: {0, 0, 0}
-mount: 1
-policy:
-  ant.general|name
-  ant.scene|scene_object
----
-data:
+  filter_state: main_view|selectable|cast_shadow
   material: /pkg/ant.resources.binary/meshes/base/cone.glb|materials/lambert1.material
   mesh: /pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin
   name: pCone1
   scene:
-    srt:
-      r: {0, 0, 0, -1}
-      s: {100, 100, 100}
-      t: {0, 0, 0}
-  filter_state: main_view|selectable|cast_shadow
-mount: 2
+    srt: {}
+mount: 1
 policy:
   ant.general|name
   ant.render|render

@@ -112,9 +112,7 @@ end
 function hierarchy:update_prefab_template(world)
     local prefab_template = {}
     local function construct_entity(eid, pt)
-        if type(eid) == "table" then
-            
-        elseif world[eid].collider then
+        if self.all[eid].template.temporary then
             return
         end
         local templ = self.all[eid].template.template

@@ -1,6 +1,6 @@
 ---
 data:
-  name: "Root Scene"
+  name: Scene
   scene:
     srt: {}
 policy:
@@ -8,27 +8,13 @@ policy:
   ant.scene|scene_object
 ---
 data:
-  name: RootNode
-  scene:
-    srt:
-      r: {0, 0, 0, -1}
-      s: {1, 1, 1}
-      t: {0, 0, 0}
-mount: 1
-policy:
-  ant.general|name
-  ant.scene|scene_object
----
-data:
-  material: /pkg/ant.resources.binary/meshes/base/cube.glb|materials/lambert1.material
+  filter_state: main_view|selectable|cast_shadow
+  material: /pkg/ant.resources.binary/meshes/base/cube.glb|materials/lambert1.001.material
   mesh: /pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin
   name: pCube1
   scene:
-    srt:
-      r: {0, 0, 0, -1}
-      s: 100
-  filter_state: main_view|selectable|cast_shadow
-mount: 2
+    srt: {}
+mount: 1
 policy:
   ant.general|name
   ant.render|render
