@@ -85,7 +85,7 @@ void Event::InitMouseEvent() {
 	Document* document = target_element->GetOwnerDocument();
 	if (document) {
 		Point page = client;
-		if (document->body->Project(page)) {
+		if (document->body && document->body->Project(page)) {
 			parameters["pageX"] = page.x;
 			parameters["pageY"] = page.y;
 		}

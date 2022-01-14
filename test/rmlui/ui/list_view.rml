@@ -142,7 +142,12 @@
             <div class="column" style="justify-content: flex-start; align-items: flex-start; width:50%; height: 100%;">
                 <div style="width:100%; height:720px;">
                     <div style="transition: left 0.5s linear-out; width:100%; height:100%;" data-event-mousedown="pagemousedown()" data-event-mouseup="pagemouseup()" data-event-mousemove="pagedrag()">
-                        <div style="z-index: -1; position: absolute; background-color: rgba(255, 120, 120, 255);" data-style-border="selected_id == it.data.id ? '2px green' : '0px green'" data-event-mousedown="page_item_click(it.data.id)" data-style-width="item_size+'px'" data-style-height="item_size+'px'" data-style-left="it.left" data-style-top="it.top" data-for="view_items">
+                        <div style="flex-direction: row; justify-content: center; width:100%; height:100%;">
+                            <div style="width:100%; height:100%;" data-for="virtual_pages">
+                                <div style="position: absolute; width:100%; height:100%; background-color: rgba(0, 200, 200, 255); border: 2px red; top: 0%;" data-style-left="(it_index + 1) * 100 + '%'"/>
+                            </div>
+                        </div>
+                        <div style="position: absolute; background-color: rgba(255, 120, 120, 255);" data-style-border="selected_id == it.data.id ? '2px green' : '0px green'" data-event-mousedown="page_item_click(it.data.id)" data-style-width="item_size+'px'" data-style-height="item_size+'px'" data-style-left="it.left" data-style-top="it.top" data-for="view_items">
                             <div class="item-bg" data-style-background-image="it.data.icon0"/>
                             <div>{{it.data.id}}</div>
                         </div>

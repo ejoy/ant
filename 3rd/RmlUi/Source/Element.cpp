@@ -78,7 +78,7 @@ Element::Element(Document* owner, const std::string& tag)
 
 Element::~Element() {
 	RMLUI_ASSERT(parent == nullptr);
-	//GetOwnerDocument()->OnElementDetach(this);
+	GetOwnerDocument()->OnElementDetach(this);
 	SetDataModel(nullptr);
 	for (auto& child : children) {
 		child->SetParent(nullptr);
