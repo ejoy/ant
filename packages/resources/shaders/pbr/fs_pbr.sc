@@ -2,11 +2,13 @@
 
 #ifdef MATERIAL_UNLIT
 #define OUTPUT_NORMAL
+#define OUTPUT_WORLDPOS
 #else
-#define OUTPUT_NORMAL v_normal
+#define OUTPUT_NORMAL   v_normal
+#define OUTPUT_WORLDPOS v_posWS
 #endif 
 
-$input v_posWS v_texcoord0 OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGENT OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0
+$input v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGENT OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0
 
 #include <bgfx_shader.sh>
 #include <bgfx_compute.sh>
@@ -158,7 +160,7 @@ void main()
 
 #ifdef HAS_EMISSIVE_TEXTURE
     basecolor.rgb += texture2D(s_emissive, uv).rgb * u_emissive_factor.rgb;
-#endif
+#endif //HAS_EMISSIVE_TEXTURE
 
 #ifdef MATERIAL_UNLIT
     gl_FragColor = basecolor;
@@ -167,9 +169,9 @@ void main()
 
 #ifdef WITH_TANGENT_ATTRIB
     vec3 N = get_normal(v_tangent, v_bitangent, v_normal, uv);
-#else //!CALC_TBN
+#else //!WITH_TANGENT_ATTRIB
     vec3 N = get_normal_by_tbn(tbn_from_world_pos(v_normal, v_posWS.xyz, uv), v_normal, uv);
-#endif //CALC_TBN
+#endif //WITH_TANGENT_ATTRIB
 
     material_info mi = get_material_info(basecolor.rgb, uv);
 
