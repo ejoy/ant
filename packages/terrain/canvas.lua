@@ -40,27 +40,33 @@ function canvas_sys:init()
 
 end
 
+local canvas_texture_mb = world:sub{"canvas_update", "texture"}
+function canvas_sys:data_changed()
+    for _ in canvas_texture_mb:each() do
+        for e in w:select "canvas:in" do
+            local canvas = e.canvas
+            local textures = canvas.textures
+            local tt = {}
+            
+            for p, obj in pairs(canvas.textures) do
+                tt[#tt+1] = p
+                for _, it in ipairs(obj.items) do
+                    
+                end
+            end
+            table.sort(tt)
+            for _, n in ipairs(tt) do
+                local tex = textures[n]
+                local re = tex.renderer
+                w:sync("render_object:in", re)
+                local ro = re.render_object
+
+            end
+        end
+    end
+end
 
 local icanvas = ecs.interface "icanvas"
-
-function icanvas.create_canvas(transform, name)
-    return ecs.create_entity {
-        policy = {
-            "ant.scene|scene_object",
-            "ant.terrain|canvas",
-            "ant.general|name",
-        },
-        data = {
-            name = name,
-            scene = {srt=transform},
-            reference = true,
-            canvas = {
-                textures = {},
-                texts = {},
-            },
-        }
-    }
-end
 
 local textureid = 0
 local function gen_texture_id()
@@ -69,7 +75,7 @@ local function gen_texture_id()
     return id
 end
 
-local function create_texture_item_entity(texture, start, num)
+local function create_texture_item_entity(texobj)
     return ecs.create_entity{
         policy = {
             "ant.render|simplerender",
@@ -78,15 +84,15 @@ local function create_texture_item_entity(texture, start, num)
         data = {
             simplemesh  = {
                 vb = {
-                    start = start,
-                    num = num,
+                    start = 0,
+                    num = 0,
                     handles = {
                         buffer.handle,
                     }
                 },
                 ib = {
                     start = 0,
-                    num = (num // 4) * 6,
+                    num = 0,
                     handle = irender.quad_ib(),
                 }
             },
@@ -94,8 +100,9 @@ local function create_texture_item_entity(texture, start, num)
             scene       = {srt={}},
             filter_state= "main_view",
             name        = "canvas_texture" .. gen_texture_id(),
+            canvas_item = "texture",
             on_ready = function (e)
-                imaterial.set_property(e, "u_image", texture)
+                imaterial.set_property(e, "u_image", {texture=texobj, stage=0})
             end
         }
     }
@@ -132,30 +139,35 @@ local function create_buffer_data(itemsize)
     return buffer.data, startidx
 end
 
-function icanvas.add_items(e, items)
+function icanvas.add_items(e, ...)
     w:sync("canvas:in", e)
     local canvas = e.canvas
     local textures = canvas.textures
-    local n = #items
-    local itemsize = n * layout.stride
-    local data, startidx = create_buffer_data(itemsize)
 
-    for _=1, n do
-        local item = items[n]
+    local n = select("#", ...)
+    
+    for i=1, n do
+        local item = select(i, ...)
         local texture = item.texture
         local texpath = texture.path
-        local t = textures[texture]
+        local t = textures[texpath]
         if t == nil then
-            local texobj = assetmgr.load(texpath)
+            local texobj = assetmgr.resource(texpath)
             t = {
-                renderer = create_texture_item_entity(texobj, startidx),
+                renderer = create_texture_item_entity(texobj),
+                items = {},
             }
             textures[texpath] = t
         end
-        data[startidx] = add_item(t, texture.size)
+        t.items[#t.items+1] = add_item(t, texture.size)
     end
+    if n > 0 then
+        world:pub{"canvas_update", "texture"}
+    end
+end
 
-    buffer:update()
+function icanvas.remove_item(e, texpath, idx)
+    world:pub{"canvas_update", "texture"}
 end
 
 function icanvas.add_text(e, ...)

@@ -1,14 +1,16 @@
 system "canvas_system"
     .implement "canvas.lua"
     .method "init"
+    .method "data_changed"
 
 interface "icanvas"
     .implement "canvas.lua"
-    .method "create_canvas"
     .method "add_items"
+    .method "remove_item"
     .method "add_text"
 
 component "canvas".type "lua"
+component "canvas_item"
 
 policy "canvas"
     .require_system "ant.terrain|canvas_system"

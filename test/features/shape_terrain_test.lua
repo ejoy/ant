@@ -272,7 +272,37 @@ end
 local canvas
 
 local function create_canvas()
-    return icanvas.create_canvas({t={0.0, 1.0, 0.0}}, "canvas")
+    return ecs.create_entity {
+        policy = {
+            "ant.scene|scene_object",
+            "ant.terrain|canvas",
+            "ant.general|name",
+        },
+        data = {
+            name = "canvas",
+            scene = {t={0.0, 1.0, 0.0}},
+            reference = true,
+            canvas = {
+                textures = {},
+                texts = {},
+            },
+            on_ready = function (e)
+                icanvas.add_items(e, {
+                    {
+                        texture = {
+                            path = "/pkg/ant.test.features/assets/textures/canvas/canvas.texture",
+                            size = {w=128, h=128},
+                        },
+                        x = 1.2, y = 2.2,
+                        rect = {
+                            x = 32, y = 32,
+                            w = 32, h = 32,
+                        },
+                    }
+                })
+            end
+        }
+    }
 end
 
 function shape_terrain_test_sys:init()
@@ -315,19 +345,6 @@ function shape_terrain_test_sys:init()
 
     indicator = create_indicator()
     canvas = create_canvas()
-    icanvas.add_items(canvas, {
-        {
-            texture = {
-                path = "/pkg/ant.test.features/assets/textures/canvas/canvas.texture",
-                size = {w=128, h=128},
-            },
-            x = 1.2, y = 2.2,
-            rect = {
-                x = 32, y = 32,
-                w = 32, h = 32,
-            },
-        }
-    })
 end
 
 local itr = ecs.import.interface "ant.terrain|iterrain_road"
