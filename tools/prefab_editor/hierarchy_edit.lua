@@ -252,8 +252,8 @@ end
 local function find_table(e)
     local p = hierarchy.all[e].parent
     local t = hierarchy.all[p].children
-    for i, e in ipairs(t) do
-        if e.eid == e then
+    for i, n in ipairs(t) do
+        if n.eid.scene.id == e.scene.id then
             return i, t
         end
     end
