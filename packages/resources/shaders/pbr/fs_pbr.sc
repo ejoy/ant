@@ -1,13 +1,5 @@
 #include "common/inputs.sh"
 
-#ifdef MATERIAL_UNLIT
-#define OUTPUT_NORMAL
-#define OUTPUT_WORLDPOS
-#else
-#define OUTPUT_NORMAL   v_normal
-#define OUTPUT_WORLDPOS v_posWS
-#endif 
-
 $input v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGENT OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0
 
 #include <bgfx_shader.sh>

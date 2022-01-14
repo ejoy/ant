@@ -45,3 +45,13 @@
 #   define INPUT_LIGHTMAP_TEXCOORD
 #   define OUTPUT_LIGHTMAP_TEXCOORD
 #endif //USING_LIGHTMAP
+
+#ifdef MATERIAL_UNLIT
+#define INPUT_NORMAL
+#define OUTPUT_NORMAL
+#define OUTPUT_WORLDPOS
+#else //!MATERIAL_UNLIT
+#define INPUT_NORMAL a_normal
+#define OUTPUT_NORMAL v_normal
+#define OUTPUT_WORLDPOS v_posWS
+#endif //MATERIAL_UNLIT
