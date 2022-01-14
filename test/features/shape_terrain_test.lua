@@ -315,6 +315,19 @@ function shape_terrain_test_sys:init()
 
     indicator = create_indicator()
     canvas = create_canvas()
+    icanvas.add_items(canvas, {
+        {
+            texture = {
+                path = "/pkg/ant.test.features/assets/textures/canvas/canvas.texture",
+                size = {w=128, h=128},
+            },
+            x = 1.2, y = 2.2,
+            rect = {
+                x = 32, y = 32,
+                w = 32, h = 32,
+            },
+        }
+    })
 end
 
 local itr = ecs.import.interface "ant.terrain|iterrain_road"

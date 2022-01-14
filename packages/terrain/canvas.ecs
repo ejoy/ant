@@ -4,6 +4,7 @@ system "canvas_system"
 
 interface "icanvas"
     .implement "canvas.lua"
+    .method "create_canvas"
     .method "add_items"
     .method "add_text"
 

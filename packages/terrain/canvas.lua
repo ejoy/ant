@@ -2,11 +2,11 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local bgfx = require "bgfx"
+local bgfx      = require "bgfx"
 
-local declmgr = require "vertexdecl_mgr"
-
-local assetmgr = import_package "ant.asset"
+local renderpkg = import_package "ant.render"
+local declmgr   = renderpkg.declmgr
+local assetmgr  = import_package "ant.asset"
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local irender = ecs.import.interface "ant.render|irender"
@@ -143,17 +143,24 @@ function icanvas.add_items(e, items)
     for _=1, n do
         local item = items[n]
         local texture = item.texture
+        local texpath = texture.path
         local t = textures[texture]
         if t == nil then
-            local texobj = assetmgr.load(texture)
+            local texobj = assetmgr.load(texpath)
             t = {
                 renderer = create_texture_item_entity(texobj, startidx),
-                texobj = texobj,
             }
-            textures[texture] = t
+            textures[texpath] = t
         end
-        data[startidx] = add_item(t)
+        data[startidx] = add_item(t, texture.size)
     end
 
     buffer:update()
+end
+
+function icanvas.add_text(e, ...)
+    for i=1, select('#', ...) do
+        local t = select(1, ...)
+        ---
+    end
 end
