@@ -137,10 +137,22 @@ struct ozzJointRemap : public luaClass<ozzJointRemap> {
 		return 1;
 	}
 
+	static int
+	lindex(lua_State *L){
+		auto jm = (ozzJointRemap*)luaL_checkudata(L, 1, "ozzJointRemap");
+		int idx = (int)luaL_checkinteger(L, 2)-1;
+		if (idx < 0 || idx >= jm->joints.size()){
+			luaL_error(L, "invalid index:", idx);
+		}
+		lua_pushinteger(L, jm->joints[idx]);
+		return 1;
+	}
+
 	static void registerMetatable(lua_State *L){
 		luaL_Reg l[] = {
-			{"count", 		lcount},
-			{nullptr, 		nullptr,}
+			{"count", 	lcount},
+			{"index",	lindex},
+			{nullptr, 	nullptr,}
 		};
 		base_type::reigister_mt(L, l);
 		lua_pop(L, 1);
