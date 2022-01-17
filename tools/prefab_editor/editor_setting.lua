@@ -47,16 +47,16 @@ local function add_recent_file(f)
         editor_setting.recent_files = rf
     end
 
-    if #rf == 10 then
-        table.remove(rf, 1)
-    end
-
     for _, ff in ipairs(rf) do
         if ff == f then
             return
         end
     end
-    rf[#rf+1] = f
+
+    if #rf == 10 then
+        table.remove(rf, 10)
+    end
+    table.insert(rf, 1, f)
 end
 
 return {
