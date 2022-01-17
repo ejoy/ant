@@ -487,30 +487,42 @@ struct ozzRawAnimation : public luaClass<ozzRawAnimation> {
 
 	static int lpush_key(lua_State *L) {
 		ozz::animation::offline::RawAnimation* pv = base_type::get(L, 1)->v;
-		auto vecFloat3TranslationKey = ozzVectorFloat3::getPointer(L, 2);
-		auto vecQuaternionRotationKey = ozzVectorQuaternion::getPointer(L, 3);
-		float duration = (float)luaL_checknumber(L, 4);
-
+		const auto hie = (hierarchy_build_data*)luaL_checkudata(L, 2, "HIERARCHY_BUILD_DATA");
+		ozz::animation::Skeleton* ske = hie->skeleton;
+		float duration = (float)luaL_checknumber(L, 5);
 		pv->duration = duration;
-		pv->tracks.resize(1);
-	    ozz::animation::offline::RawAnimation::JointTrack& track = pv->tracks[0];
+		pv->tracks.resize(ske->num_joints());
 
-		size_t size = 0;
+		lua_pushnil(L);
+		while (lua_next(L, 3) != 0) {
+			auto idx = luaL_checkinteger(L, -2);
+			auto vecFloat3TranslationKey = ozzVectorFloat3::getPointer(L, -1);
+			ozz::animation::offline::RawAnimation::JointTrack& track = pv->tracks[idx - 1];
+			lua_pop(L, 1);
 
-		size = vecFloat3TranslationKey->size();
-		for(int i = 0; i < size; i++) {
-			ozz::animation::offline::RawAnimation::TranslationKey PreTranslationKeys;
-			PreTranslationKeys.time = (float)duration / size * i;
-			PreTranslationKeys.value = vecFloat3TranslationKey->at(i);
-			track.translations.push_back(PreTranslationKeys);
+			size_t size = vecFloat3TranslationKey->size();
+			for(int i = 0; i < size; i++) {
+				ozz::animation::offline::RawAnimation::TranslationKey PreTranslationKeys;
+				PreTranslationKeys.time = (float)duration / size * i;
+				PreTranslationKeys.value = vecFloat3TranslationKey->at(i);
+				track.translations.push_back(PreTranslationKeys);
+			}
 		}
 
-		size = vecQuaternionRotationKey->size();
-		for(int i = 0; i < size; i++) {
-			ozz::animation::offline::RawAnimation::RotationKey PreRotationKey;
-			PreRotationKey.time = (float)duration / size * i;
-			PreRotationKey.value = vecQuaternionRotationKey->at(i);
-			track.rotations.push_back(PreRotationKey);
+		lua_pushnil(L);
+		while (lua_next(L, 4) != 0) {
+			auto idx = luaL_checkinteger(L, -2);
+			auto vecQuaternionRotationKey = ozzVectorQuaternion::getPointer(L, -1);
+			ozz::animation::offline::RawAnimation::JointTrack& track = pv->tracks[idx - 1];
+			lua_pop(L, 1);
+
+			size_t size = vecQuaternionRotationKey->size();
+			for(int i = 0; i < size; i++) {
+				ozz::animation::offline::RawAnimation::RotationKey PreRotationKey;
+				PreRotationKey.time = (float)duration / size * i;
+				PreRotationKey.value = vecQuaternionRotationKey->at(i);
+				track.rotations.push_back(PreRotationKey);
+			}
 		}
 
 		return 0;
@@ -622,6 +634,39 @@ private:
 		_push_pose(bp_soa, weight);
 		return 0;
 	}
+	int do_blend(lua_State* L) {
+		const char* blendtype = luaL_checkstring(L, 2);
+		lua_Integer n = luaL_checkinteger(L, 3);
+		float weight = (float)luaL_optnumber(L, 4, 1.0f);
+		float threshold = (float)luaL_optnumber(L, 5, 0.1f);
+		size_t max = m_layers.size();
+		if (n <= 0 || (size_t)n > max) {
+			return luaL_error(L, "invalid blend range: %d", n);
+		}
+		if (n == 1) {
+			m_layers.back().weight = weight;
+			return 0;
+		}
+		ozz::animation::BlendingJob job;
+		bindpose_soa bp_soa(m_ske->num_soa_joints());
+		if (strcmp(blendtype, "blend") == 0) {
+			job.layers = ozz::span(&(m_layers[max-n]), n);
+		} else if (strcmp(blendtype, "additive") == 0) {
+			job.additive_layers = ozz::span(&(m_layers[max-n]), n);
+		} else {
+			return luaL_error(L, "invalid blend type: %s", blendtype);
+		}
+		job.rest_pose = m_ske->joint_rest_poses();
+		job.threshold = threshold;
+		job.output = ozz::make_span(bp_soa);
+		if (!job.Run()) {
+			return luaL_error(L, "blend failed");
+		}
+		m_results.resize(max-n);
+		m_layers.resize(max-n);
+		_push_pose(bp_soa, weight);
+		return 0;
+	}
 
 	int do_ik(lua_State* L) {
 		if (!::do_ik(L, m_ske, m_results.back(), *this)){
@@ -653,6 +698,7 @@ private:
 #define STATIC_MEM_FUNC(_NAME)	static int l##_NAME(lua_State* L){ auto pr = ozzPoseResult::get(L, 1); return pr->_NAME(L); }
 	STATIC_MEM_FUNC(setup);
 	STATIC_MEM_FUNC(do_sample);
+	STATIC_MEM_FUNC(do_blend);
 	STATIC_MEM_FUNC(fetch_result);
 	STATIC_MEM_FUNC(do_ik);
 	STATIC_MEM_FUNC(clear);
@@ -664,6 +710,7 @@ public:
 		luaL_Reg l[] = {
 			{ "setup",		  	lsetup},
 			{ "do_sample",	  	ldo_sample},
+			{ "do_blend",	  	ldo_blend},
 			{ "fetch_result", 	lfetch_result},
 			{ "do_ik",		  	ldo_ik},
 			{ "end_animation",	lclear},
