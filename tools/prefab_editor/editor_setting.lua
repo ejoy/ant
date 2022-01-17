@@ -51,6 +51,11 @@ local function add_recent_file(f)
         table.remove(rf, 1)
     end
 
+    for _, ff in ipairs(rf) do
+        if ff == f then
+            return
+        end
+    end
     rf[#rf+1] = f
 end
 
