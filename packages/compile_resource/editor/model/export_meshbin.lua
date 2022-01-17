@@ -282,15 +282,13 @@ end
 
 local cache_tree = {}
 
-local function redirect_skin_joints(gltfscene, skin)
-	local joints = skin.joints
+local function redirect_skin_joints(gltfscene, skin, node_index)
 	local skeleton_nodeidx = find_skin_root_idx(gltfscene, skin)
 
 	if skeleton_nodeidx then
 		local mapper = cache_tree[skeleton_nodeidx]
 		if mapper == nil then
 			mapper = {}
-			local node_index = 0
 			-- follow with ozz-animation:SkeletonBuilder, IterateJointsDF
 			local function iterate_hierarchy_DF(nodes)
 				for _, nidx in ipairs(nodes) do
@@ -308,10 +306,13 @@ local function redirect_skin_joints(gltfscene, skin)
 			cache_tree[skeleton_nodeidx] = mapper
 		end
 
+		local joints = skin.joints
 		for i=1, #joints do
 			local joint_nodeidx = joints[i]
 			joints[i] = assert(mapper[joint_nodeidx])
 		end
+
+		return node_index
 	end
 end
 
@@ -321,8 +322,9 @@ local function export_skinbin(gltfscene, bindata, exports)
 	if skins == nil then
 		return
 	end
+	local node_index = 0
 	for skinidx, skin in ipairs(gltfscene.skins) do
-		redirect_skin_joints(gltfscene, skin)
+		node_index = redirect_skin_joints(gltfscene, skin, node_index) or 0
 		local skinname = get_obj_name(skin, skinidx, "skin")
 		local resname = "./meshes/"..skinname .. ".skinbin"
 		utility.save_bin_file(resname, fetch_skininfo(gltfscene, skin, bindata))
