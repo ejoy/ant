@@ -13,26 +13,9 @@ local irender = ecs.import.interface "ant.render|irender"
 
 local decl<const> = "p3|t2"
 local layout<const> = declmgr.get(decl)
-local layoutfmt<const> = declmgr.vertex_desc_str(declmgr.correct_layout(decl))
 
-local buffer = {}
-
-function buffer:create(size)
-    self.buffer_size = size
-    self.handle = bgfx.create_dynamic_vertex_buffer(size, layout.handle)
-end
-
-function buffer:remove()
-    self.buffer_size = 0
-    bgfx.destroy(self.handle)
-    self.data = nil
-end
-
-function buffer:update()
-    bgfx.update(self.handle, 0, assert(self.data))
-end
-
-buffer:create(1024 * 1024 * 10)    --10 M
+local max_buffersize<const> = 1024 * 1024 * 10    --10 M
+local bufferhandle<const> = bgfx.create_dynamic_vertex_buffer(max_buffersize, layout.handle)
 
 local canvas_sys = ecs.system "canvas_system"
 
@@ -43,25 +26,43 @@ end
 local canvas_texture_mb = world:sub{"canvas_update", "texture"}
 function canvas_sys:data_changed()
     for _ in canvas_texture_mb:each() do
+        local bufferoffset = 0
+        local buffers = {}
         for e in w:select "canvas:in" do
             local canvas = e.canvas
             local textures = canvas.textures
             local tt = {}
-            
-            for p, obj in pairs(canvas.textures) do
+            for p in pairs(canvas.textures) do
                 tt[#tt+1] = p
-                for _, it in ipairs(obj.items) do
-                    
-                end
             end
             table.sort(tt)
+
             for _, n in ipairs(tt) do
                 local tex = textures[n]
                 local re = tex.renderer
+                local objbuffer = table.concat(tex.items, "")
                 w:sync("render_object:in", re)
                 local ro = re.render_object
 
+                local buffersize = #objbuffer
+                local vbnum = buffersize/layout.stride
+                local vb = ro.vb
+                vb.start = bufferoffset
+                vb.num = vbnum
+
+                local ib = ro.ib
+                ib.start = 0
+                ib.num = (vbnum/4)*6
+
+                bufferoffset = bufferoffset + buffersize
+                buffers[#buffers+1] = objbuffer
             end
+        end
+
+        if bufferoffset > 0 then
+            local b = table.concat(buffers, "")
+            assert(max_buffersize >= #b)
+            bgfx.update(bufferhandle, 0, bgfx.memory_buffer(b))
         end
     end
 end
