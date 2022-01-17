@@ -82,27 +82,20 @@ local iani = ecs.import.interface "ant.animation|ianimation"
 
 local function do_animation(poseresult, e, delta_time)
 	local task = e._animation._current
-	if task.type == 'blend' then
-		for _, t in ipairs(task) do
-			do_animation(poseresult, t, delta_time)
-		end
-		poseresult:do_blend("blend", #task, task.weight)
-	else
-		local play_state = task.play_state
-		if not play_state.manual_update and play_state.play then
-			-- TODO : refactor animation birth system
-			if task.init then
-				-- many eid shared same state, step state only once.
-				if task.eid and task.eid[1].scene.id == e.scene.id then 
-					iani.step(task, delta_time * 0.001)
-				end
-			else
+	local play_state = task.play_state
+	if not play_state.manual_update and play_state.play then
+		-- TODO : refactor animation birth system
+		if task.init then
+			-- many eid shared same state, step state only once.
+			if task.eid and task.eid[1].scene.id == e.scene.id then 
 				iani.step(task, delta_time * 0.001)
 			end
+		else
+			iani.step(task, delta_time * 0.001)
 		end
-		local ani = task.animation
-		poseresult:do_sample(ani._sampling_context, ani._handle, play_state.ratio, task.weight)
 	end
+	local ani = task.animation
+	poseresult:do_sample(ani._sampling_context, ani._handle, play_state.ratio, task.weight)
 end
 
 function ani_sys:sample_animation_pose()
