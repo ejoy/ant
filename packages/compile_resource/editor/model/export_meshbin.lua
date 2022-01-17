@@ -249,19 +249,10 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim)
 	}
 end
 
-local function find_skin_root_idx(scene, skin)
+local function find_skin_root_idx(skin, nodetree)
 	local joints = skin.joints
 	if joints == nil or #joints == 0 then
 		return
-	end
-
-	local parents = {}
-	for nidx, node in ipairs(scene.nodes) do
-		if node.children then
-			for _, cnidx in ipairs(node.children) do
-				parents[cnidx] = nidx-1
-			end
-		end
 	end
 
 	if skin.skeleton then
@@ -270,7 +261,7 @@ local function find_skin_root_idx(scene, skin)
 
 	local root = joints[1]
 	while true do
-		local p = parents[root]
+		local p = nodetree[root]
 		if p == nil then
 			break
 		end
@@ -282,8 +273,8 @@ end
 
 local cache_tree = {}
 
-local function redirect_skin_joints(gltfscene, skin, node_index)
-	local skeleton_nodeidx = find_skin_root_idx(gltfscene, skin)
+local function redirect_skin_joints(gltfscene, skin, node_index, scenetree)
+	local skeleton_nodeidx = find_skin_root_idx(skin, scenetree)
 
 	if skeleton_nodeidx then
 		local mapper = cache_tree[skeleton_nodeidx]
@@ -323,8 +314,17 @@ local function export_skinbin(gltfscene, bindata, exports)
 		return
 	end
 	local node_index = 0
+	local scenetree = {}
+	for nidx, node in ipairs(gltfscene.nodes) do
+		if node.children then
+			for _, cnidx in ipairs(node.children) do
+				scenetree[cnidx] = nidx-1
+			end
+		end
+	end
+
 	for skinidx, skin in ipairs(gltfscene.skins) do
-		node_index = redirect_skin_joints(gltfscene, skin, node_index) or 0
+		node_index = redirect_skin_joints(gltfscene, skin, node_index, scenetree) or 0
 		local skinname = get_obj_name(skin, skinidx, "skin")
 		local resname = "./meshes/"..skinname .. ".skinbin"
 		utility.save_bin_file(resname, fetch_skininfo(gltfscene, skin, bindata))

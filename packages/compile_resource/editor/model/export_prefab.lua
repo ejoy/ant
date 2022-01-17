@@ -163,6 +163,25 @@ local function save_material(mi)
     end
 end
 
+local function find_node_animation(gltfscene, nodeidx, animationfiles)
+    if #animationfiles == 0 then
+        return
+    end
+
+    for _, ani in ipairs(gltfscene.animations) do
+        for _, channel in ipairs(ani.channels) do
+            if channel.target == nodeidx then
+                for _, anifile in ipairs(animationfiles) do
+                    if fs.path(anifile):stem():string() == ani.name then
+                        return anifile
+                    end
+                end
+                error(("node:%d, has animation, but not found in exports.animations: %s"):format(nodeidx, ani.name))
+            end
+        end
+    end
+end
+
 local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports, tolocalpath)
     local node = gltfscene.nodes[nodeidx+1]
     local transform = get_transform(node)
@@ -214,7 +233,9 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports, tolo
             "ant.render|render",
         }
 
-        if node.skin and exports.skeleton and next(exports.animations) then
+        --if node.skin and exports.skeleton and next(exports.animations) then
+        local anifile = find_node_animation(gltfscene, nodeidx, exports.animations)
+        if anifile then
             local f = exports.skin[node.skin+1]
             if f == nil then
                 error(("mesh need skin data, but no skin file output:%d"):format(node.skin))
@@ -233,7 +254,7 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports, tolo
                 lst[#lst+1] = n
             end
             table.sort(lst)
-            data.animation_birth = lst[1]
+            data.animation_birth = anifile
             
 			data.pose_result = false
 			data._animation = {anim_clips = {}, keyframe_events = {}, joint_list = {}}
