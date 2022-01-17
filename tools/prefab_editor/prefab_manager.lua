@@ -567,6 +567,8 @@ function m:open(filename)
     function prefab:on_message(msg) end
     function prefab:on_update() end
     self.prefab_instance = world:create_object(prefab)
+    editor_setting.add_recent_file(filename)
+    editor_setting.save()
     world:pub {"WindowTitle", filename}
 end
 

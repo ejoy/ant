@@ -2,20 +2,17 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local widget_utils = require "widget.utils"
-local prefab_mgr = ecs.require "prefab_manager"
+local widget_utils      = require "widget.utils"
+local prefab_mgr        = ecs.require "prefab_manager"
 
-local projsetting = require "widget.project_setting"
+local projsetting       = require "widget.project_setting"
 
-local rhwi      = import_package "ant.hwi"
-local stringify = import_package "ant.serialize".stringify
+local rhwi              = import_package "ant.hwi"
+local editor_setting    = require "editor_setting"
 
-local editor_setting = require "editor_setting"
-
-local imgui     = require "imgui"
-local datalist  = require "datalist"
-local lfs       = require "filesystem.local"
-local fs        = require "filesystem"
+local imgui             = require "imgui"
+local lfs               = require "filesystem.local"
+local fs                = require "filesystem"
 
 local m = {}
 
@@ -47,9 +44,25 @@ function m.show()
             end
             if imgui.widget.MenuItem("Open", "Ctrl+O") then
             end
+            imgui.cursor.Separator()
+            if imgui.widget.BeginMenu "Recent Files" then
+                local rf = editor_setting.setting.recent_files
+                if rf then
+                    for _, f in ipairs(editor_setting.setting.recent_files) do
+                        local ff = f:match "([^|]+)|mesh.prefab"
+                        ff = ff or f
+                        if imgui.widget.MenuItem(ff) then
+                            world:pub{"OpenPrefab", f}
+                        end
+                    end
+                end
+                imgui.widget.EndMenu()
+            end
+            imgui.cursor.Separator()
             if imgui.widget.MenuItem("Save", "Ctrl+S") then
                 prefab_mgr:save_prefab()
             end
+            
             if imgui.widget.MenuItem "Save As.." then
                 local path = widget_utils.get_saveas_path("Prefab", "prefab")
                 if path then

@@ -40,8 +40,23 @@ local function update_lastproj(name, projpath, auto_import)
     l.auto_import = auto_import
 end
 
+local function add_recent_file(f)
+    local rf = editor_setting.recent_files
+    if rf == nil then
+        rf = {}
+        editor_setting.recent_files = rf
+    end
+
+    if #rf == 10 then
+        table.remove(rf, 1)
+    end
+
+    rf[#rf+1] = f
+end
+
 return {
     update_lastproj = update_lastproj,
+    add_recent_file = add_recent_file,
     setting = editor_setting,
     save = save,
 }
