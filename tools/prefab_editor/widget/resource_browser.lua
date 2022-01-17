@@ -12,6 +12,7 @@ local uiutils   = require "widget.utils"
 local utils     = require "common.utils"
 local gd        = require "common.global_data"
 local icons     = require "common.icons"(assetmgr)
+local editor_setting=require "editor_setting"
 
 local m = {
     dirty = true
@@ -79,8 +80,6 @@ local engine_package_resources = {
     "/pkg/ant.resources",
     "/pkg/ant.resources.binary",
 }
-
-local hiden_engine_resource = true
 
 function m.update_resource_tree(hiden_engine_res)
     if not m.dirty or not gd.project_root then return end
@@ -170,7 +169,7 @@ function m.show()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
-    m.update_resource_tree(hiden_engine_resource)
+    m.update_resource_tree(editor_setting.setting.hide_engine_resource)
 
     local function do_show_browser(folder)
         for k, v in pairs(folder.dirs) do
@@ -219,11 +218,12 @@ function m.show()
             end
             imgui.cursor.SameLine() --last SameLine for 'HideEngineResource' button
         end
-        local cb = {hiden_engine_resource}
+        local cb = {editor_setting.setting.hide_engine_resource}
         if imgui.widget.Checkbox("HideEngineResource", cb) then
-            hiden_engine_resource = cb[1]
+            editor_setting.setting.hide_engine_resource = cb[1]
+            editor_setting.save()
             m.dirty = true
-            m.update_resource_tree(hiden_engine_resource)
+            m.update_resource_tree(editor_setting.setting.hide_engine_resource)
         end
         imgui.windows.PopStyleVar(1)
         imgui.cursor.Separator()
