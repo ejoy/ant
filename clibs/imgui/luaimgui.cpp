@@ -114,6 +114,80 @@ static int lGetMainViewport(lua_State* L) {
 	return 1;
 }
 
+static int lPairsInputEvents(lua_State* L) {
+	lua_Integer event_n = luaL_checkinteger(L, 2);
+	ImGuiContext& g = *ImGui::GetCurrentContext();
+	ImGuiIO& io = ImGui::GetIO();
+	for (; event_n < g.InputEventsTrail.Size;++event_n) {
+		const ImGuiInputEvent* e = &g.InputEventsTrail[event_n];
+		switch (e->Type) {
+		case ImGuiInputEventType_MousePos: {
+			if (io.WantCaptureMouse) {
+				break;
+			}
+			ImVec2 event_pos(e->MousePos.PosX, e->MousePos.PosY);
+			if (ImGui::IsMousePosValid(&event_pos))
+				event_pos = ImVec2(ImFloorSigned(event_pos.x), ImFloorSigned(event_pos.y));
+			lua_pushinteger(L, ++event_n);
+			lua_pushstring(L, "MousePos");
+			lua_pushnumber(L, event_pos.x);
+			lua_pushnumber(L, event_pos.y);
+			return 4;
+		}
+		case ImGuiInputEventType_MouseWheel:
+			if (io.WantCaptureMouse) {
+				break;
+			}
+			if (e->MouseWheel.WheelX == 0.0f && e->MouseWheel.WheelY == 0.0f) {
+				break;
+			}
+			lua_pushinteger(L, ++event_n);
+			lua_pushstring(L, "MouseWheel");
+			lua_pushnumber(L, e->MouseWheel.WheelX);
+			lua_pushnumber(L, e->MouseWheel.WheelY);
+			return 4;
+		case ImGuiInputEventType_MouseButton:
+			if (io.WantCaptureMouse) {
+				break;
+			}
+			lua_pushinteger(L, ++event_n);
+			lua_pushstring(L, "MouseButton");
+			lua_pushinteger(L, e->MouseButton.Button + 1);
+			lua_pushinteger(L, e->MouseButton.Down);
+			return 4;
+		case ImGuiInputEventType_Key:
+			if (io.WantCaptureKeyboard) {
+				break;
+			}
+			lua_pushinteger(L, ++event_n);
+			lua_pushstring(L, "Key");
+			lua_pushinteger(L, e->Key.Key - ImGuiKey_KeysData_OFFSET + 1);
+			lua_pushinteger(L, e->Key.Down);
+			return 4;
+		case ImGuiInputEventType_KeyMods:
+			if (io.WantCaptureKeyboard) {
+				break;
+			}
+			lua_pushinteger(L, ++event_n);
+			lua_pushstring(L, "KeyMods");
+			lua_pushinteger(L, e->KeyMods.Mods);
+			return 3;
+		case ImGuiInputEventType_Char:
+		case ImGuiInputEventType_Focus:
+		default:
+			break;
+		}
+	}
+	return 0;
+}
+
+static int lInputEvents(lua_State* L) {
+	lua_pushcfunction(L, lPairsInputEvents);
+	lua_pushnil(L);
+	lua_pushinteger(L, 0);
+	return 3;
+}
+
 static ImGuiCond
 get_cond(lua_State *L, int index) {
 	int t = lua_type(L, index);
@@ -3602,151 +3676,6 @@ lCreate(lua_State* L) {
 	return 1;
 }
 
-static void ioWantCaptureMouse(lua_State* L) {
-	lua_pushboolean(L, ImGui::GetIO().WantCaptureMouse);
-}
-
-static void ioWantCaptureKeyboard(lua_State* L) {
-	lua_pushboolean(L, ImGui::GetIO().WantCaptureKeyboard);
-}
-
-static void ioMouseWheel(lua_State* L) {
-	lua_pushnumber(L, ImGui::GetIO().MouseWheel);
-}
-
-static void ioMouseWheelH(lua_State* L) {
-	lua_pushnumber(L, ImGui::GetIO().MouseWheelH);
-}
-
-static void ioMouseClicked(lua_State* L) {
-	ImGuiIO& io = ImGui::GetIO();
-	lua_getfield(L, LUA_REGISTRYINDEX, "_ImGui_MouseClicked");
-	lua_Integer i = 0;
-	for (bool v : io.MouseClicked) {
-		lua_pushboolean(L, v);
-		lua_seti(L, -2, ++i);
-	}
-}
-
-static void ioMouseReleased(lua_State* L) {
-	ImGuiIO& io = ImGui::GetIO();
-	lua_getfield(L, LUA_REGISTRYINDEX, "_ImGui_MouseReleased");
-	lua_Integer i = 0;
-	for (bool v : io.MouseReleased) {
-		lua_pushboolean(L, v);
-		lua_seti(L, -2, ++i);
-	}
-}
-
-static void ioMousePos(lua_State* L) {
-	ImGuiIO& io = ImGui::GetIO();
-	lua_getfield(L, LUA_REGISTRYINDEX, "_ImGui_MousePos");
-	lua_pushnumber(L, io.MousePos.x);
-	lua_seti(L, -2, 1);
-	lua_pushnumber(L, io.MousePos.y);
-	lua_seti(L, -2, 2);
-}
-
-static void ioKeyMods(lua_State* L) {
-	lua_pushinteger(L, ImGui::GetIO().KeyMods);
-}
-
-static void ioKeysPressed(lua_State* L) {
-	lua_getfield(L, LUA_REGISTRYINDEX, "_ImGui_KeysPressed");
-	for (int i = 0; i < ImGuiKey_KeysData_SIZE; ++i) {
-		if (ImGui::IsKeyPressed(i + ImGuiKey_KeysData_OFFSET, false)) {
-			lua_pushboolean(L, 1);
-		}
-		else {
-			lua_pushnil(L);
-		}
-		lua_seti(L, -2, i + 1);
-	}
-}
-
-static void ioKeysReleased(lua_State* L) {
-	lua_getfield(L, LUA_REGISTRYINDEX, "_ImGui_KeysReleased");
-	for (int i = 0; i < ImGuiKey_KeysData_SIZE; ++i) {
-		if (ImGui::IsKeyReleased(i + ImGuiKey_KeysData_OFFSET)) {
-			lua_pushboolean(L, 1);
-		}
-		else {
-			lua_pushnil(L);
-		}
-		lua_seti(L, -2, i + 1);
-	}
-}
-
-std::map<std::string_view, std::function<void(lua_State*)>> ioProperty = {
-	{"WantCaptureMouse", ioWantCaptureMouse},
-	{"WantCaptureKeyboard", ioWantCaptureKeyboard},
-	{"MouseWheel", ioMouseWheel},
-	{"MouseWheelH", ioMouseWheelH},
-	{"MousePos", ioMousePos},
-	{"MouseClicked", ioMouseClicked},
-	{"MouseReleased", ioMouseReleased},
-	{"KeyMods", ioKeyMods},
-	{"KeysPressed", ioKeysPressed},
-	{"KeysReleased", ioKeysReleased},
-};
-
-static int
-ioGetter(lua_State* L) {
-	size_t keysz = 0;
-	const char* key = luaL_checklstring(L, 2, &keysz);
-	auto iter = ioProperty.find(std::string_view(key, keysz));
-	if (iter == ioProperty.end()) {
-		return luaL_error(L, "Invalid ImGui.IO.%s", key);
-	}
-	iter->second(L);
-	lua_pushvalue(L, -1);
-	lua_insert(L, 2);
-	lua_rawset(L, -4);
-	return 1;
-}
-
-static int
-ioCreate(lua_State* L) {
-	lua_newtable(L);
-	luaL_Reg mt[] = {
-		{ "__index", ioGetter },
-		{ NULL, NULL },
-	};
-	luaL_newlib(L, mt);
-	lua_setmetatable(L, -2);
-	lua_pushvalue(L, -1);
-	lua_setfield(L, LUA_REGISTRYINDEX, "_ImGui_IO");
-
-	lua_newtable(L);
-	lua_setfield(L, LUA_REGISTRYINDEX, "_ImGui_MouseClicked");
-	lua_newtable(L);
-	lua_setfield(L, LUA_REGISTRYINDEX, "_ImGui_MouseReleased");
-	lua_newtable(L);
-	lua_setfield(L, LUA_REGISTRYINDEX, "_ImGui_MousePos");
-	lua_createtable(L, ImGuiKey_KeysData_SIZE, 0);
-	lua_setfield(L, LUA_REGISTRYINDEX, "_ImGui_KeysPressed");
-	lua_createtable(L, ImGuiKey_KeysData_SIZE, 0);
-	lua_setfield(L, LUA_REGISTRYINDEX, "_ImGui_KeysReleased");
-	return 1;
-}
-
-static int
-ioClean(lua_State* L) {
-	if (lua_getfield(L, LUA_REGISTRYINDEX, "_ImGui_IO") != LUA_TTABLE) {
-		lua_pop(L, 1);
-		return 0;
-	}
-	lua_pushnil(L);
-	while (lua_next(L, -2)) {
-		lua_pop(L, 1);
-		lua_pushvalue(L, -1);
-		lua_pushnil(L);
-		lua_rawset(L, -4);
-	}
-	lua_pop(L, 1);
-	return 0;
-}
-
 static int
 lNewFrame(lua_State* L) {
 	if (!platformNewFrame()) {
@@ -3765,7 +3694,6 @@ lEndFrame(lua_State* L){
 
 static int
 lRender(lua_State* L) {
-	ioClean(L);
 	ImGui::Render();
 	rendererDrawData(ImGui::GetMainViewport());
 	ImGui::UpdatePlatformWindows();
@@ -3839,13 +3767,11 @@ luaopen_imgui(lua_State *L) {
 		{ "SetFontProgram", rendererSetFontProgram },
 		{ "SetImageProgram", rendererSetImageProgram },
 		{ "GetMainViewport", lGetMainViewport },
+		{ "InputEvents", lInputEvents },
 		{ "memory", lmemory },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
-
-	ioCreate(L);
-	lua_setfield(L, -2, "IO");
 
 	luaL_Reg dock[] = {
 		{ "Space", dSpace },

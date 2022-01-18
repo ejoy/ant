@@ -80,42 +80,56 @@ local function update_size()
 	size_dirty = false
 end
 
-local mouse = {}
-local keyboard = {}
+local Keyboard = {}
+local KeyMods = 0
+local Mouse = {}
+local MousePosX, MousePosY = 0, 0
+local DOWN <const> = {true}
 
 local function updateIO()
-	local io = imgui.IO
-	if not io.WantCaptureMouse then
-		if io.MouseWheel ~= 0 then
-			cb.mouse_wheel(io.MousePos[1], io.MousePos[2], io.MouseWheel)
-		end
-		for i = 1, 3 do
-			if io.MouseClicked[i] then
-				mouse[i] = true
-				cb.mouse(io.MousePos[1], io.MousePos[2], i, 1)
+	local MouseChanged = {}
+	local KeyboardChanged = {}
+	for _, what,x, y in imgui.InputEvents() do
+		if what == "MousePos" then
+			MousePosX, MousePosY = x, y
+		elseif what == "MouseWheel" then
+			cb.mouse_wheel(MousePosX, MousePosY, y)
+		elseif what == "MouseButton" then
+			local button, down = x, DOWN[y]
+			local cur = Mouse[button]
+			if cur ~= down then
+				Mouse[button] = down
+				if down then
+					cb.mouse(MousePosX, MousePosY, button, 1)
+				else
+					cb.mouse(MousePosX, MousePosY, button, 3)
+				end
+				MouseChanged[button] = true
 			end
-			if io.MouseReleased[i] then
-				mouse[i] = nil
-				cb.mouse(io.MousePos[1], io.MousePos[2], i, 3)
+		elseif what == "Key" then
+			local code, down = x, DOWN[y]
+			local cur = Keyboard[code]
+			if cur ~= down then
+				Keyboard[code] = down
+				if down then
+					cb.keyboard(code, 1, KeyMods)
+				else
+					cb.keyboard(code, 0, KeyMods)
+				end
+				KeyboardChanged[code] = true
 			end
-			if mouse[i] and not io.MouseClicked[i] then
-				cb.mouse(io.MousePos[1], io.MousePos[2], i, 2)
-			end
+		elseif what == "KeyMods" then
+			KeyMods = x
 		end
 	end
-	if not io.WantCaptureKeyboard then
-		for code in pairs(io.KeysPressed) do
-			keyboard[code] = true
-			cb.keyboard(code, 1, io.KeyMods)
+	for button in pairs(Mouse) do
+		if not MouseChanged[button] then
+			cb.mouse(MousePosX, MousePosY, button, 2)
 		end
-		for code in pairs(io.KeysReleased) do
-			keyboard[code] = nil
-			cb.keyboard(code, 0, io.KeyMods)
-		end
-		for code in pairs(keyboard) do
-			if not io.KeysPressed[code] then
-				cb.keyboard(code, 2, io.KeyMods)
-			end
+	end
+	for code in pairs(Keyboard) do
+		if not KeyboardChanged[code] then
+			cb.keyboard(code, 2, KeyMods)
 		end
 	end
 end
