@@ -26,7 +26,7 @@ policy "animation"
     .component "skeleton"
     .component "animation"
     .component "pose_result"
-    .component "_animation"
+    .component_opt "_animation"
 
 component "animation"
     .type "lua"
