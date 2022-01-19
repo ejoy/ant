@@ -182,6 +182,45 @@ local function find_node_animation(gltfscene, nodeidx, animationfiles)
     end
 end
 
+local function add_animation(gltfscene, exports, nodeidx, policy, data)
+    local anifile = find_node_animation(gltfscene, nodeidx, exports.animations)
+    if anifile then
+        local node = gltfscene.nodes[nodeidx+1]
+        if node.skin then
+            local f = exports.skin[node.skin+1]
+            if f == nil then
+                error(("mesh need skin data, but no skin file output:%d"):format(node.skin))
+            end
+            data.skeleton = serialize.path(exports.skeleton)
+
+            --skinning
+            data.meshskin = serialize.path(f)
+            policy[#policy+1] = "ant.animation|skinning"
+
+            data.material_setting = { skinning = "GPU"}
+        else
+            policy[#policy+1] = "ant.scene|slot"
+            local idx = assert(exports.node_joints[nodeidx], "node index is not one of the skeleton struct:" .. nodeidx)
+            data.slot = {index=idx}
+        end
+
+        data.animation = {}
+        for name, file in pairs(exports.animations) do
+            local n = fix_invalid_name(name)
+            data.animation[n] = serialize.path(file)
+        end
+
+        data.animation_birth = anifile
+        
+        data.pose_result = false
+        data._animation = {anim_clips = {}, keyframe_events = {}, joint_list = {}}
+        data.skinning = {}
+
+        policy[#policy+1] = "ant.animation|animation"
+        policy[#policy+1] = "ant.animation|animation_controller.birth"
+    end
+end
+
 local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports, tolocalpath)
     local node = gltfscene.nodes[nodeidx+1]
     local transform = get_transform(node)
@@ -233,37 +272,7 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports, tolo
             "ant.render|render",
         }
 
-        --if node.skin and exports.skeleton and next(exports.animations) then
-        local anifile = find_node_animation(gltfscene, nodeidx, exports.animations)
-        if anifile then
-            local f = exports.skin[node.skin+1]
-            if f == nil then
-                error(("mesh need skin data, but no skin file output:%d"):format(node.skin))
-            end
-            data.skeleton = serialize.path(exports.skeleton)
-
-            --skinning
-            data.meshskin = serialize.path(f)
-            policy[#policy+1] = "ant.animation|skinning"
-
-            local lst = {}
-            data.animation = {}
-            for name, file in pairs(exports.animations) do
-                local n = fix_invalid_name(name)
-                data.animation[n] = serialize.path(file)
-                lst[#lst+1] = n
-            end
-            table.sort(lst)
-            data.animation_birth = anifile
-            
-			data.pose_result = false
-			data._animation = {anim_clips = {}, keyframe_events = {}, joint_list = {}}
-			data.skinning = {}
-			data.material_setting = { skinning = "GPU"}
-
-            policy[#policy+1] = "ant.animation|animation"
-            policy[#policy+1] = "ant.animation|animation_controller.birth"
-        end
+        add_animation(gltfscene, exports, nodeidx, policy, data)
 
         create_entity {
             policy = policy,
@@ -273,19 +282,22 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports, tolo
     end
 end
 
-local function create_node_entity(gltfscene, nodeidx, parent)
+local function create_node_entity(gltfscene, nodeidx, parent, exports)
     local node = gltfscene.nodes[nodeidx+1]
     local transform = get_transform(node)
     local nname = node.name and fix_invalid_name(node.name) or ("node" .. nodeidx)
+    local policy = {
+        "ant.general|name",
+        "ant.scene|scene_object"
+    }
+    local data = {
+        name = nname,
+        scene = {srt=transform or {}},
+    }
+    add_animation(gltfscene, nodeidx, exports, policy, data)
     return create_entity {
-        policy = {
-            "ant.general|name",
-            "ant.scene|scene_object"
-        },
-        data = {
-            name = nname,
-            scene = {srt=transform or {}},
-        },
+        policy = policy,
+        data = data,
         parent = parent,
     }
 end
@@ -333,7 +345,7 @@ return function(output, glbdata, exports, tolocalpath)
             if p then
                 parent = p
             else
-                parent = create_node_entity(gltfscene, nodeidx, parent)
+                parent = create_node_entity(gltfscene, nodeidx, parent, exports)
                 C[nodeidx] = parent
             end
         end

@@ -271,20 +271,20 @@ local function find_skin_root_idx(skin, nodetree)
 	return root
 end
 
-local cache_tree = {}
+local joint_trees = {}
 
-local function redirect_skin_joints(gltfscene, skin, node_index, scenetree)
+local function redirect_skin_joints(gltfscene, skin, joint_index, scenetree)
 	local skeleton_nodeidx = find_skin_root_idx(skin, scenetree)
 
 	if skeleton_nodeidx then
-		local mapper = cache_tree[skeleton_nodeidx]
+		local mapper = joint_trees[skeleton_nodeidx]
 		if mapper == nil then
 			mapper = {}
 			-- follow with ozz-animation:SkeletonBuilder, IterateJointsDF
 			local function iterate_hierarchy_DF(nodes)
 				for _, nidx in ipairs(nodes) do
-					mapper[nidx] = node_index
-					node_index = node_index + 1
+					mapper[nidx] = joint_index
+					joint_index = joint_index + 1
 					local node = gltfscene.nodes[nidx+1]
 					local c = node.children
 					if c then
@@ -294,7 +294,7 @@ local function redirect_skin_joints(gltfscene, skin, node_index, scenetree)
 			end
 			iterate_hierarchy_DF{skeleton_nodeidx}
 
-			cache_tree[skeleton_nodeidx] = mapper
+			joint_trees[skeleton_nodeidx] = mapper
 		end
 
 		local joints = skin.joints
@@ -302,9 +302,9 @@ local function redirect_skin_joints(gltfscene, skin, node_index, scenetree)
 			local joint_nodeidx = joints[i]
 			joints[i] = assert(mapper[joint_nodeidx])
 		end
-
-		return node_index
 	end
+
+	return joint_index
 end
 
 local function export_skinbin(gltfscene, bindata, exports)
@@ -313,7 +313,7 @@ local function export_skinbin(gltfscene, bindata, exports)
 	if skins == nil then
 		return
 	end
-	local node_index = 0
+	local joint_index = 0
 	local scenetree = {}
 	for nidx, node in ipairs(gltfscene.nodes) do
 		if node.children then
@@ -324,12 +324,21 @@ local function export_skinbin(gltfscene, bindata, exports)
 	end
 
 	for skinidx, skin in ipairs(gltfscene.skins) do
-		node_index = redirect_skin_joints(gltfscene, skin, node_index, scenetree) or 0
+		joint_index = redirect_skin_joints(gltfscene, skin, joint_index, scenetree)
 		local skinname = get_obj_name(skin, skinidx, "skin")
 		local resname = "./meshes/"..skinname .. ".skinbin"
 		utility.save_bin_file(resname, fetch_skininfo(gltfscene, skin, bindata))
 		exports.skin[skinidx] = resname
 	end
+
+	local nodejoints = {}
+	for root_nodeidx, t in pairs(joint_trees) do
+		assert(t[root_nodeidx])
+		for nodeidx, jointidx in pairs(t) do
+			nodejoints[nodeidx] = jointidx
+		end
+	end
+	exports.node_joints = nodejoints
 end
 
 -- local function check_front_face(vb, ib)
@@ -429,6 +438,7 @@ local function export_meshbin(gltfscene, bindata, exports)
 end
 
 return function (_, glbdata, exports)
+	joint_trees = {}
 	export_meshbin(glbdata.info, glbdata.bin, exports)
 	export_skinbin(glbdata.info, glbdata.bin, exports)
 	return exports
