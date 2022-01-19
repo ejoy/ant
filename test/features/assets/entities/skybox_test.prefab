@@ -9,7 +9,7 @@ data:
     scene:
         srt: {}
     ibl:
-        intensity: 200
+        intensity: 1200
         irradiance:
             size: 128
         prefilter:

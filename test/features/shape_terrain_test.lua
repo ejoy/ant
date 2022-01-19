@@ -344,7 +344,7 @@ function shape_terrain_test_sys:init()
     --indicator test
 
     indicator = create_indicator()
-    canvas = create_canvas()
+    --canvas = create_canvas()
 end
 
 local itr = ecs.import.interface "ant.terrain|iterrain_road"

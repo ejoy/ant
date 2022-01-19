@@ -314,17 +314,8 @@ local function export_skinbin(gltfscene, bindata, exports)
 		return
 	end
 	local joint_index = 0
-	local scenetree = {}
-	for nidx, node in ipairs(gltfscene.nodes) do
-		if node.children then
-			for _, cnidx in ipairs(node.children) do
-				scenetree[cnidx] = nidx-1
-			end
-		end
-	end
-
 	for skinidx, skin in ipairs(gltfscene.skins) do
-		joint_index = redirect_skin_joints(gltfscene, skin, joint_index, scenetree)
+		joint_index = redirect_skin_joints(gltfscene, skin, joint_index, exports.scenetree)
 		local skinname = get_obj_name(skin, skinidx, "skin")
 		local resname = "./meshes/"..skinname .. ".skinbin"
 		utility.save_bin_file(resname, fetch_skininfo(gltfscene, skin, bindata))

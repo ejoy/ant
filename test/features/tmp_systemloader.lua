@@ -89,7 +89,10 @@ function init_loader_sys:init()
     --ientity.create_procedural_sky()
     ecs.create_instance "/pkg/ant.test.features/assets/entities/skybox_test.prefab"
     ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
-    local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/goods_station.glb|mesh.prefab"
+    local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/test1.glb|mesh.prefab"
+    function p.on_ready()
+        iom.set_position(p.root, {3, 0.0, 0.0})
+    end
     -- p.on_ready = function (e)
     --     for _, ee in ipairs(e.tag['*']) do
     --         ies.set_state(ee, "main_view", false)

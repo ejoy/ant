@@ -227,7 +227,7 @@ local function add_animation(gltfscene, exports, nodeidx, policy, data)
     end
 end
 
-local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports, tolocalpath)
+local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
     local node = gltfscene.nodes[nodeidx+1]
     local transform = get_transform(node)
     local meshidx = node.mesh
@@ -308,14 +308,15 @@ local function create_node_entity(gltfscene, nodeidx, parent, exports)
     }
 end
 
-local function find_mesh_nodes(gltfscene, scenenodes, meshnodes, parent_nodeidx)
+local function find_mesh_nodes(gltfscene, scenenodes, meshnodes)
     for _, nodeidx in ipairs(scenenodes) do
         local node = gltfscene.nodes[nodeidx+1]
         if node.children then
-            find_mesh_nodes(gltfscene, node.children, meshnodes, nodeidx)
+            find_mesh_nodes(gltfscene, node.children, meshnodes)
         end
+
         if node.mesh then
-            meshnodes[nodeidx] = {nodeidx, parent_nodeidx}
+            meshnodes[#meshnodes+1] = nodeidx
         end
     end
 end
@@ -343,19 +344,30 @@ return function(output, glbdata, exports, tolocalpath)
     find_mesh_nodes(gltfscene, scene.nodes, meshnodes)
 
     local C = {}
-    for mesh_nodeidx, meshlist in pairs(meshnodes) do
-        local parent = rootid
-        for i=#meshlist, 2, -1 do
-            local nodeidx = meshlist[i]
-            local p = C[nodeidx]
-            if p then
-                parent = p
-            else
-                parent = create_node_entity(gltfscene, nodeidx, parent, exports)
-                C[nodeidx] = parent
+    local scenetree = exports.scenetree
+    local function check_create_node_entity(nodeidx)
+        local p_nodeidx = scenetree[nodeidx]
+        local parent
+        if p_nodeidx == nil then
+            parent = rootid
+        else
+            parent = C[p_nodeidx]
+            if parent == nil then
+                parent = check_create_node_entity(p_nodeidx)
             end
         end
-        create_mesh_node_entity(gltfscene, mesh_nodeidx, parent, exports, tolocalpath)
+
+        local node = gltfscene.nodes[nodeidx+1]
+        local e = node.mesh ~= nil
+                and create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
+                or create_node_entity(gltfscene, nodeidx, parent, exports)
+
+        C[nodeidx] = e
+        return e
+    end
+
+    for _, nodeidx in ipairs(meshnodes) do
+        check_create_node_entity(nodeidx)
     end
     utility.save_txt_file("./mesh.prefab", prefab)
 end

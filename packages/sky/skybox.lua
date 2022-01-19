@@ -42,7 +42,7 @@ function skybox_sys:entity_ready()
 		local s = ro.fx.setting
 		local h = t.value.texture.handle
 		iibl.filter_all{
-			source 		= {handle = h, cubemap=true},
+			source 		= {handle = h, cubemap=s.CUBEMAP_SKY~=nil},
 			irradiance 	= se_ibl.irradiance,
 			prefilter 	= se_ibl.prefilter,
 			LUT			= se_ibl.LUT,
