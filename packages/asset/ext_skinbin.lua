@@ -4,6 +4,9 @@ local lfs       = require "filesystem.local"
 local cr        = import_package "ant.compile_resource"
 local serialize = import_package "ant.serialize"
 
+local mathpkg   = import_package "ant.math"
+local mc        = mathpkg.constant
+
 local animodule = require "hierarchy".animation
 
 local function read_file(filename)
@@ -13,7 +16,7 @@ local function read_file(filename)
     return c
 end
 
-local r2l_mat<const> = math3d.ref(math3d.matrix{s={1.0, 1.0, -1.0}})
+local r2l_mat<const> = mc.R2L_MAT
 
 return {
     loader = function (filename)

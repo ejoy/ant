@@ -113,10 +113,10 @@ function m:create_slot()
         data = {
             reference = true,
             scene = {srt = {}},
-            slot = true,
-            follow_joint = "None",
-            follow_flag = 1,
-            follow_offset = {s = {1,1,1}, r = {0,0,0,1}, t = {0,0,0}},
+            slot = {
+                joint_name = "None",
+                follow_flag = 1,
+            },
             name = auto_name,
             tag = {auto_name},
         }

@@ -70,4 +70,6 @@ constant.IDENTITY_MAT = math3d.ref(math3d.matrix(constant.mat_identity))
 constant.T_IDENTITY_QUAT = constant.quat_identity
 constant.IDENTITY_QUAT= math3d.ref(math3d.quaternion(constant.quat_identity))
 
+constant.R2L_MAT = math3d.ref(math3d.matrix{s={1.0, 1.0, -1.0}})
+
 return constant

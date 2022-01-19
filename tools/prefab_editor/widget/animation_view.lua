@@ -790,14 +790,16 @@ function m.save_clip(path)
     -- copy_clips.slot_list = {}
     -- for k, v in pairs(hierarchy.slot_list) do
     --     if type(v) == "table" then
-    --         local ts = math3d.totable(iom.get_scale(v))
-    --         local tr = math3d.totable(iom.get_rotation(v))
-    --         local tp = math3d.totable(iom.get_position(v))
-    --         w:sync("follow_joint?in", v)
-    --         if v.follow_joint and v.follow_joint ~= "None" then
+    --         local ts, tr, tp
+    --         w:sync("slot?in", v)
+    --         if v.slot then
     --             ts = {1,1,1}
     --             tr = {0,0,0,1}
     --             tp = {0,0,0}
+    --         else
+    --              ts = math3d.tovalue(iom.get_scale(v))
+    --              tr = math3d.tovalue(iom.get_rotation(v))
+    --              tp = math3d.tovalue(iom.get_position(v))
     --         end
     --         copy_clips.slot_list[#copy_clips.slot_list + 1] = {tag = k, name = v.name, scale = {ts[1], ts[2], ts[3]}, rotate = {tr[1], tr[2], tr[3], tr[4]}, position = {tp[1], tp[2], tp[3]}}
     --     end

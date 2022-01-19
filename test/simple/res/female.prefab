@@ -55,10 +55,10 @@ policy:
 action:
   mount: @3
 data:
-  follow_flag: 1
-  follow_joint: "mixamorig:LeftHand"
+  slot:
+    follow_flag: 1
+    joint_name: "mixamorig:LeftHand"
   name: slot1
-  slot: true
   scene:
     srt: {}
 policy:
@@ -86,10 +86,10 @@ policy:
 action:
   mount: @3
 data:
-  follow_flag: 1
-  follow_joint: "mixamorig:RightHand"
-  name: slot2
   slot: true
+    follow_flag: 1
+    joint_name: "mixamorig:RightHand"
+  name: slot2
   scene_entity: true
   scene:
     srt:

@@ -5,11 +5,14 @@ local w = world.w
 local animodule = require "hierarchy".animation
 local math3d 	= require "math3d"
 
+local mathpkg	= import_package "ant.math"
+local mc		= mathpkg.constant
+
 -- skinning system
 local skinning_sys = ecs.system "skinning_system"
 
 local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
-local r2l_mat<const> = math3d.ref(math3d.matrix{s={1.0, 1.0, -1.0}})
+local r2l_mat<const> = mc.R2L_MAT
 function skinning_sys:skin_mesh()
 	for e in w:select "pose_result:in skinning:in" do
 		local skinning = e.skinning

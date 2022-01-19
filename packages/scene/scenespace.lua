@@ -38,29 +38,23 @@ local function new_sceneid()
 end
 
 local function update_worldmat_noparent(node)
-	if node.srt == nil then
-		node._worldmat = nil
-	else
-		node._worldmat = math3d.matrix(node.srt)
+	local srt = node.srt
+	local wm = srt and math3d.matrix(srt) or nil
+
+	local slotmat = node.slot_matrix
+	if slotmat then
+		wm = wm and math3d.mul(slotmat, wm) or slotmat
 	end
+	node._worldmat = wm
 end
 
 local function update_worldmat(node, parent)
 	if parent.changed > node.changed then
 		node.changed = parent.changed
 	end
+	update_worldmat_noparent(node)
 	if parent._worldmat then
-		if node.srt == nil then
-			node._worldmat = math3d.matrix(parent._worldmat)
-		else
-			node._worldmat = math3d.mul(parent._worldmat, math3d.matrix(node.srt))
-		end
-	else
-		if node.srt == nil then
-			node._worldmat = nil
-		else
-			node._worldmat = math3d.matrix(node.srt)
-		end
+		node._worldmat = node._worldmat and math3d.mul(parent._worldmat, node._worldmat) or parent._worldmat
 	end
 end
 

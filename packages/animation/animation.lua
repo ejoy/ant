@@ -1,17 +1,13 @@
-local ecs = ...
+local ecs 	= ...
 local world = ecs.world
-local w = world.w
+local w 	= world.w
 
 local assetmgr 		= import_package "ant.asset"
 local iom 			= ecs.import.interface "ant.objcontroller|iobj_motion"
 local animodule 	= require "hierarchy".animation
 
-
-local ani_sys = ecs.system "animation_system"
-
-local timer = ecs.import.interface "ant.timer|itimer"
-
-local fix_root <const> = false
+local ani_sys 		= ecs.system "animation_system"
+local timer 		= ecs.import.interface "ant.timer|itimer"
 
 local function get_current_anim_time(task)
 	return task.play_state.ratio * task.animation._handle:duration()
@@ -151,7 +147,7 @@ function ani_sys:entity_ready()
 		elseif what == "play_clip" then
 			iani.play_clip(e, p0, p1, p2)
 		elseif what == "step" then
-			world.w:sync("_animation:in", e)
+			w:sync("_animation:in", e)
 			iani.step(e._animation._current, p0, p1)
 		elseif what == "set_time" then
 			iani.set_time(e, p0)

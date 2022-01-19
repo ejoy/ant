@@ -58,21 +58,13 @@ function m.update_template_tranform(e)
     
     if not template or not template.template then return end
 
-    w:sync("follow_joint?in follow_offset?in", e)
-    if e.follow_joint and e.follow_joint ~= "None" then
-        local srt = template.template.data.scene.srt
-        template.template.data.follow_offset = srt
-        e.follow_offset = srt
-        w:sync("follow_offset:out", e)
-    else
-        local s, r, t = iom.get_scale(e), iom.get_rotation(e), iom.get_position(e)
-        local srt = {
-            r = {math3d.index(r, 1, 2, 3, 4)},
-            s = {math3d.index(s, 1, 2, 3)},
-            t = {math3d.index(t, 1, 2, 3)},
-        }
-        template.template.data.scene.srt = srt 
-    end
+    local s, r, t = iom.get_scale(e), iom.get_rotation(e), iom.get_position(e)
+    local srt = {
+        r = {math3d.index(r, 1, 2, 3, 4)},
+        s = {math3d.index(s, 1, 2, 3)},
+        t = {math3d.index(t, 1, 2, 3)},
+    }
+    template.template.data.scene.srt = srt 
 
     w:sync("collider?in", e)
     if e.collider then

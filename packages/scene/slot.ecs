@@ -5,17 +5,6 @@ system "slot_system"
 component "slot"
     .type "lua"
 
-component "follow_joint"
-    .type "lua"
-
-component "follow_flag"
-    .type "lua"
-    
-component "follow_offset"
-    .type "lua"
-
 policy "slot"
+    .require_system "ant.scene|slot_system"
     .component "slot"
-    .component "follow_joint"
-    .component "follow_flag"
-    .component "follow_offset"
