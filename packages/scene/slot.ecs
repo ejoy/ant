@@ -1,5 +1,6 @@
 system "slot_system"
     .implement "slot.lua"
+    .method "entity_init"
     .method "update_slot"
 
 component "slot"

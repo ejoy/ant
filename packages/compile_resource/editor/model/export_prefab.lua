@@ -201,7 +201,13 @@ local function add_animation(gltfscene, exports, nodeidx, policy, data)
         else
             policy[#policy+1] = "ant.scene|slot"
             local idx = assert(exports.node_joints[nodeidx], "node index is not one of the skeleton struct:" .. nodeidx)
-            data.slot = {index=idx}
+            local function get_joint_name(jidx)
+                local skemodule = require "hierarchy".skeleton
+                local handle = skemodule.new()
+                handle:load(exports.skeleton)
+                return handle:joint_name(jidx)
+            end
+            data.slot = {follow_flag=3, joint_name=get_joint_name(idx)}
         end
 
         data.animation = {}
