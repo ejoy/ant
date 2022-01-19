@@ -23,6 +23,7 @@ local icamera   = ecs.import.interface "ant.camera|icamera"
 
 local resource_browser  = ecs.require "widget.resource_browser"
 local anim_view         = ecs.require "widget.animation_view"
+local skeleton_view     = ecs.require "widget.skeleton_view"
 local material_view     = ecs.require "widget.material_view"
 local toolbar           = ecs.require "widget.toolbar"
 local scene_view        = ecs.require "widget.scene_view"
@@ -309,6 +310,7 @@ function m:ui_update()
     inspector.show()
     resource_browser.show()
     anim_view.show()
+    skeleton_view.show()
     console_widget.show()
     log_widget.show()
     choose_project()
@@ -397,6 +399,7 @@ local function on_target(old, new)
     end
     world:pub {"UpdateAABB", new}
     anim_view.bind(new)
+    skeleton_view.bind(new)
 end
 
 local function on_update(e)
@@ -589,15 +592,6 @@ function m:handle_event()
 end
 
 function m:start_frame()
-    local viewport = imgui.GetMainViewport()
-    local io = imgui.IO
-    local current_mx = io.MousePos[1] - viewport.MainPos[1]
-    local current_my = io.MousePos[2] - viewport.MainPos[2]
-    if global_data.mouse_pos_x ~= current_mx or global_data.mouse_pos_y ~= current_my then
-        global_data.mouse_pos_x = current_mx
-        global_data.mouse_pos_y = current_my
-        global_data.mouse_move = true
-    end
 end
 
 function m:end_frame()
@@ -611,7 +605,6 @@ function m:end_frame()
         irq.set_view_rect("tonemapping_queue", viewport)
         world:pub{"view_resize", main_vp.w, main_vp.h}
     end
-    global_data.mouse_move = false
 end
 
 function m:data_changed()

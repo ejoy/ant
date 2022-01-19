@@ -590,7 +590,6 @@ function m:reset_prefab()
             w:remove(e)
         end
     end
-    if self.root then w:remove(self.root) end
     light_gizmo.clear()
     hierarchy:clear()
     anim_view.clear()

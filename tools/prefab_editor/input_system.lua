@@ -28,6 +28,8 @@ function m:input_filter()
                 last_vx, last_vy = vx, vy
             elseif state == "UP" then
                 world:pub {"mouseup", what, vx, vy}
+            else
+                world:pub {"mousemove", what, vx, vy}
             end
         end
     end

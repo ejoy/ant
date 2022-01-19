@@ -92,6 +92,7 @@ local function updateIO()
 	for _, what,x, y in imgui.InputEvents() do
 		if what == "MousePos" then
 			MousePosX, MousePosY = x, y
+			cb.mouse(MousePosX, MousePosY)
 		elseif what == "MouseWheel" then
 			cb.mouse_wheel(MousePosX, MousePosY, y)
 		elseif what == "MouseButton" then

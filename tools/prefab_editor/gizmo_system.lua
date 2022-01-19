@@ -637,6 +637,7 @@ end
 local camera_zoom = world:sub {"camera", "zoom"}
 local mouse_drag = world:sub {"mousedrag"}
 local mouse_down = world:sub {"mousedown"}
+local mouse_move = world:sub {"mousemove"}
 local mouse_up = world:sub {"mouseup"}
 local gizmo_target_event = world:sub {"Gizmo"}
 local gizmo_mode_event = world:sub {"GizmoMode"}
@@ -975,18 +976,27 @@ end
 
 local keypress_mb = world:sub{"keyboard"}
 local prefab_mgr  = ecs.require "prefab_manager"
+local last_mouse_pos_x = 0
+local last_mouse_pos_y = 0
 local function on_mouse_move()
-	if not global_data.mouse_move or gizmo_seleted or gizmo.mode == gizmo_const.SELECT then return end
-	local mx, my = global_data.mouse_pos_x, global_data.mouse_pos_y
-	if select_light_gizmo(mx, my) == 0 then
-		if gizmo.mode == gizmo_const.MOVE or gizmo.mode == gizmo_const.SCALE then
-			local axis = select_axis(mx, my)
-			gizmo:highlight_axis_or_plane(axis)
-		elseif gizmo.mode == gizmo_const.ROTATE then
-			gizmo:hide_rotate_fan()
-			select_rotate_axis(mx, my)
+	if gizmo_seleted or gizmo.mode == gizmo_const.SELECT then return end
+	for _, what, x, y in mouse_move:unpack() do
+		if last_mouse_pos_x ~= x or last_mouse_pos_y ~= y then
+			last_mouse_pos_x = x
+			last_mouse_pos_y = y
+			local mx, my = x, y
+			if select_light_gizmo(mx, my) == 0 then
+				if gizmo.mode == gizmo_const.MOVE or gizmo.mode == gizmo_const.SCALE then
+					local axis = select_axis(mx, my)
+					gizmo:highlight_axis_or_plane(axis)
+				elseif gizmo.mode == gizmo_const.ROTATE then
+					gizmo:hide_rotate_fan()
+					select_rotate_axis(mx, my)
+				end
+			end
 		end
 	end
+	
 end
 
 local gizmo_event = world:sub{"Gizmo"}
@@ -1108,7 +1118,7 @@ function gizmo_sys:handle_event()
 			end
 		else
 			if not gizmo_seleted and not camera_mgr.select_frustum then
-				local vx, vy = igui.cvt2scenept(global_data.mouse_pos_x, global_data.mouse_pos_y)
+				local vx, vy = igui.cvt2scenept(last_mouse_pos_x, last_mouse_pos_y)
 				if vx and vy then
 					gizmo:set_target(nil)
 				end
