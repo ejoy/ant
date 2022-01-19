@@ -1,6 +1,6 @@
-local luaecs = require "ecs"
+local luaecs = import_package "ant.luaecs"
 local policy = require "policy"
-local ecs = import_package "ant.ecs"
+local ecs = require "world"
 local cr = import_package "ant.compile_resource"
 local serialize = import_package "ant.serialize"
 
@@ -145,7 +145,7 @@ local function create_template(w, package, detach, filename)
         if not w.__EDITOR__ and v.editor then
             if v.prefab then
                 v = {
-                    prefab = "/pkg/ant.luaecs/dummy.prefab"
+                    prefab = "/pkg/ant.ecs/dummy.prefab"
                 }
             else
                 --TODO
@@ -397,11 +397,11 @@ function m.new_world(config)
                 "_init", "_update", "exit"
             }
             cfg.import = cfg.import or {}
-            table.insert(cfg.import, "@ant.luaecs")
+            table.insert(cfg.import, "@ant.ecs")
             cfg.system = cfg.system or {}
-            table.insert(cfg.system, "ant.luaecs|entity_system")
-            table.insert(cfg.system, "ant.luaecs|prefab_system")
-            table.insert(cfg.system, "ant.luaecs|debug_system")
+            table.insert(cfg.system, "ant.ecs|entity_system")
+            table.insert(cfg.system, "ant.ecs|prefab_system")
+            table.insert(cfg.system, "ant.ecs|debug_system")
         end
 	end
     config.w = luaecs.world()

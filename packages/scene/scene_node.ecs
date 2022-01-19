@@ -1,4 +1,4 @@
-import "@ant.luaecs"
+import "@ant.ecs"
 
 --SceneObject
 policy "scene_object"

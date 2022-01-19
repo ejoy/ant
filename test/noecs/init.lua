@@ -1,7 +1,7 @@
 local assetmgr = import_package "ant.asset"
 
 local function create_world()
-    local ecs = import_package "ant.luaecs"
+    local ecs = import_package "ant.ecs"
     local cr = import_package "ant.compile_resource"
     local world = ecs.new_world {
         width  = 0,

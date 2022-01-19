@@ -2,7 +2,7 @@ local initargs = ...
 
 local ltask     = require "ltask"
 local inputmgr  = import_package "ant.inputmgr"
-local ecs       = import_package "ant.luaecs"
+local ecs       = import_package "ant.ecs"
 local rhwi      = import_package "ant.hwi"
 local cr        = import_package "ant.compile_resource"
 local setting	= import_package "ant.settings".setting

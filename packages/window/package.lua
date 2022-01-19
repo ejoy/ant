@@ -5,7 +5,7 @@ return {
         "ant.compile_resource",
         "ant.hwi",
         "ant.inputmgr",
-        "ant.luaecs",
+        "ant.ecs",
         "ant.render",
         "ant.settings",
     }

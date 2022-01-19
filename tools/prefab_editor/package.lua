@@ -19,7 +19,7 @@ return {
         "ant.effekseer",
         "ant.audio",
         "ant.inputmgr",
-        "ant.luaecs",
+        "ant.ecs",
         "ant.subprocess",
         "ant.settings",
         "ant.objcontroller",

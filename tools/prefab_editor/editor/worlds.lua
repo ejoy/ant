@@ -1,4 +1,4 @@
-local ecs      = import_package "ant.luaecs"
+local ecs      = import_package "ant.ecs"
 local inputmgr = import_package "ant.inputmgr"
 local wu       = require "widget.utils"
 local imgui    = require "imgui"
