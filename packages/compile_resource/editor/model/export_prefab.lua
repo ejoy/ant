@@ -20,7 +20,6 @@ local prefab = {}
 
 local function create_entity(t)
     if t.parent then
-        t.policy[#t.policy+1] = "ant.scene|scene_object"
         t.mount = t.parent
         t.data.scene = t.data.scene or {}
     end
@@ -163,29 +162,39 @@ local function save_material(mi)
     end
 end
 
-local function find_node_animation(gltfscene, nodeidx, animationfiles)
-    if #animationfiles == 0 then
+local function find_node_animation(gltfscene, nodeidx, scenetree, animationfiles)
+    if next(animationfiles) == nil then
         return
     end
 
     for _, ani in ipairs(gltfscene.animations) do
         for _, channel in ipairs(ani.channels) do
-            if channel.target == nodeidx then
-                for _, anifile in ipairs(animationfiles) do
-                    if fs.path(anifile):stem():string() == ani.name then
-                        return anifile
-                    end
+            local idx = nodeidx
+            local targetidx = channel.target.node
+            local found
+            while idx do
+                if idx == targetidx then
+                    found = true
+                    break
                 end
-                error(("node:%d, has animation, but not found in exports.animations: %s"):format(nodeidx, ani.name))
+                idx = scenetree[idx]
+            end
+            if found then
+                local anifile = animationfiles[ani.name]
+                if anifile == nil then
+                    error(("node:%d, has animation, but not found in exports.animations: %s"):format(nodeidx, ani.name))
+                end
+                return anifile
             end
         end
     end
 end
 
 local function add_animation(gltfscene, exports, nodeidx, policy, data)
-    local anifile = find_node_animation(gltfscene, nodeidx, exports.animations)
-    if anifile then
-        local node = gltfscene.nodes[nodeidx+1]
+    --TODO: we need to check skin.joints is reference to skeleton node, to detect this mesh entity have animation or not
+    --      we just give it animation info where it have skin info right now
+    local node = gltfscene.nodes[nodeidx+1]
+    if node.skin and next(exports.animations) and exports.skeleton then
         if node.skin then
             local f = exports.skin[node.skin+1]
             if f == nil then
@@ -198,25 +207,27 @@ local function add_animation(gltfscene, exports, nodeidx, policy, data)
             policy[#policy+1] = "ant.animation|skinning"
 
             data.material_setting = { skinning = "GPU"}
-        else
-            policy[#policy+1] = "ant.scene|slot"
-            local idx = assert(exports.node_joints[nodeidx], "node index is not one of the skeleton struct:" .. nodeidx)
-            local function get_joint_name(jidx)
-                local skemodule = require "hierarchy".skeleton
-                local handle = skemodule.new()
-                handle:load(exports.skeleton)
-                return handle:joint_name(jidx)
-            end
-            data.slot = {follow_flag=3, joint_name=get_joint_name(idx)}
+        -- else
+        --     policy[#policy+1] = "ant.scene|slot"
+        --     local idx = assert(exports.node_joints[nodeidx], "node index is not one of the skeleton struct:" .. nodeidx)
+        --     local function get_joint_name(jidx)
+        --         local skemodule = require "hierarchy".skeleton
+        --         local handle = skemodule.new()
+        --         handle:load(exports.skeleton)
+        --         return handle:joint_name(jidx)
+        --     end
+        --     data.slot = {follow_flag=3, joint_name=get_joint_name(idx)}
         end
 
         data.animation = {}
+        local anilst = {}
         for name, file in pairs(exports.animations) do
             local n = fix_invalid_name(name)
+            anilst[#anilst+1] = n
             data.animation[n] = serialize.path(file)
         end
-
-        data.animation_birth = anifile
+        table.sort(anilst)
+        data.animation_birth = anilst[1]
         
         data.pose_result = false
         data._animation = {anim_clips = {}, keyframe_events = {}, joint_list = {}}
@@ -233,6 +244,7 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
     local meshidx = node.mesh
     local mesh = gltfscene.meshes[meshidx+1]
 
+    local entity
     for primidx, prim in ipairs(mesh.primitives) do
         local meshname = mesh.name and fix_invalid_name(mesh.name) or ("mesh" .. meshidx)
         local materialfile
@@ -280,12 +292,14 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
 
         add_animation(gltfscene, exports, nodeidx, policy, data)
 
-        create_entity {
+        --TODO: need a mesh node to reference all mesh.primitives, we assume primitives only have one right now
+        entity = create_entity {
             policy = policy,
             data = data,
             parent = parent,
         }
     end
+    return entity
 end
 
 local function create_node_entity(gltfscene, nodeidx, parent, exports)
@@ -298,9 +312,9 @@ local function create_node_entity(gltfscene, nodeidx, parent, exports)
     }
     local data = {
         name = nname,
-        scene = {srt=transform or {}},
+        scene = {srt=transform},
     }
-    add_animation(gltfscene, exports, nodeidx, policy, data)
+    --add_animation(gltfscene, exports, nodeidx, policy, data)
     return create_entity {
         policy = policy,
         data = data,
@@ -358,9 +372,12 @@ return function(output, glbdata, exports, tolocalpath)
         end
 
         local node = gltfscene.nodes[nodeidx+1]
-        local e = node.mesh ~= nil
-                and create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
-                or create_node_entity(gltfscene, nodeidx, parent, exports)
+        local e
+        if node.mesh then
+            e = create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
+        else
+            e = create_node_entity(gltfscene, nodeidx, parent, exports)
+        end
 
         C[nodeidx] = e
         return e
