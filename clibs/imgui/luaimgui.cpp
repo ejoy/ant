@@ -1952,20 +1952,20 @@ wSimpleSequencer(lua_State* L) {
 		lua_pop(L, 1);
 	};
 
-	auto update_clip_range = [L, init_clip_ranges]() {
-		lua_pushnil(L);
-		while (lua_next(L, 1) != 0) {
-			const char* anim_name = lua_tostring(L, -2);
-			auto it = ImSimpleSequencer::bone_anim.anim_layers.find_if(anim_name);
-			if (it != ImSimpleSequencer::anim_info.end()) {
-				auto& item = it->second;
-				if (lua_type(L, -1) == LUA_TTABLE) {
-					init_clip_ranges(item);
-				}
-			}
-			lua_pop(L, 1);
-		}
-	};
+// 	auto update_clip_range = [L, init_clip_ranges]() {
+// 		lua_pushnil(L);
+// 		while (lua_next(L, 1) != 0) {
+// 			const char* anim_name = lua_tostring(L, -2);
+// 			auto it = ImSimpleSequencer::bone_anim.anim_layers.find_if(anim_name);
+// 			if (it != ImSimpleSequencer::anim_info.end()) {
+// 				auto& item = it->second;
+// 				if (lua_type(L, -1) == LUA_TTABLE) {
+// 					init_clip_ranges(item);
+// 				}
+// 			}
+// 			lua_pop(L, 1);
+// 		}
+// 	};
 	static int selected_frame = -1;
 	static int current_frame = 0;
 	static std::string current_anim_name;
@@ -1991,9 +1991,9 @@ wSimpleSequencer(lua_State* L) {
 					lua_pushinteger(L, index + 1);
 					lua_gettable(L, -2);
 					if (lua_type(L, -1) == LUA_TTABLE) {
-						if (dirty_layer != -1 && )
-						{
-						}
+// 						if (dirty_layer != -1 && )
+// 						{
+// 						}
 						std::string_view nv;
 						int start = -1;
 						int end = -1;
