@@ -300,7 +300,7 @@ local function create_node_entity(gltfscene, nodeidx, parent, exports)
         name = nname,
         scene = {srt=transform or {}},
     }
-    add_animation(gltfscene, nodeidx, exports, policy, data)
+    add_animation(gltfscene, exports, nodeidx, policy, data)
     return create_entity {
         policy = policy,
         data = data,
