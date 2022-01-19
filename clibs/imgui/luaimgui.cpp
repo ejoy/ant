@@ -19,7 +19,7 @@ extern "C" {
 #include "imgui_platform.h"
 #include "imgui_window.h"
 #include "widgets/ImSequencer.h"
-
+#include "widgets/ImSimpleSequencer.h"
 namespace imgui::table { void init(lua_State* L); }
 
 static void*
@@ -1891,7 +1891,6 @@ wSequencer(lua_State* L) {
 	int current_select = selected_frame;
 	ImSequencer::Sequencer(pause, current_frame, current_select, move_type, selected_clip_index, move_delta);
 	if (pause) {
-		//lua_pushnumber(L, current_frame / (float)ImSequencer::anim_fps);
 		lua_pushinteger(L, current_frame);
 		lua_setfield(L, -2, "pause");
 	}
@@ -1907,6 +1906,163 @@ wSequencer(lua_State* L) {
 		lua_setfield(L, -2, "selected_frame");
 	}
 	
+	return 0;
+}
+
+namespace ImSimpleSequencer
+{
+	extern int anim_fps;
+	extern anim_layer* current_layer;
+	extern bone_anim_s bone_anim;
+}
+
+static int
+wSimpleSequencer(lua_State* L) {
+	auto init_clip_ranges = [L](ImSimpleSequencer::anim_layer& layer) {
+		layer.clip_rangs.clear();
+		if (lua_getfield(L, -1, "clips") == LUA_TTABLE) {
+			int len = (int)lua_rawlen(L, -1);
+			for (int index = 0; index < len; index++) {
+				lua_pushinteger(L, index + 1);
+				lua_gettable(L, -2);
+				if (lua_type(L, -1) == LUA_TTABLE) {
+					std::string_view nv;
+					int start = -1;
+					int end = -1;
+					if (lua_getfield(L, -1, "name") == LUA_TSTRING) {
+						nv = lua_tostring(L, -1);
+					}
+					lua_pop(L, 1);
+					if (lua_getfield(L, -1, "range") == LUA_TTABLE) {
+						lua_geti(L, -1, 1);
+						start = (int)lua_tointeger(L, -1);
+						lua_pop(L, 1);
+						lua_geti(L, -1, 2);
+						end = (int)lua_tointeger(L, -1);
+						lua_pop(L, 1);
+
+					}
+					lua_pop(L, 1);
+
+					layer.clip_rangs.emplace_back(nv, (int)start, (int)end);
+				}
+				lua_pop(L, 1);
+			}
+		}
+		lua_pop(L, 1);
+	};
+
+	auto update_clip_range = [L, init_clip_ranges]() {
+		lua_pushnil(L);
+		while (lua_next(L, 1) != 0) {
+			const char* anim_name = lua_tostring(L, -2);
+			auto it = ImSimpleSequencer::bone_anim.anim_layers.find_if(anim_name);
+			if (it != ImSimpleSequencer::anim_info.end()) {
+				auto& item = it->second;
+				if (lua_type(L, -1) == LUA_TTABLE) {
+					init_clip_ranges(item);
+				}
+			}
+			lua_pop(L, 1);
+		}
+	};
+	static int selected_frame = -1;
+	static int current_frame = 0;
+	static std::string current_anim_name;
+	static int selected_clip_index = -1;
+	if (lua_type(L, 1) == LUA_TTABLE) {
+		bool dirty = read_field_boolean(L, "dirty", false, 1);
+		int dirty_layer = read_field_int(L, "dirty_layer", 0, 1);
+		if (dirty) {
+			ImSimpleSequencer::bone_anim.duration = (float)read_field_float(L, "duration", 0.0f, 1);
+			ImSimpleSequencer::bone_anim.is_playing = read_field_boolean(L, "is_playing", false, 1);
+			current_frame = read_field_int(L, "current_frame", 0, 1);
+			selected_frame = read_field_int(L, "selected_frame", 0, 1);
+			auto clip_dirty_num = read_field_int(L, "clip_range_dirty", 0, 1);
+			selected_clip_index = read_field_int(L, "selected_clip_index", 0, 1) - 1;
+		}
+		if (dirty_layer != 0) {
+			if (dirty_layer == -1) {
+				ImSimpleSequencer::bone_anim.anim_layers.clear();
+			}
+			if (lua_getfield(L, 1, "anims") == LUA_TTABLE) {
+				int len = (int)lua_rawlen(L, -1);
+				for (int index = 0; index < len; index++) {
+					lua_pushinteger(L, index + 1);
+					lua_gettable(L, -2);
+					if (lua_type(L, -1) == LUA_TTABLE) {
+						if (dirty_layer != -1 && )
+						{
+						}
+						std::string_view nv;
+						int start = -1;
+						int end = -1;
+						if (lua_getfield(L, -1, "bone_name") == LUA_TSTRING) {
+							nv = lua_tostring(L, -1);
+						}
+						lua_pop(L, 1);
+						ImSimpleSequencer::bone_anim.anim_layers.emplace_back();
+						auto& item = ImSimpleSequencer::bone_anim.anim_layers.back();
+						item.name = nv;
+						init_clip_ranges(item);
+					}
+					lua_pop(L, 1);
+				}
+			}
+			lua_pop(L, 1);
+		}
+// 		while (lua_next(L, 1) != 0) {
+// 			const char* bone_name = lua_tostring(L, -2);
+// 			if (lua_type(L, -1) == LUA_TTABLE) {
+// 				auto duration = (float)read_field_float(L, "duration", 0.0f, -1);
+// 				if (duration > 0.0f) {
+// 					ImSimpleSequencer::anim_info.emplace_back({});
+// 					auto& item = ImSimpleSequencer::anim_info.back();
+// 					item.name = bone_name
+// 					item.duration = duration;
+// 					init_clip_ranges(item);
+// 				}
+// 			}
+// 			lua_pop(L, 1);
+// 		}
+// 		current_anim_name = birth;
+// 		ImSimpleSequencer::current_anim = &ImSimpleSequencer::anim_info[birth];
+// 		std::string anim_name = read_field_string(L, "anim_name", nullptr, 2);
+// 		if (current_anim_name != anim_name) {
+// 			current_anim_name = anim_name;
+// 			ImSimpleSequencer::current_anim = &ImSimpleSequencer::anim_info[current_anim_name];
+// 		}
+// 		ImSimpleSequencer::bone_anim.is_playing = read_field_boolean(L, "is_playing", false, 2);
+// 		current_frame = read_field_int(L, "current_frame", 0, 2);
+// 		selected_frame = read_field_int(L, "selected_frame", 0, 2);
+// 		auto clip_dirty_num = read_field_int(L, "clip_range_dirty", 0, 2);
+// 		selected_clip_index = read_field_int(L, "selected_clip_index", 0, 2) - 1;
+		
+	}
+
+	bool pause = false;
+	int move_type = -1;
+	int move_delta = 0;
+	int current_select = selected_frame;
+	ImSimpleSequencer::SimpleSequencer(pause, current_frame, current_select, move_type, selected_clip_index, move_delta);
+	if (pause) {
+		lua_pushinteger(L, current_frame);
+		lua_setfield(L, -2, "pause");
+	}
+	if (move_type != -1) {
+		lua_pushinteger(L, move_type);
+		lua_setfield(L, -2, "move_type");
+		lua_pushinteger(L, move_delta);
+		lua_setfield(L, -2, "move_delta");
+	}
+	if (selected_frame != current_select) {
+		selected_frame = current_select;
+		lua_pushinteger(L, selected_frame);
+		lua_setfield(L, -2, "selected_frame");
+		lua_pushinteger(L, selected_clip_index + 1);
+		lua_setfield(L, -2, "selected_clip_index");
+	}
+
 	return 0;
 }
 
@@ -3844,6 +4000,7 @@ luaopen_imgui(lua_State *L) {
 		{ "PushTextWrapPos", wPushTextWrapPos },
 		{ "PopTextWrapPos", wPopTextWrapPos },
 		{ "Sequencer", wSequencer},
+		{ "SimpleSequencer", wSimpleSequencer},
 		{ "SelectableInput", wSelectableInput },
 		{ NULL, NULL },
 	};

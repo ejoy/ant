@@ -16,6 +16,7 @@ local math3d    = require "math3d"
 local hierarchy = require "hierarchy_edit"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
+local joint_utils = require "widget.joint_utils"
 local utils     = require "common.utils"
 local vfs       = require "vfs"
 local access    = require "vfs.repoaccess"
@@ -31,7 +32,8 @@ local current_e
 local imgui_message
 local current_anim
 local sample_ratio = 50.0
-
+local joint_map = {}
+local joint_list = {}
 local anim_state = {
     duration = 0,
     selected_frame = -1,
@@ -50,12 +52,7 @@ local ui_loop = {false}
 local event_type = {
     "Effect", "Sound", "Collision", "Message", "Move"
 }
-local joint_list = {
 
-}
-local joints = {}
-
-local current_joint
 local current_event
 local current_collider
 local current_clip
@@ -1044,26 +1041,6 @@ local function show_current_group()
     end
 end
 
-local function show_joints(root)
-    local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((current_joint and (current_joint.name == root.name)) and imgui.flags.TreeNode{"Selected"} or 0)
-    local flags = base_flags
-    local has_child = true
-    if #root.children == 0 then
-        flags = base_flags | imgui.flags.TreeNode { "Leaf", "NoTreePushOnOpen" }
-        has_child = false
-    end
-    local open = imgui.widget.TreeNode(root.name, flags)
-    if imgui.util.IsItemClicked() then
-        current_joint = root
-    end
-    if open and has_child then
-        for _, joint in ipairs(root.children) do
-            show_joints(joint)
-        end
-        imgui.widget.TreePop()
-    end
-end
-
 function m.clear()
     current_e = nil
     current_anim = nil
@@ -1072,7 +1049,6 @@ function m.clear()
     anim_group_eid = {}
     current_collider = nil
     current_event = nil
-    current_joint = nil
     current_clip = nil
 end
 
@@ -1273,7 +1249,7 @@ function m.show()
                 imgui.table.NextColumn()
                 local child_width, child_height = imgui.windows.GetContentRegionAvail()
                 imgui.windows.BeginChild("##show_joints", child_width, child_height, false)
-                show_joints(joints[current_e].root)
+                joint_utils:show_joints(joint_map[current_e].root)
                 imgui.windows.EndChild()
 
                 imgui.table.NextColumn()
@@ -1320,45 +1296,6 @@ function m.show()
         prefab_mgr:save_prefab()
         prefab_mgr:reload()
     end
-end
-
-local function construct_joints(e)
-    joint_list = {{ index = 0, name = "None", children = {}}}
-    joints[e] = {root = nil, joint_map = {}}
-    local function construct(current_joints, ske, joint_idx)
-        if current_joints.joint_map[joint_idx] then
-            return current_joints.joint_map[joint_idx]
-        end
-        local new_joint = {
-            index = joint_idx,
-            name = ske:joint_name(joint_idx),
-            children = {}
-        }
-        current_joints.joint_map[joint_idx] = new_joint
-        local parent_idx = ske:parent(joint_idx)
-        if parent_idx > 0 then
-            new_joint.parent = current_joints.joint_map[parent_idx] or construct(current_joints, ske, ske:parent(parent_idx))
-            table.insert(current_joints.joint_map[parent_idx].children, new_joint)
-        else
-            current_joints.root = new_joint
-        end
-    end
-    
-    w:sync("skeleton:in", e)
-    local ske = e.skeleton._handle
-    if not ske then return end
-    for i=1, #ske do
-        construct(joints[e], ske, i)
-    end
-    local function setup_joint_list(joint)
-        joint_list[#joint_list + 1] = joint
-        for _, child_joint in ipairs(joint.children) do
-            setup_joint_list(child_joint)
-        end
-    end
-    setup_joint_list(joints[e].root)
-    e._animation.joint_list = joint_list
-    hierarchy:update_slot_list(world)
 end
 
 function m.load_clips()
@@ -1438,7 +1375,10 @@ local function construct_edit_animations(e)
     table.sort(edit_anim.name_list)
     set_current_anim(edit_anim.birth)
     m.load_clips()
-    construct_joints(e)
+    w:sync("skeleton:in", e)
+    joint_map[e], joint_list[e] = joint_utils:get_joints(e)
+    e._animation.joint_list = joint_list
+    hierarchy:update_slot_list(world)
 end
 
 function m.bind(e)
@@ -1456,10 +1396,6 @@ function m.bind(e)
     if not edit_anims[e] then
         construct_edit_animations(e)
     end
-end
-
-function m.get_current_joint()
-    return current_joint and current_joint.index or 0
 end
 
 return m
