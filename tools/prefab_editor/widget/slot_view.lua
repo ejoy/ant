@@ -52,8 +52,10 @@ function SlotView:set_model(e)
             -- local jlist = world[parent].joint_list
             for e in w:select "scene:in _animation:in" do
                 if e.scene.id == parent then
-                    for _, joint in ipairs(e._animation.joint_list) do
-                        name_list[joint.index] = joint.name
+                    for _, joints in pairs(e._animation.joint_list) do
+                        for _, joint in ipairs(joints) do
+                            name_list[#name_list+1] = joint.name
+                        end
                     end
                 end
             end

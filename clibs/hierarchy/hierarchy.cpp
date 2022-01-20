@@ -168,12 +168,11 @@ lbuilddata_jointindex(lua_State *L) {
 	const char* name = lua_tostring(L, 2);
 
 	auto jointidx = find_joint_index(ske, name);
-	if (jointidx < 0) {
-		luaL_error(L, "not found joint idx, name:%s", name);
+	if (jointidx >= 0) {
+		lua_pushinteger(L, jointidx + 1);
+		return 1;
 	}
-
-	lua_pushinteger(L, jointidx + 1);
-	return 1;
+	return 0;
 }
 
 static ozz::math::Float4x4

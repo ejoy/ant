@@ -27,7 +27,7 @@ function sys:entity_init()
         local slot = e.slot
         local jn = slot.joint_name
         local ske = e.skeleton
-        slot.joint_index = ske:joint_index(jn)
+        slot.joint_index = assert(ske._handle:joint_index(jn))
     end
 end
 
@@ -37,6 +37,7 @@ local function calc_pose_mat(pose_result, slot)
         local offset_mat = math3d.matrix(slot.offset_srt)
         adjust_mat = math3d.mul(adjust_mat, offset_mat)
     end
+    return adjust_mat
 end
 
 function sys:update_slot()
@@ -52,14 +53,16 @@ function sys:update_slot()
             local e = cache[v.scene.parent]
             if e then
                 local ske = e.skeleton
-                slot.joint_index = ske:joint_index(slot.joint_name)
-                local adjust_mat = calc_pose_mat(e.pose_result, slot)
-                if follow_flag == 1 then
-                    e.scene.slot_matrix = math3d.set_index(mc.IDENTITY_MAT, 4, math3d.index(adjust_mat, 4))
-                else
-                    local r, t = math3d.index(adjust_mat, 3, 4)
-                    r = math3d.torotation(r)
-                    e.scene.slot_matrix = math3d.matrix{r=r, t=t}
+                slot.joint_index = ske._handle:joint_index(slot.joint_name)
+                    if slot.joint_index then
+                    local adjust_mat = calc_pose_mat(e.pose_result, slot)
+                    if follow_flag == 1 then
+                        e.scene.slot_matrix = math3d.set_index(mc.IDENTITY_MAT, 4, math3d.index(adjust_mat, 4))
+                    else
+                        local r, t = math3d.index(adjust_mat, 3, 4)
+                        r = math3d.torotation(r)
+                        e.scene.slot_matrix = math3d.matrix{r=r, t=t}
+                    end
                 end
             end
         elseif follow_flag == 3 then
