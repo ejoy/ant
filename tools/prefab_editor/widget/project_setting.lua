@@ -225,7 +225,7 @@ local function setting_ui(sc)
     end
 
     if Button "Save" then
-        local p = sc:setting_path()
+        local p = lfs.path(global_data.project_root) / "settings"
         local f<close> = lfs.open(p, "w")
         f:write(serialize.stringify(sc._data))
     end
