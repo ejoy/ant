@@ -41,14 +41,13 @@ end
 function sys:update_slot()
     local cache
 	for v in w:select "scene:in slot:in" do
-        if cache == nil then
-            cache = find_animation_entities()
-        end
-
         --TODO: slot.offset_srt is duplicate with entity.scene.srt, not need to keep this srt in slot
         local slot = v.slot
         local follow_flag = assert(slot.follow_flag)
         if follow_flag == 1 or follow_flag == 2 then
+            if cache == nil then
+                cache = find_animation_entities()
+            end
             local e = cache[v.scene.parent]
             if e then
                 local adjust_mat = calc_pose_mat(e.pose_result, slot)
