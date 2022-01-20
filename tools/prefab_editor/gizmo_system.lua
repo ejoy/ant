@@ -1001,6 +1001,53 @@ end
 
 local gizmo_event = world:sub{"Gizmo"}
 
+local function check_calc_aabb(e)
+	w:sync("scene?in", e)
+	local scene = e.scene
+	if scene == nil then
+		return
+	end
+	local aabb = scene._aabb
+	if aabb then
+		return aabb
+	end
+	
+	local function build_scene()
+		local rt = {}
+		for ee in w:select "scene:in" do
+			local id = ee.scene.id
+			local pid = ee.scene.parent
+			if pid then
+				local c = rt[pid]
+				if c == nil then
+					c = {}
+					rt[pid] = c
+				end
+				w:sync("name?in", ee)
+				c[#c+1] = {id=id, aabb=ee.scene._aabb, name=ee.name}
+			end
+		end
+		return rt
+	end
+	local scenetree = build_scene()
+
+	local function build_aabb(tr, sceneaabb)
+		for idx, it in ipairs(tr) do
+			local ctr = scenetree[it.id]
+			if ctr then
+				build_aabb(ctr, sceneaabb)
+			end
+			if it.aabb then
+				sceneaabb.m = math3d.aabb_merge(it.aabb, sceneaabb)
+			end
+		end
+	end
+
+	local sceneaabb = math3d.ref(math3d.aabb())
+	build_aabb(scenetree[e.scene.id], sceneaabb)
+	return sceneaabb
+end
+
 function gizmo_sys:handle_event()
 	for _, what, wp in gizmo_event:unpack() do
 		if what == "updateposition" then
@@ -1130,6 +1177,16 @@ function gizmo_sys:handle_event()
 			elseif key == "Y" then
 				if press == 1 then
 					cmd_queue:redo()
+				end
+			end
+		end
+
+		if key == 'F' then
+			if gizmo.target_eid then
+				local cref = irq.main_camera()
+				local aabb = check_calc_aabb(gizmo.target_eid)
+				if aabb then
+					icamera.focus_aabb(cref, aabb)
 				end
 			end
 		end

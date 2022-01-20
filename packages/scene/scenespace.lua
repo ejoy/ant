@@ -163,6 +163,10 @@ function s:update_transform()
 		if scene.parent == nil then
 			cache[scene.id] = scene
 			update_worldmat_noparent(scene)
+			w:sync("name?in", v)
+			if v.name == "zhuti" then
+				print "zhuti"
+			end
 			update_aabb(scene)
 			if scene.changed == current_changed then
 				v.scene_changed = true
@@ -172,6 +176,10 @@ function s:update_transform()
 			if parent then
 				cache[scene.id] = scene
 				update_worldmat(scene, parent)
+				w:sync("name?in", v)
+				if v.name == "zhuti" then
+					print "zhuti"
+				end
 				update_aabb(scene)
 				if scene.changed == current_changed then
 					v.scene_changed = true

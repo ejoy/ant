@@ -164,17 +164,21 @@ function ic.lookto(cameraref, ...)
     iom.lookto(cameraref, ...)
 end
 
-function ic.focus_obj(camera_ref, e)
-    w:sync("render_object:in", e)
-    local aabb = e.render_object.aabb
-    if aabb then
-        local aabb_min, aabb_max= math3d.index(aabb, 1), math3d.index(aabb, 2)
-        local center = math3d.mul(0.5, math3d.add(aabb_min, aabb_max))
-        local nviewdir = math3d.sub(aabb_max, center)
-        local viewdir = math3d.normalize(math3d.inverse(nviewdir))
+function ic.focus_aabb(camera_ref, aabb)
+    local aabb_min, aabb_max= math3d.index(aabb, 1), math3d.index(aabb, 2)
+    local center = math3d.mul(0.5, math3d.add(aabb_min, aabb_max))
+    local nviewdir = math3d.sub(aabb_max, center)
+    local viewdir = math3d.normalize(math3d.inverse(nviewdir))
 
-        local pos = math3d.muladd(3, nviewdir, center)
-        iom.lookto(camera_ref, pos, viewdir)
+    local pos = math3d.muladd(3, nviewdir, center)
+    iom.lookto(camera_ref, pos, viewdir)
+end
+
+function ic.focus_obj(camera_ref, e)
+    w:sync("scene:in", e)
+    local aabb = e.scene._aabb
+    if aabb then
+        ic.focus_aabb(camera_ref, aabb)
     end
 end
 
