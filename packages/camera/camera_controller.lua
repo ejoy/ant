@@ -119,9 +119,9 @@ function cc_sys:data_changed()
             newx, newy = x, y
         end
 
-        if btn == "LEFT" then
-            motiontype = "rotate_point"
-        elseif btn == "RIGHT" then
+        -- if btn == "LEFT" then
+        --     motiontype = "rotate_point"
+        if btn == "RIGHT" then
             motiontype = "rotate_forwardaxis"
         elseif btn == "MIDDLE" then
             motiontype = "move_pan"
