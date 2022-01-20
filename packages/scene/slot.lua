@@ -22,7 +22,7 @@ end
 local sys = ecs.system "slot_system"
 
 function sys:entity_init()
-    for e in w:select "slot:in skeleton:in" do
+    for e in w:select "INIT slot:in skeleton:in" do
         local slot = e.slot
         local jn = slot.joint_name
         local ske = e.skeleton
