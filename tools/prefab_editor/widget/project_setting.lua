@@ -166,6 +166,10 @@ local function setting_ui(sc)
                     cw = default_curve_world
                 end
                 sc:set("graphic/curve_world/enable", enable)
+                local eeee = sc:get "graphic/curve_world/enable"
+                print (eeee)
+
+                graphic = sc:data().graphic
             end
             cw = cw or default_curve_world
 
@@ -234,23 +238,10 @@ function ps.show(open_popup)
 
     if BeginPopupModal(ps.id, default_win_flags) then
         if BeginTabBar("PS_Bar", default_tab_flags) then
-            if BeginTabItem "Editor" then
+            if BeginTabItem "ProjectSetting" then
                 setting_ui(setting.setting)
                 EndTabItem()
             end
-
-            local proj_root = global_data.project_root
-            if proj_root then
-                if BeginTabItem "Project" then
-                    if projpath ~= proj_root or projsetting == nil then
-                        projsetting = setting.create(proj_root / "settings")
-                    end
-                    
-                    setting_ui(projsetting)
-                    EndTabItem()
-                end
-            end
-
             EndTabBar()
         end
 
