@@ -49,15 +49,16 @@ function sys:update_slot()
         local slot = v.slot
         local follow_flag = assert(slot.follow_flag)
         if follow_flag == 1 or follow_flag == 2 then
-            local e = assert(cache[v.scene.parent], "not found slot entity parent")
-            local adjust_mat = calc_pose_mat(e.pose_result, slot)
-            
-            if follow_flag == 1 then
-                e.scene.slot_matrix = math3d.set_index(mc.IDENTITY_MAT, 4, math3d.index(adjust_mat, 4))
-            else
-                local r, t = math3d.index(adjust_mat, 3, 4)
-                r = math3d.torotation(r)
-                e.scene.slot_matrix = math3d.matrix{r=r, t=t}
+            local e = cache[v.scene.parent]
+            if e then
+                local adjust_mat = calc_pose_mat(e.pose_result, slot)
+                if follow_flag == 1 then
+                    e.scene.slot_matrix = math3d.set_index(mc.IDENTITY_MAT, 4, math3d.index(adjust_mat, 4))
+                else
+                    local r, t = math3d.index(adjust_mat, 3, 4)
+                    r = math3d.torotation(r)
+                    e.scene.slot_matrix = math3d.matrix{r=r, t=t}
+                end
             end
         elseif follow_flag == 3 then
             w:sync("skeleton:in pose_result:in", v)

@@ -13,31 +13,32 @@ local SlotView = require "widget.view_class".SlotView
 
 function SlotView:_init()
     BaseView._init(self)
-    self.slot = uiproperty.Group({label="Slot", flags=imgui.flags.TreeNode{"DefaultOpen"}},
-        uiproperty.Combo({label="FollowJoint", options={}}, {
-            getter = function()
-                local tp = hierarchy:get_template(self.e)
-                return tp.template.data.slot.joint_name or "(NONE)"
-            end,
-            setter = function(name)
-                local tp = hierarchy:get_template(self.e)
-                tp.template.data.slot.joint_name = name
-                w:sync("slot:in", self.e)
-                self.e.slot.joint_name = name
-            end,
-        }),
-        uiproperty.Int({label="FollowFlag"}, {
-            getter = function()
-                local tp = hierarchy:get_template(self.e)
-                return tp.template.data.follow_flag
-            end,
-            setter = function(flag)
-                local tp = hierarchy:get_template(self.e)
-                tp.template.data.follow_flag = flag
-                w:sync("slot:in", self.e)
-                self.e.slot.follow_flag = flag
-            end,
-        })
+    self.slot = uiproperty.Group({label="Slot", flags=imgui.flags.TreeNode{"DefaultOpen"}}, {
+            uiproperty.Combo({label="FollowJoint", options={}}, {
+                getter = function()
+                    local tp = hierarchy:get_template(self.e)
+                    return tp.template.data.slot.joint_name or "(NONE)"
+                end,
+                setter = function(name)
+                    local tp = hierarchy:get_template(self.e)
+                    tp.template.data.slot.joint_name = name
+                    w:sync("slot:in", self.e)
+                    self.e.slot.joint_name = name
+                end,
+            }),
+            uiproperty.Int({label="FollowFlag"}, {
+                getter = function()
+                    local tp = hierarchy:get_template(self.e)
+                    return tp.template.data.slot.follow_flag
+                end,
+                setter = function(flag)
+                    local tp = hierarchy:get_template(self.e)
+                    tp.template.data.follow_flag = flag
+                    w:sync("slot:in", self.e)
+                    self.e.slot.follow_flag = flag
+                end,
+            })
+        }
     )
 end
 
