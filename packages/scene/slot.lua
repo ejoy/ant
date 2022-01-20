@@ -9,9 +9,10 @@ local r2l_mat<const> = mc.R2L_MAT
 
 local function find_animation_entities()
     local cache = {}
-    for e in w:select "scene:in pose_result:in" do
+    for e in w:select "scene:in skeleton:in pose_result:in" do
         cache[e.scene.id] = {
             scene       = e.scene,
+            skeleton    = e.skeleton,
             pose_result = e.pose_result,
         }
     end
@@ -50,6 +51,8 @@ function sys:update_slot()
             end
             local e = cache[v.scene.parent]
             if e then
+                local ske = e.skeleton
+                slot.joint_index = ske:joint_index(slot.joint_name)
                 local adjust_mat = calc_pose_mat(e.pose_result, slot)
                 if follow_flag == 1 then
                     e.scene.slot_matrix = math3d.set_index(mc.IDENTITY_MAT, 4, math3d.index(adjust_mat, 4))
