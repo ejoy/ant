@@ -84,6 +84,8 @@ local default_curve_world<const> = {
     type_options = {"cylinder", "view_sphere"}
 }
 
+local project_settings = {}
+
 local function setting_ui(sc)
     local graphic = sc:data().graphic
 
@@ -166,10 +168,6 @@ local function setting_ui(sc)
                     cw = default_curve_world
                 end
                 sc:set("graphic/curve_world/enable", enable)
-                local eeee = sc:get "graphic/curve_world/enable"
-                print (eeee)
-
-                graphic = sc:data().graphic
             end
             cw = cw or default_curve_world
 
@@ -240,7 +238,13 @@ function ps.show(open_popup)
     if BeginPopupModal(ps.id, default_win_flags) then
         if BeginTabBar("PS_Bar", default_tab_flags) then
             if BeginTabItem "ProjectSetting" then
-                setting_ui(setting.setting)
+                local p = lfs.path(global_data.project_root) / "settings"
+                local s = project_settings[p:string()]
+                if s == nil then
+                    s = setting.create(p)
+                    project_settings[p:string()] = s
+                end
+                setting_ui(s)
                 EndTabItem()
             end
             EndTabBar()
