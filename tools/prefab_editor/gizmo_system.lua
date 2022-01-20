@@ -1054,6 +1054,7 @@ function gizmo_sys:handle_event()
 				end
 			end
 			gizmo_seleted = false
+			world:pub{"camera_controller", "stop", false}
 			light_gizmo_mode = 0
 			if is_tran_dirty then
 				is_tran_dirty = false
