@@ -25,7 +25,7 @@ function m:get_joints(e)
             children = {}
         }
         current_joints.joint_map[joint_idx] = new_joint
-        if new_joint.name == "RootBone" then
+        if skeleton:isroot(joint_idx) then
             current_joints.root = new_joint
         else
             local parent_idx = skeleton:parent(joint_idx)
