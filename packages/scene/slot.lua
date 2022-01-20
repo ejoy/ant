@@ -57,11 +57,11 @@ function sys:update_slot()
                     if slot.joint_index then
                     local adjust_mat = calc_pose_mat(e.pose_result, slot)
                     if follow_flag == 1 then
-                        e.scene.slot_matrix = math3d.set_index(mc.IDENTITY_MAT, 4, math3d.index(adjust_mat, 4))
+                        v.scene.slot_matrix = math3d.set_index(mc.IDENTITY_MAT, 4, math3d.index(adjust_mat, 4))
                     else
                         local r, t = math3d.index(adjust_mat, 3, 4)
                         r = math3d.torotation(r)
-                        e.scene.slot_matrix = math3d.matrix{r=r, t=t}
+                        v.scene.slot_matrix = math3d.matrix{r=r, t=t}
                     end
                 end
             end
