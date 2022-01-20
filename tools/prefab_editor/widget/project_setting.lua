@@ -29,26 +29,26 @@ local BeginPopupModal=imgui.windows.BeginPopupModal
 local EndPopup      = imgui.windows.EndPopup
 local SameLine      = imgui.cursor.SameLine
 
-local function Property(name, value, ctrltype)
+local function Property(name, value, ctrltype, config)
     PropertyLabel(name)
     SameLine()
-    return imgui.widget[ctrltype]("##"..name, value)
+    return imgui.widget[ctrltype]("##"..name, value, config)
 end
 
-local function PropertyFloat(name, value)
-    return Property(name, value, "DragFloat")
+local function PropertyFloat(name, value, config)
+    return Property(name, value, "DragFloat", config)
 end
 
-local function PropertyColor(name, value)
-    return Property(name, value, "ColorEdit")
+local function PropertyColor(name, value, config)
+    return Property(name, value, "ColorEdit", config)
 end
 
-local function CheckProperty(name, value, enable, p, set_p)
+local function CheckProperty(name, value, enable, p, set_p, config)
     local _, result = Checkbox("##"..name, enable)
     SameLine()
     BeginDisabled(not result)
     
-    if p(name, value) then
+    if p(name, value, config) then
         set_p(value)
     end
     EndDisabled()
@@ -185,16 +185,20 @@ local function setting_ui(sc)
 
             local t = cw.type
             if t == "cylinder" then
-                local v = {cw.flat_distance}
+                local v = {cw.flat_distance, speed=1.0, min=0.0}
                 if PropertyFloat("Flat Distance", v) then
                     sc:set("graphic/curve_world/flat_distance", v[1])
                 end
                 v[1] = cw.curve_rate
+                v.speed = 0.1
+                v.max = 1.0
                 if PropertyFloat("Curve Rate", v) then
                     sc:set("graphic/curve_world/curve_rate", v[1])
                 end
 
                 v[1] = cw.distance
+                v.speed = 1.0
+                v.max = nil
                 if PropertyFloat("Curve distance", v) then
                     sc:set("graphic/curve_world/distance", v[1])
                 end
@@ -226,9 +230,6 @@ local function setting_ui(sc)
         f:write(serialize.stringify(sc._data))
     end
 end
-
-local projsetting
-local projpath
 
 function ps.show(open_popup)
     if open_popup then
