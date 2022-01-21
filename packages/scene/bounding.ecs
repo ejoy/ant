@@ -1,0 +1,7 @@
+system "bounding_system"
+    .implement "bounding.lua"
+    .method "entity_init"
+
+interface "ibounding"
+    .implement "bounding.lua"
+    .method "set_aabb_transform"

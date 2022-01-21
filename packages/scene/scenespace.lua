@@ -73,13 +73,6 @@ end
 
 function s:entity_init()
 	local needsync = false
-	--TODO: bounding as component?
-	for v in w:select "INIT mesh:in scene:in" do
-		local mesh = v.mesh
-		if mesh.bounding then
-			v.scene.aabb = mesh.bounding.aabb
-		end
-	end
 	for v in w:select "INIT scene:in scene_sorted?new" do
 		local scene = v.scene
 		

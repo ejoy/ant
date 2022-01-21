@@ -37,3 +37,5 @@ pipeline "scene"
     .stage "refine_entity_transform"
     .stage "update_transform"
     .stage "follow_transform_updated"
+
+import "bounding.ecs"
