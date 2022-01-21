@@ -13,7 +13,9 @@ local samplerutil= renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
 
 local irender   = ecs.import.interface "ant.render|irender"
+local ientity	= ecs.import.interface "ant.render|ientity"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
+local imesh		= ecs.import.interface "ant.asset|imesh"
 
 local pickup_materials = {}
 
@@ -166,7 +168,7 @@ local function create_pick_entity()
 			scene = {srt={}},
 			camera = {
 				frustum = {
-					type="mat", n=0.1, f=1000, fov=0.5, aspect=pickup_buffer_w / pickup_buffer_h
+					type="mat", n=1, f=1000, fov=0.5, aspect=pickup_buffer_w / pickup_buffer_h
 				},
 			},
 			name = "camera.pickup",
@@ -242,7 +244,7 @@ end
 function pickup_sys:entity_init()
 	for e in w:select "INIT pickup_queue pickup:in" do
 		local pickup = e.pickup
-		pickup.clickpt = {}
+		pickup.clickpt = {-1, -1}
 		blit_buffer_init(pickup.blit_buffer)
 	end
 end
@@ -263,11 +265,16 @@ local function close_pickup()
 	w:sync("visible?out", e)
 end
 
-local leftmousepress_mb = world:sub {"mouse", "LEFT"}
+local leftmouse_mb = world:sub {"mouse", "LEFT"}
+local function remap_xy(x, y)
+	local tmq = w:singleton("tonemapping_queue", "render_target:in")
+	local vr = tmq.render_target.view_rect
+	return x-vr.x, y-vr.y
+end
 function pickup_sys:data_changed()
-	for _,_,state,x,y in leftmousepress_mb:unpack() do
+	for _,_,state,x,y in leftmouse_mb:unpack() do
 		if state == "DOWN" then
-			open_pickup(x, y)
+			open_pickup(remap_xy(x, y))
 		end
 	end
 end
@@ -275,7 +282,6 @@ end
 function pickup_sys:update_camera()
 	for e in w:select "pickup_queue visible pickup:in camera_ref:in" do
 		update_camera(e.camera_ref, e.pickup.clickpt)
-		break
 	end
 end
 
@@ -316,7 +322,7 @@ function pickup_sys:pickup()
 		local nextstep = pc.nextstep
 		if nextstep == "blit" then
 			blit(pc.blit_buffer, v.render_target)
-		elseif nextstep	== "select_obj" then
+		elseif nextstep == "select_obj" then
 			select_obj(pc.blit_buffer, v.render_target)
 			close_pickup()
 		end

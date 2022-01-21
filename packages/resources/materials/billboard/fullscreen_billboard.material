@@ -1,8 +1,9 @@
 fx:
+  vs: /pkg/ant.resources/shaders/simple/quad/vs_texquad.sc
   fs: /pkg/ant.resources/shaders/simple/quad/fs_simplequad.sc
   setting:
     surfacetype: foreground
-  vs: /pkg/ant.resources/shaders/simple/quad/vs_simple_texquad.sc
+    POS_IN_RECT: 1
 properties:
   s_tex:
     stage: 0

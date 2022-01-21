@@ -6,9 +6,26 @@ $input a_position
  */
 
 #include <bgfx_shader.sh>
+#include "common/curve_world.sh"
+
+// #ifdef CURVE_WORLD
+// #undef CURVE_WORLD
+// #define CURVE_WORLD 0
+// #endif CURVE_WORLD
+
+#if 0 //CURVE_WORLD
+uniform mat4 u_viewcamera_viewmat;
+uniform mat4 u_viewcamera_inv_viewmat;
+#endif //CURVE_WORLD
 
 void main()
 {
-	vec3 pos = a_position;
-	gl_Position = mul(u_modelViewProj, vec4(pos, 1.0));
+	vec3 posWS = a_position;
+#if 0 //CURVE_WORLD
+	posWS = curve_world_offset(posWS, u_viewcamera_viewmat, u_viewcamera_inv_viewmat);
+	gl_Position   = mul(u_viewProj, vec4(posWS, 1.0));
+#else
+	gl_Position = mul(u_modelViewProj, vec4(posWS, 1.0));
+#endif //CURVE_WORLD
+	
 }

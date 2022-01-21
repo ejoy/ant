@@ -1,9 +1,9 @@
 fx:
   fs: /pkg/ant.resources/shaders/simple/quad/fs_simplequad.sc
   setting:
-    surfacetype: background
+    surfacetype: translucent
     lighting: off
-  vs: /pkg/ant.resources/shaders/simple/quad/vs_simple_texquad.sc
+  vs: /pkg/ant.resources/shaders/simple/quad/vs_texquad.sc
 properties:
   s_tex:
     stage: 0

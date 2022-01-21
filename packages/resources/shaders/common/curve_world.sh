@@ -3,6 +3,10 @@
 
 #include "common/camera.sh"
 
+#if !defined(NO_CURVE_WORLD) && defined(ENABLE_CURVE_WORLD)
+#define CURVE_WORLD 1
+#endif //!defined(NO_CURVE_WORLD) && defined(ENABLE_CURVE_WORLD)
+
 //ENABLE_CURVE_WORLD
 
 #define CURVE_WORLD_TYPE_VIEW_SPHERE    1
@@ -26,12 +30,12 @@ uniform vec4 u_curveworld_param;
 
 uniform vec4 u_curveworld_dir;
 
-vec3 curve_world_offset(vec3 posWS)
+vec3 curve_world_offset(vec3 posWS, mat4 viewmat, mat4 inv_viewmat)
 {
 #if ENABLE_CURVE_WORLD == CURVE_WORLD_TYPE_CYLINDER
     if (u_curveworld_cylinder_max_range > 0.0)
     {
-        vec4 posVS = mul(u_view, vec4(posWS, 1.0));
+        vec4 posVS = mul(viewmat, vec4(posWS, 1.0));
         float dis = posVS.z-u_curveworld_cylinder_flat_distance;
         if (dis > 0){
             float radian = clamp((dis / u_curveworld_cylinder_distance) * PI * u_curveworld_cylinder_curve_rate, 0.0, u_curveworld_cylinder_max_range);
@@ -47,7 +51,7 @@ vec3 curve_world_offset(vec3 posWS)
             // NOTE: we should add offset in VS and transform to WS, or it will faild depth test when compare to pre-depth pass's depth
             vec4 offsetVS = mul(ct, vec4(u_curveworld_dir.xyz*dis, 0.0));
             posVS.xyz += offsetVS.xyz;
-            return mul(u_invView, posVS).xyz;
+            return mul(inv_viewmat, posVS).xyz;
             //return posWS+offset;
         }
     }
@@ -62,6 +66,11 @@ vec3 curve_world_offset(vec3 posWS)
     return posWS + offset;
 #endif //CURVE_WORLD_VIEW_SPHERE
     return posWS;
+}
+
+vec3 curve_world_offset(vec3 posWS)
+{
+    return curve_world_offset(posWS, u_view, u_invView);
 }
 
 // vec4 do_cylinder_transform(vec4 posWS)

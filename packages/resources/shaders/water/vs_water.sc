@@ -41,9 +41,9 @@ void main()
     vertex += wave(u_wave_b, vertexWS.xz, time, tangent, bitangent);
     vertex += wave(u_wave_c, vertexWS.xz, time, tangent, bitangent);
 
-#ifdef ENABLE_CURVE_WORLD
+#if CURVE_WORLD
 	vertex = curve_world_offset(vertex);
-#endif //ENABLE_CURVE_WORLD
+#endif //CURVE_WORLD
 
 	v_tangent = normalize(tangent);
 	v_bitangent = normalize(bitangent);

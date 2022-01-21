@@ -5,8 +5,7 @@ local w = world.w
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
 local irender   = ecs.import.interface "ant.render|irender"
-local mathpkg   = import_package "ant.math"
-local mu, mc    = mathpkg.util, mathpkg.constant
+local imesh		= ecs.import.interface "ant.asset|imesh"
 
 local math3d    = require "math3d"
 
@@ -19,7 +18,7 @@ local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
 local shadowdbg_sys = ecs.system "shadow_debug_system"
 
 local quadsize = 192
-local quadmaterial = "/pkg/ant.resources/materials/shadow/shadowmap_quad.material"
+local quadmaterial = "/pkg/ant.resources/materials/texquad.material"
 
 local frustum_colors = {
 	0xff0000ff, 0xff00ff00, 0xffff0000, 0xffffff00,
@@ -33,17 +32,20 @@ local function find_csm_entity(index)
 	end
 end
 
-local debug_entities = {}
 local function create_debug_entity()
-	for _, eid in ipairs(debug_entities) do
-		world:remove_entity(eid)
-	end
-	debug_entities = {}
-
 	do
 		local splitnum = ishadow.split_num()
-		local rect = {x=0, y=0, w=quadsize*splitnum, h=quadsize}
-		debug_entities[#debug_entities+1] = ientity.create_quad_entity(rect, quadmaterial, "csm_quad")
+		ecs.create_entity {
+			policy = {
+				"ant.render|simplerender",
+			},
+			data = {
+				scene 		= {srt = {}},
+				material	= quadmaterial,
+				simplemesh	= imesh.init_mesh(ientity.quad_mesh{x=0, y=0, w=quadsize*splitnum, h=quadsize}, true),
+				filter_state= "main_view",
+			}
+		}
 	end
 
 	do
@@ -51,7 +53,7 @@ local function create_debug_entity()
 			local camera = icamera.find_camera(e.camera_ref)
 			for idx, f in ipairs(ishadow.split_frustums()) do
 				local vp = math3d.mul(math3d.projmat(f), camera.viewmat)
-				debug_entities[#debug_entities+1] = ientity.create_frustum_entity(
+				ientity.create_frustum_entity(
 					math3d.frustum_points(vp), "frusutm:main_view", frustum_colors[idx]
 				)
 			end
@@ -67,8 +69,8 @@ local function create_debug_entity()
 		local frustum_points = math3d.frustum_points(c.viewprojmat)
 		local color = frustum_colors[idx]
 
-		debug_entities[#debug_entities+1] = ientity.create_frustum_entity(frustum_points, "frusutm:" .. se.name, color)
-		debug_entities[#debug_entities+1] = ientity.create_axis_entity(ce._worldmat, "csm_axis:" .. idx, color)
+		ientity.create_frustum_entity(frustum_points, "frusutm:" .. se.name, color)
+		ientity.create_axis_entity(ce._worldmat, "csm_axis:" .. idx, color)
 	end
 end
 

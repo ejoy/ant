@@ -1,7 +1,15 @@
 fx:
   fs: /pkg/ant.resources/shaders/simple/quad/fs_mainview.sc
-  vs: /pkg/ant.resources/shaders/simple/quad/vs_simple_texquad.sc
-  setting: /pkg/ant.resources/settings/nolighting.setting
+  vs: /pkg/ant.resources/shaders/simple/quad/vs_texquad.sc
+  setting:
+    lighting: off
+    surfacetype: opacity
+    shadow_cast: off
+    shadow_receive: off
+    subsurface: off
+    skinning: UNKNOWN
+    depth_type: inv_z
+    POS_IN_RECT: 1
 properties:
   s_scene_color:
     stage: 0

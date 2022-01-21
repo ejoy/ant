@@ -1,8 +1,10 @@
 import "@ant.render"
 import "@ant.scene"
 
+import "pickup/pickup_debug.ecs"
+
 system "pickup_system"
-    .implement "pickup_system.lua"
+    .implement "pickup/pickup_system.lua"
     .require_system "ant.scene|scenespace_system"
     .method "init"
     .method "entity_init"
@@ -22,5 +24,7 @@ component "pickupid"
     .type "int"
     
 policy "pickup"
-    .require_system "pickup_system"
+    .require_system "ant.objcontroller|pickup_system"
+    --.require_system "ant.objcontroller|pickup_debug_system"
     .component "pickup"
+

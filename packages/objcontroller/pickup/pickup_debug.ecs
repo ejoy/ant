@@ -1,0 +1,5 @@
+system "pickup_debug_system"
+    .implement "pickup/pickup_debug.lua"
+    .method "init"
+    .method "data_changed"
+    .method "camera_usage"
