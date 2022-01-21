@@ -28,6 +28,14 @@ lm:source_set "source_bee" {
             "!bee/**_linux.cpp",
         }
     },
+    ios = {
+        sources = {
+            "bee/**.mm",
+            "!bee/**_win.cpp",
+            "!bee/**_linux.cpp",
+            "!bee/fsevent/**",
+        }
+    },
     linux = {
         flags = "-fPIC",
         sources = {
@@ -89,6 +97,15 @@ lm:source_set "source_bee" {
             "Foundation",
             "CoreFoundation",
             "CoreServices",
+        }
+    },
+    ios = {
+        sources = {
+            "!binding/lua_unicode.cpp",
+            "!binding/lua_filewatch.cpp",
+        },
+        frameworks = {
+            "Foundation",
         }
     },
     android = {

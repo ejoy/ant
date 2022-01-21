@@ -9,6 +9,7 @@ local RuntimeBacklist = {
     imgui = true,
     subprocess = true,
     bake = true,
+    audio = true,
 }
 
 local EditorBacklist = {
