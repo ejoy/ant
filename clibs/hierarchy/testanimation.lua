@@ -37,17 +37,29 @@ local skl = skeleton.build({
 local raw_animation = animation.new_raw_animation()
 raw_animation:setup(skl, duration)
 
-for _, joint_name in ipairs({"root_1", "root_2"}) do
-    for i = 0, 10 do
-        raw_animation:push_prekey(
-            joint_name,
-            i, -- time [0, duration]
-            math3d.vector({0, 1, 0}), -- translation
-            math3d.quaternion({axis = math3d.vector {0, 1, 0}, r = math.pi * 0.5}), -- rotation
-            mc.ONE -- scale
-        )
-    end
+local joint_name 
+joint_name = "root_1"
+for i = 0, 10, 1 do
+    raw_animation:push_prekey(
+        joint_name,
+        i, -- time [0, duration]
+        math3d.vector({0, 1, 0}), -- translation
+        math3d.quaternion({axis = math3d.vector {0, 1, 0}, r = math.pi * 0.5}), -- rotation
+        mc.ONE -- scale
+    )
 end
+
+joint_name = "root_2"
+for i = 0, 10, 2 do
+    raw_animation:push_prekey(
+        joint_name,
+        i, -- time [0, duration]
+        math3d.vector({0, 1, 0}), -- translation
+        math3d.quaternion({axis = math3d.vector {0, 1, 0}, r = math.pi * 0.5}), -- rotation
+        mc.ONE -- scale
+    )
+end
+
 local ani = raw_animation:build()
 
 --
