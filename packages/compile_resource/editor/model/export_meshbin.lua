@@ -415,8 +415,11 @@ local function export_meshbin(gltfscene, bindata, exports)
 
 			local bb = create_prim_bounding(gltfscene, prim)
 			if bb then
-				group.bounding = bb
-				meshaabb = math3d.aabb_merge(meshaabb, math3d.aabb(bb.aabb[1], bb.aabb[2]))
+				local aabb = math3d.set_index(math3d.aabb(), 1, bb.aabb[1], bb.aabb[2])
+				if math3d.aabb_isvalid(aabb) then
+					group.bounding = bb
+					meshaabb = math3d.aabb_merge(meshaabb, aabb)
+				end
 			end
 			local primname = "P" .. primidx
 			local resname = "./meshes/"..meshname .. "_" .. primname .. ".meshbin"

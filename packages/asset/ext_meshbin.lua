@@ -63,7 +63,7 @@ end
 
 local function create_bounding(bounding)
     if bounding then
-        bounding.aabb = math3d.ref(math3d.aabb(bounding.aabb[1], bounding.aabb[2]))
+        bounding.aabb = math3d.ref(math3d.set_index(math3d.aabb(), 1, bounding.aabb[1], bounding.aabb[2]))
     end
 end
 
