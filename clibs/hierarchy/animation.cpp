@@ -495,18 +495,26 @@ struct alignas(8) ozzRawAnimation : public luaClass<ozzRawAnimation> {
 
 	ozzRawAnimation() {
 		v = ozz::New<ozz::animation::offline::RawAnimation>();
-		m_skeleton = NULL;
+		m_skeleton = nullptr;
 	}
 	~ozzRawAnimation() {
 		ozz::Delete(v);
 	}
 
+	static int lclear(lua_State* L) {
+		auto base = base_type::get(L, 1);
+		base->m_skeleton = nullptr;
+		ozz::animation::offline::RawAnimation* pv = base->v;
+		pv->tracks.clear();
+		return 0;
+	}
+
 	static int lsetup(lua_State *L) {
 		auto base = base_type::get(L, 1);
-		ozz::animation::offline::RawAnimation* pv = base_type::get(L, 1)->v;
+		ozz::animation::offline::RawAnimation* pv = base->v;
 		const auto ske = (hierarchy_build_data*)luaL_checkudata(L, 2, "HIERARCHY_BUILD_DATA");
-		pv->duration = (float)lua_tonumber(L, 3);
 		base->m_skeleton = ske->skeleton;
+		pv->duration = (float)lua_tonumber(L, 3);
 		pv->tracks.resize(base->m_skeleton->num_joints());
 		return 0;
 	}
@@ -575,6 +583,7 @@ struct alignas(8) ozzRawAnimation : public luaClass<ozzRawAnimation> {
 			{"setup",    lsetup},
 			{"push_prekey", lpush_prekey},
 			{"build", 	 lbuild},
+			{"clear", 	 lclear},
 			{nullptr, 	 nullptr,}
 		};
 		base_type::reigister_mt(L, l);
