@@ -501,12 +501,29 @@ struct ozzRawAnimation : public luaClass<ozzRawAnimation> {
 		ozz::animation::offline::RawAnimation* pv = base_type::get(L, 1)->v;
 		const auto hie = (hierarchy_build_data*)luaL_checkudata(L, 2, "HIERARCHY_BUILD_DATA");
 		ozz::animation::Skeleton* ske = hie->skeleton;
-		float duration = (float)luaL_checknumber(L, 5);
+
+		float duration = (float)luaL_checknumber(L, 3);	
 		pv->duration = duration;
 		pv->tracks.resize(ske->num_joints());
 
+		ozz::vector<ozz::vector<int>> vecTime;
 		lua_pushnil(L);
-		while (lua_next(L, 3) != 0) {
+		while (lua_next(L, 6) != 0) {
+			auto idx = luaL_checkinteger(L, -2);
+			auto st = lua_gettop(L);
+
+			ozz::vector<int> v;
+			lua_pushnil(L);
+			while (lua_next(L, st) != 0) {
+				v.push_back(lua_tointeger(L, -1));
+				lua_pop(L, 1);
+			}
+			vecTime.push_back(v);
+			lua_pop(L, 1);
+		}
+
+		lua_pushnil(L);
+		while (lua_next(L, 4) != 0) {
 			auto idx = luaL_checkinteger(L, -2);
 			auto vecFloat3TranslationKey = ozzVectorFloat3::getPointer(L, -1);
 			ozz::animation::offline::RawAnimation::JointTrack& track = pv->tracks[idx - 1];
@@ -515,14 +532,14 @@ struct ozzRawAnimation : public luaClass<ozzRawAnimation> {
 			size_t size = vecFloat3TranslationKey->size();
 			for(int i = 0; i < size; i++) {
 				ozz::animation::offline::RawAnimation::TranslationKey PreTranslationKeys;
-				PreTranslationKeys.time = (float)duration / size * i;
+				PreTranslationKeys.time = vecTime.at(idx - 1).at(i);
 				PreTranslationKeys.value = vecFloat3TranslationKey->at(i);
 				track.translations.push_back(PreTranslationKeys);
 			}
 		}
 
 		lua_pushnil(L);
-		while (lua_next(L, 4) != 0) {
+		while (lua_next(L, 5) != 0) {
 			auto idx = luaL_checkinteger(L, -2);
 			auto vecQuaternionRotationKey = ozzVectorQuaternion::getPointer(L, -1);
 			ozz::animation::offline::RawAnimation::JointTrack& track = pv->tracks[idx - 1];
@@ -531,7 +548,7 @@ struct ozzRawAnimation : public luaClass<ozzRawAnimation> {
 			size_t size = vecQuaternionRotationKey->size();
 			for(int i = 0; i < size; i++) {
 				ozz::animation::offline::RawAnimation::RotationKey PreRotationKey;
-				PreRotationKey.time = (float)duration / size * i;
+				PreRotationKey.time = vecTime.at(idx - 1).at(i);
 				PreRotationKey.value = vecQuaternionRotationKey->at(i);
 				track.rotations.push_back(PreRotationKey);
 			}

@@ -23,7 +23,6 @@ for _, v in ipairs(t) do
     local methods = v[4]
     local begin_idx = v[5]
     for _, method in ipairs(methods) do
-        print(method, math3d_type_str, begin_idx)
         mt[method] = math3d_adapter[adapter_method_name](mt[method], math3d_type_str, begin_idx)
     end
 end
@@ -39,13 +38,18 @@ for i = 1, 10 do
     rotations:insert(math3d.quaternion {axis=math3d.vector{0, 1, 0}, r=math.pi * 0.5})
 end
 
-local duration = 6.0
+local time = {}
+for i = 1, 10 do
+    time[#time + 1] = i
+end
+
+local duration = 10.0
 local skl = skeleton.build({
     {name = "root_1", s = {1.0, 1.0, 1.0}, r = {0.0, 0.0, 0.0, 1.0}, t = {0.0, 0.0, 0.0}},
     {name = "root_2", s = {1.0, 1.0, 1.0}, r = {0.0, 0.0, 0.0, 1.0}, t = {0.0, 0.0, 0.0}},
 })
 
-raw_animation:push_key(skl, {translations, translations}, {rotations, rotations}, duration)
+raw_animation:push_key(skl, duration, {translations, translations}, {rotations, rotations}, {time, time})
 local ani = raw_animation:build()
 
 local poseresult = animation.new_pose_result(#skl)
