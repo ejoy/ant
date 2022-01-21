@@ -11,6 +11,7 @@
 #include <ozz/animation/runtime/local_to_model_job.h>
 #include <ozz/animation/runtime/blending_job.h>
 #include <ozz/animation/runtime/skeleton.h>
+#include <ozz/animation/runtime/skeleton_utils.h>
 
 #include <ozz/geometry/runtime/skinning_job.h>
 #include <ozz/base/platform.h>
@@ -488,71 +489,66 @@ struct ozzAnimation : public luaClass<ozzAnimation> {
 };
 REGISTER_LUA_CLASS(ozzAnimation)
 
-struct ozzRawAnimation : public luaClass<ozzRawAnimation> {
+struct alignas(8) ozzRawAnimation : public luaClass<ozzRawAnimation> {
 	ozz::animation::offline::RawAnimation* v;
-	ozzRawAnimation()
-		: v(ozz::New<ozz::animation::offline::RawAnimation>()) {
+	ozz::animation::Skeleton* m_skeleton;
+
+	ozzRawAnimation() {
+		v = ozz::New<ozz::animation::offline::RawAnimation>();
+		m_skeleton = NULL;
 	}
 	~ozzRawAnimation() {
 		ozz::Delete(v);
 	}
 
-	static int lpush_key(lua_State *L) {
+	static int lsetup(lua_State *L) {
+		auto base = base_type::get(L, 1);
 		ozz::animation::offline::RawAnimation* pv = base_type::get(L, 1)->v;
-		const auto hie = (hierarchy_build_data*)luaL_checkudata(L, 2, "HIERARCHY_BUILD_DATA");
-		ozz::animation::Skeleton* ske = hie->skeleton;
+		const auto ske = (hierarchy_build_data*)luaL_checkudata(L, 2, "HIERARCHY_BUILD_DATA");
+		pv->duration = (float)lua_tonumber(L, 3);
+		base->m_skeleton = ske->skeleton;
+		pv->tracks.resize(base->m_skeleton->num_joints());
+		return 0;
+	}
 
-		float duration = (float)luaL_checknumber(L, 3);	
-		pv->duration = duration;
-		pv->tracks.resize(ske->num_joints());
+	static int lpush_prekey(lua_State *L) {
+		auto base = base_type::get(L, 1);
+		ozz::animation::offline::RawAnimation* pv = base_type::get(L, 1)->v;
 
-		ozz::vector<ozz::vector<int>> vecTime;
-		lua_pushnil(L);
-		while (lua_next(L, 6) != 0) {
-			auto idx = luaL_checkinteger(L, -2);
-			auto st = lua_gettop(L);
-
-			ozz::vector<int> v;
-			lua_pushnil(L);
-			while (lua_next(L, st) != 0) {
-				v.push_back(lua_tointeger(L, -1));
-				lua_pop(L, 1);
-			}
-			vecTime.push_back(v);
-			lua_pop(L, 1);
+		// joint name
+		int idx = ozz::animation::FindJoint(*base->m_skeleton, lua_tostring(L, 2));
+		if (idx < 0) {
+			luaL_error(L, "Can not found joint name");
+			return 0;
 		}
+		ozz::animation::offline::RawAnimation::JointTrack& track = pv->tracks[idx];
 
-		lua_pushnil(L);
-		while (lua_next(L, 4) != 0) {
-			auto idx = luaL_checkinteger(L, -2);
-			auto vecFloat3TranslationKey = ozzVectorFloat3::getPointer(L, -1);
-			ozz::animation::offline::RawAnimation::JointTrack& track = pv->tracks[idx - 1];
-			lua_pop(L, 1);
+		// time
+		float time = (float)lua_tonumber(L, 3);
 
-			size_t size = vecFloat3TranslationKey->size();
-			for(int i = 0; i < size; i++) {
-				ozz::animation::offline::RawAnimation::TranslationKey PreTranslationKeys;
-				PreTranslationKeys.time = vecTime.at(idx - 1).at(i);
-				PreTranslationKeys.value = vecFloat3TranslationKey->at(i);
-				track.translations.push_back(PreTranslationKeys);
-			}
-		}
+		// translation
+		ozz::math::Float3 translation;
+		memcpy(&translation, lua_touserdata(L, 4), sizeof(translation));
+		ozz::animation::offline::RawAnimation::TranslationKey PreTranslationKeys;
+		PreTranslationKeys.time = time;
+		PreTranslationKeys.value = translation;
+		track.translations.push_back(PreTranslationKeys);
 
-		lua_pushnil(L);
-		while (lua_next(L, 5) != 0) {
-			auto idx = luaL_checkinteger(L, -2);
-			auto vecQuaternionRotationKey = ozzVectorQuaternion::getPointer(L, -1);
-			ozz::animation::offline::RawAnimation::JointTrack& track = pv->tracks[idx - 1];
-			lua_pop(L, 1);
+		// rotation
+		ozz::math::Quaternion rotation;
+		memcpy(&translation, lua_touserdata(L, 5), sizeof(rotation));
+		ozz::animation::offline::RawAnimation::RotationKey PreRotationKey;
+		PreRotationKey.time = time;
+		PreRotationKey.value = rotation;
+		track.rotations.push_back(PreRotationKey);
 
-			size_t size = vecQuaternionRotationKey->size();
-			for(int i = 0; i < size; i++) {
-				ozz::animation::offline::RawAnimation::RotationKey PreRotationKey;
-				PreRotationKey.time = vecTime.at(idx - 1).at(i);
-				PreRotationKey.value = vecQuaternionRotationKey->at(i);
-				track.rotations.push_back(PreRotationKey);
-			}
-		}
+		// scale
+		ozz::math::Float3 scale;
+		memcpy(&scale, lua_touserdata(L, 6), sizeof(scale));
+		ozz::animation::offline::RawAnimation::ScaleKey PreScaleKey;
+		PreScaleKey.time = time;
+		PreScaleKey.value = scale;
+		track.scales.push_back(PreScaleKey);
 
 		return 0;
 	}
@@ -576,9 +572,10 @@ struct ozzRawAnimation : public luaClass<ozzRawAnimation> {
 
 	static void registerMetatable(lua_State* L) {
 		luaL_Reg l[] = {
-			{"push_key",	 lpush_key},
-			{"build", 		 lbuild},
-			{nullptr, 		 nullptr,}
+			{"setup",    lsetup},
+			{"push_prekey", lpush_prekey},
+			{"build", 	 lbuild},
+			{nullptr, 	 nullptr,}
 		};
 		base_type::reigister_mt(L, l);
 		lua_pop(L, 1);
@@ -913,6 +910,7 @@ int init_animation(lua_State *L) {
 		{ "build_skinning_matrices",	lbuild_skinning_matrices},
 		{ "new_animation",				ozzAnimation::create},
 		{ "new_raw_animation", 			ozzRawAnimation::create},
+		{ "raw_animation_mt",           ozzRawAnimation::getMT},
 		{ "new_bind_pose",				ozzBindpose::create},
 		{ "new_sampling_context",		ozzSamplingContext::create},
 		{ "bind_pose_mt",				ozzBindpose::getMT},
