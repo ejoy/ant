@@ -73,7 +73,7 @@ function m.show()
 
         imgui.cursor.SameLine()
         imgui.cursor.PushItemWidth(64)
-        camera_speed[1] = (editor_setting.setting.camera or camera_speed).speed
+        camera_speed[1] = editor_setting.setting.camera.speed
         if imgui.widget.DragFloat("CameraSpeed", camera_speed) then
             world:pub{"camera_controller", "move_speed", camera_speed[1]}
             editor_setting.update_camera_setting(camera_speed[1])

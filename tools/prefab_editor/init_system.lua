@@ -43,9 +43,10 @@ function m:init()
     imgui.SetWindowTitle("PrefabEditor")
     gd.editor_package_path = "/pkg/tools.prefab_editor/"
 
-    if editor_setting.setting.camera then
-        world:pub{"camera_controller", "move_speed", editor_setting.setting.camera.speed}
+    if editor_setting.setting.camera == nil then
+        editor_setting.update_camera_setting(0.1)
     end
+    world:pub{"camera_controller", "move_speed", editor_setting.setting.camera.speed}
 end
 
 local function init_camera()
