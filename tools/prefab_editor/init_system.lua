@@ -7,13 +7,10 @@ local mc            = mathpkg.constant
 
 local irq           = ecs.import.interface "ant.render|irenderqueue"
 local icamera       = ecs.import.interface "ant.camera|icamera"
-local entity        = ecs.import.interface "ant.render|ientity"
 local iRmlUi        = ecs.import.interface "ant.rmlui|irmlui"
-local irender       = ecs.import.interface "ant.render|irender"
 local iani          = ecs.import.interface "ant.animation|ianimation"
 local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
-local default_comp  = import_package "ant.general".default
-local camera_mgr    = ecs.require "camera.camera_manager"
+local editor_setting= require "editor_setting"
 local imgui         = require "imgui"
 local lfs           = require "filesystem.local"
 local fs            = require "filesystem"
@@ -45,6 +42,10 @@ function m:init()
 
     imgui.SetWindowTitle("PrefabEditor")
     gd.editor_package_path = "/pkg/tools.prefab_editor/"
+
+    if editor_setting.setting.camera then
+        world:pub{"camera_controller", "move_speed", editor_setting.setting.camera.speed}
+    end
 end
 
 local function init_camera()

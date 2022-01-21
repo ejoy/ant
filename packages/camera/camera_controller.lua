@@ -27,6 +27,21 @@ local mouse_btn
 local mouse_state
 local move_speed_delta = 0.01
 local move_speed = 0.1
+local move_wheel_speed = 8
+local dxdy_speed = 30
+local key_move_speed = 10
+
+local function calc_dxdy_speed()
+    return move_speed * dxdy_speed
+end
+
+local function calc_wheel_speed()
+    return move_speed * move_wheel_speed
+end
+
+local function calc_key_speed()
+    return move_speed * key_move_speed
+end
 
 local function check_update_control()
     for _, _, pt in viewat_change_mb:unpack() do
@@ -52,9 +67,10 @@ local function check_update_control()
 end
 
 local function dxdy(x, y, rect)
-    local dx = (x - mouse_lastx) / rect.w * 10
-    local dy = (y - mouse_lasty) / rect.h * 10
-    return dx, dy
+    local dx = (x - mouse_lastx) / rect.w
+    local dy = (y - mouse_lasty) / rect.h
+    local speed = calc_dxdy_speed()
+    return dx*speed, dy*speed
 end
 
 local stop_camera = false
@@ -74,7 +90,8 @@ function cc_sys:data_changed()
 
     for _, delta in mouse_wheel_mb:unpack() do
         local mq = w:singleton("main_queue", "camera_ref:in")
-        local d = delta > 0 and move_speed or -move_speed
+        local speed = calc_wheel_speed()
+        local d = delta > 0 and speed or -speed
         iom.move_forward(mq.camera_ref, d)
     end
 
@@ -82,17 +99,17 @@ function cc_sys:data_changed()
         if mouse_btn == "RIGHT" then
             local pressed = press == 1 or press == 2
             if key == "A" then
-                move_x = pressed and -move_speed or nil
+                move_x = pressed and -calc_key_speed() or nil
             elseif key == "D" then
-                move_x = pressed and  move_speed or nil
+                move_x = pressed and  calc_key_speed() or nil
             elseif key == "Q" then
-                move_y = pressed and -move_speed or nil
+                move_y = pressed and -calc_key_speed() or nil
             elseif key == "E" then
-                move_y = pressed and  move_speed or nil
+                move_y = pressed and  calc_key_speed() or nil
             elseif key == "S" then
-                move_z = pressed and -move_speed or nil
+                move_z = pressed and -calc_key_speed() or nil
             elseif key == "W" then
-                move_z = pressed and  move_speed or nil
+                move_z = pressed and  calc_key_speed() or nil
             end
         else
             if status.SHIFT then

@@ -8,6 +8,8 @@ local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local gizmo     = ecs.require "gizmo.gizmo"
 
+local editor_setting = require "editor_setting"
+
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 
 local m = {}
@@ -29,6 +31,7 @@ local LAST_main_camera
 
 local localSpace = {}
 local defaultLight = { false }
+local camera_speed = {0.1, speed=0.05, min=0.01, max=10}
 function m.show()
     local icons = require "common.icons"(assetmgr)
     local viewport = imgui.GetMainViewport()
@@ -67,6 +70,16 @@ function m.show()
             local action = defaultLight[1] and "enable_default_light" or "disable_default_light"
             world:pub { "Create", action }
         end
+
+        imgui.cursor.SameLine()
+        imgui.cursor.PushItemWidth(64)
+        camera_speed[1] = editor_setting.setting.camera.speed
+        if imgui.widget.DragFloat("CameraSpeed", camera_speed) then
+            world:pub{"camera_controller", "move_speed", camera_speed[1]}
+            editor_setting.update_camera_setting(camera_speed[1])
+            editor_setting.save()
+        end
+        imgui.cursor.PopItemWidth()
 
         if is_select_camera() then
             imgui.cursor.SameLine()

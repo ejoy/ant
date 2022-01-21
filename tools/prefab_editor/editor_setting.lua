@@ -59,9 +59,19 @@ local function add_recent_file(f)
     table.insert(rf, 1, f)
 end
 
+local function update_camera_setting(speed)
+    local cs = editor_setting.camera
+    if cs == nil then
+        cs = {}
+        editor_setting.camera = cs
+    end
+    cs.speed = speed
+end
+
 return {
     update_lastproj = update_lastproj,
     add_recent_file = add_recent_file,
+    update_camera_setting = update_camera_setting,
     setting = editor_setting,
     save = save,
 }
