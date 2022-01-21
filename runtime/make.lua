@@ -60,8 +60,8 @@ lm:source_set "ant_common" {
     ios = {
         includes = "../../clibs/window/ios",
         sources = {
-            "ios/main.mm",
-            "ios/ios_error.mm",
+            "common/ios/main.mm",
+            "common/ios/ios_error.mm",
         }
     }
 }
