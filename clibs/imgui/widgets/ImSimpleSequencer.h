@@ -36,6 +36,6 @@ namespace ImSimpleSequencer
    };
    extern bone_anim_s bone_anim;
 
-   void SimpleSequencer(bool& pause, int& current_frame, int& selected_entry, int& move_type, int& range_index, int& move_delta);
+   void SimpleSequencer(bool& pause, int& selected_layer, int& current_frame, int& selected_entry, int& move_type, int& range_index, int& move_delta);
 
 }

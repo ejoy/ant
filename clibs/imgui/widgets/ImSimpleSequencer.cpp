@@ -25,8 +25,7 @@ namespace ImSimpleSequencer
 	static ImVec2 operator+(const ImVec2& a, const ImVec2& b) { return ImVec2(a.x + b.x, a.y + b.y); }
 #endif
 
-	int selected_layer = -1;
-	void SimpleSequencer(bool& pause, int& current_frame, int& selected_frame, int& move_type, int& range_index, int& move_delta)
+	void SimpleSequencer(bool& pause, int& selected_layer, int& current_frame, int& selected_frame, int& move_type, int& range_index, int& move_delta)
 	{
 		static int firstFrame = 0;
 		ImGuiIO& io = ImGui::GetIO();
@@ -38,8 +37,6 @@ namespace ImSimpleSequencer
 		static bool movingEntry = false;
 		static int movingPos = -1;
 		static int movingPart = -1;
-		static int movingKeyFrame = -1;
-		static int sourceKeyFrame = -1;
 		ImGui::BeginGroup();
 
 		ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -233,18 +230,19 @@ namespace ImSimpleSequencer
 							draw_list->AddRectFilled(rc.Min, rc.Max, quadColor[j], 2);
 						}
 					}
-
-					for (int j = 0; j < 3; j++) {
-						ImRect& rc = rects[j];
-						if (!rc.Contains(io.MousePos))
-							continue;
-						if (!ImRect(childFramePos, childFramePos + childFrameSize).Contains(io.MousePos))
-							continue;
-						if (is_active && range_index == i && !MovingCurrentFrame) {
-							movingEntry = true;
-							movingPos = cx;
-							movingPart = j + 1;
-							break;
+					if (io.MouseClicked[0]) {
+						for (int j = 0; j < 3; j++) {
+							ImRect& rc = rects[j];
+							if (!rc.Contains(io.MousePos))
+								continue;
+							if (!ImRect(childFramePos, childFramePos + childFrameSize).Contains(io.MousePos))
+								continue;
+							if (is_active && range_index == i && !MovingCurrentFrame) {
+								movingEntry = true;
+								movingPos = cx;
+								movingPart = j + 1;
+								break;
+							}
 						}
 					}
 				}
@@ -258,82 +256,55 @@ namespace ImSimpleSequencer
 			drawLineContent(GetFrameMax(), int(contentHeight), layer_idx);
 
 			if (io.MouseClicked[0]) {
-				auto row = (int)floor((io.MousePos.y - contentMin.y) / ItemHeight);
-				selected_layer = row;
-				auto col = (int)floor((io.MousePos.x - contentMin.x + 3) / framePixelWidth) + firstFrameUsed;
-				if (col >= 0 && col <= GetFrameMax() && selected_frame != col) {
-					selected_frame = col;
-				}
-
-				for (int ri = 0; ri < layer.clip_rangs.size(); ri++) {
-					if (col >= layer.clip_rangs[ri].start && col <= layer.clip_rangs[ri].end) {
-						range_index = ri;
-					}
+				if (io.MousePos.x > contentMin.x) {
+					selected_layer = (int)floor((io.MousePos.y - contentMin.y) / ItemHeight);
 				}
 				if (is_active) {
+					selected_frame = -1;
+					range_index = -1;
+					auto col = (int)floor((io.MousePos.x - contentMin.x + 3) / framePixelWidth) + firstFrameUsed;
+					for (int ri = 0; ri < layer.clip_rangs.size(); ri++) {
+						if (col >= layer.clip_rangs[ri].start && col <= layer.clip_rangs[ri].end) {
+							range_index = ri;
+						}
+					}
 					if (range_index >= 0 && range_index < layer.clip_rangs.size()) {
-						if (selected_frame >= 0) {
-							movingEntry = true;
-							movingPos = cx;
-							movingKeyFrame = selected_frame;
-							sourceKeyFrame = selected_frame;
-							movingPart = 3;
+						if (((col == layer.clip_rangs[range_index].start) || (col == layer.clip_rangs[range_index].end))) {
+							selected_frame = col;
 						}
 					}
 				}
 			}
-// 			if (selected_frame >= 0) {
-// 				int px = (int)canvas_pos.x + int(selected_frame * framePixelWidth) - int(firstFrameUsed * framePixelWidth);
-// 				draw_list->AddRect(ImVec2((float)px, contentMin.y + offset_y), ImVec2((float)px + framePixelWidth, contentMin.y + ItemHeight + offset_y), 0xFF1080FF);
-// 			}
+			if (is_active && selected_frame >= 0 && range_index >= 0) {
+				int px = (int)canvas_pos.x + int(selected_frame * framePixelWidth) - int(firstFrameUsed * framePixelWidth);
+				draw_list->AddRect(ImVec2((float)px, contentMin.y + offset_y), ImVec2((float)px + framePixelWidth, contentMin.y + ItemHeight + offset_y), 0xFF1080FF);
+			}
 
 			// moving
-			if (movingEntry) {
+			if (is_active && movingEntry) {
 				ImGui::CaptureMouseFromApp();
 				int diffFrame = int((cx - movingPos) / framePixelWidth);
 				movingPos += int(diffFrame * framePixelWidth);
-				if (io.KeyAlt/*move_keyframe*/) {
-					if (std::abs(diffFrame) > 0 && sourceKeyFrame >= 0) {
-						if (movingPart == 3) {
-							movingKeyFrame += diffFrame;
-						}
-						if (movingKeyFrame < 0) {
-							movingKeyFrame = 0;
-						}
-						if (range_index >= 0 && range_index < layer.clip_rangs.size()) {
-//							auto& flags = current_anim->clip_rangs[range_index].event_flags;
-							if (sourceKeyFrame != movingKeyFrame/* && !flags[movingKeyFrame]*/) {
-// 								flags[movingKeyFrame] = true;
-// 								flags[sourceKeyFrame] = false;
-								selected_frame = movingKeyFrame;
-								sourceKeyFrame = movingKeyFrame;
-								move_type = 0;
-							}
-						}
-					}
-				}
-				else {
-					if (std::abs(diffFrame) > 0 && range_index >= 0) {
-						int* start = &layer.clip_rangs[range_index].start;
-						int* end = &layer.clip_rangs[range_index].end;
-						int& l = *start;
-						int& r = *end;
-						if (movingPart & 1)
-							l += diffFrame;
+				if (is_active && std::abs(diffFrame) > 0 && range_index >= 0) {
+					int* start = &layer.clip_rangs[range_index].start;
+					int* end = &layer.clip_rangs[range_index].end;
+					int& l = *start;
+					int& r = *end;
+					if (movingPart & 1)
+						l += diffFrame;
+					if (movingPart & 2)
+						r += diffFrame;
+					if (l < 0) {
 						if (movingPart & 2)
-							r += diffFrame;
-						if (l < 0) {
-							if (movingPart & 2)
-								r -= l;
-							l = 0;
-						}
-						if (movingPart & 1 && l > r)
-							l = r;
-						if (movingPart & 2 && r < l)
-							r = l;
-						move_type = movingPart;
-						move_delta = diffFrame;
+							r -= l;
+						l = 0;
 					}
+					if (movingPart & 1 && l > r)
+						l = r;
+					if (movingPart & 2 && r < l)
+						r = l;
+					move_type = movingPart;
+					move_delta = diffFrame;
 				}
 				if (!io.MouseDown[0]) {
 					movingEntry = false;
@@ -341,7 +312,11 @@ namespace ImSimpleSequencer
 			}
 
 			layer_idx++;
+
+			draw_list->PopClipRect();
 		}
+
+
 		const int anim_layer_count = bone_anim.anim_layers.size();
 		// cursor
 		if (current_frame >= firstFrame && current_frame <= GetFrameMax()) {
@@ -355,7 +330,6 @@ namespace ImSimpleSequencer
 			draw_list->AddRectFilled(ImVec2((float)px, canvas_pos.y), ImVec2((float)px + framePixelWidth, canvas_pos.y + ItemHeight), 0x502A2AFF);
 		}
 
-		draw_list->PopClipRect();
 		draw_list->PopClipRect();
 
 		ImGui::EndChildFrame();

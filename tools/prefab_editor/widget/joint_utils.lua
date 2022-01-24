@@ -87,4 +87,20 @@ function m:show_joints(root)
     end
 end
 
+function m:get_joint_by_name(ske, name)
+    local list = self.joint_list[ske._handle]
+    for index, value in ipairs(list) do
+        if value.name == name then
+            return value
+        end
+    end
+end
+
+function m:set_current_joint(ske, name)
+    local joint = self:get_joint_by_name(ske, name)
+    if joint then
+        self.current_joint = joint
+    end
+end
+
 return m

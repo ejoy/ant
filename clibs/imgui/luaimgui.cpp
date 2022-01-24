@@ -1952,33 +1952,23 @@ wSimpleSequencer(lua_State* L) {
 		lua_pop(L, 1);
 	};
 
-// 	auto update_clip_range = [L, init_clip_ranges]() {
-// 		lua_pushnil(L);
-// 		while (lua_next(L, 1) != 0) {
-// 			const char* anim_name = lua_tostring(L, -2);
-// 			auto it = ImSimpleSequencer::bone_anim.anim_layers.find_if(anim_name);
-// 			if (it != ImSimpleSequencer::anim_info.end()) {
-// 				auto& item = it->second;
-// 				if (lua_type(L, -1) == LUA_TTABLE) {
-// 					init_clip_ranges(item);
-// 				}
-// 			}
-// 			lua_pop(L, 1);
-// 		}
-// 	};
 	static int selected_frame = -1;
 	static int current_frame = 0;
 	static std::string current_anim_name;
 	static int selected_clip_index = -1;
+	static int selected_layer_index = -1;
 	if (lua_type(L, 1) == LUA_TTABLE) {
 		bool dirty = read_field_boolean(L, "dirty", false, 1);
 		int dirty_layer = read_field_int(L, "dirty_layer", 0, 1);
+		ImSimpleSequencer::bone_anim.is_playing = read_field_boolean(L, "is_playing", false, 1);
+		if (ImSimpleSequencer::bone_anim.is_playing) {
+			current_frame = read_field_int(L, "current_frame", 0, 1);
+		}
 		if (dirty) {
 			ImSimpleSequencer::bone_anim.duration = (float)read_field_float(L, "duration", 0.0f, 1);
-			ImSimpleSequencer::bone_anim.is_playing = read_field_boolean(L, "is_playing", false, 1);
-			current_frame = read_field_int(L, "current_frame", 0, 1);
 			selected_frame = read_field_int(L, "selected_frame", 0, 1);
 			auto clip_dirty_num = read_field_int(L, "clip_range_dirty", 0, 1);
+			selected_layer_index = read_field_int(L, "selected_layer_index", 0, 1) - 1;
 			selected_clip_index = read_field_int(L, "selected_clip_index", 0, 1) - 1;
 		}
 		if (dirty_layer != 0) {
@@ -1991,60 +1981,39 @@ wSimpleSequencer(lua_State* L) {
 					lua_pushinteger(L, index + 1);
 					lua_gettable(L, -2);
 					if (lua_type(L, -1) == LUA_TTABLE) {
-// 						if (dirty_layer != -1 && )
-// 						{
-// 						}
-						std::string_view nv;
-						int start = -1;
-						int end = -1;
-						if (lua_getfield(L, -1, "bone_name") == LUA_TSTRING) {
-							nv = lua_tostring(L, -1);
+						ImSimpleSequencer::anim_layer* layer = nullptr;
+						if (dirty_layer == -1) {
+							std::string_view nv;
+							int start = -1;
+							int end = -1;
+							if (lua_getfield(L, -1, "joint_name") == LUA_TSTRING) {
+								nv = lua_tostring(L, -1);
+							}
+							lua_pop(L, 1);
+							ImSimpleSequencer::bone_anim.anim_layers.emplace_back();
+							layer = &ImSimpleSequencer::bone_anim.anim_layers.back();
+							layer->name = nv;
+						} else if (dirty_layer == index + 1) {
+							layer = &ImSimpleSequencer::bone_anim.anim_layers[index];
 						}
-						lua_pop(L, 1);
-						ImSimpleSequencer::bone_anim.anim_layers.emplace_back();
-						auto& item = ImSimpleSequencer::bone_anim.anim_layers.back();
-						item.name = nv;
-						init_clip_ranges(item);
+						if (layer) {
+							init_clip_ranges(*layer);
+						}
 					}
 					lua_pop(L, 1);
 				}
 			}
 			lua_pop(L, 1);
 		}
-// 		while (lua_next(L, 1) != 0) {
-// 			const char* bone_name = lua_tostring(L, -2);
-// 			if (lua_type(L, -1) == LUA_TTABLE) {
-// 				auto duration = (float)read_field_float(L, "duration", 0.0f, -1);
-// 				if (duration > 0.0f) {
-// 					ImSimpleSequencer::anim_info.emplace_back({});
-// 					auto& item = ImSimpleSequencer::anim_info.back();
-// 					item.name = bone_name
-// 					item.duration = duration;
-// 					init_clip_ranges(item);
-// 				}
-// 			}
-// 			lua_pop(L, 1);
-// 		}
-// 		current_anim_name = birth;
-// 		ImSimpleSequencer::current_anim = &ImSimpleSequencer::anim_info[birth];
-// 		std::string anim_name = read_field_string(L, "anim_name", nullptr, 2);
-// 		if (current_anim_name != anim_name) {
-// 			current_anim_name = anim_name;
-// 			ImSimpleSequencer::current_anim = &ImSimpleSequencer::anim_info[current_anim_name];
-// 		}
-// 		ImSimpleSequencer::bone_anim.is_playing = read_field_boolean(L, "is_playing", false, 2);
-// 		current_frame = read_field_int(L, "current_frame", 0, 2);
-// 		selected_frame = read_field_int(L, "selected_frame", 0, 2);
-// 		auto clip_dirty_num = read_field_int(L, "clip_range_dirty", 0, 2);
-// 		selected_clip_index = read_field_int(L, "selected_clip_index", 0, 2) - 1;
-		
 	}
 
 	bool pause = false;
 	int move_type = -1;
 	int move_delta = 0;
 	int current_select = selected_frame;
-	ImSimpleSequencer::SimpleSequencer(pause, current_frame, current_select, move_type, selected_clip_index, move_delta);
+	int current_layer_index = selected_layer_index;
+	int current_clip_index = selected_clip_index;
+	ImSimpleSequencer::SimpleSequencer(pause, selected_layer_index, current_frame, current_select, move_type, selected_clip_index, move_delta);
 	if (pause) {
 		lua_pushinteger(L, current_frame);
 		lua_setfield(L, -2, "pause");
@@ -2059,6 +2028,15 @@ wSimpleSequencer(lua_State* L) {
 		selected_frame = current_select;
 		lua_pushinteger(L, selected_frame);
 		lua_setfield(L, -2, "selected_frame");
+	}
+
+	if (selected_layer_index >= 0 && selected_layer_index != current_layer_index) {
+		lua_pushinteger(L, selected_layer_index + 1);
+		lua_setfield(L, -2, "selected_layer_index");
+		selected_clip_index = -1;
+	}
+
+	if (selected_clip_index >= 0 && selected_clip_index != current_clip_index) {
 		lua_pushinteger(L, selected_clip_index + 1);
 		lua_setfield(L, -2, "selected_clip_index");
 	}
