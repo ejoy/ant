@@ -161,19 +161,24 @@ local math3d_adapter = require "math3d.adapter"
 mathadapter.bind(
 	"animation",
 	function ()
-		local bp_mt = animodule.bind_pose_mt()
-		bp_mt.joint = math3d_adapter.getter(bp_mt.joint, "m", 3)
+		local mt
 
-		local pr_mt = animodule.pose_result_mt()
-		pr_mt.joint = math3d_adapter.getter(pr_mt.joint, "m", 3)
+		mt = animodule.bind_pose_mt()
+		mt.joint = math3d_adapter.getter(mt.joint, "m", 3)
+
+		mt = animodule.pose_result_mt()
+		mt.joint = math3d_adapter.getter(mt.joint, "m", 3)
+
+		mt = animodule.raw_animation_mt()
+		mt.push_prekey = math3d_adapter.format(mt.push_prekey, "vqv", 4)
+
+		mt = animodule.vector_float3_mt()
+		mt.insert = math3d_adapter.format(mt.insert, "v", 2)
+		mt.at = math3d_adapter.getter(mt.at, "v", 3)
+
+		mt = animodule.vector_quaternion_mt()
+		mt.insert = math3d_adapter.format(mt.insert, "q", 2)
+		mt.at = math3d_adapter.getter(mt.at, "q", 3)
 
 		animodule.build_skinning_matrices = math3d_adapter.matrix(animodule.build_skinning_matrices, 5)
-
-		for _, v in ipairs({{"vector_float3_mt", "v"}, {"vector_quaternion_mt", "q"}}) do
-            local mt_name = v[1]
-            local math3d_adapter_fmt = v[2]
-            local mt = animodule[mt_name]()
-            mt.insert = math3d_adapter.format(mt.insert, math3d_adapter_fmt, 2)
-            mt.at = math3d_adapter.getter(mt.at, math3d_adapter_fmt, 3)
-        end
 	end)

@@ -533,30 +533,29 @@ struct alignas(8) ozzRawAnimation : public luaClass<ozzRawAnimation> {
 
 		// time
 		float time = (float)lua_tonumber(L, 3);
-
-		// translation
-		ozz::math::Float3 translation;
-		memcpy(&translation, lua_touserdata(L, 4), sizeof(translation));
-		ozz::animation::offline::RawAnimation::TranslationKey PreTranslationKeys;
-		PreTranslationKeys.time = time;
-		PreTranslationKeys.value = translation;
-		track.translations.push_back(PreTranslationKeys);
+		// scale
+		ozz::math::Float3 scale;
+		memcpy(&scale, lua_touserdata(L, 4), sizeof(scale));
+		ozz::animation::offline::RawAnimation::ScaleKey PreScaleKey;
+		PreScaleKey.time = time;
+		PreScaleKey.value = scale;
+		track.scales.push_back(PreScaleKey);
 
 		// rotation
 		ozz::math::Quaternion rotation;
-		memcpy(&translation, lua_touserdata(L, 5), sizeof(rotation));
+		memcpy(&rotation, lua_touserdata(L, 5), sizeof(rotation));
 		ozz::animation::offline::RawAnimation::RotationKey PreRotationKey;
 		PreRotationKey.time = time;
 		PreRotationKey.value = rotation;
 		track.rotations.push_back(PreRotationKey);
 
-		// scale
-		ozz::math::Float3 scale;
-		memcpy(&scale, lua_touserdata(L, 6), sizeof(scale));
-		ozz::animation::offline::RawAnimation::ScaleKey PreScaleKey;
-		PreScaleKey.time = time;
-		PreScaleKey.value = scale;
-		track.scales.push_back(PreScaleKey);
+		// translation
+		ozz::math::Float3 translation;
+		memcpy(&translation, lua_touserdata(L, 6), sizeof(translation));
+		ozz::animation::offline::RawAnimation::TranslationKey PreTranslationKeys;
+		PreTranslationKeys.time = time;
+		PreTranslationKeys.value = translation;
+		track.translations.push_back(PreTranslationKeys);
 
 		return 0;
 	}
