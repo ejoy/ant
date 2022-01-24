@@ -28,7 +28,7 @@ do
 	end
 	fs.create_directories(repo)
 	for i = 0, 255 do
-		fs.create_directory(root / ("%02x"):format(i))
+		fs.create_directory(root / ".repo" / ("%02x"):format(i))
 	end
 	fs.current_path(root)
 end

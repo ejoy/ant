@@ -116,14 +116,12 @@ static void push_message(struct ant_window_message* msg) {
 }
 @end
 
-@implementation SceneDelegate
--(void)scene:(UIScene *)scene willConnectToSession:(UISceneSession *)session options:(UISceneConnectionOptions *)connectionOptions API_AVAILABLE(ios(13.0)){
+@implementation AppDelegate
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     CGRect rect = [[UIScreen mainScreen] bounds];
     float scale = [[UIScreen mainScreen] scale];
     self.m_window = [[UIWindow alloc] initWithFrame: rect];
-    
-    UIWindowScene *windowScene = (UIWindowScene *)scene;
-    [self.m_window setWindowScene:windowScene];
     
     [self.m_window setBackgroundColor:[UIColor whiteColor]];
     
@@ -135,28 +133,14 @@ static void push_message(struct ant_window_message* msg) {
     mvc.view = self.m_view;
     [self.m_window setRootViewController: mvc];
     [self.m_window makeKeyAndVisible];
-}
-- (void)sceneDidBecomeActive:(UIScene *)scene {
     [self.m_view start];
+    return YES;
 }
-- (void)sceneWillResignActive:(UIScene *)scene {
-    [self.m_view stop];
-}
-- (void)sceneDidDisconnect:(UIScene *)scene {
+- (void) applicationWillTerminate:(UIApplication *)application {
     struct ant_window_message msg;
     msg.type = ANT_WINDOW_EXIT;
     push_message(&msg);
     [self.m_view stop];
-}
-@end
-
-@implementation AppDelegate
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    return YES;
-}
--(UISceneConfiguration *)application:(UIApplication *)application configurationForConnectingSceneSession:(UISceneSession *)connectingSceneSession options:(UISceneConnectionOptions *)options API_AVAILABLE(ios(13.0)){
-    UISceneConfiguration * config = [[UISceneConfiguration alloc] initWithName:@"Default Configuration" sessionRole:connectingSceneSession.role];
-    return config;
 }
 @end
 
