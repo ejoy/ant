@@ -22,7 +22,6 @@ graphic:
     flat_distance: 0
     curve_rate: 0.1
     distance: 1200
-    dirVS: {0.0, 0.0, 1.0, 0.0}
   lighting:
     cluster_shading: 1
   render:

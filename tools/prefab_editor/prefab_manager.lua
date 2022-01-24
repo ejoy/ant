@@ -311,7 +311,7 @@ function m:create(what, config)
                 return fields
             end
 
-            local ww, hh = 32, 32
+            local ww, hh = 64, 64
             local terrain_fields = generate_terrain_fields(ww, hh)
             local template = {
                 policy = {

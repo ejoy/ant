@@ -49,8 +49,7 @@ vec3 curve_world_offset(vec3 posWS, mat4 viewmat, mat4 inv_viewmat)
                 vec4(0.0, 0.0, 0.0, 1.0));
 
             // NOTE: we should add offset in VS and transform to WS, or it will faild depth test when compare to pre-depth pass's depth
-            vec4 offsetVS = mul(ct, vec4(u_curveworld_dir.xyz*dis, 0.0));
-            posVS.xyz += offsetVS.xyz;
+            posVS = mul(ct, posVS);
             return mul(inv_viewmat, posVS).xyz;
             //return posWS+offset;
         }

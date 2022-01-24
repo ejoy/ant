@@ -113,8 +113,6 @@ local function update_curve_param(cw)
 		elseif cw.type =="view_sphere" then
 			cw_param.v = math3d.vector(cw.flat_distance, cw.base_distance, cw.exp, cw.amplification)
 		end
-		local cw_dir = system_properties.u_curveworld_dir
-		cw_dir.v = math3d.vector(cw.dirVS)
 	end
 end
 

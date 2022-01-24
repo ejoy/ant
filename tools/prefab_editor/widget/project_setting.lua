@@ -77,7 +77,6 @@ end
 local default_curve_world<const> = {
     enable = false,
     type = "cylinder",
-    dirVS = {0, 0, 1},
     flat_distance = 0,
     curve_rate = 0.05,
     distance = 500,
@@ -94,7 +93,6 @@ local function backup_curve_world_setting()
     old_setting = {
         enable          = cw.enable,
         type            = cw.type,
-        dirVS           = cw.dirVS,
         flat_distance   = cw.flat_distance,
         curve_rate      = cw.curve_rate,
     }
@@ -103,7 +101,6 @@ local function apply_curve_world_setting(cw_setting)
     local s = setting.setting
     s:set("graphic/curve_world/enable",       cw_setting.enable)
     s:set("graphic/curve_world/type",         cw_setting.type)
-    s:set("graphic/curve_world/dirVS",        cw_setting.dirVS)
     s:set("graphic/curve_world/flat_distance",cw_setting.flat_distance)
     s:set("graphic/curve_world/curve_rate",   cw_setting.curve_rate)
 end
@@ -242,13 +239,6 @@ local function setting_ui(sc)
             else
                 assert(cw.type == "view_sphere")
                 --log.info("curve world type 'view_sphere' is not used")
-            end
-
-            local origin_disVS = cw.dirVS or default_curve_world.dirVS
-            local dirVS = {}; for i=1, #origin_disVS do dirVS[i] = origin_disVS[i] end
-            if PropertyFloat("Direction", dirVS) then
-                sc:set("graphic/curve_world/dirVS", dirVS)
-                modified = true
             end
             EndDisabled()
 
