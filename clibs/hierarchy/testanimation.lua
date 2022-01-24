@@ -32,6 +32,7 @@ local duration = 10.0
 local skl = skeleton.build({
     {name = "root_1", s = {1.0, 1.0, 1.0}, r = {0.0, 0.0, 0.0, 1.0}, t = {0.0, 0.0, 0.0}},
     {name = "root_2", s = {1.0, 1.0, 1.0}, r = {0.0, 0.0, 0.0, 1.0}, t = {0.0, 0.0, 0.0}},
+    {name = "root_3", s = {1.0, 1.0, 1.0}, r = {0.0, 0.0, 0.0, 1.0}, t = {0.0, 0.0, 0.0}},
 })
 
 local raw_animation = animation.new_raw_animation()
@@ -72,7 +73,7 @@ local function test()
 
     for i = 1, poseresult:count() do
         local m = math3d.tovalue(poseresult:joint(i))
-        print(table.concat(m, ","))
+        print(("joint %d:"):format(i), table.concat(m, ","))
     end
 end
 
