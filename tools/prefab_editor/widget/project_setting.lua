@@ -25,6 +25,7 @@ local BeginTabBar   = imgui.windows.BeginTabBar
 local EndTabBar     = imgui.windows.EndTabBar
 local BeginTabItem  = imgui.windows.BeginTabItem
 local EndTabItem    = imgui.windows.EndTabItem
+local IsPopupOpen   = imgui.windows.IsPopupOpen
 local BeginPopupModal=imgui.windows.BeginPopupModal
 local EndPopup      = imgui.windows.EndPopup
 local SameLine      = imgui.cursor.SameLine
@@ -80,11 +81,35 @@ local default_curve_world<const> = {
     flat_distance = 0,
     curve_rate = 0.05,
     distance = 500,
-    max_rage = math.pi*0.6,
+    max_range = math.pi*0.6,
     type_options = {"cylinder", "view_sphere"}
 }
 
 local project_settings = {}
+
+local apply_curve_world_in_editor = false
+local old_setting
+local function backup_curve_world_setting()
+    local s = setting.setting
+    local cw = s:data().graphic.curve_world
+    old_setting = {
+        enable          = cw.enable,
+        type            = cw.type,
+        dirVS           = cw.dirVS,
+        flat_distance   = cw.flat_distance,
+        curve_rate      = cw.curve_rate,
+        max_range       = cw.max_range,
+    }
+end
+local function apply_curve_world_setting(cw_setting)
+    local s = setting.setting
+    s:set("graphic/curve_world/enable",       cw_setting.enable)
+    s:set("graphic/curve_world/type",         cw_setting.type)
+    s:set("graphic/curve_world/dirVS",        cw_setting.dirVS)
+    s:set("graphic/curve_world/flat_distance",cw_setting.flat_distance)
+    s:set("graphic/curve_world/curve_rate",   cw_setting.curve_rate)
+    s:set("graphic/curve_world/max_range",    cw_setting.max_range)
+end
 
 local function setting_ui(sc)
     local graphic = sc:data().graphic
@@ -158,9 +183,21 @@ local function setting_ui(sc)
         end
 
         --curve world
-        
         if TreeNode("Curve World", default_tr_flags)then
             local cw = graphic.curve_world
+
+            SameLine()
+            local aa = {apply_curve_world_in_editor}
+            if Checkbox("Apply in Editor", aa) then
+                local result = aa[1]
+                if result then
+                    backup_curve_world_setting()
+                end
+        
+                apply_curve_world_in_editor = result
+            end
+
+            local modified
             local change, enable = Checkbox("Enable", cw and cw.enable or false)
             if change then
                 if cw == nil then
@@ -168,6 +205,7 @@ local function setting_ui(sc)
                     cw = default_curve_world
                 end
                 sc:set("graphic/curve_world/enable", enable)
+                modified = true
             end
             cw = cw or default_curve_world
 
@@ -176,6 +214,7 @@ local function setting_ui(sc)
                 for _, n in ipairs(default_curve_world.type_options) do
                     if imgui.widget.Selectable(n, cw.type == n) then
                         sc:set("graphic/curve_world/type", n)
+                        modified = true
                     end
                 end
                 EndCombo()
@@ -186,12 +225,14 @@ local function setting_ui(sc)
                 local v = {cw.flat_distance, speed=1.0, min=0.0}
                 if PropertyFloat("Flat Distance", v) then
                     sc:set("graphic/curve_world/flat_distance", v[1])
+                    modified = true
                 end
                 v[1] = cw.curve_rate
                 v.speed = 0.1
                 v.max = 1.0
                 if PropertyFloat("Curve Rate", v) then
                     sc:set("graphic/curve_world/curve_rate", v[1])
+                    modified = true
                 end
 
                 v[1] = cw.distance
@@ -199,11 +240,13 @@ local function setting_ui(sc)
                 v.max = nil
                 if PropertyFloat("Curve distance", v) then
                     sc:set("graphic/curve_world/distance", v[1])
+                    modified = true
                 end
 
                 v[1] = math.deg(cw.max_range)
                 if PropertyFloat("Max Range", v) then
                     sc:set("graphic/curve_world/max_range", math.rad(v[1]))
+                    modified = true
                 end
             else
                 assert(cw.type == "view_sphere")
@@ -214,8 +257,13 @@ local function setting_ui(sc)
             local dirVS = {}; for i=1, #origin_disVS do dirVS[i] = origin_disVS[i] end
             if PropertyFloat("Direction", dirVS) then
                 sc:set("graphic/curve_world/dirVS", dirVS)
+                modified = true
             end
             EndDisabled()
+
+            if modified then
+                apply_curve_world_setting(apply_curve_world_in_editor and cw or old_setting)
+            end
             TreePop()
         end
 
@@ -231,8 +279,17 @@ end
 
 function ps.show(open_popup)
     if open_popup then
+        if not IsPopupOpen(ps.id) then
+            apply_curve_world_in_editor = false
+        end
+
         imgui.windows.OpenPopup(ps.id)
         imgui.windows.SetNextWindowSize(800, 600)
+    else
+        if not IsPopupOpen(ps.id) and apply_curve_world_in_editor then
+            apply_curve_world_setting(old_setting)
+            apply_curve_world_in_editor = false
+        end
     end
 
     if BeginPopupModal(ps.id, default_win_flags) then
