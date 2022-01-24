@@ -13,9 +13,12 @@ local samplerutil= renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
 
 local irender   = ecs.import.interface "ant.render|irender"
-local ientity	= ecs.import.interface "ant.render|ientity"
+local irq		= ecs.import.interface "ant.render|irenderqueue"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local imesh		= ecs.import.interface "ant.asset|imesh"
+
+local setting 	= import_package "ant.settings".setting
+local curve_world = setting:data().graphic.curve_world
+local cw_enable = curve_world.enable
 
 local pickup_materials = {}
 
@@ -33,18 +36,13 @@ local function genid()
 	return max_pickupid
 end
 
-local function get_properties(id, fx)
-	local v = math3d.ref(math3d.vector(packeid_as_rgba(id)))
-	local u = fx.uniforms[1]
-	assert(u.name == "u_id")
-	return {
-		u_id = {
-			value = v,
-			handle = u.handle,
-			type = u.type,
-			set = imaterial.property_set_func "u"
-		}
-	}
+local function get_properties(id, properties)
+	return setmetatable({
+		u_id = setmetatable({
+			value = math3d.ref(math3d.vector(packeid_as_rgba(id)))
+		},
+		{__index=properties.u_id})
+	}, {__index=properties})
 end
 
 local function find_camera(cref)
@@ -147,10 +145,10 @@ local function blit_buffer_init(blit_buffer)
 	blit_buffer.blit_viewid = viewidmgr.get "pickup_blit"
 end
 
-local pickup_buffer_w, pickup_buffer_h = 8, 8
-local pickupviewid = viewidmgr.get "pickup"
+local pickup_buffer_w<const>, pickup_buffer_h<const> = 8, 8
+local pickupviewid<const> = viewidmgr.get "pickup"
 
-local fb_renderbuffer_flag = samplerutil.sampler_flag {
+local fb_renderbuffer_flag<const> = samplerutil.sampler_flag {
 	RT="RT_ON",
 	MIN="POINT",
 	MAG="POINT",
@@ -282,6 +280,16 @@ end
 function pickup_sys:update_camera()
 	for e in w:select "pickup_queue visible pickup:in camera_ref:in" do
 		update_camera(e.camera_ref, e.pickup.clickpt)
+		if cw_enable then
+			local mcref = irq.main_camera()
+			w:sync("camera:in", mcref)
+			local mc_viewmat = mcref.camera.viewmat
+			local mc_inv_viewmat = math3d.transpose(mc_viewmat)
+			for _, pm in pairs(pickup_materials) do
+				imaterial.set_property_directly(pm.properties, "u_viewcamera_viewmat", mc_viewmat)
+				imaterial.set_property_directly(pm.properties, "u_viewcamera_inv_viewmat", mc_inv_viewmat)
+			end
+		end
 	end
 end
 
@@ -298,7 +306,8 @@ local function select_obj(blit_buffer, render_target)
 	if selecteid then
 		local e = pickup_refs[selecteid]
 		if e then
-			log.info("pick entity id: ", selecteid)
+			w:sync("name?in", e)
+			log.info("pick entity id: ", selecteid, e.name)
 			world:pub {"pickup", e}
 			return
 		end
@@ -345,7 +354,7 @@ function pickup_sys:end_filter()
 				pickup_refs[e.reference] = id
 				fm[fn] = {
 					fx			= m.fx,
-					properties	= get_properties(id, m.fx),
+					properties	= get_properties(id, m.properties),
 					state		= irender.check_primitive_mode_state(state, m.state),
 				}
 			elseif fr[fn] == false then

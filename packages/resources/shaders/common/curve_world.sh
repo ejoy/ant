@@ -1,6 +1,7 @@
 #ifndef _CURVE_WORLD_SH_
 #define _CURVE_WORLD_SH_
 
+#include "common/constants.sh"
 #include "common/camera.sh"
 
 #if !defined(NO_CURVE_WORLD) && defined(ENABLE_CURVE_WORLD)

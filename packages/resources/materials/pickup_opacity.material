@@ -1,6 +1,10 @@
 fx:
   fs: /pkg/ant.resources/shaders/picking/fs_picking.sc
   vs: /pkg/ant.resources/shaders/picking/vs_picking.sc
+  setting:
+    lighting: off
 properties:
   u_id: {0, 0, 0, 0}
+  u_viewcamera_viewmat: {1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0}
+  u_viewcamera_inv_viewmat: {1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0}
 state: /pkg/ant.resources/materials/states/default.state
