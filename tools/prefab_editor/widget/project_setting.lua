@@ -94,6 +94,7 @@ local function backup_curve_world_setting()
         enable          = cw.enable,
         type            = cw.type,
         flat_distance   = cw.flat_distance,
+        distance        = cw.distance,
         curve_rate      = cw.curve_rate,
     }
 end
@@ -102,6 +103,7 @@ local function apply_curve_world_setting(cw_setting)
     s:set("graphic/curve_world/enable",       cw_setting.enable)
     s:set("graphic/curve_world/type",         cw_setting.type)
     s:set("graphic/curve_world/flat_distance",cw_setting.flat_distance)
+    s:set("graphic/curve_world/distance",     cw_setting.distance)
     s:set("graphic/curve_world/curve_rate",   cw_setting.curve_rate)
 end
 
@@ -186,6 +188,8 @@ local function setting_ui(sc)
                 local result = aa[1]
                 if result then
                     backup_curve_world_setting()
+                else
+                    apply_curve_world_setting(old_setting)
                 end
         
                 apply_curve_world_in_editor = result
@@ -242,8 +246,8 @@ local function setting_ui(sc)
             end
             EndDisabled()
 
-            if modified then
-                apply_curve_world_setting(apply_curve_world_in_editor and cw or old_setting)
+            if modified and apply_curve_world_in_editor then
+                apply_curve_world_setting(cw)
             end
             TreePop()
         end
