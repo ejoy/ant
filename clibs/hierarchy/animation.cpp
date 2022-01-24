@@ -503,15 +503,34 @@ struct alignas(8) ozzRawAnimation : public luaClass<ozzRawAnimation> {
 
 	static int lclear(lua_State* L) {
 		auto base = base_type::get(L, 1);
-		base->m_skeleton = nullptr;
 		ozz::animation::offline::RawAnimation* pv = base->v;
+
+		base->m_skeleton = nullptr;
 		pv->tracks.clear();
+		return 0;
+	}
+
+	static int lclear_prekey(lua_State* L) {
+		auto base = base_type::get(L, 1);
+		ozz::animation::offline::RawAnimation* pv = base->v;
+
+		// joint name
+		int idx = ozz::animation::FindJoint(*base->m_skeleton, lua_tostring(L, 2));
+		if (idx < 0) {
+			luaL_error(L, "Can not found joint name");
+			return 0;
+		}
+		ozz::animation::offline::RawAnimation::JointTrack& track = pv->tracks[idx];
+		track.scales.clear();
+		track.rotations.clear();
+		track.translations.clear();
 		return 0;
 	}
 
 	static int lsetup(lua_State *L) {
 		auto base = base_type::get(L, 1);
 		ozz::animation::offline::RawAnimation* pv = base->v;
+
 		const auto ske = (hierarchy_build_data*)luaL_checkudata(L, 2, "HIERARCHY_BUILD_DATA");
 		base->m_skeleton = ske->skeleton;
 		pv->duration = (float)lua_tonumber(L, 3);
@@ -533,6 +552,7 @@ struct alignas(8) ozzRawAnimation : public luaClass<ozzRawAnimation> {
 
 		// time
 		float time = (float)lua_tonumber(L, 3);
+
 		// scale
 		ozz::math::Float3 scale;
 		memcpy(&scale, lua_touserdata(L, 4), sizeof(scale));
@@ -561,7 +581,9 @@ struct alignas(8) ozzRawAnimation : public luaClass<ozzRawAnimation> {
 	}
 
 	static int lbuild(lua_State *L) {
+		auto base = base_type::get(L, 1);
 		ozz::animation::offline::RawAnimation* pv = base_type::get(L, 1)->v;
+
 		ozz::animation::offline::AnimationBuilder builder;
 		ozz::animation::Animation *animation = builder(*pv).release();
 		if (!animation) {
@@ -579,11 +601,12 @@ struct alignas(8) ozzRawAnimation : public luaClass<ozzRawAnimation> {
 
 	static void registerMetatable(lua_State* L) {
 		luaL_Reg l[] = {
-			{"setup",    lsetup},
-			{"push_prekey", lpush_prekey},
-			{"build", 	 lbuild},
-			{"clear", 	 lclear},
-			{nullptr, 	 nullptr,}
+			{"setup",        lsetup},
+			{"push_prekey",  lpush_prekey},
+			{"build", 	     lbuild},
+			{"clear", 	     lclear},
+			{"clear_prekey", lclear_prekey},
+			{nullptr, 	     nullptr,}
 		};
 		base_type::reigister_mt(L, l);
 		lua_pop(L, 1);

@@ -37,6 +37,21 @@ local skl = skeleton.build({
 
 local raw_animation = animation.new_raw_animation()
 
+local function build_animation(raw_animation)
+    local ani = raw_animation:build()
+
+    --
+    local poseresult = animation.new_pose_result(#skl)
+    poseresult:setup(skl)
+    poseresult:do_sample(animation.new_sampling_context(1), ani, 0.1, 0)
+    poseresult:fetch_result()
+
+    for i = 1, poseresult:count() do
+        local m = math3d.tovalue(poseresult:joint(i))
+        print(("joint %d:"):format(i), table.concat(m, ","))
+    end
+end
+
 local function test()
     raw_animation:setup(skl, duration)
 
@@ -63,20 +78,41 @@ local function test()
         )
     end
 
-    local ani = raw_animation:build()
-
-    --
-    local poseresult = animation.new_pose_result(#skl)
-    poseresult:setup(skl)
-    poseresult:do_sample(animation.new_sampling_context(1), ani, 0.1, 0)
-    poseresult:fetch_result()
-
-    for i = 1, poseresult:count() do
-        local m = math3d.tovalue(poseresult:joint(i))
-        print(("joint %d:"):format(i), table.concat(m, ","))
-    end
+    build_animation(raw_animation)
 end
 
 test()
 raw_animation:clear()
-test()
+print("------------")
+
+local function test_clear_prekey(raw_animation)
+    raw_animation:setup(skl, duration)
+
+    local joint_name 
+    joint_name = "root_1"
+    for i = 0, 10, 1 do
+        raw_animation:push_prekey(
+            joint_name,
+            i, -- time [0, duration]
+            mc.ONE, -- scale
+            math3d.quaternion({axis = math3d.vector {0, 1, 0}, r = math.pi * 0.5}), -- rotation
+            math3d.vector({0, 1, 0}) -- translation
+        )
+    end
+
+    joint_name = "root_2"
+    for i = 0, 10, 2 do
+        raw_animation:push_prekey(
+            joint_name,
+            i, -- time [0, duration]
+            mc.ONE, -- scale
+            math3d.quaternion({axis = math3d.vector {0, 1, 0}, r = math.pi * 0.5}), -- rotation
+            math3d.vector({0, 1, 0}) -- translation
+        )
+    end
+
+    raw_animation:clear_prekey("root_2")
+
+    build_animation(raw_animation)
+end
+test_clear_prekey(raw_animation)
