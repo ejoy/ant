@@ -7,10 +7,10 @@ local cw = setting:data().graphic.curve_world
 local icw = ecs.interface "icurve_world"
 
 --runtime disable
-local last_max_range = cw.max_range
+local last_curve_rate = cw.curve_rate
 function icw.enable(e)
     if e ~= nil then
-        setting:set("graphic/curve_world/max_range", e and last_max_range or 0.0)
+        setting:set("graphic/curve_world/curve_rate", e and last_curve_rate or 0.0)
         setting:set("graphic/curve_world/enable", e)
     else
         return cw.enable
