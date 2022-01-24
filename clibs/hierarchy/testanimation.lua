@@ -45,9 +45,9 @@ local function test()
         raw_animation:push_prekey(
             joint_name,
             i, -- time [0, duration]
-            math3d.vector({0, 1, 0}), -- translation
+            mc.ONE, -- scale
             math3d.quaternion({axis = math3d.vector {0, 1, 0}, r = math.pi * 0.5}), -- rotation
-            mc.ONE -- scale
+            math3d.vector({0, 1, 0}) -- translation
         )
     end
 
@@ -56,9 +56,9 @@ local function test()
         raw_animation:push_prekey(
             joint_name,
             i, -- time [0, duration]
-            math3d.vector({0, 1, 0}), -- translation
+            mc.ONE, -- scale
             math3d.quaternion({axis = math3d.vector {0, 1, 0}, r = math.pi * 0.5}), -- rotation
-            mc.ONE -- scale
+            math3d.vector({0, 1, 0}) -- translation
         )
     end
 
