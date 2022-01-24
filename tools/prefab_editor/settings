@@ -17,12 +17,11 @@ animation:
       enable: true
 graphic:
   curve_world:
-    enable: false
+    enable: true
     type: "cylinder"
     flat_distance: 0
     curve_rate: 0.1
     distance: 1200
-    max_range: 1.8  #radian
     dirVS: {0.0, 0.0, 1.0, 0.0}
   lighting:
     cluster_shading: 1

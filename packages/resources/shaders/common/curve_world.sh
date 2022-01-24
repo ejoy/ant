@@ -26,7 +26,6 @@ uniform vec4 u_curveworld_param;
 #define u_curveworld_cylinder_flat_distance u_curveworld_param.x
 #define u_curveworld_cylinder_curve_rate    u_curveworld_param.y
 #define u_curveworld_cylinder_distance      u_curveworld_param.z
-#define u_curveworld_cylinder_max_range     u_curveworld_param.w
 #endif //ENABLE_CURVE_WORLD == CURVE_WORLD_TYPE_CYLINDER
 
 uniform vec4 u_curveworld_dir;
@@ -34,12 +33,12 @@ uniform vec4 u_curveworld_dir;
 vec3 curve_world_offset(vec3 posWS, mat4 viewmat, mat4 inv_viewmat)
 {
 #if ENABLE_CURVE_WORLD == CURVE_WORLD_TYPE_CYLINDER
-    if (u_curveworld_cylinder_max_range > 0.0)
+    if (u_curveworld_cylinder_curve_rate > 0.0)
     {
         vec4 posVS = mul(viewmat, vec4(posWS, 1.0));
         float dis = posVS.z-u_curveworld_cylinder_flat_distance;
         if (dis > 0){
-            float radian = clamp((dis / u_curveworld_cylinder_distance) * PI * u_curveworld_cylinder_curve_rate, 0.0, u_curveworld_cylinder_max_range);
+            float radian = clamp((dis / u_curveworld_cylinder_distance) * u_curveworld_cylinder_curve_rate, 0.0, 1.0) * PI;
             float c = cos(radian), s = sin(radian);
 
             //TODO: rotation matrix create as rotate with x-axis in viewspace

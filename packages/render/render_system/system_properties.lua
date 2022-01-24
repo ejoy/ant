@@ -109,7 +109,7 @@ local function update_curve_param(cw)
 	if cw then
 		local cw_param = system_properties.u_curveworld_param
 		if cw.type == "cylinder" then
-			cw_param.v = math3d.vector(cw.flat_distance, cw.curve_rate, cw.distance, cw.max_range)
+			cw_param.v = math3d.vector(cw.flat_distance, cw.curve_rate, cw.distance, 0.0)
 		elseif cw.type =="view_sphere" then
 			cw_param.v = math3d.vector(cw.flat_distance, cw.base_distance, cw.exp, cw.amplification)
 		end

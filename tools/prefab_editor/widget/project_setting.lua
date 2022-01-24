@@ -81,7 +81,6 @@ local default_curve_world<const> = {
     flat_distance = 0,
     curve_rate = 0.05,
     distance = 500,
-    max_range = math.pi*0.6,
     type_options = {"cylinder", "view_sphere"}
 }
 
@@ -98,7 +97,6 @@ local function backup_curve_world_setting()
         dirVS           = cw.dirVS,
         flat_distance   = cw.flat_distance,
         curve_rate      = cw.curve_rate,
-        max_range       = cw.max_range,
     }
 end
 local function apply_curve_world_setting(cw_setting)
@@ -108,7 +106,6 @@ local function apply_curve_world_setting(cw_setting)
     s:set("graphic/curve_world/dirVS",        cw_setting.dirVS)
     s:set("graphic/curve_world/flat_distance",cw_setting.flat_distance)
     s:set("graphic/curve_world/curve_rate",   cw_setting.curve_rate)
-    s:set("graphic/curve_world/max_range",    cw_setting.max_range)
 end
 
 local function setting_ui(sc)
@@ -228,7 +225,7 @@ local function setting_ui(sc)
                     modified = true
                 end
                 v[1] = cw.curve_rate
-                v.speed = 0.1
+                v.speed = 0.01
                 v.max = 1.0
                 if PropertyFloat("Curve Rate", v) then
                     sc:set("graphic/curve_world/curve_rate", v[1])
@@ -236,16 +233,10 @@ local function setting_ui(sc)
                 end
 
                 v[1] = cw.distance
-                v.speed = 1.0
+                v.speed = 0.5
                 v.max = nil
-                if PropertyFloat("Curve distance", v) then
+                if PropertyFloat("Curve Distance", v) then
                     sc:set("graphic/curve_world/distance", v[1])
-                    modified = true
-                end
-
-                v[1] = math.deg(cw.max_range)
-                if PropertyFloat("Max Range", v) then
-                    sc:set("graphic/curve_world/max_range", math.rad(v[1]))
                     modified = true
                 end
             else
