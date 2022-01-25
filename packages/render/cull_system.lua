@@ -5,6 +5,9 @@ local w = world.w
 local math3d = require "math3d"
 local icamera = ecs.import.interface "ant.camera|icamera"
 
+local setting = import_package "ant.settings".setting
+local curveworld = setting:data().graphic.curve_world
+
 local icp = ecs.interface "icull_primitive"
 
 local function cull(cull_tags, vp_mat)
@@ -37,6 +40,9 @@ function cull_sys:entity_ready()
 end
 
 function cull_sys:cull()
+	if curveworld.enable then
+		return 
+	end
 	for v in w:select "visible camera_ref:in render_target:in cull_tag:in" do
 		local camera = icamera.find_camera(v.camera_ref)
 		cull(v.cull_tag, camera.viewprojmat)
