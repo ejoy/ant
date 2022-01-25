@@ -7,8 +7,6 @@ local mc = {ONE = math3d.vector({1, 1, 1})}
 
 --
 local t = {
-    {animation.vector_float3_mt(),     "v",   "format", {"insert", "at"},  2},
-    {animation.vector_quaternion_mt(), "q",   "format", {"insert", "at"},  2},
     {skeleton.node_metatable(),        "vqv", "format", {"add_child"},     3},
     {skeleton.node_metatable(),        "vqv", "getter", {"transform"},     nil},
     {skeleton.node_metatable(),        "vqv", "format", {"set_transform"}, 1},

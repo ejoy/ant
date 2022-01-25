@@ -331,94 +331,6 @@ struct ozzSamplingContext : public luaClass<ozzSamplingContext> {
 };
 REGISTER_LUA_CLASS(ozzSamplingContext)
 
-template <typename T>
-struct ozzVectorBindingT : public ozz::vector<T>, luaClass<ozz::vector<T>> {
-public:
-	typedef luaClass<ozz::vector<T>> base_type;
-	ozzVectorBindingT(size_t size)
-		: ozz::vector<T>(size)
-	{}
-
-	static ozz::vector<T>* getPointer(lua_State* L, int index) {
-#ifdef _DEBUG
-		return (ozz::vector<T>*)luaL_checkudata(L, index, base_type::kLuaName);
-#else
-		return (ozz::vector<T>*)lua_touserdata(L, index);
-#endif
-	}
-
-	static ozz::vector<T>* instance(lua_State* L) {
-		return base_type::constructor(L, 0);
-	}
-protected:
-	//
-	static int lsize(lua_State* L) {
-		auto p = getPointer(L, 1);
-		lua_pushinteger(L, p->size());
-		return 1;
-	}
-
-	// pointer userdata
-	// pos [1, size]
-	// output matrix
-	static int lat(lua_State* L) {
-		auto p = getPointer(L, 1);
-		const auto pos = (size_t)luaL_checkinteger(L, 2) - 1;
-		if (pos >= p->size()) {
-			return luaL_error(L, "invalid pos: %d", pos);
-		}
-
-		auto* r = (float*)lua_touserdata(L, 3);
-		memcpy(r, &p->at(pos), sizeof(T));
-		return 0;
-	}
-
-	static int linsert(lua_State* L) {
-		auto p = getPointer(L, 1);
-
-		T f;
-		auto* r = lua_touserdata(L, 2);
-		memcpy(&f, r, sizeof(T));
-
-		p->emplace_back(f);
-		return 0;
-	}
-
-	static int lclear(lua_State* L) {
-		auto p = getPointer(L, 1);
-		p->clear();
-		return 0;
-	}
-
-public:
-	static int create(lua_State* L) {
-		lua_Integer size = (size_t)luaL_optinteger(L, 1, 0);
-		base_type::constructor(L, (size_t)size);
-		return 1;
-	}
-
-	static void registerMetatable(lua_State* L) {
-		luaL_Reg l[] = {
-			{"size", 		 lsize},
-			{"at", 			 lat},
-			{"insert",		 linsert},
-			{"clear",		 lclear},
-			{nullptr, 		 nullptr,}
-		};
-		base_type::reigister_mt(L, l);
-		lua_pop(L, 1);
-	}
-};
-
-#define REGISTER_OZZ_VECTOR_LUA_CLASS(T, C) \
-	struct alignas(8) C : public ozzVectorBindingT<T> { \
-		C(size_t size) :ozzVectorBindingT<T>(size) {} \
-	}; \
-	template<> const char luaClass<ozz::vector<T>>::kLuaName[] = #C
-
-REGISTER_OZZ_VECTOR_LUA_CLASS(ozz::math::Float3, ozzVectorFloat3);
-REGISTER_OZZ_VECTOR_LUA_CLASS(ozz::math::Quaternion, ozzVectorQuaternion);
-
 struct ozzAnimation : public luaClass<ozzAnimation> {
 	ozz::animation::Animation* v;
 	ozzAnimation()
@@ -931,8 +843,6 @@ int init_animation(lua_State *L) {
 	ozzJointRemap::registerMetatable(L);
 	ozzBindpose::registerMetatable(L);
 	ozzPoseResult::registerMetatable(L);
-	ozzVectorFloat3::registerMetatable(L);
-	ozzVectorQuaternion::registerMetatable(L);
 	ozzRawAnimation::registerMetatable(L);
 
 	lua_newtable(L);
@@ -949,10 +859,6 @@ int init_animation(lua_State *L) {
 		{ "pose_result_mt",				ozzPoseResult::getMT},
 		{ "new_aligned_memory",			ozzAllocator::create},
 		{ "new_joint_remap",			ozzJointRemap::create},
-		{ "new_vector_float3",			ozzVectorFloat3::create},
-		{ "vector_float3_mt",			ozzVectorFloat3::getMT},
-		{ "new_vector_quaternion",		ozzVectorQuaternion::create},
-		{ "vector_quaternion_mt",		ozzVectorQuaternion::getMT},	
 		{ NULL, NULL },
 	};
 	luaL_setfuncs(L,l,0);

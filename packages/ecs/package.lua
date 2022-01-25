@@ -3,7 +3,7 @@ return {
     entry = "main",
     dependencies = {
         "ant.compile_resource",
-        "ant.ecs",
+        "ant.luaecs",
         "ant.serialize",
     }
 }

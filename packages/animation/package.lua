@@ -7,5 +7,6 @@ return {
 		"ant.math.adapter",
 		"ant.render",
 		"ant.timer",
+		"ant.math",
     }
 }

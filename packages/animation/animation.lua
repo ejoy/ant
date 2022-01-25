@@ -172,13 +172,5 @@ mathadapter.bind(
 		mt = animodule.raw_animation_mt()
 		mt.push_prekey = math3d_adapter.format(mt.push_prekey, "vqv", 4)
 
-		mt = animodule.vector_float3_mt()
-		mt.insert = math3d_adapter.format(mt.insert, "v", 2)
-		mt.at = math3d_adapter.getter(mt.at, "v", 3)
-
-		mt = animodule.vector_quaternion_mt()
-		mt.insert = math3d_adapter.format(mt.insert, "q", 2)
-		mt.at = math3d_adapter.getter(mt.at, "q", 3)
-
 		animodule.build_skinning_matrices = math3d_adapter.matrix(animodule.build_skinning_matrices, 5)
 	end)

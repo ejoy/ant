@@ -3,5 +3,6 @@ return {
     dependencies = {
         "ant.math",
         "ant.render",
+        "ant.settings",
     }
 }
