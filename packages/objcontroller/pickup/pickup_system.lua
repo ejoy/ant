@@ -259,14 +259,14 @@ local function open_pickup(x, y)
 	e.pickup.nextstep = "blit"
 	e.pickup.clickpt[1] = x
 	e.pickup.clickpt[2] = y
-	--e.visible = true
+	e.visible = true
 	w:sync("visible?out", e)
 end
 
 local function close_pickup()
 	local e = w:singleton("pickup_queue", "pickup:in")
 	e.pickup.nextstep = nil
-	--e.visible = false
+	e.visible = false
 	w:sync("visible?out", e)
 end
 
@@ -285,7 +285,7 @@ function pickup_sys:data_changed()
 end
 
 function pickup_sys:update_camera()
-	for e in w:select "pickup_queue pickup:in camera_ref:in" do
+	for e in w:select "pickup_queue visible pickup:in camera_ref:in" do
 		update_camera(e.camera_ref, e.pickup.clickpt)
 		if cw_enable then
 			local mcref = irq.main_camera()
