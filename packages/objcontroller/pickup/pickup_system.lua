@@ -37,12 +37,19 @@ local function genid()
 end
 
 local function get_properties(id, properties)
-	return setmetatable({
+	local p = {
 		u_id = setmetatable({
 			value = math3d.ref(math3d.vector(packeid_as_rgba(id)))
 		},
-		{__index=properties.u_id})
-	}, {__index=properties})
+		{__index=properties.u_id}),
+	}
+
+	if curve_world.enable then
+		p.u_viewcamera_viewmat 		= properties.u_viewcamera_viewmat
+		p.u_viewcamera_inv_viewmat 	= properties.u_viewcamera_inv_viewmat
+		p.u_curveworld_param 		= properties.u_curveworld_param
+	end
+	return p
 end
 
 local function find_camera(cref)
@@ -228,7 +235,7 @@ local function create_pick_entity()
 			name 		= "pickup_queue",
 			queue_name 	= "pickup_queue",
 			pickup_queue= true,
-			visible		= false,
+			visible		= true,
 		}
 	}
 end
@@ -252,14 +259,14 @@ local function open_pickup(x, y)
 	e.pickup.nextstep = "blit"
 	e.pickup.clickpt[1] = x
 	e.pickup.clickpt[2] = y
-	e.visible = true
+	--e.visible = true
 	w:sync("visible?out", e)
 end
 
 local function close_pickup()
 	local e = w:singleton("pickup_queue", "pickup:in")
 	e.pickup.nextstep = nil
-	e.visible = false
+	--e.visible = false
 	w:sync("visible?out", e)
 end
 
@@ -278,13 +285,13 @@ function pickup_sys:data_changed()
 end
 
 function pickup_sys:update_camera()
-	for e in w:select "pickup_queue visible pickup:in camera_ref:in" do
+	for e in w:select "pickup_queue pickup:in camera_ref:in" do
 		update_camera(e.camera_ref, e.pickup.clickpt)
 		if cw_enable then
 			local mcref = irq.main_camera()
 			w:sync("camera:in", mcref)
 			local mc_viewmat = mcref.camera.viewmat
-			local mc_inv_viewmat = math3d.transpose(mc_viewmat)
+			local mc_inv_viewmat = math3d.inverse(mc_viewmat)
 			for _, pm in pairs(pickup_materials) do
 				imaterial.set_property_directly(pm.properties, "u_viewcamera_viewmat", mc_viewmat)
 				imaterial.set_property_directly(pm.properties, "u_viewcamera_inv_viewmat", mc_inv_viewmat)
