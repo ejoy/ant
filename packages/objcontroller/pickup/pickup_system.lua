@@ -346,6 +346,14 @@ function pickup_sys:pickup()
 	end
 end
 
+local function remove_ref(ref)
+	local id = pickup_refs[ref]
+	pickup_refs[ref] = nil
+	if id then
+		pickup_refs[id] = nil
+	end
+end
+
 function pickup_sys:end_filter()
 	for e in w:select "filter_result:in render_object:in filter_material:out reference:in" do
 		local fr = e.filter_result
@@ -366,10 +374,14 @@ function pickup_sys:end_filter()
 				}
 			elseif fr[fn] == false then
 				fm[fn] = nil
-				local id = pickup_refs[e.reference]
-				pickup_refs[e.reference] = nil
-				pickup_refs[id] = nil
+				remove_ref(e.reference)
 			end
 		end
+	end
+end
+
+function pickup_sys:entity_remove()
+	for e in w:select "REMOVED reference:in" do
+		remove_ref(e.reference)
 	end
 end

@@ -20,8 +20,8 @@ graphic:
     enable: true
     type: "cylinder"
     flat_distance: 0
-    curve_rate: 0.1
-    distance: 1200
+    curve_rate: 0.11999999731779099
+    distance: 100
   lighting:
     cluster_shading: 1
   render:
