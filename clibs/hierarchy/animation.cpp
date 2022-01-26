@@ -425,6 +425,10 @@ struct alignas(8) ozzRawAnimation : public luaClass<ozzRawAnimation> {
 	static int lclear_prekey(lua_State* L) {
 		auto base = base_type::get(L, 1);
 		ozz::animation::offline::RawAnimation* pv = base->v;
+		if(!base->m_skeleton) {
+			luaL_error(L, "setup must be called first");
+			return 0;
+		}
 
 		// joint name
 		int idx = ozz::animation::FindJoint(*base->m_skeleton, lua_tostring(L, 2));
@@ -453,6 +457,10 @@ struct alignas(8) ozzRawAnimation : public luaClass<ozzRawAnimation> {
 	static int lpush_prekey(lua_State *L) {
 		auto base = base_type::get(L, 1);
 		ozz::animation::offline::RawAnimation* pv = base_type::get(L, 1)->v;
+		if(!base->m_skeleton) {
+			luaL_error(L, "setup must be called first");
+			return 0;
+		}
 
 		// joint name
 		int idx = ozz::animation::FindJoint(*base->m_skeleton, lua_tostring(L, 2));
