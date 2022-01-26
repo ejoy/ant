@@ -36,6 +36,7 @@ local function Render()
 			--local _ <close> = world:cpu_stat "bgfx.frame"
 			rhwi.frame()
 		end
+		world:pipeline_update_end()
 		if quit then
 			ltask.wakeup(quit)
 			return

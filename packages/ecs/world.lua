@@ -90,15 +90,12 @@ end
 
 function world:pipeline_init()
 	self:pipeline_func "init" ()
-	self._update_func = self:pipeline_func "update"
+	self.pipeline_update = self:pipeline_func "update"
+	self.pipeline_update_end = self:pipeline_func "update_end"
 end
 
 function world:pipeline_exit()
 	self:pipeline_func "exit" ()
-end
-
-function world:pipeline_update()
-	self._update_func()
 end
 
 function world:enable_system(name, enable)

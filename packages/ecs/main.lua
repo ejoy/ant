@@ -23,11 +23,6 @@ local function sortpairs(t)
     end
 end
 
-function world:pipeline_init()
-    self:pipeline_func "_init" ()
-    self._update_func = self:pipeline_func "_update"
-end
-
 local function create_entity(w, data)
     if not data.reference then
         w.w:new {
