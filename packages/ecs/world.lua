@@ -89,8 +89,8 @@ function world:print_cpu_stat()
 end
 
 function world:pipeline_init()
-	self:pipeline_func "init" ()
-	self.pipeline_update = self:pipeline_func "update"
+	self:pipeline_func "_init" ()
+	self.pipeline_update = self:pipeline_func "_update"
 	self.pipeline_update_end = self:pipeline_func "update_end"
 end
 
