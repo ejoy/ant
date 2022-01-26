@@ -1,0 +1,8 @@
+fx:
+    cs: /pkg/ant.resources/shaders/panorama/cs_panorama2cubemap.sc
+    setting:
+      lighting: off
+properties:
+    s_source:
+        stage: 0
+        texture: /pkg/ant.resources/textures/default.texture

@@ -9,8 +9,12 @@ interface "iibl"
 
 component "irradiance_builder"
 component "prefilter_builder"
+component "panorama2cubemap_converter".type "lua"
 component "prefilter".type "lua"
 component "LUT_builder"
+
+policy "panorama2cubemap_converter"
+    .component "panorama2cubemap_converter"
 
 policy "prefilter"
     .component "prefilter"

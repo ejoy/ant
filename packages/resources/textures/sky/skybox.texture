@@ -1,4 +1,4 @@
-colorspace: Linear
+colorspace: linear
 format: RGBA32F
 normalmap: false
 mipmap: 0
