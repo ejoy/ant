@@ -11,7 +11,7 @@ data:
     ibl:
         intensity: 1200
         irradiance:
-            size: 128
+            size: 32
         prefilter:
             size: 128
         LUT:
