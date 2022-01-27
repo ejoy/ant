@@ -10,7 +10,7 @@ IMAGE2D_ARRAY_WR(s_irradiance, rgba16f, 1);
 NUM_THREADS(WORKGROUP_THREADS, WORKGROUP_THREADS, 1)
 void main()
 {
-    vec4 color = vec4_splat(0.f);
+    vec3 color = vec3_splat(0.f);
     vec3 N = id2dir(gl_GlobalInvocationID, u_face_texture_size);
 
     for (int sampleidx=0; sampleidx < int(u_sample_count); ++sampleidx){
@@ -30,8 +30,10 @@ void main()
         // lambertian /= pdf;       // invert bias from importance sampling
         // lambertian /= M_PI;   // convert irradiance to radiance https://seblagarde.wordpress.com/2012/01/08/pi-or-not-to-pi-in-game-lighting-equation/
 
-        color += vec4(lambertian, 1.0);
+        color += lambertian;
     }
 
-    imageStore(s_irradiance, gl_GlobalInvocationID, (M_PI * color) / u_sample_count);
+    color /= u_sample_count;
+
+    imageStore(s_irradiance, gl_GlobalInvocationID, vec4(color, 0.0));
 }
