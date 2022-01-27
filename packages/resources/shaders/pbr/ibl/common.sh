@@ -11,31 +11,14 @@ uniform vec4 u_build_ibl_param;
 #endif //WORKGROUP_THREADS
 
 #include "pbr/pbr.sh"
-
-vec3 uv2dir(int face, vec2 uv)
-{
-    switch (face){
-    case 0:
-        return vec3( 1.0, uv.y,-uv.x);
-    case 1:
-        return vec3(-1.0, uv.y, uv.x);
-    case 2:
-        return vec3( uv.x, 1.0,-uv.y);
-    case 3:
-        return vec3( uv.x,-1.0, uv.y);
-    case 4:
-        return vec3( uv.x, uv.y, 1.0);
-    default:
-        return vec3(-uv.x, uv.y,-1.0);
-    }
-}
+#include "common/common.sh"
 
 vec3 id2dir(ivec3 id, float size)
 {
     vec2 uv = id.xy / (u_face_texture_size-1);
     uv = vec2(uv.x, 1.0-uv.y) * 2.0 - 1.0;
     int faceidx = id.z;
-    return normalize(uv2dir(faceidx, uv));
+    return normalize(uvface2dir(uv, faceidx));
 }
 
 void calc_TB(vec3 N, out vec3 T, out vec3 B)
@@ -50,6 +33,7 @@ void calc_TB(vec3 N, out vec3 T, out vec3 B)
 
 vec3 transform_TBN(vec3 v, vec3 T, vec3 B, vec3 N)
 {
+    //careful here for using mat3 build by T, B, N in different platform, so just multipy v with T, B, N can skip this platform relate issue
     return T*v.x + B*v.y + N*v.z;
 }
 

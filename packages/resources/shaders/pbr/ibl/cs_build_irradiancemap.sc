@@ -35,5 +35,5 @@ void main()
 
     color /= u_sample_count;
 
-    imageStore(s_irradiance, gl_GlobalInvocationID, vec4(color, 0.0));
+    imageStore(s_irradiance, gl_GlobalInvocationID, vec4(color, 1.0));
 }

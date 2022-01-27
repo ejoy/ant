@@ -1,7 +1,7 @@
 $input v_posWS
 
 #include <bgfx_shader.sh>
-#include "sky/common.sh"
+#include "common/common.sh"
 
 #ifdef CUBEMAP_SKY
 SAMPLERCUBE(s_skybox, 0);
@@ -18,7 +18,7 @@ void main()
     vec3 n = normalize(v_posWS.xyz);
     vec4 color = textureCube(s_skybox, n);
 #else //!CUBEMAP_SKY
-    vec2 uv = sampleEquirectangularMap(normalize(v_posWS.xyz));
+    vec2 uv = dir2spherecoord(normalize(v_posWS.xyz));
     vec4 color = texture2D(s_skybox, uv);
 #endif //CUBEMAP_SKY
 
