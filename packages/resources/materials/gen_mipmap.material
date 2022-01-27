@@ -1,12 +1,12 @@
 fx:
-  cs: /pkg/ant.resources/shaders/panorama/cs_panorama2cubemap.sc
+  cs: /pkg/ant.resources/shaders/gen_mipmap/cs_gen_mipmap.sc
   setting:
     lighting: off
 properties:
-  u_param: {0.0, 0.0, 0.0, 0.0}
+  u_param: {0.0, 0.0, 0.0, 0.0} #sample lod, NOTUSED, NOTUSED, NOTUSED
   s_source:
     stage: 0
     texture: /pkg/ant.resources/textures/black.texture
-  s_cubemap_source:
+  s_result_source:
     stage: 1
     texture: /pkg/ant.resources/textures/black.texture

@@ -3,6 +3,12 @@
 SAMPLER2D(s_source, 0);
 IMAGE2D_ARRAY_WR(s_cubemap_source, rgba16f, 1);
 
+uniform vec4 u_param;
+#define u_sample_lod u_param.x
+#define u_image_width u_param.y
+#define u_image_height u_param.z
+#define u_image_size u_param.yz
+
 vec3 uvToXYZ(int face, vec2 uv)
 {
 	if(face == 0)
@@ -38,14 +44,14 @@ vec3 panoramaToCubeMap(int face, vec2 texCoord)
 	vec3 direction = normalize(scan);
 	vec2 src = dirToUV(direction);
 
-	return texture2DLod(s_source, src, 0.0).rgb;
+	return texture2DLod(s_source, src, u_sample_lod).rgb;
 }
 
 NUM_THREADS(8, 8, 1)
 void main()
 {
     //ivec2 size = imageSize(s_cubemap_source);
-    vec2 uv = vec2(gl_GlobalInvocationID.xy) / 512.0;
+    vec2 uv = vec2(gl_GlobalInvocationID.xy) / u_image_size;
     int face = (int)gl_GlobalInvocationID.z;
 
     imageStore(s_cubemap_source, ivec3(gl_GlobalInvocationID), vec4(panoramaToCubeMap(face, uv), 0.0));
