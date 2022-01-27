@@ -93,7 +93,7 @@ local function create_irradiance_entity(ibl)
         size / thread_group_size, size / thread_group_size, 6
     }
 
-    local setting = {CUBEMAP_SOURCE=1} --ibl.cubmap and {CUBEMAP_SOURCE=1} or nil
+    local setting = ibl.cubmap and {CUBEMAP_SOURCE=1} or nil
 
     icompute.create_compute_entity(
         "irradiance_builder", "/pkg/ant.resources/materials/ibl/build_irradiance.material", dispatchsize, setting)
@@ -116,7 +116,7 @@ local function create_prefilter_entities(ibl)
             data = {
                 name        = "prefilter_builder",
                 material    = "/pkg/ant.resources/materials/ibl/build_prefilter.material",
-                material_setting = {CUBEMAP_SOURCE=1}, --ibl.cubmap and {CUBEMAP_SOURCE=1} or nil,
+                material_setting = ibl.cubmap and {CUBEMAP_SOURCE=1} or nil,
                 dispatch    ={
                     size    = dispatchsize,
                 },
@@ -155,26 +155,26 @@ local function create_LUT_entity()
 end
 
 function ibl_sys:render_preprocess()
-    local set_source
-    for e in w:select "panorama2cubemap_converter dispatch:in" do
-        local dis = e.dispatch
-        local properties = dis.properties
-        imaterial.set_property_directly(properties, "s_source", ibl_textures.source)
+    -- local set_source
+    -- for e in w:select "panorama2cubemap_converter dispatch:in" do
+    --     local dis = e.dispatch
+    --     local properties = dis.properties
+    --     imaterial.set_property_directly(properties, "s_source", ibl_textures.source)
 
-        local p = properties.u_param.value
-        local size = dis.size
-        p.v = math3d.set_index(p, 1, dis.sample_lod, size[1]*thread_group_size, size[2]*thread_group_size)
+    --     local p = properties.u_param.value
+    --     local size = dis.size
+    --     p.v = math3d.set_index(p, 1, dis.sample_lod, size[1]*thread_group_size, size[2]*thread_group_size)
 
-        local cubemap_source_stage<const> = 1
-        properties.s_cubemap_source = icompute.create_image_property(ibl_textures.cubemap_source.texture.handle, cubemap_source_stage, dis.sample_lod, "w")
-        icompute.dispatch(ibl_viewid, dis)
-        w:remove(e)
-        set_source = true
-    end
+    --     local cubemap_source_stage<const> = 1
+    --     properties.s_cubemap_source = icompute.create_image_property(ibl_textures.cubemap_source.texture.handle, cubemap_source_stage, dis.sample_lod, "w")
+    --     icompute.dispatch(ibl_viewid, dis)
+    --     w:remove(e)
+    --     set_source = true
+    -- end
 
-    if set_source then
-        ibl_textures.source = ibl_textures.cubemap_source
-    end
+    -- if set_source then
+    --     ibl_textures.source = ibl_textures.cubemap_source
+    -- end
 
     local source_tex = ibl_textures.source
     for e in w:select "irradiance_builder dispatch:in" do
@@ -244,23 +244,23 @@ local function build_ibl_textures(ibl)
 
     --TODO: make irradiance as 2D map and use RGB8E format to store
     ibl_textures.source.texture.handle = ibl.source.handle
-    if not ibl.cubemap then
-        ibl_textures.cubemap_source.size = 512
-        check_destroy(ibl_textures.cubemap_source.texture.handle)
-        ibl_textures.cubemap_source.texture.handle = bgfx.create_texturecube(ibl_textures.cubemap_source.size, true, 1, "RGBA16F", cubemap_flags)
-    end
+    -- if not ibl.cubemap then
+    --     ibl_textures.cubemap_source.size = 512
+    --     check_destroy(ibl_textures.cubemap_source.texture.handle)
+    --     ibl_textures.cubemap_source.texture.handle = bgfx.create_texturecube(ibl_textures.cubemap_source.size, true, 1, "RGBA16F", cubemap_flags)
+    -- end
 
     if ibl.irradiance.size ~= ibl_textures.irradiance.size then
         ibl_textures.irradiance.size = ibl.irradiance.size
         check_destroy(ibl_textures.irradiance.handle)
 
-        ibl_textures.irradiance.handle = bgfx.create_texturecube(ibl_textures.irradiance.size, false, 1, "RGBA32F", flags)
+        ibl_textures.irradiance.handle = bgfx.create_texturecube(ibl_textures.irradiance.size, false, 1, "RGBA16F", flags)
     end
 
     if ibl.prefilter.size ~= ibl_textures.prefilter.size then
         ibl_textures.prefilter.size = ibl.prefilter.size
         check_destroy(ibl_textures.prefilter.handle)
-        ibl_textures.prefilter.handle = bgfx.create_texturecube(ibl_textures.prefilter.size, true, 1, "RGBA32F", cubemap_flags)
+        ibl_textures.prefilter.handle = bgfx.create_texturecube(ibl_textures.prefilter.size, true, 1, "RGBA16F", cubemap_flags)
         ibl_textures.prefilter.mipmap_count = math.log(ibl.prefilter.size, 2)+1
     end
 
@@ -273,7 +273,7 @@ end
 
 
 local function create_ibl_entities(ibl)
-    create_cvt2cubemap_entities(ibl)
+    --create_cvt2cubemap_entities(ibl)
     create_irradiance_entity(ibl)
     create_prefilter_entities(ibl)
     create_LUT_entity()
