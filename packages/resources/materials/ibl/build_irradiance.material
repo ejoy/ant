@@ -4,7 +4,7 @@ fx:
         BUILD_IRRADIANCE_MAP: 1
         lighting: off
 properties:
-    u_build_ibl_param: {512, 0, 64, 0}    #sample count, lod bais, cube face texture size, roughness
+    u_build_ibl_param: {20480, 0, 32, 0}    #sample count, lod bais, cube face texture size, roughness
     s_source:
         stage: 0
         texture: /pkg/ant.resources/textures/default.texture
