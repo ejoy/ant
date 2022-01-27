@@ -30,45 +30,35 @@ vec3 uv2dir(int face, vec2 uv)
     }
 }
 
-vec2 dir2uv(vec3 dir)
-{
-    return vec2(
-            0.5f + 0.5f * atan2(dir.z, dir.x) / M_PI,
-            1.f - acos(dir.y) / M_PI);
-}
-
 vec3 id2dir(ivec3 id, float size)
 {
-    vec2 xy = id.xy / u_face_texture_size;
-    xy = xy * 2.0 - 1.0;
-    xy.y *= -1.0;
+    vec2 uv = id.xy / (u_face_texture_size-1);
+    uv = vec2(uv.x, 1.0-uv.y) * 2.0 - 1.0;
     int faceidx = id.z;
-    return normalize(uv2dir(faceidx, xy));
+    return normalize(uv2dir(faceidx, uv));
 }
 
-mat3 generate_tbn(vec3 normal)
+void calc_TB(vec3 N, out vec3 T, out vec3 B)
 {
-    vec3 bitangent = vec3(0.0, 1.0, 0.0);
-
-    float NdotUp = dot(normal, vec3(0.0, 1.0, 0.0));
     float epsilon = 0.0000001;
-    if (1.0 - abs(NdotUp) <= epsilon)
-    {
-        // Sampling +Y or -Y, so we need a more robust bitangent.
-        bitangent = (NdotUp > 0.0) ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 0.0, -1.0);
-    }
+    T = cross(N, vec3(0.0, 1.0, 0.0));
+	T = lerp(cross(N, vec3(1.0, 0.0, 0.0)), T, step(epsilon, dot(T, T)));
 
-    vec3 tangent = normalize(cross(bitangent, normal));
-    bitangent = cross(normal, tangent);
+	T = normalize(T);
+	B = normalize(cross(N, T));
+}
 
-    return mtxFromCols(tangent, bitangent, normal);
+vec3 transform_TBN(vec3 v, vec3 T, vec3 B, vec3 N)
+{
+    return T*v.x + B*v.y + N*v.z;
 }
 
 vec3 spherecoord2dir(vec3 N, float sin_theta, float cos_theta, float sin_phi, float cos_phi)
 {
     vec3 dir_LS = normalize(vec3(sin_theta * cos_phi, sin_theta * sin_phi, cos_theta));
-    mat3 TBN = generate_tbn(N);
-    return instMul(dir_LS, TBN);
+    vec3 T, B;
+    calc_TB(N, T, B);
+    return transform_TBN(dir_LS, T, B, N);
 }
 
 // Mipmap Filtered Samples (GPU Gems 3, 20.4)
