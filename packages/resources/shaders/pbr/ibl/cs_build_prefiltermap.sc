@@ -16,16 +16,15 @@ void main()
     vec3 N = id2dir(gl_GlobalInvocationID, u_face_texture_size);
 
     for (int sampleidx=0; sampleidx < int(u_sample_count); ++sampleidx){
-        vec3 H = importance_sample_GGX(sampleidx, N, u_roughness);
-        float NdotH = saturate(H.z);
-        float pdf = PDF_GGX(NdotH, u_roughness);
-
+        vec4 H = importance_sample_GGX(sampleidx, N, u_roughness);
+        vec3 H_dir = H.xyz;
+        float pdf = H.w;
         float lod = compute_lod(pdf);
         lod += u_lod_bias;
 
         // Note: reflect takes incident vector.
         vec3 V = N;
-        vec3 L = normalize(reflect(-V, H));
+        vec3 L = normalize(reflect(-V, H_dir));
         float NdotL = dot(N, L);
 
         if (NdotL > 0.0)

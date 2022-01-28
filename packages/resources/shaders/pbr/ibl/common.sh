@@ -49,11 +49,32 @@ vec3 spherecoord2dir(vec3 N, float sin_theta, float cos_theta, float sin_phi, fl
 // https://developer.nvidia.com/gpugems/gpugems3/part-iii-rendering/chapter-20-gpu-based-importance-sampling
 float compute_lod(float pdf)
 {
-    // IBL Baker (Matt Davidson)
-    // https://github.com/derkreature/IBLBaker/blob/65d244546d2e79dd8df18a28efdabcf1f2eb7717/data/shadersD3D11/IblImportanceSamplingDiffuse.fx#L215
-    float solidAngleTexel = 4.0 * M_PI / (6.0 * float(u_face_texture_size) * float(u_sample_count));
-    float solidAngleSample = 1.0 / (float(u_sample_count) * pdf);
-    float lod = 0.5 * log2(solidAngleSample / solidAngleTexel);
+    // // IBL Baker (Matt Davidson)
+    // // https://github.com/derkreature/IBLBaker/blob/65d244546d2e79dd8df18a28efdabcf1f2eb7717/data/shadersD3D11/IblImportanceSamplingDiffuse.fx#L215
+    // float solidAngleTexel = 4.0 * M_PI / (6.0 * float(u_face_texture_size) * float(u_sample_count));
+    // float solidAngleSample = 1.0 / (float(u_sample_count) * pdf);
+    // float lod = 0.5 * log2(solidAngleSample / solidAngleTexel);
+
+    // // Solid angle of current sample -- bigger for less likely samples
+    // float omegaS = 1.0 / (float(u_sampleCount) * pdf);
+    // // Solid angle of texel
+    // // note: the factor of 4.0 * MATH_PI 
+    // float omegaP = 4.0 * MATH_PI / (6.0 * float(u_width) * float(u_width));
+    // // Mip level is determined by the ratio of our sample's solid angle to a texel's solid angle 
+    // // note that 0.5 * log2 is equivalent to log4
+    // float lod = 0.5 * log2(omegaS / omegaP);
+
+    // babylon introduces a factor of K (=4) to the solid angle ratio
+    // this helps to avoid undersampling the environment map
+    // this does not appear in the original formulation by Jaroslav Krivanek and Mark Colbert
+    // log4(4) == 1
+    // lod += 1.0;
+
+    // We achieved good results by using the original formulation from Krivanek & Colbert adapted to cubemaps
+
+    // https://cgg.mff.cuni.cz/~jaroslav/papers/2007-sketch-fis/Final_sap_0073.pdf
+
+    float lod = 0.5 * log2( 6.0 * float(u_face_texture_size) * float(u_face_texture_size) / (float(u_sample_count) * pdf));
 
     return lod;
 }
@@ -79,27 +100,31 @@ vec2 hammersley2d(int i, int N)
     return vec2(float(i)/float(N), radicalInverse_VdC(uint(i)));
 }
 
-float PDF_GGX(float NdotH, float roughness)
-{
-    float D = D_GGX(NdotH, roughness * roughness);
-    return max(D / 4.0, 0.0);
+//NOTICE: this D_GGX is not the same as pbr.sh D_GGX, that is more complexity
+float D_GGX_ibl(float NdotH, float roughness) {
+    float a = NdotH * roughness;
+    float k = roughness / (1.0 - NdotH * NdotH + a * a);
+    return k * k * (1.0 / M_PI);
 }
 
-vec3 importance_sample_GGX(int sampleidx, vec3 N, float roughness)
+vec4 importance_sample_GGX(int sampleidx, vec3 N, float roughness)
 {
     vec2 hp2d = hammersley2d(sampleidx, u_sample_count);
 
     float alpha = roughness * roughness;
-    float cos_theta = sqrt((1.0 - hp2d.x) / (1.0 + (alpha*alpha - 1.0) * hp2d.x));
+    float cos_theta = saturate(sqrt((1.0 - hp2d.y) / (1.0 + (alpha*alpha - 1.0) * hp2d.y)));
     float sin_theta = sqrt(1.0 - cos_theta*cos_theta);
-    float phi = 2.0 * M_PI * hp2d.y;
+    float phi = 2.0 * M_PI * hp2d.x;
     float cos_phi = cos(phi);
     float sin_phi = sin(phi);
 
-    return spherecoord2dir(N, sin_theta, cos_theta, sin_phi, cos_phi);
+    float pdf = D_GGX_ibl(cos_theta, alpha) / 4.0;
+
+    vec3 dir = spherecoord2dir(N, sin_theta, cos_theta, sin_phi, cos_phi);
+    return vec4(dir, pdf);
 }
 
-vec3 importance_sample_irradiance(int sampleidx, vec3 N)
+vec4 importance_sample_irradiance(int sampleidx, vec3 N)
 {
     // generate a quasi monte carlo point in the unit square [0.1)^2
     vec2 hp2d = hammersley2d(sampleidx, u_sample_count);
@@ -107,17 +132,14 @@ vec3 importance_sample_irradiance(int sampleidx, vec3 N)
     
     // Cosine weighted hemisphere sampling
     // http://www.pbr-book.org/3ed-2018/Monte_Carlo_Integration/2D_Sampling_with_Multidimensional_Transformations.html#Cosine-WeightedHemisphereSampling
-    float cos_theta = sqrt(1.0 - hp2d.x);
-    float sin_theta = sqrt(hp2d.x); // equivalent to `sqrt(1.0 - cos_theta*cos_theta)`;
-    float phi = 2.0 * M_PI * hp2d.y;
+    float cos_theta = sqrt(1.0 - hp2d.y);
+    float sin_theta = sqrt(hp2d.y); // equivalent to `sqrt(1.0 - cos_theta*cos_theta)`;
+    float phi = 2.0 * M_PI * hp2d.x;
 
     float cos_phi = cos(phi);
     float sin_phi = sin(phi);
 
-    return spherecoord2dir(N, sin_theta, cos_theta, sin_phi, cos_phi);
-}
-
-float PDF_irradiance(float NdotH)
-{
-    return NdotH / M_PI;
+    vec3 dir = spherecoord2dir(N, sin_theta, cos_theta, sin_phi, cos_phi);
+    float pdf = cos_theta / M_PI;
+    return vec4(dir, pdf);
 }

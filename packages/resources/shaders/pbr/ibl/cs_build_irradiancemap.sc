@@ -14,15 +14,15 @@ void main()
     vec3 N = id2dir(gl_GlobalInvocationID, u_face_texture_size);
 
     for (int sampleidx=0; sampleidx < int(u_sample_count); ++sampleidx){
-        vec3 H = importance_sample_irradiance(sampleidx, N);
-        float NdotH = saturate(H.z);
-        float pdf = PDF_irradiance(NdotH);
+        vec4 H = importance_sample_irradiance(sampleidx, N);
+        vec3 H_dir = H.xyz;
+        float pdf = H.w;
 
         float lod = compute_lod(pdf);
         lod += u_lod_bias;
 
         // sample lambertian at a lower resolution to avoid fireflies
-        vec3 lambertian = sample_source(s_source, H, lod).rgb;
+        vec3 lambertian = sample_source(s_source, H_dir, lod).rgb;
 
         //// the below operations cancel each other out
         // float NdotH = clamp(dot(N, H), 0.0, 1.0);
