@@ -8,21 +8,100 @@ local bgfx = require "bgfx"
 local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
 local declmgr   = renderpkg.declmgr
+local fbmgr     = renderpkg.fbmgr
+local samplerutil=renderpkg.sampler
+local mathpkg   = import_package "ant.math"
+local mc        = mathpkg.constant
 
-local ientity = ecs.import.interface "ant.render|ientity"
-local irender = ecs.import.interface "ant.render|irender"
+local icamera   = ecs.import.interface "ant.camera|icamera"
+local ientity   = ecs.import.interface "ant.render|ientity"
+local irender   = ecs.import.interface "ant.render|irender"
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-
 
 local is = ecs.system "init_system"
 
 local cube_face_entities
 
 local iblmb = world:sub {"ibl_updated"}
+local viewid = viewidmgr.generate "cubeface_viewid"
+local cube_rq
+
+w:register {name = "cube_test_queue"}
+local face_size<const> = 256
+
 function is:init()
     --ecs.create_instance "/pkg/ant.test.ibl/assets/skybox.prefab"
     --ecs.create_instance "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab"
+
+    --TODO: should 6 queue for 6 face, create one queue just for test
+    local cameraref = icamera.create{
+        eyepos  = mc.ZERO_PT,
+        viewdir = mc.ZAXIS,
+        updir   = mc.YAXIS,
+    }
+    cube_rq = ecs.create_entity{
+        policy = {
+            "ant.render|render_queue",
+            "ant.general|name",
+        },
+        data = {
+            camera_ref = cameraref,
+            render_target = {
+                
+                fb_idx = fbmgr.create(
+                    {
+                        rbidx = fbmgr.create_rb{
+                            format = "RGBA32F",
+                            flags = samplerutil.sampler_flag{
+                                RT = "RT_ON",
+                                MIN="LINEAR",
+                                MAG="LINEAR",
+                                U="CLAMP",
+                                V="CLAMP",
+                            },
+                            layers=1,
+                            mipmap=true,
+                            w = face_size,
+                            h = face_size,
+                        }
+                    },
+                    {
+                        rbidx = fbmgr.create_rb{
+                            format = "D32F",
+                            flags = samplerutil.sampler_flag{
+                                RT = "RT_ON",
+                                MIN="LINEAR",
+                                MAG="LINEAR",
+                                U="CLAMP",
+                                V="CLAMP",
+                            },
+                            layers=1,
+                            w = face_size,
+                            h = face_size,
+                        }
+                    }
+                ),
+                viewid = viewid,
+                view_mode = "s",
+                view_rect = {
+                    x = 0, y = 0, w = face_size, h = face_size,
+                },
+                clear_state = {
+                    color = 0x000000ff,
+                    depth = 1.0,
+                    clear = "CD",
+                },
+            },
+            queue_name = "cube_test_queue",
+            cube_test_queue = true,
+			primitive_filter = {
+				filter_type = "",
+			},
+            name = "cube_test_queue",
+            visible = true,
+        }
+    }
 
     local simplemesh = {
         vb = {
@@ -70,8 +149,6 @@ function is:data_changed()
 end
 
 local sample_count<const> = 2048
-local face_size<const> = 256
-
 local cLambertian<const>   = 0;
 local cGGX       <const>   = 1;
 local cCharlie   <const>   = 2;
@@ -102,7 +179,6 @@ local ibl_properties = {
     }
 }
 
-local viewid = viewidmgr.generate "cubeface_viewid"
 function is:render_submit()
 
     -- do for irradiance
