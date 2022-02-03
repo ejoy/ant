@@ -7,6 +7,7 @@ data:
     name: skybox_test
     scene_entity: true
     filter_state: main_view
+    simplemesh: true
     scene:
         srt: {}
     ibl:

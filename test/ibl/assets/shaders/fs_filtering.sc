@@ -1,12 +1,12 @@
 $input v_texcoord0
 
 #include <bgfx_shader.sh>
-#include "commom/common.sh"
+#include "common/common.sh"
 
 // enum
-const int cLambertian   = 0;
-const int cGGX          = 1;
-const int cCharlie      = 2;
+#define cLambertian 0
+#define cGGX        1
+#define cCharlie    2
 
 
 //layout(push_constant) uniform FilterParameters {
@@ -29,7 +29,6 @@ uniform vec4 u_ibl_params1;
 // uniform int u_currentFace;
 // uniform int u_isGeneratingLUT;
 
-uniform samplerCube s_panorama;
 SAMPLER2D(s_panorama, 0);
 
 vec4 sample_source(vec3 dir, float lod)
@@ -124,7 +123,7 @@ vec3 transform_TBN(vec3 v, vec3 T, vec3 B, vec3 N)
     return T*v.x + B*v.y + N*v.z;
 }
 
-vec3 transformDirection(vec3 normal, vec3 dir)
+vec3 transformDirection(vec3 N, vec3 dir)
 {
     vec3 T, B;
     calc_TB(N, T, B);
@@ -211,7 +210,7 @@ vec4 getImportanceSample(int sampleIndex, vec3 N, float roughness)
     }
     else if(u_distribution == cCharlie)
     {
-        importanceSample = Charlie(xi, roughness);
+        //importanceSample = Charlie(xi, roughness);
     }
 
     // transform the hemisphere sample to the normal coordinate frame
@@ -260,7 +259,7 @@ float computeLod(float pdf)
 vec3 filterColor(vec3 N)
 {
     //return  textureLod(uCubeMap, N, 3.0).rgb;
-    vec3 color = vec3(0.f);
+    vec3 color = vec3_splat(0.f);
     float weight = 0.0f;
 
     for(int i = 0; i < u_sampleCount; ++i)
@@ -279,7 +278,8 @@ vec3 filterColor(vec3 N)
         if(u_distribution == cLambertian)
         {
             // sample lambertian at a lower resolution to avoid fireflies
-            vec3 lambertian = textureLod(uCubeMap, H, lod).rgb;
+            //vec3 lambertian = textureLod(uCubeMap, H, lod).rgb;
+            vec3 lambertian = sample_source(H, lod);
 
             //// the below operations cancel each other out
             // lambertian *= NdotH; // lamberts law
@@ -302,7 +302,8 @@ vec3 filterColor(vec3 N)
                     // without this the roughness=0 lod is too high
                     lod = u_lodBias;
                 }
-                vec3 sampleColor = textureLod(uCubeMap, L, lod).rgb;
+                //vec3 sampleColor = textureLod(uCubeMap, L, lod).rgb;
+                vec3 sampleColor = sample_source(L, lod);
                 color += sampleColor * NdotL;
                 weight += NdotL;
             }
@@ -390,11 +391,11 @@ vec3 LUT(float NdotV, float roughness)
 // entry point
 void main()
 {
-    vec3 color = vec3(0);
+    vec3 color = vec3_splat(0.0);
 
     if(u_isGeneratingLUT == 0)
     {
-        vec2 newUV = texCoord ;
+        vec2 newUV = v_texcoord0 ;
 
         newUV = newUV*2.0-1.0;
 
@@ -407,7 +408,7 @@ void main()
     }
     else
     {
-        color = LUT(texCoord.x, texCoord.y);
+        color = LUT(v_texcoord0.x, v_texcoord0.y);
     }
     
     gl_FragColor = vec4(color,1.0);

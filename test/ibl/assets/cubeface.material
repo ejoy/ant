@@ -1,6 +1,6 @@
 fx:
   vs: /pkg/ant.test.ibl/assets/shaders/vs_fullscreen.sc
-  fs: /pkg/ant.test.ibl/assets/shaders/fs_fullscreen.sc
+  fs: /pkg/ant.test.ibl/assets/shaders/fs_filtering.sc
   setting:
     lighting: off
 properties:
@@ -8,11 +8,11 @@ properties:
 #define u_sampleCount   u_ibl_params.y
 #define u_width         u_ibl_params.z
 #define u_lodBias       u_ibl_params.w
-  u_ibl_param:  {0.0, 0.0, 0.0, 0.0}
+  u_ibl_params:  {0.0, 0.0, 0.0, 0.0}
 #define u_distribution  u_ibl_params1.x
 #define u_currentFace   u_ibl_params1.y
 #define u_isGeneratingLUT u_ibl_params1.z
-  u_ibl_param1: {0.0, 0.0, 0.0, 0.0}
+  u_ibl_params1: {0.0, 0.0, 0.0, 0.0}
   s_panorama:
     stage: 0
     texture: /pkg/ant.test.ibl/assets/panorama.texture

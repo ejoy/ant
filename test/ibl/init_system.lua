@@ -7,6 +7,7 @@ local bgfx = require "bgfx"
 
 local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
+local declmgr   = renderpkg.declmgr
 
 local ientity = ecs.import.interface "ant.render|ientity"
 local irender = ecs.import.interface "ant.render|irender"
@@ -20,13 +21,15 @@ local cube_face_entities
 
 local iblmb = world:sub {"ibl_updated"}
 function is:init()
-    ecs.create_instance "/pkg/ant.test.ibl/assets/skybox.prefab"
-    ecs.create_instance "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab"
+    --ecs.create_instance "/pkg/ant.test.ibl/assets/skybox.prefab"
+    --ecs.create_instance "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab"
 
     local simplemesh = {
         vb = {
             start = 0, num = 3,
-            handle = bgfx.create_vertex_buffer(bgfx.memory_buffer{"fff", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0})
+            {
+                handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("fff", {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}), declmgr.get "p3".handle)
+            },
         }
     }
 
@@ -86,16 +89,16 @@ local cCharlie   <const>   = 2;
 
 local ibl_properties = {
     irradiance = {
-        u_ibl_param = {0.0, sample_count, face_size, 0.0},
-        u_ibl_param1= {cLambertian, 0.0, 0.0, 0.0},
+        u_ibl_params = {0.0, sample_count, face_size, 0.0},
+        u_ibl_params1= {cLambertian, 0.0, 0.0, 0.0},
     },
     prefilter = {
-        u_ibl_param = {0.0, sample_count, face_size, 0.0},
-        u_ibl_param1= {cGGX, 0.0, 0.0, 0.0},
+        u_ibl_params = {0.0, sample_count, face_size, 0.0},
+        u_ibl_params1= {cGGX, 0.0, 0.0, 0.0},
     },
     LUT = {
-        u_ibl_param = {0.0, 0.0, 0.0, 0.0},
-        u_ibl_param1= {0.0, 0.0, 1.0, 0.0},
+        u_ibl_params = {0.0, 0.0, 0.0, 0.0},
+        u_ibl_params1= {0.0, 0.0, 1.0, 0.0},
     }
 }
 
@@ -107,8 +110,8 @@ function is:render_submit()
     for faceidx, e in ipairs(cube_face_entities) do
         w:sync("render_object:in", e)
         local ro = e.render_object
-        imaterial.set_property(e, "u_ibl_params", irradiance_properties.u_ibl_param)
-        imaterial.set_property(e, "u_ibl_params1", irradiance_properties.u_ibl_param1)
+        imaterial.set_property(e, "u_ibl_params", irradiance_properties.u_ibl_params)
+        imaterial.set_property(e, "u_ibl_params1", irradiance_properties.u_ibl_params1)
         irender.draw(viewid, ro)
     end
 end
