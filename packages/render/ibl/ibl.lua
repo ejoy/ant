@@ -93,7 +93,7 @@ local function create_irradiance_entity(ibl)
         size / thread_group_size, size / thread_group_size, 6
     }
 
-    local setting = ibl.cubmap and {CUBEMAP_SOURCE=1} or nil
+    local setting = ibl.source.cubemap and {CUBEMAP_SOURCE=1} or nil
 
     icompute.create_compute_entity(
         "irradiance_builder", "/pkg/ant.resources/materials/ibl/build_irradiance.material", dispatchsize, setting)
@@ -116,7 +116,7 @@ local function create_prefilter_entities(ibl)
             data = {
                 name        = "prefilter_builder",
                 material    = "/pkg/ant.resources/materials/ibl/build_prefilter.material",
-                material_setting = ibl.cubmap and {CUBEMAP_SOURCE=1} or nil,
+                material_setting = ibl.source.cubemap and {CUBEMAP_SOURCE=1} or nil,
                 dispatch    ={
                     size    = dispatchsize,
                 },
