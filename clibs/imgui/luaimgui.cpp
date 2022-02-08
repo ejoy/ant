@@ -115,7 +115,7 @@ static int lGetMainViewport(lua_State* L) {
 }
 
 static int lPairsInputEvents(lua_State* L) {
-	lua_Integer event_n = luaL_checkinteger(L, 2);
+	int event_n = (int)luaL_checkinteger(L, 2);
 	ImGuiContext& g = *ImGui::GetCurrentContext();
 	ImGuiIO& io = ImGui::GetIO();
 	for (; event_n < g.InputEventsTrail.Size;++event_n) {
@@ -164,14 +164,7 @@ static int lPairsInputEvents(lua_State* L) {
 			lua_pushinteger(L, e->Key.Key - ImGuiKey_KeysData_OFFSET + 1);
 			lua_pushinteger(L, e->Key.Down);
 			return 4;
-		case ImGuiInputEventType_KeyMods:
-			if (io.WantCaptureKeyboard) {
-				break;
-			}
-			lua_pushinteger(L, ++event_n);
-			lua_pushstring(L, "KeyMods");
-			lua_pushinteger(L, e->KeyMods.Mods);
-			return 3;
+		case ImGuiInputEventType_MouseViewport:
 		case ImGuiInputEventType_Char:
 		case ImGuiInputEventType_Focus:
 		default:
@@ -3527,39 +3520,6 @@ static struct enum_pair eKey[] = {
 	ENUM(ImGuiKey, Space),
 	ENUM(ImGuiKey, Enter),
 	ENUM(ImGuiKey, Escape),
-	ENUM(ImGuiKey, Apostrophe),    // '
-	ENUM(ImGuiKey, Comma),         // ,
-	ENUM(ImGuiKey, Minus),         // -
-	ENUM(ImGuiKey, Period),        // .
-	ENUM(ImGuiKey, Slash),         // /
-	ENUM(ImGuiKey, Semicolon),     // ;
-	ENUM(ImGuiKey, Equal),         // =
-	ENUM(ImGuiKey, LeftBracket),   // [
-	ENUM(ImGuiKey, Backslash),     // \ (this text inhibit multiline comment caused by backlash)
-	ENUM(ImGuiKey, RightBracket),  // ]
-	ENUM(ImGuiKey, GraveAccent),   // `
-	ENUM(ImGuiKey, CapsLock),
-	ENUM(ImGuiKey, ScrollLock),
-	ENUM(ImGuiKey, NumLock),
-	ENUM(ImGuiKey, PrintScreen),
-	ENUM(ImGuiKey, Pause),
-	ENUM(ImGuiKey, Keypad0),
-	ENUM(ImGuiKey, Keypad1),
-	ENUM(ImGuiKey, Keypad2),
-	ENUM(ImGuiKey, Keypad3),
-	ENUM(ImGuiKey, Keypad4),
-	ENUM(ImGuiKey, Keypad5),
-	ENUM(ImGuiKey, Keypad6),
-	ENUM(ImGuiKey, Keypad7),
-	ENUM(ImGuiKey, Keypad8),
-	ENUM(ImGuiKey, Keypad9),
-	ENUM(ImGuiKey, KeypadDecimal),
-	ENUM(ImGuiKey, KeypadDivide),
-	ENUM(ImGuiKey, KeypadMultiply),
-	ENUM(ImGuiKey, KeypadSubtract),
-	ENUM(ImGuiKey, KeypadAdd),
-	ENUM(ImGuiKey, KeypadEnter),
-	ENUM(ImGuiKey, KeypadEqual),
 	ENUM(ImGuiKey, LeftCtrl),
 	ENUM(ImGuiKey, LeftShift),
 	ENUM(ImGuiKey, LeftAlt),
@@ -3617,6 +3577,43 @@ static struct enum_pair eKey[] = {
 	ENUM(ImGuiKey, F10),
 	ENUM(ImGuiKey, F11),
 	ENUM(ImGuiKey, F12),
+	ENUM(ImGuiKey, Apostrophe),    // '
+	ENUM(ImGuiKey, Comma),         // ,
+	ENUM(ImGuiKey, Minus),         // -
+	ENUM(ImGuiKey, Period),        // .
+	ENUM(ImGuiKey, Slash),         // /
+	ENUM(ImGuiKey, Semicolon),     // ;
+	ENUM(ImGuiKey, Equal),         // =
+	ENUM(ImGuiKey, LeftBracket),   // [
+	ENUM(ImGuiKey, Backslash),     // \ (this text inhibit multiline comment caused by backlash)
+	ENUM(ImGuiKey, RightBracket),  // ]
+	ENUM(ImGuiKey, GraveAccent),   // `
+	ENUM(ImGuiKey, CapsLock),
+	ENUM(ImGuiKey, ScrollLock),
+	ENUM(ImGuiKey, NumLock),
+	ENUM(ImGuiKey, PrintScreen),
+	ENUM(ImGuiKey, Pause),
+	ENUM(ImGuiKey, Keypad0),
+	ENUM(ImGuiKey, Keypad1),
+	ENUM(ImGuiKey, Keypad2),
+	ENUM(ImGuiKey, Keypad3),
+	ENUM(ImGuiKey, Keypad4),
+	ENUM(ImGuiKey, Keypad5),
+	ENUM(ImGuiKey, Keypad6),
+	ENUM(ImGuiKey, Keypad7),
+	ENUM(ImGuiKey, Keypad8),
+	ENUM(ImGuiKey, Keypad9),
+	ENUM(ImGuiKey, KeypadDecimal),
+	ENUM(ImGuiKey, KeypadDivide),
+	ENUM(ImGuiKey, KeypadMultiply),
+	ENUM(ImGuiKey, KeypadSubtract),
+	ENUM(ImGuiKey, KeypadAdd),
+	ENUM(ImGuiKey, KeypadEnter),
+	ENUM(ImGuiKey, KeypadEqual),
+	ENUM(ImGuiKey, ModCtrl),
+	ENUM(ImGuiKey, ModShift),
+	ENUM(ImGuiKey, ModAlt),
+	ENUM(ImGuiKey, ModSuper),
 	ENUM(ImGuiKey, COUNT),
 	{ NULL, 0 },
 };
