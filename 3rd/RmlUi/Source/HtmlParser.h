@@ -81,8 +81,8 @@ private:
     std::string_view m_buf;
     size_t           m_pos;
     bool             m_inner_xml_data = false;
-    size_t           m_inner_xml_data_begin;
-    size_t           m_inner_xml_stack_index;
+	size_t           m_inner_xml_data_begin;
+	size_t           m_inner_xml_stack_index;
     void UndoChar();
     char GetChar();
     void SkipWhiteSpace();
