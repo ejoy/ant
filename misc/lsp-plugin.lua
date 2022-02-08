@@ -14,7 +14,7 @@ local interfaces = {}
 
 do
     local ws = require "workspace"
-    local workspaceFolder = fs.path(ws.path)
+    local workspaceFolder = fs.path(furi.decode(ws.rootUri))
     local searchFolder = {
         "packages",
         "test",
