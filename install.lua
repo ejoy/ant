@@ -32,18 +32,18 @@ local function copy_directory(from, to, filter)
     end
 end
 
-local output = ...
-if not output then
-    print("usage: install.lua [output directory]")
+local input, output = ...
+if not input or not output then
+    print("usage: install.lua [input directory] [output directory]")
     return
 end
-output = fs.path(output)
 
-local input = fs.path "./"
 local BIN = fs.exe_path():parent_path()
 local PLAT = BIN:parent_path():filename():string()
+input = BIN / input
+output = BIN / output
 
-print "remove ant_release/* ..."
+print(("remove %s* ..."):format(output:string()))
 if fs.exists(output) then
     fs.remove_all(output / "bin")
     fs.remove_all(output / "engine")
@@ -53,7 +53,7 @@ else
     fs.create_directories(output)
 end
 
-print "copy data to ant_release/* ..."
+print(("copy data to  %s* ..."):format(output:string()))
 
 copy_directory(BIN, output / "bin", function (path)
    return path:equal_extension '.dll' or path:equal_extension'.exe' or path:equal_extension'.lua'
