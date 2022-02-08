@@ -41,9 +41,9 @@ end
 local input = fs.path "./"
 local BIN = fs.exe_path():parent_path()
 local PLAT = BIN:parent_path():filename():string()
-out = BIN / output
+output = BIN / output
 
-print ("remove %s/* ..."):format(out)
+print ("remove %s/* ..."):format(output)
 if fs.exists(output) then
     fs.remove_all(output / "bin")
     fs.remove_all(output / "engine")
