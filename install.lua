@@ -37,13 +37,13 @@ if not output then
     print("usage: install.lua [output directory]")
     return
 end
-output = fs.path(output)
 
 local input = fs.path "./"
 local BIN = fs.exe_path():parent_path()
 local PLAT = BIN:parent_path():filename():string()
+out = BIN / output
 
-print "remove ant_release/* ..."
+print ("remove %s/* ..."):format(out)
 if fs.exists(output) then
     fs.remove_all(output / "bin")
     fs.remove_all(output / "engine")
@@ -53,7 +53,7 @@ else
     fs.create_directories(output)
 end
 
-print "copy data to ant_release/* ..."
+print ("copy data to %s/* ..."):format(output)
 
 copy_directory(BIN, output / "bin", function (path)
    return path:equal_extension '.dll' or path:equal_extension'.exe' or path:equal_extension'.lua'
