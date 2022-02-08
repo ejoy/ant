@@ -186,8 +186,10 @@ function is:render_submit()
     for faceidx, e in ipairs(cube_face_entities) do
         w:sync("render_object:in", e)
         local ro = e.render_object
-        imaterial.set_property(e, "u_ibl_params", irradiance_properties.u_ibl_params)
-        imaterial.set_property(e, "u_ibl_params1", irradiance_properties.u_ibl_params1)
+        local p, p1 = irradiance_properties.u_ibl_params, irradiance_properties.u_ibl_params1
+        p1[2] = faceidx
+        imaterial.set_property(e, "u_ibl_params", p)
+        imaterial.set_property(e, "u_ibl_params1", p1)
         irender.draw(viewid, ro)
     end
 end
