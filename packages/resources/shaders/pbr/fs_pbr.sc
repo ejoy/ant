@@ -100,7 +100,8 @@ vec3 get_IBL_radiance_Lambertian(vec3 n, vec3 diffuseColor)
 
 vec3 get_IBL_radiance_GGX(vec3 N, vec3 V, float NdotV, float roughness, vec3 specular_color)
 {
-    float lod = clamp(roughness * u_ibl_prefilter_mipmap_count, 0.0, u_ibl_prefilter_mipmap_count);
+    float last_mipmap = u_ibl_prefilter_mipmap_count-1.0; //make roughness [0, 1] to [0, last_mipmap]
+    float lod = clamp(roughness*last_mipmap, 0.0, last_mipmap);
     vec3 reflection = normalize(reflect(-V, N));
 
     vec2 lut_uv = clamp(vec2(NdotV, roughness), vec2_splat(0.0), vec2_splat(1.0));

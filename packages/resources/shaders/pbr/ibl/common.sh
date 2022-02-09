@@ -15,7 +15,7 @@ uniform vec4 u_build_ibl_param;
 
 vec3 id2dir(ivec3 id, float size)
 {
-    vec2 uv = id.xy / (u_face_texture_size-1);
+    vec2 uv = id.xy / u_face_texture_size;
     uv = vec2(uv.x, 1.0-uv.y) * 2.0 - 1.0;
     int faceidx = id.z;
     return normalize(uvface2dir(uv, faceidx));

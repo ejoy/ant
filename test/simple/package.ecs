@@ -21,6 +21,7 @@ system "init_system"
     .require_policy "ant.scene|scene_object"
     .require_policy "ant.render|render"
     .require_policy "ant.render|render_queue"
+    .require_policy "ant.render|csm_queue"
 
     .require_interface "ant.collision|icollider"
     .require_interface "ant.animation|ianimation"

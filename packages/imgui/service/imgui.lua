@@ -86,6 +86,13 @@ local Mouse = {}
 local MousePosX, MousePosY = 0, 0
 local DOWN <const> = {true}
 
+local KeyModifiers = {
+	[imgui.enum.Key.ModCtrl]  = 1,
+	[imgui.enum.Key.ModShift] = 2,
+	[imgui.enum.Key.ModAlt]   = 4,
+	[imgui.enum.Key.ModSuper] = 8,
+}
+
 local function updateIO()
 	local MouseChanged = {}
 	local KeyboardChanged = {}
@@ -111,6 +118,13 @@ local function updateIO()
 			local code, down = x, DOWN[y]
 			local cur = Keyboard[code]
 			if cur ~= down then
+				if KeyModifiers[code] then
+					if down then
+						KeyMods = KeyMods | (1<<KeyModifiers[code])
+					else
+						KeyMods = KeyMods & (~(1<<KeyModifiers[code]))
+					end
+				end
 				Keyboard[code] = down
 				if down then
 					cb.keyboard(code, 1, KeyMods)
@@ -119,8 +133,6 @@ local function updateIO()
 				end
 				KeyboardChanged[code] = true
 			end
-		elseif what == "KeyMods" then
-			KeyMods = x
 		end
 	end
 	for button in pairs(Mouse) do
