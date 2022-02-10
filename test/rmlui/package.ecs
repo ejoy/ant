@@ -7,7 +7,6 @@ system "init_system"
     .require_system "ant.rmlui|rmlui_system"
     .require_interface "ant.render|irenderqueue"
     .method "post_init"
-    .method "ui_update"
 
 pipeline "init"
     .stage "init"
