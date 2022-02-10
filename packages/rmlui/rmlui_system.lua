@@ -34,7 +34,7 @@ function rmlui_sys:init()
             texid = default_texid,
         },
     })
-    iRmlUi.preload_dir "/pkg/ant.resources.binary/ui/test/assets/font/"
+    iRmlUi.font_dir "/pkg/ant.resources.binary/ui/test/assets/font/"
 end
 
 function rmlui_sys:init_world()
@@ -107,6 +107,10 @@ function rmlui_sys:exit()
 end
 
 local maxID = 0
+
+function iRmlUi.font_dir(dir)
+    ltask.call(ServiceRmlUi, "font_dir", dir)
+end
 
 function iRmlUi.preload_dir(dir)
     ltask.call(ServiceRmlUi, "preload_dir", dir)

@@ -156,6 +156,7 @@ end
 S.open = windowManager.open
 S.close = windowManager.close
 S.postMessage = windowManager.postMessage
+S.font_dir = filemanager.font_dir
 S.preload_dir = filemanager.preload_dir
 
 ltask.send(ServiceWindow, "subscribe", "priority=1", "mouse", "touch", "keyboard", "char")

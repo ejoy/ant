@@ -21,10 +21,12 @@ local function import_font(path)
     end
 end
 
+function m.font_dir(dir)
+    import_font(fs.path(dir))
+end
+
 function m.preload_dir(dir)
-    dir = fs.path(dir)
-    directorys[#directorys+1] = dir
-    import_font(dir)
+    directorys[#directorys+1] = fs.path(dir)
 end
 
 function m.vfspath(path)
