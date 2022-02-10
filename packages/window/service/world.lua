@@ -117,7 +117,6 @@ function S.exit()
 	ltask.call(ServiceBgfxMain, "encoder_release")
 	ltask.send(ServiceWindow, "unsubscribe_all")
 	rhwi.shutdown()
-	ltask.quit()
     print "exit"
 end
 
