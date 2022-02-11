@@ -5,7 +5,7 @@ lm:lib "bgfx-lib" {
     deps = {"bx", "bimg"},
     defines = {
         "BGFX_CONFIG_MAX_VIEWS=1024",
-        lm.mode == "debug" and "BGFX_CONFIG_DEBUG=1",
+        lm.mode == "debug" and "BX_CONFIG_DEBUG=1",
     },
     includes = {
         "../bx/include",

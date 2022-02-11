@@ -24,6 +24,7 @@ lm:source_set "source_hierarchy" {
     },
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",
+        lm.mode == "debug" and "BX_CONFIG_DEBUG=1",
     },
 }
 
