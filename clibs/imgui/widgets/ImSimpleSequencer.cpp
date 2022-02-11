@@ -172,7 +172,6 @@ namespace ImSimpleSequencer
 		}
 		drawLine(GetFrameMin(), ItemHeight);
 		drawLine(GetFrameMax(), ItemHeight);
-		draw_list->PushClipRect(childFramePos, childFramePos + childFrameSize);
 
 		// draw item names in the legend rect on the left
 // 		size_t customHeight = 0;
@@ -186,7 +185,6 @@ namespace ImSimpleSequencer
 			ImVec2 pos = ImVec2(contentMin.x, contentMin.y + 1 + offset_y);
 			ImVec2 sz = ImVec2(canvas_size.x + canvas_pos.x, pos.y + ItemHeight - 1);
 			draw_list->AddRectFilled(pos, sz, is_active ? 0x6F715D55 : (layer_idx % 2) == 0 ? 0x6F513D35 : 0x6F412D25, 0);
-			draw_list->PushClipRect(childFramePos + ImVec2(0.0f, 0.f - ItemHeight), childFramePos + childFrameSize);
 			// draw clip_ranges
 			for (int i = 0; i < layer.clip_rangs.size(); i++) {
 				auto start = layer.clip_rangs[i].start;
@@ -312,14 +310,12 @@ namespace ImSimpleSequencer
 			}
 
 			layer_idx++;
-
-			draw_list->PopClipRect();
 		}
 
 
 		const int anim_layer_count = bone_anim.anim_layers.size();
 		// cursor
-		if (current_frame >= firstFrame && current_frame <= GetFrameMax()) {
+		if (!bone_anim.anim_layers.empty() && current_frame >= firstFrame && current_frame <= GetFrameMax()) {
 			static const float cursorWidth = 2.f;
 			float cursorOffset = contentMin.x + (current_frame - firstFrameUsed) * framePixelWidth + framePixelWidth / 2 - cursorWidth * 0.5f;
 			draw_list->AddLine(ImVec2(cursorOffset - 3, canvas_pos.y), ImVec2(cursorOffset - 3, contentMax.y + (anim_layer_count - 1) * ItemHeight), 0x502A2AFF, cursorWidth);
@@ -329,8 +325,6 @@ namespace ImSimpleSequencer
 			int px = (int)canvas_pos.x + int((current_frame - firstFrameUsed) * framePixelWidth) - int(firstFrameUsed * framePixelWidth);
 			draw_list->AddRectFilled(ImVec2((float)px, canvas_pos.y), ImVec2((float)px + framePixelWidth, canvas_pos.y + ItemHeight), 0x502A2AFF);
 		}
-
-		draw_list->PopClipRect();
 
 		ImGui::EndChildFrame();
 		ImGui::PopStyleColor();

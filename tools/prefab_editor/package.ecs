@@ -62,6 +62,8 @@ system "gui_system"
     .method "handle_event"
     .method "ui_update"
     .method "end_frame"
+    .method "widget"
+    .method "skin_mesh"
 
 interface "igui"
     .implement "gui_system.lua"
