@@ -78,10 +78,10 @@ function S.init(nwh, context, width, height)
 	}
 	cr.init()
 	bgfx.set_debug "T"
+	bgfx.encoder_create()
 	bgfx.encoder_init()
 	import_package "ant.render".init_bgfx()
 	bgfx.encoder_begin()
-	ltask.call(ServiceBgfxMain, "encoder_init")
 	encoderBegin = true
 	config.fbw, config.fbh = fbw, fbh
 	config.viewport = calc_viewport(fbw, fbh)
@@ -114,7 +114,7 @@ function S.exit()
 	if encoderBegin then
 		bgfx.encoder_end()
 	end
-	ltask.call(ServiceBgfxMain, "encoder_release")
+	bgfx.encoder_destroy()
 	ltask.send(ServiceWindow, "unsubscribe_all")
 	rhwi.shutdown()
     print "exit"
