@@ -82,7 +82,6 @@ void rendererDrawData(ImGuiViewport* viewport) {
 		ImDrawIdx* indices = (ImDrawIdx*)tib.data;
 		memcpy(indices, drawList->IdxBuffer.begin(), numIndices * sizeof(ImDrawIdx));
 
-		uint32_t offset = 0;
 		for (const ImDrawCmd& cmd : drawList->CmdBuffer) {
 			if (0 == cmd.ElemCount) {
 				continue;
@@ -111,8 +110,8 @@ void rendererDrawData(ImGuiViewport* viewport) {
 				;
 			BGFX(encoder_set_state)(encoder, state, 0);
 
-			BGFX(encoder_set_transient_vertex_buffer)(encoder, 0, &tvb, 0, numVertices);
-			BGFX(encoder_set_transient_index_buffer)(encoder, &tib, offset, cmd.ElemCount);
+			BGFX(encoder_set_transient_vertex_buffer)(encoder, 0, &tvb, cmd.VtxOffset, numVertices);
+			BGFX(encoder_set_transient_index_buffer)(encoder, &tib, cmd.IdxOffset, cmd.ElemCount);
 			if (IMGUI_FLAGS_FONT == texture.s.flags) {
 				BGFX(encoder_set_texture)(encoder, 0, g_fontTex, texture.s.handle, UINT32_MAX);
 				BGFX(encoder_submit)(encoder, ud->viewid, g_fontProgram, 0, BGFX_DISCARD_STATE);
@@ -121,7 +120,6 @@ void rendererDrawData(ImGuiViewport* viewport) {
 				BGFX(encoder_set_texture)(encoder, 0, g_imageTex, texture.s.handle, UINT32_MAX);
 				BGFX(encoder_submit)(encoder, ud->viewid, g_imageProgram, 0, BGFX_DISCARD_STATE);
 			}
-			offset += cmd.ElemCount;
 		}
 	}
 	BGFX(encoder_discard)(encoder, BGFX_DISCARD_ALL);

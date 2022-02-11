@@ -23,7 +23,7 @@ struct ComputedValues {
 	AnimationList animation;
 	EdgeInsets<Color> border_color;
 	CornerInsets<FloatValue> border_radius{};
-	Color background_color = Color(255, 255, 255, 0);
+	Color background_color = ColorFromSRGB(255, 255, 255, 0);
 };
 
 }}

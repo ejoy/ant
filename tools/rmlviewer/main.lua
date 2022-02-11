@@ -9,7 +9,7 @@ vfs.mount("/resource", inputfile:parent_path():string())
 import_package "ant.window".start {
     args = {inputfile:filename():string()},
     import = {
-        "@ant.test.rmlui",
+        "@ant.tools.rmlviewer",
     },
     pipeline = {
         "init",
@@ -17,7 +17,7 @@ import_package "ant.window".start {
         "exit",
     },
     system = {
-        "ant.test.rmlui|init_system",
+        "ant.tools.rmlviewer|init_system",
     },
     policy = {
         "ant.general|name",

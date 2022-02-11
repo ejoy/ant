@@ -69,6 +69,7 @@ copy_directory(input / "tools" / "prefab_editor", output / "tools" / "prefab_edi
     return path ~= input / "tools" / "prefab_editor" / ".build"
 end)
 copy_directory(input / "tools" / "fileserver", output / "tools" / "fileserver")
+copy_directory(input / "tools" / "rmlviewer", output / "tools" / "rmlviewer")
 fs.copy_file(input / "run_editor.bat", output / "run_editor.bat", fs.copy_options.overwrite_existing)
 
 if PLAT == "msvc" then

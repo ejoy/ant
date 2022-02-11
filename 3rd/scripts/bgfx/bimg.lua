@@ -65,6 +65,7 @@ lm:source_set "bimg_decode" {
     },
     sources = {
         "src/image_decode.cpp",
+        "3rdparty/tinyexr/deps/miniz/miniz.c",
     }
 }
 

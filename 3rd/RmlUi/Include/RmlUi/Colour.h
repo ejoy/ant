@@ -7,15 +7,19 @@ namespace Rml {
 
 class Color : public glm::u8vec4 {
 public:
-	Color()
+	constexpr Color()
 		: glm::u8vec4(0,0,0,255)
 	{ }
-	Color(glm::u8 r, glm::u8 g, glm::u8 b, glm::u8 a)
+	constexpr Color(glm::u8 r, glm::u8 g, glm::u8 b, glm::u8 a)
 		: glm::u8vec4(r, g, b, a)
 	{ }
-	Color(glm::u8vec4&& v)
+	constexpr Color(glm::u8vec4&& v)
 		: glm::u8vec4(std::forward<glm::u8vec4>(v))
 	{ }
+
+	glm::u8vec4 toSRGB() const {
+		return glm::convertLinearToSRGB(glm::vec4(r, g, b, a) / 255.f) * 255.f;
+	}
 };
 
 inline Color ColorInterpolate(const Color& c0, const Color& c1, float alpha) {
@@ -29,6 +33,10 @@ inline Color ColorInterpolate(const Color& c0, const Color& c1, float alpha) {
 
 inline void ColorApplyOpacity(Color& c, float opacity) {
 	c.a = glm::u8((float)c.a * opacity);
+}
+
+constexpr inline Color ColorFromSRGB(glm::u8 r, glm::u8 g, glm::u8 b, glm::u8 a) {
+	return glm::u8vec4(glm::convertSRGBToLinear(glm::vec4(r, g, b, a) / 255.f) * 255.f);
 }
 
 }

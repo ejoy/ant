@@ -15,6 +15,14 @@ local debuggerInitialized = false
 
 local ServiceWindow = ltask.queryservice "ant.window|window"
 
+local bgfx = require "bgfx"
+local ServiceBgfxMain = ltask.queryservice "ant.render|bgfx_main"
+for _, name in ipairs(ltask.call(ServiceBgfxMain, "APIS")) do
+	bgfx[name] = function (...)
+		return ltask.call(ServiceBgfxMain, name, ...)
+	end
+end
+
 rmlui.RmlRegisterEevent(require "core.callback")
 
 local _, last = ltask.now()
@@ -26,8 +34,7 @@ local function getDelta()
 end
 
 local function Render()
-    local ServiceBgfxMain = ltask.queryservice "ant.render|bgfx_main"
-    ltask.call(ServiceBgfxMain, "encoder_init")
+    bgfx.encoder_create()
     while not quit do
         local delta = getDelta()
         if delta > 0 then
@@ -37,9 +44,9 @@ local function Render()
         rmlui.ContextUpdate(context, delta)
         rmlui.RenderFrame()
         task.update()
-        ltask.call(ServiceBgfxMain, "encoder_frame")
+        bgfx.encoder_frame()
     end
-	ltask.call(ServiceBgfxMain, "encoder_release")
+    bgfx.encoder_destroy()
     ltask.wakeup(quit)
 end
 
@@ -51,6 +58,7 @@ end
 local S = {}
 
 function S.initialize(t)
+    bgfx.init()
     ServiceWorld = t.service_world
     require "font" (t.font_mgr)
     initRender(t)
@@ -66,6 +74,7 @@ function S.shutdown()
     rmlui.RmlRemoveContext(context)
     updateContext(nil)
     rmlui.RmlShutdown()
+    bgfx.shutdown()
     ltask.quit()
 end
 
@@ -156,6 +165,7 @@ end
 S.open = windowManager.open
 S.close = windowManager.close
 S.postMessage = windowManager.postMessage
+S.font_dir = filemanager.font_dir
 S.preload_dir = filemanager.preload_dir
 
 ltask.send(ServiceWindow, "subscribe", "priority=1", "mouse", "touch", "keyboard", "char")

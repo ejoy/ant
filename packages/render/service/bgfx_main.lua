@@ -13,6 +13,8 @@ local APIS = {
     "reset",
     "set_debug",
 
+    "encoder_create",
+    "encoder_destroy",
     "encoder_frame",
     "maxfps"
 }
@@ -20,6 +22,28 @@ local S = {}
 
 function S.APIS()
     return APIS
+end
+
+local init_token = {}
+local thread_num = 0
+
+function S.init(args)
+    if init_token == nil then
+    elseif args == nil then
+        ltask.wait(init_token)
+    else
+        bgfx.init(args)
+        ltask.wakeup(init_token)
+        init_token = nil
+    end
+    thread_num = thread_num + 1
+end
+
+function S.shutdown()
+    thread_num = thread_num - 1
+    if thread_num == 0 then
+        bgfx.shutdown()
+    end
 end
 
 local encoder = {}
@@ -40,13 +64,13 @@ local function wakeup_frame(...)
     end
 end
 
-function S.encoder_init()
+function S.encoder_create()
     local who = ltask.current_session().from
     encoder[who] = nil
     encoder_num = encoder_num + 1
 end
 
-function S.encoder_release()
+function S.encoder_destroy()
     local who = ltask.current_session().from
     if encoder[who] == encoder_frame then
         encoder_cur = encoder_cur - 1
