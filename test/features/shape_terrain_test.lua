@@ -281,7 +281,11 @@ local function create_canvas()
         },
         data = {
             name = "canvas",
-            scene = {t={0.0, 5.0, 0.0}},
+            scene = {
+                srt = {
+                    t={0.0, 5.0, 0.0}
+                }
+            },
             reference = true,
             canvas = {
                 textures = {},
@@ -299,7 +303,7 @@ local function create_canvas()
                             },
                         },
                         x = 1.2 * unit, y = 2.2 * unit,
-                        w = 2 * unit, h = 2 * unit,
+                        w = 8 * unit, h = 8 * unit,
                     })
             end
         }

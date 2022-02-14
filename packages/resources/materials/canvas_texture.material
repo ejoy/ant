@@ -4,6 +4,7 @@ fx:
   setting:
     MATERIAL_UNLIT: 1
     lighting: off
+    HAS_BASECOLOR_TEXTURE: 1
 properties:
   s_basecolor:
     stage: 0
