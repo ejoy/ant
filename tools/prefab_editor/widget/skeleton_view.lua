@@ -19,7 +19,7 @@ local icons     = require "common.icons"(asset_mgr)
 local mathpkg	= import_package "ant.math"
 local mc, mu	= mathpkg.constant, mathpkg.util
 local m = {}
-local file_path = ""
+local file_path
 local joints_map
 local joints_list
 local current_skeleton
