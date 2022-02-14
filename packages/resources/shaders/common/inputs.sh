@@ -23,7 +23,7 @@
 #endif //WITH_COLOR_ATTRIB
 
 #ifndef WITH_TANGENT_ATTRIB
-#if !(defined(CALC_TBN) || defined(WITHOUT_TANGENT_ATTRIB))
+#if !((defined(CALC_TBN) || defined(WITHOUT_TANGENT_ATTRIB)) && defined(MATERIAL_UNLIT))
 #define WITH_TANGENT_ATTRIB 1
 #endif 
 #endif //!WITH_TANGENT_ATTRIB
@@ -46,12 +46,24 @@
 #   define OUTPUT_LIGHTMAP_TEXCOORD
 #endif //USING_LIGHTMAP
 
-#ifdef MATERIAL_UNLIT
-#define INPUT_NORMAL
-#define OUTPUT_NORMAL
-#define OUTPUT_WORLDPOS
-#else //!MATERIAL_UNLIT
+#ifndef MATERIAL_UNLIT
+#define WITH_NORMAL_ATTRIB 1
+#endif //MATERIAL_UNLIT
+
+#ifdef WITH_NORMAL_ATTRIB
 #define INPUT_NORMAL a_normal
 #define OUTPUT_NORMAL v_normal
+#else //!WITH_NORMAL_ATTRIB
+#define INPUT_NORMAL
+#define OUTPUT_NORMAL
+#endif //WITH_NORMAL_ATTRIB
+
+#if !defined(USING_LIGHTMAP) &&	defined(ENABLE_SHADOW) && !defined(MATERIAL_UNLIT)
+#define WITH_OUTPUT_WORLDPOS 1
+#endif 
+
+#ifdef WITH_OUTPUT_WORLDPOS
 #define OUTPUT_WORLDPOS v_posWS
-#endif //MATERIAL_UNLIT
+#else //!WITH_OUTPUT_WORLDPOS
+#define OUTPUT_WORLDPOS
+#endif //WITH_OUTPUT_WORLDPOS

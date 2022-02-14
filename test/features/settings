@@ -17,7 +17,7 @@ animation:
       enable: true
 graphic:
   curve_world:
-    enable: true
+    enable: false
     type: "cylinder"
     flat_distance: 0
     curve_rate: 0.11999999731779099

@@ -287,7 +287,7 @@ local function create_canvas()
                 texts = {},
             },
             on_ready = function (e)
-                icanvas.add_items(e, {
+                icanvas.add_items(e,
                     {
                         texture = {
                             path = "/pkg/ant.test.features/assets/textures/canvas/canvas.texture",
@@ -298,8 +298,7 @@ local function create_canvas()
                             x = 32, y = 32,
                             w = 32, h = 32,
                         },
-                    }
-                })
+                    })
             end
         }
     }
@@ -344,7 +343,7 @@ function shape_terrain_test_sys:init()
     --indicator test
 
     indicator = create_indicator()
-    --canvas = create_canvas()
+    canvas = create_canvas()
 end
 
 local itr = ecs.import.interface "ant.terrain|iterrain_road"

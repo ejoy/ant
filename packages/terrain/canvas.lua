@@ -45,14 +45,14 @@ function canvas_sys:data_changed()
                 local ro = re.render_object
 
                 local buffersize = #objbuffer
-                local vbnum = buffersize/layout.stride
+                local vbnum = buffersize//layout.stride
                 local vb = ro.vb
                 vb.start = bufferoffset
                 vb.num = vbnum
 
                 local ib = ro.ib
                 ib.start = 0
-                ib.num = (vbnum/4)*6
+                ib.num = (vbnum//4)*6
 
                 bufferoffset = bufferoffset + buffersize
                 buffers[#buffers+1] = objbuffer
@@ -83,12 +83,13 @@ local function create_texture_item_entity(texobj)
             "ant.general|name",
         },
         data = {
+            reference = true,
             simplemesh  = {
                 vb = {
                     start = 0,
                     num = 0,
-                    handles = {
-                        buffer.handle,
+                    {
+                        handle = bufferhandle,
                     }
                 },
                 ib = {
@@ -103,41 +104,28 @@ local function create_texture_item_entity(texobj)
             name        = "canvas_texture" .. gen_texture_id(),
             canvas_item = "texture",
             on_ready = function (e)
-                imaterial.set_property(e, "u_image", {texture=texobj, stage=0})
+                imaterial.set_property(e, "s_basecolor", {texture=texobj, stage=0})
             end
         }
     }
 end
 
-local function add_item(item, imagesize)
+local function add_item(item)
     local rt = item.rect
     local ww, hh = rt.w, rt.h
     local hww, hhh = ww*0.5, hh*0.5
     local x, z = item.x, item.y
 
-    local iw, ih = imagesize.w, imagesize.h
+    local texsize = item.texture.size
+    local iw, ih = texsize.w, texsize.h
     local fmt = "fffff"
     local vv = {
-        fmt:format(x-hww, 0.0, z-hhh, rt.x/iw, (rt.y+hh)/ih),
-        fmt:format(x-hww, 0.0, z+hhh, rt.x/iw, rt.y/ih),
-        fmt:format(x+hww, 0.0, z+hhh, (rt.x+ww)/iw, rt.y/ih),
-        fmt:format(x+hww, 0.0, z-hhh, (rt.x+ww)/iw, (rt.y+hh)/ih),
+        fmt:pack(x-hww, 0.0, z-hhh, rt.x/iw, (rt.y+hh)/ih),
+        fmt:pack(x-hww, 0.0, z+hhh, rt.x/iw, rt.y/ih),
+        fmt:pack(x+hww, 0.0, z+hhh, (rt.x+ww)/iw, rt.y/ih),
+        fmt:pack(x+hww, 0.0, z-hhh, (rt.x+ww)/iw, (rt.y+hh)/ih),
     }
     return table.concat(vv, "")
-end
-
-local function create_buffer_data(itemsize)
-    local startidx
-    if buffer.data then
-        local olddata = tostring(buffer.data)
-        buffer.data = bgfx.memory_buffer(#olddata + itemsize)
-        startidx = #olddata
-        buffer.data[1] = olddata
-    else
-        startidx = 0
-        buffer.data = bgfx.memory_buffer(itemsize)
-    end
-    return buffer.data, startidx
 end
 
 function icanvas.add_items(e, ...)
@@ -160,7 +148,7 @@ function icanvas.add_items(e, ...)
             }
             textures[texpath] = t
         end
-        t.items[#t.items+1] = add_item(t, texture.size)
+        t.items[#t.items+1] = add_item(item)
     end
     if n > 0 then
         world:pub{"canvas_update", "texture"}
