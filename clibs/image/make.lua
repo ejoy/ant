@@ -8,7 +8,7 @@ lm:source_set "source_image" {
         "bimg",
         "bx",
     },
-    defines = lm.mode == "debug" and "BX_CONFIG_DEBUG=1",
+    defines = "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
     includes = {
         LuaInclude,
         BgfxInclude,

@@ -2,7 +2,7 @@ local lm = require "luamake"
 
 lm:source_set "astc-codec" {
     rootdir = "../bimg/3rdparty/astc-codec",
-    defines = lm.mode == "debug" and "BX_CONFIG_DEBUG=1",
+    defines = "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
     includes = {
         ".",
         "include"
@@ -37,7 +37,7 @@ lm:source_set "astc-codec" {
 lm:source_set "bimg" {
     rootdir = "../bimg/",
     deps = "astc-codec",
-    defines = lm.mode == "debug" and "BX_CONFIG_DEBUG=1",
+    defines = "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
     includes = {
         "../bx/include",
         "include",
@@ -56,7 +56,7 @@ lm:source_set "bimg" {
 
 lm:source_set "bimg_decode" {
     rootdir = "../bimg/",
-    defines = lm.mode == "debug" and "BX_CONFIG_DEBUG=1",
+    defines = "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
     includes = {
         "../bx/include",
         "include",
@@ -71,14 +71,14 @@ lm:source_set "bimg_decode" {
 
 lm:source_set "bimg-iqa" {
     rootdir = "../bimg/",
-    defines = lm.mode == "debug" and "BX_CONFIG_DEBUG=1",
+    defines = "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
     includes = "3rdparty/iqa/include",
     sources = "3rdparty/iqa/source/*.c",
 }
 
 lm:source_set "bimg_encode" {
     rootdir = "../bimg/",
-    defines = lm.mode == "debug" and "BX_CONFIG_DEBUG=1",
+    defines = "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
     deps = {
         "astc-codec",
         "bimg-iqa",

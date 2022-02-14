@@ -12,7 +12,7 @@ lm:source_set "source_bgfx" {
         "*.c",
         "*.cpp"
     },
-    defines = lm.mode == "debug" and "BX_CONFIG_DEBUG=1",
+    defines = "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
     msvc = {
         flags = {
             "-wd4244",
