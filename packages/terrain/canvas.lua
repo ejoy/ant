@@ -76,7 +76,9 @@ local function gen_texture_id()
     return id
 end
 
-local function create_texture_item_entity(texobj)
+local function create_texture_item_entity(texobj, canvasentity)
+    w:sync("reference:in", canvasentity)
+    local parentref = canvasentity.reference
     return ecs.create_entity{
         policy = {
             "ant.render|simplerender",
@@ -104,6 +106,7 @@ local function create_texture_item_entity(texobj)
             name        = "canvas_texture" .. gen_texture_id(),
             canvas_item = "texture",
             on_ready = function (e)
+                ecs.method.set_parent(e.reference, parentref)
                 imaterial.set_property(e, "s_basecolor", {texture=texobj, stage=0})
             end
         }
@@ -111,19 +114,27 @@ local function create_texture_item_entity(texobj)
 end
 
 local function add_item(item)
-    local rt = item.rect
-    local ww, hh = rt.w, rt.h
-    local hww, hhh = ww*0.5, hh*0.5
-    local x, z = item.x, item.y
-
+    local tex = item.texture
     local texsize = item.texture.size
+    local texrt = item.texture.rect
+    local t_ww, t_hh = texrt.w, texrt.h
+
+    local x, z = item.x, item.y
+    local ww, hh = item.w, item.h
+    local hww, hhh = ww*0.5, hh*0.5
+
     local iw, ih = texsize.w, texsize.h
     local fmt = "fffff"
+    --[[
+        1---3
+        |   |
+        0---2
+    ]]
     local vv = {
-        fmt:pack(x-hww, 0.0, z-hhh, rt.x/iw, (rt.y+hh)/ih),
-        fmt:pack(x-hww, 0.0, z+hhh, rt.x/iw, rt.y/ih),
-        fmt:pack(x+hww, 0.0, z+hhh, (rt.x+ww)/iw, rt.y/ih),
-        fmt:pack(x+hww, 0.0, z-hhh, (rt.x+ww)/iw, (rt.y+hh)/ih),
+        fmt:pack(x-hww, 0.0, z-hhh, texrt.x/iw, (texrt.y+t_hh)/ih),
+        fmt:pack(x-hww, 0.0, z+hhh, texrt.x/iw, texrt.y/ih),
+        fmt:pack(x+hww, 0.0, z-hhh, (texrt.x+t_ww)/iw, texrt.y/ih),
+        fmt:pack(x+hww, 0.0, z+hhh, (texrt.x+t_ww)/iw, (texrt.y+t_hh)/ih),
     }
     return table.concat(vv, "")
 end
@@ -143,7 +154,7 @@ function icanvas.add_items(e, ...)
         if t == nil then
             local texobj = assetmgr.resource(texpath)
             t = {
-                renderer = create_texture_item_entity(texobj),
+                renderer = create_texture_item_entity(texobj, e),
                 items = {},
             }
             textures[texpath] = t

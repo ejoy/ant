@@ -272,6 +272,7 @@ end
 local canvas
 
 local function create_canvas()
+    local unit = 1
     return ecs.create_entity {
         policy = {
             "ant.scene|scene_object",
@@ -280,7 +281,7 @@ local function create_canvas()
         },
         data = {
             name = "canvas",
-            scene = {t={0.0, 1.0, 0.0}},
+            scene = {t={0.0, 5.0, 0.0}},
             reference = true,
             canvas = {
                 textures = {},
@@ -292,12 +293,13 @@ local function create_canvas()
                         texture = {
                             path = "/pkg/ant.test.features/assets/textures/canvas/canvas.texture",
                             size = {w=128, h=128},
+                            rect = {
+                                x = 32, y = 32,
+                                w = 32, h = 32,
+                            },
                         },
-                        x = 1.2, y = 2.2,
-                        rect = {
-                            x = 32, y = 32,
-                            w = 32, h = 32,
-                        },
+                        x = 1.2 * unit, y = 2.2 * unit,
+                        w = 2 * unit, h = 2 * unit,
                     })
             end
         }
