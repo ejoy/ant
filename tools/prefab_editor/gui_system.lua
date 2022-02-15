@@ -622,3 +622,50 @@ function igui.cvt2scenept(x, y)
     local vr = igui.scene_viewport()
     return x-vr.x, y-vr.y
 end
+
+local geometry_drawer   = import_package "ant.geometry".drawer
+local geo_utils         = ecs.require "editor.geometry_utils"
+local DEFAULT_COLOR <const> = 0xff00ff00
+local DEFAULT_COLOR_F <const> = {1,0,1,1}
+local skeleton_eid
+local joint_utils = require "widget.joint_utils"
+local firsttime = true
+
+function m:widget()
+    -- local ske = joint_utils:get_current_skeleton()
+    -- if not ske then
+    --     return
+    -- end
+    -- if not skeleton_eid then
+    --     local desc={vb={}, ib={}}
+    --     geometry_drawer.draw_skeleton(ske._handle, nil, DEFAULT_COLOR, {s = 15}, desc)
+    --     skeleton_eid = geo_utils.create_dynamic_lines(nil, desc.vb, desc.ib, "skeleton", DEFAULT_COLOR_F)
+    -- end
+    -- if skeleton_eid then
+    --     if firsttime then
+    --         firsttime = false
+    --     else
+    --         w:sync("simplemesh?in", skeleton_eid)
+    --         if skeleton_eid.simplemesh then
+    --             --ies.set_state(skeleton_eid, "visible", true)
+    --             local desc={vb={}, ib={}}
+    --             local pose_result
+    --             for e in w:select "skeleton:in pose_result:in" do
+    --                 if ske == e.skeleton then
+    --                     pose_result = e.pose_result
+    --                     break
+    --                 end
+    --             end
+    --             geometry_drawer.draw_skeleton(ske._handle, pose_result, DEFAULT_COLOR, nil, desc, joint_utils.current_joint and joint_utils.current_joint.index or 1)
+    --             local rc = skeleton_eid.simplemesh
+    --             local vbdesc, ibdesc = rc.vb, rc.ib
+    --             bgfx.update(vbdesc[1].handle, 0, bgfx.memory_buffer("fffd", desc.vb))
+    --             bgfx.update(ibdesc.handle, 0, bgfx.memory_buffer("w", desc.ib))
+    --         end
+    --     end
+    -- end
+end
+
+function m.skin_mesh()
+    joint_utils:update_pose()
+end

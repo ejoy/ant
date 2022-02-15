@@ -48,8 +48,8 @@ std::string Property::ToString() const {
 		return "<keyword," + std::to_string(keyword) + ">";
 	}
 	case Property::COLOUR: {
-		Color colour = std::get<Color>(value);
-		return CreateString(32, "rgba(%d,%d,%d,%d)", colour.r, colour.g, colour.b, colour.a);
+		auto sRGB = std::get<Color>(value).toSRGB();
+		return CreateString(32, "rgba(%d,%d,%d,%d)", sRGB.r, sRGB.g, sRGB.b, sRGB.a);
 	}
 	case Property::TRANSFORM:
 		return "<transform>";

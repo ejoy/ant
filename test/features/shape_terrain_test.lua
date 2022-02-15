@@ -269,9 +269,10 @@ local function create_indicator()
     }
 end
 
-local canvas
+local canvas = {}
 
 local function create_canvas()
+    local unit = 1
     return ecs.create_entity {
         policy = {
             "ant.scene|scene_object",
@@ -280,26 +281,44 @@ local function create_canvas()
         },
         data = {
             name = "canvas",
-            scene = {t={0.0, 1.0, 0.0}},
+            scene = {
+                srt = {
+                    t={0.0, 5.0, 0.0}
+                }
+            },
             reference = true,
             canvas = {
                 textures = {},
                 texts = {},
             },
             on_ready = function (e)
-                icanvas.add_items(e, {
+                canvas.added_items = 
+                icanvas.add_items(e,
                     {
                         texture = {
                             path = "/pkg/ant.test.features/assets/textures/canvas/canvas.texture",
                             size = {w=128, h=128},
+                            rect = {
+                                x = 0, y = 0,
+                                w = 128, h = 128,
+                            },
                         },
-                        x = 1.2, y = 2.2,
-                        rect = {
-                            x = 32, y = 32,
-                            w = 32, h = 32,
+                        x = 1.2 * unit, y = 2.2 * unit,
+                        w = 3 * unit, h = 3 * unit,
+                    },
+                    {
+                        texture = {
+                            path = "/pkg/ant.test.features/assets/textures/canvas/canvas.texture",
+                            size = {w=128, h=128},
+                            rect = {
+                                x = 32, y = 32,
+                                w = 32, h = 32,
+                            },
                         },
+                        x = 5 * unit, y = 6 * unit,
+                        w = 2 * unit, h = 2 * unit,
                     }
-                })
+                )
             end
         }
     }
@@ -344,7 +363,7 @@ function shape_terrain_test_sys:init()
     --indicator test
 
     indicator = create_indicator()
-    --canvas = create_canvas()
+    create_canvas()
 end
 
 local itr = ecs.import.interface "ant.terrain|iterrain_road"
@@ -369,6 +388,12 @@ function shape_terrain_test_sys:data_changed()
             end
 
             indicator = create_indicator()
+        elseif key == "M" and press == 0 then
+            if canvas.added_items then
+                local idx = canvas.added_items[1]
+                local ce = w:singleton("canvas", "scene:in")
+                icanvas.remove_item(ce, "/pkg/ant.test.features/assets/textures/canvas/canvas.texture", idx)
+            end
         end
     end
 end

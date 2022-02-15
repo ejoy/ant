@@ -4,7 +4,7 @@ lm:source_set "bx" {
     rootdir = "../bx/",
     defines = {
         "__STDC_FORMAT_MACROS",
-        lm.mode == "debug" and "BX_CONFIG_DEBUG=1",
+        "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
     },
     includes = {
         "include",

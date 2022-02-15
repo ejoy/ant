@@ -204,10 +204,10 @@ ltask.fork(function ()
         height = init_height,
     }
 	import_package "ant.compile_resource".init()
+    bgfx.encoder_create()
     bgfx.encoder_init()
 	renderpkg.init_bgfx()
     bgfx.encoder_begin()
-    ltask.call(ServiceBgfxMain, "encoder_init")
 
     local imgui_font = assetmgr.load_fx {
         fs = "/pkg/ant.imgui/shader/fs_imgui_font.sc",
@@ -251,7 +251,7 @@ ltask.fork(function ()
     cb.exit()
     imgui.Destroy()
     bgfx.encoder_end()
-	ltask.call(ServiceBgfxMain, "encoder_release")
+	bgfx.encoder_destroy()
     rhwi.shutdown()
     multi_wakeup "quit"
     print "exit"

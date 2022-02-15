@@ -9,7 +9,8 @@ local declmgr   = renderpkg.declmgr
 local assetmgr  = import_package "ant.asset"
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local irender = ecs.import.interface "ant.render|irender"
+local irender   = ecs.import.interface "ant.render|irender"
+local ifs       = ecs.import.interface "ant.scene|ifilter_state"
 
 local decl<const> = "p3|t2"
 local layout<const> = declmgr.get(decl)
@@ -40,22 +41,29 @@ function canvas_sys:data_changed()
             for _, n in ipairs(tt) do
                 local tex = textures[n]
                 local re = tex.renderer
-                local objbuffer = table.concat(tex.items, "")
-                w:sync("render_object:in", re)
-                local ro = re.render_object
+                local items = tex.items
+                local hasitem = #items > 0
+                if hasitem then
+                    local objbuffer = table.concat(items, "")
+                    w:sync("render_object:in", re)
+                    local ro = re.render_object
+    
+                    local buffersize = #objbuffer
+                    local vbnum = buffersize//layout.stride
+                    local vb = ro.vb
+                    vb.start = bufferoffset
+                    vb.num = vbnum
+    
+                    local ib = ro.ib
+                    ib.start = 0
+                    ib.num = (vbnum//4)*6
+    
+                    bufferoffset = bufferoffset + buffersize
+                    buffers[#buffers+1] = objbuffer
+                end
 
-                local buffersize = #objbuffer
-                local vbnum = buffersize/layout.stride
-                local vb = ro.vb
-                vb.start = bufferoffset
-                vb.num = vbnum
-
-                local ib = ro.ib
-                ib.start = 0
-                ib.num = (vbnum/4)*6
-
-                bufferoffset = bufferoffset + buffersize
-                buffers[#buffers+1] = objbuffer
+                ifs.set_state(re, "main_view", hasitem)
+                ifs.set_state(re, "selectable", hasitem)
             end
         end
 
@@ -76,19 +84,22 @@ local function gen_texture_id()
     return id
 end
 
-local function create_texture_item_entity(texobj)
+local function create_texture_item_entity(texobj, canvasentity)
+    w:sync("reference:in", canvasentity)
+    local parentref = canvasentity.reference
     return ecs.create_entity{
         policy = {
             "ant.render|simplerender",
             "ant.general|name",
         },
         data = {
+            reference = true,
             simplemesh  = {
                 vb = {
                     start = 0,
                     num = 0,
-                    handles = {
-                        buffer.handle,
+                    {
+                        handle = bufferhandle,
                     }
                 },
                 ib = {
@@ -103,41 +114,39 @@ local function create_texture_item_entity(texobj)
             name        = "canvas_texture" .. gen_texture_id(),
             canvas_item = "texture",
             on_ready = function (e)
-                imaterial.set_property(e, "u_image", {texture=texobj, stage=0})
+                w:sync("reference:in", e)
+                ecs.method.set_parent(e.reference, parentref)
+                imaterial.set_property(e, "s_basecolor", {texture=texobj, stage=0})
             end
         }
     }
 end
 
-local function add_item(item, imagesize)
-    local rt = item.rect
-    local ww, hh = rt.w, rt.h
-    local hww, hhh = ww*0.5, hh*0.5
-    local x, z = item.x, item.y
+local function add_item(item)
+    local tex = item.texture
+    local texsize, texrt = tex.size, tex.rect
+    local t_ww, t_hh = texrt.w, texrt.h
 
-    local iw, ih = imagesize.w, imagesize.h
+    local x, z = item.x, item.y
+    local ww, hh = item.w, item.h
+
+    local iw, ih = texsize.w, texsize.h
     local fmt = "fffff"
+    --[[
+        1---3
+        |   |
+        0---2
+    ]]
+    local u0, v0 = texrt.x/iw, texrt.y/ih
+    local u1, v1 = (texrt.x+t_ww)/iw, (texrt.y+t_hh)/ih
+    --we assume uv origin is topleft(same as D3D, metal and vulkan)
     local vv = {
-        fmt:format(x-hww, 0.0, z-hhh, rt.x/iw, (rt.y+hh)/ih),
-        fmt:format(x-hww, 0.0, z+hhh, rt.x/iw, rt.y/ih),
-        fmt:format(x+hww, 0.0, z+hhh, (rt.x+ww)/iw, rt.y/ih),
-        fmt:format(x+hww, 0.0, z-hhh, (rt.x+ww)/iw, (rt.y+hh)/ih),
+        fmt:pack(x,     0.0, z,     u0, v1),
+        fmt:pack(x,     0.0, z+hh,  u0, v0),
+        fmt:pack(x+ww,  0.0, z,     u1, v1),
+        fmt:pack(x+ww,  0.0, z+hh,  u1, v0),
     }
     return table.concat(vv, "")
-end
-
-local function create_buffer_data(itemsize)
-    local startidx
-    if buffer.data then
-        local olddata = tostring(buffer.data)
-        buffer.data = bgfx.memory_buffer(#olddata + itemsize)
-        startidx = #olddata
-        buffer.data[1] = olddata
-    else
-        startidx = 0
-        buffer.data = bgfx.memory_buffer(itemsize)
-    end
-    return buffer.data, startidx
 end
 
 function icanvas.add_items(e, ...)
@@ -147,6 +156,7 @@ function icanvas.add_items(e, ...)
 
     local n = select("#", ...)
     
+    local added_items = {}
     for i=1, n do
         local item = select(i, ...)
         local texture = item.texture
@@ -155,20 +165,35 @@ function icanvas.add_items(e, ...)
         if t == nil then
             local texobj = assetmgr.resource(texpath)
             t = {
-                renderer = create_texture_item_entity(texobj),
+                renderer = create_texture_item_entity(texobj, e),
                 items = {},
             }
             textures[texpath] = t
         end
-        t.items[#t.items+1] = add_item(t, texture.size)
+        local idx = #t.items+1
+        t.items[idx] = add_item(item)
+        added_items[#added_items+1] = idx
     end
     if n > 0 then
         world:pub{"canvas_update", "texture"}
     end
+
+    return added_items
 end
 
 function icanvas.remove_item(e, texpath, idx)
-    world:pub{"canvas_update", "texture"}
+    w:sync("canvas:in", e)
+    local canvas = e.canvas
+    local textures = canvas.textures
+
+    local t = textures[texpath]
+    if t then
+        table.remove(t.items, idx)
+        world:pub{"canvas_update", "texture"}
+    else
+        log.warn("invalid 'texpath': " .. (texpath or ''))
+    end
+    
 end
 
 function icanvas.add_text(e, ...)

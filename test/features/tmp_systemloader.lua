@@ -89,28 +89,28 @@ function init_loader_sys:init()
     --ientity.create_procedural_sky()
     ecs.create_instance "/pkg/ant.test.features/assets/entities/skybox_test.prefab"
     ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
-    local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/test1.glb|mesh.prefab"
-    function p.on_ready()
-        iom.set_position(p.root, {3, 0.0, 0.0})
-    end
-    -- p.on_ready = function (e)
-    --     for _, ee in ipairs(e.tag['*']) do
-    --         ies.set_state(ee, "main_view", false)
-    --         ies.set_state(ee, "cast_shadow", false)
-    --     end
+    -- local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/offshore-pump.glb|mesh.prefab"
+    -- function p.on_ready()
+    --     iom.set_position(p.root, {3, 0.0, 0.0})
     -- end
-    -- p.on_update = function(e)
-    --     for _, ee in ipairs(e.tag['*']) do
-    --         w:sync("skeleton?in", ee)
-    --         if ee.skeleton then
-    --             --w:sync("pose_result:in", ee)
-    --             local iwd = ecs.import.interface "ant.render|iwidget_drawer"
-    --             iwd.draw_skeleton(ee.skeleton._handle, ee.pose_result, math3d.matrix{s={1.0, 1.0, -1.0}}, 0xff00ffff)
-    --             break
-    --         end
-    --     end
-    -- end
-    world:create_object(p)
+    -- -- p.on_ready = function (e)
+    -- --     for _, ee in ipairs(e.tag['*']) do
+    -- --         ies.set_state(ee, "main_view", false)
+    -- --         ies.set_state(ee, "cast_shadow", false)
+    -- --     end
+    -- -- end
+    -- -- p.on_update = function(e)
+    -- --     for _, ee in ipairs(e.tag['*']) do
+    -- --         w:sync("skeleton?in", ee)
+    -- --         if ee.skeleton then
+    -- --             --w:sync("pose_result:in", ee)
+    -- --             local iwd = ecs.import.interface "ant.render|iwidget_drawer"
+    -- --             iwd.draw_skeleton(ee.skeleton._handle, ee.pose_result, math3d.matrix{s={1.0, 1.0, -1.0}}, 0xff00ffff)
+    -- --             break
+    -- --         end
+    -- --     end
+    -- -- end
+    -- world:create_object(p)
 
     local off = 0.1
 	ientity.create_screen_axis_entity({s=0.1}, {type = "percent", screen_pos = {off, 1-off}}, "global_axes")

@@ -11,10 +11,11 @@ void main()
 	mat4 wm = get_world_matrix();
 	vec4 posWS = transformWS(wm, vec4(a_position, 1.0));
 	gl_Position = mul(u_viewProj, posWS);
-#if !defined(USING_LIGHTMAP) &&	defined(ENABLE_SHADOW)
+
+#if WITH_OUTPUT_WORLDPOS
 	v_posWS = posWS;
 	v_posWS.w = mul(u_view, v_posWS).z;
-#endif //ENABLE_SHADOW
+#endif //WITH_OUTPUT_WORLDPOS
 
 	v_texcoord0	= a_texcoord0;
 #ifdef USING_LIGHTMAP
@@ -25,13 +26,15 @@ void main()
 	v_color0 = a_color0;
 #endif //WITH_COLOR_ATTRIB
 
-#ifndef MATERIAL_UNLIT
+#ifdef WITH_NORMAL_ATTRIB
 	//TODO: normal and tangent should use inverse transpose matrix
 	v_normal	= normalize(mul(wm, vec4(a_normal, 0.0)).xyz);
-#endif //MATERIAL_UNLIT
-
-#ifdef WITH_TANGENT_ATTRIB
+#	ifdef WITH_TANGENT_ATTRIB
 	v_tangent	= normalize(mul(wm, vec4(a_tangent, 0.0)).xyz);
 	v_bitangent	= cross(v_normal, v_tangent);	//left hand
-#endif //CALC_TBN
+#	endif //WITH_TANGENT_ATTRIB
+
+#endif //WITH_NORMAL_ATTRIB
+
+
 }

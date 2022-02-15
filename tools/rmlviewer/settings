@@ -20,8 +20,8 @@ graphic:
     enable: false
     type: "cylinder"
     flat_distance: 0
-    curve_rate: 0.11999999731779099
-    distance: 100
+    curve_rate: 0.1
+    distance: 1200
   lighting:
     cluster_shading: 1
   render:
@@ -34,7 +34,8 @@ graphic:
     format: RGBA16F
   postprocess:
     bloom:
-      enable: true
+      enable: false
+      type: cylinder
       inv_highlight: 0.00001
       threshold: 12000
   shadow:
@@ -45,8 +46,5 @@ graphic:
     normal_offset: 0
     color: {0.0, 0.0, 0.0, 1}
     stabilize: true
-    #split_ratios: {0.05, 0.25, 0.6}
-    split_lamada: 0.8
+    split_lamada: 1
     split_num: 4
-debug:
-  show_bounding: true

@@ -1,0 +1,14 @@
+<rml><head>
+<script type="text/x-lua">
+window.createModel "basics" {
+	title = "Hello World"
+}
+</script>
+</head>
+	<body onload="">
+	<panel data-model="basics">
+		<h1>{{title}}</h1>
+	</panel>
+	<button>中文 ABC</button>
+	</body>
+</rml>

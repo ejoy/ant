@@ -16,6 +16,7 @@ system "rmlui_system"
 
 interface "irmlui"
     .implement "rmlui_system.lua"
+    .method "font_dir"
     .method "preload_dir"
     .method "debugger"
     .method "open"

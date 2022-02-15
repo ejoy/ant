@@ -1094,7 +1094,7 @@ function m.show()
             if change then
                 imgui.widget.Text("Name : ")
                 imgui.cursor.SameLine()
-                if imgui.widget.InputText("##" .. "Name", ui_anim_name) then
+                if imgui.widget.InputText("##Name", ui_anim_name) then
                     anim_name = tostring(ui_anim_name.text)
                 end
                 imgui.widget.Text("Path : " .. anim_glb_path)

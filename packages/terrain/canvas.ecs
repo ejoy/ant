@@ -10,7 +10,7 @@ interface "icanvas"
     .method "add_text"
 
 component "canvas".type "lua"
-component "canvas_item"
+component "canvas_item".type "lua"
 
 policy "canvas"
     .require_system "ant.terrain|canvas_system"

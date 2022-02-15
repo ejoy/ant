@@ -34,155 +34,155 @@ namespace Rml {
 
 PropertyParserColour::PropertyParserColour()
 {
-	html_colours["transparent"] = Color(255,255,255,0);
+	html_colours["transparent"] = ColorFromSRGB(255,255,255,0);
 
-	html_colours["aliceblue"] =  Color(240,248,255,255);
-	html_colours["antiquewhite"] =  Color(250,235,215,255);
-	html_colours["aqua"] =  Color(0,255,255,255);
-	html_colours["aquamarine"] =  Color(127,255,212,255);
-	html_colours["azure"] =  Color(240,255,255,255);
-	html_colours["beige"] =  Color(245,245,220,255);
-	html_colours["bisque"] =  Color(255,228,196,255);
-	html_colours["black"] =  Color(0,0,0,255);
-	html_colours["blanchedalmond"] =  Color(255,235,205,255);
-	html_colours["blue"] =  Color(0,0,255,255);
-	html_colours["blueviolet"] =  Color(138,43,226,255);
-	html_colours["brown"] =  Color(165,42,42,255);
-	html_colours["burlywood"] =  Color(222,184,135,255);
-	html_colours["cadetblue"] =  Color(95,158,160,255);
-	html_colours["chartreuse"] =  Color(127,255,0,255);
-	html_colours["chocolate"] =  Color(210,105,30,255);
-	html_colours["coral"] =  Color(255,127,80,255);
-	html_colours["cornflowerblue"] =  Color(100,149,237,255);
-	html_colours["cornsilk"] =  Color(255,248,220,255);
-	html_colours["crimson"] =  Color(220,20,60,255);
-	html_colours["cyan"] =  Color(0,255,255,255);
-	html_colours["darkblue"] =  Color(0,0,139,255);
-	html_colours["darkcyan"] =  Color(0,139,139,255);
-	html_colours["darkgoldenrod"] =  Color(184,134,11,255);
-	html_colours["darkgray"] =  Color(169,169,169,255);
-	html_colours["darkgreen"] =  Color(0,100,0,255);
-	html_colours["darkgrey"] =  Color(169,169,169,255);
-	html_colours["darkkhaki"] =  Color(189,183,107,255);
-	html_colours["darkmagenta"] =  Color(139,0,139,255);
-	html_colours["darkolivegreen"] =  Color(85,107,47,255);
-	html_colours["darkorange"] =  Color(255,140,0,255);
-	html_colours["darkorchid"] =  Color(153,50,204,255);
-	html_colours["darkred"] =  Color(139,0,0,255);
-	html_colours["darksalmon"] =  Color(233,150,122,255);
-	html_colours["darkseagreen"] =  Color(143,188,143,255);
-	html_colours["darkslateblue"] =  Color(72,61,139,255);
-	html_colours["darkslategray"] =  Color(47,79,79,255);
-	html_colours["darkslategrey"] =  Color(47,79,79,255);
-	html_colours["darkturquoise"] =  Color(0,206,209,255);
-	html_colours["darkviolet"] =  Color(148,0,211,255);
-	html_colours["deeppink"] =  Color(255,20,147,255);
-	html_colours["deepskyblue"] =  Color(0,191,255,255);
-	html_colours["dimgray"] =  Color(105,105,105,255);
-	html_colours["dimgrey"] =  Color(105,105,105,255);
-	html_colours["dodgerblue"] =  Color(30,144,255,255);
-	html_colours["firebrick"] =  Color(178,34,34,255);
-	html_colours["floralwhite"] =  Color(255,250,240,255);
-	html_colours["forestgreen"] =  Color(34,139,34,255);
-	html_colours["fuchsia"] =  Color(255,0,255,255);
-	html_colours["gainsboro"] =  Color(220,220,220,255);
-	html_colours["ghostwhite"] =  Color(248,248,255,255);
-	html_colours["gold"] =  Color(255,215,0,255);
-	html_colours["goldenrod"] =  Color(218,165,32,255);
-	html_colours["gray"] =  Color(128,128,128,255);
-	html_colours["green"] =  Color(0,128,0,255);
-	html_colours["greenyellow"] =  Color(173,255,47,255);
-	html_colours["grey"] =  Color(128,128,128,255);
-	html_colours["honeydew"] =  Color(240,255,240,255);
-	html_colours["hotpink"] =  Color(255,105,180,255);
-	html_colours["indianred"] =  Color(205,92,92,255);
-	html_colours["indigo"] =  Color(75,0,130,255);
-	html_colours["ivory"] =  Color(255,255,240,255);
-	html_colours["khaki"] =  Color(240,230,140,255);
-	html_colours["lavender"] =  Color(230,230,250,255);
-	html_colours["lavenderblush"] =  Color(255,240,245,255);
-	html_colours["lawngreen"] =  Color(124,252,0,255);
-	html_colours["lemonchiffon"] =  Color(255,250,205,255);
-	html_colours["lightblue"] =  Color(173,216,230,255);
-	html_colours["lightcoral"] =  Color(240,128,128,255);
-	html_colours["lightcyan"] =  Color(224,255,255,255);
-	html_colours["lightgoldenrodyellow"] =  Color(250,250,210,255);
-	html_colours["lightgray"] =  Color(211,211,211,255);
-	html_colours["lightgreen"] =  Color(144,238,144,255);
-	html_colours["lightgrey"] =  Color(211,211,211,255);
-	html_colours["lightpink"] =  Color(255,182,193,255);
-	html_colours["lightsalmon"] =  Color(255,160,122,255);
-	html_colours["lightseagreen"] =  Color(32,178,170,255);
-	html_colours["lightskyblue"] =  Color(135,206,250,255);
-	html_colours["lightslategray"] =  Color(119,136,153,255);
-	html_colours["lightslategrey"] =  Color(119,136,153,255);
-	html_colours["lightsteelblue"] =  Color(176,196,222,255);
-	html_colours["lightyellow"] =  Color(255,255,224,255);
-	html_colours["lime"] =  Color(0,255,0,255);
-	html_colours["limegreen"] =  Color(50,205,50,255);
-	html_colours["linen"] =  Color(250,240,230,255);
-	html_colours["magenta"] =  Color(255,0,255,255);
-	html_colours["maroon"] =  Color(128,0,0,255);
-	html_colours["mediumaquamarine"] =  Color(102,205,170,255);
-	html_colours["mediumblue"] =  Color(0,0,205,255);
-	html_colours["mediumorchid"] =  Color(186,85,211,255);
-	html_colours["mediumpurple"] =  Color(147,112,219,255);
-	html_colours["mediumseagreen"] =  Color(60,179,113,255);
-	html_colours["mediumslateblue"] =  Color(123,104,238,255);
-	html_colours["mediumspringgreen"] =  Color(0,250,154,255);
-	html_colours["mediumturquoise"] =  Color(72,209,204,255);
-	html_colours["mediumvioletred"] =  Color(199,21,133,255);
-	html_colours["midnightblue"] =  Color(25,25,112,255);
-	html_colours["mintcream"] =  Color(245,255,250,255);
-	html_colours["mistyrose"] =  Color(255,228,225,255);
-	html_colours["moccasin"] =  Color(255,228,181,255);
-	html_colours["navajowhite"] =  Color(255,222,173,255);
-	html_colours["navy"] =  Color(0,0,128,255);
-	html_colours["oldlace"] =  Color(253,245,230,255);
-	html_colours["olive"] =  Color(128,128,0,255);
-	html_colours["olivedrab"] =  Color(107,142,35,255);
-	html_colours["orange"] =  Color(255,165,0,255);
-	html_colours["orangered"] =  Color(255,69,0,255);
-	html_colours["orchid"] =  Color(218,112,214,255);
-	html_colours["palegoldenrod"] =  Color(238,232,170,255);
-	html_colours["palegreen"] =  Color(152,251,152,255);
-	html_colours["paleturquoise"] =  Color(175,238,238,255);
-	html_colours["palevioletred"] =  Color(219,112,147,255);
-	html_colours["papayawhip"] =  Color(255,239,213,255);
-	html_colours["peachpuff"] =  Color(255,218,185,255);
-	html_colours["peru"] =  Color(205,133,63,255);
-	html_colours["pink"] =  Color(255,192,203,255);
-	html_colours["plum"] =  Color(221,160,221,255);
-	html_colours["powderblue"] =  Color(176,224,230,255);
-	html_colours["purple"] =  Color(128,0,128,255);
-	html_colours["red"] =  Color(255,0,0,255);
-	html_colours["rosybrown"] =  Color(188,143,143,255);
-	html_colours["royalblue"] =  Color(65,105,225,255);
-	html_colours["saddlebrown"] =  Color(139,69,19,255);
-	html_colours["salmon"] =  Color(250,128,114,255);
-	html_colours["sandybrown"] =  Color(244,164,96,255);
-	html_colours["seagreen"] =  Color(46,139,87,255);
-	html_colours["seashell"] =  Color(255,245,238,255);
-	html_colours["sienna"] =  Color(160,82,45,255);
-	html_colours["silver"] =  Color(192,192,192,255);
-	html_colours["skyblue"] =  Color(135,206,235,255);
-	html_colours["slateblue"] =  Color(106,90,205,255);
-	html_colours["slategray"] =  Color(112,128,144,255);
-	html_colours["slategrey"] =  Color(112,128,144,255);
-	html_colours["snow"] =  Color(255,250,250,255);
-	html_colours["springgreen"] =  Color(0,255,127,255);
-	html_colours["steelblue"] =  Color(70,130,180,255);
-	html_colours["tan"] =  Color(210,180,140,255);
-	html_colours["teal"] =  Color(0,128,128,255);
-	html_colours["thistle"] =  Color(216,191,216,255);
-	html_colours["tomato"] =  Color(255,99,71,255);
-	html_colours["turquoise"] =  Color(64,224,208,255);
-	html_colours["violet"] =  Color(238,130,238,255);
-	html_colours["wheat"] =  Color(245,222,179,255);
-	html_colours["white"] =  Color(255,255,255,255);
-	html_colours["whitesmoke"] =  Color(245,245,245,255);
-	html_colours["yellow"] =  Color(255,255,0,255);
-	html_colours["yellowgreen"] =  Color(154,205,50,255);
+	html_colours["aliceblue"] =  ColorFromSRGB(240,248,255,255);
+	html_colours["antiquewhite"] =  ColorFromSRGB(250,235,215,255);
+	html_colours["aqua"] =  ColorFromSRGB(0,255,255,255);
+	html_colours["aquamarine"] =  ColorFromSRGB(127,255,212,255);
+	html_colours["azure"] =  ColorFromSRGB(240,255,255,255);
+	html_colours["beige"] =  ColorFromSRGB(245,245,220,255);
+	html_colours["bisque"] =  ColorFromSRGB(255,228,196,255);
+	html_colours["black"] =  ColorFromSRGB(0,0,0,255);
+	html_colours["blanchedalmond"] =  ColorFromSRGB(255,235,205,255);
+	html_colours["blue"] =  ColorFromSRGB(0,0,255,255);
+	html_colours["blueviolet"] =  ColorFromSRGB(138,43,226,255);
+	html_colours["brown"] =  ColorFromSRGB(165,42,42,255);
+	html_colours["burlywood"] =  ColorFromSRGB(222,184,135,255);
+	html_colours["cadetblue"] =  ColorFromSRGB(95,158,160,255);
+	html_colours["chartreuse"] =  ColorFromSRGB(127,255,0,255);
+	html_colours["chocolate"] =  ColorFromSRGB(210,105,30,255);
+	html_colours["coral"] =  ColorFromSRGB(255,127,80,255);
+	html_colours["cornflowerblue"] =  ColorFromSRGB(100,149,237,255);
+	html_colours["cornsilk"] =  ColorFromSRGB(255,248,220,255);
+	html_colours["crimson"] =  ColorFromSRGB(220,20,60,255);
+	html_colours["cyan"] =  ColorFromSRGB(0,255,255,255);
+	html_colours["darkblue"] =  ColorFromSRGB(0,0,139,255);
+	html_colours["darkcyan"] =  ColorFromSRGB(0,139,139,255);
+	html_colours["darkgoldenrod"] =  ColorFromSRGB(184,134,11,255);
+	html_colours["darkgray"] =  ColorFromSRGB(169,169,169,255);
+	html_colours["darkgreen"] =  ColorFromSRGB(0,100,0,255);
+	html_colours["darkgrey"] =  ColorFromSRGB(169,169,169,255);
+	html_colours["darkkhaki"] =  ColorFromSRGB(189,183,107,255);
+	html_colours["darkmagenta"] =  ColorFromSRGB(139,0,139,255);
+	html_colours["darkolivegreen"] =  ColorFromSRGB(85,107,47,255);
+	html_colours["darkorange"] =  ColorFromSRGB(255,140,0,255);
+	html_colours["darkorchid"] =  ColorFromSRGB(153,50,204,255);
+	html_colours["darkred"] =  ColorFromSRGB(139,0,0,255);
+	html_colours["darksalmon"] =  ColorFromSRGB(233,150,122,255);
+	html_colours["darkseagreen"] =  ColorFromSRGB(143,188,143,255);
+	html_colours["darkslateblue"] =  ColorFromSRGB(72,61,139,255);
+	html_colours["darkslategray"] =  ColorFromSRGB(47,79,79,255);
+	html_colours["darkslategrey"] =  ColorFromSRGB(47,79,79,255);
+	html_colours["darkturquoise"] =  ColorFromSRGB(0,206,209,255);
+	html_colours["darkviolet"] =  ColorFromSRGB(148,0,211,255);
+	html_colours["deeppink"] =  ColorFromSRGB(255,20,147,255);
+	html_colours["deepskyblue"] =  ColorFromSRGB(0,191,255,255);
+	html_colours["dimgray"] =  ColorFromSRGB(105,105,105,255);
+	html_colours["dimgrey"] =  ColorFromSRGB(105,105,105,255);
+	html_colours["dodgerblue"] =  ColorFromSRGB(30,144,255,255);
+	html_colours["firebrick"] =  ColorFromSRGB(178,34,34,255);
+	html_colours["floralwhite"] =  ColorFromSRGB(255,250,240,255);
+	html_colours["forestgreen"] =  ColorFromSRGB(34,139,34,255);
+	html_colours["fuchsia"] =  ColorFromSRGB(255,0,255,255);
+	html_colours["gainsboro"] =  ColorFromSRGB(220,220,220,255);
+	html_colours["ghostwhite"] =  ColorFromSRGB(248,248,255,255);
+	html_colours["gold"] =  ColorFromSRGB(255,215,0,255);
+	html_colours["goldenrod"] =  ColorFromSRGB(218,165,32,255);
+	html_colours["gray"] =  ColorFromSRGB(128,128,128,255);
+	html_colours["green"] =  ColorFromSRGB(0,128,0,255);
+	html_colours["greenyellow"] =  ColorFromSRGB(173,255,47,255);
+	html_colours["grey"] =  ColorFromSRGB(128,128,128,255);
+	html_colours["honeydew"] =  ColorFromSRGB(240,255,240,255);
+	html_colours["hotpink"] =  ColorFromSRGB(255,105,180,255);
+	html_colours["indianred"] =  ColorFromSRGB(205,92,92,255);
+	html_colours["indigo"] =  ColorFromSRGB(75,0,130,255);
+	html_colours["ivory"] =  ColorFromSRGB(255,255,240,255);
+	html_colours["khaki"] =  ColorFromSRGB(240,230,140,255);
+	html_colours["lavender"] =  ColorFromSRGB(230,230,250,255);
+	html_colours["lavenderblush"] =  ColorFromSRGB(255,240,245,255);
+	html_colours["lawngreen"] =  ColorFromSRGB(124,252,0,255);
+	html_colours["lemonchiffon"] =  ColorFromSRGB(255,250,205,255);
+	html_colours["lightblue"] =  ColorFromSRGB(173,216,230,255);
+	html_colours["lightcoral"] =  ColorFromSRGB(240,128,128,255);
+	html_colours["lightcyan"] =  ColorFromSRGB(224,255,255,255);
+	html_colours["lightgoldenrodyellow"] =  ColorFromSRGB(250,250,210,255);
+	html_colours["lightgray"] =  ColorFromSRGB(211,211,211,255);
+	html_colours["lightgreen"] =  ColorFromSRGB(144,238,144,255);
+	html_colours["lightgrey"] =  ColorFromSRGB(211,211,211,255);
+	html_colours["lightpink"] =  ColorFromSRGB(255,182,193,255);
+	html_colours["lightsalmon"] =  ColorFromSRGB(255,160,122,255);
+	html_colours["lightseagreen"] =  ColorFromSRGB(32,178,170,255);
+	html_colours["lightskyblue"] =  ColorFromSRGB(135,206,250,255);
+	html_colours["lightslategray"] =  ColorFromSRGB(119,136,153,255);
+	html_colours["lightslategrey"] =  ColorFromSRGB(119,136,153,255);
+	html_colours["lightsteelblue"] =  ColorFromSRGB(176,196,222,255);
+	html_colours["lightyellow"] =  ColorFromSRGB(255,255,224,255);
+	html_colours["lime"] =  ColorFromSRGB(0,255,0,255);
+	html_colours["limegreen"] =  ColorFromSRGB(50,205,50,255);
+	html_colours["linen"] =  ColorFromSRGB(250,240,230,255);
+	html_colours["magenta"] =  ColorFromSRGB(255,0,255,255);
+	html_colours["maroon"] =  ColorFromSRGB(128,0,0,255);
+	html_colours["mediumaquamarine"] =  ColorFromSRGB(102,205,170,255);
+	html_colours["mediumblue"] =  ColorFromSRGB(0,0,205,255);
+	html_colours["mediumorchid"] =  ColorFromSRGB(186,85,211,255);
+	html_colours["mediumpurple"] =  ColorFromSRGB(147,112,219,255);
+	html_colours["mediumseagreen"] =  ColorFromSRGB(60,179,113,255);
+	html_colours["mediumslateblue"] =  ColorFromSRGB(123,104,238,255);
+	html_colours["mediumspringgreen"] =  ColorFromSRGB(0,250,154,255);
+	html_colours["mediumturquoise"] =  ColorFromSRGB(72,209,204,255);
+	html_colours["mediumvioletred"] =  ColorFromSRGB(199,21,133,255);
+	html_colours["midnightblue"] =  ColorFromSRGB(25,25,112,255);
+	html_colours["mintcream"] =  ColorFromSRGB(245,255,250,255);
+	html_colours["mistyrose"] =  ColorFromSRGB(255,228,225,255);
+	html_colours["moccasin"] =  ColorFromSRGB(255,228,181,255);
+	html_colours["navajowhite"] =  ColorFromSRGB(255,222,173,255);
+	html_colours["navy"] =  ColorFromSRGB(0,0,128,255);
+	html_colours["oldlace"] =  ColorFromSRGB(253,245,230,255);
+	html_colours["olive"] =  ColorFromSRGB(128,128,0,255);
+	html_colours["olivedrab"] =  ColorFromSRGB(107,142,35,255);
+	html_colours["orange"] =  ColorFromSRGB(255,165,0,255);
+	html_colours["orangered"] =  ColorFromSRGB(255,69,0,255);
+	html_colours["orchid"] =  ColorFromSRGB(218,112,214,255);
+	html_colours["palegoldenrod"] =  ColorFromSRGB(238,232,170,255);
+	html_colours["palegreen"] =  ColorFromSRGB(152,251,152,255);
+	html_colours["paleturquoise"] =  ColorFromSRGB(175,238,238,255);
+	html_colours["palevioletred"] =  ColorFromSRGB(219,112,147,255);
+	html_colours["papayawhip"] =  ColorFromSRGB(255,239,213,255);
+	html_colours["peachpuff"] =  ColorFromSRGB(255,218,185,255);
+	html_colours["peru"] =  ColorFromSRGB(205,133,63,255);
+	html_colours["pink"] =  ColorFromSRGB(255,192,203,255);
+	html_colours["plum"] =  ColorFromSRGB(221,160,221,255);
+	html_colours["powderblue"] =  ColorFromSRGB(176,224,230,255);
+	html_colours["purple"] =  ColorFromSRGB(128,0,128,255);
+	html_colours["red"] =  ColorFromSRGB(255,0,0,255);
+	html_colours["rosybrown"] =  ColorFromSRGB(188,143,143,255);
+	html_colours["royalblue"] =  ColorFromSRGB(65,105,225,255);
+	html_colours["saddlebrown"] =  ColorFromSRGB(139,69,19,255);
+	html_colours["salmon"] =  ColorFromSRGB(250,128,114,255);
+	html_colours["sandybrown"] =  ColorFromSRGB(244,164,96,255);
+	html_colours["seagreen"] =  ColorFromSRGB(46,139,87,255);
+	html_colours["seashell"] =  ColorFromSRGB(255,245,238,255);
+	html_colours["sienna"] =  ColorFromSRGB(160,82,45,255);
+	html_colours["silver"] =  ColorFromSRGB(192,192,192,255);
+	html_colours["skyblue"] =  ColorFromSRGB(135,206,235,255);
+	html_colours["slateblue"] =  ColorFromSRGB(106,90,205,255);
+	html_colours["slategray"] =  ColorFromSRGB(112,128,144,255);
+	html_colours["slategrey"] =  ColorFromSRGB(112,128,144,255);
+	html_colours["snow"] =  ColorFromSRGB(255,250,250,255);
+	html_colours["springgreen"] =  ColorFromSRGB(0,255,127,255);
+	html_colours["steelblue"] =  ColorFromSRGB(70,130,180,255);
+	html_colours["tan"] =  ColorFromSRGB(210,180,140,255);
+	html_colours["teal"] =  ColorFromSRGB(0,128,128,255);
+	html_colours["thistle"] =  ColorFromSRGB(216,191,216,255);
+	html_colours["tomato"] =  ColorFromSRGB(255,99,71,255);
+	html_colours["turquoise"] =  ColorFromSRGB(64,224,208,255);
+	html_colours["violet"] =  ColorFromSRGB(238,130,238,255);
+	html_colours["wheat"] =  ColorFromSRGB(245,222,179,255);
+	html_colours["white"] =  ColorFromSRGB(255,255,255,255);
+	html_colours["whitesmoke"] =  ColorFromSRGB(245,245,245,255);
+	html_colours["yellow"] =  ColorFromSRGB(255,255,0,255);
+	html_colours["yellowgreen"] =  ColorFromSRGB(154,205,50,255);
 }
 
 PropertyParserColour::~PropertyParserColour()
@@ -240,17 +240,15 @@ bool PropertyParserColour::ParseValue(Property& property, const std::string& val
 				return false;
 		}
 
-		// Parse each of the colour elements.
-		for (int i = 0; i < 4; i++)
-		{
+		uint8_t sRGB[4];
+		for (int i = 0; i < 4; i++) {
 			int tens = HexToDecimal(hex_values[i][0]);
 			int ones = HexToDecimal(hex_values[i][1]);
-			if (tens == -1 ||
-				ones == -1)
+			if (tens == -1 || ones == -1)
 				return false;
-
-			colour[i] = (uint8_t) (tens * 16 + ones);
+			sRGB[i] = (tens * 16 + ones);
 		}
+		colour = ColorFromSRGB(sRGB[0], sRGB[1], sRGB[2], sRGB[3]);
 	}
 	else if (value.substr(0, 3) == "rgb")
 	{
@@ -279,9 +277,8 @@ bool PropertyParserColour::ParseValue(Property& property, const std::string& val
 			values.push_back("255");
 		}
 
-		// Parse the three RGB values.
-		for (int i = 0; i < 4; ++i)
-		{
+		uint8_t sRGB[4];
+		for (int i = 0; i < 4; ++i) {
 			int component;
 
 			// We're parsing a percentage value.
@@ -291,8 +288,9 @@ bool PropertyParserColour::ParseValue(Property& property, const std::string& val
 			else
 				component = atoi(values[i].c_str());
 
-			colour[i] = (uint8_t) (std::clamp(component, 0, 255));
+			sRGB[i] = (uint8_t)std::clamp(component, 0, 255);
 		}
+		colour = ColorFromSRGB(sRGB[0], sRGB[1], sRGB[2], sRGB[3]);
 	}
 	else
 	{
