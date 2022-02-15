@@ -269,7 +269,7 @@ local function create_indicator()
     }
 end
 
-local canvas
+local canvas = {}
 
 local function create_canvas()
     local unit = 1
@@ -292,7 +292,20 @@ local function create_canvas()
                 texts = {},
             },
             on_ready = function (e)
+                canvas.added_items = 
                 icanvas.add_items(e,
+                    {
+                        texture = {
+                            path = "/pkg/ant.test.features/assets/textures/canvas/canvas.texture",
+                            size = {w=128, h=128},
+                            rect = {
+                                x = 0, y = 0,
+                                w = 128, h = 128,
+                            },
+                        },
+                        x = 1.2 * unit, y = 2.2 * unit,
+                        w = 3 * unit, h = 3 * unit,
+                    },
                     {
                         texture = {
                             path = "/pkg/ant.test.features/assets/textures/canvas/canvas.texture",
@@ -302,9 +315,10 @@ local function create_canvas()
                                 w = 32, h = 32,
                             },
                         },
-                        x = 1.2 * unit, y = 2.2 * unit,
-                        w = 8 * unit, h = 8 * unit,
-                    })
+                        x = 5 * unit, y = 6 * unit,
+                        w = 2 * unit, h = 2 * unit,
+                    }
+                )
             end
         }
     }
@@ -349,7 +363,7 @@ function shape_terrain_test_sys:init()
     --indicator test
 
     indicator = create_indicator()
-    canvas = create_canvas()
+    create_canvas()
 end
 
 local itr = ecs.import.interface "ant.terrain|iterrain_road"
@@ -374,6 +388,12 @@ function shape_terrain_test_sys:data_changed()
             end
 
             indicator = create_indicator()
+        elseif key == "D" and press == 0 then
+            if canvas.added_items then
+                local idx = canvas.added_items[1]
+                local ce = w:singleton("canvas", "scene:in")
+                icanvas.remove_item(ce, "/pkg/ant.test.features/assets/textures/canvas/canvas.texture", idx)
+            end
         end
     end
 end

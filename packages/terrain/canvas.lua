@@ -9,7 +9,8 @@ local declmgr   = renderpkg.declmgr
 local assetmgr  = import_package "ant.asset"
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local irender = ecs.import.interface "ant.render|irender"
+local irender   = ecs.import.interface "ant.render|irender"
+local ifs       = ecs.import.interface "ant.scene|ifilter_state"
 
 local decl<const> = "p3|t2"
 local layout<const> = declmgr.get(decl)
@@ -40,22 +41,29 @@ function canvas_sys:data_changed()
             for _, n in ipairs(tt) do
                 local tex = textures[n]
                 local re = tex.renderer
-                local objbuffer = table.concat(tex.items, "")
-                w:sync("render_object:in", re)
-                local ro = re.render_object
+                local items = tex.items
+                local hasitem = #items > 0
+                if hasitem then
+                    local objbuffer = table.concat(items, "")
+                    w:sync("render_object:in", re)
+                    local ro = re.render_object
+    
+                    local buffersize = #objbuffer
+                    local vbnum = buffersize//layout.stride
+                    local vb = ro.vb
+                    vb.start = bufferoffset
+                    vb.num = vbnum
+    
+                    local ib = ro.ib
+                    ib.start = 0
+                    ib.num = (vbnum//4)*6
+    
+                    bufferoffset = bufferoffset + buffersize
+                    buffers[#buffers+1] = objbuffer
+                end
 
-                local buffersize = #objbuffer
-                local vbnum = buffersize//layout.stride
-                local vb = ro.vb
-                vb.start = bufferoffset
-                vb.num = vbnum
-
-                local ib = ro.ib
-                ib.start = 0
-                ib.num = (vbnum//4)*6
-
-                bufferoffset = bufferoffset + buffersize
-                buffers[#buffers+1] = objbuffer
+                ifs.set_state(re, "main_view", hasitem)
+                ifs.set_state(re, "selectable", hasitem)
             end
         end
 
@@ -146,6 +154,7 @@ function icanvas.add_items(e, ...)
 
     local n = select("#", ...)
     
+    local added_items = {}
     for i=1, n do
         local item = select(i, ...)
         local texture = item.texture
@@ -159,15 +168,30 @@ function icanvas.add_items(e, ...)
             }
             textures[texpath] = t
         end
-        t.items[#t.items+1] = add_item(item)
+        local idx = #t.items+1
+        t.items[idx] = add_item(item)
+        added_items[#added_items+1] = idx
     end
     if n > 0 then
         world:pub{"canvas_update", "texture"}
     end
+
+    return added_items
 end
 
 function icanvas.remove_item(e, texpath, idx)
-    world:pub{"canvas_update", "texture"}
+    w:sync("canvas:in", e)
+    local canvas = e.canvas
+    local textures = canvas.textures
+
+    local t = textures[texpath]
+    if t then
+        table.remove(t.items, idx)
+        world:pub{"canvas_update", "texture"}
+    else
+        log.warn("invalid 'texpath': " .. (texpath or ''))
+    end
+    
 end
 
 function icanvas.add_text(e, ...)
