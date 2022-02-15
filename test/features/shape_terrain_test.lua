@@ -388,7 +388,7 @@ function shape_terrain_test_sys:data_changed()
             end
 
             indicator = create_indicator()
-        elseif key == "D" and press == 0 then
+        elseif key == "M" and press == 0 then
             if canvas.added_items then
                 local idx = canvas.added_items[1]
                 local ce = w:singleton("canvas", "scene:in")

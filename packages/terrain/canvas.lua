@@ -129,7 +129,6 @@ local function add_item(item)
 
     local x, z = item.x, item.y
     local ww, hh = item.w, item.h
-    local hww, hhh = ww*0.5, hh*0.5
 
     local iw, ih = texsize.w, texsize.h
     local fmt = "fffff"
@@ -138,11 +137,14 @@ local function add_item(item)
         |   |
         0---2
     ]]
+    local u0, v0 = texrt.x/iw, texrt.y/ih
+    local u1, v1 = (texrt.x+t_ww)/iw, (texrt.y+t_hh)/ih
+    --we assume uv origin is topleft(same as D3D, metal and vulkan)
     local vv = {
-        fmt:pack(x-hww, 0.0, z-hhh, texrt.x/iw, (texrt.y+t_hh)/ih),
-        fmt:pack(x-hww, 0.0, z+hhh, texrt.x/iw, texrt.y/ih),
-        fmt:pack(x+hww, 0.0, z-hhh, (texrt.x+t_ww)/iw, texrt.y/ih),
-        fmt:pack(x+hww, 0.0, z+hhh, (texrt.x+t_ww)/iw, (texrt.y+t_hh)/ih),
+        fmt:pack(x,     0.0, z,     u0, v1),
+        fmt:pack(x,     0.0, z+hh,  u0, v0),
+        fmt:pack(x+ww,  0.0, z,     u1, v1),
+        fmt:pack(x+ww,  0.0, z+hh,  u1, v0),
     }
     return table.concat(vv, "")
 end
