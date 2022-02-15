@@ -58,7 +58,7 @@
 #define OUTPUT_NORMAL
 #endif //WITH_NORMAL_ATTRIB
 
-#if !defined(USING_LIGHTMAP) &&	defined(ENABLE_SHADOW) && !defined(MATERIAL_UNLIT)
+#if (!defined(USING_LIGHTMAP) && defined(ENABLE_SHADOW)) || !defined(MATERIAL_UNLIT)
 #define WITH_OUTPUT_WORLDPOS 1
 #endif 
 
