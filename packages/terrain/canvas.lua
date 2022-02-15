@@ -106,6 +106,7 @@ local function create_texture_item_entity(texobj, canvasentity)
             name        = "canvas_texture" .. gen_texture_id(),
             canvas_item = "texture",
             on_ready = function (e)
+                w:sync("reference:in", e)
                 ecs.method.set_parent(e.reference, parentref)
                 imaterial.set_property(e, "s_basecolor", {texture=texobj, stage=0})
             end
@@ -115,8 +116,7 @@ end
 
 local function add_item(item)
     local tex = item.texture
-    local texsize = item.texture.size
-    local texrt = item.texture.rect
+    local texsize, texrt = tex.size, tex.rect
     local t_ww, t_hh = texrt.w, texrt.h
 
     local x, z = item.x, item.y
