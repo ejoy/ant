@@ -79,11 +79,13 @@ local function update_items()
                     vb.start = bufferoffset
                     vb.num = vbnum
 
+                    bufferoffset = bufferoffset + vbnum
+
                     local ib = ro.ib
                     ib.start = 0
                     ib.num = (vbnum//4)*6
 
-                    bufferoffset = bufferoffset + buffersize
+                    
                     buffers[#buffers+1] = objbuffer
                 end
 
