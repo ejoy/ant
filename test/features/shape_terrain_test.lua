@@ -297,7 +297,6 @@ local function create_canvas()
                     {
                         texture = {
                             path = "/pkg/ant.test.features/assets/textures/canvas/canvas.texture",
-                            size = {w=128, h=128},
                             rect = {
                                 x = 0, y = 0,
                                 w = 128, h = 128,
@@ -309,7 +308,6 @@ local function create_canvas()
                     {
                         texture = {
                             path = "/pkg/ant.test.features/assets/textures/canvas/canvas.texture",
-                            size = {w=128, h=128},
                             rect = {
                                 x = 32, y = 32,
                                 w = 32, h = 32,

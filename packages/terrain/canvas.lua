@@ -25,8 +25,7 @@ function canvas_sys:init()
 end
 
 local itemfmt<const> = ("fffff"):rep(4)
-local function add_item(tex, rect)
-    local texsize, texrt = tex.size, tex.rect
+local function add_item(texsize, texrt, rect)
     local t_ww, t_hh = texrt.w, texrt.h
 
     local x, z = rect.x, rect.y
@@ -48,16 +47,23 @@ local function add_item(tex, rect)
         x+ww,  0.0, z+hh,  u1, v0)
 end
 
+local function get_tex_size(texpath)
+    local texobj = assetmgr.resource(texpath)
+    local ti = texobj.texinfo
+    return {w=ti.width, h=ti.height}
+end
+
 local function update_items()
     local bufferoffset = 0
     local buffers = {}
     for e in w:select "canvas:in" do
         local canvas = e.canvas
         local textures = canvas.textures
-        for _, tex in pairs(textures) do
+        for texpath, tex in pairs(textures) do
+            local texsize = get_tex_size(texpath)
             local values = {}
             for _, v in pairs(tex.items) do
-                values[#values+1] = add_item(v.texture, v)
+                values[#values+1] = add_item(texsize, v.texture.rect, v)
             end
 
             local re = tex.renderer
@@ -82,6 +88,7 @@ local function update_items()
                     buffers[#buffers+1] = objbuffer
                 end
 
+                --TODO: if no items to draw, should remove this entity
                 ifs.set_state(re, "main_view", hasitem)
                 ifs.set_state(re, "selectable", hasitem)
             end
@@ -220,7 +227,7 @@ local function get_item(e, itemid)
     return t.items[itemid]
 end
 
-local function update_item(item, posrect, tex)
+local function update_item(item, posrect, tex_rect)
     local changed
     if posrect then
         item.x, item.y = posrect.x, posrect.y
@@ -228,19 +235,12 @@ local function update_item(item, posrect, tex)
         changed = true
     end
 
-    if tex then
-        local itex = item.texture
-        if tex.size then
-            itex.size.w, itex.size.h = tex.size.w, tex.size.h
-            changed = true
-        end
-    
-        local rt = itex.rect
-        if rt then
-            rt.x, rt.y = tex.ect.x, tex.rect.y
-            rt.w, rt.h = tex.ect.w, tex.rect.h
-            changed = true
-        end
+    if tex_rect then
+        local rt = item.texture.rect
+
+        rt.x, rt.y = tex_rect.x, tex_rect.y
+        rt.w, rt.h = tex_rect.w, tex_rect.h
+        changed = true
     end
 
     if changed then
@@ -252,12 +252,12 @@ function icanvas.update_item_rect(e, itemid, rect)
     update_item(get_item(e, itemid), rect)
 end
 
-function icanvas.update_item_tex(e, itemid, tex)
-    update_item(get_item(e, itemid), nil, tex)
+function icanvas.update_item_tex_rect(e, itemid, texrect)
+    update_item(get_item(e, itemid), nil, texrect)
 end
 
 function icanvas.update_item(e, itemid, item)
-    update_item(get_item(e, itemid), item, item.texture)
+    update_item(get_item(e, itemid), item, item.texture.rect)
 end
 
 function icanvas.add_text(e, ...)
