@@ -5,6 +5,7 @@ fx:
     MATERIAL_UNLIT: 1
     lighting: off
     HAS_BASECOLOR_TEXTURE: 1
+    surfacetype: translucent
 properties:
   s_basecolor:
     stage: 0
