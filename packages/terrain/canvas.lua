@@ -48,37 +48,36 @@ local function add_item(tex, rect)
         x+ww,  0.0, z+hh,  u1, v0)
 end
 
-local canvas_texture_mb = world:sub{"canvas_update", "texture"}
-function canvas_sys:data_changed()
-    for _ in canvas_texture_mb:each() do
-        local bufferoffset = 0
-        local buffers = {}
-        for e in w:select "canvas:in" do
-            local canvas = e.canvas
-            local textures = canvas.textures
-            for _, tex in pairs(textures) do
-                local values = {}
-                for _, v in pairs(tex.items) do
-                    values[#values+1] = add_item(v.texture, v)
-                end
+local function update_items()
+    local bufferoffset = 0
+    local buffers = {}
+    for e in w:select "canvas:in" do
+        local canvas = e.canvas
+        local textures = canvas.textures
+        for _, tex in pairs(textures) do
+            local values = {}
+            for _, v in pairs(tex.items) do
+                values[#values+1] = add_item(v.texture, v)
+            end
 
-                local re = tex.renderer
+            local re = tex.renderer
+            if re then
                 local hasitem = #values > 0
                 if hasitem then
                     local objbuffer = table.concat(values, "")
                     w:sync("render_object:in", re)
                     local ro = re.render_object
-    
+
                     local buffersize = #objbuffer
                     local vbnum = buffersize//layout.stride
                     local vb = ro.vb
                     vb.start = bufferoffset
                     vb.num = vbnum
-    
+
                     local ib = ro.ib
                     ib.start = 0
                     ib.num = (vbnum//4)*6
-    
+
                     bufferoffset = bufferoffset + buffersize
                     buffers[#buffers+1] = objbuffer
                 end
@@ -87,13 +86,19 @@ function canvas_sys:data_changed()
                 ifs.set_state(re, "selectable", hasitem)
             end
         end
+    end
 
-        if bufferoffset > 0 then
-            local b = table.concat(buffers, "")
-            assert(max_buffersize >= #b)
-            bgfx.update(bufferhandle, 0, bgfx.memory_buffer(b))
-        end
+    if bufferoffset > 0 then
+        local b = table.concat(buffers, "")
+        assert(max_buffersize >= #b)
+        bgfx.update(bufferhandle, 0, bgfx.memory_buffer(b))
+    end
+end
 
+local canvas_texture_mb = world:sub{"canvas_update", "texture"}
+function canvas_sys:data_changed()
+    for _ in canvas_texture_mb:each() do
+        update_items()
         break
     end
 end
@@ -111,9 +116,10 @@ end
 
 local gen_texture_id = id_generator()
 
-local function create_texture_item_entity(texobj, canvasentity)
-    w:sync("reference:in", canvasentity)
-    local parentref = canvasentity.reference
+local function create_texture_item_entity(texpath, canvasentity)
+    w:sync("reference:in canvas:in", canvasentity)
+    local canvas_ref = canvasentity.reference
+    local canvas = canvasentity.canvas
     return ecs.create_entity{
         policy = {
             "ant.render|simplerender",
@@ -141,9 +147,19 @@ local function create_texture_item_entity(texobj, canvasentity)
             name        = "canvas_texture" .. gen_texture_id(),
             canvas_item = "texture",
             on_ready = function (e)
-                w:sync("reference:in", e)
-                ecs.method.set_parent(e.reference, parentref)
+                local texobj = assetmgr.resource(texpath)
                 imaterial.set_property(e, "s_basecolor", {texture=texobj, stage=0})
+
+                --update parent
+                w:sync("reference:in", e)
+                
+                local objref = e.reference
+                ecs.method.set_parent(objref, canvas_ref)
+
+                --update renderer
+                local textures = canvas.textures
+                local t = textures[texpath]
+                t.renderer = e.reference
             end
         }
     }
@@ -165,9 +181,8 @@ function icanvas.add_items(e, ...)
         local texpath = texture.path
         local t = textures[texpath]
         if t == nil then
-            local texobj = assetmgr.resource(texpath)
+            create_texture_item_entity(texpath, e)
             t = {
-                renderer = create_texture_item_entity(texobj, e),
                 items = {},
             }
             textures[texpath] = t
