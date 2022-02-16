@@ -297,7 +297,6 @@ local function create_canvas()
                     {
                         texture = {
                             path = "/pkg/ant.test.features/assets/textures/canvas/canvas.texture",
-                            size = {w=128, h=128},
                             rect = {
                                 x = 0, y = 0,
                                 w = 128, h = 128,
@@ -309,7 +308,6 @@ local function create_canvas()
                     {
                         texture = {
                             path = "/pkg/ant.test.features/assets/textures/canvas/canvas.texture",
-                            size = {w=128, h=128},
                             rect = {
                                 x = 32, y = 32,
                                 w = 32, h = 32,
@@ -388,6 +386,23 @@ function shape_terrain_test_sys:data_changed()
             end
 
             indicator = create_indicator()
+        elseif key == "T" and press == 0 then
+            local ce = w:singleton("canvas", "scene:in")
+            local unit = 1.0
+            icanvas.add_items(ce, {
+                texture = {
+                    path = "/pkg/ant.resources/textures/white.texture",
+                    size = {
+                        w = 1, h = 1,
+                    },
+                    rect = {
+                        x = 0, y = 0,
+                        w = 1, h = 1,
+                    },
+                },
+                x = 0 * unit, y = 0 * unit,
+                w = 2 * unit, h = 2 * unit,
+            })
         elseif key == "M" and press == 0 then
             if canvas.added_items then
                 local ce = w:singleton("canvas", "scene:in")

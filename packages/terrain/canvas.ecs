@@ -8,7 +8,7 @@ interface "icanvas"
     .method "add_items"
     .method "remove_item"
     .method "update_item_rect"
-    .method "update_item_tex"
+    .method "update_item_tex_rect"
     .method "update_item"
     .method "add_text"
 
