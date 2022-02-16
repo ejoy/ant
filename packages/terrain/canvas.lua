@@ -93,6 +93,8 @@ function canvas_sys:data_changed()
             assert(max_buffersize >= #b)
             bgfx.update(bufferhandle, 0, bgfx.memory_buffer(b))
         end
+
+        break
     end
 end
 
