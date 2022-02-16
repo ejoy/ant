@@ -223,10 +223,11 @@ bool DataViewIf::Update(DataModel& model)
 	if (element && GetExpression().Run(expr_interface, variant))
 	{
 		const bool value = VariantHelper::Get<bool>(variant);
-		if (element->IsVisible() != value) {
+		// fixed nested data-if for same variant bug
+		//if (element->IsVisible() != value) {
 			element->SetVisible(value);
 			result = true;
-		}
+		//}
 	}
 	return result;
 }
