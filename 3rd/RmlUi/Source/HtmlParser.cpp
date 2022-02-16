@@ -701,14 +701,14 @@ void HtmlParser::EnterAttribute(void* attr, char c) {
 			case st_value:
 				if (c == open)
 					return;
-				switch (c) {
-				case '&':
-					EnterEntity(&temp);
-					attribute->m_value += temp;
-					break;
-				default:
+// 				switch (c) {
+// 				case '&':
+// 					EnterEntity(&temp);
+// 					attribute->m_value += temp;
+// 					break;
+// 				default:
 					attribute->m_value += c;
-				}
+//				}
 			}
 		}
 	}
