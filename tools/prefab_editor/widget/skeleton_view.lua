@@ -411,10 +411,26 @@ local function create_clip()
         imgui.windows.EndPopup()
     end
 end
+local function max_range_value()
+    if not current_anim then return 1 end
+    local max_value = 1
+    for _, joint_anim in ipairs(current_anim.joint_anims) do
+        local clips = joint_anim.clips
+        if #clips > 0 then
+            if max_value < clips[#clips].range[2] then
+                max_value = clips[#clips].range[2]
+            end
+        end
+    end
+    return max_value
+end
 local function show_current_joint()
     if not current_anim then return end
     imgui.widget.PropertyLabel("FrameCount:")
     if imgui.widget.DragInt("##FrameCount", current_anim.frame_count_ui) then
+        if current_anim.frame_count_ui[1] < max_range_value() + 1 then
+            current_anim.frame_count_ui[1] = max_range_value() + 1
+        end
         current_anim.frame_count = current_anim.frame_count_ui[1]
         local d = current_anim.frame_count / sample_ratio
         current_anim.runtime_anim._duration = d
@@ -685,9 +701,32 @@ function m.new()
     end
 end
 
---local ui_loop = {false}
+local reset_editor = world:sub {"ResetEditor"}
 local ui_loop = {true}
+local function reset()
+    if current_skeleton and current_joint then
+        joint_utils:set_current_joint(current_skeleton, nil)
+    end
+    anim_e = {}
+    allanims = {}
+    current_skeleton = nil
+    current_anim = nil
+    current_joint = nil
+    if joints_list then
+        for _, joint in ipairs(joints_list) do
+            if joint.mesh then
+                w:remove(joint.mesh)
+            end
+            joint.mesh = nil
+        end
+    end
+    joint_utils.on_select_joint = nil
+    joint_utils.update_joint_pose = nil
+end
 function m.show()
+    for _ in reset_editor:unpack() do
+        reset()
+    end
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
@@ -758,7 +797,7 @@ function m.show()
             imgui.table.NextColumn()
             local child_width, child_height = imgui.windows.GetContentRegionAvail()
             imgui.windows.BeginChild("##show_skeleton", child_width, child_height, false)
-            if joints_map then
+            if joints_map and current_skeleton then
                 joint_utils:show_joints(joints_map.root)
                 current_joint = joint_utils.current_joint
                 if current_joint and current_anim then
@@ -901,12 +940,14 @@ local function create_bone_entity(joint_name)
 					imaterial.set_property(e, "u_basecolor_factor", bone_color)
 				end
 				ifs.set_state(e, "auxgeom", true)
+                w:sync("reference:in", e)
+                w:sync("render_object:in", e.reference)
 			end
         }
     }
     return ecs.create_entity(template)
 end
-local first_select = true
+
 function m.bind(e)
     if not e then
         return
@@ -925,16 +966,7 @@ function m.bind(e)
     current_skeleton = e.skeleton
     if not joint_utils.on_select_joint then
         joint_utils.on_select_joint = function(old, new)
-            if first_select then
-                --TODO: remove this
-                for _, joint in ipairs(joints_list) do
-                    if joint.mesh then
-                        imaterial.set_property(joint.mesh, "u_basecolor_factor", bone_color)
-                    end
-                end
-                first_select = false
-            end
-            if old then
+            if old and old.mesh then
                 imaterial.set_property(old.mesh, "u_basecolor_factor", bone_color) 
             end
             if new then
@@ -977,6 +1009,8 @@ function m.bind(e)
             joint.mesh = create_bone_entity(joint.name)
         end
     end
+    -- joint_utils:set_current_joint(current_skeleton, joints_map.root.name)
+    -- w:pub ""
 end
 
 return m
