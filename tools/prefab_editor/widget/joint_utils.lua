@@ -92,6 +92,7 @@ function m:show_joints(root)
 end
 
 function m:get_joint_by_name(ske, name)
+    if not name then return end
     local list = self.joint_list[ske._handle]
     for _, value in ipairs(list) do
         if value.name == name then
@@ -106,8 +107,8 @@ function m:set_current_joint(ske, name)
         if self.on_select_joint then
             self.on_select_joint(self.current_joint, joint)    
         end
-        self.current_joint = joint
     end
+    self.current_joint = joint
 end
 
 function m:get_current_skeleton()

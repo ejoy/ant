@@ -130,7 +130,7 @@ local function compile_virtualfile(url)
     local hash = sha1(arguments):sub(1,7)
     local ext = file:match "[^/]%.([%w*?_%-]*)$"
     local cfg = config.get(ext)
-    local keystring = input:string():lower()
+    local keystring = input:string():lower() 
     local output = cfg.binpath / get_filename(keystring) / hash
     if not lfs.exists(output) or not do_build(output) then
         do_compile(cfg, setting, input, output)

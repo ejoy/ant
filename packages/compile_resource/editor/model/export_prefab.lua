@@ -16,7 +16,7 @@ local function fix_invalid_name(name)
     return name:gsub(pattern_fmt, replace_char)
 end
 
-local prefab = {}
+local prefab
 
 local function create_entity(t)
     if t.parent then
@@ -55,19 +55,6 @@ end
 
 local DEFAULT_STATE = "main_view|selectable|cast_shadow"
 
-local function is_mirror_transform(trans)
-    local s = math3d.srt(trans)
-    s = math3d.tovalue(s)
-    local n = 0
-    for i=1, #s do
-        if s[i] < 0 then
-            n = n + 1
-        end
-    end
-
-    return n == 1 or n == 3
-end
-
 local function duplicate_table(m)
     local t = {}
     for k, v in pairs(m) do
@@ -90,50 +77,43 @@ local primitive_names = {
     false, --TRIANGLE_FAN not support
 }
 
-local materials = {}
+local material_cache = {}
 
 local function generate_material(mi, mode)
     local sname = primitive_names[mode+1]
     if not sname then
         error(("not support primitate state, mode:%d"):format(mode))
     end
-    --defualt cull is CCW
-    local function what_cull()
-        return mi.material.state.CULL
-    end
-
-    local cullname = what_cull()
 
     local filename = mi.filename
-    local key = filename:string() .. sname .. cullname
+    local function gen_key(fn, sn)
+        fn = fn:sub(1, 4) == "/pkg" and fn or utility.full_path(fn)
+        return fn .. sn
+    end
+    local key = gen_key(filename:string(), sname)
 
-    local m = materials[key]
+    local m = material_cache[key]
     if m == nil then
-        if sname == "" and cullname == mi.material.state.CULL then
+        if sname == "" then
             m = mi
         else
-            local f = mi.filename
-            local basename = f:stem():string()
+            local basename = filename:stem():string()
 
             local nm = duplicate_table(mi.material)
             local s = nm.state
-            s.CULL = cullname
             if sname == "" then
                 s.PT = nil
             else
                 s.PT = sname
                 basename = basename .. "_" .. sname
             end
-
-            basename = basename .. "_" .. cullname
-            filename = f:parent_path() / basename .. ".material"
             m = {
-                filename = filename,
+                filename = filename:parent_path() / (basename .. ".material"),
                 material = nm
             }
         end
 
-        materials[key] = m
+        material_cache[key] = m
     end
 
     return m
@@ -152,12 +132,12 @@ local function read_material_file(filename)
     return mi
 end
 
-local default_material_info = {
-    filename = lfs.path "./materials/pbr_default_cw.material",
-}
+local default_material_path<const> = lfs.path "/pkg/ant.resources/materials/pbr_default.material"
+local default_material_info
 
 local function save_material(mi)
-    if not lfs.exists(mi.filename) then
+    local f = utility.full_path(mi.filename:string())
+    if not lfs.exists(f) then
         utility.save_txt_file(mi.filename:string(), mi.material)
     end
 end
@@ -238,6 +218,35 @@ local function add_animation(gltfscene, exports, nodeidx, policy, data)
     end
 end
 
+local function seri_material(exports, mode, materialidx)
+    local em = exports.material
+    if em == nil or #em <= 0 then
+        return
+    end
+
+    if materialidx then
+        local mi = assert(exports.material[materialidx+1])
+        local materialinfo = generate_material(mi, mode)
+        save_material(materialinfo)
+        return materialinfo.filename
+    end
+
+    if default_material_info == nil then
+        default_material_info = {
+            material = read_material_file(default_material_path),
+            filename = default_material_path,
+        }
+    end
+
+    local materialinfo = generate_material(default_material_info, mode)
+    if materialinfo.filename ~= default_material_path then
+        save_material(materialinfo)
+        return materialinfo.filename
+    end
+
+    return default_material_path
+end
+
 local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
     local node = gltfscene.nodes[nodeidx+1]
     local transform = get_transform(node)
@@ -247,31 +256,10 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
     local entity
     for primidx, prim in ipairs(mesh.primitives) do
         local meshname = mesh.name and fix_invalid_name(mesh.name) or ("mesh" .. meshidx)
-        local materialfile
-        local mode = prim.mode or 4
-        if prim.material then
-            if exports.material and #exports.material > 0 then
-                local mi = assert(exports.material[prim.material+1])
-                local materialinfo = generate_material(mi, mode)
-                save_material(materialinfo)
-                materialfile = materialinfo.filename
-            else
-                error(("primitive need material, but no material files output:%s %d"):format(meshname, prim.material))
-            end
-        else
-            local default_material_path<const> = lfs.path "/pkg/ant.resources/materials/pbr_default.material"
-            if default_material_info.material == nil then
-                default_material_info.material = read_material_file(default_material_path)
-            end
-            local materialinfo = generate_material(default_material_info, mode)
-            if materialinfo.filename ~= default_material_path then
-                save_material(materialinfo)
-                materialfile = materialinfo.filename
-            else
-                materialfile = default_material_path
-            end
+        local materialfile = seri_material(exports, prim.mode or 4, prim.material)
+        if materialfile == nil then
+            error(("not found %s material %d"):format(meshname, prim.material or -1))
         end
-
         local meshfile = exports.mesh[meshidx+1][primidx]
         if meshfile == nil then
             error(("not found meshfile in export data:%d, %d"):format(meshidx+1, primidx))
@@ -335,7 +323,8 @@ local function find_mesh_nodes(gltfscene, scenenodes, meshnodes)
     end
 end
 
-return function(output, glbdata, exports, tolocalpath)
+return function(output, glbdata, exports, localpath)
+    tolocalpath = localpath
     prefab = {}
 
     local gltfscene = glbdata.info

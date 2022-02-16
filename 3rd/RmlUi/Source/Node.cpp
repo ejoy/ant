@@ -33,9 +33,10 @@ bool Node::IsVisible() const {
 }
 
 void Node::SetVisible(bool visible) {
-	if (IsVisible() == visible) {
-		return;
-	}
+// fixed nested data-if for same variant bug
+// 	if (IsVisible() == visible) {
+// 		return;
+// 	}
 	layout.SetVisible(visible);
 }
 

@@ -237,10 +237,10 @@ return function (output, glbdata, exports, tolocalpath)
         end
     end
 
-    local function get_state(translucent)
-        local name = translucent and 
-            "/pkg/ant.resources/materials/states/translucent.state" or 
-            "/pkg/ant.resources/materials/states/default.state"
+    local function get_state(isopaque)
+        local name = isopaque and 
+            "/pkg/ant.resources/materials/states/default.state" or
+            "/pkg/ant.resources/materials/states/translucent.state"
         return read_datalist(tolocalpath(name))
     end
 
@@ -252,7 +252,7 @@ return function (output, glbdata, exports, tolocalpath)
         local isopaque = mat.alphaMode == nil or mat.alphaMode == "OPAQUE"
         local material = {
             fx          = get_default_fx(),
-            state       = get_state(not isopaque),
+            state       = get_state(isopaque),
             properties  = {
                 s_basecolor          = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),
                 s_metallic_roughness = handle_texture(pbr_mr.metallicRoughnessTexture, "metallic_roughness", false, "linear"),
@@ -294,6 +294,7 @@ return function (output, glbdata, exports, tolocalpath)
         end
 
         if mat.doubleSided then
+            --default is CCW
             material.state.CULL = "NONE"
         end
 

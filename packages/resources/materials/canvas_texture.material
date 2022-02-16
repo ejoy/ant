@@ -5,9 +5,10 @@ fx:
     MATERIAL_UNLIT: 1
     lighting: off
     HAS_BASECOLOR_TEXTURE: 1
+    surfacetype: translucent
 properties:
   s_basecolor:
     stage: 0
     texture: /pkg/ant.resources/textures/black.texture
   u_basecolor_factor: {20000.0, 20000.0, 20000.0, 1.0}
-state: /pkg/ant.resources/materials/states/default.state
+state: /pkg/ant.resources/materials/states/blend.state

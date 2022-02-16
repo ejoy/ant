@@ -75,4 +75,8 @@ function m.save_txt_file(path, data, conv)
     writeFile(path, serialize.stringify(data, conv))
 end
 
+function m.full_path(path)
+    return currentRoot / normalizePath(path)
+end
+
 return m

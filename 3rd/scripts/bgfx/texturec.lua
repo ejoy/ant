@@ -14,6 +14,9 @@ lm:exe "texturec" {
         "include",
         "3rdparty/iqa/include"
     },
+    defines = {
+        "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
+    },
     sources = {
         "tools/texturec/texturec.cpp",
     },

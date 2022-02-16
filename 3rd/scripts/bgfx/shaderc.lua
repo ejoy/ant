@@ -152,6 +152,9 @@ lm:exe "shaderc" {
         "spirv-opt",
         "spirv-cross",
     },
+    defines = {
+        "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
+    },
     includes = {
         "../bx/include",
         "../bimg/include",
