@@ -26,12 +26,11 @@ end
 
 local itemfmt<const> = ("fffff"):rep(4)
 local function add_item(texsize, texrt, rect)
-    local t_ww, t_hh = texrt.w, texrt.h
+    local iw, ih = texsize.w, texsize.h
+    local t_ww, t_hh = texrt.w or iw, texrt.h or ih
 
     local x, z = rect.x, rect.y
     local ww, hh = rect.w, rect.h
-
-    local iw, ih = texsize.w, texsize.h
     --[[
         1---3
         |   |
