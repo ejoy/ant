@@ -390,9 +390,17 @@ function shape_terrain_test_sys:data_changed()
             indicator = create_indicator()
         elseif key == "M" and press == 0 then
             if canvas.added_items then
-                local idx = canvas.added_items[1]
                 local ce = w:singleton("canvas", "scene:in")
-                icanvas.remove_item(ce, "/pkg/ant.test.features/assets/textures/canvas/canvas.texture", idx)
+                icanvas.remove_item(ce, canvas.added_items[1])
+            end
+        elseif key == "N" and press == 0 then
+            if canvas.added_items then
+                local ce = w:singleton("canvas", "scene:in")
+                local unit = 1.0
+                icanvas.update_item_rect(ce, canvas.added_items[#canvas.added_items], {
+                    x=2*unit, y=3*unit,
+                    w=2*unit, h=2*unit
+                })
             end
         end
     end
