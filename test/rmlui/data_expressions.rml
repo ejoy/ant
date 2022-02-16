@@ -1,0 +1,18 @@
+<rml>
+    <head>
+        <style>
+        </style>
+        <script type="text/x-lua" >
+            local start = window.createModel "start" {
+                myexp = "",
+            }
+        </script>
+    </head>
+    <body>
+        <div data-model="start">
+            <div data-if = "myexp != ''">if exp != empty string</div>
+            <div data-if = "myexp != '' && myexp != ''">&amp;&amp;</div>
+            <div data-event-click = "myexp = 'test'">click</div>
+        </div>
+    </body>
+</rml>
