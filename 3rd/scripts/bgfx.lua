@@ -26,6 +26,13 @@ lm.ios = {
     includes = "../bx/include/compat/ios",
     flags = {
         "-fembed-bitcode",
+        "-Wno-unused-function"
+    }
+}
+
+lm.clang = {
+    flags = {
+        "-Wno-tautological-constant-compare"
     }
 }
 
