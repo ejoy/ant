@@ -256,19 +256,19 @@ namespace ImSimpleSequencer
 			if (io.MouseClicked[0]) {
 				if (io.MousePos.x > contentMin.x) {
 					selected_layer = (int)floor((io.MousePos.y - contentMin.y) / ItemHeight);
-				}
-				if (is_active) {
-					selected_frame = -1;
-					range_index = -1;
-					auto col = (int)floor((io.MousePos.x - contentMin.x + 3) / framePixelWidth) + firstFrameUsed;
-					for (int ri = 0; ri < layer.clip_rangs.size(); ri++) {
-						if (col >= layer.clip_rangs[ri].start && col <= layer.clip_rangs[ri].end) {
-							range_index = ri;
+					if (is_active) {
+						selected_frame = -1;
+						range_index = -1;
+						auto col = (int)floor((io.MousePos.x - contentMin.x + 3) / framePixelWidth) + firstFrameUsed;
+						for (int ri = 0; ri < layer.clip_rangs.size(); ri++) {
+							if (col >= layer.clip_rangs[ri].start && col <= layer.clip_rangs[ri].end) {
+								range_index = ri;
+							}
 						}
-					}
-					if (range_index >= 0 && range_index < layer.clip_rangs.size()) {
-						if (((col == layer.clip_rangs[range_index].start) || (col == layer.clip_rangs[range_index].end))) {
-							selected_frame = col;
+						if (range_index >= 0 && range_index < layer.clip_rangs.size()) {
+							if (((col == layer.clip_rangs[range_index].start) || (col == layer.clip_rangs[range_index].end))) {
+								selected_frame = col;
+							}
 						}
 					}
 				}

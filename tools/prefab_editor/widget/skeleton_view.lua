@@ -296,6 +296,8 @@ local function show_current_joint()
         if imgui.widget.Button("DelClip") then
             table.remove(clips, current_anim.selected_clip_index)
             current_anim.selected_clip_index = 0
+            current_anim.dirty_layer = -1
+            update_animation()
             return
         end
     end
@@ -808,7 +810,14 @@ function m.bind(e)
             if new then
                 imaterial.set_property(new.mesh, "u_basecolor_factor", bone_highlight_color)
                 if current_anim then
-                    current_anim.selected_layer_index = find_anim_by_name(new.name) or 0
+                    local layer_index = find_anim_by_name(new.name) or 0
+                    if layer_index ~= 0 then
+                        if #current_anim.joint_anims[layer_index].clips > 0 then
+                            current_anim.selected_clip_index = 1
+                        end
+                    end
+                    current_anim.selected_layer_index = layer_index
+                    current_anim.dirty = true
                 end
             end
         end
@@ -845,8 +854,6 @@ function m.bind(e)
             joint.mesh = create_bone_entity(joint.name)
         end
     end
-    -- joint_utils:set_current_joint(current_skeleton, joints_map.root.name)
-    -- w:pub ""
 end
 
 return m
