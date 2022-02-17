@@ -198,7 +198,7 @@ local function create_texture_item_entity(texpath, canvasentity, param)
                 local t = textures[texpath]
                 t.renderer = e.reference
                 world:pub{"canvas_update", "texture"}
-                world:pub {"canvas_update", "new_item", e.reference, table.unpack(param)}
+                world:pub {"canvas_update", "new_item", t.renderer, table.unpack(param)}
             end
         }
     }
@@ -225,8 +225,6 @@ function icanvas.add_items(e, ...)
                 items = {},
             }
             textures[texpath] = t
-        else
-            world:pub {"canvas_update", "new_item", t.renderer, table.unpack(item.param)}
         end
         local id = gen_item_id()
         t.items[id] = item
