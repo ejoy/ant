@@ -23,7 +23,7 @@ local file_path
 local joints_map
 local joints_list
 local current_skeleton
-local joint_scale = 0.2
+local joint_scale = 0.25
 local sample_ratio = 50.0
 local anim_e = {}
 local current_joint
@@ -31,22 +31,11 @@ local joint_pose = {}
 local allanims = {}
 local current_anim
 local anim_name_list = {}
-local TYPE_LINEAR <const> = 1
-local TYPE_REBOUND <const> = 2
-local TYPE_SHAKE <const> = 3
 local anim_type_name = {
     "Linear",
     "Rebound",
     "Shake"
 }
-local TWEEN_SAMPLE <const> = 15
-local TWEEN_LINEAR <const> = 1
-local TWEEN_CUBIC_IN <const> = 2
-local TWEEN_CUBIC_Out <const> = 3
-local TWEEN_CUBIC_InOut <const> = 4
-local TWEEN_BOUNCE_IN <const> = 5
-local TWEEN_BOUNCE_OUT <const> = 6
-local TWEEN_BOUNCE_INOUT <const> = 7
 local tween_type_name = {
     "Linear",
     "CubicIn",
@@ -56,14 +45,7 @@ local tween_type_name = {
     "BounceOut",
     "BounceInOut",
 }
-local DIR_X <const> = 1
-local DIR_Y <const> = 2
-local DIR_Z <const> = 3
-local DIR_XY <const> = 4
-local DIR_YZ <const> = 5
-local DIR_XZ <const> = 6
-local DIR_XYZ <const> = 7
-local DirName = {
+local dir_name = {
     "X",
     "Y",
     "Z",
@@ -72,156 +54,9 @@ local DirName = {
     "XZ",
     "XYZ",
 }
-local Dir = {
-    math3d.ref(math3d.vector{1,0,0}),
-    math3d.ref(math3d.vector{0,1,0}),
-    math3d.ref(math3d.vector{0,0,1}),
-    math3d.ref(math3d.normalize(math3d.vector{1,1,0})),
-    math3d.ref(math3d.normalize(math3d.vector{0,1,1})),
-    math3d.ref(math3d.normalize(math3d.vector{1,0,1})),
-    math3d.ref(math3d.normalize(math3d.vector{1,1,1})),
-}
-
-
-local function bounce_time(time)
-    if time < 1 / 2.75 then
-        return 7.5625 * time * time
-    elseif time < 2 / 2.75 then
-        time = time - 1.5 / 2.75
-        return 7.5625 * time * time + 0.75
-    
-    elseif time < 2.5 / 2.75 then
-        time = time - 2.25 / 2.75
-        return 7.5625 * time * time + 0.9375
-    end
-    time = time - 2.625 / 2.75
-    return 7.5625 * time * time + 0.984375
-end
-local tween_func = {
-    function (time) return time end,
-    function (time) return time * time * time end,
-    function (time)
-        time = time - 1
-        return (time * time * time + 1)
-    end,
-    function (time)
-        time = time * 2
-        if time < 1 then
-            return 0.5 * time * time * time
-        end
-        time = time - 2;
-        return 0.5 * (time * time * time + 2)
-    end,
-    function (time) return 1 - bounce_time(1 - time) end,
-    function (time) return bounce_time(time) end,
-    function (time)
-        local newT = 0
-        if time < 0.5 then
-            time = time * 2;
-            newT = (1 - bounce_time(1 - time)) * 0.5
-        else
-            newT = bounce_time(time * 2 - 1) * 0.5 + 0.5
-        end
-        return newT
-    end,
-}
-
 local function update_animation()
-    local function tween_push_anim_key(raw_anim, joint_name, clip, time, duration, to_pos, to_rot, poseMat)
-        local tween_step = 1.0 / TWEEN_SAMPLE
-        for j = 1, TWEEN_SAMPLE - 1 do
-            local tween_ratio = tween_func[clip.tween](j * tween_step)
-            local tween_local_mat = math3d.matrix{
-                s = 1,
-                r = math3d.quaternion{math.rad(to_rot[1] * tween_ratio), math.rad(to_rot[2] * tween_ratio), math.rad(to_rot[3] * tween_ratio)},
-                t = math3d.mul(Dir[clip.direction], to_pos * tween_ratio)
-            }
-            local tween_to_s, tween_to_r, tween_to_t = math3d.srt(math3d.mul(poseMat, tween_local_mat))
-            raw_anim:push_prekey(joint_name, time + j * tween_step * duration, tween_to_s, tween_to_r, tween_to_t)
-        end
-    end
-    local function push_anim_key(raw_anim, joint_name, clips)
-        local poseMat = joint_pose[joint_name]
-        for _, clip in ipairs(clips) do
-            if clip.range[1] >= 0 and clip.range[2] >= 0 then
-                local frame_to_time = 1.0 / sample_ratio
-                local duration = clip.range[2] - clip.range[1]
-                local subdiv = clip.repeat_count
-                if clip.type == TYPE_REBOUND then
-                    subdiv = 2 * subdiv
-                elseif clip.type == TYPE_SHAKE then
-                    subdiv = 4 * subdiv
-                end
-                local step = (duration / subdiv) * frame_to_time
-                local start_time = clip.range[1] * frame_to_time
-                local localMat = math3d.matrix{s = 1, r = mc.IDENTITY_QUAT, t = mc.ZERO}
-                local from_s, from_r, from_t = math3d.srt(math3d.mul(poseMat, localMat))
-                local to_rot = {0,clip.amplitude_rot,0}
-                if clip.rot_axis == DIR_X then
-                    to_rot = {clip.amplitude_rot,0,0}
-                elseif clip.rot_axis == DIR_Z then
-                    to_rot = {0,0,clip.amplitude_rot}
-                end
-                localMat = math3d.matrix{s = 1, r = math3d.quaternion{math.rad(to_rot[1]), math.rad(to_rot[2]), math.rad(to_rot[3])}, t = math3d.mul(Dir[clip.direction], clip.amplitude_pos)}
-                local to_s, to_r, to_t = math3d.srt(math3d.mul(poseMat, localMat))
-                local time = start_time
-                if clip.type == TYPE_LINEAR then
-                    for i = 1, clip.repeat_count, 1 do
-                        raw_anim:push_prekey(joint_name, time, from_s, from_r, from_t)
-                        if clip.tween ~= TWEEN_LINEAR then
-                            -- local tween_step = 1.0 / TWEEN_SAMPLE
-                            -- for j = 1, TWEEN_SAMPLE - 1 do
-                            --     local tween_ratio = tween_func[clip.tween](j * tween_step)
-                            --     local tween_local_mat = math3d.matrix{
-                            --         s = 1,
-                            --         r = math3d.quaternion{math.rad(to_rot[1] * tween_ratio), math.rad(to_rot[2] * tween_ratio), math.rad(to_rot[3] * tween_ratio)},
-                            --         t = math3d.mul(Dir[clip.direction], clip.amplitude_pos * tween_ratio)
-                            --     }
-                            --     local tween_to_s, tween_to_r, tween_to_t = math3d.srt(math3d.mul(poseMat, tween_local_mat))
-                            --     raw_anim:push_prekey(joint_name, time + j * tween_step * step, tween_to_s, tween_to_r, tween_to_t)
-                            -- end
-                            tween_push_anim_key(raw_anim, joint_name, clip, time, step, clip.amplitude_pos, to_rot, poseMat)
-                        end
-                        time = time + step
-                        raw_anim:push_prekey(joint_name,time, to_s, to_r, to_t)
-                        time = time + frame_to_time
-                    end
-                else
-                    localMat = math3d.matrix{s = 1, r = math3d.quaternion{math.rad(-to_rot[1]), math.rad(-to_rot[2]), math.rad(-to_rot[3])}, t = math3d.mul(Dir[clip.direction], -clip.amplitude_pos)}
-                    local to_s2, to_r2, to_t2 = math3d.srt(math3d.mul(poseMat, localMat))
-                    raw_anim:push_prekey(joint_name, time, from_s, from_r, from_t)
-                    time = time + step
-                    for i = 1, clip.repeat_count, 1 do
-                        raw_anim:push_prekey(joint_name, time, to_s, to_r, to_t)
-                        if clip.type == TYPE_REBOUND then
-                            time = (i == clip.repeat_count) and (clip.range[2] * frame_to_time) or (time + step)
-                            raw_anim:push_prekey(joint_name, time, from_s, from_r, from_t)
-                            time = time + step
-                        elseif clip.type == TYPE_SHAKE then
-                            time = time + step * 2
-                            raw_anim:push_prekey(joint_name, time, to_s2, to_r2, to_t2)
-                            time = time + step * 2
-                        end
-                    end
-                    if clip.type == TYPE_SHAKE then
-                        raw_anim:push_prekey(joint_name, clip.range[2] * frame_to_time, from_s, from_r, from_t)
-                    end
-                end
-                
-            end
-        end
-    end
-    local runtim_anim = current_anim.runtime_anim
-    for _, value in ipairs(current_anim.joint_anims) do
-        local joint = joint_utils:get_joint_by_name(current_skeleton, value.joint_name)
-        if not joint then
-            assert(false)
-        end
-        local ra = runtim_anim.raw_animation
-        ra:clear_prekey(joint.name)
-        push_anim_key(ra, joint.name, value.clips)
-    end
-    runtim_anim._handle = runtim_anim.raw_animation:build()
+    local runtime_anim = current_anim.runtime_anim
+    runtime_anim._handle = iani.build_animation(runtime_anim.raw_animation, joint_pose, current_anim.joint_anims, sample_ratio)
 end
 
 local function min_max_range_value(clips, clip_index)
@@ -375,8 +210,8 @@ local function create_clip()
                 local new_clip = {
                     range = {new_range_start, new_range_end},
                     range_ui = {new_range_start, new_range_end, speed = 1},
-                    type = TYPE_LINEAR,
-                    tween = TWEEN_LINEAR,
+                    type = 1,
+                    tween = 1,
                     repeat_count = 1,
                     random_amplitude = false,
                     direction = 2,
@@ -558,8 +393,8 @@ local function show_current_joint()
     --     dirty = true
     -- end
     imgui.widget.PropertyLabel("Direction")
-    if imgui.widget.BeginCombo("##Direction", {DirName[current_clip.direction], flags = imgui.flags.Combo {}}) then
-        for i, type in ipairs(DirName) do
+    if imgui.widget.BeginCombo("##Direction", {dir_name[current_clip.direction], flags = imgui.flags.Combo {}}) then
+        for i, type in ipairs(dir_name) do
             if imgui.widget.Selectable(type, current_clip.direction == i) then
                 current_clip.direction = i
                 dirty = true
@@ -576,9 +411,9 @@ local function show_current_joint()
     end
 
     imgui.widget.PropertyLabel("RotAxis")
-    if imgui.widget.BeginCombo("##RotAxis", {DirName[current_clip.rot_axis], flags = imgui.flags.Combo {}}) then
+    if imgui.widget.BeginCombo("##RotAxis", {dir_name[current_clip.rot_axis], flags = imgui.flags.Combo {}}) then
         for i = 1, 3 do
-            if imgui.widget.Selectable(DirName[i], current_clip.rot_axis == i) then
+            if imgui.widget.Selectable(dir_name[i], current_clip.rot_axis == i) then
                 current_clip.rot_axis = i
                 dirty = true
             end
@@ -883,7 +718,7 @@ function m.save(path)
             clip.amplitude_rot_ui = nil
         end
     end
-    utils.write_file(filename, stringify({name = current_anim.name, duration = current_anim.duration, joint_anims = joint_anims}))
+    utils.write_file(filename, stringify({name = current_anim.name, duration = current_anim.duration, joint_anims = joint_anims, sample_ratio = sample_ratio}))
     if file_path ~= filename then
         file_path = filename
     end
@@ -912,6 +747,7 @@ function m.load(path)
             end
         end
         create_animation(anim.name, math.floor(anim.duration * sample_ratio), anim.joint_anims)
+        sample_ratio = anim.sample_ratio
         update_animation()
         file_path = path:string()
     end
