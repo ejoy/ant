@@ -98,12 +98,13 @@ function S.init(nwh, context, width, height)
 		ev.size(w, h)
 		world:pub{"view_resize", w, h}
 	end
-	for _, size in ipairs(resizeQueue) do
-		S.size(size[1], size[2])
-	end
 
 	world:pub {"viewsize", width, height}
 	world:pipeline_init()
+
+	for _, size in ipairs(resizeQueue) do
+		S.size(size[1], size[2])
+	end
 
 	ltask.fork(Render)
 end
