@@ -51,6 +51,14 @@ static void push_message(struct ant_window_message* msg) {
     return self;
 }
 - (void)layoutSubviews {
+    uint32_t frameW = (uint32_t)(self.contentScaleFactor * self.frame.size.width);
+    uint32_t frameH = (uint32_t)(self.contentScaleFactor * self.frame.size.height);
+    struct ant_window_message msg;
+    msg.type = ANT_WINDOW_SIZE;
+    msg.u.size.x = frameW;
+    msg.u.size.y = frameH;
+    msg.u.size.type = 0;
+    push_message(&msg);
 }
 - (void)start {
     if (nil == self.m_displayLink) {
@@ -141,6 +149,9 @@ static void push_message(struct ant_window_message* msg) {
     msg.type = ANT_WINDOW_EXIT;
     push_message(&msg);
     [self.m_view stop];
+}
+- (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {
+    return UIInterfaceOrientationMaskLandscape;
 }
 @end
 

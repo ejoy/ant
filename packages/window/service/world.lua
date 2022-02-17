@@ -17,6 +17,8 @@ end
 
 local ServiceWindow = ltask.queryservice "ant.window|window"
 ltask.send(ServiceWindow, "subscribe", "init", "exit")
+ltask.send(ServiceWindow, "subscribe", "mouse_wheel", "mouse", "touch", "keyboard", "char", "size")
+local resizeQueue = {}
 
 local S = {}
 
@@ -96,7 +98,9 @@ function S.init(nwh, context, width, height)
 		ev.size(w, h)
 		world:pub{"view_resize", w, h}
 	end
-	ltask.send(ServiceWindow, "subscribe", "mouse_wheel", "mouse", "touch", "keyboard", "char", "size")
+	for _, size in ipairs(resizeQueue) do
+		S.size(size[1], size[2])
+	end
 
 	world:pub {"viewsize", width, height}
 	world:pipeline_init()
@@ -104,6 +108,14 @@ function S.init(nwh, context, width, height)
 	ltask.fork(Render)
 end
 
+S.mouse_wheel = function () end
+S.mouse = function () end
+S.touch = function () end
+S.keyboard = function () end
+S.char = function () end
+S.size = function (w,h)
+	resizeQueue[#resizeQueue+1] = {w,h}
+end
 function S.exit()
 	quit = {}
 	ltask.wait(quit)
