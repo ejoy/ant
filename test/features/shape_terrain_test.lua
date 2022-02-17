@@ -301,6 +301,9 @@ local function create_canvas()
                                 x = 0, y = 0,
                                 w = 128, h = 128,
                             },
+                            srt = {
+                                r = math.pi * 0.25, -- rotate 45 degree
+                            }
                         },
                         x = 1.2 * unit, y = 2.2 * unit,
                         w = 3 * unit, h = 3 * unit,

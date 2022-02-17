@@ -3,7 +3,7 @@ local world = ecs.world
 local w     = world.w
 
 local bgfx      = require "bgfx"
-
+local math3d    = require "math3d"
 local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
 local assetmgr  = import_package "ant.asset"
@@ -25,8 +25,28 @@ function canvas_sys:init()
 end
 
 local itemfmt<const> = ("fffff"):rep(4)
-local function add_item(texsize, texrt, rect)
+
+local function texmat(srt)
+    if srt then
+        local s, r, t = srt.s, srt.r, srt.t
+        if s then
+            s = {s[1], s[2], 1.0}
+        end
+        if r then
+            r = math3d.quaternion{0.0, 0.0, r}  --rotation with z-axis
+        end
+        if t then
+            t = {t[1], t[2], 0.0}
+        end
+
+        return math3d.matrix{s=s, r=r, t=t}
+    end
+end
+
+local function add_item(texsize, tex, rect)
     local iw, ih = texsize.w, texsize.h
+    local texrt = tex.rect
+    local tm = texmat(tex.srt)
     local t_ww, t_hh = texrt.w or iw, texrt.h or ih
 
     local x, z = rect.x, rect.y
@@ -39,11 +59,20 @@ local function add_item(texsize, texrt, rect)
     local u0, v0 = texrt.x/iw, texrt.y/ih
     local u1, v1 = (texrt.x+t_ww)/iw, (texrt.y+t_hh)/ih
 
+    local function trans(uv)
+        return tm and math3d.tovalue(math3d.transform(tm, uv, 1)) or uv
+    end
+
+    local   u0v1 , u0v0 ,
+            u1v1 , u1v0 = 
+            trans{u0, v1, 0.0}, trans{u0, v0, 0.0},
+            trans{u1, v1, 0.0}, trans{u1, v0, 0.0}
+
     return itemfmt:pack(
-        x,     0.0, z,     u0, v1,
-        x,     0.0, z+hh,  u0, v0,
-        x+ww,  0.0, z,     u1, v1,
-        x+ww,  0.0, z+hh,  u1, v0)
+        x,     0.0, z,     u0v1[1], u0v1[2],
+        x,     0.0, z+hh,  u0v0[1], u0v0[2],
+        x+ww,  0.0, z,     u1v1[1], u1v1[2],
+        x+ww,  0.0, z+hh,  u1v0[1], u1v0[2])
 end
 
 local function get_tex_size(texpath)
@@ -62,7 +91,7 @@ local function update_items()
             local texsize = get_tex_size(texpath)
             local values = {}
             for _, v in pairs(tex.items) do
-                values[#values+1] = add_item(texsize, v.texture.rect, v)
+                values[#values+1] = add_item(texsize, v.texture, v)
             end
 
             local re = tex.renderer
