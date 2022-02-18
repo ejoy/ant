@@ -5,16 +5,230 @@ local timer = ecs.import.interface "ant.timer|itimer"
 local fs 	= require "filesystem"
 local lfs	= require "filesystem.local"
 local datalist  = require "datalist"
-
-local iani = ecs.interface "ianimation"
-
+local animation = require "hierarchy".animation
+local iani 	= ecs.interface "ianimation"
+local math3d = require "math3d"
+local mathpkg	= import_package "ant.math"
+local mc, mu	= mathpkg.constant, mathpkg.util
 local EditMode = false
 function iani.set_edit_mode(b)
 	EditMode = b
 end
 
+local TYPE_LINEAR <const>	= 1
+local TYPE_REBOUND <const>	= 2
+local TYPE_SHAKE <const>	= 3
+
+local TWEEN_SAMPLE <const> 			= 15
+
+local TWEEN_LINEAR <const> 			= 1
+local TWEEN_CUBIC_IN <const> 		= 2
+local TWEEN_CUBIC_Out <const> 		= 3
+local TWEEN_CUBIC_InOut <const>		= 4
+local TWEEN_BOUNCE_IN <const> 		= 5
+local TWEEN_BOUNCE_OUT <const> 		= 6
+local TWEEN_BOUNCE_INOUT <const>	= 7
+
+local DIR_X <const> 	= 1
+local DIR_Y <const> 	= 2
+local DIR_Z <const> 	= 3
+local DIR_XY <const>	= 4
+local DIR_YZ <const>	= 5
+local DIR_XZ <const> 	= 6
+local DIR_XYZ <const> 	= 7
+
+local Dir = {
+    math3d.ref(math3d.vector{1,0,0}),
+    math3d.ref(math3d.vector{0,1,0}),
+    math3d.ref(math3d.vector{0,0,1}),
+    math3d.ref(math3d.normalize(math3d.vector{1,1,0})),
+    math3d.ref(math3d.normalize(math3d.vector{0,1,1})),
+    math3d.ref(math3d.normalize(math3d.vector{1,0,1})),
+    math3d.ref(math3d.normalize(math3d.vector{1,1,1})),
+}
+
+local function bounce_time(time)
+    if time < 1 / 2.75 then
+        return 7.5625 * time * time
+    elseif time < 2 / 2.75 then
+        time = time - 1.5 / 2.75
+        return 7.5625 * time * time + 0.75
+    
+    elseif time < 2.5 / 2.75 then
+        time = time - 2.25 / 2.75
+        return 7.5625 * time * time + 0.9375
+    end
+    time = time - 2.625 / 2.75
+    return 7.5625 * time * time + 0.984375
+end
+
+local tween_func = {
+    function (time) return time end,
+    function (time) return time * time * time end,
+    function (time)
+        time = time - 1
+        return (time * time * time + 1)
+    end,
+    function (time)
+        time = time * 2
+        if time < 1 then
+            return 0.5 * time * time * time
+        end
+        time = time - 2;
+        return 0.5 * (time * time * time + 2)
+    end,
+    function (time) return 1 - bounce_time(1 - time) end,
+    function (time) return bounce_time(time) end,
+    function (time)
+        local newT = 0
+        if time < 0.5 then
+            time = time * 2;
+            newT = (1 - bounce_time(1 - time)) * 0.5
+        else
+            newT = bounce_time(time * 2 - 1) * 0.5 + 0.5
+        end
+        return newT
+    end,
+}
+local skeleton_pose = {}
+function iani.build_animation(raw_animation, joint_pose, joint_anims, sample_ratio)
+	local function tween_push_anim_key(raw_anim, joint_name, clip, time, duration, to_pos, to_rot, poseMat)
+        local tween_step = 1.0 / TWEEN_SAMPLE
+        for j = 1, TWEEN_SAMPLE - 1 do
+            local tween_ratio = tween_func[clip.tween](j * tween_step)
+            local tween_local_mat = math3d.matrix{
+                s = 1,
+                r = math3d.quaternion{math.rad(to_rot[1] * tween_ratio), math.rad(to_rot[2] * tween_ratio), math.rad(to_rot[3] * tween_ratio)},
+                t = math3d.mul(Dir[clip.direction], to_pos * tween_ratio)
+            }
+            local tween_to_s, tween_to_r, tween_to_t = math3d.srt(math3d.mul(poseMat, tween_local_mat))
+            raw_anim:push_prekey(joint_name, time + j * tween_step * duration, tween_to_s, tween_to_r, tween_to_t)
+        end
+    end
+    local function push_anim_key(raw_anim, joint_name, clips)
+		local frame_to_time = 1.0 / sample_ratio
+        local poseMat = joint_pose[joint_name]
+        for _, clip in ipairs(clips) do
+            if clip.range[1] >= 0 and clip.range[2] >= 0 then
+                local duration = clip.range[2] - clip.range[1]
+                local subdiv = clip.repeat_count
+                if clip.type == TYPE_REBOUND then
+                    subdiv = 2 * subdiv
+                elseif clip.type == TYPE_SHAKE then
+                    subdiv = 4 * subdiv
+                end
+                local step = (duration / subdiv) * frame_to_time
+                local start_time = clip.range[1] * frame_to_time
+                local localMat = math3d.matrix{s = 1, r = mc.IDENTITY_QUAT, t = mc.ZERO}
+                local from_s, from_r, from_t = math3d.srt(math3d.mul(poseMat, localMat))
+                local to_rot = {0,clip.amplitude_rot,0}
+                if clip.rot_axis == DIR_X then
+                    to_rot = {clip.amplitude_rot,0,0}
+                elseif clip.rot_axis == DIR_Z then
+                    to_rot = {0,0,clip.amplitude_rot}
+                end
+                localMat = math3d.matrix{s = 1, r = math3d.quaternion{math.rad(to_rot[1]), math.rad(to_rot[2]), math.rad(to_rot[3])}, t = math3d.mul(Dir[clip.direction], clip.amplitude_pos)}
+                local to_s, to_r, to_t = math3d.srt(math3d.mul(poseMat, localMat))
+                local time = start_time
+                if clip.type == TYPE_LINEAR then
+                    for i = 1, clip.repeat_count, 1 do
+                        raw_anim:push_prekey(joint_name, time, from_s, from_r, from_t)
+                        if clip.tween ~= TWEEN_LINEAR then
+                            -- local tween_step = 1.0 / TWEEN_SAMPLE
+                            -- for j = 1, TWEEN_SAMPLE - 1 do
+                            --     local tween_ratio = tween_func[clip.tween](j * tween_step)
+                            --     local tween_local_mat = math3d.matrix{
+                            --         s = 1,
+                            --         r = math3d.quaternion{math.rad(to_rot[1] * tween_ratio), math.rad(to_rot[2] * tween_ratio), math.rad(to_rot[3] * tween_ratio)},
+                            --         t = math3d.mul(Dir[clip.direction], clip.amplitude_pos * tween_ratio)
+                            --     }
+                            --     local tween_to_s, tween_to_r, tween_to_t = math3d.srt(math3d.mul(poseMat, tween_local_mat))
+                            --     raw_anim:push_prekey(joint_name, time + j * tween_step * step, tween_to_s, tween_to_r, tween_to_t)
+                            -- end
+                            tween_push_anim_key(raw_anim, joint_name, clip, time, step, clip.amplitude_pos, to_rot, poseMat)
+                        end
+                        time = time + step
+                        raw_anim:push_prekey(joint_name,time, to_s, to_r, to_t)
+                        time = time + frame_to_time
+                    end
+                else
+                    localMat = math3d.matrix{s = 1, r = math3d.quaternion{math.rad(-to_rot[1]), math.rad(-to_rot[2]), math.rad(-to_rot[3])}, t = math3d.mul(Dir[clip.direction], -clip.amplitude_pos)}
+                    local to_s2, to_r2, to_t2 = math3d.srt(math3d.mul(poseMat, localMat))
+                    raw_anim:push_prekey(joint_name, time, from_s, from_r, from_t)
+                    time = time + step
+                    for i = 1, clip.repeat_count, 1 do
+                        raw_anim:push_prekey(joint_name, time, to_s, to_r, to_t)
+                        if clip.type == TYPE_REBOUND then
+                            time = (i == clip.repeat_count) and (clip.range[2] * frame_to_time) or (time + step)
+                            raw_anim:push_prekey(joint_name, time, from_s, from_r, from_t)
+                            time = time + step
+                        elseif clip.type == TYPE_SHAKE then
+                            time = time + step * 2
+                            raw_anim:push_prekey(joint_name, time, to_s2, to_r2, to_t2)
+                            time = time + step * 2
+                        end
+                    end
+                    if clip.type == TYPE_SHAKE then
+                        raw_anim:push_prekey(joint_name, clip.range[2] * frame_to_time, from_s, from_r, from_t)
+                    end
+                end
+            end
+        end
+    end
+    for _, anim in ipairs(joint_anims) do
+        raw_animation:clear_prekey(anim.joint_name)
+        push_anim_key(raw_animation, anim.joint_name, anim.clips)
+    end
+    return raw_animation:build()
+end
+
 local function do_play(e, anim, real_clips, anim_state)
+	local anim_name = anim_state.name
 	if not anim_state.init then
+		if not anim then
+			local len = #anim_state.name
+			if string.sub(anim_state.name, len - 4, len) == ".anim" then
+				local path = fs.path(anim_state.name):localpath()
+				local f = assert(fs.open(path))
+				local data = f:read "a"
+				f:close()
+				local anim_data = datalist.parse(data)
+				local duration = anim_data.duration
+				anim_name = anim_data.name
+				anim = {
+					_duration = duration,
+					_sampling_context = animation.new_sampling_context(1)
+				}
+				w:sync("skeleton:in", e)
+				local ske = e.skeleton
+				local raw_animation = animation.new_raw_animation()
+				raw_animation:setup(ske._handle, duration)
+				if not skeleton_pose[ske] then
+					local pose = {}
+					local pose_result
+					for se in w:select "skeleton:in pose_result:in" do
+						if ske == se.skeleton then
+							pose_result = e.pose_result
+							break
+						end
+					end
+					if pose_result then
+						for _, value in ipairs(anim_data.joint_anims) do
+							local srt = pose_result:joint(ske:joint_index(value.joint_name))
+							if not pose[value.joint_name] then
+								pose[value.joint_name] = math3d.ref(srt)
+							end
+						end
+					end
+					skeleton_pose[ske] = pose
+				end
+				anim._handle = iani.build_animation(raw_animation, skeleton_pose[ske], anim_data.joint_anims, anim_data.sample_ratio)
+			else
+				print("animation:", anim_state.name, "not exist")
+				return
+			end
+		end
+
 		local start_ratio = 0.0
 		local realspeed = 1.0
 		if real_clips then
@@ -36,15 +250,18 @@ local function do_play(e, anim, real_clips, anim_state)
 	end
 	e._animation._current = anim_state
 	anim_state.eid[#anim_state.eid + 1] = e
+	if not e.animation[anim_name] then
+		e.animation[anim_name] = anim
+	end
 end
 
 function iani.play(e, anim_state)
 	w:sync("animation:in _animation:in", e)
 	local anim = e.animation[anim_state.name]
-	if not anim then
-		print("animation:", anim_state.name, "not exist")
-		return false
-	end
+	-- if not anim then
+	-- 	print("animation:", anim_state.name, "not exist")
+	-- 	return false
+	-- end
 	do_play(e, anim, nil, anim_state)
 	return true
 end

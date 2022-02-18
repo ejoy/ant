@@ -2024,11 +2024,14 @@ wSimpleSequencer(lua_State* L) {
 	if (selected_layer_index >= 0 && selected_layer_index != current_layer_index) {
 		lua_pushinteger(L, selected_layer_index + 1);
 		lua_setfield(L, -2, "selected_layer_index");
-		selected_clip_index = -1;
+		if (!ImSimpleSequencer::bone_anim.anim_layers[selected_layer_index].clip_rangs.empty())
+			selected_clip_index = 0;
+		else
+			selected_clip_index = -1;
 	}
 
-	if (selected_clip_index >= 0 && selected_clip_index != current_clip_index) {
-		lua_pushinteger(L, selected_clip_index + 1);
+	if (/*selected_clip_index >= 0 && */selected_clip_index != current_clip_index) {
+		lua_pushinteger(L, selected_clip_index >= 0 ? selected_clip_index + 1 : 0);
 		lua_setfield(L, -2, "selected_clip_index");
 	}
 

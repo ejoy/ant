@@ -236,6 +236,7 @@ local function create_texture_item_entity(texpath, canvasentity)
                 local t = textures[texpath]
                 t.renderer = e.reference
                 world:pub{"canvas_update", "texture"}
+                world:pub{"canvas_update", "new_entity", t.renderer}
             end
         }
     }
