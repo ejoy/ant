@@ -50,7 +50,7 @@ local function posmat(srt)
             s = {s[1], 1.0, s[2]}
         end
         if r then
-            r = math3d.quaternion{0.0, r, 0.0}  --rotation with z-axis
+            r = math3d.quaternion{0.0, r, 0.0}
         end
         if t then
             t = {t[1], 0.0, t[2]}
@@ -61,6 +61,7 @@ local function posmat(srt)
 end
 
 local function add_item(texsize, tex, rect)
+    --TODO: we should pack item when add or update
     local iw, ih = texsize.w, texsize.h
     local texrt = tex.rect
     local tm = texmat(tex.srt)
