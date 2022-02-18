@@ -2,14 +2,6 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local mathpkg	= import_package "ant.math"
-local mc		= mathpkg.constant
-
-local setting		= import_package "ant.settings".setting
-local settingdata 	= setting:data()
-local graphic_setting=settingdata.graphic
-
-
 local default	= import_package "ant.general".default
 local icamera	= ecs.import.interface "ant.camera|icamera"
 local irender	= ecs.import.interface "ant.render|irender"
@@ -29,7 +21,7 @@ function fr_sys:init()
 		}
 	})
 
-	if not graphic_setting.disable_pre_z then
+	if irender.use_pre_depth() then
 		irender.create_pre_depth_queue(vr, camera)
 	end
 	irender.create_main_queue(vr, camera)
