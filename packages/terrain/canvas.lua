@@ -98,7 +98,7 @@ local function add_item(texsize, tex, rect)
         local center = math3d.mul(math3d.add(vv0, vv3), 0.5)
         local function trans_pos(v, offset)
             local vv = math3d.sub(v, offset)
-            return math3d.tovalue(math3d.transform(pm, vv, 1))
+            return math3d.tovalue(math3d.add(math3d.transform(pm, vv, 1), offset))
         end
 
         vv0 = trans_pos(vv0, center)
