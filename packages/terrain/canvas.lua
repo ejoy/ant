@@ -43,6 +43,23 @@ local function texmat(srt)
     end
 end
 
+local function posmat(srt)
+    if srt then
+        local s, r, t = srt.s, srt.r, srt.t
+        if s then
+            s = {s[1], 1.0, s[2]}
+        end
+        if r then
+            r = math3d.quaternion{0.0, r, 0.0}  --rotation with z-axis
+        end
+        if t then
+            t = {t[1], 0.0, t[2]}
+        end
+
+        return math3d.matrix{s=s, r=r, t=t}
+    end
+end
+
 local function add_item(texsize, tex, rect)
     local iw, ih = texsize.w, texsize.h
     local texrt = tex.rect
@@ -59,20 +76,41 @@ local function add_item(texsize, tex, rect)
     local u0, v0 = texrt.x/iw, texrt.y/ih
     local u1, v1 = (texrt.x+t_ww)/iw, (texrt.y+t_hh)/ih
 
-    local function trans(uv)
-        return tm and math3d.tovalue(math3d.transform(tm, uv, 1)) or uv
+    local function trans(m, pt)
+        return m and math3d.tovalue(math3d.transform(m, pt, 1)) or pt
     end
 
     local   u0v1 , u0v0 ,
             u1v1 , u1v0 = 
-            trans{u0, v1, 0.0}, trans{u0, v0, 0.0},
-            trans{u1, v1, 0.0}, trans{u1, v0, 0.0}
+            trans(tm, {u0, v1, 0.0}), trans(tm, {u0, v0, 0.0}),
+            trans(tm, {u1, v1, 0.0}), trans(tm, {u1, v0, 0.0})
+
+    
+    local   vv0, vv1,
+            vv2, vv3=
+            {x,     0.0, z}, {x,     0.0, z+hh},
+            {x+ww,  0.0, z}, {x+ww,  0.0, z+hh}
+
+    local pm = posmat(rect.srt)
+    if pm then
+        vv0, vv1, vv2, vv3 = math3d.vector(vv0), math3d.vector(vv1), math3d.vector(vv2), math3d.vector(vv3)
+        local center = math3d.mul(math3d.add(vv0, vv3), 0.5)
+        local function trans_pos(v, offset)
+            local vv = math3d.sub(v, offset)
+            return math3d.tovalue(math3d.transform(pm, vv, 1))
+        end
+
+        vv0 = trans_pos(vv0, center)
+        vv1 = trans_pos(vv1, center)
+        vv2 = trans_pos(vv2, center)
+        vv3 = trans_pos(vv3, center)
+    end
 
     return itemfmt:pack(
-        x,     0.0, z,     u0v1[1], u0v1[2],
-        x,     0.0, z+hh,  u0v0[1], u0v0[2],
-        x+ww,  0.0, z,     u1v1[1], u1v1[2],
-        x+ww,  0.0, z+hh,  u1v0[1], u1v0[2])
+        vv0[1], vv0[2], vv0[3], u0v1[1], u0v1[2],
+        vv1[1], vv1[2], vv1[3], u0v0[1], u0v0[2],
+        vv2[1], vv2[2], vv2[3], u1v1[1], u1v1[2],
+        vv3[1], vv3[2], vv3[3], u1v0[1], u1v0[2])
 end
 
 local function get_tex_size(texpath)

@@ -307,6 +307,11 @@ local function create_canvas()
                         },
                         x = 1.2 * unit, y = 2.2 * unit,
                         w = 3 * unit, h = 3 * unit,
+                        srt = {
+                            r = math.rad(30),
+                            s = {1.2, 1.5},
+                            t = {0.2, 0.5}
+                        }
                     },
                     {
                         texture = {
@@ -316,7 +321,7 @@ local function create_canvas()
                                 w = 32, h = 32,
                             },
                             srt = {
-                                r = math.pi * 0.15, -- rotate 45 degree
+                                r = math.pi * 0.15,
                                 t = {0.1, 0.2},
                                 s = {1.2, 1.2},
                             }
