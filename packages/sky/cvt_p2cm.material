@@ -1,0 +1,14 @@
+fx:
+  vs: /pkg/ant.resources/shaders/fullscreen/vs_fullscreen.sc
+  fs: /pkg/ant.resources/shaders/fullscreen/fs_fullscreen.sc
+  setting:
+    lighting: off
+properties:
+  s_tex:
+    stage: 0
+    texture: /pkg/ant.resources/textures/black.texture
+state:
+  ALPHA_REF: 0
+  CULL: NONE
+  MSAA: true
+  WRITE_MASK: RGBA

@@ -103,15 +103,6 @@ function is:init()
         }
     }
 
-    local simplemesh = {
-        vb = {
-            start = 0, num = 3,
-            {
-                handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("fff", {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}), declmgr.get "p3".handle)
-            },
-        }
-    }
-
     local function create_face_entity(facename)
         return ecs.create_entity{
             policy = {
@@ -119,7 +110,7 @@ function is:init()
                 "ant.general|name",
             },
             data = {
-                simplemesh = simplemesh,
+                simplemesh = ientity.simple_fullquad_mesh(),
                 material = "/pkg/ant.test.ibl/assets/cubeface.material",
                 scene = {srt={}},
                 reference = true,

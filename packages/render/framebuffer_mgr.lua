@@ -145,6 +145,10 @@ local function create_rb_handle(rb)
 	if rb.w == 0 or rb.h == 0 then
 		error(string.format("render buffer width or height should not be 0:%d, %d", rb.w, rb.h))
 	end
+
+	if rb.cubemap then
+		bgfx.create_texturecube(rb.w, rb.h, rb.mipmap, rb.layers, rb.format, rb.flags)
+	end
 	return bgfx.create_texture2d(rb.w, rb.h, rb.mipmap, rb.layers, rb.format, rb.flags)
 end
 
