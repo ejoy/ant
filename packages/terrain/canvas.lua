@@ -105,7 +105,7 @@ local function add_item(texsize, tex, rect)
 
     local pm = posmat(rect.srt)
     if pm then
-        vv1, vv2, vv3, vv4 = trans_positions(tm, vv1, vv2, vv3, vv4)
+        vv1, vv2, vv3, vv4 = trans_positions(pm, vv1, vv2, vv3, vv4)
     end
 
     return itemfmt:pack(
