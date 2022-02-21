@@ -188,5 +188,10 @@ function util.pt2d_in_rect(x, y, rt)
 	return rt.x <= x and rt.y <= y and x <=(rt.x+rt.w) and y <=(rt.y+rt.h)
 end
 
+function util.is_rect_equal(lhs, rhs)
+	return	lhs.x == rhs.x and lhs.y == rhs.y and
+			lhs.w == rhs.w and lhs.h == rhs.h
+end
+
 return util
 

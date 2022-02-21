@@ -26,6 +26,7 @@ local anim_view         = ecs.require "widget.animation_view"
 local skeleton_view     = ecs.require "widget.skeleton_view"
 local material_view     = ecs.require "widget.material_view"
 local toolbar           = ecs.require "widget.toolbar"
+local mainview          = ecs.require "widget.main_view"
 local scene_view        = ecs.require "widget.scene_view"
 local inspector         = ecs.require "widget.inspector"
 local gridmesh_view     = ecs.require "widget.gridmesh_view"
@@ -240,55 +241,6 @@ local function choose_project()
     end
 end
 
-local main_vp = {}
-local last_main_vp = {}
-local function is_pt_in_rect(x, y, rt)
-    return  rt.x < x and x < (rt.x+rt.w) and
-            rt.y < y and y < (rt.y+rt.h)
-end
-
-local function check_update_vp()
-    if  main_vp.x ~= last_main_vp.x or
-        main_vp.y ~= last_main_vp.y or
-        main_vp.w ~= last_main_vp.w or
-        main_vp.h ~= last_main_vp.h then
-        last_main_vp.x, last_main_vp.y, last_main_vp.w, last_main_vp.h = 
-        main_vp.x, main_vp.y, main_vp.w, main_vp.h
-        return true
-    end
-end
-
-local function show_dock_space()
-    local imgui_vp = imgui.GetMainViewport()
-    local offset = {0, uiconfig.ToolBarHeight}
-    local wp, ws = imgui_vp.WorkPos, imgui_vp.WorkSize
-
-    imgui.windows.SetNextWindowPos(wp[1] + offset[1], wp[2] + offset[2])
-    imgui.windows.SetNextWindowSize(ws[1] - offset[1], ws[2] - offset[2])
-    imgui.windows.SetNextWindowViewport(imgui_vp.ID)
-	imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0.0);
-	imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowBorderSize, 0.0);
-    imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowPadding, 0.0, 0.0);
-    if imgui.windows.Begin("MainView", imgui.flags.Window {
-        "NoDocking",
-        "NoTitleBar",
-        "NoCollapse",
-        "NoResize",
-        "NoMove",
-        "NoBringToFrontOnFocus",
-        "NoNavFocus",
-        "NoBackground",
-    }) then
-        imgui.dock.Space("MainViewSpace", imgui.flags.DockNode {
-            "NoDockingInCentralNode",
-            "PassthruCentralNode",
-        })
-        main_vp.x, main_vp.y, main_vp.w, main_vp.h = imgui.dock.BuilderGetCentralRect "MainViewSpace"
-    end
-    imgui.windows.PopStyleVar(3)
-    imgui.windows.End()
-end
-
 local stat_window
 function m:init_world()
     local iRmlUi = ecs.import.interface "ant.rmlui|irmlui"
@@ -303,7 +255,7 @@ function m:ui_update()
     widget_utils.show_message_box()
     menu.show()
     toolbar.show()
-    show_dock_space()
+    mainview.show()
     scene_view.show()
     gridmesh_view.show()
     prefab_view.show()
@@ -320,7 +272,7 @@ function m:ui_update()
     --drag file to view
     if imgui.util.IsMouseDragging(0) then
         local x, y = imgui.util.GetMousePos()
-        if is_pt_in_rect(x, y, last_main_vp) then
+        if mainview.in_view(x, y) then
             if not drag_file then
                 local dropdata = imgui.widget.GetDragDropPayload()
                 if dropdata and (string.sub(dropdata, -7) == ".prefab"
@@ -591,21 +543,6 @@ function m:handle_event()
     end
 end
 
-function m:start_frame()
-end
-
-function m:end_frame()
-    if check_update_vp() then
-        local mvp = imgui.GetMainViewport()
-        local viewport = {
-            x = main_vp.x - mvp.WorkPos[1],
-            y = main_vp.y - mvp.WorkPos[2] + uiconfig.MenuHeight,
-            w = main_vp.w, h = main_vp.h
-        }
-        irq.set_view_rect("tonemapping_queue", viewport)
-        world:pub{"view_resize", main_vp.w, main_vp.h}
-    end
-end
 
 function m:data_changed()
     if highlight_aabb.visible and highlight_aabb.min and highlight_aabb.max then
@@ -614,22 +551,12 @@ function m:data_changed()
 end
 
 local igui = ecs.interface "igui"
-function igui.scene_viewport()
-    return irq.view_rect "tonemapping_queue"
-end
-
 function igui.cvt2scenept(x, y)
-    local vr = igui.scene_viewport()
+    local vr = irq.view_rect "tonemapping_queue"
     return x-vr.x, y-vr.y
 end
 
-local geometry_drawer   = import_package "ant.geometry".drawer
-local geo_utils         = ecs.require "editor.geometry_utils"
-local DEFAULT_COLOR <const> = 0xff00ff00
-local DEFAULT_COLOR_F <const> = {1,0,1,1}
-local skeleton_eid
 local joint_utils = require "widget.joint_utils"
-local firsttime = true
 
 function m:widget()
     -- local ske = joint_utils:get_current_skeleton()
