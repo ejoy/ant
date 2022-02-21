@@ -135,44 +135,6 @@ struct Size {
 	}
 };
 
-struct Rect {
-	Point origin;
-	Size size;
-	Rect() : origin(), size() {}
-	Rect(float x, float y, float width, float height) : origin(x, y), size(width, height) {}
-	Rect(const Point& origin_, const Size& size_) : origin(origin_), size(size_) {}
-	float x() const { return origin.x; }
-	float y() const { return origin.y; }
-	float width() const { return size.w; }
-	float height() const { return size.h; }
-	float left() const { return origin.x; }
-	float top() const { return origin.y; }
-	float right() const { return left() + width(); }
-	float bottom() const { return top() + height(); }
-	bool IsEmpty() const { return size.IsEmpty(); }
-	void SetRect(float x, float y, float width, float height) {
-		origin.SetPoint(x, y);
-		size.SetSize(width, height);
-	}
-	void Union(const Rect& rect) {
-		if (IsEmpty()) {
-			*this = rect;
-			return;
-		}
-		if (rect.IsEmpty()) {
-			return;
-		}
-		float rx = std::min(x(), rect.x());
-		float ry = std::min(y(), rect.y());
-		float rr = std::max(right(), rect.right());
-		float rb = std::max(bottom(), rect.bottom());
-		SetRect(rx, ry, rr - rx, rb - ry);
-	}  
-	bool Contains(const Point& point) const {
-		return (point.x >= x()) && (point.x < right()) && (point.y >= y()) && (point.y < bottom());
-	}
-};
-
 struct Quad {
 	Point a, b, c, d;
 };
@@ -208,6 +170,52 @@ struct CornerInsets {
 	}
 	bool operator!=(const CornerInsets& rhs) const {
 		return !(*this == rhs);
+	}
+};
+
+struct Rect {
+	Point origin;
+	Size size;
+	Rect() : origin(), size() {}
+	Rect(float x, float y, float width, float height) : origin(x, y), size(width, height) {}
+	Rect(const Point& origin_, const Size& size_) : origin(origin_), size(size_) {}
+	float x() const { return origin.x; }
+	float y() const { return origin.y; }
+	float width() const { return size.w; }
+	float height() const { return size.h; }
+	float left() const { return origin.x; }
+	float top() const { return origin.y; }
+	float right() const { return left() + width(); }
+	float bottom() const { return top() + height(); }
+	bool IsEmpty() const { return size.IsEmpty(); }
+	void SetRect(float x, float y, float width, float height) {
+		origin.SetPoint(x, y);
+		size.SetSize(width, height);
+	}
+	void Union(const Rect& rect) {
+		if (IsEmpty()) {
+			*this = rect;
+			return;
+		}
+		if (rect.IsEmpty()) {
+			return;
+		}
+		float rx = std::min(x(), rect.x());
+		float ry = std::min(y(), rect.y());
+		float rr = std::max(right(), rect.right());
+		float rb = std::max(bottom(), rect.bottom());
+		SetRect(rx, ry, rr - rx, rb - ry);
+	}
+	bool Contains(const Point& point) const {
+		return (point.x >= x()) && (point.x < right()) && (point.y >= y()) && (point.y < bottom());
+	}
+	CornerInsets<Point> Vertex() const {
+		return {
+			{left(), top()},
+			{right(), top()},
+			{right(), bottom()},
+			{left(), bottom()}
+		};
 	}
 };
 

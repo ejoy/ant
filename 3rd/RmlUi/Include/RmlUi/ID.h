@@ -63,6 +63,7 @@ enum class ShorthandId : uint8_t
 	TextShadow,
 	TextStroke,
 	TextDecoration,
+	Outline,
 
 	NumDefinedIds,
 };
@@ -166,6 +167,9 @@ enum class PropertyId : uint8_t
 	BackgroundPositionX,
 	BackgroundPositionY,
 	BackgroundRepeat,
+
+	OutlineColor,
+	OutlineWidth,
 
 	NumDefinedIds,
 };

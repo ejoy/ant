@@ -232,7 +232,7 @@ int FontEngine::GenerateString(
         const int16_t v0 = g.v;
 
         const float scale = FONT_POSTION_FIX_POINT / 32768.f;
-        geometry.AddRect(
+        geometry.AddRectFilled(
             { x0 * scale, y0 * scale, g.w * scale, g.h * scale },
             { u0 * fonttexel.x, v0 * fonttexel.y ,og.w * fonttexel.x , og.h * fonttexel.y },
             colour

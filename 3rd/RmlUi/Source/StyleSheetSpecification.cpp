@@ -390,6 +390,12 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 		.AddParser("color");
 	RegisterShorthand(ShorthandId::TextStroke, "-webkit-text-stroke", "-webkit-text-stroke-width, -webkit-text-stroke-color", ShorthandType::FallThrough);
 
+	RegisterProperty(PropertyId::OutlineWidth, "outline-width", "0px", false)
+		.AddParser("length");
+	RegisterProperty(PropertyId::OutlineColor, "outline-color", "white", false)
+		.AddParser("color");
+	RegisterShorthand(ShorthandId::Outline, "outline", "outline-width, outline-color", ShorthandType::FallThrough);
+
 	// flex layout
 	RegisterProperty(PropertyId::Display, "display", false)
 		.AddParser("keyword", "flex, none");

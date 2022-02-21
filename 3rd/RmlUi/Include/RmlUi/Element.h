@@ -358,7 +358,7 @@ protected:
 	ElementMeta* meta;
 	std::vector<EventListener*> listeners;
 
-	std::unique_ptr<Geometry> geometry_border;
+	std::unique_ptr<Geometry> geometry_background;
 	std::unique_ptr<Geometry> geometry_image;
 	Geometry::Path padding_edge;
 
@@ -387,7 +387,6 @@ protected:
 	bool dirty_animation = false;
 	bool dirty_transition = false;
 	bool dirty_background = false;
-	bool dirty_border = false;
 	bool dirty_image = false;
 
 	friend class Rml::ElementStyle;
