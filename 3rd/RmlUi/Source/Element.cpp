@@ -287,9 +287,15 @@ bool Element::SetPropertyImmediate(PropertyId id, const Property& property) {
 	return meta->style.SetPropertyImmediate(id, property);
 }
 
-void Element::RemoveProperty(const std::string& name)
-{
-	meta->style.RemoveProperty(StyleSheetSpecification::GetPropertyId(name));
+void Element::RemoveProperty(const std::string& name) {
+	PropertyIdSet properties;
+	if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name)) {
+		Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s;'.", name.c_str());
+		return;
+	}
+	for (auto property_id : properties) {
+		meta->style.RemoveProperty(property_id);
+	}
 }
 
 void Element::RemoveProperty(PropertyId id)

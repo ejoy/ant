@@ -162,7 +162,11 @@ const ShorthandDefinition* StyleSheetSpecification::GetShorthand(ShorthandId id)
 	return instance->properties.GetShorthand(id);
 }
 
-// Parses a property declaration, setting any parsed and validated properties on the given dictionary.
+bool StyleSheetSpecification::ParsePropertyDeclaration(PropertyIdSet& set, const std::string& property_name)
+{
+	return instance->properties.ParsePropertyDeclaration(set, property_name);
+}
+
 bool StyleSheetSpecification::ParsePropertyDeclaration(PropertyDictionary& dictionary, const std::string& property_name, const std::string& property_value)
 {
 	return instance->properties.ParsePropertyDeclaration(dictionary, property_name, property_value);
