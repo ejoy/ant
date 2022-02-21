@@ -255,7 +255,10 @@ namespace ImSimpleSequencer
 
 			if (io.MouseClicked[0]) {
 				if (io.MousePos.x > contentMin.x) {
-					selected_layer = (int)floor((io.MousePos.y - contentMin.y) / ItemHeight);
+					auto layer_index =  (int)floor((io.MousePos.y - contentMin.y) / ItemHeight);
+					if (layer_index >= 0 && layer_index < bone_anim.anim_layers.size()) {
+						selected_layer = layer_index;
+					}
 					if (is_active) {
 						selected_frame = -1;
 						range_index = -1;
