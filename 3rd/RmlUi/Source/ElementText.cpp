@@ -222,8 +222,8 @@ void ElementText::ClearLines() {
 	dirty_decoration = true;
 }
 
-void ElementText::AddLine(const Point& position, const std::string& line) {
-	lines.push_back(Line(line, metrics.frame.origin + position));
+void ElementText::AddLine(const std::string& line, Point position) {
+	lines.push_back(Line(line, position, 0));
 	dirty_geometry = true;
 }
 
@@ -488,19 +488,24 @@ Size ElementText::Measure(float minWidth, float maxWidth, float minHeight, float
 		float line_width;
 		int line_length;
 		finish = GenerateLine(line, line_length, line_width, line_begin, maxWidth, first_line);
-		float start_width = 0.0f;
-		if (line_width < maxWidth) {
-			switch (text_align) {
-			case Style::TextAlign::Right: start_width = maxWidth - line_width; break;
-			case Style::TextAlign::Center: start_width = (maxWidth - line_width) / 2.0f; break;
-			default: break;
-			}
-		}
-		AddLine(Point(start_width, height + baseline), line);
+		AddLine(line, Point(line_width, height + baseline));
 		width = std::max(width, line_width);
 		height += line_height;
 		first_line = false;
 		line_begin += line_length;
+	}
+	for (auto& line : lines) {
+		float start_width = 0.0f;
+		float line_width = line.position.x;
+		float start_height = line.position.y;
+		if (line_width < width) {
+			switch (text_align) {
+			case Style::TextAlign::Right: start_width = width - line_width; break;
+			case Style::TextAlign::Center: start_width = (width - line_width) / 2.0f; break;
+			default: break;
+			}
+		}
+		line.position = metrics.frame.origin + Point(start_width, start_height);
 	}
 	height = std::max(minHeight, height);
 	return Size(width, height);

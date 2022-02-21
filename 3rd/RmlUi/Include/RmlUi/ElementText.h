@@ -62,7 +62,7 @@ private:
 
 	bool GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix);
 	void ClearLines();
-	void AddLine(const Point& line_position, const std::string& line);
+	void AddLine(const std::string& line, Point position);
 
 	float GetLineHeight();
 	Style::TextAlign GetAlign();
