@@ -223,7 +223,7 @@ void ElementText::ClearLines() {
 }
 
 void ElementText::AddLine(const std::string& line, Point position) {
-	lines.push_back(Line(line, position, 0));
+	lines.push_back(Line { line, position, 0 });
 	dirty_geometry = true;
 }
 
