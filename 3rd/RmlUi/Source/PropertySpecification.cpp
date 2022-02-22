@@ -206,6 +206,36 @@ const ShorthandDefinition* PropertySpecification::GetShorthand(const std::string
 	return GetShorthand(shorthand_map->GetId(shorthand_name));
 }
 
+void PropertySpecification::ParseShorthandDeclaration(PropertyIdSet& set, ShorthandId shorthand_id) const {
+	const ShorthandDefinition* shorthand_definition = GetShorthand(shorthand_id);
+	for (size_t i = 0; i < shorthand_definition->items.size(); ++i) {
+		const ShorthandItem& item = shorthand_definition->items[i];
+		if (item.type == ShorthandItemType::Property)
+			set.Insert(item.property_id);
+		else if (item.type == ShorthandItemType::Shorthand)
+			ParseShorthandDeclaration(set, item.shorthand_id);
+	}
+}
+
+bool PropertySpecification::ParsePropertyDeclaration(PropertyIdSet& set, const std::string& property_name) const
+{
+	// Try as a property first
+	PropertyId property_id = property_map->GetId(property_name);
+	if (property_id != PropertyId::Invalid) {
+		set.Insert(property_id);
+		return true;
+	}
+
+	// Then, as a shorthand
+	ShorthandId shorthand_id = shorthand_map->GetId(property_name);
+	if (shorthand_id != ShorthandId::Invalid) {
+		ParseShorthandDeclaration(set, shorthand_id);
+		return true;
+	}
+
+	return false;
+}
+
 bool PropertySpecification::ParsePropertyDeclaration(PropertyDictionary& dictionary, const std::string& property_name, const std::string& property_value) const
 {
 	// Try as a property first

@@ -44,7 +44,6 @@ namespace Rml {
  */
 
 struct Line {
-	Line(const std::string& text, const Point& position) : text(text), position(position), width(0) {}
 	std::string text;
 	Point position;
 	int width;

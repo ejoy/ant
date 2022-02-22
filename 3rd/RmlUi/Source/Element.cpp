@@ -129,8 +129,8 @@ void Element::OnRender() {
 		stacking_context[i]->OnRender();
 	}
 	SetRednerStatus();
-	if (geometry_border && *geometry_border) {
-		geometry_border->Render();
+	if (geometry_background && *geometry_background) {
+		geometry_background->Render();
 	}
 	if (geometry_image && *geometry_image) {
 		geometry_image->Render();
@@ -287,9 +287,15 @@ bool Element::SetPropertyImmediate(PropertyId id, const Property& property) {
 	return meta->style.SetPropertyImmediate(id, property);
 }
 
-void Element::RemoveProperty(const std::string& name)
-{
-	meta->style.RemoveProperty(StyleSheetSpecification::GetPropertyId(name));
+void Element::RemoveProperty(const std::string& name) {
+	PropertyIdSet properties;
+	if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name)) {
+		Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s;'.", name.c_str());
+		return;
+	}
+	for (auto property_id : properties) {
+		meta->style.RemoveProperty(property_id);
+	}
 }
 
 void Element::RemoveProperty(PropertyId id)
@@ -752,7 +758,13 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 		changed_properties.Contains(PropertyId::BorderLeftColor) ||
 		changed_properties.Contains(PropertyId::Opacity))
 	{
-		dirty_border = true;
+		dirty_background = true;
+	}
+
+	if (changed_properties.Contains(PropertyId::OutlineWidth) ||
+		changed_properties.Contains(PropertyId::OutlineColor))
+	{
+		dirty_background = true;
 	}
 
 	if (border_radius_changed ||
@@ -1281,13 +1293,15 @@ void Element::UpdatePerspective() {
 }
 
 void Element::UpdateGeometry() {
-	if (dirty_background || dirty_border) {
-		if (!geometry_border) {
-			geometry_border.reset(new Geometry);
+	if (dirty_background) {
+		if (!geometry_background) {
+			geometry_background.reset(new Geometry);
 		}
-		ElementBackgroundBorder::GenerateGeometry(this, *geometry_border, padding_edge);
+		else {
+			geometry_background->Release();
+		}
+		ElementBackgroundBorder::GenerateGeometry(this, *geometry_background, padding_edge);
 		dirty_background = false;
-		dirty_border = false;
 		dirty_image = true;
 	}
 	if (dirty_image) {
@@ -1305,7 +1319,6 @@ void Element::UpdateLayout() {
 		DirtyClip();
 		dirty_background = true;
 		dirty_image = true;
-		dirty_border = true;
 		for (auto& child : children) {
 			child->UpdateLayout();
 		}

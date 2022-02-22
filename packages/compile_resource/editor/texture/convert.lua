@@ -32,7 +32,7 @@ return function (input, output, setting, localpath)
 		param.local_texpath = localpath(assert(param.path))
 		param.format = assert(which_format(setting.os, param))
 
-		dependfiles[#dependfiles+1] = param.path
+		dependfiles[#dependfiles+1] = param.local_texpath
 	else
 		assert(param.value, "memory texture should define the texture memory")
 	

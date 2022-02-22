@@ -60,6 +60,19 @@ local function posmat(srt)
     end
 end
 
+local vec<const> = math3d.vector
+
+local function trans_positions(m, v1, v2, v3, v4)
+    v1, v2, v3, v4 = vec(v1), vec(v2), vec(v3), vec(v4)
+    local center = math3d.mul(math3d.add(v1, v4), 0.5)
+    local function trans(v)
+        local vv = math3d.sub(v, center)
+        return math3d.tovalue(math3d.add(math3d.transform(m, vv, 1), center))
+    end
+
+    return trans(v1), trans(v2), trans(v3), trans(v4)
+end
+
 local function add_item(texsize, tex, rect)
     --TODO: we should pack item when add or update
     local iw, ih = texsize.w, texsize.h
@@ -77,41 +90,29 @@ local function add_item(texsize, tex, rect)
     local u0, v0 = texrt.x/iw, texrt.y/ih
     local u1, v1 = (texrt.x+t_ww)/iw, (texrt.y+t_hh)/ih
 
-    local function trans(m, pt)
-        return m and math3d.tovalue(math3d.transform(m, pt, 1)) or pt
+    local   u0v1, u0v0,
+            u1v1, u1v0 = 
+            {u0, v1, 0.0}, {u0, v0, 0.0},
+            {u1, v1, 0.0}, {u1, v0, 0.0}
+    if tm then
+        u0v1, u0v0, u1v1, u1v0 = trans_positions(tm, u0v1, u0v0, u1v1, u1v0)
     end
 
-    local   u0v1 , u0v0 ,
-            u1v1 , u1v0 = 
-            trans(tm, {u0, v1, 0.0}), trans(tm, {u0, v0, 0.0}),
-            trans(tm, {u1, v1, 0.0}), trans(tm, {u1, v0, 0.0})
-
-    
-    local   vv0, vv1,
-            vv2, vv3=
+    local   vv1, vv2,
+            vv3, vv4=
             {x,     0.0, z}, {x,     0.0, z+hh},
             {x+ww,  0.0, z}, {x+ww,  0.0, z+hh}
 
     local pm = posmat(rect.srt)
     if pm then
-        vv0, vv1, vv2, vv3 = math3d.vector(vv0), math3d.vector(vv1), math3d.vector(vv2), math3d.vector(vv3)
-        local center = math3d.mul(math3d.add(vv0, vv3), 0.5)
-        local function trans_pos(v, offset)
-            local vv = math3d.sub(v, offset)
-            return math3d.tovalue(math3d.transform(pm, vv, 1))
-        end
-
-        vv0 = trans_pos(vv0, center)
-        vv1 = trans_pos(vv1, center)
-        vv2 = trans_pos(vv2, center)
-        vv3 = trans_pos(vv3, center)
+        vv1, vv2, vv3, vv4 = trans_positions(pm, vv1, vv2, vv3, vv4)
     end
 
     return itemfmt:pack(
-        vv0[1], vv0[2], vv0[3], u0v1[1], u0v1[2],
-        vv1[1], vv1[2], vv1[3], u0v0[1], u0v0[2],
-        vv2[1], vv2[2], vv2[3], u1v1[1], u1v1[2],
-        vv3[1], vv3[2], vv3[3], u1v0[1], u1v0[2])
+        vv1[1], vv1[2], vv1[3], u0v1[1], u0v1[2],
+        vv2[1], vv2[2], vv2[3], u0v0[1], u0v0[2],
+        vv3[1], vv3[2], vv3[3], u1v1[1], u1v1[2],
+        vv4[1], vv4[2], vv4[3], u1v0[1], u1v0[2])
 end
 
 local function get_tex_size(texpath)

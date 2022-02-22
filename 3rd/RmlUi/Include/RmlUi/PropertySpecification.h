@@ -103,12 +103,10 @@ public:
 	const ShorthandDefinition* GetShorthand(ShorthandId id) const;
 	const ShorthandDefinition* GetShorthand(const std::string& shorthand_name) const;
 
-	/// Parse declaration by name, whether it's a property or shorthand.
+	bool ParsePropertyDeclaration(PropertyIdSet& set, const std::string& property_name) const;
 	bool ParsePropertyDeclaration(PropertyDictionary& dictionary, const std::string& property_name, const std::string& property_value) const;
-	/// Parse property declaration by ID.
 	bool ParsePropertyDeclaration(PropertyDictionary& dictionary, PropertyId property_id, const std::string& property_value) const;
-	/// Parses a shorthand declaration, setting any parsed and validated properties on the given dictionary.
-	/// @return True if all properties were parsed successfully, false otherwise.
+	void ParseShorthandDeclaration(PropertyIdSet& set, ShorthandId shorthand_id) const;
 	bool ParseShorthandDeclaration(PropertyDictionary& dictionary, ShorthandId shorthand_id, const std::string& property_value) const;
 
 private:

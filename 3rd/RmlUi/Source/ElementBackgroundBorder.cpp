@@ -37,7 +37,6 @@ namespace Rml {
 static const auto PI = acosf(-1);
 
 void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path& paddingEdge) {
-	geometry.Release();
 	const Style::ComputedValues& computed = element->GetComputedValues();
 	EdgeInsets<Color> border_color = computed.border_color;
 	Color background_color = computed.background_color;
@@ -56,8 +55,13 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 		ComputePropertyH(computed.border_radius.bottomLeft, element),
 	};
 	
-	geometry.Release();
 	const Layout::Metrics& metrics = element->GetMetrics();
+
+	float outlineWidth = ComputeProperty(element->GetProperty(PropertyId::OutlineWidth), element);
+	if (outlineWidth > 0.f) {
+		Color outlineColor = element->GetProperty(PropertyId::OutlineColor)->GetColor();
+		geometry.AddRect(Rect {Point{}, metrics.frame.size}, outlineWidth, outlineColor);
+	}
 
 	bool topLeftInnerRounded     = metrics.borderWidth.left  < border_radius.topLeft     && metrics.borderWidth.top    < border_radius.topLeft;
 	bool topRightInnerRounded    = metrics.borderWidth.right < border_radius.topRight    && metrics.borderWidth.top    < border_radius.topRight;

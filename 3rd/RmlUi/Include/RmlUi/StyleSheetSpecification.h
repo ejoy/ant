@@ -79,13 +79,7 @@ public:
 	static const ShorthandDefinition* GetShorthand(const std::string& shorthand_name);
 	static const ShorthandDefinition* GetShorthand(ShorthandId id);
 
-	/// Parses a property declaration, setting any parsed and validated properties on the given dictionary.
-	/// @param[in] dictionary The property dictionary which will hold all declared properties.
-	/// @param[in] property_name The name of the declared property.
-	/// @param[in] property_value The values the property is being set to.
-	/// @param[in] source_file The file where this property was declared. Used for error reporting, debugging and relative paths for referenced assets.
-	/// @param[in] line_number The location of the source file where this property was declared. Used for error reporting and debugging.
-	/// @return True if all properties were parsed successfully, false otherwise.
+	static bool ParsePropertyDeclaration(PropertyIdSet& set, const std::string& property_name);
 	static bool ParsePropertyDeclaration(PropertyDictionary& dictionary, const std::string& property_name, const std::string& property_value);
 
 	static PropertyId GetPropertyId(const std::string& property_name);

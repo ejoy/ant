@@ -49,8 +49,9 @@ public:
 		std::vector<Point> points;
 	};
 
-	void AddRect(const Rect& rect, Color col);
-	void AddRect(const Rect& rect, const Rect& uv, Color col);
+	void AddRectFilled(const Rect& rect, Color col);
+	void AddRectFilled(const Rect& rect, const Rect& uv, Color col);
+	void AddRect(const Rect& inner, float width, Color col);
 	void AddQuad(const Quad& quad, Color col);
 	void AddArc(const Path& outer, const Path& inner, Color col);
 	void AddPolygon(const Path& points, Color col);
