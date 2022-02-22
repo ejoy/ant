@@ -48,6 +48,7 @@ function cvt_p2cm_sys:init()
             primitive_filter = {
 				filter_type = "",
 			},
+            visible = false,
             camera_ref = ecs.create_entity{
                 policy = {
                     "ant.camera|camera",

@@ -3,7 +3,7 @@ $output v_texcoord0
 
 void main()
 {
-    vec2 coord = vec2_splat(
+    vec2 coord = vec2(
         float((gl_VertexID & 1) << 2),
         float((gl_VertexID & 2) << 1));
 
