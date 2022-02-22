@@ -45,9 +45,8 @@ local function show_main_view()
             x, y = x - mp[1], y - mp[2]
 
             if x ~= rt.x or y ~= rt.y or ww ~= rt.w or hh ~= rt.h then
-                rt.x, rt.y = x, y
-                rt.w, rt.h = ww, hh
-                irq.set_view_rect("tonemapping_queue", rt)
+                local vp = world.args.viewport
+                vp.x, vp.y, vp.w, vp.h = x, y, ww, hh
                 world:pub{"resize", ww, hh}
             end
         end

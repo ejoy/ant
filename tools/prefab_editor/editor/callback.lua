@@ -5,11 +5,23 @@ local worlds        = require "editor.worlds"
 local cb = {}
 
 function cb.init(width, height, cfg)
-    worlds.create "prefab_editor" {
+    local ecs = cfg.ecs
+    local m, world = worlds.create "prefab_editor" {
         fbw=width, fbh=height,
         viewport = {x=0, y=0, w=1, h=1},
-        ecs = cfg.ecs,
+        ecs = ecs,
     }
+    local oldmouse = m.mouse
+    m.mouse = function (x, y, ...)
+        -- local q = world.w:singleton("tonemapping_queue", "render_target:in")
+        -- local rt = q.render_target.view_rect
+        -- oldmouse(x-rt.x, y-rt.y, ...)
+        oldmouse(x, y, ...)
+    end
+    m.size = function ()
+        -- no need to push resize
+        -- we check editor scene's view size in gui_system.lua:end_frame function
+    end
     event("init", width, height)
 end
 

@@ -5,6 +5,8 @@ local w = world.w
 local fbmgr 	= require "framebuffer_mgr"
 
 local setting	= import_package "ant.settings".setting
+local mathpkg	= import_package "ant.math"
+local mu		= mathpkg.util
 
 local vp_detect_sys = ecs.system "viewport_detect_system"
 
@@ -94,6 +96,9 @@ function vp_detect_sys:data_changed()
 	end
 
 	if new_fbw then
+		if not mu.is_rect_equal(irq.view_rect "tonemapping_queue", world.args.viewport) then
+			irq.set_view_rect("tonemapping_queue", world.args.viewport)
+		end
 		update_render_target{w=new_fbw, h=new_fbh}
 	end
 end

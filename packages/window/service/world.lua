@@ -29,13 +29,36 @@ local world
 local encoderBegin = false
 local quit
 
-local function Render()
+local init_width, init_height
+local do_size
+
+local function calc_viewport(fbw, fbh)
+	return {
+		x=0, y=0, w=fbw, h=fbh
+	}
+end
+
+local function update_config(cfg, ww, hh)
+	cfg.fbw, cfg.fbh = ww, hh
+	cfg.viewport = calc_viewport(ww, hh)
+end
+
+local function check_size()
+	local args = world.args
+	if init_width ~= args.fbw or init_height ~= args.fbh then
+		update_config(args, init_width, init_height)
+		do_size(init_width, init_height)
+		rhwi.reset(nil, init_width, init_height)
+	end
+end
+
+local function render()
 	while true do
 		world:pipeline_update()
 		bgfx.encoder_end()
 		encoderBegin = false
 		do
-			--local _ <close> = world:cpu_stat "bgfx.frame"
+			check_size()
 			rhwi.frame()
 		end
 		world:pipeline_update_end()
@@ -63,20 +86,14 @@ local function check_load_framebuffer_size(w, h)
 	return w, h
 end
 
-local function calc_viewport(fbw, fbh)
-	return {
-		x=0, y=0, w=fbw, h=fbh
-	}
-end
-
 function S.init(nwh, context, width, height)
-	local fbw, fbh = check_load_framebuffer_size(width, height)
-	log.info("framebuffer size:", fbw, fbh)
+	init_width, init_height = check_load_framebuffer_size(width, height)
+	log.info("framebuffer size:", init_width, init_height)
 	rhwi.init {
-		nwh = nwh,
-		context = context,
-		width = fbw,
-		height = fbh,
+		nwh		= nwh,
+		context	= context,
+		width	= init_width,
+		height	= init_height,
 	}
 	cr.init()
 	bgfx.set_debug "T"
@@ -85,28 +102,25 @@ function S.init(nwh, context, width, height)
 	import_package "ant.render".init_bgfx()
 	bgfx.encoder_begin()
 	encoderBegin = true
-	config.fbw, config.fbh = fbw, fbh
-	config.viewport = calc_viewport(fbw, fbh)
+	update_config(config, init_width, init_height)
 	world = ecs.new_world(config)
-	local ev = inputmgr.create(world, "win32")
-	S.mouse_wheel = ev.mouse_wheel
-	S.mouse = ev.mouse
-	S.touch = ev.touch
-	S.keyboard = ev.keyboard
-	S.char = ev.char
-	S.size = function (w, h)
-		ev.size(w, h)
-		world:pub{"view_resize", w, h}
+	local ev 		= inputmgr.create(world, "win32")
+	S.mouse_wheel	= ev.mouse_wheel
+	S.mouse 		= ev.mouse
+	S.touch			= ev.touch
+	S.keyboard		= ev.keyboard
+	S.char			= ev.char
+	S.size			= function (ww, hh)
+		init_width, init_height = check_load_framebuffer_size(ww, hh)
 	end
-
-	world:pub {"viewsize", width, height}
+	do_size			= ev.size
 	world:pipeline_init()
 
 	for _, size in ipairs(resizeQueue) do
 		S.size(size[1], size[2])
 	end
 
-	ltask.fork(Render)
+	ltask.fork(render)
 end
 
 S.mouse_wheel = function () end
