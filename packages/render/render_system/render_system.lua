@@ -14,8 +14,9 @@ local viewidmgr = require "viewid_mgr"
 
 function render_sys:init()
 	for n, b in pairs(viewidmgr.all_bindings()) do
-		for viewid=b[1], b[2] do
-			bgfx.set_view_name(viewid, n .. "_" .. (viewid-b[1]))
+		for i=0, b[2]-1 do
+			local viewid = b[1]+i
+			bgfx.set_view_name(viewid, n .. "_" .. i)
 		end
 	end
 end
