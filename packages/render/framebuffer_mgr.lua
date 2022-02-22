@@ -109,10 +109,12 @@ local function destroy_rb(rbidx, mark_rbidx)
 	end
 end
 
-function mgr.destroy(fbidx)
+function mgr.destroy(fbidx, keep_rbs)
 	local oldfb = framebuffers[fbidx]
-	for i=1, #oldfb do
-		destroy_rb(oldfb[i].rbidx, true)
+	if not keep_rbs then
+		for i=1, #oldfb do
+			destroy_rb(oldfb[i].rbidx, true)
+		end
 	end
 	bgfx.destroy(oldfb.handle)
 	framebuffers[fbidx] = nil
@@ -147,7 +149,7 @@ local function create_rb_handle(rb)
 	end
 
 	if rb.cubemap then
-		bgfx.create_texturecube(rb.w, rb.h, rb.mipmap, rb.layers, rb.format, rb.flags)
+		return bgfx.create_texturecube(rb.size, rb.mipmap, rb.layers, rb.format, rb.flags)
 	end
 	return bgfx.create_texture2d(rb.w, rb.h, rb.mipmap, rb.layers, rb.format, rb.flags)
 end
