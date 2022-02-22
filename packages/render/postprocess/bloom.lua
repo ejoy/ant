@@ -16,12 +16,9 @@ local irender   = ecs.import.interface "ant.render|irender"
 local setting   = import_package "ant.settings".setting
 local enable_bloom = setting:get "graphic/postprocess/bloom/enable"
 
-local bloom_chain_count<const> = 4
-local bloom_ds_viewid<const> = viewidmgr.get "bloom_ds"
-viewidmgr.check_range("bloom_ds", bloom_chain_count)
-
-local bloom_us_viewid<const> = viewidmgr.get "bloom_us"
-viewidmgr.check_range("bloom_us", bloom_chain_count)
+local bloom_ds_viewid<const>, bloom_chain_count<const> = viewidmgr.get_range "bloom_ds"
+local bloom_us_viewid<const>, bloom_chain_count2<const> = viewidmgr.get_range "bloom_us"
+assert(bloom_chain_count == bloom_chain_count2)
 
 for i=1, bloom_chain_count do
     w:register{name="bloom_downsample"..i}

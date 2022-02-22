@@ -8,9 +8,13 @@ local renderpkg = import_package "ant.render"
 local viewidmgr, fbmgr = renderpkg.viewidmgr, renderpkg.fbmgr
 local sampler   = renderpkg.sampler
 
+local mathpkg   = import_package "ant.math"
+local mc        = mathpkg.constant
+
 local ientity   = ecs.import.interface "ant.render|ientity"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 local irender   = ecs.import.interface "ant.render|irender"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local cvt_p2cm_viewid = viewidmgr.generate "cvt_p2cm"
 
@@ -96,13 +100,14 @@ local cubemap_flags<const> = sampler.sampler_flag {
 
 local function convert(tex)
     local ti = tex.texinfo
-    local size = math.min(ti.width, ti.height)
+    assert(ti.width==ti.height*2 or ti.width*2==ti.height)
+    local size = math.min(ti.width, ti.height) // 2
 
-    local cm_rbidx = fbmgr.create_rb{format="RGBA32F", width=size, height=size, layers=1, mipmap=true, flags=cubemap_flags}
+    local cm_rbidx = fbmgr.create_rb{format="RGBA32F", size=size, layers=1, mipmap=true, flags=cubemap_flags, cubemap=true}
     local q = w:singleton("cvt_p2cm_queue", "render_target:in queue_name:in")
     local rt = q.render_target
     local drawer = w:singleton("cvt_p2cm_drawer", "render_object:in")
-
+    local s_tex = {stage=0, texture=tex}
     for i=1, 6 do
         local fbidx = fbmgr.create{
             rbidx = cm_rbidx,
@@ -113,12 +118,16 @@ local function convert(tex)
         }
 
         rt.fb_idx = fbidx
-        rt.view_rect.w = size
-        rt.view_rect.h = size
+        local vr = rt.view_rect
+        vr.x, vr.y, vr.w, vr.h = 0, 0, size, size
         irq.update_rendertarget(q.queue_name, rt)
+        local ro = drawer.render_object
+        ro.worldmat = mc.IDENTITY_MAT
+        imaterial.set_property_directly(ro.properties, "s_tex", s_tex)
 
-        irender.draw(rt.viewid, drawer.ro)
-        fbmgr.destroy(fbidx)
+        irender.draw(rt.viewid, ro)
+        local keep_rbs<const> = true
+        fbmgr.destroy(fbidx, keep_rbs)
     end
 
     return fbmgr.get_rb(cm_rbidx).handle
