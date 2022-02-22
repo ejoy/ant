@@ -4,6 +4,12 @@ $input v_posWS
 #include "common/common.sh"
 
 #ifdef CUBEMAP_SKY
+#undef CUBEMAP_SKY
+#endif //CUBEMAP_SKY
+
+#define CUBEMAP_SKY 1
+
+#ifdef CUBEMAP_SKY
 SAMPLERCUBE(s_skybox, 0);
 #else //!CUBEMAP_SKY
 SAMPLER2D(s_skybox, 0);

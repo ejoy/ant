@@ -1,9 +1,10 @@
 fx:
   vs: /pkg/ant.resources/shaders/fullscreen/vs_fullscreen.sc
-  fs: /pkg/ant.resources/shaders/fullscreen/fs_fullscreen.sc
+  fs: /pkg/ant.resources/shaders/fullscreen/fs_cvt_p2cm.sc
   setting:
     lighting: off
 properties:
+  u_param: {0, 0, 0, 0}
   s_tex:
     stage: 0
     texture: /pkg/ant.resources/textures/black.texture

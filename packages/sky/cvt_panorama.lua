@@ -16,7 +16,7 @@ local irq       = ecs.import.interface "ant.render|irenderqueue"
 local irender   = ecs.import.interface "ant.render|irender"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 
-local cvt_p2cm_viewid = viewidmgr.generate "cvt_p2cm"
+local cvt_p2cm_viewid = viewidmgr.generate("cvt_p2cm", 6)
 
 local cvt_p2cm_sys = ecs.system "cvt_p2cm_system"
 
@@ -107,28 +107,45 @@ local function convert(tex)
     local q = w:singleton("cvt_p2cm_queue", "render_target:in queue_name:in")
     local rt = q.render_target
     local drawer = w:singleton("cvt_p2cm_drawer", "render_object:in")
-    local s_tex = {stage=0, texture=tex}
-    for i=1, 6 do
+    local ro = drawer.render_object
+    ro.worldmat = mc.IDENTITY_MAT
+    imaterial.set_property_directly(ro.properties, "s_tex", {stage=0, texture=tex})
+    local vr = rt.view_rect
+    vr.x, vr.y, vr.w, vr.h = 0, 0, size, size
+
+    local fbs = {}
+    for faceidx=0, 5 do
         local fbidx = fbmgr.create{
             rbidx = cm_rbidx,
-            layer = i-1,
+            layer = faceidx,
             resolve = "g",
             mip = 0,
             numlayer = 1,
         }
+        fbs[#fbs+1] = fbidx
 
+        --!!NOTE!! we should create 6 render queue to pair with 1 viewid of 1 framebuffer for 1 render queue
+        -- this just temp code here!!!!!!
+        rt.viewid = cvt_p2cm_viewid + faceidx
         rt.fb_idx = fbidx
-        local vr = rt.view_rect
-        vr.x, vr.y, vr.w, vr.h = 0, 0, size, size
         irq.update_rendertarget(q.queue_name, rt)
-        local ro = drawer.render_object
-        ro.worldmat = mc.IDENTITY_MAT
-        imaterial.set_property_directly(ro.properties, "s_tex", s_tex)
+
+        imaterial.set_property_directly(ro.properties, "u_param", {faceidx, 0.0, 0.0, 0.0})
 
         irender.draw(rt.viewid, ro)
-        local keep_rbs<const> = true
+
+        fbmgr.unbind(rt.viewid) --can be remove when multi render queue is used
+    end
+
+    local keep_rbs<const> = true
+    for _, fbidx in ipairs(fbs) do
         fbmgr.destroy(fbidx, keep_rbs)
     end
+
+    rt.fb_idx = nil
+    irq.update_rendertarget(q.queue_name, rt)
+
+    w:remove(q)
 
     return fbmgr.get_rb(cm_rbidx).handle
 end
