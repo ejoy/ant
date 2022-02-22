@@ -27,7 +27,6 @@ local joint_scale = 0.25
 local sample_ratio = 50.0
 local anim_e = {}
 local current_joint
-local joint_pose = {}
 local allanims = {}
 local current_anim
 local anim_name_list = {}
@@ -56,7 +55,7 @@ local dir_name = {
 }
 local function update_animation()
     local runtime_anim = current_anim.runtime_anim
-    runtime_anim._handle = iani.build_animation(runtime_anim.raw_animation, joint_pose, current_anim.joint_anims, sample_ratio)
+    runtime_anim._handle = iani.build_animation(current_skeleton._handle, runtime_anim.raw_animation, current_anim.joint_anims, sample_ratio)
 end
 
 local function min_max_range_value(clips, clip_index)
@@ -801,7 +800,9 @@ function m.bind(e)
             end
         end
     end
-    current_skeleton = e.skeleton
+    if not current_skeleton then
+        current_skeleton = e.skeleton
+    end
     if not joint_utils.on_select_joint then
         joint_utils.on_select_joint = function(old, new)
             if old and old.mesh then
@@ -837,11 +838,7 @@ function m.bind(e)
             if pose_result then
                 for _, joint in ipairs(joints_list) do
                     if joint.mesh and joint.mesh.render_object then
-                        local srt = pose_result:joint(joint.index)
-                        if not joint_pose[joint.name] then
-                            joint_pose[joint.name] = math3d.ref(srt)
-                        end
-                        iom.set_srt_matrix(joint.mesh, math3d.mul(mc.R2L_MAT, srt))
+                        iom.set_srt_matrix(joint.mesh, math3d.mul(mc.R2L_MAT, pose_result:joint(joint.index)))
                         iom.set_scale(joint.mesh, joint_scale)
                     end
                 end
