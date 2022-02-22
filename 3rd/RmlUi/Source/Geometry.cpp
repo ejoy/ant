@@ -97,7 +97,7 @@ static Point PointClamp(const Point& v, const Point& mn, const Point& mx) {
 	);
 }
 
-void Geometry::AddRect(const Rect& rect, Color col) {
+void Geometry::AddRectFilled(const Rect& rect, Color col) {
 	if (col.a == 0) {
 		return;
 	}
@@ -130,7 +130,7 @@ void Geometry::AddQuad(const Quad& quad, Color col) {
 	DrawQuad(vtx, idx, (Index)vsz, quad.a, quad.b, quad.c, quad.d, col);
 }
 
-void Geometry::AddRect(const Rect& rect, const Rect& uv, Color col) {
+void Geometry::AddRectFilled(const Rect& rect, const Rect& uv, Color col) {
 	if (col.a == 0) {
 		return;
 	}
@@ -144,6 +144,36 @@ void Geometry::AddRect(const Rect& rect, const Rect& uv, Color col) {
 	Index* idx = &indices[isz];
 	DrawRect(vtx, idx, (Index)vsz, rect, col);
 	DrawRectUV(vtx, uv);
+}
+
+void Geometry::AddRect(const Rect& inner, float width, Color col) {
+	Rect outer = inner + EdgeInsets<float> {width,width,width,width};
+	CornerInsets<Point> outerVertex = outer.Vertex();
+	CornerInsets<Point> innerVertex = inner.Vertex();
+	AddQuad(Quad {
+		outerVertex.topLeft,
+		outerVertex.topRight,
+		innerVertex.topRight,
+		innerVertex.topLeft,
+	}, col);
+	AddQuad(Quad {
+		outerVertex.topRight,
+		outerVertex.bottomRight,
+		innerVertex.bottomRight,
+		innerVertex.topRight,
+	}, col);
+	AddQuad(Quad {
+		outerVertex.bottomRight,
+		outerVertex.bottomLeft,
+		innerVertex.bottomLeft,
+		innerVertex.bottomRight,
+	}, col);
+	AddQuad(Quad {
+		outerVertex.bottomLeft,
+		outerVertex.topLeft,
+		innerVertex.topLeft,
+		innerVertex.bottomLeft,
+	}, col);
 }
 
 void Geometry::AddArc(const Path& outer, const Path& inner, Color col) {

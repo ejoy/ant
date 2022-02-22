@@ -127,7 +127,7 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	if (paddingEdge.size() == 0 
 		|| (origin == Style::BoxType::ContentBox && metrics.contentInsets != EdgeInsets<float>{})
 	) {
-		geometry.AddRect(surface, colour);
+		geometry.AddRectFilled(surface, colour);
 		geometry.UpdateUV(4, surface, uv);
 	}
 	else {

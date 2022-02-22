@@ -355,7 +355,7 @@ void ElementText::UpdateDecoration(const FontFaceHandle font_face_handle) {
 		default: return;
 		}
 
-		decoration.AddRect(
+		decoration.AddRectFilled(
 			{ position, { (float)width, underline_thickness } },
 			color
 		);
