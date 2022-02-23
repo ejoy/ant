@@ -246,7 +246,8 @@ function m:init_world()
     local iRmlUi = ecs.import.interface "ant.rmlui|irmlui"
     stat_window = iRmlUi.open "bgfx_stat.rml"
 end
-
+local mouse_pos_y
+local mouse_pos_y
 function m:ui_update()
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.2, 0.2, 0.2, 1)
@@ -271,8 +272,8 @@ function m:ui_update()
     
     --drag file to view
     if imgui.util.IsMouseDragging(0) then
-        local x, y = imgui.util.GetMousePos()
-        if mainview.in_view(x, y) then
+        --local x, y = imgui.util.GetMousePos()
+        if mainview.in_view(mouse_pos_x, mouse_pos_y) then
             if not drag_file then
                 local dropdata = imgui.widget.GetDragDropPayload()
                 if dropdata and (string.sub(dropdata, -7) == ".prefab"
@@ -307,7 +308,7 @@ local event_resource_browser= world:sub {"ResourceBrowser"}
 local event_window_title    = world:sub {"WindowTitle"}
 local event_create          = world:sub {"Create"}
 local event_gizmo           = world:sub {"Gizmo"}
-
+local event_mouse           = world:sub {"mouse"}
 local light_gizmo = ecs.require "gizmo.light"
 
 local aabb_color_i <const> = 0x6060ffff
@@ -390,6 +391,10 @@ local function update_visible(node, visible)
     end
 end
 function m:handle_event()
+    for _, _, _, x, y in event_mouse:unpack() do
+        mouse_pos_x = x
+        mouse_pos_y = y
+    end
     for _, e in event_update_aabb:unpack() do
         update_heightlight_aabb(e)
     end
