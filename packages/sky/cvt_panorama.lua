@@ -42,10 +42,7 @@ function cvt_p2cm_sys:init()
                 viewid = cvt_p2cm_viewid,
                 view_rect = {x=0, y=0, w=1, h=1},
                 clear_state = {
-                    color = 0,
-                    depth = 1,
-                    stencil = 0,
-                    clear = "CDS"
+                    clear = ""
                 },
                 fb_idx = nil,
             },
