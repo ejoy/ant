@@ -435,7 +435,7 @@ bool Document::ProcessChar(int character)
 	return focus->DispatchEvent(EventId::Textinput, parameters);
 }
 
-bool Document::ProcessMouseMove(MouseButton button, int x, int y, int key_modifier_state) {
+bool Document::ProcessMouseMove(MouseButton button, int x, int y) {
 	// Check whether the mouse moved since the last event came through.
 	bool mouse_moved = (x != mouse_position.x) || (y != mouse_position.y);
 	if (mouse_moved) {
@@ -446,11 +446,9 @@ bool Document::ProcessMouseMove(MouseButton button, int x, int y, int key_modifi
 	// Generate the parameters for the mouse events (there could be a few!).
 	EventDictionary parameters;
 	GenerateMouseEventParameters(parameters, mouse_position, button);
-	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 
 	EventDictionary drag_parameters;
 	GenerateMouseEventParameters(drag_parameters, mouse_position, MouseButton::None);
-	GenerateKeyModifierEventParameters(drag_parameters, key_modifier_state);
 
 	// Update the current hover chain. This will send all necessary 'onmouseout', 'onmouseover', 'ondragout' and
 	// 'ondragover' messages.
@@ -469,11 +467,10 @@ bool Document::ProcessMouseMove(MouseButton button, int x, int y, int key_modifi
 	return handle;
 }
 
-bool Document::ProcessMouseButtonDown(MouseButton button, int x, int y, int key_modifier_state) {
+bool Document::ProcessMouseButtonDown(MouseButton button, int x, int y) {
 	Point mouse {(float)x, (float)y};
 	EventDictionary parameters;
 	GenerateMouseEventParameters(parameters, mouse, button);
-	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 	bool handle = false;
 	active = body->GetElementAtPoint(mouse);
 	if (active) {
@@ -490,11 +487,10 @@ bool Document::ProcessMouseButtonDown(MouseButton button, int x, int y, int key_
 	return handle;
 }
 
-bool Document::ProcessMouseButtonUp(MouseButton button, int x, int y, int key_modifier_state) {
+bool Document::ProcessMouseButtonUp(MouseButton button, int x, int y) {
 	Point mouse {(float)x, (float)y};
 	EventDictionary parameters;
 	GenerateMouseEventParameters(parameters, mouse, button);
-	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 	bool handle = false;
 	active = body->GetElementAtPoint(mouse);
 	if (active) {
@@ -517,10 +513,9 @@ bool Document::ProcessMouseButtonUp(MouseButton button, int x, int y, int key_mo
 	return handle;
 }
 
-void Document::ProcessMouseWheel(float wheel_delta, int key_modifier_state) {
+void Document::ProcessMouseWheel(float wheel_delta) {
 	if (hover) {
 		EventDictionary scroll_parameters;
-		GenerateKeyModifierEventParameters(scroll_parameters, key_modifier_state);
 		scroll_parameters["wheel_delta"] = wheel_delta;
 
 		hover->DispatchEvent(EventId::Mousescroll, scroll_parameters);
