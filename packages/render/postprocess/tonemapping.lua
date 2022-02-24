@@ -69,7 +69,8 @@ function tm_sys:init_world()
                 view_rect   = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
                 view_mode = "",
                 clear_state = {
-                    clear = "",
+                    clear = "D", --clear z buffer for effect
+                    depth = 1
                 },
             },
             queue_name = "tonemapping_queue",
