@@ -54,11 +54,11 @@ end
 
 local function render()
 	while true do
+		check_size()
 		world:pipeline_update()
 		bgfx.encoder_end()
 		encoderBegin = false
 		do
-			check_size()
 			rhwi.frame()
 		end
 		world:pipeline_update_end()
