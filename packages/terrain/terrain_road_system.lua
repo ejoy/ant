@@ -62,7 +62,7 @@ local function instance(rt, parent, iiw, iih, unit)
 end
 
 function terrain_road_sys:entity_init()
-    for e in w:select "INIT shape_terrain:in reference:in" do
+    for e in w:select "INIT shape_terrain:in id:in" do
         local st = e.shape_terrain
         local ww, hh = st.width, st.height
         local terrainfileds = st.terrain_fields
@@ -74,7 +74,7 @@ function terrain_road_sys:entity_init()
                 local field = terrainfileds[idx]
                 local rt = field.roadtype
                 if rt then
-                    field.instance_id = instance(rt, e.reference, iiw, iih, unit)
+                    field.instance_id = instance(rt, e.id, iiw, iih, unit)
                 end
             end
         end
@@ -98,8 +98,8 @@ function itr.set_road(te, roadtype, iiw, iih)
         world:pub {"terrain_road", "road", "remove", field.instance_id}
     end
     field.roadtype = roadtype
-    w:sync("reference:in", te)
-    field.instance_id = instance(roadtype, te.reference, iiw, iih, st.unit)
+    w:sync("id:in", te)
+    field.instance_id = instance(roadtype, te.id, iiw, iih, st.unit)
 end
 
 function itr.set_road_resource(roadtype, prefabres)

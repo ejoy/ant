@@ -109,9 +109,9 @@ function second_camera_sys:update_camera()
 end
 
 function second_camera_sys:entity_remove()
-    for e in w:select "REMOVED camera:in reference:in" do
+    for e in w:select "REMOVED camera:in id:in" do
         local sc = w:singleton("second_view", "camera_ref:in")
-        if e.reference == sc.camera_ref then
+        if e.id == sc.camera_ref then
             irq.set_camera("second_view", DEFAULT_camera)
         end
     end

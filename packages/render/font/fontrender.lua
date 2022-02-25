@@ -29,7 +29,7 @@ local function calc_screen_pos(pos3d, queuename)
     queuename = queuename or "main_queue"
 
     local q = w:singleton(queuename, "camera_ref:in")
-	local camera = icamera.find_camera(q.camera_ref)
+	local camera = world:entity(q.camera_ref).camera
     local vp = camera.viewprojmat
     local posNDC = math3d.transformH(vp, pos3d)
 
@@ -53,10 +53,10 @@ local fontsys = ecs.system "font_system"
 
 local vertical_mask<const> = math3d.ref(math3d.vector(0, 1, 0, 0))
 local function calc_aabb_pos(e, offset, offsetop)
-    local attach_e = e.render_object.attach_eid
-    if attach_e then
-        w:sync("render_object:in", attach_e)
-        local aabb = attach_e.render_object.aabb
+    local a_eid = e.render_object.attach_eid
+    if a_eid then
+        local ae = world:entity(a_eid)
+        local aabb = ae.render_object.aabb
         if aabb then
             local center, extent = math3d.aabb_center_extents(aabb)
             local pos = offsetop(center, extent)
@@ -136,9 +136,10 @@ function fontsys:component_init()
 end
 
 function fontsys:camera_usage()
-    for _, e, attach in ev:unpack() do
-        w:sync("render_object:in", e)
-        e.render_object.attach_eid = attach
+    for _, eid, attach in ev:unpack() do
+        local e = world:entity(eid)
+        local ro = e.render_object
+        ro.attach_eid = attach
         imaterial.set_property(e, "s_tex", fonttex)
     end
     for e in w:select "font:in show_config:in render_object:in" do

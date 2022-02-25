@@ -400,7 +400,7 @@ function cterrain_fields:init()
 end
 
 function shape_ts:entity_init()
-    for e in w:select "INIT shape_terrain:in materials:in reference:in" do
+    for e in w:select "INIT shape_terrain:in materials:in id:in" do
         local st = e.shape_terrain
 
         if st.terrain_fields == nil then
@@ -458,13 +458,13 @@ function shape_ts:entity_init()
                             name        = "section" .. sectionidx,
                             shape_terrain_drawer = true,
                             on_ready = function(entity)
-                                w:sync("reference:in", entity)
-                                world:pub {"shape_terrain", "on_ready", entity.reference, e.reference}
+                                w:sync("id:in", entity)
+                                world:pub {"shape_terrain", "on_ready", entity.id, e.id}
                             end,
                         },
                     }
 
-                    ecs.method.set_parent(ce, e.reference)
+                    ecs.method.set_parent(ce, e.id)
                 end
 
                 local edge_meshes = build_section_edge_mesh(ss, sectionidx, unit, ctf)
@@ -485,12 +485,12 @@ function shape_ts:entity_init()
                             name        = "section_edge" .. sectionidx,
                             shape_terrain_edge_drawer = true,
                             on_ready = function(entity)
-                                w:sync("reference:in", entity)
-                                world:pub {"shape_terrain", "on_ready", entity.reference, e.reference}
+                                w:sync("id:in", entity)
+                                world:pub {"shape_terrain", "on_ready", entity.id, e.id}
                             end,
                         },
                     }
-                    ecs.method.set_parent(ce, e.reference)
+                    ecs.method.set_parent(ce, e.id)
                 end
             end
         end

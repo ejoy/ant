@@ -139,11 +139,8 @@ end
 
 local evSceneChanged = world:sub {"scene_changed"}
 function s:update_transform()
-	for _, id in evSceneChanged:unpack() do
-		local e = world:entity(id)
-		if e then
-			e.scene.changed = current_changed
-		end
+	for _, e in evSceneChanged:unpack() do
+		e.scene.changed = current_changed
 	end
 
 	local cache = {}

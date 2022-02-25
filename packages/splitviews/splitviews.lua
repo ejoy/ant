@@ -215,8 +215,8 @@ function svs:update_camera()
     for k, v in pairs(orthoview) do
         local qn = v.name
         local qe = w:singleton(qn, "camera_ref:in")
-        local cref = qe.camera_ref
-        w:sync("camera:in scene:in", cref)
+        local ceid = qe.camera_ref
+        local cref = world:entity(ceid)
         local camera = cref.camera
         local scene = cref.scene
         local worldmat = scene._worldmat

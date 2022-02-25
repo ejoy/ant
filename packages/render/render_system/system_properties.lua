@@ -203,7 +203,7 @@ local function update_csm_properties()
 		local idx = csm.index
 		local split_distanceVS = csm.split_distance_VS
 		split_distances[idx] = split_distanceVS
-		local camera = icamera.find_camera(v.camera_ref)
+		local camera = world:entity(v.camera_ref).camera
 		csm_matrixs[idx].id = math3d.mul(ishadow.crop_matrix(idx), camera.viewprojmat)
 	end
 
@@ -248,7 +248,7 @@ end
 
 function isp.update()
 	update_timer_properties()
-	local cameraref = main_camera_ref()
+	local cameraref = world:entity(main_camera_ref())
 	local camerapos = iom.get_position(cameraref)
 	local f = icamera.get_frustum(cameraref)
 	local mainrt = main_render_target()

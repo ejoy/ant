@@ -17,7 +17,6 @@ interface "icamera"
     .method "lookto"
     .method "focus_obj"
     .method "focus_aabb"
-    .method "find_camera"   --TODO: need remove
     .method "world_to_screen"
 
 component "exposure".type "lua"

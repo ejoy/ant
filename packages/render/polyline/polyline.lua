@@ -167,7 +167,7 @@ local function add_polylines(polymesh, line_width, color, material)
             filter_state= "main_view",
             name        = "polyline",
             on_ready = function (e)
-                w:sync("polyline:in", e)
+                w:sync("polyline:in render_object:in", e)
                 local pl = e.polyline
                 imaterial.set_property(e, "u_line_info", {pl.width, 0.0, 0.0, 0.0})
                 imaterial.set_property(e, "u_color", pl.color)

@@ -7,31 +7,22 @@ local mc     = import_package "ant.math".constant
 
 local iobj_motion = ecs.interface "iobj_motion"
 
-local function get_scene(eid)
-    local e = world:entity(eid)
-    return e.scene
-end
-
-local function get_srt(e)
-    return get_scene(e).srt
-end
-
 local function set_changed(e)
     world:pub {"scene_changed", e}
 end
 
 function iobj_motion.get_position(e)
-    return get_srt(e).t
+    return e.scene.srt.t
 end
 
 function iobj_motion.set_position(e, pos)
-    local srt = get_srt(e)
+    local srt = e.scene.srt
     srt.t.v = pos
     set_changed(e)
 end
 
 function iobj_motion.get_direction(e)
-    return math3d.todirection(get_srt(e).r)
+    return math3d.todirection(e.scene.srt.r)
 end
 
 local function set_srt(srt_, s, r, t)
@@ -41,7 +32,7 @@ local function set_srt(srt_, s, r, t)
 end
 
 function iobj_motion.set_direction(e, dir)
-    local rc = get_scene(e)
+    local rc = e.scene
     local srt = rc.srt
     if rc.updir then
         local _srt = math3d.inverse(math3d.lookto(srt.t, dir, rc.updir))
@@ -54,7 +45,7 @@ function iobj_motion.set_direction(e, dir)
 end
 
 function iobj_motion.set_srt(e, s, r, t)
-    set_srt(get_srt(e), s, r, t)
+    set_srt(e.scene.srt, s, r, t)
     set_changed(e)
 end
 
@@ -64,7 +55,7 @@ function iobj_motion.set_srt_matrix(e, srt)
 end
 
 function iobj_motion.set_view(e, pos, dir, updir)
-    local scene = get_scene(e)
+    local scene = e.scene
     local srt = scene.srt
     if updir then
         if scene.updir == nil then
@@ -81,7 +72,7 @@ function iobj_motion.set_view(e, pos, dir, updir)
 end
 
 function iobj_motion.set_scale(e, scale)
-    local srt = get_srt(e)
+    local srt = e.scene.srt
     if type(scale) == "number" then
         srt.s.v = {scale, scale, scale}
     else
@@ -91,13 +82,13 @@ function iobj_motion.set_scale(e, scale)
 end
 
 function iobj_motion.get_scale(e)
-    return get_srt(e).s
+    return e.scene.srt.s
 end
 
 function iobj_motion.set_rotation(e, rot)
-    local rc = get_scene(e)
-    local srt = rc.srt
-    if rc.updir then
+    local scene = e.scene
+    local srt = scene.srt
+    if scene.updir then
         local viewdir
         if type(rot) == "table" then
             viewdir = math3d.todirection(math3d.quaternion{math.rad(rot[1]), math.rad(rot[2]), math.rad(rot[3])})
@@ -115,16 +106,16 @@ function iobj_motion.set_rotation(e, rot)
 end
 
 function iobj_motion.get_rotation(e)
-    return get_srt(e).r
+    return e.scene.srt.r
 end
 
 function iobj_motion.worldmat(e)
-    local scene = get_scene(e)
+    local scene = e.scene
     return scene._worldmat
 end
 
 function iobj_motion.lookto(e, eyepos, viewdir, updir)
-    local scene = get_scene(e)
+    local scene = e.scene
     if updir then
         if scene.updir == nil then
             scene.updir = math3d.ref(mc.YAXIS)
@@ -133,12 +124,12 @@ function iobj_motion.lookto(e, eyepos, viewdir, updir)
     end
     local srt = math3d.inverse(math3d.lookto(eyepos, viewdir, updir))
     local s, r, t = math3d.srt(srt)
-    set_srt(get_srt(e), s, r, t)
+    set_srt(e.scene.srt, s, r, t)
     set_changed(e)
 end
 
 function iobj_motion.move_delta(e, delta_vec)
-    local srt = get_srt(e)
+    local srt = e.scene.srt
     local pos = math3d.add(srt.t, delta_vec)
     iobj_motion.set_position(e, pos)
 end
@@ -149,7 +140,7 @@ function iobj_motion.move_along_axis(e, axis, delta)
 end
 
 function iobj_motion.move(e, v)
-    local srt = get_srt(e)
+    local srt = e.scene.srt
     local p = math3d.vector(srt.t)
     local srtmat = math3d.matrix(srt)
     for i=1, 3 do
@@ -159,19 +150,19 @@ function iobj_motion.move(e, v)
 end
 
 function iobj_motion.move_right(e, v)
-    local srt = get_srt(e)
+    local srt = e.scene.srt
     local right = math3d.transform(srt.r, mc.XAXIS, 0)
     iobj_motion.move_along_axis(e, right, v)
 end
 
 function iobj_motion.move_up(e, v)
-    local srt = get_srt(e)
+    local srt = e.scene.srt
     local up = math3d.transform(srt.r, mc.YAXIS, 0)
     iobj_motion.move_along_axis(e, up, v)
 end
 
 function iobj_motion.move_forward(e, v)
-    local srt = get_srt(e)
+    local srt = e.scene.srt
     local f = math3d.todirection(srt.r)
     iobj_motion.move_along_axis(e, f, v)
 end
@@ -207,7 +198,7 @@ end
 
 function iobj_motion.rotate_forward_vector(e, rotateX, rotateY)
     if rotateX or rotateY then
-        local scene = get_scene(e)
+        local scene = e.scene
         local srt = scene.srt
         local srtmat = math3d.matrix(srt)
         local viewdir = math3d.normalize(rotate_forword_vector(srtmat, rotateX, rotateY))
@@ -236,7 +227,7 @@ function iobj_motion.rotate_forward_vector(e, rotateX, rotateY)
 end
 
 function iobj_motion.rotate_around_point2(e, viewpt, dx, dy, distance)
-    local srt = get_scene(e).srt
+    local srt = e.scene.srt
     local srtmat = math3d.matrix(srt)
     local right, up, pos = math3d.index(srtmat, 1, 2, 4)
 
@@ -258,7 +249,7 @@ end
 
 function iobj_motion.rotate(e, rotateX, rotateY)
     if rotateX or rotateY then
-        local scene = get_scene(e)
+        local scene = e.scene
         local srt = math3d.matrix(scene.srt)
         srt = add_rotation(srt, rotateX, rotateY)
         if scene.updir then
@@ -274,7 +265,7 @@ end
 
 function iobj_motion.rotate_around_point(e, targetpt, distance, rotateX, rotateY, threshold)
     if rotateX or rotateY then
-        local rc = get_scene(e)
+        local rc = e.scene
         local srt = rc.srt
         local newsrt = math3d.matrix(srt)
         newsrt = math3d.set_index(newsrt, 4, targetpt)

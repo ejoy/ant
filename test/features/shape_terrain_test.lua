@@ -263,7 +263,6 @@ local function create_indicator()
             scene = {
                 srt = {}
             },
-            reference = true,
             name = "indicator_test",
         }
     }
@@ -286,7 +285,6 @@ local function create_canvas()
                     t={0.0, 5.0, 0.0}
                 }
             },
-            reference = true,
             canvas = {
                 textures = {},
                 texts = {},
@@ -347,7 +345,6 @@ function shape_terrain_test_sys:init()
         },
         data = {
             name = "shape_terrain_test",
-            reference   = true,
             scene = {
                 srt = {
                     t = {-ww//2, 0.0, -hh//2},

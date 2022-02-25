@@ -260,9 +260,9 @@ ilight.count_visible_light = count_visible_light
 
 local function create_light_buffers()
 	local lights = {}
-	for e in w:select "light:in visible id:in" do
-		local p	= math3d.tovalue(iom.get_position(e.id))
-		local d	= math3d.tovalue(math3d.inverse(iom.get_direction(e.id)))
+	for e in w:select "light:in visible scene:in" do
+		local p	= math3d.tovalue(iom.get_position(e))
+		local d	= math3d.tovalue(math3d.inverse(iom.get_direction(e)))
 		local c = e.light.color
 		local t	= e.light.type
 		local enable<const> = 1

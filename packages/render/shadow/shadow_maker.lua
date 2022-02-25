@@ -327,12 +327,12 @@ function sm:data_changed()
 end
 
 function sm:update_camera()
-	local dl = w:singleton("csm_directional_light", "light:in id:in")
+	local dl = w:singleton("csm_directional_light", "light:in scene:in")
 	if dl then
 		if shadow_camera_rebuild then
 			local mq = w:singleton("main_queue", "camera_ref:in")
 			local camera = world:entity(mq.camera_ref)
-			update_shadow_camera(dl.id, camera.camera)
+			update_shadow_camera(dl, camera.camera)
 			shadow_camera_rebuild = false
 		else
 			for qe in w:select "csm_queue camera_ref:in" do
