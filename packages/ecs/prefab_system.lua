@@ -47,22 +47,22 @@ function m:data_changed()
 end
 
 function m:entity_remove()
-    for _, _, prefab in evPrefabDetach:unpack() do
-        if isValidReference(prefab) then
-            w:sync("prefab:in", prefab)
+    for _, _, id in evPrefabDetach:unpack() do
+        local prefab = world:entity(id)
+        if prefab then
             world:detach_instance(prefab.prefab)
-            w:remove(prefab)
+            world:remove_entity(id)
         end
     end
-    for _, _, prefab in evPrefabRemove:unpack() do
-        if isValidReference(prefab) then
-            w:sync("prefab:in", prefab)
+    for _, _, id in evPrefabRemove:unpack() do
+        local prefab = world:entity(id)
+        if prefab then
             local instance = prefab.prefab
             w:remove(instance.root)
             for _, entity in ipairs(instance.tag["*"]) do
-                w:remove(entity)
+                world:remove_entity(entity)
             end
-            w:remove(prefab)
+            world:remove_entity(id)
         end
     end
 end
