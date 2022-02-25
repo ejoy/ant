@@ -196,8 +196,8 @@ local function do_play(e, anim, real_clips, anim_state)
 	local anim_name = anim_state.name
 	if not anim_state.init then
 		if not anim then
-			local len = #anim_state.name
-			if string.sub(anim_state.name, len - 4, len) == ".anim" then
+			local ext = anim_state.name:match "[^.]*$"
+			if ext == "anim" then
 				local path = fs.path(anim_state.name):localpath()
 				local f = assert(fs.open(path))
 				local data = f:read "a"
