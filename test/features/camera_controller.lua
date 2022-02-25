@@ -73,13 +73,14 @@ end
 
 function cc_sys:data_changed()
 	for _, e in ipairs(mouse_events) do
-		local camera_ref = icc.camera()
-		if can_rotate(camera_ref) then
+		local ceid = icc.camera()
+		local cref = world:entity(ceid)
+		if can_rotate(cref.camera) then
 			for _,_,state,x,y in e:unpack() do
 				if state == "MOVE" and mouse_lastx then
 					local ux = (x - mouse_lastx) / dpi_x * kMouseSpeed
 					local uy = (y - mouse_lasty) / dpi_y * kMouseSpeed
-					iom.rotate_forward_vector(camera_ref, uy, ux)
+					iom.rotate_forward_vector(cref, uy, ux)
 				end
 				mouse_lastx, mouse_lasty = x, y
 			end

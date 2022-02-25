@@ -19,7 +19,6 @@ local function create_plane_test()
 			"ant.general|name",
 		},
 		data = {
-			reference 	= true,
 			scene 		= {
                 srt =        {
                     s = {5, 1, 5, 0},

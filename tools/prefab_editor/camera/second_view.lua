@@ -97,8 +97,7 @@ end
 
 function second_camera_sys:update_camera()
     for svq in w:select "second_view visible camera_ref:in" do
-        local mc = svq.camera_ref
-		w:sync("camera:in scene:in", mc)
+        local mc = world:entity(svq.camera_ref)
 		local camera, scene = mc.camera, mc.scene
 
 		local worldmat = scene._worldmat
@@ -110,9 +109,9 @@ function second_camera_sys:update_camera()
 end
 
 function second_camera_sys:entity_remove()
-    for e in w:select "REMOVED camera:in reference:in" do
+    for e in w:select "REMOVED camera:in id:in" do
         local sc = w:singleton("second_view", "camera_ref:in")
-        if e.reference == sc.camera_ref then
+        if e.id == sc.camera_ref then
             irq.set_camera("second_view", DEFAULT_camera)
         end
     end
@@ -156,9 +155,9 @@ local function scale_frustum_points(frustum_points, len)
     }
 end
 
-local function create_frustum_entity(cref)
-    w:sync("camera:in scene:in", cref)
-    local camera = cref.camera
+local function create_frustum_entity(eid)
+    local e = world:entity(eid)
+    local camera = e.camera
 
     local function add_v(p, vb)
 		local x, y, z = math3d.index(p, 1, 2, 3)
@@ -180,21 +179,20 @@ local function create_frustum_entity(cref)
             "ant.general|name"
         },
         data = {
-            reference = true,
             scene = {srt={}},
             name = "second_view_frustum_root",
             second_view_frustum = true,
             on_ready = function (e)
-                w:sync("reference:in", e)
-                ecs.method.set_parent(e.reference, cref)
+                w:sync("id:in", e)
+                ecs.method.set_parent(e.id, eid)
             end,
         }
     }
 
     local color = mc.COLOR(mc.YELLOW_HALF, ilight.default_intensity "point")
     local function onready(e)
-        w:sync("reference:in", e)
-        ecs.method.set_parent(e.reference, frustum_root)
+        w:sync("id:in", e)
+        ecs.method.set_parent(e.id, frustum_root)
         imaterial.set_property(e, "u_color", color)
     end
 
@@ -204,7 +202,6 @@ local function create_frustum_entity(cref)
             "ant.general|name",
         },
         data = {
-            reference = true,
             on_ready = onready,
             simplemesh = imesh.init_mesh({
                 vb = {
@@ -240,7 +237,6 @@ local function create_frustum_entity(cref)
             "ant.general|name",
         },
         data = {
-            reference = true,
             simplemesh = imesh.init_mesh({
                 vb = {
                     start = 0,

@@ -112,7 +112,7 @@ function irq.set_view_rect(queuename, rect)
 	vr.x, vr.y = rect.x, rect.y
 	vr.w, vr.h = rect.w, rect.h
 	if qe.camera_ref then
-		icamera.set_frustum_aspect(qe.camera_ref, vr.w/vr.h)
+		icamera.set_frustum_aspect(world:entity(qe.camera_ref), vr.w/vr.h)
 	end
 	set_view_rect(rt.viewid, vr, queuename)
 end

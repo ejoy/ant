@@ -73,7 +73,6 @@ local function create_simple_render_entity(name, material, mesh, srt, color, hid
 			"ant.general|name",
 		},
 		data = {
-			reference 	= true,
 			scene 		= {srt = srt or {}},
 			material	= material,
 			simplemesh	= imesh.init_mesh(mesh, true),
@@ -148,7 +147,6 @@ function ientity.create_grid_mesh_entity(name, w, h, size, color, materialpath)
 			"ant.general|name"
 		},
 		data = {
-			reference	= true,
 			scene 		= {srt = {}},
 			material 	= materialpath,
 			filter_state= "main_view|auxgeom",
@@ -238,7 +236,6 @@ function ientity.create_prim_plane_entity(srt, materialpath, color, name, hide)
 			"ant.general|name",
 		},
 		data = {
-			reference 	= true,
 			scene 		= { srt = srt or {}},
 			material 	= materialpath,
 			filter_state= "main_view",
@@ -365,7 +362,6 @@ function ientity.create_screen_axis_entity(srt, screen_3dobj, name, color, mater
 			"ant.general|name",
 		},
 		data = {
-			reference 	= true,
 			screen_3dobj = screen_3dobj,
 			scene 		= {srt = srt or {}},
 			material	= material or "/pkg/ant.resources/materials/line_background.material",
@@ -446,7 +442,6 @@ function ientity.create_skybox(material)
 			"ant.general|name",
 		},
 		data = {
-			reference = true,
 			scene = {srt = {}},
 			material = material or "/pkg/ant.resources/materials/sky/skybox.material",
 			filter_state = "main_view",
@@ -502,7 +497,6 @@ function ientity.create_procedural_sky(settings)
 			"ant.general|name",
 		},
 		data = {
-			reference = true,
 			scene = {srt = {}},
 			material = "/pkg/ant.resources/materials/sky/procedural/procedural_sky.material",
 			procedural_sky = {
@@ -673,7 +667,6 @@ function ientity.create_arrow_entity2(srt, headratio, color, material)
 			"ant.general|name",
 		},
 		data = {
-			reference = true,
 			simplemesh = arrow_mesh(headratio),
 			material = material,
 			filter_state = "main_view",
@@ -729,7 +722,6 @@ function ientity.create_arrow_entity(origin, forward, scale, data)
 			"ant.scene|scene_object",
 		},
 		data = {
-			reference = true,
 			name = "arrow",
 			scene = {
 				srt = {
@@ -748,7 +740,6 @@ function ientity.create_arrow_entity(origin, forward, scale, data)
 		},
 		data = {
 			name = "arrow.cylinder",
-			reference = true,
 			filter_state = "main_view",
 			scene = {
 				srt = {
@@ -759,8 +750,8 @@ function ientity.create_arrow_entity(origin, forward, scale, data)
 			material = "/pkg/ant.resources/materials/simpletri.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			on_ready = function (e)
-				w:sync("reference:in", e)
-				ecs.method.set_parent(e.reference, arrowe)
+				w:sync("id:in", e)
+				ecs.method.set_parent(e.id, arrowe)
 				imaterial.set_property(e, "u_color", data.cylinder_color or {1, 0, 0, 1})
 			end
 		},
@@ -774,14 +765,13 @@ function ientity.create_arrow_entity(origin, forward, scale, data)
 		},
 		data = {
 			name = "arrow.cone",
-			reference = true,
 			filter_state = "main_view",
 			scene = {srt =  {s=100, t=cone_offset}},
 			material = "/pkg/ant.resources/materials/simpletri.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			on_ready = function (e)
-				w:sync("reference:in", e)
-				ecs.method.set_parent(e.reference, arrowe)
+				w:sync("id:in", e)
+				ecs.method.set_parent(e.id, arrowe)
 				imaterial.set_property(e, "u_color", data.cone_color or {1, 0, 0, 1})
 			end
 		},

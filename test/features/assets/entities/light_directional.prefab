@@ -3,7 +3,6 @@ policy:
   ant.render|light
   ant.general|name
 data:
-  reference: true
   scene:
     srt:
       r: {0.78, 0, 0}

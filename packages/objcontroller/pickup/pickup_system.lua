@@ -52,9 +52,9 @@ local function get_properties(id, properties)
 	return p
 end
 
-local function find_camera(cref)
-	w:sync("camera:in", cref)
-	return cref.camera
+local function find_camera(id)
+	local e = world:entity(id)
+	return e.camera
 end
 
 local function update_camera(pu_camera_ref, clickpt)
@@ -288,9 +288,8 @@ function pickup_sys:update_camera()
 	for e in w:select "pickup_queue visible pickup:in camera_ref:in" do
 		update_camera(e.camera_ref, e.pickup.clickpt)
 		if cw_enable then
-			local mcref = irq.main_camera()
-			w:sync("camera:in", mcref)
-			local mc_viewmat = mcref.camera.viewmat
+			local main_camera = world:entity(irq.main_camera())
+			local mc_viewmat = main_camera.camera.viewmat
 			local mc_inv_viewmat = math3d.inverse(mc_viewmat)
 			for _, pm in pairs(pickup_materials) do
 				imaterial.set_property_directly(pm.properties, "u_viewcamera_viewmat", mc_viewmat)
@@ -346,16 +345,16 @@ function pickup_sys:pickup()
 	end
 end
 
-local function remove_ref(ref)
-	local id = pickup_refs[ref]
-	pickup_refs[ref] = nil
-	if id then
-		pickup_refs[id] = nil
+local function remove_ref(id)
+	local _id = pickup_refs[id]
+	pickup_refs[id] = nil
+	if _id then
+		pickup_refs[_id] = nil
 	end
 end
 
 function pickup_sys:end_filter()
-	for e in w:select "filter_result:in render_object:in filter_material:out reference:in" do
+	for e in w:select "filter_result:in render_object:in filter_material:out id:in" do
 		local fr = e.filter_result
 		local st = e.render_object.fx.setting.surfacetype
 		local fm = e.filter_material
@@ -365,8 +364,8 @@ function pickup_sys:end_filter()
 				local m = assert(pickup_materials[st])
 				local state = e.render_object.state
 				local id = genid()
-				pickup_refs[id] = e.reference
-				pickup_refs[e.reference] = id
+				pickup_refs[id] = e.id
+				pickup_refs[e.id] = id
 				fm[fn] = {
 					fx			= m.fx,
 					properties	= get_properties(id, m.properties),
@@ -374,14 +373,14 @@ function pickup_sys:end_filter()
 				}
 			elseif fr[fn] == false then
 				fm[fn] = nil
-				remove_ref(e.reference)
+				remove_ref(e.id)
 			end
 		end
 	end
 end
 
 function pickup_sys:entity_remove()
-	for e in w:select "REMOVED reference:in" do
-		remove_ref(e.reference)
+	for e in w:select "REMOVED id:in" do
+		remove_ref(e.id)
 	end
 end

@@ -127,14 +127,14 @@ bool Context::ProcessChar(int character)
 	return focus->ProcessChar(character);
 }
 
-bool Context::ProcessMouseMove(MouseButton button, int x, int y, int key_modifier_state) {
+bool Context::ProcessMouseMove(MouseButton button, int x, int y) {
 	if (!focus) {
 		return false;
 	}
-	return focus->ProcessMouseMove(button, x, y, key_modifier_state);
+	return focus->ProcessMouseMove(button, x, y);
 }
 
-bool Context::ProcessMouseButtonDown(MouseButton button, int x, int y, int key_modifier_state) {
+bool Context::ProcessMouseButtonDown(MouseButton button, int x, int y) {
 	auto it = documents.rbegin();
 	while (it != documents.rend()) {
 		if ((*it)->IsShow() && (*it)->ClickTest({ (float)x, (float)y })) {
@@ -146,21 +146,21 @@ bool Context::ProcessMouseButtonDown(MouseButton button, int x, int y, int key_m
 	if (!focus) {
 		return false;
 	}
-	return focus->ProcessMouseButtonDown(button, x, y, key_modifier_state);
+	return focus->ProcessMouseButtonDown(button, x, y);
 }
 
-bool Context::ProcessMouseButtonUp(MouseButton button, int x, int y, int key_modifier_state) {
+bool Context::ProcessMouseButtonUp(MouseButton button, int x, int y) {
 	if (!focus) {
 		return false;
 	}
-	return focus->ProcessMouseButtonUp(button, x, y, key_modifier_state);
+	return focus->ProcessMouseButtonUp(button, x, y);
 }
 
-bool Context::ProcessMouseWheel(float wheel_delta, int key_modifier_state) {
+bool Context::ProcessMouseWheel(float wheel_delta) {
 	if (!focus) {
 		return false;
 	}
-	focus->ProcessMouseWheel(wheel_delta, key_modifier_state);
+	focus->ProcessMouseWheel(wheel_delta);
 	return true;
 }
 

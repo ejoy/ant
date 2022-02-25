@@ -32,9 +32,9 @@ local default_exposure<const> = {
     -- NumBlades       = 5,
 }
 
-local function exposure(cref)
-    w:sync("exposure:in", cref)
-    return cref.exposure
+local function exposure(eid)
+    local e = world:entity(eid)
+    return e.exposure
 end
 
 local function _EV(e)

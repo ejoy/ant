@@ -175,7 +175,7 @@ lContextProcessMouseMove(lua_State* L) {
 	Rml::MouseButton button = (Rml::MouseButton)luaL_checkinteger(L, 2);
 	int x = (int)luaL_checkinteger(L, 3);
 	int y = (int)luaL_checkinteger(L, 4);
-	bool handled = ctx->ProcessMouseMove(button, x, y, 0);
+	bool handled = ctx->ProcessMouseMove(button, x, y);
 	lua_pushboolean(L, handled);
 	return 1;
 }
@@ -187,7 +187,7 @@ lContextProcessMouseButtonDown(lua_State* L) {
 	Rml::MouseButton button = (Rml::MouseButton)luaL_checkinteger(L, 2);
 	int x = (int)luaL_checkinteger(L, 3);
 	int y = (int)luaL_checkinteger(L, 4);
-	bool handled = ctx->ProcessMouseButtonDown(button, x, y, 0);
+	bool handled = ctx->ProcessMouseButtonDown(button, x, y);
 	lua_pushboolean(L, handled);
 	return 1;
 }
@@ -199,7 +199,7 @@ lContextProcessMouseButtonUp(lua_State* L) {
 	Rml::MouseButton button = (Rml::MouseButton)luaL_checkinteger(L, 2);
 	int x = (int)luaL_checkinteger(L, 3);
 	int y = (int)luaL_checkinteger(L, 4);
-	bool handled = ctx->ProcessMouseButtonUp(button, x, y, 0);
+	bool handled = ctx->ProcessMouseButtonUp(button, x, y);
 	lua_pushboolean(L, handled);
 	return 1;
 }

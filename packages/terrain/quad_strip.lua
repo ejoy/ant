@@ -45,7 +45,7 @@ end
 local qs_sys        = ecs.system "quad_strip_system"
 
 function qs_sys:entity_init()
-    for e in w:select "INIT quad_strip:in uv_motion:in material:in reference:in" do
+    for e in w:select "INIT quad_strip:in uv_motion:in material:in id:in" do
         local qs = e.quad_strip
         local uvm = e.uv_motion
         local speed = uvm.speed
@@ -62,8 +62,8 @@ function qs_sys:entity_init()
                 filter_state = "main_view",
                 scene = {srt={}},
                 name = "polyline",
-                reference = true,
                 on_ready = function (le)
+                    w:sync("render_object:in", le)
                     imaterial.set_property(le, "u_line_info", {qs.width, 0.0, 0.0, 0.0})
                     imaterial.set_property(le, "u_color", qs.color)
                     imaterial.set_property(le, "u_uvmotion", {speed[1], speed[2], tile[1], tile[2]})
@@ -71,6 +71,6 @@ function qs_sys:entity_init()
             }
         }
 
-        ecs.method.set_parent(le, e.reference)
+        ecs.method.set_parent(le, e.id)
     end
 end

@@ -18,7 +18,6 @@ function cr.start(name)
             "ant.general|name",
         },
         data = {
-            reference = true,
             camera_recorder = {
                 frames = {},
             },

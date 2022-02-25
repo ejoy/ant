@@ -31,7 +31,6 @@ function camera_mgr.create_camera()
             "ant.camera|camera",
         },
         data = {
-            reference = true,
             camera = {
                 frustum = {
                     n = default_near_clip,

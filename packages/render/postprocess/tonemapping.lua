@@ -34,21 +34,20 @@ function tm_sys:init()
             render_object   = {},
             filter_state = "",
             visible = true,
-            reference = true
         }
     }
 end
 
-local function update_exposure(cref)
-    w:sync("exposure:in", cref)
-    local expo = cref.exposure
+local function update_exposure(eid)
+    local e = world:entity(eid)
+    local expo = e.exposure
     assert(expo, "invalid camera without 'exposure' component")
     if expo.type == "auto" then
         tm_material = tm_auto_material
     else
         tm_material = tm_manual_material
         assert(expo.type == "manual")
-        local ev = iexposure.exposure(cref)
+        local ev = iexposure.exposure(eid)
         imaterial.set_property_directly(tm_manual_material.properties, "u_exposure_param", {ev, 0.0, 0.0, 0.0})
     end
 end
@@ -69,7 +68,8 @@ function tm_sys:init_world()
                 view_rect   = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
                 view_mode = "",
                 clear_state = {
-                    clear = "",
+                    clear = "D", --clear z buffer for effect
+                    depth = 1
                 },
             },
             queue_name = "tonemapping_queue",
@@ -78,9 +78,9 @@ function tm_sys:init_world()
         }
     }
 
-    local mcref = irq.main_camera()
-    update_exposure(mcref)
-    exposure_mb = world:sub{"exposure_changed", mcref}
+    local eid = irq.main_camera()
+    update_exposure(eid)
+    exposure_mb = world:sub{"exposure_changed", eid}
 end
 
 local ppi_scene_color = {
@@ -116,8 +116,8 @@ local function update_properties()
 end
 
 function tm_sys:tonemapping()
-    w:sync("render_object:in", tm_e)
-    local ro = tm_e.render_object
+    local e = world:entity(tm_e)
+    local ro = e.render_object
     update_properties()
     irender.draw(tm_viewid, ro, tm_material)
 end

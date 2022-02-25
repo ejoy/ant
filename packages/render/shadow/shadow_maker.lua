@@ -99,11 +99,11 @@ local function update_camera_matrices(camera, lightmat)
 	camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 end
 
-local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, se)
+local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, eid)
 	local center_WS = math3d.points_center(corners_WS)
 	local min_extent, max_extent
 
-	w:sync("scene:in camera:in", se)
+	local se = world:entity(eid)
 	local srt = se.scene.srt
 	srt.r.q = math3d.torotation(lightdir)
 	srt.t.v = center_WS
@@ -327,18 +327,18 @@ function sm:data_changed()
 end
 
 function sm:update_camera()
-	local dl = w:singleton("csm_directional_light", "light:in")
+	local dl = w:singleton("csm_directional_light", "light:in scene:in")
 	if dl then
 		if shadow_camera_rebuild then
 			local mq = w:singleton("main_queue", "camera_ref:in")
-			w:sync("camera:in", mq.camera_ref)
-			update_shadow_camera(dl, mq.camera_ref.camera)
+			local camera = world:entity(mq.camera_ref)
+			update_shadow_camera(dl, camera.camera)
 			shadow_camera_rebuild = false
 		else
 			for qe in w:select "csm_queue camera_ref:in" do
 				local cref = qe.camera_ref
-				w:sync("camera:in scene:in", cref)
-				update_camera_matrices(cref.camera, cref.scene._worldmat)
+				local camera = world:entity(cref)
+				update_camera_matrices(camera.camera, camera.scene._worldmat)
 			end
 		end
 	end

@@ -44,7 +44,7 @@ function cull_sys:cull()
 		return 
 	end
 	for v in w:select "visible camera_ref:in render_target:in cull_tag:in" do
-		local camera = icamera.find_camera(v.camera_ref)
+		local camera = world:entity(v.camera_ref).camera
 		cull(v.cull_tag, camera.viewprojmat)
 	end
 end

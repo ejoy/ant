@@ -120,7 +120,7 @@ end
 
 function render_sys:render_submit()
 	for qe in w:select "visible camera_ref:in render_target:in primitive_filter:in cull_tag?in" do
-		local camera = icamera.find_camera(qe.camera_ref)
+		local camera = world:entity(qe.camera_ref).camera
 		local rt = qe.render_target
 		local viewid = rt.viewid
 

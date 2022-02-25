@@ -1,6 +1,5 @@
 local fs = require "filesystem"
 local lfs = require "filesystem.local"
-local cr = import_package "ant.compile_resource"
 
 local function read_file(filename)
     local f = assert(lfs.open(filename:localpath(), "rb"))

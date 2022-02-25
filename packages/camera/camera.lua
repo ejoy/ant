@@ -10,13 +10,6 @@ local defcomp 	= import_package "ant.general".default
 
 local ic = ecs.interface "icamera"
 
-local function find_camera(camera_ref)
-    w:sync("camera:in", camera_ref)
-    return camera_ref.camera
-end
-
-ic.find_camera = find_camera
-
 local defaultcamera<const> = {
     name = "default_camera",
     eyepos  = mc.ZERO_PT,
@@ -63,7 +56,6 @@ function ic.create(info)
                 },
                 updir = updir,
             },
-            reference = true,
             exposure = exposure,
             camera = {
                 frustum = frustum,
@@ -78,15 +70,14 @@ function ic.create(info)
     }
 end
 
-function ic.calc_viewmat(cameraref)
-    w:sync("scene:in", cameraref)
-    local scene = cameraref.scene
+function ic.calc_viewmat(ce)
+    local scene = ce.scene
     local srt = scene.srt
     return math3d.lookto(srt.t, math3d.todirection(srt.r), scene.updir)
 end
 
-function ic.calc_projmat(cameraref)
-    local camera = find_camera(cameraref)
+function ic.calc_projmat(ce)
+    local camera = ce.camera
     return math3d.projmat(camera.frustum)
 end
 
@@ -106,88 +97,80 @@ function ic.calc_viewproj(cameraref)
     return math3d.mul(projmat, viewmat)
 end
 
-function ic.get_frustum(cameraref)
-    local camera = find_camera(cameraref)
-    if camera then
-        return camera.frustum
-    end
+function ic.get_frustum(ce)
+    return ce.camera.frustum
 end
 
-local function set_camera_changed(subcomp, cameraref)
-    world:pub {"camera_changed", cameraref, subcomp}
+local function set_camera_changed(subcomp, ce)
+    world:pub {"camera_changed", ce, subcomp}
 end
 
-function ic.set_frustum(cameraref, frustum)
-    local camera = find_camera(cameraref)
+function ic.set_frustum(ce, frustum)
+    local camera = ce.camera
     camera.frustum = {}
     for k, v in pairs(frustum) do
         camera.frustum[k] = v
     end
-    set_camera_changed("frusutm", cameraref)
+    set_camera_changed("frusutm", ce)
 end
 
-local function frustum_changed(cameraref, name, value)
-    local camera = find_camera(cameraref)
-    if camera == nil then
-        return
-    end
+local function frustum_changed(ce, name, value)
+    local camera = assert(ce.camera)
     local f = camera.frustum
     if f.ortho then
         error("ortho frustum can not set aspect")
     end
     if f.aspect then
         f[name] = value
-        set_camera_changed("frustum", cameraref)
+        set_camera_changed("frustum", ce)
     else
         error("Not implement")
     end
 end
 
-function ic.set_frustum_aspect(cameraref, aspect)
-    frustum_changed(cameraref, "aspect", aspect)
+function ic.set_frustum_aspect(ce, aspect)
+    frustum_changed(ce, "aspect", aspect)
 end
 
-function ic.set_frustum_fov(cameraref, fov)
-    frustum_changed(cameraref, "fov", fov)
+function ic.set_frustum_fov(ce, fov)
+    frustum_changed(ce, "fov", fov)
 end
 
-function ic.set_frustum_near(cameraref, n)
-    frustum_changed(cameraref, "n", n)
+function ic.set_frustum_near(ce, n)
+    frustum_changed(ce, "n", n)
 end
 
-function ic.set_frustum_far(cameraref, f)
-    frustum_changed(cameraref, "f", f)
+function ic.set_frustum_far(ce, f)
+    frustum_changed(ce, "f", f)
 end
 
 local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
-function ic.lookto(cameraref, ...)
-    iom.lookto(cameraref, ...)
+function ic.lookto(ce, ...)
+    iom.lookto(ce, ...)
 end
 
-function ic.focus_aabb(camera_ref, aabb)
+function ic.focus_aabb(ce, aabb)
     local aabb_min, aabb_max= math3d.index(aabb, 1), math3d.index(aabb, 2)
     local center = math3d.mul(0.5, math3d.add(aabb_min, aabb_max))
     local nviewdir = math3d.sub(aabb_max, center)
     local viewdir = math3d.normalize(math3d.inverse(nviewdir))
 
     local pos = math3d.muladd(3, nviewdir, center)
-    iom.lookto(camera_ref, pos, viewdir)
+    iom.lookto(ce, pos, viewdir)
 end
 
-function ic.focus_obj(camera_ref, e)
-    w:sync("scene:in", e)
+function ic.focus_obj(ce, e)
     local aabb = e.scene._aabb
     if aabb then
-        ic.focus_aabb(camera_ref, aabb)
+        ic.focus_aabb(ce, aabb)
     end
 end
 
 local cameraview_sys = ecs.system "camera_view_system"
 
-local function update_camera(camera_ref)
-    w:sync("camera:in scene:in", camera_ref)
-    local camera = camera_ref.camera
-    local worldmat = camera_ref.scene._worldmat
+local function update_camera(e)
+    local camera = e.camera
+    local worldmat = e.scene._worldmat
     local pos, dir = math3d.index(worldmat, 4, 3)
     camera.viewmat = math3d.lookto(pos, dir, camera.updir)
     camera.projmat = math3d.projmat(camera.frustum)
@@ -196,6 +179,6 @@ end
 
 function cameraview_sys:update_mainview_camera()
     for v in w:select "main_queue camera_ref:in" do
-        update_camera(v.camera_ref)
+        update_camera(world:entity(v.camera_ref))
     end
 end

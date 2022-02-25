@@ -194,8 +194,8 @@ end
 local gen_texture_id = id_generator()
 
 local function create_texture_item_entity(texpath, canvasentity)
-    w:sync("reference:in canvas:in", canvasentity)
-    local canvas_ref = canvasentity.reference
+    w:sync("id:in canvas:in", canvasentity)
+    local canvas_id = canvasentity.id
     local canvas = canvasentity.canvas
     return ecs.create_entity{
         policy = {
@@ -203,7 +203,6 @@ local function create_texture_item_entity(texpath, canvasentity)
             "ant.general|name",
         },
         data = {
-            reference = true,
             simplemesh  = {
                 vb = {
                     start = 0,
@@ -228,10 +227,8 @@ local function create_texture_item_entity(texpath, canvasentity)
                 imaterial.set_property(e, "s_basecolor", {texture=texobj, stage=0})
 
                 --update parent
-                w:sync("reference:in", e)
-                
-                local objref = e.reference
-                ecs.method.set_parent(objref, canvas_ref)
+                w:sync("id:in", e)
+                ecs.method.set_parent(e.id, canvas_id)
 
                 --update renderer
                 local textures = canvas.textures

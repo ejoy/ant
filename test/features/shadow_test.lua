@@ -38,7 +38,6 @@ function st_sys:init()
 				srt = {
 					t = {0, 0, 0, 1}
 			}},
-			reference = true,
 			name = "mesh_root",
 		}
 	}
@@ -57,7 +56,6 @@ function st_sys:init()
                     t = {0, 0, 0, 1}, s = {50, 1, 50, 0}
                 },
             },
-			reference = true,
 			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
 			filter_state= "main_view",
 			name 		= "test_shadow_plane",

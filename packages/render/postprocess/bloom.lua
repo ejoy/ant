@@ -27,7 +27,7 @@ end
 
 local bloom_sys = ecs.system "bloom_system"
 
-local ds_drawer, us_drawer
+local ds_drawer_eid, us_drawer_eid
 
 function bloom_sys:init()
     local function create_sample_drawer(name, material)
@@ -42,12 +42,11 @@ function bloom_sys:init()
                 material = material,
                 filter_state = "",
                 scene = {srt={}},
-                reference = true,
             }
         }
     end
-    ds_drawer = create_sample_drawer("ds_drawer", "/pkg/ant.resources/materials/postprocess/downsample.material")
-    us_drawer = create_sample_drawer("us_drawer", "/pkg/ant.resources/materials/postprocess/upsample.material")
+    ds_drawer_eid = create_sample_drawer("ds_drawer_eid", "/pkg/ant.resources/materials/postprocess/downsample.material")
+    us_drawer_eid = create_sample_drawer("us_drawer_eid", "/pkg/ant.resources/materials/postprocess/upsample.material")
 end
 
 local function downscale_bloom_vr(vr)
@@ -86,7 +85,6 @@ local function create_queue(viewid, vr, fbidx, queuename)
             },
             [queuename] = true,
             queue_name = queuename,
-            reference = true,
             name = queuename,
             bloom_queue = true,
         }
@@ -218,7 +216,6 @@ local scenecolor_property = {
 }
 
 local function do_bloom_sample(viewid, drawer, ppi_handle, next_mip)
-    w:sync("render_object:in", drawer)
     local ro = drawer.render_object
 
     local rbhandle = fbmgr.get_rb(fbmgr.get_byviewid(viewid)[1].rbidx).handle
@@ -249,12 +246,14 @@ function bloom_sys:bloom()
 
     local pp = w:singleton("postprocess", "postprocess_input:in")
     local ppi_handle = pp.postprocess_input.scene_color_handle
+    local ds_drawer = world:entity(ds_drawer_eid)
     ppi_handle = do_bloom_sample(bloom_ds_viewid, ds_drawer, ppi_handle, function () 
         local m = mip
         mip = m+1
         return m
     end)
 
+    local us_drawer = world:entity(us_drawer_eid)
     do_bloom_sample(bloom_us_viewid, us_drawer, ppi_handle, function ()
         local m = mip
         mip = m-1
