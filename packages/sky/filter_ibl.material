@@ -1,6 +1,6 @@
 fx:
-  vs: /pkg/ant.test.ibl/assets/shaders/vs_fullscreen.sc
-  fs: /pkg/ant.test.ibl/assets/shaders/fs_filtering.sc
+  vs: /pkg/ant.resources/shaders/fullscreen/vs_fullscreen.sc
+  fs: /pkg/ant.sky/shaders/fs_filtering.sc
   setting:
     lighting: off
 properties:
