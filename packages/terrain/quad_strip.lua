@@ -62,7 +62,6 @@ function qs_sys:entity_init()
                 filter_state = "main_view",
                 scene = {srt={}},
                 name = "polyline",
-                reference = true,
                 on_ready = function (le)
                     imaterial.set_property(le, "u_line_info", {qs.width, 0.0, 0.0, 0.0})
                     imaterial.set_property(le, "u_color", qs.color)

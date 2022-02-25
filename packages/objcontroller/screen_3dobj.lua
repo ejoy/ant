@@ -60,8 +60,7 @@ end
 function screen_3dobj_sys:camera_usage()
     if dirty then
         for e in w:select "screen_3dobj:in render_object:in" do
-            local mcamera = irq.main_camera()
-            w:sync("camera:in", mcamera)
+            local mcamera = world:entity(irq.main_camera())
             local vp = mcamera.camera.viewprojmat
             local vr = irq.view_rect "main_queue"
 

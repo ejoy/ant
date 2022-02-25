@@ -177,7 +177,6 @@ local function create_arrow_widget(axis_root, axis_str)
 			"ant.render|render",
 		},
 		data = {
-			reference = true,
 			filter_state = "main_view",
 			scene = {
 				srt = {
@@ -202,7 +201,6 @@ local function create_arrow_widget(axis_root, axis_str)
 			"ant.render|render",
 		},
 		data = {
-			reference = true,
 			filter_state = "main_view",
 			scene = {srt = {s = {0.02, 0.03, 0.02, 0}, r = local_rotator, t = cone_t}},
 			material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
@@ -260,7 +258,6 @@ function gizmo_sys:post_init()
 			"ant.scene|scene_object",
 		},
 		data = {
-			reference = true,
 			name = "axis root",
 			scene = {srt = {}},
 		},
@@ -272,7 +269,6 @@ function gizmo_sys:post_init()
 			"ant.scene|scene_object",
 		},
 		data = {
-			reference = true,
 			name = "rot root",
 			scene = {srt = {}},
 		},
@@ -287,7 +283,6 @@ function gizmo_sys:post_init()
 			"ant.scene|scene_object",
 		},
 		data = {
-			reference = true,
 			name = "rot root",
 			scene = {srt = {}},
 		},
@@ -361,7 +356,6 @@ function gizmo_sys:post_init()
 				"ant.scene|scene_object",
 			},
 			data = {
-				reference = true,
 				filter_state = "main_view|selectable",
 				scene = {srt = srt},
 				material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",

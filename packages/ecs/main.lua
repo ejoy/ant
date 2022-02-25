@@ -23,21 +23,17 @@ local function sortpairs(t)
     end
 end
 
-local function create_entity(w, data)
-    if not data.reference then
-        w.w:new {
-            create_entity = data
-        }
-        return
-    end
+local function getentityid(w)
     w._maxid = w._maxid + 1
-    local ref = {}
-    data.reference = ref
-    data.id = w._maxid
+    return w._maxid
+end
+
+local function create_entity(w, data)
+    data.id = getentityid(w)
     w.w:new {
         create_entity = data
     }
-    return ref
+    return data.id
 end
 
 function world:_create_entity(package, v)
@@ -123,7 +119,7 @@ local function create_entity_template(w, package, detach, v)
             error(("component `%s` must exists"):format(c))
         end
     end
-    data.reference = detach == nil
+    data.id = getentityid(w)
     return {
         action = v.action,
         mount = v.mount,
@@ -216,15 +212,15 @@ local function create_tags(entities, template)
 end
 
 local function create_scene_entity(w)
-    local e = {}
+    local eid = getentityid(w)
     w.w:new {
-        reference = e,
+        id = eid,
         scene = {
             srt = {},
         }
     }
-    w:call(e, "init_scene")
-    return e
+    w:call(eid, "init_scene")
+    return eid
 end
 
 function world:create_object(inner_proxy)
@@ -237,7 +233,6 @@ function world:create_object(inner_proxy)
         return
     end
     local proxy_entity = {
-        reference = true,
         prefab = inner_proxy,
     }
     if on_init then

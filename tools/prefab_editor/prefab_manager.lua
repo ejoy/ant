@@ -111,7 +111,6 @@ function m:create_slot()
             "ant.scene|scene_object",
         },
         data = {
-            reference = true,
             scene = {srt = {}},
             slot = {
                 joint_name = "None",
@@ -149,7 +148,6 @@ function m:create_collider(config)
             "ant.general|tag",
         },
         data = {
-            reference = true,
             name = "collider" .. gen_geometry_id(),
             tag = config.tag or {"collider"},
             scene = {srt = {s = scale}, parent = self.root},
@@ -175,7 +173,6 @@ local function create_simple_entity(name, srt)
             "ant.scene|scene_object",
 		},
 		data = {
-            reference = true,
             name = name,
             scene = {srt = srt or {}}
 		},
@@ -245,7 +242,6 @@ function m:create(what, config)
                     "ant.general|name",
                 },
                 data = {
-                    reference = true,
                     scene = {srt = {}},
                     filter_state = "main_view|selectable",
                     material = "/pkg/ant.resources/materials/pbr_default.material",
@@ -321,7 +317,6 @@ function m:create(what, config)
                 },
                 data = {
                     name = "shape_terrain_test",
-                    reference   = true,
                     scene = {
                         srt = {
                             t = {-ww//2, 0.0, -hh//2},
@@ -627,7 +622,6 @@ function m:add_effect(filename)
             "ant.general|tag"
 		},
 		data = {
-            reference = true,
             name = "root",
             tag = {"effect"},
             scene = {srt = {}},

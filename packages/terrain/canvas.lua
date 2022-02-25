@@ -203,7 +203,6 @@ local function create_texture_item_entity(texpath, canvasentity)
             "ant.general|name",
         },
         data = {
-            reference = true,
             simplemesh  = {
                 vb = {
                     start = 0,

@@ -75,9 +75,6 @@ policy "camera"
     .require_system "ant.camera|camera_view_system"
     .component "camera"
     .component_opt "scene"
-    .component_opt "reference"
-
-component "reference"
 
 component "camera".type "lua"
 

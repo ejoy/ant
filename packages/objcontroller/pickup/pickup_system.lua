@@ -52,9 +52,9 @@ local function get_properties(id, properties)
 	return p
 end
 
-local function find_camera(cref)
-	w:sync("camera:in", cref)
-	return cref.camera
+local function find_camera(id)
+	local e = world:entity(id)
+	return e.camera
 end
 
 local function update_camera(pu_camera_ref, clickpt)
@@ -288,9 +288,8 @@ function pickup_sys:update_camera()
 	for e in w:select "pickup_queue visible pickup:in camera_ref:in" do
 		update_camera(e.camera_ref, e.pickup.clickpt)
 		if cw_enable then
-			local mcref = irq.main_camera()
-			w:sync("camera:in", mcref)
-			local mc_viewmat = mcref.camera.viewmat
+			local main_camera = world:entity(irq.main_camera())
+			local mc_viewmat = main_camera.camera.viewmat
 			local mc_inv_viewmat = math3d.inverse(mc_viewmat)
 			for _, pm in pairs(pickup_materials) do
 				imaterial.set_property_directly(pm.properties, "u_viewcamera_viewmat", mc_viewmat)

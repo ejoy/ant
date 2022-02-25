@@ -90,7 +90,6 @@ local function create_gizmo_root(initpos, introt)
             "ant.scene|scene_object",
 		},
 		data = {
-            reference = true,
 			name = "gizmo root",
             scene = {srt = {t = initpos or {0,0,0}, r = introt or {0,0,0,1}}},
             -- on_ready = function (e)

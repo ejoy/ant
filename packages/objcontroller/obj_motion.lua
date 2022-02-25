@@ -7,8 +7,8 @@ local mc     = import_package "ant.math".constant
 
 local iobj_motion = ecs.interface "iobj_motion"
 
-local function get_scene(e)
-    w:sync("scene:in", e)
+local function get_scene(eid)
+    local e = world:entity(eid)
     return e.scene
 end
 

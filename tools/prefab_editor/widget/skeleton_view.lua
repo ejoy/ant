@@ -766,7 +766,6 @@ local function create_bone_entity(joint_name)
             "ant.general|name",
         },
         data = {
-            reference = true,
             scene = {srt = {s = joint_scale}},
             filter_state = "main_view|selectable",
             material = "/pkg/tools.prefab_editor/res/materials/joint.material",

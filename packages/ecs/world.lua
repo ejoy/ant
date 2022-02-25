@@ -171,12 +171,12 @@ function world:entity(eid)
 	end
 	local mt = {}
 	function mt:__index(name)
-		w:sync(name..":in", v)
+		w:sync(name.."?in", v)
 		return v[name]
 	end
 	function mt:__newindex(name, value)
 		v[name] = value
-		w:sync(name..":out", v)
+		w:sync(name.."?out", v)
 	end
 	return setmetatable({}, mt)
 end

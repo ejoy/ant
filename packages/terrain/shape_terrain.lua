@@ -452,7 +452,6 @@ function shape_ts:entity_init()
                             scene = {
                                 srt = {}
                             },
-                            reference   = true,
                             simplemesh  = terrain_mesh,
                             material    = shapematerial,
                             filter_state= "main_view|selectable",
@@ -480,7 +479,6 @@ function shape_ts:entity_init()
                             scene = {
                                 srt = {}
                             },
-                            reference   = true,
                             material    = edgematerial,
                             simplemesh  = edge_meshes,
                             filter_state= "main_view|selectable",

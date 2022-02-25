@@ -10,9 +10,9 @@ local defcomp 	= import_package "ant.general".default
 
 local ic = ecs.interface "icamera"
 
-local function find_camera(camera_ref)
-    w:sync("camera:in", camera_ref)
-    return camera_ref.camera
+local function find_camera(eid)
+    local e = world:entity(eid)
+    return e.camera
 end
 
 ic.find_camera = find_camera
@@ -63,7 +63,6 @@ function ic.create(info)
                 },
                 updir = updir,
             },
-            reference = true,
             exposure = exposure,
             camera = {
                 frustum = frustum,
@@ -184,10 +183,10 @@ end
 
 local cameraview_sys = ecs.system "camera_view_system"
 
-local function update_camera(camera_ref)
-    w:sync("camera:in scene:in", camera_ref)
-    local camera = camera_ref.camera
-    local worldmat = camera_ref.scene._worldmat
+local function update_camera(eid)
+    local e = world:entity(eid)
+    local camera = e.camera
+    local worldmat = e.scene._worldmat
     local pos, dir = math3d.index(worldmat, 4, 3)
     camera.viewmat = math3d.lookto(pos, dir, camera.updir)
     camera.projmat = math3d.projmat(camera.frustum)

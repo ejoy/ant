@@ -95,19 +95,15 @@ function s:entity_init()
 	end
 	w:clear "scene_unsorted"
 
-	for _, e, parent in evParentChanged:unpack() do
-		if isValidReference(e) then
-			w:sync("scene:in", e)
+	for _, id, parentid in evParentChanged:unpack() do
+		local e = world:entity(id)
+		if e then
 			e.scene.changed = current_changed
-			if type(parent) == "number" then
-				e.scene.parent = parent
+			local parent = parentid and world:entity(parentid) or nil
+			if not parent then
+				e.scene.parent = nil
 			else
-				if not parent or not isValidReference(parent) then
-					e.scene.parent = nil
-				else
-					w:sync("scene:in", parent)
-					e.scene.parent = parent.scene.id
-				end
+				e.scene.parent = parent.scene.id
 			end
 			needsync = true
 		end
@@ -143,9 +139,9 @@ end
 
 local evSceneChanged = world:sub {"scene_changed"}
 function s:update_transform()
-	for _, e in evSceneChanged:unpack() do
+	for _, id in evSceneChanged:unpack() do
+		local e = world:entity(id)
 		if e then
-			w:sync("scene:in", e)
 			e.scene.changed = current_changed
 		end
 	end
@@ -215,9 +211,9 @@ function s:scene_remove()
 	end
 end
 
-function ecs.method.init_scene(e)
+function ecs.method.init_scene(eid)
+	local e = world:entity(eid)
 	e.scene_unsorted = true
-	w:sync("scene:in scene_unsorted?out", e)
 	local scene = e.scene
 	scene.id = new_sceneid()
 	if scene.srt then

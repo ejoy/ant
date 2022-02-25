@@ -324,7 +324,6 @@ local function create_exposure_property(cv)
                 end
 
                 local t = deep_copy(template)
-                t.reference = true
                 t.on_ready = function (ee)
                     w:sync("reference:in", ee)
                     for q in w:select "queue_name:in camera_ref:in" do

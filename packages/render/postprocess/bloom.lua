@@ -45,7 +45,6 @@ function bloom_sys:init()
                 material = material,
                 filter_state = "",
                 scene = {srt={}},
-                reference = true,
             }
         }
     end
@@ -89,7 +88,6 @@ local function create_queue(viewid, vr, fbidx, queuename)
             },
             [queuename] = true,
             queue_name = queuename,
-            reference = true,
             name = queuename,
             bloom_queue = true,
         }
