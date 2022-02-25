@@ -305,18 +305,8 @@ function world:create_instance(filename, options)
     return self:_create_instance(nil, filename, options)
 end
 
-local function isValidReference(reference)
-    assert(reference[2] == 1, "Not a reference")
-    return reference[1] ~= nil
-end
-
 function world:detach_instance(instance)
-    local w = self.w
-    for _, entity in ipairs(instance.tag["*"]) do
-        if isValidReference(entity) then
-            w:remove_reference(entity)
-        end
-    end
+    --Nothing to do
 end
 
 function world:call(e, name, ...)

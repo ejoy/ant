@@ -181,6 +181,14 @@ function world:entity(eid)
 	return setmetatable({}, mt)
 end
 
+function world:remove_entity(eid)
+	local v = self._entityid[eid]
+	if not v then
+		return
+	end
+	self.w.w:remove(v)
+end
+
 local m = {}
 
 function m.new_world(config)
