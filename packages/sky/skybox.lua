@@ -45,7 +45,8 @@ function skybox_sys:entity_ready()
 		local tex = imaterial.get_property(e, "s_skybox").value
 		local texhandle = tex.texture.handle
 		if s.CUBEMAP_SKY == nil then
-			texhandle = cvt_p2cm.convert(tex.texture)
+			local icm = ecs.import.interface "ant.sky|icubemap_face"
+			texhandle = icm.convert_panorama2cubemap(tex.texture)
 			imaterial.set_property(e, "s_skybox", {stage=tex.stage, texture={handle=texhandle}})
 		end
 

@@ -13,10 +13,10 @@ vec3 uvToXYZ(int face, vec2 uv)
 		return vec3(    -1.0,   uv.y,     uv.x);
 
 	else if(face == 2)
-		return vec3(   +uv.x,   -1.0,    +uv.y);
+		return vec3(   +uv.x,    1.0,    -uv.y);
 
 	else if(face == 3)
-		return vec3(   +uv.x,    1.0,    -uv.y);
+		return vec3(   +uv.x,   -1.0,    +uv.y);
 
 	else if(face == 4)
 		return vec3(   +uv.x,   uv.y,      1.0);

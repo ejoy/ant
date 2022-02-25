@@ -36,6 +36,7 @@ alloc_id "omni_Green"
 alloc_id "omni_Yellow"
 alloc_id "omni_Blue"
 alloc_id "omni_Red"
+alloc_id("panorama2cubmap", 6)
 alloc_id "ibl"
 alloc_id "depth"
 alloc_id "main_view"

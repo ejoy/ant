@@ -1,1 +1,12 @@
 import "sky.ecs"
+
+interface "icubemap_face"
+    .implement "cvt_panorama.lua"
+    .method "convert_panorama2cubemap"
+
+component "cubemap_face_queue_px"
+component "cubemap_face_queue_nx"
+component "cubemap_face_queue_py"
+component "cubemap_face_queue_ny"
+component "cubemap_face_queue_pz"
+component "cubemap_face_queue_nz"

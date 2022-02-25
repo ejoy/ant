@@ -2,8 +2,6 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local bgfx  = require "bgfx"
-
 local renderpkg = import_package "ant.render"
 local viewidmgr, fbmgr = renderpkg.viewidmgr, renderpkg.fbmgr
 local sampler   = renderpkg.sampler
@@ -15,59 +13,53 @@ local ientity   = ecs.import.interface "ant.render|ientity"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 local irender   = ecs.import.interface "ant.render|irender"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
+local icamera   = ecs.import.interface "ant.camera|icamera"
 
-local cvt_p2cm_viewid = viewidmgr.generate("cvt_p2cm", 6)
+local cvt_p2cm_viewid = viewidmgr.get "panorama2cubmap"
 
 local cvt_p2cm_sys = ecs.system "cvt_p2cm_system"
 
-w:register{
-    name = "cvt_p2cm_queue"
+local face_queues<const> = {
+    "cubemap_face_queue_px",
+    "cubemap_face_queue_nx",
+    "cubemap_face_queue_py",
+    "cubemap_face_queue_ny",
+    "cubemap_face_queue_pz",
+    "cubemap_face_queue_nz",
 }
 
-w:register {
-    name = "cvt_p2cm_drawer"
-}
-
-function cvt_p2cm_sys:init()
+local function create_face_queue(queuename, cameraref)
     ecs.create_entity{
         policy = {
             "ant.render|render_queue",
             "ant.general|name",
         },
         data = {
-            name = "cvt_p2cm_queue",
-            cvt_p2cm_queue = true,
-            queue_name = "cvt_p2cm_queue",
+            name = queuename,
+            [queuename] = true,
+            queue_name = queuename,
             render_target = {
                 viewid = cvt_p2cm_viewid,
                 view_rect = {x=0, y=0, w=1, h=1},
-                clear_state = {
-                    clear = ""
-                },
+                clear_state = {clear = ""},
                 fb_idx = nil,
             },
-            primitive_filter = {
-				filter_type = "",
-			},
+            primitive_filter = {filter_type = "",},
             visible = false,
-            camera_ref = ecs.create_entity{
-                policy = {
-                    "ant.camera|camera",
-                    "ant.general|name"
-                },
-                data = {
-                    scene = {srt={}},
-                    camera = {
-                        frustum = {
-                            type="mat", n=1, f=1000, fov=0.5, aspect=1,
-                        },
-                    },
-                    name = "camera.cvt_p2cm",
-                }
-            }
+            camera_ref = cameraref,
         }
     }
+end
 
+w:register {
+    name = "cvt_p2cm_drawer"
+}
+
+function cvt_p2cm_sys:init()
+    local cameraref = icamera.create()
+    for _, fn in ipairs(face_queues) do
+        create_face_queue(fn, cameraref)
+    end
     ecs.create_entity{
         policy = {
             "ant.render|simplerender",
@@ -95,23 +87,22 @@ local cubemap_flags<const> = sampler.sampler_flag {
     RT="RT_ON",
 }
 
-local function convert(tex)
+local icm = ecs.interface "icubemap_face"
+
+function icm.convert_panorama2cubemap(tex)
     local ti = tex.texinfo
     assert(ti.width==ti.height*2 or ti.width*2==ti.height)
     local size = math.min(ti.width, ti.height) // 2
 
     local cm_rbidx = fbmgr.create_rb{format="RGBA32F", size=size, layers=1, mipmap=true, flags=cubemap_flags, cubemap=true}
-    local q = w:singleton("cvt_p2cm_queue", "render_target:in queue_name:in")
-    local rt = q.render_target
+
     local drawer = w:singleton("cvt_p2cm_drawer", "render_object:in")
     local ro = drawer.render_object
     ro.worldmat = mc.IDENTITY_MAT
     imaterial.set_property_directly(ro.properties, "s_tex", {stage=0, texture=tex})
-    local vr = rt.view_rect
-    vr.x, vr.y, vr.w, vr.h = 0, 0, size, size
 
-    local fbs = {}
-    for faceidx=0, 5 do
+    for idx, fn in ipairs(face_queues) do
+        local faceidx = idx-1
         local fbidx = fbmgr.create{
             rbidx = cm_rbidx,
             layer = faceidx,
@@ -119,34 +110,20 @@ local function convert(tex)
             mip = 0,
             numlayer = 1,
         }
-        fbs[#fbs+1] = fbidx
-
-        --!!NOTE!! we should create 6 render queue to pair with 1 viewid of 1 framebuffer for 1 render queue
-        -- this just temp code here!!!!!!
+        local q = w:singleton(fn, "render_target:in")
+        local rt = q.render_target
+        local vr = rt.view_rect
+        vr.x, vr.y, vr.w, vr.h = 0, 0, size, size
         rt.viewid = cvt_p2cm_viewid + faceidx
         rt.fb_idx = fbidx
-        irq.update_rendertarget(q.queue_name, rt)
+        irq.update_rendertarget(fn, rt)
 
         imaterial.set_property_directly(ro.properties, "u_param", {faceidx, 0.0, 0.0, 0.0})
 
         irender.draw(rt.viewid, ro)
 
-        fbmgr.unbind(rt.viewid) --can be remove when multi render queue is used
-    end
-
-    local keep_rbs<const> = true
-    for _, fbidx in ipairs(fbs) do
+        local keep_rbs<const> = true
         fbmgr.destroy(fbidx, keep_rbs)
     end
-
-    rt.fb_idx = nil
-    irq.update_rendertarget(q.queue_name, rt)
-
-    w:remove(q)
-
     return fbmgr.get_rb(cm_rbidx).handle
 end
-
-return {
-    convert = convert
-}
