@@ -30,8 +30,10 @@ local function create_entity(w, data)
         }
         return
     end
+    w._maxid = w._maxid + 1
     local ref = {}
     data.reference = ref
+    data.id = w._maxid
     w.w:new {
         create_entity = data
     }
