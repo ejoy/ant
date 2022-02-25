@@ -166,6 +166,9 @@ end
 function world:entity(eid)
 	local w = self.w
 	local v = self._entityid[eid]
+	if not v then
+		return
+	end
 	local mt = {}
 	function mt:__index(name)
 		w:sync(name..":in", v)
