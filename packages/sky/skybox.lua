@@ -4,7 +4,7 @@ local w 	= world.w
 
 local iibl 		= ecs.import.interface "ant.render|iibl"
 local imesh		= ecs.import.interface "ant.asset|imesh"
-
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 local geopkg 	= import_package "ant.geometry"
 local geo 		= geopkg.geometry
 
@@ -40,13 +40,13 @@ function skybox_sys:entity_ready()
 	for e in w:select "skybox_changed ibl:in render_object:in" do
 		local se_ibl = e.ibl
 		local ro = e.render_object
-		local t = ro.properties.s_skybox
 		local s = ro.fx.setting
-		local tex = t.value.texture
-		local texhandle = tex.handle
-
+		
+		local tex = imaterial.get_property(e, "s_skybox").value
+		local texhandle = tex.texture.handle
 		if s.CUBEMAP_SKY == nil then
-			texhandle = cvt_p2cm.convert(tex)
+			texhandle = cvt_p2cm.convert(tex.texture)
+			imaterial.set_property(e, "s_skybox", {stage=tex.stage, texture={handle=texhandle}})
 		end
 
 		iibl.filter_all{
