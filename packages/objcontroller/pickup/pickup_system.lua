@@ -310,11 +310,11 @@ local function select_obj(blit_buffer, render_target)
 	local viewrect = render_target.view_rect
 	local selecteid = which_entity_hitted(blit_buffer.handle, viewrect, blit_buffer.elemsize)
 	if selecteid then
-		local e = pickup_refs[selecteid]
-		if e then
-			w:sync("name?in", e)
-			log.info("pick entity id: ", selecteid, e.name)
-			world:pub {"pickup", e}
+		local id = pickup_refs[selecteid]
+		if id then
+			local e = world:entity(id)
+			log.info("pick entity id: ", id, e.name)
+			world:pub {"pickup", id}
 			return
 		end
 	end

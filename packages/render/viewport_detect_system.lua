@@ -56,7 +56,7 @@ local function update_render_queue(q, viewsize)
 	end
 
 	if q.camera_ref then
-		icamera.set_frustum_aspect(q.camera_ref, vr.w/vr.h)
+		icamera.set_frustum_aspect(world:entity(q.camera_ref), vr.w/vr.h)
 	end
 	resize_framebuffer(vr.w, vr.h, rt.fb_idx)
 	irq.update_rendertarget(q.queue_name, rt)
