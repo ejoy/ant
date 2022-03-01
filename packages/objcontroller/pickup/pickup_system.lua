@@ -270,20 +270,6 @@ local function close_pickup()
 	w:sync("visible?out", e)
 end
 
-local leftmouse_mb = world:sub {"mouse", "LEFT"}
-local function remap_xy(x, y)
-	local tmq = w:singleton("tonemapping_queue", "render_target:in")
-	local vr = tmq.render_target.view_rect
-	return x-vr.x, y-vr.y
-end
-function pickup_sys:data_changed()
-	for _,_,state,x,y in leftmouse_mb:unpack() do
-		if state == "DOWN" then
-			open_pickup(remap_xy(x, y))
-		end
-	end
-end
-
 function pickup_sys:update_camera()
 	for e in w:select "pickup_queue visible pickup:in camera_ref:in" do
 		update_camera(e.camera_ref, e.pickup.clickpt)
@@ -383,4 +369,9 @@ function pickup_sys:entity_remove()
 	for e in w:select "REMOVED id:in" do
 		remove_ref(e.id)
 	end
+end
+
+local ipu = ecs.interface "ipickup"
+function ipu.pick(x, y)
+	open_pickup(x, y)
 end
