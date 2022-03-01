@@ -254,11 +254,12 @@ function pickup_sys:entity_init()
 	end
 end
 
-local function open_pickup(x, y)
+local function open_pickup(x, y, cb)
 	local e = w:singleton("pickup_queue", "pickup:in")
 	e.pickup.nextstep = "blit"
 	e.pickup.clickpt[1] = x
 	e.pickup.clickpt[2] = y
+	e.pickup.picked_callback = cb
 	e.visible = true
 	w:sync("visible?out", e)
 end
@@ -292,7 +293,8 @@ local function blit(blit_buffer, render_target)
 	return bgfx.read_texture(rbhandle, blit_buffer.handle)
 end
 
-local function select_obj(blit_buffer, render_target)
+local function select_obj(pc, render_target)
+	local blit_buffer = pc.blit_buffer
 	local viewrect = render_target.view_rect
 	local selecteid = which_entity_hitted(blit_buffer.handle, viewrect, blit_buffer.elemsize)
 	if selecteid then
@@ -300,11 +302,17 @@ local function select_obj(blit_buffer, render_target)
 		if id then
 			local e = world:entity(id)
 			log.info("pick entity id: ", id, e.name)
+			local cb = pc.picked_callback
+			if cb then
+				cb(id, pc)
+			end
+			pc.picked_callback = nil
 			world:pub {"pickup", id}
 			return
 		end
 	end
 	log.info("not found any eid")
+	pc.picked_callback = nil
 	world:pub {"pickup"}
 end
 
@@ -324,7 +332,7 @@ function pickup_sys:pickup()
 		if nextstep == "blit" then
 			blit(pc.blit_buffer, v.render_target)
 		elseif nextstep == "select_obj" then
-			select_obj(pc.blit_buffer, v.render_target)
+			select_obj(pc, v.render_target)
 			close_pickup()
 		end
 		check_next_step(pc)
@@ -372,6 +380,6 @@ function pickup_sys:entity_remove()
 end
 
 local ipu = ecs.interface "ipickup"
-function ipu.pick(x, y)
-	open_pickup(x, y)
+function ipu.pick(x, y, cb)
+	open_pickup(x, y, cb)
 end
