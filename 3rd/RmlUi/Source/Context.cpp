@@ -119,41 +119,25 @@ bool Context::ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state) {
 	return focus->ProcessKeyUp(key, key_modifier_state);
 }
 
-bool Context::ProcessChar(int character)
-{
+bool Context::ProcessChar(int character) {
 	if (!focus) {
 		return false;
 	}
 	return focus->ProcessChar(character);
 }
 
-bool Context::ProcessMouseMove(MouseButton button, int x, int y) {
+bool Context::ProcessTouch(int id, TouchState state, int x, int y) {
 	if (!focus) {
 		return false;
 	}
-	return focus->ProcessMouseMove(button, x, y);
+	return focus->ProcessTouch(id, state, x, y);
 }
 
-bool Context::ProcessMouseButtonDown(MouseButton button, int x, int y) {
-	auto it = documents.rbegin();
-	while (it != documents.rend()) {
-		if ((*it)->IsShow() && (*it)->ClickTest({ (float)x, (float)y })) {
-			SetFocus((*it));
-			break;
-		}
-		++it;
-	}
+bool Context::ProcessMouse(MouseButton button, MouseState state, int x, int y) {
 	if (!focus) {
 		return false;
 	}
-	return focus->ProcessMouseButtonDown(button, x, y);
-}
-
-bool Context::ProcessMouseButtonUp(MouseButton button, int x, int y) {
-	if (!focus) {
-		return false;
-	}
-	return focus->ProcessMouseButtonUp(button, x, y);
+	return focus->ProcessMouse(button, state, x, y);
 }
 
 bool Context::ProcessMouseWheel(float wheel_delta) {

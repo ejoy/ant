@@ -435,82 +435,83 @@ bool Document::ProcessChar(int character)
 	return focus->DispatchEvent(EventId::Textinput, parameters);
 }
 
-bool Document::ProcessMouseMove(MouseButton button, int x, int y) {
-	// Check whether the mouse moved since the last event came through.
-	bool mouse_moved = (x != mouse_position.x) || (y != mouse_position.y);
-	if (mouse_moved) {
-		mouse_position.x = x;
-		mouse_position.y = y;
+bool Document::ProcessTouch(int id, TouchState state, int x, int y) {
+	Point pt {(float)x, (float)y};
+	Element* e = body->GetElementAtPoint(pt);
+	if (!e) {
+		return false;
 	}
-
-	// Generate the parameters for the mouse events (there could be a few!).
 	EventDictionary parameters;
-	GenerateMouseEventParameters(parameters, mouse_position, button);
+	return !e->DispatchEvent(EventId::Touchstart, parameters);
+}
 
-	EventDictionary drag_parameters;
-	GenerateMouseEventParameters(drag_parameters, mouse_position, MouseButton::None);
-
-	// Update the current hover chain. This will send all necessary 'onmouseout', 'onmouseover', 'ondragout' and
-	// 'ondragover' messages.
-	UpdateHoverChain(parameters, drag_parameters);
-
-	bool handle = false;
-	// Dispatch any 'onmousemove' events.
-	if (mouse_moved) {
-		if (hover) {
-			hover->DispatchEvent(EventId::Mousemove, parameters);
-			if (hover != body.get()) {
+bool Document::ProcessMouse(MouseButton button, MouseState state, int x, int y) {
+	if (state == MouseState::Move) {
+		bool mouse_moved = (x != mouse_position.x) || (y != mouse_position.y);
+		if (mouse_moved) {
+			mouse_position.x = x;
+			mouse_position.y = y;
+		}
+		EventDictionary parameters;
+		GenerateMouseEventParameters(parameters, mouse_position, button);
+		EventDictionary drag_parameters;
+		GenerateMouseEventParameters(drag_parameters, mouse_position, MouseButton::None);
+		UpdateHoverChain(parameters, drag_parameters);
+		bool handle = false;
+		if (mouse_moved) {
+			if (hover) {
+				hover->DispatchEvent(EventId::Mousemove, parameters);
+				if (hover != body.get()) {
+					handle = true;
+				}
+			}
+		}
+		return handle;
+	}
+	else if (state == MouseState::Down) {
+		Point mouse {(float)x, (float)y};
+		EventDictionary parameters;
+		GenerateMouseEventParameters(parameters, mouse, button);
+		bool handle = false;
+		active = body->GetElementAtPoint(mouse);
+		if (active) {
+			active->DispatchEvent(EventId::Mousedown, parameters);
+			if (active != body.get()) {
 				handle = true;
 			}
 		}
-	}
-	return handle;
-}
-
-bool Document::ProcessMouseButtonDown(MouseButton button, int x, int y) {
-	Point mouse {(float)x, (float)y};
-	EventDictionary parameters;
-	GenerateMouseEventParameters(parameters, mouse, button);
-	bool handle = false;
-	active = body->GetElementAtPoint(mouse);
-	if (active) {
-		active->DispatchEvent(EventId::Mousedown, parameters);
-		if (active != body.get()) {
-			handle = true;
+		if (button == MouseButton::Left) {
+			active_chain.insert(active_chain.end(), hover_chain.begin(), hover_chain.end());
 		}
+		focus = active;
+		return handle;
 	}
-
-	if (button == MouseButton::Left) {
-		active_chain.insert(active_chain.end(), hover_chain.begin(), hover_chain.end());
-	}
-	focus = active;
-	return handle;
-}
-
-bool Document::ProcessMouseButtonUp(MouseButton button, int x, int y) {
-	Point mouse {(float)x, (float)y};
-	EventDictionary parameters;
-	GenerateMouseEventParameters(parameters, mouse, button);
-	bool handle = false;
-	active = body->GetElementAtPoint(mouse);
-	if (active) {
-		active->DispatchEvent(EventId::Mouseup, parameters);
-		if (active != body.get()) {
-			handle = true;
+	else if (state == MouseState::Up) {
+		Point mouse {(float)x, (float)y};
+		EventDictionary parameters;
+		GenerateMouseEventParameters(parameters, mouse, button);
+		bool handle = false;
+		active = body->GetElementAtPoint(mouse);
+		if (active) {
+			active->DispatchEvent(EventId::Mouseup, parameters);
+			if (active != body.get()) {
+				handle = true;
+			}
 		}
+		if (button == MouseButton::Left) {
+			if (active && focus == active) {
+				active->DispatchEvent(EventId::Click, parameters);
+			}
+			std::for_each(active_chain.begin(), active_chain.end(), [](Element* element) {
+				element->SetPseudoClass(PseudoClass::Active, false);
+			});
+			active_chain.clear();
+			active = nullptr;
+		}
+		return handle;
 	}
 
-	if (button == MouseButton::Left) {
-		if (active && focus == active) {
-			active->DispatchEvent(EventId::Click, parameters);
-		}
-		std::for_each(active_chain.begin(), active_chain.end(), [](Element* element) {
-			element->SetPseudoClass(PseudoClass::Active, false);
-		});
-		active_chain.clear();
-		active = nullptr;
-	}
-	return handle;
+	return false;
 }
 
 void Document::ProcessMouseWheel(float wheel_delta) {
