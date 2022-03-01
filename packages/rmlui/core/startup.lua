@@ -90,12 +90,11 @@ function S.mouse(x, y, type, state)
     return rmlui.ContextProcessMouse(context, type-1, state-1, x, y)
 end
 
-function S.touch(x, y, id, state)
+function S.touch(state, data)
     if not context then
         return
     end
-    x, y = round(x), round(y)
-    return rmlui.ContextProcessTouch(context, id, state-1, x, y)
+    return rmlui.ContextProcessTouch(context, state-1, data)
 end
 
 function S.gesture_tap(x, y)
@@ -154,6 +153,6 @@ S.postMessage = windowManager.postMessage
 S.font_dir = filemanager.font_dir
 S.preload_dir = filemanager.preload_dir
 
-ltask.send(ServiceWindow, "subscribe", "priority=1", "mouse", "keyboard", "char", "gesture_tap")
+ltask.send(ServiceWindow, "subscribe", "priority=1", "mouse", "keyboard", "char", "touch", "gesture_tap")
 
 return S
