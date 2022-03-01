@@ -12,7 +12,6 @@ local utils     = require "common.utils"
 local widget_utils  = require "widget.utils"
 local stringify     = import_package "ant.serialize".stringify
 local animation = require "hierarchy".animation
-local skeleton = require "hierarchy".skeleton
 local math3d        = require "math3d"
 local asset_mgr = import_package "ant.asset"
 local icons     = require "common.icons"(asset_mgr)
@@ -434,7 +433,7 @@ end
 
 local function anim_play(anim_state, play)
     for _, e in ipairs(anim_e) do
-        iom.set_position(hierarchy:get_node(hierarchy:get_node(e).parent).parent, {0.0,0.0,0.0})
+        iom.set_position(world:entity(hierarchy:get_node(hierarchy:get_node(e).parent).parent), {0.0,0.0,0.0})
         play(e, anim_state)
     end
 end
@@ -475,7 +474,7 @@ local function create_animation(name, duration, joint_anims)
         }
         new_anim.raw_animation:setup(current_skeleton._handle, td)
         for _, ae in ipairs(anim_e) do
-            ae.animation[name] = new_anim
+            world:entity(ae).animation[name] = new_anim
         end
         local edit_anim = {
             name = name,
@@ -772,30 +771,29 @@ local function create_bone_entity(joint_name)
             mesh = "/pkg/tools.prefab_editor/res/meshes/joint.meshbin",
             name = joint_name,
             on_ready = function(e)
+                w:sync("render_object:in", e)
 				if imaterial.has_property(e, "u_basecolor_factor") then
 					imaterial.set_property(e, "u_basecolor_factor", bone_color)
 				end
 				ifs.set_state(e, "auxgeom", true)
-                w:sync("reference:in", e)
-                w:sync("render_object:in", e.reference)
 			end
         }
     }
     return ecs.create_entity(template)
 end
 
-function m.bind(e)
-    if not e then
+function m.bind(eid)
+    if not eid then
         return
     end
-    w:sync("skeleton?in", e)
+    local e = world:entity(eid)
     if not e.skeleton then
         return
     end
     if #anim_e == 0 then
-        for ske_e in w:select "reference:in skeleton:in animation:in" do
+        for ske_e in w:select "id:in skeleton:in animation:in" do
             if ske_e.skeleton == e.skeleton then
-                anim_e[#anim_e + 1] = ske_e.reference
+                anim_e[#anim_e + 1] = ske_e.id
             end
         end
     end
@@ -805,10 +803,10 @@ function m.bind(e)
     if not joint_utils.on_select_joint then
         joint_utils.on_select_joint = function(old, new)
             if old and old.mesh then
-                imaterial.set_property(old.mesh, "u_basecolor_factor", bone_color) 
+                imaterial.set_property(world:entity(old.mesh), "u_basecolor_factor", bone_color) 
             end
             if new then
-                imaterial.set_property(new.mesh, "u_basecolor_factor", bone_highlight_color)
+                imaterial.set_property(world:entity(new.mesh), "u_basecolor_factor", bone_highlight_color)
                 if current_anim then
                     local layer_index = find_anim_by_name(new.name) or 0
                     if layer_index ~= 0 then
@@ -828,17 +826,20 @@ function m.bind(e)
                 return
             end
             local pose_result
-            for e in w:select "skeleton:in pose_result:in" do
-                if current_skeleton == e.skeleton then
-                    pose_result = e.pose_result
+            for ee in w:select "skeleton:in pose_result:in" do
+                if current_skeleton == ee.skeleton then
+                    pose_result = ee.pose_result
                     break
                 end
             end
             if pose_result then
                 for _, joint in ipairs(joints_list) do
-                    if joint.mesh and joint.mesh.render_object then
-                        iom.set_srt_matrix(joint.mesh, math3d.mul(mc.R2L_MAT, pose_result:joint(joint.index)))
-                        iom.set_scale(joint.mesh, joint_scale)
+                    if joint.mesh then
+                        local mesh_e = world:entity(joint.mesh)
+                        if mesh_e then
+                            iom.set_srt_matrix(mesh_e, math3d.mul(mc.R2L_MAT, pose_result:joint(joint.index)))
+                            iom.set_scale(mesh_e, joint_scale)   
+                        end
                     end
                 end
             end

@@ -83,7 +83,7 @@ local function do_animation(poseresult, e, delta_time)
 		-- TODO : refactor animation birth system
 		if task.init then
 			-- many eid shared same state, step state only once.
-			if task.eid and task.eid[1].scene.id == e.scene.id then 
+			if task.eid and task.eid[1] == e.id then 
 				iani.step(task, delta_time * 0.001)
 			end
 		else
@@ -96,7 +96,7 @@ end
 
 function ani_sys:sample_animation_pose()
 	local delta_time = timer.delta()
-	for e in w:select "scene:in skeleton:in pose_result:in _animation:in" do
+	for e in w:select "id:in scene:in skeleton:in pose_result:in _animation:in" do
 		local ske = e.skeleton
 		local pr = e.pose_result
 		pr:setup(ske._handle)
@@ -116,8 +116,8 @@ function ani_sys:end_animation()
 end
 
 function ani_sys:data_changed()
-	for e in w:select "_animation:in scene:in" do
-		if e._animation._current.eid and e._animation._current.eid[1].scene.id == e.scene.id then
+	for e in w:select "id:in _animation:in scene:in" do
+		if e._animation._current.eid and e._animation._current.eid[1] == e.id then
 			process_keyframe_event(e._animation._current)
 		end
 	end
@@ -127,7 +127,7 @@ function ani_sys:component_init()
 	for e in w:select "INIT animation:in skeleton:update pose_result:out" do
 		local ani = e.animation
 		for k, v in pairs(ani) do
-			ani[k] = assetmgr.resource(v)
+			ani[k] = assetmgr.resource(v, world)
 		end
 		e.skeleton = assetmgr.resource(e.skeleton)
 		local skehandle = e.skeleton._handle

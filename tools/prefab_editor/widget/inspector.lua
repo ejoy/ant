@@ -51,10 +51,10 @@ local function update_ui_data(eid)
     --end
 end
 
-function m.update_template_tranform(e)
-    if not e then return end
-    
-    local template = hierarchy:get_template(e)
+function m.update_template_tranform(eid)
+    if not eid then return end
+    local e = world:entity(eid)
+    local template = hierarchy:get_template(eid)
     
     if not template or not template.template then return end
 
@@ -64,11 +64,10 @@ function m.update_template_tranform(e)
         s = {math3d.index(s, 1, 2, 3)},
         t = {math3d.index(t, 1, 2, 3)},
     }
-    template.template.data.scene.srt = srt 
+    template.template.data.scene.srt = srt
 
-    w:sync("collider?in", e)
     if e.collider then
-        anim_view.record_collision(e)
+        anim_view.record_collision(eid)
     end
     
 end
@@ -142,44 +141,37 @@ local function update_current()
     if current_eid == gizmo.target_eid then return end
     current_eid = gizmo.target_eid
     if current_eid then
-        local e = current_eid
+        local e = world:entity(current_eid)
         current_panel = nil
-        w:sync("collider?in", e)
         if e.collider then
             current_panel = get_collider_panel()
         end
         if not current_panel then
-            w:sync("camera?in", e)
             if e.camera then
                 current_panel = get_camera_panel()
             end
         end
         if not current_panel then
-            w:sync("effekseer?in", e)
             if e.effekseer then
                 current_panel = get_effect_panel()
             end
         end
         if not current_panel then
-            w:sync("light?in", e)
             if e.light then
                 current_panel = get_light_panel()
             end
         end
         if not current_panel then
-            w:sync("slot?in", e)
             if e.slot then
                 current_panel = get_slot_panel()
             end
         end
         if not current_panel then
-            w:sync("skybox?in", e)
             if e.skybox then
                 current_panel = get_skybox_panel()
             end
         end
         if not current_panel then
-            w:sync("material?in", e)
             if e.material then
                 current_panel = get_material_panel()
             end

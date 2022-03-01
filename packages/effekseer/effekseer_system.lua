@@ -176,10 +176,9 @@ local function main_camera_ref()
 end
 
 function effekseer_sys:camera_usage()
-    local icamera = ecs.import.interface "ant.camera|icamera"
-    local c = icamera.find_camera(main_camera_ref())
-    if c then
-        effekseer.update_view_proj(math3d.value_ptr(c.viewmat), math3d.value_ptr(c.projmat))
+    local camera = world:entity(main_camera_ref()).camera
+    if camera then
+        effekseer.update_view_proj(math3d.value_ptr(camera.viewmat), math3d.value_ptr(camera.projmat))
     end
 end
 

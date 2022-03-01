@@ -77,12 +77,10 @@ local function get_icon_by_object_type(node)
     if template and template.filename then
         return icons.ICON_WORLD3D
     else
-        local e = node.eid
-        w:sync("camera?in", e)
+        local e = world:entity(node.eid)
         if e.camera then
             return icons.ICON_CAMERA3D
         end
-        w:sync("light?in", e)
         if e.light then
             if e.light.type == "directional" then
                 return icons.ICON_DIRECTIONALLIGHT
@@ -92,20 +90,16 @@ local function get_icon_by_object_type(node)
                 return icons.ICON_SPOTLIGHT
             end
         end
-        w:sync("mesh?in", e)
         if e.mesh then
-            w:sync("collider?in", e)
             if e.collider then
                 return icons.ICON_COLLISIONSHAPE3D
             else
                 return icons.ICON_MESH
             end
         end
-        w:sync("slot?in", e)
         if e.slot then
             return icons.ICON_SLOT
         end
-        w:sync("effekseer?in", e)
         if e.effekseer then
             return icons.ICON_PARTICLES3D
         else

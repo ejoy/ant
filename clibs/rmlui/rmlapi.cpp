@@ -169,37 +169,27 @@ lContextProcessChar(lua_State* L) {
 }
 
 static int
-lContextProcessMouseMove(lua_State* L) {
+lContextProcessMouse(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
 	Rml::MouseButton button = (Rml::MouseButton)luaL_checkinteger(L, 2);
-	int x = (int)luaL_checkinteger(L, 3);
-	int y = (int)luaL_checkinteger(L, 4);
-	bool handled = ctx->ProcessMouseMove(button, x, y);
+	Rml::MouseState state = (Rml::MouseState)luaL_checkinteger(L, 3);
+	int x = (int)luaL_checkinteger(L, 4);
+	int y = (int)luaL_checkinteger(L, 5);
+	bool handled = ctx->ProcessMouse(button, state, x, y);
 	lua_pushboolean(L, handled);
 	return 1;
 }
 
 static int
-lContextProcessMouseButtonDown(lua_State* L) {
+lContextProcessTouch(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
-	Rml::MouseButton button = (Rml::MouseButton)luaL_checkinteger(L, 2);
-	int x = (int)luaL_checkinteger(L, 3);
-	int y = (int)luaL_checkinteger(L, 4);
-	bool handled = ctx->ProcessMouseButtonDown(button, x, y);
-	lua_pushboolean(L, handled);
-	return 1;
-}
-
-static int
-lContextProcessMouseButtonUp(lua_State* L) {
-	luabind::setthread(L);
-	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
-	Rml::MouseButton button = (Rml::MouseButton)luaL_checkinteger(L, 2);
-	int x = (int)luaL_checkinteger(L, 3);
-	int y = (int)luaL_checkinteger(L, 4);
-	bool handled = ctx->ProcessMouseButtonUp(button, x, y);
+	int touchid = (int)luaL_checkinteger(L, 2);
+	Rml::TouchState state = (Rml::TouchState)luaL_checkinteger(L, 3);
+	int x = (int)luaL_checkinteger(L, 4);
+	int y = (int)luaL_checkinteger(L, 5);
+	bool handled = ctx->ProcessTouch(touchid, state, x, y);
 	lua_pushboolean(L, handled);
 	return 1;
 }
@@ -549,9 +539,8 @@ luaopen_rmlui(lua_State* L) {
 		{ "ContextUnloadDocument", lContextUnloadDocument },
 		{ "ContextProcessKey", lContextProcessKey },
 		{ "ContextProcessChar", lContextProcessChar },
-		{ "ContextProcessMouseMove", lContextProcessMouseMove },
-		{ "ContextProcessMouseButtonDown", lContextProcessMouseButtonDown },
-		{ "ContextProcessMouseButtonUp", lContextProcessMouseButtonUp },
+		{ "ContextProcessMouse", lContextProcessMouse },
+		{ "ContextProcessTouch", lContextProcessTouch },
 		{ "ContextUpdate", lContextUpdate },
 		{ "ContextUpdateSize", lContextUpdateSize},
 		{ "DataModelCreate", lDataModelCreate },

@@ -87,13 +87,11 @@ function ic.world_to_screen(world_pos)
     return mu.world_to_screen(vp, mq.render_target.view_rect, world_pos)
 end
 
-function ic.calc_viewproj(cameraref)
-    w:sync("camera:in scene:in", cameraref)
-    
-    local scene = cameraref.scene
+function ic.calc_viewproj(ce)
+    local scene = ce.scene
     local srt = scene.srt
     local viewmat = math3d.lookto(srt.t, math3d.todirection(srt.r), scene.updir)
-    local projmat = math3d.projmat(cameraref.camera.frustum)
+    local projmat = math3d.projmat(ce.camera.frustum)
     return math3d.mul(projmat, viewmat)
 end
 

@@ -42,11 +42,10 @@ function BaseView:_init()
 end
 
 function BaseView:set_model(eid)
-    if self.e == eid then return false end
+    if self.eid == eid then return false end
     --TODO: need remove 'eid', there is no more eid
-    self.e = eid
-    self.entity = eid
-    if not self.e then return false end
+    self.eid = eid
+    if not self.eid then return false end
 
     local template = hierarchy:get_template(eid)
     self.is_prefab = template and template.filename
@@ -66,53 +65,48 @@ function BaseView:set_model(eid)
 end
 
 function BaseView:on_get_prefab()
-    local template = hierarchy:get_template(self.e)
+    local template = hierarchy:get_template(self.eid)
     if template and template.filename then
         return template.filename
     end
 end
 
 function BaseView:on_set_preview(value)
-    local template = hierarchy:get_template(self.e)
+    local template = hierarchy:get_template(self.eid)
     template.editor = value
 end
 
 function BaseView:on_get_preview()
-    local template = hierarchy:get_template(self.e)
+    local template = hierarchy:get_template(self.eid)
     return template.editor
 end
 
-local function is_camera(e)
-    w:sync("camera?in", e)
-    return e.camera ~= nil
-end
-
 function BaseView:on_set_name(value)
-    local template = hierarchy:get_template(self.e)
+    local template = hierarchy:get_template(self.eid)
     template.template.data.name = value
-    self.e.name = value
-    w:sync("name:out", self.e)
-    world:pub {"EntityEvent", "name", self.e, value}
+    local e = world:entity(self.eid)
+    e.name = value
+    world:pub {"EntityEvent", "name", self.eid, value}
 end
 
 function BaseView:on_get_name()
-    w:sync("name?in", self.e)
-    if type(self.e.name) == "number" then
-        return tostring(self.e.name)
+    local e = world:entity(self.eid)
+    if type(e.name) == "number" then
+        return tostring(e.name)
     end
-    return self.e.name or ""
+    return e.name or ""
 end
 
 function BaseView:on_set_tag(value)
-    local template = hierarchy:get_template(self.e)
+    local template = hierarchy:get_template(self.eid)
     local tags = {}
     value:gsub('[^|]*', function (w) tags[#tags+1] = w end)
     template.template.data.tag = tags
-    world:pub {"EntityEvent", "tag", self.e, tags}
+    world:pub {"EntityEvent", "tag", self.eid, tags}
 end
 
 function BaseView:on_get_tag()
-    local template = hierarchy:get_template(self.e)
+    local template = hierarchy:get_template(self.eid)
     if not template or not template.template then return "" end
     local tags = template.template.data.tag
     if type(tags) == "table" then
@@ -122,59 +116,60 @@ function BaseView:on_get_tag()
 end
 
 function BaseView:on_set_position(value)
-    local template = hierarchy:get_template(self.e)
+    local template = hierarchy:get_template(self.eid)
     if template.template then
-        world:pub {"EntityEvent", "move", self.e, template.template.data.scene.srt.t or {0,0,0}, value}
+        world:pub {"EntityEvent", "move", self.eid, template.template.data.scene.srt.t or {0,0,0}, value}
         template.template.data.scene.srt.t = value
     else
-        world:pub {"EntityEvent", "move", self.e, math3d.tovalue(iom.get_position(self.e)), value}
+        world:pub {"EntityEvent", "move", self.eid, math3d.tovalue(iom.get_position(world:entity(self.eid))), value}
     end
 end
 
 function BaseView:on_get_position()
-    local template = hierarchy:get_template(self.e)
+    local template = hierarchy:get_template(self.eid)
     if template.template then
         return template.template.data.scene.srt.t or {0,0,0}
     else
-        return math3d.totable(iom.get_position(self.e))
+        return math3d.totable(iom.get_position(world:entity(self.eid)))
     end
 end
 
 function BaseView:on_set_rotate(value)
-    local template = hierarchy:get_template(self.e)
-    local euler = self.e.oldeuler
-    world:pub {"EntityEvent", "rotate", self.e, { math.rad(euler[1]), math.rad(euler[2]), math.rad(euler[3]) }, value}
+    local template = hierarchy:get_template(self.eid)
+    --local euler = world:entity(self.eid).oldeuler
+    world:pub {"EntityEvent", "rotate", self.eid, { math.rad(value[1]), math.rad(value[2]), math.rad(value[3]) }, value}
     if template.template then
         template.template.data.scene.srt.r = math3d.tovalue(math3d.quaternion{math.rad(value[1]), math.rad(value[2]), math.rad(value[3])})
     end
 end
 
 function BaseView:on_get_rotate()
-    local template = hierarchy:get_template(self.e)
+    local template = hierarchy:get_template(self.eid)
     local r
     if template.template then
         r = template.template.data.scene.srt.r or {0,0,0,1}
     else
-        r = iom.get_rotation(self.e)
+        r = iom.get_rotation(world:entity(self.eid))
     end
     local rad = math3d.tovalue(math3d.quat2euler(r))
     local raweuler = { math.deg(rad[1]), math.deg(rad[2]), math.deg(rad[3]) }
-    self.e.oldeuler = raweuler
-    return self.e.oldeuler
+    -- local e = world:entity(self.eid)
+    -- e.oldeuler = raweuler
+    return raweuler--e.oldeuler
 end
 
 function BaseView:on_set_scale(value)
-    local template = hierarchy:get_template(self.e)
+    local template = hierarchy:get_template(self.eid)
     if template.template then
-        world:pub {"EntityEvent", "scale", self.e, template.template.data.scene.srt.s or {1,1,1}, value}
+        world:pub {"EntityEvent", "scale", self.eid, template.template.data.scene.srt.s or {1,1,1}, value}
         template.template.data.scene.srt.s = value
     else
-        world:pub {"EntityEvent", "scale", self.e, math3d.tovalue(iom.get_scale(self.e)), value}
+        world:pub {"EntityEvent", "scale", self.eid, math3d.tovalue(iom.get_scale(world:entity(self.eid))), value}
     end
 end
 
 function BaseView:on_get_scale()
-    local template = hierarchy:get_template(self.e)
+    local template = hierarchy:get_template(self.eid)
     if template.template then
         local s = template.template.data.scene.srt.s
         if s then
@@ -183,7 +178,7 @@ function BaseView:on_get_scale()
             return {1,1,1}
         end
     else
-        return math3d.tovalue(iom.get_scale(self.e))
+        return math3d.tovalue(iom.get_scale(world:entity(self.eid)))
     end
 end
 
@@ -196,7 +191,7 @@ function BaseView:has_scale()
 end
 
 function BaseView:update()
-    if not self.e then return end
+    if not self.eid then return end
     --self.base.script:update()
     if self.is_prefab then
         self.base.prefab:update()
@@ -206,7 +201,7 @@ function BaseView:update()
 end
 
 function BaseView:show()
-    if not self.e then return end
+    if not self.eid then return end
     --self.base.script:show()
     if self.is_prefab then
         self.base.prefab:show()

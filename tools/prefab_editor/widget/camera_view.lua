@@ -19,8 +19,8 @@ local irq           = ecs.import.interface "ant.render|irenderqueue"
 
 local cameraview = {}
 
-local function camera_template(e)
-    local p = hierarchy:get_template(e)
+local function camera_template(eid)
+    local p = hierarchy:get_template(eid)
     return p.template.data
 end
 
@@ -28,11 +28,11 @@ local function create_transform_property(cv)
     return uiproperty.Group({label="Transform", flags = imgui.flags.TreeNode{"DefaultOpen"} }, {
         uiproperty.Float({label="Scale", speed=0.01, dim=3, disable=true}, {
             getter = function ()
-                return math3d.tovalue(iom.get_scale(cv.e))
+                return math3d.tovalue(iom.get_scale(world:entity(cv.eid)))
             end,
             setter = function (value)
-                iom.set_scale(cv.e, value)
-                local ct = camera_template(cv.e)
+                iom.set_scale(world:entity(cv.eid), value)
+                local ct = camera_template(cv.eid)
                 local s = ct.scene.srt.s
                 if s == nil then
                     s = {}
@@ -43,14 +43,14 @@ local function create_transform_property(cv)
         }),
         uiproperty.Float({label="Rotation", speed=0.01, dim=3},{
             getter = function ()
-                local v = math3d.tovalue(math3d.quat2euler(iom.get_rotation(cv.e)))
+                local v = math3d.tovalue(math3d.quat2euler(iom.get_rotation(world:entity(cv.eid))))
                 v[1], v[2], v[3] = math.deg(v[1]), math.deg(v[2]), math.deg(v[3])
                 return v
             end,
             setter = function (value)
                 local q = math3d.quaternion{math.rad(value[1]), math.rad(value[2]), math.rad(value[3])}
-                iom.set_rotation(cv.e, q)
-                local ct = camera_template(cv.e)
+                iom.set_rotation(world:entity(cv.eid), q)
+                local ct = camera_template(cv.eid)
                 local r = ct.scene.srt.r
                 if r == nil then
                     r = {}
@@ -62,11 +62,11 @@ local function create_transform_property(cv)
         }),
         uiproperty.Float({label="Translation", speed=0.01, dim=3},{
             getter = function ()
-                return math3d.tovalue(iom.get_position(cv.e))
+                return math3d.tovalue(iom.get_position(world:entity(cv.eid)))
             end,
             setter = function (value)
-                iom.set_position(cv.e, value)
-                local ct = camera_template(cv.e)
+                iom.set_position(world:entity(cv.eid), value)
+                local ct = camera_template(cv.eid)
                 local t = ct.scene.srt.t
                 if t == nil then
                     t = {}
@@ -82,107 +82,107 @@ end
 local function create_frustum_property(cv)
     local fov = uiproperty.Float({label="Fov", speed=0.01, min=0.1, max=180},{
         getter = function ()
-            local f = icamera.get_frustum(cv.e)
+            local f = icamera.get_frustum(cv.eid)
             return f.fov
         end,
         setter = function (value)
-            icamera.set_frustum_fov(cv.e, value)
-            local ct = camera_template(cv.e)
+            icamera.set_frustum_fov(world:entity(cv.eid), value)
+            local ct = camera_template(cv.eid)
             ct.camera.frustum.fov = value
         end,
     })
 
     function fov:is_visible()
-        local f = icamera.get_frustum(cv.e)
+        local f = icamera.get_frustum(cv.eid)
         return ((not f.ortho) and f.fov) and self.visible or false
     end
 
     local aspect = uiproperty.Float({label="Aspect", speed=0.01, min=0.00001}, {
         getter = function ()
-            local f = icamera.get_frustum(cv.e)
+            local f = icamera.get_frustum(cv.eid)
             return f.aspect
         end,
         setter = function (value)
-            icamera.set_frustum_aspect(cv.e, value)
-            local ct = camera_template(cv.e)
+            icamera.set_frustum_aspect(world:entity(cv.eid), value)
+            local ct = camera_template(cv.eid)
             ct.camera.frustum.aspect = value
         end,
     })
     function aspect:is_visible()
-        local f = icamera.get_frustum(cv.e)
+        local f = icamera.get_frustum(cv.eid)
         return ((not f.ortho) and f.aspect) and self.visible or false
     end
 
-    local function set_frustum_item(e, n, value)
-        local f = icamera.get_frustum(cv.e)
+    local function set_frustum_item(eid, n, value)
+        local f = icamera.get_frustum(cv.eid)
         local ff = {}
         for k, v in pairs(f) do ff[k] = v end
         ff[n] = value
-        icamera.set_frustum(e, ff)
-        camera_template(e).camera.frustum[n] = value
+        icamera.set_frustum(world:entity(eid), ff)
+        camera_template(eid).camera.frustum[n] = value
     end
 
     local left = uiproperty.Float({label="Left", speed=0.1}, {
         getter = function ()
-            local f = icamera.get_frustum(cv.e)
+            local f = icamera.get_frustum(cv.eid)
             return f.l
         end,
         setter = function (value)
-            set_frustum_item(cv.e, 'l', value)
+            set_frustum_item(cv.eid, 'l', value)
         end
     })
     function left:is_visible()
-        local f = icamera.get_frustum(cv.e)
+        local f = icamera.get_frustum(cv.eid)
         return f.l and self.visible or false
     end
 
     local right = uiproperty.Float({label="Right", speed=0.1}, {
         getter = function ()
-            local f = icamera.get_frustum(cv.e)
+            local f = icamera.get_frustum(cv.eid)
             return f.r
         end,
         setter = function (value)
-            set_frustum_item(cv.e, "r", value)
+            set_frustum_item(cv.eid, "r", value)
         end
     })
 
     function right:is_visible()
-        local f = icamera.get_frustum(cv.e)
+        local f = icamera.get_frustum(cv.eid)
         return f.r and self.visible or false
     end
 
     local top = uiproperty.Float({label="Top", speed=0.1}, {
         getter = function ()
-            return icamera.get_frustum(cv.e).t
+            return icamera.get_frustum(cv.eid).t
         end,
         setter = function (value)
-            set_frustum_item(cv.e, 't', value)
+            set_frustum_item(cv.eid, 't', value)
         end
     })
 
     function top:is_visible()
-        return icamera.get_frustum(cv.e).t and self.visible or false
+        return icamera.get_frustum(cv.eid).t and self.visible or false
     end
 
     local bottom = uiproperty.Float({label="Bottom", speed=0.1}, {
         getter = function ()
-            return icamera.get_frustum(cv.e).b
+            return icamera.get_frustum(cv.eid).b
         end,
         setter = function (value)
-            set_frustum_item(cv.e, 'b', value)
+            set_frustum_item(cv.eid, 'b', value)
         end
     })
     function bottom:is_visible()
-        return icamera.get_frustum(cv.e).b and self.visible or false
+        return icamera.get_frustum(cv.eid).b and self.visible or false
     end
 
     return uiproperty.Group({label="Frustum", flags=0},{
         uiproperty.Bool({label="Ortho"}, {
             getter = function ()
-                return icamera.get_frustum(cv.e).ortho ~= nil
+                return icamera.get_frustum(cv.eid).ortho ~= nil
             end,
             setter = function (value)
-                set_frustum_item(cv.e, 'ortho', value)
+                set_frustum_item(cv.eid, 'ortho', value)
                 fov:set_visible(not value)
                 aspect:set_visible(not value)
             end,
@@ -191,31 +191,30 @@ local function create_frustum_property(cv)
         left, right, top, bottom,
         uiproperty.Float({label="Near", speed=0.1, min=0.01}, {
             getter = function ()
-                local f = icamera.get_frustum(cv.e)
+                local f = icamera.get_frustum(cv.eid)
                 return f.n
             end,
             setter = function (value)
-                icamera.set_frustum_near(cv.e, value)
-                local ct = camera_template(cv.e)
+                icamera.set_frustum_near(cv.eid, value)
+                local ct = camera_template(cv.eid)
                 ct.camera.frustum.n = value
             end
         }),
         uiproperty.Float({label="Far", speed=0.1, min=0.01}, {
             getter = function ()
-                local f = icamera.get_frustum(cv.e)
+                local f = icamera.get_frustum(cv.eid)
                 return f.f
             end,
             setter = function (value)
-                icamera.set_frustum_far(cv.e, value)
-                camera_template(cv.e).camera.frustum.f = value
+                icamera.set_frustum_far(cv.eid, value)
+                camera_template(cv.eid).camera.frustum.f = value
             end
         })
     })
 end
 
-local function camera_exposure(e)
-    w:sync("exposure?in", e)
-    return e.exposure
+local function camera_exposure(eid)
+    return world:entity(eid).exposure
 end
 
 local EXPOSURE_TYPE_options<const> = {"Manual", "Auto"}
@@ -279,12 +278,12 @@ local function create_exposure_property(cv)
     local function gen_modifier(n)
         return {
             getter = function ()
-                local ee = camera_exposure(cv.e) or DEFAULT_EXPOSURE
+                local ee = camera_exposure(cv.eid) or DEFAULT_EXPOSURE
                 return ee[n]
             end,
             setter = function (value)
-                camera_exposure(cv.e)[n] = value
-                camera_template(cv.e)[n] = value
+                camera_exposure(cv.eid)[n] = value
+                camera_template(cv.eid)[n] = value
             end
         }
     end
@@ -296,18 +295,17 @@ local function create_exposure_property(cv)
     })
 
     function exposure:is_disable()
-        return camera_exposure(cv.e) == nil and true or self.disable
+        return camera_exposure(cv.eid) == nil and true or self.disable
     end
 
     return uiproperty.SameLineContainer({}, {
         uiproperty.Bool({label=""}, {
             getter = function ()
-                return camera_exposure(cv.e) ~= nil
+                return camera_exposure(cv.eid) ~= nil
             end,
             setter = function (value)
-                local e = cv.e
-                w:sync("exposure?in", e)
-                local template = hierarchy:get_template(cv.e).template
+                local e = world:entity(cv.eid)
+                local template = hierarchy:get_template(cv.eid).template
 
                 local p_idx = find_exposure_policy(template.policy)
                 assert((e.exposure and p_idx) or (e.exposure == nil and (not p_idx)))
@@ -325,13 +323,13 @@ local function create_exposure_property(cv)
 
                 local t = deep_copy(template)
                 t.on_ready = function (ee)
-                    w:sync("reference:in", ee)
+                    w:sync("id:in", ee)
                     for q in w:select "queue_name:in camera_ref:in" do
-                        if cv.e == q.camera_ref then
-                            irq.set_camera(q.queue_name, ee.reference)
+                        if cv.eid == q.camera_ref then
+                            irq.set_camera(q.queue_name, ee.id)
                         end
                     end
-                    cv.e = ee.reference
+                    cv.eid = ee.id
                 end
             end
         }),
@@ -348,12 +346,12 @@ local function create_serialize_ui(cv)
     end
     local save = uiproperty.Button({label="Save"},{
         click = function ()
-            local p = hierarchy:get_template(cv.e)
+            local p = hierarchy:get_template(cv.eid)
             save_prefab(p.filename, p.template)
         end
     })
     function save:is_disable()
-        local p = hierarchy:get_template(cv.e)
+        local p = hierarchy:get_template(cv.eid)
         if p.filename == nil then
             return true
         end
@@ -365,7 +363,7 @@ local function create_serialize_ui(cv)
         uiproperty.Button({label="Save As"},{
             click = function ()
                 local path = uiutils.get_saveas_path("Prefab", "prefab")
-                local p = hierarchy:get_template(cv.e)
+                local p = hierarchy:get_template(cv.eid)
                 save_prefab(path, p.template)
                 p.filename = path
 
@@ -390,8 +388,8 @@ function cameraview:update()
     self.serialize:update()
 end
 
-function cameraview:set_model(e)
-    self.e = e
+function cameraview:set_model(eid)
+    self.eid = eid
     self:update()
 end
 

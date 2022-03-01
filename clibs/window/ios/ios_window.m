@@ -1,5 +1,8 @@
 #include "../window.h"
 #include "ios_window.h"
+#include "window.h"
+
+UIView* global_window = NULL;
 
 @interface ViewController : UIViewController
 @end
@@ -38,6 +41,8 @@ static void push_message(struct ant_window_message* msg) {
         return nil;
     }
     [self setContentScaleFactor: scale];
+
+    global_window = self;
 
     int w = (int)(self.contentScaleFactor * self.frame.size.width);
     int h = (int)(self.contentScaleFactor * self.frame.size.height);

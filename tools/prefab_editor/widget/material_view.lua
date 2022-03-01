@@ -45,14 +45,14 @@ end
 
 local default_setting = read_datalist_file "/pkg/ant.resources/settings/default.setting"
 
-local function material_template(e)
-    local prefab = hierarchy:get_template(e)
+local function material_template(eid)
+    local prefab = hierarchy:get_template(eid)
     local mf = prefab.template.data.material
     return read_datalist_file(mf)
 end
 
-local function state_template(e)
-    local t = material_template(e)
+local function state_template(eid)
+    local t = material_template(eid)
     if type(t.state) == "string" then
         return read_datalist_file(t.state)
     end
@@ -67,23 +67,23 @@ local function build_fx_ui(mv)
     local function shader_file_ui(st)
         return uiproperty.ResourcePath({label=st, extension = ".sc", readonly = true}, {
             getter = function()
-                return material_template(mv.entity).fx[st]
+                return material_template(mv.eid).fx[st]
             end,
             setter = function(value)
-                material_template(mv.entity).fx[st] = value
+                material_template(mv.eid).fx[st] = value
                 mv.need_reload = true
             end,
         })
     end
 
     local function setting_filed(which)
-        local s = material_template(mv.entity).fx.setting
+        local s = material_template(mv.eid).fx.setting
         s = s or default_setting
         return s[which] or default_setting[which]
     end
 
     local function check_set_setting(n, v)
-        local fx = material_template(mv.entity).fx
+        local fx = material_template(mv.eid).fx
         local s = fx.setting
         if s == nil then
             s = {}
@@ -113,12 +113,12 @@ local function build_fx_ui(mv)
             }),
             uiproperty.Bool({label = "ShadowCast"}, {
                 getter = function()
-                    local prefab = hierarchy:get_template(mv.entity)
+                    local prefab = hierarchy:get_template(mv.eid)
                     local data = prefab.template.data
                     return data.filter_state:match "cast_shadow" ~= nil
                 end,
                 setter = function(value)
-                    local prefab = hierarchy:get_template(mv.entity)
+                    local prefab = hierarchy:get_template(mv.eid)
                     local data = prefab.template.data
                 local fstate = data.filter_state
                     if value then
@@ -186,11 +186,11 @@ local function create_property_ui(n, p, mv)
         -- should add ui to extent texutre
         return uiproperty.EditText({label = n}, {
             getter = function ()
-                local t = material_template(mv.entity)
+                local t = material_template(mv.eid)
                 return t.properties[n].texture
             end,
             setter = function (value)
-                local t = material_template(mv.entity)
+                local t = material_template(mv.eid)
                 t.properties[n].texture = value
                 mv.need_reload = true
             end,
@@ -198,11 +198,11 @@ local function create_property_ui(n, p, mv)
     elseif tt == "v4" or tt == "m4" then
         return uiproperty.Float({label=n}, {
             getter = function()
-                local t = material_template(mv.entity)
+                local t = material_template(mv.eid)
                 return t.properties[n]
             end,
             setter = function(value)
-                local t = material_template(mv.entity)
+                local t = material_template(mv.eid)
                 local pp = t.properties[n]
                 for i=1, #value do
                     pp[i] = value[i]
@@ -215,11 +215,11 @@ local function create_property_ui(n, p, mv)
         for i=1, #p do
             pp[i] = uiproperty.Float({label=tostring(i)}, {
                 getter = function ()
-                    local t = material_template(mv.entity)
+                    local t = material_template(mv.eid)
                     return t.properties[n][i]
                 end,
                 setter = function (value)
-                    local t = material_template(mv.entity)
+                    local t = material_template(mv.eid)
                     local ppp = t.properties[n][i]
                     for ii=1, #value do
                         ppp[ii] = value[ii]
@@ -267,7 +267,7 @@ local LIT_options<const> = {
 }
 
 local function build_properties_ui(mv)
-    local t = material_template(assert(mv.entity))
+    local t = material_template(assert(mv.eid))
     local properties = {}
     if is_pbr_material(t) then
         local dp = t.properties
@@ -571,11 +571,11 @@ local CULL_options<const> = {
 local function create_simple_state_ui(t, l, en, mv, def_value)
     return uiproperty[t](l, {
         getter = function ()
-            local s = state_template(mv.entity)
+            local s = state_template(mv.eid)
             return s[en] or def_value
         end,
         setter = function (value)
-            local s = state_template(mv.entity)
+            local s = state_template(mv.eid)
             s[en] = value
             mv.need_reload = true
         end,
@@ -585,11 +585,11 @@ end
 local function create_write_mask_ui(en, mv)
     return uiproperty.Bool({label=en}, {
         getter = function ()
-            local s = state_template(mv.entity)
+            local s = state_template(mv.eid)
             return s.WRITE_MASK:match(en)
         end,
         setter = function (value)
-            local s = state_template(mv.entity)
+            local s = state_template(mv.eid)
             if value then
                 if not s.WRITE_MASK:match(en) then
                     s.WRITE_MASK = en .. s.WRITE_MASK
@@ -606,11 +606,11 @@ local function build_state_ui(mv)
     return uiproperty.Group({label="State", flags = 0},{
         uiproperty.Combo({label = "Pritmive Type", options=PT_options, id="PT"}, {
             getter = function ()
-                local s = state_template(mv.entity)
+                local s = state_template(mv.eid)
                 return s.PT == nil and "Triangles" or s.PT
             end,
             setter = function(value)
-                local s = state_template(mv.entity)
+                local s = state_template(mv.eid)
                 s.PT = value ~= "Triangles" and value or nil
                 mv.need_reload = true
             end
@@ -619,13 +619,13 @@ local function build_state_ui(mv)
         uiproperty.Group({label="Blend Setting", id="blend_setting"}, {
             uiproperty.Bool({label="Enable", id="enable"}, {
                 getter = function()
-                    local s = state_template(mv.entity)
+                    local s = state_template(mv.eid)
                     return s.BLEND_ENABLE
                 end,
                 setter = function (value)
-                    local s = state_template(mv.entity)
+                    local s = state_template(mv.eid)
                     s.BLEND_ENABLE = value ~= nil
-                    mv:enable_blend_setting_ui(mv.entity)
+                    mv:enable_blend_setting_ui(mv.eid)
                     mv.need_reload = true
                 end,
             }),
@@ -642,7 +642,7 @@ local function build_state_ui(mv)
                 }),
                 uiproperty.Combo({label="RGB Source", options=BLEND_FUNC_options, "src_rgb"}, {
                     getter = function ()
-                        local t = material_template(mv.entity)
+                        local t = material_template(mv.eid)
                         local f = t.state.BLEND_FUNC
                         if f == nil then
                             return BLEND_FUNC_options[1]
@@ -651,7 +651,7 @@ local function build_state_ui(mv)
                         return BLEND_FUNC_mapper[k]
                     end,
                     setter = function (value)
-                        local t = material_template(mv.entity)
+                        local t = material_template(mv.eid)
                         local f = t.state.BLEND_FUNC
                         if f then
                             local d = f:sub(2, 2)
@@ -662,7 +662,7 @@ local function build_state_ui(mv)
                 }),
                 uiproperty.Combo({label="RGB Destination", options=BLEND_FUNC_options, id="dst_rgb"},{
                     getter = function ()
-                        local t = material_template(mv.entity)
+                        local t = material_template(mv.eid)
                         local f = t.state.BLEND_FUNC
                         if f == nil then
                             return BLEND_FUNC_options[1]
@@ -671,7 +671,7 @@ local function build_state_ui(mv)
                         return BLEND_FUNC_mapper[k]
                     end,
                     setter = function (value)
-                        local t = material_template(mv.entity)
+                        local t = material_template(mv.eid)
                         local f = t.state.BLEND_FUNC
                         if f then
                             local s = f:sub(1, 1)
@@ -682,7 +682,7 @@ local function build_state_ui(mv)
                 }),
                 uiproperty.Combo({label="Alpha Source", options=BLEND_FUNC_options, disable=true, id="src_alpha"}, {
                     getter = function ()
-                        local t = material_template(mv.entity)
+                        local t = material_template(mv.eid)
                         local f = t.state.BLEND_FUNC
                         if f == nil then
                             return BLEND_FUNC_options[1]
@@ -691,7 +691,7 @@ local function build_state_ui(mv)
                         return BLEND_FUNC_mapper[k]
                     end,
                     setter = function (value)
-                        local t = material_template(mv.entity)
+                        local t = material_template(mv.eid)
                         local f = t.state.BLEND_FUNC
                         if f then
                             local d = f:sub(4, 4)
@@ -702,7 +702,7 @@ local function build_state_ui(mv)
                 }),
                 uiproperty.Combo({label="Alpha Destination", options=BLEND_FUNC_options, disable=true, id="dst_alpha"},{
                     getter = function ()
-                        local t = material_template(mv.entity)
+                        local t = material_template(mv.eid)
                         local f = t.state.BLEND_FUNC
                         if f == nil or #f ~= 4 then
                             return BLEND_FUNC_options[1]
@@ -711,7 +711,7 @@ local function build_state_ui(mv)
                         return BLEND_FUNC_mapper[k]
                     end,
                     setter = function (value)
-                        local t = material_template(mv.entity)
+                        local t = material_template(mv.eid)
                         local f = t.state.BLEND_FUNC
                         if f and #f == 4 then
                             local s = f:sub(4, 4)
@@ -782,12 +782,10 @@ function MaterialView:_init()
     
     self.mat_file       = uiproperty.ResourcePath({label = "File", extension = ".material"},{
         getter = function()
-            w:sync("material?in", self.entity)
-            return self.entity.material
+            return world:entity(self.eid).material
         end,
         setter = function (value)
-            self.entity.material = value
-            w:sync("material:out", self.entity)
+            world:entity(self.eid).material = value
             self.need_reload = true
         end,
     })
@@ -797,7 +795,7 @@ function MaterialView:_init()
     self.save       = uiproperty.Button({label="Save"}, {
         click = function ()
             local path = self.mat_file:get_path()
-            reload(self.entity, path)
+            reload(self.eid, path)
         end,
     })
     self.saveas     = uiproperty.Button({label="Save As ..."}, {
@@ -805,7 +803,7 @@ function MaterialView:_init()
             local path = uiutils.get_saveas_path("Material", "material")
             if path then
                 local vpath = access.virtualpath(global_data.repo, fs.path(path))
-                reload(self.entity, vpath)
+                reload(self.eid, vpath)
                 if vpath == self.mat_file:get_path() then
                     assetmgr.unload(vpath)
                 end
@@ -836,8 +834,8 @@ local function is_readonly_resource(p)
     return p:match ".glb|" or default_files[p]
 end
 
-function MaterialView:enable_blend_setting_ui(e)
-    local s = state_template(e)
+function MaterialView:enable_blend_setting_ui(eid)
+    local s = state_template(eid)
     if s then
         local bs = self.state:find_property "blend_setting"
         for _, p in ipairs(bs.subproperty) do
@@ -847,13 +845,13 @@ function MaterialView:enable_blend_setting_ui(e)
     end
 end
 
-function MaterialView:set_model(e)
-    if not BaseView.set_model(self, e) then 
+function MaterialView:set_model(eid)
+    if not BaseView.set_model(self, eid) then 
         return false
     end
 
     self.mat_file.disable = false
-    local t = material_template(e)
+    local t = material_template(eid)
     if t.fx.cs == nil then
         local cs = self.fx:find_property_by_label "cs"
         cs.visible = false
@@ -875,17 +873,17 @@ function MaterialView:set_model(e)
             self.properties:set_subproperty(ui_pp)
         end
     end
-    self.save.disable = is_readonly_resource(e.material)
+    self.save.disable = is_readonly_resource(world:entity(eid).material)
     self.material.disable = prefab_mgr:get_current_filename() == nil
-    self:enable_blend_setting_ui(e)
-    self:enable_properties_ui(e)
+    self:enable_blend_setting_ui(eid)
+    self:enable_properties_ui(eid)
 
     self:update()
     return true
 end
 
-function MaterialView:enable_properties_ui(e)
-    local t = material_template(e)
+function MaterialView:enable_properties_ui(eid)
+    local t = material_template(eid)
     if is_pbr_material(t) then
         local p_ui = assert(self.material:find_property_by_label "Properties")
         local unlit_mode<const> = t.fx.settings and t.fx.settings.MATERIAL_UNLIT ~= nil or false
@@ -916,7 +914,7 @@ function MaterialView:enable_properties_ui(e)
 end
 
 function MaterialView:update()
-    local e = self.entity
+    local e = self.eid
     if e then
         BaseView.update(self)
         self.material:update()
@@ -924,7 +922,7 @@ function MaterialView:update()
 end
 
 function MaterialView:show()
-    if self.entity then
+    if self.eid then
         BaseView.show(self)
         self.material:show()
     end

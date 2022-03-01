@@ -65,6 +65,10 @@ static std::vector<EventSpecification> specifications = {
 		{EventId::Transitionend , "transitionend" , false , true },
 		{EventId::Change        , "change"        , false , true },
 		{EventId::Message       , "message"       , true  , true },
+		{EventId::Touchstart    , "touchstart"    , true  , true },
+		{EventId::Touchmove     , "touchmove"     , true  , true },
+		{EventId::Touchend      , "touchend"      , true  , true },
+		{EventId::Touchcancel   , "touchcancel"   , true  , true },
 	};
 
 static auto createLoolup() {

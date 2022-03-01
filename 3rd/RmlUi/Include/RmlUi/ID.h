@@ -211,6 +211,10 @@ enum class EventId : uint16_t
 	Transitionend,
 	Change,
 	Message,
+	Touchstart,
+	Touchmove,
+	Touchend,
+	Touchcancel,
 	NumDefinedIds,
 
 	// Custom IDs start here
@@ -223,6 +227,20 @@ enum class MouseButton {
 	Right = 1,
 	Middle = 2,
 };
+
+enum class MouseState {
+	Down = 0,
+	Move = 1,
+	Up = 2,
+};
+
+enum class TouchState {
+	Start = 0,
+	Move = 1,
+	End = 2,
+	Cancel = 3,
+};
+
 
 } // namespace Rml
 #endif

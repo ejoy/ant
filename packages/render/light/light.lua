@@ -95,17 +95,14 @@ function ilight.create(light)
 end
 
 function ilight.data(e)
-	w:sync("light:in", e)
 	return e.light
 end
 
 function ilight.color(e)
-	w:sync("light:in", e)
 	return e.light.color
 end
 
 function ilight.set_color(e, color)
-	w:sync("light:in", e)
 	local l = e.light
 	local c = l.color
 	for i=1, 4 do c[i] = color[i] end
@@ -113,7 +110,6 @@ function ilight.set_color(e, color)
 end
 
 function ilight.intensity(e)
-	w:sync("light:in", e)
 	return e.light.intensity
 end
 
@@ -122,7 +118,6 @@ end
 	https://google.github.io/filament/Filament.html#lighting/units
 ]]
 function ilight.set_intensity(e, i, unit)
-	w:sync("light:in", e)
 	local l = e.light
 	if unit then
 		l.intensity_unit = check_intensity_unit(unit)
@@ -144,17 +139,14 @@ function ilight.set_intensity(e, i, unit)
 end
 
 function ilight.intensity_unit(e)
-	w:sync("light:in", e)
 	return e.light.intensity_unit
 end
 
 function ilight.range(e)
-	w:sync("light:in", e)
 	return e.light.range
 end
 
 function ilight.set_range(e, r)
-	w:sync("light:in", e)
 	if e.light.type == "directional" then
 		error("directional light do not have 'range' property")
 	end
@@ -163,7 +155,6 @@ function ilight.set_range(e, r)
 end
 
 function ilight.inner_radian(e)
-	w:sync("light:in", e)
 	return e.light.inner_radian
 end
 
@@ -175,7 +166,6 @@ end
 
 local spot_radian_threshold<const> = 10e-6
 function ilight.set_inner_radian(e, r)
-	w:sync("light:in", e)
 	check_spot_light(e)
 	local l = e.light
 	l.inner_radian = math.min(l.outter_radian-spot_radian_threshold, r)
@@ -184,12 +174,10 @@ function ilight.set_inner_radian(e, r)
 end
 
 function ilight.outter_radian(e)
-	w:sync("light:in", e)
 	return e.light.outter_radian
 end
 
 function ilight.set_outter_radian(e, r)
-	w:sync("light:in", e)
 	check_spot_light(e)
 	local l = e.light
 	l.outter_radian = math.max(r, l.inner_radian+spot_radian_threshold)
@@ -198,47 +186,38 @@ function ilight.set_outter_radian(e, r)
 end
 
 function ilight.inner_cutoff(e)
-	w:sync("light:in", e)
 	return e.light.inner_cutoff
 end
 
 function ilight.outter_cutoff(e)
-	w:sync("light:in", e)
 	return e.light.outter_cutoff
 end
 
 function ilight.which_type(e)
-	w:sync("light:in", e)
 	return e.light.type
 end
 
 function ilight.make_shadow(e)
-	w:sync("make_shadow?in", e)
 	return e.make_shadow
 end
 
 function ilight.set_make_shadow(e, enable)
 	e.make_shadow = enable
-	w:sync("make_shadow?out", e)
 end
 
 function ilight.motion_type(e)
-	w:sync("light:in", e)
 	return e.light.motion_type
 end
 
 function ilight.set_motion_type(e, t)
-	w:sync("light:in", e)
 	e.light.motion_type = t
 end
 
 function ilight.angular_radius(e)
-	w:sync("light:in", e)
 	return e.light.angular_radius
 end
 
 function ilight.set_angular_radius(e, ar)
-	w:sync("light:in", e)
 	e.light.angular_radius = ar
 end
 
