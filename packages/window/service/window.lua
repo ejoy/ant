@@ -1,4 +1,5 @@
 local ltask = require "ltask"
+local gesture
 local exclusive
 
 local S = {}
@@ -9,6 +10,7 @@ local event = {
     mouse_wheel = {},
     mouse = {},
     touch = {},
+    gesture = {},
     keyboard = {},
     char = {},
     update = {},
@@ -21,6 +23,7 @@ local priority_event = {
     mouse_wheel = {},
     mouse = {},
     touch = {},
+    gesture = {},
     keyboard = {},
     char = {},
     update = {},
@@ -60,9 +63,28 @@ S["priority_handle"] = function (CMD, ...)
     end
 end
 
+local function gesture_init()
+    gesture = require "gesture"
+    gesture.tap {
+        name = "tap"
+    }
+end
+
+local function gesture_dispatch(name, ...)
+    if not name then
+        return
+    end
+    ltask.send(ltask.self(), "priority_handle", "gesture", name, ...)
+    return true
+end
+
 local function dispatch(CMD,...)
     local SCHEDULE_SUCCESS <const> = 3
     if CMD == "update" then
+        if gesture then
+            while gesture_dispatch(gesture.event()) do
+            end
+        end
         repeat
             exclusive.scheduling()
         until ltask.schedule_message() ~= SCHEDULE_SUCCESS
@@ -95,6 +117,9 @@ end
 
 function S.create_window()
     exclusive = require "ltask.exclusive"
+    if require "platform".OS == "iOS" then
+        gesture_init()
+    end
     local window = require "window"
     window.create(dispatch, 1334, 750)
     ltask.fork(function()
