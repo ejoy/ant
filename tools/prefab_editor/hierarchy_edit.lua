@@ -228,8 +228,7 @@ end
 function hierarchy:update_slot_list(world)
     local slot_list = {["None"] = -1}
     for _, value in pairs(self.all) do
-        world.w:sync("slot?in", value.eid)
-        if value.eid.slot then
+        if world:entity(value.eid).slot then
             local tagname = value.template.template.data.tag
             local slot_name = #tagname > 0 and tagname[1] or ""
             slot_list[slot_name] = value.eid
@@ -241,8 +240,7 @@ end
 function hierarchy:update_collider_list(world)
     local collider_list = {["None"] = -1}
     for _, value in pairs(self.all) do
-        world.w:sync("collider?in", value.eid)
-        if value.eid.collider then
+        if world:entity(value.eid).collider then
             collider_list[world[value.eid].name] = value.eid
         end
     end

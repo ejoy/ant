@@ -19,9 +19,7 @@ local function gen_camera_name() cameraidx = cameraidx + 1 return "camera" .. ca
 
 
 function camera_mgr.create_camera()
-    local mc = irq.main_camera()
-    w:sync("camera:in scene:in", mc)
-
+    local mc = world:entity(irq.main_camera())
     local main_frustum = mc.camera.frustum
     local srt = mc.scene.srt
     local template = {

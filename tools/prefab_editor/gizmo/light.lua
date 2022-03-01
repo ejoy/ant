@@ -38,33 +38,31 @@ function m.bind(eid)
     m.current_light = eid
     m.current_gizmo = nil
     if not eid then return end 
-    if not eid.light then
-        w:sync("light:in", eid)
-    end
-    local lt = eid.light.type
+    local ec = world:entity(eid)
+    local lt = ec.light.type
     m.current_gizmo = m[lt]
     if m.current_gizmo then
         m.update_gizmo()
-        iom.set_position(m.current_gizmo.root, iom.get_position(eid))
-        iom.set_rotation(m.current_gizmo.root, iom.get_rotation(eid))
-        w:sync("name:in", eid)
-        m.current_gizmo.root.name = eid.name
-        w:sync("name:in", m.current_gizmo.root)
-        --world[m.current_gizmo.root].name = world[eid].name
+        local er = world:entity(m.current_gizmo.root)
+        iom.set_position(er, iom.get_position(eid))
+        iom.set_rotation(er, iom.get_rotation(eid))
+        er.name = ec.name
         m.show(true)
     end
 end
 
 function m.update()
-    iom.set_position(m.current_gizmo.root, iom.get_position(m.current_light))
-    iom.set_rotation(m.current_gizmo.root, iom.get_rotation(m.current_light))
+    local er = world:entity(m.current_gizmo.root)
+    local ec = world:entity(m.current_light)
+    iom.set_position(er, iom.get_position(ec))
+    iom.set_rotation(er, iom.get_rotation(ec))
     world:pub{"component_changed", "light", m.current_light, "transform"}
 end
 
 function m.show(b)
     if m.current_gizmo then
         for i, eid in ipairs(m.current_gizmo.eid) do
-            ies.set_state(eid, "main_view", b)
+            ies.set_state(world:entity(eid), "main_view", b)
         end
     end
 end
@@ -118,8 +116,7 @@ local function create_directional_gizmo(initpos, introt)
 end
 
 local function update_circle_vb(eid, radian)
-    w:sync("render_object:in", eid)
-    local rc = eid.render_object
+    local rc = world:entity(eid).render_object
     local vbdesc, ibdesc = rc.vb, rc.ib
     local vb, _ = geo_utils.get_circle_vb_ib(radian, gizmo_const.ROTATE_SLICES)
     bgfx.update(vbdesc.handles[1], 0, bgfx.memory_buffer("fffd", vb));
@@ -172,8 +169,7 @@ local function update_spot_gizmo()
         iom.set_position(m.spot.eid[6], {0, 0, range})
 
         local function update_vb(eid, tp2)
-            w:sync("render_object:in", eid)
-            local vbdesc = eid.render_object.vb
+            local vbdesc = world:entity(eid).render_object.vb
             bgfx.update(vbdesc.handles[1], 0, bgfx.memory_buffer("fffd", {0, 0, 0, 0xffffffff, tp2[1], tp2[2], tp2[3], 0xffffffff}));
         end
         update_vb(m.spot.eid[1], {0, radius, range})

@@ -186,7 +186,7 @@ function world:remove_entity(eid)
 	if not v then
 		return
 	end
-	self.w.w:remove(v)
+	self.w:remove(v)
 end
 
 local m = {}

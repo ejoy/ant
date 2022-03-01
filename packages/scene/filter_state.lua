@@ -30,7 +30,6 @@ local ifs = ecs.interface "ifilter_state"
 ifs.filter_mask = filter_mask
 
 local function get_ro(e)
-	w:sync("render_object?in", e)
 	return e.render_object
 end
 
@@ -47,7 +46,6 @@ function ifs.set_state(e, name, v)
 		(ro.filter_state | STATE_TYPE[name]) or
 		(ro.filter_state & (~STATE_TYPE[name]))
 	e.render_object_update = true
-	w:sync("render_object_update?out", e)
 end
 
 function ifs.state_names(statemask)

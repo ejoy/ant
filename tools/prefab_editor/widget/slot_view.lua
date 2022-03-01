@@ -16,26 +16,24 @@ function SlotView:_init()
     self.slot = uiproperty.Group({label="Slot", flags=imgui.flags.TreeNode{"DefaultOpen"}}, {
             uiproperty.Combo({label="FollowJoint", options={}}, {
                 getter = function()
-                    local tp = hierarchy:get_template(self.e)
+                    local tp = hierarchy:get_template(self.eid)
                     return tp.template.data.slot.joint_name or "(NONE)"
                 end,
                 setter = function(name)
-                    local tp = hierarchy:get_template(self.e)
+                    local tp = hierarchy:get_template(self.eid)
                     tp.template.data.slot.joint_name = name
-                    w:sync("slot:in", self.e)
-                    self.e.slot.joint_name = name
+                    world:entity(self.eid).slot.joint_name = name
                 end,
             }),
             uiproperty.Int({label="FollowFlag"}, {
                 getter = function()
-                    local tp = hierarchy:get_template(self.e)
+                    local tp = hierarchy:get_template(self.eid)
                     return tp.template.data.slot.follow_flag
                 end,
                 setter = function(flag)
-                    local tp = hierarchy:get_template(self.e)
+                    local tp = hierarchy:get_template(self.eid)
                     tp.template.data.follow_flag = flag
-                    w:sync("slot:in", self.e)
-                    self.e.slot.follow_flag = flag
+                    world:entity(self.eid).slot.follow_flag = flag
                 end,
             })
         }
@@ -44,10 +42,10 @@ end
 
 local joint_name_list = {}
 
-function SlotView:set_model(e)
-    if not joint_name_list[e] then
+function SlotView:set_model(eid)
+    if not joint_name_list[eid] then
         local name_list = {}
-        local parent = e.scene.parent
+        local parent = world:entity(eid).scene.parent
         if parent then
             -- local jlist = world[parent].joint_list
             for e in w:select "scene:in _animation:in" do
@@ -65,13 +63,13 @@ function SlotView:set_model(e)
             --     end
             -- end
         end
-        joint_name_list[e] = name_list
+        joint_name_list[eid] = name_list
     end
 
-    if not BaseView.set_model(self, e) then return false end
+    if not BaseView.set_model(self, eid) then return false end
 
     local fj = self.slot:find_property_by_label "FollowJoint"
-    fj:set_options(joint_name_list[e])
+    fj:set_options(joint_name_list[eid])
 
     self:update()
     return true
