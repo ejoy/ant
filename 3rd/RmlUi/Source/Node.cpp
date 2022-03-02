@@ -16,8 +16,12 @@ Node::Type Node::GetType() {
 	return type;
 }
 
-bool Node::UpdateMetrics() {
-	return layout.UpdateMetrics(metrics);
+bool Node::UpdateVisible() {
+	return layout.UpdateVisible(metrics);
+}
+
+void Node::UpdateMetrics(Rect& child) {
+	layout.UpdateMetrics(metrics, child);
 }
 
 Layout& Node::GetLayout() {

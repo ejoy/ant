@@ -41,9 +41,10 @@ class Layout {
 public:
 	struct Metrics {
 		Rect frame;
+		Rect childFrame;
 		EdgeInsets<float> contentInsets{};
 		EdgeInsets<float> borderWidth{};
-		EdgeInsets<float> overflowInset{};
+		EdgeInsets<float> scrollInsets{};
 		bool visible = true;
 
 		Rect getContentFrame() const {
@@ -81,7 +82,10 @@ public:
 	bool IsDirty();
 	void MarkDirty();
 	std::string ToString() const;
-	bool UpdateMetrics(Layout::Metrics& metrics);
+
+	bool HasNewLayout() const;
+	bool UpdateVisible(Layout::Metrics& metrics);
+	void UpdateMetrics(Layout::Metrics& metrics, Rect& child);
 	Overflow GetOverflow();
 	void SetVisible(bool visible);
 

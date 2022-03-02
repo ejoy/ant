@@ -241,10 +241,21 @@ void Layout::MarkDirty() {
 	YGNodeMarkDirty(node);
 }
 
-bool Layout::UpdateMetrics(Layout::Metrics& metrics) {
-	if (!YGNodeGetHasNewLayout(node)) {
+bool Layout::HasNewLayout() const {
+	return YGNodeGetHasNewLayout(node);
+}
+
+bool Layout::UpdateVisible(Layout::Metrics& metrics) {
+	metrics.visible = YGNodeStyleGetDisplay(node) != YGDisplayNone;
+	if (!metrics.visible) {
+		YGNodeSetHasNewLayout(node, false);
 		return false;
 	}
+	return true;
+}
+
+void Layout::UpdateMetrics(Layout::Metrics& metrics, Rect& child) {
+	YGNodeSetHasNewLayout(node, false);
 	metrics.frame = Rect{
 		Point {
 			YGValueToFloat(YGNodeLayoutGetLeft(node)),
@@ -267,10 +278,8 @@ bool Layout::UpdateMetrics(Layout::Metrics& metrics) {
 		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeRight)),
 		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeBottom))
 	};
-	metrics.overflowInset = {};
-	metrics.visible = YGNodeStyleGetDisplay(node) != YGDisplayNone;
-	YGNodeSetHasNewLayout(node, false);
-	return true;
+	metrics.childFrame = metrics.frame;
+	metrics.childFrame.Union(child);
 }
 
 Layout::Overflow Layout::GetOverflow() {

@@ -1314,14 +1314,19 @@ void Element::UpdateGeometry() {
 }
 
 void Element::UpdateLayout() {
-	if (Node::UpdateMetrics() && Node::IsVisible()) {
+	if (layout.HasNewLayout() && Node::UpdateVisible()) {
 		DirtyTransform();
 		DirtyClip();
 		dirty_background = true;
 		dirty_image = true;
+		Rect childFrame {};
 		for (auto& child : children) {
 			child->UpdateLayout();
+			if (child->IsVisible()) {
+				childFrame.Union(child->GetMetrics().childFrame);
+			}
 		}
+		Node::UpdateMetrics(childFrame);
 	}
 }
 
