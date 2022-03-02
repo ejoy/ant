@@ -90,11 +90,15 @@
                     {id=115, icon0="correct.png", icon1="correct.png"},
                     {id=116, icon0="correct.png", icon1="correct.png"},
                 },
+                list_item_width = 667,
+                list_item_height = 50,
+                list_container_width = 667,
+                list_container_height = 750,
             }
             local listclass = require "list"
             local pageclass = require "page"
             -- window size : 1336 750
-            local list_proxy = listclass.create(1, {667, 750}, #start.item_list, {750, 50})
+            local list_proxy = listclass.create(1, {start.list_container_width, start.list_container_height}, #start.item_list, {start.list_item_width, start.list_item_height})
             local page_proxy = pageclass.create({667, 720}, start)
             function start.pagemousedown(event)
                 console.log("pagemousedown")
@@ -139,7 +143,7 @@
     </head>
     <body>
         <div class="panel" data-model="start">
-            <div class="column" style="justify-content: flex-start; align-items: flex-start; width:50%; height: 100%;">
+            <div class="column" style="overflow: hidden; justify-content: flex-start; align-items: flex-start; width:50%; height: 100%;">
                 <div style="width:100%; height:720px;">
                     <div style="transition: left 0.5s linear-out; width:100%; height:100%;" data-event-mousedown="pagemousedown()" data-event-mouseup="pagemouseup()" data-event-mousemove="pagedrag()">
                         <div style="flex-direction: row; justify-content: center; width:100%; height:100%;">
@@ -159,10 +163,12 @@
                     </div>
                 </div>
             </div>
-            <div class="column" style="transition: top 0.5s linear-out; justify-content: flex-start; width:50%; height: 100%; background-color: rgba(100, 100, 100, 255);" data-event-mousedown="listmousedown()" data-event-mouseup="listmouseup()" data-event-mousemove="listdrag()">
-                <div class="item-display" style="width:100%; height: 50px;" data-for="item_list">
-                    <div class="item-bg" data-style-background-image="it.icon0"/>
-                    <div>{{it.id}}</div>
+            <div style="width:100%; height: 50%; overflow: hidden;">
+                <div class="column" style="transition: top 0.5s linear-out; justify-content: flex-start; background-color: rgba(100, 100, 100, 255);" data-style-width="list_container_width + 'px'" data-style-height="list_container_height + 'px'" data-event-mousedown="listmousedown()" data-event-mouseup="listmouseup()" data-event-mousemove="listdrag()">
+                    <div class="item-display" style="width:100%;" data-style-height="list_item_height + 'px'" data-for="item_list">
+                        <div class="item-bg" data-style-background-image="it.icon0"/>
+                        <div>{{it.id}}</div>
+                    </div>
                 </div>
             </div>
         </div>
