@@ -41,20 +41,15 @@ class Layout {
 public:
 	struct Metrics {
 		Rect frame;
-		Rect childFrame;
-		EdgeInsets<float> contentInsets{};
+		Rect content;
+		EdgeInsets<float> paddingWidth{};
 		EdgeInsets<float> borderWidth{};
-		EdgeInsets<float> scrollInsets{};
+		EdgeInsets<float> scrollInset{};
+		Size scrollOffset{};
 		bool visible = true;
 
-		Rect getContentFrame() const {
-			return Rect {
-				Point {contentInsets.left, contentInsets.top},
-				frame.size - contentInsets
-			};
-		}
 		bool operator==(const Metrics& rhs) const {
-			return std::tie(frame, contentInsets, borderWidth, visible) == std::tie(rhs.frame, rhs.contentInsets, rhs.borderWidth, visible);
+			return std::tie(frame, paddingWidth, borderWidth, visible) == std::tie(rhs.frame, rhs.paddingWidth, rhs.borderWidth, visible);
 		}
 		bool operator!=(const Metrics& rhs) const {
 			return !(*this == rhs);
@@ -86,6 +81,8 @@ public:
 	bool HasNewLayout() const;
 	bool UpdateVisible(Layout::Metrics& metrics);
 	void UpdateMetrics(Layout::Metrics& metrics, Rect& child);
+	void UpdateScrollOffset(Layout::Metrics& metrics);
+	void SetScrollTop(Layout::Metrics& metrics, float top);
 	Overflow GetOverflow();
 	void SetVisible(bool visible);
 

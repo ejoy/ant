@@ -1225,7 +1225,11 @@ void Element::UpdateTransform() {
 		return;
 	dirty_transform = false;
 	glm::mat4x4 new_transform(1);
-	glm::vec3 origin(metrics.frame.origin.x, metrics.frame.origin.y, 0);
+	Point origin2d = metrics.frame.origin;
+	if (parent) {
+		origin2d = origin2d - parent->GetMetrics().scrollOffset;
+	}
+	glm::vec3 origin(origin2d.x, origin2d.y, 0);
 	auto computedTransform = GetProperty(PropertyId::Transform)->GetTransformPtr();
 	if (computedTransform && !computedTransform->empty()) {
 		glm::vec3 transform_origin = origin + glm::vec3 {
@@ -1319,14 +1323,14 @@ void Element::UpdateLayout() {
 		DirtyClip();
 		dirty_background = true;
 		dirty_image = true;
-		Rect childFrame {};
+		Rect content {};
 		for (auto& child : children) {
 			child->UpdateLayout();
 			if (child->IsVisible()) {
-				childFrame.Union(child->GetMetrics().childFrame);
+				content.Union(child->GetMetrics().content);
 			}
 		}
-		Node::UpdateMetrics(childFrame);
+		Node::UpdateMetrics(content);
 	}
 }
 
@@ -1340,7 +1344,7 @@ Element* Element::GetElementAtPoint(Point point) {
 	UpdateStackingContext();
 	for (auto iter = stacking_context.rbegin(); iter != stacking_context.rend();++iter) {
 		Element* res = (*iter)->GetElementAtPoint(point);
-		if (!res) {
+		if (res) {
 			return res;
 		}
 	}

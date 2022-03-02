@@ -56,4 +56,10 @@ void Node::DirtyLayout() {
 	layout.MarkDirty();
 }
 
+void Node::SetScrollTop(float top) {
+	if (layout.GetOverflow() == Layout::Overflow::Scroll) {
+		layout.SetScrollTop(metrics, top);
+	}
+}
+
 }

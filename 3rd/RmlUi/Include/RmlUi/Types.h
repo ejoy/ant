@@ -193,13 +193,6 @@ struct Rect {
 		size.SetSize(width, height);
 	}
 	void Union(const Rect& rect) {
-		if (IsEmpty()) {
-			*this = rect;
-			return;
-		}
-		if (rect.IsEmpty()) {
-			return;
-		}
 		float rx = std::min(x(), rect.x());
 		float ry = std::min(y(), rect.y());
 		float rr = std::max(right(), rect.right());

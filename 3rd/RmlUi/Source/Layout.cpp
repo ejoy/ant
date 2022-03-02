@@ -272,14 +272,42 @@ void Layout::UpdateMetrics(Layout::Metrics& metrics, Rect& child) {
 		YGValueToFloat(YGNodeLayoutGetBorder(node, YGEdgeRight)),
 		YGValueToFloat(YGNodeLayoutGetBorder(node, YGEdgeBottom))
 	};
-	metrics.contentInsets = {
+	metrics.paddingWidth = {
 		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeLeft)),
 		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeTop)),
 		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeRight)),
 		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeBottom))
 	};
-	metrics.childFrame = metrics.frame;
-	metrics.childFrame.Union(child);
+	Rect r = metrics.frame;
+	r.Union(child);
+	metrics.content = r;
+
+	UpdateScrollOffset(metrics);
+}
+
+template <typename T>
+void clamp(T& v, T min, T max) {
+	assert(min <= max);
+	if (v < min) {
+		v = min;
+	}
+	else if (v > max) {
+		v = max;
+	}
+}
+
+void clamp(Size& s, Rect r) {
+	clamp(s.w, r.left(), r.right());
+	clamp(s.h, r.top(), r.bottom());
+}
+
+void Layout::UpdateScrollOffset(Layout::Metrics& metrics) {
+	clamp(metrics.scrollOffset, metrics.content + metrics.scrollInset - EdgeInsets<float> {0, 0, metrics.frame.size.w, metrics.frame.size.h});
+}
+
+void Layout::SetScrollTop(Layout::Metrics& metrics, float top) {
+	metrics.scrollOffset.h = top;
+	UpdateScrollOffset(metrics);
 }
 
 Layout::Overflow Layout::GetOverflow() {

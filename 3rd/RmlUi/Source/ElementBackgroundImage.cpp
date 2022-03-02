@@ -60,7 +60,7 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	case Style::BoxType::BorderBox:
 		break;
 	case Style::BoxType::ContentBox:
-		surface = surface - metrics.borderWidth - metrics.contentInsets;
+		surface = surface - metrics.borderWidth - metrics.paddingWidth;
 		break;
 	}
 	if (surface.size.IsEmpty()) {
@@ -125,7 +125,7 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	}
 
 	if (paddingEdge.size() == 0 
-		|| (origin == Style::BoxType::ContentBox && metrics.contentInsets != EdgeInsets<float>{})
+		|| (origin == Style::BoxType::ContentBox && metrics.paddingWidth != EdgeInsets<float>{})
 	) {
 		geometry.AddRectFilled(surface, colour);
 		geometry.UpdateUV(4, surface, uv);
