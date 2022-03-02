@@ -1330,50 +1330,21 @@ void Element::UpdateLayout() {
 	}
 }
 
-Element* Element::GetElementAtPoint(Point point, const Element* ignore_element) {
+Element* Element::GetElementAtPoint(Point point) {
 	if (!IsVisible()) {
 		return nullptr;
 	}
+	if (!IsPointWithinElement(point)) {
+		return nullptr;
+	}
 	UpdateStackingContext();
-	for (int i = (int)stacking_context.size() - 1; i >= 0; --i) {
-		if (ignore_element != nullptr) {
-			Element* element_hierarchy = stacking_context[i];
-			while (element_hierarchy != nullptr) {
-				if (element_hierarchy == ignore_element)
-					break;
-				element_hierarchy = element_hierarchy->GetParentNode();
-			}
-			if (element_hierarchy != nullptr)
-				continue;
-		}
-		Element* child_element = stacking_context[i]->GetElementAtPoint(point, ignore_element);
-		if (child_element != nullptr) {
-			return child_element;
+	for (auto iter = stacking_context.rbegin(); iter != stacking_context.rend();++iter) {
+		Element* res = (*iter)->GetElementAtPoint(point);
+		if (!res) {
+			return res;
 		}
 	}
-	// ignore alpha element
-	if (GetTagName() != "#text") {
-		auto style = GetStyle();
-		auto image_pro = style->GetProperty(PropertyId::BackgroundImage);
-		auto color_pro = style->GetProperty(PropertyId::BackgroundColor);
-		if ((!color_pro || color_pro->GetColor().a == 0) && (!image_pro || image_pro->GetString().empty())) {
-			bool skip = true;
-			for (const auto& [key, value] : attributes) {
-				if (key == "data-style-background-image" || key == "data-style-background-color" || key.substr(0, 10) == "data-event") {
-					skip = false;
-					break;
-				}
-			}
-			if (skip) {
-				return nullptr;
-			}
-		}
-	}
-	
-	if (IsPointWithinElement(point)) {
-		return this;
-	}
-	return nullptr;
+	return this;
 }
 
 static glm::u16vec4 UnionScissor(const glm::u16vec4& a, glm::u16vec4& b) {

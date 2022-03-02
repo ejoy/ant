@@ -281,7 +281,7 @@ public:
 
 	void UpdateLayout();
 	void SetParent(Element* parent);
-	Element* GetElementAtPoint(Point point, const Element* ignore_element = nullptr);
+	Element* GetElementAtPoint(Point point);
 	void SetRednerStatus();
 
 protected:
