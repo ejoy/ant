@@ -1227,7 +1227,7 @@ void Element::UpdateTransform() {
 	glm::mat4x4 new_transform(1);
 	Point origin2d = metrics.frame.origin;
 	if (parent) {
-		origin2d = origin2d - parent->GetMetrics().scrollOffset;
+		origin2d = origin2d - parent->GetScrollOffset();
 	}
 	glm::vec3 origin(origin2d.x, origin2d.y, 0);
 	auto computedTransform = GetProperty(PropertyId::Transform)->GetTransformPtr();

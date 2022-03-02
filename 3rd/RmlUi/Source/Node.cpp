@@ -57,9 +57,23 @@ void Node::DirtyLayout() {
 }
 
 void Node::SetScrollTop(float top) {
-	if (layout.GetOverflow() == Layout::Overflow::Scroll) {
-		layout.SetScrollTop(metrics, top);
+	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
+		return;
 	}
+	metrics.scrollOffset.h = top;
+	layout.UpdateScrollOffset(metrics);
+}
+
+void Node::SetScrollLeft(float left) {
+	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
+		return;
+	}
+	metrics.scrollOffset.w = left;
+	layout.UpdateScrollOffset(metrics);
+}
+
+Size Node::GetScrollOffset() const {
+	return metrics.scrollOffset;
 }
 
 }

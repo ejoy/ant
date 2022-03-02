@@ -82,7 +82,6 @@ public:
 	bool UpdateVisible(Layout::Metrics& metrics);
 	void UpdateMetrics(Layout::Metrics& metrics, Rect& child);
 	void UpdateScrollOffset(Layout::Metrics& metrics);
-	void SetScrollTop(Layout::Metrics& metrics, float top);
 	Overflow GetOverflow();
 	void SetVisible(bool visible);
 

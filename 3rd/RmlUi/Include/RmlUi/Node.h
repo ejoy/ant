@@ -29,7 +29,9 @@ namespace Rml {
 		Element* GetParentNode() const;
 		void DirtyLayout();
 
+		Size GetScrollOffset() const;
 		void SetScrollTop(float top);
+		void SetScrollLeft(float left);
 
 		virtual void OnRender() = 0;
 		virtual void OnChange(const PropertyIdSet& properties) = 0;

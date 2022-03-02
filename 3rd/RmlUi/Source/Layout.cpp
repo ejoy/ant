@@ -305,11 +305,6 @@ void Layout::UpdateScrollOffset(Layout::Metrics& metrics) {
 	clamp(metrics.scrollOffset, metrics.content + metrics.scrollInset - EdgeInsets<float> {0, 0, metrics.frame.size.w, metrics.frame.size.h});
 }
 
-void Layout::SetScrollTop(Layout::Metrics& metrics, float top) {
-	metrics.scrollOffset.h = top;
-	UpdateScrollOffset(metrics);
-}
-
 Layout::Overflow Layout::GetOverflow() {
 	return (Layout::Overflow)YGNodeStyleGetOverflow(node);
 }
