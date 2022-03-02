@@ -550,7 +550,7 @@ local function reset()
     if joints_list then
         for _, joint in ipairs(joints_list) do
             if joint.mesh then
-                w:remove(joint.mesh)
+                world:remove_entity(joint.mesh)
             end
             joint.mesh = nil
         end
