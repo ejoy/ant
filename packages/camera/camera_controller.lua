@@ -160,7 +160,7 @@ function cc_sys:data_changed()
         iom.move_forward(world:entity(mq.camera_ref), move_z)
     end
 
-    if newx and newy then
+    if motiontype and newx and newy then
         local mq = w:singleton("main_queue", "camera_ref:in render_target:in")
         local dx, dy = dxdy(newx, newy, mq.render_target.view_rect)
         local ce = world:entity(mq.camera_ref)
