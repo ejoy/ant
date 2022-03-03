@@ -2,16 +2,13 @@ local rmlui = require "rmlui"
 
 local timer = require "core.timer"
 local task = require "core.task"
-local event = require "core.event"
 local filemanager = require "core.filemanager"
 local windowManager = require "core.windowManager"
+local contextManager = require "core.contextManager"
 local initRender = require "core.initRender"
 local ltask = require "ltask"
 
 local quit
-local context
-local screen_ratio = 1.0
-local debuggerInitialized = false
 
 local ServiceWindow = ltask.queryservice "ant.window|window"
 
@@ -42,18 +39,13 @@ local function Render()
         end
         rmlui.RenderBegin()
         rmlui.RmlTimeUpdate(delta)
-        rmlui.ContextUpdate(context)
+        contextManager.update()
         rmlui.RenderFrame()
         task.update()
         bgfx.encoder_frame()
     end
     bgfx.encoder_destroy()
     ltask.wakeup(quit)
-end
-
-local function updateContext(c)
-    context = c
-    event("OnContextChange", context)
 end
 
 local S = {}
@@ -63,8 +55,6 @@ function S.initialize(t)
     ServiceWorld = t.service_world
     require "font" (t.font_mgr)
     initRender(t)
-    local c = rmlui.RmlCreateContext(1, 1)
-    updateContext(c)
     ltask.fork(Render)
 end
 
@@ -72,71 +62,9 @@ function S.shutdown()
     quit = {}
     ltask.wait(quit)
 	ltask.send(ServiceWindow, "unsubscribe_all")
-    rmlui.RmlRemoveContext(context)
-    updateContext(nil)
     rmlui.RmlShutdown()
     bgfx.shutdown()
     ltask.quit()
-end
-
-local function round(x)
-    return math.floor(x*screen_ratio+0.5)
-end
-
-function S.mouse(x, y, type, state)
-    if not context then
-        return
-    end
-    x, y = round(x), round(y)
-    return rmlui.ContextProcessMouse(context, type-1, state-1, x, y)
-end
-
-function S.touch(state, touches)
-    if not context then
-        return
-    end
-    return rmlui.ContextProcessTouch(context, state-1, touches)
-end
-
-local gesture = {}
-function gesture.tap(x, y)
-    x, y = round(x), round(y)
-    local DOWN <const> = 0
-    local MOVE <const> = 1
-    local UP   <const> = 2
-    rmlui.ContextProcessMouse(context, 0, MOVE, x, y)
-    rmlui.ContextProcessMouse(context, 0, DOWN, x, y)
-    return rmlui.ContextProcessMouse(context, 0, UP, x, y)
-end
-
-function S.gesture(name, ...)
-    if not context then
-        return
-    end
-    local f =  gesture[name]
-    if not f then
-        return
-    end
-    return f(...)
-end
-
-function S.debugger(open)
-    if context then
-        if not debuggerInitialized then
-            rmlui.DebuggerInitialise(context)
-            debuggerInitialized = true
-        else
-            rmlui.DebuggerSetContext(context)
-        end
-        rmlui.DebuggerSetVisible(open)
-    end
-end
-
-function S.update_context_size(w, h, ratio)
-    screen_ratio = ratio
-    if context then
-        rmlui.ContextUpdateSize(context, w, h)
-    end
 end
 
 S.open = windowManager.open
@@ -144,6 +72,10 @@ S.close = windowManager.close
 S.postMessage = windowManager.postMessage
 S.font_dir = filemanager.font_dir
 S.preload_dir = filemanager.preload_dir
+S.mouse = contextManager.process_mouse
+S.touch = contextManager.process_touch
+S.gesture = contextManager.process_gesture
+S.update_context_size = contextManager.set_dimensions
 
 ltask.send(ServiceWindow, "subscribe", "priority=1", "mouse", "touch", "gesture")
 

@@ -1,6 +1,5 @@
 #include <lua.hpp>
 
-#include "RmlUi/Context.h"
 #include "RmlUi/Core.h"
 #include "RmlUi/Element.h"
 #include "RmlUi/Document.h"
@@ -102,12 +101,16 @@ struct EventListener final : public Rml::EventListener {
 };
 
 static int
-lContextLoadDocument(lua_State* L) {
+lDocumentCreate(lua_State* L) {
 	luabind::setthread(L);
-	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
-	const char* path = luaL_checkstring(L, 2);
-	Rml::Document* doc = ctx->LoadDocument(path);
-	if (!doc) {
+	std::string url = lua_checkstdstring(L, 1);
+	Rml::Size dimensions(
+		(float)luaL_checkinteger(L, 2),
+		(float)luaL_checkinteger(L, 3)
+	);
+	Rml::Document* doc = new Rml::Document(dimensions);
+	if (!doc->Load(url)) {
+		delete doc;
 		return 0;
 	}
 	lua_pushlightuserdata(L, doc);
@@ -115,62 +118,61 @@ lContextLoadDocument(lua_State* L) {
 }
 
 static int
-lContextOnLoadDocument(lua_State* L) {
+lDocumentOnLoad(lua_State* L) {
 	luabind::setthread(L);
-	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
-	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 2);
+	//TODO
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
 	doc->body->DispatchEvent(Rml::EventId::Load, Rml::EventDictionary());
 	return 0;
 }
 
 static int
-lContextUnloadDocument(lua_State* L) {
+lDocumentClose(lua_State* L) {
 	luabind::setthread(L);
-	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
-	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 2);
-	ctx->UnloadDocument(doc);
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
+	doc->Close();
 	return 0;
 }
 
 static int
-lContextProcessMouse(lua_State* L) {
+lDocumentProcessMouse(lua_State* L) {
 	luabind::setthread(L);
-	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
 	Rml::MouseButton button = (Rml::MouseButton)luaL_checkinteger(L, 2);
 	Rml::MouseState state = (Rml::MouseState)luaL_checkinteger(L, 3);
 	int x = (int)luaL_checkinteger(L, 4);
 	int y = (int)luaL_checkinteger(L, 5);
-	bool handled = ctx->ProcessMouse(button, state, x, y);
+	bool handled = doc->ProcessMouse(button, state, x, y);
 	lua_pushboolean(L, handled);
 	return 1;
 }
 
 static int
-lContextProcessTouch(lua_State* L) {
+lDocumentProcessTouch(lua_State* L) {
 	luabind::setthread(L);
-	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
 	Rml::TouchState state = (Rml::TouchState)luaL_checkinteger(L, 3);
-	bool handled = ctx->ProcessTouch(state);
+	bool handled = doc->ProcessTouch(state);
 	lua_pushboolean(L, handled);
 	return 1;
 }
 
 static int
-lContextUpdate(lua_State* L) {
+lDocumentUpdate(lua_State* L) {
 	luabind::setthread(L);
-	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
-	ctx->Update();
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
+	doc->Update();
 	return 0;
 }
 
 static int
-lContextUpdateSize(lua_State *L){
+lDocumentSetDimensions(lua_State *L){
 	luabind::setthread(L);
-	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
-	ctx->SetDimensions(Rml::Size(
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
+	doc->SetDimensions(Rml::Size(
 		(float)luaL_checkinteger(L, 2),
-		(float)luaL_checkinteger(L, 3)));
-
+		(float)luaL_checkinteger(L, 3))
+	);
 	return 0;
 }
 
@@ -411,27 +413,6 @@ lRmlShutdown(lua_State* L) {
 }
 
 static int
-lRmlCreateContext(lua_State* L) {
-	luabind::setthread(L);
-	float w = (float)luaL_checkinteger(L, 1);
-	float h = (float)luaL_checkinteger(L, 2);
-	Rml::Context* ctx = new Rml::Context(Rml::Size(w, h));
-	if (!ctx) {
-		return 0;
-	}
-	lua_pushlightuserdata(L, ctx);
-	return 1;
-}
-
-static int
-lRmlRemoveContext(lua_State* L) {
-	luabind::setthread(L);
-	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
-	delete ctx;
-	return 0;
-}
-
-static int
 lRmlRegisterEevent(lua_State* L) {
 	luabind::setthread(L);
 	lua_plugin* plugin = get_lua_plugin();
@@ -484,19 +465,21 @@ luaopen_rmlui(lua_State* L) {
 	luaL_checkversion(L);
 	g_plugin = new lua_plugin;
 	luaL_Reg l[] = {
-		{ "ContextLoadDocument", lContextLoadDocument },
-		{ "ContextOnLoadDocument", lContextOnLoadDocument },
-		{ "ContextUnloadDocument", lContextUnloadDocument },
-		{ "ContextProcessMouse", lContextProcessMouse },
-		{ "ContextProcessTouch", lContextProcessTouch },
-		{ "ContextUpdate", lContextUpdate },
-		{ "ContextUpdateSize", lContextUpdateSize},
 		{ "DataModelCreate", lDataModelCreate },
 		{ "DataModelRelease", lDataModelRelease },
 		{ "DataModelRelease", lDataModelDelete },
 		{ "DataModelGet", lDataModelGet },
 		{ "DataModelSet", lDataModelSet },
 		{ "DataModelDirty", lDataModelDirty },
+
+		{ "DocumentCreate", lDocumentCreate },
+		{ "DocumentOnLoad", lDocumentOnLoad },
+		{ "DocumentClose", lDocumentClose },
+		{ "DocumentProcessMouse", lDocumentProcessMouse },
+		{ "DocumentProcessTouch", lDocumentProcessTouch },
+		{ "DocumentUpdate", lDocumentUpdate },
+		{ "DocumentSetDimensions", lDocumentSetDimensions},
+
 		{ "DocumentAddEventListener", lDocumentAddEventListener },
 		{ "DocumentDispatchEvent", lDocumentDispatchEvent },
 		{ "DocumentGetElementById", lDocumentGetElementById },
@@ -519,8 +502,6 @@ luaopen_rmlui(lua_State* L) {
 		{ "RenderFrame", lRenderFrame },
 		{ "RmlInitialise", lRmlInitialise },
 		{ "RmlShutdown", lRmlShutdown },
-		{ "RmlCreateContext", lRmlCreateContext },
-		{ "RmlRemoveContext", lRmlRemoveContext },
 		{ "RmlRegisterEevent", lRmlRegisterEevent },
 		{ "RmlTimeUpdate", lRmlTimeUpdate },
 		{ NULL, NULL },
