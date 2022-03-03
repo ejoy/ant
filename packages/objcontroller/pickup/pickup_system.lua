@@ -301,7 +301,7 @@ local function select_obj(pc, render_target)
 		log.info("not found any eid")
 	end
 	pc.picked_callback = nil
-	world:pub {"pickup"}
+	world:pub {"pickup", eid}
 end
 
 local state_list = {
