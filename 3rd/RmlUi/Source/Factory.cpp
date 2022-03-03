@@ -27,7 +27,6 @@
  */
 
 #include "../Include/RmlUi/Factory.h"
-#include "../Include/RmlUi/Context.h"
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/Document.h"
 #include "../Include/RmlUi/Stream.h"
@@ -304,13 +303,6 @@ bool Factory::InstanceElementText(Element* parent, const std::string& str)
 	}
 
 	if (parse_as_rml) {
-// 		Context* context = parent->GetContext();
-// 		std::string tag = context ? context->GetDocumentsBaseTag() : "body";
-
-// 		std::string tag = "body";
-// 		std::string data = "<body>\n";
-// 		data += str;
-// 		std::string close_tag = "\n</body>";
 		HtmlParser parser;
 		EmbedHtmlHandler handler(parent);
 		parser.Parse(str, &handler);

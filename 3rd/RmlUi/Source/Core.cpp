@@ -27,7 +27,6 @@
  */
 
 #include "../Include/RmlUi/Core.h"
-#include "../Include/RmlUi/Context.h"
 #include "../Include/RmlUi/Factory.h"
 #include "../Include/RmlUi/FileInterface.h"
 #include "../Include/RmlUi/FontEngineInterface.h"

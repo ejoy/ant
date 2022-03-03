@@ -29,7 +29,6 @@
   
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/ElementText.h"
-#include "../Include/RmlUi/Context.h"
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/Document.h"
 #include "../Include/RmlUi/ElementUtilities.h"
@@ -44,6 +43,7 @@
 #include "../Include/RmlUi/StringUtilities.h"
 #include "../Include/RmlUi/EventSpecification.h"
 #include "../Include/RmlUi/EventListener.h"
+#include "../Include/RmlUi/Time.h"
 #include "DataModel.h"
 #include "ElementAnimation.h"
 #include "ElementBackgroundBorder.h"
@@ -392,13 +392,6 @@ void Element::RemoveAttribute(const std::string& name)
 		changed_attributes.emplace(name, std::string());
 		OnAttributeChange(changed_attributes);
 	}
-}
-
-Context* Element::GetContext() const
-{
-	if (Document* document = GetOwnerDocument())
-		return document->GetContext();
-	return nullptr;
 }
 
 void Element::SetAttributes(const ElementAttributes& _attributes)
@@ -997,7 +990,7 @@ void Element::StartAnimation(PropertyId property_id, const Property* start_value
 		return;
 	}
 	ElementAnimationOrigin origin = (initiated_by_animation_property ? ElementAnimationOrigin::Animation : ElementAnimationOrigin::User);
-	double start_time = GetContext()->GetElapsedTime() + (double)delay;
+	double start_time = Time::Now() + (double)delay;
 
 	ElementAnimation animation{ property_id, origin, value, *this, start_time, 0.0f, num_iterations, alternate_direction };
 	auto it = std::find_if(animations.begin(), animations.end(), [&](const ElementAnimation& el) { return el.GetPropertyId() == property_id; });
@@ -1042,7 +1035,7 @@ bool Element::StartTransition(const Transition& transition, const Property& star
 		return false;
 
 	float duration = transition.duration;
-	double start_time = GetContext()->GetElapsedTime() + (double)transition.delay;
+	double start_time = Time::Now() + (double)transition.delay;
 
 	if (it == animations.end()) {
 		// Add transition as new animation
@@ -1184,7 +1177,7 @@ void Element::AdvanceAnimations()
 	if (animations.empty()) {
 		return;
 	}
-	double time = GetContext()->GetElapsedTime();
+	double time = Time::Now();
 
 	for (auto& animation : animations)
 	{

@@ -1,16 +1,5 @@
 #include "../Include/RmlUi/Context.h"
-#include "../Include/RmlUi/Core.h"
-#include "../Include/RmlUi/DataModelHandle.h"
 #include "../Include/RmlUi/Document.h"
-#include "../Include/RmlUi/ElementUtilities.h"
-#include "../Include/RmlUi/Factory.h"
-#include "../Include/RmlUi/RenderInterface.h"
-#include "../Include/RmlUi/StringUtilities.h"
-#include "DataModel.h"
-#include "EventDispatcher.h"
-#include "PluginRegistry.h"
-#include <algorithm>
-#include <iterator>
 
 namespace Rml {
 
@@ -20,12 +9,10 @@ Context::Context(const Size& dimensions_)
 
 Context::~Context() {
 	for (auto& document : documents) {
-		document->body->DispatchEvent(EventId::Unload, EventDictionary());
+		document->Close();
 		unloaded_documents.push_back(document);
 	}
 	for (auto& document : unloaded_documents) {
-		document->body->RemoveAllEvents();
-		PluginRegistry::NotifyDocumentDestroy(document);
 		delete document;
 	}
 	documents.clear();
@@ -41,112 +28,54 @@ void Context::SetDimensions(const Size& _dimensions) {
 	}
 }
 
-const Size& Context::GetDimensions() const {
-	return dimensions;
-}
-
-void Context::Update(double delta) {
-	m_elapsedtime += delta;
+void Context::Update() {
 	for (auto doc : documents) {
-		if (doc->IsShow()) {
-			doc->UpdateDataModel(true);
-			doc->Update();
-			doc->Render();
-		}
+		doc->Update();
 	}
 	ReleaseUnloadedDocuments();
 }
 
-// Load a document into the context.
 Document* Context::LoadDocument(const std::string& document_path) {	
 	DocumentPtr document(new Document(dimensions));
-	document->context = this;
-	PluginRegistry::NotifyDocumentCreate(document.get());
 	if (!document->Load(document_path)) {
-		PluginRegistry::NotifyDocumentDestroy(document.get());
 		return nullptr;
 	}
 	documents.insert(documents.begin(), document.get());
-	// trigger load event in lua later
-	//document->body->DispatchEvent(EventId::Load, EventDictionary());
-	document->UpdateDataModel(false);
-	document->Update();
 	return document.release();
 }
 
 void Context::UnloadDocument(Document* document) {
-	RMLUI_ASSERT(document->GetContext() == this);
 	for (size_t i = 0; i < unloaded_documents.size(); ++i) {
 		if (unloaded_documents[i] == document)
 			return;
 	}
-	document->body->DispatchEvent(EventId::Unload, EventDictionary());
-	PluginRegistry::NotifyDocumentDestroy(document);
+	document->Close();
 	unloaded_documents.push_back(document);
-}
-
-bool Context::ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state) {
-	for (auto doc : documents) {
-		if (doc->IsShow()) {
-			if (doc->ProcessKeyDown(key, key_modifier_state)) {{
-				return true;
-			}}
-		}
-	}
-	return false;
-}
-
-bool Context::ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state) {
-	for (auto doc : documents) {
-		if (doc->IsShow()) {
-			if (doc->ProcessKeyUp(key, key_modifier_state)) {{
-				return true;
-			}}
-		}
-	}
-	return false;
-}
-
-bool Context::ProcessChar(int character) {
-	for (auto doc : documents) {
-		if (doc->IsShow()) {
-			if (doc->ProcessChar(character)) {{
-				return true;
-			}}
-		}
-	}
-	return false;
 }
 
 bool Context::ProcessTouch(TouchState state) {
 	for (auto doc : documents) {
-		if (doc->IsShow()) {
-			if (doc->ProcessTouch(state)) {{
-				return true;
-			}}
-		}
+		if (doc->ProcessTouch(state)) {{
+			return true;
+		}}
 	}
 	return false;
 }
 
 bool Context::ProcessMouse(MouseButton button, MouseState state, int x, int y) {
 	for (auto doc : documents) {
-		if (doc->IsShow()) {
-			if (doc->ProcessMouse(button, state, x, y)) {{
-				return true;
-			}}
-		}
+		if (doc->ProcessMouse(button, state, x, y)) {{
+			return true;
+		}}
 	}
 	return false;
 }
 
 bool Context::ProcessMouseWheel(float wheel_delta) {
 	for (auto doc : documents) {
-		if (doc->IsShow()) {
-			if (doc->ProcessMouseWheel(wheel_delta)) {{
-				return true;
-			}}
-		}
+		if (doc->ProcessMouseWheel(wheel_delta)) {{
+			return true;
+		}}
 	}
 	return false;
 }
@@ -159,16 +88,11 @@ void Context::ReleaseUnloadedDocuments() {
 	std::vector<Document*> docs = std::move(unloaded_documents);
 	unloaded_documents.clear();
 	for (auto document : docs) {
-		document->body->RemoveAllEvents();
 		auto pos = std::find(std::begin(documents), std::end(documents), document);
 		std::rotate(pos, pos + 1, std::end(documents));
 		documents.pop_back();
 		delete document;
 	}
-}
-
-double Context::GetElapsedTime() {
-	return m_elapsedtime / 1000;
 }
 
 }

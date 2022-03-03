@@ -28,7 +28,6 @@
 
 #include "ElementStyle.h"
 #include "../Include/RmlUi/Core.h"
-#include "../Include/RmlUi/Context.h"
 #include "../Include/RmlUi/Document.h"
 #include "../Include/RmlUi/ElementUtilities.h"
 #include "../Include/RmlUi/FontEngineInterface.h"

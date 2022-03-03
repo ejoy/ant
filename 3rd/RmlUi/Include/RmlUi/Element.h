@@ -170,10 +170,6 @@ public:
 	//@}
 
 
-	/// Returns the element's context.
-	/// @return The context this element's document exists within.
-	Context* GetContext() const;
-
 	/** @name DOM Properties
 	 */
 	//@{

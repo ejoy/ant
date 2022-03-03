@@ -27,7 +27,6 @@
  */
 
 #include "../Include/RmlUi/Document.h"
-#include "../Include/RmlUi/Context.h"
 #include "../Include/RmlUi/ElementText.h"
 #include "../Include/RmlUi/Factory.h"
 #include "../Include/RmlUi/Stream.h"
@@ -53,10 +52,12 @@ Document::Document(const Size& _dimensions)
 	, dimensions(_dimensions)
 {
 	style_sheet = nullptr;
-	context = nullptr;
+	PluginRegistry::NotifyDocumentCreate(this);
 }
 
 Document::~Document() {
+	body->RemoveAllEvents();
+	PluginRegistry::NotifyDocumentDestroy(this);
 	body.reset();
 }
 
@@ -242,18 +243,14 @@ bool Document::Load(const std::string& path) {
 		DocumentHtmlHandler handler(*this);
 		parser.Parse(data, &handler);
 		body->UpdateProperties();
+		UpdateDataModel(false);
+		Update();
 	}
 	catch (HtmlParserException& e) {
 		Log::Message(Log::Level::Error, "%s Line: %d Column: %d", e.what(), e.GetLine(), e.GetColumn());
 		return false;
 	}
 	return true;
-}
-
-// Returns the document's context.
-Context* Document::GetContext()
-{
-	return context;
 }
 
 const std::string& Document::GetSourceURL() const
@@ -293,11 +290,8 @@ void Document::Hide() {
 	body->DispatchEvent(EventId::Hide, EventDictionary());
 }
 
-// Close this document
-void Document::Close()
-{
-	if (context != nullptr)
-		context->UnloadDocument(this);
+void Document::Close() {
+	body->DispatchEvent(EventId::Unload, EventDictionary());
 }
 
 ElementPtr Document::CreateElement(const std::string& name)
@@ -373,22 +367,6 @@ static void SendEvents(const ElementSet& old_items, const ElementSet& new_items,
 	}
 }
 
-static void GenerateKeyEventParameters(EventDictionary& parameters, Input::KeyIdentifier key) {
-	parameters["key"] = (int)key;
-}
-
-static void GenerateKeyModifierEventParameters(EventDictionary& parameters, int key_modifier_state) {
-	static const std::string property_names[] = {
-		"ctrlKey",
-		"shiftKey",
-		"altKey",
-		"metaKey",
-	};
-	for (size_t i = 0; i < sizeof(property_names) /sizeof(property_names[0]); ++i) {
-		parameters[property_names[i]] = (int)((key_modifier_state & (1 << i)) > 0);
-	}
-}
-
 static void GenerateMouseEventParameters(EventDictionary& parameters, const Point& mouse_position, MouseButton button) {
 	parameters.reserve(3);
 	parameters["x"] = mouse_position.x;
@@ -397,35 +375,10 @@ static void GenerateMouseEventParameters(EventDictionary& parameters, const Poin
 		parameters["button"] = (int)button;
 }
 
-bool Document::ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state) {
-	if (!focus)
-		return false;
-	EventDictionary parameters;
-	GenerateKeyEventParameters(parameters, key);
-	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
-	return focus->DispatchEvent(EventId::Keydown, parameters);
-}
-
-bool Document::ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state) {
-	if (!focus)
-		return false;
-	EventDictionary parameters;
-	GenerateKeyEventParameters(parameters, key);
-	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
-	return focus->DispatchEvent(EventId::Keyup, parameters);
-}
-
-bool Document::ProcessChar(int character)
-{
-	if (!focus)
-		return false;
-
-	EventDictionary parameters;
-	parameters["text"] = character;
-	return focus->DispatchEvent(EventId::Textinput, parameters);
-}
-
 bool Document::ProcessTouch(TouchState state) {
+	if (!IsShow()) {
+		return false;
+	}
 	//Point pt {(float)0, (float)0};
 	//Element* e = body->GetElementAtPoint(pt);
 	Element* e = body.get();
@@ -448,6 +401,9 @@ bool Document::ProcessTouch(TouchState state) {
 }
 
 bool Document::ProcessMouse(MouseButton button, MouseState state, int x, int y) {
+	if (!IsShow()) {
+		return false;
+	}
 	if (state == MouseState::Move) {
 		bool mouse_moved = (x != mouse_position.x) || (y != mouse_position.y);
 		if (mouse_moved) {
@@ -517,6 +473,9 @@ bool Document::ProcessMouse(MouseButton button, MouseState state, int x, int y) 
 }
 
 bool Document::ProcessMouseWheel(float wheel_delta) {
+	if (!IsShow()) {
+		return false;
+	}
 	if (hover) {
 		EventDictionary scroll_parameters;
 		scroll_parameters["wheel_delta"] = wheel_delta;
@@ -625,12 +584,16 @@ const Size& Document::GetDimensions() {
 }
 
 void Document::Update() {
-	body->Update();
-	if (dirty_dimensions || body->GetLayout().IsDirty()) {
-		dirty_dimensions = false;
-		body->GetLayout().CalculateLayout(dimensions);
+	if (IsShow()) {
+		UpdateDataModel(true);
+		body->Update();
+		if (dirty_dimensions || body->GetLayout().IsDirty()) {
+			dirty_dimensions = false;
+			body->GetLayout().CalculateLayout(dimensions);
+		}
+		body->UpdateLayout();
+		Render();
 	}
-	body->UpdateLayout();
 }
 
 void Document::Render() {

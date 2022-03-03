@@ -41,7 +41,8 @@ local function Render()
             timer.update(delta)
         end
         rmlui.RenderBegin()
-        rmlui.ContextUpdate(context, delta)
+        rmlui.RmlTimeUpdate(delta)
+        rmlui.ContextUpdate(context)
         rmlui.RenderFrame()
         task.update()
         bgfx.encoder_frame()
@@ -119,24 +120,6 @@ function S.gesture(name, ...)
     return f(...)
 end
 
-function S.keyboard(key, press, state)
-    if not context then
-        return
-    end
-    rmlui.ContextProcessKey(context, key, press)
-    -- stop handle
-    return false
-end
-
-function S.char(char)
-    if not context then
-        return
-    end
-    rmlui.ContextProcessChar(context, char)
-    -- stop handle
-    return true
-end
-
 function S.debugger(open)
     if context then
         if not debuggerInitialized then
@@ -162,6 +145,6 @@ S.postMessage = windowManager.postMessage
 S.font_dir = filemanager.font_dir
 S.preload_dir = filemanager.preload_dir
 
-ltask.send(ServiceWindow, "subscribe", "priority=1", "mouse", "keyboard", "char", "touch", "gesture")
+ltask.send(ServiceWindow, "subscribe", "priority=1", "mouse", "touch", "gesture")
 
 return S

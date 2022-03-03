@@ -30,7 +30,6 @@
 #define RMLUI_CORE_ELEMENTDOCUMENT_H
 
 #include "ElementDocument.h"
-#include "Input.h"
 #include <set>
 
 namespace Rml {
@@ -47,9 +46,6 @@ public:
 	virtual ~Document();
 
 	bool Load(const std::string& path);
-
-	/// Returns the document's context.
-	Context* GetContext();
 
 	/// Returns the source address of this document.
 	const std::string& GetSourceURL() const;
@@ -76,9 +72,6 @@ public:
 	virtual void LoadInlineScript(const std::string& content, const std::string& source_path, int source_line);
 	virtual void LoadExternalScript(const std::string& source_path);
 
-	bool ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state);
-	bool ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state);
-	bool ProcessChar(int character);
 	bool ProcessTouch(TouchState state);
 	bool ProcessMouse(MouseButton button, MouseState state, int x, int y);
 	bool ProcessMouseWheel(float wheel_delta);
@@ -107,8 +100,6 @@ private:
 
 	// The document's style sheet.
 	std::shared_ptr<StyleSheet> style_sheet;
-
-	Context* context;
 
 	void UpdateHoverChain(const EventDictionary& parameters, const EventDictionary& drag_parameters);
 

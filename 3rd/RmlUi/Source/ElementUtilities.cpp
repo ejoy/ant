@@ -27,7 +27,6 @@
  */
 
 #include "../Include/RmlUi/ElementUtilities.h"
-#include "../Include/RmlUi/Context.h"
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/Factory.h"
