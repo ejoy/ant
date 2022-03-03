@@ -54,39 +54,6 @@ local ibl_textures = {
     }
 }
 
-local function create_cvt2cubemap_entities(ibl)
-    if ibl.cubemap then
-        return
-    end
-
-    local size = ibl_textures.cubemap_source.size
-    local mipmap_count = math.log(size, 2)+1
-    for i=1, mipmap_count do
-        local s = size >> (i-1)
-        local dispatchsize = {
-            math.floor(s / thread_group_size), math.floor(s / thread_group_size), 6
-        }
-    
-        ecs.create_entity {
-            policy = {
-                "ant.render|compute_policy",
-                "ant.render|panorama2cubemap_converter",
-                "ant.general|name",
-            },
-            data = {
-                name        = "panorama2cubemap_converter",
-                material    = "/pkg/ant.resources/materials/panorama2cubemap.material",
-                dispatch    ={
-                    size    = dispatchsize,
-                    sample_lod = i-1,
-                },
-                compute     = true,
-                panorama2cubemap_converter = true,
-            }
-        }
-    end
-end
-
 local function create_irradiance_entity(ibl)
     local size = ibl_textures.irradiance.size
     local dispatchsize = {

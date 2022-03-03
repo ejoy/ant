@@ -17,7 +17,7 @@ local icamera   = ecs.import.interface "ant.camera|icamera"
 
 local cvt_p2cm_viewid = viewidmgr.get "panorama2cubmap"
 
-local cvt_p2cm_sys = ecs.system "cvt_p2cm_system"
+local render2cm_sys = ecs.system "render2cm_system"
 
 local face_queues<const> = {
     "cubemap_face_queue_px",
@@ -51,13 +51,7 @@ local function create_face_queue(queuename, cameraref)
     }
 end
 
-w:register {
-    name = "cvt_p2cm_drawer"
-}
-
-w:register{name="filter_drawer"}
-
-function cvt_p2cm_sys:init()
+function render2cm_sys:init()
     local cameraref = icamera.create()
     for _, fn in ipairs(face_queues) do
         create_face_queue(fn, cameraref)
@@ -103,9 +97,8 @@ local cubemap_flags<const> = sampler.sampler_flag {
     RT="RT_ON",
 }
 
-local icm = ecs.interface "icubemap_face"
-
-function icm.convert_panorama2cubemap(tex)
+local function cvt_panorama_by_renderface(e)
+    local tex = imaterial.get_property(e, "s_skybox").value.texture
     local ti = tex.texinfo
     assert(ti.width==ti.height*2 or ti.width*2==ti.height)
     local size = math.min(ti.width, ti.height) // 2
@@ -141,7 +134,15 @@ function icm.convert_panorama2cubemap(tex)
         local keep_rbs<const> = true
         fbmgr.destroy(fbidx, keep_rbs)
     end
-    return fbmgr.get_rb(cm_rbidx).handle
+end
+
+function render2cm_sys:convert_sky()
+    for e in w:select "sky_changed skybox:in render_object:in" do
+        local setting = imaterial.get_setting(e)
+        if setting.CUBEMAP_SKY == nil then
+            cvt_panorama_by_renderface(e)
+        end
+    end
 end
 
 local sample_count<const> = 2048
@@ -178,7 +179,7 @@ local ibl_properties = {
 
 local build_ibl_viewid = viewidmgr.get "build_ibl"
 
-function icm.filter_ibl(source)
+function render2cm_sys:filter_ibl(source)
     local irradiance_rbidx = fbmgr.create_rb{format="RGBA32F", size=face_size, layers=1, flags=cubemap_flags, cubemap=true}
 
     local drawer = w:singleton("filter_drawer", "render_object:in")

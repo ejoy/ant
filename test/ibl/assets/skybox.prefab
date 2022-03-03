@@ -1,11 +1,10 @@
 ---
 policy:
     ant.sky|skybox
-    ant.render|render
+    ant.render|simplerender
     ant.general|name
 data:
     name: skybox_test
-    scene_entity: true
     filter_state: main_view
     simplemesh: true
     scene:

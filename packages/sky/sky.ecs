@@ -35,3 +35,7 @@ system "skybox_system"
     .method "component_init"
     .method "entity_ready"
     .method "data_changed"
+
+pipeline "sky"
+    .stage "convert_sky"
+    .stage "filter_ibl"

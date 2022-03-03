@@ -1,0 +1,21 @@
+system "render2cm_system"
+    .implement "panorama/render2cm.lua"
+    .method "convert_sky"
+    .method "filter_ibl"
+
+component "cvt_p2cm_drawer"
+component "filter_drawer"
+
+component "cubemap_face_queue_px"
+component "cubemap_face_queue_nx"
+component "cubemap_face_queue_py"
+component "cubemap_face_queue_ny"
+component "cubemap_face_queue_pz"
+component "cubemap_face_queue_nz"
+
+
+system "cs2cm_system"
+    .implement "panorama/cs2cm.lua"
+    .method "convert_sky"
+    .method "filter_ibl"
+
