@@ -23,9 +23,6 @@ public:
 	Document* LoadDocument(const std::string& document_path);
 	void UnloadDocument(Document* document);
 
-	void SetFocus(Document* document);
-	Document* GetFocus() const;
-
 	bool ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state);
 	bool ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state);
 	bool ProcessChar(int character);
@@ -39,7 +36,6 @@ private:
 	Size dimensions;
 	std::vector<Document*> unloaded_documents;
 	std::vector<Document*> documents;
-	Document* focus = nullptr;
 	double m_elapsedtime = 0.;
 
 	void ReleaseUnloadedDocuments();

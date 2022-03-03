@@ -81,7 +81,7 @@ public:
 	bool ProcessChar(int character);
 	bool ProcessTouch(TouchState state);
 	bool ProcessMouse(MouseButton button, MouseState state, int x, int y);
-	void ProcessMouseWheel(float wheel_delta);
+	bool ProcessMouseWheel(float wheel_delta);
 	void OnElementDetach(Element* element);
 	void SetDimensions(const Size& dimensions);
 	const Size& GetDimensions();

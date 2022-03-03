@@ -90,11 +90,11 @@ function S.mouse(x, y, type, state)
     return rmlui.ContextProcessMouse(context, type-1, state-1, x, y)
 end
 
-function S.touch(state, data)
+function S.touch(state, touches)
     if not context then
         return
     end
-    return rmlui.ContextProcessTouch(context, state-1, data)
+    return rmlui.ContextProcessTouch(context, state-1, touches)
 end
 
 local gesture = {}

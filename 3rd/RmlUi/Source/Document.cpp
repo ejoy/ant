@@ -285,16 +285,12 @@ const std::shared_ptr<StyleSheet>& Document::GetStyleSheet() const
 
 void Document::Show() {
 	show_ = true;
-	GetContext()->SetFocus(this);
 	body->DispatchEvent(EventId::Show, EventDictionary());
 }
 
 void Document::Hide() {
 	show_ = false;
 	body->DispatchEvent(EventId::Hide, EventDictionary());
-	if (GetContext()->GetFocus() == this) {
-		GetContext()->SetFocus(nullptr);
-	}
 }
 
 // Close this document
@@ -520,13 +516,13 @@ bool Document::ProcessMouse(MouseButton button, MouseState state, int x, int y) 
 	return false;
 }
 
-void Document::ProcessMouseWheel(float wheel_delta) {
+bool Document::ProcessMouseWheel(float wheel_delta) {
 	if (hover) {
 		EventDictionary scroll_parameters;
 		scroll_parameters["wheel_delta"] = wheel_delta;
-
 		hover->DispatchEvent(EventId::Mousescroll, scroll_parameters);
 	}
+	return true;
 }
 
 void Document::UpdateHoverChain(const EventDictionary& parameters, const EventDictionary& drag_parameters) {
