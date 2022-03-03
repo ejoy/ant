@@ -57,7 +57,6 @@ local function point_light_test()
     ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
 end
 
-local icc = ecs.import.interface "ant.test.features|icamera_controller"
 local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
     --point_light_test()
