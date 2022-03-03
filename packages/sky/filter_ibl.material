@@ -15,7 +15,7 @@ properties:
   u_ibl_params1: {0.0, 0.0, 0.0, 0.0}
   s_panorama:
     stage: 0
-    texture: /pkg/ant.test.ibl/assets/panorama.texture
+    texture: /pkg/ant.sky/assets/panorama.texture
 state:
   ALPHA_REF: 0
   CULL: NONE

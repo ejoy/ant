@@ -3,6 +3,7 @@ import "sky.ecs"
 interface "icubemap_face"
     .implement "cvt_panorama.lua"
     .method "convert_panorama2cubemap"
+    .method "filter_ibl"
 
 component "cubemap_face_queue_px"
 component "cubemap_face_queue_nx"

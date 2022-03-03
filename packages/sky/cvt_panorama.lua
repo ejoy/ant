@@ -84,7 +84,7 @@ function cvt_p2cm_sys:init()
         },
         data = {
             simplemesh = ientity.simple_fullquad_mesh(),
-            material = "/pkg/ant.test.ibl/assets/filter_ibl.material",
+            material = "/pkg/ant.sky/filter_ibl.material",
             scene = {srt={}},
             filter_state = "",
             name = "filter_drawer",
