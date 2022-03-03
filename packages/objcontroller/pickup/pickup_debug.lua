@@ -16,8 +16,7 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 local frustum_entity
 local function create_frustum_entity()
 	local pq = w:singleton("pickup_queue", "camera_ref:in")
-	local cref = pq.camera_ref
-	w:sync("camera:in", cref)
+	local cref = world:entity(pq.camera_ref)
 	local points = math3d.frustum_points(cref.camera.viewprojmat)
 	return ientity.create_frustum_entity(points, "pickup_frustum")
 end
@@ -40,6 +39,7 @@ local function create_view_buffer_entity()
 			on_ready = function (e)
 				local pq = w:singleton("pickup_queue", "render_target:in")
 				local rt = pq.render_target
+				w:sync("render_object:in", e)
 				imaterial.set_property(e, "s_tex", {stage=0, texture={handle=fbmgr.get_rb(rt.fb_idx, 1).handle}})
 			end,
 		}
@@ -57,7 +57,7 @@ function pickup_debug_sys:data_changed()
     for _, btn, state in mousemb:unpack() do
         if btn == "LEFT" and state == "DOWN" then
             if frustum_entity then
-                w:remove(frustum_entity)
+                world:remove_entity(frustum_entity)
                 frustum_entity = nil
             end
         end
