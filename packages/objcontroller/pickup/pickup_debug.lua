@@ -50,6 +50,24 @@ function pickup_debug_sys:init()
     create_view_buffer_entity()
 end
 
+local function log_pickup_queue_entities()
+	for q in w:select "pickup_queue visible pickup:in primitive_filter:in cull_tag?in" do
+		log.info "pickup queue entities:"
+		for idx, fn in ipairs(q.primitive_filter) do
+			local s = q.cull_tag and
+				("%s %s:absent render_object:in filter_material?in"):format(fn, q.cull_tag[idx]) or
+				("%s render_object:in filter_material?in"):format(fn)
+			log.info(("filter type:%s, select: %s"):format(fn, s))
+			local entities = {}
+			for e in w:select(s .. " id:in name?in") do
+				entities[#entities+1] = ("%d-%s"):format(e.id, e.name or "")
+			end
+
+			log.info(table.concat(entities, "\t"))
+		end
+	end
+end
+
 
 local mousemb = world:sub{"mouse"}
 
@@ -62,6 +80,8 @@ function pickup_debug_sys:data_changed()
             end
         end
     end
+
+	log_pickup_queue_entities()
 end
 
 function pickup_debug_sys:camera_usage()
