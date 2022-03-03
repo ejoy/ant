@@ -483,6 +483,13 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 		.AddParser("number");
 	RegisterProperty(PropertyId::FlexShrink, "flex-shrink", false)
 		.AddParser("number");
+
+	RegisterProperty(PropertyId::PointerEvents, "pointer-events", "auto", false)
+		.AddParser("keyword", "none, auto");
+	RegisterProperty(PropertyId::ScrollLeft, "scroll-left", "0", false)
+		.AddParser("number");
+	RegisterProperty(PropertyId::ScrollTop, "scroll-top", "0", false)
+		.AddParser("number");
 }
 
 } // namespace Rml

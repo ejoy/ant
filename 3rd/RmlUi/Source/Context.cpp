@@ -126,11 +126,11 @@ bool Context::ProcessChar(int character) {
 	return focus->ProcessChar(character);
 }
 
-bool Context::ProcessTouch(int id, TouchState state, int x, int y) {
+bool Context::ProcessTouch(TouchState state) {
 	if (!focus) {
 		return false;
 	}
-	return focus->ProcessTouch(id, state, x, y);
+	return focus->ProcessTouch(state);
 }
 
 bool Context::ProcessMouse(MouseButton button, MouseState state, int x, int y) {

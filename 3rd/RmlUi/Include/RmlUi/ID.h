@@ -171,6 +171,10 @@ enum class PropertyId : uint8_t
 	OutlineColor,
 	OutlineWidth,
 
+	PointerEvents,
+	ScrollLeft,
+	ScrollTop,
+
 	NumDefinedIds,
 };
 

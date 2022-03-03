@@ -41,19 +41,14 @@ class Layout {
 public:
 	struct Metrics {
 		Rect frame;
-		EdgeInsets<float> contentInsets{};
+		Rect content;
+		EdgeInsets<float> paddingWidth{};
 		EdgeInsets<float> borderWidth{};
-		EdgeInsets<float> overflowInset{};
+		EdgeInsets<float> scrollInset{};
 		bool visible = true;
 
-		Rect getContentFrame() const {
-			return Rect {
-				Point {contentInsets.left, contentInsets.top},
-				frame.size - contentInsets
-			};
-		}
 		bool operator==(const Metrics& rhs) const {
-			return std::tie(frame, contentInsets, borderWidth, visible) == std::tie(rhs.frame, rhs.contentInsets, rhs.borderWidth, visible);
+			return std::tie(frame, paddingWidth, borderWidth, visible) == std::tie(rhs.frame, rhs.paddingWidth, rhs.borderWidth, visible);
 		}
 		bool operator!=(const Metrics& rhs) const {
 			return !(*this == rhs);
@@ -81,8 +76,12 @@ public:
 	bool IsDirty();
 	void MarkDirty();
 	std::string ToString() const;
-	bool UpdateMetrics(Layout::Metrics& metrics);
-	Overflow GetOverflow();
+
+	bool HasNewLayout() const;
+	bool UpdateVisible(Layout::Metrics& metrics);
+	void UpdateMetrics(Layout::Metrics& metrics, Rect& child);
+	void UpdateScrollOffset(Size& scrollOffset, Layout::Metrics const& metrics) const;
+	Overflow GetOverflow() const;
 	void SetVisible(bool visible);
 
 	void InsertChild(Layout const& child, uint32_t index);

@@ -304,12 +304,6 @@ void Document::Close()
 		context->UnloadDocument(this);
 }
 
-bool Document::ClickTest(const Point& point) const
-{
-	return body->GetElementAtPoint(point) != nullptr;
-	//return body->IsPointWithinElement(point);
-}
-
 ElementPtr Document::CreateElement(const std::string& name)
 {
 	ElementPtr element(new Element(this, name));
@@ -435,14 +429,26 @@ bool Document::ProcessChar(int character)
 	return focus->DispatchEvent(EventId::Textinput, parameters);
 }
 
-bool Document::ProcessTouch(int id, TouchState state, int x, int y) {
-	Point pt {(float)x, (float)y};
-	Element* e = body->GetElementAtPoint(pt);
+bool Document::ProcessTouch(TouchState state) {
+	//Point pt {(float)0, (float)0};
+	//Element* e = body->GetElementAtPoint(pt);
+	Element* e = body.get();
 	if (!e) {
 		return false;
 	}
 	EventDictionary parameters;
-	return !e->DispatchEvent(EventId::Touchstart, parameters);
+	switch (state) {
+	case TouchState::Start:
+		return !e->DispatchEvent(EventId::Touchstart, parameters);
+	case TouchState::Move:
+		return !e->DispatchEvent(EventId::Touchmove, parameters);
+	case TouchState::End:
+		return !e->DispatchEvent(EventId::Touchend, parameters);
+	case TouchState::Cancel:
+		return !e->DispatchEvent(EventId::Touchcancel, parameters);
+	default:
+		return false;
+	}
 }
 
 bool Document::ProcessMouse(MouseButton button, MouseState state, int x, int y) {

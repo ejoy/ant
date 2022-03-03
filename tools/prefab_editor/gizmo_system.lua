@@ -250,7 +250,6 @@ function gizmo:update_scale()
 end
 
 function gizmo_sys:post_init()
-	--local srt = {r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
 	local axis_root = ecs.create_entity {
 		policy = {
 			"ant.general|name",
@@ -385,10 +384,6 @@ function gizmo_sys:post_init()
 	create_scale_axis(gizmo.sx, {gizmo_const.AXIS_LEN, 0, 0})
 	create_scale_axis(gizmo.sy, {0, gizmo_const.AXIS_LEN, 0})
 	create_scale_axis(gizmo.sz, {0, 0, gizmo_const.AXIS_LEN})
-
-	-- global_axis_x_eid = ientity.create_line_entity({}, {0, 0, 0}, {0.1, 0, 0}, "", gizmo_const.COLOR.X)
-	-- global_axis_y_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0.1, 0}, "", gizmo_const.COLOR.Y)
-	-- global_axis_z_eid = ientity.create_line_entity({}, {0, 0, 0}, {0, 0, 0.1}, "", gizmo_const.COLOR.Z)
 	
     ientity.create_grid_entity("", 64, 64, 1, 1)
 end

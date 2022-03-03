@@ -29,7 +29,7 @@ public:
 	bool ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state);
 	bool ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state);
 	bool ProcessChar(int character);
-	bool ProcessTouch(int id, TouchState state, int x, int y);
+	bool ProcessTouch(TouchState state);
 	bool ProcessMouse(MouseButton button, MouseState state, int x, int y);
 	bool ProcessMouseWheel(float wheel_delta);
 

@@ -550,7 +550,7 @@ local function reset()
     if joints_list then
         for _, joint in ipairs(joints_list) do
             if joint.mesh then
-                w:remove(joint.mesh)
+                world:remove_entity(joint.mesh)
             end
             joint.mesh = nil
         end
@@ -776,6 +776,7 @@ local function create_bone_entity(joint_name)
 					imaterial.set_property(e, "u_basecolor_factor", bone_color)
 				end
 				ifs.set_state(e, "auxgeom", true)
+                w:sync("render_object_update:out", e)
 			end
         }
     }

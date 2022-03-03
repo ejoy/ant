@@ -18,7 +18,8 @@ namespace Rml {
 		virtual ~Node();
 		void SetType(Type type);
 		Type GetType();
-		bool UpdateMetrics();
+		bool UpdateVisible();
+		void UpdateMetrics(Rect& child);
 		Layout& GetLayout();
 		const Layout::Metrics& GetMetrics() const;
 

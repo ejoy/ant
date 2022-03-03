@@ -185,11 +185,8 @@ static int
 lContextProcessTouch(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
-	int touchid = (int)luaL_checkinteger(L, 2);
 	Rml::TouchState state = (Rml::TouchState)luaL_checkinteger(L, 3);
-	int x = (int)luaL_checkinteger(L, 4);
-	int y = (int)luaL_checkinteger(L, 5);
-	bool handled = ctx->ProcessTouch(touchid, state, x, y);
+	bool handled = ctx->ProcessTouch(state);
 	lua_pushboolean(L, handled);
 	return 1;
 }
@@ -568,7 +565,7 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementRemoveProperty", lElementRemoveProperty },
 		{ "ElementSetAttribute", lElementSetAttribute },
 		{ "ElementSetProperty", lElementSetProperty },
-		{ "ElementSetPropertyImmediate", lElementSetPropertyImmediate},
+		{ "ElementSetPropertyImmediate", lElementSetPropertyImmediate },
 		{ "RenderBegin", lRenderBegin },
 		{ "RenderFrame", lRenderFrame },
 		{ "RmlInitialise", lRmlInitialise },
