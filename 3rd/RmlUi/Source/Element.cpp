@@ -1338,7 +1338,8 @@ Element* Element::GetElementAtPoint(Point point) {
 	if (!IsVisible()) {
 		return nullptr;
 	}
-	if (!IsPointWithinElement(point)) {
+	bool overflowVisible = GetLayout().GetOverflow() == Layout::Overflow::Visible;
+	if (!overflowVisible && !IsPointWithinElement(point)) {
 		return nullptr;
 	}
 	UpdateStackingContext();
@@ -1347,6 +1348,9 @@ Element* Element::GetElementAtPoint(Point point) {
 		if (res) {
 			return res;
 		}
+	}
+	if (overflowVisible && !IsPointWithinElement(point)) {
+		return nullptr;
 	}
 	return this;
 }
