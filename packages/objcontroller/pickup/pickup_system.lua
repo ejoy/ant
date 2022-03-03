@@ -29,13 +29,6 @@ local function packeid_as_rgba(eid)
             ((eid & 0xff000000) >> 24) / 0xff}    -- rgba
 end
 
-local pickup_refs = {}
-local max_pickupid = 0
-local function genid()
-	max_pickupid = max_pickupid + 1
-	return max_pickupid
-end
-
 local function get_properties(id, properties)
 	local p = {
 		u_id = setmetatable({
@@ -296,22 +289,17 @@ end
 local function select_obj(pc, render_target)
 	local blit_buffer = pc.blit_buffer
 	local viewrect = render_target.view_rect
-	local selecteid = which_entity_hitted(blit_buffer.handle, viewrect, blit_buffer.elemsize)
-	if selecteid then
-		local id = pickup_refs[selecteid]
-		if id then
-			local e = world:entity(id)
-			log.info("pick entity id: ", id, e.name)
-			local cb = pc.picked_callback
-			if cb then
-				cb(id, pc)
-			end
-			pc.picked_callback = nil
-			world:pub {"pickup", id}
-			return
+	local eid = which_entity_hitted(blit_buffer.handle, viewrect, blit_buffer.elemsize)
+	if eid then
+		local e = world:entity(eid)
+		log.info("pick entity id: ", eid, e.name)
+		local cb = pc.picked_callback
+		if cb then
+			cb(eid, pc)
 		end
+	else
+		log.info("not found any eid")
 	end
-	log.info("not found any eid")
 	pc.picked_callback = nil
 	world:pub {"pickup"}
 end
@@ -339,14 +327,6 @@ function pickup_sys:pickup()
 	end
 end
 
-local function remove_ref(id)
-	local _id = pickup_refs[id]
-	pickup_refs[id] = nil
-	if _id then
-		pickup_refs[_id] = nil
-	end
-end
-
 function pickup_sys:end_filter()
 	for e in w:select "filter_result:in render_object:in filter_material:out id:in" do
 		local fr = e.filter_result
@@ -354,28 +334,16 @@ function pickup_sys:end_filter()
 		local fm = e.filter_material
 		local qe = w:singleton("pickup_queue", "primitive_filter:in")
 		for _, fn in ipairs(qe.primitive_filter) do
-			if fr[fn] == true then
+			if fr[fn] then
 				local m = assert(pickup_materials[st])
 				local state = e.render_object.state
-				local id = genid()
-				pickup_refs[id] = e.id
-				pickup_refs[e.id] = id
 				fm[fn] = {
 					fx			= m.fx,
-					properties	= get_properties(id, m.properties),
+					properties	= get_properties(e.id, m.properties),
 					state		= irender.check_primitive_mode_state(state, m.state),
 				}
-			elseif fr[fn] == false then
-				fm[fn] = nil
-				remove_ref(e.id)
 			end
 		end
-	end
-end
-
-function pickup_sys:entity_remove()
-	for e in w:select "REMOVED id:in" do
-		remove_ref(e.id)
 	end
 end
 
