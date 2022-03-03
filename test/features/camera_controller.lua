@@ -73,14 +73,13 @@ end
 
 function cc_sys:data_changed()
 	for _, e in ipairs(mouse_events) do
-		local ceid = icc.camera()
-		local cref = world:entity(ceid)
-		if can_rotate(cref.camera) then
+		local ce = world:entity(icc.camera())
+		if can_rotate(ce.camera) then
 			for _,_,state,x,y in e:unpack() do
 				if state == "MOVE" and mouse_lastx then
 					local ux = (x - mouse_lastx) / dpi_x * kMouseSpeed
 					local uy = (y - mouse_lasty) / dpi_y * kMouseSpeed
-					iom.rotate_forward_vector(cref, uy, ux)
+					iom.rotate_forward_vector(ce, uy, ux)
 				end
 				mouse_lastx, mouse_lasty = x, y
 			end
@@ -88,16 +87,16 @@ function cc_sys:data_changed()
 	end
 
 	for _, delta in mw_mb:unpack() do
-		local camera_ref = icc.camera()
-		if can_orthoview_scale(camera_ref) then
-			scale_orthoview(camera_ref, delta)
+		local ce = world:entity(icc.camera())
+		if can_orthoview_scale(ce) then
+			scale_orthoview(ce, delta)
 		end
 	end
 
 	for _,code,press in eventKeyboard:unpack() do
-		local camera_ref = icc.camera()
+		local ce = world:entity(icc.camera())
 		local keyboard_delta = {0 , 0, 0}
-		if can_move(camera_ref) then
+		if can_move(ce.camera) then
 			local delta = (press>0) and kKeyboardSpeed or 0
 			if code == "A" then
 				keyboard_delta[1] = keyboard_delta[1] - delta
@@ -114,7 +113,7 @@ function cc_sys:data_changed()
 			end
 		end
 		if keyboard_delta[1] ~= 0 or keyboard_delta[2] ~= 0 or keyboard_delta[3] ~= 0 then
-			iom.move(camera_ref, keyboard_delta)
+			iom.move(ce, keyboard_delta)
 		end
 	end
 end
