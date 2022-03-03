@@ -4,6 +4,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <stdint.h>
+#include <lua-seri.h>
 #include "window.h"
 #include "virtual_keys.h"
 #ifdef _WIN32
@@ -48,10 +49,7 @@ push_exit_args(lua_State *L, struct ant_window_exit *exit) {
 
 static void
 push_touch_args(lua_State *L, struct ant_window_touch *touch) {
-	lua_pushinteger(L, touch->x);
-	lua_pushinteger(L, touch->y);
-	lua_pushinteger(L, touch->id);
-	lua_pushinteger(L, touch->state);
+    seri_unpackptr(L, touch->data);
 }
 
 static void
@@ -251,9 +249,12 @@ lmainloop(lua_State *L) {
 
 static void
 init(lua_State *L) {
-	struct ant_window_callback* cb = lua_newuserdatauv(L, sizeof(*cb), 0);
+	struct ant_window_callback* cb = lua_newuserdatauv(L, sizeof(*cb), 1);
 	cb->ud = NULL;
 	cb->message = message_callback;
+	cb->L = lua_newthread(L);
+	lua_setiuservalue(L, -2, 1);
+
 	lua_setfield(L, LUA_REGISTRYINDEX, ANT_WINDOW_CALLBACK);
 	window_init(cb);
 }

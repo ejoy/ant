@@ -24,24 +24,24 @@ local function set_ibl_value(eid, key, value)
     local sz = tonumber(value)
     local template = hierarchy:get_template(eid)
     template.template.data.ibl[key].size = sz
-    world[eid].ibl[key].size = sz
+    world:entity(eid).ibl[key].size = sz
     prefab_mgr:save_prefab()
     prefab_mgr:reload()
 end
 
 function SkyboxView:set_model(eid)
     if not MaterialView.set_model(self, eid) then return false end
-    self.irradiance:set_getter(function() return tostring(world[self.e].ibl.irradiance.size) end)
+    self.irradiance:set_getter(function() return tostring(world:entity(self.eid).ibl.irradiance.size) end)
     self.irradiance:set_setter(function(value)
-        set_ibl_value(self.e, "irradiance", value)
+        set_ibl_value(self.eid, "irradiance", value)
     end)
-    self.prefilter:set_getter(function() return tostring(world[self.e].ibl.prefilter.size) end)
+    self.prefilter:set_getter(function() return tostring(world:entity(self.eid).ibl.prefilter.size) end)
     self.prefilter:set_setter(function(value)
-        set_ibl_value(self.e, "prefilter", value)
+        set_ibl_value(self.eid, "prefilter", value)
     end)
-    self.LUT:set_getter(function() return tostring(world[self.e].ibl.LUT.size) end)
+    self.LUT:set_getter(function() return tostring(world:entity(self.eid).ibl.LUT.size) end)
     self.LUT:set_setter(function(value)
-        set_ibl_value(self.e, "LUT", value)
+        set_ibl_value(self.eid, "LUT", value)
     end)
     self:update()
     return true
@@ -55,7 +55,7 @@ function SkyboxView:update()
 end
 
 function SkyboxView:show()
-    if not world[self.e] then return end
+    if not world:entity(self.eid) then return end
     MaterialView.show(self)
     self.irradiance:show()
     self.prefilter:show()

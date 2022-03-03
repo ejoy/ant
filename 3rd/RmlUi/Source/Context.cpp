@@ -66,7 +66,7 @@ Document* Context::LoadDocument(const std::string& document_path) {
 		PluginRegistry::NotifyDocumentDestroy(document.get());
 		return nullptr;
 	}
-	documents.push_back(document.get());
+	documents.insert(documents.begin(), document.get());
 	// trigger load event in lua later
 	//document->body->DispatchEvent(EventId::Load, EventDictionary());
 	document->UpdateDataModel(false);
@@ -80,88 +80,75 @@ void Context::UnloadDocument(Document* document) {
 		if (unloaded_documents[i] == document)
 			return;
 	}
-	if (focus == document) {
-		focus = nullptr;
-	}
-
 	document->body->DispatchEvent(EventId::Unload, EventDictionary());
 	PluginRegistry::NotifyDocumentDestroy(document);
 	unloaded_documents.push_back(document);
 }
 
-void Context::SetFocus(Document* document) {
-	RMLUI_ASSERT(!document || document->GetContext() == this);
-	if (focus) {
-		Document* doc = focus;
-		focus = document;
-		//doc->Hide();
-	}
-	else {
-		focus = document;
-	}
-}
-
-Document* Context::GetFocus() const {
-	return focus;
-}
-
 bool Context::ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state) {
-	if (!focus) {
-		return false;
+	for (auto doc : documents) {
+		if (doc->IsShow()) {
+			if (doc->ProcessKeyDown(key, key_modifier_state)) {{
+				return true;
+			}}
+		}
 	}
-	return focus->ProcessKeyDown(key, key_modifier_state);
+	return false;
 }
 
 bool Context::ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state) {
-	if (!focus) {
-		return false;
-	}
-	return focus->ProcessKeyUp(key, key_modifier_state);
-}
-
-bool Context::ProcessChar(int character)
-{
-	if (!focus) {
-		return false;
-	}
-	return focus->ProcessChar(character);
-}
-
-bool Context::ProcessMouseMove(MouseButton button, int x, int y) {
-	if (!focus) {
-		return false;
-	}
-	return focus->ProcessMouseMove(button, x, y);
-}
-
-bool Context::ProcessMouseButtonDown(MouseButton button, int x, int y) {
-	auto it = documents.rbegin();
-	while (it != documents.rend()) {
-		if ((*it)->IsShow() && (*it)->ClickTest({ (float)x, (float)y })) {
-			SetFocus((*it));
-			break;
+	for (auto doc : documents) {
+		if (doc->IsShow()) {
+			if (doc->ProcessKeyUp(key, key_modifier_state)) {{
+				return true;
+			}}
 		}
-		++it;
 	}
-	if (!focus) {
-		return false;
-	}
-	return focus->ProcessMouseButtonDown(button, x, y);
+	return false;
 }
 
-bool Context::ProcessMouseButtonUp(MouseButton button, int x, int y) {
-	if (!focus) {
-		return false;
+bool Context::ProcessChar(int character) {
+	for (auto doc : documents) {
+		if (doc->IsShow()) {
+			if (doc->ProcessChar(character)) {{
+				return true;
+			}}
+		}
 	}
-	return focus->ProcessMouseButtonUp(button, x, y);
+	return false;
+}
+
+bool Context::ProcessTouch(TouchState state) {
+	for (auto doc : documents) {
+		if (doc->IsShow()) {
+			if (doc->ProcessTouch(state)) {{
+				return true;
+			}}
+		}
+	}
+	return false;
+}
+
+bool Context::ProcessMouse(MouseButton button, MouseState state, int x, int y) {
+	for (auto doc : documents) {
+		if (doc->IsShow()) {
+			if (doc->ProcessMouse(button, state, x, y)) {{
+				return true;
+			}}
+		}
+	}
+	return false;
 }
 
 bool Context::ProcessMouseWheel(float wheel_delta) {
-	if (!focus) {
-		return false;
+	for (auto doc : documents) {
+		if (doc->IsShow()) {
+			if (doc->ProcessMouseWheel(wheel_delta)) {{
+				return true;
+			}}
+		}
 	}
-	focus->ProcessMouseWheel(wheel_delta);
-	return true;
+	return false;
 }
 
 void Context::ReleaseUnloadedDocuments() {

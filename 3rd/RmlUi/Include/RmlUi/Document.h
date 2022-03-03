@@ -66,7 +66,6 @@ public:
 	/// Close the document.
 	void Close();
 	bool IsShow() const { return show_; }
-	bool ClickTest(const Point& point) const;
 	/// Creates the named element.
 	/// @param[in] name The tag name of the element.
 	ElementPtr CreateElement(const std::string& name);
@@ -80,10 +79,9 @@ public:
 	bool ProcessKeyDown(Input::KeyIdentifier key, int key_modifier_state);
 	bool ProcessKeyUp(Input::KeyIdentifier key, int key_modifier_state);
 	bool ProcessChar(int character);
-	bool ProcessMouseMove(MouseButton button, int x, int y);
-	bool ProcessMouseButtonDown(MouseButton button, int x, int y);
-	bool ProcessMouseButtonUp(MouseButton button, int x, int y);
-	void ProcessMouseWheel(float wheel_delta);
+	bool ProcessTouch(TouchState state);
+	bool ProcessMouse(MouseButton button, MouseState state, int x, int y);
+	bool ProcessMouseWheel(float wheel_delta);
 	void OnElementDetach(Element* element);
 	void SetDimensions(const Size& dimensions);
 	const Size& GetDimensions();

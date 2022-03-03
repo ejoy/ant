@@ -52,11 +52,12 @@ end
 local function init_camera()
     local mq = w:singleton("main_queue", "camera_ref:in")
     local eye, at = math3d.vector(5, 5, 5, 1), mc.ZERO_PT
-    iom.set_position(mq.camera_ref, {5, 5, 5, 1})
-    iom.set_direction(mq.camera_ref, math3d.normalize(math3d.sub(at, eye)))
-    local f = icamera.get_frustum(mq.camera_ref)
+    local e = world:entity(mq.camera_ref)
+    iom.set_position(e, {5, 5, 5, 1})
+    iom.set_direction(e, math3d.normalize(math3d.sub(at, eye)))
+    local f = icamera.get_frustum(e)
     f.n, f.f = 1, 1000
-    icamera.set_frustum(mq.camera_ref, f)
+    icamera.set_frustum(e, f)
 end
 
 function m:init_world()

@@ -1,5 +1,9 @@
 #include "../window.h"
 #include "ios_window.h"
+#include "window.h"
+#include <lua-seri.h>
+
+UIView* global_window = NULL;
 
 @interface ViewController : UIViewController
 @end
@@ -16,6 +20,34 @@ static void push_message(struct ant_window_message* msg) {
     if (g_cb) {
         g_cb->message(g_cb->ud, msg);
     }
+}
+
+static void push_touch_message(int type, UIView* view, NSSet* touches) {
+    if (!g_cb) {
+        return;
+    }
+    lua_State* L = g_cb->L;
+    lua_settop(L, 0);
+    lua_pushinteger(L, type);
+    lua_newtable(L);
+    lua_Integer n = 0;
+    for (UITouch *touch in touches) {
+        lua_newtable(L);
+        CGPoint pt = [touch locationInView:view];
+        pt.x *= view.contentScaleFactor;
+        pt.y *= view.contentScaleFactor;
+        lua_pushinteger(L, (lua_Integer)(uintptr_t)touch);
+        lua_setfield(L, -2, "id");
+        lua_pushnumber(L, pt.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, pt.y);
+        lua_setfield(L, -2, "y");
+        lua_seti(L, -2, ++n);
+    }
+    struct ant_window_message msg;
+    msg.type = ANT_WINDOW_TOUCH;
+    msg.u.touch.data = seri_pack(L, 0, NULL);
+    push_message(&msg);
 }
 
 @implementation View
@@ -38,6 +70,8 @@ static void push_message(struct ant_window_message* msg) {
         return nil;
     }
     [self setContentScaleFactor: scale];
+
+    global_window = self;
 
     int w = (int)(self.contentScaleFactor * self.frame.size.width);
     int h = (int)(self.contentScaleFactor * self.frame.size.height);
@@ -78,49 +112,16 @@ static void push_message(struct ant_window_message* msg) {
     push_message(&msg);
 }
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    for (UITouch *touch in touches) {
-        CGPoint pt = [touch locationInView:self];
-        pt.x *= self.contentScaleFactor;
-        pt.y *= self.contentScaleFactor;
-        struct ant_window_message msg;
-        msg.type = ANT_WINDOW_TOUCH;
-        msg.u.touch.id = (uintptr_t)touch;
-        msg.u.touch.state = 1;
-        msg.u.touch.x = pt.x;
-        msg.u.touch.y = pt.y;
-        push_message(&msg);
-    }
-}
-- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    for (UITouch *touch in touches) {
-        CGPoint pt = [touch locationInView:self];
-        pt.x *= self.contentScaleFactor;
-        pt.y *= self.contentScaleFactor;
-        struct ant_window_message msg;
-        msg.type = ANT_WINDOW_TOUCH;
-        msg.u.touch.id = (uintptr_t)touch;
-        msg.u.touch.state = 3;
-        msg.u.touch.x = pt.x;
-        msg.u.touch.y = pt.y;
-        push_message(&msg);
-    }
-}
-- (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    [self touchesEnded:touches withEvent:event];
+    push_touch_message(1, self, touches);
 }
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-    for (UITouch *touch in touches) {
-        CGPoint pt = [touch locationInView:self];
-        pt.x *= self.contentScaleFactor;
-        pt.y *= self.contentScaleFactor;
-        struct ant_window_message msg;
-        msg.type = ANT_WINDOW_TOUCH;
-        msg.u.touch.id = (uintptr_t)touch;
-        msg.u.touch.state = 2;
-        msg.u.touch.x = pt.x;
-        msg.u.touch.y = pt.y;
-        push_message(&msg);
-    }
+    push_touch_message(2, self, touches);
+}
+- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
+    push_touch_message(3, self, touches);
+}
+- (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
+    push_touch_message(4, self, touches);
 }
 @end
 

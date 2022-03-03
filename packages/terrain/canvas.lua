@@ -134,12 +134,15 @@ local function update_items()
                 values[#values+1] = add_item(texsize, v.texture, v)
             end
 
-            local re = tex.renderer
+            local re
+            if tex.renderer_eid then
+                re = world:entity(tex.renderer_eid)
+            end
+
             if re then
                 local hasitem = #values > 0
                 if hasitem then
                     local objbuffer = table.concat(values, "")
-                    w:sync("render_object:in", re)
                     local ro = re.render_object
 
                     local buffersize = #objbuffer
@@ -224,18 +227,19 @@ local function create_texture_item_entity(texpath, canvasentity)
             canvas_item = "texture",
             on_ready = function (e)
                 local texobj = assetmgr.resource(texpath)
+                w:sync("render_object:in", e)
                 imaterial.set_property(e, "s_basecolor", {texture=texobj, stage=0})
 
                 --update parent
                 w:sync("id:in", e)
                 ecs.method.set_parent(e.id, canvas_id)
 
-                --update renderer
+                --update renderer_eid
                 local textures = canvas.textures
                 local t = textures[texpath]
-                t.renderer = e.reference
+                t.renderer_eid = e.id
                 world:pub{"canvas_update", "texture"}
-                world:pub{"canvas_update", "new_entity", t.renderer}
+                world:pub{"canvas_update", "new_entity", e.id}
             end
         }
     }

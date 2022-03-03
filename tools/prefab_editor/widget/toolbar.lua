@@ -22,8 +22,7 @@ local status = {
 local function is_select_camera()
     local e = gizmo.target_eid
     if e then
-        w:sync("camera?in", e)
-        return e.camera ~= nil
+        return world:entity(e).camera ~= nil
     end
 end
 
@@ -32,8 +31,8 @@ local LAST_main_camera
 local localSpace = {}
 local defaultLight = { false }
 local camera_speed = {0.1, speed=0.05, min=0.01, max=10}
+local icons = require "common.icons"(assetmgr)
 function m.show()
-    local icons = require "common.icons"(assetmgr)
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2])
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.ToolBarHeight)

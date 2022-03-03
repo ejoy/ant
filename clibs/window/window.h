@@ -41,10 +41,7 @@ struct ant_window_exit {
 };
 
 struct ant_window_touch {
-	uintptr_t id;
-	int x;
-	int y;
-	uint8_t state; // 1: down ; 2: move ; 3: up
+	void* data;
 };
 
 typedef enum {
@@ -110,6 +107,7 @@ struct ant_window_message {
 struct ant_window_callback {
 	void (*message)(void *ud, struct ant_window_message *);
 	void *ud;
+	void* L;
 };
 
 int  window_init(struct ant_window_callback* cb);

@@ -188,19 +188,20 @@ function m:add_entity(new_entity, parent, temp, no_hierarchy)
     end
 end
 
-function m:find_entity(e)
-    if not e.scene then
-        w:sync("scene:in", e)
-    end
-    for _, entity in ipairs(self.entities) do
-        if not entity.scene then
-            w:sync("scene:in", entity)
-        end
-        if entity.scene.id == e.scene.id then
-            return entity
-        end
-    end
-end
+-- function m:find_entity(e)
+--     if not e.scene then
+--         w:sync("scene:in", e)
+--     end
+--     for _, entity in ipairs(self.entities) do
+--         if not entity.scene then
+--             w:sync("scene:in", entity)
+--         end
+--         if entity.scene.id == e.scene.id then
+--             return entity
+--         end
+--     end
+-- end
+
 local function create_default_light(lt)
     return ilight.create{
         srt = {t = {0, 3, 0}, r = {math.rad(130), 0, 0}},
@@ -275,14 +276,14 @@ function m:create(what, config)
         end
     elseif what == "disable_default_light" then
         if self.default_light then
-            w:remove(self.default_light)
+            world:remove_entity(self.default_light)
             self.default_light = nil
         end
         if self.skybox then
-            w:remove(self.skybox.root)
+            world:remove_entity(self.skybox.root)
             local all_entitys = self.skybox.tag["*"]
             for _, e in ipairs(all_entitys) do
-                w:remove(e)
+                world:remove_entity(e)
             end
             self.skybox = nil
         end
@@ -372,7 +373,7 @@ end
 
 local function remove_entitys(entities)
     for _, e in ipairs(entities) do
-        w:remove(e)
+        world:remove_entity(e)
     end
 end
 
@@ -468,7 +469,7 @@ function m:on_prefab_ready(prefab)
     local entitys = prefab.tag["*"]
     local function find_e(entitys, id)
         for _, e in ipairs(entitys) do
-            if e.scene.id == id then
+            if world:entity(e).scene.id == id then
                 return e
             end
         end
@@ -477,9 +478,9 @@ function m:on_prefab_ready(prefab)
     local function sub_tree(e, idx)
         local st = {}
         local st_set = {}
-        st_set[e.scene.id] = true
+        st_set[world:entity(e).scene.id] = true
         for i = idx, #entitys do
-            local scene = entitys[i].scene
+            local scene = world:entity(entitys[i]).scene
             if st_set[scene.parent] == nil then
                 break
             end
@@ -495,7 +496,7 @@ function m:on_prefab_ready(prefab)
     for i = 1, #self.prefab_template do
         local pt = self.prefab_template[i]
         local e = entitys[j]
-        local parent = find_e(entitys, e.scene.parent)
+        local parent = find_e(entitys, world:entity(e).scene.parent)
         if pt.prefab then
             local prefab_name = pt.name or gen_prefab_name()
             local sub_root = create_simple_entity(prefab_name)
@@ -504,7 +505,8 @@ function m:on_prefab_ready(prefab)
 
             local children = sub_tree(parent, j)
             for _, child in ipairs(children) do
-                if child.scene.parent == parent.scene.id then
+                local ce = world:entity(child)
+                if ce.scene.parent == world:entity(parent).scene.id then
                     ecs.method.set_parent(child, sub_root)
                 end
             end
@@ -516,8 +518,7 @@ function m:on_prefab_ready(prefab)
             j = j + 1
         end
 
-        w:sync("light?in", e)
-        if e.light then
+        if world:entity(e).light then
             create_light_billboard(e)
             light_gizmo.bind(e)
             light_gizmo.show(false)
@@ -568,8 +569,7 @@ function m:open(filename)
 end
 
 local function on_remove_entity(e)
-    w:sync("light?in", e)
-    if e.light then
+    if world:entity(e).light then
         light_gizmo.on_remove_light(e)
     end
     local teml = hierarchy:get_template(e)
@@ -582,9 +582,9 @@ end
 function m:reset_prefab()
     camera_mgr.clear()
     for _, e in ipairs(self.entities) do
-        if not e.scene.REMOVED then
+        if not world:entity(e).scene.REMOVED then
             on_remove_entity(e)
-            w:remove(e)
+            world:remove_entity(e)
         end
     end
     light_gizmo.clear()
@@ -631,12 +631,8 @@ function m:add_effect(filename)
     }
     local tpl = utils.deep_copy(template)
     tpl.data.on_ready = function (e)
-        if not e.effect_instance then
-            w:sync("effect_instance:in", e)
-        end
-        local inst = e.effect_instance
+        local inst = world:entity(e).effect_instance
         if inst.handle == -1 then
-            w:sync("effekseer:in", e)
             print("create effect faild : ", tostring(effekseer))
         end
         inst.playid = effekseer.play(inst.handle, inst.playid)
@@ -664,8 +660,7 @@ function m:add_prefab(filename)
         local children = inst.tag["*"]
         if #children == 1 then
             local child = children[1]
-            w:sync("camera?in", child)
-            if child.camera then
+            if world:entity(child).camera then
                 ecs.method.set_parent(child, parent)
                 local temp = serialize.parse(prefab_filename, cr.read_file(prefab_filename))
                 hierarchy:add(child, {template = temp[1], editor = true, temporary = true}, parent)
@@ -673,7 +668,7 @@ function m:add_prefab(filename)
             end
         end
         for _, child in ipairs(children) do
-            if child.scene.parent == inst.root.scene.id then
+            if world:entity(child).scene.parent == world:entity(inst.root).scene.id then
                 ecs.method.set_parent(child, v_root)
             end
         end
@@ -753,7 +748,7 @@ function m:remove_entity(e)
         return
     end
     on_remove_entity(e)
-    w:remove(e)
+    world:remove_entity(e)
     local index
     for idx, entity in ipairs(self.entities) do
         if entity == e then

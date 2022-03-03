@@ -58,7 +58,7 @@ function m:entity_remove()
         local prefab = world:entity(id)
         if prefab then
             local instance = prefab.prefab
-            w:remove(instance.root)
+            world:remove_entity(instance.root)
             for _, entity in ipairs(instance.tag["*"]) do
                 world:remove_entity(entity)
             end

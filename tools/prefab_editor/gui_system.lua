@@ -319,8 +319,7 @@ local highlight_aabb = {
 }
 local function update_heightlight_aabb(e)
     if e then
-        w:sync("render_object?in", e)
-        local ro = e.render_object
+        local ro = world:entity(e).render_object
         if ro and ro.aabb then
             local minv, maxv = math3d.index(ro.aabb, 1, 2)
             highlight_aabb.min = math3d.tovalue(minv)
@@ -333,20 +332,18 @@ local function update_heightlight_aabb(e)
 end
 
 local function on_target(old, new)
-    if old and old.scene and not old.scene.REMOVED then
-        w:sync("light?in", old)
-        if old.light then
+    if old and world:entity(old) then
+        if world:entity(old).light then
             light_gizmo.bind(nil)
         end
     end
     if new then
-        w:sync("camera?in", new)
-        if new.camera then
+        local e = world:entity(new)
+        if e.camera then
             camera_mgr.set_second_camera(new, true)
         end
 
-        w:sync("light?in", new)
-        if new.light then
+        if e.light then
             light_gizmo.bind(new)
         end
     end
@@ -358,11 +355,9 @@ end
 local function on_update(e)
     update_heightlight_aabb(e)
     if not e then return end
-    w:sync("camera?in", e)
-    w:sync("light?in", e)
-    if e.camera then
+    if world:entity(e).camera then
         camera_mgr.update_frustrum(e)
-    elseif e.light then
+    elseif world:entity(e).light then
         light_gizmo.update()
     end
     inspector.update_template_tranform(e)
@@ -381,13 +376,13 @@ function hierarchy:set_adaptee_visible(nd, b, recursion)
 end
 
 local function update_visible(node, visible)
-    ies.set_state(node.eid, "main_view", visible)
+    ies.set_state(world:entity(node.eid), "main_view", visible)
     for _, n in ipairs(node.children) do
         update_visible(n, visible)
     end
     local adaptee = hierarchy:get_select_adaptee(node.eid)
     for _, e in ipairs(adaptee) do
-        ies.set_state(e, "main_view", visible)
+        ies.set_state(world:entity(e), "main_view", visible)
     end
 end
 function m:handle_event()
@@ -424,13 +419,11 @@ function m:handle_event()
             transform_dirty = false
             if what == "name" then 
                 hierarchy:update_display_name(target, v1)
-                w:sync("collider?in", target)
-                if target.collider then
+                if world:entity(target).collider then
                     hierarchy:update_collider_list(world)
                 end
             else
-                w:sync("slot?in", target)
-                if target.slot then
+                if world:entity(target).slot then
                     hierarchy:update_slot_list(world)
                 end
             end
@@ -442,8 +435,7 @@ function m:handle_event()
             ecs.method.set_parent(target, v1)
             local isslot
             if v1 then
-                w:sync("slot?in", v1)
-                isslot = v1.slot
+                isslot = world:entity(v1).slot
             end
             -- if isslot then
             --     for e in w:select "scene:in slot_name:out" do
@@ -460,10 +452,8 @@ function m:handle_event()
     for _, what, target, value in hierarchy_event:unpack() do
         local e = target
         if what == "visible" then
-            e = target.eid
+            e = world:entity(target.eid)
             hierarchy:set_visible(target, value, true)
-            w:sync("effect_instance?in", e)
-            w:sync("light?in", e)
             if e.effect_instance then
                 local effekseer     = require "effekseer"
                 effekseer.set_visible(e.effect_instance.handle, e.effect_instance.playid, value)
@@ -481,8 +471,7 @@ function m:handle_event()
         elseif what == "lock" then
             hierarchy:set_lock(e, value)
         elseif what == "delete" then
-            w:sync("collider?in", gizmo.target_eid)
-            if gizmo.target_eid.collider then
+            if world:entity(gizmo.target_eid).collider then
                 anim_view.on_remove_entity(gizmo.target_eid)
             end
             prefab_mgr:remove_entity(e)

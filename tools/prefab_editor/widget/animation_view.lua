@@ -73,9 +73,8 @@ local function find_index(t, item)
     end
 end
 
-local function get_runtime_animations(e)
-    w:sync("animation?in", e)
-    return e.animation
+local function get_runtime_animations(eid)
+    return world:entity(eid).animation
 end
 
 local function get_anim_group_eid(eid, name)
@@ -110,7 +109,7 @@ local function anim_play(e, anim_state, play)
     local group_e = get_anim_group_eid(e, current_anim.name)
     if not group_e then return end
     for _, anim_e in ipairs(group_e) do
-        iom.set_position(hierarchy:get_node(hierarchy:get_node(anim_e).parent).parent, {0.0,0.0,0.0})
+        iom.set_position(world:entity(hierarchy:get_node(hierarchy:get_node(anim_e).parent).parent), {0.0,0.0,0.0})
         play(anim_e, anim_state)
     end
 end
@@ -162,7 +161,7 @@ local function set_current_anim(anim_name)
     if current_anim and current_anim.collider then
         for _, col in ipairs(current_anim.collider) do
             if col.collider then
-                ies.set_state(col.eid, "visible", false)
+                ies.set_state(world:entity(col.eid), "visible", false)
             end
         end
     end
@@ -170,7 +169,7 @@ local function set_current_anim(anim_name)
     if current_anim.collider then
         for _, col in ipairs(current_anim.collider) do
             if col.collider then
-                ies.set_state(col.eid, "visible", true)
+                ies.set_state(world:entity(col.eid), "visible", true)
             end
         end
     end
@@ -282,8 +281,7 @@ end
 
 local function get_runtime_clips()
     if not current_e then return end
-    w:sync("_animation:in", current_e)
-    return current_e._animation.anim_clips
+    return world:entity(current_e)._animation.anim_clips
 end
 
 local function get_runtime_events()
@@ -504,14 +502,13 @@ local function show_events()
 end
 
 local function do_record(collision, eid)
-    w:sync("collider?in", eid)
-    if not eid.collider then
+    if not world:entity(eid).collider then
         return
     end
-    local tp = math3d.totable(iom.get_position(eid))
+    local tp = math3d.totable(iom.get_position(world:entity(eid)))
     collision.position = {tp[1], tp[2], tp[3]}
-    local scale = math3d.totable(iom.get_scale(eid))
-    local factor = eid.collider.sphere and 100 or 200
+    local scale = math3d.totable(iom.get_scale(world:entity(eid)))
+    local factor = world:entity(eid).collider.sphere and 100 or 200
     collision.size = {scale[1] / factor, scale[2] / factor, scale[3] / factor}
 end
 
@@ -543,8 +540,7 @@ local function show_current_event()
                         if eid == -1 then
                             collision.shape_type = "None"
                         else
-                            w:sync("collider:in", eid)
-                            collision.shape_type = eid.collider.sphere and "sphere" or "box"
+                            collision.shape_type = world:entity(eid).collider.sphere and "sphere" or "box"
                             do_record(collision, eid)
                         end
                         dirty = true
@@ -665,10 +661,10 @@ local function update_collision()
     for idx, ke in ipairs(anim_state.current_event_list) do
         if ke.collision and ke.collision.col_eid and ke.collision.col_eid ~= -1 then
             local eid = ke.collision.col_eid
-            iom.set_position(eid, ke.collision.position)
-            w:sync("collider?in", eid)
-            local factor = eid.collider.sphere and 100 or 200
-            iom.set_scale(eid, {ke.collision.size[1] * factor, ke.collision.size[2] * factor, ke.collision.size[3] * factor})
+            local e = world:entity(eid)
+            iom.set_position(e, ke.collision.position)
+            local factor = e.collider.sphere and 100 or 200
+            iom.set_scale(e, {ke.collision.size[1] * factor, ke.collision.size[2] * factor, ke.collision.size[3] * factor})
             if eid == gizmo.target_eid then
                 gizmo:update()
                 world:pub {"UpdateAABB", eid}
@@ -1149,8 +1145,7 @@ function m.show()
                             for _, eid in ipairs(group_eid) do
                                 local template = hierarchy:get_template(eid)
                                 template.template.data.animation[anim_name] = anim_path
-                                w:sync("animation:in", eid)
-                                eid.animation[anim_name] = anim_path
+                                world:entity(eid).animation[anim_name] = anim_path
                             end
                             --TODO:reload
                             reload = true
@@ -1316,10 +1311,8 @@ function m.load_clips()
                             if e.collision and e.collision.shape_type ~= "None" then
                                 if not hierarchy.collider_list or not hierarchy.collider_list[e.collision.name] then
                                     local eid = prefab_mgr:create("collider", {tag = e.collision.tag, type = e.collision.shape_type, define = utils.deep_copy(default_collider_define[e.collision.shape_type]), parent = prefab_mgr.root, add_to_hierarchy = true})
-                                    eid.name = e.collision.name
-                                    eid.tag = e.collision.tag
-                                    w:sync("name:out", eid)
-                                    w:sync("tag:out", eid)
+                                    world:entity(eid).name = e.collision.name
+                                    world:entity(eid).tag = e.collision.tag
                                     imaterial.set_property(eid, "u_color", e.collision.color or {1.0,0.5,0.5,0.8})
                                     hierarchy:update_collider_list(world)
                                 end
@@ -1338,19 +1331,16 @@ function m.load_clips()
     to_runtime_clip()
 end
 
-local function construct_edit_animations(e)
-    w:sync("animation_birth:in", e)
-    if not e.scene then
-        w:sync("scene:in", e)
-    end
-    edit_anims[e] = {
+local function construct_edit_animations(eid)
+    local e = world:entity(eid)
+    edit_anims[eid] = {
         id          = e.scene.id,
         name_list   = {},
         birth       = e.animation_birth,
     }
-    local edit_anim = edit_anims[e]
-    local animations = get_runtime_animations(e)
-    local parentNode = hierarchy:get_node(hierarchy:get_node(e).parent)
+    local edit_anim = edit_anims[eid]
+    local animations = get_runtime_animations(eid)
+    local parentNode = hierarchy:get_node(hierarchy:get_node(eid).parent)
     for key, anim in pairs(animations) do
         if not anim_clips[key] then
             anim_clips[key] = {}
@@ -1377,26 +1367,24 @@ local function construct_edit_animations(e)
     table.sort(edit_anim.name_list)
     set_current_anim(edit_anim.birth)
     m.load_clips()
-    w:sync("skeleton:in", e)
-    joint_map[e], joint_list[e] = joint_utils:get_joints(e)
+    joint_map[eid], joint_list[eid] = joint_utils:get_joints(world:entity(eid))
     e._animation.joint_list = joint_list
     hierarchy:update_slot_list(world)
 end
 
-function m.bind(e)
-    if not e then
+function m.bind(eid)
+    if not eid then
         --current_e = e
         return
     end
-    w:sync("animation?in", e)
-    if not e.animation then
+    if not world:entity(eid).animation then
         return
     end
-    if current_e ~= e then
-        current_e = e
+    if current_e ~= eid then
+        current_e = eid
     end
-    if not edit_anims[e] then
-        construct_edit_animations(e)
+    if not edit_anims[eid] then
+        construct_edit_animations(eid)
     end
 end
 

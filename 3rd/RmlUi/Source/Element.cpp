@@ -203,6 +203,10 @@ std::string Element::GetAddress(bool include_pseudo_classes, bool include_parent
 }
 
 bool Element::IsPointWithinElement(Point point) {
+	bool ignorePointerEvents = Style::PointerEvents(GetProperty(PropertyId::PointerEvents)->GetKeyword()) == Style::PointerEvents::None;
+	if (ignorePointerEvents) {
+		return false;
+	}
 	return Project(point) && Rect { {}, GetMetrics().frame.size }.Contains(point);
 }
 
@@ -303,12 +307,12 @@ void Element::RemoveProperty(PropertyId id)
 	meta->style.RemoveProperty(id);
 }
 
-const Property* Element::GetProperty(const std::string& name)
+const Property* Element::GetProperty(const std::string& name) const
 {
 	return meta->style.GetProperty(StyleSheetSpecification::GetPropertyId(name));
 }
 
-const Property* Element::GetProperty(PropertyId id)
+const Property* Element::GetProperty(PropertyId id) const
 {
 	return meta->style.GetProperty(id);
 }
@@ -1225,7 +1229,11 @@ void Element::UpdateTransform() {
 		return;
 	dirty_transform = false;
 	glm::mat4x4 new_transform(1);
-	glm::vec3 origin(metrics.frame.origin.x, metrics.frame.origin.y, 0);
+	Point origin2d = metrics.frame.origin;
+	if (parent) {
+		origin2d = origin2d - parent->GetScrollOffset();
+	}
+	glm::vec3 origin(origin2d.x, origin2d.y, 0);
 	auto computedTransform = GetProperty(PropertyId::Transform)->GetTransformPtr();
 	if (computedTransform && !computedTransform->empty()) {
 		glm::vec3 transform_origin = origin + glm::vec3 {
@@ -1314,61 +1322,41 @@ void Element::UpdateGeometry() {
 }
 
 void Element::UpdateLayout() {
-	if (Node::UpdateMetrics() && Node::IsVisible()) {
+	if (layout.HasNewLayout() && Node::UpdateVisible()) {
 		DirtyTransform();
 		DirtyClip();
 		dirty_background = true;
 		dirty_image = true;
+		Rect content {};
 		for (auto& child : children) {
 			child->UpdateLayout();
+			if (child->IsVisible()) {
+				content.Union(child->GetMetrics().content);
+			}
 		}
+		Node::UpdateMetrics(content);
 	}
 }
 
-Element* Element::GetElementAtPoint(Point point, const Element* ignore_element) {
+Element* Element::GetElementAtPoint(Point point) {
 	if (!IsVisible()) {
 		return nullptr;
 	}
+	bool overflowVisible = GetLayout().GetOverflow() == Layout::Overflow::Visible;
+	if (!overflowVisible && !IsPointWithinElement(point)) {
+		return nullptr;
+	}
 	UpdateStackingContext();
-	for (int i = (int)stacking_context.size() - 1; i >= 0; --i) {
-		if (ignore_element != nullptr) {
-			Element* element_hierarchy = stacking_context[i];
-			while (element_hierarchy != nullptr) {
-				if (element_hierarchy == ignore_element)
-					break;
-				element_hierarchy = element_hierarchy->GetParentNode();
-			}
-			if (element_hierarchy != nullptr)
-				continue;
-		}
-		Element* child_element = stacking_context[i]->GetElementAtPoint(point, ignore_element);
-		if (child_element != nullptr) {
-			return child_element;
+	for (auto iter = stacking_context.rbegin(); iter != stacking_context.rend();++iter) {
+		Element* res = (*iter)->GetElementAtPoint(point);
+		if (res) {
+			return res;
 		}
 	}
-	// ignore alpha element
-	if (GetTagName() != "#text") {
-		auto style = GetStyle();
-		auto image_pro = style->GetProperty(PropertyId::BackgroundImage);
-		auto color_pro = style->GetProperty(PropertyId::BackgroundColor);
-		if ((!color_pro || color_pro->GetColor().a == 0) && (!image_pro || image_pro->GetString().empty())) {
-			bool skip = true;
-			for (const auto& [key, value] : attributes) {
-				if (key == "data-style-background-image" || key == "data-style-background-color" || key.substr(0, 10) == "data-event") {
-					skip = false;
-					break;
-				}
-			}
-			if (skip) {
-				return nullptr;
-			}
-		}
+	if (overflowVisible && !IsPointWithinElement(point)) {
+		return nullptr;
 	}
-	
-	if (IsPointWithinElement(point)) {
-		return this;
-	}
-	return nullptr;
+	return this;
 }
 
 static glm::u16vec4 UnionScissor(const glm::u16vec4& a, glm::u16vec4& b) {
@@ -1515,6 +1503,18 @@ void Element::RemoveAllEvents() {
 
 std::vector<EventListener*> const& Element::GetEventListeners() const {
 	return listeners;
+}
+
+Size Element::GetScrollOffset() const {
+	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
+		return {0,0};
+	}
+	Size scrollOffset {
+		GetProperty(PropertyId::ScrollLeft)->GetFloat(),
+		GetProperty(PropertyId::ScrollTop)->GetFloat()
+	};
+	layout.UpdateScrollOffset(scrollOffset, metrics);
+	return scrollOffset;
 }
 
 } // namespace Rml

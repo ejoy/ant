@@ -241,10 +241,20 @@ void Layout::MarkDirty() {
 	YGNodeMarkDirty(node);
 }
 
-bool Layout::UpdateMetrics(Layout::Metrics& metrics) {
-	if (!YGNodeGetHasNewLayout(node)) {
+bool Layout::HasNewLayout() const {
+	return YGNodeGetHasNewLayout(node);
+}
+
+bool Layout::UpdateVisible(Layout::Metrics& metrics) {
+	metrics.visible = YGNodeStyleGetDisplay(node) != YGDisplayNone;
+	if (!metrics.visible) {
+		YGNodeSetHasNewLayout(node, false);
 		return false;
 	}
+	return true;
+}
+
+void Layout::UpdateMetrics(Layout::Metrics& metrics, Rect& child) {
 	metrics.frame = Rect{
 		Point {
 			YGValueToFloat(YGNodeLayoutGetLeft(node)),
@@ -261,19 +271,39 @@ bool Layout::UpdateMetrics(Layout::Metrics& metrics) {
 		YGValueToFloat(YGNodeLayoutGetBorder(node, YGEdgeRight)),
 		YGValueToFloat(YGNodeLayoutGetBorder(node, YGEdgeBottom))
 	};
-	metrics.contentInsets = {
+	metrics.paddingWidth = {
 		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeLeft)),
 		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeTop)),
 		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeRight)),
 		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeBottom))
 	};
-	metrics.overflowInset = {};
-	metrics.visible = YGNodeStyleGetDisplay(node) != YGDisplayNone;
+	Rect r = metrics.frame;
+	r.Union(child);
+	metrics.content = r;
 	YGNodeSetHasNewLayout(node, false);
-	return true;
 }
 
-Layout::Overflow Layout::GetOverflow() {
+template <typename T>
+void clamp(T& v, T min, T max) {
+	assert(min <= max);
+	if (v < min) {
+		v = min;
+	}
+	else if (v > max) {
+		v = max;
+	}
+}
+
+void clamp(Size& s, Rect r) {
+	clamp(s.w, r.left(), r.right());
+	clamp(s.h, r.top(), r.bottom());
+}
+
+void Layout::UpdateScrollOffset(Size& scrollOffset, Layout::Metrics const& metrics) const {
+	clamp(scrollOffset, metrics.content + metrics.scrollInset - EdgeInsets<float> {0, 0, metrics.frame.size.w, metrics.frame.size.h});
+}
+
+Layout::Overflow Layout::GetOverflow() const {
 	return (Layout::Overflow)YGNodeStyleGetOverflow(node);
 }
 

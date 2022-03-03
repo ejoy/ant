@@ -44,24 +44,24 @@ function LightView:_init()
             setter = function(value) self:on_set_outter_radian(value) end,
         }),
         type  = uiproperty.EditText({label = "LightType", readonly=true}, {
-            getter = function () return ilight.which_type(self.entity) end,
+            getter = function () return ilight.which_type(world:entity(self.eid)) end,
             --no setter
         }),
         make_shadow = uiproperty.Bool({label = "MakeShadow"},{
-            getter = function () return ilight.make_shadow(self.entity) end,
-            setter = function (value) ilight.set_make_shadow(self.entity, value) end,
+            getter = function () return ilight.make_shadow(world:entity(self.eid)) end,
+            setter = function (value) world:entity(self.eid).make_shadow = value end,
         }),
         bake        = uiproperty.Bool({label = "Bake", disable=true}, {
             getter = function () return false end,
             setter = function (value) end,
         }),
         motion_type = uiproperty.Combo({label = "motion_type", options=MOTION_TYPE_options}, {
-            getter = function () return ilight.motion_type(self.entity) end,
-            setter = function (value) ilight.set_motion_type(self.entity, value) end,
+            getter = function () return ilight.motion_type(world:entity(self.eid)) end,
+            setter = function (value) ilight.set_motion_type(world:entity(self.eid), value) end,
         }),
         angular_radius= uiproperty.Float({label="AngularRadius", disable=true,}, {
-            getter = function() return math.deg(ilight.angular_radius(self.entity)) end,
-            setter = function(value) ilight.set_angular_radius(self.entity, math.rad(value)) end,
+            getter = function() return math.deg(ilight.angular_radius(world:entity(self.eid))) end,
+            setter = function(value) ilight.set_angular_radius(world:entity(self.eid), math.rad(value)) end,
         }),
     }
 
@@ -79,12 +79,9 @@ function LightView:set_model(e)
     subproperty[#subproperty + 1] = self.subproperty.bake
     subproperty[#subproperty + 1] = self.subproperty.angular_radius
 
-    if not e.light then
-        w:sync("light:in", e)
-    end
-    if e.light.type ~= "directional" then
+    if world:entity(e).light.type ~= "directional" then
         subproperty[#subproperty + 1] = self.subproperty.range
-        if e.light.type == "spot" then
+        if world:entity(e).light.type == "spot" then
             subproperty[#subproperty + 1] = self.subproperty.inner_radian
             subproperty[#subproperty + 1] = self.subproperty.outter_radian
         end
@@ -95,63 +92,63 @@ function LightView:set_model(e)
 end
 
 function LightView:on_set_color(...)
-    local template = hierarchy:get_template(self.entity)
+    local template = hierarchy:get_template(world:entity(self.eid))
     template.template.data.color = ...
-    ilight.set_color(self.entity, ...)
+    ilight.set_color(world:entity(self.eid), ...)
 end
 
 function LightView:on_get_color()
-    return ilight.color(self.entity)
+    return ilight.color(world:entity(self.eid))
 end
 
 function LightView:on_set_intensity(value)
-    local template = hierarchy:get_template(self.entity)
+    local template = hierarchy:get_template(world:entity(self.eid))
     template.template.data.intensity = value
-    ilight.set_intensity(self.entity, value)
+    ilight.set_intensity(world:entity(self.eid), value)
     light_gizmo.update_gizmo()
 end
 
 function LightView:on_get_intensity()
-    return ilight.intensity(self.entity)
+    return ilight.intensity(world:entity(self.eid))
 end
 
 function LightView:on_set_range(value)
-    local template = hierarchy:get_template(self.entity)
+    local template = hierarchy:get_template(world:entity(self.eid))
     template.template.data.range = value
-    ilight.set_range(self.entity, value)
+    ilight.set_range(world:entity(self.eid), value)
     light_gizmo.update_gizmo()
 end
 
 function LightView:on_get_range()
-    return ilight.range(self.entity)
+    return ilight.range(world:entity(self.eid))
 end
 
 function LightView:on_set_inner_radian(value)
-    local template = hierarchy:get_template(self.entity)
+    local template = hierarchy:get_template(world:entity(self.eid))
     local radian = math.rad(value)
     template.template.data.inner_radian = radian
-    ilight.set_inner_radian(self.entity, radian)
+    ilight.set_inner_radian(world:entity(self.eid), radian)
     light_gizmo.update_gizmo()
 end
 
 function LightView:on_get_inner_radian()
-    return math.deg(ilight.inner_radian(self.entity))
+    return math.deg(ilight.inner_radian(world:entity(self.eid)))
 end
 
 function LightView:on_set_outter_radian(value)
-    local template = hierarchy:get_template(self.entity)
+    local template = hierarchy:get_template(world:entity(self.eid))
     local radian = math.rad(value)
     if radian < template.template.data.inner_radian then
         radian = template.template.data.inner_radian
         self.subproperty.outter_radian:update()
     end
     template.template.data.outter_radian = radian
-    ilight.set_outter_radian(self.entity, radian)
+    ilight.set_outter_radian(world:entity(self.eid), radian)
     light_gizmo.update_gizmo()
 end
 
 function LightView:on_get_outter_radian()
-    return math.deg(ilight.outter_radian(self.entity))
+    return math.deg(ilight.outter_radian(world:entity(self.eid)))
 end
 
 function LightView:update()
@@ -165,8 +162,7 @@ function LightView:show()
 end
 
 function LightView:has_rotate()
-    w:sync("light:in", self.entity)
-    return self.entity.light.type ~= "point"
+    return world:entity(self.eid).light.type ~= "point"
 end
 
 function LightView:has_scale()

@@ -76,9 +76,6 @@ local function set_color(irow, icol, color)
     local start_col = clamp_col(icol - rad)
     local end_row = clamp_row(irow + rad)
     local end_col = clamp_col(icol + rad)
-    if not grid_eid.render_object then
-        world.w:sync("render_object:in", grid_eid)
-    end
     for row = start_row, end_row do
         for col = start_col, end_col do
             local vb_offset = ((row - 1) * grid.col + (col - 1)) * 4 * 4
@@ -91,7 +88,7 @@ local function set_color(irow, icol, color)
                 vb[#vb + 1] = grid_vb[i]
             end
 
-            local vbdesc = grid_eid.render_object.vb
+            local vbdesc = world:entity(grid_eid).render_object.vb
             bgfx.update(vbdesc.handles[1], vb_offset / 4, bgfx.memory_buffer("fffd", vb));
             grid.data[row][col][1] = current_brush_id
         end
@@ -124,7 +121,7 @@ end
 function grid:show(show)
     if not grid_eid then return end
     self.visible = show
-    ies.set_state(grid_eid, "main_view", show)
+    ies.set_state(world:entity(grid_eid), "main_view", show)
 end
 
 function grid:load(path)

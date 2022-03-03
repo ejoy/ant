@@ -87,42 +87,36 @@ function S.mouse(x, y, type, state)
         return
     end
     x, y = round(x), round(y)
-    --local MOUSE_TYPE_NONE <const> = 0
-    --local MOUSE_TYPE_LEFT <const> = 1
-    --local MOUSE_TYPE_RIGHT <const> = 2
-    --local MOUSE_TYPE_MIDDLE <const> = 3
-    local MOUSE_STATE_DOWN <const> = 1
-    local MOUSE_STATE_MOVE <const> = 2
-    local MOUSE_STATE_UP <const> = 3
-    local headled = false
-    if state == MOUSE_STATE_MOVE then
-        headled = rmlui.ContextProcessMouseMove(context, type-1, x, y)
-    elseif state == MOUSE_STATE_DOWN then
-        headled = rmlui.ContextProcessMouseButtonDown(context, type-1, x, y)
-    elseif state == MOUSE_STATE_UP then
-        headled = rmlui.ContextProcessMouseButtonUp(context, type-1, x, y)
-    end
-    return headled
+    return rmlui.ContextProcessMouse(context, type-1, state-1, x, y)
 end
 
-function S.touch(x, y, _, state)
+function S.touch(state, touches)
     if not context then
         return
     end
+    return rmlui.ContextProcessTouch(context, state-1, touches)
+end
+
+local gesture = {}
+function gesture.tap(x, y)
     x, y = round(x), round(y)
-    local TOUCH_STATE_DOWN <const> = 1
-    local TOUCH_STATE_MOVE <const> = 2
-    local TOUCH_STATE_UP <const> = 3
-    local headled = false
-    if state == TOUCH_STATE_MOVE then
-        headled = rmlui.ContextProcessMouseMove(context, 0, x, y)
-    elseif state == TOUCH_STATE_DOWN then
-        headled = rmlui.ContextProcessMouseButtonDown(context, 0, x, y)
-    elseif state == TOUCH_STATE_UP then
-        headled = rmlui.ContextProcessMouseButtonUp(context, 0, x, y)
+    local DOWN <const> = 0
+    local MOVE <const> = 1
+    local UP   <const> = 2
+    rmlui.ContextProcessMouse(context, 0, MOVE, x, y)
+    rmlui.ContextProcessMouse(context, 0, DOWN, x, y)
+    return rmlui.ContextProcessMouse(context, 0, UP, x, y)
+end
+
+function S.gesture(name, ...)
+    if not context then
+        return
     end
-    -- stop handle
-    return headled
+    local f =  gesture[name]
+    if not f then
+        return
+    end
+    return f(...)
 end
 
 function S.keyboard(key, press, state)
@@ -168,6 +162,6 @@ S.postMessage = windowManager.postMessage
 S.font_dir = filemanager.font_dir
 S.preload_dir = filemanager.preload_dir
 
-ltask.send(ServiceWindow, "subscribe", "priority=1", "mouse", "touch", "keyboard", "char")
+ltask.send(ServiceWindow, "subscribe", "priority=1", "mouse", "keyboard", "char", "touch", "gesture")
 
 return S

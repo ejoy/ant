@@ -79,11 +79,13 @@ local function create_simple_render_entity(name, material, mesh, srt, color, hid
 			filter_state= "main_view|auxgeom",
 			name		= name or gen_test_name(),
 			on_ready = function(e)
+				w:sync("render_object:in", e)
 				if imaterial.has_property(e, "u_color") then
 					imaterial.set_property(e, "u_color", color or {1,1,1,1})
 				end
 				ifs.set_state(e, "main_view", not hide)
 				ifs.set_state(e, "auxgeom", true)
+				w:sync("render_object_update:out", e)
 			end
 		}
 	}
@@ -154,6 +156,7 @@ function ientity.create_grid_mesh_entity(name, w, h, size, color, materialpath)
 			simplemesh	= imesh.init_mesh(create_dynamic_mesh("p3|c40niu", vb, ib), true), --create_mesh({"p3|c40niu", vb}, ib)
 			on_ready = function(e)
 				ifs.set_state(e, "auxgeom", true)
+				w:sync("render_object_update:out", e)
 			end
 		},
 	}
@@ -242,8 +245,10 @@ function ientity.create_prim_plane_entity(srt, materialpath, color, name, hide)
 			name 		= name or "Plane",
 			simplemesh 	= imesh.init_mesh(create_mesh({"p3|n3", plane_vb}, nil, math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))), true),
 			on_ready = function (e)
+				w:sync("render_object:in", e)
 				ifs.set_state(e, "main_view", not hide)
 				imaterial.set_property(e, "u_color", color)
+				w:sync("render_object_update:out", e)
 			end
 		},
 	}
@@ -673,6 +678,7 @@ function ientity.create_arrow_entity2(srt, headratio, color, material)
 			scene = {srt=srt},
 			name = "arrow",
 			on_ready = function (e)
+				w:sync("render_object:in", e)
 				if imaterial.has_property(e, "u_color") then
 					imaterial.set_property(e, "u_color", color)
 				end
@@ -750,7 +756,7 @@ function ientity.create_arrow_entity(origin, forward, scale, data)
 			material = "/pkg/ant.resources/materials/simpletri.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			on_ready = function (e)
-				w:sync("id:in", e)
+				w:sync("id:in render_object:in", e)
 				ecs.method.set_parent(e.id, arrowe)
 				imaterial.set_property(e, "u_color", data.cylinder_color or {1, 0, 0, 1})
 			end
@@ -770,7 +776,7 @@ function ientity.create_arrow_entity(origin, forward, scale, data)
 			material = "/pkg/ant.resources/materials/simpletri.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			on_ready = function (e)
-				w:sync("id:in", e)
+				w:sync("id:in render_object:in", e)
 				ecs.method.set_parent(e.id, arrowe)
 				imaterial.set_property(e, "u_color", data.cone_color or {1, 0, 0, 1})
 			end

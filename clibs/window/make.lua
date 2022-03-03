@@ -3,7 +3,10 @@ local lm = require "luamake"
 dofile "../common.lua"
 
 lm:source_set "source_window" {
-    includes = LuaInclude,
+    includes = {
+        LuaInclude,
+        Ant3rd.."bee.lua/3rd/lua-seri",
+    },
     sources = {
         "window.c",
     },
