@@ -255,7 +255,6 @@ bool Layout::UpdateVisible(Layout::Metrics& metrics) {
 }
 
 void Layout::UpdateMetrics(Layout::Metrics& metrics, Rect& child) {
-	YGNodeSetHasNewLayout(node, false);
 	metrics.frame = Rect{
 		Point {
 			YGValueToFloat(YGNodeLayoutGetLeft(node)),
@@ -281,8 +280,7 @@ void Layout::UpdateMetrics(Layout::Metrics& metrics, Rect& child) {
 	Rect r = metrics.frame;
 	r.Union(child);
 	metrics.content = r;
-
-	UpdateScrollOffset(metrics);
+	YGNodeSetHasNewLayout(node, false);
 }
 
 template <typename T>
@@ -301,11 +299,11 @@ void clamp(Size& s, Rect r) {
 	clamp(s.h, r.top(), r.bottom());
 }
 
-void Layout::UpdateScrollOffset(Layout::Metrics& metrics) {
-	clamp(metrics.scrollOffset, metrics.content + metrics.scrollInset - EdgeInsets<float> {0, 0, metrics.frame.size.w, metrics.frame.size.h});
+void Layout::UpdateScrollOffset(Size& scrollOffset, Layout::Metrics const& metrics) const {
+	clamp(scrollOffset, metrics.content + metrics.scrollInset - EdgeInsets<float> {0, 0, metrics.frame.size.w, metrics.frame.size.h});
 }
 
-Layout::Overflow Layout::GetOverflow() {
+Layout::Overflow Layout::GetOverflow() const {
 	return (Layout::Overflow)YGNodeStyleGetOverflow(node);
 }
 

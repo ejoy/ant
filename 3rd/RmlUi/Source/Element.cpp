@@ -203,6 +203,10 @@ std::string Element::GetAddress(bool include_pseudo_classes, bool include_parent
 }
 
 bool Element::IsPointWithinElement(Point point) {
+	bool ignorePointerEvents = Style::PointerEvents(GetProperty(PropertyId::PointerEvents)->GetKeyword()) == Style::PointerEvents::None;
+	if (ignorePointerEvents) {
+		return false;
+	}
 	return Project(point) && Rect { {}, GetMetrics().frame.size }.Contains(point);
 }
 
@@ -303,12 +307,12 @@ void Element::RemoveProperty(PropertyId id)
 	meta->style.RemoveProperty(id);
 }
 
-const Property* Element::GetProperty(const std::string& name)
+const Property* Element::GetProperty(const std::string& name) const
 {
 	return meta->style.GetProperty(StyleSheetSpecification::GetPropertyId(name));
 }
 
-const Property* Element::GetProperty(PropertyId id)
+const Property* Element::GetProperty(PropertyId id) const
 {
 	return meta->style.GetProperty(id);
 }
@@ -1499,6 +1503,18 @@ void Element::RemoveAllEvents() {
 
 std::vector<EventListener*> const& Element::GetEventListeners() const {
 	return listeners;
+}
+
+Size Element::GetScrollOffset() const {
+	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
+		return {0,0};
+	}
+	Size scrollOffset {
+		GetProperty(PropertyId::ScrollLeft)->GetFloat(),
+		GetProperty(PropertyId::ScrollTop)->GetFloat()
+	};
+	layout.UpdateScrollOffset(scrollOffset, metrics);
+	return scrollOffset;
 }
 
 } // namespace Rml

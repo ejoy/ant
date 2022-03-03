@@ -393,16 +393,6 @@ lElementGetProperty(lua_State* L) {
 }
 
 static int
-lElementGetScrollOffset(lua_State* L) {
-	luabind::setthread(L);
-	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	const Rml::Size offset = e->GetScrollOffset();
-	lua_pushnumber(L, offset.w);
-	lua_pushnumber(L, offset.h);
-	return 2;
-}
-
-static int
 lElementRemoveAttribute(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
@@ -447,22 +437,6 @@ lElementSetPropertyImmediate(lua_State* L) {
 	bool ok = e->SetPropertyImmediate(name, value);
 	lua_pushboolean(L, ok);
 	return 1;
-}
-
-static int
-lElementSetScrollLeft(lua_State* L) {
-	luabind::setthread(L);
-	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	e->SetScrollLeft((float)luaL_checknumber(L, 2));
-	return 0;
-}
-
-static int
-lElementSetScrollTop(lua_State* L) {
-	luabind::setthread(L);
-	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	e->SetScrollTop((float)luaL_checknumber(L, 2));
-	return 0;
 }
 
 static int
@@ -587,14 +561,11 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementGetOwnerDocument", lElementGetOwnerDocument },
 		{ "ElementGetParent", lElementGetParent },
 		{ "ElementGetProperty", lElementGetProperty },
-		{ "ElementGetScrollOffset", lElementGetScrollOffset },
 		{ "ElementRemoveAttribute", lElementRemoveAttribute },
 		{ "ElementRemoveProperty", lElementRemoveProperty },
 		{ "ElementSetAttribute", lElementSetAttribute },
 		{ "ElementSetProperty", lElementSetProperty },
 		{ "ElementSetPropertyImmediate", lElementSetPropertyImmediate },
-		{ "ElementSetScrollLeft", lElementSetScrollLeft },
-		{ "ElementSetScrollTop", lElementSetScrollTop },
 		{ "RenderBegin", lRenderBegin },
 		{ "RenderFrame", lRenderFrame },
 		{ "RmlInitialise", lRmlInitialise },

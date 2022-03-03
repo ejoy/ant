@@ -45,7 +45,6 @@ public:
 		EdgeInsets<float> paddingWidth{};
 		EdgeInsets<float> borderWidth{};
 		EdgeInsets<float> scrollInset{};
-		Size scrollOffset{};
 		bool visible = true;
 
 		bool operator==(const Metrics& rhs) const {
@@ -81,8 +80,8 @@ public:
 	bool HasNewLayout() const;
 	bool UpdateVisible(Layout::Metrics& metrics);
 	void UpdateMetrics(Layout::Metrics& metrics, Rect& child);
-	void UpdateScrollOffset(Layout::Metrics& metrics);
-	Overflow GetOverflow();
+	void UpdateScrollOffset(Size& scrollOffset, Layout::Metrics const& metrics) const;
+	Overflow GetOverflow() const;
 	void SetVisible(bool visible);
 
 	void InsertChild(Layout const& child, uint32_t index);

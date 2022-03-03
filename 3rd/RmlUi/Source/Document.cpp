@@ -304,12 +304,6 @@ void Document::Close()
 		context->UnloadDocument(this);
 }
 
-bool Document::ClickTest(const Point& point) const
-{
-	return body->GetElementAtPoint(point) != nullptr;
-	//return body->IsPointWithinElement(point);
-}
-
 ElementPtr Document::CreateElement(const std::string& name)
 {
 	ElementPtr element(new Element(this, name));

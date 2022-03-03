@@ -128,8 +128,8 @@ public:
 	/// from an ancestor, the default value will be returned.
 	/// @param[in] name The name of the property to fetch the value for.
 	/// @return The value of this property for this element, or nullptr if no property exists with the given name.
-	const Property* GetProperty(const std::string& name);
-	const Property* GetProperty(PropertyId id);
+	const Property* GetProperty(const std::string& name) const;
+	const Property* GetProperty(PropertyId id) const;
 
 	/// Project a 2D point in pixel coordinates onto the element's plane.
 	/// @param[in-out] point The point to project in, and the resulting projected point out.
@@ -283,6 +283,8 @@ public:
 	void SetParent(Element* parent);
 	Element* GetElementAtPoint(Point point);
 	void SetRednerStatus();
+
+	Size GetScrollOffset() const;
 
 protected:
 	void Update();

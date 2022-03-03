@@ -66,7 +66,6 @@ public:
 	/// Close the document.
 	void Close();
 	bool IsShow() const { return show_; }
-	bool ClickTest(const Point& point) const;
 	/// Creates the named element.
 	/// @param[in] name The tag name of the element.
 	ElementPtr CreateElement(const std::string& name);
