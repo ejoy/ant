@@ -37,25 +37,16 @@ vec4 sample_source(vec3 dir, float lod)
     return texture2DLod(s_panorama, uv, lod);
 }
 
-vec3 uvToXYZ(int face, vec2 uv)
+vec3 get_sample_vec(int face, vec2 uv)
 {
-    if(face == 0)
-        return vec3(     1.f,   uv.y,    -uv.x);
-
-    else if(face == 1)
-        return vec3(    -1.f,   uv.y,     uv.x);
-
-    else if(face == 2)
-        return vec3(   +uv.x,   -1.f,    +uv.y);
-
-    else if(face == 3)
-        return vec3(   +uv.x,    1.f,    -uv.y);
-
-    else if(face == 4)
-        return vec3(   +uv.x,   uv.y,      1.f);
-
-    else {//if(face == 5)
-        return vec3(    -uv.x,  +uv.y,     -1.f);}
+    switch(face){
+        case 0: return vec3(  1.0,  uv.y,-uv.x);
+        case 1: return vec3( -1.0,  uv.y, uv.x);
+        case 2: return vec3( uv.x,   1.0,-uv.y);
+        case 3: return vec3( uv.x,  -1.0,  uv.y);
+        case 4: return vec3( uv.x,  uv.y,  1.0);
+        default: return vec3(-uv.x,  uv.y, -1.0);
+    }
 }
 
 // Hammersley Points on the Hemisphere
@@ -395,15 +386,9 @@ void main()
 
     if(u_isGeneratingLUT == 0)
     {
-        vec2 newUV = v_texcoord0 ;
-
-        newUV = newUV*2.0-1.0;
-
-        vec3 scan = uvToXYZ(u_currentFace, newUV);
-
-        vec3 direction = normalize(scan);
+        vec2 newUV = v_texcoord0*2.0-1.0;
+        vec3 direction = normalize(get_sample_vec(u_currentFace, newUV));
         direction.y = -direction.y;
-    
         color = filterColor(direction);
     }
     else
