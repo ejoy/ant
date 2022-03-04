@@ -826,7 +826,7 @@ void Element::ProcessDefaultAction(Event& event) {
 	case EventId::Mouseout:
 		SetPseudoClass(PseudoClass::Hover, false);
 		break;
-	case EventId::Mousedown:
+	case EventId::Click:
 		SetPseudoClass(PseudoClass::Active, true);
 		break;
 	default:

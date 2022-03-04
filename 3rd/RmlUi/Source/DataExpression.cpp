@@ -982,23 +982,12 @@ DataExpressionInterface::DataExpressionInterface(DataModel* data_model, Element*
 
 DataAddress DataExpressionInterface::ParseAddress(const std::string& address_str) const
 {
-	if (address_str.size() >= 4 && address_str[0] == 'e' && address_str[1] == 'v' && address_str[2] == '.')
-		return DataAddress{ DataAddressEntry("ev"), DataAddressEntry(address_str.substr(3)) };
-
 	return data_model ? data_model->ResolveAddress(address_str, element) : DataAddress();
 }
 Variant DataExpressionInterface::GetValue(const DataAddress& address) const
 {
 	Variant result;
-	if(event && address.size() == 2 && address.front().name == "ev")
-	{
-		auto& parameters = event->GetParameters();
-		auto it = parameters.find(address.back().name);
-		if (it != parameters.end()){
-			result = VariantHelper::Copy(it->second);
-		}
-	}
-	else if (data_model)
+	if (data_model)
 	{
 		data_model->GetVariableInto(address, result);
 	}

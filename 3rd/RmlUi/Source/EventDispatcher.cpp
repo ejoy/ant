@@ -69,11 +69,8 @@ static DefaultActionPhase getDefaultActionPhase(Event& e) {
 		return DefaultActionPhase::Target;
 	case EventId::Mouseout:
 		return DefaultActionPhase::Target;
-	case EventId::Mousedown:
-		if (e.GetParameter<int>("button", 0) == (int)MouseButton::Left) {
-			return DefaultActionPhase::TargetAndBubble;
-		}
-		break;
+	case EventId::Click:
+		return DefaultActionPhase::TargetAndBubble;
 	default:
 		break;
 	}

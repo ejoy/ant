@@ -42,25 +42,6 @@ class DataModel;
 class DataExpression;
 using DataExpressionPtr = std::unique_ptr<DataExpression>;
 
-
-class DataControllerValue final : public DataController, private EventListener {
-public:
-    DataControllerValue(Element* element);
-    ~DataControllerValue();
-
-    bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& modifier) override;
-
-protected:
-    void OnDetach(Element *) override {}
-    void ProcessEvent(Event& event) override;
-    void Release() override;
-
-private:
-    void SetValue(const Variant& new_value);
-
-    DataAddress address;
-};
-
 struct DataControllerEventListener;
 
 class DataControllerEvent final : public DataController {

@@ -82,7 +82,6 @@ struct DefaultInstancers {
 	DataViewInstancerDefault<DataViewFor> structural_data_view_for;
 
 	// Data binding controllers
-	DataControllerInstancerDefault<DataControllerValue> data_controller_value;
 	DataControllerInstancerDefault<DataControllerEvent> data_controller_event;
 };
 
@@ -119,7 +118,6 @@ bool Factory::Initialise()
 	RegisterDataViewInstancer(&default_instancers->structural_data_view_for, "for",     true );
 
 	// Data binding controllers
-	RegisterDataControllerInstancer(&default_instancers->data_controller_value, "value");
 	RegisterDataControllerInstancer(&default_instancers->data_controller_event, "event");
 
 	return true;

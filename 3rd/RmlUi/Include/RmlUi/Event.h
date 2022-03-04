@@ -108,14 +108,6 @@ public:
 	/// Returns true if the event is still immediate propagating.
 	bool IsImmediatePropagating() const;
 
-	/// Returns the value of one of the event's parameters.
-	/// @param key[in] The name of the desired parameter.
-	/// @return The value of the requested parameter.
-	template < typename T >
-	T GetParameter(const std::string& key, const T& default_value) const
-	{
-		return Get(parameters, key, default_value);
-	}
 	/// Access the dictionary of parameters
 	/// @return The dictionary of parameters
 	const EventDictionary& GetParameters() const;
