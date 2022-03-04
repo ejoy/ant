@@ -47,14 +47,6 @@ Event::Event(Element* _target_element, EventId id, const EventDictionary& _param
 	case EventId::Mouseover:
 	case EventId::Mouseout:
 	case EventId::Click:
-	case EventId::Dblclick:
-	case EventId::Dragmove:
-	case EventId::Drag:
-	case EventId::Dragstart:
-	case EventId::Dragover:
-	case EventId::Dragdrop:
-	case EventId::Dragout:
-	case EventId::Dragend:
 		InitMouseEvent();
 		break;
 	default:
