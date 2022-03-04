@@ -13,14 +13,6 @@ uniform vec4 u_build_ibl_param;
 #include "pbr/pbr.sh"
 #include "common/common.sh"
 
-vec3 id2dir(ivec3 id, float size)
-{
-    vec2 uv = id.xy / u_face_texture_size;
-    uv = vec2(uv.x, 1.0-uv.y) * 2.0 - 1.0;
-    int faceidx = id.z;
-    return normalize(uvface2dir(uv, faceidx));
-}
-
 void calc_TB(vec3 N, out vec3 T, out vec3 B)
 {
     float epsilon = 0.0000001;

@@ -1,7 +1,7 @@
 #include <bgfx_shader.sh>
 #include <bgfx_compute.sh>
 
-#include "pbr/ibl/common.sh"
+#include "common/sphere_coord.sh"
 #include "pbr/ibl/source.sh"
 
 IMAGE2D_ARRAY_WR(s_prefilter, rgba16f, 1);

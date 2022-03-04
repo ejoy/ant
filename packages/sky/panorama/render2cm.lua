@@ -105,7 +105,7 @@ function render2cm_sys:entity_ready()
 
         local ti = tex.texinfo
         if panorama_util.is_panorama_tex(ti) then
-            local cm_rbidx = panorama_util.check_create_cubemap_tex(ti, e.skybox.cubeme_rbidx)
+            local cm_rbidx = panorama_util.check_create_cubemap_tex(ti, e.skybox.cubeme_rbidx, cubemap_flags)
             e.skybox.cubeme_rbidx = cm_rbidx
             local size = ti.height // 2
 

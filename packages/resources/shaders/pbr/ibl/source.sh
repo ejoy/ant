@@ -1,7 +1,7 @@
 #ifndef _IBL_SOURCE_SH_
 #define _IBL_SOURCE_SH_
 
-#include "common/common.sh"
+#include "common/sphere_coord.sh"
 
 #ifdef CUBEMAP_SOURCE
 SAMPLERCUBE(s_source, 0);

@@ -40,6 +40,16 @@ function cs2cm_sys:init()
 end
 
 local build_ibl_viewid = viewidmgr.get "build_ibl"
+local cm_flags = sampler.sampler_flag{
+    MIN="LINEAR",
+    MAG="LINEAR",
+    MIP="LINEAR",
+    U="CLAMP",
+    V="CLAMP",
+    W="CLAMP",
+    RT="RT_ON",
+    BLIT="BLIT_COMPUTEWRITE",
+}
 
 function cs2cm_sys:entity_ready()
     w:clear "filter_ibl"
@@ -48,7 +58,7 @@ function cs2cm_sys:entity_ready()
 
         local ti = tex.texinfo
         if panorama_util.is_panorama_tex(ti) then
-            local cm_rbidx = panorama_util.check_create_cubemap_tex(ti, e.skybox.cubeme_rbidx)
+            local cm_rbidx = panorama_util.check_create_cubemap_tex(ti, e.skybox.cubeme_rbidx, cm_flags)
             e.skybox.cubeme_rbidx = cm_rbidx
             local facesize = ti.height // 2
 
@@ -78,8 +88,6 @@ function cs2cm_sys:entity_ready()
             fbmgr.destroy(fbidx, true)
 
             imaterial.set_property(e, "s_skybox", {stage=0, texture={handle=cm_rbhandle}})
-
-            e.skybox.cubeme_rbidx = cm_rbidx
         end
         e.filter_ibl = true
     end

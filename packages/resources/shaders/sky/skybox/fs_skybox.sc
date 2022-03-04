@@ -1,7 +1,7 @@
 $input v_posWS
 
 #include <bgfx_shader.sh>
-#include "common/common.sh"
+#include "common/sphere_coord.sh"
 
 #ifdef CUBEMAP_SKY
 #undef CUBEMAP_SKY
