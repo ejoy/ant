@@ -164,25 +164,15 @@ function world:memory(async)
 end
 
 function world:entity(eid)
-	local w = self.w
-	local v = self._entityid[eid]
+	local v = self._entity_visitor[eid]
 	if not v then
 		return
 	end
-	local mt = {}
-	function mt:__index(name)
-		w:sync(name.."?in", v)
-		return v[name]
-	end
-	function mt:__newindex(name, value)
-		v[name] = value
-		w:sync(name.."?out", v)
-	end
-	return setmetatable({}, mt)
+	return setmetatable({id=eid}, self._entity_mt)
 end
 
 function world:remove_entity(eid)
-	local v = self._entityid[eid]
+	local v = self._entity_visitor[eid]
 	if not v then
 		return
 	end
@@ -196,7 +186,14 @@ function m.new_world(config)
 		name = "id",
 		type = "int64",
 	}
-	local entityid = config.w:make_index "id"
+	local entity_visitor = config.w:make_index "id"
+	local entity_mt = {}
+	function entity_mt:__index(name)
+		return entity_visitor(self.id, name)
+	end
+	function entity_mt:__newindex(name, value)
+		entity_visitor(self.id, name, value)
+	end
 
 	local w = setmetatable({
 		args = config,
@@ -208,7 +205,8 @@ function m.new_world(config)
 		_methods = {},
 		_frame = 0,
 		_maxid = 0,
-		_entityid = entityid,
+		_entity_visitor = entity_visitor,
+		_entity_mt = entity_mt,
 		w = config.w,
 	}, world)
 
