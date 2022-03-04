@@ -6,6 +6,7 @@ interface "iibl"
     .implement "ibl/ibl.lua"
     .method "get_ibl"
     .method "filter_all"
+    .method "get_ibl_textures"
 
 component "irradiance_builder"
 component "prefilter_builder"

@@ -13,9 +13,9 @@ properties:
 #define u_currentFace   u_ibl_params1.y
 #define u_isGeneratingLUT u_ibl_params1.z
   u_ibl_params1: {0.0, 0.0, 0.0, 0.0}
-  s_panorama:
+  s_source:
     stage: 0
-    texture: /pkg/ant.sky/assets/panorama.texture
+    texture: /pkg/ant.resources/textures/black.texture
 state:
   ALPHA_REF: 0
   CULL: NONE

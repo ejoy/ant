@@ -29,13 +29,7 @@ uniform vec4 u_ibl_params1;
 // uniform int u_currentFace;
 // uniform int u_isGeneratingLUT;
 
-SAMPLER2D(s_panorama, 0);
-
-vec4 sample_source(vec3 dir, float lod)
-{
-    vec2 uv = dir2spherecoord(dir);
-    return texture2DLod(s_panorama, uv, lod);
-}
+SAMPLERCUBE(s_source, 0);
 
 vec3 get_sample_vec(int face, vec2 uv)
 {
@@ -270,7 +264,7 @@ vec3 filterColor(vec3 N)
         {
             // sample lambertian at a lower resolution to avoid fireflies
             //vec3 lambertian = textureLod(uCubeMap, H, lod).rgb;
-            vec3 lambertian = sample_source(H, lod);
+            vec3 lambertian = textureCubeLod(s_source, H, lod).rgb;
 
             //// the below operations cancel each other out
             // lambertian *= NdotH; // lamberts law
@@ -294,7 +288,7 @@ vec3 filterColor(vec3 N)
                     lod = u_lodBias;
                 }
                 //vec3 sampleColor = textureLod(uCubeMap, L, lod).rgb;
-                vec3 sampleColor = sample_source(L, lod);
+                vec3 sampleColor = textureCubeLod(s_source, L, lod);
                 color += sampleColor * NdotL;
                 weight += NdotL;
             }

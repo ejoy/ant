@@ -12,6 +12,7 @@ local mc        = mathpkg.constant
 local ientity   = ecs.import.interface "ant.render|ientity"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 local irender   = ecs.import.interface "ant.render|irender"
+local iibl      = ecs.import.interface "ant.render|iibl"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local icamera   = ecs.import.interface "ant.camera|icamera"
 
@@ -65,7 +66,7 @@ function render2cm_sys:init()
         },
         data = {
             simplemesh = ientity.simple_fullquad_mesh(),
-            material = "/pkg/ant.sky/cvt_p2cm.material",
+            material = "/pkg/ant.sky/panorama/render2cm.material",
             scene = {srt={}},
             filter_state = "",
             cvt_p2cm_drawer = true,
@@ -80,7 +81,7 @@ function render2cm_sys:init()
         },
         data = {
             simplemesh = ientity.simple_fullquad_mesh(),
-            material = "/pkg/ant.sky/filter_ibl.material",
+            material = "/pkg/ant.sky/panorama/filter_ibl.material",
             scene = {srt={}},
             filter_state = "",
             name = "filter_drawer",
@@ -100,7 +101,7 @@ local cubemap_flags<const> = sampler.sampler_flag {
 }
 
 function render2cm_sys:entity_ready()
-    for e in w:select "sky_changed skybox:in render_object:in" do
+    for e in w:select "skybox_changed skybox:in render_object:in filter_ibl?out" do
         local tex = imaterial.get_property(e, "s_skybox").value.texture
 
         local ti = tex.texinfo
@@ -138,6 +139,8 @@ function render2cm_sys:entity_ready()
                 local keep_rbs<const> = true
                 fbmgr.destroy(fbidx, keep_rbs)
             end
+            imaterial.set_property(e, "s_skybox", {stage=0, texture={handle=fbmgr.get_rb(cm_rbidx).handle}})
+            e.filter_ibl = true
         end
     end
 end
@@ -176,15 +179,16 @@ local ibl_properties = {
 
 local build_ibl_viewid = viewidmgr.get "build_ibl"
 
-function render2cm_sys:filter_ibl(source)
-    local irradiance_rbidx = fbmgr.create_rb{format="RGBA32F", size=face_size, layers=1, flags=cubemap_flags, cubemap=true}
+local function build_irradiance_map(source_tex, irradiance, facesize)
+    local irradiance_rbidx = fbmgr.create_rb{format="RGBA32F", size=facesize, layers=1, flags=cubemap_flags, cubemap=true}
 
     local drawer = w:singleton("filter_drawer", "render_object:in")
     local ro = drawer.render_object
+    ro.worldmat = mc.IDENTITY_MAT
     -- do for irradiance
     local irradiance_properties = ibl_properties.irradiance
 
-    imaterial.set_property(drawer, "s_panorama", source)
+    imaterial.set_property(drawer, "s_source", source_tex)
 
     for idx, fn in ipairs(face_queues) do
         local faceidx = idx-1
@@ -192,7 +196,7 @@ function render2cm_sys:filter_ibl(source)
         local rt = q.render_target
         rt.viewid = build_ibl_viewid+faceidx
         local vr = rt.view_rect
-        vr.x, vr.y, vr.w, vr.h = 0, 0, face_size, face_size
+        vr.x, vr.y, vr.w, vr.h = 0, 0, facesize, facesize
 
         local fbidx = fbmgr.create{
             rbidx = irradiance_rbidx,
@@ -210,4 +214,41 @@ function render2cm_sys:filter_ibl(source)
 
         fbmgr.destroy(fbidx, true)
     end
+
+    irradiance.rbidx = irradiance_rbidx
+    irradiance.handle = fbmgr.get_rb(irradiance_rbidx).handle
+    irradiance.size = facesize
+end
+
+local function build_prefilter_map(source_tex, prefilter, facesize)
+    local prefilter_rbidx = fbmgr.create_rb{format="RGBA32F", size=facesize, layers=1, flags=cubemap_flags, cubemap=true}
+
+    prefilter.rbidx = prefilter_rbidx
+    prefilter.mipmap_count = math.log(facesize)+1
+    prefilter.handle = fbmgr.get_rb(prefilter_rbidx).handle
+    prefilter.size = facesize
+end
+
+local function build_LUT_map(source_tex, LUT, size)
+    local LUT_rbidx = fbmgr.create_rb{format="RG32F", w=size, h=size, layers=1, flags=cubemap_flags}
+
+    LUT.rbidx = LUT_rbidx
+    LUT.handle = fbmgr.get_rb(LUT_rbidx).handle
+    LUT.size = size
+end
+
+function render2cm_sys:filter_ibl()
+    for e in w:select "filter_ibl ibl:in render_object:in" do
+        local source_tex = imaterial.get_property(e, "s_skybox").value
+        local ibl_textures = iibl.get_ibl_textures()
+        ibl_textures.intensity = 12000
+
+        local irradiance_face_size<const> = 32
+        build_irradiance_map(source_tex, ibl_textures.irradiance, irradiance_face_size)
+        local prefilter_face_size<const> = 256
+        build_prefilter_map(source_tex, ibl_textures.prefilter, prefilter_face_size)
+        local LUT_size<const> = 256
+        build_LUT_map(source_tex, ibl_textures.LUT, LUT_size)
+    end
+    w:clear "filter_ibl"
 end
