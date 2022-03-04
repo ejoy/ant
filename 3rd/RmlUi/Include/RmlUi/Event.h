@@ -118,7 +118,6 @@ protected:
 	Element* current_element = nullptr;
 
 private:
-	void InitMouseEvent();
 	EventId id = EventId::Invalid;
 	bool interruptible = false;
 	bool interrupted = false;

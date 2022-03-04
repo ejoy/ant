@@ -135,19 +135,6 @@ lDocumentClose(lua_State* L) {
 }
 
 static int
-lDocumentProcessMouse(lua_State* L) {
-	luabind::setthread(L);
-	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	Rml::MouseButton button = (Rml::MouseButton)luaL_checkinteger(L, 2);
-	Rml::MouseState state = (Rml::MouseState)luaL_checkinteger(L, 3);
-	int x = (int)luaL_checkinteger(L, 4);
-	int y = (int)luaL_checkinteger(L, 5);
-	bool handled = doc->ProcessMouse(button, state, x, y);
-	lua_pushboolean(L, handled);
-	return 1;
-}
-
-static int
 lDocumentProcessTouch(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
@@ -191,6 +178,15 @@ lDocumentElementFromPoint(lua_State *L){
 	return 1;
 }
 
+static int
+lDocumentGetBody(lua_State* L) {
+	luabind::setthread(L);
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
+	Rml::Element* e = doc->body.get();
+	lua_pushlightuserdata(L, e);
+	return 1;
+}
+
 static void
 ElementAddEventListener(Rml::Element* e, const std::string& name, bool userCapture, lua_State* L, int idx) {
 	luaL_checktype(L, 3, LUA_TFUNCTION);
@@ -198,11 +194,11 @@ ElementAddEventListener(Rml::Element* e, const std::string& name, bool userCaptu
 	e->AddEventListener(new EventListener(L, name, get_lua_plugin()->ref(L), lua_toboolean(L, 4)));
 }
 
-static void
+static bool
 ElementDispatchEvent(Rml::Element* e, const std::string& name, lua_State* L, int idx) {
 	Rml::EventId id = Rml::EventSpecification::GetId(name);
 	if (id == Rml::EventId::Invalid) {
-		return;
+		return true;
 	}
 	luabind::setthread(L);
 	Rml::EventDictionary params;
@@ -219,7 +215,7 @@ ElementDispatchEvent(Rml::Element* e, const std::string& name, lua_State* L, int
 			lua_pop(L, 1);
 		}
 	}
-	e->DispatchEvent(id, params);
+	return e->DispatchEvent(id, params);
 }
 
 static int
@@ -248,6 +244,14 @@ lDocumentGetSourceURL(lua_State *L) {
 }
 
 static int
+lDocumentIsShow(lua_State* L) {
+	luabind::setthread(L);
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
+	lua_pushboolean(L, doc->IsShow());
+	return 1;
+}
+
+static int
 lDocumentShow(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
@@ -267,7 +271,27 @@ static int
 lDocumentDispatchEvent(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	ElementDispatchEvent(doc->body.get(), lua_checkstdstring(L, 2), L, 3);
+	bool propagating = ElementDispatchEvent(doc->body.get(), lua_checkstdstring(L, 2), L, 3);
+	lua_pushboolean(L, propagating);
+	return 1;
+}
+
+static int
+lElementDispatchEvent(lua_State* L) {
+	luabind::setthread(L);
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	bool propagating = ElementDispatchEvent(e, lua_checkstdstring(L, 2), L, 3);
+	lua_pushboolean(L, propagating);
+	return 1;
+}
+
+static int
+lElementSetPseudoClass(lua_State* L) {
+	luabind::setthread(L);
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	const char* lst[] = { "hover", "active", NULL };
+	Rml::PseudoClass pseudoClass = (Rml::PseudoClass)(1 + luaL_checkoption(L, 2, NULL, lst));
+	e->SetPseudoClass(pseudoClass, lua_toboolean(L, 3));
 	return 0;
 }
 
@@ -403,6 +427,22 @@ lElementSetPropertyImmediate(lua_State* L) {
 }
 
 static int
+lElementProject(lua_State* L) {
+	luabind::setthread(L);
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	Rml::Point pt(
+		(float)luaL_checknumber(L, 2),
+		(float)luaL_checknumber(L, 3)
+	);
+	if (!e->Project(pt)) {
+		return 0;
+	}
+	lua_pushnumber(L, pt.x);
+	lua_pushnumber(L, pt.y);
+	return 2;
+}
+
+static int
 lRmlInitialise(lua_State* L) {
 	luabind::setthread(L);
     if (g_wrapper) {
@@ -486,11 +526,9 @@ luaopen_rmlui(lua_State* L) {
 		{ "DataModelGet", lDataModelGet },
 		{ "DataModelSet", lDataModelSet },
 		{ "DataModelDirty", lDataModelDirty },
-
 		{ "DocumentCreate", lDocumentCreate },
 		{ "DocumentOnLoad", lDocumentOnLoad },
 		{ "DocumentClose", lDocumentClose },
-		{ "DocumentProcessMouse", lDocumentProcessMouse },
 		{ "DocumentProcessTouch", lDocumentProcessTouch },
 		{ "DocumentUpdate", lDocumentUpdate },
 		{ "DocumentSetDimensions", lDocumentSetDimensions},
@@ -499,8 +537,11 @@ luaopen_rmlui(lua_State* L) {
 		{ "DocumentDispatchEvent", lDocumentDispatchEvent },
 		{ "DocumentGetElementById", lDocumentGetElementById },
 		{ "DocumentGetSourceURL", lDocumentGetSourceURL },
+		{ "DocumentIsShow", lDocumentIsShow },
 		{ "DocumentShow", lDocumentShow },
+		{ "lDocumentGetBody", lDocumentGetBody },
 		{ "ElementAddEventListener", lElementAddEventListener },
+		{ "ElementDispatchEvent", lElementDispatchEvent },
 		{ "ElementGetInnerRML", lElementGetInnerRML },
 		{ "ElementGetAttribute", lElementGetAttribute },
 		{ "ElementGetBounds", lElementGetBounds },
@@ -513,6 +554,8 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementSetAttribute", lElementSetAttribute },
 		{ "ElementSetProperty", lElementSetProperty },
 		{ "ElementSetPropertyImmediate", lElementSetPropertyImmediate },
+		{ "ElementSetPseudoClass", lElementSetPseudoClass },
+		{ "ElementProject", lElementProject },
 		{ "RenderBegin", lRenderBegin },
 		{ "RenderFrame", lRenderFrame },
 		{ "RmlInitialise", lRmlInitialise },

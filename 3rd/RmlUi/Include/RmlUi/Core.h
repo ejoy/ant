@@ -36,7 +36,6 @@
 namespace Rml {
 
 class Plugin;
-class Context;
 class FileInterface;
 class FontEngineInterface;
 class RenderInterface;

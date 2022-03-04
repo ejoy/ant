@@ -34,7 +34,6 @@
 
 namespace Rml {
 
-class Context;
 class ElementText;
 class StyleSheet;
 class DataModel;
@@ -73,8 +72,6 @@ public:
 	virtual void LoadExternalScript(const std::string& source_path);
 
 	bool ProcessTouch(TouchState state);
-	bool ProcessMouse(MouseButton button, MouseState state, int x, int y);
-	void OnElementDetach(Element* element);
 	void SetDimensions(const Size& dimensions);
 	const Size& GetDimensions();
 	Element* ElementFromPoint(Point pt) const;
@@ -95,28 +92,13 @@ private:
 	DataModels data_models;
 
 private:
-	// The original path this document came from
 	std::string source_url;
-
-	// The document's style sheet.
 	std::shared_ptr<StyleSheet> style_sheet;
-
-	void UpdateHoverChain(const EventDictionary& parameters, const EventDictionary& drag_parameters);
-
 	Point mouse_position = Point(0,0);
-
-	Element* hover = nullptr;
-	Element* active = nullptr;
-	Element* focus = nullptr;
-
-	std::set<Element*> hover_chain;
-	std::vector<Element*> active_chain;
 	Size dimensions;
 	bool dirty_dimensions = false;
 	bool show_ = true;
-	friend class Rml::Context;
 	friend class Rml::Factory;
-
 };
 
 } // namespace Rml

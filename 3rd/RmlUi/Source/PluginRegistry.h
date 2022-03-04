@@ -33,7 +33,6 @@
 
 namespace Rml {
 
-class Context;
 class Element;
 class Document;
 class Plugin;

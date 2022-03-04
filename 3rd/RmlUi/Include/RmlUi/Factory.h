@@ -35,7 +35,6 @@
 
 namespace Rml {
 
-class Context;
 class DataControllerInstancer;
 class DataViewInstancer;
 class Element;

@@ -38,51 +38,10 @@ Event::Event(Element* _target_element, EventId id, const EventDictionary& _param
 	, target_element(_target_element)
 	, id(id)
 	, interruptible(interruptible)
-{
-	switch (id) {
-	case EventId::Mousedown:
-	case EventId::Mouseup:
-	case EventId::Mousemove:
-	case EventId::Mousescroll:
-	case EventId::Mouseover:
-	case EventId::Mouseout:
-	case EventId::Click:
-		InitMouseEvent();
-		break;
-	default:
-		break;
-	}
-}
+{ }
 
 Event::~Event()
 { }
-
-void Event::InitMouseEvent() {
-	const float* x = GetIf<float>(parameters, "x");
-	const float* y = GetIf<float>(parameters, "y");
-	if (!x || !y) {
-		return;
-	}
-	Point client(*x,*y);
-
-	parameters["clientX"] = client.x;
-	parameters["clientY"] = client.y;
-
-	Point offset = client;
-	if (target_element->Project(offset)) {
-		parameters["offsetX"] = offset.x;
-		parameters["offsetY"] = offset.y;
-	}
-
-	Document* document = target_element->GetOwnerDocument();
-	if (document) {
-		Point page = client;
-		if (document->body && document->body->Project(page)) {
-			parameters["pageX"] = page.x;
-			parameters["pageY"] = page.y;
-		}
-	}
-}
 
 void Event::SetCurrentElement(Element* element) {
 	current_element = element;

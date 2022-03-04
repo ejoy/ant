@@ -55,7 +55,6 @@ class Document;
 class Element;
 class ElementText;
 class ElementAnimation;
-class Context;
 class Event;
 class Property;
 class Transform;

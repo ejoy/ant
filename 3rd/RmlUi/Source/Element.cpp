@@ -78,7 +78,6 @@ Element::Element(Document* owner, const std::string& tag)
 
 Element::~Element() {
 	RMLUI_ASSERT(parent == nullptr);
-	GetOwnerDocument()->OnElementDetach(this);
 	SetDataModel(nullptr);
 	for (auto& child : children) {
 		child->SetParent(nullptr);
@@ -815,22 +814,6 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 		if (child->GetType() == Node::Type::Text) {
 			child->OnChange(changed_properties);
 		}
-	}
-}
-
-void Element::ProcessDefaultAction(Event& event) {
-	switch (event.GetId()) {
-	case EventId::Mouseover:
-		SetPseudoClass(PseudoClass::Hover, true);
-		break;
-	case EventId::Mouseout:
-		SetPseudoClass(PseudoClass::Hover, false);
-		break;
-	case EventId::Click:
-		SetPseudoClass(PseudoClass::Active, true);
-		break;
-	default:
-		break;
 	}
 }
 

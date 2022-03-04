@@ -35,26 +35,15 @@
 
 namespace Rml {
 
-enum class DefaultActionPhase { None, Target, TargetAndBubble };
-
 struct CollectedListener {
 	CollectedListener(Element* _element, EventListener* _listener, int depth, bool in_capture_phase)
 		: element(_element->GetObserverPtr())
 		, listener(_listener->GetObserverPtr())
-		, default_action(false)
-		, sort(depth * (in_capture_phase ? -1 : 1))
-	{}
-
-	CollectedListener(Element* _element, int depth, bool in_capture_phase)
-		: element(_element->GetObserverPtr())
-		, listener()
-		, default_action(true)
 		, sort(depth * (in_capture_phase ? -1 : 1))
 	{}
 
 	ObserverPtr<Element> element;
 	ObserverPtr<EventListener> listener;
-	bool default_action;
 	int sort = 0;
 
 	EventPhase GetPhase() const { return sort < 0 ? EventPhase::Capture : (sort == 0 ? EventPhase::Target : EventPhase::Bubble); }
@@ -63,23 +52,8 @@ struct CollectedListener {
 	}
 };
 
-static DefaultActionPhase getDefaultActionPhase(Event& e) {
-	switch (e.GetId()) {
-	case EventId::Mouseover:
-		return DefaultActionPhase::Target;
-	case EventId::Mouseout:
-		return DefaultActionPhase::Target;
-	case EventId::Click:
-		return DefaultActionPhase::TargetAndBubble;
-	default:
-		break;
-	}
-	return DefaultActionPhase::None;
-}
 
 bool DispatchEvent(Event& e, bool bubbles) {
-	const DefaultActionPhase default_action_phase = getDefaultActionPhase(e);
-
 	std::vector<CollectedListener> listeners;
 	
 	int depth = 0;
@@ -96,9 +70,6 @@ bool DispatchEvent(Event& e, bool bubbles) {
 				}
 			}
 		}
-		if (default_action_phase == DefaultActionPhase::TargetAndBubble || ((depth == 0) && (default_action_phase == DefaultActionPhase::Target))) {
-			listeners.emplace_back(walk_element, depth, false);
-		}
 		walk_element = walk_element->GetParentNode();
 		depth += 1;
 	}
@@ -113,16 +84,11 @@ bool DispatchEvent(Event& e, bool bubbles) {
 			break;
 		Element* element = listener_desc.element.get();
 		if (element) {
-			if (listener_desc.default_action) {
-				element->ProcessDefaultAction(e);
-			}
-			else {
-				EventListener* listener = listener_desc.listener.get();
-				if (listener) {
-					e.SetCurrentElement(element);
-					e.SetPhase(listener_desc.GetPhase());
-					listener->ProcessEvent(e);
-				}
+			EventListener* listener = listener_desc.listener.get();
+			if (listener) {
+				e.SetCurrentElement(element);
+				e.SetPhase(listener_desc.GetPhase());
+				listener->ProcessEvent(e);
 			}
 		}
 		if (!e.IsImmediatePropagating())

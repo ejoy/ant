@@ -43,7 +43,6 @@
 
 namespace Rml {
 
-class Context;
 class DataModel;
 class EventListener;
 class Document;
@@ -266,11 +265,6 @@ public:
 	/// Returns the data model of this element.
 	DataModel* GetDataModel() const;
 	//@}
-
-	/// Called when an emitted event propagates to this element, for event types with default actions.
-	/// Note: See 'EventSpecification' for the events that call this function and during which phase.
-	/// @param[in] event The event to process.
-	virtual void ProcessDefaultAction(Event& event);
 
 	/// Return the computed values of the element's properties. These values are updated as appropriate on every Context::Update.
 	const Style::ComputedValues& GetComputedValues() const;
