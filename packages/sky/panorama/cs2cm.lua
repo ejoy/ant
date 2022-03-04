@@ -2,6 +2,8 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
+local bgfx      = require "bgfx"
+
 local cs2cm_sys = ecs.system "cs2cm_system"
 
 local renderpkg = import_package "ant.render"
@@ -11,6 +13,9 @@ local sampler   = renderpkg.sampler
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local icompute  = ecs.import.interface "ant.render|icompute"
+local iibl      = ecs.import.interface "ant.render|iibl"
+
+local panorama_util=require "panorama.util"
 
 local thread_group_size<const> = 32
 
@@ -34,54 +39,64 @@ function cs2cm_sys:init()
     }
 end
 
-local cubemap_flags<const> = sampler.sampler_flag {
-    MIN="LINEAR",
-    MAG="LINEAR",
-    MIP="LINEAR",
-    U="CLAMP",
-    V="CLAMP",
-    W="CLAMP",
-    RT="RT_ON",
-}
-
 local build_ibl_viewid = viewidmgr.get "build_ibl"
 
-function cs2cm_sys:convert_sky()
+function cs2cm_sys:entity_ready()
     w:clear "filter_ibl"
-    for e in w:select "sky_changed skybox:in render_object:in filter_ibl?out" do
-        local tex = imaterial.get_property(e).value.texture
-        --TODO: if we changed skybox texture, we should remove cubemap render texture
-        local ti = tex.info
-        if ti.depth == 1 and ti.width == ti.height*2 then
+    for e in w:select "skybox_changed skybox:in render_object:in filter_ibl?in" do
+        local tex = imaterial.get_property(e, "s_skybox").value.texture
+
+        local ti = tex.texinfo
+        if panorama_util.is_panorama_tex(ti) then
+            local cm_rbidx = panorama_util.check_create_cubemap_tex(ti, e.skybox.cubeme_rbidx)
+            e.skybox.cubeme_rbidx = cm_rbidx
             local facesize = ti.height // 2
-            local cm_rbidx = fbmgr.create_rb{format="RGBA32F", size=facesize, layers=1, mipmap=true, flags=cubemap_flags, cubemap=true}
-            local ro = e.render_object
 
-            local properties = ro.properties
+            local dispatcher = world:entity(cs2cm_convertor_eid)
+            local dis = dispatcher.dispatch
+            local properties = dis.properties
 
+            local cm_rbhandle = fbmgr.get_rb(cm_rbidx).handle
             imaterial.set_property_directly(properties, "s_source", {stage=0, texture=tex})
-            local p = icompute.create_image_property(fbmgr.get_rb(cm_rbidx).handle, 1, 0, "w")
-            imaterial.set_property_directly(properties, "s_cubemap_source", p)
+            properties.s_cubemap_source = icompute.create_image_property(cm_rbhandle, 1, 0, "w")
 
-            local dis = e.dispatch
-            dis[1], dis[2], dis[3] = facesize // thread_group_size, facesize // thread_group_size, 6
+            local s = dis.size
+            s[1], s[2], s[3] = facesize // thread_group_size, facesize // thread_group_size, 6
             icompute.dispatch(build_ibl_viewid, dis)
 
-            fbmgr.create{
+            --just generate mipmaps for cm_rbidx
+            local fbidx = fbmgr.create{
                 rbidx = cm_rbidx,
-                
+                resolve = "g",
+                layer = 0,
+                mip = 0,
+                numlayer = 1,
             }
+            bgfx.set_view_frame_buffer(build_ibl_viewid, fbmgr.get(fbidx).handle)
+            bgfx.touch(build_ibl_viewid)
+
+            fbmgr.destroy(fbidx, true)
+
+            imaterial.set_property(e, "s_skybox", {stage=0, texture={handle=cm_rbhandle}})
+
+            e.skybox.cubeme_rbidx = cm_rbidx
         end
-
-
-
         e.filter_ibl = true
     end
 end
 
 function cs2cm_sys:filter_ibl()
-    for e in w:select "filter_ibl render_object:in" do
-
+    for e in w:select "filter_ibl skybox:in render_object:in" do
+        local se_ibl = e.ibl
+        local tex = imaterial.get_property(e, "s_skybox").value.texture
+        iibl.filter_all{
+			source 		= {handle = tex.handle, cubemap=true},
+			irradiance 	= se_ibl.irradiance,
+			prefilter 	= se_ibl.prefilter,
+			LUT			= se_ibl.LUT,
+			intensity	= se_ibl.intensity,
+		}
+		world:pub{"ibl_updated", e}
     end
 end
 

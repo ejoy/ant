@@ -109,6 +109,8 @@ local function destroy_rb(rbidx, mark_rbidx)
 	end
 end
 
+mgr.destroy_rb = destroy_rb
+
 function mgr.destroy(fbidx, keep_rbs)
 	local oldfb = framebuffers[fbidx]
 	if not keep_rbs then
@@ -167,12 +169,22 @@ function mgr.get_rb(fbidx, rbidx)
 	return renderbuffers[rbidx]
 end
 
-function mgr.resize_rb(w, h, rbidx)
+function mgr.resize_rb(rbidx, w, h)
 	local rb = mgr.get_rb(rbidx)
-	destroy_rb(rbidx)
-	if rb.w ~= w or rb.h ~= h then
+
+	local changed = true
+	if rb.cubemap and rb.size ~= w then
+		rb.size = w
+	elseif rb.w ~= w or rb.h ~= h then
 		rb.w, rb.h = w, h
+	else
+		changed = nil
+	end
+
+	if changed then
+		destroy_rb(rbidx)
 		rb.handle = create_rb_handle(rb)
+		
 		return true
 	end
 end

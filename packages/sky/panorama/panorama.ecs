@@ -1,6 +1,9 @@
+component "filter_ibl"
+
 system "render2cm_system"
     .implement "panorama/render2cm.lua"
-    .method "convert_sky"
+    .method "init"
+    .method "entity_ready"
     .method "filter_ibl"
 
 component "cvt_p2cm_drawer"
@@ -16,6 +19,7 @@ component "cubemap_face_queue_nz"
 
 system "cs2cm_system"
     .implement "panorama/cs2cm.lua"
-    .method "convert_sky"
+    .method "init"
+    .method "entity_ready"
     .method "filter_ibl"
 

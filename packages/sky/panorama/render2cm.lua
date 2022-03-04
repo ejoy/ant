@@ -15,6 +15,8 @@ local irender   = ecs.import.interface "ant.render|irender"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local icamera   = ecs.import.interface "ant.camera|icamera"
 
+local panorama_util=require "panorama.util"
+
 local cvt_p2cm_viewid = viewidmgr.get "panorama2cubmap"
 
 local render2cm_sys = ecs.system "render2cm_system"
@@ -97,50 +99,45 @@ local cubemap_flags<const> = sampler.sampler_flag {
     RT="RT_ON",
 }
 
-local function cvt_panorama_by_renderface(e)
-    local tex = imaterial.get_property(e, "s_skybox").value.texture
-    local ti = tex.texinfo
-    assert(ti.width==ti.height*2 or ti.width*2==ti.height)
-    local size = math.min(ti.width, ti.height) // 2
-
-    local cm_rbidx = fbmgr.create_rb{format="RGBA32F", size=size, layers=1, mipmap=true, flags=cubemap_flags, cubemap=true}
-
-    local drawer = w:singleton("cvt_p2cm_drawer", "render_object:in")
-    local ro = drawer.render_object
-    ro.worldmat = mc.IDENTITY_MAT
-    imaterial.set_property_directly(ro.properties, "s_tex", {stage=0, texture=tex})
-
-    for idx, fn in ipairs(face_queues) do
-        local faceidx = idx-1
-        local fbidx = fbmgr.create{
-            rbidx = cm_rbidx,
-            layer = faceidx,
-            resolve = "g",
-            mip = 0,
-            numlayer = 1,
-        }
-        local q = w:singleton(fn, "render_target:in")
-        local rt = q.render_target
-        local vr = rt.view_rect
-        vr.x, vr.y, vr.w, vr.h = 0, 0, size, size
-        rt.viewid = cvt_p2cm_viewid + faceidx
-        rt.fb_idx = fbidx
-        irq.update_rendertarget(fn, rt)
-
-        imaterial.set_property_directly(ro.properties, "u_param", {faceidx, 0.0, 0.0, 0.0})
-
-        irender.draw(rt.viewid, ro)
-
-        local keep_rbs<const> = true
-        fbmgr.destroy(fbidx, keep_rbs)
-    end
-end
-
-function render2cm_sys:convert_sky()
+function render2cm_sys:entity_ready()
     for e in w:select "sky_changed skybox:in render_object:in" do
-        local setting = imaterial.get_setting(e)
-        if setting.CUBEMAP_SKY == nil then
-            cvt_panorama_by_renderface(e)
+        local tex = imaterial.get_property(e, "s_skybox").value.texture
+
+        local ti = tex.texinfo
+        if panorama_util.is_panorama_tex(ti) then
+            local cm_rbidx = panorama_util.check_create_cubemap_tex(ti, e.skybox.cubeme_rbidx)
+            e.skybox.cubeme_rbidx = cm_rbidx
+            local size = ti.height // 2
+
+            local drawer = w:singleton("cvt_p2cm_drawer", "render_object:in")
+            local ro = drawer.render_object
+            ro.worldmat = mc.IDENTITY_MAT
+            imaterial.set_property_directly(ro.properties, "s_tex", {stage=0, texture=tex})
+
+            for idx, fn in ipairs(face_queues) do
+                local faceidx = idx-1
+                local fbidx = fbmgr.create{
+                    rbidx = cm_rbidx,
+                    layer = faceidx,
+                    resolve = "g",
+                    mip = 0,
+                    numlayer = 1,
+                }
+                local q = w:singleton(fn, "render_target:in")
+                local rt = q.render_target
+                local vr = rt.view_rect
+                vr.x, vr.y, vr.w, vr.h = 0, 0, size, size
+                rt.viewid = cvt_p2cm_viewid + faceidx
+                rt.fb_idx = fbidx
+                irq.update_rendertarget(fn, rt)
+
+                imaterial.set_property_directly(ro.properties, "u_param", {faceidx, 0.0, 0.0, 0.0})
+
+                irender.draw(rt.viewid, ro)
+
+                local keep_rbs<const> = true
+                fbmgr.destroy(fbidx, keep_rbs)
+            end
         end
     end
 end
