@@ -176,6 +176,21 @@ lDocumentSetDimensions(lua_State *L){
 	return 0;
 }
 
+static int
+lDocumentElementFromPoint(lua_State *L){
+	luabind::setthread(L);
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
+	Rml::Element* e = doc->ElementFromPoint(Rml::Point(
+		(float)luaL_checknumber(L, 2),
+		(float)luaL_checknumber(L, 3))
+	);
+	if (!e) {
+		return 0;
+	}
+	lua_pushlightuserdata(L, e);
+	return 1;
+}
+
 static void
 ElementAddEventListener(Rml::Element* e, const std::string& name, bool userCapture, lua_State* L, int idx) {
 	luaL_checktype(L, 3, LUA_TFUNCTION);
@@ -479,7 +494,7 @@ luaopen_rmlui(lua_State* L) {
 		{ "DocumentProcessTouch", lDocumentProcessTouch },
 		{ "DocumentUpdate", lDocumentUpdate },
 		{ "DocumentSetDimensions", lDocumentSetDimensions},
-
+		{ "DocumentElementFromPoint", lDocumentElementFromPoint },
 		{ "DocumentAddEventListener", lDocumentAddEventListener },
 		{ "DocumentDispatchEvent", lDocumentDispatchEvent },
 		{ "DocumentGetElementById", lDocumentGetElementById },

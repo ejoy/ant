@@ -1331,7 +1331,7 @@ void Element::UpdateLayout() {
 	}
 }
 
-Element* Element::GetElementAtPoint(Point point) {
+Element* Element::ElementFromPoint(Point point) {
 	if (!IsVisible()) {
 		return nullptr;
 	}
@@ -1341,7 +1341,7 @@ Element* Element::GetElementAtPoint(Point point) {
 	}
 	UpdateStackingContext();
 	for (auto iter = stacking_context.rbegin(); iter != stacking_context.rend();++iter) {
-		Element* res = (*iter)->GetElementAtPoint(point);
+		Element* res = (*iter)->ElementFromPoint(point);
 		if (res) {
 			return res;
 		}

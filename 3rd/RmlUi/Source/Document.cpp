@@ -380,7 +380,7 @@ bool Document::ProcessTouch(TouchState state) {
 		return false;
 	}
 	//Point pt {(float)0, (float)0};
-	//Element* e = body->GetElementAtPoint(pt);
+	//Element* e = ElementFromPoint(pt);
 	Element* e = body.get();
 	if (!e) {
 		return false;
@@ -431,7 +431,7 @@ bool Document::ProcessMouse(MouseButton button, MouseState state, int x, int y) 
 		EventDictionary parameters;
 		GenerateMouseEventParameters(parameters, mouse, button);
 		bool handle = false;
-		active = body->GetElementAtPoint(mouse);
+		active = ElementFromPoint(mouse);
 		if (active) {
 			active->DispatchEvent(EventId::Mousedown, parameters);
 			if (active != body.get()) {
@@ -449,7 +449,7 @@ bool Document::ProcessMouse(MouseButton button, MouseState state, int x, int y) 
 		EventDictionary parameters;
 		GenerateMouseEventParameters(parameters, mouse, button);
 		bool handle = false;
-		active = body->GetElementAtPoint(mouse);
+		active = ElementFromPoint(mouse);
 		if (active) {
 			active->DispatchEvent(EventId::Mouseup, parameters);
 			if (active != body.get()) {
@@ -472,22 +472,10 @@ bool Document::ProcessMouse(MouseButton button, MouseState state, int x, int y) 
 	return false;
 }
 
-bool Document::ProcessMouseWheel(float wheel_delta) {
-	if (!IsShow()) {
-		return false;
-	}
-	if (hover) {
-		EventDictionary scroll_parameters;
-		scroll_parameters["wheel_delta"] = wheel_delta;
-		hover->DispatchEvent(EventId::Mousescroll, scroll_parameters);
-	}
-	return true;
-}
-
 void Document::UpdateHoverChain(const EventDictionary& parameters, const EventDictionary& drag_parameters) {
 	Point position = mouse_position;
 
-	hover = body->GetElementAtPoint(position);
+	hover = ElementFromPoint(position);
 
 	// Build the new hover chain.
 	ElementSet new_hover_chain;
@@ -598,6 +586,10 @@ void Document::Update() {
 
 void Document::Render() {
 	body->OnRender();
+}
+
+Element* Document::ElementFromPoint(Point pt) const {
+	return body->ElementFromPoint(pt);
 }
 
 } // namespace Rml

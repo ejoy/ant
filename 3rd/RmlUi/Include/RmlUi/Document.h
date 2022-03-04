@@ -74,11 +74,11 @@ public:
 
 	bool ProcessTouch(TouchState state);
 	bool ProcessMouse(MouseButton button, MouseState state, int x, int y);
-	bool ProcessMouseWheel(float wheel_delta);
 	void OnElementDetach(Element* element);
 	void SetDimensions(const Size& dimensions);
 	const Size& GetDimensions();
-
+	Element* ElementFromPoint(Point pt) const;
+	
 	void Update();
 	void Render();
 	std::unique_ptr<ElementDocument> body;

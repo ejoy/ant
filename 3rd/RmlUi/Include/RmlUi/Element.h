@@ -277,7 +277,7 @@ public:
 
 	void UpdateLayout();
 	void SetParent(Element* parent);
-	Element* GetElementAtPoint(Point point);
+	Element* ElementFromPoint(Point point);
 	void SetRednerStatus();
 
 	Size GetScrollOffset() const;
