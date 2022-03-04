@@ -52,8 +52,7 @@ local cm_flags = sampler.sampler_flag{
 }
 
 function cs2cm_sys:entity_ready()
-    w:clear "filter_ibl"
-    for e in w:select "skybox_changed skybox:in render_object:in filter_ibl?in" do
+    for e in w:select "skybox_changed skybox:in render_object:in filter_ibl?out" do
         local tex = imaterial.get_property(e, "s_skybox").value.texture
 
         local ti = tex.texinfo
@@ -94,7 +93,7 @@ function cs2cm_sys:entity_ready()
 end
 
 function cs2cm_sys:filter_ibl()
-    for e in w:select "filter_ibl skybox:in render_object:in" do
+    for e in w:select "filter_ibl ibl:in render_object:in" do
         local se_ibl = e.ibl
         local tex = imaterial.get_property(e, "s_skybox").value.texture
         iibl.filter_all{
@@ -106,5 +105,6 @@ function cs2cm_sys:filter_ibl()
 		}
 		world:pub{"ibl_updated", e}
     end
+    w:clear "filter_ibl"
 end
 

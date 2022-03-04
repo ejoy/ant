@@ -3,6 +3,7 @@
 #include <bgfx_compute.sh>
 
 #include "common/sphere_coord.sh"
+#include "pbr/ibl/common.sh"
 #include "pbr/ibl/source.sh"
 
 IMAGE2D_ARRAY_WR(s_irradiance, rgba16f, 1);
@@ -10,7 +11,7 @@ IMAGE2D_ARRAY_WR(s_irradiance, rgba16f, 1);
 NUM_THREADS(WORKGROUP_THREADS, WORKGROUP_THREADS, 1)
 void main()
 {
-    vec3 color = vec3_splat(0.f);
+    vec3 color = vec3_splat(0.0);
     vec3 N = id2dir(gl_GlobalInvocationID, u_face_texture_size);
 
     for (int sampleidx=0; sampleidx < int(u_sample_count); ++sampleidx){

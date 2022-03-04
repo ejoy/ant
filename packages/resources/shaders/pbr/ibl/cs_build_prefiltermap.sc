@@ -2,6 +2,7 @@
 #include <bgfx_compute.sh>
 
 #include "common/sphere_coord.sh"
+#include "pbr/ibl/common.sh"
 #include "pbr/ibl/source.sh"
 
 IMAGE2D_ARRAY_WR(s_prefilter, rgba16f, 1);
@@ -12,7 +13,7 @@ void main()
     if (any(gl_GlobalInvocationID.xy >= int(u_face_texture_size)))
         return;
 
-    vec4 color = vec4_splat(0.f);
+    vec4 color = vec4_splat(0.0);
     vec3 N = id2dir(gl_GlobalInvocationID, u_face_texture_size);
 
     for (int sampleidx=0; sampleidx < int(u_sample_count); ++sampleidx){
