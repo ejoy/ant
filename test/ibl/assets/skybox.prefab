@@ -19,4 +19,4 @@ data:
             size: 256
     material: /pkg/ant.resources/materials/sky/skybox.material
     skybox:
-        intensity: 2500
+        intensity: 12000

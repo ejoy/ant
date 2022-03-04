@@ -33,32 +33,7 @@ function skybox_sys:component_init()
 	end
 end
 
--- function skybox_sys:entity_ready()
--- 	for e in w:select "skybox_changed ibl:in render_object:in" do
--- 		local se_ibl = e.ibl
--- 		local ro = e.render_object
--- 		local s = ro.fx.setting
-		
--- 		local tex = imaterial.get_property(e, "s_skybox").value
--- 		local texhandle = tex.texture.handle
--- 		-- if s.CUBEMAP_SKY == nil then
--- 		-- 	local icm = ecs.import.interface "ant.sky|icubemap_face"
--- 		-- 	texhandle = icm.convert_panorama2cubemap(tex.texture)
--- 		-- 	imaterial.set_property(e, "s_skybox", {stage=tex.stage, texture={handle=texhandle}})
--- 		-- end
-
--- 		iibl.filter_all{
--- 			source 		= {handle = texhandle, cubemap=true},
--- 			irradiance 	= se_ibl.irradiance,
--- 			prefilter 	= se_ibl.prefilter,
--- 			LUT			= se_ibl.LUT,
--- 			intensity	= se_ibl.intensity,
--- 		}
--- 		world:pub{"ibl_updated", e}
--- 	end
--- end
-
-function skybox_sys:data_changed()
+function skybox_sys:entity_init()
 	for e in w:select "skybox_changed skybox:in render_object:in" do
 		local sb = e.skybox
 		local ro = e.render_object
