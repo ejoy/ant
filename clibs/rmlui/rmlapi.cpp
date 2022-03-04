@@ -118,33 +118,6 @@ lDocumentCreate(lua_State* L) {
 }
 
 static int
-lDocumentOnLoad(lua_State* L) {
-	luabind::setthread(L);
-	//TODO
-	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	doc->body->DispatchEvent(Rml::EventId::Load, Rml::EventDictionary());
-	return 0;
-}
-
-static int
-lDocumentClose(lua_State* L) {
-	luabind::setthread(L);
-	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	doc->Close();
-	return 0;
-}
-
-static int
-lDocumentProcessTouch(lua_State* L) {
-	luabind::setthread(L);
-	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	Rml::TouchState state = (Rml::TouchState)luaL_checkinteger(L, 3);
-	bool handled = doc->ProcessTouch(state);
-	lua_pushboolean(L, handled);
-	return 1;
-}
-
-static int
 lDocumentUpdate(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
@@ -241,22 +214,6 @@ lDocumentGetSourceURL(lua_State *L) {
 	const std::string &url = doc->GetSourceURL();
 	lua_pushlstring(L, url.c_str(), url.length());
 	return 1;
-}
-
-static int
-lDocumentIsShow(lua_State* L) {
-	luabind::setthread(L);
-	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	lua_pushboolean(L, doc->IsShow());
-	return 1;
-}
-
-static int
-lDocumentShow(lua_State* L) {
-	luabind::setthread(L);
-	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	doc->Show();
-	return 0;
 }
 
 static int
@@ -527,9 +484,6 @@ luaopen_rmlui(lua_State* L) {
 		{ "DataModelSet", lDataModelSet },
 		{ "DataModelDirty", lDataModelDirty },
 		{ "DocumentCreate", lDocumentCreate },
-		{ "DocumentOnLoad", lDocumentOnLoad },
-		{ "DocumentClose", lDocumentClose },
-		{ "DocumentProcessTouch", lDocumentProcessTouch },
 		{ "DocumentUpdate", lDocumentUpdate },
 		{ "DocumentSetDimensions", lDocumentSetDimensions},
 		{ "DocumentElementFromPoint", lDocumentElementFromPoint },
@@ -537,9 +491,7 @@ luaopen_rmlui(lua_State* L) {
 		{ "DocumentDispatchEvent", lDocumentDispatchEvent },
 		{ "DocumentGetElementById", lDocumentGetElementById },
 		{ "DocumentGetSourceURL", lDocumentGetSourceURL },
-		{ "DocumentIsShow", lDocumentIsShow },
-		{ "DocumentShow", lDocumentShow },
-		{ "lDocumentGetBody", lDocumentGetBody },
+		{ "DocumentGetBody", lDocumentGetBody },
 		{ "ElementAddEventListener", lElementAddEventListener },
 		{ "ElementDispatchEvent", lElementDispatchEvent },
 		{ "ElementGetInnerRML", lElementGetInnerRML },

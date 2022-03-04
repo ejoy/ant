@@ -280,20 +280,6 @@ const std::shared_ptr<StyleSheet>& Document::GetStyleSheet() const
 	return style_sheet;
 }
 
-void Document::Show() {
-	show_ = true;
-	body->DispatchEvent(EventId::Show, EventDictionary());
-}
-
-void Document::Hide() {
-	show_ = false;
-	body->DispatchEvent(EventId::Hide, EventDictionary());
-}
-
-void Document::Close() {
-	body->DispatchEvent(EventId::Unload, EventDictionary());
-}
-
 ElementPtr Document::CreateElement(const std::string& name)
 {
 	ElementPtr element(new Element(this, name));
@@ -364,31 +350,6 @@ static void GenerateMouseEventParameters(EventDictionary& parameters, const Poin
 		parameters["button"] = (int)button;
 }
 
-bool Document::ProcessTouch(TouchState state) {
-	if (!IsShow()) {
-		return false;
-	}
-	//Point pt {(float)0, (float)0};
-	//Element* e = ElementFromPoint(pt);
-	Element* e = body.get();
-	if (!e) {
-		return false;
-	}
-	EventDictionary parameters;
-	switch (state) {
-	case TouchState::Start:
-		return !e->DispatchEvent(EventId::Touchstart, parameters);
-	case TouchState::Move:
-		return !e->DispatchEvent(EventId::Touchmove, parameters);
-	case TouchState::End:
-		return !e->DispatchEvent(EventId::Touchend, parameters);
-	case TouchState::Cancel:
-		return !e->DispatchEvent(EventId::Touchcancel, parameters);
-	default:
-		return false;
-	}
-}
-
 DataModelConstructor Document::CreateDataModel(const std::string& name) {
 	auto result = data_models.emplace(name, std::make_unique<DataModel>());
 	bool inserted = result.second;
@@ -434,7 +395,6 @@ void Document::SetDimensions(const Size& _dimensions) {
 		dirty_dimensions = true;
 		dimensions = _dimensions;
 		body->GetStyle()->DirtyPropertiesWithUnitRecursive(Property::VIEW_LENGTH);
-		body->DispatchEvent(EventId::Resize, EventDictionary());
 	}
 }
 
@@ -443,16 +403,14 @@ const Size& Document::GetDimensions() {
 }
 
 void Document::Update() {
-	if (IsShow()) {
-		UpdateDataModel(true);
-		body->Update();
-		if (dirty_dimensions || body->GetLayout().IsDirty()) {
-			dirty_dimensions = false;
-			body->GetLayout().CalculateLayout(dimensions);
-		}
-		body->UpdateLayout();
-		Render();
+	UpdateDataModel(true);
+	body->Update();
+	if (dirty_dimensions || body->GetLayout().IsDirty()) {
+		dirty_dimensions = false;
+		body->GetLayout().CalculateLayout(dimensions);
 	}
+	body->UpdateLayout();
+	Render();
 }
 
 void Document::Render() {

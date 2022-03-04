@@ -54,13 +54,6 @@ public:
 	/// Returns the document's style sheet.
 	const std::shared_ptr<StyleSheet>& GetStyleSheet() const;
 
-	/// Show the document.
-	void Show();
-	/// Hide the document.
-	void Hide();
-	/// Close the document.
-	void Close();
-	bool IsShow() const { return show_; }
 	/// Creates the named element.
 	/// @param[in] name The tag name of the element.
 	ElementPtr CreateElement(const std::string& name);
@@ -71,7 +64,6 @@ public:
 	virtual void LoadInlineScript(const std::string& content, const std::string& source_path, int source_line);
 	virtual void LoadExternalScript(const std::string& source_path);
 
-	bool ProcessTouch(TouchState state);
 	void SetDimensions(const Size& dimensions);
 	const Size& GetDimensions();
 	Element* ElementFromPoint(Point pt) const;
@@ -97,7 +89,6 @@ private:
 	Point mouse_position = Point(0,0);
 	Size dimensions;
 	bool dirty_dimensions = false;
-	bool show_ = true;
 	friend class Rml::Factory;
 };
 

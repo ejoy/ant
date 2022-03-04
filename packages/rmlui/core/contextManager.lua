@@ -1,4 +1,12 @@
 local rmlui = require "rmlui"
+
+local elementFromPoint = rmlui.DocumentElementFromPoint
+local getBody = rmlui.DocumentGetBody
+local dispatchEvent = rmlui.ElementDispatchEvent
+local getParent = rmlui.ElementGetParent
+local setPseudoClass = rmlui.ElementSetPseudoClass
+local project = rmlui.ElementProject
+
 local m = {}
 
 local width, height = 1, 1
@@ -13,17 +21,16 @@ function m.open(url)
     local doc = rmlui.DocumentCreate(url, width, height)
     if doc then
         table.insert(documents, 1, doc)
-        rmlui.DocumentShow(doc)
         return doc
     end
 end
 
 function m.onload(doc)
-    rmlui.DocumentOnLoad(doc)
+    dispatchEvent(getBody(doc), "load", {})
 end
 
 function m.close(doc)
-    rmlui.DocumentClose(doc)
+    dispatchEvent(getBody(doc), "unload", {})
     for i, d in ipairs(documents) do
         if d == doc then
             table.remove(documents, i)
@@ -32,13 +39,6 @@ function m.close(doc)
     end
 end
 
-local elementFromPoint = rmlui.DocumentElementFromPoint
-local isShow = rmlui.DocumentIsShow
-local getBody = rmlui.DocumentGetBody
-local dispatchEvent = rmlui.ElementDispatchEvent
-local getParent = rmlui.ElementGetParent
-local setPseudoClass = rmlui.ElementSetPseudoClass
-local project = rmlui.ElementProject
 
 local focusElement
 local activeElement
@@ -180,7 +180,7 @@ function m.process_mouse(x, y, button, state)
         return
     end
     for _, doc in ipairs(documents) do
-        local handled = isShow(doc) and process(doc, button, x, y)
+        local handled = process(doc, button, x, y)
         if handled then
             return true
         end
@@ -224,6 +224,7 @@ function m.set_dimensions(w, h, ratio)
     width, height = w, h
     for _, doc in ipairs(documents) do
         rmlui.DocumentSetDimensions(doc, width, height)
+        dispatchEvent(getBody(doc), "resize", {})
     end
 end
 
