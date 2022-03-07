@@ -4,14 +4,11 @@
 
 namespace Rml {
 
-Event::Event(Element* _target_element, const std::string& type, const EventDictionary& _parameters, bool interruptible)
-	: parameters(_parameters)
-	, target_element(_target_element)
+Event::Event(Element* target_element, const std::string& type, int parameters, bool interruptible)
+	: parameters(parameters)
+	, target_element(target_element)
 	, type(type)
 	, interruptible(interruptible)
-{ }
-
-Event::~Event()
 { }
 
 void Event::SetCurrentElement(Element* element) {
@@ -60,7 +57,7 @@ void Event::StopImmediatePropagation() {
 	}
 }
 
-const EventDictionary& Event::GetParameters() const {
+int Event::GetParameters() const {
 	return parameters;
 }
 

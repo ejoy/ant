@@ -32,7 +32,6 @@
 #include "Platform.h"
 #include "Layout.h"
 #include "ComputedValues.h"
-#include "Event.h"
 #include "ObserverPtr.h"
 #include "Property.h"
 #include "Types.h"
@@ -51,7 +50,6 @@ class PropertyDictionary;
 class StyleSheet;
 class Geometry;
 struct ElementMeta;
-struct StackingOrderedChild;
 
 /**
 	A generic element in the DOM tree.
@@ -213,7 +211,7 @@ public:
 
 	void AddEventListener(EventListener* listener);
 	void RemoveEventListener(EventListener* listener);
-	bool DispatchEvent(const std::string& type, const EventDictionary& parameters, bool interruptible, bool bubbles);
+	bool DispatchEvent(const std::string& type, int parameters, bool interruptible, bool bubbles);
 	void RemoveAllEvents();
 	std::vector<EventListener*> const& GetEventListeners() const;
 

@@ -38,11 +38,6 @@ lua_pushvariant(lua_State *L, const Rml::Variant &v) {
 }
 
 void
-lua_pushvariant(lua_State *L, const Rml::EventVariant &v) {
-	std::visit(LuaPushVariantVisitor{L}, v);
-}
-
-void
 lua_getvariant(lua_State *L, int index, Rml::Variant* variant) {
 	if (!variant)
 		return;
@@ -65,47 +60,6 @@ lua_getvariant(lua_State *L, int index, Rml::Variant* variant) {
 		*variant = Rml::Variant {};
 		break;
 	}
-}
-
-void
-lua_getvariant(lua_State *L, int index, Rml::EventVariant* variant) {
-	if (!variant)
-		return;
-	switch(lua_type(L, index)) {
-	case LUA_TNUMBER:
-		if (lua_isinteger(L, index)) {
-			*variant = (int)lua_tointeger(L, index);
-		} else {
-			*variant = (float)lua_tonumber(L, index);
-		}
-		break;
-	case LUA_TSTRING:
-		*variant = std::string(lua_tostring(L, index));
-		break;
-	case LUA_TNIL:
-	default:	// todo
-		*variant = Rml::EventVariant {};
-		break;
-	}
-}
-
-void
-lua_pushevent(lua_State* L, const Rml::Event& event) {
-	auto& p = event.GetParameters();
-	lua_createtable(L, 0, (int)p.size() + 1);
-	for (auto& v : p) {
-		lua_pushlstring(L, v.first.c_str(), v.first.length());
-		lua_pushvariant(L, v.second);
-		lua_rawset(L, -3);
-	}
-	lua_pushstring(L, event.GetType().c_str());
-	lua_setfield(L, -2, "type");
-	Rml::Element* target = event.GetTargetElement();
-	target? lua_pushlightuserdata(L, target): lua_pushnil(L);
-	lua_setfield(L, -2, "target");
-	Rml::Element* current = event.GetCurrentElement();
-	current ? lua_pushlightuserdata(L, current) : lua_pushnil(L);
-	lua_setfield(L, -2, "current");
 }
 
 class LuaScalarDef;
@@ -257,7 +211,7 @@ BindVariable(struct LuaDataModel* D, lua_State* L) {
 			luabind::invoke([&](lua_State* L){
 				lua_pushvalue(dataL, id);
 				lua_xmove(dataL, L, 1);
-				lua_pushevent(L, event);
+				get_lua_plugin()->pushevent(L, event);
 				for (auto const& e : list) {
 					lua_pushvariant(L, e);
 				}

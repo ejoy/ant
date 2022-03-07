@@ -52,12 +52,12 @@ struct CollectedListener {
 };
 
 
-bool DispatchEvent(Event& e, bool bubbles) {
+bool DispatchEvent(Event& event, bool bubbles) {
 	std::vector<CollectedListener> listeners;
 	
 	int depth = 0;
-	auto const& type = e.GetType();
-	Element* walk_element = e.GetTargetElement();
+	auto const& type = event.GetType();
+	Element* walk_element = event.GetTargetElement();
 	while (walk_element) {
 		for (auto const& listener : walk_element->GetEventListeners()) {
 			if (listener->type == type) {
@@ -79,21 +79,21 @@ bool DispatchEvent(Event& e, bool bubbles) {
 	std::stable_sort(listeners.begin(), listeners.end());
 
 	for (const auto& listener_desc : listeners) {
-		if (!e.IsPropagating())
+		if (!event.IsPropagating())
 			break;
 		Element* element = listener_desc.element.get();
 		if (element) {
 			EventListener* listener = listener_desc.listener.get();
 			if (listener) {
-				e.SetCurrentElement(element);
-				e.SetPhase(listener_desc.GetPhase());
-				listener->ProcessEvent(e);
+				event.SetCurrentElement(element);
+				event.SetPhase(listener_desc.GetPhase());
+				listener->ProcessEvent(event);
 			}
 		}
-		if (!e.IsImmediatePropagating())
+		if (!event.IsImmediatePropagating())
 			break;
 	}
-	return e.IsPropagating();
+	return event.IsPropagating();
 }
 
 }

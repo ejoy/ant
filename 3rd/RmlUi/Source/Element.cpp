@@ -43,6 +43,7 @@
 #include "../Include/RmlUi/StringUtilities.h"
 #include "../Include/RmlUi/EventListener.h"
 #include "../Include/RmlUi/Time.h"
+#include "../Include/RmlUi/Event.h"
 #include "DataModel.h"
 #include "ElementAnimation.h"
 #include "ElementBackgroundBorder.h"
@@ -1171,17 +1172,17 @@ void Element::AdvanceAnimations()
 	// Move all completed animations to the end of the list
 	auto it_completed = std::partition(animations.begin(), animations.end(), [](const ElementAnimation& animation) { return !animation.IsComplete(); });
 
-	std::vector<EventDictionary> dictionary_list;
+	//std::vector<EventDictionary> dictionary_list;
 	std::vector<bool> is_transition;
-	dictionary_list.reserve(animations.end() - it_completed);
+	//dictionary_list.reserve(animations.end() - it_completed);
 	is_transition.reserve(animations.end() - it_completed);
 
 	for (auto it = it_completed; it != animations.end(); ++it)
 	{
 		const std::string& property_name = StyleSheetSpecification::GetPropertyName(it->GetPropertyId());
 
-		dictionary_list.emplace_back();
-		dictionary_list.back().emplace("property", property_name);
+		//dictionary_list.emplace_back();
+		//dictionary_list.back().emplace("property", property_name);
 		is_transition.push_back(it->IsTransition());
 
 		it->Release(*this);
@@ -1190,8 +1191,9 @@ void Element::AdvanceAnimations()
 	// Need to erase elements before submitting event, as iterators might be invalidated when calling external code.
 	animations.erase(it_completed, animations.end());
 
-	for (size_t i = 0; i < dictionary_list.size(); i++)
-		DispatchEvent(is_transition[i] ? "transitionend" : "animationend", dictionary_list[i], false, true);
+	// TODO
+	//for (size_t i = 0; i < dictionary_list.size(); i++)
+	//	DispatchEvent(is_transition[i] ? "transitionend" : "animationend", dictionary_list[i], false, true);
 }
 
 void Element::DirtyPerspective()
@@ -1456,7 +1458,7 @@ void Element::RemoveEventListener(EventListener* listener) {
 	}
 }
 
-bool Element::DispatchEvent(const std::string& type, const EventDictionary& parameters, bool interruptible, bool bubbles) {
+bool Element::DispatchEvent(const std::string& type, int parameters, bool interruptible, bool bubbles) {
 	Event event(this, type, parameters, interruptible);
 	return Rml::DispatchEvent(event, bubbles);
 }

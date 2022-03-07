@@ -6,12 +6,6 @@
 
 namespace Rml {
 
-using EventVariant = std::variant<
-	std::monostate,
-	float,
-	int,
-	std::string
->;
 
 using Variant = std::variant<
 	std::monostate,
@@ -41,17 +35,6 @@ namespace VariantHelper {
 				}
 			},
 			variant);
-	}
-
-	template <typename V>
-	struct CopyVisitor {
-		template <typename T>
-		V operator()(T const& v) {
-			return v;
-		}
-	};
-	inline Variant Copy(const EventVariant& from) {
-		return std::visit(CopyVisitor<Variant> {}, from);
 	}
 
 	struct ToStringVisitor {

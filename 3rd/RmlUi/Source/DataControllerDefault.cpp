@@ -29,6 +29,7 @@
 #include "DataControllerDefault.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/Log.h"
+#include "../Include/RmlUi/Event.h"
 #include "DataController.h"
 #include "DataExpression.h"
 #include "DataModel.h"

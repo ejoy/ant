@@ -39,6 +39,7 @@ public:
 	void unref(int ref);
 	void callref(lua_State* L, int ref, size_t argn = 0, size_t retn = 0);
 	void call(lua_State* L, LuaEvent eid, size_t argn = 0, size_t retn = 0);
+	void pushevent(lua_State* L, const Rml::Event& event);
 
 	luaref reference = 0;
 	lua_event_listener_instancer* event_listener_instancer = nullptr;
@@ -47,9 +48,6 @@ public:
 lua_plugin* get_lua_plugin();
 void lua_pushvariant(lua_State *L, const Rml::Variant &v);
 void lua_getvariant(lua_State *L, int index, Rml::Variant* variant);
-void lua_pushvariant(lua_State *L, const Rml::EventVariant &v);
-void lua_getvariant(lua_State *L, int index, Rml::EventVariant* variant);
-void lua_pushevent(lua_State* L, const Rml::Event& event);
 
 
 #endif

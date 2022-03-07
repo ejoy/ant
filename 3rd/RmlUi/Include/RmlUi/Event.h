@@ -10,10 +10,9 @@ class Element;
 
 enum class EventPhase { None, Capture = 1, Target = 2, Bubble = 4 };
 
-class Event {
+class Event final {
 public:
-	Event(Element* target, const std::string& type, const EventDictionary& parameters, bool interruptible);
-	virtual ~Event();
+	Event(Element* target, const std::string& type, int parameters, bool interruptible);
 
 	EventPhase GetPhase() const;
 	void SetPhase(EventPhase phase);
@@ -31,14 +30,13 @@ public:
 	bool IsPropagating() const;
 	bool IsImmediatePropagating() const;
 
-	const EventDictionary& GetParameters() const;
+	int GetParameters() const;
 
-protected:
-	EventDictionary parameters;
+private:
+	int parameters;
 	Element* target_element = nullptr;
 	Element* current_element = nullptr;
 
-private:
 	std::string type;
 	bool interruptible = false;
 	bool interrupted = false;

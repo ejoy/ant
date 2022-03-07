@@ -91,7 +91,7 @@ struct EventListener final : public Rml::EventListener {
 	void OnDetach(Rml::Element* element) override { delete this; }
 	void ProcessEvent(Rml::Event& event) override {
 		luabind::invoke([&](lua_State* L) {
-			lua_pushevent(L, event);
+			get_lua_plugin()->pushevent(L, event);
 			get_lua_plugin()->callref(L, ref, 1, 0);
 		});
 	}
@@ -167,23 +167,10 @@ ElementAddEventListener(Rml::Element* e, const std::string& name, bool userCaptu
 }
 
 static bool
-ElementDispatchEvent(Rml::Element* e, const std::string& type, bool interruptible, bool bubbles, lua_State* L, int idx) {
-	luabind::setthread(L);
-	Rml::EventDictionary params;
-	if (lua_type(L, idx) == LUA_TTABLE) {
-		lua_pushnil(L);
-		while (lua_next(L, idx)) {
-			if (lua_type(L, -2) != LUA_TSTRING) {
-				lua_pop(L, 1);
-				continue;
-			}
-			Rml::EventDictionary::value_type v {lua_checkstdstring(L, -2), Rml::EventVariant{}};
-			lua_getvariant(L, -1, &v.second);
-			params.emplace(v);
-			lua_pop(L, 1);
-		}
-	}
-	return e->DispatchEvent(type, params, interruptible, bubbles);
+ElementDispatchEvent(Rml::Element* e, const std::string& type, bool interruptible, bool bubbles, lua_State* L, int parameters) {
+	luaL_checktype(L, parameters, LUA_TTABLE);
+	lua_pushvalue(L, parameters);
+	return e->DispatchEvent(type, get_lua_plugin()->ref(L), interruptible, bubbles);
 }
 
 static int

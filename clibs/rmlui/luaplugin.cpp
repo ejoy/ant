@@ -3,6 +3,7 @@
 #include <RmlUi/Plugin.h>
 #include <RmlUi/Document.h>
 #include <RmlUi/Stream.h>
+#include <RmlUi/Event.h>
 #include <RmlUi/EventListener.h>
 #include <RmlUi/EventListenerInstancer.h>
 #include <RmlUi/Factory.h>
@@ -122,6 +123,19 @@ void lua_plugin::call(lua_State* L, LuaEvent eid, size_t argn, size_t retn) {
 	callref(L, (int)eid, argn, retn);
 }
 
+void lua_plugin::pushevent(lua_State* L, const Rml::Event& event) {
+	luaref_get(reference, L, event.GetParameters());
+	luaL_checktype(L, -1, LUA_TTABLE);
+	lua_pushstring(L, event.GetType().c_str());
+	lua_setfield(L, -2, "type");
+	Rml::Element* target = event.GetTargetElement();
+	target? lua_pushlightuserdata(L, target): lua_pushnil(L);
+	lua_setfield(L, -2, "target");
+	Rml::Element* current = event.GetCurrentElement();
+	current ? lua_pushlightuserdata(L, current) : lua_pushnil(L);
+	lua_setfield(L, -2, "current");
+}
+
 lua_event_listener::lua_event_listener(lua_plugin* p, Rml::Element* element, const std::string& type, const std::string& code, bool use_capture)
 	: Rml::EventListener(type, use_capture)
 	, plugin(p)
@@ -147,7 +161,7 @@ lua_event_listener::~lua_event_listener() {
 void lua_event_listener::ProcessEvent(Rml::Event& event) {
 	luabind::invoke([&](lua_State* L) {
 		lua_pushlightuserdata(L, (void*)this);
-		lua_pushevent(L, event);
+		plugin->pushevent(L, event);
 		plugin->call(L, LuaEvent::OnEvent, 2);
 	});
 }

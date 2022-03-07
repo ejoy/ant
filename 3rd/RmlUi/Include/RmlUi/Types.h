@@ -83,7 +83,6 @@ using ElementAnimationList = std::vector< ElementAnimation >;
 using AttributeNameList = std::unordered_set< std::string >;
 using PropertyMap = std::unordered_map< PropertyId, Property >;
 
-using EventDictionary = std::unordered_map< std::string, EventVariant >;
 using ElementAttributes = std::unordered_map< std::string, std::string >;
 
 using AnimationList = std::vector<Animation>;

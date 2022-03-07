@@ -39,13 +39,11 @@ class DataControllerInstancer;
 class DataViewInstancer;
 class Element;
 class Document;
-class Event;
 class EventListener;
 class EventListenerInstancer;
 class StyleSheet;
 class PropertyDictionary;
 class PropertySpecification;
-enum class EventId : uint16_t;
 
 /**
 	The Factory contains a registry of instancers for different types.
