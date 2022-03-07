@@ -447,7 +447,7 @@ local function select_axis_plane(x, y)
 	if gizmo.mode ~= gizmo_const.MOVE then
 		return nil
 	end
-	local function hit_test_axix_plane(axis_plane)
+	local function hit_test_axis_plane(axis_plane)
 		local gizmoPos = iom.get_position(world:entity(gizmo.root_eid))
 		local hitPosVec = mouse_hit_plane({x, y}, {dir = gizmo_dir_to_world(axis_plane.dir), pos = math3d.totable(gizmoPos)})
 		if hitPosVec then
@@ -457,7 +457,7 @@ local function select_axis_plane(x, y)
 	end
 	local planeHitRadius = gizmo_scale * gizmo_const.MOVE_PLANE_HIT_RADIUS * 0.5
 	local axis_plane = gizmo.tyz
-	local posToGizmo = hit_test_axix_plane(axis_plane)
+	local posToGizmo = hit_test_axis_plane(axis_plane)
 	
 	if posToGizmo then
 		if axis_plane.area == gizmo_const.RIGHT_BOTTOM then
@@ -472,7 +472,7 @@ local function select_axis_plane(x, y)
 			return axis_plane
 		end
 	end
-	posToGizmo = hit_test_axix_plane(gizmo.txy)
+	posToGizmo = hit_test_axis_plane(gizmo.txy)
 	axis_plane = gizmo.txy
 	if posToGizmo then
 		if axis_plane.area == gizmo_const.RIGHT_BOTTOM then
@@ -487,7 +487,7 @@ local function select_axis_plane(x, y)
 			return axis_plane
 		end
 	end
-	posToGizmo = hit_test_axix_plane(gizmo.tzx)
+	posToGizmo = hit_test_axis_plane(gizmo.tzx)
 	axis_plane = gizmo.tzx
 	if posToGizmo then
 		if axis_plane.area == gizmo_const.RIGHT_BOTTOM then
@@ -510,9 +510,8 @@ local function select_axis(x, y)
 		return
 	end
 	assert(x and y)
-	local vx, vy = igui.cvt2scenept(x, y)
 	local mqvr = irq.view_rect "main_queue"
-	if not mu.pt2d_in_rect(vx, vy, mqvr) then
+	if not mu.pt2d_in_rect(x, y, mqvr) then
 		return
 	end
 
@@ -522,7 +521,7 @@ local function select_axis(x, y)
 		gizmo:reset_move_axis_color()
 	end
 	-- by plane
-	local axisPlane = select_axis_plane(vx, vy)
+	local axisPlane = select_axis_plane(x, y)
 	if axisPlane then
 		return axisPlane
 	end
@@ -532,7 +531,7 @@ local function select_axis(x, y)
 	local start = mu.world_to_screen(mc, mqvr, gizmo_obj_pos)
 	uniform_scale = false
 	-- uniform scale
-	local hp = math3d.vector(vx, vy, 0)
+	local hp = math3d.vector(x, y, 0)
 	if gizmo.mode == gizmo_const.SCALE then
 		local radius = math3d.length(math3d.sub(hp, start))
 		if radius < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
@@ -573,9 +572,8 @@ local function select_rotate_axis(x, y)
 	end
 
 	assert(x and y)
-	local vx, vy = igui.cvt2scenept(x, y)
 	local mqvr = irq.view_rect "main_queue"
-	if not mu.pt2d_in_rect(vx, vy, mqvr) then
+	if not mu.pt2d_in_rect(x, y, mqvr) then
 		return
 	end
 
@@ -584,7 +582,7 @@ local function select_rotate_axis(x, y)
 	local function hit_test_rotate_axis(axis)
 		local gizmoPos = iom.get_position(world:entity(gizmo.root_eid))
 		local axisDir = (axis ~= gizmo.rw) and gizmo_dir_to_world(axis.dir) or axis.dir
-		local hitPosVec = mouse_hit_plane({vx, vy}, {dir = axisDir, pos = math3d.totable(gizmoPos)})
+		local hitPosVec = mouse_hit_plane({x, y}, {dir = axisDir, pos = math3d.totable(gizmoPos)})
 		if not hitPosVec then
 			return
 		end
@@ -893,9 +891,8 @@ local function select_light_gizmo(x, y)
 			local mqvr = irq.view_rect "main_queue"
 			local sp1 = mu.world_to_screen(vpmat, mqvr, iom.get_position(le))
 			local sp2 = mu.world_to_screen(vpmat, mqvr, centre)
-			local sx, sy = igui.cvt2scenept(x, y)
 
-			if mu.pt2d_line_distance(sp1, sp2, math3d.vector(sx, sy, 0.0)) < 5.0 then
+			if mu.pt2d_line_distance(sp1, sp2, math3d.vector(x, y, 0.0)) < 5.0 then
 				light_gizmo_mode = 5
 				light_gizmo.highlight(true)
 			else
@@ -960,6 +957,7 @@ local last_mouse_pos_y = 0
 local function on_mouse_move()
 	if gizmo_seleted or gizmo.mode == gizmo_const.SELECT then return end
 	for _, what, x, y in mouse_move:unpack() do
+		x, y = igui.cvt2scenept(x, y)
 		if last_mouse_pos_x ~= x or last_mouse_pos_y ~= y then
 			last_mouse_pos_x = x
 			last_mouse_pos_y = y
@@ -1056,6 +1054,7 @@ function gizmo_sys:handle_event()
 	end
 
 	for _, what, x, y in mouse_down:unpack() do
+		x, y = igui.cvt2scenept(x, y)
 		if what == "LEFT" then
 			gizmo_seleted = gizmo:select_gizmo(x, y)
 			gizmo:click_axis_or_plane(move_axis)
@@ -1067,6 +1066,7 @@ function gizmo_sys:handle_event()
 	end
 
 	for _, what, x, y in mouse_up:unpack() do
+		x, y = igui.cvt2scenept(x, y)
 		if what == "LEFT" then
 			gizmo:reset_move_axis_color()
 			if gizmo.mode == gizmo_const.ROTATE then
@@ -1107,7 +1107,8 @@ function gizmo_sys:handle_event()
 	
 	on_mouse_move()
 	
-	for _, what, x, y, dx, dy in mouse_drag:unpack() do
+	for _, what, x, y in mouse_drag:unpack() do
+		x, y = igui.cvt2scenept(x, y)
 		if what == "LEFT" then
 			if light_gizmo_mode ~= 0 then
 				move_light_gizmo(x, y)
@@ -1136,8 +1137,7 @@ function gizmo_sys:handle_event()
 			end
 		else
 			if not gizmo_seleted and not camera_mgr.select_frustum then
-				local vx, vy = igui.cvt2scenept(last_mouse_pos_x, last_mouse_pos_y)
-				if vx and vy then
+				if last_mouse_pos_x and last_mouse_pos_y then
 					gizmo:set_target(nil)
 				end
 			end
