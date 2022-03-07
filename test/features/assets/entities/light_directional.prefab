@@ -6,7 +6,7 @@ data:
   scene:
     srt:
       r: {0.78, 0, 0}
-      t: {0, 10, 0, 1}
+      t: {0, 5, 0, 1}
   name: directional_light
   visible: true
   light:

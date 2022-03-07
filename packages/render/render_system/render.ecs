@@ -205,7 +205,6 @@ interface "ientity"
     .method "create_gamma_test_entity"
     .method "create_simple_render_entity"
     .method "create_arrow_entity"
-    .method "create_arrow_entity2"
     .method "create_screen_axis_entity"
 
 

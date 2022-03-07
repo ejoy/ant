@@ -41,9 +41,7 @@ function st_sys:init()
 			name = "mesh_root",
 		}
 	}
-	local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/RiggedFigure.glb|mesh.prefab"
-
-	world:create_object(p)
+	ecs.create_instance "/pkg/ant.resources.binary/meshes/RiggedFigure.glb|mesh.prefab"
 
 	local ee = ecs.create_entity{
 		policy = {
@@ -70,8 +68,8 @@ function st_sys:init()
 end
 
 function st_sys:entity_init()
-	for e in w:select "INIT make_shadow light:in scene:in" do
-		local ee = ientity.create_arrow_entity2({}, 0.3, {10, 10, 10, 1}, "/pkg/ant.resources/materials/meshcolor.material")
-		ecs.method.set_parent(ee, e.scene.id)
+	for e in w:select "INIT make_shadow light:in scene:in id:in" do
+		local ee = ientity.create_arrow_entity({}, 0.3, {1000, 1000, 1000, 1}, "/pkg/ant.resources/materials/meshcolor.material")
+		ecs.method.set_parent(ee, e.id)
 	end
 end

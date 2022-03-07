@@ -665,7 +665,7 @@ end
 
 ientity.arrow_mesh = arrow_mesh
 
-function ientity.create_arrow_entity2(srt, headratio, color, material)
+function ientity.create_arrow_entity(srt, headratio, color, material)
 	return ecs.create_entity{
 		policy = {
 			"ant.render|simplerender",
@@ -685,103 +685,4 @@ function ientity.create_arrow_entity2(srt, headratio, color, material)
 			end
 		}
 	}
-end
-
-function ientity.create_arrow_entity(origin, forward, scale, data)
-	--[[
-		cylinde & cone
-		1. center in (0, 0, 0, 1)
-		2. size is 2
-		3. pointer to (0, 1, 0)
-
-		we need to:
-		1. rotate arrow, make it rotate to (0, 0, 1)
-		2. scale cylinder as it match cylinder_cone_ratio
-		3. scale cylinder radius
-	]]
-
-	local cone_rawlen<const> = 2
-	local cone_raw_halflen = cone_rawlen * 0.5
-	local cylinder_rawlen = cone_rawlen
-	local cylinder_len = cone_rawlen * data.cylinder_cone_ratio
-	local cylinder_halflen = cylinder_len * 0.5
-	local cylinder_scaleY = cylinder_len / cylinder_rawlen
-
-	local cylinder_radius = data.cylinder_rawradius or 0.65
-
-	local cone_raw_centerpos = mc.ZERO_PT
-	local cone_centerpos = math3d.add(math3d.add({0, cylinder_halflen, 0, 1}, cone_raw_centerpos), {0, cone_raw_halflen, 0, 1})
-
-	local cylinder_bottom_pos = math3d.vector(0, -cylinder_halflen, 0, 1)
-	local cone_top_pos = math3d.add(cone_centerpos, {0, cone_raw_halflen, 0, 1})
-
-	local arrow_center = math3d.mul(0.5, math3d.add(cylinder_bottom_pos, cone_top_pos))
-
-	local cylinder_raw_centerpos = mc.ZERO_PT
-	local cylinder_offset = math3d.sub(cylinder_raw_centerpos, arrow_center)
-
-	local cone_offset = math3d.sub(cone_centerpos, arrow_center)
-
-	local arrowe = ecs.create_entity{
-		policy = {
-			"ant.general|name",
-			"ant.scene|scene_object",
-		},
-		data = {
-			name = "arrow",
-			scene = {
-				srt = {
-					s = scale,
-					r = math3d.quaternion(mc.YAXIS, forward),
-					t = math3d.sub(origin, cylinder_bottom_pos),	-- move cylinder bottom to zero origin, and move to origin: -cylinder_bottom_pos+origin
-				}
-			},
-		},
-	}
-
-	ecs.create_entity{
-		policy = {
-			"ant.general|name",
-			"ant.render|render",
-		},
-		data = {
-			name = "arrow.cylinder",
-			filter_state = "main_view",
-			scene = {
-				srt = {
-					s = math3d.mul(100, math3d.vector(cylinder_radius, cylinder_scaleY, cylinder_radius)),
-					t = cylinder_offset,
-				}
-			},
-			material = "/pkg/ant.resources/materials/simpletri.material",
-			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
-			on_ready = function (e)
-				w:sync("id:in render_object:in", e)
-				ecs.method.set_parent(e.id, arrowe)
-				imaterial.set_property(e, "u_color", data.cylinder_color or {1, 0, 0, 1})
-			end
-		},
-	}
-
-	ecs.create_entity{
-		policy = {
-			"ant.general|name",
-			"ant.render|render",
-			"ant.scene|scene_object",
-		},
-		data = {
-			name = "arrow.cone",
-			filter_state = "main_view",
-			scene = {srt =  {s=100, t=cone_offset}},
-			material = "/pkg/ant.resources/materials/simpletri.material",
-			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
-			on_ready = function (e)
-				w:sync("id:in render_object:in", e)
-				ecs.method.set_parent(e.id, arrowe)
-				imaterial.set_property(e, "u_color", data.cone_color or {1, 0, 0, 1})
-			end
-		},
-	}
-
-	
 end
