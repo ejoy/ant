@@ -60,9 +60,7 @@ function message.size(width,height)
 	init_height = height
 end
 
-local imgui_max_viewid_count<const> = 16
-local uieditor_viewid<const> = viewidmgr.get "uieditor"
-viewidmgr.check_range("uieditor", imgui_max_viewid_count)
+local uieditor_viewid<const>, imgui_max_viewid_count<const> = viewidmgr.get_range "uieditor"
 
 function message.viewid()
 	local viewid = uieditor_viewid+#viewids

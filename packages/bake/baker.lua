@@ -30,9 +30,7 @@ local mc        = mathpkg.constant
 local bake_fbw, bake_fbh, fb_hemi_unit_size = bake.framebuffer_size()
 local fb_hemi_half_size<const> = fb_hemi_unit_size/2
 
-local downsample_viewid_count<const> = 10 --max 1024x1024->2^10
-local lightmap_viewid<const> = viewidmgr.get "lightmap_ds"
-viewidmgr.check_range("lightmap_ds", downsample_viewid_count)
+local lightmap_viewid<const>, downsample_viewid_count<const> = viewidmgr.get_range "lightmap_ds"
 local lightmap_storage_viewid<const> = viewidmgr.get "lightmap_storage"
 
 local function default_weight()
