@@ -1,13 +1,12 @@
 #include "../Include/RmlUi/Event.h"
 #include "../Include/RmlUi/Element.h"
-#include "../Include/RmlUi/Document.h"
 
 namespace Rml {
 
 Event::Event(Element* target_element, const std::string& type, int parameters, bool interruptible)
-	: parameters(parameters)
+	: type(type)
 	, target_element(target_element)
-	, type(type)
+	, parameters(parameters)
 	, interruptible(interruptible)
 { }
 
