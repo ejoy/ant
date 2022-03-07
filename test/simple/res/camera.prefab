@@ -6,6 +6,7 @@ data:
     srt:
       r: {0.5, 0, 0}  #3 parameter is euler angle
       t: {1, 2, -5, 1}
+    updir: {0.0, 1.0, 0.0}
   camera:
     frustum:
       aspect: 1.3333333333333333

@@ -163,22 +163,24 @@ function cc_sys:data_changed()
     if motiontype and newx and newy then
         local mq = w:singleton("main_queue", "camera_ref:in render_target:in")
         local dx, dy = dxdy(newx, newy, mq.render_target.view_rect)
-        local ce = world:entity(mq.camera_ref)
-        if motiontype == "rotate_point" then
-            mouse_lastx, mouse_lasty = newx, newy
-            iom.rotate_around_point2(ce, viewat, dy, dx)
-        elseif motiontype == "rotate_forwardaxis" then
-            mouse_lastx, mouse_lasty = newx, newy
-            iom.rotate_forward_vector(ce, dy, dx)
-        elseif motiontype == "move_pan" then
-            if dx ~= 0 then
-                iom.move_right(ce, -dx)
-            end
+        if dx ~= 0.0 and dy ~= 0.0 then
+            local ce = world:entity(mq.camera_ref)
+            if motiontype == "rotate_point" then
+                mouse_lastx, mouse_lasty = newx, newy
+                iom.rotate_around_point2(ce, viewat, dy, dx)
+            elseif motiontype == "rotate_forwardaxis" then
+                mouse_lastx, mouse_lasty = newx, newy
+                iom.rotate_forward_vector(ce, dy, dx)
+            elseif motiontype == "move_pan" then
+                if dx ~= 0 then
+                    iom.move_right(ce, -dx)
+                end
 
-            if dy ~= 0 then
-                iom.move_up(ce, dy)
+                if dy ~= 0 then
+                    iom.move_up(ce, dy)
+                end
+                mouse_lastx, mouse_lasty = newx, newy
             end
-            mouse_lastx, mouse_lasty = newx, newy
         end
     end
 
