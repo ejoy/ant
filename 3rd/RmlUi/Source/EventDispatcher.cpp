@@ -30,7 +30,6 @@
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/Event.h"
 #include "../Include/RmlUi/EventListener.h"
-#include "../Include/RmlUi/EventSpecification.h"
 #include <algorithm>
 
 namespace Rml {
@@ -57,11 +56,11 @@ bool DispatchEvent(Event& e, bool bubbles) {
 	std::vector<CollectedListener> listeners;
 	
 	int depth = 0;
-	EventId id = e.GetId();
+	auto const& type = e.GetType();
 	Element* walk_element = e.GetTargetElement();
 	while (walk_element) {
 		for (auto const& listener : walk_element->GetEventListeners()) {
-			if (listener->id == id) {
+			if (listener->type == type) {
 				if (listener->use_capture) {
 					listeners.emplace_back(walk_element, listener, depth, true);
 				}

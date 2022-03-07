@@ -41,7 +41,6 @@
 #include "../Include/RmlUi/Stream.h"
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/StringUtilities.h"
-#include "../Include/RmlUi/EventSpecification.h"
 #include "../Include/RmlUi/EventListener.h"
 #include "../Include/RmlUi/Time.h"
 #include "DataModel.h"
@@ -1192,7 +1191,7 @@ void Element::AdvanceAnimations()
 	animations.erase(it_completed, animations.end());
 
 	for (size_t i = 0; i < dictionary_list.size(); i++)
-		DispatchEvent(is_transition[i] ? EventId::Transitionend : EventId::Animationend, dictionary_list[i]);
+		DispatchEvent(is_transition[i] ? "transitionend" : "animationend", dictionary_list[i], false, true);
 }
 
 void Element::DirtyPerspective()
@@ -1457,14 +1456,9 @@ void Element::RemoveEventListener(EventListener* listener) {
 	}
 }
 
-bool Element::DispatchEvent(EventId id, const EventDictionary& parameters, bool interruptible, bool bubbles) {
-	Event event(this, id, parameters, interruptible);
+bool Element::DispatchEvent(const std::string& type, const EventDictionary& parameters, bool interruptible, bool bubbles) {
+	Event event(this, type, parameters, interruptible);
 	return Rml::DispatchEvent(event, bubbles);
-}
-
-bool Element::DispatchEvent(EventId id, const EventDictionary& parameters) {
-	const EventSpecification& specification = EventSpecification::Get(id);
-	return DispatchEvent(specification.id, parameters, specification.interruptible, specification.bubbles);
 }
 
 void Element::RemoveAllEvents() {

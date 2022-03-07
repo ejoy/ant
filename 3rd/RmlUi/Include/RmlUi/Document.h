@@ -38,6 +38,7 @@ class ElementText;
 class StyleSheet;
 class DataModel;
 class DataModelConstructor;
+class Factory;
 
 class Document {
 public:

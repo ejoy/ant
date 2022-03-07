@@ -28,7 +28,6 @@
 
 #include "DataExpression.h"
 #include "../Include/RmlUi/DataModelHandle.h"
-#include "../Include/RmlUi/Event.h"
 #include "../Include/RmlUi/Variant.h"
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/StringUtilities.h"

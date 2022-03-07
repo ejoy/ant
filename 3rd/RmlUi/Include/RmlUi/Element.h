@@ -213,8 +213,7 @@ public:
 
 	void AddEventListener(EventListener* listener);
 	void RemoveEventListener(EventListener* listener);
-	bool DispatchEvent(EventId id, const EventDictionary& parameters, bool interruptible, bool bubbles = true);
-	bool DispatchEvent(EventId id, const EventDictionary& parameters);
+	bool DispatchEvent(const std::string& type, const EventDictionary& parameters, bool interruptible, bool bubbles);
 	void RemoveAllEvents();
 	std::vector<EventListener*> const& GetEventListeners() const;
 

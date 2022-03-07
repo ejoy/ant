@@ -31,7 +31,6 @@
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/Document.h"
 #include "../Include/RmlUi/ElementUtilities.h"
-#include "../Include/RmlUi/Event.h"
 #include "../Include/RmlUi/FontEngineInterface.h"
 #include "../Include/RmlUi/RenderInterface.h"
 #include "../Include/RmlUi/Property.h"

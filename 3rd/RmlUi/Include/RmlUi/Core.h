@@ -31,7 +31,6 @@
 
 #include "Platform.h"
 #include "Types.h"
-#include "Event.h"
 
 namespace Rml {
 

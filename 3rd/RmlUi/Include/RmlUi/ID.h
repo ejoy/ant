@@ -178,58 +178,5 @@ enum class PropertyId : uint8_t
 	NumDefinedIds,
 };
 
-
-enum class EventId : uint16_t 
-{
-	Invalid,
-
-	// Core events
-	Mousedown,
-	Mousescroll,
-	Mouseover,
-	Mouseout,
-	Mouseup,
-	Click,
-	Load,
-	Unload,
-	Show,
-	Hide,
-	Mousemove,
-	Resize,
-	Scroll,
-	Animationend,
-	Transitionend,
-	Message,
-	Touchstart,
-	Touchmove,
-	Touchend,
-	Touchcancel,
-	NumDefinedIds,
-
-	// Custom IDs start here
-	FirstCustomId = NumDefinedIds,
-};
-
-enum class MouseButton {
-	None = -1,
-	Left = 0,
-	Right = 1,
-	Middle = 2,
-};
-
-enum class MouseState {
-	Down = 0,
-	Move = 1,
-	Up = 2,
-};
-
-enum class TouchState {
-	Start = 0,
-	Move = 1,
-	End = 2,
-	Cancel = 3,
-};
-
-
 } // namespace Rml
 #endif

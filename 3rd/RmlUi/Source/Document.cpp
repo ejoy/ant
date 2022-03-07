@@ -342,14 +342,6 @@ private:
 	ElementObserverList* elements;
 };
 
-static void GenerateMouseEventParameters(EventDictionary& parameters, const Point& mouse_position, MouseButton button) {
-	parameters.reserve(3);
-	parameters["x"] = mouse_position.x;
-	parameters["y"] = mouse_position.y;
-	if (button != MouseButton::None)
-		parameters["button"] = (int)button;
-}
-
 DataModelConstructor Document::CreateDataModel(const std::string& name) {
 	auto result = data_models.emplace(name, std::make_unique<DataModel>());
 	bool inserted = result.second;

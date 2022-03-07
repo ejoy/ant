@@ -6,7 +6,6 @@
 #include "RmlUi/EventListener.h"
 #include "RmlUi/PropertyDictionary.h"
 #include "RmlUi/StyleSheetSpecification.h"
-#include "RmlUi/EventSpecification.h"
 #include "RmlUi/Time.h"
 
 #include "luaplugin.h"
@@ -168,11 +167,7 @@ ElementAddEventListener(Rml::Element* e, const std::string& name, bool userCaptu
 }
 
 static bool
-ElementDispatchEvent(Rml::Element* e, const std::string& name, lua_State* L, int idx) {
-	Rml::EventId id = Rml::EventSpecification::GetId(name);
-	if (id == Rml::EventId::Invalid) {
-		return true;
-	}
+ElementDispatchEvent(Rml::Element* e, const std::string& type, bool interruptible, bool bubbles, lua_State* L, int idx) {
 	luabind::setthread(L);
 	Rml::EventDictionary params;
 	if (lua_type(L, idx) == LUA_TTABLE) {
@@ -188,7 +183,7 @@ ElementDispatchEvent(Rml::Element* e, const std::string& name, lua_State* L, int
 			lua_pop(L, 1);
 		}
 	}
-	return e->DispatchEvent(id, params);
+	return e->DispatchEvent(type, params, interruptible, bubbles);
 }
 
 static int
@@ -228,7 +223,7 @@ static int
 lDocumentDispatchEvent(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	bool propagating = ElementDispatchEvent(doc->body.get(), lua_checkstdstring(L, 2), L, 3);
+	bool propagating = ElementDispatchEvent(doc->body.get(), lua_checkstdstring(L, 2), false, false, L, 3);
 	lua_pushboolean(L, propagating);
 	return 1;
 }
@@ -237,7 +232,7 @@ static int
 lElementDispatchEvent(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	bool propagating = ElementDispatchEvent(e, lua_checkstdstring(L, 2), L, 3);
+	bool propagating = ElementDispatchEvent(e, lua_checkstdstring(L, 2), true, true, L, 3);
 	lua_pushboolean(L, propagating);
 	return 1;
 }
