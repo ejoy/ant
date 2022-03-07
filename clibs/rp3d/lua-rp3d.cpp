@@ -68,10 +68,10 @@ getfloat(lua_State *L, int index, const char *key, float *ret) {
 }
 
 static void
-getuint(lua_State *L, int index, const char *key, uint *ret) {
+getuint16(lua_State *L, int index, const char *key, uint16 *ret) {
 	lua_getfield(L, index, key);
 	if (lua_isinteger(L, -1)) {
-		*ret = (uint)lua_tointeger(L, -1);
+		*ret = (uint16)lua_tointeger(L, -1);
 	}
 	lua_pop(L, 1);
 }
@@ -123,14 +123,12 @@ lcreate_world(lua_State *L) {
 		getdecimal(L, 1, "defaultFrictionCoefficient", &settings.defaultFrictionCoefficient);
 		getdecimal(L, 1, "defaultBounciness", &settings.defaultBounciness);
 		getdecimal(L, 1, "restitutionVelocityThreshold", &settings.restitutionVelocityThreshold);
-		getdecimal(L, 1, "defaultRollingRestistance", &settings.defaultRollingRestistance);
 		getbool(L, 1, "isSleepingEnabled", &settings.isSleepingEnabled);
-		getuint(L, 1, "defaultVelocitySolverNbIterations", &settings.defaultVelocitySolverNbIterations);
-		getuint(L, 1, "defaultPositionSolverNbIterations", &settings.defaultPositionSolverNbIterations);
+		getuint16(L, 1, "defaultVelocitySolverNbIterations", &settings.defaultVelocitySolverNbIterations);
+		getuint16(L, 1, "defaultPositionSolverNbIterations", &settings.defaultPositionSolverNbIterations);
 		getfloat(L, 1, "defaultTimeBeforeSleep", &settings.defaultTimeBeforeSleep);
 		getdecimal(L, 1, "defaultSleepLinearVelocity", &settings.defaultSleepLinearVelocity);
 		getdecimal(L, 1, "defaultSleepAngularVelocity", &settings.defaultSleepAngularVelocity);
-		getuint(L, 1, "nbMaxContactManifolds", &settings.nbMaxContactManifolds);
 		getdecimal(L, 1, "cosAngleSimilarContactManifold", &settings.cosAngleSimilarContactManifold);
 	}
 

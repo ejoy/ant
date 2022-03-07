@@ -35,7 +35,7 @@ inline void ColorApplyOpacity(Color& c, float opacity) {
 	c.a = glm::u8((float)c.a * opacity);
 }
 
-constexpr inline Color ColorFromSRGB(glm::u8 r, glm::u8 g, glm::u8 b, glm::u8 a) {
+inline Color ColorFromSRGB(glm::u8 r, glm::u8 g, glm::u8 b, glm::u8 a) {
 	return glm::u8vec4(glm::convertSRGBToLinear(glm::vec4(r, g, b, a) / 255.f) * 255.f);
 }
 
