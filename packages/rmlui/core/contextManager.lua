@@ -6,6 +6,7 @@ local dispatchEvent = rmlui.ElementDispatchEvent
 local getParent = rmlui.ElementGetParent
 local setPseudoClass = rmlui.ElementSetPseudoClass
 local project = rmlui.ElementProject
+local getOwnerDocument = rmlui.ElementGetOwnerDocument
 
 local m = {}
 
@@ -61,12 +62,13 @@ local function walkElement(e)
     return r
 end
 
-local function createMouseEvent(doc, e, button, x, y)
+local function createMouseEvent(e, button, x, y)
     local ev = {
         button = button >= 0 and button or nil,
         x = x,
         y = y,
     }
+    local doc = getOwnerDocument(e)
     local body = getBody(doc)
     ev.clientX, ev.clientY = x, y
     ev.offsetX, ev.offsetY = project(e, x, y)
@@ -119,47 +121,40 @@ local function updateHover(newHover, event)
     hoverElement = newHover
 end
 
-local function processMouseDown(doc, button, x, y)
-    local e = elementFromPoint(doc, x, y)
-    if not e then
-        return
+local function fromPoint(x, y)
+    for _, doc in ipairs(documents) do
+        local e = elementFromPoint(doc, x, y)
+        if e then
+            return e
+        end
     end
-    setFocus(e)
-    setActive(e)
-    local event = createMouseEvent(doc, e, button, x, y)
-    dispatchEvent(e, "mousedown", event)
-    return true
 end
 
-local function processMouseUp(doc, button, x, y)
-    local e = elementFromPoint(doc, x, y)
-    print("processMouseUp", x, y, e)
-    if not e then
-        return
-    end
-    local event = createMouseEvent(doc, e, button, x, y)
+local function processMouseDown(e, button, x, y)
+    setFocus(e)
+    setActive(e)
+    local event = createMouseEvent(e, button, x, y)
+    dispatchEvent(e, "mousedown", event)
+end
+
+local function processMouseUp(e, button, x, y)
+    local event = createMouseEvent(e, button, x, y)
     local cancelled = not dispatchEvent(e, "mouseup", event)
     if cancelled then
-        return true
+        return
     end
     if focusElement  == e then
         dispatchEvent(e, "click", event)
     end
-    return true
 end
 
-local function processMouseMove(doc, button, x, y)
-    local e = elementFromPoint(doc, x, y)
-    if not e then
-        return
-    end
-    local event = createMouseEvent(doc, e, button, x, y)
+local function processMouseMove(e, button, x, y)
+    local event = createMouseEvent(e, button, x, y)
     local cancelled = not dispatchEvent(e, "mousemove", event)
     if cancelled then
-        return true
+        return
     end
     updateHover(walkElement(e), event)
-    return true
 end
 
 function m.process_mouse(x, y, button, state)
@@ -180,19 +175,110 @@ function m.process_mouse(x, y, button, state)
     else
         return
     end
-    for _, doc in ipairs(documents) do
-        local handled = process(doc, button, x, y)
-        if handled then
-            return true
+    local e = fromPoint(x, y)
+    if e then
+        process(e, button, x, y)
+        return true
+    end
+end
+
+local touchData = {}
+
+local function createTouchData(touch)
+    return touch
+end
+
+local function push(t, v)
+    t[#t+1] = v
+end
+
+local function dispatchTouchEvent(e, name)
+    local event = {
+        changedTouches = {},
+        targetTouches = {},
+        touches = {},
+    }
+    for _, touch in pairs(touchData) do
+        local data = createTouchData(touch)
+        if touch.changed then
+            push(event.changedTouches, data)
         end
+        if not touch.removed then
+            push(event.touches, data)
+            if touch.target == e then
+                push(event.targetTouches, data)
+            end
+        end
+    end
+    dispatchEvent(e, name, event)
+end
+
+local function processTouchStart(touch)
+    local e = fromPoint(touch.x, touch.y)
+    if e then
+        touch.target = e
+        touch.changed = true
+        touchData[touch.id] = touch
+    end
+end
+
+local function processTouchMove(touch)
+    local t = touchData[touch.id]
+    if t then
+        t.changed = true
+        t.x = touch.x
+        t.y = touch.y
+    end
+end
+
+local function processTouchEnd(touch)
+    local t = touchData[touch.id]
+    if t then
+        t.changed = true
+        t.removed = true
+        t.x = touch.x
+        t.y = touch.y
     end
 end
 
 function m.process_touch(state, touches)
-    local THOUCH_START  <const> = 1
-    local THOUCH_MOVE   <const> = 2
-    local THOUCH_END    <const> = 3
-    local THOUCH_CANCEL <const> = 4
+    local TOUCH_START  <const> = 1
+    local TOUCH_MOVE   <const> = 2
+    local TOUCH_END    <const> = 3
+    local TOUCH_CANCEL <const> = 4
+    local process
+    local name
+    if state == TOUCH_START then
+        process = processTouchStart
+        name = "touchstart"
+    elseif state == TOUCH_MOVE then
+        process = processTouchMove
+        name = "touchmove"
+    elseif state == TOUCH_END then
+        process = processTouchEnd
+        name = "touchend"
+    elseif state == TOUCH_CANCEL then
+        process = processTouchEnd
+        name = "touchcancel"
+    else
+        return
+    end
+    for _, touch in ipairs(touches) do
+        process(touch)
+    end
+    for _, touch in pairs(touchData) do
+        if touch.changed then
+            dispatchTouchEvent(touch.target, name)
+        end
+    end
+    for _, touch in pairs(touchData) do
+        touch.changed = nil
+    end
+    if state == TOUCH_CANCEL or state == TOUCH_END then
+        for _, touch in ipairs(touches) do
+            touchData[touch.id] = nil
+        end
+    end
 end
 
 local gesture = {}
@@ -211,7 +297,6 @@ function m.process_gesture(name, ...)
 end
 
 function m.set_dimensions(w, h, ratio)
-    print("dimensions", w, h, ratio)
     screen_ratio = ratio
     if w == width and h == height then
         return
