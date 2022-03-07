@@ -72,9 +72,11 @@ static lua_Integer lua_getinteger(lua_State* L, int idx, const char* field, lua_
 -(void)handleTap:(LuaTapGesture *)gesture {
     lua_settop(L, 0);
     lua_pushnsstring(L, [gesture name]);
-    CGPoint location = [gesture locationInView:global_window];
-    lua_pushnumber(L, location.x);
-    lua_pushnumber(L, location.y);
+    CGPoint pt = [gesture locationInView:global_window];
+    pt.x *= global_window.contentScaleFactor;
+    pt.y *= global_window.contentScaleFactor;
+    lua_pushnumber(L, pt.x);
+    lua_pushnumber(L, pt.y);
     void* data = seri_pack(L, 0, NULL);
     queue_push(data);
 }

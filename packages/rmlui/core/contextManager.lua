@@ -44,6 +44,9 @@ local focusElement
 local activeElement
 local hoverElement = {}
 local mouseX, mouseY
+local MOUSE_DOWN <const> = 1
+local MOUSE_MOVE <const> = 2
+local MOUSE_UP   <const> = 3
 
 local function walkElement(e)
     local r = {}
@@ -130,6 +133,7 @@ end
 
 local function processMouseUp(doc, button, x, y)
     local e = elementFromPoint(doc, x, y)
+    print("processMouseUp", x, y, e)
     if not e then
         return
     end
@@ -159,21 +163,18 @@ local function processMouseMove(doc, button, x, y)
 end
 
 function m.process_mouse(x, y, button, state)
-    local MOUSE_STATE_DOWN <const> = 1
-    local MOUSE_STATE_MOVE <const> = 2
-    local MOUSE_STATE_UP   <const> = 3
     x, y = round(x), round(y)
     button = button - 1
     local process
-    if state == MOUSE_STATE_DOWN then
+    if state == MOUSE_DOWN then
         process = processMouseDown
-    elseif state == MOUSE_STATE_MOVE then
+    elseif state == MOUSE_MOVE then
         if mouseX == x and mouseY == y then
             return true
         end
         mouseX, mouseY = x, y
         process = processMouseMove
-    elseif state == MOUSE_STATE_UP then
+    elseif state == MOUSE_UP then
         cancelActive()
         process = processMouseUp
     else
@@ -188,24 +189,17 @@ function m.process_mouse(x, y, button, state)
 end
 
 function m.process_touch(state, touches)
-    state = state-1
-    for _, doc in ipairs(documents) do
-        local handled = rmlui.DocumentProcessTouch(doc, state, touches)
-        if handled then
-            return true
-        end
-    end
+    local THOUCH_START  <const> = 1
+    local THOUCH_MOVE   <const> = 2
+    local THOUCH_END    <const> = 3
+    local THOUCH_CANCEL <const> = 4
 end
 
 local gesture = {}
 function gesture.tap(x, y)
-    x, y = round(x), round(y)
-    local DOWN <const> = 0
-    local MOVE <const> = 1
-    local UP   <const> = 2
-    m.process_mouse(x, y, 0, MOVE)
-    m.process_mouse(x, y, 0, DOWN)
-    return m.process_mouse(x, y, 0, UP)
+    m.process_mouse(x, y, 1, MOUSE_MOVE)
+    m.process_mouse(x, y, 1, MOUSE_DOWN)
+    return m.process_mouse(x, y, 1, MOUSE_UP)
 end
 
 function m.process_gesture(name, ...)
@@ -217,6 +211,7 @@ function m.process_gesture(name, ...)
 end
 
 function m.set_dimensions(w, h, ratio)
+    print("dimensions", w, h, ratio)
     screen_ratio = ratio
     if w == width and h == height then
         return

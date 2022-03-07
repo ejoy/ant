@@ -89,6 +89,11 @@ local function dispatch(CMD,...)
             exclusive.scheduling()
         until ltask.schedule_message() ~= SCHEDULE_SUCCESS
     else
+        if CMD == "init" then
+            if require "platform".OS == "iOS" then
+                gesture_init()
+            end
+        end
         ltask.send(ltask.self(), "priority_handle", CMD, ...)
     end
 end
@@ -117,9 +122,6 @@ end
 
 function S.create_window()
     exclusive = require "ltask.exclusive"
-    if require "platform".OS == "iOS" then
-        gesture_init()
-    end
     local window = require "window"
     window.create(dispatch, 1334, 750)
     ltask.fork(function()
