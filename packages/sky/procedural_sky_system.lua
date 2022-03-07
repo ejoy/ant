@@ -288,7 +288,7 @@ function ps_sys:entity_init()
 end
 
 function ps_sys:data_changed()
-	for e in w:select "procedural_sky_changed procedural_sky:in" do
+	for e in w:select "procedural_sky_changed procedural_sky:in render_object:in" do
 		update_sky_parameters(e)
 		sync_directional_light(e)
 	end

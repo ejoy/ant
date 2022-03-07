@@ -129,7 +129,7 @@ function irq.set_camera(queuename, camera_ref)
 		q.camera_ref = camera_ref
 		local rt = q.render_target
 		local vr = rt.view_rect
-		icamera.set_frustum_aspect(camera_ref, vr.w / vr.h)
+		icamera.set_frustum_aspect(world:entity(camera_ref), vr.w / vr.h)
 		changed = true
 		world:pub{queuename, "camera_changed", camera_ref}
 	end

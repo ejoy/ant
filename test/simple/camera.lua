@@ -8,7 +8,7 @@ function object:on_init()
 end
 
 function object:on_ready()
-    world:call(camera, "get_position")
+    world:call(world:entity(camera), "get_position")
 end
 
 function object:on_message(msg)
