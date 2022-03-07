@@ -36,7 +36,7 @@ function screen_3dobj_sys:data_changed()
 
     for msg in mc_mb:each() do
         local c = msg[3]
-        world:sub{"scene_changed", c}
+        camera_mb = world:sub{"scene_changed", c}
         dirty = true
     end
 

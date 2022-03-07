@@ -8,7 +8,7 @@ local mc     = import_package "ant.math".constant
 local iobj_motion = ecs.interface "iobj_motion"
 
 local function set_changed(e)
-    world:pub {"scene_changed", e}
+    world:pub {"scene_changed", assert(e.id)}
 end
 
 function iobj_motion.get_position(e)

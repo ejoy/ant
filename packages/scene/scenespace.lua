@@ -139,7 +139,8 @@ end
 
 local evSceneChanged = world:sub {"scene_changed"}
 function s:update_transform()
-	for _, e in evSceneChanged:unpack() do
+	for _, eid in evSceneChanged:unpack() do
+		local e = world:entity(eid)
 		e.scene.changed = current_changed
 	end
 
