@@ -370,6 +370,7 @@ function ientity.create_screen_axis_entity(srt, screen_3dobj, name, color, mater
 			screen_3dobj = screen_3dobj,
 			scene 		= {srt = srt or {}},
 			material	= material or "/pkg/ant.resources/materials/line_background.material",
+			material_setting = {surfacetype="translucent"},
 			simplemesh	= imesh.init_mesh(mesh, true),
 			filter_state= "main_view|auxgeom",
 			name		= name,
