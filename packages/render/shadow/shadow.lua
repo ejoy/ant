@@ -23,37 +23,7 @@ local scale_offset = hwi.get_caps().homogeneousDepth and homogeneous_depth_scale
 
 local shadowcfg = setting:data().graphic.shadow
 
-local function get_render_buffers(width, height, depth_type)
-	if depth_type == "linear" then
-		local flags = samplerutil.sampler_flag {
-			RT="RT_ON",
-			MIN="LINEAR",
-			MAG="LINEAR",
-			U="CLAMP",
-			V="CLAMP",
-		}
-
-		return {
-			rbidx=fbmgr.create_rb{
-					format = "RGBA8",
-					w=width,
-					h=height,
-					layers=1,
-					flags=flags,
-				},
-			},
-			{
-				rbidx = fbmgr.create_rb {
-					format = "D24S8",
-					w=width,
-					h=height,
-					layers=1,
-					flags=flags,
-				},
-			}
-
-	end
-
+local function get_render_buffers(width, height)
 	return {
 		rbidx=fbmgr.create_rb{
 			format = "D32F",
@@ -83,7 +53,6 @@ local function shadow_color()
 end
 
 local csm_setting = {
-	depth_type		= shadowcfg.type,
 	shadowmap_size	= shadowcfg.size,
 	shadow_param	= {shadowcfg.bias, shadowcfg.normal_offset, 1/shadowcfg.size, 0},
     color			= math3d.ref(math3d.vector(shadow_color())),
@@ -92,7 +61,7 @@ local csm_setting = {
 	cross_delta		= shadowcfg.cross_delta or 0.005,
 	split_weight	= shadowcfg.split_weight or 0.7,
 	split_frustums	= {nil, nil, nil, nil},
-	fb_index		= fbmgr.create(get_render_buffers(shadowcfg.size * shadowcfg.split_num, shadowcfg.size, shadowcfg.type)),
+	fb_index		= fbmgr.create(get_render_buffers(shadowcfg.size * shadowcfg.split_num, shadowcfg.size)),
 }
 
 local function gen_ratios(distances)
@@ -161,10 +130,6 @@ end
 
 function ishadow.fb_index()
 	return csm_setting.fb_index
-end
-
-function ishadow.depth_type()
-	return csm_setting.depth_type
 end
 
 function ishadow.bias()

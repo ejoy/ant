@@ -29,9 +29,9 @@ uniform vec4 u_tetra_normal_Red;
 uniform vec4 u_omni_param;
 #define u_omni_count u_omni_param.x
 
-//#define DEPTH_LINEAR
+//#define PACK_RGBA8
 
-#ifdef DEPTH_LINEAR
+#ifdef PACK_RGBA8
 #define SHADOW_SAMPLER2D	SAMPLER2D
 #define shadow_sampler_type sampler2D 
 #else
@@ -74,7 +74,7 @@ float hardShadow(
 
 	// float visibility = step(receiver, occluder);
 	// return visibility;
-#ifdef DEPTH_LINEAR
+#ifdef PACK_RGBA8
 	// when use multi sampler case, no need to check border
 	vec2 tc = clamp(_shadowCoord.xy, 0.0, 1.0);
 	float receiver = (_shadowCoord.z-_bias);

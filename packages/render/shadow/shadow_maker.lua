@@ -175,7 +175,7 @@ end
 
 local sm = ecs.system "shadow_system"
 
-local function create_clear_shadowmap_queue(fbidx, depth_type)
+local function create_clear_shadowmap_queue(fbidx)
 	local rb = fbmgr.get_rb(fbidx, 1)
 	local ww, hh = rb.w, rb.h
 	ecs.create_entity{
@@ -188,7 +188,7 @@ local function create_clear_shadowmap_queue(fbidx, depth_type)
 				clear_state = {
 					color = 0xffffffff,
 					depth = 1,
-					clear = depth_type == "linear" and "CD" or "D",
+					clear = "D",
 				},
 				fb_idx = fbidx,
 				viewid = viewidmgr.get "csm_fb",
@@ -255,11 +255,11 @@ local gpu_skinning_material
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 function sm:init()
 	local fbidx = ishadow.fb_index()
-	local s, dt = ishadow.shadowmap_size(), ishadow.depth_type()
-	create_clear_shadowmap_queue(fbidx, dt)
+	local s = ishadow.shadowmap_size()
+	create_clear_shadowmap_queue(fbidx)
 	local originmatrial = "/pkg/ant.resources/materials/depth.material"
-	shadow_material = imaterial.load(originmatrial, {depth_type=dt})
-	gpu_skinning_material = imaterial.load(originmatrial, {depth_type=dt, skinning="GPU"})
+	shadow_material = imaterial.load(originmatrial)
+	gpu_skinning_material = imaterial.load(originmatrial, {skinning="GPU"})
 	for ii=1, ishadow.split_num() do
 		local vr = {x=(ii-1)*s, y=0, w=s, h=s}
 		create_csm_entity(ii, vr, fbidx)
