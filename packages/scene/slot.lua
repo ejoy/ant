@@ -5,6 +5,9 @@ local math3d = require "math3d"
 local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
 
+
+--TODO: this file need skeleton component, should move to animation package to fix circle dependence
+
 local r2l_mat<const> = mc.R2L_MAT
 
 local function find_animation_entities()

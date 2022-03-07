@@ -1,7 +1,13 @@
 $input v_posWS
 
 #include <bgfx_shader.sh>
-#include "common/common.sh"
+#include "common/sphere_coord.sh"
+
+#ifdef CUBEMAP_SKY
+#undef CUBEMAP_SKY
+#endif //CUBEMAP_SKY
+
+#define CUBEMAP_SKY 1
 
 #ifdef CUBEMAP_SKY
 SAMPLERCUBE(s_skybox, 0);

@@ -33,7 +33,7 @@ local function resize_framebuffer(w, h, fbidx)
 		rbs[#rbs+1] = attachment
 		local c = rb_cache[rbidx]
 		if c == nil then
-			changed = fbmgr.resize_rb(w, h, rbidx) or changed
+			changed = fbmgr.resize_rb(rbidx, w, h) or changed
 			rb_cache[rbidx] = changed
 		else
 			changed = true

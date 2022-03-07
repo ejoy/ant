@@ -31,7 +31,7 @@ vec2 LUT(float NdotV, float roughness)
     for(int i = 0; i < int(u_sample_count); ++i)
     {
         // Importance sampling, depending on the distribution.
-        vec3 H = importance_sample_GGX(i, N, roughness);
+        vec3 H = importance_sample_GGX(i, N, roughness).xyz;
         vec3 L = normalize(reflect(-V, H));
 
         float NdotL = saturate(L.z);

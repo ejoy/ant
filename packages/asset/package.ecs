@@ -6,6 +6,7 @@ interface "imaterial"
     .method "get_property"
     .method "has_property"
     .method "property_set_func"
+    .method "get_setting"
 
 interface "imesh"
     .implement "mesh.lua"

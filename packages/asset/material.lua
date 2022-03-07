@@ -127,6 +127,11 @@ function imaterial.has_property(e, who)
 	return imaterial.get_property(e, who) ~= nil
 end
 
+function imaterial.get_setting(e)
+	local ro = e.render_object
+	return ro.fx.setting
+end
+
 local function which_type(u)
 	local t = type(u)
 	if t == "table" then

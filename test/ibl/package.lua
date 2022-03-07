@@ -1,16 +1,10 @@
 return {
     name = "ant.test.ibl",
-    ecs = {
-        import = {
-            "@ant.test.ibl",
-        },
-        pipeline = {
-            "init",
-            "update",
-            "exit",
-        },
-        system = {
-            "ant.test.ibl|init_system",
-        }
+    dependencies = {
+        "ant.animation", --TODO: temp fix for scene package need animation package
+        "ant.collision",
+        "ant.general",
+        "ant.render",
+        "ant.sky",
     }
 }

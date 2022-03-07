@@ -296,6 +296,18 @@ function ientity.quad_mesh(rect)
 	return quad_mesh(rect)
 end
 
+local simple_fullquad_mesh<const> = {
+        vb = {
+            start = 0, num = 3,
+            {
+                handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("fff", {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}), declmgr.get "p3".handle)
+            },
+        }
+}
+function ientity.simple_fullquad_mesh()
+	return simple_fullquad_mesh
+end
+
 function ientity.create_quad_entity(rect, material, name)
 	return create_simple_render_entity(name, material, quad_mesh(rect))
 end
