@@ -11,21 +11,22 @@ data:
   name: node0
   scene:
     srt:
-      s: {0.009999999776482582, 0.009999999776482582, 0.009999999776482582, 0}
-mount: @1
+      r: {0, 0, 0, -1}
+      s: {0.009999999776482582, 0.009999999776482582, 0.009999999776482582}
+      t: {0, 0, 0}
+mount: 1
 policy:
   ant.general|name
   ant.scene|scene_object
 ---
 data:
+  filter_state: main_view|selectable|cast_shadow
   material: /pkg/tools.prefab_editor/res/Duck.glb|materials/blinn3-fx.material
   mesh: /pkg/tools.prefab_editor/res/Duck.glb|meshes/LOD3spShape_P1.meshbin
   name: ""
   scene:
     srt: {}
-  filter_state: main_view|selectable|cast_shadow
-mount: @2
+mount: 2
 policy:
   ant.general|name
   ant.render|render
-  ant.scene|scene_object

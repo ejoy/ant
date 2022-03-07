@@ -189,8 +189,8 @@ function m.update_gizmo()
 end
 
 function m.clear()
-    for k,v in pairs(m.billboard) do
-        w:remove(v)
+    for _,v in pairs(m.billboard) do
+        world:remove_entity(v)
     end
     m.billboard = {}
     m.current_light = nil

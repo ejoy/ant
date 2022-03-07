@@ -587,6 +587,6 @@ function m:widget()
     -- end
 end
 
-function m.skin_mesh()
+function m.end_animation()
     joint_utils:update_pose()
 end
