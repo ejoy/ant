@@ -566,6 +566,7 @@ function m:open(filename)
     editor_setting.add_recent_file(filename)
     editor_setting.save()
     world:pub {"WindowTitle", filename}
+    logger.info({tag = "Editor", message = "Open "..filename})
 end
 
 local function on_remove_entity(e)
