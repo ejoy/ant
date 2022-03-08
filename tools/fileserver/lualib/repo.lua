@@ -111,12 +111,13 @@ function repo_build_dir(self, filepath, cache, namehashcache)
 		return hash
 	end
 	local hashs = {}
-	for name, type in pairs(access.list_files(self, filepath)) do
+	local filelist = access.list_files(self, filepath)
+	for _, name in ipairs(filelist) do
 		local fullname = filepath .. name	-- full name in repo
 		if is_resource(fullname) then
 			table.insert(hashs, string.format("r invalid %s", name))
 		else
-			if type == "v" or lfs.is_directory(self:realpath(fullname)) then
+			if filelist[name] == "v" or lfs.is_directory(self:realpath(fullname)) then
 				local hash = repo_build_dir(self, fullname .. '/', cache, namehashcache)
 				table.insert(hashs, string.format("d %s %s", hash, name))
 			else

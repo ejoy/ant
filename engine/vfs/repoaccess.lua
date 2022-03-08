@@ -169,7 +169,17 @@ function access.list_files(repo, filepath)
 			end
 		end
 	end
-	return files
+	local list = {}
+	local n = 1
+	for filename in pairs(files) do
+		list[n] = filename
+		n = n + 1
+	end
+	table.sort(list)
+	for _,name in ipairs(list) do
+		list[name] = files[name]
+	end
+	return list
 end
 
 return access
