@@ -62,7 +62,6 @@ class PropertyIdSet;
 struct Animation;
 struct Transition;
 struct TransitionList;
-enum class EventId : uint16_t;
 enum class PropertyId : uint8_t;
 
 // Types for external interfaces.
