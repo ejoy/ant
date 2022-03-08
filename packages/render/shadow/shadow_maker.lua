@@ -122,8 +122,8 @@ local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_s
 	end
 
 	local f = camera.frustum
-	f.l, f.b, f.n = min_extent[1], min_extent[2], min_extent[3]
-	f.r, f.t, f.f = max_extent[1], max_extent[2], max_extent[3]
+	f.l, f.b, f.n = min_extent[1], min_extent[2], min_extent[3]*10
+	f.r, f.t, f.f = max_extent[1], max_extent[2], max_extent[3]*10
 	update_camera_matrices(camera, lightmat)
 
 	do
