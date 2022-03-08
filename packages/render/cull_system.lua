@@ -15,7 +15,7 @@ local function cull(cull_tags, vp_mat)
 
 	for _, culltag in ipairs(cull_tags) do
 		w:clear(culltag)
-		for vv in w:select(("render_object:in %s?out"):format(culltag)) do
+		for vv in w:select(("render_object:in name?in %s?out"):format(culltag)) do
 			local aabb = vv.render_object.aabb
 			if aabb and math3d.frustum_intersect_aabb(frustum_planes, aabb) < 0 then
 				vv[culltag] = true

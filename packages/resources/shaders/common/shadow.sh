@@ -29,8 +29,10 @@ uniform vec4 u_tetra_normal_Red;
 uniform vec4 u_omni_param;
 #define u_omni_count u_omni_param.x
 
+//#define USE_VIEW_SPACE_DISTANCE
+//#define SHADOW_COVERAGE_DEBUG
 //#define PACK_RGBA8
-#define LINEAR_SHADOW
+//#define LINEAR_SHADOW
 #ifdef LINEAR_SHADOW
 #define SHADOW_SAMPLER2D	SAMPLER2D
 #define shadow_sampler_type sampler2D 
@@ -144,8 +146,6 @@ int calc_shadow_coord(vec4 posWS, out vec4 shadowcoord)
 	return cascadeidx;
 }
 
-#define SHADOW_COVERAGE_DEBUG
-
 #ifdef SHADOW_COVERAGE_DEBUG
 static const vec4 g_colors[4] = {
 	vec4(1.0, 0.0, 0.0, 1.0),
@@ -154,8 +154,6 @@ static const vec4 g_colors[4] = {
 	vec4(0.0, 1.0, 1.0, 1.0)
 };
 #endif //SHADOW_COVERAGE_DEBUG
-
-//#define USE_VIEW_SPACE_DISTANCE
 
 vec3 shadow_visibility(float distanceVS, vec4 posWS, vec3 scenecolor)
 {

@@ -1,6 +1,9 @@
-local ecs = ...
+local ecs 	= ...
 local world = ecs.world
-local w = world.w
+local w 	= world.w
+
+local mathpkg	= import_package "ant.math"
+local mc		= mathpkg.constant
 
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
@@ -12,6 +15,7 @@ local math3d    = require "math3d"
 local ientity   = ecs.import.interface "ant.render|ientity"
 local ilight	= ecs.import.interface "ant.render|ilight"
 local ishadow	= ecs.import.interface "ant.render|ishadow"
+local irq		= ecs.import.interface "ant.render|irenderqueue"
 local icamera	= ecs.import.interface "ant.camera|icamera"
 local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
 
@@ -21,7 +25,10 @@ local quadsize = 192
 local quadmaterial = "/pkg/ant.resources/materials/texquad.material"
 
 local frustum_colors = {
-	0xff0000ff, 0xff00ff00, 0xffff0000, 0xffffff00,
+	mc.COLOR(mc.RED),
+	mc.COLOR(mc.GREEN),
+	mc.COLOR(mc.BLUE),
+	mc.COLOR(mc.YELLOW),
 }
 
 local function find_csm_entity(index)
@@ -49,28 +56,25 @@ local function create_debug_entity()
 	end
 
 	do
-		for e in w:select "main_queue camera_ref:in" do
-			local camera = icamera.find_camera(e.camera_ref)
-			for idx, f in ipairs(ishadow.split_frustums()) do
-				local vp = math3d.mul(math3d.projmat(f), camera.viewmat)
-				ientity.create_frustum_entity(
-					math3d.frustum_points(vp), "frusutm:main_view", frustum_colors[idx]
-				)
-			end
+		local mc_e = world:entity(irq.main_camera())
+		local camera = mc_e.camera
+		for idx, f in ipairs(ishadow.split_frustums()) do
+			local vp = math3d.mul(math3d.projmat(f), camera.viewmat)
+			ientity.create_frustum_entity(
+				math3d.frustum_points(vp), "frusutm:main_view", frustum_colors[idx]
+			)
 		end
 	end
 	
 	for se in w:select "csm_queue csm:in camera_ref:in name:in" do
 		local idx = se.csm.index
-		local ce = icamera.find_camera(se.camera_ref)
-		w:sync("camera:in", ce)
+		local ce = world:entity(se.camera_ref)
 		local c = ce.camera
-		w:sync("scene:in", ce)
 		local frustum_points = math3d.frustum_points(c.viewprojmat)
 		local color = frustum_colors[idx]
 
 		ientity.create_frustum_entity(frustum_points, "frusutm:" .. se.name, color)
-		ientity.create_axis_entity(ce._worldmat, "csm_axis:" .. idx, color)
+		ientity.create_axis_entity(ce.scene.srt, "csm_axis:" .. idx, color)
 	end
 end
 
@@ -211,13 +215,10 @@ local function check_shadow_matrix()
 end
 
 local function log_split_distance()
-	for e in w:select "main_queue camera_ref:in" do
-		local c = icamera.find_camera(e.camera_ref)
-		for idx, f in ipairs(ishadow.calc_split_frustums(icamera.get_frustum(e.camera_ref))) do
-			print(string.format("csm%d, distance[%f, %f]", idx, f.n, f.f))
-		end
+	local mc = world:entity(irq.main_camera())
+	for idx, f in ipairs(ishadow.calc_split_frustums(icamera.get_frustum(mc))) do
+		print(string.format("csm%d, distance[%f, %f]", idx, f.n, f.f))
 	end
-
 end
 
 local keypress_mb = world:sub{"keyboard"}
