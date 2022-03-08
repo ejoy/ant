@@ -89,7 +89,7 @@ else
 
 		ratio_list = shadowcfg.split_ratios
 	else
-		ratio_list = {0.18, 0.35, 0.65}
+		ratio_list = {0.08, 0.18, 0.45}
 		csm_setting.split_num = 4
 	end
 
